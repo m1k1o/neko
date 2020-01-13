@@ -3,10 +3,40 @@
     "DisableAppUpdate": true,
     "DisableTelemetry": true,
     "DontCheckDefaultBrowser": true,
+    "DisableFirefoxAccounts": true,
+    "DisablePrivateBrowsing": true,
+    "DisableProfileImport": true,
     "BlockAboutConfig": true,
+    "BlockAboutProfiles": true,
+    "BlockAboutSupport": true,
     "OverrideFirstRunPage": "",
     "OfferToSaveLogins": false,
     "PromptForDownloadLocation":false,
+    "DisableSetDesktopBackground":false,
+    "DisableDeveloperTools":false,
+    "DisableFeedbackCommands":false,
+    "DisableFirefoxScreenshots":false,
+    "DisableProfileRefresh":false,
+    "OfferToSaveLoginsDefault":false,
+    "PasswordManagerEnabled":false,
+    "SanitizeOnShutdown": {
+      "Cache": true,
+      "Cookies": true,
+      "Downloads": true,
+      "FormData": true,
+      "History": true,
+      "Sessions": true,
+      "SiteSettings": true,
+      "OfflineApps": true
+    },
+    "FirefoxHome": {
+      "Search": true,
+      "TopSites": true,
+      "Highlights": false,
+      "Pocket": false,
+      "Snippets": false,
+      "Locked": false
+    },
     "ExtensionSettings": {
       "uBlock0@raymondhill.net": {
         "installation_mode": "force_installed",
@@ -20,6 +50,14 @@
     "Homepage": {
       "Additional": [],
       "StartPage": "none"
-    }
+    }, 
+    "Bookmarks": [
+      {
+        "Title": "9 Anime",
+        "URL": "https://9anime.xyz/",
+        "Favicon": "https://9anime.xyz/favicon.png",
+        "Placement": "toolbar"
+      }
+    ]
   }
 }

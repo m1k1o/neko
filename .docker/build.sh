@@ -7,4 +7,6 @@ cd ../client
 npm install && npm run build
 
 cd ../
-docker build -f Dockerfile -t neko .
+sudo docker build -f Dockerfile -t neko .
+
+# sudo docker run -p 8080:8080 --shm-size=2gb neko:latest 

@@ -6,8 +6,9 @@ sudo mkdir -p /var/run/dbus /etc/neko
 sudo /etc/init.d/dbus start
 
 sudo cp supervisord.conf /etc/neko/supervisord.conf
-sudo cp pulseaudio.pa /etc/neko/pulseaudio.pa
 sudo cp openbox.xml /etc/neko/openbox.xml
+
+sudo cp default.pa /etc/pulse/default.pa
 sudo cp policies.json /usr/lib/firefox-esr/distribution/policies.json
 
 if [ ! -f /usr/lib/firefox-esr/distribution/extensions/uBlock0@raymondhill.net.xpi ]; then

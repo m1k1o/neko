@@ -152,16 +152,16 @@ func (manager *WebRTCManager) onData(session *session, msg webrtc.DataChannelMes
 		if key, ok := keys.Mouse[int(payload.Key)]; ok {
 			switch int(payload.Key) {
 			case keys.MOUSE_WHEEL_DOWN:
-				robotgo.Scroll(0, -10)
+				robotgo.Scroll(0, -1)
 				break
 			case keys.MOUSE_WHEEL_UP:
-				robotgo.Scroll(0, 10)
+				robotgo.Scroll(0, 1)
 				break
 			case keys.MOUSE_WHEEL_LEFT:
-				robotgo.Scroll(-10, 0)
+				robotgo.Scroll(-1, 0)
 				break
 			case keys.MOUSE_WHEEL_RIGH:
-				robotgo.Scroll(10, 0)
+				robotgo.Scroll(1, 0)
 				break
 			default:
 				robotgo.Click(key, false)
