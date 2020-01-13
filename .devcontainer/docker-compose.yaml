@@ -1,0 +1,16 @@
+version: '3.6'
+services:
+  neko:
+    network_mode: host
+    build:
+      context: .
+      dockerfile: Dockerfile
+    shm_size: '2gb'
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - seccomp:unconfined
+    volumes:
+      - /home/nurd/neko:/workspace
+      - /var/run/docker.sock:/var/run/docker.sock 
+    command: "/bin/sh -c \"while sleep 1000; do :; done\""

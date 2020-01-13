@@ -1,0 +1,23 @@
+@charset "utf-8";
+
+// Import variables
+@import "variables";
+
+// Reset CSS
+@import "reset";
+
+// Import Vendor
+@import "vendor/font-awesome";
+
+html, body {
+  -webkit-font-smoothing: subpixel-antialiased;
+  background-color: $style-dark;
+  font-family: $style-font-family;
+  font-size: $style-font-size;
+  color: $style-font-color;
+  overflow: hidden;
+  width: 100vw;
+  height: 100vh;
+  min-width: 320px;
+}
+

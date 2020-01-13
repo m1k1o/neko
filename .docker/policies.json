@@ -1,0 +1,25 @@
+{
+  "policies": {
+    "DisableAppUpdate": true,
+    "DisableTelemetry": true,
+    "DontCheckDefaultBrowser": true,
+    "BlockAboutConfig": true,
+    "OverrideFirstRunPage": "",
+    "OfferToSaveLogins": false,
+    "PromptForDownloadLocation":false,
+    "ExtensionSettings": {
+      "uBlock0@raymondhill.net": {
+        "installation_mode": "force_installed",
+        "install_url": "https://addons.mozilla.org/firefox/downloads/latest/ublock-origin/latest.xpi"
+      }
+    },
+    "WebsiteFilter": {
+      "Block": [],
+      "Exceptions": []
+    },
+    "Homepage": {
+      "Additional": [],
+      "StartPage": "none"
+    }
+  }
+}

@@ -1,0 +1,47 @@
+{
+	"folders": [
+		{
+			"path": "server"
+		},
+		{
+			"path": "client"
+		},
+		{
+			"path": "."
+		}
+	],
+  "settings": {
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true,
+    "editor.detectIndentation": false,
+    "files.encoding": "utf8",
+    "files.eol": "\n",
+    "typescript.tsdk": "./client/node_modules/typescript/lib",
+    "todo-tree.filtering.excludeGlobs": ["**/node_modules/**"],
+    "eslint.validate": [
+      "vue",
+      "javascript",
+      "javascriptreact",
+      "typescript",
+      "typescriptreact",
+    ],
+    "vetur.validation.template": true,
+    "vetur.useWorkspaceDependencies": true,
+    "remote.extensionKind": {
+      "ms-azuretools.vscode-docker": "ui"
+    },
+    "remote.containers.defaultExtensions": [
+      "ms-vscode.go",
+      "octref.vetur",
+      "esbenp.prettier-vscode",
+      "dbaeumer.vscode-eslint",
+      "ms-vscode-remote.vscode-remote-extensionpack",
+      "ms-vscode-remote.remote-containers",
+      "ms-azuretools.vscode-docker",
+      "editorconfig.editorconfig",
+      "gruntfuggly.todo-tree",
+      "swyphcosmo.spellchecker",
+      "eamodio.gitlens"
+    ]
+  }
+}

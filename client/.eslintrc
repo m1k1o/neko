@@ -1,0 +1,16 @@
+{
+  "root": true,
+  "env": {
+    "node": true
+  },
+  "extends": ["plugin:vue/essential", "@vue/prettier", "@vue/typescript"],
+  "parserOptions": {
+    "parser": "@typescript-eslint/parser"
+  },
+  "rules": {
+    "no-case-declarations": "off",
+    "no-dupe-class-members": "off",
+    "no-console": "off",
+  }
+}
+
