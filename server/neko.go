@@ -9,9 +9,12 @@ import (
 	"runtime"
 
 	"n.eko.moe/neko/internal/config"
+	"n.eko.moe/neko/internal/http/endpoint"
+	"n.eko.moe/neko/internal/http/middleware"
 	"n.eko.moe/neko/internal/structs"
-	api "n.eko.moe/neko/internal/http"
+	"n.eko.moe/neko/internal/webrtc"
 
+	"github.com/go-chi/chi"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -68,7 +71,49 @@ func (neko *Neko) Preflight() {
 }
 
 func (neko *Neko) Start() {
-	server := api.New(neko.Serve.Bind, neko.Serve.Password, neko.Serve.Static)
+	router := chi.NewRouter()
+
+	manager, err := webrtc.NewManager(neko.Serve.Password)
+	if err != nil {
+		neko.Logger.Panic().Err(err).Msg("Can not start webrtc manager")
+	}
+
+	router.Use(middleware.Recoverer) // Recover from panics without crashing server
+	router.Use(middleware.RequestID) // Create a request ID for each request
+	router.Use(middleware.Logger)    // Log API request calls
+
+	router.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/plain")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("."))
+	})
+
+	router.Get("/ws", func(w http.ResponseWriter, r *http.Request) {
+		if err := manager.Upgrade(w, r); err != nil {
+			neko.Logger.Error().Err(err).Msg("session.destroy has failed")
+		}
+	})
+
+	fs := http.FileServer(http.Dir(neko.Serve.Static))
+	router.Get("/*", func(w http.ResponseWriter, r *http.Request) {
+		if _, err := os.Stat(neko.Serve.Static + r.RequestURI); os.IsNotExist(err) {
+			http.StripPrefix(r.RequestURI, fs).ServeHTTP(w, r)
+		} else {
+			fs.ServeHTTP(w, r)
+		}
+	})
+
+	router.NotFound(endpoint.Handle(func(w http.ResponseWriter, r *http.Request) error {
+		return &endpoint.HandlerError{
+			Status:  http.StatusNotFound,
+			Message: fmt.Sprintf("Endpoint '%s' is not avalible", r.RequestURI),
+		}
+	}))
+
+	server := &http.Server{
+		Addr:    neko.Serve.Bind,
+		Handler: router,
+	}
 
 	if neko.Serve.Cert != "" && neko.Serve.Key != "" {
 		go func() {

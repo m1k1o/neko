@@ -470,12 +470,10 @@
     }
 
     connect() {
-      /*
       this.ws = new WebSocket(
-        `${/https/gi.test(location.protocol) ? 'wss' : 'ws'}://${location.host}/ws?password=${this.password}`,
+        process.env.NODE_ENV === 'development' ?  `ws://${process.env.NEKO_DEV}/ws?password=${this.password}` : `${/https/gi.test(location.protocol) ? 'wss' : 'ws'}://${location.host}/ws?password=${this.password}` ,
       )
-      */
-      this.ws = new WebSocket(`ws://localhost:3000/ws?password=${this.password}`)
+
       this.ws.onmessage = this.onMessage.bind(this)
       this.ws.onerror = event => console.error((event as ErrorEvent).error)
       this.ws.onclose = event => this.onClose.bind(this)

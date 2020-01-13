@@ -8,7 +8,7 @@ import (
 )
 
 func Config(name string) {
-	config := viper.GetString("neko.config")
+	config := viper.GetString("config")
 
 	if config != "" {
 		viper.SetConfigFile(config) // Use config file from the flag.
@@ -35,8 +35,8 @@ func Config(name string) {
 
 	file := viper.ConfigFileUsed()
 	logger := log.With().
-		Bool("debug", viper.GetBool("neko.debug")).
-		Str("logging", viper.GetString("neko.logs")).
+		Bool("debug", viper.GetBool("debug")).
+		Str("logging", viper.GetString("logs")).
 		Str("config", file).
 		Logger()
 

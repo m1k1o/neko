@@ -18,10 +18,14 @@ const (
 )
 
 func (manager *WebRTCManager) Upgrade(w http.ResponseWriter, r *http.Request) error {
+	manager.logger.
+		Info().
+		Msg("Attempting to upgrade ws")
+
 	socket, err := manager.upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		manager.logger.Error().Err(err).Msg("Failed to upgrade websocket!")
-		return nil
+		return err
 	}
 
 	sessionID, ok := manager.authenticate(r)

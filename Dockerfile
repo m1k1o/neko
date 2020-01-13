@@ -9,7 +9,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # Install dependencies ttf-freefont
 RUN apt-get update \
-    && apt-get -y install curl supervisor openbox dbus-x11 xvfb pulseaudio firefox-esr \
+    && apt-get -y install curl apt-utils supervisor openbox dbus-x11 xvfb pulseaudio firefox-esr \
     && apt-get -y install gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-pulseaudio libxcb-xkb-dev libxkbcommon-x11-dev \
     #
     # Create a non-root user
@@ -29,9 +29,12 @@ RUN apt-get update \
     && curl -o /usr/lib/firefox-esr/distribution/extensions/uBlock0@raymondhill.net.xpi https://addons.mozilla.org/firefox/downloads/latest/ublock-origin/addon-607454-latest.xpi \
     #
     # Setup Pulse Audio
-    mkdir -p /home/$USERNAME/.config/pulse/ \
+    && mkdir -p /home/$USERNAME/.config/pulse/ \
     && echo "default-server=unix:/tmp/pulseaudio.socket" > /home/$USERNAME/.config/pulse/client.conf \
     && chown -R $USERNAME:$USERNAME /home/$USERNAME \
+    #
+    # Workaround for an X11 problem. See: http://blog.tigerteufel.de/?p=476
+    && mkdir /tmp/.X11-unix && chmod 1777 /tmp/.X11-unix && chown $USERNAME /tmp/.X11-unix/ \
     #
     # Make directories for neko
     && mkdir -p /etc/neko /var/www \
@@ -62,9 +65,7 @@ ENV NEKO_DISPLAY=0
 ENV NEKO_WIDTH=1280
 ENV NEKO_HEIGHT=720
 ENV NEKO_PASSWORD=neko
-ENV NEKO_BIND=0.0.0.0:8080
-ENV NEKO_KEY=
-ENV NEKO_CERT=
+ENV NEKO_BIND=:8080
 
 # Nayn
 ENV NEKO_URL=https://www.youtube.com/embed/QH2-TGUlwu4 
@@ -74,5 +75,5 @@ ENV NEKO_URL=https://www.youtube.com/embed/QH2-TGUlwu4
 COPY .docker/entrypoint.sh /entrypoint.sh
 
 #
-# Run entrypoint
+# Run Service
 CMD ["/bin/bash", "/entrypoint.sh"]

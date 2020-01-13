@@ -18,13 +18,13 @@ func Logs(name string) {
 	zerolog.TimeFieldFormat = ""
 	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 
-	if viper.GetBool("neko.debug") {
+	if viper.GetBool("debug") {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
 	}
 
 	console := zerolog.ConsoleWriter{Out: os.Stdout}
 
-	if !viper.GetBool("neko.logs") {
+	if !viper.GetBool("logs") {
 		log.Logger = log.Output(console)
 	} else {
 
