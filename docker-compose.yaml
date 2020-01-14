@@ -1,0 +1,14 @@
+version: '3.6'
+services:
+  neko:
+    image: nurdism/neko
+    restart: always
+    shm_size: '2gb'
+    ports:
+      - "8080:80"
+    environment:
+      NEKO_DISPLAY: 0
+      NEKO_WIDTH: 1280
+      NEKO_HEIGHT: 720
+      NEKO_PASSWORD: neko
+      NEKO_BIND: :8080
