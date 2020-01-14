@@ -7,10 +7,10 @@
       "request": "launch",
       "mode": "debug",
       "program": "${workspaceFolder}/cmd/neko",
-      "envFile": "${workspaceFolder}/.env",
+      "envFile": "${workspaceFolder}/.env.development",
       "output": "${workspaceFolder}/bin/debug/neko",
       "cwd": "${workspaceFolder}/",
-      "args": ["serve", "-d", "--bind", "0.0.0.0:3000", "--static", "../client/dist", "--password", "test"]
+      "args": ["serve", "-d", "--bind", ":3000", "--static", "../client/dist", "--password", "123"]
     }
   ]
 }

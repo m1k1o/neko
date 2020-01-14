@@ -22,7 +22,7 @@ cd .docker && ./build
 
 Then run the container:
 ```
-sudo docker run -p 8080:8080 --shm-size=2gb neko:latest 
+sudo docker run -p 8080:8080 -e NEKO_PASSWORD='secret' --shm-size=2gb nurdism/neko:latest 
 ```
 
 *Note:* `--shm-size=2gb` is required, firefox-esr tabs will crash (not sure if 2gb is *really* needed)

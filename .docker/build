@@ -7,8 +7,8 @@ cd ../client
 npm install && npm run build
 
 cd ../
-sudo docker build -f Dockerfile -t neko .
+sudo docker build -f Dockerfile -t nurdism/neko .
 
-# sudo docker run -p 8080:8080 --shm-size=2gb neko:latest 
-# sudo docker run --network host --shm-size=2gb neko:latest 
-# sudo docker run --network host --shm-size=2gb -it neko:latest /bin/bash
+# sudo docker run -p 8080:8080 --shm-size=2gb nurdism/neko:latest 
+# sudo docker run --network host --shm-size=2gb nurdism/neko:latest 
+# sudo docker run --network host --shm-size=2gb -it nurdism/neko:latest /bin/bash
