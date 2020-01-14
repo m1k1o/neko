@@ -12,7 +12,7 @@ This is a proof of concept project I threw together over the last few days, it's
 This is by no means a fully featured clone of rabbit. The client has no concept of other peers. It has bugs, but for the most part it works. I'm not sure what the future holds for this. If I continue to use it and like it, I'll probably keep pushing updates to it. I'd be happy to accept PRs for any improvements. 
 
 ### Why n.eko?
-I like cats, I'm a weeb/nerd, I own the domain [n.eko.moe](https://n.eko.moe/) and I love the logo /shrug
+I like cats (Neko is the Japanese word for cat), I'm a weeb/nerd, I own the domain [n.eko.moe](https://n.eko.moe/) and I love the logo /shrug
 
 ### Super easy mode setup
 1. Head on to [Digital Ocean](https://digitalocean.com/) and create an account
@@ -57,3 +57,14 @@ NEKO_CERT=              // (SSL)Cert
 ### Development
 *Highly* recommend you use a [dev container](https://code.visualstudio.com/docs/remote/containers) for [vscode](https://code.visualstudio.com/), I've included the `.devcontainer` I've used to develop this app. To build neko run:
 `cd .docker && ./build`
+
+### Goals
+* Remove need for gstreamer, handle encoding/capturing with go
+* Make firefox work with client (wrtc issues)
+* Remove the need for supervisor and handle starting/stopping the applications
+* Find ouw witch audio/video codec is the cheapest as far as data and performance goes (with minimal quality loss)
+* Slim down the [robotgo](github.com/go-vgo/robotgo) package and *just* handle the key io
+* Add user names for the client
+* Add (text) chat for the client
+* Add that cool emoji thing rabb.it had
+* Slim down the docker container (use alpine)
