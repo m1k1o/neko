@@ -135,6 +135,7 @@
     "FlashPlugin": {},
     "HardwareAcceleration": false,
     "Homepage": {
+      "Additional": [],
       "StartPage": "none"
     },
     "NewTabPage": true,
