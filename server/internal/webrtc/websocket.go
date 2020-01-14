@@ -162,6 +162,7 @@ func (manager *WebRTCManager) handleWS(session *session) {
 func (manager *WebRTCManager) destroy(session *session) {
 	if manager.controller == session.id {
 		manager.controller = ""
+		manager.clearKeys()
 		for id, sess := range manager.sessions {
 			if id != session.id {
 				if err := sess.send(message{Event: "control/released"}); err != nil {
@@ -181,6 +182,7 @@ func (manager *WebRTCManager) destroy(session *session) {
 func (manager *WebRTCManager) controlRelease(session *session) error {
 	if manager.controller == session.id {
 		manager.controller = ""
+		manager.clearKeys()
 
 		if err := session.send(message{Event: "control/release"}); err != nil {
 			return err

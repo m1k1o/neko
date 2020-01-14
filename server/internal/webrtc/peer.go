@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/json"
+	"time"
 
 	"github.com/go-vgo/robotgo"
 	"github.com/pion/webrtc/v2"
@@ -76,8 +77,6 @@ func (manager *WebRTCManager) createPeer(session *session, raw []byte) error {
 	return nil
 }
 
-var debounce = map[int]bool{}
-
 func (manager *WebRTCManager) onData(session *session, msg webrtc.DataChannelMessage) error {
 	if manager.controller != session.id {
 		return nil
@@ -101,27 +100,28 @@ func (manager *WebRTCManager) onData(session *session, msg webrtc.DataChannelMes
 	switch header.Event {
 	case 0x01: // MOUSE_MOVE
 		payload := &dataMouseMove{}
-		err := binary.Read(buffer, binary.LittleEndian, payload)
-		if err != nil {
+		if err := binary.Read(buffer, binary.LittleEndian, payload); err != nil {
 			return err
 		}
+
 		robotgo.Move(int(payload.X), int(payload.Y))
 		break
 	case 0x02: // MOUSE_UP
 		payload := &dataMouseKey{}
-		err := binary.Read(buffer, binary.LittleEndian, payload)
-		if err != nil {
+		if err := binary.Read(buffer, binary.LittleEndian, payload); err != nil {
 			return err
 		}
 
-		if key, ok := keys.Mouse[int(payload.Key)]; ok {
-			if !debounce[int(payload.Key)] {
+		code := int(payload.Key)
+		if key, ok := keys.Mouse[code]; ok {
+			if _, ok := manager.debounce[code]; !ok {
 				return nil
 			}
-			debounce[int(payload.Key)] = false
+			delete(manager.debounce, code)
 			robotgo.MouseToggle("up", key)
+			manager.logger.Debug().Msgf("MOUSE_UP key: %v (%v)", code, key)
 		} else {
-			manager.logger.Warn().Msgf("Unknown MOUSE_DOWN key: %v", payload.Key)
+			manager.logger.Warn().Msgf("Unknown MOUSE_UP key: %v", code)
 		}
 		break
 	case 0x03: // MOUSE_DOWN
@@ -131,15 +131,17 @@ func (manager *WebRTCManager) onData(session *session, msg webrtc.DataChannelMes
 			return err
 		}
 
-		if key, ok := keys.Mouse[int(payload.Key)]; ok {
-			if debounce[int(payload.Key)] {
+		code := int(payload.Key)
+		if key, ok := keys.Mouse[code]; ok {
+			if _, ok := manager.debounce[code]; ok {
 				return nil
 			}
-			debounce[int(payload.Key)] = true
 
+			manager.debounce[code] = time.Now()
 			robotgo.MouseToggle("down", key)
+			manager.logger.Debug().Msgf("MOUSE_DOWN key: %v (%v)", code, key)
 		} else {
-			manager.logger.Warn().Msgf("Unknown MOUSE_DOWN key: %v", payload.Key)
+			manager.logger.Warn().Msgf("Unknown MOUSE_DOWN key: %v", code)
 		}
 		break
 	case 0x04: // MOUSE_CLK
@@ -149,8 +151,9 @@ func (manager *WebRTCManager) onData(session *session, msg webrtc.DataChannelMes
 			return err
 		}
 
-		if key, ok := keys.Mouse[int(payload.Key)]; ok {
-			switch int(payload.Key) {
+		code := int(payload.Key)
+		if key, ok := keys.Mouse[code]; ok {
+			switch code {
 			case keys.MOUSE_WHEEL_DOWN:
 				robotgo.Scroll(0, -1)
 				break
@@ -166,8 +169,10 @@ func (manager *WebRTCManager) onData(session *session, msg webrtc.DataChannelMes
 			default:
 				robotgo.Click(key, false)
 			}
+
+			manager.logger.Debug().Msgf("MOUSE_CLK key: %v (%v)", code, key)
 		} else {
-			manager.logger.Warn().Msgf("Unknown MOUSE_CLK key: %v", payload.Key)
+			manager.logger.Warn().Msgf("Unknown MOUSE_CLK key: %v", code)
 		}
 		break
 	case 0x05: // KEY_DOWN
@@ -176,30 +181,35 @@ func (manager *WebRTCManager) onData(session *session, msg webrtc.DataChannelMes
 		if err != nil {
 			return err
 		}
-		if key, ok := keys.Keyboard[int(payload.Key)]; ok {
-			if debounce[int(payload.Key)] {
+
+		code := int(payload.Key)
+		if key, ok := keys.Keyboard[code]; ok {
+			if _, ok := manager.debounce[code]; ok {
 				return nil
 			}
-			debounce[int(payload.Key)] = true
+			manager.debounce[code] = time.Now()
 			robotgo.KeyToggle(key, "down")
+			manager.logger.Debug().Msgf("KEY_DOWN key: %v (%v)", code, key)
 		} else {
-			manager.logger.Warn().Msgf("Unknown KEY_DOWN key: %v", payload.Key)
+			manager.logger.Warn().Msgf("Unknown KEY_DOWN key: %v", code)
 		}
 		break
 	case 0x06: // KEY_UP
 		payload := &dataKeyboardKey{}
-		err := binary.Read(buffer, binary.LittleEndian, payload)
-		if err != nil {
+		if err := binary.Read(buffer, binary.LittleEndian, payload); err != nil {
 			return err
 		}
-		if key, ok := keys.Keyboard[int(payload.Key)]; ok {
-			if !debounce[int(payload.Key)] {
+
+		code := int(payload.Key)
+		if key, ok := keys.Keyboard[code]; ok {
+			if _, ok := manager.debounce[code]; !ok {
 				return nil
 			}
-			debounce[int(payload.Key)] = false
+			delete(manager.debounce, code)
 			robotgo.KeyToggle(key, "up")
+			manager.logger.Debug().Msgf("KEY_UP key: %v (%v)", code, key)
 		} else {
-			manager.logger.Warn().Msgf("Unknown KEY_UP key: %v", payload.Key)
+			manager.logger.Warn().Msgf("Unknown KEY_UP key: %v", code)
 		}
 		break
 	case 0x07: // KEY_CLK
@@ -208,13 +218,49 @@ func (manager *WebRTCManager) onData(session *session, msg webrtc.DataChannelMes
 		if err != nil {
 			return err
 		}
-		if key, ok := keys.Keyboard[int(payload.Key)]; ok {
+
+		code := int(payload.Key)
+		if key, ok := keys.Keyboard[code]; ok {
 			robotgo.KeyTap(key)
+			manager.logger.Debug().Msgf("KEY_CLK key: %v (%v)", code, key)
 		} else {
-			manager.logger.Warn().Msgf("Unknown KEY_CLK key: %v", payload.Key)
+			manager.logger.Warn().Msgf("Unknown KEY_CLK key: %v", code)
 		}
 		break
 	}
 
 	return nil
+}
+
+func (manager *WebRTCManager) clearKeys() {
+	for code := range manager.debounce {
+		if key, ok := keys.Keyboard[code]; ok {
+			robotgo.MouseToggle(key, "up")
+		}
+
+		if key, ok := keys.Mouse[code]; ok {
+			robotgo.KeyToggle(key, "up")
+		}
+
+		delete(manager.debounce, code)
+	}
+}
+
+func (manager *WebRTCManager) checkKeys() {
+	t := time.Now()
+	for code, start := range manager.debounce {
+		if t.Sub(start) < (time.Second * 10) {
+			continue
+		}
+
+		if key, ok := keys.Keyboard[code]; ok {
+			robotgo.MouseToggle(key, "up")
+		}
+
+		if key, ok := keys.Mouse[code]; ok {
+			robotgo.KeyToggle(key, "up")
+		}
+
+		delete(manager.debounce, code)
+	}
 }

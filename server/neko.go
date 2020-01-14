@@ -64,6 +64,7 @@ type Neko struct {
 	Serve   *config.Serve
 	Logger  zerolog.Logger
 	http    *http.Server
+	manager *webrtc.WebRTCManager
 }
 
 func (neko *Neko) Preflight() {
@@ -75,6 +76,10 @@ func (neko *Neko) Start() {
 
 	manager, err := webrtc.NewManager(neko.Serve.Password)
 	if err != nil {
+		neko.Logger.Panic().Err(err).Msg("Can not create webrtc manager")
+	}
+
+	if err := manager.Start(); err != nil {
 		neko.Logger.Panic().Err(err).Msg("Can not start webrtc manager")
 	}
 
@@ -132,9 +137,17 @@ func (neko *Neko) Start() {
 	}
 
 	neko.http = server
+	neko.manager = manager
 }
 
 func (neko *Neko) Shutdown() {
+	if neko.manager != nil {
+		if err := neko.manager.Shutdown(); err != nil {
+			neko.Logger.Err(err).Msg("WebRTC manager shutdown with an error")
+		} else {
+			neko.Logger.Debug().Msg("WebRTC manager shutdown")
+		}
+	}
 	if neko.http != nil {
 		if err := neko.http.Shutdown(context.Background()); err != nil {
 			neko.Logger.Err(err).Msg("HTTP server shutdown with an error")

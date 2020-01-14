@@ -121,7 +121,7 @@ func init() {
 	Keyboard[KEY_Q] = "q"
 	Keyboard[KEY_R] = "r"
 	Keyboard[KEY_S] = "s"
-	Keyboard[KEY_T] = "r"
+	Keyboard[KEY_T] = "t"
 	Keyboard[KEY_U] = "u"
 	Keyboard[KEY_V] = "v"
 	Keyboard[KEY_W] = "w"
