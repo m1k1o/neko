@@ -13,9 +13,12 @@
 
 <applications>
     <!-- Match all windows and remove their decorations -->
-    <application class="*"> <decor>no</decor> </application>
-    <!-- Make the window fullscreen  -->
-    <fullscreen>yes</fullscreen>
+    <application class="Firefox*" name="Navigator">
+      <decor>no</decor>
+      <maximized>true</maximized>
+      <focus>yes</focus>
+      <layer>normal</layer>
+    </application>
 </applications>
 
 <focus>

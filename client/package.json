@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Client for neko streaming server",
   "scripts": {
-    "serve": "vue-cli-service serve",
+    "serve": "vue-cli-service serve --mode development",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint"
   },

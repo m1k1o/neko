@@ -5,11 +5,14 @@
 sudo mkdir -p /var/run/dbus /etc/neko
 sudo /etc/init.d/dbus start
 
+sudo cp default.pa /etc/pulse/default.pa
+
+sudo cp firefox/neko.js /usr/lib/firefox-esr/mozilla.cfg
+sudo cp firefox/autoconfig.js /usr/lib/firefox-esr/defaults/pref/autoconfig.js
+sudo cp firefox/policies.json /usr/lib/firefox-esr/distribution/policies.json
+
 sudo cp supervisord.conf /etc/neko/supervisord.conf
 sudo cp openbox.xml /etc/neko/openbox.xml
-
-sudo cp default.pa /etc/pulse/default.pa
-sudo cp policies.json /usr/lib/firefox-esr/distribution/policies.json
 
 if [ ! -f /usr/lib/firefox-esr/distribution/extensions/uBlock0@raymondhill.net.xpi ]; then
   sudo mkdir -p /usr/lib/firefox-esr/distribution/extensions

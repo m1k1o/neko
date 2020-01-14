@@ -10,7 +10,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Install dependencies ttf-freefont
 RUN apt-get update \
     && apt-get -y install curl apt-utils supervisor openbox dbus-x11 xvfb pulseaudio firefox-esr \
-    && apt-get -y install gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-pulseaudio libxcb-xkb-dev libxkbcommon-x11-dev \
+    && apt-get -y install gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-pulseaudio \
+    && apt-get -y install libxcb-xkb-dev libxkbcommon-x11-dev \
     #
     # Create a non-root user
     && groupadd --gid $USER_GID $USERNAME \
@@ -49,7 +50,9 @@ RUN apt-get update \
 COPY .docker/openbox.xml /etc/neko/openbox.xml
 COPY .docker/supervisord.conf /etc/neko/supervisord.conf
 COPY .docker/default.pa /etc/pulse/default.pa
-COPY .docker/policies.json /usr/lib/firefox-esr/distribution/policies.json
+COPY .docker/firefox/neko.js /usr/lib/firefox-esr/mozilla.cfg
+COPY .docker/firefox/autoconfig.js /usr/lib/firefox-esr/defaults/pref/autoconfig.js
+COPY .docker/firefox/policies.json /usr/lib/firefox-esr/distribution/policies.json
 
 #
 # Neko files
@@ -67,7 +70,7 @@ ENV NEKO_HEIGHT=720
 ENV NEKO_PASSWORD=neko
 ENV NEKO_BIND=:8080
 
-# Nayn
+# Neko Nyan (=^-ω-^=)
 ENV NEKO_URL=https://www.youtube.com/embed/QH2-TGUlwu4 
 
 #

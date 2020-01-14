@@ -66,13 +66,13 @@
           <img src="@/assets/logo.svg" alt="n.eko" />
           <span><b>n</b>.eko</span>
         </div>
-        <div class="message" v-if="!connecting">
+        <form class="message" v-if="!connecting" @submit.stop.prevent="connect">
           <span>Please enter the password:</span>
           <input type="password" v-model="password" />
-          <span class="button" @click.stop.prevent="connect">
+          <button type="submit" class="button" @click.stop.prevent="connect">
             Connect
-          </span>
-        </div>
+          </button>
+        </form>
         <div class="spinner" v-if="connecting">
           <div class="double-bounce1"></div>
           <div class="double-bounce2"></div>
@@ -471,7 +471,9 @@
 
     connect() {
       this.ws = new WebSocket(
-        process.env.NODE_ENV === 'development' ?  `ws://${process.env.NEKO_DEV}/ws?password=${this.password}` : `${/https/gi.test(location.protocol) ? 'wss' : 'ws'}://${location.host}/ws?password=${this.password}` ,
+        process.env.NODE_ENV === 'development'
+          ? `ws://${process.env.VUE_APP_SERVER}/ws?password=${this.password}`
+          : `${/https/gi.test(location.protocol) ? 'wss' : 'ws'}://${location.host}/ws?password=${this.password}`,
       )
 
       this.ws.onmessage = this.onMessage.bind(this)

@@ -11,6 +11,6 @@ services:
     security_opt:
       - seccomp:unconfined
     volumes:
-      - /home/nurd/neko:/workspace
+      - /home/neko/src:/workspace
       - /var/run/docker.sock:/var/run/docker.sock 
     command: "/bin/sh -c \"while sleep 1000; do :; done\""
