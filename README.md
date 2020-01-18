@@ -18,6 +18,7 @@ I like cats (Neko is the Japanese word for cat), I'm a weeb/nerd, I own the doma
 1. Deploy a server
 
     *Recomended specs:*
+    
     | Resolution | Cores | Ram | Recommendation   |
     |------------|-------|-----|------------------|
     | **576p**   | 2     | 2gb | Not Recommended  |
