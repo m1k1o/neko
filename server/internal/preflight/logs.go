@@ -42,17 +42,17 @@ func Logs(name string) {
 		if err == nil {
 			err = os.Rename(latest, filepath.Join(logs, "neko."+time.Now().Format("2006-01-02T15-04-05Z07-00")+".log"))
 			if err != nil {
-				log.Panic().Err(err).Msg("Failed to rotate log file")
+				log.Panic().Err(err).Msg("failed to rotate log file")
 			}
 		}
 
 		logf, err := os.OpenFile(latest, os.O_RDWR|os.O_CREATE, 0666)
 		if err != nil {
-			log.Panic().Err(err).Msg("Failed to create log file")
+			log.Panic().Err(err).Msg("failed to create log file")
 		}
 
 		logger := diode.NewWriter(logf, 1000, 10*time.Millisecond, func(missed int) {
-			fmt.Printf("Logger Dropped %d messages", missed)
+			fmt.Printf("logger dropped %d messages", missed)
 		})
 
 		log.Logger = log.Output(io.MultiWriter(console, logger))

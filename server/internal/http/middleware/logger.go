@@ -61,13 +61,13 @@ func (e *entry) Write(status, bytes int, elapsed time.Duration) {
 	res["elapsed"] = float64(elapsed.Nanoseconds()) / 1000000.0
 
 	e.fields["res"] = res
-	e.fields["module"] = "api"
+	e.fields["module"] = "http"
 
 	if len(e.errors) > 0 {
 		e.fields["errors"] = e.errors
-		log.Error().Fields(e.fields).Msgf("Request failed (%d)", status)
+		log.Error().Fields(e.fields).Msgf("request failed (%d)", status)
 	} else {
-		log.Debug().Fields(e.fields).Msgf("Request complete (%d)", status)
+		log.Debug().Fields(e.fields).Msgf("request complete (%d)", status)
 	}
 }
 

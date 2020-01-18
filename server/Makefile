@@ -6,4 +6,4 @@ GIT_DIRTY=`git diff-index --quiet HEAD -- || echo "✗-"`
 LDFLAGS=-ldflags "-s -X version.buildTime=${BUILD_TIME} -X version.gitRevision=${GIT_DIRTY}${GIT_REVISION} -X version.gitBranch=${GIT_BRANCH}"
 
 build:
-	go build -o bin/neko ${LDFLAGS} -i cmd/neko/main.go
+  go build -o bin/neko ${LDFLAGS} -i cmd/neko/main.go

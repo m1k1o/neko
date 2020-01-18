@@ -5,16 +5,14 @@ import (
 	"github.com/spf13/viper"
 )
 
-type Serve struct {
-	Cert     string
-	Key      string
-	Bind     string
-	Password string
+type Server struct {
+	Cert   string
+	Key    string
+	Bind   string
 	Static string
 }
 
-func (Serve) Init(cmd *cobra.Command) error {
-
+func (Server) Init(cmd *cobra.Command) error {
 	cmd.PersistentFlags().String("bind", "127.0.0.1:8080", "Address/port/socket to serve neko")
 	if err := viper.BindPFlag("bind", cmd.PersistentFlags().Lookup("bind")); err != nil {
 		return err
@@ -30,12 +28,7 @@ func (Serve) Init(cmd *cobra.Command) error {
 		return err
 	}
 
-	cmd.PersistentFlags().String("password", "neko", "Password for connecting to stream")
-	if err := viper.BindPFlag("password", cmd.PersistentFlags().Lookup("password")); err != nil {
-		return err
-	}
-
-	cmd.PersistentFlags().String("static", "./www", "Static files to serve")
+	cmd.PersistentFlags().String("static", "./www", "Neko client files to serve")
 	if err := viper.BindPFlag("static", cmd.PersistentFlags().Lookup("static")); err != nil {
 		return err
 	}
@@ -43,10 +36,9 @@ func (Serve) Init(cmd *cobra.Command) error {
 	return nil
 }
 
-func (s *Serve) Set() {
+func (s *Server) Set() {
 	s.Cert = viper.GetString("cert")
 	s.Key = viper.GetString("key")
 	s.Bind = viper.GetString("bind")
-	s.Password = viper.GetString("password")
 	s.Static = viper.GetString("static")
 }

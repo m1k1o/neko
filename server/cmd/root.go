@@ -3,10 +3,11 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/rs/zerolog/log"
+	"github.com/spf13/cobra"
+
 	"n.eko.moe/neko"
 	"n.eko.moe/neko/internal/preflight"
-
-	"github.com/spf13/cobra"
 )
 
 func Execute() error {
@@ -15,8 +16,8 @@ func Execute() error {
 
 var root = &cobra.Command{
 	Use:     "neko",
-	Short:   "",
-	Long:    ``,
+	Short:   "neko streaming server",
+	Long:    `neko streaming server`,
 	Version: neko.Service.Version.String(),
 }
 
@@ -28,8 +29,8 @@ func init() {
 	})
 
 	if err := neko.Service.Root.Init(root); err != nil {
-		neko.Service.Logger.Panic().Err(err).Msg("Unable to run command")
+		log.Panic().Err(err).Msg("unable to run root command")
 	}
 
-	root.SetVersionTemplate(fmt.Sprintf("Version: %s\n", neko.Service.Version))
+	root.SetVersionTemplate(fmt.Sprintf("version: %s\n", neko.Service.Version))
 }

@@ -1,4 +1,4 @@
-package webrtc
+package session
 
 import (
 	"sync"
@@ -7,14 +7,23 @@ import (
 	"github.com/pion/webrtc/v2"
 )
 
-type session struct {
-	id     string
+type Session struct {
+	ID     string
+	Name   string
+	Admin  bool
 	socket *websocket.Conn
 	peer   *webrtc.PeerConnection
 	mu     sync.Mutex
 }
 
-func (session *session) send(v interface{}) error {
+// TODO: write to peer data channel
+func (session *Session) Write(v interface{}) error {
+	session.mu.Lock()
+	defer session.mu.Unlock()
+	return nil
+}
+
+func (session *Session) Send(v interface{}) error {
 	session.mu.Lock()
 	defer session.mu.Unlock()
 
@@ -25,7 +34,7 @@ func (session *session) send(v interface{}) error {
 	return nil
 }
 
-func (session *session) destroy() error {
+func (session *Session) destroy() error {
 	if session.peer != nil && session.peer.ConnectionState() == webrtc.PeerConnectionStateConnected {
 		if err := session.peer.Close(); err != nil {
 			return err
@@ -37,5 +46,6 @@ func (session *session) destroy() error {
 			return err
 		}
 	}
+
 	return nil
 }

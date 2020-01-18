@@ -1,24 +1,30 @@
 package neko
 
 import (
-	"context"
 	"fmt"
-	"net/http"
 	"os"
 	"os/signal"
 	"runtime"
 
 	"n.eko.moe/neko/internal/config"
-	"n.eko.moe/neko/internal/http/endpoint"
-	"n.eko.moe/neko/internal/http/middleware"
-	"n.eko.moe/neko/internal/structs"
+	"n.eko.moe/neko/internal/http"
+	"n.eko.moe/neko/internal/session"
 	"n.eko.moe/neko/internal/webrtc"
+	"n.eko.moe/neko/internal/websocket"
 
-	"github.com/go-chi/chi"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
+
+const Header = `&34
+    _   __     __
+   / | / /__  / /______   \    /\
+  /  |/ / _ \/ //_/ __ \   )  ( ')
+ / /|  /  __/ ,< / /_/ /  (  /  )
+/_/ |_/\___/_/|_|\____/    \(__)|
+&1&37   nurdism/neko &33%s v%s&0
+`
 
 var (
 	//
@@ -41,7 +47,7 @@ var Service *Neko
 
 func init() {
 	Service = &Neko{
-		Version: &structs.Version{
+		Version: &Version{
 			Major:        major,
 			Minor:        minor,
 			Patch:        patch,
@@ -53,122 +59,97 @@ func init() {
 			Compiler:     runtime.Compiler,
 			Platform:     fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH),
 		},
-		Root:  &config.Root{},
-		Serve: &config.Serve{},
+		Root:      &config.Root{},
+		Server:    &config.Server{},
+		WebRTC:    &config.WebRTC{},
+		WebSocket: &config.WebSocket{},
 	}
+}
+
+type Version struct {
+	Major        string
+	Minor        string
+	Patch        string
+	Version      string
+	GitVersion   string
+	GitCommit    string
+	GitTreeState string
+	BuildDate    string
+	GoVersion    string
+	Compiler     string
+	Platform     string
+}
+
+func (i *Version) String() string {
+	return fmt.Sprintf("%s.%s.%s", i.Major, i.Minor, i.Patch)
 }
 
 type Neko struct {
-	Version *structs.Version
-	Root    *config.Root
-	Serve   *config.Serve
-	Logger  zerolog.Logger
-	http    *http.Server
-	manager *webrtc.WebRTCManager
+	Version   *Version
+	Root      *config.Root
+	Server    *config.Server
+	WebRTC    *config.WebRTC
+	WebSocket *config.WebSocket
+
+	logger           zerolog.Logger
+	server           *http.Server
+	sessions         *session.SessionManager
+	webRTCManager    *webrtc.WebRTCManager
+	webSocketHandler *websocket.WebSocketHandler
 }
 
 func (neko *Neko) Preflight() {
-	neko.Logger = log.With().Str("service", "neko").Logger()
+	neko.logger = log.With().Str("service", "neko").Logger()
 }
 
 func (neko *Neko) Start() {
-	router := chi.NewRouter()
+	sessions := session.New()
 
-	manager, err := webrtc.NewManager(neko.Serve.Password)
-	if err != nil {
-		neko.Logger.Panic().Err(err).Msg("Can not create webrtc manager")
-	}
+	webRTCManager := webrtc.New(sessions, neko.WebRTC)
+	webRTCManager.Start()
 
-	if err := manager.Start(); err != nil {
-		neko.Logger.Panic().Err(err).Msg("Can not start webrtc manager")
-	}
+	webSocketHandler := websocket.New(sessions, webRTCManager, neko.WebSocket)
+	webSocketHandler.Start()
 
-	router.Use(middleware.Recoverer) // Recover from panics without crashing server
-	router.Use(middleware.RequestID) // Create a request ID for each request
-	router.Use(middleware.Logger)    // Log API request calls
+	server := http.New(neko.Server, webSocketHandler)
+	server.Start()
 
-	router.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/plain")
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("."))
-	})
-
-	router.Get("/ws", func(w http.ResponseWriter, r *http.Request) {
-		if err := manager.Upgrade(w, r); err != nil {
-			neko.Logger.Error().Err(err).Msg("session.destroy has failed")
-		}
-	})
-
-	fs := http.FileServer(http.Dir(neko.Serve.Static))
-	router.Get("/*", func(w http.ResponseWriter, r *http.Request) {
-		if _, err := os.Stat(neko.Serve.Static + r.RequestURI); os.IsNotExist(err) {
-			http.StripPrefix(r.RequestURI, fs).ServeHTTP(w, r)
-		} else {
-			fs.ServeHTTP(w, r)
-		}
-	})
-
-	router.NotFound(endpoint.Handle(func(w http.ResponseWriter, r *http.Request) error {
-		return &endpoint.HandlerError{
-			Status:  http.StatusNotFound,
-			Message: fmt.Sprintf("Endpoint '%s' is not avalible", r.RequestURI),
-		}
-	}))
-
-	server := &http.Server{
-		Addr:    neko.Serve.Bind,
-		Handler: router,
-	}
-
-	if neko.Serve.Cert != "" && neko.Serve.Key != "" {
-		go func() {
-			if err := server.ListenAndServeTLS(neko.Serve.Cert, neko.Serve.Key); err != http.ErrServerClosed {
-				neko.Logger.Panic().Err(err).Msg("Unable to start https server")
-			}
-		}()
-		neko.Logger.Info().Msgf("HTTPS listening on %s", server.Addr)
-	} else {
-		go func() {
-			if err := server.ListenAndServe(); err != http.ErrServerClosed {
-				neko.Logger.Panic().Err(err).Msg("Unable to start http server")
-			}
-		}()
-		neko.Logger.Warn().Msgf("HTTP listening on %s", server.Addr)
-	}
-
-	neko.http = server
-	neko.manager = manager
+	neko.sessions = sessions
+	neko.webRTCManager = webRTCManager
+	neko.webSocketHandler = webSocketHandler
+	neko.server = server
 }
 
 func (neko *Neko) Shutdown() {
-	if neko.manager != nil {
-		if err := neko.manager.Shutdown(); err != nil {
-			neko.Logger.Err(err).Msg("WebRTC manager shutdown with an error")
-		} else {
-			neko.Logger.Debug().Msg("WebRTC manager shutdown")
-		}
+	if err := neko.webRTCManager.Shutdown(); err != nil {
+		neko.logger.Err(err).Msg("webrtc manager shutdown with an error")
+	} else {
+		neko.logger.Debug().Msg("webrtc manager shutdown")
 	}
-	if neko.http != nil {
-		if err := neko.http.Shutdown(context.Background()); err != nil {
-			neko.Logger.Err(err).Msg("HTTP server shutdown with an error")
-		} else {
-			neko.Logger.Debug().Msg("HTTP server shutdown")
-		}
+
+	if err := neko.webSocketHandler.Shutdown(); err != nil {
+		neko.logger.Err(err).Msg("websocket handler shutdown with an error")
+	} else {
+		neko.logger.Debug().Msg("websocket handler shutdown")
+	}
+
+	if err := neko.server.Shutdown(); err != nil {
+		neko.logger.Err(err).Msg("server shutdown with an error")
+	} else {
+		neko.logger.Debug().Msg("server shutdown")
 	}
 }
 
 func (neko *Neko) ServeCommand(cmd *cobra.Command, args []string) {
-	neko.Logger.Info().Msg("Starting HTTP/S server")
+	neko.logger.Info().Msg("starting neko server")
 	neko.Start()
-
-	neko.Logger.Info().Msg("Service ready")
+	neko.logger.Info().Msg("neko ready")
 
 	quit := make(chan os.Signal)
 	signal.Notify(quit, os.Interrupt)
 	sig := <-quit
 
-	neko.Logger.Warn().Msgf("Received %s, attempting graceful shutdown: \n", sig)
-
+	neko.logger.Warn().Msgf("received %s, attempting graceful shutdown: \n", sig)
 	neko.Shutdown()
-	neko.Logger.Info().Msg("Shutting down complete")
+	neko.logger.Info().Msg("shutdown complete")
 }

@@ -11,6 +11,7 @@
     "no-case-declarations": "off",
     "no-dupe-class-members": "off",
     "no-console": "off",
+    "no-empty": "off"
   }
 }
 

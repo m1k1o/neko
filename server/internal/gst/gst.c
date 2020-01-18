@@ -6,6 +6,10 @@ typedef struct SampleHandlerUserData {
   int pipelineId;
 } SampleHandlerUserData;
 
+void gstreamer_init(void) {
+  gst_init(NULL, NULL);
+}
+
 GMainLoop *gstreamer_send_main_loop = NULL;
 void gstreamer_send_start_mainloop(void) {
   gstreamer_send_main_loop = g_main_loop_new(NULL, FALSE);
@@ -60,7 +64,6 @@ GstFlowReturn gstreamer_send_new_sample_handler(GstElement *object, gpointer use
 }
 
 GstElement *gstreamer_send_create_pipeline(char *pipeline) {
-  gst_init(NULL, NULL);
   GError *error = NULL;
   return gst_parse_launch(pipeline, &error);
 }

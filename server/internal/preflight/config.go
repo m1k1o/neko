@@ -41,8 +41,8 @@ func Config(name string) {
 		Logger()
 
 	if file == "" {
-		logger.Warn().Msg("Preflight complete without config file")
+		logger.Warn().Msg("preflight complete without config file")
 	} else {
-		logger.Info().Msg("Preflight complete")
+		logger.Info().Msg("preflight complete")
 	}
 }

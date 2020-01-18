@@ -17,7 +17,7 @@ func JSON(w http.ResponseWriter, data interface{}, status int) error {
 	if err != nil {
 		return &endpoint.HandlerError{
 			Status:  http.StatusInternalServerError,
-			Message: "Unable to write JSON response",
+			Message: "unable to write JSON response",
 			Err:     err,
 		}
 	}

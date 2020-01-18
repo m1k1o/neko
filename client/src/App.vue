@@ -379,13 +379,11 @@
 <script lang="ts">
   import { Component, Ref, Watch, Vue } from 'vue-property-decorator'
 
-  const MOUSE_MOVE = 0x01
-  const MOUSE_UP = 0x02
-  const MOUSE_DOWN = 0x03
-  const MOUSE_CLK = 0x04
-  const KEY_DOWN = 0x05
-  const KEY_UP = 0x06
-  const KEY_CLK = 0x07
+  const OP_MOVE = 0x01
+  const OP_SCROLL = 0x02
+  const OP_KEY_DOWN = 0x03
+  const OP_KEY_UP = 0x04
+  // const OP_KEY_CLK = 0x05
 
   @Component({ name: 'stream-video' })
   export default class extends Vue {
@@ -429,6 +427,7 @@
 
     beforeDestroy() {
       window.removeEventListener('resize', this.onResise)
+      this.onClose()
     }
 
     toggleControl() {
@@ -443,6 +442,7 @@
     }
 
     toggleMedia() {
+      console.log(`[NEKO] toggleMedia`, this.playing)
       if (!this.playing) {
         this._player
           .play()
@@ -479,8 +479,8 @@
       this.ws.onmessage = this.onMessage.bind(this)
       this.ws.onerror = event => console.error((event as ErrorEvent).error)
       this.ws.onclose = event => this.onClose.bind(this)
-      this.onConnecting()
       this.timeout = setTimeout(this.onTimeout.bind(this), 5000)
+      this.onConnecting()
     }
 
     createPeer() {
@@ -488,7 +488,10 @@
         return
       }
 
-      this.peer = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] })
+      this.peer = new RTCPeerConnection({
+        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun.services.mozilla.com' }],
+      })
+
       this.peer.onicecandidate = event => {
         if (event.candidate === null && this.peer!.localDescription) {
           this.ws!.send(
@@ -512,6 +515,7 @@
             break
         }
       }
+
       this.peer.ontrack = this.onTrack.bind(this)
       this.peer.addTransceiver('audio', { direction: 'recvonly' })
       this.peer.addTransceiver('video', { direction: 'recvonly' })
@@ -538,52 +542,33 @@
         case 'mousemove':
           buffer = new ArrayBuffer(7)
           payload = new DataView(buffer)
-          payload.setUint8(0, MOUSE_MOVE)
+          payload.setUint8(0, OP_MOVE)
           payload.setUint16(1, 4, true)
           payload.setUint16(3, Math.round((this.width / data.rect.width) * (data.x - data.rect.left)), true)
           payload.setUint16(5, Math.round((this.height / data.rect.height) * (data.y - data.rect.top)), true)
           break
         case 'wheel':
-          buffer = new ArrayBuffer(4)
+          buffer = new ArrayBuffer(7)
           payload = new DataView(buffer)
-          payload.setUint8(0, MOUSE_CLK)
-          payload.setUint16(1, 1, true)
-
-          const ydir = Math.sign(data.y)
-          const xdir = Math.sign(data.x)
-
-          if ((!xdir && !ydir) || (xdir && ydir)) return
-          if (ydir && ydir < 0) payload.setUint8(3, 4)
-          if (ydir && ydir > 0) payload.setUint8(3, 5)
-          if (xdir && xdir < 0) payload.setUint8(3, 6)
-          if (xdir && xdir > 0) payload.setUint8(3, 7)
-          break
-        case 'mousedown':
-          buffer = new ArrayBuffer(4)
-          payload = new DataView(buffer)
-          payload.setUint8(0, MOUSE_DOWN)
-          payload.setUint16(1, 1, true)
-          payload.setUint8(3, data.key)
-          break
-        case 'mouseup':
-          buffer = new ArrayBuffer(4)
-          payload = new DataView(buffer)
-          payload.setUint8(0, MOUSE_UP)
-          payload.setUint16(1, 1, true)
-          payload.setUint8(3, data.key)
+          payload.setUint8(0, OP_SCROLL)
+          payload.setUint16(1, 4, true)
+          payload.setInt16(3, (data.x * -1) / 10, true)
+          payload.setInt16(5, (data.y * -1) / 10, true)
           break
         case 'keydown':
+        case 'mousedown':
           buffer = new ArrayBuffer(5)
           payload = new DataView(buffer)
-          payload.setUint8(0, KEY_DOWN)
-          payload.setUint16(1, 2, true)
+          payload.setUint8(0, OP_KEY_DOWN)
+          payload.setUint16(1, 1, true)
           payload.setUint16(3, data.key, true)
           break
         case 'keyup':
+        case 'mouseup':
           buffer = new ArrayBuffer(5)
           payload = new DataView(buffer)
-          payload.setUint8(0, KEY_UP)
-          payload.setUint16(1, 2, true)
+          payload.setUint8(0, OP_KEY_UP)
+          payload.setUint16(1, 1, true)
           payload.setUint16(3, data.key, true)
           break
       }
@@ -645,16 +630,19 @@
     onWheel(e: WheelEvent) {
       this.onMousePos(e)
       this.updateControles('wheel', { x: e.deltaX, y: e.deltaY })
+      console.log('wheel', { x: e.deltaX, y: e.deltaY })
     }
 
     onMouseDown(e: MouseEvent) {
       this.onMousePos(e)
       this.updateControles('mousedown', { key: e.button })
+      console.log('mousedown', { key: e.button })
     }
 
     onMouseUp(e: MouseEvent) {
       this.onMousePos(e)
       this.updateControles('mouseup', { key: e.button })
+      console.log('mouseup', { key: e.button })
     }
 
     onMouseMove(e: MouseEvent) {
@@ -675,6 +663,7 @@
         return
       }
       this.updateControles('keydown', { key: e.keyCode })
+      console.log('keydown', { key: e.keyCode })
     }
 
     onKeyUp(e: KeyboardEvent) {
@@ -682,6 +671,7 @@
         return
       }
       this.updateControles('keyup', { key: e.keyCode })
+      console.log('keyup', { key: e.keyCode })
     }
 
     onResise() {
@@ -769,7 +759,7 @@
           })
           break
         default:
-          console.warn(`[NEKO] Unknown message event ${event}`)
+          console.warn(`[NEKO] unknown message event ${event}`)
       }
     }
 
@@ -777,6 +767,8 @@
       if (event.track.kind === 'audio') {
         return
       }
+
+      console.log(`[NEKO] track recieved`, event)
 
       this.stream = event.streams[0]
       if (!this.stream) {
@@ -830,11 +822,25 @@
       this.controlling = false
       this.connected = false
       this.connecting = false
-      this.ws = undefined
-      this.peer = undefined
+
+      if (this.ws) {
+        try {
+          this.ws.close()
+        } catch (err) {}
+        this.ws = undefined
+      }
+
+      if (this.peer) {
+        try {
+          this.peer.close()
+        } catch (err) {}
+        this.peer = undefined
+      }
+
       if (this.playing) {
         this.toggleMedia()
       }
+
       this.$notify({
         group: 'neko',
         type: 'error',

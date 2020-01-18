@@ -11,13 +11,15 @@ import (
 func init() {
 	command := &cobra.Command{
 		Use:   "serve",
-		Short: "",
-		Long:  ``,
+		Short: "serve neko streaming server",
+		Long:  `serve neko streaming server`,
 		Run:   neko.Service.ServeCommand,
 	}
 
 	configs := []config.Config{
-		neko.Service.Serve,
+		neko.Service.Server,
+		neko.Service.WebRTC,
+		neko.Service.WebSocket,
 	}
 
 	cobra.OnInitialize(func() {
@@ -29,7 +31,7 @@ func init() {
 
 	for _, cfg := range configs {
 		if err := cfg.Init(command); err != nil {
-			log.Panic().Err(err).Msg("Unable to run command")
+			log.Panic().Err(err).Msg("unable to run serve command")
 		}
 	}
 
