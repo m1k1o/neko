@@ -1,7 +1,7 @@
 #!/bin/bash
 
 cd ../server
-go get && make build
+go get && ./build
 
 cd ../client
 npm install && npm run build
