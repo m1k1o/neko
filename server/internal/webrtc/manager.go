@@ -193,8 +193,8 @@ func (m *WebRTCManager) CreatePeer(id string, sdp string) error {
 	}
 
 	if err := session.Send(message.Signal{
-		Message: message.Message{Event: event.SIGNAL_ANSWER},
-		SDP:     answer.SDP,
+		Event: event.SIGNAL_ANSWER,
+		SDP:   answer.SDP,
 	}); err != nil {
 		return err
 	}

@@ -135,6 +135,30 @@ func (m *SessionManager) SetName(id string, name string) (bool, error) {
 	return false, fmt.Errorf("invalid session id %s", id)
 }
 
+func (m *SessionManager) Mute(id string) error {
+	session, ok := m.members[id]
+	if ok {
+		session.Muted = true
+	}
+	return nil
+}
+
+func (m *SessionManager) Unmute(id string) error {
+	session, ok := m.members[id]
+	if ok {
+		session.Muted = false
+	}
+	return nil
+}
+
+func (m *SessionManager) Kick(id string, v interface{}) error {
+	session, ok := m.members[id]
+	if ok {
+		return session.Kick(v)
+	}
+	return nil
+}
+
 func (m *SessionManager) Clear() error {
 	return nil
 }

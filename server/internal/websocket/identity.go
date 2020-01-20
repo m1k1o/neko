@@ -9,6 +9,5 @@ func (h *MessageHandler) identityDetails(id string, session *session.Session, pa
 	if _, err := h.sessions.SetName(id, payload.Username); err != nil {
 		return err
 	}
-
 	return nil
 }

@@ -20,8 +20,8 @@ func (h *MessageHandler) controlRelease(id string, session *session.Session) err
 	// tell everyone
 	if err := h.sessions.Brodcast(
 		message.Control{
-			Message: message.Message{Event: event.CONTROL_RELEASE},
-			ID:      id,
+			Event: event.CONTROL_RELEASE,
+			ID:    id,
 		}, nil); err != nil {
 		h.logger.Warn().Err(err).Msgf("brodcasting event %s has failed", event.CONTROL_RELEASE)
 		return err
@@ -41,8 +41,8 @@ func (h *MessageHandler) controlRequest(id string, session *session.Session) err
 		// let everyone know
 		if err := h.sessions.Brodcast(
 			message.Control{
-				Message: message.Message{Event: event.CONTROL_LOCKED},
-				ID:      id,
+				Event: event.CONTROL_LOCKED,
+				ID:    id,
 			}, nil); err != nil {
 			h.logger.Warn().Err(err).Msgf("brodcasting event %s has failed", event.CONTROL_LOCKED)
 			return err
@@ -57,8 +57,8 @@ func (h *MessageHandler) controlRequest(id string, session *session.Session) err
 
 		// tell session there is a host
 		if err := session.Send(message.Control{
-			Message: message.Message{Event: event.CONTROL_REQUEST},
-			ID:      host.ID,
+			Event: event.CONTROL_REQUEST,
+			ID:    host.ID,
 		}); err != nil {
 			h.logger.Warn().Err(err).Str("id", id).Msgf("sending event %s has failed", event.CONTROL_REQUEST)
 			return err
@@ -66,8 +66,8 @@ func (h *MessageHandler) controlRequest(id string, session *session.Session) err
 
 		// tell host session wants to be host
 		if err := host.Send(message.Control{
-			Message: message.Message{Event: event.CONTROL_REQUESTING},
-			ID:      id,
+			Event: event.CONTROL_REQUESTING,
+			ID:    id,
 		}); err != nil {
 			h.logger.Warn().Err(err).Str("id", host.ID).Msgf("sending event %s has failed", event.CONTROL_REQUESTING)
 			return err

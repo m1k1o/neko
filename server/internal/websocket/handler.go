@@ -10,6 +10,8 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"n.eko.moe/neko/internal/config"
+	"n.eko.moe/neko/internal/event"
+	"n.eko.moe/neko/internal/message"
 	"n.eko.moe/neko/internal/session"
 	"n.eko.moe/neko/internal/utils"
 	"n.eko.moe/neko/internal/webrtc"
@@ -31,6 +33,8 @@ func New(sessions *session.SessionManager, webrtc *webrtc.WebRTCManager, conf *c
 			logger:   logger.With().Str("subsystem", "handler").Logger(),
 			sessions: sessions,
 			webrtc:   webrtc,
+			banned:   make(map[string]bool),
+			locked:   false,
 		},
 	}
 }
@@ -106,9 +110,38 @@ func (ws *WebSocketHandler) Upgrade(w http.ResponseWriter, r *http.Request) erro
 	id, admin, err := ws.authenticate(r)
 	if err != nil {
 		ws.logger.Warn().Err(err).Msg("authenticatetion failed")
+
+		if err = socket.WriteJSON(message.Disconnect{
+			Event:   event.SYSTEM_DISCONNECT,
+			Message: "invalid password",
+		}); err != nil {
+			ws.logger.Error().Err(err).Msg("failed to send disconnect")
+		}
+
 		if err = socket.Close(); err != nil {
 			return err
 		}
+		return nil
+	}
+
+	ok, reason, err := ws.handler.SocketConnected(id, socket)
+	if err != nil {
+		ws.logger.Error().Err(err).Msg("connection failed")
+		return err
+	}
+
+	if !ok {
+		if err = socket.WriteJSON(message.Disconnect{
+			Event:   event.SYSTEM_DISCONNECT,
+			Message: reason,
+		}); err != nil {
+			ws.logger.Error().Err(err).Msg("failed to send disconnect")
+		}
+
+		if err = socket.Close(); err != nil {
+			return err
+		}
+
 		return nil
 	}
 
@@ -127,14 +160,6 @@ func (ws *WebSocketHandler) Upgrade(w http.ResponseWriter, r *http.Request) erro
 			Str("address", socket.RemoteAddr().String()).
 			Msg("session ended")
 	}()
-
-	if err = ws.handler.SocketConnected(id, socket); err != nil {
-		ws.logger.Error().Err(err).Msg("connection failed")
-		if err = socket.Close(); err != nil {
-			return err
-		}
-		return nil
-	}
 
 	ws.handle(socket, id)
 	return nil
