@@ -15,18 +15,18 @@ This is by no means a fully featured clone of rabbit. The client has no concept 
 I like cats (Neko is the Japanese word for cat), I'm a weeb/nerd, I own the domain [n.eko.moe](https://n.eko.moe/) and I love the logo /shrug
 
 ### Super easy mode setup
-1. Deploy a server
+1. Deploy a Server/VPS
 
-    *Recomended specs:*
+    *Recomended Specs:*
     
-    | Resolution | Cores | Ram | Recommendation   |
-    |------------|-------|-----|------------------|
-    | **576p**   | 2     | 2gb | Not Recommended  |
-    | **720p**   | 4     | 4gb | Good Performance |
-    | **720p**   | 6     | 6gb | Recommended      |
-    | **720p+**  | 8     | 8gb | Best Performance |
+    | Resolution | Cores | Ram   | Recommendation   |
+    |------------|-------|-------|------------------|
+    | **576p**   | 2     | 2gb   | Not Recommended  |
+    | **720p**   | 4     | 4gb   | Good Performance |
+    | **720p**   | 6     | 4-6gb | Recommended      |
+    | **720p+**  | 8     | 8gb+  | Best Performance |
 
-2. [SSH into your VPS](https://www.digitalocean.com/docs/droplets/how-to/connect-with-ssh/)
+2. [SSH into your box](https://www.digitalocean.com/docs/droplets/how-to/connect-with-ssh/)
 
 3. Install Docker
     ```
