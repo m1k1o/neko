@@ -31,7 +31,7 @@
         <li>
           <i
             alt="Request Control"
-            :class="[{ enabled: controlling }, 'request', 'fas', 'fa-keyboard']"
+            :class="[{ enabled: hosting }, 'request', 'fas', 'fa-keyboard']"
             @click.stop.prevent="toggleControl"
           />
         </li>
@@ -68,7 +68,8 @@
         </div>
         <form class="message" v-if="!connecting" @submit.stop.prevent="connect">
           <span>Please enter the password:</span>
-          <input type="password" v-model="password" />
+          <input type="text" placeholder="Username" v-model="username" />
+          <input type="password" placeholder="Password" v-model="password" />
           <button type="submit" class="button" @click.stop.prevent="connect">
             Connect
           </button>
@@ -378,12 +379,7 @@
 
 <script lang="ts">
   import { Component, Ref, Watch, Vue } from 'vue-property-decorator'
-
-  const OP_MOVE = 0x01
-  const OP_SCROLL = 0x02
-  const OP_KEY_DOWN = 0x03
-  const OP_KEY_UP = 0x04
-  // const OP_KEY_CLK = 0x05
+  import { EVENT } from '~/client/events'
 
   @Component({ name: 'stream-video' })
   export default class extends Vue {
@@ -394,22 +390,29 @@
     @Ref('volume') readonly _volume!: HTMLInputElement
 
     private focused = false
-    private connected = false
-    private connecting = false
-    private controlling = false
     private playing = false
-    private volume = 0
-    private width = 1280
-    private height = 720
-    private state: RTCIceConnectionState = 'disconnected'
+    private username = ''
     private password = ''
 
-    private ws?: WebSocket
-    private peer?: RTCPeerConnection
-    private channel?: RTCDataChannel
-    private id?: string
-    private stream?: MediaStream
-    private timeout?: number
+    get connected() {
+      return this.$accessor.connected
+    }
+
+    get connecting() {
+      return this.$accessor.connecting
+    }
+
+    get hosting() {
+      return this.$accessor.remote.hosting
+    }
+
+    get volume() {
+      return this.$accessor.video.volume
+    }
+
+    get stream() {
+      return this.$accessor.video.stream
+    }
 
     @Watch('volume')
     onVolumeChanged(volume: number) {
@@ -418,360 +421,9 @@
       }
     }
 
-    mounted() {
-      window.addEventListener('resize', this.onResise)
-      this.onResise()
-      this.volume = this._player.volume * 100
-      this._volume.value = `${this.volume}`
-    }
-
-    beforeDestroy() {
-      window.removeEventListener('resize', this.onResise)
-      this.onClose()
-    }
-
-    toggleControl() {
-      if (!this.ws) {
-        return
-      }
-      if (this.controlling) {
-        this.ws.send(JSON.stringify({ event: 'control/release' }))
-      } else {
-        this.ws.send(JSON.stringify({ event: 'control/request' }))
-      }
-    }
-
-    toggleMedia() {
-      console.log(`[NEKO] toggleMedia`, this.playing)
-      if (!this.playing) {
-        this._player
-          .play()
-          .then(() => {
-            this.playing = true
-            this.width = this._player.videoWidth
-            this.height = this._player.videoHeight
-            this.onResise()
-          })
-          .catch(err => {
-            console.error(err)
-          })
-      } else {
-        this._player.pause()
-        this.playing = false
-      }
-    }
-
-    setVolume() {
-      this.volume = parseInt(this._volume.value)
-    }
-
-    fullscreen() {
-      this._video.requestFullscreen()
-    }
-
-    connect() {
-      this.ws = new WebSocket(
-        process.env.NODE_ENV === 'development'
-          ? `ws://${process.env.VUE_APP_SERVER}/ws?password=${this.password}`
-          : `${/https/gi.test(location.protocol) ? 'wss' : 'ws'}://${location.host}/ws?password=${this.password}`,
-      )
-
-      this.ws.onmessage = this.onMessage.bind(this)
-      this.ws.onerror = event => console.error((event as ErrorEvent).error)
-      this.ws.onclose = event => this.onClose.bind(this)
-      this.timeout = setTimeout(this.onTimeout.bind(this), 5000)
-      this.onConnecting()
-    }
-
-    createPeer() {
-      if (!this.ws) {
-        return
-      }
-
-      this.peer = new RTCPeerConnection({
-        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun.services.mozilla.com' }],
-      })
-
-      this.peer.onicecandidate = event => {
-        if (event.candidate === null && this.peer!.localDescription) {
-          this.ws!.send(
-            JSON.stringify({
-              event: 'sdp/provide',
-              sdp: this.peer!.localDescription.sdp,
-            }),
-          )
-        }
-      }
-
-      this.peer.oniceconnectionstatechange = event => {
-        this.state = this.peer!.iceConnectionState
-
-        switch (this.state) {
-          case 'connected':
-            this.onConnected()
-            break
-          case 'disconnected':
-            this.onClose()
-            break
-        }
-      }
-
-      this.peer.ontrack = this.onTrack.bind(this)
-      this.peer.addTransceiver('audio', { direction: 'recvonly' })
-      this.peer.addTransceiver('video', { direction: 'recvonly' })
-
-      this.channel = this.peer.createDataChannel('data')
-
-      this.peer
-        .createOffer()
-        .then(d => this.peer!.setLocalDescription(d))
-        .catch(err => console.log(err))
-    }
-
-    updateControles(event: 'wheel', data: { x: number; y: number }): void
-    updateControles(event: 'mousemove', data: { x: number; y: number; rect: DOMRect }): void
-    updateControles(event: 'mousedown' | 'mouseup' | 'keydown' | 'keyup', data: { key: number }): void
-    updateControles(event: string, data: any) {
-      if (!this.controlling) {
-        return
-      }
-
-      let buffer: ArrayBuffer
-      let payload: DataView
-      switch (event) {
-        case 'mousemove':
-          buffer = new ArrayBuffer(7)
-          payload = new DataView(buffer)
-          payload.setUint8(0, OP_MOVE)
-          payload.setUint16(1, 4, true)
-          payload.setUint16(3, Math.round((this.width / data.rect.width) * (data.x - data.rect.left)), true)
-          payload.setUint16(5, Math.round((this.height / data.rect.height) * (data.y - data.rect.top)), true)
-          break
-        case 'wheel':
-          buffer = new ArrayBuffer(7)
-          payload = new DataView(buffer)
-          payload.setUint8(0, OP_SCROLL)
-          payload.setUint16(1, 4, true)
-          payload.setInt16(3, (data.x * -1) / 10, true)
-          payload.setInt16(5, (data.y * -1) / 10, true)
-          break
-        case 'keydown':
-        case 'mousedown':
-          buffer = new ArrayBuffer(5)
-          payload = new DataView(buffer)
-          payload.setUint8(0, OP_KEY_DOWN)
-          payload.setUint16(1, 1, true)
-          payload.setUint16(3, data.key, true)
-          break
-        case 'keyup':
-        case 'mouseup':
-          buffer = new ArrayBuffer(5)
-          payload = new DataView(buffer)
-          payload.setUint8(0, OP_KEY_UP)
-          payload.setUint16(1, 1, true)
-          payload.setUint16(3, data.key, true)
-          break
-      }
-
-      // @ts-ignore
-      if (this.channel && typeof buffer !== 'undefined') {
-        this.channel.send(buffer)
-      }
-    }
-
-    getAspect() {
-      const { width, height } = this
-
-      if ((height == 0 && width == 0) || (height == 0 && width != 0) || (height != 0 && width == 0)) {
-        return null
-      }
-
-      if (height == width) {
-        return {
-          horizontal: 1,
-          vertical: 1,
-        }
-      }
-
-      let dividend = width
-      let divisor = height
-      let gcd = -1
-
-      if (height > width) {
-        dividend = height
-        divisor = width
-      }
-
-      while (gcd == -1) {
-        const remainder = dividend % divisor
-        if (remainder == 0) {
-          gcd = divisor
-        } else {
-          dividend = divisor
-          divisor = remainder
-        }
-      }
-
-      return {
-        horizontal: width / gcd,
-        vertical: height / gcd,
-      }
-    }
-
-    onMousePos(e: MouseEvent) {
-      const rect = this._player.getBoundingClientRect() as DOMRect
-      this.updateControles('mousemove', {
-        x: e.clientX,
-        y: e.clientY,
-        rect,
-      })
-    }
-
-    onWheel(e: WheelEvent) {
-      this.onMousePos(e)
-      this.updateControles('wheel', { x: e.deltaX, y: e.deltaY })
-      console.log('wheel', { x: e.deltaX, y: e.deltaY })
-    }
-
-    onMouseDown(e: MouseEvent) {
-      this.onMousePos(e)
-      this.updateControles('mousedown', { key: e.button })
-      console.log('mousedown', { key: e.button })
-    }
-
-    onMouseUp(e: MouseEvent) {
-      this.onMousePos(e)
-      this.updateControles('mouseup', { key: e.button })
-      console.log('mouseup', { key: e.button })
-    }
-
-    onMouseMove(e: MouseEvent) {
-      this.onMousePos(e)
-    }
-
-    onMouseEnter(e: MouseEvent) {
-      this._player.focus()
-      this.focused = true
-    }
-
-    onMouseLeave(e: MouseEvent) {
-      this.focused = false
-    }
-
-    onKeyDown(e: KeyboardEvent) {
-      if (!this.focused) {
-        return
-      }
-      this.updateControles('keydown', { key: e.keyCode })
-      console.log('keydown', { key: e.keyCode })
-    }
-
-    onKeyUp(e: KeyboardEvent) {
-      if (!this.focused) {
-        return
-      }
-      this.updateControles('keyup', { key: e.keyCode })
-      console.log('keyup', { key: e.keyCode })
-    }
-
-    onResise() {
-      const aspect = this.getAspect()
-      if (!aspect) {
-        return
-      }
-      const { horizontal, vertical } = aspect
-      this._container.style.maxWidth = `${(horizontal / vertical) * this._video.offsetHeight}px`
-      this._aspect.style.paddingBottom = `${(vertical / horizontal) * 100}%`
-    }
-
-    onMessage(e: MessageEvent) {
-      const { event, ...payload } = JSON.parse(e.data)
-
-      switch (event) {
-        case 'sdp/reply':
-          if (!this.peer) {
-            return
-          }
-          this.peer.setRemoteDescription(new RTCSessionDescription({ type: 'answer', sdp: payload.sdp }))
-          break
-        case 'identity/provide':
-          this.id = payload.id
-          this.createPeer()
-          break
-        case 'control/requesting':
-          this.controlling = true
-          this.$notify({
-            group: 'neko',
-            type: 'info',
-            title: 'Another user is requesting the controls',
-            duration: 3000,
-            speed: 1000,
-          })
-          break
-        case 'control/give':
-          this.controlling = true
-          this.$notify({
-            group: 'neko',
-            type: 'info',
-            title: 'You have the controls',
-            duration: 5000,
-            speed: 1000,
-          })
-          break
-        case 'control/locked':
-          this.controlling = false
-          this.$notify({
-            group: 'neko',
-            type: 'info',
-            title: 'Another user has the controls',
-            duration: 3000,
-            speed: 1000,
-          })
-          break
-        case 'control/given':
-          this.controlling = false
-          this.$notify({
-            group: 'neko',
-            type: 'info',
-            title: 'Someone has taken the controls',
-            duration: 5000,
-            speed: 1000,
-          })
-          break
-        case 'control/release':
-          this.controlling = false
-          this.$notify({
-            group: 'neko',
-            type: 'info',
-            title: 'You released the controls',
-            duration: 5000,
-            speed: 1000,
-          })
-          break
-        case 'control/released':
-          this.controlling = false
-          this.$notify({
-            group: 'neko',
-            type: 'info',
-            title: 'The controls have been released',
-            duration: 5000,
-            speed: 1000,
-          })
-          break
-        default:
-          console.warn(`[NEKO] unknown message event ${event}`)
-      }
-    }
-
-    onTrack(event: RTCTrackEvent) {
-      if (event.track.kind === 'audio') {
-        return
-      }
-
-      console.log(`[NEKO] track recieved`, event)
-
-      this.stream = event.streams[0]
-      if (!this.stream) {
+    @Watch('stream')
+    onStreamChanged(stream?: MediaStream) {
+      if (!this._player || !stream) {
         return
       }
 
@@ -787,67 +439,133 @@
       }
     }
 
-    onTimeout() {
-      this.connected = false
-      this.connecting = false
-      this.$notify({
-        group: 'neko',
-        type: 'error',
-        title: 'Unable to connect to server!',
-        duration: 5000,
-        speed: 1000,
+    mounted() {
+      window.addEventListener('resize', this.onResise)
+      this.onResise()
+      this._player.volume = this.volume / 100
+      this._volume.value = `${this.volume}`
+      this.onStreamChanged(this.stream)
+    }
+
+    beforeDestroy() {
+      window.removeEventListener('resize', this.onResise)
+    }
+
+    toggleMedia() {
+      if (!this.playing) {
+        this._player
+          .play()
+          .then(() => {
+            const { videoWidth, videoHeight } = this._player
+            this.$accessor.video.setResolution({ width: videoWidth, height: videoHeight })
+            this.playing = true
+            this.onResise()
+          })
+          .catch(err => {})
+      } else {
+        this._player.pause()
+        this.playing = false
+      }
+    }
+
+    connect() {
+      this.$client.connect(this.password, this.username)
+    }
+
+    toggleControl() {
+      if (!this.connected) {
+        return
+      }
+
+      if (!this.hosting) {
+        this.$client.sendMessage(EVENT.CONTROL.REQUEST)
+      } else {
+        this.$client.sendMessage(EVENT.CONTROL.RELEASE)
+      }
+    }
+
+    setVolume() {
+      this.$accessor.video.setVolume(parseInt(this._volume.value))
+    }
+
+    fullscreen() {
+      this._video.requestFullscreen()
+    }
+
+    onMousePos(e: MouseEvent) {
+      const { w, h } = this.$accessor.video.resolution
+      const rect = this._player.getBoundingClientRect()
+      this.$client.sendData('mousemove', {
+        x: Math.round((w / rect.width) * (e.clientX - rect.left)),
+        y: Math.round((h / rect.height) * (e.clientY - rect.top)),
       })
     }
 
-    onConnecting() {
-      this.connecting = true
+    onWheel(e: WheelEvent) {
+      if (!this.hosting) {
+        return
+      }
+      this.onMousePos(e)
+      this.$client.sendData('wheel', {
+        x: (e.deltaX * -1) / 10,
+        y: (e.deltaY * -1) / 10,
+      }) // TODO: Add user settings
     }
 
-    onConnected() {
-      this.connected = true
-      this.connecting = false
-      this.$notify({
-        group: 'neko',
-        type: 'success',
-        title: 'Successfully connected!',
-        duration: 5000,
-        speed: 1000,
-      })
-      if (this.timeout) {
-        clearTimeout(this.timeout)
+    onMouseDown(e: MouseEvent) {
+      if (!this.hosting) {
+        return
       }
+      this.onMousePos(e)
+      this.$client.sendData('mousedown', { key: e.button })
     }
 
-    onClose() {
-      this.controlling = false
-      this.connected = false
-      this.connecting = false
-
-      if (this.ws) {
-        try {
-          this.ws.close()
-        } catch (err) {}
-        this.ws = undefined
+    onMouseUp(e: MouseEvent) {
+      if (!this.hosting) {
+        return
       }
+      this.onMousePos(e)
+      this.$client.sendData('mouseup', { key: e.button })
+    }
 
-      if (this.peer) {
-        try {
-          this.peer.close()
-        } catch (err) {}
-        this.peer = undefined
+    onMouseMove(e: MouseEvent) {
+      if (!this.hosting) {
+        return
       }
+      this.onMousePos(e)
+    }
 
-      if (this.playing) {
-        this.toggleMedia()
+    onMouseEnter(e: MouseEvent) {
+      this._player.focus()
+      this.focused = true
+    }
+
+    onMouseLeave(e: MouseEvent) {
+      this.focused = false
+    }
+
+    onKeyDown(e: KeyboardEvent) {
+      if (!this.focused || !this.hosting) {
+        return
       }
+      this.$client.sendData('keydown', { key: e.keyCode })
+    }
 
-      this.$notify({
-        group: 'neko',
-        type: 'error',
-        title: 'Disconnected from server!',
-        duration: 5000,
-        speed: 1000,
-      })
+    onKeyUp(e: KeyboardEvent) {
+      if (!this.focused || !this.hosting) {
+        return
+      }
+      this.$client.sendData('keyup', { key: e.keyCode })
+    }
+
+    onResise() {
+      const aspect = this.$accessor.video.aspect
+      if (!aspect) {
+        return
+      }
+      const { horizontal, vertical } = aspect
+      this._container.style.maxWidth = `${(horizontal / vertical) * this._video.offsetHeight}px`
+      this._aspect.style.paddingBottom = `${(vertical / horizontal) * 100}%`
     }
   }
 </script>

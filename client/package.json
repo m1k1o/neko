@@ -23,7 +23,9 @@
     "vue": "^2.6.10",
     "vue-class-component": "^7.0.2",
     "vue-notification": "^1.3.20",
-    "vue-property-decorator": "^8.3.0"
+    "vue-property-decorator": "^8.3.0",
+    "typed-vuex": "^0.1.15",
+    "vuex": "^3.1.2"
   },
   "devDependencies": {
     "@vue/cli-plugin-eslint": "^4.1.0",

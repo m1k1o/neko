@@ -1,3 +1,5 @@
+const path = require('path')
+
 module.exports = {
   css: {
     loaderOptions: {
@@ -5,6 +7,13 @@ module.exports = {
         prependData: `
           @import "@/assets/styles/_variables.scss";
         `,
+      },
+    },
+  },
+  configureWebpack: {
+    resolve: {
+      alias: {
+        '~': path.resolve(__dirname, 'src/'),
       },
     },
   },
