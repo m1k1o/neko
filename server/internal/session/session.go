@@ -8,12 +8,13 @@ import (
 )
 
 type Session struct {
-	ID     string
-	Name   string
-	Admin  bool
-	socket *websocket.Conn
-	peer   *webrtc.PeerConnection
-	mu     sync.Mutex
+	ID        string `json:"id"`
+	Name      string `json:"username"`
+	Admin     bool   `json:"admin"`
+	connected bool
+	socket    *websocket.Conn
+	peer      *webrtc.PeerConnection
+	mu        sync.Mutex
 }
 
 // TODO: write to peer data channel

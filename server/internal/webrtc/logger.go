@@ -25,7 +25,6 @@ type loggerFactory struct {
 }
 
 func (l loggerFactory) NewLogger(subsystem string) logging.LeveledLogger {
-	l.logger.Debug().Msgf("creating logger for %s", subsystem)
 	return logger{
 		logger: l.logger.With().Str("subsystem", subsystem).Logger(),
 	}
