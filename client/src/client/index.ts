@@ -1,10 +1,22 @@
 import Vue from 'vue'
 import EventEmitter from 'eventemitter3'
 import { BaseClient, BaseEvents } from './base'
-
+import { Member } from './types'
 import { EVENT } from './events'
 import { accessor } from '~/store'
-import { IdentityPayload, MemberListPayload, MemberDisconnectPayload, MemberPayload, ControlPayload } from './messages'
+
+import {
+  DisconnectPayload,
+  IdentityPayload,
+  MemberListPayload,
+  MemberDisconnectPayload,
+  MemberPayload,
+  ControlPayload,
+  ChatPayload,
+  EmojiPayload,
+  AdminPayload,
+  AdminTargetPayload,
+} from './messages'
 
 interface NekoEvents extends BaseEvents {}
 
@@ -26,18 +38,21 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
     super.connect(url, password, username)
   }
 
+  private get id() {
+    return this.$accessor.user.id
+  }
+
   /////////////////////////////
   // Internal Events
   /////////////////////////////
-  [EVENT.CONNECTING]() {
-    this.$accessor.setConnnecting(true)
+  protected [EVENT.CONNECTING]() {
+    this.$accessor.setConnnecting()
   }
 
-  [EVENT.CONNECTED]() {
+  protected [EVENT.CONNECTED]() {
     this.$accessor.setConnected(true)
-    this.$accessor.setConnnecting(false)
-    this.$accessor.video.clearStream()
-    this.$accessor.remote.clearHost()
+    this.$accessor.setConnected(true)
+
     this.$vue.$notify({
       group: 'neko',
       type: 'success',
@@ -47,11 +62,14 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
     })
   }
 
-  [EVENT.DISCONNECTED](reason?: Error) {
+  protected [EVENT.DISCONNECTED](reason?: Error) {
     this.$accessor.setConnected(false)
-    this.$accessor.setConnnecting(false)
-    this.$accessor.video.clearStream()
+
+    this.$accessor.remote.clearHost()
     this.$accessor.user.clearMembers()
+    this.$accessor.video.clear()
+    this.$accessor.chat.clear()
+
     this.$vue.$notify({
       group: 'neko',
       type: 'error',
@@ -62,61 +80,85 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
     })
   }
 
-  [EVENT.TRACK](event: RTCTrackEvent) {
-    if (event.track.kind === 'audio') {
+  protected [EVENT.TRACK](event: RTCTrackEvent) {
+    const { track, streams } = event
+    if (track.kind === 'audio') {
       return
     }
-    this.$accessor.video.addStream(event.streams[0])
+
+    this.$accessor.video.addTrack([track, streams[0]])
     this.$accessor.video.setStream(0)
   }
 
-  [EVENT.DATA](data: any) {}
+  protected [EVENT.DATA](data: any) {}
+
+  /////////////////////////////
+  // System Events
+  /////////////////////////////
+  protected [EVENT.SYSTEM.DISCONNECT]({ message }: DisconnectPayload) {
+    this.onDisconnected(new Error(message))
+    this.$vue.$swal({
+      title: 'Error!',
+      text: message,
+      icon: 'error',
+      confirmButtonText: 'ok',
+    })
+  }
 
   /////////////////////////////
   // Identity Events
   /////////////////////////////
-  [EVENT.IDENTITY.PROVIDE]({ id }: IdentityPayload) {
+  protected [EVENT.IDENTITY.PROVIDE]({ id }: IdentityPayload) {
     this.$accessor.user.setMember(id)
   }
 
   /////////////////////////////
   // Member Events
   /////////////////////////////
-  [EVENT.MEMBER.LIST]({ members }: MemberListPayload) {
+  protected [EVENT.MEMBER.LIST]({ members }: MemberListPayload) {
     this.$accessor.user.setMembers(members)
   }
 
-  [EVENT.MEMBER.CONNECTED](member: MemberPayload) {
+  protected [EVENT.MEMBER.CONNECTED](member: MemberPayload) {
     this.$accessor.user.addMember(member)
 
-    if (member.id !== this.$accessor.user.id) {
-      this.$vue.$notify({
-        group: 'neko',
-        type: 'info',
-        title: `${member.username} connected`,
-        duration: 5000,
-        speed: 1000,
+    if (member.id !== this.id) {
+      this.$accessor.chat.addMessage({
+        id: member.id,
+        content: 'connected',
+        type: 'event',
+        created: new Date(),
       })
     }
   }
 
-  [EVENT.MEMBER.DISCONNECTED]({ id }: MemberDisconnectPayload) {
-    this.$vue.$notify({
-      group: 'neko',
-      type: 'info',
-      title: `${this.$accessor.user.members[id].username} disconnected`,
-      duration: 5000,
-      speed: 1000,
+  protected [EVENT.MEMBER.DISCONNECTED]({ id }: MemberDisconnectPayload) {
+    const member = this.member(id)
+    if (!member) {
+      return
+    }
+
+    this.$accessor.chat.addMessage({
+      id: member.id,
+      content: 'disconnected',
+      type: 'event',
+      created: new Date(),
     })
+
     this.$accessor.user.delMember(id)
   }
 
   /////////////////////////////
   // Control Events
   /////////////////////////////
-  [EVENT.CONTROL.LOCKED]({ id }: ControlPayload) {
+  protected [EVENT.CONTROL.LOCKED]({ id }: ControlPayload) {
     this.$accessor.remote.setHost(id)
-    if (this.$accessor.user.id === id) {
+    const member = this.member(id)
+    if (!member) {
+      return
+    }
+
+    if (this.id === id) {
       this.$vue.$notify({
         group: 'neko',
         type: 'info',
@@ -125,19 +167,23 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
         speed: 1000,
       })
     } else {
-      this.$vue.$notify({
-        group: 'neko',
-        type: 'info',
-        title: `${this.$accessor.user.members[id].username} took the controls`,
-        duration: 5000,
-        speed: 1000,
+      this.$accessor.chat.addMessage({
+        id: member.id,
+        content: 'took the controls',
+        type: 'event',
+        created: new Date(),
       })
     }
   }
 
-  [EVENT.CONTROL.RELEASE]({ id }: ControlPayload) {
+  protected [EVENT.CONTROL.RELEASE]({ id }: ControlPayload) {
     this.$accessor.remote.clearHost()
-    if (this.$accessor.user.id === id) {
+    const member = this.member(id)
+    if (!member) {
+      return
+    }
+
+    if (this.id === id) {
       this.$vue.$notify({
         group: 'neko',
         type: 'info',
@@ -146,34 +192,212 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
         speed: 1000,
       })
     } else {
-      this.$vue.$notify({
-        group: 'neko',
-        type: 'info',
-        title: `The controls released from ${this.$accessor.user.members[id].username}`,
-        duration: 5000,
-        speed: 1000,
+      this.$accessor.chat.addMessage({
+        id: member.id,
+        content: 'released the controls',
+        type: 'event',
+        created: new Date(),
       })
     }
   }
 
-  [EVENT.CONTROL.REQUEST]({ id }: ControlPayload) {
+  protected [EVENT.CONTROL.REQUEST]({ id }: ControlPayload) {
+    const member = this.member(id)
+    if (!member) {
+      return
+    }
+
     this.$vue.$notify({
       group: 'neko',
       type: 'info',
-      title: `${this.$accessor.user.members[id].username} has the controls`,
+      title: `${member.username} has the controls`,
       text: 'But I let them know you wanted it',
       duration: 5000,
       speed: 1000,
     })
   }
 
-  [EVENT.CONTROL.REQUESTING]({ id }: ControlPayload) {
+  protected [EVENT.CONTROL.REQUESTING]({ id }: ControlPayload) {
+    const member = this.member(id)
+    if (!member) {
+      return
+    }
+
     this.$vue.$notify({
       group: 'neko',
       type: 'info',
-      title: `${this.$accessor.user.members[id].username} is requesting the controls`,
+      title: `${member.username} is requesting the controls`,
       duration: 5000,
       speed: 1000,
     })
+  }
+
+  /////////////////////////////
+  // Chat Events
+  /////////////////////////////
+  protected [EVENT.CHAT.MESSAGE]({ id, content }: ChatPayload) {
+    this.$accessor.chat.addMessage({
+      id,
+      content,
+      type: 'text',
+      created: new Date(),
+    })
+  }
+
+  protected [EVENT.CHAT.EMOJI]({ id, emoji }: EmojiPayload) {
+    //
+  }
+
+  /////////////////////////////
+  // Admin Events
+  /////////////////////////////
+  protected [EVENT.ADMIN.BAN]({ id, target }: AdminTargetPayload) {
+    if (!target) {
+      return
+    }
+
+    const member = this.member(target)
+    if (!member) {
+      return
+    }
+
+    this.$accessor.chat.addMessage({
+      id,
+      content: `banned ${member.username}`,
+      type: 'event',
+      created: new Date(),
+    })
+  }
+
+  protected [EVENT.ADMIN.KICK]({ id, target }: AdminTargetPayload) {
+    if (!target) {
+      return
+    }
+
+    const member = this.member(target)
+    if (!member) {
+      return
+    }
+
+    this.$accessor.chat.addMessage({
+      id,
+      content: `kicked ${member.username}`,
+      type: 'event',
+      created: new Date(),
+    })
+  }
+
+  protected [EVENT.ADMIN.MUTE]({ id, target }: AdminTargetPayload) {
+    if (!target) {
+      return
+    }
+
+    this.$accessor.user.setMuted({ id: target, muted: true })
+
+    const member = this.member(target)
+    if (!member) {
+      return
+    }
+
+    this.$accessor.chat.addMessage({
+      id,
+      content: `muted ${member.username}`,
+      type: 'event',
+      created: new Date(),
+    })
+  }
+
+  protected [EVENT.ADMIN.UNMUTE]({ id, target }: AdminTargetPayload) {
+    if (!target) {
+      return
+    }
+
+    this.$accessor.user.setMuted({ id: target, muted: false })
+
+    const member = this.member(target)
+    if (!member) {
+      return
+    }
+
+    this.$accessor.chat.addMessage({
+      id,
+      content: `unmuted ${member.username}`,
+      type: 'event',
+      created: new Date(),
+    })
+  }
+
+  protected [EVENT.ADMIN.LOCK]({ id }: AdminPayload) {
+    this.$accessor.chat.addMessage({
+      id,
+      content: `locked the room`,
+      type: 'event',
+      created: new Date(),
+    })
+  }
+
+  protected [EVENT.ADMIN.UNLOCK]({ id }: AdminPayload) {
+    this.$accessor.chat.addMessage({
+      id,
+      content: `unlocked the room`,
+      type: 'event',
+      created: new Date(),
+    })
+  }
+
+  protected [EVENT.ADMIN.CONTROL]({ id, target }: AdminTargetPayload) {
+    this.$accessor.remote.setHost(id)
+
+    if (!target) {
+      this.$accessor.chat.addMessage({
+        id,
+        content: `force took the controls`,
+        type: 'event',
+        created: new Date(),
+      })
+      return
+    }
+
+    const member = this.member(target)
+    if (!member) {
+      return
+    }
+
+    this.$accessor.chat.addMessage({
+      id,
+      content: `took the controls from ${member.username}`,
+      type: 'event',
+      created: new Date(),
+    })
+  }
+
+  protected [EVENT.ADMIN.RELEASE]({ id, target }: AdminTargetPayload) {
+    this.$accessor.remote.clearHost()
+    if (!target) {
+      this.$accessor.chat.addMessage({
+        id,
+        content: `force released the controls`,
+        type: 'event',
+        created: new Date(),
+      })
+      return
+    }
+
+    const member = this.member(target)
+    if (!member) {
+      return
+    }
+
+    this.$accessor.chat.addMessage({
+      id,
+      content: `released the controls from ${member.username}`,
+      type: 'event',
+      created: new Date(),
+    })
+  }
+
+  // Utilities
+  protected member(id: string): Member | undefined {
+    return this.$accessor.user.members[id]
   }
 }

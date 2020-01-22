@@ -8,7 +8,9 @@ export const EVENT = {
   DATA: 'DATA',
 
   // Websocket Events
-  DISCONNECT: 'disconnect',
+  SYSTEM: {
+    DISCONNECT: 'system/disconnect',
+  },
   SIGNAL: {
     ANSWER: 'signal/answer',
     PROVIDE: 'signal/provide',
@@ -36,20 +38,37 @@ export const EVENT = {
     BAN: 'admin/ban',
     KICK: 'admin/kick',
     LOCK: 'admin/lock',
+    UNLOCK: 'admin/unlock',
     MUTE: 'admin/mute',
     UNMUTE: 'admin/unmute',
-    FORCE: {
-      CONTROL: 'admin/force/control',
-      RELEASE: 'admin/force/release',
-    },
+    CONTROL: 'admin/control',
+    RELEASE: 'admin/release',
   },
 } as const
 
 export type Events = typeof EVENT
-export type WebSocketEvents = SystemEvents | ControlEvents | IdentityEvents | MemberEvents | SignalEvents | ChatEvents
-export type SystemEvents = typeof EVENT.DISCONNECT
+
+export type WebSocketEvents =
+  | SystemEvents
+  | ControlEvents
+  | IdentityEvents
+  | MemberEvents
+  | SignalEvents
+  | ChatEvents
+  | AdminEvents
+
+export type SystemEvents = typeof EVENT.SYSTEM.DISCONNECT
 export type ControlEvents = typeof EVENT.CONTROL.LOCKED | typeof EVENT.CONTROL.RELEASE | typeof EVENT.CONTROL.REQUEST
 export type IdentityEvents = typeof EVENT.IDENTITY.PROVIDE | typeof EVENT.IDENTITY.DETAILS
 export type MemberEvents = typeof EVENT.MEMBER.LIST | typeof EVENT.MEMBER.CONNECTED | typeof EVENT.MEMBER.DISCONNECTED
 export type SignalEvents = typeof EVENT.SIGNAL.ANSWER | typeof EVENT.SIGNAL.PROVIDE
 export type ChatEvents = typeof EVENT.CHAT.MESSAGE | typeof EVENT.CHAT.EMOJI
+export type AdminEvents =
+  | typeof EVENT.ADMIN.BAN
+  | typeof EVENT.ADMIN.KICK
+  | typeof EVENT.ADMIN.LOCK
+  | typeof EVENT.ADMIN.UNLOCK
+  | typeof EVENT.ADMIN.MUTE
+  | typeof EVENT.ADMIN.UNMUTE
+  | typeof EVENT.ADMIN.CONTROL
+  | typeof EVENT.ADMIN.RELEASE

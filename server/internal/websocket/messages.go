@@ -57,6 +57,7 @@ func (h *MessageHandler) Message(id string, raw []byte) error {
 			utils.Unmarshal(&payload, raw, func() error {
 				return h.webrtc.CreatePeer(id, payload.SDP)
 			}), "%s failed", header.Event)
+
 	// Identity Events
 	case event.IDENTITY_DETAILS:
 		payload := &message.IdentityDetails{}
@@ -64,11 +65,13 @@ func (h *MessageHandler) Message(id string, raw []byte) error {
 			utils.Unmarshal(payload, raw, func() error {
 				return h.identityDetails(id, session, payload)
 			}), "%s failed", header.Event)
+
 	// Control Events
 	case event.CONTROL_RELEASE:
 		return errors.Wrapf(h.controlRelease(id, session), "%s failed", header.Event)
 	case event.CONTROL_REQUEST:
 		return errors.Wrapf(h.controlRequest(id, session), "%s failed", header.Event)
+
 	// Chat Events
 	case event.CHAT_MESSAGE:
 		payload := &message.ChatRecieve{}
@@ -82,12 +85,15 @@ func (h *MessageHandler) Message(id string, raw []byte) error {
 			utils.Unmarshal(payload, raw, func() error {
 				return h.chatEmoji(id, session, payload)
 			}), "%s failed", header.Event)
+
 	// Admin Events
 	case event.ADMIN_LOCK:
 		return errors.Wrapf(h.adminLock(id, session), "%s failed", header.Event)
-	case event.ADMIN_FORCE_CONTROL:
+	case event.ADMIN_UNLOCK:
+		return errors.Wrapf(h.adminUnlock(id, session), "%s failed", header.Event)
+	case event.ADMIN_CONTROL:
 		return errors.Wrapf(h.adminControl(id, session), "%s failed", header.Event)
-	case event.ADMIN_FORCE_RELEASE:
+	case event.ADMIN_RELEASE:
 		return errors.Wrapf(h.adminRelease(id, session), "%s failed", header.Event)
 	case event.ADMIN_BAN:
 		payload := &message.Admin{}

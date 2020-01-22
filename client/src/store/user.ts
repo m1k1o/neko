@@ -1,5 +1,8 @@
 import { getterTree, mutationTree, actionTree } from 'typed-vuex'
 import { Member } from '~/client/types'
+import { EVENT } from '~/client/events'
+
+import { accessor } from '~/store'
 
 export const namespaced = true
 
@@ -15,13 +18,23 @@ export const state = () => ({
 export const getters = getterTree(state, {
   member: state => state.members[state.id] || null,
   admin: state => (state.members[state.id] ? state.members[state.id].admin : false),
+  muted: state => (state.members[state.id] ? state.members[state.id].muted : false),
 })
 
 export const mutations = mutationTree(state, {
+  setMuted(state, { id, muted }: { id: string; muted: boolean }) {
+    state.members[id] = {
+      ...state.members[id],
+      muted,
+    }
+  },
   setMembers(state, members: Member[]) {
     const data: Members = {}
     for (const member of members) {
-      data[member.id] = member
+      data[member.id] = {
+        connected: true,
+        ...member,
+      }
     }
     state.members = data
   },
@@ -31,13 +44,17 @@ export const mutations = mutationTree(state, {
   addMember(state, member: Member) {
     state.members = {
       ...state.members,
-      [member.id]: member,
+      [member.id]: {
+        connected: true,
+        ...member,
+      },
     }
   },
   delMember(state, id: string) {
-    const data = { ...state.members }
-    delete data[id]
-    state.members = data
+    state.members[id] = {
+      ...state.members[id],
+      connected: false,
+    }
   },
   clearMembers(state) {
     state.members = {}
@@ -47,6 +64,68 @@ export const mutations = mutationTree(state, {
 export const actions = actionTree(
   { state, getters, mutations },
   {
-    //
+    ban({ state }, member: string | Member) {
+      if (!accessor.connected || !accessor.user.admin) {
+        return
+      }
+
+      if (typeof member === 'string') {
+        member = state.members[member]
+      }
+
+      if (!member) {
+        return
+      }
+
+      $client.sendMessage(EVENT.ADMIN.BAN, { id: member.id })
+    },
+
+    kick({ state }, member: string | Member) {
+      if (!accessor.connected || !accessor.user.admin) {
+        return
+      }
+
+      if (typeof member === 'string') {
+        member = state.members[member]
+      }
+
+      if (!member) {
+        return
+      }
+
+      $client.sendMessage(EVENT.ADMIN.KICK, { id: member.id })
+    },
+
+    mute({ state }, member: string | Member) {
+      if (!accessor.connected || !accessor.user.admin) {
+        return
+      }
+
+      if (typeof member === 'string') {
+        member = state.members[member]
+      }
+
+      if (!member) {
+        return
+      }
+
+      $client.sendMessage(EVENT.ADMIN.MUTE, { id: member.id })
+    },
+
+    unmute({ state }, member: string | Member) {
+      if (!accessor.connected || !accessor.user.admin) {
+        return
+      }
+
+      if (typeof member === 'string') {
+        member = state.members[member]
+      }
+
+      if (!member) {
+        return
+      }
+
+      $client.sendMessage(EVENT.ADMIN.UNMUTE, { id: member.id })
+    },
   },
 )

@@ -1,0 +1,245 @@
+@import "~bulma/sass/utilities/initial-variables.sass";
+@import "~bulma/sass/utilities/functions.sass";
+@import "~bulma/sass/utilities/derived-variables.sass";
+@import "~bulma/sass/utilities/animations.sass";
+@import "~bulma/sass/utilities/mixins.sass";
+@import "~bulma/sass/utilities/controls.sass";
+
+// $black:        hsl(0, 0%, 4%);
+// $black-bis:    hsl(0, 0%, 7%);
+// $black-ter:    hsl(0, 0%, 14%);
+
+// $grey-darker:  hsl(0, 0%, 21%);
+// $grey-dark:    hsl(0, 0%, 29%);
+// $grey:         hsl(0, 0%, 48%);
+// $grey-light:   hsl(0, 0%, 71%);
+// $grey-lighter: hsl(0, 0%, 86%);
+// $grey-lightest: hsl(0, 0%, 93%);
+
+// $white-ter:    hsl(0, 0%, 96%);
+// $white-bis:    hsl(0, 0%, 98%);
+// $white:        hsl(0, 0%, 100%);
+
+// $orange:       hsl(14,  100%, 53%);
+// $yellow:       hsl(48,  100%, 67%);
+// $green:        hsl(141, 53%,  53%);
+// $turquoise:    hsl(171, 100%, 41%);
+// $cyan:         hsl(204, 71%,  53%);
+// $blue:         hsl(217, 71%,  53%);
+// $purple:       hsl(271, 100%, 71%);
+// $red:          hsl(348, 86%, 61%);
+
+// Typography
+$family-sans-serif: $text-family;
+// $family-monospace: monospace;
+// $render-mode: optimizeLegibility;
+
+// $size-1: 3rem;
+// $size-2: 2.5rem;
+// $size-3: 2rem;
+// $size-4: 1.5rem;
+// $size-5: 1.25rem;
+// $size-6: 1rem;
+// $size-7: 0.75rem;
+
+// $weight-light: 300;
+// $weight-normal: 400;
+// $weight-medium: 500;
+// $weight-semibold: 600;
+// $weight-bold: 700;
+
+// Spacing
+// $block-spacing: 1.5rem;
+
+// Responsiveness
+// The container horizontal gap, which acts as the offset for breakpoints
+// $gap: 32px;
+// 960, 1152, and 1344 have been chosen because they are divisible by both 12 and 16
+// $tablet: 769px;
+// 960px container + 4rem
+// $desktop: 960px + (2 * // $gap);
+// 1152px container + 4rem
+// $widescreen: 1152px + (2 * // $gap);
+// $widescreen-enabled: true;
+// 1344px container + 4rem
+// $fullhd: 1344px + (2 * // $gap);
+// $fullhd-enabled: true;
+
+// Miscellaneous
+// $easing: ease-out;
+// $radius-small: 2px;
+// $radius: 4px;
+// $radius-large: 6px;
+// $radius-rounded: 290486px;
+// $speed: 86ms;
+
+// Flags
+// $variable-columns: true;
+
+// $primary: $turquoise;
+// $info: $cyan;
+// $success: $green;
+// $warning: $yellow;
+// $danger: $red;
+
+// $light: $white-ter;
+// $dark: $grey-darker;
+
+// Invert colors
+// $orange-invert: findColorInvert($orange);
+// $yellow-invert: findColorInvert($yellow);
+// $green-invert: findColorInvert($green);
+// $turquoise-invert: findColorInvert($turquoise);
+// $cyan-invert: findColorInvert($cyan);
+// $blue-invert: findColorInvert($blue);
+// $purple-invert: findColorInvert($purple);
+// $red-invert: findColorInvert($red);
+
+// $primary-invert: findColorInvert($primary);
+// $primary-light: findLightColor($primary);
+// $primary-dark: findDarkColor($primary);
+// $info-invert: findColorInvert($info);
+// $info-light: findLightColor($info);
+// $info-dark: findDarkColor($info);
+// $success-invert: findColorInvert($success);
+// $success-light: findLightColor($success);
+// $success-dark: findDarkColor($success);
+// $warning-invert: findColorInvert($warning);
+// $warning-light: findLightColor($warning);
+// $warning-dark: findDarkColor($warning);
+// $danger-invert: findColorInvert($danger);
+// $danger-light: findLightColor($danger);
+// $danger-dark: findDarkColor($danger);
+// $light-invert: findColorInvert($light);
+// $dark-invert: findColorInvert($dark);
+
+// General colors
+// $scheme-main: $white;
+// $scheme-main-bis: $white-bis;
+// $scheme-main-ter: $white-ter;
+// $scheme-invert: $black;
+// $scheme-invert-bis: $black-bis;
+// $scheme-invert-ter: $black-ter;
+
+// $background: $white-ter;
+$border: $grey-light;
+$border-hover: $grey;
+// $border-light: $grey-lightest;
+// $border-light-hover: $grey-light;
+
+// Text colors
+// $text: $grey-dark;
+// $text-invert: findColorInvert($text);
+// $text-light: $grey;
+// $text-strong: $grey-darker;
+
+// Code colors
+// $code: $red;
+// $code-background: $background;
+
+// $pre: $text;
+// $pre-background: $background;
+
+// Link colors
+// $link: $blue;
+// $link-invert: findColorInvert($link);
+// $link-light: findLightColor($link);
+// $link-dark: findDarkColor($link);
+// $link-visited: $purple;
+
+// $link-hover: $grey-darker;
+// $link-hover-border: $grey-light;
+
+// $link-focus: $grey-darker;
+// $link-focus-border: $blue;
+
+// $link-active: $grey-darker;
+// $link-active-border: $grey-dark;
+
+// Typography
+// $family-primary: $family-sans-serif;
+// $family-secondary: $family-sans-serif;
+// $family-code: $family-monospace;
+
+// $size-small: $size-7;
+// $size-normal: $size-6;
+// $size-medium: $size-5;
+// $size-large: $size-4;
+
+// Lists and maps
+// $custom-colors: null;
+// $custom-shades: null;
+
+// $colors: mergeColorMaps(("white": ($white, $black), "black": ($black, $white), "light": ($light, $light-invert), "dark": ($dark, $dark-invert), "primary": ($primary, $primary-invert, $primary-light, $primary-dark), "link": ($link, $link-invert, $link-light, $link-dark), "info": ($info, $info-invert, $info-light, $info-dark), "success": ($success, $success-invert, $success-light, $success-dark), "warning": ($warning, $warning-invert, $warning-light, $warning-dark), "danger": ($danger, $danger-invert, $danger-light, $danger-dark)), $custom-colors);
+// $shades: mergeColorMaps(("black-bis": $black-bis, "black-ter": $black-ter, "grey-darker": $grey-darker, "grey-dark": $grey-dark, "grey": $grey, "grey-light": $grey-light, "grey-lighter": $grey-lighter, "white-ter": $white-ter, "white-bis": $white-bis), $custom-shades);
+// $sizes: $size-1 $size-2 $size-3 $size-4 $size-5 $size-6 $size-7;
+
+@import "~bulma/sass/base/minireset";
+@import "~bulma/sass/base/generic";
+@import "~bulma/sass/base/helpers";
+
+@import "~bulma/sass/elements/box.sass";
+@import "~bulma/sass/elements/button.sass";
+@import "~bulma/sass/elements/container.sass";
+@import "~bulma/sass/elements/content.sass";
+@import "~bulma/sass/elements/icon.sass";
+@import "~bulma/sass/elements/image.sass";
+@import "~bulma/sass/elements/notification.sass";
+@import "~bulma/sass/elements/progress.sass";
+@import "~bulma/sass/elements/table.sass";
+@import "~bulma/sass/elements/tag.sass";
+@import "~bulma/sass/elements/title.sass";
+@import "~bulma/sass/elements/other.sass";
+
+// $input-color: $text-strong;
+// $input-background-color: $scheme-main;
+// $input-border-color: $border;
+// $input-height: $control-height;
+// $input-shadow: inset 0 0.0625em 0.125em rgba($scheme-invert, 0.05);
+// $input-placeholder-color: rgba($input-color, 0.3);
+// $input-hover-color: $text-strong;
+// $input-hover-border-color: $border-hover;
+// $input-focus-color: $text-strong;
+// $input-focus-border-color: $link;
+// $input-focus-box-shadow-size: 0 0 0 0.125em;
+// $input-focus-box-shadow-color: rgba($link, 0.25);
+// $input-disabled-color: $text-light;
+// $input-disabled-background-color: $background;
+// $input-disabled-border-color: $background;
+// $input-disabled-placeholder-color: rgba($input-disabled-color, 0.3);
+// $input-arrow: $link;
+// $input-icon-color: $border;
+// $input-icon-active-color: $text;
+// $input-radius: $radius;
+
+@import "~bulma/sass/form/shared.sass";
+
+// $textarea-padding: $control-padding-horizontal;
+// $textarea-max-height: 40em;
+// $textarea-min-height: 8em;
+@import "~bulma/sass/form/input-textarea.sass";
+@import "~bulma/sass/form/checkbox-radio.sass";
+@import "~bulma/sass/form/select.sass";
+@import "~bulma/sass/form/file.sass";
+@import "~bulma/sass/form/tools.sass";
+
+// @import "~bulma/sass/components/breadcrumb.sass";
+// @import "~bulma/sass/components/card.sass";
+// @import "~bulma/sass/components/dropdown.sass";
+// @import "~bulma/sass/components/level.sass";
+// @import "~bulma/sass/components/list.sass";
+// @import "~bulma/sass/components/media.sass";
+// @import "~bulma/sass/components/menu.sass";
+// @import "~bulma/sass/components/message.sass";
+// @import "~bulma/sass/components/modal.sass";
+// @import "~bulma/sass/components/navbar.sass";
+// @import "~bulma/sass/components/pagination.sass";
+// @import "~bulma/sass/components/panel.sass";
+@import "~bulma/sass/components/tabs.sass";
+
+@import "~bulma/sass/grid/columns.sass";
+@import "~bulma/sass/grid/tiles.sass";
+
+// @import "~bulma/sass/layout/hero.sass";
+// @import "~bulma/sass/layout/section.sass";
+// @import "~bulma/sass/layout/footer.sass";

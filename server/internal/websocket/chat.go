@@ -7,6 +7,10 @@ import (
 )
 
 func (h *MessageHandler) chat(id string, session *session.Session, payload *message.ChatRecieve) error {
+	if session.Muted {
+		return nil
+	}
+
 	if err := h.sessions.Brodcast(
 		message.ChatSend{
 			Event:   event.CHAT_MESSAGE,
@@ -20,6 +24,10 @@ func (h *MessageHandler) chat(id string, session *session.Session, payload *mess
 }
 
 func (h *MessageHandler) chatEmoji(id string, session *session.Session, payload *message.EmojiRecieve) error {
+	if session.Muted {
+		return nil
+	}
+
 	if err := h.sessions.Brodcast(
 		message.EmojiSend{
 			Event: event.CHAT_MESSAGE,

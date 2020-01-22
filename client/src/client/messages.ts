@@ -18,9 +18,23 @@ export type WebSocketPayloads =
   | Member
   | ControlPayload
   | ChatPayload
+  | ChatSendPayload
+  | EmojiSendPayload
+  | AdminPayload
 
 export interface WebSocketMessage {
   event: WebSocketEvents | string
+}
+
+/*
+  SYSTEM MESSAGES/PAYLOADS
+*/
+// system/disconnect
+export interface DisconnectMessage extends WebSocketMessage, DisconnectPayload {
+  event: typeof EVENT.SYSTEM.DISCONNECT
+}
+export interface DisconnectPayload {
+  message: string
 }
 
 /*
@@ -84,12 +98,49 @@ export interface ControlPayload {
 /*
   CHAT PAYLOADS
 */
-// chat/send & chat/receive
+// chat/message
 export interface ChatMessage extends WebSocketMessage, ChatPayload {
-  event: typeof EVENT.CHAT.SEND | typeof EVENT.CHAT.RECEIVE
+  event: typeof EVENT.CHAT.MESSAGE
 }
 
+export interface ChatSendPayload {
+  content: string
+}
 export interface ChatPayload {
   id: string
   content: string
+}
+
+// chat/emoji
+export interface ChatEmojiMessage extends WebSocketMessage, EmojiPayload {
+  event: typeof EVENT.CHAT.EMOJI
+}
+
+export interface EmojiPayload {
+  id: string
+  emoji: string
+}
+
+export interface EmojiSendPayload {
+  emoji: string
+}
+
+/*
+  ADMIN PAYLOADS
+*/
+export interface AdminMessage extends WebSocketMessage, AdminPayload {
+  event: typeof EVENT.MESSAGE
+}
+
+export interface AdminPayload {
+  id: string
+}
+
+export interface AdminTargetMessage extends WebSocketMessage, AdminTargetPayload {
+  event: typeof EVENT.CHAT.EMOJI
+}
+
+export interface AdminTargetPayload {
+  id: string
+  target?: string
 }

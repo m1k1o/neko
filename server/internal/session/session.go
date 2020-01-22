@@ -11,7 +11,7 @@ type Session struct {
 	ID        string `json:"id"`
 	Name      string `json:"username"`
 	Admin     bool   `json:"admin"`
-	Muted     bool   `json:"-"`
+	Muted     bool   `json:"muted"`
 	connected bool
 	socket    *websocket.Conn
 	peer      *webrtc.PeerConnection

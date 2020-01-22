@@ -72,8 +72,8 @@ type Admin struct {
 	ID    string `json:"id"`
 }
 
-type AdminSubject struct {
-	Event   string `json:"event"`
-	Subject string `json:"subject"`
-	ID      string `json:"id"`
+type AdminTarget struct {
+	Event  string `json:"event"`
+	Target string `json:"target"`
+	ID     string `json:"id"`
 }

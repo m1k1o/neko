@@ -1,21 +1,27 @@
 import './assets/styles/main.scss'
 
-import { EVENT } from '~/client/events'
-
 import Vue from 'vue'
+
 import Notifications from 'vue-notification'
+import ToolTip from 'v-tooltip'
 import Client from './plugins/neko'
-import App from './App.vue'
+import Axios from './plugins/axios'
+import Swal from './plugins/swal'
+
 import store from './store'
+import app from './app.vue'
 
 Vue.config.productionTip = false
 
 Vue.use(Notifications)
+Vue.use(ToolTip)
+Vue.use(Axios)
+Vue.use(Swal)
 Vue.use(Client)
 
 new Vue({
   store,
-  render: h => h(App),
+  render: h => h(app),
   created() {
     this.$client.init(this)
   },

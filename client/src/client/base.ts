@@ -25,7 +25,7 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
   protected _ws?: WebSocket
   protected _peer?: RTCPeerConnection
   protected _channel?: RTCDataChannel
-  protected _timeout?: number
+  protected _timeout?: NodeJS.Timeout
   protected _username?: string
   protected _state: RTCIceConnectionState = 'disconnected'
 
@@ -264,7 +264,11 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
     this.onDisconnected(new Error('connection timeout'))
   }
 
-  private onDisconnected(reason?: Error) {
+  protected onDisconnected(reason?: Error) {
+    if (this._timeout) {
+      clearTimeout(this._timeout)
+    }
+
     if (this.socketOpen) {
       try {
         this._ws!.close()
@@ -283,14 +287,14 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
     this[EVENT.DISCONNECTED](reason)
   }
 
-  [EVENT.MESSAGE](event: string, payload: any) {
+  protected [EVENT.MESSAGE](event: string, payload: any) {
     this.emit('warn', `unhandled websocket event '${event}':`, payload)
   }
 
-  abstract [EVENT.CONNECTING](): void
-  abstract [EVENT.CONNECTED](): void
-  abstract [EVENT.DISCONNECTED](reason?: Error): void
-  abstract [EVENT.TRACK](event: RTCTrackEvent): void
-  abstract [EVENT.DATA](data: any): void
-  abstract [EVENT.IDENTITY.PROVIDE](payload: IdentityPayload): void
+  protected abstract [EVENT.CONNECTING](): void
+  protected abstract [EVENT.CONNECTED](): void
+  protected abstract [EVENT.DISCONNECTED](reason?: Error): void
+  protected abstract [EVENT.TRACK](event: RTCTrackEvent): void
+  protected abstract [EVENT.DATA](data: any): void
+  protected abstract [EVENT.IDENTITY.PROVIDE](payload: IdentityPayload): void
 }

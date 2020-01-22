@@ -17,7 +17,7 @@ I like cats (Neko is the Japanese word for cat), I'm a weeb/nerd, I own the doma
 ### Super easy mode setup
 1. Deploy a Server/VPS
 
-    *Recomended Specs:*
+    *Recomended Specs:* (Note: these may not be correct, I did a small round testing, 4c/4gb worked fine with small hickups here and there)
     
     | Resolution | Cores | Ram   | Recommendation   |
     |------------|-------|-------|------------------|

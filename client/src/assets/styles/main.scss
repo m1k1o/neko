@@ -8,16 +8,20 @@
 
 // Import Vendor
 @import "vendor/font-awesome";
+@import "vendor/font-whitney";
+@import "vendor/swal";
+@import "vendor/tooltip";
+@import "vendor/github";
+// @import "vendor/bulma";
 
 html, body {
   -webkit-font-smoothing: subpixel-antialiased;
-  background-color: $style-dark;
-  font-family: $style-font-family;
-  font-size: $style-font-size;
-  color: $style-font-color;
+  background-color: $background-tertiary;
+  font-family: $text-family;
+  font-size: $text-size;
+  color:  $text-normal;
   overflow: hidden;
   width: 100vw;
   height: 100vh;
   min-width: 320px;
 }
-
