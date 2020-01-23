@@ -1,6 +1,6 @@
 import { getterTree, mutationTree, actionTree } from 'typed-vuex'
-import { Member } from '~/client/types'
-import { EVENT } from '~/client/events'
+import { Member } from '~/neko/types'
+import { EVENT } from '~/neko/events'
 
 import { accessor } from '~/store'
 
@@ -22,6 +22,12 @@ export const getters = getterTree(state, {
 })
 
 export const mutations = mutationTree(state, {
+  setIgnored(state, { id, ignored }: { id: string; ignored: boolean }) {
+    state.members[id] = {
+      ...state.members[id],
+      ignored,
+    }
+  },
   setMuted(state, { id, muted }: { id: string; muted: boolean }) {
     state.members[id] = {
       ...state.members[id],
@@ -56,7 +62,7 @@ export const mutations = mutationTree(state, {
       connected: false,
     }
   },
-  clearMembers(state) {
+  clear(state) {
     state.members = {}
   },
 })

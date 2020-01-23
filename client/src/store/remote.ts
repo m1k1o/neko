@@ -1,6 +1,6 @@
 import { getterTree, mutationTree, actionTree } from 'typed-vuex'
-import { Member } from '~/client/types'
-import { EVENT } from '~/client/events'
+import { Member } from '~/neko/types'
+import { EVENT } from '~/neko/events'
 import { accessor } from '~/store'
 
 export const namespaced = true
@@ -22,15 +22,16 @@ export const getters = getterTree(state, {
 })
 
 export const mutations = mutationTree(state, {
-  clearHost(state) {
-    state.id = ''
-  },
   setHost(state, host: string | Member) {
     if (typeof host === 'string') {
       state.id = host
     } else {
       state.id = host.id
     }
+  },
+
+  clear(state) {
+    state.id = ''
   },
 })
 
@@ -68,6 +69,22 @@ export const actions = actionTree(
       $client.sendMessage(EVENT.CONTROL.RELEASE)
     },
 
+    give({ getters }, member: string | Member) {
+      if (!accessor.connected || !getters.hosting) {
+        return
+      }
+
+      if (typeof member === 'string') {
+        member = accessor.user.members[member]
+      }
+
+      if (!member) {
+        return
+      }
+
+      $client.sendMessage(EVENT.CONTROL.GIVE, { id: member.id })
+    },
+
     adminControl() {
       if (!accessor.connected || !accessor.user.admin) {
         return
@@ -82,6 +99,22 @@ export const actions = actionTree(
       }
 
       $client.sendMessage(EVENT.ADMIN.RELEASE)
+    },
+
+    adminGive({ getters }, member: string | Member) {
+      if (!accessor.connected) {
+        return
+      }
+
+      if (typeof member === 'string') {
+        member = accessor.user.members[member]
+      }
+
+      if (!member) {
+        return
+      }
+
+      $client.sendMessage(EVENT.ADMIN.GIVE, { id: member.id })
     },
 
     lock() {

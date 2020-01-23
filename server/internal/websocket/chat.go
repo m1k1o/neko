@@ -23,15 +23,15 @@ func (h *MessageHandler) chat(id string, session *session.Session, payload *mess
 	return nil
 }
 
-func (h *MessageHandler) chatEmoji(id string, session *session.Session, payload *message.EmojiRecieve) error {
+func (h *MessageHandler) chatEmote(id string, session *session.Session, payload *message.EmoteRecieve) error {
 	if session.Muted {
 		return nil
 	}
 
 	if err := h.sessions.Brodcast(
-		message.EmojiSend{
-			Event: event.CHAT_MESSAGE,
-			Emoji: payload.Emoji,
+		message.EmoteSend{
+			Event: event.CHAT_EMOTE,
+			Emote: payload.Emote,
 			ID:    id,
 		}, nil); err != nil {
 		h.logger.Warn().Err(err).Msgf("brodcasting event %s has failed", event.CONTROL_RELEASE)

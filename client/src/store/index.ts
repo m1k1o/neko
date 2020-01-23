@@ -12,17 +12,12 @@ import * as client from './client'
 export const state = () => ({
   connecting: false,
   connected: false,
+  locked: false,
 })
 
-// type RootState = ReturnType<typeof state>
-
-export const getters = {
-  // connected: (state: RootState) => state.connected
-}
-
 export const mutations = mutationTree(state, {
-  initialiseStore(state) {
-    console.log('test')
+  setLocked(state, locked: boolean) {
+    state.locked = locked
   },
 
   setConnnecting(state) {
@@ -37,7 +32,7 @@ export const mutations = mutationTree(state, {
 })
 
 export const actions = actionTree(
-  { state, getters, mutations },
+  { state, mutations },
   {
     //
     connect(store, { username, password }: { username: string; password: string }) {

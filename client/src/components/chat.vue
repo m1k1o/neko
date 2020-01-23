@@ -3,7 +3,7 @@
     <ul class="chat-history" ref="history" @click="onClick">
       <template v-for="(message, index) in history">
         <li :key="index" class="message" v-if="message.type === 'text'">
-          <div class="author">
+          <div class="author" @contextmenu.stop.prevent="onContext($event, { member: member(message.id) })">
             <img :src="`https://api.adorable.io/avatars/40/${member(message.id).username}.png`" />
           </div>
           <div class="content">
@@ -19,22 +19,24 @@
         <li :key="index" class="event" v-if="message.type === 'event'">
           <span
             v-tooltip="{
-              content: `${member(message.id).username} ${message.content}`,
+              content: `${timestamp(message.created)}, ${member(message.id).username} ${message.content}`,
               placement: 'left',
               offset: 3,
               boundariesElement: 'body',
             }"
           >
-            <strong>{{ member(message.id).username }}</strong>
+            <strong v-if="message.id === id">You</strong>
+            <strong v-else>{{ member(message.id).username }}</strong>
             {{ message.content }}
           </span>
         </li>
       </template>
     </ul>
-    <div class="chat-send">
+    <neko-context ref="context" />
+    <div v-if="!muted" class="chat-send">
       <div class="accent" />
       <div class="text-container">
-        <textarea placeholder="Send a message" @keydown="onKeyDown" v-model="content" />
+        <textarea ref="chat" placeholder="Send a message" @keydown="onKeyDown" v-model="content" />
       </div>
     </div>
   </div>
@@ -112,6 +114,8 @@
             line-height: 22px;
 
             .content-head {
+              cursor: default;
+
               span {
                 color: $text-normal;
                 font-weight: 500;
@@ -213,6 +217,7 @@
           display: flex;
           height: 15px;
           color: $text-muted;
+          cursor: default;
 
           span {
             white-space: nowrap;
@@ -305,6 +310,7 @@
   import { formatRelative } from 'date-fns'
 
   import Markdown from './markdown'
+  import Content from './context.vue'
 
   const length = 512 // max length of message
 
@@ -312,15 +318,21 @@
     name: 'neko-chat',
     components: {
       'neko-markdown': Markdown,
+      'neko-context': Content,
     },
   })
   export default class extends Vue {
     @Ref('history') readonly _history!: HTMLElement
+    @Ref('context') readonly _context!: any
 
     _content = ''
 
     get id() {
       return this.$accessor.user.id
+    }
+
+    get muted() {
+      return this.$accessor.user.muted
     }
 
     get history() {
@@ -346,6 +358,13 @@
       })
     }
 
+    @Watch('muted')
+    onMutedChange(muted: boolean) {
+      if (muted) {
+        this._content = ''
+      }
+    }
+
     mounted() {
       this.$nextTick(() => {
         this._history.scrollTop = this._history.scrollHeight
@@ -358,6 +377,10 @@
 
     timestamp(time: Date) {
       return formatRelative(time, new Date())
+    }
+
+    onContext(event: MouseEvent, data: any) {
+      this._context.open(event, data)
     }
 
     onClick(event: { target?: HTMLElement; preventDefault(): void }) {
@@ -382,7 +405,7 @@
     }
 
     onKeyDown(event: KeyboardEvent) {
-      if (typeof this._content === 'undefined') {
+      if (typeof this._content === 'undefined' || this.muted) {
         return
       }
 

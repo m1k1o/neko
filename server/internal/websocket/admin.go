@@ -1,13 +1,21 @@
 package websocket
 
 import (
+	"strings"
+
 	"n.eko.moe/neko/internal/event"
 	"n.eko.moe/neko/internal/message"
 	"n.eko.moe/neko/internal/session"
 )
 
 func (h *MessageHandler) adminLock(id string, session *session.Session) error {
-	if !session.Admin || !h.locked {
+	if !session.Admin {
+		h.logger.Debug().Msg("user not admin")
+		return nil
+	}
+
+	if h.locked {
+		h.logger.Debug().Msg("server already locked...")
 		return nil
 	}
 
@@ -26,7 +34,13 @@ func (h *MessageHandler) adminLock(id string, session *session.Session) error {
 }
 
 func (h *MessageHandler) adminUnlock(id string, session *session.Session) error {
-	if !session.Admin || !h.locked {
+	if !session.Admin {
+		h.logger.Debug().Msg("user not admin")
+		return nil
+	}
+
+	if !h.locked {
+		h.logger.Debug().Msg("server not locked...")
 		return nil
 	}
 
@@ -46,6 +60,7 @@ func (h *MessageHandler) adminUnlock(id string, session *session.Session) error 
 
 func (h *MessageHandler) adminControl(id string, session *session.Session) error {
 	if !session.Admin {
+		h.logger.Debug().Msg("user not admin")
 		return nil
 	}
 
@@ -79,6 +94,7 @@ func (h *MessageHandler) adminControl(id string, session *session.Session) error
 
 func (h *MessageHandler) adminRelease(id string, session *session.Session) error {
 	if !session.Admin {
+		h.logger.Debug().Msg("user not admin")
 		return nil
 	}
 
@@ -110,75 +126,28 @@ func (h *MessageHandler) adminRelease(id string, session *session.Session) error
 	return nil
 }
 
-func (h *MessageHandler) adminBan(id string, session *session.Session, payload *message.Admin) error {
+func (h *MessageHandler) adminGive(id string, session *session.Session, payload *message.Admin) error {
 	if !session.Admin {
+		h.logger.Debug().Msg("user not admin")
 		return nil
 	}
 
-	target, ok := h.sessions.Get(id)
-	if !ok {
+	if !h.sessions.Has(payload.ID) {
+		h.logger.Debug().Str("id", payload.ID).Msg("user does not exist")
 		return nil
 	}
 
-	if target.Admin {
-		return nil
-	}
+	// set host
+	h.sessions.SetHost(payload.ID)
 
-	address := target.RemoteAddr()
-	if address == nil {
-		return nil
-	}
-
-	h.banned[*address] = true
-
-	if err := session.Kick(message.Disconnect{
-		Event:   event.SYSTEM_DISCONNECT,
-		Message: "You have been banned",
-	}); err != nil {
-		return err
-	}
-
+	// let everyone know
 	if err := h.sessions.Brodcast(
 		message.AdminTarget{
-			Event:  event.ADMIN_BAN,
-			Target: target.ID,
+			Event:  event.CONTROL_GIVE,
 			ID:     id,
+			Target: payload.ID,
 		}, nil); err != nil {
-		h.logger.Warn().Err(err).Msgf("brodcasting event %s has failed", event.ADMIN_BAN)
-		return err
-	}
-
-	return nil
-}
-
-func (h *MessageHandler) adminKick(id string, session *session.Session, payload *message.Admin) error {
-	if !session.Admin {
-		return nil
-	}
-
-	target, ok := h.sessions.Get(payload.ID)
-	if !ok {
-		return nil
-	}
-
-	if target.Admin {
-		return nil
-	}
-
-	if err := target.Kick(message.Disconnect{
-		Event:   event.SYSTEM_DISCONNECT,
-		Message: "You have been kicked",
-	}); err != nil {
-		return err
-	}
-
-	if err := h.sessions.Brodcast(
-		message.AdminTarget{
-			Event:  event.ADMIN_KICK,
-			Target: target.ID,
-			ID:     id,
-		}, nil); err != nil {
-		h.logger.Warn().Err(err).Msgf("brodcasting event %s has failed", event.ADMIN_KICK)
+		h.logger.Warn().Err(err).Msgf("brodcasting event %s has failed", event.CONTROL_LOCKED)
 		return err
 	}
 
@@ -187,15 +156,18 @@ func (h *MessageHandler) adminKick(id string, session *session.Session, payload 
 
 func (h *MessageHandler) adminMute(id string, session *session.Session, payload *message.Admin) error {
 	if !session.Admin {
+		h.logger.Debug().Msg("user not admin")
 		return nil
 	}
 
 	target, ok := h.sessions.Get(payload.ID)
 	if !ok {
+		h.logger.Debug().Str("id", payload.ID).Msg("can't find session id")
 		return nil
 	}
 
 	if target.Admin {
+		h.logger.Debug().Msg("target is an admin, baling")
 		return nil
 	}
 
@@ -216,11 +188,13 @@ func (h *MessageHandler) adminMute(id string, session *session.Session, payload 
 
 func (h *MessageHandler) adminUnmute(id string, session *session.Session, payload *message.Admin) error {
 	if !session.Admin {
+		h.logger.Debug().Msg("user not admin")
 		return nil
 	}
 
 	target, ok := h.sessions.Get(payload.ID)
 	if !ok {
+		h.logger.Debug().Str("id", payload.ID).Msg("can't find target session")
 		return nil
 	}
 
@@ -233,6 +207,96 @@ func (h *MessageHandler) adminUnmute(id string, session *session.Session, payloa
 			ID:     id,
 		}, nil); err != nil {
 		h.logger.Warn().Err(err).Msgf("brodcasting event %s has failed", event.ADMIN_UNMUTE)
+		return err
+	}
+
+	return nil
+}
+
+func (h *MessageHandler) adminKick(id string, session *session.Session, payload *message.Admin) error {
+	if !session.Admin {
+		h.logger.Debug().Msg("user not admin")
+		return nil
+	}
+
+	target, ok := h.sessions.Get(payload.ID)
+	if !ok {
+		h.logger.Debug().Str("id", payload.ID).Msg("can't find session id")
+		return nil
+	}
+
+	if target.Admin {
+		h.logger.Debug().Msg("target is an admin, baling")
+		return nil
+	}
+
+	if err := target.Kick(message.Disconnect{
+		Event:   event.SYSTEM_DISCONNECT,
+		Message: "You have been kicked",
+	}); err != nil {
+		return err
+	}
+
+	if err := h.sessions.Brodcast(
+		message.AdminTarget{
+			Event:  event.ADMIN_KICK,
+			Target: target.ID,
+			ID:     id,
+		}, []string{payload.ID}); err != nil {
+		h.logger.Warn().Err(err).Msgf("brodcasting event %s has failed", event.ADMIN_KICK)
+		return err
+	}
+
+	return nil
+}
+
+func (h *MessageHandler) adminBan(id string, session *session.Session, payload *message.Admin) error {
+	if !session.Admin {
+		h.logger.Debug().Msg("user not admin")
+		return nil
+	}
+
+	target, ok := h.sessions.Get(payload.ID)
+	if !ok {
+		h.logger.Debug().Str("id", payload.ID).Msg("can't find session id")
+		return nil
+	}
+
+	if target.Admin {
+		h.logger.Debug().Msg("target is an admin, baling")
+		return nil
+	}
+
+	remote := target.RemoteAddr()
+	if remote == nil {
+		h.logger.Debug().Msg("no remote address, baling")
+		return nil
+	}
+
+	address := strings.SplitN(*remote, ":", -1)
+	if len(address[0]) < 1 {
+		h.logger.Debug().Str("address", *remote).Msg("no remote address, baling")
+		return nil
+	}
+
+	h.logger.Debug().Str("address", *remote).Msg("adding address to banned")
+
+	h.banned[address[0]] = true
+
+	if err := target.Kick(message.Disconnect{
+		Event:   event.SYSTEM_DISCONNECT,
+		Message: "You have been banned",
+	}); err != nil {
+		return err
+	}
+
+	if err := h.sessions.Brodcast(
+		message.AdminTarget{
+			Event:  event.ADMIN_BAN,
+			Target: target.ID,
+			ID:     id,
+		}, []string{payload.ID}); err != nil {
+		h.logger.Warn().Err(err).Msgf("brodcasting event %s has failed", event.ADMIN_BAN)
 		return err
 	}
 

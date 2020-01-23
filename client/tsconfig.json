@@ -13,8 +13,7 @@
     "skipLibCheck": true,
     "baseUrl": ".",
     "types": [
-      "webpack-env",
-      "w3c-image-capture"
+      "webpack-env"
     ],
     "paths": {
       "~/*": [

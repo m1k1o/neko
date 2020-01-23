@@ -50,15 +50,20 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
     if (username === '') {
       throw new Error('Must add a username') // TODO: Better handleing
     }
-    this._username = username
 
-    this._ws = new WebSocket(`${url}ws?password=${password}`)
-    this.emit('debug', `connecting to ${this._ws.url}`)
-    this._ws.onmessage = this.onMessage.bind(this)
-    this._ws.onerror = event => this.onError.bind(this)
-    this._ws.onclose = event => this.onDisconnected.bind(this, new Error('websocket closed'))
-    this._timeout = setTimeout(this.onTimeout.bind(this), 5000)
+    this._username = username
     this[EVENT.CONNECTING]()
+
+    try {
+      this._ws = new WebSocket(`${url}ws?password=${password}`)
+      this.emit('debug', `connecting to ${this._ws.url}`)
+      this._ws.onmessage = this.onMessage.bind(this)
+      this._ws.onerror = event => this.onError.bind(this)
+      this._ws.onclose = event => this.onDisconnected.bind(this, new Error('websocket closed'))
+      this._timeout = setTimeout(this.onTimeout.bind(this), 5000)
+    } catch (err) {
+      this.onDisconnected(err)
+    }
   }
 
   public sendData(event: 'wheel' | 'mousemove', data: { x: number; y: number }): void
@@ -162,6 +167,9 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
       switch (this._state) {
         case 'connected':
           this.onConnected()
+          break
+        case 'failed':
+          this.onDisconnected(new Error('peer failed'))
           break
         case 'disconnected':
           this.onDisconnected(new Error('peer disconnected'))

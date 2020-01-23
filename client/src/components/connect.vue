@@ -6,7 +6,7 @@
         <span><b>n</b>.eko</span>
       </div>
       <form class="message" v-if="!connecting" @submit.stop.prevent="connect">
-        <span>Please enter the password:</span>
+        <span>Please Login</span>
         <input type="text" placeholder="Username" v-model="username" />
         <input type="password" placeholder="Password" v-model="password" />
         <button type="submit" @click.stop.prevent="connect">
@@ -67,9 +67,10 @@
         flex-direction: column;
 
         span {
+          display: block;
           text-align: center;
           text-transform: uppercase;
-          margin: 5px 0;
+          line-height: 30px;
         }
 
         input {
@@ -145,7 +146,7 @@
 
 <script lang="ts">
   import { Component, Ref, Watch, Vue } from 'vue-property-decorator'
-
+  import { get, set } from '~/utils/localstorage'
   @Component({ name: 'neko-connect' })
   export default class extends Vue {
     private username = ''
@@ -156,8 +157,7 @@
     }
 
     connect() {
-      const { username, password } = this
-      this.$accessor.connect({ username, password })
+      this.$accessor.connect({ username: this.username, password: this.password })
     }
   }
 </script>

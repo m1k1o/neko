@@ -1,16 +1,16 @@
 <template>
-  <div class="emoji">
-    <ul>
+  <div class="emotes">
+    <ul v-if="!muted">
       <li><i @click.stop.prevent="click('heart')" class="fas fa-heart"></i></li>
       <li><i @click.stop.prevent="click('poo')" class="fas fa-poo"></i></li>
       <li><i @click.stop.prevent="click('grin')" class="fas fa-grin-tears"></i></li>
-      <li><i @click.stop.prevent="click('dizzy')" class="fas fa-dizzy"></i></li>
+      <li><i @click.stop.prevent="click('ghost')" class="fas fa-ghost"></i></li>
     </ul>
   </div>
 </template>
 
 <style lang="scss" scoped>
-  .emoji {
+  .emotes {
     ul {
       display: flex;
       flex-direction: row;
@@ -33,16 +33,15 @@
   import { Vue, Component } from 'vue-property-decorator'
 
   @Component({
-    name: 'neko-emoji',
+    name: 'neko-emotes',
   })
   export default class extends Vue {
-    click(emoji: string) {
-      this.$swal({
-        title: 'Error!',
-        text: 'This feature is not available yet',
-        icon: 'error',
-        confirmButtonText: 'Cool',
-      })
+    get muted() {
+      return this.$accessor.user.muted
+    }
+
+    click(emote: string) {
+      this.$accessor.chat.sendEmote(emote)
     }
   }
 </script>

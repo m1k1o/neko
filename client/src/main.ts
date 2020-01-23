@@ -7,6 +7,7 @@ import ToolTip from 'v-tooltip'
 import Client from './plugins/neko'
 import Axios from './plugins/axios'
 import Swal from './plugins/swal'
+import Anime from './plugins/anime'
 
 import store from './store'
 import app from './app.vue'
@@ -17,6 +18,7 @@ Vue.use(Notifications)
 Vue.use(ToolTip)
 Vue.use(Axios)
 Vue.use(Swal)
+Vue.use(Anime)
 Vue.use(Client)
 
 new Vue({

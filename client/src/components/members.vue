@@ -11,45 +11,19 @@
           <li
             v-if="member.id !== id && member.connected"
             :key="index"
-            v-tooltip="{ content: member.username, placement: 'top', offset: 5, boundariesElement: 'body' }"
+            v-tooltip="{ content: member.username, placement: 'bottom', offset: -15, boundariesElement: 'body' }"
           >
             <div :class="[{ host: member.id === host, admin: member.admin }, 'member']">
               <img
                 :src="`https://api.adorable.io/avatars/50/${member.username}.png`"
-                @contextmenu="context($event, { member, index })"
+                @contextmenu.stop.prevent="onContext($event, { member })"
               />
             </div>
           </li>
         </template>
       </ul>
     </div>
-    <vue-context class="context" ref="menu">
-      <template slot-scope="child" v-if="child.data && admin">
-        <li>
-          <strong>{{ child.data.member.username }}</strong>
-        </li>
-        <li class="seperator" />
-        <li>
-          <span @click="mute(child.data.member)" v-if="!child.data.member.muted">Mute</span>
-          <span @click="unmute(child.data.member)" v-else>Unmute</span>
-        </li>
-        <template v-if="child.data.member.id === host">
-          <li>
-            <span @click="release(child.data.member)">Release Controls</span>
-          </li>
-          <li>
-            <span @click="control(child.data.member)">Take Controls</span>
-          </li>
-        </template>
-        <li class="seperator" />
-        <li>
-          <span @click="kick(child.data.member)" style="color: #f04747">Kick</span>
-        </li>
-        <li>
-          <span @click="ban(child.data.member)" style="color: #f04747">Ban</span>
-        </li>
-      </template>
-    </vue-context>
+    <neko-context ref="context" />
   </div>
 </template>
 
@@ -179,93 +153,26 @@
         }
       }
     }
-
-    .context {
-      background-color: $background-floating;
-      background-clip: padding-box;
-      border-radius: 0.25rem;
-      display: block;
-      margin: 0;
-      padding: 5px;
-      min-width: 150px;
-      z-index: 1500;
-      position: fixed;
-      list-style: none;
-      box-sizing: border-box;
-      max-height: calc(100% - 50px);
-      overflow-y: auto;
-      color: $interactive-normal;
-      user-select: none;
-      box-shadow: $elevation-high;
-
-      > li {
-        margin: 0;
-        position: relative;
-
-        &.seperator {
-          height: 1px;
-          background: $background-secondary;
-          margin: 3px 0;
-        }
-
-        > strong {
-          display: block;
-          padding: 8px 5px;
-          font-weight: 700;
-        }
-
-        > span {
-          cursor: pointer;
-          display: block;
-          padding: 5px;
-          font-weight: 400;
-          text-decoration: none;
-          white-space: nowrap;
-          background-color: transparent;
-          border-radius: 3px;
-
-          &:hover,
-          &:focus {
-            text-decoration: none;
-            background-color: $background-modifier-hover;
-            color: $interactive-hover;
-          }
-
-          &:focus {
-            outline: 0;
-          }
-        }
-      }
-
-      &:focus {
-        outline: 0;
-      }
-    }
   }
 </style>
 
 <script lang="ts">
   import { Component, Ref, Watch, Vue } from 'vue-property-decorator'
-  import { Member } from '~/client/types'
+  import { Member } from '~/neko/types'
 
-  // @ts-ignore
-  import { VueContext } from 'vue-context'
+  import Content from './context.vue'
 
   @Component({
     name: 'neko-members',
     components: {
-      'vue-context': VueContext,
+      'neko-context': Content,
     },
   })
   export default class extends Vue {
-    @Ref('menu') readonly menu!: any
+    @Ref('context') readonly _context!: any
 
     get id() {
       return this.$accessor.user.id
-    }
-
-    get admin() {
-      return this.$accessor.user.admin
     }
 
     get host() {
@@ -280,75 +187,8 @@
       return this.$accessor.user.members
     }
 
-    context(event: MouseEvent, data: any) {
-      if (this.admin) {
-        event.preventDefault()
-        this.menu.open(event, data)
-      }
-    }
-
-    kick(member: Member) {
-      this.$swal({
-        title: `Kick ${member.username}?`,
-        text: `Are you sure you want to kick ${member.username}?`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Yes',
-      }).then(({ value }) => {
-        if (value) {
-          this.$accessor.user.kick(member)
-        }
-      })
-    }
-
-    ban(member: Member) {
-      this.$swal({
-        title: `Ban ${member.username}?`,
-        text: `Are you sure you want to ban ${member.username}? You will need to restart the server to undo this.`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Yes',
-      }).then(({ value }) => {
-        if (value) {
-          this.$accessor.user.ban(member)
-        }
-      })
-    }
-
-    mute(member: Member) {
-      this.$swal({
-        title: `Mute ${member.username}?`,
-        text: `Are you sure you want to mute ${member.username}?`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Yes',
-      }).then(({ value }) => {
-        if (value) {
-          this.$accessor.user.mute(member)
-        }
-      })
-    }
-
-    unmute(member: Member) {
-      this.$swal({
-        title: `Unmute ${member.username}?`,
-        text: `Are you sure you want to unmute ${member.username}?`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Yes',
-      }).then(({ value }) => {
-        if (value) {
-          this.$accessor.user.unmute(member)
-        }
-      })
-    }
-
-    release(member: Member) {
-      this.$accessor.remote.adminRelease()
-    }
-
-    control(member: Member) {
-      this.$accessor.remote.adminControl()
+    onContext(event: MouseEvent, data: any) {
+      this._context.open(event, data)
     }
   }
 </script>

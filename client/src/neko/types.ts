@@ -4,4 +4,5 @@ export interface Member {
   admin: boolean
   muted: boolean
   connected?: boolean
+  ignored?: boolean
 }

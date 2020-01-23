@@ -2,6 +2,7 @@ package websocket
 
 import (
 	"encoding/json"
+	"strings"
 
 	"github.com/gorilla/websocket"
 	"github.com/pkg/errors"
@@ -23,13 +24,24 @@ type MessageHandler struct {
 }
 
 func (h *MessageHandler) SocketConnected(id string, socket *websocket.Conn) (bool, string, error) {
-	ok, banned := h.banned[socket.RemoteAddr().String()]
-	if ok && banned {
-		return false, "you are banned", nil
+	remote := socket.RemoteAddr().String()
+	if remote != "" {
+		address := strings.SplitN(remote, ":", -1)
+		if len(address[0]) < 1 {
+			h.logger.Debug().Str("address", remote).Msg("no remote address, baling")
+		} else {
+
+			ok, banned := h.banned[address[0]]
+			if ok && banned {
+				h.logger.Debug().Str("address", remote).Msg("banned")
+				return false, "This IP has been banned", nil
+			}
+		}
 	}
 
 	if h.locked {
-		return false, "stream is currently locked", nil
+		h.logger.Debug().Str("address", remote).Msg("locked")
+		return false, "Server is currently locked", nil
 	}
 	return true, "", nil
 }
@@ -71,6 +83,12 @@ func (h *MessageHandler) Message(id string, raw []byte) error {
 		return errors.Wrapf(h.controlRelease(id, session), "%s failed", header.Event)
 	case event.CONTROL_REQUEST:
 		return errors.Wrapf(h.controlRequest(id, session), "%s failed", header.Event)
+	case event.CONTROL_GIVE:
+		payload := &message.Control{}
+		return errors.Wrapf(
+			utils.Unmarshal(payload, raw, func() error {
+				return h.controlGive(id, session, payload)
+			}), "%s failed", header.Event)
 
 	// Chat Events
 	case event.CHAT_MESSAGE:
@@ -79,11 +97,11 @@ func (h *MessageHandler) Message(id string, raw []byte) error {
 			utils.Unmarshal(payload, raw, func() error {
 				return h.chat(id, session, payload)
 			}), "%s failed", header.Event)
-	case event.CHAT_EMOJI:
-		payload := &message.EmojiRecieve{}
+	case event.CHAT_EMOTE:
+		payload := &message.EmoteRecieve{}
 		return errors.Wrapf(
 			utils.Unmarshal(payload, raw, func() error {
-				return h.chatEmoji(id, session, payload)
+				return h.chatEmote(id, session, payload)
 			}), "%s failed", header.Event)
 
 	// Admin Events
@@ -95,6 +113,12 @@ func (h *MessageHandler) Message(id string, raw []byte) error {
 		return errors.Wrapf(h.adminControl(id, session), "%s failed", header.Event)
 	case event.ADMIN_RELEASE:
 		return errors.Wrapf(h.adminRelease(id, session), "%s failed", header.Event)
+	case event.ADMIN_GIVE:
+		payload := &message.Admin{}
+		return errors.Wrapf(
+			utils.Unmarshal(payload, raw, func() error {
+				return h.adminGive(id, session, payload)
+			}), "%s failed", header.Event)
 	case event.ADMIN_BAN:
 		payload := &message.Admin{}
 		return errors.Wrapf(

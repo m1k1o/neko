@@ -3,6 +3,11 @@
     <div ref="player" class="player">
       <div ref="container" class="player-container">
         <video ref="video" />
+        <div class="emotes">
+          <template v-for="(emote, index) in emotes">
+            <neko-emote :id="index" :key="index" />
+          </template>
+        </div>
         <div
           ref="overlay"
           class="overlay"
@@ -73,12 +78,17 @@
           }
         }
 
-        .player-overlay {
+        .player-overlay,
+        .emotes {
           position: absolute;
           top: 0;
           bottom: 0;
           width: 100%;
           height: 100%;
+          overflow: hidden;
+        }
+
+        .player-overlay {
           background: rgba($color: #000, $alpha: 0.2);
           display: flex;
           justify-content: center;
@@ -118,7 +128,14 @@
   import { Component, Ref, Watch, Vue } from 'vue-property-decorator'
   import ResizeObserver from 'resize-observer-polyfill'
 
-  @Component({ name: 'neko-video' })
+  import Emote from './emote.vue'
+
+  @Component({
+    name: 'neko-video',
+    components: {
+      'neko-emote': Emote,
+    },
+  })
   export default class extends Vue {
     @Ref('component') readonly _component!: HTMLElement
     @Ref('container') readonly _container!: HTMLElement
@@ -163,6 +180,22 @@
       return this.$accessor.video.playable
     }
 
+    get emotes() {
+      return this.$accessor.chat.emotes
+    }
+
+    get autoplay() {
+      return this.$accessor.settings.autoplay
+    }
+
+    get scroll() {
+      return this.$accessor.settings.scroll
+    }
+
+    get scroll_invert() {
+      return this.$accessor.settings.scroll_invert
+    }
+
     @Watch('volume')
     onVolumeChanged(volume: number) {
       if (this._video) {
@@ -188,11 +221,6 @@
       } else {
         // @ts-ignore
         this._video.src = window.URL.createObjectURL(this.stream) // for older browsers
-      }
-
-      if (this._video.paused && this.playing) {
-        // TODO: auto play setting
-        this.play()
       }
     }
 
@@ -220,6 +248,9 @@
 
       this._video.addEventListener('canplaythrough', () => {
         this.$accessor.video.setPlayable(true)
+        if (this.autoplay) {
+          this.$accessor.video.play()
+        }
       })
 
       this._video.addEventListener('ended', () => {
@@ -291,10 +322,19 @@
         return
       }
       this.onMousePos(e)
-      this.$client.sendData('wheel', {
-        x: (e.deltaX * -1) / 10,
-        y: (e.deltaY * -1) / 10,
-      }) // TODO: Add user settings
+
+      let x = e.deltaX
+      let y = e.deltaY
+
+      if (this.scroll_invert) {
+        x = x * -1
+        y = y * -1
+      }
+
+      x = Math.min(Math.max(x, -this.scroll), this.scroll)
+      y = Math.min(Math.max(y, -this.scroll), this.scroll)
+
+      this.$client.sendData('wheel', { x, y })
     }
 
     onMouseDown(e: MouseEvent) {

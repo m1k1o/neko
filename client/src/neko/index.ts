@@ -12,8 +12,9 @@ import {
   MemberDisconnectPayload,
   MemberPayload,
   ControlPayload,
+  ControlTargetPayload,
   ChatPayload,
-  EmojiPayload,
+  EmotePayload,
   AdminPayload,
   AdminTargetPayload,
 } from './messages'
@@ -60,20 +61,27 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
       duration: 5000,
       speed: 1000,
     })
+
+    this.$accessor.chat.newMessage({
+      id: this.id,
+      content: 'connected',
+      type: 'event',
+      created: new Date(),
+    })
   }
 
   protected [EVENT.DISCONNECTED](reason?: Error) {
     this.$accessor.setConnected(false)
 
-    this.$accessor.remote.clearHost()
-    this.$accessor.user.clearMembers()
+    this.$accessor.remote.clear()
+    this.$accessor.user.clear()
     this.$accessor.video.clear()
     this.$accessor.chat.clear()
 
     this.$vue.$notify({
       group: 'neko',
       type: 'error',
-      title: `Disconnected`,
+      title: `Disconnected:`,
       text: reason ? reason.message : undefined,
       duration: 5000,
       speed: 1000,
@@ -98,7 +106,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   protected [EVENT.SYSTEM.DISCONNECT]({ message }: DisconnectPayload) {
     this.onDisconnected(new Error(message))
     this.$vue.$swal({
-      title: 'Error!',
+      title: 'Disconnected!',
       text: message,
       icon: 'error',
       confirmButtonText: 'ok',
@@ -123,7 +131,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
     this.$accessor.user.addMember(member)
 
     if (member.id !== this.id) {
-      this.$accessor.chat.addMessage({
+      this.$accessor.chat.newMessage({
         id: member.id,
         content: 'connected',
         type: 'event',
@@ -138,7 +146,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
       return
     }
 
-    this.$accessor.chat.addMessage({
+    this.$accessor.chat.newMessage({
       id: member.id,
       content: 'disconnected',
       type: 'event',
@@ -166,18 +174,18 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
         duration: 5000,
         speed: 1000,
       })
-    } else {
-      this.$accessor.chat.addMessage({
-        id: member.id,
-        content: 'took the controls',
-        type: 'event',
-        created: new Date(),
-      })
     }
+
+    this.$accessor.chat.newMessage({
+      id: member.id,
+      content: 'took the controls',
+      type: 'event',
+      created: new Date(),
+    })
   }
 
   protected [EVENT.CONTROL.RELEASE]({ id }: ControlPayload) {
-    this.$accessor.remote.clearHost()
+    this.$accessor.remote.clear()
     const member = this.member(id)
     if (!member) {
       return
@@ -191,14 +199,14 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
         duration: 5000,
         speed: 1000,
       })
-    } else {
-      this.$accessor.chat.addMessage({
-        id: member.id,
-        content: 'released the controls',
-        type: 'event',
-        created: new Date(),
-      })
     }
+
+    this.$accessor.chat.newMessage({
+      id: member.id,
+      content: 'released the controls',
+      type: 'event',
+      created: new Date(),
+    })
   }
 
   protected [EVENT.CONTROL.REQUEST]({ id }: ControlPayload) {
@@ -219,7 +227,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
 
   protected [EVENT.CONTROL.REQUESTING]({ id }: ControlPayload) {
     const member = this.member(id)
-    if (!member) {
+    if (!member || member.ignored) {
       return
     }
 
@@ -232,11 +240,31 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
     })
   }
 
+  protected [EVENT.CONTROL.GIVE]({ id, target }: ControlTargetPayload) {
+    const member = this.member(target)
+    if (!member) {
+      return
+    }
+
+    this.$accessor.remote.setHost(member)
+    this.$accessor.chat.newMessage({
+      id,
+      content: `gave the controls to ${member.id == this.id ? 'you' : member.username}`,
+      type: 'event',
+      created: new Date(),
+    })
+  }
+
   /////////////////////////////
   // Chat Events
   /////////////////////////////
   protected [EVENT.CHAT.MESSAGE]({ id, content }: ChatPayload) {
-    this.$accessor.chat.addMessage({
+    const member = this.member(id)
+    if (!member || member.ignored) {
+      return
+    }
+
+    this.$accessor.chat.newMessage({
       id,
       content,
       type: 'text',
@@ -244,8 +272,13 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
     })
   }
 
-  protected [EVENT.CHAT.EMOJI]({ id, emoji }: EmojiPayload) {
-    //
+  protected [EVENT.CHAT.EMOTE]({ id, emote }: EmotePayload) {
+    const member = this.member(id)
+    if (!member || member.ignored) {
+      return
+    }
+
+    this.$accessor.chat.newEmote({ type: emote })
   }
 
   /////////////////////////////
@@ -261,9 +294,9 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
       return
     }
 
-    this.$accessor.chat.addMessage({
+    this.$accessor.chat.newMessage({
       id,
-      content: `banned ${member.username}`,
+      content: `banned ${member.id == this.id ? 'you' : member.username}`,
       type: 'event',
       created: new Date(),
     })
@@ -279,9 +312,9 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
       return
     }
 
-    this.$accessor.chat.addMessage({
+    this.$accessor.chat.newMessage({
       id,
-      content: `kicked ${member.username}`,
+      content: `kicked ${member.id == this.id ? 'you' : member.username}`,
       type: 'event',
       created: new Date(),
     })
@@ -299,9 +332,9 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
       return
     }
 
-    this.$accessor.chat.addMessage({
+    this.$accessor.chat.newMessage({
       id,
-      content: `muted ${member.username}`,
+      content: `muted ${member.id == this.id ? 'you' : member.username}`,
       type: 'event',
       created: new Date(),
     })
@@ -319,7 +352,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
       return
     }
 
-    this.$accessor.chat.addMessage({
+    this.$accessor.chat.newMessage({
       id,
       content: `unmuted ${member.username}`,
       type: 'event',
@@ -328,7 +361,8 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   }
 
   protected [EVENT.ADMIN.LOCK]({ id }: AdminPayload) {
-    this.$accessor.chat.addMessage({
+    this.$accessor.setLocked(true)
+    this.$accessor.chat.newMessage({
       id,
       content: `locked the room`,
       type: 'event',
@@ -337,7 +371,8 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   }
 
   protected [EVENT.ADMIN.UNLOCK]({ id }: AdminPayload) {
-    this.$accessor.chat.addMessage({
+    this.$accessor.setLocked(false)
+    this.$accessor.chat.newMessage({
       id,
       content: `unlocked the room`,
       type: 'event',
@@ -349,7 +384,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
     this.$accessor.remote.setHost(id)
 
     if (!target) {
-      this.$accessor.chat.addMessage({
+      this.$accessor.chat.newMessage({
         id,
         content: `force took the controls`,
         type: 'event',
@@ -363,18 +398,18 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
       return
     }
 
-    this.$accessor.chat.addMessage({
+    this.$accessor.chat.newMessage({
       id,
-      content: `took the controls from ${member.username}`,
+      content: `took the controls from ${member.id == this.id ? 'you' : member.username}`,
       type: 'event',
       created: new Date(),
     })
   }
 
   protected [EVENT.ADMIN.RELEASE]({ id, target }: AdminTargetPayload) {
-    this.$accessor.remote.clearHost()
+    this.$accessor.remote.clear()
     if (!target) {
-      this.$accessor.chat.addMessage({
+      this.$accessor.chat.newMessage({
         id,
         content: `force released the controls`,
         type: 'event',
@@ -388,9 +423,29 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
       return
     }
 
-    this.$accessor.chat.addMessage({
+    this.$accessor.chat.newMessage({
       id,
-      content: `released the controls from ${member.username}`,
+      content: `released the controls from ${member.id == this.id ? 'you' : member.username}`,
+      type: 'event',
+      created: new Date(),
+    })
+  }
+
+  protected [EVENT.ADMIN.GIVE]({ id, target }: AdminTargetPayload) {
+    if (!target) {
+      return
+    }
+
+    const member = this.member(target)
+    if (!member) {
+      return
+    }
+
+    this.$accessor.remote.setHost(member)
+
+    this.$accessor.chat.newMessage({
+      id,
+      content: `gave the controls to ${member.id == this.id ? 'you' : member.username}`,
       type: 'event',
       created: new Date(),
     })

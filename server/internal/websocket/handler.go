@@ -223,7 +223,6 @@ func (ws *WebSocketHandler) handle(socket *websocket.Conn, id string) {
 				Msg("recieved message from client")
 			if err := ws.handler.Message(id, raw); err != nil {
 				ws.logger.Error().Err(err).Msg("message handler has failed")
-				return
 			}
 		case <-cancel:
 			return

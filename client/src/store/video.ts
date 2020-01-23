@@ -1,35 +1,21 @@
 import { getterTree, mutationTree, actionTree } from 'typed-vuex'
-import { accessor } from '~/store'
+import { get, set } from '~/utils/localstorage'
 
 export const namespaced = true
 
-export const state = () => {
-  let volume = 100
-  let _volume = localStorage.getItem('volume')
-  if (_volume) {
-    volume = parseInt(_volume)
-  }
-
-  let muted = false
-  let _muted = localStorage.getItem('muted')
-  if (_muted) {
-    muted = _muted === '1'
-  }
-
-  return {
-    index: -1,
-    tracks: [] as MediaStreamTrack[],
-    streams: [] as MediaStream[],
-    width: 1280,
-    height: 720,
-    horizontal: 16,
-    vertical: 9,
-    volume,
-    muted,
-    playing: false,
-    playable: false,
-  }
-}
+export const state = () => ({
+  index: -1,
+  tracks: [] as MediaStreamTrack[],
+  streams: [] as MediaStream[],
+  width: 1280,
+  height: 720,
+  horizontal: 16,
+  vertical: 9,
+  volume: get<number>('volume', 100),
+  muted: get<boolean>('muted', false),
+  playing: false,
+  playable: false,
+})
 
 export const getters = getterTree(state, {
   stream: state => state.streams[state.index],
@@ -58,6 +44,7 @@ export const mutations = mutationTree(state, {
 
   toggleMute(state) {
     state.muted = !state.muted
+    set('mute', state.muted)
   },
 
   setPlayable(state, playable: boolean) {
@@ -107,7 +94,7 @@ export const mutations = mutationTree(state, {
 
   setVolume(state, volume: number) {
     state.volume = volume
-    localStorage.setItem('volume', `${volume}`)
+    set('volume', volume)
   },
 
   setStream(state, index: number) {
@@ -130,15 +117,3 @@ export const mutations = mutationTree(state, {
     state.streams = []
   },
 })
-
-export const actions = actionTree(
-  { state, getters, mutations },
-  {
-    initialise({ commit }) {
-      const volume = localStorage.getItem('volume')
-      if (volume) {
-        accessor.video.setVolume(parseInt(volume))
-      }
-    },
-  },
-)

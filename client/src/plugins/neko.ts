@@ -1,5 +1,5 @@
 import { PluginObject } from 'vue'
-import { NekoClient } from '~/client'
+import { NekoClient } from '~/neko'
 
 declare global {
   const $client: NekoClient

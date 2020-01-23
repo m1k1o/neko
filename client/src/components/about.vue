@@ -1,5 +1,5 @@
 <template>
-  <div class="about" @click.stop.prevent="toggle">
+  <div class="about" @click="toggle">
     <div class="window">
       <div class="loading" v-if="loading">
         <div class="logo">
@@ -147,7 +147,7 @@
       if (this.about === '') {
         this.loading = true
         this.$http
-          .get<string>('https://raw.githubusercontent.com/nurdism/neko/master/README.md')
+          .get<string>('https://raw.githubusercontent.com/nurdism/neko/master/client/ABOUT.md')
           .then(res => {
             return this.$http.post('https://api.github.com/markdown', {
               text: res.data,
@@ -163,8 +163,10 @@
       }
     }
 
-    toggle() {
-      this.$accessor.client.toggleAbout()
+    toggle(event: { target?: HTMLElement }) {
+      if (event.target && event.target.classList.contains('about')) {
+        this.$accessor.client.toggleAbout()
+      }
     }
   }
 </script>

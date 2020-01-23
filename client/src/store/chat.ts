@@ -1,8 +1,17 @@
 import { getterTree, mutationTree, actionTree } from 'typed-vuex'
-import { EVENT } from '~/client/events'
+import { makeid } from '~/utils'
+import { EVENT } from '~/neko/events'
 import { accessor } from '~/store'
 
 export const namespaced = true
+
+interface Emote {
+  type: string
+}
+
+interface Emotes {
+  [id: string]: Emote
+}
 
 interface Message {
   id: string
@@ -13,6 +22,7 @@ interface Message {
 
 export const state = () => ({
   history: [] as Message[],
+  emotes: {} as Emotes,
 })
 
 export const getters = getterTree(state, {
@@ -23,7 +33,24 @@ export const mutations = mutationTree(state, {
   addMessage(state, message: Message) {
     state.history = state.history.concat([message])
   },
+
+  addEmote(state, { id, emote }: { id: string; emote: Emote }) {
+    state.emotes = {
+      ...state.emotes,
+      [id]: emote,
+    }
+  },
+
+  delEmote(state, id: string) {
+    const emotes = {
+      ...state.emotes,
+    }
+    delete emotes[id]
+    state.emotes = emotes
+  },
+
   clear(state) {
+    state.emotes = {}
     state.history = []
   },
 })
@@ -31,20 +58,34 @@ export const mutations = mutationTree(state, {
 export const actions = actionTree(
   { state, getters, mutations },
   {
+    newEmote(store, emote: Emote) {
+      if (accessor.settings.ignore_emotes) {
+        return
+      }
+
+      const id = makeid(10)
+      accessor.chat.addEmote({ id, emote })
+    },
+
+    newMessage({ state }, message: Message) {
+      if (accessor.settings.chat_sound) {
+        new Audio('chat.mp3').play().catch(console.error)
+      }
+      accessor.chat.addMessage(message)
+    },
+
     sendMessage(store, content: string) {
       if (!accessor.connected || accessor.user.muted) {
         return
       }
-
       $client.sendMessage(EVENT.CHAT.MESSAGE, { content })
     },
 
-    sendEmoji(store, emoji: string) {
-      if (!accessor.connected || !accessor.user.muted) {
+    sendEmote(store, emote: string) {
+      if (!accessor.connected || accessor.user.muted) {
         return
       }
-
-      $client.sendMessage(EVENT.CHAT.EMOJI, { emoji })
+      $client.sendMessage(EVENT.CHAT.EMOTE, { emote })
     },
   },
 )

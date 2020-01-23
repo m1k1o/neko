@@ -45,6 +45,12 @@ type Control struct {
 	ID    string `json:"id"`
 }
 
+type ControlTarget struct {
+	Event  string `json:"event"`
+	ID     string `json:"id"`
+	Target string `json:"target"`
+}
+
 type ChatRecieve struct {
 	Event   string `json:"event"`
 	Content string `json:"content"`
@@ -56,15 +62,15 @@ type ChatSend struct {
 	Content string `json:"content"`
 }
 
-type EmojiRecieve struct {
+type EmoteRecieve struct {
 	Event string `json:"event"`
-	Emoji string `json:"emoji"`
+	Emote string `json:"emote"`
 }
 
-type EmojiSend struct {
+type EmoteSend struct {
 	Event string `json:"event"`
 	ID    string `json:"id"`
-	Emoji string `json:"emoji"`
+	Emote string `json:"emote"`
 }
 
 type Admin struct {

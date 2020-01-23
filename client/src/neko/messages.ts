@@ -1,4 +1,14 @@
-import { WebSocketEvents, EVENT } from './events'
+import {
+  EVENT,
+  WebSocketEvents,
+  SystemEvents,
+  ControlEvents,
+  IdentityEvents,
+  MemberEvents,
+  SignalEvents,
+  ChatEvents,
+  AdminEvents,
+} from './events'
 import { Member } from './types'
 
 export type WebSocketMessages =
@@ -89,10 +99,15 @@ export interface MemberDisconnectPayload {
 */
 // control/locked & control/release & control/request
 export interface ControlMessage extends WebSocketMessage, ControlPayload {
-  event: typeof EVENT.CONTROL.LOCKED | typeof EVENT.CONTROL.RELEASE | typeof EVENT.CONTROL.REQUEST
+  event: ControlEvents
 }
 export interface ControlPayload {
   id: string
+}
+
+export interface ControlTargetPayload {
+  id: string
+  target: string
 }
 
 /*
@@ -112,24 +127,24 @@ export interface ChatPayload {
 }
 
 // chat/emoji
-export interface ChatEmojiMessage extends WebSocketMessage, EmojiPayload {
-  event: typeof EVENT.CHAT.EMOJI
+export interface ChatEmoteMessage extends WebSocketMessage, EmotePayload {
+  event: typeof EVENT.CHAT.EMOTE
 }
 
-export interface EmojiPayload {
+export interface EmotePayload {
   id: string
-  emoji: string
+  emote: string
 }
 
 export interface EmojiSendPayload {
-  emoji: string
+  emote: string
 }
 
 /*
   ADMIN PAYLOADS
 */
 export interface AdminMessage extends WebSocketMessage, AdminPayload {
-  event: typeof EVENT.MESSAGE
+  event: AdminEvents
 }
 
 export interface AdminPayload {
@@ -137,7 +152,7 @@ export interface AdminPayload {
 }
 
 export interface AdminTargetMessage extends WebSocketMessage, AdminTargetPayload {
-  event: typeof EVENT.CHAT.EMOJI
+  event: AdminEvents
 }
 
 export interface AdminTargetPayload {

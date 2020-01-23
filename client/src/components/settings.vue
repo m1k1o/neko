@@ -1,12 +1,216 @@
 <template>
-  <div></div>
+  <div class="settings">
+    <ul>
+      <li>
+        <span>Scroll Sensitivity</span>
+        <label class="slider">
+          <input type="range" min="5" max="100" v-model="scroll" />
+        </label>
+      </li>
+      <li>
+        <span>Invert Scroll</span>
+        <label class="switch">
+          <input type="checkbox" v-model="scroll_invert" />
+          <span />
+        </label>
+      </li>
+      <li>
+        <span>Autoplay Video</span>
+        <label class="switch">
+          <input type="checkbox" v-model="autoplay" />
+          <span />
+        </label>
+      </li>
+      <li>
+        <span>Ignore Emotes</span>
+        <label class="switch">
+          <input type="checkbox" v-model="ignore_emotes" />
+          <span />
+        </label>
+      </li>
+      <li>
+        <span>Play Chat Sound</span>
+        <label class="switch">
+          <input type="checkbox" v-model="chat_sound" />
+          <span />
+        </label>
+      </li>
+    </ul>
+  </div>
 </template>
 
-<style lang="scss" scoped></style>
+<style lang="scss" scoped>
+  .settings {
+    flex: 1;
+    display: flex;
+
+    ul {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 5px 20px;
+
+      li {
+        display: flex;
+        flex-direction: row;
+        align-content: center;
+        justify-content: center;
+        border-bottom: 1px solid $background-secondary;
+        padding: 5px 0;
+        white-space: nowrap;
+
+        &:last-child {
+          border-bottom: none;
+        }
+
+        span {
+          margin-right: auto;
+          height: 24px;
+          line-height: 24px;
+        }
+
+        .switch {
+          justify-self: flex-end;
+          position: relative;
+          width: 42px;
+          height: 24px;
+
+          input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+          }
+
+          span {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: $background-tertiary;
+            transition: 0.4s;
+            border-radius: 34px;
+
+            &:before {
+              position: absolute;
+              content: '';
+              height: 18px;
+              width: 18px;
+              left: 3px;
+              bottom: 3px;
+              background-color: white;
+              transition: 0.3s;
+              border-radius: 50%;
+              box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            }
+          }
+        }
+
+        input[type='checkbox'] {
+          &:checked + span {
+            background-color: $style-primary;
+          }
+
+          &:checked + span:before {
+            transform: translateX(18px);
+          }
+        }
+
+        .slider {
+          white-space: nowrap;
+          max-width: 120px;
+
+          input[type='range'] {
+            display: inline-block;
+            background: transparent;
+            appearance: none;
+            height: 24px;
+            max-width: 120px;
+
+            &::-moz-range-thumb {
+              height: 12px;
+              width: 12px;
+              border-radius: 12px;
+              background: $interactive-active;
+              cursor: pointer;
+            }
+
+            &::-moz-range-track {
+              width: 100%;
+              height: 4px;
+              cursor: pointer;
+              background: $style-primary;
+              border-radius: 2px;
+            }
+
+            &::-webkit-slider-thumb {
+              appearance: none;
+              height: 12px;
+              width: 12px;
+              border-radius: 12px;
+              background: $interactive-active;
+              cursor: pointer;
+              margin-top: -4px;
+            }
+
+            &::-webkit-slider-runnable-track {
+              width: 100%;
+              height: 4px;
+              cursor: pointer;
+              background: $style-primary;
+              border-radius: 2px;
+            }
+          }
+        }
+      }
+    }
+  }
+</style>
 
 <script lang="ts">
   import { Component, Ref, Watch, Vue } from 'vue-property-decorator'
 
   @Component({ name: 'neko-settings' })
-  export default class extends Vue {}
+  export default class extends Vue {
+    get scroll() {
+      return this.$accessor.settings.scroll.toString()
+    }
+
+    set scroll(value: string) {
+      this.$accessor.settings.setScroll(parseInt(value))
+    }
+
+    get scroll_invert() {
+      return this.$accessor.settings.scroll_invert
+    }
+
+    set scroll_invert(value: boolean) {
+      this.$accessor.settings.setInvert(value)
+    }
+
+    get autoplay() {
+      return this.$accessor.settings.autoplay
+    }
+
+    set autoplay(value: boolean) {
+      this.$accessor.settings.setAutoplay(value)
+    }
+
+    get ignore_emotes() {
+      return this.$accessor.settings.ignore_emotes
+    }
+
+    set ignore_emotes(value: boolean) {
+      this.$accessor.settings.setIgnore(value)
+    }
+
+    get chat_sound() {
+      return this.$accessor.settings.chat_sound
+    }
+
+    set chat_sound(value: boolean) {
+      this.$accessor.settings.setSound(value)
+    }
+  }
 </script>

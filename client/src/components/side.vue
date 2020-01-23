@@ -68,6 +68,7 @@
       flex-grow: 1;
       display: flex;
       overflow: auto;
+      padding-top: 5px;
     }
   }
 </style>

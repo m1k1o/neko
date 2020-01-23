@@ -10,6 +10,7 @@ func (h *MessageHandler) controlRelease(id string, session *session.Session) err
 
 	// check if session is host
 	if !h.sessions.IsHost(id) {
+		h.logger.Debug().Str("id", id).Msg("is not the host")
 		return nil
 	}
 
@@ -31,8 +32,6 @@ func (h *MessageHandler) controlRelease(id string, session *session.Session) err
 }
 
 func (h *MessageHandler) controlRequest(id string, session *session.Session) error {
-	h.logger.Debug().Str("id", id).Msgf("user called %s", event.CONTROL_REQUEST)
-
 	// check for host
 	if !h.sessions.HasHost() {
 		// set host
@@ -72,6 +71,35 @@ func (h *MessageHandler) controlRequest(id string, session *session.Session) err
 			h.logger.Warn().Err(err).Str("id", host.ID).Msgf("sending event %s has failed", event.CONTROL_REQUESTING)
 			return err
 		}
+	}
+
+	return nil
+}
+
+func (h *MessageHandler) controlGive(id string, session *session.Session, payload *message.Control) error {
+	// check if session is host
+	if !h.sessions.IsHost(id) {
+		h.logger.Debug().Str("id", id).Msg("is not the host")
+		return nil
+	}
+
+	if !h.sessions.Has(payload.ID) {
+		h.logger.Debug().Str("id", payload.ID).Msg("user does not exist")
+		return nil
+	}
+
+	// set host
+	h.sessions.SetHost(payload.ID)
+
+	// let everyone know
+	if err := h.sessions.Brodcast(
+		message.ControlTarget{
+			Event:  event.CONTROL_GIVE,
+			ID:     id,
+			Target: payload.ID,
+		}, nil); err != nil {
+		h.logger.Warn().Err(err).Msgf("brodcasting event %s has failed", event.CONTROL_LOCKED)
+		return err
 	}
 
 	return nil

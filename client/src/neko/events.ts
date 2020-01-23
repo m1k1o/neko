@@ -29,10 +29,11 @@ export const EVENT = {
     RELEASE: 'control/release',
     REQUEST: 'control/request',
     REQUESTING: 'control/requesting',
+    GIVE: 'control/give',
   },
   CHAT: {
     MESSAGE: 'chat/message',
-    EMOJI: 'chat/emoji',
+    EMOTE: 'chat/emote',
   },
   ADMIN: {
     BAN: 'admin/ban',
@@ -43,6 +44,7 @@ export const EVENT = {
     UNMUTE: 'admin/unmute',
     CONTROL: 'admin/control',
     RELEASE: 'admin/release',
+    GIVE: 'admin/give',
   },
 } as const
 
@@ -57,12 +59,17 @@ export type WebSocketEvents =
   | ChatEvents
   | AdminEvents
 
+export type ControlEvents =
+  | typeof EVENT.CONTROL.LOCKED
+  | typeof EVENT.CONTROL.RELEASE
+  | typeof EVENT.CONTROL.REQUEST
+  | typeof EVENT.CONTROL.GIVE
+
 export type SystemEvents = typeof EVENT.SYSTEM.DISCONNECT
-export type ControlEvents = typeof EVENT.CONTROL.LOCKED | typeof EVENT.CONTROL.RELEASE | typeof EVENT.CONTROL.REQUEST
 export type IdentityEvents = typeof EVENT.IDENTITY.PROVIDE | typeof EVENT.IDENTITY.DETAILS
 export type MemberEvents = typeof EVENT.MEMBER.LIST | typeof EVENT.MEMBER.CONNECTED | typeof EVENT.MEMBER.DISCONNECTED
 export type SignalEvents = typeof EVENT.SIGNAL.ANSWER | typeof EVENT.SIGNAL.PROVIDE
-export type ChatEvents = typeof EVENT.CHAT.MESSAGE | typeof EVENT.CHAT.EMOJI
+export type ChatEvents = typeof EVENT.CHAT.MESSAGE | typeof EVENT.CHAT.EMOTE
 export type AdminEvents =
   | typeof EVENT.ADMIN.BAN
   | typeof EVENT.ADMIN.KICK
@@ -72,3 +79,4 @@ export type AdminEvents =
   | typeof EVENT.ADMIN.UNMUTE
   | typeof EVENT.ADMIN.CONTROL
   | typeof EVENT.ADMIN.RELEASE
+  | typeof EVENT.ADMIN.GIVE
