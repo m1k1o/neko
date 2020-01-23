@@ -1,12 +1,12 @@
 <template>
   <div ref="emote" @click.stop.prevent="run" class="emote">
-    <i :class="classes"></i>
-    <i :class="classes"></i>
-    <i :class="classes"></i>
-    <i :class="classes"></i>
-    <i :class="classes"></i>
-    <i :class="classes"></i>
-    <i :class="classes"></i>
+    <div :class="classes" />
+    <div :class="classes" />
+    <div :class="classes" />
+    <div :class="classes" />
+    <div :class="classes" />
+    <div :class="classes" />
+    <div :class="classes" />
   </div>
 </template>
 
@@ -18,7 +18,7 @@
     bottom: 0;
     right: 0;
 
-    i {
+    div {
       position: absolute;
       width: 30px;
       height: 30px;
@@ -26,18 +26,30 @@
       font-size: 30px;
       line-height: 30px;
       text-align: center;
+      background-size: contain;
+
+      &.celebrate {
+        background-image: url('../assets/celebrate.png');
+      }
+
+      &.clap {
+        background-image: url('../assets/clap.png');
+      }
+
+      &.exclam {
+        background-image: url('../assets/exclam.png');
+      }
 
       &.heart {
-        color: rgb(204, 72, 72);
+        background-image: url('../assets/heart.png');
       }
-      &.poo {
-        color: rgb(112, 89, 58);
+
+      &.laughing {
+        background-image: url('../assets/laughing.png');
       }
-      &.grin {
-        color: rgb(228, 194, 84);
-      }
-      &.dizzy {
-        color: rgb(199, 199, 199);
+
+      &.sleep {
+        background-image: url('../assets/sleep.png');
       }
     }
   }
@@ -66,14 +78,7 @@
       let count = 0
       let finish: Array<Promise<any>> = []
 
-      const emotes: any = {
-        heart: 'fa-heart',
-        poo: 'fa-poo',
-        grin: 'fa-grin-tears',
-        ghost: 'fa-ghost',
-      }
-
-      this.classes = ['fas', emotes[this.emote.type] || 'fa-heart', this.emote.type]
+      this.classes = [this.emote.type]
 
       for (let child of this.container.children) {
         const ele = child as HTMLElement

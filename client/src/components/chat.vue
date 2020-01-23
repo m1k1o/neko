@@ -325,7 +325,7 @@
     @Ref('history') readonly _history!: HTMLElement
     @Ref('context') readonly _context!: any
 
-    _content = ''
+    content = ''
 
     get id() {
       return this.$accessor.user.id
@@ -339,18 +339,6 @@
       return this.$accessor.chat.history
     }
 
-    get content() {
-      return this._content
-    }
-
-    set content(text: string) {
-      if (text.length > length) {
-        this._content = text.substring(0, length)
-        return
-      }
-      this._content = text
-    }
-
     @Watch('history')
     onHistroyChange() {
       this.$nextTick(() => {
@@ -361,7 +349,7 @@
     @Watch('muted')
     onMutedChange(muted: boolean) {
       if (muted) {
-        this._content = ''
+        this.content = ''
       }
     }
 
@@ -405,11 +393,15 @@
     }
 
     onKeyDown(event: KeyboardEvent) {
-      if (typeof this._content === 'undefined' || this.muted) {
+      if (this.muted) {
         return
       }
 
-      if (this._content.length == length) {
+      if (this.content.length > length) {
+        this.content = this.content.substring(0, length)
+      }
+
+      if (this.content.length == length) {
         if (
           [8, 16, 17, 18, 20, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 91, 93, 144].includes(event.keyCode) ||
           (event.ctrlKey && [67, 65, 88].includes(event.keyCode))
@@ -425,14 +417,14 @@
         return
       }
 
-      if (this._content === '') {
+      if (this.content === '') {
         event.preventDefault()
         return
       }
 
-      this.$accessor.chat.sendMessage(this._content)
+      this.$accessor.chat.sendMessage(this.content)
 
-      this._content = ''
+      this.content = ''
       event.preventDefault()
     }
   }

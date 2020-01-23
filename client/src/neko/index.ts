@@ -33,7 +33,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   connect(password: string, username: string) {
     const url =
       process.env.NODE_ENV === 'development'
-        ? `ws://${process.env.VUE_APP_SERVER}/`
+        ? `ws://${location.host.split(':')[0]}:${process.env.VUE_APP_SERVER_PORT}/`
         : `${/https/gi.test(location.protocol) ? 'wss' : 'ws'}://${location.host}/`
 
     super.connect(url, password, username)
@@ -60,13 +60,6 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
       title: 'Successfully connected',
       duration: 5000,
       speed: 1000,
-    })
-
-    this.$accessor.chat.newMessage({
-      id: this.id,
-      content: 'connected',
-      type: 'event',
-      created: new Date(),
     })
   }
 
@@ -125,6 +118,12 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   /////////////////////////////
   protected [EVENT.MEMBER.LIST]({ members }: MemberListPayload) {
     this.$accessor.user.setMembers(members)
+    this.$accessor.chat.newMessage({
+      id: this.id,
+      content: 'connected',
+      type: 'event',
+      created: new Date(),
+    })
   }
 
   protected [EVENT.MEMBER.CONNECTED](member: MemberPayload) {
