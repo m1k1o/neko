@@ -1,12 +1,12 @@
 package websocket
 
 import (
-	"n.eko.moe/neko/internal/event"
-	"n.eko.moe/neko/internal/message"
-	"n.eko.moe/neko/internal/session"
+	"n.eko.moe/neko/internal/types"
+	"n.eko.moe/neko/internal/types/event"
+	"n.eko.moe/neko/internal/types/message"
 )
 
-func (h *MessageHandler) SessionCreated(id string, session *session.Session) error {
+func (h *MessageHandler) SessionCreated(id string, session types.Session) error {
 	if err := session.Send(message.Identity{
 		Event: event.IDENTITY_PROVIDE,
 		ID:    id,
@@ -17,11 +17,11 @@ func (h *MessageHandler) SessionCreated(id string, session *session.Session) err
 	return nil
 }
 
-func (h *MessageHandler) SessionConnected(id string, session *session.Session) error {
+func (h *MessageHandler) SessionConnected(id string, session types.Session) error {
 	// send list of members to session
 	if err := session.Send(message.MembersList{
 		Event:    event.MEMBER_LIST,
-		Memebers: h.sessions.GetConnected(),
+		Memebers: h.sessions.Members(),
 	}); err != nil {
 		h.logger.Warn().Str("id", id).Err(err).Msgf("sending event %s has failed", event.MEMBER_LIST)
 		return err
@@ -32,7 +32,7 @@ func (h *MessageHandler) SessionConnected(id string, session *session.Session) e
 	if ok {
 		if err := session.Send(message.Control{
 			Event: event.CONTROL_LOCKED,
-			ID:    host.ID,
+			ID:    host.ID(),
 		}); err != nil {
 			h.logger.Warn().Str("id", id).Err(err).Msgf("sending event %s has failed", event.CONTROL_LOCKED)
 			return err
@@ -42,8 +42,8 @@ func (h *MessageHandler) SessionConnected(id string, session *session.Session) e
 	// let everyone know there is a new session
 	if err := h.sessions.Brodcast(
 		message.Member{
-			Event:   event.MEMBER_CONNECTED,
-			Session: session,
+			Event:  event.MEMBER_CONNECTED,
+			Member: session.Member(),
 		}, nil); err != nil {
 		h.logger.Warn().Err(err).Msgf("brodcasting event %s has failed", event.CONTROL_RELEASE)
 		return err

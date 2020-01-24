@@ -1,13 +1,13 @@
 package websocket
 
 import (
-	"n.eko.moe/neko/internal/event"
-	"n.eko.moe/neko/internal/message"
-	"n.eko.moe/neko/internal/session"
+	"n.eko.moe/neko/internal/types"
+	"n.eko.moe/neko/internal/types/event"
+	"n.eko.moe/neko/internal/types/message"
 )
 
-func (h *MessageHandler) chat(id string, session *session.Session, payload *message.ChatRecieve) error {
-	if session.Muted {
+func (h *MessageHandler) chat(id string, session types.Session, payload *message.ChatRecieve) error {
+	if session.Muted() {
 		return nil
 	}
 
@@ -23,8 +23,8 @@ func (h *MessageHandler) chat(id string, session *session.Session, payload *mess
 	return nil
 }
 
-func (h *MessageHandler) chatEmote(id string, session *session.Session, payload *message.EmoteRecieve) error {
-	if session.Muted {
+func (h *MessageHandler) chatEmote(id string, session types.Session, payload *message.EmoteRecieve) error {
+	if session.Muted() {
 		return nil
 	}
 

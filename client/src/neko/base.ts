@@ -34,7 +34,7 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
   }
 
   get peerConnected() {
-    return typeof this._peer !== 'undefined' && this._state === 'connected'
+    return typeof this._peer !== 'undefined' && ['connected', 'checking', 'completed'].includes(this._state)
   }
 
   get connected() {
@@ -60,7 +60,7 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
       this._ws.onmessage = this.onMessage.bind(this)
       this._ws.onerror = event => this.onError.bind(this)
       this._ws.onclose = event => this.onDisconnected.bind(this, new Error('websocket closed'))
-      this._timeout = setTimeout(this.onTimeout.bind(this), 5000)
+      this._timeout = setTimeout(this.onTimeout.bind(this), 15000)
     } catch (err) {
       this.onDisconnected(err)
     }

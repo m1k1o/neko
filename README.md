@@ -54,7 +54,7 @@ NEKO_DISPLAY=0          // Display number
 NEKO_WIDTH=1280         // Display width
 NEKO_HEIGHT=720         // Display height
 NEKO_PASSWORD=neko      // Password
-NEKO_ADMIN=neko      // Admin Password
+NEKO_ADMIN=neko         // Admin Password
 NEKO_BIND=0.0.0.0:8080  // Bind
 NEKO_KEY=               // (SSL)Key 
 NEKO_CERT=              // (SSL)Cert
@@ -66,3 +66,4 @@ NEKO_CERT=              // (SSL)Cert
 
 ### Non Goals
   * Turning n.eko into a service that serves multiple rooms and browsers/desktops.
+  * Voice chat, use [Discord](https://discordapp.com/))

@@ -1,6 +1,8 @@
 package message
 
-import "n.eko.moe/neko/internal/session"
+import (
+	"n.eko.moe/neko/internal/types"
+)
 
 type Message struct {
 	Event string `json:"event"`
@@ -27,13 +29,13 @@ type Signal struct {
 }
 
 type MembersList struct {
-	Event    string             `json:"event"`
-	Memebers []*session.Session `json:"members"`
+	Event    string          `json:"event"`
+	Memebers []*types.Member `json:"members"`
 }
 
 type Member struct {
 	Event string `json:"event"`
-	*session.Session
+	*types.Member
 }
 type MemberDisconnected struct {
 	Event string `json:"event"`

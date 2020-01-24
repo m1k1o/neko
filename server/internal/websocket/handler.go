@@ -1,235 +1,142 @@
 package websocket
 
 import (
-	"fmt"
-	"net/http"
-	"time"
+	"encoding/json"
 
-	"github.com/gorilla/websocket"
+	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 
-	"n.eko.moe/neko/internal/config"
-	"n.eko.moe/neko/internal/event"
-	"n.eko.moe/neko/internal/message"
-	"n.eko.moe/neko/internal/session"
+	"n.eko.moe/neko/internal/types"
+	"n.eko.moe/neko/internal/types/event"
+	"n.eko.moe/neko/internal/types/message"
 	"n.eko.moe/neko/internal/utils"
-	"n.eko.moe/neko/internal/webrtc"
 )
 
-func New(sessions *session.SessionManager, webrtc *webrtc.WebRTCManager, conf *config.WebSocket) *WebSocketHandler {
-	logger := log.With().Str("module", "websocket").Logger()
-
-	return &WebSocketHandler{
-		logger:   logger,
-		conf:     conf,
-		sessions: sessions,
-		upgrader: websocket.Upgrader{
-			CheckOrigin: func(r *http.Request) bool {
-				return true
-			},
-		},
-		handler: &MessageHandler{
-			logger:   logger.With().Str("subsystem", "handler").Logger(),
-			sessions: sessions,
-			webrtc:   webrtc,
-			banned:   make(map[string]bool),
-			locked:   false,
-		},
-	}
-}
-
-// Send pings to peer with this period. Must be less than pongWait.
-const pingPeriod = 60 * time.Second
-
-type WebSocketHandler struct {
+type MessageHandler struct {
 	logger   zerolog.Logger
-	upgrader websocket.Upgrader
-	handler  *MessageHandler
-	conf     *config.WebSocket
-	sessions *session.SessionManager
-	shutdown chan bool
+	sessions types.SessionManager
+	webrtc   types.WebRTCManager
+	banned   map[string]bool
+	locked   bool
 }
 
-func (ws *WebSocketHandler) Start() error {
-
-	go func() {
-		defer func() {
-			ws.logger.Info().Msg("shutdown")
-		}()
-
-		for {
-			select {
-			case <-ws.shutdown:
-				return
-			}
+func (h *MessageHandler) Connected(id string, socket *WebSocket) (bool, string, error) {
+	address := socket.Address()
+	if address == nil {
+		h.logger.Debug().Msg("no remote address, baling")
+	} else {
+		ok, banned := h.banned[*address]
+		if ok && banned {
+			h.logger.Debug().Str("address", *address).Msg("banned")
+			return false, "This IP has been banned", nil
 		}
-	}()
+	}
 
-	ws.sessions.OnCreated(func(id string, session *session.Session) {
-		if err := ws.handler.SessionCreated(id, session); err != nil {
-			ws.logger.Warn().Str("id", id).Err(err).Msg("session created with and error")
-		} else {
-			ws.logger.Debug().Str("id", id).Msg("session created")
-		}
-	})
+	if h.locked {
+		h.logger.Debug().Msg("server locked")
+		return false, "Server is currently locked", nil
+	}
 
-	ws.sessions.OnConnected(func(id string, session *session.Session) {
-		if err := ws.handler.SessionConnected(id, session); err != nil {
-			ws.logger.Warn().Str("id", id).Err(err).Msg("session connected with and error")
-		} else {
-			ws.logger.Debug().Str("id", id).Msg("session connected")
-		}
-	})
-
-	ws.sessions.OnDestroy(func(id string) {
-		if err := ws.handler.SessionDestroyed(id); err != nil {
-			ws.logger.Warn().Str("id", id).Err(err).Msg("session destroyed with and error")
-		} else {
-			ws.logger.Debug().Str("id", id).Msg("session destroyed")
-		}
-	})
-
-	return nil
+	return true, "", nil
 }
 
-func (ws *WebSocketHandler) Shutdown() error {
-	ws.shutdown <- true
-	return nil
+func (h *MessageHandler) Disconnected(id string) error {
+	return h.sessions.Destroy(id)
 }
 
-func (ws *WebSocketHandler) Upgrade(w http.ResponseWriter, r *http.Request) error {
-	ws.logger.Debug().Msg("attempting to upgrade connection")
-
-	socket, err := ws.upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		ws.logger.Error().Err(err).Msg("failed to upgrade connection")
+func (h *MessageHandler) Message(id string, raw []byte) error {
+	header := message.Message{}
+	if err := json.Unmarshal(raw, &header); err != nil {
 		return err
 	}
 
-	id, admin, err := ws.authenticate(r)
-	if err != nil {
-		ws.logger.Warn().Err(err).Msg("authenticatetion failed")
-
-		if err = socket.WriteJSON(message.Disconnect{
-			Event:   event.SYSTEM_DISCONNECT,
-			Message: "invalid password",
-		}); err != nil {
-			ws.logger.Error().Err(err).Msg("failed to send disconnect")
-		}
-
-		if err = socket.Close(); err != nil {
-			return err
-		}
-		return nil
-	}
-
-	ok, reason, err := ws.handler.SocketConnected(id, socket)
-	if err != nil {
-		ws.logger.Error().Err(err).Msg("connection failed")
-		return err
-	}
-
+	session, ok := h.sessions.Get(id)
 	if !ok {
-		if err = socket.WriteJSON(message.Disconnect{
-			Event:   event.SYSTEM_DISCONNECT,
-			Message: reason,
-		}); err != nil {
-			ws.logger.Error().Err(err).Msg("failed to send disconnect")
-		}
-
-		if err = socket.Close(); err != nil {
-			return err
-		}
-
-		return nil
+		errors.Errorf("unknown session id %s", id)
 	}
 
-	ws.sessions.New(id, admin, socket)
+	switch header.Event {
+	// Signal Events
+	case event.SIGNAL_PROVIDE:
+		payload := &message.Signal{}
+		return errors.Wrapf(
+			utils.Unmarshal(payload, raw, func() error {
+				return h.createPeer(id, session, payload)
+			}), "%s failed", header.Event)
+	// Identity Events
+	case event.IDENTITY_DETAILS:
+		payload := &message.IdentityDetails{}
+		return errors.Wrapf(
+			utils.Unmarshal(payload, raw, func() error {
+				return h.identityDetails(id, session, payload)
+			}), "%s failed", header.Event)
 
-	ws.logger.
-		Debug().
-		Str("session", id).
-		Str("address", socket.RemoteAddr().String()).
-		Msg("new connection created")
+	// Control Events
+	case event.CONTROL_RELEASE:
+		return errors.Wrapf(h.controlRelease(id, session), "%s failed", header.Event)
+	case event.CONTROL_REQUEST:
+		return errors.Wrapf(h.controlRequest(id, session), "%s failed", header.Event)
+	case event.CONTROL_GIVE:
+		payload := &message.Control{}
+		return errors.Wrapf(
+			utils.Unmarshal(payload, raw, func() error {
+				return h.controlGive(id, session, payload)
+			}), "%s failed", header.Event)
 
-	defer func() {
-		ws.logger.
-			Debug().
-			Str("session", id).
-			Str("address", socket.RemoteAddr().String()).
-			Msg("session ended")
-	}()
+	// Chat Events
+	case event.CHAT_MESSAGE:
+		payload := &message.ChatRecieve{}
+		return errors.Wrapf(
+			utils.Unmarshal(payload, raw, func() error {
+				return h.chat(id, session, payload)
+			}), "%s failed", header.Event)
+	case event.CHAT_EMOTE:
+		payload := &message.EmoteRecieve{}
+		return errors.Wrapf(
+			utils.Unmarshal(payload, raw, func() error {
+				return h.chatEmote(id, session, payload)
+			}), "%s failed", header.Event)
 
-	ws.handle(socket, id)
-	return nil
-}
-
-func (ws *WebSocketHandler) authenticate(r *http.Request) (string, bool, error) {
-	id, err := utils.NewUID(32)
-	if err != nil {
-		return "", false, err
-	}
-
-	passwords, ok := r.URL.Query()["password"]
-	if !ok || len(passwords[0]) < 1 {
-		return "", false, fmt.Errorf("no password provided")
-	}
-
-	if passwords[0] == ws.conf.AdminPassword {
-		return id, true, nil
-	}
-
-	if passwords[0] == ws.conf.Password {
-		return id, false, nil
-	}
-
-	return "", false, fmt.Errorf("invalid password: %s", passwords[0])
-}
-
-func (ws *WebSocketHandler) handle(socket *websocket.Conn, id string) {
-	bytes := make(chan []byte)
-	cancel := make(chan struct{})
-	ticker := time.NewTicker(pingPeriod)
-
-	go func() {
-		defer func() {
-			ticker.Stop()
-			ws.logger.Debug().Str("address", socket.RemoteAddr().String()).Msg("handle socket ending")
-			ws.handler.SocketDisconnected(id)
-		}()
-
-		for {
-			_, raw, err := socket.ReadMessage()
-			if err != nil {
-				if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-					ws.logger.Warn().Err(err).Msg("read message error")
-				} else {
-					ws.logger.Debug().Err(err).Msg("read message error")
-				}
-				close(cancel)
-				break
-			}
-			bytes <- raw
-		}
-	}()
-
-	for {
-		select {
-		case raw := <-bytes:
-			ws.logger.Debug().
-				Str("session", id).
-				Str("raw", string(raw)).
-				Msg("recieved message from client")
-			if err := ws.handler.Message(id, raw); err != nil {
-				ws.logger.Error().Err(err).Msg("message handler has failed")
-			}
-		case <-cancel:
-			return
-		case _ = <-ticker.C:
-			if err := socket.WriteMessage(websocket.PingMessage, nil); err != nil {
-				return
-			}
-		}
+	// Admin Events
+	case event.ADMIN_LOCK:
+		return errors.Wrapf(h.adminLock(id, session), "%s failed", header.Event)
+	case event.ADMIN_UNLOCK:
+		return errors.Wrapf(h.adminUnlock(id, session), "%s failed", header.Event)
+	case event.ADMIN_CONTROL:
+		return errors.Wrapf(h.adminControl(id, session), "%s failed", header.Event)
+	case event.ADMIN_RELEASE:
+		return errors.Wrapf(h.adminRelease(id, session), "%s failed", header.Event)
+	case event.ADMIN_GIVE:
+		payload := &message.Admin{}
+		return errors.Wrapf(
+			utils.Unmarshal(payload, raw, func() error {
+				return h.adminGive(id, session, payload)
+			}), "%s failed", header.Event)
+	case event.ADMIN_BAN:
+		payload := &message.Admin{}
+		return errors.Wrapf(
+			utils.Unmarshal(payload, raw, func() error {
+				return h.adminBan(id, session, payload)
+			}), "%s failed", header.Event)
+	case event.ADMIN_KICK:
+		payload := &message.Admin{}
+		return errors.Wrapf(
+			utils.Unmarshal(payload, raw, func() error {
+				return h.adminKick(id, session, payload)
+			}), "%s failed", header.Event)
+	case event.ADMIN_MUTE:
+		payload := &message.Admin{}
+		return errors.Wrapf(
+			utils.Unmarshal(payload, raw, func() error {
+				return h.adminMute(id, session, payload)
+			}), "%s failed", header.Event)
+	case event.ADMIN_UNMUTE:
+		payload := &message.Admin{}
+		return errors.Wrapf(
+			utils.Unmarshal(payload, raw, func() error {
+				return h.adminUnmute(id, session, payload)
+			}), "%s failed", header.Event)
+	default:
+		return errors.Errorf("unknown message event %s", header.Event)
 	}
 }

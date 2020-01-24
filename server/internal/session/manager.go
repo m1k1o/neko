@@ -3,15 +3,17 @@ package session
 import (
 	"fmt"
 
-	"github.com/gorilla/websocket"
 	"github.com/kataras/go-events"
-	"github.com/pion/webrtc/v2"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 
+	"n.eko.moe/neko/internal/types"
 	"n.eko.moe/neko/internal/utils"
 )
 
 func New() *SessionManager {
 	return &SessionManager{
+		logger:  log.With().Str("module", "session").Logger(),
 		host:    "",
 		members: make(map[string]*Session),
 		emmiter: events.New(),
@@ -19,153 +21,100 @@ func New() *SessionManager {
 }
 
 type SessionManager struct {
+	logger  zerolog.Logger
 	host    string
 	members map[string]*Session
 	emmiter events.EventEmmiter
 }
 
-func (m *SessionManager) New(id string, admin bool, socket *websocket.Conn) *Session {
+func (manager *SessionManager) New(id string, admin bool, socket types.WebScoket) types.Session {
 	session := &Session{
-		ID:        id,
-		Admin:     admin,
+		id:        id,
+		admin:     admin,
+		manager:   manager,
 		socket:    socket,
+		logger:    manager.logger.With().Str("id", id).Logger(),
 		connected: false,
 	}
 
-	m.members[id] = session
-	m.emmiter.Emit("created", id, session)
+	manager.members[id] = session
+	manager.emmiter.Emit("created", id, session)
 
 	return session
 }
 
-func (m *SessionManager) IsHost(id string) bool {
-	return m.host == id
+func (manager *SessionManager) HasHost() bool {
+	return manager.host != ""
 }
 
-func (m *SessionManager) HasHost() bool {
-	return m.host != ""
+func (manager *SessionManager) IsHost(id string) bool {
+	return manager.host == id
 }
 
-func (m *SessionManager) SetHost(id string) error {
-	_, ok := m.members[id]
+func (manager *SessionManager) SetHost(id string) error {
+	_, ok := manager.members[id]
 	if ok {
-		m.host = id
-		m.emmiter.Emit("host", id)
+		manager.host = id
+		manager.emmiter.Emit("host", id)
 		return nil
 	}
 	return fmt.Errorf("invalid session id %s", id)
 }
 
-func (m *SessionManager) GetHost() (*Session, bool) {
-	host, ok := m.members[m.host]
+func (manager *SessionManager) GetHost() (types.Session, bool) {
+	host, ok := manager.members[manager.host]
 	return host, ok
 }
 
-func (m *SessionManager) ClearHost() {
-	id := m.host
-	m.host = ""
-	m.emmiter.Emit("host_cleared", id)
+func (manager *SessionManager) ClearHost() {
+	id := manager.host
+	manager.host = ""
+	manager.emmiter.Emit("host_cleared", id)
 }
 
-func (m *SessionManager) Has(id string) bool {
-	_, ok := m.members[id]
+func (manager *SessionManager) Has(id string) bool {
+	_, ok := manager.members[id]
 	return ok
 }
 
-func (m *SessionManager) Get(id string) (*Session, bool) {
-	session, ok := m.members[id]
+func (manager *SessionManager) Get(id string) (types.Session, bool) {
+	session, ok := manager.members[id]
 	return session, ok
 }
 
-func (m *SessionManager) GetConnected() []*Session {
-	var sessions []*Session
-	for _, sess := range m.members {
-		if sess.connected {
-			sessions = append(sessions, sess)
+func (manager *SessionManager) Members() []*types.Member {
+	members := []*types.Member{}
+	for _, session := range manager.members {
+		if !session.connected {
+			continue
+		}
+
+		member := session.Member()
+		if member != nil {
+			members = append(members, member)
 		}
 	}
-
-	return sessions
+	return members
 }
 
-func (m *SessionManager) Set(id string, session *Session) {
-	m.members[id] = session
-}
-
-func (m *SessionManager) Destroy(id string) error {
-	session, ok := m.members[id]
+func (manager *SessionManager) Destroy(id string) error {
+	session, ok := manager.members[id]
 	if ok {
 		err := session.destroy()
-		delete(m.members, id)
-		m.emmiter.Emit("destroyed", id)
+		delete(manager.members, id)
+		manager.emmiter.Emit("destroyed", id)
 		return err
 	}
 	return nil
 }
 
-func (m *SessionManager) SetSocket(id string, socket *websocket.Conn) (bool, error) {
-	session, ok := m.members[id]
-	if ok {
-		session.socket = socket
-		return true, nil
-	}
-
-	return false, fmt.Errorf("invalid session id %s", id)
-}
-
-func (m *SessionManager) SetPeer(id string, peer *webrtc.PeerConnection) (bool, error) {
-	session, ok := m.members[id]
-	if ok {
-		session.peer = peer
-		return true, nil
-	}
-
-	return false, fmt.Errorf("invalid session id %s", id)
-}
-
-func (m *SessionManager) SetName(id string, name string) (bool, error) {
-	session, ok := m.members[id]
-	if ok {
-		session.Name = name
-		session.connected = true
-		m.emmiter.Emit("connected", id, session)
-		return true, nil
-	}
-
-	return false, fmt.Errorf("invalid session id %s", id)
-}
-
-func (m *SessionManager) Mute(id string) error {
-	session, ok := m.members[id]
-	if ok {
-		session.Muted = true
-	}
+func (manager *SessionManager) Clear() error {
 	return nil
 }
 
-func (m *SessionManager) Unmute(id string) error {
-	session, ok := m.members[id]
-	if ok {
-		session.Muted = false
-	}
-	return nil
-}
-
-func (m *SessionManager) Kick(id string, v interface{}) error {
-	session, ok := m.members[id]
-	if ok {
-		return session.Kick(v)
-	}
-	return nil
-}
-
-func (m *SessionManager) Clear() error {
-	return nil
-}
-
-func (m *SessionManager) Brodcast(v interface{}, exclude interface{}) error {
-	for id, sess := range m.members {
-		if !sess.connected {
+func (manager *SessionManager) Brodcast(v interface{}, exclude interface{}) error {
+	for id, session := range manager.members {
+		if !session.connected {
 			continue
 		}
 
@@ -175,39 +124,65 @@ func (m *SessionManager) Brodcast(v interface{}, exclude interface{}) error {
 			}
 		}
 
-		if err := sess.Send(v); err != nil {
+		if err := session.Send(v); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (m *SessionManager) OnHost(listener func(id string)) {
-	m.emmiter.On("host", func(payload ...interface{}) {
+func (manager *SessionManager) WriteVideoSample(sample types.Sample) error {
+	for _, session := range manager.members {
+		if !session.connected {
+			continue
+		}
+
+		if err := session.WriteVideoSample(sample); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (manager *SessionManager) WriteAudioSample(sample types.Sample) error {
+	for _, session := range manager.members {
+		if !session.connected {
+			continue
+		}
+
+		if err := session.WriteAudioSample(sample); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (manager *SessionManager) OnHost(listener func(id string)) {
+	manager.emmiter.On("host", func(payload ...interface{}) {
 		listener(payload[0].(string))
 	})
 }
 
-func (m *SessionManager) OnHostCleared(listener func(id string)) {
-	m.emmiter.On("host_cleared", func(payload ...interface{}) {
+func (manager *SessionManager) OnHostCleared(listener func(id string)) {
+	manager.emmiter.On("host_cleared", func(payload ...interface{}) {
 		listener(payload[0].(string))
 	})
 }
 
-func (m *SessionManager) OnCreated(listener func(id string, session *Session)) {
-	m.emmiter.On("created", func(payload ...interface{}) {
+func (manager *SessionManager) OnDestroy(listener func(id string)) {
+	manager.emmiter.On("destroyed", func(payload ...interface{}) {
+		listener(payload[0].(string))
+	})
+}
+
+func (manager *SessionManager) OnCreated(listener func(id string, session types.Session)) {
+	manager.emmiter.On("created", func(payload ...interface{}) {
 		listener(payload[0].(string), payload[1].(*Session))
 	})
 }
 
-func (m *SessionManager) OnConnected(listener func(id string, session *Session)) {
-	m.emmiter.On("connected", func(payload ...interface{}) {
+func (manager *SessionManager) OnConnected(listener func(id string, session types.Session)) {
+	manager.emmiter.On("connected", func(payload ...interface{}) {
 		listener(payload[0].(string), payload[1].(*Session))
-	})
-}
-
-func (m *SessionManager) OnDestroy(listener func(id string)) {
-	m.emmiter.On("destroyed", func(payload ...interface{}) {
-		listener(payload[0].(string))
 	})
 }

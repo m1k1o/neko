@@ -1,12 +1,12 @@
 package websocket
 
 import (
-	"n.eko.moe/neko/internal/event"
-	"n.eko.moe/neko/internal/message"
-	"n.eko.moe/neko/internal/session"
+	"n.eko.moe/neko/internal/types"
+	"n.eko.moe/neko/internal/types/event"
+	"n.eko.moe/neko/internal/types/message"
 )
 
-func (h *MessageHandler) controlRelease(id string, session *session.Session) error {
+func (h *MessageHandler) controlRelease(id string, session types.Session) error {
 
 	// check if session is host
 	if !h.sessions.IsHost(id) {
@@ -31,7 +31,7 @@ func (h *MessageHandler) controlRelease(id string, session *session.Session) err
 	return nil
 }
 
-func (h *MessageHandler) controlRequest(id string, session *session.Session) error {
+func (h *MessageHandler) controlRequest(id string, session types.Session) error {
 	// check for host
 	if !h.sessions.HasHost() {
 		// set host
@@ -57,7 +57,7 @@ func (h *MessageHandler) controlRequest(id string, session *session.Session) err
 		// tell session there is a host
 		if err := session.Send(message.Control{
 			Event: event.CONTROL_REQUEST,
-			ID:    host.ID,
+			ID:    host.ID(),
 		}); err != nil {
 			h.logger.Warn().Err(err).Str("id", id).Msgf("sending event %s has failed", event.CONTROL_REQUEST)
 			return err
@@ -68,7 +68,7 @@ func (h *MessageHandler) controlRequest(id string, session *session.Session) err
 			Event: event.CONTROL_REQUESTING,
 			ID:    id,
 		}); err != nil {
-			h.logger.Warn().Err(err).Str("id", host.ID).Msgf("sending event %s has failed", event.CONTROL_REQUESTING)
+			h.logger.Warn().Err(err).Str("id", host.ID()).Msgf("sending event %s has failed", event.CONTROL_REQUESTING)
 			return err
 		}
 	}
@@ -76,7 +76,7 @@ func (h *MessageHandler) controlRequest(id string, session *session.Session) err
 	return nil
 }
 
-func (h *MessageHandler) controlGive(id string, session *session.Session, payload *message.Control) error {
+func (h *MessageHandler) controlGive(id string, session types.Session, payload *message.Control) error {
 	// check if session is host
 	if !h.sessions.IsHost(id) {
 		h.logger.Debug().Str("id", id).Msg("is not the host")

@@ -3,38 +3,90 @@ package session
 import (
 	"sync"
 
-	"github.com/gorilla/websocket"
-	"github.com/pion/webrtc/v2"
+	"github.com/rs/zerolog"
+	"n.eko.moe/neko/internal/types"
+	"n.eko.moe/neko/internal/types/event"
+	"n.eko.moe/neko/internal/types/message"
 )
 
 type Session struct {
-	ID        string `json:"id"`
-	Name      string `json:"username"`
-	Admin     bool   `json:"admin"`
-	Muted     bool   `json:"muted"`
+	logger    zerolog.Logger
+	id        string
+	name      string
+	admin     bool
+	muted     bool
 	connected bool
-	socket    *websocket.Conn
-	peer      *webrtc.PeerConnection
+	manager   *SessionManager
+	socket    types.WebScoket
+	peer      types.Peer
 	mu        sync.Mutex
 }
 
-func (session *Session) RemoteAddr() *string {
-	if session.socket != nil {
-		address := session.socket.RemoteAddr().String()
-		return &address
+func (session *Session) ID() string {
+	return session.id
+}
+
+func (session *Session) Name() string {
+	return session.name
+}
+
+func (session *Session) Admin() bool {
+	return session.admin
+}
+
+func (session *Session) Muted() bool {
+	return session.muted
+}
+
+func (session *Session) Connected() bool {
+	return session.connected
+}
+
+func (session *Session) Address() *string {
+	if session.socket == nil {
+		return nil
 	}
+	return session.socket.Address()
+}
+
+func (session *Session) Member() *types.Member {
+	return &types.Member{
+		ID:    session.id,
+		Name:  session.name,
+		Admin: session.admin,
+		Muted: session.muted,
+	}
+}
+
+func (session *Session) SetMuted(muted bool) {
+	session.muted = muted
+}
+
+func (session *Session) SetName(name string) error {
+	session.name = name
 	return nil
 }
 
-// TODO: write to peer data channel
-func (session *Session) Write(v interface{}) error {
-	session.mu.Lock()
-	defer session.mu.Unlock()
+func (session *Session) SetSocket(socket types.WebScoket) error {
+	session.socket = socket
 	return nil
 }
 
-func (session *Session) Kick(v interface{}) error {
-	if err := session.Send(v); err != nil {
+func (session *Session) SetPeer(peer types.Peer) error {
+	session.peer = peer
+	session.connected = true
+	session.manager.emmiter.Emit("connected", session.id, session)
+	return nil
+}
+
+func (session *Session) Kick(reason string) error {
+	if session.socket == nil {
+		return nil
+	}
+	if err := session.socket.Send(&message.Disconnect{
+		Event:   event.SYSTEM_DISCONNECT,
+		Message: reason,
+	}); err != nil {
 		return err
 	}
 
@@ -42,27 +94,40 @@ func (session *Session) Kick(v interface{}) error {
 }
 
 func (session *Session) Send(v interface{}) error {
-	session.mu.Lock()
-	defer session.mu.Unlock()
-
-	if session.socket != nil {
-		return session.socket.WriteJSON(v)
+	if session.socket == nil {
+		return nil
 	}
+	return session.socket.Send(v)
+}
 
-	return nil
+func (session *Session) Write(v interface{}) error {
+	if session.socket == nil {
+		return nil
+	}
+	return session.socket.Send(v)
+}
+
+func (session *Session) WriteVideoSample(sample types.Sample) error {
+	if session.peer == nil || !session.connected {
+		return nil
+	}
+	return session.peer.WriteVideoSample(sample)
+}
+
+func (session *Session) WriteAudioSample(sample types.Sample) error {
+	if session.peer == nil || !session.connected {
+		return nil
+	}
+	return session.peer.WriteAudioSample(sample)
 }
 
 func (session *Session) destroy() error {
-	if session.peer != nil && session.peer.ConnectionState() == webrtc.PeerConnectionStateConnected {
-		if err := session.peer.Close(); err != nil {
-			return err
-		}
+	if err := session.socket.Destroy(); err != nil {
+		return err
 	}
 
-	if session.socket != nil {
-		if err := session.socket.Close(); err != nil {
-			return err
-		}
+	if err := session.peer.Destroy(); err != nil {
+		return err
 	}
 
 	return nil

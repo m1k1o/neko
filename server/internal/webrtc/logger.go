@@ -1,6 +1,9 @@
 package webrtc
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/pion/logging"
 	"github.com/rs/zerolog"
 )
@@ -13,8 +16,19 @@ func (l logger) Trace(msg string)                          { l.logger.Trace().Ms
 func (l logger) Tracef(format string, args ...interface{}) { l.logger.Trace().Msgf(format, args...) }
 func (l logger) Debug(msg string)                          { l.logger.Debug().Msg(msg) }
 func (l logger) Debugf(format string, args ...interface{}) { l.logger.Debug().Msgf(format, args...) }
-func (l logger) Info(msg string)                           { l.logger.Info().Msg(msg) }
-func (l logger) Infof(format string, args ...interface{})  { l.logger.Info().Msgf(format, args...) }
+func (l logger) Info(msg string) {
+	if strings.Contains(msg, "packetio.Buffer is full") {
+		l.logger.Panic().Msg(msg)
+	}
+	l.logger.Info().Msg(msg)
+}
+func (l logger) Infof(format string, args ...interface{}) {
+	msg := fmt.Sprintf(format, args...)
+	if strings.Contains(msg, "packetio.Buffer is full") {
+		l.logger.Panic().Msg(msg)
+	}
+	l.logger.Info().Msgf(format, args...)
+}
 func (l logger) Warn(msg string)                           { l.logger.Warn().Msg(msg) }
 func (l logger) Warnf(format string, args ...interface{})  { l.logger.Warn().Msgf(format, args...) }
 func (l logger) Error(msg string)                          { l.logger.Error().Msg(msg) }
