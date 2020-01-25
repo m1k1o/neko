@@ -134,11 +134,11 @@ func Display(display string) {
 }
 
 func Move(x, y int) {
-	C.mouseMove(C.int(x), C.int(y))
+	C.XMove(C.int(x), C.int(y))
 }
 
 func Scroll(x, y int) {
-	C.mouseScroll(C.int(x), C.int(y))
+	C.XScroll(C.int(x), C.int(y))
 }
 
 func ButtonDown(code int) (*keycode.Button, error) {
@@ -153,7 +153,7 @@ func ButtonDown(code int) (*keycode.Button, error) {
 
 	debounce[code] = time.Now()
 
-	C.mouseEvent(C.uint(button.Keysym), C.int(1))
+	C.XButton(C.uint(button.Keysym), C.int(1))
 	return &button, nil
 }
 
@@ -168,11 +168,10 @@ func KeyDown(code int) (*keycode.Key, error) {
 	}
 
 	debounce[code] = time.Now()
-	
-	C.keyEvent(C.ulong(key.Keysym), C.int(1))
+
+	C.XKey(C.ulong(key.Keysym), C.int(1))
 	return &key, nil
 }
-
 
 func ButtonUp(code int) (*keycode.Button, error) {
 	button, ok := buttons[code]
@@ -186,7 +185,7 @@ func ButtonUp(code int) (*keycode.Button, error) {
 
 	delete(debounce, code)
 
-	C.mouseEvent(C.uint(button.Keysym), C.int(0))
+	C.XButton(C.uint(button.Keysym), C.int(0))
 	return &button, nil
 }
 
@@ -202,13 +201,13 @@ func KeyUp(code int) (*keycode.Key, error) {
 
 	delete(debounce, code)
 
-	C.keyEvent(C.ulong(key.Keysym), C.int(0))
+	C.XKey(C.ulong(key.Keysym), C.int(0))
 	return &key, nil
 }
 
 func Reset() {
 	for key := range debounce {
-		if (key < 8) {
+		if key < 8 {
 			ButtonUp(key)
 		} else {
 			KeyUp(key)
@@ -225,7 +224,7 @@ func Check(duration time.Duration) {
 			continue
 		}
 
-		if (key < 8) {
+		if key < 8 {
 			ButtonUp(key)
 		} else {
 			KeyUp(key)

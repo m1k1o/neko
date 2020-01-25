@@ -42,6 +42,11 @@ type MemberDisconnected struct {
 	ID    string `json:"id"`
 }
 
+type Clipboard struct {
+	Event string `json:"event"`
+	Text  string `json:"text"`
+}
+
 type Control struct {
 	Event string `json:"event"`
 	ID    string `json:"id"`

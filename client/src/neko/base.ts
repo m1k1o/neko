@@ -165,6 +165,11 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
       this.emit('debug', `peer connection state chagned: ${this._state}`)
 
       switch (this._state) {
+        case 'checking':
+          if (this._timeout) {
+            clearTimeout(this._timeout)
+          }
+          break
         case 'connected':
           this.onConnected()
           break

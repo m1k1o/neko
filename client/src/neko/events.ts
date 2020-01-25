@@ -29,6 +29,7 @@ export const EVENT = {
     RELEASE: 'control/release',
     REQUEST: 'control/request',
     REQUESTING: 'control/requesting',
+    CLIPBOARD: 'control/clipboard',
     GIVE: 'control/give',
   },
   CHAT: {
@@ -64,6 +65,7 @@ export type ControlEvents =
   | typeof EVENT.CONTROL.RELEASE
   | typeof EVENT.CONTROL.REQUEST
   | typeof EVENT.CONTROL.GIVE
+  | typeof EVENT.CONTROL.CLIPBOARD
 
 export type SystemEvents = typeof EVENT.SYSTEM.DISCONNECT
 export type IdentityEvents = typeof EVENT.IDENTITY.PROVIDE | typeof EVENT.IDENTITY.DETAILS

@@ -1,56 +1,56 @@
 #include "hid.h"
 
-static Display *display = NULL;
-static char *name = ":0.0";
-static int registered = 0;
-static int dirty = 0;
+static Display *DISPLAY = NULL;
+static char *NAME = ":0.0";
+static int REGISTERED = 0;
+static int DIRTY = 0;
 
 Display *getXDisplay(void) {
   /* Close the display if displayName has changed */
-  if (dirty) {
+  if (DIRTY) {
     closeXDisplay();
-    dirty = 0;
+    DIRTY = 0;
   }
 
-  if (display == NULL) {
+  if (DISPLAY == NULL) {
     /* First try the user set displayName */
-    display = XOpenDisplay(name);
+    DISPLAY = XOpenDisplay(NAME);
 
     /* Then try using environment variable DISPLAY */
-    if (display == NULL) {
-      display = XOpenDisplay(NULL);
+    if (DISPLAY == NULL) {
+      DISPLAY = XOpenDisplay(NULL);
     }
 
-    if (display == NULL) {
+    if (DISPLAY == NULL) {
       fputs("Could not open main display\n", stderr);
-    } else if (!registered) {
+    } else if (!REGISTERED) {
       atexit(&closeXDisplay);
-      registered = 1;
+      REGISTERED = 1;
     }
   }
 
-  return display;
+  return DISPLAY;
 }
 
 void closeXDisplay(void) {
-  if (display != NULL) {
-    XCloseDisplay(display);
-    display = NULL;
+  if (DISPLAY != NULL) {
+    XCloseDisplay(DISPLAY);
+    DISPLAY = NULL;
   }
 }
 
 void setXDisplay(char *input) {
-  name = strdup(input);
-  dirty = 1;
+  NAME = strdup(input);
+  DIRTY = 1;
 }
 
-void mouseMove(int x, int y) {
+void XMove(int x, int y) {
   Display *display = getXDisplay();
   XWarpPointer(display, None, DefaultRootWindow(display),  0, 0, 0, 0, x, y);
   XSync(display, 0);
 }
 
-void mouseScroll(int x, int y) {
+void XScroll(int x, int y) {
   int ydir = 4; /* Button 4 is up, 5 is down. */
   int xdir = 6;
 
@@ -59,7 +59,7 @@ void mouseScroll(int x, int y) {
   if (y < 0) {
     ydir = 5;
   }
-  
+
   if (x < 0) {
     xdir = 7;
   }
@@ -80,13 +80,13 @@ void mouseScroll(int x, int y) {
   XSync(display, 0);
 }
 
-void mouseEvent(unsigned int button, int down) {
+void XButton(unsigned int button, int down) {
   Display *display = getXDisplay();
   XTestFakeButtonEvent(display, button, down, CurrentTime);
   XSync(display, 0);
 }
 
-void keyEvent(unsigned long key, int down) {
+void XKey(unsigned long key, int down) {
   Display *display = getXDisplay();
   KeyCode code = XKeysymToKeycode(display, key);
   XTestFakeKeyEvent(display, code, down, CurrentTime);

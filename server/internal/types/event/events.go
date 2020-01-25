@@ -17,6 +17,7 @@ const CONTROL_RELEASE = "control/release"
 const CONTROL_REQUEST = "control/request"
 const CONTROL_REQUESTING = "control/requesting"
 const CONTROL_GIVE = "control/give"
+const CONTROL_CLIPBOARD = "control/clipboard"
 
 const CHAT_MESSAGE = "chat/message"
 const CHAT_EMOTE = "chat/emote"

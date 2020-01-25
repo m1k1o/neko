@@ -88,9 +88,6 @@ func CreatePipeline(codecName string, pipelineSrc string) (*Pipeline, error) {
 		}
 
 	case webrtc.H264:
-		// https://gstreamer.freedesktop.org/documentation/x264/index.html?gi-language=c
-		// gstreamer1.0-plugins-ugly
-		// video/x-raw,format=I420 ! x264enc bframes=0 key-int-max=60 byte-stream=true tune=zerolatency speed-preset=veryfast ! video/x-h264,stream-format=byte-stream
 
 		// https://gstreamer.freedesktop.org/documentation/openh264/openh264enc.html?gi-language=c#openh264enc
 		// gstreamer1.0-plugins-bad
@@ -102,6 +99,9 @@ func CreatePipeline(codecName string, pipelineSrc string) (*Pipeline, error) {
 			return nil, err
 		}
 
+		// https://gstreamer.freedesktop.org/documentation/x264/index.html?gi-language=c
+		// gstreamer1.0-plugins-ugly
+		// video/x-raw,format=I420 ! x264enc bframes=0 key-int-max=60 byte-stream=true tune=zerolatency speed-preset=veryfast ! video/x-h264,stream-format=byte-stream
 		if err := CheckPlugins([]string{"openh264"}); err != nil {
 			pipelineStr = pipelineSrc + " ! video/x-raw,format=I420 ! x264enc bframes=0 key-int-max=60 byte-stream=true tune=zerolatency speed-preset=veryfast ! video/x-h264,stream-format=byte-stream ! " + pipelineStr
 

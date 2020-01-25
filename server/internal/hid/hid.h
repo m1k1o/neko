@@ -16,12 +16,13 @@
   *
   * Note that this is almost certainly not thread safe. */
   Display *getXDisplay(void);
-  void closeXDisplay(void);
-  void mouseMove(int x, int y);
-  void mouseScroll(int x, int y);
-  void mouseEvent(unsigned int button, int down);
-  void keyEvent(unsigned long key, int down);
 
+  void XMove(int x, int y);
+  void XScroll(int x, int y);
+  void XButton(unsigned int button, int down);
+  void XKey(unsigned long key, int down);
+
+  void closeXDisplay(void);
   #ifdef __cplusplus
     extern "C"
     {

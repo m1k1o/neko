@@ -17,7 +17,7 @@ func (m *WebRTCManager) createVideoTrack(engine webrtc.MediaEngine) (*webrtc.Tra
 	}
 
 	if codec == nil || codec.PayloadType == 0 {
-		return nil, fmt.Errorf("remote peer does not support %s", m.videoPipeline.CodecName)
+		return nil, fmt.Errorf("remote peer does not support video codec %s", m.videoPipeline.CodecName)
 	}
 
 	return webrtc.NewTrack(codec.PayloadType, rand.Uint32(), "stream", "stream", codec)
@@ -33,7 +33,7 @@ func (m *WebRTCManager) createAudioTrack(engine webrtc.MediaEngine) (*webrtc.Tra
 	}
 
 	if codec == nil || codec.PayloadType == 0 {
-		return nil, fmt.Errorf("remote peer does not support %s", m.audioPipeline.CodecName)
+		return nil, fmt.Errorf("remote peer does not support audio codec %s", m.audioPipeline.CodecName)
 	}
 
 	return webrtc.NewTrack(codec.PayloadType, rand.Uint32(), "stream", "stream", codec)

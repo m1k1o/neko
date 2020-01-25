@@ -27,6 +27,7 @@ export type WebSocketPayloads =
   | MemberListPayload
   | Member
   | ControlPayload
+  | ControlClipboardPayload
   | ChatPayload
   | ChatSendPayload
   | EmojiSendPayload
@@ -108,6 +109,10 @@ export interface ControlPayload {
 export interface ControlTargetPayload {
   id: string
   target: string
+}
+
+export interface ControlClipboardPayload {
+  text: string
 }
 
 /*

@@ -1,6 +1,7 @@
 package websocket
 
 import (
+	"n.eko.moe/neko/internal/hid/clipboard"
 	"n.eko.moe/neko/internal/types"
 	"n.eko.moe/neko/internal/types/event"
 	"n.eko.moe/neko/internal/types/message"
@@ -102,5 +103,16 @@ func (h *MessageHandler) controlGive(id string, session types.Session, payload *
 		return err
 	}
 
+	return nil
+}
+
+func (h *MessageHandler) controlClipboard(id string, session types.Session, payload *message.Clipboard) error {
+	// check if session is host
+	if !h.sessions.IsHost(id) {
+		h.logger.Debug().Str("id", id).Msg("is not the host")
+		return nil
+	}
+
+	clipboard.WriteAll(payload.Text)
 	return nil
 }

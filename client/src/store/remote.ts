@@ -7,6 +7,7 @@ export const namespaced = true
 
 export const state = () => ({
   id: '',
+  clipboard: '',
 })
 
 export const getters = getterTree(state, {
@@ -30,8 +31,13 @@ export const mutations = mutationTree(state, {
     }
   },
 
+  setClipboard(state, clipboard: string) {
+    state.clipboard = clipboard
+  },
+
   clear(state) {
     state.id = ''
+    state.clipboard = ''
   },
 })
 
@@ -41,6 +47,15 @@ export const actions = actionTree(
     initialise({ commit }) {
       //
     },
+
+    sendClipboard({ getters }, clipboard: string) {
+      if (!accessor.connected || !getters.hosting) {
+        return
+      }
+
+      $client.sendMessage(EVENT.CONTROL.CLIPBOARD, { text: clipboard })
+    },
+
     toggle({ getters }) {
       if (!accessor.connected) {
         return

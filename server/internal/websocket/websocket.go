@@ -10,6 +10,7 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"n.eko.moe/neko/internal/config"
+	"n.eko.moe/neko/internal/hid/clipboard"
 	"n.eko.moe/neko/internal/types"
 	"n.eko.moe/neko/internal/types/event"
 	"n.eko.moe/neko/internal/types/message"
@@ -51,20 +52,6 @@ type WebSocketHandler struct {
 }
 
 func (ws *WebSocketHandler) Start() error {
-
-	go func() {
-		defer func() {
-			ws.logger.Info().Msg("shutdown")
-		}()
-
-		for {
-			select {
-			case <-ws.shutdown:
-				return
-			}
-		}
-	}()
-
 	ws.sessions.OnCreated(func(id string, session types.Session) {
 		if err := ws.handler.SessionCreated(id, session); err != nil {
 			ws.logger.Warn().Str("id", id).Err(err).Msg("session created with and error")
@@ -88,6 +75,40 @@ func (ws *WebSocketHandler) Start() error {
 			ws.logger.Debug().Str("id", id).Msg("session destroyed")
 		}
 	})
+
+	go func() {
+		defer func() {
+			ws.logger.Info().Msg("shutdown")
+		}()
+
+		current := ""
+		clip, err := clipboard.ReadAll()
+		if err == nil && clip != current {
+			current = clip
+		}
+
+		for {
+			select {
+			case <-ws.shutdown:
+				return
+			default:
+				if ws.sessions.HasHost() {
+					clip, err := clipboard.ReadAll()
+					if err == nil && clip != current {
+						session, ok := ws.sessions.GetHost()
+						if ok {
+							session.Send(message.Clipboard{
+								Event: event.CONTROL_CLIPBOARD,
+								Text:  clip,
+							})
+						}
+						current = clip
+					}
+				}
+				time.Sleep(100 * time.Millisecond)
+			}
+		}
+	}()
 
 	return nil
 }

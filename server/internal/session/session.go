@@ -64,6 +64,8 @@ func (session *Session) SetMuted(muted bool) {
 
 func (session *Session) SetName(name string) error {
 	session.name = name
+	session.connected = true
+	session.manager.emmiter.Emit("connected", session.id, session)
 	return nil
 }
 
@@ -74,8 +76,6 @@ func (session *Session) SetSocket(socket types.WebScoket) error {
 
 func (session *Session) SetPeer(peer types.Peer) error {
 	session.peer = peer
-	session.connected = true
-	session.manager.emmiter.Emit("connected", session.id, session)
 	return nil
 }
 
@@ -122,12 +122,16 @@ func (session *Session) WriteAudioSample(sample types.Sample) error {
 }
 
 func (session *Session) destroy() error {
-	if err := session.socket.Destroy(); err != nil {
-		return err
+	if session.socket != nil {
+		if err := session.socket.Destroy(); err != nil {
+			return err
+		}
 	}
 
-	if err := session.peer.Destroy(); err != nil {
-		return err
+	if session.peer != nil {
+		if err := session.peer.Destroy(); err != nil {
+			return err
+		}
 	}
 
 	return nil

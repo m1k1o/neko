@@ -133,32 +133,32 @@ func (m *WebRTCManager) Shutdown() error {
 }
 
 func (m *WebRTCManager) CreatePeer(id string, sdp string) (string, types.Peer, error) {
-	// create SessionDescription
+	// Create SessionDescription
 	description := webrtc.SessionDescription{
 		SDP:  sdp,
 		Type: webrtc.SDPTypeOffer,
 	}
 
-	// create MediaEngine based off sdp
+	// Create MediaEngine based off sdp
 	engine := webrtc.MediaEngine{}
 	engine.PopulateFromSDP(description)
 
-	// create API with MediaEngine and SettingEngine
+	// Create API with MediaEngine and SettingEngine
 	api := webrtc.NewAPI(webrtc.WithMediaEngine(engine), webrtc.WithSettingEngine(m.setings))
 
-	// create new peer connection
+	// Create new peer connection
 	connection, err := api.NewPeerConnection(*m.configuration)
 	if err != nil {
 		return "", nil, err
 	}
 
-	// create video track
+	// Create video track
 	video, err := m.createVideoTrack(engine)
 	if err != nil {
 		return "", nil, err
 	}
 
-	videoTransceiver, err := connection.AddTransceiverFromTrack(video, webrtc.RtpTransceiverInit{
+	_, err = connection.AddTransceiverFromTrack(video, webrtc.RtpTransceiverInit{
 		Direction: webrtc.RTPTransceiverDirectionSendonly,
 	})
 
@@ -166,13 +166,13 @@ func (m *WebRTCManager) CreatePeer(id string, sdp string) (string, types.Peer, e
 		return "", nil, err
 	}
 
-	// create audio track
+	// Create audio track
 	audio, err := m.createAudioTrack(engine)
 	if err != nil {
 		return "", nil, err
 	}
 
-	audioTransceiver, err := connection.AddTransceiverFromTrack(audio, webrtc.RtpTransceiverInit{
+	_, err = connection.AddTransceiverFromTrack(audio, webrtc.RtpTransceiverInit{
 		Direction: webrtc.RTPTransceiverDirectionSendonly,
 	})
 
@@ -182,15 +182,25 @@ func (m *WebRTCManager) CreatePeer(id string, sdp string) (string, types.Peer, e
 
 	// clear the Transceiver bufers
 	go func() {
-		for {
-			if _, err := audioTransceiver.Sender.ReadRTCP(); err != nil {
-				return
-			}
+		defer func() {
+			m.logger.Warn().Msgf("ReadRTCP shutting down")
+		}()
 
-			if _, err = videoTransceiver.Sender.ReadRTCP(); err != nil {
-				return
-			}
-		}
+		/*
+					for {
+						packet, err := videoTransceiver.Sender.ReadRTCP()
+						if err != nil {
+							return
+						}
+						m.logger.Debug().Msgf("vReadRTCP %v", packet)
+
+						packet, err = audioTransceiver.Sender.ReadRTCP()
+						if err != nil {
+							return
+						}
+						m.logger.Debug().Msgf("aReadRTCP %v", packet)
+			    }
+		*/
 	}()
 
 	// set remote description

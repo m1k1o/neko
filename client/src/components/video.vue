@@ -196,6 +196,10 @@
       return this.$accessor.settings.scroll_invert
     }
 
+    get clipboard() {
+      return this.$accessor.remote.clipboard
+    }
+
     @Watch('volume')
     onVolumeChanged(volume: number) {
       if (this._video) {
@@ -233,6 +237,11 @@
       }
     }
 
+    @Watch('clipboard')
+    onClipboardChanged(clipboard: string) {
+      navigator.clipboard.writeText(clipboard).catch(console.error)
+    }
+
     mounted() {
       this._container.addEventListener('resize', this.onResise)
       this.onVolumeChanged(this.volume)
@@ -249,7 +258,9 @@
       this._video.addEventListener('canplaythrough', () => {
         this.$accessor.video.setPlayable(true)
         if (this.autoplay) {
-          this.$accessor.video.play()
+          this.$nextTick(() => {
+            this.$accessor.video.play()
+          })
         }
       })
 
@@ -261,11 +272,14 @@
         console.error(event.error)
         this.$accessor.video.setPlayable(false)
       })
+
+      document.addEventListener('focusin', this.onFocus.bind(this))
     }
 
     beforeDestroy() {
       this.observer.disconnect()
       this.$accessor.video.setPlayable(false)
+      document.removeEventListener('focusin', this.onFocus.bind(this))
     }
 
     play() {
@@ -306,6 +320,23 @@
     requestFullscreen() {
       this._player.requestFullscreen()
       this.onResise()
+    }
+
+    onFocus() {
+      if (!document.hasFocus()) {
+        return
+      }
+
+      if (this.hosting) {
+        navigator.clipboard
+          .readText()
+          .then(text => {
+            if (this.clipboard !== text) {
+              this.$accessor.remote.sendClipboard(text)
+            }
+          })
+          .catch(console.error)
+      }
     }
 
     onMousePos(e: MouseEvent) {
@@ -362,6 +393,7 @@
 
     onMouseEnter(e: MouseEvent) {
       this._overlay.focus()
+      this.onFocus()
       this.focused = true
     }
 

@@ -17,6 +17,7 @@ import {
   EmotePayload,
   AdminPayload,
   AdminTargetPayload,
+  ControlClipboardPayload,
 } from './messages'
 
 interface NekoEvents extends BaseEvents {}
@@ -252,6 +253,10 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
       type: 'event',
       created: new Date(),
     })
+  }
+
+  protected [EVENT.CONTROL.CLIPBOARD]({ text }: ControlClipboardPayload) {
+    this.$accessor.remote.setClipboard(text)
   }
 
   /////////////////////////////

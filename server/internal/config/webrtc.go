@@ -86,7 +86,7 @@ func (s *WebRTC) Set() {
 		videoCodec = webrtc.H264
 	}
 
-	audioCodec := webrtc.VP8
+	audioCodec := webrtc.Opus
 	if viper.GetBool("opus") {
 		audioCodec = webrtc.Opus
 	} else if viper.GetBool("g722") {
