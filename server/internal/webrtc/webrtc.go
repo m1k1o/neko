@@ -22,6 +22,8 @@ func New(sessions types.SessionManager, config *config.WebRTC) *WebRTCManager {
 		},
 	}
 
+	setings.SetEphemeralUDPPortRange(59000, 59100)
+
 	return &WebRTCManager{
 		logger:   logger,
 		setings:  setings,

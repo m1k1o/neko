@@ -239,7 +239,9 @@
 
     @Watch('clipboard')
     onClipboardChanged(clipboard: string) {
-      navigator.clipboard.writeText(clipboard).catch(console.error)
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(clipboard).catch(console.error)
+      }
     }
 
     mounted() {
@@ -327,7 +329,7 @@
         return
       }
 
-      if (this.hosting) {
+      if (this.hosting && navigator.clipboard) {
         navigator.clipboard
           .readText()
           .then(text => {

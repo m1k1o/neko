@@ -74,7 +74,7 @@
             height: 12px;
             width: 12px;
             border-radius: 12px;
-            background: $interactive-active;
+            background: #fff;
             cursor: pointer;
           }
 
@@ -91,7 +91,7 @@
             height: 12px;
             width: 12px;
             border-radius: 12px;
-            background: $interactive-active;
+            background: #fff;
             cursor: pointer;
             margin-top: -4px;
           }

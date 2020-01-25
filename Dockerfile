@@ -11,7 +11,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
     && apt-get -y install curl apt-utils supervisor openbox dbus-x11 xvfb pulseaudio firefox-esr \
     && apt-get -y install gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-pulseaudio \
-    && apt-get -y install libxcb-xkb-dev libxkbcommon-x11-dev \
+    && apt-get -y install libxcb-xkb-dev libxkbcommon-x11-dev xclip \
     #
     # Create a non-root user
     && groupadd --gid $USER_GID $USERNAME \
