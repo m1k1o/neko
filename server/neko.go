@@ -28,13 +28,12 @@ const Header = `&34
 
 var (
 	//
-	buildDate = ""
+	buildDate = "dev"
 	//
-	gitCommit = ""
+	gitCommit = "dev"
 	//
-	gitVersion = ""
-	//
-	gitState = ""
+	gitBranch = "dev"
+
 	// Major version when you make incompatible API changes,
 	major = "0"
 	// Minor version when you add functionality in a backwards-compatible manner, and
@@ -48,16 +47,15 @@ var Service *Neko
 func init() {
 	Service = &Neko{
 		Version: &Version{
-			Major:        major,
-			Minor:        minor,
-			Patch:        patch,
-			GitVersion:   gitVersion,
-			GitCommit:    gitCommit,
-			GitTreeState: gitState,
-			BuildDate:    buildDate,
-			GoVersion:    runtime.Version(),
-			Compiler:     runtime.Compiler,
-			Platform:     fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH),
+			Major:     major,
+			Minor:     minor,
+			Patch:     patch,
+			GitCommit: gitCommit,
+			GitBranch: gitBranch,
+			BuildDate: buildDate,
+			GoVersion: runtime.Version(),
+			Compiler:  runtime.Compiler,
+			Platform:  fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH),
 		},
 		Root:      &config.Root{},
 		Server:    &config.Server{},
@@ -67,21 +65,32 @@ func init() {
 }
 
 type Version struct {
-	Major        string
-	Minor        string
-	Patch        string
-	Version      string
-	GitVersion   string
-	GitCommit    string
-	GitTreeState string
-	BuildDate    string
-	GoVersion    string
-	Compiler     string
-	Platform     string
+	Major     string
+	Minor     string
+	Patch     string
+	GitCommit string
+	GitBranch string
+	BuildDate string
+	GoVersion string
+	Compiler  string
+	Platform  string
 }
 
 func (i *Version) String() string {
-	return fmt.Sprintf("%s.%s.%s", i.Major, i.Minor, i.Patch)
+	return fmt.Sprintf("%s.%s.%s %s", i.Major, i.Minor, i.Patch, i.GitCommit)
+}
+
+func (i *Version) Details() string {
+	return fmt.Sprintf(
+		"%s\n%s\n%s\n%s\n%s\n%s\n%s\n",
+		fmt.Sprintf("Verison %s.%s.%s", i.Major, i.Minor, i.Patch),
+		fmt.Sprintf("GitCommit %s", i.GitCommit),
+		fmt.Sprintf("GitBranch %s", i.GitBranch),
+		fmt.Sprintf("BuildDate %s", i.BuildDate),
+		fmt.Sprintf("GoVersion %s", i.GoVersion),
+		fmt.Sprintf("Compiler %s", i.Compiler),
+		fmt.Sprintf("Platform %s", i.Platform),
+	)
 }
 
 type Neko struct {

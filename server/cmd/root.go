@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
@@ -32,5 +30,5 @@ func init() {
 		log.Panic().Err(err).Msg("unable to run root command")
 	}
 
-	root.SetVersionTemplate(fmt.Sprintf("version: %s\n", neko.Service.Version))
+	root.SetVersionTemplate(neko.Service.Version.Details())
 }

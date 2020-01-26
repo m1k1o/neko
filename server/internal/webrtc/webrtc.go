@@ -92,11 +92,11 @@ func (m *WebRTCManager) Start() {
 				return
 			case sample := <-videoPipeline.Sample:
 				if err := m.sessions.WriteVideoSample(sample); err != nil {
-					m.logger.Warn().Err(err).Msg("video pipeline failed")
+					m.logger.Warn().Err(err).Msg("video pipeline failed to write")
 				}
 			case sample := <-audioPipeline.Sample:
 				if err := m.sessions.WriteAudioSample(sample); err != nil {
-					m.logger.Warn().Err(err).Msg("audio pipeline failed")
+					m.logger.Warn().Err(err).Msg("audio pipeline failed to write")
 				}
 			case <-m.cleanup.C:
 				hid.Check(time.Second * 10)
@@ -182,28 +182,27 @@ func (m *WebRTCManager) CreatePeer(id string, sdp string) (string, types.Peer, e
 		return "", nil, err
 	}
 
-	// clear the Transceiver bufers
-	go func() {
-		defer func() {
-			m.logger.Warn().Msgf("ReadRTCP shutting down")
-		}()
+	/*
+			// clear the Transceiver bufers
+			go func() {
+				defer func() {
+					m.logger.Warn().Msgf("ReadRTCP shutting down")
+				}()
+		    for {
+		      packet, err := videoTransceiver.Sender.ReadRTCP()
+		      if err != nil {
+		        return
+		      }
+		      m.logger.Debug().Msgf("vReadRTCP %v", packet)
 
-		/*
-					for {
-						packet, err := videoTransceiver.Sender.ReadRTCP()
-						if err != nil {
-							return
-						}
-						m.logger.Debug().Msgf("vReadRTCP %v", packet)
-
-						packet, err = audioTransceiver.Sender.ReadRTCP()
-						if err != nil {
-							return
-						}
-						m.logger.Debug().Msgf("aReadRTCP %v", packet)
-			    }
-		*/
-	}()
+		      packet, err = audioTransceiver.Sender.ReadRTCP()
+		      if err != nil {
+		        return
+		      }
+		      m.logger.Debug().Msgf("aReadRTCP %v", packet)
+		    }
+		  }()
+	*/
 
 	// set remote description
 	connection.SetRemoteDescription(description)
