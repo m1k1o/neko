@@ -3,9 +3,9 @@
   "service": "neko",
   "dockerComposeFile": "docker-compose.yaml",
   "workspaceFolder": "/workspace",
-  "remoteUser": "vscode",
+  "remoteUser": "neko",
 	"settings": {
-    "terminal.integrated.shell.linux": "/bin/bash",
+    "terminal.integrated.shell.linux": "/bin/ash",
     "go.gopath": "/go"
 	},
 	"extensions": [

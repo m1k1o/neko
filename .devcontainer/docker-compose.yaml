@@ -1,4 +1,4 @@
-version: '3.6'
+version: '2.0'
 services:
   neko:
     network_mode: host
@@ -11,6 +11,7 @@ services:
     security_opt:
       - seccomp:unconfined
     volumes:
-      - /home/neko/src:/workspace
+      - /home/nurd/neko:/workspace
       - /var/run/docker.sock:/var/run/docker.sock 
+  
     command: "/bin/sh -c \"while sleep 1000; do :; done\""

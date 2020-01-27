@@ -1,0 +1,4 @@
+#!/bin/sh
+
+rm -rf /var/run/dbus.pid
+/usr/bin/dbus-daemon --nofork --print-pid --config-file=/usr/share/dbus-1/system.conf

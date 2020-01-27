@@ -187,6 +187,7 @@ func (p *Pipeline) Stop() {
 	C.gstreamer_send_stop_pipeline(p.Pipeline)
 }
 
+// gst-inspect-1.0
 func CheckPlugins(plugins []string) error {
 	var plugin *C.GstPlugin
 	for _, pluginstr := range plugins {
