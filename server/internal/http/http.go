@@ -10,10 +10,10 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"n.eko.moe/neko/internal/config"
 	"n.eko.moe/neko/internal/http/endpoint"
 	"n.eko.moe/neko/internal/http/middleware"
-	"n.eko.moe/neko/internal/websocket"
+	"n.eko.moe/neko/internal/types"
+	"n.eko.moe/neko/internal/types/config"
 )
 
 type Server struct {
@@ -23,7 +23,7 @@ type Server struct {
 	conf   *config.Server
 }
 
-func New(conf *config.Server, webSocketHandler *websocket.WebSocketHandler) *Server {
+func New(conf *config.Server, webSocketHandler types.WebSocketHandler) *Server {
 	logger := log.With().Str("module", "webrtc").Logger()
 
 	router := chi.NewRouter()

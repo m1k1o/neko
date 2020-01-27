@@ -79,7 +79,7 @@ func CreatePipeline(codecName string, pipelineSrc string) (*Pipeline, error) {
 		// gstreamer1.0-plugins-good
 		// vp9enc
 
-		// Causes panic!
+		// Causes panic! not sure why...
 		pipelineStr = pipelineSrc + " ! vp9enc ! " + pipelineStr
 		clockRate = videoClockRate
 
@@ -88,7 +88,6 @@ func CreatePipeline(codecName string, pipelineSrc string) (*Pipeline, error) {
 		}
 
 	case webrtc.H264:
-
 		// https://gstreamer.freedesktop.org/documentation/openh264/openh264enc.html?gi-language=c#openh264enc
 		// gstreamer1.0-plugins-bad
 		// openh264enc multi-thread=4 complexity=high bitrate=3072000 max-bitrate=4096000

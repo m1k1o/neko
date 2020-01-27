@@ -5,7 +5,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"n.eko.moe/neko"
-	"n.eko.moe/neko/internal/config"
+	"n.eko.moe/neko/internal/types/config"
 )
 
 func init() {

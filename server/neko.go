@@ -6,9 +6,9 @@ import (
 	"os/signal"
 	"runtime"
 
-	"n.eko.moe/neko/internal/config"
 	"n.eko.moe/neko/internal/http"
 	"n.eko.moe/neko/internal/session"
+	"n.eko.moe/neko/internal/types/config"
 	"n.eko.moe/neko/internal/webrtc"
 	"n.eko.moe/neko/internal/websocket"
 

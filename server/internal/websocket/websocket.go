@@ -9,9 +9,9 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"n.eko.moe/neko/internal/config"
 	"n.eko.moe/neko/internal/hid/clipboard"
 	"n.eko.moe/neko/internal/types"
+	"n.eko.moe/neko/internal/types/config"
 	"n.eko.moe/neko/internal/types/event"
 	"n.eko.moe/neko/internal/types/message"
 	"n.eko.moe/neko/internal/utils"

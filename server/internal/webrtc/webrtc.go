@@ -8,10 +8,10 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"n.eko.moe/neko/internal/config"
 	"n.eko.moe/neko/internal/gst"
 	"n.eko.moe/neko/internal/hid"
 	"n.eko.moe/neko/internal/types"
+	"n.eko.moe/neko/internal/types/config"
 )
 
 func New(sessions types.SessionManager, config *config.WebRTC) *WebRTCManager {
@@ -22,7 +22,7 @@ func New(sessions types.SessionManager, config *config.WebRTC) *WebRTCManager {
 		},
 	}
 
-	setings.SetEphemeralUDPPortRange(59000, 59100)
+	setings.SetEphemeralUDPPortRange(config.EphemeralStart, config.EphemeralEnd)
 
 	return &WebRTCManager{
 		logger:   logger,
