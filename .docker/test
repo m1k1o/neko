@@ -20,13 +20,13 @@ fi
 sudo mkdir -p /var/run/dbus /etc/neko
 sudo rm -rf /var/run/dbus.pid
 
-sudo cp files/firefox-esr/neko.js /usr/lib/firefox-esr/mozilla.cfg
+sudo cp files/firefox/neko.js /usr/lib/firefox-esr/mozilla.cfg
 #sudo rm -f /usr/lib/firefox-esr/mozilla.cfg
 
-sudo cp files/firefox-esr/autoconfig.js /usr/lib/firefox-esr/defaults/pref/autoconfig.js
+sudo cp files/firefox/autoconfig.js /usr/lib/firefox-esr/defaults/pref/autoconfig.js
 #sudo rm -f /usr/lib/firefox-esr/defaults/pref/autoconfig.js
 
-sudo cp files/firefox-esr/policies.json /usr/lib/firefox-esr/distribution/policies.json
+sudo cp files/firefox/policies.json /usr/lib/firefox-esr/distribution/policies.json
 #sudo rm -f /usr/lib/firefox-esr/distribution/policies.json
 
 sudo cp files/dbus /usr/bin/dbus
@@ -63,12 +63,9 @@ export NEKO_BIND=:8080
 export NEKO_KEY=
 export NEKO_CERT=
 
-if [ -f /var/run/supervisord.pid ]; then
-  sudo rm -f /var/run/supervisord.pid
+if [ -d logs ]; then
+  sudo rm -rf logs
 fi
-
-if [ -f supervisord.log ]; then
-  sudo rm -f supervisord.log
-fi
+mkdir logs
 
 supervisord --configuration ./supervisord.conf

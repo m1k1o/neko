@@ -69,13 +69,13 @@ RUN set -eux \
     # setup pulseaudio
     && mkdir -p /home/$USERNAME/.config/pulse/ \
     && echo "default-server=unix:/tmp/pulseaudio.socket" > /home/$USERNAME/.config/pulse/client.conf \
-    && chown -R $USERNAME:$USERNAME /home/$USERNAME \
     #
     # workaround for an X11 problem: http://blog.tigerteufel.de/?p=476
     && mkdir /tmp/.X11-unix && chmod 1777 /tmp/.X11-unix && chown $USERNAME /tmp/.X11-unix/ \
     #
     # make directories for neko
-    && mkdir -p /etc/neko /var/www \
+    && mkdir -p /etc/neko /var/www /home/$USERNAME/.neko/logs \
+    && chown -R $USERNAME:$USERNAME /home/$USERNAME \
     #
     # clean up
     && apt-get autoremove -y \

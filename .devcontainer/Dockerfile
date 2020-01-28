@@ -164,5 +164,7 @@ RUN apt-get update \
     && npm config -g set prefix /usr/local/share/npm-global \
     && sudo -u ${USERNAME} npm config -g set prefix /usr/local/share/npm-global
 
+ENV PATH=/usr/local/share/npm-global/bin:$PATH
+
 # switch back to dialog for any ad-hoc use of apt-get
 ENV DEBIAN_FRONTEND=dialog
