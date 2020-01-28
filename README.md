@@ -49,15 +49,16 @@ sudo docker run -p 8080:8080 -e NEKO_PASSWORD='secret' -e NEKO_ADMIN='secret' --
 
 ### Config
 ```
-NEKO_USER=$USERNAME     // User
-NEKO_DISPLAY=0          // Display number
-NEKO_WIDTH=1280         // Display width
-NEKO_HEIGHT=720         // Display height
+SCREEN_WIDTH=1280       // Display width
+SCREEN_HEIGHT=720       // Display height
+SCREEN_DEPTH=24         // Display bit depth
+DISPLAY=:99.0           // Display number
+
 NEKO_PASSWORD=neko      // Password
 NEKO_ADMIN=neko         // Admin Password
 NEKO_BIND=0.0.0.0:8080  // Bind
-NEKO_KEY=               // (SSL)Key 
-NEKO_CERT=              // (SSL)Cert
+NEKO_KEY=               // (SSL)Key, needed for clipboard sync
+NEKO_CERT=              // (SSL)Cert, needed for clipboard sync
 ```
 
 ### Development

@@ -43,10 +43,5 @@
       "swyphcosmo.spellchecker",
       "eamodio.gitlens"
     ],
-    "files.associations": {
-      "iostream": "cpp",
-      "xtest.h": "c",
-      "xlib.h": "c"
-    }
   }
 }

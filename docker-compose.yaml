@@ -1,14 +1,16 @@
-version: '2.0'
+version: "2.0"
 services:
   neko:
     image: nurdism/neko
     restart: always
-    shm_size: '2gb'
+    shm_size: "1gb"
     ports:
       - "80:8080"
     environment:
-      NEKO_DISPLAY: 0
-      NEKO_WIDTH: 1280
-      NEKO_HEIGHT: 720
+      DISPLAY: :99.0
+      SCREEN_WIDTH: 1280
+      SCREEN_HEIGHT: 720
+      SCREEN_DEPTH: 24
       NEKO_PASSWORD: neko
+      NEKO_ADMIN: admin
       NEKO_BIND: :8080

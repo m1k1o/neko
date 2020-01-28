@@ -30,7 +30,12 @@ import (
 		gstreamer1.0-tools \
 		gstreamer1.0-x \
 		gstreamer1.0-alsa \
-		gstreamer1.0-pulseaudio
+    gstreamer1.0-pulseaudio
+
+    gst-inspect-1.0 --version
+    gst-inspect-1.0 plugin
+    gst-launch-1.0 ximagesrc show-pointer=true use-damage=false ! video/x-raw,framerate=30/1 ! videoconvert ! queue ! vp8enc error-resilient=partitions keyframe-max-dist=10 auto-alt-ref=true cpu-used=5 deadline=1 ! autovideosink
+    gst-launch-1.0 pulsesrc ! audioconvert ! opusenc ! autoaudiosink
 */
 
 // Pipeline is a wrapper for a GStreamer Pipeline

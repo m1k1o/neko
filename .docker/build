@@ -1,17 +1,15 @@
 #!/bin/bash
 
-cd ../server
-go get && ./build
+cd ../server \
+  && go get \
+  && ./build \
+  && cd ../client \
+  && npm install && npm run build \
+  && cd ../ \
+  && sudo docker build -f Dockerfile -t nurdism/neko . \
+  && sudo docker images nurdism/neko 
 
-cd ../client
-npm install && npm run build
-
-cd ../
-sudo docker build -f Dockerfile -t nurdism/neko .
-
+# sudo docker images nurdism/neko
 # sudo docker push nurdism/neko:latest 
-# sudo docker run -e NEKO_BIND='0.0.0.0:9000' --network host --shm-size=1gb nurdism/neko:latest
-# sudo docker run -p 9000:8080 -p 59000-59100:59000-59100/udp --shm-size=2gb nurdism/neko:latest
-# sudo docker run -p 8080:8080 --shm-size=1gb nurdism/neko:latest 
-# sudo docker run --network host --shm-size=1gb nurdism/neko:latest 
+# sudo docker run -p 80:8080 -p 59000-59100:59000-59100/udp --shm-size=1gb nurdism/neko:latest
 # sudo docker run --network host --shm-size=1gb -it nurdism/neko:latest /bin/bash

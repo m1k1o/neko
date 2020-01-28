@@ -1,6 +1,6 @@
 {
   "policies": {
-    "BlockAboutAddons": true,
+    "BlockAboutAddons": false,
     "BlockAboutConfig": true,
     "BlockAboutProfiles": true,
     "BlockAboutSupport": true,
@@ -28,7 +28,7 @@
       },
       {
         "Title": "9Anime",
-        "URL": "https://9anime.xyz/",
+        "URL": "https://9anime.to/",
         "Favicon": "https://staticf.akacdn.ru/assets/favicons/favicon.png",
         "Folder": "Media",
         "Placement": "toolbar"
@@ -93,7 +93,7 @@
     "CaptivePortal": false,
     "DisableAppUpdate": true,
     "DisableBuiltinPDFViewer": true,
-    "DisableDeveloperTools": true,
+    "DisableDeveloperTools": false,
     "DisableFeedbackCommands": true,
     "DisableFirefoxAccounts": true,
     "DisableFirefoxScreenshots": true,
@@ -118,6 +118,10 @@
     "ExtensionSettings": {
       "*": {
         "installation_mode": "blocked"
+      },
+      "nordvpnproxy@nordvpn.com": {
+        "install_url": "https://addons.mozilla.org/firefox/downloads/latest/nordvpn-proxy-extension/latest.xpi",
+        "installation_mode": "force_installed"
       },
       "uBlock0@raymondhill.net": {
         "install_url": "https://addons.mozilla.org/firefox/downloads/latest/ublock-origin/latest.xpi",

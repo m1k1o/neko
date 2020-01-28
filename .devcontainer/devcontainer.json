@@ -5,7 +5,7 @@
   "workspaceFolder": "/workspace",
   "remoteUser": "neko",
 	"settings": {
-    "terminal.integrated.shell.linux": "/bin/ash",
+    "terminal.integrated.shell.linux": "/bin/bash",
     "go.gopath": "/go"
 	},
 	"extensions": [
