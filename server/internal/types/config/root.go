@@ -12,17 +12,17 @@ type Root struct {
 }
 
 func (Root) Init(cmd *cobra.Command) error {
-	cmd.PersistentFlags().BoolP("debug", "d", false, "Enable debug mode")
+	cmd.PersistentFlags().BoolP("debug", "d", false, "enable debug mode")
 	if err := viper.BindPFlag("debug", cmd.PersistentFlags().Lookup("debug")); err != nil {
 		return err
 	}
 
-	cmd.PersistentFlags().BoolP("logs", "l", false, "Save logs to file")
+	cmd.PersistentFlags().BoolP("logs", "l", false, "save logs to file")
 	if err := viper.BindPFlag("logs", cmd.PersistentFlags().Lookup("logs")); err != nil {
 		return err
 	}
 
-	cmd.PersistentFlags().String("config", "", "Configuration file path")
+	cmd.PersistentFlags().String("config", "", "configuration file path")
 	if err := viper.BindPFlag("config", cmd.PersistentFlags().Lookup("config")); err != nil {
 		return err
 	}

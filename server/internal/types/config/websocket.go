@@ -11,12 +11,12 @@ type WebSocket struct {
 }
 
 func (WebSocket) Init(cmd *cobra.Command) error {
-	cmd.PersistentFlags().String("password", "neko", "Password for connecting to stream")
+	cmd.PersistentFlags().String("password", "neko", "password for connecting to stream")
 	if err := viper.BindPFlag("password", cmd.PersistentFlags().Lookup("password")); err != nil {
 		return err
 	}
 
-	cmd.PersistentFlags().String("admin", "admin", "Admin password for connecting to stream")
+	cmd.PersistentFlags().String("admin", "admin", "admin password for connecting to stream")
 	if err := viper.BindPFlag("admin", cmd.PersistentFlags().Lookup("admin")); err != nil {
 		return err
 	}

@@ -21,12 +21,12 @@ type WebRTC struct {
 }
 
 func (WebRTC) Init(cmd *cobra.Command) error {
-	cmd.PersistentFlags().String("device", "auto_null.monitor", "Audio device to capture")
+	cmd.PersistentFlags().String("device", "auto_null.monitor", "audio device to capture")
 	if err := viper.BindPFlag("device", cmd.PersistentFlags().Lookup("device")); err != nil {
 		return err
 	}
 
-	cmd.PersistentFlags().String("aduio", "", "Audio codec parameters to use for streaming (unused)")
+	cmd.PersistentFlags().String("aduio", "", "audio codec parameters to use for streaming (unused)")
 	if err := viper.BindPFlag("aparams", cmd.PersistentFlags().Lookup("aduio")); err != nil {
 		return err
 	}
@@ -36,50 +36,50 @@ func (WebRTC) Init(cmd *cobra.Command) error {
 		return err
 	}
 
-	cmd.PersistentFlags().String("video", "", "Video codec parameters to use for streaming (unused)")
+	cmd.PersistentFlags().String("video", "", "video codec parameters to use for streaming (unused)")
 	if err := viper.BindPFlag("vparams", cmd.PersistentFlags().Lookup("video")); err != nil {
 		return err
 	}
 
-	cmd.PersistentFlags().String("epr", "59000-59100", "Limits the pool of ephemeral ports that ICE UDP connections can allocate from")
+	cmd.PersistentFlags().String("epr", "59000-59100", "limits the pool of ephemeral ports that ICE UDP connections can allocate from")
 	if err := viper.BindPFlag("epr", cmd.PersistentFlags().Lookup("epr")); err != nil {
 		return err
 	}
 
 	// video codecs
-	cmd.PersistentFlags().Bool("vp8", false, "Use VP8 video codec")
+	cmd.PersistentFlags().Bool("vp8", false, "use VP8 video codec")
 	if err := viper.BindPFlag("vp8", cmd.PersistentFlags().Lookup("vp8")); err != nil {
 		return err
 	}
 
-	cmd.PersistentFlags().Bool("vp9", false, "Use VP9 video codec")
+	cmd.PersistentFlags().Bool("vp9", false, "use VP9 video codec")
 	if err := viper.BindPFlag("vp9", cmd.PersistentFlags().Lookup("vp9")); err != nil {
 		return err
 	}
 
-	cmd.PersistentFlags().Bool("h264", false, "Use H264 video codec")
+	cmd.PersistentFlags().Bool("h264", false, "use H264 video codec")
 	if err := viper.BindPFlag("h264", cmd.PersistentFlags().Lookup("h264")); err != nil {
 		return err
 	}
 
 	// audio codecs
-	cmd.PersistentFlags().Bool("opus", false, "Use Opus audio codec")
+	cmd.PersistentFlags().Bool("opus", false, "use Opus audio codec")
 	if err := viper.BindPFlag("opus", cmd.PersistentFlags().Lookup("opus")); err != nil {
 		return err
 	}
 
-	cmd.PersistentFlags().Bool("g722", false, "Use G722 audio codec")
+	cmd.PersistentFlags().Bool("g722", false, "use G722 audio codec")
 	if err := viper.BindPFlag("g722", cmd.PersistentFlags().Lookup("g722")); err != nil {
 		return err
 	}
 
-	cmd.PersistentFlags().Bool("pcmu", false, "Use PCMU audio codec")
+	cmd.PersistentFlags().Bool("pcmu", false, "use PCMU audio codec")
 	if err := viper.BindPFlag("pcmu", cmd.PersistentFlags().Lookup("pcmu")); err != nil {
 		return err
 	}
 
-	cmd.PersistentFlags().Bool("pcma", false, "Use PCMA audio codec")
-	if err := viper.BindPFlag("pcmu", cmd.PersistentFlags().Lookup("pcmu")); err != nil {
+	cmd.PersistentFlags().Bool("pcma", false, "use PCMA audio codec")
+	if err := viper.BindPFlag("pcma", cmd.PersistentFlags().Lookup("pcma")); err != nil {
 		return err
 	}
 
