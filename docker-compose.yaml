@@ -6,6 +6,7 @@ services:
     shm_size: "1gb"
     ports:
       - "80:8080"
+      - "59000-59100:59000-59100/udp"
     environment:
       DISPLAY: :99.0
       SCREEN_WIDTH: 1280
