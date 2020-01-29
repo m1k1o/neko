@@ -10,6 +10,7 @@ cd ../server \
   && sudo docker images nurdism/neko 
 
 # sudo docker images nurdism/neko
+# sudo docker tag <image> nurdism/neko:1.0 
 # sudo docker push nurdism/neko:latest 
 # sudo docker run -p 80:8080 -p 59000-59100:59000-59100/udp --shm-size=1gb nurdism/neko:latest
 # sudo docker run --network host --shm-size=1gb -it nurdism/neko:latest /bin/bash
