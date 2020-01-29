@@ -1,7 +1,5 @@
 import EventEmitter from 'eventemitter3'
-
 import { OPCODE } from './data'
-
 import { EVENT, WebSocketEvents } from './events'
 
 import {
@@ -29,6 +27,10 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
   protected _username?: string
   protected _state: RTCIceConnectionState = 'disconnected'
 
+  get supported() {
+    return typeof RTCPeerConnection !== 'undefined' && typeof RTCPeerConnection.prototype.addTransceiver !== 'undefined'
+  }
+
   get socketOpen() {
     return typeof this._ws !== 'undefined' && this._ws.readyState === WebSocket.OPEN
   }
@@ -44,6 +46,11 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
   public connect(url: string, password: string, username: string) {
     if (this.socketOpen) {
       this.emit('warn', `attempting to create websocket while connection open`)
+      return
+    }
+
+    if (!this.supported) {
+      this.onDisconnected(new Error('browser does not support webrtc (RTCPeerConnection missing)'))
       return
     }
 
