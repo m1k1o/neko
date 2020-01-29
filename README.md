@@ -9,6 +9,14 @@
 # **n**.eko
  This app uses Web RTC to stream a desktop inside of a docker container, I made this because [rabb.it](https://en.wikipedia.org/wiki/Rabb.it) went under and my internet can't handle streaming and discord keeps crashing when my friend attempts to. I just want to watch anime with my friends ლ(ಠ益ಠლ) so I started digging throughout the internet and found a few *kinda* clones, but none of them had the virtual browser, then I found [Turtus](https://github.com/Khauri/Turtus) and I was able to figure out the rest. This is by no means a fully featured clone of rabbit, it hs only *one* room. It's stateless, so no saved user names or passwords. 
 
+### Features
+  * Text Chat (with basic markdown support (discord flavor))
+  * Admin users (Kick, Ban & Force Give/Release Controls)
+  * Clipboard synchronization
+  * Emote overlay
+  * Ignore user (chat and emotes)
+  * Settings are saved to local storage
+
 ### Why **n**.eko?
 I like cats 🐱 (`Neko` is the Japanese word for cat), I'm a weeb/nerd
 
@@ -36,9 +44,10 @@ I like cats 🐱 (`Neko` is the Japanese word for cat), I'm a weeb/nerd
     ```
 4. Run these commands:
     ```
-    ufw allow 80/tcp
+    sudo ufw allow 80/tcp // if you have ufw installed/enabled
+    sudo ufw allow 59000:59100/udp
     wget https://raw.githubusercontent.com/nurdism/neko/master/docker-compose.yaml
-    docker-compose up -d
+    sudo docker-compose up -d
     ```
 5. Visit the IP address of the droplet in your browser and login, the default password is `neko`
 
