@@ -46,7 +46,7 @@ I like cats 🐱 (`Neko` is the Japanese word for cat), I'm a weeb/nerd
 
 ### Running the container:
 ```
-sudo docker run -p 8080:8080 -e NEKO_PASSWORD='secret' -e NEKO_ADMIN='secret' --shm-size=1gb nurdism/neko:latest 
+sudo docker run -p 8080:8080 -p 59000-59100:59000-59100/udp -e NEKO_PASSWORD='secret' -e NEKO_ADMIN='secret' --shm-size=1gb nurdism/neko:latest 
 ```
 
 *Note:* `--shm-size=1gb` is required, firefox tabs will crash, not sure what it does to be honest 😅
