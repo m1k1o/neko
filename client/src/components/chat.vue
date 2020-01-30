@@ -11,15 +11,14 @@
               <span>{{ member(message.id).username }}</span>
               <span class="timestamp">{{ timestamp(message.created) }}</span>
             </div>
-            <div class="content-body">
-              <neko-markdown :source="message.content" />
-            </div>
+            <neko-markdown class="content-body" :source="message.content" />
           </div>
         </li>
         <li :key="index" class="event" v-if="message.type === 'event'">
-          <span
+          <div
+            class="content"
             v-tooltip="{
-              content: `${timestamp(message.created)}, ${member(message.id).username} ${message.content}`,
+              content: timestamp(message.created),
               placement: 'left',
               offset: 3,
               boundariesElement: 'body',
@@ -28,7 +27,7 @@
             <strong v-if="message.id === id">You</strong>
             <strong v-else>{{ member(message.id).username }}</strong>
             {{ message.content }}
-          </span>
+          </div>
         </li>
       </template>
     </ul>
@@ -37,6 +36,7 @@
       <div class="accent" />
       <div class="text-container">
         <textarea ref="chat" placeholder="Send a message" @keydown="onKeyDown" v-model="content" />
+        <div class="emoji"></div>
       </div>
     </div>
   </div>
@@ -84,12 +84,13 @@
       li {
         flex: 1;
         border-top: 1px solid var(--border-color);
-        padding: 10px 10px 0px 10px;
+        padding: 10px 5px 0px 10px;
         display: flex;
         flex-direction: row;
+        flex-wrap: nowrap;
         overflow: hidden;
-        user-select: contain;
-        max-width: 100%;
+        user-select: text;
+        word-wrap: break-word;
 
         &.message {
           .author {
@@ -100,7 +101,7 @@
             height: 40px;
             border-radius: 50%;
             background: $style-primary;
-            margin: 5px 10px 10px 0px;
+            margin: 0px 10px 10px 0px;
 
             img {
               width: 100%;
@@ -111,34 +112,41 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            line-height: 22px;
+            box-sizing: border-box;
+            word-wrap: break-word;
+            min-width: 0;
 
             .content-head {
               cursor: default;
+              width: 100%;
+              margin-bottom: 3px;
+              display: block;
 
               span {
+                display: inline-block;
                 color: $text-normal;
                 font-weight: 500;
-                float: left;
+                font-size: 16px;
               }
 
               .timestamp {
-                margin-left: 5px;
                 color: $text-muted;
-                float: left;
-                font-size: 0.8em;
-                line-height: 1.7em;
+                font-size: 0.7rem;
+                font-weight: 500;
+                margin-left: 0.3rem;
+                line-height: 12px;
+
+                &::first-letter {
+                  text-transform: uppercase;
+                }
               }
             }
-            ::v-deep .content-body {
-              display: flex;
-              color: $text-normal;
-              line-height: 22px;
 
-              * {
-                word-wrap: break-word;
-                max-width: 225px;
-              }
+            ::v-deep .content-body {
+              color: $text-normal;
+              line-height: 20px;
+              word-wrap: break-word;
+              overflow-wrap: break-word;
 
               a {
                 color: $text-link;
@@ -157,19 +165,22 @@
                 padding-left: 3px;
               }
 
-              .spoiler {
-                background: $background-tertiary;
-                padding: 0 2px;
-                border-radius: 4px;
-                cursor: pointer;
+              span {
+                &.spoiler {
+                  background: $background-tertiary;
+                  padding: 0 2px;
+                  border-radius: 4px;
+                  cursor: pointer;
 
-                span {
-                  opacity: 0;
+                  span {
+                    opacity: 0;
+                  }
                 }
 
-                &.active {
+                &.spoiler.active {
                   background: $background-secondary;
                   cursor: default;
+
                   span {
                     opacity: 1;
                   }
@@ -189,22 +200,19 @@
                 white-space: pre-wrap;
               }
 
-              div {
+              pre {
+                flex: 1;
+                color: $interactive-normal;
+                border: 1px solid $background-tertiary;
+                background: $background-secondary;
+                padding: 8px 6px;
+                margin: 4px 0;
+                border-radius: 4px;
+                display: block;
                 flex: 1;
 
-                pre {
-                  color: $interactive-normal;
-                  border: 1px solid $background-tertiary;
-                  background: $background-secondary;
-                  padding: 8px 6px;
-                  margin: 4px 0;
-                  border-radius: 4px;
+                code {
                   display: block;
-                  flex: 1;
-
-                  code {
-                    display: block;
-                  }
                 }
               }
             }
@@ -212,26 +220,22 @@
         }
 
         &.event {
-          flex: 1;
-          overflow: hidden;
-          display: flex;
-          height: 15px;
           color: $text-muted;
           cursor: default;
 
-          span {
-            white-space: nowrap;
-            max-width: 250px;
-            text-overflow: ellipsis;
-            overflow: hidden;
-            height: 15px;
+          .content {
+            min-width: 0;
+            box-sizing: border-box;
+            word-wrap: break-word;
+            display: inline-block;
+            vertical-align: baseline;
+            line-height: 20px;
 
             strong {
               font-weight: 600;
             }
 
             i {
-              float: right;
               font-style: italic;
               font-size: 10px;
             }
@@ -262,6 +266,13 @@
         background-color: rgba($color: #fff, $alpha: 0.05);
         border-radius: 5px;
         display: flex;
+
+        .emoji {
+          width: 20px;
+          height: 20px;
+          // background: #fff;
+          margin: 3px 3px 0 0;
+        }
 
         textarea {
           flex: 1;
@@ -364,7 +375,8 @@
     }
 
     timestamp(time: Date) {
-      return formatRelative(time, new Date())
+      const str = formatRelative(time, new Date())
+      return `${str.charAt(0).toUpperCase()}${str.slice(1)}`
     }
 
     onContext(event: MouseEvent, data: any) {

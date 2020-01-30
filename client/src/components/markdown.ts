@@ -202,10 +202,10 @@ const rules: MarkdownRules = {
     match: source => /^[\s\S]+?(?=[^0-9A-Za-z\s\u00c0-\uffff-]|\n\n|\n|\w+:\S|$)/.exec(source),
     html(node, output, state) {
       if (state.escapeHTML) {
-        return htmlTag('span', md.sanitizeText(node.content), {}, state)
+        return md.sanitizeText(node.content)
       }
 
-      return htmlTag('span', node.content, {}, state)
+      return node.content
     },
   },
   br: {
@@ -234,7 +234,7 @@ const rules: MarkdownRules = {
       }
     },
     html(node, output, state) {
-      return htmlTag('span', output(node.content, state), { class: 'spoiler' }, state) //htmlTag('span', , {  }, state)
+      return htmlTag('span', htmlTag('span', output(node.content, state), {}, state), { class: 'spoiler' }, state) //htmlTag('span', , {  }, state)
     },
   },
 }
