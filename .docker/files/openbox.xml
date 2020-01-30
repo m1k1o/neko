@@ -12,8 +12,14 @@
 </resistance>
 
 <applications>
-    <!-- Match all windows and remove their decorations -->
+    <!-- Match all windows and remove their decorations (obxprop | grep "^_OB_APP") -->
     <application class="Firefox*" name="Navigator">
+      <decor>no</decor>
+      <maximized>true</maximized>
+      <focus>yes</focus>
+      <layer>normal</layer>
+    </application>
+    <application class="Chromium*" name="chromium-browser">
       <decor>no</decor>
       <maximized>true</maximized>
       <focus>yes</focus>

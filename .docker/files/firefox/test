@@ -1,0 +1,34 @@
+#!/bin/bash
+
+#
+# firefox
+cp files/firefox/neko.js /usr/lib/firefox-esr/mozilla.cfg
+#rm -f /usr/lib/firefox-esr/mozilla.cfg
+
+cp files/firefox/autoconfig.js /usr/lib/firefox-esr/defaults/pref/autoconfig.js
+#rm -f /usr/lib/firefox-esr/defaults/pref/autoconfig.js
+
+#https://github.com/mozilla/policy-templates
+cp files/firefox/policies.json /usr/lib/firefox-esr/distribution/policies.json
+#rm -f /usr/lib/firefox-esr/distribution/policies.json
+
+cp files/firefox/supervisord.conf /etc/neko/supervisord/firefox.conf
+#rm -f /etc/neko/supervisord/firefox.conf
+
+#
+# install extensions
+mkdir -p /usr/lib/firefox/distribution/extensions
+
+# uBlock0
+if [ ! -f /usr/lib/firefox/distribution/extensions/uBlock0@raymondhill.net.xpi ]; then
+  curl -o /usr/lib/firefox/distribution/extensions/uBlock0@raymondhill.net.xpi https://addons.mozilla.org/firefox/downloads/latest/ublock-origin/addon-607454-latest.xpi
+fi
+
+# nordvpnproxy
+if [ ! -f /usr/lib/firefox/distribution/extensions/nordvpnproxy@nordvpn.com.xpi ]; then
+  curl -o /usr/lib/firefox/distribution/extensions/nordvpnproxy@nordvpn.com.xpi https://addons.mozilla.org/firefox/downloads/latest/nordvpn-proxy-extension/latest.xpi
+fi
+
+#
+# clean up old sessions
+rm -rf /home/$USER/.mozilla

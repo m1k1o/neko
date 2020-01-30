@@ -53,12 +53,20 @@ I like cats 🐱 (`Neko` is the Japanese word for cat), I'm a weeb/nerd
 
 > 💡 **Protip**: Run `nano docker-compose.yaml` to edit the settings, then press *ctrl+x* to exit and save the file.
 
-### Running the container:
+### Running:
+#### Chromium container:
 ```
-sudo docker run -p 8080:8080 -p 59000-59100:59000-59100/udp -e NEKO_PASSWORD='secret' -e NEKO_ADMIN='secret' --shm-size=1gb nurdism/neko:latest 
+sudo docker run -p 80:8080 -p 59000-59100:59000-59100/udp --cap-add SYS_ADMIN nurdism/neko:chromium
 ```
+*Note:* `--cap-add SYS_ADMIN` is required for chromium to run properly
 
-*Note:* `--shm-size=1gb` is required, firefox tabs will crash, not sure what it does to be honest 😅
+----
+#### Firefox container:
+```
+sudo docker run -p 8080:8080 -p 59000-59100:59000-59100/udp -e NEKO_PASSWORD='secret' -e NEKO_ADMIN='secret' --shm-size=1gb nurdism/neko:firefox 
+```
+*Note:* `--shm-size=1gb` is required for firefox, tabs will crash otherwise
+
 
 ### Docker Basic Configuration
 ```

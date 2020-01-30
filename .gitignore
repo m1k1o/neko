@@ -15,6 +15,7 @@ tmp/
 logs/
 *.log
 core
+.build
 
 # Runtime data
 pids

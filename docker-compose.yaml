@@ -1,7 +1,7 @@
 version: "2.0"
 services:
   neko:
-    image: nurdism/neko
+    image: nurdism/neko:firefox
     restart: always
     shm_size: "1gb"
     ports:

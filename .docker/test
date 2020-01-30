@@ -7,65 +7,72 @@ if [[ $EUID -ne 0 ]]; then
    exit 1
 fi
 
-# if [ ! -f ../server/bin/neko ]; then
-#  echo "build server before testing"
-#  exit 1
-# fi
-
-# if [ ! -d ../client/dist/ ]; then
-#  echo "build client before testing"
-#  exit 1
-# fi
-
-sudo mkdir -p /var/run/dbus /etc/neko
-sudo rm -rf /var/run/dbus.pid
-
-sudo cp files/firefox/neko.js /usr/lib/firefox-esr/mozilla.cfg
-#sudo rm -f /usr/lib/firefox-esr/mozilla.cfg
-
-sudo cp files/firefox/autoconfig.js /usr/lib/firefox-esr/defaults/pref/autoconfig.js
-#sudo rm -f /usr/lib/firefox-esr/defaults/pref/autoconfig.js
-
-sudo cp files/firefox/policies.json /usr/lib/firefox-esr/distribution/policies.json
-#sudo rm -f /usr/lib/firefox-esr/distribution/policies.json
-
-sudo cp files/dbus /usr/bin/dbus
-sudo cp files/default.pa /etc/pulse/default.pa
-sudo cp files/supervisord.conf /etc/neko/supervisord.conf
-sudo cp files/openbox.xml /etc/neko/openbox.xml
-
-sudo mkdir -p /usr/lib/firefox/distribution/extensions
-
-if [ ! -f /usr/lib/firefox/distribution/extensions/uBlock0@raymondhill.net.xpi ]; then
-  sudo curl -o /usr/lib/firefox/distribution/extensions/uBlock0@raymondhill.net.xpi https://addons.mozilla.org/firefox/downloads/latest/ublock-origin/addon-607454-latest.xpi
-fi
-
-if [ ! -f /usr/lib/firefox/distribution/extensions/nordvpnproxy@nordvpn.com.xpi ]; then
-  sudo curl -o /usr/lib/firefox/distribution/extensions/nordvpnproxy@nordvpn.com.xpi https://addons.mozilla.org/firefox/downloads/latest/nordvpn-proxy-extension/latest.xpi
-fi
-
-sudo cp ../server/bin/neko /usr/bin/neko
-sudo cp -R ../client/dist /var/www/
-
-sudo rm -rf $HOME/.mozilla
-
-mkdir -p $HOME/.config/pulse
-echo "default-server=unix:/tmp/pulseaudio.socket" > $HOME/.config/pulse/client.conf
-
 export USER=neko
 export SCREEN_WIDTH=1280
 export SCREEN_HEIGHT=720
 export SCREEN_DEPTH=24
 export DISPLAY=:99.0
 
-export NEKO_PASSWORD=neko
-export NEKO_BIND=:8080
-export NEKO_KEY=
-export NEKO_CERT=
+#
+# create log folders
+if [ ! -L /var/log/neko ]; then
+  mkdir -p /var/log/neko
+  mkdir -p logs
 
-if [ -d logs ]; then
-  sudo rm -rf logs
+  ln -s /workspace/.docker/logs /var/log/neko
+  
+  chown -R $USER logs
+  chown -R $USER /var/log/neko
 fi
-mkdir logs
 
-supervisord --configuration ./supervisord.conf
+#
+# clean up old logs
+if [ -d logs ]; then
+  rm -rf logs/*.log
+fi
+
+#
+# copy neko config
+mkdir -p /etc/neko/supervisord
+cp files/dbus /usr/bin/dbus
+cp files/default.pa /etc/pulse/default.pa
+cp files/supervisord.conf /etc/neko/supervisord.conf
+cp files/openbox.xml /etc/neko/openbox.xml
+
+#
+# remove old configs
+rm -rf /etc/neko/supervisord/*.conf
+
+#
+# copy dist files
+if [ -f ../server/bin/neko ]; then
+  cp ../server/bin/neko /usr/bin/neko
+fi
+
+if [ -d ../client/dist ]; then
+  cp -R ../client/dist /var/www/
+fi
+
+#
+# setup pules
+if [ ! -f /home/$USER/.config/pulse/client.conf ]; then
+  mkdir -p /home/$USER/.config/pulse
+  echo "default-server=unix:/tmp/pulseaudio.socket" > /home/$USER/.config/pulse/client.conf
+  chown -R $USER /home/$USER/.config;
+fi
+
+#
+# run setup for browser 
+case $1 in
+  firefox) ./files/firefox/test ;;
+  chromium) ./files/chromium/test ;;
+  *) ./files/chromium/test ;;
+esac
+
+#
+# clean up old sessions
+rm -rf /home/$USER/.dbus
+
+#
+# run supervisord
+supervisord --configuration ./files/supervisord.conf

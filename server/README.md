@@ -47,8 +47,19 @@ Development:
 libxtst-dev
 ```
 
+### Testing
+------
+located in `.docker` folder
+```
+./test firefox  // creates an x server, puleseaudio server add firefox instance
+./test chromium // creates an x server, puleseaudio server add chromium instance
+```
+
 ### Building
 ------
+located in `.docker` folder
 ```
-./build
+./build gst     // builds the required gst packages in `.build/gst/`
+./build docker  // builds the docker images
+./build push    // pushes the images to docker hub
 ```
