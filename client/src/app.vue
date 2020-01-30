@@ -1,5 +1,5 @@
 <template>
-  <div id="neko">
+  <div id="neko" :class="[side ? 'expanded' : '']">
     <template v-if="!$client.supported">
       <neko-unsupported />
     </template>
@@ -41,10 +41,13 @@
     left: 0;
     right: 0;
     bottom: 0;
+    max-width: 100vw;
+    max-height: 100vh;
     flex-direction: row;
     display: flex;
 
     .neko-main {
+      min-width: 360px;
       max-width: 100%;
       flex-grow: 1;
       flex-direction: column;
@@ -100,6 +103,29 @@
             align-items: center;
             display: flex;
           }
+        }
+      }
+    }
+  }
+
+  @media only screen and (max-width: 600px) {
+    #neko {
+      &.expanded {
+        .neko-main {
+          transform: translateX(-$side-width);
+        }
+        .neko-menu {
+          transform: translateX(-$side-width);
+        }
+      }
+    }
+  }
+
+  @media only screen and (max-width: 768px) {
+    #neko {
+      .neko-main {
+        .room-container {
+          display: none;
         }
       }
     }

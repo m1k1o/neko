@@ -1,6 +1,6 @@
 <template>
   <ul>
-    <li>
+    <li v-if="!isTouch">
       <i
         :class="[
           hosted && !hosting ? 'disabled' : '',
@@ -114,6 +114,13 @@
 
   @Component({ name: 'neko-controls' })
   export default class extends Vue {
+    get isTouch() {
+      return (
+        (typeof navigator.maxTouchPoints !== 'undefined' ? navigator.maxTouchPoints < 0 : false) ||
+        'ontouchstart' in document.documentElement
+      )
+    }
+
     get hosted() {
       return this.$accessor.remote.hosted
     }
