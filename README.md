@@ -10,7 +10,7 @@
  This app uses Web RTC to stream a desktop inside of a docker container, I made this because [rabb.it](https://en.wikipedia.org/wiki/Rabb.it) went under and my internet can't handle streaming and discord keeps crashing when my friend attempts to. I just want to watch anime with my friends ლ(ಠ益ಠლ) so I started digging throughout the internet and found a few *kinda* clones, but none of them had the virtual browser, then I found [Turtus](https://github.com/Khauri/Turtus) and I was able to figure out the rest. This is by no means a fully featured clone of rabbit, it hs only *one* room. It's stateless, so no saved user names or passwords. 
 
 ### Features
-  * Text Chat (with basic markdown support (discord flavor))
+  * Text Chat (With basic markdown support, discord flavor)
   * Admin users (Kick, Ban & Force Give/Release Controls)
   * Clipboard synchronization
   * Emote overlay
@@ -56,7 +56,7 @@ I like cats 🐱 (`Neko` is the Japanese word for cat), I'm a weeb/nerd
 ### Running:
 #### Chromium container:
 ```
-sudo docker run -p 80:8080 -p 59000-59100:59000-59100/udp --cap-add SYS_ADMIN nurdism/neko:chromium
+sudo docker run -p 80:8080 -p 59000-59100:59000-59100/udp -e NEKO_PASSWORD='secret' -e NEKO_ADMIN='secret' --cap-add SYS_ADMIN nurdism/neko:chromium
 ```
 *Note:* `--cap-add SYS_ADMIN` is required for chromium to run properly
 
@@ -86,9 +86,9 @@ for full documentation on configuring the server [go here](./server/README.md)
 ### Development
 *Highly* recommend you use a [dev container](https://code.visualstudio.com/docs/remote/containers) for [vscode](https://code.visualstudio.com/), I've included the `.devcontainer` I've used to develop this app. To build **n**.eko docker container run:
 ```
-cd .docker && ./build
+cd .docker && ./build docker
 ```
-the `.docker` folder also contains `./test` bash script which will launch a desktop with a browser for testing out any changes with the server.
+the `.docker` folder also contains `./test <browser>` bash script which will launch a desktop with a browser for testing out any changes with the server.
 
 To run the client with hot loading (for development of new client features)
 ```
