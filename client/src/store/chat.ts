@@ -59,7 +59,7 @@ export const actions = actionTree(
   { state, getters, mutations },
   {
     newEmote(store, emote: Emote) {
-      if (accessor.settings.ignore_emotes) {
+      if (accessor.settings.ignore_emotes || document.visibilityState === 'hidden') {
         return
       }
 
