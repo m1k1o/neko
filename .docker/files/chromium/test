@@ -1,23 +1,26 @@
 #!/bin/bash
 
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
 #
 # chromium
 mkdir -p /etc/chromium/policies/managed
 
 # https://cloud.google.com/docs/chrome-enterprise/policies/
-cp files/chromium/policies.json /etc/chromium/policies/managed/policies.json
+cp $DIR/policies.json /etc/chromium/policies/managed/policies.json
 #rm -f /etc/chromium/policies/managed/policies.json
 
-cp files/chromium/preferences.json /usr/share/chromium/master_preferences
+cp $DIR/preferences.json /usr/share/chromium/master_preferences
 #rm -f /usr/share/chromium/master_preferences
 
-cp files/chromium/supervisord.conf /etc/neko/supervisord/chromium.conf
+cp $DIR/supervisord.conf /etc/neko/supervisord/chromium.conf
 #rm -f /etc/neko/supervisord/firefox.conf
 
+#
 # install widevine module
 if [ ! -f /usr/lib/chromium/libwidevinecdm.so ]; then
   WIDEVINE_VERSION=$(wget --quiet -O - https://dl.google.com/widevine-cdm/versions.txt | tail -n 1)
-  wget "https://dl.google.com/widevine-cdm/$WIDEVINE_VERSION-linux-x64.zip" -O /tmp/widevine.zip
+  wget -O /tmp/widevine.zip "https://dl.google.com/widevine-cdm/$WIDEVINE_VERSION-linux-x64.zip" 
   unzip -p /tmp/widevine.zip libwidevinecdm.so > /usr/lib/chromium/libwidevinecdm.so
   chmod 644 /usr/lib/chromium/libwidevinecdm.so
   rm /tmp/widevine.zip

@@ -1,12 +1,13 @@
 FROM nurdism/neko:base
 
+#
 # install neko chromium
 RUN set -eux; apt-get update; \
     apt-get install -y --no-install-recommends unzip chromium; \
     #
     # install widevine module
     WIDEVINE_VERSION=$(wget --quiet -O - https://dl.google.com/widevine-cdm/versions.txt | tail -n 1); \
-    wget "https://dl.google.com/widevine-cdm/$WIDEVINE_VERSION-linux-x64.zip" -O /tmp/widevine.zip ; \
+    wget -O /tmp/widevine.zip "https://dl.google.com/widevine-cdm/$WIDEVINE_VERSION-linux-x64.zip"; \
     unzip -p /tmp/widevine.zip libwidevinecdm.so > /usr/lib/chromium/libwidevinecdm.so; \
     chmod 644 /usr/lib/chromium/libwidevinecdm.so; \
     rm /tmp/widevine.zip; \

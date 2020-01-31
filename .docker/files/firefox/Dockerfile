@@ -1,5 +1,6 @@
 FROM nurdism/neko:base
 
+#
 # install firefox-esr
 RUN set -eux; apt-get update; \
     apt-get install -y --no-install-recommends firefox-esr; \
@@ -10,7 +11,6 @@ RUN set -eux; apt-get update; \
     wget -O /usr/lib/firefox-esr/distribution/extensions/nordvpnproxy@nordvpn.com.xpi https://addons.mozilla.org/firefox/downloads/latest/nordvpn-proxy-extension/latest.xpi; \
     #
     # clean up
-    apt-get --purge autoremove -y wget ca-certificates; \
     apt-get autoremove -y; \
     apt-get clean -y; \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/*

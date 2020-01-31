@@ -2,19 +2,20 @@ FROM debian:stretch-slim
 
 #
 # cluster fuck of packages for neko, node, go and gstreamer
-RUN apt-get update; apt-get install -y --no-install-recommends autoconf ca-certificates curl netbase wget \
-      bzr git mercurial openssh-client subversion procps automake bzip2 dpkg-dev file g++ gcc \
-      libbz2-dev libc6-dev libcurl4-openssl-dev libdb-dev libevent-dev libffi-dev libgdbm-dev libglib2.0-dev libgmp-dev \
-      libjpeg-dev libkrb5-dev liblzma-dev libmagickcore-dev libmagickwand-dev libmaxminddb-dev libncurses5-dev libncursesw5-dev \
-      libpng-dev libpq-dev libreadline-dev libsqlite3-dev libssl-dev libtool libwebp-dev libxml2-dev libxslt-dev libyaml-dev  \
-      make patch unzip xz-utils zlib1g-dev pkg-config \
-      build-essential perl python autopoint bison flex \
-      gettext openssl libopus-dev libvpx-dev libpulse-dev libx11-dev libxv-dev libxt-dev \
-      libxfixes-dev apt-utils x11vnc libxtst-dev dialog \
-      pulseaudio openbox chromium firefox-esr dbus-x11 xvfb xclip supervisor unzip; \
-      if ! command -v gpg > /dev/null; then \
-        apt-get install -y --no-install-recommends gnupg dirmngr; \
-      fi
+RUN set -eux; apt-get update; apt-get install -y --no-install-recommends \
+  autoconf ca-certificates curl netbase wget \
+  bzr git mercurial openssh-client subversion procps automake bzip2 dpkg-dev file g++ gcc \
+  libbz2-dev libc6-dev libcurl4-openssl-dev libdb-dev libevent-dev libffi-dev libgdbm-dev libglib2.0-dev libgmp-dev \
+  libjpeg-dev libkrb5-dev liblzma-dev libmagickcore-dev libmagickwand-dev libmaxminddb-dev libncurses5-dev libncursesw5-dev \
+  libpng-dev libpq-dev libreadline-dev libsqlite3-dev libssl-dev libtool libwebp-dev libxml2-dev libxslt-dev libyaml-dev  \
+  make patch unzip xz-utils zlib1g-dev pkg-config \
+  build-essential perl python autopoint bison flex \
+  gettext openssl libopus-dev libvpx-dev libpulse-dev libx11-dev libxv-dev libxt-dev \
+  libxfixes-dev apt-utils x11vnc libxtst-dev dialog \
+  pulseaudio openbox chromium firefox-esr dbus-x11 xvfb xclip supervisor; \
+  if ! command -v gpg > /dev/null; then \
+    apt-get install -y --no-install-recommends gnupg dirmngr; \
+  fi
 
 #
 # set up env for gst
@@ -25,7 +26,8 @@ ENV PKG_CONFIG_PATH=/gst/local/lib/pkgconfig:$PKG_CONFIG_PATH
 #
 # add node
 ENV NODE_VERSION 12.14.1
-RUN ARCH= ; dpkgArch="$(dpkg --print-architecture)" \
+RUN set -eux; \
+  ARCH= ; dpkgArch="$(dpkg --print-architecture)" \
   ;case "${dpkgArch##*-}" in \
     amd64) ARCH='x64';; \
     ppc64el) ARCH='ppc64le';; \
@@ -36,7 +38,6 @@ RUN ARCH= ; dpkgArch="$(dpkg --print-architecture)" \
     *) echo "unsupported architecture"; exit 1 ;; \
   esac;\
   # gpg keys listed at https://github.com/nodejs/node#release-keys
-  set -eux;\
   for key in \
     94AE36675C464D64BAFA68DD7434390BDBE9B9C5 \
     FD3A5288F042B6850C66B31F09FE44734EB7990E \
@@ -97,7 +98,8 @@ ENV PATH $GOPATH/bin:/usr/local/go/bin:$PATH
 
 #
 # install Go tools w/module support
-RUN mkdir -p /tmp/gotools; \
+RUN set -eux; \
+    mkdir -p /tmp/gotools; \
     cd /tmp/gotools; \
     GO111MODULE=on go get -v golang.org/x/tools/gopls@latest 2>&1; \
     GO111MODULE=on go get -v \
@@ -145,15 +147,19 @@ ARG USERNAME=neko
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
 
+#
 # set to false to skip installing zsh and Oh My ZSH!
 ARG INSTALL_ZSH="true"
 
+#
 # location and expected SHA for common setup script - SHA generated on release
 ARG COMMON_SCRIPT_SOURCE="https://raw.githubusercontent.com/microsoft/vscode-dev-containers/master/script-library/common-debian.sh"
 ARG COMMON_SCRIPT_SHA="dev-mode"
 
+#
 # verify git, common tools / libs installed, add/modify non-root user, optionally install zsh
-RUN wget -q -O /tmp/common-setup.sh $COMMON_SCRIPT_SOURCE; \
+RUN set -eux; \
+    wget -q -O /tmp/common-setup.sh $COMMON_SCRIPT_SOURCE; \
     if [ "$COMMON_SCRIPT_SHA" != "dev-mode" ]; then echo "$COMMON_SCRIPT_SHA /tmp/common-setup.sh" | sha256sum -c - ; fi; \
     /bin/bash /tmp/common-setup.sh "$INSTALL_ZSH" "$USERNAME" "$USER_UID" "$USER_GID"; \
     rm /tmp/common-setup.sh; \
@@ -176,5 +182,6 @@ RUN wget -q -O /tmp/common-setup.sh $COMMON_SCRIPT_SOURCE; \
 
 ENV PATH=/usr/local/share/npm-global/bin:$PATH
 
+#
 # switch back to dialog for any ad-hoc use of apt-get
 ENV DEBIAN_FRONTEND=dialog

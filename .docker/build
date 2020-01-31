@@ -2,7 +2,7 @@
 
 # sudo docker run -p 80:8080 -p 59000-59100:59000-59100/udp --cap-add SYS_ADMIN nurdism/neko:chromium 
 # sudo docker run -p 80:8080 -p 59000-59100:59000-59100/udp --shm-size=1gb nurdism/neko:firefox
-# sudo docker run --network host --shm-size=1gb -it nurdism/neko:latest /bin/bash
+# sudo docker run --network host --shm-size=1gb -it nurdism/neko:base /bin/bash
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )/.."
 
@@ -13,9 +13,10 @@ build_gst() {
     sudo chown -R neko /workspace/.build
   fi
   
+  #
   # build & install gstreamer 
   sudo su -c 'set -eux; \
-    sudo rm -rf /gst/local; \
+    rm -rf /gst/local; \
     cd /gst; \
     for MODULE in \
       gstreamer \
