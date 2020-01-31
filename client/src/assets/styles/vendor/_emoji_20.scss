@@ -1,0 +1,5185 @@
+
+.emoji-20 {
+  display: inline-block;
+  height: 20px;
+  width: 20px;
+  background-image: url("../images/emoji_20.png");
+  background-repeat: no_repeat;
+
+  &.e-copyright {
+    background-position: -0px -0px;
+  }
+
+  &.e-registered {
+    background-position: -0px -20px;
+  }
+
+  &.e-bangbang {
+    background-position: -0px -40px;
+  }
+
+  &.e-interrobang {
+    background-position: -0px -60px;
+  }
+
+  &.e-tm {
+    background-position: -0px -80px;
+  }
+
+  &.e-information_source {
+    background-position: -0px -100px;
+  }
+
+  &.e-left_right_arrow {
+    background-position: -0px -120px;
+  }
+
+  &.e-arrow_up_down {
+    background-position: -0px -140px;
+  }
+
+  &.e-arrow_upper_left {
+    background-position: -0px -160px;
+  }
+
+  &.e-arrow_upper_right {
+    background-position: -0px -180px;
+  }
+
+  &.e-arrow_lower_right {
+    background-position: -0px -200px;
+  }
+
+  &.e-arrow_lower_left {
+    background-position: -0px -220px;
+  }
+
+  &.e-leftwards_arrow_with_hook {
+    background-position: -0px -240px;
+  }
+
+  &.e-arrow_right_hook {
+    background-position: -0px -260px;
+  }
+
+  &.e-watch {
+    background-position: -0px -280px;
+  }
+
+  &.e-hourglass {
+    background-position: -0px -300px;
+  }
+
+  &.e-keyboard {
+    background-position: -0px -320px;
+  }
+
+  &.e-fast_forward {
+    background-position: -0px -360px;
+  }
+
+  &.e-rewind {
+    background-position: -0px -380px;
+  }
+
+  &.e-arrow_double_up {
+    background-position: -0px -400px;
+  }
+
+  &.e-arrow_double_down {
+    background-position: -0px -420px;
+  }
+
+  &.e-black_right_pointing_double_triangle_with_vertical_bar {
+    background-position: -0px -440px;
+  }
+
+  &.e-black_left_pointing_double_triangle_with_vertical_bar {
+    background-position: -0px -460px;
+  }
+
+  &.e-black_right_pointing_triangle_with_double_vertical_bar {
+    background-position: -0px -480px;
+  }
+
+  &.e-alarm_clock {
+    background-position: -0px -500px;
+  }
+
+  &.e-stopwatch {
+    background-position: -0px -520px;
+  }
+
+  &.e-timer_clock {
+    background-position: -0px -540px;
+  }
+
+  &.e-hourglass_flowing_sand {
+    background-position: -0px -560px;
+  }
+
+  &.e-double_vertical_bar {
+    background-position: -0px -580px;
+  }
+
+  &.e-black_square_for_stop {
+    background-position: -0px -600px;
+  }
+
+  &.e-black_circle_for_record {
+    background-position: -0px -620px;
+  }
+
+  &.e-m {
+    background-position: -0px -640px;
+  }
+
+  &.e-black_small_square {
+    background-position: -0px -660px;
+  }
+
+  &.e-white_small_square {
+    background-position: -0px -680px;
+  }
+
+  &.e-arrow_forward {
+    background-position: -0px -700px;
+  }
+
+  &.e-arrow_backward {
+    background-position: -0px -720px;
+  }
+
+  &.e-white_medium_square {
+    background-position: -0px -740px;
+  }
+
+  &.e-black_medium_square {
+    background-position: -0px -760px;
+  }
+
+  &.e-white_medium_small_square {
+    background-position: -0px -780px;
+  }
+
+  &.e-black_medium_small_square {
+    background-position: -0px -800px;
+  }
+
+  &.e-sunny {
+    background-position: -20px -0px;
+  }
+
+  &.e-cloud {
+    background-position: -20px -20px;
+  }
+
+  &.e-umbrella {
+    background-position: -20px -40px;
+  }
+
+  &.e-snowman {
+    background-position: -20px -60px;
+  }
+
+  &.e-comet {
+    background-position: -20px -80px;
+  }
+
+  &.e-phone {
+    background-position: -20px -100px;
+  }
+
+  &.e-ballot_box_with_check {
+    background-position: -20px -120px;
+  }
+
+  &.e-umbrella_with_rain_drops {
+    background-position: -20px -140px;
+  }
+
+  &.e-coffee {
+    background-position: -20px -160px;
+  }
+
+  &.e-shamrock {
+    background-position: -20px -180px;
+  }
+
+  &.e-point_up {
+    background-position: -20px -200px;
+  }
+
+  &.e-skull_and_crossbones {
+    background-position: -20px -320px;
+  }
+
+  &.e-radioactive_sign {
+    background-position: -20px -340px;
+  }
+
+  &.e-biohazard_sign {
+    background-position: -20px -360px;
+  }
+
+  &.e-orthodox_cross {
+    background-position: -20px -380px;
+  }
+
+  &.e-star_and_crescent {
+    background-position: -20px -400px;
+  }
+
+  &.e-peace_symbol {
+    background-position: -20px -420px;
+  }
+
+  &.e-yin_yang {
+    background-position: -20px -440px;
+  }
+
+  &.e-wheel_of_dharma {
+    background-position: -20px -460px;
+  }
+
+  &.e-white_frowning_face {
+    background-position: -20px -480px;
+  }
+
+  &.e-relaxed {
+    background-position: -20px -500px;
+  }
+
+  &.e-aries {
+    background-position: -20px -520px;
+  }
+
+  &.e-taurus {
+    background-position: -20px -540px;
+  }
+
+  &.e-gemini {
+    background-position: -20px -560px;
+  }
+
+  &.e-cancer {
+    background-position: -20px -580px;
+  }
+
+  &.e-leo {
+    background-position: -20px -600px;
+  }
+
+  &.e-virgo {
+    background-position: -20px -620px;
+  }
+
+  &.e-libra {
+    background-position: -20px -640px;
+  }
+
+  &.e-scorpius {
+    background-position: -20px -660px;
+  }
+
+  &.e-sagittarius {
+    background-position: -20px -680px;
+  }
+
+  &.e-capricorn {
+    background-position: -20px -700px;
+  }
+
+  &.e-aquarius {
+    background-position: -20px -720px;
+  }
+
+  &.e-pisces {
+    background-position: -20px -740px;
+  }
+
+  &.e-spades {
+    background-position: -20px -760px;
+  }
+
+  &.e-clubs {
+    background-position: -20px -780px;
+  }
+
+  &.e-hearts {
+    background-position: -20px -800px;
+  }
+
+  &.e-diamonds {
+    background-position: -40px -0px;
+  }
+
+  &.e-hotsprings {
+    background-position: -40px -20px;
+  }
+
+  &.e-recycle {
+    background-position: -40px -40px;
+  }
+
+  &.e-wheelchair {
+    background-position: -40px -60px;
+  }
+
+  &.e-hammer_and_pick {
+    background-position: -40px -80px;
+  }
+
+  &.e-anchor {
+    background-position: -40px -100px;
+  }
+
+  &.e-crossed_swords {
+    background-position: -40px -120px;
+  }
+
+  &.e-scales {
+    background-position: -40px -140px;
+  }
+
+  &.e-alembic {
+    background-position: -40px -160px;
+  }
+
+  &.e-gear {
+    background-position: -40px -180px;
+  }
+
+  &.e-atom_symbol {
+    background-position: -40px -200px;
+  }
+
+  &.e-fleur_de_lis {
+    background-position: -40px -220px;
+  }
+
+  &.e-warning {
+    background-position: -40px -240px;
+  }
+
+  &.e-zap {
+    background-position: -40px -260px;
+  }
+
+  &.e-white_circle {
+    background-position: -40px -280px;
+  }
+
+  &.e-black_circle {
+    background-position: -40px -300px;
+  }
+
+  &.e-coffin {
+    background-position: -40px -320px;
+  }
+
+  &.e-funeral_urn {
+    background-position: -40px -340px;
+  }
+
+  &.e-soccer {
+    background-position: -40px -360px;
+  }
+
+  &.e-baseball {
+    background-position: -40px -380px;
+  }
+
+  &.e-snowman_without_snow {
+    background-position: -40px -400px;
+  }
+
+  &.e-partly_sunny {
+    background-position: -40px -420px;
+  }
+
+  &.e-thunder_cloud_and_rain {
+    background-position: -40px -440px;
+  }
+
+  &.e-ophiuchus {
+    background-position: -40px -460px;
+  }
+
+  &.e-pick {
+    background-position: -40px -480px;
+  }
+
+  &.e-helmet_with_white_cross {
+    background-position: -40px -500px;
+  }
+
+  &.e-chains {
+    background-position: -40px -520px;
+  }
+
+  &.e-no_entry {
+    background-position: -40px -540px;
+  }
+
+  &.e-shinto_shrine {
+    background-position: -40px -560px;
+  }
+
+  &.e-church {
+    background-position: -40px -580px;
+  }
+
+  &.e-mountain {
+    background-position: -40px -600px;
+  }
+
+  &.e-umbrella_on_ground {
+    background-position: -40px -620px;
+  }
+
+  &.e-fountain {
+    background-position: -40px -640px;
+  }
+
+  &.e-golf {
+    background-position: -40px -660px;
+  }
+
+  &.e-ferry {
+    background-position: -40px -680px;
+  }
+
+  &.e-boat {
+    background-position: -40px -700px;
+  }
+
+  &.e-skier {
+    background-position: -40px -720px;
+  }
+
+  &.e-ice_skate {
+    background-position: -40px -740px;
+  }
+
+  &.e-person_with_ball {
+    background-position: -40px -760px;
+  }
+
+  &.e-tent {
+    background-position: -60px -60px;
+  }
+
+  &.e-fuelpump {
+    background-position: -60px -80px;
+  }
+
+  &.e-scissors {
+    background-position: -60px -100px;
+  }
+
+  &.e-white_check_mark {
+    background-position: -60px -120px;
+  }
+
+  &.e-airplane {
+    background-position: -60px -140px;
+  }
+
+  &.e-email {
+    background-position: -60px -160px;
+  }
+
+  &.e-fist {
+    background-position: -60px -180px;
+  }
+
+  &.e-hand {
+    background-position: -60px -300px;
+  }
+
+  &.e-v {
+    background-position: -60px -420px;
+  }
+
+  &.e-writing_hand {
+    background-position: -60px -540px;
+  }
+
+  &.e-pencil2 {
+    background-position: -60px -660px;
+  }
+
+  &.e-black_nib {
+    background-position: -60px -680px;
+  }
+
+  &.e-heavy_check_mark {
+    background-position: -60px -700px;
+  }
+
+  &.e-heavy_multiplication_x {
+    background-position: -60px -720px;
+  }
+
+  &.e-latin_cross {
+    background-position: -60px -740px;
+  }
+
+  &.e-star_of_david {
+    background-position: -60px -760px;
+  }
+
+  &.e-sparkles {
+    background-position: -60px -780px;
+  }
+
+  &.e-eight_spoked_asterisk {
+    background-position: -60px -800px;
+  }
+
+  &.e-eight_pointed_black_star {
+    background-position: -80px -0px;
+  }
+
+  &.e-snowflake {
+    background-position: -80px -20px;
+  }
+
+  &.e-sparkle {
+    background-position: -80px -40px;
+  }
+
+  &.e-x {
+    background-position: -80px -60px;
+  }
+
+  &.e-negative_squared_cross_mark {
+    background-position: -80px -80px;
+  }
+
+  &.e-question {
+    background-position: -80px -100px;
+  }
+
+  &.e-grey_question {
+    background-position: -80px -120px;
+  }
+
+  &.e-grey_exclamation {
+    background-position: -80px -140px;
+  }
+
+  &.e-exclamation {
+    background-position: -80px -160px;
+  }
+
+  &.e-heavy_heart_exclamation_mark_ornament {
+    background-position: -80px -180px;
+  }
+
+  &.e-heart {
+    background-position: -80px -200px;
+  }
+
+  &.e-heavy_plus_sign {
+    background-position: -80px -220px;
+  }
+
+  &.e-heavy_minus_sign {
+    background-position: -80px -240px;
+  }
+
+  &.e-heavy_division_sign {
+    background-position: -80px -260px;
+  }
+
+  &.e-arrow_right {
+    background-position: -80px -280px;
+  }
+
+  &.e-curly_loop {
+    background-position: -80px -300px;
+  }
+
+  &.e-loop {
+    background-position: -80px -320px;
+  }
+
+  &.e-arrow_heading_up {
+    background-position: -80px -340px;
+  }
+
+  &.e-arrow_heading_down {
+    background-position: -80px -360px;
+  }
+
+  &.e-arrow_left {
+    background-position: -80px -380px;
+  }
+
+  &.e-arrow_up {
+    background-position: -80px -400px;
+  }
+
+  &.e-arrow_down {
+    background-position: -80px -420px;
+  }
+
+  &.e-black_large_square {
+    background-position: -80px -440px;
+  }
+
+  &.e-white_large_square {
+    background-position: -80px -460px;
+  }
+
+  &.e-star {
+    background-position: -80px -480px;
+  }
+
+  &.e-o {
+    background-position: -80px -500px;
+  }
+
+  &.e-wavy_dash {
+    background-position: -80px -520px;
+  }
+
+  &.e-part_alternation_mark {
+    background-position: -80px -540px;
+  }
+
+  &.e-congratulations {
+    background-position: -80px -560px;
+  }
+
+  &.e-secret {
+    background-position: -80px -580px;
+  }
+
+  &.e-mahjong {
+    background-position: -80px -600px;
+  }
+
+  &.e-black_joker {
+    background-position: -80px -620px;
+  }
+
+  &.e-a {
+    background-position: -80px -640px;
+  }
+
+  &.e-b {
+    background-position: -80px -660px;
+  }
+
+  &.e-o2 {
+    background-position: -80px -680px;
+  }
+
+  &.e-parking {
+    background-position: -80px -700px;
+  }
+
+  &.e-ab {
+    background-position: -80px -720px;
+  }
+
+  &.e-cl {
+    background-position: -80px -740px;
+  }
+
+  &.e-cool {
+    background-position: -80px -760px;
+  }
+
+  &.e-free {
+    background-position: -80px -780px;
+  }
+
+  &.e-id {
+    background-position: -80px -800px;
+  }
+
+  &.e-new {
+    background-position: -100px -0px;
+  }
+
+  &.e-ng {
+    background-position: -100px -20px;
+  }
+
+  &.e-ok {
+    background-position: -100px -40px;
+  }
+
+  &.e-sos {
+    background-position: -100px -60px;
+  }
+
+  &.e-up {
+    background-position: -100px -80px;
+  }
+
+  &.e-vs {
+    background-position: -100px -100px;
+  }
+
+  &.e-koko {
+    background-position: -100px -120px;
+  }
+
+  &.e-sa {
+    background-position: -100px -140px;
+  }
+
+  &.e-u7121 {
+    background-position: -100px -160px;
+  }
+
+  &.e-u6307 {
+    background-position: -100px -180px;
+  }
+
+  &.e-u7981 {
+    background-position: -100px -200px;
+  }
+
+  &.e-u7a7a {
+    background-position: -100px -220px;
+  }
+
+  &.e-u5408 {
+    background-position: -100px -240px;
+  }
+
+  &.e-u6e80 {
+    background-position: -100px -260px;
+  }
+
+  &.e-u6709 {
+    background-position: -100px -280px;
+  }
+
+  &.e-u6708 {
+    background-position: -100px -300px;
+  }
+
+  &.e-u7533 {
+    background-position: -100px -320px;
+  }
+
+  &.e-u5272 {
+    background-position: -100px -340px;
+  }
+
+  &.e-u55b6 {
+    background-position: -100px -360px;
+  }
+
+  &.e-ideograph_advantage {
+    background-position: -100px -380px;
+  }
+
+  &.e-accept {
+    background-position: -100px -400px;
+  }
+
+  &.e-cyclone {
+    background-position: -100px -420px;
+  }
+
+  &.e-foggy {
+    background-position: -100px -440px;
+  }
+
+  &.e-closed_umbrella {
+    background-position: -100px -460px;
+  }
+
+  &.e-night_with_stars {
+    background-position: -100px -480px;
+  }
+
+  &.e-sunrise_over_mountains {
+    background-position: -100px -500px;
+  }
+
+  &.e-sunrise {
+    background-position: -100px -520px;
+  }
+
+  &.e-city_sunset {
+    background-position: -100px -540px;
+  }
+
+  &.e-city_sunrise {
+    background-position: -100px -560px;
+  }
+
+  &.e-rainbow {
+    background-position: -100px -580px;
+  }
+
+  &.e-bridge_at_night {
+    background-position: -100px -600px;
+  }
+
+  &.e-ocean {
+    background-position: -100px -620px;
+  }
+
+  &.e-volcano {
+    background-position: -100px -640px;
+  }
+
+  &.e-milky_way {
+    background-position: -100px -660px;
+  }
+
+  &.e-earth_africa {
+    background-position: -100px -680px;
+  }
+
+  &.e-earth_americas {
+    background-position: -100px -700px;
+  }
+
+  &.e-earth_asia {
+    background-position: -100px -720px;
+  }
+
+  &.e-globe_with_meridians {
+    background-position: -100px -740px;
+  }
+
+  &.e-new_moon {
+    background-position: -100px -760px;
+  }
+
+  &.e-waxing_crescent_moon {
+    background-position: -100px -780px;
+  }
+
+  &.e-first_quarter_moon {
+    background-position: -100px -800px;
+  }
+
+  &.e-moon {
+    background-position: -120px -0px;
+  }
+
+  &.e-full_moon {
+    background-position: -120px -20px;
+  }
+
+  &.e-waning_gibbous_moon {
+    background-position: -120px -40px;
+  }
+
+  &.e-last_quarter_moon {
+    background-position: -120px -60px;
+  }
+
+  &.e-waning_crescent_moon {
+    background-position: -120px -80px;
+  }
+
+  &.e-crescent_moon {
+    background-position: -120px -100px;
+  }
+
+  &.e-new_moon_with_face {
+    background-position: -120px -120px;
+  }
+
+  &.e-first_quarter_moon_with_face {
+    background-position: -120px -140px;
+  }
+
+  &.e-last_quarter_moon_with_face {
+    background-position: -120px -160px;
+  }
+
+  &.e-full_moon_with_face {
+    background-position: -120px -180px;
+  }
+
+  &.e-sun_with_face {
+    background-position: -120px -200px;
+  }
+
+  &.e-star2 {
+    background-position: -120px -220px;
+  }
+
+  &.e-stars {
+    background-position: -120px -240px;
+  }
+
+  &.e-thermometer {
+    background-position: -120px -260px;
+  }
+
+  &.e-mostly_sunny {
+    background-position: -120px -280px;
+  }
+
+  &.e-barely_sunny {
+    background-position: -120px -300px;
+  }
+
+  &.e-partly_sunny_rain {
+    background-position: -120px -320px;
+  }
+
+  &.e-rain_cloud {
+    background-position: -120px -340px;
+  }
+
+  &.e-snow_cloud {
+    background-position: -120px -360px;
+  }
+
+  &.e-lightning {
+    background-position: -120px -380px;
+  }
+
+  &.e-tornado {
+    background-position: -120px -400px;
+  }
+
+  &.e-fog {
+    background-position: -120px -420px;
+  }
+
+  &.e-wind_blowing_face {
+    background-position: -120px -440px;
+  }
+
+  &.e-hotdog {
+    background-position: -120px -460px;
+  }
+
+  &.e-taco {
+    background-position: -120px -480px;
+  }
+
+  &.e-burrito {
+    background-position: -120px -500px;
+  }
+
+  &.e-chestnut {
+    background-position: -120px -520px;
+  }
+
+  &.e-seedling {
+    background-position: -120px -540px;
+  }
+
+  &.e-evergreen_tree {
+    background-position: -120px -560px;
+  }
+
+  &.e-deciduous_tree {
+    background-position: -120px -580px;
+  }
+
+  &.e-palm_tree {
+    background-position: -120px -600px;
+  }
+
+  &.e-cactus {
+    background-position: -120px -620px;
+  }
+
+  &.e-hot_pepper {
+    background-position: -120px -640px;
+  }
+
+  &.e-tulip {
+    background-position: -120px -660px;
+  }
+
+  &.e-cherry_blossom {
+    background-position: -120px -680px;
+  }
+
+  &.e-rose {
+    background-position: -120px -700px;
+  }
+
+  &.e-hibiscus {
+    background-position: -120px -720px;
+  }
+
+  &.e-sunflower {
+    background-position: -120px -740px;
+  }
+
+  &.e-blossom {
+    background-position: -120px -760px;
+  }
+
+  &.e-corn {
+    background-position: -120px -780px;
+  }
+
+  &.e-ear_of_rice {
+    background-position: -120px -800px;
+  }
+
+  &.e-herb {
+    background-position: -140px -0px;
+  }
+
+  &.e-four_leaf_clover {
+    background-position: -140px -20px;
+  }
+
+  &.e-maple_leaf {
+    background-position: -140px -40px;
+  }
+
+  &.e-fallen_leaf {
+    background-position: -140px -60px;
+  }
+
+  &.e-leaves {
+    background-position: -140px -80px;
+  }
+
+  &.e-mushroom {
+    background-position: -140px -100px;
+  }
+
+  &.e-tomato {
+    background-position: -140px -120px;
+  }
+
+  &.e-eggplant {
+    background-position: -140px -140px;
+  }
+
+  &.e-grapes {
+    background-position: -140px -160px;
+  }
+
+  &.e-melon {
+    background-position: -140px -180px;
+  }
+
+  &.e-watermelon {
+    background-position: -140px -200px;
+  }
+
+  &.e-tangerine {
+    background-position: -140px -220px;
+  }
+
+  &.e-lemon {
+    background-position: -140px -240px;
+  }
+
+  &.e-banana {
+    background-position: -140px -260px;
+  }
+
+  &.e-pineapple {
+    background-position: -140px -280px;
+  }
+
+  &.e-apple {
+    background-position: -140px -300px;
+  }
+
+  &.e-green_apple {
+    background-position: -140px -320px;
+  }
+
+  &.e-pear {
+    background-position: -140px -340px;
+  }
+
+  &.e-peach {
+    background-position: -140px -360px;
+  }
+
+  &.e-cherries {
+    background-position: -140px -380px;
+  }
+
+  &.e-strawberry {
+    background-position: -140px -400px;
+  }
+
+  &.e-hamburger {
+    background-position: -140px -420px;
+  }
+
+  &.e-pizza {
+    background-position: -140px -440px;
+  }
+
+  &.e-meat_on_bone {
+    background-position: -140px -460px;
+  }
+
+  &.e-poultry_leg {
+    background-position: -140px -480px;
+  }
+
+  &.e-rice_cracker {
+    background-position: -140px -500px;
+  }
+
+  &.e-rice_ball {
+    background-position: -140px -520px;
+  }
+
+  &.e-rice {
+    background-position: -140px -540px;
+  }
+
+  &.e-curry {
+    background-position: -140px -560px;
+  }
+
+  &.e-ramen {
+    background-position: -140px -580px;
+  }
+
+  &.e-spaghetti {
+    background-position: -140px -600px;
+  }
+
+  &.e-bread {
+    background-position: -140px -620px;
+  }
+
+  &.e-fries {
+    background-position: -140px -640px;
+  }
+
+  &.e-sweet_potato {
+    background-position: -140px -660px;
+  }
+
+  &.e-dango {
+    background-position: -140px -680px;
+  }
+
+  &.e-oden {
+    background-position: -140px -700px;
+  }
+
+  &.e-sushi {
+    background-position: -140px -720px;
+  }
+
+  &.e-fried_shrimp {
+    background-position: -140px -740px;
+  }
+
+  &.e-fish_cake {
+    background-position: -140px -760px;
+  }
+
+  &.e-icecream {
+    background-position: -140px -780px;
+  }
+
+  &.e-shaved_ice {
+    background-position: -140px -800px;
+  }
+
+  &.e-ice_cream {
+    background-position: -160px -0px;
+  }
+
+  &.e-doughnut {
+    background-position: -160px -20px;
+  }
+
+  &.e-cookie {
+    background-position: -160px -40px;
+  }
+
+  &.e-chocolate_bar {
+    background-position: -160px -60px;
+  }
+
+  &.e-candy {
+    background-position: -160px -80px;
+  }
+
+  &.e-lollipop {
+    background-position: -160px -100px;
+  }
+
+  &.e-custard {
+    background-position: -160px -120px;
+  }
+
+  &.e-honey_pot {
+    background-position: -160px -140px;
+  }
+
+  &.e-cake {
+    background-position: -160px -160px;
+  }
+
+  &.e-bento {
+    background-position: -160px -180px;
+  }
+
+  &.e-stew {
+    background-position: -160px -200px;
+  }
+
+  &.e-egg {
+    background-position: -160px -220px;
+  }
+
+  &.e-fork_and_knife {
+    background-position: -160px -240px;
+  }
+
+  &.e-tea {
+    background-position: -160px -260px;
+  }
+
+  &.e-sake {
+    background-position: -160px -280px;
+  }
+
+  &.e-wine_glass {
+    background-position: -160px -300px;
+  }
+
+  &.e-cocktail {
+    background-position: -160px -320px;
+  }
+
+  &.e-tropical_drink {
+    background-position: -160px -340px;
+  }
+
+  &.e-beer {
+    background-position: -160px -360px;
+  }
+
+  &.e-beers {
+    background-position: -160px -380px;
+  }
+
+  &.e-baby_bottle {
+    background-position: -160px -400px;
+  }
+
+  &.e-knife_fork_plate {
+    background-position: -160px -420px;
+  }
+
+  &.e-champagne {
+    background-position: -160px -440px;
+  }
+
+  &.e-popcorn {
+    background-position: -160px -460px;
+  }
+
+  &.e-ribbon {
+    background-position: -160px -480px;
+  }
+
+  &.e-gift {
+    background-position: -160px -500px;
+  }
+
+  &.e-birthday {
+    background-position: -160px -520px;
+  }
+
+  &.e-jack_o_lantern {
+    background-position: -160px -540px;
+  }
+
+  &.e-christmas_tree {
+    background-position: -160px -560px;
+  }
+
+  &.e-santa {
+    background-position: -160px -580px;
+  }
+
+  &.e-fireworks {
+    background-position: -160px -700px;
+  }
+
+  &.e-sparkler {
+    background-position: -160px -720px;
+  }
+
+  &.e-balloon {
+    background-position: -160px -740px;
+  }
+
+  &.e-tada {
+    background-position: -160px -760px;
+  }
+
+  &.e-confetti_ball {
+    background-position: -160px -780px;
+  }
+
+  &.e-tanabata_tree {
+    background-position: -160px -800px;
+  }
+
+  &.e-crossed_flags {
+    background-position: -180px -0px;
+  }
+
+  &.e-bamboo {
+    background-position: -180px -20px;
+  }
+
+  &.e-dolls {
+    background-position: -180px -40px;
+  }
+
+  &.e-flags {
+    background-position: -180px -60px;
+  }
+
+  &.e-wind_chime {
+    background-position: -180px -80px;
+  }
+
+  &.e-rice_scene {
+    background-position: -180px -100px;
+  }
+
+  &.e-school_satchel {
+    background-position: -180px -120px;
+  }
+
+  &.e-mortar_board {
+    background-position: -180px -140px;
+  }
+
+  &.e-medal {
+    background-position: -180px -160px;
+  }
+
+  &.e-reminder_ribbon {
+    background-position: -180px -180px;
+  }
+
+  &.e-studio_microphone {
+    background-position: -180px -200px;
+  }
+
+  &.e-level_slider {
+    background-position: -180px -220px;
+  }
+
+  &.e-control_knobs {
+    background-position: -180px -240px;
+  }
+
+  &.e-film_frames {
+    background-position: -180px -260px;
+  }
+
+  &.e-admission_tickets {
+    background-position: -180px -280px;
+  }
+
+  &.e-carousel_horse {
+    background-position: -180px -300px;
+  }
+
+  &.e-ferris_wheel {
+    background-position: -180px -320px;
+  }
+
+  &.e-roller_coaster {
+    background-position: -180px -340px;
+  }
+
+  &.e-fishing_pole_and_fish {
+    background-position: -180px -360px;
+  }
+
+  &.e-microphone {
+    background-position: -180px -380px;
+  }
+
+  &.e-movie_camera {
+    background-position: -180px -400px;
+  }
+
+  &.e-cinema {
+    background-position: -180px -420px;
+  }
+
+  &.e-headphones {
+    background-position: -180px -440px;
+  }
+
+  &.e-art {
+    background-position: -180px -460px;
+  }
+
+  &.e-tophat {
+    background-position: -180px -480px;
+  }
+
+  &.e-circus_tent {
+    background-position: -180px -500px;
+  }
+
+  &.e-ticket {
+    background-position: -180px -520px;
+  }
+
+  &.e-clapper {
+    background-position: -180px -540px;
+  }
+
+  &.e-performing_arts {
+    background-position: -180px -560px;
+  }
+
+  &.e-video_game {
+    background-position: -180px -580px;
+  }
+
+  &.e-dart {
+    background-position: -180px -600px;
+  }
+
+  &.e-slot_machine {
+    background-position: -180px -620px;
+  }
+
+  &.e-8ball {
+    background-position: -180px -640px;
+  }
+
+  &.e-game_die {
+    background-position: -180px -660px;
+  }
+
+  &.e-bowling {
+    background-position: -180px -680px;
+  }
+
+  &.e-flower_playing_cards {
+    background-position: -180px -700px;
+  }
+
+  &.e-musical_note {
+    background-position: -180px -720px;
+  }
+
+  &.e-notes {
+    background-position: -180px -740px;
+  }
+
+  &.e-saxophone {
+    background-position: -180px -760px;
+  }
+
+  &.e-guitar {
+    background-position: -180px -780px;
+  }
+
+  &.e-musical_keyboard {
+    background-position: -180px -800px;
+  }
+
+  &.e-trumpet {
+    background-position: -200px -0px;
+  }
+
+  &.e-violin {
+    background-position: -200px -20px;
+  }
+
+  &.e-musical_score {
+    background-position: -200px -40px;
+  }
+
+  &.e-running_shirt_with_sash {
+    background-position: -200px -60px;
+  }
+
+  &.e-tennis {
+    background-position: -200px -80px;
+  }
+
+  &.e-ski {
+    background-position: -200px -100px;
+  }
+
+  &.e-basketball {
+    background-position: -200px -120px;
+  }
+
+  &.e-checkered_flag {
+    background-position: -200px -140px;
+  }
+
+  &.e-snowboarder {
+    background-position: -200px -160px;
+  }
+
+  &.e-runner {
+    background-position: -200px -180px;
+  }
+
+  &.e-surfer {
+    background-position: -200px -300px;
+  }
+
+  &.e-sports_medal {
+    background-position: -200px -420px;
+  }
+
+  &.e-trophy {
+    background-position: -200px -440px;
+  }
+
+  &.e-horse_racing {
+    background-position: -200px -460px;
+  }
+
+  &.e-football {
+    background-position: -200px -480px;
+  }
+
+  &.e-rugby_football {
+    background-position: -200px -500px;
+  }
+
+  &.e-swimmer {
+    background-position: -200px -520px;
+  }
+
+  &.e-weight_lifter {
+    background-position: -200px -640px;
+  }
+
+  &.e-golfer {
+    background-position: -200px -760px;
+  }
+
+  &.e-racing_motorcycle {
+    background-position: -200px -780px;
+  }
+
+  &.e-racing_car {
+    background-position: -200px -800px;
+  }
+
+  &.e-cricket_bat_and_ball {
+    background-position: -220px -0px;
+  }
+
+  &.e-volleyball {
+    background-position: -220px -20px;
+  }
+
+  &.e-field_hockey_stick_and_ball {
+    background-position: -220px -40px;
+  }
+
+  &.e-ice_hockey_stick_and_puck {
+    background-position: -220px -60px;
+  }
+
+  &.e-table_tennis_paddle_and_ball {
+    background-position: -220px -80px;
+  }
+
+  &.e-snow_capped_mountain {
+    background-position: -220px -100px;
+  }
+
+  &.e-camping {
+    background-position: -220px -120px;
+  }
+
+  &.e-beach_with_umbrella {
+    background-position: -220px -140px;
+  }
+
+  &.e-building_construction {
+    background-position: -220px -160px;
+  }
+
+  &.e-house_buildings {
+    background-position: -220px -180px;
+  }
+
+  &.e-cityscape {
+    background-position: -220px -200px;
+  }
+
+  &.e-derelict_house_building {
+    background-position: -220px -220px;
+  }
+
+  &.e-classical_building {
+    background-position: -220px -240px;
+  }
+
+  &.e-desert {
+    background-position: -220px -260px;
+  }
+
+  &.e-desert_island {
+    background-position: -220px -280px;
+  }
+
+  &.e-national_park {
+    background-position: -220px -300px;
+  }
+
+  &.e-stadium {
+    background-position: -220px -320px;
+  }
+
+  &.e-house {
+    background-position: -220px -340px;
+  }
+
+  &.e-house_with_garden {
+    background-position: -220px -360px;
+  }
+
+  &.e-office {
+    background-position: -220px -380px;
+  }
+
+  &.e-post_office {
+    background-position: -220px -400px;
+  }
+
+  &.e-european_post_office {
+    background-position: -220px -420px;
+  }
+
+  &.e-hospital {
+    background-position: -220px -440px;
+  }
+
+  &.e-bank {
+    background-position: -220px -460px;
+  }
+
+  &.e-atm {
+    background-position: -220px -480px;
+  }
+
+  &.e-hotel {
+    background-position: -220px -500px;
+  }
+
+  &.e-love_hotel {
+    background-position: -220px -520px;
+  }
+
+  &.e-convenience_store {
+    background-position: -220px -540px;
+  }
+
+  &.e-school {
+    background-position: -220px -560px;
+  }
+
+  &.e-department_store {
+    background-position: -220px -580px;
+  }
+
+  &.e-factory {
+    background-position: -220px -600px;
+  }
+
+  &.e-izakaya_lantern {
+    background-position: -220px -620px;
+  }
+
+  &.e-japanese_castle {
+    background-position: -220px -640px;
+  }
+
+  &.e-european_castle {
+    background-position: -220px -660px;
+  }
+
+  &.e-waving_white_flag {
+    background-position: -220px -680px;
+  }
+
+  &.e-waving_black_flag {
+    background-position: -220px -700px;
+  }
+
+  &.e-rosette {
+    background-position: -220px -720px;
+  }
+
+  &.e-label {
+    background-position: -220px -740px;
+  }
+
+  &.e-badminton_racquet_and_shuttlecock {
+    background-position: -220px -760px;
+  }
+
+  &.e-bow_and_arrow {
+    background-position: -220px -780px;
+  }
+
+  &.e-amphora {
+    background-position: -220px -800px;
+  }
+
+  &.e-skin_tone_2 {
+    background-position: -240px -0px;
+  }
+
+  &.e-skin_tone_3 {
+    background-position: -240px -20px;
+  }
+
+  &.e-skin_tone_4 {
+    background-position: -240px -40px;
+  }
+
+  &.e-skin_tone_5 {
+    background-position: -240px -60px;
+  }
+
+  &.e-skin_tone_6 {
+    background-position: -240px -80px;
+  }
+
+  &.e-rat {
+    background-position: -240px -100px;
+  }
+
+  &.e-mouse2 {
+    background-position: -240px -120px;
+  }
+
+  &.e-ox {
+    background-position: -240px -140px;
+  }
+
+  &.e-water_buffalo {
+    background-position: -240px -160px;
+  }
+
+  &.e-cow2 {
+    background-position: -240px -180px;
+  }
+
+  &.e-tiger2 {
+    background-position: -240px -200px;
+  }
+
+  &.e-leopard {
+    background-position: -240px -220px;
+  }
+
+  &.e-rabbit2 {
+    background-position: -240px -240px;
+  }
+
+  &.e-cat2 {
+    background-position: -240px -260px;
+  }
+
+  &.e-dragon {
+    background-position: -240px -280px;
+  }
+
+  &.e-crocodile {
+    background-position: -240px -300px;
+  }
+
+  &.e-whale2 {
+    background-position: -240px -320px;
+  }
+
+  &.e-snail {
+    background-position: -240px -340px;
+  }
+
+  &.e-snake {
+    background-position: -240px -360px;
+  }
+
+  &.e-racehorse {
+    background-position: -240px -380px;
+  }
+
+  &.e-ram {
+    background-position: -240px -400px;
+  }
+
+  &.e-goat {
+    background-position: -240px -420px;
+  }
+
+  &.e-sheep {
+    background-position: -240px -440px;
+  }
+
+  &.e-monkey {
+    background-position: -240px -460px;
+  }
+
+  &.e-rooster {
+    background-position: -240px -480px;
+  }
+
+  &.e-chicken {
+    background-position: -240px -500px;
+  }
+
+  &.e-dog2 {
+    background-position: -240px -520px;
+  }
+
+  &.e-pig2 {
+    background-position: -240px -540px;
+  }
+
+  &.e-boar {
+    background-position: -240px -560px;
+  }
+
+  &.e-elephant {
+    background-position: -240px -580px;
+  }
+
+  &.e-octopus {
+    background-position: -240px -600px;
+  }
+
+  &.e-shell {
+    background-position: -240px -620px;
+  }
+
+  &.e-bug {
+    background-position: -240px -640px;
+  }
+
+  &.e-ant {
+    background-position: -240px -660px;
+  }
+
+  &.e-bee {
+    background-position: -240px -680px;
+  }
+
+  &.e-beetle {
+    background-position: -240px -700px;
+  }
+
+  &.e-fish {
+    background-position: -240px -720px;
+  }
+
+  &.e-tropical_fish {
+    background-position: -240px -740px;
+  }
+
+  &.e-blowfish {
+    background-position: -240px -760px;
+  }
+
+  &.e-turtle {
+    background-position: -240px -780px;
+  }
+
+  &.e-hatching_chick {
+    background-position: -240px -800px;
+  }
+
+  &.e-baby_chick {
+    background-position: -260px -0px;
+  }
+
+  &.e-hatched_chick {
+    background-position: -260px -20px;
+  }
+
+  &.e-bird {
+    background-position: -260px -40px;
+  }
+
+  &.e-penguin {
+    background-position: -260px -60px;
+  }
+
+  &.e-koala {
+    background-position: -260px -80px;
+  }
+
+  &.e-poodle {
+    background-position: -260px -100px;
+  }
+
+  &.e-dromedary_camel {
+    background-position: -260px -120px;
+  }
+
+  &.e-camel {
+    background-position: -260px -140px;
+  }
+
+  &.e-dolphin {
+    background-position: -260px -160px;
+  }
+
+  &.e-mouse {
+    background-position: -260px -180px;
+  }
+
+  &.e-cow {
+    background-position: -260px -200px;
+  }
+
+  &.e-tiger {
+    background-position: -260px -220px;
+  }
+
+  &.e-rabbit {
+    background-position: -260px -240px;
+  }
+
+  &.e-cat {
+    background-position: -260px -260px;
+  }
+
+  &.e-dragon_face {
+    background-position: -260px -280px;
+  }
+
+  &.e-whale {
+    background-position: -260px -300px;
+  }
+
+  &.e-horse {
+    background-position: -260px -320px;
+  }
+
+  &.e-monkey_face {
+    background-position: -260px -340px;
+  }
+
+  &.e-dog {
+    background-position: -260px -360px;
+  }
+
+  &.e-pig {
+    background-position: -260px -380px;
+  }
+
+  &.e-frog {
+    background-position: -260px -400px;
+  }
+
+  &.e-hamster {
+    background-position: -260px -420px;
+  }
+
+  &.e-wolf {
+    background-position: -260px -440px;
+  }
+
+  &.e-bear {
+    background-position: -260px -460px;
+  }
+
+  &.e-panda_face {
+    background-position: -260px -480px;
+  }
+
+  &.e-pig_nose {
+    background-position: -260px -500px;
+  }
+
+  &.e-feet {
+    background-position: -260px -520px;
+  }
+
+  &.e-chipmunk {
+    background-position: -260px -540px;
+  }
+
+  &.e-eyes {
+    background-position: -260px -560px;
+  }
+
+  &.e-eye {
+    background-position: -260px -580px;
+  }
+
+  &.e-ear {
+    background-position: -260px -600px;
+  }
+
+  &.e-nose {
+    background-position: -260px -720px;
+  }
+
+  &.e-lips {
+    background-position: -280px -20px;
+  }
+
+  &.e-tongue {
+    background-position: -280px -40px;
+  }
+
+  &.e-point_up_2 {
+    background-position: -280px -60px;
+  }
+
+  &.e-point_down {
+    background-position: -280px -180px;
+  }
+
+  &.e-point_left {
+    background-position: -280px -300px;
+  }
+
+  &.e-point_right {
+    background-position: -280px -420px;
+  }
+
+  &.e-facepunch {
+    background-position: -280px -540px;
+  }
+
+  &.e-wave {
+    background-position: -280px -660px;
+  }
+
+  &.e-ok_hand {
+    background-position: -280px -780px;
+  }
+
+  &.e-plus_one {
+    background-position: -300px -80px;
+  }
+
+  &.e-negative_one {
+    background-position: -300px -200px;
+  }
+
+  &.e-clap {
+    background-position: -300px -320px;
+  }
+
+  &.e-open_hands {
+    background-position: -300px -440px;
+  }
+
+  &.e-crown {
+    background-position: -300px -560px;
+  }
+
+  &.e-womans_hat {
+    background-position: -300px -580px;
+  }
+
+  &.e-eyeglasses {
+    background-position: -300px -600px;
+  }
+
+  &.e-necktie {
+    background-position: -300px -620px;
+  }
+
+  &.e-shirt {
+    background-position: -300px -640px;
+  }
+
+  &.e-jeans {
+    background-position: -300px -660px;
+  }
+
+  &.e-dress {
+    background-position: -300px -680px;
+  }
+
+  &.e-kimono {
+    background-position: -300px -700px;
+  }
+
+  &.e-bikini {
+    background-position: -300px -720px;
+  }
+
+  &.e-womans_clothes {
+    background-position: -300px -740px;
+  }
+
+  &.e-purse {
+    background-position: -300px -760px;
+  }
+
+  &.e-handbag {
+    background-position: -300px -780px;
+  }
+
+  &.e-pouch {
+    background-position: -300px -800px;
+  }
+
+  &.e-mans_shoe {
+    background-position: -320px -0px;
+  }
+
+  &.e-athletic_shoe {
+    background-position: -320px -20px;
+  }
+
+  &.e-high_heel {
+    background-position: -320px -40px;
+  }
+
+  &.e-sandal {
+    background-position: -320px -60px;
+  }
+
+  &.e-boot {
+    background-position: -320px -80px;
+  }
+
+  &.e-footprints {
+    background-position: -320px -100px;
+  }
+
+  &.e-bust_in_silhouette {
+    background-position: -320px -120px;
+  }
+
+  &.e-busts_in_silhouette {
+    background-position: -320px -140px;
+  }
+
+  &.e-boy {
+    background-position: -320px -160px;
+  }
+
+  &.e-girl {
+    background-position: -320px -280px;
+  }
+
+  &.e-man {
+    background-position: -320px -400px;
+  }
+
+  &.e-woman {
+    background-position: -320px -520px;
+  }
+
+  &.e-family {
+    background-position: -320px -640px;
+  }
+
+  &.e-couple {
+    background-position: -320px -660px;
+  }
+
+  &.e-two_men_holding_hands {
+    background-position: -320px -680px;
+  }
+
+  &.e-two_women_holding_hands {
+    background-position: -320px -700px;
+  }
+
+  &.e-cop {
+    background-position: -320px -720px;
+  }
+
+  &.e-dancers {
+    background-position: -340px -20px;
+  }
+
+  &.e-bride_with_veil {
+    background-position: -340px -40px;
+  }
+
+  &.e-person_with_blond_hair {
+    background-position: -340px -160px;
+  }
+
+  &.e-man_with_gua_pi_mao {
+    background-position: -340px -280px;
+  }
+
+  &.e-man_with_turban {
+    background-position: -340px -400px;
+  }
+
+  &.e-older_man {
+    background-position: -340px -520px;
+  }
+
+  &.e-older_woman {
+    background-position: -340px -640px;
+  }
+
+  &.e-baby {
+    background-position: -340px -760px;
+  }
+
+  &.e-construction_worker {
+    background-position: -360px -60px;
+  }
+
+  &.e-princess {
+    background-position: -360px -180px;
+  }
+
+  &.e-japanese_ogre {
+    background-position: -360px -300px;
+  }
+
+  &.e-japanese_goblin {
+    background-position: -360px -320px;
+  }
+
+  &.e-ghost {
+    background-position: -360px -340px;
+  }
+
+  &.e-angel {
+    background-position: -360px -360px;
+  }
+
+  &.e-alien {
+    background-position: -360px -480px;
+  }
+
+  &.e-space_invader {
+    background-position: -360px -500px;
+  }
+
+  &.e-imp {
+    background-position: -360px -520px;
+  }
+
+  &.e-skull {
+    background-position: -360px -540px;
+  }
+
+  &.e-information_desk_person {
+    background-position: -360px -560px;
+  }
+
+  &.e-guardsman {
+    background-position: -360px -680px;
+  }
+
+  &.e-dancer {
+    background-position: -360px -800px;
+  }
+
+  &.e-lipstick {
+    background-position: -380px -100px;
+  }
+
+  &.e-nail_care {
+    background-position: -380px -120px;
+  }
+
+  &.e-massage {
+    background-position: -380px -240px;
+  }
+
+  &.e-haircut {
+    background-position: -380px -360px;
+  }
+
+  &.e-barber {
+    background-position: -380px -480px;
+  }
+
+  &.e-syringe {
+    background-position: -380px -500px;
+  }
+
+  &.e-pill {
+    background-position: -380px -520px;
+  }
+
+  &.e-kiss {
+    background-position: -380px -540px;
+  }
+
+  &.e-love_letter {
+    background-position: -380px -560px;
+  }
+
+  &.e-ring {
+    background-position: -380px -580px;
+  }
+
+  &.e-gem {
+    background-position: -380px -600px;
+  }
+
+  &.e-couplekiss {
+    background-position: -380px -620px;
+  }
+
+  &.e-bouquet {
+    background-position: -380px -640px;
+  }
+
+  &.e-couple_with_heart {
+    background-position: -380px -660px;
+  }
+
+  &.e-wedding {
+    background-position: -380px -680px;
+  }
+
+  &.e-heartbeat {
+    background-position: -380px -700px;
+  }
+
+  &.e-broken_heart {
+    background-position: -380px -720px;
+  }
+
+  &.e-two_hearts {
+    background-position: -380px -740px;
+  }
+
+  &.e-sparkling_heart {
+    background-position: -380px -760px;
+  }
+
+  &.e-heartpulse {
+    background-position: -380px -780px;
+  }
+
+  &.e-cupid {
+    background-position: -380px -800px;
+  }
+
+  &.e-blue_heart {
+    background-position: -400px -0px;
+  }
+
+  &.e-green_heart {
+    background-position: -400px -20px;
+  }
+
+  &.e-yellow_heart {
+    background-position: -400px -40px;
+  }
+
+  &.e-purple_heart {
+    background-position: -400px -60px;
+  }
+
+  &.e-gift_heart {
+    background-position: -400px -80px;
+  }
+
+  &.e-revolving_hearts {
+    background-position: -400px -100px;
+  }
+
+  &.e-heart_decoration {
+    background-position: -400px -120px;
+  }
+
+  &.e-diamond_shape_with_a_dot_inside {
+    background-position: -400px -140px;
+  }
+
+  &.e-bulb {
+    background-position: -400px -160px;
+  }
+
+  &.e-anger {
+    background-position: -400px -180px;
+  }
+
+  &.e-bomb {
+    background-position: -400px -200px;
+  }
+
+  &.e-zzz {
+    background-position: -400px -220px;
+  }
+
+  &.e-boom {
+    background-position: -400px -240px;
+  }
+
+  &.e-sweat_drops {
+    background-position: -400px -260px;
+  }
+
+  &.e-droplet {
+    background-position: -400px -280px;
+  }
+
+  &.e-dash {
+    background-position: -400px -300px;
+  }
+
+  &.e-hankey {
+    background-position: -400px -320px;
+  }
+
+  &.e-muscle {
+    background-position: -400px -340px;
+  }
+
+  &.e-dizzy {
+    background-position: -400px -460px;
+  }
+
+  &.e-speech_balloon {
+    background-position: -400px -480px;
+  }
+
+  &.e-thought_balloon {
+    background-position: -400px -500px;
+  }
+
+  &.e-white_flower {
+    background-position: -400px -520px;
+  }
+
+  &.e-100 {
+    background-position: -400px -540px;
+  }
+
+  &.e-moneybag {
+    background-position: -400px -560px;
+  }
+
+  &.e-currency_exchange {
+    background-position: -400px -580px;
+  }
+
+  &.e-heavy_dollar_sign {
+    background-position: -400px -600px;
+  }
+
+  &.e-credit_card {
+    background-position: -400px -620px;
+  }
+
+  &.e-yen {
+    background-position: -400px -640px;
+  }
+
+  &.e-dollar {
+    background-position: -400px -660px;
+  }
+
+  &.e-euro {
+    background-position: -400px -680px;
+  }
+
+  &.e-pound {
+    background-position: -400px -700px;
+  }
+
+  &.e-money_with_wings {
+    background-position: -400px -720px;
+  }
+
+  &.e-chart {
+    background-position: -400px -740px;
+  }
+
+  &.e-seat {
+    background-position: -400px -760px;
+  }
+
+  &.e-computer {
+    background-position: -400px -780px;
+  }
+
+  &.e-briefcase {
+    background-position: -400px -800px;
+  }
+
+  &.e-minidisc {
+    background-position: -420px -0px;
+  }
+
+  &.e-floppy_disk {
+    background-position: -420px -20px;
+  }
+
+  &.e-cd {
+    background-position: -420px -40px;
+  }
+
+  &.e-dvd {
+    background-position: -420px -60px;
+  }
+
+  &.e-file_folder {
+    background-position: -420px -80px;
+  }
+
+  &.e-open_file_folder {
+    background-position: -420px -100px;
+  }
+
+  &.e-page_with_curl {
+    background-position: -420px -120px;
+  }
+
+  &.e-page_facing_up {
+    background-position: -420px -140px;
+  }
+
+  &.e-date {
+    background-position: -420px -160px;
+  }
+
+  &.e-calendar {
+    background-position: -420px -180px;
+  }
+
+  &.e-card_index {
+    background-position: -420px -200px;
+  }
+
+  &.e-chart_with_upwards_trend {
+    background-position: -420px -220px;
+  }
+
+  &.e-chart_with_downwards_trend {
+    background-position: -420px -240px;
+  }
+
+  &.e-bar_chart {
+    background-position: -420px -260px;
+  }
+
+  &.e-clipboard {
+    background-position: -420px -280px;
+  }
+
+  &.e-pushpin {
+    background-position: -420px -300px;
+  }
+
+  &.e-round_pushpin {
+    background-position: -420px -320px;
+  }
+
+  &.e-paperclip {
+    background-position: -420px -340px;
+  }
+
+  &.e-straight_ruler {
+    background-position: -420px -360px;
+  }
+
+  &.e-triangular_ruler {
+    background-position: -420px -380px;
+  }
+
+  &.e-bookmark_tabs {
+    background-position: -420px -400px;
+  }
+
+  &.e-ledger {
+    background-position: -420px -420px;
+  }
+
+  &.e-notebook {
+    background-position: -420px -440px;
+  }
+
+  &.e-notebook_with_decorative_cover {
+    background-position: -420px -460px;
+  }
+
+  &.e-closed_book {
+    background-position: -420px -480px;
+  }
+
+  &.e-book {
+    background-position: -420px -500px;
+  }
+
+  &.e-green_book {
+    background-position: -420px -520px;
+  }
+
+  &.e-blue_book {
+    background-position: -420px -540px;
+  }
+
+  &.e-orange_book {
+    background-position: -420px -560px;
+  }
+
+  &.e-books {
+    background-position: -420px -580px;
+  }
+
+  &.e-name_badge {
+    background-position: -420px -600px;
+  }
+
+  &.e-scroll {
+    background-position: -420px -620px;
+  }
+
+  &.e-memo {
+    background-position: -420px -640px;
+  }
+
+  &.e-telephone_receiver {
+    background-position: -420px -660px;
+  }
+
+  &.e-pager {
+    background-position: -420px -680px;
+  }
+
+  &.e-fax {
+    background-position: -420px -700px;
+  }
+
+  &.e-satellite_antenna {
+    background-position: -420px -720px;
+  }
+
+  &.e-loudspeaker {
+    background-position: -420px -740px;
+  }
+
+  &.e-mega {
+    background-position: -420px -760px;
+  }
+
+  &.e-outbox_tray {
+    background-position: -420px -780px;
+  }
+
+  &.e-inbox_tray {
+    background-position: -420px -800px;
+  }
+
+  &.e-package {
+    background-position: -440px -0px;
+  }
+
+  &.e-e_mail {
+    background-position: -440px -20px;
+  }
+
+  &.e-incoming_envelope {
+    background-position: -440px -40px;
+  }
+
+  &.e-envelope_with_arrow {
+    background-position: -440px -60px;
+  }
+
+  &.e-mailbox_closed {
+    background-position: -440px -80px;
+  }
+
+  &.e-mailbox {
+    background-position: -440px -100px;
+  }
+
+  &.e-mailbox_with_mail {
+    background-position: -440px -120px;
+  }
+
+  &.e-mailbox_with_no_mail {
+    background-position: -440px -140px;
+  }
+
+  &.e-postbox {
+    background-position: -440px -160px;
+  }
+
+  &.e-postal_horn {
+    background-position: -440px -180px;
+  }
+
+  &.e-newspaper {
+    background-position: -440px -200px;
+  }
+
+  &.e-iphone {
+    background-position: -440px -220px;
+  }
+
+  &.e-calling {
+    background-position: -440px -240px;
+  }
+
+  &.e-vibration_mode {
+    background-position: -440px -260px;
+  }
+
+  &.e-mobile_phone_off {
+    background-position: -440px -280px;
+  }
+
+  &.e-no_mobile_phones {
+    background-position: -440px -300px;
+  }
+
+  &.e-signal_strength {
+    background-position: -440px -320px;
+  }
+
+  &.e-camera {
+    background-position: -440px -340px;
+  }
+
+  &.e-camera_with_flash {
+    background-position: -440px -360px;
+  }
+
+  &.e-video_camera {
+    background-position: -440px -380px;
+  }
+
+  &.e-tv {
+    background-position: -440px -400px;
+  }
+
+  &.e-radio {
+    background-position: -440px -420px;
+  }
+
+  &.e-vhs {
+    background-position: -440px -440px;
+  }
+
+  &.e-film_projector {
+    background-position: -440px -460px;
+  }
+
+  &.e-prayer_beads {
+    background-position: -440px -480px;
+  }
+
+  &.e-twisted_rightwards_arrows {
+    background-position: -440px -500px;
+  }
+
+  &.e-repeat {
+    background-position: -440px -520px;
+  }
+
+  &.e-repeat_one {
+    background-position: -440px -540px;
+  }
+
+  &.e-arrows_clockwise {
+    background-position: -440px -560px;
+  }
+
+  &.e-arrows_counterclockwise {
+    background-position: -440px -580px;
+  }
+
+  &.e-low_brightness {
+    background-position: -440px -600px;
+  }
+
+  &.e-high_brightness {
+    background-position: -440px -620px;
+  }
+
+  &.e-mute {
+    background-position: -440px -640px;
+  }
+
+  &.e-speaker {
+    background-position: -440px -660px;
+  }
+
+  &.e-sound {
+    background-position: -440px -680px;
+  }
+
+  &.e-loud_sound {
+    background-position: -440px -700px;
+  }
+
+  &.e-battery {
+    background-position: -440px -720px;
+  }
+
+  &.e-electric_plug {
+    background-position: -440px -740px;
+  }
+
+  &.e-mag {
+    background-position: -440px -760px;
+  }
+
+  &.e-mag_right {
+    background-position: -440px -780px;
+  }
+
+  &.e-lock_with_ink_pen {
+    background-position: -440px -800px;
+  }
+
+  &.e-closed_lock_with_key {
+    background-position: -460px -0px;
+  }
+
+  &.e-key {
+    background-position: -460px -20px;
+  }
+
+  &.e-lock {
+    background-position: -460px -40px;
+  }
+
+  &.e-unlock {
+    background-position: -460px -60px;
+  }
+
+  &.e-bell {
+    background-position: -460px -80px;
+  }
+
+  &.e-no_bell {
+    background-position: -460px -100px;
+  }
+
+  &.e-bookmark {
+    background-position: -460px -120px;
+  }
+
+  &.e-link {
+    background-position: -460px -140px;
+  }
+
+  &.e-radio_button {
+    background-position: -460px -160px;
+  }
+
+  &.e-back {
+    background-position: -460px -180px;
+  }
+
+  &.e-end {
+    background-position: -460px -200px;
+  }
+
+  &.e-on {
+    background-position: -460px -220px;
+  }
+
+  &.e-soon {
+    background-position: -460px -240px;
+  }
+
+  &.e-top {
+    background-position: -460px -260px;
+  }
+
+  &.e-underage {
+    background-position: -460px -280px;
+  }
+
+  &.e-keycap_ten {
+    background-position: -460px -300px;
+  }
+
+  &.e-capital_abcd {
+    background-position: -460px -320px;
+  }
+
+  &.e-abcd {
+    background-position: -460px -340px;
+  }
+
+  &.e-1234 {
+    background-position: -460px -360px;
+  }
+
+  &.e-symbols {
+    background-position: -460px -380px;
+  }
+
+  &.e-abc {
+    background-position: -460px -400px;
+  }
+
+  &.e-fire {
+    background-position: -460px -420px;
+  }
+
+  &.e-flashlight {
+    background-position: -460px -440px;
+  }
+
+  &.e-wrench {
+    background-position: -460px -460px;
+  }
+
+  &.e-hammer {
+    background-position: -460px -480px;
+  }
+
+  &.e-nut_and_bolt {
+    background-position: -460px -500px;
+  }
+
+  &.e-hocho {
+    background-position: -460px -520px;
+  }
+
+  &.e-gun {
+    background-position: -460px -540px;
+  }
+
+  &.e-microscope {
+    background-position: -460px -560px;
+  }
+
+  &.e-telescope {
+    background-position: -460px -580px;
+  }
+
+  &.e-crystal_ball {
+    background-position: -460px -600px;
+  }
+
+  &.e-six_pointed_star {
+    background-position: -460px -620px;
+  }
+
+  &.e-beginner {
+    background-position: -460px -640px;
+  }
+
+  &.e-trident {
+    background-position: -460px -660px;
+  }
+
+  &.e-black_square_button {
+    background-position: -460px -680px;
+  }
+
+  &.e-white_square_button {
+    background-position: -460px -700px;
+  }
+
+  &.e-red_circle {
+    background-position: -460px -720px;
+  }
+
+  &.e-large_blue_circle {
+    background-position: -460px -740px;
+  }
+
+  &.e-large_orange_diamond {
+    background-position: -460px -760px;
+  }
+
+  &.e-large_blue_diamond {
+    background-position: -460px -780px;
+  }
+
+  &.e-small_orange_diamond {
+    background-position: -460px -800px;
+  }
+
+  &.e-small_blue_diamond {
+    background-position: -480px -0px;
+  }
+
+  &.e-small_red_triangle {
+    background-position: -480px -20px;
+  }
+
+  &.e-small_red_triangle_down {
+    background-position: -480px -40px;
+  }
+
+  &.e-arrow_up_small {
+    background-position: -480px -60px;
+  }
+
+  &.e-arrow_down_small {
+    background-position: -480px -80px;
+  }
+
+  &.e-om_symbol {
+    background-position: -480px -100px;
+  }
+
+  &.e-dove_of_peace {
+    background-position: -480px -120px;
+  }
+
+  &.e-kaaba {
+    background-position: -480px -140px;
+  }
+
+  &.e-mosque {
+    background-position: -480px -160px;
+  }
+
+  &.e-synagogue {
+    background-position: -480px -180px;
+  }
+
+  &.e-menorah_with_nine_branches {
+    background-position: -480px -200px;
+  }
+
+  &.e-clock1 {
+    background-position: -480px -220px;
+  }
+
+  &.e-clock2 {
+    background-position: -480px -240px;
+  }
+
+  &.e-clock3 {
+    background-position: -480px -260px;
+  }
+
+  &.e-clock4 {
+    background-position: -480px -280px;
+  }
+
+  &.e-clock5 {
+    background-position: -480px -300px;
+  }
+
+  &.e-clock6 {
+    background-position: -480px -320px;
+  }
+
+  &.e-clock7 {
+    background-position: -480px -340px;
+  }
+
+  &.e-clock8 {
+    background-position: -480px -360px;
+  }
+
+  &.e-clock9 {
+    background-position: -480px -380px;
+  }
+
+  &.e-clock10 {
+    background-position: -480px -400px;
+  }
+
+  &.e-clock11 {
+    background-position: -480px -420px;
+  }
+
+  &.e-clock12 {
+    background-position: -480px -440px;
+  }
+
+  &.e-clock130 {
+    background-position: -480px -460px;
+  }
+
+  &.e-clock230 {
+    background-position: -480px -480px;
+  }
+
+  &.e-clock330 {
+    background-position: -480px -500px;
+  }
+
+  &.e-clock430 {
+    background-position: -480px -520px;
+  }
+
+  &.e-clock530 {
+    background-position: -480px -540px;
+  }
+
+  &.e-clock630 {
+    background-position: -480px -560px;
+  }
+
+  &.e-clock730 {
+    background-position: -480px -580px;
+  }
+
+  &.e-clock830 {
+    background-position: -480px -600px;
+  }
+
+  &.e-clock930 {
+    background-position: -480px -620px;
+  }
+
+  &.e-clock1030 {
+    background-position: -480px -640px;
+  }
+
+  &.e-clock1130 {
+    background-position: -480px -660px;
+  }
+
+  &.e-clock1230 {
+    background-position: -480px -680px;
+  }
+
+  &.e-candle {
+    background-position: -480px -700px;
+  }
+
+  &.e-mantelpiece_clock {
+    background-position: -480px -720px;
+  }
+
+  &.e-hole {
+    background-position: -480px -740px;
+  }
+
+  &.e-man_in_business_suit_levitating {
+    background-position: -480px -760px;
+  }
+
+  &.e-sleuth_or_spy {
+    background-position: -480px -780px;
+  }
+
+  &.e-dark_sunglasses {
+    background-position: -500px -80px;
+  }
+
+  &.e-spider {
+    background-position: -500px -100px;
+  }
+
+  &.e-spider_web {
+    background-position: -500px -120px;
+  }
+
+  &.e-joystick {
+    background-position: -500px -140px;
+  }
+
+  &.e-linked_paperclips {
+    background-position: -500px -160px;
+  }
+
+  &.e-lower_left_ballpoint_pen {
+    background-position: -500px -180px;
+  }
+
+  &.e-lower_left_fountain_pen {
+    background-position: -500px -200px;
+  }
+
+  &.e-lower_left_paintbrush {
+    background-position: -500px -220px;
+  }
+
+  &.e-lower_left_crayon {
+    background-position: -500px -240px;
+  }
+
+  &.e-raised_hand_with_fingers_splayed {
+    background-position: -500px -260px;
+  }
+
+  &.e-middle_finger {
+    background-position: -500px -380px;
+  }
+
+  &.e-spock_hand {
+    background-position: -500px -500px;
+  }
+
+  &.e-desktop_computer {
+    background-position: -500px -620px;
+  }
+
+  &.e-printer {
+    background-position: -500px -640px;
+  }
+
+  &.e-three_button_mouse {
+    background-position: -500px -660px;
+  }
+
+  &.e-trackball {
+    background-position: -500px -680px;
+  }
+
+  &.e-frame_with_picture {
+    background-position: -500px -700px;
+  }
+
+  &.e-card_index_dividers {
+    background-position: -500px -720px;
+  }
+
+  &.e-card_file_box {
+    background-position: -500px -740px;
+  }
+
+  &.e-file_cabinet {
+    background-position: -500px -760px;
+  }
+
+  &.e-wastebasket {
+    background-position: -500px -780px;
+  }
+
+  &.e-spiral_note_pad {
+    background-position: -500px -800px;
+  }
+
+  &.e-spiral_calendar_pad {
+    background-position: -520px -0px;
+  }
+
+  &.e-compression {
+    background-position: -520px -20px;
+  }
+
+  &.e-old_key {
+    background-position: -520px -40px;
+  }
+
+  &.e-rolled_up_newspaper {
+    background-position: -520px -60px;
+  }
+
+  &.e-dagger_knife {
+    background-position: -520px -80px;
+  }
+
+  &.e-speaking_head_in_silhouette {
+    background-position: -520px -100px;
+  }
+
+  &.e-right_anger_bubble {
+    background-position: -520px -140px;
+  }
+
+  &.e-ballot_box_with_ballot {
+    background-position: -520px -160px;
+  }
+
+  &.e-world_map {
+    background-position: -520px -180px;
+  }
+
+  &.e-mount_fuji {
+    background-position: -520px -200px;
+  }
+
+  &.e-tokyo_tower {
+    background-position: -520px -220px;
+  }
+
+  &.e-statue_of_liberty {
+    background-position: -520px -240px;
+  }
+
+  &.e-japan {
+    background-position: -520px -260px;
+  }
+
+  &.e-moyai {
+    background-position: -520px -280px;
+  }
+
+  &.e-grinning {
+    background-position: -520px -300px;
+  }
+
+  &.e-grin {
+    background-position: -520px -320px;
+  }
+
+  &.e-joy {
+    background-position: -520px -340px;
+  }
+
+  &.e-smiley {
+    background-position: -520px -360px;
+  }
+
+  &.e-smile {
+    background-position: -520px -380px;
+  }
+
+  &.e-sweat_smile {
+    background-position: -520px -400px;
+  }
+
+  &.e-laughing {
+    background-position: -520px -420px;
+  }
+
+  &.e-innocent {
+    background-position: -520px -440px;
+  }
+
+  &.e-smiling_imp {
+    background-position: -520px -460px;
+  }
+
+  &.e-wink {
+    background-position: -520px -480px;
+  }
+
+  &.e-blush {
+    background-position: -520px -500px;
+  }
+
+  &.e-yum {
+    background-position: -520px -520px;
+  }
+
+  &.e-relieved {
+    background-position: -520px -540px;
+  }
+
+  &.e-heart_eyes {
+    background-position: -520px -560px;
+  }
+
+  &.e-sunglasses {
+    background-position: -520px -580px;
+  }
+
+  &.e-smirk {
+    background-position: -520px -600px;
+  }
+
+  &.e-neutral_face {
+    background-position: -520px -620px;
+  }
+
+  &.e-expressionless {
+    background-position: -520px -640px;
+  }
+
+  &.e-unamused {
+    background-position: -520px -660px;
+  }
+
+  &.e-sweat {
+    background-position: -520px -680px;
+  }
+
+  &.e-pensive {
+    background-position: -520px -700px;
+  }
+
+  &.e-confused {
+    background-position: -520px -720px;
+  }
+
+  &.e-confounded {
+    background-position: -520px -740px;
+  }
+
+  &.e-kissing {
+    background-position: -520px -760px;
+  }
+
+  &.e-kissing_heart {
+    background-position: -520px -780px;
+  }
+
+  &.e-kissing_smiling_eyes {
+    background-position: -520px -800px;
+  }
+
+  &.e-kissing_closed_eyes {
+    background-position: -540px -0px;
+  }
+
+  &.e-stuck_out_tongue {
+    background-position: -540px -20px;
+  }
+
+  &.e-stuck_out_tongue_winking_eye {
+    background-position: -540px -40px;
+  }
+
+  &.e-stuck_out_tongue_closed_eyes {
+    background-position: -540px -60px;
+  }
+
+  &.e-disappointed {
+    background-position: -540px -80px;
+  }
+
+  &.e-worried {
+    background-position: -540px -100px;
+  }
+
+  &.e-angry {
+    background-position: -540px -120px;
+  }
+
+  &.e-rage {
+    background-position: -540px -140px;
+  }
+
+  &.e-cry {
+    background-position: -540px -160px;
+  }
+
+  &.e-persevere {
+    background-position: -540px -180px;
+  }
+
+  &.e-triumph {
+    background-position: -540px -200px;
+  }
+
+  &.e-disappointed_relieved {
+    background-position: -540px -220px;
+  }
+
+  &.e-frowning {
+    background-position: -540px -240px;
+  }
+
+  &.e-anguished {
+    background-position: -540px -260px;
+  }
+
+  &.e-fearful {
+    background-position: -540px -280px;
+  }
+
+  &.e-weary {
+    background-position: -540px -300px;
+  }
+
+  &.e-sleepy {
+    background-position: -540px -320px;
+  }
+
+  &.e-tired_face {
+    background-position: -540px -340px;
+  }
+
+  &.e-grimacing {
+    background-position: -540px -360px;
+  }
+
+  &.e-sob {
+    background-position: -540px -380px;
+  }
+
+  &.e-open_mouth {
+    background-position: -540px -400px;
+  }
+
+  &.e-hushed {
+    background-position: -540px -420px;
+  }
+
+  &.e-cold_sweat {
+    background-position: -540px -440px;
+  }
+
+  &.e-scream {
+    background-position: -540px -460px;
+  }
+
+  &.e-astonished {
+    background-position: -540px -480px;
+  }
+
+  &.e-flushed {
+    background-position: -540px -500px;
+  }
+
+  &.e-sleeping {
+    background-position: -540px -520px;
+  }
+
+  &.e-dizzy_face {
+    background-position: -540px -540px;
+  }
+
+  &.e-no_mouth {
+    background-position: -540px -560px;
+  }
+
+  &.e-mask {
+    background-position: -540px -580px;
+  }
+
+  &.e-smile_cat {
+    background-position: -540px -600px;
+  }
+
+  &.e-joy_cat {
+    background-position: -540px -620px;
+  }
+
+  &.e-smiley_cat {
+    background-position: -540px -640px;
+  }
+
+  &.e-heart_eyes_cat {
+    background-position: -540px -660px;
+  }
+
+  &.e-smirk_cat {
+    background-position: -540px -680px;
+  }
+
+  &.e-kissing_cat {
+    background-position: -540px -700px;
+  }
+
+  &.e-pouting_cat {
+    background-position: -540px -720px;
+  }
+
+  &.e-crying_cat_face {
+    background-position: -540px -740px;
+  }
+
+  &.e-scream_cat {
+    background-position: -540px -760px;
+  }
+
+  &.e-slightly_frowning_face {
+    background-position: -540px -780px;
+  }
+
+  &.e-slightly_smiling_face {
+    background-position: -540px -800px;
+  }
+
+  &.e-upside_down_face {
+    background-position: -560px -0px;
+  }
+
+  &.e-face_with_rolling_eyes {
+    background-position: -560px -20px;
+  }
+
+  &.e-no_good {
+    background-position: -560px -40px;
+  }
+
+  &.e-ok_woman {
+    background-position: -560px -160px;
+  }
+
+  &.e-bow {
+    background-position: -560px -280px;
+  }
+
+  &.e-see_no_evil {
+    background-position: -560px -400px;
+  }
+
+  &.e-hear_no_evil {
+    background-position: -560px -420px;
+  }
+
+  &.e-speak_no_evil {
+    background-position: -560px -440px;
+  }
+
+  &.e-raising_hand {
+    background-position: -560px -460px;
+  }
+
+  &.e-raised_hands {
+    background-position: -560px -580px;
+  }
+
+  &.e-person_frowning {
+    background-position: -560px -700px;
+  }
+
+  &.e-person_with_pouting_face {
+    background-position: -580px -0px;
+  }
+
+  &.e-pray {
+    background-position: -580px -120px;
+  }
+
+  &.e-rocket {
+    background-position: -580px -240px;
+  }
+
+  &.e-helicopter {
+    background-position: -580px -260px;
+  }
+
+  &.e-steam_locomotive {
+    background-position: -580px -280px;
+  }
+
+  &.e-railway_car {
+    background-position: -580px -300px;
+  }
+
+  &.e-bullettrain_side {
+    background-position: -580px -320px;
+  }
+
+  &.e-bullettrain_front {
+    background-position: -580px -340px;
+  }
+
+  &.e-train2 {
+    background-position: -580px -360px;
+  }
+
+  &.e-metro {
+    background-position: -580px -380px;
+  }
+
+  &.e-light_rail {
+    background-position: -580px -400px;
+  }
+
+  &.e-station {
+    background-position: -580px -420px;
+  }
+
+  &.e-tram {
+    background-position: -580px -440px;
+  }
+
+  &.e-train {
+    background-position: -580px -460px;
+  }
+
+  &.e-bus {
+    background-position: -580px -480px;
+  }
+
+  &.e-oncoming_bus {
+    background-position: -580px -500px;
+  }
+
+  &.e-trolleybus {
+    background-position: -580px -520px;
+  }
+
+  &.e-busstop {
+    background-position: -580px -540px;
+  }
+
+  &.e-minibus {
+    background-position: -580px -560px;
+  }
+
+  &.e-ambulance {
+    background-position: -580px -580px;
+  }
+
+  &.e-fire_engine {
+    background-position: -580px -600px;
+  }
+
+  &.e-police_car {
+    background-position: -580px -620px;
+  }
+
+  &.e-oncoming_police_car {
+    background-position: -580px -640px;
+  }
+
+  &.e-taxi {
+    background-position: -580px -660px;
+  }
+
+  &.e-oncoming_taxi {
+    background-position: -580px -680px;
+  }
+
+  &.e-car {
+    background-position: -580px -700px;
+  }
+
+  &.e-oncoming_automobile {
+    background-position: -580px -720px;
+  }
+
+  &.e-blue_car {
+    background-position: -580px -740px;
+  }
+
+  &.e-truck {
+    background-position: -580px -760px;
+  }
+
+  &.e-articulated_lorry {
+    background-position: -580px -780px;
+  }
+
+  &.e-tractor {
+    background-position: -580px -800px;
+  }
+
+  &.e-monorail {
+    background-position: -600px -0px;
+  }
+
+  &.e-mountain_railway {
+    background-position: -600px -20px;
+  }
+
+  &.e-suspension_railway {
+    background-position: -600px -40px;
+  }
+
+  &.e-mountain_cableway {
+    background-position: -600px -60px;
+  }
+
+  &.e-aerial_tramway {
+    background-position: -600px -80px;
+  }
+
+  &.e-ship {
+    background-position: -600px -100px;
+  }
+
+  &.e-rowboat {
+    background-position: -600px -120px;
+  }
+
+  &.e-speedboat {
+    background-position: -600px -240px;
+  }
+
+  &.e-traffic_light {
+    background-position: -600px -260px;
+  }
+
+  &.e-vertical_traffic_light {
+    background-position: -600px -280px;
+  }
+
+  &.e-construction {
+    background-position: -600px -300px;
+  }
+
+  &.e-rotating_light {
+    background-position: -600px -320px;
+  }
+
+  &.e-triangular_flag_on_post {
+    background-position: -600px -340px;
+  }
+
+  &.e-door {
+    background-position: -600px -360px;
+  }
+
+  &.e-no_entry_sign {
+    background-position: -600px -380px;
+  }
+
+  &.e-smoking {
+    background-position: -600px -400px;
+  }
+
+  &.e-no_smoking {
+    background-position: -600px -420px;
+  }
+
+  &.e-put_litter_in_its_place {
+    background-position: -600px -440px;
+  }
+
+  &.e-do_not_litter {
+    background-position: -600px -460px;
+  }
+
+  &.e-potable_water {
+    background-position: -600px -480px;
+  }
+
+  &.e-non_potable_water {
+    background-position: -600px -500px;
+  }
+
+  &.e-bike {
+    background-position: -600px -520px;
+  }
+
+  &.e-no_bicycles {
+    background-position: -600px -540px;
+  }
+
+  &.e-bicyclist {
+    background-position: -600px -560px;
+  }
+
+  &.e-mountain_bicyclist {
+    background-position: -600px -680px;
+  }
+
+  &.e-walking {
+    background-position: -600px -800px;
+  }
+
+  &.e-no_pedestrians {
+    background-position: -620px -100px;
+  }
+
+  &.e-children_crossing {
+    background-position: -620px -120px;
+  }
+
+  &.e-mens {
+    background-position: -620px -140px;
+  }
+
+  &.e-womens {
+    background-position: -620px -160px;
+  }
+
+  &.e-restroom {
+    background-position: -620px -180px;
+  }
+
+  &.e-baby_symbol {
+    background-position: -620px -200px;
+  }
+
+  &.e-toilet {
+    background-position: -620px -220px;
+  }
+
+  &.e-wc {
+    background-position: -620px -240px;
+  }
+
+  &.e-shower {
+    background-position: -620px -260px;
+  }
+
+  &.e-bath {
+    background-position: -620px -280px;
+  }
+
+  &.e-bathtub {
+    background-position: -620px -400px;
+  }
+
+  &.e-passport_control {
+    background-position: -620px -420px;
+  }
+
+  &.e-customs {
+    background-position: -620px -440px;
+  }
+
+  &.e-baggage_claim {
+    background-position: -620px -460px;
+  }
+
+  &.e-left_luggage {
+    background-position: -620px -480px;
+  }
+
+  &.e-couch_and_lamp {
+    background-position: -620px -500px;
+  }
+
+  &.e-sleeping_accommodation {
+    background-position: -620px -520px;
+  }
+
+  &.e-shopping_bags {
+    background-position: -620px -540px;
+  }
+
+  &.e-bellhop_bell {
+    background-position: -620px -560px;
+  }
+
+  &.e-bed {
+    background-position: -620px -580px;
+  }
+
+  &.e-place_of_worship {
+    background-position: -620px -600px;
+  }
+
+  &.e-hammer_and_wrench {
+    background-position: -620px -620px;
+  }
+
+  &.e-shield {
+    background-position: -620px -640px;
+  }
+
+  &.e-oil_drum {
+    background-position: -620px -660px;
+  }
+
+  &.e-motorway {
+    background-position: -620px -680px;
+  }
+
+  &.e-railway_track {
+    background-position: -620px -700px;
+  }
+
+  &.e-motor_boat {
+    background-position: -620px -720px;
+  }
+
+  &.e-small_airplane {
+    background-position: -620px -740px;
+  }
+
+  &.e-airplane_departure {
+    background-position: -620px -760px;
+  }
+
+  &.e-airplane_arriving {
+    background-position: -620px -780px;
+  }
+
+  &.e-satellite {
+    background-position: -620px -800px;
+  }
+
+  &.e-passenger_ship {
+    background-position: -640px -0px;
+  }
+
+  &.e-zipper_mouth_face {
+    background-position: -640px -20px;
+  }
+
+  &.e-money_mouth_face {
+    background-position: -640px -40px;
+  }
+
+  &.e-face_with_thermometer {
+    background-position: -640px -60px;
+  }
+
+  &.e-nerd_face {
+    background-position: -640px -80px;
+  }
+
+  &.e-thinking_face {
+    background-position: -640px -100px;
+  }
+
+  &.e-face_with_head_bandage {
+    background-position: -640px -120px;
+  }
+
+  &.e-robot_face {
+    background-position: -640px -140px;
+  }
+
+  &.e-hugging_face {
+    background-position: -640px -160px;
+  }
+
+  &.e-the_horns {
+    background-position: -640px -180px;
+  }
+
+  &.e-crab {
+    background-position: -640px -300px;
+  }
+
+  &.e-lion_face {
+    background-position: -640px -320px;
+  }
+
+  &.e-scorpion {
+    background-position: -640px -340px;
+  }
+
+  &.e-turkey {
+    background-position: -640px -360px;
+  }
+
+  &.e-unicorn_face {
+    background-position: -640px -380px;
+  }
+
+  &.e-cheese_wedge {
+    background-position: -640px -400px;
+  }
+
+  &.e-hash {
+    background-position: -640px -420px;
+  }
+
+  &.e-keycap_star {
+    background-position: -640px -440px;
+  }
+
+  &.e-zero {
+    background-position: -640px -460px;
+  }
+
+  &.e-one {
+    background-position: -640px -480px;
+  }
+
+  &.e-two {
+    background-position: -640px -500px;
+  }
+
+  &.e-three {
+    background-position: -640px -520px;
+  }
+
+  &.e-four {
+    background-position: -640px -540px;
+  }
+
+  &.e-five {
+    background-position: -640px -560px;
+  }
+
+  &.e-six {
+    background-position: -640px -580px;
+  }
+
+  &.e-seven {
+    background-position: -640px -600px;
+  }
+
+  &.e-eight {
+    background-position: -640px -620px;
+  }
+
+  &.e-nine {
+    background-position: -640px -640px;
+  }
+
+  &.e-flag_ac {
+    background-position: -640px -660px;
+  }
+
+  &.e-flag_ad {
+    background-position: -640px -680px;
+  }
+
+  &.e-flag_ae {
+    background-position: -640px -700px;
+  }
+
+  &.e-flag_af {
+    background-position: -640px -720px;
+  }
+
+  &.e-flag_ag {
+    background-position: -640px -740px;
+  }
+
+  &.e-flag_ai {
+    background-position: -640px -760px;
+  }
+
+  &.e-flag_al {
+    background-position: -640px -780px;
+  }
+
+  &.e-flag_am {
+    background-position: -640px -800px;
+  }
+
+  &.e-flag_ao {
+    background-position: -660px -0px;
+  }
+
+  &.e-flag_aq {
+    background-position: -660px -20px;
+  }
+
+  &.e-flag_ar {
+    background-position: -660px -40px;
+  }
+
+  &.e-flag_as {
+    background-position: -660px -60px;
+  }
+
+  &.e-flag_at {
+    background-position: -660px -80px;
+  }
+
+  &.e-flag_au {
+    background-position: -660px -100px;
+  }
+
+  &.e-flag_aw {
+    background-position: -660px -120px;
+  }
+
+  &.e-flag_ax {
+    background-position: -660px -140px;
+  }
+
+  &.e-flag_az {
+    background-position: -660px -160px;
+  }
+
+  &.e-flag_ba {
+    background-position: -660px -180px;
+  }
+
+  &.e-flag_bb {
+    background-position: -660px -200px;
+  }
+
+  &.e-flag_bd {
+    background-position: -660px -220px;
+  }
+
+  &.e-flag_be {
+    background-position: -660px -240px;
+  }
+
+  &.e-flag_bf {
+    background-position: -660px -260px;
+  }
+
+  &.e-flag_bg {
+    background-position: -660px -280px;
+  }
+
+  &.e-flag_bh {
+    background-position: -660px -300px;
+  }
+
+  &.e-flag_bi {
+    background-position: -660px -320px;
+  }
+
+  &.e-flag_bj {
+    background-position: -660px -340px;
+  }
+
+  &.e-flag_bl {
+    background-position: -660px -360px;
+  }
+
+  &.e-flag_bm {
+    background-position: -660px -380px;
+  }
+
+  &.e-flag_bn {
+    background-position: -660px -400px;
+  }
+
+  &.e-flag_bo {
+    background-position: -660px -420px;
+  }
+
+  &.e-flag_bq {
+    background-position: -660px -440px;
+  }
+
+  &.e-flag_br {
+    background-position: -660px -460px;
+  }
+
+  &.e-flag_bs {
+    background-position: -660px -480px;
+  }
+
+  &.e-flag_bt {
+    background-position: -660px -500px;
+  }
+
+  &.e-flag_bv {
+    background-position: -660px -520px;
+  }
+
+  &.e-flag_bw {
+    background-position: -660px -540px;
+  }
+
+  &.e-flag_by {
+    background-position: -660px -560px;
+  }
+
+  &.e-flag_bz {
+    background-position: -660px -580px;
+  }
+
+  &.e-flag_ca {
+    background-position: -660px -600px;
+  }
+
+  &.e-flag_cc {
+    background-position: -660px -620px;
+  }
+
+  &.e-flag_cd {
+    background-position: -660px -640px;
+  }
+
+  &.e-flag_cf {
+    background-position: -660px -660px;
+  }
+
+  &.e-flag_cg {
+    background-position: -660px -680px;
+  }
+
+  &.e-flag_ch {
+    background-position: -660px -700px;
+  }
+
+  &.e-flag_ci {
+    background-position: -660px -720px;
+  }
+
+  &.e-flag_ck {
+    background-position: -660px -740px;
+  }
+
+  &.e-flag_cl {
+    background-position: -660px -760px;
+  }
+
+  &.e-flag_cm {
+    background-position: -660px -780px;
+  }
+
+  &.e-flag_cn {
+    background-position: -660px -800px;
+  }
+
+  &.e-flag_co {
+    background-position: -680px -0px;
+  }
+
+  &.e-flag_cp {
+    background-position: -680px -20px;
+  }
+
+  &.e-flag_cr {
+    background-position: -680px -40px;
+  }
+
+  &.e-flag_cu {
+    background-position: -680px -60px;
+  }
+
+  &.e-flag_cv {
+    background-position: -680px -80px;
+  }
+
+  &.e-flag_cw {
+    background-position: -680px -100px;
+  }
+
+  &.e-flag_cx {
+    background-position: -680px -120px;
+  }
+
+  &.e-flag_cy {
+    background-position: -680px -140px;
+  }
+
+  &.e-flag_cz {
+    background-position: -680px -160px;
+  }
+
+  &.e-flag_de {
+    background-position: -680px -180px;
+  }
+
+  &.e-flag_dg {
+    background-position: -680px -200px;
+  }
+
+  &.e-flag_dj {
+    background-position: -680px -220px;
+  }
+
+  &.e-flag_dk {
+    background-position: -680px -240px;
+  }
+
+  &.e-flag_dm {
+    background-position: -680px -260px;
+  }
+
+  &.e-flag_do {
+    background-position: -680px -280px;
+  }
+
+  &.e-flag_dz {
+    background-position: -680px -300px;
+  }
+
+  &.e-flag_ea {
+    background-position: -680px -320px;
+  }
+
+  &.e-flag_ec {
+    background-position: -680px -340px;
+  }
+
+  &.e-flag_ee {
+    background-position: -680px -360px;
+  }
+
+  &.e-flag_eg {
+    background-position: -680px -380px;
+  }
+
+  &.e-flag_eh {
+    background-position: -680px -400px;
+  }
+
+  &.e-flag_er {
+    background-position: -680px -420px;
+  }
+
+  &.e-flag_es {
+    background-position: -680px -440px;
+  }
+
+  &.e-flag_et {
+    background-position: -680px -460px;
+  }
+
+  &.e-flag_eu {
+    background-position: -680px -480px;
+  }
+
+  &.e-flag_fi {
+    background-position: -680px -500px;
+  }
+
+  &.e-flag_fj {
+    background-position: -680px -520px;
+  }
+
+  &.e-flag_fk {
+    background-position: -680px -540px;
+  }
+
+  &.e-flag_fm {
+    background-position: -680px -560px;
+  }
+
+  &.e-flag_fo {
+    background-position: -680px -580px;
+  }
+
+  &.e-flag_fr {
+    background-position: -680px -600px;
+  }
+
+  &.e-flag_ga {
+    background-position: -680px -620px;
+  }
+
+  &.e-flag_gb {
+    background-position: -680px -640px;
+  }
+
+  &.e-flag_gd {
+    background-position: -680px -660px;
+  }
+
+  &.e-flag_ge {
+    background-position: -680px -680px;
+  }
+
+  &.e-flag_gf {
+    background-position: -680px -700px;
+  }
+
+  &.e-flag_gg {
+    background-position: -680px -720px;
+  }
+
+  &.e-flag_gh {
+    background-position: -680px -740px;
+  }
+
+  &.e-flag_gi {
+    background-position: -680px -760px;
+  }
+
+  &.e-flag_gl {
+    background-position: -680px -780px;
+  }
+
+  &.e-flag_gm {
+    background-position: -680px -800px;
+  }
+
+  &.e-flag_gn {
+    background-position: -700px -0px;
+  }
+
+  &.e-flag_gp {
+    background-position: -700px -20px;
+  }
+
+  &.e-flag_gq {
+    background-position: -700px -40px;
+  }
+
+  &.e-flag_gr {
+    background-position: -700px -60px;
+  }
+
+  &.e-flag_gs {
+    background-position: -700px -80px;
+  }
+
+  &.e-flag_gt {
+    background-position: -700px -100px;
+  }
+
+  &.e-flag_gu {
+    background-position: -700px -120px;
+  }
+
+  &.e-flag_gw {
+    background-position: -700px -140px;
+  }
+
+  &.e-flag_gy {
+    background-position: -700px -160px;
+  }
+
+  &.e-flag_hk {
+    background-position: -700px -180px;
+  }
+
+  &.e-flag_hm {
+    background-position: -700px -200px;
+  }
+
+  &.e-flag_hn {
+    background-position: -700px -220px;
+  }
+
+  &.e-flag_hr {
+    background-position: -700px -240px;
+  }
+
+  &.e-flag_ht {
+    background-position: -700px -260px;
+  }
+
+  &.e-flag_hu {
+    background-position: -700px -280px;
+  }
+
+  &.e-flag_ic {
+    background-position: -700px -300px;
+  }
+
+  &.e-flag_id {
+    background-position: -700px -320px;
+  }
+
+  &.e-flag_ie {
+    background-position: -700px -340px;
+  }
+
+  &.e-flag_il {
+    background-position: -700px -360px;
+  }
+
+  &.e-flag_im {
+    background-position: -700px -380px;
+  }
+
+  &.e-flag_in {
+    background-position: -700px -400px;
+  }
+
+  &.e-flag_io {
+    background-position: -700px -420px;
+  }
+
+  &.e-flag_iq {
+    background-position: -700px -440px;
+  }
+
+  &.e-flag_ir {
+    background-position: -700px -460px;
+  }
+
+  &.e-flag_is {
+    background-position: -700px -480px;
+  }
+
+  &.e-flag_it {
+    background-position: -700px -500px;
+  }
+
+  &.e-flag_je {
+    background-position: -700px -520px;
+  }
+
+  &.e-flag_jm {
+    background-position: -700px -540px;
+  }
+
+  &.e-flag_jo {
+    background-position: -700px -560px;
+  }
+
+  &.e-flag_jp {
+    background-position: -700px -580px;
+  }
+
+  &.e-flag_ke {
+    background-position: -700px -600px;
+  }
+
+  &.e-flag_kg {
+    background-position: -700px -620px;
+  }
+
+  &.e-flag_kh {
+    background-position: -700px -640px;
+  }
+
+  &.e-flag_ki {
+    background-position: -700px -660px;
+  }
+
+  &.e-flag_km {
+    background-position: -700px -680px;
+  }
+
+  &.e-flag_kn {
+    background-position: -700px -700px;
+  }
+
+  &.e-flag_kp {
+    background-position: -700px -720px;
+  }
+
+  &.e-flag_kr {
+    background-position: -700px -740px;
+  }
+
+  &.e-flag_kw {
+    background-position: -700px -760px;
+  }
+
+  &.e-flag_ky {
+    background-position: -700px -780px;
+  }
+
+  &.e-flag_kz {
+    background-position: -700px -800px;
+  }
+
+  &.e-flag_la {
+    background-position: -720px -0px;
+  }
+
+  &.e-flag_lb {
+    background-position: -720px -20px;
+  }
+
+  &.e-flag_lc {
+    background-position: -720px -40px;
+  }
+
+  &.e-flag_li {
+    background-position: -720px -60px;
+  }
+
+  &.e-flag_lk {
+    background-position: -720px -80px;
+  }
+
+  &.e-flag_lr {
+    background-position: -720px -100px;
+  }
+
+  &.e-flag_ls {
+    background-position: -720px -120px;
+  }
+
+  &.e-flag_lt {
+    background-position: -720px -140px;
+  }
+
+  &.e-flag_lu {
+    background-position: -720px -160px;
+  }
+
+  &.e-flag_lv {
+    background-position: -720px -180px;
+  }
+
+  &.e-flag_ly {
+    background-position: -720px -200px;
+  }
+
+  &.e-flag_ma {
+    background-position: -720px -220px;
+  }
+
+  &.e-flag_mc {
+    background-position: -720px -240px;
+  }
+
+  &.e-flag_md {
+    background-position: -720px -260px;
+  }
+
+  &.e-flag_me {
+    background-position: -720px -280px;
+  }
+
+  &.e-flag_mf {
+    background-position: -720px -300px;
+  }
+
+  &.e-flag_mg {
+    background-position: -720px -320px;
+  }
+
+  &.e-flag_mh {
+    background-position: -720px -340px;
+  }
+
+  &.e-flag_mk {
+    background-position: -720px -360px;
+  }
+
+  &.e-flag_ml {
+    background-position: -720px -380px;
+  }
+
+  &.e-flag_mm {
+    background-position: -720px -400px;
+  }
+
+  &.e-flag_mn {
+    background-position: -720px -420px;
+  }
+
+  &.e-flag_mo {
+    background-position: -720px -440px;
+  }
+
+  &.e-flag_mp {
+    background-position: -720px -460px;
+  }
+
+  &.e-flag_mq {
+    background-position: -720px -480px;
+  }
+
+  &.e-flag_mr {
+    background-position: -720px -500px;
+  }
+
+  &.e-flag_ms {
+    background-position: -720px -520px;
+  }
+
+  &.e-flag_mt {
+    background-position: -720px -540px;
+  }
+
+  &.e-flag_mu {
+    background-position: -720px -560px;
+  }
+
+  &.e-flag_mv {
+    background-position: -720px -580px;
+  }
+
+  &.e-flag_mw {
+    background-position: -720px -600px;
+  }
+
+  &.e-flag_mx {
+    background-position: -720px -620px;
+  }
+
+  &.e-flag_my {
+    background-position: -720px -640px;
+  }
+
+  &.e-flag_mz {
+    background-position: -720px -660px;
+  }
+
+  &.e-flag_na {
+    background-position: -720px -680px;
+  }
+
+  &.e-flag_nc {
+    background-position: -720px -700px;
+  }
+
+  &.e-flag_ne {
+    background-position: -720px -720px;
+  }
+
+  &.e-flag_nf {
+    background-position: -720px -740px;
+  }
+
+  &.e-flag_ng {
+    background-position: -720px -760px;
+  }
+
+  &.e-flag_ni {
+    background-position: -720px -780px;
+  }
+
+  &.e-flag_nl {
+    background-position: -720px -800px;
+  }
+
+  &.e-flag_no {
+    background-position: -740px -0px;
+  }
+
+  &.e-flag_np {
+    background-position: -740px -20px;
+  }
+
+  &.e-flag_nr {
+    background-position: -740px -40px;
+  }
+
+  &.e-flag_nu {
+    background-position: -740px -60px;
+  }
+
+  &.e-flag_nz {
+    background-position: -740px -80px;
+  }
+
+  &.e-flag_om {
+    background-position: -740px -100px;
+  }
+
+  &.e-flag_pa {
+    background-position: -740px -120px;
+  }
+
+  &.e-flag_pe {
+    background-position: -740px -140px;
+  }
+
+  &.e-flag_pf {
+    background-position: -740px -160px;
+  }
+
+  &.e-flag_pg {
+    background-position: -740px -180px;
+  }
+
+  &.e-flag_ph {
+    background-position: -740px -200px;
+  }
+
+  &.e-flag_pk {
+    background-position: -740px -220px;
+  }
+
+  &.e-flag_pl {
+    background-position: -740px -240px;
+  }
+
+  &.e-flag_pm {
+    background-position: -740px -260px;
+  }
+
+  &.e-flag_pn {
+    background-position: -740px -280px;
+  }
+
+  &.e-flag_pr {
+    background-position: -740px -300px;
+  }
+
+  &.e-flag_ps {
+    background-position: -740px -320px;
+  }
+
+  &.e-flag_pt {
+    background-position: -740px -340px;
+  }
+
+  &.e-flag_pw {
+    background-position: -740px -360px;
+  }
+
+  &.e-flag_py {
+    background-position: -740px -380px;
+  }
+
+  &.e-flag_qa {
+    background-position: -740px -400px;
+  }
+
+  &.e-flag_re {
+    background-position: -740px -420px;
+  }
+
+  &.e-flag_ro {
+    background-position: -740px -440px;
+  }
+
+  &.e-flag_rs {
+    background-position: -740px -460px;
+  }
+
+  &.e-flag_ru {
+    background-position: -740px -480px;
+  }
+
+  &.e-flag_rw {
+    background-position: -740px -500px;
+  }
+
+  &.e-flag_sa {
+    background-position: -740px -520px;
+  }
+
+  &.e-flag_sb {
+    background-position: -740px -540px;
+  }
+
+  &.e-flag_sc {
+    background-position: -740px -560px;
+  }
+
+  &.e-flag_sd {
+    background-position: -740px -580px;
+  }
+
+  &.e-flag_se {
+    background-position: -740px -600px;
+  }
+
+  &.e-flag_sg {
+    background-position: -740px -620px;
+  }
+
+  &.e-flag_sh {
+    background-position: -740px -640px;
+  }
+
+  &.e-flag_si {
+    background-position: -740px -660px;
+  }
+
+  &.e-flag_sj {
+    background-position: -740px -680px;
+  }
+
+  &.e-flag_sk {
+    background-position: -740px -700px;
+  }
+
+  &.e-flag_sl {
+    background-position: -740px -720px;
+  }
+
+  &.e-flag_sm {
+    background-position: -740px -740px;
+  }
+
+  &.e-flag_sn {
+    background-position: -740px -760px;
+  }
+
+  &.e-flag_so {
+    background-position: -740px -780px;
+  }
+
+  &.e-flag_sr {
+    background-position: -740px -800px;
+  }
+
+  &.e-flag_ss {
+    background-position: -760px -0px;
+  }
+
+  &.e-flag_st {
+    background-position: -760px -20px;
+  }
+
+  &.e-flag_sv {
+    background-position: -760px -40px;
+  }
+
+  &.e-flag_sx {
+    background-position: -760px -60px;
+  }
+
+  &.e-flag_sy {
+    background-position: -760px -80px;
+  }
+
+  &.e-flag_sz {
+    background-position: -760px -100px;
+  }
+
+  &.e-flag_ta {
+    background-position: -760px -120px;
+  }
+
+  &.e-flag_tc {
+    background-position: -760px -140px;
+  }
+
+  &.e-flag_td {
+    background-position: -760px -160px;
+  }
+
+  &.e-flag_tf {
+    background-position: -760px -180px;
+  }
+
+  &.e-flag_tg {
+    background-position: -760px -200px;
+  }
+
+  &.e-flag_th {
+    background-position: -760px -220px;
+  }
+
+  &.e-flag_tj {
+    background-position: -760px -240px;
+  }
+
+  &.e-flag_tk {
+    background-position: -760px -260px;
+  }
+
+  &.e-flag_tl {
+    background-position: -760px -280px;
+  }
+
+  &.e-flag_tm {
+    background-position: -760px -300px;
+  }
+
+  &.e-flag_tn {
+    background-position: -760px -320px;
+  }
+
+  &.e-flag_to {
+    background-position: -760px -340px;
+  }
+
+  &.e-flag_tr {
+    background-position: -760px -360px;
+  }
+
+  &.e-flag_tt {
+    background-position: -760px -380px;
+  }
+
+  &.e-flag_tv {
+    background-position: -760px -400px;
+  }
+
+  &.e-flag_tw {
+    background-position: -760px -420px;
+  }
+
+  &.e-flag_tz {
+    background-position: -760px -440px;
+  }
+
+  &.e-flag_ua {
+    background-position: -760px -460px;
+  }
+
+  &.e-flag_ug {
+    background-position: -760px -480px;
+  }
+
+  &.e-flag_um {
+    background-position: -760px -500px;
+  }
+
+  &.e-flag_us {
+    background-position: -760px -520px;
+  }
+
+  &.e-flag_uy {
+    background-position: -760px -540px;
+  }
+
+  &.e-flag_uz {
+    background-position: -760px -560px;
+  }
+
+  &.e-flag_va {
+    background-position: -760px -580px;
+  }
+
+  &.e-flag_vc {
+    background-position: -760px -600px;
+  }
+
+  &.e-flag_ve {
+    background-position: -760px -620px;
+  }
+
+  &.e-flag_vg {
+    background-position: -760px -640px;
+  }
+
+  &.e-flag_vi {
+    background-position: -760px -660px;
+  }
+
+  &.e-flag_vn {
+    background-position: -760px -680px;
+  }
+
+  &.e-flag_vu {
+    background-position: -760px -700px;
+  }
+
+  &.e-flag_wf {
+    background-position: -760px -720px;
+  }
+
+  &.e-flag_ws {
+    background-position: -760px -740px;
+  }
+
+  &.e-flag_xk {
+    background-position: -760px -760px;
+  }
+
+  &.e-flag_ye {
+    background-position: -760px -780px;
+  }
+
+  &.e-flag_yt {
+    background-position: -760px -800px;
+  }
+
+  &.e-flag_za {
+    background-position: -780px -0px;
+  }
+
+  &.e-flag_zm {
+    background-position: -780px -20px;
+  }
+
+  &.e-flag_zw {
+    background-position: -780px -40px;
+  }
+
+  &.e-man_man_boy {
+    background-position: -780px -60px;
+  }
+
+  &.e-man_man_boy_boy {
+    background-position: -780px -80px;
+  }
+
+  &.e-man_man_girl {
+    background-position: -780px -100px;
+  }
+
+  &.e-man_man_girl_boy {
+    background-position: -780px -120px;
+  }
+
+  &.e-man_man_girl_girl {
+    background-position: -780px -140px;
+  }
+
+  &.e-man_woman_boy_boy {
+    background-position: -780px -160px;
+  }
+
+  &.e-man_woman_girl {
+    background-position: -780px -180px;
+  }
+
+  &.e-man_woman_girl_boy {
+    background-position: -780px -200px;
+  }
+
+  &.e-man_woman_girl_girl {
+    background-position: -780px -220px;
+  }
+
+  &.e-woman_woman_boy {
+    background-position: -780px -280px;
+  }
+
+  &.e-woman_woman_boy_boy {
+    background-position: -780px -300px;
+  }
+
+  &.e-woman_woman_girl {
+    background-position: -780px -320px;
+  }
+
+  &.e-woman_woman_girl_boy {
+    background-position: -780px -340px;
+  }
+
+  &.e-woman_woman_girl_girl {
+    background-position: -780px -360px;
+  }
+
+}

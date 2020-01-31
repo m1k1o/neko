@@ -36,7 +36,7 @@
       <div class="accent" />
       <div class="text-container">
         <textarea ref="chat" placeholder="Send a message" @keydown="onKeyDown" v-model="content" />
-        <div class="emoji"></div>
+        <div class="emoji"><neko-emoji /></div>
       </div>
     </div>
   </div>
@@ -272,6 +272,7 @@
           height: 20px;
           // background: #fff;
           margin: 3px 3px 0 0;
+          position: relative;
         }
 
         textarea {
@@ -322,6 +323,7 @@
 
   import Markdown from './markdown'
   import Content from './context.vue'
+  import Emoji from './emoji.vue'
 
   const length = 512 // max length of message
 
@@ -330,6 +332,7 @@
     components: {
       'neko-markdown': Markdown,
       'neko-context': Content,
+      'neko-emoji': Emoji,
     },
   })
   export default class extends Vue {
