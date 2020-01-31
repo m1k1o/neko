@@ -13,13 +13,14 @@ export SCREEN_HEIGHT=720
 export SCREEN_DEPTH=24
 export DISPLAY=:99.0
 
+set -eux
+
 #
 # create log folders
 if [ ! -L /var/log/neko ]; then
-  mkdir -p /var/log/neko
-  mkdir -p logs
+  mkdir -p logs/neko
 
-  ln -s /workspace/.docker/logs /var/log/neko
+  ln -s /workspace/.docker/logs/neko /var/log/neko 
   
   chown -R $USER logs
   chown -R $USER /var/log/neko
