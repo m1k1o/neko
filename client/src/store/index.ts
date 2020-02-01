@@ -8,6 +8,7 @@ import * as remote from './remote'
 import * as user from './user'
 import * as settings from './settings'
 import * as client from './client'
+import * as emoji from './emoji'
 
 export const state = () => ({
   connecting: false,
@@ -35,6 +36,11 @@ export const actions = actionTree(
   { state, mutations },
   {
     //
+    initialise(store) {
+      accessor.emoji.initialise()
+    },
+
+    //
     connect(store, { username, password }: { username: string; password: string }) {
       $client.connect(password, username)
     },
@@ -45,7 +51,7 @@ export const storePattern = {
   state,
   mutations,
   actions,
-  modules: { video, chat, user, remote, settings, client },
+  modules: { video, chat, user, remote, settings, client, emoji },
 }
 
 Vue.use(Vuex)

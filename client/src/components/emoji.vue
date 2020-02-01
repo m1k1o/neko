@@ -6,39 +6,39 @@
       </div>
     </div>
     <div class="list" ref="scroll" @scroll="onScroll">
-      <ul :class="[search === '' ? 'group-list' : 'emoji-list']">
-        <template v-if="search === ''">
-          <li v-for="(group, index) in groups" :key="index" class="group" ref="groups">
-            <span class="label">{{ group.name }}</span>
-            <ul class="emoji-list">
-              <li
-                v-for="emoji in group.list"
-                :key="`${group.id}-${emoji}`"
-                :class="['emoji', hovered === emoji ? 'active' : '']"
-              >
-                <span
-                  :class="['emoji-20', `e-${emoji}`]"
-                  @mouseenter.stop.prevent="onMouseEnter($event, emoji)"
-                  @click.stop.prevent="onClick($event, emoji)"
-                ></span>
-              </li>
-            </ul>
-          </li>
-        </template>
-        <template v-else>
-          <li v-for="emoji in filtered" :key="emoji" :class="['emoji', hovered === emoji ? 'active' : '']">
-            <span
-              :class="['emoji-20', `e-${emoji}`]"
-              @mouseenter.stop.prevent="onMouseEnter($event, emoji)"
-              @click.stop.prevent="onClick($event, emoji)"
-            ></span>
-          </li>
-        </template>
+      <ul :class="['group-list']" :style="{ display: search === '' ? 'flex' : 'none' }">
+        <li v-for="(group, index) in groups" :key="index" class="group" ref="groups">
+          <span class="label">{{ group.name }}</span>
+          <ul class="emoji-list">
+            <li
+              v-for="emoji in index === 0 ? recent : group.list"
+              :key="`${group.id}-${emoji}`"
+              :class="['emoji-container', hovered === emoji ? 'active' : '']"
+            >
+              <span
+                :class="['emoji']"
+                @mouseenter.stop.prevent="onMouseEnter($event, emoji)"
+                @click.stop.prevent="onClick($event, emoji)"
+                :data-emoji="emoji"
+              ></span>
+            </li>
+          </ul>
+        </li>
+      </ul>
+      <ul :class="['emoji-container']" :style="{ display: search === '' ? 'none' : 'flex' }">
+        <li v-for="emoji in filtered" :key="emoji" :class="['emoji-item', hovered === emoji ? 'active' : '']">
+          <span
+            :class="['emoji']"
+            @mouseenter.stop.prevent="onMouseEnter($event, emoji)"
+            @click.stop.prevent="onClick($event, emoji)"
+            :data-emoji="emoji"
+          ></span>
+        </li>
       </ul>
     </div>
     <div class="details">
-      <div class="icon-container" v-if="hovered !== ''">
-        <span :class="['icon', 'emoji-20', `e-${hovered}`]"></span><span class="emoji">:{{ hovered }}:</span>
+      <div class="details-container" v-if="hovered !== ''">
+        <span :class="['emoji']" :data-emoji="hovered" /><span class="emoji-id">:{{ hovered }}:</span>
       </div>
     </div>
     <div class="groups">
@@ -46,10 +46,10 @@
         <li
           v-for="(group, index) in groups"
           :key="index"
-          :class="[group.id, active === group.id && search === '' ? 'active' : '']"
+          :class="[group.id, active.id === group.id && search === '' ? 'active' : '']"
           @click.stop.prevent="scrollTo($event, index)"
         >
-          <span :class="[`group-${group.id}`]" />
+          <span :class="[`group-${group.id} fas`]" />
         </li>
       </ul>
     </div>
@@ -65,8 +65,8 @@
     width: $emoji-width;
     height: 350px;
     background: $background-secondary;
-    bottom: 30px;
-    right: 0;
+    bottom: 75px;
+    right: 5px;
     display: flex;
     flex-direction: column;
     border-radius: 5px;
@@ -169,7 +169,7 @@
         flex-direction: row;
         flex-wrap: wrap;
         li {
-          &.emoji {
+          &.emoji-container {
             padding: 2px;
             border-radius: 3px;
             cursor: pointer;
@@ -191,7 +191,7 @@
       height: 36px;
       background: $background-tertiary;
 
-      .icon-container {
+      .details-container {
         display: flex;
         align-content: center;
         flex-direction: row;
@@ -200,11 +200,11 @@
         span {
           cursor: default;
 
-          &.icon {
+          &.emoji {
             margin: 0 5px 0 10px;
           }
 
-          &.emoji {
+          &.emoji-id {
             line-height: 20px;
             font-size: 16px;
             font-weight: 500;
@@ -242,36 +242,42 @@
             margin: 0 auto;
             height: 20px;
             width: 20px;
+            font-size: 16px;
+            line-height: 20px;
+            text-align: center;
 
-            &.group-recent {
-              background-color: #fff;
+            &.group-recent::before {
+              content: '\f017';
             }
-            &.group-neko {
-              background-color: #fff;
+            &.group-neko::before {
+              content: '\f6be';
             }
-            &.group-people {
-              background-color: #fff;
+            &.group-emotion::before {
+              content: '\f118';
             }
-            &.group-nature {
-              background-color: #fff;
+            &.group-people::before {
+              content: '\f0c0';
             }
-            &.group-food {
-              background-color: #fff;
+            &.group-nature::before {
+              content: '\f1b0';
             }
-            &.group-activity {
-              background-color: #fff;
+            &.group-food::before {
+              content: '\f5d1';
             }
-            &.group-travel {
-              background-color: #fff;
+            &.group-activity::before {
+              content: '\f44e';
             }
-            &.group-objects {
-              background-color: #fff;
+            &.group-travel::before {
+              content: '\f1b9';
             }
-            &.group-symbols {
-              background-color: #fff;
+            &.group-objects::before {
+              content: '\f0eb';
             }
-            &.group-flags {
-              background-color: #fff;
+            &.group-symbols::before {
+              content: '\f86d';
+            }
+            &.group-flags::before {
+              content: '\f024';
             }
           }
         }
@@ -283,9 +289,7 @@
 <script lang="ts">
   import { Component, Ref, Watch, Vue } from 'vue-property-decorator'
 
-  import { list } from './emoji/list'
-  import { keywords } from './emoji/keywords'
-  import { groups } from './emoji/groups'
+  import { get, set } from '../utils/localstorage'
 
   @Component({
     name: 'neko-emoji',
@@ -297,19 +301,32 @@
 
     waitingForPaint = false
     search = ''
-    active = groups[0].id
+    index = 0
     hovered = ''
+    recent: string[] = JSON.parse(get('emoji_recent', '[]'))
+
+    get active() {
+      return this.$accessor.emoji.groups[this.index]
+    }
+
+    get keywords() {
+      return this.$accessor.emoji.keywords
+    }
 
     get groups() {
-      return groups
+      return this.$accessor.emoji.groups
+    }
+
+    get list() {
+      return this.$accessor.emoji.list
     }
 
     get filtered() {
       const filtered = []
-      for (const emoji of list) {
+      for (const emoji of this.list) {
         if (
-          emoji.includes(this.search) || typeof keywords[emoji] !== 'undefined'
-            ? keywords[emoji].some(keyword => keyword.includes(this.search))
+          emoji.includes(this.search) || typeof this.keywords[emoji] !== 'undefined'
+            ? this.keywords[emoji].some(keyword => keyword.includes(this.search))
             : false
         ) {
           filtered.push(emoji)
@@ -319,16 +336,10 @@
     }
 
     scrollTo(event: MouseEvent, index: number) {
-      const ele = this._groups[index]
-      if (!ele) {
+      if (!this._groups[index]) {
         return
       }
-
-      let top = ele.offsetTop
-      if (index == 0) {
-        top = 0
-      }
-      this._scroll.scrollTop = top
+      this._scroll.scrollTop = index == 0 ? 0 : this._groups[index].offsetTop
     }
 
     onScroll() {
@@ -341,16 +352,17 @@
     onScrollPaint() {
       this.waitingForPaint = false
       let scrollTop = this._scroll.scrollTop
-      let active = this.groups[0]
-      for (let i = 0, l = this.groups.length; i < l; i++) {
-        let group = this.groups[i]
+      let active = 0
+      for (const [i, group] of this.groups.entries()) {
         let component = this._groups[i]
         if (component && component.offsetTop > scrollTop) {
           break
         }
-        active = group
+        active = i
       }
-      this.active = active.id
+      if (this.index !== active) {
+        this.index = active
+      }
     }
 
     onMouseExit(event: MouseEvent, emoji: string) {
@@ -363,6 +375,7 @@
     }
 
     onClick(event: MouseEvent, emoji: string) {
+      this.$accessor.emoji.setRecent(emoji)
       this.$emit('picked', emoji)
     }
   }

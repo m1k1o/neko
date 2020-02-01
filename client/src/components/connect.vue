@@ -2,7 +2,7 @@
   <div class="connect">
     <div class="window">
       <div class="logo">
-        <img src="@/assets/logo.svg" alt="n.eko" />
+        <img src="@/assets/images/logo.svg" alt="n.eko" />
         <span><b>n</b>.eko</span>
       </div>
       <form class="message" v-if="!connecting" @submit.stop.prevent="connect">

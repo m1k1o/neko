@@ -3,7 +3,7 @@
     <div class="window">
       <div class="loading" v-if="loading">
         <div class="logo">
-          <img src="@/assets/logo.svg" alt="n.eko" />
+          <img src="@/assets/images/logo.svg" alt="n.eko" />
           <span><b>N</b>.EKO</span>
         </div>
         <div class="loader">

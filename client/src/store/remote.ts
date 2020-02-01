@@ -44,10 +44,6 @@ export const mutations = mutationTree(state, {
 export const actions = actionTree(
   { state, getters, mutations },
   {
-    initialise({ commit }) {
-      //
-    },
-
     sendClipboard({ getters }, clipboard: string) {
       if (!accessor.connected || !getters.hosting) {
         return

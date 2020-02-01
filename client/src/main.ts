@@ -26,5 +26,6 @@ new Vue({
   render: h => h(app),
   created() {
     this.$client.init(this)
+    this.$accessor.initialise()
   },
 }).$mount('#neko')

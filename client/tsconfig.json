@@ -13,6 +13,7 @@
     "skipLibCheck": true,
     "baseUrl": ".",
     "types": [
+      "node",
       "webpack-env"
     ],
     "paths": {
@@ -31,6 +32,7 @@
     ],
   },
   "include": [
+    "tools/**/*.ts",
     "src/**/*.ts",
     "src/**/*.tsx",
     "src/**/*.vue",

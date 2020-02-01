@@ -30,27 +30,27 @@
           background-size: contain;
 
           &.celebrate {
-            background-image: url('../assets/celebrate.png');
+            background-image: url('../assets/images/emote/celebrate.png');
           }
 
           &.clap {
-            background-image: url('../assets/clap.png');
+            background-image: url('../assets/images/emote/clap.png');
           }
 
           &.exclam {
-            background-image: url('../assets/exclam.png');
+            background-image: url('../assets/images/emote/exclam.png');
           }
 
           &.heart {
-            background-image: url('../assets/heart.png');
+            background-image: url('../assets/images/emote/heart.png');
           }
 
           &.laughing {
-            background-image: url('../assets/laughing.png');
+            background-image: url('../assets/images/emote/laughing.png');
           }
 
           &.sleep {
-            background-image: url('../assets/sleep.png');
+            background-image: url('../assets/images/emote/sleep.png');
           }
         }
       }

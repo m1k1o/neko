@@ -1,7 +1,7 @@
 <template>
   <div class="header">
     <div class="neko">
-      <img src="@/assets/logo.svg" alt="n.eko" />
+      <img src="@/assets/images/logo.svg" alt="n.eko" />
       <span><b>n</b>.eko</span>
     </div>
     <ul class="menu">

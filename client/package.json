@@ -15,6 +15,7 @@
   "scripts": {
     "serve": "vue-cli-service serve --mode development",
     "build": "vue-cli-service build",
+    "build:emoji": "ts-node --files --project tools/tsconfig.json tools/emoji.ts",
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
@@ -22,6 +23,8 @@
     "animejs": "^3.1.0",
     "axios": "^0.19.1",
     "date-fns": "^2.9.0",
+    "emoji-datasource": "^5.0.1",
+    "emojilib": "^2.4.0",
     "eventemitter3": "^4.0.0",
     "resize-observer-polyfill": "^1.5.1",
     "simple-markdown": "^0.7.2",
@@ -37,6 +40,7 @@
   },
   "devDependencies": {
     "@types/animejs": "^3.1.0",
+    "@types/node": "^13.7.0",
     "@types/vue": "^2.0.0",
     "@vue/cli-plugin-babel": "^4.1.0",
     "@vue/cli-plugin-eslint": "^4.1.0",
@@ -51,6 +55,7 @@
     "node-sass": "^4.12.0",
     "prettier": "^1.19.1",
     "sass-loader": "^8.0.0",
+    "ts-node": "^8.6.2",
     "typescript": "~3.5.3",
     "vue-template-compiler": "^2.6.10"
   }

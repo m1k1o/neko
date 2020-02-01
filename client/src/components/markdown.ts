@@ -212,6 +212,18 @@ const rules: MarkdownRules = {
     ...br,
     match: md.anyScopeRegex(/^\n/),
   },
+  emoji: {
+    order: md.defaultRules.strong.order,
+    match: source => /^:([a-zA-z_-]*):/.exec(source),
+    parse(capture) {
+      return {
+        id: capture[1],
+      }
+    },
+    html(node, output, state) {
+      return htmlTag('span', '', { class: `emoji`, 'data-emoji': node.id }, state)
+    },
+  },
   emoticon: {
     order: md.defaultRules.text.order,
     match: source => /^(¯\\_\(ツ\)_\/¯)/.exec(source),

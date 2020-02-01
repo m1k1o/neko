@@ -42,9 +42,8 @@
           v-model="content"
           @click.stop.prevent="emoji = false"
         />
-        <div class="emoji" @click.stop.prevent="emoji = !emoji">
-          <neko-emoji v-if="emoji" @picked="onEmojiPicked" />
-        </div>
+        <neko-emoji v-if="emoji" @picked="onEmojiPicked" />
+        <i class="emoji-menu fas fa-laugh" @click.stop.prevent="emoji = !emoji"></i>
       </div>
     </div>
   </div>
@@ -101,6 +100,8 @@
         word-wrap: break-word;
 
         &.message {
+          font-size: 16px;
+
           .author {
             flex-grow: 0;
             flex-shrink: 0;
@@ -134,7 +135,6 @@
                 display: inline-block;
                 color: $text-normal;
                 font-weight: 500;
-                font-size: 16px;
               }
 
               .timestamp {
@@ -152,7 +152,7 @@
 
             ::v-deep .content-body {
               color: $text-normal;
-              line-height: 20px;
+              line-height: 22px;
               word-wrap: break-word;
               overflow-wrap: break-word;
 
@@ -273,14 +273,15 @@
         height: 100%;
         background-color: rgba($color: #fff, $alpha: 0.05);
         border-radius: 5px;
+        position: relative;
         display: flex;
 
-        .emoji {
+        .emoji-menu {
           width: 20px;
           height: 20px;
-          // background: #fff;
-          margin: 3px 3px 0 0;
-          position: relative;
+          font-size: 20px;
+          margin: 8px 5px 0 0;
+          cursor: pointer;
         }
 
         textarea {
