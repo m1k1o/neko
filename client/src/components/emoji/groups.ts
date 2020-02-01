@@ -1,16 +1,16 @@
 export const groups: Array<{ name: string; id: string; list: string[] }> = [
   {
-    id: 'Recent',
+    id: 'recent',
     name: 'Recent',
     list: [],
   },
   {
-    id: 'Neko',
+    id: 'neko',
     name: 'Neko',
     list: [],
   },
   {
-    id: 'People',
+    id: 'people',
     name: 'People',
     list: [
       'grinning',
@@ -362,7 +362,7 @@ export const groups: Array<{ name: string; id: string; list: string[] }> = [
     ],
   },
   {
-    id: 'Nature',
+    id: 'nature',
     name: 'Nature',
     list: [
       'dog',
@@ -545,7 +545,7 @@ export const groups: Array<{ name: string; id: string; list: string[] }> = [
     ],
   },
   {
-    id: 'Food',
+    id: 'food',
     name: 'Food',
     list: [
       'green_apple',
@@ -656,7 +656,7 @@ export const groups: Array<{ name: string; id: string; list: string[] }> = [
     ],
   },
   {
-    id: 'Activity',
+    id: 'activity',
     name: 'Activity',
     list: [
       'soccer',
@@ -757,7 +757,7 @@ export const groups: Array<{ name: string; id: string; list: string[] }> = [
     ],
   },
   {
-    id: 'Travel',
+    id: 'travel',
     name: 'Travel',
     list: [
       'red_car',
@@ -882,7 +882,7 @@ export const groups: Array<{ name: string; id: string; list: string[] }> = [
     ],
   },
   {
-    id: 'Objects',
+    id: 'objects',
     name: 'Objects',
     list: [
       'watch',
@@ -1090,7 +1090,7 @@ export const groups: Array<{ name: string; id: string; list: string[] }> = [
     ],
   },
   {
-    id: 'Symbols',
+    id: 'symbols',
     name: 'Symbols',
     list: [
       '100',
@@ -1370,7 +1370,7 @@ export const groups: Array<{ name: string; id: string; list: string[] }> = [
     ],
   },
   {
-    id: 'Flags',
+    id: 'flags',
     name: 'Flags',
     list: [
       'afghanistan',

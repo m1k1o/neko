@@ -1,7 +1,9 @@
 <template>
   <div class="neko-emoji">
     <div class="search">
-      <input type="text" ref="search" v-model="search" />
+      <div class="search-contianer">
+        <input type="text" ref="search" v-model="search" />
+      </div>
     </div>
     <div class="list" ref="scroll" @scroll="onScroll">
       <ul :class="[search === '' ? 'group-list' : 'emoji-list']">
@@ -35,9 +37,9 @@
       </ul>
     </div>
     <div class="details">
-      <template v-if="hovered !== ''">
+      <div class="icon-container" v-if="hovered !== ''">
         <span :class="['icon', 'emoji-20', `e-${hovered}`]"></span><span class="emoji">:{{ hovered }}:</span>
-      </template>
+      </div>
     </div>
     <div class="groups">
       <ul>
@@ -47,7 +49,7 @@
           :class="[group.id, active === group.id && search === '' ? 'active' : '']"
           @click.stop.prevent="scrollTo($event, index)"
         >
-          <i class="fas fa-angry"></i>
+          <span :class="[`group-${group.id}`]" />
         </li>
       </ul>
     </div>
@@ -55,12 +57,13 @@
 </template>
 
 <style lang="scss" scoped>
-  $emoji-width: 350px;
+  $emoji-width: 300px;
 
   .neko-emoji {
     position: absolute;
+    z-index: 10000;
     width: $emoji-width;
-    height: 200px;
+    height: 350px;
     background: $background-secondary;
     bottom: 30px;
     right: 0;
@@ -68,13 +71,46 @@
     flex-direction: column;
     border-radius: 5px;
     overflow: hidden;
+    box-shadow: $elevation-high;
 
     .search {
       flex-shrink: 0;
-      height: 38px;
       border-bottom: 1px solid $background-tertiary;
+      padding: 10px;
 
-      input {
+      .search-contianer {
+        border-radius: 5px;
+        color: $interactive-normal;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-content: center;
+        overflow: hidden;
+
+        &::before {
+          content: '\f002';
+          font-weight: 900;
+          font-family: 'Font Awesome 5 Free';
+          position: absolute;
+          width: 15px;
+          height: 15px;
+          top: 6px;
+          right: 6px;
+          opacity: 0.5;
+        }
+
+        input {
+          border: none;
+          background-color: $background-floating;
+          color: $interactive-normal;
+          padding: 5px;
+          font-weight: 500;
+
+          &::placeholder {
+            color: $text-muted;
+            font-weight: 500;
+          }
+        }
       }
     }
 
@@ -118,11 +154,11 @@
               font-weight: 500;
               font-size: 12px;
               position: sticky;
-              top: 0;
-            }
-
-            .emoji-list {
-              margin: 10px 0;
+              top: -5px;
+              background-color: rgba($color: $background-secondary, $alpha: 0.9);
+              width: 100%;
+              display: block;
+              padding: 8px 0;
             }
           }
         }
@@ -136,9 +172,10 @@
           &.emoji {
             padding: 2px;
             border-radius: 3px;
+            cursor: pointer;
 
             &.active {
-              background-color: #fff;
+              background-color: $background-floating;
             }
           }
         }
@@ -147,22 +184,40 @@
 
     .details {
       flex-shrink: 0;
+      display: flex;
+      align-content: center;
+      justify-content: center;
+      flex-direction: column;
       height: 36px;
       background: $background-tertiary;
 
-      span {
-        &.icon {
-        }
+      .icon-container {
+        display: flex;
+        align-content: center;
+        flex-direction: row;
+        height: 20px;
 
-        &.emoji {
+        span {
+          cursor: default;
+
+          &.icon {
+            margin: 0 5px 0 10px;
+          }
+
+          &.emoji {
+            line-height: 20px;
+            font-size: 16px;
+            font-weight: 500;
+          }
         }
       }
     }
 
     .groups {
       flex-shrink: 0;
-      height: 28px;
+      height: 30px;
       background: $background-floating;
+      padding: 0 5px;
 
       ul {
         display: flex;
@@ -171,10 +226,53 @@
 
         li {
           flex-grow: 1;
-          height: 23px;
+          display: flex;
+          flex-direction: row;
+          justify-content: center;
+          align-content: center;
+          flex-direction: column;
+          height: 27px;
+          cursor: pointer;
 
           &.active {
-            border-bottom: 2px solid $style-primary;
+            border-bottom: 3px solid $style-primary;
+          }
+
+          span {
+            margin: 0 auto;
+            height: 20px;
+            width: 20px;
+
+            &.group-recent {
+              background-color: #fff;
+            }
+            &.group-neko {
+              background-color: #fff;
+            }
+            &.group-people {
+              background-color: #fff;
+            }
+            &.group-nature {
+              background-color: #fff;
+            }
+            &.group-food {
+              background-color: #fff;
+            }
+            &.group-activity {
+              background-color: #fff;
+            }
+            &.group-travel {
+              background-color: #fff;
+            }
+            &.group-objects {
+              background-color: #fff;
+            }
+            &.group-symbols {
+              background-color: #fff;
+            }
+            &.group-flags {
+              background-color: #fff;
+            }
           }
         }
       }
@@ -265,7 +363,7 @@
     }
 
     onClick(event: MouseEvent, emoji: string) {
-      this.$emit('done', emoji)
+      this.$emit('picked', emoji)
     }
   }
 </script>

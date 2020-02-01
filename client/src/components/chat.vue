@@ -35,8 +35,16 @@
     <div v-if="!muted" class="chat-send">
       <div class="accent" />
       <div class="text-container">
-        <textarea ref="chat" placeholder="Send a message" @keydown="onKeyDown" v-model="content" />
-        <div class="emoji"><neko-emoji /></div>
+        <textarea
+          ref="input"
+          placeholder="Send a message"
+          @keydown="onKeyDown"
+          v-model="content"
+          @click.stop.prevent="emoji = false"
+        />
+        <div class="emoji" @click.stop.prevent="emoji = !emoji">
+          <neko-emoji v-if="emoji" @picked="onEmojiPicked" />
+        </div>
       </div>
     </div>
   </div>
@@ -336,9 +344,11 @@
     },
   })
   export default class extends Vue {
+    @Ref('input') readonly _input!: HTMLTextAreaElement
     @Ref('history') readonly _history!: HTMLElement
     @Ref('context') readonly _context!: any
 
+    emoji = false
     content = ''
 
     get id() {
@@ -358,6 +368,11 @@
       this.$nextTick(() => {
         this._history.scrollTop = this._history.scrollHeight
       })
+    }
+
+    @Watch('emoji')
+    onEmojiChange() {
+      this._input.focus()
     }
 
     @Watch('muted')
@@ -380,6 +395,22 @@
     timestamp(time: Date) {
       const str = formatRelative(time, new Date())
       return `${str.charAt(0).toUpperCase()}${str.slice(1)}`
+    }
+
+    onEmojiPicked(emoji: string) {
+      const text = `:${emoji}:`
+      if (this._input.selectionStart || this._input.selectionStart === 0) {
+        var startPos = this._input.selectionStart
+        var endPos = this._input.selectionEnd
+        this.content = this.content.substring(0, startPos) + text + this.content.substring(endPos, this.content.length)
+        this.$nextTick(() => {
+          this._input.selectionStart = startPos + text.length
+          this._input.selectionEnd = startPos + text.length
+        })
+      } else {
+        this.content += text
+      }
+      this.emoji = false
     }
 
     onContext(event: MouseEvent, data: any) {
