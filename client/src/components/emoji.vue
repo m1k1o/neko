@@ -1,5 +1,5 @@
 <template>
-  <div class="neko-emoji">
+  <div class="neko-emoji" v-on-clickaway="onClickAway">
     <div class="search">
       <div class="search-contianer">
         <input type="text" ref="search" v-model="search" />
@@ -288,11 +288,14 @@
 
 <script lang="ts">
   import { Component, Ref, Watch, Vue } from 'vue-property-decorator'
-
+  import { directive as onClickaway } from 'vue-clickaway'
   import { get, set } from '../utils/localstorage'
 
   @Component({
     name: 'neko-emoji',
+    directives: {
+      onClickaway,
+    },
   })
   export default class extends Vue {
     @Ref('scroll') readonly _scroll!: HTMLElement
@@ -377,6 +380,10 @@
     onClick(event: MouseEvent, emoji: string) {
       this.$accessor.emoji.setRecent(emoji)
       this.$emit('picked', emoji)
+    }
+
+    onClickAway(event: MouseEvent) {
+      this.$emit('done')
     }
   }
 </script>

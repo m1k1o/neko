@@ -35,15 +35,9 @@
     <div v-if="!muted" class="chat-send">
       <div class="accent" />
       <div class="text-container">
-        <textarea
-          ref="input"
-          placeholder="Send a message"
-          @keydown="onKeyDown"
-          v-model="content"
-          @click.stop.prevent="emoji = false"
-        />
-        <neko-emoji v-if="emoji" @picked="onEmojiPicked" />
-        <i class="emoji-menu fas fa-laugh" @click.stop.prevent="emoji = !emoji"></i>
+        <textarea ref="input" placeholder="Send a message" @keydown="onKeyDown" v-model="content" />
+        <neko-emoji v-if="emoji" @picked="onEmojiPicked" @done="emoji = false" />
+        <i class="emoji-menu fas fa-laugh" @click.stop.prevent="onEmoji"></i>
       </div>
     </div>
   </div>
@@ -330,6 +324,8 @@
   import { Component, Ref, Watch, Vue } from 'vue-property-decorator'
   import { formatRelative } from 'date-fns'
 
+  import { Member } from '~/neko/types'
+
   import Markdown from './markdown'
   import Content from './context.vue'
   import Emoji from './emoji.vue'
@@ -371,11 +367,6 @@
       })
     }
 
-    @Watch('emoji')
-    onEmojiChange() {
-      this._input.focus()
-    }
-
     @Watch('muted')
     onMutedChange(muted: boolean) {
       if (muted) {
@@ -398,6 +389,11 @@
       return `${str.charAt(0).toUpperCase()}${str.slice(1)}`
     }
 
+    onEmoji() {
+      this.emoji = !this.emoji
+      this._input.focus()
+    }
+
     onEmojiPicked(emoji: string) {
       const text = `:${emoji}:`
       if (this._input.selectionStart || this._input.selectionStart === 0) {
@@ -411,11 +407,15 @@
       } else {
         this.content += text
       }
+      this._input.focus()
       this.emoji = false
     }
 
-    onContext(event: MouseEvent, data: any) {
-      this._context.open(event, data)
+    onContext(event: MouseEvent, { member }: { member: Member }) {
+      if (member.id === this.id) {
+        return
+      }
+      this._context.open(event, { member })
     }
 
     onClick(event: { target?: HTMLElement; preventDefault(): void }) {
