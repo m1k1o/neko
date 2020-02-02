@@ -71,7 +71,7 @@ function htmlTag(
   let attributeString = ''
   for (const attr in attributes) {
     if (Object.prototype.hasOwnProperty.call(attributes, attr) && attributes[attr]) {
-      attributeString += ` ${md.sanitizeText(attr)}="${md.sanitizeText(attributes[attr])}"`
+      attributeString += ` ${attr}="${attributes[attr]}"` // md.sanitizeText(attr)
     }
   }
 
@@ -221,7 +221,16 @@ const rules: MarkdownRules = {
       }
     },
     html(node, output, state) {
-      return htmlTag('span', '', { class: `emoji`, 'data-emoji': node.id }, state)
+      return htmlTag(
+        'span',
+        '',
+        {
+          class: `emoji`,
+          'data-emoji': node.id,
+          'v-tooltip.top-center': `{ content:':${node.id}:', offset: 2, delay: { show: 1000, hide: 100 } }`,
+        },
+        state,
+      )
     },
   },
   emoticon: {
@@ -246,7 +255,7 @@ const rules: MarkdownRules = {
       }
     },
     html(node, output, state) {
-      return htmlTag('span', htmlTag('span', output(node.content, state), {}, state), { class: 'spoiler' }, state) //htmlTag('span', , {  }, state)
+      return htmlTag('span', htmlTag('span', output(node.content, state), {}, state), { class: 'spoiler' }, state)
     },
   },
 }
@@ -258,37 +267,16 @@ const htmlOutput = md.outputFor<HtmlOutputRule, 'html'>(rules, 'html')
   name: 'neko-markdown',
 })
 export default class extends Vue {
-  html = ''
-
   @Prop({ required: true })
   source!: string
 
-  @Watch('source')
-  onSourceChanged(source: string) {
+  render(h: any) {
     const state: MarkdownState = {
       inline: true,
       inQuote: false,
       escapeHTML: true,
       cssModuleNames: null,
     }
-
-    this.html = htmlOutput(parser(source, state), state)
-  }
-
-  render(createElement: any) {
-    const state: MarkdownState = {
-      inline: true,
-      inQuote: false,
-      escapeHTML: true,
-      cssModuleNames: null,
-    }
-
-    this.html = htmlOutput(parser(this.source, state), state)
-
-    return createElement('div', {
-      domProps: {
-        innerHTML: this.html,
-      },
-    })
+    return h({ template: `<div>${htmlOutput(parser(this.source, state), state)}</div>` })
   }
 }
