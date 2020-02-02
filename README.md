@@ -12,7 +12,7 @@
 ### Features
   * Text Chat (With basic markdown support, discord flavor)
   * Admin users (Kick, Ban & Force Give/Release Controls)
-  * Clipboard synchronization
+  * Clipboard synchronization (on [supported browsers](https://developer.mozilla.org/en-US/docs/Web/API/Clipboard/readText))
   * Emote overlay
   * Ignore user (chat and emotes)
   * Settings are saved to local storage
@@ -49,7 +49,7 @@ I like cats 🐱 (`Neko` is the Japanese word for cat), I'm a weeb/nerd
     wget https://raw.githubusercontent.com/nurdism/neko/master/docker-compose.yaml
     sudo docker-compose up -d
     ```
-5. Visit the IP address of the droplet in your browser and login, the default password is `neko`
+5. Visit the IP address server in your browser and login, the default password is `neko`
 
 > 💡 **Protip**: Run `nano docker-compose.yaml` to edit the settings, then press *ctrl+x* to exit and save the file.
 
