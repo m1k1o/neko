@@ -33,6 +33,7 @@
     "remote.containers.defaultExtensions": [
       "ms-vscode.go",
       "octref.vetur",
+      "ms-vscode.cpptools",
       "esbenp.prettier-vscode",
       "dbaeumer.vscode-eslint",
       "ms-vscode-remote.vscode-remote-extensionpack",
@@ -40,8 +41,8 @@
       "ms-azuretools.vscode-docker",
       "editorconfig.editorconfig",
       "gruntfuggly.todo-tree",
-      "swyphcosmo.spellchecker",
-      "eamodio.gitlens"
-    ],
+      "eamodio.gitlens",
+      "swyphcosmo.spellchecker"
+    ]
   }
 }

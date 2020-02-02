@@ -1,5 +1,6 @@
 FROM debian:stretch-slim
 
+#
 # avoid warnings by switching to noninteractive
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -7,9 +8,27 @@ ARG USERNAME=neko
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
 
+#
+# install libclipboard
+RUN set -eux; apt-get update; \
+    apt-get install -y --no-install-recommends ca-certificates git cmake pkg-config build-essential libx11-dev ; \
+    cd /tmp ; \
+    git clone https://github.com/jtanx/libclipboard ; \
+    cd libclipboard ; \
+    cmake -DBUILD_SHARED_LIBS=ON -DLIBCLIPBOARD_FORCE_X11=on -DLIBCLIPBOARD_ADD_SOVERSION=ON --prefix=/usr/local . ; \
+    make -j4; \
+    make install; \ 
+    rm -rf /tmp/libclipboard ; \
+    #
+    # clean up
+    apt-get autoremove -y git cmake pkg-config build-essential libx11-dev; \
+    apt-get clean -y; \
+    rm -rf /var/lib/apt/lists/* /var/cache/apt/*
+
+#
 # install neko dependencies
 RUN set -eux; apt-get update; \
-    apt-get install -y --no-install-recommends wget ca-certificates pulseaudio openbox dbus-x11 xvfb xclip supervisor; \
+    apt-get install -y --no-install-recommends wget ca-certificates pulseaudio openbox dbus-x11 xvfb supervisor; \
     apt-get install -y --no-install-recommends libxv1 libopus0 libvpx4; \
     #
     # create a non-root user
@@ -31,15 +50,16 @@ RUN set -eux; apt-get update; \
     chown -R $USERNAME:$USERNAME /home/$USERNAME; \
     #
     # clean up
-    apt-get autoremove -y; \
     apt-get clean -y; \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/*
 
+#
 # add gst to env
 ENV PATH=/gst/local/bin:$PATH
 ENV LD_LIBRARY_PATH=/gst/local/lib:$LD_LIBRARY_PATH
 ENV PKG_CONFIG_PATH=/gst/local/lib/pkgconfig:$PKG_CONFIG_PATH
 
+#
 # copy gst
 COPY .build/gst/local /gst/local/
 

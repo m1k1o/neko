@@ -9,7 +9,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"n.eko.moe/neko/internal/hid/clipboard"
+	"n.eko.moe/neko/internal/clip"
 	"n.eko.moe/neko/internal/types"
 	"n.eko.moe/neko/internal/types/config"
 	"n.eko.moe/neko/internal/types/event"
@@ -81,11 +81,7 @@ func (ws *WebSocketHandler) Start() error {
 			ws.logger.Info().Msg("shutdown")
 		}()
 
-		current := ""
-		clip, err := clipboard.ReadAll()
-		if err == nil && clip != current {
-			current = clip
-		}
+		current := clip.Read()
 
 		for {
 			select {
@@ -93,16 +89,16 @@ func (ws *WebSocketHandler) Start() error {
 				return
 			default:
 				if ws.sessions.HasHost() {
-					clip, err := clipboard.ReadAll()
-					if err == nil && clip != current {
+					text := clip.Read()
+					if text != current {
 						session, ok := ws.sessions.GetHost()
 						if ok {
 							session.Send(message.Clipboard{
 								Event: event.CONTROL_CLIPBOARD,
-								Text:  clip,
+								Text:  text,
 							})
 						}
-						current = clip
+						current = text
 					}
 				}
 				time.Sleep(100 * time.Millisecond)

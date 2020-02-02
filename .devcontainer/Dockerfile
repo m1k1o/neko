@@ -4,7 +4,7 @@ FROM debian:stretch-slim
 # cluster fuck of packages for neko, node, go and gstreamer
 RUN set -eux; apt-get update; apt-get install -y --no-install-recommends \
   autoconf ca-certificates curl netbase wget \
-  bzr git mercurial openssh-client subversion procps automake bzip2 dpkg-dev file g++ gcc \
+  bzr git mercurial openssh-client subversion procps cmake automake bzip2 dpkg-dev file g++ gcc \
   libbz2-dev libc6-dev libcurl4-openssl-dev libdb-dev libevent-dev libffi-dev libgdbm-dev libglib2.0-dev libgmp-dev \
   libjpeg-dev libkrb5-dev liblzma-dev libmagickcore-dev libmagickwand-dev libmaxminddb-dev libncurses5-dev libncursesw5-dev \
   libpng-dev libpq-dev libreadline-dev libsqlite3-dev libssl-dev libtool libwebp-dev libxml2-dev libxslt-dev libyaml-dev  \
@@ -97,6 +97,17 @@ ENV GOPATH /go
 ENV PATH $GOPATH/bin:/usr/local/go/bin:$PATH
 
 #
+# install libclipboard
+RUN set -eux; \
+    cd /tmp ; \
+    git clone https://github.com/jtanx/libclipboard ; \
+    cd libclipboard ; \
+    cmake -DBUILD_SHARED_LIBS=ON -DLIBCLIPBOARD_FORCE_X11=on -DLIBCLIPBOARD_ADD_SOVERSION=ON --prefix=/usr/local . ; \
+    make -j4; \
+    make install; \ 
+    rm -rf /tmp/libclipboard
+
+#
 # install Go tools w/module support
 RUN set -eux; \
     mkdir -p /tmp/gotools; \
@@ -155,6 +166,10 @@ ARG INSTALL_ZSH="true"
 # location and expected SHA for common setup script - SHA generated on release
 ARG COMMON_SCRIPT_SOURCE="https://raw.githubusercontent.com/microsoft/vscode-dev-containers/master/script-library/common-debian.sh"
 ARG COMMON_SCRIPT_SHA="dev-mode"
+
+#
+# Docker Compose version
+ARG COMPOSE_VERSION=1.24.0
 
 #
 # verify git, common tools / libs installed, add/modify non-root user, optionally install zsh

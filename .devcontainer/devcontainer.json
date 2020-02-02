@@ -7,19 +7,19 @@
 	"settings": {
     "terminal.integrated.shell.linux": "/bin/bash",
     "go.gopath": "/go"
-	},
+  },
 	"extensions": [
     "ms-vscode.go",
     "octref.vetur",
+    "ms-vscode.cpptools",
     "esbenp.prettier-vscode",
     "dbaeumer.vscode-eslint",
     "ms-vscode-remote.vscode-remote-extensionpack",
     "ms-vscode-remote.remote-containers",
     "ms-azuretools.vscode-docker",
     "editorconfig.editorconfig",
-    "psioniq.psi-header",
     "gruntfuggly.todo-tree",
-    "swyphcosmo.spellchecker",
-    "eamodio.gitlens"
+    "eamodio.gitlens",
+    "swyphcosmo.spellchecker"
 	]
 }
