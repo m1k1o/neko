@@ -239,7 +239,7 @@
 
     @Watch('clipboard')
     onClipboardChanged(clipboard: string) {
-      if (navigator.clipboard) {
+      if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
         navigator.clipboard.writeText(clipboard).catch(console.error)
       }
     }
@@ -329,7 +329,7 @@
         return
       }
 
-      if (this.hosting && navigator.clipboard) {
+      if (this.hosting && navigator.clipboard && typeof navigator.clipboard.readText === 'function') {
         navigator.clipboard
           .readText()
           .then(text => {
