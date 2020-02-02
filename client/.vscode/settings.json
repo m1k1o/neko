@@ -21,5 +21,17 @@
   "editor.formatOnSave": false,
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": true
-  }
+  },
+  "remote.containers.defaultExtensions": [
+    "octref.vetur",
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint",
+    "ms-vscode-remote.vscode-remote-extensionpack",
+    "ms-vscode-remote.remote-containers",
+    "ms-azuretools.vscode-docker",
+    "editorconfig.editorconfig",
+    "gruntfuggly.todo-tree",
+    "eamodio.gitlens",
+    "swyphcosmo.spellchecker"
+  ],
 }
