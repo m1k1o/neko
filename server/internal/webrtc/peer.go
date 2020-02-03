@@ -1,6 +1,8 @@
 package webrtc
 
 import (
+	"sync"
+
 	"github.com/pion/webrtc/v2"
 	"github.com/pion/webrtc/v2/pkg/media"
 	"n.eko.moe/neko/internal/types"
@@ -13,6 +15,7 @@ type Peer struct {
 	video      *webrtc.Track
 	audio      *webrtc.Track
 	connection *webrtc.PeerConnection
+	mu         sync.Mutex
 }
 
 func (peer *Peer) WriteAudioSample(sample types.Sample) error {
@@ -30,6 +33,8 @@ func (peer *Peer) WriteVideoSample(sample types.Sample) error {
 }
 
 func (peer *Peer) WriteData(v interface{}) error {
+	peer.mu.Lock()
+	defer peer.mu.Unlock()
 	return nil
 }
 
