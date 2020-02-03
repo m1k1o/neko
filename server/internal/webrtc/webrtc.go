@@ -182,28 +182,6 @@ func (m *WebRTCManager) CreatePeer(id string, sdp string) (string, types.Peer, e
 		return "", nil, err
 	}
 
-	/*
-			// clear the Transceiver bufers
-			go func() {
-				defer func() {
-					m.logger.Warn().Msgf("ReadRTCP shutting down")
-				}()
-		    for {
-		      packet, err := videoTransceiver.Sender.ReadRTCP()
-		      if err != nil {
-		        return
-		      }
-		      m.logger.Debug().Msgf("vReadRTCP %v", packet)
-
-		      packet, err = audioTransceiver.Sender.ReadRTCP()
-		      if err != nil {
-		        return
-		      }
-		      m.logger.Debug().Msgf("aReadRTCP %v", packet)
-		    }
-		  }()
-	*/
-
 	// set remote description
 	connection.SetRemoteDescription(description)
 
