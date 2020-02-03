@@ -2,6 +2,7 @@ package websocket
 
 import (
 	"strings"
+	"sync"
 
 	"github.com/gorilla/websocket"
 )
@@ -9,6 +10,7 @@ import (
 type WebSocket struct {
 	id         string
 	connection *websocket.Conn
+	mu         sync.Mutex
 }
 
 func (socket *WebSocket) Address() *string {
@@ -21,6 +23,8 @@ func (socket *WebSocket) Address() *string {
 }
 
 func (socket *WebSocket) Send(v interface{}) error {
+	socket.mu.Lock()
+	defer socket.mu.Unlock()
 	if socket.connection == nil {
 		return nil
 	}
