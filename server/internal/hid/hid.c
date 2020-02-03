@@ -1,5 +1,6 @@
 #include "hid.h"
 
+static clipboard_c *CLIPBOARD = NULL;
 static Display *DISPLAY = NULL;
 static char *NAME = ":0.0";
 static int REGISTERED = 0;
@@ -30,6 +31,13 @@ Display *getXDisplay(void) {
   }
 
   return DISPLAY;
+}
+
+clipboard_c *getClipboard(void) {
+  if (CLIPBOARD == NULL) {
+    CLIPBOARD = clipboard_new(NULL);
+  }
+  return CLIPBOARD;
 }
 
 void closeXDisplay(void) {
@@ -91,4 +99,14 @@ void XKey(unsigned long key, int down) {
   KeyCode code = XKeysymToKeycode(display, key);
   XTestFakeKeyEvent(display, code, down, CurrentTime);
   XSync(display, 0);
+}
+
+void XClipboardSet(char *src) {
+  clipboard_c *cb = getClipboard();
+  clipboard_set_text_ex(cb, src, strlen(src), 0);
+}
+
+char *XClipboardGet() {
+  clipboard_c *cb = getClipboard();
+  return clipboard_text_ex(cb, NULL, 0);
 }

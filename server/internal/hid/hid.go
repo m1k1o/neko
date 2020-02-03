@@ -1,8 +1,13 @@
+// NOTE: I have no fucking clue what I'm doing with this,
+// it works, but I am positive I'm doing this very wrong...
+// should I be freeing these strings? does go cg them?
+// pretty sure this *isn't* thread safe either.... /shrug
+
 package hid
 
 /*
 #cgo linux CFLAGS: -I/usr/src
-#cgo linux LDFLAGS: -L/usr/src -lX11 -lXtst
+#cgo linux LDFLAGS: -L/usr/src -lX11 -lXtst -lclipboard
 
 #include "hid.h"
 */
@@ -10,6 +15,7 @@ import "C"
 
 import (
 	"fmt"
+	"sync"
 	"time"
 
 	"n.eko.moe/neko/internal/hid/keycode"
@@ -18,6 +24,7 @@ import (
 var debounce = make(map[int]time.Time)
 var buttons = make(map[int]keycode.Button)
 var keys = make(map[int]keycode.Key)
+var mu = sync.Mutex{}
 
 func init() {
 	keys[keycode.BACKSPACE.Code] = keycode.BACKSPACE
@@ -130,18 +137,30 @@ func init() {
 }
 
 func Display(display string) {
+	mu.Lock()
+	defer mu.Unlock()
+
 	C.setXDisplay(C.CString(display))
 }
 
 func Move(x, y int) {
+	mu.Lock()
+	defer mu.Unlock()
+
 	C.XMove(C.int(x), C.int(y))
 }
 
 func Scroll(x, y int) {
+	mu.Lock()
+	defer mu.Unlock()
+
 	C.XScroll(C.int(x), C.int(y))
 }
 
 func ButtonDown(code int) (*keycode.Button, error) {
+	mu.Lock()
+	defer mu.Unlock()
+
 	button, ok := buttons[code]
 	if !ok {
 		return nil, fmt.Errorf("invalid button %v", code)
@@ -158,6 +177,9 @@ func ButtonDown(code int) (*keycode.Button, error) {
 }
 
 func KeyDown(code int) (*keycode.Key, error) {
+	mu.Lock()
+	defer mu.Unlock()
+
 	key, ok := keys[code]
 	if !ok {
 		return nil, fmt.Errorf("invalid key %v", code)
@@ -174,6 +196,9 @@ func KeyDown(code int) (*keycode.Key, error) {
 }
 
 func ButtonUp(code int) (*keycode.Button, error) {
+	mu.Lock()
+	defer mu.Unlock()
+
 	button, ok := buttons[code]
 	if !ok {
 		return nil, fmt.Errorf("invalid button %v", code)
@@ -190,6 +215,9 @@ func ButtonUp(code int) (*keycode.Button, error) {
 }
 
 func KeyUp(code int) (*keycode.Key, error) {
+	mu.Lock()
+	defer mu.Unlock()
+
 	key, ok := keys[code]
 	if !ok {
 		return nil, fmt.Errorf("invalid key %v", code)
@@ -203,6 +231,20 @@ func KeyUp(code int) (*keycode.Key, error) {
 
 	C.XKey(C.ulong(key.Keysym), C.int(0))
 	return &key, nil
+}
+
+func ReadClipboard() string {
+	mu.Lock()
+	defer mu.Unlock()
+
+	return C.GoString(C.XClipboardGet())
+}
+
+func WriteClipboard(data string) {
+	mu.Lock()
+	defer mu.Unlock()
+
+	C.XClipboardSet(C.CString(data))
 }
 
 func Reset() {

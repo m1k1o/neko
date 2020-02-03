@@ -1,7 +1,7 @@
 package websocket
 
 import (
-	"n.eko.moe/neko/internal/clip"
+	"n.eko.moe/neko/internal/hid"
 	"n.eko.moe/neko/internal/types"
 	"n.eko.moe/neko/internal/types/event"
 	"n.eko.moe/neko/internal/types/message"
@@ -113,6 +113,6 @@ func (h *MessageHandler) controlClipboard(id string, session types.Session, payl
 		return nil
 	}
 
-	clip.Write(payload.Text)
+	hid.WriteClipboard(payload.Text)
 	return nil
 }

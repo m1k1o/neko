@@ -5,6 +5,7 @@
 
   #include <X11/Xlib.h>
   #include <X11/extensions/XTest.h>
+  #include <libclipboard.h>
   #include <stdint.h>
   #include <stdlib.h>
   #include <stdio.h> /* For fputs() */
@@ -16,20 +17,16 @@
   *
   * Note that this is almost certainly not thread safe. */
   Display *getXDisplay(void);
+  clipboard_c *getClipboard(void);
 
+  void XClipboardSet(char *src);
+  char *XClipboardGet();
   void XMove(int x, int y);
   void XScroll(int x, int y);
   void XButton(unsigned int button, int down);
   void XKey(unsigned long key, int down);
 
   void closeXDisplay(void);
-  #ifdef __cplusplus
-    extern "C"
-    {
-  #endif
-    void setXDisplay(char *input);
-  #ifdef __cplusplus
-    }
-  #endif
+  void setXDisplay(char *input);
 #endif
 
