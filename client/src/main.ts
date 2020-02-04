@@ -4,6 +4,7 @@ import Vue from 'vue'
 
 import Notifications from 'vue-notification'
 import ToolTip from 'v-tooltip'
+import Logger from './plugins/log'
 import Client from './plugins/neko'
 import Axios from './plugins/axios'
 import Swal from './plugins/swal'
@@ -14,6 +15,7 @@ import app from './app.vue'
 
 Vue.config.productionTip = false
 
+Vue.use(Logger)
 Vue.use(Notifications)
 Vue.use(ToolTip)
 Vue.use(Axios)

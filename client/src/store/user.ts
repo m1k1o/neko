@@ -62,7 +62,7 @@ export const mutations = mutationTree(state, {
       connected: false,
     }
   },
-  clear(state) {
+  reset(state) {
     state.members = {}
   },
 })

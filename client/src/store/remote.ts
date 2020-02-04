@@ -35,7 +35,7 @@ export const mutations = mutationTree(state, {
     state.clipboard = clipboard
   },
 
-  clear(state) {
+  reset(state) {
     state.id = ''
     state.clipboard = ''
   },

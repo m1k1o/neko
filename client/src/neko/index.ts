@@ -67,10 +67,10 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   protected [EVENT.DISCONNECTED](reason?: Error) {
     this.$accessor.setConnected(false)
 
-    this.$accessor.remote.clear()
-    this.$accessor.user.clear()
-    this.$accessor.video.clear()
-    this.$accessor.chat.clear()
+    this.$accessor.remote.reset()
+    this.$accessor.user.reset()
+    this.$accessor.video.reset()
+    this.$accessor.chat.reset()
 
     this.$vue.$notify({
       group: 'neko',
@@ -185,7 +185,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   }
 
   protected [EVENT.CONTROL.RELEASE]({ id }: ControlPayload) {
-    this.$accessor.remote.clear()
+    this.$accessor.remote.reset()
     const member = this.member(id)
     if (!member) {
       return
@@ -411,7 +411,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   }
 
   protected [EVENT.ADMIN.RELEASE]({ id, target }: AdminTargetPayload) {
-    this.$accessor.remote.clear()
+    this.$accessor.remote.reset()
     if (!target) {
       this.$accessor.chat.newMessage({
         id,

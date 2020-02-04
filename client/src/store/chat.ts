@@ -49,7 +49,7 @@ export const mutations = mutationTree(state, {
     state.emotes = emotes
   },
 
-  clear(state) {
+  reset(state) {
     state.emotes = {}
     state.history = []
   },

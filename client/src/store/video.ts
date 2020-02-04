@@ -111,9 +111,15 @@ export const mutations = mutationTree(state, {
     state.tracks = state.tracks.filter((_, i) => i !== index)
   },
 
-  clear(state) {
+  reset(state) {
     state.index = -1
     state.tracks = []
     state.streams = []
+    state.width = 1280
+    state.height = 720
+    state.horizontal = 16
+    state.vertical = 9
+    state.playing = false
+    state.playable = false
   },
 })
