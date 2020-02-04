@@ -25,12 +25,14 @@
       "chrome://policy"
   ],
   "ExtensionInstallWhitelist": [
-      "cjpalhdlnbpafiamejdnhcphjbkeiagm"
+      "cjpalhdlnbpafiamejdnhcphjbkeiagm",
+      "fjoaledfpmneenckfbpdfhkmimnjocfa"
   ],
   "ExtensionInstallBlacklist": [
       "*"
   ],
   "ExtensionInstallForcelist": [
-      "cjpalhdlnbpafiamejdnhcphjbkeiagm"
+      "cjpalhdlnbpafiamejdnhcphjbkeiagm",
+      "fjoaledfpmneenckfbpdfhkmimnjocfa"
   ]
 }

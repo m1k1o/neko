@@ -13,7 +13,7 @@ export SCREEN_HEIGHT=720
 export SCREEN_DEPTH=24
 export DISPLAY=:99.0
 
-set -eux
+set -ex
 
 #
 # create log folders

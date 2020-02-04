@@ -14,7 +14,6 @@ RUN set -eux; apt-get update; \
     #
     # clean up
     apt-get --purge autoremove -y unzip; \
-    apt-get autoremove -y; \
     apt-get clean -y; \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/*
 

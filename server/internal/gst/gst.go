@@ -72,7 +72,7 @@ func CreatePipeline(codecName string, pipelineSrc string) (*Pipeline, error) {
 		// https://gstreamer.freedesktop.org/documentation/vpx/vp8enc.html?gi-language=c
 		// gstreamer1.0-plugins-good
 		// vp8enc error-resilient=partitions keyframe-max-dist=10 auto-alt-ref=true cpu-used=5 deadline=1
-		pipelineStr = pipelineSrc + " ! vp8enc error-resilient=partitions keyframe-max-dist=10 auto-alt-ref=true cpu-used=5 deadline=1 ! " + pipelineStr
+		pipelineStr = pipelineSrc + " ! vp8enc cpu-used=8 threads=2 deadline=1 error-resilient=partitions keyframe-max-dist=10 auto-alt-ref=true ! " + pipelineStr
 		clockRate = videoClockRate
 
 		if err := CheckPlugins([]string{"ximagesrc", "vpx"}); err != nil {

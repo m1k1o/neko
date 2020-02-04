@@ -55,7 +55,7 @@ build_firefox() {
 build_chromium() {
   set -eux; \
     cd $DIR/.docker/files/chromium; \
-    sudo docker build -f Dockerfile -t nurdism/neko:chromium -t nurdism/neko:latest . ; 
+    sudo docker build -f Dockerfile -t nurdism/neko:chromium . ; 
 }
 
 build_docker() {
@@ -76,6 +76,8 @@ build_push() {
   sudo docker push nurdism/neko:firefox 
   sudo docker push nurdism/neko:chromium 
 }
+
+set -ex
 
 case $1 in
   push) build_push ;;

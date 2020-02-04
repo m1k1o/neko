@@ -1,0 +1,209 @@
+<?xml version="1.0"?>
+<JWM>
+
+    <!-- The root menu. -->
+    <RootMenu onroot="12">
+        <Include>/etc/jwm/debian-menu</Include>
+        <Program icon="terminal.png" label="Terminal">xterm</Program>
+        <Separator/>
+        <Program icon="lock.png" label="Lock">
+            xlock -mode blank
+        </Program>
+        <Separator/>
+        <Restart label="Restart" icon="restart.png"/>
+        <Exit label="Exit" confirm="true" icon="quit.png"/>
+    </RootMenu>
+
+    <!-- Options for program groups. -->
+    <Group>
+        <Option>tiled</Option>
+        <Option>aerosnap</Option>
+    </Group>
+    <Group>
+        <Class>Pidgin</Class>
+        <Option>sticky</Option>
+    </Group>
+    <Group>
+        <Name>xterm</Name>
+        <Option>vmax</Option>
+    </Group>
+    <Group>
+        <Name>xclock</Name>
+        <Option>drag</Option>
+        <Option>notitle</Option>
+    </Group>
+
+    <!-- Tray at the bottom. -->
+    <Tray x="0" y="-1" height="25" autohide="off">
+
+        <TrayButton icon="/usr/share/jwm/jwm-red.svg">root:1</TrayButton>
+        <Spacer width="2"/>
+        <TrayButton label="_">showdesktop</TrayButton>
+        <Spacer width="2"/>
+
+        <Pager labeled="true"/>
+
+        <TaskList maxwidth="256"/>
+
+        <Dock/>
+        <Clock format="%H:%M"><Button mask="123">exec:xclock</Button></Clock>
+
+    </Tray>
+
+    <!-- Visual Styles -->
+    <WindowStyle>
+        <Font>Sans-9:bold</Font>
+        <Width>4</Width>
+        <Height>21</Height>
+        <Corner>3</Corner>
+        <Foreground>#FFFFFF</Foreground>
+        <Background>#555555</Background>
+        <Outline>#000000</Outline>
+        <Opacity>0.5</Opacity>
+        <Active>
+            <Foreground>#FFFFFF</Foreground>
+            <Background>#0077CC</Background>
+            <Outline>#000000</Outline>
+            <Opacity>1.0</Opacity>
+        </Active>
+    </WindowStyle>
+    <TrayStyle group="true" list="all">
+        <Font>Sans-9</Font>
+        <Background>#333333</Background>
+        <Foreground>#FFFFFF</Foreground>
+        <Outline>#000000</Outline>
+        <Opacity>0.75</Opacity>
+    </TrayStyle>
+    <PagerStyle>
+        <Outline>#000000</Outline>
+        <Foreground>#555555</Foreground>
+        <Background>#333333</Background>
+        <Text>#FFFFFF</Text>
+        <Active>
+            <Foreground>#0077CC</Foreground>
+            <Background>#004488</Background>
+        </Active>
+    </PagerStyle>
+    <MenuStyle>
+        <Font>Sans-9</Font>
+        <Foreground>#FFFFFF</Foreground>
+        <Background>#333333</Background>
+        <Outline>#000000</Outline>
+        <Active>
+            <Foreground>#FFFFFF</Foreground>
+            <Background>#0077CC</Background>
+        </Active>
+        <Opacity>0.85</Opacity>
+    </MenuStyle>
+    <PopupStyle>
+        <Font>Sans-9</Font>
+        <Foreground>#000000</Foreground>
+        <Background>#999999</Background>
+    </PopupStyle>
+
+    <!-- Path where icons can be found.
+         IconPath can be listed multiple times to allow searching
+         for icons in multiple paths.
+      -->
+    <IconPath>/usr/share/icons/gnome/256x256/actions</IconPath>
+    <IconPath>/usr/share/icons/gnome/256x256/apps</IconPath>
+    <IconPath>/usr/share/icons/gnome/256x256/categories</IconPath>
+    <IconPath>/usr/share/icons/gnome/256x256/devices</IconPath>
+    <IconPath>/usr/share/icons/gnome/256x256/emblems</IconPath>
+    <IconPath>/usr/share/icons/gnome/256x256/mimetypes</IconPath>
+    <IconPath>/usr/share/icons/gnome/256x256/places</IconPath>
+    <IconPath>/usr/share/icons/gnome/256x256/status</IconPath>
+    <IconPath>/usr/share/icons/gnome/32x32/actions</IconPath>
+    <IconPath>/usr/share/icons/gnome/32x32/animations</IconPath>
+    <IconPath>/usr/share/icons/gnome/32x32/apps</IconPath>
+    <IconPath>/usr/share/icons/gnome/32x32/categories</IconPath>
+    <IconPath>/usr/share/icons/gnome/32x32/devices</IconPath>
+    <IconPath>/usr/share/icons/gnome/32x32/emblems</IconPath>
+    <IconPath>/usr/share/icons/gnome/32x32/mimetypes</IconPath>
+    <IconPath>/usr/share/icons/gnome/32x32/places</IconPath>
+    <IconPath>/usr/share/icons/gnome/32x32/status</IconPath>
+    <IconPath>/usr/share/icons/gnome/scalable/actions</IconPath>
+    <IconPath>/usr/share/icons/gnome/scalable/apps</IconPath>
+    <IconPath>/usr/share/icons/gnome/scalable/categories</IconPath>
+    <IconPath>/usr/share/icons/gnome/scalable/devices</IconPath>
+    <IconPath>/usr/share/icons/gnome/scalable/emblems</IconPath>
+    <IconPath>/usr/share/icons/gnome/scalable/mimetypes</IconPath>
+    <IconPath>/usr/share/icons/gnome/scalable/places</IconPath>
+    <IconPath>/usr/share/icons/gnome/scalable/status</IconPath>
+    <IconPath>/usr/share/icons/hicolor/256x256/apps</IconPath>
+    <IconPath>/usr/share/icons/hicolor/256x256/mimetypes</IconPath>
+    <IconPath>/usr/share/icons/hicolor/32x32/actions</IconPath>
+    <IconPath>/usr/share/icons/hicolor/32x32/apps</IconPath>
+    <IconPath>/usr/share/icons/hicolor/32x32/categories</IconPath>
+    <IconPath>/usr/share/icons/hicolor/32x32/devices</IconPath>
+    <IconPath>/usr/share/icons/hicolor/32x32/emblems</IconPath>
+    <IconPath>/usr/share/icons/hicolor/32x32/mimetypes</IconPath>
+    <IconPath>/usr/share/icons/hicolor/32x32/status</IconPath>
+    <IconPath>/usr/share/icons/hicolor/512x512/apps</IconPath>
+    <IconPath>/usr/share/icons/hicolor/512x512/mimetypes</IconPath>
+    <IconPath>/usr/share/icons/hicolor/scalable/actions</IconPath>
+    <IconPath>/usr/share/icons/hicolor/scalable/apps</IconPath>
+    <IconPath>/usr/share/icons/hicolor/scalable/categories</IconPath>
+    <IconPath>/usr/share/icons/hicolor/scalable/devices</IconPath>
+    <IconPath>/usr/share/icons/hicolor/scalable/emblems</IconPath>
+    <IconPath>/usr/share/icons/hicolor/scalable/mimetypes</IconPath>
+    <IconPath>/usr/share/icons/hicolor/scalable/places</IconPath>
+    <IconPath>/usr/share/icons/hicolor/scalable/status</IconPath>
+    <IconPath>/usr/share/icons</IconPath>
+    <IconPath>/usr/share/pixmaps</IconPath>
+    <IconPath>
+        /usr/local/share/jwm
+    </IconPath>
+
+    <!-- Virtual Desktops -->
+    <!-- Desktop tags can be contained within Desktops for desktop names. -->
+    <Desktops width="4" height="1">
+        <!-- Default background. Note that a Background tag can be
+              contained within a Desktop tag to give a specific background
+              for that desktop.
+         -->
+        <Background type="solid">#111111</Background>
+    </Desktops>
+
+    <!-- Double click speed (in milliseconds) -->
+    <DoubleClickSpeed>400</DoubleClickSpeed>
+
+    <!-- Double click delta (in pixels) -->
+    <DoubleClickDelta>2</DoubleClickDelta>
+
+    <!-- The focus model (sloppy or click) -->
+    <FocusModel>sloppy</FocusModel>
+
+    <!-- The snap mode (none, screen, or border) -->
+    <SnapMode distance="10">border</SnapMode>
+
+    <!-- The move mode (outline or opaque) -->
+    <MoveMode>opaque</MoveMode>
+
+    <!-- The resize mode (outline or opaque) -->
+    <ResizeMode>opaque</ResizeMode>
+
+    <!-- Key bindings -->
+    <Key key="Up">up</Key>
+    <Key key="Down">down</Key>
+    <Key key="Right">right</Key>
+    <Key key="Left">left</Key>
+    <Key key="h">left</Key>
+    <Key key="j">down</Key>
+    <Key key="k">up</Key>
+    <Key key="l">right</Key>
+    <Key key="Return">select</Key>
+    <Key key="Escape">escape</Key>
+
+    <Key mask="A" key="Tab">nextstacked</Key>
+    <Key mask="A" key="F4">close</Key>
+    <Key mask="A" key="#">desktop#</Key>
+    <Key mask="A" key="F1">root:1</Key>
+    <Key mask="A" key="F2">window</Key>
+    <Key mask="A" key="F10">maximize</Key>
+    <Key mask="A" key="Right">rdesktop</Key>
+    <Key mask="A" key="Left">ldesktop</Key>
+    <Key mask="A" key="Up">udesktop</Key>
+    <Key mask="A" key="Down">ddesktop</Key>
+
+</JWM>

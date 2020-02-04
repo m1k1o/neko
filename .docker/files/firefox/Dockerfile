@@ -11,7 +11,6 @@ RUN set -eux; apt-get update; \
     wget -O /usr/lib/firefox-esr/distribution/extensions/nordvpnproxy@nordvpn.com.xpi https://addons.mozilla.org/firefox/downloads/latest/nordvpn-proxy-extension/latest.xpi; \
     #
     # clean up
-    apt-get autoremove -y; \
     apt-get clean -y; \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/*
 
