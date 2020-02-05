@@ -40,6 +40,8 @@ cp files/default.pa /etc/pulse/default.pa
 cp files/supervisord.conf /etc/neko/supervisord.conf
 cp files/openbox.xml /etc/neko/openbox.xml
 
+chmod +x /usr/bin/dbus
+
 #
 # remove old configs
 rm -rf /etc/neko/supervisord/*.conf
