@@ -9,9 +9,6 @@ services:
       - "59000-59100:59000-59100/udp"
     environment:
       DISPLAY: :99.0
-      SCREEN_WIDTH: 1280
-      SCREEN_HEIGHT: 720
-      SCREEN_DEPTH: 24
       NEKO_PASSWORD: neko
       NEKO_ADMIN: admin
       NEKO_BIND: :8080
