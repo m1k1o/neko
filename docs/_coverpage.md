@@ -9,4 +9,4 @@
 
 <!-- background color -->
 
-![color](#18191c)
+![color](#e2e2e2)
