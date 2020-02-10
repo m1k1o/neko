@@ -6,17 +6,21 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
   <meta name="description" content="A self hosted virtual browser (rabb.it clone) that runs in docker">
   <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-  <link rel="stylesheet" href="//unpkg.com/docsify/lib/themes/vue.css">
+  <link rel="stylesheet" href="//unpkg.com/docsify/lib/themes/dark.css">
   <style>
     .app-name img { max-width: 70%; }
     nav.app-nav li ul { min-width: 100px; }
+    .search { border-bottom: 1px solid rgba(0,0,0,.07) !important; }
+    .search .matching-post { border-bottom: 1px solid rgba(0,0,0,.3) !important; }
+    section tr:nth-child(2n) { background-color: #333333 !important; }
+    .markdown-section td, .markdown-section th { border: 1px solid #777 !important; }
   </style>
 </head>
 <body>
   <div id="app"></div>
   <script>
     window.$docsify = {
-      logo: '/_media/logo.svg',
+      logo: '/_media/logo.png',
       formatUpdated: '{MM}/{DD} {HH}:{mm}',
       auto2top: true,
       coverpage: true,
@@ -28,7 +32,7 @@
       subMaxLevel: 2,
       name: 'neko',
       repo: 'nurdism/neko',
-      themeColor: '#E53935'
+      themeColor: '#19bd9c'
     }
   </script>
   <script src="//unpkg.com/docsify/lib/docsify.min.js"></script>

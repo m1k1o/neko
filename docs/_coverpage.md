@@ -1,0 +1,12 @@
+<!-- _coverpage.md -->
+
+<img src="_media/logo.png" width="450" height="auto"/>
+
+> A self hosted virtual browser that runs in docker
+
+[GitHub](https://github.com/nurdism/neko/)
+[Get Started](#neko)
+
+<!-- background color -->
+
+![color](#18191c)
