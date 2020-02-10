@@ -28,7 +28,7 @@ RUN set -eux; apt-get update; \
 #
 # install neko dependencies
 RUN set -eux; apt-get update; \
-    apt-get install -y --no-install-recommends wget ca-certificates pulseaudio openbox dbus-x11 xvfb supervisor; \
+    apt-get install -y --no-install-recommends wget ca-certificates pulseaudio openbox dbus-x11 xserver-xorg-video-dummy supervisor; \
     apt-get install -y --no-install-recommends libxv1 libopus0 libvpx4; \
     #
     # create a non-root user
@@ -66,9 +66,6 @@ COPY .build/gst/local /gst/local/
 #
 # env
 ENV USER=$USERNAME
-ENV SCREEN_WIDTH=1280
-ENV SCREEN_HEIGHT=720
-ENV SCREEN_DEPTH=24
 ENV DISPLAY=:99.0
 
 #
@@ -77,6 +74,7 @@ COPY .docker/files/dbus /usr/bin/dbus
 COPY .docker/files/openbox.xml /etc/neko/openbox.xml
 COPY .docker/files/neko/supervisord.conf /etc/neko/supervisord/neko.conf
 COPY .docker/files/supervisord.conf /etc/neko/supervisord.conf
+COPY .docker/files/xorg.conf /etc/neko/xorg.conf
 COPY .docker/files/default.pa /etc/pulse/default.pa
 
 #

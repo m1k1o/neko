@@ -38,6 +38,7 @@ mkdir -p /etc/neko/supervisord
 cp files/dbus /usr/bin/dbus
 cp files/default.pa /etc/pulse/default.pa
 cp files/supervisord.conf /etc/neko/supervisord.conf
+cp files/xorg.conf /etc/neko/xorg.conf
 cp files/openbox.xml /etc/neko/openbox.xml
 
 chmod +x /usr/bin/dbus
