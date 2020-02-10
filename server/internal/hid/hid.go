@@ -1,7 +1,8 @@
 // NOTE: I have no fucking clue what I'm doing with this,
 // it works, but I am positive I'm doing this very wrong...
-// should I be freeing these strings? does go cg them?
+// should I be freeing these strings? does go gc them?
 // pretty sure this *isn't* thread safe either.... /shrug
+// if you know a better way to get this done *please* make a pr <3
 
 package hid
 
