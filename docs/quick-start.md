@@ -7,9 +7,9 @@
     | Resolution  | Cores | Ram   | Recommendation   |
     |-------------|-------|-------|------------------|
     | 1024×576@30 | 2     | 2gb   | Not Recommended  |
-    | 1280x720@30 | 4     | 4gb   | Good Performance |
-    | 1280x720@30 | 6     | 4-6gb | Recommended      |
-    | 1280x720@30 | 8     | 8gb+  | Best Performance |
+    | 1280x720@30 | 4     | 3gb   | Good Performance |
+    | 1280x720@30 | 6     | 4gb   | Recommended      |
+    | 1280x720@30 | 8     | 4gb+  | Best Performance |
   
     *Why are the specs so high?* : If you think about it, you have to run a full desktop, a browser (a resource hog on its own) *and* encode/transmit the desktop, there's a lot going on and so it demands some power.
 
@@ -31,3 +31,10 @@
 5. Visit the IP address server in your browser and login, the default password is `neko`
 
 > 💡 **Protip**: Run `nano docker-compose.yaml` to edit the settings, then press `ctrl+x` to exit and save the file.
+
+## Well known cloud providers
+* [Hetzner Cloud](https://www.hetzner.com/cloud)
+* [Scaleway](https://www.scaleway.com/)
+* [Digital Ocean](https://www.digitalocean.com/)
+* [Linode](https://www.linode.com/)
+* [Vultr](https://www.vultr.com/)

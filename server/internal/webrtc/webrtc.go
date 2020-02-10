@@ -16,17 +16,18 @@ import (
 
 func New(sessions types.SessionManager, config *config.WebRTC) *WebRTCManager {
 	logger := log.With().Str("module", "webrtc").Logger()
-	setings := webrtc.SettingEngine{
+	settings := webrtc.SettingEngine{
 		LoggerFactory: loggerFactory{
 			logger: logger,
 		},
 	}
 
-	setings.SetEphemeralUDPPortRange(config.EphemeralStart, config.EphemeralEnd)
+	settings.SetNetworkTypes([]webrtc.NetworkType{webrtc.NetworkTypeUDP4})
+	settings.SetEphemeralUDPPortRange(config.EphemeralStart, config.EphemeralEnd)
 
 	return &WebRTCManager{
 		logger:   logger,
-		setings:  setings,
+		settings: settings,
 		cleanup:  time.NewTicker(1 * time.Second),
 		shutdown: make(chan bool),
 		sessions: sessions,
@@ -44,7 +45,7 @@ func New(sessions types.SessionManager, config *config.WebRTC) *WebRTCManager {
 
 type WebRTCManager struct {
 	logger        zerolog.Logger
-	setings       webrtc.SettingEngine
+	settings      webrtc.SettingEngine
 	sessions      types.SessionManager
 	videoPipeline *gst.Pipeline
 	audioPipeline *gst.Pipeline
@@ -146,7 +147,7 @@ func (m *WebRTCManager) CreatePeer(id string, sdp string) (string, types.Peer, e
 	engine.PopulateFromSDP(description)
 
 	// Create API with MediaEngine and SettingEngine
-	api := webrtc.NewAPI(webrtc.WithMediaEngine(engine), webrtc.WithSettingEngine(m.setings))
+	api := webrtc.NewAPI(webrtc.WithMediaEngine(engine), webrtc.WithSettingEngine(m.settings))
 
 	// Create new peer connection
 	connection, err := api.NewPeerConnection(*m.configuration)

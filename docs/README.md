@@ -1,5 +1,5 @@
 <div align="center">
-<img src="_media/logo.png" width="450" height="auto"/>
+<a href="https://n.eko.moe/#/" ><img src="https://raw.githubusercontent.com/nurdism/neko/master/docs/_media/logo.png" width="450" height="auto"/></a>
 <br/>
 <br/>
 <img src="https://i.imgur.com/ZSzbQr7.gif" width="650" height="auto"/>
