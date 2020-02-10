@@ -7,17 +7,19 @@ import (
 	"github.com/pion/webrtc/v2"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"n.eko.moe/neko/internal/utils"
 )
 
 type WebRTC struct {
-	Device         string
-	AudioCodec     string
-	AudioParams    string
-	Display        string
-	VideoCodec     string
-	VideoParams    string
-	EphemeralStart uint16
-	EphemeralEnd   uint16
+	Device       string
+	AudioCodec   string
+	AudioParams  string
+	Display      string
+	VideoCodec   string
+	VideoParams  string
+	EphemeralMin uint16
+	EphemeralMax uint16
+	NAT1To1IPs   []string
 }
 
 func (WebRTC) Init(cmd *cobra.Command) error {
@@ -83,6 +85,11 @@ func (WebRTC) Init(cmd *cobra.Command) error {
 		return err
 	}
 
+	cmd.PersistentFlags().StringSlice("ip", []string{}, "sets a list of external IP addresses of 1:1 (D)NAT and a candidate type for which the external IP address is used")
+	if err := viper.BindPFlag("ip", cmd.PersistentFlags().Lookup("ip")); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -113,19 +120,34 @@ func (s *WebRTC) Set() {
 	s.Display = viper.GetString("display")
 	s.VideoCodec = videoCodec
 	s.VideoParams = viper.GetString("vparams")
-	s.EphemeralStart = 59000
-	s.EphemeralEnd = 59100
+	s.NAT1To1IPs = viper.GetStringSlice("ip")
 
+	ip, err := utils.GetIP()
+	if err == nil {
+		s.NAT1To1IPs = append(s.NAT1To1IPs, ip)
+	}
+
+	min := uint16(59000)
+	max := uint16(59100)
 	epr := viper.GetString("epr")
 	ports := strings.SplitN(epr, "-", -1)
 	if len(ports[0]) > 1 {
 		start, err := strconv.ParseUint(ports[0], 16, 16)
 		if err == nil {
-			s.EphemeralStart = uint16(start)
+			min = uint16(start)
 		}
+
 		end, err := strconv.ParseUint(ports[1], 16, 16)
 		if err == nil {
-			s.EphemeralEnd = uint16(end)
+			max = uint16(end)
 		}
+	}
+
+	if min > max {
+		s.EphemeralMin = max
+		s.EphemeralMax = min
+	} else {
+		s.EphemeralMin = min
+		s.EphemeralMax = max
 	}
 }

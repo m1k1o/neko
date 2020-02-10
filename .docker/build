@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# sudo docker run -p 80:8080 -p 59000-59100:59000-59100/udp --cap-add SYS_ADMIN nurdism/neko:chromium 
+# sudo docker run -p 80:8080 -p 59000-59100:59000-59100/udp --cap-add SYS_ADMIN --shm-size=1gb nurdism/neko:chromium 
 # sudo docker run -p 80:8080 -p 59000-59100:59000-59100/udp --shm-size=1gb nurdism/neko:firefox
 # sudo docker run --network host --shm-size=1gb -it nurdism/neko:base /bin/bash
 

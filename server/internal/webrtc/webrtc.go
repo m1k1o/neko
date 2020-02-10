@@ -22,8 +22,10 @@ func New(sessions types.SessionManager, config *config.WebRTC) *WebRTCManager {
 		},
 	}
 
+	settings.SetLite(true)
 	settings.SetNetworkTypes([]webrtc.NetworkType{webrtc.NetworkTypeUDP4})
-	settings.SetEphemeralUDPPortRange(config.EphemeralStart, config.EphemeralEnd)
+	settings.SetEphemeralUDPPortRange(config.EphemeralMin, config.EphemeralMax)
+	settings.SetNAT1To1IPs(config.NAT1To1IPs, webrtc.ICECandidateTypeHost)
 
 	return &WebRTCManager{
 		logger:   logger,
@@ -33,11 +35,6 @@ func New(sessions types.SessionManager, config *config.WebRTC) *WebRTCManager {
 		sessions: sessions,
 		config:   config,
 		configuration: &webrtc.Configuration{
-			ICEServers: []webrtc.ICEServer{
-				{
-					URLs: []string{"stun:stun.l.google.com:19302"},
-				},
-			},
 			SDPSemantics: webrtc.SDPSemanticsUnifiedPlanWithFallback,
 		},
 	}

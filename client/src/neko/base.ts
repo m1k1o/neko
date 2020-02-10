@@ -151,9 +151,7 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
       return
     }
 
-    this._peer = new RTCPeerConnection({
-      iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
-    })
+    this._peer = new RTCPeerConnection()
 
     this._peer.onicecandidate = event => {
       if (event.candidate === null && this._peer!.localDescription) {
@@ -167,9 +165,18 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
       }
     }
 
+    this._peer.onsignalingstatechange = event => {
+      this.emit('debug', `peer signal state chagned: ${this._peer!.signalingState}`)
+    }
+
+    this._peer.onconnectionstatechange = event => {
+      this.emit('debug', `peer connection state chagned: ${this._peer!.connectionState}`)
+    }
+
     this._peer.oniceconnectionstatechange = event => {
       this._state = this._peer!.iceConnectionState
-      this.emit('debug', `peer connection state chagned: ${this._state}`)
+
+      this.emit('debug', `peer ice connection state chagned: ${this._peer!.iceConnectionState}`)
 
       switch (this._state) {
         case 'checking':

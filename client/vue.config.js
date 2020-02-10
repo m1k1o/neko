@@ -1,6 +1,7 @@
 const path = require('path')
 
 module.exports = {
+  productionSourceMap: false,
   css: {
     loaderOptions: {
       sass: {
