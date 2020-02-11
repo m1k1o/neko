@@ -8,11 +8,17 @@ export interface Member {
 }
 
 export interface ScreenConfigurations {
-  [index: number]: ScreenConfiguration
+  [index: string]: ScreenConfiguration
 }
 
 export interface ScreenConfiguration {
-  width: string
-  height: string
-  rates: { [index: number]: number }
+  width: number
+  height: number
+  rates: { [index: string]: number }
+}
+
+export interface ScreenResolution {
+  width: number
+  height: number
+  rate: number
 }

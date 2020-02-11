@@ -10,7 +10,7 @@ import {
   ScreenEvents,
   AdminEvents,
 } from './events'
-import { Member, ScreenConfigurations } from './types'
+import { Member, ScreenConfigurations, ScreenResolution } from './types'
 
 export type WebSocketMessages =
   | WebSocketMessage
@@ -157,11 +157,8 @@ export interface ScreenResolutionMessage extends WebSocketMessage, ScreenResolut
   event: ScreenEvents
 }
 
-export interface ScreenResolutionPayload {
+export interface ScreenResolutionPayload extends ScreenResolution {
   id?: string
-  width: number
-  height: number
-  rate: number
 }
 
 export interface ScreenConfigurationsMessage extends WebSocketMessage, ScreenConfigurationsPayload {

@@ -2,14 +2,13 @@
   <vue-context class="context" ref="context">
     <template v-for="(conf, i) in configurations">
       <li
-        v-for="(fps, j) in conf.rates"
-        :key="`${i}-${j}`"
-        @click="screenSet(conf.width, conf.height, fps)"
-        :class="[conf.width === width && conf.height === height && fps === rate ? 'active' : '']"
+        :key="i"
+        @click="screenSet(conf)"
+        :class="[conf.width === width && conf.height === height && conf.rate === rate ? 'active' : '']"
       >
         <i class="fas fa-desktop"></i>
         <span>{{ conf.width }}x{{ conf.height }}</span>
-        <small>{{ fps }}</small>
+        <small>{{ conf.rate }}</small>
       </li>
     </template>
   </vue-context>
@@ -60,7 +59,7 @@
       align-content: center;
       display: flex;
       flex-direction: row;
-      padding: 8px 5px;
+      padding: 8px;
       cursor: pointer;
       border-radius: 3px;
 
@@ -99,7 +98,7 @@
 
 <script lang="ts">
   import { Component, Ref, Watch, Vue } from 'vue-property-decorator'
-  import { Member } from '~/neko/types'
+  import { ScreenResolution } from '~/neko/types'
 
   // @ts-ignore
   import { VueContext } from 'vue-context'
@@ -133,8 +132,8 @@
       this.context.open(event)
     }
 
-    screenSet(width: number, height: number, rate: number) {
-      this.$accessor.video.screenSet({ width, height, rate })
+    screenSet(resolution: ScreenResolution) {
+      this.$accessor.video.screenSet(resolution)
     }
   }
 </script>

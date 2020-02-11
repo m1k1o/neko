@@ -30,7 +30,7 @@
       </div>
       <ul v-if="!fullscreen" class="video-menu">
         <li><i @click.stop.prevent="requestFullscreen" class="fas fa-expand"></i></li>
-        <li v-if="admin"><i @click.stop.prevent="onResolution" class="fas fa-cog"></i></li>
+        <li v-if="admin"><i @click.stop.prevent="onResolution" class="fas fa-desktop"></i></li>
       </ul>
       <neko-resolution ref="resolution" />
     </div>

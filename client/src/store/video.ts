@@ -1,7 +1,7 @@
 import { getterTree, mutationTree, actionTree } from 'typed-vuex'
 import { get, set } from '~/utils/localstorage'
 import { EVENT } from '~/neko/events'
-import { ScreenConfigurations } from '~/neko/types'
+import { ScreenConfigurations, ScreenResolution } from '~/neko/types'
 import { accessor } from '~/store'
 
 export const namespaced = true
@@ -10,7 +10,7 @@ export const state = () => ({
   index: -1,
   tracks: [] as MediaStreamTrack[],
   streams: [] as MediaStream[],
-  configurations: {} as ScreenConfigurations,
+  configurations: [] as ScreenResolution[],
   width: 1280,
   height: 720,
   rate: 30,
@@ -99,7 +99,25 @@ export const mutations = mutationTree(state, {
   },
 
   setConfigurations(state, configurations: ScreenConfigurations) {
-    state.configurations = configurations
+    const data: ScreenResolution[] = []
+
+    for (const i of Object.keys(configurations)) {
+      const { width, height, rates } = configurations[i]
+      if (width >= 600 && height >= 300) {
+        for (const j of Object.keys(rates)) {
+          const rate = rates[j]
+          if (rate >= 15 && rate <= 60) {
+            data.push({
+              width,
+              height,
+              rate,
+            })
+          }
+        }
+      }
+    }
+
+    state.configurations = data.sort((a, b) => (b.width === a.width ? b.rate - a.rate : b.width - a.width))
   },
 
   setVolume(state, volume: number) {
@@ -155,12 +173,12 @@ export const actions = actionTree(
       $client.sendMessage(EVENT.SCREEN.RESOLUTION)
     },
 
-    screenSet({ state }, { width, height, rate }: { width: number; height: number; rate: number }) {
+    screenSet({ state }, resolution: ScreenResolution) {
       if (!accessor.connected || !accessor.user.admin) {
         return
       }
 
-      $client.sendMessage(EVENT.SCREEN.SET, { width, height, rate })
+      $client.sendMessage(EVENT.SCREEN.SET, resolution)
     },
   },
 )
