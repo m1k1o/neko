@@ -37,7 +37,7 @@ var (
 	// Major version when you make incompatible API changes,
 	major = "1"
 	// Minor version when you add functionality in a backwards-compatible manner, and
-	minor = "0"
+	minor = "1"
 	// Patch version when you make backwards-compatible bug fixeneko.
 	patch = "0"
 )
