@@ -1,10 +1,15 @@
 <template>
   <vue-context class="context" ref="context">
     <template v-for="(conf, i) in configurations">
-      <li v-for="(rate, j) in conf.rates" :key="`${i}-${j}`" @click="screenSet(conf.width, conf.height, rate)">
+      <li
+        v-for="(fps, j) in conf.rates"
+        :key="`${i}-${j}`"
+        @click="screenSet(conf.width, conf.height, fps)"
+        :class="[conf.width === width && conf.height === height && fps === rate ? 'active' : '']"
+      >
         <i class="fas fa-desktop"></i>
         <span>{{ conf.width }}x{{ conf.height }}</span>
-        <small>{{ rate }}</small>
+        <small>{{ fps }}</small>
       </li>
     </template>
   </vue-context>
@@ -57,6 +62,7 @@
       flex-direction: row;
       padding: 8px 5px;
       cursor: pointer;
+      border-radius: 3px;
 
       i {
         margin-right: 10px;
@@ -72,6 +78,7 @@
         align-self: flex-end;
       }
 
+      &.active,
       &:hover,
       &:focus {
         text-decoration: none;
@@ -105,6 +112,18 @@
   })
   export default class extends Vue {
     @Ref('context') readonly context!: any
+
+    get width() {
+      return this.$accessor.video.width
+    }
+
+    get height() {
+      return this.$accessor.video.height
+    }
+
+    get rate() {
+      return this.$accessor.video.rate
+    }
 
     get configurations() {
       return this.$accessor.video.configurations
