@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import { useAccessor, mutationTree, actionTree } from 'typed-vuex'
+import { EVENT } from '~/neko/events'
 import { get, set } from '~/utils/localstorage'
 
 import * as video from './video'
@@ -49,6 +50,22 @@ export const actions = actionTree(
   {
     initialise(store) {
       accessor.emoji.initialise()
+    },
+
+    lock() {
+      if (!accessor.connected || !accessor.user.admin) {
+        return
+      }
+
+      $client.sendMessage(EVENT.ADMIN.LOCK)
+    },
+
+    unlock() {
+      if (!accessor.connected || !accessor.user.admin) {
+        return
+      }
+
+      $client.sendMessage(EVENT.ADMIN.UNLOCK)
     },
 
     login({ state }, { username, password }: { username: string; password: string }) {

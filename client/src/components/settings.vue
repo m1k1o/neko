@@ -108,7 +108,7 @@
             right: 0;
             bottom: 0;
             background-color: $background-tertiary;
-            transition: 0.4s;
+            transition: 0.2s;
             border-radius: 34px;
 
             &:before {

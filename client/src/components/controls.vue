@@ -9,8 +9,30 @@
           'fa-keyboard',
           'request',
         ]"
+        v-tooltip="{
+          content: !hosted || hosting ? (hosting ? 'Release Controls' : 'Request Controls') : '',
+          placement: 'top',
+          offset: 5,
+          boundariesElement: 'body',
+          delay: { show: 300, hide: 100 },
+        }"
         @click.stop.prevent="toggleControl"
       />
+    </li>
+    <li>
+      <label
+        class="switch"
+        v-tooltip="{
+          content: hosting ? (locked ? 'Unlock Controls' : 'Lock Controls') : '',
+          placement: 'top',
+          offset: 5,
+          boundariesElement: 'body',
+          delay: { show: 300, hide: 100 },
+        }"
+      >
+        <input type="checkbox" v-model="locked" :disabled="!hosting" />
+        <span />
+      </label>
     </li>
     <li>
       <i
@@ -43,7 +65,7 @@
       cursor: pointer;
 
       i {
-        padding: 0 10px;
+        padding: 0 5px;
 
         &.faded {
           color: rgba($color: $text-normal, $alpha: 0.4);
@@ -66,7 +88,7 @@
         input[type='range'] {
           width: 100%;
           background: transparent;
-          width: 200px;
+          width: 150px;
           height: 20px;
           -webkit-appearance: none;
 
@@ -102,6 +124,69 @@
             cursor: pointer;
             background: $style-primary;
             border-radius: 2px;
+          }
+        }
+      }
+
+      .switch {
+        margin: 0 5px;
+        display: block;
+        position: relative;
+        width: 42px;
+        height: 24px;
+
+        input[type='checkbox'] {
+          opacity: 0;
+          width: 0;
+          height: 0;
+        }
+
+        span {
+          position: absolute;
+          cursor: pointer;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-color: $background-secondary;
+          transition: 0.2s;
+          border-radius: 34px;
+
+          &:before {
+            color: $background-tertiary;
+            font-weight: 900;
+            font-family: 'Font Awesome 5 Free';
+            content: '\f3c1';
+            font-size: 8px;
+            line-height: 18px;
+            text-align: center;
+            position: absolute;
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+          }
+        }
+      }
+
+      input[type='checkbox'] {
+        &:checked + span {
+          background-color: $style-primary;
+
+          &:before {
+            content: '\f023';
+            transform: translateX(18px);
+          }
+        }
+
+        &:disabled + span {
+          &:before {
+            content: '';
+            background-color: rgba($color: $text-normal, $alpha: 0.4);
           }
         }
       }
@@ -147,6 +232,14 @@
 
     get playable() {
       return this.$accessor.video.playable
+    }
+
+    get locked() {
+      return this.$accessor.remote.locked && this.$accessor.remote.hosting
+    }
+
+    set locked(locked: boolean) {
+      this.$accessor.remote.setLocked(locked)
     }
 
     toggleControl() {

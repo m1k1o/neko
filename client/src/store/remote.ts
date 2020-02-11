@@ -8,6 +8,7 @@ export const namespaced = true
 export const state = () => ({
   id: '',
   clipboard: '',
+  locked: false,
 })
 
 export const getters = getterTree(state, {
@@ -35,9 +36,14 @@ export const mutations = mutationTree(state, {
     state.clipboard = clipboard
   },
 
+  setLocked(state, locked: boolean) {
+    state.locked = locked
+  },
+
   reset(state) {
     state.id = ''
     state.clipboard = ''
+    state.locked = false
   },
 })
 
@@ -126,22 +132,6 @@ export const actions = actionTree(
       }
 
       $client.sendMessage(EVENT.ADMIN.GIVE, { id: member.id })
-    },
-
-    lock() {
-      if (!accessor.connected || !accessor.user.admin) {
-        return
-      }
-
-      $client.sendMessage(EVENT.ADMIN.LOCK)
-    },
-
-    unlock() {
-      if (!accessor.connected || !accessor.user.admin) {
-        return
-      }
-
-      $client.sendMessage(EVENT.ADMIN.UNLOCK)
     },
   },
 )

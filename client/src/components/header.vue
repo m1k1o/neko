@@ -106,9 +106,9 @@
     toggleLock() {
       if (this.admin) {
         if (this.locked) {
-          this.$accessor.remote.unlock()
+          this.$accessor.unlock()
         } else {
-          this.$accessor.remote.lock()
+          this.$accessor.lock()
         }
       }
     }

@@ -206,6 +206,10 @@
       return this.$accessor.settings.autoplay
     }
 
+    get locked() {
+      return this.$accessor.remote.locked
+    }
+
     get scroll() {
       return this.$accessor.settings.scroll
     }
@@ -240,8 +244,6 @@
 
     @Watch('width')
     onWidthChanged(width: number) {
-      const { videoWidth, videoHeight } = this._video
-      console.log({ videoWidth, videoHeight })
       this.onResise()
     }
 
@@ -321,7 +323,7 @@
       })
 
       this._video.addEventListener('error', event => {
-        console.error(event.error)
+        this.$log.error(event.error)
         this.$accessor.video.setPlayable(false)
       })
 
@@ -344,7 +346,7 @@
         .then(() => {
           this.onResise()
         })
-        .catch(err => console.log(err))
+        .catch(err => this.$log.error(err))
     }
 
     pause() {
@@ -385,7 +387,7 @@
               this.$accessor.remote.sendClipboard(text)
             }
           })
-          .catch(console.error)
+          .catch(this.$log.error)
       }
     }
 
@@ -399,7 +401,7 @@
     }
 
     onWheel(e: WheelEvent) {
-      if (!this.hosting) {
+      if (!this.hosting || this.locked) {
         return
       }
       this.onMousePos(e)
@@ -419,7 +421,7 @@
     }
 
     onMouseDown(e: MouseEvent) {
-      if (!this.hosting) {
+      if (!this.hosting || this.locked) {
         return
       }
       this.onMousePos(e)
@@ -427,7 +429,7 @@
     }
 
     onMouseUp(e: MouseEvent) {
-      if (!this.hosting) {
+      if (!this.hosting || this.locked) {
         return
       }
       this.onMousePos(e)
@@ -435,7 +437,7 @@
     }
 
     onMouseMove(e: MouseEvent) {
-      if (!this.hosting) {
+      if (!this.hosting || this.locked) {
         return
       }
       this.onMousePos(e)
@@ -452,14 +454,14 @@
     }
 
     onKeyDown(e: KeyboardEvent) {
-      if (!this.focused || !this.hosting) {
+      if (!this.focused || !this.hosting || this.locked) {
         return
       }
       this.$client.sendData('keydown', { key: e.keyCode })
     }
 
     onKeyUp(e: KeyboardEvent) {
-      if (!this.focused || !this.hosting) {
+      if (!this.focused || !this.hosting || this.locked) {
         return
       }
       this.$client.sendData('keyup', { key: e.keyCode })
