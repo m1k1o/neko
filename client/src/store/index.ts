@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import { useAccessor, mutationTree, actionTree } from 'typed-vuex'
+import { get, set } from '~/utils/localstorage'
 
 import * as video from './video'
 import * as chat from './chat'
@@ -11,12 +12,19 @@ import * as client from './client'
 import * as emoji from './emoji'
 
 export const state = () => ({
+  username: get<string>('username', ''),
+  password: get<string>('password', ''),
   connecting: false,
   connected: false,
   locked: false,
 })
 
 export const mutations = mutationTree(state, {
+  setLogin(state, { username, password }: { username: string; password: string }) {
+    state.username = username
+    state.password = password
+  },
+
   setLocked(state, locked: boolean) {
     state.locked = locked
   },
@@ -29,20 +37,30 @@ export const mutations = mutationTree(state, {
   setConnected(state, connected: boolean) {
     state.connected = connected
     state.connecting = false
+    if (connected) {
+      set('username', state.username)
+      set('password', state.password)
+    }
   },
 })
 
 export const actions = actionTree(
   { state, mutations },
   {
-    //
     initialise(store) {
       accessor.emoji.initialise()
     },
 
-    //
-    connect(store, { username, password }: { username: string; password: string }) {
-      $client.connect(password, username)
+    login({ state }, { username, password }: { username: string; password: string }) {
+      accessor.setLogin({ username, password })
+      $client.login(password, username)
+    },
+
+    logout({ state }) {
+      accessor.setLogin({ username: '', password: '' })
+      set('username', '')
+      set('password', '')
+      $client.logout()
     },
   },
 )

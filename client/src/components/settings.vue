@@ -35,6 +35,9 @@
           <span />
         </label>
       </li>
+      <li v-if="connected">
+        <button @click.stop.prevent="logout">Logout</button>
+      </li>
     </ul>
   </div>
 </template>
@@ -67,6 +70,22 @@
           margin-right: auto;
           height: 24px;
           line-height: 24px;
+        }
+
+        button {
+          cursor: pointer;
+          border-radius: 5px;
+          padding: 4px;
+          background: $style-primary;
+          color: $text-normal;
+          text-align: center;
+          text-transform: uppercase;
+          font-weight: bold;
+          line-height: 30px;
+          margin: 5px 0;
+          border: none;
+          display: block;
+          width: 100%;
         }
 
         .switch {
@@ -173,6 +192,10 @@
 
   @Component({ name: 'neko-settings' })
   export default class extends Vue {
+    get connected() {
+      return this.$accessor.connected
+    }
+
     get scroll() {
       return this.$accessor.settings.scroll.toString()
     }
@@ -211,6 +234,10 @@
 
     set chat_sound(value: boolean) {
       this.$accessor.settings.setSound(value)
+    }
+
+    logout() {
+      this.$accessor.logout()
     }
   }
 </script>

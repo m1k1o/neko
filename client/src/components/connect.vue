@@ -9,7 +9,7 @@
         <span>Please Login</span>
         <input type="text" placeholder="Username" v-model="username" />
         <input type="password" placeholder="Password" v-model="password" />
-        <button type="submit" @click.stop.prevent="connect">
+        <button type="submit" @click.stop.prevent="login">
           Connect
         </button>
       </form>
@@ -147,17 +147,24 @@
 <script lang="ts">
   import { Component, Ref, Watch, Vue } from 'vue-property-decorator'
   import { get, set } from '~/utils/localstorage'
+
   @Component({ name: 'neko-connect' })
   export default class extends Vue {
     private username = ''
     private password = ''
 
+    mounted() {
+      if (this.$accessor.username !== '' && this.$accessor.password !== '') {
+        this.$accessor.login({ username: this.$accessor.username, password: this.$accessor.password })
+      }
+    }
+
     get connecting() {
       return this.$accessor.connecting
     }
 
-    connect() {
-      this.$accessor.connect({ username: this.username, password: this.password })
+    login() {
+      this.$accessor.login({ username: this.username, password: this.password })
     }
   }
 </script>

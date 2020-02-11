@@ -73,6 +73,28 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
     }
   }
 
+  protected disconnect() {
+    if (this._timeout) {
+      clearTimeout(this._timeout)
+    }
+
+    if (this.socketOpen) {
+      try {
+        this._ws!.close()
+      } catch (err) {}
+      this._ws = undefined
+    }
+
+    if (this.peerConnected) {
+      try {
+        this._peer!.close()
+      } catch (err) {}
+      this._peer = undefined
+    }
+
+    this._state = 'disconnected'
+  }
+
   public sendData(event: 'wheel' | 'mousemove', data: { x: number; y: number }): void
   public sendData(event: 'mousedown' | 'mouseup' | 'keydown' | 'keyup', data: { key: number }): void
   public sendData(event: string, data: any) {
@@ -165,14 +187,6 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
       }
     }
 
-    this._peer.onsignalingstatechange = event => {
-      this.emit('debug', `peer signal state chagned: ${this._peer!.signalingState}`)
-    }
-
-    this._peer.onconnectionstatechange = event => {
-      this.emit('debug', `peer connection state chagned: ${this._peer!.connectionState}`)
-    }
-
     this._peer.oniceconnectionstatechange = event => {
       this._state = this._peer!.iceConnectionState
 
@@ -213,7 +227,7 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
 
   private setRemoteDescription(payload: SignalPayload) {
     if (this.peerConnected) {
-      this.emit('warn', `received ${event} with no peer!`)
+      this.emit('warn', `attempting to set remote description while peer connected`, payload)
       return
     }
     this._peer!.setRemoteDescription({ type: 'answer', sdp: payload.sdp })
@@ -292,24 +306,7 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
   }
 
   protected onDisconnected(reason?: Error) {
-    if (this._timeout) {
-      clearTimeout(this._timeout)
-    }
-
-    if (this.socketOpen) {
-      try {
-        this._ws!.close()
-      } catch (err) {}
-      this._ws = undefined
-    }
-
-    if (this.peerConnected) {
-      try {
-        this._peer!.close()
-      } catch (err) {}
-      this._peer = undefined
-    }
-
+    this.disconnect()
     this.emit('debug', `disconnected:`, reason)
     this[EVENT.DISCONNECTED](reason)
   }

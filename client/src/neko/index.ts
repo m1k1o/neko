@@ -28,22 +28,40 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   private $vue!: Vue
   private $accessor!: typeof accessor
 
+  private get id() {
+    return this.$accessor.user.id
+  }
+
   init(vue: Vue) {
     this.$vue = vue
     this.$accessor = vue.$accessor
   }
 
-  connect(password: string, username: string) {
+  private cleanup() {
+    this.$accessor.setConnected(false)
+    this.$accessor.remote.reset()
+    this.$accessor.user.reset()
+    this.$accessor.video.reset()
+    this.$accessor.chat.reset()
+  }
+
+  login(password: string, username: string) {
     const url =
       process.env.NODE_ENV === 'development'
         ? `ws://${location.host.split(':')[0]}:${process.env.VUE_APP_SERVER_PORT}/`
         : `${/https/gi.test(location.protocol) ? 'wss' : 'ws'}://${location.host}/`
 
-    super.connect(url, password, username)
+    this.connect(url, password, username)
   }
 
-  private get id() {
-    return this.$accessor.user.id
+  logout() {
+    this.disconnect()
+    this.cleanup()
+    this.$vue.$swal({
+      title: 'You have logged out!',
+      icon: 'info',
+      confirmButtonText: 'ok',
+    })
   }
 
   /////////////////////////////
@@ -67,13 +85,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   }
 
   protected [EVENT.DISCONNECTED](reason?: Error) {
-    this.$accessor.setConnected(false)
-
-    this.$accessor.remote.reset()
-    this.$accessor.user.reset()
-    this.$accessor.video.reset()
-    this.$accessor.chat.reset()
-
+    this.cleanup()
     this.$vue.$notify({
       group: 'neko',
       type: 'error',
