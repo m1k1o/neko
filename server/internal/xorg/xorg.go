@@ -292,15 +292,29 @@ func CheckKeys(duration time.Duration) {
 	}
 }
 
+func ValidScreenSize(width int, height int, rate int) bool {
+	for _, size := range ScreenConfigurations {
+		if size.Width == width && size.Height == height {
+			for _, fps := range size.Rates {
+				if int16(rate) == fps {
+					return true
+				}
+			}
+		}
+	}
+
+	return false
+}
+
 func ChangeScreenSize(width int, height int, rate int) error {
 	mu.Lock()
 	defer mu.Unlock()
 
 	for index, size := range ScreenConfigurations {
 		if size.Width == width && size.Height == height {
-			for _, srate := range size.Rates {
-				if int16(rate) == srate {
-					C.XSetScreenConfiguration(C.int(index), C.short(srate))
+			for _, fps := range size.Rates {
+				if int16(rate) == fps {
+					C.XSetScreenConfiguration(C.int(index), C.short(fps))
 					return nil
 				}
 			}
