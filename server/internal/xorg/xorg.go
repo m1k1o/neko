@@ -7,8 +7,8 @@
 package xorg
 
 /*
-#cgo linux CFLAGS: -I/usr/src
-#cgo linux LDFLAGS: -L/usr/src -lX11 -lXtst -lXrandr -lclipboard
+#cgo linux CFLAGS: -I/usr/src -I/usr/local/include/
+#cgo linux LDFLAGS: /usr/local/lib/libclipboard.a -L/usr/src -L/usr/local/lib -lX11 -lXtst -lXrandr -lxcb
 
 #include "xorg.h"
 */

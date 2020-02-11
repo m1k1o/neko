@@ -102,7 +102,7 @@ RUN set -eux; \
     cd /tmp ; \
     git clone https://github.com/jtanx/libclipboard ; \
     cd libclipboard ; \
-    cmake -DBUILD_SHARED_LIBS=ON -DLIBCLIPBOARD_FORCE_X11=on -DLIBCLIPBOARD_ADD_SOVERSION=ON --prefix=/usr/local . ; \
+    cmake . ; \
     make -j4; \
     make install; \ 
     rm -rf /tmp/libclipboard

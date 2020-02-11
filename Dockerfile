@@ -9,27 +9,10 @@ ARG USER_UID=1000
 ARG USER_GID=$USER_UID
 
 #
-# install libclipboard
-RUN set -eux; apt-get update; \
-    apt-get install -y --no-install-recommends ca-certificates git cmake pkg-config build-essential libx11-dev ; \
-    cd /tmp ; \
-    git clone https://github.com/jtanx/libclipboard ; \
-    cd libclipboard ; \
-    cmake -DBUILD_SHARED_LIBS=ON -DLIBCLIPBOARD_FORCE_X11=on -DLIBCLIPBOARD_ADD_SOVERSION=ON --prefix=/usr/local . ; \
-    make -j4; \
-    make install; \ 
-    rm -rf /tmp/libclipboard ; \
-    #
-    # clean up
-    apt-get autoremove -y git cmake pkg-config build-essential libx11-dev; \
-    apt-get clean -y; \
-    rm -rf /var/lib/apt/lists/* /var/cache/apt/*
-
-#
 # install neko dependencies
 RUN set -eux; apt-get update; \
     apt-get install -y --no-install-recommends wget ca-certificates pulseaudio openbox dbus-x11 xserver-xorg-video-dummy supervisor; \
-    apt-get install -y --no-install-recommends libxrandr2 libxv1 libopus0 libvpx4; \
+    apt-get install -y --no-install-recommends libxcb1 libxrandr2 libxv1 libopus0 libvpx4; \
     #
     # create a non-root user
     groupadd --gid $USER_GID $USERNAME; \
