@@ -1,6 +1,7 @@
 package config
 
 import (
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -20,6 +21,9 @@ type WebRTC struct {
 	EphemeralMin uint16
 	EphemeralMax uint16
 	NAT1To1IPs   []string
+	ScreenWidth  int
+	ScreenHeight int
+	ScreenRate   int
 }
 
 func (WebRTC) Init(cmd *cobra.Command) error {
@@ -39,6 +43,11 @@ func (WebRTC) Init(cmd *cobra.Command) error {
 	}
 
 	cmd.PersistentFlags().String("video", "", "video codec parameters to use for streaming (unused)")
+	if err := viper.BindPFlag("vparams", cmd.PersistentFlags().Lookup("video")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().String("screen", "1280x720@30", "default screen resolution and framerate")
 	if err := viper.BindPFlag("vparams", cmd.PersistentFlags().Lookup("video")); err != nil {
 		return err
 	}
@@ -149,5 +158,24 @@ func (s *WebRTC) Set() {
 	} else {
 		s.EphemeralMin = min
 		s.EphemeralMax = max
+	}
+
+	s.ScreenWidth = 1280
+	s.ScreenHeight = 720
+	s.ScreenRate = 30
+
+	r := regexp.MustCompile(`([0-9]{1,4})x([0-9]{1,4})@([0-9]{1,3})`)
+	res := r.FindStringSubmatch(viper.GetString("screen"))
+
+	if len(res) > 0 {
+		width, err1 := strconv.ParseInt(res[1], 10, 64)
+		height, err2 := strconv.ParseInt(res[1], 10, 64)
+		rate, err3 := strconv.ParseInt(res[1], 10, 64)
+
+		if err1 == nil && err2 == nil && err3 == nil {
+			s.ScreenWidth = int(width)
+			s.ScreenHeight = int(height)
+			s.ScreenRate = int(rate)
+		}
 	}
 }

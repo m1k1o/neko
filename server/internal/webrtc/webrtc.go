@@ -56,6 +56,14 @@ type WebRTCManager struct {
 func (m *WebRTCManager) Start() {
 	xorg.Display(m.config.Display)
 
+	if !xorg.ValidScreenSize(m.config.ScreenWidth, m.config.ScreenHeight, m.config.ScreenRate) {
+		m.logger.Warn().Msgf("invalid screen option %dx%d@%d", m.config.ScreenWidth, m.config.ScreenHeight, m.config.ScreenRate)
+	} else {
+		if err := xorg.ChangeScreenSize(m.config.ScreenWidth, m.config.ScreenHeight, m.config.ScreenRate); err != nil {
+			m.logger.Warn().Err(err).Msg("unable to change screen size")
+		}
+	}
+
 	videoPipeline, err := gst.CreatePipeline(
 		m.config.VideoCodec,
 		m.config.Display,
@@ -231,7 +239,15 @@ func (m *WebRTCManager) CreatePeer(id string, sdp string) (string, types.Peer, e
 }
 
 func (m *WebRTCManager) ChangeScreenSize(width int, height int, rate int) error {
+	if !xorg.ValidScreenSize(width, height, rate) {
+		return fmt.Errorf("unknown configuration")
+	}
+
 	m.videoPipeline.Stop()
+	defer func() {
+		m.videoPipeline.Start()
+		m.logger.Info().Msg("starting pipeline")
+	}()
 
 	if err := xorg.ChangeScreenSize(width, height, rate); err != nil {
 		return err
@@ -248,7 +264,6 @@ func (m *WebRTCManager) ChangeScreenSize(width int, height int, rate int) error 
 	}
 
 	m.videoPipeline = videoPipeline
-	m.videoPipeline.Start()
 
 	return nil
 }
