@@ -106,7 +106,7 @@ export const mutations = mutationTree(state, {
       if (width >= 600 && height >= 300) {
         for (const j of Object.keys(rates)) {
           const rate = rates[j]
-          if (rate >= 15 && rate <= 60) {
+          if (rate === 30 || rate === 60) {
             data.push({
               width,
               height,
@@ -117,7 +117,14 @@ export const mutations = mutationTree(state, {
       }
     }
 
-    state.configurations = data.sort((a, b) => (b.width === a.width ? b.rate - a.rate : b.width - a.width))
+    state.configurations = data.sort((a, b) => {
+      if (b.width === a.width && b.height == a.height) {
+        return b.rate - a.rate
+      } else if (b.width === a.width) {
+        return b.height - a.height
+      }
+      return b.width - a.width
+    })
   },
 
   setVolume(state, volume: number) {
