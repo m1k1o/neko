@@ -1,0 +1,56 @@
+.emote {
+  width: 24px;
+  height: 24px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center center;
+
+  &.anger { background-image: url('../images/emote/1f4a2.svg'); }
+  &.bomb { background-image: url('../images/emote/1f4a3.svg'); }
+  &.sleep { background-image: url('../images/emote/1f4a4.svg'); }
+  &.explode { background-image: url('../images/emote/1f4a5.svg'); }
+  &.sweat { background-image: url('../images/emote/1f4a6.svg'); }
+  &.poo { background-image: url('../images/emote/1f4a9.svg'); }
+  &.hundred { background-image: url('../images/emote/1f4af.svg'); }
+  &.alert { background-image: url('../images/emote/1f6a8.svg'); }
+  &.punch { background-image: url('../images/emote/1f44a.svg'); }
+  &.wave { background-image: url('../images/emote/1f44b.svg'); }
+  &.okay { background-image: url('../images/emote/1f44c.svg'); }
+  &.thumbs-up { background-image: url('../images/emote/1f44d.svg'); }
+  &.clap { background-image: url('../images/emote/1f44f.svg'); }
+  &.prey { background-image: url('../images/emote/1f64f.svg'); }
+  &.celebrate { background-image: url('../images/emote/1f389.svg'); }
+  &.flame { background-image: url('../images/emote/1f525.svg'); }
+
+  &.goof { background-image: url('../images/emote/1f60b.svg'); }
+  &.love { background-image: url('../images/emote/1f60d.svg'); }
+  &.cool { background-image: url('../images/emote/1f60e.svg'); }
+  &.smerk { background-image: url('../images/emote/1f60f.svg'); }
+  &.worry { background-image: url('../images/emote/1f61f.svg'); }
+  &.ouch { background-image: url('../images/emote/1f62c.svg'); }
+  &.cry { background-image: url('../images/emote/1f62d.svg'); }
+  &.surprised { background-image: url('../images/emote/1f62e.svg'); }
+  &.quiet { background-image: url('../images/emote/1f92b.svg'); }
+  &.rage { background-image: url('../images/emote/1f92c.svg'); }
+  &.annoy { background-image: url('../images/emote/1f611.svg'); }
+  &.steamed { background-image: url('../images/emote/1f624.svg'); }
+  &.scared { background-image: url('../images/emote/1f628.svg'); }
+  &.terrified { background-image: url('../images/emote/1f631.svg'); }
+  &.sleepy { background-image: url('../images/emote/1f634.svg'); }
+  &.dead { background-image: url('../images/emote/1f635.svg'); }
+  &.happy { background-image: url('../images/emote/1f642.svg'); }
+  &.roll-eyes { background-image: url('../images/emote/1f644.svg'); }
+  &.thinking { background-image: url('../images/emote/1f914.svg'); }
+  &.clown { background-image: url('../images/emote/1f921.svg'); }
+  &.sick { background-image: url('../images/emote/1f922.svg'); }
+  &.rofl { background-image: url('../images/emote/1f923.svg'); }
+  &.drule { background-image: url('../images/emote/1f924.svg'); }
+  &.sniff { background-image: url('../images/emote/1f927.svg'); }
+  &.sus { background-image: url('../images/emote/1f928.svg'); }
+  &.party { background-image: url('../images/emote/1f973.svg'); }
+  &.odd { background-image: url('../images/emote/1f974.svg'); }
+  &.hot { background-image: url('../images/emote/1f975.svg'); }
+  &.cold { background-image: url('../images/emote/1f976.svg'); }
+  &.blush { background-image: url('../images/emote/263a.svg'); }
+  &.sad { background-image: url('../images/emote/2639.svg'); }
+}

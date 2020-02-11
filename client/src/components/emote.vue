@@ -1,5 +1,5 @@
 <template>
-  <div ref="emote" @click.stop.prevent="run" class="emote">
+  <div ref="emote" @click.stop.prevent="run" class="emote-container">
     <div :class="classes" />
     <div :class="classes" />
     <div :class="classes" />
@@ -11,46 +11,21 @@
 </template>
 
 <style lang="scss" scoped>
-  .emote {
-    width: 150px;
-    height: 30px;
+  .emote-container {
+    width: 25%;
+    height: 10%;
     position: absolute;
     bottom: 0;
     right: 0;
 
-    div {
+    .emote {
       position: absolute;
-      width: 30px;
-      height: 30px;
+      width: 100px;
+      height: 100%;
       color: #fff;
-      font-size: 30px;
-      line-height: 30px;
+      transform: scale(0.7);
       text-align: center;
       background-size: contain;
-
-      &.celebrate {
-        background-image: url('../assets/images/emote/celebrate.png');
-      }
-
-      &.clap {
-        background-image: url('../assets/images/emote/clap.png');
-      }
-
-      &.exclam {
-        background-image: url('../assets/images/emote/exclam.png');
-      }
-
-      &.heart {
-        background-image: url('../assets/images/emote/heart.png');
-      }
-
-      &.laughing {
-        background-image: url('../assets/images/emote/laughing.png');
-      }
-
-      &.sleep {
-        background-image: url('../assets/images/emote/sleep.png');
-      }
     }
   }
 </style>
@@ -74,27 +49,27 @@
     private classes: string[] = []
 
     mounted() {
-      const range = 90
+      const range = 50
       let count = 0
       let finish: Array<Promise<any>> = []
 
-      this.classes = [this.emote.type]
+      this.classes = ['emote', this.emote.type]
 
       for (let child of this.container.children) {
         const ele = child as HTMLElement
-        ele.style['left'] = `${count % 2 ? this.$anime.random(0, range) : this.$anime.random(-range, 0)}px`
+        ele.style['left'] = `${count % 2 ? this.$anime.random(0, range) : this.$anime.random(-range, 0)}%`
         ele.style['opacity'] = `0`
 
         const animation = this.$anime({
           targets: child,
           keyframes: [
-            { left: count % 2 ? this.$anime.random(0, range) : this.$anime.random(-range, 0), opacity: 1 },
-            { left: count % 2 ? this.$anime.random(-range, 0) : this.$anime.random(0, range), opacity: 0.5 },
-            { left: count % 2 ? this.$anime.random(0, range) : this.$anime.random(-range, 0), opacity: 0 },
+            { left: `${count % 2 ? this.$anime.random(0, range) : this.$anime.random(-range, 0)}%`, opacity: 1 },
+            { left: `${count % 2 ? this.$anime.random(-range, 0) : this.$anime.random(0, range)}%`, opacity: 0.5 },
+            { left: `${count % 2 ? this.$anime.random(0, range) : this.$anime.random(-range, 0)}%`, opacity: 0 },
           ],
           elasticity: 600,
           rotate: this.$anime.random(-35, 35),
-          top: this.$anime.random(-100, -250),
+          top: `${this.$anime.random(-200, -600)}%`,
           duration: this.$anime.random(1000, 2000),
           easing: 'easeInOutQuad',
         })
