@@ -2,6 +2,7 @@ package webrtc
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/pion/webrtc/v2"
@@ -9,9 +10,9 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"n.eko.moe/neko/internal/gst"
-	"n.eko.moe/neko/internal/hid"
 	"n.eko.moe/neko/internal/types"
 	"n.eko.moe/neko/internal/types/config"
+	"n.eko.moe/neko/internal/xorg"
 )
 
 func New(sessions types.SessionManager, config *config.WebRTC) *WebRTCManager {
@@ -53,11 +54,12 @@ type WebRTCManager struct {
 }
 
 func (m *WebRTCManager) Start() {
-	hid.Display(m.config.Display)
+	xorg.Display(m.config.Display)
 
 	videoPipeline, err := gst.CreatePipeline(
 		m.config.VideoCodec,
-		fmt.Sprintf("ximagesrc xid=%s show-pointer=true use-damage=false ! video/x-raw,framerate=30/1 ! videoconvert ! queue", m.config.Display),
+		m.config.Display,
+		m.config.VideoParams,
 	)
 
 	if err != nil {
@@ -66,7 +68,8 @@ func (m *WebRTCManager) Start() {
 
 	audioPipeline, err := gst.CreatePipeline(
 		m.config.AudioCodec,
-		fmt.Sprintf("pulsesrc device=%s ! audioconvert", m.config.Device),
+		m.config.Device,
+		m.config.AudioParams,
 	)
 
 	if err != nil {
@@ -88,22 +91,22 @@ func (m *WebRTCManager) Start() {
 			select {
 			case <-m.shutdown:
 				return
-			case sample := <-videoPipeline.Sample:
+			case sample := <-m.videoPipeline.Sample:
 				if err := m.sessions.WriteVideoSample(sample); err != nil {
 					m.logger.Warn().Err(err).Msg("video pipeline failed to write")
 				}
-			case sample := <-audioPipeline.Sample:
+			case sample := <-m.audioPipeline.Sample:
 				if err := m.sessions.WriteAudioSample(sample); err != nil {
 					m.logger.Warn().Err(err).Msg("audio pipeline failed to write")
 				}
 			case <-m.cleanup.C:
-				hid.Check(time.Second * 10)
+				xorg.CheckKeys(time.Second * 10)
 			}
 		}
 	}()
 
 	m.sessions.OnHostCleared(func(id string) {
-		hid.Reset()
+		xorg.ResetKeys()
 	})
 
 	m.sessions.OnCreated(func(id string, session types.Session) {
@@ -120,6 +123,10 @@ func (m *WebRTCManager) Start() {
 		Str("video_codec", m.config.VideoCodec).
 		Str("audio_device", m.config.Device).
 		Str("audio_codec", m.config.AudioCodec).
+		Str("ephemeral_port_range", fmt.Sprintf("%d-%d", m.config.EphemeralMin, m.config.EphemeralMax)).
+		Str("nat_ips", strings.Join(m.config.NAT1To1IPs, ",")).
+		Str("audio_pipeline_src", audioPipeline.Src).
+		Str("video_pipeline_src", videoPipeline.Src).
 		Msgf("webrtc streaming")
 }
 
@@ -180,7 +187,7 @@ func (m *WebRTCManager) CreatePeer(id string, sdp string) (string, types.Peer, e
 		return "", nil, err
 	}
 
-	// set remote description
+	// Set remote description
 	connection.SetRemoteDescription(description)
 
 	answer, err := connection.CreateAnswer(nil)
@@ -221,4 +228,27 @@ func (m *WebRTCManager) CreatePeer(id string, sdp string) (string, types.Peer, e
 		audio:      audio,
 		connection: connection,
 	}, nil
+}
+
+func (m *WebRTCManager) ChangeScreenSize(width int, height int, rate int) error {
+	m.videoPipeline.Stop()
+
+	if err := xorg.ChangeScreenSize(width, height, rate); err != nil {
+		return err
+	}
+
+	videoPipeline, err := gst.CreatePipeline(
+		m.config.VideoCodec,
+		m.config.Display,
+		m.config.VideoParams,
+	)
+
+	if err != nil {
+		m.logger.Panic().Err(err).Msg("unable to create new video pipeline")
+	}
+
+	m.videoPipeline = videoPipeline
+	m.videoPipeline.Start()
+
+	return nil
 }

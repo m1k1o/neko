@@ -9,12 +9,12 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"n.eko.moe/neko/internal/hid"
 	"n.eko.moe/neko/internal/types"
 	"n.eko.moe/neko/internal/types/config"
 	"n.eko.moe/neko/internal/types/event"
 	"n.eko.moe/neko/internal/types/message"
 	"n.eko.moe/neko/internal/utils"
+	"n.eko.moe/neko/internal/xorg"
 )
 
 func New(sessions types.SessionManager, webrtc types.WebRTCManager, conf *config.WebSocket) *WebSocketHandler {
@@ -81,7 +81,7 @@ func (ws *WebSocketHandler) Start() error {
 			ws.logger.Info().Msg("shutdown")
 		}()
 
-		current := hid.ReadClipboard()
+		current := xorg.ReadClipboard()
 
 		for {
 			select {
@@ -89,7 +89,7 @@ func (ws *WebSocketHandler) Start() error {
 				return
 			default:
 				if ws.sessions.HasHost() {
-					text := hid.ReadClipboard()
+					text := xorg.ReadClipboard()
 					if text != current {
 						session, ok := ws.sessions.GetHost()
 						if ok {

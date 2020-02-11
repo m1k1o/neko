@@ -36,6 +36,11 @@ export const EVENT = {
     MESSAGE: 'chat/message',
     EMOTE: 'chat/emote',
   },
+  SCREEN: {
+    CONFIGURATIONS: 'screen/configurations',
+    RESOLUTION: 'screen/resolution',
+    SET: 'screen/set',
+  },
   ADMIN: {
     BAN: 'admin/ban',
     KICK: 'admin/kick',
@@ -58,6 +63,7 @@ export type WebSocketEvents =
   | MemberEvents
   | SignalEvents
   | ChatEvents
+  | ScreenEvents
   | AdminEvents
 
 export type ControlEvents =
@@ -72,6 +78,8 @@ export type IdentityEvents = typeof EVENT.IDENTITY.PROVIDE | typeof EVENT.IDENTI
 export type MemberEvents = typeof EVENT.MEMBER.LIST | typeof EVENT.MEMBER.CONNECTED | typeof EVENT.MEMBER.DISCONNECTED
 export type SignalEvents = typeof EVENT.SIGNAL.ANSWER | typeof EVENT.SIGNAL.PROVIDE
 export type ChatEvents = typeof EVENT.CHAT.MESSAGE | typeof EVENT.CHAT.EMOTE
+export type ScreenEvents = typeof EVENT.SCREEN.CONFIGURATIONS | typeof EVENT.SCREEN.RESOLUTION | typeof EVENT.SCREEN.SET
+
 export type AdminEvents =
   | typeof EVENT.ADMIN.BAN
   | typeof EVENT.ADMIN.KICK

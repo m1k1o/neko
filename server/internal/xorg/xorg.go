@@ -4,13 +4,13 @@
 // pretty sure this *isn't* thread safe either.... /shrug
 // if you know a better way to get this done *please* make a pr <3
 
-package hid
+package xorg
 
 /*
 #cgo linux CFLAGS: -I/usr/src
-#cgo linux LDFLAGS: -L/usr/src -lX11 -lXtst -lclipboard
+#cgo linux LDFLAGS: -L/usr/src -lX11 -lXtst -lXrandr -lclipboard
 
-#include "hid.h"
+#include "xorg.h"
 */
 import "C"
 
@@ -18,9 +18,13 @@ import (
 	"fmt"
 	"sync"
 	"time"
+	"unsafe"
 
-	"n.eko.moe/neko/internal/hid/keycode"
+	"n.eko.moe/neko/internal/types"
+	"n.eko.moe/neko/internal/xorg/keycode"
 )
+
+var ScreenConfigurations = make(map[int]types.ScreenConfiguration)
 
 var debounce = make(map[int]time.Time)
 var buttons = make(map[int]keycode.Button)
@@ -135,13 +139,18 @@ func init() {
 	buttons[keycode.SCROLL_DOWN_BUTTON.Code] = keycode.SCROLL_DOWN_BUTTON
 	buttons[keycode.SCROLL_LEFT_BUTTON.Code] = keycode.SCROLL_LEFT_BUTTON
 	buttons[keycode.SCROLL_RIGHT_BUTTON.Code] = keycode.SCROLL_RIGHT_BUTTON
+
+	C.XGetScreenConfigurations()
 }
 
 func Display(display string) {
 	mu.Lock()
 	defer mu.Unlock()
 
-	C.setXDisplay(C.CString(display))
+	displayUnsafe := C.CString(display)
+	defer C.free(unsafe.Pointer(displayUnsafe))
+
+	C.XDisplaySet(displayUnsafe)
 }
 
 func Move(x, y int) {
@@ -238,17 +247,23 @@ func ReadClipboard() string {
 	mu.Lock()
 	defer mu.Unlock()
 
-	return C.GoString(C.XClipboardGet())
+	clipboardUnsafe := C.XClipboardGet()
+	defer C.free(unsafe.Pointer(clipboardUnsafe))
+
+	return C.GoString(clipboardUnsafe)
 }
 
 func WriteClipboard(data string) {
 	mu.Lock()
 	defer mu.Unlock()
 
-	C.XClipboardSet(C.CString(data))
+	clipboardUnsafe := C.CString(data)
+	defer C.free(unsafe.Pointer(clipboardUnsafe))
+
+	C.XClipboardSet(clipboardUnsafe)
 }
 
-func Reset() {
+func ResetKeys() {
 	for key := range debounce {
 		if key < 8 {
 			ButtonUp(key)
@@ -260,7 +275,7 @@ func Reset() {
 	}
 }
 
-func Check(duration time.Duration) {
+func CheckKeys(duration time.Duration) {
 	t := time.Now()
 	for key, start := range debounce {
 		if t.Sub(start) < duration {
@@ -275,4 +290,54 @@ func Check(duration time.Duration) {
 
 		delete(debounce, key)
 	}
+}
+
+func ChangeScreenSize(width int, height int, rate int) error {
+	mu.Lock()
+	defer mu.Unlock()
+
+	for index, size := range ScreenConfigurations {
+		if size.Width == width && size.Height == height {
+			for _, srate := range size.Rates {
+				if int16(rate) == srate {
+					C.XSetScreenConfiguration(C.int(index), C.short(srate))
+					return nil
+				}
+			}
+		}
+	}
+
+	return fmt.Errorf("unknown configuration")
+}
+
+func GetScreenSize() *types.ScreenSize {
+	mu.Lock()
+	defer mu.Unlock()
+
+	index := int(C.XGetScreenSize())
+	rate := int16(C.XGetScreenRate())
+
+	if conf, ok := ScreenConfigurations[index]; ok {
+		return &types.ScreenSize{
+			Width:  conf.Width,
+			Height: conf.Height,
+			Rate:   rate,
+		}
+	}
+
+	return nil
+}
+
+//export goCreateScreenSize
+func goCreateScreenSize(index C.int, width C.int, height C.int, mwidth C.int, mheight C.int) {
+	ScreenConfigurations[int(index)] = types.ScreenConfiguration{
+		Width:  int(width),
+		Height: int(height),
+		Rates:  make(map[int]int16),
+	}
+}
+
+//export goSetScreenRates
+func goSetScreenRates(index C.int, rate_index C.int, rate C.short) {
+	ScreenConfigurations[int(index)].Rates[int(rate_index)] = int16(rate)
 }

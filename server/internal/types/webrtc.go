@@ -9,6 +9,7 @@ type WebRTCManager interface {
 	Start()
 	Shutdown() error
 	CreatePeer(id string, sdp string) (string, Peer, error)
+	ChangeScreenSize(width int, height int, rate int) error
 }
 
 type Peer interface {

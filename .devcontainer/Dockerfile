@@ -10,9 +10,9 @@ RUN set -eux; apt-get update; apt-get install -y --no-install-recommends \
   libpng-dev libpq-dev libreadline-dev libsqlite3-dev libssl-dev libtool libwebp-dev libxml2-dev libxslt-dev libyaml-dev  \
   make patch unzip xz-utils zlib1g-dev pkg-config \
   build-essential perl python autopoint bison flex \
-  gettext openssl libopus-dev libvpx-dev libpulse-dev libx11-dev libxv-dev libxt-dev \
+  gettext openssl libopus-dev libvpx-dev libpulse-dev libx11-dev libxv-dev libxt-dev libxrandr-dev \
   libxfixes-dev apt-utils x11vnc libxtst-dev dialog \
-  pulseaudio openbox chromium firefox-esr dbus-x11 xvfb xclip supervisor; \
+  pulseaudio openbox chromium firefox-esr dbus-x11 xserver-xorg-video-dummy supervisor; \
   if ! command -v gpg > /dev/null; then \
     apt-get install -y --no-install-recommends gnupg dirmngr; \
   fi

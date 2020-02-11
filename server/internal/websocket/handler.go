@@ -103,6 +103,18 @@ func (h *MessageHandler) Message(id string, raw []byte) error {
 				return h.chatEmote(id, session, payload)
 			}), "%s failed", header.Event)
 
+	// Screen Events
+	case event.SCREEN_RESOLUTION:
+		return errors.Wrapf(h.screenResolution(id, session), "%s failed", header.Event)
+	case event.SCREEN_CONFIGURATIONS:
+		return errors.Wrapf(h.screenConfigurations(id, session), "%s failed", header.Event)
+	case event.SCREEN_SET:
+		payload := &message.ScreenResolution{}
+		return errors.Wrapf(
+			utils.Unmarshal(payload, raw, func() error {
+				return h.screenSet(id, session, payload)
+			}), "%s failed", header.Event)
+
 	// Admin Events
 	case event.ADMIN_LOCK:
 		return errors.Wrapf(h.adminLock(id, session), "%s failed", header.Event)

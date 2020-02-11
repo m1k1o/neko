@@ -1,33 +1,53 @@
 package event
 
-const SYSTEM_DISCONNECT = "system/disconnect"
+const (
+	SYSTEM_DISCONNECT = "system/disconnect"
+)
 
-const SIGNAL_ANSWER = "signal/answer"
-const SIGNAL_PROVIDE = "signal/provide"
+const (
+	SIGNAL_ANSWER  = "signal/answer"
+	SIGNAL_PROVIDE = "signal/provide"
+)
 
-const IDENTITY_PROVIDE = "identity/provide"
-const IDENTITY_DETAILS = "identity/details"
+const (
+	IDENTITY_PROVIDE = "identity/provide"
+	IDENTITY_DETAILS = "identity/details"
+)
 
-const MEMBER_LIST = "member/list"
-const MEMBER_CONNECTED = "member/connected"
-const MEMBER_DISCONNECTED = "member/disconnected"
+const (
+	MEMBER_LIST         = "member/list"
+	MEMBER_CONNECTED    = "member/connected"
+	MEMBER_DISCONNECTED = "member/disconnected"
+)
 
-const CONTROL_LOCKED = "control/locked"
-const CONTROL_RELEASE = "control/release"
-const CONTROL_REQUEST = "control/request"
-const CONTROL_REQUESTING = "control/requesting"
-const CONTROL_GIVE = "control/give"
-const CONTROL_CLIPBOARD = "control/clipboard"
+const (
+	CONTROL_LOCKED     = "control/locked"
+	CONTROL_RELEASE    = "control/release"
+	CONTROL_REQUEST    = "control/request"
+	CONTROL_REQUESTING = "control/requesting"
+	CONTROL_GIVE       = "control/give"
+	CONTROL_CLIPBOARD  = "control/clipboard"
+)
 
-const CHAT_MESSAGE = "chat/message"
-const CHAT_EMOTE = "chat/emote"
+const (
+	CHAT_MESSAGE = "chat/message"
+	CHAT_EMOTE   = "chat/emote"
+)
 
-const ADMIN_BAN = "admin/ban"
-const ADMIN_KICK = "admin/kick"
-const ADMIN_LOCK = "admin/lock"
-const ADMIN_MUTE = "admin/mute"
-const ADMIN_UNLOCK = "admin/unlock"
-const ADMIN_UNMUTE = "admin/unmute"
-const ADMIN_CONTROL = "admin/control"
-const ADMIN_RELEASE = "admin/release"
-const ADMIN_GIVE = "admin/give"
+const (
+	SCREEN_CONFIGURATIONS = "screen/configurations"
+	SCREEN_RESOLUTION     = "screen/resolution"
+	SCREEN_SET            = "screen/set"
+)
+
+const (
+	ADMIN_BAN     = "admin/ban"
+	ADMIN_KICK    = "admin/kick"
+	ADMIN_LOCK    = "admin/lock"
+	ADMIN_MUTE    = "admin/mute"
+	ADMIN_UNLOCK  = "admin/unlock"
+	ADMIN_UNMUTE  = "admin/unmute"
+	ADMIN_CONTROL = "admin/control"
+	ADMIN_RELEASE = "admin/release"
+	ADMIN_GIVE    = "admin/give"
+)

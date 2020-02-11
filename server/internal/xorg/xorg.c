@@ -1,4 +1,4 @@
-#include "hid.h"
+#include "xorg.h"
 
 static clipboard_c *CLIPBOARD = NULL;
 static Display *DISPLAY = NULL;
@@ -9,7 +9,7 @@ static int DIRTY = 0;
 Display *getXDisplay(void) {
   /* Close the display if displayName has changed */
   if (DIRTY) {
-    closeXDisplay();
+    XDisplayClose();
     DIRTY = 0;
   }
 
@@ -25,7 +25,7 @@ Display *getXDisplay(void) {
     if (DISPLAY == NULL) {
       fputs("Could not open main display\n", stderr);
     } else if (!REGISTERED) {
-      atexit(&closeXDisplay);
+      atexit(&XDisplayClose);
       REGISTERED = 1;
     }
   }
@@ -40,14 +40,14 @@ clipboard_c *getClipboard(void) {
   return CLIPBOARD;
 }
 
-void closeXDisplay(void) {
+void XDisplayClose(void) {
   if (DISPLAY != NULL) {
     XCloseDisplay(DISPLAY);
     DISPLAY = NULL;
   }
 }
 
-void setXDisplay(char *input) {
+void XDisplaySet(char *input) {
   NAME = strdup(input);
   DIRTY = 1;
 }
@@ -109,4 +109,42 @@ void XClipboardSet(char *src) {
 char *XClipboardGet() {
   clipboard_c *cb = getClipboard();
   return clipboard_text_ex(cb, NULL, 0);
+}
+
+void XGetScreenConfigurations() {
+  Display       *display = getXDisplay();
+  Window        root = RootWindow(display, 0);
+  XRRScreenSize *xrrs;
+  int           num_sizes;
+
+  xrrs = XRRSizes(display, 0, &num_sizes);
+  for(int i = 0; i < num_sizes; i ++) {
+    short *rates;
+    int   num_rates;
+
+    goCreateScreenSize(i, xrrs[i].width, xrrs[i].height, xrrs[i].mwidth, xrrs[i].mheight);
+    rates = XRRRates(display, 0, i, &num_rates);
+    for (int j = 0; j < num_rates; j ++) {
+      goSetScreenRates(i, j, rates[j]);
+    }
+  }
+}
+
+void XSetScreenConfiguration(int index, short rate) {
+  Display *display = getXDisplay();
+  Window root = RootWindow(display, 0);
+  XRRSetScreenConfigAndRate(display, XRRGetScreenInfo(display, root), root, index, RR_Rotate_0, rate, CurrentTime);
+}
+
+int XGetScreenSize() {
+  Display *display = getXDisplay();
+  XRRScreenConfiguration *conf  = XRRGetScreenInfo(display, RootWindow(display, 0));
+  Rotation original_rotation;
+  return XRRConfigCurrentConfiguration(conf, &original_rotation);
+}
+
+short XGetScreenRate() {
+  Display *display = getXDisplay();
+  XRRScreenConfiguration *conf  = XRRGetScreenInfo(display, RootWindow(display, 0));
+  return XRRConfigCurrentRate(conf);
 }

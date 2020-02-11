@@ -28,7 +28,11 @@
         </div>
         <div ref="aspect" class="player-aspect" />
       </div>
-      <i v-if="!fullscreen" @click.stop.prevent="requestFullscreen" class="expand fas fa-expand"></i>
+      <ul v-if="!fullscreen" class="video-menu">
+        <li><i @click.stop.prevent="requestFullscreen" class="fas fa-expand"></i></li>
+        <li v-if="admin"><i @click.stop.prevent="onResolution" class="fas fa-cog"></i></li>
+      </ul>
+      <neko-resolution ref="resolution" />
     </div>
   </div>
 </template>
@@ -44,19 +48,26 @@
       justify-content: center;
       align-items: center;
 
-      .expand {
+      .video-menu {
         position: absolute;
         right: 20px;
         top: 15px;
-        width: 30px;
-        height: 30px;
-        background: rgba($color: #fff, $alpha: 0.2);
-        border-radius: 5px;
-        line-height: 30px;
-        font-size: 16px;
-        text-align: center;
-        color: rgba($color: #fff, $alpha: 0.6);
-        cursor: pointer;
+
+        li {
+          margin: 0 0 10px 0;
+
+          i {
+            width: 30px;
+            height: 30px;
+            background: rgba($color: #fff, $alpha: 0.2);
+            border-radius: 5px;
+            line-height: 30px;
+            font-size: 16px;
+            text-align: center;
+            color: rgba($color: #fff, $alpha: 0.6);
+            cursor: pointer;
+          }
+        }
       }
 
       .player-container {
@@ -129,11 +140,13 @@
   import ResizeObserver from 'resize-observer-polyfill'
 
   import Emote from './emote.vue'
+  import Resolution from './resolution.vue'
 
   @Component({
     name: 'neko-video',
     components: {
       'neko-emote': Emote,
+      'neko-resolution': Resolution,
     },
   })
   export default class extends Vue {
@@ -143,10 +156,15 @@
     @Ref('aspect') readonly _aspect!: HTMLElement
     @Ref('player') readonly _player!: HTMLElement
     @Ref('video') readonly _video!: HTMLVideoElement
+    @Ref('resolution') readonly _resolution!: any
 
     private observer = new ResizeObserver(this.onResise.bind(this))
     private focused = false
     private fullscreen = false
+
+    get admin() {
+      return this.$accessor.user.admin
+    }
 
     get connected() {
       return this.$accessor.connected
@@ -198,6 +216,38 @@
 
     get clipboard() {
       return this.$accessor.remote.clipboard
+    }
+
+    get width() {
+      return this.$accessor.video.width
+    }
+
+    get height() {
+      return this.$accessor.video.height
+    }
+
+    get rate() {
+      return this.$accessor.video.rate
+    }
+
+    get vertical() {
+      return this.$accessor.video.vertical
+    }
+
+    get horizontal() {
+      return this.$accessor.video.horizontal
+    }
+
+    @Watch('width')
+    onWidthChanged(width: number) {
+      const { videoWidth, videoHeight } = this._video
+      console.log({ videoWidth, videoHeight })
+      this.onResise()
+    }
+
+    @Watch('height')
+    onHeightChanged(height: number) {
+      this.onResise()
     }
 
     @Watch('volume')
@@ -292,8 +342,6 @@
       this._video
         .play()
         .then(() => {
-          const { videoWidth, videoHeight } = this._video
-          this.$accessor.video.setResolution({ width: videoWidth, height: videoHeight })
           this.onResise()
         })
         .catch(err => console.log(err))
@@ -418,8 +466,6 @@
     }
 
     onResise() {
-      const { horizontal, vertical } = this.$accessor.video
-
       let height = 0
       if (!this.fullscreen) {
         const { offsetWidth, offsetHeight } = this._component
@@ -431,8 +477,12 @@
         height = offsetHeight
       }
 
-      this._container.style.maxWidth = `${(horizontal / vertical) * height}px`
-      this._aspect.style.paddingBottom = `${(vertical / horizontal) * 100}%`
+      this._container.style.maxWidth = `${(this.horizontal / this.vertical) * height}px`
+      this._aspect.style.paddingBottom = `${(this.vertical / this.horizontal) * 100}%`
+    }
+
+    onResolution(event: MouseEvent) {
+      this._resolution.open(event)
     }
   }
 </script>

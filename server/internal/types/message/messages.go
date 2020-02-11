@@ -90,3 +90,16 @@ type AdminTarget struct {
 	Target string `json:"target"`
 	ID     string `json:"id"`
 }
+
+type ScreenResolution struct {
+	Event  string `json:"event"`
+	ID     string `json:"id,omitempty"`
+	Width  int    `json:"width"`
+	Height int    `json:"height"`
+	Rate   int    `json:"rate"`
+}
+
+type ScreenConfigurations struct {
+	Event          string                            `json:"event"`
+	Configurations map[int]types.ScreenConfiguration `json:"configurations"`
+}

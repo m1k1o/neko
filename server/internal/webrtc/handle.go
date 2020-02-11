@@ -6,7 +6,7 @@ import (
 	"strconv"
 
 	"github.com/pion/webrtc/v2"
-	"n.eko.moe/neko/internal/hid"
+	"n.eko.moe/neko/internal/xorg"
 )
 
 const OP_MOVE = 0x01
@@ -63,7 +63,7 @@ func (m *WebRTCManager) handle(id string, msg webrtc.DataChannelMessage) error {
 			return err
 		}
 
-		hid.Move(int(payload.X), int(payload.Y))
+		xorg.Move(int(payload.X), int(payload.Y))
 		break
 	case OP_SCROLL:
 		payload := &PayloadScroll{}
@@ -77,7 +77,7 @@ func (m *WebRTCManager) handle(id string, msg webrtc.DataChannelMessage) error {
 			Str("y", strconv.Itoa(int(payload.Y))).
 			Msg("scroll")
 
-		hid.Scroll(int(payload.X), int(payload.Y))
+		xorg.Scroll(int(payload.X), int(payload.Y))
 		break
 	case OP_KEY_DOWN:
 		payload := &PayloadKey{}
@@ -86,7 +86,7 @@ func (m *WebRTCManager) handle(id string, msg webrtc.DataChannelMessage) error {
 		}
 
 		if payload.Key < 8 {
-			button, err := hid.ButtonDown(int(payload.Key))
+			button, err := xorg.ButtonDown(int(payload.Key))
 			if err != nil {
 				m.logger.Warn().Err(err).Msg("key down failed")
 				return nil
@@ -94,7 +94,7 @@ func (m *WebRTCManager) handle(id string, msg webrtc.DataChannelMessage) error {
 
 			m.logger.Debug().Msgf("button down %s(%d)", button.Name, payload.Key)
 		} else {
-			key, err := hid.KeyDown(int(payload.Key))
+			key, err := xorg.KeyDown(int(payload.Key))
 			if err != nil {
 				m.logger.Warn().Err(err).Msg("key down failed")
 				return nil
@@ -112,7 +112,7 @@ func (m *WebRTCManager) handle(id string, msg webrtc.DataChannelMessage) error {
 		}
 
 		if payload.Key < 8 {
-			button, err := hid.ButtonUp(int(payload.Key))
+			button, err := xorg.ButtonUp(int(payload.Key))
 			if err != nil {
 				m.logger.Warn().Err(err).Msg("button up failed")
 				return nil
@@ -120,7 +120,7 @@ func (m *WebRTCManager) handle(id string, msg webrtc.DataChannelMessage) error {
 
 			m.logger.Debug().Msgf("button up %s(%d)", button.Name, payload.Key)
 		} else {
-			key, err := hid.KeyUp(int(payload.Key))
+			key, err := xorg.KeyUp(int(payload.Key))
 			if err != nil {
 				m.logger.Warn().Err(err).Msg("keyup failed")
 				return nil

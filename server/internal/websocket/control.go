@@ -1,10 +1,10 @@
 package websocket
 
 import (
-	"n.eko.moe/neko/internal/hid"
 	"n.eko.moe/neko/internal/types"
 	"n.eko.moe/neko/internal/types/event"
 	"n.eko.moe/neko/internal/types/message"
+	"n.eko.moe/neko/internal/xorg"
 )
 
 func (h *MessageHandler) controlRelease(id string, session types.Session) error {
@@ -113,6 +113,6 @@ func (h *MessageHandler) controlClipboard(id string, session types.Session, payl
 		return nil
 	}
 
-	hid.WriteClipboard(payload.Text)
+	xorg.WriteClipboard(payload.Text)
 	return nil
 }

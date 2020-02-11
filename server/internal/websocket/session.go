@@ -14,6 +14,18 @@ func (h *MessageHandler) SessionCreated(id string, session types.Session) error 
 		return err
 	}
 
+	// send screen current resolution
+	if err := h.screenResolution(id, session); err != nil {
+		return err
+	}
+
+	if session.Admin() {
+		// send screen configurations
+		if err := h.screenConfigurations(id, session); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 

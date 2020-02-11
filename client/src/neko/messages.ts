@@ -7,9 +7,10 @@ import {
   MemberEvents,
   SignalEvents,
   ChatEvents,
+  ScreenEvents,
   AdminEvents,
 } from './events'
-import { Member } from './types'
+import { Member, ScreenConfigurations } from './types'
 
 export type WebSocketMessages =
   | WebSocketMessage
@@ -19,6 +20,8 @@ export type WebSocketMessages =
   | MembeConnectMessage
   | MembeDisconnectMessage
   | ControlMessage
+  | ScreenResolutionMessage
+  | ScreenConfigurationsMessage
   | ChatMessage
 
 export type WebSocketPayloads =
@@ -31,6 +34,8 @@ export type WebSocketPayloads =
   | ChatPayload
   | ChatSendPayload
   | EmojiSendPayload
+  | ScreenResolutionPayload
+  | ScreenConfigurationsPayload
   | AdminPayload
 
 export interface WebSocketMessage {
@@ -143,6 +148,28 @@ export interface EmotePayload {
 
 export interface EmojiSendPayload {
   emote: string
+}
+
+/*
+  SCREEN PAYLOADS
+*/
+export interface ScreenResolutionMessage extends WebSocketMessage, ScreenResolutionPayload {
+  event: ScreenEvents
+}
+
+export interface ScreenResolutionPayload {
+  id?: string
+  width: number
+  height: number
+  rate: number
+}
+
+export interface ScreenConfigurationsMessage extends WebSocketMessage, ScreenConfigurationsPayload {
+  event: ScreenEvents
+}
+
+export interface ScreenConfigurationsPayload {
+  configurations: ScreenConfigurations
 }
 
 /*

@@ -15,9 +15,11 @@ import {
   ControlTargetPayload,
   ChatPayload,
   EmotePayload,
+  ControlClipboardPayload,
+  ScreenConfigurationsPayload,
+  ScreenResolutionPayload,
   AdminPayload,
   AdminTargetPayload,
-  ControlClipboardPayload,
 } from './messages'
 
 interface NekoEvents extends BaseEvents {}
@@ -283,6 +285,33 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
     }
 
     this.$accessor.chat.newEmote({ type: emote })
+  }
+
+  /////////////////////////////
+  // Screen Events
+  /////////////////////////////
+  protected [EVENT.SCREEN.CONFIGURATIONS]({ configurations }: ScreenConfigurationsPayload) {
+    this.$accessor.video.setConfigurations(configurations)
+  }
+
+  protected [EVENT.SCREEN.RESOLUTION]({ id, width, height, rate }: ScreenResolutionPayload) {
+    this.$accessor.video.setResolution({ width, height, rate })
+
+    if (!id) {
+      return
+    }
+
+    const member = this.member(id)
+    if (!member || member.ignored) {
+      return
+    }
+
+    this.$accessor.chat.newMessage({
+      id,
+      content: `chaned the resolution to ${width}x${height}@${rate}`,
+      type: 'event',
+      created: new Date(),
+    })
   }
 
   /////////////////////////////

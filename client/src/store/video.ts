@@ -1,5 +1,8 @@
 import { getterTree, mutationTree, actionTree } from 'typed-vuex'
 import { get, set } from '~/utils/localstorage'
+import { EVENT } from '~/neko/events'
+import { ScreenConfigurations } from '~/neko/types'
+import { accessor } from '~/store'
 
 export const namespaced = true
 
@@ -7,8 +10,10 @@ export const state = () => ({
   index: -1,
   tracks: [] as MediaStreamTrack[],
   streams: [] as MediaStream[],
+  configurations: {} as ScreenConfigurations,
   width: 1280,
   height: 720,
+  rate: 30,
   horizontal: 16,
   vertical: 9,
   volume: get<number>('volume', 100),
@@ -54,9 +59,10 @@ export const mutations = mutationTree(state, {
     state.playable = playable
   },
 
-  setResolution(state, { width, height }: { width: number; height: number }) {
+  setResolution(state, { width, height, rate }: { width: number; height: number; rate: number }) {
     state.width = width
     state.height = height
+    state.rate = rate
 
     if ((height == 0 && width == 0) || (height == 0 && width != 0) || (height != 0 && width == 0)) {
       return
@@ -92,6 +98,10 @@ export const mutations = mutationTree(state, {
     state.vertical = height / gcd
   },
 
+  setConfigurations(state, configurations: ScreenConfigurations) {
+    state.configurations = configurations
+  },
+
   setVolume(state, volume: number) {
     state.volume = volume
     set('volume', volume)
@@ -115,11 +125,42 @@ export const mutations = mutationTree(state, {
     state.index = -1
     state.tracks = []
     state.streams = []
+    state.configurations = []
     state.width = 1280
     state.height = 720
+    state.rate = 30
     state.horizontal = 16
     state.vertical = 9
     state.playing = false
     state.playable = false
   },
 })
+
+export const actions = actionTree(
+  { state, getters, mutations },
+  {
+    screenConfiguations({ state }) {
+      if (!accessor.connected || !accessor.user.admin) {
+        return
+      }
+
+      $client.sendMessage(EVENT.SCREEN.CONFIGURATIONS)
+    },
+
+    screenGet({ state }) {
+      if (!accessor.connected) {
+        return
+      }
+
+      $client.sendMessage(EVENT.SCREEN.RESOLUTION)
+    },
+
+    screenSet({ state }, { width, height, rate }: { width: number; height: number; rate: number }) {
+      if (!accessor.connected || !accessor.user.admin) {
+        return
+      }
+
+      $client.sendMessage(EVENT.SCREEN.SET, { width, height, rate })
+    },
+  },
+)

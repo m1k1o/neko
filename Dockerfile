@@ -29,7 +29,7 @@ RUN set -eux; apt-get update; \
 # install neko dependencies
 RUN set -eux; apt-get update; \
     apt-get install -y --no-install-recommends wget ca-certificates pulseaudio openbox dbus-x11 xserver-xorg-video-dummy supervisor; \
-    apt-get install -y --no-install-recommends libxv1 libopus0 libvpx4; \
+    apt-get install -y --no-install-recommends libxrandr2 libxv1 libopus0 libvpx4; \
     #
     # create a non-root user
     groupadd --gid $USER_GID $USERNAME; \
