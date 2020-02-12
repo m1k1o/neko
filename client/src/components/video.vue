@@ -312,6 +312,10 @@
       this._video.addEventListener('canplaythrough', () => {
         this.$accessor.video.setPlayable(true)
         if (this.autoplay) {
+          if (!document.hasFocus()) {
+            this.$accessor.video.setMuted(true)
+          }
+
           this.$nextTick(() => {
             this.$accessor.video.play()
           })

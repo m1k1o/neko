@@ -47,6 +47,11 @@ export const mutations = mutationTree(state, {
     }
   },
 
+  setMuted(state, muted: boolean) {
+    state.muted = muted
+    set('mute', muted)
+  },
+
   toggleMute(state) {
     state.muted = !state.muted
     set('mute', state.muted)
