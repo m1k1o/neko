@@ -131,32 +131,6 @@ func (manager *SessionManager) Brodcast(v interface{}, exclude interface{}) erro
 	return nil
 }
 
-func (manager *SessionManager) WriteVideoSample(sample types.Sample) error {
-	for _, session := range manager.members {
-		if !session.connected {
-			continue
-		}
-
-		if err := session.WriteVideoSample(sample); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (manager *SessionManager) WriteAudioSample(sample types.Sample) error {
-	for _, session := range manager.members {
-		if !session.connected {
-			continue
-		}
-
-		if err := session.WriteAudioSample(sample); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 func (manager *SessionManager) OnHost(listener func(id string)) {
 	manager.emmiter.On("host", func(payload ...interface{}) {
 		listener(payload[0].(string))

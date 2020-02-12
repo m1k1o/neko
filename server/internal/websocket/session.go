@@ -7,10 +7,8 @@ import (
 )
 
 func (h *MessageHandler) SessionCreated(id string, session types.Session) error {
-	if err := session.Send(message.Identity{
-		Event: event.IDENTITY_PROVIDE,
-		ID:    id,
-	}); err != nil {
+	// send sdp and id over to client
+	if err := h.signalProvide(id, session); err != nil {
 		return err
 	}
 
@@ -20,7 +18,7 @@ func (h *MessageHandler) SessionCreated(id string, session types.Session) error 
 	}
 
 	if session.Admin() {
-		// send screen configurations
+		// send screen configurations if admin
 		if err := h.screenConfigurations(id, session); err != nil {
 			return err
 		}

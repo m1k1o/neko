@@ -10,11 +10,6 @@ const (
 )
 
 const (
-	IDENTITY_PROVIDE = "identity/provide"
-	IDENTITY_DETAILS = "identity/details"
-)
-
-const (
 	MEMBER_LIST         = "member/list"
 	MEMBER_CONNECTED    = "member/connected"
 	MEMBER_DISCONNECTED = "member/disconnected"

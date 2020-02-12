@@ -13,19 +13,16 @@ type Disconnect struct {
 	Message string `json:"message"`
 }
 
-type Identity struct {
+type SignalProvide struct {
 	Event string `json:"event"`
 	ID    string `json:"id"`
+	SDP   string `json:"sdp"`
 }
 
-type IdentityDetails struct {
+type SignalAnswer struct {
 	Event    string `json:"event"`
 	Username string `json:"username"`
-}
-
-type Signal struct {
-	Event string `json:"event"`
-	SDP   string `json:"sdp"`
+	SDP      string `json:"sdp"`
 }
 
 type MembersList struct {

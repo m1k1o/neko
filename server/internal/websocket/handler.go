@@ -57,18 +57,11 @@ func (h *MessageHandler) Message(id string, raw []byte) error {
 
 	switch header.Event {
 	// Signal Events
-	case event.SIGNAL_PROVIDE:
-		payload := &message.Signal{}
+	case event.SIGNAL_ANSWER:
+		payload := &message.SignalAnswer{}
 		return errors.Wrapf(
 			utils.Unmarshal(payload, raw, func() error {
-				return h.createPeer(id, session, payload)
-			}), "%s failed", header.Event)
-	// Identity Events
-	case event.IDENTITY_DETAILS:
-		payload := &message.IdentityDetails{}
-		return errors.Wrapf(
-			utils.Unmarshal(payload, raw, func() error {
-				return h.identityDetails(id, session, payload)
+				return h.signalAnswer(id, session, payload)
 			}), "%s failed", header.Event)
 
 	// Control Events

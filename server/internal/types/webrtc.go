@@ -8,13 +8,12 @@ type Sample struct {
 type WebRTCManager interface {
 	Start()
 	Shutdown() error
-	CreatePeer(id string, sdp string) (string, Peer, error)
+	CreatePeer(id string, session Session) (string, error)
 	ChangeScreenSize(width int, height int, rate int) error
 }
 
 type Peer interface {
-	WriteVideoSample(sample Sample) error
-	WriteAudioSample(sample Sample) error
+	SignalAnwser(sdp string) error
 	WriteData(v interface{}) error
 	Destroy() error
 }

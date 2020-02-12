@@ -2,15 +2,7 @@ import EventEmitter from 'eventemitter3'
 import { OPCODE } from './data'
 import { EVENT, WebSocketEvents } from './events'
 
-import {
-  WebSocketMessages,
-  WebSocketPayloads,
-  IdentityPayload,
-  SignalPayload,
-  MemberListPayload,
-  MemberPayload,
-  ControlPayload,
-} from './messages'
+import { WebSocketMessages, WebSocketPayloads, SignalProvidePayload } from './messages'
 
 export interface BaseEvents {
   info: (...message: any[]) => void
@@ -26,6 +18,11 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
   protected _timeout?: NodeJS.Timeout
   protected _username?: string
   protected _state: RTCIceConnectionState = 'disconnected'
+  protected _id = ''
+
+  get id() {
+    return this._id
+  }
 
   get supported() {
     return typeof RTCPeerConnection !== 'undefined' && typeof RTCPeerConnection.prototype.addTransceiver !== 'undefined'
@@ -93,6 +90,8 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
     }
 
     this._state = 'disconnected'
+    this._username = undefined
+    this._id = ''
   }
 
   public sendData(event: 'wheel' | 'mousemove', data: { x: number; y: number }): void
@@ -157,7 +156,7 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
     this._ws!.send(JSON.stringify({ event, ...payload }))
   }
 
-  public createPeer() {
+  public createPeer(sdp: string) {
     this.emit('debug', `creating peer`)
     if (!this.socketOpen) {
       this.emit(
@@ -174,18 +173,6 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
     }
 
     this._peer = new RTCPeerConnection()
-
-    this._peer.onicecandidate = event => {
-      if (event.candidate === null && this._peer!.localDescription) {
-        this.emit('debug', `sending event '${EVENT.SIGNAL.PROVIDE}' with payload`, this._peer!.localDescription.sdp)
-        this._ws!.send(
-          JSON.stringify({
-            event: EVENT.SIGNAL.PROVIDE,
-            sdp: this._peer!.localDescription.sdp,
-          }),
-        )
-      }
-    }
 
     this._peer.onconnectionstatechange = event => {
       this.emit('debug', `peer connection state chagned`, this._peer ? this._peer.connectionState : undefined)
@@ -227,20 +214,20 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
     this._channel.onmessage = this.onData.bind(this)
     this._channel.onclose = this.onDisconnected.bind(this, new Error('peer data channel closed'))
 
+    this._peer.setRemoteDescription({ type: 'offer', sdp })
     this._peer
-      .createOffer()
-      .then(d => this._peer!.setLocalDescription(d))
+      .createAnswer()
+      .then(d => {
+        this._peer!.setLocalDescription(d)
+        this._ws!.send(
+          JSON.stringify({
+            event: EVENT.SIGNAL.ANSWER,
+            sdp: d.sdp,
+            username: this._username,
+          }),
+        )
+      })
       .catch(err => this.emit('error', err))
-  }
-
-  private setRemoteDescription(payload: SignalPayload) {
-    if (this.peerConnected) {
-      this.emit('warn', `attempting to set remote description while peer connected`, payload)
-      return
-    }
-
-    this.emit('debug', `remote description recieved: \n`, payload.sdp)
-    this._peer!.setRemoteDescription({ type: 'answer', sdp: payload.sdp })
   }
 
   private onMessage(e: MessageEvent) {
@@ -248,22 +235,19 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
 
     this.emit('debug', `received websocket event ${event} ${payload ? `with payload: ` : ''}`, payload)
 
-    switch (event) {
-      case EVENT.IDENTITY.PROVIDE:
-        this[EVENT.IDENTITY.PROVIDE](payload as IdentityPayload)
-        this.createPeer()
-        break
-      case EVENT.SIGNAL.ANSWER:
-        this.setRemoteDescription(payload as SignalPayload)
-        break
-      default:
-        // @ts-ignore
-        if (typeof this[event] === 'function') {
-          // @ts-ignore
-          this[event](payload)
-        } else {
-          this[EVENT.MESSAGE](event, payload)
-        }
+    if (event === EVENT.SIGNAL.PROVIDE) {
+      const { sdp, id } = payload as SignalProvidePayload
+      this._id = id
+      this.createPeer(sdp)
+      return
+    }
+
+    // @ts-ignore
+    if (typeof this[event] === 'function') {
+      // @ts-ignore
+      this[event](payload)
+    } else {
+      this[EVENT.MESSAGE](event, payload)
     }
   }
 
@@ -295,14 +279,6 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
       return
     }
 
-    this.emit('debug', `sending event '${EVENT.IDENTITY.DETAILS}' with payload`, { username: this._username })
-    this._ws!.send(
-      JSON.stringify({
-        event: EVENT.IDENTITY.DETAILS,
-        username: this._username,
-      }),
-    )
-
     this.emit('debug', `connected`)
     this[EVENT.CONNECTED]()
   }
@@ -330,5 +306,4 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
   protected abstract [EVENT.DISCONNECTED](reason?: Error): void
   protected abstract [EVENT.TRACK](event: RTCTrackEvent): void
   protected abstract [EVENT.DATA](data: any): void
-  protected abstract [EVENT.IDENTITY.PROVIDE](payload: IdentityPayload): void
 }

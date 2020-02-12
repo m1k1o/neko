@@ -3,7 +3,6 @@ import {
   WebSocketEvents,
   SystemEvents,
   ControlEvents,
-  IdentityEvents,
   MemberEvents,
   SignalEvents,
   ChatEvents,
@@ -14,8 +13,8 @@ import { Member, ScreenConfigurations, ScreenResolution } from './types'
 
 export type WebSocketMessages =
   | WebSocketMessage
-  | IdentityMessage
-  | SignalMessage
+  | SignalProvideMessage
+  | SignalAnswerMessage
   | MemberListMessage
   | MembeConnectMessage
   | MembeDisconnectMessage
@@ -25,8 +24,8 @@ export type WebSocketMessages =
   | ChatMessage
 
 export type WebSocketPayloads =
-  | IdentityPayload
-  | SignalPayload
+  | SignalProvidePayload
+  | SignalAnswerPayload
   | MemberListPayload
   | Member
   | ControlPayload
@@ -54,25 +53,24 @@ export interface DisconnectPayload {
 }
 
 /*
-  IDENTITY MESSAGES/PAYLOADS
-*/
-// identity/provide
-export interface IdentityMessage extends WebSocketMessage, IdentityPayload {
-  event: typeof EVENT.IDENTITY.PROVIDE
-}
-export interface IdentityPayload {
-  id: string
-}
-
-/*
   SIGNAL MESSAGES/PAYLOADS
 */
+// signal/provide
+export interface SignalProvideMessage extends WebSocketMessage, SignalProvidePayload {
+  event: typeof EVENT.SIGNAL.PROVIDE
+}
+export interface SignalProvidePayload {
+  id: string
+  sdp: string
+}
+
 // signal/answer
-export interface SignalMessage extends WebSocketMessage, SignalPayload {
+export interface SignalAnswerMessage extends WebSocketMessage, SignalAnswerPayload {
   event: typeof EVENT.SIGNAL.ANSWER
 }
-export interface SignalPayload {
+export interface SignalAnswerPayload {
   sdp: string
+  username: string
 }
 
 /*

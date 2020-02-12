@@ -2,10 +2,12 @@ package webrtc
 
 import (
 	"fmt"
+	"io"
 	"strings"
 	"time"
 
 	"github.com/pion/webrtc/v2"
+	"github.com/pion/webrtc/v2/pkg/media"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
@@ -28,13 +30,22 @@ func New(sessions types.SessionManager, config *config.WebRTC) *WebRTCManager {
 	settings.SetEphemeralUDPPortRange(config.EphemeralMin, config.EphemeralMax)
 	settings.SetNAT1To1IPs(config.NAT1To1IPs, webrtc.ICECandidateTypeHost)
 
+	// Create MediaEngine based off sdp
+	engine := webrtc.MediaEngine{}
+	engine.RegisterDefaultCodecs()
+
+	// Create API with MediaEngine and SettingEngine
+	api := webrtc.NewAPI(webrtc.WithMediaEngine(engine), webrtc.WithSettingEngine(settings))
+
 	return &WebRTCManager{
 		logger:   logger,
 		settings: settings,
 		cleanup:  time.NewTicker(1 * time.Second),
 		shutdown: make(chan bool),
 		sessions: sessions,
+		engine:   engine,
 		config:   config,
+		api:      api,
 		configuration: &webrtc.Configuration{
 			SDPSemantics: webrtc.SDPSemanticsUnifiedPlanWithFallback,
 		},
@@ -44,18 +55,23 @@ func New(sessions types.SessionManager, config *config.WebRTC) *WebRTCManager {
 type WebRTCManager struct {
 	logger        zerolog.Logger
 	settings      webrtc.SettingEngine
-	sessions      types.SessionManager
+	engine        webrtc.MediaEngine
+	api           *webrtc.API
+	videoTrack    *webrtc.Track
+	audioTrack    *webrtc.Track
 	videoPipeline *gst.Pipeline
 	audioPipeline *gst.Pipeline
+	sessions      types.SessionManager
 	cleanup       *time.Ticker
 	config        *config.WebRTC
+
 	shutdown      chan bool
 	configuration *webrtc.Configuration
 }
 
 func (m *WebRTCManager) Start() {
+	// Set display and change to default resolution
 	xorg.Display(m.config.Display)
-
 	if !xorg.ValidScreenSize(m.config.ScreenWidth, m.config.ScreenHeight, m.config.ScreenRate) {
 		m.logger.Warn().Msgf("invalid screen option %dx%d@%d", m.config.ScreenWidth, m.config.ScreenHeight, m.config.ScreenRate)
 	} else {
@@ -64,31 +80,39 @@ func (m *WebRTCManager) Start() {
 		}
 	}
 
+	// Create video track/pipeline
 	videoPipeline, err := gst.CreatePipeline(
 		m.config.VideoCodec,
 		m.config.Display,
 		m.config.VideoParams,
 	)
-
 	if err != nil {
 		m.logger.Panic().Err(err).Msg("unable to start webrtc manager")
 	}
+	m.videoPipeline = videoPipeline
 
+	video, err := m.createVideoTrack()
+	if err != nil {
+		m.logger.Panic().Err(err).Msg("unable to start webrtc manager")
+	}
+	m.videoTrack = video
+
+	// Create audio track/pipeline
 	audioPipeline, err := gst.CreatePipeline(
 		m.config.AudioCodec,
 		m.config.Device,
 		m.config.AudioParams,
 	)
-
 	if err != nil {
 		m.logger.Panic().Err(err).Msg("unable to start webrtc manager")
 	}
-
-	m.videoPipeline = videoPipeline
 	m.audioPipeline = audioPipeline
 
-	videoPipeline.Start()
-	audioPipeline.Start()
+	audio, err := m.createAudioTrack()
+	if err != nil {
+		m.logger.Panic().Err(err).Msg("unable to start webrtc manager")
+	}
+	m.audioTrack = audio
 
 	go func() {
 		defer func() {
@@ -100,11 +124,11 @@ func (m *WebRTCManager) Start() {
 			case <-m.shutdown:
 				return
 			case sample := <-m.videoPipeline.Sample:
-				if err := m.sessions.WriteVideoSample(sample); err != nil {
+				if err := m.videoTrack.WriteSample(media.Sample(sample)); err != nil && err != io.ErrClosedPipe {
 					m.logger.Warn().Err(err).Msg("video pipeline failed to write")
 				}
 			case sample := <-m.audioPipeline.Sample:
-				if err := m.sessions.WriteAudioSample(sample); err != nil {
+				if err := m.audioTrack.WriteSample(media.Sample(sample)); err != nil && err != io.ErrClosedPipe {
 					m.logger.Warn().Err(err).Msg("audio pipeline failed to write")
 				}
 			case <-m.cleanup.C:
@@ -124,6 +148,10 @@ func (m *WebRTCManager) Start() {
 	m.sessions.OnDestroy(func(id string) {
 		m.logger.Debug().Str("id", id).Msg("session destroyed")
 	})
+
+	// start pipelines
+	videoPipeline.Start()
+	audioPipeline.Start()
 
 	// TODO: log resolution, bit rate and codec parameters
 	m.logger.Info().
@@ -147,64 +175,28 @@ func (m *WebRTCManager) Shutdown() error {
 	return nil
 }
 
-func (m *WebRTCManager) CreatePeer(id string, sdp string) (string, types.Peer, error) {
-	// Create SessionDescription
-	description := webrtc.SessionDescription{
-		SDP:  sdp,
-		Type: webrtc.SDPTypeOffer,
-	}
-
-	// Create MediaEngine based off sdp
-	engine := webrtc.MediaEngine{}
-	engine.PopulateFromSDP(description)
-
-	// Create API with MediaEngine and SettingEngine
-	api := webrtc.NewAPI(webrtc.WithMediaEngine(engine), webrtc.WithSettingEngine(m.settings))
-
+func (m *WebRTCManager) CreatePeer(id string, session types.Session) (string, error) {
 	// Create new peer connection
-	connection, err := api.NewPeerConnection(*m.configuration)
+	connection, err := m.api.NewPeerConnection(*m.configuration)
 	if err != nil {
-		return "", nil, err
+		return "", err
 	}
 
-	// Create video track
-	video, err := m.createVideoTrack(engine)
-	if err != nil {
-		return "", nil, err
-	}
-
-	_, err = connection.AddTransceiverFromTrack(video, webrtc.RtpTransceiverInit{
+	if _, err = connection.AddTransceiverFromTrack(m.videoTrack, webrtc.RtpTransceiverInit{
 		Direction: webrtc.RTPTransceiverDirectionSendonly,
-	})
-
-	if err != nil {
-		return "", nil, err
+	}); err != nil {
+		return "", err
 	}
 
-	// Create audio track
-	audio, err := m.createAudioTrack(engine)
-	if err != nil {
-		return "", nil, err
-	}
-
-	_, err = connection.AddTransceiverFromTrack(audio, webrtc.RtpTransceiverInit{
+	if _, err = connection.AddTransceiverFromTrack(m.audioTrack, webrtc.RtpTransceiverInit{
 		Direction: webrtc.RTPTransceiverDirectionSendonly,
-	})
-
-	if err != nil {
-		return "", nil, err
+	}); err != nil {
+		return "", err
 	}
 
-	// Set remote description
-	connection.SetRemoteDescription(description)
-
-	answer, err := connection.CreateAnswer(nil)
+	description, err := connection.CreateOffer(nil)
 	if err != nil {
-		return "", nil, err
-	}
-
-	if err = connection.SetLocalDescription(answer); err != nil {
-		return "", nil, err
+		return "", err
 	}
 
 	connection.OnDataChannel(func(d *webrtc.DataChannel) {
@@ -215,6 +207,7 @@ func (m *WebRTCManager) CreatePeer(id string, sdp string) (string, types.Peer, e
 		})
 	})
 
+	connection.SetLocalDescription(description)
 	connection.OnConnectionStateChange(func(state webrtc.PeerConnectionState) {
 		switch state {
 		case webrtc.PeerConnectionStateDisconnected:
@@ -224,18 +217,23 @@ func (m *WebRTCManager) CreatePeer(id string, sdp string) (string, types.Peer, e
 			break
 		case webrtc.PeerConnectionStateConnected:
 			m.logger.Info().Str("id", id).Msg("peer connected")
+			if err = session.SetConnected(true); err != nil {
+				m.logger.Warn().Err(err).Msg("unable to set connected on peer")
+				m.sessions.Destroy(id)
+			}
 			break
 		}
 	})
 
-	return answer.SDP, &Peer{
+	if err := session.SetPeer(&Peer{
 		id:         id,
-		api:        api,
-		engine:     engine,
-		video:      video,
-		audio:      audio,
+		manager:    m,
 		connection: connection,
-	}, nil
+	}); err != nil {
+		return "", err
+	}
+
+	return description.SDP, nil
 }
 
 func (m *WebRTCManager) ChangeScreenSize(width int, height int, rate int) error {

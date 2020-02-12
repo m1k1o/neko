@@ -7,7 +7,7 @@ import { accessor } from '~/store'
 
 import {
   DisconnectPayload,
-  IdentityPayload,
+  SignalProvidePayload,
   MemberListPayload,
   MemberDisconnectPayload,
   MemberPayload,
@@ -27,10 +27,6 @@ interface NekoEvents extends BaseEvents {}
 export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   private $vue!: Vue
   private $accessor!: typeof accessor
-
-  private get id() {
-    return this.$accessor.user.id
-  }
 
   init(vue: Vue) {
     this.$vue = vue
@@ -72,6 +68,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   }
 
   protected [EVENT.CONNECTED]() {
+    this.$accessor.user.setMember(this.id)
     this.$accessor.setConnected(true)
     this.$accessor.setConnected(true)
 
@@ -119,13 +116,6 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
       icon: 'error',
       confirmButtonText: 'ok',
     })
-  }
-
-  /////////////////////////////
-  // Identity Events
-  /////////////////////////////
-  protected [EVENT.IDENTITY.PROVIDE]({ id }: IdentityPayload) {
-    this.$accessor.user.setMember(id)
   }
 
   /////////////////////////////

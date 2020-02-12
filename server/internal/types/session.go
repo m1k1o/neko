@@ -16,14 +16,14 @@ type Session interface {
 	Member() *Member
 	SetMuted(muted bool)
 	SetName(name string) error
+	SetConnected(connected bool) error
 	SetSocket(socket WebScoket) error
 	SetPeer(peer Peer) error
 	Address() *string
 	Kick(message string) error
 	Write(v interface{}) error
 	Send(v interface{}) error
-	WriteAudioSample(sample Sample) error
-	WriteVideoSample(sample Sample) error
+	SignalAnwser(sdp string) error
 }
 
 type SessionManager interface {
@@ -39,8 +39,6 @@ type SessionManager interface {
 	Destroy(id string) error
 	Clear() error
 	Brodcast(v interface{}, exclude interface{}) error
-	WriteAudioSample(sample Sample) error
-	WriteVideoSample(sample Sample) error
 	OnHost(listener func(id string))
 	OnHostCleared(listener func(id string))
 	OnDestroy(listener func(id string))

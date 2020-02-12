@@ -15,10 +15,6 @@ export const EVENT = {
     ANSWER: 'signal/answer',
     PROVIDE: 'signal/provide',
   },
-  IDENTITY: {
-    PROVIDE: 'identity/provide',
-    DETAILS: 'identity/details',
-  },
   MEMBER: {
     LIST: 'member/list',
     CONNECTED: 'member/connected',
@@ -59,7 +55,6 @@ export type Events = typeof EVENT
 export type WebSocketEvents =
   | SystemEvents
   | ControlEvents
-  | IdentityEvents
   | MemberEvents
   | SignalEvents
   | ChatEvents
@@ -74,7 +69,6 @@ export type ControlEvents =
   | typeof EVENT.CONTROL.CLIPBOARD
 
 export type SystemEvents = typeof EVENT.SYSTEM.DISCONNECT
-export type IdentityEvents = typeof EVENT.IDENTITY.PROVIDE | typeof EVENT.IDENTITY.DETAILS
 export type MemberEvents = typeof EVENT.MEMBER.LIST | typeof EVENT.MEMBER.CONNECTED | typeof EVENT.MEMBER.DISCONNECTED
 export type SignalEvents = typeof EVENT.SIGNAL.ANSWER | typeof EVENT.SIGNAL.PROVIDE
 export type ChatEvents = typeof EVENT.CHAT.MESSAGE | typeof EVENT.CHAT.EMOTE

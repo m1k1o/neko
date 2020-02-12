@@ -4,32 +4,17 @@ import (
 	"sync"
 
 	"github.com/pion/webrtc/v2"
-	"github.com/pion/webrtc/v2/pkg/media"
-	"n.eko.moe/neko/internal/types"
 )
 
 type Peer struct {
 	id         string
-	engine     webrtc.MediaEngine
-	api        *webrtc.API
-	video      *webrtc.Track
-	audio      *webrtc.Track
+	manager    *WebRTCManager
 	connection *webrtc.PeerConnection
 	mu         sync.Mutex
 }
 
-func (peer *Peer) WriteAudioSample(sample types.Sample) error {
-	if err := peer.audio.WriteSample(media.Sample(sample)); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (peer *Peer) WriteVideoSample(sample types.Sample) error {
-	if err := peer.video.WriteSample(media.Sample(sample)); err != nil {
-		return err
-	}
-	return nil
+func (peer *Peer) SignalAnwser(sdp string) error {
+	return peer.connection.SetRemoteDescription(webrtc.SessionDescription{SDP: sdp, Type: webrtc.SDPTypeAnswer})
 }
 
 func (peer *Peer) WriteData(v interface{}) error {
