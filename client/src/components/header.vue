@@ -9,6 +9,13 @@
         <i
           :class="[{ disabled: !admin }, { 'fa-lock-open': !locked }, { 'fa-lock': locked }, 'fas', 'lock']"
           @click="toggleLock"
+          v-tooltip="{
+            content: admin ? (locked ? 'Unlock Room' : 'Lock Room') : locked ? 'Room Unlocked' : 'Room Locked',
+            placement: 'bottom',
+            offset: 5,
+            boundariesElement: 'body',
+            delay: { show: 300, hide: 100 },
+          }"
         />
       </li>
       <li>
