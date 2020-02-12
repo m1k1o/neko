@@ -15,12 +15,17 @@ import * as emoji from './emoji'
 export const state = () => ({
   username: get<string>('username', ''),
   password: get<string>('password', ''),
+  active: false,
   connecting: false,
   connected: false,
   locked: false,
 })
 
 export const mutations = mutationTree(state, {
+  setActive(state) {
+    state.active = true
+  },
+
   setLogin(state, { username, password }: { username: string; password: string }) {
     state.username = username
     state.password = password

@@ -27,6 +27,15 @@ new Vue({
   store,
   render: h => h(app),
   created() {
+    const click = () => {
+      this.$accessor.setActive()
+      if (this.$accessor.settings.autoplay && this.$accessor.video.playing) {
+        this.$accessor.video.setMuted(false)
+      }
+      window.removeEventListener('click', click, false)
+    }
+    window.addEventListener('click', click, false)
+
     this.$client.init(this)
     this.$accessor.initialise()
   },

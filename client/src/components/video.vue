@@ -312,8 +312,9 @@
       this._video.addEventListener('canplaythrough', () => {
         this.$accessor.video.setPlayable(true)
         if (this.autoplay) {
-          if (!document.hasFocus()) {
+          if (!document.hasFocus() || !this.$accessor.active) {
             this.$accessor.video.setMuted(true)
+            this._video.muted = true
           }
 
           this.$nextTick(() => {
@@ -345,12 +346,16 @@
         return
       }
 
-      this._video
-        .play()
-        .then(() => {
-          this.onResise()
-        })
-        .catch(err => this.$log.error(err))
+      try {
+        this._video
+          .play()
+          .then(() => {
+            this.onResise()
+          })
+          .catch(err => this.$log.error)
+      } catch (err) {
+        this.$log.error(err)
+      }
     }
 
     pause() {
@@ -379,7 +384,7 @@
     }
 
     onFocus() {
-      if (!document.hasFocus()) {
+      if (!document.hasFocus() || !this.$accessor.active) {
         return
       }
 
@@ -388,6 +393,7 @@
           .readText()
           .then(text => {
             if (this.clipboard !== text) {
+              this.$accessor.remote.setClipboard(text)
               this.$accessor.remote.sendClipboard(text)
             }
           })
