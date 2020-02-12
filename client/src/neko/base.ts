@@ -187,6 +187,14 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
       }
     }
 
+    this._peer.onconnectionstatechange = event => {
+      this.emit('debug', `peer connection state chagned`, this._peer ? this._peer.connectionState : undefined)
+    }
+
+    this._peer.onsignalingstatechange = event => {
+      this.emit('debug', `peer signaling state chagned`, this._peer ? this._peer.signalingState : undefined)
+    }
+
     this._peer.oniceconnectionstatechange = event => {
       this._state = this._peer!.iceConnectionState
 
