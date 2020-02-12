@@ -320,7 +320,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
 
     this.$accessor.chat.newMessage({
       id,
-      content: `chaned the resolution to ${width}x${height}@${rate}`,
+      content: `changed the resolution to ${width}x${height}@${rate}`,
       type: 'event',
       created: new Date(),
     })
