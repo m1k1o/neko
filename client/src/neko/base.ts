@@ -230,6 +230,8 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
       this.emit('warn', `attempting to set remote description while peer connected`, payload)
       return
     }
+
+    this.emit('debug', `remote description recieved: \n`, payload.sdp)
     this._peer!.setRemoteDescription({ type: 'answer', sdp: payload.sdp })
   }
 
