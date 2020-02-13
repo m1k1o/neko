@@ -1,6 +1,7 @@
 package websocket
 
 import (
+	"encoding/json"
 	"strings"
 	"sync"
 
@@ -9,6 +10,7 @@ import (
 
 type WebSocket struct {
 	id         string
+	ws         WebSocketHandler
 	connection *websocket.Conn
 	mu         sync.Mutex
 }
@@ -29,7 +31,18 @@ func (socket *WebSocket) Send(v interface{}) error {
 		return nil
 	}
 
-	return socket.connection.WriteJSON(v)
+	raw, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	socket.ws.logger.Debug().
+		Str("session", socket.id).
+		Str("address", socket.connection.RemoteAddr().String()).
+		Str("raw", string(raw)).
+		Msg("sending message to client")
+
+	return socket.connection.WriteMessage(websocket.TextMessage, raw)
 }
 
 func (socket *WebSocket) Destroy() error {

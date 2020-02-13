@@ -240,6 +240,7 @@ func (ws *WebSocketHandler) handle(connection *websocket.Conn, id string) {
 		case raw := <-bytes:
 			ws.logger.Debug().
 				Str("session", id).
+				Str("address", connection.RemoteAddr().String()).
 				Str("raw", string(raw)).
 				Msg("recieved message from client")
 			if err := ws.handler.Message(id, raw); err != nil {
