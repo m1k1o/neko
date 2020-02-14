@@ -94,8 +94,8 @@ func (WebRTC) Init(cmd *cobra.Command) error {
 		return err
 	}
 
-	cmd.PersistentFlags().StringSlice("ip", []string{}, "sets a list of external IP addresses of 1:1 (D)NAT and a candidate type for which the external IP address is used")
-	if err := viper.BindPFlag("ip", cmd.PersistentFlags().Lookup("ip")); err != nil {
+	cmd.PersistentFlags().StringSlice("nat1to1", []string{}, "sets a list of external IP addresses of 1:1 (D)NAT and a candidate type for which the external IP address is used")
+	if err := viper.BindPFlag("nat1to1", cmd.PersistentFlags().Lookup("nat1to1")); err != nil {
 		return err
 	}
 
@@ -129,7 +129,7 @@ func (s *WebRTC) Set() {
 	s.Display = viper.GetString("display")
 	s.VideoCodec = videoCodec
 	s.VideoParams = viper.GetString("vparams")
-	s.NAT1To1IPs = viper.GetStringSlice("ip")
+	s.NAT1To1IPs = viper.GetStringSlice("nat1to1")
 
 	if len(s.NAT1To1IPs) == 0 {
 		ip, err := utils.GetIP()
