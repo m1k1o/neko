@@ -142,6 +142,7 @@ func (ws *WebSocketHandler) Upgrade(w http.ResponseWriter, r *http.Request) erro
 
 	socket := &WebSocket{
 		id:         id,
+		ws:         ws,
 		connection: connection,
 	}
 

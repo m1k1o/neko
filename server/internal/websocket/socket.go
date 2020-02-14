@@ -10,7 +10,7 @@ import (
 
 type WebSocket struct {
 	id         string
-	ws         WebSocketHandler
+	ws         *WebSocketHandler
 	connection *websocket.Conn
 	mu         sync.Mutex
 }
