@@ -131,9 +131,11 @@ func (s *WebRTC) Set() {
 	s.VideoParams = viper.GetString("vparams")
 	s.NAT1To1IPs = viper.GetStringSlice("ip")
 
-	ip, err := utils.GetIP()
-	if err == nil {
-		s.NAT1To1IPs = append(s.NAT1To1IPs, ip)
+	if len(s.NAT1To1IPs) == 0 {
+		ip, err := utils.GetIP()
+		if err == nil {
+			s.NAT1To1IPs = append(s.NAT1To1IPs, ip)
+		}
 	}
 
 	min := uint16(59000)
