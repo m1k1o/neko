@@ -26,7 +26,6 @@ func New(sessions types.SessionManager, config *config.WebRTC) *WebRTCManager {
 	}
 
 	settings.SetLite(true)
-	settings.SetNetworkTypes([]webrtc.NetworkType{webrtc.NetworkTypeUDP4})
 	settings.SetEphemeralUDPPortRange(config.EphemeralMin, config.EphemeralMax)
 	settings.SetNAT1To1IPs(config.NAT1To1IPs, webrtc.ICECandidateTypeHost)
 
@@ -64,7 +63,6 @@ type WebRTCManager struct {
 	sessions      types.SessionManager
 	cleanup       *time.Ticker
 	config        *config.WebRTC
-
 	shutdown      chan bool
 	configuration *webrtc.Configuration
 }
@@ -80,39 +78,16 @@ func (m *WebRTCManager) Start() {
 		}
 	}
 
-	// Create video track/pipeline
-	videoPipeline, err := gst.CreatePipeline(
-		m.config.VideoCodec,
-		m.config.Display,
-		m.config.VideoParams,
-	)
+	var err error
+	m.videoPipeline, m.videoTrack, err = m.createTrack(m.config.VideoCodec, m.config.Display, m.config.VideoParams)
 	if err != nil {
 		m.logger.Panic().Err(err).Msg("unable to start webrtc manager")
 	}
-	m.videoPipeline = videoPipeline
 
-	video, err := m.createVideoTrack()
+	m.audioPipeline, m.audioTrack, err = m.createTrack(m.config.AudioCodec, m.config.Device, m.config.AudioParams)
 	if err != nil {
 		m.logger.Panic().Err(err).Msg("unable to start webrtc manager")
 	}
-	m.videoTrack = video
-
-	// Create audio track/pipeline
-	audioPipeline, err := gst.CreatePipeline(
-		m.config.AudioCodec,
-		m.config.Device,
-		m.config.AudioParams,
-	)
-	if err != nil {
-		m.logger.Panic().Err(err).Msg("unable to start webrtc manager")
-	}
-	m.audioPipeline = audioPipeline
-
-	audio, err := m.createAudioTrack()
-	if err != nil {
-		m.logger.Panic().Err(err).Msg("unable to start webrtc manager")
-	}
-	m.audioTrack = audio
 
 	go func() {
 		defer func() {
@@ -137,6 +112,9 @@ func (m *WebRTCManager) Start() {
 		}
 	}()
 
+	m.videoPipeline.Start()
+	m.audioPipeline.Start()
+
 	m.sessions.OnHostCleared(func(id string) {
 		xorg.ResetKeys()
 	})
@@ -149,10 +127,6 @@ func (m *WebRTCManager) Start() {
 		m.logger.Debug().Str("id", id).Msg("session destroyed")
 	})
 
-	// start pipelines
-	videoPipeline.Start()
-	audioPipeline.Start()
-
 	// TODO: log resolution, bit rate and codec parameters
 	m.logger.Info().
 		Str("video_display", m.config.Display).
@@ -161,8 +135,8 @@ func (m *WebRTCManager) Start() {
 		Str("audio_codec", m.config.AudioCodec).
 		Str("ephemeral_port_range", fmt.Sprintf("%d-%d", m.config.EphemeralMin, m.config.EphemeralMax)).
 		Str("nat_ips", strings.Join(m.config.NAT1To1IPs, ",")).
-		Str("audio_pipeline_src", audioPipeline.Src).
-		Str("video_pipeline_src", videoPipeline.Src).
+		Str("audio_pipeline_src", m.audioPipeline.Src).
+		Str("video_pipeline_src", m.videoPipeline.Src).
 		Msgf("webrtc streaming")
 }
 
