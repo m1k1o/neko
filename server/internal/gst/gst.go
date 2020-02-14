@@ -13,7 +13,6 @@ import (
 	"unsafe"
 
 	"github.com/pion/webrtc/v2"
-	"github.com/pkg/errors"
 
 	"n.eko.moe/neko/internal/types"
 )
@@ -190,7 +189,7 @@ func CreatePipeline(codecName string, pipelineDevice string, pipelineSrc string)
 			pipelineStr = fmt.Sprintf(audioSrc+"audio/x-raw, rate=8000 ! alawenc"+pipelineStr, pipelineDevice)
 		}
 	default:
-		return nil, errors.Errorf("unknown video codec %s", codecName)
+		return nil, fmt.Errorf("unknown codec %s", codecName)
 	}
 
 	pipelineStrUnsafe := C.CString(pipelineStr)
