@@ -27,7 +27,7 @@ type SessionManager struct {
 	emmiter events.EventEmmiter
 }
 
-func (manager *SessionManager) New(id string, admin bool, socket types.WebScoket) types.Session {
+func (manager *SessionManager) New(id string, admin bool, socket types.WebSocket) types.Session {
 	session := &Session{
 		id:        id,
 		admin:     admin,
@@ -112,7 +112,7 @@ func (manager *SessionManager) Clear() error {
 	return nil
 }
 
-func (manager *SessionManager) Brodcast(v interface{}, exclude interface{}) error {
+func (manager *SessionManager) Broadcast(v interface{}, exclude interface{}) error {
 	for id, session := range manager.members {
 		if !session.connected {
 			continue

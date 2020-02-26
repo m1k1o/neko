@@ -16,8 +16,8 @@ export type WebSocketMessages =
   | SignalProvideMessage
   | SignalAnswerMessage
   | MemberListMessage
-  | MembeConnectMessage
-  | MembeDisconnectMessage
+  | MemberConnectMessage
+  | MemberDisconnectMessage
   | ControlMessage
   | ScreenResolutionMessage
   | ScreenConfigurationsMessage
@@ -85,13 +85,13 @@ export interface MemberListPayload {
 }
 
 // member/connected
-export interface MembeConnectMessage extends WebSocketMessage, MemberPayload {
+export interface MemberConnectMessage extends WebSocketMessage, MemberPayload {
   event: typeof EVENT.MEMBER.CONNECTED
 }
 export type MemberPayload = Member
 
 // member/disconnected
-export interface MembeDisconnectMessage extends WebSocketMessage, MemberPayload {
+export interface MemberDisconnectMessage extends WebSocketMessage, MemberPayload {
   event: typeof EVENT.MEMBER.DISCONNECTED
 }
 export interface MemberDisconnectPayload {

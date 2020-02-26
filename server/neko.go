@@ -83,7 +83,7 @@ func (i *Version) String() string {
 func (i *Version) Details() string {
 	return fmt.Sprintf(
 		"%s\n%s\n%s\n%s\n%s\n%s\n%s\n",
-		fmt.Sprintf("Verison %s.%s.%s", i.Major, i.Minor, i.Patch),
+		fmt.Sprintf("Version %s.%s.%s", i.Major, i.Minor, i.Patch),
 		fmt.Sprintf("GitCommit %s", i.GitCommit),
 		fmt.Sprintf("GitBranch %s", i.GitBranch),
 		fmt.Sprintf("BuildDate %s", i.BuildDate),

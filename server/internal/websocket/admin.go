@@ -21,12 +21,12 @@ func (h *MessageHandler) adminLock(id string, session types.Session) error {
 
 	h.locked = true
 
-	if err := h.sessions.Brodcast(
+	if err := h.sessions.Broadcast(
 		message.Admin{
 			Event: event.ADMIN_LOCK,
 			ID:    id,
 		}, nil); err != nil {
-		h.logger.Warn().Err(err).Msgf("brodcasting event %s has failed", event.ADMIN_LOCK)
+		h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.ADMIN_LOCK)
 		return err
 	}
 
@@ -46,12 +46,12 @@ func (h *MessageHandler) adminUnlock(id string, session types.Session) error {
 
 	h.locked = false
 
-	if err := h.sessions.Brodcast(
+	if err := h.sessions.Broadcast(
 		message.Admin{
 			Event: event.ADMIN_UNLOCK,
 			ID:    id,
 		}, nil); err != nil {
-		h.logger.Warn().Err(err).Msgf("brodcasting event %s has failed", event.ADMIN_UNLOCK)
+		h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.ADMIN_UNLOCK)
 		return err
 	}
 
@@ -69,22 +69,22 @@ func (h *MessageHandler) adminControl(id string, session types.Session) error {
 	h.sessions.SetHost(id)
 
 	if ok {
-		if err := h.sessions.Brodcast(
+		if err := h.sessions.Broadcast(
 			message.AdminTarget{
 				Event:  event.ADMIN_CONTROL,
 				ID:     id,
 				Target: host.ID(),
 			}, nil); err != nil {
-			h.logger.Warn().Err(err).Msgf("brodcasting event %s has failed", event.ADMIN_CONTROL)
+			h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.ADMIN_CONTROL)
 			return err
 		}
 	} else {
-		if err := h.sessions.Brodcast(
+		if err := h.sessions.Broadcast(
 			message.Admin{
 				Event: event.ADMIN_CONTROL,
 				ID:    id,
 			}, nil); err != nil {
-			h.logger.Warn().Err(err).Msgf("brodcasting event %s has failed", event.ADMIN_CONTROL)
+			h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.ADMIN_CONTROL)
 			return err
 		}
 	}
@@ -103,22 +103,22 @@ func (h *MessageHandler) adminRelease(id string, session types.Session) error {
 	h.sessions.ClearHost()
 
 	if ok {
-		if err := h.sessions.Brodcast(
+		if err := h.sessions.Broadcast(
 			message.AdminTarget{
 				Event:  event.ADMIN_RELEASE,
 				ID:     id,
 				Target: host.ID(),
 			}, nil); err != nil {
-			h.logger.Warn().Err(err).Msgf("brodcasting event %s has failed", event.ADMIN_RELEASE)
+			h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.ADMIN_RELEASE)
 			return err
 		}
 	} else {
-		if err := h.sessions.Brodcast(
+		if err := h.sessions.Broadcast(
 			message.Admin{
 				Event: event.ADMIN_RELEASE,
 				ID:    id,
 			}, nil); err != nil {
-			h.logger.Warn().Err(err).Msgf("brodcasting event %s has failed", event.ADMIN_RELEASE)
+			h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.ADMIN_RELEASE)
 			return err
 		}
 	}
@@ -141,13 +141,13 @@ func (h *MessageHandler) adminGive(id string, session types.Session, payload *me
 	h.sessions.SetHost(payload.ID)
 
 	// let everyone know
-	if err := h.sessions.Brodcast(
+	if err := h.sessions.Broadcast(
 		message.AdminTarget{
 			Event:  event.CONTROL_GIVE,
 			ID:     id,
 			Target: payload.ID,
 		}, nil); err != nil {
-		h.logger.Warn().Err(err).Msgf("brodcasting event %s has failed", event.CONTROL_LOCKED)
+		h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.CONTROL_LOCKED)
 		return err
 	}
 
@@ -173,13 +173,13 @@ func (h *MessageHandler) adminMute(id string, session types.Session, payload *me
 
 	target.SetMuted(true)
 
-	if err := h.sessions.Brodcast(
+	if err := h.sessions.Broadcast(
 		message.AdminTarget{
 			Event:  event.ADMIN_MUTE,
 			Target: target.ID(),
 			ID:     id,
 		}, nil); err != nil {
-		h.logger.Warn().Err(err).Msgf("brodcasting event %s has failed", event.ADMIN_UNMUTE)
+		h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.ADMIN_UNMUTE)
 		return err
 	}
 
@@ -200,13 +200,13 @@ func (h *MessageHandler) adminUnmute(id string, session types.Session, payload *
 
 	target.SetMuted(false)
 
-	if err := h.sessions.Brodcast(
+	if err := h.sessions.Broadcast(
 		message.AdminTarget{
 			Event:  event.ADMIN_UNMUTE,
 			Target: target.ID(),
 			ID:     id,
 		}, nil); err != nil {
-		h.logger.Warn().Err(err).Msgf("brodcasting event %s has failed", event.ADMIN_UNMUTE)
+		h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.ADMIN_UNMUTE)
 		return err
 	}
 
@@ -234,13 +234,13 @@ func (h *MessageHandler) adminKick(id string, session types.Session, payload *me
 		return err
 	}
 
-	if err := h.sessions.Brodcast(
+	if err := h.sessions.Broadcast(
 		message.AdminTarget{
 			Event:  event.ADMIN_KICK,
 			Target: target.ID(),
 			ID:     id,
 		}, []string{payload.ID}); err != nil {
-		h.logger.Warn().Err(err).Msgf("brodcasting event %s has failed", event.ADMIN_KICK)
+		h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.ADMIN_KICK)
 		return err
 	}
 
@@ -284,13 +284,13 @@ func (h *MessageHandler) adminBan(id string, session types.Session, payload *mes
 		return err
 	}
 
-	if err := h.sessions.Brodcast(
+	if err := h.sessions.Broadcast(
 		message.AdminTarget{
 			Event:  event.ADMIN_BAN,
 			Target: target.ID(),
 			ID:     id,
 		}, []string{payload.ID}); err != nil {
-		h.logger.Warn().Err(err).Msgf("brodcasting event %s has failed", event.ADMIN_BAN)
+		h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.ADMIN_BAN)
 		return err
 	}
 

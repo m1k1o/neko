@@ -20,12 +20,12 @@ func (h *MessageHandler) controlRelease(id string, session types.Session) error 
 	h.sessions.ClearHost()
 
 	// tell everyone
-	if err := h.sessions.Brodcast(
+	if err := h.sessions.Broadcast(
 		message.Control{
 			Event: event.CONTROL_RELEASE,
 			ID:    id,
 		}, nil); err != nil {
-		h.logger.Warn().Err(err).Msgf("brodcasting event %s has failed", event.CONTROL_RELEASE)
+		h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.CONTROL_RELEASE)
 		return err
 	}
 
@@ -39,12 +39,12 @@ func (h *MessageHandler) controlRequest(id string, session types.Session) error 
 		h.sessions.SetHost(id)
 
 		// let everyone know
-		if err := h.sessions.Brodcast(
+		if err := h.sessions.Broadcast(
 			message.Control{
 				Event: event.CONTROL_LOCKED,
 				ID:    id,
 			}, nil); err != nil {
-			h.logger.Warn().Err(err).Msgf("brodcasting event %s has failed", event.CONTROL_LOCKED)
+			h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.CONTROL_LOCKED)
 			return err
 		}
 
@@ -93,13 +93,13 @@ func (h *MessageHandler) controlGive(id string, session types.Session, payload *
 	h.sessions.SetHost(payload.ID)
 
 	// let everyone know
-	if err := h.sessions.Brodcast(
+	if err := h.sessions.Broadcast(
 		message.ControlTarget{
 			Event:  event.CONTROL_GIVE,
 			ID:     id,
 			Target: payload.ID,
 		}, nil); err != nil {
-		h.logger.Warn().Err(err).Msgf("brodcasting event %s has failed", event.CONTROL_LOCKED)
+		h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.CONTROL_LOCKED)
 		return err
 	}
 

@@ -84,13 +84,13 @@ func (h *MessageHandler) Message(id string, raw []byte) error {
 
 	// Chat Events
 	case event.CHAT_MESSAGE:
-		payload := &message.ChatRecieve{}
+		payload := &message.ChatReceive{}
 		return errors.Wrapf(
 			utils.Unmarshal(payload, raw, func() error {
 				return h.chat(id, session, payload)
 			}), "%s failed", header.Event)
 	case event.CHAT_EMOTE:
-		payload := &message.EmoteRecieve{}
+		payload := &message.EmoteReceive{}
 		return errors.Wrapf(
 			utils.Unmarshal(payload, raw, func() error {
 				return h.chatEmote(id, session, payload)

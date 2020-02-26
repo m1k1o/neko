@@ -55,7 +55,7 @@ type ControlTarget struct {
 	Target string `json:"target"`
 }
 
-type ChatRecieve struct {
+type ChatReceive struct {
 	Event   string `json:"event"`
 	Content string `json:"content"`
 }
@@ -66,7 +66,7 @@ type ChatSend struct {
 	Content string `json:"content"`
 }
 
-type EmoteRecieve struct {
+type EmoteReceive struct {
 	Event string `json:"event"`
 	Emote string `json:"emote"`
 }

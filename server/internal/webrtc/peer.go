@@ -13,7 +13,7 @@ type Peer struct {
 	mu         sync.Mutex
 }
 
-func (peer *Peer) SignalAnwser(sdp string) error {
+func (peer *Peer) SignalAnswer(sdp string) error {
 	return peer.connection.SetRemoteDescription(webrtc.SessionDescription{SDP: sdp, Type: webrtc.SDPTypeAnswer})
 }
 

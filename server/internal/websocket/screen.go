@@ -18,7 +18,7 @@ func (h *MessageHandler) screenSet(id string, session types.Session, payload *me
 		return err
 	}
 
-	if err := h.sessions.Brodcast(
+	if err := h.sessions.Broadcast(
 		message.ScreenResolution{
 			Event:  event.SCREEN_RESOLUTION,
 			ID:     id,
@@ -26,7 +26,7 @@ func (h *MessageHandler) screenSet(id string, session types.Session, payload *me
 			Height: payload.Height,
 			Rate:   payload.Rate,
 		}, nil); err != nil {
-		h.logger.Warn().Err(err).Msgf("brodcasting event %s has failed", event.SCREEN_RESOLUTION)
+		h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.SCREEN_RESOLUTION)
 		return err
 	}
 
