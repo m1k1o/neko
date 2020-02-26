@@ -52,7 +52,7 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
     }
 
     if (username === '') {
-      throw new Error('Must add a username') // TODO: Better handleing
+      throw new Error('Must add a username') // TODO: Better handling
     }
 
     this._username = username
@@ -98,7 +98,7 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
   public sendData(event: 'mousedown' | 'mouseup' | 'keydown' | 'keyup', data: { key: number }): void
   public sendData(event: string, data: any) {
     if (!this.connected) {
-      this.emit('warn', `attemping to send data while dissconneted`)
+      this.emit('warn', `attempting to send data while disconnected`)
       return
     }
 
@@ -149,7 +149,7 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
 
   public sendMessage(event: WebSocketEvents, payload?: WebSocketPayloads) {
     if (!this.connected) {
-      this.emit('warn', `attemping to send message while dissconneted`)
+      this.emit('warn', `attempting to send message while disconnected`)
       return
     }
     this.emit('debug', `sending event '${event}' ${payload ? `with payload: ` : ''}`, payload)
@@ -175,17 +175,17 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
     this._peer = new RTCPeerConnection()
 
     this._peer.onconnectionstatechange = event => {
-      this.emit('debug', `peer connection state chagned`, this._peer ? this._peer.connectionState : undefined)
+      this.emit('debug', `peer connection state changed`, this._peer ? this._peer.connectionState : undefined)
     }
 
     this._peer.onsignalingstatechange = event => {
-      this.emit('debug', `peer signaling state chagned`, this._peer ? this._peer.signalingState : undefined)
+      this.emit('debug', `peer signaling state changed`, this._peer ? this._peer.signalingState : undefined)
     }
 
     this._peer.oniceconnectionstatechange = event => {
       this._state = this._peer!.iceConnectionState
 
-      this.emit('debug', `peer ice connection state chagned: ${this._peer!.iceConnectionState}`)
+      this.emit('debug', `peer ice connection state changed: ${this._peer!.iceConnectionState}`)
 
       switch (this._state) {
         case 'checking':
@@ -284,7 +284,7 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
   }
 
   private onTimeout() {
-    this.emit('debug', `connection timedout`)
+    this.emit('debug', `connection timeout`)
     if (this._timeout) {
       clearTimeout(this._timeout)
     }
