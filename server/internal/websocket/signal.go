@@ -28,7 +28,7 @@ func (h *MessageHandler) signalAnswer(id string, session types.Session, payload 
 		return err
 	}
 
-	if err := session.SignalAnwser(payload.SDP); err != nil {
+	if err := session.SignalAnswer(payload.SDP); err != nil {
 		return err
 	}
 

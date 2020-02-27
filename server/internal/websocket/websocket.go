@@ -125,7 +125,7 @@ func (ws *WebSocketHandler) Upgrade(w http.ResponseWriter, r *http.Request) erro
 
 	id, admin, err := ws.authenticate(r)
 	if err != nil {
-		ws.logger.Warn().Err(err).Msg("authenticatetion failed")
+		ws.logger.Warn().Err(err).Msg("authentication failed")
 
 		if err = connection.WriteJSON(message.Disconnect{
 			Event:   event.SYSTEM_DISCONNECT,
@@ -243,7 +243,7 @@ func (ws *WebSocketHandler) handle(connection *websocket.Conn, id string) {
 				Str("session", id).
 				Str("address", connection.RemoteAddr().String()).
 				Str("raw", string(raw)).
-				Msg("recieved message from client")
+				Msg("received message from client")
 			if err := ws.handler.Message(id, raw); err != nil {
 				ws.logger.Error().Err(err).Msg("message handler has failed")
 			}

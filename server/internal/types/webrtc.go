@@ -13,7 +13,7 @@ type WebRTCManager interface {
 }
 
 type Peer interface {
-	SignalAnwser(sdp string) error
+	SignalAnswer(sdp string) error
 	WriteData(v interface{}) error
 	Destroy() error
 }

@@ -17,7 +17,7 @@ type Session struct {
 	muted     bool
 	connected bool
 	manager   *SessionManager
-	socket    types.WebScoket
+	socket    types.WebSocket
 	peer      types.Peer
 	mu        sync.Mutex
 }
@@ -67,7 +67,7 @@ func (session *Session) SetName(name string) error {
 	return nil
 }
 
-func (session *Session) SetSocket(socket types.WebScoket) error {
+func (session *Session) SetSocket(socket types.WebSocket) error {
 	session.socket = socket
 	return nil
 }
@@ -113,11 +113,11 @@ func (session *Session) Write(v interface{}) error {
 	return session.socket.Send(v)
 }
 
-func (session *Session) SignalAnwser(sdp string) error {
+func (session *Session) SignalAnswer(sdp string) error {
 	if session.peer == nil {
 		return nil
 	}
-	return session.peer.SignalAnwser(sdp)
+	return session.peer.SignalAnswer(sdp)
 }
 
 func (session *Session) destroy() error {

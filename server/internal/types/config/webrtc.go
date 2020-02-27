@@ -32,8 +32,8 @@ func (WebRTC) Init(cmd *cobra.Command) error {
 		return err
 	}
 
-	cmd.PersistentFlags().String("aduio", "", "audio codec parameters to use for streaming (unused)")
-	if err := viper.BindPFlag("aparams", cmd.PersistentFlags().Lookup("aduio")); err != nil {
+	cmd.PersistentFlags().String("audio", "", "audio codec parameters to use for streaming (unused)")
+	if err := viper.BindPFlag("aparams", cmd.PersistentFlags().Lookup("audio")); err != nil {
 		return err
 	}
 
