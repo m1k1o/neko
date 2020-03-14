@@ -142,13 +142,13 @@ func (s *WebRTC) Set() {
 	max := uint16(59100)
 	epr := viper.GetString("epr")
 	ports := strings.SplitN(epr, "-", -1)
-	if len(ports[0]) > 1 {
-		start, err := strconv.ParseUint(ports[0], 16, 16)
+	if len(ports) > 1 {
+		start, err := strconv.ParseUint(ports[0], 10, 16)
 		if err == nil {
 			min = uint16(start)
 		}
 
-		end, err := strconv.ParseUint(ports[1], 16, 16)
+		end, err := strconv.ParseUint(ports[1], 10, 16)
 		if err == nil {
 			max = uint16(end)
 		}
