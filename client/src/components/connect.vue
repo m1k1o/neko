@@ -7,7 +7,7 @@
       </div>
       <form class="message" v-if="!connecting" @submit.stop.prevent="connect">
         <span>Please Login</span>
-        <input type="text" placeholder="Username" v-model="username" />
+        <input type="text" placeholder="Display Name" v-model="username" />
         <input type="password" placeholder="Password" v-model="password" />
         <button type="submit" @click.stop.prevent="login">
           Connect
