@@ -13,7 +13,7 @@ Server for n.eko, as of right now this will *only* work on Linux systems, only t
 --static "./www"              // (string) path to neko client files to serve
 --device "auto_null.monitor"  // (string) audio device to capture
 --display ":99.0"             // (string) XDisplay to capture
---aduio ""                    // (string) audio codec parameters to use for streaming (unused)
+--audio ""                    // (string) audio codec parameters to use for streaming (unused)
 --video ""                    // (string) video codec parameters to use for streaming (unused)
 --epr "59000-59100"           // (string) limits the pool of ephemeral ports that ICE UDP connections can allocate from
 --vp8                         // (bool) use VP8 video codec
