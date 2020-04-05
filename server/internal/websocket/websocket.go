@@ -14,16 +14,16 @@ import (
 	"n.eko.moe/neko/internal/types/event"
 	"n.eko.moe/neko/internal/types/message"
 	"n.eko.moe/neko/internal/utils"
-	"n.eko.moe/neko/internal/xorg"
 )
 
-func New(sessions types.SessionManager, webrtc types.WebRTCManager, conf *config.WebSocket) *WebSocketHandler {
+func New(sessions types.SessionManager, remote types.RemoteManager, webrtc types.WebRTCManager, conf *config.WebSocket) *WebSocketHandler {
 	logger := log.With().Str("module", "websocket").Logger()
 
 	return &WebSocketHandler{
 		logger:   logger,
 		conf:     conf,
 		sessions: sessions,
+		remote:   remote,
 		upgrader: websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool {
 				return true
@@ -31,6 +31,7 @@ func New(sessions types.SessionManager, webrtc types.WebRTCManager, conf *config
 		},
 		handler: &MessageHandler{
 			logger:   logger.With().Str("subsystem", "handler").Logger(),
+			remote:   remote,
 			sessions: sessions,
 			webrtc:   webrtc,
 			banned:   make(map[string]bool),
@@ -46,6 +47,7 @@ type WebSocketHandler struct {
 	logger   zerolog.Logger
 	upgrader websocket.Upgrader
 	sessions types.SessionManager
+	remote   types.RemoteManager
 	conf     *config.WebSocket
 	handler  *MessageHandler
 	shutdown chan bool
@@ -81,7 +83,7 @@ func (ws *WebSocketHandler) Start() error {
 			ws.logger.Info().Msg("shutdown")
 		}()
 
-		current := xorg.ReadClipboard()
+		current := ws.remote.ReadClipboard()
 
 		for {
 			select {
@@ -89,7 +91,7 @@ func (ws *WebSocketHandler) Start() error {
 				return
 			default:
 				if ws.sessions.HasHost() {
-					text := xorg.ReadClipboard()
+					text := ws.remote.ReadClipboard()
 					if text != current {
 						session, ok := ws.sessions.GetHost()
 						if ok {

@@ -6,7 +6,6 @@ import (
 	"strconv"
 
 	"github.com/pion/webrtc/v2"
-	"n.eko.moe/neko/internal/xorg"
 )
 
 const OP_MOVE = 0x01
@@ -37,8 +36,8 @@ type PayloadKey struct {
 	Key uint16
 }
 
-func (m *WebRTCManager) handle(id string, msg webrtc.DataChannelMessage) error {
-	if !m.sessions.IsHost(id) {
+func (manager *WebRTCManager) handle(id string, msg webrtc.DataChannelMessage) error {
+	if !manager.sessions.IsHost(id) {
 		return nil
 	}
 
@@ -63,7 +62,7 @@ func (m *WebRTCManager) handle(id string, msg webrtc.DataChannelMessage) error {
 			return err
 		}
 
-		xorg.Move(int(payload.X), int(payload.Y))
+		manager.remote.Move(int(payload.X), int(payload.Y))
 		break
 	case OP_SCROLL:
 		payload := &PayloadScroll{}
@@ -71,13 +70,13 @@ func (m *WebRTCManager) handle(id string, msg webrtc.DataChannelMessage) error {
 			return err
 		}
 
-		m.logger.
+		manager.logger.
 			Debug().
 			Str("x", strconv.Itoa(int(payload.X))).
 			Str("y", strconv.Itoa(int(payload.Y))).
 			Msg("scroll")
 
-		xorg.Scroll(int(payload.X), int(payload.Y))
+		manager.remote.Scroll(int(payload.X), int(payload.Y))
 		break
 	case OP_KEY_DOWN:
 		payload := &PayloadKey{}
@@ -86,21 +85,21 @@ func (m *WebRTCManager) handle(id string, msg webrtc.DataChannelMessage) error {
 		}
 
 		if payload.Key < 8 {
-			button, err := xorg.ButtonDown(int(payload.Key))
+			button, err := manager.remote.ButtonDown(int(payload.Key))
 			if err != nil {
-				m.logger.Warn().Err(err).Msg("key down failed")
+				manager.logger.Warn().Err(err).Msg("key down failed")
 				return nil
 			}
 
-			m.logger.Debug().Msgf("button down %s(%d)", button.Name, payload.Key)
+			manager.logger.Debug().Msgf("button down %s(%d)", button.Name, payload.Key)
 		} else {
-			key, err := xorg.KeyDown(int(payload.Key))
+			key, err := manager.remote.KeyDown(int(payload.Key))
 			if err != nil {
-				m.logger.Warn().Err(err).Msg("key down failed")
+				manager.logger.Warn().Err(err).Msg("key down failed")
 				return nil
 			}
 
-			m.logger.Debug().Msgf("key down %s(%d)", key.Name, payload.Key)
+			manager.logger.Debug().Msgf("key down %s(%d)", key.Name, payload.Key)
 		}
 
 		break
@@ -112,21 +111,21 @@ func (m *WebRTCManager) handle(id string, msg webrtc.DataChannelMessage) error {
 		}
 
 		if payload.Key < 8 {
-			button, err := xorg.ButtonUp(int(payload.Key))
+			button, err := manager.remote.ButtonUp(int(payload.Key))
 			if err != nil {
-				m.logger.Warn().Err(err).Msg("button up failed")
+				manager.logger.Warn().Err(err).Msg("button up failed")
 				return nil
 			}
 
-			m.logger.Debug().Msgf("button up %s(%d)", button.Name, payload.Key)
+			manager.logger.Debug().Msgf("button up %s(%d)", button.Name, payload.Key)
 		} else {
-			key, err := xorg.KeyUp(int(payload.Key))
+			key, err := manager.remote.KeyUp(int(payload.Key))
 			if err != nil {
-				m.logger.Warn().Err(err).Msg("keyup failed")
+				manager.logger.Warn().Err(err).Msg("keyup failed")
 				return nil
 			}
 
-			m.logger.Debug().Msgf("key up %s(%d)", key.Name, payload.Key)
+			manager.logger.Debug().Msgf("key up %s(%d)", key.Name, payload.Key)
 		}
 		break
 	case OP_KEY_CLK:

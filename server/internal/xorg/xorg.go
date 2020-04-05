@@ -27,8 +27,8 @@ import (
 var ScreenConfigurations = make(map[int]types.ScreenConfiguration)
 
 var debounce = make(map[int]time.Time)
-var buttons = make(map[int]keycode.Button)
-var keys = make(map[int]keycode.Key)
+var buttons = make(map[int]types.Button)
+var keys = make(map[int]types.Key)
 var mu = sync.Mutex{}
 
 func init() {
@@ -167,7 +167,7 @@ func Scroll(x, y int) {
 	C.XScroll(C.int(x), C.int(y))
 }
 
-func ButtonDown(code int) (*keycode.Button, error) {
+func ButtonDown(code int) (*types.Button, error) {
 	mu.Lock()
 	defer mu.Unlock()
 
@@ -186,7 +186,7 @@ func ButtonDown(code int) (*keycode.Button, error) {
 	return &button, nil
 }
 
-func KeyDown(code int) (*keycode.Key, error) {
+func KeyDown(code int) (*types.Key, error) {
 	mu.Lock()
 	defer mu.Unlock()
 
@@ -205,7 +205,7 @@ func KeyDown(code int) (*keycode.Key, error) {
 	return &key, nil
 }
 
-func ButtonUp(code int) (*keycode.Button, error) {
+func ButtonUp(code int) (*types.Button, error) {
 	mu.Lock()
 	defer mu.Unlock()
 
@@ -224,7 +224,7 @@ func ButtonUp(code int) (*keycode.Button, error) {
 	return &button, nil
 }
 
-func KeyUp(code int) (*keycode.Key, error) {
+func KeyUp(code int) (*types.Key, error) {
 	mu.Lock()
 	defer mu.Unlock()
 

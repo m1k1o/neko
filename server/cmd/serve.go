@@ -19,6 +19,7 @@ func init() {
 	configs := []config.Config{
 		neko.Service.Server,
 		neko.Service.WebRTC,
+		neko.Service.Remote,
 		neko.Service.WebSocket,
 	}
 

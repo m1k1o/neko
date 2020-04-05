@@ -16,6 +16,7 @@ type MessageHandler struct {
 	logger   zerolog.Logger
 	sessions types.SessionManager
 	webrtc   types.WebRTCManager
+	remote   types.RemoteManager
 	banned   map[string]bool
 	locked   bool
 }

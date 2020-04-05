@@ -4,7 +4,6 @@ import (
 	"n.eko.moe/neko/internal/types"
 	"n.eko.moe/neko/internal/types/event"
 	"n.eko.moe/neko/internal/types/message"
-	"n.eko.moe/neko/internal/xorg"
 )
 
 func (h *MessageHandler) controlRelease(id string, session types.Session) error {
@@ -113,6 +112,6 @@ func (h *MessageHandler) controlClipboard(id string, session types.Session, payl
 		return nil
 	}
 
-	xorg.WriteClipboard(payload.Text)
+	h.remote.WriteClipboard(payload.Text)
 	return nil
 }

@@ -7,6 +7,7 @@ import (
 	"runtime"
 
 	"n.eko.moe/neko/internal/http"
+	"n.eko.moe/neko/internal/remote"
 	"n.eko.moe/neko/internal/session"
 	"n.eko.moe/neko/internal/types/config"
 	"n.eko.moe/neko/internal/webrtc"
@@ -59,6 +60,7 @@ func init() {
 		},
 		Root:      &config.Root{},
 		Server:    &config.Server{},
+		Remote:    &config.Remote{},
 		WebRTC:    &config.WebRTC{},
 		WebSocket: &config.WebSocket{},
 	}
@@ -96,13 +98,15 @@ func (i *Version) Details() string {
 type Neko struct {
 	Version   *Version
 	Root      *config.Root
+	Remote    *config.Remote
 	Server    *config.Server
 	WebRTC    *config.WebRTC
 	WebSocket *config.WebSocket
 
 	logger           zerolog.Logger
 	server           *http.Server
-	sessions         *session.SessionManager
+	sessionManager   *session.SessionManager
+	remoteManager    *remote.RemoteManager
 	webRTCManager    *webrtc.WebRTCManager
 	webSocketHandler *websocket.WebSocketHandler
 }
@@ -112,24 +116,34 @@ func (neko *Neko) Preflight() {
 }
 
 func (neko *Neko) Start() {
-	sessions := session.New()
+	sessionManager := session.New()
 
-	webRTCManager := webrtc.New(sessions, neko.WebRTC)
+	remoteManager := remote.New(neko.Remote)
+	remoteManager.Start()
+
+	webRTCManager := webrtc.New(sessionManager, remoteManager, neko.WebRTC)
 	webRTCManager.Start()
 
-	webSocketHandler := websocket.New(sessions, webRTCManager, neko.WebSocket)
+	webSocketHandler := websocket.New(sessionManager, remoteManager, webRTCManager, neko.WebSocket)
 	webSocketHandler.Start()
 
 	server := http.New(neko.Server, webSocketHandler)
 	server.Start()
 
-	neko.sessions = sessions
+	neko.sessionManager = sessionManager
+	neko.remoteManager = remoteManager
 	neko.webRTCManager = webRTCManager
 	neko.webSocketHandler = webSocketHandler
 	neko.server = server
 }
 
 func (neko *Neko) Shutdown() {
+	if err := neko.remoteManager.Shutdown(); err != nil {
+		neko.logger.Err(err).Msg("remote manager shutdown with an error")
+	} else {
+		neko.logger.Debug().Msg("remote manager shutdown")
+	}
+
 	if err := neko.webRTCManager.Shutdown(); err != nil {
 		neko.logger.Err(err).Msg("webrtc manager shutdown with an error")
 	} else {
