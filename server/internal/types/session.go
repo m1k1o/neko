@@ -19,7 +19,7 @@ type Session interface {
 	SetConnected(connected bool) error
 	SetSocket(socket WebSocket) error
 	SetPeer(peer Peer) error
-	Address() *string
+	Address() string
 	Kick(message string) error
 	Write(v interface{}) error
 	Send(v interface{}) error

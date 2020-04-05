@@ -42,9 +42,9 @@ func (session *Session) Connected() bool {
 	return session.connected
 }
 
-func (session *Session) Address() *string {
+func (session *Session) Address() string {
 	if session.socket == nil {
-		return nil
+		return ""
 	}
 	return session.socket.Address()
 }

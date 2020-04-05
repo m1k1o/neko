@@ -10,18 +10,19 @@ import (
 
 type WebSocket struct {
 	id         string
+	address    string
 	ws         *WebSocketHandler
 	connection *websocket.Conn
 	mu         sync.Mutex
 }
 
-func (socket *WebSocket) Address() *string {
-	remote := socket.connection.RemoteAddr()
-	address := strings.SplitN(remote.String(), ":", -1)
+func (socket *WebSocket) Address() string {
+	//remote := socket.connection.RemoteAddr()
+	address := strings.SplitN(socket.address, ":", -1)
 	if len(address[0]) < 1 {
-		return nil
+		return socket.address
 	}
-	return &address[0]
+	return address[0]
 }
 
 func (socket *WebSocket) Send(v interface{}) error {

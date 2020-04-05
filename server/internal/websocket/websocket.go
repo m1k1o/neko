@@ -123,7 +123,7 @@ func (ws *WebSocketHandler) Upgrade(w http.ResponseWriter, r *http.Request) erro
 		return err
 	}
 
-	id, admin, err := ws.authenticate(r)
+	id, ip, admin, err := ws.authenticate(r)
 	if err != nil {
 		ws.logger.Warn().Err(err).Msg("authentication failed")
 
@@ -143,6 +143,7 @@ func (ws *WebSocketHandler) Upgrade(w http.ResponseWriter, r *http.Request) erro
 	socket := &WebSocket{
 		id:         id,
 		ws:         ws,
+		address:    ip,
 		connection: connection,
 	}
 
@@ -187,26 +188,28 @@ func (ws *WebSocketHandler) Upgrade(w http.ResponseWriter, r *http.Request) erro
 	return nil
 }
 
-func (ws *WebSocketHandler) authenticate(r *http.Request) (string, bool, error) {
+func (ws *WebSocketHandler) authenticate(r *http.Request) (string, string, bool, error) {
+	ip := utils.ReadUserIP(r)
+
 	id, err := utils.NewUID(32)
 	if err != nil {
-		return "", false, err
+		return "", ip, false, err
 	}
 
 	passwords, ok := r.URL.Query()["password"]
 	if !ok || len(passwords[0]) < 1 {
-		return "", false, fmt.Errorf("no password provided")
+		return "", ip, false, fmt.Errorf("no password provided")
 	}
 
 	if passwords[0] == ws.conf.AdminPassword {
-		return id, true, nil
+		return id, ip, true, nil
 	}
 
 	if passwords[0] == ws.conf.Password {
-		return id, false, nil
+		return id, ip, false, nil
 	}
 
-	return "", false, fmt.Errorf("invalid password: %s", passwords[0])
+	return "", ip, false, fmt.Errorf("invalid password: %s", passwords[0])
 }
 
 func (ws *WebSocketHandler) handle(connection *websocket.Conn, id string) {

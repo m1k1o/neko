@@ -265,18 +265,18 @@ func (h *MessageHandler) adminBan(id string, session types.Session, payload *mes
 	}
 
 	remote := target.Address()
-	if remote == nil {
+	if remote == "" {
 		h.logger.Debug().Msg("no remote address, baling")
 		return nil
 	}
 
-	address := strings.SplitN(*remote, ":", -1)
+	address := strings.SplitN(remote, ":", -1)
 	if len(address[0]) < 1 {
-		h.logger.Debug().Str("address", *remote).Msg("no remote address, baling")
+		h.logger.Debug().Str("address", remote).Msg("no remote address, baling")
 		return nil
 	}
 
-	h.logger.Debug().Str("address", *remote).Msg("adding address to banned")
+	h.logger.Debug().Str("address", remote).Msg("adding address to banned")
 
 	h.banned[address[0]] = true
 

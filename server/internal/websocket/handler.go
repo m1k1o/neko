@@ -22,12 +22,12 @@ type MessageHandler struct {
 
 func (h *MessageHandler) Connected(id string, socket *WebSocket) (bool, string, error) {
 	address := socket.Address()
-	if address == nil {
-		h.logger.Debug().Msg("no remote address, baling")
+	if address == "" {
+		h.logger.Debug().Msg("no remote address")
 	} else {
-		ok, banned := h.banned[*address]
+		ok, banned := h.banned[address]
 		if ok && banned {
-			h.logger.Debug().Str("address", *address).Msg("banned")
+			h.logger.Debug().Str("address", address).Msg("banned")
 			return false, "This IP has been banned", nil
 		}
 	}
