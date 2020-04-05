@@ -1,6 +1,6 @@
 {
   "name": "neko-client",
-  "version": "0.1.0",
+  "version": "2.0.0",
   "description": "Client for neko streaming server",
   "license": "Apache License 2.0",
   "author": "Nurdism <https://github.com/nurdism>",
