@@ -16,9 +16,9 @@ export const state = () => ({
 })
 
 export const getters = getterTree(state, {
-  member: state => state.members[state.id] || null,
-  admin: state => (state.members[state.id] ? state.members[state.id].admin : false),
-  muted: state => (state.members[state.id] ? state.members[state.id].muted : false),
+  member: (state) => state.members[state.id] || null,
+  admin: (state) => (state.members[state.id] ? state.members[state.id].admin : false),
+  muted: (state) => (state.members[state.id] ? state.members[state.id].muted : false),
 })
 
 export const mutations = mutationTree(state, {

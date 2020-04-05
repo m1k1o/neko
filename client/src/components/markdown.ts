@@ -64,7 +64,7 @@ function htmlTag(
   if (attributes.class && state.cssModuleNames) {
     attributes.class = attributes.class
       .split(' ')
-      .map(cl => state.cssModuleNames[cl] || cl)
+      .map((cl) => state.cssModuleNames[cl] || cl)
       .join(' ')
   }
 
@@ -199,7 +199,7 @@ const rules: MarkdownRules = {
   },
   text: {
     ...text,
-    match: source => /^[\s\S]+?(?=[^0-9A-Za-z\s\u00c0-\uffff-]|\n\n|\n|\w+:\S|$)/.exec(source),
+    match: (source) => /^[\s\S]+?(?=[^0-9A-Za-z\s\u00c0-\uffff-]|\n\n|\n|\w+:\S|$)/.exec(source),
     html(node, output, state) {
       if (state.escapeHTML) {
         return md.sanitizeText(node.content)
@@ -214,7 +214,7 @@ const rules: MarkdownRules = {
   },
   emoji: {
     order: md.defaultRules.strong.order,
-    match: source => /^:([a-zA-z_-]*):/.exec(source),
+    match: (source) => /^:([a-zA-z_-]*):/.exec(source),
     parse(capture) {
       return {
         id: capture[1],
@@ -235,7 +235,7 @@ const rules: MarkdownRules = {
   },
   emoticon: {
     order: md.defaultRules.text.order,
-    match: source => /^(¯\\_\(ツ\)_\/¯)/.exec(source),
+    match: (source) => /^(¯\\_\(ツ\)_\/¯)/.exec(source),
     parse(capture) {
       return {
         type: 'text',
@@ -248,7 +248,7 @@ const rules: MarkdownRules = {
   },
   spoiler: {
     order: 0,
-    match: source => /^\|\|([\s\S]+?)\|\|/.exec(source),
+    match: (source) => /^\|\|([\s\S]+?)\|\|/.exec(source),
     parse(capture, parse, state) {
       return {
         content: parse(capture[1], state),

@@ -37,7 +37,7 @@ class VueSweetalert2 {
       // @ts-ignore
       if (Object.prototype.hasOwnProperty.call(Swal, methodName) && typeof Swal[methodName] === 'function') {
         // @ts-ignore
-        swalFunction[methodName] = (method => {
+        swalFunction[methodName] = ((method) => {
           return (...args: any[]) => {
             // @ts-ignore
             return Swal[method].apply(Swal, args)

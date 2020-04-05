@@ -27,7 +27,7 @@ Vue.use(Client)
 new Vue({
   i18n,
   store,
-  render: h => h(app),
+  render: (h) => h(app),
   created() {
     const click = () => {
       this.$accessor.setActive()

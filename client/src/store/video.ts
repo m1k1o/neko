@@ -23,9 +23,9 @@ export const state = () => ({
 })
 
 export const getters = getterTree(state, {
-  stream: state => state.streams[state.index],
-  track: state => state.tracks[state.index],
-  resolution: state => ({ w: state.width, h: state.height }),
+  stream: (state) => state.streams[state.index],
+  track: (state) => state.tracks[state.index],
+  resolution: (state) => ({ w: state.width, h: state.height }),
 })
 
 export const mutations = mutationTree(state, {

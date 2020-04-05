@@ -329,7 +329,7 @@
       for (const emoji of this.list) {
         if (
           emoji.includes(this.search) || typeof this.keywords[emoji] !== 'undefined'
-            ? this.keywords[emoji].some(keyword => keyword.includes(this.search))
+            ? this.keywords[emoji].some((keyword) => keyword.includes(this.search))
             : false
         ) {
           filtered.push(emoji)

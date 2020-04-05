@@ -327,7 +327,7 @@
         this.$accessor.video.setPlayable(false)
       })
 
-      this._video.addEventListener('error', event => {
+      this._video.addEventListener('error', (event) => {
         this.$log.error(event.error)
         this.$accessor.video.setPlayable(false)
       })
@@ -352,7 +352,7 @@
           .then(() => {
             this.onResise()
           })
-          .catch(err => this.$log.error)
+          .catch((err) => this.$log.error)
       } catch (err) {
         this.$log.error(err)
       }
@@ -391,7 +391,7 @@
       if (this.hosting && navigator.clipboard && typeof navigator.clipboard.readText === 'function') {
         navigator.clipboard
           .readText()
-          .then(text => {
+          .then((text) => {
             if (this.clipboard !== text) {
               this.$accessor.remote.setClipboard(text)
               this.$accessor.remote.sendClipboard(text)

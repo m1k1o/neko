@@ -150,7 +150,7 @@
         'cold',
         'blush',
         'sad',
-      ].filter(v => !this.recent.includes(v))
+      ].filter((v) => !this.recent.includes(v))
     }
 
     get muted() {

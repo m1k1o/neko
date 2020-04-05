@@ -148,18 +148,18 @@
         this.loading = true
         this.$http
           .get<string>('https://raw.githubusercontent.com/nurdism/neko/master/docs/README.md')
-          .then(res => {
+          .then((res) => {
             return this.$http.post('https://api.github.com/markdown', {
               text: res.data,
               mode: 'gfm',
               context: 'github/gollum',
             })
           })
-          .then(res => {
+          .then((res) => {
             this.$accessor.client.setAbout(res.data)
             this.loading = false
           })
-          .catch(err => console.error(err))
+          .catch((err) => console.error(err))
       }
     }
 
