@@ -14,9 +14,11 @@ type Disconnect struct {
 }
 
 type SignalProvide struct {
-	Event string `json:"event"`
-	ID    string `json:"id"`
-	SDP   string `json:"sdp"`
+	Event string   `json:"event"`
+	ID    string   `json:"id"`
+	SDP   string   `json:"sdp"`
+	Lite  bool     `json:"lite"`
+	ICE   []string `json:"ice"`
 }
 
 type SignalAnswer struct {

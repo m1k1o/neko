@@ -62,8 +62,8 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
       this._ws = new WebSocket(`${url}ws?password=${password}`)
       this.emit('debug', `connecting to ${this._ws.url}`)
       this._ws.onmessage = this.onMessage.bind(this)
-      this._ws.onerror = (event) => this.onError.bind(this)
-      this._ws.onclose = (event) => this.onDisconnected.bind(this, new Error('websocket closed'))
+      this._ws.onerror = event => this.onError.bind(this)
+      this._ws.onclose = event => this.onDisconnected.bind(this, new Error('websocket closed'))
       this._timeout = setTimeout(this.onTimeout.bind(this), 15000)
     } catch (err) {
       this.onDisconnected(err)
@@ -156,7 +156,7 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
     this._ws!.send(JSON.stringify({ event, ...payload }))
   }
 
-  public createPeer(sdp: string) {
+  public createPeer(sdp: string, lite: boolean, servers: string[]) {
     this.emit('debug', `creating peer`)
     if (!this.socketOpen) {
       this.emit(
@@ -173,16 +173,21 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
     }
 
     this._peer = new RTCPeerConnection()
+    if (lite !== true) {
+      this._peer = new RTCPeerConnection({
+        iceServers: [{ urls: servers }],
+      })
+    }
 
-    this._peer.onconnectionstatechange = (event) => {
+    this._peer.onconnectionstatechange = event => {
       this.emit('debug', `peer connection state changed`, this._peer ? this._peer.connectionState : undefined)
     }
 
-    this._peer.onsignalingstatechange = (event) => {
+    this._peer.onsignalingstatechange = event => {
       this.emit('debug', `peer signaling state changed`, this._peer ? this._peer.signalingState : undefined)
     }
 
-    this._peer.oniceconnectionstatechange = (event) => {
+    this._peer.oniceconnectionstatechange = event => {
       this._state = this._peer!.iceConnectionState
 
       this.emit('debug', `peer ice connection state changed: ${this._peer!.iceConnectionState}`)
@@ -217,7 +222,7 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
     this._peer.setRemoteDescription({ type: 'offer', sdp })
     this._peer
       .createAnswer()
-      .then((d) => {
+      .then(d => {
         this._peer!.setLocalDescription(d)
         this._ws!.send(
           JSON.stringify({
@@ -227,7 +232,7 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
           }),
         )
       })
-      .catch((err) => this.emit('error', err))
+      .catch(err => this.emit('error', err))
   }
 
   private onMessage(e: MessageEvent) {
@@ -236,9 +241,9 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
     this.emit('debug', `received websocket event ${event} ${payload ? `with payload: ` : ''}`, payload)
 
     if (event === EVENT.SIGNAL.PROVIDE) {
-      const { sdp, id } = payload as SignalProvidePayload
+      const { sdp, lite, ice, id } = payload as SignalProvidePayload
       this._id = id
-      this.createPeer(sdp)
+      this.createPeer(sdp, lite, ice)
       return
     }
 

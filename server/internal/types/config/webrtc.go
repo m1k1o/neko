@@ -16,6 +16,8 @@ type WebRTC struct {
 	AudioCodec   string
 	AudioParams  string
 	Display      string
+	ICELite      bool
+	ICEServers   []string
 	VideoCodec   string
 	VideoParams  string
 	EphemeralMin uint16
@@ -99,6 +101,16 @@ func (WebRTC) Init(cmd *cobra.Command) error {
 		return err
 	}
 
+	cmd.PersistentFlags().Bool("icelite", false, "")
+	if err := viper.BindPFlag("icelite", cmd.PersistentFlags().Lookup("icelite")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().StringSlice("iceserver", []string{"stun:stun.l.google.com:19302"}, "")
+	if err := viper.BindPFlag("iceserver", cmd.PersistentFlags().Lookup("iceserver")); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -122,6 +134,9 @@ func (s *WebRTC) Set() {
 	} else if viper.GetBool("pcma") {
 		audioCodec = webrtc.PCMA
 	}
+
+	s.ICELite = viper.GetBool("icelite")
+	s.ICEServers = viper.GetStringSlice("iceserver")
 
 	s.Device = viper.GetString("device")
 	s.AudioCodec = audioCodec

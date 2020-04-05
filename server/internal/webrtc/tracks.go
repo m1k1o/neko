@@ -8,7 +8,7 @@ import (
 	"n.eko.moe/neko/internal/gst"
 )
 
-func (m *WebRTCManager) createTrack(codecName string, pipelineDevice string, pipelineSrc string) (*gst.Pipeline, *webrtc.Track, error) {
+func (m *WebRTCManager) createTrack(codecName string, pipelineDevice string, pipelineSrc string) (*gst.Pipeline, *webrtc.Track, *webrtc.RTPCodec, error) {
 	pipeline, err := gst.CreatePipeline(
 		codecName,
 		pipelineDevice,
@@ -16,7 +16,7 @@ func (m *WebRTCManager) createTrack(codecName string, pipelineDevice string, pip
 	)
 
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
 	var codec *webrtc.RTPCodec
@@ -36,14 +36,13 @@ func (m *WebRTCManager) createTrack(codecName string, pipelineDevice string, pip
 	case webrtc.PCMA:
 		codec = webrtc.NewRTPPCMACodec(webrtc.DefaultPayloadTypePCMA, 8000)
 	default:
-		return nil, nil, fmt.Errorf("unknown codec %s", codecName)
+		return nil, nil, nil, fmt.Errorf("unknown codec %s", codecName)
 	}
 
-	m.engine.RegisterCodec(codec)
 	track, err := webrtc.NewTrack(codec.PayloadType, rand.Uint32(), "stream", "stream", codec)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
-	return pipeline, track, nil
+	return pipeline, track, codec, nil
 }
