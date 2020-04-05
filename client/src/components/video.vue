@@ -327,7 +327,7 @@
         this.$accessor.video.setPlayable(false)
       })
 
-      this._video.addEventListener('error', (event) => {
+      this._video.addEventListener('error', event => {
         this.$log.error(event.error)
         this.$accessor.video.setPlayable(false)
       })
@@ -352,7 +352,7 @@
           .then(() => {
             this.onResise()
           })
-          .catch((err) => this.$log.error)
+          .catch(err => this.$log.error)
       } catch (err) {
         this.$log.error(err)
       }
@@ -391,7 +391,7 @@
       if (this.hosting && navigator.clipboard && typeof navigator.clipboard.readText === 'function') {
         navigator.clipboard
           .readText()
-          .then((text) => {
+          .then(text => {
             if (this.clipboard !== text) {
               this.$accessor.remote.setClipboard(text)
               this.$accessor.remote.sendClipboard(text)
@@ -463,18 +463,38 @@
       this.focused = false
     }
 
+    // frick you firefox
+    getCode(e: KeyboardEvent): number {
+      let key = e.keyCode
+      if (key === 59 && e.key === ';') {
+        key = 186
+      }
+
+      if (key === 61 && e.key === '=') {
+        key = 187
+      }
+
+      if (key === 173 && e.key === '-') {
+        key = 189
+      }
+
+      return key
+    }
+
     onKeyDown(e: KeyboardEvent) {
       if (!this.focused || !this.hosting || this.locked) {
         return
       }
-      this.$client.sendData('keydown', { key: e.keyCode })
+
+      this.$client.sendData('keydown', { key: this.getCode(e) })
     }
 
     onKeyUp(e: KeyboardEvent) {
       if (!this.focused || !this.hosting || this.locked) {
         return
       }
-      this.$client.sendData('keyup', { key: e.keyCode })
+
+      this.$client.sendData('keyup', { key: this.getCode(e) })
     }
 
     onResise() {
