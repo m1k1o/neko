@@ -3,8 +3,8 @@
     <template slot-scope="child" v-if="child.data">
       <li class="header">
         <div class="user">
-          <img :src="`https://api.adorable.io/avatars/25/${child.data.member.username}.png`" />
-          <strong>{{ child.data.member.username }}</strong>
+          <img :src="`https://api.adorable.io/avatars/25/${child.data.member.displayname}.png`" />
+          <strong>{{ child.data.member.displayname }}</strong>
         </div>
       </li>
       <li class="seperator" />
@@ -163,8 +163,8 @@
 
     kick(member: Member) {
       this.$swal({
-        title: `Kick ${member.username}?`,
-        text: `Are you sure you want to kick ${member.username}?`,
+        title: `Kick ${member.displayname}?`,
+        text: `Are you sure you want to kick ${member.displayname}?`,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonText: 'Yes',
@@ -177,8 +177,8 @@
 
     ban(member: Member) {
       this.$swal({
-        title: `Ban ${member.username}?`,
-        text: `Are you sure you want to ban ${member.username}? You will need to restart the server to undo this.`,
+        title: `Ban ${member.displayname}?`,
+        text: `Are you sure you want to ban ${member.displayname}? You will need to restart the server to undo this.`,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonText: 'Yes',
@@ -191,8 +191,8 @@
 
     mute(member: Member) {
       this.$swal({
-        title: `Mute ${member.username}?`,
-        text: `Are you sure you want to mute ${member.username}?`,
+        title: `Mute ${member.displayname}?`,
+        text: `Are you sure you want to mute ${member.displayname}?`,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonText: 'Yes',
@@ -205,8 +205,8 @@
 
     unmute(member: Member) {
       this.$swal({
-        title: `Unmute ${member.username}?`,
-        text: `Are you sure you want to unmute ${member.username}?`,
+        title: `Unmute ${member.displayname}?`,
+        text: `Are you sure you want to unmute ${member.displayname}?`,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonText: 'Yes',

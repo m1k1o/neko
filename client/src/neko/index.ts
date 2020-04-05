@@ -41,13 +41,13 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
     this.$accessor.chat.reset()
   }
 
-  login(password: string, username: string) {
+  login(password: string, displayname: string) {
     const url =
       process.env.NODE_ENV === 'development'
         ? `ws://${location.host.split(':')[0]}:${process.env.VUE_APP_SERVER_PORT}/`
         : `${/https/gi.test(location.protocol) ? 'wss' : 'ws'}://${location.host}/`
 
-    this.connect(url, password, username)
+    this.connect(url, password, displayname)
   }
 
   logout() {
@@ -222,7 +222,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
     this.$vue.$notify({
       group: 'neko',
       type: 'info',
-      title: `${member.username} has the controls`,
+      title: `${member.displayname} has the controls`,
       text: 'But I let them know you wanted it',
       duration: 5000,
       speed: 1000,
@@ -238,7 +238,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
     this.$vue.$notify({
       group: 'neko',
       type: 'info',
-      title: `${member.username} is requesting the controls`,
+      title: `${member.displayname} is requesting the controls`,
       duration: 5000,
       speed: 1000,
     })
@@ -253,7 +253,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
     this.$accessor.remote.setHost(member)
     this.$accessor.chat.newMessage({
       id,
-      content: `gave the controls to ${member.id == this.id ? 'you' : member.username}`,
+      content: `gave the controls to ${member.id == this.id ? 'you' : member.displayname}`,
       type: 'event',
       created: new Date(),
     })
@@ -331,7 +331,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
 
     this.$accessor.chat.newMessage({
       id,
-      content: `banned ${member.id == this.id ? 'you' : member.username}`,
+      content: `banned ${member.id == this.id ? 'you' : member.displayname}`,
       type: 'event',
       created: new Date(),
     })
@@ -349,7 +349,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
 
     this.$accessor.chat.newMessage({
       id,
-      content: `kicked ${member.id == this.id ? 'you' : member.username}`,
+      content: `kicked ${member.id == this.id ? 'you' : member.displayname}`,
       type: 'event',
       created: new Date(),
     })
@@ -369,7 +369,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
 
     this.$accessor.chat.newMessage({
       id,
-      content: `muted ${member.id == this.id ? 'you' : member.username}`,
+      content: `muted ${member.id == this.id ? 'you' : member.displayname}`,
       type: 'event',
       created: new Date(),
     })
@@ -389,7 +389,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
 
     this.$accessor.chat.newMessage({
       id,
-      content: `unmuted ${member.username}`,
+      content: `unmuted ${member.displayname}`,
       type: 'event',
       created: new Date(),
     })
@@ -435,7 +435,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
 
     this.$accessor.chat.newMessage({
       id,
-      content: `took the controls from ${member.id == this.id ? 'you' : member.username}`,
+      content: `took the controls from ${member.id == this.id ? 'you' : member.displayname}`,
       type: 'event',
       created: new Date(),
     })
@@ -460,7 +460,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
 
     this.$accessor.chat.newMessage({
       id,
-      content: `released the controls from ${member.id == this.id ? 'you' : member.username}`,
+      content: `released the controls from ${member.id == this.id ? 'you' : member.displayname}`,
       type: 'event',
       created: new Date(),
     })
@@ -480,7 +480,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
 
     this.$accessor.chat.newMessage({
       id,
-      content: `gave the controls to ${member.id == this.id ? 'you' : member.username}`,
+      content: `gave the controls to ${member.id == this.id ? 'you' : member.displayname}`,
       type: 'event',
       created: new Date(),
     })

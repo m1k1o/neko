@@ -2,7 +2,7 @@ package types
 
 type Member struct {
 	ID    string `json:"id"`
-	Name  string `json:"username"`
+	Name  string `json:"displayname"`
 	Admin bool   `json:"admin"`
 	Muted bool   `json:"muted"`
 }

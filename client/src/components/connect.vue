@@ -7,7 +7,7 @@
       </div>
       <form class="message" v-if="!connecting" @submit.stop.prevent="connect">
         <span>Please Login</span>
-        <input type="text" placeholder="Display Name" v-model="username" />
+        <input type="text" placeholder="Display Name" v-model="displayname" />
         <input type="password" placeholder="Password" v-model="password" />
         <button type="submit" @click.stop.prevent="login">
           Connect
@@ -150,12 +150,12 @@
 
   @Component({ name: 'neko-connect' })
   export default class extends Vue {
-    private username = ''
+    private displayname = ''
     private password = ''
 
     mounted() {
-      if (this.$accessor.username !== '' && this.$accessor.password !== '') {
-        this.$accessor.login({ username: this.$accessor.username, password: this.$accessor.password })
+      if (this.$accessor.displayname !== '' && this.$accessor.password !== '') {
+        this.$accessor.login({ displayname: this.$accessor.displayname, password: this.$accessor.password })
       }
     }
 
@@ -164,7 +164,7 @@
     }
 
     login() {
-      this.$accessor.login({ username: this.username, password: this.password })
+      this.$accessor.login({ displayname: this.displayname, password: this.password })
     }
   }
 </script>

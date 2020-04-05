@@ -16,7 +16,7 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
   protected _peer?: RTCPeerConnection
   protected _channel?: RTCDataChannel
   protected _timeout?: NodeJS.Timeout
-  protected _username?: string
+  protected _displayname?: string
   protected _state: RTCIceConnectionState = 'disconnected'
   protected _id = ''
 
@@ -40,7 +40,7 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
     return this.peerConnected && this.socketOpen
   }
 
-  public connect(url: string, password: string, username: string) {
+  public connect(url: string, password: string, displayname: string) {
     if (this.socketOpen) {
       this.emit('warn', `attempting to create websocket while connection open`)
       return
@@ -51,11 +51,11 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
       return
     }
 
-    if (username === '') {
-      throw new Error('Must add a username') // TODO: Better handling
+    if (displayname === '') {
+      throw new Error('Must add a displayname') // TODO: Better handling
     }
 
-    this._username = username
+    this._displayname = displayname
     this[EVENT.CONNECTING]()
 
     try {
@@ -90,7 +90,7 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
     }
 
     this._state = 'disconnected'
-    this._username = undefined
+    this._displayname = undefined
     this._id = ''
   }
 
@@ -223,7 +223,7 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
           JSON.stringify({
             event: EVENT.SIGNAL.ANSWER,
             sdp: d.sdp,
-            username: this._username,
+            displayname: this._displayname,
           }),
         )
       })

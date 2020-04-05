@@ -4,18 +4,18 @@
       <ul class="members-list">
         <li v-if="member">
           <div :class="[{ host: member.id === host }, 'self', 'member']">
-            <img :src="`https://api.adorable.io/avatars/50/${member.username}.png`" />
+            <img :src="`https://api.adorable.io/avatars/50/${member.displayname}.png`" />
           </div>
         </li>
         <template v-for="(member, index) in members">
           <li
             v-if="member.id !== id && member.connected"
             :key="index"
-            v-tooltip="{ content: member.username, placement: 'bottom', offset: -15, boundariesElement: 'body' }"
+            v-tooltip="{ content: member.displayname, placement: 'bottom', offset: -15, boundariesElement: 'body' }"
           >
             <div :class="[{ host: member.id === host, admin: member.admin }, 'member']">
               <img
-                :src="`https://api.adorable.io/avatars/50/${member.username}.png`"
+                :src="`https://api.adorable.io/avatars/50/${member.displayname}.png`"
                 @contextmenu.stop.prevent="onContext($event, { member })"
               />
             </div>

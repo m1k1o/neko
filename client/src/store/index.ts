@@ -13,7 +13,7 @@ import * as client from './client'
 import * as emoji from './emoji'
 
 export const state = () => ({
-  username: get<string>('username', ''),
+  displayname: get<string>('displayname', ''),
   password: get<string>('password', ''),
   active: false,
   connecting: false,
@@ -26,8 +26,8 @@ export const mutations = mutationTree(state, {
     state.active = true
   },
 
-  setLogin(state, { username, password }: { username: string; password: string }) {
-    state.username = username
+  setLogin(state, { displayname, password }: { displayname: string; password: string }) {
+    state.displayname = displayname
     state.password = password
   },
 
@@ -44,7 +44,7 @@ export const mutations = mutationTree(state, {
     state.connected = connected
     state.connecting = false
     if (connected) {
-      set('username', state.username)
+      set('displayname', state.displayname)
       set('password', state.password)
     }
   },
@@ -73,14 +73,14 @@ export const actions = actionTree(
       $client.sendMessage(EVENT.ADMIN.UNLOCK)
     },
 
-    login({ state }, { username, password }: { username: string; password: string }) {
-      accessor.setLogin({ username, password })
-      $client.login(password, username)
+    login({ state }, { displayname, password }: { displayname: string; password: string }) {
+      accessor.setLogin({ displayname, password })
+      $client.login(password, displayname)
     },
 
     logout({ state }) {
-      accessor.setLogin({ username: '', password: '' })
-      set('username', '')
+      accessor.setLogin({ displayname: '', password: '' })
+      set('displayname', '')
       set('password', '')
       $client.logout()
     },

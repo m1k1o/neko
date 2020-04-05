@@ -4,11 +4,11 @@
       <template v-for="(message, index) in history">
         <li :key="index" class="message" v-if="message.type === 'text'">
           <div class="author" @contextmenu.stop.prevent="onContext($event, { member: member(message.id) })">
-            <img :src="`https://api.adorable.io/avatars/40/${member(message.id).username}.png`" />
+            <img :src="`https://api.adorable.io/avatars/40/${member(message.id).displayname}.png`" />
           </div>
           <div class="content">
             <div class="content-head">
-              <span>{{ member(message.id).username }}</span>
+              <span>{{ member(message.id).displayname }}</span>
               <span class="timestamp">{{ timestamp(message.created) }}</span>
             </div>
             <neko-markdown class="content-body" :source="message.content" />
@@ -25,7 +25,7 @@
             }"
           >
             <strong v-if="message.id === id">You</strong>
-            <strong v-else>{{ member(message.id).username }}</strong>
+            <strong v-else>{{ member(message.id).displayname }}</strong>
             {{ message.content }}
           </div>
         </li>

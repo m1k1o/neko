@@ -70,7 +70,7 @@ export interface SignalAnswerMessage extends WebSocketMessage, SignalAnswerPaylo
 }
 export interface SignalAnswerPayload {
   sdp: string
-  username: string
+  displayname: string
 }
 
 /*
