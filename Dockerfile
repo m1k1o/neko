@@ -68,7 +68,7 @@ COPY server/bin/neko /usr/bin/neko
 #
 # neko env
 ENV NEKO_PASSWORD=neko
-ENV NEKO_ADMIN=admin
+ENV NEKO_PASSWORD_ADMIN=admin
 ENV NEKO_BIND=:8080
 
 #
