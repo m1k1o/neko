@@ -116,10 +116,11 @@ func (neko *Neko) Preflight() {
 }
 
 func (neko *Neko) Start() {
-	sessionManager := session.New()
 
 	remoteManager := remote.New(neko.Remote)
 	remoteManager.Start()
+
+	sessionManager := session.New(remoteManager)
 
 	webRTCManager := webrtc.New(sessionManager, remoteManager, neko.WebRTC)
 	webRTCManager.Start()

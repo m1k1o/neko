@@ -9,6 +9,7 @@ type RemoteManager interface {
 	OnAudioFrame(listener func(sample Sample))
 	StartStream()
 	StopStream()
+	Streaming() bool
 	ChangeResolution(width int, height int, rate int) error
 	GetScreenSize() *ScreenSize
 	ScreenConfigurations() map[int]ScreenConfiguration

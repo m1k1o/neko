@@ -11,10 +11,11 @@ import (
 	"n.eko.moe/neko/internal/utils"
 )
 
-func New() *SessionManager {
+func New(remote types.RemoteManager) *SessionManager {
 	return &SessionManager{
 		logger:  log.With().Str("module", "session").Logger(),
 		host:    "",
+		remote:  remote,
 		members: make(map[string]*Session),
 		emmiter: events.New(),
 	}
@@ -23,6 +24,7 @@ func New() *SessionManager {
 type SessionManager struct {
 	logger  zerolog.Logger
 	host    string
+	remote  types.RemoteManager
 	members map[string]*Session
 	emmiter events.EventEmmiter
 }
@@ -39,6 +41,10 @@ func (manager *SessionManager) New(id string, admin bool, socket types.WebSocket
 
 	manager.members[id] = session
 	manager.emmiter.Emit("created", id, session)
+
+	if manager.remote.Streaming() != true && len(manager.members) > 0 {
+		manager.remote.StartStream()
+	}
 
 	return session
 }
@@ -102,9 +108,15 @@ func (manager *SessionManager) Destroy(id string) error {
 	if ok {
 		err := session.destroy()
 		delete(manager.members, id)
+
+		if manager.remote.Streaming() != false && len(manager.members) <= 0 {
+			manager.remote.StopStream()
+		}
+
 		manager.emmiter.Emit("destroyed", id)
 		return err
 	}
+
 	return nil
 }
 

@@ -14,22 +14,24 @@ import (
 )
 
 type RemoteManager struct {
-	logger   zerolog.Logger
-	video    *gst.Pipeline
-	audio    *gst.Pipeline
-	config   *config.Remote
-	cleanup  *time.Ticker
-	shutdown chan bool
-	emmiter  events.EventEmmiter
+	logger    zerolog.Logger
+	video     *gst.Pipeline
+	audio     *gst.Pipeline
+	config    *config.Remote
+	cleanup   *time.Ticker
+	shutdown  chan bool
+	emmiter   events.EventEmmiter
+	streaming bool
 }
 
 func New(config *config.Remote) *RemoteManager {
 	return &RemoteManager{
-		logger:   log.With().Str("module", "remote").Logger(),
-		cleanup:  time.NewTicker(1 * time.Second),
-		shutdown: make(chan bool),
-		emmiter:  events.New(),
-		config:   config,
+		logger:    log.With().Str("module", "remote").Logger(),
+		cleanup:   time.NewTicker(1 * time.Second),
+		shutdown:  make(chan bool),
+		emmiter:   events.New(),
+		config:    config,
+		streaming: false,
 	}
 }
 
@@ -42,26 +44,7 @@ func (manager *RemoteManager) AudioCodec() string {
 }
 
 func (manager *RemoteManager) Start() {
-	var err error
-	manager.video, err = gst.CreatePipeline(
-		manager.config.VideoCodec,
-		manager.config.Display,
-		manager.config.VideoParams,
-	)
-	if err != nil {
-		manager.logger.Panic().Err(err).Msg("unable to create video pipeline")
-	}
-
-	manager.audio, err = gst.CreatePipeline(
-		manager.config.AudioCodec,
-		manager.config.Device,
-		manager.config.AudioParams,
-	)
-	if err != nil {
-		manager.logger.Panic().Err(err).Msg("unable to screate audio pipeline")
-	}
-
-	manager.StartStream()
+	manager.createPipelines()
 
 	go func() {
 		defer func() {
@@ -113,7 +96,7 @@ func (manager *RemoteManager) StartStream() {
 		Str("audio_pipeline_src", manager.audio.Src).
 		Str("video_pipeline_src", manager.video.Src).
 		Str("screen_resolution", fmt.Sprintf("%dx%d@%d", manager.config.ScreenWidth, manager.config.ScreenHeight, manager.config.ScreenRate)).
-		Msgf("pipelines starting...")
+		Msgf("Pipelines starting...")
 
 	xorg.Display(manager.config.Display)
 
@@ -125,13 +108,42 @@ func (manager *RemoteManager) StartStream() {
 		}
 	}
 
+	manager.createPipelines()
 	manager.video.Start()
 	manager.audio.Start()
+	manager.streaming = true
 }
 
 func (manager *RemoteManager) StopStream() {
+	manager.logger.Info().Msgf("Pipelines shutting down...")
 	manager.video.Stop()
 	manager.audio.Stop()
+	manager.streaming = false
+}
+
+func (manager *RemoteManager) Streaming() bool {
+	return manager.streaming
+}
+
+func (manager *RemoteManager) createPipelines() {
+	var err error
+	manager.video, err = gst.CreatePipeline(
+		manager.config.VideoCodec,
+		manager.config.Display,
+		manager.config.VideoParams,
+	)
+	if err != nil {
+		manager.logger.Panic().Err(err).Msg("unable to create video pipeline")
+	}
+
+	manager.audio, err = gst.CreatePipeline(
+		manager.config.AudioCodec,
+		manager.config.Device,
+		manager.config.AudioParams,
+	)
+	if err != nil {
+		manager.logger.Panic().Err(err).Msg("unable to screate audio pipeline")
+	}
 }
 
 func (manager *RemoteManager) ChangeResolution(width int, height int, rate int) error {
