@@ -24,7 +24,7 @@ Server for n.eko, as of right now this will *only* work on Linux systems, only t
 --pcmu                        // (bool) use PCMU audio codec
 --pcma                        // (bool) use PCMA audio codec
 --password "neko"             // (string) password for connecting to stream
---admin "admin"               // (string) admin password for connecting to stream
+--password_admin "admin"      // (string) admin password for connecting to stream
 ```
 
 Config can be set via environment variables with the prefix `NEKO_` (I.E. NEKO_BIND="127.0.0.1:8080")
