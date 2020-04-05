@@ -16,8 +16,8 @@ func (WebSocket) Init(cmd *cobra.Command) error {
 		return err
 	}
 
-	cmd.PersistentFlags().String("admin", "admin", "admin password for connecting to stream")
-	if err := viper.BindPFlag("admin", cmd.PersistentFlags().Lookup("admin")); err != nil {
+	cmd.PersistentFlags().String("password_admin", "admin", "admin password for connecting to stream")
+	if err := viper.BindPFlag("password_admin", cmd.PersistentFlags().Lookup("password_admin")); err != nil {
 		return err
 	}
 
@@ -26,5 +26,5 @@ func (WebSocket) Init(cmd *cobra.Command) error {
 
 func (s *WebSocket) Set() {
 	s.Password = viper.GetString("password")
-	s.AdminPassword = viper.GetString("admin")
+	s.AdminPassword = viper.GetString("password_admin")
 }
