@@ -4,11 +4,11 @@
       <ul>
         <li :class="{ active: tab === 'chat' }" @click.stop.prevent="change('chat')">
           <i class="fas fa-comment-alt" />
-          <span>Chat</span>
+          <span>{{ $t('chat') }}</span>
         </li>
         <li :class="{ active: tab === 'settings' }" @click.stop.prevent="change('settings')">
           <i class="fas fa-sliders-h" />
-          <span>Settings</span>
+          <span>{{ $t('settings') }}</span>
         </li>
       </ul>
     </div>

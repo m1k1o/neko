@@ -2,41 +2,41 @@
   <div class="settings">
     <ul>
       <li>
-        <span>Scroll Sensitivity</span>
+        <span>{{ $t('setting.scroll') }}</span>
         <label class="slider">
           <input type="range" min="5" max="100" v-model="scroll" />
         </label>
       </li>
       <li>
-        <span>Invert Scroll</span>
+        <span>{{ $t('setting.scroll_invert') }}</span>
         <label class="switch">
           <input type="checkbox" v-model="scroll_invert" />
           <span />
         </label>
       </li>
       <li>
-        <span>Autoplay Video</span>
+        <span>{{ $t('setting.autoplay') }}</span>
         <label class="switch">
           <input type="checkbox" v-model="autoplay" />
           <span />
         </label>
       </li>
       <li>
-        <span>Ignore Emotes</span>
+        <span>{{ $t('setting.ignore_emotes') }}</span>
         <label class="switch">
           <input type="checkbox" v-model="ignore_emotes" />
           <span />
         </label>
       </li>
       <li>
-        <span>Play Chat Sound</span>
+        <span>{{ $t('setting.chat_sound') }}</span>
         <label class="switch">
           <input type="checkbox" v-model="chat_sound" />
           <span />
         </label>
       </li>
       <li v-if="connected">
-        <button @click.stop.prevent="logout">Logout</button>
+        <button @click.stop.prevent="logout">{{ $t('logout') }}</button>
       </li>
     </ul>
   </div>

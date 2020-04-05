@@ -10,7 +10,7 @@
           'request',
         ]"
         v-tooltip="{
-          content: !hosted || hosting ? (hosting ? 'Release Controls' : 'Request Controls') : '',
+          content: !hosted || hosting ? (hosting ? $t('controls.release') : $t('controls.request')) : '',
           placement: 'top',
           offset: 5,
           boundariesElement: 'body',
@@ -23,7 +23,7 @@
       <label
         class="switch"
         v-tooltip="{
-          content: hosting ? (locked ? 'Unlock Controls' : 'Lock Controls') : '',
+          content: hosting ? (locked ? $t('controls.unlock') : $t('controls.lock')) : '',
           placement: 'top',
           offset: 5,
           boundariesElement: 'body',

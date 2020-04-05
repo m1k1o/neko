@@ -6,11 +6,11 @@
         <span><b>n</b>.eko</span>
       </div>
       <form class="message" v-if="!connecting" @submit.stop.prevent="connect">
-        <span>Please Login</span>
-        <input type="text" placeholder="Display Name" v-model="displayname" />
-        <input type="password" placeholder="Password" v-model="password" />
+        <span>{{ $t('connect.title') }}</span>
+        <input type="text" :placeholder="$t('connect.displayname')" v-model="displayname" />
+        <input type="password" :placeholder="$t('connect.password')" v-model="password" />
         <button type="submit" @click.stop.prevent="login">
-          Connect
+          {{ $t('connect.connect') }}
         </button>
       </form>
       <div class="loader" v-if="connecting">

@@ -6,7 +6,7 @@
         <span><b>n</b>.eko</span>
       </div>
       <div class="message">
-        <span>this browser does not support webrtc</span>
+        <span>{{ $t('unsupported') }}</span>
       </div>
     </div>
   </div>

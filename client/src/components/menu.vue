@@ -5,7 +5,7 @@
       <i
         class="fas fa-shield-alt"
         v-tooltip="{
-          content: 'You are logged in as an admin',
+          content: $t('admin_loggedin'),
           placement: 'right',
           offset: 5,
           boundariesElement: 'body',

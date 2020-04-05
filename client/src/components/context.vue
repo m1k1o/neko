@@ -9,38 +9,40 @@
       </li>
       <li class="seperator" />
       <li>
-        <span @click="ignore(child.data.member)" v-if="!child.data.member.ignored">Ignore</span>
-        <span @click="unignore(child.data.member)" v-else>Unignore</span>
+        <span @click="ignore(child.data.member)" v-if="!child.data.member.ignored">{{ $t('context.ignore') }}</span>
+        <span @click="unignore(child.data.member)" v-else>{{ $t('context.unignore') }}</span>
       </li>
 
       <template v-if="admin">
         <li>
-          <span @click="mute(child.data.member)" v-if="!child.data.member.muted">Mute</span>
-          <span @click="unmute(child.data.member)" v-else>Unmute</span>
+          <span @click="mute(child.data.member)" v-if="!child.data.member.muted">{{ $t('context.mute') }}</span>
+          <span @click="unmute(child.data.member)" v-else>{{ $t('context.unmute') }}</span>
         </li>
         <li v-if="child.data.member.id === host">
-          <span @click="adminRelease(child.data.member)">Force Release Controls</span>
+          <span @click="adminRelease(child.data.member)">{{ $t('context.release') }}</span>
         </li>
         <li v-if="child.data.member.id === host">
-          <span @click="adminControl(child.data.member)">Force Take Controls</span>
+          <span @click="adminControl(child.data.member)">{{ $t('context.take') }}</span>
         </li>
         <li>
-          <span v-if="child.data.member.id !== host" @click="adminGive(child.data.member)">Give Controls</span>
+          <span v-if="child.data.member.id !== host" @click="adminGive(child.data.member)">{{
+            $t('context.give')
+          }}</span>
         </li>
       </template>
       <template v-else>
         <li v-if="hosting">
-          <span @click="give(child.data.member)">Give Controls</span>
+          <span @click="give(child.data.member)">{{ $t('context.give') }}</span>
         </li>
       </template>
 
       <template v-if="admin">
         <li class="seperator" />
         <li>
-          <span @click="kick(child.data.member)" style="color: #f04747">Kick</span>
+          <span @click="kick(child.data.member)" style="color: #f04747">{{ $t('context.kick') }}</span>
         </li>
         <li>
-          <span @click="ban(child.data.member)" style="color: #f04747">Ban IP</span>
+          <span @click="ban(child.data.member)" style="color: #f04747">{{ $t('context.ban') }}</span>
         </li>
       </template>
     </template>

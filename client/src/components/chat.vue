@@ -24,7 +24,7 @@
               boundariesElement: 'body',
             }"
           >
-            <strong v-if="message.id === id">You</strong>
+            <strong v-if="message.id === id">{{ $t('you') }}</strong>
             <strong v-else>{{ member(message.id).displayname }}</strong>
             {{ message.content }}
           </div>
