@@ -54,7 +54,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
     this.disconnect()
     this.cleanup()
     this.$vue.$swal({
-      title: this.$vue.$t('connection.logged_out', { name: this.$vue.$t('you') }),
+      title: this.$vue.$t('connection.logged_out'),
       icon: 'info',
       confirmButtonText: this.$vue.$t('connection.button_confirm') as string,
     })
