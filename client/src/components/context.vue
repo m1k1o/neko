@@ -165,11 +165,12 @@
 
     kick(member: Member) {
       this.$swal({
-        title: `Kick ${member.displayname}?`,
-        text: `Are you sure you want to kick ${member.displayname}?`,
+        title: this.$t('context.confirm.kick_title', { name: member.displayname }) as string,
+        text: this.$t('context.confirm.kick_text', { name: member.displayname }) as string,
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonText: 'Yes',
+        confirmButtonText: this.$t('context.confirm.button_yes') as string,
+        cancelButtonText: this.$t('context.confirm.button_cancel') as string,
       }).then(({ value }) => {
         if (value) {
           this.$accessor.user.kick(member)
@@ -179,11 +180,12 @@
 
     ban(member: Member) {
       this.$swal({
-        title: `Ban ${member.displayname}?`,
-        text: `Are you sure you want to ban ${member.displayname}? You will need to restart the server to undo this.`,
+        title: this.$t('context.confirm.ban_title', { name: member.displayname }) as string,
+        text: this.$t('context.confirm.ban_text', { name: member.displayname }) as string,
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonText: 'Yes',
+        confirmButtonText: this.$t('context.confirm.button_yes') as string,
+        cancelButtonText: this.$t('context.confirm.button_cancel') as string,
       }).then(({ value }) => {
         if (value) {
           this.$accessor.user.ban(member)
@@ -193,11 +195,12 @@
 
     mute(member: Member) {
       this.$swal({
-        title: `Mute ${member.displayname}?`,
-        text: `Are you sure you want to mute ${member.displayname}?`,
+        title: this.$t('context.confirm.mute_title', { name: member.displayname }) as string,
+        text: this.$t('context.confirm.mute_text', { name: member.displayname }) as string,
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonText: 'Yes',
+        confirmButtonText: this.$t('context.confirm.button_yes') as string,
+        cancelButtonText: this.$t('context.confirm.button_cancel') as string,
       }).then(({ value }) => {
         if (value) {
           this.$accessor.user.mute(member)
@@ -207,11 +210,12 @@
 
     unmute(member: Member) {
       this.$swal({
-        title: `Unmute ${member.displayname}?`,
-        text: `Are you sure you want to unmute ${member.displayname}?`,
+        title: this.$t('context.confirm.unmute_title', { name: member.displayname }) as string,
+        text: this.$t('context.confirm.unmute_text', { name: member.displayname }) as string,
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonText: 'Yes',
+        confirmButtonText: this.$t('context.confirm.button_yes') as string,
+        cancelButtonText: this.$t('context.confirm.button_cancel') as string,
       }).then(({ value }) => {
         if (value) {
           this.$accessor.user.unmute(member)

@@ -466,15 +466,15 @@
     // frick you firefox
     getCode(e: KeyboardEvent): number {
       let key = e.keyCode
-      if (key === 59 && e.key === ';') {
+      if (key === 59 && (e.key === ';' || e.key === ':')) {
         key = 186
       }
 
-      if (key === 61 && e.key === '=') {
+      if (key === 61 && (e.key === '=' || e.key === '+')) {
         key = 187
       }
 
-      if (key === 173 && e.key === '-') {
+      if (key === 173 && (e.key === '-' || e.key === '_')) {
         key = 189
       }
 
