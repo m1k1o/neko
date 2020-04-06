@@ -37,7 +37,7 @@ export const context = {
     unmute_text: 'Are you sure you want to unmute {name}?',
     button_yes: 'Yes',
     button_cancel: 'Cancel',
-  }
+  },
 }
 
 export const controls = {

@@ -165,12 +165,12 @@
 
     kick(member: Member) {
       this.$swal({
-        title: this.$t('context.confirm.kick_title', { name: member.displayname }),
-        text: this.$t('context.confirm.kick_text', { name: member.displayname }),
+        title: this.$t('context.confirm.kick_title', { name: member.displayname }) as string,
+        text: this.$t('context.confirm.kick_text', { name: member.displayname }) as string,
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonText: this.$t('context.confirm.button_yes'),
-        cancelButtonText: this.$t('context.confirm.button_cancel'),
+        confirmButtonText: this.$t('context.confirm.button_yes') as string,
+        cancelButtonText: this.$t('context.confirm.button_cancel') as string,
       }).then(({ value }) => {
         if (value) {
           this.$accessor.user.kick(member)
@@ -180,12 +180,12 @@
 
     ban(member: Member) {
       this.$swal({
-        title: this.$t('context.confirm.ban_title', { name: member.displayname }),
-        text: this.$t('context.confirm.ban_text', { name: member.displayname }),
+        title: this.$t('context.confirm.ban_title', { name: member.displayname }) as string,
+        text: this.$t('context.confirm.ban_text', { name: member.displayname }) as string,
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonText: this.$t('context.confirm.button_yes'),
-        cancelButtonText: this.$t('context.confirm.button_cancel'),
+        confirmButtonText: this.$t('context.confirm.button_yes') as string,
+        cancelButtonText: this.$t('context.confirm.button_cancel') as string,
       }).then(({ value }) => {
         if (value) {
           this.$accessor.user.ban(member)
@@ -195,12 +195,12 @@
 
     mute(member: Member) {
       this.$swal({
-        title: this.$t('context.confirm.mute_title', { name: member.displayname }),
-        text: this.$t('context.confirm.mute_text', { name: member.displayname }),
+        title: this.$t('context.confirm.mute_title', { name: member.displayname }) as string,
+        text: this.$t('context.confirm.mute_text', { name: member.displayname }) as string,
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonText: this.$t('context.confirm.button_yes'),
-        cancelButtonText: this.$t('context.confirm.button_cancel'),
+        confirmButtonText: this.$t('context.confirm.button_yes') as string,
+        cancelButtonText: this.$t('context.confirm.button_cancel') as string,
       }).then(({ value }) => {
         if (value) {
           this.$accessor.user.mute(member)
@@ -210,12 +210,12 @@
 
     unmute(member: Member) {
       this.$swal({
-        title: this.$t('context.confirm.unmute_title', { name: member.displayname }),
-        text: this.$t('context.confirm.unmute_text', { name: member.displayname }),
+        title: this.$t('context.confirm.unmute_title', { name: member.displayname }) as string,
+        text: this.$t('context.confirm.unmute_text', { name: member.displayname }) as string,
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonText: this.$t('context.confirm.button_yes'),
-        cancelButtonText: this.$t('context.confirm.button_cancel'),
+        confirmButtonText: this.$t('context.confirm.button_yes') as string,
+        cancelButtonText: this.$t('context.confirm.button_cancel') as string,
       }).then(({ value }) => {
         if (value) {
           this.$accessor.user.unmute(member)
