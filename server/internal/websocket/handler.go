@@ -34,8 +34,11 @@ func (h *MessageHandler) Connected(id string, socket *WebSocket) (bool, string, 
 	}
 
 	if h.locked {
-		h.logger.Debug().Msg("server locked")
-		return false, "Server is currently locked", nil
+		session, ok := h.sessions.Get(id)
+		if !ok || !session.Admin() {
+			h.logger.Debug().Msg("server locked")
+			return false, "Server is currently locked", nil
+		}
 	}
 
 	return true, "", nil
