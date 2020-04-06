@@ -54,7 +54,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
     this.disconnect()
     this.cleanup()
     this.$vue.$swal({
-      title: this.$vue.$t('notifications.logged_out', { name: 'You' }),
+      title: this.$vue.$t('notifications.logged_out', { name: this.$vue.$t('you') }),
       icon: 'info',
       confirmButtonText: this.$vue.$t('ok') as string,
     })
@@ -207,7 +207,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
 
     this.$accessor.chat.newMessage({
       id: member.id,
-      content: this.$vue.$t('notifications.controls_released') as string,
+      content: this.$vue.$t('notifications.controls_released', { name: '' }) as string,
       type: 'event',
       created: new Date(),
     })
