@@ -36,7 +36,7 @@
         </li>
       </template>
 
-      <template v-if="admin">
+      <template v-if="admin && !child.data.member.admin">
         <li class="seperator" />
         <li>
           <span @click="kick(child.data.member)" style="color: #f04747;">{{ $t('context.kick') }}</span>
