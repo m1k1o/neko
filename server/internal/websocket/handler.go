@@ -42,6 +42,10 @@ func (h *MessageHandler) Connected(id string, socket *WebSocket) (bool, string, 
 }
 
 func (h *MessageHandler) Disconnected(id string) error {
+	if h.locked && len(h.sessions.Admins()) == 0 {
+		h.locked = false
+	}
+
 	return h.sessions.Destroy(id)
 }
 
