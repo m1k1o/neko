@@ -35,7 +35,7 @@
     <div v-if="!muted" class="chat-send">
       <div class="accent" />
       <div class="text-container">
-        <textarea ref="input" placeholder="Send a message" @keydown="onKeyDown" v-model="content" />
+        <textarea ref="input" :placeholder="$t('send_a_message')" @keydown="onKeyDown" v-model="content" />
         <neko-emoji v-if="emoji" @picked="onEmojiPicked" @done="emoji = false" />
         <i class="emoji-menu fas fa-laugh" @click.stop.prevent="onEmoji"></i>
       </div>

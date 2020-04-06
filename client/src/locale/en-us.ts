@@ -5,6 +5,7 @@ export const unsupported = 'this browser does not support webrtc'
 export const admin_loggedin = 'You are logged in as an admin'
 export const you = 'You'
 export const ok = 'ok'
+export const send_a_message = 'Send a message'
 export const connected = 'connected'
 export const disconnected = 'disconnected'
 
