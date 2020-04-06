@@ -8,6 +8,7 @@ import (
 type WebSocket struct {
 	Password      string
 	AdminPassword string
+	Proxy         bool
 }
 
 func (WebSocket) Init(cmd *cobra.Command) error {
@@ -21,10 +22,16 @@ func (WebSocket) Init(cmd *cobra.Command) error {
 		return err
 	}
 
+	cmd.PersistentFlags().Bool("proxy", false, "enable reverse proxy mode")
+	if err := viper.BindPFlag("proxy", cmd.PersistentFlags().Lookup("proxy")); err != nil {
+		return err
+	}
+
 	return nil
 }
 
 func (s *WebSocket) Set() {
 	s.Password = viper.GetString("password")
 	s.AdminPassword = viper.GetString("password_admin")
+	s.Proxy = viper.GetBool("proxy")
 }

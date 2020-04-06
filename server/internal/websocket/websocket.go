@@ -70,7 +70,7 @@ func (ws *WebSocketHandler) Start() error {
 		}
 	})
 
-	ws.sessions.OnDestroy(func(id string) {
+	ws.sessions.OnDestroy(func(id string, session types.Session) {
 		if err := ws.handler.SessionDestroyed(id); err != nil {
 			ws.logger.Warn().Str("id", id).Err(err).Msg("session destroyed with and error")
 		} else {
@@ -191,7 +191,11 @@ func (ws *WebSocketHandler) Upgrade(w http.ResponseWriter, r *http.Request) erro
 }
 
 func (ws *WebSocketHandler) authenticate(r *http.Request) (string, string, bool, error) {
-	ip := utils.ReadUserIP(r)
+	ip := r.RemoteAddr
+
+	if ws.conf.Proxy {
+		ip = utils.ReadUserIP(r)
+	}
 
 	id, err := utils.NewUID(32)
 	if err != nil {
