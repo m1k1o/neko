@@ -32,18 +32,18 @@ func (Remote) Init(cmd *cobra.Command) error {
 		return err
 	}
 
-	cmd.PersistentFlags().String("audio", "", "audio codec parameters to use for streaming (unused)")
-	if err := viper.BindPFlag("aparams", cmd.PersistentFlags().Lookup("audio")); err != nil {
+	cmd.PersistentFlags().String("audio", "", "audio codec parameters to use for streaming")
+	if err := viper.BindPFlag("audio", cmd.PersistentFlags().Lookup("audio")); err != nil {
 		return err
 	}
 
-	cmd.PersistentFlags().String("video", "", "video codec parameters to use for streaming (unused)")
-	if err := viper.BindPFlag("vparams", cmd.PersistentFlags().Lookup("video")); err != nil {
+	cmd.PersistentFlags().String("video", "", "video codec parameters to use for streaming")
+	if err := viper.BindPFlag("video", cmd.PersistentFlags().Lookup("video")); err != nil {
 		return err
 	}
 
 	cmd.PersistentFlags().String("screen", "1280x720@30", "default screen resolution and framerate")
-	if err := viper.BindPFlag("vparams", cmd.PersistentFlags().Lookup("video")); err != nil {
+	if err := viper.BindPFlag("screen", cmd.PersistentFlags().Lookup("screen")); err != nil {
 		return err
 	}
 
@@ -110,10 +110,10 @@ func (s *Remote) Set() {
 
 	s.Device = viper.GetString("device")
 	s.AudioCodec = audioCodec
-	s.AudioParams = viper.GetString("aparams")
+	s.AudioParams = viper.GetString("audio")
 	s.Display = viper.GetString("display")
 	s.VideoCodec = videoCodec
-	s.VideoParams = viper.GetString("vparams")
+	s.VideoParams = viper.GetString("video")
 
 	s.ScreenWidth = 1280
 	s.ScreenHeight = 720
