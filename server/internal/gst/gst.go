@@ -64,8 +64,15 @@ func init() {
 	registry = C.gst_registry_get()
 }
 
-// CreatePipeline creates a GStreamer Pipeline
-func CreatePipeline(codecName string, pipelineDevice string, pipelineSrc string) (*Pipeline, error) {
+// CreateRTMPPipeline creates a GStreamer Pipeline
+func CreateRTMPPipeline(pipelineDevice string, pipelineDisplay string, pipelineRTMP string) (*Pipeline, error) {
+	video := fmt.Sprintf(videoSrc, pipelineDisplay)
+	audio := fmt.Sprintf(audioSrc, pipelineDevice)
+	return CreatePipeline(fmt.Sprintf("%s ! x264enc ! flv. ! %s ! faac ! flv. ! flvmux name='flv' ! rtmpsink location='%s'", video, audio, pipelineRTMP))
+}
+
+// CreateAppPipeline creates a GStreamer Pipeline
+func CreateAppPipeline(codecName string, pipelineDevice string, pipelineSrc string) (*Pipeline, error) {
 	pipelineStr := " ! appsink name=appsink"
 
 	var clockRate float32
@@ -192,6 +199,11 @@ func CreatePipeline(codecName string, pipelineDevice string, pipelineSrc string)
 		return nil, fmt.Errorf("unknown codec %s", codecName)
 	}
 
+	return CreatePipeline(pipelineStr)
+}
+
+// CreatePipeline creates a GStreamer Pipeline
+func CreatePipeline(pipelineStr string) (*Pipeline, error) {
 	pipelineStrUnsafe := C.CString(pipelineStr)
 	defer C.free(unsafe.Pointer(pipelineStrUnsafe))
 

@@ -127,7 +127,7 @@ func (manager *RemoteManager) Streaming() bool {
 
 func (manager *RemoteManager) createPipelines() {
 	var err error
-	manager.video, err = gst.CreatePipeline(
+	manager.video, err = gst.CreateAppPipeline(
 		manager.config.VideoCodec,
 		manager.config.Display,
 		manager.config.VideoParams,
@@ -136,7 +136,7 @@ func (manager *RemoteManager) createPipelines() {
 		manager.logger.Panic().Err(err).Msg("unable to create video pipeline")
 	}
 
-	manager.audio, err = gst.CreatePipeline(
+	manager.audio, err = gst.CreateAppPipeline(
 		manager.config.AudioCodec,
 		manager.config.Device,
 		manager.config.AudioParams,
@@ -161,7 +161,7 @@ func (manager *RemoteManager) ChangeResolution(width int, height int, rate int) 
 		return err
 	}
 
-	video, err := gst.CreatePipeline(
+	video, err := gst.CreateAppPipeline(
 		manager.config.VideoCodec,
 		manager.config.Display,
 		manager.config.VideoParams,
