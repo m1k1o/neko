@@ -25,6 +25,18 @@ export const context = {
   give: 'Give Controls',
   kick: 'Kick',
   ban: 'Ban IP',
+  confirm: {
+    kick_title: 'Kick {name}?',
+    kick_text: 'Are you sure you want to kick {name}?',
+    ban_title: 'Ban {name}?',
+    ban_text: 'Are you sure you want to ban {name}? You will need to restart the server to undo this.',
+    mute_title: 'Mute {name}?',
+    mute_text: 'Are you sure you want to mute {name}?',
+    unmute_title: 'Unmute {name}?',
+    unmute_text: 'Are you sure you want to unmute {name}?',
+    button_yes: 'Yes',
+    button_cancel: 'Cancel',
+  }
 }
 
 export const controls = {
