@@ -1,13 +1,13 @@
-export const chat = 'Chat'
-export const settings = 'Settings'
 export const logout = 'logout'
 export const unsupported = 'this browser does not support webrtc'
 export const admin_loggedin = 'You are logged in as an admin'
 export const you = 'You'
-export const ok = 'ok'
 export const send_a_message = 'Send a message'
-export const connected = 'connected'
-export const disconnected = 'disconnected'
+
+export const side = {
+  chat: 'Chat',
+  settings: 'Settings',
+}
 
 export const connect = {
   title: 'Please Login',
@@ -63,11 +63,15 @@ export const setting = {
 }
 
 export const connection = {
-  success: 'Successfully connected',
+  logged_out: 'You have been logged out!',
+  connected: 'Successfully connected',
+  disconnected: 'You have been disconnected',
+  button_confirm: 'Ok',
 }
 
 export const notifications = {
-  logged_out: '{name} logged out!',
+  connected: '{name} connected',
+  disconnected: '{name} disconnected',
   controls_taken: '{name} took the controls',
   controls_taken_force: 'force took the controls',
   controls_taken_steal: 'took the controls from {name}',
