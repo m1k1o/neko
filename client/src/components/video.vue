@@ -161,6 +161,7 @@
     private observer = new ResizeObserver(this.onResise.bind(this))
     private focused = false
     private fullscreen = false
+    private activeKeys: any = {}
 
     get admin() {
       return this.$accessor.user.admin
@@ -333,12 +334,14 @@
       })
 
       document.addEventListener('focusin', this.onFocus.bind(this))
+      document.addEventListener('focusout', this.onBlur.bind(this))
     }
 
     beforeDestroy() {
       this.observer.disconnect()
       this.$accessor.video.setPlayable(false)
       document.removeEventListener('focusin', this.onFocus.bind(this))
+      document.removeEventListener('focusout', this.onBlur.bind(this))
     }
 
     play() {
@@ -398,6 +401,18 @@
             }
           })
           .catch(this.$log.error)
+      }
+    }
+
+    onBlur() {
+      if (!this.focused || !this.hosting || this.locked) {
+        return
+      }
+
+      let keys = Object.keys(this.activeKeys)
+      for(let key of keys) {
+        this.$client.sendData('keyup', { key })
+        delete this.activeKeys[key]
       }
     }
 
@@ -486,7 +501,9 @@
         return
       }
 
-      this.$client.sendData('keydown', { key: this.getCode(e) })
+      let key = this.getCode(e)
+      this.$client.sendData('keydown', { key })
+      this.activeKeys[key] = true
     }
 
     onKeyUp(e: KeyboardEvent) {
@@ -494,7 +511,9 @@
         return
       }
 
-      this.$client.sendData('keyup', { key: this.getCode(e) })
+      let key = this.getCode(e)
+      this.$client.sendData('keyup', { key })
+      delete this.activeKeys[key]
     }
 
     onResise() {
