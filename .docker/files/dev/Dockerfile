@@ -3,6 +3,7 @@ FROM debian:stretch-slim
 #
 # cluster fuck of packages for neko, node, go and gstreamer
 RUN set -eux; apt-get update; apt-get install -y --no-install-recommends \
+  apt-transport-https gnupg-agent software-properties-common lsb-release \
   autoconf ca-certificates curl netbase wget gnupg dirmngr libatomic1 \
   bzr git mercurial openssh-client subversion procps cmake automake bzip2 dpkg-dev file g++ gcc \
   libbz2-dev libc6-dev libcurl4-openssl-dev libdb-dev libevent-dev libffi-dev libgdbm-dev libglib2.0-dev libgmp-dev \
@@ -168,3 +169,10 @@ RUN mkdir -p /tmp/gotools \
 #
 # turn on go modules
 ENV GO111MODULE=on
+
+#
+# install docker
+RUN set -eux; \
+    curl -fsSL https://download.docker.com/linux/$(lsb_release -is | tr '[:upper:]' '[:lower:]')/gpg | (OUT=$(apt-key add - 2>&1) || echo $OUT); \
+    add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/$(lsb_release -is | tr '[:upper:]' '[:lower:]') $(lsb_release -cs) stable"; \
+    apt-get update; apt-get install -y docker-ce-cli;
