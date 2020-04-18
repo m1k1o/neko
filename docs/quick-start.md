@@ -25,7 +25,7 @@
     ```shell
     sudo ufw allow 80/tcp # if you have ufw installed/enabled
     sudo ufw allow 59000:59100/udp
-    wget https://raw.githubusercontent.com/nurdism/neko/master/docker-compose.yaml
+    wget https://raw.githubusercontent.com/nurdism/neko/master/.examples/simple/docker-compose.yaml
     sudo docker-compose up -d
     ```
 5. Visit the IP address server in your browser and login, the default password is `neko`
