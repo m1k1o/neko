@@ -55,21 +55,9 @@ ENV DISPLAY=:99.0
 # copy configuation files
 COPY .docker/files/dbus /usr/bin/dbus
 COPY .docker/files/openbox.xml /etc/neko/openbox.xml
-COPY .docker/files/neko/supervisord.conf /etc/neko/supervisord/neko.conf
 COPY .docker/files/supervisord.conf /etc/neko/supervisord.conf
 COPY .docker/files/xorg.conf /etc/neko/xorg.conf
 COPY .docker/files/default.pa /etc/pulse/default.pa
-
-#
-# neko files
-COPY client/dist/ /var/www
-COPY server/bin/neko /usr/bin/neko
-
-#
-# neko env
-ENV NEKO_PASSWORD=neko
-ENV NEKO_PASSWORD_ADMIN=admin
-ENV NEKO_BIND=:8080
 
 #
 # run neko
