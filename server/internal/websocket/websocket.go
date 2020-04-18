@@ -131,7 +131,7 @@ func (ws *WebSocketHandler) Upgrade(w http.ResponseWriter, r *http.Request) erro
 
 		if err = connection.WriteJSON(message.Disconnect{
 			Event:   event.SYSTEM_DISCONNECT,
-			Message: "invalid password",
+			Message: "invalid_password",
 		}); err != nil {
 			ws.logger.Error().Err(err).Msg("failed to send disconnect")
 		}

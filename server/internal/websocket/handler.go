@@ -29,7 +29,7 @@ func (h *MessageHandler) Connected(id string, socket *WebSocket) (bool, string, 
 		ok, banned := h.banned[address]
 		if ok && banned {
 			h.logger.Debug().Str("address", address).Msg("banned")
-			return false, "This IP has been banned", nil
+			return false, "banned", nil
 		}
 	}
 
@@ -37,7 +37,7 @@ func (h *MessageHandler) Connected(id string, socket *WebSocket) (bool, string, 
 		session, ok := h.sessions.Get(id)
 		if !ok || !session.Admin() {
 			h.logger.Debug().Msg("server locked")
-			return false, "Server is currently locked", nil
+			return false, "locked", nil
 		}
 	}
 
