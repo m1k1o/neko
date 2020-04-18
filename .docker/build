@@ -42,13 +42,13 @@ build_gst() {
 
 build_dev() {
   set -eux; \
-    sudo docker build -f .docker/files/dev/Dockerfile -t nurdism/neko:dev $DIR ; \
+    sudo docker build -f files/dev/Dockerfile -t nurdism/neko:dev $DIR ; \
     sudo docker push nurdism/neko:dev;
 }
 
 build_deps() {
   set -eux; \
-    sudo docker build -f .docker/files/deps/Dockerfile -t nurdism/neko:deps $DIR ; \
+    sudo docker build -f files/deps/Dockerfile -t nurdism/neko:deps $DIR ; \
     sudo docker push nurdism/neko:deps;
 }
 
@@ -56,17 +56,17 @@ build_base() {
   set -eux; \
     cd $DIR/server; go get; ./build; \
     cd $DIR/client; npm install; npm run build; \
-    sudo docker build -f .docker/files/base/Dockerfile -t nurdism/neko:base $DIR ;
+    sudo docker build -f files/base/Dockerfile -t nurdism/neko:base $DIR ;
 }
 
 build_firefox() {
   set -eux; \
-   sudo docker build -f .docker/files/firefox/Dockerfile -t nurdism/neko:firefox -t nurdism/neko:latest $DIR ; 
+   sudo docker build -f files/firefox/Dockerfile -t nurdism/neko:firefox -t nurdism/neko:latest $DIR ; 
 }
 
 build_chromium() {
   set -eux; \
-    sudo docker build -f .docker/files/chromium/Dockerfile -t nurdism/neko:chromium $DIR ; 
+    sudo docker build -f files/chromium/Dockerfile -t nurdism/neko:chromium $DIR ; 
 }
 
 build_docker() {
