@@ -124,8 +124,8 @@ func (s *Remote) Set() {
 
 	if len(res) > 0 {
 		width, err1 := strconv.ParseInt(res[1], 10, 64)
-		height, err2 := strconv.ParseInt(res[1], 10, 64)
-		rate, err3 := strconv.ParseInt(res[1], 10, 64)
+		height, err2 := strconv.ParseInt(res[2], 10, 64)
+		rate, err3 := strconv.ParseInt(res[3], 10, 64)
 
 		if err1 == nil && err2 == nil && err3 == nil {
 			s.ScreenWidth = int(width)
