@@ -1,8 +1,11 @@
-name: n.eko build
+name: build
 
 on:
   pull_request:
     branches: [ master ]
+    paths:
+      - 'client/**'
+      - 'server/**'
 
 jobs:
   build:

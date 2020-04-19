@@ -6,6 +6,7 @@
   <img src="https://img.shields.io/docker/pulls/nurdism/neko" alt="pulls">
   <img src="https://img.shields.io/github/issues/nurdism/neko" alt="issues">
   <a href="https://discord.gg/3U6hWpC" ><img src="https://discordapp.com/api/guilds/665851821906067466/widget.png" alt="Chat on discord"><a/>
+  <a href="https://github.com/nurdism/neko/actions" ><img src="https://github.com/nurdism/neko/workflows/deploy/badge.svg" alt="build"><a/>
 </p>
 <br/>
 <br/>

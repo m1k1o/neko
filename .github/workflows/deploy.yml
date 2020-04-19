@@ -1,8 +1,11 @@
-name: n.eko auto deploy
+name: deploy
 
 on:
   push:
     branches: [ master ]
+    paths:
+      - 'client/**'
+      - 'server/**'
 
 jobs:
   deploy:
