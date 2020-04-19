@@ -1,12 +1,12 @@
-name: N.eko CI
+name: n.eko auto deploy
 
 on:
   push:
     branches: [ master ]
 
 jobs:
-  build:
-    name: Build
+  deploy:
+    name: Deploy
     runs-on: ubuntu-latest
     container: nurdism/neko:dev
     steps:
@@ -18,11 +18,15 @@ jobs:
 
     - name: Get go dependencies and build server
       working-directory: server
-      run: go get -v -t -d ./... && ./build
+      run: |
+        go get -v -t -d . 
+        ./build
 
     - name: Get npm dependencies and build Client
       working-directory: client
-      run: npm install && npm run build
+      run: | 
+        npm install
+        npm run build
 
     - name: Build the base image
       run: docker build -f ./.docker/files/base/Dockerfile -t nurdism/neko:base .

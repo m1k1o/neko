@@ -54,9 +54,9 @@ build_deps() {
 
 build_base() {
   set -eux; \
-    cd $DIR/server; go get; ./build; \
+    cd $DIR/server; go get -v -t -d . ; ./build; \
     cd $DIR/client; npm install; npm run build; \
-    sudo docker build -f files/base/Dockerfile -t nurdism/neko:base $DIR ;
+    cd $DIR; sudo docker build -f .docker/files/base/Dockerfile -t nurdism/neko:base $DIR ;
 }
 
 build_firefox() {
@@ -93,6 +93,7 @@ set -ex
 case $1 in
   push) build_push ;;
   docker) build_docker ;;
+  base) build_base ;;
   deps) build_deps ;;
   dev) build_dev ;;
   gst) build_gst ;;
