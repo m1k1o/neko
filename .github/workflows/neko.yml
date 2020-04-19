@@ -12,8 +12,6 @@ jobs:
     steps:
     - name: Check out code
       uses: actions/checkout@v2
-      with:
-        path: '/usr/bin/git'
 
     - name: Fetch unshallow
       run: git fetch --prune --tags --unshallow
