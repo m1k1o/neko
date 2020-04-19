@@ -5,7 +5,8 @@ FROM debian:stretch-slim
 RUN set -eux; apt-get update; apt-get install -y --no-install-recommends \
   apt-transport-https gnupg-agent software-properties-common lsb-release \
   autoconf ca-certificates curl netbase wget gnupg dirmngr libatomic1 \
-  bzr git mercurial openssh-client subversion procps cmake automake bzip2 dpkg-dev file g++ gcc \
+  libghc-zlib-dev libexpat1-dev \
+  bzr mercurial openssh-client subversion procps cmake automake bzip2 dpkg-dev file g++ gcc \
   libbz2-dev libc6-dev libcurl4-openssl-dev libdb-dev libevent-dev libffi-dev libgdbm-dev libglib2.0-dev libgmp-dev \
   libjpeg-dev libkrb5-dev liblzma-dev libmagickcore-dev libmagickwand-dev libmaxminddb-dev libncurses5-dev libncursesw5-dev \
   libpng-dev libpq-dev libreadline-dev libsqlite3-dev libssl-dev libtool libwebp-dev libxml2-dev libxslt-dev libyaml-dev  \
@@ -14,6 +15,19 @@ RUN set -eux; apt-get update; apt-get install -y --no-install-recommends \
   gettext openssl libopus-dev libvpx-dev libpulse-dev libx11-dev libxv-dev libxt-dev libxrandr-dev \
   libxfixes-dev apt-utils x11vnc libxtst-dev dialog \
   pulseaudio openbox chromium firefox-esr dbus-x11 xserver-xorg-video-dummy supervisor;
+
+#
+# add git
+ENV GIT_VERSION 2.21.0
+
+RUN set -eux; \
+  cd /tmp/; \
+  wget https://github.com/git/git/archive/v$GIT_VERSION.zip -O latestgit.zip; \
+  unzip latestgit.zip; \
+  cd git-$GIT_VERSION; \
+  make prefix=/usr/local all; \
+  make prefix=/usr/local install; \
+  rm -rf /tmp/latestgit.zip /tmp/git-$GIT_VERSION;
 
 #
 # install libclipboard
@@ -39,7 +53,6 @@ COPY .build/gst/local /gst/local/
 #
 # add node
 ENV NODE_VERSION 12.16.2
-
 RUN ARCH= && dpkgArch="$(dpkg --print-architecture)" \
     && case "${dpkgArch##*-}" in \
       amd64) ARCH='x64';; \
