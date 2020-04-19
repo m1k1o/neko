@@ -8,11 +8,13 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
-    container:
-      image: nurdism/neko:dev
+    container: nurdism/neko:dev
     steps:
     - name: Check out code
       uses: actions/checkout@v2
+
+    - name: Fetch unshallow
+      run: git fetch --prune --tags --unshallow
 
     - name: Get go dependencies and build server
       working-directory: server
@@ -25,16 +27,11 @@ jobs:
     - name: Build the base image
       run: docker build -f ./.docker/files/base/Dockerfile -t nurdism/neko:base .
     
-    - name: Build the firefox image
-      run: docker build -f ./.docker/files/firefox/Dockerfile -t nurdism/neko:firefox -t nurdism/neko:latest .
-    
-    - name: Build the chromium image
-      run: docker build -f ./.docker/files/chromium/Dockerfile -t nurdism/neko:chromium .
-    
+    - name: Build the latest image
+      run: docker build -f ./.docker/files/firefox/Dockerfile -t nurdism/neko:latest .
+
     - name: Push the Docker images
       run: | 
         echo "${{ secrets.DOCKER_PASSWORD }}" | docker login ${{ secrets.DOCKER_REGISTRY_URL }} -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
         docker push nurdism/neko:base
         docker push nurdism/neko:latest
-        docker push nurdism/neko:firefox
-        docker push nurdism/neko:chromium
