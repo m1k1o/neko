@@ -1,0 +1,16 @@
+version: "2.0"
+services:
+  neko:
+    image: nurdism/neko:firefox
+    restart: always
+    shm_size: "1gb"
+    ports:
+      - "80:8080"
+      - "59000-59100:59000-59100/udp"
+    environment:
+      DISPLAY: :99.0
+      NEKO_PASSWORD: neko
+      NEKO_PASSWORD_ADMIN: admin
+      NEKO_BIND: :8080
+      NEKO_EPR: 59000-59100
+      NEKO_NAT1TO1: 192.168.0.X

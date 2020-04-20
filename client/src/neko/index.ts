@@ -54,9 +54,9 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
     this.disconnect()
     this.cleanup()
     this.$vue.$swal({
-      title: this.$vue.$t('notifications.logged_out', { name: this.$vue.$t('you') }),
+      title: this.$vue.$t('connection.logged_out'),
       icon: 'info',
-      confirmButtonText: this.$vue.$t('ok') as string,
+      confirmButtonText: this.$vue.$t('connection.button_confirm') as string,
     })
   }
 
@@ -75,7 +75,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
     this.$vue.$notify({
       group: 'neko',
       type: 'success',
-      title: this.$vue.$t('connection.success') as string,
+      title: this.$vue.$t('connection.connected') as string,
       duration: 5000,
       speed: 1000,
     })
@@ -86,7 +86,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
     this.$vue.$notify({
       group: 'neko',
       type: 'error',
-      title: this.$vue.$t('disconnected') as string,
+      title: this.$vue.$t('connection.disconnected') as string,
       text: reason ? reason.message : undefined,
       duration: 5000,
       speed: 1000,
@@ -111,10 +111,10 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   protected [EVENT.SYSTEM.DISCONNECT]({ message }: DisconnectPayload) {
     this.onDisconnected(new Error(message))
     this.$vue.$swal({
-      title: this.$vue.$t('disconnected'),
+      title: this.$vue.$t('connection.disconnected'),
       text: message,
       icon: 'error',
-      confirmButtonText: this.$vue.$t('ok') as string,
+      confirmButtonText: this.$vue.$t('connection.button_confirm') as string,
     })
   }
 
@@ -125,7 +125,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
     this.$accessor.user.setMembers(members)
     this.$accessor.chat.newMessage({
       id: this.id,
-      content: this.$vue.$t('connected') as string,
+      content: this.$vue.$t('notifications.connected', { name: '' }) as string,
       type: 'event',
       created: new Date(),
     })
@@ -137,7 +137,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
     if (member.id !== this.id) {
       this.$accessor.chat.newMessage({
         id: member.id,
-        content: this.$vue.$t('connected') as string,
+        content: this.$vue.$t('notifications.connected', { name: '' }) as string,
         type: 'event',
         created: new Date(),
       })
@@ -152,7 +152,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
 
     this.$accessor.chat.newMessage({
       id: member.id,
-      content: this.$vue.$t('disconnected') as string,
+      content: this.$vue.$t('notifications.disconnected', { name: '' }) as string,
       type: 'event',
       created: new Date(),
     })

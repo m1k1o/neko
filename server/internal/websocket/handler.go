@@ -29,19 +29,26 @@ func (h *MessageHandler) Connected(id string, socket *WebSocket) (bool, string, 
 		ok, banned := h.banned[address]
 		if ok && banned {
 			h.logger.Debug().Str("address", address).Msg("banned")
-			return false, "This IP has been banned", nil
+			return false, "banned", nil
 		}
 	}
 
 	if h.locked {
-		h.logger.Debug().Msg("server locked")
-		return false, "Server is currently locked", nil
+		session, ok := h.sessions.Get(id)
+		if !ok || !session.Admin() {
+			h.logger.Debug().Msg("server locked")
+			return false, "locked", nil
+		}
 	}
 
 	return true, "", nil
 }
 
 func (h *MessageHandler) Disconnected(id string) error {
+	if h.locked && len(h.sessions.Admins()) == 0 {
+		h.locked = false
+	}
+
 	return h.sessions.Destroy(id)
 }
 

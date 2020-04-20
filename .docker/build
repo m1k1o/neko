@@ -7,7 +7,8 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )/.."
 
 build_gst() {
-  if [ ! -d /gst ]; then
+  if [ ! -L /gst || ! -d /gst ]; then
+    sudo rm -rf /gst;
     sudo mkdir -p /workspace/.build/gst
     sudo ln -s /workspace/.build/gst /gst
     sudo chown -R neko /workspace/.build
@@ -39,23 +40,33 @@ build_gst() {
     done'
 }
 
+build_dev() {
+  set -eux; \
+    sudo docker build -f files/dev/Dockerfile -t nurdism/neko:dev $DIR ; \
+    sudo docker push nurdism/neko:dev;
+}
+
+build_deps() {
+  set -eux; \
+    sudo docker build -f files/deps/Dockerfile -t nurdism/neko:deps $DIR ; \
+    sudo docker push nurdism/neko:deps;
+}
+
 build_base() {
   set -eux; \
-    cd $DIR/server; go get; ./build; \
+    cd $DIR/server; go get -v -t -d . ; ./build; \
     cd $DIR/client; npm install; npm run build; \
-    cd $DIR; sudo docker build -f Dockerfile -t nurdism/neko:base . ;
+    cd $DIR; sudo docker build -f .docker/files/base/Dockerfile -t nurdism/neko:base $DIR ;
 }
 
 build_firefox() {
   set -eux; \
-    cd $DIR/.docker/files/firefox; \
-    sudo docker build -f Dockerfile -t nurdism/neko:firefox -t nurdism/neko:latest . ; 
+   sudo docker build -f files/firefox/Dockerfile -t nurdism/neko:firefox -t nurdism/neko:latest $DIR ; 
 }
 
 build_chromium() {
   set -eux; \
-    cd $DIR/.docker/files/chromium; \
-    sudo docker build -f Dockerfile -t nurdism/neko:chromium . ; 
+    sudo docker build -f files/chromium/Dockerfile -t nurdism/neko:chromium $DIR ; 
 }
 
 build_docker() {
@@ -82,6 +93,9 @@ set -ex
 case $1 in
   push) build_push ;;
   docker) build_docker ;;
+  base) build_base ;;
+  deps) build_deps ;;
+  dev) build_dev ;;
   gst) build_gst ;;
   *) build_docker ;;
 esac

@@ -161,6 +161,7 @@
     private observer = new ResizeObserver(this.onResise.bind(this))
     private focused = false
     private fullscreen = false
+    private activeKeys: Set<number> = new Set()
 
     get admin() {
       return this.$accessor.user.admin
@@ -333,12 +334,14 @@
       })
 
       document.addEventListener('focusin', this.onFocus.bind(this))
+      document.addEventListener('focusout', this.onBlur.bind(this))
     }
 
     beforeDestroy() {
       this.observer.disconnect()
       this.$accessor.video.setPlayable(false)
       document.removeEventListener('focusin', this.onFocus.bind(this))
+      document.removeEventListener('focusout', this.onBlur.bind(this))
     }
 
     play() {
@@ -398,6 +401,17 @@
             }
           })
           .catch(this.$log.error)
+      }
+    }
+
+    onBlur() {
+      if (!this.focused || !this.hosting || this.locked) {
+        return
+      }
+
+      for (let key of this.activeKeys) {
+        this.$client.sendData('keyup', { key })
+        this.activeKeys.delete(key)
       }
     }
 
@@ -466,15 +480,15 @@
     // frick you firefox
     getCode(e: KeyboardEvent): number {
       let key = e.keyCode
-      if (key === 59 && e.key === ';') {
+      if (key === 59 && (e.key === ';' || e.key === ':')) {
         key = 186
       }
 
-      if (key === 61 && e.key === '=') {
+      if (key === 61 && (e.key === '=' || e.key === '+')) {
         key = 187
       }
 
-      if (key === 173 && e.key === '-') {
+      if (key === 173 && (e.key === '-' || e.key === '_')) {
         key = 189
       }
 
@@ -486,7 +500,9 @@
         return
       }
 
-      this.$client.sendData('keydown', { key: this.getCode(e) })
+      let key = this.getCode(e)
+      this.$client.sendData('keydown', { key })
+      this.activeKeys.add(key)
     }
 
     onKeyUp(e: KeyboardEvent) {
@@ -494,7 +510,9 @@
         return
       }
 
-      this.$client.sendData('keyup', { key: this.getCode(e) })
+      let key = this.getCode(e)
+      this.$client.sendData('keyup', { key })
+      this.activeKeys.delete(key)
     }
 
     onResise() {

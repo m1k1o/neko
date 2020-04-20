@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -ex
+
 BUILD_TIME=`date -u +'%Y-%m-%dT%H:%M:%SZ'`
 GIT_COMMIT=`git rev-parse --short HEAD`
 GIT_BRANCH=`git rev-parse --symbolic-full-name --abbrev-ref HEAD`

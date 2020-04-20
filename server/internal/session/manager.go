@@ -88,6 +88,21 @@ func (manager *SessionManager) Get(id string) (types.Session, bool) {
 	return session, ok
 }
 
+func (manager *SessionManager) Admins() []*types.Member {
+	members := []*types.Member{}
+	for _, session := range manager.members {
+		if !session.connected || !session.admin {
+			continue
+		}
+
+		member := session.Member()
+		if member != nil {
+			members = append(members, member)
+		}
+	}
+	return members
+}
+
 func (manager *SessionManager) Members() []*types.Member {
 	members := []*types.Member{}
 	for _, session := range manager.members {
@@ -113,7 +128,7 @@ func (manager *SessionManager) Destroy(id string) error {
 			manager.remote.StopStream()
 		}
 
-		manager.emmiter.Emit("destroyed", id)
+		manager.emmiter.Emit("destroyed", id, session)
 		return err
 	}
 
@@ -155,9 +170,9 @@ func (manager *SessionManager) OnHostCleared(listener func(id string)) {
 	})
 }
 
-func (manager *SessionManager) OnDestroy(listener func(id string)) {
+func (manager *SessionManager) OnDestroy(listener func(id string, session types.Session)) {
 	manager.emmiter.On("destroyed", func(payload ...interface{}) {
-		listener(payload[0].(string))
+		listener(payload[0].(string), payload[1].(*Session))
 	})
 }
 

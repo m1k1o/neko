@@ -6,7 +6,7 @@ import (
 )
 
 type Broadcast struct {
-	Enabled     string
+	Enabled     bool
 	Display     string
 	Device      string
 	AudioParams string

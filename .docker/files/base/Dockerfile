@@ -1,4 +1,4 @@
-FROM debian:stretch-slim
+FROM nurdism/neko:deps
 
 #
 # avoid warnings by switching to noninteractive
@@ -11,8 +11,7 @@ ARG USER_GID=$USER_UID
 #
 # install neko dependencies
 RUN set -eux; apt-get update; \
-    apt-get install -y --no-install-recommends wget ca-certificates pulseaudio openbox dbus-x11 xserver-xorg-video-dummy supervisor; \
-    apt-get install -y --no-install-recommends libcairo2 libxcb1 libxrandr2 libxv1 libopus0 libvpx4; \
+    apt-get install -y --no-install-recommends wget ca-certificates; \
     #
     # create a non-root user
     groupadd --gid $USER_GID $USERNAME; \
@@ -37,39 +36,26 @@ RUN set -eux; apt-get update; \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/*
 
 #
-# add gst to env
-ENV PATH=/gst/local/bin:$PATH
-ENV LD_LIBRARY_PATH=/gst/local/lib:$LD_LIBRARY_PATH
-ENV PKG_CONFIG_PATH=/gst/local/lib/pkgconfig:$PKG_CONFIG_PATH
-
-#
-# copy gst
-COPY .build/gst/local /gst/local/
-
-#
 # env
 ENV USER=$USERNAME
 ENV DISPLAY=:99.0
-
-#
-# copy configuation files
-COPY .docker/files/dbus /usr/bin/dbus
-COPY .docker/files/openbox.xml /etc/neko/openbox.xml
-COPY .docker/files/neko/supervisord.conf /etc/neko/supervisord/neko.conf
-COPY .docker/files/supervisord.conf /etc/neko/supervisord.conf
-COPY .docker/files/xorg.conf /etc/neko/xorg.conf
-COPY .docker/files/default.pa /etc/pulse/default.pa
-
-#
-# neko files
-COPY client/dist/ /var/www
-COPY server/bin/neko /usr/bin/neko
-
-#
-# neko env
 ENV NEKO_PASSWORD=neko
 ENV NEKO_PASSWORD_ADMIN=admin
 ENV NEKO_BIND=:8080
+
+#
+# neko config
+COPY .docker/files/dbus /usr/bin/dbus
+COPY .docker/files/openbox.xml /etc/neko/openbox.xml
+COPY .docker/files/supervisord.conf /etc/neko/supervisord.conf
+COPY .docker/files/xorg.conf /etc/neko/xorg.conf
+COPY .docker/files/default.pa /etc/pulse/default.pa
+COPY .docker/files/neko/supervisord.conf /etc/neko/supervisord/neko.conf
+
+#
+# neko dist
+COPY client/dist/ /var/www
+COPY server/bin/neko /usr/bin/neko
 
 #
 # run neko

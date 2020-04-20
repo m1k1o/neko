@@ -1,0 +1,44 @@
+name: deploy
+
+on:
+  push:
+    branches: [ master ]
+    paths:
+      - 'client/**'
+      - 'server/**'
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    container: nurdism/neko:dev
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v2
+
+    - name: Fetch unshallow
+      run: git fetch --prune --tags --unshallow
+
+    - name: Get go dependencies and build server
+      working-directory: server
+      run: |
+        go get -v -t -d . 
+        ./build
+
+    - name: Get npm dependencies and build Client
+      working-directory: client
+      run: | 
+        npm install
+        npm run build
+
+    - name: Build the base image
+      run: docker build -f ./.docker/files/base/Dockerfile -t nurdism/neko:base .
+    
+    - name: Build the latest image
+      run: docker build -f ./.docker/files/firefox/Dockerfile -t nurdism/neko:latest .
+
+    - name: Push the Docker images
+      run: | 
+        echo "${{ secrets.DOCKER_PASSWORD }}" | docker login ${{ secrets.DOCKER_REGISTRY_URL }} -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+        docker push nurdism/neko:base
+        docker push nurdism/neko:latest

@@ -68,7 +68,7 @@ func init() {
 func CreateRTMPPipeline(pipelineDevice string, pipelineDisplay string, pipelineRTMP string) (*Pipeline, error) {
 	video := fmt.Sprintf(videoSrc, pipelineDisplay)
 	audio := fmt.Sprintf(audioSrc, pipelineDevice)
-	return CreatePipeline(fmt.Sprintf("%s ! x264enc ! flv. ! %s ! faac ! flv. ! flvmux name='flv' ! rtmpsink location='%s'", video, audio, pipelineRTMP))
+	return CreatePipeline(fmt.Sprintf("%s ! x264enc ! flv. ! %s ! faac ! flv. ! flvmux name='flv' ! rtmpsink location='%s'", video, audio, pipelineRTMP), "", 0)
 }
 
 // CreateAppPipeline creates a GStreamer Pipeline
@@ -199,11 +199,11 @@ func CreateAppPipeline(codecName string, pipelineDevice string, pipelineSrc stri
 		return nil, fmt.Errorf("unknown codec %s", codecName)
 	}
 
-	return CreatePipeline(pipelineStr)
+	return CreatePipeline(pipelineStr, codecName, clockRate)
 }
 
 // CreatePipeline creates a GStreamer Pipeline
-func CreatePipeline(pipelineStr string) (*Pipeline, error) {
+func CreatePipeline(pipelineStr string, codecName string, clockRate float32) (*Pipeline, error) {
 	pipelineStrUnsafe := C.CString(pipelineStr)
 	defer C.free(unsafe.Pointer(pipelineStrUnsafe))
 

@@ -16,7 +16,7 @@ RUN set -eux; apt-get update; \
 
 #
 # copy configuation files
-COPY supervisord.conf /etc/neko/supervisord/firefox.conf
-COPY neko.js /usr/lib/firefox-esr/mozilla.cfg
-COPY autoconfig.js /usr/lib/firefox-esr/defaults/pref/autoconfig.js
-COPY policies.json /usr/lib/firefox-esr/distribution/policies.json
+COPY .docker/files/firefox/supervisord.conf /etc/neko/supervisord/firefox.conf
+COPY .docker/files/firefox/neko.js /usr/lib/firefox-esr/mozilla.cfg
+COPY .docker/files/firefox/autoconfig.js /usr/lib/firefox-esr/defaults/pref/autoconfig.js
+COPY .docker/files/firefox/policies.json /usr/lib/firefox-esr/distribution/policies.json
