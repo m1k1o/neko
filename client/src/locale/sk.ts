@@ -1,13 +1,13 @@
-export const chat = 'Chat'
-export const settings = 'Nastavenia'
 export const logout = 'odhlásiť sa'
 export const unsupported = 'tento prehliadač nepodporuje webrtc'
 export const admin_loggedin = 'Ste prihlásení ako administrátor'
 export const you = 'Vy'// TODO: Incorrect in some translations!
-export const ok = 'ok'
 export const send_a_message = 'Odoslať správu'
-export const connected = 'pripojený'// TODO: Incorrect in some translations!
-export const disconnected = 'odpojený'// TODO: Incorrect in some translations!
+
+export const side = {
+  chat: 'Chat',
+  settings: 'Nastavenia',
+}
 
 export const connect = {
   title: 'Prosím prihláste sa',
@@ -63,11 +63,15 @@ export const setting = {
 }
 
 export const connection = {
-  success: 'Úspešne pripojený',
+  logged_out: 'Boli ste odhlásený',
+  connected: 'Úspešne pripojený',
+  disconnected: 'Boli ste odpojený',
+  button_confirm: 'Ok',
 }
 
 export const notifications = {
-  logged_out: '{name} sa odhlásil/a!',
+  connected: '{name} sa pripojil/a',
+  disconnected: '{name} sa odpojil/a',
   controls_taken: '{name} prevzal/a ovládanie',
   controls_taken_force: 'ovládanie bolo prevzaté',
   controls_taken_steal: 'prevzal/a ovládanie od použivateľa {name}',
