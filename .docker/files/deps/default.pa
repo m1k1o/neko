@@ -1,0 +1,7 @@
+#!/usr/bin/pulseaudio -nF
+
+# Allow pulse audio to be accessed via TCP (from localhost only), to allow other users to access the virtual devices
+load-module module-native-protocol-unix socket=/tmp/pulseaudio.socket auth-anonymous=1
+
+### Make sure we always have a sink around, even if it is a null sink.
+load-module module-always-sink
