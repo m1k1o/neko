@@ -11,7 +11,7 @@ ARG USER_GID=$USER_UID
 #
 # install neko dependencies
 RUN set -eux; apt-get update; \
-    apt-get install -y --no-install-recommends wget ca-certificates; \
+    apt-get install -y --no-install-recommends wget ca-certificates supervisor; \
     #
     # create a non-root user
     groupadd --gid $USER_GID $USERNAME; \
@@ -45,12 +45,9 @@ ENV NEKO_BIND=:8080
 
 #
 # neko config
-COPY .docker/files/dbus /usr/bin/dbus
-COPY .docker/files/openbox.xml /etc/neko/openbox.xml
-COPY .docker/files/supervisord.conf /etc/neko/supervisord.conf
-COPY .docker/files/xorg.conf /etc/neko/xorg.conf
-COPY .docker/files/default.pa /etc/pulse/default.pa
-COPY .docker/files/neko/supervisord.conf /etc/neko/supervisord/neko.conf
+COPY .docker/files/base/supervisord.conf /etc/neko/supervisord.conf
+COPY .docker/files/base/xorg.conf /etc/neko/xorg.conf
+COPY .docker/files/base/neko.conf /etc/neko/supervisord/neko.conf
 
 #
 # neko dist
