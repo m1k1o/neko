@@ -1,4 +1,4 @@
-FROM nurdism/neko:base
+FROM nurdism/neko:openbox
 
 #
 # install neko chromium
@@ -22,3 +22,4 @@ RUN set -eux; apt-get update; \
 COPY .docker/files/chromium/supervisord.conf /etc/neko/supervisord/chromium.conf
 COPY .docker/files/chromium/preferences.json /usr/share/chromium/master_preferences
 COPY .docker/files/chromium/policies.json /etc/chromium/policies/managed/policies.json
+COPY .docker/files/chromium/openbox.xml /etc/neko/openbox.xml

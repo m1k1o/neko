@@ -19,12 +19,6 @@
       <focus>yes</focus>
       <layer>normal</layer>
     </application>
-    <application class="Chromium*" name="chromium-browser">
-      <decor>no</decor>
-      <maximized>true</maximized>
-      <focus>yes</focus>
-      <layer>normal</layer>
-    </application>
 </applications>
 
 <focus>
@@ -144,7 +138,7 @@
 
        use obconf if you want to change these without having to log out
        and back in -->
-  <number>4</number>
+  <number>1</number>
   <firstdesk>1</firstdesk>
   <names>
     <!-- set names up here if you want to, like this:

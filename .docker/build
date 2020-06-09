@@ -40,62 +40,67 @@ build_gst() {
     done'
 }
 
-build_dev() {
-  set -eux; \
-    sudo docker build -f files/dev/Dockerfile -t nurdism/neko:dev $DIR ; \
-    sudo docker push nurdism/neko:dev;
-}
-
-build_deps() {
-  set -eux; \
-    sudo docker build -f files/deps/Dockerfile -t nurdism/neko:deps $DIR ; \
-    sudo docker push nurdism/neko:deps;
-}
-
 build_base() {
   set -eux; \
     cd $DIR/server; go get -v -t -d . ; ./build; \
     cd $DIR/client; npm install; npm run build; \
-    cd $DIR; sudo docker build -f .docker/files/base/Dockerfile -t nurdism/neko:base $DIR ;
+    cd $DIR; sudo docker build -f .docker/files/base/Dockerfile -t nurdism/neko:base . ;
 }
 
-build_firefox() {
+build_latest() {
   set -eux; \
-   sudo docker build -f files/firefox/Dockerfile -t nurdism/neko:firefox -t nurdism/neko:latest $DIR ; 
+   cd $DIR; sudo docker build -f .docker/files/$1/Dockerfile -t nurdism/neko:latest . ; 
 }
 
-build_chromium() {
+build_image() {
   set -eux; \
-    sudo docker build -f files/chromium/Dockerfile -t nurdism/neko:chromium $DIR ; 
+    cd $DIR; sudo docker build -f .docker/files/$1/Dockerfile -t nurdism/neko:$1 . ; 
 }
 
-build_docker() {
+build() {
   if [ ! -d /gst/local ]; then
     build_gst
   fi
 
-  set -eux; \
-    build_base; \
-    build_firefox; \
-    build_chromium; \
-    sudo docker images nurdism/neko 
+  if [ $1 != "" ]; then
+    build_image $1
+  else
+    set -eux; \
+      build_image "deps"; \
+      build_image "base"; \
+      build_base; \
+      build_image "openbox"; \
+      build_image "xfce4"; \
+      build_image "jwm"; \
+      build_image "firefox"; \
+      build_image "chromium";
+  fi
+
+  sudo docker images nurdism/neko 
 }
 
-build_push() {
-  sudo docker push nurdism/neko:base 
-  sudo docker push nurdism/neko:latest 
-  sudo docker push nurdism/neko:firefox 
-  sudo docker push nurdism/neko:chromium 
+push() {
+  if [ $1 != "" ]; then
+    sudo docker push nurdism/neko:$1
+  else
+    sudo docker push nurdism/neko:deps 
+    sudo docker push nurdism/neko:base 
+    sudo docker push nurdism/neko:openbox 
+    sudo docker push nurdism/neko:xfce4 
+    sudo docker push nurdism/neko:jwm 
+    sudo docker push nurdism/neko:firefox 
+    sudo docker push nurdism/neko:chromium 
+  fi
 }
-
-set -ex
 
 case $1 in
-  push) build_push ;;
-  docker) build_docker ;;
-  base) build_base ;;
-  deps) build_deps ;;
-  dev) build_dev ;;
+  images) build;;
+  image) build $2 ;;
+  push) push $2 ;;
+  latest) build_latest ;;
+  base) build_image "base" ;;
+  deps) build_image "deps" ;;
+  dev) build_image "dev" ;;
   gst) build_gst ;;
   *) build_docker ;;
 esac
