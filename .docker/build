@@ -73,7 +73,8 @@ build() {
       build_image "xfce4"; \
       build_image "jwm"; \
       build_image "firefox"; \
-      build_image "chromium";
+      build_image "chromium"; \
+      build_image "tor-browser";
   fi
 
   sudo docker images nurdism/neko 
@@ -90,6 +91,7 @@ push() {
     sudo docker push nurdism/neko:jwm 
     sudo docker push nurdism/neko:firefox 
     sudo docker push nurdism/neko:chromium 
+    sudo docker push nurdism/neko:tor-browser 
   fi
 }
 
