@@ -183,19 +183,19 @@ func (manager *RemoteManager) Scroll(x, y int) {
 	xorg.Scroll(x, y)
 }
 
-func (manager *RemoteManager) ButtonDown(code int) (*types.Button, error) {
+func (manager *RemoteManager) ButtonDown(code int) error {
 	return xorg.ButtonDown(code)
 }
 
-func (manager *RemoteManager) KeyDown(code int) (*types.Key, error) {
+func (manager *RemoteManager) KeyDown(code int) error {
 	return xorg.KeyDown(code)
 }
 
-func (manager *RemoteManager) ButtonUp(code int) (*types.Button, error) {
+func (manager *RemoteManager) ButtonUp(code int) error {
 	return xorg.ButtonUp(code)
 }
 
-func (manager *RemoteManager) KeyUp(code int) (*types.Key, error) {
+func (manager *RemoteManager) KeyUp(code int) error {
 	return xorg.KeyUp(code)
 }
 

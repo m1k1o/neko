@@ -142,6 +142,8 @@
   import Emote from './emote.vue'
   import Resolution from './resolution.vue'
 
+  import { mapKeyboardEventToKeySym } from '@/neko/keyboard.ts'
+
   @Component({
     name: 'neko-video',
     components: {
@@ -449,7 +451,7 @@
         return
       }
       this.onMousePos(e)
-      this.$client.sendData('mousedown', { key: e.button })
+      this.$client.sendData('mousedown', { key: e.button + 1 })
     }
 
     onMouseUp(e: MouseEvent) {
@@ -457,7 +459,7 @@
         return
       }
       this.onMousePos(e)
-      this.$client.sendData('mouseup', { key: e.button })
+      this.$client.sendData('mouseup', { key: e.button + 1 })
     }
 
     onMouseMove(e: MouseEvent) {
@@ -477,30 +479,12 @@
       this.focused = false
     }
 
-    // frick you firefox
-    getCode(e: KeyboardEvent): number {
-      let key = e.keyCode
-      if (key === 59 && (e.key === ';' || e.key === ':')) {
-        key = 186
-      }
-
-      if (key === 61 && (e.key === '=' || e.key === '+')) {
-        key = 187
-      }
-
-      if (key === 173 && (e.key === '-' || e.key === '_')) {
-        key = 189
-      }
-
-      return key
-    }
-
     onKeyDown(e: KeyboardEvent) {
       if (!this.focused || !this.hosting || this.locked) {
         return
       }
 
-      let key = this.getCode(e)
+      let key = mapKeyboardEventToKeySym(e)
       this.$client.sendData('keydown', { key })
       this.activeKeys.add(key)
     }
@@ -510,7 +494,7 @@
         return
       }
 
-      let key = this.getCode(e)
+      let key = mapKeyboardEventToKeySym(e)
       this.$client.sendData('keyup', { key })
       this.activeKeys.delete(key)
     }

@@ -89,18 +89,22 @@ void XScroll(int x, int y) {
 }
 
 void XButton(unsigned int button, int down) {
-  Display *display = getXDisplay();
-  XTestFakeButtonEvent(display, button, down, CurrentTime);
-  XSync(display, 0);
+  if (button != 0) {
+    Display *display = getXDisplay();
+    XTestFakeButtonEvent(display, button, down, CurrentTime);
+    XSync(display, 0);
+  }
 }
 
 void XKey(unsigned long key, int down) {
-  Display *display = getXDisplay();
-  KeyCode code = XKeysymToKeycode(display, key);
+  if (key != 0) {
+    Display *display = getXDisplay();
+    KeyCode code = XKeysymToKeycode(display, key);
 
-  if (code != 0) {
-    XTestFakeKeyEvent(display, code, down, CurrentTime);
-    XSync(display, 0);
+    if (code != 0) {
+      XTestFakeKeyEvent(display, code, down, CurrentTime);
+      XSync(display, 0);
+    }
   }
 }
 
