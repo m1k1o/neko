@@ -6,12 +6,12 @@ const keyMap: Record<string, number> = {
   'ShiftRight': 0xFFE2,
   'ControlLeft': 0xFFE3,
   'ControlRight': 0xFFE4,
-  'AltLeft': 0xFFE9, // 2 keys - one code?
-  'AltRight': 0xFFE9, // 2 keys - one code?
+  'AltLeft': 0xFFE9,
+  'AltRight': 0xFFEA,
   'MetaLeft': 0xFFEB, // Super key, or Meta key?
-  'MetaRight': 0xFF67, // Super key, or Meta key?
-  //'PrintScreen': ,
-  //'ContextMenu': ,
+  'MetaRight': 0xFFEC, // Super key, or Meta key?
+  'PrintScreen': 0xFF61,
+  'ContextMenu': 0xFF67,
   'Pause': 0xFF13,
   'CapsLock': 0xFFE5,
   'Escape': 0xFF1B,
