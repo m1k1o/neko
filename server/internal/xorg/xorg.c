@@ -97,8 +97,11 @@ void XButton(unsigned int button, int down) {
 void XKey(unsigned long key, int down) {
   Display *display = getXDisplay();
   KeyCode code = XKeysymToKeycode(display, key);
-  XTestFakeKeyEvent(display, code, down, CurrentTime);
-  XSync(display, 0);
+
+  if (code != 0) {
+    XTestFakeKeyEvent(display, code, down, CurrentTime);
+    XSync(display, 0);
+  }
 }
 
 void XClipboardSet(char *src) {
