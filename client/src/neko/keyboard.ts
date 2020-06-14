@@ -96,34 +96,34 @@ const keyMap: Record<string, number> = {
   'Equal': 0x003d,
 };
 
-// If Num Lock is enabled
-const keyMap_numlock_enabled: Record<string, number> =  {
-  'Numpad0': 0xFFB0,
-  'Numpad1': 0xFFB1,
-  'Numpad2': 0xFFB2,
-  'Numpad3': 0xFFB3,
-  'Numpad4': 0xFFB4,
-  'Numpad5': 0xFFB5,
-  'Numpad6': 0xFFB6,
-  'Numpad7': 0xFFB7,
-  'Numpad8': 0xFFB8,
-  'Numpad9': 0xFFB9,
-  'NumpadDecimal': 0xFFAE,
+// If Num Lock is enabled [Original KeySym, Non-NumPad key (on US kbd)]
+const keyMap_numlock_enabled: Record<string, Array<number>> =  {
+  'Numpad0': [0xFFB0, 0x0030],
+  'Numpad1': [0xFFB1, 0x0031],
+  'Numpad2': [0xFFB2, 0x0032],
+  'Numpad3': [0xFFB3, 0x0033],
+  'Numpad4': [0xFFB4, 0x0034],
+  'Numpad5': [0xFFB5, 0x0035],
+  'Numpad6': [0xFFB6, 0x0036],
+  'Numpad7': [0xFFB7, 0x0037],
+  'Numpad8': [0xFFB8, 0x0038],
+  'Numpad9': [0xFFB9, 0x0039],
+  'NumpadDecimal': [0xFFAE, 0x002c]
 };
 
-// If Num Lock is disabled
-const keyMap_numlock_disabled: Record<string, number> = {
-  'Numpad0': 0xFFB0,
-  'Numpad1': 0xFFB1,
-  'Numpad2': 0xFFB2,
-  'Numpad3': 0xFFB3,
-  'Numpad4': 0xFFB4,
-  'Numpad5': 0xFFB5,
-  'Numpad6': 0xFFB6,
-  'Numpad7': 0xFFB7,
-  'Numpad8': 0xFFB8,
-  'Numpad9': 0xFFB9,
-  'NumpadDecimal': 0xFF9F,
+// If Num Lock is disabled [Original KeySym, Non-NumPad key (on US kbd)]
+const keyMap_numlock_disabled: Record<string, Array<number>> =  {
+  'Numpad0': [0xFFB0, 0xff63],
+  'Numpad1': [0xFFB1, 0xFF57],
+  'Numpad2': [0xFFB2, 0xFF54],
+  'Numpad3': [0xFFB3, 0xFF56],
+  'Numpad4': [0xFFB4, 0xFF51],
+  'Numpad5': [0xFFB5, 0xff0b],
+  'Numpad6': [0xFFB6, 0xFF53],
+  'Numpad7': [0xFFB7, 0xFF50],
+  'Numpad8': [0xFFB8, 0xFF52],
+  'Numpad9': [0xFFB9, 0xFF55],
+  'NumpadDecimal': [0xFF9F, 0xFFFF],
 };
 
 export function mapKeyboardEventToKeySym(e: KeyboardEvent): number {
@@ -131,9 +131,17 @@ export function mapKeyboardEventToKeySym(e: KeyboardEvent): number {
     return keyMap[e.code];
   }
 
+  //// Handle Num Lock at Server
+  //if (isNumLockActive)) {
+  //  return keyMap_numlock_enabled[e.code][0];
+  //} else {
+  //  return keyMap_numlock_disabled[e.code][0];
+  //}
+
+  // Handle Num Lock at Client
   if (e.getModifierState('NumLock')) {
-    return keyMap_numlock_enabled[e.code];
+    return keyMap_numlock_enabled[e.code][1];
   } else {
-    return keyMap_numlock_disabled[e.code];
+    return keyMap_numlock_disabled[e.code][1];
   }
 }
