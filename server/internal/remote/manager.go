@@ -102,10 +102,8 @@ func (manager *RemoteManager) StartStream() {
 
 	if !xorg.ValidScreenSize(manager.config.ScreenWidth, manager.config.ScreenHeight, manager.config.ScreenRate) {
 		manager.logger.Warn().Msgf("invalid screen option %dx%d@%d", manager.config.ScreenWidth, manager.config.ScreenHeight, manager.config.ScreenRate)
-	} else {
-		if err := xorg.ChangeScreenSize(manager.config.ScreenWidth, manager.config.ScreenHeight, manager.config.ScreenRate); err != nil {
-			manager.logger.Warn().Err(err).Msg("unable to change screen size")
-		}
+	} else if err := xorg.ChangeScreenSize(manager.config.ScreenWidth, manager.config.ScreenHeight, manager.config.ScreenRate); err != nil {
+		manager.logger.Warn().Err(err).Msg("unable to change screen size")
 	}
 
 	manager.createPipelines()
