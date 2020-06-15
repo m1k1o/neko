@@ -31,9 +31,12 @@ func (h *MessageHandler) controlRelease(id string, session types.Session) error 
 	return nil
 }
 
-func (h *MessageHandler) controlRequest(id string, session types.Session) error {
+func (h *MessageHandler) controlRequest(id string, session types.Session, payload *message.ControlRequest) error {
 	// check for host
 	if !h.sessions.HasHost() {
+		// TODO: Keyboard Layout change.
+		h.logger.Warn().Msgf("should set keyboard to %s", payload.KeyboardLayout)
+
 		// set host
 		h.sessions.SetHost(id)
 
