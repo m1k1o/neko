@@ -140,6 +140,8 @@
   import Emote from './emote.vue'
   import Resolution from './resolution.vue'
 
+  import GuacamoleKeyboard from '~/utils/guacamole-keyboard.ts'
+
   @Component({
     name: 'neko-video',
     components: {
@@ -156,6 +158,7 @@
     @Ref('video') readonly _video!: HTMLVideoElement
     @Ref('resolution') readonly _resolution!: any
 
+    private keyboard = GuacamoleKeyboard()
     private observer = new ResizeObserver(this.onResise.bind(this))
     private focused = false
     private fullscreen = false
@@ -333,37 +336,23 @@
       document.addEventListener('focusin', this.onFocus.bind(this))
       document.addEventListener('focusout', this.onBlur.bind(this))
 
-      var Keyboard = {};
-
-      // @ts-ignore
-      Guacamole.Keyboard.bind(Keyboard, this._overlay)();
-
-      // @ts-ignore
-      Keyboard.onkeydown = (key: number) => {
+      /* Initialize Guacamole Keyboard */
+      this.keyboard.onkeydown = (key: number) => {
         if (!this.focused || !this.hosting || this.locked) {
-          return
+          return false
         }
 
         this.$client.sendData('keydown', { key })
-      };
-
-      // @ts-ignore
-      Keyboard.onkeyup = (key: number) => {
+        return true
+      }
+      this.keyboard.onkeyup = (key: number) => {
         if (!this.focused || !this.hosting || this.locked) {
           return
         }
 
         this.$client.sendData('keyup', { key })
-      };
-
-      // @ts-ignore
-      this.kbdReset = () => {
-        // @ts-ignore
-        Keyboard.reset();
       }
-
-      //Keyboard.release(keysym);
-      //Keyboard.type(str);
+      this.keyboard.listenTo(this._overlay)
     }
 
     beforeDestroy() {
@@ -371,6 +360,7 @@
       this.$accessor.video.setPlayable(false)
       document.removeEventListener('focusin', this.onFocus.bind(this))
       document.removeEventListener('focusout', this.onBlur.bind(this))
+      /* Guacamole Keyboard does not provide destroy functions */
     }
 
     play() {
@@ -438,8 +428,7 @@
         return
       }
 
-      // @ts-ignore
-      this.kbdReset();
+      this.keyboard.reset()
     }
 
     onMousePos(e: MouseEvent) {

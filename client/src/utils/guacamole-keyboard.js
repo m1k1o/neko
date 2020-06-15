@@ -1511,3 +1511,5 @@ Guacamole.Keyboard.ModifierState.fromKeyboardEvent = function(e) {
     return state;
     
 };
+
+export default Guacamole.Keyboard;
