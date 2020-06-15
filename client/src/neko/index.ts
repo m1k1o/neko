@@ -165,6 +165,8 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   /////////////////////////////
   protected [EVENT.CONTROL.LOCKED]({ id }: ControlPayload) {
     this.$accessor.remote.setHost(id)
+    this.$accessor.remote.changeKeyboard()
+
     const member = this.member(id)
     if (!member) {
       return
@@ -433,6 +435,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
 
   protected [EVENT.ADMIN.CONTROL]({ id, target }: AdminTargetPayload) {
     this.$accessor.remote.setHost(id)
+    this.$accessor.remote.changeKeyboard()
 
     if (!target) {
       this.$accessor.chat.newMessage({
@@ -497,6 +500,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
     }
 
     this.$accessor.remote.setHost(member)
+    this.$accessor.remote.changeKeyboard()
 
     this.$accessor.chat.newMessage({
       id,
