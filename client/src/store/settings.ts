@@ -10,6 +10,7 @@ export const state = () => {
     autoplay: get<boolean>('autoplay', true),
     ignore_emotes: get<boolean>('ignore_emotes', false),
     chat_sound: get<boolean>('chat_sound', true),
+    keyboard_layout: get<string>('keyboard_layout', 'us'),
   }
 }
 
@@ -39,5 +40,10 @@ export const mutations = mutationTree(state, {
   setSound(state, value: boolean) {
     state.chat_sound = value
     set('chat_sound', value)
+  },
+
+  setKeyboardLayout(state, value: string) {
+    state.keyboard_layout = value
+    set('keyboard_layout', value)
   },
 })

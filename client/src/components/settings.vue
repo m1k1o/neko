@@ -35,6 +35,22 @@
           <span />
         </label>
       </li>
+      <li>
+        <span>{{ $t('setting.keyboard_layout') }}</span>
+        <label class="select">
+          <select v-model="keyboard_layout">
+            <option value="us">English (US)</option>
+            <option value="gb">English (UK)</option>
+
+            <option value="de">German</option>
+            <option value="at">German (Austria)</option>
+            <option value="ch">German (Switzerland)</option>
+
+            <option value="sk">Slovak</option>
+          </select>
+          <span />
+        </label>
+      </li>
       <li v-if="connected">
         <button @click.stop.prevent="logout">{{ $t('logout') }}</button>
       </li>
@@ -182,6 +198,31 @@
             }
           }
         }
+
+        .select {
+          max-width: 120px;
+
+          select {
+            display: block;
+            width: 100%;
+            max-width: 100%;
+            padding: 4px;
+            margin: 0;
+            line-height: 30px;
+            font-weight: bold;
+            border: 0;
+            border-radius: 12px;
+
+            color: black;
+            background-color: $style-primary;
+
+            option {
+              font-weight: normal;
+              color: $text-normal;
+              background-color: $background-tertiary;
+            }
+          }
+        }
       }
     }
   }
@@ -234,6 +275,14 @@
 
     set chat_sound(value: boolean) {
       this.$accessor.settings.setSound(value)
+    }
+
+    get keyboard_layout() {
+      return this.$accessor.settings.keyboard_layout
+    }
+
+    set keyboard_layout(value: string) {
+      this.$accessor.settings.setKeyboardLayout(value)
     }
 
     logout() {
