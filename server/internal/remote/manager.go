@@ -218,3 +218,7 @@ func (manager *RemoteManager) ScreenConfigurations() map[int]types.ScreenConfigu
 func (manager *RemoteManager) GetScreenSize() *types.ScreenSize {
 	return xorg.GetScreenSize()
 }
+
+func (manager *RemoteManager) SetKeyboard(layout string) {
+	xorg.SetKeyboard(layout)
+}
