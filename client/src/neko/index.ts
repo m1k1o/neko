@@ -251,6 +251,8 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
     }
 
     this.$accessor.remote.setHost(member)
+    this.$accessor.remote.changeKeyboard()
+
     this.$accessor.chat.newMessage({
       id,
       content: this.$vue.$t('notifications.controls_given', {
