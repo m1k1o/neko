@@ -101,10 +101,20 @@ void XKey(unsigned long key, int down) {
     Display *display = getXDisplay();
     KeyCode code = XKeysymToKeycode(display, key);
 
-    if (code != 0) {
-      XTestFakeKeyEvent(display, code, down, CurrentTime);
-      XSync(display, 0);
+    // Map non-existing keysyms to new keycodes
+    if(code == 0) {
+      int min, max, numcodes;
+      XDisplayKeycodes(display, &min, &max);
+      XGetKeyboardMapping(display, min, max-min, &numcodes);
+
+      code = (max-min+1)*numcodes;
+      KeySym keysym_list[numcodes];
+      for(int i=0;i<numcodes;i++) keysym_list[i] = key;
+      XChangeKeyboardMapping(display, code, numcodes, keysym_list, 1);
     }
+
+    XTestFakeKeyEvent(display, code, down, CurrentTime);
+    XSync(display, 0);
   }
 }
 
