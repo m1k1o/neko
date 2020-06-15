@@ -20,8 +20,6 @@
           @mouseup.stop.prevent="onMouseUp"
           @mouseenter.stop.prevent="onMouseEnter"
           @mouseleave.stop.prevent="onMouseLeave"
-          @keydown.stop.prevent="onKeyDown"
-          @keyup.stop.prevent="onKeyUp"
         />
         <div v-if="!playing" class="player-overlay">
           <i @click.stop.prevent="toggle" v-if="playable" class="fas fa-play-circle" />
@@ -141,8 +139,6 @@
 
   import Emote from './emote.vue'
   import Resolution from './resolution.vue'
-
-  import { mapKeyboardEventToKeySym } from '@/neko/keyboard.ts'
 
   @Component({
     name: 'neko-video',
@@ -337,6 +333,31 @@
 
       document.addEventListener('focusin', this.onFocus.bind(this))
       document.addEventListener('focusout', this.onBlur.bind(this))
+
+      var Keyboard = {};
+
+      // @ts-ignore
+      Guacamole.Keyboard.bind(Keyboard, this._overlay)();
+
+      // @ts-ignore
+      Keyboard.onkeydown = (key: number) => {
+        if (!this.focused || !this.hosting || this.locked) {
+          return
+        }
+
+        this.$client.sendData('keydown', { key })
+        this.activeKeys.add(key)
+      };
+
+      // @ts-ignore
+      Keyboard.onkeyup = (key: number) => {
+        if (!this.focused || !this.hosting || this.locked) {
+          return
+        }
+
+        this.$client.sendData('keyup', { key })
+        this.activeKeys.delete(key)
+      };
     }
 
     beforeDestroy() {
@@ -477,26 +498,6 @@
 
     onMouseLeave(e: MouseEvent) {
       this.focused = false
-    }
-
-    onKeyDown(e: KeyboardEvent) {
-      if (!this.focused || !this.hosting || this.locked) {
-        return
-      }
-
-      let key = mapKeyboardEventToKeySym(e)
-      this.$client.sendData('keydown', { key })
-      this.activeKeys.add(key)
-    }
-
-    onKeyUp(e: KeyboardEvent) {
-      if (!this.focused || !this.hosting || this.locked) {
-        return
-      }
-
-      let key = mapKeyboardEventToKeySym(e)
-      this.$client.sendData('keyup', { key })
-      this.activeKeys.delete(key)
     }
 
     onResise() {
