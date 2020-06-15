@@ -283,6 +283,7 @@
 
     set keyboard_layout(value: string) {
       this.$accessor.settings.setKeyboardLayout(value)
+      this.$accessor.remote.changeKeyboard()
     }
 
     logout() {
