@@ -159,7 +159,6 @@
     private observer = new ResizeObserver(this.onResise.bind(this))
     private focused = false
     private fullscreen = false
-    private activeKeys: Set<number> = new Set()
 
     get admin() {
       return this.$accessor.user.admin
@@ -346,7 +345,6 @@
         }
 
         this.$client.sendData('keydown', { key })
-        this.activeKeys.add(key)
       };
 
       // @ts-ignore
@@ -356,8 +354,16 @@
         }
 
         this.$client.sendData('keyup', { key })
-        this.activeKeys.delete(key)
       };
+
+      // @ts-ignore
+      this.kbdReset = () => {
+        // @ts-ignore
+        Keyboard.reset();
+      }
+
+      //Keyboard.release(keysym);
+      //Keyboard.type(str);
     }
 
     beforeDestroy() {
@@ -432,10 +438,8 @@
         return
       }
 
-      for (let key of this.activeKeys) {
-        this.$client.sendData('keyup', { key })
-        this.activeKeys.delete(key)
-      }
+      // @ts-ignore
+      this.kbdReset();
     }
 
     onMousePos(e: MouseEvent) {
