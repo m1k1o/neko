@@ -133,5 +133,13 @@ export const actions = actionTree(
 
       $client.sendMessage(EVENT.ADMIN.GIVE, { id: member.id })
     },
+
+    changeKeyboard({ getters }) {
+      if (!accessor.connected || !getters.hosting) {
+        return
+      }
+
+      $client.sendMessage(EVENT.CONTROL.KEYBOARD, { layout: accessor.settings.keyboard_layout })
+    }
   },
 )

@@ -119,3 +119,14 @@ func (h *MessageHandler) controlClipboard(id string, session types.Session, payl
 	h.remote.WriteClipboard(payload.Text)
 	return nil
 }
+
+func (h *MessageHandler) controlKeyboard(id string, session types.Session, payload *message.Keyboard) error {
+	// check if session is host
+	if !h.sessions.IsHost(id) {
+		h.logger.Debug().Str("id", id).Msg("is not the host")
+		return nil
+	}
+
+	h.remote.SetKeyboard(payload.Layout)
+	return nil
+}
