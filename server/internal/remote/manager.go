@@ -187,7 +187,7 @@ func (manager *RemoteManager) ButtonDown(code int) error {
 	return xorg.ButtonDown(code)
 }
 
-func (manager *RemoteManager) KeyDown(code int) error {
+func (manager *RemoteManager) KeyDown(code uint64) error {
 	return xorg.KeyDown(code)
 }
 
@@ -195,7 +195,7 @@ func (manager *RemoteManager) ButtonUp(code int) error {
 	return xorg.ButtonUp(code)
 }
 
-func (manager *RemoteManager) KeyUp(code int) error {
+func (manager *RemoteManager) KeyUp(code uint64) error {
 	return xorg.KeyUp(code)
 }
 

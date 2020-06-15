@@ -16,9 +16,9 @@ type RemoteManager interface {
 	Move(x, y int)
 	Scroll(x, y int)
 	ButtonDown(code int) error
-	KeyDown(code int) error
+	KeyDown(code uint64) error
 	ButtonUp(code int) error
-	KeyUp(code int) error
+	KeyUp(code uint64) error
 	ReadClipboard() string
 	WriteClipboard(data string)
 	ResetKeys()

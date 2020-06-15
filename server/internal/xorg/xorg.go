@@ -19,7 +19,8 @@ import (
 
 var ScreenConfigurations = make(map[int]types.ScreenConfiguration)
 
-var debounce = make(map[int]time.Time)
+var debounce_button = make(map[int]time.Time)
+var debounce_key = make(map[uint64]time.Time)
 var mu = sync.Mutex{}
 
 func init() {
@@ -54,25 +55,25 @@ func ButtonDown(code int) error {
 	mu.Lock()
 	defer mu.Unlock()
 
-	if _, ok := debounce[code]; ok {
+	if _, ok := debounce_button[code]; ok {
 		return fmt.Errorf("debounced button %v", code)
 	}
 
-	debounce[code] = time.Now()
+	debounce_button[code] = time.Now()
 
 	C.XButton(C.uint(code), C.int(1))
 	return nil
 }
 
-func KeyDown(code int) error {
+func KeyDown(code uint64) error {
 	mu.Lock()
 	defer mu.Unlock()
 
-	if _, ok := debounce[code]; ok {
+	if _, ok := debounce_key[code]; ok {
 		return fmt.Errorf("debounced key %v", code)
 	}
 
-	debounce[code] = time.Now()
+	debounce_key[code] = time.Now()
 
 	C.XKey(C.ulong(code), C.int(1))
 	return nil
@@ -82,25 +83,25 @@ func ButtonUp(code int) error {
 	mu.Lock()
 	defer mu.Unlock()
 
-	if _, ok := debounce[code]; !ok {
+	if _, ok := debounce_button[code]; !ok {
 		return fmt.Errorf("debounced button %v", code)
 	}
 
-	delete(debounce, code)
+	delete(debounce_button, code)
 
 	C.XButton(C.uint(code), C.int(0))
 	return nil
 }
 
-func KeyUp(code int) error {
+func KeyUp(code uint64) error {
 	mu.Lock()
 	defer mu.Unlock()
 
-	if _, ok := debounce[code]; !ok {
+	if _, ok := debounce_key[code]; !ok {
 		return fmt.Errorf("debounced key %v", code)
 	}
 
-	delete(debounce, code)
+	delete(debounce_key, code)
 
 	C.XKey(C.ulong(code), C.int(0))
 	return nil
@@ -127,31 +128,35 @@ func WriteClipboard(data string) {
 }
 
 func ResetKeys() {
-	for code := range debounce {
-		if code < 8 {
-			ButtonUp(code)
-		} else {
-			KeyUp(code)
-		}
+	for code := range debounce_button {
+		ButtonUp(code)
 
-		delete(debounce, code)
+		delete(debounce_button, code)
+	}
+	for code := range debounce_key {
+		KeyUp(code)
+
+		delete(debounce_key, code)
 	}
 }
 
 func CheckKeys(duration time.Duration) {
 	t := time.Now()
-	for code, start := range debounce {
+	for code, start := range debounce_button {
 		if t.Sub(start) < duration {
 			continue
 		}
+		ButtonUp(code)
 
-		if code < 8 {
-			ButtonUp(code)
-		} else {
-			KeyUp(code)
+		delete(debounce_button, code)
+	}
+	for code, start := range debounce_key {
+		if t.Sub(start) < duration {
+			continue
 		}
+		KeyUp(code)
 
-		delete(debounce, code)
+		delete(debounce_key, code)
 	}
 }
 
