@@ -64,7 +64,7 @@ export const actions = actionTree(
       }
 
       if (!getters.hosting) {
-        $client.sendMessage(EVENT.CONTROL.REQUEST, { keyboard_layout: accessor.settings.keyboard_layout })
+        $client.sendMessage(EVENT.CONTROL.REQUEST)
       } else {
         $client.sendMessage(EVENT.CONTROL.RELEASE)
       }

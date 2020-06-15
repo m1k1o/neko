@@ -76,11 +76,7 @@ func (h *MessageHandler) Message(id string, raw []byte) error {
 	case event.CONTROL_RELEASE:
 		return errors.Wrapf(h.controlRelease(id, session), "%s failed", header.Event)
 	case event.CONTROL_REQUEST:
-		payload := &message.ControlRequest{}
-		return errors.Wrapf(
-			utils.Unmarshal(payload, raw, func() error {
-				return h.controlRequest(id, session, payload)
-			}), "%s failed", header.Event)
+		return errors.Wrapf(h.controlRequest(id, session), "%s failed", header.Event)
 	case event.CONTROL_GIVE:
 		payload := &message.Control{}
 		return errors.Wrapf(

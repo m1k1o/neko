@@ -56,11 +56,6 @@ type Control struct {
 	ID    string `json:"id"`
 }
 
-type ControlRequest struct {
-	Event          string `json:"event"`
-	KeyboardLayout string `json:"keyboard_layout"`
-}
-
 type ControlTarget struct {
 	Event  string `json:"event"`
 	ID     string `json:"id"`

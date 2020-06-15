@@ -29,7 +29,6 @@ export type WebSocketPayloads =
   | MemberListPayload
   | Member
   | ControlPayload
-  | ControlRequestPayload
   | ControlClipboardPayload
   | ControlKeyboardPayload
   | ChatPayload
@@ -111,10 +110,6 @@ export interface ControlMessage extends WebSocketMessage, ControlPayload {
 }
 export interface ControlPayload {
   id: string
-}
-
-export interface ControlRequestPayload {
-  keyboard_layout: string
 }
 
 export interface ControlTargetPayload {
