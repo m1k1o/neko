@@ -1,0 +1,29 @@
+#!/bin/sh
+
+BASE=../
+
+build_client() {
+	docker build -t neko-dev-client -f base/Dockerfile --target client "$BASE"
+	docker run --rm -v "$BASE"/client/dist:/tmp/dist neko-dev-client sh -c "rm -rf /tmp/dist/*; cp -r /src/dist/* /tmp/dist"
+}
+
+build_server() {
+	docker build -t neko-dev-server -f base/Dockerfile --target server "$BASE"
+	docker run --rm -v "$BASE"/server/bin:/tmp/bin neko-dev-server sh -c "rm -rf /tmp/bin/neko; cp /src/bin/neko /tmp/bin"
+}
+
+build_base() {
+	docker build -t m1k1o/neko:base -f base/Dockerfile "$BASE"
+}
+
+build_browser() {
+	docker build -t m1k1o/neko:browser -f browser/Dockerfile browser/
+}
+
+case $1 in
+  client) build_client;;
+  serve) build_server;;
+  base) build_base;;
+  browser) build_browser;;
+  *) echo "Unknown $1";;
+esac
