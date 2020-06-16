@@ -13,6 +13,7 @@ import (
 	"sync"
 	"time"
 	"unsafe"
+	"regexp"
 
 	"n.eko.moe/neko/internal/types"
 )
@@ -213,6 +214,10 @@ func GetScreenSize() *types.ScreenSize {
 func SetKeyboard(layout string) {
 	mu.Lock()
 	defer mu.Unlock()
+
+	if !regexp.MustCompile(`^[a-zA-Z]+$`).MatchString(layout) {
+		return
+	}
 
 	layoutUnsafe := C.CString(layout)
 	defer C.free(unsafe.Pointer(layoutUnsafe))
