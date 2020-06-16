@@ -39,14 +39,11 @@
         <span>{{ $t('setting.keyboard_layout') }}</span>
         <label class="select">
           <select v-model="keyboard_layout">
-            <option value="us">English (US)</option>
-            <option value="gb">English (UK)</option>
-
-            <option value="de">German</option>
-            <option value="at">German (Austria)</option>
-            <option value="ch">German (Switzerland)</option>
-
-            <option value="sk">Slovak</option>
+            <option
+              v-for="(name, code) in keyboard_layouts_list"
+              :key="code"
+              :value="code"
+            >{{ name }}</option>
           </select>
           <span />
         </label>
@@ -275,6 +272,10 @@
 
     set chat_sound(value: boolean) {
       this.$accessor.settings.setSound(value)
+    }
+
+    get keyboard_layouts_list() {
+      return this.$accessor.settings.keyboard_layouts_list
     }
 
     get keyboard_layout() {
