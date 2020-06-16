@@ -339,11 +339,11 @@
       /* Initialize Guacamole Keyboard */
       this.keyboard.onkeydown = (key: number) => {
         if (!this.focused || !this.hosting || this.locked) {
-          return false
+          return true
         }
 
         this.$client.sendData('keydown', { key })
-        return true
+        return false
       }
       this.keyboard.onkeyup = (key: number) => {
         if (!this.focused || !this.hosting || this.locked) {
