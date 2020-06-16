@@ -12,11 +12,6 @@ func (h *MessageHandler) SessionCreated(id string, session types.Session) error 
 		return err
 	}
 
-	// send screen current resolution
-	if err := h.screenResolution(id, session); err != nil {
-		return err
-	}
-
 	if session.Admin() {
 		// send screen configurations if admin
 		if err := h.screenConfigurations(id, session); err != nil {
@@ -34,6 +29,11 @@ func (h *MessageHandler) SessionConnected(id string, session types.Session) erro
 		Memebers: h.sessions.Members(),
 	}); err != nil {
 		h.logger.Warn().Str("id", id).Err(err).Msgf("sending event %s has failed", event.MEMBER_LIST)
+		return err
+	}
+
+	// send screen current resolution
+	if err := h.screenResolution(id, session); err != nil {
 		return err
 	}
 
