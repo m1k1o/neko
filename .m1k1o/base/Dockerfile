@@ -99,10 +99,10 @@ RUN set -eux; apt-get update; \
 
 #
 # copy config files
-COPY .docker/dbus /usr/bin/dbus
-COPY .docker/default.pa /etc/pulse/default.pa
-COPY .docker/supervisord.conf /etc/neko/supervisord.conf
-COPY .docker/xorg.conf /etc/neko/xorg.conf
+COPY .m1k1o/base/dbus /usr/bin/dbus
+COPY .m1k1o/base/default.pa /etc/pulse/default.pa
+COPY .m1k1o/base/supervisord.conf /etc/neko/supervisord.conf
+COPY .m1k1o/base/xorg.conf /etc/neko/xorg.conf
 
 #
 # set default envs
