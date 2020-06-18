@@ -4,7 +4,7 @@
       <li>
         <span>{{ $t('setting.scroll') }}</span>
         <label class="slider">
-          <input type="range" min="5" max="100" v-model="scroll" />
+          <input type="range" min="1" max="100" v-model="scroll" />
         </label>
       </li>
       <li>
