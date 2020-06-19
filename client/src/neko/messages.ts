@@ -122,7 +122,10 @@ export interface ControlClipboardPayload {
 }
 
 export interface ControlKeyboardPayload {
-  layout: string
+  layout?: string
+  capsLock?: boolean
+  numLock?: boolean
+  scrollLock?: boolean
 }
 
 /*

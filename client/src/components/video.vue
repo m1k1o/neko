@@ -480,16 +480,33 @@
       if (!this.hosting || this.locked) {
         return
       }
+
       this.onMousePos(e)
     }
 
     onMouseEnter(e: MouseEvent) {
+      if(this.hosting) {
+        this.$accessor.remote.syncKeyboardModifierState({
+          capsLock: e.getModifierState("CapsLock"),
+          numLock: e.getModifierState("NumLock"),
+          scrollLock: e.getModifierState("ScrollLock"),
+        })
+      }
+
       this._overlay.focus()
       this.onFocus()
       this.focused = true
     }
 
     onMouseLeave(e: MouseEvent) {
+      if(this.hosting) {
+        this.$accessor.remote.setKeyboardModifierState({
+          capsLock: e.getModifierState("CapsLock"),
+          numLock: e.getModifierState("NumLock"),
+          scrollLock: e.getModifierState("ScrollLock"),
+        })
+      }
+
       this.focused = false
     }
 
