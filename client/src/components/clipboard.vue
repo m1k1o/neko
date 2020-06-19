@@ -4,7 +4,11 @@
     v-if="opened"
     @click="$event.stopPropagation()"
   >
-    <textarea ref="textarea" v-model="clipboard" />
+    <textarea
+      ref="textarea"
+      v-model="clipboard"
+      @focus="$event.target.select()"
+    />
   </div>
 </template>
 
