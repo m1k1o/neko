@@ -26,11 +26,15 @@
         </div>
         <div ref="aspect" class="player-aspect" />
       </div>
-      <ul v-if="!fullscreen" class="video-menu">
+      <ul v-if="!fullscreen" class="video-menu top">
         <li><i @click.stop.prevent="requestFullscreen" class="fas fa-expand"></i></li>
         <li v-if="admin"><i @click.stop.prevent="onResolution" class="fas fa-desktop"></i></li>
       </ul>
-      <neko-resolution ref="resolution" />
+      <ul v-if="!fullscreen" class="video-menu bottom">
+        <li v-if="hosting"><i @click.stop.prevent="onClipboard" class="fas fa-clipboard"></i></li>
+      </ul>
+      <neko-resolution ref="resolution" v-if="admin" />
+      <neko-clipboard ref="clipboard" v-if="hosting" />
     </div>
   </div>
 </template>
@@ -49,7 +53,14 @@
       .video-menu {
         position: absolute;
         right: 20px;
-        top: 15px;
+
+        &.top {
+          top: 15px;
+        }
+
+        &.bottom {
+          bottom: 15px;
+        }
 
         li {
           margin: 0 0 10px 0;
@@ -64,6 +75,10 @@
             text-align: center;
             color: rgba($color: #fff, $alpha: 0.6);
             cursor: pointer;
+          }
+
+          &:last-child {
+            margin: 0;
           }
         }
       }
@@ -139,6 +154,7 @@
 
   import Emote from './emote.vue'
   import Resolution from './resolution.vue'
+  import Clipboard from './clipboard.vue'
 
   import GuacamoleKeyboard from '~/utils/guacamole-keyboard.ts'
 
@@ -147,6 +163,7 @@
     components: {
       'neko-emote': Emote,
       'neko-resolution': Resolution,
+      'neko-clipboard': Clipboard,
     },
   })
   export default class extends Vue {
@@ -157,6 +174,7 @@
     @Ref('player') readonly _player!: HTMLElement
     @Ref('video') readonly _video!: HTMLVideoElement
     @Ref('resolution') readonly _resolution!: any
+    @Ref('clipboard') readonly _clipboard!: any
 
     private keyboard = GuacamoleKeyboard()
     private observer = new ResizeObserver(this.onResise.bind(this))
@@ -511,6 +529,10 @@
 
     onResolution(event: MouseEvent) {
       this._resolution.open(event)
+    }
+
+    onClipboard(event: MouseEvent) {
+      this._clipboard.open(event)
     }
   }
 </script>
