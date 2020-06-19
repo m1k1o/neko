@@ -47,8 +47,11 @@ type Clipboard struct {
 }
 
 type Keyboard struct {
-	Event  string `json:"event"`
-	Layout string `json:"layout"`
+	Event      string  `json:"event"`
+	Layout     *string `json:"layout,omitempty"`
+	CapsLock   *bool   `json:"capsLock,omitempty"`
+	NumLock    *bool   `json:"numLock,omitempty"`
+	ScrollLock *bool   `json:"scrollLock,omitempty"`
 }
 
 type Control struct {

@@ -27,7 +27,7 @@ export const EVENT = {
     REQUESTING: 'control/requesting',
     CLIPBOARD: 'control/clipboard',
     GIVE: 'control/give',
-    KEYBOARD: 'control/keyboard'
+    KEYBOARD: 'control/keyboard',
   },
   CHAT: {
     MESSAGE: 'chat/message',
