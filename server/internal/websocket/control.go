@@ -116,6 +116,11 @@ func (h *MessageHandler) controlClipboard(id string, session types.Session, payl
 	return nil
 }
 
+// TODO: Refactor
+var CapsLock = false
+var NumLock = false
+var ScrollLock = false
+
 func (h *MessageHandler) controlKeyboard(id string, session types.Session, payload *message.Keyboard) error {
 	// check if session is host
 	if !h.sessions.IsHost(id) {
@@ -123,6 +128,34 @@ func (h *MessageHandler) controlKeyboard(id string, session types.Session, paylo
 		return nil
 	}
 
-	h.remote.SetKeyboard(payload.Layout)
+	// change layout
+	if payload.Layout != nil {
+		h.remote.SetKeyboard(*payload.Layout)
+	}
+
+	// set caps lock
+	if payload.CapsLock != nil && *payload.CapsLock != CapsLock {
+		h.remote.KeyDown(0xffe5)
+		h.remote.KeyUp(0xffe5)
+
+		CapsLock = *payload.CapsLock
+	}
+
+	// set num lock
+	if payload.NumLock != nil && *payload.NumLock != NumLock {
+		h.remote.KeyDown(0xff7f)
+		h.remote.KeyUp(0xff7f)
+
+		NumLock = *payload.NumLock
+	}
+
+	// set scroll lock
+	if payload.ScrollLock != nil && *payload.ScrollLock != ScrollLock {
+		h.remote.KeyDown(0xff14)
+		h.remote.KeyUp(0xff14)
+
+		ScrollLock = *payload.ScrollLock
+	}
+
 	return nil
 }
