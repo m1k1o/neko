@@ -116,11 +116,6 @@ func (h *MessageHandler) controlClipboard(id string, session types.Session, payl
 	return nil
 }
 
-// TODO: Refactor
-var CapsLock = false
-var NumLock = false
-var ScrollLock = false
-
 func (h *MessageHandler) controlKeyboard(id string, session types.Session, payload *message.Keyboard) error {
 	// check if session is host
 	if !h.sessions.IsHost(id) {
@@ -134,28 +129,29 @@ func (h *MessageHandler) controlKeyboard(id string, session types.Session, paylo
 	}
 
 	// set caps lock
-	if payload.CapsLock != nil && *payload.CapsLock != CapsLock {
-		h.remote.KeyDown(0xffe5)
-		h.remote.KeyUp(0xffe5)
-
-		CapsLock = *payload.CapsLock
+	var CapsLock = 0
+	if payload.CapsLock == nil {
+		CapsLock = -1
+	} else if *payload.CapsLock {
+		CapsLock = 1
 	}
 
 	// set num lock
-	if payload.NumLock != nil && *payload.NumLock != NumLock {
-		h.remote.KeyDown(0xff7f)
-		h.remote.KeyUp(0xff7f)
-
-		NumLock = *payload.NumLock
+	var NumLock = 0
+	if payload.NumLock == nil {
+		NumLock = -1
+	} else if *payload.NumLock {
+		NumLock = 1
 	}
 
 	// set scroll lock
-	if payload.ScrollLock != nil && *payload.ScrollLock != ScrollLock {
-		h.remote.KeyDown(0xff14)
-		h.remote.KeyUp(0xff14)
-
-		ScrollLock = *payload.ScrollLock
+	var ScrollLock = 0
+	if payload.ScrollLock == nil {
+		ScrollLock = -1
+	} else if *payload.ScrollLock {
+		ScrollLock = 1
 	}
 
+	h.remote.SetKeyboardModifiers(CapsLock, NumLock, ScrollLock)
 	return nil
 }

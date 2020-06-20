@@ -40,5 +40,6 @@
   void XDisplaySet(char *input);
 
   void SetKeyboard(char *layout);
+  void SetKeyboardModifiers(int num_lock, int caps_lock, int scroll_lock);
 #endif
 
