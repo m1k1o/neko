@@ -32,6 +32,12 @@ func New(config *config.Remote) *RemoteManager {
 		emmiter:   events.New(),
 		config:    config,
 		streaming: false,
+
+		keyboardModifierState: {
+			CapsLock: false,
+			NumLock: false,
+			ScrollLock: false,
+		}
 	}
 }
 
@@ -219,4 +225,8 @@ func (manager *RemoteManager) GetScreenSize() *types.ScreenSize {
 
 func (manager *RemoteManager) SetKeyboard(layout string) {
 	xorg.SetKeyboard(layout)
+}
+
+func (manager *RemoteManager) SetKeyboard(NumLock int, CapsLock int, ScrollLock int) {
+	xorg.SetKeyboardModifiers(NumLock, CapsLock, ScrollLock)
 }

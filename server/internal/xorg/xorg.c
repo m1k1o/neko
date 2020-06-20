@@ -172,3 +172,35 @@ void SetKeyboard(char *layout) {
   strncat(cmd, layout, 2);
   system(cmd);
 }
+
+void SetKeyboardModifiers(int num_lock, int caps_lock, int scroll_lock) {
+  // TOOD: refactor, use native API.
+  // https://stackoverflow.com/questions/8427817/how-to-get-a-num-lock-state-using-c-c/8429021
+  Display *display = getXDisplay();
+  XKeyboardState x;
+  XGetKeyboardControl(display, &x);
+
+  // set caps lock
+  //printf("CapsLock is %s\n", (x.led_mask & 1) ? "On" : "Off");
+  if(caps_lock != -1 && x.led_mask & 1 != caps_lock) {
+    XKey(0xffe5, 1);
+    XKey(0xffe5, 0);
+  }
+
+  // set num lock
+  //printf("NumLock is %s\n", (x.led_mask & 2) ? "On" : "Off");
+  if(num_lock != -1 && x.led_mask & 2 != num_lock) {
+    XKey(0xff7f, 1);
+    XKey(0xff7f, 0);
+  }
+
+  /* NOT SUPPORTED
+  // set scroll lock
+  //printf("ScrollLock is %s\n", (x.led_mask & 4) ? "On" : "Off");
+  if(scroll_lock != -1 && x.led_mask & 4 != scroll_lock) {
+    XKey(0xff14, 1);
+    XKey(0xff14, 0);
+  }
+  */
+}
+
