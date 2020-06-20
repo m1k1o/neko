@@ -23,5 +23,5 @@ type RemoteManager interface {
 	WriteClipboard(data string)
 	ResetKeys()
 	SetKeyboard(layout string)
-	SetKeyboard(NumLock int, CapsLock int, ScrollLock int)
+	SetKeyboardModifiers(NumLock int, CapsLock int, ScrollLock int)
 }
