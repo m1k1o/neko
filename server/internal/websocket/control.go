@@ -152,6 +152,12 @@ func (h *MessageHandler) controlKeyboard(id string, session types.Session, paylo
 		ScrollLock = 1
 	}
 
+	h.logger.Debug().
+		Int("NumLock", NumLock).
+		Int("CapsLock", CapsLock).
+		Int("ScrollLock", ScrollLock).
+		Msg("setting keyboard modifiers")
+
 	h.remote.SetKeyboardModifiers(NumLock, CapsLock, ScrollLock)
 	return nil
 }
