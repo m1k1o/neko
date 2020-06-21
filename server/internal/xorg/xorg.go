@@ -211,7 +211,7 @@ func GetScreenSize() *types.ScreenSize {
 	return nil
 }
 
-func SetKeyboard(layout string) {
+func SetKeyboardLayout(layout string) {
 	mu.Lock()
 	defer mu.Unlock()
 
@@ -222,7 +222,7 @@ func SetKeyboard(layout string) {
 	layoutUnsafe := C.CString(layout)
 	defer C.free(unsafe.Pointer(layoutUnsafe))
 
-	C.SetKeyboard(layoutUnsafe)
+	C.SetKeyboardLayout(layoutUnsafe)
 }
 
 //export goCreateScreenSize

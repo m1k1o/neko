@@ -123,6 +123,6 @@ func (h *MessageHandler) controlKeyboard(id string, session types.Session, paylo
 		return nil
 	}
 
-	h.remote.SetKeyboard(payload.Layout)
+	h.remote.SetKeyboardLayout(payload.Layout)
 	return nil
 }
