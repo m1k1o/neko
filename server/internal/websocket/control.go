@@ -128,20 +128,20 @@ func (h *MessageHandler) controlKeyboard(id string, session types.Session, paylo
 		h.remote.SetKeyboard(*payload.Layout)
 	}
 
-	// set caps lock
-	var CapsLock = 0
-	if payload.CapsLock == nil {
-		CapsLock = -1
-	} else if *payload.CapsLock {
-		CapsLock = 1
-	}
-
 	// set num lock
 	var NumLock = 0
 	if payload.NumLock == nil {
 		NumLock = -1
 	} else if *payload.NumLock {
 		NumLock = 1
+	}
+
+	// set caps lock
+	var CapsLock = 0
+	if payload.CapsLock == nil {
+		CapsLock = -1
+	} else if *payload.CapsLock {
+		CapsLock = 1
 	}
 
 	// set scroll lock
@@ -152,6 +152,6 @@ func (h *MessageHandler) controlKeyboard(id string, session types.Session, paylo
 		ScrollLock = 1
 	}
 
-	h.remote.SetKeyboardModifiers(CapsLock, NumLock, ScrollLock)
+	h.remote.SetKeyboardModifiers(NumLock, CapsLock, ScrollLock)
 	return nil
 }
