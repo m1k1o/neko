@@ -175,33 +175,21 @@ void SetKeyboard(char *layout) {
 
 void SetKeyboardModifiers(int num_lock, int caps_lock, int scroll_lock) {
   Display *display = getXDisplay();
-  Bool state;
-  Atom atom;
 
-  // set num lock
-  atom = XInternAtom(display, "Num Lock", 0);
-  XkbGetNamedIndicator(display, atom, NULL, &state, NULL, NULL);
-  //printf("Num Lock is %s\n", state ? "on" : "off");
-  if(num_lock != -1 && state != num_lock) {
-    XKey(XK_Num_Lock, 1);
-    XKey(XK_Num_Lock, 0);
+  if (num_lock != -1) {
+    XkbLockModifiers(display, XkbUseCoreKbd, 16, num_lock * 16);
   }
 
-  // set caps lock
-  atom = XInternAtom(display, "Caps Lock", 0);
-  XkbGetNamedIndicator(display, atom, NULL, &state, NULL, NULL);
-  //printf("Caps Lock is %s\n", state ? "on" : "off");
-  if(caps_lock != -1 && state != caps_lock) {
-    XKey(XK_Caps_Lock, 1);
-    XKey(XK_Caps_Lock, 0);
+  if (caps_lock != -1) {
+    XkbLockModifiers(display, XkbUseCoreKbd, 2, caps_lock * 2);
   }
 
-  // set scroll lock
-  atom = XInternAtom(display, "Scroll Lock", 0);
-  XkbGetNamedIndicator(display, atom, NULL, &state, NULL, NULL);
-  //printf("Scroll Lock is %s\n", state ? "on" : "off");
-  if(scroll_lock != -1 && state != scroll_lock) {
-    XKey(XK_Scroll_Lock, 1);
-    XKey(XK_Scroll_Lock, 0);
+  if (scroll_lock != -1) {
+    XKeyboardControl values;
+    values.led_mode = scroll_lock ? LedModeOn : LedModeOff;
+    values.led = 3;
+    XChangeKeyboardControl(display, KBLedMode, &values);
   }
+
+  XFlush(display);
 }
