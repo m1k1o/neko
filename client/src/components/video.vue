@@ -352,7 +352,6 @@
       })
 
       document.addEventListener('focusin', this.onFocus.bind(this))
-      document.addEventListener('focusout', this.onBlur.bind(this))
 
       /* Initialize Guacamole Keyboard */
       this.keyboard.onkeydown = (key: number) => {
@@ -377,7 +376,6 @@
       this.observer.disconnect()
       this.$accessor.video.setPlayable(false)
       document.removeEventListener('focusin', this.onFocus.bind(this))
-      document.removeEventListener('focusout', this.onBlur.bind(this))
       /* Guacamole Keyboard does not provide destroy functions */
     }
 
@@ -439,14 +437,6 @@
           })
           .catch(this.$log.error)
       }
-    }
-
-    onBlur() {
-      if (!this.focused || !this.hosting || this.locked) {
-        return
-      }
-
-      this.keyboard.reset()
     }
 
     onMousePos(e: MouseEvent) {
@@ -525,6 +515,7 @@
         })
       }
 
+      this.keyboard.reset()
       this.focused = false
     }
 
