@@ -125,7 +125,7 @@ func (h *MessageHandler) controlKeyboard(id string, session types.Session, paylo
 
 	// change layout
 	if payload.Layout != nil {
-		h.remote.SetKeyboard(*payload.Layout)
+		h.remote.SetKeyboardLayout(*payload.Layout)
 	}
 
 	// set num lock
