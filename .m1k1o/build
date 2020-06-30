@@ -17,14 +17,19 @@ build_base() {
 	docker build -t m1k1o/neko:base -f base/Dockerfile "$BASE"
 }
 
-build_browser() {
-	docker build -t m1k1o/neko:browser -f browser/Dockerfile browser/
+build_firefox() {
+	docker build -t m1k1o/neko:firefox -f firefox/Dockerfile firefox/
+}
+
+build_chromium() {
+	docker build -t m1k1o/neko:chromium -f chromium/Dockerfile chromium/
 }
 
 case $1 in
   client) build_client;;
   serve) build_server;;
   base) build_base;;
-  browser) build_browser;;
+  firefox) build_firefox;;
+  chromium) build_chromium;;
   *) echo "Unknown $1";;
 esac

@@ -1,0 +1,38 @@
+{
+  "HomepageLocation": "",
+  "AutoFillEnabled": false,
+  "AutofillAddressEnabled": false,
+  "AutofillCreditCardEnabled": false,
+  "BrowserSignin": 0,
+  "DefaultNotificationsSetting": 2,
+  "DeveloperToolsAvailability": 2,
+  "EditBookmarksEnabled": false,
+  "FullscreenAllowed": true,
+  "IncognitoModeAvailability": 1,
+  "SyncDisabled": true,
+  "AutoplayAllowed": true,
+  "BrowserAddPersonEnabled": false,
+  "BrowserGuestModeEnabled": false,
+  "DefaultPopupsSetting": 2,
+  "DownloadRestrictions": 3,
+  "VideoCaptureAllowed": true,
+  "AllowFileSelectionDialogs": false,
+  "PromptForDownloadLocation": false,
+  "BookmarkBarEnabled": false,
+  "PasswordManagerEnabled": false,
+  "URLBlacklist": [
+      "file://*",
+      "chrome://policy"
+  ],
+  "ExtensionInstallWhitelist": [
+      "cjpalhdlnbpafiamejdnhcphjbkeiagm",
+      "fjoaledfpmneenckfbpdfhkmimnjocfa"
+  ],
+  "ExtensionInstallBlacklist": [
+      "*"
+  ],
+  "ExtensionInstallForcelist": [
+      "cjpalhdlnbpafiamejdnhcphjbkeiagm",
+      "fjoaledfpmneenckfbpdfhkmimnjocfa"
+  ]
+}
