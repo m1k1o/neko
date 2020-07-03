@@ -1,7 +1,7 @@
 #
 # STAGE 1: SERVER
 #
-FROM golang:1.14.4-stretch as server
+FROM golang:1.14-buster as server
 WORKDIR /src
 
 #
@@ -32,7 +32,7 @@ RUN go get -v -t -d . && go build -o bin/neko -i cmd/neko/main.go
 #
 # STAGE 2: CLIENT
 #
-FROM node:12.18.0-stretch-slim as client
+FROM node:12.18-buster-slim as client
 WORKDIR /src
 
 #
@@ -48,7 +48,7 @@ RUN npm run build
 #
 # STAGE 3: RUNTIME
 #
-FROM debian:stretch-slim
+FROM debian:buster-slim
 
 #
 # avoid warnings by switching to noninteractive
