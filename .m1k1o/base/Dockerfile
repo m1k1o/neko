@@ -65,7 +65,7 @@ ARG USER_GID=$USER_UID
 RUN set -eux; apt-get update; \
     apt-get install -y --no-install-recommends wget ca-certificates supervisor; \
     apt-get install -y --no-install-recommends pulseaudio dbus-x11 xserver-xorg-video-dummy; \
-    apt-get install -y --no-install-recommends libcairo2 libxcb1 libxrandr2 libxv1 libopus0 libvpx4; \
+    apt-get install -y --no-install-recommends libcairo2 libxcb1 libxrandr2 libxv1 libopus0 libvpx5; \
     #
     # gst
     apt-get install -y --no-install-recommends libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
