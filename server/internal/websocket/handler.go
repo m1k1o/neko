@@ -89,6 +89,13 @@ func (h *MessageHandler) Message(id string, raw []byte) error {
 			utils.Unmarshal(payload, raw, func() error {
 				return h.controlClipboard(id, session, payload)
 			}), "%s failed", header.Event)
+	case event.CONTROL_KEYBOARD:
+		payload := &message.Keyboard{}
+		return errors.Wrapf(
+			utils.Unmarshal(payload, raw, func() error {
+				return h.controlKeyboard(id, session, payload)
+			}), "%s failed", header.Event)
+
 
 	// Chat Events
 	case event.CHAT_MESSAGE:

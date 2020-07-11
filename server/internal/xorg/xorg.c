@@ -89,16 +89,30 @@ void XScroll(int x, int y) {
 }
 
 void XButton(unsigned int button, int down) {
-  Display *display = getXDisplay();
-  XTestFakeButtonEvent(display, button, down, CurrentTime);
-  XSync(display, 0);
+  if (button != 0) {
+    Display *display = getXDisplay();
+    XTestFakeButtonEvent(display, button, down, CurrentTime);
+    XSync(display, 0);
+  }
 }
 
 void XKey(unsigned long key, int down) {
-  Display *display = getXDisplay();
-  KeyCode code = XKeysymToKeycode(display, key);
+  if (key != 0) {
+    Display *display = getXDisplay();
+    KeyCode code = XKeysymToKeycode(display, key);
 
-  if (code != 0) {
+    // Map non-existing keysyms to new keycodes
+    if(code == 0) {
+      int min, max, numcodes;
+      XDisplayKeycodes(display, &min, &max);
+      XGetKeyboardMapping(display, min, max-min, &numcodes);
+
+      code = (max-min+1)*numcodes;
+      KeySym keysym_list[numcodes];
+      for(int i=0;i<numcodes;i++) keysym_list[i] = key;
+      XChangeKeyboardMapping(display, code, numcodes, keysym_list, 1);
+    }
+
     XTestFakeKeyEvent(display, code, down, CurrentTime);
     XSync(display, 0);
   }
@@ -150,4 +164,11 @@ short XGetScreenRate() {
   Display *display = getXDisplay();
   XRRScreenConfiguration *conf  = XRRGetScreenInfo(display, RootWindow(display, 0));
   return XRRConfigCurrentRate(conf);
+}
+
+void SetKeyboardLayout(char *layout) {
+  // TOOD: refactor, use native API.
+  char cmd[13] = "setxkbmap ";
+  strncat(cmd, layout, 2);
+  system(cmd);
 }

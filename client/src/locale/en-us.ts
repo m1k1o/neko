@@ -60,6 +60,7 @@ export const setting = {
   autoplay: 'Autoplay Video',
   ignore_emotes: 'Ignore Emotes',
   chat_sound: 'Play Chat Sound',
+  keyboard_layout: 'Change Keyboard Layout',
 }
 
 export const connection = {

@@ -30,6 +30,7 @@ export type WebSocketPayloads =
   | Member
   | ControlPayload
   | ControlClipboardPayload
+  | ControlKeyboardPayload
   | ChatPayload
   | ChatSendPayload
   | EmojiSendPayload
@@ -118,6 +119,10 @@ export interface ControlTargetPayload {
 
 export interface ControlClipboardPayload {
   text: string
+}
+
+export interface ControlKeyboardPayload {
+  layout: string
 }
 
 /*

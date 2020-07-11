@@ -38,5 +38,7 @@
 
   void XDisplayClose(void);
   void XDisplaySet(char *input);
+
+  void SetKeyboardLayout(char *layout);
 #endif
 
