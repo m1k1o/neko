@@ -15,11 +15,12 @@ type RemoteManager interface {
 	ScreenConfigurations() map[int]ScreenConfiguration
 	Move(x, y int)
 	Scroll(x, y int)
-	ButtonDown(code int) (*Button, error)
-	KeyDown(code int) (*Key, error)
-	ButtonUp(code int) (*Button, error)
-	KeyUp(code int) (*Key, error)
+	ButtonDown(code int) error
+	KeyDown(code uint64) error
+	ButtonUp(code int) error
+	KeyUp(code uint64) error
 	ReadClipboard() string
 	WriteClipboard(data string)
 	ResetKeys()
+	SetKeyboardLayout(layout string)
 }

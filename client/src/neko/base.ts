@@ -123,19 +123,19 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
         break
       case 'keydown':
       case 'mousedown':
-        buffer = new ArrayBuffer(5)
+        buffer = new ArrayBuffer(11)
         payload = new DataView(buffer)
         payload.setUint8(0, OPCODE.KEY_DOWN)
-        payload.setUint16(1, 1, true)
-        payload.setUint16(3, data.key, true)
+        payload.setUint16(1, 8, true)
+        payload.setBigUint64(3, BigInt(data.key), true)
         break
       case 'keyup':
       case 'mouseup':
-        buffer = new ArrayBuffer(5)
+        buffer = new ArrayBuffer(11)
         payload = new DataView(buffer)
         payload.setUint8(0, OPCODE.KEY_UP)
-        payload.setUint16(1, 1, true)
-        payload.setUint16(3, data.key, true)
+        payload.setUint16(1, 8, true)
+        payload.setBigUint64(3, BigInt(data.key), true)
         break
       default:
         this.emit('warn', `unknown data event: ${event}`)

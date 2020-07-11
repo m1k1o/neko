@@ -20,8 +20,6 @@
           @mouseup.stop.prevent="onMouseUp"
           @mouseenter.stop.prevent="onMouseEnter"
           @mouseleave.stop.prevent="onMouseLeave"
-          @keydown.stop.prevent="onKeyDown"
-          @keyup.stop.prevent="onKeyUp"
         />
         <div v-if="!playing" class="player-overlay">
           <i @click.stop.prevent="toggle" v-if="playable" class="fas fa-play-circle" />
@@ -142,6 +140,8 @@
   import Emote from './emote.vue'
   import Resolution from './resolution.vue'
 
+  import GuacamoleKeyboard from '~/utils/guacamole-keyboard.ts'
+
   @Component({
     name: 'neko-video',
     components: {
@@ -158,10 +158,10 @@
     @Ref('video') readonly _video!: HTMLVideoElement
     @Ref('resolution') readonly _resolution!: any
 
+    private keyboard = GuacamoleKeyboard()
     private observer = new ResizeObserver(this.onResise.bind(this))
     private focused = false
     private fullscreen = false
-    private activeKeys: Set<number> = new Set()
 
     get admin() {
       return this.$accessor.user.admin
@@ -335,6 +335,24 @@
 
       document.addEventListener('focusin', this.onFocus.bind(this))
       document.addEventListener('focusout', this.onBlur.bind(this))
+
+      /* Initialize Guacamole Keyboard */
+      this.keyboard.onkeydown = (key: number) => {
+        if (!this.focused || !this.hosting || this.locked) {
+          return true
+        }
+
+        this.$client.sendData('keydown', { key })
+        return false
+      }
+      this.keyboard.onkeyup = (key: number) => {
+        if (!this.focused || !this.hosting || this.locked) {
+          return
+        }
+
+        this.$client.sendData('keyup', { key })
+      }
+      this.keyboard.listenTo(this._overlay)
     }
 
     beforeDestroy() {
@@ -342,6 +360,7 @@
       this.$accessor.video.setPlayable(false)
       document.removeEventListener('focusin', this.onFocus.bind(this))
       document.removeEventListener('focusout', this.onBlur.bind(this))
+      /* Guacamole Keyboard does not provide destroy functions */
     }
 
     play() {
@@ -409,10 +428,7 @@
         return
       }
 
-      for (let key of this.activeKeys) {
-        this.$client.sendData('keyup', { key })
-        this.activeKeys.delete(key)
-      }
+      this.keyboard.reset()
     }
 
     onMousePos(e: MouseEvent) {
@@ -449,7 +465,7 @@
         return
       }
       this.onMousePos(e)
-      this.$client.sendData('mousedown', { key: e.button })
+      this.$client.sendData('mousedown', { key: e.button + 1 })
     }
 
     onMouseUp(e: MouseEvent) {
@@ -457,7 +473,7 @@
         return
       }
       this.onMousePos(e)
-      this.$client.sendData('mouseup', { key: e.button })
+      this.$client.sendData('mouseup', { key: e.button + 1 })
     }
 
     onMouseMove(e: MouseEvent) {
@@ -475,44 +491,6 @@
 
     onMouseLeave(e: MouseEvent) {
       this.focused = false
-    }
-
-    // frick you firefox
-    getCode(e: KeyboardEvent): number {
-      let key = e.keyCode
-      if (key === 59 && (e.key === ';' || e.key === ':')) {
-        key = 186
-      }
-
-      if (key === 61 && (e.key === '=' || e.key === '+')) {
-        key = 187
-      }
-
-      if (key === 173 && (e.key === '-' || e.key === '_')) {
-        key = 189
-      }
-
-      return key
-    }
-
-    onKeyDown(e: KeyboardEvent) {
-      if (!this.focused || !this.hosting || this.locked) {
-        return
-      }
-
-      let key = this.getCode(e)
-      this.$client.sendData('keydown', { key })
-      this.activeKeys.add(key)
-    }
-
-    onKeyUp(e: KeyboardEvent) {
-      if (!this.focused || !this.hosting || this.locked) {
-        return
-      }
-
-      let key = this.getCode(e)
-      this.$client.sendData('keyup', { key })
-      this.activeKeys.delete(key)
     }
 
     onResise() {

@@ -55,6 +55,7 @@ export const actions = actionTree(
   {
     initialise(store) {
       accessor.emoji.initialise()
+      accessor.settings.initialise()
     },
 
     lock() {

@@ -4,7 +4,7 @@
       <li>
         <span>{{ $t('setting.scroll') }}</span>
         <label class="slider">
-          <input type="range" min="5" max="100" v-model="scroll" />
+          <input type="range" min="1" max="100" v-model="scroll" />
         </label>
       </li>
       <li>
@@ -32,6 +32,19 @@
         <span>{{ $t('setting.chat_sound') }}</span>
         <label class="switch">
           <input type="checkbox" v-model="chat_sound" />
+          <span />
+        </label>
+      </li>
+      <li>
+        <span>{{ $t('setting.keyboard_layout') }}</span>
+        <label class="select">
+          <select v-model="keyboard_layout">
+            <option
+              v-for="(name, code) in keyboard_layouts_list"
+              :key="code"
+              :value="code"
+            >{{ name }}</option>
+          </select>
           <span />
         </label>
       </li>
@@ -182,6 +195,31 @@
             }
           }
         }
+
+        .select {
+          max-width: 120px;
+
+          select {
+            display: block;
+            width: 100%;
+            max-width: 100%;
+            padding: 4px;
+            margin: 0;
+            line-height: 30px;
+            font-weight: bold;
+            border: 0;
+            border-radius: 12px;
+
+            color: black;
+            background-color: $style-primary;
+
+            option {
+              font-weight: normal;
+              color: $text-normal;
+              background-color: $background-tertiary;
+            }
+          }
+        }
       }
     }
   }
@@ -234,6 +272,19 @@
 
     set chat_sound(value: boolean) {
       this.$accessor.settings.setSound(value)
+    }
+
+    get keyboard_layouts_list() {
+      return this.$accessor.settings.keyboard_layouts_list
+    }
+
+    get keyboard_layout() {
+      return this.$accessor.settings.keyboard_layout
+    }
+
+    set keyboard_layout(value: string) {
+      this.$accessor.settings.setKeyboardLayout(value)
+      this.$accessor.remote.changeKeyboard()
     }
 
     logout() {

@@ -1,7 +1,12 @@
-import { getterTree, mutationTree } from 'typed-vuex'
+import { getterTree, mutationTree, actionTree } from 'typed-vuex'
 import { get, set } from '~/utils/localstorage'
+import { accessor } from '~/store'
 
 export const namespaced = true
+
+interface KeyboardLayouts {
+  [code: string]: string
+}
 
 export const state = () => {
   return {
@@ -10,6 +15,9 @@ export const state = () => {
     autoplay: get<boolean>('autoplay', true),
     ignore_emotes: get<boolean>('ignore_emotes', false),
     chat_sound: get<boolean>('chat_sound', true),
+    keyboard_layout: get<string>('keyboard_layout', 'us'),
+
+    keyboard_layouts_list: {} as KeyboardLayouts,
   }
 }
 
@@ -40,4 +48,28 @@ export const mutations = mutationTree(state, {
     state.chat_sound = value
     set('chat_sound', value)
   },
+
+  setKeyboardLayout(state, value: string) {
+    state.keyboard_layout = value
+    set('keyboard_layout', value)
+  },
+
+  setKeyboardLayoutsList(state, value: KeyboardLayouts) {
+    state.keyboard_layouts_list = value
+  },
 })
+
+export const actions = actionTree(
+  { state, getters, mutations },
+  {
+    initialise() {
+      $http
+        .get<KeyboardLayouts>('/keyboard_layouts.json')
+        .then((req) => {
+          accessor.settings.setKeyboardLayoutsList(req.data)
+          console.log(req.data)
+        })
+        .catch(console.error)
+    },
+  },
+)
