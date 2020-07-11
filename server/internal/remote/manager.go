@@ -181,19 +181,19 @@ func (manager *RemoteManager) Scroll(x, y int) {
 	xorg.Scroll(x, y)
 }
 
-func (manager *RemoteManager) ButtonDown(code int) (*types.Button, error) {
+func (manager *RemoteManager) ButtonDown(code int) error {
 	return xorg.ButtonDown(code)
 }
 
-func (manager *RemoteManager) KeyDown(code int) (*types.Key, error) {
+func (manager *RemoteManager) KeyDown(code uint64) error {
 	return xorg.KeyDown(code)
 }
 
-func (manager *RemoteManager) ButtonUp(code int) (*types.Button, error) {
+func (manager *RemoteManager) ButtonUp(code int) error {
 	return xorg.ButtonUp(code)
 }
 
-func (manager *RemoteManager) KeyUp(code int) (*types.Key, error) {
+func (manager *RemoteManager) KeyUp(code uint64) error {
 	return xorg.KeyUp(code)
 }
 
@@ -215,4 +215,8 @@ func (manager *RemoteManager) ScreenConfigurations() map[int]types.ScreenConfigu
 
 func (manager *RemoteManager) GetScreenSize() *types.ScreenSize {
 	return xorg.GetScreenSize()
+}
+
+func (manager *RemoteManager) SetKeyboardLayout(layout string) {
+	xorg.SetKeyboardLayout(layout)
 }

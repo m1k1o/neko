@@ -46,6 +46,11 @@ type Clipboard struct {
 	Text  string `json:"text"`
 }
 
+type Keyboard struct {
+	Event  string `json:"event"`
+	Layout string `json:"layout"`
+}
+
 type Control struct {
 	Event string `json:"event"`
 	ID    string `json:"id"`
