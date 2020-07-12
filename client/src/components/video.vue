@@ -31,7 +31,7 @@
         <li v-if="admin"><i @click.stop.prevent="onResolution" class="fas fa-desktop"></i></li>
       </ul>
       <ul v-if="!fullscreen" class="video-menu bottom">
-        <li v-if="hosting"><i @click.stop.prevent="onClipboard" class="fas fa-clipboard"></i></li>
+        <li v-if="hosting && !clipboard_available"><i @click.stop.prevent="onClipboard" class="fas fa-clipboard"></i></li>
       </ul>
       <neko-resolution ref="resolution" v-if="admin" />
       <neko-clipboard ref="clipboard" v-if="hosting && !clipboard_available" />
