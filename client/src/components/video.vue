@@ -34,7 +34,7 @@
         <li v-if="hosting"><i @click.stop.prevent="onClipboard" class="fas fa-clipboard"></i></li>
       </ul>
       <neko-resolution ref="resolution" v-if="admin" />
-      <neko-clipboard ref="clipboard" v-if="hosting && !navigator.clipboard" />
+      <neko-clipboard ref="clipboard" v-if="hosting && !clipboard_available" />
     </div>
   </div>
 </template>
@@ -237,6 +237,10 @@
       return this.$accessor.settings.scroll_invert
     }
 
+    get clipboard_available() {
+      return 'clipboard' in navigator
+    }
+
     get clipboard() {
       return this.$accessor.remote.clipboard
     }
@@ -310,7 +314,7 @@
 
     @Watch('clipboard')
     onClipboardChanged(clipboard: string) {
-      if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+      if (this.clipboard_available && typeof navigator.clipboard.writeText === 'function') {
         navigator.clipboard.writeText(clipboard).catch(console.error)
       }
     }
@@ -426,7 +430,7 @@
         return
       }
 
-      if (this.hosting && navigator.clipboard && typeof navigator.clipboard.readText === 'function') {
+      if (this.hosting && this.clipboard_available && typeof navigator.clipboard.readText === 'function') {
         navigator.clipboard
           .readText()
           .then(text => {
