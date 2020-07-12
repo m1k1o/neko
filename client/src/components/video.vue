@@ -34,7 +34,7 @@
         <li v-if="hosting"><i @click.stop.prevent="onClipboard" class="fas fa-clipboard"></i></li>
       </ul>
       <neko-resolution ref="resolution" v-if="admin" />
-      <neko-clipboard ref="clipboard" v-if="hosting" />
+      <neko-clipboard ref="clipboard" v-if="hosting && !navigator.clipboard" />
     </div>
   </div>
 </template>
