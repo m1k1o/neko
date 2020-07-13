@@ -29,7 +29,7 @@
       <ul v-if="!fullscreen" class="video-menu">
         <li><i @click.stop.prevent="requestFullscreen" class="fas fa-expand"></i></li>
         <li v-if="admin"><i @click.stop.prevent="onResolution" class="fas fa-desktop"></i></li>
-        <li>
+        <li class="request-control">
           <i
             :class="[hosted && !hosting ? 'disabled' : '', !hosted && !hosting ? 'faded' : '', 'fas', 'fa-keyboard']"
             @click.stop.prevent="toggleControl"
@@ -77,6 +77,16 @@
 
             &.disabled {
               color: rgba($color: $style-error, $alpha: 0.4);
+            }
+          }
+
+          &.request-control {
+            display: none;
+          }
+
+          @media (max-width: 768px) {
+            &.request-control {
+              display: inline-block;
             }
           }
         }
