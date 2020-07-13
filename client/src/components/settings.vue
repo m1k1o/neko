@@ -39,11 +39,7 @@
         <span>{{ $t('setting.keyboard_layout') }}</span>
         <label class="select">
           <select v-model="keyboard_layout">
-            <option
-              v-for="(name, code) in keyboard_layouts_list"
-              :key="code"
-              :value="code"
-            >{{ name }}</option>
+            <option v-for="(name, code) in keyboard_layouts_list" :key="code" :value="code">{{ name }}</option>
           </select>
           <span />
         </label>
@@ -198,20 +194,33 @@
 
         .select {
           max-width: 120px;
+          text-align: right;
+
+          select:hover {
+            border: 1px solid $background-secondary;
+          }
 
           select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
             display: block;
             width: 100%;
             max-width: 100%;
-            padding: 4px;
+            height: 30px;
+            text-align: right;
+            padding: 0 5px 0 10px;
             margin: 0;
             line-height: 30px;
             font-weight: bold;
-            border: 0;
-            border-radius: 12px;
-
-            color: black;
-            background-color: $style-primary;
+            font-size: 12px;
+            text-overflow: ellipsis;
+            border: 1px solid transparent;
+            border-radius: 5px;
+            color: white;
+            background-color: $background-tertiary;
+            font-weight: lighter;
+            cursor: pointer;
 
             option {
               font-weight: normal;
