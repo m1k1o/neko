@@ -30,9 +30,5 @@
   ],
   "ExtensionInstallBlacklist": [
       "*"
-  ],
-  "ExtensionInstallForcelist": [
-      "cjpalhdlnbpafiamejdnhcphjbkeiagm",
-      "fjoaledfpmneenckfbpdfhkmimnjocfa"
   ]
 }

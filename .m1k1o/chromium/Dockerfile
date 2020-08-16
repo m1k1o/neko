@@ -24,3 +24,10 @@ COPY supervisord.conf /etc/neko/supervisord/chromium.conf
 COPY preferences.json /usr/lib/chromium/master_preferences
 COPY policies.json /etc/chromium/policies/managed/policies.json
 COPY openbox.xml /etc/neko/openbox.xml
+
+#
+# copy extensions and policy files
+COPY ublock.json /usr/share/chromium/extensions/cjpalhdlnbpafiamejdnhcphjbkeiagm.json
+COPY ublock.crx /tmp/cjpalhdlnbpafiamejdnhcphjbkeiagm.crx
+COPY nordvpn.json /usr/share/chromium/extensions/fjoaledfpmneenckfbpdfhkmimnjocfa.json
+COPY nordvpn.crx /tmp/fjoaledfpmneenckfbpdfhkmimnjocfa.crx
