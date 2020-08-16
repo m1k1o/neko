@@ -1,12 +1,14 @@
 FROM m1k1o/neko:base
 
+ARG SRC_URL="https://github.com/macchrome/linchrome/releases/download/v84.0.4147.125-r768962-portable-ungoogled-Lin64/ungoogled-chromium_84.0.4147.125_1.vaapi_linux.tar.xz"
+
 #
 # install custom chromium build from woolyss with support for hevc/x265
 RUN set -eux; apt-get update; \
-    apt-get install -y --no-install-recommends libatk1.0-0 libatk-bridge2.0-0 libatomic1 libcups2 libgtk-3-0 libnss3 libpci3 libxcomposite1 libxss1 openbox xz-utils; \
-    wget -O - /tmp/chromium.tar.xz "https://github.com/macchrome/linchrome/releases/download/v84.0.4147.125-r768962-portable-ungoogled-Lin64/ungoogled-chromium_84.0.4147.125_1.vaapi_linux.tar.xz" | \
-    tar -xJf- -C /usr/lib; \
-    mv /usr/lib/ungoogled-chromium_84.0.4147.125_1.vaapi_linux /usr/lib/chromium; \
+    apt-get install -y --no-install-recommends libatk1.0-0 libatk-bridge2.0-0 libatomic1 \
+    libcups2 libgtk-3-0 libnss3 libpci3 libxcomposite1 libxss1 openbox xz-utils; \
+    wget -O - /tmp/chromium.tar.xz "${SRC_URL}" | tar -xJf- -C /tmp; \
+    mv /tmp/ungoogled-chromium_* /usr/lib/chromium; \
     #
     # make required changes for sandbox mode
     mv /usr/lib/chromium/chrome_sandbox /usr/lib/chromium/chrome-sandbox; \
