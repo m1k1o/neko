@@ -27,7 +27,4 @@ COPY openbox.xml /etc/neko/openbox.xml
 
 #
 # copy extensions and policy files
-COPY ublock.json /usr/share/chromium/extensions/cjpalhdlnbpafiamejdnhcphjbkeiagm.json
-COPY ublock.crx /tmp/cjpalhdlnbpafiamejdnhcphjbkeiagm.crx
-COPY nordvpn.json /usr/share/chromium/extensions/fjoaledfpmneenckfbpdfhkmimnjocfa.json
-COPY nordvpn.crx /tmp/fjoaledfpmneenckfbpdfhkmimnjocfa.crx
+COPY extensions /usr/share/chromium/extensions
