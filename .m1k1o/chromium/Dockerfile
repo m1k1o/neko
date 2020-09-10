@@ -1,6 +1,6 @@
 FROM m1k1o/neko:base
 
-ARG SRC_URL="https://github.com/macchrome/linchrome/releases/download/v85.0.4183.83-r782793-portable-ungoogled-Lin64/ungoogled-chromium_85.0.4183.83_1.vaapi_linux.tar.xz"
+ARG SRC_URL="https://github.com/macchrome/linchrome/releases/download/v85.0.4183.102-r782793-portable-ungoogled-Lin64/ungoogled-chromium_85.0.4183.102_1.vaapi_linux.tar.xz"
 
 #
 # install custom chromium build from woolyss with support for hevc/x265
