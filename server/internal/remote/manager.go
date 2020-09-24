@@ -204,7 +204,7 @@ func (manager *RemoteManager) ChangeResolution(width int, height int, rate int) 
 		return err
 	}
 
-	manager.video, err := gst.CreateAppPipeline(
+	video, err := gst.CreateAppPipeline(
 		manager.config.VideoCodec,
 		manager.config.Display,
 		manager.config.VideoParams,
@@ -212,9 +212,10 @@ func (manager *RemoteManager) ChangeResolution(width int, height int, rate int) 
 	if err != nil {
 		manager.logger.Panic().Err(err).Msg("unable to create new video pipeline")
 	}
+	manager.video = video
 
 	if manager.broadcast.Enabled {
-		manager.rtmp, err = gst.CreateRTMPPipeline(
+		rtmp, err = gst.CreateRTMPPipeline(
 			manager.config.Device,
 			manager.config.Display,
 			manager.broadcast.RTMP,
@@ -222,6 +223,7 @@ func (manager *RemoteManager) ChangeResolution(width int, height int, rate int) 
 		if err != nil {
 			manager.logger.Panic().Err(err).Msg("unable to create new rtmp pipeline")
 		}
+		manager.rtmp = rtmp
 	}
 
 	return nil
