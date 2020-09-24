@@ -7,10 +7,10 @@ import (
 
 type Broadcast struct {
 	Enabled     bool
-	Display     string
-	Device      string
-	AudioParams string
-	VideoParams string
+	// Display     string
+	// Device      string
+	// AudioParams string
+	// VideoParams string
 	RTMP        string
 }
 
@@ -40,9 +40,9 @@ func (Broadcast) Init(cmd *cobra.Command) error {
 
 func (s *Broadcast) Set() {
 	s.Enabled = viper.GetBool("broadcast")
-	s.Display = viper.GetString("display")
-	s.Device = viper.GetString("device")
-	s.AudioParams = viper.GetString("cast_audio")
-	s.VideoParams = viper.GetString("cast_video")
+	// s.Display = viper.GetString("display")
+	// s.Device = viper.GetString("device")
+	// s.AudioParams = viper.GetString("cast_audio")
+	// s.VideoParams = viper.GetString("cast_video")
 	s.RTMP = viper.GetString("rtmp")
 }

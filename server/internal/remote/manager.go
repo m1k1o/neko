@@ -17,20 +17,23 @@ type RemoteManager struct {
 	logger    zerolog.Logger
 	video     *gst.Pipeline
 	audio     *gst.Pipeline
+	rtmp      *gst.Pipeline
 	config    *config.Remote
+	broadcast *config.Broadcast
 	cleanup   *time.Ticker
 	shutdown  chan bool
 	emmiter   events.EventEmmiter
 	streaming bool
 }
 
-func New(config *config.Remote) *RemoteManager {
+func New(config *config.Remote, broadcast *config.Broadcast) *RemoteManager {
 	return &RemoteManager{
 		logger:    log.With().Str("module", "remote").Logger(),
 		cleanup:   time.NewTicker(1 * time.Second),
 		shutdown:  make(chan bool),
 		emmiter:   events.New(),
 		config:    config,
+		broadcast: broadcast,
 		streaming: false,
 	}
 }
@@ -70,6 +73,11 @@ func (manager *RemoteManager) Shutdown() error {
 	manager.logger.Info().Msgf("remote shutting down")
 	manager.video.Stop()
 	manager.audio.Stop()
+
+	if manager.broadcast.Enabled {
+		manager.rtmp.Stop()
+	}
+
 	manager.cleanup.Stop()
 	manager.shutdown <- true
 	return nil
@@ -98,6 +106,12 @@ func (manager *RemoteManager) StartStream() {
 		Str("screen_resolution", fmt.Sprintf("%dx%d@%d", manager.config.ScreenWidth, manager.config.ScreenHeight, manager.config.ScreenRate)).
 		Msgf("Pipelines starting...")
 
+	if manager.broadcast.Enabled {
+		manager.logger.Info().
+			Str("rtmp_pipeline_src", manager.rtmp.Src).
+			Msgf("Prtmp pipeline is starting...")
+	}
+
 	xorg.Display(manager.config.Display)
 
 	if !xorg.ValidScreenSize(manager.config.ScreenWidth, manager.config.ScreenHeight, manager.config.ScreenRate) {
@@ -109,6 +123,11 @@ func (manager *RemoteManager) StartStream() {
 	manager.createPipelines()
 	manager.video.Start()
 	manager.audio.Start()
+
+	if manager.broadcast.Enabled {
+		manager.rtmp.Play()
+	}
+
 	manager.streaming = true
 }
 
@@ -116,6 +135,11 @@ func (manager *RemoteManager) StopStream() {
 	manager.logger.Info().Msgf("Pipelines shutting down...")
 	manager.video.Stop()
 	manager.audio.Stop()
+
+	if manager.broadcast.Enabled {
+		manager.rtmp.Stop()
+	}
+
 	manager.streaming = false
 }
 
@@ -140,7 +164,18 @@ func (manager *RemoteManager) createPipelines() {
 		manager.config.AudioParams,
 	)
 	if err != nil {
-		manager.logger.Panic().Err(err).Msg("unable to screate audio pipeline")
+		manager.logger.Panic().Err(err).Msg("unable to create audio pipeline")
+	}
+
+	if manager.broadcast.Enabled {
+		manager.rtmp, err = gst.CreateRTMPPipeline(
+			manager.config.Device,
+			manager.config.Display,
+			manager.broadcast.RTMP,
+		)
+		if err != nil {
+			manager.logger.Panic().Err(err).Msg("unable to create rtmp pipeline")
+		}
 	}
 }
 
@@ -150,8 +185,18 @@ func (manager *RemoteManager) ChangeResolution(width int, height int, rate int) 
 	}
 
 	manager.video.Stop()
+
+	if manager.broadcast.Enabled {
+		manager.rtmp.Stop()
+	}
+
 	defer func() {
 		manager.video.Start()
+
+		if manager.broadcast.Enabled {
+			manager.rtmp.Play()
+		}
+
 		manager.logger.Info().Msg("starting video pipeline...")
 	}()
 
@@ -159,17 +204,26 @@ func (manager *RemoteManager) ChangeResolution(width int, height int, rate int) 
 		return err
 	}
 
-	video, err := gst.CreateAppPipeline(
+	manager.video, err := gst.CreateAppPipeline(
 		manager.config.VideoCodec,
 		manager.config.Display,
 		manager.config.VideoParams,
 	)
-
 	if err != nil {
 		manager.logger.Panic().Err(err).Msg("unable to create new video pipeline")
 	}
 
-	manager.video = video
+	if manager.broadcast.Enabled {
+		manager.rtmp, err = gst.CreateRTMPPipeline(
+			manager.config.Device,
+			manager.config.Display,
+			manager.broadcast.RTMP,
+		)
+		if err != nil {
+			manager.logger.Panic().Err(err).Msg("unable to create new rtmp pipeline")
+		}
+	}
+
 	return nil
 }
 

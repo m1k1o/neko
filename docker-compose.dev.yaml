@@ -12,9 +12,12 @@ services:
       - SYS_ADMIN
     environment:
       DISPLAY: :99.0
-      NEKO_SCREEN: '1280x720@30'
+      NEKO_SCREEN: '1920x1080@30'
       NEKO_PASSWORD: neko
       NEKO_PASSWORD_ADMIN: admin
       NEKO_BIND: :8080
       NEKO_EPR: 52000-52010
       NEKO_NAT1TO1: 192.168.1.20
+      NEKO_BROADCAST: 'true'
+      NEKO_RTMP: 'rtmp://192.168.1.20/live/neko'
+
