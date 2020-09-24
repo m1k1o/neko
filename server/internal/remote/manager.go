@@ -215,7 +215,7 @@ func (manager *RemoteManager) ChangeResolution(width int, height int, rate int) 
 	manager.video = video
 
 	if manager.broadcast.Enabled {
-		rtmp, err = gst.CreateRTMPPipeline(
+		rtmp, err := gst.CreateRTMPPipeline(
 			manager.config.Device,
 			manager.config.Display,
 			manager.broadcast.RTMP,
