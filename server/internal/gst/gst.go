@@ -69,7 +69,7 @@ func CreateRTMPPipeline(pipelineDevice string, pipelineDisplay string, pipelineR
 	video := fmt.Sprintf(videoSrc, pipelineDisplay)
 	audio := fmt.Sprintf(audioSrc, pipelineDevice)
 
-	return CreatePipeline(fmt.Sprintf("flvmux name=mux ! rtmpsink location='%s' live=1 %s voaacenc ! mux. %s x264enc bframes=0 key-int-max=60 byte-stream=true tune=zerolatency speed-preset=veryfast ! mux.", pipelineRTMP, audio, video), "", 0)
+	return CreatePipeline(fmt.Sprintf("flvmux name=mux ! rtmpsink location='%s live=1' %s voaacenc ! mux. %s x264enc bframes=0 key-int-max=60 byte-stream=true tune=zerolatency speed-preset=veryfast ! mux.", pipelineRTMP, audio, video), "", 0)
 }
 
 // CreateAppPipeline creates a GStreamer Pipeline
