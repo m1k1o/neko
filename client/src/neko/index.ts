@@ -18,6 +18,7 @@ import {
   ControlClipboardPayload,
   ScreenConfigurationsPayload,
   ScreenResolutionPayload,
+  BroadcastStatusPayload,
   AdminPayload,
   AdminTargetPayload,
 } from './messages'
