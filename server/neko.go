@@ -6,6 +6,7 @@ import (
 	"os/signal"
 	"runtime"
 
+	"n.eko.moe/neko/internal/broadcast"
 	"n.eko.moe/neko/internal/http"
 	"n.eko.moe/neko/internal/remote"
 	"n.eko.moe/neko/internal/session"
@@ -107,6 +108,7 @@ type Neko struct {
 	server           *http.Server
 	sessionManager   *session.SessionManager
 	remoteManager    *remote.RemoteManager
+	broadcastManager *broadcast.BroadcastManager
 	webRTCManager    *webrtc.WebRTCManager
 	webSocketHandler *websocket.WebSocketHandler
 }
@@ -116,8 +118,9 @@ func (neko *Neko) Preflight() {
 }
 
 func (neko *Neko) Start() {
+	broadcastManager := broadcast.New(neko.Remote)
 
-	remoteManager := remote.New(neko.Remote)
+	remoteManager := remote.New(neko.Remote, broadcastManager)
 	remoteManager.Start()
 
 	sessionManager := session.New(remoteManager)
@@ -125,7 +128,7 @@ func (neko *Neko) Start() {
 	webRTCManager := webrtc.New(sessionManager, remoteManager, neko.WebRTC)
 	webRTCManager.Start()
 
-	webSocketHandler := websocket.New(sessionManager, remoteManager, webRTCManager, neko.WebSocket)
+	webSocketHandler := websocket.New(sessionManager, remoteManager, broadcastManager, webRTCManager, neko.WebSocket)
 	webSocketHandler.Start()
 
 	server := http.New(neko.Server, webSocketHandler)

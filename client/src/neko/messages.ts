@@ -37,6 +37,8 @@ export type WebSocketPayloads =
   | ScreenResolutionPayload
   | ScreenConfigurationsPayload
   | AdminPayload
+  | BroadcastStatusPayload
+  | BroadcastCreatePayload
 
 export interface WebSocketMessage {
   event: WebSocketEvents | string
@@ -175,6 +177,18 @@ export interface ScreenConfigurationsMessage extends WebSocketMessage, ScreenCon
 
 export interface ScreenConfigurationsPayload {
   configurations: ScreenConfigurations
+}
+
+/*
+  BROADCAST PAYLOADS
+*/
+export interface BroadcastCreatePayload {
+  url:   string
+}
+
+export interface BroadcastStatusPayload {
+  url:      string
+  isActive: boolean
 }
 
 /*

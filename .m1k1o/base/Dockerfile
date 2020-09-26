@@ -8,7 +8,7 @@ WORKDIR /src
 # install dependencies
 RUN set -eux; apt-get update; \
     apt-get install -y --no-install-recommends git cmake make libx11-dev libxrandr-dev libxtst-dev \
-    libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good; \
+    libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly; \
     #
     # install libclipboard
     set -eux; \
@@ -69,7 +69,7 @@ RUN set -eux; apt-get update; \
     #
     # gst
     apt-get install -y --no-install-recommends libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
-                    gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-pulseaudio; \
+                    gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-pulseaudio; \
     #
     # create a non-root user
     groupadd --gid $USER_GID $USERNAME; \

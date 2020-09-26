@@ -110,3 +110,14 @@ type ScreenConfigurations struct {
 	Event          string                            `json:"event"`
 	Configurations map[int]types.ScreenConfiguration `json:"configurations"`
 }
+
+type BroadcastStatus struct {
+	Event    string `json:"event"`
+	URL      string `json:"url"`
+	IsActive bool   `json:"isActive"`
+}
+
+type BroadcastCreate struct {
+	Event  string `json:"event"`
+	URL    string `json:"url"`
+}

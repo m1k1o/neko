@@ -13,12 +13,13 @@ import (
 )
 
 type MessageHandler struct {
-	logger   zerolog.Logger
-	sessions types.SessionManager
-	webrtc   types.WebRTCManager
-	remote   types.RemoteManager
-	banned   map[string]bool
-	locked   bool
+	logger    zerolog.Logger
+	sessions  types.SessionManager
+	webrtc    types.WebRTCManager
+	remote    types.RemoteManager
+	broadcast types.BroadcastManager
+	banned    map[string]bool
+	locked    bool
 }
 
 func (h *MessageHandler) Connected(id string, socket *WebSocket) (bool, string, error) {
@@ -122,6 +123,16 @@ func (h *MessageHandler) Message(id string, raw []byte) error {
 			utils.Unmarshal(payload, raw, func() error {
 				return h.screenSet(id, session, payload)
 			}), "%s failed", header.Event)
+
+	// Boradcast Events
+	case event.BORADCAST_CREATE:
+		payload := &message.BroadcastCreate{}
+		return errors.Wrapf(
+			utils.Unmarshal(payload, raw, func() error {
+				return h.boradcastCreate(session, payload)
+			}), "%s failed", header.Event)
+	case event.BORADCAST_DESTROY:
+		return errors.Wrapf(h.boradcastDestroy(session), "%s failed", header.Event)
 
 	// Admin Events
 	case event.ADMIN_LOCK:

@@ -18,6 +18,7 @@ import {
   ControlClipboardPayload,
   ScreenConfigurationsPayload,
   ScreenResolutionPayload,
+  BroadcastStatusPayload,
   AdminPayload,
   AdminTargetPayload,
 } from './messages'
@@ -324,6 +325,13 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
       type: 'event',
       created: new Date(),
     })
+  }
+
+  /////////////////////////////
+  // Broadcast Events
+  /////////////////////////////
+  protected [EVENT.BROADCAST.STATUS](payload: BroadcastStatusPayload) {
+    this.$accessor.settings.broadcastStatus(payload)
   }
 
   /////////////////////////////

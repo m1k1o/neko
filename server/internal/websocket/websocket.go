@@ -16,26 +16,27 @@ import (
 	"n.eko.moe/neko/internal/utils"
 )
 
-func New(sessions types.SessionManager, remote types.RemoteManager, webrtc types.WebRTCManager, conf *config.WebSocket) *WebSocketHandler {
+func New(sessions types.SessionManager, remote types.RemoteManager, broadcast types.BroadcastManager, webrtc types.WebRTCManager, conf *config.WebSocket) *WebSocketHandler {
 	logger := log.With().Str("module", "websocket").Logger()
 
 	return &WebSocketHandler{
-		logger:   logger,
-		conf:     conf,
-		sessions: sessions,
-		remote:   remote,
-		upgrader: websocket.Upgrader{
+		logger:    logger,
+		conf:      conf,
+		sessions:  sessions,
+		remote:    remote,
+		upgrader:  websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool {
 				return true
 			},
 		},
 		handler: &MessageHandler{
-			logger:   logger.With().Str("subsystem", "handler").Logger(),
-			remote:   remote,
-			sessions: sessions,
-			webrtc:   webrtc,
-			banned:   make(map[string]bool),
-			locked:   false,
+			logger:    logger.With().Str("subsystem", "handler").Logger(),
+			remote:    remote,
+			broadcast: broadcast,
+			sessions:  sessions,
+			webrtc:    webrtc,
+			banned:    make(map[string]bool),
+			locked:    false,
 		},
 	}
 }
@@ -44,13 +45,13 @@ func New(sessions types.SessionManager, remote types.RemoteManager, webrtc types
 const pingPeriod = 60 * time.Second
 
 type WebSocketHandler struct {
-	logger   zerolog.Logger
-	upgrader websocket.Upgrader
-	sessions types.SessionManager
-	remote   types.RemoteManager
-	conf     *config.WebSocket
-	handler  *MessageHandler
-	shutdown chan bool
+	logger    zerolog.Logger
+	upgrader  websocket.Upgrader
+	sessions  types.SessionManager
+	remote    types.RemoteManager
+	conf      *config.WebSocket
+	handler   *MessageHandler
+	shutdown  chan bool
 }
 
 func (ws *WebSocketHandler) Start() error {

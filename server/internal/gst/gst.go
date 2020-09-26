@@ -68,7 +68,8 @@ func init() {
 func CreateRTMPPipeline(pipelineDevice string, pipelineDisplay string, pipelineRTMP string) (*Pipeline, error) {
 	video := fmt.Sprintf(videoSrc, pipelineDisplay)
 	audio := fmt.Sprintf(audioSrc, pipelineDevice)
-	return CreatePipeline(fmt.Sprintf("%s ! x264enc ! flv. ! %s ! faac ! flv. ! flvmux name='flv' ! rtmpsink location='%s'", video, audio, pipelineRTMP), "", 0)
+
+	return CreatePipeline(fmt.Sprintf("flvmux name=mux ! rtmpsink location='%s live=1' %s voaacenc ! mux. %s x264enc bframes=0 key-int-max=60 byte-stream=true tune=zerolatency speed-preset=veryfast ! mux.", pipelineRTMP, audio, video), "", 0)
 }
 
 // CreateAppPipeline creates a GStreamer Pipeline
@@ -226,6 +227,11 @@ func CreatePipeline(pipelineStr string, codecName string, clockRate float32) (*P
 // Start starts the GStreamer Pipeline
 func (p *Pipeline) Start() {
 	C.gstreamer_send_start_pipeline(p.Pipeline, C.int(p.id))
+}
+
+// Play starts the GStreamer Pipeline
+func (p *Pipeline) Play() {
+	C.gstreamer_send_play_pipeline(p.Pipeline)
 }
 
 // Stop stops the GStreamer Pipeline
