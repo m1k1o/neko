@@ -327,6 +327,13 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   }
 
   /////////////////////////////
+  // Broadcast Events
+  /////////////////////////////
+  protected [EVENT.BROADCAST.STATUS](payload: BroadcastStatusPayload) {
+    this.$accessor.settings.broadcastStatus(payload)
+  }
+
+  /////////////////////////////
   // Admin Events
   /////////////////////////////
   protected [EVENT.ADMIN.BAN]({ id, target }: AdminTargetPayload) {

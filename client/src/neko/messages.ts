@@ -22,6 +22,7 @@ export type WebSocketMessages =
   | ScreenResolutionMessage
   | ScreenConfigurationsMessage
   | ChatMessage
+  | BroadcastCreateMessage
 
 export type WebSocketPayloads =
   | SignalProvidePayload
@@ -37,6 +38,7 @@ export type WebSocketPayloads =
   | ScreenResolutionPayload
   | ScreenConfigurationsPayload
   | AdminPayload
+  | BroadcastStatusPayload
 
 export interface WebSocketMessage {
   event: WebSocketEvents | string
@@ -175,6 +177,19 @@ export interface ScreenConfigurationsMessage extends WebSocketMessage, ScreenCon
 
 export interface ScreenConfigurationsPayload {
   configurations: ScreenConfigurations
+}
+
+/*
+  BROADCAST PAYLOADS
+*/
+export interface BroadcastCreateMessage extends WebSocketMessage {
+  event: typeof EVENT.BROADCAST.CREATE
+  url:   string
+}
+
+export interface BroadcastStatusPayload extends WebSocketMessage {
+  url:      string
+  isActive: boolean
 }
 
 /*

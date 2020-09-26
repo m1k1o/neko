@@ -61,6 +61,8 @@ export const setting = {
   ignore_emotes: 'Ignore Emotes',
   chat_sound: 'Play Chat Sound',
   keyboard_layout: 'Change Keyboard Layout',
+  broadcast_is_active: 'Broadcast Enabled',
+  broadcast_url: 'RTMP url',
 }
 
 export const connection = {

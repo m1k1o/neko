@@ -38,6 +38,11 @@ export const EVENT = {
     RESOLUTION: 'screen/resolution',
     SET: 'screen/set',
   },
+  BROADCAST: {
+    STATUS: "broadcast/status",
+    CREATE: "broadcast/create",
+    DESTROY: "broadcast/destroy",
+  },
   ADMIN: {
     BAN: 'admin/ban',
     KICK: 'admin/kick',
@@ -60,6 +65,7 @@ export type WebSocketEvents =
   | SignalEvents
   | ChatEvents
   | ScreenEvents
+  | BroadcastEvents
   | AdminEvents
 
 export type ControlEvents =
@@ -75,6 +81,11 @@ export type MemberEvents = typeof EVENT.MEMBER.LIST | typeof EVENT.MEMBER.CONNEC
 export type SignalEvents = typeof EVENT.SIGNAL.ANSWER | typeof EVENT.SIGNAL.PROVIDE
 export type ChatEvents = typeof EVENT.CHAT.MESSAGE | typeof EVENT.CHAT.EMOTE
 export type ScreenEvents = typeof EVENT.SCREEN.CONFIGURATIONS | typeof EVENT.SCREEN.RESOLUTION | typeof EVENT.SCREEN.SET
+
+export type BroadcastEvents =
+  | typeof EVENT.BROADCAST.STATUS
+  | typeof EVENT.BROADCAST.CREATE
+  | typeof EVENT.BROADCAST.DESTROY
 
 export type AdminEvents =
   | typeof EVENT.ADMIN.BAN
