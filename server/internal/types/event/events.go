@@ -37,6 +37,12 @@ const (
 )
 
 const (
+	BORADCAST_STATUS  = "broadcast/status"
+	BORADCAST_CREATE  = "broadcast/create"
+	BORADCAST_DESTROY = "broadcast/destroy"
+)
+
+const (
 	ADMIN_BAN     = "admin/ban"
 	ADMIN_KICK    = "admin/kick"
 	ADMIN_LOCK    = "admin/lock"

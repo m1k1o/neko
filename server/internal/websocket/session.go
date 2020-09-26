@@ -17,6 +17,11 @@ func (h *MessageHandler) SessionCreated(id string, session types.Session) error 
 		if err := h.screenConfigurations(id, session); err != nil {
 			return err
 		}
+
+		// send broadcast status if admin
+		if err := h.boradcastStatus(session); err != nil {
+			return err
+		}
 	}
 
 	return nil

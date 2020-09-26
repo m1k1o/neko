@@ -130,7 +130,7 @@ func (neko *Neko) Start() {
 	webRTCManager := webrtc.New(sessionManager, remoteManager, neko.WebRTC)
 	webRTCManager.Start()
 
-	webSocketHandler := websocket.New(sessionManager, remoteManager, webRTCManager, neko.WebSocket)
+	webSocketHandler := websocket.New(sessionManager, remoteManager, broadcastManager, webRTCManager, neko.WebSocket)
 	webSocketHandler.Start()
 
 	server := http.New(neko.Server, webSocketHandler)
