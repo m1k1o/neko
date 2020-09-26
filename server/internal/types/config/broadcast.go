@@ -6,22 +6,16 @@ import (
 )
 
 type Broadcast struct {
-	Enabled     bool
-	RTMP        string
+	// Enabled     bool
 	// AudioParams string
 	// VideoParams string
 }
 
 func (Broadcast) Init(cmd *cobra.Command) error {
-	cmd.PersistentFlags().Bool("broadcast", false, "turn on boradcasting")
-	if err := viper.BindPFlag("broadcast", cmd.PersistentFlags().Lookup("broadcast")); err != nil {
-		return err
-	}
-
-	cmd.PersistentFlags().String("rtmp", "", "RMTP url for broadcasting")
-	if err := viper.BindPFlag("rtmp", cmd.PersistentFlags().Lookup("rtmp")); err != nil {
-		return err
-	}
+	// cmd.PersistentFlags().Bool("broadcast", false, "enable boradcasting")
+	// if err := viper.BindPFlag("broadcast", cmd.PersistentFlags().Lookup("broadcast")); err != nil {
+	// 	return err
+	// }
 
 	// cmd.PersistentFlags().String("cast_audio", "", "audio codec parameters to use for broadcasting")
 	// if err := viper.BindPFlag("cast_audio", cmd.PersistentFlags().Lookup("cast_audio")); err != nil {
@@ -37,8 +31,7 @@ func (Broadcast) Init(cmd *cobra.Command) error {
 }
 
 func (s *Broadcast) Set() {
-	s.Enabled = viper.GetBool("broadcast")
-	s.RTMP = viper.GetString("rtmp")
+	// s.Enabled = viper.GetBool("broadcast")
 	// s.AudioParams = viper.GetString("cast_audio")
 	// s.VideoParams = viper.GetString("cast_video")
 }
