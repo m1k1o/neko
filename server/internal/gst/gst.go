@@ -56,7 +56,7 @@ const (
 	audioClockRate = 48000
 	pcmClockRate   = 8000
 	videoSrc       = "ximagesrc xid=%s show-pointer=true use-damage=false ! video/x-raw ! videoconvert ! queue ! "
-	audioSrc       = "pulsesrc device=%s ! audioconvert ! "
+	audioSrc       = "pulsesrc device=%s ! audio/x-raw,channels=2 ! audioconvert ! "
 )
 
 func init() {
@@ -73,7 +73,7 @@ func CreateRTMPPipeline(pipelineDevice string, pipelineDisplay string, pipelineS
 	if pipelineSrc != "" {
 		pipelineStr = fmt.Sprintf(pipelineSrc, pipelineRTMP, pipelineDevice, pipelineDisplay)
 	} else {
-		pipelineStr = fmt.Sprintf("flvmux name=mux ! rtmpsink location='%s live=1' %s ! voaacenc ! mux. %s x264enc bframes=0 key-int-max=60 byte-stream=true tune=zerolatency speed-preset=veryfast ! mux.", pipelineRTMP, audio, video)
+		pipelineStr = fmt.Sprintf("flvmux name=mux ! rtmpsink location='%s live=1' %s audio/x-raw,channels=2 ! audioconvert ! voaacenc ! mux. %s x264enc bframes=0 key-int-max=60 byte-stream=true tune=zerolatency speed-preset=veryfast ! mux.", pipelineRTMP, audio, video)
 	}
 
 	return CreatePipeline(pipelineStr, "", 0)
