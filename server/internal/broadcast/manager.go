@@ -36,6 +36,7 @@ func (manager *BroadcastManager) Start() {
 	manager.pipeline, err = gst.CreateRTMPPipeline(
 		manager.remote.Device,
 		manager.remote.Display,
+		manager.config.Pipeline,
 		manager.url,
 	)
 

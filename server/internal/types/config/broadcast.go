@@ -6,32 +6,18 @@ import (
 )
 
 type Broadcast struct {
-	// Enabled     bool
-	// AudioParams string
-	// VideoParams string
+	Pipeline string
 }
 
 func (Broadcast) Init(cmd *cobra.Command) error {
-	// cmd.PersistentFlags().Bool("broadcast", false, "enable boradcasting")
-	// if err := viper.BindPFlag("broadcast", cmd.PersistentFlags().Lookup("broadcast")); err != nil {
-	// 	return err
-	// }
-
-	// cmd.PersistentFlags().String("cast_audio", "", "audio codec parameters to use for broadcasting")
-	// if err := viper.BindPFlag("cast_audio", cmd.PersistentFlags().Lookup("cast_audio")); err != nil {
-	// 	return err
-	// }
-
-	// cmd.PersistentFlags().String("cast_video", "", "video codec parameters to use for broadcasting")
-	// if err := viper.BindPFlag("cast_video", cmd.PersistentFlags().Lookup("cast_video")); err != nil {
-	// 	return err
-	// }
+	cmd.PersistentFlags().String("broadcast_pipeline", "", "audio codec parameters to use for broadcasting")
+	if err := viper.BindPFlag("broadcast_pipeline", cmd.PersistentFlags().Lookup("broadcast_pipeline")); err != nil {
+		return err
+	}
 
 	return nil
 }
 
 func (s *Broadcast) Set() {
-	// s.Enabled = viper.GetBool("broadcast")
-	// s.AudioParams = viper.GetString("cast_audio")
-	// s.VideoParams = viper.GetString("cast_video")
+	s.Pipeline = viper.GetString("broadcast_pipeline")
 }

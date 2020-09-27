@@ -65,11 +65,18 @@ func init() {
 }
 
 // CreateRTMPPipeline creates a GStreamer Pipeline
-func CreateRTMPPipeline(pipelineDevice string, pipelineDisplay string, pipelineRTMP string) (*Pipeline, error) {
+func CreateRTMPPipeline(pipelineDevice string, pipelineDisplay string, pipelineSrc string, pipelineRTMP string) (*Pipeline, error) {
 	video := fmt.Sprintf(videoSrc, pipelineDisplay)
 	audio := fmt.Sprintf(audioSrc, pipelineDevice)
 
-	return CreatePipeline(fmt.Sprintf("flvmux name=mux ! rtmpsink location='%s live=1' %s voaacenc ! mux. %s x264enc bframes=0 key-int-max=60 byte-stream=true tune=zerolatency speed-preset=veryfast ! mux.", pipelineRTMP, audio, video), "", 0)
+	var pipelineStr string
+	if pipelineSrc != "" {
+		pipelineStr = fmt.Sprintf(pipelineSrc, pipelineRTMP, pipelineDevice, pipelineDisplay)
+	} else {
+		pipelineStr = fmt.Sprintf("flvmux name=mux ! rtmpsink location='%s live=1' %s ! voaacenc ! mux. %s x264enc bframes=0 key-int-max=60 byte-stream=true tune=zerolatency speed-preset=veryfast ! mux.", pipelineRTMP, audio, video)
+	}
+
+	return CreatePipeline(pipelineStr, "", 0)
 }
 
 // CreateAppPipeline creates a GStreamer Pipeline
