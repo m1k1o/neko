@@ -12,14 +12,16 @@ type BroadcastManager struct {
 	logger   zerolog.Logger
 	pipeline *gst.Pipeline
 	remote   *config.Remote
+	config   *config.Broadcast
 	enabled  bool
 	url      string
 }
 
-func New(remote *config.Remote) *BroadcastManager {
+func New(remote *config.Remote, config *config.Broadcast) *BroadcastManager {
 	return &BroadcastManager{
 		logger:  log.With().Str("module", "remote").Logger(),
 		remote:  remote,
+		config:  config,
 		enabled: false,
 		url:     "",
 	}

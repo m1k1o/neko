@@ -62,6 +62,7 @@ func init() {
 		Root:      &config.Root{},
 		Server:    &config.Server{},
 		Remote:    &config.Remote{},
+		Broadcast: &config.Broadcast{},
 		WebRTC:    &config.WebRTC{},
 		WebSocket: &config.WebSocket{},
 	}
@@ -100,6 +101,7 @@ type Neko struct {
 	Version   *Version
 	Root      *config.Root
 	Remote    *config.Remote
+	Broadcast *config.Broadcast
 	Server    *config.Server
 	WebRTC    *config.WebRTC
 	WebSocket *config.WebSocket
@@ -118,7 +120,7 @@ func (neko *Neko) Preflight() {
 }
 
 func (neko *Neko) Start() {
-	broadcastManager := broadcast.New(neko.Remote)
+	broadcastManager := broadcast.New(neko.Remote, neko.Broadcast)
 
 	remoteManager := remote.New(neko.Remote, broadcastManager)
 	remoteManager.Start()
