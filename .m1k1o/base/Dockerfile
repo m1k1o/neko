@@ -32,7 +32,7 @@ RUN go get -v -t -d . && go build -o bin/neko -i cmd/neko/main.go
 #
 # STAGE 2: CLIENT
 #
-FROM node:12.18-buster-slim as client
+FROM node:12-buster-slim as client
 WORKDIR /src
 
 #
