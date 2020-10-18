@@ -4,7 +4,7 @@
       <template v-for="(message, index) in history">
         <li :key="index" class="message" v-if="message.type === 'text'">
           <div class="author" @contextmenu.stop.prevent="onContext($event, { member: member(message.id) })">
-            <neko-avatar :seed="member(message.id).displayname" :size="40" />
+            <neko-avatar class="avatar" :seed="member(message.id).displayname" :size="40" />
           </div>
           <div class="content">
             <div class="content-head">
@@ -106,7 +106,7 @@
             background: $style-primary;
             margin: 0px 10px 10px 0px;
 
-            img {
+            .avatar {
               width: 100%;
             }
           }

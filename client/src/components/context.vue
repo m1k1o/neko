@@ -3,7 +3,7 @@
     <template slot-scope="child" v-if="child.data">
       <li class="header">
         <div class="user">
-          <neko-avatar :seed="child.data.member.displayname" :size="25" />
+          <neko-avatar class="avatar" :seed="child.data.member.displayname" :size="25" />
           <strong>{{ child.data.member.displayname }}</strong>
         </div>
       </li>
@@ -80,7 +80,7 @@
           align-content: center;
           padding: 5px 0;
 
-          img {
+          .avatar {
             width: 25px;
             height: 25px;
             border-radius: 50%;
