@@ -4,7 +4,7 @@
       <template v-for="(message, index) in history">
         <li :key="index" class="message" v-if="message.type === 'text'">
           <div class="author" @contextmenu.stop.prevent="onContext($event, { member: member(message.id) })">
-            <img :src="`https://api.adorable.io/avatars/40/${member(message.id).displayname}.png`" />
+            <neko-avatar :seed="member(message.id).displayname" :size="40" />
           </div>
           <div class="content">
             <div class="content-head">
@@ -329,6 +329,7 @@
   import Markdown from './markdown'
   import Content from './context.vue'
   import Emoji from './emoji.vue'
+  import Avatar from './avatar.vue'
 
   const length = 512 // max length of message
 
@@ -338,6 +339,7 @@
       'neko-markdown': Markdown,
       'neko-context': Content,
       'neko-emoji': Emoji,
+      'neko-avatar': Avatar,
     },
   })
   export default class extends Vue {

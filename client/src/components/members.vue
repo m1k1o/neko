@@ -4,7 +4,7 @@
       <ul class="members-list">
         <li v-if="member">
           <div :class="[{ host: member.id === host }, 'self', 'member']">
-            <img :src="`https://api.adorable.io/avatars/50/${member.displayname}.png`" />
+            <neko-avatar :seed="member.displayname" :size="50" />
           </div>
         </li>
         <template v-for="(member, index) in members">
@@ -13,11 +13,11 @@
             :key="index"
             v-tooltip="{ content: member.displayname, placement: 'bottom', offset: -15, boundariesElement: 'body' }"
           >
-            <div :class="[{ host: member.id === host, admin: member.admin }, 'member']">
-              <img
-                :src="`https://api.adorable.io/avatars/50/${member.displayname}.png`"
-                @contextmenu.stop.prevent="onContext($event, { member })"
-              />
+            <div
+              :class="[{ host: member.id === host, admin: member.admin }, 'member']"
+              @contextmenu.stop.prevent="onContext($event, { member })"
+            >
+              <neko-avatar :seed="member.displayname" :size="50" />
             </div>
           </li>
         </template>
@@ -161,11 +161,13 @@
   import { Member } from '~/neko/types'
 
   import Content from './context.vue'
+  import Avatar from './avatar.vue'
 
   @Component({
     name: 'neko-members',
     components: {
       'neko-context': Content,
+      'neko-avatar': Avatar,
     },
   })
   export default class extends Vue {
