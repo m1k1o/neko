@@ -3,7 +3,7 @@
     <template slot-scope="child" v-if="child.data">
       <li class="header">
         <div class="user">
-          <img :src="`https://api.adorable.io/avatars/25/${child.data.member.displayname}.png`" />
+          <neko-avatar class="avatar" :seed="child.data.member.displayname" :size="25" />
           <strong>{{ child.data.member.displayname }}</strong>
         </div>
       </li>
@@ -80,7 +80,7 @@
           align-content: center;
           padding: 5px 0;
 
-          img {
+          .avatar {
             width: 25px;
             height: 25px;
             border-radius: 50%;
@@ -137,11 +137,13 @@
 
   // @ts-ignore
   import { VueContext } from 'vue-context'
+  import Avatar from './avatar.vue'
 
   @Component({
     name: 'neko-context',
     components: {
       'vue-context': VueContext,
+      'neko-avatar': Avatar,
     },
   })
   export default class extends Vue {
