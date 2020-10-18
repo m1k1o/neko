@@ -4,7 +4,7 @@
       <ul class="members-list">
         <li v-if="member">
           <div :class="[{ host: member.id === host }, 'self', 'member']">
-            <img :src="`https://api.adorable.io/avatars/50/${member.displayname}.png`" />
+            <img :src="`https://ui-avatars.com/api/?name=${member.displayname}.png`" />
           </div>
         </li>
         <template v-for="(member, index) in members">
@@ -15,7 +15,7 @@
           >
             <div :class="[{ host: member.id === host, admin: member.admin }, 'member']">
               <img
-                :src="`https://api.adorable.io/avatars/50/${member.displayname}.png`"
+                :src="`https://ui-avatars.com/api/?name=${member.displayname}.png`"
                 @contextmenu.stop.prevent="onContext($event, { member })"
               />
             </div>

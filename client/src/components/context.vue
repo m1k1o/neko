@@ -3,7 +3,7 @@
     <template slot-scope="child" v-if="child.data">
       <li class="header">
         <div class="user">
-          <img :src="`https://api.adorable.io/avatars/25/${child.data.member.displayname}.png`" />
+          <img :src="`https://ui-avatars.com/api/?name=${child.data.member.displayname}.png`" />
           <strong>{{ child.data.member.displayname }}</strong>
         </div>
       </li>
