@@ -7,7 +7,7 @@
     height: size + 'px',
     lineHeight: size + 'px',
     fontSize: (size/2) + 'px',
-    backgroundColor: Background(),
+    backgroundColor: Background(seed),
   }">
     {{ seed.substring(0, 2).toUpperCase() }}
   </div>
@@ -35,12 +35,12 @@
     @Prop(String) readonly seed: string | undefined;
     @Prop(Number) readonly size: number | undefined;
 
-    Background() {
+    Background(seed: string) {
       let a = 0, b = 0, c = 0;
-      for(let i = 0; i < this.seed.length; i++) {
-        a += this.seed.charCodeAt(i) * 3;
-        b += this.seed.charCodeAt(i) * 5;
-        c += this.seed.charCodeAt(i) * 7;
+      for(let i = 0; i < seed.length; i++) {
+        a += seed.charCodeAt(i) * 3;
+        b += seed.charCodeAt(i) * 5;
+        c += seed.charCodeAt(i) * 7;
       }
 
       let x = Math.floor(128 + (a % 128));
