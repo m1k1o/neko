@@ -7,7 +7,7 @@ After creating new config file, you can use this example config and paste it in.
 Bear in mind that your neko server doesn't have to run on the same computer as apache. They just have to be on the same network and then you replace localhost with correct internal IP.
 
 ## Example apache config
-```
+```apache
 <VirtualHost *:80>
         # The ServerName directive sets the request scheme, hostname and port that
         # the server uses to identify itself. This is used when creating
