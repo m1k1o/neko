@@ -1,0 +1,16 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "launch",
+      "type": "go",
+      "request": "launch",
+      "mode": "debug",
+      "program": "${workspaceFolder}/cmd/neko",
+      "envFile": "${workspaceFolder}/.env.development",
+      "output": "${workspaceFolder}/bin/debug/neko",
+      "cwd": "${workspaceFolder}/",
+      "args": ["serve", "-d", "--bind", ":3000", "--static", "../client/dist", "--password", "neko", "--password_admin", "admin"]
+    }
+  ]
+}
