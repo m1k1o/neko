@@ -23,5 +23,7 @@ RUN set -eux; apt-get update; \
 
 #
 # build server
-COPY server/ .
+COPY . .
 RUN go get -v -t -d . && go build -o bin/neko -i cmd/neko/main.go
+
+ENTRYPOINT [ "bin/neko" ]
