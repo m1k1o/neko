@@ -95,7 +95,11 @@ func (manager *WebRTCManager) CreatePeer(id string, session types.Session) (stri
 		settings.SetLite(true)
 	}
 
-	settings.SetEphemeralUDPPortRange(manager.config.EphemeralMin, manager.config.EphemeralMax)
+	err := settings.SetEphemeralUDPPortRange(manager.config.EphemeralMin, manager.config.EphemeralMax)
+	if err != nil {
+		return "", manager.config.ICELite, manager.config.ICEServers, err
+	}
+
 	settings.SetNAT1To1IPs(manager.config.NAT1To1IPs, webrtc.ICECandidateTypeHost)
 
 	// Create MediaEngine based off sdp
