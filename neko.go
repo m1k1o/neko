@@ -138,6 +138,7 @@ func (neko *Neko) Start() {
 
 	neko.sessionManager = sessionManager
 	neko.remoteManager = remoteManager
+	neko.broadcastManager = broadcastManager
 	neko.webRTCManager = webRTCManager
 	neko.webSocketHandler = webSocketHandler
 	neko.server = server
