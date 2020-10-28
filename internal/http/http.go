@@ -34,6 +34,7 @@ func New(conf *config.Server, webSocketHandler types.WebSocketHandler) *Server {
 
 	router.Get("/ws", func(w http.ResponseWriter, r *http.Request) {
 		if webSocketHandler.Upgrade(w, r) != nil {
+			//nolint
 			w.Write([]byte("unable to upgrade your connection to a websocket"))
 		}
 	})
