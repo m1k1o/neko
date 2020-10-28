@@ -4,8 +4,8 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"n.eko.moe/neko/internal/gst"
-	"n.eko.moe/neko/internal/types/config"
+	"demodesk/neko/internal/gst"
+	"demodesk/neko/internal/types/config"
 )
 
 type BroadcastManager struct {

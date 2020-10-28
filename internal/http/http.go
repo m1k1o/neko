@@ -10,10 +10,10 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"n.eko.moe/neko/internal/http/endpoint"
-	"n.eko.moe/neko/internal/http/middleware"
-	"n.eko.moe/neko/internal/types"
-	"n.eko.moe/neko/internal/types/config"
+	"demodesk/neko/internal/http/endpoint"
+	"demodesk/neko/internal/http/middleware"
+	"demodesk/neko/internal/types"
+	"demodesk/neko/internal/types/config"
 )
 
 type Server struct {

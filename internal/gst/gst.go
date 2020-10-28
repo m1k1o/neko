@@ -14,7 +14,7 @@ import (
 
 	"github.com/pion/webrtc/v2"
 
-	"n.eko.moe/neko/internal/types"
+	"demodesk/neko/internal/types"
 )
 
 /*

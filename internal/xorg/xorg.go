@@ -15,7 +15,7 @@ import (
 	"unsafe"
 	"regexp"
 
-	"n.eko.moe/neko/internal/types"
+	"demodesk/neko/internal/types"
 )
 
 var ScreenConfigurations = make(map[int]types.ScreenConfiguration)

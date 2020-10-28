@@ -4,9 +4,9 @@ import (
 	"sync"
 
 	"github.com/rs/zerolog"
-	"n.eko.moe/neko/internal/types"
-	"n.eko.moe/neko/internal/types/event"
-	"n.eko.moe/neko/internal/types/message"
+	"demodesk/neko/internal/types"
+	"demodesk/neko/internal/types/event"
+	"demodesk/neko/internal/types/message"
 )
 
 type Session struct {

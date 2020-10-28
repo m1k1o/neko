@@ -7,10 +7,10 @@ import (
 	"github.com/kataras/go-events"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"n.eko.moe/neko/internal/gst"
-	"n.eko.moe/neko/internal/types"
-	"n.eko.moe/neko/internal/types/config"
-	"n.eko.moe/neko/internal/xorg"
+	"demodesk/neko/internal/gst"
+	"demodesk/neko/internal/types"
+	"demodesk/neko/internal/types/config"
+	"demodesk/neko/internal/xorg"
 )
 
 type RemoteManager struct {

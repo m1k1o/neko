@@ -6,7 +6,7 @@ package middleware
 import (
   "net/http"
 
-  "n.eko.moe/neko/internal/http/endpoint"
+  "demodesk/neko/internal/http/endpoint"
 )
 
 func Recoverer(next http.Handler) http.Handler {

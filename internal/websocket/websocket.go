@@ -9,11 +9,11 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"n.eko.moe/neko/internal/types"
-	"n.eko.moe/neko/internal/types/config"
-	"n.eko.moe/neko/internal/types/event"
-	"n.eko.moe/neko/internal/types/message"
-	"n.eko.moe/neko/internal/utils"
+	"demodesk/neko/internal/types"
+	"demodesk/neko/internal/types/config"
+	"demodesk/neko/internal/types/event"
+	"demodesk/neko/internal/types/message"
+	"demodesk/neko/internal/utils"
 )
 
 func New(sessions types.SessionManager, remote types.RemoteManager, broadcast types.BroadcastManager, webrtc types.WebRTCManager, conf *config.WebSocket) *WebSocketHandler {

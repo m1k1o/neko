@@ -6,10 +6,10 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 
-	"n.eko.moe/neko/internal/types"
-	"n.eko.moe/neko/internal/types/event"
-	"n.eko.moe/neko/internal/types/message"
-	"n.eko.moe/neko/internal/utils"
+	"demodesk/neko/internal/types"
+	"demodesk/neko/internal/types/event"
+	"demodesk/neko/internal/types/message"
+	"demodesk/neko/internal/utils"
 )
 
 type MessageHandler struct {

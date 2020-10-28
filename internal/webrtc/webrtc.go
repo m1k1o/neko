@@ -11,8 +11,8 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"n.eko.moe/neko/internal/types"
-	"n.eko.moe/neko/internal/types/config"
+	"demodesk/neko/internal/types"
+	"demodesk/neko/internal/types/config"
 )
 
 func New(sessions types.SessionManager, remote types.RemoteManager, config *config.WebRTC) *WebRTCManager {

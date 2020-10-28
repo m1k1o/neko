@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"n.eko.moe/neko/internal/http/endpoint"
+	"demodesk/neko/internal/http/endpoint"
 )
 
 // JSON encodes data to rw in JSON format. Returns a pointer to a

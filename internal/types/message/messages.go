@@ -1,7 +1,7 @@
 package message
 
 import (
-	"n.eko.moe/neko/internal/types"
+	"demodesk/neko/internal/types"
 )
 
 type Message struct {

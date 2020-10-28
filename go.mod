@@ -1,4 +1,4 @@
-module n.eko.moe/neko
+module demodesk/neko
 
 go 1.13
 

@@ -1,9 +1,9 @@
 package websocket
 
 import (
-	"n.eko.moe/neko/internal/types"
-	"n.eko.moe/neko/internal/types/event"
-	"n.eko.moe/neko/internal/types/message"
+	"demodesk/neko/internal/types"
+	"demodesk/neko/internal/types/event"
+	"demodesk/neko/internal/types/message"
 )
 
 func (h *MessageHandler) chat(id string, session types.Session, payload *message.ChatReceive) error {

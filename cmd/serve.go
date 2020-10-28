@@ -4,8 +4,8 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
-	"n.eko.moe/neko"
-	"n.eko.moe/neko/internal/types/config"
+	"demodesk/neko"
+	"demodesk/neko/internal/types/config"
 )
 
 func init() {
