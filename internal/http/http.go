@@ -7,11 +7,12 @@ import (
 	"os"
 
 	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/middleware"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
 	"demodesk/neko/internal/http/endpoint"
-	"demodesk/neko/internal/http/middleware"
+	customMiddleware "demodesk/neko/internal/http/middleware"
 	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/types/config"
 )
@@ -24,12 +25,12 @@ type Server struct {
 }
 
 func New(conf *config.Server, webSocketHandler types.WebSocketHandler) *Server {
-	logger := log.With().Str("module", "webrtc").Logger()
+	logger := log.With().Str("module", "http").Logger()
 
 	router := chi.NewRouter()
-	// router.Use(middleware.Recoverer) // Recover from panics without crashing server
+	router.Use(middleware.Recoverer) // Recover from panics without crashing server
 	router.Use(middleware.RequestID) // Create a request ID for each request
-	router.Use(middleware.Logger)    // Log API request calls
+	router.Use(customMiddleware.Logger) // Log API request calls using custom logger function
 
 	router.Get("/ws", func(w http.ResponseWriter, r *http.Request) {
 		webSocketHandler.Upgrade(w, r)
@@ -51,7 +52,7 @@ func New(conf *config.Server, webSocketHandler types.WebSocketHandler) *Server {
 		}
 	}))
 
-	server := &http.Server{
+	http := &http.Server{
 		Addr:    conf.Bind,
 		Handler: router,
 	}
@@ -59,7 +60,7 @@ func New(conf *config.Server, webSocketHandler types.WebSocketHandler) *Server {
 	return &Server{
 		logger: logger,
 		router: router,
-		http:   server,
+		http:   http,
 		conf:   conf,
 	}
 }
