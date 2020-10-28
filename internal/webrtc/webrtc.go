@@ -142,7 +142,10 @@ func (manager *WebRTCManager) CreatePeer(id string, session types.Session) (stri
 		})
 	})
 
-	connection.SetLocalDescription(description)
+	if err := connection.SetLocalDescription(description); err != nil {
+		return "", manager.config.ICELite, manager.config.ICEServers, err
+	}
+
 	connection.OnConnectionStateChange(func(state webrtc.PeerConnectionState) {
 		switch state {
 		case webrtc.PeerConnectionStateDisconnected:
