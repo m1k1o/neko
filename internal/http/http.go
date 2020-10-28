@@ -33,7 +33,9 @@ func New(conf *config.Server, webSocketHandler types.WebSocketHandler) *Server {
 	router.Use(customMiddleware.Logger) // Log API request calls using custom logger function
 
 	router.Get("/ws", func(w http.ResponseWriter, r *http.Request) {
-		webSocketHandler.Upgrade(w, r)
+		if webSocketHandler.Upgrade(w, r) != nil {
+			w.Write([]byte("unable to upgrade your connection to a websocket"))
+		}
 	})
 
 	fs := http.FileServer(http.Dir(conf.Static))
