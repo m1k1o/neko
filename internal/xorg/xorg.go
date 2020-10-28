@@ -130,11 +130,13 @@ func WriteClipboard(data string) {
 
 func ResetKeys() {
 	for code := range debounce_button {
+		//nolint
 		ButtonUp(code)
 
 		delete(debounce_button, code)
 	}
 	for code := range debounce_key {
+		//nolint
 		KeyUp(code)
 
 		delete(debounce_key, code)
@@ -147,6 +149,7 @@ func CheckKeys(duration time.Duration) {
 		if t.Sub(start) < duration {
 			continue
 		}
+		//nolint
 		ButtonUp(code)
 
 		delete(debounce_button, code)
@@ -155,6 +158,7 @@ func CheckKeys(duration time.Duration) {
 		if t.Sub(start) < duration {
 			continue
 		}
+		//nolint
 		KeyUp(code)
 
 		delete(debounce_key, code)

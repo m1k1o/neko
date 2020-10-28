@@ -52,6 +52,7 @@ func init() {
 			}
 
 			if _, err := os.Stat(logs); os.IsNotExist(err) {
+				//nolint
 				os.Mkdir(logs, os.ModePerm)
 			}
 

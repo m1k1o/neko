@@ -41,6 +41,7 @@ func errResponse(input interface{}) *ErrResponse {
   var res *ErrResponse
   var err interface{}
 
+  //nolint
   switch input.(type) {
   case *HandlerError:
     e := input.(*HandlerError)
