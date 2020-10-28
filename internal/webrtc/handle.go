@@ -123,10 +123,8 @@ func (manager *WebRTCManager) handle(id string, msg webrtc.DataChannelMessage) e
 
 			manager.logger.Debug().Msgf("key up %d", payload.Key)
 		}
-		break
 	case OP_KEY_CLK:
 		// unused
-		break
 	}
 
 	return nil
