@@ -96,10 +96,12 @@ func (ws *WebSocketHandler) Start() {
 					if text != current {
 						session, ok := ws.sessions.GetHost()
 						if ok {
-							session.Send(message.Clipboard{
+							if err := session.Send(message.Clipboard{
 								Event: event.CONTROL_CLIPBOARD,
 								Text:  text,
-							})
+							}); err != nil {
+								ws.logger.Warn().Err(err).Msg("could not sync clipboard")
+							}
 						}
 						current = text
 					}
