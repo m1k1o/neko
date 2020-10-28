@@ -261,7 +261,7 @@ func (ws *WebSocketHandler) handle(connection *websocket.Conn, id string) {
 			}
 		case <-cancel:
 			return
-		case _ = <-ticker.C:
+		case <-ticker.C:
 			if err := connection.WriteMessage(websocket.PingMessage, nil); err != nil {
 				return
 			}
