@@ -54,7 +54,7 @@ type WebSocketHandler struct {
 	shutdown  chan bool
 }
 
-func (ws *WebSocketHandler) Start() error {
+func (ws *WebSocketHandler) Start() {
 	ws.sessions.OnCreated(func(id string, session types.Session) {
 		if err := ws.handler.SessionCreated(id, session); err != nil {
 			ws.logger.Warn().Str("id", id).Err(err).Msg("session created with and error")
@@ -108,8 +108,6 @@ func (ws *WebSocketHandler) Start() error {
 			}
 		}
 	}()
-
-	return nil
 }
 
 func (ws *WebSocketHandler) Shutdown() error {
