@@ -42,7 +42,7 @@ func (manager *SessionManager) New(id string, admin bool, socket types.WebSocket
 	manager.members[id] = session
 	manager.emmiter.Emit("created", id, session)
 
-	if manager.remote.Streaming() != true && len(manager.members) > 0 {
+	if !manager.remote.Streaming() && len(manager.members) > 0 {
 		manager.remote.StartStream()
 	}
 
@@ -124,7 +124,7 @@ func (manager *SessionManager) Destroy(id string) error {
 		err := session.destroy()
 		delete(manager.members, id)
 
-		if manager.remote.Streaming() != false && len(manager.members) <= 0 {
+		if !manager.remote.Streaming() && len(manager.members) <= 0 {
 			manager.remote.StopStream()
 		}
 
