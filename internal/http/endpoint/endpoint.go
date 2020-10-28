@@ -63,10 +63,8 @@ func errResponse(input interface{}) *ErrResponse {
     case *error:
       e := err.(error)
       res.Details = e.Error()
-      break
     default:
       res.Details = fmt.Sprintf("%+v", err)
-      break
     }
   }
 
