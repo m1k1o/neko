@@ -61,7 +61,7 @@ func (h *MessageHandler) Message(id string, raw []byte) error {
 
 	session, ok := h.sessions.Get(id)
 	if !ok {
-		errors.Errorf("unknown session id %s", id)
+		return errors.Errorf("unknown session id %s", id)
 	}
 
 	switch header.Event {
