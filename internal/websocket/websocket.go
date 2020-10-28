@@ -228,7 +228,9 @@ func (ws *WebSocketHandler) handle(connection *websocket.Conn, id string) {
 		defer func() {
 			ticker.Stop()
 			ws.logger.Debug().Str("address", connection.RemoteAddr().String()).Msg("handle socket ending")
-			ws.handler.Disconnected(id)
+			if err := ws.handler.Disconnected(id); err != nil {
+				ws.logger.Warn().Err(err).Msg("socket disconnected with error")
+			}
 		}()
 
 		for {
