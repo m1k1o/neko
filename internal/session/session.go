@@ -2,6 +2,7 @@ package session
 
 import (
 	"github.com/rs/zerolog"
+
 	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/types/event"
 	"demodesk/neko/internal/types/message"

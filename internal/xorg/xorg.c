@@ -54,7 +54,7 @@ void XDisplaySet(char *input) {
 
 void XMove(int x, int y) {
   Display *display = getXDisplay();
-  XWarpPointer(display, None, DefaultRootWindow(display),  0, 0, 0, 0, x, y);
+  XWarpPointer(display, None, DefaultRootWindow(display), 0, 0, 0, 0, x, y);
   XSync(display, 0);
 }
 
@@ -102,7 +102,7 @@ void XKey(unsigned long key, int down) {
     KeyCode code = XKeysymToKeycode(display, key);
 
     // Map non-existing keysyms to new keycodes
-    if(code == 0) {
+    if (code == 0) {
       int min, max, numcodes;
       XDisplayKeycodes(display, &min, &max);
       XGetKeyboardMapping(display, min, max-min, &numcodes);
@@ -129,19 +129,19 @@ char *XClipboardGet() {
 }
 
 void XGetScreenConfigurations() {
-  Display       *display = getXDisplay();
-  Window        root = RootWindow(display, 0);
+  Display *display = getXDisplay();
+  Window root = RootWindow(display, 0);
   XRRScreenSize *xrrs;
-  int           num_sizes;
+  int num_sizes;
 
   xrrs = XRRSizes(display, 0, &num_sizes);
-  for(int i = 0; i < num_sizes; i ++) {
+  for (int i = 0; i < num_sizes; i++) {
     short *rates;
-    int   num_rates;
+    int num_rates;
 
     goCreateScreenSize(i, xrrs[i].width, xrrs[i].height, xrrs[i].mwidth, xrrs[i].mheight);
     rates = XRRRates(display, 0, i, &num_rates);
-    for (int j = 0; j < num_rates; j ++) {
+    for (int j = 0; j < num_rates; j++) {
       goSetScreenRates(i, j, rates[j]);
     }
   }
@@ -155,14 +155,14 @@ void XSetScreenConfiguration(int index, short rate) {
 
 int XGetScreenSize() {
   Display *display = getXDisplay();
-  XRRScreenConfiguration *conf  = XRRGetScreenInfo(display, RootWindow(display, 0));
+  XRRScreenConfiguration *conf = XRRGetScreenInfo(display, RootWindow(display, 0));
   Rotation original_rotation;
   return XRRConfigCurrentConfiguration(conf, &original_rotation);
 }
 
 short XGetScreenRate() {
   Display *display = getXDisplay();
-  XRRScreenConfiguration *conf  = XRRGetScreenInfo(display, RootWindow(display, 0));
+  XRRScreenConfiguration *conf = XRRGetScreenInfo(display, RootWindow(display, 0));
   return XRRConfigCurrentRate(conf);
 }
 

@@ -50,14 +50,14 @@ GstFlowReturn gstreamer_send_new_sample_handler(GstElement *object, gpointer use
   gsize copy_size = 0;
   SampleHandlerUserData *s = (SampleHandlerUserData *)user_data;
 
-  g_signal_emit_by_name (object, "pull-sample", &sample);
+  g_signal_emit_by_name(object, "pull-sample", &sample);
   if (sample) {
     buffer = gst_sample_get_buffer(sample);
     if (buffer) {
       gst_buffer_extract_dup(buffer, 0, gst_buffer_get_size(buffer), &copy, &copy_size);
       goHandlePipelineBuffer(copy, copy_size, GST_BUFFER_DURATION(buffer), s->pipelineId);
     }
-    gst_sample_unref (sample);
+    gst_sample_unref(sample);
   }
 
   return GST_FLOW_OK;
@@ -69,8 +69,8 @@ GstElement *gstreamer_send_create_pipeline(char *pipeline) {
 }
 
 void gstreamer_send_destroy_pipeline(GstElement *pipeline) {
-  gst_element_set_state (pipeline, GST_STATE_NULL);
-  gst_object_unref (pipeline);
+  gst_element_set_state(pipeline, GST_STATE_NULL);
+  gst_object_unref(pipeline);
 }
 
 void gstreamer_send_start_pipeline(GstElement *pipeline, int pipelineId) {
@@ -96,5 +96,3 @@ void gstreamer_send_play_pipeline(GstElement *pipeline) {
 void gstreamer_send_stop_pipeline(GstElement *pipeline) {
   gst_element_set_state(pipeline, GST_STATE_NULL);
 }
-
-
