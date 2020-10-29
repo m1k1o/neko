@@ -11,6 +11,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
+	"demodesk/neko/internal/api"
 	"demodesk/neko/internal/http/endpoint"
 	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/types/config"
@@ -30,6 +31,9 @@ func New(conf *config.Server, webSocketHandler types.WebSocketHandler) *Server {
 	router.Use(middleware.Recoverer) // Recover from panics without crashing server
 	router.Use(middleware.RequestID) // Create a request ID for each request
 	router.Use(Logger) // Log API request calls using custom logger function
+
+	// Mount REST API
+	api.Mount(router)
 
 	router.Get("/ws", func(w http.ResponseWriter, r *http.Request) {
 		if webSocketHandler.Upgrade(w, r) != nil {
