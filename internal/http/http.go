@@ -12,7 +12,6 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"demodesk/neko/internal/http/endpoint"
-	customMiddleware "demodesk/neko/internal/http/middleware"
 	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/types/config"
 )
@@ -30,7 +29,7 @@ func New(conf *config.Server, webSocketHandler types.WebSocketHandler) *Server {
 	router := chi.NewRouter()
 	router.Use(middleware.Recoverer) // Recover from panics without crashing server
 	router.Use(middleware.RequestID) // Create a request ID for each request
-	router.Use(customMiddleware.Logger) // Log API request calls using custom logger function
+	router.Use(Logger) // Log API request calls using custom logger function
 
 	router.Get("/ws", func(w http.ResponseWriter, r *http.Request) {
 		if webSocketHandler.Upgrade(w, r) != nil {
@@ -51,7 +50,7 @@ func New(conf *config.Server, webSocketHandler types.WebSocketHandler) *Server {
 	router.NotFound(endpoint.Handle(func(w http.ResponseWriter, r *http.Request) error {
 		return &endpoint.HandlerError{
 			Status:  http.StatusNotFound,
-			Message: fmt.Sprintf("file '%s' is not found", r.RequestURI),
+			Message: fmt.Sprintf("Endpoint '%s' was not found.", r.RequestURI),
 		}
 	}))
 
