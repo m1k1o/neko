@@ -97,21 +97,6 @@ func (h *MessageHandler) Message(id string, raw []byte) error {
 				return h.controlKeyboard(id, session, payload)
 			}), "%s failed", header.Event)
 
-
-	// Chat Events
-	case event.CHAT_MESSAGE:
-		payload := &message.ChatReceive{}
-		return errors.Wrapf(
-			utils.Unmarshal(payload, raw, func() error {
-				return h.chat(id, session, payload)
-			}), "%s failed", header.Event)
-	case event.CHAT_EMOTE:
-		payload := &message.EmoteReceive{}
-		return errors.Wrapf(
-			utils.Unmarshal(payload, raw, func() error {
-				return h.chatEmote(id, session, payload)
-			}), "%s failed", header.Event)
-
 	// Screen Events
 	case event.SCREEN_RESOLUTION:
 		return errors.Wrapf(h.screenResolution(id, session), "%s failed", header.Event)

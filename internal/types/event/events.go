@@ -26,11 +26,6 @@ const (
 )
 
 const (
-	CHAT_MESSAGE = "chat/message"
-	CHAT_EMOTE   = "chat/emote"
-)
-
-const (
 	SCREEN_CONFIGURATIONS = "screen/configurations"
 	SCREEN_RESOLUTION     = "screen/resolution"
 	SCREEN_SET            = "screen/set"
