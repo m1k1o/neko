@@ -84,8 +84,8 @@ func (manager *RemoteManager) Start() {
 
 func (manager *RemoteManager) Shutdown() error {
 	manager.logger.Info().Msgf("remote shutting down")
-	manager.video.Stop()
-	manager.audio.Stop()
+	manager.video.DestroyPipeline()
+	manager.audio.DestroyPipeline()
 	manager.broadcast.Stop()
 
 	manager.cleanup.Stop()
@@ -170,7 +170,7 @@ func (manager *RemoteManager) ChangeResolution(width int, height int, rate int) 
 		return fmt.Errorf("unknown configuration")
 	}
 
-	manager.video.Stop()
+	manager.video.DestroyPipeline()
 	manager.broadcast.Stop()
 
 	defer func() {

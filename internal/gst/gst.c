@@ -68,6 +68,11 @@ GstElement *gstreamer_send_create_pipeline(char *pipeline) {
   return gst_parse_launch(pipeline, &error);
 }
 
+void gstreamer_send_destroy_pipeline(GstElement *pipeline) {
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_object_unref (pipeline);
+}
+
 void gstreamer_send_start_pipeline(GstElement *pipeline, int pipelineId) {
   SampleHandlerUserData *s = calloc(1, sizeof(SampleHandlerUserData));
   s->pipelineId = pipelineId;
