@@ -48,13 +48,18 @@ func (manager *RemoteManager) AudioCodec() string {
 func (manager *RemoteManager) Start() {
 	xorg.Display(manager.config.Display)
 
+	manager.logger.Info().
+		Str("screen_resolution", fmt.Sprintf("%dx%d@%d", manager.config.ScreenWidth, manager.config.ScreenHeight, manager.config.ScreenRate)).
+		Msgf("Setting screen resolution...")
+
 	if !xorg.ValidScreenSize(manager.config.ScreenWidth, manager.config.ScreenHeight, manager.config.ScreenRate) {
 		manager.logger.Warn().Msgf("invalid screen option %dx%d@%d", manager.config.ScreenWidth, manager.config.ScreenHeight, manager.config.ScreenRate)
 	} else if err := xorg.ChangeScreenSize(manager.config.ScreenWidth, manager.config.ScreenHeight, manager.config.ScreenRate); err != nil {
 		manager.logger.Warn().Err(err).Msg("unable to change screen size")
 	}
 
-	manager.createPipelines()
+	manager.createVideoPipeline()
+	manager.createAudioPipeline()
 	manager.broadcast.Start()
 
 	go func() {
@@ -101,17 +106,7 @@ func (manager *RemoteManager) OnAudioFrame(listener func(sample types.Sample)) {
 }
 
 func (manager *RemoteManager) StartStream() {
-	manager.createPipelines()
-
-	manager.logger.Info().
-		Str("video_display", manager.config.Display).
-		Str("video_codec", manager.config.VideoCodec).
-		Str("audio_device", manager.config.Device).
-		Str("audio_codec", manager.config.AudioCodec).
-		Str("audio_pipeline_src", manager.audio.Src).
-		Str("video_pipeline_src", manager.video.Src).
-		Str("screen_resolution", fmt.Sprintf("%dx%d@%d", manager.config.ScreenWidth, manager.config.ScreenHeight, manager.config.ScreenRate)).
-		Msgf("Pipelines starting...")
+	manager.logger.Info().Msgf("Pipelines starting...")
 
 	manager.video.Start()
 	manager.audio.Start()
@@ -120,6 +115,7 @@ func (manager *RemoteManager) StartStream() {
 
 func (manager *RemoteManager) StopStream() {
 	manager.logger.Info().Msgf("Pipelines shutting down...")
+
 	manager.video.Stop()
 	manager.audio.Stop()
 	manager.streaming = false
@@ -129,22 +125,41 @@ func (manager *RemoteManager) Streaming() bool {
 	return manager.streaming
 }
 
-func (manager *RemoteManager) createPipelines() {
+func (manager *RemoteManager) createVideoPipeline() {
 	var err error
+
+	manager.logger.Info().
+		Str("video_codec", manager.config.VideoCodec).
+		Str("video_display", manager.config.Display).
+		Str("video_params", manager.config.VideoParams).
+		Msgf("Creating video pipeline...")
+
 	manager.video, err = gst.CreateAppPipeline(
 		manager.config.VideoCodec,
 		manager.config.Display,
 		manager.config.VideoParams,
 	)
+
 	if err != nil {
 		manager.logger.Panic().Err(err).Msg("unable to create video pipeline")
 	}
+}
+
+func (manager *RemoteManager) createAudioPipeline() {
+	var err error
+
+	manager.logger.Info().
+		Str("audio_codec", manager.config.AudioCodec).
+		Str("audio_display", manager.config.Device).
+		Str("audio_params", manager.config.AudioParams).
+		Msgf("Creating audio pipeline...")
 
 	manager.audio, err = gst.CreateAppPipeline(
 		manager.config.AudioCodec,
 		manager.config.Device,
 		manager.config.AudioParams,
 	)
+
 	if err != nil {
 		manager.logger.Panic().Err(err).Msg("unable to create audio pipeline")
 	}
@@ -169,16 +184,7 @@ func (manager *RemoteManager) ChangeResolution(width int, height int, rate int) 
 		return err
 	}
 
-	var err error
-	manager.video, err = gst.CreateAppPipeline(
-		manager.config.VideoCodec,
-		manager.config.Display,
-		manager.config.VideoParams,
-	)
-	if err != nil {
-		manager.logger.Panic().Err(err).Msg("unable to create new video pipeline")
-	}
-
+	manager.createVideoPipeline()
 	return nil
 }
 
