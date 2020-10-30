@@ -1,14 +1,12 @@
-package api
+package room
 
 import (
 	"github.com/go-chi/chi"
-	
-	"demodesk/neko/internal/api/member"
-	"demodesk/neko/internal/api/room"
+
 	"demodesk/neko/internal/types"
 )
 
-type API struct {
+type RoomHandler struct {
 	sessions   types.SessionManager
 	remote     types.RemoteManager
 	broadcast  types.BroadcastManager
@@ -20,10 +18,10 @@ func New(
 	remote types.RemoteManager,
 	broadcast types.BroadcastManager,
 	websocket types.WebSocketHandler,
-) *API {
+) *RoomHandler {
 	// Init
 
-	return &API{
+	return &RoomHandler{
 		sessions:   sessions,
 		remote:     remote,
 		broadcast:  broadcast,
@@ -31,12 +29,17 @@ func New(
 	}
 }
 
-func (a *API) Mount(router *chi.Mux) {
-	// all member routes
-	memberHandler := member.New(a.sessions, a.websocket)
-	router.Mount("/member", memberHandler.Router())
+func (h *RoomHandler) Router() *chi.Mux {
+	r := chi.NewRouter()
 
-	// get room routes
-	roomHandler := room.New(a.sessions, a.remote, a.broadcast, a.websocket)
-	router.Mount("/room", roomHandler.Router())
+	r.Route("/resolution", func(r chi.Router) {
+		r.Get("/", h.ResolutionGet)
+		r.Post("/", h.ResolutionChange)
+
+		r.Get("/list", h.ResolutionList)
+	})
+
+	// TODO
+
+	return r
 }

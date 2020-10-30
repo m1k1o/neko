@@ -133,7 +133,13 @@ func (neko *Neko) Start() {
 	webSocketHandler := websocket.New(sessionManager, remoteManager, broadcastManager, webRTCManager, neko.WebSocket)
 	webSocketHandler.Start()
 
-	server := http.New(neko.Server, webSocketHandler)
+	server := http.New(
+		sessionManager,
+		remoteManager,
+		broadcastManager,
+		webSocketHandler,
+		neko.Server,
+	)
 	server.Start()
 
 	neko.sessionManager = sessionManager

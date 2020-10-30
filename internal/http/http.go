@@ -24,7 +24,13 @@ type Server struct {
 	conf   *config.Server
 }
 
-func New(conf *config.Server, webSocketHandler types.WebSocketHandler) *Server {
+func New(
+	sessions types.SessionManager,
+	remote types.RemoteManager,
+	broadcast types.BroadcastManager,
+	webSocketHandler types.WebSocketHandler,
+	conf *config.Server,
+) *Server {
 	logger := log.With().Str("module", "http").Logger()
 
 	router := chi.NewRouter()
@@ -33,7 +39,8 @@ func New(conf *config.Server, webSocketHandler types.WebSocketHandler) *Server {
 	router.Use(Logger) // Log API request calls using custom logger function
 
 	// Mount REST API
-	api.Mount(router)
+	apiManager := api.New(sessions, remote, broadcast, webSocketHandler)
+	apiManager.Mount(router)
 
 	router.Get("/ws", func(w http.ResponseWriter, r *http.Request) {
 		if webSocketHandler.Upgrade(w, r) != nil {
