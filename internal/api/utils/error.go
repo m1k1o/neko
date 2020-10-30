@@ -36,11 +36,20 @@ func ErrMessage(HTTPStatusCode int, StatusText string) render.Renderer {
 	}
 }
 
-func ErrInvalidRequest(err error) render.Renderer {
+func ErrBadRequest(err error) render.Renderer {
 	return &ErrResponse{
 		Err:            err,
 		HTTPStatusCode: 400,
-		StatusText:     "Invalid request.",
+		StatusText:     "Bad request.",
+		ErrorText:      err.Error(),
+	}
+}
+
+func ErrUnprocessableEntity(err error) render.Renderer {
+	return &ErrResponse{
+		Err:            err,
+		HTTPStatusCode: 400,
+		StatusText:     "Unprocessable Entity.",
 		ErrorText:      err.Error(),
 	}
 }
