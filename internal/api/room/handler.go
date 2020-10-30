@@ -32,11 +32,11 @@ func New(
 func (h *RoomHandler) Router() *chi.Mux {
 	r := chi.NewRouter()
 
-	r.Route("/resolution", func(r chi.Router) {
-		r.Get("/", h.ResolutionGet)
-		r.Post("/", h.ResolutionChange)
+	r.Route("/screen", func(r chi.Router) {
+		r.Get("/", h.ScreenConfiguration)
+		r.Post("/", h.ScreenConfigurationChange)
 
-		r.Get("/list", h.ResolutionList)
+		r.Get("/configurations", h.ScreenConfigurationsList)
 	})
 
 	// TODO

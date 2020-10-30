@@ -8,17 +8,17 @@ import (
 	"demodesk/neko/internal/api/utils"
 )
 
-type ResolutionStruct struct {
+type ScreenConfiguration struct {
 	Width  int `json:"width"`
 	Height int `json:"height"`
 	Rate   int `json:"rate"`
 }
 
-func (a *ResolutionStruct) Bind(r *http.Request) error {
+func (a *ScreenConfiguration) Bind(r *http.Request) error {
 	return nil
 }
 
-func (h *RoomHandler) ResolutionGet(w http.ResponseWriter, r *http.Request) {
+func (h *RoomHandler) ScreenConfiguration(w http.ResponseWriter, r *http.Request) {
 	size := h.remote.GetScreenSize()
 
 	if size == nil {
@@ -26,15 +26,15 @@ func (h *RoomHandler) ResolutionGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	render.JSON(w, r, ResolutionStruct{
+	render.JSON(w, r, ScreenConfiguration{
 		Width:  size.Width,
 		Height: size.Height,
 		Rate:   int(size.Rate),
 	})
 }
 
-func (h *RoomHandler) ResolutionChange(w http.ResponseWriter, r *http.Request) {
-	data := &ResolutionStruct{}
+func (h *RoomHandler) ScreenConfigurationChange(w http.ResponseWriter, r *http.Request) {
+	data := &ScreenConfiguration{}
 	if err := render.Bind(r, data); err != nil {
 		render.Render(w, r, utils.ErrInvalidRequest(err))
 		return
@@ -50,6 +50,6 @@ func (h *RoomHandler) ResolutionChange(w http.ResponseWriter, r *http.Request) {
 	render.JSON(w, r, data)
 }
 
-func (h *RoomHandler) ResolutionList(w http.ResponseWriter, r *http.Request) {
+func (h *RoomHandler) ScreenConfigurationsList(w http.ResponseWriter, r *http.Request) {
 	render.Render(w, r, utils.ErrMessage(500, "Not implmented."))
 }
