@@ -53,9 +53,7 @@ func (manager *RemoteManager) Start() {
 		Str("screen_resolution", fmt.Sprintf("%dx%d@%d", manager.config.ScreenWidth, manager.config.ScreenHeight, manager.config.ScreenRate)).
 		Msgf("Setting screen resolution...")
 
-	if !xorg.ValidScreenSize(manager.config.ScreenWidth, manager.config.ScreenHeight, manager.config.ScreenRate) {
-		manager.logger.Warn().Msgf("invalid screen option %dx%d@%d", manager.config.ScreenWidth, manager.config.ScreenHeight, manager.config.ScreenRate)
-	} else if err := xorg.ChangeScreenSize(manager.config.ScreenWidth, manager.config.ScreenHeight, manager.config.ScreenRate); err != nil {
+	if err := xorg.ChangeScreenSize(manager.config.ScreenWidth, manager.config.ScreenHeight, manager.config.ScreenRate); err != nil {
 		manager.logger.Warn().Err(err).Msg("unable to change screen size")
 	}
 
@@ -167,26 +165,19 @@ func (manager *RemoteManager) createAudioPipeline() {
 }
 
 func (manager *RemoteManager) ChangeResolution(width int, height int, rate int) error {
-	if !xorg.ValidScreenSize(width, height, rate) {
-		return fmt.Errorf("unknown configuration")
-	}
-
 	manager.video.DestroyPipeline()
 	manager.broadcast.Stop()
 
 	defer func() {
+		manager.createVideoPipeline()
+
 		manager.video.Start()
 		manager.broadcast.Start()
 
 		manager.logger.Info().Msg("starting video pipeline...")
 	}()
-
-	if err := xorg.ChangeScreenSize(width, height, rate); err != nil {
-		return err
-	}
-
-	manager.createVideoPipeline()
-	return nil
+	
+	return xorg.ChangeScreenSize(width, height, rate)
 }
 
 func (manager *RemoteManager) Move(x, y int) {
