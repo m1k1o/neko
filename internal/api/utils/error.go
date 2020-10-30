@@ -45,13 +45,32 @@ func ErrInvalidRequest(err error) render.Renderer {
 	}
 }
 
-func ErrRender(err error) render.Renderer {
+func ErrInternalServer(err error) render.Renderer {
+	return &ErrResponse{
+		Err:            err,
+		HTTPStatusCode: 500,
+		StatusText:     "Internal server error.",
+		ErrorText:      err.Error(),
+	}
+}
+
+func ErrNot(err error) render.Renderer {
 	return &ErrResponse{
 		Err:            err,
 		HTTPStatusCode: 422,
 		StatusText:     "Error rendering response.",
 		ErrorText:      err.Error(),
 	}
+}
+
+var ErrNotAuthenticated = &ErrResponse{
+	HTTPStatusCode: 401,
+	StatusText: "Invalid or missing access token.",
+}
+
+var ErrNotAuthorized = &ErrResponse{
+	HTTPStatusCode: 403,
+	StatusText: "Access token does not have the required scope.",
 }
 
 var ErrNotFound = &ErrResponse{
