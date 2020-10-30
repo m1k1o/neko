@@ -57,8 +57,8 @@ func (manager *RemoteManager) Start() {
 		manager.logger.Warn().Err(err).Msg("unable to change screen size")
 	}
 
-	manager.createVideoPipeline()
-	manager.createAudioPipeline()
+	manager.CreateVideoPipeline()
+	manager.CreateAudioPipeline()
 	manager.broadcast.Start()
 
 	go func() {
@@ -124,7 +124,7 @@ func (manager *RemoteManager) Streaming() bool {
 	return manager.streaming
 }
 
-func (manager *RemoteManager) createVideoPipeline() {
+func (manager *RemoteManager) CreateVideoPipeline() {
 	var err error
 
 	manager.logger.Info().
@@ -144,7 +144,7 @@ func (manager *RemoteManager) createVideoPipeline() {
 	}
 }
 
-func (manager *RemoteManager) createAudioPipeline() {
+func (manager *RemoteManager) CreateAudioPipeline() {
 	var err error
 
 	manager.logger.Info().
@@ -169,7 +169,7 @@ func (manager *RemoteManager) ChangeResolution(width int, height int, rate int) 
 	manager.broadcast.Stop()
 
 	defer func() {
-		manager.createVideoPipeline()
+		manager.CreateVideoPipeline()
 
 		manager.video.Start()
 		manager.broadcast.Start()
