@@ -6,6 +6,7 @@ import (
 	"github.com/go-chi/render"
 
 	"demodesk/neko/internal/api/utils"
+	"demodesk/neko/internal/websocket/broadcast"
 )
 
 type ScreenConfiguration struct {
@@ -45,7 +46,10 @@ func (h *RoomHandler) ScreenConfigurationChange(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	// TODO: WebSocket notify.
+	if err := broadcast.ScreenConfiguration(h.sessions, "-todo-session-id-", data.Width, data.Height, data.Rate); err != nil {
+		render.Render(w, r, utils.ErrInvalidRequest(err))
+		return
+	}
 
 	render.JSON(w, r, data)
 }

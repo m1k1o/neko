@@ -4,6 +4,7 @@ import (
 	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/types/event"
 	"demodesk/neko/internal/types/message"
+	"demodesk/neko/internal/websocket/broadcast"
 )
 
 func (h *MessageHandler) screenSet(id string, session types.Session, payload *message.ScreenResolution) error {
@@ -17,14 +18,7 @@ func (h *MessageHandler) screenSet(id string, session types.Session, payload *me
 		return err
 	}
 
-	if err := h.sessions.Broadcast(
-		message.ScreenResolution{
-			Event:  event.SCREEN_RESOLUTION,
-			ID:     id,
-			Width:  payload.Width,
-			Height: payload.Height,
-			Rate:   payload.Rate,
-		}, nil); err != nil {
+	if err := broadcast.ScreenConfiguration(h.sessions, id, payload.Width, payload.Height, payload.Rate); err != nil {
 		h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.SCREEN_RESOLUTION)
 		return err
 	}
