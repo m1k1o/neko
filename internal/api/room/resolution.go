@@ -4,12 +4,9 @@ import (
 	"net/http"
 
 	"github.com/go-chi/render"
-)
 
-type ErrResponse struct {
-	Code    int    `json:"code"`
-	Message string `json:"message"`
-}
+	"demodesk/neko/internal/api/utils"
+)
 
 type ResolutionStruct struct {
 	Width  int `json:"width"`
@@ -17,15 +14,15 @@ type ResolutionStruct struct {
 	Rate   int `json:"rate"`
 }
 
+func (a *ResolutionStruct) Bind(r *http.Request) error {
+	return nil
+}
+
 func (h *RoomHandler) ResolutionGet(w http.ResponseWriter, r *http.Request) {
 	size := h.remote.GetScreenSize()
 
 	if size == nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		render.JSON(w, r, ErrResponse{
-			Code:  -1,
-			Message: "Unable to get current screen resolution.",
-		})
+		render.Render(w, r, utils.ErrMessage(500, "Not implmented."))
 		return
 	}
 
@@ -37,25 +34,22 @@ func (h *RoomHandler) ResolutionGet(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *RoomHandler) ResolutionChange(w http.ResponseWriter, r *http.Request) {
-	// data := &ResolutionStruct{}
-	// if err := render.Bind(r, data); err != nil {
-	// 	render.JSON(w, r, ErrResponse{
-	// 		Code:  -1,
-	// 		Message: "Invalid Request.",
-	// 	})
-	// 	return
-	// }
+	data := &ResolutionStruct{}
+	if err := render.Bind(r, data); err != nil {
+		render.Render(w, r, utils.ErrInvalidRequest(err))
+		return
+	}
 
-	render.JSON(w, r, ErrResponse{
-		Code:  -1,
-		Message: "Not implmented.",
-	})
+	if err := h.remote.ChangeResolution(data.Width, data.Height, data.Rate); err != nil {
+		render.Render(w, r, utils.ErrInvalidRequest(err))
+		return
+	}
+
+	// TODO: WebSocket notify.
+
+	render.JSON(w, r, data)
 }
 
 func (h *RoomHandler) ResolutionList(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusInternalServerError)
-	render.JSON(w, r, ErrResponse{
-		Code:  -1,
-		Message: "Not implmented.",
-	})
+	render.Render(w, r, utils.ErrMessage(500, "Not implmented."))
 }
