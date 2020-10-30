@@ -16,6 +16,14 @@ type ScreenConfiguration struct {
 }
 
 func (a *ScreenConfiguration) Bind(r *http.Request) error {
+	// Bind will run after the unmarshalling is complete, its a
+	// good time to focus some post-processing after a decoding.
+	return nil
+}
+
+func (a *ScreenConfiguration) Render(w http.ResponseWriter, r *http.Request) error {
+	// Pre-processing before a response is marshalled and sent
+	// across the wire
 	return nil
 }
 
@@ -55,5 +63,18 @@ func (h *RoomHandler) ScreenConfigurationChange(w http.ResponseWriter, r *http.R
 }
 
 func (h *RoomHandler) ScreenConfigurationsList(w http.ResponseWriter, r *http.Request) {
-	render.Render(w, r, utils.ErrMessage(500, "Not implmented."))
+	list := []render.Renderer{}
+	
+	ScreenConfigurations := h.remote.ScreenConfigurations()
+	for _, size := range ScreenConfigurations {
+		for _, fps := range size.Rates {
+			list = append(list, &ScreenConfiguration{
+				Width:  size.Width,
+				Height: size.Height,
+				Rate:   int(fps),
+			})
+		}
+	}
+
+	render.RenderList(w, r, list)
 }
