@@ -43,5 +43,10 @@ func (h *RoomHandler) Router(
 		r.With(adminsOnly).Get("/configurations", h.ScreenConfigurationsList)
 	})
 
+	r.With(adminsOnly).Route("/clipboard", func(r chi.Router) {
+		r.Get("/", h.ClipboardRead)
+		r.Post("/", h.ClipboardWrite)
+	})
+
 	return r
 }
