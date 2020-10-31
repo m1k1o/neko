@@ -21,7 +21,6 @@ type Session interface {
 	SetPeer(peer Peer) error
 	Address() string
 	Kick(message string) error
-	Write(v interface{}) error
 	Send(v interface{}) error
 	SignalAnswer(sdp string) error
 }
@@ -38,7 +37,6 @@ type SessionManager interface {
 	Members() []*Member
 	Admins() []*Member
 	Destroy(id string) error
-	Clear() error
 	Broadcast(v interface{}, exclude interface{}) error
 	OnHost(listener func(id string))
 	OnHostCleared(listener func(id string))

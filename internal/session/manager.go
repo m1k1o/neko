@@ -135,10 +135,6 @@ func (manager *SessionManager) Destroy(id string) error {
 	return nil
 }
 
-func (manager *SessionManager) Clear() error {
-	return nil
-}
-
 func (manager *SessionManager) Broadcast(v interface{}, exclude interface{}) error {
 	for id, session := range manager.members {
 		if !session.connected {
