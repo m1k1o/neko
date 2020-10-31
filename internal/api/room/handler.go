@@ -3,6 +3,7 @@ package room
 import (
 	"github.com/go-chi/chi"
 
+	"demodesk/neko/internal/api/utils"
 	"demodesk/neko/internal/types"
 )
 
@@ -30,18 +31,16 @@ func New(
 }
 
 func (h *RoomHandler) Router(
-	usersOnly func(chi.Router, func(chi.Router)),
-	adminsOnly func(chi.Router, func(chi.Router)),
+	usersOnly utils.HttpMiddleware,
+	adminsOnly utils.HttpMiddleware,
 ) *chi.Mux {
 	r := chi.NewRouter()
-	
-	usersOnly(r, func(r chi.Router) {
-		r.Get("/screen", h.ScreenConfiguration)
-	})
 
-	adminsOnly(r, func(r chi.Router) {
-		r.Post("/screen", h.ScreenConfigurationChange)
-		r.Get("/screen/configurations", h.ScreenConfigurationsList)
+	r.Route("/screen", func(r chi.Router) {
+		r.With(usersOnly).Get("/", h.ScreenConfiguration)
+		r.With(adminsOnly).Post("/", h.ScreenConfigurationChange)
+
+		r.With(adminsOnly).Get("/configurations", h.ScreenConfigurationsList)
 	})
 
 	return r

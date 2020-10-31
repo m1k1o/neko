@@ -3,6 +3,7 @@ package member
 import (
 	"github.com/go-chi/chi"
 
+	"demodesk/neko/internal/api/utils"
 	"demodesk/neko/internal/types"
 )
 
@@ -24,18 +25,10 @@ func New(
 }
 
 func (h *MemberHandler) Router(
-	usersOnly func(chi.Router, func(chi.Router)),
-	adminsOnly func(chi.Router, func(chi.Router)),
+	usersOnly utils.HttpMiddleware,
+	adminsOnly utils.HttpMiddleware,
 ) *chi.Mux {
 	r := chi.NewRouter()
-
-	usersOnly(r, func(r chi.Router) {
-		
-	})
-
-	adminsOnly(r, func(r chi.Router) {
-		
-	})
 
 	return r
 }

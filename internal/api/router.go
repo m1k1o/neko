@@ -1,13 +1,15 @@
 package api
 
 import (
+	"net/http"
+
 	"github.com/go-chi/chi"
-	"github.com/go-chi/jwtauth"
-	
+
 	"demodesk/neko/internal/api/member"
 	"demodesk/neko/internal/api/room"
 	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/types/config"
+	"demodesk/neko/internal/api/utils"
 )
 
 type API struct {
@@ -17,8 +19,8 @@ type API struct {
 	websocket  types.WebSocketHandler
 }
 
-var AdminToken *jwtauth.JWTAuth
-var UserToken *jwtauth.JWTAuth
+var AdminToken []byte
+var UserToken []byte
 
 func New(
 	sessions types.SessionManager,
@@ -27,8 +29,8 @@ func New(
 	websocket types.WebSocketHandler,
 	conf *config.Server,
 ) *API {
-	AdminToken = jwtauth.New("HS256", []byte(conf.AdminToken), nil)
-	UserToken = jwtauth.New("HS256", []byte(conf.UserToken), nil)
+	AdminToken = []byte(conf.AdminToken)
+	UserToken = []byte(conf.UserToken)
 
 	return &API{
 		sessions:   sessions,
@@ -46,27 +48,10 @@ func (a *API) Mount(r *chi.Mux) {
 	r.Mount("/room", roomHandler.Router(UsersOnly, AdminsOnly))
 }
 
-func UsersOnly(r chi.Router, protectedRoutes func(r chi.Router)) {
-	r.Group(func(r chi.Router) {
-		// Verify JWT tokens
-		r.Use(jwtauth.Verifier(UserToken))
-		r.Use(jwtauth.Verifier(AdminToken))
-
-		// Handle valid / invalid tokens.
-		r.Use(jwtauth.Authenticator)
-
-		protectedRoutes(r)
-	})
+func UsersOnly(next http.Handler) http.Handler {
+	return utils.AuthMiddleware(next, UserToken, AdminToken)
 }
 
-func AdminsOnly(r chi.Router, protectedRoutes func(r chi.Router)) {
-	r.Group(func(r chi.Router) {
-		// Verify JWT token
-		r.Use(jwtauth.Verifier(AdminToken))
-
-		// Handle valid / invalid tokens.
-		r.Use(jwtauth.Authenticator)
-
-		protectedRoutes(r)
-	})
+func AdminsOnly(next http.Handler) http.Handler {
+	return utils.AuthMiddleware(next, AdminToken)
 }
