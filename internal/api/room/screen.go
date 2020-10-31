@@ -31,7 +31,7 @@ func (h *RoomHandler) ScreenConfiguration(w http.ResponseWriter, r *http.Request
 	size := h.remote.GetScreenSize()
 
 	if size == nil {
-		render.Render(w, r, utils.ErrMessage(500, "Unable to get screen configuration."))
+		_ = render.Render(w, r, utils.ErrMessage(500, "Unable to get screen configuration."))
 		return
 	}
 
@@ -45,17 +45,17 @@ func (h *RoomHandler) ScreenConfiguration(w http.ResponseWriter, r *http.Request
 func (h *RoomHandler) ScreenConfigurationChange(w http.ResponseWriter, r *http.Request) {
 	data := &ScreenConfiguration{}
 	if err := render.Bind(r, data); err != nil {
-		render.Render(w, r, utils.ErrBadRequest(err))
+		_ = render.Render(w, r, utils.ErrBadRequest(err))
 		return
 	}
 
 	if err := h.remote.ChangeResolution(data.Width, data.Height, data.Rate); err != nil {
-		render.Render(w, r, utils.ErrUnprocessableEntity(err))
+		_ = render.Render(w, r, utils.ErrUnprocessableEntity(err))
 		return
 	}
 
 	if err := broadcast.ScreenConfiguration(h.sessions, "-todo-session-id-", data.Width, data.Height, data.Rate); err != nil {
-		render.Render(w, r, utils.ErrInternalServer(err))
+		_ = render.Render(w, r, utils.ErrInternalServer(err))
 		return
 	}
 
@@ -76,5 +76,5 @@ func (h *RoomHandler) ScreenConfigurationsList(w http.ResponseWriter, r *http.Re
 		}
 	}
 
-	render.RenderList(w, r, list)
+	_ = render.RenderList(w, r, list)
 }

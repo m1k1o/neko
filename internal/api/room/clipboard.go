@@ -36,7 +36,7 @@ func (h *RoomHandler) ClipboardRead(w http.ResponseWriter, r *http.Request) {
 func (h *RoomHandler) ClipboardWrite(w http.ResponseWriter, r *http.Request) {
 	data := &ClipboardData{}
 	if err := render.Bind(r, data); err != nil {
-		render.Render(w, r, utils.ErrBadRequest(err))
+		_ = render.Render(w, r, utils.ErrBadRequest(err))
 		return
 	}
 

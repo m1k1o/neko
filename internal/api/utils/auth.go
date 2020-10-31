@@ -10,8 +10,14 @@ import (
 	"github.com/dgrijalva/jwt-go"
 )
 
+type key int
+
+const (
+    keyPrincipalID key = iota
+)
+
 func GetUserName(r *http.Request) interface{} {
-	props, _ := r.Context().Value("props").(jwt.MapClaims)
+	props, _ := r.Context().Value(keyPrincipalID).(jwt.MapClaims)
 	return props["user_name"]
 }
 
@@ -21,7 +27,7 @@ func AuthMiddleware(next http.Handler, jwtSecrets ...[]byte) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authHeader := strings.Split(r.Header.Get("Authorization"), "Bearer ")
 		if len(authHeader) != 2 {
-			render.Render(w, r, ErrMessage(401, "Malformed JWT token."))
+			_ = render.Render(w, r, ErrMessage(401, "Malformed JWT token."))
 			return
 		}
 
@@ -43,17 +49,17 @@ func AuthMiddleware(next http.Handler, jwtSecrets ...[]byte) http.Handler {
 		}
 
 		if err != nil {
-			render.Render(w, r, ErrMessage(401, "Invalid JWT token."))
+			_ = render.Render(w, r, ErrMessage(401, "Invalid JWT token."))
 			return
 		}
 
 		if claims, ok := jwtVerified.Claims.(jwt.MapClaims); ok && jwtVerified.Valid {
-			ctx := context.WithValue(r.Context(), "props", claims)
+			ctx := context.WithValue(r.Context(), keyPrincipalID, claims)
 			// Access context values in handlers like this
 			// props, _ := r.Context().Value("props").(jwt.MapClaims)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		} else {
-			render.Render(w, r, ErrMessage(401, "Unauthorized."))
+			_ = render.Render(w, r, ErrMessage(401, "Unauthorized."))
 		}
 	})
 }
