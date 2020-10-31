@@ -6,23 +6,22 @@ import (
 	"demodesk/neko/internal/types/message"
 )
 
-func (h *MessageHandler) controlRelease(id string, session types.Session) error {
-
+func (h *MessageHandler) controlRelease(session types.Session) error {
 	// check if session is host
-	if !h.sessions.IsHost(id) {
-		h.logger.Debug().Str("id", id).Msg("is not the host")
+	if !h.sessions.IsHost(session.ID()) {
+		h.logger.Debug().Str("id", session.ID()).Msg("is not the host")
 		return nil
 	}
 
 	// release host
-	h.logger.Debug().Str("id", id).Msgf("host called %s", event.CONTROL_RELEASE)
+	h.logger.Debug().Str("id", session.ID()).Msgf("host called %s", event.CONTROL_RELEASE)
 	h.sessions.ClearHost()
 
 	// tell everyone
 	if err := h.sessions.Broadcast(
 		message.Control{
 			Event: event.CONTROL_RELEASE,
-			ID:    id,
+			ID:    session.ID(),
 		}, nil); err != nil {
 		h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.CONTROL_RELEASE)
 		return err
@@ -31,11 +30,11 @@ func (h *MessageHandler) controlRelease(id string, session types.Session) error 
 	return nil
 }
 
-func (h *MessageHandler) controlRequest(id string, session types.Session) error {
+func (h *MessageHandler) controlRequest(session types.Session) error {
 	// check for host
 	if !h.sessions.HasHost() {
 		// set host
-		if err := h.sessions.SetHost(id); err != nil {
+		if err := h.sessions.SetHost(session.ID()); err != nil {
 			h.logger.Warn().Err(err).Msgf("SetHost failed")
 			return err
 		}
@@ -44,7 +43,7 @@ func (h *MessageHandler) controlRequest(id string, session types.Session) error 
 		if err := h.sessions.Broadcast(
 			message.Control{
 				Event: event.CONTROL_LOCKED,
-				ID:    id,
+				ID:    session.ID(),
 			}, nil); err != nil {
 			h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.CONTROL_LOCKED)
 			return err
@@ -62,14 +61,14 @@ func (h *MessageHandler) controlRequest(id string, session types.Session) error 
 			Event: event.CONTROL_REQUEST,
 			ID:    host.ID(),
 		}); err != nil {
-			h.logger.Warn().Err(err).Str("id", id).Msgf("sending event %s has failed", event.CONTROL_REQUEST)
+			h.logger.Warn().Err(err).Str("id", session.ID()).Msgf("sending event %s has failed", event.CONTROL_REQUEST)
 			return err
 		}
 
 		// tell host session wants to be host
 		if err := host.Send(message.Control{
 			Event: event.CONTROL_REQUESTING,
-			ID:    id,
+			ID:    session.ID(),
 		}); err != nil {
 			h.logger.Warn().Err(err).Str("id", host.ID()).Msgf("sending event %s has failed", event.CONTROL_REQUESTING)
 			return err
@@ -79,10 +78,10 @@ func (h *MessageHandler) controlRequest(id string, session types.Session) error 
 	return nil
 }
 
-func (h *MessageHandler) controlGive(id string, session types.Session, payload *message.Control) error {
+func (h *MessageHandler) controlGive(session types.Session, payload *message.Control) error {
 	// check if session is host
-	if !h.sessions.IsHost(id) {
-		h.logger.Debug().Str("id", id).Msg("is not the host")
+	if !h.sessions.IsHost(session.ID()) {
+		h.logger.Debug().Str("id", session.ID()).Msg("is not the host")
 		return nil
 	}
 
@@ -101,7 +100,7 @@ func (h *MessageHandler) controlGive(id string, session types.Session, payload *
 	if err := h.sessions.Broadcast(
 		message.ControlTarget{
 			Event:  event.CONTROL_GIVE,
-			ID:     id,
+			ID:     session.ID(),
 			Target: payload.ID,
 		}, nil); err != nil {
 		h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.CONTROL_LOCKED)
@@ -111,10 +110,10 @@ func (h *MessageHandler) controlGive(id string, session types.Session, payload *
 	return nil
 }
 
-func (h *MessageHandler) controlClipboard(id string, session types.Session, payload *message.Clipboard) error {
+func (h *MessageHandler) controlClipboard(session types.Session, payload *message.Clipboard) error {
 	// check if session is host
-	if !h.sessions.IsHost(id) {
-		h.logger.Debug().Str("id", id).Msg("is not the host")
+	if !h.sessions.IsHost(session.ID()) {
+		h.logger.Debug().Str("id", session.ID()).Msg("is not the host")
 		return nil
 	}
 
@@ -122,10 +121,10 @@ func (h *MessageHandler) controlClipboard(id string, session types.Session, payl
 	return nil
 }
 
-func (h *MessageHandler) controlKeyboard(id string, session types.Session, payload *message.Keyboard) error {
+func (h *MessageHandler) controlKeyboard(session types.Session, payload *message.Keyboard) error {
 	// check if session is host
-	if !h.sessions.IsHost(id) {
-		h.logger.Debug().Str("id", id).Msg("is not the host")
+	if !h.sessions.IsHost(session.ID()) {
+		h.logger.Debug().Str("id", session.ID()).Msg("is not the host")
 		return nil
 	}
 

@@ -70,43 +70,43 @@ func (h *MessageHandler) Message(id string, raw []byte) error {
 		payload := &message.SignalAnswer{}
 		return errors.Wrapf(
 			utils.Unmarshal(payload, raw, func() error {
-				return h.signalAnswer(id, session, payload)
+				return h.signalAnswer(session, payload)
 			}), "%s failed", header.Event)
 
 	// Control Events
 	case event.CONTROL_RELEASE:
-		return errors.Wrapf(h.controlRelease(id, session), "%s failed", header.Event)
+		return errors.Wrapf(h.controlRelease(session), "%s failed", header.Event)
 	case event.CONTROL_REQUEST:
-		return errors.Wrapf(h.controlRequest(id, session), "%s failed", header.Event)
+		return errors.Wrapf(h.controlRequest(session), "%s failed", header.Event)
 	case event.CONTROL_GIVE:
 		payload := &message.Control{}
 		return errors.Wrapf(
 			utils.Unmarshal(payload, raw, func() error {
-				return h.controlGive(id, session, payload)
+				return h.controlGive(session, payload)
 			}), "%s failed", header.Event)
 	case event.CONTROL_CLIPBOARD:
 		payload := &message.Clipboard{}
 		return errors.Wrapf(
 			utils.Unmarshal(payload, raw, func() error {
-				return h.controlClipboard(id, session, payload)
+				return h.controlClipboard(session, payload)
 			}), "%s failed", header.Event)
 	case event.CONTROL_KEYBOARD:
 		payload := &message.Keyboard{}
 		return errors.Wrapf(
 			utils.Unmarshal(payload, raw, func() error {
-				return h.controlKeyboard(id, session, payload)
+				return h.controlKeyboard(session, payload)
 			}), "%s failed", header.Event)
 
 	// Screen Events
 	case event.SCREEN_RESOLUTION:
-		return errors.Wrapf(h.screenResolution(id, session), "%s failed", header.Event)
+		return errors.Wrapf(h.screenResolution(session), "%s failed", header.Event)
 	case event.SCREEN_CONFIGURATIONS:
-		return errors.Wrapf(h.screenConfigurations(id, session), "%s failed", header.Event)
+		return errors.Wrapf(h.screenConfigurations(session), "%s failed", header.Event)
 	case event.SCREEN_SET:
 		payload := &message.ScreenResolution{}
 		return errors.Wrapf(
 			utils.Unmarshal(payload, raw, func() error {
-				return h.screenSet(id, session, payload)
+				return h.screenSet(session, payload)
 			}), "%s failed", header.Event)
 
 	// Boradcast Events
@@ -121,42 +121,42 @@ func (h *MessageHandler) Message(id string, raw []byte) error {
 
 	// Admin Events
 	case event.ADMIN_LOCK:
-		return errors.Wrapf(h.adminLock(id, session), "%s failed", header.Event)
+		return errors.Wrapf(h.adminLock(session), "%s failed", header.Event)
 	case event.ADMIN_UNLOCK:
-		return errors.Wrapf(h.adminUnlock(id, session), "%s failed", header.Event)
+		return errors.Wrapf(h.adminUnlock(session), "%s failed", header.Event)
 	case event.ADMIN_CONTROL:
-		return errors.Wrapf(h.adminControl(id, session), "%s failed", header.Event)
+		return errors.Wrapf(h.adminControl(session), "%s failed", header.Event)
 	case event.ADMIN_RELEASE:
-		return errors.Wrapf(h.adminRelease(id, session), "%s failed", header.Event)
+		return errors.Wrapf(h.adminRelease(session), "%s failed", header.Event)
 	case event.ADMIN_GIVE:
 		payload := &message.Admin{}
 		return errors.Wrapf(
 			utils.Unmarshal(payload, raw, func() error {
-				return h.adminGive(id, session, payload)
+				return h.adminGive(session, payload)
 			}), "%s failed", header.Event)
 	case event.ADMIN_BAN:
 		payload := &message.Admin{}
 		return errors.Wrapf(
 			utils.Unmarshal(payload, raw, func() error {
-				return h.adminBan(id, session, payload)
+				return h.adminBan(session, payload)
 			}), "%s failed", header.Event)
 	case event.ADMIN_KICK:
 		payload := &message.Admin{}
 		return errors.Wrapf(
 			utils.Unmarshal(payload, raw, func() error {
-				return h.adminKick(id, session, payload)
+				return h.adminKick(session, payload)
 			}), "%s failed", header.Event)
 	case event.ADMIN_MUTE:
 		payload := &message.Admin{}
 		return errors.Wrapf(
 			utils.Unmarshal(payload, raw, func() error {
-				return h.adminMute(id, session, payload)
+				return h.adminMute(session, payload)
 			}), "%s failed", header.Event)
 	case event.ADMIN_UNMUTE:
 		payload := &message.Admin{}
 		return errors.Wrapf(
 			utils.Unmarshal(payload, raw, func() error {
-				return h.adminUnmute(id, session, payload)
+				return h.adminUnmute(session, payload)
 			}), "%s failed", header.Event)
 	default:
 		return errors.Errorf("unknown message event %s", header.Event)

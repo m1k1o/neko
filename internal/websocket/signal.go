@@ -6,15 +6,15 @@ import (
 	"demodesk/neko/internal/types/message"
 )
 
-func (h *MessageHandler) signalProvide(id string, session types.Session) error {
-	sdp, lite, ice, err := h.webrtc.CreatePeer(id, session)
+func (h *MessageHandler) signalProvide(session types.Session) error {
+	sdp, lite, ice, err := h.webrtc.CreatePeer(session.ID(), session)
 	if err != nil {
 		return err
 	}
 
 	if err := session.Send(message.SignalProvide{
 		Event: event.SIGNAL_PROVIDE,
-		ID:    id,
+		ID:    session.ID(),
 		SDP:   sdp,
 		Lite:  lite,
 		ICE:   ice,
@@ -25,7 +25,7 @@ func (h *MessageHandler) signalProvide(id string, session types.Session) error {
 	return nil
 }
 
-func (h *MessageHandler) signalAnswer(id string, session types.Session, payload *message.SignalAnswer) error {
+func (h *MessageHandler) signalAnswer(session types.Session, payload *message.SignalAnswer) error {
 	session.SetName(payload.DisplayName)
 
 	if err := session.SignalAnswer(payload.SDP); err != nil {

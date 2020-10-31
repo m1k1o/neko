@@ -8,7 +8,7 @@ import (
 	"demodesk/neko/internal/types/message"
 )
 
-func (h *MessageHandler) adminLock(id string, session types.Session) error {
+func (h *MessageHandler) adminLock(session types.Session) error {
 	if !session.Admin() {
 		h.logger.Debug().Msg("user not admin")
 		return nil
@@ -24,7 +24,7 @@ func (h *MessageHandler) adminLock(id string, session types.Session) error {
 	if err := h.sessions.Broadcast(
 		message.Admin{
 			Event: event.ADMIN_LOCK,
-			ID:    id,
+			ID:    session.ID(),
 		}, nil); err != nil {
 		h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.ADMIN_LOCK)
 		return err
@@ -33,7 +33,7 @@ func (h *MessageHandler) adminLock(id string, session types.Session) error {
 	return nil
 }
 
-func (h *MessageHandler) adminUnlock(id string, session types.Session) error {
+func (h *MessageHandler) adminUnlock(session types.Session) error {
 	if !session.Admin() {
 		h.logger.Debug().Msg("user not admin")
 		return nil
@@ -49,7 +49,7 @@ func (h *MessageHandler) adminUnlock(id string, session types.Session) error {
 	if err := h.sessions.Broadcast(
 		message.Admin{
 			Event: event.ADMIN_UNLOCK,
-			ID:    id,
+			ID:    session.ID(),
 		}, nil); err != nil {
 		h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.ADMIN_UNLOCK)
 		return err
@@ -58,7 +58,7 @@ func (h *MessageHandler) adminUnlock(id string, session types.Session) error {
 	return nil
 }
 
-func (h *MessageHandler) adminControl(id string, session types.Session) error {
+func (h *MessageHandler) adminControl(session types.Session) error {
 	if !session.Admin() {
 		h.logger.Debug().Msg("user not admin")
 		return nil
@@ -66,7 +66,7 @@ func (h *MessageHandler) adminControl(id string, session types.Session) error {
 
 	host, ok := h.sessions.GetHost()
 
-	if err := h.sessions.SetHost(id); err != nil {
+	if err := h.sessions.SetHost(session.ID()); err != nil {
 		h.logger.Warn().Err(err).Msgf("SetHost failed")
 		return err
 	}
@@ -75,7 +75,7 @@ func (h *MessageHandler) adminControl(id string, session types.Session) error {
 		if err := h.sessions.Broadcast(
 			message.AdminTarget{
 				Event:  event.ADMIN_CONTROL,
-				ID:     id,
+				ID:     session.ID(),
 				Target: host.ID(),
 			}, nil); err != nil {
 			h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.ADMIN_CONTROL)
@@ -85,7 +85,7 @@ func (h *MessageHandler) adminControl(id string, session types.Session) error {
 		if err := h.sessions.Broadcast(
 			message.Admin{
 				Event: event.ADMIN_CONTROL,
-				ID:    id,
+				ID:    session.ID(),
 			}, nil); err != nil {
 			h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.ADMIN_CONTROL)
 			return err
@@ -95,7 +95,7 @@ func (h *MessageHandler) adminControl(id string, session types.Session) error {
 	return nil
 }
 
-func (h *MessageHandler) adminRelease(id string, session types.Session) error {
+func (h *MessageHandler) adminRelease(session types.Session) error {
 	if !session.Admin() {
 		h.logger.Debug().Msg("user not admin")
 		return nil
@@ -109,7 +109,7 @@ func (h *MessageHandler) adminRelease(id string, session types.Session) error {
 		if err := h.sessions.Broadcast(
 			message.AdminTarget{
 				Event:  event.ADMIN_RELEASE,
-				ID:     id,
+				ID:     session.ID(),
 				Target: host.ID(),
 			}, nil); err != nil {
 			h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.ADMIN_RELEASE)
@@ -119,7 +119,7 @@ func (h *MessageHandler) adminRelease(id string, session types.Session) error {
 		if err := h.sessions.Broadcast(
 			message.Admin{
 				Event: event.ADMIN_RELEASE,
-				ID:    id,
+				ID:    session.ID(),
 			}, nil); err != nil {
 			h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.ADMIN_RELEASE)
 			return err
@@ -129,7 +129,7 @@ func (h *MessageHandler) adminRelease(id string, session types.Session) error {
 	return nil
 }
 
-func (h *MessageHandler) adminGive(id string, session types.Session, payload *message.Admin) error {
+func (h *MessageHandler) adminGive(session types.Session, payload *message.Admin) error {
 	if !session.Admin() {
 		h.logger.Debug().Msg("user not admin")
 		return nil
@@ -150,7 +150,7 @@ func (h *MessageHandler) adminGive(id string, session types.Session, payload *me
 	if err := h.sessions.Broadcast(
 		message.AdminTarget{
 			Event:  event.CONTROL_GIVE,
-			ID:     id,
+			ID:     session.ID(),
 			Target: payload.ID,
 		}, nil); err != nil {
 		h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.CONTROL_LOCKED)
@@ -160,7 +160,7 @@ func (h *MessageHandler) adminGive(id string, session types.Session, payload *me
 	return nil
 }
 
-func (h *MessageHandler) adminMute(id string, session types.Session, payload *message.Admin) error {
+func (h *MessageHandler) adminMute(session types.Session, payload *message.Admin) error {
 	if !session.Admin() {
 		h.logger.Debug().Msg("user not admin")
 		return nil
@@ -183,7 +183,7 @@ func (h *MessageHandler) adminMute(id string, session types.Session, payload *me
 		message.AdminTarget{
 			Event:  event.ADMIN_MUTE,
 			Target: target.ID(),
-			ID:     id,
+			ID:     session.ID(),
 		}, nil); err != nil {
 		h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.ADMIN_UNMUTE)
 		return err
@@ -192,7 +192,7 @@ func (h *MessageHandler) adminMute(id string, session types.Session, payload *me
 	return nil
 }
 
-func (h *MessageHandler) adminUnmute(id string, session types.Session, payload *message.Admin) error {
+func (h *MessageHandler) adminUnmute(session types.Session, payload *message.Admin) error {
 	if !session.Admin() {
 		h.logger.Debug().Msg("user not admin")
 		return nil
@@ -210,7 +210,7 @@ func (h *MessageHandler) adminUnmute(id string, session types.Session, payload *
 		message.AdminTarget{
 			Event:  event.ADMIN_UNMUTE,
 			Target: target.ID(),
-			ID:     id,
+			ID:     session.ID(),
 		}, nil); err != nil {
 		h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.ADMIN_UNMUTE)
 		return err
@@ -219,7 +219,7 @@ func (h *MessageHandler) adminUnmute(id string, session types.Session, payload *
 	return nil
 }
 
-func (h *MessageHandler) adminKick(id string, session types.Session, payload *message.Admin) error {
+func (h *MessageHandler) adminKick(session types.Session, payload *message.Admin) error {
 	if !session.Admin() {
 		h.logger.Debug().Msg("user not admin")
 		return nil
@@ -244,7 +244,7 @@ func (h *MessageHandler) adminKick(id string, session types.Session, payload *me
 		message.AdminTarget{
 			Event:  event.ADMIN_KICK,
 			Target: target.ID(),
-			ID:     id,
+			ID:     session.ID(),
 		}, []string{payload.ID}); err != nil {
 		h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.ADMIN_KICK)
 		return err
@@ -253,7 +253,7 @@ func (h *MessageHandler) adminKick(id string, session types.Session, payload *me
 	return nil
 }
 
-func (h *MessageHandler) adminBan(id string, session types.Session, payload *message.Admin) error {
+func (h *MessageHandler) adminBan(session types.Session, payload *message.Admin) error {
 	if !session.Admin() {
 		h.logger.Debug().Msg("user not admin")
 		return nil
@@ -294,7 +294,7 @@ func (h *MessageHandler) adminBan(id string, session types.Session, payload *mes
 		message.AdminTarget{
 			Event:  event.ADMIN_BAN,
 			Target: target.ID(),
-			ID:     id,
+			ID:     session.ID(),
 		}, []string{payload.ID}); err != nil {
 		h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.ADMIN_BAN)
 		return err

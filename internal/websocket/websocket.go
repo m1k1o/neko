@@ -56,7 +56,7 @@ type WebSocketHandler struct {
 
 func (ws *WebSocketHandler) Start() {
 	ws.sessions.OnCreated(func(id string, session types.Session) {
-		if err := ws.handler.SessionCreated(id, session); err != nil {
+		if err := ws.handler.SessionCreated(session); err != nil {
 			ws.logger.Warn().Str("id", id).Err(err).Msg("session created with and error")
 		} else {
 			ws.logger.Debug().Str("id", id).Msg("session created")
@@ -64,7 +64,7 @@ func (ws *WebSocketHandler) Start() {
 	})
 
 	ws.sessions.OnConnected(func(id string, session types.Session) {
-		if err := ws.handler.SessionConnected(id, session); err != nil {
+		if err := ws.handler.SessionConnected(session); err != nil {
 			ws.logger.Warn().Str("id", id).Err(err).Msg("session connected with and error")
 		} else {
 			ws.logger.Debug().Str("id", id).Msg("session connected")

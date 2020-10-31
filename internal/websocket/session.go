@@ -6,15 +6,15 @@ import (
 	"demodesk/neko/internal/types/message"
 )
 
-func (h *MessageHandler) SessionCreated(id string, session types.Session) error {
+func (h *MessageHandler) SessionCreated(session types.Session) error {
 	// send sdp and id over to client
-	if err := h.signalProvide(id, session); err != nil {
+	if err := h.signalProvide(session); err != nil {
 		return err
 	}
 
 	if session.Admin() {
 		// send screen configurations if admin
-		if err := h.screenConfigurations(id, session); err != nil {
+		if err := h.screenConfigurations(session); err != nil {
 			return err
 		}
 
@@ -27,18 +27,18 @@ func (h *MessageHandler) SessionCreated(id string, session types.Session) error 
 	return nil
 }
 
-func (h *MessageHandler) SessionConnected(id string, session types.Session) error {
+func (h *MessageHandler) SessionConnected(session types.Session) error {
 	// send list of members to session
 	if err := session.Send(message.MembersList{
 		Event:    event.MEMBER_LIST,
 		Memebers: h.sessions.Members(),
 	}); err != nil {
-		h.logger.Warn().Str("id", id).Err(err).Msgf("sending event %s has failed", event.MEMBER_LIST)
+		h.logger.Warn().Str("id", session.ID()).Err(err).Msgf("sending event %s has failed", event.MEMBER_LIST)
 		return err
 	}
 
 	// send screen current resolution
-	if err := h.screenResolution(id, session); err != nil {
+	if err := h.screenResolution(session); err != nil {
 		return err
 	}
 
@@ -49,7 +49,7 @@ func (h *MessageHandler) SessionConnected(id string, session types.Session) erro
 			Event: event.CONTROL_LOCKED,
 			ID:    host.ID(),
 		}); err != nil {
-			h.logger.Warn().Str("id", id).Err(err).Msgf("sending event %s has failed", event.CONTROL_LOCKED)
+			h.logger.Warn().Str("id", session.ID()).Err(err).Msgf("sending event %s has failed", event.CONTROL_LOCKED)
 			return err
 		}
 	}

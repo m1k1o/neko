@@ -7,7 +7,7 @@ import (
 	"demodesk/neko/internal/websocket/broadcast"
 )
 
-func (h *MessageHandler) screenSet(id string, session types.Session, payload *message.ScreenResolution) error {
+func (h *MessageHandler) screenSet(session types.Session, payload *message.ScreenResolution) error {
 	if !session.Admin() {
 		h.logger.Debug().Msg("user not admin")
 		return nil
@@ -18,7 +18,7 @@ func (h *MessageHandler) screenSet(id string, session types.Session, payload *me
 		return err
 	}
 
-	if err := broadcast.ScreenConfiguration(h.sessions, id, payload.Width, payload.Height, payload.Rate); err != nil {
+	if err := broadcast.ScreenConfiguration(h.sessions, session.ID(), payload.Width, payload.Height, payload.Rate); err != nil {
 		h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.SCREEN_RESOLUTION)
 		return err
 	}
@@ -26,7 +26,7 @@ func (h *MessageHandler) screenSet(id string, session types.Session, payload *me
 	return nil
 }
 
-func (h *MessageHandler) screenResolution(id string, session types.Session) error {
+func (h *MessageHandler) screenResolution(session types.Session) error {
 	if size := h.remote.GetScreenSize(); size != nil {
 		if err := session.Send(message.ScreenResolution{
 			Event:  event.SCREEN_RESOLUTION,
@@ -42,7 +42,7 @@ func (h *MessageHandler) screenResolution(id string, session types.Session) erro
 	return nil
 }
 
-func (h *MessageHandler) screenConfigurations(id string, session types.Session) error {
+func (h *MessageHandler) screenConfigurations(session types.Session) error {
 	if !session.Admin() {
 		h.logger.Debug().Msg("user not admin")
 		return nil
