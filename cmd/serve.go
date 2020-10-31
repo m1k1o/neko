@@ -17,11 +17,11 @@ func init() {
 	}
 
 	configs := []config.Config{
-		neko.Service.Server,
-		neko.Service.WebRTC,
-		neko.Service.Remote,
-		neko.Service.Broadcast,
-		neko.Service.WebSocket,
+		neko.Service.Configs.Server,
+		neko.Service.Configs.WebRTC,
+		neko.Service.Configs.Remote,
+		neko.Service.Configs.Broadcast,
+		neko.Service.Configs.WebSocket,
 	}
 
 	cobra.OnInitialize(func() {

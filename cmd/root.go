@@ -117,10 +117,10 @@ func init() {
 			logger.Info().Msg("preflight complete")
 		}
 
-		neko.Service.Root.Set()
+		neko.Service.Configs.Root.Set()
 	})
 
-	if err := neko.Service.Root.Init(root); err != nil {
+	if err := neko.Service.Configs.Root.Init(root); err != nil {
 		log.Panic().Err(err).Msg("unable to run root command")
 	}
 

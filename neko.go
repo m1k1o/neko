@@ -59,12 +59,14 @@ func init() {
 			Compiler:  runtime.Compiler,
 			Platform:  fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH),
 		},
-		Root:      &config.Root{},
-		Server:    &config.Server{},
-		Remote:    &config.Remote{},
-		Broadcast: &config.Broadcast{},
-		WebRTC:    &config.WebRTC{},
-		WebSocket: &config.WebSocket{},
+		Configs: &Configs{
+			Root:      &config.Root{},
+			Server:    &config.Server{},
+			Remote:    &config.Remote{},
+			Broadcast: &config.Broadcast{},
+			WebRTC:    &config.WebRTC{},
+			WebSocket: &config.WebSocket{},
+		},
 	}
 }
 
@@ -97,14 +99,18 @@ func (i *Version) Details() string {
 	)
 }
 
-type Neko struct {
-	Version   *Version
+type Configs struct {
 	Root      *config.Root
 	Remote    *config.Remote
 	Broadcast *config.Broadcast
 	Server    *config.Server
 	WebRTC    *config.WebRTC
 	WebSocket *config.WebSocket
+}
+
+type Neko struct {
+	Version   *Version
+	Configs   *Configs
 
 	logger           zerolog.Logger
 	server           *http.Server
@@ -120,34 +126,45 @@ func (neko *Neko) Preflight() {
 }
 
 func (neko *Neko) Start() {
-	broadcastManager := broadcast.New(neko.Remote, neko.Broadcast)
-
-	remoteManager := remote.New(neko.Remote, broadcastManager)
-	remoteManager.Start()
-
-	sessionManager := session.New(remoteManager)
-
-	webRTCManager := webrtc.New(sessionManager, remoteManager, neko.WebRTC)
-	webRTCManager.Start()
-
-	webSocketHandler := websocket.New(sessionManager, remoteManager, broadcastManager, webRTCManager, neko.WebSocket)
-	webSocketHandler.Start()
-
-	server := http.New(
-		sessionManager,
-		remoteManager,
-		broadcastManager,
-		webSocketHandler,
-		neko.Server,
+	neko.broadcastManager = broadcast.New(
+		neko.Configs.Remote,
+		neko.Configs.Broadcast,
 	)
-	server.Start()
 
-	neko.sessionManager = sessionManager
-	neko.remoteManager = remoteManager
-	neko.broadcastManager = broadcastManager
-	neko.webRTCManager = webRTCManager
-	neko.webSocketHandler = webSocketHandler
-	neko.server = server
+	neko.remoteManager = remote.New(
+		neko.Configs.Remote,
+		neko.broadcastManager,
+	)
+	neko.remoteManager.Start()
+
+	neko.sessionManager = session.New(
+		neko.remoteManager,
+	)
+
+	neko.webRTCManager = webrtc.New(
+		neko.sessionManager,
+		neko.remoteManager,
+		neko.Configs.WebRTC,
+	)
+	neko.webRTCManager.Start()
+
+	neko.webSocketHandler = websocket.New(
+		neko.sessionManager,
+		neko.remoteManager,
+		neko.broadcastManager,
+		neko.webRTCManager,
+		neko.Configs.WebSocket,
+	)
+	neko.webSocketHandler.Start()
+
+	neko.server = http.New(
+		neko.sessionManager,
+		neko.remoteManager,
+		neko.broadcastManager,
+		neko.webSocketHandler,
+		neko.Configs.Server,
+	)
+	neko.server.Start()
 }
 
 func (neko *Neko) Shutdown() {
