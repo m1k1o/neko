@@ -48,6 +48,7 @@ func (session *Session) Address() string {
 	if session.socket == nil {
 		return ""
 	}
+
 	return session.socket.Address()
 }
 
@@ -64,26 +65,21 @@ func (session *Session) SetMuted(muted bool) {
 	session.muted = muted
 }
 
-func (session *Session) SetName(name string) error {
+func (session *Session) SetName(name string) {
 	session.name = name
-	return nil
 }
 
-func (session *Session) SetSocket(socket types.WebSocket) error {
+func (session *Session) SetSocket(socket types.WebSocket) {
 	session.socket = socket
-	return nil
 }
 
-func (session *Session) SetPeer(peer types.Peer) error {
+func (session *Session) SetPeer(peer types.Peer) {
 	session.peer = peer
-	return nil
 }
 
-func (session *Session) SetConnected(connected bool) {
-	session.connected = connected
-	if connected {
-		session.manager.emmiter.Emit("connected", session.id, session)
-	}
+func (session *Session) SetConnected() {
+	session.connected = true
+	session.manager.emmiter.Emit("connected", session.id, session)
 }
 
 func (session *Session) Disconnect(reason string) error {
@@ -105,6 +101,7 @@ func (session *Session) Send(v interface{}) error {
 	if session.socket == nil {
 		return nil
 	}
+
 	return session.socket.Send(v)
 }
 
@@ -112,6 +109,7 @@ func (session *Session) SignalAnswer(sdp string) error {
 	if session.peer == nil {
 		return nil
 	}
+
 	return session.peer.SignalAnswer(sdp)
 }
 

@@ -152,11 +152,11 @@ func (manager *WebRTCManager) CreatePeer(id string, session types.Session) (stri
 			session.Disconnect("peer connection state failed")
 		case webrtc.PeerConnectionStateConnected:
 			manager.logger.Info().Str("id", id).Msg("peer connected")
-			session.SetConnected(true)
+			session.SetConnected()
 		}
 	})
 
-	if err := session.SetPeer(&Peer{
+	session.SetPeer(&Peer{
 		id:            id,
 		api:           api,
 		engine:        &engine,
@@ -164,9 +164,7 @@ func (manager *WebRTCManager) CreatePeer(id string, session types.Session) (stri
 		settings:      &settings,
 		connection:    connection,
 		configuration: configuration,
-	}); err != nil {
-		return "", manager.config.ICELite, manager.config.ICEServers, err
-	}
+	})
 
 	return description.SDP, manager.config.ICELite, manager.config.ICEServers, nil
 }

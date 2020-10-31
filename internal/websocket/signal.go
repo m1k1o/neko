@@ -26,9 +26,7 @@ func (h *MessageHandler) signalProvide(id string, session types.Session) error {
 }
 
 func (h *MessageHandler) signalAnswer(id string, session types.Session, payload *message.SignalAnswer) error {
-	if err := session.SetName(payload.DisplayName); err != nil {
-		return err
-	}
+	session.SetName(payload.DisplayName)
 
 	if err := session.SignalAnswer(payload.SDP); err != nil {
 		return err
