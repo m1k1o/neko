@@ -39,7 +39,7 @@ func New(
 	router.Use(Logger) // Log API request calls using custom logger function
 
 	// Mount REST API
-	apiManager := api.New(sessions, remote, broadcast, webSocketHandler)
+	apiManager := api.New(sessions, remote, broadcast, webSocketHandler, conf)
 	apiManager.Mount(router)
 
 	router.Get("/ws", func(w http.ResponseWriter, r *http.Request) {

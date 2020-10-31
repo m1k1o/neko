@@ -23,10 +23,19 @@ func New(
 	}
 }
 
-func (h *MemberHandler) Router() *chi.Mux {
+func (h *MemberHandler) Router(
+	usersOnly func(chi.Router, func(chi.Router)),
+	adminsOnly func(chi.Router, func(chi.Router)),
+) *chi.Mux {
 	r := chi.NewRouter()
 
-	// TODO
+	usersOnly(r, func(r chi.Router) {
+		
+	})
+
+	adminsOnly(r, func(r chi.Router) {
+		
+	})
 
 	return r
 }

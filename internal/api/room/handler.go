@@ -29,17 +29,20 @@ func New(
 	}
 }
 
-func (h *RoomHandler) Router() *chi.Mux {
+func (h *RoomHandler) Router(
+	usersOnly func(chi.Router, func(chi.Router)),
+	adminsOnly func(chi.Router, func(chi.Router)),
+) *chi.Mux {
 	r := chi.NewRouter()
-
-	r.Route("/screen", func(r chi.Router) {
-		r.Get("/", h.ScreenConfiguration)
-		r.Post("/", h.ScreenConfigurationChange)
-
-		r.Get("/configurations", h.ScreenConfigurationsList)
+	
+	usersOnly(r, func(r chi.Router) {
+		r.Get("/screen", h.ScreenConfiguration)
 	})
 
-	// TODO
+	adminsOnly(r, func(r chi.Router) {
+		r.Post("/screen", h.ScreenConfigurationChange)
+		r.Get("/screen/configurations", h.ScreenConfigurationsList)
+	})
 
 	return r
 }
