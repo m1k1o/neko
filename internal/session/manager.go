@@ -40,7 +40,7 @@ func (manager *SessionManager) New(id string, admin bool, socket types.WebSocket
 	}
 
 	manager.members[id] = session
-	manager.emmiter.Emit("created", id, session)
+	manager.emmiter.Emit("created", session)
 
 	if !manager.remote.Streaming() && len(manager.members) > 0 {
 		manager.remote.StartStream()
@@ -53,15 +53,11 @@ func (manager *SessionManager) HasHost() bool {
 	return manager.host != ""
 }
 
-func (manager *SessionManager) IsHost(id string) bool {
-	return manager.host == id
-}
-
 func (manager *SessionManager) SetHost(id string) error {
-	_, ok := manager.members[id]
+	host, ok := manager.GetHost()
 	if ok {
 		manager.host = id
-		manager.emmiter.Emit("host", id)
+		manager.emmiter.Emit("host", host)
 		return nil
 	}
 	return fmt.Errorf("invalid session id %s", id)
@@ -73,9 +69,11 @@ func (manager *SessionManager) GetHost() (types.Session, bool) {
 }
 
 func (manager *SessionManager) ClearHost() {
-	id := manager.host
+	host, ok := manager.GetHost()
 	manager.host = ""
-	manager.emmiter.Emit("host_cleared", id)
+	if ok {
+		manager.emmiter.Emit("host_cleared", host)
+	}
 }
 
 func (manager *SessionManager) Has(id string) bool {
@@ -122,13 +120,13 @@ func (manager *SessionManager) Destroy(id string) error {
 	session, ok := manager.members[id]
 	if ok {
 		err := session.destroy()
-		delete(manager.members, id)
 
 		if !manager.remote.Streaming() && len(manager.members) <= 0 {
 			manager.remote.StopStream()
 		}
 
-		manager.emmiter.Emit("destroyed", id, session)
+		manager.emmiter.Emit("before_destroy", session)
+		delete(manager.members, id)
 		return err
 	}
 
@@ -154,32 +152,32 @@ func (manager *SessionManager) Broadcast(v interface{}, exclude interface{}) err
 	return nil
 }
 
-func (manager *SessionManager) OnHost(listener func(id string)) {
+func (manager *SessionManager) OnHost(listener func(session types.Session)) {
 	manager.emmiter.On("host", func(payload ...interface{}) {
-		listener(payload[0].(string))
+		listener(payload[0].(*Session))
 	})
 }
 
-func (manager *SessionManager) OnHostCleared(listener func(id string)) {
+func (manager *SessionManager) OnHostCleared(listener func(session types.Session)) {
 	manager.emmiter.On("host_cleared", func(payload ...interface{}) {
-		listener(payload[0].(string))
+		listener(payload[0].(*Session))
 	})
 }
 
-func (manager *SessionManager) OnDestroy(listener func(id string, session types.Session)) {
-	manager.emmiter.On("destroyed", func(payload ...interface{}) {
-		listener(payload[0].(string), payload[1].(*Session))
+func (manager *SessionManager) OnBeforeDestroy(listener func(session types.Session)) {
+	manager.emmiter.On("before_destroy", func(payload ...interface{}) {
+		listener(payload[0].(*Session))
 	})
 }
 
-func (manager *SessionManager) OnCreated(listener func(id string, session types.Session)) {
+func (manager *SessionManager) OnCreated(listener func(session types.Session)) {
 	manager.emmiter.On("created", func(payload ...interface{}) {
-		listener(payload[0].(string), payload[1].(*Session))
+		listener(payload[0].(*Session))
 	})
 }
 
-func (manager *SessionManager) OnConnected(listener func(id string, session types.Session)) {
+func (manager *SessionManager) OnConnected(listener func(session types.Session)) {
 	manager.emmiter.On("connected", func(payload ...interface{}) {
-		listener(payload[0].(string), payload[1].(*Session))
+		listener(payload[0].(*Session))
 	})
 }

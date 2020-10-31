@@ -8,7 +8,7 @@ import (
 
 func (h *MessageHandler) controlRelease(session types.Session) error {
 	// check if session is host
-	if !h.sessions.IsHost(session.ID()) {
+	if !session.IsHost() {
 		h.logger.Debug().Str("id", session.ID()).Msg("is not the host")
 		return nil
 	}
@@ -80,7 +80,7 @@ func (h *MessageHandler) controlRequest(session types.Session) error {
 
 func (h *MessageHandler) controlGive(session types.Session, payload *message.Control) error {
 	// check if session is host
-	if !h.sessions.IsHost(session.ID()) {
+	if !session.IsHost() {
 		h.logger.Debug().Str("id", session.ID()).Msg("is not the host")
 		return nil
 	}
@@ -112,7 +112,7 @@ func (h *MessageHandler) controlGive(session types.Session, payload *message.Con
 
 func (h *MessageHandler) controlClipboard(session types.Session, payload *message.Clipboard) error {
 	// check if session is host
-	if !h.sessions.IsHost(session.ID()) {
+	if !session.IsHost() {
 		h.logger.Debug().Str("id", session.ID()).Msg("is not the host")
 		return nil
 	}
@@ -123,7 +123,7 @@ func (h *MessageHandler) controlClipboard(session types.Session, payload *messag
 
 func (h *MessageHandler) controlKeyboard(session types.Session, payload *message.Keyboard) error {
 	// check if session is host
-	if !h.sessions.IsHost(session.ID()) {
+	if !session.IsHost() {
 		h.logger.Debug().Str("id", session.ID()).Msg("is not the host")
 		return nil
 	}

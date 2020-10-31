@@ -55,27 +55,27 @@ type WebSocketHandler struct {
 }
 
 func (ws *WebSocketHandler) Start() {
-	ws.sessions.OnCreated(func(id string, session types.Session) {
+	ws.sessions.OnCreated(func(session types.Session) {
 		if err := ws.handler.SessionCreated(session); err != nil {
-			ws.logger.Warn().Str("id", id).Err(err).Msg("session created with and error")
+			ws.logger.Warn().Str("id", session.ID()).Err(err).Msg("session created with and error")
 		} else {
-			ws.logger.Debug().Str("id", id).Msg("session created")
+			ws.logger.Debug().Str("id", session.ID()).Msg("session created")
 		}
 	})
 
-	ws.sessions.OnConnected(func(id string, session types.Session) {
+	ws.sessions.OnConnected(func(session types.Session) {
 		if err := ws.handler.SessionConnected(session); err != nil {
-			ws.logger.Warn().Str("id", id).Err(err).Msg("session connected with and error")
+			ws.logger.Warn().Str("id", session.ID()).Err(err).Msg("session connected with and error")
 		} else {
-			ws.logger.Debug().Str("id", id).Msg("session connected")
+			ws.logger.Debug().Str("id", session.ID()).Msg("session connected")
 		}
 	})
 
-	ws.sessions.OnDestroy(func(id string, session types.Session) {
-		if err := ws.handler.SessionDestroyed(id); err != nil {
-			ws.logger.Warn().Str("id", id).Err(err).Msg("session destroyed with and error")
+	ws.sessions.OnBeforeDestroy(func(session types.Session) {
+		if err := ws.handler.SessionDestroyed(session); err != nil {
+			ws.logger.Warn().Str("id", session.ID()).Err(err).Msg("session destroyed with and error")
 		} else {
-			ws.logger.Debug().Str("id", id).Msg("session destroyed")
+			ws.logger.Debug().Str("id", session.ID()).Msg("session destroyed")
 		}
 	})
 

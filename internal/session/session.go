@@ -79,7 +79,7 @@ func (session *Session) SetPeer(peer types.Peer) {
 
 func (session *Session) SetConnected() {
 	session.connected = true
-	session.manager.emmiter.Emit("connected", session.id, session)
+	session.manager.emmiter.Emit("connected", session)
 }
 
 func (session *Session) Disconnect(reason string) error {

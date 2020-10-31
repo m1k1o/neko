@@ -29,7 +29,6 @@ type Session interface {
 type SessionManager interface {
 	New(id string, admin bool, socket WebSocket) Session
 	HasHost() bool
-	IsHost(id string) bool
 	SetHost(id string) error
 	GetHost() (Session, bool)
 	ClearHost()
@@ -39,9 +38,9 @@ type SessionManager interface {
 	Admins() []*Member
 	Destroy(id string) error
 	Broadcast(v interface{}, exclude interface{}) error
-	OnHost(listener func(id string))
-	OnHostCleared(listener func(id string))
-	OnDestroy(listener func(id string, session Session))
-	OnCreated(listener func(id string, session Session))
-	OnConnected(listener func(id string, session Session))
+	OnHost(listener func(session Session))
+	OnHostCleared(listener func(session Session))
+	OnBeforeDestroy(listener func(session Session))
+	OnCreated(listener func(session Session))
+	OnConnected(listener func(session Session))
 }
