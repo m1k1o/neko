@@ -15,11 +15,10 @@ import (
 	"demodesk/neko/internal/types/config"
 )
 
-func New(sessions types.SessionManager, remote types.RemoteManager, config *config.WebRTC) *WebRTCManager {
+func New(remote types.RemoteManager, config *config.WebRTC) *WebRTCManager {
 	return &WebRTCManager{
 		logger:   log.With().Str("module", "webrtc").Logger(),
 		remote:   remote,
-		sessions: sessions,
 		config:   config,
 	}
 }
@@ -30,7 +29,6 @@ type WebRTCManager struct {
 	audioTrack *webrtc.Track
 	videoCodec *webrtc.RTPCodec
 	audioCodec *webrtc.RTPCodec
-	sessions   types.SessionManager
 	remote     types.RemoteManager
 	config     *config.WebRTC
 }
@@ -136,7 +134,7 @@ func (manager *WebRTCManager) CreatePeer(id string, session types.Session) (stri
 
 	connection.OnDataChannel(func(d *webrtc.DataChannel) {
 		d.OnMessage(func(msg webrtc.DataChannelMessage) {
-			if err = manager.handle(id, msg); err != nil {
+			if err = manager.handle(session, msg); err != nil {
 				manager.logger.Warn().Err(err).Msg("data handle failed")
 			}
 		})
@@ -151,17 +149,10 @@ func (manager *WebRTCManager) CreatePeer(id string, session types.Session) (stri
 		case webrtc.PeerConnectionStateDisconnected:
 		case webrtc.PeerConnectionStateFailed:
 			manager.logger.Info().Str("id", id).Msg("peer disconnected")
-			if err = manager.sessions.Destroy(id); err != nil {
-				manager.logger.Warn().Err(err).Msg("error while destroying session")
-			}
+			session.Disconnect("peer connection state failed")
 		case webrtc.PeerConnectionStateConnected:
 			manager.logger.Info().Str("id", id).Msg("peer connected")
-			if err = session.SetConnected(true); err != nil {
-				manager.logger.Warn().Err(err).Msg("unable to set connected on peer")
-				if err = manager.sessions.Destroy(id); err != nil {
-					manager.logger.Warn().Err(err).Msg("error while destroying session")
-				}
-			}
+			session.SetConnected(true)
 		}
 	})
 

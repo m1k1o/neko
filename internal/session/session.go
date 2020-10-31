@@ -36,6 +36,10 @@ func (session *Session) Muted() bool {
 	return session.muted
 }
 
+func (session *Session) IsHost() bool {
+	return session.manager.host == session.id
+}
+
 func (session *Session) Connected() bool {
 	return session.connected
 }
@@ -75,18 +79,18 @@ func (session *Session) SetPeer(peer types.Peer) error {
 	return nil
 }
 
-func (session *Session) SetConnected(connected bool) error {
+func (session *Session) SetConnected(connected bool) {
 	session.connected = connected
 	if connected {
 		session.manager.emmiter.Emit("connected", session.id, session)
 	}
-	return nil
 }
 
-func (session *Session) Kick(reason string) error {
+func (session *Session) Disconnect(reason string) error {
 	if session.socket == nil {
 		return nil
 	}
+
 	if err := session.socket.Send(&message.Disconnect{
 		Event:   event.SYSTEM_DISCONNECT,
 		Message: reason,
@@ -94,7 +98,7 @@ func (session *Session) Kick(reason string) error {
 		return err
 	}
 
-	return session.destroy()
+	return session.manager.Destroy(session.id)
 }
 
 func (session *Session) Send(v interface{}) error {

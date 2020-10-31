@@ -137,16 +137,15 @@ func (neko *Neko) Start() {
 	)
 	neko.remoteManager.Start()
 
-	neko.sessionManager = session.New(
-		neko.remoteManager,
-	)
-
 	neko.webRTCManager = webrtc.New(
-		neko.sessionManager,
 		neko.remoteManager,
 		neko.Configs.WebRTC,
 	)
 	neko.webRTCManager.Start()
+
+	neko.sessionManager = session.New(
+		neko.remoteManager,
+	)
 
 	neko.webSocketHandler = websocket.New(
 		neko.sessionManager,

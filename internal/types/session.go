@@ -12,15 +12,16 @@ type Session interface {
 	Name() string
 	Admin() bool
 	Muted() bool
+	IsHost() bool
 	Connected() bool
 	Member() *Member
 	SetMuted(muted bool)
 	SetName(name string) error
-	SetConnected(connected bool) error
+	SetConnected(connected bool)
 	SetSocket(socket WebSocket) error
 	SetPeer(peer Peer) error
 	Address() string
-	Kick(message string) error
+	Disconnect(message string) error
 	Send(v interface{}) error
 	SignalAnswer(sdp string) error
 }

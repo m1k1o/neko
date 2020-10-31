@@ -236,7 +236,7 @@ func (h *MessageHandler) adminKick(id string, session types.Session, payload *me
 		return nil
 	}
 
-	if err := target.Kick("kicked"); err != nil {
+	if err := target.Disconnect("kicked"); err != nil {
 		return err
 	}
 
@@ -286,7 +286,7 @@ func (h *MessageHandler) adminBan(id string, session types.Session, payload *mes
 
 	h.banned[address[0]] = true
 
-	if err := target.Kick("banned"); err != nil {
+	if err := target.Disconnect("banned"); err != nil {
 		return err
 	}
 
