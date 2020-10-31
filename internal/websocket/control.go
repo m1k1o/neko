@@ -31,13 +31,11 @@ func (h *MessageHandler) controlRelease(session types.Session) error {
 }
 
 func (h *MessageHandler) controlRequest(session types.Session) error {
-	// check for host
-	if !h.sessions.HasHost() {
+	host := h.sessions.GetHost()
+
+	if host == nil {
 		// set host
-		if err := h.sessions.SetHost(session.ID()); err != nil {
-			h.logger.Warn().Err(err).Msgf("SetHost failed")
-			return err
-		}
+		h.sessions.SetHost(session)
 
 		// let everyone know
 		if err := h.sessions.Broadcast(
@@ -48,14 +46,7 @@ func (h *MessageHandler) controlRequest(session types.Session) error {
 			h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.CONTROL_LOCKED)
 			return err
 		}
-
-		return nil
-	}
-
-	// get host
-	host, ok := h.sessions.GetHost()
-	if ok {
-
+	} else {
 		// tell session there is a host
 		if err := session.Send(message.Control{
 			Event: event.CONTROL_REQUEST,
@@ -85,23 +76,21 @@ func (h *MessageHandler) controlGive(session types.Session, payload *message.Con
 		return nil
 	}
 
-	if !h.sessions.Has(payload.ID) {
-		h.logger.Debug().Str("id", payload.ID).Msg("user does not exist")
+	target, ok := h.sessions.Get(payload.ID)
+	if !ok {
+		h.logger.Debug().Str("id", target.ID()).Msg("user does not exist")
 		return nil
 	}
 
 	// set host
-	if err := h.sessions.SetHost(payload.ID); err != nil {
-		h.logger.Warn().Err(err).Msgf("SetHost failed")
-		return err
-	}
+	h.sessions.SetHost(target)
 
 	// let everyone know
 	if err := h.sessions.Broadcast(
 		message.ControlTarget{
 			Event:  event.CONTROL_GIVE,
 			ID:     session.ID(),
-			Target: payload.ID,
+			Target: target.ID(),
 		}, nil); err != nil {
 		h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.CONTROL_LOCKED)
 		return err

@@ -37,7 +37,7 @@ func (session *Session) Muted() bool {
 }
 
 func (session *Session) IsHost() bool {
-	return session.manager.host == session.id
+	return session.manager.host != nil && session.manager.host.ID() == session.ID()
 }
 
 func (session *Session) Connected() bool {

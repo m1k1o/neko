@@ -71,11 +71,11 @@ func (ws *WebSocketHandler) Start() {
 		}
 	})
 
-	ws.sessions.OnBeforeDestroy(func(session types.Session) {
-		if err := ws.handler.SessionDestroyed(session); err != nil {
-			ws.logger.Warn().Str("id", session.ID()).Err(err).Msg("session destroyed with and error")
+	ws.sessions.OnDestroy(func(id string) {
+		if err := ws.handler.SessionDestroyed(id); err != nil {
+			ws.logger.Warn().Str("id", id).Err(err).Msg("session destroyed with and error")
 		} else {
-			ws.logger.Debug().Str("id", session.ID()).Msg("session destroyed")
+			ws.logger.Debug().Str("id", id).Msg("session destroyed")
 		}
 	})
 
@@ -94,8 +94,8 @@ func (ws *WebSocketHandler) Start() {
 				if ws.sessions.HasHost() {
 					text := ws.remote.ReadClipboard()
 					if text != current {
-						session, ok := ws.sessions.GetHost()
-						if ok {
+						session := ws.sessions.GetHost()
+						if session != nil {
 							if err := session.Send(message.Clipboard{
 								Event: event.CONTROL_CLIPBOARD,
 								Text:  text,

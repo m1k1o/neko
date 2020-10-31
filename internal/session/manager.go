@@ -1,8 +1,6 @@
 package session
 
 import (
-	"fmt"
-
 	"github.com/kataras/go-events"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -14,7 +12,7 @@ import (
 func New(remote types.RemoteManager) *SessionManager {
 	return &SessionManager{
 		logger:  log.With().Str("module", "session").Logger(),
-		host:    "",
+		host:    nil,
 		remote:  remote,
 		members: make(map[string]*Session),
 		emmiter: events.New(),
@@ -23,7 +21,7 @@ func New(remote types.RemoteManager) *SessionManager {
 
 type SessionManager struct {
 	logger  zerolog.Logger
-	host    string
+	host    types.Session
 	remote  types.RemoteManager
 	members map[string]*Session
 	emmiter events.EventEmmiter
@@ -50,30 +48,22 @@ func (manager *SessionManager) New(id string, admin bool, socket types.WebSocket
 }
 
 func (manager *SessionManager) HasHost() bool {
-	return manager.host != ""
+	return manager.host != nil
 }
 
-func (manager *SessionManager) SetHost(id string) error {
-	host, ok := manager.GetHost()
-	if ok {
-		manager.host = id
-		manager.emmiter.Emit("host", host)
-		return nil
-	}
-	return fmt.Errorf("invalid session id %s", id)
+func (manager *SessionManager) SetHost(host types.Session) {
+	manager.host = host
+	manager.emmiter.Emit("host", host)
 }
 
-func (manager *SessionManager) GetHost() (types.Session, bool) {
-	host, ok := manager.members[manager.host]
-	return host, ok
+func (manager *SessionManager) GetHost() types.Session {
+	return manager.host
 }
 
 func (manager *SessionManager) ClearHost() {
-	host, ok := manager.GetHost()
-	manager.host = ""
-	if ok {
-		manager.emmiter.Emit("host_cleared", host)
-	}
+	host := manager.host
+	manager.host = nil
+	manager.emmiter.Emit("host_cleared", host)
 }
 
 func (manager *SessionManager) Has(id string) bool {
@@ -119,14 +109,14 @@ func (manager *SessionManager) Members() []*types.Member {
 func (manager *SessionManager) Destroy(id string) error {
 	session, ok := manager.members[id]
 	if ok {
+		delete(manager.members, id)
 		err := session.destroy()
 
 		if !manager.remote.Streaming() && len(manager.members) <= 0 {
 			manager.remote.StopStream()
 		}
 
-		manager.emmiter.Emit("before_destroy", session)
-		delete(manager.members, id)
+		manager.emmiter.Emit("destroy", id)
 		return err
 	}
 
@@ -164,9 +154,9 @@ func (manager *SessionManager) OnHostCleared(listener func(session types.Session
 	})
 }
 
-func (manager *SessionManager) OnBeforeDestroy(listener func(session types.Session)) {
-	manager.emmiter.On("before_destroy", func(payload ...interface{}) {
-		listener(payload[0].(*Session))
+func (manager *SessionManager) OnDestroy(listener func(id string)) {
+	manager.emmiter.On("destroy", func(payload ...interface{}) {
+		listener(payload[0].(string))
 	})
 }
 

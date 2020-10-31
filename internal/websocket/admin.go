@@ -64,14 +64,10 @@ func (h *MessageHandler) adminControl(session types.Session) error {
 		return nil
 	}
 
-	host, ok := h.sessions.GetHost()
+	host := h.sessions.GetHost()
+	h.sessions.SetHost(session)
 
-	if err := h.sessions.SetHost(session.ID()); err != nil {
-		h.logger.Warn().Err(err).Msgf("SetHost failed")
-		return err
-	}
-
-	if ok {
+	if host != nil {
 		if err := h.sessions.Broadcast(
 			message.AdminTarget{
 				Event:  event.ADMIN_CONTROL,
@@ -101,11 +97,10 @@ func (h *MessageHandler) adminRelease(session types.Session) error {
 		return nil
 	}
 
-	host, ok := h.sessions.GetHost()
-
+	host := h.sessions.GetHost()
 	h.sessions.ClearHost()
 
-	if ok {
+	if host != nil {
 		if err := h.sessions.Broadcast(
 			message.AdminTarget{
 				Event:  event.ADMIN_RELEASE,
@@ -135,23 +130,21 @@ func (h *MessageHandler) adminGive(session types.Session, payload *message.Admin
 		return nil
 	}
 
-	if !h.sessions.Has(payload.ID) {
-		h.logger.Debug().Str("id", payload.ID).Msg("user does not exist")
+	target, ok := h.sessions.Get(payload.ID)
+	if !ok {
+		h.logger.Debug().Str("id", target.ID()).Msg("user does not exist")
 		return nil
 	}
 
 	// set host
-	if err := h.sessions.SetHost(payload.ID); err != nil {
-		h.logger.Warn().Err(err).Msgf("SetHost failed")
-		return err
-	}
+	h.sessions.SetHost(target)
 
 	// let everyone know
 	if err := h.sessions.Broadcast(
 		message.AdminTarget{
 			Event:  event.CONTROL_GIVE,
 			ID:     session.ID(),
-			Target: payload.ID,
+			Target: target.ID(),
 		}, nil); err != nil {
 		h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.CONTROL_LOCKED)
 		return err
