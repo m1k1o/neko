@@ -37,7 +37,7 @@ func (manager *CaptureManagerCtx) StopBroadcastPipeline() {
 		return
 	}
 
-	manager.broadcast.DestroyPipeline()
+	manager.broadcast.Stop()
 	manager.logger.Info().Msgf("Stopping broadcast pipeline...")
 	manager.broadcast = nil
 }

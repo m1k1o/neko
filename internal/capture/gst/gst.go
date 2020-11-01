@@ -210,11 +210,6 @@ func CreatePipeline(pipelineStr string, codecName string, clockRate float32) (*P
 	return p, nil
 }
 
-// Destroy GStreamer Pipeline
-func (p *Pipeline) DestroyPipeline() {
-	C.gstreamer_send_destroy_pipeline(p.Pipeline)
-}
-
 // Start starts the GStreamer Pipeline
 func (p *Pipeline) Start() {
 	C.gstreamer_send_start_pipeline(p.Pipeline, C.int(p.id))
