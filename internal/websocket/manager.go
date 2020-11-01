@@ -51,7 +51,7 @@ type WebSocketManagerCtx struct {
 func (ws *WebSocketManagerCtx) Start() {
 	ws.sessions.OnCreated(func(session types.Session) {
 		if err := ws.handler.SessionCreated(session); err != nil {
-			ws.logger.Warn().Str("id", session.ID()).Err(err).Msg("session created with and error")
+			ws.logger.Warn().Str("id", session.ID()).Err(err).Msg("session created with an error")
 		} else {
 			ws.logger.Debug().Str("id", session.ID()).Msg("session created")
 		}
@@ -59,17 +59,17 @@ func (ws *WebSocketManagerCtx) Start() {
 
 	ws.sessions.OnConnected(func(session types.Session) {
 		if err := ws.handler.SessionConnected(session); err != nil {
-			ws.logger.Warn().Str("id", session.ID()).Err(err).Msg("session connected with and error")
+			ws.logger.Warn().Str("id", session.ID()).Err(err).Msg("session connected with an error")
 		} else {
 			ws.logger.Debug().Str("id", session.ID()).Msg("session connected")
 		}
 	})
 
-	ws.sessions.OnDestroy(func(id string) {
-		if err := ws.handler.SessionDestroyed(id); err != nil {
-			ws.logger.Warn().Str("id", id).Err(err).Msg("session destroyed with and error")
+	ws.sessions.OnDisconnected(func(session types.Session) {
+		if err := ws.handler.SessionDisconnected(session); err != nil {
+			ws.logger.Warn().Str("id", session.ID()).Err(err).Msg("session disconnected with an error")
 		} else {
-			ws.logger.Debug().Str("id", id).Msg("session destroyed")
+			ws.logger.Debug().Str("id", session.ID()).Msg("session disconnected")
 		}
 	})
 
@@ -184,11 +184,11 @@ func (ws *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Request) e
 			Msg("session ended")
 	}()
 
-	ws.handle(connection, session.ID())
+	ws.handle(connection, session)
 	return nil
 }
 
-func (ws *WebSocketManagerCtx) handle(connection *websocket.Conn, id string) {
+func (ws *WebSocketManagerCtx) handle(connection *websocket.Conn, session types.Session) {
 	bytes := make(chan []byte)
 	cancel := make(chan struct{})
 	ticker := time.NewTicker(pingPeriod)
@@ -197,9 +197,7 @@ func (ws *WebSocketManagerCtx) handle(connection *websocket.Conn, id string) {
 		defer func() {
 			ticker.Stop()
 			ws.logger.Debug().Str("address", connection.RemoteAddr().String()).Msg("handle socket ending")
-			if err := ws.handler.Disconnected(id); err != nil {
-				ws.logger.Warn().Err(err).Msg("socket disconnected with error")
-			}
+			session.SetDisconnected()
 		}()
 
 		for {
@@ -223,12 +221,12 @@ func (ws *WebSocketManagerCtx) handle(connection *websocket.Conn, id string) {
 		select {
 		case raw := <-bytes:
 			ws.logger.Debug().
-				Str("session", id).
+				Str("session", session.ID()).
 				Str("address", connection.RemoteAddr().String()).
 				Str("raw", string(raw)).
 				Msg("received message from client")
 
-			if err := ws.handler.Message(id, raw); err != nil {
+			if err := ws.handler.Message(session.ID(), raw); err != nil {
 				ws.logger.Error().Err(err).Msg("message handler has failed")
 			}
 		case <-cancel:

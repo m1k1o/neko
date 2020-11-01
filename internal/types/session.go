@@ -15,6 +15,7 @@ type Session interface {
 	SetSocket(socket WebSocket)
 	SetPeer(peer Peer)
 	SetConnected()
+	SetDisconnected()
 	Disconnect(reason string) error
 	Send(v interface{}) error
 	SignalAnswer(sdp string) error
@@ -37,9 +38,9 @@ type SessionManager interface {
 
 	OnHost(listener func(session Session))
 	OnHostCleared(listener func(session Session))
-	OnDestroy(listener func(id string))
 	OnCreated(listener func(session Session))
 	OnConnected(listener func(session Session))
+	OnDisconnected(listener func(session Session))
 
 	// auth
 	Authenticate(r *http.Request) (Session, error)

@@ -57,10 +57,7 @@ func (manager *SessionManagerCtx) Destroy(id string) error {
 	session, ok := manager.members[id]
 	if ok {
 		delete(manager.members, id)
-		err := session.destroy()
-
-		manager.emmiter.Emit("destroy", id)
-		return err
+		return session.destroy()
 	}
 
 	return nil
@@ -151,17 +148,6 @@ func (manager *SessionManagerCtx) OnHostCleared(listener func(session types.Sess
 	})
 }
 
-func (manager *SessionManagerCtx) OnDestroy(listener func(id string)) {
-	manager.emmiter.On("destroy", func(payload ...interface{}) {
-		// Stop streaming, if everyone left
-		if manager.capture.Streaming() && len(manager.members) == 0 {
-			manager.capture.StopStream()
-		}
-
-		listener(payload[0].(string))
-	})
-}
-
 func (manager *SessionManagerCtx) OnCreated(listener func(session types.Session)) {
 	manager.emmiter.On("created", func(payload ...interface{}) {
 		// Start streaming, when first joins
@@ -175,6 +161,17 @@ func (manager *SessionManagerCtx) OnCreated(listener func(session types.Session)
 
 func (manager *SessionManagerCtx) OnConnected(listener func(session types.Session)) {
 	manager.emmiter.On("connected", func(payload ...interface{}) {
+		listener(payload[0].(*SessionCtx))
+	})
+}
+
+func (manager *SessionManagerCtx) OnDisconnected(listener func(session types.Session)) {
+	manager.emmiter.On("disconnected", func(payload ...interface{}) {
+		// Stop streaming, if everyone left
+		if manager.capture.Streaming() && len(manager.members) == 0 {
+			manager.capture.StopStream()
+		}
+
 		listener(payload[0].(*SessionCtx))
 	})
 }

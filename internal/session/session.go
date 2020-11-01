@@ -74,6 +74,15 @@ func (session *SessionCtx) SetConnected() {
 	session.manager.emmiter.Emit("connected", session)
 }
 
+func (session *SessionCtx) SetDisconnected() {
+	session.connected = false
+	session.manager.emmiter.Emit("disconnected", session)
+	session.socket = nil
+
+	// TODO: Refactor.
+	session.manager.Destroy(session.id)
+}
+
 func (session *SessionCtx) Disconnect(reason string) error {
 	if session.socket == nil {
 		return nil
@@ -87,7 +96,8 @@ func (session *SessionCtx) Disconnect(reason string) error {
 		return err
 	}
 
-	return session.manager.Destroy(session.id)
+	session.SetDisconnected()
+	return nil
 }
 
 func (session *SessionCtx) Send(v interface{}) error {
