@@ -29,6 +29,12 @@
       <ul v-if="!fullscreen" class="video-menu">
         <li><i @click.stop.prevent="requestFullscreen" class="fas fa-expand"></i></li>
         <li v-if="admin"><i @click.stop.prevent="onResolution" class="fas fa-desktop"></i></li>
+        <li class="request-control">
+          <i
+            :class="[hosted && !hosting ? 'disabled' : '', !hosted && !hosting ? 'faded' : '', 'fas', 'fa-keyboard']"
+            @click.stop.prevent="toggleControl"
+          />
+        </li>
       </ul>
       <neko-resolution ref="resolution" />
     </div>
@@ -64,6 +70,24 @@
             text-align: center;
             color: rgba($color: #fff, $alpha: 0.6);
             cursor: pointer;
+
+            &.faded {
+              color: rgba($color: $text-normal, $alpha: 0.4);
+            }
+
+            &.disabled {
+              color: rgba($color: $style-error, $alpha: 0.4);
+            }
+          }
+
+          &.request-control {
+            display: none;
+          }
+
+          @media (max-width: 768px) {
+            &.request-control {
+              display: inline-block;
+            }
           }
         }
       }
@@ -177,6 +201,10 @@
 
     get hosting() {
       return this.$accessor.remote.hosting
+    }
+
+    get hosted() {
+      return this.$accessor.remote.hosted
     }
 
     get volume() {
@@ -328,7 +356,7 @@
         this.$accessor.video.setPlayable(false)
       })
 
-      this._video.addEventListener('error', event => {
+      this._video.addEventListener('error', (event) => {
         this.$log.error(event.error)
         this.$accessor.video.setPlayable(false)
       })
@@ -374,7 +402,7 @@
           .then(() => {
             this.onResise()
           })
-          .catch(err => this.$log.error)
+          .catch((err) => this.$log.error)
       } catch (err) {
         this.$log.error(err)
       }
@@ -400,6 +428,14 @@
       }
     }
 
+    toggleControl() {
+      if (!this.playable) {
+        return
+      }
+
+      this.$accessor.remote.toggle()
+    }
+
     requestFullscreen() {
       this._player.requestFullscreen()
       this.onResise()
@@ -413,7 +449,7 @@
       if (this.hosting && navigator.clipboard && typeof navigator.clipboard.readText === 'function') {
         navigator.clipboard
           .readText()
-          .then(text => {
+          .then((text) => {
             if (this.clipboard !== text) {
               this.$accessor.remote.setClipboard(text)
               this.$accessor.remote.sendClipboard(text)
