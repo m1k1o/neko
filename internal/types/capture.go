@@ -24,6 +24,6 @@ type CaptureManager interface {
 	// broacast
 	StartBroadcast(url string)
 	StopBroadcast()
-	IsBoradcasting() bool
+	BroadcastEnabled() bool
 	BroadcastUrl() string
 }

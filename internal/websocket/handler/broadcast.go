@@ -45,7 +45,7 @@ func (h *MessageHandlerCtx) boradcastStatus(session types.Session) error {
 	if err := session.Send(
 		message.BroadcastStatus{
 			Event:    event.BORADCAST_STATUS,
-			IsActive: h.capture.IsBoradcasting(),
+			IsActive: h.capture.BroadcastEnabled(),
 			URL:      h.capture.BroadcastUrl(),
 		}); err != nil {
 		h.logger.Warn().Err(err).Msgf("sending event %s has failed", event.BORADCAST_STATUS)

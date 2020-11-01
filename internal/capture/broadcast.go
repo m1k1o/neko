@@ -7,14 +7,14 @@ import (
 func (manager *CaptureManagerCtx) StartBroadcastPipeline() {
 	var err error
 
-	if manager.IsBoradcasting() || manager.broadcast_url == "" {
+	if manager.broadcast != nil || !manager.BroadcastEnabled() {
 		return
 	}
 
 	manager.logger.Info().
 		Str("audio_device", manager.config.Device).
 		Str("video_display", manager.config.Display).
-		Str("rtmp_pipeline_src", manager.broadcast.Src).
+		Str("broadcast_pipeline", manager.config.BroadcastPipeline).
 		Msgf("Creating broadcast pipeline...")
 	
 	manager.broadcast, err = gst.CreateRTMPPipeline(
@@ -33,26 +33,28 @@ func (manager *CaptureManagerCtx) StartBroadcastPipeline() {
 }
 
 func (manager *CaptureManagerCtx) StopBroadcastPipeline() {
-	if !manager.IsBoradcasting() {
+	if manager.broadcast == nil {
 		return
 	}
 
 	manager.broadcast.DestroyPipeline()
+	manager.logger.Info().Msgf("Stopping broadcast pipeline...")
 	manager.broadcast = nil
 }
 
 func (manager *CaptureManagerCtx) StartBroadcast(url string) {
 	manager.broadcast_url = url
+	manager.broadcasting = true
 	manager.StartBroadcastPipeline()
 }
 
 func (manager *CaptureManagerCtx) StopBroadcast() {
-	manager.broadcast_url = ""
+	manager.broadcasting = false
 	manager.StopBroadcastPipeline()
 }
 
-func (manager *CaptureManagerCtx) IsBoradcasting() bool {
-	return manager.broadcast != nil
+func (manager *CaptureManagerCtx) BroadcastEnabled() bool {
+	return manager.broadcasting
 }
 
 func (manager *CaptureManagerCtx) BroadcastUrl() string {

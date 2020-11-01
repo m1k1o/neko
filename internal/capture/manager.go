@@ -21,6 +21,7 @@ type CaptureManagerCtx struct {
 	shutdown      chan bool
 	emmiter       events.EventEmmiter
 	streaming     bool
+	broadcasting  bool
 	broadcast_url string
 	desktop       types.DesktopManager
 }
@@ -32,6 +33,7 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 		emmiter:       events.New(),
 		config:        config,
 		streaming:     false,
+		broadcasting:  false,
 		broadcast_url: "",
 		desktop:       desktop,
 	}
