@@ -30,7 +30,7 @@ func (Server) Init(cmd *cobra.Command) error {
 		return err
 	}
 
-	cmd.PersistentFlags().String("static", "./www", "path to neko client files to serve")
+	cmd.PersistentFlags().String("static", "", "path to neko client files to serve")
 	if err := viper.BindPFlag("static", cmd.PersistentFlags().Lookup("static")); err != nil {
 		return err
 	}

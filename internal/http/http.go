@@ -40,14 +40,16 @@ func New(WebSocketManager types.WebSocketManager, ApiManager types.ApiManager, c
 		}
 	})
 
-	fs := http.FileServer(http.Dir(conf.Static))
-	router.Get("/*", func(w http.ResponseWriter, r *http.Request) {
-		if _, err := os.Stat(conf.Static + r.RequestURI); os.IsNotExist(err) {
-			http.StripPrefix(r.RequestURI, fs).ServeHTTP(w, r)
-		} else {
-			fs.ServeHTTP(w, r)
-		}
-	})
+	if conf.Static != "" {
+		fs := http.FileServer(http.Dir(conf.Static))
+		router.Get("/*", func(w http.ResponseWriter, r *http.Request) {
+			if _, err := os.Stat(conf.Static + r.RequestURI); os.IsNotExist(err) {
+				http.StripPrefix(r.RequestURI, fs).ServeHTTP(w, r)
+			} else {
+				fs.ServeHTTP(w, r)
+			}
+		})
+	}
 
 	router.NotFound(endpoint.Handle(func(w http.ResponseWriter, r *http.Request) error {
 		return &endpoint.HandlerError{
