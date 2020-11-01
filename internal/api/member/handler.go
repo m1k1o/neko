@@ -8,19 +8,16 @@ import (
 )
 
 type MemberHandler struct {
-	sessions   types.SessionManager
-	websocket  types.WebSocketHandler
+	sessions types.SessionManager
 }
 
 func New(
 	sessions types.SessionManager,
-	websocket types.WebSocketHandler,
 ) *MemberHandler {
 	// Init
 
 	return &MemberHandler{
-		sessions:   sessions,
-		websocket:  websocket,
+		sessions: sessions,
 	}
 }
 

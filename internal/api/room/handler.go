@@ -8,25 +8,22 @@ import (
 )
 
 type RoomHandler struct {
-	sessions   types.SessionManager
-	remote     types.RemoteManager
-	broadcast  types.BroadcastManager
-	websocket  types.WebSocketHandler
+	sessions  types.SessionManager
+	desktop   types.DesktopManager
+	capture  types.CaptureManager
 }
 
 func New(
 	sessions types.SessionManager,
-	remote types.RemoteManager,
-	broadcast types.BroadcastManager,
-	websocket types.WebSocketHandler,
+	desktop types.DesktopManager,
+	capture types.CaptureManager,
 ) *RoomHandler {
 	// Init
 
 	return &RoomHandler{
-		sessions:   sessions,
-		remote:     remote,
-		broadcast:  broadcast,
-		websocket:  websocket,
+		sessions:  sessions,
+		desktop:   desktop,
+		capture:   capture,
 	}
 }
 

@@ -6,7 +6,6 @@ import (
 	"github.com/go-chi/render"
 
 	"demodesk/neko/internal/api/utils"
-	"demodesk/neko/internal/websocket/broadcast"
 )
 
 type ScreenConfiguration struct {
@@ -28,7 +27,7 @@ func (a *ScreenConfiguration) Render(w http.ResponseWriter, r *http.Request) err
 }
 
 func (h *RoomHandler) ScreenConfiguration(w http.ResponseWriter, r *http.Request) {
-	size := h.remote.GetScreenSize()
+	size := h.desktop.GetScreenSize()
 
 	if size == nil {
 		_ = render.Render(w, r, utils.ErrMessage(500, "Unable to get screen configuration."))
@@ -49,15 +48,12 @@ func (h *RoomHandler) ScreenConfigurationChange(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	if err := h.remote.ChangeResolution(data.Width, data.Height, data.Rate); err != nil {
+	if err := h.capture.ChangeResolution(data.Width, data.Height, data.Rate); err != nil {
 		_ = render.Render(w, r, utils.ErrUnprocessableEntity(err))
 		return
 	}
 
-	if err := broadcast.ScreenConfiguration(h.sessions, "-todo-session-id-", data.Width, data.Height, data.Rate); err != nil {
-		_ = render.Render(w, r, utils.ErrInternalServer(err))
-		return
-	}
+	// TODO: Broadcast change to all sessions.
 
 	render.JSON(w, r, data)
 }
@@ -65,7 +61,7 @@ func (h *RoomHandler) ScreenConfigurationChange(w http.ResponseWriter, r *http.R
 func (h *RoomHandler) ScreenConfigurationsList(w http.ResponseWriter, r *http.Request) {
 	list := []render.Renderer{}
 	
-	ScreenConfigurations := h.remote.ScreenConfigurations()
+	ScreenConfigurations := h.desktop.ScreenConfigurations()
 	for _, size := range ScreenConfigurations {
 		for _, fps := range size.Rates {
 			list = append(list, &ScreenConfiguration{

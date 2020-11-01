@@ -23,7 +23,7 @@ type ServerCtx struct {
 	conf   *config.Server
 }
 
-func New(webSocketHandler types.WebSocketManager, conf *config.Server) *ServerCtx {
+func New(WebSocketManager types.WebSocketManager, ApiManager types.ApiManager, conf *config.Server) *ServerCtx {
 	logger := log.With().Str("module", "http").Logger()
 
 	router := chi.NewRouter()
@@ -31,8 +31,10 @@ func New(webSocketHandler types.WebSocketManager, conf *config.Server) *ServerCt
 	router.Use(middleware.RequestID) // Create a request ID for each request
 	router.Use(Logger) // Log API request calls using custom logger function
 
+	ApiManager.Mount(router)
+
 	router.Get("/ws", func(w http.ResponseWriter, r *http.Request) {
-		if webSocketHandler.Upgrade(w, r) != nil {
+		if WebSocketManager.Upgrade(w, r) != nil {
 			//nolint
 			w.Write([]byte("unable to upgrade your connection to a websocket"))
 		}

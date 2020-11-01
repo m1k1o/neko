@@ -26,7 +26,7 @@ func (a *ClipboardData) Render(w http.ResponseWriter, r *http.Request) error {
 
 func (h *RoomHandler) ClipboardRead(w http.ResponseWriter, r *http.Request) {
 	// TODO: error check?
-	text := h.remote.ReadClipboard()
+	text := h.desktop.ReadClipboard()
 
 	render.JSON(w, r, ClipboardData{
 		Text: text,
@@ -41,7 +41,7 @@ func (h *RoomHandler) ClipboardWrite(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// TODO: error check?
-	h.remote.WriteClipboard(data.Text)
+	h.desktop.WriteClipboard(data.Text)
 
 	w.WriteHeader(http.StatusNoContent)
 }

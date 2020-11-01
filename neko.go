@@ -12,6 +12,7 @@ import (
 	"demodesk/neko/internal/webrtc"
 	"demodesk/neko/internal/session"
 	"demodesk/neko/internal/websocket"
+	"demodesk/neko/internal/api"
 	"demodesk/neko/internal/http"
 
 	"github.com/rs/zerolog"
@@ -116,6 +117,7 @@ type Neko struct {
 	webRTCManager     *webrtc.WebRTCManagerCtx
 	sessionManager    *session.SessionManagerCtx
 	webSocketManager  *websocket.WebSocketManagerCtx
+	apiManager        *api.ApiManagerCtx
 	server            *http.ServerCtx
 }
 
@@ -155,8 +157,16 @@ func (neko *Neko) Start() {
 	)
 	neko.webSocketManager.Start()
 
+	neko.apiManager = api.New(
+		neko.sessionManager,
+		neko.desktopManager,
+		neko.captureManager,
+		neko.Configs.Server,
+	)
+
 	neko.server = http.New(
 		neko.webSocketManager,
+		neko.apiManager,
 		neko.Configs.Server,
 	)
 	neko.server.Start()

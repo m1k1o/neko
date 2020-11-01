@@ -8,15 +8,14 @@ import (
 	"demodesk/neko/internal/api/member"
 	"demodesk/neko/internal/api/room"
 	"demodesk/neko/internal/types"
-	"demodesk/neko/internal/types/config"
+	"demodesk/neko/internal/config"
 	"demodesk/neko/internal/api/utils"
 )
 
-type API struct {
-	sessions   types.SessionManager
-	remote     types.RemoteManager
-	broadcast  types.BroadcastManager
-	websocket  types.WebSocketHandler
+type ApiManagerCtx struct {
+	sessions  types.SessionManager
+	desktop   types.DesktopManager
+	capture   types.CaptureManager
 }
 
 var AdminToken []byte
@@ -24,27 +23,25 @@ var UserToken []byte
 
 func New(
 	sessions types.SessionManager,
-	remote types.RemoteManager,
-	broadcast types.BroadcastManager,
-	websocket types.WebSocketHandler,
+	desktop types.DesktopManager,
+	capture types.CaptureManager,
 	conf *config.Server,
-) *API {
+) *ApiManagerCtx {
 	AdminToken = []byte(conf.AdminToken)
 	UserToken = []byte(conf.UserToken)
 
-	return &API{
+	return &ApiManagerCtx{
 		sessions:   sessions,
-		remote:     remote,
-		broadcast:  broadcast,
-		websocket:  websocket,
+		desktop:    desktop,
+		capture:    capture,
 	}
 }
 
-func (a *API) Mount(r *chi.Mux) {
-	memberHandler := member.New(a.sessions, a.websocket)
+func (a *ApiManagerCtx) Mount(r *chi.Mux) {
+	memberHandler := member.New(a.sessions)
 	r.Mount("/member", memberHandler.Router(UsersOnly, AdminsOnly))
 
-	roomHandler := room.New(a.sessions, a.remote, a.broadcast, a.websocket)
+	roomHandler := room.New(a.sessions, a.desktop, a.capture)
 	r.Mount("/room", roomHandler.Router(UsersOnly, AdminsOnly))
 }
 
