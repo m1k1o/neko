@@ -1,4 +1,4 @@
-package websocket
+package handler
 
 import (
 	"strings"
@@ -8,7 +8,7 @@ import (
 	"demodesk/neko/internal/types/message"
 )
 
-func (h *MessageHandler) adminLock(session types.Session) error {
+func (h *MessageHandlerCtx) adminLock(session types.Session) error {
 	if !session.Admin() {
 		h.logger.Debug().Msg("user not admin")
 		return nil
@@ -33,7 +33,7 @@ func (h *MessageHandler) adminLock(session types.Session) error {
 	return nil
 }
 
-func (h *MessageHandler) adminUnlock(session types.Session) error {
+func (h *MessageHandlerCtx) adminUnlock(session types.Session) error {
 	if !session.Admin() {
 		h.logger.Debug().Msg("user not admin")
 		return nil
@@ -58,7 +58,7 @@ func (h *MessageHandler) adminUnlock(session types.Session) error {
 	return nil
 }
 
-func (h *MessageHandler) adminControl(session types.Session) error {
+func (h *MessageHandlerCtx) adminControl(session types.Session) error {
 	if !session.Admin() {
 		h.logger.Debug().Msg("user not admin")
 		return nil
@@ -91,7 +91,7 @@ func (h *MessageHandler) adminControl(session types.Session) error {
 	return nil
 }
 
-func (h *MessageHandler) adminRelease(session types.Session) error {
+func (h *MessageHandlerCtx) adminRelease(session types.Session) error {
 	if !session.Admin() {
 		h.logger.Debug().Msg("user not admin")
 		return nil
@@ -124,7 +124,7 @@ func (h *MessageHandler) adminRelease(session types.Session) error {
 	return nil
 }
 
-func (h *MessageHandler) adminGive(session types.Session, payload *message.Admin) error {
+func (h *MessageHandlerCtx) adminGive(session types.Session, payload *message.Admin) error {
 	if !session.Admin() {
 		h.logger.Debug().Msg("user not admin")
 		return nil
@@ -153,7 +153,7 @@ func (h *MessageHandler) adminGive(session types.Session, payload *message.Admin
 	return nil
 }
 
-func (h *MessageHandler) adminMute(session types.Session, payload *message.Admin) error {
+func (h *MessageHandlerCtx) adminMute(session types.Session, payload *message.Admin) error {
 	if !session.Admin() {
 		h.logger.Debug().Msg("user not admin")
 		return nil
@@ -185,7 +185,7 @@ func (h *MessageHandler) adminMute(session types.Session, payload *message.Admin
 	return nil
 }
 
-func (h *MessageHandler) adminUnmute(session types.Session, payload *message.Admin) error {
+func (h *MessageHandlerCtx) adminUnmute(session types.Session, payload *message.Admin) error {
 	if !session.Admin() {
 		h.logger.Debug().Msg("user not admin")
 		return nil
@@ -212,7 +212,7 @@ func (h *MessageHandler) adminUnmute(session types.Session, payload *message.Adm
 	return nil
 }
 
-func (h *MessageHandler) adminKick(session types.Session, payload *message.Admin) error {
+func (h *MessageHandlerCtx) adminKick(session types.Session, payload *message.Admin) error {
 	if !session.Admin() {
 		h.logger.Debug().Msg("user not admin")
 		return nil
@@ -246,7 +246,7 @@ func (h *MessageHandler) adminKick(session types.Session, payload *message.Admin
 	return nil
 }
 
-func (h *MessageHandler) adminBan(session types.Session, payload *message.Admin) error {
+func (h *MessageHandlerCtx) adminBan(session types.Session, payload *message.Admin) error {
 	if !session.Admin() {
 		h.logger.Debug().Msg("user not admin")
 		return nil

@@ -28,14 +28,22 @@ type SignalAnswer struct {
 }
 
 type MembersList struct {
-	Event    string          `json:"event"`
-	Memebers []*types.Member `json:"members"`
+	Event    string              `json:"event"`
+	Memebers []*MembersListEntry `json:"members"`
+}
+
+type MembersListEntry struct {
+	ID    string `json:"id"`
+	Name  string `json:"displayname"`
+	Admin bool   `json:"admin"`
+	Muted bool   `json:"muted"`
 }
 
 type Member struct {
 	Event string `json:"event"`
-	*types.Member
+	Member *MembersListEntry
 }
+
 type MemberDisconnected struct {
 	Event string `json:"event"`
 	ID    string `json:"id"`

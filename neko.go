@@ -6,13 +6,13 @@ import (
 	"os/signal"
 	"runtime"
 
-	"demodesk/neko/internal/broadcast"
-	"demodesk/neko/internal/http"
-	"demodesk/neko/internal/remote"
-	"demodesk/neko/internal/session"
-	"demodesk/neko/internal/types/config"
+	"demodesk/neko/internal/config"
+	"demodesk/neko/internal/desktop"
+	"demodesk/neko/internal/capture"
 	"demodesk/neko/internal/webrtc"
+	"demodesk/neko/internal/session"
 	"demodesk/neko/internal/websocket"
+	"demodesk/neko/internal/http"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -61,10 +61,9 @@ func init() {
 		},
 		Configs: &Configs{
 			Root:      &config.Root{},
-			Server:    &config.Server{},
-			Remote:    &config.Remote{},
-			Broadcast: &config.Broadcast{},
+			Capture:   &config.Capture{},
 			WebRTC:    &config.WebRTC{},
+			Server:    &config.Server{},
 			WebSocket: &config.WebSocket{},
 		},
 	}
@@ -101,10 +100,9 @@ func (i *Version) Details() string {
 
 type Configs struct {
 	Root      *config.Root
-	Remote    *config.Remote
-	Broadcast *config.Broadcast
-	Server    *config.Server
+	Capture   *config.Capture
 	WebRTC    *config.WebRTC
+	Server    *config.Server
 	WebSocket *config.WebSocket
 }
 
@@ -112,13 +110,13 @@ type Neko struct {
 	Version   *Version
 	Configs   *Configs
 
-	logger           zerolog.Logger
-	server           *http.Server
-	sessionManager   *session.SessionManager
-	remoteManager    *remote.RemoteManager
-	broadcastManager *broadcast.BroadcastManager
-	webRTCManager    *webrtc.WebRTCManager
-	webSocketHandler *websocket.WebSocketHandler
+	logger            zerolog.Logger
+	desktopManager    *desktop.DesktopManagerCtx
+	captureManager    *capture.CaptureManagerCtx
+	webRTCManager     *webrtc.WebRTCManagerCtx
+	sessionManager    *session.SessionManagerCtx
+	webSocketManager  *websocket.WebSocketManagerCtx
+	server            *http.ServerCtx
 }
 
 func (neko *Neko) Preflight() {
@@ -126,51 +124,55 @@ func (neko *Neko) Preflight() {
 }
 
 func (neko *Neko) Start() {
-	neko.broadcastManager = broadcast.New(
-		neko.Configs.Remote,
-		neko.Configs.Broadcast,
+	neko.desktopManager = desktop.New(
+		neko.Configs.Capture.Display,
 	)
+	neko.desktopManager.Start()
 
-	neko.remoteManager = remote.New(
-		neko.Configs.Remote,
-		neko.broadcastManager,
+	neko.captureManager = capture.New(
+		neko.desktopManager,
+		neko.Configs.Capture,
 	)
-	neko.remoteManager.Start()
+	neko.captureManager.Start()
 
 	neko.webRTCManager = webrtc.New(
-		neko.remoteManager,
+		neko.desktopManager,
+		neko.captureManager,
 		neko.Configs.WebRTC,
 	)
 	neko.webRTCManager.Start()
 
 	neko.sessionManager = session.New(
-		neko.remoteManager,
+		neko.captureManager,
 	)
 
-	neko.webSocketHandler = websocket.New(
+	neko.webSocketManager = websocket.New(
 		neko.sessionManager,
-		neko.remoteManager,
-		neko.broadcastManager,
+		neko.desktopManager,
+		neko.captureManager,
 		neko.webRTCManager,
 		neko.Configs.WebSocket,
 	)
-	neko.webSocketHandler.Start()
+	neko.webSocketManager.Start()
 
 	neko.server = http.New(
-		neko.sessionManager,
-		neko.remoteManager,
-		neko.broadcastManager,
-		neko.webSocketHandler,
+		neko.webSocketManager,
 		neko.Configs.Server,
 	)
 	neko.server.Start()
 }
 
 func (neko *Neko) Shutdown() {
-	if err := neko.remoteManager.Shutdown(); err != nil {
-		neko.logger.Err(err).Msg("remote manager shutdown with an error")
+	if err := neko.desktopManager.Shutdown(); err != nil {
+		neko.logger.Err(err).Msg("desktop manager shutdown with an error")
 	} else {
-		neko.logger.Debug().Msg("remote manager shutdown")
+		neko.logger.Debug().Msg("desktop manager shutdown")
+	}
+
+	if err := neko.captureManager.Shutdown(); err != nil {
+		neko.logger.Err(err).Msg("capture manager shutdown with an error")
+	} else {
+		neko.logger.Debug().Msg("capture manager shutdown")
 	}
 
 	if err := neko.webRTCManager.Shutdown(); err != nil {
@@ -179,10 +181,10 @@ func (neko *Neko) Shutdown() {
 		neko.logger.Debug().Msg("webrtc manager shutdown")
 	}
 
-	if err := neko.webSocketHandler.Shutdown(); err != nil {
-		neko.logger.Err(err).Msg("websocket handler shutdown with an error")
+	if err := neko.webSocketManager.Shutdown(); err != nil {
+		neko.logger.Err(err).Msg("websocket manager shutdown with an error")
 	} else {
-		neko.logger.Debug().Msg("websocket handler shutdown")
+		neko.logger.Debug().Msg("websocket manager shutdown")
 	}
 
 	if err := neko.server.Shutdown(); err != nil {

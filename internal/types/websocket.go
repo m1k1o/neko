@@ -8,7 +8,7 @@ type WebSocket interface {
 	Destroy() error
 }
 
-type WebSocketHandler interface {
+type WebSocketManager interface {
 	Start()
 	Shutdown() error
 	Upgrade(w http.ResponseWriter, r *http.Request) error

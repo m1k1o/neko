@@ -6,15 +6,15 @@ import (
 	"strconv"
 
 	"github.com/pion/webrtc/v2"
-
-	"demodesk/neko/internal/types"
 )
 
-const OP_MOVE = 0x01
-const OP_SCROLL = 0x02
-const OP_KEY_DOWN = 0x03
-const OP_KEY_UP = 0x04
-const OP_KEY_CLK = 0x05
+const (
+	OP_MOVE = 0x01
+	OP_SCROLL = 0x02
+	OP_KEY_DOWN = 0x03
+	OP_KEY_UP = 0x04
+	OP_KEY_CLK = 0x05
+)
 
 type PayloadHeader struct {
 	Event  uint8
@@ -38,11 +38,7 @@ type PayloadKey struct {
 	Key uint64
 }
 
-func (manager *WebRTCManager) handle(session types.Session, msg webrtc.DataChannelMessage) error {
-	if !session.IsHost() {
-		return nil
-	}
-
+func (manager *WebRTCManagerCtx) handle(msg webrtc.DataChannelMessage) error {
 	buffer := bytes.NewBuffer(msg.Data)
 	header := &PayloadHeader{}
 	hbytes := make([]byte, 3)
@@ -64,7 +60,7 @@ func (manager *WebRTCManager) handle(session types.Session, msg webrtc.DataChann
 			return err
 		}
 
-		manager.remote.Move(int(payload.X), int(payload.Y))
+		manager.desktop.Move(int(payload.X), int(payload.Y))
 	case OP_SCROLL:
 		payload := &PayloadScroll{}
 		if err := binary.Read(buffer, binary.LittleEndian, payload); err != nil {
@@ -77,7 +73,7 @@ func (manager *WebRTCManager) handle(session types.Session, msg webrtc.DataChann
 			Str("y", strconv.Itoa(int(payload.Y))).
 			Msg("scroll")
 
-		manager.remote.Scroll(int(payload.X), int(payload.Y))
+		manager.desktop.Scroll(int(payload.X), int(payload.Y))
 	case OP_KEY_DOWN:
 		payload := &PayloadKey{}
 		if err := binary.Read(buffer, binary.LittleEndian, payload); err != nil {
@@ -85,7 +81,7 @@ func (manager *WebRTCManager) handle(session types.Session, msg webrtc.DataChann
 		}
 
 		if payload.Key < 8 {
-			err := manager.remote.ButtonDown(int(payload.Key))
+			err := manager.desktop.ButtonDown(int(payload.Key))
 			if err != nil {
 				manager.logger.Warn().Err(err).Msg("button down failed")
 				return nil
@@ -93,7 +89,7 @@ func (manager *WebRTCManager) handle(session types.Session, msg webrtc.DataChann
 
 			manager.logger.Debug().Msgf("button down %d", payload.Key)
 		} else {
-			err := manager.remote.KeyDown(uint64(payload.Key))
+			err := manager.desktop.KeyDown(uint64(payload.Key))
 			if err != nil {
 				manager.logger.Warn().Err(err).Msg("key down failed")
 				return nil
@@ -109,7 +105,7 @@ func (manager *WebRTCManager) handle(session types.Session, msg webrtc.DataChann
 		}
 
 		if payload.Key < 8 {
-			err := manager.remote.ButtonUp(int(payload.Key))
+			err := manager.desktop.ButtonUp(int(payload.Key))
 			if err != nil {
 				manager.logger.Warn().Err(err).Msg("button up failed")
 				return nil
@@ -117,7 +113,7 @@ func (manager *WebRTCManager) handle(session types.Session, msg webrtc.DataChann
 
 			manager.logger.Debug().Msgf("button up %d", payload.Key)
 		} else {
-			err := manager.remote.KeyUp(uint64(payload.Key))
+			err := manager.desktop.KeyUp(uint64(payload.Key))
 			if err != nil {
 				manager.logger.Warn().Err(err).Msg("key up failed")
 				return nil

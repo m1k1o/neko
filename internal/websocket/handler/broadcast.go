@@ -1,4 +1,4 @@
-package websocket
+package handler
 
 import (
 	"demodesk/neko/internal/types"
@@ -6,13 +6,13 @@ import (
 	"demodesk/neko/internal/types/message"
 )
 
-func (h *MessageHandler) boradcastCreate(session types.Session, payload *message.BroadcastCreate) error {
+func (h *MessageHandlerCtx) boradcastCreate(session types.Session, payload *message.BroadcastCreate) error {
 	if !session.Admin() {
 		h.logger.Debug().Msg("user not admin")
 		return nil
 	}
 
-	h.broadcast.Create(payload.URL)
+	h.capture.StartBroadcast(payload.URL)
 
 	if err := h.boradcastStatus(session); err != nil {
 		return err
@@ -21,13 +21,13 @@ func (h *MessageHandler) boradcastCreate(session types.Session, payload *message
 	return nil
 }
 
-func (h *MessageHandler) boradcastDestroy(session types.Session) error {
+func (h *MessageHandlerCtx) boradcastDestroy(session types.Session) error {
 	if !session.Admin() {
 		h.logger.Debug().Msg("user not admin")
 		return nil
 	}
 
-	h.broadcast.Destroy()
+	h.capture.StopBroadcast()
 
 	if err := h.boradcastStatus(session); err != nil {
 		return err
@@ -36,7 +36,7 @@ func (h *MessageHandler) boradcastDestroy(session types.Session) error {
 	return nil
 }
 
-func (h *MessageHandler) boradcastStatus(session types.Session) error {
+func (h *MessageHandlerCtx) boradcastStatus(session types.Session) error {
 	if !session.Admin() {
 		h.logger.Debug().Msg("user not admin")
 		return nil
@@ -45,8 +45,8 @@ func (h *MessageHandler) boradcastStatus(session types.Session) error {
 	if err := session.Send(
 		message.BroadcastStatus{
 			Event:    event.BORADCAST_STATUS,
-			IsActive: h.broadcast.IsActive(),
-			URL:      h.broadcast.GetUrl(),
+			IsActive: h.capture.IsBoradcasting(),
+			URL:      h.capture.BroadcastUrl(),
 		}); err != nil {
 		h.logger.Warn().Err(err).Msgf("sending event %s has failed", event.BORADCAST_STATUS)
 		return err

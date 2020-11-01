@@ -1,33 +1,38 @@
-package websocket
+package handler
 
 import (
 	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/types/event"
 	"demodesk/neko/internal/types/message"
-	"demodesk/neko/internal/websocket/broadcast"
 )
 
-func (h *MessageHandler) screenSet(session types.Session, payload *message.ScreenResolution) error {
+func (h *MessageHandlerCtx) screenSet(session types.Session, payload *message.ScreenResolution) error {
 	if !session.Admin() {
 		h.logger.Debug().Msg("user not admin")
 		return nil
 	}
 
-	if err := h.remote.ChangeResolution(payload.Width, payload.Height, payload.Rate); err != nil {
+	if err := h.capture.ChangeResolution(payload.Width, payload.Height, payload.Rate); err != nil {
 		h.logger.Warn().Err(err).Msgf("unable to change screen size")
 		return err
 	}
 
-	if err := broadcast.ScreenConfiguration(h.sessions, session.ID(), payload.Width, payload.Height, payload.Rate); err != nil {
-		h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.SCREEN_RESOLUTION)
+	if err := h.sessions.Broadcast(message.ScreenResolution{
+		Event:  event.SCREEN_RESOLUTION,
+		ID:     session.ID(),
+		Width:  payload.Width,
+		Height: payload.Height,
+		Rate:   payload.Rate,
+	}, nil); err != nil {
+		h.logger.Warn().Err(err).Msgf("sending event %s has failed", event.SCREEN_RESOLUTION)
 		return err
 	}
 
 	return nil
 }
 
-func (h *MessageHandler) screenResolution(session types.Session) error {
-	if size := h.remote.GetScreenSize(); size != nil {
+func (h *MessageHandlerCtx) screenResolution(session types.Session) error {
+	if size := h.desktop.GetScreenSize(); size != nil {
 		if err := session.Send(message.ScreenResolution{
 			Event:  event.SCREEN_RESOLUTION,
 			Width:  size.Width,
@@ -42,7 +47,7 @@ func (h *MessageHandler) screenResolution(session types.Session) error {
 	return nil
 }
 
-func (h *MessageHandler) screenConfigurations(session types.Session) error {
+func (h *MessageHandlerCtx) screenConfigurations(session types.Session) error {
 	if !session.Admin() {
 		h.logger.Debug().Msg("user not admin")
 		return nil
@@ -50,7 +55,7 @@ func (h *MessageHandler) screenConfigurations(session types.Session) error {
 
 	if err := session.Send(message.ScreenConfigurations{
 		Event:          event.SCREEN_CONFIGURATIONS,
-		Configurations: h.remote.ScreenConfigurations(),
+		Configurations: h.desktop.ScreenConfigurations(),
 	}); err != nil {
 		h.logger.Warn().Err(err).Msgf("sending event %s has failed", event.SCREEN_CONFIGURATIONS)
 		return err

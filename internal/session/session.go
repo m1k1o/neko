@@ -8,43 +8,43 @@ import (
 	"demodesk/neko/internal/types/message"
 )
 
-type Session struct {
+type SessionCtx struct {
 	logger    zerolog.Logger
 	id        string
 	name      string
 	admin     bool
 	muted     bool
 	connected bool
-	manager   *SessionManager
+	manager   *SessionManagerCtx
 	socket    types.WebSocket
 	peer      types.Peer
 }
 
-func (session *Session) ID() string {
+func (session *SessionCtx) ID() string {
 	return session.id
 }
 
-func (session *Session) Name() string {
+func (session *SessionCtx) Name() string {
 	return session.name
 }
 
-func (session *Session) Admin() bool {
+func (session *SessionCtx) Admin() bool {
 	return session.admin
 }
 
-func (session *Session) Muted() bool {
+func (session *SessionCtx) Muted() bool {
 	return session.muted
 }
 
-func (session *Session) IsHost() bool {
+func (session *SessionCtx) IsHost() bool {
 	return session.manager.host != nil && session.manager.host.ID() == session.ID()
 }
 
-func (session *Session) Connected() bool {
+func (session *SessionCtx) Connected() bool {
 	return session.connected
 }
 
-func (session *Session) Address() string {
+func (session *SessionCtx) Address() string {
 	if session.socket == nil {
 		return ""
 	}
@@ -52,41 +52,33 @@ func (session *Session) Address() string {
 	return session.socket.Address()
 }
 
-func (session *Session) Member() *types.Member {
-	return &types.Member{
-		ID:    session.id,
-		Name:  session.name,
-		Admin: session.admin,
-		Muted: session.muted,
-	}
-}
-
-func (session *Session) SetMuted(muted bool) {
+func (session *SessionCtx) SetMuted(muted bool) {
 	session.muted = muted
 }
 
-func (session *Session) SetName(name string) {
+func (session *SessionCtx) SetName(name string) {
 	session.name = name
 }
 
-func (session *Session) SetSocket(socket types.WebSocket) {
+func (session *SessionCtx) SetSocket(socket types.WebSocket) {
 	session.socket = socket
 }
 
-func (session *Session) SetPeer(peer types.Peer) {
+func (session *SessionCtx) SetPeer(peer types.Peer) {
 	session.peer = peer
 }
 
-func (session *Session) SetConnected() {
+func (session *SessionCtx) SetConnected() {
 	session.connected = true
 	session.manager.emmiter.Emit("connected", session)
 }
 
-func (session *Session) Disconnect(reason string) error {
+func (session *SessionCtx) Disconnect(reason string) error {
 	if session.socket == nil {
 		return nil
 	}
 
+	// TODO: Refcator
 	if err := session.socket.Send(&message.Disconnect{
 		Event:   event.SYSTEM_DISCONNECT,
 		Message: reason,
@@ -97,7 +89,7 @@ func (session *Session) Disconnect(reason string) error {
 	return session.manager.Destroy(session.id)
 }
 
-func (session *Session) Send(v interface{}) error {
+func (session *SessionCtx) Send(v interface{}) error {
 	if session.socket == nil {
 		return nil
 	}
@@ -105,7 +97,7 @@ func (session *Session) Send(v interface{}) error {
 	return session.socket.Send(v)
 }
 
-func (session *Session) SignalAnswer(sdp string) error {
+func (session *SessionCtx) SignalAnswer(sdp string) error {
 	if session.peer == nil {
 		return nil
 	}
@@ -113,7 +105,7 @@ func (session *Session) SignalAnswer(sdp string) error {
 	return session.peer.SignalAnswer(sdp)
 }
 
-func (session *Session) destroy() error {
+func (session *SessionCtx) destroy() error {
 	if session.socket != nil {
 		if err := session.socket.Destroy(); err != nil {
 			return err

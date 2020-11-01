@@ -1,4 +1,4 @@
-package websocket
+package handler
 
 import (
 	"demodesk/neko/internal/types"
@@ -6,7 +6,7 @@ import (
 	"demodesk/neko/internal/types/message"
 )
 
-func (h *MessageHandler) controlRelease(session types.Session) error {
+func (h *MessageHandlerCtx) controlRelease(session types.Session) error {
 	// check if session is host
 	if !session.IsHost() {
 		h.logger.Debug().Str("id", session.ID()).Msg("is not the host")
@@ -30,7 +30,7 @@ func (h *MessageHandler) controlRelease(session types.Session) error {
 	return nil
 }
 
-func (h *MessageHandler) controlRequest(session types.Session) error {
+func (h *MessageHandlerCtx) controlRequest(session types.Session) error {
 	host := h.sessions.GetHost()
 
 	if host == nil {
@@ -69,7 +69,7 @@ func (h *MessageHandler) controlRequest(session types.Session) error {
 	return nil
 }
 
-func (h *MessageHandler) controlGive(session types.Session, payload *message.Control) error {
+func (h *MessageHandlerCtx) controlGive(session types.Session, payload *message.Control) error {
 	// check if session is host
 	if !session.IsHost() {
 		h.logger.Debug().Str("id", session.ID()).Msg("is not the host")
@@ -99,18 +99,18 @@ func (h *MessageHandler) controlGive(session types.Session, payload *message.Con
 	return nil
 }
 
-func (h *MessageHandler) controlClipboard(session types.Session, payload *message.Clipboard) error {
+func (h *MessageHandlerCtx) controlClipboard(session types.Session, payload *message.Clipboard) error {
 	// check if session is host
 	if !session.IsHost() {
 		h.logger.Debug().Str("id", session.ID()).Msg("is not the host")
 		return nil
 	}
 
-	h.remote.WriteClipboard(payload.Text)
+	h.desktop.WriteClipboard(payload.Text)
 	return nil
 }
 
-func (h *MessageHandler) controlKeyboard(session types.Session, payload *message.Keyboard) error {
+func (h *MessageHandlerCtx) controlKeyboard(session types.Session, payload *message.Keyboard) error {
 	// check if session is host
 	if !session.IsHost() {
 		h.logger.Debug().Str("id", session.ID()).Msg("is not the host")
@@ -119,7 +119,7 @@ func (h *MessageHandler) controlKeyboard(session types.Session, payload *message
 
 	// change layout
 	if payload.Layout != nil {
-		h.remote.SetKeyboardLayout(*payload.Layout)
+		h.desktop.SetKeyboardLayout(*payload.Layout)
 	}
 
 	// set num lock
@@ -152,6 +152,6 @@ func (h *MessageHandler) controlKeyboard(session types.Session, payload *message
 		Int("ScrollLock", ScrollLock).
 		Msg("setting keyboard modifiers")
 
-	h.remote.SetKeyboardModifiers(NumLock, CapsLock, ScrollLock)
+	h.desktop.SetKeyboardModifiers(NumLock, CapsLock, ScrollLock)
 	return nil
 }

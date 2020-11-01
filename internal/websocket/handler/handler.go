@@ -1,10 +1,11 @@
-package websocket
+package handler
 
 import (
 	"encoding/json"
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 
 	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/types/event"
@@ -12,40 +13,60 @@ import (
 	"demodesk/neko/internal/utils"
 )
 
-type MessageHandler struct {
+func New(
+	sessions types.SessionManager,
+	desktop types.DesktopManager,
+	capture types.CaptureManager,
+	webrtc types.WebRTCManager,
+) *MessageHandlerCtx {
+	logger := log.With().Str("module", "handler").Logger()
+
+	return &MessageHandlerCtx{
+		logger:    logger,
+		sessions:  sessions,
+		desktop:   desktop,
+		capture:   capture,
+		webrtc:    webrtc,
+		banned:    make(map[string]bool),
+		locked:    false,
+	}
+}
+
+type MessageHandlerCtx struct {
 	logger    zerolog.Logger
 	sessions  types.SessionManager
 	webrtc    types.WebRTCManager
-	remote    types.RemoteManager
-	broadcast types.BroadcastManager
+	desktop   types.DesktopManager
+	capture   types.CaptureManager
 	banned    map[string]bool
 	locked    bool
 }
 
-func (h *MessageHandler) Connected(id string, socket *WebSocket) (bool, string, error) {
+func (h *MessageHandlerCtx) Connected(id string, socket types.WebSocket) (bool, string) {
 	address := socket.Address()
-	if address == "" {
-		h.logger.Debug().Msg("no remote address")
-	} else {
+	if address != "" {
 		ok, banned := h.banned[address]
 		if ok && banned {
 			h.logger.Debug().Str("address", address).Msg("banned")
-			return false, "banned", nil
+			return false, "banned"
 		}
+	} else {
+		h.logger.Debug().Msg("no remote address")
 	}
 
 	if h.locked {
 		session, ok := h.sessions.Get(id)
 		if !ok || !session.Admin() {
 			h.logger.Debug().Msg("server locked")
-			return false, "locked", nil
+			return false, "locked"
 		}
 	}
 
-	return true, "", nil
+	return true, ""
 }
 
-func (h *MessageHandler) Disconnected(id string) error {
+func (h *MessageHandlerCtx) Disconnected(id string) error {
+	// TODO: Refactor.
 	if h.locked && len(h.sessions.Admins()) == 0 {
 		h.locked = false
 	}
@@ -53,7 +74,7 @@ func (h *MessageHandler) Disconnected(id string) error {
 	return h.sessions.Destroy(id)
 }
 
-func (h *MessageHandler) Message(id string, raw []byte) error {
+func (h *MessageHandlerCtx) Message(id string, raw []byte) error {
 	header := message.Message{}
 	if err := json.Unmarshal(raw, &header); err != nil {
 		return err

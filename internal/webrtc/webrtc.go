@@ -12,46 +12,49 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"demodesk/neko/internal/types"
-	"demodesk/neko/internal/types/config"
+	"demodesk/neko/internal/config"
 )
 
-func New(remote types.RemoteManager, config *config.WebRTC) *WebRTCManager {
-	return &WebRTCManager{
+func New(desktop types.DesktopManager, capture types.CaptureManager, config *config.WebRTC) *WebRTCManagerCtx {
+	return &WebRTCManagerCtx{
 		logger:   log.With().Str("module", "webrtc").Logger(),
-		remote:   remote,
+		desktop:  desktop,
+		capture:  capture,
 		config:   config,
 	}
 }
 
-type WebRTCManager struct {
+type WebRTCManagerCtx struct {
 	logger     zerolog.Logger
 	videoTrack *webrtc.Track
 	audioTrack *webrtc.Track
 	videoCodec *webrtc.RTPCodec
 	audioCodec *webrtc.RTPCodec
-	remote     types.RemoteManager
+	desktop    types.DesktopManager
+	capture    types.CaptureManager
 	config     *config.WebRTC
 }
 
-func (manager *WebRTCManager) Start() {
+func (manager *WebRTCManagerCtx) Start() {
 	var err error
-	manager.audioTrack, manager.audioCodec, err = manager.createTrack(manager.remote.AudioCodec())
+
+	manager.audioTrack, manager.audioCodec, err = manager.createTrack(manager.capture.AudioCodec())
 	if err != nil {
 		manager.logger.Panic().Err(err).Msg("unable to create audio track")
 	}
 
-	manager.remote.OnAudioFrame(func(sample types.Sample) {
+	manager.capture.OnAudioFrame(func(sample types.Sample) {
 		if err := manager.audioTrack.WriteSample(media.Sample(sample)); err != nil && err != io.ErrClosedPipe {
 			manager.logger.Warn().Err(err).Msg("audio pipeline failed to write")
 		}
 	})
 
-	manager.videoTrack, manager.videoCodec, err = manager.createTrack(manager.remote.VideoCodec())
+	manager.videoTrack, manager.videoCodec, err = manager.createTrack(manager.capture.VideoCodec())
 	if err != nil {
 		manager.logger.Panic().Err(err).Msg("unable to create video track")
 	}
 
-	manager.remote.OnVideoFrame(func(sample types.Sample) {
+	manager.capture.OnVideoFrame(func(sample types.Sample) {
 		if err := manager.videoTrack.WriteSample(media.Sample(sample)); err != nil && err != io.ErrClosedPipe {
 			manager.logger.Warn().Err(err).Msg("video pipeline failed to write")
 		}
@@ -65,12 +68,12 @@ func (manager *WebRTCManager) Start() {
 		Msgf("webrtc starting")
 }
 
-func (manager *WebRTCManager) Shutdown() error {
+func (manager *WebRTCManagerCtx) Shutdown() error {
 	manager.logger.Info().Msgf("webrtc shutting down")
 	return nil
 }
 
-func (manager *WebRTCManager) CreatePeer(id string, session types.Session) (string, bool, []string, error) {
+func (manager *WebRTCManagerCtx) CreatePeer(session types.Session) (string, bool, []string, error) {
 	configuration := &webrtc.Configuration{
 		ICEServers: []webrtc.ICEServer{
 			{
@@ -134,7 +137,11 @@ func (manager *WebRTCManager) CreatePeer(id string, session types.Session) (stri
 
 	connection.OnDataChannel(func(d *webrtc.DataChannel) {
 		d.OnMessage(func(msg webrtc.DataChannelMessage) {
-			if err = manager.handle(session, msg); err != nil {
+			if !session.IsHost() {
+				return
+			}
+
+			if err = manager.handle(msg); err != nil {
 				manager.logger.Warn().Err(err).Msg("data handle failed")
 			}
 		})
@@ -148,21 +155,19 @@ func (manager *WebRTCManager) CreatePeer(id string, session types.Session) (stri
 		switch state {
 		case webrtc.PeerConnectionStateDisconnected:
 		case webrtc.PeerConnectionStateFailed:
-			manager.logger.Info().Str("id", id).Msg("peer disconnected")
+			manager.logger.Info().Str("id", session.ID()).Msg("peer disconnected")
 			if err:= session.Disconnect("peer connection state failed"); err != nil {
 				manager.logger.Warn().Err(err).Msg("error while disconnecting session")
 			}
 		case webrtc.PeerConnectionStateConnected:
-			manager.logger.Info().Str("id", id).Msg("peer connected")
+			manager.logger.Info().Str("id", session.ID()).Msg("peer connected")
 			session.SetConnected()
 		}
 	})
 
-	session.SetPeer(&Peer{
-		id:            id,
+	session.SetPeer(&PeerCtx{
 		api:           api,
 		engine:        &engine,
-		manager:       manager,
 		settings:      &settings,
 		connection:    connection,
 		configuration: configuration,
@@ -171,7 +176,7 @@ func (manager *WebRTCManager) CreatePeer(id string, session types.Session) (stri
 	return description.SDP, manager.config.ICELite, manager.config.ICEServers, nil
 }
 
-func (m *WebRTCManager) createTrack(codecName string) (*webrtc.Track, *webrtc.RTPCodec, error) {
+func (m *WebRTCManagerCtx) createTrack(codecName string) (*webrtc.Track, *webrtc.RTPCodec, error) {
 	var codec *webrtc.RTPCodec
 	switch codecName {
 	case webrtc.VP8:

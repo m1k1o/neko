@@ -1,14 +1,9 @@
 package types
 
-type Sample struct {
-	Data    []byte
-	Samples uint32
-}
-
 type WebRTCManager interface {
 	Start()
 	Shutdown() error
-	CreatePeer(id string, session Session) (string, bool, []string, error)
+	CreatePeer(session Session) (string, bool, []string, error)
 }
 
 type Peer interface {

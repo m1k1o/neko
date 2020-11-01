@@ -1,4 +1,4 @@
-package websocket
+package handler
 
 import (
 	"demodesk/neko/internal/types"
@@ -6,8 +6,8 @@ import (
 	"demodesk/neko/internal/types/message"
 )
 
-func (h *MessageHandler) signalProvide(session types.Session) error {
-	sdp, lite, ice, err := h.webrtc.CreatePeer(session.ID(), session)
+func (h *MessageHandlerCtx) signalProvide(session types.Session) error {
+	sdp, lite, ice, err := h.webrtc.CreatePeer(session)
 	if err != nil {
 		return err
 	}
@@ -25,7 +25,7 @@ func (h *MessageHandler) signalProvide(session types.Session) error {
 	return nil
 }
 
-func (h *MessageHandler) signalAnswer(session types.Session, payload *message.SignalAnswer) error {
+func (h *MessageHandlerCtx) signalAnswer(session types.Session, payload *message.SignalAnswer) error {
 	session.SetName(payload.DisplayName)
 
 	if err := session.SignalAnswer(payload.SDP); err != nil {

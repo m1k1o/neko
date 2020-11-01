@@ -1,4 +1,4 @@
-package websocket
+package handler
 
 import (
 	"demodesk/neko/internal/types"
@@ -6,7 +6,7 @@ import (
 	"demodesk/neko/internal/types/message"
 )
 
-func (h *MessageHandler) SessionCreated(session types.Session) error {
+func (h *MessageHandlerCtx) SessionCreated(session types.Session) error {
 	// send sdp and id over to client
 	if err := h.signalProvide(session); err != nil {
 		return err
@@ -27,11 +27,22 @@ func (h *MessageHandler) SessionCreated(session types.Session) error {
 	return nil
 }
 
-func (h *MessageHandler) SessionConnected(session types.Session) error {
+func (h *MessageHandlerCtx) SessionConnected(session types.Session) error {
+	// TODO: Refactor.
+	members := []*message.MembersListEntry{}
+	for _, session := range h.sessions.Members() {
+		members = append(members, &message.MembersListEntry{
+			ID:    session.ID(),
+			Name:  session.Name(),
+			Admin: session.Admin(),
+			Muted: session.Muted(),
+		})
+	}
+
 	// send list of members to session
 	if err := session.Send(message.MembersList{
 		Event:    event.MEMBER_LIST,
-		Memebers: h.sessions.Members(),
+		Memebers: members,
 	}); err != nil {
 		h.logger.Warn().Str("id", session.ID()).Err(err).Msgf("sending event %s has failed", event.MEMBER_LIST)
 		return err
@@ -58,7 +69,12 @@ func (h *MessageHandler) SessionConnected(session types.Session) error {
 	if err := h.sessions.Broadcast(
 		message.Member{
 			Event:  event.MEMBER_CONNECTED,
-			Member: session.Member(),
+			Member: &message.MembersListEntry{
+				ID:    session.ID(),
+				Name:  session.Name(),
+				Admin: session.Admin(),
+				Muted: session.Muted(),
+			},
 		}, nil); err != nil {
 		h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.CONTROL_RELEASE)
 		return err
@@ -67,7 +83,7 @@ func (h *MessageHandler) SessionConnected(session types.Session) error {
 	return nil
 }
 
-func (h *MessageHandler) SessionDestroyed(id string) error {
+func (h *MessageHandlerCtx) SessionDestroyed(id string) error {
 	// clear host if exists
 	host := h.sessions.GetHost()
 	if host != nil && host.ID() == id {

@@ -5,7 +5,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"demodesk/neko"
-	"demodesk/neko/internal/types/config"
+	"demodesk/neko/internal/config"
 )
 
 func init() {
@@ -17,10 +17,9 @@ func init() {
 	}
 
 	configs := []config.Config{
+		neko.Service.Configs.Capture,
 		neko.Service.Configs.Server,
 		neko.Service.Configs.WebRTC,
-		neko.Service.Configs.Remote,
-		neko.Service.Configs.Broadcast,
 		neko.Service.Configs.WebSocket,
 	}
 

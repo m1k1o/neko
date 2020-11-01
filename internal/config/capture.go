@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-type Remote struct {
+type Capture struct {
 	Display      string
 	Device       string
 	AudioCodec   string
@@ -19,9 +19,10 @@ type Remote struct {
 	ScreenWidth  int
 	ScreenHeight int
 	ScreenRate   int
+	BroadcastPipeline string
 }
 
-func (Remote) Init(cmd *cobra.Command) error {
+func (Capture) Init(cmd *cobra.Command) error {
 	cmd.PersistentFlags().String("display", ":99.0", "XDisplay to capture")
 	if err := viper.BindPFlag("display", cmd.PersistentFlags().Lookup("display")); err != nil {
 		return err
@@ -84,10 +85,16 @@ func (Remote) Init(cmd *cobra.Command) error {
 		return err
 	}
 
+	// broadcast
+	cmd.PersistentFlags().String("broadcast_pipeline", "", "audio video codec parameters to use for broadcasting")
+	if err := viper.BindPFlag("broadcast_pipeline", cmd.PersistentFlags().Lookup("broadcast_pipeline")); err != nil {
+		return err
+	}
+
 	return nil
 }
 
-func (s *Remote) Set() {
+func (s *Capture) Set() {
 	videoCodec := webrtc.VP8
 	if viper.GetBool("vp8") {
 		videoCodec = webrtc.VP8
@@ -133,4 +140,6 @@ func (s *Remote) Set() {
 			s.ScreenRate = int(rate)
 		}
 	}
+
+	s.BroadcastPipeline = viper.GetString("broadcast_pipeline")
 }

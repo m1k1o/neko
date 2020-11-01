@@ -11,36 +11,25 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"demodesk/neko/internal/api"
-	"demodesk/neko/internal/http/endpoint"
 	"demodesk/neko/internal/types"
-	"demodesk/neko/internal/types/config"
+	"demodesk/neko/internal/config"
+	"demodesk/neko/internal/http/endpoint"
 )
 
-type Server struct {
+type ServerCtx struct {
 	logger zerolog.Logger
 	router *chi.Mux
 	http   *http.Server
 	conf   *config.Server
 }
 
-func New(
-	sessions types.SessionManager,
-	remote types.RemoteManager,
-	broadcast types.BroadcastManager,
-	webSocketHandler types.WebSocketHandler,
-	conf *config.Server,
-) *Server {
+func New(webSocketHandler types.WebSocketManager, conf *config.Server) *ServerCtx {
 	logger := log.With().Str("module", "http").Logger()
 
 	router := chi.NewRouter()
 	router.Use(middleware.Recoverer) // Recover from panics without crashing server
 	router.Use(middleware.RequestID) // Create a request ID for each request
 	router.Use(Logger) // Log API request calls using custom logger function
-
-	// Mount REST API
-	apiManager := api.New(sessions, remote, broadcast, webSocketHandler, conf)
-	apiManager.Mount(router)
 
 	router.Get("/ws", func(w http.ResponseWriter, r *http.Request) {
 		if webSocketHandler.Upgrade(w, r) != nil {
@@ -70,7 +59,7 @@ func New(
 		Handler: router,
 	}
 
-	return &Server{
+	return &ServerCtx{
 		logger: logger,
 		router: router,
 		http:   http,
@@ -78,7 +67,7 @@ func New(
 	}
 }
 
-func (s *Server) Start() {
+func (s *ServerCtx) Start() {
 	if s.conf.Cert != "" && s.conf.Key != "" {
 		go func() {
 			if err := s.http.ListenAndServeTLS(s.conf.Cert, s.conf.Key); err != http.ErrServerClosed {
@@ -96,6 +85,6 @@ func (s *Server) Start() {
 	}
 }
 
-func (s *Server) Shutdown() error {
+func (s *ServerCtx) Shutdown() error {
 	return s.http.Shutdown(context.Background())
 }
