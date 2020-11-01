@@ -6,14 +6,16 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"demodesk/neko/internal/types"
+	"demodesk/neko/internal/config"
 	"demodesk/neko/internal/utils"
 )
 
-func New(capture types.CaptureManager) *SessionManagerCtx {
+func New(capture types.CaptureManager, config *config.Session) *SessionManagerCtx {
 	return &SessionManagerCtx{
 		logger:  log.With().Str("module", "session").Logger(),
 		host:    nil,
 		capture: capture,
+		config:  config,
 		members: make(map[string]*SessionCtx),
 		emmiter: events.New(),
 	}
@@ -23,6 +25,7 @@ type SessionManagerCtx struct {
 	logger  zerolog.Logger
 	host    types.Session
 	capture types.CaptureManager
+	config  *config.Session
 	members map[string]*SessionCtx
 	emmiter events.EventEmmiter
 }

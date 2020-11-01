@@ -5,13 +5,12 @@ import (
 	"github.com/spf13/viper"
 )
 
-type WebSocket struct {
+type Session struct {
 	Password      string
 	AdminPassword string
-	Proxy         bool
 }
 
-func (WebSocket) Init(cmd *cobra.Command) error {
+func (Session) Init(cmd *cobra.Command) error {
 	cmd.PersistentFlags().String("password", "neko", "password for connecting to stream")
 	if err := viper.BindPFlag("password", cmd.PersistentFlags().Lookup("password")); err != nil {
 		return err
@@ -22,16 +21,10 @@ func (WebSocket) Init(cmd *cobra.Command) error {
 		return err
 	}
 
-	cmd.PersistentFlags().Bool("proxy", false, "enable reverse proxy mode")
-	if err := viper.BindPFlag("proxy", cmd.PersistentFlags().Lookup("proxy")); err != nil {
-		return err
-	}
-
 	return nil
 }
 
-func (s *WebSocket) Set() {
+func (s *Session) Set() {
 	s.Password = viper.GetString("password")
 	s.AdminPassword = viper.GetString("password_admin")
-	s.Proxy = viper.GetBool("proxy")
 }

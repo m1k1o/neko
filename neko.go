@@ -64,8 +64,8 @@ func init() {
 			Root:      &config.Root{},
 			Capture:   &config.Capture{},
 			WebRTC:    &config.WebRTC{},
+			Session:   &config.Session{},
 			Server:    &config.Server{},
-			WebSocket: &config.WebSocket{},
 		},
 	}
 }
@@ -103,8 +103,8 @@ type Configs struct {
 	Root      *config.Root
 	Capture   *config.Capture
 	WebRTC    *config.WebRTC
+	Session   *config.Session
 	Server    *config.Server
-	WebSocket *config.WebSocket
 }
 
 type Neko struct {
@@ -146,6 +146,7 @@ func (neko *Neko) Start() {
 
 	neko.sessionManager = session.New(
 		neko.captureManager,
+		neko.Configs.Session,
 	)
 
 	neko.webSocketManager = websocket.New(
@@ -153,7 +154,6 @@ func (neko *Neko) Start() {
 		neko.desktopManager,
 		neko.captureManager,
 		neko.webRTCManager,
-		neko.Configs.WebSocket,
 	)
 	neko.webSocketManager.Start()
 

@@ -1,7 +1,6 @@
 package websocket
 
 import (
-	"fmt"
 	"net/http"
 	"time"
 
@@ -14,8 +13,6 @@ import (
 	"demodesk/neko/internal/types/message"
 
 	"demodesk/neko/internal/types"
-	"demodesk/neko/internal/config"
-	"demodesk/neko/internal/utils"
 )
 
 func New(
@@ -23,13 +20,11 @@ func New(
 	desktop types.DesktopManager,
 	capture types.CaptureManager,
 	webrtc types.WebRTCManager,
-	conf *config.WebSocket,
 ) *WebSocketManagerCtx {
 	logger := log.With().Str("module", "websocket").Logger()
 
 	return &WebSocketManagerCtx{
 		logger:    logger,
-		conf:      conf,
 		sessions:  sessions,
 		desktop:   desktop,
 		upgrader:  websocket.Upgrader{
@@ -49,7 +44,6 @@ type WebSocketManagerCtx struct {
 	upgrader  websocket.Upgrader
 	sessions  types.SessionManager
 	desktop   types.DesktopManager
-	conf      *config.WebSocket
 	handler   *handler.MessageHandlerCtx
 	shutdown  chan bool
 }
@@ -80,8 +74,10 @@ func (ws *WebSocketManagerCtx) Start() {
 	})
 
 	go func() {
+		ws.logger.Info().Msg("clipboard loop started")
+
 		defer func() {
-			ws.logger.Info().Msg("shutdown")
+			ws.logger.Info().Msg("clipboard loop stopped")
 		}()
 
 		current := ws.desktop.ReadClipboard()
@@ -131,7 +127,7 @@ func (ws *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Request) e
 		return err
 	}
 
-	id, ip, admin, err := ws.authenticate(r)
+	id, ip, admin, err := ws.sessions.Authenticate(r)
 	if err != nil {
 		ws.logger.Warn().Err(err).Msg("authentication failed")
 
@@ -184,35 +180,6 @@ func (ws *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Request) e
 
 	ws.handle(connection, id)
 	return nil
-}
-
-// TODO: Refactor
-func (ws *WebSocketManagerCtx) authenticate(r *http.Request) (string, string, bool, error) {
-	ip := r.RemoteAddr
-
-	if ws.conf.Proxy {
-		ip = utils.ReadUserIP(r)
-	}
-
-	id, err := utils.NewUID(32)
-	if err != nil {
-		return "", ip, false, err
-	}
-
-	passwords, ok := r.URL.Query()["password"]
-	if !ok || len(passwords[0]) < 1 {
-		return "", ip, false, fmt.Errorf("no password provided")
-	}
-
-	if passwords[0] == ws.conf.AdminPassword {
-		return id, ip, true, nil
-	}
-
-	if passwords[0] == ws.conf.Password {
-		return id, ip, false, nil
-	}
-
-	return "", ip, false, fmt.Errorf("invalid password: %s", passwords[0])
 }
 
 func (ws *WebSocketManagerCtx) handle(connection *websocket.Conn, id string) {

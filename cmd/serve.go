@@ -18,9 +18,9 @@ func init() {
 
 	configs := []config.Config{
 		neko.Service.Configs.Capture,
-		neko.Service.Configs.Server,
 		neko.Service.Configs.WebRTC,
-		neko.Service.Configs.WebSocket,
+		neko.Service.Configs.Session,
+		neko.Service.Configs.Server,
 	}
 
 	cobra.OnInitialize(func() {

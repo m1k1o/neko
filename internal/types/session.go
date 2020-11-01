@@ -1,5 +1,7 @@
 package types
 
+import "net/http"
+
 type Session interface {
 	ID() string
 	Name() string
@@ -38,4 +40,7 @@ type SessionManager interface {
 	OnDestroy(listener func(id string))
 	OnCreated(listener func(session Session))
 	OnConnected(listener func(session Session))
+
+	// auth
+	Authenticate(r *http.Request) (string, string, bool, error)
 }
