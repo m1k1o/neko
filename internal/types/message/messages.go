@@ -76,17 +76,6 @@ type ControlTarget struct {
 	Target string `json:"target"`
 }
 
-type EmoteReceive struct {
-	Event string `json:"event"`
-	Emote string `json:"emote"`
-}
-
-type EmoteSend struct {
-	Event string `json:"event"`
-	ID    string `json:"id"`
-	Emote string `json:"emote"`
-}
-
 type Admin struct {
 	Event string `json:"event"`
 	ID    string `json:"id"`
