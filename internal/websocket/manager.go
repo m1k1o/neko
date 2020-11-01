@@ -231,18 +231,18 @@ func (ws *WebSocketManagerCtx) handle(connection *websocket.Conn, id string) {
 
 		for {
 			_, raw, err := connection.ReadMessage()
-			if err == nil {
-				bytes <- raw
-				continue
+			if err != nil {
+				if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+					ws.logger.Warn().Err(err).Msg("read message error")
+				} else {
+					ws.logger.Debug().Err(err).Msg("read message error")
+				}
+	
+				close(cancel)
+				break
 			}
 
-			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				ws.logger.Warn().Err(err).Msg("read message error")
-			} else {
-				ws.logger.Debug().Err(err).Msg("read message error")
-			}
-
-			close(cancel)
+			bytes <- raw
 		}
 	}()
 

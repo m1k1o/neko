@@ -41,7 +41,10 @@ type MembersListEntry struct {
 
 type Member struct {
 	Event string `json:"event"`
-	Member *MembersListEntry
+	ID    string `json:"id"`
+	Name  string `json:"displayname"`
+	Admin bool   `json:"admin"`
+	Muted bool   `json:"muted"`
 }
 
 type MemberDisconnected struct {

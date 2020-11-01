@@ -69,12 +69,10 @@ func (h *MessageHandlerCtx) SessionConnected(session types.Session) error {
 	if err := h.sessions.Broadcast(
 		message.Member{
 			Event:  event.MEMBER_CONNECTED,
-			Member: &message.MembersListEntry{
-				ID:    session.ID(),
-				Name:  session.Name(),
-				Admin: session.Admin(),
-				Muted: session.Muted(),
-			},
+			ID:    session.ID(),
+			Name:  session.Name(),
+			Admin: session.Admin(),
+			Muted: session.Muted(),
 		}, nil); err != nil {
 		h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.CONTROL_RELEASE)
 		return err
