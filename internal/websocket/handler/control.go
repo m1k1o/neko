@@ -7,17 +7,14 @@ import (
 )
 
 func (h *MessageHandlerCtx) controlRelease(session types.Session) error {
-	// check if session is host
 	if !session.IsHost() {
 		h.logger.Debug().Str("id", session.ID()).Msg("is not the host")
 		return nil
 	}
 
-	// release host
 	h.logger.Debug().Str("id", session.ID()).Msgf("host called %s", event.CONTROL_RELEASE)
 	h.sessions.ClearHost()
 
-	// tell everyone
 	if err := h.sessions.Broadcast(
 		message.Control{
 			Event: event.CONTROL_RELEASE,
@@ -70,7 +67,6 @@ func (h *MessageHandlerCtx) controlRequest(session types.Session) error {
 }
 
 func (h *MessageHandlerCtx) controlGive(session types.Session, payload *message.Control) error {
-	// check if session is host
 	if !session.IsHost() {
 		h.logger.Debug().Str("id", session.ID()).Msg("is not the host")
 		return nil
@@ -78,14 +74,12 @@ func (h *MessageHandlerCtx) controlGive(session types.Session, payload *message.
 
 	target, ok := h.sessions.Get(payload.ID)
 	if !ok {
-		h.logger.Debug().Str("id", target.ID()).Msg("user does not exist")
+		h.logger.Debug().Str("id", payload.ID).Msg("can't find target session")
 		return nil
 	}
 
-	// set host
 	h.sessions.SetHost(target)
 
-	// let everyone know
 	if err := h.sessions.Broadcast(
 		message.ControlTarget{
 			Event:  event.CONTROL_GIVE,
@@ -100,7 +94,6 @@ func (h *MessageHandlerCtx) controlGive(session types.Session, payload *message.
 }
 
 func (h *MessageHandlerCtx) controlClipboard(session types.Session, payload *message.Clipboard) error {
-	// check if session is host
 	if !session.IsHost() {
 		h.logger.Debug().Str("id", session.ID()).Msg("is not the host")
 		return nil
@@ -111,7 +104,6 @@ func (h *MessageHandlerCtx) controlClipboard(session types.Session, payload *mes
 }
 
 func (h *MessageHandlerCtx) controlKeyboard(session types.Session, payload *message.Keyboard) error {
-	// check if session is host
 	if !session.IsHost() {
 		h.logger.Debug().Str("id", session.ID()).Msg("is not the host")
 		return nil
@@ -122,7 +114,6 @@ func (h *MessageHandlerCtx) controlKeyboard(session types.Session, payload *mess
 		h.desktop.SetKeyboardLayout(*payload.Layout)
 	}
 
-	// set num lock
 	var NumLock = 0
 	if payload.NumLock == nil {
 		NumLock = -1
@@ -130,7 +121,6 @@ func (h *MessageHandlerCtx) controlKeyboard(session types.Session, payload *mess
 		NumLock = 1
 	}
 
-	// set caps lock
 	var CapsLock = 0
 	if payload.CapsLock == nil {
 		CapsLock = -1
@@ -138,7 +128,6 @@ func (h *MessageHandlerCtx) controlKeyboard(session types.Session, payload *mess
 		CapsLock = 1
 	}
 
-	// set scroll lock
 	var ScrollLock = 0
 	if payload.ScrollLock == nil {
 		ScrollLock = -1

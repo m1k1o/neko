@@ -32,16 +32,20 @@ func (h *MessageHandlerCtx) screenSet(session types.Session, payload *message.Sc
 }
 
 func (h *MessageHandlerCtx) screenResolution(session types.Session) error {
-	if size := h.desktop.GetScreenSize(); size != nil {
-		if err := session.Send(message.ScreenResolution{
-			Event:  event.SCREEN_RESOLUTION,
-			Width:  size.Width,
-			Height: size.Height,
-			Rate:   int(size.Rate),
-		}); err != nil {
-			h.logger.Warn().Err(err).Msgf("sending event %s has failed", event.SCREEN_RESOLUTION)
-			return err
-		}
+	size := h.desktop.GetScreenSize()
+	if size == nil {
+		h.logger.Debug().Msg("could not get screen size")
+		return nil
+	}
+
+	if err := session.Send(message.ScreenResolution{
+		Event:  event.SCREEN_RESOLUTION,
+		Width:  size.Width,
+		Height: size.Height,
+		Rate:   int(size.Rate),
+	}); err != nil {
+		h.logger.Warn().Err(err).Msgf("sending event %s has failed", event.SCREEN_RESOLUTION)
+		return err
 	}
 
 	return nil

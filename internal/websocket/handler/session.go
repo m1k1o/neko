@@ -28,7 +28,7 @@ func (h *MessageHandlerCtx) SessionCreated(session types.Session) error {
 }
 
 func (h *MessageHandlerCtx) SessionConnected(session types.Session) error {
-	// TODO: Refactor.
+	// create member list
 	members := []*message.MembersListEntry{}
 	for _, session := range h.sessions.Members() {
 		members = append(members, &message.MembersListEntry{
@@ -48,7 +48,7 @@ func (h *MessageHandlerCtx) SessionConnected(session types.Session) error {
 		return err
 	}
 
-	// send screen current resolution
+	// send current screen resolution
 	if err := h.screenResolution(session); err != nil {
 		return err
 	}

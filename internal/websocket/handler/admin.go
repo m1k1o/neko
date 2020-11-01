@@ -132,14 +132,12 @@ func (h *MessageHandlerCtx) adminGive(session types.Session, payload *message.Ad
 
 	target, ok := h.sessions.Get(payload.ID)
 	if !ok {
-		h.logger.Debug().Str("id", target.ID()).Msg("user does not exist")
+		h.logger.Debug().Str("id", payload.ID).Msg("can't find target session")
 		return nil
 	}
 
-	// set host
 	h.sessions.SetHost(target)
 
-	// let everyone know
 	if err := h.sessions.Broadcast(
 		message.AdminTarget{
 			Event:  event.CONTROL_GIVE,
@@ -220,7 +218,7 @@ func (h *MessageHandlerCtx) adminKick(session types.Session, payload *message.Ad
 
 	target, ok := h.sessions.Get(payload.ID)
 	if !ok {
-		h.logger.Debug().Str("id", payload.ID).Msg("can't find session id")
+		h.logger.Debug().Str("id", payload.ID).Msg("can't find target session")
 		return nil
 	}
 
@@ -254,7 +252,7 @@ func (h *MessageHandlerCtx) adminBan(session types.Session, payload *message.Adm
 
 	target, ok := h.sessions.Get(payload.ID)
 	if !ok {
-		h.logger.Debug().Str("id", payload.ID).Msg("can't find session id")
+		h.logger.Debug().Str("id", payload.ID).Msg("can't find target session")
 		return nil
 	}
 
