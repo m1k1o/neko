@@ -69,18 +69,18 @@ func (session *SessionCtx) SetPeer(peer types.Peer) {
 	session.peer = peer
 }
 
-func (session *SessionCtx) SetConnected() {
-	session.connected = true
-	session.manager.emmiter.Emit("connected", session)
-}
+func (session *SessionCtx) SetConnected(connected bool) {
+	session.connected = connected
 
-func (session *SessionCtx) SetDisconnected() {
-	session.connected = false
-	session.manager.emmiter.Emit("disconnected", session)
-	session.socket = nil
-
-	// TODO: Refactor.
-	session.manager.Destroy(session.id)
+	if connected {
+		session.manager.emmiter.Emit("connected", session)
+	} else {
+		session.manager.emmiter.Emit("disconnected", session)
+		session.socket = nil
+	
+		// TODO: Refactor.
+		session.manager.Destroy(session.id)
+	}
 }
 
 func (session *SessionCtx) Disconnect(reason string) error {
@@ -96,7 +96,7 @@ func (session *SessionCtx) Disconnect(reason string) error {
 		return err
 	}
 
-	session.SetDisconnected()
+	session.SetConnected(false)
 	return nil
 }
 

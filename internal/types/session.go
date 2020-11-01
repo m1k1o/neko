@@ -14,8 +14,7 @@ type Session interface {
 	SetName(name string)
 	SetSocket(socket WebSocket)
 	SetPeer(peer Peer)
-	SetConnected()
-	SetDisconnected()
+	SetConnected(connected bool)
 	Disconnect(reason string) error
 	Send(v interface{}) error
 	SignalAnswer(sdp string) error

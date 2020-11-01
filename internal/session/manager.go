@@ -168,7 +168,7 @@ func (manager *SessionManagerCtx) OnConnected(listener func(session types.Sessio
 func (manager *SessionManagerCtx) OnDisconnected(listener func(session types.Session)) {
 	manager.emmiter.On("disconnected", func(payload ...interface{}) {
 		// Stop streaming, if everyone left
-		if manager.capture.Streaming() && len(manager.members) == 0 {
+		if manager.capture.Streaming() && len(manager.Members()) == 0 {
 			manager.capture.StopStream()
 		}
 

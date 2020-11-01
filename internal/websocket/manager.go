@@ -197,7 +197,7 @@ func (ws *WebSocketManagerCtx) handle(connection *websocket.Conn, session types.
 		defer func() {
 			ticker.Stop()
 			ws.logger.Debug().Str("address", connection.RemoteAddr().String()).Msg("handle socket ending")
-			session.SetDisconnected()
+			session.SetConnected(false)
 		}()
 
 		for {
