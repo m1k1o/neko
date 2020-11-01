@@ -62,6 +62,7 @@ func (session *SessionCtx) SetName(name string) {
 
 func (session *SessionCtx) SetSocket(socket types.WebSocket) {
 	session.socket = socket
+	session.manager.emmiter.Emit("created", session)
 }
 
 func (session *SessionCtx) SetPeer(peer types.Peer) {

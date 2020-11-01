@@ -30,23 +30,16 @@ type SessionManagerCtx struct {
 	emmiter events.EventEmmiter
 }
 
-func (manager *SessionManagerCtx) New(id string, admin bool, socket types.WebSocket) types.Session {
+func (manager *SessionManagerCtx) New(id string, admin bool) types.Session {
 	session := &SessionCtx{
 		id:        id,
 		admin:     admin,
 		manager:   manager,
-		socket:    socket,
 		logger:    manager.logger.With().Str("id", id).Logger(),
 		connected: false,
 	}
 
 	manager.members[id] = session
-	manager.emmiter.Emit("created", session)
-
-	if !manager.capture.Streaming() && len(manager.members) > 0 {
-		manager.capture.StartStream()
-	}
-
 	return session
 }
 
@@ -65,10 +58,6 @@ func (manager *SessionManagerCtx) Destroy(id string) error {
 	if ok {
 		delete(manager.members, id)
 		err := session.destroy()
-
-		if !manager.capture.Streaming() && len(manager.members) <= 0 {
-			manager.capture.StopStream()
-		}
 
 		manager.emmiter.Emit("destroy", id)
 		return err
@@ -164,12 +153,22 @@ func (manager *SessionManagerCtx) OnHostCleared(listener func(session types.Sess
 
 func (manager *SessionManagerCtx) OnDestroy(listener func(id string)) {
 	manager.emmiter.On("destroy", func(payload ...interface{}) {
+		// Stop streaming, if everyone left
+		if manager.capture.Streaming() && len(manager.members) == 0 {
+			manager.capture.StopStream()
+		}
+
 		listener(payload[0].(string))
 	})
 }
 
 func (manager *SessionManagerCtx) OnCreated(listener func(session types.Session)) {
 	manager.emmiter.On("created", func(payload ...interface{}) {
+		// Start streaming, when first joins
+		if !manager.capture.Streaming() {
+			manager.capture.StartStream()
+		}
+	
 		listener(payload[0].(*SessionCtx))
 	})
 }

@@ -3,35 +3,54 @@ package session
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
+	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/utils"
 )
 
-// TODO: Refactor
-func (manager *SessionManagerCtx) Authenticate(r *http.Request) (string, string, bool, error) {
-	ip := r.RemoteAddr
+const (
+	token_name = "password"
+)
 
-	//if ws.conf.Proxy {
-	//	ip = utils.ReadUserIP(r)
-	//}
+func (manager *SessionManagerCtx) Authenticate(r *http.Request) (types.Session, error) {
+	token := getToken(r)
+	if token == "" {
+		return nil, fmt.Errorf("no password provided")
+	}
+
+	isAdmin := (token == manager.config.AdminPassword)
+	isUser := (token == manager.config.Password)
+
+	if !isAdmin && !isUser {
+		return nil, fmt.Errorf("invalid password")
+	}
 
 	id, err := utils.NewUID(32)
 	if err != nil {
-		return "", ip, false, err
+		return nil, err
 	}
 
-	passwords, ok := r.URL.Query()["password"]
-	if !ok || len(passwords[0]) < 1 {
-		return "", ip, false, fmt.Errorf("no password provided")
+	return manager.New(id, isAdmin), nil
+}
+
+func getToken(r *http.Request) string {
+	// Get token from query
+	if token := r.URL.Query().Get(token_name); token != "" {
+		return token
 	}
 
-	if passwords[0] == manager.config.AdminPassword {
-		return id, ip, true, nil
+	// Get token from authorization header
+	bearer := r.Header.Get("Authorization")
+	if len(bearer) > 7 && strings.ToUpper(bearer[0:6]) == "BEARER" {
+		return bearer[7:]
 	}
 
-	if passwords[0] == manager.config.Password {
-		return id, ip, false, nil
+	// Get token from cookie
+	cookie, err := r.Cookie(token_name)
+	if err == nil {
+		return cookie.Value
 	}
 
-	return "", ip, false, fmt.Errorf("invalid password: %s", passwords[0])
+	return ""
 }

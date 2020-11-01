@@ -21,7 +21,7 @@ type Session interface {
 }
 
 type SessionManager interface {
-	New(id string, admin bool, socket WebSocket) Session
+	New(id string, admin bool) Session
 	Get(id string) (Session, bool)
 	Has(id string) bool
 	Destroy(id string) error
@@ -42,5 +42,5 @@ type SessionManager interface {
 	OnConnected(listener func(session Session))
 
 	// auth
-	Authenticate(r *http.Request) (string, string, bool, error)
+	Authenticate(r *http.Request) (Session, error)
 }

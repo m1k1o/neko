@@ -127,14 +127,14 @@ func (ws *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Request) e
 		return err
 	}
 
-	id, ip, admin, err := ws.sessions.Authenticate(r)
+	session, err := ws.sessions.Authenticate(r)
 	if err != nil {
 		ws.logger.Warn().Err(err).Msg("authentication failed")
 
 		// TODO: Refactor
 		if err = connection.WriteJSON(message.Disconnect{
 			Event:   event.SYSTEM_DISCONNECT,
-			Message: "invalid_password",
+			Message: "authentication failed",
 		}); err != nil {
 			ws.logger.Error().Err(err).Msg("failed to send disconnect")
 		}
@@ -142,14 +142,20 @@ func (ws *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Request) e
 		return connection.Close()
 	}
 
+	// TODO: Refactor.
+	ip := r.RemoteAddr
+	// if allow poxy {
+	// 	ip = utils.ReadUserIP(r)
+	// }
+
 	socket := &WebSocketCtx{
-		id:         id,
+		id:         session.ID(),
 		ws:         ws,
 		address:    ip,
 		connection: connection,
 	}
 
-	ok, reason := ws.handler.Connected(id, socket)
+	ok, reason := ws.handler.Connected(session.ID(), socket)
 	if !ok {
 		// TODO: Refactor
 		if err = connection.WriteJSON(message.Disconnect{
@@ -162,23 +168,23 @@ func (ws *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Request) e
 		return connection.Close()
 	}
 
-	ws.sessions.New(id, admin, socket)
+	session.SetSocket(socket)
 
 	ws.logger.
 		Debug().
-		Str("session", id).
+		Str("session", session.ID()).
 		Str("address", connection.RemoteAddr().String()).
 		Msg("new connection created")
 
 	defer func() {
 		ws.logger.
 			Debug().
-			Str("session", id).
+			Str("session", session.ID()).
 			Str("address", connection.RemoteAddr().String()).
 			Msg("session ended")
 	}()
 
-	ws.handle(connection, id)
+	ws.handle(connection, session.ID())
 	return nil
 }
 
