@@ -33,12 +33,16 @@ jobs:
 
     - name: Build the base image
       run: docker build -f ./.docker/files/base/Dockerfile -t nurdism/neko:base .
+      
+    - name: Build the openbox image
+      run: docker build -f ./.docker/files/openbox/Dockerfile -t nurdism/neko:openbox .
     
-    - name: Build the latest image
+    - name: Build the latest firefox image
       run: docker build -f ./.docker/files/firefox/Dockerfile -t nurdism/neko:latest .
 
     - name: Push the Docker images
       run: | 
         echo "${{ secrets.DOCKER_PASSWORD }}" | docker login ${{ secrets.DOCKER_REGISTRY_URL }} -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
         docker push nurdism/neko:base
+        docker push nurdism/neko:openbox
         docker push nurdism/neko:latest
