@@ -24,18 +24,32 @@ var debounce_button = make(map[int]time.Time)
 var debounce_key = make(map[uint64]time.Time)
 var mu = sync.Mutex{}
 
-func init() {
+func GetScreenConfigurations() {
 	C.XGetScreenConfigurations()
 }
 
-func Display(display string) {
+func DisplayOpen(display string) error {
 	mu.Lock()
 	defer mu.Unlock()
 
 	displayUnsafe := C.CString(display)
 	defer C.free(unsafe.Pointer(displayUnsafe))
 
-	C.XDisplaySet(displayUnsafe)
+	var err C.int
+	err = C.XDisplayOpen(displayUnsafe)
+
+	if int(err) == 1 {
+		return fmt.Errorf("Could not open display %s.", display)
+	}
+
+	return nil
+}
+
+func DisplayClose() {
+	mu.Lock()
+	defer mu.Unlock()
+	
+	C.XDisplayClose()
 }
 
 func Move(x, y int) {

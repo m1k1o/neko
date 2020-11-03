@@ -9,18 +9,14 @@
 #include <X11/extensions/XTest.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include <stdio.h> /* For fputs() */
-#include <string.h> /* For strdup() */
+#include <string.h>
 
 extern void goCreateScreenSize(int index, int width, int height, int mwidth, int mheight);
 extern void goSetScreenRates(int index, int rate_index, short rate);
 
-/* Returns the main display, closed either on exit or when closeMainDisplay()
-* is invoked. This removes a bit of the overhead of calling XOpenDisplay() &
-* XCloseDisplay() everytime the main display needs to be used.
-*
-* Note that this is almost certainly not thread safe. */
 Display *getXDisplay(void);
+int XDisplayOpen(char *input);
+void XDisplayClose(void);
 
 void XMove(int x, int y);
 void XScroll(int x, int y);
@@ -31,9 +27,6 @@ void XGetScreenConfigurations();
 void XSetScreenConfiguration(int index, short rate);
 int XGetScreenSize();
 short XGetScreenRate();
-
-void XDisplayClose(void);
-void XDisplaySet(char *input);
 
 void SetKeyboardLayout(char *layout);
 void SetKeyboardModifiers(int num_lock, int caps_lock, int scroll_lock);

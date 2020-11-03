@@ -1,47 +1,18 @@
 #include "xorg.h"
 
 static Display *DISPLAY = NULL;
-static char *NAME = ":0.0";
-static int REGISTERED = 0;
-static int DIRTY = 0;
 
 Display *getXDisplay(void) {
-  /* Close the display if displayName has changed */
-  if (DIRTY) {
-    XDisplayClose();
-    DIRTY = 0;
-  }
-
-  if (DISPLAY == NULL) {
-    /* First try the user set displayName */
-    DISPLAY = XOpenDisplay(NAME);
-
-    /* Then try using environment variable DISPLAY */
-    if (DISPLAY == NULL) {
-      DISPLAY = XOpenDisplay(NULL);
-    }
-
-    if (DISPLAY == NULL) {
-      fputs("Could not open main display\n", stderr);
-    } else if (!REGISTERED) {
-      atexit(&XDisplayClose);
-      REGISTERED = 1;
-    }
-  }
-
   return DISPLAY;
 }
 
-void XDisplayClose(void) {
-  if (DISPLAY != NULL) {
-    XCloseDisplay(DISPLAY);
-    DISPLAY = NULL;
-  }
+int XDisplayOpen(char *name) {
+  DISPLAY = XOpenDisplay(name);
+  return DISPLAY == NULL;
 }
 
-void XDisplaySet(char *input) {
-  NAME = strdup(input);
-  DIRTY = 1;
+void XDisplayClose(void) {
+  XCloseDisplay(DISPLAY);
 }
 
 void XMove(int x, int y) {

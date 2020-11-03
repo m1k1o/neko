@@ -3,6 +3,7 @@ package desktop
 import (
 	"time"
 
+	"github.com/kataras/go-events"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
@@ -26,10 +27,15 @@ func New(display string) *DesktopManagerCtx {
 }
 
 func (manager *DesktopManagerCtx) Start() {
-	xorg.Display(manager.display)
+	if err := xorg.DisplayOpen(manager.display); err != nil {
+		manager.logger.Warn().Err(err).Msg("unable to open dispaly")
+	}
+
+	xorg.GetScreenConfigurations()
 
 	go func() {
 		defer func() {
+			xorg.DisplayClose()
 			manager.logger.Info().Msg("shutdown")
 		}()
 
