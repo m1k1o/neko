@@ -5,10 +5,6 @@ import (
 	"demodesk/neko/internal/desktop/xorg"
 )
 
-func (manager *DesktopManagerCtx) ChangeScreenSize(width int, height int, rate int) error {
-	return xorg.ChangeScreenSize(width, height, rate)
-}
-
 func (manager *DesktopManagerCtx) Move(x, y int) {
 	xorg.Move(x, y)
 }
@@ -43,6 +39,15 @@ func (manager *DesktopManagerCtx) ScreenConfigurations() map[int]types.ScreenCon
 
 func (manager *DesktopManagerCtx) GetScreenSize() *types.ScreenSize {
 	return xorg.GetScreenSize()
+}
+
+func (manager *DesktopManagerCtx) ChangeScreenSize(width int, height int, rate int) error {
+	if err := xorg.ChangeScreenSize(width, height, rate); err != nil {
+		return err
+	}
+
+	manager.emmiter.Emit("screen_size_change", width, height, rate)
+	return nil
 }
 
 func (manager *DesktopManagerCtx) SetKeyboardLayout(layout string) {

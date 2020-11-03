@@ -19,8 +19,6 @@ type CaptureManager interface {
 	StopStream()
 	Streaming() bool
 
-	ChangeResolution(width int, height int, rate int) error
-
 	// broacast
 	StartBroadcast(url string)
 	StopBroadcast()

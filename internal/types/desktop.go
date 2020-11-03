@@ -15,6 +15,7 @@ type ScreenConfiguration struct {
 type DesktopManager interface {
 	Start()
 	Shutdown() error
+	OnScreenSizeChange(listener func(width int, height int, rate int))
 
 	// xorg
 	ChangeScreenSize(width int, height int, rate int) error

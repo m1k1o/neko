@@ -17,6 +17,7 @@ func init() {
 	}
 
 	configs := []config.Config{
+		neko.Service.Configs.Desktop,
 		neko.Service.Configs.Capture,
 		neko.Service.Configs.WebRTC,
 		neko.Service.Configs.Session,

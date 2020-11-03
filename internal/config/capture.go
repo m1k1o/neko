@@ -1,9 +1,6 @@
 package config
 
 import (
-	"regexp"
-	"strconv"
-
 	"github.com/pion/webrtc/v2"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -16,9 +13,6 @@ type Capture struct {
 	AudioParams  string
 	VideoCodec   string
 	VideoParams  string
-	ScreenWidth  int
-	ScreenHeight int
-	ScreenRate   int
 	BroadcastPipeline string
 }
 
@@ -40,11 +34,6 @@ func (Capture) Init(cmd *cobra.Command) error {
 
 	cmd.PersistentFlags().String("video", "", "video codec parameters to use for streaming")
 	if err := viper.BindPFlag("video", cmd.PersistentFlags().Lookup("video")); err != nil {
-		return err
-	}
-
-	cmd.PersistentFlags().String("screen", "1280x720@30", "default screen resolution and framerate")
-	if err := viper.BindPFlag("screen", cmd.PersistentFlags().Lookup("screen")); err != nil {
 		return err
 	}
 
@@ -121,25 +110,5 @@ func (s *Capture) Set() {
 	s.Display = viper.GetString("display")
 	s.VideoCodec = videoCodec
 	s.VideoParams = viper.GetString("video")
-
-	s.ScreenWidth = 1280
-	s.ScreenHeight = 720
-	s.ScreenRate = 30
-
-	r := regexp.MustCompile(`([0-9]{1,4})x([0-9]{1,4})@([0-9]{1,3})`)
-	res := r.FindStringSubmatch(viper.GetString("screen"))
-
-	if len(res) > 0 {
-		width, err1 := strconv.ParseInt(res[1], 10, 64)
-		height, err2 := strconv.ParseInt(res[2], 10, 64)
-		rate, err3 := strconv.ParseInt(res[3], 10, 64)
-
-		if err1 == nil && err2 == nil && err3 == nil {
-			s.ScreenWidth = int(width)
-			s.ScreenHeight = int(height)
-			s.ScreenRate = int(rate)
-		}
-	}
-
 	s.BroadcastPipeline = viper.GetString("broadcast_pipeline")
 }

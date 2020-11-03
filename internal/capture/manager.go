@@ -1,8 +1,6 @@
 package capture
 
 import (
-	"fmt"
-
 	"github.com/kataras/go-events"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -42,15 +40,15 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 }
 
 func (manager *CaptureManagerCtx) Start() {
-	manager.logger.Info().
-		Str("screen_resolution", fmt.Sprintf("%dx%d@%d", manager.config.ScreenWidth, manager.config.ScreenHeight, manager.config.ScreenRate)).
-		Msgf("Setting screen resolution...")
-
-	if err := manager.desktop.ChangeScreenSize(manager.config.ScreenWidth, manager.config.ScreenHeight, manager.config.ScreenRate); err != nil {
-		manager.logger.Warn().Err(err).Msg("unable to change screen size")
-	}
-
 	manager.StartBroadcastPipeline()
+
+	manager.desktop.OnScreenSizeChange(func(width int, height int, rate int) {
+		manager.video_stop <- true
+		manager.StopBroadcastPipeline()
+
+		manager.createVideoPipeline()
+		manager.StartBroadcastPipeline()
+	})
 }
 
 func (manager *CaptureManagerCtx) Shutdown() error {
@@ -100,18 +98,6 @@ func (manager *CaptureManagerCtx) StopStream() {
 
 func (manager *CaptureManagerCtx) Streaming() bool {
 	return manager.streaming
-}
-
-func (manager *CaptureManagerCtx) ChangeResolution(width int, height int, rate int) error {
-	manager.video_stop <- true
-	manager.StopBroadcastPipeline()
-
-	defer func() {
-		manager.createVideoPipeline()
-		manager.StartBroadcastPipeline()
-	}()
-	
-	return manager.desktop.ChangeScreenSize(width, height, rate)
 }
 
 func (manager *CaptureManagerCtx) createVideoPipeline() {

@@ -1,12 +1,14 @@
 package desktop
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/kataras/go-events"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
+	"demodesk/neko/internal/config"
 	"demodesk/neko/internal/desktop/xorg"
 )
 
@@ -14,15 +16,19 @@ type DesktopManagerCtx struct {
 	logger    zerolog.Logger
 	cleanup   *time.Ticker
 	shutdown  chan bool
+	emmiter   events.EventEmmiter
 	display   string
+	config    *config.Desktop
 }
 
-func New(display string) *DesktopManagerCtx {
+func New(display string, config *config.Desktop) *DesktopManagerCtx {
 	return &DesktopManagerCtx{
 		logger:    log.With().Str("module", "desktop").Logger(),
 		cleanup:   time.NewTicker(1 * time.Second),
 		shutdown:  make(chan bool),
+		emmiter:   events.New(),
 		display:   display,
+		config:    config,
 	}
 }
 
@@ -32,6 +38,14 @@ func (manager *DesktopManagerCtx) Start() {
 	}
 
 	xorg.GetScreenConfigurations()
+
+	manager.logger.Info().
+		Str("screen_size", fmt.Sprintf("%dx%d@%d", manager.config.ScreenWidth, manager.config.ScreenHeight, manager.config.ScreenRate)).
+		Msgf("Setting initial screen size...")
+
+	if err := xorg.ChangeScreenSize(manager.config.ScreenWidth, manager.config.ScreenHeight, manager.config.ScreenRate); err != nil {
+		manager.logger.Warn().Err(err).Msg("unable to set initial screen size")
+	}
 
 	go func() {
 		defer func() {
@@ -48,6 +62,12 @@ func (manager *DesktopManagerCtx) Start() {
 			}
 		}
 	}()
+}
+
+func (manager *DesktopManagerCtx) OnScreenSizeChange(listener func(width int, height int, rate int)) {
+	manager.emmiter.On("screen_size_change", func(payload ...interface{}) {
+		listener(payload[0].(int), payload[1].(int), payload[2].(int))
+	})
 }
 
 func (manager *DesktopManagerCtx) Shutdown() error {

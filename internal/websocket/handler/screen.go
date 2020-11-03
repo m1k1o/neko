@@ -12,7 +12,7 @@ func (h *MessageHandlerCtx) screenSet(session types.Session, payload *message.Sc
 		return nil
 	}
 
-	if err := h.capture.ChangeResolution(payload.Width, payload.Height, payload.Rate); err != nil {
+	if err := h.desktop.ChangeScreenSize(payload.Width, payload.Height, payload.Rate); err != nil {
 		h.logger.Warn().Err(err).Msgf("unable to change screen size")
 		return err
 	}

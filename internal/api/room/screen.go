@@ -48,7 +48,7 @@ func (h *RoomHandler) ScreenConfigurationChange(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	if err := h.capture.ChangeResolution(data.Width, data.Height, data.Rate); err != nil {
+	if err := h.desktop.ChangeScreenSize(data.Width, data.Height, data.Rate); err != nil {
 		_ = render.Render(w, r, utils.ErrUnprocessableEntity(err))
 		return
 	}

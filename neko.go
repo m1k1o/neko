@@ -62,6 +62,7 @@ func init() {
 		},
 		Configs: &Configs{
 			Root:      &config.Root{},
+			Desktop:   &config.Desktop{},
 			Capture:   &config.Capture{},
 			WebRTC:    &config.WebRTC{},
 			Session:   &config.Session{},
@@ -101,6 +102,7 @@ func (i *Version) Details() string {
 
 type Configs struct {
 	Root      *config.Root
+	Desktop   *config.Desktop
 	Capture   *config.Capture
 	WebRTC    *config.WebRTC
 	Session   *config.Session
@@ -128,6 +130,7 @@ func (neko *Neko) Preflight() {
 func (neko *Neko) Start() {
 	neko.desktopManager = desktop.New(
 		neko.Configs.Capture.Display,
+		neko.Configs.Desktop,
 	)
 	neko.desktopManager.Start()
 
