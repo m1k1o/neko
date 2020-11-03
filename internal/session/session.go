@@ -79,7 +79,7 @@ func (session *SessionCtx) SetConnected(connected bool) {
 		session.socket = nil
 	
 		// TODO: Refactor.
-		session.manager.Destroy(session.id)
+		_ = session.manager.Destroy(session.id)
 	}
 }
 

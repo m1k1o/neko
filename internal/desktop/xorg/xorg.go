@@ -35,9 +35,7 @@ func DisplayOpen(display string) error {
 	displayUnsafe := C.CString(display)
 	defer C.free(unsafe.Pointer(displayUnsafe))
 
-	var err C.int
-	err = C.XDisplayOpen(displayUnsafe)
-
+	err := C.XDisplayOpen(displayUnsafe)
 	if int(err) == 1 {
 		return fmt.Errorf("Could not open display %s.", display)
 	}
