@@ -16,7 +16,7 @@ export class NekoWebSocket extends EventEmitter<NekoWebSocketEvents> {
 
   constructor() {
     super()
-  
+
     this._log = new Logger('websocket')
   }
 
@@ -61,7 +61,7 @@ export class NekoWebSocket extends EventEmitter<NekoWebSocketEvents> {
       this._log.warn(`attempting to send message while disconnected`)
       return
     }
-  
+
     this._log.debug(`sending event '${event}' ${payload ? `with payload: ` : ''}`, payload)
     this._ws!.send(JSON.stringify({ event, ...payload }))
   }
@@ -105,7 +105,7 @@ export class NekoWebSocket extends EventEmitter<NekoWebSocketEvents> {
 
   private onDisconnected(reason?: Error) {
     this._log.debug(`disconnected:`, reason)
-  
+
     this.disconnect()
     this.emit('disconnected', reason)
   }
