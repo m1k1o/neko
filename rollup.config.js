@@ -11,6 +11,12 @@ export default {
   output: {
     name: 'NekoClient',
     exports: 'named',
+    globals: {
+      "vue": "Vue",
+      "vue-property-decorator": "VueClassComponent",
+      "vue-class-component": "VueClassComponent",
+      "axios": "axios",
+    },
   },
   plugins: [
     typescript({
@@ -25,11 +31,18 @@ export default {
         { find:/^@\/(.+)/, replacement: './$1' }
       ]
     }),
-    commonjs(),
+    commonjs({
+      include: 'node_modules/**',
+    }),
     autoExternal(),
     buble({
       objectAssign: 'Object.assign',
     }),
     terser(),
+  ],
+  external: [
+    "vue", 
+    "vue-class-component",
+    "axios"
   ],
 };
