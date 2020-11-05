@@ -15,7 +15,7 @@ export interface NekoWebRTCEvents {
   track: (event: RTCTrackEvent) => void
 }
 
-export abstract class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
+export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
   private _peer?: RTCPeerConnection
   private _channel?: RTCDataChannel
   private _state: RTCIceConnectionState = 'disconnected'
@@ -23,7 +23,7 @@ export abstract class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
 
   constructor() {
     super()
-  
+
     this._log = new Logger('webrtc')
   }
 
@@ -37,11 +37,11 @@ export abstract class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
 
   public async connect(sdp: string, lite: boolean, servers: string[]): Promise<string> {
     this._log.debug(`creating peer`)
-  
+
     if (!this.supported) {
       throw new Error('browser does not support webrtc')
     }
-  
+
     if (this.connected) {
       throw new Error('attempting to create peer while connected')
     }
@@ -87,7 +87,7 @@ export abstract class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
     this._peer.addTransceiver('video', { direction: 'recvonly' })
 
     this._channel = this._peer.createDataChannel('data')
-    this._channel.onerror = this.onError.bind(this)
+    this._channel.onerror = this.onDisconnected.bind(this, new Error('peer data channel error'))
     this._channel.onmessage = this.onData.bind(this)
     this._channel.onclose = this.onDisconnected.bind(this, new Error('peer data channel closed'))
 
@@ -175,17 +175,13 @@ export abstract class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
   private onTrack(event: RTCTrackEvent) {
     this._log.debug(`received ${event.track.kind} track from peer: ${event.track.id}`, event)
     const stream = event.streams[0]
-  
+
     if (!stream) {
       this._log.warn(`no stream provided for track ${event.track.id}(${event.track.label})`)
       return
     }
-  
-    this.emit('track', event)
-  }
 
-  private onError(event: Event) {
-    this._log.error((event as ErrorEvent).error)
+    this.emit('track', event)
   }
 
   private onConnected() {
@@ -201,7 +197,7 @@ export abstract class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
   private onDisconnected(reason?: Error) {
     this.disconnect()
 
-    this._log.debug(`disconnected:`, reason)
+    this._log.debug(`disconnected:`, reason?.message)
     this.emit('disconnected', reason)
   }
 }

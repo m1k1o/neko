@@ -7,6 +7,7 @@ export interface NekoWebSocketEvents {
   connecting: () => void
   connected: () => void
   disconnected: (error?: Error) => void
+  message: (event: string, payload: any) => void
 }
 
 export class NekoWebSocket extends EventEmitter<NekoWebSocketEvents> {
@@ -36,7 +37,7 @@ export class NekoWebSocket extends EventEmitter<NekoWebSocketEvents> {
 
     this._ws.onopen = this.onConnected.bind(this)
     this._ws.onclose = this.onDisconnected.bind(this, new Error('websocket closed'))
-    this._ws.onerror = this.onError.bind(this)
+    this._ws.onerror = this.onDisconnected.bind(this, new Error('websocket error'))
     this._ws.onmessage = this.onMessage.bind(this)
 
     this._timeout = setTimeout(this.onTimeout.bind(this), timeout)
@@ -68,20 +69,9 @@ export class NekoWebSocket extends EventEmitter<NekoWebSocketEvents> {
 
   private onMessage(e: MessageEvent) {
     const { event, ...payload } = JSON.parse(e.data)
+
     this._log.debug(`received websocket event ${event} ${payload ? `with payload: ` : ''}`, payload)
-
-    // @ts-ignore
-    if (typeof this[event] === 'function') {
-      // @ts-ignore
-      // TODO: REFACTOR
-      this[event](payload)
-    } else {
-      this._log.warn(`unhandled websocket event '${event}':`, payload)
-    }
-  }
-
-  private onError(event: Event) {
-    this._log.error((event as ErrorEvent).error)
+    this.emit('message', event, payload)
   }
 
   private onConnected() {
@@ -104,7 +94,7 @@ export class NekoWebSocket extends EventEmitter<NekoWebSocketEvents> {
   }
 
   private onDisconnected(reason?: Error) {
-    this._log.debug(`disconnected:`, reason)
+    this._log.debug(`disconnected:`, reason?.message)
 
     this.disconnect()
     this.emit('disconnected', reason)
