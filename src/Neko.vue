@@ -1,16 +1,49 @@
 <template>
-  <div>
+  <div ref="component" class="video">
     <button @click="connect()">Connect</button>
-    <button @click="disconnect()">Disonnect</button>
-    <button @click="send()">Send</button><br />
+    <button @click="disconnect()">Disonnect</button><br />
     websocket_state: {{ websocket_state }}<br />
     webrtc_state: {{ webrtc_state }}<br />
 
-    <video ref="video" />
+    <div ref="container" class="player-container">
+      <video ref="video" />
+      <div ref="overlay" class="overlay" tabindex="0" @click.stop.prevent @contextmenu.stop.prevent />
+    </div>
   </div>
 </template>
 
+<style lang="scss" scoped>
+  .player-container {
+    position: relative;
+    width: 1280px;
+    height: 720px;
+
+    video {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      background: #000;
+
+      &::-webkit-media-controls {
+        display: none !important;
+      }
+    }
+
+    .overlay {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 100%;
+      height: 100%;
+    }
+  }
+</style>
+
 <script lang="ts">
+  import ResizeObserver from 'resize-observer-polyfill'
   import { Vue, Component, Ref, Watch } from 'vue-property-decorator'
   import { NekoWebSocket } from './internal/websocket'
   import { NekoWebRTC } from './internal/webrtc'
@@ -19,13 +52,17 @@
     name: 'neko',
   })
   export default class extends Vue {
+    @Ref('component') readonly _component!: HTMLElement
+    @Ref('container') readonly _container!: HTMLElement
     @Ref('video') readonly _video!: HTMLVideoElement
+
+    private observer = new ResizeObserver(this.onResize.bind(this))
 
     protected _websocket?: NekoWebSocket
     protected _webrtc?: NekoWebRTC
 
-    websocket_state = 'disconnected'
-    webrtc_state = 'disconnected'
+    private websocket_state = 'disconnected'
+    private webrtc_state = 'disconnected'
 
     public connect() {
       try {
@@ -37,22 +74,28 @@
       this._websocket?.disconnect()
     }
 
-    public send() {
-      this._websocket?.send('test', 'abc')
-    }
-
     mounted() {
-      this._websocket = new NekoWebSocket()
-      this._webrtc = new NekoWebRTC()
+      // Update canvas on resize
+      this._container.addEventListener('resize', this.onResize)
+      this.observer.observe(this._component)
 
+      // WebSocket
+      this._websocket = new NekoWebSocket()
       this._websocket?.on('message', async (event: string, payload: any) => {
-        if (event == 'signal/provide') {
-          try {
-            let sdp = await this._webrtc?.connect(payload.sdp, payload.lite, payload.ice)
-            this._websocket?.send('signal/answer', { sdp, displayname: 'test' })
-          } catch (e) {}
-        } else {
-          console.log(event, payload)
+        switch (event) {
+          case 'signal/provide':
+            try {
+              let sdp = await this._webrtc?.connect(payload.sdp, payload.lite, payload.ice)
+              this._websocket?.send('signal/answer', { sdp, displayname: 'test' })
+            } catch (e) {}
+            break
+          case 'screen/resolution':
+            payload.width
+            payload.height
+            payload.rate
+            break
+          default:
+            console.log(event, payload)
         }
       })
       this._websocket?.on('connecting', () => {
@@ -66,6 +109,8 @@
         this._webrtc?.disconnect()
       })
 
+      // WebRTC
+      this._webrtc = new NekoWebRTC()
       this._webrtc?.on('track', (event: RTCTrackEvent) => {
         const { track, streams } = event
         if (track.kind === 'audio') {
@@ -91,6 +136,15 @@
       this._webrtc?.on('disconnected', () => {
         this.webrtc_state = 'disconnected'
       })
+    }
+
+    destroyed() {
+      this._webrtc?.disconnect()
+      this._websocket?.disconnect()
+    }
+
+    public onResize() {
+      console.log('Resize event triggered.')
     }
   }
 </script>
