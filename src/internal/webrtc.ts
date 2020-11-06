@@ -32,7 +32,12 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
   }
 
   get connected() {
-    return typeof this._peer !== 'undefined' && ['connected', 'checking', 'completed'].includes(this._state)
+    return (
+      typeof this._peer !== 'undefined' &&
+      ['connected', 'checking', 'completed'].includes(this._state) &&
+      typeof this._channel !== 'undefined' &&
+      this._channel.readyState == 'open'
+    )
   }
 
   public async connect(sdp: string, lite: boolean, servers: string[]): Promise<string> {
@@ -68,11 +73,6 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
       this._log.debug(`peer ice connection state changed: ${this._peer!.iceConnectionState}`)
 
       switch (this._state) {
-        case 'checking':
-          break
-        case 'connected':
-          this.onConnected()
-          break
         case 'failed':
           this.onDisconnected(new Error('peer failed'))
           break
@@ -89,6 +89,7 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
     this._channel = this._peer.createDataChannel('data')
     this._channel.onerror = this.onDisconnected.bind(this, new Error('peer data channel error'))
     this._channel.onmessage = this.onData.bind(this)
+    this._channel.onopen = this.onConnected.bind(this)
     this._channel.onclose = this.onDisconnected.bind(this, new Error('peer data channel closed'))
 
     this._peer.setRemoteDescription({ type: 'offer', sdp })
