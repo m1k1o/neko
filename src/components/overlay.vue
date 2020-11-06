@@ -21,11 +21,13 @@
     bottom: 0;
     width: 100%;
     height: 100%;
+    outline: 0;
   }
 </style>
 
 <script lang="ts">
   import { Vue, Component, Ref, Prop } from 'vue-property-decorator'
+
   import GuacamoleKeyboard from '~/utils/guacamole-keyboard.ts'
   import { NekoWebRTC } from '~/internal/webrtc'
 
