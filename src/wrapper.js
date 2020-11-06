@@ -1,5 +1,5 @@
 // Import vue component
-import Neko from './Neko.vue';
+import Neko from './components/canvas.vue';
 
 // Declare install function executed by Vue.use()
 export function install(Vue) {
