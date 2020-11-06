@@ -9,7 +9,7 @@
         :screenHeight="state.screen_size.height"
         :scrollSensitivity="5"
         :scrollInvert="true"
-        :isControling="true"
+        :isControling="state.is_controlling"
       />
     </div>
   </div>
@@ -47,6 +47,7 @@
   import { NekoWebSocket } from '~/internal/websocket'
   import { NekoWebRTC } from '~/internal/webrtc'
 
+  import NekoState from '~/types/state'
   import Overlay from './overlay.vue'
 
   @Component({
@@ -60,17 +61,20 @@
     @Ref('container') readonly _container!: HTMLElement
     @Ref('video') public readonly video!: HTMLVideoElement
 
+    private observer = new ResizeObserver(this.onResize.bind(this))
     private websocket = new NekoWebSocket()
     private webrtc = new NekoWebRTC()
-    private observer = new ResizeObserver(this.onResize.bind(this))
 
     private state = {
+      id: null,
+      display_name: null,
       screen_size: {
-        width: Number,
-        height: Number,
-        rate: Number,
+        width: 1280,
+        height: 720,
+        rate: 30,
       },
-    }
+      is_controlling: false,
+    } as NekoState
 
     private websocket_state = 'disconnected'
     private webrtc_state = 'disconnected'
@@ -108,14 +112,26 @@
       this.websocket.on('message', async (event: string, payload: any) => {
         switch (event) {
           case 'signal/provide':
+            Vue.set(this.state, 'id', payload.id)
+
             try {
               let sdp = await this.webrtc.connect(payload.sdp, payload.lite, payload.ice)
-              this.websocket.send('signal/answer', { sdp, displayname: 'test' })
+              this.websocket.send('signal/answer', { sdp, displayname: this.state.display_name })
             } catch (e) {}
             break
           case 'screen/resolution':
             Vue.set(this.state, 'screen_size', payload)
             this.onResize()
+            break
+          case 'control/release':
+            if (payload.id === this.state.id) {
+              Vue.set(this.state, 'is_controlling', false)
+            }
+            break
+          case 'control/locked':
+            if (payload.id === this.state.id) {
+              Vue.set(this.state, 'is_controlling', true)
+            }
             break
           default:
             console.log(event, payload)
@@ -175,7 +191,7 @@
       const canvas_ratio = offsetWidth / offsetHeight
 
       // Vertical centering
-      if(screen_ratio > canvas_ratio) {
+      if (screen_ratio > canvas_ratio) {
         const vertical = offsetWidth / screen_ratio
         this._container.style.width = `${offsetWidth}px`
         this._container.style.height = `${vertical}px`
@@ -183,7 +199,7 @@
         this._container.style.marginLeft = `0px`
       }
       // Horizontal centering
-      else if(screen_ratio < canvas_ratio) {
+      else if (screen_ratio < canvas_ratio) {
         const horizontal = screen_ratio * offsetHeight
         this._container.style.width = `${horizontal}px`
         this._container.style.height = `${offsetHeight}px`

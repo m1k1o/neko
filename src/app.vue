@@ -12,7 +12,7 @@
     <!--websocket_state: {{ websocket_state }}<br />
     webrtc_state: {{ webrtc_state }}<br />-->
 
-    <div ref="container" style="width:1280px;height:720px;border: 2px solid red;">
+    <div ref="container" style="width: 1280px; height: 720px; border: 2px solid red">
       <neko-canvas ref="neko" />
     </div>
   </div>
