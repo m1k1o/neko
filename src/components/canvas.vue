@@ -46,6 +46,7 @@
 
   import { NekoWebSocket } from '~/internal/websocket'
   import { NekoWebRTC } from '~/internal/webrtc'
+  import { NekoMessages } from '~/internal/messages'
 
   import NekoState from '~/types/state'
   import Overlay from './overlay.vue'
@@ -64,6 +65,7 @@
     private observer = new ResizeObserver(this.onResize.bind(this))
     private websocket = new NekoWebSocket()
     private webrtc = new NekoWebRTC()
+    private messages = new NekoMessages()
 
     private state = {
       id: null,
@@ -134,7 +136,13 @@
             }
             break
           default:
-            console.log(event, payload)
+            // @ts-ignore
+            if (typeof this.messages[event] === 'function') {
+              // @ts-ignore
+              this.messages[event](payload)
+            } else {
+              console.log(`unhandled websocket event '${event}':`, payload)
+            }
         }
       })
       this.websocket.on('connecting', () => {
