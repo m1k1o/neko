@@ -6,11 +6,12 @@
   "module": "dist/neko.esm.js",
   "unpkg": "dist/neko.min.js",
   "browser": {
-    "./sfc": "src/Neko.vue"
+    "./sfc": "src/components/canvas.vue"
   },
   "scripts": {
     "serve": "vue-cli-service serve --mode development",
     "build:spa": "vue-cli-service build",
+    "build:package": "vue-cli-service build --target lib --name neko ./src/components/canvas.vue",
     "lint": "vue-cli-service lint",
     "build": "npm run build:umd & npm run build:es & npm run build:unpkg",
     "build:umd": "rollup --config rollup.config.js --format umd --file dist/neko.umd.js",
