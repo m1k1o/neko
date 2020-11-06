@@ -7,7 +7,15 @@
 
     <div ref="container" class="player-container">
       <video ref="video" />
-      <div ref="overlay" class="overlay" tabindex="0" @click.stop.prevent @contextmenu.stop.prevent />
+      <neko-overlay
+        v-if="websocket_state == 'connected' && webrtc_state == 'connected'"
+        :webrtc="webrtc"
+        :screenWidth="1280"
+        :screenHeight="720"
+        :scrollSensitivity="5"
+        :scrollInvert="true"
+        :isControling="true"
+      />
     </div>
   </div>
 </template>
@@ -31,14 +39,6 @@
         display: none !important;
       }
     }
-
-    .overlay {
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      width: 100%;
-      height: 100%;
-    }
   }
 </style>
 
@@ -48,8 +48,13 @@
   import { NekoWebSocket } from './internal/websocket'
   import { NekoWebRTC } from './internal/webrtc'
 
+  import Overlay from '~/components/overlay.vue'
+
   @Component({
     name: 'neko',
+    components: {
+      'neko-overlay': Overlay,
+    },
   })
   export default class extends Vue {
     @Ref('component') readonly _component!: HTMLElement
@@ -58,20 +63,20 @@
 
     private observer = new ResizeObserver(this.onResize.bind(this))
 
-    protected _websocket?: NekoWebSocket
-    protected _webrtc?: NekoWebRTC
+    websocket: NekoWebSocket | null = null
+    webrtc: NekoWebRTC | null = null
 
     private websocket_state = 'disconnected'
     private webrtc_state = 'disconnected'
 
     public connect() {
       try {
-        this._websocket?.connect('ws://192.168.1.20:3000/', 'admin')
+        this.websocket?.connect('ws://192.168.1.20:3000/', 'admin')
       } catch (e) {}
     }
 
     public disconnect() {
-      this._websocket?.disconnect()
+      this.websocket?.disconnect()
     }
 
     mounted() {
@@ -80,13 +85,13 @@
       this.observer.observe(this._component)
 
       // WebSocket
-      this._websocket = new NekoWebSocket()
-      this._websocket?.on('message', async (event: string, payload: any) => {
+      this.websocket = new NekoWebSocket()
+      this.websocket?.on('message', async (event: string, payload: any) => {
         switch (event) {
           case 'signal/provide':
             try {
-              let sdp = await this._webrtc?.connect(payload.sdp, payload.lite, payload.ice)
-              this._websocket?.send('signal/answer', { sdp, displayname: 'test' })
+              let sdp = await this.webrtc?.connect(payload.sdp, payload.lite, payload.ice)
+              this.websocket?.send('signal/answer', { sdp, displayname: 'test' })
             } catch (e) {}
             break
           case 'screen/resolution':
@@ -98,20 +103,20 @@
             console.log(event, payload)
         }
       })
-      this._websocket?.on('connecting', () => {
+      this.websocket?.on('connecting', () => {
         this.websocket_state = 'connecting'
       })
-      this._websocket?.on('connected', () => {
+      this.websocket?.on('connected', () => {
         this.websocket_state = 'connected'
       })
-      this._websocket?.on('disconnected', () => {
+      this.websocket?.on('disconnected', () => {
         this.websocket_state = 'disconnected'
-        this._webrtc?.disconnect()
+        this.webrtc?.disconnect()
       })
 
       // WebRTC
-      this._webrtc = new NekoWebRTC()
-      this._webrtc?.on('track', (event: RTCTrackEvent) => {
+      this.webrtc = new NekoWebRTC()
+      this.webrtc?.on('track', (event: RTCTrackEvent) => {
         const { track, streams } = event
         if (track.kind === 'audio') {
           return
@@ -127,20 +132,20 @@
 
         this._video.play()
       })
-      this._webrtc?.on('connecting', () => {
+      this.webrtc?.on('connecting', () => {
         this.webrtc_state = 'connecting'
       })
-      this._webrtc?.on('connected', () => {
+      this.webrtc?.on('connected', () => {
         this.webrtc_state = 'connected'
       })
-      this._webrtc?.on('disconnected', () => {
+      this.webrtc?.on('disconnected', () => {
         this.webrtc_state = 'disconnected'
       })
     }
 
     destroyed() {
-      this._webrtc?.disconnect()
-      this._websocket?.disconnect()
+      this.webrtc?.disconnect()
+      this.websocket?.disconnect()
     }
 
     public onResize() {
