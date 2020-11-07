@@ -75,9 +75,9 @@
     private websocket = new NekoWebSocket()
     private webrtc = new NekoWebRTC()
     private observer = new ResizeObserver(this.onResize.bind(this))
-    public events = new NekoMessages(this.websocket)
 
-    private state = {
+    public events = new NekoMessages(this.websocket)
+    public state = {
       id: null,
       display_name: null,
       screen_size: {
@@ -85,6 +85,7 @@
         height: 720,
         rate: 30,
       },
+      available_screen_sizes: [],
       scroll: {
         sensitivity: 10,
         invert: true,
@@ -93,6 +94,10 @@
       websocket: 'disconnected',
       webrtc: 'disconnected',
     } as NekoState
+
+    public get connected() {
+      return this.state.websocket == 'connected' && this.state.webrtc == 'connected'
+    }
 
     public control = {
       request: () => {
@@ -109,11 +114,21 @@
       },
     }
 
-    public connect(url: string, password: string) {
+    public scroll = {
+      sensitivity: (sensitivity: number) => {
+        Vue.set(this.state.scroll, 'sensitivity', sensitivity)
+      },
+      inverse: (inverse: boolean) => {
+        Vue.set(this.state.scroll, 'inverse', inverse)
+      },
+    }
+
+    public connect(url: string, password: string, name: string) {
       if (this.websocket.connected) {
         throw new Error('client already connected')
       }
 
+      Vue.set(this.state, 'display_name', name)
       this.websocket.connect(url, password)
     }
 
@@ -146,6 +161,36 @@
             break
           case 'screen/resolution':
             Vue.set(this.state, 'screen_size', payload)
+            this.onResize()
+            break
+          case 'screen/configurations':
+            let data = []
+            for (const i of Object.keys(payload.configurations)) {
+              const { width, height, rates } = payload.configurations[i]
+              if (width >= 600 && height >= 300) {
+                for (const j of Object.keys(rates)) {
+                  const rate = rates[j]
+                  if (rate === 30 || rate === 60) {
+                    data.push({
+                      width,
+                      height,
+                      rate,
+                    })
+                  }
+                }
+              }
+            }
+
+            let conf = data.sort((a, b) => {
+              if (b.width === a.width && b.height == a.height) {
+                return b.rate - a.rate
+              } else if (b.width === a.width) {
+                return b.height - a.height
+              }
+              return b.width - a.width
+            })
+
+            Vue.set(this.state, 'available_screen_sizes', conf)
             this.onResize()
             break
         }
@@ -194,6 +239,7 @@
     }
 
     private beforeDestroy() {
+      this.observer.disconnect()
       this.webrtc.disconnect()
       this.websocket.disconnect()
     }
