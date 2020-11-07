@@ -10,9 +10,9 @@
         :webrtc="webrtc"
         :screenWidth="state.screen_size.width"
         :screenHeight="state.screen_size.height"
-        :scrollSensitivity="5"
-        :scrollInvert="true"
         :isControling="state.is_controlling"
+        :scrollSensitivity="state.scroll.sensitivity"
+        :scrollInvert="state.scroll.invert"
       />
     </div>
   </div>
@@ -72,11 +72,10 @@
     @Ref('container') readonly _container!: HTMLElement
     @Ref('video') public readonly video!: HTMLVideoElement
 
-    public events = new EventEmitter()
-    private observer = new ResizeObserver(this.onResize.bind(this))
     private websocket = new NekoWebSocket()
     private webrtc = new NekoWebRTC()
-    private messages = new NekoMessages(this.events)
+    private observer = new ResizeObserver(this.onResize.bind(this))
+    public events = new NekoMessages(this.websocket)
 
     private state = {
       id: null,
@@ -85,6 +84,10 @@
         width: 1280,
         height: 720,
         rate: 30,
+      },
+      scroll: {
+        sensitivity: 10,
+        invert: true,
       },
       is_controlling: false,
       websocket: 'disconnected',
@@ -97,6 +100,12 @@
       },
       release: () => {
         this.websocket.send('control/release')
+      },
+    }
+
+    public screen = {
+      size: (width: number, height: number, rate: number) => {
+        this.websocket.send('screen/set', { width, height, rate })
       },
     }
 
@@ -120,6 +129,10 @@
       // Update canvas on resize
       this.observer.observe(this._component)
 
+      this.events.on('control.host', (id: string | null) => {
+        Vue.set(this.state, 'is_controlling', id != null && id === this.state.id)
+      })
+
       // WebSocket
       this.websocket.on('message', async (event: string, payload: any) => {
         switch (event) {
@@ -135,43 +148,26 @@
             Vue.set(this.state, 'screen_size', payload)
             this.onResize()
             break
-          case 'control/release':
-            if (payload.id === this.state.id) {
-              Vue.set(this.state, 'is_controlling', false)
-            }
-            break
-          case 'control/locked':
-            if (payload.id === this.state.id) {
-              Vue.set(this.state, 'is_controlling', true)
-            }
-            break
-          default:
-            // @ts-ignore
-            if (typeof this.messages[event] === 'function') {
-              // @ts-ignore
-              this.messages[event](payload)
-            } else {
-              console.log(`unhandled websocket event '${event}':`, payload)
-            }
         }
       })
       this.websocket.on('connecting', () => {
         Vue.set(this.state, 'websocket', 'connecting')
+        this.events.emit('system.websocket', 'connecting')
       })
       this.websocket.on('connected', () => {
         Vue.set(this.state, 'websocket', 'connected')
+        this.events.emit('system.websocket', 'connected')
       })
       this.websocket.on('disconnected', () => {
         Vue.set(this.state, 'websocket', 'disconnected')
+        this.events.emit('system.websocket', 'disconnected')
         this.webrtc.disconnect()
       })
 
       // WebRTC
       this.webrtc.on('track', (event: RTCTrackEvent) => {
         const { track, streams } = event
-        if (track.kind === 'audio') {
-          return
-        }
+        if (track.kind === 'audio') return
 
         // Create stream
         if ('srcObject' in this.video) {
@@ -185,13 +181,15 @@
       })
       this.webrtc.on('connecting', () => {
         Vue.set(this.state, 'webrtc', 'connecting')
+        this.events.emit('system.webrtc', 'connecting')
       })
       this.webrtc.on('connected', () => {
         Vue.set(this.state, 'webrtc', 'connected')
-        this.events.emit('connect')
+        this.events.emit('system.webrtc', 'connected')
       })
       this.webrtc.on('disconnected', () => {
         Vue.set(this.state, 'webrtc', 'disconnected')
+        this.events.emit('system.webrtc', 'disconnected')
       })
     }
 

@@ -16,8 +16,8 @@ export const EVENT = {
     RELEASE: 'control/release',
     REQUEST: 'control/request',
     REQUESTING: 'control/requesting',
-    CLIPBOARD: 'control/clipboard',
     GIVE: 'control/give',
+    CLIPBOARD: 'control/clipboard',
     KEYBOARD: 'control/keyboard',
   },
   SCREEN: {
@@ -33,10 +33,10 @@ export const EVENT = {
   ADMIN: {
     BAN: 'admin/ban',
     KICK: 'admin/kick',
-    LOCK: 'admin/lock',
-    UNLOCK: 'admin/unlock',
     MUTE: 'admin/mute',
     UNMUTE: 'admin/unmute',
+    LOCK: 'admin/lock',
+    UNLOCK: 'admin/unlock',
     CONTROL: 'admin/control',
     RELEASE: 'admin/release',
     GIVE: 'admin/give',

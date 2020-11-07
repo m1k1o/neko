@@ -1,9 +1,7 @@
-import Vue from 'vue'
-import { Member } from '../types/structs'
+import { Member, ScreenConfigurations } from '../types/structs'
 import { EVENT } from '../types/events'
 import {
   DisconnectPayload,
-  SignalProvidePayload,
   MemberListPayload,
   MemberDisconnectPayload,
   MemberPayload,
@@ -18,175 +16,142 @@ import {
 } from '../types/messages'
 
 import EventEmitter from 'eventemitter3'
+import { NekoWebSocket } from './websocket'
 
-export class NekoMessages {
-  _eventEmmiter: EventEmitter
+export interface NekoEvents {
+  ['system.websocket']: (state: 'connected' | 'connecting' | 'disconnected') => void
+  ['system.webrtc']: (state: 'connected' | 'connecting' | 'disconnected') => void
+  ['system.connect']: () => void
+  ['system.disconnect']: (message: string) => void
+  ['control.host']: (id: string | null) => void
+  ['member.list']: (members: Member[]) => void
+  ['member.connected']: (id: string) => void
+  ['member.disconnected']: (id: string) => void
+  ['control.request']: (id: string) => void
+  ['control.requesting']: (id: string) => void
+  ['clipboard.update']: (text: string) => void
+  ['screen.configuration']: (configurations: ScreenConfigurations) => void
+  ['screen.size']: (width: number, height: number, rate: number) => void
+  ['broadcast.status']: (url: string, isActive: boolean) => void
+  ['member.ban']: (id: string, target: string) => void
+  ['member.kick']: (id: string, target: string) => void
+  ['member.muted']: (id: string, target: string) => void
+  ['member.unmuted']: (id: string, target: string) => void
+  ['room.locked']: (id: string) => void
+  ['room.unlocked']: (id: string) => void
+}
 
-  constructor(eventEmitter: EventEmitter) {
-    this._eventEmmiter = eventEmitter
-  }
+export class NekoMessages extends EventEmitter<NekoEvents> {
+  constructor(websocket: NekoWebSocket) {
+    super()
 
-  private emit(event: string, ...payload: any) {
-    this._eventEmmiter.emit(event, ...payload)
+    websocket.on('message', async (event: string, payload: any) => {
+      // @ts-ignore
+      if (typeof this[event] === 'function') {
+        // @ts-ignore
+        this[event](payload)
+      } else {
+        console.log(`unhandled websocket event '${event}':`, payload)
+      }
+    })
   }
 
   /////////////////////////////
   // System Events
   /////////////////////////////
-  public [EVENT.SYSTEM.DISCONNECT]({ message }: DisconnectPayload) {
+  protected [EVENT.SYSTEM.DISCONNECT]({ message }: DisconnectPayload) {
     console.log('EVENT.SYSTEM.DISCONNECT')
-    this.emit('disconnect', message)
-    //this.onDisconnected(new Error(message))
-    //this.$vue.$swal({
-    //  title: this.$vue.$t('connection.disconnected'),
-    //  text: message,
-    //  icon: 'error',
-    //  confirmButtonText: this.$vue.$t('connection.button_confirm') as string,
-    //})
+    this.emit('system.disconnect', message)
   }
 
   /////////////////////////////
   // Member Events
   /////////////////////////////
-  public [EVENT.MEMBER.LIST]({ members }: MemberListPayload) {
+  protected [EVENT.MEMBER.LIST]({ members }: MemberListPayload) {
     console.log('EVENT.MEMBER.LIST')
     this.emit('member.list', members)
-    //this.$accessor.user.setMembers(members)
+    //user.setMembers(members)
   }
 
-  public [EVENT.MEMBER.CONNECTED](member: MemberPayload) {
+  protected [EVENT.MEMBER.CONNECTED](member: MemberPayload) {
     console.log('EVENT.MEMBER.CONNECTED')
     this.emit('member.connected', member.id)
-    //this.$accessor.user.addMember(member)
+    //user.addMember(member)
   }
 
-  public [EVENT.MEMBER.DISCONNECTED]({ id }: MemberDisconnectPayload) {
+  protected [EVENT.MEMBER.DISCONNECTED]({ id }: MemberDisconnectPayload) {
     console.log('EVENT.MEMBER.DISCONNECTED')
     this.emit('member.disconnected', id)
-    //this.$accessor.user.delMember(id)
+    //user.delMember(id)
   }
 
   /////////////////////////////
   // Control Events
   /////////////////////////////
-  public [EVENT.CONTROL.LOCKED]({ id }: ControlPayload) {
+  protected [EVENT.CONTROL.LOCKED]({ id }: ControlPayload) {
     console.log('EVENT.CONTROL.LOCKED')
-    this.emit('host.change', id)
-    //this.$accessor.remote.setHost(id)
-    //this.$accessor.remote.changeKeyboard()
-    //
-    //const member = this.member(id)
-    //if (!member) {
-    //  return
-    //}
-    //
-    //if (this.id === id) {
-    //  this.$vue.$notify({
-    //    group: 'neko',
-    //    type: 'info',
-    //    title: this.$vue.$t('notifications.controls_taken', { name: this.$vue.$t('you') }) as string,
-    //    duration: 5000,
-    //    speed: 1000,
-    //  })
-    //}
+    this.emit('control.host', id)
+    //remote.setHost(id)
+    //remote.changeKeyboard()
   }
 
-  public [EVENT.CONTROL.RELEASE]({ id }: ControlPayload) {
+  protected [EVENT.CONTROL.RELEASE]({ id }: ControlPayload) {
     console.log('EVENT.CONTROL.RELEASE')
-    this.emit('host.change', null)
-    //this.$accessor.remote.reset()
-    //const member = this.member(id)
-    //if (!member) {
-    //  return
-    //}
-    //
-    //if (this.id === id) {
-    //  this.$vue.$notify({
-    //    group: 'neko',
-    //    type: 'info',
-    //    title: this.$vue.$t('notifications.controls_released', { name: this.$vue.$t('you') }) as string,
-    //    duration: 5000,
-    //    speed: 1000,
-    //  })
-    //}
+    this.emit('control.host', null)
+    //remote.reset()
   }
 
-  public [EVENT.CONTROL.REQUEST]({ id }: ControlPayload) {
+  protected [EVENT.CONTROL.REQUEST]({ id }: ControlPayload) {
     console.log('EVENT.CONTROL.REQUEST')
     this.emit('control.request', id)
-    //const member = this.member(id)
-    //if (!member) {
-    //  return
-    //}
-    //
-    //this.$vue.$notify({
-    //  group: 'neko',
-    //  type: 'info',
-    //  title: this.$vue.$t('notifications.controls_has', { name: member.displayname }) as string,
-    //  text: this.$vue.$t('notifications.controls_has_alt') as string,
-    //  duration: 5000,
-    //  speed: 1000,
-    //})
   }
 
-  public [EVENT.CONTROL.REQUESTING]({ id }: ControlPayload) {
+  protected [EVENT.CONTROL.REQUESTING]({ id }: ControlPayload) {
     console.log('EVENT.CONTROL.REQUESTING')
     this.emit('control.requesting', id)
-    //const member = this.member(id)
-    //if (!member || member.ignored) {
-    //  return
-    //}
-    //
-    //this.$vue.$notify({
-    //  group: 'neko',
-    //  type: 'info',
-    //  title: this.$vue.$t('notifications.controls_requesting', { name: member.displayname }) as string,
-    //  duration: 5000,
-    //  speed: 1000,
-    //})
   }
 
-  public [EVENT.CONTROL.GIVE]({ id, target }: ControlTargetPayload) {
+  protected [EVENT.CONTROL.GIVE]({ id, target }: ControlTargetPayload) {
     console.log('EVENT.CONTROL.GIVE')
-    this.emit('host.change', target)
-    //this.$accessor.remote.setHost(target)
-    //this.$accessor.remote.changeKeyboard()
+    this.emit('control.host', target)
+    //remote.setHost(target)
+    //remote.changeKeyboard()
   }
 
-  public [EVENT.CONTROL.CLIPBOARD]({ text }: ControlClipboardPayload) {
+  protected [EVENT.CONTROL.CLIPBOARD]({ text }: ControlClipboardPayload) {
     console.log('EVENT.CONTROL.CLIPBOARD')
     this.emit('clipboard.update', text)
-    //this.$accessor.remote.setClipboard(text)
+    //remote.setClipboard(text)
   }
 
   /////////////////////////////
   // Screen Events
   /////////////////////////////
-  public [EVENT.SCREEN.CONFIGURATIONS]({ configurations }: ScreenConfigurationsPayload) {
+  protected [EVENT.SCREEN.CONFIGURATIONS]({ configurations }: ScreenConfigurationsPayload) {
     console.log('EVENT.SCREEN.CONFIGURATIONS')
     this.emit('screen.configuration', configurations)
-    //this.$accessor.video.setConfigurations(configurations)
+    //video.setConfigurations(configurations)
   }
 
-  public [EVENT.SCREEN.RESOLUTION]({ id, width, height, rate }: ScreenResolutionPayload) {
+  protected [EVENT.SCREEN.RESOLUTION]({ id, width, height, rate }: ScreenResolutionPayload) {
     console.log('EVENT.SCREEN.RESOLUTION')
     this.emit('screen.size', width, height, rate)
-    //this.$accessor.video.setResolution({ width, height, rate })
+    //video.setResolution({ width, height, rate })
   }
 
   /////////////////////////////
   // Broadcast Events
   /////////////////////////////
-  public [EVENT.BROADCAST.STATUS](payload: BroadcastStatusPayload) {
+  protected [EVENT.BROADCAST.STATUS](payload: BroadcastStatusPayload) {
     console.log('EVENT.BROADCAST.STATUS')
-    this.emit('broadcast.status', payload)
-    //this.$accessor.settings.broadcastStatus(payload)
+    this.emit('broadcast.status', payload.url, payload.isActive)
+    //settings.broadcastStatus(payload)
   }
 
   /////////////////////////////
   // Admin Events
   /////////////////////////////
-  public [EVENT.ADMIN.BAN]({ id, target }: AdminTargetPayload) {
+  protected [EVENT.ADMIN.BAN]({ id, target }: AdminTargetPayload) {
     if (!target) return
 
     console.log('EVENT.ADMIN.BAN')
@@ -194,7 +159,7 @@ export class NekoMessages {
     // TODO
   }
 
-  public [EVENT.ADMIN.KICK]({ id, target }: AdminTargetPayload) {
+  protected [EVENT.ADMIN.KICK]({ id, target }: AdminTargetPayload) {
     if (!target) return
 
     console.log('EVENT.ADMIN.KICK')
@@ -202,62 +167,57 @@ export class NekoMessages {
     // TODO
   }
 
-  public [EVENT.ADMIN.MUTE]({ id, target }: AdminTargetPayload) {
+  protected [EVENT.ADMIN.MUTE]({ id, target }: AdminTargetPayload) {
     if (!target) return
 
     console.log('EVENT.ADMIN.MUTE')
     this.emit('member.muted', id, target)
-    //this.$accessor.user.setMuted({ id: target, muted: true })
+    //user.setMuted({ id: target, muted: true })
   }
 
-  public [EVENT.ADMIN.UNMUTE]({ id, target }: AdminTargetPayload) {
+  protected [EVENT.ADMIN.UNMUTE]({ id, target }: AdminTargetPayload) {
     if (!target) return
 
     console.log('EVENT.ADMIN.UNMUTE')
     this.emit('member.unmuted', id, target)
-    //this.$accessor.user.setMuted({ id: target, muted: false })
+    //user.setMuted({ id: target, muted: false })
   }
 
-  public [EVENT.ADMIN.LOCK]({ id }: AdminPayload) {
+  protected [EVENT.ADMIN.LOCK]({ id }: AdminPayload) {
     console.log('EVENT.ADMIN.LOCK')
     this.emit('room.locked', id)
-    //this.$accessor.setLocked(true)
+    //setLocked(true)
   }
 
-  public [EVENT.ADMIN.UNLOCK]({ id }: AdminPayload) {
+  protected [EVENT.ADMIN.UNLOCK]({ id }: AdminPayload) {
     console.log('EVENT.ADMIN.UNLOCK')
     this.emit('room.unlocked', id)
-    //this.$accessor.setLocked(false)
+    //setLocked(false)
   }
 
-  public [EVENT.ADMIN.CONTROL]({ id, target }: AdminTargetPayload) {
+  protected [EVENT.ADMIN.CONTROL]({ id, target }: AdminTargetPayload) {
     if (!target) return
 
     console.log('EVENT.ADMIN.CONTROL')
-    this.emit('host.change', id)
-    //this.$accessor.remote.setHost(id)
-    //this.$accessor.remote.changeKeyboard()
+    this.emit('control.host', id)
+    //remote.setHost(id)
+    //remote.changeKeyboard()
   }
 
-  public [EVENT.ADMIN.RELEASE]({ id, target }: AdminTargetPayload) {
+  protected [EVENT.ADMIN.RELEASE]({ id, target }: AdminTargetPayload) {
     if (!target) return
 
     console.log('EVENT.ADMIN.RELEASE')
-    this.emit('host.change', null)
-    //this.$accessor.remote.reset()
+    this.emit('control.host', null)
+    //remote.reset()
   }
 
-  public [EVENT.ADMIN.GIVE]({ id, target }: AdminTargetPayload) {
+  protected [EVENT.ADMIN.GIVE]({ id, target }: AdminTargetPayload) {
     if (!target) return
 
     console.log('EVENT.ADMIN.GIVE')
-    this.emit('host.change', target)
-    //this.$accessor.remote.setHost(target)
-    //this.$accessor.remote.changeKeyboard()
+    this.emit('control.host', target)
+    //remote.setHost(target)
+    //remote.changeKeyboard()
   }
-
-  // Utilities
-  //public member(id: string): Member | undefined {
-  //  return this.$accessor.user.members[id]
-  //}
 }
