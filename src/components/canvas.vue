@@ -1,9 +1,8 @@
 <template>
   <div ref="component" class="component">
-    <div ref="container" class="player-container">
+    <div ref="container" class="player-container" v-show="state.websocket == 'connected' && state.webrtc == 'connected'">
       <video ref="video" />
       <neko-overlay
-        v-if="websocket_state == 'connected' && webrtc_state == 'connected'"
         :webrtc="webrtc"
         :screenWidth="state.screen_size.width"
         :screenHeight="state.screen_size.height"
@@ -43,6 +42,7 @@
 <script lang="ts">
   import { Vue, Component, Ref, Watch, Prop } from 'vue-property-decorator'
   import ResizeObserver from 'resize-observer-polyfill'
+  import EventEmitter from 'eventemitter3'
 
   import { NekoWebSocket } from '~/internal/websocket'
   import { NekoWebRTC } from '~/internal/webrtc'
@@ -50,6 +50,12 @@
 
   import NekoState from '~/types/state'
   import Overlay from './overlay.vue'
+
+  export interface NekoEvents {
+    connecting: () => void
+    connected: () => void
+    disconnected: (error?: Error) => void
+  }
 
   @Component({
     name: 'neko-canvas',
@@ -66,6 +72,7 @@
     private websocket = new NekoWebSocket()
     private webrtc = new NekoWebRTC()
     private messages = new NekoMessages()
+    public readonly events = new EventEmitter<NekoEvents>()
 
     private state = {
       id: null,
@@ -76,10 +83,9 @@
         rate: 30,
       },
       is_controlling: false,
+      websocket: 'disconnected',
+      webrtc: 'disconnected',
     } as NekoState
-
-    private websocket_state = 'disconnected'
-    private webrtc_state = 'disconnected'
 
     public control = {
       request: () => {
@@ -146,13 +152,13 @@
         }
       })
       this.websocket.on('connecting', () => {
-        this.websocket_state = 'connecting'
+        Vue.set(this.state, 'websocket', 'connecting')
       })
       this.websocket.on('connected', () => {
-        this.websocket_state = 'connected'
+        Vue.set(this.state, 'websocket', 'connected')
       })
       this.websocket.on('disconnected', () => {
-        this.websocket_state = 'disconnected'
+        Vue.set(this.state, 'websocket', 'disconnected')
         this.webrtc.disconnect()
       })
 
@@ -174,13 +180,14 @@
         this.video.play()
       })
       this.webrtc.on('connecting', () => {
-        this.webrtc_state = 'connecting'
+        Vue.set(this.state, 'webrtc', 'connecting')
       })
       this.webrtc.on('connected', () => {
-        this.webrtc_state = 'connected'
+        Vue.set(this.state, 'webrtc', 'connected')
+        this.events.emit('connected')
       })
       this.webrtc.on('disconnected', () => {
-        this.webrtc_state = 'disconnected'
+        Vue.set(this.state, 'webrtc', 'disconnected')
       })
     }
 

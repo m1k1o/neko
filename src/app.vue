@@ -50,5 +50,11 @@
       this.container.style.width = this.width
       this.container.style.height = this.height
     }
+
+    mounted() {
+      this.neko.events.on('connected', () => {
+        console.log('connected...')
+      })
+    }
   }
 </script>
