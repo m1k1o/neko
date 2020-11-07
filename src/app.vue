@@ -52,8 +52,59 @@
     }
 
     mounted() {
-      this.neko.events.on('connected', () => {
+      this.neko.events.on('connect', () => {
         console.log('connected...')
+      })
+      this.neko.events.on('host.change', (id) => {
+        console.log('host.change', id)
+      })
+      this.neko.events.on('disconnect', (message) => {
+        console.log('disconnect', message)
+      })
+      this.neko.events.on('member.list', (members) => {
+        console.log('member.list', members)
+      })
+      this.neko.events.on('member.connected', (id) => {
+        console.log('member.connected', id)
+      })
+      this.neko.events.on('member.disconnected', (id) => {
+        console.log('member.disconnected', id)
+      })
+      this.neko.events.on('control.request', (id) => {
+        console.log('control.request', id)
+      })
+      this.neko.events.on('control.requesting', (id) => {
+        console.log('control.requesting', id)
+      })
+      this.neko.events.on('clipboard.update', (text) => {
+        console.log('clipboard.update', text)
+      })
+      this.neko.events.on('screen.configuration', (configurations) => {
+        console.log('screen.configuration', configurations)
+      })
+      this.neko.events.on('screen.size', (width, height, rate) => {
+        console.log('screen.size', width, height, rate)
+      })
+      this.neko.events.on('broadcast.status', (payload) => {
+        console.log('broadcast.status', payload)
+      })
+      this.neko.events.on('member.ban', (id, target) => {
+        console.log('member.ban', id, target)
+      })
+      this.neko.events.on('member.kick', (id, target) => {
+        console.log('member.kick', id, target)
+      })
+      this.neko.events.on('member.muted', (id, target) => {
+        console.log('member.muted', id, target)
+      })
+      this.neko.events.on('member.unmuted', (id, target) => {
+        console.log('member.unmuted', id, target)
+      })
+      this.neko.events.on('room.locked', (id) => {
+        console.log('room.locked', id)
+      })
+      this.neko.events.on('room.unlocked', (id) => {
+        console.log('room.unlocked', id)
       })
     }
   }

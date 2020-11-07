@@ -1,6 +1,10 @@
 <template>
   <div ref="component" class="component">
-    <div ref="container" class="player-container" v-show="state.websocket == 'connected' && state.webrtc == 'connected'">
+    <div
+      ref="container"
+      class="player-container"
+      v-show="state.websocket == 'connected' && state.webrtc == 'connected'"
+    >
       <video ref="video" />
       <neko-overlay
         :webrtc="webrtc"
@@ -68,11 +72,11 @@
     @Ref('container') readonly _container!: HTMLElement
     @Ref('video') public readonly video!: HTMLVideoElement
 
+    public events = new EventEmitter()
     private observer = new ResizeObserver(this.onResize.bind(this))
     private websocket = new NekoWebSocket()
     private webrtc = new NekoWebRTC()
-    private messages = new NekoMessages()
-    public readonly events = new EventEmitter<NekoEvents>()
+    private messages = new NekoMessages(this.events)
 
     private state = {
       id: null,
@@ -184,7 +188,7 @@
       })
       this.webrtc.on('connected', () => {
         Vue.set(this.state, 'webrtc', 'connected')
-        this.events.emit('connected')
+        this.events.emit('connect')
       })
       this.webrtc.on('disconnected', () => {
         Vue.set(this.state, 'webrtc', 'disconnected')
