@@ -11,41 +11,46 @@ import (
 )
 
 type CaptureManagerCtx struct {
-	logger        zerolog.Logger
-	video         *gst.Pipeline
-	audio         *gst.Pipeline
-	broadcast     *gst.Pipeline
-	config        *config.Capture
-	audio_stop    chan bool
-	video_stop    chan bool
-	emmiter       events.EventEmmiter
-	streaming     bool
-	broadcasting  bool
-	broadcast_url string
-	desktop       types.DesktopManager
+	logger          zerolog.Logger
+	video           *gst.Pipeline
+	audio           *gst.Pipeline
+	broadcast       *gst.Pipeline
+	config          *config.Capture
+	audio_emit_stop chan bool
+	video_emit_stop chan bool
+	emmiter         events.EventEmmiter
+	streaming       bool
+	broadcasting    bool
+	broadcast_url   string
+	desktop         types.DesktopManager
 }
 
 func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCtx {
 	return &CaptureManagerCtx{
-		logger:        log.With().Str("module", "capture").Logger(),
-		audio_stop:     make(chan bool),
-		video_stop:     make(chan bool),
-		emmiter:       events.New(),
-		config:        config,
-		streaming:     false,
-		broadcasting:  false,
-		broadcast_url: "",
-		desktop:       desktop,
+		logger:          log.With().Str("module", "capture").Logger(),
+		audio_emit_stop: make(chan bool),
+		video_emit_stop: make(chan bool),
+		emmiter:         events.New(),
+		config:          config,
+		streaming:       false,
+		broadcasting:    false,
+		broadcast_url:   "",
+		desktop:         desktop,
 	}
 }
 
 func (manager *CaptureManagerCtx) Start() {
 	manager.StartBroadcastPipeline()
 
-	manager.desktop.OnScreenSizeChange(func(width int, height int, rate int) {
-		manager.video_stop <- true
-		manager.StopBroadcastPipeline()
+	manager.desktop.OnBeforeScreenSizeChange(func() {
+		manager.video_emit_stop <- true
+		manager.logger.Info().Msgf("stopping video pipeline")
+		manager.video.Stop()
 
+		manager.StopBroadcastPipeline()
+	})
+
+	manager.desktop.OnAfterScreenSizeChange(func() {
 		manager.createVideoPipeline()
 		manager.StartBroadcastPipeline()
 	})
@@ -53,10 +58,7 @@ func (manager *CaptureManagerCtx) Start() {
 
 func (manager *CaptureManagerCtx) Shutdown() error {
 	manager.logger.Info().Msgf("capture shutting down")
-	manager.audio_stop <- true
-	manager.video_stop <- true
-	manager.StopBroadcastPipeline()
-
+	manager.StopStream()
 	return nil
 }
 
@@ -81,7 +83,7 @@ func (manager *CaptureManagerCtx) OnAudioFrame(listener func(sample types.Sample
 }
 
 func (manager *CaptureManagerCtx) StartStream() {
-	manager.logger.Info().Msgf("Pipelines starting...")
+	manager.logger.Info().Msgf("starting pipelines")
 
 	manager.createVideoPipeline()
 	manager.createAudioPipeline()
@@ -89,10 +91,16 @@ func (manager *CaptureManagerCtx) StartStream() {
 }
 
 func (manager *CaptureManagerCtx) StopStream() {
-	manager.logger.Info().Msgf("Pipelines stopping...")
+	manager.logger.Info().Msgf("stopping pipelines")
 
-	manager.audio_stop <- true
-	manager.video_stop <- true
+	manager.audio_emit_stop <- true
+	manager.logger.Info().Msgf("stopping video pipeline")
+	manager.audio.Stop()
+
+	manager.video_emit_stop <- true
+	manager.logger.Info().Msgf("stopping audio pipeline")
+	manager.video.Stop()
+
 	manager.streaming = false
 }
 
@@ -107,7 +115,7 @@ func (manager *CaptureManagerCtx) createVideoPipeline() {
 		Str("video_codec", manager.config.VideoCodec).
 		Str("video_display", manager.config.Display).
 		Str("video_params", manager.config.VideoParams).
-		Msgf("Creating video pipeline...")
+		Msgf("creating video pipeline")
 
 	manager.video, err = gst.CreateAppPipeline(
 		manager.config.VideoCodec,
@@ -120,23 +128,18 @@ func (manager *CaptureManagerCtx) createVideoPipeline() {
 	}
 
 	manager.logger.Info().
-		Str("pipeline", manager.video.Src).
-		Msgf("Starting video pipeline...")
+		Str("src", manager.video.Src).
+		Msgf("starting video pipeline...")
 
 	manager.video.Start()
 
 	go func() {
-		manager.logger.Debug().Msg("started emitting video data")
-
-		defer func() {
-			manager.logger.Debug().Msg("stopped emitting video data")
-		}()
+		manager.logger.Debug().Msg("started emitting video samples")
 
 		for {
 			select {
-			case <-manager.video_stop:
-				manager.logger.Info().Msgf("Stopping video pipeline...")
-				manager.video.Stop()
+			case <-manager.video_emit_stop:
+				manager.logger.Debug().Msg("stopped emitting video samples")
 				return
 			case sample := <-manager.video.Sample:
 				manager.emmiter.Emit("video", sample)
@@ -152,7 +155,7 @@ func (manager *CaptureManagerCtx) createAudioPipeline() {
 		Str("audio_codec", manager.config.AudioCodec).
 		Str("audio_display", manager.config.Device).
 		Str("audio_params", manager.config.AudioParams).
-		Msgf("Creating audio pipeline...")
+		Msgf("creating audio pipeline")
 
 	manager.audio, err = gst.CreateAppPipeline(
 		manager.config.AudioCodec,
@@ -165,23 +168,18 @@ func (manager *CaptureManagerCtx) createAudioPipeline() {
 	}
 
 	manager.logger.Info().
-		Str("pipeline", manager.audio.Src).
-		Msgf("Starting audio pipeline...")
+		Str("src", manager.audio.Src).
+		Msgf("starting audio pipeline")
 
 	manager.audio.Start()
 
 	go func() {
-		manager.logger.Debug().Msg("started emitting audio data")
-
-		defer func() {
-			manager.logger.Debug().Msg("stopped emitting audio data")
-		}()
+		manager.logger.Debug().Msg("started emitting audio samples")
 
 		for {
 			select {
-			case <-manager.audio_stop:
-				manager.logger.Info().Msgf("Stopping audio pipeline...")
-				manager.audio.Stop()
+			case <-manager.audio_emit_stop:
+				manager.logger.Debug().Msg("stopped emitting audio samples")
 				return
 			case sample := <-manager.audio.Sample:
 				manager.emmiter.Emit("audio", sample)

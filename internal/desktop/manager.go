@@ -64,9 +64,15 @@ func (manager *DesktopManagerCtx) Start() {
 	}()
 }
 
-func (manager *DesktopManagerCtx) OnScreenSizeChange(listener func(width int, height int, rate int)) {
-	manager.emmiter.On("screen_size_change", func(payload ...interface{}) {
-		listener(payload[0].(int), payload[1].(int), payload[2].(int))
+func (manager *DesktopManagerCtx) OnBeforeScreenSizeChange(listener func()) {
+	manager.emmiter.On("before_screen_size_change", func(payload ...interface{}) {
+		listener()
+	})
+}
+
+func (manager *DesktopManagerCtx) OnAfterScreenSizeChange(listener func()) {
+	manager.emmiter.On("after_screen_size_change", func(payload ...interface{}) {
+		listener()
 	})
 }
 

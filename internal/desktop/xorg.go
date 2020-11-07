@@ -42,12 +42,10 @@ func (manager *DesktopManagerCtx) GetScreenSize() *types.ScreenSize {
 }
 
 func (manager *DesktopManagerCtx) ChangeScreenSize(width int, height int, rate int) error {
-	if err := xorg.ChangeScreenSize(width, height, rate); err != nil {
-		return err
-	}
-
-	manager.emmiter.Emit("screen_size_change", width, height, rate)
-	return nil
+	manager.emmiter.Emit("before_screen_size_change")
+	err := xorg.ChangeScreenSize(width, height, rate)
+	manager.emmiter.Emit("after_screen_size_change")
+	return err
 }
 
 func (manager *DesktopManagerCtx) SetKeyboardLayout(layout string) {
