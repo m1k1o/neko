@@ -85,7 +85,7 @@ func (s *ServerCtx) Start() {
 				s.logger.Panic().Err(err).Msg("unable to start http server")
 			}
 		}()
-		s.logger.Warn().Msgf("http listening on %s", s.http.Addr)
+		s.logger.Info().Msgf("http listening on %s", s.http.Addr)
 	}
 }
 
