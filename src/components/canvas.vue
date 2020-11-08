@@ -1,10 +1,6 @@
 <template>
   <div ref="component" class="component">
-    <div
-      ref="container"
-      class="player-container"
-      v-show="state.connection.websocket == 'connected' && state.connection.webrtc == 'connected'"
-    >
+    <div ref="container" class="player-container">
       <video ref="video" />
       <neko-overlay
         :webrtc="webrtc"
@@ -175,17 +171,8 @@
       },
     }
 
-    public scroll = {
-      sensitivity: (sensitivity: number) => {
-        Vue.set(this.state.control.scroll, 'sensitivity', sensitivity)
-      },
-      inverse: (inverse: boolean) => {
-        Vue.set(this.state.control.scroll, 'inverse', inverse)
-      },
-    }
-
     public connect(url: string, password: string, name: string) {
-      if (this.websocket.connected) {
+      if (this.connected) {
         throw new Error('client already connected')
       }
 
@@ -194,30 +181,39 @@
     }
 
     public disconnect() {
-      if (!this.websocket.connected) {
+      if (!this.connected) {
         throw new Error('client not connected')
       }
 
       this.websocket.disconnect()
+
+      // TODO: reset state
+      Vue.set(this.state.member, 'is_controlling', false)
     }
 
     private mounted() {
-      // Update canvas on resize
+      // update canvas on resize
       this.observer.observe(this._component)
 
+      // change host
       this.events.on('control.host', (id: string | null) => {
         Vue.set(this.state.member, 'is_controlling', id != null && id === this.state.member.id)
       })
+
+      // hardcoded webrtc for now
+      Vue.set(this.state.connection, 'type', 'webrtc')
+      Vue.set(this.state.connection, 'can_watch', this.webrtc.supported)
+      Vue.set(this.state.connection, 'can_control', this.webrtc.supported)
 
       this._component.addEventListener('fullscreenchange', () => {
         Vue.set(this.state.screen, 'fullscreen', document.fullscreenElement !== null)
         this.onResize()
       })
 
-      // Video
+      // video
       VideoRegister(this.video, this.state.video)
 
-      // WebSocket
+      // websocket
       this.websocket.on('message', async (event: string, payload: any) => {
         switch (event) {
           case 'signal/provide':
@@ -244,12 +240,12 @@
         this.webrtc.disconnect()
       })
 
-      // WebRTC
+      // webrtc
       this.webrtc.on('track', (event: RTCTrackEvent) => {
         const { track, streams } = event
         if (track.kind === 'audio') return
 
-        // Create stream
+        // create stream
         if ('srcObject' in this.video) {
           this.video.srcObject = streams[0]
         } else {
@@ -282,15 +278,13 @@
     }
 
     private onResize() {
-      console.log('Resize event triggered.')
-
       const { width, height } = this.state.screen.size
       const screen_ratio = width / height
 
       const { offsetWidth, offsetHeight } = this._component
       const canvas_ratio = offsetWidth / offsetHeight
 
-      // Vertical centering
+      // vertical centering
       if (screen_ratio > canvas_ratio) {
         const vertical = offsetWidth / screen_ratio
         this._container.style.width = `${offsetWidth}px`
@@ -298,7 +292,7 @@
         this._container.style.marginTop = `${(offsetHeight - vertical) / 2}px`
         this._container.style.marginLeft = `0px`
       }
-      // Horizontal centering
+      // horizontal centering
       else if (screen_ratio < canvas_ratio) {
         const horizontal = screen_ratio * offsetHeight
         this._container.style.width = `${horizontal}px`
@@ -306,7 +300,7 @@
         this._container.style.marginTop = `0px`
         this._container.style.marginLeft = `${(offsetWidth - horizontal) / 2}px`
       }
-      // No centering
+      // no centering
       else {
         this._container.style.width = `${offsetWidth}px`
         this._container.style.height = `${offsetHeight}px`

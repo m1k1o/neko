@@ -11,15 +11,15 @@
           <th>connection.webrtc</th>
           <td>{{ neko.state.connection.webrtc }}</td>
         </tr>
-        <tr>
+        <tr class="ok">
           <th>connection.type</th>
           <td>{{ neko.state.connection.type }}</td>
         </tr>
-        <tr>
+        <tr class="ok">
           <th>connection.can_watch</th>
           <td>{{ neko.state.connection.can_watch }}</td>
         </tr>
-        <tr>
+        <tr class="ok">
           <th>connection.can_control</th>
           <td>{{ neko.state.connection.can_control }}</td>
         </tr>
