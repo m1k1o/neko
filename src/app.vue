@@ -11,12 +11,24 @@
       <button @click="neko.video.play()">play stream</button><br />
     </template>
 
-      <table class="states" v-if="loaded">
-        <tr><th>is connected</th><td>{{ neko.connected ? 'yes' : 'no' }}</td></tr>
-        <tr><th>is contolling</th><td>{{ is_controlling ? 'yes' : 'no' }}</td></tr>
-        <tr><th>websocket state</th><td>{{ neko.state.websocket }}</td></tr>
-        <tr><th>webrtc state</th><td>{{ neko.state.webrtc }}</td></tr>
-      </table>
+    <table class="states" v-if="loaded">
+      <tr>
+        <th>is connected</th>
+        <td>{{ neko.connected ? 'yes' : 'no' }}</td>
+      </tr>
+      <tr>
+        <th>is contolling</th>
+        <td>{{ is_controlling ? 'yes' : 'no' }}</td>
+      </tr>
+      <tr>
+        <th>websocket state</th>
+        <td>{{ neko.state.connection.websocket }}</td>
+      </tr>
+      <tr>
+        <th>webrtc state</th>
+        <td>{{ neko.state.connection.webrtc }}</td>
+      </tr>
+    </table>
 
     <div ref="container" style="width: 1280px; height: 720px; border: 2px solid red">
       <neko-canvas ref="neko" />
@@ -36,11 +48,12 @@
 
 <style lang="scss" scoped>
   .states {
-    td, th {
+    td,
+    th {
       border: 1px solid black;
       padding: 4px;
     }
-    
+
     th {
       text-align: right;
     }
@@ -64,11 +77,11 @@
     loaded: boolean = false
 
     get is_controlling() {
-      return this.neko.state.is_controlling
+      return this.neko.state.member.is_controlling
     }
 
     get available_screen_sizes() {
-      return this.neko.state.available_screen_sizes
+      return this.neko.state.screen.configurations
     }
 
     connect() {

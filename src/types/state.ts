@@ -1,21 +1,71 @@
+export default interface State {
+  connection: Connection
+  video: Video
+  control: Control
+  screen: Screen
+  member: Member
+  members: Member[]
+}
+
+/////////////////////////////
+// Connection
+/////////////////////////////
+export interface Connection {
+  websocket: 'disconnected' | 'connecting' | 'connected'
+  webrtc: 'disconnected' | 'connecting' | 'connected'
+  type: 'webrtc' | 'fallback' | 'none'
+  can_watch: boolean
+  can_control: boolean
+  clipboard_access: boolean   
+}
+
+/////////////////////////////
+// Video
+/////////////////////////////
+export interface Video {
+  playable: boolean
+  playing: boolean
+  volume: number 
+}
+
+/////////////////////////////
+// Control
+/////////////////////////////
+export interface Control {
+  scroll: Scroll
+  host: Member | null
+}
+
+export interface Scroll {
+  inverse: boolean
+  sensitivity: number
+}
+
+/////////////////////////////
+// Screen
+/////////////////////////////
+export interface Screen {
+  size: ScreenSize
+  configurations: ScreenSize[]
+  is_fullscreen: boolean
+}
+
 export interface ScreenSize {
   width: number
   height: number
   rate: number
 }
 
-export interface Scroll {
-  sensitivity: number
-  invert: boolean
-}
-
-export default interface State {
+/////////////////////////////
+// Member
+/////////////////////////////
+export interface Member {
   id: string | null
-  display_name: string | null
-  screen_size: ScreenSize
-  available_screen_sizes: ScreenSize[]
-  scroll: Scroll
+  name: string | null
+  is_admin: boolean
+  is_watching: boolean
   is_controlling: boolean
-  websocket: 'connected' | 'connecting' | 'disconnected'
-  webrtc: 'connected' | 'connecting' | 'disconnected'
+  can_watch: boolean
+  can_control: boolean
+  clipboard_access: boolean
 }

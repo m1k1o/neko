@@ -17,6 +17,7 @@ import {
 
 import EventEmitter from 'eventemitter3'
 import { NekoWebSocket } from './websocket'
+import NekoState from '~/types/state'
 
 export interface NekoEvents {
   ['system.websocket']: (state: 'connected' | 'connecting' | 'disconnected') => void
@@ -42,9 +43,12 @@ export interface NekoEvents {
 }
 
 export class NekoMessages extends EventEmitter<NekoEvents> {
-  constructor(websocket: NekoWebSocket) {
+  state: NekoState
+
+  constructor(websocket: NekoWebSocket, state: NekoState) {
     super()
 
+    this.state = state
     websocket.on('message', async (event: string, payload: any) => {
       // @ts-ignore
       if (typeof this[event] === 'function') {

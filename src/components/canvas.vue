@@ -3,16 +3,16 @@
     <div
       ref="container"
       class="player-container"
-      v-show="state.websocket == 'connected' && state.webrtc == 'connected'"
+      v-show="state.connection.websocket == 'connected' && state.connection.webrtc == 'connected'"
     >
       <video ref="video" />
       <neko-overlay
         :webrtc="webrtc"
-        :screenWidth="state.screen_size.width"
-        :screenHeight="state.screen_size.height"
-        :isControling="state.is_controlling"
-        :scrollSensitivity="state.scroll.sensitivity"
-        :scrollInvert="state.scroll.invert"
+        :screenWidth="state.screen.size.width"
+        :screenHeight="state.screen.size.height"
+        :isControling="state.member.is_controlling"
+        :scrollSensitivity="state.control.scroll.sensitivity"
+        :scrollInvert="state.control.scroll.invert"
       />
     </div>
   </div>
@@ -76,27 +76,53 @@
     private webrtc = new NekoWebRTC()
     private observer = new ResizeObserver(this.onResize.bind(this))
 
-    public events = new NekoMessages(this.websocket)
     public state = {
-      id: null,
-      display_name: null,
-      screen_size: {
-        width: 1280,
-        height: 720,
-        rate: 30,
+      connection: {
+        websocket: 'disconnected',
+        webrtc: 'disconnected',
+        type: 'none',
+        can_watch: false,
+        can_control: false,
+        clipboard_access: false,
       },
-      available_screen_sizes: [],
-      scroll: {
-        sensitivity: 10,
-        invert: true,
+      video: {
+        playable: false,
+        playing: false,
+        volume: 0,
       },
-      is_controlling: false,
-      websocket: 'disconnected',
-      webrtc: 'disconnected',
+      control: {
+        scroll: {
+          inverse: true,
+          sensitivity: 10,
+        },
+        host: null,
+      },
+      screen: {
+        size: {
+          width: 1280,
+          height: 720,
+          rate: 30,
+        },
+        configurations: [],
+        is_fullscreen: false,
+      },
+      member: {
+        id: null,
+        name: null,
+        is_admin: false,
+        is_watching: false,
+        is_controlling: false,
+        can_watch: false,
+        can_control: false,
+        clipboard_access: false,
+      },
+      members: [],
     } as NekoState
 
+    public events = new NekoMessages(this.websocket, this.state)
+
     public get connected() {
-      return this.state.websocket == 'connected' && this.state.webrtc == 'connected'
+      return this.state.connection.websocket == 'connected' && this.state.connection.webrtc == 'connected'
     }
 
     public control = {
@@ -116,10 +142,10 @@
 
     public scroll = {
       sensitivity: (sensitivity: number) => {
-        Vue.set(this.state.scroll, 'sensitivity', sensitivity)
+        Vue.set(this.state.control.scroll, 'sensitivity', sensitivity)
       },
       inverse: (inverse: boolean) => {
-        Vue.set(this.state.scroll, 'inverse', inverse)
+        Vue.set(this.state.control.scroll, 'inverse', inverse)
       },
     }
 
@@ -128,7 +154,7 @@
         throw new Error('client already connected')
       }
 
-      Vue.set(this.state, 'display_name', name)
+      Vue.set(this.state.member, 'name', name)
       this.websocket.connect(url, password)
     }
 
@@ -145,22 +171,22 @@
       this.observer.observe(this._component)
 
       this.events.on('control.host', (id: string | null) => {
-        Vue.set(this.state, 'is_controlling', id != null && id === this.state.id)
+        Vue.set(this.state.member, 'is_controlling', id != null && id === this.state.member.id)
       })
 
       // WebSocket
       this.websocket.on('message', async (event: string, payload: any) => {
         switch (event) {
           case 'signal/provide':
-            Vue.set(this.state, 'id', payload.id)
+            Vue.set(this.state.member, 'id', payload.id)
 
             try {
               let sdp = await this.webrtc.connect(payload.sdp, payload.lite, payload.ice)
-              this.websocket.send('signal/answer', { sdp, displayname: this.state.display_name })
+              this.websocket.send('signal/answer', { sdp, displayname: this.state.member.name })
             } catch (e) {}
             break
           case 'screen/resolution':
-            Vue.set(this.state, 'screen_size', payload)
+            Vue.set(this.state.screen, 'size', payload)
             this.onResize()
             break
           case 'screen/configurations':
@@ -190,21 +216,21 @@
               return b.width - a.width
             })
 
-            Vue.set(this.state, 'available_screen_sizes', conf)
+            Vue.set(this.state.screen, 'configurations', conf)
             this.onResize()
             break
         }
       })
       this.websocket.on('connecting', () => {
-        Vue.set(this.state, 'websocket', 'connecting')
+        Vue.set(this.state.connection, 'websocket', 'connecting')
         this.events.emit('system.websocket', 'connecting')
       })
       this.websocket.on('connected', () => {
-        Vue.set(this.state, 'websocket', 'connected')
+        Vue.set(this.state.connection, 'websocket', 'connected')
         this.events.emit('system.websocket', 'connected')
       })
       this.websocket.on('disconnected', () => {
-        Vue.set(this.state, 'websocket', 'disconnected')
+        Vue.set(this.state.connection, 'websocket', 'disconnected')
         this.events.emit('system.websocket', 'disconnected')
         this.webrtc.disconnect()
       })
@@ -225,15 +251,15 @@
         this.video.play()
       })
       this.webrtc.on('connecting', () => {
-        Vue.set(this.state, 'webrtc', 'connecting')
+        Vue.set(this.state.connection, 'webrtc', 'connecting')
         this.events.emit('system.webrtc', 'connecting')
       })
       this.webrtc.on('connected', () => {
-        Vue.set(this.state, 'webrtc', 'connected')
+        Vue.set(this.state.connection, 'webrtc', 'connected')
         this.events.emit('system.webrtc', 'connected')
       })
       this.webrtc.on('disconnected', () => {
-        Vue.set(this.state, 'webrtc', 'disconnected')
+        Vue.set(this.state.connection, 'webrtc', 'disconnected')
         this.events.emit('system.webrtc', 'disconnected')
       })
     }
@@ -247,7 +273,7 @@
     private onResize() {
       console.log('Resize event triggered.')
 
-      const { width, height } = this.state.screen_size
+      const { width, height } = this.state.screen.size
       const screen_ratio = width / height
 
       const { offsetWidth, offsetHeight } = this._component
