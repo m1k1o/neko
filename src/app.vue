@@ -99,7 +99,7 @@
           <th>member.is_admin</th>
           <td>{{ neko.state.member.is_admin }}</td>
         </tr>
-        <tr>
+        <tr class="ok">
           <th>member.is_watching</th>
           <td>{{ neko.state.member.is_watching }}</td>
         </tr>

@@ -131,6 +131,9 @@
       if (!this.video.paused && !play) {
         this.video.pause()
       }
+
+      // TODO: check if user has tab focused and send via websocket
+      Vue.set(this.state.member, 'is_watching', play)
     }
 
     @Watch('state.video.volume')
@@ -267,7 +270,7 @@
         Vue.set(this.state.connection, 'webrtc', 'disconnected')
         this.events.emit('system.webrtc', 'disconnected')
         // @ts-ignore
-        this.video.src = null
+        if (this.video) this.video.src = null
       })
     }
 
