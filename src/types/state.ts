@@ -47,7 +47,7 @@ export interface Scroll {
 export interface Screen {
   size: ScreenSize
   configurations: ScreenSize[]
-  is_fullscreen: boolean
+  fullscreen: boolean
 }
 
 export interface ScreenSize {

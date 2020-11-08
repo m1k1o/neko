@@ -105,7 +105,7 @@
           rate: 30,
         },
         configurations: [],
-        is_fullscreen: false,
+        fullscreen: false,
       },
       member: {
         id: null,
@@ -149,6 +149,15 @@
     @Watch('state.screen.size')
     onScreenSizeChanged() {
       this.onResize()
+    }
+
+    @Watch('state.screen.fullscreen')
+    onScreenFullscreenChanged() {
+      if (document.fullscreenElement !== null) {
+        document.exitFullscreen()
+      } else {
+        this._component.requestFullscreen()
+      }
     }
 
     public control = {
@@ -198,6 +207,11 @@
 
       this.events.on('control.host', (id: string | null) => {
         Vue.set(this.state.member, 'is_controlling', id != null && id === this.state.member.id)
+      })
+
+      this._component.addEventListener('fullscreenchange', () => {
+        Vue.set(this.state.screen, 'fullscreen', document.fullscreenElement !== null)
+        this.onResize()
       })
 
       // Video

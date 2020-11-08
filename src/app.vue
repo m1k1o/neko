@@ -83,9 +83,9 @@
             </select>
           </td>
         </tr>
-        <tr>
-          <th>screen.is_fullscreen</th>
-          <td>{{ neko.state.screen.is_fullscreen }}</td>
+        <tr class="ok">
+          <th>screen.fullscreen</th>
+          <td><input type="checkbox" v-model="neko.state.screen.fullscreen" /></td>
         </tr>
         <tr class="ok">
           <th>member.id</th>
