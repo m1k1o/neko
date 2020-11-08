@@ -1,3 +1,4 @@
+import Vue from 'vue'
 import { Member, ScreenConfigurations } from '../types/structs'
 import { EVENT } from '../types/events'
 import {
@@ -31,8 +32,7 @@ export interface NekoEvents {
   ['control.request']: (id: string) => void
   ['control.requesting']: (id: string) => void
   ['clipboard.update']: (text: string) => void
-  ['screen.configuration']: (configurations: ScreenConfigurations) => void
-  ['screen.size']: (width: number, height: number, rate: number) => void
+  ['screen.size']: (id: string) => void
   ['broadcast.status']: (url: string, isActive: boolean) => void
   ['member.ban']: (id: string, target: string) => void
   ['member.kick']: (id: string, target: string) => void
@@ -132,15 +132,38 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
   // Screen Events
   /////////////////////////////
   protected [EVENT.SCREEN.CONFIGURATIONS]({ configurations }: ScreenConfigurationsPayload) {
-    console.log('EVENT.SCREEN.CONFIGURATIONS')
-    this.emit('screen.configuration', configurations)
-    //video.setConfigurations(configurations)
+    let data = []
+    for (const i of Object.keys(configurations)) {
+      const { width, height, rates } = configurations[i]
+      if (width >= 600 && height >= 300) {
+        for (const j of Object.keys(rates)) {
+          const rate = rates[j]
+          if (rate === 30 || rate === 60) {
+            data.push({
+              width,
+              height,
+              rate,
+            })
+          }
+        }
+      }
+    }
+
+    let conf = data.sort((a, b) => {
+      if (b.width === a.width && b.height == a.height) {
+        return b.rate - a.rate
+      } else if (b.width === a.width) {
+        return b.height - a.height
+      }
+      return b.width - a.width
+    })
+
+    Vue.set(this.state.screen, 'configurations', conf)
   }
 
   protected [EVENT.SCREEN.RESOLUTION]({ id, width, height, rate }: ScreenResolutionPayload) {
-    console.log('EVENT.SCREEN.RESOLUTION')
-    this.emit('screen.size', width, height, rate)
-    //video.setResolution({ width, height, rate })
+    Vue.set(this.state.screen, 'size', { width, height, rate })
+    if (id) this.emit('screen.size', id)
   }
 
   /////////////////////////////

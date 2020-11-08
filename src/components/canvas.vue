@@ -12,7 +12,7 @@
         :screenHeight="state.screen.size.height"
         :isControling="state.member.is_controlling"
         :scrollSensitivity="state.control.scroll.sensitivity"
-        :scrollInvert="state.control.scroll.invert"
+        :scrollInvert="state.control.scroll.inverse"
       />
     </div>
   </div>
@@ -51,6 +51,7 @@
   import { NekoWebSocket } from '~/internal/websocket'
   import { NekoWebRTC } from '~/internal/webrtc'
   import { NekoMessages } from '~/internal/messages'
+  import { register as VideoRegister } from '~/internal/video'
 
   import NekoState from '~/types/state'
   import Overlay from './overlay.vue'
@@ -93,7 +94,7 @@
       control: {
         scroll: {
           inverse: true,
-          sensitivity: 10,
+          sensitivity: 1,
         },
         host: null,
       },
@@ -123,6 +124,11 @@
 
     public get connected() {
       return this.state.connection.websocket == 'connected' && this.state.connection.webrtc == 'connected'
+    }
+
+    @Watch('state.screen.size')
+    onScreenSizeChanged() {
+      this.onResize()
     }
 
     public control = {
@@ -174,6 +180,9 @@
         Vue.set(this.state.member, 'is_controlling', id != null && id === this.state.member.id)
       })
 
+      // Video
+      VideoRegister(this.video, this.state.video)
+
       // WebSocket
       this.websocket.on('message', async (event: string, payload: any) => {
         switch (event) {
@@ -184,40 +193,6 @@
               let sdp = await this.webrtc.connect(payload.sdp, payload.lite, payload.ice)
               this.websocket.send('signal/answer', { sdp, displayname: this.state.member.name })
             } catch (e) {}
-            break
-          case 'screen/resolution':
-            Vue.set(this.state.screen, 'size', payload)
-            this.onResize()
-            break
-          case 'screen/configurations':
-            let data = []
-            for (const i of Object.keys(payload.configurations)) {
-              const { width, height, rates } = payload.configurations[i]
-              if (width >= 600 && height >= 300) {
-                for (const j of Object.keys(rates)) {
-                  const rate = rates[j]
-                  if (rate === 30 || rate === 60) {
-                    data.push({
-                      width,
-                      height,
-                      rate,
-                    })
-                  }
-                }
-              }
-            }
-
-            let conf = data.sort((a, b) => {
-              if (b.width === a.width && b.height == a.height) {
-                return b.rate - a.rate
-              } else if (b.width === a.width) {
-                return b.height - a.height
-              }
-              return b.width - a.width
-            })
-
-            Vue.set(this.state.screen, 'configurations', conf)
-            this.onResize()
             break
         }
       })
@@ -261,6 +236,8 @@
       this.webrtc.on('disconnected', () => {
         Vue.set(this.state.connection, 'webrtc', 'disconnected')
         this.events.emit('system.webrtc', 'disconnected')
+        // @ts-ignore
+        this.video.src = null
       })
     }
 
