@@ -95,7 +95,7 @@
           <th>member.name</th>
           <td>{{ neko.state.member.name }}</td>
         </tr>
-        <tr>
+        <tr class="ok">
           <th>member.is_admin</th>
           <td>{{ neko.state.member.is_admin }}</td>
         </tr>

@@ -81,6 +81,10 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
     console.log('EVENT.MEMBER.CONNECTED')
     this.emit('member.connected', member.id)
     //user.addMember(member)
+
+    if (member.id === this.state.member.id) {
+      Vue.set(this.state.member, 'is_admin', member.admin)
+    }
   }
 
   protected [EVENT.MEMBER.DISCONNECTED]({ id }: MemberDisconnectPayload) {
