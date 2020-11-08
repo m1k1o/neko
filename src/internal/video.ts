@@ -20,6 +20,10 @@ export function register(el: HTMLVideoElement, state: Video) {
     Vue.set(state, 'playing', false)
   })
   el.addEventListener('volumechange', (value) => {
-    Vue.set(state, 'volume', value)
+    Vue.set(state, 'volume', el.volume)
   })
+
+  // Initial state
+  Vue.set(state, 'volume', el.volume)
+  Vue.set(state, 'playing', !el.paused)
 }

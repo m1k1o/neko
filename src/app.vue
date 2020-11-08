@@ -33,11 +33,11 @@
         </tr>
         <tr class="ok">
           <th>video.playing</th>
-          <td>{{ neko.state.video.playing }}</td>
+          <td><input type="checkbox" v-model="neko.state.video.playing" /></td>
         </tr>
-        <tr>
+        <tr class="ok">
           <th>video.volume</th>
-          <td>{{ neko.state.video.volume }}</td>
+          <td><input type="range" min="0" max="1" v-model="neko.state.video.volume" step="0.01" /></td>
         </tr>
         <tr class="ok">
           <th>control.scroll.inverse</th>
@@ -133,8 +133,8 @@
         <button v-if="!is_controlling" @click="neko.control.request()">request control</button>
         <button v-else @click="neko.control.release()">release control</button>
 
-        <button @click="neko.video.pause()">pause stream</button>
-        <button @click="neko.video.play()">play stream</button><br />
+        <button v-if="neko.state.video.playing" @click="neko.state.video.playing = false">pause stream</button>
+        <button v-else @click="neko.state.video.playing = true">play stream</button><br />
       </template>
 
       <div ref="container" style="width: 1280px; height: 720px; border: 2px solid red">

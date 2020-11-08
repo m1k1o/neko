@@ -71,7 +71,7 @@
   export default class extends Vue {
     @Ref('component') readonly _component!: HTMLElement
     @Ref('container') readonly _container!: HTMLElement
-    @Ref('video') public readonly video!: HTMLVideoElement
+    @Ref('video') readonly video!: HTMLVideoElement
 
     private websocket = new NekoWebSocket()
     private webrtc = new NekoWebRTC()
@@ -124,6 +124,26 @@
 
     public get connected() {
       return this.state.connection.websocket == 'connected' && this.state.connection.webrtc == 'connected'
+    }
+
+    @Watch('state.video.playing')
+    onVideoPlayingChanged(play: boolean) {
+      if (this.video.paused && play) {
+        this.video.play()
+      }
+
+      if (!this.video.paused && !play) {
+        this.video.pause()
+      }
+    }
+
+    @Watch('state.video.volume')
+    onVideoVolumeChanged(value: number) {
+      if (value < 0 || value > 1) {
+        throw new Error('Out of range. Value must be between 0 and 1.')
+      }
+
+      this.video.volume = value
     }
 
     @Watch('state.screen.size')
