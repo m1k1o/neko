@@ -26,6 +26,7 @@ export interface Video {
   playable: boolean
   playing: boolean
   volume: number 
+  fullscreen: boolean
 }
 
 /////////////////////////////
@@ -33,6 +34,7 @@ export interface Video {
 /////////////////////////////
 export interface Control {
   scroll: Scroll
+  clipboard: Clipboard
   host: Member | null
 }
 
@@ -41,13 +43,16 @@ export interface Scroll {
   sensitivity: number
 }
 
+export interface Clipboard {
+  data: string | null
+}
+
 /////////////////////////////
 // Screen
 /////////////////////////////
 export interface Screen {
   size: ScreenSize
   configurations: ScreenSize[]
-  fullscreen: boolean
 }
 
 export interface ScreenSize {

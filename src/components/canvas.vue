@@ -52,12 +52,6 @@
   import NekoState from '~/types/state'
   import Overlay from './overlay.vue'
 
-  export interface NekoEvents {
-    connecting: () => void
-    connected: () => void
-    disconnected: (error?: Error) => void
-  }
-
   @Component({
     name: 'neko-canvas',
     components: {
@@ -67,12 +61,15 @@
   export default class extends Vue {
     @Ref('component') readonly _component!: HTMLElement
     @Ref('container') readonly _container!: HTMLElement
-    @Ref('video') readonly video!: HTMLVideoElement
+    @Ref('video') readonly _video!: HTMLVideoElement
 
-    private websocket = new NekoWebSocket()
-    private webrtc = new NekoWebRTC()
-    private observer = new ResizeObserver(this.onResize.bind(this))
+    websocket = new NekoWebSocket()
+    webrtc = new NekoWebRTC()
+    observer = new ResizeObserver(this.onResize.bind(this))
 
+    /////////////////////////////
+    // Public state
+    /////////////////////////////
     public state = {
       connection: {
         websocket: 'disconnected',
@@ -86,11 +83,15 @@
         playable: false,
         playing: false,
         volume: 0,
+        fullscreen: false,
       },
       control: {
         scroll: {
           inverse: true,
           sensitivity: 1,
+        },
+        clipboard: {
+          data: null,
         },
         host: null,
       },
@@ -101,7 +102,6 @@
           rate: 30,
         },
         configurations: [],
-        fullscreen: false,
       },
       member: {
         id: null,
@@ -116,64 +116,18 @@
       members: [],
     } as NekoState
 
-    public events = new NekoMessages(this.websocket, this.state)
-
     public get connected() {
       return this.state.connection.websocket == 'connected' && this.state.connection.webrtc == 'connected'
     }
 
-    @Watch('state.video.playing')
-    onVideoPlayingChanged(play: boolean) {
-      if (this.video.paused && play) {
-        this.video.play()
-      }
+    /////////////////////////////
+    // Public events
+    /////////////////////////////
+    public events = new NekoMessages(this.websocket, this.state)
 
-      if (!this.video.paused && !play) {
-        this.video.pause()
-      }
-
-      // TODO: check if user has tab focused and send via websocket
-      Vue.set(this.state.member, 'is_watching', play)
-    }
-
-    @Watch('state.video.volume')
-    onVideoVolumeChanged(value: number) {
-      if (value < 0 || value > 1) {
-        throw new Error('Out of range. Value must be between 0 and 1.')
-      }
-
-      this.video.volume = value
-    }
-
-    @Watch('state.screen.size')
-    onScreenSizeChanged() {
-      this.onResize()
-    }
-
-    @Watch('state.screen.fullscreen')
-    onScreenFullscreenChanged() {
-      if (document.fullscreenElement !== null) {
-        document.exitFullscreen()
-      } else {
-        this._component.requestFullscreen()
-      }
-    }
-
-    public control = {
-      request: () => {
-        this.websocket.send('control/request')
-      },
-      release: () => {
-        this.websocket.send('control/release')
-      },
-    }
-
-    public screen = {
-      size: (width: number, height: number, rate: number) => {
-        this.websocket.send('screen/set', { width, height, rate })
-      },
-    }
-
+    /////////////////////////////
+    // Public methods
+    /////////////////////////////
     public connect(url: string, password: string, name: string) {
       if (this.connected) {
         throw new Error('client already connected')
@@ -189,32 +143,91 @@
       }
 
       this.websocket.disconnect()
-
-      // TODO: reset state
-      Vue.set(this.state.member, 'is_controlling', false)
     }
 
-    private mounted() {
-      // update canvas on resize
+    public play() {
+      this._video.play()
+    }
+
+    public pause() {
+      this._video.pause()
+    }
+
+    public setVolume(value: number) {
+      if (value < 0 || value > 1) {
+        throw new Error('Out of range. Value must be between 0 and 1.')
+      }
+
+      this._video.volume = value
+    }
+
+    public requestFullscreen() {
+      this._component.requestFullscreen()
+    }
+
+    public exitFullscreen() {
+      document.exitFullscreen()
+    }
+
+    public setScrollInverse(value: boolean = true) {
+      Vue.set(this.state.control.scroll, 'inverse', value)
+    }
+
+    public setScrollSensitivity(value: number) {
+      Vue.set(this.state.control.scroll, 'sensitivity', value)
+    }
+
+    public setClipboardData(value: number) {
+      // TODO: Via REST API.
+    }
+
+    public controlRequest() {
+      // TODO: Via REST API.
+      this.websocket.send('control/request')
+    }
+
+    public controlRelease() {
+      // TODO: Via REST API.
+      this.websocket.send('control/release')
+    }
+
+    public controlTake() {
+      // TODO: Via REST API.
+    }
+
+    public controlGive(id: string) {
+      // TODO: Via REST API.
+    }
+
+    public controlReset() {
+      // TODO: Via REST API.
+    }
+
+    public setScreenSize(width: number, height: number, rate: number) {
+      // TODO: Via REST API.
+      this.websocket.send('screen/set', { width, height, rate })
+    }
+
+    /////////////////////////////
+    // Component lifecycle
+    /////////////////////////////
+    mounted() {
+      // component size change
       this.observer.observe(this._component)
 
-      // change host
+      // host change
       this.events.on('control.host', (id: string | null) => {
         Vue.set(this.state.member, 'is_controlling', id != null && id === this.state.member.id)
       })
 
-      // hardcoded webrtc for now
-      Vue.set(this.state.connection, 'type', 'webrtc')
-      Vue.set(this.state.connection, 'can_watch', this.webrtc.supported)
-      Vue.set(this.state.connection, 'can_control', this.webrtc.supported)
-
+      // fullscreen change
       this._component.addEventListener('fullscreenchange', () => {
-        Vue.set(this.state.screen, 'fullscreen', document.fullscreenElement !== null)
+        Vue.set(this.state.video, 'fullscreen', document.fullscreenElement !== null)
         this.onResize()
       })
 
-      // video
-      VideoRegister(this.video, this.state.video)
+      // video events
+      VideoRegister(this._video, this.state.video)
 
       // websocket
       this.websocket.on('message', async (event: string, payload: any) => {
@@ -241,6 +254,18 @@
         Vue.set(this.state.connection, 'websocket', 'disconnected')
         this.events.emit('system.websocket', 'disconnected')
         this.webrtc.disconnect()
+
+        // TODO: reset state
+        Vue.set(this.state, 'member', {
+          id: null,
+          name: null,
+          is_admin: false,
+          is_watching: false,
+          is_controlling: false,
+          can_watch: false,
+          can_control: false,
+          clipboard_access: false,
+        })
       })
 
       // webrtc
@@ -249,14 +274,14 @@
         if (track.kind === 'audio') return
 
         // create stream
-        if ('srcObject' in this.video) {
-          this.video.srcObject = streams[0]
+        if ('srcObject' in this._video) {
+          this._video.srcObject = streams[0]
         } else {
           // @ts-ignore
-          this.video.src = window.URL.createObjectURL(streams[0]) // for older browsers
+          this._video.src = window.URL.createObjectURL(streams[0]) // for older browsers
         }
 
-        this.video.play()
+        this._video.play()
       })
       this.webrtc.on('connecting', () => {
         Vue.set(this.state.connection, 'webrtc', 'connecting')
@@ -270,17 +295,29 @@
         Vue.set(this.state.connection, 'webrtc', 'disconnected')
         this.events.emit('system.webrtc', 'disconnected')
         // @ts-ignore
-        if (this.video) this.video.src = null
+        this._video.src = null
       })
+
+      // hardcoded webrtc for now
+      Vue.set(this.state.connection, 'type', 'webrtc')
+      Vue.set(this.state.connection, 'can_watch', this.webrtc.supported)
+      Vue.set(this.state.connection, 'can_control', this.webrtc.supported)
     }
 
-    private beforeDestroy() {
+    beforeDestroy() {
       this.observer.disconnect()
       this.webrtc.disconnect()
       this.websocket.disconnect()
     }
 
-    private onResize() {
+    @Watch('state.video.playing')
+    onVideoPlayingChanged(play: boolean) {
+      // TODO: check if user has tab focused and send via websocket
+      Vue.set(this.state.member, 'is_watching', play)
+    }
+
+    @Watch('state.screen.size')
+    onResize() {
       const { width, height } = this.state.screen.size
       const screen_ratio = width / height
 

@@ -32,20 +32,67 @@
           <td>{{ neko.state.video.playable }}</td>
         </tr>
         <tr class="ok">
-          <th>video.playing</th>
-          <td><input type="checkbox" v-model="neko.state.video.playing" /></td>
+          <th rowspan="2">video.playing</th>
+          <td>{{ neko.state.video.playing }}</td>
         </tr>
         <tr class="ok">
-          <th>video.volume</th>
-          <td><input type="range" min="0" max="1" v-model="neko.state.video.volume" step="0.01" /></td>
+          <td>
+            <button v-if="!neko.state.video.playing" @click="neko.play()">play</button>
+            <button v-else @click="neko.pause()">pause</button>
+          </td>
         </tr>
         <tr class="ok">
-          <th>control.scroll.inverse</th>
-          <td><input type="checkbox" v-model="neko.state.control.scroll.inverse" /></td>
+          <th rowspan="2">video.volume</th>
+          <td>{{ neko.state.video.volume }}</td>
         </tr>
         <tr class="ok">
-          <th>control.scroll.sensitivity</th>
-          <td><input type="number" v-model="neko.state.control.scroll.sensitivity" /></td>
+          <td>
+            <input
+              type="range"
+              min="0"
+              max="1"
+              :value="neko.state.video.volume"
+              @input="neko.setVolume(parseInt($event))"
+              step="0.01"
+            />
+          </td>
+        </tr>
+        <tr class="ok">
+          <th rowspan="2">video.fullscreen</th>
+          <td>{{ neko.state.video.fullscreen }}</td>
+        </tr>
+        <tr class="ok">
+          <td>
+            <button v-if="!neko.state.video.fullscreen" @click="neko.requestFullscreen()">request</button>
+            <button v-else @click="neko.exitFullscreen()">exit</button>
+          </td>
+        </tr>
+        <tr class="ok">
+          <th rowspan="2">control.scroll.inverse</th>
+          <td>{{ neko.state.control.scroll.inverse }}</td>
+        </tr>
+        <tr class="ok">
+          <td>
+            <button v-if="!neko.state.control.scroll.inverse" @click="neko.setScrollInverse(true)">switch to inverse</button>
+            <button v-else @click="neko.setScrollInverse(false)">switch to normal</button>
+          </td>
+        </tr>
+        <tr class="ok">
+          <th rowspan="2">control.scroll.sensitivity</th>
+          <td>{{ neko.state.control.scroll.sensitivity }}</td>
+        </tr>
+        <tr class="ok">
+          <td>
+            <input
+              type="number"
+              :value="neko.state.control.scroll.sensitivity"
+              @input="neko.setScrollSensitivity(parseInt($event.target.value))"
+            />
+          </td>
+        </tr>
+        <tr>
+          <th>control.clipboard.data</th>
+          <td>{{ neko.state.control.clipboard.data }}</td>
         </tr>
         <tr>
           <th>control.host</th>
@@ -64,13 +111,16 @@
           <td>{{ neko.state.screen.size.rate }}</td>
         </tr>
         <tr class="ok">
-          <th>screen.configurations</th>
+          <th rowspan="2">screen.configurations</th>
+          <td>Total {{ neko.state.screen.configurations.length }} configurations.</td>
+        </tr>
+        <tr class="ok">
           <td>
             <select
               :value="Object.values(neko.state.screen.size).join()"
               @input="
                 a = String($event.target.value).split(',')
-                neko.screen.size(parseInt(a[0]), parseInt(a[1]), parseInt(a[2]))
+                neko.setScreenSize(parseInt(a[0]), parseInt(a[1]), parseInt(a[2]))
               "
             >
               <option
@@ -82,10 +132,6 @@
               </option>
             </select>
           </td>
-        </tr>
-        <tr class="ok">
-          <th>screen.fullscreen</th>
-          <td><input type="checkbox" v-model="neko.state.screen.fullscreen" /></td>
         </tr>
         <tr class="ok">
           <th>member.id</th>
@@ -104,8 +150,14 @@
           <td>{{ neko.state.member.is_watching }}</td>
         </tr>
         <tr class="ok">
-          <th>member.is_controlling</th>
+          <th rowspan="2">member.is_controlling</th>
           <td>{{ neko.state.member.is_controlling }}</td>
+        </tr>
+        <tr class="ok">
+          <td>
+            <button v-if="!neko.state.member.is_controlling" @click="neko.controlRequest()">request control</button>
+            <button v-else @click="neko.controlRelease()">release control</button>
+          </td>
         </tr>
         <tr>
           <th>member.can_watch</th>
@@ -126,15 +178,17 @@
       </table>
     </div>
     <div>
-      <button @click="connect()">Connect</button>
-      <button @click="disconnect()">Disonnect</button>
+      <div v-if="loaded && !neko.connected">
+        <input type="text" placeholder="URL" v-model="url" />
+        <input type="text" placeholder="Password" v-model="pass" />
+        <input type="text" placeholder="Display Name" v-model="name" />
+        <button @click="connect()">Connect</button>
+      </div>
+      <button v-if="loaded && neko.connected" @click="disconnect()">Disonnect</button>
 
       <template v-if="loaded && neko.connected">
-        <button v-if="!is_controlling" @click="neko.control.request()">request control</button>
-        <button v-else @click="neko.control.release()">release control</button>
-
-        <button v-if="neko.state.video.playing" @click="neko.state.video.playing = false">pause stream</button>
-        <button v-else @click="neko.state.video.playing = true">play stream</button><br />
+        <button v-if="!is_controlling" @click="neko.controlRequest()">request control</button>
+        <button v-else @click="neko.controlRelease()">release control</button>
       </template>
 
       <div ref="container" style="width: 1280px; height: 720px; border: 2px solid red">
@@ -182,8 +236,12 @@
       return this.neko.state.member.is_controlling
     }
 
+    url: string = 'ws://192.168.1.20:3000/'
+    pass: string = 'admin'
+    name: string = 'test'
+  
     connect() {
-      this.neko.connect('ws://192.168.1.20:3000/', 'admin', 'test')
+      this.neko.connect(this.url, this.pass, this.name)
     }
 
     disconnect() {
