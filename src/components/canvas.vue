@@ -120,6 +120,10 @@
       return this.state.connection.websocket == 'connected' && this.state.connection.webrtc == 'connected'
     }
 
+    public get controlling() {
+      return this.state.member.is_controlling
+    }
+
     /////////////////////////////
     // Public events
     /////////////////////////////
