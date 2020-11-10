@@ -52,7 +52,7 @@
               min="0"
               max="1"
               :value="neko.state.video.volume"
-              @input="neko.setVolume(parseInt($event))"
+              @input="neko.setVolume(Number($event.target.value))"
               step="0.01"
             />
           </td>
