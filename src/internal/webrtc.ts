@@ -94,7 +94,7 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
 
     this._peer.setRemoteDescription({ type: 'offer', sdp })
 
-    let answer = await this._peer.createAnswer()
+    const answer = await this._peer.createAnswer()
     this._peer!.setLocalDescription(answer)
 
     if (!answer.sdp) {

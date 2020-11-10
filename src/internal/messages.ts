@@ -136,7 +136,7 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
   // Screen Events
   /////////////////////////////
   protected [EVENT.SCREEN.CONFIGURATIONS]({ configurations }: ScreenConfigurationsPayload) {
-    let data = []
+    const data = []
     for (const i of Object.keys(configurations)) {
       const { width, height, rates } = configurations[i]
       if (width >= 600 && height >= 300) {
@@ -153,7 +153,7 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
       }
     }
 
-    let conf = data.sort((a, b) => {
+    const conf = data.sort((a, b) => {
       if (b.width === a.width && b.height == a.height) {
         return b.rate - a.rate
       } else if (b.width === a.width) {
