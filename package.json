@@ -1,6 +1,6 @@
 {
   "name": "@demodesk/neko",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Client as reusable Vue.js component for neko streaming server.",
   "main": "dist/neko.umd.js",
   "module": "dist/neko.esm.js",
