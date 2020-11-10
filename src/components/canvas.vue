@@ -181,25 +181,25 @@
       // TODO: Via REST API.
     }
 
-    public controlRequest() {
+    public requestControl() {
       // TODO: Via REST API.
       this.websocket.send('control/request')
     }
 
-    public controlRelease() {
+    public releaseControl() {
       // TODO: Via REST API.
       this.websocket.send('control/release')
     }
 
-    public controlTake() {
+    public takeControl() {
       // TODO: Via REST API.
     }
 
-    public controlGive(id: string) {
+    public giveControl(id: string) {
       // TODO: Via REST API.
     }
 
-    public controlReset() {
+    public resetControl() {
       // TODO: Via REST API.
     }
 

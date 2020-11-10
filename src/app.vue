@@ -154,8 +154,8 @@
         </tr>
         <tr class="ok">
           <td>
-            <button v-if="!neko.state.member.is_controlling" @click="neko.controlRequest()">request control</button>
-            <button v-else @click="neko.controlRelease()">release control</button>
+            <button v-if="!neko.state.member.is_controlling" @click="neko.requestControl()">request control</button>
+            <button v-else @click="neko.releaseControl()">release control</button>
           </td>
         </tr>
         <tr>
@@ -186,8 +186,8 @@
       <button v-if="loaded && neko.connected" @click="disconnect()">Disonnect</button>
 
       <template v-if="loaded && neko.connected">
-        <button v-if="!is_controlling" @click="neko.controlRequest()">request control</button>
-        <button v-else @click="neko.controlRelease()">release control</button>
+        <button v-if="!is_controlling" @click="neko.requestControl()">request control</button>
+        <button v-else @click="neko.releaseControl()">release control</button>
       </template>
 
       <div ref="container" style="width: 1280px; height: 720px; border: 2px solid red">
