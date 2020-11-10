@@ -73,8 +73,7 @@
         </tr>
         <tr class="ok">
           <td>
-            <button v-if="!neko.state.control.scroll.inverse" @click="neko.setScrollInverse(true)">switch to inverse</button>
-            <button v-else @click="neko.setScrollInverse(false)">switch to normal</button>
+            <button @click="neko.setScrollInverse(!neko.state.control.scroll.inverse)">toggle</button>
           </td>
         </tr>
         <tr class="ok">
@@ -239,7 +238,7 @@
     url: string = 'ws://192.168.1.20:3000/'
     pass: string = 'admin'
     name: string = 'test'
-  
+
     connect() {
       this.neko.connect(this.url, this.pass, this.name)
     }
