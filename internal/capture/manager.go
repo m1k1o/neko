@@ -16,8 +16,10 @@ type CaptureManagerCtx struct {
 	audio           *gst.Pipeline
 	broadcast       *gst.Pipeline
 	config          *config.Capture
-	audio_emit_stop chan bool
-	video_emit_stop chan bool
+	emit_update     chan bool
+	emit_stop       chan bool
+	video_sample    chan types.Sample
+	audio_sample    chan types.Sample
 	emmiter         events.EventEmmiter
 	streaming       bool
 	broadcasting    bool
@@ -28,8 +30,8 @@ type CaptureManagerCtx struct {
 func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCtx {
 	return &CaptureManagerCtx{
 		logger:          log.With().Str("module", "capture").Logger(),
-		audio_emit_stop: make(chan bool),
-		video_emit_stop: make(chan bool),
+		emit_update:     make(chan bool),
+		emit_stop:       make(chan bool),
 		emmiter:         events.New(),
 		config:          config,
 		streaming:       false,
@@ -51,10 +53,29 @@ func (manager *CaptureManagerCtx) Start() {
 		manager.createVideoPipeline()
 		manager.StartBroadcastPipeline()
 	})
+
+	go func() {
+		manager.logger.Debug().Msg("started emitting samples")
+
+		for {
+			select {
+			case <-manager.emit_stop:
+				manager.logger.Debug().Msg("stopped emitting samples")
+				return
+			case <-manager.emit_update:
+				manager.logger.Debug().Msg("update emitting samples")
+			case sample := <-manager.video_sample:
+				manager.emmiter.Emit("video", sample)
+			case sample := <-manager.audio_sample:
+				manager.emmiter.Emit("audio", sample)
+			}
+		}
+	}()
 }
 
 func (manager *CaptureManagerCtx) Shutdown() error {
 	manager.logger.Info().Msgf("capture shutting down")
+	manager.emit_stop <- true
 	manager.StopStream()
 	return nil
 }
@@ -124,23 +145,11 @@ func (manager *CaptureManagerCtx) createVideoPipeline() {
 
 	manager.video.Start()
 
-	go func() {
-		manager.logger.Debug().Msg("started emitting video samples")
-
-		for {
-			select {
-			case <-manager.video_emit_stop:
-				manager.logger.Debug().Msg("stopped emitting video samples")
-				return
-			case sample := <-manager.video.Sample:
-				manager.emmiter.Emit("video", sample)
-			}
-		}
-	}()
+	manager.video_sample = manager.video.Sample
+	manager.emit_update <-true
 }
 
 func (manager *CaptureManagerCtx) destroyVideoPipeline() {
-	manager.video_emit_stop <- true
 	manager.logger.Info().Msgf("stopping video pipeline")
 	manager.video.Stop()
 }
@@ -170,23 +179,11 @@ func (manager *CaptureManagerCtx) createAudioPipeline() {
 
 	manager.audio.Start()
 
-	go func() {
-		manager.logger.Debug().Msg("started emitting audio samples")
-
-		for {
-			select {
-			case <-manager.audio_emit_stop:
-				manager.logger.Debug().Msg("stopped emitting audio samples")
-				return
-			case sample := <-manager.audio.Sample:
-				manager.emmiter.Emit("audio", sample)
-			}
-		}
-	}()
+	manager.audio_sample = manager.audio.Sample
+	manager.emit_update <-true
 }
 
 func (manager *CaptureManagerCtx) destroyAudioPipeline() {
-	manager.audio_emit_stop <- true
 	manager.logger.Info().Msgf("stopping audio pipeline")
 	manager.audio.Stop()
 }
