@@ -41,7 +41,7 @@ func (manager *DesktopManagerCtx) Start() {
 
 	manager.logger.Info().
 		Str("screen_size", fmt.Sprintf("%dx%d@%d", manager.config.ScreenWidth, manager.config.ScreenHeight, manager.config.ScreenRate)).
-		Msgf("Setting initial screen size...")
+		Msgf("setting initial screen size")
 
 	if err := xorg.ChangeScreenSize(manager.config.ScreenWidth, manager.config.ScreenHeight, manager.config.ScreenRate); err != nil {
 		manager.logger.Warn().Err(err).Msg("unable to set initial screen size")
@@ -77,7 +77,7 @@ func (manager *DesktopManagerCtx) OnAfterScreenSizeChange(listener func()) {
 }
 
 func (manager *DesktopManagerCtx) Shutdown() error {
-	manager.logger.Info().Msgf("remote shutting down")
+	manager.logger.Info().Msgf("desktop shutting down")
 
 	manager.cleanup.Stop()
 	manager.shutdown <- true

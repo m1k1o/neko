@@ -15,7 +15,7 @@ func (manager *CaptureManagerCtx) StartBroadcastPipeline() {
 		Str("audio_device", manager.config.Device).
 		Str("video_display", manager.config.Display).
 		Str("broadcast_pipeline", manager.config.BroadcastPipeline).
-		Msgf("Creating broadcast pipeline...")
+		Msgf("creating broadcast pipeline")
 	
 	manager.broadcast, err = gst.CreateRTMPPipeline(
 		manager.config.Device,
@@ -29,7 +29,7 @@ func (manager *CaptureManagerCtx) StartBroadcastPipeline() {
 	}
 
 	manager.broadcast.Play()
-	manager.logger.Info().Msgf("Starting broadcast pipeline...")
+	manager.logger.Info().Msgf("starting broadcast pipeline")
 }
 
 func (manager *CaptureManagerCtx) StopBroadcastPipeline() {
@@ -38,7 +38,7 @@ func (manager *CaptureManagerCtx) StopBroadcastPipeline() {
 	}
 
 	manager.broadcast.Stop()
-	manager.logger.Info().Msgf("Stopping broadcast pipeline...")
+	manager.logger.Info().Msgf("stopping broadcast pipeline")
 	manager.broadcast = nil
 }
 

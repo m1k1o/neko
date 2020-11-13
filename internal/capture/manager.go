@@ -129,7 +129,7 @@ func (manager *CaptureManagerCtx) createVideoPipeline() {
 
 	manager.logger.Info().
 		Str("src", manager.video.Src).
-		Msgf("starting video pipeline...")
+		Msgf("starting video pipeline")
 
 	manager.video.Start()
 
