@@ -16,14 +16,14 @@ import (
 	"demodesk/neko/internal/http/endpoint"
 )
 
-type ServerCtx struct {
+type HttpManagerCtx struct {
 	logger zerolog.Logger
 	router *chi.Mux
 	http   *http.Server
 	conf   *config.Server
 }
 
-func New(WebSocketManager types.WebSocketManager, ApiManager types.ApiManager, conf *config.Server) *ServerCtx {
+func New(WebSocketManager types.WebSocketManager, ApiManager types.ApiManager, conf *config.Server) *HttpManagerCtx {
 	logger := log.With().Str("module", "http").Logger()
 
 	router := chi.NewRouter()
@@ -63,7 +63,7 @@ func New(WebSocketManager types.WebSocketManager, ApiManager types.ApiManager, c
 		Handler: router,
 	}
 
-	return &ServerCtx{
+	return &HttpManagerCtx{
 		logger: logger,
 		router: router,
 		http:   http,
@@ -71,7 +71,7 @@ func New(WebSocketManager types.WebSocketManager, ApiManager types.ApiManager, c
 	}
 }
 
-func (s *ServerCtx) Start() {
+func (s *HttpManagerCtx) Start() {
 	if s.conf.Cert != "" && s.conf.Key != "" {
 		go func() {
 			if err := s.http.ListenAndServeTLS(s.conf.Cert, s.conf.Key); err != http.ErrServerClosed {
@@ -89,6 +89,6 @@ func (s *ServerCtx) Start() {
 	}
 }
 
-func (s *ServerCtx) Shutdown() error {
+func (s *HttpManagerCtx) Shutdown() error {
 	return s.http.Shutdown(context.Background())
 }

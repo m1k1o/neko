@@ -120,7 +120,7 @@ type Neko struct {
 	sessionManager    *session.SessionManagerCtx
 	webSocketManager  *websocket.WebSocketManagerCtx
 	apiManager        *api.ApiManagerCtx
-	server            *http.ServerCtx
+	httpManager       *http.HttpManagerCtx
 }
 
 func (neko *Neko) Preflight() {
@@ -167,12 +167,12 @@ func (neko *Neko) Start() {
 		neko.Configs.Server,
 	)
 
-	neko.server = http.New(
+	neko.httpManager = http.New(
 		neko.webSocketManager,
 		neko.apiManager,
 		neko.Configs.Server,
 	)
-	neko.server.Start()
+	neko.httpManager.Start()
 }
 
 func (neko *Neko) Shutdown() {
@@ -200,10 +200,10 @@ func (neko *Neko) Shutdown() {
 		neko.logger.Debug().Msg("websocket manager shutdown")
 	}
 
-	if err := neko.server.Shutdown(); err != nil {
-		neko.logger.Err(err).Msg("server shutdown with an error")
+	if err := neko.httpManager.Shutdown(); err != nil {
+		neko.logger.Err(err).Msg("http manager shutdown with an error")
 	} else {
-		neko.logger.Debug().Msg("server shutdown")
+		neko.logger.Debug().Msg("http manager shutdown")
 	}
 }
 
