@@ -43,10 +43,7 @@ func (manager *CaptureManagerCtx) Start() {
 	manager.StartBroadcastPipeline()
 
 	manager.desktop.OnBeforeScreenSizeChange(func() {
-		manager.video_emit_stop <- true
-		manager.logger.Info().Msgf("stopping video pipeline")
-		manager.video.Stop()
-
+		manager.destroyVideoPipeline()
 		manager.StopBroadcastPipeline()
 	})
 
@@ -93,14 +90,8 @@ func (manager *CaptureManagerCtx) StartStream() {
 func (manager *CaptureManagerCtx) StopStream() {
 	manager.logger.Info().Msgf("stopping pipelines")
 
-	manager.audio_emit_stop <- true
-	manager.logger.Info().Msgf("stopping video pipeline")
-	manager.audio.Stop()
-
-	manager.video_emit_stop <- true
-	manager.logger.Info().Msgf("stopping audio pipeline")
-	manager.video.Stop()
-
+	manager.destroyVideoPipeline()
+	manager.destroyAudioPipeline()
 	manager.streaming = false
 }
 
@@ -148,6 +139,12 @@ func (manager *CaptureManagerCtx) createVideoPipeline() {
 	}()
 }
 
+func (manager *CaptureManagerCtx) destroyVideoPipeline() {
+	manager.video_emit_stop <- true
+	manager.logger.Info().Msgf("stopping video pipeline")
+	manager.video.Stop()
+}
+
 func (manager *CaptureManagerCtx) createAudioPipeline() {
 	var err error
 
@@ -186,4 +183,10 @@ func (manager *CaptureManagerCtx) createAudioPipeline() {
 			}
 		}
 	}()
+}
+
+func (manager *CaptureManagerCtx) destroyAudioPipeline() {
+	manager.audio_emit_stop <- true
+	manager.logger.Info().Msgf("stopping audio pipeline")
+	manager.audio.Stop()
 }
