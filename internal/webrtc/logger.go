@@ -27,23 +27,25 @@ type logger struct {
 }
 
 func (l logger) Trace(msg string) {
-	l.logger.Trace().Msg(msg)
+	l.logger.Trace().Msg(strings.TrimSpace(msg))
 }
 func (l logger) Tracef(format string, args ...interface{}) {
-	l.logger.Trace().Msgf(format, args...)
+	msg := fmt.Sprintf(format, args...)
+	l.logger.Trace().Msg(strings.TrimSpace(msg))
 }
 func (l logger) Debug(msg string) {
-	l.logger.Debug().Msg(msg)
+	l.logger.Debug().Msg(strings.TrimSpace(msg))
 }
 func (l logger) Debugf(format string, args ...interface{}) {
-	l.logger.Debug().Msgf(format, args...)
+	msg := fmt.Sprintf(format, args...)
+	l.logger.Debug().Msg(strings.TrimSpace(msg))
 }
 func (l logger) Info(msg string) {
 	if strings.Contains(msg, "packetio.Buffer is full") {
 		//l.logger.Panic().Msg(msg)
 		return
 	}
-	l.logger.Info().Msg(msg)
+	l.logger.Info().Msg(strings.TrimSpace(msg))
 }
 func (l logger) Infof(format string, args ...interface{}) {
 	msg := fmt.Sprintf(format, args...)
@@ -51,19 +53,21 @@ func (l logger) Infof(format string, args ...interface{}) {
 		// l.logger.Panic().Msg(msg)
 		return
 	}
-	l.logger.Info().Msg(msg)
+	l.logger.Info().Msg(strings.TrimSpace(msg))
 }
 func (l logger) Warn(msg string) {
-	l.logger.Warn().Msg(msg)
+	l.logger.Warn().Msg(strings.TrimSpace(msg))
 }
 func (l logger) Warnf(format string, args ...interface{}) {
-	l.logger.Warn().Msgf(format, args...)
+	msg := fmt.Sprintf(format, args...)
+	l.logger.Warn().Msg(strings.TrimSpace(msg))
 }
 func (l logger) Error(msg string) {
-	l.logger.Error().Msg(msg)
+	l.logger.Error().Msg(strings.TrimSpace(msg))
 }
 func (l logger) Errorf(format string, args ...interface{}) {
-	l.logger.Error().Msgf(format, args...)
+	msg := fmt.Sprintf(format, args...)
+	l.logger.Error().Msg(strings.TrimSpace(msg))
 }
 
 type loggerFactory struct {
