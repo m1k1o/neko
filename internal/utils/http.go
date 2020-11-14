@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 	"encoding/json"
+
+	"github.com/rs/zerolog/log"
 )
 
 type ErrResponse struct {
@@ -24,8 +26,9 @@ func HttpJsonResponse(w http.ResponseWriter, status int, res interface{}) {
 	w.WriteHeader(status)
 
 	if err := json.NewEncoder(w).Encode(res); err != nil {
-		// TODO: Log.
-		//log.Warn().Err(err).Msg("failed writing json error response")
+		log.Warn().Err(err).
+			Str("module", "http").
+			Msg("failed writing json error response")
 	}
 }
 
