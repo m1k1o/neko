@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/go-chi/chi"
@@ -8,8 +9,8 @@ import (
 	"demodesk/neko/internal/api/member"
 	"demodesk/neko/internal/api/room"
 	"demodesk/neko/internal/types"
+	"demodesk/neko/internal/utils"
 	"demodesk/neko/internal/config"
-	"demodesk/neko/internal/api/utils"
 )
 
 type ApiManagerCtx struct {
@@ -18,8 +19,9 @@ type ApiManagerCtx struct {
 	capture   types.CaptureManager
 }
 
-var AdminToken []byte
-var UserToken []byte
+const (
+    keySessionCtx int = iota
+)
 
 func New(
 	sessions types.SessionManager,
@@ -27,8 +29,6 @@ func New(
 	capture types.CaptureManager,
 	conf *config.Server,
 ) *ApiManagerCtx {
-	AdminToken = []byte(conf.AdminToken)
-	UserToken = []byte(conf.UserToken)
 
 	return &ApiManagerCtx{
 		sessions:   sessions,
@@ -37,18 +37,29 @@ func New(
 	}
 }
 
-func (a *ApiManagerCtx) Mount(r *chi.Mux) {
-	memberHandler := member.New(a.sessions)
-	r.Mount("/member", memberHandler.Router(UsersOnly, AdminsOnly))
+func (api *ApiManagerCtx) Mount(r *chi.Mux) {
+	r.Use(api.Authenticate)
 
-	roomHandler := room.New(a.sessions, a.desktop, a.capture)
-	r.Mount("/room", roomHandler.Router(UsersOnly, AdminsOnly))
+	memberHandler := member.New(api.sessions)
+	r.Mount("/member", memberHandler.Router())
+
+	roomHandler := room.New(api.sessions, api.desktop, api.capture)
+	r.Mount("/room", roomHandler.Router())
+
+	r.Get("/test", func(w http.ResponseWriter, r *http.Request) {
+		session, _ := r.Context().Value(keySessionCtx).(types.Session)
+		utils.HttpBadRequest(w, "Hi `" + session.ID() + "`, you are authenticated.")
+	})
 }
 
-func UsersOnly(next http.Handler) http.Handler {
-	return utils.AuthMiddleware(next, UserToken, AdminToken)
-}
-
-func AdminsOnly(next http.Handler) http.Handler {
-	return utils.AuthMiddleware(next, AdminToken)
+func (api *ApiManagerCtx) Authenticate(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		session, err := api.sessions.Authenticate(r)
+		if err != nil {
+			utils.HttpNotAuthenticated(w, err)
+		} else {
+			ctx := context.WithValue(r.Context(), keySessionCtx, session)
+			next.ServeHTTP(w, r.WithContext(ctx))
+		}
+	})
 }

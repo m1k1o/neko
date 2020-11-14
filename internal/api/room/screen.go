@@ -3,9 +3,7 @@ package room
 import (
 	"net/http"
 
-	"github.com/go-chi/render"
-
-	"demodesk/neko/internal/api/utils"
+	"demodesk/neko/internal/utils"
 )
 
 type ScreenConfiguration struct {
@@ -14,27 +12,15 @@ type ScreenConfiguration struct {
 	Rate   int `json:"rate"`
 }
 
-func (a *ScreenConfiguration) Bind(r *http.Request) error {
-	// Bind will run after the unmarshalling is complete, its a
-	// good time to focus some post-processing after a decoding.
-	return nil
-}
-
-func (a *ScreenConfiguration) Render(w http.ResponseWriter, r *http.Request) error {
-	// Pre-processing before a response is marshalled and sent
-	// across the wire
-	return nil
-}
-
 func (h *RoomHandler) ScreenConfiguration(w http.ResponseWriter, r *http.Request) {
 	size := h.desktop.GetScreenSize()
 
 	if size == nil {
-		_ = render.Render(w, r, utils.ErrMessage(500, "Unable to get screen configuration."))
+		utils.HttpInternalServer(w, "Unable to get screen configuration.")
 		return
 	}
 
-	render.JSON(w, r, ScreenConfiguration{
+	utils.HttpSuccess(w, ScreenConfiguration{
 		Width:  size.Width,
 		Height: size.Height,
 		Rate:   int(size.Rate),
@@ -43,28 +29,27 @@ func (h *RoomHandler) ScreenConfiguration(w http.ResponseWriter, r *http.Request
 
 func (h *RoomHandler) ScreenConfigurationChange(w http.ResponseWriter, r *http.Request) {
 	data := &ScreenConfiguration{}
-	if err := render.Bind(r, data); err != nil {
-		_ = render.Render(w, r, utils.ErrBadRequest(err))
+	if !utils.HttpJsonRequest(w, r, data) {
 		return
 	}
 
 	if err := h.desktop.ChangeScreenSize(data.Width, data.Height, data.Rate); err != nil {
-		_ = render.Render(w, r, utils.ErrUnprocessableEntity(err))
+		utils.HttpUnprocessableEntity(w, err)
 		return
 	}
 
 	// TODO: Broadcast change to all sessions.
 
-	render.JSON(w, r, data)
+	utils.HttpSuccess(w, data)
 }
 
 func (h *RoomHandler) ScreenConfigurationsList(w http.ResponseWriter, r *http.Request) {
-	list := []render.Renderer{}
+	list := []ScreenConfiguration{}
 	
 	ScreenConfigurations := h.desktop.ScreenConfigurations()
 	for _, size := range ScreenConfigurations {
 		for _, fps := range size.Rates {
-			list = append(list, &ScreenConfiguration{
+			list = append(list, ScreenConfiguration{
 				Width:  size.Width,
 				Height: size.Height,
 				Rate:   int(fps),
@@ -72,5 +57,5 @@ func (h *RoomHandler) ScreenConfigurationsList(w http.ResponseWriter, r *http.Re
 		}
 	}
 
-	_ = render.RenderList(w, r, list)
+	utils.HttpSuccess(w, list)
 }
