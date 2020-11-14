@@ -89,7 +89,7 @@ func (session *SessionCtx) Disconnect(reason string) error {
 	}
 
 	// TODO: Refcator
-	if err := session.socket.Send(&message.Disconnect{
+	if err := session.Send(&message.Disconnect{
 		Event:   event.SYSTEM_DISCONNECT,
 		Message: reason,
 	}); err != nil {

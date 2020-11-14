@@ -174,14 +174,14 @@ func (ws *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Request) e
 		Debug().
 		Str("session", session.ID()).
 		Str("address", connection.RemoteAddr().String()).
-		Msg("new connection created")
+		Msg("connection started")
 
 	defer func() {
 		ws.logger.
 			Debug().
 			Str("session", session.ID()).
 			Str("address", connection.RemoteAddr().String()).
-			Msg("session ended")
+			Msg("connection ended")
 	}()
 
 	ws.handle(connection, session)
