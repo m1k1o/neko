@@ -1,6 +1,8 @@
 package session
 
 import (
+	"sync"
+
 	"github.com/kataras/go-events"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -14,6 +16,7 @@ func New(capture types.CaptureManager, config *config.Session) *SessionManagerCt
 	return &SessionManagerCtx{
 		logger:  log.With().Str("module", "session").Logger(),
 		host:    nil,
+		hostMu:  sync.Mutex{},
 		capture: capture,
 		config:  config,
 		members: make(map[string]*SessionCtx),
@@ -24,6 +27,7 @@ func New(capture types.CaptureManager, config *config.Session) *SessionManagerCt
 type SessionManagerCtx struct {
 	logger  zerolog.Logger
 	host    types.Session
+	hostMu  sync.Mutex
 	capture types.CaptureManager
 	config  *config.Session
 	members map[string]*SessionCtx
@@ -67,19 +71,31 @@ func (manager *SessionManagerCtx) Destroy(id string) error {
 // host
 // ---
 func (manager *SessionManagerCtx) HasHost() bool {
+	manager.hostMu.Lock()
+	defer manager.hostMu.Unlock()
+
 	return manager.host != nil
 }
 
 func (manager *SessionManagerCtx) SetHost(host types.Session) {
+	manager.hostMu.Lock()
+	defer manager.hostMu.Unlock()
+
 	manager.host = host
 	manager.emmiter.Emit("host", host)
 }
 
 func (manager *SessionManagerCtx) GetHost() types.Session {
+	manager.hostMu.Lock()
+	defer manager.hostMu.Unlock()
+
 	return manager.host
 }
 
 func (manager *SessionManagerCtx) ClearHost() {
+	manager.hostMu.Lock()
+	defer manager.hostMu.Unlock()
+
 	host := manager.host
 	manager.host = nil
 	manager.emmiter.Emit("host_cleared", host)
