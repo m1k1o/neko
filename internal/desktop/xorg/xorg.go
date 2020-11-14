@@ -25,6 +25,9 @@ var debounce_key = make(map[uint64]time.Time)
 var mu = sync.Mutex{}
 
 func GetScreenConfigurations() {
+	mu.Lock()
+	defer mu.Unlock()
+
 	C.XGetScreenConfigurations()
 }
 
@@ -121,38 +124,40 @@ func KeyUp(code uint64) error {
 }
 
 func ResetKeys() {
-	for code := range debounce_button {
-		//nolint
-		ButtonUp(code)
+	mu.Lock()
+	defer mu.Unlock()
 
+	for code := range debounce_button {
+		C.XButton(C.uint(code), C.int(0))
 		delete(debounce_button, code)
 	}
-	for code := range debounce_key {
-		//nolint
-		KeyUp(code)
 
+	for code := range debounce_key {
+		C.XKey(C.ulong(code), C.int(0))
 		delete(debounce_key, code)
 	}
 }
 
 func CheckKeys(duration time.Duration) {
+	mu.Lock()
+	defer mu.Unlock()
+
 	t := time.Now()
 	for code, start := range debounce_button {
 		if t.Sub(start) < duration {
 			continue
 		}
-		//nolint
-		ButtonUp(code)
 
+		C.XButton(C.uint(code), C.int(0))
 		delete(debounce_button, code)
 	}
+
 	for code, start := range debounce_key {
 		if t.Sub(start) < duration {
 			continue
 		}
-		//nolint
-		KeyUp(code)
 
+		C.XKey(C.ulong(code), C.int(0))
 		delete(debounce_key, code)
 	}
 }
