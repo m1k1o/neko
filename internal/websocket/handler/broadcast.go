@@ -13,12 +13,7 @@ func (h *MessageHandlerCtx) boradcastCreate(session types.Session, payload *mess
 	}
 
 	h.capture.StartBroadcast(payload.URL)
-
-	if err := h.boradcastStatus(session); err != nil {
-		return err
-	}
-
-	return nil
+	return h.boradcastStatus(session)
 }
 
 func (h *MessageHandlerCtx) boradcastDestroy(session types.Session) error {
@@ -28,12 +23,7 @@ func (h *MessageHandlerCtx) boradcastDestroy(session types.Session) error {
 	}
 
 	h.capture.StopBroadcast()
-
-	if err := h.boradcastStatus(session); err != nil {
-		return err
-	}
-
-	return nil
+	return h.boradcastStatus(session)
 }
 
 func (h *MessageHandlerCtx) boradcastStatus(session types.Session) error {
