@@ -5,5 +5,5 @@ import (
 )
 
 type ApiManager interface {
-	Mount(r *chi.Mux)
+	Route(r chi.Router)
 }

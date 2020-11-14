@@ -2,7 +2,6 @@ package http
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"os"
 
@@ -13,7 +12,7 @@ import (
 
 	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/config"
-	"demodesk/neko/internal/http/endpoint"
+	"demodesk/neko/internal/utils"
 )
 
 type HttpManagerCtx struct {
@@ -31,13 +30,11 @@ func New(WebSocketManager types.WebSocketManager, ApiManager types.ApiManager, c
 	router.Use(middleware.RequestID) // Create a request ID for each request
 	router.Use(Logger) // Log API request calls using custom logger function
 
-	ApiManager.Mount(router)
+	router.Route("/api", ApiManager.Route)
 
 	router.Get("/ws", func(w http.ResponseWriter, r *http.Request) {
-		if WebSocketManager.Upgrade(w, r) != nil {
-			//nolint
-			w.Write([]byte("unable to upgrade your connection to a websocket"))
-		}
+		//nolint
+		WebSocketManager.Upgrade(w, r)
 	})
 
 	if conf.Static != "" {
@@ -51,11 +48,8 @@ func New(WebSocketManager types.WebSocketManager, ApiManager types.ApiManager, c
 		})
 	}
 
-	router.NotFound(endpoint.Handle(func(w http.ResponseWriter, r *http.Request) error {
-		return &endpoint.HandlerError{
-			Status:  http.StatusNotFound,
-			Message: fmt.Sprintf("Endpoint '%s' was not found.", r.RequestURI),
-		}
+	router.NotFound(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		utils.HttpNotFound(w)
 	}))
 
 	http := &http.Server{

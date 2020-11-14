@@ -37,14 +37,14 @@ func New(
 	}
 }
 
-func (api *ApiManagerCtx) Mount(r *chi.Mux) {
+func (api *ApiManagerCtx) Route(r chi.Router) {
 	r.Use(api.Authenticate)
 
 	memberHandler := member.New(api.sessions)
-	r.Mount("/member", memberHandler.Router())
+	r.Route("/member", memberHandler.Route)
 
 	roomHandler := room.New(api.sessions, api.desktop, api.capture)
-	r.Mount("/room", roomHandler.Router())
+	r.Route("/room", roomHandler.Route)
 
 	r.Get("/test", func(w http.ResponseWriter, r *http.Request) {
 		session, _ := r.Context().Value(keySessionCtx).(types.Session)

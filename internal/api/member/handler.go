@@ -20,8 +20,6 @@ func New(
 	}
 }
 
-func (h *MemberHandler) Router() *chi.Mux {
-	r := chi.NewRouter()
-
-	return r
+func (h *MemberHandler) Route(r chi.Router) {
+	
 }

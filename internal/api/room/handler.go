@@ -26,9 +26,7 @@ func New(
 	}
 }
 
-func (h *RoomHandler) Router() *chi.Mux {
-	r := chi.NewRouter()
-	
+func (h *RoomHandler) Route(r chi.Router) {
 	// TODO: Authorizaton.
 	r.Route("/screen", func(r chi.Router) {
 		r.Get("/", h.ScreenConfiguration)
@@ -41,6 +39,4 @@ func (h *RoomHandler) Router() *chi.Mux {
 		r.Get("/", h.ClipboardRead)
 		r.Post("/", h.ClipboardWrite)
 	})
-
-	return r
 }
