@@ -47,7 +47,7 @@ func (api *ApiManagerCtx) Route(r chi.Router) {
 	r.Route("/room", roomHandler.Route)
 
 	r.Get("/test", func(w http.ResponseWriter, r *http.Request) {
-		session, _ := r.Context().Value(keySessionCtx).(types.Session)
+		session := GetSession(r)
 		utils.HttpBadRequest(w, "Hi `" + session.ID() + "`, you are authenticated.")
 	})
 }
@@ -62,4 +62,8 @@ func (api *ApiManagerCtx) Authenticate(next http.Handler) http.Handler {
 			next.ServeHTTP(w, r.WithContext(ctx))
 		}
 	})
+}
+
+func GetSession(r *http.Request) types.Session {
+	return r.Context().Value(keySessionCtx).(types.Session)
 }
