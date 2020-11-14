@@ -4,7 +4,26 @@ import (
 	"demodesk/neko/internal/capture/gst"
 )
 
-func (manager *CaptureManagerCtx) StartBroadcastPipeline() {
+func (manager *CaptureManagerCtx) StartBroadcast(url string) {
+	manager.broadcast_url = url
+	manager.broadcasting = true
+	manager.createBroadcastPipeline()
+}
+
+func (manager *CaptureManagerCtx) StopBroadcast() {
+	manager.broadcasting = false
+	manager.destroyBroadcastPipeline()
+}
+
+func (manager *CaptureManagerCtx) BroadcastEnabled() bool {
+	return manager.broadcasting
+}
+
+func (manager *CaptureManagerCtx) BroadcastUrl() string {
+	return manager.broadcast_url
+}
+
+func (manager *CaptureManagerCtx) createBroadcastPipeline() {
 	var err error
 
 	if manager.broadcast != nil || !manager.BroadcastEnabled() {
@@ -32,7 +51,7 @@ func (manager *CaptureManagerCtx) StartBroadcastPipeline() {
 	manager.logger.Info().Msgf("starting broadcast pipeline")
 }
 
-func (manager *CaptureManagerCtx) StopBroadcastPipeline() {
+func (manager *CaptureManagerCtx) destroyBroadcastPipeline() {
 	if manager.broadcast == nil {
 		return
 	}
@@ -40,23 +59,4 @@ func (manager *CaptureManagerCtx) StopBroadcastPipeline() {
 	manager.broadcast.Stop()
 	manager.logger.Info().Msgf("stopping broadcast pipeline")
 	manager.broadcast = nil
-}
-
-func (manager *CaptureManagerCtx) StartBroadcast(url string) {
-	manager.broadcast_url = url
-	manager.broadcasting = true
-	manager.StartBroadcastPipeline()
-}
-
-func (manager *CaptureManagerCtx) StopBroadcast() {
-	manager.broadcasting = false
-	manager.StopBroadcastPipeline()
-}
-
-func (manager *CaptureManagerCtx) BroadcastEnabled() bool {
-	return manager.broadcasting
-}
-
-func (manager *CaptureManagerCtx) BroadcastUrl() string {
-	return manager.broadcast_url
 }
