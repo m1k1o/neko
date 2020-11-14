@@ -149,13 +149,13 @@ func (ws *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Request) e
 	// }
 
 	socket := &WebSocketCtx{
-		id:         session.ID(),
+		session:    session,
 		ws:         ws,
 		address:    ip,
 		connection: connection,
 	}
 
-	ok, reason := ws.handler.Connected(session.ID(), socket)
+	ok, reason := ws.handler.Connected(session, socket)
 	if !ok {
 		// TODO: Refactor
 		if err = connection.WriteJSON(message.Disconnect{
@@ -226,7 +226,7 @@ func (ws *WebSocketManagerCtx) handle(connection *websocket.Conn, session types.
 				Str("raw", string(raw)).
 				Msg("received message from client")
 
-			if err := ws.handler.Message(session.ID(), raw); err != nil {
+			if err := ws.handler.Message(session, raw); err != nil {
 				ws.logger.Error().Err(err).Msg("message handler has failed")
 			}
 		case <-cancel:

@@ -6,10 +6,12 @@ import (
 	"sync"
 
 	"github.com/gorilla/websocket"
+
+	"demodesk/neko/internal/types"
 )
 
 type WebSocketCtx struct {
-	id         string
+	session    types.Session
 	address    string
 	ws         *WebSocketManagerCtx
 	connection *websocket.Conn
@@ -40,7 +42,7 @@ func (socket *WebSocketCtx) Send(v interface{}) error {
 	}
 
 	socket.ws.logger.Debug().
-		Str("session", socket.id).
+		Str("session", socket.session.ID()).
 		Str("address", socket.connection.RemoteAddr().String()).
 		Str("raw", string(raw)).
 		Msg("sending message to client")

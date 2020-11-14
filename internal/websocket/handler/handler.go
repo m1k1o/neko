@@ -42,7 +42,7 @@ type MessageHandlerCtx struct {
 	locked    bool
 }
 
-func (h *MessageHandlerCtx) Connected(id string, socket types.WebSocket) (bool, string) {
+func (h *MessageHandlerCtx) Connected(session types.Session, socket types.WebSocket) (bool, string) {
 	address := socket.Address()
 	if address != "" {
 		ok, banned := h.banned[address]
@@ -54,12 +54,9 @@ func (h *MessageHandlerCtx) Connected(id string, socket types.WebSocket) (bool, 
 		h.logger.Debug().Msg("no remote address")
 	}
 
-	if h.locked {
-		session, ok := h.sessions.Get(id)
-		if !ok || !session.Admin() {
-			h.logger.Debug().Msg("server locked")
-			return false, "locked"
-		}
+	if h.locked && !session.Admin(){
+		h.logger.Debug().Msg("server locked")
+		return false, "locked"
 	}
 
 	return true, ""
@@ -74,15 +71,10 @@ func (h *MessageHandlerCtx) Disconnected(id string) error {
 	return h.sessions.Destroy(id)
 }
 
-func (h *MessageHandlerCtx) Message(id string, raw []byte) error {
+func (h *MessageHandlerCtx) Message(session types.Session, raw []byte) error {
 	header := message.Message{}
 	if err := json.Unmarshal(raw, &header); err != nil {
 		return err
-	}
-
-	session, ok := h.sessions.Get(id)
-	if !ok {
-		return errors.Errorf("unknown session id %s", id)
 	}
 
 	switch header.Event {
