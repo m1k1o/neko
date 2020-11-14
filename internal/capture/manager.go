@@ -1,6 +1,8 @@
 package capture
 
 import (
+	"sync"
+
 	"github.com/kataras/go-events"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -12,6 +14,7 @@ import (
 
 type CaptureManagerCtx struct {
 	logger          zerolog.Logger
+	mu              sync.Mutex
 	video           *gst.Pipeline
 	audio           *gst.Pipeline
 	broadcast       *gst.Pipeline
@@ -30,6 +33,7 @@ type CaptureManagerCtx struct {
 func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCtx {
 	return &CaptureManagerCtx{
 		logger:          log.With().Str("module", "capture").Logger(),
+		mu:              sync.Mutex{},
 		emit_update:     make(chan bool),
 		emit_stop:       make(chan bool),
 		emmiter:         events.New(),
@@ -45,12 +49,18 @@ func (manager *CaptureManagerCtx) Start() {
 	manager.createBroadcastPipeline()
 
 	manager.desktop.OnBeforeScreenSizeChange(func() {
-		manager.destroyVideoPipeline()
+		if manager.Streaming() {
+			manager.destroyVideoPipeline()
+		}
+
 		manager.destroyBroadcastPipeline()
 	})
 
 	manager.desktop.OnAfterScreenSizeChange(func() {
-		manager.createVideoPipeline()
+		if manager.Streaming() {
+			manager.createVideoPipeline()
+		}
+
 		manager.createBroadcastPipeline()
 	})
 
@@ -103,6 +113,9 @@ func (manager *CaptureManagerCtx) OnAudioFrame(listener func(sample types.Sample
 }
 
 func (manager *CaptureManagerCtx) StartStream() {
+	manager.mu.Lock()
+	defer manager.mu.Unlock()
+
 	manager.logger.Info().Msgf("starting pipelines")
 
 	manager.createVideoPipeline()
@@ -111,6 +124,9 @@ func (manager *CaptureManagerCtx) StartStream() {
 }
 
 func (manager *CaptureManagerCtx) StopStream() {
+	manager.mu.Lock()
+	defer manager.mu.Unlock()
+
 	manager.logger.Info().Msgf("stopping pipelines")
 
 	manager.destroyVideoPipeline()
@@ -119,6 +135,9 @@ func (manager *CaptureManagerCtx) StopStream() {
 }
 
 func (manager *CaptureManagerCtx) Streaming() bool {
+	manager.mu.Lock()
+	defer manager.mu.Unlock()
+
 	return manager.streaming
 }
 
