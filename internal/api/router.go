@@ -19,8 +19,10 @@ type ApiManagerCtx struct {
 	capture   types.CaptureManager
 }
 
+type key int
+
 const (
-    keySessionCtx int = iota
+    keySessionCtx key = iota
 )
 
 func New(
