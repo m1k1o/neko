@@ -23,7 +23,6 @@ type Session interface {
 type SessionManager interface {
 	New(id string, admin bool) Session
 	Get(id string) (Session, bool)
-	Has(id string) bool
 	Destroy(id string) error
 
 	HasHost() bool

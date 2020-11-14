@@ -14,27 +14,32 @@ import (
 
 func New(capture types.CaptureManager, config *config.Session) *SessionManagerCtx {
 	return &SessionManagerCtx{
-		logger:  log.With().Str("module", "session").Logger(),
-		host:    nil,
-		hostMu:  sync.Mutex{},
-		capture: capture,
-		config:  config,
-		members: make(map[string]*SessionCtx),
-		emmiter: events.New(),
+		logger:    log.With().Str("module", "session").Logger(),
+		host:      nil,
+		hostMu:    sync.Mutex{},
+		capture:   capture,
+		config:    config,
+		members:   make(map[string]*SessionCtx),
+		membersMu: sync.Mutex{},
+		emmiter:   events.New(),
 	}
 }
 
 type SessionManagerCtx struct {
-	logger  zerolog.Logger
-	host    types.Session
-	hostMu  sync.Mutex
-	capture types.CaptureManager
-	config  *config.Session
-	members map[string]*SessionCtx
-	emmiter events.EventEmmiter
+	logger    zerolog.Logger
+	host      types.Session
+	hostMu    sync.Mutex
+	capture   types.CaptureManager
+	config    *config.Session
+	members   map[string]*SessionCtx
+	membersMu sync.Mutex
+	emmiter   events.EventEmmiter
 }
 
 func (manager *SessionManagerCtx) New(id string, admin bool) types.Session {
+	manager.membersMu.Lock()
+	defer manager.membersMu.Unlock()
+
 	session := &SessionCtx{
 		id:        id,
 		admin:     admin,
@@ -48,16 +53,17 @@ func (manager *SessionManagerCtx) New(id string, admin bool) types.Session {
 }
 
 func (manager *SessionManagerCtx) Get(id string) (types.Session, bool) {
+	manager.membersMu.Lock()
+	defer manager.membersMu.Unlock()
+
 	session, ok := manager.members[id]
 	return session, ok
 }
 
-func (manager *SessionManagerCtx) Has(id string) bool {
-	_, ok := manager.members[id]
-	return ok
-}
-
 func (manager *SessionManagerCtx) Destroy(id string) error {
+	manager.membersMu.Lock()
+	defer manager.membersMu.Unlock()
+
 	session, ok := manager.members[id]
 	if ok {
 		delete(manager.members, id)
@@ -105,6 +111,9 @@ func (manager *SessionManagerCtx) ClearHost() {
 // members list
 // ---
 func (manager *SessionManagerCtx) Admins() []types.Session {
+	manager.membersMu.Lock()
+	defer manager.membersMu.Unlock()
+
 	var sessions []types.Session
 	for _, session := range manager.members {
 		if !session.connected || !session.admin {
@@ -118,6 +127,9 @@ func (manager *SessionManagerCtx) Admins() []types.Session {
 }
 
 func (manager *SessionManagerCtx) Members() []types.Session {
+	manager.membersMu.Lock()
+	defer manager.membersMu.Unlock()
+
 	var sessions []types.Session
 	for _, session := range manager.members {
 		if !session.connected {
@@ -131,6 +143,9 @@ func (manager *SessionManagerCtx) Members() []types.Session {
 }
 
 func (manager *SessionManagerCtx) Broadcast(v interface{}, exclude interface{}) error {
+	manager.membersMu.Lock()
+	defer manager.membersMu.Unlock()
+
 	for id, session := range manager.members {
 		if !session.connected {
 			continue
@@ -146,6 +161,7 @@ func (manager *SessionManagerCtx) Broadcast(v interface{}, exclude interface{}) 
 			return err
 		}
 	}
+
 	return nil
 }
 
