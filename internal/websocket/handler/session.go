@@ -47,8 +47,8 @@ func (h *MessageHandlerCtx) SessionConnected(session types.Session) error {
 		return err
 	}
 
-	// send current screen resolution
-	if err := h.screenResolution(session); err != nil {
+	// send current screen size
+	if err := h.screenSize(session); err != nil {
 		return err
 	}
 

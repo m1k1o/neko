@@ -109,13 +109,13 @@ func (h *MessageHandlerCtx) Message(session types.Session, raw []byte) error {
 
 	// Screen Events
 	case event.SCREEN_RESOLUTION:
-		err = h.screenResolution(session)
+		err = h.screenSize(session)
 	case event.SCREEN_CONFIGURATIONS:
 		err = h.screenConfigurations(session)
 	case event.SCREEN_SET:
 		payload := &message.ScreenResolution{}
 		err = utils.Unmarshal(payload, raw, func() error {
-			return h.screenSet(session, payload)
+			return h.screenSizeChange(session, payload)
 		})
 
 	// Boradcast Events

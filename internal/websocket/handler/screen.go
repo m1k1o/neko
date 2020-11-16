@@ -6,7 +6,7 @@ import (
 	"demodesk/neko/internal/types/message"
 )
 
-func (h *MessageHandlerCtx) screenSet(session types.Session, payload *message.ScreenResolution) error {
+func (h *MessageHandlerCtx) screenSizeChange(session types.Session, payload *message.ScreenResolution) error {
 	if !session.Admin() {
 		h.logger.Debug().Msg("user not admin")
 		return nil
@@ -27,7 +27,7 @@ func (h *MessageHandlerCtx) screenSet(session types.Session, payload *message.Sc
 		}, nil)
 }
 
-func (h *MessageHandlerCtx) screenResolution(session types.Session) error {
+func (h *MessageHandlerCtx) screenSize(session types.Session) error {
 	size := h.desktop.GetScreenSize()
 	if size == nil {
 		h.logger.Debug().Msg("could not get screen size")
