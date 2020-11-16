@@ -130,6 +130,7 @@
                 {{ width }}x{{ height }}@{{ rate }}
               </option>
             </select>
+            <button @click="screenChangingToggle">screenChangingToggle</button>
           </td>
         </tr>
         <tr class="ok">
@@ -245,6 +246,26 @@
 
     disconnect() {
       this.neko.disconnect()
+    }
+
+    // fast sceen changing test
+    screen_interval = null
+    screenChangingToggle() {
+      if (this.screen_interval === null) {
+        let sizes = this.neko.state.screen.configurations
+        let len = sizes.length
+
+        //@ts-ignore
+        this.screen_interval = setInterval(() => {
+          let { width, height, rate } = sizes[Math.floor(Math.random() * len)]
+
+          this.neko.setScreenSize(width, height, rate)
+        }, 10)
+      } else {
+        //@ts-ignore
+        clearInterval(this.screen_interval)
+        this.screen_interval = null
+      }
     }
 
     mounted() {
