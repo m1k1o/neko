@@ -85,10 +85,11 @@ func (h *MessageHandlerCtx) SessionDisconnected(session types.Session) error {
 	// clear host if exists
 	if session.IsHost() {
 		h.sessions.ClearHost()
-		if err := h.sessions.Broadcast(message.Control{
-			Event: event.CONTROL_RELEASE,
-			ID:    session.ID(),
-		}, nil); err != nil {
+		if err := h.sessions.Broadcast(
+			message.Control{
+				Event: event.CONTROL_RELEASE,
+				ID:    session.ID(),
+			}, nil); err != nil {
 			h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.CONTROL_RELEASE)
 		}
 	}

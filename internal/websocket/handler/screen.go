@@ -17,13 +17,14 @@ func (h *MessageHandlerCtx) screenSet(session types.Session, payload *message.Sc
 		return err
 	}
 
-	if err := h.sessions.Broadcast(message.ScreenResolution{
-		Event:  event.SCREEN_RESOLUTION,
-		ID:     session.ID(),
-		Width:  payload.Width,
-		Height: payload.Height,
-		Rate:   payload.Rate,
-	}, nil); err != nil {
+	if err := h.sessions.Broadcast(
+		message.ScreenResolution{
+			Event:  event.SCREEN_RESOLUTION,
+			ID:     session.ID(),
+			Width:  payload.Width,
+			Height: payload.Height,
+			Rate:   payload.Rate,
+		}, nil); err != nil {
 		h.logger.Warn().Err(err).Msgf("sending event %s has failed", event.SCREEN_RESOLUTION)
 		return err
 	}
