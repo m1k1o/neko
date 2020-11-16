@@ -141,16 +141,9 @@ func (ws *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Request) e
 		return connection.Close()
 	}
 
-	// TODO: Refactor.
-	ip := r.RemoteAddr
-	// if allow poxy {
-	// 	ip = utils.ReadUserIP(r)
-	// }
-
 	socket := &WebSocketCtx{
 		session:    session,
 		ws:         ws,
-		address:    ip,
 		connection: connection,
 	}
 

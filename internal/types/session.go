@@ -8,7 +8,6 @@ type Session interface {
 	Admin() bool
 	IsHost() bool
 	Connected() bool
-	Address() string
 	SetName(name string)
 	SetSocket(socket WebSocket)
 	SetPeer(peer Peer)

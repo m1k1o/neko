@@ -3,7 +3,6 @@ package types
 import "net/http"
 
 type WebSocket interface {
-	Address() string
 	Send(v interface{}) error
 	Destroy() error
 }

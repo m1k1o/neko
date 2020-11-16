@@ -27,7 +27,6 @@ func New(
 		desktop:   desktop,
 		capture:   capture,
 		webrtc:    webrtc,
-		banned:    make(map[string]bool),
 		locked:    false,
 	}
 }
@@ -38,22 +37,10 @@ type MessageHandlerCtx struct {
 	webrtc    types.WebRTCManager
 	desktop   types.DesktopManager
 	capture   types.CaptureManager
-	banned    map[string]bool
 	locked    bool
 }
 
 func (h *MessageHandlerCtx) Connected(session types.Session, socket types.WebSocket) (bool, string) {
-	address := socket.Address()
-	if address != "" {
-		ok, banned := h.banned[address]
-		if ok && banned {
-			h.logger.Debug().Str("address", address).Msg("banned")
-			return false, "banned"
-		}
-	} else {
-		h.logger.Debug().Msg("no remote address")
-	}
-
 	if h.locked && !session.Admin(){
 		h.logger.Debug().Msg("server locked")
 		return false, "locked"
@@ -140,11 +127,6 @@ func (h *MessageHandlerCtx) Message(session types.Session, raw []byte) error {
 		payload := &message.Admin{}
 		err = utils.Unmarshal(payload, raw, func() error {
 			return h.adminGive(session, payload)
-		})
-	case event.ADMIN_BAN:
-		payload := &message.Admin{}
-		err = utils.Unmarshal(payload, raw, func() error {
-			return h.adminBan(session, payload)
 		})
 	case event.ADMIN_KICK:
 		payload := &message.Admin{}

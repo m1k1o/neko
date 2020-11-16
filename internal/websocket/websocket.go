@@ -2,7 +2,6 @@ package websocket
 
 import (
 	"encoding/json"
-	"strings"
 	"sync"
 
 	"github.com/gorilla/websocket"
@@ -12,20 +11,9 @@ import (
 
 type WebSocketCtx struct {
 	session    types.Session
-	address    string
 	ws         *WebSocketManagerCtx
 	connection *websocket.Conn
 	mu         sync.Mutex
-}
-
-func (socket *WebSocketCtx) Address() string {
-	//remote := socket.connection.RemoteAddr()
-	address := strings.SplitN(socket.address, ":", -1)
-	if len(address[0]) < 1 {
-		return socket.address
-	}
-
-	return address[0]
 }
 
 func (socket *WebSocketCtx) Send(v interface{}) error {

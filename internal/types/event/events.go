@@ -38,7 +38,6 @@ const (
 )
 
 const (
-	ADMIN_BAN     = "admin/ban"
 	ADMIN_KICK    = "admin/kick"
 	ADMIN_LOCK    = "admin/lock"
 	ADMIN_UNLOCK  = "admin/unlock"

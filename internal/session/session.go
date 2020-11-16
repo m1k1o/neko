@@ -39,14 +39,6 @@ func (session *SessionCtx) Connected() bool {
 	return session.connected
 }
 
-func (session *SessionCtx) Address() string {
-	if session.socket == nil {
-		return ""
-	}
-
-	return session.socket.Address()
-}
-
 func (session *SessionCtx) SetName(name string) {
 	session.name = name
 }
