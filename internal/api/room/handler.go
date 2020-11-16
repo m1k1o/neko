@@ -4,6 +4,7 @@ import (
 	"github.com/go-chi/chi"
 
 	"demodesk/neko/internal/types"
+	"demodesk/neko/internal/http/auth"
 )
 
 type RoomHandler struct {
@@ -27,15 +28,14 @@ func New(
 }
 
 func (h *RoomHandler) Route(r chi.Router) {
-	// TODO: Authorizaton.
 	r.Route("/screen", func(r chi.Router) {
 		r.Get("/", h.ScreenConfiguration)
-		r.Post("/", h.ScreenConfigurationChange)
 
-		r.Get("/configurations", h.ScreenConfigurationsList)
+		r.With(auth.AdminsOnly).Post("/", h.ScreenConfigurationChange)
+		r.With(auth.AdminsOnly).Get("/configurations", h.ScreenConfigurationsList)
 	})
 
-	r.Route("/clipboard", func(r chi.Router) {
+	r.With(auth.HostsOnly).Route("/clipboard", func(r chi.Router) {
 		r.Get("/", h.ClipboardRead)
 		r.Post("/", h.ClipboardWrite)
 	})

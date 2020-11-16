@@ -1,13 +1,13 @@
 package api
 
 import (
-	"context"
 	"net/http"
 
 	"github.com/go-chi/chi"
 
 	"demodesk/neko/internal/api/member"
 	"demodesk/neko/internal/api/room"
+	"demodesk/neko/internal/http/auth"
 	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/utils"
 	"demodesk/neko/internal/config"
@@ -18,12 +18,6 @@ type ApiManagerCtx struct {
 	desktop   types.DesktopManager
 	capture   types.CaptureManager
 }
-
-type key int
-
-const (
-    keySessionCtx key = iota
-)
 
 func New(
 	sessions types.SessionManager,
@@ -49,7 +43,7 @@ func (api *ApiManagerCtx) Route(r chi.Router) {
 	r.Route("/room", roomHandler.Route)
 
 	r.Get("/test", func(w http.ResponseWriter, r *http.Request) {
-		session := GetSession(r)
+		session := auth.GetSession(r)
 		utils.HttpBadRequest(w, "Hi `" + session.ID() + "`, you are authenticated.")
 	})
 }
@@ -60,12 +54,7 @@ func (api *ApiManagerCtx) Authenticate(next http.Handler) http.Handler {
 		if err != nil {
 			utils.HttpNotAuthenticated(w, err)
 		} else {
-			ctx := context.WithValue(r.Context(), keySessionCtx, session)
-			next.ServeHTTP(w, r.WithContext(ctx))
+			next.ServeHTTP(w, auth.SetSession(r, session))
 		}
 	})
-}
-
-func GetSession(r *http.Request) types.Session {
-	return r.Context().Value(keySessionCtx).(types.Session)
 }
