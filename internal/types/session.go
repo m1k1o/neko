@@ -6,11 +6,9 @@ type Session interface {
 	ID() string
 	Name() string
 	Admin() bool
-	Muted() bool
 	IsHost() bool
 	Connected() bool
 	Address() string
-	SetMuted(muted bool)
 	SetName(name string)
 	SetSocket(socket WebSocket)
 	SetPeer(peer Peer)

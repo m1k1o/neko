@@ -36,7 +36,6 @@ type MembersListEntry struct {
 	ID    string `json:"id"`
 	Name  string `json:"displayname"`
 	Admin bool   `json:"admin"`
-	Muted bool   `json:"muted"`
 }
 
 type Member struct {
@@ -44,7 +43,6 @@ type Member struct {
 	ID    string `json:"id"`
 	Name  string `json:"displayname"`
 	Admin bool   `json:"admin"`
-	Muted bool   `json:"muted"`
 }
 
 type MemberDisconnected struct {

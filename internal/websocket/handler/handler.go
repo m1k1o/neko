@@ -151,16 +151,6 @@ func (h *MessageHandlerCtx) Message(session types.Session, raw []byte) error {
 		err = utils.Unmarshal(payload, raw, func() error {
 			return h.adminKick(session, payload)
 		})
-	case event.ADMIN_MUTE:
-		payload := &message.Admin{}
-		err = utils.Unmarshal(payload, raw, func() error {
-			return h.adminMute(session, payload)
-		})
-	case event.ADMIN_UNMUTE:
-		payload := &message.Admin{}
-		err = utils.Unmarshal(payload, raw, func() error {
-			return h.adminUnmute(session, payload)
-		})
 	default:
 		return errors.Errorf("unknown message event %s", header.Event)
 	}

@@ -35,7 +35,6 @@ func (h *MessageHandlerCtx) SessionConnected(session types.Session) error {
 			ID:    session.ID(),
 			Name:  session.Name(),
 			Admin: session.Admin(),
-			Muted: session.Muted(),
 		})
 	}
 
@@ -70,7 +69,6 @@ func (h *MessageHandlerCtx) SessionConnected(session types.Session) error {
 			ID:    session.ID(),
 			Name:  session.Name(),
 			Admin: session.Admin(),
-			Muted: session.Muted(),
 		}, nil)
 }
 

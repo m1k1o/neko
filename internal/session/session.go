@@ -13,7 +13,6 @@ type SessionCtx struct {
 	id        string
 	name      string
 	admin     bool
-	muted     bool
 	connected bool
 	manager   *SessionManagerCtx
 	socket    types.WebSocket
@@ -32,10 +31,6 @@ func (session *SessionCtx) Admin() bool {
 	return session.admin
 }
 
-func (session *SessionCtx) Muted() bool {
-	return session.muted
-}
-
 func (session *SessionCtx) IsHost() bool {
 	return session.manager.host != nil && session.manager.host.ID() == session.ID()
 }
@@ -50,10 +45,6 @@ func (session *SessionCtx) Address() string {
 	}
 
 	return session.socket.Address()
-}
-
-func (session *SessionCtx) SetMuted(muted bool) {
-	session.muted = muted
 }
 
 func (session *SessionCtx) SetName(name string) {
