@@ -44,7 +44,6 @@ func (h *MessageHandlerCtx) SessionConnected(session types.Session) error {
 		Event:    event.MEMBER_LIST,
 		Memebers: members,
 	}); err != nil {
-		h.logger.Warn().Str("id", session.ID()).Err(err).Msgf("sending event %s has failed", event.MEMBER_LIST)
 		return err
 	}
 
@@ -60,31 +59,27 @@ func (h *MessageHandlerCtx) SessionConnected(session types.Session) error {
 			Event: event.CONTROL_LOCKED,
 			ID:    host.ID(),
 		}); err != nil {
-			h.logger.Warn().Str("id", session.ID()).Err(err).Msgf("sending event %s has failed", event.CONTROL_LOCKED)
 			return err
 		}
 	}
 
 	// let everyone know there is a new session
-	if err := h.sessions.Broadcast(
+	return h.sessions.Broadcast(
 		message.Member{
 			Event:  event.MEMBER_CONNECTED,
 			ID:    session.ID(),
 			Name:  session.Name(),
 			Admin: session.Admin(),
 			Muted: session.Muted(),
-		}, nil); err != nil {
-		h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.CONTROL_RELEASE)
-		return err
-	}
-
-	return nil
+		}, nil)
 }
 
 func (h *MessageHandlerCtx) SessionDisconnected(session types.Session) error {
 	// clear host if exists
 	if session.IsHost() {
 		h.sessions.ClearHost()
+
+		// gracefully handle error
 		if err := h.sessions.Broadcast(
 			message.Control{
 				Event: event.CONTROL_RELEASE,
@@ -95,14 +90,9 @@ func (h *MessageHandlerCtx) SessionDisconnected(session types.Session) error {
 	}
 
 	// let everyone know session disconnected
-	if err := h.sessions.Broadcast(
+	return h.sessions.Broadcast(
 		message.MemberDisconnected{
 			Event: event.MEMBER_DISCONNECTED,
 			ID:    session.ID(),
-		}, nil); err != nil {
-		h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.MEMBER_DISCONNECTED)
-		return err
-	}
-
-	return nil
+		}, nil);
 }

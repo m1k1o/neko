@@ -15,16 +15,11 @@ func (h *MessageHandlerCtx) controlRelease(session types.Session) error {
 	h.logger.Debug().Str("id", session.ID()).Msgf("host called %s", event.CONTROL_RELEASE)
 	h.sessions.ClearHost()
 
-	if err := h.sessions.Broadcast(
+	return h.sessions.Broadcast(
 		message.Control{
 			Event: event.CONTROL_RELEASE,
 			ID:    session.ID(),
-		}, nil); err != nil {
-		h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.CONTROL_RELEASE)
-		return err
-	}
-
-	return nil
+		}, nil)
 }
 
 func (h *MessageHandlerCtx) controlRequest(session types.Session) error {
@@ -35,35 +30,26 @@ func (h *MessageHandlerCtx) controlRequest(session types.Session) error {
 		h.sessions.SetHost(session)
 
 		// let everyone know
-		if err := h.sessions.Broadcast(
+		return h.sessions.Broadcast(
 			message.Control{
 				Event: event.CONTROL_LOCKED,
 				ID:    session.ID(),
-			}, nil); err != nil {
-			h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.CONTROL_LOCKED)
-			return err
-		}
-	} else {
-		// tell session there is a host
-		if err := session.Send(message.Control{
-			Event: event.CONTROL_REQUEST,
-			ID:    host.ID(),
-		}); err != nil {
-			h.logger.Warn().Err(err).Str("id", session.ID()).Msgf("sending event %s has failed", event.CONTROL_REQUEST)
-			return err
-		}
-
-		// tell host session wants to be host
-		if err := host.Send(message.Control{
-			Event: event.CONTROL_REQUESTING,
-			ID:    session.ID(),
-		}); err != nil {
-			h.logger.Warn().Err(err).Str("id", host.ID()).Msgf("sending event %s has failed", event.CONTROL_REQUESTING)
-			return err
-		}
+			}, nil)
 	}
 
-	return nil
+	// tell session there is a host
+	if err := session.Send(message.Control{
+		Event: event.CONTROL_REQUEST,
+		ID:    host.ID(),
+	}); err != nil {
+		return err
+	}
+
+	// tell host session wants to be host
+	return host.Send(message.Control{
+		Event: event.CONTROL_REQUESTING,
+		ID:    session.ID(),
+	})
 }
 
 func (h *MessageHandlerCtx) controlGive(session types.Session, payload *message.Control) error {
@@ -80,17 +66,12 @@ func (h *MessageHandlerCtx) controlGive(session types.Session, payload *message.
 
 	h.sessions.SetHost(target)
 
-	if err := h.sessions.Broadcast(
+	return h.sessions.Broadcast(
 		message.ControlTarget{
 			Event:  event.CONTROL_GIVE,
 			ID:     session.ID(),
 			Target: target.ID(),
-		}, nil); err != nil {
-		h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.CONTROL_LOCKED)
-		return err
-	}
-
-	return nil
+		}, nil)
 }
 
 func (h *MessageHandlerCtx) controlClipboard(session types.Session, payload *message.Clipboard) error {
