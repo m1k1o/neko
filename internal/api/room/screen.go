@@ -3,7 +3,10 @@ package room
 import (
 	"net/http"
 
+	"demodesk/neko/internal/types/event"
+	"demodesk/neko/internal/types/message"
 	"demodesk/neko/internal/utils"
+	"demodesk/neko/internal/http/auth"
 )
 
 type ScreenConfiguration struct {
@@ -38,7 +41,17 @@ func (h *RoomHandler) ScreenConfigurationChange(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	// TODO: Broadcast change to all sessions.
+	session := auth.GetSession(r)
+	if err := h.sessions.Broadcast(
+		message.ScreenResolution{
+			Event:  event.SCREEN_RESOLUTION,
+			ID:     session.ID(),
+			Width:  data.Width,
+			Height: data.Height,
+			Rate:   data.Rate,
+		}, nil); err != nil {
+		h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.SCREEN_RESOLUTION)
+	}
 
 	utils.HttpSuccess(w, data)
 }

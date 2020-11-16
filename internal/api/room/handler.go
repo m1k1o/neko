@@ -2,15 +2,18 @@ package room
 
 import (
 	"github.com/go-chi/chi"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 
 	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/http/auth"
 )
 
 type RoomHandler struct {
+	logger    zerolog.Logger
 	sessions  types.SessionManager
 	desktop   types.DesktopManager
-	capture  types.CaptureManager
+	capture   types.CaptureManager
 }
 
 func New(
@@ -18,9 +21,13 @@ func New(
 	desktop types.DesktopManager,
 	capture types.CaptureManager,
 ) *RoomHandler {
-	// Init
+	logger := log.With().
+		Str("module", "api").
+		Str("submodule", "room").
+		Logger()
 
 	return &RoomHandler{
+		logger:    logger,
 		sessions:  sessions,
 		desktop:   desktop,
 		capture:   capture,
