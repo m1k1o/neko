@@ -88,7 +88,7 @@ func (ws *WebSocketManagerCtx) Start() {
 				return
 			default:
 				session := ws.sessions.GetHost()
-				if session != nil {
+				if session == nil {
 					break
 				}
 
@@ -97,7 +97,6 @@ func (ws *WebSocketManagerCtx) Start() {
 					break
 				}
 
-				// TODO: Refactor
 				if err := session.Send(message.Clipboard{
 					Event: event.CONTROL_CLIPBOARD,
 					Text:  text,
