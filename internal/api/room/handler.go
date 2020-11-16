@@ -46,4 +46,9 @@ func (h *RoomHandler) Route(r chi.Router) {
 		r.Get("/", h.ClipboardRead)
 		r.Post("/", h.ClipboardWrite)
 	})
+
+	r.Route("/control", func(r chi.Router) {
+		r.Post("/request", h.ControlRequest)
+		r.Post("/release", h.ControlRelease)
+	})
 }
