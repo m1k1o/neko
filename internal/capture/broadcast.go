@@ -4,10 +4,10 @@ import (
 	"demodesk/neko/internal/capture/gst"
 )
 
-func (manager *CaptureManagerCtx) StartBroadcast(url string) {
+func (manager *CaptureManagerCtx) StartBroadcast(url string) error {
 	manager.broadcast_url = url
 	manager.broadcasting = true
-	manager.createBroadcastPipeline()
+	return manager.createBroadcastPipeline()
 }
 
 func (manager *CaptureManagerCtx) StopBroadcast() {
@@ -23,12 +23,8 @@ func (manager *CaptureManagerCtx) BroadcastUrl() string {
 	return manager.broadcast_url
 }
 
-func (manager *CaptureManagerCtx) createBroadcastPipeline() {
+func (manager *CaptureManagerCtx) createBroadcastPipeline() error {
 	var err error
-
-	if manager.broadcast != nil || !manager.BroadcastEnabled() {
-		return
-	}
 
 	manager.logger.Info().
 		Str("audio_device", manager.config.Device).
@@ -44,11 +40,12 @@ func (manager *CaptureManagerCtx) createBroadcastPipeline() {
 	)
 
 	if err != nil {
-		manager.logger.Panic().Err(err).Msg("unable to create broadcast pipeline")
+		return err
 	}
 
 	manager.broadcast.Play()
 	manager.logger.Info().Msgf("starting broadcast pipeline")
+	return nil
 }
 
 func (manager *CaptureManagerCtx) destroyBroadcastPipeline() {

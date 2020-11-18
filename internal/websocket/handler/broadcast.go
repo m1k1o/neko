@@ -12,7 +12,10 @@ func (h *MessageHandlerCtx) boradcastCreate(session types.Session, payload *mess
 		return nil
 	}
 
-	h.capture.StartBroadcast(payload.URL)
+	if err := h.capture.StartBroadcast(payload.URL); err != nil {
+		return err
+	}
+
 	return h.boradcastStatus(session)
 }
 

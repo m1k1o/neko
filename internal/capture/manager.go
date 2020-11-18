@@ -46,14 +46,18 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 }
 
 func (manager *CaptureManagerCtx) Start() {
-	manager.createBroadcastPipeline()
+	if manager.BroadcastEnabled() {
+		manager.createBroadcastPipeline()
+	}
 
 	manager.desktop.OnBeforeScreenSizeChange(func() {
 		if manager.Streaming() {
 			manager.destroyVideoPipeline()
 		}
 
-		manager.destroyBroadcastPipeline()
+		if manager.BroadcastEnabled() {
+			manager.destroyBroadcastPipeline()
+		}
 	})
 
 	manager.desktop.OnAfterScreenSizeChange(func() {
@@ -61,7 +65,9 @@ func (manager *CaptureManagerCtx) Start() {
 			manager.createVideoPipeline()
 		}
 
-		manager.createBroadcastPipeline()
+		if manager.BroadcastEnabled() {
+			manager.createBroadcastPipeline()
+		}
 	})
 
 	go func() {
@@ -85,9 +91,15 @@ func (manager *CaptureManagerCtx) Start() {
 
 func (manager *CaptureManagerCtx) Shutdown() error {
 	manager.logger.Info().Msgf("capture shutting down")
-	manager.StopStream()
+	
+	if manager.Streaming() {
+		manager.StopStream()
+	}
 
-	manager.destroyBroadcastPipeline()
+	if manager.BroadcastEnabled() {
+		manager.createBroadcastPipeline()
+	}
+
 	manager.emit_stop <- true
 	return nil
 }

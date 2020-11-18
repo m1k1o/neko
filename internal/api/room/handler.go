@@ -54,4 +54,10 @@ func (h *RoomHandler) Route(r chi.Router) {
 		r.With(auth.AdminsOnly).Post("/take", h.ControlTake)
 		r.With(auth.AdminsOnly).Post("/give", h.ControlGive)
 	})
+
+	r.With(auth.AdminsOnly).Route("/broadcast", func(r chi.Router) {
+		r.Get("/", h.BroadcastStatus)
+		r.Post("/start", h.BoradcastStart)
+		r.Post("/stop", h.BoradcastStop)
+	})
 }

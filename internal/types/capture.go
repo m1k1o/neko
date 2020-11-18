@@ -20,7 +20,7 @@ type CaptureManager interface {
 	Streaming() bool
 
 	// broacast
-	StartBroadcast(url string)
+	StartBroadcast(url string) error
 	StopBroadcast()
 	BroadcastEnabled() bool
 	BroadcastUrl() string

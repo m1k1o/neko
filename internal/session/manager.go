@@ -163,6 +163,27 @@ func (manager *SessionManagerCtx) Broadcast(v interface{}, exclude interface{}) 
 	}
 }
 
+func (manager *SessionManagerCtx) AdminBroadcast(v interface{}, exclude interface{}) {
+	manager.membersMu.Lock()
+	defer manager.membersMu.Unlock()
+
+	for id, session := range manager.members {
+		if !session.connected || !session.Admin() {
+			continue
+		}
+
+		if exclude != nil {
+			if in, _ := utils.ArrayIn(id, exclude); in {
+				continue
+			}
+		}
+
+		if err := session.Send(v); err != nil {
+			manager.logger.Warn().Err(err).Msgf("broadcasting admin event has failed")
+		}
+	}
+}
+
 // ---
 // events
 // ---
