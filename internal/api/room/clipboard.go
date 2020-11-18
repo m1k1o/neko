@@ -10,7 +10,7 @@ type ClipboardPayload struct {
 	Text string `json:"text"`
 }
 
-func (h *RoomHandler) ClipboardRead(w http.ResponseWriter, r *http.Request) {
+func (h *RoomHandler) clipboardRead(w http.ResponseWriter, r *http.Request) {
 	// TODO: error check?
 	text := h.desktop.ReadClipboard()
 
@@ -19,7 +19,7 @@ func (h *RoomHandler) ClipboardRead(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (h *RoomHandler) ClipboardWrite(w http.ResponseWriter, r *http.Request) {
+func (h *RoomHandler) clipboardWrite(w http.ResponseWriter, r *http.Request) {
 	data := &ClipboardPayload{}
 	if !utils.HttpJsonRequest(w, r, data) {
 		return

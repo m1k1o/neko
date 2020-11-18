@@ -15,7 +15,7 @@ type ScreenConfigurationPayload struct {
 	Rate   int `json:"rate"`
 }
 
-func (h *RoomHandler) ScreenConfiguration(w http.ResponseWriter, r *http.Request) {
+func (h *RoomHandler) screenConfiguration(w http.ResponseWriter, r *http.Request) {
 	size := h.desktop.GetScreenSize()
 
 	if size == nil {
@@ -30,7 +30,7 @@ func (h *RoomHandler) ScreenConfiguration(w http.ResponseWriter, r *http.Request
 	})
 }
 
-func (h *RoomHandler) ScreenConfigurationChange(w http.ResponseWriter, r *http.Request) {
+func (h *RoomHandler) screenConfigurationChange(w http.ResponseWriter, r *http.Request) {
 	data := &ScreenConfigurationPayload{}
 	if !utils.HttpJsonRequest(w, r, data) {
 		return
@@ -55,7 +55,7 @@ func (h *RoomHandler) ScreenConfigurationChange(w http.ResponseWriter, r *http.R
 	utils.HttpSuccess(w, data)
 }
 
-func (h *RoomHandler) ScreenConfigurationsList(w http.ResponseWriter, r *http.Request) {
+func (h *RoomHandler) screenConfigurationsList(w http.ResponseWriter, r *http.Request) {
 	list := []ScreenConfigurationPayload{}
 	
 	ScreenConfigurations := h.desktop.ScreenConfigurations()

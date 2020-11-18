@@ -13,7 +13,7 @@ type ControlGivePayload struct {
 	ID string `json:"id"`
 }
 
-func (h *RoomHandler) ControlRequest(w http.ResponseWriter, r *http.Request) {
+func (h *RoomHandler) controlRequest(w http.ResponseWriter, r *http.Request) {
 	session := auth.GetSession(r)
 	if session.IsHost() {
 		utils.HttpBadRequest(w, "User is already host.")
@@ -37,7 +37,7 @@ func (h *RoomHandler) ControlRequest(w http.ResponseWriter, r *http.Request) {
 	utils.HttpSuccess(w)
 }
 
-func (h *RoomHandler) ControlRelease(w http.ResponseWriter, r *http.Request) {
+func (h *RoomHandler) controlRelease(w http.ResponseWriter, r *http.Request) {
 	session := auth.GetSession(r)
 	if !session.IsHost() {
 		utils.HttpBadRequest(w, "User is not the host.")
@@ -55,7 +55,7 @@ func (h *RoomHandler) ControlRelease(w http.ResponseWriter, r *http.Request) {
 	utils.HttpSuccess(w)
 }
 
-func (h *RoomHandler) ControlTake(w http.ResponseWriter, r *http.Request) {
+func (h *RoomHandler) controlTake(w http.ResponseWriter, r *http.Request) {
 	session := auth.GetSession(r)
 
 	h.sessions.SetHost(session)
@@ -69,7 +69,7 @@ func (h *RoomHandler) ControlTake(w http.ResponseWriter, r *http.Request) {
 	utils.HttpSuccess(w)
 }
 
-func (h *RoomHandler) ControlGive(w http.ResponseWriter, r *http.Request) {
+func (h *RoomHandler) controlGive(w http.ResponseWriter, r *http.Request) {
 	data := &ControlGivePayload{}
 	if !utils.HttpJsonRequest(w, r, data) {
 		return

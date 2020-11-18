@@ -16,7 +16,7 @@ type KeyboardModifiersData struct {
 	ScrollLock *bool `json:"scrollock"`
 }
 
-func (h *RoomHandler) KeyboardLayoutSet(w http.ResponseWriter, r *http.Request) {
+func (h *RoomHandler) keyboardLayoutSet(w http.ResponseWriter, r *http.Request) {
 	data := &KeyboardLayoutData{}
 	if !utils.HttpJsonRequest(w, r, data) {
 		return
@@ -27,7 +27,7 @@ func (h *RoomHandler) KeyboardLayoutSet(w http.ResponseWriter, r *http.Request) 
 	utils.HttpSuccess(w)
 }
 
-func (h *RoomHandler) KeyboardModifiersSet(w http.ResponseWriter, r *http.Request) {
+func (h *RoomHandler) keyboardModifiersSet(w http.ResponseWriter, r *http.Request) {
 	data := &KeyboardModifiersData{}
 	if !utils.HttpJsonRequest(w, r, data) {
 		return

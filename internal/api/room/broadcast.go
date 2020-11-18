@@ -13,14 +13,14 @@ type BroadcastStatusPayload struct {
 	IsActive bool `json:"is_active"`
 }
 
-func (h *RoomHandler) BroadcastStatus(w http.ResponseWriter, r *http.Request) {
+func (h *RoomHandler) broadcastStatus(w http.ResponseWriter, r *http.Request) {
 	utils.HttpSuccess(w, BroadcastStatusPayload{
 		IsActive: h.capture.BroadcastEnabled(),
 		URL:      h.capture.BroadcastUrl(),
 	})
 }
 
-func (h *RoomHandler) BoradcastStart(w http.ResponseWriter, r *http.Request) {
+func (h *RoomHandler) boradcastStart(w http.ResponseWriter, r *http.Request) {
 	data := &BroadcastStatusPayload{}
 	if !utils.HttpJsonRequest(w, r, data) {
 		return
@@ -51,7 +51,7 @@ func (h *RoomHandler) BoradcastStart(w http.ResponseWriter, r *http.Request) {
 	utils.HttpSuccess(w)
 }
 
-func (h *RoomHandler) BoradcastStop(w http.ResponseWriter, r *http.Request) {
+func (h *RoomHandler) boradcastStop(w http.ResponseWriter, r *http.Request) {
 	if !h.capture.BroadcastEnabled() {
 		utils.HttpBadRequest(w, "Server is not broadcasting.")
 		return
