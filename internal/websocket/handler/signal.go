@@ -12,13 +12,14 @@ func (h *MessageHandlerCtx) signalProvide(session types.Session) error {
 		return err
 	}
 
-	return session.Send(message.SignalProvide{
-		Event: event.SIGNAL_PROVIDE,
-		ID:    session.ID(),
-		SDP:   sdp,
-		Lite:  lite,
-		ICE:   ice,
-	})
+	return session.Send(
+		message.SignalProvide{
+			Event: event.SIGNAL_PROVIDE,
+			ID:    session.ID(),
+			SDP:   sdp,
+			Lite:  lite,
+			ICE:   ice,
+		})
 }
 
 func (h *MessageHandlerCtx) signalAnswer(session types.Session, payload *message.SignalAnswer) error {

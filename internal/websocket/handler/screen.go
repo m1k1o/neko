@@ -17,7 +17,7 @@ func (h *MessageHandlerCtx) screenSizeChange(session types.Session, payload *mes
 		return nil
 	}
 
-	return h.sessions.Broadcast(
+	h.sessions.Broadcast(
 		message.ScreenResolution{
 			Event:  event.SCREEN_RESOLUTION,
 			ID:     session.ID(),
@@ -25,6 +25,8 @@ func (h *MessageHandlerCtx) screenSizeChange(session types.Session, payload *mes
 			Height: payload.Height,
 			Rate:   payload.Rate,
 		}, nil)
+
+	return nil
 }
 
 func (h *MessageHandlerCtx) screenSize(session types.Session) error {

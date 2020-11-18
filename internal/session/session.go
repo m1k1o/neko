@@ -67,20 +67,13 @@ func (session *SessionCtx) SetConnected(connected bool) {
 }
 
 func (session *SessionCtx) Disconnect(reason string) error {
-	if session.socket == nil {
-		return nil
-	}
-
-	// TODO: Refcator
-	if err := session.Send(&message.Disconnect{
-		Event:   event.SYSTEM_DISCONNECT,
-		Message: reason,
-	}); err != nil {
-		return err
-	}
-
 	session.SetConnected(false)
-	return nil
+
+	return session.Send(
+		message.Disconnect{
+			Event:   event.SYSTEM_DISCONNECT,
+			Message: reason,
+		})
 }
 
 func (session *SessionCtx) Send(v interface{}) error {

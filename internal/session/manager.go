@@ -142,7 +142,7 @@ func (manager *SessionManagerCtx) Members() []types.Session {
 	return sessions
 }
 
-func (manager *SessionManagerCtx) Broadcast(v interface{}, exclude interface{}) error {
+func (manager *SessionManagerCtx) Broadcast(v interface{}, exclude interface{}) {
 	manager.membersMu.Lock()
 	defer manager.membersMu.Unlock()
 
@@ -158,11 +158,9 @@ func (manager *SessionManagerCtx) Broadcast(v interface{}, exclude interface{}) 
 		}
 
 		if err := session.Send(v); err != nil {
-			return err
+			manager.logger.Warn().Err(err).Msgf("broadcasting event has failed")
 		}
 	}
-
-	return nil
 }
 
 // ---

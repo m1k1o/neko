@@ -29,7 +29,7 @@ type SessionManager interface {
 
 	Admins() []Session
 	Members() []Session
-	Broadcast(v interface{}, exclude interface{}) error
+	Broadcast(v interface{}, exclude interface{})
 
 	OnHost(listener func(session Session))
 	OnHostCleared(listener func(session Session))

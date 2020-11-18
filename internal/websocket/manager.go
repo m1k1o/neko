@@ -97,10 +97,11 @@ func (ws *WebSocketManagerCtx) Start() {
 					break
 				}
 
-				if err := session.Send(message.Clipboard{
-					Event: event.CONTROL_CLIPBOARD,
-					Text:  text,
-				}); err != nil {
+				if err := session.Send(
+					message.Clipboard{
+						Event: event.CONTROL_CLIPBOARD,
+						Text:  text,
+					}); err != nil {
 					ws.logger.Warn().Err(err).Msg("could not sync clipboard")
 				}
 

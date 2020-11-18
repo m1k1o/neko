@@ -24,13 +24,11 @@ func (h *RoomHandler) ControlRequest(w http.ResponseWriter, r *http.Request) {
 
 	h.sessions.SetHost(session)
 
-	if err := h.sessions.Broadcast(
+	h.sessions.Broadcast(
 		message.Control{
 			Event: event.CONTROL_LOCKED,
 			ID:    session.ID(),
-		}, nil); err != nil {
-		h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.CONTROL_LOCKED)
-	}
+		}, nil)
 
 	utils.HttpSuccess(w)
 }
@@ -43,14 +41,12 @@ func (h *RoomHandler) ControlRelease(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.sessions.ClearHost()
-
-	if err := h.sessions.Broadcast(
+	
+	h.sessions.Broadcast(
 		message.Control{
 			Event: event.CONTROL_RELEASE,
 			ID:    session.ID(),
-		}, nil); err != nil {
-		h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.CONTROL_RELEASE)
-	}
+		}, nil)
 
 	utils.HttpSuccess(w)
 }

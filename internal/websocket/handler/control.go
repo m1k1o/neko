@@ -15,11 +15,13 @@ func (h *MessageHandlerCtx) controlRelease(session types.Session) error {
 	h.logger.Debug().Str("id", session.ID()).Msgf("host called %s", event.CONTROL_RELEASE)
 	h.sessions.ClearHost()
 
-	return h.sessions.Broadcast(
+	h.sessions.Broadcast(
 		message.Control{
 			Event: event.CONTROL_RELEASE,
 			ID:    session.ID(),
 		}, nil)
+
+	return nil
 }
 
 func (h *MessageHandlerCtx) controlRequest(session types.Session) error {
@@ -30,26 +32,30 @@ func (h *MessageHandlerCtx) controlRequest(session types.Session) error {
 		h.sessions.SetHost(session)
 
 		// let everyone know
-		return h.sessions.Broadcast(
+		h.sessions.Broadcast(
 			message.Control{
 				Event: event.CONTROL_LOCKED,
 				ID:    session.ID(),
 			}, nil)
+	} else {
+		// tell session there is a host
+		if err := session.Send(
+			message.Control{
+				Event: event.CONTROL_REQUEST,
+				ID:    host.ID(),
+			}); err != nil {
+			return err
+		}
+
+		// tell host session wants to be host
+		return host.Send(
+			message.Control{
+				Event: event.CONTROL_REQUESTING,
+				ID:    session.ID(),
+			})
 	}
 
-	// tell session there is a host
-	if err := session.Send(message.Control{
-		Event: event.CONTROL_REQUEST,
-		ID:    host.ID(),
-	}); err != nil {
-		return err
-	}
-
-	// tell host session wants to be host
-	return host.Send(message.Control{
-		Event: event.CONTROL_REQUESTING,
-		ID:    session.ID(),
-	})
+	return nil
 }
 
 func (h *MessageHandlerCtx) controlGive(session types.Session, payload *message.Control) error {
@@ -66,12 +72,14 @@ func (h *MessageHandlerCtx) controlGive(session types.Session, payload *message.
 
 	h.sessions.SetHost(target)
 
-	return h.sessions.Broadcast(
+	h.sessions.Broadcast(
 		message.ControlTarget{
 			Event:  event.CONTROL_GIVE,
 			ID:     session.ID(),
 			Target: target.ID(),
 		}, nil)
+
+	return nil
 }
 
 func (h *MessageHandlerCtx) controlClipboard(session types.Session, payload *message.Clipboard) error {

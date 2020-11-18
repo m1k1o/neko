@@ -42,16 +42,15 @@ func (h *RoomHandler) ScreenConfigurationChange(w http.ResponseWriter, r *http.R
 	}
 
 	session := auth.GetSession(r)
-	if err := h.sessions.Broadcast(
+
+	h.sessions.Broadcast(
 		message.ScreenResolution{
 			Event:  event.SCREEN_RESOLUTION,
 			ID:     session.ID(),
 			Width:  data.Width,
 			Height: data.Height,
 			Rate:   data.Rate,
-		}, nil); err != nil {
-		h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.SCREEN_RESOLUTION)
-	}
+		}, nil)
 
 	utils.HttpSuccess(w, data)
 }
