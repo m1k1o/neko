@@ -9,23 +9,18 @@ import (
 	"demodesk/neko/internal/http/auth"
 )
 
-type ControlGivePayload struct {
+type ControlTargetPayload struct {
 	ID string `json:"id"`
 }
 
 func (h *RoomHandler) controlRequest(w http.ResponseWriter, r *http.Request) {
-	session := auth.GetSession(r)
-	if session.IsHost() {
-		utils.HttpBadRequest(w, "User is already host.")
-		return
-	}
-
 	host := h.sessions.GetHost()
 	if host != nil {
-		utils.HttpBadRequest(w, "There is already a host.")
+		utils.HttpUnprocessableEntity(w, "There is already a host.")
 		return
 	}
 
+	session := auth.GetSession(r)
 	h.sessions.SetHost(session)
 
 	h.sessions.Broadcast(
@@ -40,7 +35,7 @@ func (h *RoomHandler) controlRequest(w http.ResponseWriter, r *http.Request) {
 func (h *RoomHandler) controlRelease(w http.ResponseWriter, r *http.Request) {
 	session := auth.GetSession(r)
 	if !session.IsHost() {
-		utils.HttpBadRequest(w, "User is not the host.")
+		utils.HttpUnprocessableEntity(w, "User is not the host.")
 		return
 	}
 
@@ -70,7 +65,7 @@ func (h *RoomHandler) controlTake(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *RoomHandler) controlGive(w http.ResponseWriter, r *http.Request) {
-	data := &ControlGivePayload{}
+	data := &ControlTargetPayload{}
 	if !utils.HttpJsonRequest(w, r, data) {
 		return
 	}
