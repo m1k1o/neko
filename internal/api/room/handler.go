@@ -60,4 +60,9 @@ func (h *RoomHandler) Route(r chi.Router) {
 		r.Post("/start", h.BoradcastStart)
 		r.Post("/stop", h.BoradcastStop)
 	})
+
+	r.With(auth.HostsOnly).Route("/keyboard", func(r chi.Router) {
+		r.Post("/layout", h.KeyboardLayoutSet)
+		r.Post("/modifiers", h.KeyboardModifiersSet)
+	})
 }
