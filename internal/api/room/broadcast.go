@@ -32,7 +32,7 @@ func (h *RoomHandler) boradcastStart(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if h.capture.BroadcastEnabled() {
-		utils.HttpBadRequest(w, "Server is already broadcasting.")
+		utils.HttpUnprocessableEntity(w, "Server is already broadcasting.")
 		return
 	}
 
@@ -53,7 +53,7 @@ func (h *RoomHandler) boradcastStart(w http.ResponseWriter, r *http.Request) {
 
 func (h *RoomHandler) boradcastStop(w http.ResponseWriter, r *http.Request) {
 	if !h.capture.BroadcastEnabled() {
-		utils.HttpBadRequest(w, "Server is not broadcasting.")
+		utils.HttpUnprocessableEntity(w, "Server is not broadcasting.")
 		return
 	}
 	
