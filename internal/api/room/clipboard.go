@@ -6,7 +6,7 @@ import (
 	"demodesk/neko/internal/utils"
 )
 
-type ClipboardData struct {
+type ClipboardPayload struct {
 	Text string `json:"text"`
 }
 
@@ -14,13 +14,13 @@ func (h *RoomHandler) ClipboardRead(w http.ResponseWriter, r *http.Request) {
 	// TODO: error check?
 	text := h.desktop.ReadClipboard()
 
-	utils.HttpSuccess(w, ClipboardData{
+	utils.HttpSuccess(w, ClipboardPayload{
 		Text: text,
 	})
 }
 
 func (h *RoomHandler) ClipboardWrite(w http.ResponseWriter, r *http.Request) {
-	data := &ClipboardData{}
+	data := &ClipboardPayload{}
 	if !utils.HttpJsonRequest(w, r, data) {
 		return
 	}

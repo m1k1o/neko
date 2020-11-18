@@ -9,7 +9,7 @@ import (
 	"demodesk/neko/internal/http/auth"
 )
 
-type ScreenConfiguration struct {
+type ScreenConfigurationPayload struct {
 	Width  int `json:"width"`
 	Height int `json:"height"`
 	Rate   int `json:"rate"`
@@ -23,7 +23,7 @@ func (h *RoomHandler) ScreenConfiguration(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	utils.HttpSuccess(w, ScreenConfiguration{
+	utils.HttpSuccess(w, ScreenConfigurationPayload{
 		Width:  size.Width,
 		Height: size.Height,
 		Rate:   int(size.Rate),
@@ -31,7 +31,7 @@ func (h *RoomHandler) ScreenConfiguration(w http.ResponseWriter, r *http.Request
 }
 
 func (h *RoomHandler) ScreenConfigurationChange(w http.ResponseWriter, r *http.Request) {
-	data := &ScreenConfiguration{}
+	data := &ScreenConfigurationPayload{}
 	if !utils.HttpJsonRequest(w, r, data) {
 		return
 	}
@@ -56,12 +56,12 @@ func (h *RoomHandler) ScreenConfigurationChange(w http.ResponseWriter, r *http.R
 }
 
 func (h *RoomHandler) ScreenConfigurationsList(w http.ResponseWriter, r *http.Request) {
-	list := []ScreenConfiguration{}
+	list := []ScreenConfigurationPayload{}
 	
 	ScreenConfigurations := h.desktop.ScreenConfigurations()
 	for _, size := range ScreenConfigurations {
 		for _, fps := range size.Rates {
-			list = append(list, ScreenConfiguration{
+			list = append(list, ScreenConfigurationPayload{
 				Width:  size.Width,
 				Height: size.Height,
 				Rate:   int(fps),

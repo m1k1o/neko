@@ -35,16 +35,20 @@ func New(
 }
 
 func (h *RoomHandler) Route(r chi.Router) {
-	r.Route("/screen", func(r chi.Router) {
-		r.Get("/", h.ScreenConfiguration)
-
-		r.With(auth.AdminsOnly).Post("/", h.ScreenConfigurationChange)
-		r.With(auth.AdminsOnly).Get("/configurations", h.ScreenConfigurationsList)
+	r.With(auth.AdminsOnly).Route("/broadcast", func(r chi.Router) {
+		r.Get("/", h.BroadcastStatus)
+		r.Post("/start", h.BoradcastStart)
+		r.Post("/stop", h.BoradcastStop)
 	})
 
 	r.With(auth.HostsOnly).Route("/clipboard", func(r chi.Router) {
 		r.Get("/", h.ClipboardRead)
 		r.Post("/", h.ClipboardWrite)
+	})
+
+	r.With(auth.HostsOnly).Route("/keyboard", func(r chi.Router) {
+		r.Post("/layout", h.KeyboardLayoutSet)
+		r.Post("/modifiers", h.KeyboardModifiersSet)
 	})
 
 	r.Route("/control", func(r chi.Router) {
@@ -55,14 +59,10 @@ func (h *RoomHandler) Route(r chi.Router) {
 		r.With(auth.AdminsOnly).Post("/give", h.ControlGive)
 	})
 
-	r.With(auth.AdminsOnly).Route("/broadcast", func(r chi.Router) {
-		r.Get("/", h.BroadcastStatus)
-		r.Post("/start", h.BoradcastStart)
-		r.Post("/stop", h.BoradcastStop)
-	})
+	r.Route("/screen", func(r chi.Router) {
+		r.Get("/", h.ScreenConfiguration)
 
-	r.With(auth.HostsOnly).Route("/keyboard", func(r chi.Router) {
-		r.Post("/layout", h.KeyboardLayoutSet)
-		r.Post("/modifiers", h.KeyboardModifiersSet)
+		r.With(auth.AdminsOnly).Post("/", h.ScreenConfigurationChange)
+		r.With(auth.AdminsOnly).Get("/configurations", h.ScreenConfigurationsList)
 	})
 }
