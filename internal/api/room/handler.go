@@ -52,6 +52,7 @@ func (h *RoomHandler) Route(r chi.Router) {
 	})
 
 	r.Route("/control", func(r chi.Router) {
+		r.Get("/", h.controlStatus)
 		r.Post("/request", h.controlRequest)
 		r.Post("/release", h.controlRelease)
 

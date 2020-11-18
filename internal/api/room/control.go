@@ -9,8 +9,28 @@ import (
 	"demodesk/neko/internal/http/auth"
 )
 
+type ControlStatusPayload struct {
+	HasHost bool `json:"has_host"`
+	HostId string `json:"host_id,omitempty"`
+}
+
 type ControlTargetPayload struct {
 	ID string `json:"id"`
+}
+
+func (h *RoomHandler) controlStatus(w http.ResponseWriter, r *http.Request) {
+	host := h.sessions.GetHost()
+
+	if host == nil {
+		utils.HttpSuccess(w, ControlStatusPayload{
+			HasHost: false,
+		})
+	} else {
+		utils.HttpSuccess(w, ControlStatusPayload{
+			HasHost: true,
+			HostId: host.ID(),
+		})
+	}
 }
 
 func (h *RoomHandler) controlRequest(w http.ResponseWriter, r *http.Request) {
