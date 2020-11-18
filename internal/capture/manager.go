@@ -47,7 +47,9 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 
 func (manager *CaptureManagerCtx) Start() {
 	if manager.BroadcastEnabled() {
-		manager.createBroadcastPipeline()
+		if err := manager.createBroadcastPipeline(); err != nil {
+			manager.logger.Panic().Err(err).Msg("unable to create broadcast pipeline")
+		}
 	}
 
 	manager.desktop.OnBeforeScreenSizeChange(func() {
@@ -66,7 +68,9 @@ func (manager *CaptureManagerCtx) Start() {
 		}
 
 		if manager.BroadcastEnabled() {
-			manager.createBroadcastPipeline()
+			if err := manager.createBroadcastPipeline(); err != nil {
+				manager.logger.Panic().Err(err).Msg("unable to create broadcast pipeline")
+			}
 		}
 	})
 
@@ -97,7 +101,7 @@ func (manager *CaptureManagerCtx) Shutdown() error {
 	}
 
 	if manager.BroadcastEnabled() {
-		manager.createBroadcastPipeline()
+		manager.destroyBroadcastPipeline()
 	}
 
 	manager.emit_stop <- true
