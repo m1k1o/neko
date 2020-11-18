@@ -50,12 +50,12 @@ func HttpBadRequest(w http.ResponseWriter, res ...interface{}) {
 	defHttpError(w, http.StatusBadRequest, "Bad Request.", res...)
 }
 
-func HttpNotAuthenticated(w http.ResponseWriter, res ...interface{}) {
-	defHttpError(w, http.StatusUnauthorized, "Invalid or missing access token.", res...)
+func HttpNotAuthorized(w http.ResponseWriter, res ...interface{}) {
+	defHttpError(w, http.StatusUnauthorized, "Access token does not have the required scope.", res...)
 }
 
-func HttpNotAuthorized(w http.ResponseWriter, res ...interface{}) {
-	defHttpError(w, http.StatusForbidden, "Access token does not have the required scope.", res...)
+func HttpNotAuthenticated(w http.ResponseWriter, res ...interface{}) {
+	defHttpError(w, http.StatusForbidden, "Invalid or missing access token.", res...)
 }
 
 func HttpNotFound(w http.ResponseWriter, res ...interface{}) {
