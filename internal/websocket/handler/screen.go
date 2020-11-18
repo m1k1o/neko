@@ -13,8 +13,7 @@ func (h *MessageHandlerCtx) screenSizeChange(session types.Session, payload *mes
 	}
 
 	if err := h.desktop.ChangeScreenSize(payload.Width, payload.Height, payload.Rate); err != nil {
-		h.logger.Warn().Err(err).Msgf("unable to change screen size")
-		return nil
+		return err
 	}
 
 	h.sessions.Broadcast(
