@@ -5,7 +5,7 @@ import (
 
 	"github.com/go-chi/chi"
 
-	"demodesk/neko/internal/api/member"
+	"demodesk/neko/internal/api/members"
 	"demodesk/neko/internal/api/room"
 	"demodesk/neko/internal/http/auth"
 	"demodesk/neko/internal/types"
@@ -36,8 +36,8 @@ func New(
 func (api *ApiManagerCtx) Route(r chi.Router) {
 	r.Use(api.Authenticate)
 
-	memberHandler := member.New(api.sessions)
-	r.Route("/member", memberHandler.Route)
+	membersHandler := members.New(api.sessions)
+	r.Route("/members", membersHandler.Route)
 
 	roomHandler := room.New(api.sessions, api.desktop, api.capture)
 	r.Route("/room", roomHandler.Route)

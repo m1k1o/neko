@@ -1,4 +1,4 @@
-package member
+package members
 
 import (
 	"context"
@@ -17,29 +17,29 @@ const (
     keyMemberCtx key = iota
 )
 
-type MemberHandler struct {
+type MembersHandler struct {
 	sessions types.SessionManager
 }
 
 func New(
 	sessions types.SessionManager,
-) *MemberHandler {
+) *MembersHandler {
 	// Init
 
-	return &MemberHandler{
+	return &MembersHandler{
 		sessions: sessions,
 	}
 }
 
-func (h *MemberHandler) Route(r chi.Router) {
+func (h *MembersHandler) Route(r chi.Router) {
 	
 	r.With(auth.AdminsOnly).Group(func(r chi.Router) {
-		r.Get("/", h.memberList)
+		r.Get("/", h.membersList)
 
-		r.Post("/", h.memberCreate)
-		r.Get("/{memberId}/", h.memberRead)
-		r.Post("/{memberId}/", h.memberUpdate)
-		r.Delete("/{memberId}/", h.memberDelete)
+		r.Post("/", h.membersCreate)
+		r.Get("/{memberId}/", h.membersRead)
+		r.Post("/{memberId}/", h.membersUpdate)
+		r.Delete("/{memberId}/", h.membersDelete)
 	})
 
 }
@@ -53,7 +53,7 @@ func GetMember(r *http.Request) types.Session {
 	return r.Context().Value(keyMemberCtx).(types.Session)
 }
 
-func (h *MemberHandler) ExtractMember(next http.Handler) http.Handler {
+func (h *MembersHandler) ExtractMember(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		memberId := chi.URLParam(r, "memberId")
 		session, ok := h.sessions.Get(memberId)
