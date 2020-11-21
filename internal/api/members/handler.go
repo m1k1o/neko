@@ -32,16 +32,16 @@ func New(
 }
 
 func (h *MembersHandler) Route(r chi.Router) {
-	
+	r.Get("/", h.membersList)
+
 	r.With(auth.AdminsOnly).Group(func(r chi.Router) {
-		r.Get("/", h.membersList)
-
 		r.Post("/", h.membersCreate)
-		r.Get("/{memberId}/", h.membersRead)
-		r.Post("/{memberId}/", h.membersUpdate)
-		r.Delete("/{memberId}/", h.membersDelete)
+		r.With(h.ExtractMember).Route("/{memberId}", func(r chi.Router) {
+			r.Get("/", h.membersRead)
+			r.Post("/", h.membersUpdate)
+			r.Delete("/", h.membersDelete)
+		})
 	})
-
 }
 
 func SetMember(r *http.Request, session types.Session) *http.Request {
