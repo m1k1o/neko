@@ -187,9 +187,13 @@ func (ws *WebSocketManagerCtx) handle(connection *websocket.Conn, session types.
 	ticker := time.NewTicker(pingPeriod)
 
 	go func() {
+		// TODO: Change WebSocket connection state.
+		//session.SetConnected(true)
+		
 		defer func() {
 			ticker.Stop()
 			ws.logger.Debug().Str("address", connection.RemoteAddr().String()).Msg("handle socket ending")
+			// TODO: Change WebSocket connection state.
 			session.SetConnected(false)
 		}()
 

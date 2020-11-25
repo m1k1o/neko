@@ -10,7 +10,10 @@ type Session interface {
 	Connected() bool
 	SetName(name string)
 	SetWebSocketPeer(websocket_peer WebSocketPeer)
+	SetWebSocketConnected(connected bool)
 	SetWebRTCPeer(webrtc_peer WebRTCPeer)
+	SetWebRTCConnected(connected bool)
+	// TODO: Refactor.
 	SetConnected(connected bool)
 	Disconnect(reason string) error
 	Send(v interface{}) error

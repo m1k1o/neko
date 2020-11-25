@@ -19,13 +19,16 @@ type MemberProfile struct {
 }
 
 type SessionCtx struct {
-	id             string
-	logger         zerolog.Logger
-	manager        *SessionManagerCtx
-	profile        MemberProfile
-	websocket_peer types.WebSocketPeer
-	webrtc_peer    types.WebRTCPeer
-	connected      bool
+	id                  string
+	logger              zerolog.Logger
+	manager             *SessionManagerCtx
+	profile             MemberProfile
+	websocket_peer      types.WebSocketPeer
+	websocket_connected bool
+	webrtc_peer         types.WebRTCPeer
+	webrtc_connected    bool
+	// TODO: Refactor.
+	connected           bool
 }
 
 func (session *SessionCtx) ID() string {
@@ -57,10 +60,31 @@ func (session *SessionCtx) SetWebSocketPeer(websocket_peer types.WebSocketPeer) 
 	session.manager.emmiter.Emit("created", session)
 }
 
+func (session *SessionCtx) SetWebSocketConnected(connected bool) {
+	if connected {
+		session.websocket_connected = true
+		session.manager.emmiter.Emit("websocket_connected", session)
+	} else {
+		session.websocket_connected = false
+		session.manager.emmiter.Emit("websocket_disconnected", session)
+	}
+}
+
 func (session *SessionCtx) SetWebRTCPeer(webrtc_peer types.WebRTCPeer) {
 	session.webrtc_peer = webrtc_peer
 }
 
+func (session *SessionCtx) SetWebRTCConnected(connected bool) {
+	if connected {
+		session.webrtc_connected = true
+		session.manager.emmiter.Emit("webrtc_connected", session)
+	} else {
+		session.webrtc_connected = false
+		session.manager.emmiter.Emit("webrtc_disconnected", session)
+	}
+}
+
+// TODO: Refactor.
 func (session *SessionCtx) SetConnected(connected bool) {
 	session.connected = connected
 
@@ -76,6 +100,7 @@ func (session *SessionCtx) SetConnected(connected bool) {
 }
 
 func (session *SessionCtx) Disconnect(reason string) error {
+	// TODO: Refactor.
 	session.SetConnected(false)
 
 	return session.Send(
