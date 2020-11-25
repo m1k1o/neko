@@ -42,9 +42,11 @@ func (manager *SessionManagerCtx) New(id string, admin bool) types.Session {
 
 	session := &SessionCtx{
 		id:        id,
-		admin:     admin,
 		manager:   manager,
 		logger:    manager.logger.With().Str("id", id).Logger(),
+		profile:   MemberProfile{
+			is_admin: admin,
+		},
 		connected: false,
 	}
 
@@ -116,7 +118,7 @@ func (manager *SessionManagerCtx) Admins() []types.Session {
 
 	var sessions []types.Session
 	for _, session := range manager.members {
-		if !session.connected || !session.admin {
+		if !session.Connected() || !session.Admin() {
 			continue
 		}
 
@@ -132,7 +134,7 @@ func (manager *SessionManagerCtx) Members() []types.Session {
 
 	var sessions []types.Session
 	for _, session := range manager.members {
-		if !session.connected {
+		if !session.Connected() {
 			continue
 		}
 
@@ -147,7 +149,7 @@ func (manager *SessionManagerCtx) Broadcast(v interface{}, exclude interface{}) 
 	defer manager.membersMu.Unlock()
 
 	for id, session := range manager.members {
-		if !session.connected {
+		if !session.Connected() {
 			continue
 		}
 
@@ -168,7 +170,7 @@ func (manager *SessionManagerCtx) AdminBroadcast(v interface{}, exclude interfac
 	defer manager.membersMu.Unlock()
 
 	for id, session := range manager.members {
-		if !session.connected || !session.Admin() {
+		if !session.Connected() || !session.Admin() {
 			continue
 		}
 
