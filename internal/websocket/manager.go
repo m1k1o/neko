@@ -169,12 +169,16 @@ func (ws *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Request) e
 		Str("address", connection.RemoteAddr().String()).
 		Msg("connection started")
 
+	session.SetWebSocketConnected(true)
+
 	defer func() {
 		ws.logger.
 			Debug().
 			Str("session", session.ID()).
 			Str("address", connection.RemoteAddr().String()).
 			Msg("connection ended")
+
+		session.SetWebSocketConnected(false)
 	}()
 
 	ws.handle(connection, session)
@@ -186,17 +190,11 @@ func (ws *WebSocketManagerCtx) handle(connection *websocket.Conn, session types.
 	cancel := make(chan struct{})
 	ticker := time.NewTicker(pingPeriod)
 
-	go func() {
-		// TODO: Change WebSocket connection state.
-		//session.SetConnected(true)
-		
-		defer func() {
-			ticker.Stop()
-			ws.logger.Debug().Str("address", connection.RemoteAddr().String()).Msg("handle socket ending")
-			// TODO: Change WebSocket connection state.
-			session.SetConnected(false)
-		}()
+	defer func() {
+		ticker.Stop()
+	}()
 
+	go func() {
 		for {
 			_, raw, err := connection.ReadMessage()
 			if err != nil {

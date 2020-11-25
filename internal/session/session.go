@@ -27,8 +27,6 @@ type SessionCtx struct {
 	websocket_connected bool
 	webrtc_peer         types.WebRTCPeer
 	webrtc_connected    bool
-	// TODO: Refactor.
-	connected           bool
 }
 
 func (session *SessionCtx) ID() string {
@@ -48,7 +46,7 @@ func (session *SessionCtx) IsHost() bool {
 }
 
 func (session *SessionCtx) Connected() bool {
-	return session.connected
+	return session.websocket_connected && session.webrtc_connected
 }
 
 func (session *SessionCtx) SetName(name string) {
@@ -66,7 +64,15 @@ func (session *SessionCtx) SetWebSocketConnected(connected bool) {
 		session.manager.emmiter.Emit("websocket_connected", session)
 	} else {
 		session.websocket_connected = false
-		session.manager.emmiter.Emit("websocket_disconnected", session)
+
+		// TODO: Refactor.
+		//session.manager.emmiter.Emit("websocket_disconnected", session)
+		session.manager.emmiter.Emit("disconnected", session)
+
+		session.websocket_peer = nil
+		
+		// TODO: Refactor.
+		_ = session.manager.Destroy(session.id)
 	}
 }
 
@@ -77,31 +83,21 @@ func (session *SessionCtx) SetWebRTCPeer(webrtc_peer types.WebRTCPeer) {
 func (session *SessionCtx) SetWebRTCConnected(connected bool) {
 	if connected {
 		session.webrtc_connected = true
-		session.manager.emmiter.Emit("webrtc_connected", session)
+
+		// TODO: Refactor.
+		//session.manager.emmiter.Emit("webrtc_connected", session)
+		session.manager.emmiter.Emit("connected", session)
 	} else {
 		session.webrtc_connected = false
 		session.manager.emmiter.Emit("webrtc_disconnected", session)
-	}
-}
 
-// TODO: Refactor.
-func (session *SessionCtx) SetConnected(connected bool) {
-	session.connected = connected
-
-	if connected {
-		session.manager.emmiter.Emit("connected", session)
-	} else {
-		session.manager.emmiter.Emit("disconnected", session)
-		session.websocket_peer = nil
-	
-		// TODO: Refactor.
-		_ = session.manager.Destroy(session.id)
+		session.webrtc_peer = nil
 	}
 }
 
 func (session *SessionCtx) Disconnect(reason string) error {
-	// TODO: Refactor.
-	session.SetConnected(false)
+	// TODO: End WebSocket connection.
+	// TODO: End WebRTC connection.
 
 	return session.Send(
 		message.Disconnect{

@@ -47,7 +47,6 @@ func (manager *SessionManagerCtx) New(id string, admin bool) types.Session {
 		profile:   MemberProfile{
 			is_admin: admin,
 		},
-		connected: false,
 	}
 
 	manager.members[id] = session

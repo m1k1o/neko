@@ -156,12 +156,10 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session) (string, bool
 		case webrtc.PeerConnectionStateDisconnected:
 		case webrtc.PeerConnectionStateFailed:
 			manager.logger.Info().Str("id", session.ID()).Msg("peer disconnected")
-			// TODO: Change WebRTC connection state.
-			session.SetConnected(false)
+			session.SetWebRTCConnected(false)
 		case webrtc.PeerConnectionStateConnected:
 			manager.logger.Info().Str("id", session.ID()).Msg("peer connected")
-			// TODO: Change WebRTC connection state.
-			session.SetConnected(true)
+			session.SetWebRTCConnected(true)
 		}
 	})
 

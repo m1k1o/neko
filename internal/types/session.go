@@ -13,8 +13,6 @@ type Session interface {
 	SetWebSocketConnected(connected bool)
 	SetWebRTCPeer(webrtc_peer WebRTCPeer)
 	SetWebRTCConnected(connected bool)
-	// TODO: Refactor.
-	SetConnected(connected bool)
 	Disconnect(reason string) error
 	Send(v interface{}) error
 	SignalAnswer(sdp string) error
