@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"demodesk/neko/internal/types"
-	"demodesk/neko/internal/utils"
 )
 
 const (
@@ -26,12 +25,9 @@ func (manager *SessionManagerCtx) Authenticate(r *http.Request) (types.Session, 
 		return nil, fmt.Errorf("invalid password")
 	}
 
-	id, err := utils.NewUID(32)
-	if err != nil {
-		return nil, err
-	}
-
-	return manager.New(id, isAdmin), nil
+	return manager.Create(types.MemberProfile{
+		IsAdmin: isAdmin,
+	})
 }
 
 func getToken(r *http.Request) string {

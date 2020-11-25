@@ -37,7 +37,7 @@ type SessionManagerCtx struct {
 	emmiter   events.EventEmmiter
 }
 
-func (manager *SessionManagerCtx) Create(profile MemberProfile) (types.Session, error) {
+func (manager *SessionManagerCtx) Create(profile types.MemberProfile) (types.Session, error) {
 	manager.membersMu.Lock()
 	defer manager.membersMu.Unlock()
 

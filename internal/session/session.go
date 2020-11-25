@@ -8,21 +8,11 @@ import (
 	"demodesk/neko/internal/types/message"
 )
 
-type MemberProfile struct {
-	//token            string
-	name             string
-	is_admin         bool
-	//enabled          bool
-	//can_control      bool
-	//can_watch        bool
-	//clipboard_access bool
-}
-
 type SessionCtx struct {
 	id                  string
 	logger              zerolog.Logger
 	manager             *SessionManagerCtx
-	profile             MemberProfile
+	profile             types.MemberProfile
 	websocket_peer      types.WebSocketPeer
 	websocket_connected bool
 	webrtc_peer         types.WebRTCPeer
@@ -34,11 +24,11 @@ func (session *SessionCtx) ID() string {
 }
 
 func (session *SessionCtx) Name() string {
-	return session.profile.name
+	return session.profile.Name
 }
 
 func (session *SessionCtx) Admin() bool {
-	return session.profile.is_admin
+	return session.profile.IsAdmin
 }
 
 func (session *SessionCtx) IsHost() bool {
@@ -50,7 +40,7 @@ func (session *SessionCtx) Connected() bool {
 }
 
 func (session *SessionCtx) SetName(name string) {
-	session.profile.name = name
+	session.profile.Name = name
 }
 
 func (session *SessionCtx) SetWebSocketPeer(websocket_peer types.WebSocketPeer) {

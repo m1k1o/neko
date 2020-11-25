@@ -2,6 +2,16 @@ package types
 
 import "net/http"
 
+type MemberProfile struct {
+	//Token            string
+	Name             string
+	IsAdmin         bool
+	//Enabled          bool
+	//CanControl      bool
+	//CanWatch        bool
+	//ClipboardAccess bool
+}
+
 type Session interface {
 	ID() string
 	Name() string
