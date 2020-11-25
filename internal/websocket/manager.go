@@ -142,26 +142,11 @@ func (ws *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Request) e
 		return connection.Close()
 	}
 
-	websocket_peer := &WebSocketPeerCtx{
+	session.SetWebSocketPeer(&WebSocketPeerCtx{
 		session:    session,
 		ws:         ws,
 		connection: connection,
-	}
-
-	ok, reason := ws.handler.Connected(session, websocket_peer)
-	if !ok {
-		// TODO: Refactor
-		if err = connection.WriteJSON(message.Disconnect{
-			Event:   event.SYSTEM_DISCONNECT,
-			Message: reason,
-		}); err != nil {
-			ws.logger.Error().Err(err).Msg("failed to send disconnect")
-		}
-
-		return connection.Close()
-	}
-
-	session.SetWebSocketPeer(websocket_peer)
+	})
 
 	ws.logger.
 		Debug().
@@ -179,6 +164,9 @@ func (ws *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Request) e
 			Msg("connection ended")
 
 		session.SetWebSocketConnected(false)
+
+		// TODO: Enable persistent user autentication.
+		_ = ws.sessions.Delete(session.ID())
 	}()
 
 	ws.handle(connection, session)

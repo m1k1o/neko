@@ -27,7 +27,6 @@ func New(
 		desktop:   desktop,
 		capture:   capture,
 		webrtc:    webrtc,
-		locked:    false,
 	}
 }
 
@@ -37,26 +36,6 @@ type MessageHandlerCtx struct {
 	webrtc    types.WebRTCManager
 	desktop   types.DesktopManager
 	capture   types.CaptureManager
-	locked    bool
-}
-
-func (h *MessageHandlerCtx) Connected(session types.Session, websocket_peer types.WebSocketPeer) (bool, string) {
-	if h.locked && !session.Admin(){
-		h.logger.Debug().Msg("server locked")
-		return false, "locked"
-	}
-
-	return true, ""
-}
-
-// TODO: Remove, unused.
-func (h *MessageHandlerCtx) Disconnected(id string) error {
-	// TODO: Refactor.
-	if h.locked && len(h.sessions.Admins()) == 0 {
-		h.locked = false
-	}
-
-	return h.sessions.Delete(id)
 }
 
 func (h *MessageHandlerCtx) Message(session types.Session, raw []byte) error {
@@ -116,10 +95,6 @@ func (h *MessageHandlerCtx) Message(session types.Session, raw []byte) error {
 		err = h.boradcastDestroy(session)
 
 	// Admin Events
-	case event.ADMIN_LOCK:
-		err = h.adminLock(session)
-	case event.ADMIN_UNLOCK:
-		err = h.adminUnlock(session)
 	case event.ADMIN_CONTROL:
 		err = h.adminControl(session)
 	case event.ADMIN_RELEASE:

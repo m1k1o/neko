@@ -39,8 +39,6 @@ const (
 
 const (
 	ADMIN_KICK    = "admin/kick"
-	ADMIN_LOCK    = "admin/lock"
-	ADMIN_UNLOCK  = "admin/unlock"
 	ADMIN_CONTROL = "admin/control"
 	ADMIN_RELEASE = "admin/release"
 	ADMIN_GIVE    = "admin/give"

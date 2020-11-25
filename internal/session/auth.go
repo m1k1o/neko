@@ -25,6 +25,7 @@ func (manager *SessionManagerCtx) Authenticate(r *http.Request) (types.Session, 
 		return nil, fmt.Errorf("invalid password")
 	}
 
+	// TODO: Enable persistent user autentication.
 	return manager.Create(types.MemberProfile{
 		IsAdmin: isAdmin,
 	})

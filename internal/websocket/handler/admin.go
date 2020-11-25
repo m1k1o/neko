@@ -6,50 +6,6 @@ import (
 	"demodesk/neko/internal/types/message"
 )
 
-func (h *MessageHandlerCtx) adminLock(session types.Session) error {
-	if !session.Admin() {
-		h.logger.Debug().Msg("user not admin")
-		return nil
-	}
-
-	if h.locked {
-		h.logger.Debug().Msg("server already locked...")
-		return nil
-	}
-
-	h.locked = true
-
-	h.sessions.Broadcast(
-		message.Admin{
-			Event: event.ADMIN_LOCK,
-			ID:    session.ID(),
-		}, nil)
-
-	return nil
-}
-
-func (h *MessageHandlerCtx) adminUnlock(session types.Session) error {
-	if !session.Admin() {
-		h.logger.Debug().Msg("user not admin")
-		return nil
-	}
-
-	if !h.locked {
-		h.logger.Debug().Msg("server not locked...")
-		return nil
-	}
-
-	h.locked = false
-
-	h.sessions.Broadcast(
-		message.Admin{
-			Event: event.ADMIN_UNLOCK,
-			ID:    session.ID(),
-		}, nil)
-
-	return nil
-}
-
 func (h *MessageHandlerCtx) adminControl(session types.Session) error {
 	if !session.Admin() {
 		h.logger.Debug().Msg("user not admin")
