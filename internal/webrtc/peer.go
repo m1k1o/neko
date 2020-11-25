@@ -4,7 +4,7 @@ import (
 	"github.com/pion/webrtc/v2"
 )
 
-type PeerCtx struct {
+type WebRTCPeerCtx struct {
 	api           *webrtc.API
 	engine        *webrtc.MediaEngine
 	settings      *webrtc.SettingEngine
@@ -12,17 +12,17 @@ type PeerCtx struct {
 	configuration *webrtc.Configuration
 }
 
-func (peer *PeerCtx) SignalAnswer(sdp string) error {
-	return peer.connection.SetRemoteDescription(webrtc.SessionDescription{
+func (webrtc_peer *WebRTCPeerCtx) SignalAnswer(sdp string) error {
+	return webrtc_peer.connection.SetRemoteDescription(webrtc.SessionDescription{
 		SDP: sdp,
 		Type: webrtc.SDPTypeAnswer,
 	})
 }
 
-func (peer *PeerCtx) Destroy() error {
-	if peer.connection == nil || peer.connection.ConnectionState() != webrtc.PeerConnectionStateConnected {
+func (webrtc_peer *WebRTCPeerCtx) Destroy() error {
+	if webrtc_peer.connection == nil || webrtc_peer.connection.ConnectionState() != webrtc.PeerConnectionStateConnected {
 		return nil
 	}
 	
-	return peer.connection.Close()
+	return webrtc_peer.connection.Close()
 }

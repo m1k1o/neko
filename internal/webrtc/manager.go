@@ -163,7 +163,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session) (string, bool
 		}
 	})
 
-	session.SetPeer(&PeerCtx{
+	session.SetWebRTCPeer(&WebRTCPeerCtx{
 		api:           api,
 		engine:        &engine,
 		settings:      &settings,

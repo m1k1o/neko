@@ -10,7 +10,7 @@ type Session interface {
 	Connected() bool
 	SetName(name string)
 	SetWebSocketPeer(websocket_peer WebSocketPeer)
-	SetPeer(peer Peer)
+	SetWebRTCPeer(webrtc_peer WebRTCPeer)
 	SetConnected(connected bool)
 	Disconnect(reason string) error
 	Send(v interface{}) error

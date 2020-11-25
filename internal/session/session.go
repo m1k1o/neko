@@ -16,7 +16,7 @@ type SessionCtx struct {
 	connected      bool
 	manager        *SessionManagerCtx
 	websocket_peer types.WebSocketPeer
-	peer           types.Peer
+	webrtc_peer    types.WebRTCPeer
 }
 
 func (session *SessionCtx) ID() string {
@@ -48,8 +48,8 @@ func (session *SessionCtx) SetWebSocketPeer(websocket_peer types.WebSocketPeer) 
 	session.manager.emmiter.Emit("created", session)
 }
 
-func (session *SessionCtx) SetPeer(peer types.Peer) {
-	session.peer = peer
+func (session *SessionCtx) SetWebRTCPeer(webrtc_peer types.WebRTCPeer) {
+	session.webrtc_peer = webrtc_peer
 }
 
 func (session *SessionCtx) SetConnected(connected bool) {
@@ -85,11 +85,11 @@ func (session *SessionCtx) Send(v interface{}) error {
 }
 
 func (session *SessionCtx) SignalAnswer(sdp string) error {
-	if session.peer == nil {
+	if session.webrtc_peer == nil {
 		return nil
 	}
 
-	return session.peer.SignalAnswer(sdp)
+	return session.webrtc_peer.SignalAnswer(sdp)
 }
 
 func (session *SessionCtx) destroy() error {
@@ -99,8 +99,8 @@ func (session *SessionCtx) destroy() error {
 		}
 	}
 
-	if session.peer != nil {
-		if err := session.peer.Destroy(); err != nil {
+	if session.webrtc_peer != nil {
+		if err := session.webrtc_peer.Destroy(); err != nil {
 			return err
 		}
 	}
