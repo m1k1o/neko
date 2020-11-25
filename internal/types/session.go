@@ -19,9 +19,9 @@ type Session interface {
 }
 
 type SessionManager interface {
-	New(id string, admin bool) Session
+	Create(profile MemberProfile) (Session, error)
 	Get(id string) (Session, bool)
-	Destroy(id string) error
+	Delete(id string) error
 
 	HasHost() bool
 	SetHost(host Session)

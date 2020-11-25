@@ -70,9 +70,6 @@ func (session *SessionCtx) SetWebSocketConnected(connected bool) {
 		session.manager.emmiter.Emit("disconnected", session)
 
 		session.websocket_peer = nil
-		
-		// TODO: Refactor.
-		_ = session.manager.Destroy(session.id)
 	}
 }
 
@@ -96,14 +93,27 @@ func (session *SessionCtx) SetWebRTCConnected(connected bool) {
 }
 
 func (session *SessionCtx) Disconnect(reason string) error {
-	// TODO: End WebSocket connection.
-	// TODO: End WebRTC connection.
-
-	return session.Send(
+	if err := session.Send(
 		message.Disconnect{
 			Event:   event.SYSTEM_DISCONNECT,
 			Message: reason,
-		})
+		}); err != nil {
+		return err
+	}
+
+	if session.websocket_peer != nil {
+		if err := session.websocket_peer.Destroy(); err != nil {
+			return err
+		}
+	}
+
+	if session.webrtc_peer != nil {
+		if err := session.webrtc_peer.Destroy(); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (session *SessionCtx) Send(v interface{}) error {
@@ -120,20 +130,4 @@ func (session *SessionCtx) SignalAnswer(sdp string) error {
 	}
 
 	return session.webrtc_peer.SignalAnswer(sdp)
-}
-
-func (session *SessionCtx) destroy() error {
-	if session.websocket_peer != nil {
-		if err := session.websocket_peer.Destroy(); err != nil {
-			return err
-		}
-	}
-
-	if session.webrtc_peer != nil {
-		if err := session.webrtc_peer.Destroy(); err != nil {
-			return err
-		}
-	}
-
-	return nil
 }

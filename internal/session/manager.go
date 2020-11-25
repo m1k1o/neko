@@ -1,6 +1,7 @@
 package session
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/kataras/go-events"
@@ -36,21 +37,24 @@ type SessionManagerCtx struct {
 	emmiter   events.EventEmmiter
 }
 
-func (manager *SessionManagerCtx) New(id string, admin bool) types.Session {
+func (manager *SessionManagerCtx) Create(profile MemberProfile) (types.Session, error) {
 	manager.membersMu.Lock()
 	defer manager.membersMu.Unlock()
+
+	id, err := utils.NewUID(32)
+	if err != nil {
+		return nil, err
+	}
 
 	session := &SessionCtx{
 		id:        id,
 		manager:   manager,
 		logger:    manager.logger.With().Str("id", id).Logger(),
-		profile:   MemberProfile{
-			is_admin: admin,
-		},
+		profile:   profile,
 	}
 
 	manager.members[id] = session
-	return session
+	return session, nil
 }
 
 func (manager *SessionManagerCtx) Get(id string) (types.Session, bool) {
@@ -61,14 +65,19 @@ func (manager *SessionManagerCtx) Get(id string) (types.Session, bool) {
 	return session, ok
 }
 
-func (manager *SessionManagerCtx) Destroy(id string) error {
+func (manager *SessionManagerCtx) Delete(id string) error {
 	manager.membersMu.Lock()
 	defer manager.membersMu.Unlock()
 
 	session, ok := manager.members[id]
-	if ok {
-		delete(manager.members, id)
-		return session.destroy()
+	if !ok {
+		return fmt.Errorf("Member not found.")
+	}
+
+	delete(manager.members, id)
+
+	if session.Connected() {
+		return session.Disconnect("member deleted")
 	}
 
 	return nil

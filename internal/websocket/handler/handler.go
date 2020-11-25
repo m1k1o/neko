@@ -49,13 +49,14 @@ func (h *MessageHandlerCtx) Connected(session types.Session, websocket_peer type
 	return true, ""
 }
 
+// TODO: Remove, unused.
 func (h *MessageHandlerCtx) Disconnected(id string) error {
 	// TODO: Refactor.
 	if h.locked && len(h.sessions.Admins()) == 0 {
 		h.locked = false
 	}
 
-	return h.sessions.Destroy(id)
+	return h.sessions.Delete(id)
 }
 
 func (h *MessageHandlerCtx) Message(session types.Session, raw []byte) error {
