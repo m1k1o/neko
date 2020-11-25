@@ -9,7 +9,7 @@ type Session interface {
 	IsHost() bool
 	Connected() bool
 	SetName(name string)
-	SetSocket(socket WebSocket)
+	SetWebSocketPeer(websocket_peer WebSocketPeer)
 	SetPeer(peer Peer)
 	SetConnected(connected bool)
 	Disconnect(reason string) error

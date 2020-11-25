@@ -40,7 +40,7 @@ type MessageHandlerCtx struct {
 	locked    bool
 }
 
-func (h *MessageHandlerCtx) Connected(session types.Session, socket types.WebSocket) (bool, string) {
+func (h *MessageHandlerCtx) Connected(session types.Session, websocket_peer types.WebSocketPeer) (bool, string) {
 	if h.locked && !session.Admin(){
 		h.logger.Debug().Msg("server locked")
 		return false, "locked"

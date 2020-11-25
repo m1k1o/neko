@@ -142,13 +142,13 @@ func (ws *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Request) e
 		return connection.Close()
 	}
 
-	socket := &WebSocketCtx{
+	websocket_peer := &WebSocketPeerCtx{
 		session:    session,
 		ws:         ws,
 		connection: connection,
 	}
 
-	ok, reason := ws.handler.Connected(session, socket)
+	ok, reason := ws.handler.Connected(session, websocket_peer)
 	if !ok {
 		// TODO: Refactor
 		if err = connection.WriteJSON(message.Disconnect{
@@ -161,7 +161,7 @@ func (ws *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Request) e
 		return connection.Close()
 	}
 
-	session.SetSocket(socket)
+	session.SetWebSocketPeer(websocket_peer)
 
 	ws.logger.
 		Debug().

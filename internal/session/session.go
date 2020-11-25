@@ -9,14 +9,14 @@ import (
 )
 
 type SessionCtx struct {
-	logger    zerolog.Logger
-	id        string
-	name      string
-	admin     bool
-	connected bool
-	manager   *SessionManagerCtx
-	socket    types.WebSocket
-	peer      types.Peer
+	logger         zerolog.Logger
+	id             string
+	name           string
+	admin          bool
+	connected      bool
+	manager        *SessionManagerCtx
+	websocket_peer types.WebSocketPeer
+	peer           types.Peer
 }
 
 func (session *SessionCtx) ID() string {
@@ -43,8 +43,8 @@ func (session *SessionCtx) SetName(name string) {
 	session.name = name
 }
 
-func (session *SessionCtx) SetSocket(socket types.WebSocket) {
-	session.socket = socket
+func (session *SessionCtx) SetWebSocketPeer(websocket_peer types.WebSocketPeer) {
+	session.websocket_peer = websocket_peer
 	session.manager.emmiter.Emit("created", session)
 }
 
@@ -59,7 +59,7 @@ func (session *SessionCtx) SetConnected(connected bool) {
 		session.manager.emmiter.Emit("connected", session)
 	} else {
 		session.manager.emmiter.Emit("disconnected", session)
-		session.socket = nil
+		session.websocket_peer = nil
 	
 		// TODO: Refactor.
 		_ = session.manager.Destroy(session.id)
@@ -77,11 +77,11 @@ func (session *SessionCtx) Disconnect(reason string) error {
 }
 
 func (session *SessionCtx) Send(v interface{}) error {
-	if session.socket == nil {
+	if session.websocket_peer == nil {
 		return nil
 	}
 
-	return session.socket.Send(v)
+	return session.websocket_peer.Send(v)
 }
 
 func (session *SessionCtx) SignalAnswer(sdp string) error {
@@ -93,8 +93,8 @@ func (session *SessionCtx) SignalAnswer(sdp string) error {
 }
 
 func (session *SessionCtx) destroy() error {
-	if session.socket != nil {
-		if err := session.socket.Destroy(); err != nil {
+	if session.websocket_peer != nil {
+		if err := session.websocket_peer.Destroy(); err != nil {
 			return err
 		}
 	}

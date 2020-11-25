@@ -2,7 +2,7 @@ package types
 
 import "net/http"
 
-type WebSocket interface {
+type WebSocketPeer interface {
 	Send(v interface{}) error
 	Destroy() error
 }
