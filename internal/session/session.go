@@ -9,13 +9,13 @@ import (
 )
 
 type MemberProfile struct {
-	token            string
+	//token            string
 	name             string
 	is_admin         bool
-	enabled          bool
-	can_control      bool
-	can_watch        bool
-	clipboard_access bool
+	//enabled          bool
+	//can_control      bool
+	//can_watch        bool
+	//clipboard_access bool
 }
 
 type SessionCtx struct {
