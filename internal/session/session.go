@@ -35,6 +35,10 @@ func (session *SessionCtx) IsHost() bool {
 	return session.manager.host != nil && session.manager.host.ID() == session.ID()
 }
 
+func (session *SessionCtx) VerifySecret(secret string) bool {
+	return session.profile.Secret == secret
+}
+
 func (session *SessionCtx) Connected() bool {
 	return session.websocket_connected && session.webrtc_connected
 }

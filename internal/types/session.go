@@ -3,7 +3,8 @@ package types
 import "net/http"
 
 type MemberProfile struct {
-	//Token            string
+	ID               string
+	Secret           string
 	Name             string
 	IsAdmin          bool
 	//Enabled          bool
@@ -18,6 +19,7 @@ type Session interface {
 	Admin() bool
 	IsHost() bool
 	Connected() bool
+	VerifySecret(secret string) bool
 	SetName(name string)
 	SetWebSocketPeer(websocket_peer WebSocketPeer)
 	SetWebSocketConnected(connected bool)
@@ -29,7 +31,7 @@ type Session interface {
 }
 
 type SessionManager interface {
-	Create(profile MemberProfile) (Session, error)
+	Create(id string, profile MemberProfile) Session
 	Get(id string) (Session, bool)
 	Delete(id string) error
 

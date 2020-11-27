@@ -14,7 +14,7 @@ import (
 )
 
 func New(capture types.CaptureManager, config *config.Session) *SessionManagerCtx {
-	return &SessionManagerCtx{
+	manager := &SessionManagerCtx{
 		logger:    log.With().Str("module", "session").Logger(),
 		host:      nil,
 		hostMu:    sync.Mutex{},
@@ -24,6 +24,22 @@ func New(capture types.CaptureManager, config *config.Session) *SessionManagerCt
 		membersMu: sync.Mutex{},
 		emmiter:   events.New(),
 	}
+
+	// create default admin account at startup
+	_ = manager.Create("admin", types.MemberProfile{
+		Secret: config.AdminPassword,
+		Name: "Administrator",
+		IsAdmin: true,
+	})
+
+	// create default user account at startup
+	_ = manager.Create("user", types.MemberProfile{
+		Secret: config.Password,
+		Name: "User",
+		IsAdmin: false,
+	})
+
+	return manager
 }
 
 type SessionManagerCtx struct {
@@ -37,14 +53,9 @@ type SessionManagerCtx struct {
 	emmiter   events.EventEmmiter
 }
 
-func (manager *SessionManagerCtx) Create(profile types.MemberProfile) (types.Session, error) {
+func (manager *SessionManagerCtx) Create(id string, profile types.MemberProfile) types.Session {
 	manager.membersMu.Lock()
 	defer manager.membersMu.Unlock()
-
-	id, err := utils.NewUID(32)
-	if err != nil {
-		return nil, err
-	}
 
 	session := &SessionCtx{
 		id:        id,
@@ -54,7 +65,7 @@ func (manager *SessionManagerCtx) Create(profile types.MemberProfile) (types.Ses
 	}
 
 	manager.members[id] = session
-	return session, nil
+	return session
 }
 
 func (manager *SessionManagerCtx) Get(id string) (types.Session, bool) {
