@@ -13,6 +13,7 @@ type MemberCreatePayload struct {
 
 type MemberDataPayload struct {
 	ID               string `json:"id"`
+	Secret           string `json:"secret,omitempty"`
 	Name             string `json:"name"`
 	IsAdmin          bool   `json:"is_admin"`
 	//Enabled          bool   `json:"enabled"`
@@ -27,14 +28,17 @@ func (h *MembersHandler) membersCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	session, err := h.sessions.Create(types.MemberProfile{
-		Name: data.Name,
-		IsAdmin: data.IsAdmin,
-	})
+	id, err := utils.NewUID(32)
 	if err != nil {
 		utils.HttpInternalServer(w, err)
 		return
 	}
+
+	session := h.sessions.Create(id, types.MemberProfile{
+		Secret: data.Secret,
+		Name: data.Name,
+		IsAdmin: data.IsAdmin,
+	})
 
 	utils.HttpSuccess(w, MemberCreatePayload{
 		ID: session.ID(),
@@ -42,11 +46,6 @@ func (h *MembersHandler) membersCreate(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *MembersHandler) membersRead(w http.ResponseWriter, r *http.Request) {
-	data := &MemberDataPayload{}
-	if !utils.HttpJsonRequest(w, r, data) {
-		return
-	}
-
 	member := GetMember(r)
 
 	utils.HttpSuccess(w, MemberDataPayload{
