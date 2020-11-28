@@ -37,7 +37,7 @@ func (h *RoomHandler) boradcastStart(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.capture.StartBroadcast(data.URL); err != nil {
-		utils.HttpInternalServer(w, err)
+		utils.HttpInternalServerError(w, err)
 		return
 	}
 

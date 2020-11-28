@@ -50,11 +50,11 @@ func HttpBadRequest(w http.ResponseWriter, res ...interface{}) {
 	defHttpError(w, http.StatusBadRequest, "Bad Request.", res...)
 }
 
-func HttpNotAuthorized(w http.ResponseWriter, res ...interface{}) {
+func HttpUnauthorized(w http.ResponseWriter, res ...interface{}) {
 	defHttpError(w, http.StatusUnauthorized, "Access token does not have the required scope.", res...)
 }
 
-func HttpNotAuthenticated(w http.ResponseWriter, res ...interface{}) {
+func HttpForbidden(w http.ResponseWriter, res ...interface{}) {
 	defHttpError(w, http.StatusForbidden, "Invalid or missing access token.", res...)
 }
 
@@ -66,7 +66,7 @@ func HttpUnprocessableEntity(w http.ResponseWriter, res ...interface{}) {
 	defHttpError(w, http.StatusUnprocessableEntity, "Unprocessable Entity.", res...)
 }
 
-func HttpInternalServer(w http.ResponseWriter, res ...interface{}) {
+func HttpInternalServerError(w http.ResponseWriter, res ...interface{}) {
 	defHttpError(w, http.StatusInternalServerError, "Internal server error.", res...)
 }
 

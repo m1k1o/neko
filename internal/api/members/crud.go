@@ -30,7 +30,7 @@ func (h *MembersHandler) membersCreate(w http.ResponseWriter, r *http.Request) {
 
 	id, err := utils.NewUID(32)
 	if err != nil {
-		utils.HttpInternalServer(w, err)
+		utils.HttpInternalServerError(w, err)
 		return
 	}
 
@@ -74,7 +74,7 @@ func (h *MembersHandler) membersDelete(w http.ResponseWriter, r *http.Request) {
 	member := GetMember(r)
 
 	if err := h.sessions.Delete(member.ID()); err != nil {
-		utils.HttpInternalServer(w, err)
+		utils.HttpInternalServerError(w, err)
 		return
 	}
 

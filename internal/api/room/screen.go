@@ -19,7 +19,7 @@ func (h *RoomHandler) screenConfiguration(w http.ResponseWriter, r *http.Request
 	size := h.desktop.GetScreenSize()
 
 	if size == nil {
-		utils.HttpInternalServer(w, "Unable to get screen configuration.")
+		utils.HttpInternalServerError(w, "Unable to get screen configuration.")
 		return
 	}
 

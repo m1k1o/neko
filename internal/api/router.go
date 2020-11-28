@@ -52,7 +52,7 @@ func (api *ApiManagerCtx) Authenticate(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		session, err := api.sessions.Authenticate(r)
 		if err != nil {
-			utils.HttpNotAuthenticated(w, err)
+			utils.HttpUnauthorized(w, err)
 		} else {
 			next.ServeHTTP(w, auth.SetSession(r, session))
 		}
