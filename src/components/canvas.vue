@@ -132,13 +132,12 @@
     /////////////////////////////
     // Public methods
     /////////////////////////////
-    public connect(url: string, password: string, name: string) {
+    public connect(url: string, id: string, secret: string) {
       if (this.connected) {
         throw new Error('client already connected')
       }
 
-      Vue.set(this.state.member, 'name', name)
-      this.websocket.connect(url, password)
+      this.websocket.connect(url, id, secret)
     }
 
     public disconnect() {
@@ -241,7 +240,7 @@
 
             try {
               let sdp = await this.webrtc.connect(payload.sdp, payload.lite, payload.ice)
-              this.websocket.send('signal/answer', { sdp, displayname: this.state.member.name })
+              this.websocket.send('signal/answer', { sdp })
             } catch (e) {}
             break
         }

@@ -1,8 +1,7 @@
 export interface Member {
   id: string
-  displayname: string
+  name: string
   admin: boolean
-  muted: boolean
   connected?: boolean
   ignored?: boolean
 }

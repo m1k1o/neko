@@ -180,8 +180,8 @@
     <div>
       <div v-if="loaded && !neko.connected">
         <input type="text" placeholder="URL" v-model="url" />
-        <input type="text" placeholder="Password" v-model="pass" />
-        <input type="text" placeholder="Display Name" v-model="name" />
+        <input type="text" placeholder="Member ID" v-model="member_id" />
+        <input type="text" placeholder="Member Secret" v-model="member_secret" />
         <button @click="connect()">Connect</button>
       </div>
       <button v-if="loaded && neko.connected" @click="disconnect()">Disonnect</button>
@@ -236,12 +236,12 @@
       return this.neko.state.member.is_controlling
     }
 
-    url: string = 'ws://192.168.1.20:3000/'
-    pass: string = 'admin'
-    name: string = 'test'
+    url: string = 'ws://192.168.1.20:3000/ws'
+    member_id: string = 'admin'
+    member_secret: string = 'admin'
 
     connect() {
-      this.neko.connect(this.url, this.pass, this.name)
+      this.neko.connect(this.url, this.member_id, this.member_secret)
     }
 
     disconnect() {

@@ -77,6 +77,7 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
     //user.addMember(member)
 
     if (member.id === this.state.member.id) {
+      Vue.set(this.state.member, 'name', member.name)
       Vue.set(this.state.member, 'is_admin', member.admin)
     }
   }
