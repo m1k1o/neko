@@ -44,12 +44,12 @@
   import ResizeObserver from 'resize-observer-polyfill'
   import EventEmitter from 'eventemitter3'
 
-  import { NekoWebSocket } from '~/internal/websocket'
-  import { NekoWebRTC } from '~/internal/webrtc'
-  import { NekoMessages } from '~/internal/messages'
-  import { register as VideoRegister } from '~/internal/video'
+  import { NekoWebSocket } from './internal/websocket'
+  import { NekoWebRTC } from './internal/webrtc'
+  import { NekoMessages } from './internal/messages'
+  import { register as VideoRegister } from './internal/video'
 
-  import NekoState from '~/types/state'
+  import NekoState from './types/state'
   import Overlay from './overlay.vue'
 
   @Component({

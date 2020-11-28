@@ -1,5 +1,5 @@
 import Vue from 'vue'
-import { Video } from '~/types/state'
+import { Video } from '../types/state'
 
 export function register(el: HTMLVideoElement, state: Video) {
   el.addEventListener('canplaythrough', () => {

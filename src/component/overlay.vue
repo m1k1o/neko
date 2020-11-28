@@ -28,8 +28,8 @@
 <script lang="ts">
   import { Vue, Component, Ref, Prop } from 'vue-property-decorator'
 
-  import GuacamoleKeyboard from '~/utils/guacamole-keyboard.ts'
-  import { NekoWebRTC } from '~/internal/webrtc'
+  import GuacamoleKeyboard from './utils/guacamole-keyboard'
+  import { NekoWebRTC } from './internal/webrtc'
 
   @Component({
     name: 'neko-overlay',

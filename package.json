@@ -6,12 +6,13 @@
   "module": "dist/neko.common.js",
   "unpkg": "dist/neko.min.js",
   "browser": {
-    "./sfc": "src/components/canvas.vue"
+    "./sfc": "src/component/main.vue"
   },
   "scripts": {
     "serve": "vue-cli-service serve --mode development",
     "lint": "vue-cli-service lint",
-    "build": "vue-cli-service build --target lib --name neko ./src/components/canvas.vue"
+    "build": "vue-cli-service build --target lib --name neko ./src/component/main.vue",
+    "build:page": "vue-cli-service build"
   },
   "dependencies": {
     "eventemitter3": "^4.0.7",
