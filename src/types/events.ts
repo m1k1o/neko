@@ -31,12 +31,6 @@ export const EVENT = {
     DESTROY: 'broadcast/destroy',
   },
   ADMIN: {
-    BAN: 'admin/ban',
-    KICK: 'admin/kick',
-    MUTE: 'admin/mute',
-    UNMUTE: 'admin/unmute',
-    LOCK: 'admin/lock',
-    UNLOCK: 'admin/unlock',
     CONTROL: 'admin/control',
     RELEASE: 'admin/release',
     GIVE: 'admin/give',
@@ -75,13 +69,4 @@ export type BroadcastEvents =
   | typeof EVENT.BROADCAST.CREATE
   | typeof EVENT.BROADCAST.DESTROY
 
-export type AdminEvents =
-  | typeof EVENT.ADMIN.BAN
-  | typeof EVENT.ADMIN.KICK
-  | typeof EVENT.ADMIN.LOCK
-  | typeof EVENT.ADMIN.UNLOCK
-  | typeof EVENT.ADMIN.MUTE
-  | typeof EVENT.ADMIN.UNMUTE
-  | typeof EVENT.ADMIN.CONTROL
-  | typeof EVENT.ADMIN.RELEASE
-  | typeof EVENT.ADMIN.GIVE
+export type AdminEvents = typeof EVENT.ADMIN.CONTROL | typeof EVENT.ADMIN.RELEASE | typeof EVENT.ADMIN.GIVE

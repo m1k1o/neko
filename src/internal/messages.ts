@@ -34,12 +34,6 @@ export interface NekoEvents {
   ['clipboard.update']: (text: string) => void
   ['screen.size']: (id: string) => void
   ['broadcast.status']: (url: string, isActive: boolean) => void
-  ['member.ban']: (id: string, target: string) => void
-  ['member.kick']: (id: string, target: string) => void
-  ['member.muted']: (id: string, target: string) => void
-  ['member.unmuted']: (id: string, target: string) => void
-  ['room.locked']: (id: string) => void
-  ['room.unlocked']: (id: string) => void
 }
 
 export class NekoMessages extends EventEmitter<NekoEvents> {
@@ -182,50 +176,6 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
   /////////////////////////////
   // Admin Events
   /////////////////////////////
-  protected [EVENT.ADMIN.BAN]({ id, target }: AdminTargetPayload) {
-    if (!target) return
-
-    console.log('EVENT.ADMIN.BAN')
-    this.emit('member.ban', id, target)
-    // TODO
-  }
-
-  protected [EVENT.ADMIN.KICK]({ id, target }: AdminTargetPayload) {
-    if (!target) return
-
-    console.log('EVENT.ADMIN.KICK')
-    this.emit('member.kick', id, target)
-    // TODO
-  }
-
-  protected [EVENT.ADMIN.MUTE]({ id, target }: AdminTargetPayload) {
-    if (!target) return
-
-    console.log('EVENT.ADMIN.MUTE')
-    this.emit('member.muted', id, target)
-    //user.setMuted({ id: target, muted: true })
-  }
-
-  protected [EVENT.ADMIN.UNMUTE]({ id, target }: AdminTargetPayload) {
-    if (!target) return
-
-    console.log('EVENT.ADMIN.UNMUTE')
-    this.emit('member.unmuted', id, target)
-    //user.setMuted({ id: target, muted: false })
-  }
-
-  protected [EVENT.ADMIN.LOCK]({ id }: AdminPayload) {
-    console.log('EVENT.ADMIN.LOCK')
-    this.emit('room.locked', id)
-    //setLocked(true)
-  }
-
-  protected [EVENT.ADMIN.UNLOCK]({ id }: AdminPayload) {
-    console.log('EVENT.ADMIN.UNLOCK')
-    this.emit('room.unlocked', id)
-    //setLocked(false)
-  }
-
   protected [EVENT.ADMIN.CONTROL]({ id, target }: AdminTargetPayload) {
     if (!target) return
 
