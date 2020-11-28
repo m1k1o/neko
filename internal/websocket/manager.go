@@ -164,9 +164,6 @@ func (ws *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Request) e
 			Msg("connection ended")
 
 		session.SetWebSocketConnected(false)
-
-		// TODO: Enable persistent user autentication.
-		_ = ws.sessions.Delete(session.ID())
 	}()
 
 	ws.handle(connection, session)
