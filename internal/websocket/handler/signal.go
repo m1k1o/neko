@@ -23,6 +23,5 @@ func (h *MessageHandlerCtx) signalProvide(session types.Session) error {
 }
 
 func (h *MessageHandlerCtx) signalAnswer(session types.Session, payload *message.SignalAnswer) error {
-	session.SetName(payload.Name)
 	return session.SignalAnswer(payload.SDP)
 }

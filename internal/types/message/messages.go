@@ -23,7 +23,6 @@ type SignalProvide struct {
 
 type SignalAnswer struct {
 	Event string `json:"event"`
-	Name  string `json:"displayname"` // TODO: Change.
 	SDP   string `json:"sdp"`
 }
 
@@ -34,14 +33,14 @@ type MembersList struct {
 
 type MembersListEntry struct {
 	ID    string `json:"id"`
-	Name  string `json:"displayname"` // TODO: Change.
+	Name  string `json:"name"`
 	Admin bool   `json:"admin"`
 }
 
 type Member struct {
 	Event string `json:"event"`
 	ID    string `json:"id"`
-	Name  string `json:"displayname"` // TODO: Change.
+	Name  string `json:"name"`
 	Admin bool   `json:"admin"`
 }
 

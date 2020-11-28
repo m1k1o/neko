@@ -20,7 +20,6 @@ type Session interface {
 	IsHost() bool
 	Connected() bool
 	VerifySecret(secret string) bool
-	SetName(name string)
 	SetWebSocketPeer(websocket_peer WebSocketPeer)
 	SetWebSocketConnected(connected bool)
 	SetWebRTCPeer(webrtc_peer WebRTCPeer)

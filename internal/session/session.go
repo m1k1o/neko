@@ -43,10 +43,6 @@ func (session *SessionCtx) Connected() bool {
 	return session.websocket_connected && session.webrtc_connected
 }
 
-func (session *SessionCtx) SetName(name string) {
-	session.profile.Name = name
-}
-
 func (session *SessionCtx) SetWebSocketPeer(websocket_peer types.WebSocketPeer) {
 	session.websocket_peer = websocket_peer
 	session.manager.emmiter.Emit("created", session)
