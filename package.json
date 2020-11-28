@@ -15,6 +15,7 @@
     "build:page": "vue-cli-service build"
   },
   "dependencies": {
+    "@fortawesome/fontawesome-free": "^5.15.1",
     "eventemitter3": "^4.0.7",
     "resize-observer-polyfill": "^1.5.1",
     "typed-vuex": "^0.1.21",
