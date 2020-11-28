@@ -83,34 +83,3 @@ func (h *MessageHandlerCtx) adminGive(session types.Session, payload *message.Ad
 
 	return nil
 }
-
-func (h *MessageHandlerCtx) adminKick(session types.Session, payload *message.Admin) error {
-	if !session.Admin() {
-		h.logger.Debug().Msg("user not admin")
-		return nil
-	}
-
-	target, ok := h.sessions.Get(payload.ID)
-	if !ok {
-		h.logger.Debug().Str("id", payload.ID).Msg("can't find target session")
-		return nil
-	}
-
-	if target.Admin() {
-		h.logger.Debug().Msg("target is an admin, baling")
-		return nil
-	}
-
-	if err := target.Disconnect("kicked"); err != nil {
-		return err
-	}
-
-	h.sessions.Broadcast(
-		message.AdminTarget{
-			Event:  event.ADMIN_KICK,
-			Target: target.ID(),
-			ID:     session.ID(),
-		}, []string{payload.ID})
-
-	return nil
-}

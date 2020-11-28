@@ -38,7 +38,6 @@ const (
 )
 
 const (
-	ADMIN_KICK    = "admin/kick"
 	ADMIN_CONTROL = "admin/control"
 	ADMIN_RELEASE = "admin/release"
 	ADMIN_GIVE    = "admin/give"
