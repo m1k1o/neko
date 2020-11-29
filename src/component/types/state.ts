@@ -16,7 +16,7 @@ export interface Connection {
   type: 'webrtc' | 'fallback' | 'none'
   can_watch: boolean
   can_control: boolean
-  clipboard_access: boolean   
+  clipboard_access: boolean
 }
 
 /////////////////////////////

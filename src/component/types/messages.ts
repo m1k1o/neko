@@ -10,11 +10,7 @@ import {
   AdminEvents,
 } from './events'
 
-import {
-  Member,
-  ScreenConfigurations,
-  ScreenResolution
-} from './structs'
+import { Member, ScreenConfigurations, ScreenResolution } from './structs'
 
 export type WebSocketMessages =
   | WebSocketMessage
@@ -153,11 +149,11 @@ export interface ScreenConfigurationsPayload {
   BROADCAST PAYLOADS
 */
 export interface BroadcastCreatePayload {
-  url:   string
+  url: string
 }
 
 export interface BroadcastStatusPayload {
-  url:      string
+  url: string
   isActive: boolean
 }
 
