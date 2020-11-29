@@ -196,35 +196,39 @@
       Vue.set(this.state.control.scroll, 'sensitivity', value)
     }
 
-    public setClipboardData(value: number) {
-      // TODO: Via REST API.
+    public setClipboardData(text: string) {
+      const clipboardPayload = { text }
+      this.api.host.clipboardWrite({ clipboardPayload })
     }
 
     public requestControl() {
-      // TODO: Via REST API.
-      this.websocket.send('control/request')
+      this.api.user.controlRequest()
+      //this.websocket.send('control/request')
     }
 
     public releaseControl() {
-      // TODO: Via REST API.
-      this.websocket.send('control/release')
+      this.api.user.controlRelease()
+      //this.websocket.send('control/release')
     }
 
     public takeControl() {
-      // TODO: Via REST API.
+      this.api.admin.controlTake()
+      //this.websocket.send('control/take')
     }
 
     public giveControl(id: string) {
-      // TODO: Via REST API.
+      const controlTargetPayload = { id }
+      this.api.admin.controlGive({ controlTargetPayload })
+      //this.websocket.send('control/give', { id })
     }
 
     public resetControl() {
-      // TODO: Via REST API.
+      this.api.admin.controlReset()
     }
 
     public setScreenSize(width: number, height: number, rate: number) {
-      // TODO: Via REST API.
-      this.websocket.send('screen/set', { width, height, rate })
+      this.api.admin.screenConfigurationChange({ screenConfigurationPayload: { width, height, rate } })
+      //this.websocket.send('screen/set', { width, height, rate })
     }
 
     /////////////////////////////
