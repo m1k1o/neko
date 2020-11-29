@@ -44,6 +44,7 @@
   import ResizeObserver from 'resize-observer-polyfill'
   import EventEmitter from 'eventemitter3'
 
+  import { NekoApi } from './internal/api'
   import { NekoWebSocket } from './internal/websocket'
   import { NekoWebRTC } from './internal/webrtc'
   import { NekoMessages } from './internal/messages'
@@ -63,6 +64,7 @@
     @Ref('container') readonly _container!: HTMLElement
     @Ref('video') readonly _video!: HTMLVideoElement
 
+    api = new NekoApi()
     websocket = new NekoWebSocket()
     webrtc = new NekoWebRTC()
     observer = new ResizeObserver(this.onResize.bind(this))
@@ -138,7 +140,11 @@
         throw new Error('client already connected')
       }
 
-      this.websocket.connect(url, id, secret)
+      const wsURL = url.replace(/^http/, 'ws').replace(/\/$|\/ws\/?$/, '')
+      this.websocket.connect(wsURL, id, secret)
+
+      const httpURL = url.replace(/^ws/, 'http').replace(/\/$|\/ws\/?$/, '')
+      this.api.connect(httpURL, id, secret)
     }
 
     public disconnect() {
@@ -147,6 +153,7 @@
       }
 
       this.websocket.disconnect()
+      this.api.disconnect()
     }
 
     public play() {

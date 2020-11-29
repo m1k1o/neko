@@ -32,8 +32,7 @@ export class NekoWebSocket extends EventEmitter<NekoWebSocketEvents> {
 
     this.emit('connecting')
 
-    const ws_url = url.replace(/^http/, 'ws').replace(/\/$|\/ws$/, '')
-    this._ws = new WebSocket(`${ws_url}/ws?id=${encodeURIComponent(id)}&secret=${encodeURIComponent(secret)}`)
+    this._ws = new WebSocket(`${url}/ws?id=${encodeURIComponent(id)}&secret=${encodeURIComponent(secret)}`)
     this._log.debug(`connecting to ${this._ws.url}`)
 
     this._ws.onopen = this.onConnected.bind(this)
