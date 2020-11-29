@@ -106,3 +106,21 @@ func (h *RoomHandler) controlGive(w http.ResponseWriter, r *http.Request) {
 
 	utils.HttpSuccess(w)
 }
+
+func (h *RoomHandler) controlReset(w http.ResponseWriter, r *http.Request) {
+	host := h.sessions.GetHost()
+	if host == nil {
+		utils.HttpSuccess(w)
+		return
+	}
+
+	h.sessions.ClearHost()
+	
+	h.sessions.Broadcast(
+		message.Control{
+			Event: event.CONTROL_RELEASE,
+			ID:    host.ID(),
+		}, nil)
+
+	utils.HttpSuccess(w)
+}
