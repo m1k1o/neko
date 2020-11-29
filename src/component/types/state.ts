@@ -25,7 +25,8 @@ export interface Connection {
 export interface Video {
   playable: boolean
   playing: boolean
-  volume: number 
+  volume: number
+  muted: boolean
   fullscreen: boolean
 }
 

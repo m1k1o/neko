@@ -83,6 +83,7 @@
         playable: false,
         playing: false,
         volume: 0,
+        muted: false,
         fullscreen: false,
       },
       control: {
@@ -154,6 +155,14 @@
 
     public pause() {
       this._video.pause()
+    }
+
+    public mute() {
+      this._video.muted = true
+    }
+
+    public unmute() {
+      this._video.muted = false
     }
 
     public setVolume(value: number) {
