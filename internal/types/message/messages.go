@@ -69,7 +69,7 @@ type MemberData struct {
 type ControlHost struct {
 	Event   string  `json:"event,omitempty"`
 	HasHost bool    `json:"has_host"`
-	HostID  string  `json:"id,omitempty"`
+	HostID  string  `json:"host_id,omitempty"`
 }
 
 // TODO: New.
