@@ -1,72 +1,30 @@
-export const EVENT = {
-  SYSTEM: {
-    DISCONNECT: 'system/disconnect',
-  },
-  SIGNAL: {
-    ANSWER: 'signal/answer',
-    PROVIDE: 'signal/provide',
-  },
-  MEMBER: {
-    LIST: 'member/list',
-    CONNECTED: 'member/connected',
-    DISCONNECTED: 'member/disconnected',
-  },
-  CONTROL: {
-    LOCKED: 'control/locked',
-    RELEASE: 'control/release',
-    REQUEST: 'control/request',
-    REQUESTING: 'control/requesting',
-    GIVE: 'control/give',
-    CLIPBOARD: 'control/clipboard',
-    KEYBOARD: 'control/keyboard',
-  },
-  SCREEN: {
-    CONFIGURATIONS: 'screen/configurations',
-    RESOLUTION: 'screen/resolution',
-    SET: 'screen/set',
-  },
-  BROADCAST: {
-    STATUS: 'broadcast/status',
-    CREATE: 'broadcast/create',
-    DESTROY: 'broadcast/destroy',
-  },
-  ADMIN: {
-    CONTROL: 'admin/control',
-    RELEASE: 'admin/release',
-    GIVE: 'admin/give',
-  },
-} as const
+export const SYSTEM_INIT = 'system/init'
+export const SYSTEM_ADMIN = 'system/admin'
+export const SYSTEM_DISCONNECT = 'system/disconnect'
 
-export type Events = typeof EVENT
+export const SIGNAL_REQUEST = 'signal/request'
+export const SIGNAL_ANSWER = 'signal/answer'
+export const SIGNAL_PROVIDE = 'signal/provide'
 
-export type WebSocketEvents =
-  | SystemEvents
-  | SignalEvents
-  | MemberEvents
-  | ControlEvents
-  | ScreenEvents
-  | BroadcastEvents
-  | AdminEvents
+export const MEMBER_CONNECTED = 'member/connected'
+export const MEMBER_UPDATED = 'member/updated' // TODO: New.
+export const MEMBER_DISCONNECTED = 'member/disconnected'
 
-export type SystemEvents = typeof EVENT.SYSTEM.DISCONNECT
+export const CONTROL_HOST = 'control/host'
+export const CONTROL_RELEASE = 'control/release'
+export const CONTROL_REQUEST = 'control/request'
+export const CONTROL_MOVE = 'control/move' // TODO: New. (fallback)
+export const CONTROL_SCROLL = 'control/scroll' // TODO: New. (fallback)
+export const CONTROL_KEYDOWN = 'control/keydown' // TODO: New. (fallback)
+export const CONTROL_KEYUP = 'control/keyup' // TODO: New. (fallback)
 
-export type SignalEvents = typeof EVENT.SIGNAL.ANSWER | typeof EVENT.SIGNAL.PROVIDE
+export const SCREEN_UPDATED = 'screen/updated'
+export const SCREEN_SET = 'screen/set'
 
-export type MemberEvents = typeof EVENT.MEMBER.LIST | typeof EVENT.MEMBER.CONNECTED | typeof EVENT.MEMBER.DISCONNECTED
+export const CLIPBOARD_UPDATED = 'clipboard/updated'
+export const CLIPBOARD_SET = 'clipboard/set'
 
-export type ControlEvents =
-  | typeof EVENT.CONTROL.LOCKED
-  | typeof EVENT.CONTROL.RELEASE
-  | typeof EVENT.CONTROL.REQUEST
-  | typeof EVENT.CONTROL.GIVE
-  | typeof EVENT.CONTROL.CLIPBOARD
-  | typeof EVENT.CONTROL.KEYBOARD
+export const KEYBOARD_MODIFIERS = 'keyboard/modifiers'
+export const KEYBOARD_LAYOUT = 'keyboard/layout'
 
-export type ScreenEvents = typeof EVENT.SCREEN.CONFIGURATIONS | typeof EVENT.SCREEN.RESOLUTION | typeof EVENT.SCREEN.SET
-
-export type BroadcastEvents =
-  | typeof EVENT.BROADCAST.STATUS
-  | typeof EVENT.BROADCAST.CREATE
-  | typeof EVENT.BROADCAST.DESTROY
-
-export type AdminEvents = typeof EVENT.ADMIN.CONTROL | typeof EVENT.ADMIN.RELEASE | typeof EVENT.ADMIN.GIVE
+export const BORADCAST_STATUS = 'broadcast/status'

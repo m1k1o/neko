@@ -1,178 +1,137 @@
-import {
-  EVENT,
-  WebSocketEvents,
-  SystemEvents,
-  SignalEvents,
-  MemberEvents,
-  ControlEvents,
-  ScreenEvents,
-  BroadcastEvents,
-  AdminEvents,
-} from './events'
-
-import { Member, ScreenConfigurations, ScreenResolution } from './structs'
-
-export type WebSocketMessages =
-  | WebSocketMessage
-  | SignalProvideMessage
-  | SignalAnswerMessage
-  | MemberListMessage
-  | MemberConnectMessage
-  | MemberDisconnectMessage
-  | ControlMessage
-  | ScreenResolutionMessage
-  | ScreenConfigurationsMessage
-
-export type WebSocketPayloads =
-  | SignalProvidePayload
-  | SignalAnswerPayload
-  | MemberListPayload
-  | Member
-  | ControlPayload
-  | ControlClipboardPayload
-  | ControlKeyboardPayload
-  | ScreenResolutionPayload
-  | ScreenConfigurationsPayload
-  | AdminPayload
-  | BroadcastStatusPayload
-  | BroadcastCreatePayload
-
-export interface WebSocketMessage {
-  event: WebSocketEvents | string
+export interface Message {
+  event: string | undefined
+  payload: any
 }
 
-/*
-  SYSTEM MESSAGES/PAYLOADS
-*/
-// system/disconnect
-export interface DisconnectMessage extends WebSocketMessage, DisconnectPayload {
-  event: typeof EVENT.SYSTEM.DISCONNECT
+/////////////////////////////
+// System
+/////////////////////////////
+
+export interface SystemInit {
+  event: string | undefined
+  control_host: ControlHost
+  screen_size: ScreenSize
+  members: MemberData[]
 }
-export interface DisconnectPayload {
+
+export interface SystemAdmin {
+  event: string | undefined
+  screen_sizes_list: ScreenSize[]
+  broadcast_status: BroadcastStatus
+}
+
+// TODO: New.
+export interface SystemDisconnect {
+  event: string | undefined
   message: string
 }
 
-/*
-  SIGNAL MESSAGES/PAYLOADS
-*/
-// signal/provide
-export interface SignalProvideMessage extends WebSocketMessage, SignalProvidePayload {
-  event: typeof EVENT.SIGNAL.PROVIDE
-}
-export interface SignalProvidePayload {
-  id: string
+/////////////////////////////
+// Signal
+/////////////////////////////
+
+export interface SignalProvide {
+  event: string | undefined
+  sdp: string
   lite: boolean
   ice: string[]
+}
+
+export interface SignalAnswer {
+  event: string | undefined
   sdp: string
 }
 
-// signal/answer
-export interface SignalAnswerMessage extends WebSocketMessage, SignalAnswerPayload {
-  event: typeof EVENT.SIGNAL.ANSWER
-}
-export interface SignalAnswerPayload {
-  sdp: string
-}
+/////////////////////////////
+// Member
+/////////////////////////////
 
-/*
-  MEMBER MESSAGES/PAYLOADS
-*/
-// member/list
-export interface MemberListMessage extends WebSocketMessage, MemberListPayload {
-  event: typeof EVENT.MEMBER.LIST
-}
-export interface MemberListPayload {
-  members: Member[]
-}
-
-// member/connected
-export interface MemberConnectMessage extends WebSocketMessage, MemberPayload {
-  event: typeof EVENT.MEMBER.CONNECTED
-}
-export type MemberPayload = Member
-
-// member/disconnected
-export interface MemberDisconnectMessage extends WebSocketMessage, MemberPayload {
-  event: typeof EVENT.MEMBER.DISCONNECTED
-}
-export interface MemberDisconnectPayload {
+// TODO: New.
+export interface MemberID {
+  event: string | undefined
   id: string
 }
 
-/*
-  CONTROL MESSAGES/PAYLOADS
-*/
-// control/locked & control/release & control/request
-export interface ControlMessage extends WebSocketMessage, ControlPayload {
-  event: ControlEvents
-}
-export interface ControlPayload {
+// TODO: New.
+export interface MemberData {
+  event: string | undefined
   id: string
+  name: string
+  is_admin: boolean
 }
 
-export interface ControlTargetPayload {
-  id: string
-  target: string
+/////////////////////////////
+// Control
+/////////////////////////////
+
+export interface ControlHost {
+  event: string | undefined
+  has_host: boolean
+  host_id: string | undefined
 }
 
-export interface ControlClipboardPayload {
+// TODO: New.
+export interface ControlMove {
+  event: string | undefined
+  x: number
+  y: number
+}
+
+// TODO: New.
+export interface ControlScroll {
+  event: string | undefined
+  x: number
+  y: number
+}
+
+// TODO: New.
+export interface ControlKey {
+  event: string | undefined
+  key: number
+}
+
+/////////////////////////////
+// Screen
+/////////////////////////////
+
+export interface ScreenSize {
+  event: string | undefined
+  width: number
+  height: number
+  rate: number
+}
+
+/////////////////////////////
+// Clipboard
+/////////////////////////////
+
+export interface ClipboardData {
+  event: string | undefined
   text: string
 }
 
-export interface ControlKeyboardPayload {
-  layout?: string
-  capsLock?: boolean
-  numLock?: boolean
-  scrollLock?: boolean
+/////////////////////////////
+// Keyboard
+/////////////////////////////
+
+export interface KeyboardModifiers {
+  event: string | undefined
+  caps_lock: boolean
+  num_lock: boolean
+  scroll_lock: boolean
 }
 
-/*
-  SCREEN PAYLOADS
-*/
-export interface ScreenResolutionMessage extends WebSocketMessage, ScreenResolutionPayload {
-  event: ScreenEvents
+export interface KeyboardLayout {
+  event: string | undefined
+  layout: string
 }
 
-export interface ScreenResolutionPayload extends ScreenResolution {
-  id?: string
-}
+/////////////////////////////
+// Broadcast
+/////////////////////////////
 
-export interface ScreenConfigurationsMessage extends WebSocketMessage, ScreenConfigurationsPayload {
-  event: ScreenEvents
-}
-
-export interface ScreenConfigurationsPayload {
-  configurations: ScreenConfigurations
-}
-
-/*
-  BROADCAST PAYLOADS
-*/
-export interface BroadcastCreatePayload {
-  url: string
-}
-
-export interface BroadcastStatusPayload {
-  url: string
-  isActive: boolean
-}
-
-/*
-  ADMIN PAYLOADS
-*/
-export interface AdminMessage extends WebSocketMessage, AdminPayload {
-  event: AdminEvents
-}
-
-export interface AdminPayload {
-  id: string
-}
-
-export interface AdminTargetMessage extends WebSocketMessage, AdminTargetPayload {
-  event: AdminEvents
-}
-
-export interface AdminTargetPayload {
-  id: string
-  target?: string
+export interface BroadcastStatus {
+  event: string | undefined
+  is_active: boolean
+  url: string | undefined
 }

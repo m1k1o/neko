@@ -35,7 +35,7 @@ export interface Video {
 /////////////////////////////
 export interface Control {
   scroll: Scroll
-  clipboard: Clipboard
+  clipboard: Clipboard | null
   host: Member | null
 }
 
@@ -45,7 +45,7 @@ export interface Scroll {
 }
 
 export interface Clipboard {
-  data: string | null
+  text: string
 }
 
 /////////////////////////////

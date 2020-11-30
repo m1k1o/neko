@@ -93,9 +93,7 @@
           inverse: true,
           sensitivity: 1,
         },
-        clipboard: {
-          data: null,
-        },
+        clipboard: null,
         host: null,
       },
       screen: {
@@ -227,8 +225,8 @@
     }
 
     public setScreenSize(width: number, height: number, rate: number) {
-      this.api.admin.screenConfigurationChange({ screenConfigurationPayload: { width, height, rate } })
-      //this.websocket.send('screen/set', { width, height, rate })
+      //this.api.admin.screenConfigurationChange({ screenConfigurationPayload: { width, height, rate } })
+      this.websocket.send('screen/set', { width, height, rate })
     }
 
     /////////////////////////////
@@ -237,11 +235,6 @@
     mounted() {
       // component size change
       this.observer.observe(this._component)
-
-      // host change
-      this.events.on('control.host', (id: string | null) => {
-        Vue.set(this.state.member, 'is_controlling', id != null && id === this.state.member.id)
-      })
 
       // fullscreen change
       this._component.addEventListener('fullscreenchange', () => {
@@ -256,8 +249,6 @@
       this.websocket.on('message', async (event: string, payload: any) => {
         switch (event) {
           case 'signal/provide':
-            Vue.set(this.state.member, 'id', payload.id)
-
             try {
               let sdp = await this.webrtc.connect(payload.sdp, payload.lite, payload.ice)
               this.websocket.send('signal/answer', { sdp })
@@ -267,15 +258,16 @@
       })
       this.websocket.on('connecting', () => {
         Vue.set(this.state.connection, 'websocket', 'connecting')
-        this.events.emit('system.websocket', 'connecting')
+        this.events.emit('internal.websocket', 'connecting')
       })
       this.websocket.on('connected', () => {
+        this.websocket.send('signal/request')
         Vue.set(this.state.connection, 'websocket', 'connected')
-        this.events.emit('system.websocket', 'connected')
+        this.events.emit('internal.websocket', 'connected')
       })
       this.websocket.on('disconnected', () => {
         Vue.set(this.state.connection, 'websocket', 'disconnected')
-        this.events.emit('system.websocket', 'disconnected')
+        this.events.emit('internal.websocket', 'disconnected')
         this.webrtc.disconnect()
 
         // TODO: reset state
@@ -308,15 +300,15 @@
       })
       this.webrtc.on('connecting', () => {
         Vue.set(this.state.connection, 'webrtc', 'connecting')
-        this.events.emit('system.webrtc', 'connecting')
+        this.events.emit('internal.webrtc', 'connecting')
       })
       this.webrtc.on('connected', () => {
         Vue.set(this.state.connection, 'webrtc', 'connected')
-        this.events.emit('system.webrtc', 'connected')
+        this.events.emit('internal.webrtc', 'connected')
       })
       this.webrtc.on('disconnected', () => {
         Vue.set(this.state.connection, 'webrtc', 'disconnected')
-        this.events.emit('system.webrtc', 'disconnected')
+        this.events.emit('internal.webrtc', 'disconnected')
         // @ts-ignore
         this._video.src = null
       })
