@@ -6,14 +6,17 @@ type Message struct {
 }
 
 // System
-// TODO: New.
-type SystemConnect struct {
-	Event            string          `json:"event,omitempty"`
-	ControlHost      ControlHost     `json:"control_host"`
-	ScreenSize       ScreenSize      `json:"screen_size"`
-	Members          []MemberData    `json:"members"`
-	ScreenSizesList  *[]ScreenSize   `json:"screen_sizes_list,omitempty"`
-	BroadcastStatus  BroadcastStatus `json:"members,omitempty"`
+type SystemInit struct {
+	Event           string           `json:"event,omitempty"`
+	ControlHost     ControlHost      `json:"control_host"`
+	ScreenSize      ScreenSize       `json:"screen_size"`
+	Members         []MemberData     `json:"members"`
+}
+
+type SystemAdmin struct {
+	Event           string           `json:"event,omitempty"`
+	ScreenSizesList []ScreenSize     `json:"screen_sizes_list"`
+	BroadcastStatus BroadcastStatus  `json:"broadcast_status"`
 }
 
 // TODO: New.
@@ -106,9 +109,9 @@ type KeyboardLayout struct {
 }
 
 type BroadcastStatus struct {
-	Event    string `json:"event"`
-	URL      string `json:"url"`
+	Event    string `json:"event,omitempty"`
 	IsActive bool   `json:"is_active"`
+	URL      string `json:"url,omitempty"`
 }
 
 // TODO: Remove.

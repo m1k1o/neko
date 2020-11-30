@@ -1,7 +1,8 @@
 package event
 
 const (
-	SYSTEM_CONNECT    = "system/connect" // TODO: New.
+	SYSTEM_INIT       = "system/init"
+	SYSTEM_ADMIN      = "system/admin"
 	SYSTEM_DISCONNECT = "system/disconnect"
 )
 

@@ -7,34 +7,12 @@ import (
 )
 
 func (h *MessageHandlerCtx) SessionConnected(session types.Session) error {
-	// create member list
-	members := []*message.MembersListEntry{}
-	for _, session := range h.sessions.Members() {
-		members = append(members, &message.MembersListEntry{
-			ID:    session.ID(),
-			Name:  session.Name(),
-			Admin: session.Admin(),
-		})
-	}
-
-	// send list of members to session
-	if err := session.Send(
-		message.MembersList{
-			Event:    event.MEMBER_LIST,
-			Memebers: members,
-		}); err != nil {
+	if err := h.systemInit(session); err != nil {
 		return err
 	}
 
-	// tell session there is a host
-	host := h.sessions.GetHost()
-	if host != nil {
-		if err := session.Send(
-			message.ControlHost{
-				Event:   event.CONTROL_HOST,
-				HasHost: true,
-				HostID:  host.ID(),
-			}); err != nil {
+	if session.Admin() {
+		if err := h.systemAdmin(session); err != nil {
 			return err
 		}
 	}
@@ -42,7 +20,7 @@ func (h *MessageHandlerCtx) SessionConnected(session types.Session) error {
 	// let everyone know there is a new session
 	h.sessions.Broadcast(
 		message.Member{
-			Event:  event.MEMBER_CONNECTED,
+			Event: event.MEMBER_CONNECTED,
 			ID:    session.ID(),
 			Name:  session.Name(),
 			Admin: session.Admin(),
