@@ -84,17 +84,6 @@ func (h *MessageHandlerCtx) Message(session types.Session, raw []byte) error {
 		err = utils.Unmarshal(payload, raw, func() error {
 			return h.screenSizeChange(session, payload)
 		})
-
-	// Admin Events
-	case event.ADMIN_CONTROL:
-		err = h.adminControl(session)
-	case event.ADMIN_RELEASE:
-		err = h.adminRelease(session)
-	case event.ADMIN_GIVE:
-		payload := &message.Admin{}
-		err = utils.Unmarshal(payload, raw, func() error {
-			return h.adminGive(session, payload)
-		})
 	default:
 		return errors.Errorf("unknown message event %s", header.Event)
 	}

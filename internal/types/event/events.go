@@ -54,9 +54,3 @@ const (
 const (
 	BORADCAST_STATUS = "broadcast/status"
 )
-
-const (
-	ADMIN_CONTROL = "admin/control" // TODO: Remove.
-	ADMIN_RELEASE = "admin/release" // TODO: Remove.
-	ADMIN_GIVE    = "admin/give" // TODO: Remove.
-)

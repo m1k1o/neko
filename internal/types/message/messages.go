@@ -183,19 +183,6 @@ type ControlTarget struct {
 }
 
 // TODO: Remove.
-type Admin struct {
-	Event string `json:"event"`
-	ID    string `json:"id"`
-}
-
-// TODO: Remove.
-type AdminTarget struct {
-	Event  string `json:"event"`
-	Target string `json:"target"`
-	ID     string `json:"id"`
-}
-
-// TODO: Remove.
 type ScreenResolution struct {
 	Event  string `json:"event"`
 	ID     string `json:"id,omitempty"`
