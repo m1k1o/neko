@@ -22,7 +22,6 @@ const (
 	CONTROL_LOCKED     = "control/locked" // TODO: Remove.
 	CONTROL_REQUESTING = "control/requesting" // TODO: Remove.
 	CONTROL_GIVE       = "control/give" // TODO: Remove.
-	CONTROL_KEYBOARD   = "control/keyboard" // TODO: Remove.
 	CONTROL_HOST    = "control/host" // TODO: New.
 	CONTROL_RELEASE = "control/release"
 	CONTROL_REQUEST = "control/request"
@@ -46,8 +45,8 @@ const (
 )
 
 const (
-	KEYBOARD_MODIFIERS = "keyboard/modifiers" // TODO: New.
-	KEYBOARD_LAYOUT    = "keyboard/layout" // TODO: New.
+	KEYBOARD_MODIFIERS = "keyboard/modifiers"
+	KEYBOARD_LAYOUT    = "keyboard/layout"
 )
 
 const (

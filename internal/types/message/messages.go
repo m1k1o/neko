@@ -99,15 +99,13 @@ type ClipboardData struct {
 }
 
 // Keyboard
-// TODO: New.
 type KeyboardModifiers struct {
 	Event      string `json:"event,omitempty"`
-	CapsLock   bool   `json:"caps_lock"`
-	NumLock    bool   `json:"num_lock"`
-	ScrollLock bool   `json:"scroll_lock"`	
+	CapsLock   *bool  `json:"caps_lock"`
+	NumLock    *bool  `json:"num_lock"`
+	ScrollLock *bool  `json:"scroll_lock"`	
 }
 
-// TODO: New.
 type KeyboardLayout struct {
 	Event  string `json:"event,omitempty"`
 	Layout string `json:"layout"`
@@ -150,15 +148,6 @@ type Member struct {
 type MemberDisconnected struct {
 	Event string `json:"event"`
 	ID    string `json:"id"`
-}
-
-// TODO: Remove.
-type Keyboard struct {
-	Event      string  `json:"event"`
-	Layout     *string `json:"layout,omitempty"`
-	CapsLock   *bool   `json:"capsLock,omitempty"`
-	NumLock    *bool   `json:"numLock,omitempty"`
-	ScrollLock *bool   `json:"scrollLock,omitempty"`
 }
 
 // TODO: Remove.

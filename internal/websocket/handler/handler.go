@@ -63,17 +63,24 @@ func (h *MessageHandlerCtx) Message(session types.Session, raw []byte) error {
 		err = utils.Unmarshal(payload, raw, func() error {
 			return h.controlGive(session, payload)
 		})
-	case event.CONTROL_KEYBOARD:
-		payload := &message.Keyboard{}
-		err = utils.Unmarshal(payload, raw, func() error {
-			return h.controlKeyboard(session, payload)
-		})
 
 	// Clipboard Events
 	case event.CLIPBOARD_SET:
 		payload := &message.ClipboardData{}
 		err = utils.Unmarshal(payload, raw, func() error {
 			return h.clipboardSet(session, payload)
+		})
+
+	// Keyboard Events
+	case event.KEYBOARD_MODIFIERS:
+		payload := &message.KeyboardLayout{}
+		err = utils.Unmarshal(payload, raw, func() error {
+			return h.keyboardLayout(session, payload)
+		})
+	case event.KEYBOARD_LAYOUT:
+		payload := &message.KeyboardModifiers{}
+		err = utils.Unmarshal(payload, raw, func() error {
+			return h.keyboardModifiers(session, payload)
 		})
 
 	// Screen Events
