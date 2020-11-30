@@ -9,6 +9,7 @@ export interface Message {
 
 export interface SystemInit {
   event: string | undefined
+  member_id: string
   control_host: ControlHost
   screen_size: ScreenSize
   members: MemberData[]
