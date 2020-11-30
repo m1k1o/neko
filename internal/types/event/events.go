@@ -6,7 +6,7 @@ const (
 )
 
 const (
-	SIGNAL_REQUEST = "signal/request" // TODO: New.
+	SIGNAL_REQUEST = "signal/request"
 	SIGNAL_ANSWER  = "signal/answer"
 	SIGNAL_PROVIDE = "signal/provide"
 )

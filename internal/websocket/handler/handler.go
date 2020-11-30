@@ -47,6 +47,8 @@ func (h *MessageHandlerCtx) Message(session types.Session, raw []byte) error {
 	var err error
 	switch header.Event {
 	// Signal Events
+	case event.SIGNAL_REQUEST:
+		err = h.signalRequest(session)
 	case event.SIGNAL_ANSWER:
 		payload := &message.SignalAnswer{}
 		err = utils.Unmarshal(payload, raw, func() error {

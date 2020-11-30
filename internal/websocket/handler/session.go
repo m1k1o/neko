@@ -7,11 +7,6 @@ import (
 )
 
 func (h *MessageHandlerCtx) SessionCreated(session types.Session) error {
-	// send sdp and id over to client
-	if err := h.signalProvide(session); err != nil {
-		return err
-	}
-
 	return nil
 }
 

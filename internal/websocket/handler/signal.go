@@ -6,7 +6,7 @@ import (
 	"demodesk/neko/internal/types/message"
 )
 
-func (h *MessageHandlerCtx) signalProvide(session types.Session) error {
+func (h *MessageHandlerCtx) signalRequest(session types.Session) error {
 	sdp, lite, ice, err := h.webrtc.CreatePeer(session)
 	if err != nil {
 		return err
