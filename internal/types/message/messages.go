@@ -5,7 +5,10 @@ type Message struct {
 	Payload interface{} `json:"payload"` // TODO: New.
 }
 
+/////////////////////////////
 // System
+/////////////////////////////
+
 type SystemInit struct {
 	Event           string           `json:"event,omitempty"`
 	ControlHost     ControlHost      `json:"control_host"`
@@ -25,7 +28,10 @@ type SystemDisconnect struct {
 	Message string `json:"message"`
 }
 
+/////////////////////////////
 // Signal
+/////////////////////////////
+
 type SignalProvide struct {
 	Event string   `json:"event,omitempty"`
 	SDP   string   `json:"sdp"`
@@ -38,8 +44,10 @@ type SignalAnswer struct {
 	SDP   string `json:"sdp"`
 }
 
-
+/////////////////////////////
 // Member
+/////////////////////////////
+
 // TODO: New.
 type MemberID struct {
 	Event string `json:"event,omitempty"`
@@ -54,7 +62,10 @@ type MemberData struct {
 	IsAdmin bool   `json:"is_admin"`
 }
 
+/////////////////////////////
 // Control
+/////////////////////////////
+
 type ControlHost struct {
 	Event   string  `json:"event,omitempty"`
 	HasHost bool    `json:"has_host"`
@@ -81,7 +92,10 @@ type ControlKey struct {
 	Key   uint64 `json:"key"`
 }
 
+/////////////////////////////
 // Screen
+/////////////////////////////
+
 type ScreenSize struct {
 	Event  string `json:"event,omitempty"`
 	Width  int    `json:"width"`
@@ -89,13 +103,19 @@ type ScreenSize struct {
 	Rate   int    `json:"rate"`
 }
 
+/////////////////////////////
 // Clipboard
+/////////////////////////////
+
 type ClipboardData struct {
 	Event string `json:"event,omitempty"`
 	Text  string `json:"text"`
 }
 
+/////////////////////////////
 // Keyboard
+/////////////////////////////
+
 type KeyboardModifiers struct {
 	Event      string `json:"event,omitempty"`
 	CapsLock   *bool  `json:"caps_lock"`
@@ -107,6 +127,10 @@ type KeyboardLayout struct {
 	Event  string `json:"event,omitempty"`
 	Layout string `json:"layout"`
 }
+
+/////////////////////////////
+// Broadcast
+/////////////////////////////
 
 type BroadcastStatus struct {
 	Event    string `json:"event,omitempty"`
