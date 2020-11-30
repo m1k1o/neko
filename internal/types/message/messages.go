@@ -29,7 +29,6 @@ type SystemDisconnect struct {
 // Signal
 type SignalProvide struct {
 	Event string   `json:"event,omitempty"`
-	ID    string   `json:"id"` // TODO: Remove
 	SDP   string   `json:"sdp"`
 	Lite  bool     `json:"lite"`
 	ICE   []string `json:"ice"`

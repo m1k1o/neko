@@ -15,7 +15,6 @@ func (h *MessageHandlerCtx) signalProvide(session types.Session) error {
 	return session.Send(
 		message.SignalProvide{
 			Event: event.SIGNAL_PROVIDE,
-			ID:    session.ID(),
 			SDP:   sdp,
 			Lite:  lite,
 			ICE:   ice,
