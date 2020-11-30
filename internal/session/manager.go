@@ -220,19 +220,13 @@ func (manager *SessionManagerCtx) OnHostCleared(listener func(session types.Sess
 	})
 }
 
-func (manager *SessionManagerCtx) OnCreated(listener func(session types.Session)) {
-	manager.emmiter.On("created", func(payload ...interface{}) {
+func (manager *SessionManagerCtx) OnConnected(listener func(session types.Session)) {
+	manager.emmiter.On("connected", func(payload ...interface{}) {
 		// Start streaming, when first joins
 		if !manager.capture.Streaming() {
 			manager.capture.StartStream()
 		}
 	
-		listener(payload[0].(*SessionCtx))
-	})
-}
-
-func (manager *SessionManagerCtx) OnConnected(listener func(session types.Session)) {
-	manager.emmiter.On("connected", func(payload ...interface{}) {
 		listener(payload[0].(*SessionCtx))
 	})
 }

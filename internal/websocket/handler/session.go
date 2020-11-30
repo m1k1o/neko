@@ -6,10 +6,6 @@ import (
 	"demodesk/neko/internal/types/message"
 )
 
-func (h *MessageHandlerCtx) SessionCreated(session types.Session) error {
-	return nil
-}
-
 func (h *MessageHandlerCtx) SessionConnected(session types.Session) error {
 	// create member list
 	members := []*message.MembersListEntry{}

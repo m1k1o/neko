@@ -49,14 +49,6 @@ type WebSocketManagerCtx struct {
 }
 
 func (ws *WebSocketManagerCtx) Start() {
-	ws.sessions.OnCreated(func(session types.Session) {
-		if err := ws.handler.SessionCreated(session); err != nil {
-			ws.logger.Warn().Str("id", session.ID()).Err(err).Msg("session created with an error")
-		} else {
-			ws.logger.Debug().Str("id", session.ID()).Msg("session created")
-		}
-	})
-
 	ws.sessions.OnConnected(func(session types.Session) {
 		if err := ws.handler.SessionConnected(session); err != nil {
 			ws.logger.Warn().Str("id", session.ID()).Err(err).Msg("session connected with an error")

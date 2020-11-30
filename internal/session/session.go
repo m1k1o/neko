@@ -45,7 +45,6 @@ func (session *SessionCtx) Connected() bool {
 
 func (session *SessionCtx) SetWebSocketPeer(websocket_peer types.WebSocketPeer) {
 	session.websocket_peer = websocket_peer
-	session.manager.emmiter.Emit("created", session)
 }
 
 func (session *SessionCtx) SetWebSocketConnected(connected bool) {
