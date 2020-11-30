@@ -12,11 +12,12 @@ type Message struct {
 // System
 // TODO: New.
 type SystemConnect struct {
-	Event            string        `json:"event,omitempty"`
-	ControlHost      ControlHost   `json:"control_host"`
-	ScreenSize       ScreenSize    `json:"screen_size"`
-	Members          []MemberData  `json:"members"`
-	ScreenSizesList  *[]ScreenSize `json:"screen_sizes_list,omitempty"`
+	Event            string          `json:"event,omitempty"`
+	ControlHost      ControlHost     `json:"control_host"`
+	ScreenSize       ScreenSize      `json:"screen_size"`
+	Members          []MemberData    `json:"members"`
+	ScreenSizesList  *[]ScreenSize   `json:"screen_sizes_list,omitempty"`
+	BroadcastStatus  BroadcastStatus `json:"members,omitempty"`
 }
 
 // TODO: New.
@@ -114,6 +115,12 @@ type KeyboardLayout struct {
 	Layout string `json:"layout"`
 }
 
+type BroadcastStatus struct {
+	Event    string `json:"event"`
+	URL      string `json:"url"`
+	IsActive bool   `json:"is_active"`
+}
+
 // TODO: Remove.
 type Disconnect struct {
 	Event   string `json:"event"`
@@ -201,17 +208,4 @@ type ScreenResolution struct {
 type ScreenConfigurations struct {
 	Event          string                            `json:"event"`
 	Configurations map[int]types.ScreenConfiguration `json:"configurations"`
-}
-
-// TODO: Remove.
-type BroadcastStatus struct {
-	Event    string `json:"event"`
-	URL      string `json:"url"`
-	IsActive bool   `json:"isActive"`
-}
-
-// TODO: Remove.
-type BroadcastCreate struct {
-	Event  string `json:"event"`
-	URL    string `json:"url"`
 }
