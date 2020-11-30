@@ -35,6 +35,7 @@ func (h *MessageHandlerCtx) systemInit(session types.Session) error {
 	return session.Send(
 		message.SystemInit{
 			Event:       event.SYSTEM_INIT,
+			MemberId:    session.ID(),
 			ControlHost: controlHost,
 			Members:     members,
 			ScreenSize:  message.ScreenSize{

@@ -11,6 +11,7 @@ type Message struct {
 
 type SystemInit struct {
 	Event           string           `json:"event,omitempty"`
+	MemberId        string           `json:"member_id"`
 	ControlHost     ControlHost      `json:"control_host"`
 	ScreenSize      ScreenSize       `json:"screen_size"`
 	Members         []MemberData     `json:"members"`
