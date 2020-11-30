@@ -40,6 +40,7 @@ func (session *SessionCtx) VerifySecret(secret string) bool {
 }
 
 func (session *SessionCtx) Connected() bool {
+	// TODO: Refactor.
 	return session.websocket_connected && session.webrtc_connected
 }
 
@@ -50,7 +51,10 @@ func (session *SessionCtx) SetWebSocketPeer(websocket_peer types.WebSocketPeer) 
 func (session *SessionCtx) SetWebSocketConnected(connected bool) {
 	if connected {
 		session.websocket_connected = true
-		session.manager.emmiter.Emit("websocket_connected", session)
+
+		// TODO: Refactor.
+		//session.manager.emmiter.Emit("websocket_connected", session)
+		session.manager.emmiter.Emit("connected", session)
 	} else {
 		session.websocket_connected = false
 
@@ -69,10 +73,7 @@ func (session *SessionCtx) SetWebRTCPeer(webrtc_peer types.WebRTCPeer) {
 func (session *SessionCtx) SetWebRTCConnected(connected bool) {
 	if connected {
 		session.webrtc_connected = true
-
-		// TODO: Refactor.
-		//session.manager.emmiter.Emit("webrtc_connected", session)
-		session.manager.emmiter.Emit("connected", session)
+		session.manager.emmiter.Emit("webrtc_connected", session)
 	} else {
 		session.webrtc_connected = false
 		session.manager.emmiter.Emit("webrtc_disconnected", session)
