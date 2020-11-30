@@ -24,7 +24,7 @@ const (
 	CONTROL_GIVE       = "control/give" // TODO: Remove.
 	CONTROL_CLIPBOARD  = "control/clipboard" // TODO: Remove.
 	CONTROL_KEYBOARD   = "control/keyboard" // TODO: Remove.
-	CONTROL_UPDATED = "control/updated" // TODO: New.
+	CONTROL_HOST    = "control/host" // TODO: New.
 	CONTROL_RELEASE = "control/release"
 	CONTROL_REQUEST = "control/request"
 	CONTROL_MOVE    = "control/move" // TODO: New. (fallback)
