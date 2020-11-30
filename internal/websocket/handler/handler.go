@@ -85,15 +85,6 @@ func (h *MessageHandlerCtx) Message(session types.Session, raw []byte) error {
 			return h.screenSizeChange(session, payload)
 		})
 
-	// Boradcast Events
-	case event.BORADCAST_CREATE:
-		payload := &message.BroadcastCreate{}
-		err = utils.Unmarshal(payload, raw, func() error {
-			return h.boradcastCreate(session, payload)
-		})
-	case event.BORADCAST_DESTROY:
-		err = h.boradcastDestroy(session)
-
 	// Admin Events
 	case event.ADMIN_CONTROL:
 		err = h.adminControl(session)

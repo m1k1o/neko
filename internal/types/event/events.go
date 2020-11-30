@@ -53,8 +53,6 @@ const (
 
 const (
 	BORADCAST_STATUS = "broadcast/status"
-	BORADCAST_CREATE  = "broadcast/create" // TODO: Remove.
-	BORADCAST_DESTROY = "broadcast/destroy" // TODO: Remove.
 )
 
 const (

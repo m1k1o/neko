@@ -17,11 +17,6 @@ func (h *MessageHandlerCtx) SessionCreated(session types.Session) error {
 		if err := h.screenConfigurations(session); err != nil {
 			return err
 		}
-
-		// send broadcast status if admin
-		if err := h.boradcastStatus(session); err != nil {
-			return err
-		}
 	}
 
 	return nil
