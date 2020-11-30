@@ -6,7 +6,7 @@ import (
 	"demodesk/neko/internal/types/message"
 )
 
-func (h *MessageHandlerCtx) screenSizeChange(session types.Session, payload *message.ScreenResolution) error {
+func (h *MessageHandlerCtx) screenSet(session types.Session, payload *message.ScreenSize) error {
 	if !session.Admin() {
 		h.logger.Debug().Msg("user not admin")
 		return nil
@@ -17,42 +17,12 @@ func (h *MessageHandlerCtx) screenSizeChange(session types.Session, payload *mes
 	}
 
 	h.sessions.Broadcast(
-		message.ScreenResolution{
-			Event:  event.SCREEN_RESOLUTION,
-			ID:     session.ID(),
+		message.ScreenSize{
+			Event:  event.SCREEN_UPDATED,
 			Width:  payload.Width,
 			Height: payload.Height,
 			Rate:   payload.Rate,
 		}, nil)
 
 	return nil
-}
-
-func (h *MessageHandlerCtx) screenSize(session types.Session) error {
-	size := h.desktop.GetScreenSize()
-	if size == nil {
-		h.logger.Debug().Msg("could not get screen size")
-		return nil
-	}
-
-	return session.Send(
-		message.ScreenResolution{
-			Event:  event.SCREEN_RESOLUTION,
-			Width:  size.Width,
-			Height: size.Height,
-			Rate:   int(size.Rate),
-		})
-}
-
-func (h *MessageHandlerCtx) screenConfigurations(session types.Session) error {
-	if !session.Admin() {
-		h.logger.Debug().Msg("user not admin")
-		return nil
-	}
-
-	return session.Send(
-		message.ScreenConfigurations{
-			Event:          event.SCREEN_CONFIGURATIONS,
-			Configurations: h.desktop.ScreenConfigurations(),
-		})
 }

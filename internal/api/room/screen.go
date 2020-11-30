@@ -6,7 +6,6 @@ import (
 	"demodesk/neko/internal/types/event"
 	"demodesk/neko/internal/types/message"
 	"demodesk/neko/internal/utils"
-	"demodesk/neko/internal/http/auth"
 )
 
 type ScreenConfigurationPayload struct {
@@ -41,12 +40,9 @@ func (h *RoomHandler) screenConfigurationChange(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	session := auth.GetSession(r)
-
 	h.sessions.Broadcast(
-		message.ScreenResolution{
-			Event:  event.SCREEN_RESOLUTION,
-			ID:     session.ID(),
+		message.ScreenSize{
+			Event:  event.SCREEN_UPDATED,
 			Width:  data.Width,
 			Height: data.Height,
 			Rate:   data.Rate,

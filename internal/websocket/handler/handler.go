@@ -64,6 +64,13 @@ func (h *MessageHandlerCtx) Message(session types.Session, raw []byte) error {
 			return h.controlGive(session, payload)
 		})
 
+	// Screen Events
+	case event.SCREEN_SET:
+		payload := &message.ScreenSize{}
+		err = utils.Unmarshal(payload, raw, func() error {
+			return h.screenSet(session, payload)
+		})
+
 	// Clipboard Events
 	case event.CLIPBOARD_SET:
 		payload := &message.ClipboardData{}
@@ -81,17 +88,6 @@ func (h *MessageHandlerCtx) Message(session types.Session, raw []byte) error {
 		payload := &message.KeyboardModifiers{}
 		err = utils.Unmarshal(payload, raw, func() error {
 			return h.keyboardModifiers(session, payload)
-		})
-
-	// Screen Events
-	case event.SCREEN_RESOLUTION:
-		err = h.screenSize(session)
-	case event.SCREEN_CONFIGURATIONS:
-		err = h.screenConfigurations(session)
-	case event.SCREEN_SET:
-		payload := &message.ScreenResolution{}
-		err = utils.Unmarshal(payload, raw, func() error {
-			return h.screenSizeChange(session, payload)
 		})
 	default:
 		return errors.Errorf("unknown message event %s", header.Event)

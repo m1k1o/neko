@@ -12,13 +12,6 @@ func (h *MessageHandlerCtx) SessionCreated(session types.Session) error {
 		return err
 	}
 
-	if session.Admin() {
-		// send screen configurations if admin
-		if err := h.screenConfigurations(session); err != nil {
-			return err
-		}
-	}
-
 	return nil
 }
 
@@ -39,11 +32,6 @@ func (h *MessageHandlerCtx) SessionConnected(session types.Session) error {
 			Event:    event.MEMBER_LIST,
 			Memebers: members,
 		}); err != nil {
-		return err
-	}
-
-	// send current screen size
-	if err := h.screenSize(session); err != nil {
 		return err
 	}
 

@@ -32,10 +32,7 @@ const (
 )
 
 const (
-	SCREEN_CONFIGURATIONS = "screen/configurations" // TODO: Remove.
-	SCREEN_RESOLUTION     = "screen/resolution" // TODO: Remove.
-
-	SCREEN_UPDATED = "screen/updated" // TODO: New.
+	SCREEN_UPDATED = "screen/updated"
 	SCREEN_SET     = "screen/set"
 )
 

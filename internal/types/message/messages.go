@@ -1,9 +1,5 @@
 package message
 
-import (
-	"demodesk/neko/internal/types"
-)
-
 type Message struct {
 	Event   string      `json:"event"`
 	Payload interface{} `json:"payload"` // TODO: New.
@@ -84,7 +80,6 @@ type ControlKey struct {
 }
 
 // Screen
-// TODO: New.
 type ScreenSize struct {
 	Event  string `json:"event,omitempty"`
 	Width  int    `json:"width"`
@@ -161,19 +156,4 @@ type ControlTarget struct {
 	Event  string `json:"event"`
 	ID     string `json:"id"`
 	Target string `json:"target"`
-}
-
-// TODO: Remove.
-type ScreenResolution struct {
-	Event  string `json:"event"`
-	ID     string `json:"id,omitempty"`
-	Width  int    `json:"width"`
-	Height int    `json:"height"`
-	Rate   int    `json:"rate"`
-}
-
-// TODO: Remove.
-type ScreenConfigurations struct {
-	Event          string                            `json:"event"`
-	Configurations map[int]types.ScreenConfiguration `json:"configurations"`
 }
