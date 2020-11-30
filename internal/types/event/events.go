@@ -13,7 +13,6 @@ const (
 )
 
 const (
-	MEMBER_LIST         = "member/list" // TODO: Remove.
 	MEMBER_CONNECTED    = "member/connected"
 	MEMBER_UPDATED      = "member/updated" // TODO: New.
 	MEMBER_DISCONNECTED = "member/disconnected"
