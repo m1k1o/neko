@@ -22,7 +22,6 @@ const (
 	CONTROL_LOCKED     = "control/locked" // TODO: Remove.
 	CONTROL_REQUESTING = "control/requesting" // TODO: Remove.
 	CONTROL_GIVE       = "control/give" // TODO: Remove.
-	CONTROL_CLIPBOARD  = "control/clipboard" // TODO: Remove.
 	CONTROL_KEYBOARD   = "control/keyboard" // TODO: Remove.
 	CONTROL_HOST    = "control/host" // TODO: New.
 	CONTROL_RELEASE = "control/release"
@@ -42,8 +41,8 @@ const (
 )
 
 const (
-	CLIPBOARD_UPDATED = "clipboard/updated" // TODO: New.
-	CLIPBOARD_SET     = "clipboard/set" // TODO: New.
+	CLIPBOARD_UPDATED = "clipboard/updated"
+	CLIPBOARD_SET     = "clipboard/set"
 )
 
 const (

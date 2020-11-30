@@ -82,16 +82,6 @@ func (h *MessageHandlerCtx) controlGive(session types.Session, payload *message.
 	return nil
 }
 
-func (h *MessageHandlerCtx) controlClipboard(session types.Session, payload *message.Clipboard) error {
-	if !session.IsHost() {
-		h.logger.Debug().Str("id", session.ID()).Msg("is not the host")
-		return nil
-	}
-
-	h.desktop.WriteClipboard(payload.Text)
-	return nil
-}
-
 func (h *MessageHandlerCtx) controlKeyboard(session types.Session, payload *message.Keyboard) error {
 	if !session.IsHost() {
 		h.logger.Debug().Str("id", session.ID()).Msg("is not the host")

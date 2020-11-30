@@ -93,7 +93,6 @@ type ScreenSize struct {
 }
 
 // Clipboard
-// TODO: New.
 type ClipboardData struct {
 	Event string `json:"event,omitempty"`
 	Text  string `json:"text"`
@@ -151,12 +150,6 @@ type Member struct {
 type MemberDisconnected struct {
 	Event string `json:"event"`
 	ID    string `json:"id"`
-}
-
-// TODO: Remove.
-type Clipboard struct {
-	Event string `json:"event"`
-	Text  string `json:"text"`
 }
 
 // TODO: Remove.
