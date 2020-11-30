@@ -41,7 +41,7 @@ func (session *SessionCtx) VerifySecret(secret string) bool {
 
 func (session *SessionCtx) Connected() bool {
 	// TODO: Refactor.
-	return session.websocket_connected && session.webrtc_connected
+	return session.websocket_connected// && session.webrtc_connected
 }
 
 func (session *SessionCtx) SetWebSocketPeer(websocket_peer types.WebSocketPeer) {
