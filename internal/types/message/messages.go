@@ -52,7 +52,6 @@ type MemberData struct {
 }
 
 // Control
-// TODO: New.
 type ControlHost struct {
 	Event   string  `json:"event,omitempty"`
 	HasHost bool    `json:"has_host"`
@@ -143,17 +142,4 @@ type Member struct {
 type MemberDisconnected struct {
 	Event string `json:"event"`
 	ID    string `json:"id"`
-}
-
-// TODO: Remove.
-type Control struct {
-	Event string `json:"event"`
-	ID    string `json:"id"`
-}
-
-// TODO: Remove.
-type ControlTarget struct {
-	Event  string `json:"event"`
-	ID     string `json:"id"`
-	Target string `json:"target"`
 }

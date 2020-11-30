@@ -39,9 +39,10 @@ func (h *MessageHandlerCtx) SessionConnected(session types.Session) error {
 	host := h.sessions.GetHost()
 	if host != nil {
 		if err := session.Send(
-			message.Control{
-				Event: event.CONTROL_LOCKED,
-				ID:    host.ID(),
+			message.ControlHost{
+				Event:   event.CONTROL_HOST,
+				HasHost: true,
+				HostID:  host.ID(),
 			}); err != nil {
 			return err
 		}
@@ -65,9 +66,9 @@ func (h *MessageHandlerCtx) SessionDisconnected(session types.Session) error {
 		h.sessions.ClearHost()
 
 		h.sessions.Broadcast(
-			message.Control{
-				Event: event.CONTROL_RELEASE,
-				ID:    session.ID(),
+			message.ControlHost{
+				Event:   event.CONTROL_HOST,
+				HasHost: false,
 			}, nil)
 	}
 

@@ -19,10 +19,7 @@ const (
 )
 
 const (
-	CONTROL_LOCKED     = "control/locked" // TODO: Remove.
-	CONTROL_REQUESTING = "control/requesting" // TODO: Remove.
-	CONTROL_GIVE       = "control/give" // TODO: Remove.
-	CONTROL_HOST    = "control/host" // TODO: New.
+	CONTROL_HOST    = "control/host"
 	CONTROL_RELEASE = "control/release"
 	CONTROL_REQUEST = "control/request"
 	CONTROL_MOVE    = "control/move" // TODO: New. (fallback)

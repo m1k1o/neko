@@ -44,9 +44,10 @@ func (h *RoomHandler) controlRequest(w http.ResponseWriter, r *http.Request) {
 	h.sessions.SetHost(session)
 
 	h.sessions.Broadcast(
-		message.Control{
-			Event: event.CONTROL_LOCKED,
-			ID:    session.ID(),
+		message.ControlHost{
+			Event:   event.CONTROL_HOST,
+			HasHost: true,
+			HostID:  session.ID(),
 		}, nil)
 
 	utils.HttpSuccess(w)
@@ -62,9 +63,10 @@ func (h *RoomHandler) controlRelease(w http.ResponseWriter, r *http.Request) {
 	h.sessions.ClearHost()
 	
 	h.sessions.Broadcast(
-		message.Control{
-			Event: event.CONTROL_RELEASE,
-			ID:    session.ID(),
+		message.ControlHost{
+			Event:   event.CONTROL_HOST,
+			HasHost: false,
+			HostID:  session.ID(),
 		}, nil)
 
 	utils.HttpSuccess(w)
@@ -76,9 +78,10 @@ func (h *RoomHandler) controlTake(w http.ResponseWriter, r *http.Request) {
 	h.sessions.SetHost(session)
 
 	h.sessions.Broadcast(
-		message.Control{
-			Event: event.CONTROL_LOCKED,
-			ID:    session.ID(),
+		message.ControlHost{
+			Event:   event.CONTROL_HOST,
+			HasHost: true,
+			HostID:  session.ID(),
 		}, nil)
 
 	utils.HttpSuccess(w)
@@ -99,9 +102,10 @@ func (h *RoomHandler) controlGive(w http.ResponseWriter, r *http.Request) {
 	h.sessions.SetHost(target)
 
 	h.sessions.Broadcast(
-		message.Control{
-			Event: event.CONTROL_LOCKED,
-			ID:    target.ID(),
+		message.ControlHost{
+			Event:   event.CONTROL_HOST,
+			HasHost: true,
+			HostID:  target.ID(),
 		}, nil)
 
 	utils.HttpSuccess(w)
@@ -117,9 +121,9 @@ func (h *RoomHandler) controlReset(w http.ResponseWriter, r *http.Request) {
 	h.sessions.ClearHost()
 	
 	h.sessions.Broadcast(
-		message.Control{
-			Event: event.CONTROL_RELEASE,
-			ID:    host.ID(),
+		message.ControlHost{
+			Event:   event.CONTROL_HOST,
+			HasHost: false,
 		}, nil)
 
 	utils.HttpSuccess(w)

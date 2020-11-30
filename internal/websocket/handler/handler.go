@@ -58,11 +58,6 @@ func (h *MessageHandlerCtx) Message(session types.Session, raw []byte) error {
 		err = h.controlRelease(session)
 	case event.CONTROL_REQUEST:
 		err = h.controlRequest(session)
-	case event.CONTROL_GIVE:
-		payload := &message.Control{}
-		err = utils.Unmarshal(payload, raw, func() error {
-			return h.controlGive(session, payload)
-		})
 
 	// Screen Events
 	case event.SCREEN_SET:
