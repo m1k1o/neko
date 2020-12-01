@@ -84,7 +84,7 @@ func (session *SessionCtx) SetWebRTCConnected(connected bool) {
 
 func (session *SessionCtx) Disconnect(reason string) error {
 	if err := session.Send(
-		message.Disconnect{
+		message.SystemDisconnect{
 			Event:   event.SYSTEM_DISCONNECT,
 			Message: reason,
 		}); err != nil {

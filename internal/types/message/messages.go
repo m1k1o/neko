@@ -23,7 +23,6 @@ type SystemAdmin struct {
 	BroadcastStatus BroadcastStatus  `json:"broadcast_status"`
 }
 
-// TODO: New.
 type SystemDisconnect struct {
 	Event   string `json:"event,omitempty"`
 	Message string `json:"message"`
@@ -139,11 +138,6 @@ type BroadcastStatus struct {
 	URL      string `json:"url,omitempty"`
 }
 
-// TODO: Remove.
-type Disconnect struct {
-	Event   string `json:"event"`
-	Message string `json:"message"`
-}
 
 // TODO: Remove.
 type MembersList struct {

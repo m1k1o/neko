@@ -124,10 +124,11 @@ func (ws *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Request) e
 		ws.logger.Warn().Err(err).Msg("authentication failed")
 
 		// TODO: Refactor
-		if err = connection.WriteJSON(message.Disconnect{
-			Event:   event.SYSTEM_DISCONNECT,
-			Message: "authentication failed",
-		}); err != nil {
+		if err = connection.WriteJSON(
+			message.SystemDisconnect{
+				Event:   event.SYSTEM_DISCONNECT,
+				Message: "authentication failed",
+			}); err != nil {
 			ws.logger.Error().Err(err).Msg("failed to send disconnect")
 		}
 
