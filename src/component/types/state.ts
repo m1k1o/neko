@@ -4,7 +4,7 @@ export default interface State {
   control: Control
   screen: Screen
   member: Member
-  members: Member[]
+  members: Record<string, Member>
 }
 
 /////////////////////////////

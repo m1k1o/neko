@@ -12,7 +12,7 @@ export interface SystemInit {
   member_id: string
   control_host: ControlHost
   screen_size: ScreenSize
-  members: MemberData[]
+  members: Record<string, MemberData>
 }
 
 export interface SystemAdmin {
@@ -21,7 +21,6 @@ export interface SystemAdmin {
   broadcast_status: BroadcastStatus
 }
 
-// TODO: New.
 export interface SystemDisconnect {
   event: string | undefined
   message: string

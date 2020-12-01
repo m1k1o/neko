@@ -114,7 +114,7 @@
         can_control: false,
         clipboard_access: false,
       },
-      members: [],
+      members: {},
     } as NekoState
 
     public get connected() {
