@@ -23,13 +23,13 @@ func (h *MessageHandlerCtx) systemInit(session types.Session) error {
 		return nil
 	}
 
-	members := []message.MemberData{}
+	members := map[string]message.MemberData{}
 	for _, session := range h.sessions.Members() {
-		members = append(members, message.MemberData{
+		members[session.ID()] = message.MemberData{
 			ID:      session.ID(),
 			Name:    session.Name(),
 			IsAdmin: session.Admin(),
-		})
+		}
 	}
 
 	return session.Send(
