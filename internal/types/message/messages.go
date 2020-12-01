@@ -48,13 +48,11 @@ type SignalAnswer struct {
 // Member
 /////////////////////////////
 
-// TODO: New.
 type MemberID struct {
 	Event string `json:"event,omitempty"`
 	ID    string `json:"id"`
 }
 
-// TODO: New.
 type MemberData struct {
 	Event   string `json:"event,omitempty"`
 	ID      string `json:"id"`
@@ -136,18 +134,4 @@ type BroadcastStatus struct {
 	Event    string `json:"event,omitempty"`
 	IsActive bool   `json:"is_active"`
 	URL      string `json:"url,omitempty"`
-}
-
-// TODO: Remove.
-type Member struct {
-	Event string `json:"event"`
-	ID    string `json:"id"`
-	Name  string `json:"name"`
-	Admin bool   `json:"admin"`
-}
-
-// TODO: Remove.
-type MemberDisconnected struct {
-	Event string `json:"event"`
-	ID    string `json:"id"`
 }

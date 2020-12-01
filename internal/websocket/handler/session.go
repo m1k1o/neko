@@ -19,11 +19,11 @@ func (h *MessageHandlerCtx) SessionConnected(session types.Session) error {
 
 	// let everyone know there is a new session
 	h.sessions.Broadcast(
-		message.Member{
-			Event: event.MEMBER_CONNECTED,
-			ID:    session.ID(),
-			Name:  session.Name(),
-			Admin: session.Admin(),
+		message.MemberData{
+			Event:   event.MEMBER_CONNECTED,
+			ID:      session.ID(),
+			Name:    session.Name(),
+			IsAdmin: session.Admin(),
 		}, nil)
 
 	return nil
@@ -43,7 +43,7 @@ func (h *MessageHandlerCtx) SessionDisconnected(session types.Session) error {
 
 	// let everyone know session disconnected
 	h.sessions.Broadcast(
-		message.MemberDisconnected{
+		message.MemberID{
 			Event: event.MEMBER_DISCONNECTED,
 			ID:    session.ID(),
 		}, nil);
