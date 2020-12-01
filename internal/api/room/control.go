@@ -66,7 +66,6 @@ func (h *RoomHandler) controlRelease(w http.ResponseWriter, r *http.Request) {
 		message.ControlHost{
 			Event:   event.CONTROL_HOST,
 			HasHost: false,
-			HostID:  session.ID(),
 		}, nil)
 
 	utils.HttpSuccess(w)
