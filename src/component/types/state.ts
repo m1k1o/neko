@@ -3,7 +3,7 @@ export default interface State {
   video: Video
   control: Control
   screen: Screen
-  member: Member
+  member_id: string | null
   members: Record<string, Member>
 }
 
@@ -36,7 +36,7 @@ export interface Video {
 export interface Control {
   scroll: Scroll
   clipboard: Clipboard | null
-  host: Member | null
+  host_id: string | null
 }
 
 export interface Scroll {
@@ -66,8 +66,8 @@ export interface ScreenSize {
 // Member
 /////////////////////////////
 export interface Member {
-  id: string | null
-  name: string | null
+  id: string
+  name: string
   is_admin: boolean
   is_watching: boolean
   is_controlling: boolean

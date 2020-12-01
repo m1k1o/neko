@@ -6,7 +6,7 @@
         :webrtc="webrtc"
         :screenWidth="state.screen.size.width"
         :screenHeight="state.screen.size.height"
-        :isControling="state.member.is_controlling"
+        :isControling="controlling"
         :scrollSensitivity="state.control.scroll.sensitivity"
         :scrollInvert="state.control.scroll.inverse"
       />
@@ -94,7 +94,7 @@
           sensitivity: 1,
         },
         clipboard: null,
-        host: null,
+        host_id: null,
       },
       screen: {
         size: {
@@ -104,16 +104,7 @@
         },
         configurations: [],
       },
-      member: {
-        id: null,
-        name: null,
-        is_admin: false,
-        is_watching: false,
-        is_controlling: false,
-        can_watch: false,
-        can_control: false,
-        clipboard_access: false,
-      },
+      member_id: null,
       members: {},
     } as NekoState
 
@@ -122,7 +113,7 @@
     }
 
     public get controlling() {
-      return this.state.member.is_controlling
+      return this.state.control.host_id !== null && this.state.member_id === this.state.control.host_id
     }
 
     /////////////////////////////
@@ -323,12 +314,6 @@
       this.observer.disconnect()
       this.webrtc.disconnect()
       this.websocket.disconnect()
-    }
-
-    @Watch('state.video.playing')
-    onVideoPlayingChanged(play: boolean) {
-      // TODO: check if user has tab focused and send via websocket
-      Vue.set(this.state.member, 'is_watching', play)
     }
 
     @Watch('state.screen.size')
