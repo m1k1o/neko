@@ -138,20 +138,6 @@ type BroadcastStatus struct {
 	URL      string `json:"url,omitempty"`
 }
 
-
-// TODO: Remove.
-type MembersList struct {
-	Event    string              `json:"event"`
-	Memebers []*MembersListEntry `json:"members"`
-}
-
-// TODO: Remove.
-type MembersListEntry struct {
-	ID    string `json:"id"`
-	Name  string `json:"name"`
-	Admin bool   `json:"admin"`
-}
-
 // TODO: Remove.
 type Member struct {
 	Event string `json:"event"`
