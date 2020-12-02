@@ -61,6 +61,7 @@ func (session *SessionCtx) CanAccessClipboard() bool {
 
 func (session *SessionCtx) SetProfile(profile types.MemberProfile) {
 	session.profile = profile
+	session.manager.emmiter.Emit("profile_updated", session)
 }
 
 // ---

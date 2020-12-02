@@ -63,6 +63,7 @@ func (manager *SessionManagerCtx) Create(id string, profile types.MemberProfile)
 	}
 
 	manager.members[id] = session
+	manager.emmiter.Emit("created", session)
 	return session
 }
 
@@ -83,6 +84,7 @@ func (manager *SessionManagerCtx) Delete(id string) error {
 		return fmt.Errorf("Member not found.")
 	}
 
+	manager.emmiter.Emit("deleted", session)
 	delete(manager.members, id)
 
 	if session.IsConnected() {
@@ -214,6 +216,18 @@ func (manager *SessionManagerCtx) OnHostCleared(listener func(session types.Sess
 	})
 }
 
+func (manager *SessionManagerCtx) OnCreated(listener func(session types.Session)) {
+	manager.emmiter.On("created", func(payload ...interface{}) {
+		listener(payload[0].(*SessionCtx))
+	})
+}
+
+func (manager *SessionManagerCtx) OnDeleted(listener func(session types.Session)) {
+	manager.emmiter.On("deleted", func(payload ...interface{}) {
+		listener(payload[0].(*SessionCtx))
+	})
+}
+
 func (manager *SessionManagerCtx) OnConnected(listener func(session types.Session)) {
 	manager.emmiter.On("connected", func(payload ...interface{}) {
 		listener(payload[0].(*SessionCtx))
@@ -234,6 +248,12 @@ func (manager *SessionManagerCtx) OnReceivingStarted(listener func(session types
 
 func (manager *SessionManagerCtx) OnReceivingStopped(listener func(session types.Session)) {
 	manager.emmiter.On("receiving_stopped", func(payload ...interface{}) {
+		listener(payload[0].(*SessionCtx))
+	})
+}
+
+func (manager *SessionManagerCtx) OnProfileUpdated(listener func(session types.Session)) {
+	manager.emmiter.On("profile_updated", func(payload ...interface{}) {
 		listener(payload[0].(*SessionCtx))
 	})
 }

@@ -58,8 +58,13 @@ type SessionManager interface {
 
 	OnHost(listener func(session Session))
 	OnHostCleared(listener func(session Session))
+	OnCreated(listener func(session Session))
+	OnDeleted(listener func(session Session))
 	OnConnected(listener func(session Session))
 	OnDisconnected(listener func(session Session))
+	OnReceivingStarted(listener func(session Session))
+	OnReceivingStopped(listener func(session Session))
+	OnProfileUpdated(listener func(session Session))
 
 	ImplicitHosting() bool
 
