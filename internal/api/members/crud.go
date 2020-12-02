@@ -28,13 +28,20 @@ func (h *MembersHandler) membersCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, err := utils.NewUID(32)
-	if err != nil {
-		utils.HttpInternalServerError(w, err)
-		return
+	if data.ID == "" {
+		var err error
+		if data.ID, err = utils.NewUID(32); err != nil {
+			utils.HttpInternalServerError(w, err)
+			return
+		}
+	} else {
+		if _, ok := h.sessions.Get(data.ID); ok {
+			utils.HttpBadRequest(w, "Member ID already exists.")
+			return
+		}
 	}
 
-	session := h.sessions.Create(id, types.MemberProfile{
+	session := h.sessions.Create(data.ID, types.MemberProfile{
 		Secret: data.Secret,
 		Name: data.Name,
 		IsAdmin: data.IsAdmin,
@@ -51,7 +58,7 @@ func (h *MembersHandler) membersRead(w http.ResponseWriter, r *http.Request) {
 	utils.HttpSuccess(w, MemberDataPayload{
 		ID: member.ID(),
 		Name: member.Name(),
-		IsAdmin: member.Admin(),
+		IsAdmin: member.IsAdmin(),
 	})
 }
 
@@ -66,7 +73,7 @@ func (h *MembersHandler) membersUpdate(w http.ResponseWriter, r *http.Request) {
 	utils.HttpSuccess(w, MemberDataPayload{
 		ID: member.ID(),
 		Name: member.Name(),
-		IsAdmin: member.Admin(),
+		IsAdmin: member.IsAdmin(),
 	})
 }
 
