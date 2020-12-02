@@ -42,10 +42,16 @@ func (h *MembersHandler) membersCreate(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// TODO: Join structs?
 	session := h.sessions.Create(data.ID, types.MemberProfile{
 		Secret: data.Secret,
 		Name: data.Name,
 		IsAdmin: data.IsAdmin,
+		CanLogin: data.CanLogin,
+		CanConnect: data.CanConnect,
+		CanWatch: data.CanWatch,
+		CanHost: data.CanHost,
+		CanAccessClipboard: data.CanAccessClipboard,
 	})
 
 	utils.HttpSuccess(w, MemberCreatePayload{
@@ -56,10 +62,15 @@ func (h *MembersHandler) membersCreate(w http.ResponseWriter, r *http.Request) {
 func (h *MembersHandler) membersRead(w http.ResponseWriter, r *http.Request) {
 	member := GetMember(r)
 
+	// TODO: Join structs?
 	utils.HttpSuccess(w, MemberDataPayload{
-		ID: member.ID(),
 		Name: member.Name(),
 		IsAdmin: member.IsAdmin(),
+		CanLogin: member.CanLogin(),
+		CanConnect: member.CanConnect(),
+		CanWatch: member.CanWatch(),
+		CanHost: member.CanHost(),
+		CanAccessClipboard: member.CanAccessClipboard(),
 	})
 }
 
@@ -71,11 +82,20 @@ func (h *MembersHandler) membersUpdate(w http.ResponseWriter, r *http.Request) {
 
 	member := GetMember(r)
 
-	utils.HttpSuccess(w, MemberDataPayload{
-		ID: member.ID(),
-		Name: member.Name(),
-		IsAdmin: member.IsAdmin(),
+	// TODO: Join structs?
+	// TODO: Update independent props.
+	member.SetProfile(types.MemberProfile{
+		Secret: data.Secret,
+		Name: data.Name,
+		IsAdmin: data.IsAdmin,
+		CanLogin: data.CanLogin,
+		CanConnect: data.CanConnect,
+		CanWatch: data.CanWatch,
+		CanHost: data.CanHost,
+		CanAccessClipboard: data.CanAccessClipboard,
 	})
+
+	utils.HttpSuccess(w)
 }
 
 func (h *MembersHandler) membersDelete(w http.ResponseWriter, r *http.Request) {
