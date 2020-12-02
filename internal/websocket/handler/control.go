@@ -25,6 +25,11 @@ func (h *MessageHandlerCtx) controlRelease(session types.Session) error {
 }
 
 func (h *MessageHandlerCtx) controlRequest(session types.Session) error {
+	if session.IsHost() {
+		h.logger.Debug().Str("id", session.ID()).Msg("is already the host")
+		return nil
+	}
+
 	// TODO: Allow implicit requests.
 	host := h.sessions.GetHost()
 	if host != nil {
