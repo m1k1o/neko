@@ -12,14 +12,15 @@ type MemberCreatePayload struct {
 }
 
 type MemberDataPayload struct {
-	ID               string `json:"id"`
-	Secret           string `json:"secret,omitempty"`
-	Name             string `json:"name"`
-	IsAdmin          bool   `json:"is_admin"`
-	//Enabled          bool   `json:"enabled"`
-	//CanControl       bool   `json:"can_control"`
-	//CanWatch         bool   `json:"can_watch"`
-	//ClipboardAccess  bool   `json:"clipboard_access"`
+	ID                 string `json:"id"`
+	Secret             string `json:"secret,omitempty"`
+	Name               string `json:"name"`
+	IsAdmin            bool   `json:"is_admin"`
+	CanLogin           bool   `json:"can_login"`
+	CanConnect         bool   `json:"can_connect"`
+	CanWatch           bool   `json:"can_watch"`
+	CanHost            bool   `json:"can_host"`
+	CanAccessClipboard bool   `json:"can_access_clipboard"`
 }
 
 func (h *MembersHandler) membersCreate(w http.ResponseWriter, r *http.Request) {

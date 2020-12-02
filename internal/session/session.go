@@ -23,6 +23,14 @@ func (session *SessionCtx) ID() string {
 	return session.id
 }
 
+// ---
+// profile
+// ---
+
+func (session *SessionCtx) VerifySecret(secret string) bool {
+	return session.profile.Secret == secret
+}
+
 func (session *SessionCtx) Name() string {
 	return session.profile.Name
 }
@@ -31,55 +39,44 @@ func (session *SessionCtx) IsAdmin() bool {
 	return session.profile.IsAdmin
 }
 
+func (session *SessionCtx) CanLogin() bool {
+	return session.profile.CanLogin
+}
+
+func (session *SessionCtx) CanConnect() bool {
+	return session.profile.CanConnect
+}
+
+func (session *SessionCtx) CanWatch() bool {
+	return session.profile.CanWatch
+}
+
+func (session *SessionCtx) CanHost() bool {
+	return session.profile.CanHost
+}
+
+func (session *SessionCtx) CanAccessClipboard() bool {
+	return session.profile.CanAccessClipboard
+}
+
+func (session *SessionCtx) SetProfile(profile types.MemberProfile) {
+	session.profile = profile
+}
+
+// ---
+// runtime
+// ---
+
 func (session *SessionCtx) IsHost() bool {
 	return session.manager.host != nil && session.manager.host.ID() == session.ID()
 }
 
-func (session *SessionCtx) VerifySecret(secret string) bool {
-	return session.profile.Secret == secret
-}
-
 func (session *SessionCtx) IsConnected() bool {
-	// TODO: Refactor.
-	return session.websocket_connected// && session.webrtc_connected
+	return session.websocket_connected
 }
 
-func (session *SessionCtx) SetWebSocketPeer(websocket_peer types.WebSocketPeer) {
-	session.websocket_peer = websocket_peer
-}
-
-func (session *SessionCtx) SetWebSocketConnected(connected bool) {
-	if connected {
-		session.websocket_connected = true
-
-		// TODO: Refactor.
-		//session.manager.emmiter.Emit("websocket_connected", session)
-		session.manager.emmiter.Emit("connected", session)
-	} else {
-		session.websocket_connected = false
-
-		// TODO: Refactor.
-		//session.manager.emmiter.Emit("websocket_disconnected", session)
-		session.manager.emmiter.Emit("disconnected", session)
-
-		session.websocket_peer = nil
-	}
-}
-
-func (session *SessionCtx) SetWebRTCPeer(webrtc_peer types.WebRTCPeer) {
-	session.webrtc_peer = webrtc_peer
-}
-
-func (session *SessionCtx) SetWebRTCConnected(connected bool) {
-	if connected {
-		session.webrtc_connected = true
-		session.manager.emmiter.Emit("webrtc_connected", session)
-	} else {
-		session.webrtc_connected = false
-		session.manager.emmiter.Emit("webrtc_disconnected", session)
-
-		session.webrtc_peer = nil
-	}
+func (session *SessionCtx) IsReceiving() bool {
+	return session.webrtc_connected
 }
 
 func (session *SessionCtx) Disconnect(reason string) error {
@@ -106,12 +103,50 @@ func (session *SessionCtx) Disconnect(reason string) error {
 	return nil
 }
 
+// ---
+// webscoket
+// ---
+
+func (session *SessionCtx) SetWebSocketPeer(websocket_peer types.WebSocketPeer) {
+	session.websocket_peer = websocket_peer
+}
+
+func (session *SessionCtx) SetWebSocketConnected(connected bool) {
+	if connected {
+		session.websocket_connected = true
+		session.manager.emmiter.Emit("connected", session)
+	} else {
+		session.websocket_connected = false
+		session.manager.emmiter.Emit("disconnected", session)
+		session.websocket_peer = nil
+	}
+}
+
 func (session *SessionCtx) Send(v interface{}) error {
 	if session.websocket_peer == nil {
 		return nil
 	}
 
 	return session.websocket_peer.Send(v)
+}
+
+// ---
+// webrtc
+// ---
+
+func (session *SessionCtx) SetWebRTCPeer(webrtc_peer types.WebRTCPeer) {
+	session.webrtc_peer = webrtc_peer
+}
+
+func (session *SessionCtx) SetWebRTCConnected(connected bool) {
+	if connected {
+		session.webrtc_connected = true
+		session.manager.emmiter.Emit("receiving_started", session)
+	} else {
+		session.webrtc_connected = false
+		session.manager.emmiter.Emit("receiving_stopped", session)
+		session.webrtc_peer = nil
+	}
 }
 
 func (session *SessionCtx) SignalAnswer(sdp string) error {

@@ -3,29 +3,41 @@ package types
 import "net/http"
 
 type MemberProfile struct {
-	ID               string
-	Secret           string
-	Name             string
-	IsAdmin          bool
-	//Enabled          bool
-	//CanControl       bool
-	//CanWatch         bool
-	//ClipboardAccess  bool
+	Secret             string
+	Name               string
+
+	IsAdmin            bool
+	CanLogin           bool
+	CanConnect         bool
+	CanWatch           bool
+	CanHost            bool
+	CanAccessClipboard bool
 }
 
 type Session interface {
 	ID() string
+
+	VerifySecret(secret string) bool
 	Name() string
 	IsAdmin() bool
+	CanLogin() bool
+	CanConnect() bool
+	CanWatch() bool
+	CanHost() bool
+	CanAccessClipboard() bool
+	SetProfile(profile MemberProfile)
+
 	IsHost() bool
 	IsConnected() bool
-	VerifySecret(secret string) bool
+	IsReceiving() bool
+	Disconnect(reason string) error
+
 	SetWebSocketPeer(websocket_peer WebSocketPeer)
 	SetWebSocketConnected(connected bool)
+	Send(v interface{}) error
+
 	SetWebRTCPeer(webrtc_peer WebRTCPeer)
 	SetWebRTCConnected(connected bool)
-	Disconnect(reason string) error
-	Send(v interface{}) error
 	SignalAnswer(sdp string) error
 }
 
@@ -47,8 +59,8 @@ type SessionManager interface {
 	OnHostCleared(listener func(session Session))
 	OnConnected(listener func(session Session))
 	OnDisconnected(listener func(session Session))
+
 	ImplicitHosting() bool
 
-	// auth
 	Authenticate(r *http.Request) (Session, error)
 }
