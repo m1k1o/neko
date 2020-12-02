@@ -28,7 +28,7 @@ func (h *MessageHandlerCtx) systemInit(session types.Session) error {
 		members[session.ID()] = message.MemberData{
 			ID:      session.ID(),
 			Name:    session.Name(),
-			IsAdmin: session.Admin(),
+			IsAdmin: session.IsAdmin(),
 		}
 	}
 

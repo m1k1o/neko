@@ -135,7 +135,7 @@ func (ws *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Request) e
 		return connection.Close()
 	}
 
-	if session.Connected() {
+	if session.IsConnected() {
 		// TODO: Refactor
 		if err = connection.WriteJSON(
 			message.SystemDisconnect{

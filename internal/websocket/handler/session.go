@@ -11,7 +11,7 @@ func (h *MessageHandlerCtx) SessionConnected(session types.Session) error {
 		return err
 	}
 
-	if session.Admin() {
+	if session.IsAdmin() {
 		if err := h.systemAdmin(session); err != nil {
 			return err
 		}
@@ -23,7 +23,7 @@ func (h *MessageHandlerCtx) SessionConnected(session types.Session) error {
 			Event:   event.MEMBER_CONNECTED,
 			ID:      session.ID(),
 			Name:    session.Name(),
-			IsAdmin: session.Admin(),
+			IsAdmin: session.IsAdmin(),
 		}, nil)
 
 	return nil

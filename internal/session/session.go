@@ -27,7 +27,7 @@ func (session *SessionCtx) Name() string {
 	return session.profile.Name
 }
 
-func (session *SessionCtx) Admin() bool {
+func (session *SessionCtx) IsAdmin() bool {
 	return session.profile.IsAdmin
 }
 
@@ -39,7 +39,7 @@ func (session *SessionCtx) VerifySecret(secret string) bool {
 	return session.profile.Secret == secret
 }
 
-func (session *SessionCtx) Connected() bool {
+func (session *SessionCtx) IsConnected() bool {
 	// TODO: Refactor.
 	return session.websocket_connected// && session.webrtc_connected
 }

@@ -16,9 +16,9 @@ type MemberProfile struct {
 type Session interface {
 	ID() string
 	Name() string
-	Admin() bool
+	IsAdmin() bool
 	IsHost() bool
-	Connected() bool
+	IsConnected() bool
 	VerifySecret(secret string) bool
 	SetWebSocketPeer(websocket_peer WebSocketPeer)
 	SetWebSocketConnected(connected bool)

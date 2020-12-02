@@ -26,7 +26,7 @@ func GetSession(r *http.Request) types.Session {
 func AdminsOnly(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		session := GetSession(r)
-		if !session.Admin() {
+		if !session.IsAdmin() {
 			utils.HttpForbidden(w)
 		} else {
 			next.ServeHTTP(w, r)
@@ -48,7 +48,7 @@ func HostsOnly(next http.Handler) http.Handler {
 func HostsOrAdminsOnly(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		session := GetSession(r)
-		if !session.IsHost() && !session.Admin() {
+		if !session.IsHost() && !session.IsAdmin() {
 			utils.HttpForbidden(w, "Only host can do this.")
 		} else {
 			next.ServeHTTP(w, r)

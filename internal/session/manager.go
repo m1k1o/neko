@@ -87,7 +87,7 @@ func (manager *SessionManagerCtx) Delete(id string) error {
 
 	delete(manager.members, id)
 
-	if session.Connected() {
+	if session.IsConnected() {
 		return session.Disconnect("member deleted")
 	}
 
@@ -137,7 +137,7 @@ func (manager *SessionManagerCtx) Admins() []types.Session {
 
 	var sessions []types.Session
 	for _, session := range manager.members {
-		if !session.Connected() || !session.Admin() {
+		if !session.IsConnected() || !session.IsAdmin() {
 			continue
 		}
 
@@ -153,7 +153,7 @@ func (manager *SessionManagerCtx) Members() []types.Session {
 
 	var sessions []types.Session
 	for _, session := range manager.members {
-		if !session.Connected() {
+		if !session.IsConnected() {
 			continue
 		}
 
@@ -168,7 +168,7 @@ func (manager *SessionManagerCtx) Broadcast(v interface{}, exclude interface{}) 
 	defer manager.membersMu.Unlock()
 
 	for id, session := range manager.members {
-		if !session.Connected() {
+		if !session.IsConnected() {
 			continue
 		}
 
@@ -189,7 +189,7 @@ func (manager *SessionManagerCtx) AdminBroadcast(v interface{}, exclude interfac
 	defer manager.membersMu.Unlock()
 
 	for id, session := range manager.members {
-		if !session.Connected() || !session.Admin() {
+		if !session.IsConnected() || !session.IsAdmin() {
 			continue
 		}
 
