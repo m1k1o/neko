@@ -30,16 +30,16 @@ func (h *MessageHandlerCtx) controlRequest(session types.Session) error {
 		return nil
 	}
 
-	// TODO: Allow implicit requests.
-	host := h.sessions.GetHost()
-	if host != nil {
-		// tell session there is a host
-		return session.Send(
-			message.ControlHost{
-				Event:   event.CONTROL_HOST,
-				HasHost: true,
-				HostID:  host.ID(),
-			})
+	if !h.sessions.ImplicitHosting() {
+		// tell session if there is a host
+		if host := h.sessions.GetHost(); host != nil {
+			return session.Send(
+				message.ControlHost{
+					Event:   event.CONTROL_HOST,
+					HasHost: true,
+					HostID:  host.ID(),
+				})
+		}
 	}
 
 	h.sessions.SetHost(session)

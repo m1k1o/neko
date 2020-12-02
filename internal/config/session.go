@@ -6,8 +6,9 @@ import (
 )
 
 type Session struct {
-	Password      string
-	AdminPassword string
+	Password        string
+	AdminPassword   string
+	ImplicitHosting bool
 }
 
 func (Session) Init(cmd *cobra.Command) error {
@@ -21,10 +22,16 @@ func (Session) Init(cmd *cobra.Command) error {
 		return err
 	}
 
+	cmd.PersistentFlags().Bool("implicit_hosting", true, "allow implicit control switching")
+	if err := viper.BindPFlag("implicit_hosting", cmd.PersistentFlags().Lookup("implicit_hosting")); err != nil {
+		return err
+	}
+
 	return nil
 }
 
 func (s *Session) Set() {
 	s.Password = viper.GetString("password")
 	s.AdminPassword = viper.GetString("password_admin")
+	s.ImplicitHosting = viper.GetBool("implicit_hosting")
 }

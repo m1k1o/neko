@@ -15,6 +15,7 @@ type SystemInit struct {
 	ControlHost     ControlHost           `json:"control_host"`
 	ScreenSize      ScreenSize            `json:"screen_size"`
 	Members         map[string]MemberData `json:"members"`
+	ImplicitHosting bool                  `json:"implicit_hosting"`
 }
 
 type SystemAdmin struct {

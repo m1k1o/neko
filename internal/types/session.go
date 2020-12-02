@@ -48,6 +48,7 @@ type SessionManager interface {
 	OnHostCleared(listener func(session Session))
 	OnConnected(listener func(session Session))
 	OnDisconnected(listener func(session Session))
+	ImplicitHosting() bool
 
 	// auth
 	Authenticate(r *http.Request) (Session, error)

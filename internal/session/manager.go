@@ -241,3 +241,7 @@ func (manager *SessionManagerCtx) OnDisconnected(listener func(session types.Ses
 		listener(payload[0].(*SessionCtx))
 	})
 }
+
+func (manager *SessionManagerCtx) ImplicitHosting() bool {
+	return manager.config.ImplicitHosting
+}
