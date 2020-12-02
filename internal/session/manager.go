@@ -97,6 +97,7 @@ func (manager *SessionManagerCtx) Delete(id string) error {
 // ---
 // host
 // ---
+
 func (manager *SessionManagerCtx) HasHost() bool {
 	manager.hostMu.Lock()
 	defer manager.hostMu.Unlock()
@@ -131,6 +132,7 @@ func (manager *SessionManagerCtx) ClearHost() {
 // ---
 // members list
 // ---
+
 func (manager *SessionManagerCtx) HasConnectedMembers() bool {
 	manager.membersMu.Lock()
 	defer manager.membersMu.Unlock()
@@ -201,6 +203,7 @@ func (manager *SessionManagerCtx) AdminBroadcast(v interface{}, exclude interfac
 // ---
 // events
 // ---
+
 func (manager *SessionManagerCtx) OnHost(listener func(session types.Session)) {
 	manager.emmiter.On("host", func(payload ...interface{}) {
 		listener(payload[0].(*SessionCtx))
@@ -234,6 +237,10 @@ func (manager *SessionManagerCtx) OnDisconnected(listener func(session types.Ses
 		listener(payload[0].(*SessionCtx))
 	})
 }
+
+// ---
+// config
+// ---
 
 func (manager *SessionManagerCtx) ImplicitHosting() bool {
 	return manager.config.ImplicitHosting
