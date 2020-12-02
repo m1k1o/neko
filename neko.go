@@ -148,7 +148,6 @@ func (neko *Neko) Start() {
 	neko.webRTCManager.Start()
 
 	neko.sessionManager = session.New(
-		neko.captureManager,
 		neko.Configs.Session,
 	)
 

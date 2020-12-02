@@ -7,6 +7,11 @@ import (
 )
 
 func (h *MessageHandlerCtx) SessionConnected(session types.Session) error {
+	// start streaming, when first member connects
+	if !h.capture.Streaming() {
+		h.capture.StartStream()
+	}
+
 	if err := h.systemInit(session); err != nil {
 		return err
 	}
@@ -30,6 +35,11 @@ func (h *MessageHandlerCtx) SessionConnected(session types.Session) error {
 }
 
 func (h *MessageHandlerCtx) SessionDisconnected(session types.Session) error {
+	// Stop streaming, if last member disonnects
+	if h.capture.Streaming() && !h.sessions.HasConnectedMembers() {
+		h.capture.StopStream()
+	}
+
 	// clear host if exists
 	if session.IsHost() {
 		h.desktop.ResetKeys()

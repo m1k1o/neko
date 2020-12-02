@@ -13,12 +13,11 @@ import (
 	"demodesk/neko/internal/utils"
 )
 
-func New(capture types.CaptureManager, config *config.Session) *SessionManagerCtx {
+func New(config *config.Session) *SessionManagerCtx {
 	manager := &SessionManagerCtx{
 		logger:    log.With().Str("module", "session").Logger(),
 		host:      nil,
 		hostMu:    sync.Mutex{},
-		capture:   capture,
 		config:    config,
 		members:   make(map[string]*SessionCtx),
 		membersMu: sync.Mutex{},
@@ -46,7 +45,6 @@ type SessionManagerCtx struct {
 	logger    zerolog.Logger
 	host      types.Session
 	hostMu    sync.Mutex
-	capture   types.CaptureManager
 	config    *config.Session
 	members   map[string]*SessionCtx
 	membersMu sync.Mutex
@@ -218,22 +216,12 @@ func (manager *SessionManagerCtx) OnHostCleared(listener func(session types.Sess
 
 func (manager *SessionManagerCtx) OnConnected(listener func(session types.Session)) {
 	manager.emmiter.On("connected", func(payload ...interface{}) {
-		// Start streaming, when first joins
-		if !manager.capture.Streaming() {
-			manager.capture.StartStream()
-		}
-	
 		listener(payload[0].(*SessionCtx))
 	})
 }
 
 func (manager *SessionManagerCtx) OnDisconnected(listener func(session types.Session)) {
 	manager.emmiter.On("disconnected", func(payload ...interface{}) {
-		// Stop streaming, if everyone left
-		if manager.capture.Streaming() && !manager.HasConnectedMembers() {
-			manager.capture.StopStream()
-		}
-
 		listener(payload[0].(*SessionCtx))
 	})
 }

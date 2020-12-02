@@ -51,6 +51,7 @@ type SessionManager interface {
 	GetHost() Session
 	ClearHost()
 
+	HasConnectedMembers() bool
 	Members() []Session
 	Broadcast(v interface{}, exclude interface{})
 	AdminBroadcast(v interface{}, exclude interface{})
