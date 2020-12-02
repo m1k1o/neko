@@ -135,6 +135,19 @@ func (ws *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Request) e
 		return connection.Close()
 	}
 
+	if session.Connected() {
+		// TODO: Refactor
+		if err = connection.WriteJSON(
+			message.SystemDisconnect{
+				Event:   event.SYSTEM_DISCONNECT,
+				Message: "already connected",
+			}); err != nil {
+			ws.logger.Error().Err(err).Msg("failed to send disconnect")
+		}
+
+		return connection.Close()
+	}
+
 	session.SetWebSocketPeer(&WebSocketPeerCtx{
 		session:    session,
 		ws:         ws,
