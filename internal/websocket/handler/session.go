@@ -6,6 +6,38 @@ import (
 	"demodesk/neko/internal/types/message"
 )
 
+func (h *MessageHandlerCtx) SessionCreated(session types.Session) error {
+	// TODO: Join structs?
+	h.sessions.Broadcast(
+		message.MemberData{
+			Event:       event.MEMBER_CREATED,
+			ID:          session.ID(),
+			Profile:     message.MemberProfile{
+				Name:               session.Name(),
+				IsAdmin:            session.IsAdmin(),
+				CanLogin:           session.CanLogin(),
+				CanConnect:         session.CanConnect(),
+				CanWatch:           session.CanWatch(),
+				CanHost:            session.CanHost(),
+				CanAccessClipboard: session.CanAccessClipboard(),
+			},
+			IsConnected: session.IsConnected(),
+			IsReceiving: session.IsReceiving(),
+		}, nil)
+
+	return nil
+}
+
+func (h *MessageHandlerCtx) SessionDeleted(session types.Session) error {
+	h.sessions.Broadcast(
+		message.MemberID{
+			Event: event.MEMBER_DELETED,
+			ID:    session.ID(),
+		}, nil);
+
+	return nil
+}
+
 func (h *MessageHandlerCtx) SessionConnected(session types.Session) error {
 	// start streaming, when first member connects
 	if !h.capture.Streaming() {
@@ -22,14 +54,11 @@ func (h *MessageHandlerCtx) SessionConnected(session types.Session) error {
 		}
 	}
 
-	// let everyone know there is a new session
 	h.sessions.Broadcast(
-		message.MemberData{
-			Event:   event.MEMBER_CONNECTED,
-			ID:      session.ID(),
-			Name:    session.Name(),
-			IsAdmin: session.IsAdmin(),
-		}, nil)
+		message.MemberID{
+			Event: event.MEMBER_CONNECTED,
+			ID:    session.ID(),
+		}, nil);
 
 	return nil
 }
@@ -52,12 +81,48 @@ func (h *MessageHandlerCtx) SessionDisconnected(session types.Session) error {
 			}, nil)
 	}
 
-	// let everyone know session disconnected
 	h.sessions.Broadcast(
 		message.MemberID{
 			Event: event.MEMBER_DISCONNECTED,
 			ID:    session.ID(),
 		}, nil);
+
+	return nil
+}
+
+func (h *MessageHandlerCtx) SessionReceivingStarted(session types.Session) error {
+	h.sessions.Broadcast(
+		message.MemberID{
+			Event: event.MEMBER_RECEIVING_STARTED,
+			ID:    session.ID(),
+		}, nil);
+
+	return nil
+}
+
+func (h *MessageHandlerCtx) SessionReceivingStopped(session types.Session) error {
+	h.sessions.Broadcast(
+		message.MemberID{
+			Event: event.MEMBER_RECEIVING_STOPPED,
+			ID:    session.ID(),
+		}, nil);
+
+	return nil
+}
+
+func (h *MessageHandlerCtx) SessionProfileUpdated(session types.Session) error {
+	// TODO: Join structs?
+	h.sessions.Broadcast(
+		message.MemberProfile{
+			Event:              event.MEMBER_PROFILE_UPDATED,
+			Name:               session.Name(),
+			IsAdmin:            session.IsAdmin(),
+			CanLogin:           session.CanLogin(),
+			CanConnect:         session.CanConnect(),
+			CanWatch:           session.CanWatch(),
+			CanHost:            session.CanHost(),
+			CanAccessClipboard: session.CanAccessClipboard(),
+		}, nil)
 
 	return nil
 }

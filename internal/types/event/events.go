@@ -13,9 +13,13 @@ const (
 )
 
 const (
-	MEMBER_CONNECTED    = "member/connected"
-	MEMBER_UPDATED      = "member/updated" // TODO: New.
-	MEMBER_DISCONNECTED = "member/disconnected"
+	MEMBER_CREATED           = "member/created"
+	MEMBER_DELETED           = "member/deleted"
+	MEMBER_CONNECTED         = "member/connected"
+	MEMBER_DISCONNECTED      = "member/disconnected"
+	MEMBER_RECEIVING_STARTED = "member/receiving/started"
+	MEMBER_RECEIVING_STOPPED = "member/receiving/stopped"
+	MEMBER_PROFILE_UPDATED   = "member/profile/updated"
 )
 
 const (

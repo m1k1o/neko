@@ -49,6 +49,22 @@ type WebSocketManagerCtx struct {
 }
 
 func (ws *WebSocketManagerCtx) Start() {
+	ws.sessions.OnCreated(func(session types.Session) {
+		if err := ws.handler.SessionCreated(session); err != nil {
+			ws.logger.Warn().Str("id", session.ID()).Err(err).Msg("session created with an error")
+		} else {
+			ws.logger.Debug().Str("id", session.ID()).Msg("session created")
+		}
+	})
+
+	ws.sessions.OnDeleted(func(session types.Session) {
+		if err := ws.handler.SessionDeleted(session); err != nil {
+			ws.logger.Warn().Str("id", session.ID()).Err(err).Msg("session deleted with an error")
+		} else {
+			ws.logger.Debug().Str("id", session.ID()).Msg("session deleted")
+		}
+	})
+
 	ws.sessions.OnConnected(func(session types.Session) {
 		if err := ws.handler.SessionConnected(session); err != nil {
 			ws.logger.Warn().Str("id", session.ID()).Err(err).Msg("session connected with an error")
@@ -62,6 +78,30 @@ func (ws *WebSocketManagerCtx) Start() {
 			ws.logger.Warn().Str("id", session.ID()).Err(err).Msg("session disconnected with an error")
 		} else {
 			ws.logger.Debug().Str("id", session.ID()).Msg("session disconnected")
+		}
+	})
+
+	ws.sessions.OnReceivingStarted(func(session types.Session) {
+		if err := ws.handler.SessionReceivingStarted(session); err != nil {
+			ws.logger.Warn().Str("id", session.ID()).Err(err).Msg("session receiving started with an error")
+		} else {
+			ws.logger.Debug().Str("id", session.ID()).Msg("session receiving started")
+		}
+	})
+
+	ws.sessions.OnReceivingStopped(func(session types.Session) {
+		if err := ws.handler.SessionReceivingStopped(session); err != nil {
+			ws.logger.Warn().Str("id", session.ID()).Err(err).Msg("session receiving stopped with an error")
+		} else {
+			ws.logger.Debug().Str("id", session.ID()).Msg("session receiving stopped")
+		}
+	})
+
+	ws.sessions.OnProfileUpdated(func(session types.Session) {
+		if err := ws.handler.SessionProfileUpdated(session); err != nil {
+			ws.logger.Warn().Str("id", session.ID()).Err(err).Msg("session profile updated with an error")
+		} else {
+			ws.logger.Debug().Str("id", session.ID()).Msg("session profile updated")
 		}
 	})
 
