@@ -224,6 +224,15 @@
       this.websocket.send('screen/set', { width, height, rate })
     }
 
+    public memberCreate({ id, secret, name, isAdmin }: { id: string; secret: string; name: string; isAdmin: boolean }) {
+      const memberDataPayload = { id, secret, name, isAdmin }
+      this.api.admin.membersCreate({ memberDataPayload })
+    }
+
+    public memberDelete(memberId: string) {
+      this.api.admin.membersDelete({ memberId })
+    }
+
     /////////////////////////////
     // Component lifecycle
     /////////////////////////////
