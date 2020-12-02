@@ -54,6 +54,7 @@ export interface MemberID {
 }
 
 export interface MemberProfile {
+  id: string
   name: string
   is_admin: boolean
   can_login: boolean

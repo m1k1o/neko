@@ -6,9 +6,13 @@ export const SIGNAL_REQUEST = 'signal/request'
 export const SIGNAL_ANSWER = 'signal/answer'
 export const SIGNAL_PROVIDE = 'signal/provide'
 
+export const MEMBER_CREATED = 'member/created'
+export const MEMBER_DELETED = 'member/deleted'
 export const MEMBER_CONNECTED = 'member/connected'
-export const MEMBER_UPDATED = 'member/updated' // TODO: New.
 export const MEMBER_DISCONNECTED = 'member/disconnected'
+export const MEMBER_RECEIVING_STARTED = 'member/receiving/started'
+export const MEMBER_RECEIVING_STOPPED = 'member/receiving/stopped'
+export const MEMBER_PROFILE_UPDATED = 'member/profile/updated'
 
 export const CONTROL_HOST = 'control/host'
 export const CONTROL_RELEASE = 'control/release'
