@@ -131,20 +131,17 @@ func (manager *SessionManagerCtx) ClearHost() {
 // ---
 // members list
 // ---
-func (manager *SessionManagerCtx) Admins() []types.Session {
+func (manager *SessionManagerCtx) HasConnectedMembers() bool {
 	manager.membersMu.Lock()
 	defer manager.membersMu.Unlock()
 
-	var sessions []types.Session
 	for _, session := range manager.members {
-		if !session.IsConnected() || !session.IsAdmin() {
-			continue
+		if session.IsConnected() {
+			return true
 		}
-
-		sessions = append(sessions, session)
 	}
 
-	return sessions
+	return false
 }
 
 func (manager *SessionManagerCtx) Members() []types.Session {
@@ -153,10 +150,6 @@ func (manager *SessionManagerCtx) Members() []types.Session {
 
 	var sessions []types.Session
 	for _, session := range manager.members {
-		if !session.IsConnected() {
-			continue
-		}
-
 		sessions = append(sessions, session)
 	}
 
@@ -234,7 +227,7 @@ func (manager *SessionManagerCtx) OnConnected(listener func(session types.Sessio
 func (manager *SessionManagerCtx) OnDisconnected(listener func(session types.Session)) {
 	manager.emmiter.On("disconnected", func(payload ...interface{}) {
 		// Stop streaming, if everyone left
-		if manager.capture.Streaming() && len(manager.Members()) == 0 {
+		if manager.capture.Streaming() && !manager.HasConnectedMembers() {
 			manager.capture.StopStream()
 		}
 

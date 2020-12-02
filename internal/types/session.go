@@ -39,7 +39,6 @@ type SessionManager interface {
 	GetHost() Session
 	ClearHost()
 
-	Admins() []Session
 	Members() []Session
 	Broadcast(v interface{}, exclude interface{})
 	AdminBroadcast(v interface{}, exclude interface{})
