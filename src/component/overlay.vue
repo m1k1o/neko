@@ -26,7 +26,7 @@
 </style>
 
 <script lang="ts">
-  import { Vue, Component, Ref, Prop } from 'vue-property-decorator'
+  import { Vue, Component, Ref, Prop, Watch } from 'vue-property-decorator'
 
   import GuacamoleKeyboard from './utils/guacamole-keyboard'
   import { NekoWebRTC } from './internal/webrtc'
@@ -58,10 +58,18 @@
     @Prop()
     private readonly isControling!: boolean
 
+    @Prop()
+    private readonly implicitControl!: boolean
+
     mounted() {
       // Initialize Guacamole Keyboard
       this.keyboard.onkeydown = (key: number) => {
-        if (!this.focused || !this.isControling) {
+        if (!this.focused) {
+          return true
+        }
+
+        if (!this.isControling) {
+          this.implicitControlRequest()
           return true
         }
 
@@ -69,7 +77,12 @@
         return false
       }
       this.keyboard.onkeyup = (key: number) => {
-        if (!this.focused || !this.isControling) {
+        if (!this.focused) {
+          return
+        }
+
+        if (!this.isControling) {
+          this.implicitControlRequest()
           return
         }
 
@@ -93,6 +106,7 @@
 
     onWheel(e: WheelEvent) {
       if (!this.isControling) {
+        this.implicitControlRequest()
         return
       }
 
@@ -113,6 +127,7 @@
 
     onMouseMove(e: MouseEvent) {
       if (!this.isControling) {
+        this.implicitControlRequest()
         return
       }
 
@@ -121,6 +136,7 @@
 
     onMouseDown(e: MouseEvent) {
       if (!this.isControling) {
+        this.implicitControlRequest()
         return
       }
 
@@ -130,6 +146,7 @@
 
     onMouseUp(e: MouseEvent) {
       if (!this.isControling) {
+        this.implicitControlRequest()
         return
       }
 
@@ -138,36 +155,54 @@
     }
 
     onMouseEnter(e: MouseEvent) {
-      if (!this.isControling) {
-        return
-      }
-
-      // TODO: Refactor
-      //syncKeyboardModifierState({
-      //  capsLock: e.getModifierState('CapsLock'),
-      //  numLock: e.getModifierState('NumLock'),
-      //  scrollLock: e.getModifierState('ScrollLock'),
-      //})
-
       this._overlay.focus()
       this.focused = true
+
+      if (!this.isControling) {
+        this.implicitControlRequest()
+        // TODO: Refactor
+        //syncKeyboardModifierState({
+        //  capsLock: e.getModifierState('CapsLock'),
+        //  numLock: e.getModifierState('NumLock'),
+        //  scrollLock: e.getModifierState('ScrollLock'),
+        //})
+      }
     }
 
     onMouseLeave(e: MouseEvent) {
-      if (!this.isControling) {
-        return
-      }
-
-      // TODO: Refactor
-      //setKeyboardModifierState({
-      //  capsLock: e.getModifierState('CapsLock'),
-      //  numLock: e.getModifierState('NumLock'),
-      //  scrollLock: e.getModifierState('ScrollLock'),
-      //})
-
-      this.keyboard.reset()
       this._overlay.blur()
       this.focused = false
+
+      if (this.isControling) {
+        this.keyboard.reset()
+        this.implicitControlRelease()
+
+        // TODO: Refactor
+        //setKeyboardModifierState({
+        //  capsLock: e.getModifierState('CapsLock'),
+        //  numLock: e.getModifierState('NumLock'),
+        //  scrollLock: e.getModifierState('ScrollLock'),
+        //})
+      }
+    }
+
+    isRequesting = false
+    @Watch('isControling')
+    onControlChange(isControling: boolean) {
+      this.isRequesting = false
+    }
+
+    implicitControlRequest() {
+      if (!this.isRequesting && this.implicitControl) {
+        this.isRequesting = true
+        this.$emit('implicit-control-request')
+      }
+    }
+
+    implicitControlRelease() {
+      if (this.implicitControl) {
+        this.$emit('implicit-control-release')
+      }
     }
   }
 </script>

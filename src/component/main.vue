@@ -9,6 +9,9 @@
         :isControling="controlling"
         :scrollSensitivity="state.control.scroll.sensitivity"
         :scrollInvert="state.control.scroll.inverse"
+        :implicitControl="true"
+        @implicit-control-request="websocket.send('control/request')"
+        @implicit-control-release="websocket.send('control/release')"
       />
     </div>
   </div>
