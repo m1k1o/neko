@@ -9,7 +9,7 @@
         :isControling="controlling"
         :scrollSensitivity="state.control.scroll.sensitivity"
         :scrollInvert="state.control.scroll.inverse"
-        :implicitControl="true"
+        :implicitControl="state.control.implicit_hosting"
         @implicit-control-request="websocket.send('control/request')"
         @implicit-control-release="websocket.send('control/release')"
       />
@@ -98,6 +98,7 @@
         },
         clipboard: null,
         host_id: null,
+        implicit_hosting: false,
       },
       screen: {
         size: {

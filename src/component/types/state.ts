@@ -37,6 +37,7 @@ export interface Control {
   scroll: Scroll
   clipboard: Clipboard | null
   host_id: string | null
+  implicit_hosting: boolean
 }
 
 export interface Scroll {

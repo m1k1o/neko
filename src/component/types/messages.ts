@@ -13,6 +13,7 @@ export interface SystemInit {
   control_host: ControlHost
   screen_size: ScreenSize
   members: Record<string, MemberData>
+  implicit_hosting: boolean
 }
 
 export interface SystemAdmin {
