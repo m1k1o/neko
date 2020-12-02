@@ -56,6 +56,7 @@ type MemberID struct {
 
 type MemberProfile struct {
 	Event              string `json:"event,omitempty"`
+	ID                 string `json:"id,omitempty"`
 	Name               string `json:"name"`
 	IsAdmin            bool   `json:"is_admin"`
 	CanLogin           bool   `json:"can_login"`

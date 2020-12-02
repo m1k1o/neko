@@ -115,6 +115,7 @@ func (h *MessageHandlerCtx) SessionProfileUpdated(session types.Session) error {
 	h.sessions.Broadcast(
 		message.MemberProfile{
 			Event:              event.MEMBER_PROFILE_UPDATED,
+			ID:                 session.ID(),
 			Name:               session.Name(),
 			IsAdmin:            session.IsAdmin(),
 			CanLogin:           session.CanLogin(),
