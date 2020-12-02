@@ -224,8 +224,17 @@
       this.websocket.send('screen/set', { width, height, rate })
     }
 
-    public memberCreate({ id, secret, name, isAdmin }: { id: string; secret: string; name: string; isAdmin: boolean }) {
-      const memberDataPayload = { id, secret, name, isAdmin }
+    public memberCreate(memberDataPayload: {
+      id: string
+      secret: string
+      name: string
+      isAdmin: boolean
+      canLogin: boolean
+      canConnect: boolean
+      canWatch: boolean
+      canHost: boolean
+      canAccessClipboard: boolean
+    }) {
       this.api.admin.membersCreate({ memberDataPayload })
     }
 

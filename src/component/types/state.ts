@@ -66,13 +66,19 @@ export interface ScreenSize {
 /////////////////////////////
 // Member
 /////////////////////////////
-export interface Member {
-  id: string
+export interface MemberProfile {
   name: string
   is_admin: boolean
-  is_watching: boolean
-  is_controlling: boolean
+  can_login: boolean
+  can_connect: boolean
   can_watch: boolean
-  can_control: boolean
-  clipboard_access: boolean
+  can_host: boolean
+  can_access_clipboard: boolean
+}
+
+export interface Member {
+  id: string
+  profile: MemberProfile
+  is_connected: boolean
+  is_receiving: boolean
 }

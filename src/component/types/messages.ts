@@ -53,12 +53,22 @@ export interface MemberID {
   id: string
 }
 
-// TODO: New.
+export interface MemberProfile {
+  name: string
+  is_admin: boolean
+  can_login: boolean
+  can_connect: boolean
+  can_watch: boolean
+  can_host: boolean
+  can_access_clipboard: boolean
+}
+
 export interface MemberData {
   event: string | undefined
   id: string
-  name: string
-  is_admin: boolean
+  profile: MemberProfile
+  is_connected: boolean
+  is_receiving: boolean
 }
 
 /////////////////////////////
