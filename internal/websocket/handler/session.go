@@ -32,6 +32,7 @@ func (h *MessageHandlerCtx) SessionConnected(session types.Session) error {
 func (h *MessageHandlerCtx) SessionDisconnected(session types.Session) error {
 	// clear host if exists
 	if session.IsHost() {
+		h.desktop.ResetKeys()
 		h.sessions.ClearHost()
 
 		h.sessions.Broadcast(

@@ -12,7 +12,9 @@ func (h *MessageHandlerCtx) controlRelease(session types.Session) error {
 		return nil
 	}
 
+	h.desktop.ResetKeys()
 	h.sessions.ClearHost()
+
 	h.sessions.Broadcast(
 		message.ControlHost{
 			Event:   event.CONTROL_HOST,

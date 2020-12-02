@@ -60,6 +60,7 @@ func (h *RoomHandler) controlRelease(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	h.desktop.ResetKeys()
 	h.sessions.ClearHost()
 	
 	h.sessions.Broadcast(
@@ -117,8 +118,9 @@ func (h *RoomHandler) controlReset(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	h.desktop.ResetKeys()
 	h.sessions.ClearHost()
-	
+
 	h.sessions.Broadcast(
 		message.ControlHost{
 			Event:   event.CONTROL_HOST,
