@@ -8,8 +8,6 @@ export const SIGNAL_PROVIDE = 'signal/provide'
 
 export const MEMBER_CREATED = 'member/created'
 export const MEMBER_DELETED = 'member/deleted'
-export const MEMBER_CONNECTED = 'member/connected'
-export const MEMBER_DISCONNECTED = 'member/disconnected'
 export const MEMBER_PROFILE = 'member/profile'
 export const MEMBER_STATE = 'member/state'
 
