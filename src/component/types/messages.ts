@@ -54,6 +54,7 @@ export interface MemberID {
 }
 
 export interface MemberProfile {
+  event: string | undefined
   id: string
   name: string
   is_admin: boolean
@@ -62,6 +63,13 @@ export interface MemberProfile {
   can_watch: boolean
   can_host: boolean
   can_access_clipboard: boolean
+}
+
+export interface MemberState {
+  event: string | undefined
+  id: string
+  is_connected: boolean
+  is_receiving: boolean
 }
 
 export interface MemberData {
