@@ -56,13 +56,7 @@ func (h *MessageHandlerCtx) SessionConnected(session types.Session) error {
 		}
 	}
 
-	h.sessions.Broadcast(
-		message.MemberID{
-			Event: event.MEMBER_CONNECTED,
-			ID:    session.ID(),
-		}, nil);
-
-	return nil
+	return h.SessionStateChanged(session)
 }
 
 func (h *MessageHandlerCtx) SessionDisconnected(session types.Session) error {
@@ -83,13 +77,7 @@ func (h *MessageHandlerCtx) SessionDisconnected(session types.Session) error {
 			}, nil)
 	}
 
-	h.sessions.Broadcast(
-		message.MemberID{
-			Event: event.MEMBER_DISCONNECTED,
-			ID:    session.ID(),
-		}, nil);
-
-	return nil
+	return h.SessionStateChanged(session)
 }
 
 func (h *MessageHandlerCtx) SessionProfileChanged(session types.Session) error {

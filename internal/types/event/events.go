@@ -15,8 +15,6 @@ const (
 const (
 	MEMBER_CREATED      = "member/created"
 	MEMBER_DELETED      = "member/deleted"
-	MEMBER_CONNECTED    = "member/connected"
-	MEMBER_DISCONNECTED = "member/disconnected"
 	MEMBER_PROFILE      = "member/profile"
 	MEMBER_STATE        = "member/state"
 )
