@@ -113,13 +113,19 @@ func (session *SessionCtx) SetWebSocketPeer(websocket_peer types.WebSocketPeer) 
 }
 
 func (session *SessionCtx) SetWebSocketConnected(connected bool) {
+	session.websocket_connected = connected
+
 	if connected {
-		session.websocket_connected = true
 		session.manager.emmiter.Emit("connected", session)
-	} else {
-		session.websocket_connected = false
-		session.manager.emmiter.Emit("disconnected", session)
-		session.websocket_peer = nil
+		return
+	}
+
+	session.manager.emmiter.Emit("disconnected", session)
+	session.websocket_peer = nil
+
+	// TODO: Refactor. Only if is WebRTC active.
+	if err := session.webrtc_peer.Destroy(); err != nil {
+		session.logger.Warn().Err(err).Msgf("webrtc destroy has failed")
 	}
 }
 
