@@ -281,19 +281,9 @@
       this.websocket.on('disconnected', () => {
         Vue.set(this.state.connection, 'websocket', 'disconnected')
         this.events.emit('internal.websocket', 'disconnected')
-        this.webrtc.disconnect()
 
-        // TODO: reset state
-        Vue.set(this.state, 'member', {
-          id: null,
-          name: null,
-          is_admin: false,
-          is_watching: false,
-          is_controlling: false,
-          can_watch: false,
-          can_control: false,
-          clipboard_access: false,
-        })
+        this.webrtc.disconnect()
+        this.clearState()
       })
 
       // webrtc
@@ -369,6 +359,16 @@
         this._container.style.marginTop = `0px`
         this._container.style.marginLeft = `0px`
       }
+    }
+
+    clearState() {
+      Vue.set(this.state.control, 'clipboard', null)
+      Vue.set(this.state.control, 'host_id', null)
+      Vue.set(this.state.control, 'implicit_hosting', false)
+      Vue.set(this.state.screen, 'size', { width: 1280, height: 720, rate: 30 })
+      Vue.set(this.state.screen, 'configurations', [])
+      Vue.set(this.state, 'member_id', null)
+      Vue.set(this.state, 'members', {})
     }
   }
 </script>
