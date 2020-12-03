@@ -52,9 +52,6 @@ type SessionManagerCtx struct {
 }
 
 func (manager *SessionManagerCtx) Create(id string, profile types.MemberProfile) types.Session {
-	manager.membersMu.Lock()
-	defer manager.membersMu.Unlock()
-
 	session := &SessionCtx{
 		id:        id,
 		manager:   manager,
@@ -62,36 +59,40 @@ func (manager *SessionManagerCtx) Create(id string, profile types.MemberProfile)
 		profile:   profile,
 	}
 
+	manager.membersMu.Lock()
 	manager.members[id] = session
+	manager.membersMu.Unlock()
+
 	manager.emmiter.Emit("created", session)
 	return session
 }
 
 func (manager *SessionManagerCtx) Get(id string) (types.Session, bool) {
 	manager.membersMu.Lock()
-	defer manager.membersMu.Unlock()
-
 	session, ok := manager.members[id]
+	manager.membersMu.Unlock()
+
 	return session, ok
 }
 
 func (manager *SessionManagerCtx) Delete(id string) error {
 	manager.membersMu.Lock()
-	defer manager.membersMu.Unlock()
-
 	session, ok := manager.members[id]
 	if !ok {
+		manager.membersMu.Unlock()
 		return fmt.Errorf("Member not found.")
 	}
 
-	manager.emmiter.Emit("deleted", session)
 	delete(manager.members, id)
+	manager.membersMu.Unlock()
 
+	var err error
 	if session.IsConnected() {
-		return session.Disconnect("member deleted")
+		err = session.Disconnect("member deleted")
 	}
 
-	return nil
+	manager.emmiter.Emit("deleted", session)
+	return err
 }
 
 // ---
