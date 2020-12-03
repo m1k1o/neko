@@ -196,23 +196,19 @@
 
     public requestControl() {
       this.api.user.controlRequest()
-      //this.websocket.send('control/request')
     }
 
     public releaseControl() {
       this.api.user.controlRelease()
-      //this.websocket.send('control/release')
     }
 
     public takeControl() {
       this.api.admin.controlTake()
-      //this.websocket.send('control/take')
     }
 
     public giveControl(id: string) {
       const controlTargetPayload = { id }
       this.api.admin.controlGive({ controlTargetPayload })
-      //this.websocket.send('control/give', { id })
     }
 
     public resetControl() {
@@ -236,6 +232,22 @@
       canAccessClipboard: boolean
     }) {
       this.api.admin.membersCreate({ memberDataPayload })
+    }
+
+    public memberUpdate(
+      memberId: string,
+      memberDataPayload: {
+        secret: string
+        name: string
+        isAdmin: boolean
+        canLogin: boolean
+        canConnect: boolean
+        canWatch: boolean
+        canHost: boolean
+        canAccessClipboard: boolean
+      },
+    ) {
+      this.api.admin.membersUpdate({ memberId, memberDataPayload })
     }
 
     public memberDelete(memberId: string) {
