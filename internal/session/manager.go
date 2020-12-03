@@ -240,20 +240,14 @@ func (manager *SessionManagerCtx) OnDisconnected(listener func(session types.Ses
 	})
 }
 
-func (manager *SessionManagerCtx) OnReceivingStarted(listener func(session types.Session)) {
-	manager.emmiter.On("receiving_started", func(payload ...interface{}) {
+func (manager *SessionManagerCtx) OnProfileChanged(listener func(session types.Session)) {
+	manager.emmiter.On("profile_changed", func(payload ...interface{}) {
 		listener(payload[0].(*SessionCtx))
 	})
 }
 
-func (manager *SessionManagerCtx) OnReceivingStopped(listener func(session types.Session)) {
-	manager.emmiter.On("receiving_stopped", func(payload ...interface{}) {
-		listener(payload[0].(*SessionCtx))
-	})
-}
-
-func (manager *SessionManagerCtx) OnProfileUpdated(listener func(session types.Session)) {
-	manager.emmiter.On("profile_updated", func(payload ...interface{}) {
+func (manager *SessionManagerCtx) OnStateChanged(listener func(session types.Session)) {
+	manager.emmiter.On("state_changed", func(payload ...interface{}) {
 		listener(payload[0].(*SessionCtx))
 	})
 }

@@ -66,12 +66,18 @@ type MemberProfile struct {
 	CanAccessClipboard bool   `json:"can_access_clipboard"`
 }
 
+type MemberState struct {
+	Event       string `json:"event,omitempty"`
+	ID          string `json:"id,omitempty"`
+	IsConnected bool   `json:"is_connected"`
+	IsReceiving bool   `json:"is_receiving"`
+}
+
 type MemberData struct {
 	Event       string        `json:"event,omitempty"`
 	ID          string        `json:"id"`
 	Profile     MemberProfile `json:"profile"`
-	IsConnected bool          `json:"is_connected"`
-	IsReceiving bool          `json:"is_receiving"`
+	State       MemberState   `json:"state"`
 }
 
 /////////////////////////////

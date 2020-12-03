@@ -81,27 +81,19 @@ func (ws *WebSocketManagerCtx) Start() {
 		}
 	})
 
-	ws.sessions.OnReceivingStarted(func(session types.Session) {
-		if err := ws.handler.SessionReceivingStarted(session); err != nil {
-			ws.logger.Warn().Str("id", session.ID()).Err(err).Msg("session receiving started with an error")
+	ws.sessions.OnProfileChanged(func(session types.Session) {
+		if err := ws.handler.SessionProfileChanged(session); err != nil {
+			ws.logger.Warn().Str("id", session.ID()).Err(err).Msg("session profile changed with an error")
 		} else {
-			ws.logger.Debug().Str("id", session.ID()).Msg("session receiving started")
+			ws.logger.Debug().Str("id", session.ID()).Msg("session profile changed")
 		}
 	})
 
-	ws.sessions.OnReceivingStopped(func(session types.Session) {
-		if err := ws.handler.SessionReceivingStopped(session); err != nil {
-			ws.logger.Warn().Str("id", session.ID()).Err(err).Msg("session receiving stopped with an error")
+	ws.sessions.OnStateChanged(func(session types.Session) {
+		if err := ws.handler.SessionStateChanged(session); err != nil {
+			ws.logger.Warn().Str("id", session.ID()).Err(err).Msg("session state changed with an error")
 		} else {
-			ws.logger.Debug().Str("id", session.ID()).Msg("session receiving stopped")
-		}
-	})
-
-	ws.sessions.OnProfileUpdated(func(session types.Session) {
-		if err := ws.handler.SessionProfileUpdated(session); err != nil {
-			ws.logger.Warn().Str("id", session.ID()).Err(err).Msg("session profile updated with an error")
-		} else {
-			ws.logger.Debug().Str("id", session.ID()).Msg("session profile updated")
+			ws.logger.Debug().Str("id", session.ID()).Msg("session state changed")
 		}
 	})
 

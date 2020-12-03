@@ -61,7 +61,7 @@ func (session *SessionCtx) CanAccessClipboard() bool {
 
 func (session *SessionCtx) SetProfile(profile types.MemberProfile) {
 	session.profile = profile
-	session.manager.emmiter.Emit("profile_updated", session)
+	session.manager.emmiter.Emit("profile_changed", session)
 }
 
 // ---
@@ -140,12 +140,10 @@ func (session *SessionCtx) SetWebRTCPeer(webrtc_peer types.WebRTCPeer) {
 }
 
 func (session *SessionCtx) SetWebRTCConnected(connected bool) {
-	if connected {
-		session.webrtc_connected = true
-		session.manager.emmiter.Emit("receiving_started", session)
-	} else {
-		session.webrtc_connected = false
-		session.manager.emmiter.Emit("receiving_stopped", session)
+	session.webrtc_connected = connected
+	session.manager.emmiter.Emit("state_changed", session)
+
+	if !connected {
 		session.webrtc_peer = nil
 	}
 }

@@ -10,9 +10,9 @@ func (h *MessageHandlerCtx) SessionCreated(session types.Session) error {
 	// TODO: Join structs?
 	h.sessions.Broadcast(
 		message.MemberData{
-			Event:       event.MEMBER_CREATED,
-			ID:          session.ID(),
-			Profile:     message.MemberProfile{
+			Event:   event.MEMBER_CREATED,
+			ID:      session.ID(),
+			Profile: message.MemberProfile{
 				Name:               session.Name(),
 				IsAdmin:            session.IsAdmin(),
 				CanLogin:           session.CanLogin(),
@@ -21,8 +21,10 @@ func (h *MessageHandlerCtx) SessionCreated(session types.Session) error {
 				CanHost:            session.CanHost(),
 				CanAccessClipboard: session.CanAccessClipboard(),
 			},
-			IsConnected: session.IsConnected(),
-			IsReceiving: session.IsReceiving(),
+			State:  message.MemberState{
+				IsConnected: session.IsConnected(),
+				IsReceiving: session.IsReceiving(),
+			},
 		}, nil)
 
 	return nil
@@ -90,31 +92,11 @@ func (h *MessageHandlerCtx) SessionDisconnected(session types.Session) error {
 	return nil
 }
 
-func (h *MessageHandlerCtx) SessionReceivingStarted(session types.Session) error {
-	h.sessions.Broadcast(
-		message.MemberID{
-			Event: event.MEMBER_RECEIVING_STARTED,
-			ID:    session.ID(),
-		}, nil);
-
-	return nil
-}
-
-func (h *MessageHandlerCtx) SessionReceivingStopped(session types.Session) error {
-	h.sessions.Broadcast(
-		message.MemberID{
-			Event: event.MEMBER_RECEIVING_STOPPED,
-			ID:    session.ID(),
-		}, nil);
-
-	return nil
-}
-
-func (h *MessageHandlerCtx) SessionProfileUpdated(session types.Session) error {
+func (h *MessageHandlerCtx) SessionProfileChanged(session types.Session) error {
 	// TODO: Join structs?
 	h.sessions.Broadcast(
 		message.MemberProfile{
-			Event:              event.MEMBER_PROFILE_UPDATED,
+			Event:              event.MEMBER_PROFILE,
 			ID:                 session.ID(),
 			Name:               session.Name(),
 			IsAdmin:            session.IsAdmin(),
@@ -123,6 +105,19 @@ func (h *MessageHandlerCtx) SessionProfileUpdated(session types.Session) error {
 			CanWatch:           session.CanWatch(),
 			CanHost:            session.CanHost(),
 			CanAccessClipboard: session.CanAccessClipboard(),
+		}, nil)
+
+	return nil
+}
+
+func (h *MessageHandlerCtx) SessionStateChanged(session types.Session) error {
+	// TODO: Join structs?
+	h.sessions.Broadcast(
+		message.MemberState{
+			Event:       event.MEMBER_STATE,
+			ID:          session.ID(),
+			IsConnected: session.IsConnected(),
+			IsReceiving: session.IsReceiving(),
 		}, nil)
 
 	return nil
