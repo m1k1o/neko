@@ -8,6 +8,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
+	"demodesk/neko/internal/session/database"
 	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/config"
 	"demodesk/neko/internal/utils"
@@ -19,20 +20,23 @@ func New(config *config.Session) *SessionManagerCtx {
 		host:      nil,
 		hostMu:    sync.Mutex{},
 		config:    config,
+		database:  database.New(),
 		members:   make(map[string]*SessionCtx),
 		membersMu: sync.Mutex{},
 		emmiter:   events.New(),
 	}
 
+	// TODO: Import from Database at startup.
+
 	// create default admin account at startup
-	_ = manager.Create("admin", types.MemberProfile{
+	_, _ = manager.Create("admin", types.MemberProfile{
 		Secret: config.AdminPassword,
 		Name: "Administrator",
 		IsAdmin: true,
 	})
 
 	// create default user account at startup
-	_ = manager.Create("user", types.MemberProfile{
+	_, _ = manager.Create("user", types.MemberProfile{
 		Secret: config.Password,
 		Name: "User",
 		IsAdmin: false,
@@ -46,33 +50,54 @@ type SessionManagerCtx struct {
 	host      types.Session
 	hostMu    sync.Mutex
 	config    *config.Session
+	database  *database.MembersDatabaseCtx
 	members   map[string]*SessionCtx
 	membersMu sync.Mutex
 	emmiter   events.EventEmmiter
 }
 
-func (manager *SessionManagerCtx) Create(id string, profile types.MemberProfile) types.Session {
+func (manager *SessionManagerCtx) Create(id string, profile types.MemberProfile) (types.Session, error) {
 	session := &SessionCtx{
-		id:        id,
-		manager:   manager,
-		logger:    manager.logger.With().Str("id", id).Logger(),
-		profile:   profile,
+		id:      id,
+		manager: manager,
+		logger:  manager.logger.With().Str("id", id).Logger(),
+		profile: profile,
 	}
 
 	manager.membersMu.Lock()
+
+	_, ok := manager.members[id]
+	if ok {
+		manager.membersMu.Unlock()
+		return nil, fmt.Errorf("Member ID already exists.")
+	}
+
+	err := manager.database.Insert(id, profile)
+	if err != nil {
+		manager.membersMu.Unlock()
+		return nil, err
+	}
+
 	manager.members[id] = session
 	manager.membersMu.Unlock()
 
 	manager.emmiter.Emit("created", session)
-	return session
+	return session, nil
 }
 
 func (manager *SessionManagerCtx) Update(id string, profile types.MemberProfile) error {
 	manager.membersMu.Lock()
+
 	session, ok := manager.members[id]
 	if !ok {
 		manager.membersMu.Unlock()
 		return fmt.Errorf("Member not found.")
+	}
+
+	err := manager.database.Update(id, profile)
+	if err != nil {
+		manager.membersMu.Unlock()
+		return err
 	}
 
 	session.profile = profile
@@ -80,14 +105,6 @@ func (manager *SessionManagerCtx) Update(id string, profile types.MemberProfile)
 
 	manager.emmiter.Emit("profile_changed", session)
 	return nil
-}
-
-func (manager *SessionManagerCtx) Get(id string) (types.Session, bool) {
-	manager.membersMu.Lock()
-	session, ok := manager.members[id]
-	manager.membersMu.Unlock()
-
-	return session, ok
 }
 
 func (manager *SessionManagerCtx) Delete(id string) error {
@@ -98,16 +115,29 @@ func (manager *SessionManagerCtx) Delete(id string) error {
 		return fmt.Errorf("Member not found.")
 	}
 
+	err := manager.database.Delete(id)
+	if err != nil {
+		manager.membersMu.Unlock()
+		return err
+	}
+
 	delete(manager.members, id)
 	manager.membersMu.Unlock()
 
-	var err error
 	if session.IsConnected() {
 		err = session.Disconnect("member deleted")
 	}
 
 	manager.emmiter.Emit("deleted", session)
 	return err
+}
+
+func (manager *SessionManagerCtx) Get(id string) (types.Session, bool) {
+	manager.membersMu.Lock()
+	defer manager.membersMu.Unlock()
+
+	session, ok := manager.members[id]
+	return session, ok
 }
 
 // ---

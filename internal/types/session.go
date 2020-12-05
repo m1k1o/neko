@@ -41,7 +41,7 @@ type Session interface {
 }
 
 type SessionManager interface {
-	Create(id string, profile MemberProfile) Session
+	Create(id string, profile MemberProfile) (Session, error)
 	Update(id string, profile MemberProfile) error
 	Get(id string) (Session, bool)
 	Delete(id string) error

@@ -43,7 +43,7 @@ func (h *MembersHandler) membersCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// TODO: Join structs?
-	session := h.sessions.Create(data.ID, types.MemberProfile{
+	session, err := h.sessions.Create(data.ID, types.MemberProfile{
 		Secret: data.Secret,
 		Name: data.Name,
 		IsAdmin: data.IsAdmin,
@@ -53,6 +53,11 @@ func (h *MembersHandler) membersCreate(w http.ResponseWriter, r *http.Request) {
 		CanHost: data.CanHost,
 		CanAccessClipboard: data.CanAccessClipboard,
 	})
+
+	if err != nil {
+		utils.HttpInternalServerError(w, err)
+		return
+	}
 
 	utils.HttpSuccess(w, MemberCreatePayload{
 		ID: session.ID(),
