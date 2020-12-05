@@ -84,7 +84,7 @@ func (h *MembersHandler) membersUpdate(w http.ResponseWriter, r *http.Request) {
 
 	// TODO: Join structs?
 	// TODO: Update independent props.
-	member.SetProfile(types.MemberProfile{
+	if err := h.sessions.Update(member.ID(), types.MemberProfile{
 		Secret: data.Secret,
 		Name: data.Name,
 		IsAdmin: data.IsAdmin,
@@ -93,7 +93,10 @@ func (h *MembersHandler) membersUpdate(w http.ResponseWriter, r *http.Request) {
 		CanWatch: data.CanWatch,
 		CanHost: data.CanHost,
 		CanAccessClipboard: data.CanAccessClipboard,
-	})
+	}); err != nil {
+		utils.HttpInternalServerError(w, err)
+		return
+	}
 
 	utils.HttpSuccess(w)
 }

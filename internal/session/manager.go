@@ -67,6 +67,21 @@ func (manager *SessionManagerCtx) Create(id string, profile types.MemberProfile)
 	return session
 }
 
+func (manager *SessionManagerCtx) Update(id string, profile types.MemberProfile) error {
+	manager.membersMu.Lock()
+	session, ok := manager.members[id]
+	if !ok {
+		manager.membersMu.Unlock()
+		return fmt.Errorf("Member not found.")
+	}
+
+	session.profile = profile
+	manager.membersMu.Unlock()
+
+	manager.emmiter.Emit("profile_changed", session)
+	return nil
+}
+
 func (manager *SessionManagerCtx) Get(id string) (types.Session, bool) {
 	manager.membersMu.Lock()
 	session, ok := manager.members[id]
