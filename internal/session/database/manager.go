@@ -1,66 +1,22 @@
 package database
 
 import (
-	"fmt"
-	"sync"
-
+	"demodesk/neko/internal/session/database/dummy"
+	"demodesk/neko/internal/session/database/object"
 	"demodesk/neko/internal/types"
+	"demodesk/neko/internal/config"
 )
 
-func New() *MembersDatabaseCtx {
-	return &MembersDatabaseCtx{
-		profiles: make(map[string]types.MemberProfile),
-		mu:       sync.Mutex{},
-	}
-}
+func New(config *config.Session) types.MembersDatabase {
+	// TODO: Load from config.
+	adapter := "object"
 
-type MembersDatabaseCtx struct {
-	profiles map[string]types.MemberProfile
-	mu       sync.Mutex
-}
-
-func (manager *MembersDatabaseCtx) Insert(id string, profile types.MemberProfile) error {
-	manager.mu.Lock()
-	defer manager.mu.Unlock()
-
-	_, ok := manager.profiles[id]
-	if ok {
-		return fmt.Errorf("Member ID already exists.")
+	switch adapter {
+	case "object":
+		return object.New()
+	case "dummy":
+		return dummy.New()
 	}
 
-	manager.profiles[id] = profile
-	return nil
-}
-
-func (manager *MembersDatabaseCtx) Update(id string, profile types.MemberProfile) error {
-	manager.mu.Lock()
-	defer manager.mu.Unlock()
-
-	_, ok := manager.profiles[id]
-	if !ok {
-		return fmt.Errorf("Member ID does not exist.")
-	}
-
-	manager.profiles[id] = profile
-	return nil
-}
-
-func (manager *MembersDatabaseCtx) Delete(id string) error {
-	manager.mu.Lock()
-	defer manager.mu.Unlock()
-
-	_, ok := manager.profiles[id]
-	if !ok {
-		return fmt.Errorf("Member ID does not exist.")
-	}
-
-	delete(manager.profiles, id)
-	return nil
-}
-
-func (manager *MembersDatabaseCtx) Select() map[string]types.MemberProfile {
-	manager.mu.Lock()
-	defer manager.mu.Unlock()
-
-	return manager.profiles
+	return dummy.New()
 }

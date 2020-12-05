@@ -14,6 +14,13 @@ type MemberProfile struct {
 	CanAccessClipboard bool
 }
 
+type MembersDatabase interface {
+	Insert(id string, profile MemberProfile) error	
+	Update(id string, profile MemberProfile) error	
+	Delete(id string) error	
+	Select() map[string]MemberProfile	
+}
+
 type Session interface {
 	ID() string
 

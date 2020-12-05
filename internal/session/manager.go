@@ -20,7 +20,7 @@ func New(config *config.Session) *SessionManagerCtx {
 		host:      nil,
 		hostMu:    sync.Mutex{},
 		config:    config,
-		database:  database.New(),
+		database:  database.New(config),
 		members:   make(map[string]*SessionCtx),
 		membersMu: sync.Mutex{},
 		emmiter:   events.New(),
@@ -30,6 +30,8 @@ func New(config *config.Session) *SessionManagerCtx {
 	for id, profile := range manager.database.Select() {
 		_ = manager.add(id, profile)
 	}
+
+	// TODO: Move to Database, or make `admin` as reserved user.
 
 	// create default admin account at startup
 	_ = manager.add("admin", types.MemberProfile{
@@ -53,7 +55,7 @@ type SessionManagerCtx struct {
 	host      types.Session
 	hostMu    sync.Mutex
 	config    *config.Session
-	database  *database.MembersDatabaseCtx
+	database  types.MembersDatabase
 	members   map[string]*SessionCtx
 	membersMu sync.Mutex
 	emmiter   events.EventEmmiter
