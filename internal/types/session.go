@@ -46,7 +46,6 @@ type SessionManager interface {
 	Get(id string) (Session, bool)
 	Delete(id string) error
 
-	HasHost() bool
 	SetHost(host Session)
 	GetHost() Session
 	ClearHost()

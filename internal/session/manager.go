@@ -157,13 +157,6 @@ func (manager *SessionManagerCtx) Get(id string) (types.Session, bool) {
 // host
 // ---
 
-func (manager *SessionManagerCtx) HasHost() bool {
-	manager.hostMu.Lock()
-	defer manager.hostMu.Unlock()
-
-	return manager.host != nil
-}
-
 func (manager *SessionManagerCtx) SetHost(host types.Session) {
 	manager.hostMu.Lock()
 	defer manager.hostMu.Unlock()
