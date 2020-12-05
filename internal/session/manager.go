@@ -26,17 +26,20 @@ func New(config *config.Session) *SessionManagerCtx {
 		emmiter:   events.New(),
 	}
 
-	// TODO: Import from Database at startup.
+	// import database users
+	for id, profile := range manager.database.Select() {
+		_ = manager.add(id, profile)
+	}
 
 	// create default admin account at startup
-	_, _ = manager.Create("admin", types.MemberProfile{
+	_ = manager.add("admin", types.MemberProfile{
 		Secret: config.AdminPassword,
 		Name: "Administrator",
 		IsAdmin: true,
 	})
 
 	// create default user account at startup
-	_, _ = manager.Create("user", types.MemberProfile{
+	_ = manager.add("user", types.MemberProfile{
 		Secret: config.Password,
 		Name: "User",
 		IsAdmin: false,
@@ -56,7 +59,8 @@ type SessionManagerCtx struct {
 	emmiter   events.EventEmmiter
 }
 
-func (manager *SessionManagerCtx) Create(id string, profile types.MemberProfile) (types.Session, error) {
+// TODO: Extract members map + primitives.
+func (manager *SessionManagerCtx) add(id string, profile types.MemberProfile) types.Session {
 	session := &SessionCtx{
 		id:      id,
 		manager: manager,
@@ -64,6 +68,15 @@ func (manager *SessionManagerCtx) Create(id string, profile types.MemberProfile)
 		profile: profile,
 	}
 
+	manager.members[id] = session
+	return session
+}
+
+// ---
+// members
+// ---
+
+func (manager *SessionManagerCtx) Create(id string, profile types.MemberProfile) (types.Session, error) {
 	manager.membersMu.Lock()
 
 	_, ok := manager.members[id]
@@ -78,7 +91,7 @@ func (manager *SessionManagerCtx) Create(id string, profile types.MemberProfile)
 		return nil, err
 	}
 
-	manager.members[id] = session
+	session := manager.add(id, profile)
 	manager.membersMu.Unlock()
 
 	manager.emmiter.Emit("created", session)

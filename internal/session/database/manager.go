@@ -58,10 +58,9 @@ func (manager *MembersDatabaseCtx) Delete(id string) error {
 	return nil
 }
 
-func (manager *MembersDatabaseCtx) Select(id string) (types.MemberProfile, bool) {
+func (manager *MembersDatabaseCtx) Select() map[string]types.MemberProfile {
 	manager.mu.Lock()
 	defer manager.mu.Unlock()
 
-	profile, ok := manager.profiles[id]
-	return profile, ok
+	return manager.profiles
 }
