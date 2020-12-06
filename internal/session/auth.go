@@ -22,6 +22,10 @@ func (manager *SessionManagerCtx) Authenticate(r *http.Request) (types.Session, 
 		return nil, fmt.Errorf("invalid password provided")
 	}
 
+	if !session.CanLogin() {
+		return nil, fmt.Errorf("login disabled")
+	}
+
 	return session, nil
 }
 
