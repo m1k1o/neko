@@ -59,6 +59,24 @@ func (session *SessionCtx) CanAccessClipboard() bool {
 	return session.profile.CanAccessClipboard
 }
 
+func (session *SessionCtx) profileChanged() {
+	if !session.CanHost() && session.IsHost() {
+		session.manager.ClearHost()
+	}
+
+	if !session.CanWatch() && session.IsWatching() {
+		if err := session.webrtc_peer.Destroy(); err != nil {
+			session.logger.Warn().Err(err).Msgf("webrtc destroy has failed")
+		}
+	}
+
+	if !session.CanConnect() && session.IsConnected() {
+		if err := session.Disconnect("profile changed"); err != nil {
+			session.logger.Warn().Err(err).Msgf("websocket destroy has failed")
+		}
+	}
+}
+
 // ---
 // runtime
 // ---

@@ -142,6 +142,7 @@ func (manager *SessionManagerCtx) Update(id string, profile types.MemberProfile)
 	manager.membersMu.Unlock()
 
 	manager.emmiter.Emit("profile_changed", session)
+	session.profileChanged()
 	return nil
 }
 
