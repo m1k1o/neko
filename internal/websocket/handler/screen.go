@@ -8,7 +8,7 @@ import (
 
 func (h *MessageHandlerCtx) screenSet(session types.Session, payload *message.ScreenSize) error {
 	if !session.IsAdmin() {
-		h.logger.Debug().Msg("user not admin")
+		h.logger.Debug().Msg("member not admin")
 		return nil
 	}
 
