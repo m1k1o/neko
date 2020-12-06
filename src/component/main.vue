@@ -120,6 +120,10 @@
       return this.state.control.host_id !== null && this.state.member_id === this.state.control.host_id
     }
 
+    public get is_admin() {
+      return this.state.member_id != null ? this.state.members[this.state.member_id].profile.is_admin : false
+    }
+
     /////////////////////////////
     // Public events
     /////////////////////////////
