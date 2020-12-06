@@ -75,6 +75,11 @@ func (manager *SessionManagerCtx) Connect() error {
 		Secret: manager.config.AdminPassword,
 		Name: "Administrator",
 		IsAdmin: true,
+		CanLogin: true,
+		CanConnect: true,
+		CanWatch: true,
+		CanHost: true,
+		CanAccessClipboard: true,
 	})
 
 	// create default user account at startup
@@ -82,6 +87,11 @@ func (manager *SessionManagerCtx) Connect() error {
 		Secret: manager.config.Password,
 		Name: "User",
 		IsAdmin: false,
+		CanLogin: true,
+		CanConnect: true,
+		CanWatch: true,
+		CanHost: true,
+		CanAccessClipboard: true,
 	})
 
 	return nil
