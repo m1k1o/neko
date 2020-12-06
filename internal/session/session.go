@@ -62,6 +62,12 @@ func (session *SessionCtx) CanAccessClipboard() bool {
 func (session *SessionCtx) profileChanged() {
 	if !session.CanHost() && session.IsHost() {
 		session.manager.ClearHost()
+
+		session.manager.Broadcast(
+			message.ControlHost{
+				Event:   event.CONTROL_HOST,
+				HasHost: false,
+			}, nil)
 	}
 
 	if !session.CanWatch() && session.IsWatching() {
@@ -70,7 +76,7 @@ func (session *SessionCtx) profileChanged() {
 		}
 	}
 
-	if !session.CanConnect() && session.IsConnected() {
+	if (!session.CanConnect() || !session.CanLogin()) && session.IsConnected() {
 		if err := session.Disconnect("profile changed"); err != nil {
 			session.logger.Warn().Err(err).Msgf("websocket destroy has failed")
 		}
