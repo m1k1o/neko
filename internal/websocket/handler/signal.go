@@ -7,6 +7,10 @@ import (
 )
 
 func (h *MessageHandlerCtx) signalRequest(session types.Session) error {
+	if !session.CanWatch() {
+		return nil
+	}
+
 	sdp, lite, ice, err := h.webrtc.CreatePeer(session)
 	if err != nil {
 		return err
