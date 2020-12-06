@@ -132,6 +132,11 @@ func (manager *SessionManagerCtx) Update(id string, profile types.MemberProfile)
 		return fmt.Errorf("Member not found.")
 	}
 
+	// preserve secret if not updated
+	if profile.Secret == "" {
+		profile.Secret = session.profile.Secret
+	}
+
 	err := manager.database.Update(id, profile)
 	if err != nil {
 		manager.membersMu.Unlock()
