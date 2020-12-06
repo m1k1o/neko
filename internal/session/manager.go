@@ -68,7 +68,7 @@ func (manager *SessionManagerCtx) Connect() error {
 		_ = manager.add(id, profile)
 	}
 
-	// TODO: Move to Database, or make `admin` as reserved user.
+	// TODO: Move to Database, or make `admin` as reserved ID.
 
 	// create default admin account at startup
 	_ = manager.add("admin", types.MemberProfile{

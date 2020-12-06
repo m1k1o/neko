@@ -7,6 +7,11 @@ import (
 )
 
 func (h *MessageHandlerCtx) controlRelease(session types.Session) error {
+	if !session.CanHost() {
+		h.logger.Debug().Str("id", session.ID()).Msg("is not allowed to host")
+		return nil
+	}
+
 	if !session.IsHost() {
 		h.logger.Debug().Str("id", session.ID()).Msg("is not the host")
 		return nil
@@ -25,6 +30,11 @@ func (h *MessageHandlerCtx) controlRelease(session types.Session) error {
 }
 
 func (h *MessageHandlerCtx) controlRequest(session types.Session) error {
+	if !session.CanHost() {
+		h.logger.Debug().Str("id", session.ID()).Msg("is not allowed to host")
+		return nil
+	}
+
 	if session.IsHost() {
 		h.logger.Debug().Str("id", session.ID()).Msg("is already the host")
 		return nil
