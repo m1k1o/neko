@@ -155,11 +155,24 @@ func (ws *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Request) e
 	if err != nil {
 		ws.logger.Warn().Err(err).Msg("authentication failed")
 
-		// TODO: Refactor
+		// TODO: Refactor, return error code.
 		if err = connection.WriteJSON(
 			message.SystemDisconnect{
 				Event:   event.SYSTEM_DISCONNECT,
-				Message: "authentication failed",
+				Message: err.Error(),
+			}); err != nil {
+			ws.logger.Error().Err(err).Msg("failed to send disconnect")
+		}
+
+		return connection.Close()
+	}
+
+	if !session.CanConnect() {
+		// TODO: Refactor, return error code.
+		if err = connection.WriteJSON(
+			message.SystemDisconnect{
+				Event:   event.SYSTEM_DISCONNECT,
+				Message: "connection disabled",
 			}); err != nil {
 			ws.logger.Error().Err(err).Msg("failed to send disconnect")
 		}
@@ -168,7 +181,7 @@ func (ws *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Request) e
 	}
 
 	if session.IsConnected() {
-		// TODO: Refactor
+		// TODO: Refactor, return error code.
 		if err = connection.WriteJSON(
 			message.SystemDisconnect{
 				Event:   event.SYSTEM_DISCONNECT,
