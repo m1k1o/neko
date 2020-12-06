@@ -9,6 +9,8 @@ type Session struct {
 	Password        string
 	AdminPassword   string
 	ImplicitHosting bool
+	DatabaseAdapter string
+	FilePath        string
 }
 
 func (Session) Init(cmd *cobra.Command) error {
@@ -27,6 +29,16 @@ func (Session) Init(cmd *cobra.Command) error {
 		return err
 	}
 
+	cmd.PersistentFlags().String("database_adapter", "file", "choose database adapter for members")
+	if err := viper.BindPFlag("database_adapter", cmd.PersistentFlags().Lookup("database_adapter")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().String("file_path", "/home/neko/members.json", "file adapter: specify file path")
+	if err := viper.BindPFlag("file_path", cmd.PersistentFlags().Lookup("file_path")); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -34,4 +46,6 @@ func (s *Session) Set() {
 	s.Password = viper.GetString("password")
 	s.AdminPassword = viper.GetString("password_admin")
 	s.ImplicitHosting = viper.GetBool("implicit_hosting")
+	s.DatabaseAdapter = viper.GetString("database_adapter")
+	s.FilePath = viper.GetString("file_path")
 }
