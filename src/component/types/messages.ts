@@ -69,7 +69,7 @@ export interface MemberState {
   event: string | undefined
   id: string
   is_connected: boolean
-  is_receiving: boolean
+  is_watching: boolean
 }
 
 export interface MemberData {
@@ -77,7 +77,7 @@ export interface MemberData {
   id: string
   profile: MemberProfile
   is_connected: boolean
-  is_receiving: boolean
+  is_watching: boolean
 }
 
 /////////////////////////////

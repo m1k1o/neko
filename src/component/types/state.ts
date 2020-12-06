@@ -78,7 +78,7 @@ export interface MemberProfile {
 
 export interface MemberState {
   is_connected: boolean
-  is_receiving: boolean
+  is_watching: boolean
 }
 
 export interface Member {
