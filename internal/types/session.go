@@ -38,7 +38,7 @@ type Session interface {
 
 	IsHost() bool
 	IsConnected() bool
-	IsReceiving() bool
+	IsWatching() bool
 	Disconnect(reason string) error
 
 	SetWebSocketPeer(websocket_peer WebSocketPeer)

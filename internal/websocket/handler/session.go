@@ -23,7 +23,7 @@ func (h *MessageHandlerCtx) SessionCreated(session types.Session) error {
 			},
 			State:  message.MemberState{
 				IsConnected: session.IsConnected(),
-				IsReceiving: session.IsReceiving(),
+				IsWatching:  session.IsWatching(),
 			},
 		}, nil)
 
@@ -105,7 +105,7 @@ func (h *MessageHandlerCtx) SessionStateChanged(session types.Session) error {
 			Event:       event.MEMBER_STATE,
 			ID:          session.ID(),
 			IsConnected: session.IsConnected(),
-			IsReceiving: session.IsReceiving(),
+			IsWatching:  session.IsWatching(),
 		}, nil)
 
 	return nil

@@ -71,7 +71,7 @@ func (session *SessionCtx) IsConnected() bool {
 	return session.websocket_connected
 }
 
-func (session *SessionCtx) IsReceiving() bool {
+func (session *SessionCtx) IsWatching() bool {
 	return session.webrtc_connected
 }
 

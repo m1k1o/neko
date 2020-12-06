@@ -39,7 +39,7 @@ func (h *MessageHandlerCtx) systemInit(session types.Session) error {
 			},
 			State:   message.MemberState{
 				IsConnected: session.IsConnected(),
-				IsReceiving: session.IsReceiving(),
+				IsWatching:  session.IsWatching(),
 			},
 		}
 	}

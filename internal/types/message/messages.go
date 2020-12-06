@@ -70,7 +70,7 @@ type MemberState struct {
 	Event       string `json:"event,omitempty"`
 	ID          string `json:"id,omitempty"`
 	IsConnected bool   `json:"is_connected"`
-	IsReceiving bool   `json:"is_receiving"`
+	IsWatching  bool   `json:"is_watching"`
 }
 
 type MemberData struct {
