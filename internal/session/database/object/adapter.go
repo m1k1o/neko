@@ -19,6 +19,14 @@ type MembersDatabaseCtx struct {
 	mu       sync.Mutex
 }
 
+func (manager *MembersDatabaseCtx) Connect() error {
+	return nil
+}
+
+func (manager *MembersDatabaseCtx) Disconnect() error {
+	return nil
+}
+
 func (manager *MembersDatabaseCtx) Insert(id string, profile types.MemberProfile) error {
 	manager.mu.Lock()
 	defer manager.mu.Unlock()
@@ -58,9 +66,9 @@ func (manager *MembersDatabaseCtx) Delete(id string) error {
 	return nil
 }
 
-func (manager *MembersDatabaseCtx) Select() map[string]types.MemberProfile {
+func (manager *MembersDatabaseCtx) Select() (map[string]types.MemberProfile, error) {
 	manager.mu.Lock()
 	defer manager.mu.Unlock()
 
-	return manager.profiles
+	return manager.profiles, nil
 }

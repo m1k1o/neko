@@ -7,8 +7,6 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/rs/zerolog/log"
-
 	"demodesk/neko/internal/types"
 )
 
@@ -22,6 +20,14 @@ func New(file string) types.MembersDatabase {
 type MembersDatabaseCtx struct {
 	file string
 	mu   sync.Mutex
+}
+
+func (manager *MembersDatabaseCtx) Connect() error {
+	return nil
+}
+
+func (manager *MembersDatabaseCtx) Disconnect() error {
+	return nil
 }
 
 func (manager *MembersDatabaseCtx) Insert(id string, profile types.MemberProfile) error {
@@ -81,17 +87,12 @@ func (manager *MembersDatabaseCtx) Delete(id string) error {
 	return manager.serialize(profiles)
 }
 
-func (manager *MembersDatabaseCtx) Select() map[string]types.MemberProfile {
+func (manager *MembersDatabaseCtx) Select() (map[string]types.MemberProfile, error) {
 	manager.mu.Lock()
 	defer manager.mu.Unlock()
 
 	profiles, err := manager.deserialize()
-	if err != nil {
-		// TODO: Refactor.
-		log.Panic().Err(err).Msg("could not read members file")
-	}
-
-	return profiles
+	return profiles, err
 }
 
 func (manager *MembersDatabaseCtx) deserialize() (map[string]types.MemberProfile, error) {

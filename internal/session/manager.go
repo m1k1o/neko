@@ -15,7 +15,7 @@ import (
 )
 
 func New(config *config.Session) *SessionManagerCtx {
-	manager := &SessionManagerCtx{
+	return &SessionManagerCtx{
 		logger:    log.With().Str("module", "session").Logger(),
 		host:      nil,
 		hostMu:    sync.Mutex{},
@@ -25,29 +25,6 @@ func New(config *config.Session) *SessionManagerCtx {
 		membersMu: sync.Mutex{},
 		emmiter:   events.New(),
 	}
-
-	// import database users
-	for id, profile := range manager.database.Select() {
-		_ = manager.add(id, profile)
-	}
-
-	// TODO: Move to Database, or make `admin` as reserved user.
-
-	// create default admin account at startup
-	_ = manager.add("admin", types.MemberProfile{
-		Secret: config.AdminPassword,
-		Name: "Administrator",
-		IsAdmin: true,
-	})
-
-	// create default user account at startup
-	_ = manager.add("user", types.MemberProfile{
-		Secret: config.Password,
-		Name: "User",
-		IsAdmin: false,
-	})
-
-	return manager
 }
 
 type SessionManagerCtx struct {
@@ -77,6 +54,42 @@ func (manager *SessionManagerCtx) add(id string, profile types.MemberProfile) ty
 // ---
 // members
 // ---
+func (manager *SessionManagerCtx) Connect() error {
+	if err := manager.database.Connect(); err != nil {
+		return err
+	}
+
+	profiles, err := manager.database.Select()
+	if err != nil {
+		return err
+	}
+
+	for id, profile := range profiles {
+		_ = manager.add(id, profile)
+	}
+
+	// TODO: Move to Database, or make `admin` as reserved user.
+
+	// create default admin account at startup
+	_ = manager.add("admin", types.MemberProfile{
+		Secret: manager.config.AdminPassword,
+		Name: "Administrator",
+		IsAdmin: true,
+	})
+
+	// create default user account at startup
+	_ = manager.add("user", types.MemberProfile{
+		Secret: manager.config.Password,
+		Name: "User",
+		IsAdmin: false,
+	})
+
+	return nil
+}
+
+func (manager *SessionManagerCtx) Disconnect() error {
+	return manager.database.Disconnect()
+}
 
 func (manager *SessionManagerCtx) Create(id string, profile types.MemberProfile) (types.Session, error) {
 	manager.membersMu.Lock()

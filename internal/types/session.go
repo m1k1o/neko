@@ -15,10 +15,13 @@ type MemberProfile struct {
 }
 
 type MembersDatabase interface {
+	Connect() error
+	Disconnect() error
+
 	Insert(id string, profile MemberProfile) error	
 	Update(id string, profile MemberProfile) error	
 	Delete(id string) error	
-	Select() map[string]MemberProfile	
+	Select() (map[string]MemberProfile, error)
 }
 
 type Session interface {
@@ -48,6 +51,9 @@ type Session interface {
 }
 
 type SessionManager interface {
+	Connect() error
+	Disconnect() error
+
 	Create(id string, profile MemberProfile) (Session, error)
 	Update(id string, profile MemberProfile) error
 	Get(id string) (Session, bool)

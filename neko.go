@@ -128,6 +128,13 @@ func (neko *Neko) Preflight() {
 }
 
 func (neko *Neko) Start() {
+	neko.sessionManager = session.New(
+		neko.Configs.Session,
+	)
+	if err := neko.sessionManager.Connect(); err != nil {
+		neko.logger.Panic().Err(err).Msg("unable to connect to session manager")
+	}
+
 	neko.desktopManager = desktop.New(
 		neko.Configs.Capture.Display,
 		neko.Configs.Desktop,
@@ -146,10 +153,6 @@ func (neko *Neko) Start() {
 		neko.Configs.WebRTC,
 	)
 	neko.webRTCManager.Start()
-
-	neko.sessionManager = session.New(
-		neko.Configs.Session,
-	)
 
 	neko.webSocketManager = websocket.New(
 		neko.sessionManager,
@@ -175,6 +178,12 @@ func (neko *Neko) Start() {
 }
 
 func (neko *Neko) Shutdown() {
+	if err := neko.sessionManager.Disconnect(); err != nil {
+		neko.logger.Err(err).Msg("session manager disconnect with an error")
+	} else {
+		neko.logger.Debug().Msg("session manager disconnect")
+	}
+
 	if err := neko.desktopManager.Shutdown(); err != nil {
 		neko.logger.Err(err).Msg("desktop manager shutdown with an error")
 	} else {
