@@ -9,7 +9,7 @@
         :isControling="controlling"
         :scrollSensitivity="state.control.scroll.sensitivity"
         :scrollInvert="state.control.scroll.inverse"
-        :implicitControl="state.control.implicit_hosting"
+        :implicitControl="state.control.implicit_hosting && state.members[state.member_id].profile.can_host"
         @implicit-control-request="websocket.send('control/request')"
         @implicit-control-release="websocket.send('control/release')"
       />
