@@ -121,6 +121,11 @@ func (ws *WebSocketManagerCtx) Start() {
 					break
 				}
 
+				current = text
+				if !session.CanAccessClipboard() {
+					break
+				}
+
 				if err := session.Send(
 					message.ClipboardData{
 						Event: event.CLIPBOARD_UPDATED,
@@ -128,8 +133,6 @@ func (ws *WebSocketManagerCtx) Start() {
 					}); err != nil {
 					ws.logger.Warn().Err(err).Msg("could not sync clipboard")
 				}
-
-				current = text
 			}
 
 			time.Sleep(100 * time.Millisecond)
