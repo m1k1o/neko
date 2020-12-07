@@ -6,7 +6,7 @@
         :webrtc="webrtc"
         :screenWidth="state.screen.size.width"
         :screenHeight="state.screen.size.height"
-        :isControling="controlling"
+        :isControling="controlling && watching"
         :scrollSensitivity="state.control.scroll.sensitivity"
         :scrollInvert="state.control.scroll.inverse"
         :implicitControl="state.control.implicit_hosting && state.members[state.member_id].profile.can_host"
@@ -113,7 +113,11 @@
     } as NekoState
 
     public get connected() {
-      return this.state.connection.websocket == 'connected' && this.state.connection.webrtc == 'connected'
+      return this.state.connection.websocket == 'connected'
+    }
+
+    public get watching() {
+      return this.state.connection.webrtc == 'connected'
     }
 
     public get controlling() {
@@ -151,6 +155,30 @@
 
       this.websocket.disconnect()
       this.api.disconnect()
+    }
+
+    public webrtcConnect() {
+      if (!this.connected) {
+        throw new Error('client not connected to websocket')
+      }
+
+      if (this.watching) {
+        throw new Error('client already connected to webrtc')
+      }
+
+      this.websocket.send('signal/request')
+    }
+
+    public webrtcDisconnect() {
+      if (!this.connected) {
+        throw new Error('client not connected to websocket')
+      }
+
+      if (!this.watching) {
+        throw new Error('client not connected to webrtc')
+      }
+
+      this.webrtc.disconnect()
     }
 
     public play() {
@@ -290,9 +318,9 @@
         this.events.emit('internal.websocket', 'connecting')
       })
       this.websocket.on('connected', () => {
-        this.websocket.send('signal/request')
         Vue.set(this.state.connection, 'websocket', 'connected')
         this.events.emit('internal.websocket', 'connected')
+        this.webrtcConnect()
       })
       this.websocket.on('disconnected', () => {
         Vue.set(this.state.connection, 'websocket', 'disconnected')

@@ -73,11 +73,14 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
       this._log.debug(`peer ice connection state changed: ${this._peer!.iceConnectionState}`)
 
       switch (this._state) {
+        case 'disconnected':
+          this.onDisconnected(new Error('peer disconnected'))
+          break
         case 'failed':
           this.onDisconnected(new Error('peer failed'))
           break
-        case 'disconnected':
-          this.onDisconnected(new Error('peer disconnected'))
+        case 'closed':
+          this.onDisconnected(new Error('peer closed'))
           break
       }
     }
