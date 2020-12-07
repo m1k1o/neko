@@ -357,6 +357,8 @@
         Vue.set(this.state.connection, 'webrtc', 'disconnected')
         this.events.emit('internal.webrtc', 'disconnected')
 
+        if (!this._video) return
+
         // destroy stream
         if ('srcObject' in this._video) {
           this._video.srcObject = null
