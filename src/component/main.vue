@@ -268,7 +268,7 @@
 
     public memberUpdate(
       memberId: string,
-      memberDataPayload: {
+      memberProfile: {
         secret: string
         name: string
         isAdmin: boolean
@@ -279,7 +279,7 @@
         canAccessClipboard: boolean
       },
     ) {
-      this.api.admin.membersUpdate({ memberId, memberDataPayload })
+      this.api.admin.membersUpdate({ memberId, memberProfile })
     }
 
     public memberDelete(memberId: string) {
