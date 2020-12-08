@@ -7,13 +7,13 @@ import (
 	"demodesk/neko/internal/types"
 )
 
-type MemberCreatePayload struct {
+type MemberDataPayload struct {
 	ID string `json:"id"`
 	*types.MemberProfile
 }
 
 func (h *MembersHandler) membersCreate(w http.ResponseWriter, r *http.Request) {
-	data := &MemberCreatePayload{
+	data := &MemberDataPayload{
 		// default values
 		MemberProfile: &types.MemberProfile{
 			IsAdmin: false,
@@ -58,7 +58,7 @@ func (h *MembersHandler) membersCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.HttpSuccess(w, MemberCreatePayload{
+	utils.HttpSuccess(w, MemberDataPayload{
 		ID: session.ID(),
 	})
 }
