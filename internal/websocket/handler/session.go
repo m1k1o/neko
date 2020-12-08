@@ -11,21 +11,8 @@ func (h *MessageHandlerCtx) SessionCreated(session types.Session) error {
 		message.MemberData{
 			Event:   event.MEMBER_CREATED,
 			ID:      session.ID(),
-			// TODO: Get whole profile from session.
-			Profile: types.MemberProfile{
-				Name:               session.Name(),
-				IsAdmin:            session.IsAdmin(),
-				CanLogin:           session.CanLogin(),
-				CanConnect:         session.CanConnect(),
-				CanWatch:           session.CanWatch(),
-				CanHost:            session.CanHost(),
-				CanAccessClipboard: session.CanAccessClipboard(),
-			},
-			// TODO: Get whole state from session.
-			State:   types.MemberState{
-				IsConnected: session.IsConnected(),
-				IsWatching:  session.IsWatching(),
-			},
+			Profile: session.GetProfile(),
+			State:   session.GetState(),
 		}, nil)
 
 	return nil
@@ -82,35 +69,26 @@ func (h *MessageHandlerCtx) SessionDisconnected(session types.Session) error {
 }
 
 func (h *MessageHandlerCtx) SessionProfileChanged(session types.Session) error {
+	profile := session.GetProfile()
+
 	h.sessions.Broadcast(
 		message.MemberProfile{
 			Event:         event.MEMBER_PROFILE,
 			ID:            session.ID(),
-			// TODO: Get whole profile from session.
-			MemberProfile: &types.MemberProfile{
-				Name:               session.Name(),
-				IsAdmin:            session.IsAdmin(),
-				CanLogin:           session.CanLogin(),
-				CanConnect:         session.CanConnect(),
-				CanWatch:           session.CanWatch(),
-				CanHost:            session.CanHost(),
-				CanAccessClipboard: session.CanAccessClipboard(),
-			},
+			MemberProfile: &profile,
 		}, nil)
 
 	return nil
 }
 
 func (h *MessageHandlerCtx) SessionStateChanged(session types.Session) error {
+	state := session.GetState()
+
 	h.sessions.Broadcast(
 		message.MemberState{
 			Event:       event.MEMBER_STATE,
 			ID:          session.ID(),
-			// TODO: Get whole state from session.
-			MemberState: &types.MemberState{
-				IsConnected: session.IsConnected(),
-				IsWatching:  session.IsWatching(),
-			},
+			MemberState: &state,
 		}, nil)
 
 	return nil

@@ -31,6 +31,7 @@ type MembersDatabase interface {
 type Session interface {
 	ID() string
 
+	// profile
 	VerifySecret(secret string) bool
 	Name() string
 	IsAdmin() bool
@@ -39,16 +40,21 @@ type Session interface {
 	CanWatch() bool
 	CanHost() bool
 	CanAccessClipboard() bool
+	GetProfile() MemberProfile
 
+	// state
 	IsHost() bool
 	IsConnected() bool
 	IsWatching() bool
-	Disconnect(reason string) error
+	GetState() MemberState
 
+	// websocket
 	SetWebSocketPeer(websocket_peer WebSocketPeer)
 	SetWebSocketConnected(connected bool)
 	Send(v interface{}) error
+	Disconnect(reason string) error
 
+	// webrtc
 	SetWebRTCPeer(webrtc_peer WebRTCPeer)
 	SetWebRTCConnected(connected bool)
 	SignalAnswer(sdp string) error

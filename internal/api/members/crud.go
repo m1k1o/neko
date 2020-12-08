@@ -14,6 +14,7 @@ type MemberCreatePayload struct {
 
 func (h *MembersHandler) membersCreate(w http.ResponseWriter, r *http.Request) {
 	data := &MemberCreatePayload{
+		// default values
 		MemberProfile: &types.MemberProfile{
 			IsAdmin: false,
 			CanLogin: true,
@@ -64,32 +65,14 @@ func (h *MembersHandler) membersCreate(w http.ResponseWriter, r *http.Request) {
 
 func (h *MembersHandler) membersRead(w http.ResponseWriter, r *http.Request) {
 	member := GetMember(r)
+	profile := member.GetProfile()
 
-	// TODO: Get whole profile from session.
-	utils.HttpSuccess(w, types.MemberProfile{
-		Name: member.Name(),
-		IsAdmin: member.IsAdmin(),
-		CanLogin: member.CanLogin(),
-		CanConnect: member.CanConnect(),
-		CanWatch: member.CanWatch(),
-		CanHost: member.CanHost(),
-		CanAccessClipboard: member.CanAccessClipboard(),
-	})
+	utils.HttpSuccess(w, profile)
 }
 
 func (h *MembersHandler) membersUpdate(w http.ResponseWriter, r *http.Request) {
 	member := GetMember(r)
-
-	// TODO: Get whole profile from session.
-	profile := types.MemberProfile{
-		Name: member.Name(),
-		IsAdmin: member.IsAdmin(),
-		CanLogin: member.CanLogin(),
-		CanConnect: member.CanConnect(),
-		CanWatch: member.CanWatch(),
-		CanHost: member.CanHost(),
-		CanAccessClipboard: member.CanAccessClipboard(),
-	}
+	profile := member.GetProfile()
 
 	if !utils.HttpJsonRequest(w, r, &profile) {
 		return

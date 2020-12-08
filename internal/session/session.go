@@ -59,6 +59,12 @@ func (session *SessionCtx) CanAccessClipboard() bool {
 	return session.profile.CanAccessClipboard
 }
 
+func (session *SessionCtx) GetProfile() types.MemberProfile {
+	profile := session.profile
+	profile.Secret = ""
+	return profile
+}
+
 func (session *SessionCtx) profileChanged() {
 	if !session.CanHost() && session.IsHost() {
 		session.manager.ClearHost()
@@ -84,7 +90,7 @@ func (session *SessionCtx) profileChanged() {
 }
 
 // ---
-// runtime
+// state
 // ---
 
 func (session *SessionCtx) IsHost() bool {
@@ -99,28 +105,12 @@ func (session *SessionCtx) IsWatching() bool {
 	return session.webrtc_connected
 }
 
-func (session *SessionCtx) Disconnect(reason string) error {
-	if err := session.Send(
-		message.SystemDisconnect{
-			Event:   event.SYSTEM_DISCONNECT,
-			Message: reason,
-		}); err != nil {
-		return err
+func (session *SessionCtx) GetState() types.MemberState {
+	// TODO: Save state in member struct.
+	return types.MemberState{
+		IsConnected: session.IsConnected(),
+		IsWatching:  session.IsWatching(),
 	}
-
-	if session.websocket_peer != nil {
-		if err := session.websocket_peer.Destroy(); err != nil {
-			return err
-		}
-	}
-
-	if session.webrtc_peer != nil {
-		if err := session.webrtc_peer.Destroy(); err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 // ---
@@ -155,6 +145,30 @@ func (session *SessionCtx) Send(v interface{}) error {
 	}
 
 	return session.websocket_peer.Send(v)
+}
+
+func (session *SessionCtx) Disconnect(reason string) error {
+	if err := session.Send(
+		message.SystemDisconnect{
+			Event:   event.SYSTEM_DISCONNECT,
+			Message: reason,
+		}); err != nil {
+		return err
+	}
+
+	if session.websocket_peer != nil {
+		if err := session.websocket_peer.Destroy(); err != nil {
+			return err
+		}
+	}
+
+	if session.webrtc_peer != nil {
+		if err := session.webrtc_peer.Destroy(); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // ---

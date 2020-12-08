@@ -27,21 +27,8 @@ func (h *MessageHandlerCtx) systemInit(session types.Session) error {
 	for _, session := range h.sessions.Members() {
 		members[session.ID()] = message.MemberData{
 			ID:      session.ID(),
-			// TODO: Get whole profile from session.
-			Profile: types.MemberProfile{
-				Name:               session.Name(),
-				IsAdmin:            session.IsAdmin(),
-				CanLogin:           session.CanLogin(),
-				CanConnect:         session.CanConnect(),
-				CanWatch:           session.CanWatch(),
-				CanHost:            session.CanHost(),
-				CanAccessClipboard: session.CanAccessClipboard(),
-			},
-			// TODO: Get whole state from session.
-			State:   types.MemberState{
-				IsConnected: session.IsConnected(),
-				IsWatching:  session.IsWatching(),
-			},
+			Profile: session.GetProfile(),
+			State:   session.GetState(),
 		}
 	}
 
