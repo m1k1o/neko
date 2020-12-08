@@ -25,10 +25,10 @@ func (h *MessageHandlerCtx) systemInit(session types.Session) error {
 
 	members := map[string]message.MemberData{}
 	for _, session := range h.sessions.Members() {
-		// TODO: Join structs?
 		members[session.ID()] = message.MemberData{
 			ID:      session.ID(),
-			Profile: message.MemberProfile{
+			// TODO: Get whole profile from session.
+			Profile: types.MemberProfile{
 				Name:               session.Name(),
 				IsAdmin:            session.IsAdmin(),
 				CanLogin:           session.CanLogin(),
@@ -37,7 +37,8 @@ func (h *MessageHandlerCtx) systemInit(session types.Session) error {
 				CanHost:            session.CanHost(),
 				CanAccessClipboard: session.CanAccessClipboard(),
 			},
-			State:   message.MemberState{
+			// TODO: Get whole state from session.
+			State:   types.MemberState{
 				IsConnected: session.IsConnected(),
 				IsWatching:  session.IsWatching(),
 			},

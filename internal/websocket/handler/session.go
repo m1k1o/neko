@@ -7,12 +7,12 @@ import (
 )
 
 func (h *MessageHandlerCtx) SessionCreated(session types.Session) error {
-	// TODO: Join structs?
 	h.sessions.Broadcast(
 		message.MemberData{
 			Event:   event.MEMBER_CREATED,
 			ID:      session.ID(),
-			Profile: message.MemberProfile{
+			// TODO: Get whole profile from session.
+			Profile: types.MemberProfile{
 				Name:               session.Name(),
 				IsAdmin:            session.IsAdmin(),
 				CanLogin:           session.CanLogin(),
@@ -21,7 +21,8 @@ func (h *MessageHandlerCtx) SessionCreated(session types.Session) error {
 				CanHost:            session.CanHost(),
 				CanAccessClipboard: session.CanAccessClipboard(),
 			},
-			State:  message.MemberState{
+			// TODO: Get whole state from session.
+			State:   types.MemberState{
 				IsConnected: session.IsConnected(),
 				IsWatching:  session.IsWatching(),
 			},
@@ -81,31 +82,35 @@ func (h *MessageHandlerCtx) SessionDisconnected(session types.Session) error {
 }
 
 func (h *MessageHandlerCtx) SessionProfileChanged(session types.Session) error {
-	// TODO: Join structs?
 	h.sessions.Broadcast(
 		message.MemberProfile{
-			Event:              event.MEMBER_PROFILE,
-			ID:                 session.ID(),
-			Name:               session.Name(),
-			IsAdmin:            session.IsAdmin(),
-			CanLogin:           session.CanLogin(),
-			CanConnect:         session.CanConnect(),
-			CanWatch:           session.CanWatch(),
-			CanHost:            session.CanHost(),
-			CanAccessClipboard: session.CanAccessClipboard(),
+			Event:         event.MEMBER_PROFILE,
+			ID:            session.ID(),
+			// TODO: Get whole profile from session.
+			MemberProfile: &types.MemberProfile{
+				Name:               session.Name(),
+				IsAdmin:            session.IsAdmin(),
+				CanLogin:           session.CanLogin(),
+				CanConnect:         session.CanConnect(),
+				CanWatch:           session.CanWatch(),
+				CanHost:            session.CanHost(),
+				CanAccessClipboard: session.CanAccessClipboard(),
+			},
 		}, nil)
 
 	return nil
 }
 
 func (h *MessageHandlerCtx) SessionStateChanged(session types.Session) error {
-	// TODO: Join structs?
 	h.sessions.Broadcast(
 		message.MemberState{
 			Event:       event.MEMBER_STATE,
 			ID:          session.ID(),
-			IsConnected: session.IsConnected(),
-			IsWatching:  session.IsWatching(),
+			// TODO: Get whole state from session.
+			MemberState: &types.MemberState{
+				IsConnected: session.IsConnected(),
+				IsWatching:  session.IsWatching(),
+			},
 		}, nil)
 
 	return nil

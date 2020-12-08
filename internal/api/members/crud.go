@@ -9,28 +9,19 @@ import (
 
 type MemberCreatePayload struct {
 	ID string `json:"id"`
-}
-
-type MemberDataPayload struct {
-	ID                 string `json:"id"`
-	Secret             string `json:"secret,omitempty"`
-	Name               string `json:"name"`
-	IsAdmin            bool   `json:"is_admin"`
-	CanLogin           bool   `json:"can_login"`
-	CanConnect         bool   `json:"can_connect"`
-	CanWatch           bool   `json:"can_watch"`
-	CanHost            bool   `json:"can_host"`
-	CanAccessClipboard bool   `json:"can_access_clipboard"`
+	*types.MemberProfile
 }
 
 func (h *MembersHandler) membersCreate(w http.ResponseWriter, r *http.Request) {
-	data := &MemberDataPayload{
-		IsAdmin: false,
-		CanLogin: true,
-		CanConnect: true,
-		CanWatch: true,
-		CanHost: true,
-		CanAccessClipboard: true,
+	data := &MemberCreatePayload{
+		MemberProfile: &types.MemberProfile{
+			IsAdmin: false,
+			CanLogin: true,
+			CanConnect: true,
+			CanWatch: true,
+			CanHost: true,
+			CanAccessClipboard: true,
+		},
 	}
 
 	if !utils.HttpJsonRequest(w, r, data) {
@@ -60,18 +51,7 @@ func (h *MembersHandler) membersCreate(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// TODO: Join structs?
-	session, err := h.sessions.Create(data.ID, types.MemberProfile{
-		Secret: data.Secret,
-		Name: data.Name,
-		IsAdmin: data.IsAdmin,
-		CanLogin: data.CanLogin,
-		CanConnect: data.CanConnect,
-		CanWatch: data.CanWatch,
-		CanHost: data.CanHost,
-		CanAccessClipboard: data.CanAccessClipboard,
-	})
-
+	session, err := h.sessions.Create(data.ID, *data.MemberProfile)
 	if err != nil {
 		utils.HttpInternalServerError(w, err)
 		return
@@ -85,8 +65,8 @@ func (h *MembersHandler) membersCreate(w http.ResponseWriter, r *http.Request) {
 func (h *MembersHandler) membersRead(w http.ResponseWriter, r *http.Request) {
 	member := GetMember(r)
 
-	// TODO: Join structs?
-	utils.HttpSuccess(w, MemberDataPayload{
+	// TODO: Get whole profile from session.
+	utils.HttpSuccess(w, types.MemberProfile{
 		Name: member.Name(),
 		IsAdmin: member.IsAdmin(),
 		CanLogin: member.CanLogin(),
@@ -100,7 +80,8 @@ func (h *MembersHandler) membersRead(w http.ResponseWriter, r *http.Request) {
 func (h *MembersHandler) membersUpdate(w http.ResponseWriter, r *http.Request) {
 	member := GetMember(r)
 
-	data := &MemberDataPayload{
+	// TODO: Get whole profile from session.
+	profile := types.MemberProfile{
 		Name: member.Name(),
 		IsAdmin: member.IsAdmin(),
 		CanLogin: member.CanLogin(),
@@ -110,23 +91,11 @@ func (h *MembersHandler) membersUpdate(w http.ResponseWriter, r *http.Request) {
 		CanAccessClipboard: member.CanAccessClipboard(),
 	}
 
-	if !utils.HttpJsonRequest(w, r, data) {
+	if !utils.HttpJsonRequest(w, r, &profile) {
 		return
 	}
 
-	// TODO: Join structs?
-	err := h.sessions.Update(member.ID(), types.MemberProfile{
-		Secret: data.Secret,
-		Name: data.Name,
-		IsAdmin: data.IsAdmin,
-		CanLogin: data.CanLogin,
-		CanConnect: data.CanConnect,
-		CanWatch: data.CanWatch,
-		CanHost: data.CanHost,
-		CanAccessClipboard: data.CanAccessClipboard,
-	})
-
-	if err != nil {
+	if err := h.sessions.Update(member.ID(), profile); err != nil {
 		utils.HttpInternalServerError(w, err)
 		return
 	}

@@ -1,5 +1,9 @@
 package message
 
+import (
+	"demodesk/neko/internal/types"
+)
+
 type Message struct {
 	Event   string      `json:"event"`
 	Payload interface{} `json:"payload"` // TODO: New.
@@ -55,29 +59,22 @@ type MemberID struct {
 }
 
 type MemberProfile struct {
-	Event              string `json:"event,omitempty"`
-	ID                 string `json:"id,omitempty"`
-	Name               string `json:"name"`
-	IsAdmin            bool   `json:"is_admin"`
-	CanLogin           bool   `json:"can_login"`
-	CanConnect         bool   `json:"can_connect"`
-	CanWatch           bool   `json:"can_watch"`
-	CanHost            bool   `json:"can_host"`
-	CanAccessClipboard bool   `json:"can_access_clipboard"`
+	Event string `json:"event,omitempty"`
+	ID    string `json:"id"`
+	*types.MemberProfile
 }
 
 type MemberState struct {
-	Event       string `json:"event,omitempty"`
-	ID          string `json:"id,omitempty"`
-	IsConnected bool   `json:"is_connected"`
-	IsWatching  bool   `json:"is_watching"`
+	Event string `json:"event,omitempty"`
+	ID    string `json:"id"`
+	*types.MemberState
 }
 
 type MemberData struct {
-	Event       string        `json:"event,omitempty"`
-	ID          string        `json:"id"`
-	Profile     MemberProfile `json:"profile"`
-	State       MemberState   `json:"state"`
+	Event   string              `json:"event,omitempty"`
+	ID      string              `json:"id"`
+	Profile types.MemberProfile `json:"profile"`
+	State   types.MemberState   `json:"state"`
 }
 
 /////////////////////////////
