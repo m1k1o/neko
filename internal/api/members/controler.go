@@ -12,6 +12,19 @@ type MemberDataPayload struct {
 	*types.MemberProfile
 }
 
+func (h *MembersHandler) membersList(w http.ResponseWriter, r *http.Request) {
+	members := []MemberDataPayload{}
+	for _, session := range h.sessions.Members() {
+		profile := session.GetProfile()
+		members = append(members, MemberDataPayload{
+			ID:            session.ID(),
+			MemberProfile: &profile,
+		})
+	}
+
+	utils.HttpSuccess(w, members)
+}
+
 func (h *MembersHandler) membersCreate(w http.ResponseWriter, r *http.Request) {
 	data := &MemberDataPayload{
 		// default values
