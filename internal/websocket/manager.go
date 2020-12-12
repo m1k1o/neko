@@ -15,6 +15,8 @@ import (
 	"demodesk/neko/internal/types"
 )
 
+type HandlerFunction func(types.Session, []byte) bool
+
 func New(
 	sessions types.SessionManager,
 	desktop types.DesktopManager,
@@ -32,7 +34,8 @@ func New(
 				return true
 			},
 		},
-		handler: handler.New(sessions, desktop, capture, webrtc),
+		handler:   handler.New(sessions, desktop, capture, webrtc),
+		handlers:  []HandlerFunction{},
 	}
 }
 
@@ -45,6 +48,7 @@ type WebSocketManagerCtx struct {
 	sessions  types.SessionManager
 	desktop   types.DesktopManager
 	handler   *handler.MessageHandlerCtx
+	handlers  []HandlerFunction
 	shutdown  chan bool
 }
 
@@ -143,6 +147,10 @@ func (ws *WebSocketManagerCtx) Start() {
 func (ws *WebSocketManagerCtx) Shutdown() error {
 	ws.shutdown <- true
 	return nil
+}
+
+func (ws *WebSocketManagerCtx) AddHandler(handler HandlerFunction) {
+	ws.handlers = append(ws.handlers, handler)
 }
 
 func (ws *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Request) error {
@@ -260,8 +268,17 @@ func (ws *WebSocketManagerCtx) handle(connection *websocket.Conn, session types.
 				Str("raw", string(raw)).
 				Msg("received message from client")
 
-			if err := ws.handler.Message(session, raw); err != nil {
-				ws.logger.Error().Err(err).Msg("message handler has failed")
+			handled := ws.handler.Message(session, raw)
+			for _, handler := range ws.handlers {
+				if handled {
+					break
+				}
+
+				handled = handler(session, raw)
+			}
+
+			if !handled {
+				ws.logger.Warn().Msg("unhandled message")
 			}
 		case <-cancel:
 			return

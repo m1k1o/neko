@@ -3,7 +3,6 @@ package handler
 import (
 	"encoding/json"
 
-	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
@@ -38,10 +37,11 @@ type MessageHandlerCtx struct {
 	capture   types.CaptureManager
 }
 
-func (h *MessageHandlerCtx) Message(session types.Session, raw []byte) error {
+func (h *MessageHandlerCtx) Message(session types.Session, raw []byte) bool {
 	header := message.Message{}
 	if err := json.Unmarshal(raw, &header); err != nil {
-		return err
+		h.logger.Error().Err(err).Msg("message parsing has failed")
+		return false
 	}
 
 	var err error
@@ -87,8 +87,12 @@ func (h *MessageHandlerCtx) Message(session types.Session, raw []byte) error {
 			return h.keyboardModifiers(session, payload)
 		})
 	default:
-		return errors.Errorf("unknown message event %s", header.Event)
+		return false
 	}
 
-	return errors.Wrapf(err, "%s failed", header.Event)
+	if err != nil {
+		h.logger.Error().Err(err).Msg("message handler has failed")
+	}
+
+	return true
 }
