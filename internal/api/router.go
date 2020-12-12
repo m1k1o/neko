@@ -14,9 +14,10 @@ import (
 )
 
 type ApiManagerCtx struct {
-	sessions  types.SessionManager
-	desktop   types.DesktopManager
-	capture   types.CaptureManager
+	sessions types.SessionManager
+	desktop  types.DesktopManager
+	capture  types.CaptureManager
+	routers  map[string]func(chi.Router)
 }
 
 func New(
@@ -27,9 +28,10 @@ func New(
 ) *ApiManagerCtx {
 
 	return &ApiManagerCtx{
-		sessions:   sessions,
-		desktop:    desktop,
-		capture:    capture,
+		sessions: sessions,
+		desktop:  desktop,
+		capture:  capture,
+		routers:  make(map[string]func(chi.Router)),
 	}
 }
 
@@ -46,6 +48,10 @@ func (api *ApiManagerCtx) Route(r chi.Router) {
 		session := auth.GetSession(r)
 		utils.HttpBadRequest(w, "Hi `" + session.ID() + "`, you are authenticated.")
 	})
+
+	for path, router := range api.routers {
+		r.Route(path, router)
+	}
 }
 
 func (api *ApiManagerCtx) Authenticate(next http.Handler) http.Handler {
@@ -57,4 +63,8 @@ func (api *ApiManagerCtx) Authenticate(next http.Handler) http.Handler {
 			next.ServeHTTP(w, auth.SetSession(r, session))
 		}
 	})
+}
+
+func (api *ApiManagerCtx) AddRouter(path string, router func(chi.Router)) {
+	api.routers[path] = router
 }
