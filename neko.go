@@ -14,6 +14,7 @@ import (
 	"demodesk/neko/internal/websocket"
 	"demodesk/neko/internal/api"
 	"demodesk/neko/internal/http"
+	"demodesk/neko/modules"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -169,6 +170,12 @@ func (neko *Neko) Start() {
 		neko.Configs.Server,
 	)
 
+	modules.Start(
+		neko.sessionManager,
+		neko.webSocketManager,
+		neko.apiManager,
+	)
+
 	neko.httpManager = http.New(
 		neko.webSocketManager,
 		neko.apiManager,
@@ -206,6 +213,12 @@ func (neko *Neko) Shutdown() {
 		neko.logger.Err(err).Msg("websocket manager shutdown with an error")
 	} else {
 		neko.logger.Debug().Msg("websocket manager shutdown")
+	}
+
+	if err := modules.Shutdown(); err != nil {
+		neko.logger.Err(err).Msg("modules shutdown with an error")
+	} else {
+		neko.logger.Debug().Msg("modules shutdown")
 	}
 
 	if err := neko.httpManager.Shutdown(); err != nil {

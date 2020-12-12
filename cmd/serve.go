@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"demodesk/neko"
+	"demodesk/neko/modules"
 	"demodesk/neko/internal/config"
 )
 
@@ -16,13 +17,13 @@ func init() {
 		Run:   neko.Service.ServeCommand,
 	}
 
-	configs := []config.Config{
+	configs := append([]config.Config{
 		neko.Service.Configs.Desktop,
 		neko.Service.Configs.Capture,
 		neko.Service.Configs.WebRTC,
 		neko.Service.Configs.Session,
 		neko.Service.Configs.Server,
-	}
+	}, modules.ConfigsList()...)
 
 	cobra.OnInitialize(func() {
 		for _, cfg := range configs {

@@ -15,8 +15,6 @@ import (
 	"demodesk/neko/internal/types"
 )
 
-type HandlerFunction func(types.Session, []byte) bool
-
 func New(
 	sessions types.SessionManager,
 	desktop types.DesktopManager,
@@ -35,7 +33,7 @@ func New(
 			},
 		},
 		handler:   handler.New(sessions, desktop, capture, webrtc),
-		handlers:  []HandlerFunction{},
+		handlers:  []types.HandlerFunction{},
 	}
 }
 
@@ -48,7 +46,7 @@ type WebSocketManagerCtx struct {
 	sessions  types.SessionManager
 	desktop   types.DesktopManager
 	handler   *handler.MessageHandlerCtx
-	handlers  []HandlerFunction
+	handlers  []types.HandlerFunction
 	shutdown  chan bool
 }
 
@@ -149,7 +147,7 @@ func (ws *WebSocketManagerCtx) Shutdown() error {
 	return nil
 }
 
-func (ws *WebSocketManagerCtx) AddHandler(handler HandlerFunction) {
+func (ws *WebSocketManagerCtx) AddHandler(handler types.HandlerFunction) {
 	ws.handlers = append(ws.handlers, handler)
 }
 

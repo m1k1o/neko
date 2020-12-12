@@ -6,4 +6,5 @@ import (
 
 type ApiManager interface {
 	Route(r chi.Router)
+	AddRouter(path string, router func(chi.Router))
 }
