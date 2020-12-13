@@ -287,8 +287,16 @@
     }
 
     // TODO: Refactor.
-    public browserUrl(url: string) {
-      this.websocket.send('browser/url', { url })
+    public browserNavigateUrl(url: string) {
+      this.websocket.send('browser/navigate/url', { url })
+    }
+
+    public browserNavigateBack() {
+      this.websocket.send('browser/navigate/back')
+    }
+
+    public browserNavigateForward() {
+      this.websocket.send('browser/navigate/forward')
     }
 
     /////////////////////////////
