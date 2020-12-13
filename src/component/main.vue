@@ -286,6 +286,11 @@
       this.api.admin.membersDelete({ memberId })
     }
 
+    // TODO: Refactor.
+    public browserUrl(url: string) {
+      this.websocket.send('browser/url', { url })
+    }
+
     /////////////////////////////
     // Component lifecycle
     /////////////////////////////
