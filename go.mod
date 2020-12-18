@@ -3,13 +3,8 @@ module demodesk/neko
 go 1.13
 
 require (
-	github.com/chromedp/cdproto v0.0.0-20201204063249-be40c824ad18
-	github.com/chromedp/chromedp v0.5.4
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/go-chi/chi v4.1.0+incompatible
-	github.com/go-chi/render v1.0.1
-	github.com/gobwas/httphead v0.1.0 // indirect
 	github.com/golang/protobuf v1.3.5 // indirect
 	github.com/gorilla/websocket v1.4.2
 	github.com/kataras/go-events v0.0.2
@@ -21,7 +16,6 @@ require (
 	github.com/pion/rtp v1.4.0 // indirect
 	github.com/pion/sdp/v2 v2.3.5 // indirect
 	github.com/pion/webrtc/v2 v2.2.4
-	github.com/pkg/errors v0.9.1
 	github.com/rs/zerolog v1.18.0
 	github.com/spf13/afero v1.2.2 // indirect
 	github.com/spf13/cast v1.3.1 // indirect
