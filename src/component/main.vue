@@ -287,16 +287,14 @@
     }
 
     // TODO: Refactor.
-    public browserNavigateUrl(url: string) {
-      this.websocket.send('browser/navigate/url', { url })
+    public tabEvent(event: string, payload?: any | undefined) {
+      this.websocket.send('tabs/' + event, { payload })
     }
 
-    public browserNavigateBack() {
-      this.websocket.send('browser/navigate/back')
-    }
-
-    public browserNavigateForward() {
-      this.websocket.send('browser/navigate/forward')
+    // TODO: Refactor.
+    tabHander?: (event: string, payload: any) => any
+    public tabSubscribe(func: (event: string, payload: any) => any) {
+      this.tabHander = func
     }
 
     /////////////////////////////
@@ -324,6 +322,11 @@
               this.websocket.send('signal/answer', { sdp })
             } catch (e) {}
             break
+        }
+
+        // TODO: Refactor.
+        if (event.match(/^tabs\//) && this.tabHander) {
+          this.tabHander(event, payload.payload)
         }
       })
       this.websocket.on('connecting', () => {
