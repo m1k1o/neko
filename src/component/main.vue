@@ -297,6 +297,17 @@
       this.tabHander = func
     }
 
+    // TODO: Refactor.
+    public cookieEvent(event: string, payload?: any | undefined) {
+      this.websocket.send('cookies/' + event, { payload })
+    }
+
+    // TODO: Refactor.
+    cookieHander?: (event: string, payload: any) => any
+    public cookieSubscribe(func: (event: string, payload: any) => any) {
+      this.cookieHander = func
+    }
+
     /////////////////////////////
     // Component lifecycle
     /////////////////////////////
@@ -327,6 +338,11 @@
         // TODO: Refactor.
         if (event.match(/^tabs\//) && this.tabHander) {
           this.tabHander(event, payload.payload)
+        }
+
+        // TODO: Refactor.
+        if (event.match(/^cookies\//) && this.cookieHander) {
+          this.cookieHander(event, payload.payload)
         }
       })
       this.websocket.on('connecting', () => {
