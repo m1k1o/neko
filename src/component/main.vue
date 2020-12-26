@@ -222,8 +222,8 @@
     }
 
     public setClipboardData(text: string) {
-      const clipboardPayload = { text }
-      this.api.room.clipboardWrite({ clipboardPayload })
+      const clipboardData = { text }
+      this.api.room.clipboardWrite({ clipboardData })
     }
 
     public requestControl() {
@@ -238,9 +238,8 @@
       this.api.room.controlTake()
     }
 
-    public giveControl(id: string) {
-      const controlTargetPayload = { id }
-      this.api.room.controlGive({ controlTargetPayload })
+    public giveControl(memberId: string) {
+      this.api.room.controlGive({ memberId })
     }
 
     public resetControl() {
@@ -248,7 +247,7 @@
     }
 
     public setScreenSize(width: number, height: number, rate: number) {
-      //this.api.room.screenConfigurationChange({ screenConfigurationPayload: { width, height, rate } })
+      //this.api.room.screenConfigurationChange({ screenConfiguration: { width, height, rate } })
       this.websocket.send('screen/set', { width, height, rate })
     }
 
