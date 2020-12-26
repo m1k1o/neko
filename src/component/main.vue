@@ -47,7 +47,7 @@
   import ResizeObserver from 'resize-observer-polyfill'
   import EventEmitter from 'eventemitter3'
 
-  import { NekoApi } from './internal/api'
+  import { NekoApi, MembersApi, RoomApi } from './internal/api'
   import { NekoWebSocket } from './internal/websocket'
   import { NekoWebRTC } from './internal/webrtc'
   import { NekoMessages } from './internal/messages'
@@ -223,67 +223,41 @@
 
     public setClipboardData(text: string) {
       const clipboardPayload = { text }
-      this.api.host.clipboardWrite({ clipboardPayload })
+      this.api.room.clipboardWrite({ clipboardPayload })
     }
 
     public requestControl() {
-      this.api.user.controlRequest()
+      this.api.room.controlRequest()
     }
 
     public releaseControl() {
-      this.api.user.controlRelease()
+      this.api.room.controlRelease()
     }
 
     public takeControl() {
-      this.api.admin.controlTake()
+      this.api.room.controlTake()
     }
 
     public giveControl(id: string) {
       const controlTargetPayload = { id }
-      this.api.admin.controlGive({ controlTargetPayload })
+      this.api.room.controlGive({ controlTargetPayload })
     }
 
     public resetControl() {
-      this.api.admin.controlReset()
+      this.api.room.controlReset()
     }
 
     public setScreenSize(width: number, height: number, rate: number) {
-      //this.api.admin.screenConfigurationChange({ screenConfigurationPayload: { width, height, rate } })
+      //this.api.room.screenConfigurationChange({ screenConfigurationPayload: { width, height, rate } })
       this.websocket.send('screen/set', { width, height, rate })
     }
 
-    public memberCreate(memberDataPayload: {
-      id: string
-      secret: string
-      name: string
-      isAdmin: boolean
-      canLogin: boolean
-      canConnect: boolean
-      canWatch: boolean
-      canHost: boolean
-      canAccessClipboard: boolean
-    }) {
-      this.api.admin.membersCreate({ memberDataPayload })
+    public get room(): RoomApi {
+      return this.api.room
     }
 
-    public memberUpdate(
-      memberId: string,
-      memberProfile: {
-        secret: string
-        name: string
-        isAdmin: boolean
-        canLogin: boolean
-        canConnect: boolean
-        canWatch: boolean
-        canHost: boolean
-        canAccessClipboard: boolean
-      },
-    ) {
-      this.api.admin.membersUpdate({ memberId, memberProfile })
-    }
-
-    public memberDelete(memberId: string) {
-      this.api.admin.membersDelete({ memberId })
+    public get members(): MembersApi {
+      return this.api.members
     }
 
     // TODO: Refactor.

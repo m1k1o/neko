@@ -16,15 +16,14 @@ export class NekoApi {
     this.api_configuration = new Api.Configuration()
   }
 
-  get admin(): Api.AdminsApi {
-    return new Api.AdminsApi(this.api_configuration)
+  get room(): RoomApi {
+    return new Api.RoomApi(this.api_configuration)
   }
 
-  get user(): Api.UsersApi {
-    return new Api.UsersApi(this.api_configuration)
-  }
-
-  get host(): Api.HostsApi {
-    return new Api.HostsApi(this.api_configuration)
+  get members(): MembersApi {
+    return new Api.MembersApi(this.api_configuration)
   }
 }
+
+export type RoomApi = Api.RoomApi
+export type MembersApi = Api.MembersApi
