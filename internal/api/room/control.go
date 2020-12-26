@@ -3,6 +3,8 @@ package room
 import (
 	"net/http"
 
+	"github.com/go-chi/chi"
+
 	"demodesk/neko/internal/types/event"
 	"demodesk/neko/internal/types/message"
 	"demodesk/neko/internal/utils"
@@ -102,12 +104,9 @@ func (h *RoomHandler) controlTake(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *RoomHandler) controlGive(w http.ResponseWriter, r *http.Request) {
-	data := &ControlTargetPayload{}
-	if !utils.HttpJsonRequest(w, r, data) {
-		return
-	}
+	memberId := chi.URLParam(r, "memberId")
 
-	target, ok := h.sessions.Get(data.ID)
+	target, ok := h.sessions.Get(memberId)
 	if !ok {
 		utils.HttpBadRequest(w, "Target member was not found.")
 		return
