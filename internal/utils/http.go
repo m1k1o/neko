@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"io"
 	"fmt"
 	"net/http"
 	"encoding/json"
@@ -14,7 +15,12 @@ type ErrResponse struct {
 
 func HttpJsonRequest(w http.ResponseWriter, r *http.Request, res interface{}) bool {
 	if err := json.NewDecoder(r.Body).Decode(res); err != nil {
-		HttpBadRequest(w, err)
+		if err == io.EOF {
+			HttpBadRequest(w, "No data provided.")
+		} else {
+			HttpBadRequest(w, err)
+		}
+
 		return false
 	}
 
