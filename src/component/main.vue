@@ -260,11 +260,6 @@
     }
 
     // TODO: Refactor.
-    public tabEvent(event: string, payload?: any | undefined) {
-      this.websocket.send('tabs/' + event, { payload })
-    }
-
-    // TODO: Refactor.
     tabHander?: (event: string, payload: any) => any
     public tabSubscribe(func: (event: string, payload: any) => any) {
       this.tabHander = func
