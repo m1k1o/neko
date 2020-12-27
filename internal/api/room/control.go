@@ -108,7 +108,7 @@ func (h *RoomHandler) controlGive(w http.ResponseWriter, r *http.Request) {
 
 	target, ok := h.sessions.Get(memberId)
 	if !ok {
-		utils.HttpBadRequest(w, "Target member was not found.")
+		utils.HttpNotFound(w, "Target member was not found.")
 		return
 	}
 
