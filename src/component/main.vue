@@ -221,31 +221,6 @@
       Vue.set(this.state.control.scroll, 'sensitivity', value)
     }
 
-    public setClipboardData(text: string) {
-      const clipboardData = { text }
-      this.api.room.clipboardWrite({ clipboardData })
-    }
-
-    public requestControl() {
-      this.api.room.controlRequest()
-    }
-
-    public releaseControl() {
-      this.api.room.controlRelease()
-    }
-
-    public takeControl() {
-      this.api.room.controlTake()
-    }
-
-    public giveControl(memberId: string) {
-      this.api.room.controlGive({ memberId })
-    }
-
-    public resetControl() {
-      this.api.room.controlReset()
-    }
-
     public setScreenSize(width: number, height: number, rate: number) {
       //this.api.room.screenConfigurationChange({ screenConfiguration: { width, height, rate } })
       this.websocket.send('screen/set', { width, height, rate })
