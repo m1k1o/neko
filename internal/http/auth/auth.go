@@ -55,3 +55,14 @@ func HostsOrAdminsOnly(next http.Handler) http.Handler {
 		}
 	})
 }
+
+func CanHostOnly(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		session := GetSession(r)
+		if !session.CanHost() {
+			utils.HttpForbidden(w, "Only for members, that can host.")
+		} else {
+			next.ServeHTTP(w, r)
+		}
+	})
+}
