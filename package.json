@@ -1,6 +1,6 @@
 {
   "name": "@demodesk/neko",
-  "version": "0.2.0",
+  "version": "1.1.0",
   "description": "Client as reusable Vue.js component for neko streaming server.",
   "main": "dist/neko.umd.js",
   "module": "dist/neko.common.js",
@@ -11,8 +11,7 @@
   "scripts": {
     "serve": "vue-cli-service serve --mode development",
     "lint": "vue-cli-service lint",
-    "build": "vue-cli-service build --target lib --name neko ./src/component/main.vue",
-    "build:page": "vue-cli-service build"
+    "build": "vue-cli-service build --target lib --name neko ./src/component/main.vue"
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^5.15.1",
