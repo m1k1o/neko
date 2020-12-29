@@ -226,18 +226,21 @@
       this.websocket.send('screen/set', { width, height, rate })
     }
 
+    public async initBrowser() {
+      const tabs = await this.api.browser.tabsGetAll()
+
+      Vue.set(this.state, 'browser', {
+        connected: true,
+        tabs,
+      })
+    }
+
     public get room(): RoomApi {
       return this.api.room
     }
 
     public get members(): MembersApi {
       return this.api.members
-    }
-
-    // TODO: Refactor.
-    tabHander?: (event: string, payload: any) => any
-    public tabSubscribe(func: (event: string, payload: any) => any) {
-      this.tabHander = func
     }
 
     /////////////////////////////
@@ -265,11 +268,6 @@
               this.websocket.send('signal/answer', { sdp })
             } catch (e) {}
             break
-        }
-
-        // TODO: Refactor.
-        if (event.match(/^tabs\//) && this.tabHander) {
-          this.tabHander(event, payload.payload)
         }
       })
       this.websocket.on('connecting', () => {
