@@ -240,17 +240,6 @@
       this.tabHander = func
     }
 
-    // TODO: Refactor.
-    public headerEvent(event: string, payload?: any | undefined) {
-      this.websocket.send('headers/' + event, { payload })
-    }
-
-    // TODO: Refactor.
-    headerHander?: (event: string, payload: any) => any
-    public headerSubscribe(func: (event: string, payload: any) => any) {
-      this.headerHander = func
-    }
-
     /////////////////////////////
     // Component lifecycle
     /////////////////////////////
@@ -281,11 +270,6 @@
         // TODO: Refactor.
         if (event.match(/^tabs\//) && this.tabHander) {
           this.tabHander(event, payload.payload)
-        }
-
-        // TODO: Refactor.
-        if (event.match(/^headers\//) && this.headerHander) {
-          this.headerHander(event, payload.payload)
         }
       })
       this.websocket.on('connecting', () => {
