@@ -1,9 +1,13 @@
 package desktop
 
 import (
+	"sync"
+
 	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/desktop/xorg"
 )
+
+var mu = sync.Mutex{}
 
 func (manager *DesktopManagerCtx) Move(x, y int) {
 	xorg.Move(x, y)
@@ -42,10 +46,15 @@ func (manager *DesktopManagerCtx) GetScreenSize() *types.ScreenSize {
 }
 
 func (manager *DesktopManagerCtx) ChangeScreenSize(width int, height int, rate int) error {
+	mu.Lock()
 	manager.emmiter.Emit("before_screen_size_change")
-	err := xorg.ChangeScreenSize(width, height, rate)
-	manager.emmiter.Emit("after_screen_size_change")
-	return err
+
+	defer func() {
+		manager.emmiter.Emit("after_screen_size_change")
+		mu.Unlock()
+	}()
+
+	return xorg.ChangeScreenSize(width, height, rate)
 }
 
 func (manager *DesktopManagerCtx) SetKeyboardLayout(layout string) {
