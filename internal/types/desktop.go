@@ -35,4 +35,7 @@ type DesktopManager interface {
 	// clipboard
 	ReadClipboard() string
 	WriteClipboard(data string)
+
+	// drop
+	DropFiles(x int, y int, files []string)
 }

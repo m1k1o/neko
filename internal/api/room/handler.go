@@ -60,4 +60,8 @@ func (h *RoomHandler) Route(r chi.Router) {
 		r.With(auth.AdminsOnly).Post("/", h.screenConfigurationChange)
 		r.With(auth.AdminsOnly).Get("/configurations", h.screenConfigurationsList)
 	})
+
+	r.Route("/drop", func(r chi.Router) {
+		r.With(auth.AdminsOnly).Post("/", h.dropFiles)
+	})
 }
