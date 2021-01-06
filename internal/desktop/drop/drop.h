@@ -8,18 +8,18 @@ enum {
 };
 
 static void drag_data_get(
-    GtkWidget *widget,
-    GdkDragContext *context,
-    GtkSelectionData *data,
-    guint target_type,
-    guint time,
-    gpointer user_data
+  GtkWidget *widget,
+  GdkDragContext *context,
+  GtkSelectionData *data,
+  guint target_type,
+  guint time,
+  gpointer user_data
 );
 
 static void drag_end(
-    GtkWidget *widget,
-    GdkDragContext *context,
-    gpointer user_data
+  GtkWidget *widget,
+  GdkDragContext *context,
+  gpointer user_data
 );
 
 void drag_window(char **uris);
