@@ -8,7 +8,7 @@ WORKDIR /src
 # install dependencies
 ENV DEBIAN_FRONTEND=noninteractive
 RUN set -eux; apt-get update; \
-    apt-get install -y --no-install-recommends git cmake make libx11-dev libxrandr-dev libxtst-dev \
+    apt-get install -y --no-install-recommends git cmake make libx11-dev libxrandr-dev libxtst-dev libgtk-3-dev \
     libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly; \
     #
     # install libclipboard
