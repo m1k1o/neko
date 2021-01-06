@@ -14,16 +14,16 @@ import (
 
 var mu = sync.Mutex{}
 
-func FileDrop(x int, y int, uris []string) {
+func DragWindow(files []string) {
 	mu.Lock()
 	defer mu.Unlock()
 
-	size := C.int(len(uris))
+	size := C.int(len(files))
 	urisUnsafe := C.uris_make(size);
 	defer C.uris_free(urisUnsafe, size)
 
-	for i, uri := range uris {
-		C.uris_set(urisUnsafe, C.CString(uri), C.int(i))
+	for i, file := range files {
+		C.uris_set_file(urisUnsafe, C.CString(file), C.int(i))
 	}
 
 	C.drag_window(urisUnsafe)

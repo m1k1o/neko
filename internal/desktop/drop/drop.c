@@ -85,9 +85,9 @@ char **uris_make(int size) {
   return calloc(size + 1, sizeof(char *));
 }
 
-void uris_set(char **uris, char *filename, int n) {
-  GFile *file = g_file_new_for_path(filename);
-  uris[n] = g_file_get_uri(file);
+void uris_set_file(char **uris, char *file, int n) {
+  GFile *gfile = g_file_new_for_path(file);
+  uris[n] = g_file_get_uri(gfile);
 }
 
 void uris_free(char **uris, int size) {

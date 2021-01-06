@@ -25,5 +25,5 @@ static void drag_end(
 void drag_window(char **uris);
 
 char **uris_make(int size);
-void uris_set(char **uris, char *filename, int n);
+void uris_set_file(char **uris, char *file, int n);
 void uris_free(char **uris, int size);
