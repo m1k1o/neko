@@ -20,5 +20,7 @@ func (manager *DesktopManagerCtx) DropFiles(x int, y int, files []string) {
 	time.Sleep(DELAY)
 	manager.Move(x, y)
 	time.Sleep(DELAY)
+	manager.Move(x, y)
+	time.Sleep(DELAY)
 	manager.ButtonUp(1)
 }
