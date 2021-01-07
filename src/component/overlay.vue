@@ -11,6 +11,10 @@
     @mouseup.stop.prevent="onMouseUp"
     @mouseenter.stop.prevent="onMouseEnter"
     @mouseleave.stop.prevent="onMouseLeave"
+    @dragenter.stop.prevent="onDrag"
+    @dragleave.stop.prevent="onDrag"
+    @dragover.stop.prevent="onDrag"
+    @drop.stop.prevent="onDrop"
   />
 </template>
 
@@ -95,13 +99,17 @@
       // Guacamole Keyboard does not provide destroy functions
     }
 
-    setMousePos(e: MouseEvent) {
+    getMousePos(clientX: number, clientY: number) {
       const rect = this._overlay.getBoundingClientRect()
 
-      this.webrtc.send('mousemove', {
-        x: Math.round((this.screenWidth / rect.width) * (e.clientX - rect.left)),
-        y: Math.round((this.screenHeight / rect.height) * (e.clientY - rect.top)),
-      })
+      return {
+        x: Math.round((this.screenWidth / rect.width) * (clientX - rect.left)),
+        y: Math.round((this.screenHeight / rect.height) * (clientY - rect.top)),
+      }
+    }
+
+    setMousePos(e: MouseEvent) {
+      this.webrtc.send('mousemove', this.getMousePos(e.clientX, e.clientY))
     }
 
     onWheel(e: WheelEvent) {
@@ -184,6 +192,24 @@
         //  scrollLock: e.getModifierState('ScrollLock'),
         //})
       }
+    }
+
+    onDrag(e: DragEvent) {
+      e.preventDefault()
+      e.stopPropagation()
+    }
+
+    onDrop(e: DragEvent) {
+      e.preventDefault()
+      e.stopPropagation()
+
+      let dt = e.dataTransfer
+      if (!dt) return
+
+      let files = [...dt.files]
+      if (!files) return
+
+      this.$emit('drop-files', { ...this.getMousePos(e.clientX, e.clientY), files })
     }
 
     isRequesting = false
