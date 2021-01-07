@@ -16,7 +16,7 @@ const (
 	MAX_UPLOAD_SIZE = 32 << 20
 )
 
-func (h *RoomHandler) dropFiles(w http.ResponseWriter, r *http.Request) {
+func (h *RoomHandler) uploadDrop(w http.ResponseWriter, r *http.Request) {
 	r.ParseMultipartForm(MAX_UPLOAD_SIZE)
 
 	X, err := strconv.Atoi(r.FormValue("x"))
