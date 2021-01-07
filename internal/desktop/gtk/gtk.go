@@ -1,10 +1,10 @@
-package drop
+package gtk
 
 /*
 #cgo linux CFLAGS: -I/usr/src -I/usr/local/include/
 #cgo pkg-config: gdk-3.0 gtk+-3.0
 
-#include "drop.h"
+#include "gtk.h"
 */
 import "C"
 

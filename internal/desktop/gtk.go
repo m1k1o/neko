@@ -2,7 +2,7 @@ package desktop
 
 import (
 	"time"
-	"demodesk/neko/internal/desktop/drop"
+	"demodesk/neko/internal/desktop/gtk"
 )
 
 const (
@@ -10,7 +10,7 @@ const (
 )
 
 func (manager *DesktopManagerCtx) DropFiles(x int, y int, files []string) {
-	go drop.DragWindow(files)
+	go gtk.DragWindow(files)
 
 	// TODO: Find a bettter way.
 	time.Sleep(DELAY)
