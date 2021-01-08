@@ -11,7 +11,7 @@ import (
 type key int
 
 const (
-    keySessionCtx key = iota
+	keySessionCtx key = iota
 )
 
 func SetSession(r *http.Request, session types.Session) *http.Request {

@@ -1,8 +1,8 @@
 package file
 
 import (
-    "encoding/json"
-    "io/ioutil"
+	"encoding/json"
+	"io/ioutil"
 	"os"
 	"fmt"
 	"sync"
@@ -101,7 +101,7 @@ func (manager *MembersDatabaseCtx) deserialize() (map[string]types.MemberProfile
 		return nil, err
 	}
 
-    raw, err := ioutil.ReadAll(file)
+	raw, err := ioutil.ReadAll(file)
 	if err != nil {
 		return nil, err
 	}
