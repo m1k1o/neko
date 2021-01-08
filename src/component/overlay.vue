@@ -11,9 +11,9 @@
     @mouseup.stop.prevent="onMouseUp"
     @mouseenter.stop.prevent="onMouseEnter"
     @mouseleave.stop.prevent="onMouseLeave"
-    @dragenter.stop.prevent="onDrag"
-    @dragleave.stop.prevent="onDrag"
-    @dragover.stop.prevent="onDrag"
+    @dragenter.stop.prevent="onDragEnter"
+    @dragleave.stop.prevent="onDragLeave"
+    @dragover.stop.prevent="onDragOver"
     @drop.stop.prevent="onDrop"
   />
 </template>
@@ -194,22 +194,28 @@
       }
     }
 
-    onDrag(e: DragEvent) {
-      e.preventDefault()
-      e.stopPropagation()
+    onDragEnter(e: DragEvent) {
+      this.onMouseEnter(e as MouseEvent)
+    }
+
+    onDragLeave(e: DragEvent) {
+      this.onMouseLeave(e as MouseEvent)
+    }
+
+    onDragOver(e: DragEvent) {
+      this.onMouseMove(e as MouseEvent)
     }
 
     onDrop(e: DragEvent) {
-      e.preventDefault()
-      e.stopPropagation()
+      if (this.isControling || this.implicitControl) {
+        let dt = e.dataTransfer
+        if (!dt) return
 
-      let dt = e.dataTransfer
-      if (!dt) return
+        let files = [...dt.files]
+        if (!files) return
 
-      let files = [...dt.files]
-      if (!files) return
-
-      this.$emit('drop-files', { ...this.getMousePos(e.clientX, e.clientY), files })
+        this.$emit('drop-files', { ...this.getMousePos(e.clientX, e.clientY), files })
+      }
     }
 
     isRequesting = false
