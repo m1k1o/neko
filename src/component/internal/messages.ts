@@ -9,6 +9,9 @@ import NekoState from '../types/state'
 export interface NekoEvents {
   ['internal.websocket']: (state: 'connected' | 'connecting' | 'disconnected') => void
   ['internal.webrtc']: (state: 'connected' | 'connecting' | 'disconnected') => void
+  ['upload.drop.started']: () => void
+  ['upload.drop.progress']: (progressEvent: ProgressEvent) => void
+  ['upload.drop.finished']: (error: Error | null) => void
   ['system.disconnect']: (message: string) => void
   ['member.created']: (id: string) => void
   ['member.deleted']: (id: string) => void

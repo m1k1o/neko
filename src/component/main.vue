@@ -235,8 +235,20 @@
       return this.api.members
     }
 
-    uploadDrop({ x, y, files }: { x: number; y: number; files: Array<Blob> }) {
-      this.api.room.uploadDrop(x, y, files)
+    async uploadDrop({ x, y, files }: { x: number; y: number; files: Array<Blob> }) {
+      try {
+        this.events.emit('upload.drop.started')
+
+        await this.api.room.uploadDrop(x, y, files, {
+          onUploadProgress: (progressEvent: ProgressEvent) => {
+            this.events.emit('upload.drop.progress', progressEvent)
+          },
+        })
+
+        this.events.emit('upload.drop.finished', null)
+      } catch (err) {
+        this.events.emit('upload.drop.finished', err)
+      }
     }
 
     /////////////////////////////
