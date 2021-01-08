@@ -6,8 +6,11 @@ export class NekoApi {
   public connect(url: string, id: string, secret: string) {
     this.api_configuration = new Api.Configuration({
       basePath: url,
-      headers: {
-        Authorization: 'Basic ' + btoa(id + ':' + secret),
+      baseOptions: {
+        auth: {
+          username: id,
+          password: secret,
+        },
       },
     })
   }

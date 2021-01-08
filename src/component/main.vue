@@ -12,7 +12,7 @@
         :implicitControl="state.control.implicit_hosting && state.members[state.member_id].profile.can_host"
         @implicit-control-request="websocket.send('control/request')"
         @implicit-control-release="websocket.send('control/release')"
-        @drop-files="api.room.uploadDrop($event)"
+        @drop-files="uploadDrop($event)"
       />
     </div>
   </div>
@@ -227,21 +227,16 @@
       this.websocket.send('screen/set', { width, height, rate })
     }
 
-    public async initBrowser() {
-      const tabs = await this.api.browser.tabsGetAll()
-
-      Vue.set(this.state, 'browser', {
-        connected: true,
-        tabs,
-      })
-    }
-
     public get room(): RoomApi {
       return this.api.room
     }
 
     public get members(): MembersApi {
       return this.api.members
+    }
+
+    uploadDrop({ x, y, files }: { x: number; y: number; files: Array<Blob> }) {
+      this.api.room.uploadDrop(x, y, files)
     }
 
     /////////////////////////////
