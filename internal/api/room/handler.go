@@ -1,10 +1,13 @@
 package room
 
 import (
+	"net/http"
+
 	"github.com/go-chi/chi"
 
 	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/http/auth"
+	"demodesk/neko/internal/utils"
 )
 
 type RoomHandler struct {
@@ -61,7 +64,18 @@ func (h *RoomHandler) Route(r chi.Router) {
 		r.With(auth.AdminsOnly).Get("/configurations", h.screenConfigurationsList)
 	})
 
-	r.With(auth.HostsOnly).Route("/upload", func(r chi.Router) {
+	r.With(h.uploadMiddleware).Route("/upload", func(r chi.Router) {
 		r.Post("/drop", h.uploadDrop)
+	})
+}
+
+func (h *RoomHandler) uploadMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		session := auth.GetSession(r)
+		if !session.IsHost() && !h.sessions.ImplicitHosting() {
+			utils.HttpForbidden(w, "Without implicit hosting, only host can upload files.")
+		} else {
+			next.ServeHTTP(w, r)
+		}
 	})
 }
