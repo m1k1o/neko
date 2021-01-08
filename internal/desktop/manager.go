@@ -3,6 +3,7 @@ package desktop
 import (
 	"fmt"
 	"time"
+	"sync"
 
 	"github.com/kataras/go-events"
 	"github.com/rs/zerolog"
@@ -11,6 +12,8 @@ import (
 	"demodesk/neko/internal/config"
 	"demodesk/neko/internal/desktop/xorg"
 )
+
+var mu = sync.Mutex{}
 
 type DesktopManagerCtx struct {
 	logger    zerolog.Logger

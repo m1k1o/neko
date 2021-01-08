@@ -10,6 +10,9 @@ const (
 )
 
 func (manager *DesktopManagerCtx) DropFiles(x int, y int, files []string) {
+	mu.Lock()
+	defer mu.Unlock()
+
 	go gtk.DragWindow(files)
 
 	// TODO: Find a bettter way.

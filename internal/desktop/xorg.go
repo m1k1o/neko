@@ -1,13 +1,9 @@
 package desktop
 
 import (
-	"sync"
-
 	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/desktop/xorg"
 )
-
-var mu = sync.Mutex{}
 
 func (manager *DesktopManagerCtx) Move(x, y int) {
 	xorg.Move(x, y)
