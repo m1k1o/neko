@@ -63,13 +63,7 @@ void drag_window(char **uris) {
   gtk_window_set_title(window, "neko-drop");
   gtk_window_set_decorated(window, FALSE);
   gtk_window_set_keep_above(window, TRUE);
-  gtk_window_set_default_size(window, 100, 100);
-
-  gtk_widget_set_app_paintable(widget, TRUE);
-  GdkScreen *screen = gtk_widget_get_screen(widget);
-  GdkVisual *visual = gdk_screen_get_rgba_visual(screen);
-  gtk_widget_set_visual(widget, visual);
-  gtk_widget_set_opacity(widget, 0);
+  gtk_window_set_default_size(window, 0, 0);
 
   GtkTargetList* target_list = gtk_target_list_new(NULL, 0);
   gtk_target_list_add_uri_targets(target_list, TARGET_TYPE_URI);

@@ -2,6 +2,7 @@ package desktop
 
 import (
 	"time"
+
 	"demodesk/neko/internal/desktop/gtk"
 )
 
@@ -17,7 +18,7 @@ func (manager *DesktopManagerCtx) DropFiles(x int, y int, files []string) {
 
 	// TODO: Find a bettter way.
 	time.Sleep(DELAY)
-	manager.Move(10, 10)
+	manager.Move(0, 0)
 	manager.ButtonDown(1)
 	manager.Move(x, y)
 	time.Sleep(DELAY)
