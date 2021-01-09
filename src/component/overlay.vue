@@ -3,6 +3,7 @@
     ref="overlay"
     class="overlay"
     tabindex="0"
+    :style="{ cursor }"
     @click.stop.prevent
     @contextmenu.stop.prevent
     @wheel.stop.prevent="onWheel"
@@ -35,6 +36,7 @@
   import GuacamoleKeyboard from './utils/guacamole-keyboard'
   import { getFilesFromDataTansfer } from './utils/file-upload'
   import { NekoWebRTC } from './internal/webrtc'
+  import { Control } from './types/state'
 
   @Component({
     name: 'neko-overlay',
@@ -49,22 +51,26 @@
     private readonly webrtc!: NekoWebRTC
 
     @Prop()
+    private readonly control!: Control
+
+    @Prop()
     private readonly screenWidth!: number
 
     @Prop()
     private readonly screenHeight!: number
 
     @Prop()
-    private readonly scrollSensitivity!: number
-
-    @Prop()
-    private readonly scrollInvert!: boolean
-
-    @Prop()
     private readonly isControling!: boolean
 
     @Prop()
     private readonly implicitControl!: boolean
+
+    get cursor(): string {
+      if (!this.control.cursor) return 'auto'
+
+      const { uri, hot_x, hot_y } = this.control.cursor
+      return 'url(' + uri + ') ' + hot_x + ' ' + hot_y + ', auto'
+    }
 
     mounted() {
       // Initialize Guacamole Keyboard
@@ -122,13 +128,13 @@
       let x = e.deltaX
       let y = e.deltaY
 
-      if (this.scrollInvert) {
+      if (this.control.scroll.inverse) {
         x *= -1
         y *= -1
       }
 
-      x = Math.min(Math.max(x, -this.scrollSensitivity), this.scrollSensitivity)
-      y = Math.min(Math.max(y, -this.scrollSensitivity), this.scrollSensitivity)
+      x = Math.min(Math.max(x, -this.control.scroll.sensitivity), this.control.scroll.sensitivity)
+      y = Math.min(Math.max(y, -this.control.scroll.sensitivity), this.control.scroll.sensitivity)
 
       this.setMousePos(e)
       this.webrtc.send('wheel', { x, y })

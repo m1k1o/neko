@@ -4,11 +4,10 @@
       <video ref="video" />
       <neko-overlay
         :webrtc="webrtc"
+        :control="state.control"
         :screenWidth="state.screen.size.width"
         :screenHeight="state.screen.size.height"
         :isControling="controlling && watching"
-        :scrollSensitivity="state.control.scroll.sensitivity"
-        :scrollInvert="state.control.scroll.inverse"
         :implicitControl="state.control.implicit_hosting && state.members[state.member_id].profile.can_host"
         @implicit-control-request="websocket.send('control/request')"
         @implicit-control-release="websocket.send('control/release')"
@@ -97,6 +96,7 @@
           inverse: true,
           sensitivity: 1,
         },
+        cursor: null,
         clipboard: null,
         host_id: null,
         implicit_hosting: false,
