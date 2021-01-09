@@ -33,6 +33,7 @@
   import { Vue, Component, Ref, Prop, Watch } from 'vue-property-decorator'
 
   import GuacamoleKeyboard from './utils/guacamole-keyboard'
+  import { getFilesFromDataTansfer } from './utils/file-upload'
   import { NekoWebRTC } from './internal/webrtc'
 
   @Component({
@@ -206,13 +207,13 @@
       this.onMouseMove(e as MouseEvent)
     }
 
-    onDrop(e: DragEvent) {
+    async onDrop(e: DragEvent) {
       if (this.isControling || this.implicitControl) {
         let dt = e.dataTransfer
         if (!dt) return
 
-        let files = [...dt.files]
-        if (!files) return
+        const files = await getFilesFromDataTansfer(dt)
+        if (files.length === 0) return
 
         this.$emit('drop-files', { ...this.getMousePos(e.clientX, e.clientY), files })
       }
