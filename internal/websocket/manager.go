@@ -9,10 +9,10 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"demodesk/neko/internal/websocket/handler"
+	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/types/event"
 	"demodesk/neko/internal/types/message"
-
-	"demodesk/neko/internal/types"
+	"demodesk/neko/internal/utils"
 )
 
 func New(
@@ -107,12 +107,29 @@ func (ws *WebSocketManagerCtx) Start() {
 		}()
 
 		current := ws.desktop.ReadClipboard()
+		cursor := uint64(0)
 
 		for {
 			select {
 			case <-ws.shutdown:
 				return
 			default:
+				cur := ws.desktop.GetCursorImage()
+				if cursor != cur.Serial || cur.Serial == 0 {
+					cursor = cur.Serial
+
+					// TODO: Refactor.
+					uri, _ := utils.GetCursorImageURI(cur)
+					ws.sessions.Broadcast(message.Message{
+						Event:   "cursor/image",
+						Payload: struct{
+							Xhot uint16
+							Yhot uint16
+							Uri  string
+						}{ cur.Xhot, cur.Yhot, uri },
+					}, nil)
+				}
+
 				session := ws.sessions.GetHost()
 				if session == nil {
 					break
