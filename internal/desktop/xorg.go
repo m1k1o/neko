@@ -60,3 +60,7 @@ func (manager *DesktopManagerCtx) SetKeyboardLayout(layout string) {
 func (manager *DesktopManagerCtx) SetKeyboardModifiers(NumLock int, CapsLock int, ScrollLock int) {
 	xorg.SetKeyboardModifiers(NumLock, CapsLock, ScrollLock)
 }
+
+func (manager *DesktopManagerCtx) GetCursorImage() *types.CursorImage {
+	return xorg.GetCursorImage()
+}

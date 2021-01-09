@@ -2,7 +2,7 @@ package xorg
 
 /*
 #cgo linux CFLAGS: -I/usr/src -I/usr/local/include/
-#cgo linux LDFLAGS: -L/usr/src -L/usr/local/lib -lX11 -lXtst -lXrandr -lxcb
+#cgo linux LDFLAGS: -L/usr/src -L/usr/local/lib -lX11 -lxcb -lXrandr -lXtst -lXfixes
 
 #include "xorg.h"
 */
@@ -217,6 +217,28 @@ func SetKeyboardModifiers(num_lock int, caps_lock int, scroll_lock int) {
 	defer mu.Unlock()
 
 	C.SetKeyboardModifiers(C.int(num_lock), C.int(caps_lock), C.int(scroll_lock))
+}
+
+func GetCursorImage() *types.CursorImage {
+	mu.Lock()
+	defer mu.Unlock()
+
+	var cur *C.XFixesCursorImage
+	cur = C.XGetCursorImage()
+	defer C.XFree(unsafe.Pointer(cur))
+
+	width := uint16(cur.width)
+	height := uint16(cur.height)
+
+	return &types.CursorImage{
+		Width: width,
+		Height: height,
+		Xhot: uint16(cur.xhot),
+		Yhot: uint16(cur.yhot),
+		Serial: uint64(cur.cursor_serial),
+		// Xlib stores 32-bit data in longs, even if longs are 64-bits long.
+		Pixels: C.GoBytes(unsafe.Pointer(cur.pixels), C.int(width * height * 8)),
+	}
 }
 
 //export goCreateScreenSize

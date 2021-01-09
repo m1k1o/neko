@@ -7,6 +7,7 @@
 #include <X11/XKBlib.h>
 #include <X11/extensions/Xrandr.h>
 #include <X11/extensions/XTest.h>
+#include <X11/extensions/Xfixes.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -30,5 +31,6 @@ short XGetScreenRate();
 
 void SetKeyboardLayout(char *layout);
 void SetKeyboardModifiers(int num_lock, int caps_lock, int scroll_lock);
+XFixesCursorImage *XGetCursorImage(void);
 
 #endif

@@ -1,5 +1,14 @@
 package types
 
+type CursorImage struct {
+	Width  uint16
+	Height uint16
+	Xhot   uint16
+	Yhot   uint16
+	Serial uint64
+	Pixels []byte
+}
+
 type ScreenSize struct {
 	Width  int
 	Height int
@@ -31,6 +40,7 @@ type DesktopManager interface {
 	GetScreenSize() *ScreenSize
 	SetKeyboardLayout(layout string)
 	SetKeyboardModifiers(NumLock int, CapsLock int, ScrollLock int)
+	GetCursorImage() *CursorImage
 
 	// clipboard
 	ReadClipboard() string
