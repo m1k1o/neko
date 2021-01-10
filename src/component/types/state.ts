@@ -48,8 +48,10 @@ export interface Scroll {
 
 export interface Cursor {
   uri: string
-  hot_x: number
-  hot_y: number
+  width: number
+  height: number
+  x: number
+  y: number
 }
 
 export interface Clipboard {

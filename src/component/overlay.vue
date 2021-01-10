@@ -68,8 +68,8 @@
     get cursor(): string {
       if (!this.control.cursor) return 'auto'
 
-      const { uri, hot_x, hot_y } = this.control.cursor
-      return 'url(' + uri + ') ' + hot_x + ' ' + hot_y + ', auto'
+      const { uri, x, y } = this.control.cursor
+      return 'url(' + uri + ') ' + x + ' ' + y + ', auto'
     }
 
     mounted() {

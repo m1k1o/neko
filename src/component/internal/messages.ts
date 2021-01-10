@@ -81,14 +81,9 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
     // TODO: Handle.
   }
 
-  // TODO: Refactor.
-  protected ['cursor/image']({ payload }: any) {
-    console.log('cursor/image')
-    Vue.set(this.state.control, 'cursor', {
-      uri: payload.Uri,
-      hot_x: payload.Xhot,
-      hot_y: payload.Yhot,
-    })
+  protected [EVENT.CURSOR_IMAGE]({ uri, width, height, x, y }: message.CursorImage) {
+    console.log('EVENT.CURSOR_IMAGE')
+    Vue.set(this.state.control, 'cursor', { uri, width, height, x, y })
   }
 
   /////////////////////////////

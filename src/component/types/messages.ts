@@ -147,6 +147,19 @@ export interface KeyboardLayout {
 }
 
 /////////////////////////////
+// Cursor
+/////////////////////////////
+
+export interface CursorImage {
+  event: string | undefined
+	uri: string
+	width: number
+	height: number
+	x: number
+	y: number
+}
+
+/////////////////////////////
 // Broadcast
 /////////////////////////////
 

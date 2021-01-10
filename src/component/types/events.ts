@@ -28,4 +28,6 @@ export const CLIPBOARD_SET = 'clipboard/set'
 export const KEYBOARD_MODIFIERS = 'keyboard/modifiers'
 export const KEYBOARD_LAYOUT = 'keyboard/layout'
 
+export const CURSOR_IMAGE = 'cursor/image'
+
 export const BORADCAST_STATUS = 'broadcast/status'
