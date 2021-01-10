@@ -4,6 +4,7 @@ import (
 	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/types/event"
 	"demodesk/neko/internal/types/message"
+	"demodesk/neko/internal/utils"
 )
 
 func (h *MessageHandlerCtx) systemInit(session types.Session) error {
@@ -32,6 +33,20 @@ func (h *MessageHandlerCtx) systemInit(session types.Session) error {
 		}
 	}
 
+	var cursorImage *message.CursorImage
+	cur := h.desktop.GetCursorImage()
+	uri, err := utils.GetCursorImageURI(cur)
+	if err == nil {
+		cursorImage = &message.CursorImage{
+			Event:  event.CURSOR_IMAGE,
+			Uri:    uri,
+			Width:  cur.Width,
+			Height: cur.Height,
+			X:      cur.Xhot,
+			Y:      cur.Yhot,
+		}
+	}
+
 	return session.Send(
 		message.SystemInit{
 			Event:           event.SYSTEM_INIT,
@@ -44,6 +59,7 @@ func (h *MessageHandlerCtx) systemInit(session types.Session) error {
 			},
 			Members:         members,
 			ImplicitHosting: h.sessions.ImplicitHosting(),
+			CursorImage:     cursorImage,
 		})
 }
 

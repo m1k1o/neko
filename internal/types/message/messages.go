@@ -20,6 +20,7 @@ type SystemInit struct {
 	ScreenSize      ScreenSize            `json:"screen_size"`
 	Members         map[string]MemberData `json:"members"`
 	ImplicitHosting bool                  `json:"implicit_hosting"`
+	CursorImage     *CursorImage          `json:"cursor_image"`
 }
 
 type SystemAdmin struct {
