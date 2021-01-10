@@ -45,5 +45,9 @@ const (
 )
 
 const (
+	CURSOR_IMAGE = "cursor/image"
+)
+
+const (
 	BORADCAST_STATUS = "broadcast/status"
 )

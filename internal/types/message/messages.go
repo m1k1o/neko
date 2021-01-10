@@ -144,6 +144,19 @@ type KeyboardLayout struct {
 }
 
 /////////////////////////////
+// Cursor
+/////////////////////////////
+
+type CursorImage struct {
+	Event  string `json:"event,omitempty"`
+	Uri    string `json:"uri"`
+	Width  uint16 `json:"width"`
+	Height uint16 `json:"height"`
+	X      uint16 `json:"x"`
+	Y      uint16 `json:"y"`
+}
+
+/////////////////////////////
 // Broadcast
 /////////////////////////////
 

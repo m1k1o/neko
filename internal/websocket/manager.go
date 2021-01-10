@@ -118,15 +118,14 @@ func (ws *WebSocketManagerCtx) Start() {
 				if cursor != cur.Serial || cur.Serial == 0 {
 					cursor = cur.Serial
 
-					// TODO: Refactor.
 					uri, _ := utils.GetCursorImageURI(cur)
-					ws.sessions.Broadcast(message.Message{
-						Event:   "cursor/image",
-						Payload: struct{
-							Xhot uint16
-							Yhot uint16
-							Uri  string
-						}{ cur.Xhot, cur.Yhot, uri },
+					ws.sessions.Broadcast(message.CursorImage{
+						Event:  event.CURSOR_IMAGE,
+						Uri:    uri,
+						Width:  cur.Width,
+						Height: cur.Height,
+						X:      cur.Xhot,
+						Y:      cur.Yhot,
 					}, nil)
 				}
 
