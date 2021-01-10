@@ -11,6 +11,7 @@ import (
 
 	"demodesk/neko/internal/config"
 	"demodesk/neko/internal/desktop/xorg"
+	"demodesk/neko/internal/desktop/xevent"
 )
 
 var mu = sync.Mutex{}
@@ -49,6 +50,8 @@ func (manager *DesktopManagerCtx) Start() {
 	if err := xorg.ChangeScreenSize(manager.config.ScreenWidth, manager.config.ScreenHeight, manager.config.ScreenRate); err != nil {
 		manager.logger.Warn().Err(err).Msg("unable to set initial screen size")
 	}
+
+	go xevent.EventLoop(manager.display)
 
 	go func() {
 		defer func() {

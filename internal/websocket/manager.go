@@ -99,6 +99,25 @@ func (ws *WebSocketManagerCtx) Start() {
 		}
 	})
 
+	// TOOD: Throttle events.
+	ws.desktop.OnCursorChanged(func(serial uint64) {
+		cur := ws.desktop.GetCursorImage()
+		uri, err := utils.GetCursorImageURI(cur)
+		if err != nil {
+			ws.logger.Warn().Err(err).Msg("could create cursor image")
+			return
+		}
+
+		ws.sessions.Broadcast(message.CursorImage{
+			Event:  event.CURSOR_IMAGE,
+			Uri:    uri,
+			Width:  cur.Width,
+			Height: cur.Height,
+			X:      cur.Xhot,
+			Y:      cur.Yhot,
+		}, nil)
+	})
+
 	go func() {
 		ws.logger.Info().Msg("clipboard loop started")
 
@@ -107,28 +126,12 @@ func (ws *WebSocketManagerCtx) Start() {
 		}()
 
 		current := ws.desktop.ReadClipboard()
-		cursor := uint64(0)
 
 		for {
 			select {
 			case <-ws.shutdown:
 				return
 			default:
-				cur := ws.desktop.GetCursorImage()
-				if cursor != cur.Serial || cur.Serial == 0 {
-					cursor = cur.Serial
-
-					uri, _ := utils.GetCursorImageURI(cur)
-					ws.sessions.Broadcast(message.CursorImage{
-						Event:  event.CURSOR_IMAGE,
-						Uri:    uri,
-						Width:  cur.Width,
-						Height: cur.Height,
-						X:      cur.Xhot,
-						Y:      cur.Yhot,
-					}, nil)
-				}
-
 				session := ws.sessions.GetHost()
 				if session == nil {
 					break

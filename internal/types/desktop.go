@@ -42,6 +42,10 @@ type DesktopManager interface {
 	SetKeyboardModifiers(NumLock int, CapsLock int, ScrollLock int)
 	GetCursorImage() *CursorImage
 
+	// xevent
+	OnCursorChanged(listener func(serial uint64))
+	OnEventError(listener func(error_code uint8, message string, request_code uint8, minor_code uint8))
+
 	// clipboard
 	ReadClipboard() string
 	WriteClipboard(data string)
