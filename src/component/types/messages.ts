@@ -14,6 +14,7 @@ export interface SystemInit {
   screen_size: ScreenSize
   members: Record<string, MemberData>
   implicit_hosting: boolean
+  cursor_image: CursorImage | null
 }
 
 export interface SystemAdmin {
