@@ -27,6 +27,7 @@ void XEventLoop(char *name) {
   XA_CLIPBOARD = XInternAtom(display, "CLIPBOARD", 0);
   XFixesSelectSelectionInput(display, root, XA_CLIPBOARD, XFixesSetSelectionOwnerNotifyMask);
   XFixesSelectCursorInput(display, root, XFixesDisplayCursorNotifyMask);
+  XSelectInput(display, root, SubstructureNotifyMask);
 
   XSync(display, 0);
   XSetErrorHandler(XEventError);
@@ -51,6 +52,22 @@ void XEventLoop(char *name) {
         goXEventClipboardUpdated();
         continue;
       }
+    }
+
+    // XFixesSelectionNotifyEvent
+    if (event.type == CreateNotify) {
+      char *name;
+      XFetchName(display, event.xcreatewindow.window, &name);
+ 
+      char *role;
+      XTextProperty text_data;
+      Atom atom = XInternAtom(display, "WM_WINDOW_ROLE", True);
+      int status = XGetTextProperty(display, event.xcreatewindow.window, &text_data, atom);
+      role = (char *)text_data.value;
+    
+      goXEventWindowCreated(event.xcreatewindow, name, role);
+      XFree(name);
+      continue;
     }
   }
 

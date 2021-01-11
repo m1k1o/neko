@@ -133,6 +133,15 @@ func (ws *WebSocketManagerCtx) Start() {
 			ws.logger.Warn().Err(err).Msg("could not sync clipboard")
 		}
 	})
+
+	ws.desktop.OnWindowCreated(func(window uint32, name string, role string) {
+		// TODO: Implement.
+		ws.logger.Info().
+			Uint32("window", window).
+			Str("name", name).
+			Str("role", role).
+			Msg("created new window")
+	})
 }
 
 func (ws *WebSocketManagerCtx) Shutdown() error {
