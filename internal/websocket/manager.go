@@ -47,7 +47,6 @@ type WebSocketManagerCtx struct {
 	desktop   types.DesktopManager
 	handler   *handler.MessageHandlerCtx
 	handlers  []types.HandlerFunction
-	shutdown  chan bool
 }
 
 func (ws *WebSocketManagerCtx) Start() {
@@ -118,51 +117,25 @@ func (ws *WebSocketManagerCtx) Start() {
 		}, nil)
 	})
 
-	go func() {
-		ws.logger.Info().Msg("clipboard loop started")
-
-		defer func() {
-			ws.logger.Info().Msg("clipboard loop stopped")
-		}()
-
-		current := ws.desktop.ReadClipboard()
-
-		for {
-			select {
-			case <-ws.shutdown:
-				return
-			default:
-				session := ws.sessions.GetHost()
-				if session == nil {
-					break
-				}
-
-				text := ws.desktop.ReadClipboard()
-				if text == current {
-					break
-				}
-
-				current = text
-				if !session.CanAccessClipboard() {
-					break
-				}
-
-				if err := session.Send(
-					message.ClipboardData{
-						Event: event.CLIPBOARD_UPDATED,
-						Text:  text,
-					}); err != nil {
-					ws.logger.Warn().Err(err).Msg("could not sync clipboard")
-				}
-			}
-
-			time.Sleep(100 * time.Millisecond)
+	ws.desktop.OnClipboardUpdated(func() {
+		session := ws.sessions.GetHost()
+		if session == nil || !session.CanAccessClipboard() {
+			return
 		}
-	}()
+
+		text := ws.desktop.ReadClipboard()
+		err := session.Send(message.ClipboardData{
+			Event: event.CLIPBOARD_UPDATED,
+			Text:  text,
+		})
+
+		if err != nil {
+			ws.logger.Warn().Err(err).Msg("could not sync clipboard")
+		}
+	})
 }
 
 func (ws *WebSocketManagerCtx) Shutdown() error {
-	ws.shutdown <- true
 	return nil
 }
 

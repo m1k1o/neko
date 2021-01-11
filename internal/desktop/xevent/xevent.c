@@ -23,7 +23,11 @@ void XEventLoop(char *name) {
     return;
   }
 
+  Atom XA_CLIPBOARD;
+  XA_CLIPBOARD = XInternAtom(display, "CLIPBOARD", 0);
+  XFixesSelectSelectionInput(display, root, XA_CLIPBOARD, XFixesSetSelectionOwnerNotifyMask);
   XFixesSelectCursorInput(display, root, XFixesDisplayCursorNotifyMask);
+
   XSync(display, 0);
   XSetErrorHandler(XEventError);
 
@@ -36,6 +40,15 @@ void XEventLoop(char *name) {
       XFixesCursorNotifyEvent notifyEvent = *((XFixesCursorNotifyEvent *) &event);
       if (notifyEvent.subtype == XFixesDisplayCursorNotify) {
         goXEventCursorChanged(notifyEvent);
+        continue;
+      }
+    }
+
+    // XFixesSelectionNotifyEvent
+    if (event.type == xfixes_event_base + XFixesSelectionNotify) {
+      XFixesSelectionNotifyEvent notifyEvent = *((XFixesSelectionNotifyEvent *) &event);
+      if (notifyEvent.subtype == XFixesSetSelectionOwnerNotify && notifyEvent.selection == XA_CLIPBOARD) {
+        goXEventClipboardUpdated();
         continue;
       }
     }
