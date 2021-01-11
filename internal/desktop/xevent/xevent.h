@@ -3,9 +3,7 @@
 #include <X11/Xatom.h>
 #include <X11/Xlib.h>
 #include <X11/extensions/Xfixes.h>
-#include <stdint.h>
 #include <stdlib.h>
-#include <string.h>
 
 extern void goXEventCursorChanged(XFixesCursorNotifyEvent event);
 extern void goXEventClipboardUpdated();

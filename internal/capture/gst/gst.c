@@ -1,7 +1,5 @@
 #include "gst.h"
 
-#include <gst/app/gstappsrc.h>
-
 typedef struct SampleHandlerUserData {
   int pipelineId;
 } SampleHandlerUserData;

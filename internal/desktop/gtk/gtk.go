@@ -1,8 +1,7 @@
 package gtk
 
 /*
-#cgo linux CFLAGS: -I/usr/src -I/usr/local/include/
-#cgo pkg-config: gdk-3.0 gtk+-3.0
+#cgo pkg-config: gtk+-3.0
 
 #include "gtk.h"
 */

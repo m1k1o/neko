@@ -1,8 +1,7 @@
 package xorg
 
 /*
-#cgo linux CFLAGS: -I/usr/src -I/usr/local/include/
-#cgo linux LDFLAGS: -L/usr/src -L/usr/local/lib -lX11 -lxcb -lXrandr -lXtst -lXfixes
+#cgo linux LDFLAGS: -lX11 -lXrandr -lXtst -lXfixes
 
 #include "xorg.h"
 */
