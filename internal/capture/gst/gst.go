@@ -197,8 +197,18 @@ func CreatePipeline(pipelineStr string, codecName string, clockRate float32) (*P
 	pipelinesLock.Lock()
 	defer pipelinesLock.Unlock()
 
+	var gstPipeline *C.GstElement
+	var gstError *C.GError
+
+	gstPipeline = C.gst_parse_launch(pipelineStrUnsafe, &gstError)
+	defer C.g_error_free(gstError)
+
+	if gstPipeline == nil || gstError != nil {
+		return nil, fmt.Errorf("(pipeline error) %s", C.GoString(gstError.message)) 
+	}
+
 	p := &Pipeline{
-		Pipeline:  C.gstreamer_send_create_pipeline(pipelineStrUnsafe),
+		Pipeline:  gstPipeline,
 		Sample:    make(chan types.Sample),
 		CodecName: codecName,
 		ClockRate: clockRate,

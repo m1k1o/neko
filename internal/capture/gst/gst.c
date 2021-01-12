@@ -61,11 +61,6 @@ GstFlowReturn gstreamer_send_new_sample_handler(GstElement *object, gpointer use
   return GST_FLOW_OK;
 }
 
-GstElement *gstreamer_send_create_pipeline(char *pipeline) {
-  GError *error = NULL;
-  return gst_parse_launch(pipeline, &error);
-}
-
 void gstreamer_send_start_pipeline(GstElement *pipeline, int pipelineId) {
   SampleHandlerUserData *s = calloc(1, sizeof(SampleHandlerUserData));
   s->pipelineId = pipelineId;
