@@ -17,7 +17,7 @@ import (
 	"demodesk/neko/internal/types"
 )
 
-type KbdModifiers int
+type KbdModifiers uint8
 
 const (
 	KBD_CAPS_LOCK KbdModifiers = 2
@@ -230,11 +230,11 @@ func SetKeyboardModifier(mod KbdModifiers, active bool) {
 	C.XSetKeyboardModifier(C.int(mod), num)
 }
 
-func GetKeyboardModifier(mod KbdModifiers) bool {
+func GetKeyboardModifiers() KbdModifiers {
 	mu.Lock()
 	defer mu.Unlock()
 
-	return C.XGetKeyboardModifier(C.int(mod)) == C.int(1)
+	return KbdModifiers(C.XGetKeyboardModifiers())
 }
 
 func GetCursorImage() *types.CursorImage {

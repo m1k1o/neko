@@ -132,11 +132,11 @@ void XSetKeyboardModifier(int mod, int on) {
   XFlush(display);
 }
 
-int XGetKeyboardModifier(int mod) {
+char XGetKeyboardModifiers() {
   XkbStateRec xkbState;
   Display *display = getXDisplay();
   XkbGetState(display, XkbUseCoreKbd, &xkbState);
-  return xkbState.locked_mods & mod;
+  return xkbState.locked_mods;
 }
 
 XFixesCursorImage *XGetCursorImage(void) {

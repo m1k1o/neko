@@ -68,8 +68,10 @@ func (manager *DesktopManagerCtx) SetKeyboardModifiers(mod types.KeyboardModifie
 }
 
 func (manager *DesktopManagerCtx) GetKeyboardModifiers() types.KeyboardModifiers {
-	NumLock := xorg.GetKeyboardModifier(xorg.KBD_NUM_LOCK)
-	CapsLock := xorg.GetKeyboardModifier(xorg.KBD_CAPS_LOCK)
+	modifiers := xorg.GetKeyboardModifiers()
+
+	NumLock := (modifiers & xorg.KBD_NUM_LOCK) != 0
+	CapsLock := (modifiers & xorg.KBD_CAPS_LOCK) != 0
 
 	return types.KeyboardModifiers{
 		NumLock: &NumLock,
