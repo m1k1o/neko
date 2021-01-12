@@ -80,11 +80,15 @@ RUN set -eux; apt-get update; \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/*
 
 #
-# copy runtime files
+# copy runtime configs
 COPY runtime/dbus /usr/bin/dbus
 COPY runtime/default.pa /etc/pulse/default.pa
 COPY runtime/supervisord.conf /etc/neko/supervisord.conf
 COPY runtime/xorg.conf /etc/neko/xorg.conf
+
+#
+# copy runtime folders
+COPY runtime/icon-theme /home/neko/.icons/default
 
 #
 # set default envs
