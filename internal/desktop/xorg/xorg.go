@@ -12,7 +12,6 @@ import (
 	"sync"
 	"time"
 	"unsafe"
-	"regexp"
 
 	"demodesk/neko/internal/types"
 )
@@ -202,20 +201,6 @@ func GetScreenSize() *types.ScreenSize {
 	}
 
 	return nil
-}
-
-func SetKeyboardLayout(layout string) {
-	mu.Lock()
-	defer mu.Unlock()
-
-	if !regexp.MustCompile(`^[a-zA-Z]+$`).MatchString(layout) {
-		return
-	}
-
-	layoutUnsafe := C.CString(layout)
-	defer C.free(unsafe.Pointer(layoutUnsafe))
-
-	C.SetKeyboardLayout(layoutUnsafe)
 }
 
 func SetKeyboardModifier(mod KbdModifiers, active bool) {

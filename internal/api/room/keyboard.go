@@ -22,7 +22,11 @@ func (h *RoomHandler) keyboardLayoutSet(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	h.desktop.SetKeyboardLayout(data.Layout)
+	err := h.desktop.SetKeyboardLayout(data.Layout)
+	if err != nil{
+		utils.HttpInternalServerError(w, "Unable to change keyboard layout.")
+		return
+	}
 
 	utils.HttpSuccess(w)
 }

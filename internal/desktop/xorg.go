@@ -1,6 +1,8 @@
 package desktop
 
 import (
+	"os/exec"
+
 	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/desktop/xorg"
 )
@@ -53,8 +55,11 @@ func (manager *DesktopManagerCtx) ChangeScreenSize(width int, height int, rate i
 	return xorg.ChangeScreenSize(width, height, rate)
 }
 
-func (manager *DesktopManagerCtx) SetKeyboardLayout(layout string) {
-	xorg.SetKeyboardLayout(layout)
+func (manager *DesktopManagerCtx) SetKeyboardLayout(layout string) error {
+	// TOOD: Use native API.
+    cmd := exec.Command("setxkbmap", layout)
+	_, err := cmd.Output()
+	return err
 }
 
 func (manager *DesktopManagerCtx) SetKeyboardModifiers(mod types.KeyboardModifiers) {
