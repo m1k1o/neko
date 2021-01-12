@@ -140,8 +140,9 @@ type KeyboardModifiers struct {
 }
 
 type KeyboardLayout struct {
-	Event  string `json:"event,omitempty"`
-	Layout string `json:"layout"`
+	Event   string `json:"event,omitempty"`
+	Layout  string `json:"layout"`
+	Variant string `json:"variant"`
 }
 
 /////////////////////////////

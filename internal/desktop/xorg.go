@@ -55,9 +55,9 @@ func (manager *DesktopManagerCtx) ChangeScreenSize(width int, height int, rate i
 	return xorg.ChangeScreenSize(width, height, rate)
 }
 
-func (manager *DesktopManagerCtx) SetKeyboardLayout(layout string) error {
+func (manager *DesktopManagerCtx) SetKeyboardLayout(layout string, variant string) error {
 	// TOOD: Use native API.
-    cmd := exec.Command("setxkbmap", layout)
+    cmd := exec.Command("setxkbmap", "-layout", layout, "-variant", variant)
 	_, err := cmd.Output()
 	return err
 }

@@ -12,7 +12,7 @@ func (h *MessageHandlerCtx) keyboardLayout(session types.Session, payload *messa
 		return nil
 	}
 
-	return h.desktop.SetKeyboardLayout(payload.Layout)
+	return h.desktop.SetKeyboardLayout(payload.Layout, payload.Variant)
 }
 
 func (h *MessageHandlerCtx) keyboardModifiers(session types.Session, payload *message.KeyboardModifiers) error {

@@ -8,7 +8,8 @@ import (
 )
 
 type KeyboardLayoutData struct {
-	Layout string `json:"layout"`
+	Layout  string `json:"layout"`
+	Variant string `json:"variant"`
 }
 
 type KeyboardModifiersData struct {
@@ -22,7 +23,7 @@ func (h *RoomHandler) keyboardLayoutSet(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	err := h.desktop.SetKeyboardLayout(data.Layout)
+	err := h.desktop.SetKeyboardLayout(data.Layout, data.Variant)
 	if err != nil{
 		utils.HttpInternalServerError(w, "Unable to change keyboard layout.")
 		return
