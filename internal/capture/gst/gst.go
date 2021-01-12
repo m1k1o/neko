@@ -20,7 +20,6 @@ import (
 type Pipeline struct {
 	Pipeline  *C.GstElement
 	Sample    chan types.Sample
-	CodecName string
 	ClockRate float32
 	Src       string
 	id        int
@@ -55,7 +54,7 @@ func CreateRTMPPipeline(pipelineDevice string, pipelineDisplay string, pipelineS
 		pipelineStr = fmt.Sprintf("flvmux name=mux ! rtmpsink location='%s live=1' %s audio/x-raw,channels=2 ! audioconvert ! voaacenc ! mux. %s x264enc bframes=0 key-int-max=60 byte-stream=true tune=zerolatency speed-preset=veryfast ! mux.", pipelineRTMP, audio, video)
 	}
 
-	return CreatePipeline(pipelineStr, "", 0)
+	return CreatePipeline(pipelineStr, 0)
 }
 
 // CreateAppPipeline creates a GStreamer Pipeline
@@ -186,11 +185,11 @@ func CreateAppPipeline(codecName string, pipelineDevice string, pipelineSrc stri
 		return nil, fmt.Errorf("unknown codec %s", codecName)
 	}
 
-	return CreatePipeline(pipelineStr, codecName, clockRate)
+	return CreatePipeline(pipelineStr, clockRate)
 }
 
 // CreatePipeline creates a GStreamer Pipeline
-func CreatePipeline(pipelineStr string, codecName string, clockRate float32) (*Pipeline, error) {
+func CreatePipeline(pipelineStr string, clockRate float32) (*Pipeline, error) {
 	pipelineStrUnsafe := C.CString(pipelineStr)
 	defer C.free(unsafe.Pointer(pipelineStrUnsafe))
 
@@ -210,7 +209,6 @@ func CreatePipeline(pipelineStr string, codecName string, clockRate float32) (*P
 	p := &Pipeline{
 		Pipeline:  gstPipeline,
 		Sample:    make(chan types.Sample),
-		CodecName: codecName,
 		ClockRate: clockRate,
 		Src:       pipelineStr,
 		id:        len(pipelines),
