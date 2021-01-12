@@ -39,3 +39,12 @@ func (h *RoomHandler) keyboardModifiersSet(w http.ResponseWriter, r *http.Reques
 	})
 	utils.HttpSuccess(w)
 }
+
+func (h *RoomHandler) keyboardModifiersGet(w http.ResponseWriter, r *http.Request) {
+	data := h.desktop.GetKeyboardModifiers()
+
+	utils.HttpSuccess(w, KeyboardModifiersData{
+		NumLock: data.NumLock,
+		CapsLock: data.CapsLock,
+	})
+}

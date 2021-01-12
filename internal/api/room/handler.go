@@ -42,9 +42,11 @@ func (h *RoomHandler) Route(r chi.Router) {
 		r.Post("/", h.clipboardWrite)
 	})
 
-	r.With(auth.HostsOnly).Route("/keyboard", func(r chi.Router) {
-		r.Post("/layout", h.keyboardLayoutSet)
-		r.Post("/modifiers", h.keyboardModifiersSet)
+	r.Route("/keyboard", func(r chi.Router) {
+		r.With(auth.HostsOnly).Post("/layout", h.keyboardLayoutSet)
+
+		r.Get("/modifiers", h.keyboardModifiersGet)
+		r.With(auth.HostsOnly).Post("/modifiers", h.keyboardModifiersSet)
 	})
 
 	r.Route("/control", func(r chi.Router) {
