@@ -33,7 +33,7 @@ const (
 	videoClockRate = 90000
 	audioClockRate = 48000
 	pcmClockRate   = 8000
-	videoSrc       = "ximagesrc display-name=%s show-pointer=true use-damage=false ! video/x-raw ! videoconvert ! queue ! "
+	videoSrc       = "ximagesrc display-name=%s show-pointer=false use-damage=false ! video/x-raw ! videoconvert ! queue ! "
 	audioSrc       = "pulsesrc device=%s ! audio/x-raw,channels=2 ! audioconvert ! "
 	appSink        = " ! appsink name=appsink"
 )
