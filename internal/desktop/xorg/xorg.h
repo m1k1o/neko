@@ -26,5 +26,6 @@ int XGetScreenSize();
 short XGetScreenRate();
 
 void SetKeyboardLayout(char *layout);
-void SetKeyboardModifiers(int num_lock, int caps_lock, int scroll_lock);
+void XSetKeyboardModifier(int mod, int on);
+int XGetKeyboardModifier(int mod);
 XFixesCursorImage *XGetCursorImage(void);

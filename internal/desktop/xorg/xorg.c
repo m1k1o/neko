@@ -126,25 +126,17 @@ void SetKeyboardLayout(char *layout) {
   system(cmd);
 }
 
-void SetKeyboardModifiers(int num_lock, int caps_lock, int scroll_lock) {
+void XSetKeyboardModifier(int mod, int on) {
   Display *display = getXDisplay();
-
-  if (num_lock != -1) {
-    XkbLockModifiers(display, XkbUseCoreKbd, 16, num_lock * 16);
-  }
-
-  if (caps_lock != -1) {
-    XkbLockModifiers(display, XkbUseCoreKbd, 2, caps_lock * 2);
-  }
-
-  if (scroll_lock != -1) {
-    XKeyboardControl values;
-    values.led_mode = scroll_lock ? LedModeOn : LedModeOff;
-    values.led = 3;
-    XChangeKeyboardControl(display, KBLedMode, &values);
-  }
-
+  XkbLockModifiers(display, XkbUseCoreKbd, mod, on ? mod : 0);
   XFlush(display);
+}
+
+int XGetKeyboardModifier(int mod) {
+  XkbStateRec xkbState;
+  Display *display = getXDisplay();
+  XkbGetState(display, XkbUseCoreKbd, &xkbState);
+  return xkbState.locked_mods & mod;
 }
 
 XFixesCursorImage *XGetCursorImage(void) {

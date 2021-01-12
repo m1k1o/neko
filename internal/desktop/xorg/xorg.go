@@ -17,6 +17,13 @@ import (
 	"demodesk/neko/internal/types"
 )
 
+type KbdModifiers int
+
+const (
+	KBD_CAPS_LOCK KbdModifiers = 2
+	KBD_NUM_LOCK  KbdModifiers = 16
+)
+
 var ScreenConfigurations = make(map[int]types.ScreenConfiguration)
 
 var debounce_button = make(map[int]time.Time)
@@ -211,11 +218,23 @@ func SetKeyboardLayout(layout string) {
 	C.SetKeyboardLayout(layoutUnsafe)
 }
 
-func SetKeyboardModifiers(num_lock int, caps_lock int, scroll_lock int) {
+func SetKeyboardModifier(mod KbdModifiers, active bool) {
 	mu.Lock()
 	defer mu.Unlock()
 
-	C.SetKeyboardModifiers(C.int(num_lock), C.int(caps_lock), C.int(scroll_lock))
+	num := C.int(0)
+	if active {
+		num = C.int(1)
+	}
+
+	C.XSetKeyboardModifier(C.int(mod), num)
+}
+
+func GetKeyboardModifier(mod KbdModifiers) bool {
+	mu.Lock()
+	defer mu.Unlock()
+
+	return C.XGetKeyboardModifier(C.int(mod)) == C.int(1)
 }
 
 func GetCursorImage() *types.CursorImage {

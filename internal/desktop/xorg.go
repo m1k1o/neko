@@ -57,8 +57,24 @@ func (manager *DesktopManagerCtx) SetKeyboardLayout(layout string) {
 	xorg.SetKeyboardLayout(layout)
 }
 
-func (manager *DesktopManagerCtx) SetKeyboardModifiers(NumLock int, CapsLock int, ScrollLock int) {
-	xorg.SetKeyboardModifiers(NumLock, CapsLock, ScrollLock)
+func (manager *DesktopManagerCtx) SetKeyboardModifiers(mod types.KeyboardModifiers) {
+	if mod.NumLock != nil {
+		xorg.SetKeyboardModifier(xorg.KBD_NUM_LOCK, *mod.NumLock)
+	}
+
+	if mod.CapsLock != nil {
+		xorg.SetKeyboardModifier(xorg.KBD_CAPS_LOCK, *mod.CapsLock)
+	}
+}
+
+func (manager *DesktopManagerCtx) GetKeyboardModifiers() types.KeyboardModifiers {
+	NumLock := xorg.GetKeyboardModifier(xorg.KBD_NUM_LOCK)
+	CapsLock := xorg.GetKeyboardModifier(xorg.KBD_CAPS_LOCK)
+
+	return types.KeyboardModifiers{
+		NumLock: &NumLock,
+		CapsLock: &CapsLock,
+	}
 }
 
 func (manager *DesktopManagerCtx) GetCursorImage() *types.CursorImage {

@@ -21,6 +21,11 @@ type ScreenConfiguration struct {
 	Rates  map[int]int16
 }
 
+type KeyboardModifiers struct {
+	NumLock  *bool
+	CapsLock *bool
+}
+
 type DesktopManager interface {
 	Start()
 	Shutdown() error
@@ -39,7 +44,8 @@ type DesktopManager interface {
 	ScreenConfigurations() map[int]ScreenConfiguration
 	GetScreenSize() *ScreenSize
 	SetKeyboardLayout(layout string)
-	SetKeyboardModifiers(NumLock int, CapsLock int, ScrollLock int)
+	SetKeyboardModifiers(mod KeyboardModifiers)
+	GetKeyboardModifiers() KeyboardModifiers
 	GetCursorImage() *CursorImage
 
 	// xevent

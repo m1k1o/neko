@@ -22,27 +22,9 @@ func (h *MessageHandlerCtx) keyboardModifiers(session types.Session, payload *me
 		return nil
 	}
 
-	var NumLock = 0
-	if payload.NumLock == nil {
-		NumLock = -1
-	} else if *payload.NumLock {
-		NumLock = 1
-	}
-
-	var CapsLock = 0
-	if payload.CapsLock == nil {
-		CapsLock = -1
-	} else if *payload.CapsLock {
-		CapsLock = 1
-	}
-
-	var ScrollLock = 0
-	if payload.ScrollLock == nil {
-		ScrollLock = -1
-	} else if *payload.ScrollLock {
-		ScrollLock = 1
-	}
-
-	h.desktop.SetKeyboardModifiers(NumLock, CapsLock, ScrollLock)
+	h.desktop.SetKeyboardModifiers(types.KeyboardModifiers{
+		NumLock: payload.NumLock,
+		CapsLock: payload.CapsLock,
+	})
 	return nil
 }
