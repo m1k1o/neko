@@ -153,11 +153,11 @@ export interface KeyboardLayout {
 
 export interface CursorImage {
   event: string | undefined
-	uri: string
-	width: number
-	height: number
-	x: number
-	y: number
+  uri: string
+  width: number
+  height: number
+  x: number
+  y: number
 }
 
 /////////////////////////////
