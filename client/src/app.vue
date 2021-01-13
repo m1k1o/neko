@@ -29,7 +29,7 @@
       <neko-side v-if="side" />
       <neko-connect v-if="!connected" />
       <neko-about v-if="about" />
-      <notifications group="neko" position="top left" style="top: 50px;" />
+      <notifications group="neko" position="top left" :ignoreDuplicates="true" style="top: 50px;pointer-events: none" />
     </template>
   </div>
 </template>
