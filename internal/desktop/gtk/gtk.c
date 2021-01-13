@@ -54,13 +54,16 @@ static void drag_end(
 }
 
 void drag_window(char **uris) {
-  gtk_init(NULL, NULL);
+  if (gtk_init_check(NULL, NULL) == FALSE) {
+    fprintf(stderr, "Unable to initialize GTK for drag and drop widget!\n");
+    return;
+  }
 
   GtkWidget *widget = gtk_window_new(GTK_WINDOW_TOPLEVEL);
   GtkWindow *window = GTK_WINDOW(widget);
 
   gtk_window_move(window, 0, 0);
-  gtk_window_set_title(window, "neko-drop");
+  gtk_window_set_title(window, "Neko Drag & Drop Window");
   gtk_window_set_decorated(window, FALSE);
   gtk_window_set_keep_above(window, TRUE);
   gtk_window_set_default_size(window, 0, 0);
@@ -76,6 +79,7 @@ void drag_window(char **uris) {
   g_signal_connect(widget, "drag-end", G_CALLBACK(drag_end), NULL);
   g_signal_connect(window, "destroy", G_CALLBACK(gtk_main_quit), NULL);
 
+  fprintf(stderr, "Preparing to show drag and drop widget.\n");
   gtk_widget_show_all(widget);
   gtk_main();
 }
