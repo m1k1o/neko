@@ -41,18 +41,18 @@ func (l logger) Debugf(format string, args ...interface{}) {
 	l.logger.Debug().Msg(strings.TrimSpace(msg))
 }
 func (l logger) Info(msg string) {
-	if strings.Contains(msg, "packetio.Buffer is full") {
-		//l.logger.Panic().Msg(msg)
+	if strings.Contains(msg, "duplicated packet") {
 		return
 	}
+
 	l.logger.Info().Msg(strings.TrimSpace(msg))
 }
 func (l logger) Infof(format string, args ...interface{}) {
 	msg := fmt.Sprintf(format, args...)
-	if strings.Contains(msg, "packetio.Buffer is full") {
-		// l.logger.Panic().Msg(msg)
+	if strings.Contains(msg, "duplicated packet") {
 		return
 	}
+
 	l.logger.Info().Msg(strings.TrimSpace(msg))
 }
 func (l logger) Warn(msg string) {
