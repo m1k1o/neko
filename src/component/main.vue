@@ -43,6 +43,9 @@
 </style>
 
 <script lang="ts">
+  export * as ApiModels from './api/models'
+  export * as StateModels from './types/state'
+
   import { Vue, Component, Ref, Watch, Prop } from 'vue-property-decorator'
   import ResizeObserver from 'resize-observer-polyfill'
   import EventEmitter from 'eventemitter3'
