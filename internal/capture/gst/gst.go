@@ -172,9 +172,9 @@ func CreatePipeline(pipelineStr string, clockRate float32) (*Pipeline, error) {
 	var gstError *C.GError
 
 	gstPipeline = C.gst_parse_launch(pipelineStrUnsafe, &gstError)
-	defer C.g_error_free(gstError)
 
 	if gstError != nil {
+		defer C.g_error_free(gstError)
 		return nil, fmt.Errorf("(pipeline error) %s", C.GoString(gstError.message)) 
 	}
 
