@@ -1,0 +1,53 @@
+package desktop
+
+import (
+	"time"
+
+	"demodesk/neko/internal/desktop/drop"
+)
+
+const (
+	DROP_DELAY = 100 * time.Millisecond
+)
+
+func (manager *DesktopManagerCtx) DropFiles(x int, y int, files []string) bool {
+	mu.Lock()
+	defer mu.Unlock()
+
+	drop.Emmiter.Clear()
+
+	drop.Emmiter.Once("create", func(payload ...interface{}) {
+		manager.Move(0, 0)
+	})
+
+	drop.Emmiter.Once("cursor-enter", func(payload ...interface{}) {
+		manager.ButtonDown(1)
+	})
+
+	drop.Emmiter.Once("button-press", func(payload ...interface{}) {
+		manager.Move(x, y)
+	})
+
+	drop.Emmiter.Once("begin", func(payload ...interface{}) {
+		manager.Move(x, y)
+		time.Sleep(DROP_DELAY)
+		manager.Move(x, y)
+		time.Sleep(DROP_DELAY)
+		manager.ButtonUp(1)
+	})
+
+	finished := make(chan bool)
+	drop.Emmiter.Once("finish", func(payload ...interface{}) {
+		finished <- payload[0].(bool)
+	})
+
+	go drop.OpenWindow(files)
+
+	select {
+	case succeeded := <- finished:
+		return succeeded
+	case <-time.After(1 * time.Second):
+		drop.CloseWindow();
+		return false
+	}
+}

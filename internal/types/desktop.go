@@ -59,5 +59,5 @@ type DesktopManager interface {
 	WriteClipboard(data string)
 
 	// drop
-	DropFiles(x int, y int, files []string)
+	DropFiles(x int, y int, files []string) bool
 }
