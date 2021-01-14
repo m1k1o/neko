@@ -17,14 +17,22 @@ func (manager *DesktopManagerCtx) DropFiles(x int, y int, files []string) {
 	go gtk.DragWindow(files)
 
 	// TODO: Find a bettter way.
-	time.Sleep(DELAY)
-	manager.Move(0, 0)
-	manager.ButtonDown(1)
-	manager.Move(x, y)
-	time.Sleep(DELAY)
-	manager.Move(x, y)
-	time.Sleep(DELAY)
-	manager.Move(x, y)
-	time.Sleep(DELAY)
-	manager.ButtonUp(1)
+	for step := 1; step <= 6; step++ {
+		time.Sleep(DELAY)
+
+		switch step {
+		case 1:
+			manager.Move(0, 0)
+		case 2:
+			manager.ButtonDown(1)
+		case 3:
+			fallthrough
+		case 4:
+			fallthrough
+		case 5:
+			manager.Move(x, y)
+		case 6:
+			manager.ButtonUp(1)
+		}
+	}
 }
