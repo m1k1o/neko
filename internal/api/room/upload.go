@@ -19,6 +19,13 @@ const (
 func (h *RoomHandler) uploadDrop(w http.ResponseWriter, r *http.Request) {
 	r.ParseMultipartForm(MAX_UPLOAD_SIZE)
 
+	if r.MultipartForm == nil {
+		utils.HttpBadRequest(w, "No MultipartForm received.")
+		return
+	}
+
+	defer r.MultipartForm.RemoveAll()
+
 	X, err := strconv.Atoi(r.FormValue("x"))
 	if err != nil {
 		utils.HttpBadRequest(w, "No X coordinate received.")
@@ -28,11 +35,6 @@ func (h *RoomHandler) uploadDrop(w http.ResponseWriter, r *http.Request) {
 	Y, err := strconv.Atoi(r.FormValue("y"))
 	if err != nil {
 		utils.HttpBadRequest(w, "No Y coordinate received.")
-		return
-	}
-
-	if r.MultipartForm == nil {
-		utils.HttpBadRequest(w, "No MultipartForm received.")
 		return
 	}
 
@@ -77,8 +79,10 @@ func (h *RoomHandler) uploadDrop(w http.ResponseWriter, r *http.Request) {
 		files = append(files, path)
 	}
 
-	h.desktop.DropFiles(X, Y, files)
+	if !h.desktop.DropFiles(X, Y, files) {
+		utils.HttpInternalServerError(w, "Unable to drop files.")
+		return
+	}
 
-	r.MultipartForm.RemoveAll()
 	utils.HttpSuccess(w)
 }
