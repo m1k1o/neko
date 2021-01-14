@@ -22,7 +22,7 @@ type MessageHandler struct {
 	locked    bool
 }
 
-func (h *MessageHandler) Connected(id string, socket *WebSocket) (bool, string, error) {
+func (h *MessageHandler) Connected(admin bool, socket *WebSocket) (bool, string, error) {
 	address := socket.Address()
 	if address == "" {
 		h.logger.Debug().Msg("no remote address")
@@ -34,22 +34,15 @@ func (h *MessageHandler) Connected(id string, socket *WebSocket) (bool, string, 
 		}
 	}
 
-	if h.locked {
-		session, ok := h.sessions.Get(id)
-		if !ok || !session.Admin() {
-			h.logger.Debug().Msg("server locked")
-			return false, "locked", nil
-		}
+	if h.locked && !admin {
+		h.logger.Debug().Msg("server locked")
+		return false, "locked", nil
 	}
 
 	return true, "", nil
 }
 
 func (h *MessageHandler) Disconnected(id string) error {
-	if h.locked && len(h.sessions.Admins()) == 0 {
-		h.locked = false
-	}
-
 	return h.sessions.Destroy(id)
 }
 

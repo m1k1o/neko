@@ -150,7 +150,7 @@ func (ws *WebSocketHandler) Upgrade(w http.ResponseWriter, r *http.Request) erro
 		connection: connection,
 	}
 
-	ok, reason, err := ws.handler.Connected(id, socket)
+	ok, reason, err := ws.handler.Connected(admin, socket)
 	if err != nil {
 		ws.logger.Error().Err(err).Msg("connection failed")
 		return err

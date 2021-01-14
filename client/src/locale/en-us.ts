@@ -48,10 +48,10 @@ export const controls = {
 }
 
 export const room = {
-  lock: 'Lock Room',
-  unlock: 'Unlock Room',
-  locked: 'Room Locked',
-  unlocked: 'Room Unlocked',
+  lock: 'Lock Room (for users)',
+  unlock: 'Unlock Room (for users)',
+  locked: 'Room Locked (for users)',
+  unlocked: 'Room Unlocked (for users)',
 }
 
 export const setting = {
