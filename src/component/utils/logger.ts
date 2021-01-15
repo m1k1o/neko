@@ -20,6 +20,6 @@ export class Logger {
   }
 
   public debug(...log: any[]) {
-    console.log('[%cNEKO%c] [' + this._scope + '] %cDBG', 'color: #498ad8;', '', 'color: #eae364;', ...log)
+    console.debug('[%cNEKO%c] [' + this._scope + '] %cDBG', 'color: #498ad8;', '', 'color: #eae364;', ...log)
   }
 }

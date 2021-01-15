@@ -33,7 +33,7 @@ export class NekoWebSocket extends EventEmitter<NekoWebSocketEvents> {
     this.emit('connecting')
 
     this._ws = new WebSocket(`${url}/ws?id=${encodeURIComponent(id)}&secret=${encodeURIComponent(secret)}`)
-    this._log.debug(`connecting to ${this._ws.url}`)
+    this._log.info(`connecting`)
 
     this._ws.onopen = this.onConnected.bind(this)
     this._ws.onclose = this.onDisconnected.bind(this, new Error('websocket closed'))
@@ -84,17 +84,17 @@ export class NekoWebSocket extends EventEmitter<NekoWebSocketEvents> {
       return
     }
 
-    this._log.debug(`connected`)
+    this._log.info(`connected`)
     this.emit('connected')
   }
 
   private onTimeout() {
-    this._log.debug(`connection timeout`)
+    this._log.info(`connection timeout`)
     this.onDisconnected(new Error('connection timeout'))
   }
 
   private onDisconnected(reason?: Error) {
-    this._log.debug(`disconnected:`, reason?.message)
+    this._log.info(`disconnected:`, reason?.message)
 
     this.disconnect()
     this.emit('disconnected', reason)

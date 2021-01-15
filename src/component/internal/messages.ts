@@ -3,6 +3,7 @@ import * as EVENT from '../types/events'
 import * as message from '../types/messages'
 
 import EventEmitter from 'eventemitter3'
+import { Logger } from '../utils/logger'
 import { NekoWebSocket } from './websocket'
 import NekoState from '../types/state'
 
@@ -24,11 +25,13 @@ export interface NekoEvents {
 }
 
 export class NekoMessages extends EventEmitter<NekoEvents> {
-  state: NekoState
+  private state: NekoState
+  private _log: Logger
 
   constructor(websocket: NekoWebSocket, state: NekoState) {
     super()
 
+    this._log = new Logger('messages')
     this.state = state
     websocket.on('message', async (event: string, payload: any) => {
       // @ts-ignore
@@ -36,7 +39,7 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
         // @ts-ignore
         this[event](payload)
       } else {
-        console.log(`unhandled websocket event '${event}':`, payload)
+        this._log.warn(`unhandled websocket event '${event}':`, payload)
       }
     })
   }
@@ -46,7 +49,7 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
   /////////////////////////////
 
   protected [EVENT.SYSTEM_INIT](conf: message.SystemInit) {
-    console.log('EVENT.SYSTEM_INIT')
+    this._log.debug('EVENT.SYSTEM_INIT')
     Vue.set(this.state, 'member_id', conf.member_id)
     Vue.set(this.state.control, 'implicit_hosting', conf.implicit_hosting)
 
@@ -62,7 +65,7 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
   }
 
   protected [EVENT.SYSTEM_ADMIN]({ screen_sizes_list, broadcast_status }: message.SystemAdmin) {
-    console.log('EVENT.SYSTEM_ADMIN')
+    this._log.debug('EVENT.SYSTEM_ADMIN')
 
     const list = screen_sizes_list.sort((a, b) => {
       if (b.width === a.width && b.height == a.height) {
@@ -79,13 +82,13 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
   }
 
   protected [EVENT.SYSTEM_DISCONNECT]({ message }: message.SystemDisconnect) {
-    console.log('EVENT.SYSTEM_DISCONNECT')
+    this._log.debug('EVENT.SYSTEM_DISCONNECT')
     this.emit('system.disconnect', message)
     // TODO: Handle.
   }
 
   protected [EVENT.CURSOR_IMAGE]({ uri, width, height, x, y }: message.CursorImage) {
-    console.log('EVENT.CURSOR_IMAGE')
+    this._log.debug('EVENT.CURSOR_IMAGE')
     Vue.set(this.state.control, 'cursor', { uri, width, height, x, y })
   }
 
@@ -94,7 +97,7 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
   /////////////////////////////
 
   protected [EVENT.SIGNAL_PROVIDE]({ event }: message.SignalProvide) {
-    console.log('EVENT.SIGNAL_PROVIDE')
+    this._log.debug('EVENT.SIGNAL_PROVIDE')
     // TODO: Handle.
   }
 
@@ -103,25 +106,25 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
   /////////////////////////////
 
   protected [EVENT.MEMBER_CREATED]({ id, ...data }: message.MemberData) {
-    console.log('EVENT.MEMBER_CREATED', id)
+    this._log.debug('EVENT.MEMBER_CREATED', id)
     Vue.set(this.state.members, id, data)
     this.emit('member.created', id)
   }
 
   protected [EVENT.MEMBER_DELETED]({ id }: message.MemberID) {
-    console.log('EVENT.MEMBER_DELETED', id)
+    this._log.debug('EVENT.MEMBER_DELETED', id)
     Vue.delete(this.state.members, id)
     this.emit('member.deleted', id)
   }
 
   protected [EVENT.MEMBER_PROFILE]({ id, ...profile }: message.MemberProfile) {
-    console.log('EVENT.MEMBER_PROFILE', id)
+    this._log.debug('EVENT.MEMBER_PROFILE', id)
     Vue.set(this.state.members[id], 'profile', profile)
     this.emit('member.profile', id)
   }
 
   protected [EVENT.MEMBER_STATE]({ id, ...state }: message.MemberState) {
-    console.log('EVENT.MEMBER_STATE', id)
+    this._log.debug('EVENT.MEMBER_STATE', id)
     Vue.set(this.state.members[id], 'state', state)
     this.emit('member.state', id)
   }
@@ -131,7 +134,7 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
   /////////////////////////////
 
   protected [EVENT.CONTROL_HOST]({ has_host, host_id }: message.ControlHost) {
-    console.log('EVENT.CONTROL_HOST')
+    this._log.debug('EVENT.CONTROL_HOST')
 
     if (has_host && host_id) {
       Vue.set(this.state.control, 'host_id', host_id)
@@ -147,7 +150,7 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
   /////////////////////////////
 
   protected [EVENT.SCREEN_UPDATED]({ width, height, rate }: message.ScreenSize) {
-    console.log('EVENT.SCREEN_UPDATED')
+    this._log.debug('EVENT.SCREEN_UPDATED')
     Vue.set(this.state.screen, 'size', { width, height, rate })
     this.emit('screen.updated', width, height, rate)
   }
@@ -156,7 +159,7 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
   /////////////////////////////
 
   protected [EVENT.CLIPBOARD_UPDATED]({ text }: message.ClipboardData) {
-    console.log('EVENT.CLIPBOARD_UPDATED')
+    this._log.debug('EVENT.CLIPBOARD_UPDATED')
     Vue.set(this.state.control, 'clipboard', { text })
     this.emit('clipboard.updated', text)
   }
@@ -166,7 +169,7 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
   /////////////////////////////
 
   protected [EVENT.BORADCAST_STATUS]({ event, url, is_active }: message.BroadcastStatus) {
-    console.log('EVENT.BORADCAST_STATUS')
+    this._log.debug('EVENT.BORADCAST_STATUS')
     // TODO: Handle.
     this.emit('broadcast.status', is_active, url)
   }

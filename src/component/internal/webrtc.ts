@@ -41,7 +41,7 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
   }
 
   public async connect(sdp: string, lite: boolean, servers: string[]): Promise<string> {
-    this._log.debug(`creating peer`)
+    this._log.info(`connecting`)
 
     if (!this.supported) {
       throw new Error('browser does not support webrtc')
@@ -194,14 +194,14 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
       return
     }
 
-    this._log.debug(`connected`)
+    this._log.info(`connected`)
     this.emit('connected')
   }
 
   private onDisconnected(reason?: Error) {
     this.disconnect()
 
-    this._log.debug(`disconnected:`, reason?.message)
+    this._log.info(`disconnected:`, reason?.message)
     this.emit('disconnected', reason)
   }
 }
