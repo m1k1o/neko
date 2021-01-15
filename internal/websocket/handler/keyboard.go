@@ -6,13 +6,16 @@ import (
 )
 
 
-func (h *MessageHandlerCtx) keyboardLayout(session types.Session, payload *message.KeyboardLayout) error {
+func (h *MessageHandlerCtx) keyboardMap(session types.Session, payload *message.KeyboardMap) error {
 	if !session.IsHost() {
 		h.logger.Debug().Str("id", session.ID()).Msg("is not the host")
 		return nil
 	}
 
-	return h.desktop.SetKeyboardLayout(payload.Layout, payload.Variant)
+	return h.desktop.SetKeyboardMap(types.KeyboardMap{
+		Layout: payload.Layout,
+		Variant: payload.Variant,
+	})
 }
 
 func (h *MessageHandlerCtx) keyboardModifiers(session types.Session, payload *message.KeyboardModifiers) error {

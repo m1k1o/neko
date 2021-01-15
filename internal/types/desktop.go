@@ -26,6 +26,11 @@ type KeyboardModifiers struct {
 	CapsLock *bool
 }
 
+type KeyboardMap struct {
+	Layout  string
+	Variant string
+}
+
 type DesktopManager interface {
 	Start()
 	Shutdown() error
@@ -43,7 +48,8 @@ type DesktopManager interface {
 	ResetKeys()
 	ScreenConfigurations() map[int]ScreenConfiguration
 	GetScreenSize() *ScreenSize
-	SetKeyboardLayout(layout string, variant string) error
+	SetKeyboardMap(KeyboardMap) error
+	GetKeyboardMap() (*KeyboardMap, error)
 	SetKeyboardModifiers(mod KeyboardModifiers)
 	GetKeyboardModifiers() KeyboardModifiers
 	GetCursorImage() *CursorImage

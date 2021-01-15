@@ -1,6 +1,7 @@
 package desktop
 
 import (
+	"regexp"
 	"os/exec"
 
 	"demodesk/neko/internal/types"
@@ -55,11 +56,36 @@ func (manager *DesktopManagerCtx) ChangeScreenSize(width int, height int, rate i
 	return xorg.ChangeScreenSize(width, height, rate)
 }
 
-func (manager *DesktopManagerCtx) SetKeyboardLayout(layout string, variant string) error {
+func (manager *DesktopManagerCtx) SetKeyboardMap(kbd types.KeyboardMap) error {
 	// TOOD: Use native API.
-    cmd := exec.Command("setxkbmap", "-layout", layout, "-variant", variant)
+    cmd := exec.Command("setxkbmap", "-layout", kbd.Layout, "-variant", kbd.Variant)
 	_, err := cmd.Output()
 	return err
+}
+
+func (manager *DesktopManagerCtx) GetKeyboardMap() (*types.KeyboardMap, error) {
+	// TOOD: Use native API.
+    cmd := exec.Command("setxkbmap", "-query")
+	res, err := cmd.Output()
+	if err != nil {
+		return nil, err
+	}
+
+	kbd := types.KeyboardMap{}
+
+	re := regexp.MustCompile(`layout:\s+(.*)\n`)
+	arr := re.FindStringSubmatch(string(res))
+	if len(arr) > 1 {
+		kbd.Layout = arr[1]
+	}
+
+	re = regexp.MustCompile(`variant:\s+(.*)\n`)
+	arr = re.FindStringSubmatch(string(res))
+	if len(arr) > 1 {
+		kbd.Variant = arr[1]
+	}
+
+	return &kbd, nil
 }
 
 func (manager *DesktopManagerCtx) SetKeyboardModifiers(mod types.KeyboardModifiers) {

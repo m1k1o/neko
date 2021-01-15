@@ -76,12 +76,12 @@ func (h *MessageHandlerCtx) Message(session types.Session, raw []byte) bool {
 		})
 
 	// Keyboard Events
-	case event.KEYBOARD_MODIFIERS:
-		payload := &message.KeyboardLayout{}
+	case event.KEYBOARD_MAP:
+		payload := &message.KeyboardMap{}
 		err = utils.Unmarshal(payload, raw, func() error {
-			return h.keyboardLayout(session, payload)
+			return h.keyboardMap(session, payload)
 		})
-	case event.KEYBOARD_LAYOUT:
+	case event.KEYBOARD_MODIFIERS:
 		payload := &message.KeyboardModifiers{}
 		err = utils.Unmarshal(payload, raw, func() error {
 			return h.keyboardModifiers(session, payload)

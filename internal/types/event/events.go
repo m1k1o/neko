@@ -41,7 +41,7 @@ const (
 
 const (
 	KEYBOARD_MODIFIERS = "keyboard/modifiers"
-	KEYBOARD_LAYOUT    = "keyboard/layout"
+	KEYBOARD_MAP       = "keyboard/map"
 )
 
 const (

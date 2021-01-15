@@ -132,17 +132,17 @@ type ClipboardData struct {
 // Keyboard
 /////////////////////////////
 
+type KeyboardMap struct {
+	Event   string `json:"event,omitempty"`
+	Layout  string `json:"layout"`
+	Variant string `json:"variant"`
+}
+
 type KeyboardModifiers struct {
 	Event      string `json:"event,omitempty"`
 	CapsLock   *bool  `json:"caps_lock"`
 	NumLock    *bool  `json:"num_lock"`
 	ScrollLock *bool  `json:"scroll_lock"`	
-}
-
-type KeyboardLayout struct {
-	Event   string `json:"event,omitempty"`
-	Layout  string `json:"layout"`
-	Variant string `json:"variant"`
 }
 
 /////////////////////////////
