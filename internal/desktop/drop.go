@@ -7,6 +7,7 @@ import (
 )
 
 const (
+	DROP_MOVE_REPEAT = 4
 	DROP_DELAY = 100 * time.Millisecond
 )
 
@@ -29,10 +30,11 @@ func (manager *DesktopManagerCtx) DropFiles(x int, y int, files []string) bool {
 	})
 
 	drop.Emmiter.Once("begin", func(payload ...interface{}) {
-		manager.Move(x, y)
-		time.Sleep(DROP_DELAY)
-		manager.Move(x, y)
-		time.Sleep(DROP_DELAY)
+		for i := 0; i < DROP_MOVE_REPEAT; i++ {
+			manager.Move(x, y)
+			time.Sleep(DROP_DELAY)
+		}
+
 		manager.ButtonUp(1)
 	})
 
