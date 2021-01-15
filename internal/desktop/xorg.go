@@ -40,11 +40,7 @@ func (manager *DesktopManagerCtx) ScreenConfigurations() map[int]types.ScreenCon
 	return xorg.ScreenConfigurations
 }
 
-func (manager *DesktopManagerCtx) GetScreenSize() *types.ScreenSize {
-	return xorg.GetScreenSize()
-}
-
-func (manager *DesktopManagerCtx) ChangeScreenSize(width int, height int, rate int) error {
+func (manager *DesktopManagerCtx) SetScreenSize(size types.ScreenSize) error {
 	mu.Lock()
 	manager.emmiter.Emit("before_screen_size_change")
 
@@ -53,7 +49,11 @@ func (manager *DesktopManagerCtx) ChangeScreenSize(width int, height int, rate i
 		mu.Unlock()
 	}()
 
-	return xorg.ChangeScreenSize(width, height, rate)
+	return xorg.ChangeScreenSize(size.Width, size.Height, size.Rate)
+}
+
+func (manager *DesktopManagerCtx) GetScreenSize() *types.ScreenSize {
+	return xorg.GetScreenSize()
 }
 
 func (manager *DesktopManagerCtx) SetKeyboardMap(kbd types.KeyboardMap) error {

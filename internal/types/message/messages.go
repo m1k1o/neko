@@ -116,7 +116,7 @@ type ScreenSize struct {
 	Event  string `json:"event,omitempty"`
 	Width  int    `json:"width"`
 	Height int    `json:"height"`
-	Rate   int    `json:"rate"`
+	Rate   int16  `json:"rate"`
 }
 
 /////////////////////////////

@@ -167,14 +167,14 @@ func CheckKeys(duration time.Duration) {
 	}
 }
 
-func ChangeScreenSize(width int, height int, rate int) error {
+func ChangeScreenSize(width int, height int, rate int16) error {
 	mu.Lock()
 	defer mu.Unlock()
 
 	for index, size := range ScreenConfigurations {
 		if size.Width == width && size.Height == height {
 			for _, fps := range size.Rates {
-				if int16(rate) == fps {
+				if rate == fps {
 					C.XSetScreenConfiguration(C.int(index), C.short(fps))
 					return nil
 				}

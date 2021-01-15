@@ -55,7 +55,7 @@ func (h *MessageHandlerCtx) systemInit(session types.Session) error {
 			ScreenSize:      message.ScreenSize{
 				Width:  size.Width,
 				Height: size.Height,
-				Rate:   int(size.Rate),
+				Rate:   size.Rate,
 			},
 			Members:         members,
 			ImplicitHosting: h.sessions.ImplicitHosting(),
@@ -70,7 +70,7 @@ func (h *MessageHandlerCtx) systemAdmin(session types.Session) error {
 			screenSizesList = append(screenSizesList, message.ScreenSize{
 				Width:  size.Width,
 				Height: size.Height,
-				Rate:   int(fps),
+				Rate:   fps,
 			})
 		}
 	}

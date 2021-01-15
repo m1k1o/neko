@@ -38,7 +38,6 @@ type DesktopManager interface {
 	OnAfterScreenSizeChange(listener func())
 
 	// xorg
-	ChangeScreenSize(width int, height int, rate int) error
 	Move(x, y int)
 	Scroll(x, y int)
 	ButtonDown(code int) error
@@ -47,6 +46,7 @@ type DesktopManager interface {
 	KeyUp(code uint64) error
 	ResetKeys()
 	ScreenConfigurations() map[int]ScreenConfiguration
+	SetScreenSize(ScreenSize) error
 	GetScreenSize() *ScreenSize
 	SetKeyboardMap(KeyboardMap) error
 	GetKeyboardMap() (*KeyboardMap, error)

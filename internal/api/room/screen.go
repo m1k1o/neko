@@ -3,15 +3,16 @@ package room
 import (
 	"net/http"
 
+	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/types/event"
 	"demodesk/neko/internal/types/message"
 	"demodesk/neko/internal/utils"
 )
 
 type ScreenConfigurationPayload struct {
-	Width  int `json:"width"`
-	Height int `json:"height"`
-	Rate   int `json:"rate"`
+	Width  int   `json:"width"`
+	Height int   `json:"height"`
+	Rate   int16 `json:"rate"`
 }
 
 func (h *RoomHandler) screenConfiguration(w http.ResponseWriter, r *http.Request) {
@@ -25,7 +26,7 @@ func (h *RoomHandler) screenConfiguration(w http.ResponseWriter, r *http.Request
 	utils.HttpSuccess(w, ScreenConfigurationPayload{
 		Width:  size.Width,
 		Height: size.Height,
-		Rate:   int(size.Rate),
+		Rate:   size.Rate,
 	})
 }
 
@@ -35,7 +36,11 @@ func (h *RoomHandler) screenConfigurationChange(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	if err := h.desktop.ChangeScreenSize(data.Width, data.Height, data.Rate); err != nil {
+	if err := h.desktop.SetScreenSize(types.ScreenSize{
+		Width: data.Width,
+		Height: data.Height,
+		Rate: data.Rate,
+	}); err != nil {
 		utils.HttpUnprocessableEntity(w, err)
 		return
 	}
@@ -60,7 +65,7 @@ func (h *RoomHandler) screenConfigurationsList(w http.ResponseWriter, r *http.Re
 			list = append(list, ScreenConfigurationPayload{
 				Width:  size.Width,
 				Height: size.Height,
-				Rate:   int(fps),
+				Rate:   fps,
 			})
 		}
 	}
