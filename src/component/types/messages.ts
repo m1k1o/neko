@@ -142,9 +142,10 @@ export interface KeyboardModifiers {
   scroll_lock: boolean
 }
 
-export interface KeyboardLayout {
+export interface KeyboardMap {
   event: string | undefined
   layout: string
+  variant: string
 }
 
 /////////////////////////////

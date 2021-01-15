@@ -26,7 +26,7 @@ export const CLIPBOARD_UPDATED = 'clipboard/updated'
 export const CLIPBOARD_SET = 'clipboard/set'
 
 export const KEYBOARD_MODIFIERS = 'keyboard/modifiers'
-export const KEYBOARD_LAYOUT = 'keyboard/layout'
+export const KEYBOARD_MAP = 'keyboard/map'
 
 export const CURSOR_IMAGE = 'cursor/image'
 
