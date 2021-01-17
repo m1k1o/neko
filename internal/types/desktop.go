@@ -66,4 +66,9 @@ type DesktopManager interface {
 
 	// drop
 	DropFiles(x int, y int, files []string) bool
+
+	// filechooser
+	HandleFileChooserDialog(uri string) error
+	CloseFileChooserDialog() error
+	IsFileChooserDialogOpen() bool
 }

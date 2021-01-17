@@ -69,6 +69,7 @@ func (h *RoomHandler) Route(r chi.Router) {
 
 	r.With(h.uploadMiddleware).Route("/upload", func(r chi.Router) {
 		r.Post("/drop", h.uploadDrop)
+		r.Post("/dialog", h.uploadDialog)
 	})
 }
 

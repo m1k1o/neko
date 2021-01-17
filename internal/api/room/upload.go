@@ -86,3 +86,65 @@ func (h *RoomHandler) uploadDrop(w http.ResponseWriter, r *http.Request) {
 
 	utils.HttpSuccess(w)
 }
+
+
+func (h *RoomHandler) uploadDialog(w http.ResponseWriter, r *http.Request) {
+	r.ParseMultipartForm(MAX_UPLOAD_SIZE)
+
+	if r.MultipartForm == nil {
+		utils.HttpBadRequest(w, "No MultipartForm received.")
+		return
+	}
+
+	defer r.MultipartForm.RemoveAll()
+
+	if !h.desktop.IsFileChooserDialogOpen() {
+		utils.HttpBadRequest(w, "Open file chooser dialog first.")
+		return
+	}
+
+	req_files := r.MultipartForm.File["files"]
+	if len(req_files) == 0 {
+		utils.HttpBadRequest(w, "No files received.")
+		return
+	}
+
+	dir, err := ioutil.TempDir("", "neko-dialog-*")
+	if err != nil {
+		utils.HttpInternalServerError(w, err)
+		return
+	}
+
+	for _, req_file := range req_files {
+		path := path.Join(dir, req_file.Filename)
+
+		srcFile, err := req_file.Open()
+		if err != nil {
+			utils.HttpInternalServerError(w, err)
+			return
+		}
+
+		defer srcFile.Close()
+
+		dstFile, err := os.OpenFile(path, os.O_APPEND | os.O_CREATE | os.O_WRONLY, 0644)
+		if err != nil {
+			utils.HttpInternalServerError(w, err)
+			return
+		}
+
+		defer dstFile.Close()
+
+		_, err = io.Copy(dstFile, srcFile)
+		if err != nil {
+			utils.HttpInternalServerError(w, err)
+			return
+		}
+	}
+
+	if err := h.desktop.HandleFileChooserDialog(dir); err != nil {
+		utils.HttpInternalServerError(w, "Unable to handle file chooser dialog.")
+		return
+	}
+
+	utils.HttpSuccess(w)
+}
