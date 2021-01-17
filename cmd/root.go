@@ -104,6 +104,11 @@ func init() {
 			}
 		}
 
+		// debug mode from ENV or config
+		if viper.GetBool("debug") {
+			zerolog.SetGlobalLevel(zerolog.DebugLevel)
+		}
+
 		file := viper.ConfigFileUsed()
 		logger := log.With().
 			Bool("debug", viper.GetBool("debug")).
