@@ -52,33 +52,33 @@ void XScroll(int x, int y) {
 }
 
 void XButton(unsigned int button, int down) {
-  if (button != 0) {
-    Display *display = getXDisplay();
-    XTestFakeButtonEvent(display, button, down, CurrentTime);
-    XSync(display, 0);
-  }
+  if (button == 0) return;
+
+  Display *display = getXDisplay();
+  XTestFakeButtonEvent(display, button, down, CurrentTime);
+  XSync(display, 0);
 }
 
 void XKey(unsigned long key, int down) {
-  if (key != 0) {
-    Display *display = getXDisplay();
-    KeyCode code = XKeysymToKeycode(display, key);
+  if (key == 0) return;
 
-    // Map non-existing keysyms to new keycodes
-    if (code == 0) {
-      int min, max, numcodes;
-      XDisplayKeycodes(display, &min, &max);
-      XGetKeyboardMapping(display, min, max-min, &numcodes);
+  Display *display = getXDisplay();
+  KeyCode code = XKeysymToKeycode(display, key);
 
-      code = (max-min+1)*numcodes;
-      KeySym keysym_list[numcodes];
-      for(int i=0;i<numcodes;i++) keysym_list[i] = key;
-      XChangeKeyboardMapping(display, code, numcodes, keysym_list, 1);
-    }
+  // Map non-existing keysyms to new keycodes
+  if (code == 0) {
+    int min, max, numcodes;
+    XDisplayKeycodes(display, &min, &max);
+    XGetKeyboardMapping(display, min, max-min, &numcodes);
 
-    XTestFakeKeyEvent(display, code, down, CurrentTime);
-    XSync(display, 0);
+    code = (max-min+1)*numcodes;
+    KeySym keysym_list[numcodes];
+    for(int i=0;i<numcodes;i++) keysym_list[i] = key;
+    XChangeKeyboardMapping(display, code, numcodes, keysym_list, 1);
   }
+
+  XTestFakeKeyEvent(display, code, down, CurrentTime);
+  XSync(display, 0);
 }
 
 void XGetScreenConfigurations() {
