@@ -7,17 +7,19 @@ WORKDIR /src
 #
 # install dependencies
 ENV DEBIAN_FRONTEND=noninteractive
-RUN set -eux; apt-get update; \
-    apt-get install -y --no-install-recommends git cmake make libx11-dev libxrandr-dev libxtst-dev libgtk-3-dev \
-    libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly; \
+RUN set -eux; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends \
+        libx11-dev libxrandr-dev libxtst-dev libgtk-3-dev \
+        libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
+        git cmake make; \
     #
     # install libclipboard
-    set -eux; \
     cd /tmp; \
     git clone https://github.com/jtanx/libclipboard; \
     cd libclipboard; \
     cmake .; \
-    make -j4; \
+    make -j`nproc`; \
     make install; \
     rm -rf /tmp/libclipboard; \
     #
@@ -44,14 +46,20 @@ ARG USER_GID=$USER_UID
 #
 # install dependencies
 ENV DEBIAN_FRONTEND=noninteractive
-RUN set -eux; apt-get update; \
-    apt-get install -y --no-install-recommends wget ca-certificates supervisor; \
-    apt-get install -y --no-install-recommends pulseaudio dbus-x11 xserver-xorg-video-dummy xserver-xorg-input-void; \
-    apt-get install -y --no-install-recommends libcairo2 libxcb1 libxrandr2 libxv1 libopus0 libvpx5; \
-    #
-    # gst
-    apt-get install -y --no-install-recommends libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
-                    gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-pulseaudio; \
+RUN set -eux; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends \
+        wget ca-certificates supervisor \
+        pulseaudio dbus-x11 xserver-xorg-video-dummy xserver-xorg-input-void \
+        libcairo2 libxcb1 libxrandr2 libxv1 libopus0 libvpx5 \
+        #
+        # file chooser handler
+        xdotool \
+        #
+        # gst
+        gstreamer1.0-plugins-base gstreamer1.0-plugins-good \
+        gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly \
+        gstreamer1.0-pulseaudio; \
     #
     # create a non-root user
     groupadd --gid $USER_GID $USERNAME; \
@@ -88,7 +96,7 @@ COPY runtime/xorg.conf /etc/neko/xorg.conf
 
 #
 # copy runtime folders
-COPY runtime/icon-theme /home/neko/.icons/default
+COPY runtime/icon-theme /home/$USERNAME/.icons/default
 
 #
 # set default envs
