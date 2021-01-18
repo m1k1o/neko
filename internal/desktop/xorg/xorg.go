@@ -244,6 +244,13 @@ func GetCursorImage() *types.CursorImage {
 	}
 }
 
+func PutWindowBelow(window uint32) {
+	mu.Lock()
+	defer mu.Unlock()
+
+	C.XPutWindowBelow(C.Window(window))
+}
+
 //export goCreateScreenSize
 func goCreateScreenSize(index C.int, width C.int, height C.int, mwidth C.int, mheight C.int) {
 	ScreenConfigurations[int(index)] = types.ScreenConfiguration{
