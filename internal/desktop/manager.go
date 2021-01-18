@@ -53,6 +53,17 @@ func (manager *DesktopManagerCtx) Start() {
 
 	go xevent.EventLoop(manager.display)
 
+	go manager.fileChooserDialogStart()
+
+	manager.OnEventError(func(error_code uint8, message string, request_code uint8, minor_code uint8) {
+		manager.logger.Warn().
+			Uint8("error_code", error_code).
+			Str("message", message).
+			Uint8("request_code", request_code).
+			Uint8("minor_code", minor_code).
+			Msg("X event error occured")
+	})
+
 	go func() {
 		defer func() {
 			xorg.DisplayClose()
