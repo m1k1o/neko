@@ -23,8 +23,8 @@ void XEventLoop(char *name) {
     return;
   }
 
-  Atom XA_CLIPBOARD;
-  XA_CLIPBOARD = XInternAtom(display, "CLIPBOARD", 0);
+  Atom WM_WINDOW_ROLE = XInternAtom(display, "WM_WINDOW_ROLE", 1);
+  Atom XA_CLIPBOARD = XInternAtom(display, "CLIPBOARD", 0);
   XFixesSelectSelectionInput(display, root, XA_CLIPBOARD, XFixesSetSelectionOwnerNotifyMask);
   XFixesSelectCursorInput(display, root, XFixesDisplayCursorNotifyMask);
   XSelectInput(display, root, SubstructureNotifyMask);
@@ -54,18 +54,32 @@ void XEventLoop(char *name) {
       }
     }
 
-    // XFixesSelectionNotifyEvent
+    // CreateNotify
     if (event.type == CreateNotify) {
+      Window window = event.xcreatewindow.window;
+
       char *name;
-      XFetchName(display, event.xcreatewindow.window, &name);
+      XFetchName(display, window, &name);
  
-      char *role;
-      XTextProperty text_data;
-      Atom atom = XInternAtom(display, "WM_WINDOW_ROLE", True);
-      int status = XGetTextProperty(display, event.xcreatewindow.window, &text_data, atom);
-      role = (char *)text_data.value;
+      XTextProperty role;
+      XGetTextProperty(display, window, &role, WM_WINDOW_ROLE);
     
-      goXEventWindowCreated(event.xcreatewindow, name, role);
+      goXEventWindowCreated(window, name, role.value);
+      XFree(name);
+      continue;
+    }
+
+    // ConfigureNotify
+    if (event.type == ConfigureNotify) {
+      Window window = event.xconfigure.window;
+
+      char *name;
+      XFetchName(display, window, &name);
+ 
+      XTextProperty role;
+      XGetTextProperty(display, window, &role, WM_WINDOW_ROLE);
+    
+      goXEventWindowConfigured(window, name, role.value);
       XFree(name);
       continue;
     }

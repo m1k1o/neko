@@ -44,6 +44,12 @@ func OnWindowCreated(listener func(window uint32, name string, role string)) {
 	})
 }
 
+func OnWindowConfigured(listener func(window uint32, name string, role string)) {
+	emmiter.On("window-configured", func(payload ...interface{}) {
+		listener(payload[0].(uint32), payload[1].(string), payload[2].(string))
+	})
+}
+
 func OnEventError(listener func(error_code uint8, message string, request_code uint8, minor_code uint8)) {
 	emmiter.On("event-error", func(payload ...interface{}) {
 		listener(payload[0].(uint8), payload[1].(string), payload[2].(uint8), payload[3].(uint8))
@@ -61,8 +67,13 @@ func goXEventClipboardUpdated() {
 }
 
 //export goXEventWindowCreated
-func goXEventWindowCreated(event C.XCreateWindowEvent, name *C.char, role *C.char) {
-	emmiter.Emit("window-created", uint32(event.window), C.GoString(name), C.GoString(role))
+func goXEventWindowCreated(window C.Window, name *C.char, role *C.char) {
+	emmiter.Emit("window-created", uint32(window), C.GoString(name), C.GoString(role))
+}
+
+//export goXEventWindowConfigured
+func goXEventWindowConfigured(window C.Window, name *C.char, role *C.char) {
+	emmiter.Emit("window-configured", uint32(window), C.GoString(name), C.GoString(role))
 }
 
 //export goXEventError

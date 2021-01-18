@@ -8,10 +8,10 @@
 
 extern void goXEventCursorChanged(XFixesCursorNotifyEvent event);
 extern void goXEventClipboardUpdated();
-extern void goXEventWindowCreated(XCreateWindowEvent event, char *name, char *role);
+extern void goXEventWindowCreated(Window window, char *name, char *role);
+extern void goXEventWindowConfigured(Window window, char *name, char *role);
 extern void goXEventError(XErrorEvent *event, char *message);
 extern int goXEventActive();
 
 static int XEventError(Display *display, XErrorEvent *event);
 void XEventLoop(char *display);
-

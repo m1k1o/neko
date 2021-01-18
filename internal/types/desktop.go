@@ -58,6 +58,7 @@ type DesktopManager interface {
 	OnCursorChanged(listener func(serial uint64))
 	OnClipboardUpdated(listener func())
 	OnWindowCreated(listener func(window uint32, name string, role string))
+	OnWindowConfigured(listener func(window uint32, name string, role string))
 	OnEventError(listener func(error_code uint8, message string, request_code uint8, minor_code uint8))
 
 	// clipboard
