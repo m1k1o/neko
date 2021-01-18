@@ -25,7 +25,7 @@ func (h *MessageHandler) SessionCreated(id string, session types.Session) error 
 
 		// if locked, notify admin about that
 		if h.locked {
-			if err := session.Send(message.MembersList{
+			if err := session.Send(message.Admin{
 				Event: event.ADMIN_LOCK,
 				ID:    id,
 			}); err != nil {
