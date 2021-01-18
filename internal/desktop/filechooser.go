@@ -27,20 +27,24 @@ func (manager *DesktopManagerCtx) HandleFileChooserDialog(uri string) error {
 	return err
 }
 
-func (manager *DesktopManagerCtx) CloseFileChooserDialog() error {
-	mu.Lock()
-	defer mu.Unlock()
+func (manager *DesktopManagerCtx) CloseFileChooserDialog() bool {
+	for i := 0; i < 5; i++ {
+		// TOOD: Use native API.
+		mu.Lock()
+		exec.Command(
+			"xdotool",
+				"search", "--name", "Open", "windowfocus",
+				"sleep", "0.2",
+				"key", "--clearmodifiers", "alt+F4",
+		).Output()
+		mu.Unlock()
 
-	// TOOD: Use native API.
-    cmd := exec.Command(
-		"xdotool",
-			"search", "--name", "Open", "windowfocus",
-			"sleep", "0.2",
-			"key", "--clearmodifiers", "alt+f4",
-	)
+		if !manager.IsFileChooserDialogOpen() {
+			return true
+		}
+	}
 
-	_, err := cmd.Output()
-	return err
+	return false
 }
 
 func (manager *DesktopManagerCtx) IsFileChooserDialogOpen() bool {
