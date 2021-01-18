@@ -9,7 +9,7 @@ func (manager *DesktopManagerCtx) HandleFileChooserDialog(uri string) error {
 	defer mu.Unlock()
 
 	// TOOD: Use native API.
-    cmd := exec.Command(
+	cmd := exec.Command(
 		"xdotool",
 			"search", "--name", "Open", "windowfocus",
 			"sleep", "0.2",
@@ -52,7 +52,7 @@ func (manager *DesktopManagerCtx) IsFileChooserDialogOpen() bool {
 	defer mu.Unlock()
 
 	// TOOD: Use native API.
-    cmd := exec.Command(
+	cmd := exec.Command(
 		"xdotool",
 			"search", "--name", "Open", "windowfocus",
 	)

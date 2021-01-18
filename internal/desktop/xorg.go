@@ -58,14 +58,14 @@ func (manager *DesktopManagerCtx) GetScreenSize() *types.ScreenSize {
 
 func (manager *DesktopManagerCtx) SetKeyboardMap(kbd types.KeyboardMap) error {
 	// TOOD: Use native API.
-    cmd := exec.Command("setxkbmap", "-layout", kbd.Layout, "-variant", kbd.Variant)
+	cmd := exec.Command("setxkbmap", "-layout", kbd.Layout, "-variant", kbd.Variant)
 	_, err := cmd.Output()
 	return err
 }
 
 func (manager *DesktopManagerCtx) GetKeyboardMap() (*types.KeyboardMap, error) {
 	// TOOD: Use native API.
-    cmd := exec.Command("setxkbmap", "-query")
+	cmd := exec.Command("setxkbmap", "-query")
 	res, err := cmd.Output()
 	if err != nil {
 		return nil, err

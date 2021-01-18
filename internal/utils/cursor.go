@@ -2,8 +2,8 @@ package utils
 
 import (
 	"bytes"
-    "image"
-    "image/color"
+	"image"
+	"image/color"
 	"image/png"
 	"encoding/base64"
 
@@ -29,8 +29,8 @@ func GetCursorImageURI(cursor *types.CursorImage) (string, error) {
 		}
 	}
 
-    out := new(bytes.Buffer)
-    err := png.Encode(out, img)
+	out := new(bytes.Buffer)
+	err := png.Encode(out, img)
 	if err != nil {
 		return "", err
 	}
