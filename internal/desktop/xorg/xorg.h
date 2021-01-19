@@ -6,7 +6,6 @@
 #include <X11/extensions/XTest.h>
 #include <X11/extensions/Xfixes.h>
 #include <stdlib.h>
-#include <string.h>
 
 extern void goCreateScreenSize(int index, int width, int height, int mwidth, int mheight);
 extern void goSetScreenRates(int index, int rate_index, short rate);
@@ -28,5 +27,3 @@ short XGetScreenRate();
 void XSetKeyboardModifier(int mod, int on);
 char XGetKeyboardModifiers();
 XFixesCursorImage *XGetCursorImage(void);
-
-void XPutWindowBelow(Window window);

@@ -113,7 +113,3 @@ func (manager *DesktopManagerCtx) GetKeyboardModifiers() types.KeyboardModifiers
 func (manager *DesktopManagerCtx) GetCursorImage() *types.CursorImage {
 	return xorg.GetCursorImage()
 }
-
-func (manager *DesktopManagerCtx) PutWindowBelow(window uint32) {
-	xorg.PutWindowBelow(window)
-}

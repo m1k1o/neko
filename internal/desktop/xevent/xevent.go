@@ -8,12 +8,14 @@ package xevent
 import "C"
 
 import (
+	"time"
 	"unsafe"
 
 	"github.com/kataras/go-events"
 )
 
 var emmiter events.EventEmmiter
+var file_chooser_dialog_window uint32 = 0
 
 func init() {
 	emmiter = events.New()
@@ -38,15 +40,15 @@ func OnClipboardUpdated(listener func()) {
 	})
 }
 
-func OnWindowCreated(listener func(window uint32, name string, role string)) {
-	emmiter.On("window-created", func(payload ...interface{}) {
-		listener(payload[0].(uint32), payload[1].(string), payload[2].(string))
+func OnFileChooserDialogOpened(listener func()) {
+	emmiter.On("file-chooser-dialog-opened", func(payload ...interface{}) {
+		listener()
 	})
 }
 
-func OnWindowConfigured(listener func(window uint32, name string, role string)) {
-	emmiter.On("window-configured", func(payload ...interface{}) {
-		listener(payload[0].(uint32), payload[1].(string), payload[2].(string))
+func OnFileChooserDialogClosed(listener func()) {
+	emmiter.On("file-chooser-dialog-closed", func(payload ...interface{}) {
+		listener()
 	})
 }
 
@@ -66,14 +68,38 @@ func goXEventClipboardUpdated() {
 	emmiter.Emit("clipboard-updated")
 }
 
-//export goXEventWindowCreated
-func goXEventWindowCreated(window C.Window, name *C.char, role *C.char) {
-	emmiter.Emit("window-created", uint32(window), C.GoString(name), C.GoString(role))
+//export goXEventCreateNotify
+func goXEventCreateNotify(window C.Window, nameUnsafe *C.char, roleUnsafe *C.char) {
+	role := C.GoString(roleUnsafe)
+	if role != "GtkFileChooserDialog" {
+		return
+	}
+
+	file_chooser_dialog_window = uint32(window)
+	emmiter.Emit("file-chooser-dialog-opened")
 }
 
-//export goXEventWindowConfigured
-func goXEventWindowConfigured(window C.Window, name *C.char, role *C.char) {
-	emmiter.Emit("window-configured", uint32(window), C.GoString(name), C.GoString(role))
+//export goXEventConfigureNotify
+func goXEventConfigureNotify(display *C.Display, window C.Window, nameUnsafe *C.char, roleUnsafe *C.char) {
+	role := C.GoString(roleUnsafe)
+	if role != "GtkFileChooserDialog" {
+		return
+	}
+
+	C.XFileChooserHide(display, window)
+
+	// Because first dialog is not put properly to background
+	time.Sleep(10 * time.Millisecond)
+	C.XFileChooserHide(display, window)
+}
+
+//export goXEventUnmapNotify
+func goXEventUnmapNotify(window C.Window) {
+	if uint32(window) != file_chooser_dialog_window {
+		return
+	}
+
+	emmiter.Emit("file-chooser-dialog-closed")
 }
 
 //export goXEventError

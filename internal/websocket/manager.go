@@ -134,13 +134,16 @@ func (ws *WebSocketManagerCtx) Start() {
 		}
 	})
 
-	ws.desktop.OnWindowCreated(func(window uint32, name string, role string) {
+	ws.desktop.OnFileChooserDialogOpened(func() {
 		// TODO: Implement.
 		ws.logger.Info().
-			Uint32("window", window).
-			Str("name", name).
-			Str("role", role).
-			Msg("created new window")
+			Msg("FileChooserDialog opened")
+	})
+
+	ws.desktop.OnFileChooserDialogClosed(func() {
+		// TODO: Implement.
+		ws.logger.Info().
+			Msg("FileChooserDialog closed")
 	})
 }
 

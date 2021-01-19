@@ -53,7 +53,8 @@ func (manager *DesktopManagerCtx) Start() {
 
 	go xevent.EventLoop(manager.display)
 
-	go manager.fileChooserDialogStart()
+	// In case it was opened
+	go manager.CloseFileChooserDialog()
 
 	manager.OnEventError(func(error_code uint8, message string, request_code uint8, minor_code uint8) {
 		manager.logger.Warn().

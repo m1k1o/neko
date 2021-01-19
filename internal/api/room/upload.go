@@ -97,7 +97,7 @@ func (h *RoomHandler) uploadDialogPost(w http.ResponseWriter, r *http.Request) {
 
 	defer r.MultipartForm.RemoveAll()
 
-	if !h.desktop.IsFileChooserDialogOpen() {
+	if !h.desktop.IsFileChooserDialogOpened() {
 		utils.HttpBadRequest(w, "Open file chooser dialog first.")
 		return
 	}
@@ -149,15 +149,11 @@ func (h *RoomHandler) uploadDialogPost(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *RoomHandler) uploadDialogClose(w http.ResponseWriter, r *http.Request) {
-	if !h.desktop.IsFileChooserDialogOpen() {
+	if !h.desktop.IsFileChooserDialogOpened() {
 		utils.HttpBadRequest(w, "File chooser dialog is not open.")
 		return
 	}
 
-	if !h.desktop.CloseFileChooserDialog() {
-		utils.HttpInternalServerError(w, "Unable to close file chooser dialog.")
-		return
-	}
-
+	h.desktop.CloseFileChooserDialog()
 	utils.HttpSuccess(w)
 }
