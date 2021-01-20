@@ -68,17 +68,6 @@ func goXEventClipboardUpdated() {
 	emmiter.Emit("clipboard-updated")
 }
 
-//export goXEventCreateNotify
-func goXEventCreateNotify(window C.Window, nameUnsafe *C.char, roleUnsafe *C.char) {
-	role := C.GoString(roleUnsafe)
-	if role != "GtkFileChooserDialog" {
-		return
-	}
-
-	file_chooser_dialog_window = uint32(window)
-	emmiter.Emit("file-chooser-dialog-opened")
-}
-
 //export goXEventConfigureNotify
 func goXEventConfigureNotify(display *C.Display, window C.Window, nameUnsafe *C.char, roleUnsafe *C.char) {
 	role := C.GoString(roleUnsafe)
@@ -91,6 +80,11 @@ func goXEventConfigureNotify(display *C.Display, window C.Window, nameUnsafe *C.
 	// Because first dialog is not put properly to background
 	time.Sleep(10 * time.Millisecond)
 	C.XFileChooserHide(display, window)
+
+	if file_chooser_dialog_window == 0 {
+		file_chooser_dialog_window = uint32(window)
+		emmiter.Emit("file-chooser-dialog-opened")
+	}
 }
 
 //export goXEventUnmapNotify
@@ -99,6 +93,7 @@ func goXEventUnmapNotify(window C.Window) {
 		return
 	}
 
+	file_chooser_dialog_window = 0
 	emmiter.Emit("file-chooser-dialog-closed")
 }
 

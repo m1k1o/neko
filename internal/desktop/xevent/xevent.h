@@ -9,7 +9,6 @@
 
 extern void goXEventCursorChanged(XFixesCursorNotifyEvent event);
 extern void goXEventClipboardUpdated();
-extern void goXEventCreateNotify(Window window, char *name, char *role);
 extern void goXEventConfigureNotify(Display *display, Window window, char *name, char *role);
 extern void goXEventUnmapNotify(Window window);
 extern void goXEventError(XErrorEvent *event, char *message);

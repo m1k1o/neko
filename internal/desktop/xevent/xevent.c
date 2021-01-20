@@ -54,21 +54,6 @@ void XEventLoop(char *name) {
       }
     }
 
-    // CreateNotify
-    if (event.type == CreateNotify) {
-      Window window = event.xcreatewindow.window;
-
-      char *name;
-      XFetchName(display, window, &name);
-
-      XTextProperty role;
-      XGetTextProperty(display, window, &role, WM_WINDOW_ROLE);
-
-      goXEventCreateNotify(window, name, role.value);
-      XFree(name);
-      continue;
-    }
-
     // ConfigureNotify
     if (event.type == ConfigureNotify) {
       Window window = event.xconfigure.window;
