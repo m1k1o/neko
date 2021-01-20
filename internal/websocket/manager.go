@@ -134,17 +134,7 @@ func (ws *WebSocketManagerCtx) Start() {
 		}
 	})
 
-	ws.desktop.OnFileChooserDialogOpened(func() {
-		// TODO: Implement.
-		ws.logger.Info().
-			Msg("FileChooserDialog opened")
-	})
-
-	ws.desktop.OnFileChooserDialogClosed(func() {
-		// TODO: Implement.
-		ws.logger.Info().
-			Msg("FileChooserDialog closed")
-	})
+	ws.fileChooserDialogEvents()
 }
 
 func (ws *WebSocketManagerCtx) Shutdown() error {
