@@ -22,6 +22,9 @@ export interface NekoEvents {
   ['screen.updated']: (width: number, height: number, rate: number) => void
   ['clipboard.updated']: (text: string) => void
   ['broadcast.status']: (isActive: boolean, url: string | undefined) => void
+  ['file_chooser_dialog.requested']: () => void
+  ['file_chooser_dialog.overlay']: (id: string) => void
+  ['file_chooser_dialog.closed']: () => void
 }
 
 export class NekoMessages extends EventEmitter<NekoEvents> {
@@ -172,5 +175,24 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
     this._log.debug('EVENT.BORADCAST_STATUS')
     // TODO: Handle.
     this.emit('broadcast.status', is_active, url)
+  }
+
+  /////////////////////////////
+  // FileChooserDialog Events
+  /////////////////////////////
+
+  protected [EVENT.FILE_CHOOSER_DIALOG_OPENED]({ id }: message.MemberID) {
+    this._log.debug('EVENT.FILE_CHOOSER_DIALOG_OPENED')
+
+    if (id == this.state.member_id) {
+      this.emit('file_chooser_dialog.requested')
+    } else {
+      this.emit('file_chooser_dialog.overlay', id)
+    }
+  }
+
+  protected [EVENT.FILE_CHOOSER_DIALOG_CLOSED]({ id }: message.MemberID) {
+    this._log.debug('EVENT.FILE_CHOOSER_DIALOG_CLOSED')
+    this.emit('file_chooser_dialog.closed')
   }
 }
