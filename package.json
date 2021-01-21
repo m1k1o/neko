@@ -2,15 +2,6 @@
   "name": "@demodesk/neko",
   "version": "1.1.0",
   "description": "Client as reusable Vue.js component for neko streaming server.",
-  "main": "dist/neko.umd.js",
-  "module": "dist/neko.common.js",
-  "unpkg": "dist/neko.min.js",
-  "files": [
-    "dist/*"
-  ],
-  "browser": {
-    "./sfc": "src/component/main.vue"
-  },
   "repository": {
     "type": "git",
     "url": "https://gitlab.com/demodesk/neko/client.git"
@@ -18,10 +9,12 @@
   "bugs": {
     "url": "https://gitlab.com/demodesk/neko/client/-/issues"
   },
+  "main": "dist/neko.umd.js",
+  "module": "dist/neko.common.js",
   "scripts": {
     "serve": "vue-cli-service serve --mode development",
     "lint": "vue-cli-service lint",
-    "build": "vue-cli-service build --target lib --name neko ./src/component/main.vue"
+    "build": "vue-cli-service build --target lib --name neko ./src/index.ts"
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^5.15.1",
@@ -55,6 +48,9 @@
     "typescript": "^4.0.5",
     "vue-template-compiler": "^2.6.12"
   },
+  "files": [
+    "dist/*"
+  ],
   "browserslist": [
     "> 1%",
     "last 2 versions"
