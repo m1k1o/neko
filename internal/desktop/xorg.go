@@ -1,6 +1,7 @@
 package desktop
 
 import (
+	"image"
 	"regexp"
 	"os/exec"
 
@@ -112,4 +113,8 @@ func (manager *DesktopManagerCtx) GetKeyboardModifiers() types.KeyboardModifiers
 
 func (manager *DesktopManagerCtx) GetCursorImage() *types.CursorImage {
 	return xorg.GetCursorImage()
+}
+
+func (manager *DesktopManagerCtx) GetScreenshotImage() *image.RGBA {
+	return xorg.GetScreenshotImage()
 }

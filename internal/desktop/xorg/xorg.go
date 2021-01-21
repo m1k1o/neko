@@ -13,6 +13,9 @@ import (
 	"time"
 	"unsafe"
 
+	"image"
+	"image/color"
+
 	"demodesk/neko/internal/types"
 )
 
@@ -242,6 +245,34 @@ func GetCursorImage() *types.CursorImage {
 		// Xlib stores 32-bit data in longs, even if longs are 64-bits long.
 		Pixels: C.GoBytes(unsafe.Pointer(cur.pixels), C.int(width * height * 8)),
 	}
+}
+
+func GetScreenshotImage() *image.RGBA {
+	mu.Lock()
+	defer mu.Unlock()
+
+	var w, h C.int
+	pixelsUnsafe := C.XGetScreenshot(&w, &h)
+	pixels := C.GoBytes(unsafe.Pointer(pixelsUnsafe), w * h * 3)
+	defer C.free(unsafe.Pointer(pixelsUnsafe))
+
+	width := int(w)
+	height := int(h)
+	img := image.NewRGBA(image.Rect(0, 0, width, height))
+	for row := 0; row < height; row++ {
+		for col := 0; col < width; col++ {
+			pos := ((row * width) + col) * 3
+
+			img.SetRGBA(col, row, color.RGBA{
+				R: uint8(pixels[pos]),
+				G: uint8(pixels[pos+1]),
+				B: uint8(pixels[pos+2]),
+				A: 0xFF,
+			})
+		}
+	}
+
+	return img
 }
 
 //export goCreateScreenSize

@@ -1,5 +1,9 @@
 package types
 
+import (
+	"image"
+)
+
 type CursorImage struct {
 	Width  uint16
 	Height uint16
@@ -53,6 +57,7 @@ type DesktopManager interface {
 	SetKeyboardModifiers(mod KeyboardModifiers)
 	GetKeyboardModifiers() KeyboardModifiers
 	GetCursorImage() *CursorImage
+	GetScreenshotImage() *image.RGBA
 
 	// xevent
 	OnCursorChanged(listener func(serial uint64))

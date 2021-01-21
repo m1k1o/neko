@@ -61,7 +61,8 @@ func (h *RoomHandler) Route(r chi.Router) {
 	})
 
 	r.Route("/screen", func(r chi.Router) {
-		r.Get("/", h.screenConfiguration)
+		r.With(auth.CanWatchOnly).Get("/", h.screenConfiguration)
+		r.With(auth.CanWatchOnly).Get("/image", h.screenImageGet)
 
 		r.With(auth.AdminsOnly).Post("/", h.screenConfigurationChange)
 		r.With(auth.AdminsOnly).Get("/configurations", h.screenConfigurationsList)

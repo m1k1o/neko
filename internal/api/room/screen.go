@@ -1,6 +1,9 @@
 package room
 
 import (
+	"bytes"
+	"image/jpeg"
+	"strconv"
 	"net/http"
 
 	"demodesk/neko/internal/types"
@@ -71,4 +74,24 @@ func (h *RoomHandler) screenConfigurationsList(w http.ResponseWriter, r *http.Re
 	}
 
 	utils.HttpSuccess(w, list)
+}
+
+func (h *RoomHandler) screenImageGet(w http.ResponseWriter, r *http.Request) {
+	var options *jpeg.Options
+	if quality, err := strconv.Atoi(r.URL.Query().Get("quality")); err == nil {
+		options = &jpeg.Options{ quality }
+	} else {
+		options = &jpeg.Options{ 90 }
+	}
+
+	img := h.desktop.GetScreenshotImage()
+	out := new(bytes.Buffer)
+	err := jpeg.Encode(out, img, options)
+	if err != nil {
+		utils.HttpInternalServerError(w, err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "image/jpeg")
+	w.Write(out.Bytes())
 }

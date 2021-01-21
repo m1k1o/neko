@@ -136,3 +136,33 @@ XFixesCursorImage *XGetCursorImage(void) {
   Display *display = getXDisplay();
   return XFixesGetCursorImage(display);
 }
+
+char *XGetScreenshot(int *w, int *h) {
+  Display *display = getXDisplay();
+  Window root = DefaultRootWindow(display);
+
+  XWindowAttributes attr;
+  XGetWindowAttributes(display, root, &attr);
+  int width = attr.width;
+  int height = attr.height;
+
+  XImage *ximage = XGetImage(display, root, 0, 0, width, height, AllPlanes, ZPixmap);
+
+  *w = width;
+  *h = height;
+  char *pixels = (char *)malloc(width * height * 3);
+
+	for (int row = 0; row < height; row++) {
+		for (int col = 0; col < width; col++) {
+			int pos = ((row * width) + col) * 3;
+      unsigned long pixel = XGetPixel(ximage, col, row);
+
+			pixels[pos]   = (pixel & ximage->red_mask)   >> 16;
+			pixels[pos+1] = (pixel & ximage->green_mask) >> 8;
+			pixels[pos+2] =  pixel & ximage->blue_mask;
+    }
+  }
+
+  XDestroyImage(ximage);
+  return pixels;
+}
