@@ -1,4 +1,4 @@
-import Vue from 'vue';
+import Vue from 'vue'
 import Neko from './component/main.vue'
 
 /**
@@ -9,14 +9,14 @@ import Neko from './component/main.vue'
  */
 const NekoElements = {
   install(vue: typeof Vue): void {
-    vue.component('Neko', Neko);
+    vue.component('Neko', Neko)
   },
-};
+}
 
 if (typeof window !== 'undefined' && window.Vue) {
   // @ts-ignore
-  window.Vue.use(NekoElements, {});
+  window.Vue.use(NekoElements, {})
 }
 
-export { Neko };
-export default NekoElements;
+export { Neko }
+export default NekoElements
