@@ -5,8 +5,18 @@
   "main": "dist/neko.umd.js",
   "module": "dist/neko.common.js",
   "unpkg": "dist/neko.min.js",
+  "files": [
+    "dist/*"
+  ],
   "browser": {
     "./sfc": "src/component/main.vue"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://gitlab.com/demodesk/neko/client.git"
+  },
+  "bugs": {
+    "url": "https://gitlab.com/demodesk/neko/client/-/issues"
   },
   "scripts": {
     "serve": "vue-cli-service serve --mode development",
