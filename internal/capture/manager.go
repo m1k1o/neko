@@ -26,6 +26,7 @@ type CaptureManagerCtx struct {
 	streaming       bool
 	desktop         types.DesktopManager
 	broadcast       *BroacastManagerCtx
+	screencast      *ScreencastManagerCtx
 }
 
 func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCtx {
@@ -39,6 +40,7 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 		streaming:       false,
 		desktop:         desktop,
 		broadcast:       broadcastNew(config),
+		screencast:      screencastNew(config),
 	}
 }
 
@@ -46,6 +48,12 @@ func (manager *CaptureManagerCtx) Start() {
 	if manager.broadcast.Enabled() {
 		if err := manager.broadcast.createPipeline(); err != nil {
 			manager.logger.Panic().Err(err).Msg("unable to create broadcast pipeline")
+		}
+	}
+
+	if manager.screencast.Enabled() {
+		if err := manager.screencast.createPipeline(); err != nil {
+			manager.logger.Panic().Err(err).Msg("unable to create screencast pipeline")
 		}
 	}
 
@@ -57,6 +65,10 @@ func (manager *CaptureManagerCtx) Start() {
 		if manager.broadcast.Enabled() {
 			manager.broadcast.destroyPipeline()
 		}
+
+		if manager.screencast.Enabled() {
+			manager.screencast.destroyPipeline()
+		}
 	})
 
 	manager.desktop.OnAfterScreenSizeChange(func() {
@@ -66,7 +78,13 @@ func (manager *CaptureManagerCtx) Start() {
 
 		if manager.broadcast.Enabled() {
 			if err := manager.broadcast.createPipeline(); err != nil {
-				manager.logger.Panic().Err(err).Msg("unable to create broadcast pipeline")
+				manager.logger.Panic().Err(err).Msg("unable to recreate broadcast pipeline")
+			}
+		}
+
+		if manager.screencast.Enabled() {
+			if err := manager.screencast.createPipeline(); err != nil {
+				manager.logger.Panic().Err(err).Msg("unable to recreate screencast pipeline")
 			}
 		}
 	})
@@ -97,16 +115,20 @@ func (manager *CaptureManagerCtx) Shutdown() error {
 		manager.StopStream()
 	}
 
-	if manager.broadcast.Enabled() {
-		manager.broadcast.destroyPipeline()
-	}
+	manager.broadcast.destroyPipeline()
+	manager.screencast.destroyPipeline()
 
 	manager.emit_stop <- true
+	manager.screencast.shutdown <- true
 	return nil
 }
 
 func (manager *CaptureManagerCtx) Broadcast() types.BroadcastManager {
 	return manager.broadcast
+}
+
+func (manager *CaptureManagerCtx) Screencast() types.ScreencastManager {
+	return manager.screencast
 }
 
 func (manager *CaptureManagerCtx) VideoCodec() string {

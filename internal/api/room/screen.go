@@ -95,3 +95,16 @@ func (h *RoomHandler) screenImageGet(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "image/jpeg")
 	w.Write(out.Bytes())
 }
+
+func (h *RoomHandler) screenCastGet(w http.ResponseWriter, r *http.Request) {
+	screencast := h.capture.Screencast()
+	if !screencast.Enabled() {
+		utils.HttpBadRequest(w, "Screencast pipeline is not enabled.")
+		return
+	}
+
+	bytes := screencast.Image()
+	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+	w.Header().Set("Content-Type", "image/jpeg")
+	w.Write(bytes)
+}

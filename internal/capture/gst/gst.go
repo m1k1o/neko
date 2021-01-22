@@ -58,6 +58,18 @@ func CreateRTMPPipeline(pipelineDevice string, pipelineDisplay string, pipelineS
 	return CreatePipeline(pipelineStr, 0)
 }
 
+// CreateJPEGPipeline creates a GStreamer Pipeline
+func CreateJPEGPipeline(pipelineDisplay string, pipelineSrc string) (*Pipeline, error) {
+	var pipelineStr string
+	if pipelineSrc != "" {
+		pipelineStr = fmt.Sprintf(pipelineSrc, pipelineDisplay)
+	} else {
+		pipelineStr = fmt.Sprintf("ximagesrc display-name=%s show-pointer=true use-damage=false ! videoconvert ! videoscale ! videorate ! video/x-raw,framerate=10/1 ! jpegenc quality=60" + appSink, pipelineDisplay)
+	}
+
+	return CreatePipeline(pipelineStr, 0)
+}
+
 // CreateAppPipeline creates a GStreamer Pipeline
 func CreateAppPipeline(codecName string, pipelineDevice string, pipelineSrc string) (*Pipeline, error) {
 	var clockRate float32
@@ -222,15 +234,18 @@ func CheckPlugins(plugins []string) error {
 
 //export goHandlePipelineBuffer
 func goHandlePipelineBuffer(buffer unsafe.Pointer, bufferLen C.int, duration C.int, pipelineID C.int) {
+	defer C.free(buffer)
+
 	pipelinesLock.Lock()
 	pipeline, ok := pipelines[int(pipelineID)]
 	pipelinesLock.Unlock()
 
 	if ok {
-		samples := uint32(pipeline.ClockRate * (float32(duration) / 1000000000))
-		pipeline.Sample <- types.Sample{Data: C.GoBytes(buffer, bufferLen), Samples: samples}
+		pipeline.Sample <- types.Sample{
+			Data: C.GoBytes(buffer, bufferLen),
+			Samples: uint32(pipeline.ClockRate * (float32(duration) / 1e9)),
+		}
 	} else {
 		fmt.Printf("discarding buffer, no pipeline with id %d", int(pipelineID))
 	}
-	C.free(buffer)
 }

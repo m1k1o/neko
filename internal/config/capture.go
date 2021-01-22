@@ -13,7 +13,10 @@ type Capture struct {
 	AudioParams  string
 	VideoCodec   string
 	VideoParams  string
+
 	BroadcastPipeline string
+	Screencast bool
+	ScreencastPipeline string
 }
 
 func (Capture) Init(cmd *cobra.Command) error {
@@ -80,6 +83,17 @@ func (Capture) Init(cmd *cobra.Command) error {
 		return err
 	}
 
+	// screencast
+	cmd.PersistentFlags().Bool("screencast", false, "enable screencast")
+	if err := viper.BindPFlag("screencast", cmd.PersistentFlags().Lookup("screencast")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().String("screencast_pipeline", "", "custom screencast pipeline")
+	if err := viper.BindPFlag("screencast_pipeline", cmd.PersistentFlags().Lookup("screencast_pipeline")); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -110,5 +124,8 @@ func (s *Capture) Set() {
 	s.Display = viper.GetString("display")
 	s.VideoCodec = videoCodec
 	s.VideoParams = viper.GetString("video")
+
 	s.BroadcastPipeline = viper.GetString("broadcast_pipeline")
+	s.Screencast = viper.GetBool("screencast")
+	s.ScreencastPipeline = viper.GetString("screencast_pipeline")
 }

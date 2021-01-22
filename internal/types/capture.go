@@ -12,11 +12,19 @@ type BroadcastManager interface {
 	Url() string
 }
 
+type ScreencastManager interface {
+	Start() error
+	Stop()
+	Enabled() bool
+	Image() []byte
+}
+
 type CaptureManager interface {
 	Start()
 	Shutdown() error
 
 	Broadcast() BroadcastManager
+	Screencast() ScreencastManager
 
 	VideoCodec() string
 	AudioCodec() string
