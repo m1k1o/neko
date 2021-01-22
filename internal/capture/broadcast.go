@@ -1,59 +1,80 @@
 package capture
 
 import (
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
+
+	"demodesk/neko/internal/config"
 	"demodesk/neko/internal/capture/gst"
 )
 
-func (manager *CaptureManagerCtx) StartBroadcast(url string) error {
-	manager.broadcast_url = url
-	manager.broadcasting = true
-	return manager.createBroadcastPipeline()
+type BroacastManagerCtx struct {
+	logger    zerolog.Logger
+	config    *config.Capture
+	pipeline  *gst.Pipeline
+	enabled   bool
+	url       string
 }
 
-func (manager *CaptureManagerCtx) StopBroadcast() {
-	manager.broadcasting = false
-	manager.destroyBroadcastPipeline()
+func broadcastNew(config *config.Capture) *BroacastManagerCtx {
+	return &BroacastManagerCtx{
+		logger:   log.With().Str("module", "capture").Str("submodule", "broadcast").Logger(),
+		config:   config,
+		enabled:  false,
+		url:      "",
+	}
 }
 
-func (manager *CaptureManagerCtx) BroadcastEnabled() bool {
-	return manager.broadcasting
+func (manager *BroacastManagerCtx) Start(url string) error {
+	manager.url = url
+	manager.enabled = true
+	return manager.createPipeline()
 }
 
-func (manager *CaptureManagerCtx) BroadcastUrl() string {
-	return manager.broadcast_url
+func (manager *BroacastManagerCtx) Stop() {
+	manager.enabled = false
+	manager.destroyPipeline()
 }
 
-func (manager *CaptureManagerCtx) createBroadcastPipeline() error {
+func (manager *BroacastManagerCtx) Enabled() bool {
+	return manager.enabled
+}
+
+func (manager *BroacastManagerCtx) Url() string {
+	return manager.url
+}
+
+func (manager *BroacastManagerCtx) createPipeline() error {
 	var err error
 
 	manager.logger.Info().
 		Str("audio_device", manager.config.Device).
 		Str("video_display", manager.config.Display).
 		Str("broadcast_pipeline", manager.config.BroadcastPipeline).
-		Msgf("creating broadcast pipeline")
+		Msgf("creating pipeline")
 	
-	manager.broadcast, err = gst.CreateRTMPPipeline(
+	manager.pipeline, err = gst.CreateRTMPPipeline(
 		manager.config.Device,
 		manager.config.Display,
 		manager.config.BroadcastPipeline,
-		manager.broadcast_url,
+		manager.url,
 	)
 
 	if err != nil {
 		return err
 	}
 
-	manager.broadcast.Play()
-	manager.logger.Info().Msgf("starting broadcast pipeline")
+	manager.pipeline.Play()
+	manager.logger.Info().Msgf("starting pipeline")
 	return nil
 }
 
-func (manager *CaptureManagerCtx) destroyBroadcastPipeline() {
-	if manager.broadcast == nil {
+func (manager *BroacastManagerCtx) destroyPipeline() {
+	if manager.pipeline == nil {
 		return
 	}
 
-	manager.broadcast.Stop()
-	manager.logger.Info().Msgf("stopping broadcast pipeline")
-	manager.broadcast = nil
+	manager.pipeline.Stop()
+	manager.logger.Info().Msgf("stopping pipeline")
+	manager.pipeline = nil
 }

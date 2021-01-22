@@ -75,13 +75,14 @@ func (h *MessageHandlerCtx) systemAdmin(session types.Session) error {
 		}
 	}
 
+	broadcast := h.capture.Broadcast()
 	return session.Send(
 		message.SystemAdmin{
 			Event:           event.SYSTEM_ADMIN,
 			ScreenSizesList: screenSizesList,
 			BroadcastStatus: message.BroadcastStatus{
-				IsActive: h.capture.BroadcastEnabled(),
-				URL:      h.capture.BroadcastUrl(),
+				IsActive: broadcast.Enabled(),
+				URL:      broadcast.Url(),
 			},
 		})
 }

@@ -5,9 +5,18 @@ type Sample struct {
 	Samples uint32
 }
 
+type BroadcastManager interface {
+	Start(url string) error
+	Stop()
+	Enabled() bool
+	Url() string
+}
+
 type CaptureManager interface {
 	Start()
 	Shutdown() error
+
+	Broadcast() BroadcastManager
 
 	VideoCodec() string
 	AudioCodec() string
@@ -18,10 +27,4 @@ type CaptureManager interface {
 	StartStream()
 	StopStream()
 	Streaming() bool
-
-	// broacast
-	StartBroadcast(url string) error
-	StopBroadcast()
-	BroadcastEnabled() bool
-	BroadcastUrl() string
 }

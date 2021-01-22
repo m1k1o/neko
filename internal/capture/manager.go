@@ -17,7 +17,6 @@ type CaptureManagerCtx struct {
 	mu              sync.Mutex
 	video           *gst.Pipeline
 	audio           *gst.Pipeline
-	broadcast       *gst.Pipeline
 	config          *config.Capture
 	emit_update     chan bool
 	emit_stop       chan bool
@@ -25,9 +24,8 @@ type CaptureManagerCtx struct {
 	audio_sample    chan types.Sample
 	emmiter         events.EventEmmiter
 	streaming       bool
-	broadcasting    bool
-	broadcast_url   string
 	desktop         types.DesktopManager
+	broadcast       *BroacastManagerCtx
 }
 
 func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCtx {
@@ -39,15 +37,14 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 		emmiter:         events.New(),
 		config:          config,
 		streaming:       false,
-		broadcasting:    false,
-		broadcast_url:   "",
 		desktop:         desktop,
+		broadcast:       broadcastNew(config),
 	}
 }
 
 func (manager *CaptureManagerCtx) Start() {
-	if manager.BroadcastEnabled() {
-		if err := manager.createBroadcastPipeline(); err != nil {
+	if manager.broadcast.Enabled() {
+		if err := manager.broadcast.createPipeline(); err != nil {
 			manager.logger.Panic().Err(err).Msg("unable to create broadcast pipeline")
 		}
 	}
@@ -57,8 +54,8 @@ func (manager *CaptureManagerCtx) Start() {
 			manager.destroyVideoPipeline()
 		}
 
-		if manager.BroadcastEnabled() {
-			manager.destroyBroadcastPipeline()
+		if manager.broadcast.Enabled() {
+			manager.broadcast.destroyPipeline()
 		}
 	})
 
@@ -67,8 +64,8 @@ func (manager *CaptureManagerCtx) Start() {
 			manager.createVideoPipeline()
 		}
 
-		if manager.BroadcastEnabled() {
-			if err := manager.createBroadcastPipeline(); err != nil {
+		if manager.broadcast.Enabled() {
+			if err := manager.broadcast.createPipeline(); err != nil {
 				manager.logger.Panic().Err(err).Msg("unable to create broadcast pipeline")
 			}
 		}
@@ -100,12 +97,16 @@ func (manager *CaptureManagerCtx) Shutdown() error {
 		manager.StopStream()
 	}
 
-	if manager.BroadcastEnabled() {
-		manager.destroyBroadcastPipeline()
+	if manager.broadcast.Enabled() {
+		manager.broadcast.destroyPipeline()
 	}
 
 	manager.emit_stop <- true
 	return nil
+}
+
+func (manager *CaptureManagerCtx) Broadcast() types.BroadcastManager {
+	return manager.broadcast
 }
 
 func (manager *CaptureManagerCtx) VideoCodec() string {
