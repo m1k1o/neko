@@ -16,6 +16,8 @@ type Capture struct {
 
 	BroadcastPipeline string
 	Screencast bool
+	ScreencastRate string
+	ScreencastQuality string
 	ScreencastPipeline string
 }
 
@@ -89,6 +91,16 @@ func (Capture) Init(cmd *cobra.Command) error {
 		return err
 	}
 
+	cmd.PersistentFlags().String("screencast_rate", "10/1", "set screencast frame rate")
+	if err := viper.BindPFlag("screencast_rate", cmd.PersistentFlags().Lookup("screencast_rate")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().String("screencast_quality", "60", "set screencast JPEG quality")
+	if err := viper.BindPFlag("screencast_quality", cmd.PersistentFlags().Lookup("screencast_quality")); err != nil {
+		return err
+	}
+
 	cmd.PersistentFlags().String("screencast_pipeline", "", "custom screencast pipeline")
 	if err := viper.BindPFlag("screencast_pipeline", cmd.PersistentFlags().Lookup("screencast_pipeline")); err != nil {
 		return err
@@ -127,5 +139,7 @@ func (s *Capture) Set() {
 
 	s.BroadcastPipeline = viper.GetString("broadcast_pipeline")
 	s.Screencast = viper.GetBool("screencast")
+	s.ScreencastRate = viper.GetString("screencast_rate")
+	s.ScreencastQuality = viper.GetString("screencast_quality")
 	s.ScreencastPipeline = viper.GetString("screencast_pipeline")
 }

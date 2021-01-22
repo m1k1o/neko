@@ -59,12 +59,12 @@ func CreateRTMPPipeline(pipelineDevice string, pipelineDisplay string, pipelineS
 }
 
 // CreateJPEGPipeline creates a GStreamer Pipeline
-func CreateJPEGPipeline(pipelineDisplay string, pipelineSrc string) (*Pipeline, error) {
+func CreateJPEGPipeline(pipelineDisplay string, pipelineSrc string, rate string, quality string) (*Pipeline, error) {
 	var pipelineStr string
 	if pipelineSrc != "" {
 		pipelineStr = fmt.Sprintf(pipelineSrc, pipelineDisplay)
 	} else {
-		pipelineStr = fmt.Sprintf("ximagesrc display-name=%s show-pointer=true use-damage=false ! videoconvert ! videoscale ! videorate ! video/x-raw,framerate=10/1 ! jpegenc quality=60" + appSink, pipelineDisplay)
+		pipelineStr = fmt.Sprintf("ximagesrc display-name=%s show-pointer=true use-damage=false ! videoconvert ! videoscale ! videorate ! video/x-raw,framerate=%s ! jpegenc quality=%s" + appSink, pipelineDisplay, rate, quality)
 	}
 
 	return CreatePipeline(pipelineStr, 0)

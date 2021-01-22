@@ -81,6 +81,8 @@ func (manager *ScreencastManagerCtx) createPipeline() error {
 	manager.pipeline, err = gst.CreateJPEGPipeline(
 		manager.config.Display,
 		manager.config.ScreencastPipeline,
+		manager.config.ScreencastRate,
+		manager.config.ScreencastQuality,
 	)
 
 	if err != nil {
