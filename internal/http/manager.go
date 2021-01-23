@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
+	"github.com/go-chi/cors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
@@ -27,6 +28,16 @@ func New(WebSocketManager types.WebSocketManager, ApiManager types.ApiManager, c
 
 	router := chi.NewRouter()
 	router.Use(middleware.Recoverer) // Recover from panics without crashing server
+	router.Use(cors.Handler(cors.Options{
+		AllowOriginFunc:  func(r *http.Request, origin string) bool {
+			return conf.AllowOrigin(origin)
+		},
+		AllowedMethods:   []string{"GET", "POST", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: false,
+		MaxAge:           300, // Maximum value not ignored by any of major browsers
+	}))
 	router.Use(middleware.RequestID) // Create a request ID for each request
 	router.Use(Logger) // Log API request calls using custom logger function
 
@@ -34,7 +45,9 @@ func New(WebSocketManager types.WebSocketManager, ApiManager types.ApiManager, c
 
 	router.Get("/ws", func(w http.ResponseWriter, r *http.Request) {
 		//nolint
-		WebSocketManager.Upgrade(w, r)
+		WebSocketManager.Upgrade(w, r, func(r *http.Request) bool {
+			return conf.AllowOrigin(r.Header.Get("Origin"))
+		})
 	})
 
 	if conf.Static != "" {

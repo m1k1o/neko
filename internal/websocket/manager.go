@@ -27,11 +27,6 @@ func New(
 		logger:    logger,
 		sessions:  sessions,
 		desktop:   desktop,
-		upgrader:  websocket.Upgrader{
-			CheckOrigin: func(r *http.Request) bool {
-				return true
-			},
-		},
 		handler:   handler.New(sessions, desktop, capture, webrtc),
 		handlers:  []types.HandlerFunction{},
 	}
@@ -42,7 +37,6 @@ const pingPeriod = 60 * time.Second
 
 type WebSocketManagerCtx struct {
 	logger    zerolog.Logger
-	upgrader  websocket.Upgrader
 	sessions  types.SessionManager
 	desktop   types.DesktopManager
 	handler   *handler.MessageHandlerCtx
@@ -145,10 +139,14 @@ func (ws *WebSocketManagerCtx) AddHandler(handler types.HandlerFunction) {
 	ws.handlers = append(ws.handlers, handler)
 }
 
-func (ws *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Request) error {
+func (ws *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Request, checkOrigin types.CheckOrigin) error {
 	ws.logger.Debug().Msg("attempting to upgrade connection")
 
-	connection, err := ws.upgrader.Upgrade(w, r, nil)
+	upgrader := websocket.Upgrader{
+		CheckOrigin: checkOrigin,
+	}
+
+	connection, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		ws.logger.Error().Err(err).Msg("failed to upgrade connection")
 		return err
@@ -227,11 +225,9 @@ func (ws *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Request) e
 func (ws *WebSocketManagerCtx) handle(connection *websocket.Conn, session types.Session) {
 	bytes := make(chan []byte)
 	cancel := make(chan struct{})
-	ticker := time.NewTicker(pingPeriod)
 
-	defer func() {
-		ticker.Stop()
-	}()
+	ticker := time.NewTicker(pingPeriod)
+	defer ticker.Stop()
 
 	go func() {
 		for {
