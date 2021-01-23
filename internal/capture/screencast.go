@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 	"sync"
+	"sync/atomic"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -22,8 +23,7 @@ type ScreencastManagerCtx struct {
 	started   bool
 	shutdown  chan bool
 	refresh   chan bool
-	expires   time.Time
-	timeout   time.Duration
+	expired   int32
 	sample    chan types.Sample
 	image     types.Sample
 }
@@ -36,7 +36,6 @@ func screencastNew(config *config.Capture) *ScreencastManagerCtx {
 		started:   false,
 		shutdown:  make(chan bool),
 		refresh:   make(chan bool),
-		timeout:   10 * time.Second,
 	}
 
 	if !manager.enabled {
@@ -44,7 +43,7 @@ func screencastNew(config *config.Capture) *ScreencastManagerCtx {
 	}
 
 	go func() {
-		ticker := time.NewTicker(1 * time.Second)
+		ticker := time.NewTicker(5 * time.Second)
 		manager.logger.Debug().Msg("subroutine started")
 
 		for {
@@ -58,7 +57,7 @@ func screencastNew(config *config.Capture) *ScreencastManagerCtx {
 			case sample := <-manager.sample:
 				manager.image = sample
 			case <-ticker.C:
-				if manager.started && time.Now().After(manager.expires) {
+				if manager.started && !atomic.CompareAndSwapInt32(&manager.expired, 0, 1) {
 					manager.stop()
 				}
 			}
@@ -77,7 +76,7 @@ func (manager *ScreencastManagerCtx) Started() bool {
 }
 
 func (manager *ScreencastManagerCtx) Image() ([]byte, error) {
-	manager.expires = time.Now().Add(manager.timeout)
+	atomic.StoreInt32(&manager.expired, 0)
 
 	if !manager.started {
 		err := manager.start()
