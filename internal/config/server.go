@@ -37,7 +37,7 @@ func (Server) Init(cmd *cobra.Command) error {
 		return err
 	}
 
-	cmd.PersistentFlags().StringSlice("cors", []string{"http://icms:3001"}, "list of allowed origins for CORS")
+	cmd.PersistentFlags().StringSlice("cors", []string{"*"}, "list of allowed origins for CORS")
 	if err := viper.BindPFlag("cors", cmd.PersistentFlags().Lookup("cors")); err != nil {
 		return err
 	}
