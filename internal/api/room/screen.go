@@ -76,7 +76,7 @@ func (h *RoomHandler) screenConfigurationsList(w http.ResponseWriter, r *http.Re
 	utils.HttpSuccess(w, list)
 }
 
-func (h *RoomHandler) screenImageGet(w http.ResponseWriter, r *http.Request) {
+func (h *RoomHandler) screenShotGet(w http.ResponseWriter, r *http.Request) {
 	var options *jpeg.Options
 	if quality, err := strconv.Atoi(r.URL.Query().Get("quality")); err == nil {
 		options = &jpeg.Options{ quality }
@@ -92,6 +92,7 @@ func (h *RoomHandler) screenImageGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 	w.Header().Set("Content-Type", "image/jpeg")
 	w.Write(out.Bytes())
 }
