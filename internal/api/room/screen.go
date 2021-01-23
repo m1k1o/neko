@@ -103,7 +103,12 @@ func (h *RoomHandler) screenCastGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	bytes := screencast.Image()
+	bytes, err := screencast.Image()
+	if err != nil {
+		utils.HttpInternalServerError(w, err)
+		return
+	}
+
 	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 	w.Header().Set("Content-Type", "image/jpeg")
 	w.Write(bytes)

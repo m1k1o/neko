@@ -13,10 +13,9 @@ type BroadcastManager interface {
 }
 
 type ScreencastManager interface {
-	Start() error
-	Stop()
 	Enabled() bool
-	Image() []byte
+	Started() bool
+	Image() ([]byte, error)
 }
 
 type CaptureManager interface {

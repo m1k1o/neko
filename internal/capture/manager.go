@@ -51,12 +51,6 @@ func (manager *CaptureManagerCtx) Start() {
 		}
 	}
 
-	if manager.screencast.Enabled() {
-		if err := manager.screencast.createPipeline(); err != nil {
-			manager.logger.Panic().Err(err).Msg("unable to create screencast pipeline")
-		}
-	}
-
 	manager.desktop.OnBeforeScreenSizeChange(func() {
 		if manager.Streaming() {
 			manager.destroyVideoPipeline()
@@ -66,7 +60,7 @@ func (manager *CaptureManagerCtx) Start() {
 			manager.broadcast.destroyPipeline()
 		}
 
-		if manager.screencast.Enabled() {
+		if manager.screencast.Started() {
 			manager.screencast.destroyPipeline()
 		}
 	})
@@ -82,7 +76,7 @@ func (manager *CaptureManagerCtx) Start() {
 			}
 		}
 
-		if manager.screencast.Enabled() {
+		if manager.screencast.Started() {
 			if err := manager.screencast.createPipeline(); err != nil {
 				manager.logger.Panic().Err(err).Msg("unable to recreate screencast pipeline")
 			}

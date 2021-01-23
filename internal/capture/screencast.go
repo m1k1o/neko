@@ -1,7 +1,9 @@
 package capture
 
 import (
-	"bytes"
+	"fmt"
+	"time"
+	"sync"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -13,13 +15,17 @@ import (
 
 type ScreencastManagerCtx struct {
 	logger    zerolog.Logger
+	mu        sync.Mutex
 	config    *config.Capture
 	pipeline  *gst.Pipeline
 	enabled   bool
+	started   bool
 	shutdown  chan bool
 	refresh   chan bool
+	expires   time.Time
+	timeout   time.Duration
 	sample    chan types.Sample
-	image     *bytes.Buffer
+	image     types.Sample
 }
 
 func screencastNew(config *config.Capture) *ScreencastManagerCtx {
@@ -27,24 +33,34 @@ func screencastNew(config *config.Capture) *ScreencastManagerCtx {
 		logger:    log.With().Str("module", "capture").Str("submodule", "screencast").Logger(),
 		config:    config,
 		enabled:   config.Screencast,
+		started:   false,
 		shutdown:  make(chan bool),
 		refresh:   make(chan bool),
-		image:     new(bytes.Buffer),
+		timeout:   10 * time.Second,
+	}
+
+	if !manager.enabled {
+		return manager
 	}
 
 	go func() {
+		ticker := time.NewTicker(1 * time.Second)
 		manager.logger.Debug().Msg("subroutine started")
 
 		for {
 			select {
 			case <-manager.shutdown:
 				manager.logger.Debug().Msg("shutting down")
+				ticker.Stop()
 				return
 			case <-manager.refresh:
 				manager.logger.Debug().Msg("subroutine updated")
 			case sample := <-manager.sample:
-				manager.image.Reset()
-				manager.image.Write(sample.Data)
+				manager.image = sample
+			case <-ticker.C:
+				if manager.started && time.Now().After(manager.expires) {
+					manager.stop()
+				}
 			}
 		}
 	}()
@@ -52,25 +68,61 @@ func screencastNew(config *config.Capture) *ScreencastManagerCtx {
 	return manager
 }
 
-func (manager *ScreencastManagerCtx) Start() error {
-	manager.enabled = true
-	return manager.createPipeline()
-}
-
-func (manager *ScreencastManagerCtx) Stop() {
-	manager.enabled = false
-	manager.destroyPipeline()
-}
-
 func (manager *ScreencastManagerCtx) Enabled() bool {
 	return manager.enabled
 }
 
-func (manager *ScreencastManagerCtx) Image() []byte {
-	return manager.image.Bytes()
+func (manager *ScreencastManagerCtx) Started() bool {
+	return manager.started
+}
+
+func (manager *ScreencastManagerCtx) Image() ([]byte, error) {
+	manager.expires = time.Now().Add(manager.timeout)
+
+	if !manager.started {
+		err := manager.start()
+		if err != nil {
+			return nil, err
+		}
+
+		select {
+		case sample := <-manager.sample:
+			return sample.Data, nil
+		case <-time.After(1 * time.Second):
+			return nil, fmt.Errorf("timeouted")
+		}
+	}
+
+	if manager.image.Data == nil {
+		return nil, fmt.Errorf("image sample not found")
+	}
+
+	return manager.image.Data, nil
+}
+
+func (manager *ScreencastManagerCtx) start() error {
+	if !manager.enabled {
+		return fmt.Errorf("screenshot pipeline not enabled")
+	}
+
+	err := manager.createPipeline()
+	if err != nil {
+		return err
+	}
+
+	manager.started = true
+	return nil
+}
+
+func (manager *ScreencastManagerCtx) stop() {
+	manager.started = false
+	manager.destroyPipeline()
 }
 
 func (manager *ScreencastManagerCtx) createPipeline() error {
+	manager.mu.Lock()
+	defer manager.mu.Unlock()
+
 	var err error
 
 	manager.logger.Info().
@@ -98,6 +150,9 @@ func (manager *ScreencastManagerCtx) createPipeline() error {
 }
 
 func (manager *ScreencastManagerCtx) destroyPipeline() {
+	manager.mu.Lock()
+	defer manager.mu.Unlock()
+
 	if manager.pipeline == nil {
 		return
 	}
