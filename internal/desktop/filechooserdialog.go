@@ -25,7 +25,7 @@ func (manager *DesktopManagerCtx) HandleFileChooserDialog(uri string) error {
 			"sleep", FILE_CHOOSER_DIALOG_SLEEP,
 	).Run()
 
-	// TODO: Use native API.
+	//nolint
 	exec.Command(
 		"xdotool",
 			"search", "--name", FILE_CHOOSER_DIALOG_NAME, "windowfocus",
@@ -61,7 +61,9 @@ func (manager *DesktopManagerCtx) CloseFileChooserDialog() {
 		// because xdotool is failing to send proper Alt+F4
 
 		manager.ResetKeys()
+		//nolint
 		manager.KeyDown(65513) // Alt
+		//nolint
 		manager.KeyDown(65473) // F4
 		time.Sleep(10 * time.Millisecond)
 		manager.ResetKeys()
