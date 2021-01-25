@@ -22,6 +22,7 @@ func (manager *DesktopManagerCtx) DropFiles(x int, y int, files []string) bool {
 	})
 
 	drop.Emmiter.Once("cursor-enter", func(payload ...interface{}) {
+		//nolint
 		manager.ButtonDown(1)
 	})
 
@@ -35,6 +36,7 @@ func (manager *DesktopManagerCtx) DropFiles(x int, y int, files []string) bool {
 			time.Sleep(DROP_DELAY)
 		}
 
+		//nolint
 		manager.ButtonUp(1)
 	})
 
@@ -43,6 +45,7 @@ func (manager *DesktopManagerCtx) DropFiles(x int, y int, files []string) bool {
 		finished <- payload[0].(bool)
 	})
 
+	manager.ResetKeys()
 	go drop.OpenWindow(files)
 
 	select {
