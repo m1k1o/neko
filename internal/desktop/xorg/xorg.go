@@ -229,8 +229,7 @@ func GetCursorImage() *types.CursorImage {
 	mu.Lock()
 	defer mu.Unlock()
 
-	var cur *C.XFixesCursorImage
-	cur = C.XGetCursorImage()
+	cur := C.XGetCursorImage()
 	defer C.XFree(unsafe.Pointer(cur))
 
 	width := uint16(cur.width)
