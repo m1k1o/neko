@@ -17,13 +17,13 @@ const (
 )
 
 func (h *RoomHandler) uploadDrop(w http.ResponseWriter, r *http.Request) {
-	r.ParseMultipartForm(MAX_UPLOAD_SIZE)
-
-	if r.MultipartForm == nil {
-		utils.HttpBadRequest(w, "No MultipartForm received.")
+	err := r.ParseMultipartForm(MAX_UPLOAD_SIZE)
+	if err != nil {
+		utils.HttpBadRequest(w, "Failed to parse multipart form.")
 		return
 	}
 
+	//nolint
 	defer r.MultipartForm.RemoveAll()
 
 	X, err := strconv.Atoi(r.FormValue("x"))
@@ -88,13 +88,13 @@ func (h *RoomHandler) uploadDrop(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *RoomHandler) uploadDialogPost(w http.ResponseWriter, r *http.Request) {
-	r.ParseMultipartForm(MAX_UPLOAD_SIZE)
-
-	if r.MultipartForm == nil {
-		utils.HttpBadRequest(w, "No MultipartForm received.")
+	err := r.ParseMultipartForm(MAX_UPLOAD_SIZE)
+	if err != nil {
+		utils.HttpBadRequest(w, "Failed to parse multipart form.")
 		return
 	}
 
+	//nolint
 	defer r.MultipartForm.RemoveAll()
 
 	if !h.desktop.IsFileChooserDialogOpened() {
