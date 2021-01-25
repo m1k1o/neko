@@ -1,13 +1,15 @@
 package desktop
 
 import (
+	"fmt"
 	"time"
 	"os/exec"
 )
 
 const (
-	FILE_CHOOSER_DIALOG_NAME  = "Open File"
-	FILE_CHOOSER_DIALOG_SLEEP = "0.2"
+	FILE_CHOOSER_DIALOG_NAME        = "Open File"
+	FILE_CHOOSER_DIALOG_SHORT_SLEEP = "0.2"
+	FILE_CHOOSER_DIALOG_LONG_SLEEP  = "0.4"
 )
 
 func (manager *DesktopManagerCtx) HandleFileChooserDialog(uri string) error {
@@ -15,28 +17,39 @@ func (manager *DesktopManagerCtx) HandleFileChooserDialog(uri string) error {
 	defer mu.Unlock()
 
 	// TODO: Use native API.
-	err := exec.Command(
+	err1 := exec.Command(
 		"xdotool",
 			"search", "--name", FILE_CHOOSER_DIALOG_NAME, "windowfocus",
-			"sleep", FILE_CHOOSER_DIALOG_SLEEP,
+			"sleep", FILE_CHOOSER_DIALOG_SHORT_SLEEP,
 			"key", "--clearmodifiers", "ctrl+l",
 			"type", "--args", "1", uri + "//",
+			"sleep", FILE_CHOOSER_DIALOG_SHORT_SLEEP,
+			"key", "Delete", // remove autocomplete results
+			"sleep", FILE_CHOOSER_DIALOG_SHORT_SLEEP,
 			"key", "Return",
-			"sleep", FILE_CHOOSER_DIALOG_SLEEP,
-	).Run()
-
-	//nolint
-	exec.Command(
-		"xdotool",
-			"search", "--name", FILE_CHOOSER_DIALOG_NAME, "windowfocus",
-			"sleep", FILE_CHOOSER_DIALOG_SLEEP,
+			"sleep", FILE_CHOOSER_DIALOG_LONG_SLEEP,
 			"key", "Down",
 			"key", "--clearmodifiers", "ctrl+a",
 			"key", "Return",
-			"sleep", FILE_CHOOSER_DIALOG_SLEEP,
+			"sleep", FILE_CHOOSER_DIALOG_LONG_SLEEP,
 	).Run()
 
-	return err
+	if err1 != nil {
+		return err1
+	}
+
+	// TODO: Use native API.
+	err2 := exec.Command(
+		"xdotool",
+			"search", "--name", FILE_CHOOSER_DIALOG_NAME,
+	).Run()
+
+	// if last command didn't return error, consider dialog as still open
+	if err2 == nil {
+		return fmt.Errorf("unable to select files in dialog")
+	}
+
+	return nil
 }
 
 func (manager *DesktopManagerCtx) CloseFileChooserDialog() {
