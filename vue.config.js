@@ -14,11 +14,11 @@ module.exports = {
     disableHostCheck: true,
     proxy: {
       '^/ws': {
-        target: 'ws://192.168.1.20:3000/',
+        target: 'ws://' + process.env.NEKO_HOST + ':' + process.env.NEKO_PORT + '/',
         ws: true,
       },
       '^/api': {
-        target: 'http://192.168.1.20:3000/',
+        target: 'http://' + process.env.NEKO_HOST + ':' + process.env.NEKO_PORT + '/',
       },
     },
   },
