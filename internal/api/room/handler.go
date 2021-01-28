@@ -43,6 +43,9 @@ func (h *RoomHandler) Route(r chi.Router) {
 		r.Get("/targets", h.clipboardGetTargets)
 		r.Get("/html", h.clipboardGetRichText)
 		r.Post("/html", h.clipboardSetRichText)
+		r.Get("/image", h.clipboardGetImage)
+		// TODO: Refactor.
+		//r.Post("/image", h.clipboardSetImage)
 	})
 
 	r.Route("/keyboard", func(r chi.Router) {

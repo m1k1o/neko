@@ -1,6 +1,8 @@
 package room
 
 import (
+	"bytes"
+	"strings"
 	"net/http"
 
 	"demodesk/neko/internal/utils"
@@ -67,6 +69,55 @@ func (h *RoomHandler) clipboardSetRichText(w http.ResponseWriter, r *http.Reques
 	}
 
 	err := h.desktop.ClipboardSetRichText(data.HTML)
+	if err != nil {
+		utils.HttpInternalServerError(w, err)
+		return
+	}
+
+	utils.HttpSuccess(w)
+}
+
+func (h *RoomHandler) clipboardGetImage(w http.ResponseWriter, r *http.Request) {
+	bytes, err := h.desktop.ClipboardGetBinary("image/png")
+	if err != nil {
+		utils.HttpInternalServerError(w, err)
+		return
+	}
+
+	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+	w.Header().Set("Content-Type", "image/png")
+	//nolint
+	w.Write(bytes)
+}
+
+func (h *RoomHandler) clipboardSetImage(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseMultipartForm(MAX_UPLOAD_SIZE)
+	if err != nil {
+		utils.HttpBadRequest(w, "Failed to parse multipart form.")
+		return
+	}
+
+	//nolint
+	defer r.MultipartForm.RemoveAll()
+
+	file, header, err := r.FormFile("file")
+	if err != nil {
+		utils.HttpBadRequest(w, "No file received.")
+		return
+	}
+
+	defer file.Close()
+
+	mime := header.Header.Get("Content-Type")
+	if !strings.HasPrefix(mime, "image/") {
+		utils.HttpBadRequest(w, "File must be image.")
+		return
+	}
+
+	buffer := new(bytes.Buffer)
+	buffer.ReadFrom(file)
+
+	err = h.desktop.ClipboardSetBinary("image/png", buffer.Bytes())
 	if err != nil {
 		utils.HttpInternalServerError(w, err)
 		return

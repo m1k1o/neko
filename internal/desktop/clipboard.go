@@ -8,7 +8,7 @@ import (
 )
 
 func (manager *DesktopManagerCtx) ClipboardGetBinary(mime string) ([]byte, error) {
-	cmd := exec.Command("xclip", "-selection", "clipboard", "-o", "-t", mime)
+	cmd := exec.Command("xclip", "-selection", "clipboard", "-out", "-target", mime)
 
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
@@ -24,23 +24,32 @@ func (manager *DesktopManagerCtx) ClipboardGetBinary(mime string) ([]byte, error
 }
 
 func (manager *DesktopManagerCtx) ClipboardSetBinary(mime string, data []byte) error {
-	cmd := exec.Command("xclip", "-selection", "clipboard", "-i", "-t", mime)
-	cmd.Stdin = bytes.NewReader(data)
+	cmd := exec.Command("xclip", "-selection", "clipboard", "-in", "-target", mime)
 
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
 
-	err := cmd.Run()
+    stdin, err := cmd.StdinPipe()
+	if err != nil {
+		return err
+	}
+
+	err = cmd.Start()
 	if err != nil {
 		msg := strings.TrimSpace(string(stderr.Bytes()))
 		return fmt.Errorf("%s", msg)
 	}
+	
+	stdin.Write(data)
+	stdin.Close()
 
+	// TODO: Refactor.
+	// cmd.Wait()
 	return nil
 }
 
 func (manager *DesktopManagerCtx) ClipboardGetTargets() ([]string, error) {
-	cmd := exec.Command("xclip", "-selection", "clipboard", "-o", "-t", "TARGETS")
+	cmd := exec.Command("xclip", "-selection", "clipboard", "-out", "-target", "TARGETS")
 
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
