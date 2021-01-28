@@ -38,9 +38,9 @@ func (h *RoomHandler) Route(r chi.Router) {
 	})
 
 	r.With(auth.HostsOnly).Route("/clipboard", func(r chi.Router) {
+		r.Get("/", h.clipboardGetPlainText)
+		r.Post("/", h.clipboardSetPlainText)
 		r.Get("/targets", h.clipboardGetTargets)
-		r.Get("/text", h.clipboardGetPlainText)
-		r.Post("/text", h.clipboardSetPlainText)
 		r.Get("/html", h.clipboardGetRichText)
 		r.Post("/html", h.clipboardSetRichText)
 	})
