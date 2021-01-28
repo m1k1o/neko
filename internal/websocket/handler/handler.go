@@ -86,6 +86,18 @@ func (h *MessageHandlerCtx) Message(session types.Session, raw []byte) bool {
 		err = utils.Unmarshal(payload, raw, func() error {
 			return h.keyboardModifiers(session, payload)
 		})
+
+	// Send Events
+	case event.SEND_UNICAST:
+		payload := &message.SendUnicast{}
+		err = utils.Unmarshal(payload, raw, func() error {
+			return h.sendUnicast(session, payload)
+		})
+	case event.SEND_BROADCAST:
+		payload := &message.SendBroadcast{}
+		err = utils.Unmarshal(payload, raw, func() error {
+			return h.sendBroadcast(session, payload)
+		})
 	default:
 		return false
 	}

@@ -167,3 +167,22 @@ type BroadcastStatus struct {
 	IsActive bool   `json:"is_active"`
 	URL      string `json:"url,omitempty"`
 }
+
+/////////////////////////////
+// Send (opaque comunication channel)
+/////////////////////////////
+
+type SendUnicast struct {
+	Event    string `json:"event,omitempty"`
+	Sender   string `json:"sender"`
+	Receiver string `json:"receiver"`
+	Subject  string `json:"subject"`
+	Body     string `json:"body"`
+}
+
+type SendBroadcast struct {
+	Event   string `json:"event,omitempty"`
+	Sender  string `json:"sender"`
+	Subject string `json:"subject"`
+	Body    string `json:"body"`
+}

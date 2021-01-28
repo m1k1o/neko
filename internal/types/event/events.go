@@ -53,6 +53,11 @@ const (
 )
 
 const (
+	SEND_UNICAST   = "send/unicast"
+	SEND_BROADCAST = "send/broadcast"
+)
+
+const (
 	FILE_CHOOSER_DIALOG_OPENED = "file_chooser_dialog/opened"
 	FILE_CHOOSER_DIALOG_CLOSED = "file_chooser_dialog/closed"
 )
