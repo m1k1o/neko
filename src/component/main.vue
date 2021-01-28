@@ -230,11 +230,11 @@
       this.websocket.send('screen/set', { width, height, rate })
     }
 
-    public sendUnicast(receiver: string, subject: string, body: string) {
+    public sendUnicast(receiver: string, subject: string, body: any) {
       this.websocket.send('send/unicast', { receiver, subject, body })
     }
 
-    public sendBroadcast(subject: string, body: string) {
+    public sendBroadcast(subject: string, body: any) {
       this.websocket.send('send/broadcast', { subject, body })
     }
 
