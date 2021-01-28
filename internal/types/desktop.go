@@ -67,8 +67,13 @@ type DesktopManager interface {
 	OnEventError(listener func(error_code uint8, message string, request_code uint8, minor_code uint8))
 
 	// clipboard
-	ReadClipboard() (string, error)
-	WriteClipboard(data string) error
+	ClipboardGetBinary(mime string) ([]byte, error)
+	ClipboardSetBinary(mime string, data []byte) error
+	ClipboardGetTargets() ([]string, error)
+	ClipboardGetPlainText() (string, error)
+	ClipboardSetPlainText(data string) error
+	ClipboardGetRichText() (string, error)
+	ClipboardSetRichText(data string) error
 
 	// drop
 	DropFiles(x int, y int, files []string) bool

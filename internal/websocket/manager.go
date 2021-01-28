@@ -117,7 +117,7 @@ func (ws *WebSocketManagerCtx) Start() {
 			return
 		}
 
-		text, err := ws.desktop.ReadClipboard()
+		text, err := ws.desktop.ClipboardGetPlainText()
 		if err != nil {
 			ws.logger.Warn().Err(err).Msg("could not get clipboard content")
 		}
