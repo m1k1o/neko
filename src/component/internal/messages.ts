@@ -22,6 +22,8 @@ export interface NekoEvents {
   ['screen.updated']: (width: number, height: number, rate: number) => void
   ['clipboard.updated']: (text: string) => void
   ['broadcast.status']: (isActive: boolean, url: string | undefined) => void
+  ['receive.unicast']: (sender: string, subject: string, body: string) => void
+  ['receive.broadcast']: (sender: string, subject: string, body: string) => void
   ['file_chooser_dialog.requested']: () => void
   ['file_chooser_dialog.overlay']: (id: string) => void
   ['file_chooser_dialog.closed']: () => void
@@ -175,6 +177,20 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
     this._log.debug('EVENT.BORADCAST_STATUS')
     // TODO: Handle.
     this.emit('broadcast.status', is_active, url)
+  }
+
+  /////////////////////////////
+  // Send Events
+  /////////////////////////////
+
+  protected [EVENT.SEND_UNICAST]({ sender, subject, body }: message.SendMessage) {
+    this._log.debug('EVENT.SEND_UNICAST')
+    this.emit('receive.unicast', sender, subject, body)
+  }
+
+  protected [EVENT.SEND_BROADCAST]({ sender, subject, body }: message.SendMessage) {
+    this._log.debug('EVENT.BORADCAST_STATUS')
+    this.emit('receive.broadcast', sender, subject, body)
   }
 
   /////////////////////////////

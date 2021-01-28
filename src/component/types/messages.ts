@@ -170,3 +170,14 @@ export interface BroadcastStatus {
   is_active: boolean
   url: string | undefined
 }
+
+/////////////////////////////
+// Send
+/////////////////////////////
+
+export interface SendMessage {
+  event: string | undefined
+  sender: string
+  subject: string
+  body: string
+}
