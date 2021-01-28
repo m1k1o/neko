@@ -16,6 +16,5 @@ func (h *MessageHandlerCtx) clipboardSet(session types.Session, payload *message
 		return nil
 	}
 
-	h.desktop.WriteClipboard(payload.Text)
-	return nil
+	return h.desktop.WriteClipboard(payload.Text)
 }

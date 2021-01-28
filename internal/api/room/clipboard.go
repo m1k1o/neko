@@ -11,8 +11,11 @@ type ClipboardPayload struct {
 }
 
 func (h *RoomHandler) clipboardRead(w http.ResponseWriter, r *http.Request) {
-	// TODO: error check?
-	text := h.desktop.ReadClipboard()
+	text, err := h.desktop.ReadClipboard()
+	if err != nil {
+		utils.HttpInternalServerError(w, err)
+		return
+	}
 
 	utils.HttpSuccess(w, ClipboardPayload{
 		Text: text,
@@ -25,7 +28,11 @@ func (h *RoomHandler) clipboardWrite(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: error check?
-	h.desktop.WriteClipboard(data.Text)
+	err := h.desktop.WriteClipboard(data.Text)
+	if err != nil {
+		utils.HttpInternalServerError(w, err)
+		return
+	}
+
 	utils.HttpSuccess(w)
 }

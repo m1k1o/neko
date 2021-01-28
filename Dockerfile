@@ -11,17 +11,7 @@ RUN set -eux; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
         libx11-dev libxrandr-dev libxtst-dev libgtk-3-dev \
-        libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
-        git cmake make; \
-    #
-    # install libclipboard
-    cd /tmp; \
-    git clone https://github.com/jtanx/libclipboard; \
-    cd libclipboard; \
-    cmake .; \
-    make -j`nproc`; \
-    make install; \
-    rm -rf /tmp/libclipboard; \
+        libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev; \
     #
     # clean up
     apt-get clean -y; \
@@ -53,8 +43,8 @@ RUN set -eux; \
         pulseaudio dbus-x11 xserver-xorg-video-dummy xserver-xorg-input-void \
         libcairo2 libxcb1 libxrandr2 libxv1 libopus0 libvpx5 \
         #
-        # file chooser handler
-        xdotool \
+        # file chooser handler, clipboard
+        xdotool xclip \
         #
         # gst
         gstreamer1.0-plugins-base gstreamer1.0-plugins-good \

@@ -117,13 +117,15 @@ func (ws *WebSocketManagerCtx) Start() {
 			return
 		}
 
-		text := ws.desktop.ReadClipboard()
-		err := session.Send(message.ClipboardData{
+		text, err := ws.desktop.ReadClipboard()
+		if err != nil {
+			ws.logger.Warn().Err(err).Msg("could not get clipboard content")
+		}
+
+		if err := session.Send(message.ClipboardData{
 			Event: event.CLIPBOARD_UPDATED,
 			Text:  text,
-		})
-
-		if err != nil {
+		}); err != nil {
 			ws.logger.Warn().Err(err).Msg("could not sync clipboard")
 		}
 	})

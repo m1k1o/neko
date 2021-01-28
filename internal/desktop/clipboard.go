@@ -1,13 +1,17 @@
 package desktop
 
 import (
-	"demodesk/neko/internal/desktop/clipboard"
+	"os/exec"
+	"strings"
 )
 
-func (manager *DesktopManagerCtx) ReadClipboard() string {
-	return clipboard.ReadClipboard()
+func (manager *DesktopManagerCtx) ReadClipboard() (string, error) {
+	out, err := exec.Command("xclip", "-selection", "clipboard", "-o").Output()
+	return string(out), err
 }
 
-func (manager *DesktopManagerCtx) WriteClipboard(data string) {
-	clipboard.WriteClipboard(data)
+func (manager *DesktopManagerCtx) WriteClipboard(data string) error {
+	cmd := exec.Command("xclip", "-selection", "clipboard", "-i")
+    cmd.Stdin = strings.NewReader(data)
+	return cmd.Run()
 }
