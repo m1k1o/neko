@@ -145,7 +145,7 @@
     /////////////////////////////
     // Public methods
     /////////////////////////////
-    public async setUrl(url: string) {
+    public setUrl(url: string) {
       const httpURL = url.replace(/^ws/, 'http').replace(/\/$|\/ws\/?$/, '')
       this.api.setUrl(httpURL)
     }
