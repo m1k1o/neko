@@ -390,6 +390,7 @@
     }
 
     clearState() {
+      Vue.set(this.state.control, 'cursor', null)
       Vue.set(this.state.control, 'clipboard', null)
       Vue.set(this.state.control, 'host_id', null)
       Vue.set(this.state.control, 'implicit_hosting', false)
