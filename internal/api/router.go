@@ -36,27 +36,30 @@ func New(
 }
 
 func (api *ApiManagerCtx) Route(r chi.Router) {
-	r.Use(api.Authenticate)
+	r.Post("/login", api.Login)
 
-	membersHandler := members.New(api.sessions)
-	r.Route("/members", membersHandler.Route)
+	// Authenticated area
+	r.Group(func(r chi.Router) {
+		r.Use(api.Authenticate)
 
-	roomHandler := room.New(api.sessions, api.desktop, api.capture)
-	r.Route("/room", roomHandler.Route)
+		r.Post("/logout", api.Logout)
+		r.Get("/whoami", api.Whoami)
 
-	r.Get("/test", func(w http.ResponseWriter, r *http.Request) {
-		session := auth.GetSession(r)
-		utils.HttpBadRequest(w, "Hi `" + session.ID() + "`, you are authenticated.")
+		membersHandler := members.New(api.sessions)
+		r.Route("/members", membersHandler.Route)
+
+		roomHandler := room.New(api.sessions, api.desktop, api.capture)
+		r.Route("/room", roomHandler.Route)
+
+		for path, router := range api.routers {
+			r.Route(path, router)
+		}
 	})
-
-	for path, router := range api.routers {
-		r.Route(path, router)
-	}
 }
 
 func (api *ApiManagerCtx) Authenticate(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		session, err := api.sessions.Authenticate(r)
+		session, err := api.sessions.AuthenticateRequest(r)
 		if err != nil {
 			utils.HttpUnauthorized(w, err)
 		} else {

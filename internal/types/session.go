@@ -89,5 +89,6 @@ type SessionManager interface {
 
 	ImplicitHosting() bool
 
-	Authenticate(r *http.Request) (Session, error)
+	AuthenticateRequest(r *http.Request) (Session, error)
+	Authenticate(id string, secret string) (Session, error)
 }
