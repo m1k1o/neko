@@ -46,7 +46,11 @@ func (api *ApiManagerCtx) Login(w http.ResponseWriter, r *http.Request) {
 		HttpOnly: true,
 	})
 
-	utils.HttpSuccess(w)
+	utils.HttpSuccess(w, SessionWhoamiPayload{
+		ID:      session.ID(),
+		Profile: session.GetProfile(),
+		State:   session.GetState(),
+	})
 }
 
 func (api *ApiManagerCtx) Logout(w http.ResponseWriter, r *http.Request) {
@@ -66,7 +70,7 @@ func (api *ApiManagerCtx) Logout(w http.ResponseWriter, r *http.Request) {
 		HttpOnly: true,
 	})
 
-	utils.HttpSuccess(w)
+	utils.HttpSuccess(w, true)
 }
 
 func (api *ApiManagerCtx) Whoami(w http.ResponseWriter, r *http.Request) {
