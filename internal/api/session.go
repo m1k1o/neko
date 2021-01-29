@@ -57,7 +57,6 @@ func (api *ApiManagerCtx) Logout(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &http.Cookie{
 		Name: "neko-id",
 		Value: "",
-		Path: "/",
 		Expires: time.Unix(0, 0),
 		HttpOnly: false,
 	})
@@ -65,7 +64,6 @@ func (api *ApiManagerCtx) Logout(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &http.Cookie{
 		Name: "neko-secret",
 		Value: "",
-		Path: "/",
 		Expires: time.Unix(0, 0),
 		HttpOnly: true,
 	})
