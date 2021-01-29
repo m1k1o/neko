@@ -16,5 +16,8 @@ func (h *MessageHandlerCtx) clipboardSet(session types.Session, payload *message
 		return nil
 	}
 
-	return h.desktop.ClipboardSetPlainText(payload.Text)
+	return h.desktop.ClipboardSetText(types.ClipboardText{
+		Text: payload.Text,
+		// TODO: Send HTML?
+	})
 }

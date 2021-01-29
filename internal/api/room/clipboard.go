@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"demodesk/neko/internal/utils"
+	"demodesk/neko/internal/types"
 )
 
 type ClipboardPayload struct {
@@ -23,52 +24,30 @@ func (h *RoomHandler) clipboardGetTargets(w http.ResponseWriter, r *http.Request
 	utils.HttpSuccess(w, targets)
 }
 
-func (h *RoomHandler) clipboardGetPlainText(w http.ResponseWriter, r *http.Request) {
-	text, err := h.desktop.ClipboardGetPlainText()
+func (h *RoomHandler) clipboardGetText(w http.ResponseWriter, r *http.Request) {
+	data, err := h.desktop.ClipboardGetText()
 	if err != nil {
 		utils.HttpInternalServerError(w, err)
 		return
 	}
 
 	utils.HttpSuccess(w, ClipboardPayload{
-		Text: text,
+		Text: data.Text,
+		HTML: data.HTML,
 	})
 }
 
-func (h *RoomHandler) clipboardSetPlainText(w http.ResponseWriter, r *http.Request) {
+func (h *RoomHandler) clipboardSetText(w http.ResponseWriter, r *http.Request) {
 	data := &ClipboardPayload{}
 	if !utils.HttpJsonRequest(w, r, data) {
 		return
 	}
 
-	err := h.desktop.ClipboardSetPlainText(data.Text)
-	if err != nil {
-		utils.HttpInternalServerError(w, err)
-		return
-	}
-
-	utils.HttpSuccess(w)
-}
-
-func (h *RoomHandler) clipboardGetRichText(w http.ResponseWriter, r *http.Request) {
-	html, err := h.desktop.ClipboardGetRichText()
-	if err != nil {
-		utils.HttpInternalServerError(w, err)
-		return
-	}
-
-	utils.HttpSuccess(w, ClipboardPayload{
-		HTML: html,
+	err := h.desktop.ClipboardSetText(types.ClipboardText{
+		Text: data.Text,
+		HTML: data.HTML,
 	})
-}
 
-func (h *RoomHandler) clipboardSetRichText(w http.ResponseWriter, r *http.Request) {
-	data := &ClipboardPayload{}
-	if !utils.HttpJsonRequest(w, r, data) {
-		return
-	}
-
-	err := h.desktop.ClipboardSetRichText(data.HTML)
 	if err != nil {
 		utils.HttpInternalServerError(w, err)
 		return

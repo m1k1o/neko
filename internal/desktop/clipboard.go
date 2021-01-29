@@ -5,7 +5,36 @@ import (
 	"bytes"
 	"os/exec"
 	"strings"
+
+	"demodesk/neko/internal/types"
 )
+
+func (manager *DesktopManagerCtx) ClipboardGetText() (*types.ClipboardText, error) {
+	text, err := manager.ClipboardGetBinary("STRING")
+	if err != nil {
+		return nil, err
+	}
+
+	// Rich text must not always be available, can fail silently.
+	html, _ := manager.ClipboardGetBinary("text/html")
+
+	return &types.ClipboardText{
+		Text: string(text),
+		HTML: string(html),
+	}, nil
+}
+
+func (manager *DesktopManagerCtx) ClipboardSetText(data types.ClipboardText) error {
+	// TODO: Refactor.
+	// Current implementation is unable to set multiple targets. HTML
+	// is set, if available. Otherwise plain text.
+
+	if data.HTML != "" {
+		return manager.ClipboardSetBinary("text/html", []byte(data.HTML))
+	}
+
+	return manager.ClipboardSetBinary("STRING", []byte(data.Text))
+}
 
 func (manager *DesktopManagerCtx) ClipboardGetBinary(mime string) ([]byte, error) {
 	cmd := exec.Command("xclip", "-selection", "clipboard", "-out", "-target", mime)
@@ -76,22 +105,4 @@ func (manager *DesktopManagerCtx) ClipboardGetTargets() ([]string, error) {
 	}
 
 	return response, nil
-}
-
-func (manager *DesktopManagerCtx) ClipboardGetPlainText() (string, error) {
-	bytes, err := manager.ClipboardGetBinary("STRING")
-	return string(bytes), err
-}
-
-func (manager *DesktopManagerCtx) ClipboardSetPlainText(data string) error {
-	return manager.ClipboardSetBinary("STRING", []byte(data))
-}
-
-func (manager *DesktopManagerCtx) ClipboardGetRichText() (string, error) {
-	bytes, err := manager.ClipboardGetBinary("text/html")
-	return string(bytes), err
-}
-
-func (manager *DesktopManagerCtx) ClipboardSetRichText(data string) error {
-	return manager.ClipboardSetBinary("text/html", []byte(data))
 }
