@@ -21,6 +21,10 @@ export class NekoWebSocket extends EventEmitter<NekoWebSocketEvents> {
     this._log = new Logger('websocket')
   }
 
+  get supported() {
+    return typeof WebSocket !== 'undefined' && WebSocket.OPEN === 1
+  }
+
   get connected() {
     return typeof this._ws !== 'undefined' && this._ws.readyState === WebSocket.OPEN
   }
