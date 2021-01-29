@@ -29,14 +29,14 @@ export class NekoWebSocket extends EventEmitter<NekoWebSocketEvents> {
     return typeof this._ws !== 'undefined' && this._ws.readyState === WebSocket.OPEN
   }
 
-  public connect(url: string, id: string, secret: string) {
+  public connect(url: string) {
     if (this.connected) {
       throw new Error('attempting to create websocket while connection open')
     }
 
     this.emit('connecting')
 
-    this._ws = new WebSocket(`${url}/ws?id=${encodeURIComponent(id)}&secret=${encodeURIComponent(secret)}`)
+    this._ws = new WebSocket(url)
     this._log.info(`connecting`)
 
     this._ws.onopen = this.onConnected.bind(this)

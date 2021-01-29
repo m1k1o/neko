@@ -80,6 +80,7 @@
     /////////////////////////////
     public state = {
       connection: {
+        authenticated: false,
         websocket: 'disconnected',
         webrtc: 'disconnected',
         type: 'none',
@@ -116,6 +117,10 @@
       members: {},
     } as NekoState
 
+    public get authenticated() {
+      return this.state.connection.authenticated
+    }
+
     public get connected() {
       return this.state.connection.websocket == 'connected'
     }
@@ -140,25 +145,61 @@
     /////////////////////////////
     // Public methods
     /////////////////////////////
-    public connect(url: string, id: string, secret: string) {
-      if (this.connected) {
-        throw new Error('client already connected')
-      }
-
-      const wsURL = url.replace(/^http/, 'ws').replace(/\/$|\/ws\/?$/, '')
-      this.websocket.connect(wsURL, id, secret)
-
+    public async setUrl(url: string) {
       const httpURL = url.replace(/^ws/, 'http').replace(/\/$|\/ws\/?$/, '')
-      this.api.connect(httpURL, id, secret)
+      this.api.setUrl(httpURL)
     }
 
-    public disconnect() {
+    public async login(id: string, secret: string) {
+      if (this.authenticated) {
+        throw new Error('client already authenticated')
+      }
+
+      try {
+        await this.api.session.login({ id, secret })
+        Vue.set(this.state.connection, 'authenticated', true)
+        this.websocketConnect()
+      } catch (e) {
+        throw e
+      }
+    }
+
+    public async logout() {
+      if (!this.authenticated) {
+        throw new Error('client not authenticated')
+      }
+
+      try {
+        this.websocketDisconnect()
+        await this.api.session.logout()
+        Vue.set(this.state.connection, 'authenticated', false)
+      } catch (e) {
+        throw e
+      }
+    }
+
+    public websocketConnect() {
+      if (!this.authenticated) {
+        throw new Error('client not authenticated')
+      }
+
+      if (this.connected) {
+        throw new Error('client already connected to websocket')
+      }
+
+      this.websocket.connect(this.api.url.replace(/^http/, 'ws') + '/api/ws')
+    }
+
+    public websocketDisconnect() {
+      if (!this.authenticated) {
+        throw new Error('client not authenticated')
+      }
+
       if (!this.connected) {
-        throw new Error('client not connected')
+        throw new Error('client not connected to websocket')
       }
 
       this.websocket.disconnect()
-      this.api.disconnect()
     }
 
     public webrtcConnect() {
@@ -348,6 +389,12 @@
       Vue.set(this.state.connection, 'type', 'webrtc')
       Vue.set(this.state.connection, 'can_watch', this.webrtc.supported)
       Vue.set(this.state.connection, 'can_control', this.webrtc.supported)
+
+      // check if is user logged in
+      this.api.session.whoami().then(() => {
+        Vue.set(this.state.connection, 'authenticated', true)
+        this.websocketConnect()
+      })
     }
 
     beforeDestroy() {

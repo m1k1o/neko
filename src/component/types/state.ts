@@ -11,6 +11,7 @@ export default interface State {
 // Connection
 /////////////////////////////
 export interface Connection {
+  authenticated: boolean
   websocket: 'disconnected' | 'connecting' | 'connected'
   webrtc: 'disconnected' | 'connecting' | 'connected'
   type: 'webrtc' | 'fallback' | 'none'

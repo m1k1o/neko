@@ -1,22 +1,22 @@
 import * as Api from '../api'
 
 export class NekoApi {
-  api_configuration = new Api.Configuration()
+  api_configuration = new Api.Configuration({
+    basePath: location.href.replace(/\/+$/, ''),
+  })
 
-  public connect(url: string, id: string, secret: string) {
+  public setUrl(url: string) {
     this.api_configuration = new Api.Configuration({
-      basePath: url,
-      baseOptions: {
-        auth: {
-          username: id,
-          password: secret,
-        },
-      },
+      basePath: url.replace(/\/+$/, ''),
     })
   }
 
-  public disconnect() {
-    this.api_configuration = new Api.Configuration()
+  get url(): string {
+    return this.api_configuration.basePath || location.href.replace(/\/+$/, '')
+  }
+
+  get session(): SessionApi {
+    return new Api.SessionApi(this.api_configuration)
   }
 
   get room(): RoomApi {
@@ -28,5 +28,6 @@ export class NekoApi {
   }
 }
 
+export type SessionApi = Api.SessionApi
 export type RoomApi = Api.RoomApi
 export type MembersApi = Api.MembersApi
