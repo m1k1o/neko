@@ -17,10 +17,22 @@ RUN set -eux; \
     apt-get clean -y; \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/*
 
+ARG GIT_COMMIT=dev
+ARG GIT_BRANCH=dev
+
 #
 # build server
 COPY . .
-RUN go get -v -t -d . && go build -tags browser -o bin/neko -i cmd/neko/main.go
+RUN go get -v -t -d . && go build \
+    -tags browser \
+    -o bin/neko \
+    -ldflags " \
+        -s -w \
+        -X 'demodesk/neko.buildDate=`date -u +'%Y-%m-%dT%H:%M:%SZ'`' \
+        -X 'demodesk/neko.gitCommit=${GIT_COMMIT}' \
+        -X 'demodesk/neko.gitBranch=${GIT_BRANCH}' \
+    " \
+    -i cmd/neko/main.go;
 
 #
 # Stage 2: Runtime.
