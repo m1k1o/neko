@@ -1,7 +1,7 @@
 <template>
   <div ref="component" class="component">
     <div ref="container" class="player-container">
-      <video ref="video" />
+      <video ref="video" muted />
       <neko-overlay
         :webrtc="webrtc"
         :control="state.control"
@@ -395,6 +395,9 @@
         Vue.set(this.state.connection, 'authenticated', true)
         this.websocketConnect()
       })
+
+      // unmute on users first interaction
+      document.addEventListener('click', this.unmute, { once: true })
     }
 
     beforeDestroy() {
