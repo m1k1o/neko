@@ -20,7 +20,7 @@ RUN set -eux; \
 #
 # build server
 COPY . .
-RUN go get -v -t -d . && go build -o bin/neko -i cmd/neko/main.go
+RUN go get -v -t -d . && go build -tags browser -o bin/neko -i cmd/neko/main.go
 
 #
 # Stage 2: Runtime.
