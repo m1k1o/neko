@@ -15,9 +15,6 @@ export interface Connection {
   websocket: 'unavailable' | 'disconnected' | 'connecting' | 'connected'
   webrtc: 'unavailable' | 'disconnected' | 'connecting' | 'connected'
   type: 'webrtc' | 'fallback' | 'none'
-  can_watch: boolean
-  can_control: boolean
-  clipboard_access: boolean
 }
 
 /////////////////////////////

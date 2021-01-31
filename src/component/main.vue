@@ -87,9 +87,6 @@
         websocket: this.websocket.supported ? 'disconnected' : 'unavailable',
         webrtc: this.webrtc.supported ? 'disconnected' : 'unavailable',
         type: 'none',
-        can_watch: false,
-        can_control: false,
-        clipboard_access: false,
       },
       video: {
         playable: false,
@@ -365,10 +362,12 @@
       })
       this.webrtc.on('connected', () => {
         Vue.set(this.state.connection, 'webrtc', 'connected')
+        Vue.set(this.state.connection, 'type', 'webrtc')
         this.events.emit('connection.webrtc', 'connected')
       })
       this.webrtc.on('disconnected', () => {
         Vue.set(this.state.connection, 'webrtc', 'disconnected')
+        Vue.set(this.state.connection, 'type', 'none')
         this.events.emit('connection.webrtc', 'disconnected')
 
         if (!this._video) return
@@ -382,11 +381,6 @@
         }
       })
 
-      // hardcoded webrtc for now
-      Vue.set(this.state.connection, 'type', 'webrtc')
-      Vue.set(this.state.connection, 'can_watch', this.webrtc.supported)
-      Vue.set(this.state.connection, 'can_control', this.webrtc.supported)
-
       // check if is user logged in
       this.api.session.whoami().then(() => {
         Vue.set(this.state.connection, 'authenticated', true)
@@ -395,7 +389,7 @@
 
       // unmute on users first interaction
       if (this.autoplay) {
-        document.addEventListener('click', this.unmute, { once: true })
+        document.addEventListener('click', () => this.unmute(), { once: true })
       }
     }
 
