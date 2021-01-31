@@ -23,7 +23,7 @@ func init() {
 		neko.Service.Configs.WebRTC,
 		neko.Service.Configs.Session,
 		neko.Service.Configs.Server,
-	}, modules.ConfigsList()...)
+	}, modules.Configs()...)
 
 	cobra.OnInitialize(func() {
 		for _, cfg := range configs {
