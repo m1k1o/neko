@@ -10,6 +10,7 @@ import "C"
 import (
 	"time"
 	"unsafe"
+	"strings"
 
 	"github.com/kataras/go-events"
 )
@@ -69,9 +70,14 @@ func goXEventClipboardUpdated() {
 }
 
 //export goXEventConfigureNotify
-func goXEventConfigureNotify(display *C.Display, window C.Window, nameUnsafe *C.char, roleUnsafe *C.char) {
-	role := C.GoString(roleUnsafe)
-	if role != "GtkFileChooserDialog" {
+func goXEventConfigureNotify(display *C.Display, window C.Window, name *C.char, role *C.char) {
+	if C.GoString(role) != "GtkFileChooserDialog" {
+		return
+	}
+
+	// TODO: Refactor. Right now processing of this dialog relies on identifying
+	// via its name. When that changes to role, this condition should be removed.
+	if !strings.HasPrefix(C.GoString(name), "Open File") {
 		return
 	}
 
