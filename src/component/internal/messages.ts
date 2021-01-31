@@ -8,25 +8,35 @@ import { NekoWebSocket } from './websocket'
 import NekoState from '../types/state'
 
 export interface NekoEvents {
-  ['internal.websocket']: (state: 'connected' | 'connecting' | 'disconnected') => void
-  ['internal.webrtc']: (state: 'connected' | 'connecting' | 'disconnected') => void
+  // connection events
+  ['connection.websocket']: (state: 'connected' | 'connecting' | 'disconnected') => void
+  ['connection.webrtc']: (state: 'connected' | 'connecting' | 'disconnected') => void
+  ['connection.disconnect']: (message: string) => void
+
+  // drag and drop events
   ['upload.drop.started']: () => void
   ['upload.drop.progress']: (progressEvent: ProgressEvent) => void
   ['upload.drop.finished']: (error: Error | null) => void
-  ['system.disconnect']: (message: string) => void
+
+  // upload dialog events
+  ['upload.dialog.requested']: () => void
+  ['upload.dialog.overlay']: (id: string) => void
+  ['upload.dialog.closed']: () => void
+
+  // custom messages events
+  ['receive.unicast']: (sender: string, subject: string, body: any) => void
+  ['receive.broadcast']: (sender: string, subject: string, body: any) => void
+
+  // member events
   ['member.created']: (id: string) => void
   ['member.deleted']: (id: string) => void
-  ['member.profile']: (id: string) => void
-  ['member.state']: (id: string) => void
-  ['control.host']: (hasHost: boolean, hostID: string | undefined) => void
-  ['screen.updated']: (width: number, height: number, rate: number) => void
-  ['clipboard.updated']: (text: string) => void
-  ['broadcast.status']: (isActive: boolean, url: string | undefined) => void
-  ['receive.unicast']: (sender: string, subject: string, body: string) => void
-  ['receive.broadcast']: (sender: string, subject: string, body: string) => void
-  ['file_chooser_dialog.requested']: () => void
-  ['file_chooser_dialog.overlay']: (id: string) => void
-  ['file_chooser_dialog.closed']: () => void
+  ['member.updated']: (id: string) => void
+
+  // room events
+  ['room.control.host']: (hasHost: boolean, hostID: string | undefined) => void
+  ['room.screen.updated']: (width: number, height: number, rate: number) => void
+  ['room.clipboard.updated']: (text: string) => void
+  ['room.broadcast.status']: (isActive: boolean, url: string | undefined) => void
 }
 
 export class NekoMessages extends EventEmitter<NekoEvents> {
@@ -88,7 +98,7 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
 
   protected [EVENT.SYSTEM_DISCONNECT]({ message }: message.SystemDisconnect) {
     this._log.debug('EVENT.SYSTEM_DISCONNECT')
-    this.emit('system.disconnect', message)
+    this.emit('connection.disconnect', message)
     // TODO: Handle.
   }
 
@@ -125,13 +135,13 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
   protected [EVENT.MEMBER_PROFILE]({ id, ...profile }: message.MemberProfile) {
     this._log.debug('EVENT.MEMBER_PROFILE', id)
     Vue.set(this.state.members[id], 'profile', profile)
-    this.emit('member.profile', id)
+    this.emit('member.updated', id)
   }
 
   protected [EVENT.MEMBER_STATE]({ id, ...state }: message.MemberState) {
     this._log.debug('EVENT.MEMBER_STATE', id)
     Vue.set(this.state.members[id], 'state', state)
-    this.emit('member.state', id)
+    this.emit('member.updated', id)
   }
 
   /////////////////////////////
@@ -147,7 +157,7 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
       Vue.set(this.state.control, 'host_id', null)
     }
 
-    this.emit('control.host', has_host, host_id)
+    this.emit('room.control.host', has_host, host_id)
   }
 
   /////////////////////////////
@@ -157,7 +167,7 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
   protected [EVENT.SCREEN_UPDATED]({ width, height, rate }: message.ScreenSize) {
     this._log.debug('EVENT.SCREEN_UPDATED')
     Vue.set(this.state.screen, 'size', { width, height, rate })
-    this.emit('screen.updated', width, height, rate)
+    this.emit('room.screen.updated', width, height, rate)
   }
   /////////////////////////////
   // Clipboard Events
@@ -166,7 +176,7 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
   protected [EVENT.CLIPBOARD_UPDATED]({ text }: message.ClipboardData) {
     this._log.debug('EVENT.CLIPBOARD_UPDATED')
     Vue.set(this.state.control, 'clipboard', { text })
-    this.emit('clipboard.updated', text)
+    this.emit('room.clipboard.updated', text)
   }
 
   /////////////////////////////
@@ -176,7 +186,7 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
   protected [EVENT.BORADCAST_STATUS]({ event, url, is_active }: message.BroadcastStatus) {
     this._log.debug('EVENT.BORADCAST_STATUS')
     // TODO: Handle.
-    this.emit('broadcast.status', is_active, url)
+    this.emit('room.broadcast.status', is_active, url)
   }
 
   /////////////////////////////
@@ -201,14 +211,14 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
     this._log.debug('EVENT.FILE_CHOOSER_DIALOG_OPENED')
 
     if (id == this.state.member_id) {
-      this.emit('file_chooser_dialog.requested')
+      this.emit('upload.dialog.requested')
     } else {
-      this.emit('file_chooser_dialog.overlay', id)
+      this.emit('upload.dialog.overlay', id)
     }
   }
 
   protected [EVENT.FILE_CHOOSER_DIALOG_CLOSED]({ id }: message.MemberID) {
     this._log.debug('EVENT.FILE_CHOOSER_DIALOG_CLOSED')
-    this.emit('file_chooser_dialog.closed')
+    this.emit('upload.dialog.closed')
   }
 }

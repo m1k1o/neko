@@ -158,13 +158,9 @@
         throw new Error('client already authenticated')
       }
 
-      try {
-        await this.api.session.login({ id, secret })
-        Vue.set(this.state.connection, 'authenticated', true)
-        this.websocketConnect()
-      } catch (e) {
-        throw e
-      }
+      await this.api.session.login({ id, secret })
+      Vue.set(this.state.connection, 'authenticated', true)
+      this.websocketConnect()
     }
 
     public async logout() {
@@ -172,13 +168,9 @@
         throw new Error('client not authenticated')
       }
 
-      try {
-        this.websocketDisconnect()
-        await this.api.session.logout()
-        Vue.set(this.state.connection, 'authenticated', false)
-      } catch (e) {
-        throw e
-      }
+      this.websocketDisconnect()
+      await this.api.session.logout()
+      Vue.set(this.state.connection, 'authenticated', false)
     }
 
     public websocketConnect() {
@@ -335,16 +327,16 @@
       })
       this.websocket.on('connecting', () => {
         Vue.set(this.state.connection, 'websocket', 'connecting')
-        this.events.emit('internal.websocket', 'connecting')
+        this.events.emit('connection.websocket', 'connecting')
       })
       this.websocket.on('connected', () => {
         Vue.set(this.state.connection, 'websocket', 'connected')
-        this.events.emit('internal.websocket', 'connected')
+        this.events.emit('connection.websocket', 'connected')
         this.webrtcConnect()
       })
       this.websocket.on('disconnected', () => {
         Vue.set(this.state.connection, 'websocket', 'disconnected')
-        this.events.emit('internal.websocket', 'disconnected')
+        this.events.emit('connection.websocket', 'disconnected')
 
         this.webrtc.disconnect()
         this.clearState()
@@ -369,15 +361,15 @@
       })
       this.webrtc.on('connecting', () => {
         Vue.set(this.state.connection, 'webrtc', 'connecting')
-        this.events.emit('internal.webrtc', 'connecting')
+        this.events.emit('connection.webrtc', 'connecting')
       })
       this.webrtc.on('connected', () => {
         Vue.set(this.state.connection, 'webrtc', 'connected')
-        this.events.emit('internal.webrtc', 'connected')
+        this.events.emit('connection.webrtc', 'connected')
       })
       this.webrtc.on('disconnected', () => {
         Vue.set(this.state.connection, 'webrtc', 'disconnected')
-        this.events.emit('internal.webrtc', 'disconnected')
+        this.events.emit('connection.webrtc', 'disconnected')
 
         if (!this._video) return
 
