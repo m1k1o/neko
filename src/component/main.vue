@@ -81,8 +81,8 @@
     public state = {
       connection: {
         authenticated: false,
-        websocket: 'disconnected',
-        webrtc: 'disconnected',
+        websocket: this.websocket.supported ? 'disconnected' : 'unavailable',
+        webrtc: this.webrtc.supported ? 'disconnected' : 'unavailable',
         type: 'none',
         can_watch: false,
         can_control: false,
