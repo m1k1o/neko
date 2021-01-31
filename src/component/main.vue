@@ -1,7 +1,7 @@
 <template>
   <div ref="component" class="component">
     <div ref="container" class="player-container">
-      <video ref="video" muted />
+      <video ref="video" :autoplay="autoplay" :muted="autoplay" />
       <neko-overlay
         :webrtc="webrtc"
         :control="state.control"
@@ -74,6 +74,9 @@
     websocket = new NekoWebSocket()
     webrtc = new NekoWebRTC()
     observer = new ResizeObserver(this.onResize.bind(this))
+
+    @Prop({ type: Boolean })
+    private readonly autoplay!: boolean
 
     /////////////////////////////
     // Public state
@@ -360,7 +363,9 @@
           this._video.src = window.URL.createObjectURL(streams[0]) // for older browsers
         }
 
-        this._video.play()
+        if (this.autoplay) {
+          this._video.play()
+        }
       })
       this.webrtc.on('connecting', () => {
         Vue.set(this.state.connection, 'webrtc', 'connecting')
@@ -397,7 +402,9 @@
       })
 
       // unmute on users first interaction
-      document.addEventListener('click', this.unmute, { once: true })
+      if (this.autoplay) {
+        document.addEventListener('click', this.unmute, { once: true })
+      }
     }
 
     beforeDestroy() {
