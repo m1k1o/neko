@@ -98,8 +98,8 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
 
   protected [EVENT.SYSTEM_DISCONNECT]({ message }: message.SystemDisconnect) {
     this._log.debug('EVENT.SYSTEM_DISCONNECT')
+    Vue.set(this.state.connection, 'authenticated', false)
     this.emit('connection.disconnect', message)
-    // TODO: Handle.
   }
 
   protected [EVENT.CURSOR_IMAGE]({ uri, width, height, x, y }: message.CursorImage) {
