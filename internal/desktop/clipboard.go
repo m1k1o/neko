@@ -45,7 +45,7 @@ func (manager *DesktopManagerCtx) ClipboardGetBinary(mime string) ([]byte, error
 
 	err := cmd.Run()
 	if err != nil {
-		msg := strings.TrimSpace(string(stderr.Bytes()))
+		msg := strings.TrimSpace(stderr.String())
 		return nil, fmt.Errorf("%s", msg)
 	}
 
@@ -65,11 +65,15 @@ func (manager *DesktopManagerCtx) ClipboardSetBinary(mime string, data []byte) e
 
 	err = cmd.Start()
 	if err != nil {
-		msg := strings.TrimSpace(string(stderr.Bytes()))
+		msg := strings.TrimSpace(stderr.String())
 		return fmt.Errorf("%s", msg)
 	}
-	
-	stdin.Write(data)
+
+	_, err = stdin.Write(data)
+	if err != nil {
+		return err
+	}
+
 	stdin.Close()
 
 	// TODO: Refactor.
@@ -86,12 +90,12 @@ func (manager *DesktopManagerCtx) ClipboardGetTargets() ([]string, error) {
 
 	err := cmd.Run()
 	if err != nil {
-		msg := strings.TrimSpace(string(stderr.Bytes()))
+		msg := strings.TrimSpace(stderr.String())
 		return nil, fmt.Errorf("%s", msg)
 	}
 
 	var response []string
-	targets := strings.Split(string(stdout.Bytes()), "\n")
+	targets := strings.Split(stdout.String(), "\n")
 	for _, target := range targets {
 		if target == "" {
 			continue

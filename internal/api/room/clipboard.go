@@ -1,8 +1,9 @@
 package room
 
 import (
-	"bytes"
-	"strings"
+	// TODO: Unused now.
+	//"bytes"
+	//"strings"
 	"net/http"
 
 	"demodesk/neko/internal/utils"
@@ -12,16 +13,6 @@ import (
 type ClipboardPayload struct {
 	Text string `json:"text,omitempty"`
 	HTML string `json:"html,omitempty"`
-}
-
-func (h *RoomHandler) clipboardGetTargets(w http.ResponseWriter, r *http.Request) {
-	targets, err := h.desktop.ClipboardGetTargets()
-	if err != nil {
-		utils.HttpInternalServerError(w, err)
-		return
-	}
-
-	utils.HttpSuccess(w, targets)
 }
 
 func (h *RoomHandler) clipboardGetText(w http.ResponseWriter, r *http.Request) {
@@ -69,6 +60,7 @@ func (h *RoomHandler) clipboardGetImage(w http.ResponseWriter, r *http.Request) 
 	w.Write(bytes)
 }
 
+/* TODO: Unused now.
 func (h *RoomHandler) clipboardSetImage(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseMultipartForm(MAX_UPLOAD_SIZE)
 	if err != nil {
@@ -94,7 +86,11 @@ func (h *RoomHandler) clipboardSetImage(w http.ResponseWriter, r *http.Request) 
 	}
 
 	buffer := new(bytes.Buffer)
-	buffer.ReadFrom(file)
+	_, err = buffer.ReadFrom(file)
+	if err != nil {
+		utils.HttpInternalServerError(w, err)
+		return
+	}
 
 	err = h.desktop.ClipboardSetBinary("image/png", buffer.Bytes())
 	if err != nil {
@@ -104,3 +100,14 @@ func (h *RoomHandler) clipboardSetImage(w http.ResponseWriter, r *http.Request) 
 
 	utils.HttpSuccess(w)
 }
+
+func (h *RoomHandler) clipboardGetTargets(w http.ResponseWriter, r *http.Request) {
+	targets, err := h.desktop.ClipboardGetTargets()
+	if err != nil {
+		utils.HttpInternalServerError(w, err)
+		return
+	}
+
+	utils.HttpSuccess(w, targets)
+}
+*/
