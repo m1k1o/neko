@@ -8,6 +8,7 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"demodesk/neko/internal/types"
+	"demodesk/neko/internal/types/codec"
 	"demodesk/neko/internal/config"
 	"demodesk/neko/internal/capture/gst"
 )
@@ -125,11 +126,11 @@ func (manager *CaptureManagerCtx) Screencast() types.ScreencastManager {
 	return manager.screencast
 }
 
-func (manager *CaptureManagerCtx) VideoCodec() string {
+func (manager *CaptureManagerCtx) VideoCodec() codec.RTP {
 	return manager.config.VideoCodec
 }
 
-func (manager *CaptureManagerCtx) AudioCodec() string {
+func (manager *CaptureManagerCtx) AudioCodec() codec.RTP {
 	return manager.config.AudioCodec
 }
 
@@ -178,7 +179,7 @@ func (manager *CaptureManagerCtx) createVideoPipeline() {
 	var err error
 
 	manager.logger.Info().
-		Str("video_codec", manager.config.VideoCodec).
+		Str("video_codec", manager.config.VideoCodec.Name).
 		Str("video_display", manager.config.Display).
 		Str("video_params", manager.config.VideoParams).
 		Msgf("creating video pipeline")
@@ -212,7 +213,7 @@ func (manager *CaptureManagerCtx) createAudioPipeline() {
 	var err error
 
 	manager.logger.Info().
-		Str("audio_codec", manager.config.AudioCodec).
+		Str("audio_codec", manager.config.AudioCodec.Name).
 		Str("audio_display", manager.config.Device).
 		Str("audio_params", manager.config.AudioParams).
 		Msgf("creating audio pipeline")

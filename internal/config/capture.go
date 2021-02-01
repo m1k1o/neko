@@ -1,17 +1,18 @@
 package config
 
 import (
-	"github.com/pion/webrtc/v2"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+
+	"demodesk/neko/internal/types/codec"
 )
 
 type Capture struct {
 	Display      string
 	Device       string
-	AudioCodec   string
+	AudioCodec   codec.RTP
 	AudioParams  string
-	VideoCodec   string
+	VideoCodec   codec.RTP
 	VideoParams  string
 
 	BroadcastPipeline string
@@ -110,24 +111,30 @@ func (Capture) Init(cmd *cobra.Command) error {
 }
 
 func (s *Capture) Set() {
-	videoCodec := webrtc.VP8
+	var videoCodec codec.RTP
 	if viper.GetBool("vp8") {
-		videoCodec = webrtc.VP8
+		videoCodec = codec.New(codec.VP8)
 	} else if viper.GetBool("vp9") {
-		videoCodec = webrtc.VP9
+		videoCodec = codec.New(codec.VP9)
 	} else if viper.GetBool("h264") {
-		videoCodec = webrtc.H264
+		videoCodec = codec.New(codec.H264)
+	} else {
+		// default
+		videoCodec = codec.New(codec.VP8)
 	}
 
-	audioCodec := webrtc.Opus
+	var audioCodec codec.RTP
 	if viper.GetBool("opus") {
-		audioCodec = webrtc.Opus
+		audioCodec = codec.New(codec.Opus)
 	} else if viper.GetBool("g722") {
-		audioCodec = webrtc.G722
+		audioCodec = codec.New(codec.G722)
 	} else if viper.GetBool("pcmu") {
-		audioCodec = webrtc.PCMU
+		audioCodec = codec.New(codec.PCMU)
 	} else if viper.GetBool("pcma") {
-		audioCodec = webrtc.PCMA
+		audioCodec = codec.New(codec.PCMA)
+	} else {
+		// default
+		audioCodec = codec.New(codec.Opus)
 	}
 
 	s.Device = viper.GetString("device")

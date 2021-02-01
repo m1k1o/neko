@@ -1,9 +1,12 @@
 package types
 
-type Sample struct {
-	Data    []byte
-	Samples uint32
-}
+import (
+	"github.com/pion/webrtc/v3/pkg/media"
+
+	"demodesk/neko/internal/types/codec"
+)
+
+type Sample media.Sample
 
 type BroadcastManager interface {
 	Start(url string) error
@@ -25,8 +28,8 @@ type CaptureManager interface {
 	Broadcast() BroadcastManager
 	Screencast() ScreencastManager
 
-	VideoCodec() string
-	AudioCodec() string
+	VideoCodec() codec.RTP
+	AudioCodec() codec.RTP
 
 	OnVideoFrame(listener func(sample Sample))
 	OnAudioFrame(listener func(sample Sample))
