@@ -5,7 +5,7 @@ import (
 	"encoding/binary"
 	"strconv"
 
-	"github.com/pion/webrtc/v2"
+	"github.com/pion/webrtc/v3"
 )
 
 const (
