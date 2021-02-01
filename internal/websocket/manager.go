@@ -120,6 +120,7 @@ func (ws *WebSocketManagerCtx) Start() {
 		data, err := ws.desktop.ClipboardGetText()
 		if err != nil {
 			ws.logger.Warn().Err(err).Msg("could not get clipboard content")
+			return
 		}
 
 		if err := session.Send(message.ClipboardData{
