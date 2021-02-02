@@ -7,9 +7,10 @@ const (
 )
 
 const (
-	SIGNAL_REQUEST = "signal/request"
-	SIGNAL_ANSWER  = "signal/answer"
-	SIGNAL_PROVIDE = "signal/provide"
+	SIGNAL_REQUEST   = "signal/request"
+	SIGNAL_ANSWER    = "signal/answer"
+	SIGNAL_PROVIDE   = "signal/provide"
+	SIGNAL_CANDIDATE = "signal/candidate"
 )
 
 const (

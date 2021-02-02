@@ -17,6 +17,10 @@ func (webrtc_peer *WebRTCPeerCtx) SignalAnswer(sdp string) error {
 	})
 }
 
+func (webrtc_peer *WebRTCPeerCtx) SignalCandidate(candidate webrtc.ICECandidateInit) error {
+	return webrtc_peer.connection.AddICECandidate(candidate)
+}
+
 func (webrtc_peer *WebRTCPeerCtx) Destroy() error {
 	if webrtc_peer.connection == nil || webrtc_peer.connection.ConnectionState() != webrtc.PeerConnectionStateConnected {
 		return nil

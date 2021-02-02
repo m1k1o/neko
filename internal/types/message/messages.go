@@ -1,6 +1,8 @@
 package message
 
 import (
+	"github.com/pion/webrtc/v3"
+
 	"demodesk/neko/internal/types"
 )
 
@@ -43,6 +45,11 @@ type SignalProvide struct {
 	SDP   string   `json:"sdp"`
 	Lite  bool     `json:"lite"`
 	ICE   []string `json:"ice"`
+}
+
+type SignalCandidate struct {
+	Event string `json:"event,omitempty"`
+	*webrtc.ICECandidateInit
 }
 
 type SignalAnswer struct {

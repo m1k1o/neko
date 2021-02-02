@@ -1,6 +1,10 @@
 package types
 
-import "net/http"
+import (
+	"net/http"
+
+	"github.com/pion/webrtc/v3"
+)
 
 type MemberProfile struct {
 	Secret             string `json:"secret,omitempty"`
@@ -58,6 +62,7 @@ type Session interface {
 	SetWebRTCPeer(webrtc_peer WebRTCPeer)
 	SetWebRTCConnected(connected bool)
 	SignalAnswer(sdp string) error
+	SignalCandidate(candidate webrtc.ICECandidateInit) error
 }
 
 type SessionManager interface {

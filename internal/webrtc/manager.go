@@ -12,6 +12,8 @@ import (
 
 	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/types/codec"
+	"demodesk/neko/internal/types/event"
+	"demodesk/neko/internal/types/message"
 	"demodesk/neko/internal/config"
 )
 
@@ -86,44 +88,56 @@ func (manager *WebRTCManagerCtx) ICEServers() []string {
 }
 
 func (manager *WebRTCManagerCtx) CreatePeer(session types.Session) (*webrtc.SessionDescription, error) {
-	// Create MediaEngine
+	logger := manager.logger.With().Str("id", session.ID()).Logger()
+
 	engine, err := manager.mediaEngine()
 	if err != nil {
 		return nil, err
 	}
 
 	// Custom settings & configuration
-	settings := manager.apiSettings(session)
+	settings := manager.apiSettings(logger)
 	configuration := manager.apiConfiguration()
 
 	// Create NewAPI with MediaEngine and SettingEngine
 	api := webrtc.NewAPI(webrtc.WithMediaEngine(engine), webrtc.WithSettingEngine(*settings))
 
-	// Create NewPeerConnection
 	connection, err := api.NewPeerConnection(*configuration)
 	if err != nil {
 		return nil, err
 	}
 
-	// Register video, audio & data tracks
+	// Asynchronously send local ICE Candidates
+	connection.OnICECandidate(func(candidate *webrtc.ICECandidate) {
+		if candidate == nil {
+			logger.Debug().Msg("all local ice candidates sent")
+			return
+		}
+
+		ICECandidateInit := candidate.ToJSON()
+		err := session.Send(
+			message.SignalCandidate{
+				Event:            event.SIGNAL_CANDIDATE,
+				ICECandidateInit: &ICECandidateInit,
+			})
+
+		if err != nil {
+			logger.Warn().Err(err).Msg("sending ice candidate failed")
+		}
+	})
+
 	if err := manager.registerTracks(connection); err != nil {
 		return nil, err
 	}
 
-	// Create Offer
 	offer, err := connection.CreateOffer(nil)
 	if err != nil {
 		return nil, err
 	}
 
-	// TODO: Refactor, send request to client.
-	gatherComplete := webrtc.GatheringCompletePromise(connection)
-
 	if err := connection.SetLocalDescription(offer); err != nil {
 		return nil, err
 	}
-
-	<-gatherComplete
 
 	connection.OnConnectionStateChange(func(state webrtc.PeerConnectionState) {
 		switch state {
@@ -145,7 +159,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session) (*webrtc.Sess
 			}
 
 			if err = manager.handle(message); err != nil {
-				manager.logger.Warn().Err(err).Msg("data handle failed")
+				logger.Warn().Err(err).Msg("data handle failed")
 			}
 		})
 	})
@@ -176,10 +190,10 @@ func (manager *WebRTCManagerCtx) mediaEngine() (*webrtc.MediaEngine, error) {
 	return engine, nil
 }
 
-func (manager *WebRTCManagerCtx) apiSettings(session types.Session) *webrtc.SettingEngine {
+func (manager *WebRTCManagerCtx) apiSettings(logger zerolog.Logger) *webrtc.SettingEngine {
 	settings := &webrtc.SettingEngine{
 		LoggerFactory: loggerFactory{
-			logger: manager.logger.With().Str("id", session.ID()).Logger(),
+			logger: logger,
 		},
 	}
 

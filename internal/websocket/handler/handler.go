@@ -54,6 +54,11 @@ func (h *MessageHandlerCtx) Message(session types.Session, raw []byte) bool {
 		err = utils.Unmarshal(payload, raw, func() error {
 			return h.signalAnswer(session, payload)
 		})
+	case event.SIGNAL_CANDIDATE:
+		payload := &message.SignalCandidate{}
+		err = utils.Unmarshal(payload, raw, func() error {
+			return h.signalCandidate(session, payload)
+		})
 
 	// Control Events
 	case event.CONTROL_RELEASE:
