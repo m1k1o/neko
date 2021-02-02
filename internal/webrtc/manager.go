@@ -106,7 +106,9 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session) (*webrtc.Sess
 	}
 
 	// Register video, audio & data tracks
-	manager.registerTracks(connection)
+	if err := manager.registerTracks(connection); err != nil {
+		return nil, err
+	}
 
 	// Create Offer
 	offer, err := connection.CreateOffer(nil)
