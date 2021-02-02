@@ -126,11 +126,11 @@ func (manager *CaptureManagerCtx) Screencast() types.ScreencastManager {
 	return manager.screencast
 }
 
-func (manager *CaptureManagerCtx) VideoCodec() codec.RTP {
+func (manager *CaptureManagerCtx) VideoCodec() codec.RTPCodec {
 	return manager.config.VideoCodec
 }
 
-func (manager *CaptureManagerCtx) AudioCodec() codec.RTP {
+func (manager *CaptureManagerCtx) AudioCodec() codec.RTPCodec {
 	return manager.config.AudioCodec
 }
 

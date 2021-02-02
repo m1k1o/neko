@@ -28,8 +28,8 @@ type WebRTCManagerCtx struct {
 	logger     zerolog.Logger
 	videoTrack *webrtc.TrackLocalStaticSample
 	audioTrack *webrtc.TrackLocalStaticSample
-	videoCodec codec.RTP
-	audioCodec codec.RTP
+	videoCodec codec.RTPCodec
+	audioCodec codec.RTPCodec
 	desktop    types.DesktopManager
 	capture    types.CaptureManager
 	config     *config.WebRTC

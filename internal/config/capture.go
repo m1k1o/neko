@@ -10,9 +10,9 @@ import (
 type Capture struct {
 	Display      string
 	Device       string
-	AudioCodec   codec.RTP
+	AudioCodec   codec.RTPCodec
 	AudioParams  string
-	VideoCodec   codec.RTP
+	VideoCodec   codec.RTPCodec
 	VideoParams  string
 
 	BroadcastPipeline string
@@ -111,30 +111,30 @@ func (Capture) Init(cmd *cobra.Command) error {
 }
 
 func (s *Capture) Set() {
-	var videoCodec codec.RTP
+	var videoCodec codec.RTPCodec
 	if viper.GetBool("vp8") {
-		videoCodec = codec.New(codec.VP8)
+		videoCodec = codec.VP8()
 	} else if viper.GetBool("vp9") {
-		videoCodec = codec.New(codec.VP9)
+		videoCodec = codec.VP9()
 	} else if viper.GetBool("h264") {
-		videoCodec = codec.New(codec.H264)
+		videoCodec = codec.H264()
 	} else {
 		// default
-		videoCodec = codec.New(codec.VP8)
+		videoCodec = codec.VP8()
 	}
 
-	var audioCodec codec.RTP
+	var audioCodec codec.RTPCodec
 	if viper.GetBool("opus") {
-		audioCodec = codec.New(codec.Opus)
+		audioCodec = codec.Opus()
 	} else if viper.GetBool("g722") {
-		audioCodec = codec.New(codec.G722)
+		audioCodec = codec.G722()
 	} else if viper.GetBool("pcmu") {
-		audioCodec = codec.New(codec.PCMU)
+		audioCodec = codec.PCMU()
 	} else if viper.GetBool("pcma") {
-		audioCodec = codec.New(codec.PCMA)
+		audioCodec = codec.PCMA()
 	} else {
 		// default
-		audioCodec = codec.New(codec.Opus)
+		audioCodec = codec.Opus()
 	}
 
 	s.Device = viper.GetString("device")

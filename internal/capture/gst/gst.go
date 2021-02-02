@@ -67,11 +67,11 @@ func CreateJPEGPipeline(pipelineDisplay string, pipelineSrc string, rate string,
 }
 
 // CreateAppPipeline creates a GStreamer Pipeline
-func CreateAppPipeline(codecRTP codec.RTP, pipelineDevice string, pipelineSrc string) (*Pipeline, error) {
+func CreateAppPipeline(codecRTP codec.RTPCodec, pipelineDevice string, pipelineSrc string) (*Pipeline, error) {
 	var pipelineStr string
 
 	switch codecRTP.Name {
-	case codec.VP8:
+	case "vp8":
 		// https://gstreamer.freedesktop.org/documentation/vpx/vp8enc.html?gi-language=c
 		// gstreamer1.0-plugins-good
 		// vp8enc error-resilient=partitions keyframe-max-dist=10 auto-alt-ref=true cpu-used=5 deadline=1
@@ -80,7 +80,7 @@ func CreateAppPipeline(codecRTP codec.RTP, pipelineDevice string, pipelineSrc st
 		}
 
 		pipelineStr = fmt.Sprintf(videoSrc + "vp8enc cpu-used=8 threads=2 deadline=1 error-resilient=partitions keyframe-max-dist=10 auto-alt-ref=true" + appSink, pipelineDevice)
-	case codec.VP9:
+	case "vp9":
 		// https://gstreamer.freedesktop.org/documentation/vpx/vp9enc.html?gi-language=c
 		// gstreamer1.0-plugins-good
 		// vp9enc
@@ -89,7 +89,7 @@ func CreateAppPipeline(codecRTP codec.RTP, pipelineDevice string, pipelineSrc st
 		}
 
 		pipelineStr = fmt.Sprintf(videoSrc + "vp9enc" + appSink, pipelineDevice)
-	case codec.H264:
+	case "h264":
 		if err := CheckPlugins([]string{"ximagesrc"}); err != nil {
 			return nil, err
 		}
@@ -112,7 +112,7 @@ func CreateAppPipeline(codecRTP codec.RTP, pipelineDevice string, pipelineSrc st
 		}
 
 		return nil, err
-	case codec.Opus:
+	case "opus":
 		// https://gstreamer.freedesktop.org/documentation/opus/opusenc.html
 		// gstreamer1.0-plugins-base
 		// opusenc
@@ -121,7 +121,7 @@ func CreateAppPipeline(codecRTP codec.RTP, pipelineDevice string, pipelineSrc st
 		}
 
 		pipelineStr = fmt.Sprintf(audioSrc + "opusenc" + appSink, pipelineDevice)
-	case codec.G722:
+	case "g722":
 		// https://gstreamer.freedesktop.org/documentation/libav/avenc_g722.html?gi-language=c
 		// gstreamer1.0-libav
 		// avenc_g722
@@ -130,7 +130,7 @@ func CreateAppPipeline(codecRTP codec.RTP, pipelineDevice string, pipelineSrc st
 		}
 
 		pipelineStr = fmt.Sprintf(audioSrc + "avenc_g722" + appSink, pipelineDevice)
-	case codec.PCMU:
+	case "pcmu":
 		// https://gstreamer.freedesktop.org/documentation/mulaw/mulawenc.html?gi-language=c
 		// gstreamer1.0-plugins-good
 		// audio/x-raw, rate=8000 ! mulawenc
@@ -139,7 +139,7 @@ func CreateAppPipeline(codecRTP codec.RTP, pipelineDevice string, pipelineSrc st
 		}
 
 		pipelineStr = fmt.Sprintf(audioSrc + "audio/x-raw, rate=8000 ! mulawenc" + appSink, pipelineDevice)
-	case codec.PCMA:
+	case "pcma":
 		// https://gstreamer.freedesktop.org/documentation/alaw/alawenc.html?gi-language=c
 		// gstreamer1.0-plugins-good
 		// audio/x-raw, rate=8000 ! alawenc

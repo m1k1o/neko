@@ -28,8 +28,8 @@ type CaptureManager interface {
 	Broadcast() BroadcastManager
 	Screencast() ScreencastManager
 
-	VideoCodec() codec.RTP
-	AudioCodec() codec.RTP
+	VideoCodec() codec.RTPCodec
+	AudioCodec() codec.RTPCodec
 
 	OnVideoFrame(listener func(sample Sample))
 	OnAudioFrame(listener func(sample Sample))

@@ -2,112 +2,123 @@ package codec
 
 import "github.com/pion/webrtc/v3"
 
-const (
-	VP8 = "vp8"
-	VP9 = "vp9"
-	H264 = "h264"
-	Opus = "opus"
-	G722 = "g722"
-	PCMU = "pcmu"
-	PCMA = "pcma"
-)
-
-type RTP struct {
+type RTPCodec struct {
 	Name        string
 	PayloadType webrtc.PayloadType
 	Type        webrtc.RTPCodecType
 	Capability  webrtc.RTPCodecCapability
 }
 
-func New(codecType string) RTP {
-	codec := RTP{}
+func (codec *RTPCodec) Register(engine *webrtc.MediaEngine) error {
+	return engine.RegisterCodec(webrtc.RTPCodecParameters{
+		RTPCodecCapability: codec.Capability,
+		PayloadType:        codec.PayloadType,
+	}, codec.Type)
+}
 
-	switch codecType {
-	case "vp8":
-		codec.Name = "vp8"
-		codec.PayloadType = 96
-		codec.Type = webrtc.RTPCodecTypeVideo
-		codec.Capability = webrtc.RTPCodecCapability{
+func VP8() RTPCodec {
+	return RTPCodec{
+		Name: "vp8",
+		PayloadType: 96,
+		Type: webrtc.RTPCodecTypeVideo,
+		Capability: webrtc.RTPCodecCapability{
 			MimeType: webrtc.MimeTypeVP8,
 			ClockRate: 90000,
 			Channels: 0,
 			SDPFmtpLine: "",
 			RTCPFeedback: nil,
-		}
-	case "vp9":
-		codec.Name = "vp9"
-		codec.PayloadType = 98
-		codec.Type = webrtc.RTPCodecTypeVideo
-		codec.Capability = webrtc.RTPCodecCapability{
+		},
+	}
+}
+
+// TODO: Profile ID.
+func VP9() RTPCodec {
+	return RTPCodec{
+		Name: "vp9",
+		PayloadType: 98,
+		Type: webrtc.RTPCodecTypeVideo,
+		Capability: webrtc.RTPCodecCapability{
 			MimeType: webrtc.MimeTypeVP9,
 			ClockRate: 90000,
 			Channels: 0,
 			SDPFmtpLine: "profile-id=0",
 			RTCPFeedback: nil,
-		}
-	case "h264":
-		codec.Name = "h264"
-		codec.PayloadType = 102
-		codec.Type = webrtc.RTPCodecTypeVideo
-		codec.Capability = webrtc.RTPCodecCapability{
+		},
+	}
+}
+
+// TODO: Profile ID.
+func H264() RTPCodec {
+	return RTPCodec{
+		Name: "h264",
+		PayloadType: 102,
+		Type: webrtc.RTPCodecTypeVideo,
+		Capability: webrtc.RTPCodecCapability{
 			MimeType: webrtc.MimeTypeH264,
 			ClockRate: 90000,
 			Channels: 0,
 			SDPFmtpLine: "level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42001f",
 			RTCPFeedback: nil,
-		}
-	case "opus":
-		codec.Name = "opus"
-		codec.PayloadType = 111
-		codec.Type = webrtc.RTPCodecTypeAudio
-		codec.Capability = webrtc.RTPCodecCapability{
+		},
+	}
+}
+
+func Opus() RTPCodec {
+	return RTPCodec{
+		Name: "opus",
+		PayloadType: 111,
+		Type: webrtc.RTPCodecTypeAudio,
+		Capability: webrtc.RTPCodecCapability{
 			MimeType: webrtc.MimeTypeOpus,
 			ClockRate: 48000,
 			Channels: 2,
 			SDPFmtpLine: "",
 			RTCPFeedback: nil,
-		}
-	case "g722":
-		codec.Name = "g722"
-		codec.PayloadType = 9
-		codec.Type = webrtc.RTPCodecTypeAudio
-		codec.Capability = webrtc.RTPCodecCapability{
+		},
+	}
+}
+
+func G722() RTPCodec {
+	return RTPCodec{
+		Name: "g722",
+		PayloadType: 9,
+		Type: webrtc.RTPCodecTypeAudio,
+		Capability: webrtc.RTPCodecCapability{
 			MimeType: webrtc.MimeTypeG722,
 			ClockRate: 8000,
 			Channels: 0,
 			SDPFmtpLine: "",
 			RTCPFeedback: nil,
-		}
-	case "pcmu":
-		codec.Name = "pcmu"
-		codec.PayloadType = 0
-		codec.Type = webrtc.RTPCodecTypeAudio
-		codec.Capability = webrtc.RTPCodecCapability{
+		},
+	}
+}
+
+func PCMU() RTPCodec {
+	return RTPCodec{
+		Name: "pcmu",
+		PayloadType: 0,
+		Type: webrtc.RTPCodecTypeAudio,
+		Capability: webrtc.RTPCodecCapability{
 			MimeType: webrtc.MimeTypePCMU,
 			ClockRate: 8000,
 			Channels: 0,
 			SDPFmtpLine: "",
 			RTCPFeedback: nil,
-		}
-	case "pcma":
-		codec.Name = "pcma"
-		codec.PayloadType = 8
-		codec.Type = webrtc.RTPCodecTypeAudio
-		codec.Capability = webrtc.RTPCodecCapability{
+		},
+	}
+}
+
+func PCMA() RTPCodec {
+	return RTPCodec{
+		Name: "pcma",
+		PayloadType: 8,
+		Type: webrtc.RTPCodecTypeAudio,
+		Capability: webrtc.RTPCodecCapability{
 			MimeType: webrtc.MimeTypePCMA,
 			ClockRate: 8000,
 			Channels: 0,
 			SDPFmtpLine: "",
 			RTCPFeedback: nil,
-		}
+		},
 	}
-
-	return codec
-}
-
-func (codec *RTP) Register(engine *webrtc.MediaEngine) error {
-	return engine.RegisterCodec(webrtc.RTPCodecParameters{
-		RTPCodecCapability: codec.Capability,
-		PayloadType:        codec.PayloadType,
-	}, codec.Type)
 }
