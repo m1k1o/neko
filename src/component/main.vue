@@ -320,6 +320,9 @@
               this.websocket.send('signal/answer', { sdp })
             } catch (e) {}
             break
+          case 'signal/candidate':
+            this.webrtc.setCandidate(payload)
+            break
         }
       })
       this.websocket.on('connecting', () => {
@@ -355,6 +358,9 @@
         if (this.autoplay) {
           this._video.play()
         }
+      })
+      this.webrtc.on('candidate', (candidate: RTCIceCandidateInit) => {
+        this.websocket.send('signal/candidate', candidate)
       })
       this.webrtc.on('connecting', () => {
         Vue.set(this.state.connection, 'webrtc', 'connecting')

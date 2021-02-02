@@ -13,6 +13,7 @@ export interface NekoWebRTCEvents {
   connected: () => void
   disconnected: (error?: Error) => void
   track: (event: RTCTrackEvent) => void
+  candidate: (candidate: RTCIceCandidateInit) => void
 }
 
 export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
@@ -38,6 +39,16 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
       typeof this._channel !== 'undefined' &&
       this._channel.readyState == 'open'
     )
+  }
+
+  public async setCandidate(candidate: RTCIceCandidateInit) {
+    if (!this._peer) {
+      this._log.warn(`could not add remote ICE candidate: peer does not exist!`)
+      return
+    }
+
+    this._peer.addIceCandidate(candidate)
+    this._log.debug(`adding remote ICE candidate`, candidate)
   }
 
   public async connect(sdp: string, lite: boolean, servers: string[]): Promise<string> {
@@ -66,6 +77,17 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
 
     this._peer.onsignalingstatechange = (event) => {
       this._log.debug(`peer signaling state changed`, this._peer ? this._peer.signalingState : undefined)
+    }
+
+    this._peer.onicecandidate = (event: RTCPeerConnectionIceEvent) => {
+      if (!event.candidate) {
+        this._log.debug(`sent all remote ICE candidates`)
+        return
+      }
+
+      const init = event.candidate.toJSON()
+      this.emit('candidate', init)
+      this._log.debug(`sending remote ICE candidate`, init)
     }
 
     this._peer.oniceconnectionstatechange = (event) => {

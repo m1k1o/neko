@@ -116,6 +116,11 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
     // TODO: Handle.
   }
 
+  protected [EVENT.SIGNAL_CANDIDATE]({ event, ...candidate }: message.SignalCandidate) {
+    this._log.debug('EVENT.SIGNAL_CANDIDATE')
+    // TODO: Handle.
+  }
+
   /////////////////////////////
   // Member Events
   /////////////////////////////

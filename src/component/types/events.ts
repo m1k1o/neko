@@ -5,6 +5,7 @@ export const SYSTEM_DISCONNECT = 'system/disconnect'
 export const SIGNAL_REQUEST = 'signal/request'
 export const SIGNAL_ANSWER = 'signal/answer'
 export const SIGNAL_PROVIDE = 'signal/provide'
+export const SIGNAL_CANDIDATE = 'signal/candidate'
 
 export const MEMBER_CREATED = 'member/created'
 export const MEMBER_DELETED = 'member/deleted'

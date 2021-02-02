@@ -39,6 +39,10 @@ export interface SignalProvide {
   ice: string[]
 }
 
+export interface SignalCandidate extends RTCIceCandidateInit {
+  event: string | undefined
+}
+
 export interface SignalAnswer {
   event: string | undefined
   sdp: string
