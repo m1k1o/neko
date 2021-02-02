@@ -41,9 +41,10 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
     )
   }
 
+  candidates: RTCIceCandidateInit[] = []
   public async setCandidate(candidate: RTCIceCandidateInit) {
     if (!this._peer) {
-      this._log.warn(`could not add remote ICE candidate: peer does not exist!`)
+      this.candidates.push(candidate)
       return
     }
 
@@ -69,6 +70,15 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
       this._peer = new RTCPeerConnection({
         iceServers: [{ urls: servers }],
       })
+    }
+
+    if (this.candidates.length > 0) {
+      for (const candidate of this.candidates) {
+        this._peer.addIceCandidate(candidate)
+      }
+
+      this._log.debug(`added ${this.candidates.length} remote ICE candidates`, this.candidates)
+      this.candidates = []
     }
 
     this._peer.onconnectionstatechange = (event) => {
