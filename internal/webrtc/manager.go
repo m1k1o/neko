@@ -77,84 +77,48 @@ func (manager *WebRTCManagerCtx) Shutdown() error {
 	return nil
 }
 
-func (manager *WebRTCManagerCtx) CreatePeer(session types.Session) (string, bool, []string, error) {
-	configuration := &webrtc.Configuration{
-		ICEServers: []webrtc.ICEServer{
-			{
-				URLs: manager.config.ICEServers,
-			},
-		},
-		SDPSemantics: webrtc.SDPSemanticsUnifiedPlanWithFallback,
-	}
+func (manager *WebRTCManagerCtx) ICELite() bool {
+	return manager.config.ICELite
+}
 
-	settings := webrtc.SettingEngine{
-		LoggerFactory: loggerFactory{
-			logger: manager.logger.With().Str("id", session.ID()).Logger(),
-		},
-	}
+func (manager *WebRTCManagerCtx) ICEServers() []string {
+	return manager.config.ICEServers
+}
 
-	if manager.config.ICELite {
-		configuration = &webrtc.Configuration{
-			SDPSemantics: webrtc.SDPSemanticsUnifiedPlanWithFallback,
-		}
-
-		settings.SetLite(true)
-	}
-
-	err := settings.SetEphemeralUDPPortRange(manager.config.EphemeralMin, manager.config.EphemeralMax)
-	if err != nil {
-		return "", manager.config.ICELite, manager.config.ICEServers, err
-	}
-
-	settings.SetNAT1To1IPs(manager.config.NAT1To1IPs, webrtc.ICECandidateTypeHost)
-
+func (manager *WebRTCManagerCtx) CreatePeer(session types.Session) (*webrtc.SessionDescription, error) {
 	// Create MediaEngine
-	engine := &webrtc.MediaEngine{}
-
-	if err := manager.videoCodec.Register(engine); err != nil {
-		return "", manager.config.ICELite, manager.config.ICEServers, err
+	engine, err := manager.mediaEngine()
+	if err != nil {
+		return nil, err
 	}
 
-	if err := manager.audioCodec.Register(engine); err != nil {
-		return "", manager.config.ICELite, manager.config.ICEServers, err
-	}
+	// Custom settings & configuration
+	settings := manager.apiSettings(session)
+	configuration := manager.apiConfiguration()
 
 	// Create NewAPI with MediaEngine and SettingEngine
-	api := webrtc.NewAPI(webrtc.WithMediaEngine(engine), webrtc.WithSettingEngine(settings))
+	api := webrtc.NewAPI(webrtc.WithMediaEngine(engine), webrtc.WithSettingEngine(*settings))
 
 	// Create NewPeerConnection
 	connection, err := api.NewPeerConnection(*configuration)
 	if err != nil {
-		return "", manager.config.ICELite, manager.config.ICEServers, err
+		return nil, err
 	}
 
-	_, err = connection.CreateDataChannel("data", nil)
-	if err != nil {
-		return "", manager.config.ICELite, manager.config.ICEServers, err
-	}
+	// Register video, audio & data tracks
+	manager.registerTracks(connection)
 
-	if _, err = connection.AddTransceiverFromTrack(manager.videoTrack, webrtc.RtpTransceiverInit{
-		Direction: webrtc.RTPTransceiverDirectionSendonly,
-	}); err != nil {
-		return "", manager.config.ICELite, manager.config.ICEServers, err
-	}
-
-	if _, err = connection.AddTransceiverFromTrack(manager.audioTrack, webrtc.RtpTransceiverInit{
-		Direction: webrtc.RTPTransceiverDirectionSendonly,
-	}); err != nil {
-		return "", manager.config.ICELite, manager.config.ICEServers, err
-	}
-
+	// Create Offer
 	offer, err := connection.CreateOffer(nil)
 	if err != nil {
-		return "", manager.config.ICELite, manager.config.ICEServers, err
+		return nil, err
 	}
 
 	// TODO: Refactor, send request to client.
 	gatherComplete := webrtc.GatheringCompletePromise(connection)
 
 	if err := connection.SetLocalDescription(offer); err != nil {
-		return "", manager.config.ICELite, manager.config.ICEServers, err
+		return nil, err
 	}
 
 	<-gatherComplete
@@ -187,10 +151,74 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session) (string, bool
 	session.SetWebRTCPeer(&WebRTCPeerCtx{
 		api:           api,
 		engine:        engine,
-		settings:      &settings,
+		settings:      settings,
 		connection:    connection,
 		configuration: configuration,
 	})
 
-	return connection.LocalDescription().SDP, manager.config.ICELite, manager.config.ICEServers, nil
+	return connection.LocalDescription(), nil
+}
+
+func (manager *WebRTCManagerCtx) mediaEngine() (*webrtc.MediaEngine, error) {
+	// Create MediaEngine
+	engine := &webrtc.MediaEngine{}
+
+	if err := manager.videoCodec.Register(engine); err != nil {
+		return nil, err
+	}
+
+	if err := manager.audioCodec.Register(engine); err != nil {
+		return nil, err
+	}
+
+	return engine, nil
+}
+
+func (manager *WebRTCManagerCtx) apiSettings(session types.Session) *webrtc.SettingEngine {
+	settings := &webrtc.SettingEngine{
+		LoggerFactory: loggerFactory{
+			logger: manager.logger.With().Str("id", session.ID()).Logger(),
+		},
+	}
+
+	//nolint
+	settings.SetEphemeralUDPPortRange(manager.config.EphemeralMin, manager.config.EphemeralMax)
+	settings.SetNAT1To1IPs(manager.config.NAT1To1IPs, webrtc.ICECandidateTypeHost)
+	settings.SetLite(manager.config.ICELite)
+	
+	return settings
+}
+
+func (manager *WebRTCManagerCtx) apiConfiguration() *webrtc.Configuration {
+	if manager.config.ICELite {
+		return &webrtc.Configuration{
+			SDPSemantics: webrtc.SDPSemanticsUnifiedPlanWithFallback,
+		}
+	}
+
+	return &webrtc.Configuration{
+		ICEServers: []webrtc.ICEServer{
+			{
+				URLs: manager.config.ICEServers,
+			},
+		},
+		SDPSemantics: webrtc.SDPSemanticsUnifiedPlanWithFallback,
+	}
+}
+
+func (manager *WebRTCManagerCtx) registerTracks(connection *webrtc.PeerConnection) error {
+	if _, err := connection.AddTransceiverFromTrack(manager.videoTrack, webrtc.RtpTransceiverInit{
+		Direction: webrtc.RTPTransceiverDirectionSendonly,
+	}); err != nil {
+		return err
+	}
+
+	if _, err := connection.AddTransceiverFromTrack(manager.audioTrack, webrtc.RtpTransceiverInit{
+		Direction: webrtc.RTPTransceiverDirectionSendonly,
+	}); err != nil {
+		return err
+	}
+
+	_, err :=  connection.CreateDataChannel("data", nil)
+	return err
 }

@@ -1,8 +1,6 @@
 package webrtc
 
-import (
-	"github.com/pion/webrtc/v3"
-)
+import "github.com/pion/webrtc/v3"
 
 type WebRTCPeerCtx struct {
 	api           *webrtc.API
