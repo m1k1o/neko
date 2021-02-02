@@ -12,6 +12,7 @@ import (
 
 type WebRTC struct {
 	ICELite      bool
+	ICETrickle   bool
 	ICEServers   []string
 	EphemeralMin uint16
 	EphemeralMax uint16
@@ -39,11 +40,17 @@ func (WebRTC) Init(cmd *cobra.Command) error {
 		return err
 	}
 
+	cmd.PersistentFlags().Bool("icetrickle", true, "configures whether cadidates should be sent asynchronously using Trickle ICE")
+	if err := viper.BindPFlag("icetrickle", cmd.PersistentFlags().Lookup("icetrickle")); err != nil {
+		return err
+	}
+
 	return nil
 }
 
 func (s *WebRTC) Set() {
 	s.ICELite = viper.GetBool("icelite")
+	s.ICETrickle = viper.GetBool("icetrickle")
 	s.ICEServers = viper.GetStringSlice("iceserver")
 	s.NAT1To1IPs = viper.GetStringSlice("nat1to1")
 

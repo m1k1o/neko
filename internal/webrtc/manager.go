@@ -68,6 +68,7 @@ func (manager *WebRTCManagerCtx) Start() {
 
 	manager.logger.Info().
 		Str("ice_lite", fmt.Sprintf("%t", manager.config.ICELite)).
+		Str("ice_trickle", fmt.Sprintf("%t", manager.config.ICETrickle)).
 		Str("ice_servers", strings.Join(manager.config.ICEServers, ",")).
 		Str("ephemeral_port_range", fmt.Sprintf("%d-%d", manager.config.EphemeralMin, manager.config.EphemeralMax)).
 		Str("nat_ips", strings.Join(manager.config.NAT1To1IPs, ",")).
@@ -108,23 +109,25 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session) (*webrtc.Sess
 	}
 
 	// Asynchronously send local ICE Candidates
-	connection.OnICECandidate(func(candidate *webrtc.ICECandidate) {
-		if candidate == nil {
-			logger.Debug().Msg("all local ice candidates sent")
-			return
-		}
+	if manager.config.ICETrickle {
+		connection.OnICECandidate(func(candidate *webrtc.ICECandidate) {
+			if candidate == nil {
+				logger.Debug().Msg("all local ice candidates sent")
+				return
+			}
 
-		ICECandidateInit := candidate.ToJSON()
-		err := session.Send(
-			message.SignalCandidate{
-				Event:            event.SIGNAL_CANDIDATE,
-				ICECandidateInit: &ICECandidateInit,
-			})
+			ICECandidateInit := candidate.ToJSON()
+			err := session.Send(
+				message.SignalCandidate{
+					Event:            event.SIGNAL_CANDIDATE,
+					ICECandidateInit: &ICECandidateInit,
+				})
 
-		if err != nil {
-			logger.Warn().Err(err).Msg("sending ice candidate failed")
-		}
-	})
+			if err != nil {
+				logger.Warn().Err(err).Msg("sending ice candidate failed")
+			}
+		})
+	}
 
 	if err := manager.registerTracks(connection); err != nil {
 		return nil, err
@@ -135,8 +138,19 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session) (*webrtc.Sess
 		return nil, err
 	}
 
-	if err := connection.SetLocalDescription(offer); err != nil {
-		return nil, err
+	if !manager.config.ICETrickle {
+		// Create channel that is blocked until ICE Gathering is complete
+		gatherComplete := webrtc.GatheringCompletePromise(connection)
+
+		if err := connection.SetLocalDescription(offer); err != nil {
+			return nil, err
+		}
+
+		<-gatherComplete
+	} else {
+		if err := connection.SetLocalDescription(offer); err != nil {
+			return nil, err
+		}
 	}
 
 	connection.OnConnectionStateChange(func(state webrtc.PeerConnectionState) {
@@ -201,7 +215,7 @@ func (manager *WebRTCManagerCtx) apiSettings(logger zerolog.Logger) *webrtc.Sett
 	settings.SetEphemeralUDPPortRange(manager.config.EphemeralMin, manager.config.EphemeralMax)
 	settings.SetNAT1To1IPs(manager.config.NAT1To1IPs, webrtc.ICECandidateTypeHost)
 	settings.SetLite(manager.config.ICELite)
-	
+
 	return settings
 }
 
