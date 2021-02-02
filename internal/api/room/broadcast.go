@@ -59,7 +59,7 @@ func (h *RoomHandler) boradcastStop(w http.ResponseWriter, r *http.Request) {
 		utils.HttpUnprocessableEntity(w, "Server is not broadcasting.")
 		return
 	}
-	
+
 	broadcast.Stop()
 
 	h.sessions.AdminBroadcast(

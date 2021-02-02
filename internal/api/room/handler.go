@@ -46,7 +46,7 @@ func (h *RoomHandler) Route(r chi.Router) {
 		// and this content is sent back to client as text in another
 		// clipboard update. Therefore endpoint is not usable!
 		//r.Post("/image", h.clipboardSetImage)
-		
+
 		// TODO: Refactor. If there would be implemented custom target
 		// retrieval, this endpoint would be useful.
 		//r.Get("/targets", h.clipboardGetTargets)

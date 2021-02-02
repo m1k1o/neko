@@ -61,7 +61,7 @@ func (h *RoomHandler) screenConfigurationChange(w http.ResponseWriter, r *http.R
 
 func (h *RoomHandler) screenConfigurationsList(w http.ResponseWriter, r *http.Request) {
 	list := []ScreenConfigurationPayload{}
-	
+
 	ScreenConfigurations := h.desktop.ScreenConfigurations()
 	for _, size := range ScreenConfigurations {
 		for _, fps := range size.Rates {

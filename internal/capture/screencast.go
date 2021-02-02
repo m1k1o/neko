@@ -128,7 +128,7 @@ func (manager *ScreencastManagerCtx) createPipeline() error {
 		Str("video_display", manager.config.Display).
 		Str("screencast_pipeline", manager.config.ScreencastPipeline).
 		Msgf("creating pipeline")
-	
+
 	manager.pipeline, err = gst.CreateJPEGPipeline(
 		manager.config.Display,
 		manager.config.ScreencastPipeline,

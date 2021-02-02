@@ -242,7 +242,7 @@ func (ws *WebSocketManagerCtx) handle(connection *websocket.Conn, session types.
 				} else {
 					ws.logger.Debug().Err(err).Msg("read message error")
 				}
-	
+
 				close(cancel)
 				break
 			}

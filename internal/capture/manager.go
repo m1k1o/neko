@@ -105,7 +105,7 @@ func (manager *CaptureManagerCtx) Start() {
 
 func (manager *CaptureManagerCtx) Shutdown() error {
 	manager.logger.Info().Msgf("capture shutting down")
-	
+
 	if manager.Streaming() {
 		manager.StopStream()
 	}

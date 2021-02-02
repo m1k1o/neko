@@ -104,7 +104,7 @@ func (manager *DesktopManagerCtx) ClipboardGetTargets() ([]string, error) {
 		if !strings.Contains(target, "/") {
 			continue
 		}
-		
+
 		response = append(response, target)
 	}
 

@@ -23,6 +23,6 @@ func (webrtc_peer *WebRTCPeerCtx) Destroy() error {
 	if webrtc_peer.connection == nil || webrtc_peer.connection.ConnectionState() != webrtc.PeerConnectionStateConnected {
 		return nil
 	}
-	
+
 	return webrtc_peer.connection.Close()
 }

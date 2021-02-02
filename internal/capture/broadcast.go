@@ -52,7 +52,7 @@ func (manager *BroacastManagerCtx) createPipeline() error {
 		Str("video_display", manager.config.Display).
 		Str("broadcast_pipeline", manager.config.BroadcastPipeline).
 		Msgf("creating pipeline")
-	
+
 	manager.pipeline, err = gst.CreateRTMPPipeline(
 		manager.config.Device,
 		manager.config.Display,

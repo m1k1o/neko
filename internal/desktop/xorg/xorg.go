@@ -57,7 +57,7 @@ func DisplayOpen(display string) error {
 func DisplayClose() {
 	mu.Lock()
 	defer mu.Unlock()
-	
+
 	C.XDisplayClose()
 }
 

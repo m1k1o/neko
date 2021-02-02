@@ -74,7 +74,7 @@ func (h *RoomHandler) controlRelease(w http.ResponseWriter, r *http.Request) {
 
 	h.desktop.ResetKeys()
 	h.sessions.ClearHost()
-	
+
 	h.sessions.Broadcast(
 		message.ControlHost{
 			Event:   event.CONTROL_HOST,
