@@ -89,7 +89,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session) (string, bool
 
 	settings := webrtc.SettingEngine{
 		LoggerFactory: loggerFactory{
-			logger: manager.logger,
+			logger: manager.logger.With().Str("id", session.ID()).Logger(),
 		},
 	}
 
@@ -108,7 +108,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session) (string, bool
 
 	settings.SetNAT1To1IPs(manager.config.NAT1To1IPs, webrtc.ICECandidateTypeHost)
 
-	// Create MediaEngine based off sdp
+	// Create MediaEngine
 	engine := &webrtc.MediaEngine{}
 
 	if err := manager.videoCodec.Register(engine); err != nil {
@@ -119,10 +119,10 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session) (string, bool
 		return "", manager.config.ICELite, manager.config.ICEServers, err
 	}
 
-	// Create API with MediaEngine and SettingEngine
+	// Create NewAPI with MediaEngine and SettingEngine
 	api := webrtc.NewAPI(webrtc.WithMediaEngine(engine), webrtc.WithSettingEngine(settings))
 
-	// Create new peer connection
+	// Create NewPeerConnection
 	connection, err := api.NewPeerConnection(*configuration)
 	if err != nil {
 		return "", manager.config.ICELite, manager.config.ICEServers, err
@@ -150,18 +150,6 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session) (string, bool
 		return "", manager.config.ICELite, manager.config.ICEServers, err
 	}
 
-	connection.OnDataChannel(func(channel *webrtc.DataChannel) {
-		channel.OnMessage(func(message webrtc.DataChannelMessage) {
-			if !session.IsHost() {
-				return
-			}
-
-			if err = manager.handle(message); err != nil {
-				manager.logger.Warn().Err(err).Msg("data handle failed")
-			}
-		})
-	})
-
 	// TODO: Refactor, send request to client.
 	gatherComplete := webrtc.GatheringCompletePromise(connection)
 
@@ -174,18 +162,26 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session) (string, bool
 	connection.OnConnectionStateChange(func(state webrtc.PeerConnectionState) {
 		switch state {
 		case webrtc.PeerConnectionStateConnected:
-			manager.logger.Info().Str("id", session.ID()).Msg("peer connected")
 			session.SetWebRTCConnected(true)
 		case webrtc.PeerConnectionStateDisconnected:
-			manager.logger.Info().Str("id", session.ID()).Msg("peer disconnected")
-			session.SetWebRTCConnected(false)
+			fallthrough
 		case webrtc.PeerConnectionStateFailed:
-			manager.logger.Warn().Str("id", session.ID()).Msg("peer failed")
-			session.SetWebRTCConnected(false)
+			connection.Close()
 		case webrtc.PeerConnectionStateClosed:
-			manager.logger.Warn().Str("id", session.ID()).Msg("peer closed")
 			session.SetWebRTCConnected(false)
 		}
+	})
+
+	connection.OnDataChannel(func(channel *webrtc.DataChannel) {
+		channel.OnMessage(func(message webrtc.DataChannelMessage) {
+			if !session.IsHost() {
+				return
+			}
+
+			if err = manager.handle(message); err != nil {
+				manager.logger.Warn().Err(err).Msg("data handle failed")
+			}
+		})
 	})
 
 	session.SetWebRTCPeer(&WebRTCPeerCtx{
