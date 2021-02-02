@@ -29,9 +29,9 @@ var pipelinesLock sync.Mutex
 var registry *C.GstRegistry
 
 const (
-	videoSrc       = "ximagesrc display-name=%s show-pointer=false use-damage=false ! video/x-raw ! videoconvert ! queue ! "
-	audioSrc       = "pulsesrc device=%s ! audio/x-raw,channels=2 ! audioconvert ! "
-	appSink        = " ! appsink name=appsink"
+	videoSrc = "ximagesrc display-name=%s show-pointer=false use-damage=false ! video/x-raw ! videoconvert ! queue ! "
+	audioSrc = "pulsesrc device=%s ! audio/x-raw,channels=2 ! audioconvert ! "
+	appSink  = " ! appsink name=appsink"
 )
 
 func init() {
