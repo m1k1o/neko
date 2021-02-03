@@ -72,42 +72,38 @@ func CreateAppPipeline(codecRTP codec.RTPCodec, pipelineDevice string, pipelineS
 
 	switch codecRTP.Name {
 	case "vp8":
-		// https://gstreamer.freedesktop.org/documentation/vpx/vp8enc.html?gi-language=c
+		// https://gstreamer.freedesktop.org/documentation/vpx/vp8enc.html
 		// gstreamer1.0-plugins-good
-		// vp8enc error-resilient=partitions keyframe-max-dist=10 auto-alt-ref=true cpu-used=5 deadline=1
 		if err := CheckPlugins([]string{"ximagesrc", "vpx"}); err != nil {
 			return nil, err
 		}
 
-		pipelineStr = fmt.Sprintf(videoSrc + "vp8enc cpu-used=8 threads=2 deadline=1 error-resilient=partitions keyframe-max-dist=10 auto-alt-ref=true" + appSink, pipelineDevice)
+		pipelineStr = fmt.Sprintf(videoSrc + "vp8enc cpu-used=16 threads=4 deadline=1 error-resilient=partitions keyframe-max-dist=15 static-threshold=20" + appSink, pipelineDevice)
 	case "vp9":
-		// https://gstreamer.freedesktop.org/documentation/vpx/vp9enc.html?gi-language=c
+		// https://gstreamer.freedesktop.org/documentation/vpx/vp9enc.html
 		// gstreamer1.0-plugins-good
-		// vp9enc
 		if err := CheckPlugins([]string{"ximagesrc", "vpx"}); err != nil {
 			return nil, err
 		}
 
 		pipelineStr = fmt.Sprintf(videoSrc + "vp9enc" + appSink, pipelineDevice)
 	case "h264":
-		if err := CheckPlugins([]string{"ximagesrc"}); err != nil {
+		var err error
+		if err = CheckPlugins([]string{"ximagesrc"}); err != nil {
 			return nil, err
 		}
 
-		var err error
-		// https://gstreamer.freedesktop.org/documentation/openh264/openh264enc.html?gi-language=c#openh264enc
-		// gstreamer1.0-plugins-bad
-		// openh264enc multi-thread=4 complexity=high bitrate=3072000 max-bitrate=4096000
-		if err = CheckPlugins([]string{"openh264"}); err == nil {
-			pipelineStr = fmt.Sprintf(videoSrc + "openh264enc multi-thread=4 complexity=high bitrate=3072000 max-bitrate=4096000 ! video/x-h264,stream-format=byte-stream" + appSink, pipelineDevice)
+		// https://gstreamer.freedesktop.org/documentation/x264/index.html
+		// gstreamer1.0-plugins-ugly
+		if err = CheckPlugins([]string{"x264"}); err == nil {
+			pipelineStr = fmt.Sprintf(videoSrc + "video/x-raw,format=I420 ! x264enc threads=4 bitrate=4096 key-int-max=15 byte-stream=true tune=zerolatency speed-preset=veryfast ! video/x-h264,stream-format=byte-stream" + appSink, pipelineDevice)
 			break
 		}
 
-		// https://gstreamer.freedesktop.org/documentation/x264/index.html?gi-language=c
-		// gstreamer1.0-plugins-ugly
-		// video/x-raw,format=I420 ! x264enc bframes=0 key-int-max=60 byte-stream=true tune=zerolatency speed-preset=veryfast ! video/x-h264,stream-format=byte-stream
-		if err = CheckPlugins([]string{"x264"}); err == nil {
-			pipelineStr = fmt.Sprintf(videoSrc + "video/x-raw,format=I420 ! x264enc bframes=0 key-int-max=60 byte-stream=true tune=zerolatency speed-preset=veryfast ! video/x-h264,stream-format=byte-stream" + appSink, pipelineDevice)
+		// https://gstreamer.freedesktop.org/documentation/openh264/openh264enc.html
+		// gstreamer1.0-plugins-bad
+		if err = CheckPlugins([]string{"openh264"}); err == nil {
+			pipelineStr = fmt.Sprintf(videoSrc + "openh264enc multi-thread=4 complexity=high bitrate=3072000 max-bitrate=4096000 ! video/x-h264,stream-format=byte-stream" + appSink, pipelineDevice)
 			break
 		}
 
@@ -115,34 +111,30 @@ func CreateAppPipeline(codecRTP codec.RTPCodec, pipelineDevice string, pipelineS
 	case "opus":
 		// https://gstreamer.freedesktop.org/documentation/opus/opusenc.html
 		// gstreamer1.0-plugins-base
-		// opusenc
 		if err := CheckPlugins([]string{"pulseaudio", "opus"}); err != nil {
 			return nil, err
 		}
 
-		pipelineStr = fmt.Sprintf(audioSrc + "opusenc" + appSink, pipelineDevice)
+		pipelineStr = fmt.Sprintf(audioSrc + "opusenc bitrate=128000" + appSink, pipelineDevice)
 	case "g722":
-		// https://gstreamer.freedesktop.org/documentation/libav/avenc_g722.html?gi-language=c
+		// https://gstreamer.freedesktop.org/documentation/libav/avenc_g722.html
 		// gstreamer1.0-libav
-		// avenc_g722
 		if err := CheckPlugins([]string{"pulseaudio", "libav"}); err != nil {
 			return nil, err
 		}
 
 		pipelineStr = fmt.Sprintf(audioSrc + "avenc_g722" + appSink, pipelineDevice)
 	case "pcmu":
-		// https://gstreamer.freedesktop.org/documentation/mulaw/mulawenc.html?gi-language=c
+		// https://gstreamer.freedesktop.org/documentation/mulaw/mulawenc.html
 		// gstreamer1.0-plugins-good
-		// audio/x-raw, rate=8000 ! mulawenc
 		if err := CheckPlugins([]string{"pulseaudio", "mulaw"}); err != nil {
 			return nil, err
 		}
 
 		pipelineStr = fmt.Sprintf(audioSrc + "audio/x-raw, rate=8000 ! mulawenc" + appSink, pipelineDevice)
 	case "pcma":
-		// https://gstreamer.freedesktop.org/documentation/alaw/alawenc.html?gi-language=c
+		// https://gstreamer.freedesktop.org/documentation/alaw/alawenc.html
 		// gstreamer1.0-plugins-good
-		// audio/x-raw, rate=8000 ! alawenc
 		if err := CheckPlugins([]string{"pulseaudio", "alaw"}); err != nil {
 			return nil, err
 		}
