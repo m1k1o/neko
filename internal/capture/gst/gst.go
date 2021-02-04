@@ -86,7 +86,7 @@ func CreateAppPipeline(codecRTP codec.RTPCodec, pipelineDevice string, pipelineS
 			return nil, err
 		}
 
-		pipelineStr = fmt.Sprintf(videoSrc + "vp9enc" + appSink, pipelineDevice)
+		pipelineStr = fmt.Sprintf(videoSrc + "vp9enc cpu-used=16 threads=4 deadline=1 keyframe-max-dist=15 static-threshold=20" + appSink, pipelineDevice)
 	case "h264":
 		var err error
 		if err = CheckPlugins([]string{"ximagesrc"}); err != nil {
