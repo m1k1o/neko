@@ -21,18 +21,25 @@ type ScreencastManager interface {
 	Image() ([]byte, error)
 }
 
+type StreamManager interface {
+	Shutdown()
+
+	Codec() codec.RTPCodec
+	OnSample(listener func(sample Sample))
+
+	Start()
+	Stop()
+	Enabled() bool
+}
+
 type CaptureManager interface {
 	Start()
 	Shutdown() error
 
 	Broadcast() BroadcastManager
 	Screencast() ScreencastManager
-
-	VideoCodec() codec.RTPCodec
-	AudioCodec() codec.RTPCodec
-
-	OnVideoFrame(listener func(sample Sample))
-	OnAudioFrame(listener func(sample Sample))
+	Audio() StreamManager
+	Video() StreamManager
 
 	StartStream()
 	StopStream()

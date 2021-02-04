@@ -19,48 +19,48 @@ import (
 
 func New(desktop types.DesktopManager, capture types.CaptureManager, config *config.WebRTC) *WebRTCManagerCtx {
 	return &WebRTCManagerCtx{
-		logger:   log.With().Str("module", "webrtc").Logger(),
-		desktop:  desktop,
-		capture:  capture,
-		config:   config,
+		logger:     log.With().Str("module", "webrtc").Logger(),
+		videoCodec: capture.Video().Codec(),
+		audioCodec: capture.Audio().Codec(),
+		desktop:    desktop,
+		capture:    capture,
+		config:     config,
 	}
 }
 
 type WebRTCManagerCtx struct {
-	logger     zerolog.Logger
-	videoTrack *webrtc.TrackLocalStaticSample
-	audioTrack *webrtc.TrackLocalStaticSample
-	videoCodec codec.RTPCodec
-	audioCodec codec.RTPCodec
-	desktop    types.DesktopManager
-	capture    types.CaptureManager
-	config     *config.WebRTC
+	logger      zerolog.Logger
+	videoTrack  *webrtc.TrackLocalStaticSample
+	audioTrack  *webrtc.TrackLocalStaticSample
+	videoCodec  codec.RTPCodec
+	audioCodec  codec.RTPCodec
+	desktop     types.DesktopManager
+	capture     types.CaptureManager
+	config      *config.WebRTC
 }
 
 func (manager *WebRTCManagerCtx) Start() {
 	var err error
 
 	// create audio track
-	manager.audioCodec = manager.capture.AudioCodec()
 	manager.audioTrack, err = webrtc.NewTrackLocalStaticSample(manager.audioCodec.Capability, "audio", "stream")
 	if err != nil {
 		manager.logger.Panic().Err(err).Msg("unable to create audio track")
 	}
 
-	manager.capture.OnAudioFrame(func(sample types.Sample) {
+	manager.capture.Audio().OnSample(func(sample types.Sample) {
 		if err := manager.audioTrack.WriteSample(media.Sample(sample)); err != nil && err != io.ErrClosedPipe {
 			manager.logger.Warn().Err(err).Msg("audio pipeline failed to write")
 		}
 	})
 
 	// create video track
-	manager.videoCodec = manager.capture.VideoCodec()
 	manager.videoTrack, err = webrtc.NewTrackLocalStaticSample(manager.videoCodec.Capability, "video", "stream")
 	if err != nil {
 		manager.logger.Panic().Err(err).Msg("unable to create video track")
 	}
 
-	manager.capture.OnVideoFrame(func(sample types.Sample) {
+	manager.capture.Video().OnSample(func(sample types.Sample) {
 		if err := manager.videoTrack.WriteSample(media.Sample(sample)); err != nil && err != io.ErrClosedPipe {
 			manager.logger.Warn().Err(err).Msg("video pipeline failed to write")
 		}
@@ -91,6 +91,7 @@ func (manager *WebRTCManagerCtx) ICEServers() []string {
 func (manager *WebRTCManagerCtx) CreatePeer(session types.Session) (*webrtc.SessionDescription, error) {
 	logger := manager.logger.With().Str("id", session.ID()).Logger()
 
+	// Create MediaEngine
 	engine, err := manager.mediaEngine()
 	if err != nil {
 		return nil, err
@@ -129,7 +130,21 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session) (*webrtc.Sess
 		})
 	}
 
-	if err := manager.registerTracks(connection); err != nil {
+	audioTransceiver, err := connection.AddTransceiverFromTrack(manager.audioTrack, webrtc.RtpTransceiverInit{
+		Direction: webrtc.RTPTransceiverDirectionSendonly,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	videoTransceiver, err := connection.AddTransceiverFromTrack(manager.videoTrack, webrtc.RtpTransceiverInit{
+		Direction: webrtc.RTPTransceiverDirectionSendonly,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if _, err := connection.CreateDataChannel("data", nil); err != nil {
 		return nil, err
 	}
 
@@ -179,18 +194,19 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session) (*webrtc.Sess
 	})
 
 	session.SetWebRTCPeer(&WebRTCPeerCtx{
-		api:           api,
-		engine:        engine,
-		settings:      settings,
-		connection:    connection,
-		configuration: configuration,
+		api:               api,
+		engine:            engine,
+		settings:          settings,
+		connection:        connection,
+		configuration:     configuration,
+		audioTransceiver:  audioTransceiver,
+		videoTransceiver:  videoTransceiver,
 	})
 
 	return connection.LocalDescription(), nil
 }
 
 func (manager *WebRTCManagerCtx) mediaEngine() (*webrtc.MediaEngine, error) {
-	// Create MediaEngine
 	engine := &webrtc.MediaEngine{}
 
 	if err := manager.videoCodec.Register(engine); err != nil {
@@ -234,21 +250,4 @@ func (manager *WebRTCManagerCtx) apiConfiguration() *webrtc.Configuration {
 		},
 		SDPSemantics: webrtc.SDPSemanticsUnifiedPlanWithFallback,
 	}
-}
-
-func (manager *WebRTCManagerCtx) registerTracks(connection *webrtc.PeerConnection) error {
-	if _, err := connection.AddTransceiverFromTrack(manager.videoTrack, webrtc.RtpTransceiverInit{
-		Direction: webrtc.RTPTransceiverDirectionSendonly,
-	}); err != nil {
-		return err
-	}
-
-	if _, err := connection.AddTransceiverFromTrack(manager.audioTrack, webrtc.RtpTransceiverInit{
-		Direction: webrtc.RTPTransceiverDirectionSendonly,
-	}); err != nil {
-		return err
-	}
-
-	_, err :=  connection.CreateDataChannel("data", nil)
-	return err
 }
