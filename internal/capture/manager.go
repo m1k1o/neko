@@ -19,7 +19,8 @@ type CaptureManagerCtx struct {
 	broadcast    *BroacastManagerCtx
 	screencast   *ScreencastManagerCtx
 	audio        *StreamManagerCtx
-	video        *StreamManagerCtx
+	videos       map[string]*StreamManagerCtx
+	videoIDs     []string
 }
 
 func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCtx {
@@ -87,7 +88,10 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 		broadcast:   broadcastNew(broadcastPipeline),
 		screencast:  screencastNew(config.Screencast, screencastPipeline),
 		audio:       streamNew(config.AudioCodec, audioPipeline),
-		video:       streamNew(config.VideoCodec, videoPipeline),
+		videos:      map[string]*StreamManagerCtx{
+			"hq": streamNew(config.VideoCodec, videoPipeline),
+		},
+		videoIDs:    []string{ "hq" },
 	}
 }
 
@@ -99,8 +103,10 @@ func (manager *CaptureManagerCtx) Start() {
 	}
 
 	manager.desktop.OnBeforeScreenSizeChange(func() {
-		if manager.video.Started() {
-			manager.video.destroyPipeline()
+		for _, video := range manager.videos {
+			if video.Started() {
+				video.destroyPipeline()
+			}
 		}
 
 		if manager.broadcast.Started() {
@@ -113,9 +119,11 @@ func (manager *CaptureManagerCtx) Start() {
 	})
 
 	manager.desktop.OnAfterScreenSizeChange(func() {
-		if manager.video.Started() {
-			if err := manager.video.createPipeline(); err != nil {
-				manager.logger.Panic().Err(err).Msg("unable to recreate video pipeline")
+		for _, video := range manager.videos {
+			if video.Started() {
+				if err := video.createPipeline(); err != nil {
+					manager.logger.Panic().Err(err).Msg("unable to recreate video pipeline")
+				}
 			}
 		}
 
@@ -140,7 +148,11 @@ func (manager *CaptureManagerCtx) Shutdown() error {
 	manager.screencast.shutdown()
 
 	manager.audio.shutdown()
-	manager.video.shutdown()
+
+	for _, video := range manager.videos {
+		video.shutdown()
+	}
+
 	return nil
 }
 
@@ -156,8 +168,12 @@ func (manager *CaptureManagerCtx) Audio() types.StreamManager {
 	return manager.audio
 }
 
-func (manager *CaptureManagerCtx) Video() types.StreamManager {
-	return manager.video
+func (manager *CaptureManagerCtx) Video(videoID string) types.StreamManager {
+	return manager.videos[videoID]
+}
+
+func (manager *CaptureManagerCtx) VideoIDs() []string {
+	return manager.videoIDs
 }
 
 func (manager *CaptureManagerCtx) StartStream() {
@@ -166,14 +182,13 @@ func (manager *CaptureManagerCtx) StartStream() {
 
 	manager.logger.Info().Msgf("starting stream pipelines")
 
-	var err error
-	err = manager.Video().Start()
-	if err != nil {
-		manager.logger.Panic().Err(err).Msg("unable to start video pipeline")
+	for _, video := range manager.videos {
+		if err := video.Start(); err != nil {
+			manager.logger.Panic().Err(err).Msg("unable to start video pipeline")
+		}
 	}
 
-	err = manager.Audio().Start()
-	if err != nil {
+	if err := manager.audio.Start(); err != nil {
 		manager.logger.Panic().Err(err).Msg("unable to start audio pipeline")
 	}
 
@@ -186,8 +201,11 @@ func (manager *CaptureManagerCtx) StopStream() {
 
 	manager.logger.Info().Msgf("stopping stream pipelines")
 
-	manager.Video().Stop()
-	manager.Audio().Stop()
+	for _, video := range manager.videos {
+		video.Stop()
+	}
+
+	manager.audio.Stop()
 	manager.streaming = false
 }
 

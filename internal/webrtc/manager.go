@@ -19,52 +19,59 @@ import (
 
 func New(desktop types.DesktopManager, capture types.CaptureManager, config *config.WebRTC) *WebRTCManagerCtx {
 	return &WebRTCManagerCtx{
-		logger:     log.With().Str("module", "webrtc").Logger(),
-		videoCodec: capture.Video().Codec(),
-		audioCodec: capture.Audio().Codec(),
-		desktop:    desktop,
-		capture:    capture,
-		config:     config,
+		logger:         log.With().Str("module", "webrtc").Logger(),
+		defaultVideoID:  capture.VideoIDs()[0],
+		desktop:         desktop,
+		capture:         capture,
+		config:          config,
 	}
 }
 
 type WebRTCManagerCtx struct {
-	logger      zerolog.Logger
-	videoTrack  *webrtc.TrackLocalStaticSample
-	audioTrack  *webrtc.TrackLocalStaticSample
-	videoCodec  codec.RTPCodec
-	audioCodec  codec.RTPCodec
-	desktop     types.DesktopManager
-	capture     types.CaptureManager
-	config      *config.WebRTC
+	logger          zerolog.Logger
+	videoTracks     map[string]*webrtc.TrackLocalStaticSample
+	audioTrack      *webrtc.TrackLocalStaticSample
+	defaultVideoID  string
+	audioCodec      codec.RTPCodec
+	desktop         types.DesktopManager
+	capture         types.CaptureManager
+	config          *config.WebRTC
 }
 
 func (manager *WebRTCManagerCtx) Start() {
 	var err error
 
 	// create audio track
-	manager.audioTrack, err = webrtc.NewTrackLocalStaticSample(manager.audioCodec.Capability, "audio", "stream")
+	audio := manager.capture.Audio()
+	manager.audioTrack, err = webrtc.NewTrackLocalStaticSample(audio.Codec().Capability, "audio", "stream")
 	if err != nil {
 		manager.logger.Panic().Err(err).Msg("unable to create audio track")
 	}
 
-	manager.capture.Audio().OnSample(func(sample types.Sample) {
+	audio.OnSample(func(sample types.Sample) {
 		if err := manager.audioTrack.WriteSample(media.Sample(sample)); err != nil && err != io.ErrClosedPipe {
 			manager.logger.Warn().Err(err).Msg("audio pipeline failed to write")
 		}
 	})
 
-	// create video track
-	manager.videoTrack, err = webrtc.NewTrackLocalStaticSample(manager.videoCodec.Capability, "video", "stream")
-	if err != nil {
-		manager.logger.Panic().Err(err).Msg("unable to create video track")
-	}
+	videoIDs := manager.capture.VideoIDs()
+	manager.videoTracks = map[string]*webrtc.TrackLocalStaticSample{}
+	for _, videoID := range videoIDs {
+		video := manager.capture.Video(videoID)
 
-	manager.capture.Video().OnSample(func(sample types.Sample) {
-		if err := manager.videoTrack.WriteSample(media.Sample(sample)); err != nil && err != io.ErrClosedPipe {
-			manager.logger.Warn().Err(err).Msg("video pipeline failed to write")
+		track, err := webrtc.NewTrackLocalStaticSample(video.Codec().Capability, "video", "stream")
+		if err != nil {
+			manager.logger.Panic().Err(err).Msgf("unable to create video (%s) track", videoID)
 		}
-	})
+	
+		video.OnSample(func(sample types.Sample) {
+			if err := track.WriteSample(media.Sample(sample)); err != nil && err != io.ErrClosedPipe {
+				manager.logger.Warn().Err(err).Msgf("video (%s) pipeline failed to write", videoID)
+			}
+		})
+
+		manager.videoTracks[videoID] = track
+	}
 
 	manager.logger.Info().
 		Str("ice_lite", fmt.Sprintf("%t", manager.config.ICELite)).
@@ -137,7 +144,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session) (*webrtc.Sess
 		return nil, err
 	}
 
-	videoTransceiver, err := connection.AddTransceiverFromTrack(manager.videoTrack, webrtc.RtpTransceiverInit{
+	videoTransceiver, err := connection.AddTransceiverFromTrack(manager.videoTracks[manager.defaultVideoID], webrtc.RtpTransceiverInit{
 		Direction: webrtc.RTPTransceiverDirectionSendonly,
 	})
 	if err != nil {
@@ -209,11 +216,14 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session) (*webrtc.Sess
 func (manager *WebRTCManagerCtx) mediaEngine() (*webrtc.MediaEngine, error) {
 	engine := &webrtc.MediaEngine{}
 
-	if err := manager.videoCodec.Register(engine); err != nil {
+	// all videos must have the same codec
+	videoCodec := manager.capture.Video(manager.defaultVideoID).Codec()
+	if err := videoCodec.Register(engine); err != nil {
 		return nil, err
 	}
 
-	if err := manager.audioCodec.Register(engine); err != nil {
+	audioCodec := manager.capture.Audio().Codec()
+	if err := audioCodec.Register(engine); err != nil {
 		return nil, err
 	}
 

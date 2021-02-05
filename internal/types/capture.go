@@ -37,7 +37,8 @@ type CaptureManager interface {
 	Broadcast() BroadcastManager
 	Screencast() ScreencastManager
 	Audio() StreamManager
-	Video() StreamManager
+	Video(videoID string) StreamManager
+	VideoIDs() []string
 
 	StartStream()
 	StopStream()
