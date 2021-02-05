@@ -7,6 +7,7 @@ type RTPCodec struct {
 	PayloadType webrtc.PayloadType
 	Type        webrtc.RTPCodecType
 	Capability  webrtc.RTPCodecCapability
+	Pipeline    string
 }
 
 func (codec *RTPCodec) Register(engine *webrtc.MediaEngine) error {
@@ -28,6 +29,9 @@ func VP8() RTPCodec {
 			SDPFmtpLine: "",
 			RTCPFeedback: nil,
 		},
+		// https://gstreamer.freedesktop.org/documentation/vpx/vp8enc.html
+		// gstreamer1.0-plugins-good
+		Pipeline: "vp8enc cpu-used=16 threads=4 deadline=1 error-resilient=partitions keyframe-max-dist=15 static-threshold=20",
 	}
 }
 
@@ -44,6 +48,9 @@ func VP9() RTPCodec {
 			SDPFmtpLine: "profile-id=0",
 			RTCPFeedback: nil,
 		},
+		// https://gstreamer.freedesktop.org/documentation/vpx/vp9enc.html
+		// gstreamer1.0-plugins-good
+		Pipeline: "vp9enc cpu-used=16 threads=4 deadline=1 keyframe-max-dist=15 static-threshold=20",
 	}
 }
 
@@ -60,6 +67,12 @@ func H264() RTPCodec {
 			SDPFmtpLine: "level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42001f",
 			RTCPFeedback: nil,
 		},
+		// https://gstreamer.freedesktop.org/documentation/x264/index.html
+		// gstreamer1.0-plugins-ugly
+		Pipeline: "video/x-raw,format=I420 ! x264enc threads=4 bitrate=4096 key-int-max=15 byte-stream=true tune=zerolatency speed-preset=veryfast ! video/x-h264,stream-format=byte-stream",
+		// https://gstreamer.freedesktop.org/documentation/openh264/openh264enc.html
+		// gstreamer1.0-plugins-bad
+		//Pipeline: "openh264enc multi-thread=4 complexity=high bitrate=3072000 max-bitrate=4096000 ! video/x-h264,stream-format=byte-stream",
 	}
 }
 
@@ -75,6 +88,9 @@ func Opus() RTPCodec {
 			SDPFmtpLine: "",
 			RTCPFeedback: nil,
 		},
+		// https://gstreamer.freedesktop.org/documentation/opus/opusenc.html
+		// gstreamer1.0-plugins-base
+		Pipeline: "opusenc bitrate=128000",
 	}
 }
 
@@ -90,6 +106,9 @@ func G722() RTPCodec {
 			SDPFmtpLine: "",
 			RTCPFeedback: nil,
 		},
+		// https://gstreamer.freedesktop.org/documentation/libav/avenc_g722.html
+		// gstreamer1.0-libav
+		Pipeline: "avenc_g722",
 	}
 }
 
@@ -105,6 +124,9 @@ func PCMU() RTPCodec {
 			SDPFmtpLine: "",
 			RTCPFeedback: nil,
 		},
+		// https://gstreamer.freedesktop.org/documentation/mulaw/mulawenc.html
+		// gstreamer1.0-plugins-good
+		Pipeline: "audio/x-raw, rate=8000 ! mulawenc",
 	}
 }
 
@@ -120,5 +142,8 @@ func PCMA() RTPCodec {
 			SDPFmtpLine: "",
 			RTCPFeedback: nil,
 		},
+		// https://gstreamer.freedesktop.org/documentation/alaw/alawenc.html
+		// gstreamer1.0-plugins-good
+		Pipeline: "audio/x-raw, rate=8000 ! alawenc",
 	}
 }

@@ -8,17 +8,19 @@ import (
 )
 
 type Capture struct {
-	Display      string
-	Device       string
-	AudioCodec   codec.RTPCodec
-	AudioParams  string
-	VideoCodec   codec.RTPCodec
-	VideoParams  string
+	Device             string
+	AudioCodec         codec.RTPCodec
+	AudioPipeline      string
 
-	BroadcastPipeline string
-	Screencast bool
-	ScreencastRate string
-	ScreencastQuality string
+	Display            string
+	VideoCodec         codec.RTPCodec
+	VideoPipeline      string
+
+	BroadcastPipeline  string
+
+	Screencast         bool
+	ScreencastRate     string
+	ScreencastQuality  string
 	ScreencastPipeline string
 }
 
@@ -139,12 +141,14 @@ func (s *Capture) Set() {
 
 	s.Device = viper.GetString("device")
 	s.AudioCodec = audioCodec
-	s.AudioParams = viper.GetString("audio")
+	s.AudioPipeline = viper.GetString("audio")
+
 	s.Display = viper.GetString("display")
 	s.VideoCodec = videoCodec
-	s.VideoParams = viper.GetString("video")
+	s.VideoPipeline = viper.GetString("video")
 
 	s.BroadcastPipeline = viper.GetString("broadcast_pipeline")
+
 	s.Screencast = viper.GetBool("screencast")
 	s.ScreencastRate = viper.GetString("screencast_rate")
 	s.ScreencastQuality = viper.GetString("screencast_quality")

@@ -1,6 +1,7 @@
 package capture
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/rs/zerolog"
@@ -8,7 +9,6 @@ import (
 
 	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/config"
-	"demodesk/neko/internal/capture/gst"
 )
 
 type CaptureManagerCtx struct {
@@ -25,37 +25,59 @@ type CaptureManagerCtx struct {
 func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCtx {
 	logger := log.With().Str("module", "capture").Logger()
 
-	broadcastPipeline := gst.GetRTMPPipeline(
-		config.Device,
-		config.Display,
-		config.BroadcastPipeline,
-	)
-
-	screencastPipeline := gst.GetJPEGPipeline(
-		config.Display,
-		config.ScreencastPipeline,
-		config.ScreencastRate,
-		config.ScreencastQuality,
-	)
-
-	audioPipeline, err := gst.GetAppPipeline(
-		config.AudioCodec,
-		config.Device,
-		config.AudioParams,
-	)
-
-	if err != nil {
-		logger.Panic().Err(err).Msg("unable to get pipeline")
+	broadcastPipeline := config.BroadcastPipeline
+	if broadcastPipeline == "" {
+		broadcastPipeline = fmt.Sprintf(
+			"flvmux name=mux ! rtmpsink location='{url} live=1' " +
+				"pulsesrc device=%s " +
+					"! audio/x-raw,channels=2 " +
+					"! audioconvert " +
+					"! queue " +
+					"! voaacenc " +
+					"! mux. " +
+				"ximagesrc display-name=%s show-pointer=true use-damage=false " +
+					"! video/x-raw " +
+					"! videoconvert " +
+					"! queue " +
+					"! x264enc threads=4 bitrate=4096 key-int-max=15 byte-stream=true byte-stream=true tune=zerolatency speed-preset=veryfast " +
+					"! mux.", config.Device, config.Display,
+		)
 	}
 
-	videoPipeline, err := gst.GetAppPipeline(
-		config.VideoCodec,
-		config.Display,
-		config.VideoParams,
-	)
+	screencastPipeline := config.ScreencastPipeline
+	if screencastPipeline == "" {
+		screencastPipeline = fmt.Sprintf(
+			"ximagesrc display-name=%s show-pointer=true use-damage=false " +
+				"! video/x-raw,framerate=%s " +
+				"! videoconvert " +
+				"! queue " +
+				"! jpegenc quality=%s " +
+				"! appsink name=appsink", config.Display, config.ScreencastRate, config.ScreencastQuality,
+		)
+	}
 
-	if err != nil {
-		logger.Panic().Err(err).Msg("unable to get pipeline")
+	audioPipeline := config.AudioPipeline
+	if audioPipeline == "" {
+		audioPipeline = fmt.Sprintf(
+			"pulsesrc device=%s " +
+				"! audio/x-raw,channels=2 " +
+				"! audioconvert " +
+				"! queue " +
+				"! %s " +
+				"! appsink name=appsink", config.Device, config.AudioCodec.Pipeline,
+		)
+	}
+
+	videoPipeline := config.VideoPipeline
+	if videoPipeline == "" {
+		videoPipeline = fmt.Sprintf(
+			"ximagesrc display-name=%s show-pointer=false use-damage=false " +
+				"! video/x-raw " +
+				"! videoconvert " +
+				"! queue " +
+				"! %s " +
+				"! appsink name=appsink", config.Display, config.VideoCodec.Pipeline,
+		)
 	}
 
 	return &CaptureManagerCtx{
