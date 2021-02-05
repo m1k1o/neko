@@ -57,7 +57,11 @@ func (manager *WebRTCManagerCtx) Start() {
 	videoIDs := manager.capture.VideoIDs()
 	manager.videoTracks = map[string]*webrtc.TrackLocalStaticSample{}
 	for _, videoID := range videoIDs {
-		video := manager.capture.Video(videoID)
+		video, ok := manager.capture.Video(videoID)
+		if !ok {
+			manager.logger.Warn().Str("videoID", videoID).Msg("video stream not found, skipping")
+			continue
+		}
 
 		track, err := webrtc.NewTrackLocalStaticSample(video.Codec().Capability, "video", "stream")
 		if err != nil {
@@ -218,7 +222,12 @@ func (manager *WebRTCManagerCtx) mediaEngine() (*webrtc.MediaEngine, error) {
 	engine := &webrtc.MediaEngine{}
 
 	// all videos must have the same codec
-	videoCodec := manager.capture.Video(manager.defaultVideoID).Codec()
+	video, ok := manager.capture.Video(manager.defaultVideoID)
+	if !ok {
+		return nil, fmt.Errorf("default video track not found")
+	}
+
+	videoCodec := video.Codec()
 	if err := videoCodec.Register(engine); err != nil {
 		return nil, err
 	}

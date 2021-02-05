@@ -168,8 +168,9 @@ func (manager *CaptureManagerCtx) Audio() types.StreamManager {
 	return manager.audio
 }
 
-func (manager *CaptureManagerCtx) Video(videoID string) types.StreamManager {
-	return manager.videos[videoID]
+func (manager *CaptureManagerCtx) Video(videoID string) (types.StreamManager, bool) {
+	video, ok := manager.videos[videoID]
+	return video, ok
 }
 
 func (manager *CaptureManagerCtx) VideoIDs() []string {
