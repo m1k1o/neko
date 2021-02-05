@@ -26,9 +26,21 @@ func (h *MessageHandlerCtx) signalRequest(session types.Session) error {
 }
 
 func (h *MessageHandlerCtx) signalAnswer(session types.Session, payload *message.SignalAnswer) error {
-	return session.SignalAnswer(payload.SDP)
+	peer := session.GetWebRTCPeer()
+	if peer == nil {
+		h.logger.Debug().Msg("webRTC peer does not exist")
+		return nil
+	}
+
+	return peer.SignalAnswer(payload.SDP)
 }
 
 func (h *MessageHandlerCtx) signalCandidate(session types.Session, payload *message.SignalCandidate) error {
-	return session.SignalCandidate(*payload.ICECandidateInit)
+	peer := session.GetWebRTCPeer()
+	if peer == nil {
+		h.logger.Debug().Msg("webRTC peer does not exist")
+		return nil
+	}
+
+	return peer.SignalCandidate(*payload.ICECandidateInit)
 }

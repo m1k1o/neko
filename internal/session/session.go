@@ -2,7 +2,6 @@ package session
 
 import (
 	"github.com/rs/zerolog"
-	"github.com/pion/webrtc/v3"
 
 	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/types/event"
@@ -189,18 +188,6 @@ func (session *SessionCtx) SetWebRTCConnected(connected bool) {
 	}
 }
 
-func (session *SessionCtx) SignalAnswer(sdp string) error {
-	if session.webrtc_peer == nil {
-		return nil
-	}
-
-	return session.webrtc_peer.SignalAnswer(sdp)
-}
-
-func (session *SessionCtx) SignalCandidate(candidate webrtc.ICECandidateInit) error {
-	if session.webrtc_peer == nil {
-		return nil
-	}
-
-	return session.webrtc_peer.SignalCandidate(candidate)
+func (session *SessionCtx) GetWebRTCPeer() types.WebRTCPeer {
+	return session.webrtc_peer
 }
