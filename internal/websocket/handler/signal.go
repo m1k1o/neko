@@ -44,3 +44,13 @@ func (h *MessageHandlerCtx) signalCandidate(session types.Session, payload *mess
 
 	return peer.SignalCandidate(*payload.ICECandidateInit)
 }
+
+func (h *MessageHandlerCtx) signalVideo(session types.Session, payload *message.SignalVideo) error {
+	peer := session.GetWebRTCPeer()
+	if peer == nil {
+		h.logger.Debug().Msg("webRTC peer does not exist")
+		return nil
+	}
+
+	return peer.SetVideoID(payload.VideoID)
+}

@@ -59,6 +59,11 @@ func (h *MessageHandlerCtx) Message(session types.Session, raw []byte) bool {
 		err = utils.Unmarshal(payload, raw, func() error {
 			return h.signalCandidate(session, payload)
 		})
+	case event.SIGNAL_VIDEO:
+		payload := &message.SignalVideo{}
+		err = utils.Unmarshal(payload, raw, func() error {
+			return h.signalVideo(session, payload)
+		})
 
 	// Control Events
 	case event.CONTROL_RELEASE:

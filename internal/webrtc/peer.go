@@ -7,13 +7,13 @@ import (
 )
 
 type WebRTCPeerCtx struct {
-	api               *webrtc.API
-	engine            *webrtc.MediaEngine
-	settings          *webrtc.SettingEngine
-	connection        *webrtc.PeerConnection
-	configuration     *webrtc.Configuration
-	videoTracks       map[string]*webrtc.TrackLocalStaticSample
-	videoTransceiver  *webrtc.RTPTransceiver
+	api            *webrtc.API
+	engine         *webrtc.MediaEngine
+	settings       *webrtc.SettingEngine
+	connection     *webrtc.PeerConnection
+	configuration  *webrtc.Configuration
+	videoTracks    map[string]*webrtc.TrackLocalStaticSample
+	videoSender    *webrtc.RTPSender
 }
 
 func (webrtc_peer *WebRTCPeerCtx) SignalAnswer(sdp string) error {
@@ -33,7 +33,7 @@ func (webrtc_peer *WebRTCPeerCtx) SetVideoID(videoID string) error {
 		return fmt.Errorf("videoID not found in available tracks")
 	}
 
-	return webrtc_peer.videoTransceiver.Sender().ReplaceTrack(track)
+	return webrtc_peer.videoSender.ReplaceTrack(track)
 }
 
 func (webrtc_peer *WebRTCPeerCtx) Destroy() error {

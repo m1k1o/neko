@@ -57,6 +57,8 @@ func (manager *WebRTCManagerCtx) Start() {
 	videoIDs := manager.capture.VideoIDs()
 	manager.videoTracks = map[string]*webrtc.TrackLocalStaticSample{}
 	for _, videoID := range videoIDs {
+		videoID := videoID
+
 		video, ok := manager.capture.Video(videoID)
 		if !ok {
 			manager.logger.Warn().Str("videoID", videoID).Msg("video stream not found, skipping")
@@ -65,12 +67,12 @@ func (manager *WebRTCManagerCtx) Start() {
 
 		track, err := webrtc.NewTrackLocalStaticSample(video.Codec().Capability, "video", "stream")
 		if err != nil {
-			manager.logger.Panic().Err(err).Msgf("unable to create video (%s) track", videoID)
+			manager.logger.Panic().Err(err).Str("videoID", videoID).Msg("unable to create video track")
 		}
 	
 		video.OnSample(func(sample types.Sample) {
 			if err := track.WriteSample(media.Sample(sample)); err != nil && err != io.ErrClosedPipe {
-				manager.logger.Warn().Err(err).Msgf("video (%s) pipeline failed to write", videoID)
+				manager.logger.Warn().Err(err).Str("videoID", videoID).Msg("vide pipeline failed to write")
 			}
 		})
 
@@ -141,16 +143,12 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session) (*webrtc.Sess
 		})
 	}
 
-	_, err = connection.AddTransceiverFromTrack(manager.audioTrack, webrtc.RtpTransceiverInit{
-		Direction: webrtc.RTPTransceiverDirectionSendonly,
-	})
+	_, err = connection.AddTrack(manager.audioTrack)
 	if err != nil {
 		return nil, err
 	}
 
-	videoTransceiver, err := connection.AddTransceiverFromTrack(manager.videoTracks[manager.defaultVideoID], webrtc.RtpTransceiverInit{
-		Direction: webrtc.RTPTransceiverDirectionSendonly,
-	})
+	videoSender, err := connection.AddTrack(manager.videoTracks[manager.defaultVideoID])
 	if err != nil {
 		return nil, err
 	}
@@ -206,13 +204,13 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session) (*webrtc.Sess
 	})
 
 	session.SetWebRTCPeer(&WebRTCPeerCtx{
-		api:               api,
-		engine:            engine,
-		settings:          settings,
-		connection:        connection,
-		configuration:     configuration,
-		videoTracks:       manager.videoTracks,
-		videoTransceiver:  videoTransceiver,
+		api:            api,
+		engine:         engine,
+		settings:       settings,
+		connection:     connection,
+		configuration:  configuration,
+		videoTracks:    manager.videoTracks,
+		videoSender:    videoSender,
 	})
 
 	return connection.LocalDescription(), nil

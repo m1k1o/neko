@@ -57,6 +57,11 @@ type SignalAnswer struct {
 	SDP   string `json:"sdp"`
 }
 
+type SignalVideo struct {
+	Event   string `json:"event,omitempty"`
+	VideoID string `json:"video_id"`
+}
+
 /////////////////////////////
 // Member
 /////////////////////////////
