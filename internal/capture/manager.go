@@ -81,11 +81,11 @@ func (manager *CaptureManagerCtx) Start() {
 func (manager *CaptureManagerCtx) Shutdown() error {
 	manager.logger.Info().Msgf("capture shutting down")
 
-	manager.broadcast.destroyPipeline()
-	manager.screencast.destroyPipeline()
-	manager.screencast.shutdown <- true
-	manager.audio.Shutdown()
-	manager.video.Shutdown()
+	manager.broadcast.shutdown()
+	manager.screencast.shutdown()
+
+	manager.audio.shutdown()
+	manager.video.shutdown()
 	return nil
 }
 

@@ -58,7 +58,7 @@ func streamNew(codec codec.RTPCodec, pipelineDevice string, pipelineSrc string) 
 	return manager
 }
 
-func (manager *StreamManagerCtx) Shutdown() {
+func (manager *StreamManagerCtx) shutdown() {
 	manager.logger.Info().Msgf("shutting down")
 
 	manager.destroyPipeline()

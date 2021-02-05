@@ -15,27 +15,27 @@ import (
 )
 
 type ScreencastManagerCtx struct {
-	logger    zerolog.Logger
-	mu        sync.Mutex
-	config    *config.Capture
-	pipeline  *gst.Pipeline
-	enabled   bool
-	started   bool
-	shutdown  chan bool
-	refresh   chan bool
-	expired   int32
-	sample    chan types.Sample
-	image     types.Sample
+	logger      zerolog.Logger
+	mu          sync.Mutex
+	config      *config.Capture
+	pipeline    *gst.Pipeline
+	enabled     bool
+	started     bool
+	emitStop    chan bool
+	emitUpdate  chan bool
+	expired     int32
+	sample      chan types.Sample
+	image       types.Sample
 }
 
 func screencastNew(config *config.Capture) *ScreencastManagerCtx {
 	manager := &ScreencastManagerCtx{
-		logger:    log.With().Str("module", "capture").Str("submodule", "screencast").Logger(),
-		config:    config,
-		enabled:   config.Screencast,
-		started:   false,
-		shutdown:  make(chan bool),
-		refresh:   make(chan bool),
+		logger:      log.With().Str("module", "capture").Str("submodule", "screencast").Logger(),
+		config:      config,
+		enabled:     config.Screencast,
+		started:     false,
+		emitStop:    make(chan bool),
+		emitUpdate:  make(chan bool),
 	}
 
 	if !manager.enabled {
@@ -44,16 +44,16 @@ func screencastNew(config *config.Capture) *ScreencastManagerCtx {
 
 	go func() {
 		ticker := time.NewTicker(5 * time.Second)
-		manager.logger.Debug().Msg("subroutine started")
+		manager.logger.Debug().Msg("started emitting samples")
 
 		for {
 			select {
-			case <-manager.shutdown:
-				manager.logger.Debug().Msg("shutting down")
+			case <-manager.emitStop:
+				manager.logger.Debug().Msg("stopped emitting samples")
 				ticker.Stop()
 				return
-			case <-manager.refresh:
-				manager.logger.Debug().Msg("subroutine updated")
+			case <-manager.emitUpdate:
+				manager.logger.Debug().Msg("update emitting samples")
 			case sample := <-manager.sample:
 				manager.image = sample
 			case <-ticker.C:
@@ -65,6 +65,13 @@ func screencastNew(config *config.Capture) *ScreencastManagerCtx {
 	}()
 
 	return manager
+}
+
+func (manager *ScreencastManagerCtx) shutdown() {
+	manager.logger.Info().Msgf("shutting down")
+
+	manager.destroyPipeline()
+	manager.emitStop <- true
 }
 
 func (manager *ScreencastManagerCtx) Enabled() bool {
@@ -144,7 +151,7 @@ func (manager *ScreencastManagerCtx) createPipeline() error {
 	manager.logger.Info().Msgf("starting pipeline")
 
 	manager.sample = manager.pipeline.Sample
-	manager.refresh <-true
+	manager.emitUpdate <-true
 	return nil
 }
 

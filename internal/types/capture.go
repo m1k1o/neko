@@ -22,8 +22,6 @@ type ScreencastManager interface {
 }
 
 type StreamManager interface {
-	Shutdown()
-
 	Codec() codec.RTPCodec
 	OnSample(listener func(sample Sample))
 

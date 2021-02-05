@@ -25,6 +25,12 @@ func broadcastNew(config *config.Capture) *BroacastManagerCtx {
 	}
 }
 
+func (manager *BroacastManagerCtx) shutdown() {
+	manager.logger.Info().Msgf("shutting down")
+
+	manager.destroyPipeline()
+}
+
 func (manager *BroacastManagerCtx) Start(url string) error {
 	manager.url = url
 	manager.enabled = true
