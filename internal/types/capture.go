@@ -11,7 +11,7 @@ type Sample media.Sample
 type BroadcastManager interface {
 	Start(url string) error
 	Stop()
-	Enabled() bool
+	Started() bool
 	Url() string
 }
 
@@ -27,7 +27,7 @@ type StreamManager interface {
 
 	Start() error
 	Stop()
-	Enabled() bool
+	Started() bool
 }
 
 type CaptureManager interface {

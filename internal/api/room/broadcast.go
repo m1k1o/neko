@@ -16,7 +16,7 @@ type BroadcastStatusPayload struct {
 func (h *RoomHandler) broadcastStatus(w http.ResponseWriter, r *http.Request) {
 	broadcast := h.capture.Broadcast()
 	utils.HttpSuccess(w, BroadcastStatusPayload{
-		IsActive: broadcast.Enabled(),
+		IsActive: broadcast.Started(),
 		URL:      broadcast.Url(),
 	})
 }
@@ -33,7 +33,7 @@ func (h *RoomHandler) boradcastStart(w http.ResponseWriter, r *http.Request) {
 	}
 
 	broadcast := h.capture.Broadcast()
-	if broadcast.Enabled() {
+	if broadcast.Started() {
 		utils.HttpUnprocessableEntity(w, "Server is already broadcasting.")
 		return
 	}
@@ -46,7 +46,7 @@ func (h *RoomHandler) boradcastStart(w http.ResponseWriter, r *http.Request) {
 	h.sessions.AdminBroadcast(
 		message.BroadcastStatus{
 			Event:    event.BORADCAST_STATUS,
-			IsActive: broadcast.Enabled(),
+			IsActive: broadcast.Started(),
 			URL:      broadcast.Url(),
 		}, nil)
 
@@ -55,7 +55,7 @@ func (h *RoomHandler) boradcastStart(w http.ResponseWriter, r *http.Request) {
 
 func (h *RoomHandler) boradcastStop(w http.ResponseWriter, r *http.Request) {
 	broadcast := h.capture.Broadcast()
-	if !broadcast.Enabled() {
+	if !broadcast.Started() {
 		utils.HttpUnprocessableEntity(w, "Server is not broadcasting.")
 		return
 	}
@@ -65,7 +65,7 @@ func (h *RoomHandler) boradcastStop(w http.ResponseWriter, r *http.Request) {
 	h.sessions.AdminBroadcast(
 		message.BroadcastStatus{
 			Event:    event.BORADCAST_STATUS,
-			IsActive: broadcast.Enabled(),
+			IsActive: broadcast.Started(),
 			URL:      broadcast.Url(),
 		}, nil)
 

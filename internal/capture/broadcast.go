@@ -16,7 +16,7 @@ type BroacastManagerCtx struct {
 	mu           sync.Mutex
 	pipelineStr  string
 	pipeline     *gst.Pipeline
-	enabled      bool
+	started      bool
 	url          string
 }
 
@@ -24,7 +24,7 @@ func broadcastNew(pipelineStr string) *BroacastManagerCtx {
 	return &BroacastManagerCtx{
 		logger:       log.With().Str("module", "capture").Str("submodule", "broadcast").Logger(),
 		pipelineStr:  pipelineStr,
-		enabled:      false,
+		started:      false,
 		url:          "",
 	}
 }
@@ -45,7 +45,7 @@ func (manager *BroacastManagerCtx) Start(url string) error {
 	}
 
 	manager.url = url
-	manager.enabled = true
+	manager.started = true
 	return nil
 }
 
@@ -53,12 +53,12 @@ func (manager *BroacastManagerCtx) Stop() {
 	manager.mu.Lock()
 	defer manager.mu.Unlock()
 
-	manager.enabled = false
+	manager.started = false
 	manager.destroyPipeline()
 }
 
-func (manager *BroacastManagerCtx) Enabled() bool {
-	return manager.enabled
+func (manager *BroacastManagerCtx) Started() bool {
+	return manager.started
 }
 
 func (manager *BroacastManagerCtx) Url() string {

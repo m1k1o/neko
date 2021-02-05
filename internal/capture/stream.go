@@ -23,7 +23,7 @@ type StreamManagerCtx struct {
 	emmiter      events.EventEmmiter
 	emitUpdate   chan bool
 	emitStop     chan bool
-	enabled      bool
+	started      bool
 }
 
 func streamNew(codec codec.RTPCodec, pipelineStr string) *StreamManagerCtx {
@@ -34,7 +34,7 @@ func streamNew(codec codec.RTPCodec, pipelineStr string) *StreamManagerCtx {
 		emmiter:      events.New(),
 		emitUpdate:   make(chan bool),
 		emitStop:     make(chan bool),
-		enabled:      false,
+		started:      false,
 	}
 
 	go func() {
@@ -82,7 +82,7 @@ func (manager *StreamManagerCtx) Start() error {
 		return err
 	}
 
-	manager.enabled = true
+	manager.started = true
 	return nil
 }
 
@@ -90,12 +90,12 @@ func (manager *StreamManagerCtx) Stop() {
 	manager.mu.Lock()
 	defer manager.mu.Unlock()
 
-	manager.enabled = false
+	manager.started = false
 	manager.destroyPipeline()
 }
 
-func (manager *StreamManagerCtx) Enabled() bool {
-	return manager.enabled
+func (manager *StreamManagerCtx) Started() bool {
+	return manager.started
 }
 
 func (manager *StreamManagerCtx) createPipeline() error {

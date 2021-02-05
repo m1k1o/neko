@@ -70,18 +70,18 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 }
 
 func (manager *CaptureManagerCtx) Start() {
-	if manager.broadcast.Enabled() {
+	if manager.broadcast.Started() {
 		if err := manager.broadcast.createPipeline(); err != nil {
 			manager.logger.Panic().Err(err).Msg("unable to create broadcast pipeline")
 		}
 	}
 
 	manager.desktop.OnBeforeScreenSizeChange(func() {
-		if manager.video.Enabled() {
+		if manager.video.Started() {
 			manager.video.destroyPipeline()
 		}
 
-		if manager.broadcast.Enabled() {
+		if manager.broadcast.Started() {
 			manager.broadcast.destroyPipeline()
 		}
 
@@ -91,13 +91,13 @@ func (manager *CaptureManagerCtx) Start() {
 	})
 
 	manager.desktop.OnAfterScreenSizeChange(func() {
-		if manager.video.Enabled() {
+		if manager.video.Started() {
 			if err := manager.video.createPipeline(); err != nil {
 				manager.logger.Panic().Err(err).Msg("unable to recreate video pipeline")
 			}
 		}
 
-		if manager.broadcast.Enabled() {
+		if manager.broadcast.Started() {
 			if err := manager.broadcast.createPipeline(); err != nil {
 				manager.logger.Panic().Err(err).Msg("unable to recreate broadcast pipeline")
 			}
