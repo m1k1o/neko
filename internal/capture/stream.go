@@ -75,9 +75,14 @@ func (manager *StreamManagerCtx) OnSample(listener func(sample types.Sample)) {
 	})
 }
 
-func (manager *StreamManagerCtx) Start() {
+func (manager *StreamManagerCtx) Start() error {
+	err := manager.createPipeline()
+	if err != nil {
+		return err
+	}
+
 	manager.enabled = true
-	manager.createPipeline()
+	return nil
 }
 
 func (manager *StreamManagerCtx) Stop() {

@@ -111,8 +111,17 @@ func (manager *CaptureManagerCtx) StartStream() {
 
 	manager.logger.Info().Msgf("starting stream pipelines")
 
-	manager.Video().Start()
-	manager.Audio().Start()
+	var err error
+	err = manager.Video().Start()
+	if err != nil {
+		manager.logger.Panic().Err(err).Msg("unable to start video pipeline")
+	}
+
+	err = manager.Audio().Start()
+	if err != nil {
+		manager.logger.Panic().Err(err).Msg("unable to start audio pipeline")
+	}
+
 	manager.streaming = true
 }
 

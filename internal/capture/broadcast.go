@@ -32,9 +32,14 @@ func (manager *BroacastManagerCtx) shutdown() {
 }
 
 func (manager *BroacastManagerCtx) Start(url string) error {
+	err := manager.createPipeline()
+	if err != nil {
+		return err
+	}
+
 	manager.url = url
 	manager.enabled = true
-	return manager.createPipeline()
+	return nil
 }
 
 func (manager *BroacastManagerCtx) Stop() {

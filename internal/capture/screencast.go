@@ -147,9 +147,11 @@ func (manager *ScreencastManagerCtx) createPipeline() error {
 		return err
 	}
 
-	manager.pipeline.Start()
-	manager.logger.Info().Msgf("starting pipeline")
+	manager.logger.Info().
+		Str("src", manager.pipeline.Src).
+		Msgf("starting pipeline")
 
+	manager.pipeline.Start()
 	manager.sample = manager.pipeline.Sample
 	manager.emitUpdate <-true
 	return nil

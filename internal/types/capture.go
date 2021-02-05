@@ -25,7 +25,7 @@ type StreamManager interface {
 	Codec() codec.RTPCodec
 	OnSample(listener func(sample Sample))
 
-	Start()
+	Start() error
 	Stop()
 	Enabled() bool
 }
