@@ -8,12 +8,12 @@ import (
 
 	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/config"
+	"demodesk/neko/internal/capture/gst"
 )
 
 type CaptureManagerCtx struct {
 	logger       zerolog.Logger
 	mu           sync.Mutex
-	config       *config.Capture
 	desktop      types.DesktopManager
 	streaming    bool
 	broadcast    *BroacastManagerCtx
@@ -23,16 +23,49 @@ type CaptureManagerCtx struct {
 }
 
 func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCtx {
+	logger := log.With().Str("module", "capture").Logger()
+
+	broadcastPipeline := gst.GetRTMPPipeline(
+		config.Device,
+		config.Display,
+		config.BroadcastPipeline,
+	)
+
+	screencastPipeline := gst.GetJPEGPipeline(
+		config.Display,
+		config.ScreencastPipeline,
+		config.ScreencastRate,
+		config.ScreencastQuality,
+	)
+
+	audioPipeline, err := gst.GetAppPipeline(
+		config.AudioCodec,
+		config.Device,
+		config.AudioParams,
+	)
+
+	if err != nil {
+		logger.Panic().Err(err).Msg("unable to get pipeline")
+	}
+
+	videoPipeline, err := gst.GetAppPipeline(
+		config.VideoCodec,
+		config.Display,
+		config.VideoParams,
+	)
+
+	if err != nil {
+		logger.Panic().Err(err).Msg("unable to get pipeline")
+	}
+
 	return &CaptureManagerCtx{
-		logger:      log.With().Str("module", "capture").Logger(),
-		mu:          sync.Mutex{},
-		config:      config,
+		logger:      logger,
 		desktop:     desktop,
 		streaming:   false,
-		broadcast:   broadcastNew(config),
-		screencast:  screencastNew(config),
-		audio:       streamNew(config.AudioCodec, config.Device, config.AudioParams),
-		video:       streamNew(config.VideoCodec, config.Display, config.VideoParams),
+		broadcast:   broadcastNew(broadcastPipeline),
+		screencast:  screencastNew(config.Screencast, screencastPipeline),
+		audio:       streamNew(config.AudioCodec, audioPipeline),
+		video:       streamNew(config.VideoCodec, videoPipeline),
 	}
 }
 

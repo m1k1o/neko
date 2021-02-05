@@ -3,30 +3,29 @@ package capture
 import (
 	"fmt"
 	"sync"
+	"strings"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"demodesk/neko/internal/config"
 	"demodesk/neko/internal/capture/gst"
 )
 
 type BroacastManagerCtx struct {
-	logger    zerolog.Logger
-	mu        sync.Mutex
-	config    *config.Capture
-	pipeline  *gst.Pipeline
-	enabled   bool
-	url       string
+	logger       zerolog.Logger
+	mu           sync.Mutex
+	pipelineStr  string
+	pipeline     *gst.Pipeline
+	enabled      bool
+	url          string
 }
 
-func broadcastNew(config *config.Capture) *BroacastManagerCtx {
+func broadcastNew(pipelineStr string) *BroacastManagerCtx {
 	return &BroacastManagerCtx{
-		logger:   log.With().Str("module", "capture").Str("submodule", "broadcast").Logger(),
-		mu:       sync.Mutex{},
-		config:   config,
-		enabled:  false,
-		url:      "",
+		logger:       log.With().Str("module", "capture").Str("submodule", "broadcast").Logger(),
+		pipelineStr:  pipelineStr,
+		enabled:      false,
+		url:          "",
 	}
 }
 
@@ -68,30 +67,24 @@ func (manager *BroacastManagerCtx) Url() string {
 
 func (manager *BroacastManagerCtx) createPipeline() error {
 	if manager.pipeline != nil {
-		return fmt.Errorf("pipeline already running")
+		return fmt.Errorf("pipeline already exists")
 	}
 
 	var err error
 
+	// replace {url} with valid URL
+	pipelineStr := strings.Replace(manager.pipelineStr, "{url}", manager.url, 1)
+
 	manager.logger.Info().
-		Str("audio_device", manager.config.Device).
-		Str("video_display", manager.config.Display).
-		Str("broadcast_pipeline", manager.config.BroadcastPipeline).
-		Msgf("creating pipeline")
+		Str("str", pipelineStr).
+		Msgf("starting pipeline")
 
-	manager.pipeline, err = gst.CreateRTMPPipeline(
-		manager.config.Device,
-		manager.config.Display,
-		manager.config.BroadcastPipeline,
-		manager.url,
-	)
-
+	manager.pipeline, err = gst.CreatePipeline(pipelineStr)
 	if err != nil {
 		return err
 	}
 
 	manager.pipeline.Play()
-	manager.logger.Info().Msgf("starting pipeline")
 	return nil
 }
 
@@ -101,6 +94,6 @@ func (manager *BroacastManagerCtx) destroyPipeline() {
 	}
 
 	manager.pipeline.Stop()
-	manager.logger.Info().Msgf("stopping pipeline")
+	manager.logger.Info().Msgf("destroying pipeline")
 	manager.pipeline = nil
 }

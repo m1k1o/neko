@@ -14,30 +14,27 @@ import (
 )
 
 type StreamManagerCtx struct {
-	logger          zerolog.Logger
-	mu              sync.Mutex
-	codec           codec.RTPCodec
-	pipelineDevice  string
-	pipelineSrc     string
-	pipeline        *gst.Pipeline
-	sample          chan types.Sample
-	emmiter         events.EventEmmiter
-	emitUpdate      chan bool
-	emitStop        chan bool
-	enabled         bool
+	logger       zerolog.Logger
+	mu           sync.Mutex
+	codec        codec.RTPCodec
+	pipelineStr  string
+	pipeline     *gst.Pipeline
+	sample       chan types.Sample
+	emmiter      events.EventEmmiter
+	emitUpdate   chan bool
+	emitStop     chan bool
+	enabled      bool
 }
 
-func streamNew(codec codec.RTPCodec, pipelineDevice string, pipelineSrc string) *StreamManagerCtx {
+func streamNew(codec codec.RTPCodec, pipelineStr string) *StreamManagerCtx {
 	manager := &StreamManagerCtx{
-		logger:          log.With().Str("module", "capture").Str("submodule", "stream").Logger(),
-		mu:              sync.Mutex{},
-		codec:           codec,
-		pipelineDevice:  pipelineDevice,
-		pipelineSrc:     pipelineSrc,
-		emmiter:         events.New(),
-		emitUpdate:      make(chan bool),
-		emitStop:        make(chan bool),
-		enabled:         false,
+		logger:       log.With().Str("module", "capture").Str("submodule", "stream").Logger(),
+		codec:        codec,
+		pipelineStr:  pipelineStr,
+		emmiter:      events.New(),
+		emitUpdate:   make(chan bool),
+		emitStop:     make(chan bool),
+		enabled:      false,
 	}
 
 	go func() {
@@ -103,7 +100,7 @@ func (manager *StreamManagerCtx) Enabled() bool {
 
 func (manager *StreamManagerCtx) createPipeline() error {
 	if manager.pipeline != nil {
-		return fmt.Errorf("pipeline already running")
+		return fmt.Errorf("pipeline already exists")
 	}
 
 	var err error
@@ -111,18 +108,13 @@ func (manager *StreamManagerCtx) createPipeline() error {
 	codec := manager.Codec()
 	manager.logger.Info().
 		Str("codec", codec.Name).
-		Str("device", manager.pipelineDevice).
-		Str("src", manager.pipelineSrc).
+		Str("src", manager.pipelineStr).
 		Msgf("creating pipeline")
 
-	manager.pipeline, err = gst.CreateAppPipeline(codec, manager.pipelineDevice, manager.pipelineSrc)
+	manager.pipeline, err = gst.CreatePipeline(manager.pipelineStr)
 	if err != nil {
 		return err
 	}
-
-	manager.logger.Info().
-		Str("src", manager.pipeline.Src).
-		Msgf("starting pipeline")
 
 	manager.pipeline.Start()
 
@@ -137,6 +129,6 @@ func (manager *StreamManagerCtx) destroyPipeline() {
 	}
 
 	manager.pipeline.Stop()
-	manager.logger.Info().Msgf("stopping pipeline")
+	manager.logger.Info().Msgf("destroying pipeline")
 	manager.pipeline = nil
 }

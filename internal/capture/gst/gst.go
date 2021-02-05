@@ -39,35 +39,36 @@ func init() {
 	registry = C.gst_registry_get()
 }
 
-// CreateRTMPPipeline creates a GStreamer Pipeline
-func CreateRTMPPipeline(pipelineDevice string, pipelineDisplay string, pipelineSrc string, pipelineRTMP string) (*Pipeline, error) {
-	video := fmt.Sprintf(videoSrc, pipelineDisplay)
-	audio := fmt.Sprintf(audioSrc, pipelineDevice)
+func GetRTMPPipeline(audioDevice string, videoDisplay string, pipelineSrc string) string {
+	video := fmt.Sprintf(videoSrc, videoDisplay)
+	audio := fmt.Sprintf(audioSrc, audioDevice)
 
 	var pipelineStr string
 	if pipelineSrc != "" {
-		pipelineStr = fmt.Sprintf(pipelineSrc, pipelineRTMP, pipelineDevice, pipelineDisplay)
+		pipelineStr = fmt.Sprintf(pipelineSrc, audioDevice, videoDisplay)
 	} else {
-		pipelineStr = fmt.Sprintf("flvmux name=mux ! rtmpsink location='%s live=1' %s audio/x-raw,channels=2 ! audioconvert ! voaacenc ! mux. %s x264enc bframes=0 key-int-max=60 byte-stream=true tune=zerolatency speed-preset=veryfast ! mux.", pipelineRTMP, audio, video)
+		pipelineStr = fmt.Sprintf("flvmux name=mux ! rtmpsink location='{url} live=1' %s audio/x-raw,channels=2 ! audioconvert ! voaacenc ! mux. %s x264enc bframes=0 key-int-max=60 byte-stream=true tune=zerolatency speed-preset=veryfast ! mux.", audio, video)
 	}
 
-	return CreatePipeline(pipelineStr)
+	return pipelineStr
 }
 
-// CreateJPEGPipeline creates a GStreamer Pipeline
-func CreateJPEGPipeline(pipelineDisplay string, pipelineSrc string, rate string, quality string) (*Pipeline, error) {
+func GetJPEGPipeline(videoDisplay string, pipelineSrc string, rate string, quality string) string {
 	var pipelineStr string
 	if pipelineSrc != "" {
-		pipelineStr = fmt.Sprintf(pipelineSrc, pipelineDisplay)
+		pipelineStr = fmt.Sprintf(pipelineSrc, videoDisplay)
 	} else {
-		pipelineStr = fmt.Sprintf("ximagesrc display-name=%s show-pointer=true use-damage=false ! videoconvert ! videoscale ! videorate ! video/x-raw,framerate=%s ! jpegenc quality=%s" + appSink, pipelineDisplay, rate, quality)
+		pipelineStr = fmt.Sprintf("ximagesrc display-name=%s show-pointer=true use-damage=false ! videoconvert ! videoscale ! videorate ! video/x-raw,framerate=%s ! jpegenc quality=%s" + appSink, videoDisplay, rate, quality)
 	}
 
-	return CreatePipeline(pipelineStr)
+	return pipelineStr
 }
 
-// CreateAppPipeline creates a GStreamer Pipeline
-func CreateAppPipeline(codecRTP codec.RTPCodec, pipelineDevice string, pipelineSrc string) (*Pipeline, error) {
+func GetAppPipeline(codecRTP codec.RTPCodec, pipelineDevice string, pipelineSrc string) (string, error) {
+	if pipelineSrc != "" {
+		return fmt.Sprintf(pipelineSrc + appSink, pipelineDevice), nil
+	}
+
 	var pipelineStr string
 
 	switch codecRTP.Name {
@@ -75,7 +76,7 @@ func CreateAppPipeline(codecRTP codec.RTPCodec, pipelineDevice string, pipelineS
 		// https://gstreamer.freedesktop.org/documentation/vpx/vp8enc.html
 		// gstreamer1.0-plugins-good
 		if err := CheckPlugins([]string{"ximagesrc", "vpx"}); err != nil {
-			return nil, err
+			return "", err
 		}
 
 		pipelineStr = fmt.Sprintf(videoSrc + "vp8enc cpu-used=16 threads=4 deadline=1 error-resilient=partitions keyframe-max-dist=15 static-threshold=20" + appSink, pipelineDevice)
@@ -83,14 +84,14 @@ func CreateAppPipeline(codecRTP codec.RTPCodec, pipelineDevice string, pipelineS
 		// https://gstreamer.freedesktop.org/documentation/vpx/vp9enc.html
 		// gstreamer1.0-plugins-good
 		if err := CheckPlugins([]string{"ximagesrc", "vpx"}); err != nil {
-			return nil, err
+			return "", err
 		}
 
 		pipelineStr = fmt.Sprintf(videoSrc + "vp9enc cpu-used=16 threads=4 deadline=1 keyframe-max-dist=15 static-threshold=20" + appSink, pipelineDevice)
 	case "h264":
 		var err error
 		if err = CheckPlugins([]string{"ximagesrc"}); err != nil {
-			return nil, err
+			return "", err
 		}
 
 		// https://gstreamer.freedesktop.org/documentation/x264/index.html
@@ -107,12 +108,12 @@ func CreateAppPipeline(codecRTP codec.RTPCodec, pipelineDevice string, pipelineS
 			break
 		}
 
-		return nil, err
+		return "", err
 	case "opus":
 		// https://gstreamer.freedesktop.org/documentation/opus/opusenc.html
 		// gstreamer1.0-plugins-base
 		if err := CheckPlugins([]string{"pulseaudio", "opus"}); err != nil {
-			return nil, err
+			return "", err
 		}
 
 		pipelineStr = fmt.Sprintf(audioSrc + "opusenc bitrate=128000" + appSink, pipelineDevice)
@@ -120,7 +121,7 @@ func CreateAppPipeline(codecRTP codec.RTPCodec, pipelineDevice string, pipelineS
 		// https://gstreamer.freedesktop.org/documentation/libav/avenc_g722.html
 		// gstreamer1.0-libav
 		if err := CheckPlugins([]string{"pulseaudio", "libav"}); err != nil {
-			return nil, err
+			return "", err
 		}
 
 		pipelineStr = fmt.Sprintf(audioSrc + "avenc_g722" + appSink, pipelineDevice)
@@ -128,7 +129,7 @@ func CreateAppPipeline(codecRTP codec.RTPCodec, pipelineDevice string, pipelineS
 		// https://gstreamer.freedesktop.org/documentation/mulaw/mulawenc.html
 		// gstreamer1.0-plugins-good
 		if err := CheckPlugins([]string{"pulseaudio", "mulaw"}); err != nil {
-			return nil, err
+			return "", err
 		}
 
 		pipelineStr = fmt.Sprintf(audioSrc + "audio/x-raw, rate=8000 ! mulawenc" + appSink, pipelineDevice)
@@ -136,19 +137,15 @@ func CreateAppPipeline(codecRTP codec.RTPCodec, pipelineDevice string, pipelineS
 		// https://gstreamer.freedesktop.org/documentation/alaw/alawenc.html
 		// gstreamer1.0-plugins-good
 		if err := CheckPlugins([]string{"pulseaudio", "alaw"}); err != nil {
-			return nil, err
+			return "", err
 		}
 
 		pipelineStr = fmt.Sprintf(audioSrc + "audio/x-raw, rate=8000 ! alawenc" + appSink, pipelineDevice)
 	default:
-		return nil, fmt.Errorf("unknown codec %s", codecRTP.Name)
+		return "", fmt.Errorf("unknown codec %s", codecRTP.Name)
 	}
 
-	if pipelineSrc != "" {
-		pipelineStr = fmt.Sprintf(pipelineSrc + appSink, pipelineDevice)
-	}
-
-	return CreatePipeline(pipelineStr)
+	return pipelineStr, nil
 }
 
 // CreatePipeline creates a GStreamer Pipeline

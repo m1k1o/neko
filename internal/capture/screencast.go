@@ -9,41 +9,38 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"demodesk/neko/internal/config"
 	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/capture/gst"
 )
 
 type ScreencastManagerCtx struct {
-	logger      zerolog.Logger
-	mu          sync.Mutex
-	config      *config.Capture
-	pipeline    *gst.Pipeline
-	enabled     bool
-	started     bool
-	emitStop    chan bool
-	emitUpdate  chan bool
-	expired     int32
-	sample      chan types.Sample
-	image       types.Sample
+	logger       zerolog.Logger
+	mu           sync.Mutex
+	pipelineStr  string
+	pipeline     *gst.Pipeline
+	enabled      bool
+	started      bool
+	emitStop     chan bool
+	emitUpdate   chan bool
+	expired      int32
+	sample       chan types.Sample
+	image        types.Sample
 }
 
-func screencastNew(config *config.Capture) *ScreencastManagerCtx {
-	manager := &ScreencastManagerCtx{
-		logger:      log.With().Str("module", "capture").Str("submodule", "screencast").Logger(),
-		config:      config,
-		enabled:     config.Screencast,
-		started:     false,
-		emitStop:    make(chan bool),
-		emitUpdate:  make(chan bool),
-	}
+const screencastTimeout = 5 * time.Second
 
-	if !manager.enabled {
-		return manager
+func screencastNew(enabled bool, pipelineStr string) *ScreencastManagerCtx {
+	manager := &ScreencastManagerCtx{
+		logger:       log.With().Str("module", "capture").Str("submodule", "screencast").Logger(),
+		pipelineStr:  pipelineStr,
+		enabled:      enabled,
+		started:      false,
+		emitStop:     make(chan bool),
+		emitUpdate:   make(chan bool),
 	}
 
 	go func() {
-		ticker := time.NewTicker(5 * time.Second)
+		ticker := time.NewTicker(screencastTimeout)
 		manager.logger.Debug().Msg("started emitting samples")
 
 		for {
@@ -133,30 +130,19 @@ func (manager *ScreencastManagerCtx) stop() {
 
 func (manager *ScreencastManagerCtx) createPipeline() error {
 	if manager.pipeline != nil {
-		return fmt.Errorf("pipeline already running")
+		return fmt.Errorf("pipeline already exists")
 	}
 
 	var err error
 
 	manager.logger.Info().
-		Str("video_display", manager.config.Display).
-		Str("screencast_pipeline", manager.config.ScreencastPipeline).
+		Str("str", manager.pipelineStr).
 		Msgf("creating pipeline")
 
-	manager.pipeline, err = gst.CreateJPEGPipeline(
-		manager.config.Display,
-		manager.config.ScreencastPipeline,
-		manager.config.ScreencastRate,
-		manager.config.ScreencastQuality,
-	)
-
+	manager.pipeline, err = gst.CreatePipeline(manager.pipelineStr)
 	if err != nil {
 		return err
 	}
-
-	manager.logger.Info().
-		Str("src", manager.pipeline.Src).
-		Msgf("starting pipeline")
 
 	manager.pipeline.Start()
 	manager.sample = manager.pipeline.Sample
@@ -170,6 +156,6 @@ func (manager *ScreencastManagerCtx) destroyPipeline() {
 	}
 
 	manager.pipeline.Stop()
-	manager.logger.Info().Msgf("stopping pipeline")
+	manager.logger.Info().Msgf("destroying pipeline")
 	manager.pipeline = nil
 }
