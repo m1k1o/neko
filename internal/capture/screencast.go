@@ -107,6 +107,9 @@ func (manager *ScreencastManagerCtx) Image() ([]byte, error) {
 }
 
 func (manager *ScreencastManagerCtx) start() error {
+	manager.mu.Lock()
+	defer manager.mu.Unlock()
+
 	if !manager.enabled {
 		return fmt.Errorf("screenshot pipeline not enabled")
 	}
@@ -121,13 +124,17 @@ func (manager *ScreencastManagerCtx) start() error {
 }
 
 func (manager *ScreencastManagerCtx) stop() {
+	manager.mu.Lock()
+	defer manager.mu.Unlock()
+
 	manager.started = false
 	manager.destroyPipeline()
 }
 
 func (manager *ScreencastManagerCtx) createPipeline() error {
-	manager.mu.Lock()
-	defer manager.mu.Unlock()
+	if manager.pipeline != nil {
+		return fmt.Errorf("pipeline already running")
+	}
 
 	var err error
 
@@ -158,9 +165,6 @@ func (manager *ScreencastManagerCtx) createPipeline() error {
 }
 
 func (manager *ScreencastManagerCtx) destroyPipeline() {
-	manager.mu.Lock()
-	defer manager.mu.Unlock()
-
 	if manager.pipeline == nil {
 		return
 	}

@@ -1,6 +1,7 @@
 package capture
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/kataras/go-events"
@@ -76,6 +77,9 @@ func (manager *StreamManagerCtx) OnSample(listener func(sample types.Sample)) {
 }
 
 func (manager *StreamManagerCtx) Start() error {
+	manager.mu.Lock()
+	defer manager.mu.Unlock()
+
 	err := manager.createPipeline()
 	if err != nil {
 		return err
@@ -86,6 +90,9 @@ func (manager *StreamManagerCtx) Start() error {
 }
 
 func (manager *StreamManagerCtx) Stop() {
+	manager.mu.Lock()
+	defer manager.mu.Unlock()
+
 	manager.enabled = false
 	manager.destroyPipeline()
 }
@@ -95,6 +102,10 @@ func (manager *StreamManagerCtx) Enabled() bool {
 }
 
 func (manager *StreamManagerCtx) createPipeline() error {
+	if manager.pipeline != nil {
+		return fmt.Errorf("pipeline already running")
+	}
+
 	var err error
 
 	codec := manager.Codec()

@@ -1,6 +1,9 @@
 package capture
 
 import (
+	"fmt"
+	"sync"
+
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
@@ -10,6 +13,7 @@ import (
 
 type BroacastManagerCtx struct {
 	logger    zerolog.Logger
+	mu        sync.Mutex
 	config    *config.Capture
 	pipeline  *gst.Pipeline
 	enabled   bool
@@ -19,6 +23,7 @@ type BroacastManagerCtx struct {
 func broadcastNew(config *config.Capture) *BroacastManagerCtx {
 	return &BroacastManagerCtx{
 		logger:   log.With().Str("module", "capture").Str("submodule", "broadcast").Logger(),
+		mu:       sync.Mutex{},
 		config:   config,
 		enabled:  false,
 		url:      "",
@@ -32,6 +37,9 @@ func (manager *BroacastManagerCtx) shutdown() {
 }
 
 func (manager *BroacastManagerCtx) Start(url string) error {
+	manager.mu.Lock()
+	defer manager.mu.Unlock()
+
 	err := manager.createPipeline()
 	if err != nil {
 		return err
@@ -43,6 +51,9 @@ func (manager *BroacastManagerCtx) Start(url string) error {
 }
 
 func (manager *BroacastManagerCtx) Stop() {
+	manager.mu.Lock()
+	defer manager.mu.Unlock()
+
 	manager.enabled = false
 	manager.destroyPipeline()
 }
@@ -56,6 +67,10 @@ func (manager *BroacastManagerCtx) Url() string {
 }
 
 func (manager *BroacastManagerCtx) createPipeline() error {
+	if manager.pipeline != nil {
+		return fmt.Errorf("pipeline already running")
+	}
+
 	var err error
 
 	manager.logger.Info().
