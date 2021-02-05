@@ -137,7 +137,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session) (*webrtc.Sess
 		})
 	}
 
-	audioTransceiver, err := connection.AddTransceiverFromTrack(manager.audioTrack, webrtc.RtpTransceiverInit{
+	_, err = connection.AddTransceiverFromTrack(manager.audioTrack, webrtc.RtpTransceiverInit{
 		Direction: webrtc.RTPTransceiverDirectionSendonly,
 	})
 	if err != nil {
@@ -151,7 +151,8 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session) (*webrtc.Sess
 		return nil, err
 	}
 
-	if _, err := connection.CreateDataChannel("data", nil); err != nil {
+	_, err = connection.CreateDataChannel("data", nil)
+	if err != nil {
 		return nil, err
 	}
 
@@ -206,7 +207,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session) (*webrtc.Sess
 		settings:          settings,
 		connection:        connection,
 		configuration:     configuration,
-		audioTransceiver:  audioTransceiver,
+		videoTracks:       manager.videoTracks,
 		videoTransceiver:  videoTransceiver,
 	})
 

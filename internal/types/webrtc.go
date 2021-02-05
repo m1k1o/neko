@@ -5,6 +5,7 @@ import "github.com/pion/webrtc/v3"
 type WebRTCPeer interface {
 	SignalAnswer(sdp string) error
 	SignalCandidate(candidate webrtc.ICECandidateInit) error
+	SetVideoID(videoID string) error
 
 	Destroy() error
 }

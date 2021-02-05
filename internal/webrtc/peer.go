@@ -1,6 +1,10 @@
 package webrtc
 
-import "github.com/pion/webrtc/v3"
+import (
+	"fmt"
+
+	"github.com/pion/webrtc/v3"
+)
 
 type WebRTCPeerCtx struct {
 	api               *webrtc.API
@@ -8,7 +12,7 @@ type WebRTCPeerCtx struct {
 	settings          *webrtc.SettingEngine
 	connection        *webrtc.PeerConnection
 	configuration     *webrtc.Configuration
-	audioTransceiver  *webrtc.RTPTransceiver
+	videoTracks       map[string]*webrtc.TrackLocalStaticSample
 	videoTransceiver  *webrtc.RTPTransceiver
 }
 
@@ -23,11 +27,12 @@ func (webrtc_peer *WebRTCPeerCtx) SignalCandidate(candidate webrtc.ICECandidateI
 	return webrtc_peer.connection.AddICECandidate(candidate)
 }
 
-func (webrtc_peer *WebRTCPeerCtx) ReplaceAudioTrack(track webrtc.TrackLocal) error {
-	return webrtc_peer.audioTransceiver.Sender().ReplaceTrack(track)
-}
+func (webrtc_peer *WebRTCPeerCtx) SetVideoID(videoID string) error {
+	track, ok := webrtc_peer.videoTracks[videoID]
+	if !ok {
+		return fmt.Errorf("videoID not found in available tracks")
+	}
 
-func (webrtc_peer *WebRTCPeerCtx) ReplaceVideoTrack(track webrtc.TrackLocal) error {
 	return webrtc_peer.videoTransceiver.Sender().ReplaceTrack(track)
 }
 
