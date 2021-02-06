@@ -92,6 +92,13 @@ func (manager *StreamManagerCtx) RemoveListener(listener *func(sample types.Samp
 	}
 }
 
+func (manager *StreamManagerCtx) ListenersCount() int {
+	manager.emitMu.Lock()
+	defer manager.emitMu.Unlock()
+
+	return len(manager.listeners)
+}
+
 func (manager *StreamManagerCtx) Start() error {
 	manager.mu.Lock()
 	defer manager.mu.Unlock()

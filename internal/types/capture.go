@@ -23,8 +23,10 @@ type ScreencastManager interface {
 
 type StreamManager interface {
 	Codec() codec.RTPCodec
+
 	AddListener(listener *func(sample Sample))
 	RemoveListener(listener *func(sample Sample))
+	ListenersCount() int
 
 	Start() error
 	Stop()
@@ -40,8 +42,4 @@ type CaptureManager interface {
 	Audio() StreamManager
 	Video(videoID string) (StreamManager, bool)
 	VideoIDs() []string
-
-	StartStream()
-	StopStream()
-	Streaming() bool
 }

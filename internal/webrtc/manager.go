@@ -19,7 +19,7 @@ import (
 
 func New(desktop types.DesktopManager, capture types.CaptureManager, config *config.WebRTC) *WebRTCManagerCtx {
 	return &WebRTCManagerCtx{
-		logger:         log.With().Str("module", "webrtc").Logger(),
+		logger:          log.With().Str("module", "webrtc").Logger(),
 		defaultVideoID:  capture.VideoIDs()[0],
 		desktop:         desktop,
 		capture:         capture,
@@ -29,7 +29,6 @@ func New(desktop types.DesktopManager, capture types.CaptureManager, config *con
 
 type WebRTCManagerCtx struct {
 	logger          zerolog.Logger
-	videoTracks     map[string]*webrtc.TrackLocalStaticSample
 	audioTrack      *webrtc.TrackLocalStaticSample
 	unsubscribe     []func()
 	defaultVideoID  string
@@ -59,36 +58,6 @@ func (manager *WebRTCManagerCtx) Start() {
 	manager.unsubscribe = append(manager.unsubscribe, func(){
 		audio.RemoveListener(&listener)
 	})
-
-	videoIDs := manager.capture.VideoIDs()
-	manager.videoTracks = map[string]*webrtc.TrackLocalStaticSample{}
-	for _, videoID := range videoIDs {
-		videoID := videoID
-
-		video, ok := manager.capture.Video(videoID)
-		if !ok {
-			manager.logger.Warn().Str("videoID", videoID).Msg("video stream not found, skipping")
-			continue
-		}
-
-		track, err := webrtc.NewTrackLocalStaticSample(video.Codec().Capability, "video", "stream")
-		if err != nil {
-			manager.logger.Panic().Err(err).Str("videoID", videoID).Msg("unable to create video track")
-		}
-
-		listener := func(sample types.Sample) {
-			if err := track.WriteSample(media.Sample(sample)); err != nil && err != io.ErrClosedPipe {
-				manager.logger.Warn().Err(err).Str("videoID", videoID).Msg("vide pipeline failed to write")
-			}
-		}
-
-		video.AddListener(&listener)
-		manager.unsubscribe = append(manager.unsubscribe, func(){
-			video.RemoveListener(&listener)
-		})
-
-		manager.videoTracks[videoID] = track
-	}
 
 	manager.logger.Info().
 		Str("ice_lite", fmt.Sprintf("%t", manager.config.ICELite)).
@@ -159,12 +128,67 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session) (*webrtc.Sess
 		})
 	}
 
+	// create video track
+	videoStream, ok := manager.capture.Video(manager.defaultVideoID)
+	if !ok {
+		manager.logger.Warn().Str("videoID", manager.defaultVideoID).Msg("default video stream not found")
+		return nil, err
+	}
+
+	videoTrack, err := webrtc.NewTrackLocalStaticSample(videoStream.Codec().Capability, "video", "stream")
+	if err != nil {
+		manager.logger.Warn().Err(err).Msg("unable to create video track")
+		return nil, err
+	}
+
+	listener := func(sample types.Sample) {
+		if err := videoTrack.WriteSample(media.Sample(sample)); err != nil && err != io.ErrClosedPipe {
+			manager.logger.Warn().Err(err).Msg("video pipeline failed to write")
+		}
+	}
+
+	// should be stream started
+	if videoStream.ListenersCount() == 0 {
+		if err := videoStream.Start(); err != nil {
+			manager.logger.Warn().Err(err).Msg("unable to start video pipeline")
+			return nil, err
+		}
+	}
+
+	videoStream.AddListener(&listener)
+
+	changeVideo := func(videoID string) error {
+		newVideoStream, ok := manager.capture.Video(videoID)
+		if !ok {
+			return fmt.Errorf("video stream not found")
+		}
+
+		// should be new stream started
+		if newVideoStream.ListenersCount() == 0 {
+			if err := newVideoStream.Start(); err != nil {
+				return err
+			}
+		}
+
+		// switch listeners
+		videoStream.RemoveListener(&listener)
+		newVideoStream.AddListener(&listener)
+
+		// should be old stream stopped
+		if videoStream.ListenersCount() == 0 {
+			videoStream.Stop()
+		}
+	
+		videoStream = newVideoStream
+		return nil
+	}
+
 	_, err = connection.AddTrack(manager.audioTrack)
 	if err != nil {
 		return nil, err
 	}
 
-	videoSender, err := connection.AddTrack(manager.videoTracks[manager.defaultVideoID])
+	_, err = connection.AddTrack(videoTrack)
 	if err != nil {
 		return nil, err
 	}
@@ -208,6 +232,12 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session) (*webrtc.Sess
 			connection.Close()
 		case webrtc.PeerConnectionStateClosed:
 			session.SetWebRTCConnected(false)
+			videoStream.RemoveListener(&listener)
+
+			// should be stream stopped
+			if videoStream.ListenersCount() == 0 {
+				videoStream.Stop()
+			}
 		}
 	})
 
@@ -229,8 +259,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session) (*webrtc.Sess
 		settings:       settings,
 		connection:     connection,
 		configuration:  configuration,
-		videoTracks:    manager.videoTracks,
-		videoSender:    videoSender,
+		changeVideo:    changeVideo,
 	})
 
 	return connection.LocalDescription(), nil

@@ -29,9 +29,11 @@ func (h *MessageHandlerCtx) SessionDeleted(session types.Session) error {
 }
 
 func (h *MessageHandlerCtx) SessionConnected(session types.Session) error {
-	// start streaming, when first member connects
-	if !h.capture.Streaming() {
-		h.capture.StartStream()
+	// start audio, when first member connects
+	if !h.capture.Audio().Started() {
+		if err := h.capture.Audio().Start(); err != nil {
+			return err
+		}
 	}
 
 	if err := h.systemInit(session); err != nil {
@@ -48,9 +50,9 @@ func (h *MessageHandlerCtx) SessionConnected(session types.Session) error {
 }
 
 func (h *MessageHandlerCtx) SessionDisconnected(session types.Session) error {
-	// Stop streaming, if last member disonnects
-	if h.capture.Streaming() && !h.sessions.HasConnectedMembers() {
-		h.capture.StopStream()
+	// stop audio, if last member disonnects
+	if h.capture.Audio().Started() && !h.sessions.HasConnectedMembers() {
+		h.capture.Audio().Stop()
 	}
 
 	// clear host if exists

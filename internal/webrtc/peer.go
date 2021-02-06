@@ -1,10 +1,6 @@
 package webrtc
 
-import (
-	"fmt"
-
-	"github.com/pion/webrtc/v3"
-)
+import "github.com/pion/webrtc/v3"
 
 type WebRTCPeerCtx struct {
 	api            *webrtc.API
@@ -12,8 +8,7 @@ type WebRTCPeerCtx struct {
 	settings       *webrtc.SettingEngine
 	connection     *webrtc.PeerConnection
 	configuration  *webrtc.Configuration
-	videoTracks    map[string]*webrtc.TrackLocalStaticSample
-	videoSender    *webrtc.RTPSender
+	changeVideo    func(videoID string) error
 }
 
 func (webrtc_peer *WebRTCPeerCtx) SignalAnswer(sdp string) error {
@@ -28,12 +23,7 @@ func (webrtc_peer *WebRTCPeerCtx) SignalCandidate(candidate webrtc.ICECandidateI
 }
 
 func (webrtc_peer *WebRTCPeerCtx) SetVideoID(videoID string) error {
-	track, ok := webrtc_peer.videoTracks[videoID]
-	if !ok {
-		return fmt.Errorf("videoID not found in available tracks")
-	}
-
-	return webrtc_peer.videoSender.ReplaceTrack(track)
+	return webrtc_peer.changeVideo(videoID)
 }
 
 func (webrtc_peer *WebRTCPeerCtx) Destroy() error {
