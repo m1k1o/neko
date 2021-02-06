@@ -48,7 +48,7 @@ func (manager *WebRTCManagerCtx) Start() {
 		manager.logger.Panic().Err(err).Msg("unable to create audio track")
 	}
 
-	audio.OnSample(func(sample types.Sample) {
+	audio.AddListener(func(sample types.Sample) {
 		if err := manager.audioTrack.WriteSample(media.Sample(sample)); err != nil && err != io.ErrClosedPipe {
 			manager.logger.Warn().Err(err).Msg("audio pipeline failed to write")
 		}
@@ -70,7 +70,7 @@ func (manager *WebRTCManagerCtx) Start() {
 			manager.logger.Panic().Err(err).Str("videoID", videoID).Msg("unable to create video track")
 		}
 	
-		video.OnSample(func(sample types.Sample) {
+		video.AddListener(func(sample types.Sample) {
 			if err := track.WriteSample(media.Sample(sample)); err != nil && err != io.ErrClosedPipe {
 				manager.logger.Warn().Err(err).Str("videoID", videoID).Msg("vide pipeline failed to write")
 			}
@@ -177,6 +177,10 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session) (*webrtc.Sess
 			return nil, err
 		}
 	}
+
+	connection.OnNegotiationNeeded(func() {
+		logger.Warn().Msg("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!negotiation needed!")
+	})
 
 	connection.OnConnectionStateChange(func(state webrtc.PeerConnectionState) {
 		switch state {

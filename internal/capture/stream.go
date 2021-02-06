@@ -3,8 +3,8 @@ package capture
 import (
 	"fmt"
 	"sync"
+	"reflect"
 
-	"github.com/kataras/go-events"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
@@ -20,7 +20,8 @@ type StreamManagerCtx struct {
 	pipelineStr  string
 	pipeline     *gst.Pipeline
 	sample       chan types.Sample
-	emmiter      events.EventEmmiter
+	listeners    map[uintptr]func(sample types.Sample)
+	emitMu       sync.Mutex
 	emitUpdate   chan bool
 	emitStop     chan bool
 	started      bool
@@ -31,7 +32,7 @@ func streamNew(codec codec.RTPCodec, pipelineStr string) *StreamManagerCtx {
 		logger:       log.With().Str("module", "capture").Str("submodule", "stream").Logger(),
 		codec:        codec,
 		pipelineStr:  pipelineStr,
-		emmiter:      events.New(),
+		listeners:    map[uintptr]func(sample types.Sample){},
 		emitUpdate:   make(chan bool),
 		emitStop:     make(chan bool),
 		started:      false,
@@ -48,7 +49,11 @@ func streamNew(codec codec.RTPCodec, pipelineStr string) *StreamManagerCtx {
 			case <-manager.emitUpdate:
 				manager.logger.Debug().Msg("update emitting samples")
 			case sample := <-manager.sample:
-				manager.emmiter.Emit("sample", sample)
+				manager.emitMu.Lock()
+				for _, emit := range manager.listeners {
+					emit(sample)
+				}
+				manager.emitMu.Unlock()
 			}
 		}
 	}()
@@ -67,10 +72,20 @@ func (manager *StreamManagerCtx) Codec() codec.RTPCodec {
 	return manager.codec
 }
 
-func (manager *StreamManagerCtx) OnSample(listener func(sample types.Sample)) {
-	manager.emmiter.On("sample", func(payload ...interface{}) {
-		listener(payload[0].(types.Sample))
-	})
+func (manager *StreamManagerCtx) AddListener(listener func(sample types.Sample)) {
+	manager.emitMu.Lock()
+	defer manager.emitMu.Unlock()
+
+	ptr := reflect.ValueOf(listener).Pointer()
+	manager.listeners[ptr] = listener
+}
+
+func (manager *StreamManagerCtx) RemoveListener(listener func(sample types.Sample)) {
+	manager.emitMu.Lock()
+	defer manager.emitMu.Unlock()
+
+	ptr := reflect.ValueOf(listener).Pointer()
+	delete(manager.listeners, ptr)
 }
 
 func (manager *StreamManagerCtx) Start() error {
