@@ -31,6 +31,7 @@ type WebRTCManagerCtx struct {
 	logger          zerolog.Logger
 	videoTracks     map[string]*webrtc.TrackLocalStaticSample
 	audioTrack      *webrtc.TrackLocalStaticSample
+	unsubscribe     []func()
 	defaultVideoID  string
 	audioCodec      codec.RTPCodec
 	desktop         types.DesktopManager
@@ -48,10 +49,15 @@ func (manager *WebRTCManagerCtx) Start() {
 		manager.logger.Panic().Err(err).Msg("unable to create audio track")
 	}
 
-	audio.AddListener(func(sample types.Sample) {
+	listener := func(sample types.Sample) {
 		if err := manager.audioTrack.WriteSample(media.Sample(sample)); err != nil && err != io.ErrClosedPipe {
 			manager.logger.Warn().Err(err).Msg("audio pipeline failed to write")
 		}
+	}
+
+	audio.AddListener(listener)
+	manager.unsubscribe = append(manager.unsubscribe, func(){
+		audio.RemoveListener(listener)
 	})
 
 	videoIDs := manager.capture.VideoIDs()
@@ -69,11 +75,16 @@ func (manager *WebRTCManagerCtx) Start() {
 		if err != nil {
 			manager.logger.Panic().Err(err).Str("videoID", videoID).Msg("unable to create video track")
 		}
-	
-		video.AddListener(func(sample types.Sample) {
+
+		listener := func(sample types.Sample) {
 			if err := track.WriteSample(media.Sample(sample)); err != nil && err != io.ErrClosedPipe {
 				manager.logger.Warn().Err(err).Str("videoID", videoID).Msg("vide pipeline failed to write")
 			}
+		}
+
+		video.AddListener(listener)
+		manager.unsubscribe = append(manager.unsubscribe, func(){
+			video.RemoveListener(listener)
 		})
 
 		manager.videoTracks[videoID] = track
@@ -90,6 +101,11 @@ func (manager *WebRTCManagerCtx) Start() {
 
 func (manager *WebRTCManagerCtx) Shutdown() error {
 	manager.logger.Info().Msgf("webrtc shutting down")
+
+	for _, unsubscribe := range manager.unsubscribe {
+		unsubscribe()
+	}
+
 	return nil
 }
 
