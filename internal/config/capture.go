@@ -13,8 +13,8 @@ type Capture struct {
 	AudioPipeline      string
 
 	Display            string
-	VideoCodec         codec.RTPCodec
-	VideoPipeline      string
+	//VideoCodec         codec.RTPCodec
+	//VideoPipeline      string
 
 	BroadcastPipeline  string
 
@@ -40,26 +40,26 @@ func (Capture) Init(cmd *cobra.Command) error {
 		return err
 	}
 
-	cmd.PersistentFlags().String("video", "", "video codec parameters to use for streaming")
-	if err := viper.BindPFlag("video", cmd.PersistentFlags().Lookup("video")); err != nil {
-		return err
-	}
+	//cmd.PersistentFlags().String("video", "", "video codec parameters to use for streaming")
+	//if err := viper.BindPFlag("video", cmd.PersistentFlags().Lookup("video")); err != nil {
+	//	return err
+	//}
 
 	// video codecs
-	cmd.PersistentFlags().Bool("vp8", false, "use VP8 video codec")
-	if err := viper.BindPFlag("vp8", cmd.PersistentFlags().Lookup("vp8")); err != nil {
-		return err
-	}
-
-	cmd.PersistentFlags().Bool("vp9", false, "use VP9 video codec")
-	if err := viper.BindPFlag("vp9", cmd.PersistentFlags().Lookup("vp9")); err != nil {
-		return err
-	}
-
-	cmd.PersistentFlags().Bool("h264", false, "use H264 video codec")
-	if err := viper.BindPFlag("h264", cmd.PersistentFlags().Lookup("h264")); err != nil {
-		return err
-	}
+	//cmd.PersistentFlags().Bool("vp8", false, "use VP8 video codec")
+	//if err := viper.BindPFlag("vp8", cmd.PersistentFlags().Lookup("vp8")); err != nil {
+	//	return err
+	//}
+	//
+	//cmd.PersistentFlags().Bool("vp9", false, "use VP9 video codec")
+	//if err := viper.BindPFlag("vp9", cmd.PersistentFlags().Lookup("vp9")); err != nil {
+	//	return err
+	//}
+	//
+	//cmd.PersistentFlags().Bool("h264", false, "use H264 video codec")
+	//if err := viper.BindPFlag("h264", cmd.PersistentFlags().Lookup("h264")); err != nil {
+	//	return err
+	//}
 
 	// audio codecs
 	cmd.PersistentFlags().Bool("opus", false, "use Opus audio codec")
@@ -113,17 +113,17 @@ func (Capture) Init(cmd *cobra.Command) error {
 }
 
 func (s *Capture) Set() {
-	var videoCodec codec.RTPCodec
-	if viper.GetBool("vp8") {
-		videoCodec = codec.VP8()
-	} else if viper.GetBool("vp9") {
-		videoCodec = codec.VP9()
-	} else if viper.GetBool("h264") {
-		videoCodec = codec.H264()
-	} else {
-		// default
-		videoCodec = codec.VP8()
-	}
+	//var videoCodec codec.RTPCodec
+	//if viper.GetBool("vp8") {
+	//	videoCodec = codec.VP8()
+	//} else if viper.GetBool("vp9") {
+	//	videoCodec = codec.VP9()
+	//} else if viper.GetBool("h264") {
+	//	videoCodec = codec.H264()
+	//} else {
+	//	// default
+	//	videoCodec = codec.VP8()
+	//}
 
 	var audioCodec codec.RTPCodec
 	if viper.GetBool("opus") {
@@ -144,8 +144,8 @@ func (s *Capture) Set() {
 	s.AudioPipeline = viper.GetString("audio")
 
 	s.Display = viper.GetString("display")
-	s.VideoCodec = videoCodec
-	s.VideoPipeline = viper.GetString("video")
+	//s.VideoCodec = videoCodec
+	//s.VideoPipeline = viper.GetString("video")
 
 	s.BroadcastPipeline = viper.GetString("broadcast_pipeline")
 

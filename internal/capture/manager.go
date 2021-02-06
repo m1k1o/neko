@@ -8,6 +8,7 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"demodesk/neko/internal/types"
+	"demodesk/neko/internal/types/codec"
 	"demodesk/neko/internal/config"
 )
 
@@ -69,18 +70,6 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 		)
 	}
 
-	videoPipeline := config.VideoPipeline
-	if videoPipeline == "" {
-		videoPipeline = fmt.Sprintf(
-			"ximagesrc display-name=%s show-pointer=false use-damage=false " +
-				"! video/x-raw " +
-				"! videoconvert " +
-				"! queue " +
-				"! %s " +
-				"! appsink name=appsink", config.Display, config.VideoCodec.Pipeline,
-		)
-	}
-
 	return &CaptureManagerCtx{
 		logger:      logger,
 		desktop:     desktop,
@@ -89,9 +78,40 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 		screencast:  screencastNew(config.Screencast, screencastPipeline),
 		audio:       streamNew(config.AudioCodec, audioPipeline),
 		videos:      map[string]*StreamManagerCtx{
-			"hq": streamNew(config.VideoCodec, videoPipeline),
+			"hd": streamNew(codec.VP8(), fmt.Sprintf(
+				"ximagesrc display-name=%s show-pointer=false use-damage=false " +
+					"! video/x-raw " +
+					"! videoconvert " +
+					"! queue " +
+					"! vp8enc target-bitrate=8192000 cpu-used=16 threads=4 deadline=1 error-resilient=partitions keyframe-max-dist=15 static-threshold=20 " +
+					"! appsink name=appsink", config.Display,
+			)),
+			"hq": streamNew(codec.VP8(), fmt.Sprintf(
+				"ximagesrc display-name=%s show-pointer=false use-damage=false " +
+					"! video/x-raw " +
+					"! videoconvert " +
+					"! queue " +
+					"! vp8enc target-bitrate=4096000 cpu-used=16 threads=4 deadline=1 error-resilient=partitions keyframe-max-dist=15 static-threshold=20 " +
+					"! appsink name=appsink", config.Display,
+			)),
+			"mq": streamNew(codec.VP8(), fmt.Sprintf(
+				"ximagesrc display-name=%s show-pointer=false use-damage=false " +
+					"! video/x-raw " +
+					"! videoconvert " +
+					"! queue " +
+					"! vp8enc target-bitrate=2048000 cpu-used=16 threads=4 deadline=1 error-resilient=partitions keyframe-max-dist=15 static-threshold=20 " +
+					"! appsink name=appsink", config.Display,
+			)),
+			"lq": streamNew(codec.VP8(), fmt.Sprintf(
+				"ximagesrc display-name=%s show-pointer=false use-damage=false " +
+					"! video/x-raw " +
+					"! videoconvert " +
+					"! queue " +
+					"! vp8enc target-bitrate=1024000 cpu-used=16 threads=4 deadline=1 error-resilient=partitions keyframe-max-dist=15 static-threshold=20 " +
+					"! appsink name=appsink", config.Display,
+			)),
 		},
-		videoIDs:    []string{ "hq" },
+		videoIDs:    []string{ "hd", "hq", "mq", "lq" },
 	}
 }
 
