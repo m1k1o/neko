@@ -23,8 +23,8 @@ type ScreencastManager interface {
 
 type StreamManager interface {
 	Codec() codec.RTPCodec
-	AddListener(listener func(sample Sample))
-	RemoveListener(listener func(sample Sample))
+	AddListener(listener *func(sample Sample))
+	RemoveListener(listener *func(sample Sample))
 
 	Start() error
 	Stop()

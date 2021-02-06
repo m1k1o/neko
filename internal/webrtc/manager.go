@@ -55,9 +55,9 @@ func (manager *WebRTCManagerCtx) Start() {
 		}
 	}
 
-	audio.AddListener(listener)
+	audio.AddListener(&listener)
 	manager.unsubscribe = append(manager.unsubscribe, func(){
-		audio.RemoveListener(listener)
+		audio.RemoveListener(&listener)
 	})
 
 	videoIDs := manager.capture.VideoIDs()
@@ -82,9 +82,9 @@ func (manager *WebRTCManagerCtx) Start() {
 			}
 		}
 
-		video.AddListener(listener)
+		video.AddListener(&listener)
 		manager.unsubscribe = append(manager.unsubscribe, func(){
-			video.RemoveListener(listener)
+			video.RemoveListener(&listener)
 		})
 
 		manager.videoTracks[videoID] = track

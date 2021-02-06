@@ -20,7 +20,7 @@ type StreamManagerCtx struct {
 	pipelineStr  string
 	pipeline     *gst.Pipeline
 	sample       chan types.Sample
-	listeners    map[uintptr]func(sample types.Sample)
+	listeners    map[uintptr]*func(sample types.Sample)
 	emitMu       sync.Mutex
 	emitUpdate   chan bool
 	emitStop     chan bool
@@ -32,7 +32,7 @@ func streamNew(codec codec.RTPCodec, pipelineStr string) *StreamManagerCtx {
 		logger:       log.With().Str("module", "capture").Str("submodule", "stream").Logger(),
 		codec:        codec,
 		pipelineStr:  pipelineStr,
-		listeners:    map[uintptr]func(sample types.Sample){},
+		listeners:    map[uintptr]*func(sample types.Sample){},
 		emitUpdate:   make(chan bool),
 		emitStop:     make(chan bool),
 		started:      false,
@@ -51,7 +51,7 @@ func streamNew(codec codec.RTPCodec, pipelineStr string) *StreamManagerCtx {
 			case sample := <-manager.sample:
 				manager.emitMu.Lock()
 				for _, emit := range manager.listeners {
-					emit(sample)
+					(*emit)(sample)
 				}
 				manager.emitMu.Unlock()
 			}
@@ -72,20 +72,24 @@ func (manager *StreamManagerCtx) Codec() codec.RTPCodec {
 	return manager.codec
 }
 
-func (manager *StreamManagerCtx) AddListener(listener func(sample types.Sample)) {
+func (manager *StreamManagerCtx) AddListener(listener *func(sample types.Sample)) {
 	manager.emitMu.Lock()
 	defer manager.emitMu.Unlock()
 
-	ptr := reflect.ValueOf(listener).Pointer()
-	manager.listeners[ptr] = listener
+	if listener != nil {
+		ptr := reflect.ValueOf(listener).Pointer()
+		manager.listeners[ptr] = listener
+	}
 }
 
-func (manager *StreamManagerCtx) RemoveListener(listener func(sample types.Sample)) {
+func (manager *StreamManagerCtx) RemoveListener(listener *func(sample types.Sample)) {
 	manager.emitMu.Lock()
 	defer manager.emitMu.Unlock()
 
-	ptr := reflect.ValueOf(listener).Pointer()
-	delete(manager.listeners, ptr)
+	if listener != nil {
+		ptr := reflect.ValueOf(listener).Pointer()
+		delete(manager.listeners, ptr)
+	}
 }
 
 func (manager *StreamManagerCtx) Start() error {
