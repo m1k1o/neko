@@ -14,7 +14,16 @@ export interface Connection {
   authenticated: boolean
   websocket: 'unavailable' | 'disconnected' | 'connecting' | 'connected'
   webrtc: 'unavailable' | 'disconnected' | 'connecting' | 'connected'
+  webrtc_stats: WebRTCStats | null
   type: 'webrtc' | 'fallback' | 'none'
+}
+
+export interface WebRTCStats {
+  bitrate: number
+  packetLoss: number
+  fps: number
+  width: number
+  height: number
 }
 
 /////////////////////////////

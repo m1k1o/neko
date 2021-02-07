@@ -86,6 +86,7 @@
         authenticated: false,
         websocket: this.websocket.supported ? 'disconnected' : 'unavailable',
         webrtc: this.webrtc.supported ? 'disconnected' : 'unavailable',
+        webrtc_stats: null,
         type: 'none',
       },
       video: {
@@ -363,7 +364,7 @@
         this.websocket.send('signal/candidate', candidate)
       })
       this.webrtc.on('stats', (stats: WebRTCStats) => {
-        console.log(stats)
+        Vue.set(this.state.connection, 'webrtc_stats', stats)
       })
       this.webrtc.on('connecting', () => {
         Vue.set(this.state.connection, 'webrtc', 'connecting')
