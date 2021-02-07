@@ -341,6 +341,15 @@
 
         this.webrtc.disconnect()
         this.clearState()
+
+        // reconnect WebRTC
+        if (this.authenticated) {
+          setTimeout(() => {
+            try {
+              this.websocketConnect()
+            } catch (e) {}
+          }, 1000)
+        }
       })
 
       // webrtc
@@ -377,6 +386,7 @@
       })
       this.webrtc.on('disconnected', () => {
         Vue.set(this.state.connection, 'webrtc', 'disconnected')
+        Vue.set(this.state.connection, 'webrtc_stats', null)
         Vue.set(this.state.connection, 'type', 'none')
         this.events.emit('connection.webrtc', 'disconnected')
 
@@ -388,6 +398,15 @@
         } else {
           // @ts-ignore
           this._video.removeAttribute('src')
+        }
+
+        // reconnect WebRTC
+        if (this.connected) {
+          setTimeout(() => {
+            try {
+              this.webrtcConnect()
+            } catch (e) {}
+          }, 1000)
         }
       })
 
