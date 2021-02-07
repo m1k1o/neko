@@ -85,8 +85,12 @@
       connection: {
         authenticated: false,
         websocket: this.websocket.supported ? 'disconnected' : 'unavailable',
-        webrtc: this.webrtc.supported ? 'disconnected' : 'unavailable',
-        webrtc_stats: null,
+        webrtc: {
+          status: this.webrtc.supported ? 'disconnected' : 'unavailable',
+          stats: null,
+          video: null,
+          videos: [],
+        },
         type: 'none',
       },
       video: {
@@ -127,7 +131,7 @@
     }
 
     public get watching() {
-      return this.state.connection.webrtc == 'connected'
+      return this.state.connection.webrtc.status == 'connected'
     }
 
     public get controlling() {
@@ -264,6 +268,14 @@
       this.websocket.send('screen/set', { width, height, rate })
     }
 
+    public setWebRTCVideo(video: string) {
+      if (!this.state.connection.webrtc.videos.includes(video)) {
+        throw new Error('VideoID not found.')
+      }
+
+      this.websocket.send('signal/video', { video: video })
+    }
+
     public sendUnicast(receiver: string, subject: string, body: any) {
       this.websocket.send('send/unicast', { receiver, subject, body })
     }
@@ -373,20 +385,22 @@
         this.websocket.send('signal/candidate', candidate)
       })
       this.webrtc.on('stats', (stats: WebRTCStats) => {
-        Vue.set(this.state.connection, 'webrtc_stats', stats)
+        Vue.set(this.state.connection.webrtc, 'stats', stats)
       })
       this.webrtc.on('connecting', () => {
-        Vue.set(this.state.connection, 'webrtc', 'connecting')
+        Vue.set(this.state.connection.webrtc, 'status', 'connecting')
         this.events.emit('connection.webrtc', 'connecting')
       })
       this.webrtc.on('connected', () => {
-        Vue.set(this.state.connection, 'webrtc', 'connected')
+        Vue.set(this.state.connection.webrtc, 'status', 'connected')
         Vue.set(this.state.connection, 'type', 'webrtc')
         this.events.emit('connection.webrtc', 'connected')
       })
       this.webrtc.on('disconnected', () => {
-        Vue.set(this.state.connection, 'webrtc', 'disconnected')
-        Vue.set(this.state.connection, 'webrtc_stats', null)
+        Vue.set(this.state.connection.webrtc, 'status', 'disconnected')
+        Vue.set(this.state.connection.webrtc, 'stats', null)
+        Vue.set(this.state.connection.webrtc, 'video', null)
+        Vue.set(this.state.connection.webrtc, 'videos', [])
         Vue.set(this.state.connection, 'type', 'none')
         this.events.emit('connection.webrtc', 'disconnected')
 

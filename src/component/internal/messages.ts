@@ -111,14 +111,21 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
   // Signal Events
   /////////////////////////////
 
-  protected [EVENT.SIGNAL_PROVIDE]({ event }: message.SignalProvide) {
+  protected [EVENT.SIGNAL_PROVIDE]({ event, video, videos }: message.SignalProvide) {
     this._log.debug('EVENT.SIGNAL_PROVIDE')
+    Vue.set(this.state.connection.webrtc, 'video', video)
+    Vue.set(this.state.connection.webrtc, 'videos', videos)
     // TODO: Handle.
   }
 
   protected [EVENT.SIGNAL_CANDIDATE]({ event, ...candidate }: message.SignalCandidate) {
     this._log.debug('EVENT.SIGNAL_CANDIDATE')
     // TODO: Handle.
+  }
+
+  protected [EVENT.SIGNAL_VIDEO]({ event, video }: message.SignalVideo) {
+    this._log.debug('EVENT.SIGNAL_VIDEO')
+    Vue.set(this.state.connection.webrtc, 'video', video)
   }
 
   /////////////////////////////

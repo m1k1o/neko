@@ -13,9 +13,15 @@ export default interface State {
 export interface Connection {
   authenticated: boolean
   websocket: 'unavailable' | 'disconnected' | 'connecting' | 'connected'
-  webrtc: 'unavailable' | 'disconnected' | 'connecting' | 'connected'
-  webrtc_stats: WebRTCStats | null
+  webrtc: WebRTC
   type: 'webrtc' | 'fallback' | 'none'
+}
+
+export interface WebRTC {
+  status: 'unavailable' | 'disconnected' | 'connecting' | 'connected'
+  stats: WebRTCStats | null
+  video: string | null
+  videos: string[]
 }
 
 export interface WebRTCStats {

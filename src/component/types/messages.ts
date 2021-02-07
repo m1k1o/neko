@@ -37,6 +37,8 @@ export interface SignalProvide {
   sdp: string
   lite: boolean
   ice: string[]
+  video: string
+  videos: string[]
 }
 
 export interface SignalCandidate extends RTCIceCandidateInit {
@@ -46,6 +48,11 @@ export interface SignalCandidate extends RTCIceCandidateInit {
 export interface SignalAnswer {
   event: string | undefined
   sdp: string
+}
+
+export interface SignalVideo {
+  event: string | undefined
+  video: string
 }
 
 /////////////////////////////
