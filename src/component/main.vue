@@ -52,7 +52,7 @@
 
   import { NekoApi, MembersApi, RoomApi } from './internal/api'
   import { NekoWebSocket } from './internal/websocket'
-  import { NekoWebRTC } from './internal/webrtc'
+  import { NekoWebRTC, WebRTCStats } from './internal/webrtc'
   import { NekoMessages } from './internal/messages'
   import { register as VideoRegister } from './internal/video'
 
@@ -361,6 +361,9 @@
       })
       this.webrtc.on('candidate', (candidate: RTCIceCandidateInit) => {
         this.websocket.send('signal/candidate', candidate)
+      })
+      this.webrtc.on('stats', (stats: WebRTCStats) => {
+        console.log(stats)
       })
       this.webrtc.on('connecting', () => {
         Vue.set(this.state.connection, 'webrtc', 'connecting')

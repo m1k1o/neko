@@ -8,12 +8,21 @@ export const OPCODE = {
   KEY_UP: 0x04,
 } as const
 
+export interface WebRTCStats {
+  bitrate: number
+  packetLoss: number
+  fps: number
+  width: number
+  height: number
+}
+
 export interface NekoWebRTCEvents {
   connecting: () => void
   connected: () => void
   disconnected: (error?: Error) => void
   track: (event: RTCTrackEvent) => void
   candidate: (candidate: RTCIceCandidateInit) => void
+  stats: (stats: WebRTCStats) => void
 }
 
 export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
@@ -21,6 +30,7 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
   private _channel?: RTCDataChannel
   private _state: RTCIceConnectionState = 'disconnected'
   private _log: Logger
+  private _statsStop?: () => void
 
   constructor() {
     super()
@@ -228,6 +238,8 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
 
     this._log.info(`connected`)
     this.emit('connected')
+
+    this._statsStop = this.statsEmitter()
   }
 
   private onDisconnected(reason?: Error) {
@@ -235,5 +247,63 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
 
     this._log.info(`disconnected:`, reason?.message)
     this.emit('disconnected', reason)
+
+    if (this._statsStop && typeof this._statsStop === 'function') {
+      this._statsStop()
+    }
+  }
+
+  private statsEmitter(ms: number = 2000) {
+    let bytesReceived: number
+    let timestamp: number
+    let packetsLost: number
+    let packetsReceived: number
+
+    const timer = setInterval(async () => {
+      let stats: RTCStatsReport | undefined = undefined
+      if (this._peer!.getStats.length === 0) {
+        stats = await this._peer!.getStats()
+      } else {
+        await new Promise((res, rej) => {
+          //@ts-ignore
+          this._peer!.getStats((stats) => res(stats))
+        })
+      }
+
+      if (!stats) return
+
+      let report: any = null
+      stats.forEach(function (stat) {
+        if (stat.type === 'inbound-rtp' && stat.kind === 'video') {
+          report = stat
+        }
+      })
+
+      if (report === null) return
+
+      if (timestamp) {
+        const bytesDiff = (report.bytesReceived - bytesReceived) * 8
+        const tsDiff = report.timestamp - timestamp
+        const packetsLostDiff = report.packetsLost - packetsLost
+        const packetsReceivedDiff = report.packetsReceived - packetsReceived
+
+        this.emit('stats', {
+          bitrate: (bytesDiff / tsDiff) * 1000,
+          packetLoss: (packetsLostDiff / (packetsLostDiff + packetsReceivedDiff)) * 100,
+          fps: report.framesPerSecond,
+          width: report.frameWidth,
+          height: report.frameHeight,
+        })
+      }
+
+      bytesReceived = report.bytesReceived
+      timestamp = report.timestamp
+      packetsLost = report.packetsLost
+      packetsReceived = report.packetsReceived
+    }, ms)
+
+    return function () {
+      clearInterval(timer)
+    }
   }
 }
