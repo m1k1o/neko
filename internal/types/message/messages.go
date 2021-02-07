@@ -41,10 +41,11 @@ type SystemDisconnect struct {
 /////////////////////////////
 
 type SignalProvide struct {
-	Event string   `json:"event,omitempty"`
-	SDP   string   `json:"sdp"`
-	Lite  bool     `json:"lite"`
-	ICE   []string `json:"ice"`
+	Event  string   `json:"event,omitempty"`
+	SDP    string   `json:"sdp"`
+	Lite   bool     `json:"lite"`
+	ICE    []string `json:"ice"`
+	Videos []string `json:"videos"`
 }
 
 type SignalCandidate struct {
