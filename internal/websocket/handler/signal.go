@@ -57,5 +57,14 @@ func (h *MessageHandlerCtx) signalVideo(session types.Session, payload *message.
 		return nil
 	}
 
-	return peer.SetVideoID(payload.VideoID)
+	err := peer.SetVideoID(payload.Video)
+	if err != nil {
+		return err
+	}
+
+	return session.Send(
+		message.SignalVideo{
+			Event:  event.SIGNAL_VIDEO,
+			Video:  payload.Video,
+		})
 }

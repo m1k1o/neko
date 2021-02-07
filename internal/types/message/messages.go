@@ -60,8 +60,8 @@ type SignalAnswer struct {
 }
 
 type SignalVideo struct {
-	Event   string `json:"event,omitempty"`
-	VideoID string `json:"video_id"`
+	Event string `json:"event,omitempty"`
+	Video string `json:"video"`
 }
 
 /////////////////////////////
