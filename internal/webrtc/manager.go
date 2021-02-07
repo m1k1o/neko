@@ -19,23 +19,21 @@ import (
 
 func New(desktop types.DesktopManager, capture types.CaptureManager, config *config.WebRTC) *WebRTCManagerCtx {
 	return &WebRTCManagerCtx{
-		logger:          log.With().Str("module", "webrtc").Logger(),
-		defaultVideoID:  capture.VideoIDs()[0],
-		desktop:         desktop,
-		capture:         capture,
-		config:          config,
+		logger:   log.With().Str("module", "webrtc").Logger(),
+		desktop:  desktop,
+		capture:  capture,
+		config:   config,
 	}
 }
 
 type WebRTCManagerCtx struct {
-	logger          zerolog.Logger
-	audioTrack      *webrtc.TrackLocalStaticSample
-	unsubscribe     []func()
-	defaultVideoID  string
-	audioCodec      codec.RTPCodec
-	desktop         types.DesktopManager
-	capture         types.CaptureManager
-	config          *config.WebRTC
+	logger       zerolog.Logger
+	audioTrack   *webrtc.TrackLocalStaticSample
+	audioCodec   codec.RTPCodec
+	audioStop    func()
+	desktop      types.DesktopManager
+	capture      types.CaptureManager
+	config       *config.WebRTC
 }
 
 func (manager *WebRTCManagerCtx) Start() {
@@ -55,9 +53,9 @@ func (manager *WebRTCManagerCtx) Start() {
 	}
 
 	audio.AddListener(&listener)
-	manager.unsubscribe = append(manager.unsubscribe, func(){
+	manager.audioStop = func(){
 		audio.RemoveListener(&listener)
-	})
+	}
 
 	manager.logger.Info().
 		Str("ice_lite", fmt.Sprintf("%t", manager.config.ICELite)).
@@ -71,10 +69,7 @@ func (manager *WebRTCManagerCtx) Start() {
 func (manager *WebRTCManagerCtx) Shutdown() error {
 	manager.logger.Info().Msgf("webrtc shutting down")
 
-	for _, unsubscribe := range manager.unsubscribe {
-		unsubscribe()
-	}
-
+	manager.audioStop()
 	return nil
 }
 
@@ -86,11 +81,11 @@ func (manager *WebRTCManagerCtx) ICEServers() []string {
 	return manager.config.ICEServers
 }
 
-func (manager *WebRTCManagerCtx) CreatePeer(session types.Session) (*webrtc.SessionDescription, error) {
+func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID string) (*webrtc.SessionDescription, error) {
 	logger := manager.logger.With().Str("id", session.ID()).Logger()
 
 	// Create MediaEngine
-	engine, err := manager.mediaEngine()
+	engine, err := manager.mediaEngine(videoID)
 	if err != nil {
 		return nil, err
 	}
@@ -129,9 +124,9 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session) (*webrtc.Sess
 	}
 
 	// create video track
-	videoStream, ok := manager.capture.Video(manager.defaultVideoID)
+	videoStream, ok := manager.capture.Video(videoID)
 	if !ok {
-		manager.logger.Warn().Str("videoID", manager.defaultVideoID).Msg("default video stream not found")
+		manager.logger.Warn().Str("videoID", videoID).Msg("video stream not found")
 		return nil, err
 	}
 
@@ -265,11 +260,11 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session) (*webrtc.Sess
 	return connection.LocalDescription(), nil
 }
 
-func (manager *WebRTCManagerCtx) mediaEngine() (*webrtc.MediaEngine, error) {
+func (manager *WebRTCManagerCtx) mediaEngine(videoID string) (*webrtc.MediaEngine, error) {
 	engine := &webrtc.MediaEngine{}
 
 	// all videos must have the same codec
-	video, ok := manager.capture.Video(manager.defaultVideoID)
+	video, ok := manager.capture.Video(videoID)
 	if !ok {
 		return nil, fmt.Errorf("default video track not found")
 	}

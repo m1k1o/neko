@@ -11,7 +11,10 @@ func (h *MessageHandlerCtx) signalRequest(session types.Session) error {
 		return nil
 	}
 
-	offer, err := h.webrtc.CreatePeer(session)
+	videos := h.capture.VideoIDs()
+	defaultVideo := videos[0]
+
+	offer, err := h.webrtc.CreatePeer(session, defaultVideo)
 	if err != nil {
 		return err
 	}
@@ -22,7 +25,8 @@ func (h *MessageHandlerCtx) signalRequest(session types.Session) error {
 			SDP:    offer.SDP,
 			Lite:   h.webrtc.ICELite(),
 			ICE:    h.webrtc.ICEServers(),
-			Videos: h.capture.VideoIDs(),
+			Videos: videos,
+			Video:  defaultVideo,
 		})
 }
 

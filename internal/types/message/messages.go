@@ -46,6 +46,7 @@ type SignalProvide struct {
 	Lite   bool     `json:"lite"`
 	ICE    []string `json:"ice"`
 	Videos []string `json:"videos"`
+	Video  string   `json:"video"`
 }
 
 type SignalCandidate struct {
