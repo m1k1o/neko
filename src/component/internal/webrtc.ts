@@ -82,15 +82,6 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
       })
     }
 
-    if (this.candidates.length > 0) {
-      for (const candidate of this.candidates) {
-        this._peer.addIceCandidate(candidate)
-      }
-
-      this._log.debug(`added ${this.candidates.length} remote ICE candidates`, this.candidates)
-      this.candidates = []
-    }
-
     this._peer.onconnectionstatechange = (event) => {
       this._log.debug(`peer connection state changed`, this._peer ? this._peer.connectionState : undefined)
     }
@@ -138,6 +129,15 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
     this._channel.onclose = this.onDisconnected.bind(this, new Error('peer data channel closed'))
 
     this._peer.setRemoteDescription({ type: 'offer', sdp })
+
+    if (this.candidates.length > 0) {
+      for (const candidate of this.candidates) {
+        this._peer.addIceCandidate(candidate)
+      }
+
+      this._log.debug(`added ${this.candidates.length} remote ICE candidates`, this.candidates)
+      this.candidates = []
+    }
 
     const answer = await this._peer.createAnswer()
     this._peer!.setLocalDescription(answer)
