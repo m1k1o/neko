@@ -397,6 +397,8 @@
         Vue.set(this.state.connection, 'type', 'webrtc')
         this.events.emit('connection.webrtc', 'connected')
       })
+
+      let webrtcReconnect: any
       this.webrtc.on('disconnected', () => {
         Vue.set(this.state.connection.webrtc, 'status', 'disconnected')
         Vue.set(this.state.connection.webrtc, 'stats', null)
@@ -417,7 +419,9 @@
 
         // reconnect WebRTC
         if (this.connected) {
-          setTimeout(() => {
+          if (webrtcReconnect) clearTimeout(webrtcReconnect)
+
+          webrtcReconnect = setTimeout(() => {
             try {
               this.webrtcConnect()
             } catch (e) {}
