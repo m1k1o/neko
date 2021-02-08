@@ -150,15 +150,12 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
   }
 
   public disconnect() {
-    if (this.connected) {
-      try {
-        this._peer!.close()
-      } catch (err) {}
+    try {
+      this._peer!.close()
+    } catch (err) {}
 
-      this._peer = undefined
-      this._channel = undefined
-    }
-
+    this._peer = undefined
+    this._channel = undefined
     this._state = 'disconnected'
   }
 
