@@ -42,27 +42,40 @@ export class NekoWebSocket extends EventEmitter<NekoWebSocketEvents> {
       throw new Error('attempting to create websocket while connection open')
     }
 
+    if (typeof this._ws !== 'undefined') {
+      this._log.debug(`previous websocket connection needs to be closed`)
+      this.disconnect(new Error('connection replaced'))
+    }
+
     this.emit('connecting')
 
     this._ws = new WebSocket(this._url)
     this._log.info(`connecting`)
 
     this._ws.onopen = this.onConnected.bind(this)
-    this._ws.onclose = this.onDisconnected.bind(this, new Error('websocket closed'))
-    this._ws.onerror = this.onDisconnected.bind(this, new Error('websocket error'))
+    this._ws.onclose = this.onClose.bind(this)
+    this._ws.onerror = this.onError.bind(this)
     this._ws.onmessage = this.onMessage.bind(this)
 
     this._timeout = setTimeout(this.onTimeout.bind(this), timeout)
   }
 
-  public disconnect() {
+  public disconnect(reason?: Error) {
+    this.emit('disconnected', reason)
+
     if (this._timeout) {
       clearTimeout(this._timeout)
     }
 
-    if (this.connected) {
+    if (typeof this._ws !== 'undefined') {
+      // unmount all events
+      this._ws.onopen = () => {}
+      this._ws.onclose = () => {}
+      this._ws.onerror = () => {}
+      this._ws.onmessage = () => {}
+
       try {
-        this._ws!.close()
+        this._ws.close()
       } catch (err) {}
 
       this._ws = undefined
@@ -102,13 +115,16 @@ export class NekoWebSocket extends EventEmitter<NekoWebSocketEvents> {
 
   private onTimeout() {
     this._log.info(`connection timeout`)
-    this.onDisconnected(new Error('connection timeout'))
+    this.disconnect(new Error('connection timeout'))
   }
 
-  private onDisconnected(reason?: Error) {
-    this._log.info(`disconnected:`, reason?.message)
+  private onError() {
+    this._log.info(`connection error`)
+    this.disconnect(new Error('connection error'))
+  }
 
-    this.disconnect()
-    this.emit('disconnected', reason)
+  private onClose() {
+    this._log.info(`connection closed`)
+    this.disconnect(new Error('connection closed'))
   }
 }
