@@ -207,12 +207,10 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
         break
       default:
         this._log.warn(`unknown data event: ${event}`)
+        return
     }
 
-    // @ts-ignore
-    if (typeof buffer !== 'undefined') {
-      this._channel!.send(buffer)
-    }
+    this._channel!.send(buffer)
   }
 
   // not-implemented
@@ -250,6 +248,7 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
 
     if (this._statsStop && typeof this._statsStop === 'function') {
       this._statsStop()
+      this._statsStop = undefined
     }
   }
 

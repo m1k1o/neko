@@ -203,7 +203,7 @@
         throw new Error('client not connected to websocket')
       }
 
-      this.websocket.disconnect()
+      this.websocket.disconnect(new Error('manual action'))
     }
 
     public webrtcConnect() {
@@ -361,7 +361,7 @@
         this.webrtc.disconnect()
         this.clearState()
 
-        // reconnect WebRTC
+        // reconnect Websocket
         if (this.authenticated) {
           setTimeout(() => {
             try {
