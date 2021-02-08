@@ -153,6 +153,7 @@
     public setUrl(url: string) {
       const httpURL = url.replace(/^ws/, 'http').replace(/\/$|\/ws\/?$/, '')
       this.api.setUrl(httpURL)
+      this.websocket.setUrl(httpURL)
     }
 
     public async login(id: string, secret: string) {
@@ -162,7 +163,7 @@
 
       await this.api.session.login({ id, secret })
       Vue.set(this.state.connection, 'authenticated', true)
-      this.websocketConnect()
+      this.websocket.connect()
     }
 
     public async logout() {
@@ -170,9 +171,15 @@
         throw new Error('client not authenticated')
       }
 
-      this.websocketDisconnect()
-      await this.api.session.logout()
-      Vue.set(this.state.connection, 'authenticated', false)
+      if (this.connected) {
+        this.websocketDisconnect()
+      }
+
+      try {
+        await this.api.session.logout()
+      } finally {
+        Vue.set(this.state.connection, 'authenticated', false)
+      }
     }
 
     public websocketConnect() {
@@ -184,7 +191,7 @@
         throw new Error('client already connected to websocket')
       }
 
-      this.websocket.connect(this.api.url.replace(/^http/, 'ws') + '/api/ws')
+      this.websocket.connect()
     }
 
     public websocketDisconnect() {
@@ -358,7 +365,7 @@
         if (this.authenticated) {
           setTimeout(() => {
             try {
-              this.websocketConnect()
+              this.websocket.connect()
             } catch (e) {}
           }, 1000)
         }
@@ -427,7 +434,7 @@
       // check if is user logged in
       this.api.session.whoami().then(() => {
         Vue.set(this.state.connection, 'authenticated', true)
-        this.websocketConnect()
+        this.websocket.connect()
       })
 
       // unmute on users first interaction

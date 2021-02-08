@@ -14,11 +14,19 @@ export class NekoWebSocket extends EventEmitter<NekoWebSocketEvents> {
   private _ws?: WebSocket
   private _timeout?: NodeJS.Timeout
   private _log: Logger
+  private _url: string
 
   constructor() {
     super()
 
     this._log = new Logger('websocket')
+
+    this._url = ''
+    this.setUrl(location.href)
+  }
+
+  public setUrl(url: string) {
+    this._url = url.replace(/^http/, 'ws').replace(/\/+$/, '') + '/api/ws'
   }
 
   get supported() {
@@ -29,14 +37,14 @@ export class NekoWebSocket extends EventEmitter<NekoWebSocketEvents> {
     return typeof this._ws !== 'undefined' && this._ws.readyState === WebSocket.OPEN
   }
 
-  public connect(url: string) {
+  public connect() {
     if (this.connected) {
       throw new Error('attempting to create websocket while connection open')
     }
 
     this.emit('connecting')
 
-    this._ws = new WebSocket(url)
+    this._ws = new WebSocket(this._url)
     this._log.info(`connecting`)
 
     this._ws.onopen = this.onConnected.bind(this)
