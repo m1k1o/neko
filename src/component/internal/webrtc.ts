@@ -260,13 +260,16 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
     let packetsReceived: number
 
     const timer = setInterval(async () => {
+      if (!this._peer) return
+
       let stats: RTCStatsReport | undefined = undefined
-      if (this._peer!.getStats.length === 0) {
-        stats = await this._peer!.getStats()
+      if (this._peer.getStats.length === 0) {
+        stats = await this._peer.getStats()
       } else {
+        // callback browsers support
         await new Promise((res, rej) => {
           //@ts-ignore
-          this._peer!.getStats((stats) => res(stats))
+          this._peer.getStats((stats) => res(stats))
         })
       }
 
