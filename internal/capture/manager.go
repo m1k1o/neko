@@ -80,34 +80,34 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 		videos:      map[string]*StreamManagerCtx{
 			"hd": streamNew(codec.VP8(), fmt.Sprintf(
 				"ximagesrc display-name=%s show-pointer=false use-damage=false " +
-					"! video/x-raw " +
+					"! video/x-raw,framerate=25/1 " +
 					"! videoconvert " +
 					"! queue " +
-					"! vp8enc target-bitrate=8192000 cpu-used=16 threads=4 deadline=1 error-resilient=partitions keyframe-max-dist=15 static-threshold=20 " +
+					"! vp8enc target-bitrate=24576000 cpu-used=16 threads=4 deadline=1 error-resilient=partitions keyframe-max-dist=15 static-threshold=20 " +
 					"! appsink name=appsink", config.Display,
 			)),
 			"hq": streamNew(codec.VP8(), fmt.Sprintf(
 				"ximagesrc display-name=%s show-pointer=false use-damage=false " +
-					"! video/x-raw " +
+					"! video/x-raw,framerate=25/1 " +
 					"! videoconvert " +
 					"! queue " +
-					"! vp8enc target-bitrate=4096000 cpu-used=16 threads=4 deadline=1 error-resilient=partitions keyframe-max-dist=15 static-threshold=20 " +
+					"! vp8enc target-bitrate=16588800 cpu-used=16 threads=4 deadline=1 error-resilient=partitions keyframe-max-dist=15 static-threshold=20 " +
 					"! appsink name=appsink", config.Display,
 			)),
 			"mq": streamNew(codec.VP8(), fmt.Sprintf(
 				"ximagesrc display-name=%s show-pointer=false use-damage=false " +
-					"! video/x-raw " +
+					"! video/x-raw,framerate=125/10 " +
 					"! videoconvert " +
 					"! queue " +
-					"! vp8enc target-bitrate=2048000 cpu-used=16 threads=4 deadline=1 error-resilient=partitions keyframe-max-dist=15 static-threshold=20 " +
+					"! vp8enc target-bitrate=9216000 cpu-used=16 threads=4 deadline=1 error-resilient=partitions keyframe-max-dist=15 static-threshold=20 " +
 					"! appsink name=appsink", config.Display,
 			)),
 			"lq": streamNew(codec.VP8(), fmt.Sprintf(
 				"ximagesrc display-name=%s show-pointer=false use-damage=false " +
-					"! video/x-raw " +
+					"! video/x-raw,framerate=125/10 " +
 					"! videoconvert " +
 					"! queue " +
-					"! vp8enc target-bitrate=1024000 cpu-used=16 threads=4 deadline=1 error-resilient=partitions keyframe-max-dist=15 static-threshold=20 " +
+					"! vp8enc target-bitrate=4608000 cpu-used=16 threads=4 deadline=1 error-resilient=partitions keyframe-max-dist=15 static-threshold=20 " +
 					"! appsink name=appsink", config.Display,
 			)),
 		},
