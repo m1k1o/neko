@@ -172,7 +172,7 @@
       }
 
       if (this.connected) {
-        this.websocketDisconnect()
+        this.websocket.disconnect(new Error('logged out'))
       }
 
       try {
@@ -360,15 +360,6 @@
 
         this.webrtc.disconnect()
         this.clearState()
-
-        // reconnect Websocket
-        if (this.authenticated) {
-          setTimeout(() => {
-            try {
-              this.websocket.connect()
-            } catch (e) {}
-          }, 1000)
-        }
       })
 
       // webrtc

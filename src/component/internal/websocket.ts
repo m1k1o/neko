@@ -1,7 +1,9 @@
 import EventEmitter from 'eventemitter3'
 import { Logger } from '../utils/logger'
 
-export const timeout = 15000
+export const connTimeout = 15000
+export const reconnTimeout = 1000
+export const reconnMultiplier = 1.2
 
 export interface NekoWebSocketEvents {
   connecting: () => void
@@ -12,9 +14,13 @@ export interface NekoWebSocketEvents {
 
 export class NekoWebSocket extends EventEmitter<NekoWebSocketEvents> {
   private _ws?: WebSocket
-  private _timeout?: NodeJS.Timeout
+  private _connTimer?: NodeJS.Timeout
   private _log: Logger
   private _url: string
+
+  // reconnection
+  private _reconTimer?: NodeJS.Timeout
+  private _reconnTimeout: number = reconnTimeout
 
   constructor() {
     super()
@@ -57,14 +63,14 @@ export class NekoWebSocket extends EventEmitter<NekoWebSocketEvents> {
     this._ws.onerror = this.onError.bind(this)
     this._ws.onmessage = this.onMessage.bind(this)
 
-    this._timeout = setTimeout(this.onTimeout.bind(this), timeout)
+    this._connTimer = setTimeout(this.onTimeout.bind(this), connTimeout)
   }
 
   public disconnect(reason?: Error) {
     this.emit('disconnected', reason)
 
-    if (this._timeout) {
-      clearTimeout(this._timeout)
+    if (this._connTimer) {
+      clearTimeout(this._connTimer)
     }
 
     if (typeof this._ws !== 'undefined') {
@@ -92,6 +98,14 @@ export class NekoWebSocket extends EventEmitter<NekoWebSocketEvents> {
     this._ws!.send(JSON.stringify({ event, ...payload }))
   }
 
+  private tryReconnect() {
+    if (this._reconTimer) {
+      clearTimeout(this._reconTimer)
+    }
+
+    this._reconTimer = setTimeout(this.onReconnect.bind(this), this._reconnTimeout)
+  }
+
   private onMessage(e: MessageEvent) {
     const { event, ...payload } = JSON.parse(e.data)
 
@@ -100,8 +114,12 @@ export class NekoWebSocket extends EventEmitter<NekoWebSocketEvents> {
   }
 
   private onConnected() {
-    if (this._timeout) {
-      clearTimeout(this._timeout)
+    if (this._connTimer) {
+      clearTimeout(this._connTimer)
+    }
+
+    if (this._reconTimer) {
+      clearTimeout(this._reconTimer)
     }
 
     if (!this.connected) {
@@ -111,20 +129,33 @@ export class NekoWebSocket extends EventEmitter<NekoWebSocketEvents> {
 
     this._log.info(`connected`)
     this.emit('connected')
+
+    // reset reconnect timeout
+    this._reconnTimeout = reconnTimeout
   }
 
   private onTimeout() {
     this._log.info(`connection timeout`)
     this.disconnect(new Error('connection timeout'))
+    this.tryReconnect()
   }
 
   private onError() {
     this._log.info(`connection error`)
     this.disconnect(new Error('connection error'))
+    this.tryReconnect()
   }
 
   private onClose() {
     this._log.info(`connection closed`)
     this.disconnect(new Error('connection closed'))
+    this.tryReconnect()
+  }
+
+  private onReconnect() {
+    this._log.info(`reconnecting after ${this._reconnTimeout}ms`)
+    this._reconnTimeout *= reconnMultiplier
+
+    this.connect()
   }
 }
