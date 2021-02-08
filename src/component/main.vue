@@ -343,6 +343,9 @@
           case 'signal/candidate':
             this.webrtc.setCandidate(payload)
             break
+          case 'system/disconnect':
+            this.websocket.disconnect(new Error('disconnected by server'))
+            break
         }
       })
       this.websocket.on('connecting', () => {
