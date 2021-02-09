@@ -3,6 +3,7 @@ package capture
 import (
 	"fmt"
 	"sync"
+	"math"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -58,58 +59,94 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 		)
 	}
 
-	audioPipeline := config.AudioPipeline
-	if audioPipeline == "" {
-		audioPipeline = fmt.Sprintf(
-			"pulsesrc device=%s " +
-				"! audio/x-raw,channels=2 " +
-				"! audioconvert " +
-				"! queue " +
-				"! %s " +
-				"! appsink name=appsink", config.Device, config.AudioCodec.Pipeline,
-		)
-	}
-
 	return &CaptureManagerCtx{
 		logger:      logger,
 		desktop:     desktop,
 		streaming:   false,
 		broadcast:   broadcastNew(broadcastPipeline),
 		screencast:  screencastNew(config.Screencast, screencastPipeline),
-		audio:       streamNew(config.AudioCodec, audioPipeline),
+		audio:       streamNew(config.AudioCodec, func() string {
+			if config.AudioPipeline != "" {
+				return config.AudioPipeline
+			}
+
+			return fmt.Sprintf(
+				"pulsesrc device=%s " +
+					"! audio/x-raw,channels=2 " +
+					"! audioconvert " +
+					"! queue " +
+					"! %s " +
+					"! appsink name=appsink", config.Device, config.AudioCodec.Pipeline,
+			)
+		}),
 		videos:      map[string]*StreamManagerCtx{
-			"hd": streamNew(codec.VP8(), fmt.Sprintf(
-				"ximagesrc display-name=%s show-pointer=false use-damage=false " +
-					"! video/x-raw,framerate=25/1 " +
-					"! videoconvert " +
-					"! queue " +
-					"! vp8enc target-bitrate=24576000 cpu-used=16 threads=4 deadline=1 error-resilient=partitions keyframe-max-dist=15 static-threshold=20 " +
-					"! appsink name=appsink", config.Display,
-			)),
-			"hq": streamNew(codec.VP8(), fmt.Sprintf(
-				"ximagesrc display-name=%s show-pointer=false use-damage=false " +
-					"! video/x-raw,framerate=25/1 " +
-					"! videoconvert " +
-					"! queue " +
-					"! vp8enc target-bitrate=16588800 cpu-used=16 threads=4 deadline=1 error-resilient=partitions keyframe-max-dist=15 static-threshold=20 " +
-					"! appsink name=appsink", config.Display,
-			)),
-			"mq": streamNew(codec.VP8(), fmt.Sprintf(
-				"ximagesrc display-name=%s show-pointer=false use-damage=false " +
-					"! video/x-raw,framerate=125/10 " +
-					"! videoconvert " +
-					"! queue " +
-					"! vp8enc target-bitrate=9216000 cpu-used=16 threads=4 deadline=1 error-resilient=partitions keyframe-max-dist=15 static-threshold=20 " +
-					"! appsink name=appsink", config.Display,
-			)),
-			"lq": streamNew(codec.VP8(), fmt.Sprintf(
-				"ximagesrc display-name=%s show-pointer=false use-damage=false " +
-					"! video/x-raw,framerate=125/10 " +
-					"! videoconvert " +
-					"! queue " +
-					"! vp8enc target-bitrate=4608000 cpu-used=16 threads=4 deadline=1 error-resilient=partitions keyframe-max-dist=15 static-threshold=20 " +
-					"! appsink name=appsink", config.Display,
-			)),
+			"hd": streamNew(codec.VP8(), func() string {
+				screen  := desktop.GetScreenSize()
+				bitrate := screen.Width * screen.Height * 12
+
+				return fmt.Sprintf(
+					"ximagesrc display-name=%s show-pointer=false use-damage=false " +
+						"! video/x-raw,framerate=25/1 " +
+						"! videoconvert " +
+						"! queue " +
+						"! vp8enc target-bitrate=%d cpu-used=16 threads=4 deadline=100000 error-resilient=partitions keyframe-max-dist=15 auto-alt-ref=true min-quantizer=6 max-quantizer=12 " +
+						"! appsink name=appsink", config.Display, bitrate,
+				)
+			}),
+			"hq": streamNew(codec.VP8(), func() string {
+				screen  := desktop.GetScreenSize()
+				width   := int(math.Ceil(float64(screen.Width) / 6) * 5)
+				height  := int(math.Ceil(float64(screen.Height) / 6) * 5)
+				bitrate := width * height * 12
+
+				return fmt.Sprintf(
+					"ximagesrc display-name=%s show-pointer=false use-damage=false " +
+						"! video/x-raw,framerate=25/1 " +
+						"! videoconvert " +
+						"! queue " +
+						"! videoscale " +
+						"! video/x-raw,width=%d,height=%d " +
+						"! queue " +
+						"! vp8enc target-bitrate=%d cpu-used=16 threads=4 deadline=100000 error-resilient=partitions keyframe-max-dist=15 auto-alt-ref=true min-quantizer=6 max-quantizer=12 " +
+						"! appsink name=appsink", config.Display, width, height, bitrate,
+				)
+			}),
+			"mq": streamNew(codec.VP8(), func() string {
+				screen  := desktop.GetScreenSize()
+				width   := int(math.Ceil(float64(screen.Width) / 6) * 4)
+				height  := int(math.Ceil(float64(screen.Height) / 6) * 4)
+				bitrate := width * height * 8
+
+				return fmt.Sprintf(
+					"ximagesrc display-name=%s show-pointer=false use-damage=false " +
+						"! video/x-raw,framerate=125/10 " +
+						"! videoconvert " +
+						"! queue " +
+						"! videoscale " +
+						"! video/x-raw,width=%d,height=%d " +
+						"! queue " +
+						"! vp8enc target-bitrate=%d cpu-used=16 threads=4 deadline=100000 error-resilient=partitions keyframe-max-dist=15 auto-alt-ref=true min-quantizer=12 max-quantizer=24 " +
+						"! appsink name=appsink", config.Display, width, height, bitrate,
+				)
+			}),
+			"lq": streamNew(codec.VP8(), func() string {
+				screen  := desktop.GetScreenSize()
+				width   := int(math.Ceil(float64(screen.Width) / 6) * 3)
+				height  := int(math.Ceil(float64(screen.Height) / 6) * 3)
+				bitrate := width * height * 4
+
+				return fmt.Sprintf(
+					"ximagesrc display-name=%s show-pointer=false use-damage=false " +
+						"! video/x-raw,framerate=125/10 " +
+						"! videoconvert " +
+						"! queue " +
+						"! videoscale " +
+						"! video/x-raw,width=%d,height=%d " +
+						"! queue " +
+						"! vp8enc target-bitrate=%d cpu-used=16 threads=4 deadline=100000 error-resilient=partitions keyframe-max-dist=15 auto-alt-ref=true min-quantizer=12 max-quantizer=24 " +
+						"! appsink name=appsink", config.Display, width, height, bitrate,
+				)
+			}),
 		},
 		videoIDs:    []string{ "hd", "hq", "mq", "lq" },
 	}

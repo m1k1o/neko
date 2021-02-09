@@ -17,7 +17,7 @@ type StreamManagerCtx struct {
 	logger       zerolog.Logger
 	mu           sync.Mutex
 	codec        codec.RTPCodec
-	pipelineStr  string
+	pipelineStr  func() string
 	pipeline     *gst.Pipeline
 	sample       chan types.Sample
 	listeners    map[uintptr]*func(sample types.Sample)
@@ -27,7 +27,7 @@ type StreamManagerCtx struct {
 	started      bool
 }
 
-func streamNew(codec codec.RTPCodec, pipelineStr string) *StreamManagerCtx {
+func streamNew(codec codec.RTPCodec, pipelineStr func() string) *StreamManagerCtx {
 	manager := &StreamManagerCtx{
 		logger:       log.With().Str("module", "capture").Str("submodule", "stream").Logger(),
 		codec:        codec,
@@ -132,12 +132,13 @@ func (manager *StreamManagerCtx) createPipeline() error {
 	var err error
 
 	codec := manager.Codec()
+	pipelineStr := manager.pipelineStr()
 	manager.logger.Info().
 		Str("codec", codec.Name).
-		Str("src", manager.pipelineStr).
+		Str("src", pipelineStr).
 		Msgf("creating pipeline")
 
-	manager.pipeline, err = gst.CreatePipeline(manager.pipelineStr)
+	manager.pipeline, err = gst.CreatePipeline(pipelineStr)
 	if err != nil {
 		return err
 	}
