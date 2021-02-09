@@ -5,7 +5,7 @@ ARG SRC_URL="https://github.com/macchrome/linchrome/releases/download/v87.0.4280
 #
 # install custom chromium build from woolyss with support for hevc/x265
 RUN set -eux; apt-get update; \
-    apt-get install -y --no-install-recommends libatk1.0-0 libatk-bridge2.0-0 libatomic1 \
+    apt-get install -y --no-install-recommends wget unzip libatk1.0-0 libatk-bridge2.0-0 libatomic1 \
     libcups2 libgtk-3-0 libnss3 libpci3 libxcomposite1 libxss1 openbox xz-utils; \
     wget -O - /tmp/chromium.tar.xz "${SRC_URL}" | tar -xJf- -C /tmp; \
     mv /tmp/ungoogled-chromium_* /usr/lib/chromium; \
@@ -14,6 +14,13 @@ RUN set -eux; apt-get update; \
     mv /usr/lib/chromium/chrome_sandbox /usr/lib/chromium/chrome-sandbox; \
     chown root:root /usr/lib/chromium/chrome-sandbox; \
     chmod 4755 /usr/lib/chromium/chrome-sandbox; \
+    #
+    # install widevine module
+    WIDEVINE_VERSION=$(wget --quiet -O - https://dl.google.com/widevine-cdm/versions.txt | tail -n 1); \
+    wget -O /tmp/widevine.zip "https://dl.google.com/widevine-cdm/$WIDEVINE_VERSION-linux-x64.zip"; \
+    unzip -p /tmp/widevine.zip libwidevinecdm.so > /usr/lib/chromium/libwidevinecdm.so; \
+    chmod 644 /usr/lib/chromium/libwidevinecdm.so; \
+    rm /tmp/widevine.zip; \
     #
     # clean up
     apt-get --purge autoremove -y xz-utils; \
