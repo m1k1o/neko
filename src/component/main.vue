@@ -90,6 +90,7 @@
           stats: null,
           video: null,
           videos: [],
+          auto: true,
         },
         type: 'none',
       },
@@ -283,6 +284,10 @@
       this.websocket.send('signal/video', { video: video })
     }
 
+    public setWebRTCAuto(auto: boolean = true) {
+      Vue.set(this.state.connection.webrtc, 'auto', auto)
+    }
+
     public sendUnicast(receiver: string, subject: string, body: any) {
       this.websocket.send('send/unicast', { receiver, subject, body })
     }
@@ -385,8 +390,40 @@
       this.webrtc.on('candidate', (candidate: RTCIceCandidateInit) => {
         this.websocket.send('signal/candidate', candidate)
       })
+
+      let webrtcCongestion: number = 0
       this.webrtc.on('stats', (stats: WebRTCStats) => {
         Vue.set(this.state.connection.webrtc, 'stats', stats)
+
+        // if automatic quality adjusting is turned off
+        if (!this.state.connection.webrtc.auto) return
+
+        // if there are no or just one quality, no switching can be done
+        if (this.state.connection.webrtc.videos.length <= 1) return
+
+        // current quality is not known
+        if (this.state.connection.webrtc.video == null) return
+
+        // check if video is not playing
+        if (stats.fps) {
+          webrtcCongestion = 0
+          return
+        }
+
+        // try to downgrade quality if it happend many times
+        if (++webrtcCongestion >= 3) {
+          let index = this.state.connection.webrtc.videos.indexOf(this.state.connection.webrtc.video)
+
+          // edge case: current quality is not in qualities list
+          if (index === -1) return
+
+          // current quality is the lowest one
+          if (index + 1 == this.state.connection.webrtc.videos.length) return
+
+          // downgrade video quality
+          this.setWebRTCVideo(this.state.connection.webrtc.videos[index + 1])
+          webrtcCongestion = 0
+        }
       })
       this.webrtc.on('connecting', () => {
         Vue.set(this.state.connection.webrtc, 'status', 'connecting')

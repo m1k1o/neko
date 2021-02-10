@@ -22,6 +22,7 @@ export interface WebRTC {
   stats: WebRTCStats | null
   video: string | null
   videos: string[]
+  auto: boolean
 }
 
 export interface WebRTCStats {
