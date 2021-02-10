@@ -38,6 +38,15 @@
   import { NekoWebRTC } from './internal/webrtc'
   import { Control } from './types/state'
 
+  const inactiveCursorWin10 =
+    'url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAACEUlEQVR4nOzWz6sSURQH8O+89zJ5C32LKbAgktCSaPpBSL' +
+    'uSNtHqLcOV+BeIGxei0oCtFME/wI0bF4GCK6mNuAghH7xFlBAO7bQoA/Vik3riyghTaCQzTsLzbIZZDPdzzj3nzt3Df44dYDsBRNSYTqcn5XL5KoADy1VERL' +
+    'Is02g0+phIJG4BsFkOEEVxjhgOh59kWb5rKWIBWCAGg0EnFovdtgyhB+grkU6n7wA4ZzlgCWKzlVgGsLQnVgE2gVh7xvP5PH9ciUajFQDHyWTyHQDVKOS3+F' +
+    'sF/pyOcDh83Uhj/nMFBEFANpuF0+nUQ92SJD0G8AXAdwAz0wE+nw8OhwPNZhPj8RiBQOC0Vqu9EgSBcrnc11Qq9R7AeW5cd/GVsdgCr9dLiqJQtVqdv/v9fm' +
+    'KM9UVRfArgJoBrAC4DsJsOcLlc1Gg0qNVqVRljI0mS5oh6vU6lUukFgEta5gemLr4AFAoF6nQ6b20223G73X6ZyWTmgFAoRL1ej3f+DQ1gfqiq+qbf73/weD' +
+    'zPADwoFouPut3uzO12UyQSoclkotrt9ocAHKZnr8UhAP4bvg/gIs+UMfaaMTZTFOUkHo8/B/AEwAWjl5pV+j1dZ//g4xUMBo8YY/cqlcqhNvffAJxq40dmA5' +
+    'bFPoAjrev5EfwZQNfoKbju/u1ri/PvfgKYGMl+K2I7b8U7wA5wpgC/AgAA///Yyif1MZXzRQAAAABJRU5ErkJggg==) 4 4, crosshair'
+
   @Component({
     name: 'neko-overlay',
   })
@@ -66,7 +75,13 @@
     private readonly implicitControl!: boolean
 
     get cursor(): string {
-      if (!this.control.cursor) return 'auto'
+      if (!this.isControling) {
+        return inactiveCursorWin10
+      }
+
+      if (!this.control.cursor) {
+        return 'auto'
+      }
 
       const { uri, x, y } = this.control.cursor
       return 'url(' + uri + ') ' + x + ' ' + y + ', auto'
@@ -80,7 +95,6 @@
         }
 
         if (!this.isControling) {
-          this.implicitControlRequest()
           return true
         }
 
@@ -93,7 +107,6 @@
         }
 
         if (!this.isControling) {
-          this.implicitControlRequest()
           return
         }
 
@@ -121,7 +134,6 @@
 
     onWheel(e: WheelEvent) {
       if (!this.isControling) {
-        this.implicitControlRequest()
         return
       }
 
@@ -142,7 +154,6 @@
 
     onMouseMove(e: MouseEvent) {
       if (!this.isControling) {
-        this.implicitControlRequest()
         return
       }
 
@@ -151,7 +162,7 @@
 
     onMouseDown(e: MouseEvent) {
       if (!this.isControling) {
-        this.implicitControlRequest()
+        this.implicitControlRequest(e)
         return
       }
 
@@ -161,7 +172,7 @@
 
     onMouseUp(e: MouseEvent) {
       if (!this.isControling) {
-        this.implicitControlRequest()
+        this.implicitControlRequest(e)
         return
       }
 
@@ -174,7 +185,6 @@
       this.focused = true
 
       if (!this.isControling) {
-        this.implicitControlRequest()
         // TODO: Refactor
         //syncKeyboardModifierState({
         //  capsLock: e.getModifierState('CapsLock'),
@@ -190,7 +200,6 @@
 
       if (this.isControling) {
         this.keyboard.reset()
-        this.implicitControlRelease()
 
         // TODO: Refactor
         //setKeyboardModifierState({
@@ -225,19 +234,35 @@
       }
     }
 
-    isRequesting = false
+    private reqMouseDown: any | null = null
+    private reqMouseUp: any | null = null
     @Watch('isControling')
     onControlChange(isControling: boolean) {
-      this.isRequesting = false
+      if (isControling && this.reqMouseDown) {
+        this.setMousePos(this.reqMouseDown)
+        this.webrtc.send('mousedown', { key: this.reqMouseDown.button + 1 })
+      }
+
+      if (isControling && this.reqMouseUp) {
+        this.webrtc.send('mouseup', { key: this.reqMouseUp.button + 1 })
+      }
+
+      this.reqMouseDown = null
+      this.reqMouseUp = null
     }
 
-    implicitControlRequest() {
-      if (!this.isRequesting && this.implicitControl) {
-        this.isRequesting = true
+    implicitControlRequest(e: MouseEvent) {
+      if (this.implicitControl && e.type === 'mousedown' && this.reqMouseDown == null) {
+        this.reqMouseDown = e
         this.$emit('implicit-control-request')
+      }
+
+      if (this.implicitControl && e.type === 'mouseup' && this.reqMouseUp == null) {
+        this.reqMouseUp = e
       }
     }
 
+    // unused
     implicitControlRelease() {
       if (this.implicitControl) {
         this.$emit('implicit-control-release')
