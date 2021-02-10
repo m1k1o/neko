@@ -1,8 +1,8 @@
 <template>
   <div
     ref="overlay"
-    class="overlay"
-    :class="isControling ? 'active' : ''"
+    class="neko-overlay"
+    :class="isControling ? 'neko-active' : ''"
     tabindex="0"
     :style="{ cursor }"
     @click.stop.prevent
@@ -21,7 +21,7 @@
 </template>
 
 <style lang="scss" scoped>
-  .overlay {
+  .neko-overlay {
     position: absolute;
     top: 0;
     bottom: 0;
@@ -29,7 +29,7 @@
     height: 100%;
     outline: 0;
 
-    &.active {
+    &.neko-active {
       outline: 2px solid red;
       box-sizing: border-box;
     }

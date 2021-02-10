@@ -1,6 +1,6 @@
 <template>
-  <div ref="component" class="component">
-    <div ref="container" class="player-container">
+  <div ref="component" class="neko-component">
+    <div ref="container" class="neko-container">
       <video ref="video" :autoplay="autoplay" :muted="autoplay" />
       <neko-overlay
         :webrtc="webrtc"
@@ -18,12 +18,12 @@
 </template>
 
 <style lang="scss" scoped>
-  .component {
+  .neko-component {
     width: 100%;
     height: 100%;
   }
 
-  .player-container {
+  .neko-container {
     position: relative;
 
     video {
