@@ -2,6 +2,7 @@
   <div
     ref="overlay"
     class="overlay"
+    :class="isControling ? 'active' : ''"
     tabindex="0"
     :style="{ cursor }"
     @click.stop.prevent
@@ -27,6 +28,11 @@
     width: 100%;
     height: 100%;
     outline: 0;
+
+    &.active {
+      outline: 2px solid red;
+      box-sizing: border-box;
+    }
   }
 </style>
 
