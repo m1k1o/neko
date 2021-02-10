@@ -474,7 +474,7 @@
 
       // unmute on users first interaction
       if (this.autoplay) {
-        document.addEventListener('click', () => this.unmute(), { once: true })
+        document.addEventListener('click', this.unmute, { once: true })
       }
     }
 
@@ -482,6 +482,9 @@
       this.observer.disconnect()
       this.webrtc.disconnect()
       this.websocket.disconnect()
+
+      // remove users first interaction event
+      document.removeEventListener('click', this.unmute)
     }
 
     @Watch('state.screen.size')
