@@ -284,6 +284,13 @@ func goCreateScreenSize(index C.int, width C.int, height C.int, mwidth C.int, mh
 }
 
 //export goSetScreenRates
-func goSetScreenRates(index C.int, rate_index C.int, rate C.short) {
-	ScreenConfigurations[int(index)].Rates[int(rate_index)] = int16(rate)
+func goSetScreenRates(index C.int, rate_index C.int, rateC C.short) {
+	rate := int16(rateC)
+
+	// filter out all irrelevant rates
+	if rate > 60 || (rate > 30 && rate % 10 != 0){
+		return
+	}
+
+	ScreenConfigurations[int(index)].Rates[int(rate_index)] = rate
 }
