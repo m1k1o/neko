@@ -1,5 +1,5 @@
 <template>
-  <div
+  <canvas
     ref="overlay"
     class="neko-overlay"
     :class="isControling ? 'neko-active' : ''"
@@ -17,18 +17,7 @@
     @dragleave.stop.prevent="onDragLeave"
     @dragover.stop.prevent="onDragOver"
     @drop.stop.prevent="onDrop"
-  >
-    <img
-      v-if="cursorPos && !isControling"
-      :src="control.cursor.image.uri"
-      class="cursor"
-      :style="{
-        top: (cursorPos.y / screenHeight) * 100 + '%',
-        left: (cursorPos.x / screenWidth) * 100 + '%',
-        transform: 'translate(' + control.cursor.image.x * -1 + 'px, ' + control.cursor.image.y * -1 + 'px)',
-      }"
-    />
-  </div>
+  />
 </template>
 
 <style lang="scss" scoped>
@@ -72,7 +61,8 @@
     name: 'neko-overlay',
   })
   export default class extends Vue {
-    @Ref('overlay') readonly _overlay!: HTMLElement
+    @Ref('overlay') readonly _overlay!: HTMLCanvasElement
+    private _ctx: any = null
 
     private keyboard = GuacamoleKeyboard()
     private focused = false
@@ -109,6 +99,13 @@
     }
 
     mounted() {
+      this._ctx = this._overlay.getContext('2d')
+
+      // synchronize intrinsic with extrinsic dimensions
+      const { width, height } = this._overlay.getBoundingClientRect()
+      this._overlay.width = width
+      this._overlay.height = height
+
       // Initialize Guacamole Keyboard
       this.keyboard.onkeydown = (key: number) => {
         if (!this.focused) {
@@ -149,10 +146,11 @@
       }
     }
 
+    private mousepos: { x: number; y: number } = { x: 0, y: 0 }
     setMousePos(e: MouseEvent) {
       const pos = this.getMousePos(e.clientX, e.clientY)
       this.webrtc.send('mousemove', pos)
-      Vue.set(this, 'cursorPos', pos)
+      Vue.set(this, 'mousepos', pos)
     }
 
     onWheel(e: WheelEvent) {
@@ -257,6 +255,34 @@
       }
     }
 
+    private cursorElem: HTMLImageElement = new Image()
+    @Watch('control.cursor.image')
+    onCursorImageChange({ uri }: { uri: string }) {
+      this.cursorElem.src = uri
+    }
+
+    @Watch('control.cursor.position')
+    onCursorPositionChange({ x, y }: { x: number; y: number }) {
+      if (this.isControling || this.control.cursor.image == null) return
+
+      // synchronize intrinsic with extrinsic dimensions
+      const { width, height } = this._overlay.getBoundingClientRect()
+      if (this._overlay.width != width || this._overlay.height != height) {
+        this._overlay.width = width
+        this._overlay.height = height
+      }
+
+      // redraw cursor
+      this._ctx.clearRect(0, 0, width, height)
+      this._ctx.drawImage(
+        this.cursorElem,
+        (x / this.screenWidth) * width - this.control.cursor.image.x,
+        (y / this.screenHeight) * height - this.control.cursor.image.y,
+        this.control.cursor.image.width,
+        this.control.cursor.image.height,
+      )
+    }
+
     private reqMouseDown: any | null = null
     private reqMouseUp: any | null = null
     @Watch('isControling')
@@ -268,6 +294,13 @@
 
       if (isControling && this.reqMouseUp) {
         this.webrtc.send('mouseup', { key: this.reqMouseUp.button + 1 })
+      }
+
+      if (isControling) {
+        const { width, height } = this._overlay
+        this._ctx.clearRect(0, 0, width, height)
+      } else {
+        this.onCursorPositionChange(this.mousepos)
       }
 
       this.reqMouseDown = null
@@ -290,12 +323,6 @@
       if (this.implicitControl) {
         this.$emit('implicit-control-release')
       }
-    }
-
-    private cursorPos: { x: number; y: number } | null = null
-    @Watch('control.cursor.position')
-    onCursorPositionChange({ x, y }: { x: number; y: number }) {
-      this.cursorPos = { x, y }
     }
   }
 </script>
