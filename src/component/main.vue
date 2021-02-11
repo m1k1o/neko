@@ -106,7 +106,10 @@
           inverse: true,
           sensitivity: 1,
         },
-        cursor: null,
+        cursor: {
+          image: null,
+          position: null,
+        },
         clipboard: null,
         host_id: null,
         implicit_hosting: false,

@@ -17,7 +17,18 @@
     @dragleave.stop.prevent="onDragLeave"
     @dragover.stop.prevent="onDragOver"
     @drop.stop.prevent="onDrop"
-  />
+  >
+    <img
+      v-if="cursorPos && !isControling"
+      :src="control.cursor.image.uri"
+      class="cursor"
+      :style="{
+        top: (cursorPos.y / screenHeight) * 100 + '%',
+        left: (cursorPos.x / screenWidth) * 100 + '%',
+        transform: 'translate(' + control.cursor.image.x * -1 + 'px, ' + control.cursor.image.y * -1 + 'px)',
+      }"
+    />
+  </div>
 </template>
 
 <style lang="scss" scoped>
@@ -32,6 +43,10 @@
     &.neko-active {
       outline: 2px solid red;
       box-sizing: border-box;
+    }
+
+    .cursor {
+      position: relative;
     }
   }
 </style>
@@ -85,11 +100,11 @@
         return inactiveCursorWin10
       }
 
-      if (!this.control.cursor) {
+      if (!this.control.cursor.image) {
         return 'auto'
       }
 
-      const { uri, x, y } = this.control.cursor
+      const { uri, x, y } = this.control.cursor.image
       return 'url(' + uri + ') ' + x + ' ' + y + ', auto'
     }
 
@@ -135,7 +150,9 @@
     }
 
     setMousePos(e: MouseEvent) {
-      this.webrtc.send('mousemove', this.getMousePos(e.clientX, e.clientY))
+      const pos = this.getMousePos(e.clientX, e.clientY)
+      this.webrtc.send('mousemove', pos)
+      Vue.set(this, 'cursorPos', pos)
     }
 
     onWheel(e: WheelEvent) {
@@ -273,6 +290,12 @@
       if (this.implicitControl) {
         this.$emit('implicit-control-release')
       }
+    }
+
+    private cursorPos: { x: number; y: number } | null = null
+    @Watch('control.cursor.position')
+    onCursorPositionChange({ x, y }: { x: number; y: number }) {
+      this.cursorPos = { x, y }
     }
   }
 </script>

@@ -101,11 +101,6 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
     this.emit('connection.disconnect', message)
   }
 
-  protected [EVENT.CURSOR_IMAGE]({ uri, width, height, x, y }: message.CursorImage) {
-    this._log.debug('EVENT.CURSOR_IMAGE')
-    Vue.set(this.state.control, 'cursor', { uri, width, height, x, y })
-  }
-
   /////////////////////////////
   // Signal Events
   /////////////////////////////
@@ -180,6 +175,7 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
     Vue.set(this.state.screen, 'size', { width, height, rate })
     this.emit('room.screen.updated', width, height, rate)
   }
+
   /////////////////////////////
   // Clipboard Events
   /////////////////////////////
@@ -188,6 +184,20 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
     this._log.debug('EVENT.CLIPBOARD_UPDATED')
     Vue.set(this.state.control, 'clipboard', { text })
     this.emit('room.clipboard.updated', text)
+  }
+
+  /////////////////////////////
+  // Cursor Events
+  /////////////////////////////
+
+  protected [EVENT.CURSOR_IMAGE]({ uri, width, height, x, y }: message.CursorImage) {
+    this._log.debug('EVENT.CURSOR_IMAGE')
+    Vue.set(this.state.control.cursor, 'image', { uri, width, height, x, y })
+  }
+
+  protected [EVENT.CURSOR_POSITION]({ x, y }: message.CursorPosition) {
+    this._log.debug('EVENT.CURSOR_IMAGE')
+    Vue.set(this.state.control.cursor, 'position', { x, y })
   }
 
   /////////////////////////////

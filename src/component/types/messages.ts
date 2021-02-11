@@ -172,6 +172,13 @@ export interface CursorImage {
   y: number
 }
 
+export interface CursorPosition {
+  event: string | undefined
+  member_id: string
+  x: number
+  y: number
+}
+
 /////////////////////////////
 // Broadcast
 /////////////////////////////
