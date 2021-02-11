@@ -47,7 +47,8 @@ const (
 )
 
 const (
-	CURSOR_IMAGE = "cursor/image"
+	CURSOR_IMAGE    = "cursor/image"
+	CURSOR_POSITION = "cursor/position"
 )
 
 const (

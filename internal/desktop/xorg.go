@@ -9,8 +9,16 @@ import (
 	"demodesk/neko/internal/desktop/xorg"
 )
 
+var mousePosX int
+var mousePosY int
+
 func (manager *DesktopManagerCtx) Move(x, y int) {
 	xorg.Move(x, y)
+	mousePosX, mousePosY = x, y
+}
+
+func (manager *DesktopManagerCtx) GetMousePositon() (x, y int) {
+	return mousePosX, mousePosY
 }
 
 func (manager *DesktopManagerCtx) Scroll(x, y int) {

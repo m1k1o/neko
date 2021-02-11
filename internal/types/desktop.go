@@ -48,6 +48,7 @@ type DesktopManager interface {
 
 	// xorg
 	Move(x, y int)
+	GetMousePositon() (x, y int)
 	Scroll(x, y int)
 	ButtonDown(code int) error
 	KeyDown(code uint64) error

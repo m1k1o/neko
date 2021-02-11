@@ -172,6 +172,13 @@ type CursorImage struct {
 	Y      uint16 `json:"y"`
 }
 
+type CursorPosition struct {
+	Event     string `json:"event,omitempty"`
+	MemberId  string `json:"member_id"`
+	X         uint16 `json:"x"`
+	Y         uint16 `json:"y"`
+}
+
 /////////////////////////////
 // Broadcast
 /////////////////////////////
