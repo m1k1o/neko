@@ -37,7 +37,7 @@
         </li>
       </ul>
       <ul v-if="!fullscreen" class="video-menu bottom">
-        <li v-if="hosting && !clipboard_available"><i @click.stop.prevent="onClipboard" class="fas fa-clipboard"></i></li>
+        <li v-if="hosting && (!clipboard_read_available || !clipboard_write_available)"><i @click.stop.prevent="onClipboard" class="fas fa-clipboard"></i></li>
         <li>
           <i
             @click.stop.prevent="requestPictureInPicture"
@@ -47,7 +47,7 @@
         </li>
       </ul>
       <neko-resolution ref="resolution" v-if="admin" />
-      <neko-clipboard ref="clipboard" v-if="hosting && !clipboard_available" />
+      <neko-clipboard ref="clipboard" v-if="hosting && (!clipboard_read_available || !clipboard_write_available)" />
     </div>
   </div>
 </template>
@@ -272,8 +272,12 @@
       return this.$accessor.settings.scroll_invert
     }
 
-    get clipboard_available() {
-      return 'clipboard' in navigator
+    get clipboard_read_available() {
+      return 'clipboard' in navigator && typeof navigator.clipboard.readText === 'function'
+    }
+
+    get clipboard_write_available() {
+      return 'clipboard' in navigator && typeof navigator.clipboard.writeText === 'function'
     }
 
     get clipboard() {
@@ -349,7 +353,7 @@
 
     @Watch('clipboard')
     onClipboardChanged(clipboard: string) {
-      if (this.clipboard_available && typeof navigator.clipboard.writeText === 'function') {
+      if (this.clipboard_write_available) {
         navigator.clipboard.writeText(clipboard).catch(console.error)
       }
     }
@@ -479,7 +483,7 @@
         return
       }
 
-      if (this.hosting && this.clipboard_available && typeof navigator.clipboard.readText === 'function') {
+      if (this.hosting && this.clipboard_read_available) {
         navigator.clipboard
           .readText()
           .then((text) => {

@@ -21,7 +21,7 @@ This app uses Web RTC to stream a desktop inside of a docker container. This is 
 ## Differences to original repository.
 
 ### New Features
-- Clipboard button with text area - for browsers, that don't support clipboard syncing or for HTTP.
+- Clipboard button with text area - for browsers, that don't support clipboard syncing (FireFox, what a shame...) or for HTTP.
 - Keyboard modifier state synchronization (Num Lock, Caps Lock, Scroll Lock) for each hosting.
 - Added chromium ungoogled (with h265 support) an kept up to date by @whalehub.
 - Added Picture in Picture button (only for watching screen, controlling not possible).
