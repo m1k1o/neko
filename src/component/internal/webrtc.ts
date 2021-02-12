@@ -168,33 +168,33 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
         buffer = new ArrayBuffer(7)
         payload = new DataView(buffer)
         payload.setUint8(0, OPCODE.MOVE)
-        payload.setUint16(1, 4, true)
-        payload.setUint16(3, data.x, true)
-        payload.setUint16(5, data.y, true)
+        payload.setUint16(1, 4)
+        payload.setUint16(3, data.x)
+        payload.setUint16(5, data.y)
         break
       case 'wheel':
         buffer = new ArrayBuffer(7)
         payload = new DataView(buffer)
         payload.setUint8(0, OPCODE.SCROLL)
-        payload.setUint16(1, 4, true)
-        payload.setInt16(3, data.x, true)
-        payload.setInt16(5, data.y, true)
+        payload.setUint16(1, 4)
+        payload.setInt16(3, data.x)
+        payload.setInt16(5, data.y)
         break
       case 'keydown':
       case 'mousedown':
         buffer = new ArrayBuffer(11)
         payload = new DataView(buffer)
         payload.setUint8(0, OPCODE.KEY_DOWN)
-        payload.setUint16(1, 8, true)
-        payload.setBigUint64(3, BigInt(data.key), true)
+        payload.setUint16(1, 8)
+        payload.setBigUint64(3, BigInt(data.key))
         break
       case 'keyup':
       case 'mouseup':
         buffer = new ArrayBuffer(11)
         payload = new DataView(buffer)
         payload.setUint8(0, OPCODE.KEY_UP)
-        payload.setUint16(1, 8, true)
-        payload.setBigUint64(3, BigInt(data.key), true)
+        payload.setUint16(1, 8)
+        payload.setBigUint64(3, BigInt(data.key))
         break
       default:
         this._log.warn(`unknown data event: ${event}`)
