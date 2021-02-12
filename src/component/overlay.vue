@@ -74,10 +74,16 @@
     private readonly control!: Control
 
     @Prop()
-    private readonly screenWidth!: number
+    private readonly screenSize: { width: number; height: number } = {
+      width: 0,
+      height: 0,
+    }
 
     @Prop()
-    private readonly screenHeight!: number
+    private readonly canvasSize: { width: number; height: number } = {
+      width: 0,
+      height: 0,
+    }
 
     @Prop()
     private readonly isControling!: boolean
@@ -141,8 +147,8 @@
       const rect = this._overlay.getBoundingClientRect()
 
       return {
-        x: Math.round((this.screenWidth / rect.width) * (clientX - rect.left)),
-        y: Math.round((this.screenHeight / rect.height) * (clientY - rect.top)),
+        x: Math.round((this.screenSize.width / rect.width) * (clientX - rect.left)),
+        y: Math.round((this.screenSize.height / rect.height) * (clientY - rect.top)),
       }
     }
 
@@ -255,6 +261,12 @@
       }
     }
 
+    @Watch('canvasSize')
+    onCanvasSizeChange({ width, height }: { width: number; height: number }) {
+      this._overlay.width = width
+      this._overlay.height = height
+    }
+
     private cursorElem: HTMLImageElement = new Image()
     @Watch('control.cursor.image')
     onCursorImageChange({ uri }: { uri: string }) {
@@ -265,19 +277,15 @@
     onCursorPositionChange({ x, y }: { x: number; y: number }) {
       if (this.isControling || this.control.cursor.image == null) return
 
-      // synchronize intrinsic with extrinsic dimensions
-      const { width, height } = this._overlay.getBoundingClientRect()
-      if (this._overlay.width != width || this._overlay.height != height) {
-        this._overlay.width = width
-        this._overlay.height = height
-      }
+      // get intrinsic dimensions
+      const { width, height } = this._overlay
 
       // redraw cursor
       this._ctx.clearRect(0, 0, width, height)
       this._ctx.drawImage(
         this.cursorElem,
-        (x / this.screenWidth) * width - this.control.cursor.image.x,
-        (y / this.screenHeight) * height - this.control.cursor.image.y,
+        (x / this.screenSize.width) * width - this.control.cursor.image.x,
+        (y / this.screenSize.height) * height - this.control.cursor.image.y,
         this.control.cursor.image.width,
         this.control.cursor.image.height,
       )

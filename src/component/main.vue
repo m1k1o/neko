@@ -5,8 +5,8 @@
       <neko-overlay
         :webrtc="webrtc"
         :control="state.control"
-        :screenWidth="state.screen.size.width"
-        :screenHeight="state.screen.size.height"
+        :screenSize="state.screen.size"
+        :canvasSize="canvasSize"
         :isControling="controlling && watching"
         :implicitControl="state.control.implicit_hosting && state.members[state.member_id].profile.can_host"
         @implicit-control-request="websocket.send('control/request')"
@@ -74,6 +74,10 @@
     websocket = new NekoWebSocket()
     webrtc = new NekoWebRTC()
     observer = new ResizeObserver(this.onResize.bind(this))
+    canvasSize: { width: number; height: number } = {
+      width: 0,
+      height: 0,
+    }
 
     @Prop({ type: Boolean })
     private readonly autoplay!: boolean
@@ -505,6 +509,11 @@
         this._container.style.height = `${vertical}px`
         this._container.style.marginTop = `${(offsetHeight - vertical) / 2}px`
         this._container.style.marginLeft = `0px`
+
+        Vue.set(this, 'canvasSize', {
+          width: offsetWidth,
+          height: vertical,
+        })
       }
       // horizontal centering
       else if (screen_ratio < canvas_ratio) {
@@ -513,6 +522,11 @@
         this._container.style.height = `${offsetHeight}px`
         this._container.style.marginTop = `0px`
         this._container.style.marginLeft = `${(offsetWidth - horizontal) / 2}px`
+
+        Vue.set(this, 'canvasSize', {
+          width: horizontal,
+          height: offsetHeight,
+        })
       }
       // no centering
       else {
@@ -520,6 +534,11 @@
         this._container.style.height = `${offsetHeight}px`
         this._container.style.marginTop = `0px`
         this._container.style.marginLeft = `0px`
+
+        Vue.set(this, 'canvasSize', {
+          width: offsetWidth,
+          height: offsetHeight,
+        })
       }
     }
 
