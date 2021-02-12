@@ -47,7 +47,7 @@ func (manager *WebRTCManagerCtx) handle(msg webrtc.DataChannelMessage) error {
 		return err
 	}
 
-	if err := binary.Read(bytes.NewBuffer(hbytes), binary.LittleEndian, header); err != nil {
+	if err := binary.Read(bytes.NewBuffer(hbytes), binary.BigEndian, header); err != nil {
 		return err
 	}
 
@@ -56,14 +56,14 @@ func (manager *WebRTCManagerCtx) handle(msg webrtc.DataChannelMessage) error {
 	switch header.Event {
 	case OP_MOVE:
 		payload := &PayloadMove{}
-		if err := binary.Read(buffer, binary.LittleEndian, payload); err != nil {
+		if err := binary.Read(buffer, binary.BigEndian, payload); err != nil {
 			return err
 		}
 
 		manager.desktop.Move(int(payload.X), int(payload.Y))
 	case OP_SCROLL:
 		payload := &PayloadScroll{}
-		if err := binary.Read(buffer, binary.LittleEndian, payload); err != nil {
+		if err := binary.Read(buffer, binary.BigEndian, payload); err != nil {
 			return err
 		}
 
@@ -76,7 +76,7 @@ func (manager *WebRTCManagerCtx) handle(msg webrtc.DataChannelMessage) error {
 		manager.desktop.Scroll(int(payload.X), int(payload.Y))
 	case OP_KEY_DOWN:
 		payload := &PayloadKey{}
-		if err := binary.Read(buffer, binary.LittleEndian, payload); err != nil {
+		if err := binary.Read(buffer, binary.BigEndian, payload); err != nil {
 			return err
 		}
 
@@ -99,7 +99,7 @@ func (manager *WebRTCManagerCtx) handle(msg webrtc.DataChannelMessage) error {
 		}
 	case OP_KEY_UP:
 		payload := &PayloadKey{}
-		err := binary.Read(buffer, binary.LittleEndian, payload)
+		err := binary.Read(buffer, binary.BigEndian, payload)
 		if err != nil {
 			return err
 		}

@@ -43,7 +43,7 @@ func (webrtc_peer *WebRTCPeerCtx) SendCursorPosition(x, y int) error {
 	}
 
 	buffer := &bytes.Buffer{}
-	if err := binary.Write(buffer, binary.LittleEndian, data); err != nil {
+	if err := binary.Write(buffer, binary.BigEndian, data); err != nil {
 		return err
 	}
 
@@ -73,11 +73,11 @@ func (webrtc_peer *WebRTCPeerCtx) SendCursorImage(cur *types.CursorImage) error 
 
 	buffer := &bytes.Buffer{}
 
-	if err := binary.Write(buffer, binary.LittleEndian, data); err != nil {
+	if err := binary.Write(buffer, binary.BigEndian, data); err != nil {
 		return err
 	}
 
-	if err := binary.Write(buffer, binary.LittleEndian, img); err != nil {
+	if err := binary.Write(buffer, binary.BigEndian, img); err != nil {
 		return err
 	}
 
