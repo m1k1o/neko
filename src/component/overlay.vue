@@ -284,8 +284,8 @@
       this._ctx.clearRect(0, 0, width, height)
       this._ctx.drawImage(
         this.cursorElem,
-        (x / this.screenSize.width) * width - this.control.cursor.image.x,
-        (y / this.screenSize.height) * height - this.control.cursor.image.y,
+        Math.round((x / this.screenSize.width) * width - this.control.cursor.image.x),
+        Math.round((y / this.screenSize.height) * height - this.control.cursor.image.y),
         this.control.cursor.image.width,
         this.control.cursor.image.height,
       )
