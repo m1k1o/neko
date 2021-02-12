@@ -118,6 +118,12 @@ func (session *SessionCtx) GetState() types.MemberState {
 // ---
 
 func (session *SessionCtx) SetWebSocketPeer(websocket_peer types.WebSocketPeer) {
+	if session.websocket_peer != nil {
+		if err := session.websocket_peer.Destroy(); err != nil {
+			session.logger.Warn().Err(err).Msgf("websocket destroy has failed")
+		}
+	}
+
 	session.websocket_peer = websocket_peer
 }
 
@@ -176,6 +182,12 @@ func (session *SessionCtx) Disconnect(reason string) error {
 // ---
 
 func (session *SessionCtx) SetWebRTCPeer(webrtc_peer types.WebRTCPeer) {
+	if session.webrtc_peer != nil {
+		if err := session.webrtc_peer.Destroy(); err != nil {
+			session.logger.Warn().Err(err).Msgf("webrtc destroy has failed")
+		}
+	}
+
 	session.webrtc_peer = webrtc_peer
 }
 
