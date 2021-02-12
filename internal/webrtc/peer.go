@@ -24,14 +24,6 @@ func (webrtc_peer *WebRTCPeerCtx) SetVideoID(videoID string) error {
 	return webrtc_peer.changeVideo(videoID)
 }
 
-func (webrtc_peer *WebRTCPeerCtx) Send(data []byte) error {
-	if webrtc_peer.dataChannel == nil {
-		return nil
-	}
-
-	return webrtc_peer.dataChannel.Send(data)
-}
-
 func (webrtc_peer *WebRTCPeerCtx) Destroy() error {
 	if webrtc_peer.connection == nil || webrtc_peer.connection.ConnectionState() != webrtc.PeerConnectionStateConnected {
 		return nil

@@ -5,9 +5,11 @@ import "github.com/pion/webrtc/v3"
 type WebRTCPeer interface {
 	SignalAnswer(sdp string) error
 	SignalCandidate(candidate webrtc.ICECandidateInit) error
-	SetVideoID(videoID string) error
 
-	Send(data []byte) error
+	SetVideoID(videoID string) error
+	SendCursorPosition(x, y int) error
+	SendCursorImage(cur *CursorImage) error
+
 	Destroy() error
 }
 
