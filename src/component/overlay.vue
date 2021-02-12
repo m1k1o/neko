@@ -74,16 +74,10 @@
     private readonly control!: Control
 
     @Prop()
-    private readonly screenSize: { width: number; height: number } = {
-      width: 0,
-      height: 0,
-    }
+    private readonly screenSize!: { width: number; height: number }
 
     @Prop()
-    private readonly canvasSize: { width: number; height: number } = {
-      width: 0,
-      height: 0,
-    }
+    private readonly canvasSize!: { width: number; height: number }
 
     @Prop()
     private readonly isControling!: boolean
