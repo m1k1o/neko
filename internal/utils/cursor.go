@@ -10,7 +10,7 @@ import (
 	"demodesk/neko/internal/types"
 )
 
-func GetCursorImageURI(cursor *types.CursorImage) (string, error) {
+func GetCursorImage(cursor *types.CursorImage) ([]byte, error) {
 	width := int(cursor.Width)
 	height := int(cursor.Height)
 	pixels := cursor.Pixels
@@ -32,9 +32,18 @@ func GetCursorImageURI(cursor *types.CursorImage) (string, error) {
 	out := new(bytes.Buffer)
 	err := png.Encode(out, img)
 	if err != nil {
+		return nil, err
+	}
+
+	return out.Bytes(), nil
+}
+
+func GetCursorImageURI(cursor *types.CursorImage) (string, error) {
+	img, err := GetCursorImage(cursor)
+	if err != nil {
 		return "", err
 	}
 
-	uri := "data:image/png;base64," + base64.StdEncoding.EncodeToString(out.Bytes())
+	uri := "data:image/png;base64," + base64.StdEncoding.EncodeToString(img)
 	return uri, nil
 }
