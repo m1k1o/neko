@@ -188,7 +188,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 		return nil, err
 	}
 
-	_, err = connection.CreateDataChannel("data", nil)
+	dataChannel, err := connection.CreateDataChannel("data", nil)
 	if err != nil {
 		return nil, err
 	}
@@ -213,12 +213,6 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 		}
 	}
 
-	peer := &WebRTCPeerCtx{
-		api:            api,
-		connection:     connection,
-		changeVideo:    changeVideo,
-	}
-
 	connection.OnConnectionStateChange(func(state webrtc.PeerConnectionState) {
 		switch state {
 		case webrtc.PeerConnectionStateConnected:
@@ -238,21 +232,23 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 		}
 	})
 
-	connection.OnDataChannel(func(channel *webrtc.DataChannel) {
-		peer.dataChannel = channel
+	dataChannel.OnMessage(func(message webrtc.DataChannelMessage) {
+		if !session.IsHost() {
+			return
+		}
 
-		channel.OnMessage(func(message webrtc.DataChannelMessage) {
-			if !session.IsHost() {
-				return
-			}
-
-			if err = manager.handle(message); err != nil {
-				logger.Warn().Err(err).Msg("data handle failed")
-			}
-		})
+		if err = manager.handle(message); err != nil {
+			logger.Warn().Err(err).Msg("data handle failed")
+		}
 	})
 
-	session.SetWebRTCPeer(peer)
+	session.SetWebRTCPeer(&WebRTCPeerCtx{
+		api:          api,
+		connection:   connection,
+		changeVideo:  changeVideo,
+		dataChannel:  dataChannel,
+	})
+
 	return connection.LocalDescription(), nil
 }
 
