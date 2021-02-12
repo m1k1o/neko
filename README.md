@@ -27,10 +27,12 @@ This app uses Web RTC to stream a desktop inside of a docker container. This is 
 - Added Picture in Picture button (only for watching screen, controlling not possible).
 - Added RTMP broadcast. Enables broadcasting neko screen to local RTMP server, YouTube or Twitch.
 - Stereo sound (works properly only in Firefox host).
+- Added limited support for some mobile browsers with `playsinline` attribute.
 
 ### Bugs
 - Fixed minor gst pipeline bug.
 - Locked screen only for users, admins can still join.
+- Fixed h264 pipelines bugs (by @mbattista).
 
 ### Misc
 - Custom docker workflow.
