@@ -119,15 +119,9 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
     }
 
     this._peer.ontrack = this.onTrack.bind(this)
+    this._peer.ondatachannel = this.onDataChannel.bind(this)
     this._peer.addTransceiver('audio', { direction: 'recvonly' })
     this._peer.addTransceiver('video', { direction: 'recvonly' })
-
-    this._channel = this._peer.createDataChannel('data')
-    this._channel.onerror = this.onDisconnected.bind(this, new Error('peer data channel error'))
-    this._channel.onmessage = this.onData.bind(this)
-    this._channel.onopen = this.onConnected.bind(this)
-    this._channel.onclose = this.onDisconnected.bind(this, new Error('peer data channel closed'))
-
     this._peer.setRemoteDescription({ type: 'offer', sdp })
 
     if (this.candidates.length > 0) {
@@ -223,6 +217,16 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
     }
 
     this.emit('track', event)
+  }
+
+  private onDataChannel(event: RTCDataChannelEvent) {
+    this._log.debug(`received data channel from peer: ${event.channel.label}`, event)
+
+    this._channel = event.channel
+    this._channel.onerror = this.onDisconnected.bind(this, new Error('peer data channel error'))
+    this._channel.onmessage = this.onData.bind(this)
+    this._channel.onopen = this.onConnected.bind(this)
+    this._channel.onclose = this.onDisconnected.bind(this, new Error('peer data channel closed'))
   }
 
   private onConnected() {
