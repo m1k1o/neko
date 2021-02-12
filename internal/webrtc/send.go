@@ -1,6 +1,7 @@
 package webrtc
 
 import (
+	"fmt"
 	"bytes"
     "encoding/binary"
 
@@ -25,12 +26,11 @@ type PayloadCursorImage struct {
 	Height uint16
 	Xhot   uint16
 	Yhot   uint16
-	Uri    string
 }
 
 func (webrtc_peer *WebRTCPeerCtx) SendCursorPosition(x, y int) error {
 	if webrtc_peer.dataChannel == nil {
-		return nil
+		return fmt.Errorf("no data channel")
 	}
 
 	data := PayloadCursorPosition{
@@ -42,17 +42,20 @@ func (webrtc_peer *WebRTCPeerCtx) SendCursorPosition(x, y int) error {
 		Y: uint16(y),
 	}
 
-	var buffer bytes.Buffer
-	binary.Write(&buffer, binary.LittleEndian, data)
+	buffer := &bytes.Buffer{}
+	if err := binary.Write(buffer, binary.LittleEndian, data); err != nil {
+		return err
+	}
+
 	return webrtc_peer.dataChannel.Send(buffer.Bytes())
 }
 
 func (webrtc_peer *WebRTCPeerCtx) SendCursorImage(cur *types.CursorImage) error {
 	if webrtc_peer.dataChannel == nil {
-		return nil
+		return fmt.Errorf("no data channel")
 	}
 
-	uri, err := utils.GetCursorImageURI(cur)
+	img, err := utils.GetCursorImage(cur)
 	if err != nil {
 		return err
 	}
@@ -60,16 +63,23 @@ func (webrtc_peer *WebRTCPeerCtx) SendCursorImage(cur *types.CursorImage) error 
 	data := PayloadCursorImage{
 		PayloadHeader: PayloadHeader{
 			Event: OP_CURSOR_IMAGE,
-			Length: uint16(11 + len(uri)),
+			Length: uint16(11 + len(img)),
 		},
 		Width: cur.Width,
 		Height: cur.Height,
 		Xhot: cur.Xhot,
 		Yhot: cur.Yhot,
-		Uri: uri,
 	}
 
-	var buffer bytes.Buffer
-	binary.Write(&buffer, binary.LittleEndian, data)
+	buffer := &bytes.Buffer{}
+
+	if err := binary.Write(buffer, binary.LittleEndian, data); err != nil {
+		return err
+	}
+
+	if err := binary.Write(buffer, binary.LittleEndian, img); err != nil {
+		return err
+	}
+
 	return webrtc_peer.dataChannel.Send(buffer.Bytes())
 }
