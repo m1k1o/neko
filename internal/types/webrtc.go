@@ -7,6 +7,7 @@ type WebRTCPeer interface {
 	SignalCandidate(candidate webrtc.ICECandidateInit) error
 	SetVideoID(videoID string) error
 
+	Send(data []byte) error
 	Destroy() error
 }
 

@@ -213,9 +213,11 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 		}
 	}
 
-	connection.OnNegotiationNeeded(func() {
-		logger.Warn().Msg("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!negotiation needed!")
-	})
+	peer := &WebRTCPeerCtx{
+		api:            api,
+		connection:     connection,
+		changeVideo:    changeVideo,
+	}
 
 	connection.OnConnectionStateChange(func(state webrtc.PeerConnectionState) {
 		switch state {
@@ -237,6 +239,8 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 	})
 
 	connection.OnDataChannel(func(channel *webrtc.DataChannel) {
+		peer.dataChannel = channel
+
 		channel.OnMessage(func(message webrtc.DataChannelMessage) {
 			if !session.IsHost() {
 				return
@@ -248,15 +252,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 		})
 	})
 
-	session.SetWebRTCPeer(&WebRTCPeerCtx{
-		api:            api,
-		engine:         engine,
-		settings:       settings,
-		connection:     connection,
-		configuration:  configuration,
-		changeVideo:    changeVideo,
-	})
-
+	session.SetWebRTCPeer(peer)
 	return connection.LocalDescription(), nil
 }
 

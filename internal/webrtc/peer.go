@@ -4,10 +4,8 @@ import "github.com/pion/webrtc/v3"
 
 type WebRTCPeerCtx struct {
 	api            *webrtc.API
-	engine         *webrtc.MediaEngine
-	settings       *webrtc.SettingEngine
 	connection     *webrtc.PeerConnection
-	configuration  *webrtc.Configuration
+	dataChannel    *webrtc.DataChannel
 	changeVideo    func(videoID string) error
 }
 
@@ -24,6 +22,14 @@ func (webrtc_peer *WebRTCPeerCtx) SignalCandidate(candidate webrtc.ICECandidateI
 
 func (webrtc_peer *WebRTCPeerCtx) SetVideoID(videoID string) error {
 	return webrtc_peer.changeVideo(videoID)
+}
+
+func (webrtc_peer *WebRTCPeerCtx) Send(data []byte) error {
+	if webrtc_peer.dataChannel == nil {
+		return nil
+	}
+
+	return webrtc_peer.dataChannel.Send(data)
 }
 
 func (webrtc_peer *WebRTCPeerCtx) Destroy() error {
