@@ -49,9 +49,9 @@ export const mutations = mutationTree(state, {
   },
   addMember(state, member: Member) {
     // remove html tags
-    let tmp = document.createElement("div");
-    tmp.innerHTML = member.displayname;
-    member.displayname = tmp.textContent || tmp.innerText || "";
+    let tmp = document.createElement('div')
+    tmp.innerHTML = member.displayname
+    member.displayname = tmp.textContent || tmp.innerText || ''
 
     state.members = {
       ...state.members,
