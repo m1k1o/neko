@@ -37,7 +37,9 @@
         </li>
       </ul>
       <ul v-if="!fullscreen" class="video-menu bottom">
-        <li v-if="hosting && (!clipboard_read_available || !clipboard_write_available)"><i @click.stop.prevent="onClipboard" class="fas fa-clipboard"></i></li>
+        <li v-if="hosting && (!clipboard_read_available || !clipboard_write_available)">
+          <i @click.stop.prevent="onClipboard" class="fas fa-clipboard"></i>
+        </li>
         <li>
           <i
             @click.stop.prevent="requestPictureInPicture"
@@ -550,11 +552,11 @@
     }
 
     onMouseEnter(e: MouseEvent) {
-      if(this.hosting) {
+      if (this.hosting) {
         this.$accessor.remote.syncKeyboardModifierState({
-          capsLock: e.getModifierState("CapsLock"),
-          numLock: e.getModifierState("NumLock"),
-          scrollLock: e.getModifierState("ScrollLock"),
+          capsLock: e.getModifierState('CapsLock'),
+          numLock: e.getModifierState('NumLock'),
+          scrollLock: e.getModifierState('ScrollLock'),
         })
       }
 
@@ -564,11 +566,11 @@
     }
 
     onMouseLeave(e: MouseEvent) {
-      if(this.hosting) {
+      if (this.hosting) {
         this.$accessor.remote.setKeyboardModifierState({
-          capsLock: e.getModifierState("CapsLock"),
-          numLock: e.getModifierState("NumLock"),
-          scrollLock: e.getModifierState("ScrollLock"),
+          capsLock: e.getModifierState('CapsLock'),
+          numLock: e.getModifierState('NumLock'),
+          scrollLock: e.getModifierState('ScrollLock'),
         })
       }
 
