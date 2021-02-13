@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"reflect"
 
 	"github.com/pion/webrtc/v3"
 	"github.com/pion/webrtc/v3/pkg/media"
@@ -19,21 +20,27 @@ import (
 
 func New(desktop types.DesktopManager, capture types.CaptureManager, config *config.WebRTC) *WebRTCManagerCtx {
 	return &WebRTCManagerCtx{
-		logger:   log.With().Str("module", "webrtc").Logger(),
-		desktop:  desktop,
-		capture:  capture,
-		config:   config,
+		logger:           log.With().Str("module", "webrtc").Logger(),
+		desktop:          desktop,
+		capture:          capture,
+		config:           config,
+		// TODO: Refactor.
+		curImgListeners:  map[uintptr]*func(cur *types.CursorImage){},
+		curPosListeners:  map[uintptr]*func(x, y int){},
 	}
 }
 
 type WebRTCManagerCtx struct {
-	logger       zerolog.Logger
-	audioTrack   *webrtc.TrackLocalStaticSample
-	audioCodec   codec.RTPCodec
-	audioStop    func()
-	desktop      types.DesktopManager
-	capture      types.CaptureManager
-	config       *config.WebRTC
+	logger          zerolog.Logger
+	audioTrack      *webrtc.TrackLocalStaticSample
+	audioCodec      codec.RTPCodec
+	audioStop       func()
+	desktop         types.DesktopManager
+	capture         types.CaptureManager
+	config          *config.WebRTC
+	// TODO: Refactor.
+	curImgListeners map[uintptr]*func(cur *types.CursorImage)
+	curPosListeners map[uintptr]*func(x, y int)
 }
 
 func (manager *WebRTCManagerCtx) Start() {
@@ -64,6 +71,21 @@ func (manager *WebRTCManagerCtx) Start() {
 		Str("ephemeral_port_range", fmt.Sprintf("%d-%d", manager.config.EphemeralMin, manager.config.EphemeralMax)).
 		Str("nat_ips", strings.Join(manager.config.NAT1To1IPs, ",")).
 		Msgf("webrtc starting")
+
+	// TODO: Refactor.
+	manager.desktop.OnCursorChanged(func(serial uint64) {
+		cur := manager.desktop.GetCursorImage()
+		for _, emit := range manager.curImgListeners {
+			(*emit)(cur)
+		}
+	})
+
+	// TODO: Refactor.
+	manager.desktop.OnCursorPosition(func(x, y int) {
+		for _, emit := range manager.curPosListeners {
+			(*emit)(x, y)
+		}
+	})
 }
 
 func (manager *WebRTCManagerCtx) Shutdown() error {
@@ -213,6 +235,33 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 		}
 	}
 
+	peer := &WebRTCPeerCtx{
+		api:          api,
+		connection:   connection,
+		changeVideo:  changeVideo,
+		dataChannel:  dataChannel,
+	}
+
+	cursorChange := func(cur *types.CursorImage) {
+		if err := peer.SendCursorImage(cur); err != nil {
+			manager.logger.Warn().Err(err).Msg("could not send cursor image")
+		}
+	}
+
+	cursorPosition := func(x, y int) {
+		if session.IsHost() {
+			return
+		}
+
+		if err := peer.SendCursorPosition(x, y); err != nil {
+			manager.logger.Warn().Err(err).Msg("could not send cursor position")
+		}
+	}
+
+	// TODO: Refactor.
+	cursorChangePtr := reflect.ValueOf(&cursorChange).Pointer()
+	cursorPositionPtr := reflect.ValueOf(&cursorPosition).Pointer()
+
 	connection.OnConnectionStateChange(func(state webrtc.PeerConnectionState) {
 		switch state {
 		case webrtc.PeerConnectionStateConnected:
@@ -229,7 +278,17 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 			if videoStream.ListenersCount() == 0 {
 				videoStream.Stop()
 			}
+
+			// TODO: Refactor.
+			delete(manager.curImgListeners, cursorChangePtr)
+			delete(manager.curPosListeners, cursorPositionPtr)
 		}
+	})
+
+	dataChannel.OnOpen(func() {
+		// TODO: Refactor.
+		manager.curImgListeners[cursorChangePtr] = &cursorChange
+		manager.curPosListeners[cursorPositionPtr] = &cursorPosition
 	})
 
 	dataChannel.OnMessage(func(message webrtc.DataChannelMessage) {
@@ -242,13 +301,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 		}
 	})
 
-	session.SetWebRTCPeer(&WebRTCPeerCtx{
-		api:          api,
-		connection:   connection,
-		changeVideo:  changeVideo,
-		dataChannel:  dataChannel,
-	})
-
+	session.SetWebRTCPeer(peer)
 	return connection.LocalDescription(), nil
 }
 

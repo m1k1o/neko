@@ -9,16 +9,21 @@ import (
 	"demodesk/neko/internal/desktop/xorg"
 )
 
-var mousePosX int
-var mousePosY int
+// TODO: Refactor.
+var cursorListeners []func(x, y int)
 
 func (manager *DesktopManagerCtx) Move(x, y int) {
 	xorg.Move(x, y)
-	mousePosX, mousePosY = x, y
+
+	// TODO: Refactor.
+	for _, listener := range cursorListeners {
+		listener(x, y)
+	}
 }
 
-func (manager *DesktopManagerCtx) GetMousePositon() (x, y int) {
-	return mousePosX, mousePosY
+// TODO: Refactor.
+func (manager *DesktopManagerCtx) OnCursorPosition(listener func(x, y int)) {
+	cursorListeners = append(cursorListeners, listener)
 }
 
 func (manager *DesktopManagerCtx) Scroll(x, y int) {

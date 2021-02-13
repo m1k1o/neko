@@ -22,7 +22,6 @@ type SystemInit struct {
 	ScreenSize      ScreenSize            `json:"screen_size"`
 	Members         map[string]MemberData `json:"members"`
 	ImplicitHosting bool                  `json:"implicit_hosting"`
-	CursorImage     *CursorImage          `json:"cursor_image"`
 }
 
 type SystemAdmin struct {
@@ -157,26 +156,6 @@ type KeyboardModifiers struct {
 	CapsLock   *bool  `json:"caps_lock"`
 	NumLock    *bool  `json:"num_lock"`
 	ScrollLock *bool  `json:"scroll_lock"`	
-}
-
-/////////////////////////////
-// Cursor
-/////////////////////////////
-
-type CursorImage struct {
-	Event  string `json:"event,omitempty"`
-	Uri    string `json:"uri"`
-	Width  uint16 `json:"width"`
-	Height uint16 `json:"height"`
-	X      uint16 `json:"x"`
-	Y      uint16 `json:"y"`
-}
-
-type CursorPosition struct {
-	Event     string `json:"event,omitempty"`
-	MemberId  string `json:"member_id"`
-	X         uint16 `json:"x"`
-	Y         uint16 `json:"y"`
 }
 
 /////////////////////////////

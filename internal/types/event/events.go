@@ -47,11 +47,6 @@ const (
 )
 
 const (
-	CURSOR_IMAGE    = "cursor/image"
-	CURSOR_POSITION = "cursor/position"
-)
-
-const (
 	BORADCAST_STATUS = "broadcast/status"
 )
 

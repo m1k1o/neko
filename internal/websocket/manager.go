@@ -12,7 +12,6 @@ import (
 	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/types/event"
 	"demodesk/neko/internal/types/message"
-	"demodesk/neko/internal/utils"
 )
 
 func New(
@@ -93,25 +92,6 @@ func (ws *WebSocketManagerCtx) Start() {
 		}
 	})
 
-	// TOOD: Throttle events.
-	ws.desktop.OnCursorChanged(func(serial uint64) {
-		cur := ws.desktop.GetCursorImage()
-		uri, err := utils.GetCursorImageURI(cur)
-		if err != nil {
-			ws.logger.Warn().Err(err).Msg("could create cursor image")
-			return
-		}
-
-		ws.sessions.Broadcast(message.CursorImage{
-			Event:  event.CURSOR_IMAGE,
-			Uri:    uri,
-			Width:  cur.Width,
-			Height: cur.Height,
-			X:      cur.Xhot,
-			Y:      cur.Yhot,
-		}, nil)
-	})
-
 	ws.desktop.OnClipboardUpdated(func() {
 		session := ws.sessions.GetHost()
 		if session == nil || !session.CanAccessClipboard() {
@@ -134,47 +114,6 @@ func (ws *WebSocketManagerCtx) Start() {
 	})
 
 	ws.fileChooserDialogEvents()
-
-	go func() {
-		ws.logger.Debug().Msg("cursor position broadcast start")
-
-		defer func() {
-			ws.logger.Debug().Msg("cursor position broadcast shutdown")
-		}()
-
-		var posX int
-		var posY int
-
-		for {
-			select {
-			case <-ws.shutdown:
-				return
-			default:
-				time.Sleep(40 * time.Millisecond)
-
-				session := ws.sessions.GetHost()
-				if session == nil {
-					continue
-				}
-
-				x, y := ws.desktop.GetMousePositon()
-				if posX == x && posY == y {
-					continue
-				}
-
-				memberId := session.ID()
-				posX = x
-				posY = y
-			
-				ws.sessions.Broadcast(message.CursorPosition{
-					Event: event.CURSOR_POSITION,
-					MemberId: memberId,
-					X:        uint16(x),
-					Y:        uint16(y),
-				}, []string{ memberId })
-			}
-		}
-	}()
 }
 
 func (ws *WebSocketManagerCtx) Shutdown() error {
