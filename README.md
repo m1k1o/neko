@@ -121,3 +121,9 @@ services:
       NEKO_EPR: 52000-52100
       NEKO_NAT1TO1: <your-IP>
 ```
+
+## Mobile UI
+
+Although on iOS is neko not working, the UI screens have been fixed for small screens.
+
+![mobile-screens](https://i.imgur.com/K9gfscU.png)
