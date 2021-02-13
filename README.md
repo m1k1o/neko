@@ -41,6 +41,7 @@ This app uses Web RTC to stream a desktop inside of a docker container. This is 
 - Ignore duplicate notify bars.
 - No pointer events for notify bars.
 - Disable debug mode by default.
+- Remove HTML tags from user name.
 
 # Getting started & FAQ
 
