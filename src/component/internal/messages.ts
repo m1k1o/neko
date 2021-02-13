@@ -74,9 +74,6 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
 
     this[EVENT.SCREEN_UPDATED](conf.screen_size)
     this[EVENT.CONTROL_HOST](conf.control_host)
-    if (conf.cursor_image) {
-      this[EVENT.CURSOR_IMAGE](conf.cursor_image)
-    }
   }
 
   protected [EVENT.SYSTEM_ADMIN]({ screen_sizes_list, broadcast_status }: message.SystemAdmin) {
@@ -184,20 +181,6 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
     this._log.debug('EVENT.CLIPBOARD_UPDATED')
     Vue.set(this.state.control, 'clipboard', { text })
     this.emit('room.clipboard.updated', text)
-  }
-
-  /////////////////////////////
-  // Cursor Events
-  /////////////////////////////
-
-  protected [EVENT.CURSOR_IMAGE]({ uri, width, height, x, y }: message.CursorImage) {
-    this._log.debug('EVENT.CURSOR_IMAGE')
-    Vue.set(this.state.control.cursor, 'image', { uri, width, height, x, y })
-  }
-
-  protected [EVENT.CURSOR_POSITION]({ x, y }: message.CursorPosition) {
-    this._log.debug('EVENT.CURSOR_IMAGE')
-    Vue.set(this.state.control.cursor, 'position', { x, y })
   }
 
   /////////////////////////////

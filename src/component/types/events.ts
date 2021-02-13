@@ -30,9 +30,6 @@ export const CLIPBOARD_SET = 'clipboard/set'
 export const KEYBOARD_MODIFIERS = 'keyboard/modifiers'
 export const KEYBOARD_MAP = 'keyboard/map'
 
-export const CURSOR_IMAGE = 'cursor/image'
-export const CURSOR_POSITION = 'cursor/position'
-
 export const BORADCAST_STATUS = 'broadcast/status'
 
 export const SEND_UNICAST = 'send/unicast'

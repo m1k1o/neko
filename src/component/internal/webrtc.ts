@@ -23,6 +23,8 @@ export interface NekoWebRTCEvents {
   track: (event: RTCTrackEvent) => void
   candidate: (candidate: RTCIceCandidateInit) => void
   stats: (stats: WebRTCStats) => void
+  ['cursor-position']: (data: { x: number; y: number }) => void
+  ['cursor-image']: (data: { width: number; height: number; x: number; y: number; uri: string }) => void
 }
 
 export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
@@ -204,9 +206,6 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
     this._channel!.send(buffer)
   }
 
-  // not-implemented
-  private onData(e: MessageEvent) {}
-
   private onTrack(event: RTCTrackEvent) {
     this._log.debug(`received ${event.track.kind} track from peer: ${event.track.id}`, event)
     const stream = event.streams[0]
@@ -227,6 +226,42 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
     this._channel.onmessage = this.onData.bind(this)
     this._channel.onopen = this.onConnected.bind(this)
     this._channel.onclose = this.onDisconnected.bind(this, new Error('peer data channel closed'))
+  }
+
+  // not-implemented
+  private onData(e: MessageEvent) {
+    const payload = new DataView(e.data)
+    const event = payload.getUint8(0)
+    const length = payload.getUint16(1)
+
+    switch (event) {
+      case 1:
+        this.emit('cursor-position', {
+          x: payload.getUint16(3),
+          y: payload.getUint16(5),
+        })
+        break
+      case 2:
+        const data = e.data.slice(11, length - 11)
+
+        // TODO: get string from server
+        const blob = new Blob([data], { type: 'image/png' })
+        const reader = new FileReader()
+        reader.onload = (e) => {
+          this.emit('cursor-image', {
+            width: payload.getUint16(3),
+            height: payload.getUint16(5),
+            x: payload.getUint16(7),
+            y: payload.getUint16(9),
+            uri: String(e.target!.result),
+          })
+        }
+        reader.readAsDataURL(blob)
+
+        break
+      default:
+        this._log.warn(`unhandled webrtc event '${event}'.`, payload)
+    }
   }
 
   private onConnected() {

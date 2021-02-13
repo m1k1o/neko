@@ -14,7 +14,6 @@ export interface SystemInit {
   screen_size: ScreenSize
   members: Record<string, MemberData>
   implicit_hosting: boolean
-  cursor_image: CursorImage | null
 }
 
 export interface SystemAdmin {
@@ -157,26 +156,6 @@ export interface KeyboardMap {
   event: string | undefined
   layout: string
   variant: string
-}
-
-/////////////////////////////
-// Cursor
-/////////////////////////////
-
-export interface CursorImage {
-  event: string | undefined
-  uri: string
-  width: number
-  height: number
-  x: number
-  y: number
-}
-
-export interface CursorPosition {
-  event: string | undefined
-  member_id: string
-  x: number
-  y: number
 }
 
 /////////////////////////////

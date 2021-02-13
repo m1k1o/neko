@@ -4,7 +4,7 @@
       <video ref="video" :autoplay="autoplay" :muted="autoplay" />
       <neko-overlay
         :webrtc="webrtc"
-        :control="state.control"
+        :scroll="state.control.scroll"
         :screenSize="state.screen.size"
         :canvasSize="canvasSize"
         :isControling="controlling && watching"

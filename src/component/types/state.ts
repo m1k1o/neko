@@ -49,7 +49,6 @@ export interface Video {
 /////////////////////////////
 export interface Control {
   scroll: Scroll
-  cursor: Cursor
   clipboard: Clipboard | null
   host_id: string | null
   implicit_hosting: boolean
@@ -58,24 +57,6 @@ export interface Control {
 export interface Scroll {
   inverse: boolean
   sensitivity: number
-}
-
-export interface Cursor {
-  image: CursorImage | null
-  position: CursorPosition | null
-}
-
-export interface CursorImage {
-  uri: string
-  width: number
-  height: number
-  x: number
-  y: number
-}
-
-export interface CursorPosition {
-  x: number
-  y: number
 }
 
 export interface Clipboard {

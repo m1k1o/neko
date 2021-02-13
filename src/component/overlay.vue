@@ -46,7 +46,7 @@
   import GuacamoleKeyboard from './utils/guacamole-keyboard'
   import { getFilesFromDataTansfer } from './utils/file-upload'
   import { NekoWebRTC } from './internal/webrtc'
-  import { Control } from './types/state'
+  import { Scroll } from './types/state'
 
   const inactiveCursorWin10 =
     'url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAACEUlEQVR4nOzWz6sSURQH8O+89zJ5C32LKbAgktCSaPpBSL' +
@@ -71,7 +71,7 @@
     private readonly webrtc!: NekoWebRTC
 
     @Prop()
-    private readonly control!: Control
+    private readonly scroll!: Scroll
 
     @Prop()
     private readonly screenSize!: { width: number; height: number }
@@ -90,11 +90,11 @@
         return inactiveCursorWin10
       }
 
-      if (!this.control.cursor.image) {
+      if (!this.cursorImage) {
         return 'auto'
       }
 
-      const { uri, x, y } = this.control.cursor.image
+      const { uri, x, y } = this.cursorImage
       return 'url(' + uri + ') ' + x + ' ' + y + ', auto'
     }
 
@@ -131,10 +131,16 @@
         this.webrtc.send('keyup', { key })
       }
       this.keyboard.listenTo(this._overlay)
+
+      this.webrtc.addListener('cursor-position', this.onCursorPosition)
+      this.webrtc.addListener('cursor-image', this.onCursorImage)
     }
 
     beforeDestroy() {
       // Guacamole Keyboard does not provide destroy functions
+
+      this.webrtc.removeListener('cursor-position', this.onCursorPosition)
+      this.webrtc.removeListener('cursor-image', this.onCursorImage)
     }
 
     getMousePos(clientX: number, clientY: number) {
@@ -146,11 +152,10 @@
       }
     }
 
-    private mousepos: { x: number; y: number } = { x: 0, y: 0 }
     setMousePos(e: MouseEvent) {
       const pos = this.getMousePos(e.clientX, e.clientY)
       this.webrtc.send('mousemove', pos)
-      Vue.set(this, 'mousepos', pos)
+      Vue.set(this, 'cursorPosition', pos)
     }
 
     onWheel(e: WheelEvent) {
@@ -161,13 +166,13 @@
       let x = e.deltaX
       let y = e.deltaY
 
-      if (this.control.scroll.inverse) {
+      if (this.scroll.inverse) {
         x *= -1
         y *= -1
       }
 
-      x = Math.min(Math.max(x, -this.control.scroll.sensitivity), this.control.scroll.sensitivity)
-      y = Math.min(Math.max(y, -this.control.scroll.sensitivity), this.control.scroll.sensitivity)
+      x = Math.min(Math.max(x, -this.scroll.sensitivity), this.scroll.sensitivity)
+      y = Math.min(Math.max(y, -this.scroll.sensitivity), this.scroll.sensitivity)
 
       this.setMousePos(e)
       this.webrtc.send('wheel', { x, y })
@@ -255,38 +260,67 @@
       }
     }
 
+    //
+    // canvas
+    //
+
+    private cursorImage: { width: number; height: number; x: number; y: number; uri: string } | null = null
+    private cursorElement: HTMLImageElement = new Image()
+    private cursorPosition: { x: number; y: number } | null = null
+
     @Watch('canvasSize')
     onCanvasSizeChange({ width, height }: { width: number; height: number }) {
       this._overlay.width = width
       this._overlay.height = height
+      this.canvasRedraw()
     }
 
-    private cursorElem: HTMLImageElement = new Image()
-    @Watch('control.cursor.image')
-    onCursorImageChange({ uri }: { uri: string }) {
-      this.cursorElem.src = uri
+    onCursorPosition(data: { x: number; y: number }) {
+      if (!this.isControling) {
+        Vue.set(this, 'cursorPosition', data)
+        this.canvasRedraw()
+      }
     }
 
-    @Watch('control.cursor.position')
-    onCursorPositionChange({ x, y }: { x: number; y: number }) {
-      if (this.isControling || this.control.cursor.image == null) return
+    onCursorImage(data: { width: number; height: number; x: number; y: number; uri: string }) {
+      Vue.set(this, 'cursorImage', data)
+
+      if (!this.isControling) {
+        this.cursorElement.src = data.uri
+        this.canvasRedraw()
+      }
+    }
+
+    canvasRedraw() {
+      if (this.cursorPosition == null || this.screenSize == null || this.cursorImage == null) return
 
       // get intrinsic dimensions
       const { width, height } = this._overlay
+      const { x, y } = this.cursorPosition
 
       // redraw cursor
       this._ctx.clearRect(0, 0, width, height)
       this._ctx.drawImage(
-        this.cursorElem,
-        Math.round((x / this.screenSize.width) * width - this.control.cursor.image.x),
-        Math.round((y / this.screenSize.height) * height - this.control.cursor.image.y),
-        this.control.cursor.image.width,
-        this.control.cursor.image.height,
+        this.cursorElement,
+        Math.round((x / this.screenSize.width) * width - this.cursorImage.x),
+        Math.round((y / this.screenSize.height) * height - this.cursorImage.y),
+        this.cursorImage.width,
+        this.cursorImage.height,
       )
     }
 
+    canvasClear() {
+      const { width, height } = this._overlay
+      this._ctx.clearRect(0, 0, width, height)
+    }
+
+    //
+    // implicit hosting
+    //
+
     private reqMouseDown: any | null = null
     private reqMouseUp: any | null = null
+
     @Watch('isControling')
     onControlChange(isControling: boolean) {
       if (isControling && this.reqMouseDown) {
@@ -299,10 +333,9 @@
       }
 
       if (isControling) {
-        const { width, height } = this._overlay
-        this._ctx.clearRect(0, 0, width, height)
+        this.canvasClear()
       } else {
-        this.onCursorPositionChange(this.mousepos)
+        this.canvasRedraw()
       }
 
       this.reqMouseDown = null
