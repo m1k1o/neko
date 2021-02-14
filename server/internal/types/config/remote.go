@@ -4,7 +4,6 @@ import (
 	"regexp"
 	"strconv"
 
-	"github.com/pion/webrtc/v2"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -19,6 +18,7 @@ type Remote struct {
 	ScreenWidth  int
 	ScreenHeight int
 	ScreenRate   int
+	Bitrate      string
 }
 
 func (Remote) Init(cmd *cobra.Command) error {
@@ -46,6 +46,12 @@ func (Remote) Init(cmd *cobra.Command) error {
 	if err := viper.BindPFlag("screen", cmd.PersistentFlags().Lookup("screen")); err != nil {
 		return err
 	}
+
+	cmd.PersistentFlags().String("bitrate", "", "set this video bitrate when possible")
+	if err := viper.BindPFlag("bitrate", cmd.PersistentFlags().Lookup("bitrate")); err != nil {
+		return err
+	}
+
 
 	// video codecs
 	cmd.PersistentFlags().Bool("vp8", false, "use VP8 video codec")
@@ -88,24 +94,24 @@ func (Remote) Init(cmd *cobra.Command) error {
 }
 
 func (s *Remote) Set() {
-	videoCodec := webrtc.VP8
+	videoCodec := "VP8"
 	if viper.GetBool("vp8") {
-		videoCodec = webrtc.VP8
+		videoCodec = "VP8"
 	} else if viper.GetBool("vp9") {
-		videoCodec = webrtc.VP9
+		videoCodec = "VP9"
 	} else if viper.GetBool("h264") {
-		videoCodec = webrtc.H264
+		videoCodec = "H264"
 	}
 
-	audioCodec := webrtc.Opus
+	audioCodec := "Opus"
 	if viper.GetBool("opus") {
-		audioCodec = webrtc.Opus
+		audioCodec = "Opus"
 	} else if viper.GetBool("g722") {
-		audioCodec = webrtc.G722
+		audioCodec = "G722"
 	} else if viper.GetBool("pcmu") {
-		audioCodec = webrtc.PCMU
+		audioCodec = "PCMU"
 	} else if viper.GetBool("pcma") {
-		audioCodec = webrtc.PCMA
+		audioCodec = "PCMA"
 	}
 
 	s.Device = viper.GetString("device")
@@ -114,6 +120,7 @@ func (s *Remote) Set() {
 	s.Display = viper.GetString("display")
 	s.VideoCodec = videoCodec
 	s.VideoParams = viper.GetString("video")
+	s.Bitrate = viper.GetString("bitrate")
 
 	s.ScreenWidth = 1280
 	s.ScreenHeight = 720

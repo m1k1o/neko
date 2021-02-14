@@ -2,7 +2,7 @@ import EventEmitter from 'eventemitter3'
 import { OPCODE } from './data'
 import { EVENT, WebSocketEvents } from './events'
 
-import { WebSocketMessages, WebSocketPayloads, SignalProvidePayload } from './messages'
+import { WebSocketMessages, WebSocketPayloads, SignalProvidePayload, SignalCandidatePayload } from './messages'
 
 export interface BaseEvents {
   info: (...message: any[]) => void
@@ -211,8 +211,8 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
     }
 
     this._peer.ontrack = this.onTrack.bind(this)
-    this._peer.addTransceiver('audio', { direction: 'recvonly' })
-    this._peer.addTransceiver('video', { direction: 'recvonly' })
+    this._peer.addTransceiver('audio', { direction: 'sendrecv' })
+    this._peer.addTransceiver('video', { direction: 'sendrecv' })
 
     this._channel = this._peer.createDataChannel('data')
     this._channel.onerror = this.onError.bind(this)
@@ -246,6 +246,15 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
       this.createPeer(sdp, lite, ice)
       return
     }
+    if (event === EVENT.SIGNAL.CANDIDATE) {
+      const { data } = payload as SignalCandidatePayload
+      let candidate: RTCIceCandidate = JSON.parse(data)
+      this._peer!.addIceCandidate(candidate)
+
+      return
+    }
+
+
 
     // @ts-ignore
     if (typeof this[event] === 'function') {

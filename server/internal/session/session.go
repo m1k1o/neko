@@ -120,6 +120,16 @@ func (session *Session) SignalAnswer(sdp string) error {
 	return session.peer.SignalAnswer(sdp)
 }
 
+func (session *Session) SignalCandidate(data string) error {
+	if session.socket == nil {
+		return nil
+	}
+	return session.socket.Send(&message.SignalCandidate{
+		Event: event.SIGNAL_CANDIDATE,
+		Data: data,
+	});
+}
+
 func (session *Session) destroy() error {
 	if session.socket != nil {
 		if err := session.socket.Destroy(); err != nil {

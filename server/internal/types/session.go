@@ -24,6 +24,7 @@ type Session interface {
 	Write(v interface{}) error
 	Send(v interface{}) error
 	SignalAnswer(sdp string) error
+	SignalCandidate(data string) error
 }
 
 type SessionManager interface {

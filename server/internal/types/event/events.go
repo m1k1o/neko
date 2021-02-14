@@ -5,8 +5,10 @@ const (
 )
 
 const (
-	SIGNAL_ANSWER  = "signal/answer"
-	SIGNAL_PROVIDE = "signal/provide"
+	SIGNAL_ANSWER    = "signal/answer"
+	SIGNAL_OFFER     = "signal/offer"
+	SIGNAL_PROVIDE   = "signal/provide"
+	SIGNAL_CANDIDATE = "signal/candidate"
 )
 
 const (

@@ -27,6 +27,11 @@ type SignalAnswer struct {
 	SDP         string `json:"sdp"`
 }
 
+type SignalCandidate struct {
+	Event   string `json:"event"`
+	Data    string `json:"data"`
+}
+
 type MembersList struct {
 	Event    string          `json:"event"`
 	Memebers []*types.Member `json:"members"`
