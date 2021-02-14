@@ -8,9 +8,9 @@ package xevent
 import "C"
 
 import (
+	"strings"
 	"time"
 	"unsafe"
-	"strings"
 
 	"github.com/kataras/go-events"
 )

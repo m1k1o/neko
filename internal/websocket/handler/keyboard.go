@@ -5,7 +5,6 @@ import (
 	"demodesk/neko/internal/types/message"
 )
 
-
 func (h *MessageHandlerCtx) keyboardMap(session types.Session, payload *message.KeyboardMap) error {
 	if !session.IsHost() {
 		h.logger.Debug().Str("id", session.ID()).Msg("is not the host")
@@ -13,7 +12,7 @@ func (h *MessageHandlerCtx) keyboardMap(session types.Session, payload *message.
 	}
 
 	return h.desktop.SetKeyboardMap(types.KeyboardMap{
-		Layout: payload.Layout,
+		Layout:  payload.Layout,
 		Variant: payload.Variant,
 	})
 }
@@ -25,7 +24,7 @@ func (h *MessageHandlerCtx) keyboardModifiers(session types.Session, payload *me
 	}
 
 	h.desktop.SetKeyboardModifiers(types.KeyboardModifiers{
-		NumLock: payload.NumLock,
+		NumLock:  payload.NumLock,
 		CapsLock: payload.CapsLock,
 	})
 	return nil

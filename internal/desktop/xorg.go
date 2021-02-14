@@ -2,11 +2,11 @@ package desktop
 
 import (
 	"image"
-	"regexp"
 	"os/exec"
+	"regexp"
 
-	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/desktop/xorg"
+	"demodesk/neko/internal/types"
 )
 
 // TODO: Refactor.
@@ -119,7 +119,7 @@ func (manager *DesktopManagerCtx) GetKeyboardModifiers() types.KeyboardModifiers
 	CapsLock := (modifiers & xorg.KBD_CAPS_LOCK) != 0
 
 	return types.KeyboardModifiers{
-		NumLock: &NumLock,
+		NumLock:  &NumLock,
 		CapsLock: &CapsLock,
 	}
 }

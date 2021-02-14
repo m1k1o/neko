@@ -21,20 +21,20 @@ func New(
 	logger := log.With().Str("module", "handler").Logger()
 
 	return &MessageHandlerCtx{
-		logger:    logger,
-		sessions:  sessions,
-		desktop:   desktop,
-		capture:   capture,
-		webrtc:    webrtc,
+		logger:   logger,
+		sessions: sessions,
+		desktop:  desktop,
+		capture:  capture,
+		webrtc:   webrtc,
 	}
 }
 
 type MessageHandlerCtx struct {
-	logger    zerolog.Logger
-	sessions  types.SessionManager
-	webrtc    types.WebRTCManager
-	desktop   types.DesktopManager
-	capture   types.CaptureManager
+	logger   zerolog.Logger
+	sessions types.SessionManager
+	webrtc   types.WebRTCManager
+	desktop  types.DesktopManager
+	capture  types.CaptureManager
 }
 
 func (h *MessageHandlerCtx) Message(session types.Session, raw []byte) bool {

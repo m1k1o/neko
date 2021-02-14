@@ -7,20 +7,20 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
+	"demodesk/neko/internal/config"
 	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/types/codec"
-	"demodesk/neko/internal/config"
 )
 
 type CaptureManagerCtx struct {
-	logger       zerolog.Logger
-	desktop      types.DesktopManager
-	streaming    bool
-	broadcast    *BroacastManagerCtx
-	screencast   *ScreencastManagerCtx
-	audio        *StreamManagerCtx
-	videos       map[string]*StreamManagerCtx
-	videoIDs     []string
+	logger     zerolog.Logger
+	desktop    types.DesktopManager
+	streaming  bool
+	broadcast  *BroacastManagerCtx
+	screencast *ScreencastManagerCtx
+	audio      *StreamManagerCtx
+	videos     map[string]*StreamManagerCtx
+	videoIDs   []string
 }
 
 func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCtx {
@@ -29,124 +29,124 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 	broadcastPipeline := config.BroadcastPipeline
 	if broadcastPipeline == "" {
 		broadcastPipeline = fmt.Sprintf(
-			"flvmux name=mux ! rtmpsink location='{url} live=1' " +
-				"pulsesrc device=%s " +
-					"! audio/x-raw,channels=2 " +
-					"! audioconvert " +
-					"! queue " +
-					"! voaacenc " +
-					"! mux. " +
-				"ximagesrc display-name=%s show-pointer=true use-damage=false " +
-					"! video/x-raw " +
-					"! videoconvert " +
-					"! queue " +
-					"! x264enc threads=4 bitrate=4096 key-int-max=15 byte-stream=true byte-stream=true tune=zerolatency speed-preset=veryfast " +
-					"! mux.", config.Device, config.Display,
+			"flvmux name=mux ! rtmpsink location='{url} live=1' "+
+				"pulsesrc device=%s "+
+				"! audio/x-raw,channels=2 "+
+				"! audioconvert "+
+				"! queue "+
+				"! voaacenc "+
+				"! mux. "+
+				"ximagesrc display-name=%s show-pointer=true use-damage=false "+
+				"! video/x-raw "+
+				"! videoconvert "+
+				"! queue "+
+				"! x264enc threads=4 bitrate=4096 key-int-max=15 byte-stream=true byte-stream=true tune=zerolatency speed-preset=veryfast "+
+				"! mux.", config.Device, config.Display,
 		)
 	}
 
 	screencastPipeline := config.ScreencastPipeline
 	if screencastPipeline == "" {
 		screencastPipeline = fmt.Sprintf(
-			"ximagesrc display-name=%s show-pointer=true use-damage=false " +
-				"! video/x-raw,framerate=%s " +
-				"! videoconvert " +
-				"! queue " +
-				"! jpegenc quality=%s " +
+			"ximagesrc display-name=%s show-pointer=true use-damage=false "+
+				"! video/x-raw,framerate=%s "+
+				"! videoconvert "+
+				"! queue "+
+				"! jpegenc quality=%s "+
 				"! appsink name=appsink", config.Display, config.ScreencastRate, config.ScreencastQuality,
 		)
 	}
 
 	return &CaptureManagerCtx{
-		logger:      logger,
-		desktop:     desktop,
-		streaming:   false,
-		broadcast:   broadcastNew(broadcastPipeline),
-		screencast:  screencastNew(config.Screencast, screencastPipeline),
-		audio:       streamNew(config.AudioCodec, func() string {
+		logger:     logger,
+		desktop:    desktop,
+		streaming:  false,
+		broadcast:  broadcastNew(broadcastPipeline),
+		screencast: screencastNew(config.Screencast, screencastPipeline),
+		audio: streamNew(config.AudioCodec, func() string {
 			if config.AudioPipeline != "" {
 				return config.AudioPipeline
 			}
 
 			return fmt.Sprintf(
-				"pulsesrc device=%s " +
-					"! audio/x-raw,channels=2 " +
-					"! audioconvert " +
-					"! queue " +
-					"! %s " +
+				"pulsesrc device=%s "+
+					"! audio/x-raw,channels=2 "+
+					"! audioconvert "+
+					"! queue "+
+					"! %s "+
 					"! appsink name=appsink", config.Device, config.AudioCodec.Pipeline,
 			)
 		}),
-		videos:      map[string]*StreamManagerCtx{
+		videos: map[string]*StreamManagerCtx{
 			"hd": streamNew(codec.VP8(), func() string {
-				screen  := desktop.GetScreenSize()
+				screen := desktop.GetScreenSize()
 				bitrate := screen.Width * screen.Height * 12
 
 				return fmt.Sprintf(
-					"ximagesrc display-name=%s show-pointer=false use-damage=false " +
-						"! video/x-raw,framerate=25/1 " +
-						"! videoconvert " +
-						"! queue " +
-						"! vp8enc target-bitrate=%d cpu-used=16 threads=4 deadline=100000 error-resilient=partitions keyframe-max-dist=15 auto-alt-ref=true min-quantizer=6 max-quantizer=12 " +
+					"ximagesrc display-name=%s show-pointer=false use-damage=false "+
+						"! video/x-raw,framerate=25/1 "+
+						"! videoconvert "+
+						"! queue "+
+						"! vp8enc target-bitrate=%d cpu-used=16 threads=4 deadline=100000 error-resilient=partitions keyframe-max-dist=15 auto-alt-ref=true min-quantizer=6 max-quantizer=12 "+
 						"! appsink name=appsink", config.Display, bitrate,
 				)
 			}),
 			"hq": streamNew(codec.VP8(), func() string {
-				screen  := desktop.GetScreenSize()
-				width   := int(math.Ceil(float64(screen.Width) / 6) * 5)
-				height  := int(math.Ceil(float64(screen.Height) / 6) * 5)
+				screen := desktop.GetScreenSize()
+				width := int(math.Ceil(float64(screen.Width)/6) * 5)
+				height := int(math.Ceil(float64(screen.Height)/6) * 5)
 				bitrate := width * height * 12
 
 				return fmt.Sprintf(
-					"ximagesrc display-name=%s show-pointer=false use-damage=false " +
-						"! video/x-raw,framerate=25/1 " +
-						"! videoconvert " +
-						"! queue " +
-						"! videoscale " +
-						"! video/x-raw,width=%d,height=%d " +
-						"! queue " +
-						"! vp8enc target-bitrate=%d cpu-used=16 threads=4 deadline=100000 error-resilient=partitions keyframe-max-dist=15 auto-alt-ref=true min-quantizer=6 max-quantizer=12 " +
+					"ximagesrc display-name=%s show-pointer=false use-damage=false "+
+						"! video/x-raw,framerate=25/1 "+
+						"! videoconvert "+
+						"! queue "+
+						"! videoscale "+
+						"! video/x-raw,width=%d,height=%d "+
+						"! queue "+
+						"! vp8enc target-bitrate=%d cpu-used=16 threads=4 deadline=100000 error-resilient=partitions keyframe-max-dist=15 auto-alt-ref=true min-quantizer=6 max-quantizer=12 "+
 						"! appsink name=appsink", config.Display, width, height, bitrate,
 				)
 			}),
 			"mq": streamNew(codec.VP8(), func() string {
-				screen  := desktop.GetScreenSize()
-				width   := int(math.Ceil(float64(screen.Width) / 6) * 4)
-				height  := int(math.Ceil(float64(screen.Height) / 6) * 4)
+				screen := desktop.GetScreenSize()
+				width := int(math.Ceil(float64(screen.Width)/6) * 4)
+				height := int(math.Ceil(float64(screen.Height)/6) * 4)
 				bitrate := width * height * 8
 
 				return fmt.Sprintf(
-					"ximagesrc display-name=%s show-pointer=false use-damage=false " +
-						"! video/x-raw,framerate=125/10 " +
-						"! videoconvert " +
-						"! queue " +
-						"! videoscale " +
-						"! video/x-raw,width=%d,height=%d " +
-						"! queue " +
-						"! vp8enc target-bitrate=%d cpu-used=16 threads=4 deadline=100000 error-resilient=partitions keyframe-max-dist=15 auto-alt-ref=true min-quantizer=12 max-quantizer=24 " +
+					"ximagesrc display-name=%s show-pointer=false use-damage=false "+
+						"! video/x-raw,framerate=125/10 "+
+						"! videoconvert "+
+						"! queue "+
+						"! videoscale "+
+						"! video/x-raw,width=%d,height=%d "+
+						"! queue "+
+						"! vp8enc target-bitrate=%d cpu-used=16 threads=4 deadline=100000 error-resilient=partitions keyframe-max-dist=15 auto-alt-ref=true min-quantizer=12 max-quantizer=24 "+
 						"! appsink name=appsink", config.Display, width, height, bitrate,
 				)
 			}),
 			"lq": streamNew(codec.VP8(), func() string {
-				screen  := desktop.GetScreenSize()
-				width   := int(math.Ceil(float64(screen.Width) / 6) * 3)
-				height  := int(math.Ceil(float64(screen.Height) / 6) * 3)
+				screen := desktop.GetScreenSize()
+				width := int(math.Ceil(float64(screen.Width)/6) * 3)
+				height := int(math.Ceil(float64(screen.Height)/6) * 3)
 				bitrate := width * height * 4
 
 				return fmt.Sprintf(
-					"ximagesrc display-name=%s show-pointer=false use-damage=false " +
-						"! video/x-raw,framerate=125/10 " +
-						"! videoconvert " +
-						"! queue " +
-						"! videoscale " +
-						"! video/x-raw,width=%d,height=%d " +
-						"! queue " +
-						"! vp8enc target-bitrate=%d cpu-used=16 threads=4 deadline=100000 error-resilient=partitions keyframe-max-dist=15 auto-alt-ref=true min-quantizer=12 max-quantizer=24 " +
+					"ximagesrc display-name=%s show-pointer=false use-damage=false "+
+						"! video/x-raw,framerate=125/10 "+
+						"! videoconvert "+
+						"! queue "+
+						"! videoscale "+
+						"! video/x-raw,width=%d,height=%d "+
+						"! queue "+
+						"! vp8enc target-bitrate=%d cpu-used=16 threads=4 deadline=100000 error-resilient=partitions keyframe-max-dist=15 auto-alt-ref=true min-quantizer=12 max-quantizer=24 "+
 						"! appsink name=appsink", config.Display, width, height, bitrate,
 				)
 			}),
 		},
-		videoIDs:    []string{ "hd", "hq", "mq", "lq" },
+		videoIDs: []string{"hd", "hq", "mq", "lq"},
 	}
 }
 

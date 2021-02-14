@@ -6,8 +6,8 @@ import (
 	//"strings"
 	"net/http"
 
-	"demodesk/neko/internal/utils"
 	"demodesk/neko/internal/types"
+	"demodesk/neko/internal/utils"
 )
 
 type ClipboardPayload struct {

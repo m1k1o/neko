@@ -64,7 +64,7 @@ func (h *MessageHandlerCtx) signalVideo(session types.Session, payload *message.
 
 	return session.Send(
 		message.SignalVideo{
-			Event:  event.SIGNAL_VIDEO,
-			Video:  payload.Video,
+			Event: event.SIGNAL_VIDEO,
+			Video: payload.Video,
 		})
 }

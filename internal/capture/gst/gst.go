@@ -8,18 +8,18 @@ package gst
 import "C"
 import (
 	"fmt"
-	"time"
 	"sync"
+	"time"
 	"unsafe"
 
 	"demodesk/neko/internal/types"
 )
 
 type Pipeline struct {
-	Pipeline  *C.GstElement
-	Sample    chan types.Sample
-	Src       string
-	id        int
+	Pipeline *C.GstElement
+	Sample   chan types.Sample
+	Src      string
+	id       int
 }
 
 var pipelines = make(map[int]*Pipeline)
@@ -45,14 +45,14 @@ func CreatePipeline(pipelineStr string) (*Pipeline, error) {
 
 	if gstError != nil {
 		defer C.g_error_free(gstError)
-		return nil, fmt.Errorf("(pipeline error) %s", C.GoString(gstError.message)) 
+		return nil, fmt.Errorf("(pipeline error) %s", C.GoString(gstError.message))
 	}
 
 	p := &Pipeline{
-		Pipeline:  gstPipeline,
-		Sample:    make(chan types.Sample),
-		Src:       pipelineStr,
-		id:        len(pipelines),
+		Pipeline: gstPipeline,
+		Sample:   make(chan types.Sample),
+		Src:      pipelineStr,
+		id:       len(pipelines),
 	}
 
 	pipelines[p.id] = p
@@ -96,7 +96,7 @@ func goHandlePipelineBuffer(buffer unsafe.Pointer, bufferLen C.int, duration C.i
 
 	if ok {
 		pipeline.Sample <- types.Sample{
-			Data: C.GoBytes(buffer, bufferLen),
+			Data:     C.GoBytes(buffer, bufferLen),
 			Duration: time.Duration(duration),
 		}
 	} else {

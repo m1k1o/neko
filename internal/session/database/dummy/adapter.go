@@ -8,7 +8,7 @@ func New() types.MembersDatabase {
 	return &MembersDatabaseCtx{}
 }
 
-type MembersDatabaseCtx struct {}
+type MembersDatabaseCtx struct{}
 
 func (manager *MembersDatabaseCtx) Connect() error {
 	return nil

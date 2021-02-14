@@ -2,40 +2,40 @@ package capture
 
 import (
 	"fmt"
-	"sync"
 	"reflect"
+	"sync"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
+	"demodesk/neko/internal/capture/gst"
 	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/types/codec"
-	"demodesk/neko/internal/capture/gst"
 )
 
 type StreamManagerCtx struct {
-	logger       zerolog.Logger
-	mu           sync.Mutex
-	codec        codec.RTPCodec
-	pipelineStr  func() string
-	pipeline     *gst.Pipeline
-	sample       chan types.Sample
-	listeners    map[uintptr]*func(sample types.Sample)
-	emitMu       sync.Mutex
-	emitUpdate   chan bool
-	emitStop     chan bool
-	started      bool
+	logger      zerolog.Logger
+	mu          sync.Mutex
+	codec       codec.RTPCodec
+	pipelineStr func() string
+	pipeline    *gst.Pipeline
+	sample      chan types.Sample
+	listeners   map[uintptr]*func(sample types.Sample)
+	emitMu      sync.Mutex
+	emitUpdate  chan bool
+	emitStop    chan bool
+	started     bool
 }
 
 func streamNew(codec codec.RTPCodec, pipelineStr func() string) *StreamManagerCtx {
 	manager := &StreamManagerCtx{
-		logger:       log.With().Str("module", "capture").Str("submodule", "stream").Logger(),
-		codec:        codec,
-		pipelineStr:  pipelineStr,
-		listeners:    map[uintptr]*func(sample types.Sample){},
-		emitUpdate:   make(chan bool),
-		emitStop:     make(chan bool),
-		started:      false,
+		logger:      log.With().Str("module", "capture").Str("submodule", "stream").Logger(),
+		codec:       codec,
+		pipelineStr: pipelineStr,
+		listeners:   map[uintptr]*func(sample types.Sample){},
+		emitUpdate:  make(chan bool),
+		emitStop:    make(chan bool),
+		started:     false,
 	}
 
 	go func() {
@@ -146,7 +146,7 @@ func (manager *StreamManagerCtx) createPipeline() error {
 	manager.pipeline.Start()
 
 	manager.sample = manager.pipeline.Sample
-	manager.emitUpdate <-true
+	manager.emitUpdate <- true
 	return nil
 }
 

@@ -9,11 +9,11 @@ import (
 )
 
 const (
-	OP_MOVE = 0x01
-	OP_SCROLL = 0x02
+	OP_MOVE     = 0x01
+	OP_SCROLL   = 0x02
 	OP_KEY_DOWN = 0x03
-	OP_KEY_UP = 0x04
-	OP_KEY_CLK = 0x05
+	OP_KEY_UP   = 0x04
+	OP_KEY_CLK  = 0x05
 )
 
 type PayloadHeader struct {

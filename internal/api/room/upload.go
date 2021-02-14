@@ -1,12 +1,12 @@
 package room
 
 import (
-	"os"
 	"io"
 	"io/ioutil"
+	"net/http"
+	"os"
 	"path"
 	"strconv"
-	"net/http"
 
 	"demodesk/neko/internal/utils"
 )
@@ -62,7 +62,7 @@ func (h *RoomHandler) uploadDrop(w http.ResponseWriter, r *http.Request) {
 
 		defer srcFile.Close()
 
-		dstFile, err := os.OpenFile(path, os.O_APPEND | os.O_CREATE | os.O_WRONLY, 0644)
+		dstFile, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 		if err != nil {
 			utils.HttpInternalServerError(w, err)
 			return
@@ -125,7 +125,7 @@ func (h *RoomHandler) uploadDialogPost(w http.ResponseWriter, r *http.Request) {
 
 		defer srcFile.Close()
 
-		dstFile, err := os.OpenFile(path, os.O_APPEND | os.O_CREATE | os.O_WRONLY, 0644)
+		dstFile, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 		if err != nil {
 			utils.HttpInternalServerError(w, err)
 			return

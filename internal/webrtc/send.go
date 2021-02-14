@@ -1,9 +1,9 @@
 package webrtc
 
 import (
-	"fmt"
 	"bytes"
-    "encoding/binary"
+	"encoding/binary"
+	"fmt"
 
 	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/utils"
@@ -11,7 +11,7 @@ import (
 
 const (
 	OP_CURSOR_POSITION = 0x01
-	OP_CURSOR_IMAGE = 0x02
+	OP_CURSOR_IMAGE    = 0x02
 )
 
 type PayloadCursorPosition struct {
@@ -35,7 +35,7 @@ func (webrtc_peer *WebRTCPeerCtx) SendCursorPosition(x, y int) error {
 
 	data := PayloadCursorPosition{
 		PayloadHeader: PayloadHeader{
-			Event: OP_CURSOR_POSITION,
+			Event:  OP_CURSOR_POSITION,
 			Length: 7,
 		},
 		X: uint16(x),
@@ -62,13 +62,13 @@ func (webrtc_peer *WebRTCPeerCtx) SendCursorImage(cur *types.CursorImage) error 
 
 	data := PayloadCursorImage{
 		PayloadHeader: PayloadHeader{
-			Event: OP_CURSOR_IMAGE,
+			Event:  OP_CURSOR_IMAGE,
 			Length: uint16(11 + len(img)),
 		},
-		Width: cur.Width,
+		Width:  cur.Width,
 		Height: cur.Height,
-		Xhot: cur.Xhot,
-		Yhot: cur.Yhot,
+		Xhot:   cur.Xhot,
+		Yhot:   cur.Yhot,
 	}
 
 	buffer := &bytes.Buffer{}

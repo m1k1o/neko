@@ -3,8 +3,8 @@ package room
 import (
 	"net/http"
 
-	"demodesk/neko/internal/utils"
 	"demodesk/neko/internal/types"
+	"demodesk/neko/internal/utils"
 )
 
 type KeyboardMapData struct {
@@ -24,11 +24,11 @@ func (h *RoomHandler) keyboardMapSet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err := h.desktop.SetKeyboardMap(types.KeyboardMap{
-		Layout: data.Layout,
+		Layout:  data.Layout,
 		Variant: data.Variant,
 	})
 
-	if err != nil{
+	if err != nil {
 		utils.HttpInternalServerError(w, "Unable to change keyboard map.")
 		return
 	}
@@ -39,13 +39,13 @@ func (h *RoomHandler) keyboardMapSet(w http.ResponseWriter, r *http.Request) {
 func (h *RoomHandler) keyboardMapGet(w http.ResponseWriter, r *http.Request) {
 	data, err := h.desktop.GetKeyboardMap()
 
-	if err != nil{
+	if err != nil {
 		utils.HttpInternalServerError(w, "Unable to get keyboard map.")
 		return
 	}
 
 	utils.HttpSuccess(w, KeyboardMapData{
-		Layout: data.Layout,
+		Layout:  data.Layout,
 		Variant: data.Variant,
 	})
 }
@@ -57,7 +57,7 @@ func (h *RoomHandler) keyboardModifiersSet(w http.ResponseWriter, r *http.Reques
 	}
 
 	h.desktop.SetKeyboardModifiers(types.KeyboardModifiers{
-		NumLock: data.NumLock,
+		NumLock:  data.NumLock,
 		CapsLock: data.CapsLock,
 	})
 	utils.HttpSuccess(w)
@@ -67,7 +67,7 @@ func (h *RoomHandler) keyboardModifiersGet(w http.ResponseWriter, r *http.Reques
 	data := h.desktop.GetKeyboardModifiers()
 
 	utils.HttpSuccess(w, KeyboardModifiersData{
-		NumLock: data.NumLock,
+		NumLock:  data.NumLock,
 		CapsLock: data.CapsLock,
 	})
 }

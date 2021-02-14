@@ -5,8 +5,8 @@ import (
 
 	"github.com/go-chi/chi"
 
-	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/http/auth"
+	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/utils"
 )
 

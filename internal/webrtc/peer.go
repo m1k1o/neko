@@ -3,15 +3,15 @@ package webrtc
 import "github.com/pion/webrtc/v3"
 
 type WebRTCPeerCtx struct {
-	api            *webrtc.API
-	connection     *webrtc.PeerConnection
-	dataChannel    *webrtc.DataChannel
-	changeVideo    func(videoID string) error
+	api         *webrtc.API
+	connection  *webrtc.PeerConnection
+	dataChannel *webrtc.DataChannel
+	changeVideo func(videoID string) error
 }
 
 func (webrtc_peer *WebRTCPeerCtx) SignalAnswer(sdp string) error {
 	return webrtc_peer.connection.SetRemoteDescription(webrtc.SessionDescription{
-		SDP: sdp,
+		SDP:  sdp,
 		Type: webrtc.SDPTypeAnswer,
 	})
 }

@@ -8,9 +8,9 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
+	"demodesk/neko/internal/config"
 	"demodesk/neko/internal/session/database"
 	"demodesk/neko/internal/types"
-	"demodesk/neko/internal/config"
 	"demodesk/neko/internal/utils"
 )
 
@@ -72,25 +72,25 @@ func (manager *SessionManagerCtx) Connect() error {
 
 	// create default admin account at startup
 	_ = manager.add("admin", types.MemberProfile{
-		Secret: manager.config.AdminPassword,
-		Name: "Administrator",
-		IsAdmin: true,
-		CanLogin: true,
-		CanConnect: true,
-		CanWatch: true,
-		CanHost: true,
+		Secret:             manager.config.AdminPassword,
+		Name:               "Administrator",
+		IsAdmin:            true,
+		CanLogin:           true,
+		CanConnect:         true,
+		CanWatch:           true,
+		CanHost:            true,
 		CanAccessClipboard: true,
 	})
 
 	// create default user account at startup
 	_ = manager.add("user", types.MemberProfile{
-		Secret: manager.config.Password,
-		Name: "User",
-		IsAdmin: false,
-		CanLogin: true,
-		CanConnect: true,
-		CanWatch: true,
-		CanHost: true,
+		Secret:             manager.config.Password,
+		Name:               "User",
+		IsAdmin:            false,
+		CanLogin:           true,
+		CanConnect:         true,
+		CanWatch:           true,
+		CanHost:            true,
 		CanAccessClipboard: true,
 	})
 

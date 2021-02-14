@@ -3,8 +3,8 @@ package room
 import (
 	"bytes"
 	"image/jpeg"
-	"strconv"
 	"net/http"
+	"strconv"
 
 	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/types/event"
@@ -40,9 +40,9 @@ func (h *RoomHandler) screenConfigurationChange(w http.ResponseWriter, r *http.R
 	}
 
 	if err := h.desktop.SetScreenSize(types.ScreenSize{
-		Width: data.Width,
+		Width:  data.Width,
 		Height: data.Height,
-		Rate: data.Rate,
+		Rate:   data.Rate,
 	}); err != nil {
 		utils.HttpUnprocessableEntity(w, err)
 		return

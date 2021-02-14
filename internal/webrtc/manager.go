@@ -3,39 +3,39 @@ package webrtc
 import (
 	"fmt"
 	"io"
-	"strings"
 	"reflect"
+	"strings"
 
 	"github.com/pion/webrtc/v3"
 	"github.com/pion/webrtc/v3/pkg/media"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
+	"demodesk/neko/internal/config"
 	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/types/event"
 	"demodesk/neko/internal/types/message"
-	"demodesk/neko/internal/config"
 )
 
 func New(desktop types.DesktopManager, capture types.CaptureManager, config *config.WebRTC) *WebRTCManagerCtx {
 	return &WebRTCManagerCtx{
-		logger:           log.With().Str("module", "webrtc").Logger(),
-		desktop:          desktop,
-		capture:          capture,
-		config:           config,
+		logger:  log.With().Str("module", "webrtc").Logger(),
+		desktop: desktop,
+		capture: capture,
+		config:  config,
 		// TODO: Refactor.
-		curImgListeners:  map[uintptr]*func(cur *types.CursorImage){},
-		curPosListeners:  map[uintptr]*func(x, y int){},
+		curImgListeners: map[uintptr]*func(cur *types.CursorImage){},
+		curPosListeners: map[uintptr]*func(x, y int){},
 	}
 }
 
 type WebRTCManagerCtx struct {
-	logger          zerolog.Logger
-	audioTrack      *webrtc.TrackLocalStaticSample
-	audioStop       func()
-	desktop         types.DesktopManager
-	capture         types.CaptureManager
-	config          *config.WebRTC
+	logger     zerolog.Logger
+	audioTrack *webrtc.TrackLocalStaticSample
+	audioStop  func()
+	desktop    types.DesktopManager
+	capture    types.CaptureManager
+	config     *config.WebRTC
 	// TODO: Refactor.
 	curImgListeners map[uintptr]*func(cur *types.CursorImage)
 	curPosListeners map[uintptr]*func(x, y int)
@@ -58,7 +58,7 @@ func (manager *WebRTCManagerCtx) Start() {
 	}
 
 	audio.AddListener(&listener)
-	manager.audioStop = func(){
+	manager.audioStop = func() {
 		audio.RemoveListener(&listener)
 	}
 
@@ -193,7 +193,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 		if videoStream.ListenersCount() == 0 {
 			videoStream.Stop()
 		}
-	
+
 		videoStream = newVideoStream
 		return nil
 	}
@@ -234,10 +234,10 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 	}
 
 	peer := &WebRTCPeerCtx{
-		api:          api,
-		connection:   connection,
-		changeVideo:  changeVideo,
-		dataChannel:  dataChannel,
+		api:         api,
+		connection:  connection,
+		changeVideo: changeVideo,
+		dataChannel: dataChannel,
 	}
 
 	cursorChange := func(cur *types.CursorImage) {

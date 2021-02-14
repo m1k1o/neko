@@ -6,14 +6,14 @@ import (
 	"os/signal"
 	"runtime"
 
+	"demodesk/neko/internal/api"
+	"demodesk/neko/internal/capture"
 	"demodesk/neko/internal/config"
 	"demodesk/neko/internal/desktop"
-	"demodesk/neko/internal/capture"
-	"demodesk/neko/internal/webrtc"
-	"demodesk/neko/internal/session"
-	"demodesk/neko/internal/websocket"
-	"demodesk/neko/internal/api"
 	"demodesk/neko/internal/http"
+	"demodesk/neko/internal/session"
+	"demodesk/neko/internal/webrtc"
+	"demodesk/neko/internal/websocket"
 	"demodesk/neko/modules"
 
 	"github.com/rs/zerolog"
@@ -62,12 +62,12 @@ func init() {
 			Platform:  fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH),
 		},
 		Configs: &Configs{
-			Root:      &config.Root{},
-			Desktop:   &config.Desktop{},
-			Capture:   &config.Capture{},
-			WebRTC:    &config.WebRTC{},
-			Session:   &config.Session{},
-			Server:    &config.Server{},
+			Root:    &config.Root{},
+			Desktop: &config.Desktop{},
+			Capture: &config.Capture{},
+			WebRTC:  &config.WebRTC{},
+			Session: &config.Session{},
+			Server:  &config.Server{},
 		},
 	}
 }
@@ -102,26 +102,26 @@ func (i *Version) Details() string {
 }
 
 type Configs struct {
-	Root      *config.Root
-	Desktop   *config.Desktop
-	Capture   *config.Capture
-	WebRTC    *config.WebRTC
-	Session   *config.Session
-	Server    *config.Server
+	Root    *config.Root
+	Desktop *config.Desktop
+	Capture *config.Capture
+	WebRTC  *config.WebRTC
+	Session *config.Session
+	Server  *config.Server
 }
 
 type Neko struct {
-	Version   *Version
-	Configs   *Configs
+	Version *Version
+	Configs *Configs
 
-	logger            zerolog.Logger
-	desktopManager    *desktop.DesktopManagerCtx
-	captureManager    *capture.CaptureManagerCtx
-	webRTCManager     *webrtc.WebRTCManagerCtx
-	sessionManager    *session.SessionManagerCtx
-	webSocketManager  *websocket.WebSocketManagerCtx
-	apiManager        *api.ApiManagerCtx
-	httpManager       *http.HttpManagerCtx
+	logger           zerolog.Logger
+	desktopManager   *desktop.DesktopManagerCtx
+	captureManager   *capture.CaptureManagerCtx
+	webRTCManager    *webrtc.WebRTCManagerCtx
+	sessionManager   *session.SessionManagerCtx
+	webSocketManager *websocket.WebSocketManagerCtx
+	apiManager       *api.ApiManagerCtx
+	httpManager      *http.HttpManagerCtx
 }
 
 func (neko *Neko) Preflight() {

@@ -1,12 +1,12 @@
 package api
 
 import (
-	"time"
 	"net/http"
+	"time"
 
-	"demodesk/neko/internal/utils"
-	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/http/auth"
+	"demodesk/neko/internal/types"
+	"demodesk/neko/internal/utils"
 )
 
 type SessionLoginPayload struct {
@@ -33,16 +33,16 @@ func (api *ApiManagerCtx) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.SetCookie(w, &http.Cookie{
-		Name: "neko-id",
-		Value: session.ID(),
-		Expires: time.Now().Add(365 * 24 * time.Hour),
+		Name:     "neko-id",
+		Value:    session.ID(),
+		Expires:  time.Now().Add(365 * 24 * time.Hour),
 		HttpOnly: false,
 	})
 
 	http.SetCookie(w, &http.Cookie{
-		Name: "neko-secret",
-		Value: data.Secret,
-		Expires: time.Now().Add(365 * 24 * time.Hour),
+		Name:     "neko-secret",
+		Value:    data.Secret,
+		Expires:  time.Now().Add(365 * 24 * time.Hour),
 		HttpOnly: true,
 	})
 
@@ -55,16 +55,16 @@ func (api *ApiManagerCtx) Login(w http.ResponseWriter, r *http.Request) {
 
 func (api *ApiManagerCtx) Logout(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &http.Cookie{
-		Name: "neko-id",
-		Value: "",
-		Expires: time.Unix(0, 0),
+		Name:     "neko-id",
+		Value:    "",
+		Expires:  time.Unix(0, 0),
 		HttpOnly: false,
 	})
 
 	http.SetCookie(w, &http.Cookie{
-		Name: "neko-secret",
-		Value: "",
-		Expires: time.Unix(0, 0),
+		Name:     "neko-secret",
+		Value:    "",
+		Expires:  time.Unix(0, 0),
 		HttpOnly: true,
 	})
 

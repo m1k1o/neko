@@ -2,8 +2,8 @@ package desktop
 
 import (
 	"fmt"
-	"time"
 	"os/exec"
+	"time"
 )
 
 const (
@@ -19,19 +19,19 @@ func (manager *DesktopManagerCtx) HandleFileChooserDialog(uri string) error {
 	// TODO: Use native API.
 	err1 := exec.Command(
 		"xdotool",
-			"search", "--name", FILE_CHOOSER_DIALOG_NAME, "windowfocus",
-			"sleep", FILE_CHOOSER_DIALOG_SHORT_SLEEP,
-			"key", "--clearmodifiers", "ctrl+l",
-			"type", "--args", "1", uri + "//",
-			"sleep", FILE_CHOOSER_DIALOG_SHORT_SLEEP,
-			"key", "Delete", // remove autocomplete results
-			"sleep", FILE_CHOOSER_DIALOG_SHORT_SLEEP,
-			"key", "Return",
-			"sleep", FILE_CHOOSER_DIALOG_LONG_SLEEP,
-			"key", "Down",
-			"key", "--clearmodifiers", "ctrl+a",
-			"key", "Return",
-			"sleep", FILE_CHOOSER_DIALOG_LONG_SLEEP,
+		"search", "--name", FILE_CHOOSER_DIALOG_NAME, "windowfocus",
+		"sleep", FILE_CHOOSER_DIALOG_SHORT_SLEEP,
+		"key", "--clearmodifiers", "ctrl+l",
+		"type", "--args", "1", uri+"//",
+		"sleep", FILE_CHOOSER_DIALOG_SHORT_SLEEP,
+		"key", "Delete", // remove autocomplete results
+		"sleep", FILE_CHOOSER_DIALOG_SHORT_SLEEP,
+		"key", "Return",
+		"sleep", FILE_CHOOSER_DIALOG_LONG_SLEEP,
+		"key", "Down",
+		"key", "--clearmodifiers", "ctrl+a",
+		"key", "Return",
+		"sleep", FILE_CHOOSER_DIALOG_LONG_SLEEP,
 	).Run()
 
 	if err1 != nil {
@@ -41,7 +41,7 @@ func (manager *DesktopManagerCtx) HandleFileChooserDialog(uri string) error {
 	// TODO: Use native API.
 	err2 := exec.Command(
 		"xdotool",
-			"search", "--name", FILE_CHOOSER_DIALOG_NAME,
+		"search", "--name", FILE_CHOOSER_DIALOG_NAME,
 	).Run()
 
 	// if last command didn't return error, consider dialog as still open
@@ -61,7 +61,7 @@ func (manager *DesktopManagerCtx) CloseFileChooserDialog() {
 		// TODO: Use native API.
 		err := exec.Command(
 			"xdotool",
-				"search", "--name", FILE_CHOOSER_DIALOG_NAME, "windowfocus",
+			"search", "--name", FILE_CHOOSER_DIALOG_NAME, "windowfocus",
 		).Run()
 
 		if err != nil {
@@ -92,7 +92,7 @@ func (manager *DesktopManagerCtx) IsFileChooserDialogOpened() bool {
 	// TODO: Use native API.
 	err := exec.Command(
 		"xdotool",
-			"search", "--name", FILE_CHOOSER_DIALOG_NAME,
+		"search", "--name", FILE_CHOOSER_DIALOG_NAME,
 	).Run()
 
 	return err == nil

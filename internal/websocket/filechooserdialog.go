@@ -23,8 +23,8 @@ func (ws *WebSocketManagerCtx) fileChooserDialogEvents() {
 		file_chooser_dialog_member = host
 
 		go ws.sessions.Broadcast(message.MemberID{
-			Event:  event.FILE_CHOOSER_DIALOG_OPENED,
-			ID:     host.ID(),
+			Event: event.FILE_CHOOSER_DIALOG_OPENED,
+			ID:    host.ID(),
 		}, nil)
 	})
 
@@ -35,10 +35,9 @@ func (ws *WebSocketManagerCtx) fileChooserDialogEvents() {
 		file_chooser_dialog_member = nil
 
 		go ws.sessions.Broadcast(message.MemberID{
-			Event:  event.FILE_CHOOSER_DIALOG_CLOSED,
+			Event: event.FILE_CHOOSER_DIALOG_CLOSED,
 		}, nil)
 	})
-
 
 	// when new user joins, and someone holds dialog, he shouldd be notified about it.
 	ws.sessions.OnConnected(func(session types.Session) {
@@ -47,8 +46,8 @@ func (ws *WebSocketManagerCtx) fileChooserDialogEvents() {
 		}
 
 		if err := session.Send(message.MemberID{
-			Event:  event.FILE_CHOOSER_DIALOG_OPENED,
-			ID:     file_chooser_dialog_member.ID(),
+			Event: event.FILE_CHOOSER_DIALOG_OPENED,
+			ID:    file_chooser_dialog_member.ID(),
 		}); err != nil {
 			ws.logger.Warn().
 				Str("id", session.ID()).

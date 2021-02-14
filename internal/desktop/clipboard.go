@@ -1,8 +1,8 @@
 package desktop
 
 import (
-	"fmt"
 	"bytes"
+	"fmt"
 	"os/exec"
 	"strings"
 
@@ -58,7 +58,7 @@ func (manager *DesktopManagerCtx) ClipboardSetBinary(mime string, data []byte) e
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
 
-    stdin, err := cmd.StdinPipe()
+	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		return err
 	}

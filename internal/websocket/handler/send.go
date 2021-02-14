@@ -2,8 +2,8 @@ package handler
 
 import (
 	"demodesk/neko/internal/types"
-	"demodesk/neko/internal/types/message"
 	"demodesk/neko/internal/types/event"
+	"demodesk/neko/internal/types/message"
 )
 
 func (h *MessageHandlerCtx) sendUnicast(session types.Session, payload *message.SendUnicast) error {
@@ -24,10 +24,10 @@ func (h *MessageHandlerCtx) sendUnicast(session types.Session, payload *message.
 
 func (h *MessageHandlerCtx) sendBroadcast(session types.Session, payload *message.SendBroadcast) error {
 	h.sessions.Broadcast(message.SendBroadcast{
-		Event:    event.SEND_BROADCAST,
-		Sender:   session.ID(),
-		Subject:  payload.Subject,
-		Body:     payload.Body,
-	}, []string{ session.ID() })
+		Event:   event.SEND_BROADCAST,
+		Sender:  session.ID(),
+		Subject: payload.Subject,
+		Body:    payload.Body,
+	}, []string{session.ID()})
 	return nil
 }

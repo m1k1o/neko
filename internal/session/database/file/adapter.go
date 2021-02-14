@@ -2,9 +2,9 @@ package file
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
-	"fmt"
 	"sync"
 
 	"demodesk/neko/internal/types"

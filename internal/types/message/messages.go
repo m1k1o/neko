@@ -25,9 +25,9 @@ type SystemInit struct {
 }
 
 type SystemAdmin struct {
-	Event           string           `json:"event,omitempty"`
-	ScreenSizesList []ScreenSize     `json:"screen_sizes_list"`
-	BroadcastStatus BroadcastStatus  `json:"broadcast_status"`
+	Event           string          `json:"event,omitempty"`
+	ScreenSizesList []ScreenSize    `json:"screen_sizes_list"`
+	BroadcastStatus BroadcastStatus `json:"broadcast_status"`
 }
 
 type SystemDisconnect struct {
@@ -96,9 +96,9 @@ type MemberData struct {
 /////////////////////////////
 
 type ControlHost struct {
-	Event   string  `json:"event,omitempty"`
-	HasHost bool    `json:"has_host"`
-	HostID  string  `json:"host_id,omitempty"`
+	Event   string `json:"event,omitempty"`
+	HasHost bool   `json:"has_host"`
+	HostID  string `json:"host_id,omitempty"`
 }
 
 // TODO: New.
@@ -155,7 +155,7 @@ type KeyboardModifiers struct {
 	Event      string `json:"event,omitempty"`
 	CapsLock   *bool  `json:"caps_lock"`
 	NumLock    *bool  `json:"num_lock"`
-	ScrollLock *bool  `json:"scroll_lock"`	
+	ScrollLock *bool  `json:"scroll_lock"`
 }
 
 /////////////////////////////

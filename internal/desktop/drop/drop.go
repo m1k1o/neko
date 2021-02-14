@@ -25,7 +25,7 @@ func OpenWindow(files []string) {
 	defer mu.Unlock()
 
 	size := C.int(len(files))
-	urisUnsafe := C.dragUrisMake(size);
+	urisUnsafe := C.dragUrisMake(size)
 	defer C.dragUrisFree(urisUnsafe, size)
 
 	for i, file := range files {

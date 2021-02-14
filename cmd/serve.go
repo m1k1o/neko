@@ -5,8 +5,8 @@ import (
 	"github.com/spf13/cobra"
 
 	"demodesk/neko"
-	"demodesk/neko/modules"
 	"demodesk/neko/internal/config"
+	"demodesk/neko/modules"
 )
 
 func init() {

@@ -7,10 +7,10 @@ import (
 
 	"demodesk/neko/internal/api/members"
 	"demodesk/neko/internal/api/room"
+	"demodesk/neko/internal/config"
 	"demodesk/neko/internal/http/auth"
 	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/utils"
-	"demodesk/neko/internal/config"
 )
 
 type ApiManagerCtx struct {

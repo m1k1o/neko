@@ -8,7 +8,7 @@ import (
 
 const (
 	DROP_MOVE_REPEAT = 4
-	DROP_DELAY = 100 * time.Millisecond
+	DROP_DELAY       = 100 * time.Millisecond
 )
 
 func (manager *DesktopManagerCtx) DropFiles(x int, y int, files []string) bool {
@@ -49,10 +49,10 @@ func (manager *DesktopManagerCtx) DropFiles(x int, y int, files []string) bool {
 	go drop.OpenWindow(files)
 
 	select {
-	case succeeded := <- finished:
+	case succeeded := <-finished:
 		return succeeded
 	case <-time.After(1 * time.Second):
-		drop.CloseWindow();
+		drop.CloseWindow()
 		return false
 	}
 }

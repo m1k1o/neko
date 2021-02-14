@@ -236,13 +236,13 @@ func GetCursorImage() *types.CursorImage {
 	height := uint16(cur.height)
 
 	return &types.CursorImage{
-		Width: width,
+		Width:  width,
 		Height: height,
-		Xhot: uint16(cur.xhot),
-		Yhot: uint16(cur.yhot),
+		Xhot:   uint16(cur.xhot),
+		Yhot:   uint16(cur.yhot),
 		Serial: uint64(cur.cursor_serial),
 		// Xlib stores 32-bit data in longs, even if longs are 64-bits long.
-		Pixels: C.GoBytes(unsafe.Pointer(cur.pixels), C.int(width * height * 8)),
+		Pixels: C.GoBytes(unsafe.Pointer(cur.pixels), C.int(width*height*8)),
 	}
 }
 
@@ -252,7 +252,7 @@ func GetScreenshotImage() *image.RGBA {
 
 	var w, h C.int
 	pixelsUnsafe := C.XGetScreenshot(&w, &h)
-	pixels := C.GoBytes(unsafe.Pointer(pixelsUnsafe), w * h * 3)
+	pixels := C.GoBytes(unsafe.Pointer(pixelsUnsafe), w*h*3)
 	defer C.free(unsafe.Pointer(pixelsUnsafe))
 
 	width := int(w)
@@ -288,7 +288,7 @@ func goSetScreenRates(index C.int, rate_index C.int, rateC C.short) {
 	rate := int16(rateC)
 
 	// filter out all irrelevant rates
-	if rate > 60 || (rate > 30 && rate % 10 != 0){
+	if rate > 60 || (rate > 30 && rate%10 != 0) {
 		return
 	}
 

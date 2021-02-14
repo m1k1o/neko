@@ -73,7 +73,7 @@ type DesktopManager interface {
 	OnEventError(listener func(error_code uint8, message string, request_code uint8, minor_code uint8))
 
 	// clipboard
-	ClipboardGetText() (*ClipboardText, error) 
+	ClipboardGetText() (*ClipboardText, error)
 	ClipboardSetText(data ClipboardText) error
 	ClipboardGetBinary(mime string) ([]byte, error)
 	ClipboardSetBinary(mime string, data []byte) error

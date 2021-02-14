@@ -2,10 +2,10 @@ package utils
 
 import (
 	"bytes"
+	"encoding/base64"
 	"image"
 	"image/color"
 	"image/png"
-	"encoding/base64"
 
 	"demodesk/neko/internal/types"
 )

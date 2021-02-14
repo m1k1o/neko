@@ -3,14 +3,14 @@ package room
 import (
 	"net/http"
 
-	"demodesk/neko/internal/utils"
 	"demodesk/neko/internal/types/event"
 	"demodesk/neko/internal/types/message"
+	"demodesk/neko/internal/utils"
 )
 
 type BroadcastStatusPayload struct {
-	URL string `json:"url,omitempty"`
-	IsActive bool `json:"is_active"`
+	URL      string `json:"url,omitempty"`
+	IsActive bool   `json:"is_active"`
 }
 
 func (h *RoomHandler) broadcastStatus(w http.ResponseWriter, r *http.Request) {

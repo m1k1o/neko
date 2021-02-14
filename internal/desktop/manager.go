@@ -2,37 +2,37 @@ package desktop
 
 import (
 	"fmt"
-	"time"
 	"sync"
+	"time"
 
 	"github.com/kataras/go-events"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
 	"demodesk/neko/internal/config"
-	"demodesk/neko/internal/desktop/xorg"
 	"demodesk/neko/internal/desktop/xevent"
+	"demodesk/neko/internal/desktop/xorg"
 )
 
 var mu = sync.Mutex{}
 
 type DesktopManagerCtx struct {
-	logger    zerolog.Logger
-	cleanup   *time.Ticker
-	shutdown  chan bool
-	emmiter   events.EventEmmiter
-	display   string
-	config    *config.Desktop
+	logger   zerolog.Logger
+	cleanup  *time.Ticker
+	shutdown chan bool
+	emmiter  events.EventEmmiter
+	display  string
+	config   *config.Desktop
 }
 
 func New(display string, config *config.Desktop) *DesktopManagerCtx {
 	return &DesktopManagerCtx{
-		logger:    log.With().Str("module", "desktop").Logger(),
-		cleanup:   time.NewTicker(1 * time.Second),
-		shutdown:  make(chan bool),
-		emmiter:   events.New(),
-		display:   display,
-		config:    config,
+		logger:   log.With().Str("module", "desktop").Logger(),
+		cleanup:  time.NewTicker(1 * time.Second),
+		shutdown: make(chan bool),
+		emmiter:  events.New(),
+		display:  display,
+		config:   config,
 	}
 }
 

@@ -13,9 +13,9 @@ func (h *MessageHandlerCtx) screenSet(session types.Session, payload *message.Sc
 	}
 
 	if err := h.desktop.SetScreenSize(types.ScreenSize{
-		Width: payload.Width,
+		Width:  payload.Width,
 		Height: payload.Height,
-		Rate: payload.Rate,
+		Rate:   payload.Rate,
 	}); err != nil {
 		return err
 	}

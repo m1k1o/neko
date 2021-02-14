@@ -15,20 +15,20 @@ const (
 )
 
 const (
-	MEMBER_CREATED      = "member/created"
-	MEMBER_DELETED      = "member/deleted"
-	MEMBER_PROFILE      = "member/profile"
-	MEMBER_STATE        = "member/state"
+	MEMBER_CREATED = "member/created"
+	MEMBER_DELETED = "member/deleted"
+	MEMBER_PROFILE = "member/profile"
+	MEMBER_STATE   = "member/state"
 )
 
 const (
 	CONTROL_HOST    = "control/host"
 	CONTROL_RELEASE = "control/release"
 	CONTROL_REQUEST = "control/request"
-	CONTROL_MOVE    = "control/move" // TODO: New. (fallback)
-	CONTROL_SCROLL  = "control/scroll" // TODO: New. (fallback)
+	CONTROL_MOVE    = "control/move"    // TODO: New. (fallback)
+	CONTROL_SCROLL  = "control/scroll"  // TODO: New. (fallback)
 	CONTROL_KEYDOWN = "control/keydown" // TODO: New. (fallback)
-	CONTROL_KEYUP   = "control/keyup" // TODO: New. (fallback)
+	CONTROL_KEYUP   = "control/keyup"   // TODO: New. (fallback)
 )
 
 const (

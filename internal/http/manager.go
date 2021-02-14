@@ -11,8 +11,8 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/config"
+	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/utils"
 )
 
@@ -29,7 +29,7 @@ func New(WebSocketManager types.WebSocketManager, ApiManager types.ApiManager, c
 	router := chi.NewRouter()
 	router.Use(middleware.Recoverer) // Recover from panics without crashing server
 	router.Use(cors.Handler(cors.Options{
-		AllowOriginFunc:  func(r *http.Request, origin string) bool {
+		AllowOriginFunc: func(r *http.Request, origin string) bool {
 			return conf.AllowOrigin(origin)
 		},
 		AllowedMethods:   []string{"GET", "POST", "DELETE", "OPTIONS"},
@@ -39,7 +39,7 @@ func New(WebSocketManager types.WebSocketManager, ApiManager types.ApiManager, c
 		MaxAge:           300, // Maximum value not ignored by any of major browsers
 	}))
 	router.Use(middleware.RequestID) // Create a request ID for each request
-	router.Use(Logger) // Log API request calls using custom logger function
+	router.Use(Logger)               // Log API request calls using custom logger function
 
 	router.Route("/api", ApiManager.Route)
 

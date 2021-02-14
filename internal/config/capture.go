@@ -8,15 +8,15 @@ import (
 )
 
 type Capture struct {
-	Device             string
-	AudioCodec         codec.RTPCodec
-	AudioPipeline      string
+	Device        string
+	AudioCodec    codec.RTPCodec
+	AudioPipeline string
 
-	Display            string
-	//VideoCodec         codec.RTPCodec
-	//VideoPipeline      string
+	Display string
+	//VideoCodec codec.RTPCodec
+	//VideoPipeline string
 
-	BroadcastPipeline  string
+	BroadcastPipeline string
 
 	Screencast         bool
 	ScreencastRate     string

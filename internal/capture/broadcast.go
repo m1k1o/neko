@@ -2,8 +2,8 @@ package capture
 
 import (
 	"fmt"
-	"sync"
 	"strings"
+	"sync"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -12,20 +12,20 @@ import (
 )
 
 type BroacastManagerCtx struct {
-	logger       zerolog.Logger
-	mu           sync.Mutex
-	pipelineStr  string
-	pipeline     *gst.Pipeline
-	started      bool
-	url          string
+	logger      zerolog.Logger
+	mu          sync.Mutex
+	pipelineStr string
+	pipeline    *gst.Pipeline
+	started     bool
+	url         string
 }
 
 func broadcastNew(pipelineStr string) *BroacastManagerCtx {
 	return &BroacastManagerCtx{
-		logger:       log.With().Str("module", "capture").Str("submodule", "broadcast").Logger(),
-		pipelineStr:  pipelineStr,
-		started:      false,
-		url:          "",
+		logger:      log.With().Str("module", "capture").Str("submodule", "broadcast").Logger(),
+		pipelineStr: pipelineStr,
+		started:     false,
+		url:         "",
 	}
 }
 

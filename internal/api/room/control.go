@@ -5,15 +5,15 @@ import (
 
 	"github.com/go-chi/chi"
 
+	"demodesk/neko/internal/http/auth"
 	"demodesk/neko/internal/types/event"
 	"demodesk/neko/internal/types/message"
 	"demodesk/neko/internal/utils"
-	"demodesk/neko/internal/http/auth"
 )
 
 type ControlStatusPayload struct {
-	HasHost bool `json:"has_host"`
-	HostId string `json:"host_id,omitempty"`
+	HasHost bool   `json:"has_host"`
+	HostId  string `json:"host_id,omitempty"`
 }
 
 type ControlTargetPayload struct {
@@ -30,7 +30,7 @@ func (h *RoomHandler) controlStatus(w http.ResponseWriter, r *http.Request) {
 	} else {
 		utils.HttpSuccess(w, ControlStatusPayload{
 			HasHost: true,
-			HostId: host.ID(),
+			HostId:  host.ID(),
 		})
 	}
 }

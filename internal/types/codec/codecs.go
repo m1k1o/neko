@@ -19,14 +19,14 @@ func (codec *RTPCodec) Register(engine *webrtc.MediaEngine) error {
 
 func VP8() RTPCodec {
 	return RTPCodec{
-		Name: "vp8",
+		Name:        "vp8",
 		PayloadType: 96,
-		Type: webrtc.RTPCodecTypeVideo,
+		Type:        webrtc.RTPCodecTypeVideo,
 		Capability: webrtc.RTPCodecCapability{
-			MimeType: webrtc.MimeTypeVP8,
-			ClockRate: 90000,
-			Channels: 0,
-			SDPFmtpLine: "",
+			MimeType:     webrtc.MimeTypeVP8,
+			ClockRate:    90000,
+			Channels:     0,
+			SDPFmtpLine:  "",
 			RTCPFeedback: nil,
 		},
 		// https://gstreamer.freedesktop.org/documentation/vpx/vp8enc.html
@@ -38,14 +38,14 @@ func VP8() RTPCodec {
 // TODO: Profile ID.
 func VP9() RTPCodec {
 	return RTPCodec{
-		Name: "vp9",
+		Name:        "vp9",
 		PayloadType: 98,
-		Type: webrtc.RTPCodecTypeVideo,
+		Type:        webrtc.RTPCodecTypeVideo,
 		Capability: webrtc.RTPCodecCapability{
-			MimeType: webrtc.MimeTypeVP9,
-			ClockRate: 90000,
-			Channels: 0,
-			SDPFmtpLine: "profile-id=0",
+			MimeType:     webrtc.MimeTypeVP9,
+			ClockRate:    90000,
+			Channels:     0,
+			SDPFmtpLine:  "profile-id=0",
 			RTCPFeedback: nil,
 		},
 		// https://gstreamer.freedesktop.org/documentation/vpx/vp9enc.html
@@ -57,14 +57,14 @@ func VP9() RTPCodec {
 // TODO: Profile ID.
 func H264() RTPCodec {
 	return RTPCodec{
-		Name: "h264",
+		Name:        "h264",
 		PayloadType: 102,
-		Type: webrtc.RTPCodecTypeVideo,
+		Type:        webrtc.RTPCodecTypeVideo,
 		Capability: webrtc.RTPCodecCapability{
-			MimeType: webrtc.MimeTypeH264,
-			ClockRate: 90000,
-			Channels: 0,
-			SDPFmtpLine: "level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42001f",
+			MimeType:     webrtc.MimeTypeH264,
+			ClockRate:    90000,
+			Channels:     0,
+			SDPFmtpLine:  "level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42001f",
 			RTCPFeedback: nil,
 		},
 		// https://gstreamer.freedesktop.org/documentation/x264/index.html
@@ -78,14 +78,14 @@ func H264() RTPCodec {
 
 func Opus() RTPCodec {
 	return RTPCodec{
-		Name: "opus",
+		Name:        "opus",
 		PayloadType: 111,
-		Type: webrtc.RTPCodecTypeAudio,
+		Type:        webrtc.RTPCodecTypeAudio,
 		Capability: webrtc.RTPCodecCapability{
-			MimeType: webrtc.MimeTypeOpus,
-			ClockRate: 48000,
-			Channels: 2,
-			SDPFmtpLine: "",
+			MimeType:     webrtc.MimeTypeOpus,
+			ClockRate:    48000,
+			Channels:     2,
+			SDPFmtpLine:  "",
 			RTCPFeedback: nil,
 		},
 		// https://gstreamer.freedesktop.org/documentation/opus/opusenc.html
@@ -96,14 +96,14 @@ func Opus() RTPCodec {
 
 func G722() RTPCodec {
 	return RTPCodec{
-		Name: "g722",
+		Name:        "g722",
 		PayloadType: 9,
-		Type: webrtc.RTPCodecTypeAudio,
+		Type:        webrtc.RTPCodecTypeAudio,
 		Capability: webrtc.RTPCodecCapability{
-			MimeType: webrtc.MimeTypeG722,
-			ClockRate: 8000,
-			Channels: 0,
-			SDPFmtpLine: "",
+			MimeType:     webrtc.MimeTypeG722,
+			ClockRate:    8000,
+			Channels:     0,
+			SDPFmtpLine:  "",
 			RTCPFeedback: nil,
 		},
 		// https://gstreamer.freedesktop.org/documentation/libav/avenc_g722.html
@@ -114,14 +114,14 @@ func G722() RTPCodec {
 
 func PCMU() RTPCodec {
 	return RTPCodec{
-		Name: "pcmu",
+		Name:        "pcmu",
 		PayloadType: 0,
-		Type: webrtc.RTPCodecTypeAudio,
+		Type:        webrtc.RTPCodecTypeAudio,
 		Capability: webrtc.RTPCodecCapability{
-			MimeType: webrtc.MimeTypePCMU,
-			ClockRate: 8000,
-			Channels: 0,
-			SDPFmtpLine: "",
+			MimeType:     webrtc.MimeTypePCMU,
+			ClockRate:    8000,
+			Channels:     0,
+			SDPFmtpLine:  "",
 			RTCPFeedback: nil,
 		},
 		// https://gstreamer.freedesktop.org/documentation/mulaw/mulawenc.html
@@ -132,14 +132,14 @@ func PCMU() RTPCodec {
 
 func PCMA() RTPCodec {
 	return RTPCodec{
-		Name: "pcma",
+		Name:        "pcma",
 		PayloadType: 8,
-		Type: webrtc.RTPCodecTypeAudio,
+		Type:        webrtc.RTPCodecTypeAudio,
 		Capability: webrtc.RTPCodecCapability{
-			MimeType: webrtc.MimeTypePCMA,
-			ClockRate: 8000,
-			Channels: 0,
-			SDPFmtpLine: "",
+			MimeType:     webrtc.MimeTypePCMA,
+			ClockRate:    8000,
+			Channels:     0,
+			SDPFmtpLine:  "",
 			RTCPFeedback: nil,
 		},
 		// https://gstreamer.freedesktop.org/documentation/alaw/alawenc.html

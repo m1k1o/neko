@@ -1,10 +1,10 @@
 package utils
 
 import (
-	"io"
-	"fmt"
-	"net/http"
 	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
 
 	"github.com/rs/zerolog/log"
 )

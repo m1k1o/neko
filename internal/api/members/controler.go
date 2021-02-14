@@ -3,8 +3,8 @@ package members
 import (
 	"net/http"
 
-	"demodesk/neko/internal/utils"
 	"demodesk/neko/internal/types"
+	"demodesk/neko/internal/utils"
 )
 
 type MemberDataPayload struct {
@@ -29,11 +29,11 @@ func (h *MembersHandler) membersCreate(w http.ResponseWriter, r *http.Request) {
 	data := &MemberDataPayload{
 		// default values
 		MemberProfile: &types.MemberProfile{
-			IsAdmin: false,
-			CanLogin: true,
-			CanConnect: true,
-			CanWatch: true,
-			CanHost: true,
+			IsAdmin:            false,
+			CanLogin:           true,
+			CanConnect:         true,
+			CanWatch:           true,
+			CanHost:            true,
 			CanAccessClipboard: true,
 		},
 	}

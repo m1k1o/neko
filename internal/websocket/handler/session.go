@@ -23,7 +23,7 @@ func (h *MessageHandlerCtx) SessionDeleted(session types.Session) error {
 		message.MemberID{
 			Event: event.MEMBER_DELETED,
 			ID:    session.ID(),
-		}, nil);
+		}, nil)
 
 	return nil
 }

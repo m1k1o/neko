@@ -1,11 +1,11 @@
 package database
 
 import (
+	"demodesk/neko/internal/config"
 	"demodesk/neko/internal/session/database/dummy"
 	"demodesk/neko/internal/session/database/file"
 	"demodesk/neko/internal/session/database/object"
 	"demodesk/neko/internal/types"
-	"demodesk/neko/internal/config"
 )
 
 func New(config *config.Session) types.MembersDatabase {

@@ -8,10 +8,10 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"demodesk/neko/internal/websocket/handler"
 	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/types/event"
 	"demodesk/neko/internal/types/message"
+	"demodesk/neko/internal/websocket/handler"
 )
 
 func New(
@@ -23,11 +23,11 @@ func New(
 	logger := log.With().Str("module", "websocket").Logger()
 
 	return &WebSocketManagerCtx{
-		logger:    logger,
-		sessions:  sessions,
-		desktop:   desktop,
-		handler:   handler.New(sessions, desktop, capture, webrtc),
-		handlers:  []types.HandlerFunction{},
+		logger:   logger,
+		sessions: sessions,
+		desktop:  desktop,
+		handler:  handler.New(sessions, desktop, capture, webrtc),
+		handlers: []types.HandlerFunction{},
 	}
 }
 
@@ -35,12 +35,12 @@ func New(
 const pingPeriod = 60 * time.Second
 
 type WebSocketManagerCtx struct {
-	logger    zerolog.Logger
-	sessions  types.SessionManager
-	desktop   types.DesktopManager
-	handler   *handler.MessageHandlerCtx
-	handlers  []types.HandlerFunction
-	shutdown  chan bool
+	logger   zerolog.Logger
+	sessions types.SessionManager
+	desktop  types.DesktopManager
+	handler  *handler.MessageHandlerCtx
+	handlers []types.HandlerFunction
+	shutdown chan bool
 }
 
 func (ws *WebSocketManagerCtx) Start() {

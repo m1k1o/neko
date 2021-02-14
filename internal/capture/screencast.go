@@ -2,41 +2,41 @@ package capture
 
 import (
 	"fmt"
-	"time"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/capture/gst"
+	"demodesk/neko/internal/types"
 )
 
 type ScreencastManagerCtx struct {
-	logger       zerolog.Logger
-	mu           sync.Mutex
-	pipelineStr  string
-	pipeline     *gst.Pipeline
-	enabled      bool
-	started      bool
-	emitStop     chan bool
-	emitUpdate   chan bool
-	expired      int32
-	sample       chan types.Sample
-	image        types.Sample
+	logger      zerolog.Logger
+	mu          sync.Mutex
+	pipelineStr string
+	pipeline    *gst.Pipeline
+	enabled     bool
+	started     bool
+	emitStop    chan bool
+	emitUpdate  chan bool
+	expired     int32
+	sample      chan types.Sample
+	image       types.Sample
 }
 
 const screencastTimeout = 5 * time.Second
 
 func screencastNew(enabled bool, pipelineStr string) *ScreencastManagerCtx {
 	manager := &ScreencastManagerCtx{
-		logger:       log.With().Str("module", "capture").Str("submodule", "screencast").Logger(),
-		pipelineStr:  pipelineStr,
-		enabled:      enabled,
-		started:      false,
-		emitStop:     make(chan bool),
-		emitUpdate:   make(chan bool),
+		logger:      log.With().Str("module", "capture").Str("submodule", "screencast").Logger(),
+		pipelineStr: pipelineStr,
+		enabled:     enabled,
+		started:     false,
+		emitStop:    make(chan bool),
+		emitUpdate:  make(chan bool),
 	}
 
 	go func() {
@@ -146,7 +146,7 @@ func (manager *ScreencastManagerCtx) createPipeline() error {
 
 	manager.pipeline.Start()
 	manager.sample = manager.pipeline.Sample
-	manager.emitUpdate <-true
+	manager.emitUpdate <- true
 	return nil
 }
 
