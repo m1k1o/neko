@@ -211,8 +211,8 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
     }
 
     this._peer.ontrack = this.onTrack.bind(this)
-    this._peer.addTransceiver('audio', { direction: 'sendrecv' })
-    this._peer.addTransceiver('video', { direction: 'sendrecv' })
+    this._peer.addTransceiver('audio', { direction: 'recvonly' })
+    this._peer.addTransceiver('video', { direction: 'recvonly' })
 
     this._channel = this._peer.createDataChannel('data')
     this._channel.onerror = this.onError.bind(this)

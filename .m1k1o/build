@@ -14,7 +14,7 @@ build_server() {
 }
 
 build_base() {
-	docker build -t m1k1o/neko:base -f base/Dockerfile "$BASE"
+	docker build -t gstreamertest/neko:base -f base/Dockerfile "$BASE"
 }
 
 build_firefox() {
@@ -22,7 +22,7 @@ build_firefox() {
 }
 
 build_chromium() {
-	docker build -t m1k1o/neko:chromium -f chromium/Dockerfile chromium/
+	docker build -t gstreamertest/neko:chromium -f chromium/Dockerfile chromium/
 }
 
 case $1 in
