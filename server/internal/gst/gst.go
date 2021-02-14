@@ -42,7 +42,6 @@ type Pipeline struct {
 	Pipeline  *C.GstElement
 	Sample    chan types.Sample
 	CodecName string
-	ClockRate float32
 	Src       string
 	id        int
 }
@@ -52,11 +51,8 @@ var pipelinesLock sync.Mutex
 var registry *C.GstRegistry
 
 const (
-	videoClockRate = 90000
-	audioClockRate = 48000
-	pcmClockRate   = 8000
-	videoSrc       = "ximagesrc display-name=%s show-pointer=true use-damage=false ! video/x-raw ! videoconvert ! queue ! "
-	audioSrc       = "pulsesrc device=%s ! audio/x-raw,channels=2 ! audioconvert ! "
+	videoSrc = "ximagesrc display-name=%s show-pointer=true use-damage=false ! video/x-raw ! videoconvert ! queue ! "
+	audioSrc = "pulsesrc device=%s ! audio/x-raw,channels=2 ! audioconvert ! "
 )
 
 func init() {
@@ -76,14 +72,12 @@ func CreateRTMPPipeline(pipelineDevice string, pipelineDisplay string, pipelineS
 		pipelineStr = fmt.Sprintf("flvmux name=mux ! rtmpsink location='%s live=1' %s audio/x-raw,channels=2 ! audioconvert ! voaacenc ! mux. %s x264enc bframes=0 key-int-max=60 byte-stream=true tune=zerolatency speed-preset=veryfast ! mux.", pipelineRTMP, audio, video)
 	}
 
-	return CreatePipeline(pipelineStr, "", 0)
+	return CreatePipeline(pipelineStr, "")
 }
 
 // CreateAppPipeline creates a GStreamer Pipeline
 func CreateAppPipeline(codecName string, pipelineDevice string, pipelineSrc string, bitrate int) (*Pipeline, error) {
 	pipelineStr := " ! appsink name=appsink"
-
-	var clockRate float32
 
 	switch codecName {
 	case "VP8":
@@ -93,8 +87,6 @@ func CreateAppPipeline(codecName string, pipelineDevice string, pipelineSrc stri
 		if err := CheckPlugins([]string{"ximagesrc", "vpx"}); err != nil {
 			return nil, err
 		}
-
-		clockRate = videoClockRate
 
 		if pipelineSrc != "" {
 			pipelineStr = fmt.Sprintf(pipelineSrc+pipelineStr, pipelineDevice)
@@ -109,8 +101,6 @@ func CreateAppPipeline(codecName string, pipelineDevice string, pipelineSrc stri
 			return nil, err
 		}
 
-		clockRate = videoClockRate
-
 		// Causes panic! not sure why...
 		if pipelineSrc != "" {
 			pipelineStr = fmt.Sprintf(pipelineSrc+pipelineStr, pipelineDevice)
@@ -124,8 +114,6 @@ func CreateAppPipeline(codecName string, pipelineDevice string, pipelineSrc stri
 		if err := CheckPlugins([]string{"ximagesrc"}); err != nil {
 			return nil, err
 		}
-
-		clockRate = videoClockRate
 
 		if pipelineSrc != "" {
 			pipelineStr = fmt.Sprintf(pipelineSrc+pipelineStr, pipelineDevice)
@@ -160,8 +148,6 @@ func CreateAppPipeline(codecName string, pipelineDevice string, pipelineSrc stri
 			return nil, err
 		}
 
-		clockRate = audioClockRate
-
 		if pipelineSrc != "" {
 			pipelineStr = fmt.Sprintf(pipelineSrc+pipelineStr, pipelineDevice)
 		} else {
@@ -174,8 +160,6 @@ func CreateAppPipeline(codecName string, pipelineDevice string, pipelineSrc stri
 		if err := CheckPlugins([]string{"pulseaudio", "libav"}); err != nil {
 			return nil, err
 		}
-
-		clockRate = audioClockRate
 
 		if pipelineSrc != "" {
 			pipelineStr = fmt.Sprintf(pipelineSrc+pipelineStr, pipelineDevice)
@@ -190,8 +174,6 @@ func CreateAppPipeline(codecName string, pipelineDevice string, pipelineSrc stri
 			return nil, err
 		}
 
-		clockRate = pcmClockRate
-
 		if pipelineSrc != "" {
 			pipelineStr = fmt.Sprintf(pipelineSrc+pipelineStr, pipelineDevice)
 		} else {
@@ -205,8 +187,6 @@ func CreateAppPipeline(codecName string, pipelineDevice string, pipelineSrc stri
 			return nil, err
 		}
 
-		clockRate = pcmClockRate
-
 		if pipelineSrc != "" {
 			pipelineStr = fmt.Sprintf(pipelineSrc+pipelineStr, pipelineDevice)
 		} else {
@@ -216,11 +196,11 @@ func CreateAppPipeline(codecName string, pipelineDevice string, pipelineSrc stri
 		return nil, fmt.Errorf("unknown codec %s", codecName)
 	}
 
-	return CreatePipeline(pipelineStr, codecName, clockRate)
+	return CreatePipeline(pipelineStr, codecName)
 }
 
 // CreatePipeline creates a GStreamer Pipeline
-func CreatePipeline(pipelineStr string, codecName string, clockRate float32) (*Pipeline, error) {
+func CreatePipeline(pipelineStr string, codecName string) (*Pipeline, error) {
 	pipelineStrUnsafe := C.CString(pipelineStr)
 	defer C.free(unsafe.Pointer(pipelineStrUnsafe))
 
@@ -231,7 +211,6 @@ func CreatePipeline(pipelineStr string, codecName string, clockRate float32) (*P
 		Pipeline:  C.gstreamer_send_create_pipeline(pipelineStrUnsafe),
 		Sample:    make(chan types.Sample),
 		CodecName: codecName,
-		ClockRate: clockRate,
 		Src:       pipelineStr,
 		id:        len(pipelines),
 	}
