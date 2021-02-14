@@ -191,7 +191,11 @@ func (session *SessionCtx) SetWebRTCPeer(webrtcPeer types.WebRTCPeer) {
 	session.webrtcPeer = webrtcPeer
 }
 
-func (session *SessionCtx) SetWebRTCConnected(connected bool) {
+func (session *SessionCtx) SetWebRTCConnected(webrtcPeer types.WebRTCPeer, connected bool) {
+	if webrtcPeer != session.webrtcPeer {
+		return
+	}
+
 	session.webrtcConnected = connected
 	session.manager.emmiter.Emit("state_changed", session)
 

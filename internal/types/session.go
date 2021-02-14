@@ -56,7 +56,7 @@ type Session interface {
 
 	// webrtc
 	SetWebRTCPeer(webrtcPeer WebRTCPeer)
-	SetWebRTCConnected(connected bool)
+	SetWebRTCConnected(webrtcPeer WebRTCPeer, connected bool)
 	GetWebRTCPeer() WebRTCPeer
 }
 

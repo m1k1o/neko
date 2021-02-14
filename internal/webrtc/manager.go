@@ -263,13 +263,13 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 	connection.OnConnectionStateChange(func(state webrtc.PeerConnectionState) {
 		switch state {
 		case webrtc.PeerConnectionStateConnected:
-			session.SetWebRTCConnected(true)
+			session.SetWebRTCConnected(peer, true)
 		case webrtc.PeerConnectionStateDisconnected:
 			fallthrough
 		case webrtc.PeerConnectionStateFailed:
 			connection.Close()
 		case webrtc.PeerConnectionStateClosed:
-			session.SetWebRTCConnected(false)
+			session.SetWebRTCConnected(peer, false)
 			videoStream.RemoveListener(&listener)
 
 			// should be stream stopped
