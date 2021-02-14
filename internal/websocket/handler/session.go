@@ -29,13 +29,6 @@ func (h *MessageHandlerCtx) SessionDeleted(session types.Session) error {
 }
 
 func (h *MessageHandlerCtx) SessionConnected(session types.Session) error {
-	// start audio, when first member connects
-	if !h.capture.Audio().Started() {
-		if err := h.capture.Audio().Start(); err != nil {
-			return err
-		}
-	}
-
 	if err := h.systemInit(session); err != nil {
 		return err
 	}
@@ -50,11 +43,6 @@ func (h *MessageHandlerCtx) SessionConnected(session types.Session) error {
 }
 
 func (h *MessageHandlerCtx) SessionDisconnected(session types.Session) error {
-	// stop audio, if last member disonnects
-	if h.capture.Audio().Started() && !h.sessions.HasConnectedMembers() {
-		h.capture.Audio().Stop()
-	}
-
 	// clear host if exists
 	if session.IsHost() {
 		h.desktop.ResetKeys()
