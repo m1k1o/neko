@@ -152,7 +152,7 @@ func (manager *WebRTCManager) CreatePeer(id string, session types.Session) (stri
 		return "", manager.config.ICELite, manager.config.ICEServers, err
 	}
 
-	description, err := connection.CreateOffer(&webrtc.OfferOptions{ICERestart: true})
+	description, err := connection.CreateOffer(nil)
 	if err != nil {
 		return "", manager.config.ICELite, manager.config.ICEServers, err
 	}
