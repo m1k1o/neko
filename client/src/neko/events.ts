@@ -14,7 +14,7 @@ export const EVENT = {
   SIGNAL: {
     ANSWER: 'signal/answer',
     PROVIDE: 'signal/provide',
-    CANDIDATE: 'signal/candidate'
+    CANDIDATE: 'signal/candidate',
   },
   MEMBER: {
     LIST: 'member/list',
