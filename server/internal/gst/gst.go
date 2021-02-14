@@ -50,7 +50,7 @@ var pipelinesLock sync.Mutex
 var registry *C.GstRegistry
 
 const (
-	videoSrc = "ximagesrc display-name=%s show-pointer=true use-damage=false ! video/x-raw ! videoconvert ! queue ! "
+	videoSrc = "ximagesrc display-name=%s show-pointer=true use-damage=false ! video/x-raw,framerate=30/1 ! videoconvert ! queue ! "
 	audioSrc = "pulsesrc device=%s ! audio/x-raw,channels=2 ! audioconvert ! "
 )
 
