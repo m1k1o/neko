@@ -9,25 +9,25 @@ type WebRTCPeerCtx struct {
 	changeVideo func(videoID string) error
 }
 
-func (webrtc_peer *WebRTCPeerCtx) SignalAnswer(sdp string) error {
-	return webrtc_peer.connection.SetRemoteDescription(webrtc.SessionDescription{
+func (peer *WebRTCPeerCtx) SignalAnswer(sdp string) error {
+	return peer.connection.SetRemoteDescription(webrtc.SessionDescription{
 		SDP:  sdp,
 		Type: webrtc.SDPTypeAnswer,
 	})
 }
 
-func (webrtc_peer *WebRTCPeerCtx) SignalCandidate(candidate webrtc.ICECandidateInit) error {
-	return webrtc_peer.connection.AddICECandidate(candidate)
+func (peer *WebRTCPeerCtx) SignalCandidate(candidate webrtc.ICECandidateInit) error {
+	return peer.connection.AddICECandidate(candidate)
 }
 
-func (webrtc_peer *WebRTCPeerCtx) SetVideoID(videoID string) error {
-	return webrtc_peer.changeVideo(videoID)
+func (peer *WebRTCPeerCtx) SetVideoID(videoID string) error {
+	return peer.changeVideo(videoID)
 }
 
-func (webrtc_peer *WebRTCPeerCtx) Destroy() error {
-	if webrtc_peer.connection == nil || webrtc_peer.connection.ConnectionState() != webrtc.PeerConnectionStateConnected {
+func (peer *WebRTCPeerCtx) Destroy() error {
+	if peer.connection == nil || peer.connection.ConnectionState() != webrtc.PeerConnectionStateConnected {
 		return nil
 	}
 
-	return webrtc_peer.connection.Close()
+	return peer.connection.Close()
 }

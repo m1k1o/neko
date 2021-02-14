@@ -9,14 +9,14 @@ import (
 )
 
 type SessionCtx struct {
-	id                  string
-	logger              zerolog.Logger
-	manager             *SessionManagerCtx
-	profile             types.MemberProfile
-	websocket_peer      types.WebSocketPeer
-	websocket_connected bool
-	webrtc_peer         types.WebRTCPeer
-	webrtc_connected    bool
+	id                 string
+	logger             zerolog.Logger
+	manager            *SessionManagerCtx
+	profile            types.MemberProfile
+	websocketPeer      types.WebSocketPeer
+	websocketConnected bool
+	webrtcPeer         types.WebRTCPeer
+	webrtcConnected    bool
 }
 
 func (session *SessionCtx) ID() string {
@@ -77,7 +77,7 @@ func (session *SessionCtx) profileChanged() {
 	}
 
 	if !session.CanWatch() && session.IsWatching() {
-		if err := session.webrtc_peer.Destroy(); err != nil {
+		if err := session.webrtcPeer.Destroy(); err != nil {
 			session.logger.Warn().Err(err).Msgf("webrtc destroy has failed")
 		}
 	}
@@ -98,11 +98,11 @@ func (session *SessionCtx) IsHost() bool {
 }
 
 func (session *SessionCtx) IsConnected() bool {
-	return session.websocket_connected
+	return session.websocketConnected
 }
 
 func (session *SessionCtx) IsWatching() bool {
-	return session.webrtc_connected
+	return session.webrtcConnected
 }
 
 func (session *SessionCtx) GetState() types.MemberState {
@@ -117,18 +117,18 @@ func (session *SessionCtx) GetState() types.MemberState {
 // webscoket
 // ---
 
-func (session *SessionCtx) SetWebSocketPeer(websocket_peer types.WebSocketPeer) {
-	if session.websocket_peer != nil {
-		if err := session.websocket_peer.Destroy(); err != nil {
+func (session *SessionCtx) SetWebSocketPeer(websocketPeer types.WebSocketPeer) {
+	if session.websocketPeer != nil {
+		if err := session.websocketPeer.Destroy(); err != nil {
 			session.logger.Warn().Err(err).Msgf("websocket destroy has failed")
 		}
 	}
 
-	session.websocket_peer = websocket_peer
+	session.websocketPeer = websocketPeer
 }
 
 func (session *SessionCtx) SetWebSocketConnected(connected bool) {
-	session.websocket_connected = connected
+	session.websocketConnected = connected
 
 	if connected {
 		session.manager.emmiter.Emit("connected", session)
@@ -136,21 +136,21 @@ func (session *SessionCtx) SetWebSocketConnected(connected bool) {
 	}
 
 	session.manager.emmiter.Emit("disconnected", session)
-	session.websocket_peer = nil
+	session.websocketPeer = nil
 
-	if session.webrtc_peer != nil {
-		if err := session.webrtc_peer.Destroy(); err != nil {
+	if session.webrtcPeer != nil {
+		if err := session.webrtcPeer.Destroy(); err != nil {
 			session.logger.Warn().Err(err).Msgf("webrtc destroy has failed")
 		}
 	}
 }
 
 func (session *SessionCtx) Send(v interface{}) error {
-	if session.websocket_peer == nil {
+	if session.websocketPeer == nil {
 		return nil
 	}
 
-	return session.websocket_peer.Send(v)
+	return session.websocketPeer.Send(v)
 }
 
 func (session *SessionCtx) Disconnect(reason string) error {
@@ -162,14 +162,14 @@ func (session *SessionCtx) Disconnect(reason string) error {
 		return err
 	}
 
-	if session.websocket_peer != nil {
-		if err := session.websocket_peer.Destroy(); err != nil {
+	if session.websocketPeer != nil {
+		if err := session.websocketPeer.Destroy(); err != nil {
 			return err
 		}
 	}
 
-	if session.webrtc_peer != nil {
-		if err := session.webrtc_peer.Destroy(); err != nil {
+	if session.webrtcPeer != nil {
+		if err := session.webrtcPeer.Destroy(); err != nil {
 			return err
 		}
 	}
@@ -181,25 +181,25 @@ func (session *SessionCtx) Disconnect(reason string) error {
 // webrtc
 // ---
 
-func (session *SessionCtx) SetWebRTCPeer(webrtc_peer types.WebRTCPeer) {
-	if session.webrtc_peer != nil {
-		if err := session.webrtc_peer.Destroy(); err != nil {
+func (session *SessionCtx) SetWebRTCPeer(webrtcPeer types.WebRTCPeer) {
+	if session.webrtcPeer != nil {
+		if err := session.webrtcPeer.Destroy(); err != nil {
 			session.logger.Warn().Err(err).Msgf("webrtc destroy has failed")
 		}
 	}
 
-	session.webrtc_peer = webrtc_peer
+	session.webrtcPeer = webrtcPeer
 }
 
 func (session *SessionCtx) SetWebRTCConnected(connected bool) {
-	session.webrtc_connected = connected
+	session.webrtcConnected = connected
 	session.manager.emmiter.Emit("state_changed", session)
 
 	if !connected {
-		session.webrtc_peer = nil
+		session.webrtcPeer = nil
 	}
 }
 
 func (session *SessionCtx) GetWebRTCPeer() types.WebRTCPeer {
-	return session.webrtc_peer
+	return session.webrtcPeer
 }

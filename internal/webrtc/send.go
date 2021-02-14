@@ -28,8 +28,8 @@ type PayloadCursorImage struct {
 	Yhot   uint16
 }
 
-func (webrtc_peer *WebRTCPeerCtx) SendCursorPosition(x, y int) error {
-	if webrtc_peer.dataChannel == nil {
+func (peer *WebRTCPeerCtx) SendCursorPosition(x, y int) error {
+	if peer.dataChannel == nil {
 		return fmt.Errorf("no data channel")
 	}
 
@@ -47,11 +47,11 @@ func (webrtc_peer *WebRTCPeerCtx) SendCursorPosition(x, y int) error {
 		return err
 	}
 
-	return webrtc_peer.dataChannel.Send(buffer.Bytes())
+	return peer.dataChannel.Send(buffer.Bytes())
 }
 
-func (webrtc_peer *WebRTCPeerCtx) SendCursorImage(cur *types.CursorImage) error {
-	if webrtc_peer.dataChannel == nil {
+func (peer *WebRTCPeerCtx) SendCursorImage(cur *types.CursorImage) error {
+	if peer.dataChannel == nil {
 		return fmt.Errorf("no data channel")
 	}
 
@@ -81,5 +81,5 @@ func (webrtc_peer *WebRTCPeerCtx) SendCursorImage(cur *types.CursorImage) error 
 		return err
 	}
 
-	return webrtc_peer.dataChannel.Send(buffer.Bytes())
+	return peer.dataChannel.Send(buffer.Bytes())
 }

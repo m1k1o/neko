@@ -10,17 +10,17 @@ import (
 )
 
 type WebSocketPeerCtx struct {
-	session    types.Session
-	ws         *WebSocketManagerCtx
-	connection *websocket.Conn
 	mu         sync.Mutex
+	session    types.Session
+	manager    *WebSocketManagerCtx
+	connection *websocket.Conn
 }
 
-func (websocket_peer *WebSocketPeerCtx) Send(v interface{}) error {
-	websocket_peer.mu.Lock()
-	defer websocket_peer.mu.Unlock()
+func (peer *WebSocketPeerCtx) Send(v interface{}) error {
+	peer.mu.Lock()
+	defer peer.mu.Unlock()
 
-	if websocket_peer.connection == nil {
+	if peer.connection == nil {
 		return nil
 	}
 
@@ -29,19 +29,19 @@ func (websocket_peer *WebSocketPeerCtx) Send(v interface{}) error {
 		return err
 	}
 
-	websocket_peer.ws.logger.Debug().
-		Str("session", websocket_peer.session.ID()).
-		Str("address", websocket_peer.connection.RemoteAddr().String()).
+	peer.manager.logger.Debug().
+		Str("session", peer.session.ID()).
+		Str("address", peer.connection.RemoteAddr().String()).
 		Str("raw", string(raw)).
 		Msg("sending message to client")
 
-	return websocket_peer.connection.WriteMessage(websocket.TextMessage, raw)
+	return peer.connection.WriteMessage(websocket.TextMessage, raw)
 }
 
-func (websocket_peer *WebSocketPeerCtx) Destroy() error {
-	if websocket_peer.connection == nil {
+func (peer *WebSocketPeerCtx) Destroy() error {
+	if peer.connection == nil {
 		return nil
 	}
 
-	return websocket_peer.connection.Close()
+	return peer.connection.Close()
 }

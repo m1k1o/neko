@@ -43,64 +43,64 @@ type WebSocketManagerCtx struct {
 	shutdown chan bool
 }
 
-func (ws *WebSocketManagerCtx) Start() {
-	ws.sessions.OnCreated(func(session types.Session) {
-		if err := ws.handler.SessionCreated(session); err != nil {
-			ws.logger.Warn().Str("id", session.ID()).Err(err).Msg("session created with an error")
+func (manager *WebSocketManagerCtx) Start() {
+	manager.sessions.OnCreated(func(session types.Session) {
+		if err := manager.handler.SessionCreated(session); err != nil {
+			manager.logger.Warn().Str("id", session.ID()).Err(err).Msg("session created with an error")
 		} else {
-			ws.logger.Debug().Str("id", session.ID()).Msg("session created")
+			manager.logger.Debug().Str("id", session.ID()).Msg("session created")
 		}
 	})
 
-	ws.sessions.OnDeleted(func(session types.Session) {
-		if err := ws.handler.SessionDeleted(session); err != nil {
-			ws.logger.Warn().Str("id", session.ID()).Err(err).Msg("session deleted with an error")
+	manager.sessions.OnDeleted(func(session types.Session) {
+		if err := manager.handler.SessionDeleted(session); err != nil {
+			manager.logger.Warn().Str("id", session.ID()).Err(err).Msg("session deleted with an error")
 		} else {
-			ws.logger.Debug().Str("id", session.ID()).Msg("session deleted")
+			manager.logger.Debug().Str("id", session.ID()).Msg("session deleted")
 		}
 	})
 
-	ws.sessions.OnConnected(func(session types.Session) {
-		if err := ws.handler.SessionConnected(session); err != nil {
-			ws.logger.Warn().Str("id", session.ID()).Err(err).Msg("session connected with an error")
+	manager.sessions.OnConnected(func(session types.Session) {
+		if err := manager.handler.SessionConnected(session); err != nil {
+			manager.logger.Warn().Str("id", session.ID()).Err(err).Msg("session connected with an error")
 		} else {
-			ws.logger.Debug().Str("id", session.ID()).Msg("session connected")
+			manager.logger.Debug().Str("id", session.ID()).Msg("session connected")
 		}
 	})
 
-	ws.sessions.OnDisconnected(func(session types.Session) {
-		if err := ws.handler.SessionDisconnected(session); err != nil {
-			ws.logger.Warn().Str("id", session.ID()).Err(err).Msg("session disconnected with an error")
+	manager.sessions.OnDisconnected(func(session types.Session) {
+		if err := manager.handler.SessionDisconnected(session); err != nil {
+			manager.logger.Warn().Str("id", session.ID()).Err(err).Msg("session disconnected with an error")
 		} else {
-			ws.logger.Debug().Str("id", session.ID()).Msg("session disconnected")
+			manager.logger.Debug().Str("id", session.ID()).Msg("session disconnected")
 		}
 	})
 
-	ws.sessions.OnProfileChanged(func(session types.Session) {
-		if err := ws.handler.SessionProfileChanged(session); err != nil {
-			ws.logger.Warn().Str("id", session.ID()).Err(err).Msg("session profile changed with an error")
+	manager.sessions.OnProfileChanged(func(session types.Session) {
+		if err := manager.handler.SessionProfileChanged(session); err != nil {
+			manager.logger.Warn().Str("id", session.ID()).Err(err).Msg("session profile changed with an error")
 		} else {
-			ws.logger.Debug().Str("id", session.ID()).Msg("session profile changed")
+			manager.logger.Debug().Str("id", session.ID()).Msg("session profile changed")
 		}
 	})
 
-	ws.sessions.OnStateChanged(func(session types.Session) {
-		if err := ws.handler.SessionStateChanged(session); err != nil {
-			ws.logger.Warn().Str("id", session.ID()).Err(err).Msg("session state changed with an error")
+	manager.sessions.OnStateChanged(func(session types.Session) {
+		if err := manager.handler.SessionStateChanged(session); err != nil {
+			manager.logger.Warn().Str("id", session.ID()).Err(err).Msg("session state changed with an error")
 		} else {
-			ws.logger.Debug().Str("id", session.ID()).Msg("session state changed")
+			manager.logger.Debug().Str("id", session.ID()).Msg("session state changed")
 		}
 	})
 
-	ws.desktop.OnClipboardUpdated(func() {
-		session := ws.sessions.GetHost()
+	manager.desktop.OnClipboardUpdated(func() {
+		session := manager.sessions.GetHost()
 		if session == nil || !session.CanAccessClipboard() {
 			return
 		}
 
-		data, err := ws.desktop.ClipboardGetText()
+		data, err := manager.desktop.ClipboardGetText()
 		if err != nil {
-			ws.logger.Warn().Err(err).Msg("could not get clipboard content")
+			manager.logger.Warn().Err(err).Msg("could not get clipboard content")
 			return
 		}
 
@@ -109,24 +109,24 @@ func (ws *WebSocketManagerCtx) Start() {
 			Text:  data.Text,
 			// TODO: Send HTML?
 		}); err != nil {
-			ws.logger.Warn().Err(err).Msg("could not sync clipboard")
+			manager.logger.Warn().Err(err).Msg("could not sync clipboard")
 		}
 	})
 
-	ws.fileChooserDialogEvents()
+	manager.fileChooserDialogEvents()
 }
 
-func (ws *WebSocketManagerCtx) Shutdown() error {
-	ws.shutdown <- true
+func (manager *WebSocketManagerCtx) Shutdown() error {
+	manager.shutdown <- true
 	return nil
 }
 
-func (ws *WebSocketManagerCtx) AddHandler(handler types.HandlerFunction) {
-	ws.handlers = append(ws.handlers, handler)
+func (manager *WebSocketManagerCtx) AddHandler(handler types.HandlerFunction) {
+	manager.handlers = append(manager.handlers, handler)
 }
 
-func (ws *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Request, checkOrigin types.CheckOrigin) error {
-	ws.logger.Debug().Msg("attempting to upgrade connection")
+func (manager *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Request, checkOrigin types.CheckOrigin) error {
+	manager.logger.Debug().Msg("attempting to upgrade connection")
 
 	upgrader := websocket.Upgrader{
 		CheckOrigin: checkOrigin,
@@ -134,13 +134,13 @@ func (ws *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Request, c
 
 	connection, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		ws.logger.Error().Err(err).Msg("failed to upgrade connection")
+		manager.logger.Error().Err(err).Msg("failed to upgrade connection")
 		return err
 	}
 
-	session, err := ws.sessions.AuthenticateRequest(r)
+	session, err := manager.sessions.AuthenticateRequest(r)
 	if err != nil {
-		ws.logger.Warn().Err(err).Msg("authentication failed")
+		manager.logger.Warn().Err(err).Msg("authentication failed")
 
 		// TODO: Refactor, return error code.
 		if err = connection.WriteJSON(
@@ -148,7 +148,7 @@ func (ws *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Request, c
 				Event:   event.SYSTEM_DISCONNECT,
 				Message: err.Error(),
 			}); err != nil {
-			ws.logger.Error().Err(err).Msg("failed to send disconnect")
+			manager.logger.Error().Err(err).Msg("failed to send disconnect")
 		}
 
 		return connection.Close()
@@ -161,7 +161,7 @@ func (ws *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Request, c
 				Event:   event.SYSTEM_DISCONNECT,
 				Message: "connection disabled",
 			}); err != nil {
-			ws.logger.Error().Err(err).Msg("failed to send disconnect")
+			manager.logger.Error().Err(err).Msg("failed to send disconnect")
 		}
 
 		return connection.Close()
@@ -174,7 +174,7 @@ func (ws *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Request, c
 				Event:   event.SYSTEM_DISCONNECT,
 				Message: "already connected",
 			}); err != nil {
-			ws.logger.Error().Err(err).Msg("failed to send disconnect")
+			manager.logger.Error().Err(err).Msg("failed to send disconnect")
 		}
 
 		return connection.Close()
@@ -182,11 +182,11 @@ func (ws *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Request, c
 
 	session.SetWebSocketPeer(&WebSocketPeerCtx{
 		session:    session,
-		ws:         ws,
+		manager:    manager,
 		connection: connection,
 	})
 
-	ws.logger.
+	manager.logger.
 		Debug().
 		Str("session", session.ID()).
 		Str("address", connection.RemoteAddr().String()).
@@ -195,7 +195,7 @@ func (ws *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Request, c
 	session.SetWebSocketConnected(true)
 
 	defer func() {
-		ws.logger.
+		manager.logger.
 			Debug().
 			Str("session", session.ID()).
 			Str("address", connection.RemoteAddr().String()).
@@ -204,11 +204,11 @@ func (ws *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Request, c
 		session.SetWebSocketConnected(false)
 	}()
 
-	ws.handle(connection, session)
+	manager.handle(connection, session)
 	return nil
 }
 
-func (ws *WebSocketManagerCtx) handle(connection *websocket.Conn, session types.Session) {
+func (manager *WebSocketManagerCtx) handle(connection *websocket.Conn, session types.Session) {
 	bytes := make(chan []byte)
 	cancel := make(chan struct{})
 
@@ -220,9 +220,9 @@ func (ws *WebSocketManagerCtx) handle(connection *websocket.Conn, session types.
 			_, raw, err := connection.ReadMessage()
 			if err != nil {
 				if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-					ws.logger.Warn().Err(err).Msg("read message error")
+					manager.logger.Warn().Err(err).Msg("read message error")
 				} else {
-					ws.logger.Debug().Err(err).Msg("read message error")
+					manager.logger.Debug().Err(err).Msg("read message error")
 				}
 
 				close(cancel)
@@ -236,14 +236,14 @@ func (ws *WebSocketManagerCtx) handle(connection *websocket.Conn, session types.
 	for {
 		select {
 		case raw := <-bytes:
-			ws.logger.Debug().
+			manager.logger.Debug().
 				Str("session", session.ID()).
 				Str("address", connection.RemoteAddr().String()).
 				Str("raw", string(raw)).
 				Msg("received message from client")
 
-			handled := ws.handler.Message(session, raw)
-			for _, handler := range ws.handlers {
+			handled := manager.handler.Message(session, raw)
+			for _, handler := range manager.handlers {
 				if handled {
 					break
 				}
@@ -252,13 +252,13 @@ func (ws *WebSocketManagerCtx) handle(connection *websocket.Conn, session types.
 			}
 
 			if !handled {
-				ws.logger.Warn().Msg("unhandled message")
+				manager.logger.Warn().Msg("unhandled message")
 			}
 		case <-cancel:
 			return
 		case <-ticker.C:
 			if err := connection.WriteMessage(websocket.PingMessage, nil); err != nil {
-				ws.logger.Error().Err(err).Msg("ping message has failed")
+				manager.logger.Error().Err(err).Msg("ping message has failed")
 				return
 			}
 		}

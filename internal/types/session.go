@@ -49,13 +49,13 @@ type Session interface {
 	GetState() MemberState
 
 	// websocket
-	SetWebSocketPeer(websocket_peer WebSocketPeer)
+	SetWebSocketPeer(websocketPeer WebSocketPeer)
 	SetWebSocketConnected(connected bool)
 	Send(v interface{}) error
 	Disconnect(reason string) error
 
 	// webrtc
-	SetWebRTCPeer(webrtc_peer WebRTCPeer)
+	SetWebRTCPeer(webrtcPeer WebRTCPeer)
 	SetWebRTCConnected(connected bool)
 	GetWebRTCPeer() WebRTCPeer
 }

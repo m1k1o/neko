@@ -78,24 +78,24 @@ func New(WebSocketManager types.WebSocketManager, ApiManager types.ApiManager, c
 	}
 }
 
-func (s *HttpManagerCtx) Start() {
-	if s.conf.Cert != "" && s.conf.Key != "" {
+func (manager *HttpManagerCtx) Start() {
+	if manager.conf.Cert != "" && manager.conf.Key != "" {
 		go func() {
-			if err := s.http.ListenAndServeTLS(s.conf.Cert, s.conf.Key); err != http.ErrServerClosed {
-				s.logger.Panic().Err(err).Msg("unable to start https server")
+			if err := manager.http.ListenAndServeTLS(manager.conf.Cert, manager.conf.Key); err != http.ErrServerClosed {
+				manager.logger.Panic().Err(err).Msg("unable to start https server")
 			}
 		}()
-		s.logger.Info().Msgf("https listening on %s", s.http.Addr)
+		manager.logger.Info().Msgf("https listening on %s", manager.http.Addr)
 	} else {
 		go func() {
-			if err := s.http.ListenAndServe(); err != http.ErrServerClosed {
-				s.logger.Panic().Err(err).Msg("unable to start http server")
+			if err := manager.http.ListenAndServe(); err != http.ErrServerClosed {
+				manager.logger.Panic().Err(err).Msg("unable to start http server")
 			}
 		}()
-		s.logger.Info().Msgf("http listening on %s", s.http.Addr)
+		manager.logger.Info().Msgf("http listening on %s", manager.http.Addr)
 	}
 }
 
-func (s *HttpManagerCtx) Shutdown() error {
-	return s.http.Shutdown(context.Background())
+func (manager *HttpManagerCtx) Shutdown() error {
+	return manager.http.Shutdown(context.Background())
 }
