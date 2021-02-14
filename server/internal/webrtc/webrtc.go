@@ -120,10 +120,15 @@ func (manager *WebRTCManager) CreatePeer(id string, session types.Session) (stri
 	if err != nil {
 		return "", manager.config.ICELite, manager.config.ICEServers, err
 	}
+
 	negotiated := true
-	connection.CreateDataChannel("data", &webrtc.DataChannelInit{
+	_, err = connection.CreateDataChannel("data", &webrtc.DataChannelInit{
 		Negotiated: &negotiated,
 	})
+	if err != nil {
+		return "", manager.config.ICELite, manager.config.ICEServers, err
+	}
+
 	connection.OnDataChannel(func(d *webrtc.DataChannel) {
 		d.OnMessage(func(msg webrtc.DataChannelMessage) {
 			if err = manager.handle(id, msg); err != nil {
@@ -135,7 +140,9 @@ func (manager *WebRTCManager) CreatePeer(id string, session types.Session) (stri
 	// Set the handler for ICE connection state
 	// This will notify you when the peer has connected/disconnected
 	connection.OnICEConnectionStateChange(func(connectionState webrtc.ICEConnectionState) {
-		fmt.Printf("Connection State has changed %s \n", connectionState.String())
+		manager.logger.Info().
+			Str("connection_state", connectionState.String()).
+			Msg("connection state has changed")
 	})
 
 	rtpSender, viderr := connection.AddTrack(manager.videoTrack)
@@ -154,7 +161,7 @@ func (manager *WebRTCManager) CreatePeer(id string, session types.Session) (stri
 
 	err = connection.SetLocalDescription(description)
 	if err != nil {
-		panic(err)
+		return "", manager.config.ICELite, manager.config.ICEServers, err
 	}
 
 	connection.OnConnectionStateChange(func(state webrtc.PeerConnectionState) {
@@ -175,45 +182,49 @@ func (manager *WebRTCManager) CreatePeer(id string, session types.Session) (stri
 	})
 
 	connection.OnICECandidate(func(i *webrtc.ICECandidate) {
-		if i != nil {
-			candidateString, err := json.Marshal(i.ToJSON())
-			if err != nil {
-				manager.logger.Info().Msg("error")
-				return
-			}
+		if i == nil {
+			manager.logger.Info().Msg("sent all ICECandidates")
+			return
+		}
 
-			if err = session.SignalCandidate(string(candidateString));err != nil {
-				manager.logger.Info().Msg("err")
-				return
-			}
+		candidateString, err := json.Marshal(i.ToJSON())
+		if err != nil {
+			manager.logger.Warn().Err(err).Msg("converting ICECandidate to json failed")
+			return
+		}
+
+		if err := session.SignalCandidate(string(candidateString)); err != nil {
+			manager.logger.Warn().Err(err).Msg("sending SignalCandidate failed")
+			return
 		}
 	})
-
 
 	// Read incoming RTCP packets
 	// Before these packets are retuned they are processed by interceptors. For things
 	// like NACK this needs to be called.
 	go func() {
 		rtcpBuf := make([]byte, 1500)
+
 		for {
-			n, _, rtcpErr := rtpSender.Read(rtcpBuf)
-			if rtcpErr != nil {
+			n, _, err := rtpSender.Read(rtcpBuf)
+			if err != nil {
 				return
 			}
+
 			ps, err := rtcp.Unmarshal(rtcpBuf[:n])
-				if err != nil {
-				log.Printf("Unmarshal RTCP: %v", err)
+			if err != nil {
+				manager.logger.Warn().Err(err).Msg("unmarshal RTCP failed")
 				continue
 			}
+
 			for _, p := range ps {
 				switch p.(type) {
 				case *rtcp.TransportLayerNack:
-					manager.logger.Info().Msg("got a nack")
+					manager.logger.Warn().Msg("got a nack")
 				}
 			}
 		}
 	}()
-
 
 	if err := session.SetPeer(&Peer{
 		id:            id,
@@ -232,31 +243,30 @@ func (manager *WebRTCManager) CreatePeer(id string, session types.Session) (stri
 
 func (m *WebRTCManager) createTrack(codecName string) (*webrtc.TrackLocalStaticSample, webrtc.RTPCodecParameters, error) {
 	var codec webrtc.RTPCodecParameters
-	var fb  []webrtc.RTCPFeedback
-	var fba []webrtc.RTCPFeedback
-	fb = []webrtc.RTCPFeedback{
+
+	fba := []webrtc.RTCPFeedback{}
+	fbv := []webrtc.RTCPFeedback{
 		{"goog-remb", ""},
 		{"nack", ""},
 		{"nack", "pli"},
 		{"ccm", "fir"},
 	}
-	fba = []webrtc.RTCPFeedback{}
 
 	switch codecName {
 	case "VP8":
-		codec = webrtc.RTPCodecParameters{ RTPCodecCapability: webrtc.RTPCodecCapability{MimeType: "video/VP8", ClockRate: 90000, Channels: 0, SDPFmtpLine: "", RTCPFeedback: fb}, PayloadType: 96,}
+		codec = webrtc.RTPCodecParameters{RTPCodecCapability: webrtc.RTPCodecCapability{MimeType: "video/VP8", ClockRate: 90000, Channels: 0, SDPFmtpLine: "", RTCPFeedback: fbv}, PayloadType: 96}
 	case "VP9":
-		codec = webrtc.RTPCodecParameters{ RTPCodecCapability: webrtc.RTPCodecCapability{MimeType: "video/VP9", ClockRate: 90000, Channels: 0, SDPFmtpLine: "", RTCPFeedback: fb}, PayloadType: 98,}
+		codec = webrtc.RTPCodecParameters{RTPCodecCapability: webrtc.RTPCodecCapability{MimeType: "video/VP9", ClockRate: 90000, Channels: 0, SDPFmtpLine: "", RTCPFeedback: fbv}, PayloadType: 98}
 	case "H264":
-		codec = webrtc.RTPCodecParameters{ RTPCodecCapability: webrtc.RTPCodecCapability{MimeType: "video/H264", ClockRate: 90000, Channels: 0, SDPFmtpLine: "level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42001f", RTCPFeedback: fb}, PayloadType: 102,}
+		codec = webrtc.RTPCodecParameters{RTPCodecCapability: webrtc.RTPCodecCapability{MimeType: "video/H264", ClockRate: 90000, Channels: 0, SDPFmtpLine: "level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42001f", RTCPFeedback: fbv}, PayloadType: 102}
 	case "Opus":
-		codec = webrtc.RTPCodecParameters{ RTPCodecCapability: webrtc.RTPCodecCapability{MimeType: "audio/opus", ClockRate: 48000, Channels: 2, SDPFmtpLine: "", RTCPFeedback: fba}, PayloadType: 111,}
+		codec = webrtc.RTPCodecParameters{RTPCodecCapability: webrtc.RTPCodecCapability{MimeType: "audio/opus", ClockRate: 48000, Channels: 2, SDPFmtpLine: "", RTCPFeedback: fba}, PayloadType: 111}
 	case "G722":
-		codec = webrtc.RTPCodecParameters{ RTPCodecCapability: webrtc.RTPCodecCapability{MimeType: "audio/G722", ClockRate: 8000, Channels: 0, SDPFmtpLine: "", RTCPFeedback: fba}, PayloadType: 9,}
+		codec = webrtc.RTPCodecParameters{RTPCodecCapability: webrtc.RTPCodecCapability{MimeType: "audio/G722", ClockRate: 8000, Channels: 0, SDPFmtpLine: "", RTCPFeedback: fba}, PayloadType: 9}
 	case "PCMU":
-		codec = webrtc.RTPCodecParameters{ RTPCodecCapability: webrtc.RTPCodecCapability{MimeType: "audio/PCMU", ClockRate: 8000, Channels: 0, SDPFmtpLine: "", RTCPFeedback: fba}, PayloadType: 0,}
+		codec = webrtc.RTPCodecParameters{RTPCodecCapability: webrtc.RTPCodecCapability{MimeType: "audio/PCMU", ClockRate: 8000, Channels: 0, SDPFmtpLine: "", RTCPFeedback: fba}, PayloadType: 0}
 	case "PCMA":
-		codec = webrtc.RTPCodecParameters{ RTPCodecCapability: webrtc.RTPCodecCapability{MimeType: "audio/PCMA", ClockRate: 8000, Channels: 0, SDPFmtpLine: "", RTCPFeedback: fba}, PayloadType: 8,}
+		codec = webrtc.RTPCodecParameters{RTPCodecCapability: webrtc.RTPCodecCapability{MimeType: "audio/PCMA", ClockRate: 8000, Channels: 0, SDPFmtpLine: "", RTCPFeedback: fba}, PayloadType: 8}
 	default:
 		return nil, codec, fmt.Errorf("unknown codec %s", codecName)
 	}
