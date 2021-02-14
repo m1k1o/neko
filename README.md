@@ -28,6 +28,7 @@ This app uses Web RTC to stream a desktop inside of a docker container. This is 
 - Added RTMP broadcast. Enables broadcasting neko screen to local RTMP server, YouTube or Twitch.
 - Stereo sound (works properly only in Firefox host).
 - Added limited support for some mobile browsers with `playsinline` attribute.
+- Added `VIDEO_BITRATE` and `AUDIO_BITRATE` in kbit/s to control stream quality (in collaboration with @mbattista).
 
 ### Bugs
 - Fixed minor gst pipeline bug.
@@ -42,6 +43,7 @@ This app uses Web RTC to stream a desktop inside of a docker container. This is 
 - No pointer events for notify bars.
 - Disable debug mode by default.
 - Remove HTML tags from user name.
+- Upgraded `pion/webrtc` to v3 (by @mbattista).
 
 # Getting started & FAQ
 
