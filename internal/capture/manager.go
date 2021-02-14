@@ -2,7 +2,6 @@ package capture
 
 import (
 	"fmt"
-	"sync"
 	"math"
 
 	"github.com/rs/zerolog"
@@ -15,7 +14,6 @@ import (
 
 type CaptureManagerCtx struct {
 	logger       zerolog.Logger
-	mu           sync.Mutex
 	desktop      types.DesktopManager
 	streaming    bool
 	broadcast    *BroacastManagerCtx

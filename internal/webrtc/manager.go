@@ -12,7 +12,6 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"demodesk/neko/internal/types"
-	"demodesk/neko/internal/types/codec"
 	"demodesk/neko/internal/types/event"
 	"demodesk/neko/internal/types/message"
 	"demodesk/neko/internal/config"
@@ -33,7 +32,6 @@ func New(desktop types.DesktopManager, capture types.CaptureManager, config *con
 type WebRTCManagerCtx struct {
 	logger          zerolog.Logger
 	audioTrack      *webrtc.TrackLocalStaticSample
-	audioCodec      codec.RTPCodec
 	audioStop       func()
 	desktop         types.DesktopManager
 	capture         types.CaptureManager
