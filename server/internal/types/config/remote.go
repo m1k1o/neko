@@ -13,12 +13,13 @@ type Remote struct {
 	Device       string
 	AudioCodec   string
 	AudioParams  string
+	AudioBitrate uint
 	VideoCodec   string
 	VideoParams  string
+	VideoBitrate uint
 	ScreenWidth  int
 	ScreenHeight int
 	ScreenRate   int
-	Bitrate      int
 }
 
 func (Remote) Init(cmd *cobra.Command) error {
@@ -37,8 +38,18 @@ func (Remote) Init(cmd *cobra.Command) error {
 		return err
 	}
 
+	cmd.PersistentFlags().Int("audio_bitrate", 128, "audio bitrate in kbit/s")
+	if err := viper.BindPFlag("audio_bitrate", cmd.PersistentFlags().Lookup("audio_bitrate")); err != nil {
+		return err
+	}
+
 	cmd.PersistentFlags().String("video", "", "video codec parameters to use for streaming")
 	if err := viper.BindPFlag("video", cmd.PersistentFlags().Lookup("video")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().Int("video_bitrate", 3072, "video bitrate in kbit/s")
+	if err := viper.BindPFlag("video_bitrate", cmd.PersistentFlags().Lookup("video_bitrate")); err != nil {
 		return err
 	}
 
@@ -46,12 +57,6 @@ func (Remote) Init(cmd *cobra.Command) error {
 	if err := viper.BindPFlag("screen", cmd.PersistentFlags().Lookup("screen")); err != nil {
 		return err
 	}
-
-	cmd.PersistentFlags().Int("bitrate", 0, "set this video bitrate when possible")
-	if err := viper.BindPFlag("bitrate", cmd.PersistentFlags().Lookup("bitrate")); err != nil {
-		return err
-	}
-
 
 	// video codecs
 	cmd.PersistentFlags().Bool("vp8", false, "use VP8 video codec")
@@ -117,10 +122,11 @@ func (s *Remote) Set() {
 	s.Device = viper.GetString("device")
 	s.AudioCodec = audioCodec
 	s.AudioParams = viper.GetString("audio")
+	s.AudioBitrate = viper.GetUint("audio_bitrate")
 	s.Display = viper.GetString("display")
 	s.VideoCodec = videoCodec
 	s.VideoParams = viper.GetString("video")
-	s.Bitrate = viper.GetInt("bitrate")
+	s.VideoBitrate = viper.GetUint("video_bitrate")
 
 	s.ScreenWidth = 1280
 	s.ScreenHeight = 720
