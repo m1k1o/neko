@@ -9,6 +9,7 @@ package gst
 import "C"
 import (
 	"fmt"
+	"strconv"
 	"sync"
 	"time"
 	"unsafe"
@@ -79,7 +80,7 @@ func CreateRTMPPipeline(pipelineDevice string, pipelineDisplay string, pipelineS
 }
 
 // CreateAppPipeline creates a GStreamer Pipeline
-func CreateAppPipeline(codecName string, pipelineDevice string, pipelineSrc string, bitrate string) (*Pipeline, error) {
+func CreateAppPipeline(codecName string, pipelineDevice string, pipelineSrc string, bitrate int) (*Pipeline, error) {
 	pipelineStr := " ! appsink name=appsink"
 
 	var clockRate float32
@@ -131,8 +132,8 @@ func CreateAppPipeline(codecName string, pipelineDevice string, pipelineSrc stri
 		} else {
 			var h264Str string
 			 h264Str = "openh264enc multi-thread=4 complexity=high bitrate=3072000 max-bitrate=4096000 ! video/x-h264,stream-format=byte-stream"
-			if bitrate != "" {
-				h264Str = "openh264enc multi-thread=4 complexity=high bitrate=" + bitrate + "000 max-bitrate=" + bitrate + "999 ! video/x-h264,stream-format=byte-stream"
+			if bitrate > 0 {
+				h264Str = "openh264enc multi-thread=4 complexity=high bitrate=" + strconv.Itoa(bitrate) + "000 max-bitrate=" + strconv.Itoa(bitrate) + "999 ! video/x-h264,stream-format=byte-stream"
 			}
 
 			// https://gstreamer.freedesktop.org/documentation/x264/index.html?gi-language=c
@@ -141,8 +142,8 @@ func CreateAppPipeline(codecName string, pipelineDevice string, pipelineSrc stri
 			if err := CheckPlugins([]string{"openh264"}); err != nil {
 
 				h264Str = "video/x-raw,format=I420 ! x264enc threads=4 byte-stream=true tune=zerolatency speed-preset=veryfast ! video/x-h264,stream-format=byte-stream"
-				if bitrate != "" {
-					h264Str = "video/x-raw,format=I420 ! x264enc threads=4 bitrate=" + bitrate + " byte-stream=true tune=zerolatency speed-preset=veryfast ! video/x-h264,stream-format=byte-stream"
+				if bitrate > 0 {
+					h264Str = "video/x-raw,format=I420 ! x264enc threads=4 bitrate=" + strconv.Itoa(bitrate) + " byte-stream=true tune=zerolatency speed-preset=veryfast ! video/x-h264,stream-format=byte-stream"
 				}
 
 				if err := CheckPlugins([]string{"x264"}); err != nil {

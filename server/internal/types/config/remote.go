@@ -18,7 +18,7 @@ type Remote struct {
 	ScreenWidth  int
 	ScreenHeight int
 	ScreenRate   int
-	Bitrate      string
+	Bitrate      int
 }
 
 func (Remote) Init(cmd *cobra.Command) error {
@@ -47,7 +47,7 @@ func (Remote) Init(cmd *cobra.Command) error {
 		return err
 	}
 
-	cmd.PersistentFlags().String("bitrate", "", "set this video bitrate when possible")
+	cmd.PersistentFlags().Int("bitrate", 0, "set this video bitrate when possible")
 	if err := viper.BindPFlag("bitrate", cmd.PersistentFlags().Lookup("bitrate")); err != nil {
 		return err
 	}
@@ -120,7 +120,7 @@ func (s *Remote) Set() {
 	s.Display = viper.GetString("display")
 	s.VideoCodec = videoCodec
 	s.VideoParams = viper.GetString("video")
-	s.Bitrate = viper.GetString("bitrate")
+	s.Bitrate = viper.GetInt("bitrate")
 
 	s.ScreenWidth = 1280
 	s.ScreenHeight = 720

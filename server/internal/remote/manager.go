@@ -145,7 +145,7 @@ func (manager *RemoteManager) createPipelines() {
 		manager.config.AudioCodec,
 		manager.config.Device,
 		manager.config.AudioParams,
-		"",
+		0,
 	)
 	if err != nil {
 		manager.logger.Panic().Err(err).Msg("unable to create audio pipeline")
