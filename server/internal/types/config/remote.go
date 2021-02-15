@@ -20,6 +20,7 @@ type Remote struct {
 	ScreenWidth  int
 	ScreenHeight int
 	ScreenRate   int
+	MaxFPS       int
 }
 
 func (Remote) Init(cmd *cobra.Command) error {
@@ -55,6 +56,11 @@ func (Remote) Init(cmd *cobra.Command) error {
 
 	cmd.PersistentFlags().String("screen", "1280x720@30", "default screen resolution and framerate")
 	if err := viper.BindPFlag("screen", cmd.PersistentFlags().Lookup("screen")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().Int("max_fps", 25, "maximum fps delivered via WebRTC, 0 is for no maximum")
+	if err := viper.BindPFlag("max_fps", cmd.PersistentFlags().Lookup("max_fps")); err != nil {
 		return err
 	}
 
@@ -146,4 +152,6 @@ func (s *Remote) Set() {
 			s.ScreenRate = int(rate)
 		}
 	}
+
+	s.MaxFPS = viper.GetInt("max_fps")
 }

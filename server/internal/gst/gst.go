@@ -50,7 +50,7 @@ var pipelinesLock sync.Mutex
 var registry *C.GstRegistry
 
 const (
-	videoSrc = "ximagesrc display-name=%s show-pointer=true use-damage=false ! video/x-raw,framerate=30/1 ! videoconvert ! queue ! "
+	videoSrc = "ximagesrc display-name=%s show-pointer=true use-damage=false ! video/x-raw,framerate=%d/1 ! videoconvert ! queue ! "
 	audioSrc = "pulsesrc device=%s ! audio/x-raw,channels=2 ! audioconvert ! "
 )
 
@@ -61,7 +61,7 @@ func init() {
 
 // CreateRTMPPipeline creates a GStreamer Pipeline
 func CreateRTMPPipeline(pipelineDevice string, pipelineDisplay string, pipelineSrc string, pipelineRTMP string) (*Pipeline, error) {
-	video := fmt.Sprintf(videoSrc, pipelineDisplay)
+	video := fmt.Sprintf(videoSrc, pipelineDisplay, 25)
 	audio := fmt.Sprintf(audioSrc, pipelineDevice)
 
 	var pipelineStr string
@@ -75,7 +75,7 @@ func CreateRTMPPipeline(pipelineDevice string, pipelineDisplay string, pipelineS
 }
 
 // CreateAppPipeline creates a GStreamer Pipeline
-func CreateAppPipeline(codecName string, pipelineDevice string, pipelineSrc string, bitrate uint) (*Pipeline, error) {
+func CreateAppPipeline(codecName string, pipelineDevice string, pipelineSrc string, fps int, bitrate uint) (*Pipeline, error) {
 	pipelineStr := " ! appsink name=appsink"
 
 	switch codecName {
@@ -90,7 +90,7 @@ func CreateAppPipeline(codecName string, pipelineDevice string, pipelineSrc stri
 		if pipelineSrc != "" {
 			pipelineStr = fmt.Sprintf(pipelineSrc+pipelineStr, pipelineDevice)
 		} else {
-			pipelineStr = fmt.Sprintf(videoSrc+"vp8enc target-bitrate=%d cpu-used=-5 threads=4 deadline=1 error-resilient=partitions keyframe-max-dist=30 auto-alt-ref=true"+pipelineStr, pipelineDevice, bitrate*1000)
+			pipelineStr = fmt.Sprintf(videoSrc+"vp8enc target-bitrate=%d cpu-used=-5 threads=4 deadline=1 error-resilient=partitions keyframe-max-dist=30 auto-alt-ref=true"+pipelineStr, pipelineDevice, fps, bitrate*1000)
 		}
 	case "VP9":
 		// https://gstreamer.freedesktop.org/documentation/vpx/vp9enc.html?gi-language=c
@@ -104,7 +104,7 @@ func CreateAppPipeline(codecName string, pipelineDevice string, pipelineSrc stri
 		if pipelineSrc != "" {
 			pipelineStr = fmt.Sprintf(pipelineSrc+pipelineStr, pipelineDevice)
 		} else {
-			pipelineStr = fmt.Sprintf(videoSrc+"vp9enc target-bitrate=%d cpu-used=-5 threads=4 deadline=1 keyframe-max-dist=30 auto-alt-ref=true"+pipelineStr, pipelineDevice, bitrate*1000)
+			pipelineStr = fmt.Sprintf(videoSrc+"vp9enc target-bitrate=%d cpu-used=-5 threads=4 deadline=1 keyframe-max-dist=30 auto-alt-ref=true"+pipelineStr, pipelineDevice, fps, bitrate*1000)
 		}
 	case "H264":
 		if err := CheckPlugins([]string{"ximagesrc"}); err != nil {
@@ -120,7 +120,7 @@ func CreateAppPipeline(codecName string, pipelineDevice string, pipelineSrc stri
 		// gstreamer1.0-plugins-bad
 		// openh264enc multi-thread=4 complexity=high bitrate=3072000 max-bitrate=4096000
 		if err := CheckPlugins([]string{"openh264"}); err == nil {
-			pipelineStr = fmt.Sprintf(videoSrc+"openh264enc multi-thread=4 complexity=high bitrate=%d max-bitrate=%d ! video/x-h264,stream-format=byte-stream"+pipelineStr, pipelineDevice, bitrate*1000, (bitrate+1024)*1000)
+			pipelineStr = fmt.Sprintf(videoSrc+"openh264enc multi-thread=4 complexity=high bitrate=%d max-bitrate=%d ! video/x-h264,stream-format=byte-stream"+pipelineStr, pipelineDevice, fps, bitrate*1000, (bitrate+1024)*1000)
 			break
 		}
 
@@ -131,7 +131,7 @@ func CreateAppPipeline(codecName string, pipelineDevice string, pipelineSrc stri
 			return nil, err
 		}
 
-		pipelineStr = fmt.Sprintf(videoSrc+"video/x-raw,format=I420 ! x264enc threads=4 bitrate=%d byte-stream=true tune=zerolatency speed-preset=veryfast ! video/x-h264,stream-format=byte-stream"+pipelineStr, pipelineDevice, bitrate)
+		pipelineStr = fmt.Sprintf(videoSrc+"video/x-raw,format=I420 ! x264enc threads=4 bitrate=%d byte-stream=true tune=zerolatency speed-preset=veryfast ! video/x-h264,stream-format=byte-stream"+pipelineStr, pipelineDevice, fps, bitrate)
 	case "Opus":
 		// https://gstreamer.freedesktop.org/documentation/opus/opusenc.html
 		// gstreamer1.0-plugins-base

@@ -29,6 +29,7 @@ This app uses Web RTC to stream a desktop inside of a docker container. This is 
 - Stereo sound (works properly only in Firefox host).
 - Added limited support for some mobile browsers with `playsinline` attribute.
 - Added `VIDEO_BITRATE` and `AUDIO_BITRATE` in kbit/s to control stream quality (in collaboration with @mbattista).
+- Added `MAX_FPS`, where you can specify max WebRTC frame rate. When set to `0`, frame rate won't be capped and you can enjoy your real `60fps` experience. Originally, it was constant at `25fps`.
 
 ### Bugs
 - Fixed minor gst pipeline bug.
