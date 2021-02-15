@@ -35,6 +35,7 @@ This app uses Web RTC to stream a desktop inside of a docker container. This is 
 - Fixed minor gst pipeline bug.
 - Locked screen only for users, admins can still join.
 - Fixed h264 pipelines bugs (by @mbattista).
+- Fixed sessions manager thread safety by adding mutexes (caused panic in rare edge cases).
 
 ### Misc
 - Custom docker workflow.

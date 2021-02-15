@@ -2,6 +2,7 @@ package session
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/kataras/go-events"
 	"github.com/rs/zerolog"
@@ -22,6 +23,7 @@ func New(remote types.RemoteManager) *SessionManager {
 }
 
 type SessionManager struct {
+	mu      sync.Mutex
 	logger  zerolog.Logger
 	host    string
 	remote  types.RemoteManager
@@ -39,13 +41,14 @@ func (manager *SessionManager) New(id string, admin bool, socket types.WebSocket
 		connected: false,
 	}
 
+	manager.mu.Lock()
 	manager.members[id] = session
-	manager.emmiter.Emit("created", id, session)
-
 	if manager.remote.Streaming() != true && len(manager.members) > 0 {
 		manager.remote.StartStream()
 	}
+	manager.mu.Unlock()
 
+	manager.emmiter.Emit("created", id, session)
 	return session
 }
 
@@ -58,16 +61,23 @@ func (manager *SessionManager) IsHost(id string) bool {
 }
 
 func (manager *SessionManager) SetHost(id string) error {
+	manager.mu.Lock()
 	_, ok := manager.members[id]
+	manager.mu.Unlock()
+
 	if ok {
 		manager.host = id
 		manager.emmiter.Emit("host", id)
 		return nil
 	}
+
 	return fmt.Errorf("invalid session id %s", id)
 }
 
 func (manager *SessionManager) GetHost() (types.Session, bool) {
+	manager.mu.Lock()
+	defer manager.mu.Unlock()
+
 	host, ok := manager.members[manager.host]
 	return host, ok
 }
@@ -79,16 +89,25 @@ func (manager *SessionManager) ClearHost() {
 }
 
 func (manager *SessionManager) Has(id string) bool {
+	manager.mu.Lock()
+	defer manager.mu.Unlock()
+
 	_, ok := manager.members[id]
 	return ok
 }
 
 func (manager *SessionManager) Get(id string) (types.Session, bool) {
+	manager.mu.Lock()
+	defer manager.mu.Unlock()
+
 	session, ok := manager.members[id]
 	return session, ok
 }
 
 func (manager *SessionManager) Admins() []*types.Member {
+	manager.mu.Lock()
+	defer manager.mu.Unlock()
+
 	members := []*types.Member{}
 	for _, session := range manager.members {
 		if !session.connected || !session.admin {
@@ -100,10 +119,14 @@ func (manager *SessionManager) Admins() []*types.Member {
 			members = append(members, member)
 		}
 	}
+
 	return members
 }
 
 func (manager *SessionManager) Members() []*types.Member {
+	manager.mu.Lock()
+	defer manager.mu.Unlock()
+
 	members := []*types.Member{}
 	for _, session := range manager.members {
 		if !session.connected {
@@ -119,6 +142,7 @@ func (manager *SessionManager) Members() []*types.Member {
 }
 
 func (manager *SessionManager) Destroy(id string) error {
+	manager.mu.Lock()
 	session, ok := manager.members[id]
 	if ok {
 		err := session.destroy()
@@ -127,11 +151,13 @@ func (manager *SessionManager) Destroy(id string) error {
 		if manager.remote.Streaming() != false && len(manager.members) <= 0 {
 			manager.remote.StopStream()
 		}
+		manager.mu.Unlock()
 
 		manager.emmiter.Emit("destroyed", id, session)
 		return err
 	}
 
+	manager.mu.Unlock()
 	return nil
 }
 
@@ -140,6 +166,9 @@ func (manager *SessionManager) Clear() error {
 }
 
 func (manager *SessionManager) Broadcast(v interface{}, exclude interface{}) error {
+	manager.mu.Lock()
+	defer manager.mu.Unlock()
+
 	for id, session := range manager.members {
 		if !session.connected {
 			continue
