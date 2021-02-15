@@ -2,7 +2,6 @@
   <canvas
     ref="overlay"
     class="neko-overlay"
-    :class="isControling ? 'neko-active' : ''"
     tabindex="0"
     :style="{ cursor }"
     @click.stop.prevent
@@ -28,15 +27,6 @@
     width: 100%;
     height: 100%;
     outline: 0;
-
-    &.neko-active {
-      outline: 2px solid red;
-      box-sizing: border-box;
-    }
-
-    .cursor {
-      position: relative;
-    }
   }
 </style>
 
