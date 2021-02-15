@@ -15,6 +15,7 @@ export type WebSocketMessages =
   | WebSocketMessage
   | SignalProvideMessage
   | SignalAnswerMessage
+  | SignalCandidateMessage
   | MemberListMessage
   | MemberConnectMessage
   | MemberDisconnectMessage
@@ -26,6 +27,7 @@ export type WebSocketMessages =
 export type WebSocketPayloads =
   | SignalProvidePayload
   | SignalAnswerPayload
+  | SignalCandidatePayload
   | MemberListPayload
   | Member
   | ControlPayload
@@ -76,6 +78,14 @@ export interface SignalAnswerMessage extends WebSocketMessage, SignalAnswerPaylo
 export interface SignalAnswerPayload {
   sdp: string
   displayname: string
+}
+
+// signal/candidate
+export interface SignalCandidateMessage extends WebSocketMessage, SignalCandidatePayload {
+  event: typeof EVENT.SIGNAL.CANDIDATE
+}
+export interface SignalCandidatePayload {
+  data: string
 }
 
 /*

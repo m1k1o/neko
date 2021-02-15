@@ -3,7 +3,7 @@ package webrtc
 import (
 	"sync"
 
-	"github.com/pion/webrtc/v2"
+	"github.com/pion/webrtc/v3"
 )
 
 type Peer struct {

@@ -1,13 +1,15 @@
 package webrtc
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
-	"math/rand"
 	"strings"
+	"time"
 
-	"github.com/pion/webrtc/v2"
-	"github.com/pion/webrtc/v2/pkg/media"
+	"github.com/pion/interceptor"
+	"github.com/pion/webrtc/v3"
+	"github.com/pion/webrtc/v3/pkg/media"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
@@ -26,10 +28,10 @@ func New(sessions types.SessionManager, remote types.RemoteManager, config *conf
 
 type WebRTCManager struct {
 	logger     zerolog.Logger
-	videoTrack *webrtc.Track
-	audioTrack *webrtc.Track
-	videoCodec *webrtc.RTPCodec
-	audioCodec *webrtc.RTPCodec
+	videoTrack *webrtc.TrackLocalStaticSample
+	audioTrack *webrtc.TrackLocalStaticSample
+	videoCodec webrtc.RTPCodecParameters
+	audioCodec webrtc.RTPCodecParameters
 	sessions   types.SessionManager
 	remote     types.RemoteManager
 	config     *config.WebRTC
@@ -97,15 +99,22 @@ func (manager *WebRTCManager) CreatePeer(id string, session types.Session) (stri
 
 	settings.SetEphemeralUDPPortRange(manager.config.EphemeralMin, manager.config.EphemeralMax)
 	settings.SetNAT1To1IPs(manager.config.NAT1To1IPs, webrtc.ICECandidateTypeHost)
+	settings.SetICETimeouts(6 * time.Second, 6 * time.Second, 3 * time.Second)
+	settings.SetSRTPReplayProtectionWindow(512)
 
 	// Create MediaEngine based off sdp
 	engine := webrtc.MediaEngine{}
 
-	engine.RegisterCodec(manager.audioCodec)
-	engine.RegisterCodec(manager.videoCodec)
+	engine.RegisterCodec(manager.audioCodec, webrtc.RTPCodecTypeAudio)
+	engine.RegisterCodec(manager.videoCodec, webrtc.RTPCodecTypeVideo)
+
+	i := &interceptor.Registry{}
+	if err := webrtc.RegisterDefaultInterceptors(&engine, i); err != nil {
+		return "", manager.config.ICELite, manager.config.ICEServers, err
+	}
 
 	// Create API with MediaEngine and SettingEngine
-	api := webrtc.NewAPI(webrtc.WithMediaEngine(engine), webrtc.WithSettingEngine(settings))
+	api := webrtc.NewAPI(webrtc.WithMediaEngine(&engine), webrtc.WithSettingEngine(settings), webrtc.WithInterceptorRegistry(i))
 
 	// Create new peer connection
 	connection, err := api.NewPeerConnection(*configuration)
@@ -113,19 +122,10 @@ func (manager *WebRTCManager) CreatePeer(id string, session types.Session) (stri
 		return "", manager.config.ICELite, manager.config.ICEServers, err
 	}
 
-	if _, err = connection.AddTransceiverFromTrack(manager.videoTrack, webrtc.RtpTransceiverInit{
-		Direction: webrtc.RTPTransceiverDirectionSendonly,
-	}); err != nil {
-		return "", manager.config.ICELite, manager.config.ICEServers, err
-	}
-
-	if _, err = connection.AddTransceiverFromTrack(manager.audioTrack, webrtc.RtpTransceiverInit{
-		Direction: webrtc.RTPTransceiverDirectionSendonly,
-	}); err != nil {
-		return "", manager.config.ICELite, manager.config.ICEServers, err
-	}
-
-	description, err := connection.CreateOffer(nil)
+	negotiated := true
+	_, err = connection.CreateDataChannel("data", &webrtc.DataChannelInit{
+		Negotiated: &negotiated,
+	})
 	if err != nil {
 		return "", manager.config.ICELite, manager.config.ICEServers, err
 	}
@@ -138,7 +138,32 @@ func (manager *WebRTCManager) CreatePeer(id string, session types.Session) (stri
 		})
 	})
 
-	connection.SetLocalDescription(description)
+	// Set the handler for ICE connection state
+	// This will notify you when the peer has connected/disconnected
+	connection.OnICEConnectionStateChange(func(connectionState webrtc.ICEConnectionState) {
+		manager.logger.Info().
+			Str("connection_state", connectionState.String()).
+			Msg("connection state has changed")
+	})
+
+	if _, err = connection.AddTrack(manager.videoTrack); err != nil {
+		return "", manager.config.ICELite, manager.config.ICEServers, err
+	}
+
+	if _, err = connection.AddTrack(manager.audioTrack); err != nil {
+		return "", manager.config.ICELite, manager.config.ICEServers, err
+	}
+
+	description, err := connection.CreateOffer(nil)
+	if err != nil {
+		return "", manager.config.ICELite, manager.config.ICEServers, err
+	}
+
+	err = connection.SetLocalDescription(description)
+	if err != nil {
+		return "", manager.config.ICELite, manager.config.ICEServers, err
+	}
+
 	connection.OnConnectionStateChange(func(state webrtc.PeerConnectionState) {
 		switch state {
 		case webrtc.PeerConnectionStateDisconnected:
@@ -153,6 +178,24 @@ func (manager *WebRTCManager) CreatePeer(id string, session types.Session) (stri
 				manager.sessions.Destroy(id)
 			}
 			break
+		}
+	})
+
+	connection.OnICECandidate(func(i *webrtc.ICECandidate) {
+		if i == nil {
+			manager.logger.Info().Msg("sent all ICECandidates")
+			return
+		}
+
+		candidateString, err := json.Marshal(i.ToJSON())
+		if err != nil {
+			manager.logger.Warn().Err(err).Msg("converting ICECandidate to json failed")
+			return
+		}
+
+		if err := session.SignalCandidate(string(candidateString)); err != nil {
+			manager.logger.Warn().Err(err).Msg("sending SignalCandidate failed")
+			return
 		}
 	})
 
@@ -171,30 +214,33 @@ func (manager *WebRTCManager) CreatePeer(id string, session types.Session) (stri
 	return description.SDP, manager.config.ICELite, manager.config.ICEServers, nil
 }
 
-func (m *WebRTCManager) createTrack(codecName string) (*webrtc.Track, *webrtc.RTPCodec, error) {
-	var codec *webrtc.RTPCodec
+func (m *WebRTCManager) createTrack(codecName string) (*webrtc.TrackLocalStaticSample, webrtc.RTPCodecParameters, error) {
+	var codec webrtc.RTPCodecParameters
+
+	fb := []webrtc.RTCPFeedback{}
+
 	switch codecName {
-	case webrtc.VP8:
-		codec = webrtc.NewRTPVP8Codec(webrtc.DefaultPayloadTypeVP8, 90000)
-	case webrtc.VP9:
-		codec = webrtc.NewRTPVP9Codec(webrtc.DefaultPayloadTypeVP9, 90000)
-	case webrtc.H264:
-		codec = webrtc.NewRTPH264Codec(webrtc.DefaultPayloadTypeH264, 90000)
-	case webrtc.Opus:
-		codec = webrtc.NewRTPOpusCodec(webrtc.DefaultPayloadTypeOpus, 48000)
-	case webrtc.G722:
-		codec = webrtc.NewRTPG722Codec(webrtc.DefaultPayloadTypeG722, 8000)
-	case webrtc.PCMU:
-		codec = webrtc.NewRTPPCMUCodec(webrtc.DefaultPayloadTypePCMU, 8000)
-	case webrtc.PCMA:
-		codec = webrtc.NewRTPPCMACodec(webrtc.DefaultPayloadTypePCMA, 8000)
+	case "VP8":
+		codec = webrtc.RTPCodecParameters{RTPCodecCapability: webrtc.RTPCodecCapability{MimeType: "video/VP8", ClockRate: 90000, Channels: 0, SDPFmtpLine: "", RTCPFeedback: fb}, PayloadType: 96}
+	case "VP9":
+		codec = webrtc.RTPCodecParameters{RTPCodecCapability: webrtc.RTPCodecCapability{MimeType: "video/VP9", ClockRate: 90000, Channels: 0, SDPFmtpLine: "", RTCPFeedback: fb}, PayloadType: 98}
+	case "H264":
+		codec = webrtc.RTPCodecParameters{RTPCodecCapability: webrtc.RTPCodecCapability{MimeType: "video/H264", ClockRate: 90000, Channels: 0, SDPFmtpLine: "level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42001f", RTCPFeedback: fb}, PayloadType: 102}
+	case "Opus":
+		codec = webrtc.RTPCodecParameters{RTPCodecCapability: webrtc.RTPCodecCapability{MimeType: "audio/opus", ClockRate: 48000, Channels: 2, SDPFmtpLine: "", RTCPFeedback: fb}, PayloadType: 111}
+	case "G722":
+		codec = webrtc.RTPCodecParameters{RTPCodecCapability: webrtc.RTPCodecCapability{MimeType: "audio/G722", ClockRate: 8000, Channels: 0, SDPFmtpLine: "", RTCPFeedback: fb}, PayloadType: 9}
+	case "PCMU":
+		codec = webrtc.RTPCodecParameters{RTPCodecCapability: webrtc.RTPCodecCapability{MimeType: "audio/PCMU", ClockRate: 8000, Channels: 0, SDPFmtpLine: "", RTCPFeedback: fb}, PayloadType: 0}
+	case "PCMA":
+		codec = webrtc.RTPCodecParameters{RTPCodecCapability: webrtc.RTPCodecCapability{MimeType: "audio/PCMA", ClockRate: 8000, Channels: 0, SDPFmtpLine: "", RTCPFeedback: fb}, PayloadType: 8}
 	default:
-		return nil, nil, fmt.Errorf("unknown codec %s", codecName)
+		return nil, codec, fmt.Errorf("unknown codec %s", codecName)
 	}
 
-	track, err := webrtc.NewTrack(codec.PayloadType, rand.Uint32(), "stream", "stream", codec)
+	track, err := webrtc.NewTrackLocalStaticSample(codec.RTPCodecCapability, "stream", "stream")
 	if err != nil {
-		return nil, nil, err
+		return nil, codec, err
 	}
 
 	return track, codec, nil

@@ -130,11 +130,19 @@ func (manager *RemoteManager) Streaming() bool {
 }
 
 func (manager *RemoteManager) createPipelines() {
+	// handle maximum fps
+	rate := manager.config.ScreenRate
+	if manager.config.MaxFPS != 0 && manager.config.MaxFPS < manager.config.ScreenRate {
+		rate = manager.config.MaxFPS
+	}
+
 	var err error
 	manager.video, err = gst.CreateAppPipeline(
 		manager.config.VideoCodec,
 		manager.config.Display,
 		manager.config.VideoParams,
+		rate,
+		manager.config.VideoBitrate,
 	)
 	if err != nil {
 		manager.logger.Panic().Err(err).Msg("unable to create video pipeline")
@@ -144,6 +152,8 @@ func (manager *RemoteManager) createPipelines() {
 		manager.config.AudioCodec,
 		manager.config.Device,
 		manager.config.AudioParams,
+		0, // fps: n/a for audio
+		manager.config.AudioBitrate,
 	)
 	if err != nil {
 		manager.logger.Panic().Err(err).Msg("unable to create audio pipeline")
@@ -169,11 +179,18 @@ func (manager *RemoteManager) ChangeResolution(width int, height int, rate int) 
 		return err
 	}
 
+	// handle maximum fps
+	if manager.config.MaxFPS != 0 && manager.config.MaxFPS < rate {
+		rate = manager.config.MaxFPS
+	}
+
 	var err error
 	manager.video, err = gst.CreateAppPipeline(
 		manager.config.VideoCodec,
 		manager.config.Display,
 		manager.config.VideoParams,
+		rate,
+		manager.config.VideoBitrate,
 	)
 	if err != nil {
 		manager.logger.Panic().Err(err).Msg("unable to create new video pipeline")

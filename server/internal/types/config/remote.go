@@ -4,7 +4,6 @@ import (
 	"regexp"
 	"strconv"
 
-	"github.com/pion/webrtc/v2"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -14,11 +13,14 @@ type Remote struct {
 	Device       string
 	AudioCodec   string
 	AudioParams  string
+	AudioBitrate uint
 	VideoCodec   string
 	VideoParams  string
+	VideoBitrate uint
 	ScreenWidth  int
 	ScreenHeight int
 	ScreenRate   int
+	MaxFPS       int
 }
 
 func (Remote) Init(cmd *cobra.Command) error {
@@ -37,13 +39,28 @@ func (Remote) Init(cmd *cobra.Command) error {
 		return err
 	}
 
+	cmd.PersistentFlags().Int("audio_bitrate", 128, "audio bitrate in kbit/s")
+	if err := viper.BindPFlag("audio_bitrate", cmd.PersistentFlags().Lookup("audio_bitrate")); err != nil {
+		return err
+	}
+
 	cmd.PersistentFlags().String("video", "", "video codec parameters to use for streaming")
 	if err := viper.BindPFlag("video", cmd.PersistentFlags().Lookup("video")); err != nil {
 		return err
 	}
 
+	cmd.PersistentFlags().Int("video_bitrate", 3072, "video bitrate in kbit/s")
+	if err := viper.BindPFlag("video_bitrate", cmd.PersistentFlags().Lookup("video_bitrate")); err != nil {
+		return err
+	}
+
 	cmd.PersistentFlags().String("screen", "1280x720@30", "default screen resolution and framerate")
 	if err := viper.BindPFlag("screen", cmd.PersistentFlags().Lookup("screen")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().Int("max_fps", 25, "maximum fps delivered via WebRTC, 0 is for no maximum")
+	if err := viper.BindPFlag("max_fps", cmd.PersistentFlags().Lookup("max_fps")); err != nil {
 		return err
 	}
 
@@ -88,32 +105,34 @@ func (Remote) Init(cmd *cobra.Command) error {
 }
 
 func (s *Remote) Set() {
-	videoCodec := webrtc.VP8
+	videoCodec := "VP8"
 	if viper.GetBool("vp8") {
-		videoCodec = webrtc.VP8
+		videoCodec = "VP8"
 	} else if viper.GetBool("vp9") {
-		videoCodec = webrtc.VP9
+		videoCodec = "VP9"
 	} else if viper.GetBool("h264") {
-		videoCodec = webrtc.H264
+		videoCodec = "H264"
 	}
 
-	audioCodec := webrtc.Opus
+	audioCodec := "Opus"
 	if viper.GetBool("opus") {
-		audioCodec = webrtc.Opus
+		audioCodec = "Opus"
 	} else if viper.GetBool("g722") {
-		audioCodec = webrtc.G722
+		audioCodec = "G722"
 	} else if viper.GetBool("pcmu") {
-		audioCodec = webrtc.PCMU
+		audioCodec = "PCMU"
 	} else if viper.GetBool("pcma") {
-		audioCodec = webrtc.PCMA
+		audioCodec = "PCMA"
 	}
 
 	s.Device = viper.GetString("device")
 	s.AudioCodec = audioCodec
 	s.AudioParams = viper.GetString("audio")
+	s.AudioBitrate = viper.GetUint("audio_bitrate")
 	s.Display = viper.GetString("display")
 	s.VideoCodec = videoCodec
 	s.VideoParams = viper.GetString("video")
+	s.VideoBitrate = viper.GetUint("video_bitrate")
 
 	s.ScreenWidth = 1280
 	s.ScreenHeight = 720
@@ -133,4 +152,6 @@ func (s *Remote) Set() {
 			s.ScreenRate = int(rate)
 		}
 	}
+
+	s.MaxFPS = viper.GetInt("max_fps")
 }
