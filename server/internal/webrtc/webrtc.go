@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"time"
 
 	"github.com/pion/interceptor"
 	"github.com/pion/webrtc/v3"
@@ -98,6 +99,7 @@ func (manager *WebRTCManager) CreatePeer(id string, session types.Session) (stri
 
 	settings.SetEphemeralUDPPortRange(manager.config.EphemeralMin, manager.config.EphemeralMax)
 	settings.SetNAT1To1IPs(manager.config.NAT1To1IPs, webrtc.ICECandidateTypeHost)
+	settings.SetICETimeouts(6 * time.Second, 6 * time.Second, 3 * time.Second)
 	settings.SetSRTPReplayProtectionWindow(512)
 
 	// Create MediaEngine based off sdp
