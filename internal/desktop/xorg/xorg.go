@@ -68,6 +68,17 @@ func Move(x, y int) {
 	C.XMove(C.int(x), C.int(y))
 }
 
+func GetCursorPosition() (int, int) {
+	mu.Lock()
+	defer mu.Unlock()
+
+	var x C.int
+	var y C.int
+	C.XCursorPosition(&x, &y)
+	
+	return int(x), int(y)
+}
+
 func Scroll(x, y int) {
 	mu.Lock()
 	defer mu.Unlock()

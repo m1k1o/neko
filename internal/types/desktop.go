@@ -49,6 +49,7 @@ type DesktopManager interface {
 	// xorg
 	Move(x, y int)
 	OnCursorPosition(listener func(x, y int))
+	GetCursorPosition() (int, int)
 	Scroll(x, y int)
 	ButtonDown(code int) error
 	KeyDown(code uint64) error

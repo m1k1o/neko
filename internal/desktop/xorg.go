@@ -26,6 +26,10 @@ func (manager *DesktopManagerCtx) OnCursorPosition(listener func(x, y int)) {
 	cursorListeners = append(cursorListeners, listener)
 }
 
+func (manager *DesktopManagerCtx) GetCursorPosition() (int, int) {
+	return xorg.GetCursorPosition()
+}
+
 func (manager *DesktopManagerCtx) Scroll(x, y int) {
 	xorg.Scroll(x, y)
 }

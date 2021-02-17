@@ -21,6 +21,15 @@ void XMove(int x, int y) {
   XSync(display, 0);
 }
 
+void XCursorPosition(int *x, int *y) {
+  Display *display = getXDisplay();
+  Window root = DefaultRootWindow(display);
+  Window window;
+  int i;
+  unsigned mask;
+  XQueryPointer(display, root, &root, &window, x, y, &i, &i, &mask);
+}
+
 void XScroll(int x, int y) {
   int ydir = 4; /* Button 4 is up, 5 is down. */
   int xdir = 6;

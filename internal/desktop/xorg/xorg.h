@@ -16,6 +16,7 @@ int XDisplayOpen(char *input);
 void XDisplayClose(void);
 
 void XMove(int x, int y);
+void XCursorPosition(int *x, int *y);
 void XScroll(int x, int y);
 void XButton(unsigned int button, int down);
 void XKey(unsigned long key, int down);
