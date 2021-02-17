@@ -319,6 +319,15 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 		// TODO: Refactor.
 		manager.curImgListeners[cursorChangePtr] = &cursorChange
 		manager.curPosListeners[cursorPositionPtr] = &cursorPosition
+
+		// send initial cursor image
+		cur := manager.desktop.GetCursorImage()
+		cursorChange(cur)
+	
+		// send initial cursor position
+		x, y := manager.desktop.GetCursorPosition()
+		manager.logger.Warn().Int("x", x).Int("y", y).Msg("got cursor position")
+		cursorPosition(x, y)
 	})
 
 	dataChannel.OnMessage(func(message webrtc.DataChannelMessage) {
