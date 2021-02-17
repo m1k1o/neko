@@ -127,6 +127,7 @@
 
       this.webrtc.addListener('cursor-position', this.onCursorPosition)
       this.webrtc.addListener('cursor-image', this.onCursorImage)
+      this.cursorElement.onload = this.canvasRedraw
     }
 
     beforeDestroy() {
@@ -134,6 +135,7 @@
 
       this.webrtc.removeListener('cursor-position', this.onCursorPosition)
       this.webrtc.removeListener('cursor-image', this.onCursorImage)
+      this.cursorElement.onload = null
     }
 
     getMousePos(clientX: number, clientY: number) {
@@ -280,7 +282,6 @@
 
       if (!this.isControling) {
         this.cursorElement.src = data.uri
-        this.canvasRedraw()
       }
     }
 
