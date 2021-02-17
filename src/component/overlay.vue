@@ -70,6 +70,9 @@
     private readonly canvasSize!: { width: number; height: number }
 
     @Prop()
+    private readonly cursorTag!: string
+
+    @Prop()
     private readonly isControling!: boolean
 
     @Prop()
@@ -286,17 +289,36 @@
 
       // get intrinsic dimensions
       const { width, height } = this._overlay
-      const { x, y } = this.cursorPosition
+
+      // clear drawings
+      this._ctx.clearRect(0, 0, width, height)
+
+      // ignore hidden cursor
+      if (this.cursorImage.width <= 1 && this.cursorImage.height <= 1) return
 
       // redraw cursor
-      this._ctx.clearRect(0, 0, width, height)
-      this._ctx.drawImage(
-        this.cursorElement,
-        Math.round((x / this.screenSize.width) * width - this.cursorImage.x),
-        Math.round((y / this.screenSize.height) * height - this.cursorImage.y),
-        this.cursorImage.width,
-        this.cursorImage.height,
-      )
+      let x = Math.round((this.cursorPosition.x / this.screenSize.width) * width - this.cursorImage.x)
+      let y = Math.round((this.cursorPosition.y / this.screenSize.height) * height - this.cursorImage.y)
+      this._ctx.drawImage(this.cursorElement, x, y, this.cursorImage.width, this.cursorImage.height)
+
+      // redraw cursor tag
+      if (this.cursorTag) {
+        x += this.cursorImage.width + this.cursorImage.x
+        y += this.cursorImage.height + this.cursorImage.y
+
+        this._ctx.save()
+        this._ctx.font = '14px Arial, sans-serif'
+        this._ctx.textBaseline = 'top'
+        this._ctx.shadowColor = 'black'
+        this._ctx.shadowBlur = 2
+        this._ctx.lineWidth = 2
+        this._ctx.fillStyle = 'black'
+        this._ctx.strokeText(this.cursorTag, x, y)
+        this._ctx.shadowBlur = 0
+        this._ctx.fillStyle = 'white'
+        this._ctx.fillText(this.cursorTag, x, y)
+        this._ctx.restore()
+      }
     }
 
     canvasClear() {

@@ -8,6 +8,11 @@
         :screenSize="state.screen.size"
         :canvasSize="canvasSize"
         :isControling="controlling && watching"
+        :cursorTag="
+          state.control.implicit_hosting && state.control.host_id != null
+            ? state.members[state.control.host_id].profile.name
+            : ''
+        "
         :implicitControl="state.control.implicit_hosting && state.members[state.member_id].profile.can_host"
         @implicit-control-request="websocket.send('control/request')"
         @implicit-control-release="websocket.send('control/release')"
@@ -109,10 +114,6 @@
         scroll: {
           inverse: true,
           sensitivity: 1,
-        },
-        cursor: {
-          image: null,
-          position: null,
         },
         clipboard: null,
         host_id: null,
