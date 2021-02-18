@@ -127,6 +127,7 @@
 
       this.webrtc.addListener('cursor-position', this.onCursorPosition)
       this.webrtc.addListener('cursor-image', this.onCursorImage)
+      this.webrtc.addListener('disconnected', this.canvasClear)
       this.cursorElement.onload = this.canvasRedraw
     }
 
@@ -135,6 +136,7 @@
 
       this.webrtc.removeListener('cursor-position', this.onCursorPosition)
       this.webrtc.removeListener('cursor-image', this.onCursorImage)
+      this.webrtc.removeListener('disconnected', this.canvasClear)
       this.cursorElement.onload = null
     }
 
