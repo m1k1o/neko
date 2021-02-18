@@ -278,6 +278,11 @@
     private cursorElement: HTMLImageElement = new Image()
     private cursorPosition: { x: number; y: number } | null = null
 
+    @Watch('cursorTag')
+    onCursorTagChange() {
+      this.canvasRedraw()
+    }
+
     @Watch('screenSize')
     onScreenSizeChange() {
       if (this.isControling) {
