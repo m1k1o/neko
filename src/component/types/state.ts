@@ -50,6 +50,7 @@ export interface Video {
 export interface Control {
   scroll: Scroll
   clipboard: Clipboard | null
+  keyboard: Keyboard
   host_id: string | null
   implicit_hosting: boolean
 }
@@ -61,6 +62,11 @@ export interface Scroll {
 
 export interface Clipboard {
   text: string
+}
+
+export interface Keyboard {
+  layout: string
+  variant: string
 }
 
 /////////////////////////////

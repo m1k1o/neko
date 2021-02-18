@@ -117,6 +117,10 @@
           sensitivity: 1,
         },
         clipboard: null,
+        keyboard: {
+          layout: '',
+          variant: '',
+        },
         host_id: null,
         implicit_hosting: false,
       },
@@ -278,6 +282,10 @@
 
     public setScrollSensitivity(value: number) {
       Vue.set(this.state.control.scroll, 'sensitivity', value)
+    }
+
+    public setKeyboard(layout: string, variant: string = '') {
+      Vue.set(this.state.control, 'keyboard', { layout, variant })
     }
 
     public setScreenSize(width: number, height: number, rate: number) {
@@ -494,6 +502,14 @@
 
       // remove users first interaction event
       document.removeEventListener('click', this.unmute)
+    }
+
+    @Watch('controlling')
+    @Watch('state.control.keyboard')
+    updateKeyboard() {
+      if (this.controlling && this.state.control.keyboard.layout) {
+        this.websocket.send('keyboard/map', this.state.control.keyboard)
+      }
     }
 
     @Watch('state.screen.size')
