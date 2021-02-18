@@ -129,8 +129,8 @@ services:
       NEKO_NAT1TO1: <your-IP>
 ```
 
-## Mobile UI
+## Mobile support
 
-Although on iOS is neko not working, the UI screens have been fixed for small screens.
+Neko is now working on iOS and Android! Also, the UI screens have been fixed for small screens.
 
 ![mobile-screens](https://i.imgur.com/K9gfscU.png)
