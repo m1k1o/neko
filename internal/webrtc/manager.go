@@ -326,7 +326,6 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 	
 		// send initial cursor position
 		x, y := manager.desktop.GetCursorPosition()
-		manager.logger.Warn().Int("x", x).Int("y", y).Msg("got cursor position")
 		cursorPosition(x, y)
 	})
 
