@@ -278,11 +278,25 @@
     private cursorElement: HTMLImageElement = new Image()
     private cursorPosition: { x: number; y: number } | null = null
 
+    @Watch('screenSize')
+    onScreenSizeChange() {
+      if (this.isControling) {
+        this.canvasClear()
+      } else {
+        this.canvasRedraw()
+      }
+    }
+
     @Watch('canvasSize')
     onCanvasSizeChange({ width, height }: { width: number; height: number }) {
       this._overlay.width = width
       this._overlay.height = height
-      this.canvasRedraw()
+
+      if (this.isControling) {
+        this.canvasClear()
+      } else {
+        this.canvasRedraw()
+      }
     }
 
     onCursorPosition(data: { x: number; y: number }) {
