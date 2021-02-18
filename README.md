@@ -48,6 +48,7 @@ This app uses Web RTC to stream a desktop inside of a docker container. This is 
 - Disable debug mode by default.
 - Remove HTML tags from user name.
 - Upgraded `pion/webrtc` to v3 (by @mbattista).
+- Added `requestFullscreen` compatibility for older browsers.
 
 # Getting started & FAQ
 

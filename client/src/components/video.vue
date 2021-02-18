@@ -476,7 +476,22 @@
     }
 
     requestFullscreen() {
-      this._player.requestFullscreen()
+      if (typeof this._player.requestFullscreen === 'function') {
+        this._player.requestFullscreen()
+        //@ts-ignore
+      } else if (typeof this._player.webkitRequestFullscreen === 'function') {
+        //@ts-ignore
+        this._player.webkitRequestFullscreen()
+        //@ts-ignore
+      } else if (typeof this._player.webkitEnterFullscreen === 'function') {
+        //@ts-ignore
+        this._player.webkitEnterFullscreen()
+        //@ts-ignore
+      } else if (typeof this._player.msRequestFullScreen === 'function') {
+        //@ts-ignore
+        this._player.msRequestFullScreen()
+      }
+
       this.onResise()
     }
 
