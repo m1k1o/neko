@@ -205,13 +205,8 @@
       this._overlay.focus()
       this.focused = true
 
-      if (!this.isControling) {
-        // TODO: Refactor
-        //syncKeyboardModifierState({
-        //  capsLock: e.getModifierState('CapsLock'),
-        //  numLock: e.getModifierState('NumLock'),
-        //  scrollLock: e.getModifierState('ScrollLock'),
-        //})
+      if (this.isControling) {
+        this.updateKbdModifiers(e)
       }
     }
 
@@ -222,12 +217,11 @@
       if (this.isControling) {
         this.keyboard.reset()
 
-        // TODO: Refactor
-        //setKeyboardModifierState({
-        //  capsLock: e.getModifierState('CapsLock'),
-        //  numLock: e.getModifierState('NumLock'),
-        //  scrollLock: e.getModifierState('ScrollLock'),
-        //})
+        // save current kbd modifiers state
+        Vue.set(this, 'kbdModifiers', {
+          capslock: e.getModifierState('CapsLock'),
+          numlock: e.getModifierState('NumLock'),
+        })
       }
     }
 
@@ -252,6 +246,25 @@
         if (files.length === 0) return
 
         this.$emit('drop-files', { ...this.getMousePos(e.clientX, e.clientY), files })
+      }
+    }
+
+    //
+    // keyboard modifiers
+    //
+
+    private kbdModifiers: { capslock: boolean; numlock: boolean } | null = null
+
+    updateKbdModifiers(e: MouseEvent) {
+      const capslock = e.getModifierState('CapsLock')
+      const numlock = e.getModifierState('NumLock')
+
+      if (
+        this.kbdModifiers === null ||
+        this.kbdModifiers.capslock !== capslock ||
+        this.kbdModifiers.numlock !== numlock
+      ) {
+        this.$emit('update-kbd-modifiers', { capslock, numlock })
       }
     }
 
@@ -336,7 +349,10 @@
 
     @Watch('isControling')
     onControlChange(isControling: boolean) {
+      Vue.set(this, 'kbdModifiers', null)
+
       if (isControling && this.reqMouseDown) {
+        this.updateKbdModifiers(this.reqMouseDown)
         this.setMousePos(this.reqMouseDown)
         this.webrtc.send('mousedown', { key: this.reqMouseDown.button + 1 })
       }
