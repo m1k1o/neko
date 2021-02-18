@@ -84,6 +84,11 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
 
   protected [EVENT.DISCONNECTED](reason?: Error) {
     this.cleanup()
+
+    if (reason && reason.message == 'kicked') {
+      this.$accessor.logout()
+    }
+
     this.$vue.$notify({
       group: 'neko',
       type: 'error',

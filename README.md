@@ -36,6 +36,7 @@ This app uses Web RTC to stream a desktop inside of a docker container. This is 
 - Locked screen only for users, admins can still join.
 - Fixed h264 pipelines bugs (by @mbattista).
 - Fixed sessions manager thread safety by adding mutexes (caused panic in rare edge cases).
+- Now when user gets kicked, he won't join as a ghost user again but will be logged out.
 
 ### Misc
 - Custom docker workflow.
