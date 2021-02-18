@@ -152,10 +152,9 @@ type KeyboardMap struct {
 }
 
 type KeyboardModifiers struct {
-	Event      string `json:"event,omitempty"`
-	CapsLock   *bool  `json:"caps_lock"`
-	NumLock    *bool  `json:"num_lock"`
-	ScrollLock *bool  `json:"scroll_lock"`
+	Event    string `json:"event,omitempty"`
+	CapsLock *bool  `json:"capslock"`
+	NumLock  *bool  `json:"numlock"`
 }
 
 /////////////////////////////
