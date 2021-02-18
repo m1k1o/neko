@@ -42,6 +42,7 @@
         </li>
         <li>
           <i
+            v-if="pip_available"
             @click.stop.prevent="requestPictureInPicture"
             v-tooltip="{ content: 'Picture-in-Picture', placement: 'left', offset: 5, boundariesElement: 'body' }"
             class="fas fa-external-link-alt"
@@ -272,6 +273,11 @@
 
     get scroll_invert() {
       return this.$accessor.settings.scroll_invert
+    }
+
+    get pip_available() {
+      //@ts-ignore
+      return typeof document.createElement('video').requestPictureInPicture === 'function'
     }
 
     get clipboard_read_available() {
