@@ -1,7 +1,7 @@
 <template>
   <div ref="component" class="neko-component">
     <div ref="container" class="neko-container">
-      <video ref="video" :autoplay="autoplay" :muted="autoplay" />
+      <video ref="video" :autoplay="autoplay" :muted="autoplay" playsinline />
       <neko-overlay
         :webrtc="webrtc"
         :scroll="state.control.scroll"
