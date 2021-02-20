@@ -323,7 +323,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 		// send initial cursor image
 		cur := manager.desktop.GetCursorImage()
 		cursorChange(cur)
-	
+
 		// send initial cursor position
 		x, y := manager.desktop.GetCursorPosition()
 		cursorPosition(x, y)

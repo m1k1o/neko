@@ -75,7 +75,7 @@ func GetCursorPosition() (int, int) {
 	var x C.int
 	var y C.int
 	C.XCursorPosition(&x, &y)
-	
+
 	return int(x), int(y)
 }
 
