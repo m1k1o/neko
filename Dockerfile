@@ -1,7 +1,7 @@
 #
 # Stage 1: Build.
 #
-FROM golang:1.15-buster as build
+FROM golang:1.16-buster as build
 WORKDIR /src
 
 #
@@ -32,7 +32,7 @@ RUN go get -v -t -d . && go build \
         -X 'demodesk/neko.gitCommit=${GIT_COMMIT}' \
         -X 'demodesk/neko.gitBranch=${GIT_BRANCH}' \
     " \
-    -i cmd/neko/main.go;
+    cmd/neko/main.go;
 
 #
 # Stage 2: Runtime.
