@@ -280,14 +280,7 @@
 
     @Watch('cursorTag')
     onCursorTagChange() {
-      this.canvasRedraw()
-    }
-
-    @Watch('screenSize')
-    onScreenSizeChange() {
-      if (this.isControling) {
-        this.canvasClear()
-      } else {
+      if (!this.isControling) {
         this.canvasRedraw()
       }
     }
