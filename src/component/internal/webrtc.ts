@@ -6,6 +6,8 @@ export const OPCODE = {
   SCROLL: 0x02,
   KEY_DOWN: 0x03,
   KEY_UP: 0x04,
+  BTN_DOWN: 0x05,
+  BTN_UP: 0x06,
 } as const
 
 export interface WebRTCStats {
@@ -183,20 +185,32 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
         payload.setInt16(5, data.y)
         break
       case 'keydown':
-      case 'mousedown':
-        buffer = new ArrayBuffer(11)
+        buffer = new ArrayBuffer(7)
         payload = new DataView(buffer)
         payload.setUint8(0, OPCODE.KEY_DOWN)
-        payload.setUint16(1, 8)
-        payload.setBigUint64(3, BigInt(data.key))
+        payload.setUint16(1, 4)
+        payload.setUint32(3, data.key)
         break
       case 'keyup':
-      case 'mouseup':
-        buffer = new ArrayBuffer(11)
+        buffer = new ArrayBuffer(7)
         payload = new DataView(buffer)
         payload.setUint8(0, OPCODE.KEY_UP)
-        payload.setUint16(1, 8)
-        payload.setBigUint64(3, BigInt(data.key))
+        payload.setUint16(1, 4)
+        payload.setUint32(3, data.key)
+        break
+      case 'mousedown':
+        buffer = new ArrayBuffer(7)
+        payload = new DataView(buffer)
+        payload.setUint8(0, OPCODE.BTN_DOWN)
+        payload.setUint16(1, 4)
+        payload.setUint32(3, data.key)
+        break
+      case 'mouseup':
+        buffer = new ArrayBuffer(7)
+        payload = new DataView(buffer)
+        payload.setUint8(0, OPCODE.BTN_UP)
+        payload.setUint16(1, 4)
+        payload.setUint32(3, data.key)
         break
       default:
         this._log.warn(`unknown data event: ${event}`)
