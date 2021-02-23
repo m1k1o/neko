@@ -13,7 +13,8 @@ const (
 	OP_SCROLL   = 0x02
 	OP_KEY_DOWN = 0x03
 	OP_KEY_UP   = 0x04
-	OP_KEY_CLK  = 0x05
+	OP_BTN_DOWN = 0x05
+	OP_BTN_UP   = 0x06
 )
 
 type PayloadHeader struct {
@@ -35,7 +36,7 @@ type PayloadScroll struct {
 
 type PayloadKey struct {
 	PayloadHeader
-	Key uint64
+	Key uint32
 }
 
 func (manager *WebRTCManagerCtx) handle(msg webrtc.DataChannelMessage) error {
@@ -80,49 +81,48 @@ func (manager *WebRTCManagerCtx) handle(msg webrtc.DataChannelMessage) error {
 			return err
 		}
 
-		if payload.Key < 8 {
-			err := manager.desktop.ButtonDown(int(payload.Key))
-			if err != nil {
-				manager.logger.Warn().Err(err).Msg("button down failed")
-				return nil
-			}
-
-			manager.logger.Debug().Msgf("button down %d", payload.Key)
-		} else {
-			err := manager.desktop.KeyDown(uint64(payload.Key))
-			if err != nil {
-				manager.logger.Warn().Err(err).Msg("key down failed")
-				return nil
-			}
-
-			manager.logger.Debug().Msgf("key down %d", payload.Key)
+		if err := manager.desktop.KeyDown(payload.Key); err != nil {
+			manager.logger.Warn().Err(err).Msg("key down failed")
+			break
 		}
+
+		manager.logger.Debug().Msgf("key down %d", payload.Key)
 	case OP_KEY_UP:
 		payload := &PayloadKey{}
-		err := binary.Read(buffer, binary.BigEndian, payload)
-		if err != nil {
+		if err := binary.Read(buffer, binary.BigEndian, payload); err != nil {
 			return err
 		}
 
-		if payload.Key < 8 {
-			err := manager.desktop.ButtonUp(int(payload.Key))
-			if err != nil {
-				manager.logger.Warn().Err(err).Msg("button up failed")
-				return nil
-			}
-
-			manager.logger.Debug().Msgf("button up %d", payload.Key)
-		} else {
-			err := manager.desktop.KeyUp(uint64(payload.Key))
-			if err != nil {
-				manager.logger.Warn().Err(err).Msg("key up failed")
-				return nil
-			}
-
-			manager.logger.Debug().Msgf("key up %d", payload.Key)
+		if err := manager.desktop.KeyUp(payload.Key); err != nil {
+			manager.logger.Warn().Err(err).Msg("key up failed")
+			break
 		}
-	case OP_KEY_CLK:
-		// unused
+
+		manager.logger.Debug().Msgf("key up %d", payload.Key)
+	case OP_BTN_DOWN:
+		payload := &PayloadKey{}
+		if err := binary.Read(buffer, binary.BigEndian, payload); err != nil {
+			return err
+		}
+
+		if err := manager.desktop.ButtonDown(payload.Key); err != nil {
+			manager.logger.Warn().Err(err).Msg("button down failed")
+			break
+		}
+
+		manager.logger.Debug().Msgf("button down %d", payload.Key)
+	case OP_BTN_UP:
+		payload := &PayloadKey{}
+		if err := binary.Read(buffer, binary.BigEndian, payload); err != nil {
+			return err
+		}
+
+		if err := manager.desktop.ButtonUp(payload.Key); err != nil {
+			manager.logger.Warn().Err(err).Msg("button up failed")
+			break
+		}
+
+		manager.logger.Debug().Msgf("button up %d", payload.Key)
 	}
 
 	return nil

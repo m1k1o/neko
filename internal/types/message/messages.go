@@ -118,7 +118,7 @@ type ControlScroll struct {
 // TODO: New.
 type ControlKey struct {
 	Event string `json:"event,omitempty"`
-	Key   uint64 `json:"key"`
+	Key   uint32 `json:"key"`
 }
 
 /////////////////////////////

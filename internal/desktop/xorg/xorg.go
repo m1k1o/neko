@@ -28,8 +28,8 @@ const (
 
 var ScreenConfigurations = make(map[int]types.ScreenConfiguration)
 
-var debounce_button = make(map[int]time.Time)
-var debounce_key = make(map[uint64]time.Time)
+var debounce_button = make(map[uint32]time.Time)
+var debounce_key = make(map[uint32]time.Time)
 var mu = sync.Mutex{}
 
 func GetScreenConfigurations() {
@@ -86,7 +86,7 @@ func Scroll(x, y int) {
 	C.XScroll(C.int(x), C.int(y))
 }
 
-func ButtonDown(code int) error {
+func ButtonDown(code uint32) error {
 	mu.Lock()
 	defer mu.Unlock()
 
@@ -100,7 +100,7 @@ func ButtonDown(code int) error {
 	return nil
 }
 
-func KeyDown(code uint64) error {
+func KeyDown(code uint32) error {
 	mu.Lock()
 	defer mu.Unlock()
 
@@ -114,7 +114,7 @@ func KeyDown(code uint64) error {
 	return nil
 }
 
-func ButtonUp(code int) error {
+func ButtonUp(code uint32) error {
 	mu.Lock()
 	defer mu.Unlock()
 
@@ -128,7 +128,7 @@ func ButtonUp(code int) error {
 	return nil
 }
 
-func KeyUp(code uint64) error {
+func KeyUp(code uint32) error {
 	mu.Lock()
 	defer mu.Unlock()
 

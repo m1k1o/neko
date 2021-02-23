@@ -51,10 +51,10 @@ type DesktopManager interface {
 	OnCursorPosition(listener func(x, y int))
 	GetCursorPosition() (int, int)
 	Scroll(x, y int)
-	ButtonDown(code int) error
-	KeyDown(code uint64) error
-	ButtonUp(code int) error
-	KeyUp(code uint64) error
+	ButtonDown(code uint32) error
+	KeyDown(code uint32) error
+	ButtonUp(code uint32) error
+	KeyUp(code uint32) error
 	ResetKeys()
 	ScreenConfigurations() map[int]ScreenConfiguration
 	SetScreenSize(ScreenSize) error

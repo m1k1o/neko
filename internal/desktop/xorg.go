@@ -34,19 +34,19 @@ func (manager *DesktopManagerCtx) Scroll(x, y int) {
 	xorg.Scroll(x, y)
 }
 
-func (manager *DesktopManagerCtx) ButtonDown(code int) error {
+func (manager *DesktopManagerCtx) ButtonDown(code uint32) error {
 	return xorg.ButtonDown(code)
 }
 
-func (manager *DesktopManagerCtx) KeyDown(code uint64) error {
+func (manager *DesktopManagerCtx) KeyDown(code uint32) error {
 	return xorg.KeyDown(code)
 }
 
-func (manager *DesktopManagerCtx) ButtonUp(code int) error {
+func (manager *DesktopManagerCtx) ButtonUp(code uint32) error {
 	return xorg.ButtonUp(code)
 }
 
-func (manager *DesktopManagerCtx) KeyUp(code uint64) error {
+func (manager *DesktopManagerCtx) KeyUp(code uint32) error {
 	return xorg.KeyUp(code)
 }
 
