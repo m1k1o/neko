@@ -8,7 +8,7 @@ type WebRTCPeer interface {
 
 	SetVideoID(videoID string) error
 	SendCursorPosition(x, y int) error
-	SendCursorImage(cur *CursorImage) error
+	SendCursorImage(cur *CursorImage, img []byte) error
 
 	Destroy() error
 }

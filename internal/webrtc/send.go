@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	"demodesk/neko/internal/types"
-	"demodesk/neko/internal/utils"
 )
 
 const (
@@ -50,14 +49,9 @@ func (peer *WebRTCPeerCtx) SendCursorPosition(x, y int) error {
 	return peer.dataChannel.Send(buffer.Bytes())
 }
 
-func (peer *WebRTCPeerCtx) SendCursorImage(cur *types.CursorImage) error {
+func (peer *WebRTCPeerCtx) SendCursorImage(cur *types.CursorImage, img []byte) error {
 	if peer.dataChannel == nil {
 		return fmt.Errorf("no data channel")
-	}
-
-	img, err := utils.CreatePNGImage(cur.Image)
-	if err != nil {
-		return err
 	}
 
 	data := PayloadCursorImage{

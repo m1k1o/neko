@@ -16,6 +16,7 @@ import (
 	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/types/event"
 	"demodesk/neko/internal/types/message"
+	"demodesk/neko/internal/utils"
 )
 
 func New(desktop types.DesktopManager, capture types.CaptureManager, config *config.WebRTC) *WebRTCManagerCtx {
@@ -26,7 +27,7 @@ func New(desktop types.DesktopManager, capture types.CaptureManager, config *con
 		config:       config,
 		participants: 0,
 		// TODO: Refactor.
-		curImgListeners: map[uintptr]*func(cur *types.CursorImage){},
+		curImgListeners: map[uintptr]*func(cur *types.CursorImage, img []byte){},
 		curPosListeners: map[uintptr]*func(x, y int){},
 	}
 }
@@ -41,7 +42,7 @@ type WebRTCManagerCtx struct {
 	config       *config.WebRTC
 	participants uint32
 	// TODO: Refactor.
-	curImgListeners map[uintptr]*func(cur *types.CursorImage)
+	curImgListeners map[uintptr]*func(cur *types.CursorImage, img []byte)
 	curPosListeners map[uintptr]*func(x, y int)
 }
 
@@ -77,8 +78,15 @@ func (manager *WebRTCManagerCtx) Start() {
 	// TODO: Refactor.
 	manager.desktop.OnCursorChanged(func(serial uint64) {
 		cur := manager.desktop.GetCursorImage()
+
+		img, err := utils.CreatePNGImage(cur.Image)
+		if err != nil {
+			manager.logger.Warn().Err(err).Msg("failed to create cursor image")
+			return
+		}
+
 		for _, emit := range manager.curImgListeners {
-			(*emit)(cur)
+			(*emit)(cur, img)
 		}
 	})
 
@@ -256,8 +264,8 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 		dataChannel: dataChannel,
 	}
 
-	cursorChange := func(cur *types.CursorImage) {
-		if err := peer.SendCursorImage(cur); err != nil {
+	cursorChange := func(cur *types.CursorImage, img []byte) {
+		if err := peer.SendCursorImage(cur, img); err != nil {
 			manager.logger.Warn().Err(err).Msg("could not send cursor image")
 		}
 	}
@@ -322,7 +330,12 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 
 		// send initial cursor image
 		cur := manager.desktop.GetCursorImage()
-		cursorChange(cur)
+		img, err := utils.CreatePNGImage(cur.Image)
+		if err == nil {
+			cursorChange(cur, img)
+		} else {
+			manager.logger.Warn().Err(err).Msg("failed to create cursor image")
+		}
 
 		// send initial cursor position
 		x, y := manager.desktop.GetCursorPosition()
