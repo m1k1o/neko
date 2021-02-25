@@ -20,7 +20,7 @@ func CreatePNGImage(img *image.RGBA) ([]byte, error) {
 
 func CreateJPGImage(img *image.RGBA, quality int) ([]byte, error) {
 	out := new(bytes.Buffer)
-	err := jpeg.Encode(out, img, &jpeg.Options{ Quality: quality })
+	err := jpeg.Encode(out, img, &jpeg.Options{Quality: quality})
 	if err != nil {
 		return nil, err
 	}
