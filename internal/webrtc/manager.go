@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/pion/webrtc/v3"
 	"github.com/pion/webrtc/v3/pkg/media"
@@ -18,6 +19,18 @@ import (
 	"demodesk/neko/internal/types/message"
 	"demodesk/neko/internal/utils"
 )
+
+// how long is can take between sending offer and connecting
+const offerTimeout = 4 * time.Second
+
+// the duration without network activity before a Agent is considered disconnected. Default is 5 Seconds
+const disconnectedTimeout = 4 * time.Second
+
+// the duration without network activity before a Agent is considered failed after disconnected. Default is 25 Seconds
+const failedTimeout = 6 * time.Second
+
+// how often the ICE Agent sends extra traffic if there is no activity, if media is flowing no traffic will be sent. Default is 2 seconds
+const keepAliveInterval = 2 * time.Second
 
 func New(desktop types.DesktopManager, capture types.CaptureManager, config *config.WebRTC) *WebRTCManagerCtx {
 	return &WebRTCManagerCtx{
@@ -352,6 +365,22 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 		}
 	})
 
+	// offer timeout
+	go func() {
+		time.Sleep(offerTimeout)
+
+		// already disconnected
+		if connection.ConnectionState() == webrtc.PeerConnectionStateClosed {
+			return
+		}
+
+		// not connected
+		if connection.ConnectionState() != webrtc.PeerConnectionStateConnected {
+			logger.Warn().Msg("connection timeouted, closing")
+			connection.Close()
+		}
+	}()
+
 	session.SetWebRTCPeer(peer)
 	return connection.LocalDescription(), nil
 }
@@ -387,6 +416,7 @@ func (manager *WebRTCManagerCtx) apiSettings(logger zerolog.Logger) *webrtc.Sett
 
 	//nolint
 	settings.SetEphemeralUDPPortRange(manager.config.EphemeralMin, manager.config.EphemeralMax)
+	settings.SetICETimeouts(disconnectedTimeout, failedTimeout, keepAliveInterval)
 	settings.SetNAT1To1IPs(manager.config.NAT1To1IPs, webrtc.ICECandidateTypeHost)
 	settings.SetLite(manager.config.ICELite)
 
