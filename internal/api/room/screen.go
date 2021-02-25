@@ -1,8 +1,6 @@
 package room
 
 import (
-	"bytes"
-	"image/jpeg"
 	"net/http"
 	"strconv"
 
@@ -83,11 +81,8 @@ func (h *RoomHandler) screenShotGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	img := h.desktop.GetScreenshotImage()
-	out := new(bytes.Buffer)
-
-	if err := jpeg.Encode(out, img, &jpeg.Options{
-		Quality: quality,
-	}); err != nil {
+	bytes, err := utils.CreateJPGImage(img, quality)
+	if err != nil {
 		utils.HttpInternalServerError(w, err)
 		return
 	}
@@ -95,7 +90,7 @@ func (h *RoomHandler) screenShotGet(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 	w.Header().Set("Content-Type", "image/jpeg")
 	//nolint
-	w.Write(out.Bytes())
+	w.Write(bytes)
 }
 
 func (h *RoomHandler) screenCastGet(w http.ResponseWriter, r *http.Request) {

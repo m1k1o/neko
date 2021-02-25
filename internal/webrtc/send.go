@@ -55,7 +55,7 @@ func (peer *WebRTCPeerCtx) SendCursorImage(cur *types.CursorImage) error {
 		return fmt.Errorf("no data channel")
 	}
 
-	img, err := utils.GetCursorImage(cur)
+	img, err := utils.CreatePNGImage(cur.Image)
 	if err != nil {
 		return err
 	}
