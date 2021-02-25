@@ -10,7 +10,7 @@ type CursorImage struct {
 	Xhot   uint16
 	Yhot   uint16
 	Serial uint64
-	Pixels []byte
+	Image  *image.RGBA
 }
 
 type ScreenSize struct {

@@ -3,34 +3,14 @@ package utils
 import (
 	"bytes"
 	"encoding/base64"
-	"image"
-	"image/color"
 	"image/png"
 
 	"demodesk/neko/internal/types"
 )
 
 func GetCursorImage(cursor *types.CursorImage) ([]byte, error) {
-	width := int(cursor.Width)
-	height := int(cursor.Height)
-	pixels := cursor.Pixels
-
-	img := image.NewRGBA(image.Rect(0, 0, width, height))
-	for row := 0; row < height; row++ {
-		for col := 0; col < width; col++ {
-			pos := ((row * height) + col) * 8
-
-			img.SetRGBA(col, row, color.RGBA{
-				A: pixels[pos+3],
-				R: pixels[pos+2],
-				G: pixels[pos+1],
-				B: pixels[pos+0],
-			})
-		}
-	}
-
 	out := new(bytes.Buffer)
-	err := png.Encode(out, img)
+	err := png.Encode(out, cursor.Image)
 	if err != nil {
 		return nil, err
 	}

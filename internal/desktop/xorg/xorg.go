@@ -243,17 +243,33 @@ func GetCursorImage() *types.CursorImage {
 	cur := C.XGetCursorImage()
 	defer C.XFree(unsafe.Pointer(cur))
 
-	width := uint16(cur.width)
-	height := uint16(cur.height)
+	width := int(cur.width)
+	height := int(cur.height)
+
+	// Xlib stores 32-bit data in longs, even if longs are 64-bits long.
+	pixels := C.GoBytes(unsafe.Pointer(cur.pixels), C.int(width*height*8))
+
+	img := image.NewRGBA(image.Rect(0, 0, width, height))
+	for row := 0; row < height; row++ {
+		for col := 0; col < width; col++ {
+			pos := ((row * height) + col) * 8
+
+			img.SetRGBA(col, row, color.RGBA{
+				A: pixels[pos+3],
+				R: pixels[pos+2],
+				G: pixels[pos+1],
+				B: pixels[pos+0],
+			})
+		}
+	}
 
 	return &types.CursorImage{
-		Width:  width,
-		Height: height,
+		Width:  uint16(width),
+		Height: uint16(height),
 		Xhot:   uint16(cur.xhot),
 		Yhot:   uint16(cur.yhot),
 		Serial: uint64(cur.cursor_serial),
-		// Xlib stores 32-bit data in longs, even if longs are 64-bits long.
-		Pixels: C.GoBytes(unsafe.Pointer(cur.pixels), C.int(width*height*8)),
+		Image:  img,
 	}
 }
 
