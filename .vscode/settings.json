@@ -1,25 +1,26 @@
 {
-  "editor.tabSize": 2,
-  "editor.insertSpaces": true,
-  "editor.detectIndentation": false,
-  "files.encoding": "utf8",
-  "files.eol": "\n",
-  "typescript.tsdk": "./node_modules/typescript/lib",
-  "todo-tree.filtering.excludeGlobs": ["**/node_modules/**"],
-  "eslint.validate": [
-    "vue",
-    "javascript",
-    "javascriptreact",
-    "typescript",
-    "typescriptreact",
-  ],
-  "vetur.validation.template": true,
-  "vetur.useWorkspaceDependencies": true,
-  "remote.extensionKind": {
-    "ms-azuretools.vscode-docker": "ui"
-  },
-  "editor.formatOnSave": false,
-  "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": true
-  },
-}
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true,
+    "editor.detectIndentation": false,
+    "files.encoding": "utf8",
+    "files.eol": "\n",
+    "typescript.tsdk": "./node_modules/typescript/lib",
+    "todo-tree.filtering.excludeGlobs": ["**/node_modules/**"],
+    "eslint.validate": [
+      "vue",
+      "javascript",
+      "javascriptreact",
+      "typescript",
+      "typescriptreact",
+    ],
+    "vetur.validation.template": true,
+    "vetur.useWorkspaceDependencies": true,
+    "remote.extensionKind": {
+      "ms-azuretools.vscode-docker": "ui"
+    },
+    "editor.formatOnSave": false,
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": true
+    },
+  }
+  
