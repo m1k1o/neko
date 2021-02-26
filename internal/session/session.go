@@ -13,10 +13,9 @@ type SessionCtx struct {
 	logger             zerolog.Logger
 	manager            *SessionManagerCtx
 	profile            types.MemberProfile
+	state              types.MemberState
 	websocketPeer      types.WebSocketPeer
-	websocketConnected bool
 	webrtcPeer         types.WebRTCPeer
-	webrtcConnected    bool
 }
 
 func (session *SessionCtx) ID() string {
@@ -76,13 +75,13 @@ func (session *SessionCtx) profileChanged() {
 			}, nil)
 	}
 
-	if !session.CanWatch() && session.IsWatching() {
+	if !session.CanWatch() && session.state.IsWatching {
 		if err := session.webrtcPeer.Destroy(); err != nil {
 			session.logger.Warn().Err(err).Msgf("webrtc destroy has failed")
 		}
 	}
 
-	if (!session.CanConnect() || !session.CanLogin()) && session.IsConnected() {
+	if (!session.CanConnect() || !session.CanLogin()) && session.state.IsConnected {
 		if err := session.Disconnect("profile changed"); err != nil {
 			session.logger.Warn().Err(err).Msgf("websocket destroy has failed")
 		}
@@ -98,19 +97,11 @@ func (session *SessionCtx) IsHost() bool {
 }
 
 func (session *SessionCtx) IsConnected() bool {
-	return session.websocketConnected
-}
-
-func (session *SessionCtx) IsWatching() bool {
-	return session.webrtcConnected
+	return session.state.IsConnected
 }
 
 func (session *SessionCtx) GetState() types.MemberState {
-	// TODO: Save state in member struct.
-	return types.MemberState{
-		IsConnected: session.IsConnected(),
-		IsWatching:  session.IsWatching(),
-	}
+	return session.state
 }
 
 // ---
@@ -128,7 +119,7 @@ func (session *SessionCtx) SetWebSocketPeer(websocketPeer types.WebSocketPeer) {
 }
 
 func (session *SessionCtx) SetWebSocketConnected(connected bool) {
-	session.websocketConnected = connected
+	session.state.IsConnected = connected
 
 	if connected {
 		session.manager.emmiter.Emit("connected", session)
@@ -196,7 +187,7 @@ func (session *SessionCtx) SetWebRTCConnected(webrtcPeer types.WebRTCPeer, conne
 		return
 	}
 
-	session.webrtcConnected = connected
+	session.state.IsWatching = connected
 	session.manager.emmiter.Emit("state_changed", session)
 
 	if !connected {

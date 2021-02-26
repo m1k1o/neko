@@ -45,7 +45,6 @@ type Session interface {
 	// state
 	IsHost() bool
 	IsConnected() bool
-	IsWatching() bool
 	GetState() MemberState
 
 	// websocket
