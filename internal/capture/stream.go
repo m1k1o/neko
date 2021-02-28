@@ -64,6 +64,12 @@ func streamNew(codec codec.RTPCodec, pipelineStr func() string) *StreamManagerCt
 func (manager *StreamManagerCtx) shutdown() {
 	manager.logger.Info().Msgf("shutting down")
 
+	manager.emitMu.Lock()
+	for key := range manager.listeners {
+		delete(manager.listeners, key)
+	}
+	manager.emitMu.Unlock()
+
 	manager.destroyPipeline()
 	manager.emitStop <- true
 }
