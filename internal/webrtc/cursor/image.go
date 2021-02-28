@@ -60,6 +60,11 @@ func (manager *ImageCtx) Shutdown() {
 }
 
 func (manager *ImageCtx) GetCached(serial uint64) (*ImageEntry, error) {
+	// zero means no serial available
+	if serial == 0 {
+		return manager.fetchEntry()
+	}
+
 	manager.cacheMu.Lock()
 	entry, ok := manager.cache[serial]
 	manager.cacheMu.Unlock()
