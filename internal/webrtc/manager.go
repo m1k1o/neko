@@ -3,7 +3,6 @@ package webrtc
 import (
 	"fmt"
 	"io"
-	"reflect"
 	"strings"
 	"sync"
 	"time"
@@ -17,7 +16,7 @@ import (
 	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/types/event"
 	"demodesk/neko/internal/types/message"
-	"demodesk/neko/internal/utils"
+	"demodesk/neko/internal/webrtc/cursor"
 )
 
 // how long is can take between sending offer and connecting
@@ -39,9 +38,8 @@ func New(desktop types.DesktopManager, capture types.CaptureManager, config *con
 		capture:      capture,
 		config:       config,
 		participants: 0,
-		// TODO: Refactor.
-		curImgListeners: map[uintptr]*func(cur *types.CursorImage, img []byte){},
-		curPosListeners: map[uintptr]*func(x, y int){},
+		curImage:     cursor.NewImage(desktop),
+		curPosition:  cursor.NewPosition(desktop),
 	}
 }
 
@@ -54,9 +52,8 @@ type WebRTCManagerCtx struct {
 	capture      types.CaptureManager
 	config       *config.WebRTC
 	participants uint32
-	// TODO: Refactor.
-	curImgListeners map[uintptr]*func(cur *types.CursorImage, img []byte)
-	curPosListeners map[uintptr]*func(x, y int)
+	curImage     *cursor.ImageCtx
+	curPosition  *cursor.PositionCtx
 }
 
 func (manager *WebRTCManagerCtx) Start() {
@@ -88,31 +85,15 @@ func (manager *WebRTCManagerCtx) Start() {
 		Str("nat_ips", strings.Join(manager.config.NAT1To1IPs, ",")).
 		Msgf("webrtc starting")
 
-	// TODO: Refactor.
-	manager.desktop.OnCursorChanged(func(serial uint64) {
-		cur := manager.desktop.GetCursorImage()
-
-		img, err := utils.CreatePNGImage(cur.Image)
-		if err != nil {
-			manager.logger.Warn().Err(err).Msg("failed to create cursor image")
-			return
-		}
-
-		for _, emit := range manager.curImgListeners {
-			(*emit)(cur, img)
-		}
-	})
-
-	// TODO: Refactor.
-	manager.desktop.OnCursorPosition(func(x, y int) {
-		for _, emit := range manager.curPosListeners {
-			(*emit)(x, y)
-		}
-	})
+	manager.curImage.Start()
+	manager.curPosition.Start()
 }
 
 func (manager *WebRTCManagerCtx) Shutdown() error {
 	manager.logger.Info().Msgf("webrtc shutting down")
+
+	manager.curImage.Shutdown()
+	manager.curPosition.Shutdown()
 
 	manager.audioStop()
 	return nil
@@ -277,8 +258,8 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 		dataChannel: dataChannel,
 	}
 
-	cursorChange := func(cur *types.CursorImage, img []byte) {
-		if err := peer.SendCursorImage(cur, img); err != nil {
+	cursorImage := func(entry *cursor.ImageEntry) {
+		if err := peer.SendCursorImage(entry.Cursor, entry.Image); err != nil {
 			manager.logger.Warn().Err(err).Msg("could not send cursor image")
 		}
 	}
@@ -292,10 +273,6 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 			manager.logger.Warn().Err(err).Msg("could not send cursor position")
 		}
 	}
-
-	// TODO: Refactor.
-	cursorChangePtr := reflect.ValueOf(&cursorChange).Pointer()
-	cursorPositionPtr := reflect.ValueOf(&cursorPosition).Pointer()
 
 	connection.OnConnectionStateChange(func(state webrtc.PeerConnectionState) {
 		switch state {
@@ -328,31 +305,30 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 				}
 			}
 
-			// TODO: Refactor.
-			delete(manager.curImgListeners, cursorChangePtr)
-			delete(manager.curPosListeners, cursorPositionPtr)
-
 			manager.mu.Unlock()
 		}
 	})
 
 	dataChannel.OnOpen(func() {
-		// TODO: Refactor.
-		manager.curImgListeners[cursorChangePtr] = &cursorChange
-		manager.curPosListeners[cursorPositionPtr] = &cursorPosition
+		manager.curImage.AddListener(&cursorImage)
+		manager.curPosition.AddListener(&cursorPosition)
 
 		// send initial cursor image
-		cur := manager.desktop.GetCursorImage()
-		img, err := utils.CreatePNGImage(cur.Image)
+		entry, err := manager.curImage.GetCurrent()
 		if err == nil {
-			cursorChange(cur, img)
+			cursorImage(entry)
 		} else {
-			manager.logger.Warn().Err(err).Msg("failed to create cursor image")
+			manager.logger.Warn().Err(err).Msg("failed to get cursor image")
 		}
 
 		// send initial cursor position
-		x, y := manager.desktop.GetCursorPosition()
+		x, y := manager.curPosition.GetCurrent()
 		cursorPosition(x, y)
+	})
+
+	dataChannel.OnClose(func() {
+		manager.curImage.RemoveListener(&cursorImage)
+		manager.curPosition.RemoveListener(&cursorPosition)
 	})
 
 	dataChannel.OnMessage(func(message webrtc.DataChannelMessage) {
