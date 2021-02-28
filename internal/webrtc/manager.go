@@ -86,7 +86,6 @@ func (manager *WebRTCManagerCtx) Start() {
 		Msgf("webrtc starting")
 
 	manager.curImage.Start()
-	manager.curPosition.Start()
 }
 
 func (manager *WebRTCManagerCtx) Shutdown() error {
@@ -314,7 +313,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 		manager.curPosition.AddListener(&cursorPosition)
 
 		// send initial cursor image
-		entry, err := manager.curImage.GetCurrent()
+		entry, err := manager.curImage.Get()
 		if err == nil {
 			cursorImage(entry)
 		} else {
@@ -322,7 +321,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 		}
 
 		// send initial cursor position
-		x, y := manager.curPosition.GetCurrent()
+		x, y := manager.curPosition.Get()
 		cursorPosition(x, y)
 	})
 

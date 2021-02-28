@@ -25,14 +25,6 @@ type PositionCtx struct {
 	listeners map[uintptr]*func(x, y int)
 }
 
-func (manager *PositionCtx) Start() {
-	manager.desktop.OnCursorPosition(func(x, y int) {
-		for _, emit := range manager.listeners {
-			(*emit)(x, y)
-		}
-	})
-}
-
 func (manager *PositionCtx) Shutdown() {
 	manager.logger.Info().Msgf("shutting down")
 
@@ -43,8 +35,14 @@ func (manager *PositionCtx) Shutdown() {
 	manager.emitMu.Unlock()
 }
 
-func (manager *PositionCtx) GetCurrent() (x, y int) {
+func (manager *PositionCtx) Get() (x, y int) {
 	return manager.desktop.GetCursorPosition()
+}
+
+func (manager *PositionCtx) Set(x, y int) {
+	for _, emit := range manager.listeners {
+		(*emit)(x, y)
+	}
 }
 
 func (manager *PositionCtx) AddListener(listener *func(x, y int)) {

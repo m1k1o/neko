@@ -62,6 +62,7 @@ func (manager *WebRTCManagerCtx) handle(msg webrtc.DataChannelMessage) error {
 		}
 
 		manager.desktop.Move(int(payload.X), int(payload.Y))
+		manager.curPosition.Set(int(payload.X), int(payload.Y))
 	case OP_SCROLL:
 		payload := &PayloadScroll{}
 		if err := binary.Read(buffer, binary.BigEndian, payload); err != nil {

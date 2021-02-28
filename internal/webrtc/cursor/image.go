@@ -80,7 +80,7 @@ func (manager *ImageCtx) GetCached(serial uint64) (*ImageEntry, error) {
 	return entry, nil
 }
 
-func (manager *ImageCtx) GetCurrent() (*ImageEntry, error) {
+func (manager *ImageCtx) Get() (*ImageEntry, error) {
 	if manager.current != nil {
 		return manager.current, nil
 	}

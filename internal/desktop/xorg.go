@@ -9,21 +9,8 @@ import (
 	"demodesk/neko/internal/types"
 )
 
-// TODO: Refactor.
-var cursorListeners []func(x, y int)
-
 func (manager *DesktopManagerCtx) Move(x, y int) {
 	xorg.Move(x, y)
-
-	// TODO: Refactor.
-	for _, listener := range cursorListeners {
-		listener(x, y)
-	}
-}
-
-// TODO: Refactor.
-func (manager *DesktopManagerCtx) OnCursorPosition(listener func(x, y int)) {
-	cursorListeners = append(cursorListeners, listener)
 }
 
 func (manager *DesktopManagerCtx) GetCursorPosition() (int, int) {
