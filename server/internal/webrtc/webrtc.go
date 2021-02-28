@@ -146,11 +146,13 @@ func (manager *WebRTCManager) CreatePeer(id string, session types.Session) (stri
 			Msg("connection state has changed")
 	})
 
-	if _, err = connection.AddTrack(manager.videoTrack); err != nil {
+	rtpVideo, err := connection.AddTrack(manager.videoTrack);
+	if err != nil {
 		return "", manager.config.ICELite, manager.config.ICEServers, err
 	}
 
-	if _, err = connection.AddTrack(manager.audioTrack); err != nil {
+	rtpAudio, err := connection.AddTrack(manager.audioTrack);
+	if err != nil {
 		return "", manager.config.ICELite, manager.config.ICEServers, err
 	}
 
@@ -210,6 +212,25 @@ func (manager *WebRTCManager) CreatePeer(id string, session types.Session) (stri
 	}); err != nil {
 		return "", manager.config.ICELite, manager.config.ICEServers, err
 	}
+
+	go func() {
+		rtcpBuf := make([]byte, 1500)
+		for {
+			if _, _, rtcpErr := rtpVideo.Read(rtcpBuf); rtcpErr != nil {
+				return
+			}
+		}
+	}()
+
+	go func() {
+		rtcpBuf := make([]byte, 1500)
+		for {
+			if _, _, rtcpErr := rtpAudio.Read(rtcpBuf); rtcpErr != nil {
+				return
+			}
+		}
+	}()
+
 
 	return description.SDP, manager.config.ICELite, manager.config.ICEServers, nil
 }
