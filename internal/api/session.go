@@ -2,12 +2,16 @@ package api
 
 import (
 	"net/http"
+	"os"
 	"time"
 
 	"demodesk/neko/internal/http/auth"
 	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/utils"
 )
+
+var CookieExpirationDate = time.Now().Add(365 * 24 * time.Hour)
+var UnsecureCookies = os.Getenv("DISABLE_SECURE_COOKIES") == "true"
 
 type SessionLoginPayload struct {
 	ID     string `json:"id"`
@@ -32,17 +36,26 @@ func (api *ApiManagerCtx) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	sameSite := http.SameSiteNoneMode
+	if UnsecureCookies {
+		sameSite = http.SameSiteDefaultMode
+	}
+
 	http.SetCookie(w, &http.Cookie{
 		Name:     "neko-id",
 		Value:    session.ID(),
-		Expires:  time.Now().Add(365 * 24 * time.Hour),
+		Expires:  CookieExpirationDate,
+		Secure:   !UnsecureCookies,
+		SameSite: sameSite,
 		HttpOnly: false,
 	})
 
 	http.SetCookie(w, &http.Cookie{
 		Name:     "neko-secret",
 		Value:    data.Secret,
-		Expires:  time.Now().Add(365 * 24 * time.Hour),
+		Expires:  CookieExpirationDate,
+		Secure:   !UnsecureCookies,
+		SameSite: sameSite,
 		HttpOnly: true,
 	})
 
@@ -54,10 +67,17 @@ func (api *ApiManagerCtx) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func (api *ApiManagerCtx) Logout(w http.ResponseWriter, r *http.Request) {
+	sameSite := http.SameSiteNoneMode
+	if UnsecureCookies {
+		sameSite = http.SameSiteDefaultMode
+	}
+
 	http.SetCookie(w, &http.Cookie{
 		Name:     "neko-id",
 		Value:    "",
 		Expires:  time.Unix(0, 0),
+		Secure:   !UnsecureCookies,
+		SameSite: sameSite,
 		HttpOnly: false,
 	})
 
@@ -65,6 +85,8 @@ func (api *ApiManagerCtx) Logout(w http.ResponseWriter, r *http.Request) {
 		Name:     "neko-secret",
 		Value:    "",
 		Expires:  time.Unix(0, 0),
+		Secure:   !UnsecureCookies,
+		SameSite: sameSite,
 		HttpOnly: true,
 	})
 
