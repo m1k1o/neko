@@ -8,6 +8,7 @@ export class NekoApi {
   public setUrl(url: string) {
     this.api_configuration = new Api.Configuration({
       basePath: url.replace(/\/+$/, ''),
+      baseOptions: { withCredentials: true },
     })
   }
 
