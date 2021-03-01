@@ -28,7 +28,7 @@ func (peer *Peer) WriteData(v interface{}) error {
 }
 
 func (peer *Peer) Destroy() error {
-	if peer.connection != nil && peer.connection.ConnectionState() == webrtc.PeerConnectionStateConnected {
+	if peer.connection != nil && peer.connection.ConnectionState() != webrtc.PeerConnectionStateClosed {
 		if err := peer.connection.Close(); err != nil {
 			return err
 		}

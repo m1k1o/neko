@@ -146,11 +146,13 @@ func (manager *WebRTCManager) CreatePeer(id string, session types.Session) (stri
 			Msg("connection state has changed")
 	})
 
-	if _, err = connection.AddTrack(manager.videoTrack); err != nil {
+	rtpVideo, err := connection.AddTrack(manager.videoTrack);
+	if err != nil {
 		return "", manager.config.ICELite, manager.config.ICEServers, err
 	}
 
-	if _, err = connection.AddTrack(manager.audioTrack); err != nil {
+	rtpAudio, err := connection.AddTrack(manager.audioTrack);
+	if err != nil {
 		return "", manager.config.ICELite, manager.config.ICEServers, err
 	}
 
@@ -167,17 +169,20 @@ func (manager *WebRTCManager) CreatePeer(id string, session types.Session) (stri
 	connection.OnConnectionStateChange(func(state webrtc.PeerConnectionState) {
 		switch state {
 		case webrtc.PeerConnectionStateDisconnected:
-		case webrtc.PeerConnectionStateFailed:
 			manager.logger.Info().Str("id", id).Msg("peer disconnected")
 			manager.sessions.Destroy(id)
-			break
+		case webrtc.PeerConnectionStateFailed:
+			manager.logger.Warn().Str("id", id).Msg("peer failed")
+			manager.sessions.Destroy(id)
+		case webrtc.PeerConnectionStateClosed:
+			manager.logger.Info().Str("id", id).Msg("peer closed")
+			manager.sessions.Destroy(id)
 		case webrtc.PeerConnectionStateConnected:
 			manager.logger.Info().Str("id", id).Msg("peer connected")
 			if err = session.SetConnected(true); err != nil {
 				manager.logger.Warn().Err(err).Msg("unable to set connected on peer")
 				manager.sessions.Destroy(id)
 			}
-			break
 		}
 	})
 
@@ -210,6 +215,25 @@ func (manager *WebRTCManager) CreatePeer(id string, session types.Session) (stri
 	}); err != nil {
 		return "", manager.config.ICELite, manager.config.ICEServers, err
 	}
+
+	go func() {
+		rtcpBuf := make([]byte, 1500)
+		for {
+			if _, _, rtcpErr := rtpVideo.Read(rtcpBuf); rtcpErr != nil {
+				return
+			}
+		}
+	}()
+
+	go func() {
+		rtcpBuf := make([]byte, 1500)
+		for {
+			if _, _, rtcpErr := rtpAudio.Read(rtcpBuf); rtcpErr != nil {
+				return
+			}
+		}
+	}()
+
 
 	return description.SDP, manager.config.ICELite, manager.config.ICEServers, nil
 }
