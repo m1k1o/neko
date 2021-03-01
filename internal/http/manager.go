@@ -35,7 +35,7 @@ func New(WebSocketManager types.WebSocketManager, ApiManager types.ApiManager, c
 		AllowedMethods:   []string{"GET", "POST", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},
-		AllowCredentials: false,
+		AllowCredentials: true,
 		MaxAge:           300, // Maximum value not ignored by any of major browsers
 	}))
 	router.Use(middleware.RequestID) // Create a request ID for each request
