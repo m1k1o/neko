@@ -3,9 +3,8 @@ import { Member } from '~/neko/types'
 import { EVENT } from '~/neko/events'
 import { accessor } from '~/store'
 
-const keyboardModifierState =
-  (capsLock: boolean, numLock: boolean, scrollLock: boolean) =>
-    Number(capsLock) + 2*Number(numLock) + 4*Number(scrollLock)
+const keyboardModifierState = (capsLock: boolean, numLock: boolean, scrollLock: boolean) =>
+  Number(capsLock) + 2 * Number(numLock) + 4 * Number(scrollLock)
 
 export const namespaced = true
 
@@ -155,11 +154,11 @@ export const actions = actionTree(
 
     syncKeyboardModifierState({ state, getters }, { capsLock, numLock, scrollLock }) {
       if (state.keyboardModifierState === keyboardModifierState(capsLock, numLock, scrollLock)) {
-        return ;
+        return
       }
 
       accessor.remote.setKeyboardModifierState({ capsLock, numLock, scrollLock })
       $client.sendMessage(EVENT.CONTROL.KEYBOARD, { capsLock, numLock, scrollLock })
-    }
+    },
   },
 )

@@ -54,7 +54,7 @@
         </li>
         <li>
           <span>{{ $t('setting.broadcast_url') }}</span>
-          <input v-model="broadcast_url" :disabled="broadcast_is_active" class="input">
+          <input v-model="broadcast_url" :disabled="broadcast_is_active" class="input" />
         </li>
       </template>
       <li v-if="connected">
@@ -276,7 +276,7 @@
 
   @Component({ name: 'neko-settings' })
   export default class extends Vue {
-    private broadcast_url: string = '';
+    private broadcast_url: string = ''
 
     get admin() {
       return this.$accessor.user.admin

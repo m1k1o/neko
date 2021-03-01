@@ -19,9 +19,9 @@ export const state = () => {
     keyboard_layout: get<string>('keyboard_layout', 'us'),
 
     keyboard_layouts_list: {} as KeyboardLayouts,
-    
+
     broadcast_is_active: false,
-    broadcast_url: "",
+    broadcast_url: '',
   }
 }
 
@@ -62,7 +62,7 @@ export const mutations = mutationTree(state, {
     state.keyboard_layouts_list = value
   },
   setBroadcastStatus(state, { url, isActive }) {
-    state.broadcast_url = url,
+    state.broadcast_url = url
     state.broadcast_is_active = isActive
   },
 })

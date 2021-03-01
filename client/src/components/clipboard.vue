@@ -1,14 +1,6 @@
 <template>
-  <div
-    class="clipboard"
-    v-if="opened"
-    @click="$event.stopPropagation()"
-  >
-    <textarea
-      ref="textarea"
-      v-model="clipboard"
-      @focus="$event.target.select()"
-    />
+  <div class="clipboard" v-if="opened" @click="$event.stopPropagation()">
+    <textarea ref="textarea" v-model="clipboard" @focus="$event.target.select()" />
   </div>
 </template>
 
@@ -23,7 +15,8 @@
     bottom: 10px;
     right: 10px;
 
-    &, textarea {
+    &,
+    textarea {
       max-width: 320px;
       width: 100%;
       max-height: 120px;

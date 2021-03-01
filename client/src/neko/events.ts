@@ -40,9 +40,9 @@ export const EVENT = {
     SET: 'screen/set',
   },
   BROADCAST: {
-    STATUS: "broadcast/status",
-    CREATE: "broadcast/create",
-    DESTROY: "broadcast/destroy",
+    STATUS: 'broadcast/status',
+    CREATE: 'broadcast/create',
+    DESTROY: 'broadcast/destroy',
   },
   ADMIN: {
     BAN: 'admin/ban',
