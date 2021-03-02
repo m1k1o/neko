@@ -88,6 +88,12 @@
     @Prop({ type: Boolean })
     private readonly autoplay!: boolean
 
+    @Prop({ type: Boolean })
+    private readonly autologin!: boolean
+
+    @Prop({ type: String })
+    private readonly server!: string
+
     /////////////////////////////
     // Public state
     /////////////////////////////
@@ -164,10 +170,31 @@
     /////////////////////////////
     // Public methods
     /////////////////////////////
+    @Watch('server', { immediate: true })
     public setUrl(url: string) {
+      if (!url) {
+        url = location.href
+      }
+
       const httpURL = url.replace(/^ws/, 'http').replace(/\/$|\/ws\/?$/, '')
       this.api.setUrl(httpURL)
       this.websocket.setUrl(httpURL)
+
+      if (this.connected) {
+        this.websocket.disconnect(new Error('url changed'))
+      }
+
+      if (this.authenticated) {
+        Vue.set(this.state.connection, 'authenticated', false)
+      }
+
+      // check if is user logged in
+      if (this.autologin) {
+        this.api.session.whoami().then(() => {
+          Vue.set(this.state.connection, 'authenticated', true)
+          this.websocket.connect()
+        })
+      }
     }
 
     public async login(id: string, secret: string) {
@@ -481,12 +508,6 @@
             } catch (e) {}
           }, 1000)
         }
-      })
-
-      // check if is user logged in
-      this.api.session.whoami().then(() => {
-        Vue.set(this.state.connection, 'authenticated', true)
-        this.websocket.connect()
       })
 
       // unmute on users first interaction
