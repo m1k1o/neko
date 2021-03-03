@@ -80,7 +80,7 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 		videos: map[string]*StreamManagerCtx{
 			"hd": streamNew(codec.VP8(), func() string {
 				screen := desktop.GetScreenSize()
-				bitrate := screen.Width * screen.Height * 12
+				bitrate := int((screen.Width * screen.Height * 5) / 3)
 
 				return fmt.Sprintf(
 					"ximagesrc display-name=%s show-pointer=false use-damage=false "+
@@ -95,7 +95,7 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 				screen := desktop.GetScreenSize()
 				width := int(math.Ceil(float64(screen.Width)/6) * 5)
 				height := int(math.Ceil(float64(screen.Height)/6) * 5)
-				bitrate := width * height * 12
+				bitrate := int((width * height * 5) / 3)
 
 				return fmt.Sprintf(
 					"ximagesrc display-name=%s show-pointer=false use-damage=false "+
@@ -113,7 +113,7 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 				screen := desktop.GetScreenSize()
 				width := int(math.Ceil(float64(screen.Width)/6) * 4)
 				height := int(math.Ceil(float64(screen.Height)/6) * 4)
-				bitrate := width * height * 8
+				bitrate := int((width * height * 5) / 3)
 
 				return fmt.Sprintf(
 					"ximagesrc display-name=%s show-pointer=false use-damage=false "+
@@ -131,7 +131,7 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 				screen := desktop.GetScreenSize()
 				width := int(math.Ceil(float64(screen.Width)/6) * 3)
 				height := int(math.Ceil(float64(screen.Height)/6) * 3)
-				bitrate := width * height * 4
+				bitrate := int((width * height * 5) / 3)
 
 				return fmt.Sprintf(
 					"ximagesrc display-name=%s show-pointer=false use-damage=false "+
