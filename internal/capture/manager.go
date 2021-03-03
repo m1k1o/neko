@@ -87,7 +87,7 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 						"! video/x-raw,framerate=25/1 "+
 						"! videoconvert "+
 						"! queue "+
-						"! vp8enc target-bitrate=%d cpu-used=16 threads=4 deadline=100000 error-resilient=partitions keyframe-max-dist=15 auto-alt-ref=true min-quantizer=6 max-quantizer=12 "+
+						"! vp8enc end-usage=cbr target-bitrate=%d cpu-used=16 threads=4 deadline=100000 undershoot=95 error-resilient=partitions keyframe-max-dist=15 auto-alt-ref=true min-quantizer=6 max-quantizer=12 "+
 						"! appsink name=appsink", config.Display, bitrate,
 				)
 			}),
@@ -105,7 +105,7 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 						"! videoscale "+
 						"! video/x-raw,width=%d,height=%d "+
 						"! queue "+
-						"! vp8enc target-bitrate=%d cpu-used=16 threads=4 deadline=100000 error-resilient=partitions keyframe-max-dist=15 auto-alt-ref=true min-quantizer=6 max-quantizer=12 "+
+						"! vp8enc end-usage=cbr target-bitrate=%d cpu-used=16 threads=4 deadline=100000 undershoot=95 error-resilient=partitions keyframe-max-dist=15 auto-alt-ref=true min-quantizer=6 max-quantizer=12 "+
 						"! appsink name=appsink", config.Display, width, height, bitrate,
 				)
 			}),
@@ -123,7 +123,7 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 						"! videoscale "+
 						"! video/x-raw,width=%d,height=%d "+
 						"! queue "+
-						"! vp8enc target-bitrate=%d cpu-used=16 threads=4 deadline=100000 error-resilient=partitions keyframe-max-dist=15 auto-alt-ref=true min-quantizer=12 max-quantizer=24 "+
+						"! vp8enc end-usage=cbr target-bitrate=%d cpu-used=16 threads=4 deadline=100000 undershoot=95 error-resilient=partitions keyframe-max-dist=15 auto-alt-ref=true min-quantizer=12 max-quantizer=24 "+
 						"! appsink name=appsink", config.Display, width, height, bitrate,
 				)
 			}),
@@ -141,7 +141,7 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 						"! videoscale "+
 						"! video/x-raw,width=%d,height=%d "+
 						"! queue "+
-						"! vp8enc target-bitrate=%d cpu-used=16 threads=4 deadline=100000 error-resilient=partitions keyframe-max-dist=15 auto-alt-ref=true min-quantizer=12 max-quantizer=24 "+
+						"! vp8enc end-usage=cbr target-bitrate=%d cpu-used=16 threads=4 deadline=100000 undershoot=95 error-resilient=partitions keyframe-max-dist=15 auto-alt-ref=true min-quantizer=12 max-quantizer=24 "+
 						"! appsink name=appsink", config.Display, width, height, bitrate,
 				)
 			}),
