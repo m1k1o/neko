@@ -34,13 +34,13 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 				"! audio/x-raw,channels=2 "+
 				"! audioconvert "+
 				"! queue "+
-				"! voaacenc "+
+				"! voaacenc bitrate=128000 "+
 				"! mux. "+
 				"ximagesrc display-name=%s show-pointer=true use-damage=false "+
 				"! video/x-raw "+
 				"! videoconvert "+
 				"! queue "+
-				"! x264enc threads=4 bitrate=4096 key-int-max=15 byte-stream=true byte-stream=true tune=zerolatency speed-preset=veryfast "+
+				"! x264enc threads=4 bitrate=4096 key-int-max=15 byte-stream=true tune=zerolatency speed-preset=veryfast "+
 				"! mux.", config.Device, config.Display,
 		)
 	}
