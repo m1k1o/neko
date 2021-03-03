@@ -32,7 +32,7 @@ func New(
 }
 
 // Send pings to peer with this period. Must be less than pongWait.
-const pingPeriod = 60 * time.Second
+const pingPeriod = 10 * time.Second
 
 type WebSocketManagerCtx struct {
 	logger   zerolog.Logger
