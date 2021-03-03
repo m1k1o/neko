@@ -215,12 +215,12 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 		return nil
 	}
 
-	_, err = connection.AddTrack(manager.audioTrack)
+	rtpAudio, err := connection.AddTrack(manager.audioTrack)
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = connection.AddTrack(videoTrack)
+	rtpVideo, err := connection.AddTrack(videoTrack)
 	if err != nil {
 		return nil, err
 	}
@@ -353,6 +353,24 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 		if connection.ConnectionState() != webrtc.PeerConnectionStateConnected {
 			logger.Warn().Msg("connection timeouted, closing")
 			connection.Close()
+		}
+	}()
+
+	go func() {
+		rtcpBuf := make([]byte, 1500)
+		for {
+			if _, _, err := rtpAudio.Read(rtcpBuf); err != nil {
+				return
+			}
+		}
+	}()
+
+	go func() {
+		rtcpBuf := make([]byte, 1500)
+		for {
+			if _, _, err := rtpVideo.Read(rtcpBuf); err != nil {
+				return
+			}
 		}
 	}()
 
