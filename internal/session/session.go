@@ -9,13 +9,13 @@ import (
 )
 
 type SessionCtx struct {
-	id                 string
-	logger             zerolog.Logger
-	manager            *SessionManagerCtx
-	profile            types.MemberProfile
-	state              types.MemberState
-	websocketPeer      types.WebSocketPeer
-	webrtcPeer         types.WebRTCPeer
+	id            string
+	logger        zerolog.Logger
+	manager       *SessionManagerCtx
+	profile       types.MemberProfile
+	state         types.MemberState
+	websocketPeer types.WebSocketPeer
+	webrtcPeer    types.WebRTCPeer
 }
 
 func (session *SessionCtx) ID() string {
