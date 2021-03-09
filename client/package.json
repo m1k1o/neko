@@ -16,7 +16,8 @@
     "serve": "vue-cli-service serve --mode development",
     "build": "vue-cli-service build",
     "build:emoji": "ts-node --files --project tools/tsconfig.json tools/emoji.ts",
-    "lint": "vue-cli-service lint"
+    "lint": "vue-cli-service lint",
+    "lib": "vue-cli-service build --target lib --name neko-lib 'src/lib.ts'"
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^5.14.0",

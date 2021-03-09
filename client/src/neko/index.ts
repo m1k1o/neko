@@ -28,10 +28,16 @@ interface NekoEvents extends BaseEvents {}
 export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   private $vue!: Vue
   private $accessor!: typeof accessor
+  private url!: string
 
   init(vue: Vue) {
+    this.initWithSettings(vue, '')
+  }
+
+  initWithSettings(vue: Vue, url: string) {
     this.$vue = vue
     this.$accessor = vue.$accessor
+    this.url = url
   }
 
   private cleanup() {
@@ -43,12 +49,12 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   }
 
   login(password: string, displayname: string) {
-    const url =
+    const url = 
       process.env.NODE_ENV === 'development'
         ? `ws://${location.host.split(':')[0]}:${process.env.VUE_APP_SERVER_PORT}/`
         : `${/https/gi.test(location.protocol) ? 'wss' : 'ws'}://${location.host}/`
 
-    this.connect(url, password, displayname)
+    this.connect(this.url || url, password, displayname)
   }
 
   logout() {
