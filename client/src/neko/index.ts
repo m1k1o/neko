@@ -31,10 +31,15 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   private url!: string
 
   init(vue: Vue) {
-    this.initWithSettings(vue, '')
+    const url = 
+      process.env.NODE_ENV === 'development'
+        ? `ws://${location.host.split(':')[0]}:${process.env.VUE_APP_SERVER_PORT}/`
+        : `${/https/gi.test(location.protocol) ? 'wss' : 'ws'}://${location.host}/`
+
+    this.initWithURL(vue, url)
   }
 
-  initWithSettings(vue: Vue, url: string) {
+  initWithURL(vue: Vue, url: string) {
     this.$vue = vue
     this.$accessor = vue.$accessor
     this.url = url
@@ -49,12 +54,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   }
 
   login(password: string, displayname: string) {
-    const url = 
-      process.env.NODE_ENV === 'development'
-        ? `ws://${location.host.split(':')[0]}:${process.env.VUE_APP_SERVER_PORT}/`
-        : `${/https/gi.test(location.protocol) ? 'wss' : 'ws'}://${location.host}/`
-
-    this.connect(this.url || url, password, displayname)
+    this.connect(this.url, password, displayname)
   }
 
   logout() {
