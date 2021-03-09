@@ -1,6 +1,6 @@
-// accessor
 import { accessor as neko } from './store'
 import { PluginObject } from 'vue'
+
 // Plugins
 import Logger from './plugins/log'
 import Client from './plugins/neko'
@@ -51,7 +51,6 @@ function extend (component: any) {
     .use(Client)
     .extend(exportMixin)
 }
-
 
 export const components = {
   'neko-connect': extend(Connect),
