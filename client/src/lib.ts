@@ -22,9 +22,6 @@ import Header from '~/components/header.vue'
 
 const exportMixin = {
   computed: {
-    beforeCreate () {
-      console.log('Creating neko component', this)
-    },
     $accessor() {
       return neko
     },
