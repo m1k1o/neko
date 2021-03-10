@@ -10,7 +10,6 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"n.eko.moe/neko/internal/http/endpoint"
 	"n.eko.moe/neko/internal/http/middleware"
 	"n.eko.moe/neko/internal/types"
 	"n.eko.moe/neko/internal/types/config"
@@ -37,19 +36,13 @@ func New(conf *config.Server, webSocketHandler types.WebSocketHandler) *Server {
 
 	fs := http.FileServer(http.Dir(conf.Static))
 	router.Get("/*", func(w http.ResponseWriter, r *http.Request) {
-		if _, err := os.Stat(conf.Static + r.RequestURI); os.IsNotExist(err) {
-			http.StripPrefix(r.RequestURI, fs).ServeHTTP(w, r)
-		} else {
+		if _, err := os.Stat(conf.Static + r.RequestURI); !os.IsNotExist(err) {
 			fs.ServeHTTP(w, r)
+		} else {
+			w.WriteHeader(http.StatusNotFound)
+			fmt.Fprint(w, "404 page not found")
 		}
 	})
-
-	router.NotFound(endpoint.Handle(func(w http.ResponseWriter, r *http.Request) error {
-		return &endpoint.HandlerError{
-			Status:  http.StatusNotFound,
-			Message: fmt.Sprintf("file '%s' is not found", r.RequestURI),
-		}
-	}))
 
 	server := &http.Server{
 		Addr:    conf.Bind,
