@@ -59,7 +59,7 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
     this[EVENT.CONNECTING]()
 
     try {
-      this._ws = new WebSocket(`${url}ws?password=${password}`)
+      this._ws = new WebSocket(`${url}?password=${encodeURIComponent(password)}`)
       this.emit('debug', `connecting to ${this._ws.url}`)
       this._ws.onmessage = this.onMessage.bind(this)
       this._ws.onerror = (event) => this.onError.bind(this)
