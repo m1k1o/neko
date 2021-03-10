@@ -72,10 +72,9 @@ export const actions = actionTree(
   {
     initialise() {
       $http
-        .get<KeyboardLayouts>('/keyboard_layouts.json')
+        .get<KeyboardLayouts>('keyboard_layouts.json')
         .then((req) => {
           accessor.settings.setKeyboardLayoutsList(req.data)
-          console.log(req.data)
         })
         .catch(console.error)
     },
