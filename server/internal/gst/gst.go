@@ -90,7 +90,7 @@ func CreateAppPipeline(codecName string, pipelineDevice string, pipelineSrc stri
 		if pipelineSrc != "" {
 			pipelineStr = fmt.Sprintf(pipelineSrc+pipelineStr, pipelineDevice)
 		} else {
-			pipelineStr = fmt.Sprintf(videoSrc+"vp8enc target-bitrate=%d cpu-used=4 end-usage=cbr threads=4 deadline=1 undershoot=95 buffer-size=%d buffer-initial-size=%d buffer-optimal-size=%d keyframe-max-dist=180 min-quantizer=3 max-quantizer=40"+pipelineStr, pipelineDevice, fps, bitrate*1000, bitrate*6, bitrate*4, bitrate*5)
+			pipelineStr = fmt.Sprintf(videoSrc+"vp8enc target-bitrate=%d cpu-used=4 end-usage=cbr threads=4 deadline=1 undershoot=95 buffer-size=%d buffer-initial-size=%d buffer-optimal-size=%d keyframe-max-dist=30 min-quantizer=3 max-quantizer=40"+pipelineStr, pipelineDevice, fps, bitrate*1000, bitrate*6, bitrate*4, bitrate*5)
 		}
 	case "VP9":
 		// https://gstreamer.freedesktop.org/documentation/vpx/vp9enc.html?gi-language=c
