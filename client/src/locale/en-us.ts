@@ -10,10 +10,12 @@ export const side = {
 }
 
 export const connect = {
-  title: 'Please Login',
-  displayname: 'Display Name',
+  login_title: 'Please Login',
+  invitation_title: 'You have been invited to this room',
+  displayname: 'Enter your display name',
   password: 'Password',
   connect: 'Connect',
+  error: 'Login error',
 }
 
 export const context = {

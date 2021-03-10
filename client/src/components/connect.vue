@@ -6,9 +6,10 @@
         <span><b>n</b>.eko</span>
       </div>
       <form class="message" v-if="!connecting" @submit.stop.prevent="connect">
-        <span>{{ $t('connect.title') }}</span>
+        <span v-if="!autoPassword">{{ $t('connect.login_title') }}</span>
+        <span v-else>{{ $t('connect.invitation_title') }}</span>
         <input type="text" :placeholder="$t('connect.displayname')" v-model="displayname" />
-        <input type="password" :placeholder="$t('connect.password')" v-model="password" />
+        <input type="password" :placeholder="$t('connect.password')" v-model="password" v-if="!autoPassword" />
         <button type="submit" @click.stop.prevent="login">
           {{ $t('connect.connect') }}
         </button>
@@ -158,13 +159,29 @@
         this.$accessor.login({ displayname: this.$accessor.displayname, password: this.$accessor.password })
       }
     }
+    get autoPassword() {
+      return new URL(location.href).searchParams.get('pwd')
+    }
 
     get connecting() {
       return this.$accessor.connecting
     }
 
-    login() {
-      this.$accessor.login({ displayname: this.displayname, password: this.password })
+    async login() {
+      let password = this.password
+      if (this.autoPassword) {
+        password = this.autoPassword
+      }
+
+      try {
+        await this.$accessor.login({ displayname: this.displayname, password })
+      } catch (err) {
+        this.$swal({
+          title: this.$t('connect.error') as string,
+          text: err.message,
+          icon: 'error',
+        })
+      }
     }
   }
 </script>
