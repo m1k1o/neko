@@ -151,30 +151,49 @@
 
   @Component({ name: 'neko-connect' })
   export default class extends Vue {
+    private autoPassword = new URL(location.href).searchParams.get('pwd')
+
     private displayname = ''
-    private password = ''
+    private password = this.autoPassword
 
     mounted() {
       if (this.$accessor.displayname !== '' && this.$accessor.password !== '') {
         this.$accessor.login({ displayname: this.$accessor.displayname, password: this.$accessor.password })
       }
     }
-    get autoPassword() {
-      return new URL(location.href).searchParams.get('pwd')
-    }
 
     get connecting() {
       return this.$accessor.connecting
     }
 
-    async login() {
-      let password = this.password
-      if (this.autoPassword) {
-        password = this.autoPassword
-      }
+    removeUrlParam(param: string) {
+      let url = document.location.href
+      let urlparts = url.split('?')
 
+      if (urlparts.length >= 2) {
+        let urlBase = urlparts.shift()
+        let queryString = urlparts.join('?')
+
+        let prefix = encodeURIComponent(param) + '='
+        let pars = queryString.split(/[&;]/g)
+        for (let i = pars.length; i-- > 0; ) {
+          if (pars[i].lastIndexOf(prefix, 0) !== -1) {
+            pars.splice(i, 1)
+          }
+        }
+
+        url = urlBase + (pars.length > 0 ? '?' + pars.join('&') : '')
+        window.history.pushState('', document.title, url)
+      }
+    }
+
+    async login() {
       try {
-        await this.$accessor.login({ displayname: this.displayname, password })
+        await this.$accessor.login({ displayname: this.displayname, password: this.password, })
+        if (this.autoPassword) {
+          this.removeUrlParam('pwd')
+          this.autoPassword = ''
+        }
       } catch (err) {
         this.$swal({
           title: this.$t('connect.error') as string,
