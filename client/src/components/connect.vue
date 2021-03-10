@@ -153,8 +153,8 @@
   export default class extends Vue {
     private autoPassword = new URL(location.href).searchParams.get('pwd')
 
-    private displayname = ''
-    private password = this.autoPassword
+    private displayname: string = ''
+    private password: string = this.autoPassword || ''
 
     mounted() {
       if (this.$accessor.displayname !== '' && this.$accessor.password !== '') {
@@ -189,7 +189,11 @@
 
     async login() {
       try {
-        await this.$accessor.login({ displayname: this.displayname, password: this.password, })
+        await this.$accessor.login({
+          displayname: this.displayname,
+          password: this.password,
+        })
+
         if (this.autoPassword) {
           this.removeUrlParam('pwd')
           this.autoPassword = ''
