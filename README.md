@@ -18,6 +18,8 @@
 # n.eko (m1k1o fork)
 This app uses Web RTC to stream a desktop inside of a docker container. This is fork of https://github.com/nurdism/neko.
 
+For n.eko room management software visit https://github.com/m1k1o/neko-rooms.
+
 ## Differences to original repository.
 
 ### New Features
@@ -30,6 +32,7 @@ This app uses Web RTC to stream a desktop inside of a docker container. This is 
 - Added limited support for some mobile browsers with `playsinline` attribute.
 - Added `VIDEO_BITRATE` and `AUDIO_BITRATE` in kbit/s to control stream quality (in collaboration with @mbattista).
 - Added `MAX_FPS`, where you can specify max WebRTC frame rate. When set to `0`, frame rate won't be capped and you can enjoy your real `60fps` experience. Originally, it was constant at `25fps`.
+- Invite links. You can invite people and they don't need to enter passwords by themselves (and get confused about user accounts that do not exits). You can put your password in URL using `?pwd=<your-password>` and it will be automatically used when logging in.
 
 ### Bugs
 - Fixed minor gst pipeline bug.
@@ -49,6 +52,9 @@ This app uses Web RTC to stream a desktop inside of a docker container. This is 
 - Remove HTML tags from user name.
 - Upgraded `pion/webrtc` to v3 (by @mbattista).
 - Added `requestFullscreen` compatibility for older browsers.
+- Fixed small lags in video and improved video UX (by @mbattista).
+- Added `m1k1o/neko:vncviewer` tag, use `NEKO_VNC_URL` to specify VNC target and use n.eko as a bridge.
+- Abiltiy to include neko as a component in another Vue.Js project (by @gbrian).
 
 # Getting started & FAQ
 
