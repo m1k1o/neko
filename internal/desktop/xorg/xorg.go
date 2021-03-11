@@ -39,19 +39,15 @@ func GetScreenConfigurations() {
 	C.XGetScreenConfigurations()
 }
 
-func DisplayOpen(display string) error {
+func DisplayOpen(display string) bool {
 	mu.Lock()
 	defer mu.Unlock()
 
 	displayUnsafe := C.CString(display)
 	defer C.free(unsafe.Pointer(displayUnsafe))
 
-	err := C.XDisplayOpen(displayUnsafe)
-	if int(err) == 1 {
-		return fmt.Errorf("Could not open display %s.", display)
-	}
-
-	return nil
+	ok := C.XDisplayOpen(displayUnsafe)
+	return int(ok) == 1
 }
 
 func DisplayClose() {

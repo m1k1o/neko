@@ -1,6 +1,7 @@
 package config
 
 import (
+	"os"
 	"regexp"
 	"strconv"
 
@@ -9,6 +10,8 @@ import (
 )
 
 type Desktop struct {
+	Display string
+
 	ScreenWidth  int
 	ScreenHeight int
 	ScreenRate   int16
@@ -24,6 +27,9 @@ func (Desktop) Init(cmd *cobra.Command) error {
 }
 
 func (s *Desktop) Set() {
+	// Display is provided by env variable
+	s.Display = os.Getenv("DISPLAY")
+
 	s.ScreenWidth = 1280
 	s.ScreenHeight = 720
 	s.ScreenRate = 30

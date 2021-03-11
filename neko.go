@@ -137,7 +137,6 @@ func (neko *Neko) Start() {
 	}
 
 	neko.desktopManager = desktop.New(
-		neko.Configs.Capture.Display,
 		neko.Configs.Desktop,
 	)
 	neko.desktopManager.Start()

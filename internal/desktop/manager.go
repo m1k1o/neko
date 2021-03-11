@@ -21,24 +21,22 @@ type DesktopManagerCtx struct {
 	cleanup  *time.Ticker
 	shutdown chan bool
 	emmiter  events.EventEmmiter
-	display  string
 	config   *config.Desktop
 }
 
-func New(display string, config *config.Desktop) *DesktopManagerCtx {
+func New(config *config.Desktop) *DesktopManagerCtx {
 	return &DesktopManagerCtx{
 		logger:   log.With().Str("module", "desktop").Logger(),
 		cleanup:  time.NewTicker(1 * time.Second),
 		shutdown: make(chan bool),
 		emmiter:  events.New(),
-		display:  display,
 		config:   config,
 	}
 }
 
 func (manager *DesktopManagerCtx) Start() {
-	if err := xorg.DisplayOpen(manager.display); err != nil {
-		manager.logger.Warn().Err(err).Msg("unable to open dispaly")
+	if xorg.DisplayOpen(manager.config.Display) {
+		manager.logger.Panic().Str("display", manager.config.Display).Msg("unable to open display")
 	}
 
 	xorg.GetScreenConfigurations()
@@ -51,7 +49,7 @@ func (manager *DesktopManagerCtx) Start() {
 		manager.logger.Warn().Err(err).Msg("unable to set initial screen size")
 	}
 
-	go xevent.EventLoop(manager.display)
+	go xevent.EventLoop(manager.config.Display)
 
 	// In case it was opened
 	go manager.CloseFileChooserDialog()
