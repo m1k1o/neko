@@ -1,6 +1,8 @@
 package config
 
 import (
+	"os"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -8,13 +10,11 @@ import (
 )
 
 type Capture struct {
-	Device        string
+	Display string
+
+	AudioDevice   string
 	AudioCodec    codec.RTPCodec
 	AudioPipeline string
-
-	Display string
-	//VideoCodec codec.RTPCodec
-	//VideoPipeline string
 
 	BroadcastPipeline string
 
@@ -25,43 +25,17 @@ type Capture struct {
 }
 
 func (Capture) Init(cmd *cobra.Command) error {
-	cmd.PersistentFlags().String("display", ":99.0", "XDisplay to capture")
-	if err := viper.BindPFlag("display", cmd.PersistentFlags().Lookup("display")); err != nil {
+	// audio
+	cmd.PersistentFlags().String("audio_device", "auto_null.monitor", "audio device to capture")
+	if err := viper.BindPFlag("audio_device", cmd.PersistentFlags().Lookup("audio_device")); err != nil {
 		return err
 	}
 
-	cmd.PersistentFlags().String("device", "auto_null.monitor", "audio device to capture")
-	if err := viper.BindPFlag("device", cmd.PersistentFlags().Lookup("device")); err != nil {
+	cmd.PersistentFlags().String("audio_pipeline", "", "gstreamer pipeline used for audio streaming")
+	if err := viper.BindPFlag("audio_pipeline", cmd.PersistentFlags().Lookup("audio_pipeline")); err != nil {
 		return err
 	}
 
-	cmd.PersistentFlags().String("audio", "", "audio codec parameters to use for streaming")
-	if err := viper.BindPFlag("audio", cmd.PersistentFlags().Lookup("audio")); err != nil {
-		return err
-	}
-
-	//cmd.PersistentFlags().String("video", "", "video codec parameters to use for streaming")
-	//if err := viper.BindPFlag("video", cmd.PersistentFlags().Lookup("video")); err != nil {
-	//	return err
-	//}
-
-	// video codecs
-	//cmd.PersistentFlags().Bool("vp8", false, "use VP8 video codec")
-	//if err := viper.BindPFlag("vp8", cmd.PersistentFlags().Lookup("vp8")); err != nil {
-	//	return err
-	//}
-	//
-	//cmd.PersistentFlags().Bool("vp9", false, "use VP9 video codec")
-	//if err := viper.BindPFlag("vp9", cmd.PersistentFlags().Lookup("vp9")); err != nil {
-	//	return err
-	//}
-	//
-	//cmd.PersistentFlags().Bool("h264", false, "use H264 video codec")
-	//if err := viper.BindPFlag("h264", cmd.PersistentFlags().Lookup("h264")); err != nil {
-	//	return err
-	//}
-
-	// audio codecs
 	cmd.PersistentFlags().Bool("opus", false, "use Opus audio codec")
 	if err := viper.BindPFlag("opus", cmd.PersistentFlags().Lookup("opus")); err != nil {
 		return err
@@ -83,7 +57,7 @@ func (Capture) Init(cmd *cobra.Command) error {
 	}
 
 	// broadcast
-	cmd.PersistentFlags().String("broadcast_pipeline", "", "audio video codec parameters to use for broadcasting")
+	cmd.PersistentFlags().String("broadcast_pipeline", "", "gstreamer pipeline used for broadcasting")
 	if err := viper.BindPFlag("broadcast_pipeline", cmd.PersistentFlags().Lookup("broadcast_pipeline")); err != nil {
 		return err
 	}
@@ -94,17 +68,17 @@ func (Capture) Init(cmd *cobra.Command) error {
 		return err
 	}
 
-	cmd.PersistentFlags().String("screencast_rate", "10/1", "set screencast frame rate")
+	cmd.PersistentFlags().String("screencast_rate", "10/1", "screencast frame rate")
 	if err := viper.BindPFlag("screencast_rate", cmd.PersistentFlags().Lookup("screencast_rate")); err != nil {
 		return err
 	}
 
-	cmd.PersistentFlags().String("screencast_quality", "60", "set screencast JPEG quality")
+	cmd.PersistentFlags().String("screencast_quality", "60", "screencast JPEG quality")
 	if err := viper.BindPFlag("screencast_quality", cmd.PersistentFlags().Lookup("screencast_quality")); err != nil {
 		return err
 	}
 
-	cmd.PersistentFlags().String("screencast_pipeline", "", "custom screencast pipeline")
+	cmd.PersistentFlags().String("screencast_pipeline", "", "gstreamer pipeline used for screencasting")
 	if err := viper.BindPFlag("screencast_pipeline", cmd.PersistentFlags().Lookup("screencast_pipeline")); err != nil {
 		return err
 	}
@@ -113,39 +87,24 @@ func (Capture) Init(cmd *cobra.Command) error {
 }
 
 func (s *Capture) Set() {
-	//var videoCodec codec.RTPCodec
-	//if viper.GetBool("vp8") {
-	//	videoCodec = codec.VP8()
-	//} else if viper.GetBool("vp9") {
-	//	videoCodec = codec.VP9()
-	//} else if viper.GetBool("h264") {
-	//	videoCodec = codec.H264()
-	//} else {
-	//	// default
-	//	videoCodec = codec.VP8()
-	//}
+	// Display is provided by env variable
+	s.Display = os.Getenv("DISPLAY")
 
-	var audioCodec codec.RTPCodec
+	s.AudioDevice = viper.GetString("audio_device")
+	s.AudioPipeline = viper.GetString("audio_pipeline")
+
 	if viper.GetBool("opus") {
-		audioCodec = codec.Opus()
+		s.AudioCodec = codec.Opus()
 	} else if viper.GetBool("g722") {
-		audioCodec = codec.G722()
+		s.AudioCodec = codec.G722()
 	} else if viper.GetBool("pcmu") {
-		audioCodec = codec.PCMU()
+		s.AudioCodec = codec.PCMU()
 	} else if viper.GetBool("pcma") {
-		audioCodec = codec.PCMA()
+		s.AudioCodec = codec.PCMA()
 	} else {
 		// default
-		audioCodec = codec.Opus()
+		s.AudioCodec = codec.Opus()
 	}
-
-	s.Device = viper.GetString("device")
-	s.AudioCodec = audioCodec
-	s.AudioPipeline = viper.GetString("audio")
-
-	s.Display = viper.GetString("display")
-	//s.VideoCodec = videoCodec
-	//s.VideoPipeline = viper.GetString("video")
 
 	s.BroadcastPipeline = viper.GetString("broadcast_pipeline")
 

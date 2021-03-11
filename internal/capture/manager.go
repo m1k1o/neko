@@ -41,7 +41,7 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 				"! videoconvert "+
 				"! queue "+
 				"! x264enc threads=4 bitrate=4096 key-int-max=15 byte-stream=true tune=zerolatency speed-preset=veryfast "+
-				"! mux.", config.Device, config.Display,
+				"! mux.", config.AudioDevice, config.Display,
 		)
 	}
 
@@ -74,7 +74,7 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 					"! audioconvert "+
 					"! queue "+
 					"! %s "+
-					"! appsink name=appsink", config.Device, config.AudioCodec.Pipeline,
+					"! appsink name=appsink", config.AudioDevice, config.AudioCodec.Pipeline,
 			)
 		}),
 		videos: map[string]*StreamManagerCtx{
