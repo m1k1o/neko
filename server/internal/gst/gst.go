@@ -133,9 +133,9 @@ func CreateAppPipeline(codecName string, pipelineDevice string, pipelineSrc stri
 
 		vbvbuf := uint(1000)
 		if bitrate > 1000 {
-			vbvbuf = bitrate*5
+			vbvbuf = bitrate+500
 		}
-		pipelineStr = fmt.Sprintf(videoSrc+"video/x-raw,format=NV12 ! x264enc threads=4 bitrate=%d key-int-max=60 vbv-buf-capacity=%d byte-stream=true tune=zerolatency speed-preset=veryfast ! video/x-h264,stream-format=byte-stream"+pipelineStr, pipelineDevice, fps, bitrate, vbvbuf)
+		pipelineStr = fmt.Sprintf(videoSrc+"video/x-raw,format=NV12 ! x264enc threads=4 bitrate=%d intra-refresh=true vbv-buf-capacity=%d pass=cbr byte-stream=true key-int-max=30 tune=zerolatency speed-preset=faster ! video/x-h264,stream-format=byte-stream"+pipelineStr, pipelineDevice, fps, bitrate, vbvbuf)
 	case "Opus":
 		// https://gstreamer.freedesktop.org/documentation/opus/opusenc.html
 		// gstreamer1.0-plugins-base
