@@ -2,8 +2,8 @@ package session
 
 import (
 	"fmt"
-	"strings"
 	"net/http"
+	"strings"
 
 	"demodesk/neko/internal/types"
 )
