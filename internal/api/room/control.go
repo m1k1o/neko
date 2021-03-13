@@ -42,7 +42,7 @@ func (h *RoomHandler) controlRequest(w http.ResponseWriter, r *http.Request) {
 
 	session := auth.GetSession(r)
 	if !session.CanHost() {
-		utils.HttpBadRequest(w, "Member is not allowed to host.")
+		utils.HttpBadRequest(w, "Session is not allowed to host.")
 		return
 	}
 
@@ -54,12 +54,12 @@ func (h *RoomHandler) controlRequest(w http.ResponseWriter, r *http.Request) {
 func (h *RoomHandler) controlRelease(w http.ResponseWriter, r *http.Request) {
 	session := auth.GetSession(r)
 	if !session.IsHost() {
-		utils.HttpUnprocessableEntity(w, "Member is not the host.")
+		utils.HttpUnprocessableEntity(w, "Session is not the host.")
 		return
 	}
 
 	if !session.CanHost() {
-		utils.HttpBadRequest(w, "Member is not allowed to host.")
+		utils.HttpBadRequest(w, "Session is not allowed to host.")
 		return
 	}
 
@@ -72,7 +72,7 @@ func (h *RoomHandler) controlRelease(w http.ResponseWriter, r *http.Request) {
 func (h *RoomHandler) controlTake(w http.ResponseWriter, r *http.Request) {
 	session := auth.GetSession(r)
 	if !session.CanHost() {
-		utils.HttpBadRequest(w, "Member is not allowed to host.")
+		utils.HttpBadRequest(w, "Session is not allowed to host.")
 		return
 	}
 
@@ -82,16 +82,16 @@ func (h *RoomHandler) controlTake(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *RoomHandler) controlGive(w http.ResponseWriter, r *http.Request) {
-	memberId := chi.URLParam(r, "memberId")
+	sessionId := chi.URLParam(r, "sessionId")
 
-	target, ok := h.sessions.Get(memberId)
+	target, ok := h.sessions.Get(sessionId)
 	if !ok {
-		utils.HttpNotFound(w, "Target member was not found.")
+		utils.HttpNotFound(w, "Target session was not found.")
 		return
 	}
 
 	if !target.CanHost() {
-		utils.HttpBadRequest(w, "Target member is not allowed to host.")
+		utils.HttpBadRequest(w, "Target session is not allowed to host.")
 		return
 	}
 

@@ -23,11 +23,12 @@ func (h *MessageHandlerCtx) systemInit(session types.Session) error {
 		return nil
 	}
 
+	// TODO: Sessions.
 	members := map[string]message.MemberData{}
 	for _, session := range h.sessions.List() {
-		memberId := session.ID()
-		members[memberId] = message.MemberData{
-			ID:      memberId,
+		sessionId := session.ID()
+		members[sessionId] = message.MemberData{
+			ID:      sessionId,
 			Profile: session.GetProfile(),
 			State:   session.GetState(),
 		}
@@ -36,6 +37,7 @@ func (h *MessageHandlerCtx) systemInit(session types.Session) error {
 	return session.Send(
 		message.SystemInit{
 			Event:       event.SYSTEM_INIT,
+			// TODO: Session ID.
 			MemberId:    session.ID(),
 			ControlHost: controlHost,
 			ScreenSize: message.ScreenSize{
@@ -43,6 +45,7 @@ func (h *MessageHandlerCtx) systemInit(session types.Session) error {
 				Height: size.Height,
 				Rate:   size.Rate,
 			},
+			// TODO: Sessions.
 			Members:         members,
 			ImplicitHosting: h.sessions.ImplicitHosting(),
 		})
