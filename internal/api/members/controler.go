@@ -65,10 +65,7 @@ func (h *MembersHandler) membersCreate(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// TODO: Refactor.
-	// data.ID
-
-	session, _, err := h.sessions.Create(*data.MemberProfile)
+	session, _, err := h.sessions.Create(data.ID, *data.MemberProfile)
 	if err != nil {
 		utils.HttpInternalServerError(w, err)
 		return

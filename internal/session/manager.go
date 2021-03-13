@@ -37,12 +37,7 @@ type SessionManagerCtx struct {
 	emmiter    events.EventEmmiter
 }
 
-func (manager *SessionManagerCtx) Create(profile types.MemberProfile) (types.Session, string, error) {
-	id, err := utils.NewUID(32)
-	if err != nil {
-		return nil, "", err
-	}
-
+func (manager *SessionManagerCtx) Create(id string, profile types.MemberProfile) (types.Session, string, error) {
 	token, err := utils.NewUID(64)
 	if err != nil {
 		return nil, "", err

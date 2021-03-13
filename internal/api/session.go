@@ -31,7 +31,7 @@ func (api *ApiManagerCtx) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// TODO: Proper login.
-	session, token, err := api.sessions.Create(types.MemberProfile{
+	session, token, err := api.sessions.Create(data.ID, types.MemberProfile{
 		Name:               data.ID,
 		IsAdmin:            true,
 		CanLogin:           true,
