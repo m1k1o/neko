@@ -16,12 +16,12 @@ type Message struct {
 /////////////////////////////
 
 type SystemInit struct {
-	Event           string                `json:"event,omitempty"`
-	MemberId        string                `json:"member_id"`
-	ControlHost     ControlHost           `json:"control_host"`
-	ScreenSize      ScreenSize            `json:"screen_size"`
-	Members         map[string]MemberData `json:"members"`
-	ImplicitHosting bool                  `json:"implicit_hosting"`
+	Event           string                 `json:"event,omitempty"`
+	SessionId       string                 `json:"session_id"`
+	ControlHost     ControlHost            `json:"control_host"`
+	ScreenSize      ScreenSize             `json:"screen_size"`
+	Sessions        map[string]SessionData `json:"sessions"`
+	ImplicitHosting bool                   `json:"implicit_hosting"`
 }
 
 type SystemAdmin struct {
@@ -64,10 +64,10 @@ type SignalVideo struct {
 }
 
 /////////////////////////////
-// Member
+// Session
 /////////////////////////////
 
-type MemberID struct {
+type SessionID struct {
 	Event string `json:"event,omitempty"`
 	ID    string `json:"id"`
 }
@@ -84,7 +84,7 @@ type SessionState struct {
 	*types.SessionState
 }
 
-type MemberData struct {
+type SessionData struct {
 	Event   string              `json:"event,omitempty"`
 	ID      string              `json:"id"`
 	Profile types.MemberProfile `json:"profile"`

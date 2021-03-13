@@ -24,10 +24,10 @@ func (h *MessageHandlerCtx) systemInit(session types.Session) error {
 	}
 
 	// TODO: Sessions.
-	members := map[string]message.MemberData{}
+	sessions := map[string]message.SessionData{}
 	for _, session := range h.sessions.List() {
 		sessionId := session.ID()
-		members[sessionId] = message.MemberData{
+		sessions[sessionId] = message.SessionData{
 			ID:      sessionId,
 			Profile: session.GetProfile(),
 			State:   session.GetState(),
@@ -37,16 +37,14 @@ func (h *MessageHandlerCtx) systemInit(session types.Session) error {
 	return session.Send(
 		message.SystemInit{
 			Event: event.SYSTEM_INIT,
-			// TODO: Session ID.
-			MemberId:    session.ID(),
+			SessionId:   session.ID(),
 			ControlHost: controlHost,
 			ScreenSize: message.ScreenSize{
 				Width:  size.Width,
 				Height: size.Height,
 				Rate:   size.Rate,
 			},
-			// TODO: Sessions.
-			Members:         members,
+			Sessions:        sessions,
 			ImplicitHosting: h.sessions.ImplicitHosting(),
 		})
 }

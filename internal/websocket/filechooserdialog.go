@@ -22,7 +22,7 @@ func (manager *WebSocketManagerCtx) fileChooserDialogEvents() {
 
 		activeSession = host
 
-		go manager.sessions.Broadcast(message.MemberID{
+		go manager.sessions.Broadcast(message.SessionID{
 			Event: event.FILE_CHOOSER_DIALOG_OPENED,
 			ID:    host.ID(),
 		}, nil)
@@ -34,7 +34,7 @@ func (manager *WebSocketManagerCtx) fileChooserDialogEvents() {
 
 		activeSession = nil
 
-		go manager.sessions.Broadcast(message.MemberID{
+		go manager.sessions.Broadcast(message.SessionID{
 			Event: event.FILE_CHOOSER_DIALOG_CLOSED,
 		}, nil)
 	})
@@ -45,7 +45,7 @@ func (manager *WebSocketManagerCtx) fileChooserDialogEvents() {
 			return
 		}
 
-		if err := session.Send(message.MemberID{
+		if err := session.Send(message.SessionID{
 			Event: event.FILE_CHOOSER_DIALOG_OPENED,
 			ID:    activeSession.ID(),
 		}); err != nil {

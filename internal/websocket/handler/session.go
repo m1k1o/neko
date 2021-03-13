@@ -8,7 +8,7 @@ import (
 
 func (h *MessageHandlerCtx) SessionCreated(session types.Session) error {
 	h.sessions.Broadcast(
-		message.MemberData{
+		message.SessionData{
 			Event:   event.SESSION_CREATED,
 			ID:      session.ID(),
 			Profile: session.GetProfile(),
@@ -20,7 +20,7 @@ func (h *MessageHandlerCtx) SessionCreated(session types.Session) error {
 
 func (h *MessageHandlerCtx) SessionDeleted(session types.Session) error {
 	h.sessions.Broadcast(
-		message.MemberID{
+		message.SessionID{
 			Event: event.SESSION_DELETED,
 			ID:    session.ID(),
 		}, nil)
