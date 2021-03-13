@@ -30,11 +30,12 @@ func (api *ApiManagerCtx) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	session, err := api.sessions.Authenticate(data.ID, data.Secret)
-	if err != nil {
-		utils.HttpUnauthorized(w, err)
+	// TODO: Proper login.
+	//session, err := api.sessions.Authenticate(data.ID, data.Secret)
+	//if err != nil {
+		utils.HttpUnauthorized(w, "no authentication implemented")
 		return
-	}
+	//}
 
 	sameSite := http.SameSiteNoneMode
 	if UnsecureCookies {

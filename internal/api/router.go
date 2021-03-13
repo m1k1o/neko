@@ -59,7 +59,7 @@ func (api *ApiManagerCtx) Route(r chi.Router) {
 
 func (api *ApiManagerCtx) Authenticate(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		session, err := api.sessions.AuthenticateRequest(r)
+		session, err := api.sessions.Authenticate(r)
 		if err != nil {
 			utils.HttpUnauthorized(w, err)
 		} else {

@@ -138,7 +138,7 @@ func (manager *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Reque
 		return err
 	}
 
-	session, err := manager.sessions.AuthenticateRequest(r)
+	session, err := manager.sessions.Authenticate(r)
 	if err != nil {
 		manager.logger.Warn().Err(err).Msg("authentication failed")
 

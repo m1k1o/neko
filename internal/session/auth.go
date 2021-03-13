@@ -2,57 +2,45 @@ package session
 
 import (
 	"fmt"
+	"strings"
 	"net/http"
 
 	"demodesk/neko/internal/types"
 )
 
-func (manager *SessionManagerCtx) AuthenticateRequest(r *http.Request) (types.Session, error) {
-	id, secret, ok := getAuthData(r)
+func (manager *SessionManagerCtx) Authenticate(r *http.Request) (types.Session, error) {
+	token, ok := getToken(r)
 	if !ok {
 		return nil, fmt.Errorf("no authentication provided")
 	}
 
-	return manager.Authenticate(id, secret)
-}
-
-func (manager *SessionManagerCtx) Authenticate(id string, secret string) (types.Session, error) {
-	session, ok := manager.Get(id)
+	session, ok := manager.Get(token)
 	if !ok {
-		return nil, fmt.Errorf("member not found")
-	}
-
-	if !session.VerifySecret(secret) {
-		return nil, fmt.Errorf("invalid password provided")
-	}
-
-	if !session.CanLogin() {
-		return nil, fmt.Errorf("login disabled")
+		return nil, fmt.Errorf("session not found")
 	}
 
 	return session, nil
 }
 
-func getAuthData(r *http.Request) (string, string, bool) {
-	// get from Cookies
-	cid, err1 := r.Cookie("neko-id")
-	csecret, err2 := r.Cookie("neko-secret")
-	if err1 == nil && err2 == nil {
-		return cid.Value, csecret.Value, true
+func getToken(r *http.Request) (string, bool) {
+	// get from Cookie
+	cookie, err := r.Cookie("neko-token")
+	if err == nil {
+		return cookie.Value, true
 	}
 
-	// get from BasicAuth
-	id, secret, ok := r.BasicAuth()
-	if ok {
-		return id, secret, true
+	// get from Header
+	reqToken := r.Header.Get("Authorization")
+	splitToken := strings.Split(reqToken, "Bearer ")
+	if len(splitToken) == 2 {
+		return strings.TrimSpace(splitToken[1]), true
 	}
 
-	// get from QueryParams
-	id = r.URL.Query().Get("id")
-	secret = r.URL.Query().Get("secret")
-	if id != "" && secret != "" {
-		return id, secret, true
+	// get from URL
+	token := r.URL.Query().Get("token")
+	if token != "" {
+		return token, true
 	}
 
-	return "", "", false
+	return "", false
 }
