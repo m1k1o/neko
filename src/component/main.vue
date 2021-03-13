@@ -197,12 +197,12 @@
       }
     }
 
-    public async login(id: string, secret: string) {
+    public async login(username: string, password: string) {
       if (this.authenticated) {
         throw new Error('client already authenticated')
       }
 
-      await this.api.session.login({ id, secret })
+      await this.api.session.login({ username, password })
       Vue.set(this.state.connection, 'authenticated', true)
       this.websocket.connect()
     }
