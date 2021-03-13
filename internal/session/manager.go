@@ -9,37 +9,45 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"demodesk/neko/internal/config"
-	"demodesk/neko/internal/session/database"
 	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/utils"
 )
 
 func New(config *config.Session) *SessionManagerCtx {
 	return &SessionManagerCtx{
-		logger:    log.With().Str("module", "session").Logger(),
-		host:      nil,
-		hostMu:    sync.Mutex{},
-		config:    config,
-		database:  database.New(config),
-		members:   make(map[string]*SessionCtx),
-		membersMu: sync.Mutex{},
-		emmiter:   events.New(),
+		logger:     log.With().Str("module", "session").Logger(),
+		config:     config,
+		host:       nil,
+		hostMu:     sync.Mutex{},
+		sessions:   make(map[string]*SessionCtx),
+		sessionsMu: sync.Mutex{},
+		emmiter:    events.New(),
 	}
 }
 
 type SessionManagerCtx struct {
-	logger    zerolog.Logger
-	host      types.Session
-	hostMu    sync.Mutex
-	config    *config.Session
-	database  types.MembersDatabase
-	members   map[string]*SessionCtx
-	membersMu sync.Mutex
-	emmiter   events.EventEmmiter
+	logger     zerolog.Logger
+	config     *config.Session
+	host       types.Session
+	hostMu     sync.Mutex
+	sessions   map[string]*SessionCtx
+	sessionsMu sync.Mutex
+	emmiter    events.EventEmmiter
 }
 
-// TODO: Extract members map + primitives.
-func (manager *SessionManagerCtx) add(id string, profile types.MemberProfile) types.Session {
+// ---
+// sessions
+// ---
+
+func (manager *SessionManagerCtx) Create(id string, profile types.MemberProfile) (types.Session, error) {
+	manager.sessionsMu.Lock()
+
+	_, ok := manager.sessions[id]
+	if ok {
+		manager.sessionsMu.Unlock()
+		return nil, fmt.Errorf("Session id already exists.")
+	}
+
 	session := &SessionCtx{
 		id:      id,
 		manager: manager,
@@ -47,104 +55,24 @@ func (manager *SessionManagerCtx) add(id string, profile types.MemberProfile) ty
 		profile: profile,
 	}
 
-	manager.members[id] = session
-	return session
-}
-
-// ---
-// members
-// ---
-func (manager *SessionManagerCtx) Connect() error {
-	if err := manager.database.Connect(); err != nil {
-		return err
-	}
-
-	profiles, err := manager.database.Select()
-	if err != nil {
-		return err
-	}
-
-	for id, profile := range profiles {
-		_ = manager.add(id, profile)
-	}
-
-	// TODO: Move to Database, or make `admin` as reserved ID.
-
-	// create default admin account at startup
-	_ = manager.add("admin", types.MemberProfile{
-		Secret:             manager.config.AdminPassword,
-		Name:               "Administrator",
-		IsAdmin:            true,
-		CanLogin:           true,
-		CanConnect:         true,
-		CanWatch:           true,
-		CanHost:            true,
-		CanAccessClipboard: true,
-	})
-
-	// create default user account at startup
-	_ = manager.add("user", types.MemberProfile{
-		Secret:             manager.config.Password,
-		Name:               "User",
-		IsAdmin:            false,
-		CanLogin:           true,
-		CanConnect:         true,
-		CanWatch:           true,
-		CanHost:            true,
-		CanAccessClipboard: true,
-	})
-
-	return nil
-}
-
-func (manager *SessionManagerCtx) Disconnect() error {
-	return manager.database.Disconnect()
-}
-
-func (manager *SessionManagerCtx) Create(id string, profile types.MemberProfile) (types.Session, error) {
-	manager.membersMu.Lock()
-
-	_, ok := manager.members[id]
-	if ok {
-		manager.membersMu.Unlock()
-		return nil, fmt.Errorf("Member ID already exists.")
-	}
-
-	err := manager.database.Insert(id, profile)
-	if err != nil {
-		manager.membersMu.Unlock()
-		return nil, err
-	}
-
-	session := manager.add(id, profile)
-	manager.membersMu.Unlock()
+	manager.sessions[id] = session
+	manager.sessionsMu.Unlock()
 
 	manager.emmiter.Emit("created", session)
 	return session, nil
 }
 
 func (manager *SessionManagerCtx) Update(id string, profile types.MemberProfile) error {
-	manager.membersMu.Lock()
+	manager.sessionsMu.Lock()
 
-	session, ok := manager.members[id]
+	session, ok := manager.sessions[id]
 	if !ok {
-		manager.membersMu.Unlock()
-		return fmt.Errorf("Member not found.")
-	}
-
-	// preserve secret if not updated
-	if profile.Secret == "" {
-		profile.Secret = session.profile.Secret
-	}
-
-	err := manager.database.Update(id, profile)
-	if err != nil {
-		manager.membersMu.Unlock()
-		return err
+		manager.sessionsMu.Unlock()
+		return fmt.Errorf("Session id not found.")
 	}
 
 	session.profile = profile
-	manager.membersMu.Unlock()
+	manager.sessionsMu.Unlock()
 
 	manager.emmiter.Emit("profile_changed", session)
 	session.profileChanged()
@@ -152,24 +80,19 @@ func (manager *SessionManagerCtx) Update(id string, profile types.MemberProfile)
 }
 
 func (manager *SessionManagerCtx) Delete(id string) error {
-	manager.membersMu.Lock()
-	session, ok := manager.members[id]
+	manager.sessionsMu.Lock()
+	session, ok := manager.sessions[id]
 	if !ok {
-		manager.membersMu.Unlock()
-		return fmt.Errorf("Member not found.")
+		manager.sessionsMu.Unlock()
+		return fmt.Errorf("Session id not found.")
 	}
 
-	err := manager.database.Delete(id)
-	if err != nil {
-		manager.membersMu.Unlock()
-		return err
-	}
+	delete(manager.sessions, id)
+	manager.sessionsMu.Unlock()
 
-	delete(manager.members, id)
-	manager.membersMu.Unlock()
-
+	var err error
 	if session.IsConnected() {
-		err = session.Disconnect("member deleted")
+		err = session.Disconnect("session deleted")
 	}
 
 	manager.emmiter.Emit("deleted", session)
@@ -177,11 +100,23 @@ func (manager *SessionManagerCtx) Delete(id string) error {
 }
 
 func (manager *SessionManagerCtx) Get(id string) (types.Session, bool) {
-	manager.membersMu.Lock()
-	defer manager.membersMu.Unlock()
+	manager.sessionsMu.Lock()
+	defer manager.sessionsMu.Unlock()
 
-	session, ok := manager.members[id]
+	session, ok := manager.sessions[id]
 	return session, ok
+}
+
+func (manager *SessionManagerCtx) List() []types.Session {
+	manager.sessionsMu.Lock()
+	defer manager.sessionsMu.Unlock()
+
+	var sessions []types.Session
+	for _, session := range manager.sessions {
+		sessions = append(sessions, session)
+	}
+
+	return sessions
 }
 
 // ---
@@ -213,39 +148,14 @@ func (manager *SessionManagerCtx) ClearHost() {
 }
 
 // ---
-// members list
+// broadcasts
 // ---
 
-func (manager *SessionManagerCtx) HasConnectedMembers() bool {
-	manager.membersMu.Lock()
-	defer manager.membersMu.Unlock()
-
-	for _, session := range manager.members {
-		if session.IsConnected() {
-			return true
-		}
-	}
-
-	return false
-}
-
-func (manager *SessionManagerCtx) Members() []types.Session {
-	manager.membersMu.Lock()
-	defer manager.membersMu.Unlock()
-
-	var sessions []types.Session
-	for _, session := range manager.members {
-		sessions = append(sessions, session)
-	}
-
-	return sessions
-}
-
 func (manager *SessionManagerCtx) Broadcast(v interface{}, exclude interface{}) {
-	manager.membersMu.Lock()
-	defer manager.membersMu.Unlock()
+	manager.sessionsMu.Lock()
+	defer manager.sessionsMu.Unlock()
 
-	for id, session := range manager.members {
+	for id, session := range manager.sessions {
 		if !session.IsConnected() {
 			continue
 		}
@@ -263,10 +173,10 @@ func (manager *SessionManagerCtx) Broadcast(v interface{}, exclude interface{}) 
 }
 
 func (manager *SessionManagerCtx) AdminBroadcast(v interface{}, exclude interface{}) {
-	manager.membersMu.Lock()
-	defer manager.membersMu.Unlock()
+	manager.sessionsMu.Lock()
+	defer manager.sessionsMu.Unlock()
 
-	for id, session := range manager.members {
+	for id, session := range manager.sessions {
 		if !session.IsConnected() || !session.IsAdmin() {
 			continue
 		}

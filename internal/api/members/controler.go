@@ -14,7 +14,7 @@ type MemberDataPayload struct {
 
 func (h *MembersHandler) membersList(w http.ResponseWriter, r *http.Request) {
 	members := []MemberDataPayload{}
-	for _, session := range h.sessions.Members() {
+	for _, session := range h.sessions.List() {
 		profile := session.GetProfile()
 		members = append(members, MemberDataPayload{
 			ID:            session.ID(),

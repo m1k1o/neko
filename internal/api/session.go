@@ -30,12 +30,23 @@ func (api *ApiManagerCtx) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	token := data.Secret
+
 	// TODO: Proper login.
-	//session, err := api.sessions.Authenticate(data.ID, data.Secret)
-	//if err != nil {
-		utils.HttpUnauthorized(w, "no authentication implemented")
+	session, err := api.sessions.Create(token, types.MemberProfile{
+		Name:               data.ID,
+		IsAdmin:            true,
+		CanLogin:           true,
+		CanConnect:         true,
+		CanWatch:           true,
+		CanHost:            true,
+		CanAccessClipboard: true,
+	})
+
+	if err != nil {
+		utils.HttpUnauthorized(w, err)
 		return
-	//}
+	}
 
 	sameSite := http.SameSiteNoneMode
 	if UnsecureCookies {
@@ -43,17 +54,8 @@ func (api *ApiManagerCtx) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.SetCookie(w, &http.Cookie{
-		Name:     "neko-id",
-		Value:    session.ID(),
-		Expires:  CookieExpirationDate,
-		Secure:   !UnsecureCookies,
-		SameSite: sameSite,
-		HttpOnly: false,
-	})
-
-	http.SetCookie(w, &http.Cookie{
-		Name:     "neko-secret",
-		Value:    data.Secret,
+		Name:     "NEKO_SESSION",
+		Value:    token,
 		Expires:  CookieExpirationDate,
 		Secure:   !UnsecureCookies,
 		SameSite: sameSite,
@@ -68,22 +70,22 @@ func (api *ApiManagerCtx) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func (api *ApiManagerCtx) Logout(w http.ResponseWriter, r *http.Request) {
+	session := auth.GetSession(r)
+
+	// TODO: Proper logout.
+	err := api.sessions.Delete(session.ID())
+	if err != nil {
+		utils.HttpUnauthorized(w, err)
+		return
+	}
+
 	sameSite := http.SameSiteNoneMode
 	if UnsecureCookies {
 		sameSite = http.SameSiteDefaultMode
 	}
 
 	http.SetCookie(w, &http.Cookie{
-		Name:     "neko-id",
-		Value:    "",
-		Expires:  time.Unix(0, 0),
-		Secure:   !UnsecureCookies,
-		SameSite: sameSite,
-		HttpOnly: false,
-	})
-
-	http.SetCookie(w, &http.Cookie{
-		Name:     "neko-secret",
+		Name:     "NEKO_SESSION",
 		Value:    "",
 		Expires:  time.Unix(0, 0),
 		Secure:   !UnsecureCookies,

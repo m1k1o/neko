@@ -32,7 +32,6 @@ type Session interface {
 	ID() string
 
 	// profile
-	VerifySecret(secret string) bool
 	Name() string
 	IsAdmin() bool
 	CanLogin() bool
@@ -60,20 +59,16 @@ type Session interface {
 }
 
 type SessionManager interface {
-	Connect() error
-	Disconnect() error
-
 	Create(id string, profile MemberProfile) (Session, error)
 	Update(id string, profile MemberProfile) error
 	Get(id string) (Session, bool)
 	Delete(id string) error
+	List() []Session
 
 	SetHost(host Session)
 	GetHost() Session
 	ClearHost()
 
-	HasConnectedMembers() bool
-	Members() []Session
 	Broadcast(v interface{}, exclude interface{})
 	AdminBroadcast(v interface{}, exclude interface{})
 
@@ -88,6 +83,5 @@ type SessionManager interface {
 
 	ImplicitHosting() bool
 
-	AuthenticateRequest(r *http.Request) (Session, error)
-	Authenticate(id string, secret string) (Session, error)
+	Authenticate(r *http.Request) (Session, error)
 }

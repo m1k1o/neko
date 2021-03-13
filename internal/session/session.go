@@ -26,10 +26,6 @@ func (session *SessionCtx) ID() string {
 // profile
 // ---
 
-func (session *SessionCtx) VerifySecret(secret string) bool {
-	return session.profile.Secret == secret
-}
-
 func (session *SessionCtx) Name() string {
 	return session.profile.Name
 }

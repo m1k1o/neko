@@ -24,7 +24,7 @@ func (manager *SessionManagerCtx) Authenticate(r *http.Request) (types.Session, 
 
 func getToken(r *http.Request) (string, bool) {
 	// get from Cookie
-	cookie, err := r.Cookie("neko-token")
+	cookie, err := r.Cookie("NEKO_SESSION")
 	if err == nil {
 		return cookie.Value, true
 	}
