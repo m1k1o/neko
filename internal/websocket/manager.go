@@ -107,7 +107,7 @@ func (manager *WebSocketManagerCtx) Start() {
 
 	manager.desktop.OnClipboardUpdated(func() {
 		session := manager.sessions.GetHost()
-		if session == nil || !session.CanAccessClipboard() {
+		if session == nil || !session.Profile().CanAccessClipboard {
 			return
 		}
 
@@ -167,7 +167,7 @@ func (manager *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Reque
 		return connection.Close()
 	}
 
-	if !session.CanConnect() {
+	if !session.Profile().CanConnect {
 		// TODO: Refactor, return error code.
 		if err = connection.WriteJSON(
 			message.SystemDisconnect{

@@ -11,8 +11,8 @@ func (h *MessageHandlerCtx) SessionCreated(session types.Session) error {
 		message.SessionData{
 			Event:   event.SESSION_CREATED,
 			ID:      session.ID(),
-			Profile: session.GetProfile(),
-			State:   session.GetState(),
+			Profile: session.Profile(),
+			State:   session.State(),
 		}, nil)
 
 	return nil
@@ -33,7 +33,7 @@ func (h *MessageHandlerCtx) SessionConnected(session types.Session) error {
 		return err
 	}
 
-	if session.IsAdmin() {
+	if session.Profile().IsAdmin {
 		if err := h.systemAdmin(session); err != nil {
 			return err
 		}
@@ -53,7 +53,7 @@ func (h *MessageHandlerCtx) SessionDisconnected(session types.Session) error {
 }
 
 func (h *MessageHandlerCtx) SessionProfileChanged(session types.Session) error {
-	profile := session.GetProfile()
+	profile := session.Profile()
 
 	h.sessions.Broadcast(
 		message.MemberProfile{
@@ -66,7 +66,7 @@ func (h *MessageHandlerCtx) SessionProfileChanged(session types.Session) error {
 }
 
 func (h *MessageHandlerCtx) SessionStateChanged(session types.Session) error {
-	state := session.GetState()
+	state := session.State()
 
 	h.sessions.Broadcast(
 		message.SessionState{

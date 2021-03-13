@@ -41,7 +41,7 @@ func (h *RoomHandler) controlRequest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	session := auth.GetSession(r)
-	if !session.CanHost() {
+	if !session.Profile().CanHost {
 		utils.HttpBadRequest(w, "Session is not allowed to host.")
 		return
 	}
@@ -58,7 +58,7 @@ func (h *RoomHandler) controlRelease(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !session.CanHost() {
+	if !session.Profile().CanHost {
 		utils.HttpBadRequest(w, "Session is not allowed to host.")
 		return
 	}
@@ -71,7 +71,7 @@ func (h *RoomHandler) controlRelease(w http.ResponseWriter, r *http.Request) {
 
 func (h *RoomHandler) controlTake(w http.ResponseWriter, r *http.Request) {
 	session := auth.GetSession(r)
-	if !session.CanHost() {
+	if !session.Profile().CanHost {
 		utils.HttpBadRequest(w, "Session is not allowed to host.")
 		return
 	}
@@ -90,7 +90,7 @@ func (h *RoomHandler) controlGive(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !target.CanHost() {
+	if !target.Profile().CanHost {
 		utils.HttpBadRequest(w, "Target session is not allowed to host.")
 		return
 	}

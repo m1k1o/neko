@@ -15,7 +15,7 @@ type MemberDataPayload struct {
 func (h *MembersHandler) membersList(w http.ResponseWriter, r *http.Request) {
 	members := []MemberDataPayload{}
 	for _, session := range h.sessions.List() {
-		profile := session.GetProfile()
+		profile := session.Profile()
 		members = append(members, MemberDataPayload{
 			ID:            session.ID(),
 			MemberProfile: &profile,
@@ -73,14 +73,14 @@ func (h *MembersHandler) membersCreate(w http.ResponseWriter, r *http.Request) {
 
 func (h *MembersHandler) membersRead(w http.ResponseWriter, r *http.Request) {
 	member := GetMember(r)
-	profile := member.GetProfile()
+	profile := member.Profile()
 
 	utils.HttpSuccess(w, profile)
 }
 
 func (h *MembersHandler) membersUpdate(w http.ResponseWriter, r *http.Request) {
 	member := GetMember(r)
-	profile := member.GetProfile()
+	profile := member.Profile()
 
 	if !utils.HttpJsonRequest(w, r, &profile) {
 		return

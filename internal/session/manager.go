@@ -196,7 +196,7 @@ func (manager *SessionManagerCtx) AdminBroadcast(v interface{}, exclude interfac
 	defer manager.sessionsMu.Unlock()
 
 	for id, session := range manager.sessions {
-		if !session.IsConnected() || !session.IsAdmin() {
+		if !session.IsConnected() || !session.Profile().IsAdmin {
 			continue
 		}
 

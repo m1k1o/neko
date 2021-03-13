@@ -29,8 +29,8 @@ func (h *MessageHandlerCtx) systemInit(session types.Session) error {
 		sessionId := session.ID()
 		sessions[sessionId] = message.SessionData{
 			ID:      sessionId,
-			Profile: session.GetProfile(),
-			State:   session.GetState(),
+			Profile: session.Profile(),
+			State:   session.State(),
 		}
 	}
 

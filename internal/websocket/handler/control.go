@@ -7,7 +7,7 @@ import (
 )
 
 func (h *MessageHandlerCtx) controlRelease(session types.Session) error {
-	if !session.CanHost() {
+	if !session.Profile().CanHost {
 		h.logger.Debug().Str("session_id", session.ID()).Msg("is not allowed to host")
 		return nil
 	}
@@ -24,7 +24,7 @@ func (h *MessageHandlerCtx) controlRelease(session types.Session) error {
 }
 
 func (h *MessageHandlerCtx) controlRequest(session types.Session) error {
-	if !session.CanHost() {
+	if !session.Profile().CanHost {
 		h.logger.Debug().Str("session_id", session.ID()).Msg("is not allowed to host")
 		return nil
 	}

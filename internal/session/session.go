@@ -23,54 +23,22 @@ func (session *SessionCtx) ID() string {
 	return session.id
 }
 
-// ---
-// profile
-// ---
-
-func (session *SessionCtx) Name() string {
-	return session.profile.Name
-}
-
-func (session *SessionCtx) IsAdmin() bool {
-	return session.profile.IsAdmin
-}
-
-func (session *SessionCtx) CanLogin() bool {
-	return session.profile.CanLogin
-}
-
-func (session *SessionCtx) CanConnect() bool {
-	return session.profile.CanConnect
-}
-
-func (session *SessionCtx) CanWatch() bool {
-	return session.profile.CanWatch
-}
-
-func (session *SessionCtx) CanHost() bool {
-	return session.profile.CanHost
-}
-
-func (session *SessionCtx) CanAccessClipboard() bool {
-	return session.profile.CanAccessClipboard
-}
-
-func (session *SessionCtx) GetProfile() types.MemberProfile {
+func (session *SessionCtx) Profile() types.MemberProfile {
 	return session.profile
 }
 
 func (session *SessionCtx) profileChanged() {
-	if !session.CanHost() && session.IsHost() {
+	if !session.profile.CanHost && session.IsHost() {
 		session.manager.ClearHost()
 	}
 
-	if !session.CanWatch() && session.state.IsWatching {
+	if !session.profile.CanWatch && session.state.IsWatching {
 		if err := session.webrtcPeer.Destroy(); err != nil {
 			session.logger.Warn().Err(err).Msgf("webrtc destroy has failed")
 		}
 	}
 
-	if (!session.CanConnect() || !session.CanLogin()) && session.state.IsConnected {
+	if (!session.profile.CanConnect || !session.profile.CanLogin) && session.state.IsConnected {
 		if err := session.Disconnect("profile changed"); err != nil {
 			session.logger.Warn().Err(err).Msgf("websocket destroy has failed")
 		}
@@ -89,7 +57,7 @@ func (session *SessionCtx) IsConnected() bool {
 	return session.state.IsConnected
 }
 
-func (session *SessionCtx) GetState() types.SessionState {
+func (session *SessionCtx) State() types.SessionState {
 	return session.state
 }
 

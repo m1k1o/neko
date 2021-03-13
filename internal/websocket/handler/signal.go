@@ -7,7 +7,7 @@ import (
 )
 
 func (h *MessageHandlerCtx) signalRequest(session types.Session) error {
-	if !session.CanWatch() {
+	if !session.Profile().CanWatch {
 		return nil
 	}
 

@@ -62,8 +62,8 @@ func (api *ApiManagerCtx) Login(w http.ResponseWriter, r *http.Request) {
 
 	utils.HttpSuccess(w, SessionDataPayload{
 		ID:      session.ID(),
-		Profile: session.GetProfile(),
-		State:   session.GetState(),
+		Profile: session.Profile(),
+		State:   session.State(),
 	})
 }
 
@@ -99,7 +99,7 @@ func (api *ApiManagerCtx) Whoami(w http.ResponseWriter, r *http.Request) {
 
 	utils.HttpSuccess(w, SessionDataPayload{
 		ID:      session.ID(),
-		Profile: session.GetProfile(),
-		State:   session.GetState(),
+		Profile: session.Profile(),
+		State:   session.State(),
 	})
 }

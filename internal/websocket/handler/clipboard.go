@@ -6,7 +6,7 @@ import (
 )
 
 func (h *MessageHandlerCtx) clipboardSet(session types.Session, payload *message.ClipboardData) error {
-	if !session.CanAccessClipboard() {
+	if !session.Profile().CanAccessClipboard {
 		h.logger.Debug().Str("session_id", session.ID()).Msg("cannot access clipboard")
 		return nil
 	}
