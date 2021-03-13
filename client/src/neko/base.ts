@@ -19,7 +19,7 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
   protected _displayname?: string
   protected _state: RTCIceConnectionState = 'disconnected'
   protected _id = ''
-  protected _candidates: RTCIceCandidate[] = [];
+  protected _candidates: RTCIceCandidate[] = []
 
   get id() {
     return this._id
@@ -221,9 +221,12 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
     this._channel.onclose = this.onDisconnected.bind(this, new Error('peer data channel closed'))
 
     this._peer.setRemoteDescription({ type: 'offer', sdp })
+
     for (let candidate of this._candidates) {
       this._peer.addIceCandidate(candidate)
     }
+    this._candidates = []
+
     this._peer
       .createAnswer()
       .then((d) => {
@@ -257,7 +260,7 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
       if (this._peer) {
         this._peer.addIceCandidate(candidate)
       } else {
-        this._candidates.push(candidate);
+        this._candidates.push(candidate)
       }
       return
     }
