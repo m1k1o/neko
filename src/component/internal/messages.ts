@@ -69,7 +69,7 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
     Vue.set(this.state.control, 'implicit_hosting', conf.implicit_hosting)
 
     for (const id in conf.members) {
-      this[EVENT.MEMBER_CREATED](conf.members[id])
+      this[EVENT.SESSION_CREATED](conf.members[id])
     }
 
     this[EVENT.SCREEN_UPDATED](conf.screen_size)
@@ -123,26 +123,26 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
   // Member Events
   /////////////////////////////
 
-  protected [EVENT.MEMBER_CREATED]({ id, ...data }: message.MemberData) {
-    this._log.debug('EVENT.MEMBER_CREATED', id)
+  protected [EVENT.SESSION_CREATED]({ id, ...data }: message.MemberData) {
+    this._log.debug('EVENT.SESSION_CREATED', id)
     Vue.set(this.state.members, id, data)
     this.emit('member.created', id)
   }
 
-  protected [EVENT.MEMBER_DELETED]({ id }: message.MemberID) {
-    this._log.debug('EVENT.MEMBER_DELETED', id)
+  protected [EVENT.SESSION_DELETED]({ id }: message.MemberID) {
+    this._log.debug('EVENT.SESSION_DELETED', id)
     Vue.delete(this.state.members, id)
     this.emit('member.deleted', id)
   }
 
-  protected [EVENT.MEMBER_PROFILE]({ id, ...profile }: message.MemberProfile) {
-    this._log.debug('EVENT.MEMBER_PROFILE', id)
+  protected [EVENT.SESSION_PROFILE]({ id, ...profile }: message.MemberProfile) {
+    this._log.debug('EVENT.SESSION_PROFILE', id)
     Vue.set(this.state.members[id], 'profile', profile)
     this.emit('member.updated', id)
   }
 
-  protected [EVENT.MEMBER_STATE]({ id, ...state }: message.SessionState) {
-    this._log.debug('EVENT.MEMBER_STATE', id)
+  protected [EVENT.SESSION_STATE]({ id, ...state }: message.SessionState) {
+    this._log.debug('EVENT.SESSION_STATE', id)
     Vue.set(this.state.members[id], 'state', state)
     this.emit('member.updated', id)
   }
