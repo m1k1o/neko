@@ -69,10 +69,10 @@ func (h *MessageHandlerCtx) SessionStateChanged(session types.Session) error {
 	state := session.GetState()
 
 	h.sessions.Broadcast(
-		message.MemberState{
-			Event:       event.MEMBER_STATE,
-			ID:          session.ID(),
-			MemberState: &state,
+		message.SessionState{
+			Event:        event.MEMBER_STATE,
+			ID:           session.ID(),
+			SessionState: &state,
 		}, nil)
 
 	return nil

@@ -78,17 +78,17 @@ type MemberProfile struct {
 	*types.MemberProfile
 }
 
-type MemberState struct {
+type SessionState struct {
 	Event string `json:"event,omitempty"`
 	ID    string `json:"id"`
-	*types.MemberState
+	*types.SessionState
 }
 
 type MemberData struct {
 	Event   string              `json:"event,omitempty"`
 	ID      string              `json:"id"`
 	Profile types.MemberProfile `json:"profile"`
-	State   types.MemberState   `json:"state"`
+	State   types.SessionState  `json:"state"`
 }
 
 /////////////////////////////

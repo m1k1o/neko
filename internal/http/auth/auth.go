@@ -60,7 +60,7 @@ func CanHostOnly(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		session := GetSession(r)
 		if !session.CanHost() {
-			utils.HttpForbidden(w, "Only for members, that can host.")
+			utils.HttpForbidden(w, "Only for sessions, that can host.")
 		} else {
 			next.ServeHTTP(w, r)
 		}
@@ -71,7 +71,7 @@ func CanWatchOnly(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		session := GetSession(r)
 		if !session.CanWatch() {
-			utils.HttpForbidden(w, "Only for members, that can watch.")
+			utils.HttpForbidden(w, "Only for sessions, that can watch.")
 		} else {
 			next.ServeHTTP(w, r)
 		}

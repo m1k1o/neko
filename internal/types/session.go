@@ -13,19 +13,9 @@ type MemberProfile struct {
 	CanAccessClipboard bool   `json:"can_access_clipboard"`
 }
 
-type MemberState struct {
+type SessionState struct {
 	IsConnected bool `json:"is_connected"`
 	IsWatching  bool `json:"is_watching"`
-}
-
-type MembersDatabase interface {
-	Connect() error
-	Disconnect() error
-
-	Insert(id string, profile MemberProfile) error
-	Update(id string, profile MemberProfile) error
-	Delete(id string) error
-	Select() (map[string]MemberProfile, error)
 }
 
 type Session interface {
@@ -44,7 +34,7 @@ type Session interface {
 	// state
 	IsHost() bool
 	IsConnected() bool
-	GetState() MemberState
+	GetState() SessionState
 
 	// websocket
 	SetWebSocketPeer(websocketPeer WebSocketPeer)

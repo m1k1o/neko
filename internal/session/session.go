@@ -14,7 +14,7 @@ type SessionCtx struct {
 	logger        zerolog.Logger
 	manager       *SessionManagerCtx
 	profile       types.MemberProfile
-	state         types.MemberState
+	state         types.SessionState
 	websocketPeer types.WebSocketPeer
 	webrtcPeer    types.WebRTCPeer
 }
@@ -91,7 +91,7 @@ func (session *SessionCtx) IsConnected() bool {
 	return session.state.IsConnected
 }
 
-func (session *SessionCtx) GetState() types.MemberState {
+func (session *SessionCtx) GetState() types.SessionState {
 	return session.state
 }
 

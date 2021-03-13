@@ -21,7 +21,7 @@ type SessionLoginPayload struct {
 type SessionWhoamiPayload struct {
 	ID      string              `json:"id"`
 	Profile types.MemberProfile `json:"profile"`
-	State   types.MemberState   `json:"state"`
+	State   types.SessionState  `json:"state"`
 }
 
 func (api *ApiManagerCtx) Login(w http.ResponseWriter, r *http.Request) {
