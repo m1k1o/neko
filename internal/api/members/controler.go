@@ -42,11 +42,6 @@ func (h *MembersHandler) membersCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if data.Secret == "" {
-		utils.HttpBadRequest(w, "Secret cannot be empty.")
-		return
-	}
-
 	if data.Name == "" {
 		utils.HttpBadRequest(w, "Name cannot be empty.")
 		return

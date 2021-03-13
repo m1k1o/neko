@@ -56,9 +56,7 @@ func (session *SessionCtx) CanAccessClipboard() bool {
 }
 
 func (session *SessionCtx) GetProfile() types.MemberProfile {
-	profile := session.profile
-	profile.Secret = ""
-	return profile
+	return session.profile
 }
 
 func (session *SessionCtx) profileChanged() {

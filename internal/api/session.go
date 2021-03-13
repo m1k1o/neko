@@ -14,11 +14,11 @@ var CookieExpirationDate = time.Now().Add(365 * 24 * time.Hour)
 var UnsecureCookies = os.Getenv("DISABLE_SECURE_COOKIES") == "true"
 
 type SessionLoginPayload struct {
-	ID     string `json:"id"`
-	Secret string `json:"secret"`
+	Username string `json:"username"`
+	Password string `json:"password"`
 }
 
-type SessionWhoamiPayload struct {
+type SessionDataPayload struct {
 	ID      string              `json:"id"`
 	Profile types.MemberProfile `json:"profile"`
 	State   types.SessionState  `json:"state"`
@@ -31,8 +31,8 @@ func (api *ApiManagerCtx) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// TODO: Proper login.
-	session, token, err := api.sessions.Create(data.ID, types.MemberProfile{
-		Name:               data.ID,
+	session, token, err := api.sessions.Create(data.Username, types.MemberProfile{
+		Name:               data.Username,
 		IsAdmin:            true,
 		CanLogin:           true,
 		CanConnect:         true,
@@ -60,7 +60,7 @@ func (api *ApiManagerCtx) Login(w http.ResponseWriter, r *http.Request) {
 		HttpOnly: true,
 	})
 
-	utils.HttpSuccess(w, SessionWhoamiPayload{
+	utils.HttpSuccess(w, SessionDataPayload{
 		ID:      session.ID(),
 		Profile: session.GetProfile(),
 		State:   session.GetState(),
@@ -97,7 +97,7 @@ func (api *ApiManagerCtx) Logout(w http.ResponseWriter, r *http.Request) {
 func (api *ApiManagerCtx) Whoami(w http.ResponseWriter, r *http.Request) {
 	session := auth.GetSession(r)
 
-	utils.HttpSuccess(w, SessionWhoamiPayload{
+	utils.HttpSuccess(w, SessionDataPayload{
 		ID:      session.ID(),
 		Profile: session.GetProfile(),
 		State:   session.GetState(),

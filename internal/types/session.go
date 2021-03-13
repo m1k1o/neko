@@ -3,7 +3,6 @@ package types
 import "net/http"
 
 type MemberProfile struct {
-	Secret             string `json:"secret,omitempty"`
 	Name               string `json:"name"`
 	IsAdmin            bool   `json:"is_admin"`
 	CanLogin           bool   `json:"can_login"`
