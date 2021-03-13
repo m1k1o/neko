@@ -180,7 +180,7 @@ func (manager *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Reque
 		return connection.Close()
 	}
 
-	if session.IsConnected() {
+	if session.State().IsConnected {
 		// TODO: Refactor, return error code.
 		if err = connection.WriteJSON(
 			message.SystemDisconnect{

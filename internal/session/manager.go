@@ -103,7 +103,7 @@ func (manager *SessionManagerCtx) Delete(id string) error {
 	manager.sessionsMu.Unlock()
 
 	var err error
-	if session.IsConnected() {
+	if session.State().IsConnected {
 		err = session.Disconnect("session deleted")
 	}
 
@@ -175,7 +175,7 @@ func (manager *SessionManagerCtx) Broadcast(v interface{}, exclude interface{}) 
 	defer manager.sessionsMu.Unlock()
 
 	for id, session := range manager.sessions {
-		if !session.IsConnected() {
+		if !session.State().IsConnected {
 			continue
 		}
 
@@ -196,7 +196,7 @@ func (manager *SessionManagerCtx) AdminBroadcast(v interface{}, exclude interfac
 	defer manager.sessionsMu.Unlock()
 
 	for id, session := range manager.sessions {
-		if !session.IsConnected() || !session.Profile().IsAdmin {
+		if !session.State().IsConnected || !session.Profile().IsAdmin {
 			continue
 		}
 

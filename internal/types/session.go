@@ -20,11 +20,8 @@ type SessionState struct {
 type Session interface {
 	ID() string
 	Profile() MemberProfile
-
-	// state
-	IsHost() bool
-	IsConnected() bool
 	State() SessionState
+	IsHost() bool
 
 	// websocket
 	SetWebSocketPeer(websocketPeer WebSocketPeer)

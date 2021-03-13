@@ -45,20 +45,12 @@ func (session *SessionCtx) profileChanged() {
 	}
 }
 
-// ---
-// state
-// ---
+func (session *SessionCtx) State() types.SessionState {
+	return session.state
+}
 
 func (session *SessionCtx) IsHost() bool {
 	return session.manager.host != nil && session.manager.host == session
-}
-
-func (session *SessionCtx) IsConnected() bool {
-	return session.state.IsConnected
-}
-
-func (session *SessionCtx) State() types.SessionState {
-	return session.state
 }
 
 // ---
