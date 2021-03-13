@@ -35,9 +35,13 @@ type SessionManagerCtx struct {
 	emmiter    events.EventEmmiter
 }
 
-func (manager *SessionManagerCtx) Create(id string, profile types.MemberProfile) (types.Session, error) {
-	manager.sessionsMu.Lock()
+func (manager *SessionManagerCtx) Create(profile types.MemberProfile) (types.Session, error) {
+	id, err := utils.NewUID(32)
+	if err != nil {
+		return nil, err
+	}
 
+	manager.sessionsMu.Lock()
 	_, ok := manager.sessions[id]
 	if ok {
 		manager.sessionsMu.Unlock()
