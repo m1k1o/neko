@@ -25,8 +25,9 @@ func (h *MessageHandlerCtx) systemInit(session types.Session) error {
 
 	members := map[string]message.MemberData{}
 	for _, session := range h.sessions.List() {
-		members[session.ID()] = message.MemberData{
-			ID:      session.ID(),
+		memberId := session.ID()
+		members[memberId] = message.MemberData{
+			ID:      memberId,
 			Profile: session.GetProfile(),
 			State:   session.GetState(),
 		}

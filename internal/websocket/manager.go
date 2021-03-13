@@ -46,49 +46,49 @@ type WebSocketManagerCtx struct {
 func (manager *WebSocketManagerCtx) Start() {
 	manager.sessions.OnCreated(func(session types.Session) {
 		if err := manager.handler.SessionCreated(session); err != nil {
-			manager.logger.Warn().Str("id", session.ID()).Err(err).Msg("session created with an error")
+			manager.logger.Warn().Str("session_id", session.ID()).Err(err).Msg("session created with an error")
 		} else {
-			manager.logger.Debug().Str("id", session.ID()).Msg("session created")
+			manager.logger.Debug().Str("session_id", session.ID()).Msg("session created")
 		}
 	})
 
 	manager.sessions.OnDeleted(func(session types.Session) {
 		if err := manager.handler.SessionDeleted(session); err != nil {
-			manager.logger.Warn().Str("id", session.ID()).Err(err).Msg("session deleted with an error")
+			manager.logger.Warn().Str("session_id", session.ID()).Err(err).Msg("session deleted with an error")
 		} else {
-			manager.logger.Debug().Str("id", session.ID()).Msg("session deleted")
+			manager.logger.Debug().Str("session_id", session.ID()).Msg("session deleted")
 		}
 	})
 
 	manager.sessions.OnConnected(func(session types.Session) {
 		if err := manager.handler.SessionConnected(session); err != nil {
-			manager.logger.Warn().Str("id", session.ID()).Err(err).Msg("session connected with an error")
+			manager.logger.Warn().Str("session_id", session.ID()).Err(err).Msg("session connected with an error")
 		} else {
-			manager.logger.Debug().Str("id", session.ID()).Msg("session connected")
+			manager.logger.Debug().Str("session_id", session.ID()).Msg("session connected")
 		}
 	})
 
 	manager.sessions.OnDisconnected(func(session types.Session) {
 		if err := manager.handler.SessionDisconnected(session); err != nil {
-			manager.logger.Warn().Str("id", session.ID()).Err(err).Msg("session disconnected with an error")
+			manager.logger.Warn().Str("session_id", session.ID()).Err(err).Msg("session disconnected with an error")
 		} else {
-			manager.logger.Debug().Str("id", session.ID()).Msg("session disconnected")
+			manager.logger.Debug().Str("session_id", session.ID()).Msg("session disconnected")
 		}
 	})
 
 	manager.sessions.OnProfileChanged(func(session types.Session) {
 		if err := manager.handler.SessionProfileChanged(session); err != nil {
-			manager.logger.Warn().Str("id", session.ID()).Err(err).Msg("session profile changed with an error")
+			manager.logger.Warn().Str("session_id", session.ID()).Err(err).Msg("session profile changed with an error")
 		} else {
-			manager.logger.Debug().Str("id", session.ID()).Msg("session profile changed")
+			manager.logger.Debug().Str("session_id", session.ID()).Msg("session profile changed")
 		}
 	})
 
 	manager.sessions.OnStateChanged(func(session types.Session) {
 		if err := manager.handler.SessionStateChanged(session); err != nil {
-			manager.logger.Warn().Str("id", session.ID()).Err(err).Msg("session state changed with an error")
+			manager.logger.Warn().Str("session_id", session.ID()).Err(err).Msg("session state changed with an error")
 		} else {
-			manager.logger.Debug().Str("id", session.ID()).Msg("session state changed")
+			manager.logger.Debug().Str("session_id", session.ID()).Msg("session state changed")
 		}
 	})
 
@@ -201,7 +201,7 @@ func (manager *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Reque
 
 	manager.logger.
 		Debug().
-		Str("session", session.ID()).
+		Str("session_id", session.ID()).
 		Str("address", connection.RemoteAddr().String()).
 		Msg("connection started")
 
@@ -210,7 +210,7 @@ func (manager *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Reque
 	defer func() {
 		manager.logger.
 			Debug().
-			Str("session", session.ID()).
+			Str("session_id", session.ID()).
 			Str("address", connection.RemoteAddr().String()).
 			Msg("connection ended")
 
@@ -250,7 +250,7 @@ func (manager *WebSocketManagerCtx) handle(connection *websocket.Conn, session t
 		select {
 		case raw := <-bytes:
 			manager.logger.Debug().
-				Str("session", session.ID()).
+				Str("session_id", session.ID()).
 				Str("address", connection.RemoteAddr().String()).
 				Str("raw", string(raw)).
 				Msg("received message from client")

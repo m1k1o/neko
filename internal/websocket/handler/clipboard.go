@@ -7,12 +7,12 @@ import (
 
 func (h *MessageHandlerCtx) clipboardSet(session types.Session, payload *message.ClipboardData) error {
 	if !session.CanAccessClipboard() {
-		h.logger.Debug().Str("id", session.ID()).Msg("cannot access clipboard")
+		h.logger.Debug().Str("session_id", session.ID()).Msg("cannot access clipboard")
 		return nil
 	}
 
 	if !session.IsHost() {
-		h.logger.Debug().Str("id", session.ID()).Msg("is not the host")
+		h.logger.Debug().Str("session_id", session.ID()).Msg("is not the host")
 		return nil
 	}
 

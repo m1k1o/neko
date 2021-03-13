@@ -30,7 +30,7 @@ func (peer *WebSocketPeerCtx) Send(v interface{}) error {
 	}
 
 	peer.manager.logger.Debug().
-		Str("session", peer.session.ID()).
+		Str("session_id", peer.session.ID()).
 		Str("address", peer.connection.RemoteAddr().String()).
 		Str("raw", string(raw)).
 		Msg("sending message to client")

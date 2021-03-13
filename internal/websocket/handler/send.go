@@ -9,7 +9,7 @@ import (
 func (h *MessageHandlerCtx) sendUnicast(session types.Session, payload *message.SendUnicast) error {
 	receiver, ok := h.sessions.Get(payload.Receiver)
 	if !ok {
-		h.logger.Debug().Str("id", session.ID()).Msg("receiver ID not found")
+		h.logger.Debug().Str("session_id", session.ID()).Msg("receiver session ID not found")
 		return nil
 	}
 

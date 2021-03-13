@@ -107,7 +107,7 @@ func (manager *WebRTCManagerCtx) ICEServers() []string {
 }
 
 func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID string) (*webrtc.SessionDescription, error) {
-	logger := manager.logger.With().Str("id", session.ID()).Logger()
+	logger := manager.logger.With().Str("session_id", session.ID()).Logger()
 
 	// Create MediaEngine
 	engine, err := manager.mediaEngine(videoID)

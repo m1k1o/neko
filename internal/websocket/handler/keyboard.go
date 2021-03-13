@@ -7,7 +7,7 @@ import (
 
 func (h *MessageHandlerCtx) keyboardMap(session types.Session, payload *message.KeyboardMap) error {
 	if !session.IsHost() {
-		h.logger.Debug().Str("id", session.ID()).Msg("is not the host")
+		h.logger.Debug().Str("session_id", session.ID()).Msg("is not the host")
 		return nil
 	}
 
@@ -19,7 +19,7 @@ func (h *MessageHandlerCtx) keyboardMap(session types.Session, payload *message.
 
 func (h *MessageHandlerCtx) keyboardModifiers(session types.Session, payload *message.KeyboardModifiers) error {
 	if !session.IsHost() {
-		h.logger.Debug().Str("id", session.ID()).Msg("is not the host")
+		h.logger.Debug().Str("session_id", session.ID()).Msg("is not the host")
 		return nil
 	}
 

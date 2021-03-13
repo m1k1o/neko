@@ -84,7 +84,7 @@ func (session *SessionCtx) profileChanged() {
 // ---
 
 func (session *SessionCtx) IsHost() bool {
-	return session.manager.host != nil && session.manager.host.ID() == session.ID()
+	return session.manager.host != nil && session.manager.host == session
 }
 
 func (session *SessionCtx) IsConnected() bool {
