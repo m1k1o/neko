@@ -15,10 +15,10 @@ const (
 )
 
 const (
-	MEMBER_CREATED = "member/created"
-	MEMBER_DELETED = "member/deleted"
-	MEMBER_PROFILE = "member/profile"
-	MEMBER_STATE   = "member/state"
+	SESSION_CREATED = "session/created"
+	SESSION_DELETED = "session/deleted"
+	SESSION_PROFILE = "session/profile"
+	SESSION_STATE   = "session/state"
 )
 
 const (

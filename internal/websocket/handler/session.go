@@ -9,7 +9,7 @@ import (
 func (h *MessageHandlerCtx) SessionCreated(session types.Session) error {
 	h.sessions.Broadcast(
 		message.MemberData{
-			Event:   event.MEMBER_CREATED,
+			Event:   event.SESSION_CREATED,
 			ID:      session.ID(),
 			Profile: session.GetProfile(),
 			State:   session.GetState(),
@@ -21,7 +21,7 @@ func (h *MessageHandlerCtx) SessionCreated(session types.Session) error {
 func (h *MessageHandlerCtx) SessionDeleted(session types.Session) error {
 	h.sessions.Broadcast(
 		message.MemberID{
-			Event: event.MEMBER_DELETED,
+			Event: event.SESSION_DELETED,
 			ID:    session.ID(),
 		}, nil)
 
@@ -57,7 +57,7 @@ func (h *MessageHandlerCtx) SessionProfileChanged(session types.Session) error {
 
 	h.sessions.Broadcast(
 		message.MemberProfile{
-			Event:         event.MEMBER_PROFILE,
+			Event:         event.SESSION_PROFILE,
 			ID:            session.ID(),
 			MemberProfile: &profile,
 		}, nil)
@@ -70,7 +70,7 @@ func (h *MessageHandlerCtx) SessionStateChanged(session types.Session) error {
 
 	h.sessions.Broadcast(
 		message.SessionState{
-			Event:        event.MEMBER_STATE,
+			Event:        event.SESSION_STATE,
 			ID:           session.ID(),
 			SessionState: &state,
 		}, nil)
