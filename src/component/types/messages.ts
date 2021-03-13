@@ -76,7 +76,7 @@ export interface MemberProfile {
   can_access_clipboard: boolean
 }
 
-export interface MemberState {
+export interface SessionState {
   event: string | undefined
   id: string
   is_connected: boolean

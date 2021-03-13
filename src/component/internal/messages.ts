@@ -141,7 +141,7 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
     this.emit('member.updated', id)
   }
 
-  protected [EVENT.MEMBER_STATE]({ id, ...state }: message.MemberState) {
+  protected [EVENT.MEMBER_STATE]({ id, ...state }: message.SessionState) {
     this._log.debug('EVENT.MEMBER_STATE', id)
     Vue.set(this.state.members[id], 'state', state)
     this.emit('member.updated', id)

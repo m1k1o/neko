@@ -96,7 +96,7 @@ export interface MemberProfile {
   can_access_clipboard: boolean
 }
 
-export interface MemberState {
+export interface SessionState {
   is_connected: boolean
   is_watching: boolean
 }
@@ -104,5 +104,5 @@ export interface MemberState {
 export interface Member {
   id: string
   profile: MemberProfile
-  state: MemberState
+  state: SessionState
 }
