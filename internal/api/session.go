@@ -31,7 +31,7 @@ func (api *ApiManagerCtx) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// TODO: Proper login.
-	session, err := api.sessions.Create(types.MemberProfile{
+	session, token, err := api.sessions.Create(types.MemberProfile{
 		Name:               data.ID,
 		IsAdmin:            true,
 		CanLogin:           true,
@@ -53,7 +53,7 @@ func (api *ApiManagerCtx) Login(w http.ResponseWriter, r *http.Request) {
 
 	http.SetCookie(w, &http.Cookie{
 		Name:     "NEKO_SESSION",
-		Value:    session.ID(),
+		Value:    token,
 		Expires:  CookieExpirationDate,
 		Secure:   !UnsecureCookies,
 		SameSite: sameSite,

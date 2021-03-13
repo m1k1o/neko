@@ -59,10 +59,11 @@ type Session interface {
 }
 
 type SessionManager interface {
-	Create(profile MemberProfile) (Session, error)
+	Create(profile MemberProfile) (Session, string, error)
 	Update(id string, profile MemberProfile) error
-	Get(id string) (Session, bool)
 	Delete(id string) error
+	Get(id string) (Session, bool)
+	GetByToken(token string) (Session, bool) 
 	List() []Session
 
 	SetHost(host Session)

@@ -14,7 +14,7 @@ func (manager *SessionManagerCtx) Authenticate(r *http.Request) (types.Session, 
 		return nil, fmt.Errorf("no authentication provided")
 	}
 
-	session, ok := manager.Get(token)
+	session, ok := manager.GetByToken(token)
 	if !ok {
 		return nil, fmt.Errorf("session not found")
 	}

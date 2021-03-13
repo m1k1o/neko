@@ -19,6 +19,7 @@ func New(config *config.Session) *SessionManagerCtx {
 		config:     config,
 		host:       nil,
 		hostMu:     sync.Mutex{},
+		tokens:     make(map[string]string),
 		sessions:   make(map[string]*SessionCtx),
 		sessionsMu: sync.Mutex{},
 		emmiter:    events.New(),
@@ -30,36 +31,48 @@ type SessionManagerCtx struct {
 	config     *config.Session
 	host       types.Session
 	hostMu     sync.Mutex
+	tokens     map[string]string
 	sessions   map[string]*SessionCtx
 	sessionsMu sync.Mutex
 	emmiter    events.EventEmmiter
 }
 
-func (manager *SessionManagerCtx) Create(profile types.MemberProfile) (types.Session, error) {
+func (manager *SessionManagerCtx) Create(profile types.MemberProfile) (types.Session, string, error) {
 	id, err := utils.NewUID(32)
 	if err != nil {
-		return nil, err
+		return nil, "", err
+	}
+
+	token, err := utils.NewUID(64)
+	if err != nil {
+		return nil, "", err
 	}
 
 	manager.sessionsMu.Lock()
-	_, ok := manager.sessions[id]
-	if ok {
+	if _, ok := manager.sessions[id]; ok {
 		manager.sessionsMu.Unlock()
-		return nil, fmt.Errorf("Session id already exists.")
+		return nil, "", fmt.Errorf("Session id already exists.")
+	}
+
+	if _, ok := manager.tokens[token]; ok {
+		manager.sessionsMu.Unlock()
+		return nil, "", fmt.Errorf("Session token already exists.")
 	}
 
 	session := &SessionCtx{
 		id:      id,
+		token:   token,
 		manager: manager,
 		logger:  manager.logger.With().Str("id", id).Logger(),
 		profile: profile,
 	}
 
+	manager.tokens[token] = id
 	manager.sessions[id] = session
 	manager.sessionsMu.Unlock()
 
 	manager.emmiter.Emit("created", session)
-	return session, nil
+	return session, token, nil
 }
 
 func (manager *SessionManagerCtx) Update(id string, profile types.MemberProfile) error {
@@ -87,6 +100,10 @@ func (manager *SessionManagerCtx) Delete(id string) error {
 		return fmt.Errorf("Session id not found.")
 	}
 
+	if _, ok := manager.tokens[session.token]; ok {
+		delete(manager.tokens, session.token)
+	}
+
 	delete(manager.sessions, id)
 	manager.sessionsMu.Unlock()
 
@@ -105,6 +122,18 @@ func (manager *SessionManagerCtx) Get(id string) (types.Session, bool) {
 
 	session, ok := manager.sessions[id]
 	return session, ok
+}
+
+func (manager *SessionManagerCtx) GetByToken(token string) (types.Session, bool) {
+	manager.sessionsMu.Lock()
+	id, ok := manager.tokens[token]
+	manager.sessionsMu.Unlock()
+
+	if !ok {
+		return nil, false
+	}
+
+	return manager.Get(id)
 }
 
 func (manager *SessionManagerCtx) List() []types.Session {

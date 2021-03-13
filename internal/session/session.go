@@ -10,6 +10,7 @@ import (
 
 type SessionCtx struct {
 	id            string
+	token         string
 	logger        zerolog.Logger
 	manager       *SessionManagerCtx
 	profile       types.MemberProfile
