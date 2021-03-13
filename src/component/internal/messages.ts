@@ -27,10 +27,10 @@ export interface NekoEvents {
   ['receive.unicast']: (sender: string, subject: string, body: any) => void
   ['receive.broadcast']: (sender: string, subject: string, body: any) => void
 
-  // member events
-  ['member.created']: (id: string) => void
-  ['member.deleted']: (id: string) => void
-  ['member.updated']: (id: string) => void
+  // session events
+  ['session.created']: (id: string) => void
+  ['session.deleted']: (id: string) => void
+  ['session.updated']: (id: string) => void
 
   // room events
   ['room.control.host']: (hasHost: boolean, hostID: string | undefined) => void
@@ -65,11 +65,11 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
 
   protected [EVENT.SYSTEM_INIT](conf: message.SystemInit) {
     this._log.debug('EVENT.SYSTEM_INIT')
-    Vue.set(this.state, 'member_id', conf.member_id)
+    Vue.set(this.state, 'session_id', conf.session_id)
     Vue.set(this.state.control, 'implicit_hosting', conf.implicit_hosting)
 
-    for (const id in conf.members) {
-      this[EVENT.SESSION_CREATED](conf.members[id])
+    for (const id in conf.sessions) {
+      this[EVENT.SESSION_CREATED](conf.sessions[id])
     }
 
     this[EVENT.SCREEN_UPDATED](conf.screen_size)
@@ -120,31 +120,31 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
   }
 
   /////////////////////////////
-  // Member Events
+  // Session Events
   /////////////////////////////
 
-  protected [EVENT.SESSION_CREATED]({ id, ...data }: message.MemberData) {
+  protected [EVENT.SESSION_CREATED]({ id, ...data }: message.SessionData) {
     this._log.debug('EVENT.SESSION_CREATED', id)
-    Vue.set(this.state.members, id, data)
-    this.emit('member.created', id)
+    Vue.set(this.state.sessions, id, data)
+    this.emit('session.created', id)
   }
 
-  protected [EVENT.SESSION_DELETED]({ id }: message.MemberID) {
+  protected [EVENT.SESSION_DELETED]({ id }: message.SessionID) {
     this._log.debug('EVENT.SESSION_DELETED', id)
-    Vue.delete(this.state.members, id)
-    this.emit('member.deleted', id)
+    Vue.delete(this.state.sessions, id)
+    this.emit('session.deleted', id)
   }
 
   protected [EVENT.SESSION_PROFILE]({ id, ...profile }: message.MemberProfile) {
     this._log.debug('EVENT.SESSION_PROFILE', id)
-    Vue.set(this.state.members[id], 'profile', profile)
-    this.emit('member.updated', id)
+    Vue.set(this.state.sessions[id], 'profile', profile)
+    this.emit('session.updated', id)
   }
 
   protected [EVENT.SESSION_STATE]({ id, ...state }: message.SessionState) {
     this._log.debug('EVENT.SESSION_STATE', id)
-    Vue.set(this.state.members[id], 'state', state)
-    this.emit('member.updated', id)
+    Vue.set(this.state.sessions[id], 'state', state)
+    this.emit('session.updated', id)
   }
 
   /////////////////////////////
@@ -211,17 +211,17 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
   // FileChooserDialog Events
   /////////////////////////////
 
-  protected [EVENT.FILE_CHOOSER_DIALOG_OPENED]({ id }: message.MemberID) {
+  protected [EVENT.FILE_CHOOSER_DIALOG_OPENED]({ id }: message.SessionID) {
     this._log.debug('EVENT.FILE_CHOOSER_DIALOG_OPENED')
 
-    if (id == this.state.member_id) {
+    if (id == this.state.session_id) {
       this.emit('upload.dialog.requested')
     } else {
       this.emit('upload.dialog.overlay', id)
     }
   }
 
-  protected [EVENT.FILE_CHOOSER_DIALOG_CLOSED]({ id }: message.MemberID) {
+  protected [EVENT.FILE_CHOOSER_DIALOG_CLOSED]({ id }: message.SessionID) {
     this._log.debug('EVENT.FILE_CHOOSER_DIALOG_CLOSED')
     this.emit('upload.dialog.closed')
   }

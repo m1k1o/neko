@@ -10,10 +10,10 @@
         :isControling="controlling && watching"
         :cursorTag="
           state.control.implicit_hosting && state.control.host_id != null
-            ? state.members[state.control.host_id].profile.name
+            ? state.sessions[state.control.host_id].profile.name
             : ''
         "
-        :implicitControl="state.control.implicit_hosting && state.members[state.member_id].profile.can_host"
+        :implicitControl="state.control.implicit_hosting && state.sessions[state.session_id].profile.can_host"
         @implicit-control-request="websocket.send('control/request')"
         @implicit-control-release="websocket.send('control/release')"
         @update-kbd-modifiers="websocket.send('keyboard/modifiers', $event)"
@@ -138,8 +138,8 @@
         },
         configurations: [],
       },
-      member_id: null,
-      members: {},
+      session_id: null,
+      sessions: {},
     } as NekoState
 
     public get authenticated() {
@@ -155,11 +155,11 @@
     }
 
     public get controlling() {
-      return this.state.control.host_id !== null && this.state.member_id === this.state.control.host_id
+      return this.state.control.host_id !== null && this.state.session_id === this.state.control.host_id
     }
 
     public get is_admin() {
-      return this.state.member_id != null ? this.state.members[this.state.member_id].profile.is_admin : false
+      return this.state.session_id != null ? this.state.sessions[this.state.session_id].profile.is_admin : false
     }
 
     /////////////////////////////
@@ -588,8 +588,8 @@
       Vue.set(this.state.control, 'implicit_hosting', false)
       Vue.set(this.state.screen, 'size', { width: 1280, height: 720, rate: 30 })
       Vue.set(this.state.screen, 'configurations', [])
-      Vue.set(this.state, 'member_id', null)
-      Vue.set(this.state, 'members', {})
+      Vue.set(this.state, 'session_id', null)
+      Vue.set(this.state, 'sessions', {})
     }
   }
 </script>

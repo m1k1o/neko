@@ -9,10 +9,10 @@ export interface Message {
 
 export interface SystemInit {
   event: string | undefined
-  member_id: string
+  session_id: string
   control_host: ControlHost
   screen_size: ScreenSize
-  members: Record<string, MemberData>
+  sessions: Record<string, SessionData>
   implicit_hosting: boolean
 }
 
@@ -55,11 +55,10 @@ export interface SignalVideo {
 }
 
 /////////////////////////////
-// Member
+// Session
 /////////////////////////////
 
-// TODO: New.
-export interface MemberID {
+export interface SessionID {
   event: string | undefined
   id: string
 }
@@ -83,7 +82,7 @@ export interface SessionState {
   is_watching: boolean
 }
 
-export interface MemberData {
+export interface SessionData {
   event: string | undefined
   id: string
   profile: MemberProfile

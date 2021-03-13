@@ -3,8 +3,8 @@ export default interface State {
   video: Video
   control: Control
   screen: Screen
-  member_id: string | null
-  members: Record<string, Member>
+  session_id: string | null
+  sessions: Record<string, Session>
 }
 
 /////////////////////////////
@@ -84,7 +84,7 @@ export interface ScreenSize {
 }
 
 /////////////////////////////
-// Member
+// Session
 /////////////////////////////
 export interface MemberProfile {
   name: string
@@ -101,7 +101,7 @@ export interface SessionState {
   is_watching: boolean
 }
 
-export interface Member {
+export interface Session {
   id: string
   profile: MemberProfile
   state: SessionState
