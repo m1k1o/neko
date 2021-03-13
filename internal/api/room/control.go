@@ -6,8 +6,6 @@ import (
 	"github.com/go-chi/chi"
 
 	"demodesk/neko/internal/http/auth"
-	"demodesk/neko/internal/types/event"
-	"demodesk/neko/internal/types/message"
 	"demodesk/neko/internal/utils"
 )
 
@@ -50,13 +48,6 @@ func (h *RoomHandler) controlRequest(w http.ResponseWriter, r *http.Request) {
 
 	h.sessions.SetHost(session)
 
-	h.sessions.Broadcast(
-		message.ControlHost{
-			Event:   event.CONTROL_HOST,
-			HasHost: true,
-			HostID:  session.ID(),
-		}, nil)
-
 	utils.HttpSuccess(w)
 }
 
@@ -75,12 +66,6 @@ func (h *RoomHandler) controlRelease(w http.ResponseWriter, r *http.Request) {
 	h.desktop.ResetKeys()
 	h.sessions.ClearHost()
 
-	h.sessions.Broadcast(
-		message.ControlHost{
-			Event:   event.CONTROL_HOST,
-			HasHost: false,
-		}, nil)
-
 	utils.HttpSuccess(w)
 }
 
@@ -92,13 +77,6 @@ func (h *RoomHandler) controlTake(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.sessions.SetHost(session)
-
-	h.sessions.Broadcast(
-		message.ControlHost{
-			Event:   event.CONTROL_HOST,
-			HasHost: true,
-			HostID:  session.ID(),
-		}, nil)
 
 	utils.HttpSuccess(w)
 }
@@ -119,13 +97,6 @@ func (h *RoomHandler) controlGive(w http.ResponseWriter, r *http.Request) {
 
 	h.sessions.SetHost(target)
 
-	h.sessions.Broadcast(
-		message.ControlHost{
-			Event:   event.CONTROL_HOST,
-			HasHost: true,
-			HostID:  target.ID(),
-		}, nil)
-
 	utils.HttpSuccess(w)
 }
 
@@ -138,12 +109,6 @@ func (h *RoomHandler) controlReset(w http.ResponseWriter, r *http.Request) {
 
 	h.desktop.ResetKeys()
 	h.sessions.ClearHost()
-
-	h.sessions.Broadcast(
-		message.ControlHost{
-			Event:   event.CONTROL_HOST,
-			HasHost: false,
-		}, nil)
 
 	utils.HttpSuccess(w)
 }

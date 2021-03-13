@@ -47,12 +47,6 @@ func (h *MessageHandlerCtx) SessionDisconnected(session types.Session) error {
 	if session.IsHost() {
 		h.desktop.ResetKeys()
 		h.sessions.ClearHost()
-
-		h.sessions.Broadcast(
-			message.ControlHost{
-				Event:   event.CONTROL_HOST,
-				HasHost: false,
-			}, nil)
 	}
 
 	return h.SessionStateChanged(session)

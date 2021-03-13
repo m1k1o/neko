@@ -63,12 +63,6 @@ func (session *SessionCtx) GetProfile() types.MemberProfile {
 func (session *SessionCtx) profileChanged() {
 	if !session.CanHost() && session.IsHost() {
 		session.manager.ClearHost()
-
-		session.manager.Broadcast(
-			message.ControlHost{
-				Event:   event.CONTROL_HOST,
-				HasHost: false,
-			}, nil)
 	}
 
 	if !session.CanWatch() && session.state.IsWatching {

@@ -35,10 +35,6 @@ type SessionManagerCtx struct {
 	emmiter    events.EventEmmiter
 }
 
-// ---
-// sessions
-// ---
-
 func (manager *SessionManagerCtx) Create(id string, profile types.MemberProfile) (types.Session, error) {
 	manager.sessionsMu.Lock()
 
@@ -125,10 +121,10 @@ func (manager *SessionManagerCtx) List() []types.Session {
 
 func (manager *SessionManagerCtx) SetHost(host types.Session) {
 	manager.hostMu.Lock()
-	defer manager.hostMu.Unlock()
-
 	manager.host = host
-	manager.emmiter.Emit("host", host)
+	manager.hostMu.Unlock()
+
+	manager.emmiter.Emit("host_changed", host)
 }
 
 func (manager *SessionManagerCtx) GetHost() types.Session {
@@ -139,12 +135,7 @@ func (manager *SessionManagerCtx) GetHost() types.Session {
 }
 
 func (manager *SessionManagerCtx) ClearHost() {
-	manager.hostMu.Lock()
-	defer manager.hostMu.Unlock()
-
-	host := manager.host
-	manager.host = nil
-	manager.emmiter.Emit("host_cleared", host)
+	manager.SetHost(nil)
 }
 
 // ---
@@ -197,18 +188,6 @@ func (manager *SessionManagerCtx) AdminBroadcast(v interface{}, exclude interfac
 // events
 // ---
 
-func (manager *SessionManagerCtx) OnHost(listener func(session types.Session)) {
-	manager.emmiter.On("host", func(payload ...interface{}) {
-		listener(payload[0].(*SessionCtx))
-	})
-}
-
-func (manager *SessionManagerCtx) OnHostCleared(listener func(session types.Session)) {
-	manager.emmiter.On("host_cleared", func(payload ...interface{}) {
-		listener(payload[0].(*SessionCtx))
-	})
-}
-
 func (manager *SessionManagerCtx) OnCreated(listener func(session types.Session)) {
 	manager.emmiter.On("created", func(payload ...interface{}) {
 		listener(payload[0].(*SessionCtx))
@@ -242,6 +221,16 @@ func (manager *SessionManagerCtx) OnProfileChanged(listener func(session types.S
 func (manager *SessionManagerCtx) OnStateChanged(listener func(session types.Session)) {
 	manager.emmiter.On("state_changed", func(payload ...interface{}) {
 		listener(payload[0].(*SessionCtx))
+	})
+}
+
+func (manager *SessionManagerCtx) OnHostChanged(listener func(session types.Session)) {
+	manager.emmiter.On("host_changed", func(payload ...interface{}) {
+		if payload[0] == nil {
+			listener(nil)
+		} else {
+			listener(payload[0].(*SessionCtx))
+		}
 	})
 }
 

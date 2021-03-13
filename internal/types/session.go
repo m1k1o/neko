@@ -72,14 +72,13 @@ type SessionManager interface {
 	Broadcast(v interface{}, exclude interface{})
 	AdminBroadcast(v interface{}, exclude interface{})
 
-	OnHost(listener func(session Session))
-	OnHostCleared(listener func(session Session))
 	OnCreated(listener func(session Session))
 	OnDeleted(listener func(session Session))
 	OnConnected(listener func(session Session))
 	OnDisconnected(listener func(session Session))
 	OnProfileChanged(listener func(session Session))
 	OnStateChanged(listener func(session Session))
+	OnHostChanged(listener func(session Session))
 
 	ImplicitHosting() bool
 

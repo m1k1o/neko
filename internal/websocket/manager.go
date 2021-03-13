@@ -92,6 +92,19 @@ func (manager *WebSocketManagerCtx) Start() {
 		}
 	})
 
+	manager.sessions.OnHostChanged(func(session types.Session) {
+		msg := message.ControlHost{
+			Event:   event.CONTROL_HOST,
+			HasHost: session != nil,
+		}
+
+		if msg.HasHost {
+			msg.HostID = session.ID()
+		}
+
+		manager.sessions.Broadcast(msg, nil)
+	})
+
 	manager.desktop.OnClipboardUpdated(func() {
 		session := manager.sessions.GetHost()
 		if session == nil || !session.CanAccessClipboard() {
