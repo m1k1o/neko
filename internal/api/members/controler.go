@@ -1,6 +1,7 @@
 package members
 
 import (
+	"strconv"
 	"net/http"
 
 	"demodesk/neko/internal/types"
@@ -12,12 +13,40 @@ type MemberDataPayload struct {
 	*types.MemberProfile
 }
 
+type MemberCreatePayload struct {
+	Username string              `json:"username"`
+	Password string              `json:"password"`
+	Profile  types.MemberProfile `json:"profile"`
+}
+
+type MemberPasswordPayload struct {
+	Password string `json:"password"`
+}
+
 func (h *MembersHandler) membersList(w http.ResponseWriter, r *http.Request) {
+	limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
+	if err != nil {
+		// TODO: Default zero.
+		limit = 0
+	}
+
+	offset, err := strconv.Atoi(r.URL.Query().Get("offset"))
+	if err != nil {
+		// TODO: Default zero.
+		offset = 0
+	}
+
+	entries, err := h.members.SelectAll(limit, offset)
+	if err != nil {
+		utils.HttpInternalServerError(w, err)
+		return
+	}
+
 	members := []MemberDataPayload{}
-	for _, session := range h.sessions.List() {
-		profile := session.Profile()
+	for id, profile := range entries {
+		profile := profile
 		members = append(members, MemberDataPayload{
-			ID:            session.ID(),
+			ID:            id,
 			MemberProfile: &profile,
 		})
 	}
@@ -26,9 +55,9 @@ func (h *MembersHandler) membersList(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *MembersHandler) membersCreate(w http.ResponseWriter, r *http.Request) {
-	data := &MemberDataPayload{
+	data := &MemberCreatePayload{
 		// default values
-		MemberProfile: &types.MemberProfile{
+		Profile: types.MemberProfile{
 			IsAdmin:            false,
 			CanLogin:           true,
 			CanConnect:         true,
@@ -37,56 +66,64 @@ func (h *MembersHandler) membersCreate(w http.ResponseWriter, r *http.Request) {
 			CanAccessClipboard: true,
 		},
 	}
-
+	
 	if !utils.HttpJsonRequest(w, r, data) {
 		return
 	}
 
-	if data.Name == "" {
-		utils.HttpBadRequest(w, "Name cannot be empty.")
+	if data.Username == "" {
+		utils.HttpBadRequest(w, "Username cannot be empty.")
 		return
 	}
 
-	if data.ID == "" {
-		var err error
-		if data.ID, err = utils.NewUID(32); err != nil {
-			utils.HttpInternalServerError(w, err)
-			return
-		}
-	} else {
-		if _, ok := h.sessions.Get(data.ID); ok {
-			utils.HttpBadRequest(w, "Member ID already exists.")
-			return
-		}
+	if data.Password == "" {
+		utils.HttpBadRequest(w, "Password cannot be empty.")
+		return
 	}
 
-	session, _, err := h.sessions.Create(data.ID, *data.MemberProfile)
+	id, err := h.members.Insert(data.Username, data.Password, data.Profile)
 	if err != nil {
 		utils.HttpInternalServerError(w, err)
 		return
 	}
-
+	
 	utils.HttpSuccess(w, MemberDataPayload{
-		ID: session.ID(),
+		ID: id,
 	})
 }
 
 func (h *MembersHandler) membersRead(w http.ResponseWriter, r *http.Request) {
 	member := GetMember(r)
-	profile := member.Profile()
+	profile := member.Profile
 
 	utils.HttpSuccess(w, profile)
 }
 
-func (h *MembersHandler) membersUpdate(w http.ResponseWriter, r *http.Request) {
+func (h *MembersHandler) membersUpdateProfile(w http.ResponseWriter, r *http.Request) {
 	member := GetMember(r)
-	profile := member.Profile()
+	profile := member.Profile
 
 	if !utils.HttpJsonRequest(w, r, &profile) {
 		return
 	}
 
-	if err := h.sessions.Update(member.ID(), profile); err != nil {
+	if err := h.members.UpdateProfile(member.ID, profile); err != nil {
+		utils.HttpInternalServerError(w, err)
+		return
+	}
+
+	utils.HttpSuccess(w)
+}
+
+func (h *MembersHandler) membersUpdatePassword(w http.ResponseWriter, r *http.Request) {
+	member := GetMember(r)
+	data := MemberPasswordPayload{}
+
+	if !utils.HttpJsonRequest(w, r, &data) {
+		return
+	}
+
+	if err := h.members.UpdatePassword(member.ID, data.Password); err != nil {
 		utils.HttpInternalServerError(w, err)
 		return
 	}
@@ -97,7 +134,7 @@ func (h *MembersHandler) membersUpdate(w http.ResponseWriter, r *http.Request) {
 func (h *MembersHandler) membersDelete(w http.ResponseWriter, r *http.Request) {
 	member := GetMember(r)
 
-	if err := h.sessions.Delete(member.ID()); err != nil {
+	if err := h.members.Delete(member.ID); err != nil {
 		utils.HttpInternalServerError(w, err)
 		return
 	}

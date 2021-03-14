@@ -15,6 +15,7 @@ import (
 
 type ApiManagerCtx struct {
 	sessions types.SessionManager
+	members  types.MemberManager
 	desktop  types.DesktopManager
 	capture  types.CaptureManager
 	routers  map[string]func(chi.Router)
@@ -22,6 +23,7 @@ type ApiManagerCtx struct {
 
 func New(
 	sessions types.SessionManager,
+	members types.MemberManager,
 	desktop types.DesktopManager,
 	capture types.CaptureManager,
 	conf *config.Server,
@@ -29,6 +31,7 @@ func New(
 
 	return &ApiManagerCtx{
 		sessions: sessions,
+		members:  members,
 		desktop:  desktop,
 		capture:  capture,
 		routers:  make(map[string]func(chi.Router)),
@@ -45,7 +48,7 @@ func (api *ApiManagerCtx) Route(r chi.Router) {
 		r.Post("/logout", api.Logout)
 		r.Get("/whoami", api.Whoami)
 
-		membersHandler := members.New(api.sessions)
+		membersHandler := members.New(api.members)
 		r.Route("/members", membersHandler.Route)
 
 		roomHandler := room.New(api.sessions, api.desktop, api.capture)

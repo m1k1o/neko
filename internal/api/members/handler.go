@@ -18,16 +18,16 @@ const (
 )
 
 type MembersHandler struct {
-	sessions types.SessionManager
+	members types.MemberManager
 }
 
 func New(
-	sessions types.SessionManager,
+	members types.MemberManager,
 ) *MembersHandler {
 	// Init
 
 	return &MembersHandler{
-		sessions: sessions,
+		members: members,
 	}
 }
 
@@ -38,29 +38,38 @@ func (h *MembersHandler) Route(r chi.Router) {
 		r.Post("/", h.membersCreate)
 		r.With(h.ExtractMember).Route("/{memberId}", func(r chi.Router) {
 			r.Get("/", h.membersRead)
-			r.Post("/", h.membersUpdate)
+			r.Post("/", h.membersUpdateProfile)
+			r.Post("/password", h.membersUpdatePassword)
 			r.Delete("/", h.membersDelete)
 		})
 	})
 }
 
-func SetMember(r *http.Request, session types.Session) *http.Request {
+type MemberData struct {
+	ID      string
+	Profile types.MemberProfile
+}
+
+func SetMember(r *http.Request, session MemberData) *http.Request {
 	ctx := context.WithValue(r.Context(), keyMemberCtx, session)
 	return r.WithContext(ctx)
 }
 
-func GetMember(r *http.Request) types.Session {
-	return r.Context().Value(keyMemberCtx).(types.Session)
+func GetMember(r *http.Request) MemberData {
+	return r.Context().Value(keyMemberCtx).(MemberData)
 }
 
 func (h *MembersHandler) ExtractMember(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		memberId := chi.URLParam(r, "memberId")
-		session, ok := h.sessions.Get(memberId)
-		if !ok {
-			utils.HttpNotFound(w, "Member was not found.")
+		profile, err := h.members.Select(memberId)
+		if err != nil {
+			utils.HttpNotFound(w, err)
 		} else {
-			next.ServeHTTP(w, SetMember(r, session))
+			next.ServeHTTP(w, SetMember(r, MemberData{
+				ID:      memberId,
+				Profile: profile,
+			}))
 		}
 	})
 }

@@ -134,16 +134,17 @@ func (neko *Neko) Preflight() {
 }
 
 func (neko *Neko) Start() {
-	neko.memberManager = member.New(
-		neko.Configs.Member,
-	)
-	if err := neko.memberManager.Connect(); err != nil {
-		neko.logger.Panic().Err(err).Msg("unable to connect to member manager")
-	}
-
 	neko.sessionManager = session.New(
 		neko.Configs.Session,
 	)
+
+	neko.memberManager = member.New(
+		neko.Configs.Member,
+	)
+
+	if err := neko.memberManager.Connect(); err != nil {
+		neko.logger.Panic().Err(err).Msg("unable to connect to member manager")
+	}
 
 	neko.desktopManager = desktop.New(
 		neko.Configs.Desktop,
@@ -173,6 +174,7 @@ func (neko *Neko) Start() {
 
 	neko.apiManager = api.New(
 		neko.sessionManager,
+		neko.memberManager,
 		neko.desktopManager,
 		neko.captureManager,
 		neko.Configs.Server,
