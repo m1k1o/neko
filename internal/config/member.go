@@ -13,12 +13,12 @@ type Member struct {
 }
 
 func (Member) Init(cmd *cobra.Command) error {
-	cmd.PersistentFlags().String("members_provider", "file", "choose members provider")
+	cmd.PersistentFlags().String("members_provider", "object", "choose members provider")
 	if err := viper.BindPFlag("members_provider", cmd.PersistentFlags().Lookup("members_provider")); err != nil {
 		return err
 	}
 
-	cmd.PersistentFlags().String("members_file_path", "/home/neko/members.json", "mebmer file provider path")
+	cmd.PersistentFlags().String("members_file_path", "", "mebmer file provider path")
 	if err := viper.BindPFlag("members_file_path", cmd.PersistentFlags().Lookup("members_file_path")); err != nil {
 		return err
 	}
