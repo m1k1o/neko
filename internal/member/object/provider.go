@@ -2,7 +2,6 @@ package object
 
 import (
 	"fmt"
-	"sync"
 
 	"demodesk/neko/internal/types"
 )
@@ -11,14 +10,12 @@ func New(config Config) types.MemberProvider {
 	return &MemberProviderCtx{
 		config:  config,
 		entries: make(map[string]*MemberEntry),
-		mu:      sync.Mutex{},
 	}
 }
 
 type MemberProviderCtx struct {
 	config  Config
 	entries map[string]*MemberEntry
-	mu      sync.Mutex
 }
 
 func (provider *MemberProviderCtx) Connect() error {
@@ -58,9 +55,6 @@ func (provider *MemberProviderCtx) Disconnect() error {
 }
 
 func (provider *MemberProviderCtx) Authenticate(username string, password string) (string, types.MemberProfile, error) {
-	provider.mu.Lock()
-	defer provider.mu.Unlock()
-
 	// id will be also username
 	id := username
 
@@ -78,9 +72,6 @@ func (provider *MemberProviderCtx) Authenticate(username string, password string
 }
 
 func (provider *MemberProviderCtx) Insert(username string, password string, profile types.MemberProfile) (string, error) {
-	provider.mu.Lock()
-	defer provider.mu.Unlock()
-
 	// id will be also username
 	id := username
 
@@ -99,9 +90,6 @@ func (provider *MemberProviderCtx) Insert(username string, password string, prof
 }
 
 func (provider *MemberProviderCtx) UpdateProfile(id string, profile types.MemberProfile) error {
-	provider.mu.Lock()
-	defer provider.mu.Unlock()
-
 	entry, ok := provider.entries[id]
 	if !ok {
 		return fmt.Errorf("Member ID does not exist.")
@@ -113,9 +101,6 @@ func (provider *MemberProviderCtx) UpdateProfile(id string, profile types.Member
 }
 
 func (provider *MemberProviderCtx) UpdatePassword(id string, password string) error {
-	provider.mu.Lock()
-	defer provider.mu.Unlock()
-
 	entry, ok := provider.entries[id]
 	if !ok {
 		return fmt.Errorf("Member ID does not exist.")
@@ -128,9 +113,6 @@ func (provider *MemberProviderCtx) UpdatePassword(id string, password string) er
 }
 
 func (provider *MemberProviderCtx) Select(id string) (types.MemberProfile, error) {
-	provider.mu.Lock()
-	defer provider.mu.Unlock()
-
 	entry, ok := provider.entries[id]
 	if !ok {
 		return types.MemberProfile{}, fmt.Errorf("Member ID does not exist.")
@@ -140,9 +122,6 @@ func (provider *MemberProviderCtx) Select(id string) (types.MemberProfile, error
 }
 
 func (provider *MemberProviderCtx) SelectAll(limit int, offset int) (map[string]types.MemberProfile, error) {
-	provider.mu.Lock()
-	defer provider.mu.Unlock()
-
 	profiles := make(map[string]types.MemberProfile)
 
 	i := 0
@@ -158,9 +137,6 @@ func (provider *MemberProviderCtx) SelectAll(limit int, offset int) (map[string]
 }
 
 func (provider *MemberProviderCtx) Delete(id string) error {
-	provider.mu.Lock()
-	defer provider.mu.Unlock()
-
 	_, ok := provider.entries[id]
 	if !ok {
 		return fmt.Errorf("Member ID does not exist.")

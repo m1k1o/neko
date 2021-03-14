@@ -46,37 +46,64 @@ type MemberManagerCtx struct {
 }
 
 func (manager *MemberManagerCtx) Connect() error {
+	manager.mu.Lock()
+	defer manager.mu.Unlock()
+
 	return manager.provider.Connect()
 }
 
 func (manager *MemberManagerCtx) Disconnect() error {
+	manager.mu.Lock()
+	defer manager.mu.Unlock()
+
 	return manager.provider.Disconnect()
 }
 
 func (manager *MemberManagerCtx) Authenticate(username string, password string) (string, types.MemberProfile, error) {
+	manager.mu.Lock()
+	defer manager.mu.Unlock()
+
 	return manager.provider.Authenticate(username, password)
 }
 
 func (manager *MemberManagerCtx) Insert(username string, password string, profile types.MemberProfile) (string, error) {
+	manager.mu.Lock()
+	defer manager.mu.Unlock()
+
 	return manager.provider.Insert(username, password, profile)
 }
 
 func (manager *MemberManagerCtx) Select(id string) (types.MemberProfile, error) {
+	manager.mu.Lock()
+	defer manager.mu.Unlock()
+
 	return manager.provider.Select(id)
 }
 
 func (manager *MemberManagerCtx) SelectAll(limit int, offset int) (map[string]types.MemberProfile, error) {
+	manager.mu.Lock()
+	defer manager.mu.Unlock()
+
 	return manager.provider.SelectAll(limit, offset)
 }
 
 func (manager *MemberManagerCtx) UpdateProfile(id string, profile types.MemberProfile) error {
+	manager.mu.Lock()
+	defer manager.mu.Unlock()
+
 	return manager.provider.UpdateProfile(id, profile)
 }
 
 func (manager *MemberManagerCtx) UpdatePassword(id string, password string) error {
+	manager.mu.Lock()
+	defer manager.mu.Unlock()
+
 	return manager.provider.UpdatePassword(id, password)
 }
 
 func (manager *MemberManagerCtx) Delete(id string) error {
+	manager.mu.Lock()
+	defer manager.mu.Unlock()
+
 	return manager.provider.Delete(id)
 }
