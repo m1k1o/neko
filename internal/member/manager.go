@@ -11,9 +11,14 @@ import (
 func New(config *config.Member) types.MemberManager {
 	switch config.Provider {
 	case "file":
-		return file.New(config.FilePath)
+		return file.New(file.Config{
+			File: config.FilePath,
+		})
 	case "object":
-		return object.New()
+		return object.New(object.Config{
+			AdminPassword: config.AdminPassword,
+			UserPassword:  config.Password,
+		})
 	case "dummy":
 		return dummy.New()
 	}

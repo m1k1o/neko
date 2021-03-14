@@ -7,21 +7,18 @@ import (
 	"demodesk/neko/internal/types"
 )
 
-func New() types.MemberManager {
+func New(config Config) types.MemberManager {
 	return &MemberManagerCtx{
+		config:  config,
 		entries: make(map[string]MemberEntry),
 		mu:      sync.Mutex{},
 	}
 }
 
 type MemberManagerCtx struct {
+	config  Config
 	entries map[string]MemberEntry
 	mu      sync.Mutex
-}
-
-type MemberEntry struct {
-	Password string              `json:"password"`
-	Profile  types.MemberProfile `json:"profile"`
 }
 
 func (manager *MemberManagerCtx) Connect() error {
@@ -123,7 +120,7 @@ func (manager *MemberManagerCtx) SelectAll(limit int, offset int) (map[string]ty
 
 	i := 0
 	for id, entry := range manager.entries {
-		if i < offset || i > offset + limit {
+		if i < offset || i > offset+limit {
 			continue
 		}
 

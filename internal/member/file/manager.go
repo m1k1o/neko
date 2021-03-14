@@ -10,21 +10,16 @@ import (
 	"demodesk/neko/internal/types"
 )
 
-func New(file string) types.MemberManager {
+func New(config Config) types.MemberManager {
 	return &MemberManagerCtx{
-		file: file,
-		mu:   sync.Mutex{},
+		config: config,
+		mu:     sync.Mutex{},
 	}
 }
 
 type MemberManagerCtx struct {
-	file string
-	mu   sync.Mutex
-}
-
-type MemberEntry struct {
-	Password string              `json:"password"`
-	Profile  types.MemberProfile `json:"profile"`
+	config Config
+	mu     sync.Mutex
 }
 
 func (manager *MemberManagerCtx) Connect() error {
@@ -146,7 +141,7 @@ func (manager *MemberManagerCtx) SelectAll(limit int, offset int) (map[string]ty
 
 	i := 0
 	for id, entry := range entries {
-		if i < offset || i > offset + limit {
+		if i < offset || i > offset+limit {
 			continue
 		}
 
@@ -177,7 +172,7 @@ func (manager *MemberManagerCtx) Delete(id string) error {
 }
 
 func (manager *MemberManagerCtx) deserialize() (map[string]MemberEntry, error) {
-	file, err := os.OpenFile(manager.file, os.O_RDONLY|os.O_CREATE, os.ModePerm)
+	file, err := os.OpenFile(manager.config.File, os.O_RDONLY|os.O_CREATE, os.ModePerm)
 	if err != nil {
 		return nil, err
 	}
@@ -219,5 +214,5 @@ func (manager *MemberManagerCtx) serialize(data map[string]MemberEntry) error {
 		return err
 	}
 
-	return ioutil.WriteFile(manager.file, raw, os.ModePerm)
+	return ioutil.WriteFile(manager.config.File, raw, os.ModePerm)
 }
