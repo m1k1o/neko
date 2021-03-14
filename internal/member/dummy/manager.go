@@ -48,7 +48,7 @@ func (manager *MemberManagerCtx) UpdateProfile(id string, profile types.MemberPr
 	return fmt.Errorf("Not implemented.")
 }
 
-func (manager *MemberManagerCtx) UpdatePassword(id string, passwrod string) error {
+func (manager *MemberManagerCtx) UpdatePassword(id string, password string) error {
 	return fmt.Errorf("Not implemented.")
 }
 

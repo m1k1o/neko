@@ -20,6 +20,6 @@ type MemberManager interface {
 	Select(id string) (MemberProfile, error)
 	SelectAll(limit int, offset int) (map[string]MemberProfile, error)
 	UpdateProfile(id string, profile MemberProfile) error
-	UpdatePassword(id string, passwrod string) error
+	UpdatePassword(id string, password string) error
 	Delete(id string) error
 }
