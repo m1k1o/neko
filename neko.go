@@ -11,7 +11,9 @@ import (
 	"demodesk/neko/internal/config"
 	"demodesk/neko/internal/desktop"
 	"demodesk/neko/internal/http"
+	"demodesk/neko/internal/member"
 	"demodesk/neko/internal/session"
+	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/webrtc"
 	"demodesk/neko/internal/websocket"
 	"demodesk/neko/modules"
@@ -66,6 +68,7 @@ func init() {
 			Desktop: &config.Desktop{},
 			Capture: &config.Capture{},
 			WebRTC:  &config.WebRTC{},
+			Member:  &config.Member{},
 			Session: &config.Session{},
 			Server:  &config.Server{},
 		},
@@ -106,6 +109,7 @@ type Configs struct {
 	Desktop *config.Desktop
 	Capture *config.Capture
 	WebRTC  *config.WebRTC
+	Member  *config.Member
 	Session *config.Session
 	Server  *config.Server
 }
@@ -118,6 +122,7 @@ type Neko struct {
 	desktopManager   *desktop.DesktopManagerCtx
 	captureManager   *capture.CaptureManagerCtx
 	webRTCManager    *webrtc.WebRTCManagerCtx
+	memberManager    types.MemberManager
 	sessionManager   *session.SessionManagerCtx
 	webSocketManager *websocket.WebSocketManagerCtx
 	apiManager       *api.ApiManagerCtx
@@ -129,6 +134,13 @@ func (neko *Neko) Preflight() {
 }
 
 func (neko *Neko) Start() {
+	neko.memberManager = member.New(
+		neko.Configs.Member,
+	)
+	if err := neko.memberManager.Connect(); err != nil {
+		neko.logger.Panic().Err(err).Msg("unable to connect to member manager")
+	}
+
 	neko.sessionManager = session.New(
 		neko.Configs.Session,
 	)
@@ -181,6 +193,12 @@ func (neko *Neko) Start() {
 }
 
 func (neko *Neko) Shutdown() {
+	if err := neko.memberManager.Disconnect(); err != nil {
+		neko.logger.Err(err).Msg("member manager disconnect with an error")
+	} else {
+		neko.logger.Debug().Msg("member manager disconnect")
+	}
+
 	if err := neko.desktopManager.Shutdown(); err != nil {
 		neko.logger.Err(err).Msg("desktop manager shutdown with an error")
 	} else {

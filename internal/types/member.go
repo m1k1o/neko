@@ -1,6 +1,6 @@
 package types
 
-type MembersDatabase interface {
+type MemberManager interface {
 	Connect() error
 	Disconnect() error
 

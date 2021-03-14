@@ -7,27 +7,27 @@ import (
 	"demodesk/neko/internal/types"
 )
 
-func New() types.MembersDatabase {
-	return &MembersDatabaseCtx{
+func New() types.MemberManager {
+	return &MemberManagerCtx{
 		profiles: make(map[string]types.MemberProfile),
 		mu:       sync.Mutex{},
 	}
 }
 
-type MembersDatabaseCtx struct {
+type MemberManagerCtx struct {
 	profiles map[string]types.MemberProfile
 	mu       sync.Mutex
 }
 
-func (manager *MembersDatabaseCtx) Connect() error {
+func (manager *MemberManagerCtx) Connect() error {
 	return nil
 }
 
-func (manager *MembersDatabaseCtx) Disconnect() error {
+func (manager *MemberManagerCtx) Disconnect() error {
 	return nil
 }
 
-func (manager *MembersDatabaseCtx) Insert(id string, profile types.MemberProfile) error {
+func (manager *MemberManagerCtx) Insert(id string, profile types.MemberProfile) error {
 	manager.mu.Lock()
 	defer manager.mu.Unlock()
 
@@ -40,7 +40,7 @@ func (manager *MembersDatabaseCtx) Insert(id string, profile types.MemberProfile
 	return nil
 }
 
-func (manager *MembersDatabaseCtx) Update(id string, profile types.MemberProfile) error {
+func (manager *MemberManagerCtx) Update(id string, profile types.MemberProfile) error {
 	manager.mu.Lock()
 	defer manager.mu.Unlock()
 
@@ -53,7 +53,7 @@ func (manager *MembersDatabaseCtx) Update(id string, profile types.MemberProfile
 	return nil
 }
 
-func (manager *MembersDatabaseCtx) Delete(id string) error {
+func (manager *MemberManagerCtx) Delete(id string) error {
 	manager.mu.Lock()
 	defer manager.mu.Unlock()
 
@@ -66,7 +66,7 @@ func (manager *MembersDatabaseCtx) Delete(id string) error {
 	return nil
 }
 
-func (manager *MembersDatabaseCtx) Select() (map[string]types.MemberProfile, error) {
+func (manager *MemberManagerCtx) Select() (map[string]types.MemberProfile, error) {
 	manager.mu.Lock()
 	defer manager.mu.Unlock()
 

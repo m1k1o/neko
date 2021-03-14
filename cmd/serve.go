@@ -21,6 +21,7 @@ func init() {
 		neko.Service.Configs.Desktop,
 		neko.Service.Configs.Capture,
 		neko.Service.Configs.WebRTC,
+		neko.Service.Configs.Member,
 		neko.Service.Configs.Session,
 		neko.Service.Configs.Server,
 	}, modules.Configs()...)

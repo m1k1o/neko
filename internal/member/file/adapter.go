@@ -10,27 +10,27 @@ import (
 	"demodesk/neko/internal/types"
 )
 
-func New(file string) types.MembersDatabase {
-	return &MembersDatabaseCtx{
+func New(file string) types.MemberManager {
+	return &MemberManagerCtx{
 		file: file,
 		mu:   sync.Mutex{},
 	}
 }
 
-type MembersDatabaseCtx struct {
+type MemberManagerCtx struct {
 	file string
 	mu   sync.Mutex
 }
 
-func (manager *MembersDatabaseCtx) Connect() error {
+func (manager *MemberManagerCtx) Connect() error {
 	return nil
 }
 
-func (manager *MembersDatabaseCtx) Disconnect() error {
+func (manager *MemberManagerCtx) Disconnect() error {
 	return nil
 }
 
-func (manager *MembersDatabaseCtx) Insert(id string, profile types.MemberProfile) error {
+func (manager *MemberManagerCtx) Insert(id string, profile types.MemberProfile) error {
 	manager.mu.Lock()
 	defer manager.mu.Unlock()
 
@@ -49,7 +49,7 @@ func (manager *MembersDatabaseCtx) Insert(id string, profile types.MemberProfile
 	return manager.serialize(profiles)
 }
 
-func (manager *MembersDatabaseCtx) Update(id string, profile types.MemberProfile) error {
+func (manager *MemberManagerCtx) Update(id string, profile types.MemberProfile) error {
 	manager.mu.Lock()
 	defer manager.mu.Unlock()
 
@@ -68,7 +68,7 @@ func (manager *MembersDatabaseCtx) Update(id string, profile types.MemberProfile
 	return manager.serialize(profiles)
 }
 
-func (manager *MembersDatabaseCtx) Delete(id string) error {
+func (manager *MemberManagerCtx) Delete(id string) error {
 	manager.mu.Lock()
 	defer manager.mu.Unlock()
 
@@ -87,7 +87,7 @@ func (manager *MembersDatabaseCtx) Delete(id string) error {
 	return manager.serialize(profiles)
 }
 
-func (manager *MembersDatabaseCtx) Select() (map[string]types.MemberProfile, error) {
+func (manager *MemberManagerCtx) Select() (map[string]types.MemberProfile, error) {
 	manager.mu.Lock()
 	defer manager.mu.Unlock()
 
@@ -95,7 +95,7 @@ func (manager *MembersDatabaseCtx) Select() (map[string]types.MemberProfile, err
 	return profiles, err
 }
 
-func (manager *MembersDatabaseCtx) deserialize() (map[string]types.MemberProfile, error) {
+func (manager *MemberManagerCtx) deserialize() (map[string]types.MemberProfile, error) {
 	file, err := os.OpenFile(manager.file, os.O_RDONLY|os.O_CREATE, os.ModePerm)
 	if err != nil {
 		return nil, err
@@ -118,7 +118,7 @@ func (manager *MembersDatabaseCtx) deserialize() (map[string]types.MemberProfile
 	return profiles, nil
 }
 
-func (manager *MembersDatabaseCtx) serialize(data map[string]types.MemberProfile) error {
+func (manager *MemberManagerCtx) serialize(data map[string]types.MemberProfile) error {
 	raw, err := json.Marshal(data)
 	if err != nil {
 		return err
