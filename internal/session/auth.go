@@ -19,6 +19,10 @@ func (manager *SessionManagerCtx) Authenticate(r *http.Request) (types.Session, 
 		return nil, fmt.Errorf("session not found")
 	}
 
+	if !session.Profile().CanLogin {
+		return nil, fmt.Errorf("login disabled")
+	}
+
 	return session, nil
 }
 
