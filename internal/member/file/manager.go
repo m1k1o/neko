@@ -62,20 +62,21 @@ func (manager *MemberManagerCtx) Insert(username string, password string, profil
 		return "", err
 	}
 
-	entry, ok := entries[id]
+	_, ok := entries[id]
 	if ok {
 		return "", fmt.Errorf("Member ID already exists.")
 	}
 
-	// TODO: Use hash function.
-	entry.Password = password
-	entry.Profile = profile
-	entries[id] = entry
+	entries[id] = MemberEntry{
+		// TODO: Use hash function.
+		Password: password,
+		Profile: profile,
+	}
 
 	return id, manager.serialize(entries)
 }
 
-func (manager *MemberManagerCtx) Update(id string, profile types.MemberProfile) error {
+func (manager *MemberManagerCtx) UpdateProfile(id string, profile types.MemberProfile) error {
 	manager.mu.Lock()
 	defer manager.mu.Unlock()
 
@@ -141,11 +142,10 @@ func (manager *MemberManagerCtx) SelectAll(limit int, offset int) (map[string]ty
 
 	i := 0
 	for id, entry := range entries {
-		if i < offset || i > offset+limit {
-			continue
+		if i >= offset && (limit == 0 || i < offset+limit) {
+			profiles[id] = entry.Profile
 		}
 
-		profiles[id] = entry.Profile
 		i = i + 1
 	}
 

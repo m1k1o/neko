@@ -10,14 +10,14 @@ import (
 func New(config Config) types.MemberManager {
 	return &MemberManagerCtx{
 		config:  config,
-		entries: make(map[string]MemberEntry),
+		entries: make(map[string]*MemberEntry),
 		mu:      sync.Mutex{},
 	}
 }
 
 type MemberManagerCtx struct {
 	config  Config
-	entries map[string]MemberEntry
+	entries map[string]*MemberEntry
 	mu      sync.Mutex
 }
 
@@ -84,20 +84,21 @@ func (manager *MemberManagerCtx) Insert(username string, password string, profil
 	// id will be also username
 	id := username
 
-	entry, ok := manager.entries[id]
+	_, ok := manager.entries[id]
 	if ok {
 		return "", fmt.Errorf("Member ID already exists.")
 	}
 
-	// TODO: Use hash function.
-	entry.Password = password
-	entry.Profile = profile
-	manager.entries[id] = entry
+	manager.entries[id] = &MemberEntry{
+		// TODO: Use hash function.
+		Password: password,
+		Profile: profile,
+	}
 
 	return id, nil
 }
 
-func (manager *MemberManagerCtx) Update(id string, profile types.MemberProfile) error {
+func (manager *MemberManagerCtx) UpdateProfile(id string, profile types.MemberProfile) error {
 	manager.mu.Lock()
 	defer manager.mu.Unlock()
 
@@ -107,7 +108,6 @@ func (manager *MemberManagerCtx) Update(id string, profile types.MemberProfile) 
 	}
 
 	entry.Profile = profile
-	manager.entries[id] = entry
 
 	return nil
 }
@@ -123,7 +123,6 @@ func (manager *MemberManagerCtx) UpdatePassword(id string, password string) erro
 
 	// TODO: Use hash function.
 	entry.Password = password
-	manager.entries[id] = entry
 
 	return nil
 }
@@ -133,8 +132,8 @@ func (manager *MemberManagerCtx) Select(id string) (types.MemberProfile, error) 
 	defer manager.mu.Unlock()
 
 	entry, ok := manager.entries[id]
-	if ok {
-		return types.MemberProfile{}, fmt.Errorf("Member ID already exists.")
+	if !ok {
+		return types.MemberProfile{}, fmt.Errorf("Member ID does not exist.")
 	}
 
 	return entry.Profile, nil
@@ -144,15 +143,14 @@ func (manager *MemberManagerCtx) SelectAll(limit int, offset int) (map[string]ty
 	manager.mu.Lock()
 	defer manager.mu.Unlock()
 
-	profiles := map[string]types.MemberProfile{}
+	profiles := make(map[string]types.MemberProfile)
 
 	i := 0
 	for id, entry := range manager.entries {
-		if i < offset || i > offset+limit {
-			continue
+		if i >= offset && (limit == 0 || i < offset+limit) {
+			profiles[id] = entry.Profile
 		}
 
-		profiles[id] = entry.Profile
 		i = i + 1
 	}
 

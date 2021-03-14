@@ -19,7 +19,7 @@ type MemberManager interface {
 	Insert(username string, password string, profile MemberProfile) (string, error)
 	Select(id string) (MemberProfile, error)
 	SelectAll(limit int, offset int) (map[string]MemberProfile, error)
-	Update(id string, profile MemberProfile) error
+	UpdateProfile(id string, profile MemberProfile) error
 	UpdatePassword(id string, passwrod string) error
 	Delete(id string) error
 }

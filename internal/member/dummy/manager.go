@@ -44,7 +44,7 @@ func (manager *MemberManagerCtx) SelectAll(limit int, offset int) (map[string]ty
 	return map[string]types.MemberProfile{}, fmt.Errorf("Not implemented.")
 }
 
-func (manager *MemberManagerCtx) Update(id string, profile types.MemberProfile) error {
+func (manager *MemberManagerCtx) UpdateProfile(id string, profile types.MemberProfile) error {
 	return fmt.Errorf("Not implemented.")
 }
 
