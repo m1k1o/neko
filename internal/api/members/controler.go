@@ -9,8 +9,8 @@ import (
 )
 
 type MemberDataPayload struct {
-	ID string `json:"id"`
-	*types.MemberProfile
+	ID       string              `json:"id"`
+	Profile  types.MemberProfile `json:"profile"`
 }
 
 type MemberCreatePayload struct {
@@ -44,10 +44,9 @@ func (h *MembersHandler) membersList(w http.ResponseWriter, r *http.Request) {
 
 	members := []MemberDataPayload{}
 	for id, profile := range entries {
-		profile := profile
 		members = append(members, MemberDataPayload{
-			ID:            id,
-			MemberProfile: &profile,
+			ID:      id,
+			Profile: profile,
 		})
 	}
 
@@ -88,7 +87,8 @@ func (h *MembersHandler) membersCreate(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	utils.HttpSuccess(w, MemberDataPayload{
-		ID: id,
+		ID:      id,
+		Profile: data.Profile,
 	})
 }
 
