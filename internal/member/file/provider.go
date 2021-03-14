@@ -10,34 +10,34 @@ import (
 	"demodesk/neko/internal/types"
 )
 
-func New(config Config) types.MemberManager {
-	return &MemberManagerCtx{
+func New(config Config) types.MemberProvider {
+	return &MemberProviderCtx{
 		config: config,
 		mu:     sync.Mutex{},
 	}
 }
 
-type MemberManagerCtx struct {
+type MemberProviderCtx struct {
 	config Config
 	mu     sync.Mutex
 }
 
-func (manager *MemberManagerCtx) Connect() error {
+func (provider *MemberProviderCtx) Connect() error {
 	return nil
 }
 
-func (manager *MemberManagerCtx) Disconnect() error {
+func (provider *MemberProviderCtx) Disconnect() error {
 	return nil
 }
 
-func (manager *MemberManagerCtx) Authenticate(username string, password string) (string, types.MemberProfile, error) {
-	manager.mu.Lock()
-	defer manager.mu.Unlock()
+func (provider *MemberProviderCtx) Authenticate(username string, password string) (string, types.MemberProfile, error) {
+	provider.mu.Lock()
+	defer provider.mu.Unlock()
 
 	// id will be also username
 	id := username
 
-	entry, err := manager.getEntry(id)
+	entry, err := provider.getEntry(id)
 	if err != nil {
 		return "", types.MemberProfile{}, err
 	}
@@ -50,14 +50,14 @@ func (manager *MemberManagerCtx) Authenticate(username string, password string) 
 	return id, entry.Profile, nil
 }
 
-func (manager *MemberManagerCtx) Insert(username string, password string, profile types.MemberProfile) (string, error) {
-	manager.mu.Lock()
-	defer manager.mu.Unlock()
+func (provider *MemberProviderCtx) Insert(username string, password string, profile types.MemberProfile) (string, error) {
+	provider.mu.Lock()
+	defer provider.mu.Unlock()
 
 	// id will be also username
 	id := username
 
-	entries, err := manager.deserialize()
+	entries, err := provider.deserialize()
 	if err != nil {
 		return "", err
 	}
@@ -73,14 +73,14 @@ func (manager *MemberManagerCtx) Insert(username string, password string, profil
 		Profile: profile,
 	}
 
-	return id, manager.serialize(entries)
+	return id, provider.serialize(entries)
 }
 
-func (manager *MemberManagerCtx) UpdateProfile(id string, profile types.MemberProfile) error {
-	manager.mu.Lock()
-	defer manager.mu.Unlock()
+func (provider *MemberProviderCtx) UpdateProfile(id string, profile types.MemberProfile) error {
+	provider.mu.Lock()
+	defer provider.mu.Unlock()
 
-	entries, err := manager.deserialize()
+	entries, err := provider.deserialize()
 	if err != nil {
 		return err
 	}
@@ -93,14 +93,14 @@ func (manager *MemberManagerCtx) UpdateProfile(id string, profile types.MemberPr
 	entry.Profile = profile
 	entries[id] = entry
 
-	return manager.serialize(entries)
+	return provider.serialize(entries)
 }
 
-func (manager *MemberManagerCtx) UpdatePassword(id string, password string) error {
-	manager.mu.Lock()
-	defer manager.mu.Unlock()
+func (provider *MemberProviderCtx) UpdatePassword(id string, password string) error {
+	provider.mu.Lock()
+	defer provider.mu.Unlock()
 
-	entries, err := manager.deserialize()
+	entries, err := provider.deserialize()
 	if err != nil {
 		return err
 	}
@@ -114,14 +114,14 @@ func (manager *MemberManagerCtx) UpdatePassword(id string, password string) erro
 	entry.Password = password
 	entries[id] = entry
 
-	return manager.serialize(entries)
+	return provider.serialize(entries)
 }
 
-func (manager *MemberManagerCtx) Select(id string) (types.MemberProfile, error) {
-	manager.mu.Lock()
-	defer manager.mu.Unlock()
+func (provider *MemberProviderCtx) Select(id string) (types.MemberProfile, error) {
+	provider.mu.Lock()
+	defer provider.mu.Unlock()
 
-	entry, err := manager.getEntry(id)
+	entry, err := provider.getEntry(id)
 	if err != nil {
 		return types.MemberProfile{}, err
 	}
@@ -129,13 +129,13 @@ func (manager *MemberManagerCtx) Select(id string) (types.MemberProfile, error) 
 	return entry.Profile, nil
 }
 
-func (manager *MemberManagerCtx) SelectAll(limit int, offset int) (map[string]types.MemberProfile, error) {
-	manager.mu.Lock()
-	defer manager.mu.Unlock()
+func (provider *MemberProviderCtx) SelectAll(limit int, offset int) (map[string]types.MemberProfile, error) {
+	provider.mu.Lock()
+	defer provider.mu.Unlock()
 
 	profiles := map[string]types.MemberProfile{}
 
-	entries, err := manager.deserialize()
+	entries, err := provider.deserialize()
 	if err != nil {
 		return profiles, err
 	}
@@ -152,11 +152,11 @@ func (manager *MemberManagerCtx) SelectAll(limit int, offset int) (map[string]ty
 	return profiles, nil
 }
 
-func (manager *MemberManagerCtx) Delete(id string) error {
-	manager.mu.Lock()
-	defer manager.mu.Unlock()
+func (provider *MemberProviderCtx) Delete(id string) error {
+	provider.mu.Lock()
+	defer provider.mu.Unlock()
 
-	entries, err := manager.deserialize()
+	entries, err := provider.deserialize()
 	if err != nil {
 		return err
 	}
@@ -168,11 +168,11 @@ func (manager *MemberManagerCtx) Delete(id string) error {
 
 	delete(entries, id)
 
-	return manager.serialize(entries)
+	return provider.serialize(entries)
 }
 
-func (manager *MemberManagerCtx) deserialize() (map[string]MemberEntry, error) {
-	file, err := os.OpenFile(manager.config.File, os.O_RDONLY|os.O_CREATE, os.ModePerm)
+func (provider *MemberProviderCtx) deserialize() (map[string]MemberEntry, error) {
+	file, err := os.OpenFile(provider.config.File, os.O_RDONLY|os.O_CREATE, os.ModePerm)
 	if err != nil {
 		return nil, err
 	}
@@ -194,8 +194,8 @@ func (manager *MemberManagerCtx) deserialize() (map[string]MemberEntry, error) {
 	return entries, nil
 }
 
-func (manager *MemberManagerCtx) getEntry(id string) (MemberEntry, error) {
-	entries, err := manager.deserialize()
+func (provider *MemberProviderCtx) getEntry(id string) (MemberEntry, error) {
+	entries, err := provider.deserialize()
 	if err != nil {
 		return MemberEntry{}, err
 	}
@@ -208,11 +208,11 @@ func (manager *MemberManagerCtx) getEntry(id string) (MemberEntry, error) {
 	return entry, nil
 }
 
-func (manager *MemberManagerCtx) serialize(data map[string]MemberEntry) error {
+func (provider *MemberProviderCtx) serialize(data map[string]MemberEntry) error {
 	raw, err := json.Marshal(data)
 	if err != nil {
 		return err
 	}
 
-	return ioutil.WriteFile(manager.config.File, raw, os.ModePerm)
+	return ioutil.WriteFile(provider.config.File, raw, os.ModePerm)
 }

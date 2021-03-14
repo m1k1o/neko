@@ -13,7 +13,6 @@ import (
 	"demodesk/neko/internal/http"
 	"demodesk/neko/internal/member"
 	"demodesk/neko/internal/session"
-	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/webrtc"
 	"demodesk/neko/internal/websocket"
 	"demodesk/neko/modules"
@@ -122,7 +121,7 @@ type Neko struct {
 	desktopManager   *desktop.DesktopManagerCtx
 	captureManager   *capture.CaptureManagerCtx
 	webRTCManager    *webrtc.WebRTCManagerCtx
-	memberManager    types.MemberManager
+	memberManager    *member.MemberManagerCtx
 	sessionManager   *session.SessionManagerCtx
 	webSocketManager *websocket.WebSocketManagerCtx
 	apiManager       *api.ApiManagerCtx

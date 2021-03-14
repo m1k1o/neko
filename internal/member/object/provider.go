@@ -7,26 +7,26 @@ import (
 	"demodesk/neko/internal/types"
 )
 
-func New(config Config) types.MemberManager {
-	return &MemberManagerCtx{
+func New(config Config) types.MemberProvider {
+	return &MemberProviderCtx{
 		config:  config,
 		entries: make(map[string]*MemberEntry),
 		mu:      sync.Mutex{},
 	}
 }
 
-type MemberManagerCtx struct {
+type MemberProviderCtx struct {
 	config  Config
 	entries map[string]*MemberEntry
 	mu      sync.Mutex
 }
 
-func (manager *MemberManagerCtx) Connect() error {
+func (provider *MemberProviderCtx) Connect() error {
 	var err error
 
-	if manager.config.AdminPassword != "" {
+	if provider.config.AdminPassword != "" {
 		// create default admin account at startup
-		_, err = manager.Insert("admin", manager.config.AdminPassword, types.MemberProfile{
+		_, err = provider.Insert("admin", provider.config.AdminPassword, types.MemberProfile{
 			Name:               "Administrator",
 			IsAdmin:            true,
 			CanLogin:           true,
@@ -37,9 +37,9 @@ func (manager *MemberManagerCtx) Connect() error {
 		})
 	}
 
-	if manager.config.UserPassword != "" {
+	if provider.config.UserPassword != "" {
 		// create default user account at startup
-		_, err = manager.Insert("user", manager.config.UserPassword, types.MemberProfile{
+		_, err = provider.Insert("user", provider.config.UserPassword, types.MemberProfile{
 			Name:               "User",
 			IsAdmin:            false,
 			CanLogin:           true,
@@ -53,18 +53,18 @@ func (manager *MemberManagerCtx) Connect() error {
 	return err
 }
 
-func (manager *MemberManagerCtx) Disconnect() error {
+func (provider *MemberProviderCtx) Disconnect() error {
 	return nil
 }
 
-func (manager *MemberManagerCtx) Authenticate(username string, password string) (string, types.MemberProfile, error) {
-	manager.mu.Lock()
-	defer manager.mu.Unlock()
+func (provider *MemberProviderCtx) Authenticate(username string, password string) (string, types.MemberProfile, error) {
+	provider.mu.Lock()
+	defer provider.mu.Unlock()
 
 	// id will be also username
 	id := username
 
-	entry, ok := manager.entries[id]
+	entry, ok := provider.entries[id]
 	if !ok {
 		return "", types.MemberProfile{}, fmt.Errorf("Member ID does not exist.")
 	}
@@ -77,19 +77,19 @@ func (manager *MemberManagerCtx) Authenticate(username string, password string) 
 	return id, entry.Profile, nil
 }
 
-func (manager *MemberManagerCtx) Insert(username string, password string, profile types.MemberProfile) (string, error) {
-	manager.mu.Lock()
-	defer manager.mu.Unlock()
+func (provider *MemberProviderCtx) Insert(username string, password string, profile types.MemberProfile) (string, error) {
+	provider.mu.Lock()
+	defer provider.mu.Unlock()
 
 	// id will be also username
 	id := username
 
-	_, ok := manager.entries[id]
+	_, ok := provider.entries[id]
 	if ok {
 		return "", fmt.Errorf("Member ID already exists.")
 	}
 
-	manager.entries[id] = &MemberEntry{
+	provider.entries[id] = &MemberEntry{
 		// TODO: Use hash function.
 		Password: password,
 		Profile: profile,
@@ -98,11 +98,11 @@ func (manager *MemberManagerCtx) Insert(username string, password string, profil
 	return id, nil
 }
 
-func (manager *MemberManagerCtx) UpdateProfile(id string, profile types.MemberProfile) error {
-	manager.mu.Lock()
-	defer manager.mu.Unlock()
+func (provider *MemberProviderCtx) UpdateProfile(id string, profile types.MemberProfile) error {
+	provider.mu.Lock()
+	defer provider.mu.Unlock()
 
-	entry, ok := manager.entries[id]
+	entry, ok := provider.entries[id]
 	if !ok {
 		return fmt.Errorf("Member ID does not exist.")
 	}
@@ -112,11 +112,11 @@ func (manager *MemberManagerCtx) UpdateProfile(id string, profile types.MemberPr
 	return nil
 }
 
-func (manager *MemberManagerCtx) UpdatePassword(id string, password string) error {
-	manager.mu.Lock()
-	defer manager.mu.Unlock()
+func (provider *MemberProviderCtx) UpdatePassword(id string, password string) error {
+	provider.mu.Lock()
+	defer provider.mu.Unlock()
 
-	entry, ok := manager.entries[id]
+	entry, ok := provider.entries[id]
 	if !ok {
 		return fmt.Errorf("Member ID does not exist.")
 	}
@@ -127,11 +127,11 @@ func (manager *MemberManagerCtx) UpdatePassword(id string, password string) erro
 	return nil
 }
 
-func (manager *MemberManagerCtx) Select(id string) (types.MemberProfile, error) {
-	manager.mu.Lock()
-	defer manager.mu.Unlock()
+func (provider *MemberProviderCtx) Select(id string) (types.MemberProfile, error) {
+	provider.mu.Lock()
+	defer provider.mu.Unlock()
 
-	entry, ok := manager.entries[id]
+	entry, ok := provider.entries[id]
 	if !ok {
 		return types.MemberProfile{}, fmt.Errorf("Member ID does not exist.")
 	}
@@ -139,14 +139,14 @@ func (manager *MemberManagerCtx) Select(id string) (types.MemberProfile, error) 
 	return entry.Profile, nil
 }
 
-func (manager *MemberManagerCtx) SelectAll(limit int, offset int) (map[string]types.MemberProfile, error) {
-	manager.mu.Lock()
-	defer manager.mu.Unlock()
+func (provider *MemberProviderCtx) SelectAll(limit int, offset int) (map[string]types.MemberProfile, error) {
+	provider.mu.Lock()
+	defer provider.mu.Unlock()
 
 	profiles := make(map[string]types.MemberProfile)
 
 	i := 0
-	for id, entry := range manager.entries {
+	for id, entry := range provider.entries {
 		if i >= offset && (limit == 0 || i < offset+limit) {
 			profiles[id] = entry.Profile
 		}
@@ -157,16 +157,16 @@ func (manager *MemberManagerCtx) SelectAll(limit int, offset int) (map[string]ty
 	return profiles, nil
 }
 
-func (manager *MemberManagerCtx) Delete(id string) error {
-	manager.mu.Lock()
-	defer manager.mu.Unlock()
+func (provider *MemberProviderCtx) Delete(id string) error {
+	provider.mu.Lock()
+	defer provider.mu.Unlock()
 
-	_, ok := manager.entries[id]
+	_, ok := provider.entries[id]
 	if !ok {
 		return fmt.Errorf("Member ID does not exist.")
 	}
 
-	delete(manager.entries, id)
+	delete(provider.entries, id)
 
 	return nil
 }

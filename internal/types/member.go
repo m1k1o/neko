@@ -10,7 +10,7 @@ type MemberProfile struct {
 	CanAccessClipboard bool   `json:"can_access_clipboard"`
 }
 
-type MemberManager interface {
+type MemberProvider interface {
 	Connect() error
 	Disconnect() error
 
@@ -22,4 +22,8 @@ type MemberManager interface {
 	UpdateProfile(id string, profile MemberProfile) error
 	UpdatePassword(id string, password string) error
 	Delete(id string) error
+}
+
+type MemberManager interface {
+	MemberProvider
 }
