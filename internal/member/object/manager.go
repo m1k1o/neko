@@ -22,7 +22,35 @@ type MemberManagerCtx struct {
 }
 
 func (manager *MemberManagerCtx) Connect() error {
-	return nil
+	var err error
+
+	if manager.config.AdminPassword != "" {
+		// create default admin account at startup
+		_, err = manager.Insert("admin", manager.config.AdminPassword, types.MemberProfile{
+			Name:               "Administrator",
+			IsAdmin:            true,
+			CanLogin:           true,
+			CanConnect:         true,
+			CanWatch:           true,
+			CanHost:            true,
+			CanAccessClipboard: true,
+		})
+	}
+
+	if manager.config.UserPassword != "" {
+		// create default user account at startup
+		_, err = manager.Insert("user", manager.config.UserPassword, types.MemberProfile{
+			Name:               "User",
+			IsAdmin:            false,
+			CanLogin:           true,
+			CanConnect:         true,
+			CanWatch:           true,
+			CanHost:            true,
+			CanAccessClipboard: true,
+		})
+	}
+
+	return err
 }
 
 func (manager *MemberManagerCtx) Disconnect() error {
