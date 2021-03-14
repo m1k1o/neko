@@ -1,16 +1,16 @@
 package members
 
 import (
-	"strconv"
 	"net/http"
+	"strconv"
 
 	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/utils"
 )
 
 type MemberDataPayload struct {
-	ID       string              `json:"id"`
-	Profile  types.MemberProfile `json:"profile"`
+	ID      string              `json:"id"`
+	Profile types.MemberProfile `json:"profile"`
 }
 
 type MemberCreatePayload struct {
@@ -65,7 +65,7 @@ func (h *MembersHandler) membersCreate(w http.ResponseWriter, r *http.Request) {
 			CanAccessClipboard: true,
 		},
 	}
-	
+
 	if !utils.HttpJsonRequest(w, r, data) {
 		return
 	}
@@ -85,7 +85,7 @@ func (h *MembersHandler) membersCreate(w http.ResponseWriter, r *http.Request) {
 		utils.HttpInternalServerError(w, err)
 		return
 	}
-	
+
 	utils.HttpSuccess(w, MemberDataPayload{
 		ID:      id,
 		Profile: data.Profile,

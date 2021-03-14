@@ -36,7 +36,7 @@ func New(sessions types.SessionManager, config *config.Member) *MemberManagerCtx
 	default:
 		manager.provider = dummy.New()
 	}
-	
+
 	return manager
 }
 

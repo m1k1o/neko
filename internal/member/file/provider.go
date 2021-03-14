@@ -61,7 +61,7 @@ func (provider *MemberProviderCtx) Insert(username string, password string, prof
 	entries[id] = MemberEntry{
 		// TODO: Use hash function.
 		Password: password,
-		Profile: profile,
+		Profile:  profile,
 	}
 
 	return id, provider.serialize(entries)
