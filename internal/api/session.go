@@ -30,17 +30,7 @@ func (api *ApiManagerCtx) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: Proper login.
-	session, token, err := api.sessions.Create(data.Username, types.MemberProfile{
-		Name:               data.Username,
-		IsAdmin:            true,
-		CanLogin:           true,
-		CanConnect:         true,
-		CanWatch:           true,
-		CanHost:            true,
-		CanAccessClipboard: true,
-	})
-
+	session, token, err := api.members.Login(data.Username, data.Password)
 	if err != nil {
 		utils.HttpUnauthorized(w, err)
 		return
@@ -70,8 +60,7 @@ func (api *ApiManagerCtx) Login(w http.ResponseWriter, r *http.Request) {
 func (api *ApiManagerCtx) Logout(w http.ResponseWriter, r *http.Request) {
 	session := auth.GetSession(r)
 
-	// TODO: Proper logout.
-	err := api.sessions.Delete(session.ID())
+	err := api.members.Logout(session.ID())
 	if err != nil {
 		utils.HttpUnauthorized(w, err)
 		return

@@ -1,6 +1,7 @@
 package member
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/rs/zerolog"
@@ -13,10 +14,11 @@ import (
 	"demodesk/neko/internal/types"
 )
 
-func New(config *config.Member) *MemberManagerCtx {
+func New(sessions types.SessionManager, config *config.Member) *MemberManagerCtx {
 	manager := &MemberManagerCtx{
-		logger: log.With().Str("module", "member").Logger(),
-		config: config,
+		logger:   log.With().Str("module", "member").Logger(),
+		sessions: sessions,
+		config:   config,
 	}
 
 	switch config.Provider {
@@ -40,6 +42,7 @@ func New(config *config.Member) *MemberManagerCtx {
 
 type MemberManagerCtx struct {
 	logger    zerolog.Logger
+	sessions  types.SessionManager
 	config    *config.Member
 	mu        sync.Mutex
 	provider  types.MemberProvider
@@ -91,6 +94,13 @@ func (manager *MemberManagerCtx) UpdateProfile(id string, profile types.MemberPr
 	manager.mu.Lock()
 	defer manager.mu.Unlock()
 
+	// update corresponding session, if exists
+	if _, ok := manager.sessions.Get(id); ok {
+		if err := manager.sessions.Update(id, profile); err != nil {
+			manager.logger.Err(err).Msg("error while updating session")
+		}
+	}
+
 	return manager.provider.UpdateProfile(id, profile)
 }
 
@@ -105,5 +115,33 @@ func (manager *MemberManagerCtx) Delete(id string) error {
 	manager.mu.Lock()
 	defer manager.mu.Unlock()
 
+	// destroy corresponding session, if exists
+	if _, ok := manager.sessions.Get(id); ok {
+		if err := manager.sessions.Delete(id); err != nil {
+			manager.logger.Err(err).Msg("error while deleting session")
+		}
+	}
+
 	return manager.provider.Delete(id)
+}
+
+//
+// member -> session
+//
+
+func (manager *MemberManagerCtx) Login(username string, password string) (types.Session, string, error) {
+	id, profile, err := manager.provider.Authenticate(username, password)
+	if err != nil {
+		return nil, "", err
+	}
+
+	return manager.sessions.Create(id, profile)
+}
+
+func (manager *MemberManagerCtx) Logout(id string) error {
+	if _, ok := manager.sessions.Get(id); !ok {
+		return fmt.Errorf("session not found")
+	}
+
+	return manager.sessions.Delete(id)
 }

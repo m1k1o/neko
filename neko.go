@@ -138,6 +138,7 @@ func (neko *Neko) Start() {
 	)
 
 	neko.memberManager = member.New(
+		neko.sessionManager,
 		neko.Configs.Member,
 	)
 

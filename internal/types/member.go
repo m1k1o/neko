@@ -26,4 +26,7 @@ type MemberProvider interface {
 
 type MemberManager interface {
 	MemberProvider
+
+	Login(username string, password string) (Session, string, error)
+	Logout(id string) error
 }
