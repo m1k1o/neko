@@ -454,7 +454,11 @@ func (manager *WebRTCManagerCtx) apiConfiguration() *webrtc.Configuration {
 	}
 
 	return &webrtc.Configuration{
-		ICEServers: ICEServers,
+		ICEServers: []webrtc.ICEServer{
+			{
+				URLs: manager.config.ICEServers,
+			},
+		},
 		SDPSemantics: webrtc.SDPSemanticsUnifiedPlanWithFallback,
 	}
 }
