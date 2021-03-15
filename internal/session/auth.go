@@ -27,17 +27,17 @@ func (manager *SessionManagerCtx) Authenticate(r *http.Request) (types.Session, 
 }
 
 func getToken(r *http.Request) (string, bool) {
-	// get from Cookie
-	cookie, err := r.Cookie("NEKO_SESSION")
-	if err == nil {
-		return cookie.Value, true
-	}
-
 	// get from Header
 	reqToken := r.Header.Get("Authorization")
 	splitToken := strings.Split(reqToken, "Bearer ")
 	if len(splitToken) == 2 {
 		return strings.TrimSpace(splitToken[1]), true
+	}
+
+	// get from Cookie
+	cookie, err := r.Cookie("NEKO_SESSION")
+	if err == nil {
+		return cookie.Value, true
 	}
 
 	// get from URL
