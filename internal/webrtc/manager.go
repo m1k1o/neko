@@ -3,6 +3,7 @@ package webrtc
 import (
 	"fmt"
 	"io"
+	"net/url"
 	"strings"
 	"sync"
 	"time"
@@ -421,6 +422,35 @@ func (manager *WebRTCManagerCtx) apiConfiguration() *webrtc.Configuration {
 		return &webrtc.Configuration{
 			SDPSemantics: webrtc.SDPSemanticsUnifiedPlanWithFallback,
 		}
+	}
+
+	ICEServers := []webrtc.ICEServer{}
+	for _, server := range manager.config.ICEServers {
+		u, err := url.Parse(server)
+
+		// if it is not valid URL, just pass it down
+		if err != nil {
+			ICEServers = append(ICEServers, webrtc.ICEServer{
+				URLs: []string{server},
+			})
+			continue
+		}
+
+		var pwdInt interface{}
+		pwd, ok := u.User.Password()
+		if ok {
+			pwdInt = pwd
+		} else {
+			pwdInt = false
+		}
+
+		ICEServers = append(ICEServers, webrtc.ICEServer{
+			URLs: []string{
+				u.Scheme + ":" + u.Host + u.Path + "?" + u.RawQuery,
+			},
+			Username:   u.User.Username(),
+			Credential: pwdInt,
+		})
 	}
 
 	return &webrtc.Configuration{
