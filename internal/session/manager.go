@@ -14,7 +14,7 @@ import (
 )
 
 func New(config *config.Session) *SessionManagerCtx {
-	return &SessionManagerCtx{
+	manager := &SessionManagerCtx{
 		logger:     log.With().Str("module", "session").Logger(),
 		config:     config,
 		host:       nil,
@@ -24,6 +24,23 @@ func New(config *config.Session) *SessionManagerCtx {
 		sessionsMu: sync.Mutex{},
 		emmiter:    events.New(),
 	}
+
+	// create API session
+	if config.APIToken != "" {
+		manager.apiSession = &SessionCtx{
+			id:      "API",
+			token:   config.APIToken,
+			manager: manager,
+			logger:  manager.logger.With().Str("session_id", "API").Logger(),
+			profile: types.MemberProfile{
+				Name:     "API Session",
+				IsAdmin:  true,
+				CanLogin: true,
+			},
+		}
+	}
+
+	return manager
 }
 
 type SessionManagerCtx struct {
@@ -35,6 +52,7 @@ type SessionManagerCtx struct {
 	sessions   map[string]*SessionCtx
 	sessionsMu sync.Mutex
 	emmiter    events.EventEmmiter
+	apiSession *SessionCtx
 }
 
 func (manager *SessionManagerCtx) Create(id string, profile types.MemberProfile) (types.Session, string, error) {
@@ -58,7 +76,7 @@ func (manager *SessionManagerCtx) Create(id string, profile types.MemberProfile)
 		id:      id,
 		token:   token,
 		manager: manager,
-		logger:  manager.logger.With().Str("id", id).Logger(),
+		logger:  manager.logger.With().Str("session_id", id).Logger(),
 		profile: profile,
 	}
 
@@ -124,11 +142,16 @@ func (manager *SessionManagerCtx) GetByToken(token string) (types.Session, bool)
 	id, ok := manager.tokens[token]
 	manager.sessionsMu.Unlock()
 
-	if !ok {
-		return nil, false
+	if ok {
+		return manager.Get(id)
 	}
 
-	return manager.Get(id)
+	// is API session
+	if manager.apiSession != nil && manager.apiSession.token == token {
+		return manager.apiSession, true
+	}
+
+	return nil, false
 }
 
 func (manager *SessionManagerCtx) List() []types.Session {

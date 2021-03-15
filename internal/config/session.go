@@ -7,6 +7,7 @@ import (
 
 type Session struct {
 	ImplicitHosting bool
+	APIToken        string
 }
 
 func (Session) Init(cmd *cobra.Command) error {
@@ -15,9 +16,15 @@ func (Session) Init(cmd *cobra.Command) error {
 		return err
 	}
 
+	cmd.PersistentFlags().String("api_token", "", "API token for interacting with external services")
+	if err := viper.BindPFlag("api_token", cmd.PersistentFlags().Lookup("api_token")); err != nil {
+		return err
+	}
+
 	return nil
 }
 
 func (s *Session) Set() {
 	s.ImplicitHosting = viper.GetBool("implicit_hosting")
+	s.APIToken = viper.GetString("api_token")
 }
