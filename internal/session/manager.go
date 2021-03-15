@@ -33,9 +33,13 @@ func New(config *config.Session) *SessionManagerCtx {
 			manager: manager,
 			logger:  manager.logger.With().Str("session_id", "API").Logger(),
 			profile: types.MemberProfile{
-				Name:     "API Session",
-				IsAdmin:  true,
-				CanLogin: true,
+				Name:               "API Session",
+				IsAdmin:            true,
+				CanLogin:           true,
+				CanConnect:         false,
+				CanWatch:           true,
+				CanHost:            true,
+				CanAccessClipboard: true,
 			},
 		}
 	}
