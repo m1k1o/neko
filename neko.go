@@ -39,11 +39,11 @@ var (
 	//
 	gitBranch = "dev"
 
-	// Major version when you make incompatible API changes,
+	// Major version when you make incompatible API changes.
 	major = "dev"
-	// Minor version when you add functionality in a backwards-compatible manner, and
+	// Minor version when you add functionality in a backwards-compatible manner.
 	minor = "dev"
-	// Patch version when you make backwards-compatible bug fixeneko.
+	// Patch version when you make backwards-compatible bug fixes.
 	patch = "dev"
 )
 
