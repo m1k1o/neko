@@ -109,6 +109,7 @@ func (h *MessageHandlerCtx) Message(session types.Session, raw []byte) bool {
 			return h.sendBroadcast(session, payload)
 		})
 	default:
+		h.logger.Warn().Str("event", header.Event).Msg("unknown message event")
 		return false
 	}
 
