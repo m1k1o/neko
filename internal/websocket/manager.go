@@ -40,7 +40,6 @@ type WebSocketManagerCtx struct {
 	desktop  types.DesktopManager
 	handler  *handler.MessageHandlerCtx
 	handlers []types.HandlerFunction
-	shutdown chan bool
 }
 
 func (manager *WebSocketManagerCtx) Start() {
@@ -130,7 +129,6 @@ func (manager *WebSocketManagerCtx) Start() {
 }
 
 func (manager *WebSocketManagerCtx) Shutdown() error {
-	manager.shutdown <- true
 	return nil
 }
 
