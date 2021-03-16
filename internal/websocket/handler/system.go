@@ -23,7 +23,6 @@ func (h *MessageHandlerCtx) systemInit(session types.Session) error {
 		return nil
 	}
 
-	// TODO: Sessions.
 	sessions := map[string]message.SessionData{}
 	for _, session := range h.sessions.List() {
 		sessionId := session.ID()
@@ -52,11 +51,11 @@ func (h *MessageHandlerCtx) systemInit(session types.Session) error {
 func (h *MessageHandlerCtx) systemAdmin(session types.Session) error {
 	screenSizesList := []message.ScreenSize{}
 	for _, size := range h.desktop.ScreenConfigurations() {
-		for _, fps := range size.Rates {
+		for _, rate := range size.Rates {
 			screenSizesList = append(screenSizesList, message.ScreenSize{
 				Width:  size.Width,
 				Height: size.Height,
-				Rate:   fps,
+				Rate:   rate,
 			})
 		}
 	}

@@ -117,10 +117,7 @@ func (manager *SessionManagerCtx) Delete(id string) error {
 		return fmt.Errorf("Session id not found.")
 	}
 
-	if _, ok := manager.tokens[session.token]; ok {
-		delete(manager.tokens, session.token)
-	}
-
+	delete(manager.tokens, session.token)
 	delete(manager.sessions, id)
 	manager.sessionsMu.Unlock()
 

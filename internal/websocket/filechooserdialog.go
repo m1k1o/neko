@@ -50,8 +50,8 @@ func (manager *WebSocketManagerCtx) fileChooserDialogEvents() {
 			ID:    activeSession.ID(),
 		}); err != nil {
 			manager.logger.Warn().
-				Str("session_id", session.ID()).
 				Err(err).
+				Str("session_id", session.ID()).
 				Msgf("could not send event `%s` to session", event.FILE_CHOOSER_DIALOG_OPENED)
 		}
 	})

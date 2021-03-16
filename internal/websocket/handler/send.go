@@ -29,5 +29,6 @@ func (h *MessageHandlerCtx) sendBroadcast(session types.Session, payload *messag
 		Subject: payload.Subject,
 		Body:    payload.Body,
 	}, []string{session.ID()})
+
 	return nil
 }

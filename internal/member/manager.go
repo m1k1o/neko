@@ -149,8 +149,10 @@ func (manager *MemberManagerCtx) Login(username string, password string) (types.
 			return nil, "", fmt.Errorf("session is already connected")
 		}
 
-		// delete existing session
-		manager.sessions.Delete(id)
+		// TODO: Replace session.
+		if err := manager.sessions.Delete(id); err != nil {
+			return nil, "", err
+		}
 	}
 
 	return manager.sessions.Create(id, profile)

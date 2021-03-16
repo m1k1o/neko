@@ -8,6 +8,7 @@ import (
 
 func (h *MessageHandlerCtx) signalRequest(session types.Session) error {
 	if !session.Profile().CanWatch {
+		h.logger.Debug().Str("session_id", session.ID()).Msg("not allowed to watch")
 		return nil
 	}
 
@@ -33,7 +34,7 @@ func (h *MessageHandlerCtx) signalRequest(session types.Session) error {
 func (h *MessageHandlerCtx) signalAnswer(session types.Session, payload *message.SignalAnswer) error {
 	peer := session.GetWebRTCPeer()
 	if peer == nil {
-		h.logger.Debug().Msg("webRTC peer does not exist")
+		h.logger.Debug().Str("session_id", session.ID()).Msg("webRTC peer does not exist")
 		return nil
 	}
 
@@ -43,7 +44,7 @@ func (h *MessageHandlerCtx) signalAnswer(session types.Session, payload *message
 func (h *MessageHandlerCtx) signalCandidate(session types.Session, payload *message.SignalCandidate) error {
 	peer := session.GetWebRTCPeer()
 	if peer == nil {
-		h.logger.Debug().Msg("webRTC peer does not exist")
+		h.logger.Debug().Str("session_id", session.ID()).Msg("webRTC peer does not exist")
 		return nil
 	}
 
@@ -53,7 +54,7 @@ func (h *MessageHandlerCtx) signalCandidate(session types.Session, payload *mess
 func (h *MessageHandlerCtx) signalVideo(session types.Session, payload *message.SignalVideo) error {
 	peer := session.GetWebRTCPeer()
 	if peer == nil {
-		h.logger.Debug().Msg("webRTC peer does not exist")
+		h.logger.Debug().Str("session_id", session.ID()).Msg("webRTC peer does not exist")
 		return nil
 	}
 

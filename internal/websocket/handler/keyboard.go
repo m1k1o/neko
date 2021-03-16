@@ -27,5 +27,6 @@ func (h *MessageHandlerCtx) keyboardModifiers(session types.Session, payload *me
 		NumLock:  payload.NumLock,
 		CapsLock: payload.CapsLock,
 	})
+
 	return nil
 }
