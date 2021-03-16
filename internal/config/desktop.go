@@ -18,8 +18,8 @@ type Desktop struct {
 }
 
 func (Desktop) Init(cmd *cobra.Command) error {
-	cmd.PersistentFlags().String("screen", "1280x720@30", "default screen size and framerate")
-	if err := viper.BindPFlag("screen", cmd.PersistentFlags().Lookup("screen")); err != nil {
+	cmd.PersistentFlags().String("desktop.screen", "1280x720@30", "default screen size and framerate")
+	if err := viper.BindPFlag("desktop.screen", cmd.PersistentFlags().Lookup("desktop.screen")); err != nil {
 		return err
 	}
 
@@ -35,7 +35,7 @@ func (s *Desktop) Set() {
 	s.ScreenRate = 30
 
 	r := regexp.MustCompile(`([0-9]{1,4})x([0-9]{1,4})@([0-9]{1,3})`)
-	res := r.FindStringSubmatch(viper.GetString("screen"))
+	res := r.FindStringSubmatch(viper.GetString("desktop.screen"))
 
 	if len(res) > 0 {
 		width, err1 := strconv.ParseInt(res[1], 10, 64)

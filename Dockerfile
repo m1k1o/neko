@@ -104,7 +104,7 @@ COPY runtime/icon-theme /home/$USERNAME/.icons/default
 # set default envs
 ENV USER=$USERNAME
 ENV DISPLAY=:99.0
-ENV NEKO_BIND=:8080
+ENV NEKO_SERVER_BIND=:8080
 
 #
 # copy executabe from previous stage

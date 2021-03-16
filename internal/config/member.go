@@ -6,30 +6,36 @@ import (
 )
 
 type Member struct {
-	Provider      string
-	FilePath      string
-	Password      string
-	AdminPassword string
+	Provider string
+
+	// file provider
+	FilePath string
+
+	// object provider
+	ObjectUserPassword  string
+	ObjectAdminPassword string
 }
 
 func (Member) Init(cmd *cobra.Command) error {
-	cmd.PersistentFlags().String("members_provider", "object", "choose members provider")
-	if err := viper.BindPFlag("members_provider", cmd.PersistentFlags().Lookup("members_provider")); err != nil {
+	cmd.PersistentFlags().String("member.provider", "object", "choose member provider")
+	if err := viper.BindPFlag("member.provider", cmd.PersistentFlags().Lookup("member.provider")); err != nil {
 		return err
 	}
 
-	cmd.PersistentFlags().String("members_file_path", "", "mebmer file provider path")
-	if err := viper.BindPFlag("members_file_path", cmd.PersistentFlags().Lookup("members_file_path")); err != nil {
+	// file provider
+	cmd.PersistentFlags().String("member.file.path", "", "member file provider: storage path")
+	if err := viper.BindPFlag("member.file.path", cmd.PersistentFlags().Lookup("member.file.path")); err != nil {
 		return err
 	}
 
-	cmd.PersistentFlags().String("password", "neko", "password for connecting to stream")
-	if err := viper.BindPFlag("password", cmd.PersistentFlags().Lookup("password")); err != nil {
+	// object provider
+	cmd.PersistentFlags().String("member.object.user_password", "", "member object provider: user password")
+	if err := viper.BindPFlag("member.object.user_password", cmd.PersistentFlags().Lookup("member.object.user_password")); err != nil {
 		return err
 	}
 
-	cmd.PersistentFlags().String("password_admin", "admin", "admin password for connecting to stream")
-	if err := viper.BindPFlag("password_admin", cmd.PersistentFlags().Lookup("password_admin")); err != nil {
+	cmd.PersistentFlags().String("member.object.admin_password", "", "member object provider: admin password")
+	if err := viper.BindPFlag("member.object.admin_password", cmd.PersistentFlags().Lookup("member.object.admin_password")); err != nil {
 		return err
 	}
 
@@ -37,8 +43,12 @@ func (Member) Init(cmd *cobra.Command) error {
 }
 
 func (s *Member) Set() {
-	s.Provider = viper.GetString("members_provider")
-	s.FilePath = viper.GetString("members_file_path")
-	s.Password = viper.GetString("password")
-	s.AdminPassword = viper.GetString("password_admin")
+	s.Provider = viper.GetString("member.provider")
+
+	// file provider
+	s.FilePath = viper.GetString("member.file.path")
+
+	// object provider
+	s.ObjectUserPassword = viper.GetString("member.object.user_password")
+	s.ObjectAdminPassword = viper.GetString("member.object.admin_password")
 }

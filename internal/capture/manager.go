@@ -62,7 +62,7 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 		desktop:    desktop,
 		streaming:  false,
 		broadcast:  broadcastNew(broadcastPipeline),
-		screencast: screencastNew(config.Screencast, screencastPipeline),
+		screencast: screencastNew(config.ScreencastEnabled, screencastPipeline),
 		audio: streamNew(config.AudioCodec, func() string {
 			if config.AudioPipeline != "" {
 				return config.AudioPipeline

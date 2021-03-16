@@ -28,8 +28,8 @@ func New(sessions types.SessionManager, config *config.Member) *MemberManagerCtx
 		})
 	case "object":
 		manager.provider = object.New(object.Config{
-			AdminPassword: config.AdminPassword,
-			UserPassword:  config.Password,
+			AdminPassword: config.ObjectAdminPassword,
+			UserPassword:  config.ObjectUserPassword,
 		})
 	case "dummy":
 		fallthrough
