@@ -10,5 +10,5 @@ type MemberEntry struct {
 }
 
 type Config struct {
-	File string
+	Path string
 }

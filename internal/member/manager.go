@@ -23,14 +23,9 @@ func New(sessions types.SessionManager, config *config.Member) *MemberManagerCtx
 
 	switch config.Provider {
 	case "file":
-		manager.provider = file.New(file.Config{
-			File: config.FilePath,
-		})
+		manager.provider = file.New(config.File)
 	case "object":
-		manager.provider = object.New(object.Config{
-			AdminPassword: config.ObjectAdminPassword,
-			UserPassword:  config.ObjectUserPassword,
-		})
+		manager.provider = object.New(config.Object)
 	case "dummy":
 		fallthrough
 	default:

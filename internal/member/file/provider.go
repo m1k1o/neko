@@ -148,7 +148,7 @@ func (provider *MemberProviderCtx) Delete(id string) error {
 }
 
 func (provider *MemberProviderCtx) deserialize() (map[string]MemberEntry, error) {
-	file, err := os.OpenFile(provider.config.File, os.O_RDONLY|os.O_CREATE, os.ModePerm)
+	file, err := os.OpenFile(provider.config.Path, os.O_RDONLY|os.O_CREATE, os.ModePerm)
 	if err != nil {
 		return nil, err
 	}
@@ -190,5 +190,5 @@ func (provider *MemberProviderCtx) serialize(data map[string]MemberEntry) error 
 		return err
 	}
 
-	return ioutil.WriteFile(provider.config.File, raw, os.ModePerm)
+	return ioutil.WriteFile(provider.config.Path, raw, os.ModePerm)
 }

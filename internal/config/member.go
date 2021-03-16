@@ -3,17 +3,17 @@ package config
 import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+
+	"demodesk/neko/internal/member/file"
+	"demodesk/neko/internal/member/object"
 )
 
 type Member struct {
 	Provider string
 
-	// file provider
-	FilePath string
-
-	// object provider
-	ObjectUserPassword  string
-	ObjectAdminPassword string
+	// providers
+	File   file.Config
+	Object object.Config
 }
 
 func (Member) Init(cmd *cobra.Command) error {
@@ -46,9 +46,9 @@ func (s *Member) Set() {
 	s.Provider = viper.GetString("member.provider")
 
 	// file provider
-	s.FilePath = viper.GetString("member.file.path")
+	s.File.Path = viper.GetString("member.file.path")
 
 	// object provider
-	s.ObjectUserPassword = viper.GetString("member.object.user_password")
-	s.ObjectAdminPassword = viper.GetString("member.object.admin_password")
+	s.Object.UserPassword = viper.GetString("member.object.user_password")
+	s.Object.AdminPassword = viper.GetString("member.object.admin_password")
 }
