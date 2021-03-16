@@ -113,7 +113,7 @@ func (h *MessageHandlerCtx) Message(session types.Session, raw []byte) bool {
 	}
 
 	if err != nil {
-		h.logger.Error().Err(err).Msg("message handler has failed")
+		h.logger.Error().Err(err).Str("event", header.Event).Msg("message handler has failed")
 	}
 
 	return true
