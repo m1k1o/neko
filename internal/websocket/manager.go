@@ -138,7 +138,7 @@ func (manager *WebSocketManagerCtx) AddHandler(handler types.HandlerFunction) {
 	manager.handlers = append(manager.handlers, handler)
 }
 
-func (manager *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Request, checkOrigin types.CheckOrigin) error {
+func (manager *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Request, checkOrigin types.CheckOrigin) {
 	manager.logger.Debug().Msg("attempting to upgrade connection")
 
 	upgrader := websocket.Upgrader{
@@ -148,12 +148,12 @@ func (manager *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Reque
 	connection, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		manager.logger.Error().Err(err).Msg("failed to upgrade connection")
-		return err
+		return
 	}
 
 	session, err := manager.sessions.Authenticate(r)
 	if err != nil {
-		manager.logger.Warn().Err(err).Msg("authentication failed")
+		manager.logger.Debug().Err(err).Msg("authentication failed")
 
 		// TODO: Refactor, return error code.
 		if err = connection.WriteJSON(
@@ -161,36 +161,52 @@ func (manager *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Reque
 				Event:   event.SYSTEM_DISCONNECT,
 				Message: err.Error(),
 			}); err != nil {
-			manager.logger.Error().Err(err).Msg("failed to send disconnect")
+			manager.logger.Error().Err(err).Msg("failed to send disconnect event")
 		}
 
-		return connection.Close()
+		if err := connection.Close(); err != nil {
+			manager.logger.Warn().Err(err).Msg("connection closed with an error")
+		}
+
+		return
 	}
 
 	if !session.Profile().CanConnect {
+		manager.logger.Debug().Str("session_id", session.ID()).Msg("connection disabled")
+
 		// TODO: Refactor, return error code.
 		if err = connection.WriteJSON(
 			message.SystemDisconnect{
 				Event:   event.SYSTEM_DISCONNECT,
 				Message: "connection disabled",
 			}); err != nil {
-			manager.logger.Error().Err(err).Msg("failed to send disconnect")
+			manager.logger.Error().Err(err).Msg("failed to send disconnect event")
 		}
 
-		return connection.Close()
+		if err := connection.Close(); err != nil {
+			manager.logger.Warn().Err(err).Msg("connection closed with an error")
+		}
+
+		return
 	}
 
 	if session.State().IsConnected {
+		manager.logger.Debug().Str("session_id", session.ID()).Msg("already connected")
+
 		// TODO: Refactor, return error code.
 		if err = connection.WriteJSON(
 			message.SystemDisconnect{
 				Event:   event.SYSTEM_DISCONNECT,
 				Message: "already connected",
 			}); err != nil {
-			manager.logger.Error().Err(err).Msg("failed to send disconnect")
+			manager.logger.Error().Err(err).Msg("failed to send disconnect event")
 		}
 
-		return connection.Close()
+		if err := connection.Close(); err != nil {
+			manager.logger.Warn().Err(err).Msg("connection closed with an error")
+		}
+
+		return
 	}
 
 	session.SetWebSocketPeer(&WebSocketPeerCtx{
@@ -218,7 +234,6 @@ func (manager *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Reque
 	}()
 
 	manager.handle(connection, session)
-	return nil
 }
 
 func (manager *WebSocketManagerCtx) handle(connection *websocket.Conn, session types.Session) {

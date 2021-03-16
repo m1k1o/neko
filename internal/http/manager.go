@@ -44,7 +44,6 @@ func New(WebSocketManager types.WebSocketManager, ApiManager types.ApiManager, c
 	router.Route("/api", ApiManager.Route)
 
 	router.Get("/api/ws", func(w http.ResponseWriter, r *http.Request) {
-		//nolint
 		WebSocketManager.Upgrade(w, r, func(r *http.Request) bool {
 			return conf.AllowOrigin(r.Header.Get("Origin"))
 		})
