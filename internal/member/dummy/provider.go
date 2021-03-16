@@ -7,10 +7,21 @@ import (
 )
 
 func New() types.MemberProvider {
-	return &MemberProviderCtx{}
+	return &MemberProviderCtx{
+		profile: types.MemberProfile{
+			IsAdmin:            true,
+			CanLogin:           true,
+			CanConnect:         true,
+			CanWatch:           true,
+			CanHost:            true,
+			CanAccessClipboard: true,
+		},
+	}
 }
 
-type MemberProviderCtx struct{}
+type MemberProviderCtx struct {
+	profile types.MemberProfile
+}
 
 func (provider *MemberProviderCtx) Connect() error {
 	return nil
@@ -21,15 +32,8 @@ func (provider *MemberProviderCtx) Disconnect() error {
 }
 
 func (provider *MemberProviderCtx) Authenticate(username string, password string) (string, types.MemberProfile, error) {
-	return username, types.MemberProfile{
-		Name:               username,
-		IsAdmin:            true,
-		CanLogin:           true,
-		CanConnect:         true,
-		CanWatch:           true,
-		CanHost:            true,
-		CanAccessClipboard: true,
-	}, nil
+	provider.profile.Name = username
+	return username, provider.profile, nil
 }
 
 func (provider *MemberProviderCtx) Insert(username string, password string, profile types.MemberProfile) (string, error) {
@@ -37,15 +41,16 @@ func (provider *MemberProviderCtx) Insert(username string, password string, prof
 }
 
 func (provider *MemberProviderCtx) Select(id string) (types.MemberProfile, error) {
-	return types.MemberProfile{}, fmt.Errorf("Not implemented.")
+	provider.profile.Name = id
+	return provider.profile, nil
 }
 
 func (provider *MemberProviderCtx) SelectAll(limit int, offset int) (map[string]types.MemberProfile, error) {
-	return map[string]types.MemberProfile{}, fmt.Errorf("Not implemented.")
+	return map[string]types.MemberProfile{}, nil
 }
 
 func (provider *MemberProviderCtx) UpdateProfile(id string, profile types.MemberProfile) error {
-	return fmt.Errorf("Not implemented.")
+	return nil
 }
 
 func (provider *MemberProviderCtx) UpdatePassword(id string, password string) error {
@@ -53,5 +58,5 @@ func (provider *MemberProviderCtx) UpdatePassword(id string, password string) er
 }
 
 func (provider *MemberProviderCtx) Delete(id string) error {
-	return fmt.Errorf("Not implemented.")
+	return nil
 }
