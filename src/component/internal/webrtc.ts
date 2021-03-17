@@ -241,6 +241,7 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
     this._log.debug(`received data channel from peer: ${event.channel.label}`, event)
 
     this._channel = event.channel
+    this._channel.binaryType = 'arraybuffer'
     this._channel.onerror = this.onDisconnected.bind(this, new Error('peer data channel error'))
     this._channel.onmessage = this.onData.bind(this)
     this._channel.onopen = this.onConnected.bind(this)
