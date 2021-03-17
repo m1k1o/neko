@@ -385,7 +385,7 @@
         switch (event) {
           case 'signal/provide':
             try {
-              let sdp = await this.webrtc.connect(payload.sdp, payload.lite, payload.ice)
+              let sdp = await this.webrtc.connect(payload.sdp, payload.iceservers)
               this.websocket.send('signal/answer', { sdp })
             } catch (e) {}
             break

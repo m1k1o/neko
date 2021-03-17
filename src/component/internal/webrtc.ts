@@ -18,6 +18,12 @@ export interface WebRTCStats {
   height: number
 }
 
+export interface ICEServer {
+  urls: string
+  username: string
+  credential: string
+}
+
 export interface NekoWebRTCEvents {
   connecting: () => void
   connected: () => void
@@ -66,7 +72,7 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
     this._log.debug(`adding remote ICE candidate`, candidate)
   }
 
-  public async connect(sdp: string, lite: boolean, servers: string[]): Promise<string> {
+  public async connect(sdp: string, iceServers: ICEServer[]): Promise<string> {
     this._log.info(`connecting`)
 
     if (!this.supported) {
@@ -79,11 +85,10 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
 
     this.emit('connecting')
 
-    this._peer = new RTCPeerConnection()
-    if (lite !== true) {
-      this._peer = new RTCPeerConnection({
-        iceServers: [{ urls: servers }],
-      })
+    this._peer = new RTCPeerConnection({ iceServers })
+
+    if (iceServers.length == 0) {
+      this._log.warn(`iceservers are empty`)
     }
 
     this._peer.onconnectionstatechange = (event) => {

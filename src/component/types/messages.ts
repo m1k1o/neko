@@ -1,3 +1,5 @@
+import { ICEServer } from '../internal/webrtc'
+
 export interface Message {
   event: string | undefined
   payload: any
@@ -34,8 +36,7 @@ export interface SystemDisconnect {
 export interface SignalProvide {
   event: string | undefined
   sdp: string
-  lite: boolean
-  ice: string[]
+  iceservers: ICEServer[]
   video: string
   videos: string[]
 }
