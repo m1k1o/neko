@@ -22,12 +22,11 @@ func (h *MessageHandlerCtx) signalRequest(session types.Session) error {
 
 	return session.Send(
 		message.SignalProvide{
-			Event:  event.SIGNAL_PROVIDE,
-			SDP:    offer.SDP,
-			Lite:   h.webrtc.ICELite(),
-			ICE:    h.webrtc.ICEServers(),
-			Videos: videos,
-			Video:  defaultVideo,
+			Event:      event.SIGNAL_PROVIDE,
+			SDP:        offer.SDP,
+			ICEServers: h.webrtc.ICEServers(),
+			Videos:     videos,
+			Video:      defaultVideo,
 		})
 }
 

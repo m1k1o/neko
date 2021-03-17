@@ -77,12 +77,17 @@ func (manager *WebRTCManagerCtx) Start() {
 		audio.RemoveListener(&audioListener)
 	}
 
+	var servers []string
+	for _, server := range manager.config.ICEServers {
+		servers = append(servers, server.URLs...)
+	}
+
 	manager.logger.Info().
-		Str("ice_lite", fmt.Sprintf("%t", manager.config.ICELite)).
-		Str("ice_trickle", fmt.Sprintf("%t", manager.config.ICETrickle)).
-		Str("ice_servers", strings.Join(manager.config.ICEServers, ",")).
-		Str("ephemeral_port_range", fmt.Sprintf("%d-%d", manager.config.EphemeralMin, manager.config.EphemeralMax)).
-		Str("nat_ips", strings.Join(manager.config.NAT1To1IPs, ",")).
+		Str("icelite", fmt.Sprintf("%t", manager.config.ICELite)).
+		Str("icetrickle", fmt.Sprintf("%t", manager.config.ICETrickle)).
+		Str("iceservers", strings.Join(servers, ",")).
+		Str("nat1to1", strings.Join(manager.config.NAT1To1IPs, ",")).
+		Str("epr", fmt.Sprintf("%d-%d", manager.config.EphemeralMin, manager.config.EphemeralMax)).
 		Msgf("webrtc starting")
 
 	manager.curImage.Start()
@@ -98,11 +103,7 @@ func (manager *WebRTCManagerCtx) Shutdown() error {
 	return nil
 }
 
-func (manager *WebRTCManagerCtx) ICELite() bool {
-	return manager.config.ICELite
-}
-
-func (manager *WebRTCManagerCtx) ICEServers() []string {
+func (manager *WebRTCManagerCtx) ICEServers() []types.ICEServer {
 	return manager.config.ICEServers
 }
 
@@ -423,12 +424,24 @@ func (manager *WebRTCManagerCtx) apiConfiguration() *webrtc.Configuration {
 		}
 	}
 
+	ICEServers := []webrtc.ICEServer{}
+	for _, server := range manager.config.ICEServers {
+		var credential interface{}
+		if server.Credential != "" {
+			credential = server.Credential
+		} else {
+			credential = false
+		}
+
+		ICEServers = append(ICEServers, webrtc.ICEServer{
+			URLs:       server.URLs,
+			Username:   server.Username,
+			Credential: credential,
+		})
+	}
+
 	return &webrtc.Configuration{
-		ICEServers: []webrtc.ICEServer{
-			{
-				URLs: manager.config.ICEServers,
-			},
-		},
+		ICEServers:   ICEServers,
 		SDPSemantics: webrtc.SDPSemanticsUnifiedPlanWithFallback,
 	}
 }

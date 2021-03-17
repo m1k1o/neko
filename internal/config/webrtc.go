@@ -10,12 +10,13 @@ import (
 	"github.com/spf13/viper"
 
 	"demodesk/neko/internal/utils"
+	"demodesk/neko/internal/types"
 )
 
 type WebRTC struct {
 	ICELite      bool
 	ICETrickle   bool
-	ICEServers   []string
+	ICEServers   []types.ICEServer
 	EphemeralMin uint16
 	EphemeralMax uint16
 
@@ -26,6 +27,7 @@ type WebRTC struct {
 const (
 	defEprMin = 59000
 	defEprMax = 59100
+	defStun   = "stun:stun.l.google.com:19302"
 )
 
 func (WebRTC) Init(cmd *cobra.Command) error {
@@ -39,8 +41,8 @@ func (WebRTC) Init(cmd *cobra.Command) error {
 		return err
 	}
 
-	cmd.PersistentFlags().StringSlice("webrtc.iceserver", []string{"stun:stun.l.google.com:19302"}, "describes a single STUN and TURN server that can be used by the ICEAgent to establish a connection with a peer")
-	if err := viper.BindPFlag("webrtc.iceserver", cmd.PersistentFlags().Lookup("webrtc.iceserver")); err != nil {
+	cmd.PersistentFlags().String("webrtc.iceservers", "[]", "STUN and TURN servers in JSON format with `urls`, `username`, `password` keys")
+	if err := viper.BindPFlag("webrtc.iceservers", cmd.PersistentFlags().Lookup("webrtc.iceservers")); err != nil {
 		return err
 	}
 
@@ -65,7 +67,18 @@ func (WebRTC) Init(cmd *cobra.Command) error {
 func (s *WebRTC) Set() {
 	s.ICELite = viper.GetBool("webrtc.icelite")
 	s.ICETrickle = viper.GetBool("webrtc.icetrickle")
-	s.ICEServers = viper.GetStringSlice("webrtc.iceserver")
+
+	if err := viper.UnmarshalKey("webrtc.iceservers", &s.ICEServers, viper.DecodeHook(
+		utils.JsonStringAutoDecode(s.ICEServers),
+	)); err != nil {
+		log.Warn().Err(err).Msgf("unable to parse ICE servers")
+	}
+
+	if len(s.ICEServers) == 0 {
+		s.ICEServers = append(s.ICEServers, types.ICEServer{
+			URLs: []string{defStun},
+		})
+	}
 
 	s.NAT1To1IPs = viper.GetStringSlice("webrtc.nat1to1")
 	s.IpRetrievalUrl = viper.GetString("webrtc.ip_retrieval_url")
