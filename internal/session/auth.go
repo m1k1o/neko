@@ -4,12 +4,45 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"demodesk/neko/internal/types"
 )
 
+func (manager *SessionManagerCtx) CookieSetToken(w http.ResponseWriter, token string) {
+	sameSite := http.SameSiteDefaultMode
+	if manager.config.CookieSecure {
+		sameSite = http.SameSiteNoneMode
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     manager.config.CookieName,
+		Value:    token,
+		Expires:  manager.config.CookieExpiration,
+		Secure:   manager.config.CookieSecure,
+		SameSite: sameSite,
+		HttpOnly: true,
+	})
+}
+
+func (manager *SessionManagerCtx) CookieClearToken(w http.ResponseWriter) {
+	sameSite := http.SameSiteDefaultMode
+	if manager.config.CookieSecure {
+		sameSite = http.SameSiteNoneMode
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     manager.config.CookieName,
+		Value:    "",
+		Expires:  time.Unix(0, 0),
+		Secure:   manager.config.CookieSecure,
+		SameSite: sameSite,
+		HttpOnly: true,
+	})
+}
+
 func (manager *SessionManagerCtx) Authenticate(r *http.Request) (types.Session, error) {
-	token, ok := getToken(r)
+	token, ok := manager.getToken(r)
 	if !ok {
 		return nil, fmt.Errorf("no authentication provided")
 	}
@@ -26,7 +59,7 @@ func (manager *SessionManagerCtx) Authenticate(r *http.Request) (types.Session, 
 	return session, nil
 }
 
-func getToken(r *http.Request) (string, bool) {
+func (manager *SessionManagerCtx) getToken(r *http.Request) (string, bool) {
 	// get from Header
 	reqToken := r.Header.Get("Authorization")
 	splitToken := strings.Split(reqToken, "Bearer ")
@@ -35,7 +68,7 @@ func getToken(r *http.Request) (string, bool) {
 	}
 
 	// get from Cookie
-	cookie, err := r.Cookie("NEKO_SESSION")
+	cookie, err := r.Cookie(manager.config.CookieName)
 	if err == nil {
 		return cookie.Value, true
 	}

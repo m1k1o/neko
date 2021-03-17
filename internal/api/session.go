@@ -2,16 +2,11 @@ package api
 
 import (
 	"net/http"
-	"os"
-	"time"
 
 	"demodesk/neko/internal/http/auth"
 	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/utils"
 )
-
-var CookieExpirationDate = time.Now().Add(365 * 24 * time.Hour)
-var UnsecureCookies = os.Getenv("DISABLE_SECURE_COOKIES") == "true"
 
 type SessionLoginPayload struct {
 	Username string `json:"username"`
@@ -36,19 +31,7 @@ func (api *ApiManagerCtx) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sameSite := http.SameSiteNoneMode
-	if UnsecureCookies {
-		sameSite = http.SameSiteDefaultMode
-	}
-
-	http.SetCookie(w, &http.Cookie{
-		Name:     "NEKO_SESSION",
-		Value:    token,
-		Expires:  CookieExpirationDate,
-		Secure:   !UnsecureCookies,
-		SameSite: sameSite,
-		HttpOnly: true,
-	})
+	api.sessions.CookieSetToken(w, token)
 
 	utils.HttpSuccess(w, SessionDataPayload{
 		ID:      session.ID(),
@@ -66,19 +49,7 @@ func (api *ApiManagerCtx) Logout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sameSite := http.SameSiteNoneMode
-	if UnsecureCookies {
-		sameSite = http.SameSiteDefaultMode
-	}
-
-	http.SetCookie(w, &http.Cookie{
-		Name:     "NEKO_SESSION",
-		Value:    "",
-		Expires:  time.Unix(0, 0),
-		Secure:   !UnsecureCookies,
-		SameSite: sameSite,
-		HttpOnly: true,
-	})
+	api.sessions.CookieClearToken(w)
 
 	utils.HttpSuccess(w, true)
 }
