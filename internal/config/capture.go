@@ -94,7 +94,7 @@ func (s *Capture) Set() {
 		s.AudioCodec = codec.Opus()
 	}
 
-	s.BroadcastPipeline = viper.GetString("capturebroadcast.pipeline")
+	s.BroadcastPipeline = viper.GetString("capture.broadcast.pipeline")
 
 	s.ScreencastEnabled = viper.GetBool("capture.screencast.enabled")
 	s.ScreencastRate = viper.GetString("capture.screencast.rate")
