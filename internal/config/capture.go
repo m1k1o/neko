@@ -17,7 +17,10 @@ type Capture struct {
 	AudioCodec    codec.RTPCodec
 	AudioPipeline string
 
-	BroadcastPipeline string
+	BroadcastAudioBitrate int
+	BroadcastVideoBitrate int
+	BroadcastPreset       string
+	BroadcastPipeline     string
 
 	ScreencastEnabled  bool
 	ScreencastRate     string
@@ -43,6 +46,21 @@ func (Capture) Init(cmd *cobra.Command) error {
 	}
 
 	// broadcast
+	cmd.PersistentFlags().Int("capture.screencast.audio_bitrate", 128, "broadcast audio bitrate in KB/s")
+	if err := viper.BindPFlag("capture.screencast.audio_bitrate", cmd.PersistentFlags().Lookup("capture.screencast.audio_bitrate")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().Int("capture.screencast.video_bitrate", 4096, "broadcast video bitrate in KB/s")
+	if err := viper.BindPFlag("capture.screencast.video_bitrate", cmd.PersistentFlags().Lookup("capture.screencast.video_bitrate")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().String("capture.screencast.preset", "veryfast", "broadcast speed preset for h264 encoding")
+	if err := viper.BindPFlag("capture.screencast.preset", cmd.PersistentFlags().Lookup("capture.screencast.preset")); err != nil {
+		return err
+	}
+
 	cmd.PersistentFlags().String("capture.broadcast.pipeline", "", "gstreamer pipeline used for broadcasting")
 	if err := viper.BindPFlag("capture.broadcast.pipeline", cmd.PersistentFlags().Lookup("capture.broadcast.pipeline")); err != nil {
 		return err
@@ -94,6 +112,9 @@ func (s *Capture) Set() {
 		s.AudioCodec = codec.Opus()
 	}
 
+	s.BroadcastAudioBitrate = viper.GetInt("capture.broadcast.audio_bitrate")
+	s.BroadcastVideoBitrate = viper.GetInt("capture.broadcast.video_bitrate")
+	s.BroadcastPreset = viper.GetString("capture.broadcast.preset")
 	s.BroadcastPipeline = viper.GetString("capture.broadcast.pipeline")
 
 	s.ScreencastEnabled = viper.GetBool("capture.screencast.enabled")
