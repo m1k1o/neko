@@ -17,6 +17,7 @@ func NewImage(desktop types.DesktopManager) *ImageCtx {
 		desktop:   desktop,
 		listeners: map[uintptr]*func(entry *ImageEntry){},
 		cache:     map[uint64]*ImageEntry{},
+		maxSerial: 200, // TODO: Cleanup?
 	}
 }
 
@@ -28,6 +29,7 @@ type ImageCtx struct {
 	cacheMu   sync.Mutex
 	cache     map[uint64]*ImageEntry
 	current   *ImageEntry
+	maxSerial uint64
 }
 
 type ImageEntry struct {
@@ -43,6 +45,7 @@ func (manager *ImageCtx) Start() {
 			return
 		}
 
+		manager.current = entry
 		for _, emit := range manager.listeners {
 			(*emit)(entry)
 		}
@@ -61,7 +64,7 @@ func (manager *ImageCtx) Shutdown() {
 
 func (manager *ImageCtx) GetCached(serial uint64) (*ImageEntry, error) {
 	// zero means no serial available
-	if serial == 0 {
+	if serial == 0 || serial > manager.maxSerial {
 		return manager.fetchEntry()
 	}
 
@@ -126,6 +129,5 @@ func (manager *ImageCtx) fetchEntry() (*ImageEntry, error) {
 		Image:  img,
 	}
 
-	manager.current = entry
 	return entry, nil
 }
