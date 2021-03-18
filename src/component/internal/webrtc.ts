@@ -311,6 +311,7 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
   private statsEmitter(ms: number = 2000) {
     let bytesReceived: number
     let timestamp: number
+    let framesDecoded: number
     let packetsLost: number
     let packetsReceived: number
 
@@ -342,13 +343,14 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
       if (timestamp) {
         const bytesDiff = (report.bytesReceived - bytesReceived) * 8
         const tsDiff = report.timestamp - timestamp
+        const framesDecodedDiff = report.framesDecoded - framesDecoded
         const packetsLostDiff = report.packetsLost - packetsLost
         const packetsReceivedDiff = report.packetsReceived - packetsReceived
 
         this.emit('stats', {
           bitrate: (bytesDiff / tsDiff) * 1000,
           packetLoss: (packetsLostDiff / (packetsLostDiff + packetsReceivedDiff)) * 100,
-          fps: Number(report.framesPerSecond || report.framerateMean),
+          fps: Number(report.framesPerSecond || (framesDecodedDiff / (tsDiff / 1000))),
           width: report.frameWidth || NaN,
           height: report.frameHeight || NaN,
         })
@@ -356,6 +358,7 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
 
       bytesReceived = report.bytesReceived
       timestamp = report.timestamp
+      framesDecoded = report.framesDecoded
       packetsLost = report.packetsLost
       packetsReceived = report.packetsReceived
     }, ms)
