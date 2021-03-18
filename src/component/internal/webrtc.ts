@@ -334,7 +334,7 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
       let report: any = null
       stats.forEach(function (stat) {
         if (stat.type === 'inbound-rtp' && stat.kind === 'video') {
-          report = stat
+          report = { ...stat }
         }
       })
 
