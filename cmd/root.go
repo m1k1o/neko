@@ -123,7 +123,11 @@ func init() {
 		if file == "" {
 			logger.Warn().Msg("preflight complete without config file")
 		} else {
-			logger.Info().Msg("preflight complete")
+			if _, err := os.Stat(config); os.IsNotExist(err) {
+				logger.Error().Msg("preflight complete with nonexistent config file")
+			} else {
+				logger.Info().Msg("preflight complete")
+			}
 		}
 
 		neko.Service.Configs.Root.Set()
