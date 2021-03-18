@@ -123,7 +123,7 @@ func init() {
 		if file == "" {
 			logger.Warn().Msg("preflight complete without config file")
 		} else {
-			if _, err := os.Stat(config); os.IsNotExist(err) {
+			if _, err := os.Stat(file); os.IsNotExist(err) {
 				logger.Error().Msg("preflight complete with nonexistent config file")
 			} else {
 				logger.Info().Msg("preflight complete")
