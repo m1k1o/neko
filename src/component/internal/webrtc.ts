@@ -350,7 +350,7 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
         this.emit('stats', {
           bitrate: (bytesDiff / tsDiff) * 1000,
           packetLoss: (packetsLostDiff / (packetsLostDiff + packetsReceivedDiff)) * 100,
-          fps: Number(report.framesPerSecond || (framesDecodedDiff / (tsDiff / 1000))),
+          fps: Number(report.framesPerSecond || framesDecodedDiff / (tsDiff / 1000)),
           width: report.frameWidth || NaN,
           height: report.frameHeight || NaN,
         })
