@@ -37,16 +37,11 @@ func init() {
 		zerolog.TimeFieldFormat = ""
 		zerolog.SetGlobalLevel(zerolog.InfoLevel)
 
-		if viper.GetBool("debug") {
-			zerolog.SetGlobalLevel(zerolog.DebugLevel)
-		}
-
 		console := zerolog.ConsoleWriter{Out: os.Stdout}
 
 		if !viper.GetBool("logs") {
 			log.Logger = log.Output(console)
 		} else {
-
 			logs := filepath.Join(".", "logs")
 			if runtime.GOOS == "linux" {
 				logs = "/var/log/neko"
@@ -81,9 +76,13 @@ func init() {
 		//////
 		// configs
 		//////
-		config := viper.GetString("config")
+		config := viper.GetString("config") // Use config file from the flag.
+		if config == "" {
+			config = os.Getenv("NEKO_CONFIG") // Use config file from the environment variable.
+		}
+
 		if config != "" {
-			viper.SetConfigFile(config) // Use config file from the flag.
+			viper.SetConfigFile(config)
 		} else {
 			if runtime.GOOS == "linux" {
 				viper.AddConfigPath("/etc/neko/")
@@ -106,14 +105,17 @@ func init() {
 			}
 		}
 
-		// debug mode from ENV or config
-		if viper.GetBool("debug") {
+		//////
+		// debug
+		//////
+		debug := viper.GetBool("debug")
+		if debug {
 			zerolog.SetGlobalLevel(zerolog.DebugLevel)
 		}
 
 		file := viper.ConfigFileUsed()
 		logger := log.With().
-			Bool("debug", viper.GetBool("debug")).
+			Bool("debug", debug).
 			Str("logging", viper.GetString("logs")).
 			Str("config", file).
 			Logger()
