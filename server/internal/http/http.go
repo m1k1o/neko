@@ -34,6 +34,10 @@ func New(conf *config.Server, webSocketHandler types.WebSocketHandler) *Server {
 		webSocketHandler.Upgrade(w, r)
 	})
 
+	router.Get("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("true"))
+	})
+
 	fs := http.FileServer(http.Dir(conf.Static))
 	router.Get("/*", func(w http.ResponseWriter, r *http.Request) {
 		if _, err := os.Stat(conf.Static + r.URL.Path); !os.IsNotExist(err) {
