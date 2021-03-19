@@ -76,17 +76,43 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
       clearTimeout(this._timeout)
     }
 
-    if (this.socketOpen) {
+    if (this._ws) {
+      // reset all events
+      this._ws.onmessage = () => {}
+      this._ws.onerror = () => {}
+      this._ws.onclose = () => {}
+
       try {
-        this._ws!.close()
+        this._ws.close()
       } catch (err) {}
+
       this._ws = undefined
     }
 
-    if (this.peerConnected) {
+    if (this._channel) {
+      // reset all events
+      this._channel.onmessage = () => {}
+      this._channel.onerror = () => {}
+      this._channel.onclose = () => {}
+
       try {
-        this._peer!.close()
+        this._channel.close()
       } catch (err) {}
+
+      this._channel = undefined
+    }
+
+    if (this._peer) {
+      // reset all events
+      this._peer.onconnectionstatechange = () => {}
+      this._peer.onsignalingstatechange = () => {}
+      this._peer.oniceconnectionstatechange = () => {}
+      this._peer.ontrack = () => {}
+
+      try {
+        this._peer.close()
+      } catch (err) {}
+
       this._peer = undefined
     }
 

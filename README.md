@@ -41,6 +41,7 @@ For n.eko room management software visit https://github.com/m1k1o/neko-rooms.
 - Fixed sessions manager thread safety by adding mutexes (caused panic in rare edge cases).
 - Now when user gets kicked, he won't join as a ghost user again but will be logged out.
 - **iOS compatibility!** Fixed really strange CSS bug, which prevented iOS from loading the video.
+- Proper disconnect only once with unsubscribing events. When webrtc fails, user won't be logged in without username again.
 
 ### Misc
 - Custom docker workflow.
