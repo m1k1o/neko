@@ -58,6 +58,11 @@ func (api *ApiManagerCtx) Route(r chi.Router) {
 			r.Route(path, router)
 		}
 	})
+
+	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
+		//nolint
+		w.Write([]byte("true"))
+	})
 }
 
 func (api *ApiManagerCtx) Authenticate(next http.Handler) http.Handler {

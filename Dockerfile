@@ -111,5 +111,10 @@ ENV NEKO_SERVER_BIND=:8080
 COPY --from=build /src/bin/neko /usr/bin/neko
 
 #
+# add healthcheck
+HEALTHCHECK --interval=10s --timeout=5s --retries=8 \
+    CMD wget -O - http://localhost:${NEKO_SERVER_BIND#*:}/api/health || exit 1
+
+#
 # run neko
 CMD ["/usr/bin/supervisord", "-c", "/etc/neko/supervisord.conf"]
