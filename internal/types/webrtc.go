@@ -4,8 +4,8 @@ import "github.com/pion/webrtc/v3"
 
 type ICEServer struct {
 	URLs       []string `mapstructure:"urls"       json:"urls"`
-	Username   string   `mapstructure:"username"   json:"username"`
-	Credential string   `mapstructure:"credential" json:"credential"`
+	Username   string   `mapstructure:"username"   json:"username,omitempty"`
+	Credential string   `mapstructure:"credential" json:"credential,omitempty"`
 }
 
 type WebRTCPeer interface {
