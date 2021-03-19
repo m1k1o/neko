@@ -198,8 +198,18 @@ func (ws *WebSocketHandler) Upgrade(w http.ResponseWriter, r *http.Request) erro
 	return nil
 }
 
-func (ws *WebSocketHandler) TotalConns() uint32 {
-	return atomic.LoadUint32(&ws.conns)
+func (ws *WebSocketHandler) Stats() types.Stats {
+	host := ""
+	session, ok := ws.sessions.GetHost()
+	if ok {
+		host = session.ID()
+	}
+
+	return types.Stats{
+		Connections: atomic.LoadUint32(&ws.conns),
+		Host:        host,
+		Members:     ws.sessions.Members(),
+	}
 }
 
 func (ws *WebSocketHandler) IsAdmin(password string) (bool, error) {

@@ -51,11 +51,9 @@ func New(conf *config.Server, webSocketHandler types.WebSocketHandler) *Server {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		if err := json.NewEncoder(w).Encode(struct{
-			Connections uint32 `json:"connections"`
-		}{
-			Connections: webSocketHandler.TotalConns(),
-		}); err != nil {
+
+		stats := webSocketHandler.Stats()
+		if err := json.NewEncoder(w).Encode(stats); err != nil {
 			logger.Warn().Err(err).Msg("failed writing json error response")
 		}
 	})

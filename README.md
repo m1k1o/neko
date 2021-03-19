@@ -33,7 +33,7 @@ For n.eko room management software visit https://github.com/m1k1o/neko-rooms.
 - Added `VIDEO_BITRATE` and `AUDIO_BITRATE` in kbit/s to control stream quality (in collaboration with @mbattista).
 - Added `MAX_FPS`, where you can specify max WebRTC frame rate. When set to `0`, frame rate won't be capped and you can enjoy your real `60fps` experience. Originally, it was constant at `25fps`.
 - Invite links. You can invite people and they don't need to enter passwords by themselves (and get confused about user accounts that do not exits). You can put your password in URL using `?pwd=<your-password>` and it will be automatically used when logging in.
-- Added `/stats?pwd=<admin>` endpoint to get total active connections.
+- Added `/stats?pwd=<admin>` endpoint to get total active connections, host and members.
 
 ### Bugs
 - Fixed minor gst pipeline bug.
