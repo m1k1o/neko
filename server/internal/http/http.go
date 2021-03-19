@@ -2,6 +2,7 @@ package http
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -23,7 +24,7 @@ type Server struct {
 }
 
 func New(conf *config.Server, webSocketHandler types.WebSocketHandler) *Server {
-	logger := log.With().Str("module", "webrtc").Logger()
+	logger := log.With().Str("module", "http").Logger()
 
 	router := chi.NewRouter()
 	// router.Use(middleware.Recoverer) // Recover from panics without crashing server
@@ -32,6 +33,31 @@ func New(conf *config.Server, webSocketHandler types.WebSocketHandler) *Server {
 
 	router.Get("/ws", func(w http.ResponseWriter, r *http.Request) {
 		webSocketHandler.Upgrade(w, r)
+	})
+
+	router.Get("/stats", func(w http.ResponseWriter, r *http.Request) {
+		password := r.URL.Query().Get("pwd")
+		isAdmin, err := webSocketHandler.IsAdmin(password)
+		if err != nil {
+			w.WriteHeader(http.StatusForbidden)
+			fmt.Fprint(w, err)
+			return
+		}
+
+		if !isAdmin {
+			w.WriteHeader(http.StatusUnauthorized)
+			fmt.Fprint(w, "bad authorization")
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(struct{
+			Connections uint32 `json:"connections"`
+		}{
+			Connections: webSocketHandler.TotalConns(),
+		}); err != nil {
+			logger.Warn().Err(err).Msg("failed writing json error response")
+		}
 	})
 
 	router.Get("/health", func(w http.ResponseWriter, r *http.Request) {

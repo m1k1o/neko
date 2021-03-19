@@ -3,6 +3,7 @@ package websocket
 import (
 	"fmt"
 	"net/http"
+	"sync/atomic"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -38,6 +39,7 @@ func New(sessions types.SessionManager, remote types.RemoteManager, broadcast ty
 			banned:    make(map[string]bool),
 			locked:    false,
 		},
+		conns: 0,
 	}
 }
 
@@ -51,6 +53,7 @@ type WebSocketHandler struct {
 	remote    types.RemoteManager
 	conf      *config.WebSocket
 	handler   *MessageHandler
+	conns     uint32
 	shutdown  chan bool
 }
 
@@ -179,16 +182,36 @@ func (ws *WebSocketHandler) Upgrade(w http.ResponseWriter, r *http.Request) erro
 		Str("address", connection.RemoteAddr().String()).
 		Msg("new connection created")
 
+	atomic.AddUint32(&ws.conns, uint32(1))
+
 	defer func() {
 		ws.logger.
 			Debug().
 			Str("session", id).
 			Str("address", connection.RemoteAddr().String()).
 			Msg("session ended")
+
+		atomic.AddUint32(&ws.conns, ^uint32(0))
 	}()
 
 	ws.handle(connection, id)
 	return nil
+}
+
+func (ws *WebSocketHandler) TotalConns() uint32 {
+	return atomic.LoadUint32(&ws.conns)
+}
+
+func (ws *WebSocketHandler) IsAdmin(password string) (bool, error) {
+	if password == ws.conf.AdminPassword {
+		return true, nil
+	}
+
+	if password == ws.conf.Password {
+		return false, nil
+	}
+
+	return false, fmt.Errorf("invalid password")
 }
 
 func (ws *WebSocketHandler) authenticate(r *http.Request) (string, string, bool, error) {
@@ -208,15 +231,8 @@ func (ws *WebSocketHandler) authenticate(r *http.Request) (string, string, bool,
 		return "", ip, false, fmt.Errorf("no password provided")
 	}
 
-	if passwords[0] == ws.conf.AdminPassword {
-		return id, ip, true, nil
-	}
-
-	if passwords[0] == ws.conf.Password {
-		return id, ip, false, nil
-	}
-
-	return "", ip, false, fmt.Errorf("invalid password: %s", passwords[0])
+	isAdmin, err := ws.IsAdmin(passwords[0])
+	return id, ip, isAdmin, err
 }
 
 func (ws *WebSocketHandler) handle(connection *websocket.Conn, id string) {

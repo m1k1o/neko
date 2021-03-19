@@ -12,4 +12,6 @@ type WebSocketHandler interface {
 	Start() error
 	Shutdown() error
 	Upgrade(w http.ResponseWriter, r *http.Request) error
+	TotalConns() uint32
+	IsAdmin(password string) (bool, error)
 }
