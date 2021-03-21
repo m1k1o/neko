@@ -58,12 +58,16 @@ For n.eko room management software visit https://github.com/m1k1o/neko-rooms.
 - Added `m1k1o/neko:vncviewer` tag, use `NEKO_VNC_URL` to specify VNC target and use n.eko as a bridge.
 - Abiltiy to include neko as a component in another Vue.Js project (by @gbrian).
 - Added HEALTHCHECK to Dockerfile.
+- Added `m1k1o/neko:vlc` tag, use VLC to watch local files together (by @mbattista).
+- Added `m1k1o/neko:wesnoth` tag, as an non video related showcase (by @mbattista).
 
 # Getting started & FAQ
 
 Use following docker images:
 - `m1k1o/neko:latest` - for Firefox.
 - `m1k1o/neko:chromium` - for Chromium Ungoogled (needs `--cap-add=SYS_ADMIN`).
+- `m1k1o/neko:vlc` - for VLC Video player (needs `volumes` folder with local video files)
+- `m1k1o/neko:wesnoth` - for playing wesnoth
 - `m1k1o/neko:base` - for custom base.
 
 Networking:
@@ -162,30 +166,6 @@ services:
       NEKO_NAT1TO1: <your-IP>
 ```
 
-## Wesnoth
-Neko can share any application via docker.
-For example the round-based strategy game wesnoth.
-
-```yaml
-version: "3.4"
-services:
-  neko:
-    image: "m1k1o/neko:wesnoth"
-    restart: "unless-stopped"
-    shm_size: "2gb"
-    ports:
-      - "8080:8080"
-      - "52000-52100:52000-52100/udp"
-    cap_add:
-      - SYS_ADMIN
-    environment:
-      NEKO_SCREEN: '1920x1080@30'
-      NEKO_PASSWORD: neko
-      NEKO_PASSWORD_ADMIN: admin
-      NEKO_EPR: 52000-52100
-      NEKO_NAT1TO1: <your-IP>
-```
-
 ## Mobile support
 
 Neko is now working on iOS and Android! Also, the UI screens have been fixed for small screens.
@@ -238,6 +218,9 @@ NEKO_PCMU:
 NEKO_PCMA:
   - If pcma should be used as audio encoder for the stream
   - e.g. 'false'
+NEKO_AUDIO_BITRATE:
+  - Bitrate of the audio stream in kb/s
+  - e.g. 196
 NEKO_CERT:
   - Path to the SSL-Certificate
   - e.g. '/certs/cert.pem'

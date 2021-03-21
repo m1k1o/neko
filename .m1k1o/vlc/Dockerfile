@@ -1,4 +1,4 @@
-FROM m1k1o1/neko:base
+FROM m1k1o/neko:base
 
 #
 # install firefox-esr
