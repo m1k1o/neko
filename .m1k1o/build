@@ -25,11 +25,21 @@ build_chromium() {
 	docker build -t m1k1o/neko:chromium -f chromium/Dockerfile chromium/
 }
 
+build_wesnoth() {
+	docker build -t m1k1o/neko:wesnoth -f wesnoth/Dockerfile wesnoth/
+}
+
+build_vlc() {
+	docker build -t m1k1o/neko:vlc -f vlc/Dockerfile vlc/
+}
+
 case $1 in
   client) build_client;;
   serve) build_server;;
   base) build_base;;
   firefox) build_firefox;;
   chromium) build_chromium;;
+  wesnoth) build_wesnoth;;
+  vlc) build_vlc;;
   *) echo "Unknown $1";;
 esac
