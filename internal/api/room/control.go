@@ -41,11 +41,6 @@ func (h *RoomHandler) controlRequest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	session := auth.GetSession(r)
-	if !session.Profile().CanHost {
-		utils.HttpBadRequest(w, "Session is not allowed to host.")
-		return
-	}
-
 	h.sessions.SetHost(session)
 
 	utils.HttpSuccess(w)
@@ -58,11 +53,6 @@ func (h *RoomHandler) controlRelease(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !session.Profile().CanHost {
-		utils.HttpBadRequest(w, "Session is not allowed to host.")
-		return
-	}
-
 	h.desktop.ResetKeys()
 	h.sessions.ClearHost()
 
@@ -71,11 +61,6 @@ func (h *RoomHandler) controlRelease(w http.ResponseWriter, r *http.Request) {
 
 func (h *RoomHandler) controlTake(w http.ResponseWriter, r *http.Request) {
 	session := auth.GetSession(r)
-	if !session.Profile().CanHost {
-		utils.HttpBadRequest(w, "Session is not allowed to host.")
-		return
-	}
-
 	h.sessions.SetHost(session)
 
 	utils.HttpSuccess(w)

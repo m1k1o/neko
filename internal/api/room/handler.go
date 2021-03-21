@@ -37,7 +37,7 @@ func (h *RoomHandler) Route(r chi.Router) {
 		r.Post("/stop", h.boradcastStop)
 	})
 
-	r.With(auth.HostsOnly).Route("/clipboard", func(r chi.Router) {
+	r.With(auth.CanAccessClipboardOnly).With(auth.HostsOnly).Route("/clipboard", func(r chi.Router) {
 		r.Get("/", h.clipboardGetText)
 		r.Post("/", h.clipboardSetText)
 		r.Get("/image.png", h.clipboardGetImage)
@@ -52,7 +52,7 @@ func (h *RoomHandler) Route(r chi.Router) {
 		//r.Get("/targets", h.clipboardGetTargets)
 	})
 
-	r.Route("/keyboard", func(r chi.Router) {
+	r.With(auth.CanHostOnly).Route("/keyboard", func(r chi.Router) {
 		r.Get("/map", h.keyboardMapGet)
 		r.With(auth.HostsOnly).Post("/map", h.keyboardMapSet)
 
@@ -60,7 +60,7 @@ func (h *RoomHandler) Route(r chi.Router) {
 		r.With(auth.HostsOnly).Post("/modifiers", h.keyboardModifiersSet)
 	})
 
-	r.Route("/control", func(r chi.Router) {
+	r.With(auth.CanHostOnly).Route("/control", func(r chi.Router) {
 		r.Get("/", h.controlStatus)
 		r.Post("/request", h.controlRequest)
 		r.Post("/release", h.controlRelease)
@@ -70,13 +70,13 @@ func (h *RoomHandler) Route(r chi.Router) {
 		r.With(auth.AdminsOnly).Post("/reset", h.controlReset)
 	})
 
-	r.Route("/screen", func(r chi.Router) {
-		r.With(auth.CanWatchOnly).Get("/", h.screenConfiguration)
-		r.With(auth.CanWatchOnly).Get("/shot.jpg", h.screenShotGet)
-		r.With(auth.CanWatchOnly).Get("/cast.jpg", h.screenCastGet)
-
+	r.With(auth.CanWatchOnly).Route("/screen", func(r chi.Router) {
+		r.Get("/", h.screenConfiguration)
 		r.With(auth.AdminsOnly).Post("/", h.screenConfigurationChange)
 		r.With(auth.AdminsOnly).Get("/configurations", h.screenConfigurationsList)
+
+		r.Get("/cast.jpg", h.screenCastGet)
+		r.With(auth.AdminsOnly).Get("/shot.jpg", h.screenShotGet)
 	})
 
 	r.With(h.uploadMiddleware).Route("/upload", func(r chi.Router) {
