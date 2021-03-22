@@ -80,53 +80,57 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 			"hd": streamNew(codec.VP8(), func() string {
 				screen := desktop.GetScreenSize()
 				bitrate := int((screen.Width * screen.Height * 5) / 3)
+				buf := bitrate / 1000
 
 				return fmt.Sprintf(
 					"ximagesrc display-name=%s show-pointer=false use-damage=false "+
 						"! video/x-raw,framerate=25/1 "+
 						"! videoconvert "+
 						"! queue "+
-						"! vp8enc end-usage=cbr target-bitrate=%d cpu-used=16 threads=4 deadline=100000 undershoot=95 error-resilient=partitions keyframe-max-dist=15 auto-alt-ref=true min-quantizer=6 max-quantizer=12 "+
-						"! appsink name=appsink", config.Display, bitrate,
+						"! vp8enc end-usage=cbr target-bitrate=%d cpu-used=16 threads=4 deadline=1 undershoot=95 error-resilient=partitions keyframe-max-dist=25 min-quantizer=6 max-quantizer=12 buffer-size=%d buffer-initial-size=%d buffer-optimal-size=%d "+
+						"! appsink name=appsink", config.Display, bitrate, buf*6, buf*4, buf*5,
 				)
 			}),
 			"hq": streamNew(codec.VP8(), func() string {
 				screen := desktop.GetScreenSize()
 				bitrate := int((screen.Width * screen.Height * 5) / 3) / 2
+				buf := bitrate / 1000
 
 				return fmt.Sprintf(
 					"ximagesrc display-name=%s show-pointer=false use-damage=false "+
 						"! video/x-raw,framerate=15/1 "+
 						"! videoconvert "+
 						"! queue "+
-						"! vp8enc end-usage=cbr target-bitrate=%d cpu-used=16 threads=4 deadline=100000 undershoot=95 error-resilient=partitions keyframe-max-dist=15 auto-alt-ref=true min-quantizer=6 max-quantizer=12 "+
-						"! appsink name=appsink", config.Display, bitrate,
+						"! vp8enc end-usage=cbr target-bitrate=%d cpu-used=16 threads=4 deadline=1 undershoot=95 error-resilient=partitions keyframe-max-dist=25 min-quantizer=6 max-quantizer=12 buffer-size=%d buffer-initial-size=%d buffer-optimal-size=%d "+
+						"! appsink name=appsink", config.Display, bitrate, buf*6, buf*4, buf*5,
 				)
 			}),
 			"mq": streamNew(codec.VP8(), func() string {
 				screen := desktop.GetScreenSize()
 				bitrate := int((screen.Width * screen.Height * 5) / 3) / 3
+				buf := bitrate / 1000
 
 				return fmt.Sprintf(
 					"ximagesrc display-name=%s show-pointer=false use-damage=false "+
 						"! video/x-raw,framerate=10/1 "+
 						"! videoconvert "+
 						"! queue "+
-						"! vp8enc end-usage=cbr target-bitrate=%d cpu-used=16 threads=4 deadline=100000 undershoot=95 error-resilient=partitions keyframe-max-dist=15 auto-alt-ref=true min-quantizer=12 max-quantizer=24 "+
-						"! appsink name=appsink", config.Display, bitrate,
+						"! vp8enc end-usage=cbr target-bitrate=%d cpu-used=16 threads=4 deadline=1 undershoot=95 error-resilient=partitions keyframe-max-dist=25 min-quantizer=12 max-quantizer=24 buffer-size=%d buffer-initial-size=%d buffer-optimal-size=%d "+
+						"! appsink name=appsink", config.Display, bitrate, buf*6, buf*4, buf*5,
 				)
 			}),
 			"lq": streamNew(codec.VP8(), func() string {
 				screen := desktop.GetScreenSize()
 				bitrate := int((screen.Width * screen.Height * 5) / 3) / 4
+				buf := bitrate / 1000
 	
 				return fmt.Sprintf(
 					"ximagesrc display-name=%s show-pointer=false use-damage=false "+
 						"! video/x-raw,framerate=5/1 "+
 						"! videoconvert "+
 						"! queue "+
-						"! vp8enc end-usage=cbr target-bitrate=%d cpu-used=16 threads=4 deadline=100000 undershoot=95 error-resilient=partitions keyframe-max-dist=15 auto-alt-ref=true min-quantizer=12 max-quantizer=24 "+
-						"! appsink name=appsink", config.Display, bitrate,
+						"! vp8enc end-usage=cbr target-bitrate=%d cpu-used=16 threads=4 deadline=1 undershoot=95 error-resilient=partitions keyframe-max-dist=25 min-quantizer=12 max-quantizer=24 buffer-size=%d buffer-initial-size=%d buffer-optimal-size=%d "+
+						"! appsink name=appsink", config.Display, bitrate, buf*6, buf*4, buf*5,
 				)
 			}),
 		},
