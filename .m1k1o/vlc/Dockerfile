@@ -1,13 +1,15 @@
 FROM m1k1o/neko:base
 
 #
-# install firefox-esr
+# install vlc
 RUN set -eux; apt-get update; \
     apt-get install -y --no-install-recommends openbox vlc; \
     #
     # clean up
     apt-get clean -y; \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/*
+
+ENV VLC_MEDIA="/media"
 
 #
 # copy configuation files
