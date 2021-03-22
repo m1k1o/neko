@@ -25,8 +25,8 @@ build_chromium() {
 	docker build -t m1k1o/neko:chromium -f chromium/Dockerfile chromium/
 }
 
-build_wesnoth() {
-	docker build -t m1k1o/neko:wesnoth -f wesnoth/Dockerfile wesnoth/
+build_xfce() {
+	docker build -t m1k1o/neko:xfce -f xfce/Dockerfile xfce/
 }
 
 build_vlc() {
@@ -39,7 +39,7 @@ case $1 in
   base) build_base;;
   firefox) build_firefox;;
   chromium) build_chromium;;
-  wesnoth) build_wesnoth;;
+  xfce) build_xfce;;
   vlc) build_vlc;;
   *) echo "Unknown $1";;
 esac
