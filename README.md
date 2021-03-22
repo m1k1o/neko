@@ -59,7 +59,7 @@ For n.eko room management software visit https://github.com/m1k1o/neko-rooms.
 - Abiltiy to include neko as a component in another Vue.Js project (by @gbrian).
 - Added HEALTHCHECK to Dockerfile.
 - Added `m1k1o/neko:vlc` tag, use VLC to watch local files together (by @mbattista).
-- Added `m1k1o/neko:wesnoth` tag, as an non video related showcase (by @mbattista).
+- Added `m1k1o/neko:xfce` tag, as an non video related showcase (by @mbattista).
 
 # Getting started & FAQ
 
@@ -67,7 +67,7 @@ Use following docker images:
 - `m1k1o/neko:latest` - for Firefox.
 - `m1k1o/neko:chromium` - for Chromium Ungoogled (needs `--cap-add=SYS_ADMIN`).
 - `m1k1o/neko:vlc` - for VLC Video player (needs `volumes` folder with local video files)
-- `m1k1o/neko:wesnoth` - for playing wesnoth
+- `m1k1o/neko:xfce` - for an shared desktop / installing shared software (sudo-pw: `neko`)
 - `m1k1o/neko:base` - for custom base.
 
 Networking:
