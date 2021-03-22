@@ -8,6 +8,7 @@ RUN set -eux; apt-get update; \
     # add user to sudoers
     usermod -aG sudo neko; \
     echo "neko:neko" | chpasswd; \
+    echo "%sudo ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers; \
     # clean up
     apt-get clean -y; \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/*

@@ -67,7 +67,7 @@ Use following docker images:
 - `m1k1o/neko:latest` - for Firefox.
 - `m1k1o/neko:chromium` - for Chromium Ungoogled (needs `--cap-add=SYS_ADMIN`).
 - `m1k1o/neko:vlc` - for VLC Video player (needs `volumes` folder with local video files)
-- `m1k1o/neko:xfce` - for an shared desktop / installing shared software (sudo-pw: `neko`)
+- `m1k1o/neko:xfce` - for an shared desktop / installing shared software
 - `m1k1o/neko:base` - for custom base.
 
 Networking:
