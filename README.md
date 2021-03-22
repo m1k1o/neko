@@ -58,12 +58,17 @@ For n.eko room management software visit https://github.com/m1k1o/neko-rooms.
 - Added `m1k1o/neko:vncviewer` tag, use `NEKO_VNC_URL` to specify VNC target and use n.eko as a bridge.
 - Abiltiy to include neko as a component in another Vue.Js project (by @gbrian).
 - Added HEALTHCHECK to Dockerfile.
+- Added `m1k1o/neko:vlc` tag, use VLC to watch local files together (by @mbattista).
+- Added `m1k1o/neko:xfce` tag, as an non video related showcase (by @mbattista).
 
 # Getting started & FAQ
 
 Use following docker images:
 - `m1k1o/neko:latest` - for Firefox.
 - `m1k1o/neko:chromium` - for Chromium Ungoogled (needs `--cap-add=SYS_ADMIN`).
+- `m1k1o/neko:vncviewer` - for simple VNC viewer (specify `NEKO_VNC_URL` to your VNC target).
+- `m1k1o/neko:vlc` - for VLC Video player (needs volume mounted to `/media` with local video files, or setting `VLC_MEDIA=/media` path).
+- `m1k1o/neko:xfce` - for an shared desktop / installing shared software.
 - `m1k1o/neko:base` - for custom base.
 
 Networking:
@@ -138,8 +143,90 @@ services:
       NEKO_NAT1TO1: <your-IP>
 ```
 
+## VLC
+
+```yaml
+version: "3.4"
+services:
+  neko:
+    image: "m1k1o/neko:vlc"
+    restart: "unless-stopped"
+    shm_size: "2gb"
+    volumes:
+      - "<your-video-folder>:/video" 
+    ports:
+      - "8080:8080"
+      - "52000-52100:52000-52100/udp"
+    cap_add:
+      - SYS_ADMIN
+    environment:
+      NEKO_SCREEN: '1920x1080@30'
+      NEKO_PASSWORD: neko
+      NEKO_PASSWORD_ADMIN: admin
+      NEKO_EPR: 52000-52100
+      NEKO_NAT1TO1: <your-IP>
+```
+
 ## Mobile support
 
 Neko is now working on iOS and Android! Also, the UI screens have been fixed for small screens.
 
 ![mobile-screens](https://i.imgur.com/K9gfscU.png)
+
+## Docker-Compose Enviroment Options
+
+```code
+NEKO_SCREEN:
+  - Resolution after startup. Only Admins can change this later.
+  - e.g. '1920x1080@30'
+NEKO_PASSWORD:
+  - Password for the user login
+  - e.g. 'user_password'
+NEKO_PASSWORD_ADMIN
+  - Password for the admin login
+  - e.g. 'admin_password'
+NEKO_EPR:
+  - For WebRTC needed range of ports
+  - e.g. 52000-52100
+NEKO_VP8:
+  - If vp8 should be used as video encoder for the stream (default encoder)
+  - e.g. 'true'
+NEKO_VP9:
+  - If vp9 should be used as video encoder for the stream (Parameter not optimized yet)
+  - e.g. 'false'
+NEKO_H264:
+  - If h264 should be used as video encoder for the stream (second best option)
+  - e.g. 'false'
+NEKO_VIDEO_BITRATE:
+  - Bitrate of the video stream in kb/s
+  - e.g. 3500
+NEKO_VIDEO:
+  - Makes it possible to create custom gstreamer pipelines. With this you could find the best quality for your CPU
+  - Installed are gstreamer1.0-plugins-base /  gstreamer1.0-plugins-good /  gstreamer1.0-plugins-bad /  gstreamer1.0-plugins-ugly
+  - e.g. ' ximagesrc display-name=%s show-pointer=true use-damage=false ! video/x-raw,framerate=30/1 ! videoconvert ! queue ! video/x-raw,format=NV12 ! x264enc threads=4 bitrate=3500 key-int-max=60 vbv-buf-capacity=4000 byte-stream=true tune=zerolatency speed-preset=veryfast ! video/x-h264,stream-format=byte-stream '
+NEKO_MAX_FPS:
+  - The resulting stream frames per seconds should be capped (0 for uncapped)
+  - e.g. 0
+NEKO_OPUS:
+  - If opus should be used as audio encoder for the stream (default encoder)
+  - e.g. 'true'
+NEKO_G722:
+  - If g722 should be used as audio encoder for the stream
+  - e.g. 'false'
+NEKO_PCMU:
+  - If pcmu should be used as audio encoder for the stream
+  - e.g. 'false'
+NEKO_PCMA:
+  - If pcma should be used as audio encoder for the stream
+  - e.g. 'false'
+NEKO_AUDIO_BITRATE:
+  - Bitrate of the audio stream in kb/s
+  - e.g. 196
+NEKO_CERT:
+  - Path to the SSL-Certificate
+  - e.g. '/certs/cert.pem'
+NEKO_KEY:
+  - Path to the SSL-Certificate private key
+  - e.g. '/certs/key.pem'
+
+```
