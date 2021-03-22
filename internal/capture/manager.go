@@ -2,7 +2,6 @@ package capture
 
 import (
 	"fmt"
-	"math"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -93,56 +92,41 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 			}),
 			"hq": streamNew(codec.VP8(), func() string {
 				screen := desktop.GetScreenSize()
-				width := int(math.Ceil(float64(screen.Width)/6) * 5)
-				height := int(math.Ceil(float64(screen.Height)/6) * 5)
-				bitrate := int((width * height * 5) / 3)
+				bitrate := int((screen.Width * screen.Height * 5) / 3) / 2
 
 				return fmt.Sprintf(
 					"ximagesrc display-name=%s show-pointer=false use-damage=false "+
-						"! video/x-raw,framerate=25/1 "+
+						"! video/x-raw,framerate=15/1 "+
 						"! videoconvert "+
 						"! queue "+
-						"! videoscale "+
-						"! video/x-raw,width=%d,height=%d "+
-						"! queue "+
 						"! vp8enc end-usage=cbr target-bitrate=%d cpu-used=16 threads=4 deadline=100000 undershoot=95 error-resilient=partitions keyframe-max-dist=15 auto-alt-ref=true min-quantizer=6 max-quantizer=12 "+
-						"! appsink name=appsink", config.Display, width, height, bitrate,
+						"! appsink name=appsink", config.Display, bitrate,
 				)
 			}),
 			"mq": streamNew(codec.VP8(), func() string {
 				screen := desktop.GetScreenSize()
-				width := int(math.Ceil(float64(screen.Width)/6) * 4)
-				height := int(math.Ceil(float64(screen.Height)/6) * 4)
-				bitrate := int((width * height * 5) / 3)
+				bitrate := int((screen.Width * screen.Height * 5) / 3) / 3
 
 				return fmt.Sprintf(
 					"ximagesrc display-name=%s show-pointer=false use-damage=false "+
-						"! video/x-raw,framerate=125/10 "+
+						"! video/x-raw,framerate=10/1 "+
 						"! videoconvert "+
 						"! queue "+
-						"! videoscale "+
-						"! video/x-raw,width=%d,height=%d "+
-						"! queue "+
 						"! vp8enc end-usage=cbr target-bitrate=%d cpu-used=16 threads=4 deadline=100000 undershoot=95 error-resilient=partitions keyframe-max-dist=15 auto-alt-ref=true min-quantizer=12 max-quantizer=24 "+
-						"! appsink name=appsink", config.Display, width, height, bitrate,
+						"! appsink name=appsink", config.Display, bitrate,
 				)
 			}),
 			"lq": streamNew(codec.VP8(), func() string {
 				screen := desktop.GetScreenSize()
-				width := int(math.Ceil(float64(screen.Width)/6) * 3)
-				height := int(math.Ceil(float64(screen.Height)/6) * 3)
-				bitrate := int((width * height * 5) / 3)
-
+				bitrate := int((screen.Width * screen.Height * 5) / 3) / 4
+	
 				return fmt.Sprintf(
 					"ximagesrc display-name=%s show-pointer=false use-damage=false "+
-						"! video/x-raw,framerate=125/10 "+
+						"! video/x-raw,framerate=5/1 "+
 						"! videoconvert "+
 						"! queue "+
-						"! videoscale "+
-						"! video/x-raw,width=%d,height=%d "+
-						"! queue "+
 						"! vp8enc end-usage=cbr target-bitrate=%d cpu-used=16 threads=4 deadline=100000 undershoot=95 error-resilient=partitions keyframe-max-dist=15 auto-alt-ref=true min-quantizer=12 max-quantizer=24 "+
-						"! appsink name=appsink", config.Display, width, height, bitrate,
+						"! appsink name=appsink", config.Display, bitrate,
 				)
 			}),
 		},
