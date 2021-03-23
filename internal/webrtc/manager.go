@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pion/interceptor"
 	"github.com/pion/webrtc/v3"
 	"github.com/pion/webrtc/v3/pkg/media"
 	"github.com/rs/zerolog"
@@ -120,8 +121,13 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 	settings := manager.apiSettings(logger)
 	configuration := manager.apiConfiguration()
 
+	registry := &interceptor.Registry{}
+	if err := webrtc.RegisterDefaultInterceptors(engine, registry); err != nil {
+		return nil, err
+	}
+
 	// Create NewAPI with MediaEngine and SettingEngine
-	api := webrtc.NewAPI(webrtc.WithMediaEngine(engine), webrtc.WithSettingEngine(*settings))
+	api := webrtc.NewAPI(webrtc.WithMediaEngine(engine), webrtc.WithSettingEngine(settings), webrtc.WithInterceptorRegistry(registry))
 
 	connection, err := api.NewPeerConnection(*configuration)
 	if err != nil {
@@ -401,8 +407,8 @@ func (manager *WebRTCManagerCtx) mediaEngine(videoID string) (*webrtc.MediaEngin
 	return engine, nil
 }
 
-func (manager *WebRTCManagerCtx) apiSettings(logger zerolog.Logger) *webrtc.SettingEngine {
-	settings := &webrtc.SettingEngine{
+func (manager *WebRTCManagerCtx) apiSettings(logger zerolog.Logger) webrtc.SettingEngine {
+	settings := webrtc.SettingEngine{
 		LoggerFactory: loggerFactory{
 			logger: logger,
 		},
@@ -412,6 +418,7 @@ func (manager *WebRTCManagerCtx) apiSettings(logger zerolog.Logger) *webrtc.Sett
 	settings.SetEphemeralUDPPortRange(manager.config.EphemeralMin, manager.config.EphemeralMax)
 	settings.SetICETimeouts(disconnectedTimeout, failedTimeout, keepAliveInterval)
 	settings.SetNAT1To1IPs(manager.config.NAT1To1IPs, webrtc.ICECandidateTypeHost)
+	//settings.SetSRTPReplayProtectionWindow(512)
 	settings.SetLite(manager.config.ICELite)
 
 	return settings

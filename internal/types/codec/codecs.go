@@ -27,7 +27,7 @@ func VP8() RTPCodec {
 			ClockRate:    90000,
 			Channels:     0,
 			SDPFmtpLine:  "",
-			RTCPFeedback: nil,
+			RTCPFeedback: []webrtc.RTCPFeedback{},
 		},
 		// https://gstreamer.freedesktop.org/documentation/vpx/vp8enc.html
 		// gstreamer1.0-plugins-good
@@ -46,7 +46,7 @@ func VP9() RTPCodec {
 			ClockRate:    90000,
 			Channels:     0,
 			SDPFmtpLine:  "profile-id=0",
-			RTCPFeedback: nil,
+			RTCPFeedback: []webrtc.RTCPFeedback{},
 		},
 		// https://gstreamer.freedesktop.org/documentation/vpx/vp9enc.html
 		// gstreamer1.0-plugins-good
@@ -65,7 +65,7 @@ func H264() RTPCodec {
 			ClockRate:    90000,
 			Channels:     0,
 			SDPFmtpLine:  "level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42001f",
-			RTCPFeedback: nil,
+			RTCPFeedback: []webrtc.RTCPFeedback{},
 		},
 		// https://gstreamer.freedesktop.org/documentation/x264/index.html
 		// gstreamer1.0-plugins-ugly
@@ -86,7 +86,7 @@ func Opus() RTPCodec {
 			ClockRate:    48000,
 			Channels:     2,
 			SDPFmtpLine:  "",
-			RTCPFeedback: nil,
+			RTCPFeedback: []webrtc.RTCPFeedback{},
 		},
 		// https://gstreamer.freedesktop.org/documentation/opus/opusenc.html
 		// gstreamer1.0-plugins-base
@@ -104,7 +104,7 @@ func G722() RTPCodec {
 			ClockRate:    8000,
 			Channels:     0,
 			SDPFmtpLine:  "",
-			RTCPFeedback: nil,
+			RTCPFeedback: []webrtc.RTCPFeedback{},
 		},
 		// https://gstreamer.freedesktop.org/documentation/libav/avenc_g722.html
 		// gstreamer1.0-libav
@@ -122,7 +122,7 @@ func PCMU() RTPCodec {
 			ClockRate:    8000,
 			Channels:     0,
 			SDPFmtpLine:  "",
-			RTCPFeedback: nil,
+			RTCPFeedback: []webrtc.RTCPFeedback{},
 		},
 		// https://gstreamer.freedesktop.org/documentation/mulaw/mulawenc.html
 		// gstreamer1.0-plugins-good
@@ -140,7 +140,7 @@ func PCMA() RTPCodec {
 			ClockRate:    8000,
 			Channels:     0,
 			SDPFmtpLine:  "",
-			RTCPFeedback: nil,
+			RTCPFeedback: []webrtc.RTCPFeedback{},
 		},
 		// https://gstreamer.freedesktop.org/documentation/alaw/alawenc.html
 		// gstreamer1.0-plugins-good

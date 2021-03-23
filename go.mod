@@ -11,6 +11,7 @@ require (
 	github.com/magiconair/properties v1.8.4 // indirect
 	github.com/mitchellh/mapstructure v1.4.1 // indirect
 	github.com/pelletier/go-toml v1.8.1 // indirect
+	github.com/pion/interceptor v0.0.10 // indirect
 	github.com/pion/logging v0.2.2
 	github.com/pion/transport v0.12.3 // indirect
 	github.com/pion/webrtc/v3 v3.0.15
