@@ -77,12 +77,6 @@ func (session *SessionCtx) SetWebSocketConnected(connected bool) {
 
 	session.manager.emmiter.Emit("disconnected", session)
 	session.websocketPeer = nil
-
-	if session.webrtcPeer != nil {
-		if err := session.webrtcPeer.Destroy(); err != nil {
-			session.logger.Warn().Err(err).Msgf("webrtc destroy has failed")
-		}
-	}
 }
 
 func (session *SessionCtx) Send(v interface{}) error {
