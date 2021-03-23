@@ -67,7 +67,11 @@ func (session *SessionCtx) SetWebSocketPeer(websocketPeer types.WebSocketPeer) {
 	session.websocketPeer = websocketPeer
 }
 
-func (session *SessionCtx) SetWebSocketConnected(connected bool) {
+func (session *SessionCtx) SetWebSocketConnected(websocketPeer types.WebSocketPeer, connected bool) {
+	if websocketPeer != session.websocketPeer {
+		return
+	}
+
 	session.state.IsConnected = connected
 
 	if connected {

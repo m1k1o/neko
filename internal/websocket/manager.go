@@ -207,11 +207,13 @@ func (manager *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	session.SetWebSocketPeer(&WebSocketPeerCtx{
+	peer := &WebSocketPeerCtx{
 		session:    session,
 		manager:    manager,
 		connection: connection,
-	})
+	}
+
+	session.SetWebSocketPeer(peer)
 
 	manager.logger.
 		Debug().
@@ -219,7 +221,7 @@ func (manager *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Reque
 		Str("address", connection.RemoteAddr().String()).
 		Msg("connection started")
 
-	session.SetWebSocketConnected(true)
+	session.SetWebSocketConnected(peer, true)
 
 	defer func() {
 		manager.logger.
@@ -228,7 +230,7 @@ func (manager *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Reque
 			Str("address", connection.RemoteAddr().String()).
 			Msg("connection ended")
 
-		session.SetWebSocketConnected(false)
+		session.SetWebSocketConnected(peer, false)
 	}()
 
 	manager.handle(connection, session)

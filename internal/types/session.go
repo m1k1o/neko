@@ -15,7 +15,7 @@ type Session interface {
 
 	// websocket
 	SetWebSocketPeer(websocketPeer WebSocketPeer)
-	SetWebSocketConnected(connected bool)
+	SetWebSocketConnected(websocketPeer WebSocketPeer, connected bool)
 	Send(v interface{}) error
 	Disconnect(reason string) error
 
