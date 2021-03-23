@@ -404,14 +404,16 @@
       this.websocket.on('connected', () => {
         Vue.set(this.state.connection, 'websocket', 'connected')
         this.events.emit('connection.websocket', 'connected')
-        this.webrtcConnect()
+
+        if (!this.watching) {
+          this.webrtcConnect()
+        }
       })
       this.websocket.on('disconnected', () => {
         Vue.set(this.state.connection, 'websocket', 'disconnected')
         this.events.emit('connection.websocket', 'disconnected')
 
-        this.webrtc.disconnect()
-        this.clearState()
+        this.clearWebSocketState()
       })
 
       // webrtc
@@ -481,21 +483,17 @@
 
       let webrtcReconnect: any
       this.webrtc.on('disconnected', () => {
-        Vue.set(this.state.connection.webrtc, 'status', 'disconnected')
-        Vue.set(this.state.connection.webrtc, 'stats', null)
-        Vue.set(this.state.connection.webrtc, 'video', null)
-        Vue.set(this.state.connection.webrtc, 'videos', [])
-        Vue.set(this.state.connection, 'type', 'none')
         this.events.emit('connection.webrtc', 'disconnected')
+        this.clearWebRTCState()
 
-        if (!this._video) return
-
-        // destroy stream
-        if ('srcObject' in this._video) {
-          this._video.srcObject = null
-        } else {
-          // @ts-ignore
-          this._video.removeAttribute('src')
+        // destroy video
+        if (this._video) {
+          if ('srcObject' in this._video) {
+            this._video.srcObject = null
+          } else {
+            // @ts-ignore
+            this._video.removeAttribute('src')
+          }
         }
 
         // reconnect WebRTC
@@ -581,8 +579,7 @@
       }
     }
 
-    clearState() {
-      Vue.set(this.state.control, 'cursor', null)
+    clearWebSocketState() {
       Vue.set(this.state.control, 'clipboard', null)
       Vue.set(this.state.control, 'host_id', null)
       Vue.set(this.state.control, 'implicit_hosting', false)
@@ -590,6 +587,14 @@
       Vue.set(this.state.screen, 'configurations', [])
       Vue.set(this.state, 'session_id', null)
       Vue.set(this.state, 'sessions', {})
+    }
+  
+    clearWebRTCState() {
+      Vue.set(this.state.connection.webrtc, 'status', 'disconnected')
+      Vue.set(this.state.connection.webrtc, 'stats', null)
+      Vue.set(this.state.connection.webrtc, 'video', null)
+      Vue.set(this.state.connection.webrtc, 'videos', [])
+      Vue.set(this.state.connection, 'type', 'none')
     }
   }
 </script>
