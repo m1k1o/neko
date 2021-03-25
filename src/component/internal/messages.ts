@@ -40,6 +40,7 @@ export interface NekoEvents {
 }
 
 export class NekoMessages extends EventEmitter<NekoEvents> {
+  private websocket: NekoWebSocket
   private state: NekoState
   private _log: Logger
 
@@ -48,7 +49,9 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
 
     this._log = new Logger('messages')
     this.state = state
-    websocket.on('message', async (event: string, payload: any) => {
+    this.websocket = websocket
+
+    this.websocket.on('message', async (event: string, payload: any) => {
       // @ts-ignore
       if (typeof this[event] === 'function') {
         // @ts-ignore
@@ -95,6 +98,7 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
 
   protected [EVENT.SYSTEM_DISCONNECT]({ message }: message.SystemDisconnect) {
     this._log.debug('EVENT.SYSTEM_DISCONNECT')
+    this.websocket.disconnect(new Error(message))
     this.emit('connection.disconnect', message)
   }
 
