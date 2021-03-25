@@ -184,6 +184,10 @@
         this.websocket.disconnect(new Error('url changed'))
       }
 
+      if (this.watching) {
+        this.webrtc.disconnect()
+      }
+
       if (this.authenticated) {
         Vue.set(this.state.connection, 'authenticated', false)
       }
