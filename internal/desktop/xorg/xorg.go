@@ -246,11 +246,11 @@ func GetCursorImage() *types.CursorImage {
 	pixels := C.GoBytes(unsafe.Pointer(cur.pixels), C.int(width*height*8))
 
 	img := image.NewRGBA(image.Rect(0, 0, width, height))
-	for row := 0; row < height; row++ {
-		for col := 0; col < width; col++ {
-			pos := ((row * height) + col) * 8
+	for y := 0; y < height; y++ {
+		for x := 0; x < width; x++ {
+			pos := ((y * width) + x) * 8
 
-			img.SetRGBA(col, row, color.RGBA{
+			img.SetRGBA(x, y, color.RGBA{
 				A: pixels[pos+3],
 				R: pixels[pos+2],
 				G: pixels[pos+1],
