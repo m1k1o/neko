@@ -121,13 +121,20 @@ func (manager *SessionManagerCtx) Delete(id string) error {
 	delete(manager.sessions, id)
 	manager.sessionsMu.Unlock()
 
-	var err error
+	var errs []error
 	if session.State().IsConnected {
-		err = session.Disconnect("session deleted")
+		err := session.GetWebSocketPeer().Destroy()
+		errs = append(errs, err)
+	}
+
+	if session.State().IsWatching {
+		err := session.GetWebRTCPeer().Destroy()
+		errs = append(errs, err)
 	}
 
 	manager.emmiter.Emit("deleted", session)
-	return err
+
+	return utils.ErrorsJoin(errs)
 }
 
 func (manager *SessionManagerCtx) Get(id string) (types.Session, bool) {

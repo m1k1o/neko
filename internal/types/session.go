@@ -16,8 +16,8 @@ type Session interface {
 	// websocket
 	SetWebSocketPeer(websocketPeer WebSocketPeer)
 	SetWebSocketConnected(websocketPeer WebSocketPeer, connected bool)
+	GetWebSocketPeer() WebSocketPeer 
 	Send(v interface{}) error
-	Disconnect(reason string) error
 
 	// webrtc
 	SetWebRTCPeer(webrtcPeer WebRTCPeer)

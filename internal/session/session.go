@@ -4,8 +4,6 @@ import (
 	"github.com/rs/zerolog"
 
 	"demodesk/neko/internal/types"
-	"demodesk/neko/internal/types/event"
-	"demodesk/neko/internal/types/message"
 )
 
 type SessionCtx struct {
@@ -32,14 +30,14 @@ func (session *SessionCtx) profileChanged() {
 		session.manager.ClearHost()
 	}
 
-	if !session.profile.CanWatch && session.state.IsWatching {
+	if (!session.profile.CanConnect || !session.profile.CanLogin || !session.profile.CanWatch) && session.state.IsWatching {
 		if err := session.webrtcPeer.Destroy(); err != nil {
 			session.logger.Warn().Err(err).Msgf("webrtc destroy has failed")
 		}
 	}
 
 	if (!session.profile.CanConnect || !session.profile.CanLogin) && session.state.IsConnected {
-		if err := session.Disconnect("profile changed"); err != nil {
+		if err := session.websocketPeer.Destroy(); err != nil {
 			session.logger.Warn().Err(err).Msgf("websocket destroy has failed")
 		}
 	}
@@ -83,36 +81,16 @@ func (session *SessionCtx) SetWebSocketConnected(websocketPeer types.WebSocketPe
 	session.websocketPeer = nil
 }
 
+func (session *SessionCtx) GetWebSocketPeer() types.WebSocketPeer {
+	return session.websocketPeer
+}
+
 func (session *SessionCtx) Send(v interface{}) error {
 	if session.websocketPeer == nil {
 		return nil
 	}
 
 	return session.websocketPeer.Send(v)
-}
-
-func (session *SessionCtx) Disconnect(reason string) error {
-	if err := session.Send(
-		message.SystemDisconnect{
-			Event:   event.SYSTEM_DISCONNECT,
-			Message: reason,
-		}); err != nil {
-		return err
-	}
-
-	if session.websocketPeer != nil {
-		if err := session.websocketPeer.Destroy(); err != nil {
-			return err
-		}
-	}
-
-	if session.webrtcPeer != nil {
-		if err := session.webrtcPeer.Destroy(); err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 // ---

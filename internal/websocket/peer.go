@@ -6,7 +6,10 @@ import (
 
 	"github.com/gorilla/websocket"
 
+	"demodesk/neko/internal/utils"
 	"demodesk/neko/internal/types"
+	"demodesk/neko/internal/types/event"
+	"demodesk/neko/internal/types/message"
 )
 
 type WebSocketPeerCtx struct {
@@ -43,5 +46,19 @@ func (peer *WebSocketPeerCtx) Destroy() error {
 		return nil
 	}
 
-	return peer.connection.Close()
+	var errs []error
+
+	// send disconnect
+	err := peer.Send(
+		message.SystemDisconnect{
+			Event:   event.SYSTEM_DISCONNECT,
+			Message: "connection destroyed",
+		})
+	errs = append(errs, err)
+
+	// close connection
+	err = peer.connection.Close()
+	errs = append(errs, err)
+
+	return utils.ErrorsJoin(errs)
 }
