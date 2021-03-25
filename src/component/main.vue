@@ -240,10 +240,6 @@
     }
 
     public websocketDisconnect() {
-      if (!this.authenticated) {
-        throw new Error('client not authenticated')
-      }
-
       if (!this.connected) {
         throw new Error('client not connected to websocket')
       }
@@ -264,10 +260,6 @@
     }
 
     public webrtcDisconnect() {
-      if (!this.connected) {
-        throw new Error('client not connected to websocket')
-      }
-
       if (!this.watching) {
         throw new Error('client not connected to webrtc')
       }
