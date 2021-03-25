@@ -25,20 +25,15 @@ func (manager *SessionManagerCtx) CookieSetToken(w http.ResponseWriter, token st
 	})
 }
 
-func (manager *SessionManagerCtx) CookieClearToken(w http.ResponseWriter) {
-	sameSite := http.SameSiteDefaultMode
-	if manager.config.CookieSecure {
-		sameSite = http.SameSiteNoneMode
+func (manager *SessionManagerCtx) CookieClearToken(w http.ResponseWriter, r *http.Request) {
+	cookie, err := r.Cookie(manager.config.CookieName)
+	if err != nil {
+		return
 	}
 
-	http.SetCookie(w, &http.Cookie{
-		Name:     manager.config.CookieName,
-		Value:    "",
-		Expires:  time.Unix(0, 0),
-		Secure:   manager.config.CookieSecure,
-		SameSite: sameSite,
-		HttpOnly: true,
-	})
+	cookie.Value = ""
+	cookie.Expires = time.Unix(0, 0)
+	http.SetCookie(w, cookie)
 }
 
 func (manager *SessionManagerCtx) Authenticate(r *http.Request) (types.Session, error) {

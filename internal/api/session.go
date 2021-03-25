@@ -49,7 +49,7 @@ func (api *ApiManagerCtx) Logout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	api.sessions.CookieClearToken(w)
+	api.sessions.CookieClearToken(w, r)
 
 	utils.HttpSuccess(w, true)
 }

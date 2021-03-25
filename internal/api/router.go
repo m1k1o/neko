@@ -69,10 +69,12 @@ func (api *ApiManagerCtx) Authenticate(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		session, err := api.sessions.Authenticate(r)
 		if err != nil {
+			api.sessions.CookieClearToken(w, r)
 			utils.HttpUnauthorized(w, err)
-		} else {
-			next.ServeHTTP(w, auth.SetSession(r, session))
+			return
 		}
+
+		next.ServeHTTP(w, auth.SetSession(r, session))
 	})
 }
 

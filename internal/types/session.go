@@ -51,6 +51,6 @@ type SessionManager interface {
 	ImplicitHosting() bool
 
 	CookieSetToken(w http.ResponseWriter, token string)
-	CookieClearToken(w http.ResponseWriter)
+	CookieClearToken(w http.ResponseWriter, r *http.Request)
 	Authenticate(r *http.Request) (Session, error)
 }
