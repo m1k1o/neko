@@ -592,7 +592,7 @@
       Vue.set(this.state, 'session_id', null)
       Vue.set(this.state, 'sessions', {})
     }
-  
+
     clearWebRTCState() {
       Vue.set(this.state.connection.webrtc, 'status', 'disconnected')
       Vue.set(this.state.connection.webrtc, 'stats', null)
