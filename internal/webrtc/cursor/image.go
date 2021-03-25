@@ -65,6 +65,7 @@ func (manager *ImageCtx) Shutdown() {
 func (manager *ImageCtx) GetCached(serial uint64) (*ImageEntry, error) {
 	// zero means no serial available
 	if serial == 0 || serial > manager.maxSerial {
+		manager.logger.Debug().Uint64("serial", serial).Msg("cache bypass")
 		return manager.fetchEntry()
 	}
 
@@ -85,6 +86,7 @@ func (manager *ImageCtx) GetCached(serial uint64) (*ImageEntry, error) {
 	manager.cache[serial] = entry
 	manager.cacheMu.Unlock()
 
+	manager.logger.Debug().Uint64("serial", serial).Msg("cache miss")
 	return entry, nil
 }
 
