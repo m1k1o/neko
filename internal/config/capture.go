@@ -7,11 +7,15 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/types/codec"
+	"demodesk/neko/internal/utils"
 )
 
 type Capture struct {
 	Display string
+
+	Video map[string] types.VideoConfig
 
 	AudioDevice   string
 	AudioCodec    codec.RTPCodec
@@ -94,6 +98,14 @@ func (s *Capture) Set() {
 	// Display is provided by env variable
 	s.Display = os.Getenv("DISPLAY")
 
+	// video
+	if err := viper.UnmarshalKey("capture.video", &s.Video, viper.DecodeHook(
+		utils.JsonStringAutoDecode(s.Video),
+	)); err != nil {
+		log.Warn().Err(err).Msgf("unable to parse video settings")
+	}
+
+	// audio
 	s.AudioDevice = viper.GetString("capture.audio.device")
 	s.AudioPipeline = viper.GetString("capture.audio.pipeline")
 
@@ -112,11 +124,13 @@ func (s *Capture) Set() {
 		s.AudioCodec = codec.Opus()
 	}
 
+	// broadcast
 	s.BroadcastAudioBitrate = viper.GetInt("capture.broadcast.audio_bitrate")
 	s.BroadcastVideoBitrate = viper.GetInt("capture.broadcast.video_bitrate")
 	s.BroadcastPreset = viper.GetString("capture.broadcast.preset")
 	s.BroadcastPipeline = viper.GetString("capture.broadcast.pipeline")
 
+	// screencast
 	s.ScreencastEnabled = viper.GetBool("capture.screencast.enabled")
 	s.ScreencastRate = viper.GetString("capture.screencast.rate")
 	s.ScreencastQuality = viper.GetString("capture.screencast.quality")

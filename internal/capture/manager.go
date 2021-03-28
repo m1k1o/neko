@@ -8,7 +8,6 @@ import (
 
 	"demodesk/neko/internal/config"
 	"demodesk/neko/internal/types"
-	"demodesk/neko/internal/types/codec"
 )
 
 type CaptureManagerCtx struct {
@@ -56,6 +55,37 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 		)
 	}
 
+	videos := map[string]*StreamManagerCtx{}
+	videoIDs := []string{}
+	for key, pipelineConf := range config.Video {
+		codec, err := pipelineConf.GetCodec()
+		if err != nil {
+			logger.Panic().Err(err).Str("video_key", key).Msg("unable to get video codec")
+		}
+
+		createPipeline := func() string {
+			screen := desktop.GetScreenSize()
+
+			pipeline, err := pipelineConf.GetPipeline(*screen)
+			if err != nil {
+				logger.Panic().Err(err).Str("video_key", key).Msg("unable to get video pipeline")
+			}
+
+			return fmt.Sprintf(
+				"ximagesrc display-name=%s show-pointer=false use-damage=false "+
+					"! %s "+
+					"! appsink name=appsink", config.Display, pipeline,
+			)
+		}
+
+		// trigger function to catch evaluation errors at startup
+		_ = createPipeline()
+
+		// append to videos
+		videos[key] = streamNew(codec, createPipeline)
+		videoIDs = append(videoIDs, key)
+	}
+
 	return &CaptureManagerCtx{
 		logger:     logger,
 		desktop:    desktop,
@@ -76,65 +106,8 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 					"! appsink name=appsink", config.AudioDevice, config.AudioCodec.Pipeline,
 			)
 		}),
-		videos: map[string]*StreamManagerCtx{
-			"hd": streamNew(codec.VP8(), func() string {
-				screen := desktop.GetScreenSize()
-				bitrate := int((screen.Width * screen.Height * 6) / 4)
-				buffer := bitrate / 1000
-
-				return fmt.Sprintf(
-					"ximagesrc display-name=%s show-pointer=false use-damage=false "+
-						"! video/x-raw,framerate=25/1 "+
-						"! videoconvert "+
-						"! queue "+
-						"! vp8enc end-usage=cbr target-bitrate=%d cpu-used=4 threads=4 deadline=1 undershoot=95 keyframe-max-dist=25 min-quantizer=3 max-quantizer=32 buffer-size=%d buffer-initial-size=%d buffer-optimal-size=%d "+
-						"! appsink name=appsink", config.Display, bitrate, buffer*6, buffer*4, buffer*5,
-				)
-			}),
-			"hq": streamNew(codec.VP8(), func() string {
-				screen := desktop.GetScreenSize()
-				bitrate := int((screen.Width * screen.Height * 6) / 4) / 2
-				buffer := bitrate / 1000
-
-				return fmt.Sprintf(
-					"ximagesrc display-name=%s show-pointer=false use-damage=false "+
-						"! video/x-raw,framerate=15/1 "+
-						"! videoconvert "+
-						"! queue "+
-						"! vp8enc end-usage=cbr target-bitrate=%d cpu-used=4 threads=4 deadline=1 undershoot=95 keyframe-max-dist=25 min-quantizer=3 max-quantizer=32 buffer-size=%d buffer-initial-size=%d buffer-optimal-size=%d "+
-						"! appsink name=appsink", config.Display, bitrate, buffer*6, buffer*4, buffer*5,
-				)
-			}),
-			"mq": streamNew(codec.VP8(), func() string {
-				screen := desktop.GetScreenSize()
-				bitrate := int((screen.Width * screen.Height * 6) / 4) / 3
-				buffer := bitrate / 1000
-
-				return fmt.Sprintf(
-					"ximagesrc display-name=%s show-pointer=false use-damage=false "+
-						"! video/x-raw,framerate=10/1 "+
-						"! videoconvert "+
-						"! queue "+
-						"! vp8enc end-usage=cbr target-bitrate=%d cpu-used=4 threads=4 deadline=1 undershoot=95 keyframe-max-dist=25 min-quantizer=3 max-quantizer=32 buffer-size=%d buffer-initial-size=%d buffer-optimal-size=%d "+
-						"! appsink name=appsink", config.Display, bitrate, buffer*6, buffer*4, buffer*5,
-				)
-			}),
-			"lq": streamNew(codec.VP8(), func() string {
-				screen := desktop.GetScreenSize()
-				bitrate := int((screen.Width * screen.Height * 6) / 4) / 4
-				buffer := bitrate / 1000
-	
-				return fmt.Sprintf(
-					"ximagesrc display-name=%s show-pointer=false use-damage=false "+
-						"! video/x-raw,framerate=5/1 "+
-						"! videoconvert "+
-						"! queue "+
-						"! vp8enc end-usage=cbr target-bitrate=%d cpu-used=4 threads=4 deadline=1 undershoot=95 keyframe-max-dist=25 min-quantizer=3 max-quantizer=32 buffer-size=%d buffer-initial-size=%d buffer-optimal-size=%d "+
-						"! appsink name=appsink", config.Display, bitrate, buffer*6, buffer*4, buffer*5,
-				)
-			}),
-		},
-		videoIDs: []string{"hd", "hq", "mq", "lq"},
+		videos:   videos,
+		videoIDs: videoIDs,
 	}
 }
 
