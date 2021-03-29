@@ -6,9 +6,10 @@
         <span><b>n</b>.eko</span>
       </div>
       <form class="message" v-if="!connecting" @submit.stop.prevent="connect">
-        <span>{{ $t('connect.title') }}</span>
+        <span v-if="!autoPassword">{{ $t('connect.login_title') }}</span>
+        <span v-else>{{ $t('connect.invitation_title') }}</span>
         <input type="text" :placeholder="$t('connect.displayname')" v-model="displayname" />
-        <input type="password" :placeholder="$t('connect.password')" v-model="password" />
+        <input type="password" :placeholder="$t('connect.password')" v-model="password" v-if="!autoPassword" />
         <button type="submit" @click.stop.prevent="login">
           {{ $t('connect.connect') }}
         </button>
@@ -150,12 +151,21 @@
 
   @Component({ name: 'neko-connect' })
   export default class extends Vue {
-    private displayname = ''
-    private password = ''
+    private autoPassword: string | null = new URL(location.href).searchParams.get('pwd')
+
+    private displayname: string = ''
+    private password: string = ''
 
     mounted() {
-      if (this.$accessor.displayname !== '' && this.$accessor.password !== '') {
-        this.$accessor.login({ displayname: this.$accessor.displayname, password: this.$accessor.password })
+      let password = this.$accessor.password
+      if (this.autoPassword !== null) {
+        this.removeUrlParam('pwd')
+        password = this.autoPassword
+      }
+
+      if (this.$accessor.displayname !== '' && password !== '') {
+        this.$accessor.login({ displayname: this.$accessor.displayname, password })
+        this.autoPassword = null
       }
     }
 
@@ -163,8 +173,44 @@
       return this.$accessor.connecting
     }
 
-    login() {
-      this.$accessor.login({ displayname: this.displayname, password: this.password })
+    removeUrlParam(param: string) {
+      let url = document.location.href
+      let urlparts = url.split('?')
+
+      if (urlparts.length >= 2) {
+        let urlBase = urlparts.shift()
+        let queryString = urlparts.join('?')
+
+        let prefix = encodeURIComponent(param) + '='
+        let pars = queryString.split(/[&;]/g)
+        for (let i = pars.length; i-- > 0; ) {
+          if (pars[i].lastIndexOf(prefix, 0) !== -1) {
+            pars.splice(i, 1)
+          }
+        }
+
+        url = urlBase + (pars.length > 0 ? '?' + pars.join('&') : '')
+        window.history.pushState('', document.title, url)
+      }
+    }
+
+    async login() {
+      let password = this.password
+      if (this.autoPassword !== null) {
+        password = this.autoPassword
+      }
+
+      try {
+        await this.$accessor.login({ displayname: this.displayname, password })
+
+        this.autoPassword = null
+      } catch (err) {
+        this.$swal({
+          title: this.$t('connect.error') as string,
+          text: err.message,
+          icon: 'error',
+        })
+      }
     }
   }
 </script>

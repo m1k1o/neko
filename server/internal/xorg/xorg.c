@@ -170,5 +170,26 @@ void SetKeyboardLayout(char *layout) {
   // TOOD: refactor, use native API.
   char cmd[13] = "setxkbmap ";
   strncat(cmd, layout, 2);
-  system(cmd);
+  int r = system(cmd);
+}
+
+void SetKeyboardModifiers(int num_lock, int caps_lock, int scroll_lock) {
+  Display *display = getXDisplay();
+
+  if (num_lock != -1) {
+    XkbLockModifiers(display, XkbUseCoreKbd, 16, num_lock * 16);
+  }
+
+  if (caps_lock != -1) {
+    XkbLockModifiers(display, XkbUseCoreKbd, 2, caps_lock * 2);
+  }
+
+  if (scroll_lock != -1) {
+    XKeyboardControl values;
+    values.led_mode = scroll_lock ? LedModeOn : LedModeOff;
+    values.led = 3;
+    XChangeKeyboardControl(display, KBLedMode, &values);
+  }
+
+  XFlush(display);
 }

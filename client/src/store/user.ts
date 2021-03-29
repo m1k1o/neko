@@ -48,6 +48,11 @@ export const mutations = mutationTree(state, {
     state.id = id
   },
   addMember(state, member: Member) {
+    // remove html tags
+    const tmp = document.createElement('div')
+    tmp.innerHTML = member.displayname
+    member.displayname = tmp.textContent || tmp.innerText || ''
+
     state.members = {
       ...state.members,
       [member.id]: {

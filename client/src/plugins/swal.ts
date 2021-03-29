@@ -25,10 +25,10 @@ class VueSweetalert2 {
       if (options) {
         const mixed = Swal.mixin(options)
 
-        return mixed.fire.apply(mixed, args)
+        return mixed.fire(...args)
       }
 
-      return Swal.fire.apply(Swal, args)
+      return Swal.fire(...args)
     }
 
     let methodName: string | number | symbol
@@ -40,7 +40,7 @@ class VueSweetalert2 {
         swalFunction[methodName] = ((method) => {
           return (...args: any[]) => {
             // @ts-ignore
-            return Swal[method].apply(Swal, args)
+            return Swal[method](...args)
           }
         })(methodName)
       }

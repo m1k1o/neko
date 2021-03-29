@@ -2,7 +2,7 @@ import EventEmitter from 'eventemitter3'
 import { OPCODE } from './data'
 import { EVENT, WebSocketEvents } from './events'
 
-import { WebSocketMessages, WebSocketPayloads, SignalProvidePayload } from './messages'
+import { WebSocketMessages, WebSocketPayloads, SignalProvidePayload, SignalCandidatePayload } from './messages'
 
 export interface BaseEvents {
   info: (...message: any[]) => void
@@ -19,6 +19,7 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
   protected _displayname?: string
   protected _state: RTCIceConnectionState = 'disconnected'
   protected _id = ''
+  protected _candidates: RTCIceCandidate[] = []
 
   get id() {
     return this._id
@@ -52,18 +53,18 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
     }
 
     if (displayname === '') {
-      throw new Error('Must add a displayname') // TODO: Better handling
+      throw new Error('Display Name cannot be empty.')
     }
 
     this._displayname = displayname
     this[EVENT.CONNECTING]()
 
     try {
-      this._ws = new WebSocket(`${url}ws?password=${password}`)
+      this._ws = new WebSocket(`${url}?password=${encodeURIComponent(password)}`)
       this.emit('debug', `connecting to ${this._ws.url}`)
       this._ws.onmessage = this.onMessage.bind(this)
-      this._ws.onerror = event => this.onError.bind(this)
-      this._ws.onclose = event => this.onDisconnected.bind(this, new Error('websocket closed'))
+      this._ws.onerror = (event) => this.onError.bind(this)
+      this._ws.onclose = (event) => this.onDisconnected.bind(this, new Error('websocket closed'))
       this._timeout = setTimeout(this.onTimeout.bind(this), 15000)
     } catch (err) {
       this.onDisconnected(err)
@@ -75,17 +76,43 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
       clearTimeout(this._timeout)
     }
 
-    if (this.socketOpen) {
+    if (this._ws) {
+      // reset all events
+      this._ws.onmessage = () => {}
+      this._ws.onerror = () => {}
+      this._ws.onclose = () => {}
+
       try {
-        this._ws!.close()
+        this._ws.close()
       } catch (err) {}
+
       this._ws = undefined
     }
 
-    if (this.peerConnected) {
+    if (this._channel) {
+      // reset all events
+      this._channel.onmessage = () => {}
+      this._channel.onerror = () => {}
+      this._channel.onclose = () => {}
+
       try {
-        this._peer!.close()
+        this._channel.close()
       } catch (err) {}
+
+      this._channel = undefined
+    }
+
+    if (this._peer) {
+      // reset all events
+      this._peer.onconnectionstatechange = () => {}
+      this._peer.onsignalingstatechange = () => {}
+      this._peer.oniceconnectionstatechange = () => {}
+      this._peer.ontrack = () => {}
+
+      try {
+        this._peer.close()
+      } catch (err) {}
+
       this._peer = undefined
     }
 
@@ -179,15 +206,15 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
       })
     }
 
-    this._peer.onconnectionstatechange = event => {
+    this._peer.onconnectionstatechange = (event) => {
       this.emit('debug', `peer connection state changed`, this._peer ? this._peer.connectionState : undefined)
     }
 
-    this._peer.onsignalingstatechange = event => {
+    this._peer.onsignalingstatechange = (event) => {
       this.emit('debug', `peer signaling state changed`, this._peer ? this._peer.signalingState : undefined)
     }
 
-    this._peer.oniceconnectionstatechange = event => {
+    this._peer.oniceconnectionstatechange = (event) => {
       this._state = this._peer!.iceConnectionState
 
       this.emit('debug', `peer ice connection state changed: ${this._peer!.iceConnectionState}`)
@@ -220,9 +247,15 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
     this._channel.onclose = this.onDisconnected.bind(this, new Error('peer data channel closed'))
 
     this._peer.setRemoteDescription({ type: 'offer', sdp })
+
+    for (const candidate of this._candidates) {
+      this._peer.addIceCandidate(candidate)
+    }
+    this._candidates = []
+
     this._peer
       .createAnswer()
-      .then(d => {
+      .then((d) => {
         this._peer!.setLocalDescription(d)
         this._ws!.send(
           JSON.stringify({
@@ -232,7 +265,7 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
           }),
         )
       })
-      .catch(err => this.emit('error', err))
+      .catch((err) => this.emit('error', err))
   }
 
   private onMessage(e: MessageEvent) {
@@ -244,6 +277,17 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
       const { sdp, lite, ice, id } = payload as SignalProvidePayload
       this._id = id
       this.createPeer(sdp, lite, ice)
+      return
+    }
+
+    if (event === EVENT.SIGNAL.CANDIDATE) {
+      const { data } = payload as SignalCandidatePayload
+      const candidate: RTCIceCandidate = JSON.parse(data)
+      if (this._peer) {
+        this._peer.addIceCandidate(candidate)
+      } else {
+        this._candidates.push(candidate)
+      }
       return
     }
 

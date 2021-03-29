@@ -14,6 +14,7 @@ export const EVENT = {
   SIGNAL: {
     ANSWER: 'signal/answer',
     PROVIDE: 'signal/provide',
+    CANDIDATE: 'signal/candidate',
   },
   MEMBER: {
     LIST: 'member/list',
@@ -27,7 +28,7 @@ export const EVENT = {
     REQUESTING: 'control/requesting',
     CLIPBOARD: 'control/clipboard',
     GIVE: 'control/give',
-    KEYBOARD: 'control/keyboard'
+    KEYBOARD: 'control/keyboard',
   },
   CHAT: {
     MESSAGE: 'chat/message',
@@ -37,6 +38,11 @@ export const EVENT = {
     CONFIGURATIONS: 'screen/configurations',
     RESOLUTION: 'screen/resolution',
     SET: 'screen/set',
+  },
+  BROADCAST: {
+    STATUS: 'broadcast/status',
+    CREATE: 'broadcast/create',
+    DESTROY: 'broadcast/destroy',
   },
   ADMIN: {
     BAN: 'admin/ban',
@@ -60,6 +66,7 @@ export type WebSocketEvents =
   | SignalEvents
   | ChatEvents
   | ScreenEvents
+  | BroadcastEvents
   | AdminEvents
 
 export type ControlEvents =
@@ -72,9 +79,14 @@ export type ControlEvents =
 
 export type SystemEvents = typeof EVENT.SYSTEM.DISCONNECT
 export type MemberEvents = typeof EVENT.MEMBER.LIST | typeof EVENT.MEMBER.CONNECTED | typeof EVENT.MEMBER.DISCONNECTED
-export type SignalEvents = typeof EVENT.SIGNAL.ANSWER | typeof EVENT.SIGNAL.PROVIDE
+export type SignalEvents = typeof EVENT.SIGNAL.ANSWER | typeof EVENT.SIGNAL.PROVIDE | typeof EVENT.SIGNAL.CANDIDATE
 export type ChatEvents = typeof EVENT.CHAT.MESSAGE | typeof EVENT.CHAT.EMOTE
 export type ScreenEvents = typeof EVENT.SCREEN.CONFIGURATIONS | typeof EVENT.SCREEN.RESOLUTION | typeof EVENT.SCREEN.SET
+
+export type BroadcastEvents =
+  | typeof EVENT.BROADCAST.STATUS
+  | typeof EVENT.BROADCAST.CREATE
+  | typeof EVENT.BROADCAST.DESTROY
 
 export type AdminEvents =
   | typeof EVENT.ADMIN.BAN

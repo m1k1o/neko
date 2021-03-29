@@ -60,7 +60,7 @@ export const actions = actionTree(
   {
     initialise() {
       $http
-        .get<Emojis>('/emoji.json')
+        .get<Emojis>('emoji.json')
         .then((req) => {
           for (const group of req.data.groups) {
             accessor.emoji.addGroup(group)

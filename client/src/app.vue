@@ -29,7 +29,7 @@
       <neko-side v-if="side" />
       <neko-connect v-if="!connected" />
       <neko-about v-if="about" />
-      <notifications group="neko" position="top left" style="top: 50px;" />
+      <notifications group="neko" position="top left" :ignoreDuplicates="true" style="top: 50px;pointer-events: none" />
     </template>
   </div>
 </template>
@@ -109,25 +109,29 @@
   }
 
   @media only screen and (max-width: 600px) {
-    #neko {
-      &.expanded {
-        .neko-main {
-          transform: translateX(-$side-width);
+    #neko.expanded {
+      .neko-main {
+        transform: translateX(calc(-100% + 65px));
+
+        video {
+          display: none;
         }
-        .neko-menu {
-          transform: translateX(-$side-width);
-        }
+      }
+
+      .neko-menu {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 65px;
+        width: calc(100% - 65px);
       }
     }
   }
 
   @media only screen and (max-width: 768px) {
-    #neko {
-      .neko-main {
-        .room-container {
-          display: none;
-        }
-      }
+    #neko .neko-main .room-container {
+      display: none;
     }
   }
 </style>

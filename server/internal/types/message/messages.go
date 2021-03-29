@@ -27,6 +27,11 @@ type SignalAnswer struct {
 	SDP         string `json:"sdp"`
 }
 
+type SignalCandidate struct {
+	Event   string `json:"event"`
+	Data    string `json:"data"`
+}
+
 type MembersList struct {
 	Event    string          `json:"event"`
 	Memebers []*types.Member `json:"members"`
@@ -47,8 +52,11 @@ type Clipboard struct {
 }
 
 type Keyboard struct {
-	Event  string `json:"event"`
-	Layout string `json:"layout"`
+	Event      string  `json:"event"`
+	Layout     *string `json:"layout,omitempty"`
+	CapsLock   *bool   `json:"capsLock,omitempty"`
+	NumLock    *bool   `json:"numLock,omitempty"`
+	ScrollLock *bool   `json:"scrollLock,omitempty"`
 }
 
 type Control struct {
@@ -106,4 +114,15 @@ type ScreenResolution struct {
 type ScreenConfigurations struct {
 	Event          string                            `json:"event"`
 	Configurations map[int]types.ScreenConfiguration `json:"configurations"`
+}
+
+type BroadcastStatus struct {
+	Event    string `json:"event"`
+	URL      string `json:"url"`
+	IsActive bool   `json:"isActive"`
+}
+
+type BroadcastCreate struct {
+	Event  string `json:"event"`
+	URL    string `json:"url"`
 }

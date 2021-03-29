@@ -18,6 +18,7 @@ import {
   ControlClipboardPayload,
   ScreenConfigurationsPayload,
   ScreenResolutionPayload,
+  BroadcastStatusPayload,
   AdminPayload,
   AdminTargetPayload,
 } from './messages'
@@ -27,10 +28,21 @@ interface NekoEvents extends BaseEvents {}
 export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   private $vue!: Vue
   private $accessor!: typeof accessor
+  private url!: string
 
   init(vue: Vue) {
+    const url =
+      process.env.NODE_ENV === 'development'
+        ? `ws://${location.host.split(':')[0]}:${process.env.VUE_APP_SERVER_PORT}/ws`
+        : location.protocol.replace(/^http/, 'ws') + '//' + location.host + location.pathname.replace(/\/$/, '') + '/ws'
+
+    this.initWithURL(vue, url)
+  }
+
+  initWithURL(vue: Vue, url: string) {
     this.$vue = vue
     this.$accessor = vue.$accessor
+    this.url = url
   }
 
   private cleanup() {
@@ -42,12 +54,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   }
 
   login(password: string, displayname: string) {
-    const url =
-      process.env.NODE_ENV === 'development'
-        ? `ws://${location.host.split(':')[0]}:${process.env.VUE_APP_SERVER_PORT}/`
-        : `${/https/gi.test(location.protocol) ? 'wss' : 'ws'}://${location.host}/`
-
-    this.connect(url, password, displayname)
+    this.connect(this.url, password, displayname)
   }
 
   logout() {
@@ -83,6 +90,11 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
 
   protected [EVENT.DISCONNECTED](reason?: Error) {
     this.cleanup()
+
+    if (reason && reason.message == 'kicked') {
+      this.$accessor.logout()
+    }
+
     this.$vue.$notify({
       group: 'neko',
       type: 'error',
@@ -324,6 +336,13 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
       type: 'event',
       created: new Date(),
     })
+  }
+
+  /////////////////////////////
+  // Broadcast Events
+  /////////////////////////////
+  protected [EVENT.BROADCAST.STATUS](payload: BroadcastStatusPayload) {
+    this.$accessor.settings.broadcastStatus(payload)
   }
 
   /////////////////////////////
