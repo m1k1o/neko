@@ -13,8 +13,22 @@ build_server() {
 	docker run --rm -v "$BASE"/server/bin:/tmp/bin neko-dev-server sh -c "rm -rf /tmp/bin/neko; cp /src/bin/neko /tmp/bin"
 }
 
+build_arm_client() {
+        docker build -t neko-dev-client -f arm_base/Dockerfile --target client "$BASE"
+        docker run --rm -v "$BASE"/client/dist:/tmp/dist neko-dev-client sh -c "rm -rf /tmp/dist/*; cp -r /src/dist/* /tmp/dist"
+}
+
+build_arm_server() {
+        docker build -t neko-dev-server -f arm_base/Dockerfile --target server "$BASE"
+        docker run --rm -v "$BASE"/server/bin:/tmp/bin neko-dev-server sh -c "rm -rf /tmp/bin/neko; cp /src/bin/neko /tmp/bin"
+}
+
 build_base() {
 	docker build -t m1k1o/neko:base -f base/Dockerfile "$BASE"
+}
+
+build_arm_base() {
+	docker build -t mbattista/neko:arm_base -f arm_base/Dockerfile "$BASE"
 }
 
 build_firefox() {
@@ -23,6 +37,10 @@ build_firefox() {
 
 build_chromium() {
 	docker build -t m1k1o/neko:chromium -f chromium/Dockerfile chromium/
+}
+
+build_arm_firefox() {
+	docker build -t mbattista/neko:arm_firefox -f arm_firefox/Dockerfile arm_firefox/
 }
 
 build_xfce() {
@@ -41,5 +59,9 @@ case $1 in
   chromium) build_chromium;;
   xfce) build_xfce;;
   vlc) build_vlc;;
+  arm_client) build_arm_client;;
+  arm_server) build_arm_server;;
+  arm_base) build_arm_base;;
+  arm_firefox) build_arm_firefox;;
   *) echo "Unknown $1";;
 esac
