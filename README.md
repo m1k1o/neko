@@ -61,6 +61,7 @@ For n.eko room management software visit https://github.com/m1k1o/neko-rooms.
 - Added HEALTHCHECK to Dockerfile.
 - Added `m1k1o/neko:vlc` tag, use VLC to watch local files together (by @mbattista).
 - Added `m1k1o/neko:xfce` tag, as an non video related showcase (by @mbattista).
+- Added `m1k1o/neko:firefox_arm` tag, firefox neko for raspberry pi (by @mbattista)
 
 # Getting started & FAQ
 
@@ -71,6 +72,8 @@ Use following docker images:
 - `m1k1o/neko:vlc` - for VLC Video player (needs volume mounted to `/media` with local video files, or setting `VLC_MEDIA=/media` path).
 - `m1k1o/neko:xfce` - for an shared desktop / installing shared software.
 - `m1k1o/neko:base` - for custom base.
+- `m1k1o/neko:base_arm` - for custom arm based
+- `m1k1o/neko:firefox_arm` - for Firefox (Raspberry Pi)
 
 Networking:
 - If you want to use n.eko in **external** network, you can omit `NEKO_NAT1TO1`. It will automatically get your Public IP.
@@ -166,6 +169,32 @@ services:
       NEKO_PASSWORD_ADMIN: admin
       NEKO_EPR: 52000-52100
       NEKO_NAT1TO1: <your-IP>
+```
+
+```yaml
+version: "3.4"
+services:
+  neko:
+    image: "m1k1o/neko:firefox_arm"
+    restart: "unless-stopped"
+    # increase on rpi's with more then 1gb ram
+    shm_size: "740mb"
+    ports:
+      - "8084:8080"
+      - "52000-52100:52000-52100/udp"
+    # this is important since we need a GPU for hardware acceleration alternatively mount the devices into the docker
+    privileged: true
+    environment:
+      NEKO_SCREEN: '1280x720@30'
+      NEKO_PASSWORD: 'neko'
+      NEKO_PASSWORD_ADMIN: 'admin'
+      NEKO_EPR: 52000-52100
+      NEKO_VP8: 'false'
+      NEKO_VP9: 'false'
+      NEKO_H264: 'true'
+      # Change target bitrate and framerate on this parameter
+      NEKO_VIDEO: ' ximagesrc display-name=%s use-damage=0 show-pointer=true use-damage=false ! video/x-raw,framerate=30/1 ! videoconvert ! queue ! omxh264enc target-bitrate=1500000 control-rate=4 ! h264parse config-interval=3  ! video/x-h264,profile=baseline,stream-format=byte-stream '
+      NEKO_MAX_FPS: 0
 ```
 
 ## Mobile support
