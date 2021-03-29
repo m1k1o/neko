@@ -1,13 +1,13 @@
 package types
 
 import (
-	"math"
-	"strings"
 	"context"
 	"fmt"
+	"math"
+	"strings"
 
-	"github.com/pion/webrtc/v3/pkg/media"
 	"github.com/PaesslerAG/gval"
+	"github.com/pion/webrtc/v3/pkg/media"
 
 	"demodesk/neko/internal/types/codec"
 )
@@ -55,7 +55,7 @@ type VideoConfig struct {
 	Height      string            `mapstructure:"height"`       // expression
 	Fps         string            `mapstructure:"fps"`          // expression
 	GstPrefix   string            `mapstructure:"gst_prefix"`   // pipeline prefix, starts with !
-	GstEncoder  string            `mapstructure:"gst_encoder"`
+	GstEncoder  string            `mapstructure:"gst_encoder"`  // gst encoder name
 	GstParams   map[string]string `mapstructure:"gst_params"`   // map of expressions
 	GstSuffix   string            `mapstructure:"gst_suffix"`   // pipeline suffix, starts with !
 	GstPipeline string            `mapstructure:"gst_pipeline"` // whole pipeline as a string
@@ -142,5 +142,5 @@ func (config *VideoConfig) GetPipeline(screen ScreenSize) (string, error) {
 		config.GstPrefix,
 		encPipeline,
 		config.GstSuffix,
-	}[:]," "), nil
+	}[:], " "), nil
 }

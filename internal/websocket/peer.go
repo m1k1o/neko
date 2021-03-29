@@ -6,10 +6,10 @@ import (
 
 	"github.com/gorilla/websocket"
 
-	"demodesk/neko/internal/utils"
 	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/types/event"
 	"demodesk/neko/internal/types/message"
+	"demodesk/neko/internal/utils"
 )
 
 type WebSocketPeerCtx struct {

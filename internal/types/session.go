@@ -16,7 +16,7 @@ type Session interface {
 	// websocket
 	SetWebSocketPeer(websocketPeer WebSocketPeer)
 	SetWebSocketConnected(websocketPeer WebSocketPeer, connected bool)
-	GetWebSocketPeer() WebSocketPeer 
+	GetWebSocketPeer() WebSocketPeer
 	Send(v interface{}) error
 
 	// webrtc

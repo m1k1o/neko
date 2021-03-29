@@ -140,15 +140,15 @@ func (s *Capture) Set() {
 	// default video
 	if len(s.VideoPipelines) == 0 {
 		log.Warn().Msgf("no video pipelines specified, using defaults")
-	
+
 		s.VideoCodec = codec.VP8()
 		s.VideoPipelines = map[string]types.VideoConfig{
 			"main": types.VideoConfig{
-				GstPipeline: "ximagesrc display-name={display} show-pointer=false use-damage=false "+
-					"! video/x-raw "+
-					"! videoconvert "+
-					"! queue "+
-					"! vp8enc end-usage=cbr cpu-used=4 threads=4 deadline=1 keyframe-max-dist=25 "+
+				GstPipeline: "ximagesrc display-name={display} show-pointer=false use-damage=false " +
+					"! video/x-raw " +
+					"! videoconvert " +
+					"! queue " +
+					"! vp8enc end-usage=cbr cpu-used=4 threads=4 deadline=1 keyframe-max-dist=25 " +
 					"! appsink name=appsink",
 			},
 		}
