@@ -1,10 +1,9 @@
 module n.eko.moe/neko
 
-go 1.13
+go 1.16
 
 require (
 	github.com/go-chi/chi v4.1.2+incompatible
-	github.com/google/uuid v1.2.0 // indirect
 	github.com/gopherjs/gopherjs v0.0.0-20210202160940-bed99a852dfe // indirect
 	github.com/gorilla/websocket v1.4.2
 	github.com/kataras/go-events v0.0.2
@@ -14,7 +13,6 @@ require (
 	github.com/pelletier/go-toml v1.8.1 // indirect
 	github.com/pion/interceptor v0.0.12
 	github.com/pion/logging v0.2.2
-	github.com/pion/rtcp v1.2.6
 	github.com/pion/sctp v1.7.12 // indirect
 	github.com/pion/udp v0.1.1 // indirect
 	github.com/pion/webrtc/v3 v3.0.19
