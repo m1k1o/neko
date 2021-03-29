@@ -90,7 +90,7 @@ func (config *VideoConfig) GetPipeline(screen ScreenSize) (string, error) {
 	}
 
 	// get fps pipeline
-	fpsPipeline := "video/x-raw ! videoconvert ! queue"
+	fpsPipeline := "! video/x-raw ! videoconvert ! queue"
 	if config.Fps != "" {
 		var err error
 		val, err := gval.Evaluate(config.Fps, values, language...)
@@ -100,7 +100,7 @@ func (config *VideoConfig) GetPipeline(screen ScreenSize) (string, error) {
 	
 		if val != nil {
 			// TODO: To fraction.
-			fpsPipeline = fmt.Sprintf("video/x-raw,framerate=%v ! videoconvert ! queue", val)
+			fpsPipeline = fmt.Sprintf("! video/x-raw,framerate=%v ! videoconvert ! queue", val)
 		}
 	}
 
