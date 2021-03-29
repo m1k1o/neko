@@ -19,6 +19,19 @@ import Members from '~/components/members.vue'
 import Emotes from '~/components/emotes.vue'
 import About from '~/components/about.vue'
 import Header from '~/components/header.vue'
+import Chat from '~/components/chat.vue'
+import Clipboard from '~/components/clipboard.vue'
+import Emoji from '~/components/emoji.vue'
+import Emote from '~/components/emote.vue'
+import Context from '~/components/context.vue'
+import Markdown from '~/components/markdown'
+import Avatar from '~/components/avatar.vue'
+
+// Vue
+import Vue from 'vue'
+import ToolTip from 'v-tooltip'
+
+Vue.use(ToolTip)
 
 const exportMixin = {
   computed: {
@@ -49,17 +62,22 @@ function extend (component: any) {
     .extend(exportMixin)
 }
 
-export const components = {
-  'neko-connect': extend(Connect),
-  'neko-video': extend(Video),
-  'neko-menu': extend(Menu),
-  'neko-side': extend(Side),
-  'neko-controls': extend(Controls),
-  'neko-members': extend(Members),
-  'neko-emotes': extend(Emotes),
-  'neko-about': extend(About),
-  'neko-header': extend(Header),
-}
+export const NekoConnect = extend(Connect)
+export const NekoVideo = extend(Video)
+export const NekoMenu = extend(Menu)
+export const NekoSide = extend(Side)
+export const NekoControls = extend(Controls)
+export const NekoMembers = extend(Members)
+export const NekoEmotes = extend(Emotes)
+export const NekoAbout = extend(About)
+export const NekoHeader = extend(Header)
+export const NekoChat = extend(Chat)
+export const NekoClipboard = extend(Clipboard)
+export const NekoEmoji = extend(Emoji)
+export const NekoEmote = extend(Emote)
+export const NekoMarkdown = extend(Markdown)
+export const NekoContext = extend(Context)
+export const NekoAvatar = extend(Avatar)
 
 neko.initialise()
 export default neko
