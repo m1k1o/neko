@@ -68,7 +68,7 @@ export interface GuacamoleKeyboardInterface {
 }
 
 export default function (element?: Element): GuacamoleKeyboardInterface {
-  var Keyboard = {}
+  const Keyboard = {}
 
   GuacamoleKeyboard.bind(Keyboard, element)()
 
