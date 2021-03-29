@@ -2,6 +2,7 @@ package capture
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -56,19 +57,20 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 	}
 
 	videos := map[string]*StreamManagerCtx{}
-	videoIDs := []string{}
-	for key, pipelineConf := range config.Video {
-		codec, err := pipelineConf.GetCodec()
-		if err != nil {
-			logger.Panic().Err(err).Str("video_key", key).Msg("unable to get video codec")
-		}
+	for key, cnf := range config.VideoPipelines {
+		pipelineConf := cnf
 
 		createPipeline := func() string {
-			screen := desktop.GetScreenSize()
+			if pipelineConf.GstPipeline != "" {
+				return strings.Replace(pipelineConf.GstPipeline, "{display}", config.Display, 1)
+			}
 
+			screen := desktop.GetScreenSize()
 			pipeline, err := pipelineConf.GetPipeline(*screen)
 			if err != nil {
-				logger.Panic().Err(err).Str("video_key", key).Msg("unable to get video pipeline")
+				logger.Panic().Err(err).
+					Str("video_id", key).
+					Msg("unable to get video pipeline")
 			}
 
 			return fmt.Sprintf(
@@ -78,11 +80,14 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 		}
 
 		// trigger function to catch evaluation errors at startup
-		_ = createPipeline()
+		pipeline := createPipeline()
+		logger.Info().
+			Str("video_id", key).
+			Str("pipeline", pipeline).
+			Msg("syntax check for video stream pipeline passed")
 
 		// append to videos
-		videos[key] = streamNew(codec, createPipeline)
-		videoIDs = append(videoIDs, key)
+		videos[key] = streamNew(config.VideoCodec, createPipeline)
 	}
 
 	return &CaptureManagerCtx{
@@ -106,7 +111,7 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 			)
 		}),
 		videos:   videos,
-		videoIDs: videoIDs,
+		videoIDs: config.VideoIDs,
 	}
 }
 

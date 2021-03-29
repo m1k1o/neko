@@ -3,6 +3,7 @@ package types
 import (
 	"math"
 	"strings"
+	"context"
 	"fmt"
 
 	"github.com/pion/webrtc/v3/pkg/media"
@@ -50,33 +51,17 @@ type CaptureManager interface {
 }
 
 type VideoConfig struct {
-	Codec       string            `mapstructure:"codec"`
 	Width       string            `mapstructure:"width"`        // expression
 	Height      string            `mapstructure:"height"`       // expression
 	Fps         string            `mapstructure:"fps"`          // expression
+	GstPrefix   string            `mapstructure:"gst_prefix"`   // pipeline prefix, starts with !
 	GstEncoder  string            `mapstructure:"gst_encoder"`
 	GstParams   map[string]string `mapstructure:"gst_params"`   // map of expressions
-	GstPipeline string            `mapstructure:"gst_pipeline"`
-}
-
-func (config *VideoConfig) GetCodec() (codec.RTPCodec, error) {
-	switch strings.ToLower(config.Codec) {
-	case "vp8":
-		return codec.VP8(), nil
-	case "vp9":
-		return codec.VP9(), nil
-	case "h264":
-		return codec.H264(), nil
-	default:
-		return codec.RTPCodec{}, fmt.Errorf("unknown codec")
-	}
+	GstSuffix   string            `mapstructure:"gst_suffix"`   // pipeline suffix, starts with !
+	GstPipeline string            `mapstructure:"gst_pipeline"` // whole pipeline as a string
 }
 
 func (config *VideoConfig) GetPipeline(screen ScreenSize) (string, error) {
-	if config.GstPipeline != "" {
-		return config.GstPipeline, nil
-	}
-
 	values := map[string]interface{}{
 		"width":  screen.Width,
 		"height": screen.Height,
@@ -92,34 +77,43 @@ func (config *VideoConfig) GetPipeline(screen ScreenSize) (string, error) {
 	// get fps pipeline
 	fpsPipeline := "! video/x-raw ! videoconvert ! queue"
 	if config.Fps != "" {
-		var err error
-		val, err := gval.Evaluate(config.Fps, values, language...)
+		eval, err := gval.Full(language...).NewEvaluable(config.Fps)
 		if err != nil {
 			return "", err
 		}
-	
-		if val != nil {
-			// TODO: To fraction.
-			fpsPipeline = fmt.Sprintf("! video/x-raw,framerate=%v ! videoconvert ! queue", val)
+
+		val, err := eval.EvalFloat64(context.Background(), values)
+		if err != nil {
+			return "", err
 		}
+
+		fpsPipeline = fmt.Sprintf("! video/x-raw,framerate=%d/100 ! videoconvert ! queue", int(val*100))
 	}
 
 	// get scale pipeline
 	scalePipeline := ""
 	if config.Width != "" && config.Height != "" {
-		w, err := gval.Evaluate(config.Width, values, language...)
+		eval, err := gval.Full(language...).NewEvaluable(config.Width)
 		if err != nil {
 			return "", err
 		}
 
-		h, err := gval.Evaluate(config.Height, values, language...)
+		w, err := eval.EvalInt(context.Background(), values)
 		if err != nil {
 			return "", err
 		}
 
-		if w != nil && h != nil {
-			scalePipeline = fmt.Sprintf("! videoscale ! video/x-raw,width=%v,height=%v ! queue", w, h)
+		eval, err = gval.Full(language...).NewEvaluable(config.Height)
+		if err != nil {
+			return "", err
 		}
+
+		h, err := eval.EvalInt(context.Background(), values)
+		if err != nil {
+			return "", err
+		}
+
+		scalePipeline = fmt.Sprintf("! videoscale ! video/x-raw,width=%d,height=%d ! queue", w, h)
 	}
 
 	// get encoder pipeline
@@ -141,5 +135,12 @@ func (config *VideoConfig) GetPipeline(screen ScreenSize) (string, error) {
 		}
 	}
 
-	return fmt.Sprintf("%s %s %s", fpsPipeline, scalePipeline, encPipeline), nil
+	// join strings with space
+	return strings.Join([]string{
+		fpsPipeline,
+		scalePipeline,
+		config.GstPrefix,
+		encPipeline,
+		config.GstSuffix,
+	}[:]," "), nil
 }

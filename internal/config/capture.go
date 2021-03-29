@@ -15,7 +15,9 @@ import (
 type Capture struct {
 	Display string
 
-	Video map[string] types.VideoConfig
+	VideoCodec     codec.RTPCodec
+	VideoIDs       []string
+	VideoPipelines map[string]types.VideoConfig
 
 	AudioDevice   string
 	AudioCodec    codec.RTPCodec
@@ -46,6 +48,22 @@ func (Capture) Init(cmd *cobra.Command) error {
 
 	cmd.PersistentFlags().String("capture.audio.pipeline", "", "gstreamer pipeline used for audio streaming")
 	if err := viper.BindPFlag("capture.audio.pipeline", cmd.PersistentFlags().Lookup("capture.audio.pipeline")); err != nil {
+		return err
+	}
+
+	// videos
+	cmd.PersistentFlags().String("capture.video.codec", "vp8", "video codec to be used")
+	if err := viper.BindPFlag("capture.video.codec", cmd.PersistentFlags().Lookup("capture.video.codec")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().StringSlice("capture.video.ids", []string{}, "ordered list of video ids")
+	if err := viper.BindPFlag("capture.video.ids", cmd.PersistentFlags().Lookup("capture.video.ids")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().String("capture.video.pipelines", "", "pipelines config in JSON used for video streaming")
+	if err := viper.BindPFlag("capture.video.pipelines", cmd.PersistentFlags().Lookup("capture.video.pipelines")); err != nil {
 		return err
 	}
 
@@ -99,10 +117,42 @@ func (s *Capture) Set() {
 	s.Display = os.Getenv("DISPLAY")
 
 	// video
-	if err := viper.UnmarshalKey("capture.video", &s.Video, viper.DecodeHook(
-		utils.JsonStringAutoDecode(s.Video),
+	videoCodec := viper.GetString("capture.video.codec")
+	switch videoCodec {
+	case "vp8":
+		s.VideoCodec = codec.VP8()
+	case "vp9":
+		s.VideoCodec = codec.VP9()
+	case "h264":
+		s.VideoCodec = codec.H264()
+	default:
+		log.Warn().Str("codec", videoCodec).Msgf("unknown video codec, using Vp8")
+		s.VideoCodec = codec.VP8()
+	}
+
+	s.VideoIDs = viper.GetStringSlice("capture.video.ids")
+	if err := viper.UnmarshalKey("capture.video.pipelines", &s.VideoPipelines, viper.DecodeHook(
+		utils.JsonStringAutoDecode(s.VideoPipelines),
 	)); err != nil {
-		log.Warn().Err(err).Msgf("unable to parse video settings")
+		log.Warn().Err(err).Msgf("unable to parse video pipelines")
+	}
+
+	// default video
+	if len(s.VideoPipelines) == 0 {
+		log.Warn().Msgf("no video pipelines specified, using defaults")
+	
+		s.VideoCodec = codec.VP8()
+		s.VideoPipelines = map[string]types.VideoConfig{
+			"main": types.VideoConfig{
+				GstPipeline: "ximagesrc display-name={display} show-pointer=false use-damage=false "+
+					"! video/x-raw "+
+					"! videoconvert "+
+					"! queue "+
+					"! vp8enc end-usage=cbr cpu-used=4 threads=4 deadline=1 keyframe-max-dist=25 "+
+					"! appsink name=appsink",
+			},
+		}
+		s.VideoIDs = []string{"main"}
 	}
 
 	// audio
