@@ -81,7 +81,7 @@ export const actions = actionTree(
     },
 
     request({ getters }) {
-      if (!accessor.connected || !getters.hosting) {
+      if (!accessor.connected || getters.hosting) {
         return
       }
 
@@ -89,7 +89,7 @@ export const actions = actionTree(
     },
 
     release({ getters }) {
-      if (!accessor.connected || getters.hosting) {
+      if (!accessor.connected || !getters.hosting) {
         return
       }
 
