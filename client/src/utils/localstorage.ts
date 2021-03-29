@@ -13,7 +13,7 @@ export function set<T extends string | number | boolean>(key: string, val: T) {
 }
 
 export function get<T extends string | number | boolean>(key: string, def: T): T {
-  let store = localStorage.getItem(key)
+  const store = localStorage.getItem(key)
   if (store) {
     switch (typeof def) {
       case 'number':

@@ -1,7 +1,7 @@
 #
 # STAGE 1: SERVER
 #
-FROM arm32v7/golang:1.15-buster as server
+FROM arm32v7/golang:1.16-buster as server
 WORKDIR /src
 
 #
@@ -27,12 +27,12 @@ RUN set -eux; apt-get update; \
 #
 # build server
 COPY server/ .
-RUN go get -v -t -d . && go build -o bin/neko -i cmd/neko/main.go
+RUN go get -v -t -d . && go build -o bin/neko cmd/neko/main.go
 
 #
 # STAGE 2: CLIENT
 #
-FROM node:12-buster-slim as client
+FROM node:14-buster-slim as client
 
 # install dependencies
 RUN set -eux; apt-get update; \
@@ -128,3 +128,4 @@ HEALTHCHECK --interval=10s --timeout=5s --retries=8 \
 #
 # run neko
 CMD ["/usr/bin/supervisord", "-c", "/etc/neko/supervisord.conf"]
+

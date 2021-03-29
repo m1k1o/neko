@@ -248,7 +248,7 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
 
     this._peer.setRemoteDescription({ type: 'offer', sdp })
 
-    for (let candidate of this._candidates) {
+    for (const candidate of this._candidates) {
       this._peer.addIceCandidate(candidate)
     }
     this._candidates = []
@@ -282,7 +282,7 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
 
     if (event === EVENT.SIGNAL.CANDIDATE) {
       const { data } = payload as SignalCandidatePayload
-      let candidate: RTCIceCandidate = JSON.parse(data)
+      const candidate: RTCIceCandidate = JSON.parse(data)
       if (this._peer) {
         this._peer.addIceCandidate(candidate)
       } else {

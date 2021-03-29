@@ -190,6 +190,7 @@
   import Resolution from './resolution.vue'
   import Clipboard from './clipboard.vue'
 
+  // @ts-ignore
   import GuacamoleKeyboard from '~/utils/guacamole-keyboard.ts'
 
   @Component({

@@ -47,6 +47,7 @@ For n.eko room management software visit https://github.com/m1k1o/neko-rooms.
 ### Misc
 - Custom docker workflow.
 - Based on debian buster instead of stretch.
+- Versions bumped: Go 16, Node.js 14 (by @mbattista).
 - Custom avatars without any 3rd party depenency.
 - Ignore duplicate notify bars.
 - No pointer events for notify bars.

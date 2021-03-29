@@ -1,67 +1,47 @@
 #!/bin/sh
 cd "$(dirname "$0")"
 
-BASE=../
+BASE="${PWD}/../"
+IMAGE="m1k1o/neko"
 
 build_client() {
-	docker build -t neko-dev-client -f base/Dockerfile --target client "$BASE"
-	docker run --rm -v "$BASE"/client/dist:/tmp/dist neko-dev-client sh -c "rm -rf /tmp/dist/*; cp -r /src/dist/* /tmp/dist"
+  docker build -t neko-dev-client -f base/Dockerfile --target client "${BASE}"
+  docker run --rm \
+    --user "$(id -u):$(id -g)" \
+    -v "${BASE}client/dist:/tmp/dist" \
+    neko-dev-client sh -c "rm -rf /tmp/dist/*; cp -r /src/dist/* /tmp/dist"
 }
 
 build_server() {
-	docker build -t neko-dev-server -f base/Dockerfile --target server "$BASE"
-	docker run --rm -v "$BASE"/server/bin:/tmp/bin neko-dev-server sh -c "rm -rf /tmp/bin/neko; cp /src/bin/neko /tmp/bin"
-}
-
-build_arm_client() {
-        docker build -t neko-dev-client -f arm_base/Dockerfile --target client "$BASE"
-        docker run --rm -v "$BASE"/client/dist:/tmp/dist neko-dev-client sh -c "rm -rf /tmp/dist/*; cp -r /src/dist/* /tmp/dist"
-}
-
-build_arm_server() {
-        docker build -t neko-dev-server -f arm_base/Dockerfile --target server "$BASE"
-        docker run --rm -v "$BASE"/server/bin:/tmp/bin neko-dev-server sh -c "rm -rf /tmp/bin/neko; cp /src/bin/neko /tmp/bin"
+  docker build -t neko-dev-server -f base/Dockerfile --target server "${BASE}"
+  docker run --rm \
+    --user "$(id -u):$(id -g)" \
+    -v "${BASE}server/bin:/tmp/bin" \
+    neko-dev-server sh -c "rm -rf /tmp/bin/neko; cp /src/bin/neko /tmp/bin"
 }
 
 build_base() {
-	docker build -t m1k1o/neko:base -f base/Dockerfile "$BASE"
+  docker build -t "${IMAGE}:base" -f base/Dockerfile "${BASE}"
 }
 
-build_arm_base() {
-	docker build -t mbattista/neko:arm_base -f arm_base/Dockerfile "$BASE"
+build_base_arm() {
+  docker build -t "${IMAGE}:base_arm" -f base_arm/Dockerfile "${BASE}"
 }
 
-build_firefox() {
-	docker build -t m1k1o/neko:firefox -f firefox/Dockerfile firefox/
+build_firefox_arm() {
+  docker build -t "${IMAGE}:firefox_arm" -f firefox/Dockerfile --build-arg BASE_IMAGE="${IMAGE}:base_arm" firefox
 }
 
-build_chromium() {
-	docker build -t m1k1o/neko:chromium -f chromium/Dockerfile chromium/
-}
-
-build_arm_firefox() {
-	docker build -t mbattista/neko:arm_firefox -f arm_firefox/Dockerfile arm_firefox/
-}
-
-build_xfce() {
-	docker build -t m1k1o/neko:xfce -f xfce/Dockerfile xfce/
-}
-
-build_vlc() {
-	docker build -t m1k1o/neko:vlc -f vlc/Dockerfile vlc/
+build() {
+  docker build -t "${IMAGE}:$1" -f "$1/Dockerfile" "$1/"
 }
 
 case $1 in
   client) build_client;;
-  serve) build_server;;
+  server) build_server;;
   base) build_base;;
-  firefox) build_firefox;;
-  chromium) build_chromium;;
-  xfce) build_xfce;;
-  vlc) build_vlc;;
-  arm_client) build_arm_client;;
-  arm_server) build_arm_server;;
-  arm_base) build_arm_base;;
-  arm_firefox) build_arm_firefox;;
-  *) echo "Unknown $1";;
+  base_arm) build_base_arm;;
+  firefox_arm) build_firefox_arm;;
+  *) build "$1";;
 esac
+
