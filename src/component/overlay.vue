@@ -47,6 +47,15 @@
     'zPADwoFouPut3uzO12UyQSoclkotrt9ocAHKZnr8UhAP4bvg/gIs+UMfaaMTZTFOUkHo8/B/AEwAWjl5pV+j1dZ//g4xUMBo8YY/cqlcqhNvffAJxq40dmA5' +
     'bFPoAjrev5EfwZQNfoKbju/u1ri/PvfgKYGMl+K2I7b8U7wA5wpgC/AgAA///Yyif1MZXzRQAAAABJRU5ErkJggg==) 4 4, crosshair'
 
+  const KeyTable = {
+    XK_Super_L: 0xffeb, // Left super
+    XK_Super_R: 0xffec, // Right super
+    XK_Alt_L: 0xffe9, // Left alt
+    XK_Alt_R: 0xffea, // Right alt
+    XK_Mode_switch: 0xff7e, // Character set switch
+    XK_ISO_Level3_Shift: 0xfe03, // AltGr
+  }
+
   @Component({
     name: 'neko-overlay',
   })
@@ -91,6 +100,30 @@
       return 'url(' + uri + ') ' + x + ' ' + y + ', auto'
     }
 
+    keyRemap(key: number) {
+      const isMac = navigator && navigator.platform.match(/^mac/i)
+      const isiOS = navigator && navigator.platform.match(/ipad|iphone|ipod/i)
+
+      // Alt behaves more like AltGraph on macOS, so shuffle the
+      // keys around a bit to make things more sane for the remote
+      // server. This method is used by RealVNC and TigerVNC (and
+      // possibly others).
+      if (isMac || isiOS) {
+        switch (key) {
+          case KeyTable.XK_Super_L:
+            return KeyTable.XK_Alt_L
+          case KeyTable.XK_Super_R:
+            return KeyTable.XK_Super_L
+          case KeyTable.XK_Alt_L:
+            return KeyTable.XK_Mode_switch
+          case KeyTable.XK_Alt_R:
+            return KeyTable.XK_ISO_Level3_Shift
+        }
+      }
+
+      return key
+    }
+
     mounted() {
       this._ctx = this._overlay.getContext('2d')
 
@@ -109,7 +142,9 @@
           return true
         }
 
-        this.webrtc.send('keydown', { key })
+        this.webrtc.send('keydown', {
+          key: this.keyRemap(key),
+        })
         return false
       }
       this.keyboard.onkeyup = (key: number) => {
@@ -121,7 +156,9 @@
           return
         }
 
-        this.webrtc.send('keyup', { key })
+        this.webrtc.send('keyup', {
+          key: this.keyRemap(key),
+        })
       }
       this.keyboard.listenTo(this._overlay)
 
