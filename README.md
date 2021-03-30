@@ -178,7 +178,7 @@ services:
     image: "m1k1o/neko:firefox_arm"
     restart: "unless-stopped"
     # increase on rpi's with more then 1gb ram
-    shm_size: "740mb"
+    shm_size: "520mb"
     ports:
       - "8084:8080"
       - "52000-52100:52000-52100/udp"
@@ -193,7 +193,7 @@ services:
       NEKO_VP9: 'false'
       NEKO_H264: 'true'
       # Change target bitrate and framerate on this parameter
-      NEKO_VIDEO: ' ximagesrc display-name=%s use-damage=0 show-pointer=true use-damage=false ! video/x-raw,framerate=30/1 ! videoconvert ! queue ! omxh264enc target-bitrate=1500000 control-rate=4 ! h264parse config-interval=3  ! video/x-h264,profile=baseline,stream-format=byte-stream '
+      NEKO_VIDEO: ' ximagesrc display-name=%s use-damage=0 show-pointer=true use-damage=false ! video/x-raw,framerate=30/1 ! videoconvert ! queue ! video/x-raw,framerate=30/1,format=NV12 ! v4l2h264enc extra-controls="controls,h264_profile=0,video_bitrate=1250000;" ! h264parse config-interval=3 ! video/x-h264,profile=baseline,stream-format=byte-stream '
       NEKO_MAX_FPS: 0
 ```
 
