@@ -16,7 +16,7 @@
         :implicitControl="state.control.implicit_hosting && state.sessions[state.session_id].profile.can_host"
         @implicit-control-request="websocket.send('control/request')"
         @implicit-control-release="websocket.send('control/release')"
-        @update-kbd-modifiers="websocket.send('keyboard/modifiers', $event)"
+        @update-kbd-modifiers="updateKeyboardModifiers($event)"
         @drop-files="uploadDrop($event)"
       />
     </div>
@@ -51,6 +51,7 @@
 <script lang="ts">
   export * as ApiModels from './api/models'
   export * as StateModels from './types/state'
+  import * as EVENT from './types/events'
 
   import { Vue, Component, Ref, Watch, Prop } from 'vue-property-decorator'
   import ResizeObserver from 'resize-observer-polyfill'
@@ -115,7 +116,6 @@
         playing: false,
         volume: 0,
         muted: false,
-        fullscreen: false,
       },
       control: {
         scroll: {
@@ -256,7 +256,7 @@
         throw new Error('client already connected to webrtc')
       }
 
-      this.websocket.send('signal/request')
+      this.websocket.send(EVENT.SIGNAL_REQUEST)
     }
 
     public webrtcDisconnect() {
@@ -285,18 +285,10 @@
 
     public setVolume(value: number) {
       if (value < 0 || value > 1) {
-        throw new Error('Out of range. Value must be between 0 and 1.')
+        throw new Error('volume must be between 0 and 1')
       }
 
       this._video.volume = value
-    }
-
-    public requestFullscreen() {
-      this._component.requestFullscreen()
-    }
-
-    public exitFullscreen() {
-      document.exitFullscreen()
     }
 
     public setScrollInverse(value: boolean = true) {
@@ -311,17 +303,17 @@
       Vue.set(this.state.control, 'keyboard', { layout, variant })
     }
 
+    // TODO: Remove? Use REST API only?
     public setScreenSize(width: number, height: number, rate: number) {
-      //this.api.room.screenConfigurationChange({ screenConfiguration: { width, height, rate } })
-      this.websocket.send('screen/set', { width, height, rate })
+      this.websocket.send(EVENT.SCREEN_SET, { width, height, rate })
     }
 
     public setWebRTCVideo(video: string) {
       if (!this.state.connection.webrtc.videos.includes(video)) {
-        throw new Error('VideoID not found.')
+        throw new Error('video id not found')
       }
 
-      this.websocket.send('signal/video', { video: video })
+      this.websocket.send(EVENT.SIGNAL_VIDEO, { video: video })
     }
 
     public setWebRTCAuto(auto: boolean = true) {
@@ -329,11 +321,11 @@
     }
 
     public sendUnicast(receiver: string, subject: string, body: any) {
-      this.websocket.send('send/unicast', { receiver, subject, body })
+      this.websocket.send(EVENT.SEND_UNICAST, { receiver, subject, body })
     }
 
     public sendBroadcast(subject: string, body: any) {
-      this.websocket.send('send/broadcast', { subject, body })
+      this.websocket.send(EVENT.SEND_BROADCAST, { subject, body })
     }
 
     public get room(): RoomApi {
@@ -367,28 +359,22 @@
       // component size change
       this.observer.observe(this._component)
 
-      // fullscreen change
-      this._component.addEventListener('fullscreenchange', () => {
-        Vue.set(this.state.video, 'fullscreen', document.fullscreenElement !== null)
-        this.onResize()
-      })
-
       // video events
       VideoRegister(this._video, this.state.video)
 
       // websocket
       this.websocket.on('message', async (event: string, payload: any) => {
         switch (event) {
-          case 'signal/provide':
+          case EVENT.SIGNAL_PROVIDE:
             try {
               let sdp = await this.webrtc.connect(payload.sdp, payload.iceservers)
-              this.websocket.send('signal/answer', { sdp })
+              this.websocket.send(EVENT.SIGNAL_ANSWER, { sdp })
             } catch (e) {}
             break
-          case 'signal/candidate':
+          case EVENT.SIGNAL_CANDIDATE:
             this.webrtc.setCandidate(payload)
             break
-          case 'system/disconnect':
+          case EVENT.SYSTEM_DISCONNECT:
             this.websocket.disconnect(new Error('disconnected by server'))
             break
         }
@@ -430,7 +416,7 @@
         }
       })
       this.webrtc.on('candidate', (candidate: RTCIceCandidateInit) => {
-        this.websocket.send('signal/candidate', candidate)
+        this.websocket.send(EVENT.SIGNAL_CANDIDATE, candidate)
       })
 
       let webrtcCongestion: number = 0
@@ -523,8 +509,12 @@
     @Watch('state.control.keyboard')
     updateKeyboard() {
       if (this.controlling && this.state.control.keyboard.layout) {
-        this.websocket.send('keyboard/map', this.state.control.keyboard)
+        this.websocket.send(EVENT.KEYBOARD_MAP, this.state.control.keyboard)
       }
+    }
+
+    updateKeyboardModifiers(modifiers: { capslock: boolean; numlock: boolean }) {
+      this.websocket.send(EVENT.KEYBOARD_MODIFIERS, modifiers)
     }
 
     @Watch('state.screen.size')

@@ -41,7 +41,6 @@ export interface Video {
   playing: boolean
   volume: number
   muted: boolean
-  fullscreen: boolean
 }
 
 /////////////////////////////
