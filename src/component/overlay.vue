@@ -34,6 +34,7 @@
   import { Vue, Component, Ref, Prop, Watch } from 'vue-property-decorator'
 
   import GuacamoleKeyboard from './utils/guacamole-keyboard'
+  import { keySymsRemap } from './utils/keyboard-remapping'
   import { getFilesFromDataTansfer } from './utils/file-upload'
   import { NekoWebRTC } from './internal/webrtc'
   import { Scroll } from './types/state'
@@ -46,13 +47,6 @@
     'KM9UVRfArgJoBrAC4DsJsOcLlc1Gg0qNVqVRljI0mS5oh6vU6lUukFgEta5gemLr4AFAoF6nQ6b20223G73X6ZyWTmgFAoRL1ej3f+DQ1gfqiq+qbf73/weD' +
     'zPADwoFouPut3uzO12UyQSoclkotrt9ocAHKZnr8UhAP4bvg/gIs+UMfaaMTZTFOUkHo8/B/AEwAWjl5pV+j1dZ//g4xUMBo8YY/cqlcqhNvffAJxq40dmA5' +
     'bFPoAjrev5EfwZQNfoKbju/u1ri/PvfgKYGMl+K2I7b8U7wA5wpgC/AgAA///Yyif1MZXzRQAAAABJRU5ErkJggg==) 4 4, crosshair'
-
-  const KeyTable = {
-    XK_Meta_L: 0xffe7, // Left meta
-    XK_Meta_R: 0xffe8, // Right meta
-    XK_Control_L: 0xffe3, // Left control
-    XK_Control_R: 0xffe4, // Right control
-  }
 
   @Component({
     name: 'neko-overlay',
@@ -98,23 +92,6 @@
       return 'url(' + uri + ') ' + x + ' ' + y + ', auto'
     }
 
-    keyRemap(key: number) {
-      const isMac = navigator && navigator.platform.match(/^mac/i)
-      const isiOS = navigator && navigator.platform.match(/ipad|iphone|ipod/i)
-
-      // switch command with ctrl on mac and ios
-      if (isMac || isiOS) {
-        switch (key) {
-          case KeyTable.XK_Meta_L:
-            return KeyTable.XK_Control_L
-          case KeyTable.XK_Meta_R:
-            return KeyTable.XK_Control_R
-        }
-      }
-
-      return key
-    }
-
     mounted() {
       this._ctx = this._overlay.getContext('2d')
 
@@ -134,7 +111,7 @@
         }
 
         this.webrtc.send('keydown', {
-          key: this.keyRemap(key),
+          key: keySymsRemap(key),
         })
         return false
       }
@@ -148,7 +125,7 @@
         }
 
         this.webrtc.send('keyup', {
-          key: this.keyRemap(key),
+          key: keySymsRemap(key),
         })
       }
       this.keyboard.listenTo(this._overlay)
