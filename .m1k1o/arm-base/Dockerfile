@@ -118,6 +118,10 @@ ENV NEKO_PASSWORD_ADMIN=admin
 ENV NEKO_BIND=:8080
 
 #
+# custom arm values -> video pipeline with GPU encoding
+ENV NEKO_VIDEO='ximagesrc display-name=%s use-damage=0 show-pointer=true use-damage=false ! video/x-raw,framerate=30/1 ! videoconvert ! queue ! video/x-raw,framerate=30/1,format=NV12 ! v4l2h264enc extra-controls="controls,h264_profile=0,video_bitrate=1250000;" ! h264parse config-interval=3 ! video/x-h264,profile=baseline,stream-format=byte-stream'
+
+#
 # copy static files from previous stages
 COPY --from=server /src/bin/neko /usr/bin/neko
 COPY --from=client /src/dist/ /var/www

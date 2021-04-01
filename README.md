@@ -75,9 +75,9 @@ Use following docker images:
 - `m1k1o/neko:base` - for custom base.
 
 For ARM-based devices (like Raspberry Pi, with GPU hardware acceleration):
-- `m1k1o/neko:arm-base` - for custom arm based.
 - `m1k1o/neko:arm-firefox` - for Firefox.
 - `m1k1o/neko:arm-chromium` - for Chromium.
+- `m1k1o/neko:arm-base` - for custom arm based.
 
 Networking:
 - If you want to use n.eko in **external** network, you can omit `NEKO_NAT1TO1`. It will automatically get your Public IP.
@@ -129,7 +129,7 @@ services:
       NEKO_NAT1TO1: <your-IP>
 ```
 
-## Chromium Ungoogled
+## Chromium
 
 ```yaml
 version: "3.4"
@@ -175,30 +175,39 @@ services:
       NEKO_NAT1TO1: <your-IP>
 ```
 
+## Raspberry Pi
+
+Note! Since this pipeline is using H264, that enables GPU HW acceleration for Raspberry Pi, you are only able to connect from browsers supporting H264 for WebRTC. At the time of implementing, [Firefox does not support this](https://developer.mozilla.org/en-US/docs/Web/Media/Formats/WebRTC_codecs#supported-foot-1).
+
 ```yaml
 version: "3.4"
 services:
   neko:
     image: "m1k1o/neko:arm-chromium"
     restart: "unless-stopped"
-    # increase on rpi's with more then 1gb ram
+    # increase on rpi's with more then 1gb ram.
     shm_size: "520mb"
     ports:
       - "8084:8080"
       - "52000-52100:52000-52100/udp"
-    # this is important since we need a GPU for hardware acceleration alternatively mount the devices into the docker
+    # this is important since we need a GPU for hardware acceleration alternatively mount the devices into the docker.
     privileged: true
     environment:
       NEKO_SCREEN: '1280x720@30'
       NEKO_PASSWORD: 'neko'
       NEKO_PASSWORD_ADMIN: 'admin'
       NEKO_EPR: 52000-52100
-      NEKO_VP8: 'false'
-      NEKO_VP9: 'false'
-      NEKO_H264: 'true'
-      # Change target bitrate and framerate on this parameter
-      NEKO_VIDEO: ' ximagesrc display-name=%s use-damage=0 show-pointer=true use-damage=false ! video/x-raw,framerate=30/1 ! videoconvert ! queue ! video/x-raw,framerate=30/1,format=NV12 ! v4l2h264enc extra-controls="controls,h264_profile=0,video_bitrate=1250000;" ! h264parse config-interval=3 ! video/x-h264,profile=baseline,stream-format=byte-stream '
-      NEKO_MAX_FPS: 0
+      NEKO_H264: 1
+      # optional: Change target bitrate and framerate on this parameter.
+      NEKO_VIDEO: |
+        ximagesrc display-name=%s use-damage=0 show-pointer=true use-damage=false
+          ! video/x-raw,framerate=30/1
+          ! videoconvert
+          ! queue
+          ! video/x-raw,framerate=30/1,format=NV12
+          ! v4l2h264enc extra-controls="controls,h264_profile=0,video_bitrate=1250000;"
+          ! h264parse config-interval=3
+          ! video/x-h264,profile=baseline,stream-format=byte-stream
 ```
 
 ## Mobile support
