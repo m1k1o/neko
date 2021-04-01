@@ -25,7 +25,7 @@ For n.eko room management software visit https://github.com/m1k1o/neko-rooms.
 ### New Features
 - Clipboard button with text area - for browsers, that don't support clipboard syncing (FireFox, what a shame...) or for HTTP.
 - Keyboard modifier state synchronization (Num Lock, Caps Lock, Scroll Lock) for each hosting.
-- Added chromium ungoogled (with h265 support) an kept up to date by @whalehub.
+- Added chromium ungoogled (with h265 support) an kept up to date (by @whalehub).
 - Added Picture in Picture button (only for watching screen, controlling not possible).
 - Added RTMP broadcast. Enables broadcasting neko screen to local RTMP server, YouTube or Twitch.
 - Stereo sound (works properly only in Firefox host).
@@ -34,6 +34,9 @@ For n.eko room management software visit https://github.com/m1k1o/neko-rooms.
 - Added `MAX_FPS`, where you can specify max WebRTC frame rate. When set to `0`, frame rate won't be capped and you can enjoy your real `60fps` experience. Originally, it was constant at `25fps`.
 - Invite links. You can invite people and they don't need to enter passwords by themselves (and get confused about user accounts that do not exits). You can put your password in URL using `?pwd=<your-password>` and it will be automatically used when logging in.
 - Added `/stats?pwd=<admin>` endpoint to get total active connections, host and members.
+- Added `m1k1o/neko:vlc` tag, use VLC to watch local files together (by @mbattista).
+- Added `m1k1o/neko:xfce` tag, as an non video related showcase (by @mbattista).
+- Added ARM-based images, for Raspberry Pi support (by @mbattista).
 
 ### Bugs
 - Fixed minor gst pipeline bug.
@@ -59,21 +62,22 @@ For n.eko room management software visit https://github.com/m1k1o/neko-rooms.
 - Added `m1k1o/neko:vncviewer` tag, use `NEKO_VNC_URL` to specify VNC target and use n.eko as a bridge.
 - Abiltiy to include neko as a component in another Vue.Js project (by @gbrian).
 - Added HEALTHCHECK to Dockerfile.
-- Added `m1k1o/neko:vlc` tag, use VLC to watch local files together (by @mbattista).
-- Added `m1k1o/neko:xfce` tag, as an non video related showcase (by @mbattista).
-- Added `m1k1o/neko:firefox_arm` tag, firefox neko for raspberry pi (by @mbattista)
 
 # Getting started & FAQ
 
 Use following docker images:
 - `m1k1o/neko:latest` - for Firefox.
-- `m1k1o/neko:chromium` - for Chromium Ungoogled (needs `--cap-add=SYS_ADMIN`).
+- `m1k1o/neko:chromium` - for Chromium (needs `--cap-add=SYS_ADMIN`).
+- `m1k1o/neko:ungoogled-chromium` - for [Ungoogled Chromium](https://github.com/Eloston/ungoogled-chromium) (needs `--cap-add=SYS_ADMIN`) (by @whalehub).
 - `m1k1o/neko:vncviewer` - for simple VNC viewer (specify `NEKO_VNC_URL` to your VNC target).
 - `m1k1o/neko:vlc` - for VLC Video player (needs volume mounted to `/media` with local video files, or setting `VLC_MEDIA=/media` path).
 - `m1k1o/neko:xfce` - for an shared desktop / installing shared software.
 - `m1k1o/neko:base` - for custom base.
-- `m1k1o/neko:base_arm` - for custom arm based
-- `m1k1o/neko:firefox_arm` - for Firefox (Raspberry Pi)
+
+For ARM-based devices (like Raspberry Pi, with GPU hardware acceleration):
+- `m1k1o/neko:arm-base` - for custom arm based.
+- `m1k1o/neko:arm-firefox` - for Firefox.
+- `m1k1o/neko:arm-chromium` - for Chromium.
 
 Networking:
 - If you want to use n.eko in **external** network, you can omit `NEKO_NAT1TO1`. It will automatically get your Public IP.
@@ -175,7 +179,7 @@ services:
 version: "3.4"
 services:
   neko:
-    image: "m1k1o/neko:firefox_arm"
+    image: "m1k1o/neko:arm-chromium"
     restart: "unless-stopped"
     # increase on rpi's with more then 1gb ram
     shm_size: "520mb"
