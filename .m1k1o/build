@@ -28,8 +28,8 @@ build_base_arm() {
   docker build -t "${IMAGE}:base_arm" -f base_arm/Dockerfile "${BASE}"
 }
 
-build_firefox_arm() {
-  docker build -t "${IMAGE}:firefox_arm" -f firefox/Dockerfile --build-arg BASE_IMAGE="${IMAGE}:base_arm" firefox
+build_chromium_arm() {
+  docker build -t "${IMAGE}:chromium_arm" -f chromium_arm/Dockerfile chromium_arm
 }
 
 build() {
@@ -41,7 +41,7 @@ case $1 in
   server) build_server;;
   base) build_base;;
   base_arm) build_base_arm;;
-  firefox_arm) build_firefox_arm;;
+  chromium_arm) build_chromium_arm;;
   *) build "$1";;
 esac
 
