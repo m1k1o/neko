@@ -20,28 +20,41 @@ build_server() {
     neko-dev-server sh -c "rm -rf /tmp/bin/neko; cp /src/bin/neko /tmp/bin"
 }
 
-build_base() {
-  docker build -t "${IMAGE}:base" -f base/Dockerfile "${BASE}"
-}
-
-build_base_arm() {
-  docker build -t "${IMAGE}:base_arm" -f base_arm/Dockerfile "${BASE}"
-}
-
-build_chromium_arm() {
-  docker build -t "${IMAGE}:chromium_arm" -f chromium_arm/Dockerfile chromium_arm
-}
-
 build() {
-  docker build -t "${IMAGE}:$1" -f "$1/Dockerfile" "$1/"
+  IMAGE="${IMAGE}:$1"
+  echo "Building $IMAGE"
+
+  if [ "$1" = "base" ]
+  then
+    # build base
+    docker build -t "${IMAGE}" -f base/Dockerfile "${BASE}"
+  else
+    # buld image
+    docker build -t "${IMAGE}" -f "$1/Dockerfile" "$1/"
+  fi
+}
+
+build_arm() {
+  IMAGE="${IMAGE}:arm-$1"
+  echo "Building (arm) $IMAGE"
+
+  if [ "$1" = "base" ]
+  then
+    # build ARM base
+    docker build -t "${IMAGE}" -f arm-base/Dockerfile "${BASE}"
+  else
+    # buld ARM image
+    docker build -t "${IMAGE}" --build-arg="BASE_IMAGE=${IMAGE}:arm-base" -f "$1/Dockerfile" "$1/"
+  fi
 }
 
 case $1 in
   client) build_client;;
   server) build_server;;
-  base) build_base;;
-  base_arm) build_base_arm;;
-  chromium_arm) build_chromium_arm;;
+
+  # build arm- images
+  arm-*) build_arm "${1#arm-}";;
+
+  # build images
   *) build "$1";;
 esac
-
