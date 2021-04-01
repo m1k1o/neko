@@ -1,6 +1,6 @@
 # How to contribute to neko
 
-If you want to contribute, but don't want to install anything on your host system, we got you covered. You only need docker. Technically, it could be donw using vs code development in container, but this is more fun:).
+If you want to contribute, but do not want to install anything on your host system, we got you covered. You only need docker. Technically, it could be done using vs code development in container, but this is more fun:).
 
 You need to copy `.env.development` to `.env` and customize values.
 
@@ -20,15 +20,15 @@ If you want, you can build other tags. `base` tag needs to be build first:
 - `./start-server` - Starting server image you specified in `.env`.
 - `./start-server -r` - Shortcut for rebuilding server binary and then starting.
 
-If you are changing something in the server code, you don't want to rebuild container each time. You can just rebuild your binary:
+If you are changing something in the server code, you do not want to rebuild container each time. You can just rebuild your binary:
 
 - `./rebuild-server` - Rebuild only server binary.
-- `./rebuild-server -f` - Force to rebuild whole golang environment (you should do this only of you change some dependencies).
+- `./rebuild-server -f` - Force to rebuild whole Golang environment (you should do this only of you change some dependencies).
 
-## Step 3: Seving client
+## Step 3: Serving client
 
 - `./serve-client` - Serving vue.js client.
-- `./serve-client -i` - Install all depenencies.
+- `./serve-client -i` - Install all dependencies.
 
 ## Debug
 
