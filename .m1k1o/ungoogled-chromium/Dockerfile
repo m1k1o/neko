@@ -1,4 +1,5 @@
-FROM m1k1o/neko:base
+ARG BASE_IMAGE=m1k1o/neko:base
+FROM $BASE_IMAGE
 
 ARG SRC_URL="https://github.com/macchrome/linchrome/releases/download/v89.0.4389.90-r843830-portable-ungoogled-Lin64/ungoogled-chromium_89.0.4389.90_1.vaapi_linux.tar.xz"
 
