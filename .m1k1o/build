@@ -21,30 +21,24 @@ build_server() {
 }
 
 build() {
-  IMAGE="${IMAGE}:$1"
-  echo "Building $IMAGE"
-
   if [ "$1" = "base" ]
   then
     # build base
-    docker build -t "${IMAGE}" -f base/Dockerfile "${BASE}"
+    docker build -t "${IMAGE}:base" -f base/Dockerfile "${BASE}"
   else
     # buld image
-    docker build -t "${IMAGE}" -f "$1/Dockerfile" "$1/"
+    docker build -t "${IMAGE}:$1" -f "$1/Dockerfile" "$1/"
   fi
 }
 
 build_arm() {
-  IMAGE="${IMAGE}:arm-$1"
-  echo "Building (arm) $IMAGE"
-
   if [ "$1" = "base" ]
   then
     # build ARM base
-    docker build -t "${IMAGE}" -f arm-base/Dockerfile "${BASE}"
+    docker build -t "${IMAGE}:arm-base" -f arm-base/Dockerfile "${BASE}"
   else
     # buld ARM image
-    docker build -t "${IMAGE}" --build-arg="BASE_IMAGE=${IMAGE}:arm-base" -f "$1/Dockerfile" "$1/"
+    docker build -t "${IMAGE}:arm-$1" --build-arg="BASE_IMAGE=${IMAGE}:arm-base" -f "$1/Dockerfile" "$1/"
   fi
 }
 
