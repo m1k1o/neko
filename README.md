@@ -188,7 +188,7 @@ services:
     # increase on rpi's with more then 1gb ram.
     shm_size: "520mb"
     ports:
-      - "8084:8080"
+      - "8088:8080"
       - "52000-52100:52000-52100/udp"
     # this is important since we need a GPU for hardware acceleration alternatively mount the devices into the docker.
     privileged: true
@@ -197,8 +197,7 @@ services:
       NEKO_PASSWORD: 'neko'
       NEKO_PASSWORD_ADMIN: 'admin'
       NEKO_EPR: 52000-52100
-      NEKO_H264: 1
-      # optional: Change target bitrate and framerate on this parameter.
+      # optional: change target bitrate and framerate on this parameter.
       NEKO_VIDEO: |
         ximagesrc display-name=%s use-damage=0 show-pointer=true use-damage=false
           ! video/x-raw,framerate=30/1
