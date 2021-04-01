@@ -1,4 +1,5 @@
-FROM m1k1o/neko:base
+ARG BASE_IMAGE=m1k1o/neko:base
+FROM $BASE_IMAGE
 
 #
 # install xfce
