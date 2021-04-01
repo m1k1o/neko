@@ -1,0 +1,32 @@
+#!/bin/bash
+
+if [ -f ".env.default" ]
+then
+  export $(cat .env.default | sed 's/#.*//g' | xargs)
+fi
+
+if [ -f ".env" ]
+then
+  export $(cat .env | sed 's/#.*//g' | xargs)
+fi
+
+BINARY_PATH="${PWD}/../server/bin/neko"
+
+# use -r to rebuild
+if [ ! -f "${BINARY_PATH}" ] || [ "$1" == "-r" ]; then
+  ./rebuild-server
+fi
+
+docker run --rm -it \
+  --name "neko_dev" \
+  -p "${SERVER_PORT}:8080" \
+  -p "${SERVER_EPR}:${SERVER_EPR}/udp" \
+  -e "NEKO_SCREEN=1920x1080@60" \
+  -e "NEKO_EPR=${SERVER_EPR}" \
+  -e "NEKO_NAT1TO1=${SERVER_IP}" \
+  -e "NEKO_ICELITE=true" \
+  -e "NEKO_MAX_FPS=25" \
+  -v "${BINARY_PATH}:/usr/bin/neko" \
+  --shm-size=2G \
+  --cap-add SYS_ADMIN \
+  ${BUILD_IMAGE}:${SERVER_TAG}

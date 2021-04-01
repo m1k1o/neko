@@ -272,3 +272,7 @@ NEKO_KEY:
   - e.g. '/certs/key.pem'
 
 ```
+
+# How to contribute?
+
+Navigate to `.m1k1o/README.md` for further information.

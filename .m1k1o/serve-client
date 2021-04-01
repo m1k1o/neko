@@ -1,0 +1,29 @@
+#!/bin/bash
+
+if [ -f ".env.default" ]
+then
+  export $(cat .env.default | sed 's/#.*//g' | xargs)
+fi
+
+if [ -f ".env" ]
+then
+  export $(cat .env | sed 's/#.*//g' | xargs)
+fi
+
+# use -i to install
+if [ ! -d "${PWD}/../client/node_modules" ] || [ "$1" == "-i" ]; then
+  docker run --rm -it \
+    -v "${PWD}/../client:/app" \
+    --workdir="/app" \
+    --entrypoint="npm" \
+    node:14-buster-slim install
+fi
+
+docker run --rm -it \
+  -p "${CLIENT_PORT}:8080" \
+  -v "${PWD}/../client:/app" \
+  -e "VUE_APP_SERVER_PORT=${SERVER_PORT}" \
+  --workdir="/app" \
+  --entrypoint="npm" \
+  node:14-buster-slim run serve
+  

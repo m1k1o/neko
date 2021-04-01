@@ -2,7 +2,24 @@
 cd "$(dirname "$0")"
 
 BASE="${PWD}/../"
-IMAGE="m1k1o/neko"
+
+if [ -f ".env.default" ]
+then
+  export $(cat .env.default | sed 's/#.*//g' | xargs)
+fi
+
+if [ -f ".env" ]
+then
+  export $(cat .env | sed 's/#.*//g' | xargs)
+fi
+
+if [ -z "${1}" ] && [ ! -z "${SERVER_TAG}" ]
+then
+  ./build base
+  ./build ${SERVER_TAG}
+  exit 0
+fi
+
 
 build_client() {
   docker build -t neko-dev-client -f base/Dockerfile --target client "${BASE}"
@@ -24,10 +41,10 @@ build() {
   if [ "$1" = "base" ]
   then
     # build base
-    docker build -t "${IMAGE}:base" -f base/Dockerfile "${BASE}"
+    docker build -t "${BUILD_IMAGE}:base" -f base/Dockerfile "${BASE}"
   else
     # buld image
-    docker build -t "${IMAGE}:$1" -f "$1/Dockerfile" "$1/"
+    docker build -t "${BUILD_IMAGE}:$1" --build-arg="BASE_IMAGE=${BUILD_IMAGE}:base" -f "$1/Dockerfile" "$1/"
   fi
 }
 
@@ -35,10 +52,10 @@ build_arm() {
   if [ "$1" = "base" ]
   then
     # build ARM base
-    docker build -t "${IMAGE}:arm-base" -f arm-base/Dockerfile "${BASE}"
+    docker build -t "${BUILD_IMAGE}:arm-base" -f arm-base/Dockerfile "${BASE}"
   else
     # buld ARM image
-    docker build -t "${IMAGE}:arm-$1" --build-arg="BASE_IMAGE=${IMAGE}:arm-base" -f "$1/Dockerfile" "$1/"
+    docker build -t "${BUILD_IMAGE}:arm-$1" --build-arg="BASE_IMAGE=${BUILD_IMAGE}:arm-base" -f "$1/Dockerfile" "$1/"
   fi
 }
 
