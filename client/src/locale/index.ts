@@ -3,5 +3,5 @@ import * as es from './es-sp'
 
 export const messages = {
   en,
-  es
+  es,
 }
