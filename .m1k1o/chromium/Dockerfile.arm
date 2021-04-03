@@ -4,11 +4,10 @@ FROM $BASE_IMAGE
 #
 # install neko chromium
 RUN set -eux; apt-get update; \
-    apt-get install -y --no-install-recommends unzip chromium-browser openbox libwidevinecdm0; \
+    apt-get install -y --no-install-recommends chromium-browser openbox libwidevinecdm0; \
     ln -s /usr/bin/chromium-browser /usr/bin/chromium; \
     #
     # clean up
-    apt-get --purge autoremove -y unzip; \
     apt-get clean -y; \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/*
 
