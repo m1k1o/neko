@@ -52,10 +52,10 @@ build_arm() {
   if [ "$1" = "base" ]
   then
     # build ARM base
-    docker build -t "${BUILD_IMAGE}:arm-base" -f arm-base/Dockerfile "${BASE}"
+    docker build -t "${BUILD_IMAGE}:arm-base" -f base/Dockerfile.arm "${BASE}"
   else
     # buld ARM image
-    docker build -t "${BUILD_IMAGE}:arm-$1" --build-arg="BASE_IMAGE=${BUILD_IMAGE}:arm-base" -f "$1/DockerfileARM" "$1/"
+    docker build -t "${BUILD_IMAGE}:arm-$1" --build-arg="BASE_IMAGE=${BUILD_IMAGE}:arm-base" -f "$1/Dockerfile.arm" "$1/"
   fi
 }
 
