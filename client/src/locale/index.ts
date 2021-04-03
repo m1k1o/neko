@@ -7,5 +7,5 @@ export const messages = {
   en,
   es,
   sk,
-  sv
+  sv,
 }
