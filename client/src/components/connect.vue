@@ -157,14 +157,23 @@
     private password: string = ''
 
     mounted() {
+      // auto-password fill
       let password = this.$accessor.password
       if (this.autoPassword !== null) {
         this.removeUrlParam('pwd')
         password = this.autoPassword
       }
 
-      if (this.$accessor.displayname !== '' && password !== '') {
-        this.$accessor.login({ displayname: this.$accessor.displayname, password })
+      // auto-user fill
+      let displayname = this.$accessor.displayname
+      const usr = new URL(location.href).searchParams.get('usr')
+      if (usr) {
+        this.removeUrlParam('usr')
+        displayname = this.$accessor.displayname || usr
+      }
+
+      if (displayname !== '' && password !== '') {
+        this.$accessor.login({ displayname, password })
         this.autoPassword = null
       }
     }

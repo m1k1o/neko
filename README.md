@@ -38,6 +38,7 @@ For n.eko room management software visit https://github.com/m1k1o/neko-rooms.
 - Added `m1k1o/neko:xfce` tag, as an non video related showcase (by @mbattista).
 - Added ARM-based images, for Raspberry Pi support (by @mbattista).
 - Added simple language picker.
+- Added `?usr=<display-name>` that will prefill username. This allows creating auto-join links.
 
 ### Bugs
 - Fixed minor gst pipeline bug.
