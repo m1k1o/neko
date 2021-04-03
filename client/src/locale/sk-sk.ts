@@ -1,7 +1,7 @@
 export const logout = 'odhlásiť sa'
 export const unsupported = 'tento prehliadač nepodporuje webrtc'
-export const admin_loggedin = 'Ste prihlásení ako administrátor'
-export const you = 'Vy'// TODO: Incorrect in some translations!
+export const admin_loggedin = 'Ste prihlásení/á ako administrátor'
+// export const you = '' // Incorrect in some translations! Cannot be used!
 export const send_a_message = 'Odoslať správu'
 
 export const side = {
@@ -10,34 +10,36 @@ export const side = {
 }
 
 export const connect = {
-  title: 'Prosím prihláste sa',
-  displayname: 'Zobrazované meno',
+  login_title: 'Prihláste sa',
+  invitation_title: 'Boli ste pozvaný/á do miestnosti',
+  displayname: 'Vaše meno',
   password: 'Heslo',
   connect: 'Pripojiť sa',
 }
 
 export const context = {
   ignore: 'Ignorovať',
-  unignore: 'Neignorovať',
-  mute: 'Stlmiť zvuk',
-  unmute: 'Zrušiť stlmenie zvuk',
-  release: 'Vynutiť uvoľnenie ovládania',
+  unignore: 'Zrušiť ignorovanie',
+  mute: 'Zakázať chat',
+  unmute: 'Povoliť chat',
+  release: 'Zrušiť ovládanie',
   take: 'Prevziať ovládanie',
   give: 'Ponúknuť ovládanie',
   kick: 'Kick',
   ban: 'Ban IP',
   confirm: {
     kick_title: 'Kick {name}?',
-    kick_text: 'Ste si istý, že chcete vykopnúť používateľa {name}?',
+    kick_text: 'Ste si istý/á, že chcete vykopnúť používateľa {name}?',
     ban_title: 'Ban {name}?',
-    ban_text: 'Ste si istý, že chcete zablokovať používateľa {name}? Pre odblokovanie budete musieť reštartovať server.',
-    mute_title: 'Stíšiť používateľa {name}?',
-    mute_text: 'Ste si istý, že chcete stíšiť {name}?',
-    unmute_title: 'Obnoviť zvuk používateľa {name}?',
-    unmute_text: 'Ste si istý, že chcete obnoviť zvuk používateľa {name}?',
+    ban_text:
+      'Ste si istý/á, že chcete zablokovať používateľa {name}? Pre odblokovanie budete musieť reštartovať server.',
+    mute_title: 'Zakázať chat pre používateľa {name}?',
+    mute_text: 'Ste si istý/á, že chcete zakázať chat pre používateľa {name}?',
+    unmute_title: 'Povoliť chat pre používateľa {name}?',
+    unmute_text: 'Ste si istý/á, že chcete povoliť chat pre používateľa {name}?',
     button_yes: 'Áno',
     button_cancel: 'Zrušiť',
-  }
+  },
 }
 
 export const controls = {
@@ -48,10 +50,10 @@ export const controls = {
 }
 
 export const room = {
-  lock: 'Zamknúť miestnosť',
-  unlock: 'Odomknúť miestnosť',
-  locked: 'Miestnosť zamknutá',
-  unlocked: 'Miestnosť odomknutá',
+  lock: 'Zamknúť miestnosť (pre používateľov)',
+  unlock: 'Odomknúť miestnosť (pre používateľov)',
+  locked: 'Miestnosť je zamknutá (pre používateľov)',
+  unlocked: 'Miestnosť odomknutá (pre používateľov)',
 }
 
 export const setting = {
@@ -60,12 +62,15 @@ export const setting = {
   autoplay: 'Automatické prehrávanie videa',
   ignore_emotes: 'Ignorovať smajlíky',
   chat_sound: 'Prehrávať zvuky chatu',
+  keyboard_layout: 'Rozloženie klávesnice',
+  broadcast_is_active: 'Zapnúť vysielanie',
+  broadcast_url: 'RTMP adresa',
 }
 
 export const connection = {
-  logged_out: 'Boli ste odhlásený',
-  connected: 'Úspešne pripojený',
-  disconnected: 'Boli ste odpojený',
+  logged_out: 'Boli ste odhlásený/á',
+  connected: 'Úspešne pripojený/á',
+  disconnected: 'Boli ste odpojený/á',
   button_confirm: 'Ok',
 }
 
@@ -85,8 +90,8 @@ export const notifications = {
   resolution: 'zmenené rozlíšenie na {width}x{height}@{rate}',
   banned: '{name} dostal/a BAN',
   kicked: '{name} bol/a vykopnutý/a',
-  muted: '{name} bol/a stlmený/á',
-  unmuted: '{name} už nie je viac stlmený/á',
+  muted: 'zakázal chat používateľovi {name}',
+  unmuted: 'povolil chat používateľovi {name}',
   room_locked: 'miestnosť bola zamknutá',
   room_unlocked: 'miestnosť bola odomknutá',
 }
