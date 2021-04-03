@@ -18,4 +18,4 @@ fi
 docker run --rm -it \
   -v "${PWD}/../server:/src" \
   --entrypoint="go" \
-  neko_dev_server build -o "bin/neko" -i "cmd/neko/main.go"
+  neko_dev_server build -o "bin/neko" "cmd/neko/main.go"
