@@ -5,8 +5,10 @@ const (
 )
 
 const (
-	SIGNAL_ANSWER  = "signal/answer"
-	SIGNAL_PROVIDE = "signal/provide"
+	SIGNAL_ANSWER    = "signal/answer"
+	SIGNAL_OFFER     = "signal/offer"
+	SIGNAL_PROVIDE   = "signal/provide"
+	SIGNAL_CANDIDATE = "signal/candidate"
 )
 
 const (
@@ -34,6 +36,12 @@ const (
 	SCREEN_CONFIGURATIONS = "screen/configurations"
 	SCREEN_RESOLUTION     = "screen/resolution"
 	SCREEN_SET            = "screen/set"
+)
+
+const (
+	BORADCAST_STATUS  = "broadcast/status"
+	BORADCAST_CREATE  = "broadcast/create"
+	BORADCAST_DESTROY = "broadcast/destroy"
 )
 
 const (

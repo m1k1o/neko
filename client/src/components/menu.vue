@@ -13,6 +13,13 @@
         v-if="admin"
       />
     </li>
+    <li>
+      <select v-model="$i18n.locale">
+        <option v-for="(lang, i) in langs" :key="`Lang${i}`" :value="lang">
+          {{ lang }}
+        </option>
+      </select>
+    </li>
   </ul>
 </template>
 
@@ -28,15 +35,42 @@
       }
     }
   }
+
+  select {
+    appearance: none;
+    background-color: $background-tertiary;
+    border: 1px solid $background-primary;
+    color: white;
+    cursor: pointer;
+    border-radius: 5px;
+    height: 24px;
+    vertical-align: text-bottom;
+    display: inline-block;
+
+    option {
+      font-weight: normal;
+      color: $text-normal;
+      background-color: $background-tertiary;
+    }
+
+    &:hover {
+      border: 1px solid $background-primary;
+    }
+  }
 </style>
 
 <script lang="ts">
   import { Component, Ref, Watch, Vue } from 'vue-property-decorator'
+  import { messages } from '~/locale'
 
   @Component({ name: 'neko-menu' })
   export default class extends Vue {
     get admin() {
       return this.$accessor.user.admin
+    }
+
+    get langs() {
+      return Object.keys(messages)
     }
 
     about() {

@@ -2,7 +2,7 @@
   <div ref="component" class="video">
     <div ref="player" class="player">
       <div ref="container" class="player-container">
-        <video ref="video" />
+        <video ref="video" playsinline />
         <div class="emotes">
           <template v-for="(emote, index) in emotes">
             <neko-emote :id="index" :key="index" />
@@ -26,11 +26,31 @@
         </div>
         <div ref="aspect" class="player-aspect" />
       </div>
-      <ul v-if="!fullscreen" class="video-menu">
+      <ul v-if="!fullscreen" class="video-menu top">
         <li><i @click.stop.prevent="requestFullscreen" class="fas fa-expand"></i></li>
         <li v-if="admin"><i @click.stop.prevent="onResolution" class="fas fa-desktop"></i></li>
+        <li class="request-control">
+          <i
+            :class="[hosted && !hosting ? 'disabled' : '', !hosted && !hosting ? 'faded' : '', 'fas', 'fa-keyboard']"
+            @click.stop.prevent="toggleControl"
+          />
+        </li>
       </ul>
-      <neko-resolution ref="resolution" />
+      <ul v-if="!fullscreen" class="video-menu bottom">
+        <li v-if="hosting && (!clipboard_read_available || !clipboard_write_available)">
+          <i @click.stop.prevent="onClipboard" class="fas fa-clipboard"></i>
+        </li>
+        <li>
+          <i
+            v-if="pip_available"
+            @click.stop.prevent="requestPictureInPicture"
+            v-tooltip="{ content: 'Picture-in-Picture', placement: 'left', offset: 5, boundariesElement: 'body' }"
+            class="fas fa-external-link-alt"
+          />
+        </li>
+      </ul>
+      <neko-resolution ref="resolution" v-if="admin" />
+      <neko-clipboard ref="clipboard" v-if="hosting && (!clipboard_read_available || !clipboard_write_available)" />
     </div>
   </div>
 </template>
@@ -49,7 +69,14 @@
       .video-menu {
         position: absolute;
         right: 20px;
-        top: 15px;
+
+        &.top {
+          top: 15px;
+        }
+
+        &.bottom {
+          bottom: 15px;
+        }
 
         li {
           margin: 0 0 10px 0;
@@ -64,6 +91,28 @@
             text-align: center;
             color: rgba($color: #fff, $alpha: 0.6);
             cursor: pointer;
+
+            &.faded {
+              color: rgba($color: $text-normal, $alpha: 0.4);
+            }
+
+            &.disabled {
+              color: rgba($color: $style-error, $alpha: 0.4);
+            }
+          }
+
+          &.request-control {
+            display: none;
+          }
+
+          @media (max-width: 768px) {
+            &.request-control {
+              display: inline-block;
+            }
+          }
+
+          &:last-child {
+            margin: 0;
           }
         }
       }
@@ -139,7 +188,9 @@
 
   import Emote from './emote.vue'
   import Resolution from './resolution.vue'
+  import Clipboard from './clipboard.vue'
 
+  // @ts-ignore
   import GuacamoleKeyboard from '~/utils/guacamole-keyboard.ts'
 
   @Component({
@@ -147,6 +198,7 @@
     components: {
       'neko-emote': Emote,
       'neko-resolution': Resolution,
+      'neko-clipboard': Clipboard,
     },
   })
   export default class extends Vue {
@@ -157,6 +209,7 @@
     @Ref('player') readonly _player!: HTMLElement
     @Ref('video') readonly _video!: HTMLVideoElement
     @Ref('resolution') readonly _resolution!: any
+    @Ref('clipboard') readonly _clipboard!: any
 
     private keyboard = GuacamoleKeyboard()
     private observer = new ResizeObserver(this.onResise.bind(this))
@@ -177,6 +230,10 @@
 
     get hosting() {
       return this.$accessor.remote.hosting
+    }
+
+    get hosted() {
+      return this.$accessor.remote.hosted
     }
 
     get volume() {
@@ -217,6 +274,19 @@
 
     get scroll_invert() {
       return this.$accessor.settings.scroll_invert
+    }
+
+    get pip_available() {
+      //@ts-ignore
+      return typeof document.createElement('video').requestPictureInPicture === 'function'
+    }
+
+    get clipboard_read_available() {
+      return 'clipboard' in navigator && typeof navigator.clipboard.readText === 'function'
+    }
+
+    get clipboard_write_available() {
+      return 'clipboard' in navigator && typeof navigator.clipboard.writeText === 'function'
     }
 
     get clipboard() {
@@ -292,7 +362,7 @@
 
     @Watch('clipboard')
     onClipboardChanged(clipboard: string) {
-      if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+      if (this.clipboard_write_available) {
         navigator.clipboard.writeText(clipboard).catch(console.error)
       }
     }
@@ -328,13 +398,12 @@
         this.$accessor.video.setPlayable(false)
       })
 
-      this._video.addEventListener('error', event => {
+      this._video.addEventListener('error', (event) => {
         this.$log.error(event.error)
         this.$accessor.video.setPlayable(false)
       })
 
       document.addEventListener('focusin', this.onFocus.bind(this))
-      document.addEventListener('focusout', this.onBlur.bind(this))
 
       /* Initialize Guacamole Keyboard */
       this.keyboard.onkeydown = (key: number) => {
@@ -359,7 +428,6 @@
       this.observer.disconnect()
       this.$accessor.video.setPlayable(false)
       document.removeEventListener('focusin', this.onFocus.bind(this))
-      document.removeEventListener('focusout', this.onBlur.bind(this))
       /* Guacamole Keyboard does not provide destroy functions */
     }
 
@@ -374,7 +442,7 @@
           .then(() => {
             this.onResise()
           })
-          .catch(err => this.$log.error)
+          .catch((err) => this.$log.error)
       } catch (err) {
         this.$log.error(err)
       }
@@ -400,8 +468,37 @@
       }
     }
 
+    toggleControl() {
+      if (!this.playable) {
+        return
+      }
+
+      this.$accessor.remote.toggle()
+    }
+
     requestFullscreen() {
-      this._player.requestFullscreen()
+      if (typeof this._player.requestFullscreen === 'function') {
+        this._player.requestFullscreen()
+        //@ts-ignore
+      } else if (typeof this._player.webkitRequestFullscreen === 'function') {
+        //@ts-ignore
+        this._player.webkitRequestFullscreen()
+        //@ts-ignore
+      } else if (typeof this._player.webkitEnterFullscreen === 'function') {
+        //@ts-ignore
+        this._player.webkitEnterFullscreen()
+        //@ts-ignore
+      } else if (typeof this._player.msRequestFullScreen === 'function') {
+        //@ts-ignore
+        this._player.msRequestFullScreen()
+      }
+
+      this.onResise()
+    }
+
+    requestPictureInPicture() {
+      //@ts-ignore
+      this._video.requestPictureInPicture()
       this.onResise()
     }
 
@@ -410,10 +507,10 @@
         return
       }
 
-      if (this.hosting && navigator.clipboard && typeof navigator.clipboard.readText === 'function') {
+      if (this.hosting && this.clipboard_read_available) {
         navigator.clipboard
           .readText()
-          .then(text => {
+          .then((text) => {
             if (this.clipboard !== text) {
               this.$accessor.remote.setClipboard(text)
               this.$accessor.remote.sendClipboard(text)
@@ -421,14 +518,6 @@
           })
           .catch(this.$log.error)
       }
-    }
-
-    onBlur() {
-      if (!this.focused || !this.hosting || this.locked) {
-        return
-      }
-
-      this.keyboard.reset()
     }
 
     onMousePos(e: MouseEvent) {
@@ -480,16 +569,34 @@
       if (!this.hosting || this.locked) {
         return
       }
+
       this.onMousePos(e)
     }
 
     onMouseEnter(e: MouseEvent) {
+      if (this.hosting) {
+        this.$accessor.remote.syncKeyboardModifierState({
+          capsLock: e.getModifierState('CapsLock'),
+          numLock: e.getModifierState('NumLock'),
+          scrollLock: e.getModifierState('ScrollLock'),
+        })
+      }
+
       this._overlay.focus()
       this.onFocus()
       this.focused = true
     }
 
     onMouseLeave(e: MouseEvent) {
+      if (this.hosting) {
+        this.$accessor.remote.setKeyboardModifierState({
+          capsLock: e.getModifierState('CapsLock'),
+          numLock: e.getModifierState('NumLock'),
+          scrollLock: e.getModifierState('ScrollLock'),
+        })
+      }
+
+      this.keyboard.reset()
       this.focused = false
     }
 
@@ -511,6 +618,10 @@
 
     onResolution(event: MouseEvent) {
       this._resolution.open(event)
+    }
+
+    onClipboard(event: MouseEvent) {
+      this._clipboard.open(event)
     }
   }
 </script>

@@ -18,19 +18,21 @@ type RemoteManager struct {
 	video     *gst.Pipeline
 	audio     *gst.Pipeline
 	config    *config.Remote
+	broadcast types.BroadcastManager
 	cleanup   *time.Ticker
 	shutdown  chan bool
 	emmiter   events.EventEmmiter
 	streaming bool
 }
 
-func New(config *config.Remote) *RemoteManager {
+func New(config *config.Remote, broadcast types.BroadcastManager) *RemoteManager {
 	return &RemoteManager{
 		logger:    log.With().Str("module", "remote").Logger(),
 		cleanup:   time.NewTicker(1 * time.Second),
 		shutdown:  make(chan bool),
 		emmiter:   events.New(),
 		config:    config,
+		broadcast: broadcast,
 		streaming: false,
 	}
 }
@@ -44,7 +46,16 @@ func (manager *RemoteManager) AudioCodec() string {
 }
 
 func (manager *RemoteManager) Start() {
+	xorg.Display(manager.config.Display)
+
+	if !xorg.ValidScreenSize(manager.config.ScreenWidth, manager.config.ScreenHeight, manager.config.ScreenRate) {
+		manager.logger.Warn().Msgf("invalid screen option %dx%d@%d", manager.config.ScreenWidth, manager.config.ScreenHeight, manager.config.ScreenRate)
+	} else if err := xorg.ChangeScreenSize(manager.config.ScreenWidth, manager.config.ScreenHeight, manager.config.ScreenRate); err != nil {
+		manager.logger.Warn().Err(err).Msg("unable to change screen size")
+	}
+
 	manager.createPipelines()
+	manager.broadcast.Start()
 
 	go func() {
 		defer func() {
@@ -70,6 +81,8 @@ func (manager *RemoteManager) Shutdown() error {
 	manager.logger.Info().Msgf("remote shutting down")
 	manager.video.Stop()
 	manager.audio.Stop()
+	manager.broadcast.Stop()
+
 	manager.cleanup.Stop()
 	manager.shutdown <- true
 	return nil
@@ -88,6 +101,8 @@ func (manager *RemoteManager) OnAudioFrame(listener func(sample types.Sample)) {
 }
 
 func (manager *RemoteManager) StartStream() {
+	manager.createPipelines()
+
 	manager.logger.Info().
 		Str("video_display", manager.config.Display).
 		Str("video_codec", manager.config.VideoCodec).
@@ -98,15 +113,6 @@ func (manager *RemoteManager) StartStream() {
 		Str("screen_resolution", fmt.Sprintf("%dx%d@%d", manager.config.ScreenWidth, manager.config.ScreenHeight, manager.config.ScreenRate)).
 		Msgf("Pipelines starting...")
 
-	xorg.Display(manager.config.Display)
-
-	if !xorg.ValidScreenSize(manager.config.ScreenWidth, manager.config.ScreenHeight, manager.config.ScreenRate) {
-		manager.logger.Warn().Msgf("invalid screen option %dx%d@%d", manager.config.ScreenWidth, manager.config.ScreenHeight, manager.config.ScreenRate)
-	} else if err := xorg.ChangeScreenSize(manager.config.ScreenWidth, manager.config.ScreenHeight, manager.config.ScreenRate); err != nil {
-		manager.logger.Warn().Err(err).Msg("unable to change screen size")
-	}
-
-	manager.createPipelines()
 	manager.video.Start()
 	manager.audio.Start()
 	manager.streaming = true
@@ -124,11 +130,19 @@ func (manager *RemoteManager) Streaming() bool {
 }
 
 func (manager *RemoteManager) createPipelines() {
+	// handle maximum fps
+	rate := manager.config.ScreenRate
+	if manager.config.MaxFPS != 0 && manager.config.MaxFPS < manager.config.ScreenRate {
+		rate = manager.config.MaxFPS
+	}
+
 	var err error
 	manager.video, err = gst.CreateAppPipeline(
 		manager.config.VideoCodec,
 		manager.config.Display,
 		manager.config.VideoParams,
+		rate,
+		manager.config.VideoBitrate,
 	)
 	if err != nil {
 		manager.logger.Panic().Err(err).Msg("unable to create video pipeline")
@@ -138,9 +152,11 @@ func (manager *RemoteManager) createPipelines() {
 		manager.config.AudioCodec,
 		manager.config.Device,
 		manager.config.AudioParams,
+		0, // fps: n/a for audio
+		manager.config.AudioBitrate,
 	)
 	if err != nil {
-		manager.logger.Panic().Err(err).Msg("unable to screate audio pipeline")
+		manager.logger.Panic().Err(err).Msg("unable to create audio pipeline")
 	}
 }
 
@@ -150,8 +166,12 @@ func (manager *RemoteManager) ChangeResolution(width int, height int, rate int) 
 	}
 
 	manager.video.Stop()
+	manager.broadcast.Stop()
+
 	defer func() {
 		manager.video.Start()
+		manager.broadcast.Start()
+
 		manager.logger.Info().Msg("starting video pipeline...")
 	}()
 
@@ -159,17 +179,23 @@ func (manager *RemoteManager) ChangeResolution(width int, height int, rate int) 
 		return err
 	}
 
-	video, err := gst.CreateAppPipeline(
+	// handle maximum fps
+	if manager.config.MaxFPS != 0 && manager.config.MaxFPS < rate {
+		rate = manager.config.MaxFPS
+	}
+
+	var err error
+	manager.video, err = gst.CreateAppPipeline(
 		manager.config.VideoCodec,
 		manager.config.Display,
 		manager.config.VideoParams,
+		rate,
+		manager.config.VideoBitrate,
 	)
-
 	if err != nil {
 		manager.logger.Panic().Err(err).Msg("unable to create new video pipeline")
 	}
 
-	manager.video = video
 	return nil
 }
 
@@ -219,4 +245,8 @@ func (manager *RemoteManager) GetScreenSize() *types.ScreenSize {
 
 func (manager *RemoteManager) SetKeyboardLayout(layout string) {
 	xorg.SetKeyboardLayout(layout)
+}
+
+func (manager *RemoteManager) SetKeyboardModifiers(NumLock int, CapsLock int, ScrollLock int) {
+	xorg.SetKeyboardModifiers(NumLock, CapsLock, ScrollLock)
 }

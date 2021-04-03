@@ -39,15 +39,24 @@
         <span>{{ $t('setting.keyboard_layout') }}</span>
         <label class="select">
           <select v-model="keyboard_layout">
-            <option
-              v-for="(name, code) in keyboard_layouts_list"
-              :key="code"
-              :value="code"
-            >{{ name }}</option>
+            <option v-for="(name, code) in keyboard_layouts_list" :key="code" :value="code">{{ name }}</option>
           </select>
           <span />
         </label>
       </li>
+      <template v-if="admin">
+        <li>
+          <span>{{ $t('setting.broadcast_is_active') }}</span>
+          <label class="switch">
+            <input type="checkbox" v-model="broadcast_is_active" />
+            <span />
+          </label>
+        </li>
+        <li>
+          <span>{{ $t('setting.broadcast_url') }}</span>
+          <input v-model="broadcast_url" :disabled="broadcast_is_active" class="input" />
+        </li>
+      </template>
       <li v-if="connected">
         <button @click.stop.prevent="logout">{{ $t('logout') }}</button>
       </li>
@@ -198,26 +207,63 @@
 
         .select {
           max-width: 120px;
+          text-align: right;
+
+          select:hover {
+            border: 1px solid $background-secondary;
+          }
 
           select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
             display: block;
             width: 100%;
             max-width: 100%;
-            padding: 4px;
+            height: 30px;
+            text-align: right;
+            padding: 0 5px 0 10px;
             margin: 0;
             line-height: 30px;
             font-weight: bold;
-            border: 0;
-            border-radius: 12px;
-
-            color: black;
-            background-color: $style-primary;
+            font-size: 12px;
+            text-overflow: ellipsis;
+            border: 1px solid transparent;
+            border-radius: 5px;
+            color: white;
+            background-color: $background-tertiary;
+            font-weight: lighter;
+            cursor: pointer;
 
             option {
               font-weight: normal;
               color: $text-normal;
               background-color: $background-tertiary;
             }
+          }
+        }
+
+        .input {
+          display: block;
+          height: 30px;
+          text-align: right;
+          padding: 0 10px;
+          margin-left: 10px;
+          line-height: 30px;
+          text-overflow: ellipsis;
+          border: 1px solid transparent;
+          border-radius: 5px;
+          color: white;
+          background-color: $background-tertiary;
+          font-weight: lighter;
+          user-select: auto;
+
+          &::selection {
+            background: $text-normal;
+          }
+
+          &[disabled] {
+            background: none;
           }
         }
       }
@@ -230,6 +276,12 @@
 
   @Component({ name: 'neko-settings' })
   export default class extends Vue {
+    private broadcast_url: string = ''
+
+    get admin() {
+      return this.$accessor.user.admin
+    }
+
     get connected() {
       return this.$accessor.connected
     }
@@ -280,6 +332,27 @@
 
     get keyboard_layout() {
       return this.$accessor.settings.keyboard_layout
+    }
+
+    get broadcast_is_active() {
+      return this.$accessor.settings.broadcast_is_active
+    }
+
+    set broadcast_is_active(value: boolean) {
+      if (value) {
+        this.$accessor.settings.broadcastCreate(this.broadcast_url)
+      } else {
+        this.$accessor.settings.broadcastDestroy()
+      }
+    }
+
+    get broadcast_url_remote() {
+      return this.$accessor.settings.broadcast_url
+    }
+
+    @Watch('broadcast_url_remote', { immediate: true })
+    onBroadcastUrlChange() {
+      this.broadcast_url = this.broadcast_url_remote
     }
 
     set keyboard_layout(value: string) {

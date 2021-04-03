@@ -1,5 +1,6 @@
 import { getterTree, mutationTree, actionTree } from 'typed-vuex'
 import { get, set } from '~/utils/localstorage'
+import { EVENT } from '~/neko/events'
 import { accessor } from '~/store'
 
 export const namespaced = true
@@ -18,6 +19,9 @@ export const state = () => {
     keyboard_layout: get<string>('keyboard_layout', 'us'),
 
     keyboard_layouts_list: {} as KeyboardLayouts,
+
+    broadcast_is_active: false,
+    broadcast_url: '',
   }
 }
 
@@ -57,6 +61,10 @@ export const mutations = mutationTree(state, {
   setKeyboardLayoutsList(state, value: KeyboardLayouts) {
     state.keyboard_layouts_list = value
   },
+  setBroadcastStatus(state, { url, isActive }) {
+    state.broadcast_url = url
+    state.broadcast_is_active = isActive
+  },
 })
 
 export const actions = actionTree(
@@ -64,12 +72,21 @@ export const actions = actionTree(
   {
     initialise() {
       $http
-        .get<KeyboardLayouts>('/keyboard_layouts.json')
+        .get<KeyboardLayouts>('keyboard_layouts.json')
         .then((req) => {
           accessor.settings.setKeyboardLayoutsList(req.data)
-          console.log(req.data)
         })
         .catch(console.error)
+    },
+
+    broadcastStatus({ getters }, { url, isActive }) {
+      accessor.settings.setBroadcastStatus({ url, isActive })
+    },
+    broadcastCreate({ getters }, url: string) {
+      $client.sendMessage(EVENT.BROADCAST.CREATE, { url })
+    },
+    broadcastDestroy({ getters }) {
+      $client.sendMessage(EVENT.BROADCAST.DESTROY)
     },
   },
 )

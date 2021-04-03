@@ -1,0 +1,21 @@
+#!/bin/bash
+
+if [ -f ".env.default" ]
+then
+  export $(cat .env.default | sed 's/#.*//g' | xargs)
+fi
+
+if [ -f ".env" ]
+then
+  export $(cat .env | sed 's/#.*//g' | xargs)
+fi
+
+# use -f to force rebuild
+if [ "$(docker images -q neko_dev_server 2> /dev/null)" == "" ] || [ "$1" == "-f" ]; then
+  docker build -t neko_dev_server -f base/Dockerfile --target server ../
+fi
+
+docker run --rm -it \
+  -v "${PWD}/../server:/src" \
+  --entrypoint="go" \
+  neko_dev_server build -o "bin/neko" "cmd/neko/main.go"

@@ -4,6 +4,7 @@
   #define XDISPLAY_H
 
   #include <X11/Xlib.h>
+  #include <X11/XKBlib.h>
   #include <X11/extensions/Xrandr.h>
   #include <X11/extensions/XTest.h>
   #include <libclipboard.h>
@@ -40,5 +41,6 @@
   void XDisplaySet(char *input);
 
   void SetKeyboardLayout(char *layout);
+  void SetKeyboardModifiers(int num_lock, int caps_lock, int scroll_lock);
 #endif
 

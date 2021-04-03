@@ -20,6 +20,7 @@ func init() {
 		neko.Service.Server,
 		neko.Service.WebRTC,
 		neko.Service.Remote,
+		neko.Service.Broadcast,
 		neko.Service.WebSocket,
 	}
 

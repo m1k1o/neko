@@ -225,6 +225,13 @@ func SetKeyboardLayout(layout string) {
 	C.SetKeyboardLayout(layoutUnsafe)
 }
 
+func SetKeyboardModifiers(num_lock int, caps_lock int, scroll_lock int) {
+	mu.Lock()
+	defer mu.Unlock()
+
+	C.SetKeyboardModifiers(C.int(num_lock), C.int(caps_lock), C.int(scroll_lock))
+}
+
 //export goCreateScreenSize
 func goCreateScreenSize(index C.int, width C.int, height C.int, mwidth C.int, mheight C.int) {
 	ScreenConfigurations[int(index)] = types.ScreenConfiguration{

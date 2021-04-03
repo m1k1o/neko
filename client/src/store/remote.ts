@@ -3,12 +3,17 @@ import { Member } from '~/neko/types'
 import { EVENT } from '~/neko/events'
 import { accessor } from '~/store'
 
+const keyboardModifierState = (capsLock: boolean, numLock: boolean, scrollLock: boolean) =>
+  Number(capsLock) + 2 * Number(numLock) + 4 * Number(scrollLock)
+
 export const namespaced = true
 
 export const state = () => ({
   id: '',
   clipboard: '',
   locked: false,
+
+  keyboardModifierState: -1,
 })
 
 export const getters = getterTree(state, {
@@ -36,6 +41,10 @@ export const mutations = mutationTree(state, {
     state.clipboard = clipboard
   },
 
+  setKeyboardModifierState(state, { capsLock, numLock, scrollLock }) {
+    state.keyboardModifierState = keyboardModifierState(capsLock, numLock, scrollLock)
+  },
+
   setLocked(state, locked: boolean) {
     state.locked = locked
   },
@@ -44,6 +53,7 @@ export const mutations = mutationTree(state, {
     state.id = ''
     state.clipboard = ''
     state.locked = false
+    state.keyboardModifierState = -1
   },
 })
 
@@ -71,7 +81,7 @@ export const actions = actionTree(
     },
 
     request({ getters }) {
-      if (!accessor.connected || !getters.hosting) {
+      if (!accessor.connected || getters.hosting) {
         return
       }
 
@@ -79,7 +89,7 @@ export const actions = actionTree(
     },
 
     release({ getters }) {
-      if (!accessor.connected || getters.hosting) {
+      if (!accessor.connected || !getters.hosting) {
         return
       }
 
@@ -140,6 +150,15 @@ export const actions = actionTree(
       }
 
       $client.sendMessage(EVENT.CONTROL.KEYBOARD, { layout: accessor.settings.keyboard_layout })
-    }
+    },
+
+    syncKeyboardModifierState({ state, getters }, { capsLock, numLock, scrollLock }) {
+      if (state.keyboardModifierState === keyboardModifierState(capsLock, numLock, scrollLock)) {
+        return
+      }
+
+      accessor.remote.setKeyboardModifierState({ capsLock, numLock, scrollLock })
+      $client.sendMessage(EVENT.CONTROL.KEYBOARD, { capsLock, numLock, scrollLock })
+    },
   },
 )

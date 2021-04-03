@@ -10,10 +10,12 @@ export const side = {
 }
 
 export const connect = {
-  title: 'Please Login',
-  displayname: 'Display Name',
+  login_title: 'Please Login',
+  invitation_title: 'You have been invited to this room',
+  displayname: 'Enter your display name',
   password: 'Password',
   connect: 'Connect',
+  error: 'Login error',
 }
 
 export const context = {
@@ -48,10 +50,10 @@ export const controls = {
 }
 
 export const room = {
-  lock: 'Lock Room',
-  unlock: 'Unlock Room',
-  locked: 'Room Locked',
-  unlocked: 'Room Unlocked',
+  lock: 'Lock Room (for users)',
+  unlock: 'Unlock Room (for users)',
+  locked: 'Room Locked (for users)',
+  unlocked: 'Room Unlocked (for users)',
 }
 
 export const setting = {
@@ -60,7 +62,9 @@ export const setting = {
   autoplay: 'Autoplay Video',
   ignore_emotes: 'Ignore Emotes',
   chat_sound: 'Play Chat Sound',
-  keyboard_layout: 'Change Keyboard Layout',
+  keyboard_layout: 'Keyboard Layout',
+  broadcast_is_active: 'Broadcast Enabled',
+  broadcast_url: 'RTMP url',
 }
 
 export const connection = {

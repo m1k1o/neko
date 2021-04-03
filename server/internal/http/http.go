@@ -2,6 +2,7 @@ package http
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -10,7 +11,6 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"n.eko.moe/neko/internal/http/endpoint"
 	"n.eko.moe/neko/internal/http/middleware"
 	"n.eko.moe/neko/internal/types"
 	"n.eko.moe/neko/internal/types/config"
@@ -24,7 +24,7 @@ type Server struct {
 }
 
 func New(conf *config.Server, webSocketHandler types.WebSocketHandler) *Server {
-	logger := log.With().Str("module", "webrtc").Logger()
+	logger := log.With().Str("module", "http").Logger()
 
 	router := chi.NewRouter()
 	// router.Use(middleware.Recoverer) // Recover from panics without crashing server
@@ -35,21 +35,42 @@ func New(conf *config.Server, webSocketHandler types.WebSocketHandler) *Server {
 		webSocketHandler.Upgrade(w, r)
 	})
 
-	fs := http.FileServer(http.Dir(conf.Static))
-	router.Get("/*", func(w http.ResponseWriter, r *http.Request) {
-		if _, err := os.Stat(conf.Static + r.RequestURI); os.IsNotExist(err) {
-			http.StripPrefix(r.RequestURI, fs).ServeHTTP(w, r)
-		} else {
-			fs.ServeHTTP(w, r)
+	router.Get("/stats", func(w http.ResponseWriter, r *http.Request) {
+		password := r.URL.Query().Get("pwd")
+		isAdmin, err := webSocketHandler.IsAdmin(password)
+		if err != nil {
+			w.WriteHeader(http.StatusForbidden)
+			fmt.Fprint(w, err)
+			return
+		}
+
+		if !isAdmin {
+			w.WriteHeader(http.StatusUnauthorized)
+			fmt.Fprint(w, "bad authorization")
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+
+		stats := webSocketHandler.Stats()
+		if err := json.NewEncoder(w).Encode(stats); err != nil {
+			logger.Warn().Err(err).Msg("failed writing json error response")
 		}
 	})
 
-	router.NotFound(endpoint.Handle(func(w http.ResponseWriter, r *http.Request) error {
-		return &endpoint.HandlerError{
-			Status:  http.StatusNotFound,
-			Message: fmt.Sprintf("file '%s' is not found", r.RequestURI),
+	router.Get("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("true"))
+	})
+
+	fs := http.FileServer(http.Dir(conf.Static))
+	router.Get("/*", func(w http.ResponseWriter, r *http.Request) {
+		if _, err := os.Stat(conf.Static + r.URL.Path); !os.IsNotExist(err) {
+			fs.ServeHTTP(w, r)
+		} else {
+			w.WriteHeader(http.StatusNotFound)
+			fmt.Fprint(w, "404 page not found")
 		}
-	}))
+	})
 
 	server := &http.Server{
 		Addr:    conf.Bind,

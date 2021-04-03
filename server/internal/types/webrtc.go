@@ -1,8 +1,13 @@
 package types
 
+import (
+	"time"
+)
+
 type Sample struct {
-	Data    []byte
-	Samples uint32
+	Data       []byte
+	Timestamp  time.Time
+	Duration   time.Duration
 }
 
 type WebRTCManager interface {

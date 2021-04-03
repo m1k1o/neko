@@ -84,6 +84,10 @@ void gstreamer_send_start_pipeline(GstElement *pipeline, int pipelineId) {
   gst_element_set_state(pipeline, GST_STATE_PLAYING);
 }
 
+void gstreamer_send_play_pipeline(GstElement *pipeline) {
+  gst_element_set_state(pipeline, GST_STATE_PLAYING);
+}
+
 void gstreamer_send_stop_pipeline(GstElement *pipeline) {
   gst_element_set_state(pipeline, GST_STATE_NULL);
 }

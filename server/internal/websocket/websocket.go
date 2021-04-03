@@ -3,6 +3,7 @@ package websocket
 import (
 	"fmt"
 	"net/http"
+	"sync/atomic"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -16,27 +17,29 @@ import (
 	"n.eko.moe/neko/internal/utils"
 )
 
-func New(sessions types.SessionManager, remote types.RemoteManager, webrtc types.WebRTCManager, conf *config.WebSocket) *WebSocketHandler {
+func New(sessions types.SessionManager, remote types.RemoteManager, broadcast types.BroadcastManager, webrtc types.WebRTCManager, conf *config.WebSocket) *WebSocketHandler {
 	logger := log.With().Str("module", "websocket").Logger()
 
 	return &WebSocketHandler{
-		logger:   logger,
-		conf:     conf,
-		sessions: sessions,
-		remote:   remote,
-		upgrader: websocket.Upgrader{
+		logger:    logger,
+		conf:      conf,
+		sessions:  sessions,
+		remote:    remote,
+		upgrader:  websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool {
 				return true
 			},
 		},
 		handler: &MessageHandler{
-			logger:   logger.With().Str("subsystem", "handler").Logger(),
-			remote:   remote,
-			sessions: sessions,
-			webrtc:   webrtc,
-			banned:   make(map[string]bool),
-			locked:   false,
+			logger:    logger.With().Str("subsystem", "handler").Logger(),
+			remote:    remote,
+			broadcast: broadcast,
+			sessions:  sessions,
+			webrtc:    webrtc,
+			banned:    make(map[string]bool),
+			locked:    false,
 		},
+		conns: 0,
 	}
 }
 
@@ -44,13 +47,14 @@ func New(sessions types.SessionManager, remote types.RemoteManager, webrtc types
 const pingPeriod = 60 * time.Second
 
 type WebSocketHandler struct {
-	logger   zerolog.Logger
-	upgrader websocket.Upgrader
-	sessions types.SessionManager
-	remote   types.RemoteManager
-	conf     *config.WebSocket
-	handler  *MessageHandler
-	shutdown chan bool
+	logger    zerolog.Logger
+	upgrader  websocket.Upgrader
+	sessions  types.SessionManager
+	remote    types.RemoteManager
+	conf      *config.WebSocket
+	handler   *MessageHandler
+	conns     uint32
+	shutdown  chan bool
 }
 
 func (ws *WebSocketHandler) Start() error {
@@ -149,7 +153,7 @@ func (ws *WebSocketHandler) Upgrade(w http.ResponseWriter, r *http.Request) erro
 		connection: connection,
 	}
 
-	ok, reason, err := ws.handler.Connected(id, socket)
+	ok, reason, err := ws.handler.Connected(admin, socket)
 	if err != nil {
 		ws.logger.Error().Err(err).Msg("connection failed")
 		return err
@@ -178,16 +182,46 @@ func (ws *WebSocketHandler) Upgrade(w http.ResponseWriter, r *http.Request) erro
 		Str("address", connection.RemoteAddr().String()).
 		Msg("new connection created")
 
+	atomic.AddUint32(&ws.conns, uint32(1))
+
 	defer func() {
 		ws.logger.
 			Debug().
 			Str("session", id).
 			Str("address", connection.RemoteAddr().String()).
 			Msg("session ended")
+
+		atomic.AddUint32(&ws.conns, ^uint32(0))
 	}()
 
 	ws.handle(connection, id)
 	return nil
+}
+
+func (ws *WebSocketHandler) Stats() types.Stats {
+	host := ""
+	session, ok := ws.sessions.GetHost()
+	if ok {
+		host = session.ID()
+	}
+
+	return types.Stats{
+		Connections: atomic.LoadUint32(&ws.conns),
+		Host:        host,
+		Members:     ws.sessions.Members(),
+	}
+}
+
+func (ws *WebSocketHandler) IsAdmin(password string) (bool, error) {
+	if password == ws.conf.AdminPassword {
+		return true, nil
+	}
+
+	if password == ws.conf.Password {
+		return false, nil
+	}
+
+	return false, fmt.Errorf("invalid password")
 }
 
 func (ws *WebSocketHandler) authenticate(r *http.Request) (string, string, bool, error) {
@@ -207,15 +241,8 @@ func (ws *WebSocketHandler) authenticate(r *http.Request) (string, string, bool,
 		return "", ip, false, fmt.Errorf("no password provided")
 	}
 
-	if passwords[0] == ws.conf.AdminPassword {
-		return id, ip, true, nil
-	}
-
-	if passwords[0] == ws.conf.Password {
-		return id, ip, false, nil
-	}
-
-	return "", ip, false, fmt.Errorf("invalid password: %s", passwords[0])
+	isAdmin, err := ws.IsAdmin(passwords[0])
+	return id, ip, isAdmin, err
 }
 
 func (ws *WebSocketHandler) handle(connection *websocket.Conn, id string) {

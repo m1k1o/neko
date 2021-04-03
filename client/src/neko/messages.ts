@@ -15,6 +15,7 @@ export type WebSocketMessages =
   | WebSocketMessage
   | SignalProvideMessage
   | SignalAnswerMessage
+  | SignalCandidateMessage
   | MemberListMessage
   | MemberConnectMessage
   | MemberDisconnectMessage
@@ -26,6 +27,7 @@ export type WebSocketMessages =
 export type WebSocketPayloads =
   | SignalProvidePayload
   | SignalAnswerPayload
+  | SignalCandidatePayload
   | MemberListPayload
   | Member
   | ControlPayload
@@ -37,6 +39,8 @@ export type WebSocketPayloads =
   | ScreenResolutionPayload
   | ScreenConfigurationsPayload
   | AdminPayload
+  | BroadcastStatusPayload
+  | BroadcastCreatePayload
 
 export interface WebSocketMessage {
   event: WebSocketEvents | string
@@ -74,6 +78,14 @@ export interface SignalAnswerMessage extends WebSocketMessage, SignalAnswerPaylo
 export interface SignalAnswerPayload {
   sdp: string
   displayname: string
+}
+
+// signal/candidate
+export interface SignalCandidateMessage extends WebSocketMessage, SignalCandidatePayload {
+  event: typeof EVENT.SIGNAL.CANDIDATE
+}
+export interface SignalCandidatePayload {
+  data: string
 }
 
 /*
@@ -122,7 +134,10 @@ export interface ControlClipboardPayload {
 }
 
 export interface ControlKeyboardPayload {
-  layout: string
+  layout?: string
+  capsLock?: boolean
+  numLock?: boolean
+  scrollLock?: boolean
 }
 
 /*
@@ -172,6 +187,18 @@ export interface ScreenConfigurationsMessage extends WebSocketMessage, ScreenCon
 
 export interface ScreenConfigurationsPayload {
   configurations: ScreenConfigurations
+}
+
+/*
+  BROADCAST PAYLOADS
+*/
+export interface BroadcastCreatePayload {
+  url:   string
+}
+
+export interface BroadcastStatusPayload {
+  url:      string
+  isActive: boolean
 }
 
 /*
