@@ -43,7 +43,7 @@ build() {
     # build base
     docker build -t "${BUILD_IMAGE}:base" -f base/Dockerfile "${BASE}"
   else
-    # buld image
+    # build image
     docker build -t "${BUILD_IMAGE}:$1" --build-arg="BASE_IMAGE=${BUILD_IMAGE}:base" -f "$1/Dockerfile" "$1/"
   fi
 }
@@ -52,9 +52,13 @@ build_arm() {
   if [ "$1" = "base" ]
   then
     # build ARM base
-    docker build -t "${BUILD_IMAGE}:arm-base" -f arm-base/Dockerfile "${BASE}"
+    docker build -t "${BUILD_IMAGE}:arm-base" -f base/Dockerfile.arm "${BASE}"
+  elif [ -f "$1/Dockerfile.arm" ]
+  then
+    # build dedicated ARM image
+    docker build -t "${BUILD_IMAGE}:arm-$1" --build-arg="BASE_IMAGE=${BUILD_IMAGE}:arm-base" -f "$1/Dockerfile.arm" "$1/"
   else
-    # buld ARM image
+    # try to build ARM image with common Dockerfile
     docker build -t "${BUILD_IMAGE}:arm-$1" --build-arg="BASE_IMAGE=${BUILD_IMAGE}:arm-base" -f "$1/Dockerfile" "$1/"
   fi
 }
