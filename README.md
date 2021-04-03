@@ -63,6 +63,10 @@ For n.eko room management software visit https://github.com/m1k1o/neko-rooms.
 - Added `m1k1o/neko:vncviewer` tag, use `NEKO_VNC_URL` to specify VNC target and use n.eko as a bridge.
 - Abiltiy to include neko as a component in another Vue.Js project (by @gbrian).
 - Added HEALTHCHECK to Dockerfile.
+- Arguments in broadcast pipeline are optional, not positional and can be repeated `{url} {device} {display}`.
+
+### Roadmap & TODOs
+- Catch errors from gst pipeline, tell user if broadcast failed.
 
 # Getting started & FAQ
 

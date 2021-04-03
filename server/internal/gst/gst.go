@@ -9,6 +9,7 @@ package gst
 import "C"
 import (
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 	"unsafe"
@@ -66,7 +67,12 @@ func CreateRTMPPipeline(pipelineDevice string, pipelineDisplay string, pipelineS
 
 	var pipelineStr string
 	if pipelineSrc != "" {
-		pipelineStr = fmt.Sprintf(pipelineSrc, pipelineRTMP, pipelineDevice, pipelineDisplay)
+		// replace RTMP url
+		pipelineStr = strings.Replace(pipelineSrc, "{url}", pipelineRTMP, -1)
+		// replace audio device
+		pipelineStr = strings.Replace(pipelineStr, "{device}", pipelineDevice, -1)
+		// replace display
+		pipelineStr = strings.Replace(pipelineStr, "{display}", pipelineDisplay, -1)
 	} else {
 		pipelineStr = fmt.Sprintf("flvmux name=mux ! rtmpsink location='%s live=1' %s audio/x-raw,channels=2 ! audioconvert ! voaacenc ! mux. %s x264enc bframes=0 key-int-max=60 byte-stream=true tune=zerolatency speed-preset=veryfast ! mux.", pipelineRTMP, audio, video)
 	}

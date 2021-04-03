@@ -10,7 +10,7 @@ type Broadcast struct {
 }
 
 func (Broadcast) Init(cmd *cobra.Command) error {
-	cmd.PersistentFlags().String("broadcast_pipeline", "", "audio codec parameters to use for broadcasting")
+	cmd.PersistentFlags().String("broadcast_pipeline", "", "custom gst pipeline used for broadcasting, strings {url} {device} {display} will be replaced")
 	if err := viper.BindPFlag("broadcast_pipeline", cmd.PersistentFlags().Lookup("broadcast_pipeline")); err != nil {
 		return err
 	}
