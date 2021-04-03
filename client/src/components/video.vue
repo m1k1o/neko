@@ -26,7 +26,7 @@
         </div>
         <div ref="aspect" class="player-aspect" />
       </div>
-      <ul v-if="!fullscreen" class="video-menu top">
+      <ul v-if="!fullscreen && !hideControls" class="video-menu top">
         <li><i @click.stop.prevent="requestFullscreen" class="fas fa-expand"></i></li>
         <li v-if="admin"><i @click.stop.prevent="onResolution" class="fas fa-desktop"></i></li>
         <li class="request-control">
@@ -36,7 +36,7 @@
           />
         </li>
       </ul>
-      <ul v-if="!fullscreen" class="video-menu bottom">
+      <ul v-if="!fullscreen && !hideControls" class="video-menu bottom">
         <li v-if="hosting && (!clipboard_read_available || !clipboard_write_available)">
           <i @click.stop.prevent="onClipboard" class="fas fa-clipboard"></i>
         </li>
@@ -183,7 +183,7 @@
 </style>
 
 <script lang="ts">
-  import { Component, Ref, Watch, Vue } from 'vue-property-decorator'
+  import { Component, Ref, Watch, Vue, Prop } from 'vue-property-decorator'
   import ResizeObserver from 'resize-observer-polyfill'
 
   import Emote from './emote.vue'
@@ -210,6 +210,8 @@
     @Ref('video') readonly _video!: HTMLVideoElement
     @Ref('resolution') readonly _resolution!: any
     @Ref('clipboard') readonly _clipboard!: any
+
+    @Prop(Boolean) readonly hideControls = false
 
     private keyboard = GuacamoleKeyboard()
     private observer = new ResizeObserver(this.onResise.bind(this))

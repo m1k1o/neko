@@ -5,13 +5,13 @@
     </template>
     <template v-else>
       <main class="neko-main">
-        <div class="header-container">
+        <div v-if="!hideControls" class="header-container">
           <neko-header />
         </div>
         <div class="video-container">
-          <neko-video ref="video" />
+          <neko-video ref="video" :hideControls="hideControls" />
         </div>
-        <div class="room-container">
+        <div v-if="!hideControls" class="room-container">
           <neko-members />
           <div class="room-menu">
             <div class="settings">
@@ -26,10 +26,16 @@
           </div>
         </div>
       </main>
-      <neko-side v-if="side" />
+      <neko-side v-if="!hideControls && side" />
       <neko-connect v-if="!connected" />
       <neko-about v-if="about" />
-      <notifications group="neko" position="top left" :ignoreDuplicates="true" style="top: 50px;pointer-events: none" />
+      <notifications
+        v-if="!hideControls"
+        group="neko"
+        position="top left"
+        style="top: 50px; pointer-events: none"
+        :ignoreDuplicates="true"
+      />
     </template>
   </div>
 </template>
@@ -137,7 +143,7 @@
 </style>
 
 <script lang="ts">
-  import { Vue, Component, Ref } from 'vue-property-decorator'
+  import { Vue, Component, Ref, Watch } from 'vue-property-decorator'
 
   import Connect from '~/components/connect.vue'
   import Video from '~/components/video.vue'
@@ -167,6 +173,16 @@
   })
   export default class extends Vue {
     @Ref('video') video!: Video
+
+    get hideControls() {
+      return !!new URL(location.href).searchParams.get('cast')
+    }
+
+    @Watch('hideControls', { immediate: true })
+    onHideControls() {
+      this.$accessor.video.setMuted(false)
+      this.$accessor.settings.setSound(false)
+    }
 
     get about() {
       return this.$accessor.client.about

@@ -39,6 +39,7 @@ For n.eko room management software visit https://github.com/m1k1o/neko-rooms.
 - Added ARM-based images, for Raspberry Pi support (by @mbattista).
 - Added simple language picker.
 - Added `?usr=<display-name>` that will prefill username. This allows creating auto-join links.
+- Added `?cast=1` that will hide all control and show only video.
 
 ### Bugs
 - Fixed minor gst pipeline bug.
