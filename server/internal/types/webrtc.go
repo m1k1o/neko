@@ -2,6 +2,8 @@ package types
 
 import (
 	"time"
+
+	"github.com/pion/webrtc/v3"
 )
 
 type Sample struct {
@@ -13,7 +15,7 @@ type Sample struct {
 type WebRTCManager interface {
 	Start()
 	Shutdown() error
-	CreatePeer(id string, session Session) (string, bool, []string, error)
+	CreatePeer(id string, session Session) (string, bool, []webrtc.ICEServer, error)
 }
 
 type Peer interface {

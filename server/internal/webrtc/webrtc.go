@@ -63,7 +63,7 @@ func (manager *WebRTCManager) Start() {
 
 	manager.logger.Info().
 		Str("ice_lite", fmt.Sprintf("%t", manager.config.ICELite)).
-		Str("ice_servers", strings.Join(manager.config.ICEServers, ",")).
+		Str("ice_servers", fmt.Sprintf("%+v", manager.config.ICEServers)).
 		Str("ephemeral_port_range", fmt.Sprintf("%d-%d", manager.config.EphemeralMin, manager.config.EphemeralMax)).
 		Str("nat_ips", strings.Join(manager.config.NAT1To1IPs, ",")).
 		Msgf("webrtc starting")
@@ -74,13 +74,9 @@ func (manager *WebRTCManager) Shutdown() error {
 	return nil
 }
 
-func (manager *WebRTCManager) CreatePeer(id string, session types.Session) (string, bool, []string, error) {
+func (manager *WebRTCManager) CreatePeer(id string, session types.Session) (string, bool, []webrtc.ICEServer, error) {
 	configuration := &webrtc.Configuration{
-		ICEServers: []webrtc.ICEServer{
-			{
-				URLs: manager.config.ICEServers,
-			},
-		},
+		ICEServers: manager.config.ICEServers,
 		SDPSemantics: webrtc.SDPSemanticsUnifiedPlanWithFallback,
 	}
 

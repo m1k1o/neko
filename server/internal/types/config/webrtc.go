@@ -3,15 +3,18 @@ package config
 import (
 	"strconv"
 	"strings"
+	"encoding/json"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"n.eko.moe/neko/internal/utils"
+
+	"github.com/pion/webrtc/v3"
 )
 
 type WebRTC struct {
 	ICELite      bool
-	ICEServers   []string
+	ICEServers   []webrtc.ICEServer
 	EphemeralMin uint16
 	EphemeralMax uint16
 	NAT1To1IPs   []string
@@ -38,12 +41,24 @@ func (WebRTC) Init(cmd *cobra.Command) error {
 		return err
 	}
 
+	cmd.PersistentFlags().String("iceservers", "", "describes a single STUN and TURN server that can be used by the ICEAgent to establish a connection with a peer")
+        if err := viper.BindPFlag("iceservers", cmd.PersistentFlags().Lookup("iceservers")); err != nil {
+                return err
+        }
+
+
 	return nil
 }
 
 func (s *WebRTC) Set() {
 	s.ICELite = viper.GetBool("icelite")
-	s.ICEServers = viper.GetStringSlice("iceserver")
+	s.ICEServers = []webrtc.ICEServer{{URLs: viper.GetStringSlice("iceserver")}}
+	if (viper.GetString("iceservers") != "") {
+		errj := json.Unmarshal([]byte(viper.GetString("iceservers")), &s.ICEServers)
+		if (errj != nil) {
+			panic(errj)
+		}
+	}
 	s.NAT1To1IPs = viper.GetStringSlice("nat1to1")
 
 	if len(s.NAT1To1IPs) == 0 {

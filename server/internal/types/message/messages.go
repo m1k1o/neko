@@ -18,7 +18,7 @@ type SignalProvide struct {
 	ID    string   `json:"id"`
 	SDP   string   `json:"sdp"`
 	Lite  bool     `json:"lite"`
-	ICE   []string `json:"ice"`
+	ICE   string   `json:"ice"`
 }
 
 type SignalAnswer struct {
