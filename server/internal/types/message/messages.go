@@ -2,6 +2,8 @@ package message
 
 import (
 	"n.eko.moe/neko/internal/types"
+
+	"github.com/pion/webrtc/v3"
 )
 
 type Message struct {
@@ -18,7 +20,7 @@ type SignalProvide struct {
 	ID    string   `json:"id"`
 	SDP   string   `json:"sdp"`
 	Lite  bool     `json:"lite"`
-	ICE   string   `json:"ice"`
+	ICE   []webrtc.ICEServer   `json:"ice"`
 }
 
 type SignalAnswer struct {

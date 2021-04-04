@@ -1,8 +1,6 @@
 package websocket
 
 import (
-	"encoding/json"
-
 	"n.eko.moe/neko/internal/types"
 	"n.eko.moe/neko/internal/types/event"
 	"n.eko.moe/neko/internal/types/message"
@@ -14,17 +12,12 @@ func (h *MessageHandler) signalProvide(id string, session types.Session) error {
 		return err
 	}
 
-	tmp, err := json.Marshal(ice)
-	if (err != nil) {
-		panic(err)
-	}
-
 	if err := session.Send(message.SignalProvide{
 		Event: event.SIGNAL_PROVIDE,
 		ID:    id,
 		SDP:   sdp,
 		Lite:  lite,
-		ICE:   string(tmp),
+		ICE:   ice,
 	}); err != nil {
 		return err
 	}

@@ -54,9 +54,9 @@ func (s *WebRTC) Set() {
 	s.ICELite = viper.GetBool("icelite")
 	s.ICEServers = []webrtc.ICEServer{{URLs: viper.GetStringSlice("iceserver")}}
 	if (viper.GetString("iceservers") != "") {
-		errj := json.Unmarshal([]byte(viper.GetString("iceservers")), &s.ICEServers)
-		if (errj != nil) {
-			panic(errj)
+		err := json.Unmarshal([]byte(viper.GetString("iceservers")), &s.ICEServers)
+		if (err != nil) {
+			panic(err)
 		}
 	}
 	s.NAT1To1IPs = viper.GetStringSlice("nat1to1")
