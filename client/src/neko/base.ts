@@ -183,7 +183,7 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
     this._ws!.send(JSON.stringify({ event, ...payload }))
   }
 
-  public createPeer(sdp: string, lite: boolean, servers: string[]) {
+  public createPeer(sdp: string, lite: boolean, servers: RTCIceServer[]) {
     this.emit('debug', `creating peer`)
     if (!this.socketOpen) {
       this.emit(
@@ -202,7 +202,7 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
     this._peer = new RTCPeerConnection()
     if (lite !== true) {
       this._peer = new RTCPeerConnection({
-        iceServers: [{ urls: servers }],
+        iceServers: servers,
       })
     }
 

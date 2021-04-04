@@ -10,10 +10,10 @@ import "C"
 
 import (
 	"fmt"
+	"regexp"
 	"sync"
 	"time"
 	"unsafe"
-	"regexp"
 
 	"n.eko.moe/neko/internal/types"
 )

@@ -41,6 +41,7 @@ For n.eko room management software visit https://github.com/m1k1o/neko-rooms.
 - Added `?usr=<display-name>` that will prefill username. This allows creating auto-join links.
 - Added `?cast=1` that will hide all control and show only video.
 - Shake keyboard icon if someone attempted to control when is nobody hosting.
+- Support for password protected `NEKO_ICESERVERS` (by @mbattista).
 
 ### Bugs
 - Fixed minor gst pipeline bug.
@@ -280,7 +281,16 @@ NEKO_CERT:
 NEKO_KEY:
   - Path to the SSL-Certificate private key
   - e.g. '/certs/key.pem'
-
+NEKO_ICELITE:
+  - Use the ice lite protocol
+  - e.g. false
+NEKO_ICESERVER:
+  - Describes a single STUN and TURN server that can be used by the ICEAgent to establish a connection with a peer (simple usage for server without authentication)
+  - e.g. 'stun:stun.l.google.com:19302'
+NEKO_ICESERVERS:
+  - Describes multiple STUN and TURN server that can be used by the ICEAgent to establish a connection with a peer
+  - e.g. '[{"urls": ["turn:turn.example.com:19302", "stun:stun.example.com:19302"], "username": "name", "credential": "password"}, {"urls": ["stun:stun.example2.com:19302"]}]'
+  - [More information](https://developer.mozilla.org/en-US/docs/Web/API/RTCIceServer)
 ```
 
 # How to contribute?

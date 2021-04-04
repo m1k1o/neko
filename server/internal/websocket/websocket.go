@@ -21,11 +21,11 @@ func New(sessions types.SessionManager, remote types.RemoteManager, broadcast ty
 	logger := log.With().Str("module", "websocket").Logger()
 
 	return &WebSocketHandler{
-		logger:    logger,
-		conf:      conf,
-		sessions:  sessions,
-		remote:    remote,
-		upgrader:  websocket.Upgrader{
+		logger:   logger,
+		conf:     conf,
+		sessions: sessions,
+		remote:   remote,
+		upgrader: websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool {
 				return true
 			},
@@ -47,14 +47,14 @@ func New(sessions types.SessionManager, remote types.RemoteManager, broadcast ty
 const pingPeriod = 60 * time.Second
 
 type WebSocketHandler struct {
-	logger    zerolog.Logger
-	upgrader  websocket.Upgrader
-	sessions  types.SessionManager
-	remote    types.RemoteManager
-	conf      *config.WebSocket
-	handler   *MessageHandler
-	conns     uint32
-	shutdown  chan bool
+	logger   zerolog.Logger
+	upgrader websocket.Upgrader
+	sessions types.SessionManager
+	remote   types.RemoteManager
+	conf     *config.WebSocket
+	handler  *MessageHandler
+	conns    uint32
+	shutdown chan bool
 }
 
 func (ws *WebSocketHandler) Start() error {

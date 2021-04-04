@@ -67,7 +67,7 @@ export interface SignalProvideMessage extends WebSocketMessage, SignalProvidePay
 export interface SignalProvidePayload {
   id: string
   lite: boolean
-  ice: string[]
+  ice: RTCIceServer[]
   sdp: string
 }
 

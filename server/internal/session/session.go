@@ -126,8 +126,8 @@ func (session *Session) SignalCandidate(data string) error {
 	}
 	return session.socket.Send(&message.SignalCandidate{
 		Event: event.SIGNAL_CANDIDATE,
-		Data: data,
-	});
+		Data:  data,
+	})
 }
 
 func (session *Session) destroy() error {
