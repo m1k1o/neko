@@ -40,6 +40,7 @@ For n.eko room management software visit https://github.com/m1k1o/neko-rooms.
 - Added simple language picker.
 - Added `?usr=<display-name>` that will prefill username. This allows creating auto-join links.
 - Added `?cast=1` that will hide all control and show only video.
+- Shake keyboard icon if someone attempted to control when is nobody hosting.
 
 ### Bugs
 - Fixed minor gst pipeline bug.

@@ -9,7 +9,7 @@
           <neko-header />
         </div>
         <div class="video-container">
-          <neko-video ref="video" :hideControls="hideControls" />
+          <neko-video ref="video" :hideControls="hideControls" @control-attempt="controlAttempt" />
         </div>
         <div v-if="!hideControls" class="room-container">
           <neko-members />
@@ -18,7 +18,7 @@
               <neko-menu />
             </div>
             <div class="controls">
-              <neko-controls />
+              <neko-controls :shakeKbd="shakeKbd" />
             </div>
             <div class="emotes">
               <neko-emotes />
@@ -174,6 +174,8 @@
   export default class extends Vue {
     @Ref('video') video!: Video
 
+    shakeKbd = false
+
     get hideControls() {
       return !!new URL(location.href).searchParams.get('cast')
     }
@@ -182,6 +184,13 @@
     onHideControls() {
       this.$accessor.video.setMuted(false)
       this.$accessor.settings.setSound(false)
+    }
+
+    controlAttempt() {
+      if (this.shakeKbd || this.$accessor.remote.hosted) return
+
+      this.shakeKbd = true
+      setTimeout(() => (this.shakeKbd = false), 5000)
     }
 
     get about() {
