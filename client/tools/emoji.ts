@@ -43,12 +43,6 @@ interface EmojiDatasource {
   obsoleted_by: string
 }
 
-interface Emoji {
-  keywords: string[]
-  char: string
-  category: string
-}
-
 const SHEET_COLUMNS = 58
 const MULTIPLY = 100 / (SHEET_COLUMNS - 1)
 
@@ -69,20 +63,6 @@ for (const emoji of custom) {
 for (const source of datasource) {
   const unified = source.unified.split('-').map(v => v.toLowerCase())
 
-  let emoji: Emoji | null = null
-  let emoji_id: string = ''
-  for (const id of Object.keys(emojis)) {
-    if (unified.includes(id.codePointAt(0)!.toString(16))) {
-      emoji_id = id
-      emoji = {
-        char: id,
-	keywords: emojis[id],
-	category: ''
-      }
-      break
-    }
-  }
-
   if (!source.has_img_twitter) {
     console.log(source.short_name, 'not avalible for set twitter')
     continue
@@ -90,10 +70,15 @@ for (const source of datasource) {
 
   // keywords
   let words: string[] = []
-  if (!emoji) {
+  for (const id of Object.keys(emojis)) {
+    if (unified.includes(id.codePointAt(0)!.toString(16))) {
+      words = [id, ...emojis[id]]
+      break
+    }
+  }
+
+  if (words.length == 0) {
     console.log(source.short_name, 'no keywords')
-  } else {
-    words = [emoji_id, ...emoji.keywords]
   }
 
   for (const name of source.short_names) {
