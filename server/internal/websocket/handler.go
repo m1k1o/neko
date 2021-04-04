@@ -90,7 +90,6 @@ func (h *MessageHandler) Message(id string, raw []byte) error {
 				return h.controlKeyboard(id, session, payload)
 			}), "%s failed", header.Event)
 
-
 	// Chat Events
 	case event.CHAT_MESSAGE:
 		payload := &message.ChatReceive{}

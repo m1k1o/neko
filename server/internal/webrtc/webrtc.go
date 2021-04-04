@@ -76,7 +76,7 @@ func (manager *WebRTCManager) Shutdown() error {
 
 func (manager *WebRTCManager) CreatePeer(id string, session types.Session) (string, bool, []webrtc.ICEServer, error) {
 	configuration := &webrtc.Configuration{
-		ICEServers: manager.config.ICEServers,
+		ICEServers:   manager.config.ICEServers,
 		SDPSemantics: webrtc.SDPSemanticsUnifiedPlanWithFallback,
 	}
 
@@ -95,7 +95,7 @@ func (manager *WebRTCManager) CreatePeer(id string, session types.Session) (stri
 
 	settings.SetEphemeralUDPPortRange(manager.config.EphemeralMin, manager.config.EphemeralMax)
 	settings.SetNAT1To1IPs(manager.config.NAT1To1IPs, webrtc.ICECandidateTypeHost)
-	settings.SetICETimeouts(6 * time.Second, 6 * time.Second, 3 * time.Second)
+	settings.SetICETimeouts(6*time.Second, 6*time.Second, 3*time.Second)
 	settings.SetSRTPReplayProtectionWindow(512)
 
 	// Create MediaEngine based off sdp
@@ -142,12 +142,12 @@ func (manager *WebRTCManager) CreatePeer(id string, session types.Session) (stri
 			Msg("connection state has changed")
 	})
 
-	rtpVideo, err := connection.AddTrack(manager.videoTrack);
+	rtpVideo, err := connection.AddTrack(manager.videoTrack)
 	if err != nil {
 		return "", manager.config.ICELite, manager.config.ICEServers, err
 	}
 
-	rtpAudio, err := connection.AddTrack(manager.audioTrack);
+	rtpAudio, err := connection.AddTrack(manager.audioTrack)
 	if err != nil {
 		return "", manager.config.ICELite, manager.config.ICEServers, err
 	}
@@ -229,7 +229,6 @@ func (manager *WebRTCManager) CreatePeer(id string, session types.Session) (stri
 			}
 		}
 	}()
-
 
 	return description.SDP, manager.config.ICELite, manager.config.ICEServers, nil
 }

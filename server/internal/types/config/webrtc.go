@@ -1,9 +1,9 @@
 package config
 
 import (
+	"encoding/json"
 	"strconv"
 	"strings"
-	"encoding/json"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -42,10 +42,9 @@ func (WebRTC) Init(cmd *cobra.Command) error {
 	}
 
 	cmd.PersistentFlags().String("iceservers", "", "describes a single STUN and TURN server that can be used by the ICEAgent to establish a connection with a peer")
-        if err := viper.BindPFlag("iceservers", cmd.PersistentFlags().Lookup("iceservers")); err != nil {
-                return err
-        }
-
+	if err := viper.BindPFlag("iceservers", cmd.PersistentFlags().Lookup("iceservers")); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -53,9 +52,9 @@ func (WebRTC) Init(cmd *cobra.Command) error {
 func (s *WebRTC) Set() {
 	s.ICELite = viper.GetBool("icelite")
 	s.ICEServers = []webrtc.ICEServer{{URLs: viper.GetStringSlice("iceserver")}}
-	if (viper.GetString("iceservers") != "") {
+	if viper.GetString("iceservers") != "" {
 		err := json.Unmarshal([]byte(viper.GetString("iceservers")), &s.ICEServers)
-		if (err != nil) {
+		if err != nil {
 			panic(err)
 		}
 	}

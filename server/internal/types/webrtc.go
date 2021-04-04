@@ -7,9 +7,9 @@ import (
 )
 
 type Sample struct {
-	Data       []byte
-	Timestamp  time.Time
-	Duration   time.Duration
+	Data      []byte
+	Timestamp time.Time
+	Duration  time.Duration
 }
 
 type WebRTCManager interface {

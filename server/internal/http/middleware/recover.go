@@ -4,21 +4,21 @@ package middleware
 // https://github.com/zenazn/goji/tree/master/web/middleware
 
 import (
-  "net/http"
+	"net/http"
 
-  "n.eko.moe/neko/internal/http/endpoint"
+	"n.eko.moe/neko/internal/http/endpoint"
 )
 
 func Recoverer(next http.Handler) http.Handler {
-  fn := func(w http.ResponseWriter, r *http.Request) {
-    defer func() {
-      if rvr := recover(); rvr != nil {
-        endpoint.WriteError(w, r, rvr)
-      }
-    }()
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		defer func() {
+			if rvr := recover(); rvr != nil {
+				endpoint.WriteError(w, r, rvr)
+			}
+		}()
 
-    next.ServeHTTP(w, r)
-  }
+		next.ServeHTTP(w, r)
+	}
 
-  return http.HandlerFunc(fn)
+	return http.HandlerFunc(fn)
 }

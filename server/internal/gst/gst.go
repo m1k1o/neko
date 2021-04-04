@@ -39,10 +39,10 @@ import (
 
 // Pipeline is a wrapper for a GStreamer Pipeline
 type Pipeline struct {
-	Pipeline  *C.GstElement
-	Sample    chan types.Sample
-	Src       string
-	id        int
+	Pipeline *C.GstElement
+	Sample   chan types.Sample
+	Src      string
+	id       int
 }
 
 var pipelines = make(map[int]*Pipeline)
@@ -209,10 +209,10 @@ func CreatePipeline(pipelineStr string) (*Pipeline, error) {
 	defer pipelinesLock.Unlock()
 
 	p := &Pipeline{
-		Pipeline:  C.gstreamer_send_create_pipeline(pipelineStrUnsafe),
-		Sample:    make(chan types.Sample),
-		Src:       pipelineStr,
-		id:        len(pipelines),
+		Pipeline: C.gstreamer_send_create_pipeline(pipelineStrUnsafe),
+		Sample:   make(chan types.Sample),
+		Src:      pipelineStr,
+		id:       len(pipelines),
 	}
 
 	pipelines[p.id] = p

@@ -16,11 +16,11 @@ type Disconnect struct {
 }
 
 type SignalProvide struct {
-	Event string   `json:"event"`
-	ID    string   `json:"id"`
-	SDP   string   `json:"sdp"`
-	Lite  bool     `json:"lite"`
-	ICE   []webrtc.ICEServer   `json:"ice"`
+	Event string             `json:"event"`
+	ID    string             `json:"id"`
+	SDP   string             `json:"sdp"`
+	Lite  bool               `json:"lite"`
+	ICE   []webrtc.ICEServer `json:"ice"`
 }
 
 type SignalAnswer struct {
@@ -30,8 +30,8 @@ type SignalAnswer struct {
 }
 
 type SignalCandidate struct {
-	Event   string `json:"event"`
-	Data    string `json:"data"`
+	Event string `json:"event"`
+	Data  string `json:"data"`
 }
 
 type MembersList struct {
@@ -125,6 +125,6 @@ type BroadcastStatus struct {
 }
 
 type BroadcastCreate struct {
-	Event  string `json:"event"`
-	URL    string `json:"url"`
+	Event string `json:"event"`
+	URL   string `json:"url"`
 }
