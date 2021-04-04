@@ -50,7 +50,7 @@ interface Emoji {
   category: string
 }
 
-const SHEET_COLUMNS = 57
+const SHEET_COLUMNS = 58
 const MULTIPLY = 100 / (SHEET_COLUMNS - 1)
 
 const css: string[] = []
