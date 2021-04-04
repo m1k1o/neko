@@ -50,15 +50,22 @@ func (WebRTC) Init(cmd *cobra.Command) error {
 }
 
 func (s *WebRTC) Set() {
+	s.NAT1To1IPs = viper.GetStringSlice("nat1to1")
 	s.ICELite = viper.GetBool("icelite")
-	s.ICEServers = []webrtc.ICEServer{{URLs: viper.GetStringSlice("iceserver")}}
-	if viper.GetString("iceservers") != "" {
-		err := json.Unmarshal([]byte(viper.GetString("iceservers")), &s.ICEServers)
+	s.ICEServers = []webrtc.ICEServer{}
+
+	iceServersJson := viper.GetString("iceservers")
+	if iceServersJson != "" {
+		err := json.Unmarshal([]byte(iceServersJson), &s.ICEServers)
 		if err != nil {
 			panic(err)
 		}
 	}
-	s.NAT1To1IPs = viper.GetStringSlice("nat1to1")
+
+	iceServerSlice := viper.GetStringSlice("iceserver")
+	if len(iceServerSlice) > 0 {
+		s.ICEServers = append(s.ICEServers, webrtc.ICEServer{URLs: iceServerSlice})
+	}
 
 	if len(s.NAT1To1IPs) == 0 {
 		ip, err := utils.GetIP()

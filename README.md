@@ -40,6 +40,7 @@ For n.eko room management software visit https://github.com/m1k1o/neko-rooms.
 - Added simple language picker.
 - Added `?usr=<display-name>` that will prefill username. This allows creating auto-join links.
 - Added `?cast=1` that will hide all control and show only video.
+- Support for password protected `NEKO_ICESERVERS` (by @mbattista).
 
 ### Bugs
 - Fixed minor gst pipeline bug.
@@ -282,7 +283,7 @@ NEKO_ICELITE:
   - Use the ice lite protocol
   - e.g. false
 NEKO_ICESERVER:
-  - Describes a single STUN and TURN server that can be used by the ICEAgent to establish a connection with a peer (deprecated)
+  - Describes a single STUN and TURN server that can be used by the ICEAgent to establish a connection with a peer (simple usage for server without authentication)
   - e.g. 'stun:stun.l.google.com:19302'
 NEKO_ICESERVERS:
   - Describes multiple STUN and TURN server that can be used by the ICEAgent to establish a connection with a peer
