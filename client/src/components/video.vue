@@ -552,9 +552,14 @@
     }
 
     onMouseDown(e: MouseEvent) {
+      if (!this.hosting) {
+        this.$emit('control-attempt', e)
+      }
+
       if (!this.hosting || this.locked) {
         return
       }
+
       this.onMousePos(e)
       this.$client.sendData('mousedown', { key: e.button + 1 })
     }
@@ -563,6 +568,7 @@
       if (!this.hosting || this.locked) {
         return
       }
+
       this.onMousePos(e)
       this.$client.sendData('mouseup', { key: e.button + 1 })
     }

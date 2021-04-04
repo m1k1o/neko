@@ -15,8 +15,8 @@
                 ? $t('room.unlock')
                 : $t('room.lock')
               : locked
-              ? $t('room.unlocked')
-              : $t('room.locked'),
+              ? $t('room.locked')
+              : $t('room.unlocked'),
             placement: 'bottom',
             offset: 5,
             boundariesElement: 'body',

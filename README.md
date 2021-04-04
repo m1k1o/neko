@@ -40,6 +40,7 @@ For n.eko room management software visit https://github.com/m1k1o/neko-rooms.
 - Added simple language picker.
 - Added `?usr=<display-name>` that will prefill username. This allows creating auto-join links.
 - Added `?cast=1` that will hide all control and show only video.
+- Shake keyboard icon if someone attempted to control when is nobody hosting.
 - Support for password protected `NEKO_ICESERVERS` (by @mbattista).
 
 ### Bugs
@@ -67,6 +68,7 @@ For n.eko room management software visit https://github.com/m1k1o/neko-rooms.
 - Abiltiy to include neko as a component in another Vue.Js project (by @gbrian).
 - Added HEALTHCHECK to Dockerfile.
 - Arguments in broadcast pipeline are optional, not positional and can be repeated `{url} {device} {display}`.
+- Chat messages are dense, when repeated, they are joined together.
 
 ### Roadmap & TODOs
 - Catch errors from gst pipeline, tell user if broadcast failed.

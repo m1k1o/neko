@@ -3,6 +3,7 @@
     <li v-if="!isTouch">
       <i
         :class="[
+          shakeKbd ? 'shake' : '',
           hosted && !hosting ? 'disabled' : '',
           !hosted && !hosting ? 'faded' : '',
           'fas',
@@ -53,6 +54,46 @@
 </template>
 
 <style lang="scss" scoped>
+  .shake {
+    animation: shake 1.25s cubic-bezier(0, 0, 0, 1);
+  }
+
+  @keyframes shake {
+    0% {
+      transform: scale(1) translate(0px, 0) rotate(0);
+    }
+    10% {
+      transform: scale(1.25) translate(-2px, -2px) rotate(-20deg);
+    }
+    20% {
+      transform: scale(1.5) translate(4px, -4px) rotate(20deg);
+    }
+    30% {
+      transform: scale(1.75) translate(-4px, -6px) rotate(-20deg);
+    }
+    40% {
+      transform: scale(2) translate(6px, -8px) rotate(20deg);
+    }
+    50% {
+      transform: scale(2.25) translate(-6px, -10px) rotate(-20deg);
+    }
+    60% {
+      transform: scale(2) translate(6px, -8px) rotate(20deg);
+    }
+    70% {
+      transform: scale(1.75) translate(-4px, -6px) rotate(-20deg);
+    }
+    80% {
+      transform: scale(1.5) translate(4px, -4px) rotate(20deg);
+    }
+    90% {
+      transform: scale(1.25) translate(-2px, -2px) rotate(-20deg);
+    }
+    100% {
+      transform: scale(1) translate(0px, 0) rotate(0);
+    }
+  }
+
   ul {
     display: flex;
     flex-direction: row;
@@ -195,10 +236,12 @@
 </style>
 
 <script lang="ts">
-  import { Vue, Component } from 'vue-property-decorator'
+  import { Vue, Component, Prop } from 'vue-property-decorator'
 
   @Component({ name: 'neko-controls' })
   export default class extends Vue {
+    @Prop(Boolean) readonly shakeKbd = false
+
     get isTouch() {
       return (
         (typeof navigator.maxTouchPoints !== 'undefined' ? navigator.maxTouchPoints < 0 : false) ||

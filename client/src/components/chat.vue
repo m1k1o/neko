@@ -2,7 +2,14 @@
   <div class="chat">
     <ul class="chat-history" ref="history" @click="onClick">
       <template v-for="(message, index) in history">
-        <li :key="index" class="message" v-if="message.type === 'text'">
+        <li
+          :key="index"
+          class="message"
+          v-if="message.type === 'text'"
+          :class="{
+            bulk: index > 0 && history[index - 1].id == message.id && history[index - 1].type === 'text',
+          }"
+        >
           <div class="author" @contextmenu.stop.prevent="onContext($event, { member: member(message.id) })">
             <neko-avatar class="avatar" :seed="member(message.id).displayname" :size="40" />
           </div>
@@ -94,6 +101,7 @@
         word-wrap: break-word;
 
         &.message {
+          padding-top: 15px;
           font-size: 16px;
 
           .author {
@@ -104,7 +112,7 @@
             height: 40px;
             border-radius: 50%;
             background: $style-primary;
-            margin: 0px 10px 10px 0px;
+            margin-right: 10px;
 
             .avatar {
               width: 100%;
@@ -217,6 +225,19 @@
                   display: block;
                 }
               }
+            }
+          }
+
+          &.bulk {
+            padding-top: 0px;
+
+            .author {
+              visibility: hidden;
+              height: 0;
+            }
+
+            .content-head {
+              display: none;
             }
           }
         }
