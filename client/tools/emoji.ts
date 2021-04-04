@@ -2,7 +2,7 @@ import * as fs from 'fs'
 import { custom } from './emoji_custom'
 
 const datasource = require('emoji-datasource/emoji.json') as EmojiDatasource[]
-const emojis = require('emojilib/emojis.json') as { [id: string]: Emoji }
+const emojis = require('emojilib') 
 
 interface EmojiDatasource {
   name: string
@@ -46,7 +46,6 @@ interface EmojiDatasource {
 interface Emoji {
   keywords: string[]
   char: string
-  fitzpatrick_scale: boolean
   category: string
 }
 
@@ -73,9 +72,13 @@ for (const source of datasource) {
   let emoji: Emoji | null = null
   let emoji_id: string = ''
   for (const id of Object.keys(emojis)) {
-    if (unified.includes(emojis[id].char.codePointAt(0)!.toString(16))) {
+    if (unified.includes(id.codePointAt(0)!.toString(16))) {
       emoji_id = id
-      emoji = emojis[id]
+      emoji = {
+        char: id,
+	keywords: emojis[id],
+	category: ''
+      }
       break
     }
   }

@@ -55,7 +55,7 @@
     "@vue/eslint-config-prettier": "^6.0.0",
     "@vue/eslint-config-typescript": "^7.0.0",
     "core-js": "^3.9.1",
-    "emojilib": "^2.4.0",
+    "emojilib": "^3.0.1",
     "eslint": "^6.8.0",
     "eslint-plugin-prettier": "^3.1.4",
     "eslint-plugin-vue": "^7.8.0",
