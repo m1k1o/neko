@@ -45,6 +45,12 @@ func (h *MembersHandler) Route(r chi.Router) {
 	})
 }
 
+func (h *MembersHandler) RouteBulk(r chi.Router) {
+	r.With(auth.AdminsOnly).Group(func(r chi.Router) {
+		r.Post("/update", h.membersBulkUpdate)
+	})
+}
+
 type MemberData struct {
 	ID      string
 	Profile types.MemberProfile

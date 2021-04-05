@@ -50,6 +50,7 @@ func (api *ApiManagerCtx) Route(r chi.Router) {
 
 		membersHandler := members.New(api.members)
 		r.Route("/members", membersHandler.Route)
+		r.Route("/members_bulk", membersHandler.RouteBulk)
 
 		roomHandler := room.New(api.sessions, api.desktop, api.capture)
 		r.Route("/room", roomHandler.Route)
