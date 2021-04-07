@@ -249,7 +249,7 @@ func (manager *RemoteManager) SetKeyboardLayout(layout string) {
 	// When pressing `shift` + `,` instead of `<` comes `>`.
 	variant := ""
 	if layout == "us" {
-		variant = "intl"
+		variant = "mac" // TODO: Test all keys.
 	}
 
 	exec.Command("setxkbmap", layout, variant).Run()
