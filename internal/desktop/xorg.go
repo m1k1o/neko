@@ -62,6 +62,12 @@ func (manager *DesktopManagerCtx) GetScreenSize() *types.ScreenSize {
 }
 
 func (manager *DesktopManagerCtx) SetKeyboardMap(kbd types.KeyboardMap) error {
+	// Workaround for https://github.com/m1k1o/neko/issues/45
+	// When pressing `shift` + `,` instead of `<` comes `>`.
+	if kbd.Layout == "us" && kbd.Variant == "" {
+		kbd.Variant = "mac"
+	}
+
 	// TOOD: Use native API.
 	cmd := exec.Command("setxkbmap", "-layout", kbd.Layout, "-variant", kbd.Variant)
 	_, err := cmd.Output()
