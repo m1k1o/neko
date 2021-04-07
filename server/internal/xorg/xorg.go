@@ -10,7 +10,6 @@ import "C"
 
 import (
 	"fmt"
-	"regexp"
 	"sync"
 	"time"
 	"unsafe"
@@ -209,20 +208,6 @@ func GetScreenSize() *types.ScreenSize {
 	}
 
 	return nil
-}
-
-func SetKeyboardLayout(layout string) {
-	mu.Lock()
-	defer mu.Unlock()
-
-	if !regexp.MustCompile(`^[a-zA-Z]+$`).MatchString(layout) {
-		return
-	}
-
-	layoutUnsafe := C.CString(layout)
-	defer C.free(unsafe.Pointer(layoutUnsafe))
-
-	C.SetKeyboardLayout(layoutUnsafe)
 }
 
 func SetKeyboardModifiers(num_lock int, caps_lock int, scroll_lock int) {

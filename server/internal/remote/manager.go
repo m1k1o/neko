@@ -2,6 +2,7 @@ package remote
 
 import (
 	"fmt"
+	"os/exec"
 	"time"
 
 	"github.com/kataras/go-events"
@@ -244,7 +245,14 @@ func (manager *RemoteManager) GetScreenSize() *types.ScreenSize {
 }
 
 func (manager *RemoteManager) SetKeyboardLayout(layout string) {
-	xorg.SetKeyboardLayout(layout)
+	// Workaround for https://github.com/m1k1o/neko/issues/45
+	// When pressing `shift` + `,` instead of `<` comes `>`.
+	variant := ""
+	if layout == "us" {
+		variant = "intl"
+	}
+
+	exec.Command("setxkbmap", layout, variant).Run()
 }
 
 func (manager *RemoteManager) SetKeyboardModifiers(NumLock int, CapsLock int, ScrollLock int) {

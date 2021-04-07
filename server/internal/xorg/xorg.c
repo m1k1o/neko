@@ -166,13 +166,6 @@ short XGetScreenRate() {
   return XRRConfigCurrentRate(conf);
 }
 
-void SetKeyboardLayout(char *layout) {
-  // TOOD: refactor, use native API.
-  char cmd[13] = "setxkbmap ";
-  strncat(cmd, layout, 2);
-  int r = system(cmd);
-}
-
 void SetKeyboardModifiers(int num_lock, int caps_lock, int scroll_lock) {
   Display *display = getXDisplay();
 
