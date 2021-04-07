@@ -124,7 +124,7 @@
         },
         clipboard: null,
         keyboard: {
-          layout: '',
+          layout: 'us',
           variant: '',
         },
         host_id: null,
