@@ -19,7 +19,17 @@ void XMove(int x, int y);
 void XCursorPosition(int *x, int *y);
 void XScroll(int x, int y);
 void XButton(unsigned int button, int down);
-void XKey(unsigned long key, int down);
+
+typedef struct xkeyentry_t {
+  KeySym keysym;
+  KeyCode keycode;
+  struct xkeyentry_t *next;
+} xkeyentry_t;
+
+static void XKeyEntryAdd(KeySym keysym, KeyCode keycode);
+static KeyCode XKeyEntryGet(KeySym keysym);
+static KeyCode XKeysymToKeycodeRespectingModifiers(Display *display, KeySym keysym);
+void XKey(KeySym keysym, int down);
 
 void XGetScreenConfigurations();
 void XSetScreenConfiguration(int index, short rate);

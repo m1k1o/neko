@@ -68,25 +68,114 @@ void XButton(unsigned int button, int down) {
   XSync(display, 0);
 }
 
-void XKey(unsigned long key, int down) {
-  if (key == 0) return;
+static xkeyentry_t *pKeysHead = NULL;
+
+void XKeyEntryAdd(KeySym keysym, KeyCode keycode) {
+  xkeyentry_t *entry = (xkeyentry_t *) malloc(sizeof(xkeyentry_t));
+  if (entry == NULL) {
+    return;
+  }
+
+  entry->keysym = keysym;
+  entry->keycode = keycode;
+  entry->next = pKeysHead;
+  pKeysHead = entry;
+}
+
+KeyCode XKeyEntryGet(KeySym keysym) {
+  xkeyentry_t *prev = NULL;
+  xkeyentry_t *curr = pKeysHead;
+
+  KeyCode keycode = 0;
+  while (curr != NULL) {
+    if (curr->keysym == keysym) {
+      keycode = curr->keycode;
+
+      if (prev == NULL) {
+        pKeysHead = curr->next;
+      } else {
+        prev->next = curr->next;
+      }
+
+      free(curr);
+      return keycode;
+    }
+
+    prev = curr;
+    curr = curr->next;
+  }
+
+  return 0;
+}
+
+// From https://github.com/TigerVNC/tigervnc/blob/0946e298075f8f7b6d63e552297a787c5f84d27c/unix/x0vncserver/XDesktop.cxx#L343-L379
+KeyCode KbdXKeysymToKeycode(Display *dpy, KeySym keysym) {
+  XkbDescPtr xkb;
+  XkbStateRec state;
+  unsigned int mods;
+  unsigned keycode;
+
+  xkb = XkbGetMap(dpy, XkbAllComponentsMask, XkbUseCoreKbd);
+  if (!xkb)
+    return 0;
+
+  XkbGetState(dpy, XkbUseCoreKbd, &state);
+  // XkbStateFieldFromRec() doesn't work properly because
+  // state.lookup_mods isn't properly updated, so we do this manually
+  mods = XkbBuildCoreState(XkbStateMods(&state), state.group);
+
+  for (keycode = xkb->min_key_code;
+       keycode <= xkb->max_key_code;
+       keycode++) {
+    KeySym cursym;
+    unsigned int out_mods;
+    XkbTranslateKeyCode(xkb, keycode, mods, &out_mods, &cursym);
+    if (cursym == keysym)
+      break;
+  }
+
+  if (keycode > xkb->max_key_code)
+    keycode = 0;
+
+  XkbFreeKeyboard(xkb, XkbAllComponentsMask, True);
+
+  // Shift+Tab is usually ISO_Left_Tab, but RFB hides this fact. Do
+  // another attempt if we failed the initial lookup
+  if ((keycode == 0) && (keysym == XK_Tab) && (mods & ShiftMask))
+    return KbdXKeysymToKeycode(dpy, XK_ISO_Left_Tab);
+
+  return keycode;
+}
+
+void XKey(KeySym keysym, int down) {
+  if (keysym == 0)
+    return;
 
   Display *display = getXDisplay();
-  KeyCode code = XKeysymToKeycode(display, key);
+  KeyCode keycode = 0;
+
+  if (!down)
+    keycode = XKeyEntryGet(keysym);
+
+  if (keycode == 0)
+    keycode = KbdXKeysymToKeycode(display, keysym);
 
   // Map non-existing keysyms to new keycodes
-  if (code == 0) {
+  if (keycode == 0) {
     int min, max, numcodes;
     XDisplayKeycodes(display, &min, &max);
     XGetKeyboardMapping(display, min, max-min, &numcodes);
 
-    code = (max-min+1)*numcodes;
+    keycode = (max-min+1)*numcodes;
     KeySym keysym_list[numcodes];
-    for(int i=0;i<numcodes;i++) keysym_list[i] = key;
-    XChangeKeyboardMapping(display, code, numcodes, keysym_list, 1);
+    for(int i=0;i<numcodes;i++) keysym_list[i] = keysym;
+    XChangeKeyboardMapping(display, keycode, numcodes, keysym_list, 1);
   }
 
-  XTestFakeKeyEvent(display, code, down, CurrentTime);
+  if (down)
+    XKeyEntryAdd(keysym, keycode);
+
+  XTestFakeKeyEvent(display, keycode, down, CurrentTime);
   XSync(display, 0);
 }
 

@@ -106,7 +106,7 @@ func KeyDown(code uint32) error {
 
 	debounce_key[code] = time.Now()
 
-	C.XKey(C.ulong(code), C.int(1))
+	C.XKey(C.KeySym(code), C.int(1))
 	return nil
 }
 
@@ -134,7 +134,7 @@ func KeyUp(code uint32) error {
 
 	delete(debounce_key, code)
 
-	C.XKey(C.ulong(code), C.int(0))
+	C.XKey(C.KeySym(code), C.int(0))
 	return nil
 }
 
@@ -148,7 +148,7 @@ func ResetKeys() {
 	}
 
 	for code := range debounce_key {
-		C.XKey(C.ulong(code), C.int(0))
+		C.XKey(C.KeySym(code), C.int(0))
 		delete(debounce_key, code)
 	}
 }
@@ -172,7 +172,7 @@ func CheckKeys(duration time.Duration) {
 			continue
 		}
 
-		C.XKey(C.ulong(code), C.int(0))
+		C.XKey(C.KeySym(code), C.int(0))
 		delete(debounce_key, code)
 	}
 }
