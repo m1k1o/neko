@@ -6,6 +6,69 @@ static char *NAME = ":0.0";
 static int REGISTERED = 0;
 static int DIRTY = 0;
 
+struct linked_list
+{
+    unsigned long number;
+    int keycode;
+    struct linked_list *next;
+};
+
+typedef struct linked_list node;
+node *head=NULL, *last=NULL;
+
+void insertAtLast(unsigned long value, int keycode) {
+  node *temp_node;
+  temp_node = (node *) malloc(sizeof(node));
+
+  temp_node->number = value;
+  temp_node->keycode = keycode;
+  temp_node->next = NULL;
+
+  //For the 1st element
+  if(head == NULL) {
+    head = temp_node;
+    last = temp_node;
+  } else {
+    last->next = temp_node;
+    last = temp_node;
+  }
+}
+
+void deleteItem(int value) {
+  node *myNode = head, *previous=NULL;
+
+  while(myNode!=NULL) {
+    if(myNode->number==value) {
+      if(previous==NULL)
+        head = myNode->next;
+      else
+        previous->next = myNode->next;
+
+      free(myNode); //need to free up the memory to prevent memory leak
+      break;
+    }
+
+    previous = myNode;
+    myNode = myNode->next;
+  }
+}
+
+int searchItem(int value) {
+  node *searchNode = head;
+  int flag = 0;
+
+  while(searchNode != NULL) {
+    if(searchNode->number==value) {
+      flag = searchNode->keycode;
+      break;
+    } else {
+      searchNode = searchNode->next;
+    }
+  }
+
+  return flag;
+}
+
 Display *getXDisplay(void) {
   /* Close the display if displayName has changed */
   if (DIRTY) {
@@ -96,21 +159,66 @@ void XButton(unsigned int button, int down) {
   }
 }
 
+KeyCode XkbKeysymToKeycode(KeySym keysym) {
+  XkbDescPtr xkb;
+  XkbStateRec state;
+  unsigned keycode;
+  Display *dpy = getXDisplay();
+
+  xkb = XkbGetMap(dpy, XkbAllComponentsMask, XkbUseCoreKbd);
+  if (!xkb)
+    return 0;
+
+  XkbGetState(dpy, XkbUseCoreKbd, &state);
+
+  for (keycode = xkb->min_key_code;
+       keycode <= xkb->max_key_code;
+       keycode++) {
+    KeySym cursym;
+    unsigned int mods;
+    XkbTranslateKeyCode(xkb, keycode, state.compat_state, &mods, &cursym);
+    if (cursym == keysym)
+      break;
+  }
+
+  if (keycode > xkb->max_key_code)
+    keycode = 0;
+
+  XkbFreeKeyboard(xkb, XkbAllComponentsMask, True);
+
+  return keycode;
+}
+
 void XKey(unsigned long key, int down) {
   if (key != 0) {
     Display *display = getXDisplay();
-    KeyCode code = XKeysymToKeycode(display, key);
+//    KeyCode code = XKeysymToKeycode(display, key);
 
-    // Map non-existing keysyms to new keycodes
-    if(code == 0) {
-      int min, max, numcodes;
-      XDisplayKeycodes(display, &min, &max);
-      XGetKeyboardMapping(display, min, max-min, &numcodes);
+    int code;
 
-      code = (max-min+1)*numcodes;
-      KeySym keysym_list[numcodes];
-      for(int i=0;i<numcodes;i++) keysym_list[i] = key;
-      XChangeKeyboardMapping(display, code, numcodes, keysym_list, 1);
+    if (down) {
+      code = searchItem(key);
+      if (code == 0) {
+        // XKeysymToKeycode() doesn't respect state, so we have to use
+        // something slightly more complex
+        code = XkbKeysymToKeycode(key);
+        // Map non-existing keysyms to new keycodes
+        if(code == 0) {
+          int min, max, numcodes;
+          XDisplayKeycodes(display, &min, &max);
+          XGetKeyboardMapping(display, min, max-min, &numcodes);
+
+          code = (max-min+1)*numcodes;
+          KeySym keysym_list[numcodes];
+          for(int i=0;i<numcodes;i++) keysym_list[i] = key;
+            XChangeKeyboardMapping(display, code, numcodes, keysym_list, 1);
+        }
+
+	insertAtLast(key, code);
+      }
+    } else {
+      code = searchItem(key);
+      deleteItem(key);
     }
 
     XTestFakeKeyEvent(display, code, down, CurrentTime);
