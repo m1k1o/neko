@@ -126,9 +126,9 @@ KeyCode XkbKeysymToKeycode(KeySym keysym) {
   return keycode;
 }
 
-int XKey(unsigned long key, int down) {
+void XKey(unsigned long key, int down) {
   Display *display = getXDisplay();
-  KeyCode code = -2;
+  KeyCode code = 0;
 
   code = XkbKeysymToKeycode(key);
   if (!code) {
@@ -142,7 +142,7 @@ int XKey(unsigned long key, int down) {
       XChangeKeyboardMapping(display, code, numcodes, keysym_list, 1);
   }
   if (!code)
-    return -1;
+    return;
   XTestFakeKeyEvent(display, code, down, CurrentTime);
   XSync(display, 0);
 }

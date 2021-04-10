@@ -27,7 +27,7 @@
   void XMove(int x, int y);
   void XScroll(int x, int y);
   void XButton(unsigned int button, int down);
-  int XKey(unsigned long key, int down);
+  void XKey(unsigned long key, int down);
 
   void XClipboardSet(char *src);
   char *XClipboardGet();
