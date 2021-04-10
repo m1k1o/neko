@@ -73,12 +73,10 @@ func KeyDown(code uint64) error {
 		return fmt.Errorf("debounced key %v", code)
 	}
 
-	fmt.Printf("Code-Press %v", code)
 	debounce_key[code] = time.Now()
 
-	t := C.XKey(C.ulong(code), C.int(1))
+	C.XKey(C.ulong(code), C.int(1))
 
-	fmt.Printf("X-Press %v", t)
 	return nil
 }
 
@@ -106,10 +104,8 @@ func KeyUp(code uint64) error {
 
 	delete(debounce_key, code)
 
-	fmt.Printf("Code-Release %v", code)
-	t := C.XKey(C.ulong(code), C.int(0))
+	C.XKey(C.ulong(code), C.int(0))
 
-	fmt.Printf("X-Release %v", t)
 	return nil
 }
 
