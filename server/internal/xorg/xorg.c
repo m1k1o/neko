@@ -9,14 +9,14 @@ static int DIRTY = 0;
 struct linked_list
 {
     unsigned long number;
-    int keycode;
+    KeyCode keycode;
     struct linked_list *next;
 };
 
 typedef struct linked_list node;
-node *head=NULL, *last=NULL;
+node *head = NULL, *last = NULL;
 
-void insertAtLast(unsigned long value, int keycode) {
+void insertAtLast(unsigned long value, KeyCode keycode) {
   node *temp_node;
   temp_node = (node *) malloc(sizeof(node));
 
@@ -25,7 +25,7 @@ void insertAtLast(unsigned long value, int keycode) {
   temp_node->next = NULL;
 
   //For the 1st element
-  if(head == NULL) {
+  if(!head) {
     head = temp_node;
     last = temp_node;
   } else {
@@ -34,17 +34,17 @@ void insertAtLast(unsigned long value, int keycode) {
   }
 }
 
-void deleteItem(int value) {
-  node *myNode = head, *previous=NULL;
+void deleteItem(unsigned long value) {
+  node *myNode = head, *previous = NULL;
 
-  while(myNode!=NULL) {
-    if(myNode->number==value) {
-      if(previous==NULL)
+  while(myNode) {
+    if(myNode->number == value) {
+      if(!previous)
         head = myNode->next;
       else
         previous->next = myNode->next;
 
-      free(myNode); //need to free up the memory to prevent memory leak
+      free(myNode);
       break;
     }
 
@@ -53,20 +53,18 @@ void deleteItem(int value) {
   }
 }
 
-int searchItem(int value) {
+node *searchItemNode(unsigned long value) {
   node *searchNode = head;
-  int flag = 0;
 
-  while(searchNode != NULL) {
-    if(searchNode->number==value) {
-      flag = searchNode->keycode;
+  while(searchNode) {
+    if(searchNode->number == value) {
       break;
     } else {
       searchNode = searchNode->next;
     }
   }
 
-  return flag;
+  return searchNode;
 }
 
 Display *getXDisplay(void) {
@@ -189,41 +187,58 @@ KeyCode XkbKeysymToKeycode(KeySym keysym) {
   return keycode;
 }
 
-void XKey(unsigned long key, int down) {
-  if (key != 0) {
-    Display *display = getXDisplay();
-//    KeyCode code = XKeysymToKeycode(display, key);
+int XKey(unsigned long key, int down) {
+  Display *display = getXDisplay();
+  KeyCode code = -2;
+//  node *compareNode;
+//  compareNode = searchItemNode(key);
 
-    int code;
+  if (down) {
+//    if (compareNode && compareNode != last) {
+//      code = compareNode->keycode;
+//    } else {
+      code = XkbKeysymToKeycode(key);
+      if (!code) {
+        int min, max, numcodes;
+        XDisplayKeycodes(display, &min, &max);
+        XGetKeyboardMapping(display, min, max-min, &numcodes);
 
-    if (down) {
-      code = searchItem(key);
-      if (code == 0) {
-        // XKeysymToKeycode() doesn't respect state, so we have to use
-        // something slightly more complex
-        code = XkbKeysymToKeycode(key);
-        // Map non-existing keysyms to new keycodes
-        if(code == 0) {
-          int min, max, numcodes;
-          XDisplayKeycodes(display, &min, &max);
-          XGetKeyboardMapping(display, min, max-min, &numcodes);
-
-          code = (max-min+1)*numcodes;
-          KeySym keysym_list[numcodes];
-          for(int i=0;i<numcodes;i++) keysym_list[i] = key;
-            XChangeKeyboardMapping(display, code, numcodes, keysym_list, 1);
-        }
-
-	insertAtLast(key, code);
+        code = (max-min+1)*numcodes;
+        KeySym keysym_list[numcodes];
+        for(int i=0;i<numcodes;i++) keysym_list[i] = key;
+          XChangeKeyboardMapping(display, code, numcodes, keysym_list, 1);
       }
-    } else {
-      code = searchItem(key);
-      deleteItem(key);
-    }
-
+      if (!code)
+        return -1;
+//    }
+//    insertAtLast(key, code);
     XTestFakeKeyEvent(display, code, down, CurrentTime);
     XSync(display, 0);
+  } else {
+//    if (compareNode) {
+//      code = compareNode->keycode;
+
+      code = XkbKeysymToKeycode(key);
+      if (!code) {
+        int min, max, numcodes;
+        XDisplayKeycodes(display, &min, &max);
+        XGetKeyboardMapping(display, min, max-min, &numcodes);
+
+        code = (max-min+1)*numcodes;
+        KeySym keysym_list[numcodes];
+        for(int i=0;i<numcodes;i++) keysym_list[i] = key;
+          XChangeKeyboardMapping(display, code, numcodes, keysym_list, 1);
+      }
+      if (!code)
+        return -1;
+
+      XTestFakeKeyEvent(display, code, down, CurrentTime);
+      XSync(display, 0);
+//      deleteItem(key);
+//    }
   }
+
+//  return code;
 }
 
 void XClipboardSet(char *src) {
