@@ -130,40 +130,21 @@ int XKey(unsigned long key, int down) {
   Display *display = getXDisplay();
   KeyCode code = -2;
 
-  if (down) {
-    code = XkbKeysymToKeycode(key);
-    if (!code) {
-      int min, max, numcodes;
-      XDisplayKeycodes(display, &min, &max);
-      XGetKeyboardMapping(display, min, max-min, &numcodes);
+  code = XkbKeysymToKeycode(key);
+  if (!code) {
+    int min, max, numcodes;
+    XDisplayKeycodes(display, &min, &max);
+    XGetKeyboardMapping(display, min, max-min, &numcodes);
 
-      code = (max-min+1)*numcodes;
-      KeySym keysym_list[numcodes];
-      for(int i=0;i<numcodes;i++) keysym_list[i] = key;
-        XChangeKeyboardMapping(display, code, numcodes, keysym_list, 1);
-    }
-    if (!code)
-      return -1;
-    XTestFakeKeyEvent(display, code, down, CurrentTime);
-    XSync(display, 0);
-  } else {
-    code = XkbKeysymToKeycode(key);
-    if (!code) {
-      int min, max, numcodes;
-      XDisplayKeycodes(display, &min, &max);
-      XGetKeyboardMapping(display, min, max-min, &numcodes);
-
-      code = (max-min+1)*numcodes;
-      KeySym keysym_list[numcodes];
-      for(int i=0;i<numcodes;i++) keysym_list[i] = key;
-        XChangeKeyboardMapping(display, code, numcodes, keysym_list, 1);
-    }
-    if (!code)
-      return -1;
-
-    XTestFakeKeyEvent(display, code, down, CurrentTime);
-    XSync(display, 0);
+    code = (max-min+1)*numcodes;
+    KeySym keysym_list[numcodes];
+    for(int i=0;i<numcodes;i++) keysym_list[i] = key;
+      XChangeKeyboardMapping(display, code, numcodes, keysym_list, 1);
   }
+  if (!code)
+    return -1;
+  XTestFakeKeyEvent(display, code, down, CurrentTime);
+  XSync(display, 0);
 }
 
 void XClipboardSet(char *src) {
