@@ -245,14 +245,7 @@ func (manager *RemoteManager) GetScreenSize() *types.ScreenSize {
 }
 
 func (manager *RemoteManager) SetKeyboardLayout(layout string) {
-	// Workaround for https://github.com/m1k1o/neko/issues/45
-	// When pressing `shift` + `,` instead of `<` comes `>`.
-	variant := ""
-//	if layout == "us" {
-//		variant = "mac" // TODO: Test all keys.
-//	}
-
-	exec.Command("setxkbmap", layout, variant).Run()
+	exec.Command("setxkbmap", layout).Run()
 }
 
 func (manager *RemoteManager) SetKeyboardModifiers(NumLock int, CapsLock int, ScrollLock int) {
