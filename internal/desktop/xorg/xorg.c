@@ -68,7 +68,7 @@ void XButton(unsigned int button, int down) {
   XSync(display, 0);
 }
 
-static xkeyentry_t *pKeysHead = NULL;
+static xkeyentry_t *xKeysHead = NULL;
 
 void XKeyEntryAdd(KeySym keysym, KeyCode keycode) {
   xkeyentry_t *entry = (xkeyentry_t *) malloc(sizeof(xkeyentry_t));
@@ -78,13 +78,13 @@ void XKeyEntryAdd(KeySym keysym, KeyCode keycode) {
 
   entry->keysym = keysym;
   entry->keycode = keycode;
-  entry->next = pKeysHead;
-  pKeysHead = entry;
+  entry->next = xKeysHead;
+  xKeysHead = entry;
 }
 
 KeyCode XKeyEntryGet(KeySym keysym) {
   xkeyentry_t *prev = NULL;
-  xkeyentry_t *curr = pKeysHead;
+  xkeyentry_t *curr = xKeysHead;
 
   KeyCode keycode = 0;
   while (curr != NULL) {
@@ -92,7 +92,7 @@ KeyCode XKeyEntryGet(KeySym keysym) {
       keycode = curr->keycode;
 
       if (prev == NULL) {
-        pKeysHead = curr->next;
+        xKeysHead = curr->next;
       } else {
         prev->next = curr->next;
       }
@@ -113,7 +113,7 @@ KeyCode KbdXKeysymToKeycode(Display *dpy, KeySym keysym) {
   XkbDescPtr xkb;
   XkbStateRec state;
   unsigned int mods;
-  unsigned keycode;
+  KeyCode keycode;
 
   xkb = XkbGetMap(dpy, XkbAllComponentsMask, XkbUseCoreKbd);
   if (!xkb)
