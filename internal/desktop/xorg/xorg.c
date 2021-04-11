@@ -61,7 +61,8 @@ void XScroll(int x, int y) {
 }
 
 void XButton(unsigned int button, int down) {
-  if (button == 0) return;
+  if (button == 0)
+    return;
 
   Display *display = getXDisplay();
   XTestFakeButtonEvent(display, button, down, CurrentTime);
@@ -72,9 +73,8 @@ static xkeyentry_t *xKeysHead = NULL;
 
 void XKeyEntryAdd(KeySym keysym, KeyCode keycode) {
   xkeyentry_t *entry = (xkeyentry_t *) malloc(sizeof(xkeyentry_t));
-  if (entry == NULL) {
+  if (entry == NULL)
     return;
-  }
 
   entry->keysym = keysym;
   entry->keycode = keycode;
