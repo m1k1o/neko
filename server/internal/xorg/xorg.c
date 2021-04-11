@@ -6,26 +6,23 @@ static char *NAME = ":0.0";
 static int REGISTERED = 0;
 static int DIRTY = 0;
 
-struct linked_list
-{
-    unsigned long number;
-    KeyCode keycode;
-    struct linked_list *next;
-};
+typedef struct linked_list {
+  unsigned long number;
+  KeyCode keycode;
+  struct linked_list *next;
+} node;
 
-typedef struct linked_list node;
 node *head = NULL, *last = NULL;
 
 void insertAtLast(unsigned long value, KeyCode keycode) {
-  node *temp_node;
-  temp_node = (node *) malloc(sizeof(node));
+  node *temp_node = (node *) malloc(sizeof(node));
 
   temp_node->number = value;
   temp_node->keycode = keycode;
   temp_node->next = NULL;
 
-  //For the 1st element
-  if(!head) {
+  // For the 1st element
+  if (!head) {
     head = temp_node;
     last = temp_node;
   } else {
@@ -37,9 +34,9 @@ void insertAtLast(unsigned long value, KeyCode keycode) {
 void deleteItem(unsigned long value) {
   node *myNode = head, *previous = NULL;
 
-  while(myNode) {
-    if(myNode->number == value) {
-      if(!previous)
+  while (myNode) {
+    if (myNode->number == value) {
+      if (!previous)
         head = myNode->next;
       else
         previous->next = myNode->next;
@@ -55,19 +52,14 @@ void deleteItem(unsigned long value) {
 
 node *searchItemNode(unsigned long value) {
   node *searchNode = head;
-  bool foundNode = false;
 
-  while(searchNode) {
-    if(searchNode->number == value) {
-      foundNode = true;
-      break;
-    } else {
-      searchNode = searchNode->next;
+  while (searchNode) {
+    if (searchNode->number == value) {
+      return searchNode;
     }
-  }
 
-  if (foundNode)
-    return searchNode;
+    searchNode = searchNode->next;
+  }
 
   return NULL;
 }
@@ -220,15 +212,16 @@ void XKey(unsigned long key, int down) {
 
     code = (max-min+1)*numcodes;
     KeySym keysym_list[numcodes];
-    for(int i=0;i<numcodes;i++) keysym_list[i] = key;
-      XChangeKeyboardMapping(display, code, numcodes, keysym_list, 1);
+    for (int i=0;i<numcodes;i++) keysym_list[i] = key;
+    XChangeKeyboardMapping(display, code, numcodes, keysym_list, 1);
   }
+
   if (!code)
     return;
 
-  if (down) {
+  if (down)
     insertAtLast(key, code);
-  }
+
   XTestFakeKeyEvent(display, code, down, CurrentTime);
   XSync(display, 0);
 }
