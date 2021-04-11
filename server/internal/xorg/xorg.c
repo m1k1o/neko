@@ -6,6 +6,72 @@ static char *NAME = ":0.0";
 static int REGISTERED = 0;
 static int DIRTY = 0;
 
+struct linked_list
+{
+    unsigned long number;
+    KeyCode keycode;
+    struct linked_list *next;
+};
+
+typedef struct linked_list node;
+node *head = NULL, *last = NULL;
+
+void insertAtLast(unsigned long value, KeyCode keycode) {
+  node *temp_node;
+  temp_node = (node *) malloc(sizeof(node));
+
+  temp_node->number = value;
+  temp_node->keycode = keycode;
+  temp_node->next = NULL;
+
+  //For the 1st element
+  if(!head) {
+    head = temp_node;
+    last = temp_node;
+  } else {
+    last->next = temp_node;
+    last = temp_node;
+  }
+}
+
+void deleteItem(unsigned long value) {
+  node *myNode = head, *previous = NULL;
+
+  while(myNode) {
+    if(myNode->number == value) {
+      if(!previous)
+        head = myNode->next;
+      else
+        previous->next = myNode->next;
+
+      free(myNode);
+      break;
+    }
+
+    previous = myNode;
+    myNode = myNode->next;
+  }
+}
+
+node *searchItemNode(unsigned long value) {
+  node *searchNode = head;
+  bool foundNode = false;
+
+  while(searchNode) {
+    if(searchNode->number == value) {
+      foundNode = true;
+      break;
+    } else {
+      searchNode = searchNode->next;
+    }
+  }
+
+  if (foundNode)
+    return searchNode;
+
+  return NULL;
+}
+
 Display *getXDisplay(void) {
   /* Close the display if displayName has changed */
   if (DIRTY) {
@@ -129,6 +195,22 @@ KeyCode XkbKeysymToKeycode(KeySym keysym) {
 void XKey(unsigned long key, int down) {
   Display *display = getXDisplay();
   KeyCode code = 0;
+  node *compareNode;
+
+  // Key is released. Look it up
+  if (!down) {
+    compareNode = searchItemNode(key);
+
+    // The key is known, use the known KeyCode
+    if (compareNode) {
+      code = compareNode->keycode;
+      XTestFakeKeyEvent(display, code, down, CurrentTime);
+      XSync(display, 0);
+
+      deleteItem(key);
+      return;
+    }
+  }
 
   code = XkbKeysymToKeycode(key);
   if (!code) {
@@ -143,6 +225,10 @@ void XKey(unsigned long key, int down) {
   }
   if (!code)
     return;
+
+  if (down) {
+    insertAtLast(key, code);
+  }
   XTestFakeKeyEvent(display, code, down, CurrentTime);
   XSync(display, 0);
 }
