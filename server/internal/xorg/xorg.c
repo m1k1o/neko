@@ -12,9 +12,9 @@ typedef struct linked_list {
   struct linked_list *next;
 } node;
 
-node *head = NULL, *last = NULL;
+node *head = NULL;
 
-void insertAtLast(unsigned long value, KeyCode keycode) {
+void insertItem(unsigned long value, KeyCode keycode) {
   node *temp_node = (node *) malloc(sizeof(node));
 
   temp_node->number = value;
@@ -22,13 +22,10 @@ void insertAtLast(unsigned long value, KeyCode keycode) {
   temp_node->next = NULL;
 
   // For the 1st element
-  if (!head) {
-    head = temp_node;
-    last = temp_node;
-  } else {
-    last->next = temp_node;
-    last = temp_node;
+  if (head) {
+    temp_node->next = head;
   }
+  head = temp_node;
 }
 
 void deleteItem(unsigned long value) {
@@ -220,7 +217,7 @@ void XKey(unsigned long key, int down) {
     return;
 
   if (down)
-    insertAtLast(key, code);
+    insertItem(key, code);
 
   XTestFakeKeyEvent(display, code, down, CurrentTime);
   XSync(display, 0);
