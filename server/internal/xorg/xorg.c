@@ -6,16 +6,10 @@ static char *NAME = ":0.0";
 static int REGISTERED = 0;
 static int DIRTY = 0;
 
-typedef struct linked_list {
-  KeySym keysym;
-  KeyCode keycode;
-  struct linked_list *next;
-} node;
-
-node *head = NULL;
+xkeys_t *head = NULL;
 
 void insertItem(KeySym keysym, KeyCode keycode) {
-  node *temp_node = (node *) malloc(sizeof(node));
+  xkeys_t *temp_node = (xkeys_t *) malloc(sizeof(xkeys_t));
 
   temp_node->keysym = keysym;
   temp_node->keycode = keycode;
@@ -29,7 +23,7 @@ void insertItem(KeySym keysym, KeyCode keycode) {
 }
 
 void deleteItem(KeySym keysym) {
-  node *myNode = head, *previous = NULL;
+  xkeys_t *myNode = head, *previous = NULL;
   int i = 0;
 
   while (myNode) {
@@ -53,8 +47,8 @@ void deleteItem(KeySym keysym) {
   }
 }
 
-node *searchItemNode(KeySym keysym) {
-  node *searchNode = head;
+xkeys_t *searchItemNode(KeySym keysym) {
+  xkeys_t *searchNode = head;
   int i = 0;
 
   while (searchNode) {
@@ -205,7 +199,7 @@ KeyCode XkbKeysymToKeycode(Display *dpy, KeySym keysym) {
 void XKey(KeySym key, int down) {
   Display *display = getXDisplay();
   KeyCode code = 0;
-  node *compareNode;
+  xkeys_t *compareNode;
 
   // Key is released. Look it up
   if (!down) {

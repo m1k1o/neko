@@ -16,6 +16,12 @@
   extern void goCreateScreenSize(int index, int width, int height, int mwidth, int mheight);
   extern void goSetScreenRates(int index, int rate_index, short rate);
 
+  typedef struct xkeys_t {
+    KeySym keysym;
+    KeyCode keycode;
+    struct xkeys_t *next;
+  } xkeys_t;
+
   /* Returns the main display, closed either on exit or when closeMainDisplay()
   * is invoked. This removes a bit of the overhead of calling XOpenDisplay() &
   * XCloseDisplay() everytime the main display needs to be used.
