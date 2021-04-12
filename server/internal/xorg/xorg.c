@@ -6,30 +6,25 @@ static char *NAME = ":0.0";
 static int REGISTERED = 0;
 static int DIRTY = 0;
 
-xkeys_t *head = NULL;
+xkeys_t *xKeysHead = NULL;
 
 void insertItem(KeySym keysym, KeyCode keycode) {
   xkeys_t *temp_node = (xkeys_t *) malloc(sizeof(xkeys_t));
 
   temp_node->keysym = keysym;
   temp_node->keycode = keycode;
-  temp_node->next = NULL;
-
-  // For the 1st element
-  if (head) {
-    temp_node->next = head;
-  }
-  head = temp_node;
+  temp_node->next = xKeysHead;
+  xKeysHead = temp_node;
 }
 
 void deleteItem(KeySym keysym) {
-  xkeys_t *myNode = head, *previous = NULL;
+  xkeys_t *myNode = xKeysHead, *previous = NULL;
   int i = 0;
 
   while (myNode) {
     if (myNode->keysym == keysym) {
       if (!previous)
-        head = myNode->next;
+        xKeysHead = myNode->next;
       else
         previous->next = myNode->next;
 
@@ -48,7 +43,7 @@ void deleteItem(KeySym keysym) {
 }
 
 xkeys_t *searchItemNode(KeySym keysym) {
-  xkeys_t *searchNode = head;
+  xkeys_t *searchNode = xKeysHead;
   int i = 0;
 
   while (searchNode) {
