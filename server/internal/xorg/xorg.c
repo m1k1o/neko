@@ -39,8 +39,8 @@ KeyCode XKeysPop(KeySym keysym) {
     previous = node;
     node = node->next;
     if (i++ > 120) {
-      // this should lead to a panic
-      printf("loop over limit");
+      // this should NEVER HAPPEN
+      fprintf(stderr, "[FATAL-ERROR] XKeysPop() in xorg.c: reached maximum loop limit! Something is wrong\n");
       break;
     }
   }
@@ -65,7 +65,7 @@ Display *getXDisplay(void) {
     }
 
     if (DISPLAY == NULL) {
-      fputs("Could not open main display\n", stderr);
+      fprintf(stderr, "[FATAL-ERROR] XKeysPop() in xorg.c: Could not open main display!");
     } else if (!REGISTERED) {
       atexit(&XDisplayClose);
       REGISTERED = 1;
