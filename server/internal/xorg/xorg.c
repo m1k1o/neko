@@ -8,7 +8,7 @@ static int DIRTY = 0;
 
 xkeys_t *xKeysHead = NULL;
 
-void insertItem(KeySym keysym, KeyCode keycode) {
+void XKeysInsert(KeySym keysym, KeyCode keycode) {
   xkeys_t *temp_node = (xkeys_t *) malloc(sizeof(xkeys_t));
 
   temp_node->keysym = keysym;
@@ -17,19 +17,22 @@ void insertItem(KeySym keysym, KeyCode keycode) {
   xKeysHead = temp_node;
 }
 
-void deleteItem(KeySym keysym) {
+KeyCode XKeysPop(KeySym keysym) {
   xkeys_t *myNode = xKeysHead, *previous = NULL;
+  KeyCode keycode = 0;
   int i = 0;
 
   while (myNode) {
     if (myNode->keysym == keysym) {
+      keycode = myNode->keycode;
+
       if (!previous)
         xKeysHead = myNode->next;
       else
         previous->next = myNode->next;
 
       free(myNode);
-      break;
+      return keycode;
     }
 
     previous = myNode;
@@ -40,27 +43,8 @@ void deleteItem(KeySym keysym) {
       break;
     }
   }
-}
 
-xkeys_t *searchItemNode(KeySym keysym) {
-  xkeys_t *searchNode = xKeysHead;
-  int i = 0;
-
-  while (searchNode) {
-    if (searchNode->keysym == keysym) {
-      return searchNode;
-    }
-
-    searchNode = searchNode->next;
-
-    if (i++ > 120) {
-      // this should lead to a panic
-      printf("loop over limit");
-      break;
-    }
-  }
-
-  return NULL;
+  return 0;
 }
 
 Display *getXDisplay(void) {
@@ -194,24 +178,13 @@ KeyCode XkbKeysymToKeycode(Display *dpy, KeySym keysym) {
 void XKey(KeySym key, int down) {
   Display *display = getXDisplay();
   KeyCode code = 0;
-  xkeys_t *compareNode;
 
-  // Key is released. Look it up
-  if (!down) {
-    compareNode = searchItemNode(key);
+  if (!down)
+    code = XKeysPop(key);
 
-    // The key is known, use the known KeyCode
-    if (compareNode) {
-      code = compareNode->keycode;
-      XTestFakeKeyEvent(display, code, down, CurrentTime);
-      XSync(display, 0);
+  if (!code)
+    code = XkbKeysymToKeycode(display, key);
 
-      deleteItem(key);
-      return;
-    }
-  }
-
-  code = XkbKeysymToKeycode(display, key);
   if (!code) {
     int min, max, numcodes;
     XDisplayKeycodes(display, &min, &max);
@@ -227,7 +200,7 @@ void XKey(KeySym key, int down) {
     return;
 
   if (down)
-    insertItem(key, code);
+    XKeysInsert(key, code);
 
   XTestFakeKeyEvent(display, code, down, CurrentTime);
   XSync(display, 0);
