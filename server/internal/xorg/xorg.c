@@ -9,34 +9,35 @@ static int DIRTY = 0;
 xkeys_t *xKeysHead = NULL;
 
 void XKeysInsert(KeySym keysym, KeyCode keycode) {
-  xkeys_t *temp_node = (xkeys_t *) malloc(sizeof(xkeys_t));
+  xkeys_t *node = (xkeys_t *) malloc(sizeof(xkeys_t));
 
-  temp_node->keysym = keysym;
-  temp_node->keycode = keycode;
-  temp_node->next = xKeysHead;
-  xKeysHead = temp_node;
+  node->keysym = keysym;
+  node->keycode = keycode;
+  node->next = xKeysHead;
+  xKeysHead = node;
 }
 
 KeyCode XKeysPop(KeySym keysym) {
-  xkeys_t *myNode = xKeysHead, *previous = NULL;
   KeyCode keycode = 0;
+  xkeys_t *node = xKeysHead,
+          *previous = NULL;
   int i = 0;
 
-  while (myNode) {
-    if (myNode->keysym == keysym) {
-      keycode = myNode->keycode;
+  while (node) {
+    if (node->keysym == keysym) {
+      keycode = node->keycode;
 
       if (!previous)
-        xKeysHead = myNode->next;
+        xKeysHead = node->next;
       else
-        previous->next = myNode->next;
+        previous->next = node->next;
 
-      free(myNode);
+      free(node);
       return keycode;
     }
 
-    previous = myNode;
-    myNode = myNode->next;
+    previous = node;
+    node = node->next;
     if (i++ > 120) {
       // this should lead to a panic
       printf("loop over limit");
