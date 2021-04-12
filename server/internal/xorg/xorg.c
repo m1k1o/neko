@@ -138,6 +138,7 @@ void XButton(unsigned int button, int down) {
   }
 }
 
+// From: https://github.com/TigerVNC/tigervnc/blob/0946e298075f8f7b6d63e552297a787c5f84d27c/unix/x0vncserver/XDesktop.cxx#L343-L379
 KeyCode XkbKeysymToKeycode(Display *dpy, KeySym keysym) {
   XkbDescPtr xkb;
   XkbStateRec state;
