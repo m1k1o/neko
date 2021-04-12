@@ -463,7 +463,7 @@
         this.events.emit('connection.webrtc', 'connected')
       })
 
-      let webrtcReconnect: any
+      let webrtcReconnect: any = null
       this.webrtc.on('disconnected', () => {
         this.events.emit('connection.webrtc', 'disconnected')
         this.clearWebRTCState()
@@ -478,14 +478,21 @@
           }
         }
 
-        // reconnect WebRTC
-        if (this.connected) {
-          if (webrtcReconnect) clearTimeout(webrtcReconnect)
+        // periodically reconnect WebRTC
+        if (this.connected && !webrtcReconnect) {
+          webrtcReconnect = setInterval(() => {
+            // connect only if disconnected
+            if (this.state.connection.webrtc.status == 'disconnected') {
+              try {
+                this.webrtcConnect()
+              } catch (e) {}
+            }
 
-          webrtcReconnect = setTimeout(() => {
-            try {
-              this.webrtcConnect()
-            } catch (e) {}
+            // stop reconnecting if connected to webrtc or disconnected from WS
+            if (this.state.connection.webrtc.status == 'connected' || !this.connected) {
+              clearInterval(webrtcReconnect)
+              webrtcReconnect = null
+            }
           }, 1000)
         }
       })
