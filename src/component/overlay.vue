@@ -218,9 +218,6 @@
     }
 
     onMouseLeave(e: MouseEvent) {
-      this._overlay.blur()
-      this.focused = false
-
       if (this.isControling) {
         this.keyboard.reset()
 
@@ -230,6 +227,9 @@
           numlock: e.getModifierState('NumLock'),
         })
       }
+
+      this._overlay.blur()
+      this.focused = false
     }
 
     onDragEnter(e: DragEvent) {
