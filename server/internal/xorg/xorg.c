@@ -7,17 +7,17 @@ static int REGISTERED = 0;
 static int DIRTY = 0;
 
 typedef struct linked_list {
-  unsigned long number;
+  KeySym keysym;
   KeyCode keycode;
   struct linked_list *next;
 } node;
 
 node *head = NULL;
 
-void insertItem(unsigned long value, KeyCode keycode) {
+void insertItem(KeySym keysym, KeyCode keycode) {
   node *temp_node = (node *) malloc(sizeof(node));
 
-  temp_node->number = value;
+  temp_node->keysym = keysym;
   temp_node->keycode = keycode;
   temp_node->next = NULL;
 
@@ -28,12 +28,12 @@ void insertItem(unsigned long value, KeyCode keycode) {
   head = temp_node;
 }
 
-void deleteItem(unsigned long value) {
+void deleteItem(KeySym keysym) {
   node *myNode = head, *previous = NULL;
   int i = 0;
 
   while (myNode) {
-    if (myNode->number == value) {
+    if (myNode->keysym == keysym) {
       if (!previous)
         head = myNode->next;
       else
@@ -53,12 +53,12 @@ void deleteItem(unsigned long value) {
   }
 }
 
-node *searchItemNode(unsigned long value) {
+node *searchItemNode(KeySym keysym) {
   node *searchNode = head;
   int i = 0;
 
   while (searchNode) {
-    if (searchNode->number == value) {
+    if (searchNode->keysym == keysym) {
       return searchNode;
     }
 
@@ -202,7 +202,7 @@ KeyCode XkbKeysymToKeycode(Display *dpy, KeySym keysym) {
   return keycode;
 }
 
-void XKey(unsigned long key, int down) {
+void XKey(KeySym key, int down) {
   Display *display = getXDisplay();
   KeyCode code = 0;
   node *compareNode;
