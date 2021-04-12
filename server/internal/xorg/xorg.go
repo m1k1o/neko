@@ -75,7 +75,7 @@ func KeyDown(code uint64) error {
 
 	debounce_key[code] = time.Now()
 
-	C.XKey(C.ulong(code), C.int(1))
+	C.XKey(C.KeySym(code), C.int(1))
 	return nil
 }
 
@@ -103,7 +103,7 @@ func KeyUp(code uint64) error {
 
 	delete(debounce_key, code)
 
-	C.XKey(C.ulong(code), C.int(0))
+	C.XKey(C.KeySym(code), C.int(0))
 	return nil
 }
 

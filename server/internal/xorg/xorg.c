@@ -6,6 +6,48 @@ static char *NAME = ":0.0";
 static int REGISTERED = 0;
 static int DIRTY = 0;
 
+xkeys_t *xKeysHead = NULL;
+
+void XKeysInsert(KeySym keysym, KeyCode keycode) {
+  xkeys_t *node = (xkeys_t *) malloc(sizeof(xkeys_t));
+
+  node->keysym = keysym;
+  node->keycode = keycode;
+  node->next = xKeysHead;
+  xKeysHead = node;
+}
+
+KeyCode XKeysPop(KeySym keysym) {
+  KeyCode keycode = 0;
+  xkeys_t *node = xKeysHead,
+          *previous = NULL;
+  int i = 0;
+
+  while (node) {
+    if (node->keysym == keysym) {
+      keycode = node->keycode;
+
+      if (!previous)
+        xKeysHead = node->next;
+      else
+        previous->next = node->next;
+
+      free(node);
+      return keycode;
+    }
+
+    previous = node;
+    node = node->next;
+    if (i++ > 120) {
+      // this should NEVER HAPPEN
+      fprintf(stderr, "[FATAL-ERROR] XKeysPop() in xorg.c: reached maximum loop limit! Something is wrong\n");
+      break;
+    }
+  }
+
+  return 0;
+}
+
 Display *getXDisplay(void) {
   /* Close the display if displayName has changed */
   if (DIRTY) {
@@ -23,7 +65,7 @@ Display *getXDisplay(void) {
     }
 
     if (DISPLAY == NULL) {
-      fputs("Could not open main display\n", stderr);
+      fprintf(stderr, "[FATAL-ERROR] XKeysPop() in xorg.c: Could not open main display!");
     } else if (!REGISTERED) {
       atexit(&XDisplayClose);
       REGISTERED = 1;
@@ -96,26 +138,74 @@ void XButton(unsigned int button, int down) {
   }
 }
 
-void XKey(unsigned long key, int down) {
-  if (key != 0) {
-    Display *display = getXDisplay();
-    KeyCode code = XKeysymToKeycode(display, key);
+// From: https://github.com/TigerVNC/tigervnc/blob/0946e298075f8f7b6d63e552297a787c5f84d27c/unix/x0vncserver/XDesktop.cxx#L343-L379
+KeyCode XkbKeysymToKeycode(Display *dpy, KeySym keysym) {
+  XkbDescPtr xkb;
+  XkbStateRec state;
+  unsigned int mods;
+  unsigned keycode;
 
-    // Map non-existing keysyms to new keycodes
-    if(code == 0) {
-      int min, max, numcodes;
-      XDisplayKeycodes(display, &min, &max);
-      XGetKeyboardMapping(display, min, max-min, &numcodes);
+  xkb = XkbGetMap(dpy, XkbAllComponentsMask, XkbUseCoreKbd);
+  if (!xkb)
+    return 0;
 
-      code = (max-min+1)*numcodes;
-      KeySym keysym_list[numcodes];
-      for(int i=0;i<numcodes;i++) keysym_list[i] = key;
-      XChangeKeyboardMapping(display, code, numcodes, keysym_list, 1);
-    }
+  XkbGetState(dpy, XkbUseCoreKbd, &state);
+  // XkbStateFieldFromRec() doesn't work properly because
+  // state.lookup_mods isn't properly updated, so we do this manually
+  mods = XkbBuildCoreState(XkbStateMods(&state), state.group);
 
-    XTestFakeKeyEvent(display, code, down, CurrentTime);
-    XSync(display, 0);
+  for (keycode = xkb->min_key_code;
+       keycode <= xkb->max_key_code;
+       keycode++) {
+    KeySym cursym;
+    unsigned int out_mods;
+    XkbTranslateKeyCode(xkb, keycode, mods, &out_mods, &cursym);
+    if (cursym == keysym)
+      break;
   }
+
+  if (keycode > xkb->max_key_code)
+    keycode = 0;
+
+  XkbFreeKeyboard(xkb, XkbAllComponentsMask, True);
+
+  // Shift+Tab is usually ISO_Left_Tab, but RFB hides this fact. Do
+  // another attempt if we failed the initial lookup
+  if ((keycode == 0) && (keysym == XK_Tab) && (mods & ShiftMask))
+    return XkbKeysymToKeycode(dpy, XK_ISO_Left_Tab);
+
+  return keycode;
+}
+
+void XKey(KeySym key, int down) {
+  Display *display = getXDisplay();
+  KeyCode code = 0;
+
+  if (!down)
+    code = XKeysPop(key);
+
+  if (!code)
+    code = XkbKeysymToKeycode(display, key);
+
+  if (!code) {
+    int min, max, numcodes;
+    XDisplayKeycodes(display, &min, &max);
+    XGetKeyboardMapping(display, min, max-min, &numcodes);
+
+    code = (max-min+1)*numcodes;
+    KeySym keysym_list[numcodes];
+    for (int i=0;i<numcodes;i++) keysym_list[i] = key;
+    XChangeKeyboardMapping(display, code, numcodes, keysym_list, 1);
+  }
+
+  if (!code)
+    return;
+
+  if (down)
+    XKeysInsert(key, code);
+
+  XTestFakeKeyEvent(display, code, down, CurrentTime);
+  XSync(display, 0);
 }
 
 void XClipboardSet(char *src) {
