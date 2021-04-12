@@ -28,7 +28,7 @@ typedef struct xkeyentry_t {
 
 static void XKeyEntryAdd(KeySym keysym, KeyCode keycode);
 static KeyCode XKeyEntryGet(KeySym keysym);
-static KeyCode KbdXKeysymToKeycode(Display *dpy, KeySym keysym);
+static KeyCode XkbKeysymToKeycode(Display *dpy, KeySym keysym);
 void XKey(KeySym keysym, int down);
 
 void XGetScreenConfigurations();

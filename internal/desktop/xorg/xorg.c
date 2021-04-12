@@ -109,11 +109,11 @@ KeyCode XKeyEntryGet(KeySym keysym) {
 }
 
 // From https://github.com/TigerVNC/tigervnc/blob/0946e298075f8f7b6d63e552297a787c5f84d27c/unix/x0vncserver/XDesktop.cxx#L343-L379
-KeyCode KbdXKeysymToKeycode(Display *dpy, KeySym keysym) {
+KeyCode XkbKeysymToKeycode(Display* dpy, KeySym keysym) {
   XkbDescPtr xkb;
   XkbStateRec state;
   unsigned int mods;
-  KeyCode keycode;
+  unsigned keycode;
 
   xkb = XkbGetMap(dpy, XkbAllComponentsMask, XkbUseCoreKbd);
   if (!xkb)
@@ -142,7 +142,7 @@ KeyCode KbdXKeysymToKeycode(Display *dpy, KeySym keysym) {
   // Shift+Tab is usually ISO_Left_Tab, but RFB hides this fact. Do
   // another attempt if we failed the initial lookup
   if ((keycode == 0) && (keysym == XK_Tab) && (mods & ShiftMask))
-    return KbdXKeysymToKeycode(dpy, XK_ISO_Left_Tab);
+    return XkbKeysymToKeycode(dpy, XK_ISO_Left_Tab);
 
   return keycode;
 }
@@ -158,7 +158,7 @@ void XKey(KeySym keysym, int down) {
     keycode = XKeyEntryGet(keysym);
 
   if (keycode == 0)
-    keycode = KbdXKeysymToKeycode(display, keysym);
+    keycode = XkbKeysymToKeycode(display, keysym);
 
   // Map non-existing keysyms to new keycodes
   if (keycode == 0) {
