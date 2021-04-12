@@ -248,7 +248,6 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
     this._channel.onclose = this.onDisconnected.bind(this, new Error('peer data channel closed'))
   }
 
-  // not-implemented
   private onData(e: MessageEvent) {
     const payload = new DataView(e.data)
     const event = payload.getUint8(0)
