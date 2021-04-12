@@ -30,6 +30,7 @@ void insertItem(unsigned long value, KeyCode keycode) {
 
 void deleteItem(unsigned long value) {
   node *myNode = head, *previous = NULL;
+  int i = 0;
 
   while (myNode) {
     if (myNode->number == value) {
@@ -44,11 +45,17 @@ void deleteItem(unsigned long value) {
 
     previous = myNode;
     myNode = myNode->next;
+    if (i++ > 120) {
+      // this should lead to a panic
+      printf("loop over limit");
+      break;
+    }
   }
 }
 
 node *searchItemNode(unsigned long value) {
   node *searchNode = head;
+  int i = 0;
 
   while (searchNode) {
     if (searchNode->number == value) {
@@ -56,6 +63,12 @@ node *searchItemNode(unsigned long value) {
     }
 
     searchNode = searchNode->next;
+
+    if (i++ > 120) {
+      // this should lead to a panic
+      printf("loop over limit");
+      break;
+    }
   }
 
   return NULL;
@@ -151,24 +164,27 @@ void XButton(unsigned int button, int down) {
   }
 }
 
-KeyCode XkbKeysymToKeycode(KeySym keysym) {
+KeyCode XkbKeysymToKeycode(Display *dpy, KeySym keysym) {
   XkbDescPtr xkb;
   XkbStateRec state;
+  unsigned int mods;
   unsigned keycode;
-  Display *dpy = getXDisplay();
 
   xkb = XkbGetMap(dpy, XkbAllComponentsMask, XkbUseCoreKbd);
   if (!xkb)
     return 0;
 
   XkbGetState(dpy, XkbUseCoreKbd, &state);
+  // XkbStateFieldFromRec() doesn't work properly because
+  // state.lookup_mods isn't properly updated, so we do this manually
+  mods = XkbBuildCoreState(XkbStateMods(&state), state.group);
 
   for (keycode = xkb->min_key_code;
        keycode <= xkb->max_key_code;
        keycode++) {
     KeySym cursym;
-    unsigned int mods;
-    XkbTranslateKeyCode(xkb, keycode, state.compat_state, &mods, &cursym);
+    unsigned int out_mods;
+    XkbTranslateKeyCode(xkb, keycode, mods, &out_mods, &cursym);
     if (cursym == keysym)
       break;
   }
@@ -177,6 +193,11 @@ KeyCode XkbKeysymToKeycode(KeySym keysym) {
     keycode = 0;
 
   XkbFreeKeyboard(xkb, XkbAllComponentsMask, True);
+
+  // Shift+Tab is usually ISO_Left_Tab, but RFB hides this fact. Do
+  // another attempt if we failed the initial lookup
+  if ((keycode == 0) && (keysym == XK_Tab) && (mods & ShiftMask))
+    return XkbKeysymToKeycode(dpy, XK_ISO_Left_Tab);
 
   return keycode;
 }
@@ -201,7 +222,7 @@ void XKey(unsigned long key, int down) {
     }
   }
 
-  code = XkbKeysymToKeycode(key);
+  code = XkbKeysymToKeycode(display, key);
   if (!code) {
     int min, max, numcodes;
     XDisplayKeycodes(display, &min, &max);
