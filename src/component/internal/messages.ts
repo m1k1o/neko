@@ -11,6 +11,8 @@ export interface NekoEvents {
   // connection events
   ['connection.websocket']: (state: 'connected' | 'connecting' | 'disconnected') => void
   ['connection.webrtc']: (state: 'connected' | 'connecting' | 'disconnected') => void
+  ['connection.webrtc.sdp']: (type: 'local' | 'remote', data: string) => void
+  ['connection.webrtc.sdp.candidate']: (type: 'local' | 'remote', data: RTCIceCandidateInit) => void
   ['connection.disconnect']: (message: string) => void
 
   // drag and drop events
@@ -106,16 +108,18 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
   // Signal Events
   /////////////////////////////
 
-  protected [EVENT.SIGNAL_PROVIDE]({ event, video, videos }: message.SignalProvide) {
+  protected [EVENT.SIGNAL_PROVIDE]({ event, sdp, video, videos }: message.SignalProvide) {
     this._log.debug('EVENT.SIGNAL_PROVIDE')
     Vue.set(this.state.connection.webrtc, 'video', video)
     Vue.set(this.state.connection.webrtc, 'videos', videos)
     // TODO: Handle.
+    this.emit('connection.webrtc.sdp', 'remote', sdp)
   }
 
   protected [EVENT.SIGNAL_CANDIDATE]({ event, ...candidate }: message.SignalCandidate) {
     this._log.debug('EVENT.SIGNAL_CANDIDATE')
     // TODO: Handle.
+    this.emit('connection.webrtc.sdp.candidate', 'remote', candidate)
   }
 
   protected [EVENT.SIGNAL_VIDEO]({ event, video }: message.SignalVideo) {

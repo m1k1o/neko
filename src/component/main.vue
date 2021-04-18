@@ -369,6 +369,7 @@
             try {
               let sdp = await this.webrtc.connect(payload.sdp, payload.iceservers)
               this.websocket.send(EVENT.SIGNAL_ANSWER, { sdp })
+              this.events.emit('connection.webrtc.sdp', 'local', sdp)
             } catch (e) {}
             break
           case EVENT.SIGNAL_CANDIDATE:
@@ -417,6 +418,7 @@
       })
       this.webrtc.on('candidate', (candidate: RTCIceCandidateInit) => {
         this.websocket.send(EVENT.SIGNAL_CANDIDATE, candidate)
+        this.events.emit('connection.webrtc.sdp.candidate', 'local', candidate)
       })
 
       let webrtcCongestion: number = 0
