@@ -111,7 +111,7 @@ COPY runtime/xorg.conf /etc/neko/xorg.conf
 
 #
 # copy runtime folders
-COPY --chown=$USERNAME runtime/icon-theme /home/$USERNAME/.icons/default
+COPY --chown=neko:neko runtime/icon-theme /home/$USERNAME/.icons/default
 COPY runtime/fontconfig/* /etc/fonts/conf.d/
 COPY runtime/fonts /usr/local/share/fonts
 
