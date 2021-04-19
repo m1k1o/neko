@@ -85,6 +85,19 @@ RUN set -eux; \
     chown $USERNAME /var/log/neko/; \
     chown -R $USERNAME:$USERNAME /home/$USERNAME; \
     #
+    # install fonts
+    apt-get install -y --no-install-recommends \
+        # Emojis
+        fonts-noto-color-emoji \
+        # Chinese fonts
+        fonts-arphic-ukai fonts-arphic-uming \
+        # Japanese fonts
+        fonts-ipafont-mincho fonts-ipafont-gothic \
+        # Korean fonts
+        fonts-unfonts-core \
+        # Indian fonts
+        fonts-indic; \
+    #
     # clean up
     apt-get clean -y; \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/*
@@ -98,7 +111,9 @@ COPY runtime/xorg.conf /etc/neko/xorg.conf
 
 #
 # copy runtime folders
-COPY runtime/icon-theme /home/$USERNAME/.icons/default
+COPY --chown=$USERNAME runtime/icon-theme /home/$USERNAME/.icons/default
+COPY runtime/fontconfig/* /etc/fonts/conf.d/
+COPY runtime/fonts /usr/local/share/fonts
 
 #
 # set default envs
