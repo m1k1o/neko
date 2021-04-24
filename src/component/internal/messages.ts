@@ -42,18 +42,18 @@ export interface NekoEvents {
 }
 
 export class NekoMessages extends EventEmitter<NekoEvents> {
-  private websocket: NekoWebSocket
-  private state: NekoState
+  private _websocket: NekoWebSocket
+  private _state: NekoState
   private _log: Logger
 
   constructor(websocket: NekoWebSocket, state: NekoState) {
     super()
 
     this._log = new Logger('messages')
-    this.state = state
-    this.websocket = websocket
+    this._state = state
+    this._websocket = websocket
 
-    this.websocket.on('message', async (event: string, payload: any) => {
+    this._websocket.on('message', async (event: string, payload: any) => {
       // @ts-ignore
       if (typeof this[event] === 'function') {
         // @ts-ignore
@@ -70,8 +70,8 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
 
   protected [EVENT.SYSTEM_INIT](conf: message.SystemInit) {
     this._log.debug('EVENT.SYSTEM_INIT')
-    Vue.set(this.state, 'session_id', conf.session_id)
-    Vue.set(this.state.control, 'implicit_hosting', conf.implicit_hosting)
+    Vue.set(this._state, 'session_id', conf.session_id)
+    Vue.set(this._state.control, 'implicit_hosting', conf.implicit_hosting)
 
     for (const id in conf.sessions) {
       this[EVENT.SESSION_CREATED](conf.sessions[id])
@@ -93,14 +93,14 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
       return b.width - a.width
     })
 
-    Vue.set(this.state.screen, 'configurations', list)
+    Vue.set(this._state.screen, 'configurations', list)
 
     this[EVENT.BORADCAST_STATUS](broadcast_status)
   }
 
   protected [EVENT.SYSTEM_DISCONNECT]({ message }: message.SystemDisconnect) {
     this._log.debug('EVENT.SYSTEM_DISCONNECT')
-    this.websocket.disconnect(new Error(message))
+    this._websocket.disconnect(new Error(message))
     this.emit('connection.disconnect', message)
   }
 
@@ -110,8 +110,8 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
 
   protected [EVENT.SIGNAL_PROVIDE]({ event, sdp, video, videos }: message.SignalProvide) {
     this._log.debug('EVENT.SIGNAL_PROVIDE')
-    Vue.set(this.state.connection.webrtc, 'video', video)
-    Vue.set(this.state.connection.webrtc, 'videos', videos)
+    Vue.set(this._state.connection.webrtc, 'video', video)
+    Vue.set(this._state.connection.webrtc, 'videos', videos)
     // TODO: Handle.
     this.emit('connection.webrtc.sdp', 'remote', sdp)
   }
@@ -124,7 +124,7 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
 
   protected [EVENT.SIGNAL_VIDEO]({ event, video }: message.SignalVideo) {
     this._log.debug('EVENT.SIGNAL_VIDEO')
-    Vue.set(this.state.connection.webrtc, 'video', video)
+    Vue.set(this._state.connection.webrtc, 'video', video)
   }
 
   /////////////////////////////
@@ -133,25 +133,25 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
 
   protected [EVENT.SESSION_CREATED]({ id, ...data }: message.SessionData) {
     this._log.debug('EVENT.SESSION_CREATED', id)
-    Vue.set(this.state.sessions, id, data)
+    Vue.set(this._state.sessions, id, data)
     this.emit('session.created', id)
   }
 
   protected [EVENT.SESSION_DELETED]({ id }: message.SessionID) {
     this._log.debug('EVENT.SESSION_DELETED', id)
-    Vue.delete(this.state.sessions, id)
+    Vue.delete(this._state.sessions, id)
     this.emit('session.deleted', id)
   }
 
   protected [EVENT.SESSION_PROFILE]({ id, ...profile }: message.MemberProfile) {
     this._log.debug('EVENT.SESSION_PROFILE', id)
-    Vue.set(this.state.sessions[id], 'profile', profile)
+    Vue.set(this._state.sessions[id], 'profile', profile)
     this.emit('session.updated', id)
   }
 
   protected [EVENT.SESSION_STATE]({ id, ...state }: message.SessionState) {
     this._log.debug('EVENT.SESSION_STATE', id)
-    Vue.set(this.state.sessions[id], 'state', state)
+    Vue.set(this._state.sessions[id], 'state', state)
     this.emit('session.updated', id)
   }
 
@@ -163,9 +163,9 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
     this._log.debug('EVENT.CONTROL_HOST')
 
     if (has_host && host_id) {
-      Vue.set(this.state.control, 'host_id', host_id)
+      Vue.set(this._state.control, 'host_id', host_id)
     } else {
-      Vue.set(this.state.control, 'host_id', null)
+      Vue.set(this._state.control, 'host_id', null)
     }
 
     this.emit('room.control.host', has_host, host_id)
@@ -177,7 +177,7 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
 
   protected [EVENT.SCREEN_UPDATED]({ width, height, rate }: message.ScreenSize) {
     this._log.debug('EVENT.SCREEN_UPDATED')
-    Vue.set(this.state.screen, 'size', { width, height, rate })
+    Vue.set(this._state.screen, 'size', { width, height, rate })
     this.emit('room.screen.updated', width, height, rate)
   }
 
@@ -187,7 +187,7 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
 
   protected [EVENT.CLIPBOARD_UPDATED]({ text }: message.ClipboardData) {
     this._log.debug('EVENT.CLIPBOARD_UPDATED')
-    Vue.set(this.state.control, 'clipboard', { text })
+    Vue.set(this._state.control, 'clipboard', { text })
     this.emit('room.clipboard.updated', text)
   }
 
@@ -222,7 +222,7 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
   protected [EVENT.FILE_CHOOSER_DIALOG_OPENED]({ id }: message.SessionID) {
     this._log.debug('EVENT.FILE_CHOOSER_DIALOG_OPENED')
 
-    if (id == this.state.session_id) {
+    if (id == this._state.session_id) {
       this.emit('upload.dialog.requested')
     } else {
       this.emit('upload.dialog.overlay', id)
