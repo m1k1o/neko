@@ -206,7 +206,12 @@
         throw new Error('client already authenticated')
       }
 
-      await this.api.session.login({ username, password })
+      const res = await this.api.session.login({ username, password })
+      if (res.data.token) {
+        this.api.setToken(res.data.token)
+        this.websocket.setToken(res.data.token)
+      }
+
       Vue.set(this.state.connection, 'authenticated', true)
       this.websocket.connect()
     }
@@ -223,6 +228,9 @@
       try {
         await this.api.session.logout()
       } finally {
+        this.api.setToken('')
+        this.websocket.setToken('')
+
         Vue.set(this.state.connection, 'authenticated', false)
       }
     }

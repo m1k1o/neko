@@ -17,6 +17,7 @@ export class NekoWebSocket extends EventEmitter<NekoWebSocketEvents> {
   private _connTimer?: NodeJS.Timeout
   private _log: Logger
   private _url: string
+  private _token: string
 
   // reconnection
   private _reconTimer?: NodeJS.Timeout
@@ -28,11 +29,16 @@ export class NekoWebSocket extends EventEmitter<NekoWebSocketEvents> {
     this._log = new Logger('websocket')
 
     this._url = ''
+    this._token = ''
     this.setUrl(location.href)
   }
 
   public setUrl(url: string) {
     this._url = url.replace(/^http/, 'ws').replace(/\/+$/, '') + '/api/ws'
+  }
+
+  public setToken(token: string) {
+    this._token = token
   }
 
   get supported() {
@@ -55,7 +61,12 @@ export class NekoWebSocket extends EventEmitter<NekoWebSocketEvents> {
 
     this.emit('connecting')
 
-    this._ws = new WebSocket(this._url)
+    let url = this._url
+    if (this._token) {
+      url += '?token=' + encodeURIComponent(this._token)
+    }
+
+    this._ws = new WebSocket(url)
     this._log.info(`connecting`)
 
     this._ws.onopen = this.onConnected.bind(this)

@@ -3,13 +3,15 @@ import * as Api from '../api'
 export class NekoApi {
   api_configuration = new Api.Configuration({
     basePath: location.href.replace(/\/+$/, ''),
+    baseOptions: { withCredentials: true },
   })
 
   public setUrl(url: string) {
-    this.api_configuration = new Api.Configuration({
-      basePath: url.replace(/\/+$/, ''),
-      baseOptions: { withCredentials: true },
-    })
+    this.api_configuration.basePath = url.replace(/\/+$/, '')
+  }
+
+  public setToken(token: string) {
+    this.api_configuration.accessToken = token
   }
 
   get url(): string {
