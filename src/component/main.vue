@@ -194,6 +194,12 @@
 
       // check if is user logged in
       if (this.autologin) {
+        const token = localStorage.getItem('neko_session')
+        if (token) {
+          this.api.setToken(token)
+          this.websocket.setToken(token)
+        }
+
         this.api.session.whoami().then(() => {
           Vue.set(this.state.connection, 'authenticated', true)
           this.websocket.connect()
@@ -210,6 +216,10 @@
       if (res.data.token) {
         this.api.setToken(res.data.token)
         this.websocket.setToken(res.data.token)
+
+        if (this.autologin) {
+          localStorage.setItem('neko_session', res.data.token)
+        }
       }
 
       Vue.set(this.state.connection, 'authenticated', true)
@@ -230,6 +240,10 @@
       } finally {
         this.api.setToken('')
         this.websocket.setToken('')
+
+        if (this.autologin) {
+          localStorage.removeItem('neko_session')
+        }
 
         Vue.set(this.state.connection, 'authenticated', false)
       }
