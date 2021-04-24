@@ -300,3 +300,7 @@ func (manager *SessionManagerCtx) OnHostChanged(listener func(session types.Sess
 func (manager *SessionManagerCtx) ImplicitHosting() bool {
 	return manager.config.ImplicitHosting
 }
+
+func (manager *SessionManagerCtx) CookieEnabled() bool {
+	return manager.config.CookieEnabled
+}

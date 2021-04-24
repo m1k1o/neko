@@ -49,6 +49,7 @@ type SessionManager interface {
 	OnHostChanged(listener func(session Session))
 
 	ImplicitHosting() bool
+	CookieEnabled() bool
 
 	CookieSetToken(w http.ResponseWriter, token string)
 	CookieClearToken(w http.ResponseWriter, r *http.Request)

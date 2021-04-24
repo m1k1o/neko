@@ -15,6 +15,7 @@ type SessionLoginPayload struct {
 
 type SessionDataPayload struct {
 	ID      string              `json:"id"`
+	Token   string              `json:"token,omitempty"`
 	Profile types.MemberProfile `json:"profile"`
 	State   types.SessionState  `json:"state"`
 }
@@ -31,13 +32,19 @@ func (api *ApiManagerCtx) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	api.sessions.CookieSetToken(w, token)
-
-	utils.HttpSuccess(w, SessionDataPayload{
+	sessionData := SessionDataPayload{
 		ID:      session.ID(),
 		Profile: session.Profile(),
 		State:   session.State(),
-	})
+	}
+
+	if api.sessions.CookieEnabled() {
+		api.sessions.CookieSetToken(w, token)
+	} else {
+		sessionData.Token = token
+	}
+
+	utils.HttpSuccess(w, sessionData)
 }
 
 func (api *ApiManagerCtx) Logout(w http.ResponseWriter, r *http.Request) {
@@ -49,7 +56,9 @@ func (api *ApiManagerCtx) Logout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	api.sessions.CookieClearToken(w, r)
+	if api.sessions.CookieEnabled() {
+		api.sessions.CookieClearToken(w, r)
+	}
 
 	utils.HttpSuccess(w, true)
 }

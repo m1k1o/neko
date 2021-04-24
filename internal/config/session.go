@@ -11,6 +11,7 @@ type Session struct {
 	ImplicitHosting bool
 	APIToken        string
 
+	CookieEnabled    bool
 	CookieName       string
 	CookieExpiration time.Time
 	CookieSecure     bool
@@ -28,6 +29,11 @@ func (Session) Init(cmd *cobra.Command) error {
 	}
 
 	// cookie
+	cmd.PersistentFlags().Bool("session.cookie.enabled", true, "whether cookies authentication should be enabled")
+	if err := viper.BindPFlag("session.cookie.enabled", cmd.PersistentFlags().Lookup("session.cookie.enabled")); err != nil {
+		return err
+	}
+
 	cmd.PersistentFlags().String("session.cookie.name", "NEKO_SESSION", "name of the cookie that holds token")
 	if err := viper.BindPFlag("session.cookie.name", cmd.PersistentFlags().Lookup("session.cookie.name")); err != nil {
 		return err
@@ -50,6 +56,7 @@ func (s *Session) Set() {
 	s.ImplicitHosting = viper.GetBool("session.implicit_hosting")
 	s.APIToken = viper.GetString("session.api_token")
 
+	s.CookieEnabled = viper.GetBool("session.cookie.enabled")
 	s.CookieName = viper.GetString("session.cookie.name")
 	s.CookieExpiration = time.Now().Add(time.Duration(viper.GetInt("session.cookie.expiration")) * time.Hour)
 	s.CookieSecure = viper.GetBool("session.cookie.secure")

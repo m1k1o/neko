@@ -70,7 +70,10 @@ func (api *ApiManagerCtx) Authenticate(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		session, err := api.sessions.Authenticate(r)
 		if err != nil {
-			api.sessions.CookieClearToken(w, r)
+			if api.sessions.CookieEnabled() {
+				api.sessions.CookieClearToken(w, r)
+			}
+
 			utils.HttpUnauthorized(w, err)
 			return
 		}
