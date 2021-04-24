@@ -64,7 +64,7 @@ func (h *RoomHandler) clipboardGetImage(w http.ResponseWriter, r *http.Request) 
 func (h *RoomHandler) clipboardSetImage(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseMultipartForm(MAX_UPLOAD_SIZE)
 	if err != nil {
-		utils.HttpBadRequest(w, "Failed to parse multipart form.")
+		utils.HttpBadRequest(w, "failed to parse multipart form")
 		return
 	}
 
@@ -73,7 +73,7 @@ func (h *RoomHandler) clipboardSetImage(w http.ResponseWriter, r *http.Request) 
 
 	file, header, err := r.FormFile("file")
 	if err != nil {
-		utils.HttpBadRequest(w, "No file received.")
+		utils.HttpBadRequest(w, "no file received")
 		return
 	}
 
@@ -81,7 +81,7 @@ func (h *RoomHandler) clipboardSetImage(w http.ResponseWriter, r *http.Request) 
 
 	mime := header.Header.Get("Content-Type")
 	if !strings.HasPrefix(mime, "image/") {
-		utils.HttpBadRequest(w, "File must be image.")
+		utils.HttpBadRequest(w, "file must be image")
 		return
 	}
 

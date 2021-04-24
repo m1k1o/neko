@@ -36,7 +36,7 @@ func (h *RoomHandler) controlStatus(w http.ResponseWriter, r *http.Request) {
 func (h *RoomHandler) controlRequest(w http.ResponseWriter, r *http.Request) {
 	host := h.sessions.GetHost()
 	if host != nil {
-		utils.HttpUnprocessableEntity(w, "There is already a host.")
+		utils.HttpUnprocessableEntity(w, "there is already a host")
 		return
 	}
 
@@ -49,7 +49,7 @@ func (h *RoomHandler) controlRequest(w http.ResponseWriter, r *http.Request) {
 func (h *RoomHandler) controlRelease(w http.ResponseWriter, r *http.Request) {
 	session := auth.GetSession(r)
 	if !session.IsHost() {
-		utils.HttpUnprocessableEntity(w, "Session is not the host.")
+		utils.HttpUnprocessableEntity(w, "session is not the host")
 		return
 	}
 
@@ -71,12 +71,12 @@ func (h *RoomHandler) controlGive(w http.ResponseWriter, r *http.Request) {
 
 	target, ok := h.sessions.Get(sessionId)
 	if !ok {
-		utils.HttpNotFound(w, "Target session was not found.")
+		utils.HttpNotFound(w, "target session was not found")
 		return
 	}
 
 	if !target.Profile().CanHost {
-		utils.HttpBadRequest(w, "Target session is not allowed to host.")
+		utils.HttpBadRequest(w, "target session is not allowed to host")
 		return
 	}
 

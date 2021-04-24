@@ -19,7 +19,7 @@ const (
 func (h *RoomHandler) uploadDrop(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseMultipartForm(MAX_UPLOAD_SIZE)
 	if err != nil {
-		utils.HttpBadRequest(w, "Failed to parse multipart form.")
+		utils.HttpBadRequest(w, "failed to parse multipart form")
 		return
 	}
 
@@ -28,19 +28,19 @@ func (h *RoomHandler) uploadDrop(w http.ResponseWriter, r *http.Request) {
 
 	X, err := strconv.Atoi(r.FormValue("x"))
 	if err != nil {
-		utils.HttpBadRequest(w, "No X coordinate received.")
+		utils.HttpBadRequest(w, "no X coordinate received")
 		return
 	}
 
 	Y, err := strconv.Atoi(r.FormValue("y"))
 	if err != nil {
-		utils.HttpBadRequest(w, "No Y coordinate received.")
+		utils.HttpBadRequest(w, "no Y coordinate received")
 		return
 	}
 
 	req_files := r.MultipartForm.File["files"]
 	if len(req_files) == 0 {
-		utils.HttpBadRequest(w, "No files received.")
+		utils.HttpBadRequest(w, "no files received")
 		return
 	}
 
@@ -80,7 +80,7 @@ func (h *RoomHandler) uploadDrop(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !h.desktop.DropFiles(X, Y, files) {
-		utils.HttpInternalServerError(w, "Unable to drop files.")
+		utils.HttpInternalServerError(w, "unable to drop files")
 		return
 	}
 
@@ -90,7 +90,7 @@ func (h *RoomHandler) uploadDrop(w http.ResponseWriter, r *http.Request) {
 func (h *RoomHandler) uploadDialogPost(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseMultipartForm(MAX_UPLOAD_SIZE)
 	if err != nil {
-		utils.HttpBadRequest(w, "Failed to parse multipart form.")
+		utils.HttpBadRequest(w, "failed to parse multipart form")
 		return
 	}
 
@@ -98,13 +98,13 @@ func (h *RoomHandler) uploadDialogPost(w http.ResponseWriter, r *http.Request) {
 	defer r.MultipartForm.RemoveAll()
 
 	if !h.desktop.IsFileChooserDialogOpened() {
-		utils.HttpBadRequest(w, "Open file chooser dialog first.")
+		utils.HttpBadRequest(w, "open file chooser dialog first")
 		return
 	}
 
 	req_files := r.MultipartForm.File["files"]
 	if len(req_files) == 0 {
-		utils.HttpBadRequest(w, "No files received.")
+		utils.HttpBadRequest(w, "no files received")
 		return
 	}
 
@@ -141,7 +141,7 @@ func (h *RoomHandler) uploadDialogPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.desktop.HandleFileChooserDialog(dir); err != nil {
-		utils.HttpInternalServerError(w, "Unable to handle file chooser dialog.")
+		utils.HttpInternalServerError(w, "unable to handle file chooser dialog")
 		return
 	}
 
@@ -150,7 +150,7 @@ func (h *RoomHandler) uploadDialogPost(w http.ResponseWriter, r *http.Request) {
 
 func (h *RoomHandler) uploadDialogClose(w http.ResponseWriter, r *http.Request) {
 	if !h.desktop.IsFileChooserDialogOpened() {
-		utils.HttpBadRequest(w, "File chooser dialog is not open.")
+		utils.HttpBadRequest(w, "file chooser dialog is not open")
 		return
 	}
 

@@ -37,7 +37,7 @@ func (provider *MemberProviderCtx) Authenticate(username string, password string
 }
 
 func (provider *MemberProviderCtx) Insert(username string, password string, profile types.MemberProfile) (string, error) {
-	return "", fmt.Errorf("Not implemented.")
+	return "", fmt.Errorf("not implemented")
 }
 
 func (provider *MemberProviderCtx) Select(id string) (types.MemberProfile, error) {
@@ -54,7 +54,7 @@ func (provider *MemberProviderCtx) UpdateProfile(id string, profile types.Member
 }
 
 func (provider *MemberProviderCtx) UpdatePassword(id string, password string) error {
-	return fmt.Errorf("Not implemented.")
+	return fmt.Errorf("not implemented")
 }
 
 func (provider *MemberProviderCtx) Delete(id string) error {

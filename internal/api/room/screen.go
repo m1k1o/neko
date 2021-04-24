@@ -20,7 +20,7 @@ func (h *RoomHandler) screenConfiguration(w http.ResponseWriter, r *http.Request
 	size := h.desktop.GetScreenSize()
 
 	if size == nil {
-		utils.HttpInternalServerError(w, "Unable to get screen configuration.")
+		utils.HttpInternalServerError(w, "unable to get screen configuration")
 		return
 	}
 
@@ -96,7 +96,7 @@ func (h *RoomHandler) screenShotGet(w http.ResponseWriter, r *http.Request) {
 func (h *RoomHandler) screenCastGet(w http.ResponseWriter, r *http.Request) {
 	screencast := h.capture.Screencast()
 	if !screencast.Enabled() {
-		utils.HttpBadRequest(w, "Screencast pipeline is not enabled.")
+		utils.HttpBadRequest(w, "screencast pipeline is not enabled")
 		return
 	}
 

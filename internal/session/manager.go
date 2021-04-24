@@ -68,12 +68,12 @@ func (manager *SessionManagerCtx) Create(id string, profile types.MemberProfile)
 	manager.sessionsMu.Lock()
 	if _, ok := manager.sessions[id]; ok {
 		manager.sessionsMu.Unlock()
-		return nil, "", fmt.Errorf("Session id already exists.")
+		return nil, "", fmt.Errorf("session id already exists")
 	}
 
 	if _, ok := manager.tokens[token]; ok {
 		manager.sessionsMu.Unlock()
-		return nil, "", fmt.Errorf("Session token already exists.")
+		return nil, "", fmt.Errorf("session token already exists")
 	}
 
 	session := &SessionCtx{
@@ -98,7 +98,7 @@ func (manager *SessionManagerCtx) Update(id string, profile types.MemberProfile)
 	session, ok := manager.sessions[id]
 	if !ok {
 		manager.sessionsMu.Unlock()
-		return fmt.Errorf("Session id not found.")
+		return fmt.Errorf("session id not found")
 	}
 
 	session.profile = profile
@@ -114,7 +114,7 @@ func (manager *SessionManagerCtx) Delete(id string) error {
 	session, ok := manager.sessions[id]
 	if !ok {
 		manager.sessionsMu.Unlock()
-		return fmt.Errorf("Session id not found.")
+		return fmt.Errorf("session id not found")
 	}
 
 	delete(manager.tokens, session.token)

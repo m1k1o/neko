@@ -60,12 +60,12 @@ func (provider *MemberProviderCtx) Authenticate(username string, password string
 
 	entry, ok := provider.entries[id]
 	if !ok {
-		return "", types.MemberProfile{}, fmt.Errorf("Member ID does not exist.")
+		return "", types.MemberProfile{}, fmt.Errorf("member ID does not exist")
 	}
 
 	// TODO: Use hash function.
 	if entry.Password != password {
-		return "", types.MemberProfile{}, fmt.Errorf("Invalid password.")
+		return "", types.MemberProfile{}, fmt.Errorf("invalid password")
 	}
 
 	return id, entry.Profile, nil
@@ -77,7 +77,7 @@ func (provider *MemberProviderCtx) Insert(username string, password string, prof
 
 	_, ok := provider.entries[id]
 	if ok {
-		return "", fmt.Errorf("Member ID already exists.")
+		return "", fmt.Errorf("member ID already exists")
 	}
 
 	provider.entries[id] = &MemberEntry{
@@ -92,7 +92,7 @@ func (provider *MemberProviderCtx) Insert(username string, password string, prof
 func (provider *MemberProviderCtx) UpdateProfile(id string, profile types.MemberProfile) error {
 	entry, ok := provider.entries[id]
 	if !ok {
-		return fmt.Errorf("Member ID does not exist.")
+		return fmt.Errorf("member ID does not exist")
 	}
 
 	entry.Profile = profile
@@ -103,7 +103,7 @@ func (provider *MemberProviderCtx) UpdateProfile(id string, profile types.Member
 func (provider *MemberProviderCtx) UpdatePassword(id string, password string) error {
 	entry, ok := provider.entries[id]
 	if !ok {
-		return fmt.Errorf("Member ID does not exist.")
+		return fmt.Errorf("member ID does not exist")
 	}
 
 	// TODO: Use hash function.
@@ -115,7 +115,7 @@ func (provider *MemberProviderCtx) UpdatePassword(id string, password string) er
 func (provider *MemberProviderCtx) Select(id string) (types.MemberProfile, error) {
 	entry, ok := provider.entries[id]
 	if !ok {
-		return types.MemberProfile{}, fmt.Errorf("Member ID does not exist.")
+		return types.MemberProfile{}, fmt.Errorf("member ID does not exist")
 	}
 
 	return entry.Profile, nil
@@ -139,7 +139,7 @@ func (provider *MemberProviderCtx) SelectAll(limit int, offset int) (map[string]
 func (provider *MemberProviderCtx) Delete(id string) error {
 	_, ok := provider.entries[id]
 	if !ok {
-		return fmt.Errorf("Member ID does not exist.")
+		return fmt.Errorf("member ID does not exist")
 	}
 
 	delete(provider.entries, id)

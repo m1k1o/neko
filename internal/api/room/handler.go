@@ -90,7 +90,7 @@ func (h *RoomHandler) uploadMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		session := auth.GetSession(r)
 		if !session.IsHost() && (!session.Profile().CanHost || !h.sessions.ImplicitHosting()) {
-			utils.HttpForbidden(w, "Without implicit hosting, only host can upload files.")
+			utils.HttpForbidden(w, "without implicit hosting, only host can upload files")
 		} else {
 			next.ServeHTTP(w, r)
 		}

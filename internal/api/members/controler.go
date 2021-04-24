@@ -71,12 +71,12 @@ func (h *MembersHandler) membersCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if data.Username == "" {
-		utils.HttpBadRequest(w, "Username cannot be empty.")
+		utils.HttpBadRequest(w, "username cannot be empty")
 		return
 	}
 
 	if data.Password == "" {
-		utils.HttpBadRequest(w, "Password cannot be empty.")
+		utils.HttpBadRequest(w, "password cannot be empty")
 		return
 	}
 

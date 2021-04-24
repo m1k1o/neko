@@ -16,7 +16,7 @@ type ErrResponse struct {
 func HttpJsonRequest(w http.ResponseWriter, r *http.Request, res interface{}) bool {
 	if err := json.NewDecoder(r.Body).Decode(res); err != nil {
 		if err == io.EOF {
-			HttpBadRequest(w, "No data provided.")
+			HttpBadRequest(w, "no data provided")
 		} else {
 			HttpBadRequest(w, err)
 		}
@@ -53,27 +53,27 @@ func HttpSuccess(w http.ResponseWriter, res ...interface{}) {
 }
 
 func HttpBadRequest(w http.ResponseWriter, res ...interface{}) {
-	defHttpError(w, http.StatusBadRequest, "Bad Request.", res...)
+	defHttpError(w, http.StatusBadRequest, "bad request", res...)
 }
 
 func HttpUnauthorized(w http.ResponseWriter, res ...interface{}) {
-	defHttpError(w, http.StatusUnauthorized, "Invalid or missing access token.", res...)
+	defHttpError(w, http.StatusUnauthorized, "invalid or missing access token", res...)
 }
 
 func HttpForbidden(w http.ResponseWriter, res ...interface{}) {
-	defHttpError(w, http.StatusForbidden, "Access token does not have the required scope.", res...)
+	defHttpError(w, http.StatusForbidden, "access token does not have the required scope", res...)
 }
 
 func HttpNotFound(w http.ResponseWriter, res ...interface{}) {
-	defHttpError(w, http.StatusNotFound, "Resource not found.", res...)
+	defHttpError(w, http.StatusNotFound, "resource not found", res...)
 }
 
 func HttpUnprocessableEntity(w http.ResponseWriter, res ...interface{}) {
-	defHttpError(w, http.StatusUnprocessableEntity, "Unprocessable Entity.", res...)
+	defHttpError(w, http.StatusUnprocessableEntity, "unprocessable entity", res...)
 }
 
 func HttpInternalServerError(w http.ResponseWriter, res ...interface{}) {
-	defHttpError(w, http.StatusInternalServerError, "Internal server error.", res...)
+	defHttpError(w, http.StatusInternalServerError, "internal server error", res...)
 }
 
 func defHttpError(w http.ResponseWriter, status int, text string, res ...interface{}) {
