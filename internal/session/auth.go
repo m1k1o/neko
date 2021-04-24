@@ -55,17 +55,19 @@ func (manager *SessionManagerCtx) Authenticate(r *http.Request) (types.Session, 
 }
 
 func (manager *SessionManagerCtx) getToken(r *http.Request) (string, bool) {
+	if manager.CookieEnabled() {
+		// get from Cookie
+		cookie, err := r.Cookie(manager.config.CookieName)
+		if err == nil {
+			return cookie.Value, true
+		}
+	}
+
 	// get from Header
 	reqToken := r.Header.Get("Authorization")
 	splitToken := strings.Split(reqToken, "Bearer ")
 	if len(splitToken) == 2 {
 		return strings.TrimSpace(splitToken[1]), true
-	}
-
-	// get from Cookie
-	cookie, err := r.Cookie(manager.config.CookieName)
-	if err == nil {
-		return cookie.Value, true
 	}
 
 	// get from URL
