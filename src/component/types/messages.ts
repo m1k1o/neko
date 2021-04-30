@@ -9,6 +9,11 @@ export interface Message {
 // System
 /////////////////////////////
 
+export interface SystemWebRTC {
+  event: string | undefined
+  videos: string[]
+}
+
 export interface SystemInit {
   event: string | undefined
   session_id: string
@@ -16,6 +21,7 @@ export interface SystemInit {
   screen_size: ScreenSize
   sessions: Record<string, SessionData>
   implicit_hosting: boolean
+  webrtc: SystemWebRTC
 }
 
 export interface SystemAdmin {
@@ -38,7 +44,6 @@ export interface SignalProvide {
   sdp: string
   iceservers: ICEServer[]
   video: string
-  videos: string[]
 }
 
 export interface SignalCandidate extends RTCIceCandidateInit {

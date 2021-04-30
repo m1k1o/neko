@@ -72,6 +72,7 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
     this._log.debug('EVENT.SYSTEM_INIT')
     Vue.set(this._state, 'session_id', conf.session_id)
     Vue.set(this._state.control, 'implicit_hosting', conf.implicit_hosting)
+    Vue.set(this._state.connection.webrtc, 'videos', conf.webrtc.videos)
 
     for (const id in conf.sessions) {
       this[EVENT.SESSION_CREATED](conf.sessions[id])
@@ -108,10 +109,9 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
   // Signal Events
   /////////////////////////////
 
-  protected [EVENT.SIGNAL_PROVIDE]({ event, sdp, video, videos }: message.SignalProvide) {
+  protected [EVENT.SIGNAL_PROVIDE]({ event, sdp, video }: message.SignalProvide) {
     this._log.debug('EVENT.SIGNAL_PROVIDE')
     Vue.set(this._state.connection.webrtc, 'video', video)
-    Vue.set(this._state.connection.webrtc, 'videos', videos)
     // TODO: Handle.
     this.emit('connection.webrtc.sdp', 'remote', sdp)
   }

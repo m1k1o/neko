@@ -269,7 +269,7 @@
       this.websocket.disconnect(new Error('manual action'))
     }
 
-    public webrtcConnect() {
+    public webrtcConnect(video?: string) {
       if (!this.connected) {
         throw new Error('client not connected to websocket')
       }
@@ -278,7 +278,11 @@
         throw new Error('client already connected to webrtc')
       }
 
-      this.websocket.send(EVENT.SIGNAL_REQUEST)
+      if (video && !this.state.connection.webrtc.videos.includes(video)) {
+        throw new Error('video id not found')
+      }
+
+      this.websocket.send(EVENT.SIGNAL_REQUEST, { video: video })
     }
 
     public webrtcDisconnect() {
@@ -489,6 +493,8 @@
 
       let webrtcReconnect: any = null
       this.webrtc.on('disconnected', () => {
+        const lastVideo = this.state.connection.webrtc.video ?? undefined
+
         this.events.emit('connection.webrtc', 'disconnected')
         this.clearWebRTCState()
 
@@ -508,7 +514,7 @@
             // connect only if disconnected
             if (this.state.connection.webrtc.status == 'disconnected') {
               try {
-                this.webrtcConnect()
+                this.webrtcConnect(lastVideo)
               } catch (e) {}
             }
 
@@ -597,6 +603,7 @@
     }
 
     clearWebSocketState() {
+      Vue.set(this.state.connection.webrtc, 'videos', [])
       Vue.set(this.state.control, 'clipboard', null)
       Vue.set(this.state.control, 'host_id', null)
       Vue.set(this.state.control, 'implicit_hosting', false)
@@ -610,7 +617,6 @@
       Vue.set(this.state.connection.webrtc, 'status', 'disconnected')
       Vue.set(this.state.connection.webrtc, 'stats', null)
       Vue.set(this.state.connection.webrtc, 'video', null)
-      Vue.set(this.state.connection.webrtc, 'videos', [])
       Vue.set(this.state.connection, 'type', 'none')
     }
   }
