@@ -15,6 +15,11 @@ type Message struct {
 // System
 /////////////////////////////
 
+type SystemWebRTC struct {
+	Event  string   `json:"event,omitempty"`
+	Videos []string `json:"videos"`
+}
+
 type SystemInit struct {
 	Event           string                 `json:"event,omitempty"`
 	SessionId       string                 `json:"session_id"`
@@ -22,6 +27,7 @@ type SystemInit struct {
 	ScreenSize      ScreenSize             `json:"screen_size"`
 	Sessions        map[string]SessionData `json:"sessions"`
 	ImplicitHosting bool                   `json:"implicit_hosting"`
+	WebRTC          SystemWebRTC           `json:"webrtc"`
 }
 
 type SystemAdmin struct {
@@ -43,7 +49,6 @@ type SignalProvide struct {
 	Event      string            `json:"event,omitempty"`
 	SDP        string            `json:"sdp"`
 	ICEServers []types.ICEServer `json:"iceservers"`
-	Videos     []string          `json:"videos"`
 	Video      string            `json:"video"`
 }
 

@@ -45,6 +45,9 @@ func (h *MessageHandlerCtx) systemInit(session types.Session) error {
 			},
 			Sessions:        sessions,
 			ImplicitHosting: h.sessions.ImplicitHosting(),
+			WebRTC: message.SystemWebRTC{
+				Videos: h.capture.VideoIDs(),
+			},
 		})
 }
 

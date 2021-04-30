@@ -6,16 +6,19 @@ import (
 	"demodesk/neko/internal/types/message"
 )
 
-func (h *MessageHandlerCtx) signalRequest(session types.Session) error {
+func (h *MessageHandlerCtx) signalRequest(session types.Session, payload *message.SignalVideo) error {
 	if !session.Profile().CanWatch {
 		h.logger.Debug().Str("session_id", session.ID()).Msg("not allowed to watch")
 		return nil
 	}
 
-	videos := h.capture.VideoIDs()
-	defaultVideo := videos[0]
+	// use default first video, if not provided
+	if payload.Video == "" {
+		videos := h.capture.VideoIDs()
+		payload.Video = videos[0]
+	}
 
-	offer, err := h.webrtc.CreatePeer(session, defaultVideo)
+	offer, err := h.webrtc.CreatePeer(session, payload.Video)
 	if err != nil {
 		return err
 	}
@@ -25,8 +28,7 @@ func (h *MessageHandlerCtx) signalRequest(session types.Session) error {
 			Event:      event.SIGNAL_PROVIDE,
 			SDP:        offer.SDP,
 			ICEServers: h.webrtc.ICEServers(),
-			Videos:     videos,
-			Video:      defaultVideo,
+			Video:      payload.Video,
 		})
 }
 

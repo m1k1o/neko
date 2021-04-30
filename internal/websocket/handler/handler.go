@@ -48,7 +48,10 @@ func (h *MessageHandlerCtx) Message(session types.Session, raw []byte) bool {
 	switch header.Event {
 	// Signal Events
 	case event.SIGNAL_REQUEST:
-		err = h.signalRequest(session)
+		payload := &message.SignalVideo{}
+		err = utils.Unmarshal(payload, raw, func() error {
+			return h.signalRequest(session, payload)
+		})
 	case event.SIGNAL_ANSWER:
 		payload := &message.SignalAnswer{}
 		err = utils.Unmarshal(payload, raw, func() error {

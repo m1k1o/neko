@@ -391,7 +391,7 @@ func (manager *WebRTCManagerCtx) mediaEngine(videoID string) (*webrtc.MediaEngin
 	// all videos must have the same codec
 	video, ok := manager.capture.Video(videoID)
 	if !ok {
-		return nil, fmt.Errorf("default video track not found")
+		return nil, fmt.Errorf("selected video track not found")
 	}
 
 	videoCodec := video.Codec()
