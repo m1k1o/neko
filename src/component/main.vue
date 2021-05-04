@@ -120,7 +120,7 @@
       control: {
         scroll: {
           inverse: true,
-          sensitivity: 1,
+          sensitivity: 0,
         },
         clipboard: null,
         keyboard: {

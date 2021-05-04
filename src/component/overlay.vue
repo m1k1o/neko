@@ -48,6 +48,9 @@
     'zPADwoFouPut3uzO12UyQSoclkotrt9ocAHKZnr8UhAP4bvg/gIs+UMfaaMTZTFOUkHo8/B/AEwAWjl5pV+j1dZ//g4xUMBo8YY/cqlcqhNvffAJxq40dmA5' +
     'bFPoAjrev5EfwZQNfoKbju/u1ri/PvfgKYGMl+K2I7b8U7wA5wpgC/AgAA///Yyif1MZXzRQAAAABJRU5ErkJggg==) 4 4, crosshair'
 
+  const WHEEL_STEP = 50 // Delta threshold for a mouse wheel step
+  const WHEEL_LINE_HEIGHT = 19
+
   @Component({
     name: 'neko-overlay',
   })
@@ -160,24 +163,80 @@
       Vue.set(this, 'cursorPosition', pos)
     }
 
+    private wheelX = 0
+    private wheelY = 0
+
+    // negative sensitivity can be acheived using increased step value
+    get wheelStep() {
+      let x = 20 * (window.devicePixelRatio || 1)
+
+      if (this.scroll.sensitivity < 0) {
+        x *= Math.abs(this.scroll.sensitivity) + 1
+      }
+
+      return x
+    }
+
+    // sensitivity can only be positive
+    get wheelSensitivity() {
+      let x = 1
+
+      if (this.scroll.sensitivity > 0) {
+        x = Math.abs(this.scroll.sensitivity) + 1
+      }
+
+      if (this.scroll.inverse) {
+        x *= -1
+      }
+
+      return x
+    }
+
     onWheel(e: WheelEvent) {
       if (!this.isControling) {
         return
       }
 
-      let x = e.deltaX
-      let y = e.deltaY
+      this.setMousePos(e)
 
-      if (this.scroll.inverse) {
-        x *= -1
-        y *= -1
+      let dx = e.deltaX
+      let dy = e.deltaY
+
+      if (e.deltaMode !== 0) {
+        dx *= WHEEL_LINE_HEIGHT
+        dy *= WHEEL_LINE_HEIGHT
       }
 
-      x = Math.min(Math.max(x, -this.scroll.sensitivity), this.scroll.sensitivity)
-      y = Math.min(Math.max(y, -this.scroll.sensitivity), this.scroll.sensitivity)
+      this.wheelX += dx
+      this.wheelY += dy
 
-      this.setMousePos(e)
-      this.webrtc.send('wheel', { x, y })
+      console.log(typeof dx, dx, typeof dy, dy, this.wheelX, this.wheelY)
+
+      let x = 0
+      if (Math.abs(this.wheelX) >= this.wheelStep) {
+        if (this.wheelX < 0) {
+          x = this.wheelSensitivity * -1
+        } else if (this.wheelX > 0) {
+          x = this.wheelSensitivity
+        }
+
+        this.wheelX = 0
+      }
+
+      let y = 0
+      if (Math.abs(this.wheelY) >= this.wheelStep) {
+        if (this.wheelY < 0) {
+          y = this.wheelSensitivity * -1
+        } else if (this.wheelY > 0) {
+          y = this.wheelSensitivity
+        }
+
+        this.wheelY = 0
+      }
+
+      if (x != 0 || y != 0) {
+        this.webrtc.send('wheel', { x, y })
+      }
     }
 
     onMouseMove(e: MouseEvent) {
