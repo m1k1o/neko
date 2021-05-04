@@ -48,7 +48,7 @@
     'zPADwoFouPut3uzO12UyQSoclkotrt9ocAHKZnr8UhAP4bvg/gIs+UMfaaMTZTFOUkHo8/B/AEwAWjl5pV+j1dZ//g4xUMBo8YY/cqlcqhNvffAJxq40dmA5' +
     'bFPoAjrev5EfwZQNfoKbju/u1ri/PvfgKYGMl+K2I7b8U7wA5wpgC/AgAA///Yyif1MZXzRQAAAABJRU5ErkJggg==) 4 4, crosshair'
 
-  const WHEEL_STEP = 50 // Delta threshold for a mouse wheel step
+  const WHEEL_STEP = 53 // Delta threshold for a mouse wheel step
   const WHEEL_LINE_HEIGHT = 19
 
   @Component({
@@ -165,10 +165,11 @@
 
     private wheelX = 0
     private wheelY = 0
+    private wheelDate = Date.now()
 
     // negative sensitivity can be acheived using increased step value
     get wheelStep() {
-      let x = 20 * (window.devicePixelRatio || 1)
+      let x = WHEEL_STEP
 
       if (this.scroll.sensitivity < 0) {
         x *= Math.abs(this.scroll.sensitivity) + 1
@@ -199,6 +200,15 @@
 
       this.setMousePos(e)
 
+      const now = Date.now()
+      const firstScroll = now - this.wheelDate > 250
+
+      if (firstScroll) {
+        this.wheelX = 0
+        this.wheelY = 0
+        this.wheelDate = now
+      }
+
       let dx = e.deltaX
       let dy = e.deltaY
 
@@ -210,28 +220,30 @@
       this.wheelX += dx
       this.wheelY += dy
 
-      console.log(typeof dx, dx, typeof dy, dy, this.wheelX, this.wheelY)
-
       let x = 0
-      if (Math.abs(this.wheelX) >= this.wheelStep) {
+      if (Math.abs(this.wheelX) >= this.wheelStep || firstScroll) {
         if (this.wheelX < 0) {
           x = this.wheelSensitivity * -1
         } else if (this.wheelX > 0) {
           x = this.wheelSensitivity
         }
 
-        this.wheelX = 0
+        if (!firstScroll) {
+          this.wheelX = 0
+        }
       }
 
       let y = 0
-      if (Math.abs(this.wheelY) >= this.wheelStep) {
+      if (Math.abs(this.wheelY) >= this.wheelStep || firstScroll) {
         if (this.wheelY < 0) {
           y = this.wheelSensitivity * -1
         } else if (this.wheelY > 0) {
           y = this.wheelSensitivity
         }
 
-        this.wheelY = 0
+        if (!firstScroll) {
+          this.wheelY = 0
+        }
       }
 
       if (x != 0 || y != 0) {
