@@ -1,5 +1,5 @@
-export const logout = 'logout'
-export const unsupported = 'this browser does not support webrtc'
+export const logout = 'log out'
+export const unsupported = 'this web-browser does not support WebRTC'
 export const admin_loggedin = 'You are logged in as an admin'
 export const you = 'You'
 export const send_a_message = 'Send a message'
@@ -10,7 +10,7 @@ export const side = {
 }
 
 export const connect = {
-  login_title: 'Please Login',
+  login_title: 'Please Log In',
   invitation_title: 'You have been invited to this room',
   displayname: 'Enter your display name',
   password: 'Password',
@@ -32,11 +32,11 @@ export const context = {
     kick_title: 'Kick {name}?',
     kick_text: 'Are you sure you want to kick {name}?',
     ban_title: 'Ban {name}?',
-    ban_text: 'Are you sure you want to ban {name}? You will need to restart the server to undo this.',
+    ban_text: 'Do you want to ban {name}? You will need to restart the server to undo this.',
     mute_title: 'Mute {name}?',
     mute_text: 'Are you sure you want to mute {name}?',
     unmute_title: 'Unmute {name}?',
-    unmute_text: 'Are you sure you want to unmute {name}?',
+    unmute_text: 'Do you want to unmute {name}?',
     button_yes: 'Yes',
     button_cancel: 'Cancel',
   },
@@ -64,28 +64,28 @@ export const setting = {
   chat_sound: 'Play Chat Sound',
   keyboard_layout: 'Keyboard Layout',
   broadcast_is_active: 'Broadcast Enabled',
-  broadcast_url: 'RTMP url',
+  broadcast_url: 'RTMP URL',
 }
 
 export const connection = {
-  logged_out: 'You have been logged out!',
-  connected: 'Successfully connected',
-  disconnected: 'You have been disconnected',
-  button_confirm: 'Ok',
+  logged_out: 'You have been logged out.',
+  connected: 'Connected',
+  disconnected: 'Disconnected',
+  button_confirm: 'OK',
 }
 
 export const notifications = {
   connected: '{name} connected',
   disconnected: '{name} disconnected',
   controls_taken: '{name} took the controls',
-  controls_taken_force: 'force took the controls',
+  controls_taken_force: 'took the controls forcibly',
   controls_taken_steal: 'took the controls from {name}',
   controls_released: '{name} released the controls',
-  controls_released_force: 'force released the controls',
+  controls_released_force: 'released the controls forcibly',
   controls_released_steal: 'released the controls from {name}',
   controls_given: 'gave the controls to {name}',
   controls_has: '{name} has the controls',
-  controls_has_alt: 'But I let them know you wanted it',
+  controls_has_alt: 'But I let the person know you wanted it',
   controls_requesting: '{name} is requesting the controls',
   resolution: 'changed the resolution to {width}x{height}@{rate}',
   banned: 'banned {name}',
