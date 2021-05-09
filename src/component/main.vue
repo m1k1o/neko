@@ -207,7 +207,7 @@
         Vue.set(this.state.connection, 'authenticated', true)
 
         if (this.autoconnect) {
-          this.websocket.connect()
+          await this.websocket.connect()
         }
       }
     }
@@ -230,7 +230,7 @@
       Vue.set(this.state.connection, 'authenticated', true)
 
       if (this.autoconnect) {
-        this.websocket.connect()
+        await this.websocket.connect()
       }
     }
 
@@ -257,7 +257,7 @@
       }
     }
 
-    public websocketConnect() {
+    public async websocketConnect() {
       if (!this.authenticated) {
         throw new Error('client not authenticated')
       }
@@ -266,7 +266,7 @@
         throw new Error('client already connected to websocket')
       }
 
-      this.websocket.connect()
+      await this.websocket.connect()
     }
 
     public websocketDisconnect() {

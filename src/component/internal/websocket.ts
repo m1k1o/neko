@@ -49,7 +49,7 @@ export class NekoWebSocket extends EventEmitter<NekoWebSocketEvents> {
     return typeof this._ws !== 'undefined' && this._ws.readyState === WebSocket.OPEN
   }
 
-  public connect() {
+  public async connect() {
     if (this.connected) {
       throw new Error('attempting to create websocket while connection open')
     }
@@ -66,15 +66,24 @@ export class NekoWebSocket extends EventEmitter<NekoWebSocketEvents> {
       url += '?token=' + encodeURIComponent(this._token)
     }
 
-    this._ws = new WebSocket(url)
-    this._log.info(`connecting`)
+    await new Promise<void>((res, rej) => {
+      this._ws = new WebSocket(url)
+      this._log.info(`connecting`)
 
-    this._ws.onopen = this.onConnected.bind(this)
-    this._ws.onclose = this.onClose.bind(this)
-    this._ws.onerror = this.onError.bind(this)
-    this._ws.onmessage = this.onMessage.bind(this)
+      this._ws.onclose = rej.bind(this, new Error('connection close'))
+      this._ws.onerror = rej.bind(this, new Error('connection error'))
+      this._ws.onmessage = this.onMessage.bind(this)
 
-    this._connTimer = setTimeout(this.onTimeout.bind(this), connTimeout)
+      this._ws.onopen = () => {
+        this._ws!.onclose = this.onClose.bind(this, 'close')
+        this._ws!.onerror = this.onClose.bind(this, 'error')
+
+        this.onConnected()
+        res()
+      }
+
+      this._connTimer = setTimeout(rej.bind(this, new Error('connection timeout')), connTimeout)
+    })
   }
 
   public disconnect(reason?: Error) {
@@ -145,21 +154,9 @@ export class NekoWebSocket extends EventEmitter<NekoWebSocketEvents> {
     this._reconnTimeout = reconnTimeout
   }
 
-  private onTimeout() {
-    this._log.info(`connection timeout`)
-    this.disconnect(new Error('connection timeout'))
-    this.tryReconnect()
-  }
-
-  private onError() {
-    this._log.info(`connection error`)
-    this.disconnect(new Error('connection error'))
-    this.tryReconnect()
-  }
-
-  private onClose() {
-    this._log.info(`connection closed`)
-    this.disconnect(new Error('connection closed'))
+  private onClose(reason: string) {
+    this._log.info(`connection ${reason}`)
+    this.disconnect(new Error(`connection ${reason}`))
     this.tryReconnect()
   }
 
