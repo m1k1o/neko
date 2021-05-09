@@ -422,7 +422,7 @@
         Vue.set(this.state.connection, 'websocket', 'connected')
         this.events.emit('connection.websocket', 'connected')
 
-        if (!this.watching) {
+        if (!this.watching && this.autoconnect) {
           this.webrtcConnect()
         }
       })
