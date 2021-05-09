@@ -86,14 +86,17 @@
       height: 0,
     }
 
-    @Prop({ type: Boolean })
-    private readonly autoplay!: boolean
+    @Prop({ type: String })
+    private readonly server!: string
 
     @Prop({ type: Boolean })
     private readonly autologin!: boolean
 
-    @Prop({ type: String })
-    private readonly server!: string
+    @Prop({ type: Boolean })
+    private readonly autoconnect!: boolean
+
+    @Prop({ type: Boolean })
+    private readonly autoplay!: boolean
 
     /////////////////////////////
     // Public state
@@ -171,7 +174,7 @@
     // Public methods
     /////////////////////////////
     @Watch('server', { immediate: true })
-    public setUrl(url: string) {
+    public async setUrl(url: string) {
       if (!url) {
         url = location.href
       }
@@ -200,10 +203,12 @@
           this.websocket.setToken(token)
         }
 
-        this.api.session.whoami().then(() => {
-          Vue.set(this.state.connection, 'authenticated', true)
+        await this.api.session.whoami()
+        Vue.set(this.state.connection, 'authenticated', true)
+
+        if (this.autoconnect) {
           this.websocket.connect()
-        })
+        }
       }
     }
 
@@ -223,7 +228,10 @@
       }
 
       Vue.set(this.state.connection, 'authenticated', true)
-      this.websocket.connect()
+
+      if (this.autoconnect) {
+        this.websocket.connect()
+      }
     }
 
     public async logout() {
