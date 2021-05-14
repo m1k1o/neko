@@ -3,6 +3,7 @@ import * as es from './es-sp'
 import * as sk from './sk-sk'
 import * as sv from './sv-se'
 import * as nb from './nb-no'
+import * as fr from './fr-fr'
 
 export const messages = {
   en,
@@ -10,4 +11,5 @@ export const messages = {
   sk,
   sv,
   nb,
+  fr,
 }
