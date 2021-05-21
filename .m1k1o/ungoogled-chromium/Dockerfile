@@ -1,7 +1,7 @@
 ARG BASE_IMAGE=m1k1o/neko:base
 FROM $BASE_IMAGE
 
-ARG SRC_URL="https://github.com/macchrome/linchrome/releases/download/v90.0.4430.93-r857950-portable-ungoogled-Lin64/ungoogled-chromium_90.0.4430.93_1.vaapi_linux.tar.xz"
+ARG SRC_URL="https://github.com/macchrome/linchrome/releases/download/v90.0.4430.212-r857950-portable-ungoogled-Lin64/ungoogled-chromium_90.0.4430.212_1.vaapi_linux.tar.xz"
 
 #
 # install custom chromium build from woolyss with support for hevc/x265
