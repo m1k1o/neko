@@ -18,6 +18,8 @@ type WebRTC struct {
 	EphemeralMin uint16
 	EphemeralMax uint16
 	NAT1To1IPs   []string
+	ICETCP       int
+	ICEUDP       int
 }
 
 func (WebRTC) Init(cmd *cobra.Command) error {
@@ -28,6 +30,16 @@ func (WebRTC) Init(cmd *cobra.Command) error {
 
 	cmd.PersistentFlags().StringSlice("nat1to1", []string{}, "sets a list of external IP addresses of 1:1 (D)NAT and a candidate type for which the external IP address is used")
 	if err := viper.BindPFlag("nat1to1", cmd.PersistentFlags().Lookup("nat1to1")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().Int("icetcp", 8081, "ice tcp port")
+	if err := viper.BindPFlag("icetcp", cmd.PersistentFlags().Lookup("icetcp")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().Int("iceudp", 8082, "ice udp port")
+	if err := viper.BindPFlag("iceudp", cmd.PersistentFlags().Lookup("iceudp")); err != nil {
 		return err
 	}
 
@@ -50,6 +62,8 @@ func (WebRTC) Init(cmd *cobra.Command) error {
 }
 
 func (s *WebRTC) Set() {
+	s.ICETCP = viper.GetInt("icetcp")
+	s.ICEUDP = viper.GetInt("iceudp")
 	s.NAT1To1IPs = viper.GetStringSlice("nat1to1")
 	s.ICELite = viper.GetBool("icelite")
 	s.ICEServers = []webrtc.ICEServer{}

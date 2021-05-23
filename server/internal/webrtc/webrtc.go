@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net"
 	"strings"
 	"time"
 
@@ -97,6 +98,42 @@ func (manager *WebRTCManager) CreatePeer(id string, session types.Session) (stri
 	settings.SetNAT1To1IPs(manager.config.NAT1To1IPs, webrtc.ICECandidateTypeHost)
 	settings.SetICETimeouts(6*time.Second, 6*time.Second, 3*time.Second)
 	settings.SetSRTPReplayProtectionWindow(512)
+
+	// Enable support for TCP and UDP ICE candidates.
+	settings.SetNetworkTypes([]webrtc.NetworkType{
+		webrtc.NetworkTypeUDP4,
+		webrtc.NetworkTypeTCP4,
+	})
+
+	// TCP Mux
+
+	tcpListener, err := net.ListenTCP("tcp", &net.TCPAddr{
+		IP:   net.IP{0, 0, 0, 0},
+		Port: manager.config.ICETCP,
+	})
+
+	if err != nil {
+		return "", manager.config.ICELite, manager.config.ICEServers, err
+	}
+
+	tcpLogger := settings.LoggerFactory.NewLogger("ice-tcp")
+	tcpMux := webrtc.NewICETCPMux(tcpLogger, tcpListener, 32)
+	settings.SetICETCPMux(tcpMux)
+
+	// UDP Mux
+
+	udpListener, err := net.ListenUDP("udp", &net.UDPAddr{
+		IP:   net.IP{0, 0, 0, 0},
+		Port: manager.config.ICEUDP,
+	})
+
+	if err != nil {
+		return "", manager.config.ICELite, manager.config.ICEServers, err
+	}
+
+	udpLogger := settings.LoggerFactory.NewLogger("ice-udp")
+	udpMux := webrtc.NewICEUDPMux(udpLogger, udpListener)
+	settings.SetICEUDPMux(udpMux)
 
 	// Create MediaEngine based off sdp
 	engine := webrtc.MediaEngine{}
