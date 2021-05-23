@@ -36,16 +36,11 @@ func init() {
 		zerolog.TimeFieldFormat = ""
 		zerolog.SetGlobalLevel(zerolog.InfoLevel)
 
-		if viper.GetBool("debug") {
-			zerolog.SetGlobalLevel(zerolog.DebugLevel)
-		}
-
 		console := zerolog.ConsoleWriter{Out: os.Stdout}
 
 		if !viper.GetBool("logs") {
 			log.Logger = log.Output(console)
 		} else {
-
 			logs := filepath.Join(".", "logs")
 			if runtime.GOOS == "linux" {
 				logs = "/var/log/neko"
@@ -103,9 +98,14 @@ func init() {
 			}
 		}
 
+		debug := viper.GetBool("debug")
+		if debug {
+			zerolog.SetGlobalLevel(zerolog.DebugLevel)
+		}
+
 		file := viper.ConfigFileUsed()
 		logger := log.With().
-			Bool("debug", viper.GetBool("debug")).
+			Bool("debug", debug).
 			Str("logging", viper.GetString("logs")).
 			Str("config", file).
 			Logger()
