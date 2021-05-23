@@ -13,6 +13,12 @@ func Logger(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		req := map[string]interface{}{}
 
+		// ignore healthcheck
+		if r.RequestURI == "/health" {
+			next.ServeHTTP(w, r)
+			return
+		}
+
 		if reqID := middleware.GetReqID(r.Context()); reqID != "" {
 			req["id"] = reqID
 		}
