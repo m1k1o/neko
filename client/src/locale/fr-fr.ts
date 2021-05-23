@@ -1,6 +1,6 @@
 export const logout = 'Se déconnecter'
 export const unsupported = 'ce navigateur ne prend pas en charge WebRTC'
-export const admin_loggedin = 'Vous êtes connecté en tant qu\'admin'
+export const admin_loggedin = "Vous êtes connecté en tant qu'admin"
 export const you = 'Vous'
 export const send_a_message = 'Envoyer un message'
 
@@ -12,7 +12,7 @@ export const side = {
 export const connect = {
   login_title: 'Veuillez vous connecter',
   invitation_title: 'Vous avez été invité dans cette salle',
-  displayname: 'Entrez votre nom d\'utilisateur',
+  displayname: "Entrez votre nom d'utilisateur",
   password: 'Mot de passe',
   connect: 'Connexion',
   error: 'Erreur de connexion',
@@ -27,7 +27,7 @@ export const context = {
   take: 'Forcer la prise de contrôle',
   give: 'Donner le contrôle',
   kick: 'Kicker',
-  ban: 'Bannir l\'IP',
+  ban: "Bannir l'IP",
   confirm: {
     kick_title: 'Kicker {name}?',
     kick_text: 'Êtes vous sûr de kick {name}?',
@@ -85,7 +85,7 @@ export const notifications = {
   controls_released_steal: 'a forcé la pêrte de contrôle de {name}',
   controls_given: 'a donné le contrôle à {name}',
   controls_has: '{name} a le contrôle',
-  controls_has_alt: 'Mais j\'ai fait savoir que vous le voulez',
+  controls_has_alt: "Mais j'ai fait savoir que vous le voulez",
   controls_requesting: '{name} demande le contrôle',
   resolution: 'a changé la résolution pour du {width}x{height}@{rate}',
   banned: 'a banni {name}',

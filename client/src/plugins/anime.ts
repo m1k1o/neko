@@ -15,9 +15,7 @@ interface Anime {
   path(
     path: string | HTMLElement | SVGElement | null,
     percent?: number,
-  ): (
-    prop: string,
-  ) => {
+  ): (prop: string) => {
     el: HTMLElement | SVGElement
     property: string
     totalLength: number
