@@ -1,16 +1,11 @@
 package types
 
 import (
-	"time"
-
 	"github.com/pion/webrtc/v3"
+	"github.com/pion/webrtc/v3/pkg/media"
 )
 
-type Sample struct {
-	Data      []byte
-	Timestamp time.Time
-	Duration  time.Duration
-}
+type Sample media.Sample
 
 type WebRTCManager interface {
 	Start()
