@@ -478,24 +478,40 @@
       this.$accessor.remote.toggle()
     }
 
-    requestFullscreen() {
-      if (typeof this._player.requestFullscreen === 'function') {
-        this._player.requestFullscreen()
+    _elementRequestFullscreen(el: HTMLElement) {
+      if (typeof el.requestFullscreen === 'function') {
+        el.requestFullscreen()
         //@ts-ignore
-      } else if (typeof this._player.webkitRequestFullscreen === 'function') {
+      } else if (typeof el.webkitRequestFullscreen === 'function') {
         //@ts-ignore
-        this._player.webkitRequestFullscreen()
+        el.webkitRequestFullscreen()
         //@ts-ignore
-      } else if (typeof this._player.webkitEnterFullscreen === 'function') {
+      } else if (typeof el.webkitEnterFullscreen === 'function') {
         //@ts-ignore
-        this._player.webkitEnterFullscreen()
+        el.webkitEnterFullscreen()
         //@ts-ignore
-      } else if (typeof this._player.msRequestFullScreen === 'function') {
+      } else if (typeof el.msRequestFullScreen === 'function') {
         //@ts-ignore
-        this._player.msRequestFullScreen()
+        el.msRequestFullScreen()
+      } else {
+        return false
       }
 
-      this.onResise()
+      return true
+    }
+
+    requestFullscreen() {
+      // try to fullscreen player element
+      if (this._elementRequestFullscreen(this._player)) {
+        this.onResise()
+        return
+      }
+
+      // fallback to fullscreen video itself (on mobile devices)
+      if (this._elementRequestFullscreen(this._video)) {
+        this.onResise()
+        return
+      }
     }
 
     requestPictureInPicture() {

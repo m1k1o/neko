@@ -62,7 +62,7 @@ For n.eko room management software visit https://github.com/m1k1o/neko-rooms.
 - Disable debug mode by default.
 - Remove HTML tags from user name.
 - Upgraded `pion/webrtc` to v3 (by @mbattista).
-- Added `requestFullscreen` compatibility for older browsers.
+- Added `requestFullscreen` compatibility for older browsersn and iOS devices.
 - Fixed small lags in video and improved video UX (by @mbattista).
 - Added `m1k1o/neko:vncviewer` tag, use `NEKO_VNC_URL` to specify VNC target and use n.eko as a bridge.
 - Abiltiy to include neko as a component in another Vue.Js project (by @gbrian).
