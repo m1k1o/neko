@@ -4,7 +4,7 @@ FROM $BASE_IMAGE
 #
 # install neko chromium
 RUN set -eux; apt-get update; \
-    apt-get install -y --no-install-recommends unzip chromium openbox; \
+    apt-get install -y --no-install-recommends unzip chromium chromium-sandbox openbox; \
     #
     # install widevine module
     WIDEVINE_VERSION=$(wget --quiet -O - https://dl.google.com/widevine-cdm/versions.txt | tail -n 1); \
