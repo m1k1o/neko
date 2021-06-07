@@ -13,6 +13,7 @@ If you want, you can build other tags. `base` tag needs to be build first:
 - `./build base`
 - `./build firefox`
 - `./build chromium`
+- `./build google-chrome`
 - etc...
 
 ## Step 2: Starting server
