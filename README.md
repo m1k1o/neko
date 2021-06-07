@@ -69,7 +69,7 @@ For n.eko room management software visit https://github.com/m1k1o/neko-rooms.
 - Added HEALTHCHECK to Dockerfile.
 - Arguments in broadcast pipeline are optional, not positional and can be repeated `{url} {device} {display}`.
 - Chat messages are dense, when repeated, they are joined together.
-- Start unmuted on reconnects.
+- Start unmuted on reconnects and auto unmute on any control attempt.
 
 ### Roadmap & TODOs
 - Catch errors from gst pipeline, tell user if broadcast failed.
