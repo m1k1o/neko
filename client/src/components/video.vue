@@ -217,6 +217,7 @@
     private observer = new ResizeObserver(this.onResise.bind(this))
     private focused = false
     private fullscreen = false
+    private startsMuted = true
 
     get admin() {
       return this.$accessor.user.admin
@@ -336,6 +337,7 @@
     onMutedChanged(muted: boolean) {
       if (this._video) {
         this._video.muted = muted
+        this.startsMuted = muted
       }
     }
 
@@ -385,7 +387,7 @@
       this._video.addEventListener('canplaythrough', () => {
         this.$accessor.video.setPlayable(true)
         if (this.autoplay) {
-          if (!document.hasFocus() || !this.$accessor.active) {
+          if (this.startsMuted && (!document.hasFocus() || !this.$accessor.active)) {
             this.$accessor.video.setMuted(true)
             this._video.muted = true
           }
