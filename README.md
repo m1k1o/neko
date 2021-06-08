@@ -42,6 +42,8 @@ For n.eko room management software visit https://github.com/m1k1o/neko-rooms.
 - Added `?cast=1` that will hide all control and show only video.
 - Shake keyboard icon if someone attempted to control when is nobody hosting.
 - Support for password protected `NEKO_ICESERVERS` (by @mbattista).
+- Added bunch of translations (🇸🇰, 🇪🇸, 🇸🇪, 🇳🇴, 🇫🇷) by various people.
+- Added `m1k1o/neko:google-chrome` tag.
 
 ### Bugs
 - Fixed minor gst pipeline bug.
@@ -51,6 +53,11 @@ For n.eko room management software visit https://github.com/m1k1o/neko-rooms.
 - Now when user gets kicked, he won't join as a ghost user again but will be logged out.
 - **iOS compatibility!** Fixed really strange CSS bug, which prevented iOS from loading the video.
 - Proper disconnect only once with unsubscribing events. When webrtc fails, user won't be logged in without username again.
+- Upgraded and fixed emojis to a new major version.
+- Fixed bad `keymap -> keysym` translation to respect active modifiers (#45, with @mbattista).
+- Respecting `NEKO_DEBUG` env variable.
+- Fullscreen support for iOS devices.
+- Added `chrome-sandbox` to fix weird bug when chromium didn't start.
 
 ### Misc
 - Custom docker workflow.
@@ -69,6 +76,7 @@ For n.eko room management software visit https://github.com/m1k1o/neko-rooms.
 - Added HEALTHCHECK to Dockerfile.
 - Arguments in broadcast pipeline are optional, not positional and can be repeated `{url} {device} {display}`.
 - Chat messages are dense, when repeated, they are joined together.
+- While IP address fetching is now proxy ignored.
 - Start unmuted on reconnects and auto unmute on any control attempt.
 
 ### Roadmap & TODOs
