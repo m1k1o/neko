@@ -77,7 +77,7 @@ For n.eko room management software visit https://github.com/m1k1o/neko-rooms.
 - Arguments in broadcast pipeline are optional, not positional and can be repeated `{url} {device} {display}`.
 - Chat messages are dense, when repeated, they are joined together.
 - While IP address fetching is now proxy ignored.
-- Start unmuted on reconnects and auto unmute on any control attempt.
+- Start unmuted on reconnects.
 
 ### Roadmap & TODOs
 - Catch errors from gst pipeline, tell user if broadcast failed.

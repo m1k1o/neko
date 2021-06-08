@@ -187,16 +187,10 @@
     }
 
     controlAttempt() {
-      // auto unmute on any control attempt
-      if (this.$accessor.video.muted) {
-        this.$accessor.video.setMuted(false)
-      }
+      if (this.shakeKbd || this.$accessor.remote.hosted) return
 
-      // shake keyboard if not hosting
-      if (!this.shakeKbd && !this.$accessor.remote.hosted) {
-        this.shakeKbd = true
-        setTimeout(() => (this.shakeKbd = false), 5000)
-      }
+      this.shakeKbd = true
+      setTimeout(() => (this.shakeKbd = false), 5000)
     }
 
     get about() {
