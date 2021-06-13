@@ -49,12 +49,12 @@ jobs:
         #
         # TODO: Change.
         #
-        #- google-chrome
-        #- ungoogled-chromium
-        #- tor-browser
-        #- vncviewer
-        #- vlc
-        #- xfce
+        # - google-chrome
+        # - ungoogled-chromium
+        # - tor-browser
+        # - vncviewer
+        # - vlc
+        # - xfce
     steps:
       - name: Check Out Repo
         uses: actions/checkout@v2
