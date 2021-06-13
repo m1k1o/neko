@@ -3,6 +3,12 @@ cd "$(dirname "$0")"
 
 BASE="${PWD}/../"
 
+# BUILD_IMAGE from environment vairables has precedence
+if [ ! -z "${BUILD_IMAGE}" ]
+then
+  ENV_BUILD_IMAGE="${BUILD_IMAGE}"
+fi
+
 if [ -f ".env.default" ]
 then
   export $(cat .env.default | sed 's/#.*//g' | xargs)
@@ -11,6 +17,13 @@ fi
 if [ -f ".env" ]
 then
   export $(cat .env | sed 's/#.*//g' | xargs)
+fi
+
+# BUILD_IMAGE from environment vairables has precedence
+if [ ! -z "${ENV_BUILD_IMAGE}" ]
+then
+  BUILD_IMAGE="${ENV_BUILD_IMAGE}"
+  unset ENV_BUILD_IMAGE
 fi
 
 if [ -z "${1}" ] && [ ! -z "${SERVER_TAG}" ]
