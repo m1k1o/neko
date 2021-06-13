@@ -42,7 +42,7 @@ jobs:
     # do not run on forks
     #
     if: github.repository_owner == 'm1k1o'
-    needs: [ build_base ]
+    needs: [ build-base ]
     strategy:
       matrix:
         #
