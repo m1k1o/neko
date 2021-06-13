@@ -10,10 +10,6 @@ on:
 jobs:
   build_base:
     runs-on: ubuntu-latest
-    #
-    # run only if secrets exist
-    #
-    if: secrets.DOCKER_IMAGE && secrets.DOCKER_USERNAME && secrets.DOCKER_TOKEN
     steps:
       - name: Check Out Repo
         uses: actions/checkout@v2
@@ -36,10 +32,6 @@ jobs:
 
   build_container:
     runs-on: ubuntu-latest
-    #
-    # run only if secrets exist
-    #
-    if: secrets.DOCKER_IMAGE && secrets.DOCKER_USERNAME && secrets.DOCKER_TOKEN
     needs: [ build_base ]
     strategy:
       matrix:
