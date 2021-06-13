@@ -2,10 +2,13 @@ name: "CI for builds"
 
 on:
   push:
-    #
-    # TODO: Change.
-    #
-    branches: [ github-actions ]
+    branches: [ dev ]
+  #
+  # Run this action periodically to keep browsers up-to-date
+  # even if there is no activity in this repo.
+  #
+  schedule:
+    - cron: "43 2 * * 1"
 
 env:
   DOCKER_IMAGE: m1k1o/neko
@@ -45,10 +48,7 @@ jobs:
     needs: [ build-base ]
     strategy:
       matrix:
-        #
-        # TODO: Change.
-        #
-        tags: [ firefox, chromium ]
+        tags: [ firefox, chromium, google-chrome, ungoogled-chromium, tor-browser, vncviewer, vlc, xfce ]
     env:
       DOCKER_TAG: ${{ matrix.tags }}
     steps:
