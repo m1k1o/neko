@@ -39,6 +39,7 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
   private _peer?: RTCPeerConnection
   private _channel?: RTCDataChannel
   private _state: RTCIceConnectionState = 'disconnected'
+  private _candidates: RTCIceCandidateInit[] = []
   private _log: Logger
   private _statsStop?: () => void
 
@@ -61,10 +62,9 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
     )
   }
 
-  candidates: RTCIceCandidateInit[] = []
   public async setCandidate(candidate: RTCIceCandidateInit) {
     if (!this._peer) {
-      this.candidates.push(candidate)
+      this._candidates.push(candidate)
       return
     }
 
@@ -133,13 +133,13 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
     this._peer.addTransceiver('video', { direction: 'recvonly' })
     this._peer.setRemoteDescription({ type: 'offer', sdp })
 
-    if (this.candidates.length > 0) {
-      for (const candidate of this.candidates) {
+    if (this._candidates.length > 0) {
+      for (const candidate of this._candidates) {
         this._peer.addIceCandidate(candidate)
       }
 
-      this._log.debug(`added ${this.candidates.length} remote ICE candidates`, this.candidates)
-      this.candidates = []
+      this._log.debug(`added ${this._candidates.length} remote ICE candidates`, this._candidates)
+      this._candidates = []
     }
 
     const answer = await this._peer.createAnswer()
