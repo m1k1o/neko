@@ -13,28 +13,12 @@ export interface NekoWebSocketEvents {
 
 export class NekoWebSocket extends EventEmitter<NekoWebSocketEvents> {
   private _ws?: WebSocket
-  private _connTimer?: number
-  private _reconTimer?: number
   private _log: Logger
-  private _url: string
-  private _token: string
 
   constructor() {
     super()
 
     this._log = new Logger('websocket')
-
-    this._url = ''
-    this._token = ''
-    this.setUrl(location.href)
-  }
-
-  public setUrl(url: string) {
-    this._url = url.replace(/^http/, 'ws').replace(/\/+$/, '') + '/api/ws'
-  }
-
-  public setToken(token: string) {
-    this._token = token
   }
 
   get supported() {
@@ -45,51 +29,44 @@ export class NekoWebSocket extends EventEmitter<NekoWebSocketEvents> {
     return typeof this._ws !== 'undefined' && this._ws.readyState === WebSocket.OPEN
   }
 
-  public async connect() {
+  public async connect(url: string) {
+    if (!this.supported) {
+      throw new Error('browser does not support websockets')
+    }
+
     if (this.connected) {
       throw new Error('attempting to create websocket while connection open')
     }
 
     if (typeof this._ws !== 'undefined') {
       this._log.debug(`previous websocket connection needs to be closed`)
-      this.disconnect(new Error('connection replaced'))
-    }
-
-    this.emit('connecting')
-
-    let url = this._url
-    if (this._token) {
-      url += '?token=' + encodeURIComponent(this._token)
+      this.disconnect()
     }
 
     await new Promise<void>((res, rej) => {
       this._ws = new WebSocket(url)
+
       this._log.info(`connecting`)
+      this.emit('connecting')
 
       this._ws.onclose = rej.bind(this, new Error('connection close'))
       this._ws.onerror = rej.bind(this, new Error('connection error'))
       this._ws.onmessage = this.onMessage.bind(this)
 
+      let timeout = window.setTimeout(rej.bind(this, new Error('connection timeout')), connTimeout)
       this._ws.onopen = () => {
-        this._ws!.onclose = this.onClose.bind(this, 'close')
-        this._ws!.onerror = this.onClose.bind(this, 'error')
+        window.clearTimeout(timeout)
+
+        this._ws!.onclose = this.onDisconnected.bind(this, 'close')
+        this._ws!.onerror = this.onDisconnected.bind(this, 'error')
 
         this.onConnected()
         res()
       }
-
-      this._connTimer = window.setTimeout(rej.bind(this, new Error('connection timeout')), connTimeout)
     })
   }
 
-  public disconnect(reason?: Error) {
-    this.emit('disconnected', reason)
-
-    if (this._connTimer) {
-      window.clearTimeout(this._connTimer)
-      this._connTimer = undefined
-    }
-
+  public disconnect() {
     if (typeof this._ws !== 'undefined') {
       // unmount all events
       this._ws.onopen = () => {}
@@ -123,16 +100,6 @@ export class NekoWebSocket extends EventEmitter<NekoWebSocketEvents> {
   }
 
   private onConnected() {
-    if (this._connTimer) {
-      window.clearTimeout(this._connTimer)
-      this._connTimer = undefined
-    }
-
-    if (this._reconTimer) {
-      window.clearInterval(this._reconTimer)
-      this._reconTimer = undefined
-    }
-
     if (!this.connected) {
       this._log.warn(`onConnected called while being disconnected`)
       return
@@ -142,21 +109,10 @@ export class NekoWebSocket extends EventEmitter<NekoWebSocketEvents> {
     this.emit('connected')
   }
 
-  private onClose(reason: string) {
+  private onDisconnected(reason: string) {
+    this.disconnect()
+
     this._log.info(`connection ${reason}`)
-    this.disconnect(new Error(`connection ${reason}`))
-
-    this._reconTimer = window.setInterval(async () => {
-      // connect only if disconnected
-      if (!this.connected) {
-        try {
-          await this.connect()
-        } catch (e) {
-          return
-        }
-      }
-
-      window.clearInterval(this._reconTimer)
-    }, reconnInterval)
+    this.emit('disconnected', new Error(`connection ${reason}`))
   }
 }
