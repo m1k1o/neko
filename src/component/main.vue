@@ -55,7 +55,6 @@
 
   import { Vue, Component, Ref, Watch, Prop } from 'vue-property-decorator'
   import ResizeObserver from 'resize-observer-polyfill'
-  import EventEmitter from 'eventemitter3'
 
   import { NekoApi, MembersApi, RoomApi } from './internal/api'
   import { NekoWebSocket } from './internal/websocket'
@@ -257,6 +256,7 @@
       }
     }
 
+    // TODO: Refactor.
     public async websocketConnect() {
       if (!this.authenticated) {
         throw new Error('client not authenticated')
@@ -269,6 +269,7 @@
       await this.websocket.connect()
     }
 
+    // TODO: Refactor.
     public websocketDisconnect() {
       if (!this.connected) {
         throw new Error('client not connected to websocket')
@@ -277,6 +278,7 @@
       this.websocket.disconnect(new Error('manual action'))
     }
 
+    // TODO: Refactor.
     public webrtcConnect(video?: string) {
       if (!this.connected) {
         throw new Error('client not connected to websocket')
@@ -293,6 +295,7 @@
       this.websocket.send(EVENT.SIGNAL_REQUEST, { video: video })
     }
 
+    // TODO: Refactor.
     public webrtcDisconnect() {
       if (!this.watching) {
         throw new Error('client not connected to webrtc')
@@ -422,6 +425,7 @@
         Vue.set(this.state.connection, 'websocket', 'connected')
         this.events.emit('connection.websocket', 'connected')
 
+        // TODO: Refactor.
         if (!this.watching && this.autoconnect) {
           this.webrtcConnect()
         }
@@ -516,6 +520,7 @@
           }
         }
 
+        // TODO: Refactor.
         // periodically reconnect WebRTC
         if (this.connected && !webrtcReconnect) {
           webrtcReconnect = setInterval(() => {
