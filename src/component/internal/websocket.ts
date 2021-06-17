@@ -53,7 +53,7 @@ export class NekoWebSocket extends EventEmitter<NekoWebSocketEvents> {
       this._ws.onerror = rej.bind(this, new Error('connection error'))
       this._ws.onmessage = this.onMessage.bind(this)
 
-      let timeout = window.setTimeout(rej.bind(this, new Error('connection timeout')), connTimeout)
+      const timeout = window.setTimeout(rej.bind(this, new Error('connection timeout')), connTimeout)
       this._ws.onopen = () => {
         window.clearTimeout(timeout)
 
