@@ -153,12 +153,35 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
   }
 
   public disconnect() {
-    try {
-      this._peer!.close()
-    } catch (err) {}
+    if (typeof this._channel !== 'undefined') {
+      // unmount all events
+      this._channel.onerror = () => {}
+      this._channel.onmessage = () => {}
+      this._channel.onopen = () => {}
+      this._channel.onclose = () => {}
 
-    this._peer = undefined
-    this._channel = undefined
+      try {
+        this._channel.close()
+      } catch (err) {}
+
+      this._channel = undefined
+    }
+
+    if (typeof this._peer != 'undefined') {
+      // unmount all events
+      this._peer.onsignalingstatechange = () => {}
+      this._peer.onicecandidate = () => {}
+      this._peer.oniceconnectionstatechange = () => {}
+      this._peer.ontrack = () => {}
+      this._peer.ondatachannel = () => {}
+
+      try {
+        this._peer.close()
+      } catch (err) {}
+
+      this._peer = undefined
+    }
+
     this._state = 'disconnected'
   }
 
