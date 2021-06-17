@@ -186,7 +186,7 @@
       this.connection.setUrl(httpURL)
 
       if (this.connected) {
-        this.connection.disconnect()
+        this.disconnect()
       }
 
       if (this.authenticated) {
@@ -205,7 +205,7 @@
         Vue.set(this.state.connection, 'authenticated', true)
 
         if (this.autoconnect) {
-          await this.connection.connect()
+          await this.connect()
         }
       }
     }
@@ -228,7 +228,7 @@
       Vue.set(this.state.connection, 'authenticated', true)
 
       if (this.autoconnect) {
-        await this.connection.connect()
+        await this.connect()
       }
     }
 
@@ -238,7 +238,7 @@
       }
 
       if (this.connected) {
-        this.connection.disconnect()
+        this.disconnect()
       }
 
       try {
@@ -256,36 +256,16 @@
     }
 
     // TODO: Refactor.
-    public async websocketConnect() {
+    public async connect(video?: string) {
       if (!this.authenticated) {
         throw new Error('client not authenticated')
       }
 
       if (this.connected) {
-        throw new Error('client already connected to websocket')
+        throw new Error('client is already connected')
       }
 
       await this.connection.connect()
-    }
-
-    // TODO: Refactor.
-    public websocketDisconnect() {
-      if (!this.connected) {
-        throw new Error('client not connected to websocket')
-      }
-
-      this.connection.disconnect()
-    }
-
-    // TODO: Refactor.
-    public webrtcConnect(video?: string) {
-      if (!this.connected) {
-        throw new Error('client not connected to websocket')
-      }
-
-      if (this.watching) {
-        throw new Error('client already connected to webrtc')
-      }
 
       if (video && !this.state.connection.webrtc.videos.includes(video)) {
         throw new Error('video id not found')
@@ -295,12 +275,18 @@
     }
 
     // TODO: Refactor.
-    public webrtcDisconnect() {
-      if (!this.watching) {
-        throw new Error('client not connected to webrtc')
+    public disconnect() {
+      if (!this.connected) {
+        throw new Error('client is not connected')
       }
 
       this.connection.webrtc.disconnect()
+      this.events.emit('connection.webrtc', 'disconnected')
+      this.clearWebRTCState()
+
+      this.connection.disconnect()
+      this.events.emit('connection.websocket', 'disconnected')
+      this.clearWebSocketState()
     }
 
     public play() {
@@ -406,16 +392,9 @@
       this.connection.websocket.on('connected', () => {
         Vue.set(this.state.connection, 'websocket', 'connected')
         this.events.emit('connection.websocket', 'connected')
-
-        // TODO: Refactor.
-        if (!this.watching && this.autoconnect) {
-          this.webrtcConnect()
-        }
       })
       this.connection.websocket.on('disconnected', () => {
-        Vue.set(this.state.connection, 'websocket', 'disconnected')
         this.events.emit('connection.websocket', 'disconnected')
-
         this.clearWebSocketState()
       })
 
@@ -480,42 +459,9 @@
         Vue.set(this.state.connection, 'type', 'webrtc')
         this.events.emit('connection.webrtc', 'connected')
       })
-
-      let webrtcReconnect: any = null
       this.connection.webrtc.on('disconnected', () => {
-        const lastVideo = this.state.connection.webrtc.video ?? undefined
-
         this.events.emit('connection.webrtc', 'disconnected')
         this.clearWebRTCState()
-
-        // destroy video
-        if (this._video) {
-          if ('srcObject' in this._video) {
-            this._video.srcObject = null
-          } else {
-            // @ts-ignore
-            this._video.removeAttribute('src')
-          }
-        }
-
-        // TODO: Refactor.
-        // periodically reconnect WebRTC
-        if (this.connected && !webrtcReconnect) {
-          webrtcReconnect = setInterval(() => {
-            // connect only if disconnected
-            if (this.state.connection.webrtc.status == 'disconnected') {
-              try {
-                this.webrtcConnect(lastVideo)
-              } catch (e) {}
-            }
-
-            // stop reconnecting if connected to webrtc or disconnected from WS
-            if (this.state.connection.webrtc.status == 'connected' || !this.connected) {
-              clearInterval(webrtcReconnect)
-              webrtcReconnect = null
-            }
-          }, 1000)
-        }
       })
 
       // unmute on users first interaction
@@ -526,8 +472,7 @@
 
     beforeDestroy() {
       this.observer.disconnect()
-      this.connection.webrtc.disconnect()
-      this.connection.websocket.disconnect()
+      this.disconnect()
 
       // remove users first interaction event
       document.removeEventListener('click', this.unmute)
@@ -594,6 +539,7 @@
     }
 
     clearWebSocketState() {
+      Vue.set(this.state.connection, 'websocket', 'disconnected')
       Vue.set(this.state.connection.webrtc, 'videos', [])
       Vue.set(this.state.control, 'clipboard', null)
       Vue.set(this.state.control, 'host_id', null)
@@ -605,6 +551,16 @@
     }
 
     clearWebRTCState() {
+      // destroy video
+      if (this._video) {
+        if ('srcObject' in this._video) {
+          this._video.srcObject = null
+        } else {
+          // @ts-ignore
+          this._video.removeAttribute('src')
+        }
+      }
+
       Vue.set(this.state.connection.webrtc, 'status', 'disconnected')
       Vue.set(this.state.connection.webrtc, 'stats', null)
       Vue.set(this.state.connection.webrtc, 'video', null)
