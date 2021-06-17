@@ -3,7 +3,7 @@
     <div ref="container" class="neko-container">
       <video ref="video" :autoplay="autoplay" :muted="autoplay" playsinline />
       <neko-overlay
-        :webrtc="webrtc"
+        :webrtc="connection.webrtc"
         :scroll="state.control.scroll"
         :screenSize="state.screen.size"
         :canvasSize="canvasSize"
@@ -14,8 +14,8 @@
             : ''
         "
         :implicitControl="state.control.implicit_hosting && state.sessions[state.session_id].profile.can_host"
-        @implicit-control-request="websocket.send('control/request')"
-        @implicit-control-release="websocket.send('control/release')"
+        @implicit-control-request="connection.websocket.send('control/request')"
+        @implicit-control-release="connection.websocket.send('control/release')"
         @update-kbd-modifiers="updateKeyboardModifiers($event)"
         @drop-files="uploadDrop($event)"
       />
@@ -57,8 +57,8 @@
   import ResizeObserver from 'resize-observer-polyfill'
 
   import { NekoApi, MembersApi, RoomApi } from './internal/api'
-  import { NekoWebSocket } from './internal/websocket'
-  import { NekoWebRTC, WebRTCStats } from './internal/webrtc'
+  import { NekoConnection } from './internal/connection'
+  import { WebRTCStats } from './internal/webrtc'
   import { NekoMessages } from './internal/messages'
   import { register as VideoRegister } from './internal/video'
 
@@ -77,8 +77,6 @@
     @Ref('video') readonly _video!: HTMLVideoElement
 
     api = new NekoApi()
-    websocket = new NekoWebSocket()
-    webrtc = new NekoWebRTC()
     observer = new ResizeObserver(this.onResize.bind(this))
     canvasSize: { width: number; height: number } = {
       width: 0,
@@ -98,14 +96,19 @@
     private readonly autoplay!: boolean
 
     /////////////////////////////
+    // Public connection manager
+    /////////////////////////////
+    public connection = new NekoConnection()
+
+    /////////////////////////////
     // Public state
     /////////////////////////////
     public state = {
       connection: {
         authenticated: false,
-        websocket: this.websocket.supported ? 'disconnected' : 'unavailable',
+        websocket: this.connection.websocket.supported ? 'disconnected' : 'unavailable',
         webrtc: {
-          status: this.webrtc.supported ? 'disconnected' : 'unavailable',
+          status: this.connection.webrtc.supported ? 'disconnected' : 'unavailable',
           stats: null,
           video: null,
           videos: [],
@@ -167,7 +170,7 @@
     /////////////////////////////
     // Public events
     /////////////////////////////
-    public events = new NekoMessages(this.websocket, this.state)
+    public events = new NekoMessages(this.connection, this.state)
 
     /////////////////////////////
     // Public methods
@@ -180,14 +183,10 @@
 
       const httpURL = url.replace(/^ws/, 'http').replace(/\/$|\/ws\/?$/, '')
       this.api.setUrl(httpURL)
-      this.websocket.setUrl(httpURL)
+      this.connection.setUrl(httpURL)
 
       if (this.connected) {
-        this.websocket.disconnect(new Error('url changed'))
-      }
-
-      if (this.watching) {
-        this.webrtc.disconnect()
+        this.connection.disconnect()
       }
 
       if (this.authenticated) {
@@ -199,14 +198,14 @@
         const token = localStorage.getItem('neko_session')
         if (token) {
           this.api.setToken(token)
-          this.websocket.setToken(token)
+          this.connection.setToken(token)
         }
 
         await this.api.session.whoami()
         Vue.set(this.state.connection, 'authenticated', true)
 
         if (this.autoconnect) {
-          await this.websocket.connect()
+          await this.connection.connect()
         }
       }
     }
@@ -219,7 +218,7 @@
       const res = await this.api.session.login({ username, password })
       if (res.data.token) {
         this.api.setToken(res.data.token)
-        this.websocket.setToken(res.data.token)
+        this.connection.setToken(res.data.token)
 
         if (this.autologin) {
           localStorage.setItem('neko_session', res.data.token)
@@ -229,7 +228,7 @@
       Vue.set(this.state.connection, 'authenticated', true)
 
       if (this.autoconnect) {
-        await this.websocket.connect()
+        await this.connection.connect()
       }
     }
 
@@ -239,14 +238,14 @@
       }
 
       if (this.connected) {
-        this.websocket.disconnect(new Error('logged out'))
+        this.connection.disconnect()
       }
 
       try {
         await this.api.session.logout()
       } finally {
         this.api.setToken('')
-        this.websocket.setToken('')
+        this.connection.setToken('')
 
         if (this.autologin) {
           localStorage.removeItem('neko_session')
@@ -266,7 +265,7 @@
         throw new Error('client already connected to websocket')
       }
 
-      await this.websocket.connect()
+      await this.connection.connect()
     }
 
     // TODO: Refactor.
@@ -275,7 +274,7 @@
         throw new Error('client not connected to websocket')
       }
 
-      this.websocket.disconnect(new Error('manual action'))
+      this.connection.disconnect()
     }
 
     // TODO: Refactor.
@@ -292,7 +291,7 @@
         throw new Error('video id not found')
       }
 
-      this.websocket.send(EVENT.SIGNAL_REQUEST, { video: video })
+      this.connection.websocket.send(EVENT.SIGNAL_REQUEST, { video: video })
     }
 
     // TODO: Refactor.
@@ -301,7 +300,7 @@
         throw new Error('client not connected to webrtc')
       }
 
-      this.webrtc.disconnect()
+      this.connection.webrtc.disconnect()
     }
 
     public play() {
@@ -342,7 +341,7 @@
 
     // TODO: Remove? Use REST API only?
     public setScreenSize(width: number, height: number, rate: number) {
-      this.websocket.send(EVENT.SCREEN_SET, { width, height, rate })
+      this.connection.websocket.send(EVENT.SCREEN_SET, { width, height, rate })
     }
 
     public setWebRTCVideo(video: string) {
@@ -350,7 +349,7 @@
         throw new Error('video id not found')
       }
 
-      this.websocket.send(EVENT.SIGNAL_VIDEO, { video: video })
+      this.connection.websocket.send(EVENT.SIGNAL_VIDEO, { video: video })
     }
 
     public setWebRTCAuto(auto: boolean = true) {
@@ -358,11 +357,11 @@
     }
 
     public sendUnicast(receiver: string, subject: string, body: any) {
-      this.websocket.send(EVENT.SEND_UNICAST, { receiver, subject, body })
+      this.connection.websocket.send(EVENT.SEND_UNICAST, { receiver, subject, body })
     }
 
     public sendBroadcast(subject: string, body: any) {
-      this.websocket.send(EVENT.SEND_BROADCAST, { subject, body })
+      this.connection.websocket.send(EVENT.SEND_BROADCAST, { subject, body })
     }
 
     public get room(): RoomApi {
@@ -400,28 +399,11 @@
       VideoRegister(this._video, this.state.video)
 
       // websocket
-      this.websocket.on('message', async (event: string, payload: any) => {
-        switch (event) {
-          case EVENT.SIGNAL_PROVIDE:
-            try {
-              let sdp = await this.webrtc.connect(payload.sdp, payload.iceservers)
-              this.websocket.send(EVENT.SIGNAL_ANSWER, { sdp })
-              this.events.emit('connection.webrtc.sdp', 'local', sdp)
-            } catch (e) {}
-            break
-          case EVENT.SIGNAL_CANDIDATE:
-            this.webrtc.setCandidate(payload)
-            break
-          case EVENT.SYSTEM_DISCONNECT:
-            this.websocket.disconnect(new Error('disconnected by server'))
-            break
-        }
-      })
-      this.websocket.on('connecting', () => {
+      this.connection.websocket.on('connecting', () => {
         Vue.set(this.state.connection, 'websocket', 'connecting')
         this.events.emit('connection.websocket', 'connecting')
       })
-      this.websocket.on('connected', () => {
+      this.connection.websocket.on('connected', () => {
         Vue.set(this.state.connection, 'websocket', 'connected')
         this.events.emit('connection.websocket', 'connected')
 
@@ -430,7 +412,7 @@
           this.webrtcConnect()
         }
       })
-      this.websocket.on('disconnected', () => {
+      this.connection.websocket.on('disconnected', () => {
         Vue.set(this.state.connection, 'websocket', 'disconnected')
         this.events.emit('connection.websocket', 'disconnected')
 
@@ -438,7 +420,7 @@
       })
 
       // webrtc
-      this.webrtc.on('track', (event: RTCTrackEvent) => {
+      this.connection.webrtc.on('track', (event: RTCTrackEvent) => {
         const { track, streams } = event
         if (track.kind === 'audio') return
 
@@ -454,13 +436,9 @@
           this._video.play()
         }
       })
-      this.webrtc.on('candidate', (candidate: RTCIceCandidateInit) => {
-        this.websocket.send(EVENT.SIGNAL_CANDIDATE, candidate)
-        this.events.emit('connection.webrtc.sdp.candidate', 'local', candidate)
-      })
 
       let webrtcCongestion: number = 0
-      this.webrtc.on('stats', (stats: WebRTCStats) => {
+      this.connection.webrtc.on('stats', (stats: WebRTCStats) => {
         Vue.set(this.state.connection.webrtc, 'stats', stats)
 
         // if automatic quality adjusting is turned off
@@ -493,18 +471,18 @@
           webrtcCongestion = 0
         }
       })
-      this.webrtc.on('connecting', () => {
+      this.connection.webrtc.on('connecting', () => {
         Vue.set(this.state.connection.webrtc, 'status', 'connecting')
         this.events.emit('connection.webrtc', 'connecting')
       })
-      this.webrtc.on('connected', () => {
+      this.connection.webrtc.on('connected', () => {
         Vue.set(this.state.connection.webrtc, 'status', 'connected')
         Vue.set(this.state.connection, 'type', 'webrtc')
         this.events.emit('connection.webrtc', 'connected')
       })
 
       let webrtcReconnect: any = null
-      this.webrtc.on('disconnected', () => {
+      this.connection.webrtc.on('disconnected', () => {
         const lastVideo = this.state.connection.webrtc.video ?? undefined
 
         this.events.emit('connection.webrtc', 'disconnected')
@@ -548,8 +526,8 @@
 
     beforeDestroy() {
       this.observer.disconnect()
-      this.webrtc.disconnect()
-      this.websocket.disconnect()
+      this.connection.webrtc.disconnect()
+      this.connection.websocket.disconnect()
 
       // remove users first interaction event
       document.removeEventListener('click', this.unmute)
@@ -559,12 +537,12 @@
     @Watch('state.control.keyboard')
     updateKeyboard() {
       if (this.controlling && this.state.control.keyboard.layout) {
-        this.websocket.send(EVENT.KEYBOARD_MAP, this.state.control.keyboard)
+        this.connection.websocket.send(EVENT.KEYBOARD_MAP, this.state.control.keyboard)
       }
     }
 
     updateKeyboardModifiers(modifiers: { capslock: boolean; numlock: boolean }) {
-      this.websocket.send(EVENT.KEYBOARD_MODIFIERS, modifiers)
+      this.connection.websocket.send(EVENT.KEYBOARD_MODIFIERS, modifiers)
     }
 
     @Watch('state.screen.size')

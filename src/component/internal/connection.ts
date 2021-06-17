@@ -10,61 +10,40 @@ export interface NekoConnectionEvents {
 }
 
 export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
-  staysConnected = false
+  private _url: string
+  private _token: string
 
-  websocket = new NekoWebSocket()
-  webrtc = new NekoWebRTC()
+  public websocket = new NekoWebSocket()
+  public webrtc = new NekoWebRTC()
 
   constructor() {
     super()
 
-    //
-    // websocket events
-    //
+    this._url = ''
+    this._token = ''
+  }
 
-    this.websocket.on('message', async (event: string, payload: any) => {
-      
-    })
-    this.websocket.on('connecting', () => {
-      
-    })
-    this.websocket.on('connected', () => {
-      
-    })
-    this.websocket.on('disconnected', () => {
-      
-    })
+  public setUrl(url: string) {
+    this._url = url.replace(/^http/, 'ws').replace(/\/+$/, '') + '/api/ws'
+  }
 
-    //
-    // webrtc events
-    //
-
-    this.webrtc.on('track', (event: RTCTrackEvent) => {
-      
-    })
-    this.webrtc.on('candidate', (candidate: RTCIceCandidateInit) => {
-      
-    })
-    this.webrtc.on('stats', (stats: WebRTCStats) => {
-      
-    })
-    this.webrtc.on('connecting', () => {
-      
-    })
-    this.webrtc.on('connected', () => {
-      
-    })
-    this.webrtc.on('disconnected', () => {
-
-    })
-
+  public setToken(token: string) {
+    this._token = token
   }
 
   public async connect(): Promise<void> {
-    this.staysConnected = true
+    let url = this._url
+    if (this._token) {
+      url += '?token=' + encodeURIComponent(this._token)
+    }
+
+    await this.websocket.connect(url)
+
+    // TODO: connect to WebRTC
+    //this.websocket.send(EVENT.SIGNAL_REQUEST, { video: video })
   }
 
-  public async disconnect(): Promise<void> {
-    this.staysConnected = false
+  public disconnect() {
+    this.websocket.disconnect()
   }
 }

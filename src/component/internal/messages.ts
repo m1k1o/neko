@@ -4,7 +4,7 @@ import * as message from '../types/messages'
 
 import EventEmitter from 'eventemitter3'
 import { Logger } from '../utils/logger'
-import { NekoWebSocket } from './websocket'
+import { NekoConnection } from './connection'
 import NekoState from '../types/state'
 
 export interface NekoEvents {
@@ -42,18 +42,18 @@ export interface NekoEvents {
 }
 
 export class NekoMessages extends EventEmitter<NekoEvents> {
-  private _websocket: NekoWebSocket
+  private _connection: NekoConnection
   private _state: NekoState
   private _log: Logger
 
-  constructor(websocket: NekoWebSocket, state: NekoState) {
+  constructor(connection: NekoConnection, state: NekoState) {
     super()
 
     this._log = new Logger('messages')
     this._state = state
-    this._websocket = websocket
+    this._connection = connection
 
-    this._websocket.on('message', async (event: string, payload: any) => {
+    this._connection.websocket.on('message', async (event: string, payload: any) => {
       // @ts-ignore
       if (typeof this[event] === 'function') {
         // @ts-ignore
@@ -61,6 +61,11 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
       } else {
         this._log.warn(`unhandled websocket event '${event}':`, payload)
       }
+    })
+
+    this._connection.webrtc.on('candidate', (candidate: RTCIceCandidateInit) => {
+      this._connection.websocket.send(EVENT.SIGNAL_CANDIDATE, candidate)
+      this.emit('connection.webrtc.sdp.candidate', 'local', candidate)
     })
   }
 
@@ -101,7 +106,7 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
 
   protected [EVENT.SYSTEM_DISCONNECT]({ message }: message.SystemDisconnect) {
     this._log.debug('EVENT.SYSTEM_DISCONNECT')
-    this._websocket.disconnect(new Error(message))
+    this._connection.disconnect()
     this.emit('connection.disconnect', message)
   }
 
@@ -109,20 +114,26 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
   // Signal Events
   /////////////////////////////
 
-  protected [EVENT.SIGNAL_PROVIDE]({ event, sdp, video }: message.SignalProvide) {
+  protected async [EVENT.SIGNAL_PROVIDE]({ sdp: remoteSdp, video, iceservers }: message.SignalProvide) {
     this._log.debug('EVENT.SIGNAL_PROVIDE')
+    this.emit('connection.webrtc.sdp', 'remote', remoteSdp)
+
+    const localSdp = await this._connection.webrtc.connect(remoteSdp, iceservers)
+    this._connection.websocket.send(EVENT.SIGNAL_ANSWER, {
+      sdp: localSdp,
+    })
+
+    this.emit('connection.webrtc.sdp', 'local', localSdp)
     Vue.set(this._state.connection.webrtc, 'video', video)
-    // TODO: Handle.
-    this.emit('connection.webrtc.sdp', 'remote', sdp)
   }
 
   protected [EVENT.SIGNAL_CANDIDATE]({ event, ...candidate }: message.SignalCandidate) {
     this._log.debug('EVENT.SIGNAL_CANDIDATE')
-    // TODO: Handle.
+    this._connection.webrtc.setCandidate(candidate)
     this.emit('connection.webrtc.sdp.candidate', 'remote', candidate)
   }
 
-  protected [EVENT.SIGNAL_VIDEO]({ event, video }: message.SignalVideo) {
+  protected [EVENT.SIGNAL_VIDEO]({ video }: message.SignalVideo) {
     this._log.debug('EVENT.SIGNAL_VIDEO')
     Vue.set(this._state.connection.webrtc, 'video', video)
   }
