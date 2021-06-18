@@ -274,17 +274,16 @@
       this.connection.websocket.send(EVENT.SIGNAL_REQUEST, { video: video })
     }
 
-    // TODO: Refactor.
     public disconnect() {
       if (!this.connected) {
         throw new Error('client is not connected')
       }
 
+      // TODO: Refactor.
       this.connection.webrtc.disconnect()
-      this.clearWebRTCState()
 
       this.connection.disconnect()
-      this.clearWebSocketState()
+      this.clear()
     }
 
     public play() {
@@ -509,19 +508,7 @@
       }
     }
 
-    clearWebSocketState() {
-      Vue.set(this.state.connection, 'websocket', 'disconnected')
-      Vue.set(this.state.connection.webrtc, 'videos', [])
-      Vue.set(this.state.control, 'clipboard', null)
-      Vue.set(this.state.control, 'host_id', null)
-      Vue.set(this.state.control, 'implicit_hosting', false)
-      Vue.set(this.state.screen, 'size', { width: 1280, height: 720, rate: 30 })
-      Vue.set(this.state.screen, 'configurations', [])
-      Vue.set(this.state, 'session_id', null)
-      Vue.set(this.state, 'sessions', {})
-    }
-
-    clearWebRTCState() {
+    clear() {
       // destroy video
       if (this._video) {
         if ('srcObject' in this._video) {
@@ -532,6 +519,18 @@
         }
       }
 
+      // websocket
+      Vue.set(this.state.connection, 'websocket', 'disconnected')
+      Vue.set(this.state.connection.webrtc, 'videos', [])
+      Vue.set(this.state.control, 'clipboard', null)
+      Vue.set(this.state.control, 'host_id', null)
+      Vue.set(this.state.control, 'implicit_hosting', false)
+      Vue.set(this.state.screen, 'size', { width: 1280, height: 720, rate: 30 })
+      Vue.set(this.state.screen, 'configurations', [])
+      Vue.set(this.state, 'session_id', null)
+      Vue.set(this.state, 'sessions', {})
+
+      // webrtc
       Vue.set(this.state.connection.webrtc, 'status', 'disconnected')
       Vue.set(this.state.connection.webrtc, 'stats', null)
       Vue.set(this.state.connection.webrtc, 'video', null)
