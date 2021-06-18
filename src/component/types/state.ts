@@ -10,6 +10,7 @@ export default interface State {
 /////////////////////////////
 // Connection
 /////////////////////////////
+
 export interface Connection {
   authenticated: boolean
   websocket: 'unavailable' | 'disconnected' | 'connecting' | 'connected'
@@ -36,6 +37,7 @@ export interface WebRTCStats {
 /////////////////////////////
 // Video
 /////////////////////////////
+
 export interface Video {
   playable: boolean
   playing: boolean
@@ -46,6 +48,7 @@ export interface Video {
 /////////////////////////////
 // Control
 /////////////////////////////
+
 export interface Control {
   scroll: Scroll
   clipboard: Clipboard | null
@@ -71,6 +74,7 @@ export interface Keyboard {
 /////////////////////////////
 // Screen
 /////////////////////////////
+
 export interface Screen {
   size: ScreenSize
   configurations: ScreenSize[]
@@ -85,6 +89,7 @@ export interface ScreenSize {
 /////////////////////////////
 // Session
 /////////////////////////////
+
 export interface MemberProfile {
   name: string
   is_admin: boolean
