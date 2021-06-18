@@ -9,8 +9,6 @@ import NekoState from '../types/state'
 
 export interface NekoEvents {
   // connection events
-  ['connection.websocket']: (state: 'connected' | 'connecting' | 'disconnected') => void
-  ['connection.webrtc']: (state: 'connected' | 'connecting' | 'disconnected') => void
   ['connection.webrtc.sdp']: (type: 'local' | 'remote', data: string) => void
   ['connection.webrtc.sdp.candidate']: (type: 'local' | 'remote', data: RTCIceCandidateInit) => void
   ['connection.disconnect']: (message: string) => void

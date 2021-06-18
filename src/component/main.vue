@@ -96,19 +96,14 @@
     private readonly autoplay!: boolean
 
     /////////////////////////////
-    // Public connection manager
-    /////////////////////////////
-    public connection = new NekoConnection()
-
-    /////////////////////////////
     // Public state
     /////////////////////////////
     public state = {
       connection: {
         authenticated: false,
-        websocket: this.connection.websocket.supported ? 'disconnected' : 'unavailable',
+        websocket: 'disconnected',
         webrtc: {
-          status: this.connection.webrtc.supported ? 'disconnected' : 'unavailable',
+          status: 'disconnected',
           stats: null,
           video: null,
           videos: [],
@@ -146,6 +141,11 @@
       session_id: null,
       sessions: {},
     } as NekoState
+
+    /////////////////////////////
+    // Public connection manager
+    /////////////////////////////
+    public connection = new NekoConnection(this.state.connection)
 
     public get authenticated() {
       return this.state.connection.authenticated
@@ -281,11 +281,9 @@
       }
 
       this.connection.webrtc.disconnect()
-      this.events.emit('connection.webrtc', 'disconnected')
       this.clearWebRTCState()
 
       this.connection.disconnect()
-      this.events.emit('connection.websocket', 'disconnected')
       this.clearWebSocketState()
     }
 
@@ -384,20 +382,6 @@
       // video events
       VideoRegister(this._video, this.state.video)
 
-      // websocket
-      this.connection.websocket.on('connecting', () => {
-        Vue.set(this.state.connection, 'websocket', 'connecting')
-        this.events.emit('connection.websocket', 'connecting')
-      })
-      this.connection.websocket.on('connected', () => {
-        Vue.set(this.state.connection, 'websocket', 'connected')
-        this.events.emit('connection.websocket', 'connected')
-      })
-      this.connection.websocket.on('disconnected', () => {
-        this.events.emit('connection.websocket', 'disconnected')
-        this.clearWebSocketState()
-      })
-
       // webrtc
       this.connection.webrtc.on('track', (event: RTCTrackEvent) => {
         const { track, streams } = event
@@ -449,19 +433,6 @@
           this.setWebRTCVideo(this.state.connection.webrtc.videos[index + 1])
           webrtcCongestion = 0
         }
-      })
-      this.connection.webrtc.on('connecting', () => {
-        Vue.set(this.state.connection.webrtc, 'status', 'connecting')
-        this.events.emit('connection.webrtc', 'connecting')
-      })
-      this.connection.webrtc.on('connected', () => {
-        Vue.set(this.state.connection.webrtc, 'status', 'connected')
-        Vue.set(this.state.connection, 'type', 'webrtc')
-        this.events.emit('connection.webrtc', 'connected')
-      })
-      this.connection.webrtc.on('disconnected', () => {
-        this.events.emit('connection.webrtc', 'disconnected')
-        this.clearWebRTCState()
       })
 
       // unmute on users first interaction
