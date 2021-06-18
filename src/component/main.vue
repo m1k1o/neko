@@ -14,10 +14,10 @@
             : ''
         "
         :implicitControl="state.control.implicit_hosting && state.sessions[state.session_id].profile.can_host"
-        @implicit-control-request="connection.websocket.send('control/request')"
-        @implicit-control-release="connection.websocket.send('control/release')"
-        @update-kbd-modifiers="updateKeyboardModifiers($event)"
-        @drop-files="uploadDrop($event)"
+        @implicitControlRequest="connection.websocket.send('control/request')"
+        @implicitControlRelease="connection.websocket.send('control/release')"
+        @updateKeyboardModifiers="updateKeyboardModifiers($event)"
+        @uploadDrop="uploadDrop($event)"
       />
     </div>
   </div>

@@ -284,7 +284,7 @@
       this.focused = true
 
       if (this.isControling) {
-        this.updateKbdModifiers(e)
+        this.updateKeyboardModifiers(e)
       }
     }
 
@@ -292,8 +292,8 @@
       if (this.isControling) {
         this.keyboard.reset()
 
-        // save current kbd modifiers state
-        Vue.set(this, 'kbdModifiers', {
+        // save current keyboard modifiers state
+        Vue.set(this, 'keyboardModifiers', {
           capslock: e.getModifierState('CapsLock'),
           numlock: e.getModifierState('NumLock'),
         })
@@ -323,7 +323,7 @@
         const files = await getFilesFromDataTansfer(dt)
         if (files.length === 0) return
 
-        this.$emit('drop-files', { ...this.getMousePos(e.clientX, e.clientY), files })
+        this.$emit('uploadDrop', { ...this.getMousePos(e.clientX, e.clientY), files })
       }
     }
 
@@ -331,18 +331,18 @@
     // keyboard modifiers
     //
 
-    private kbdModifiers: { capslock: boolean; numlock: boolean } | null = null
+    private keyboardModifiers: { capslock: boolean; numlock: boolean } | null = null
 
-    updateKbdModifiers(e: MouseEvent) {
+    updateKeyboardModifiers(e: MouseEvent) {
       const capslock = e.getModifierState('CapsLock')
       const numlock = e.getModifierState('NumLock')
 
       if (
-        this.kbdModifiers === null ||
-        this.kbdModifiers.capslock !== capslock ||
-        this.kbdModifiers.numlock !== numlock
+        this.keyboardModifiers === null ||
+        this.keyboardModifiers.capslock !== capslock ||
+        this.keyboardModifiers.numlock !== numlock
       ) {
-        this.$emit('update-kbd-modifiers', { capslock, numlock })
+        this.$emit('updateKeyboardModifiers', { capslock, numlock })
       }
     }
 
@@ -439,10 +439,10 @@
 
     @Watch('isControling')
     onControlChange(isControling: boolean) {
-      Vue.set(this, 'kbdModifiers', null)
+      Vue.set(this, 'keyboardModifiers', null)
 
       if (isControling && this.reqMouseDown) {
-        this.updateKbdModifiers(this.reqMouseDown)
+        this.updateKeyboardModifiers(this.reqMouseDown)
         this.setMousePos(this.reqMouseDown)
         this.webrtc.send('mousedown', { key: this.reqMouseDown.button + 1 })
       }
@@ -464,7 +464,7 @@
     implicitControlRequest(e: MouseEvent) {
       if (this.implicitControl && e.type === 'mousedown' && this.reqMouseDown == null) {
         this.reqMouseDown = e
-        this.$emit('implicit-control-request')
+        this.$emit('implicitControlRequest')
       }
 
       if (this.implicitControl && e.type === 'mouseup' && this.reqMouseUp == null) {
@@ -475,7 +475,7 @@
     // unused
     implicitControlRelease() {
       if (this.implicitControl) {
-        this.$emit('implicit-control-release')
+        this.$emit('implicitControlRelease')
       }
     }
   }
