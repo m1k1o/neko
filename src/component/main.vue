@@ -411,14 +411,14 @@
     @Watch('state.screen.size')
     onResize() {
       const { width, height } = this.state.screen.size
-      const screen_ratio = width / height
+      const screenRatio = width / height
 
       const { offsetWidth, offsetHeight } = this._component
-      const canvas_ratio = offsetWidth / offsetHeight
+      const canvasRatio = offsetWidth / offsetHeight
 
       // vertical centering
-      if (screen_ratio > canvas_ratio) {
-        const vertical = offsetWidth / screen_ratio
+      if (screenRatio > canvasRatio) {
+        const vertical = offsetWidth / screenRatio
         this._container.style.width = `${offsetWidth}px`
         this._container.style.height = `${vertical}px`
         this._container.style.marginTop = `${(offsetHeight - vertical) / 2}px`
@@ -430,8 +430,8 @@
         })
       }
       // horizontal centering
-      else if (screen_ratio < canvas_ratio) {
-        const horizontal = screen_ratio * offsetHeight
+      else if (screenRatio < canvasRatio) {
+        const horizontal = screenRatio * offsetHeight
         this._container.style.width = `${horizontal}px`
         this._container.style.height = `${offsetHeight}px`
         this._container.style.marginTop = `0px`
