@@ -1,5 +1,6 @@
 import Vue from 'vue'
 import EventEmitter from 'eventemitter3'
+import * as EVENT from '../types/events'
 
 import { NekoWebSocket } from './websocket'
 import { NekoWebRTC, WebRTCStats } from './webrtc'
@@ -69,6 +70,41 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
         Vue.set(this._state, 'status', 'disconnected')
       }
     })
+
+    let webrtcCongestion: number = 0
+    this.webrtc.on('stats', (stats: WebRTCStats) => {
+      Vue.set(this._state.webrtc, 'stats', stats)
+
+      // if automatic quality adjusting is turned off
+      if (!this._state.webrtc.auto) return
+
+      // if there are no or just one quality, no switching can be done
+      if (this._state.webrtc.videos.length <= 1) return
+
+      // current quality is not known
+      if (this._state.webrtc.video == null) return
+
+      // check if video is not playing
+      if (stats.fps) {
+        webrtcCongestion = 0
+        return
+      }
+
+      // try to downgrade quality if it happend many times
+      if (++webrtcCongestion >= 3) {
+        const index = this._state.webrtc.videos.indexOf(this._state.webrtc.video)
+
+        // edge case: current quality is not in qualities list
+        if (index === -1) return
+
+        // current quality is the lowest one
+        if (index + 1 == this._state.webrtc.videos.length) return
+
+        // downgrade video quality
+        this.setVideo(this._state.webrtc.videos[index + 1])
+        webrtcCongestion = 0
+      }
+    })
   }
 
   public setUrl(url: string) {
@@ -77,6 +113,14 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
 
   public setToken(token: string) {
     this._token = token
+  }
+
+  public setVideo(video: string) {
+    if (!this._state.webrtc.videos.includes(video)) {
+      throw new Error('video id not found')
+    }
+
+    this.websocket.send(EVENT.SIGNAL_VIDEO, { video: video })
   }
 
   public async connect(): Promise<void> {
