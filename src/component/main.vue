@@ -177,7 +177,7 @@
       this.connection.setUrl(httpURL)
 
       if (this.connected) {
-        this.disconnect()
+        this.connection.disconnect()
       }
 
       if (this.state.authenticated) {
@@ -229,7 +229,7 @@
       }
 
       if (this.connected) {
-        this.disconnect()
+        this.connection.disconnect()
       }
 
       try {
@@ -270,11 +270,7 @@
         throw new Error('client is not connected')
       }
 
-      // TODO: Refactor.
-      this.connection.webrtc.disconnect()
-
       this.connection.disconnect()
-      this.clear()
     }
 
     public play() {
@@ -318,6 +314,7 @@
       this.connection.websocket.send(EVENT.SCREEN_SET, { width, height, rate })
     }
 
+    // TODO: Refactor.
     public setWebRTCVideo(video: string) {
       if (!this.state.connection.webrtc.videos.includes(video)) {
         throw new Error('video id not found')
@@ -326,6 +323,7 @@
       this.connection.websocket.send(EVENT.SIGNAL_VIDEO, { video: video })
     }
 
+    // TODO: Refactor.
     public setWebRTCAuto(auto: boolean = true) {
       Vue.set(this.state.connection.webrtc, 'auto', auto)
     }
@@ -371,6 +369,10 @@
 
       // video events
       VideoRegister(this._video, this.state.video)
+
+      this.connection.on('disconnect', () => {
+        this.clear()
+      })
 
       // webrtc
       this.connection.webrtc.on('track', (event: RTCTrackEvent) => {
@@ -433,7 +435,7 @@
 
     beforeDestroy() {
       this.observer.disconnect()
-      this.disconnect()
+      this.connection.disconnect()
 
       // remove users first interaction event
       document.removeEventListener('click', this.unmute)

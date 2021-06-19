@@ -6,9 +6,7 @@ import { NekoWebRTC, WebRTCStats } from './webrtc'
 import { Connection } from '../types/state'
 
 export interface NekoConnectionEvents {
-  connecting: () => void
-  connected: () => void
-  disconnected: (error?: Error) => void
+  disconnect: (error?: Error) => void
 }
 
 export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
@@ -94,7 +92,9 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
   }
 
   public disconnect() {
+    this.webrtc.disconnect()
     this.websocket.disconnect()
     Vue.set(this._state, 'status', 'disconnected')
+    this.emit('disconnect')
   }
 }
