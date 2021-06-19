@@ -99,8 +99,8 @@
     // Public state
     /////////////////////////////
     public state = {
+      authenticated: false,
       connection: {
-        authenticated: false,
         websocket: 'disconnected',
         webrtc: {
           status: 'disconnected',
@@ -147,10 +147,6 @@
     /////////////////////////////
     public connection = new NekoConnection(this.state.connection)
 
-    public get authenticated() {
-      return this.state.connection.authenticated
-    }
-
     public get connected() {
       return this.state.connection.websocket == 'connected'
     }
@@ -189,8 +185,8 @@
         this.disconnect()
       }
 
-      if (this.authenticated) {
-        Vue.set(this.state.connection, 'authenticated', false)
+      if (this.state.authenticated) {
+        Vue.set(this.state, 'authenticated', false)
       }
 
       // check if is user logged in
@@ -202,7 +198,7 @@
         }
 
         await this.api.session.whoami()
-        Vue.set(this.state.connection, 'authenticated', true)
+        Vue.set(this.state, 'authenticated', true)
 
         if (this.autoconnect) {
           await this.connect()
@@ -211,7 +207,7 @@
     }
 
     public async login(username: string, password: string) {
-      if (this.authenticated) {
+      if (this.state.authenticated) {
         throw new Error('client already authenticated')
       }
 
@@ -225,7 +221,7 @@
         }
       }
 
-      Vue.set(this.state.connection, 'authenticated', true)
+      Vue.set(this.state, 'authenticated', true)
 
       if (this.autoconnect) {
         await this.connect()
@@ -233,7 +229,7 @@
     }
 
     public async logout() {
-      if (!this.authenticated) {
+      if (!this.state.authenticated) {
         throw new Error('client not authenticated')
       }
 
@@ -251,13 +247,13 @@
           localStorage.removeItem('neko_session')
         }
 
-        Vue.set(this.state.connection, 'authenticated', false)
+        Vue.set(this.state, 'authenticated', false)
       }
     }
 
     // TODO: Refactor.
     public async connect(video?: string) {
-      if (!this.authenticated) {
+      if (!this.state.authenticated) {
         throw new Error('client not authenticated')
       }
 

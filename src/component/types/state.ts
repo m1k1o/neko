@@ -1,4 +1,5 @@
 export default interface State {
+  authenticated: boolean
   connection: Connection
   video: Video
   control: Control
@@ -12,7 +13,6 @@ export default interface State {
 /////////////////////////////
 
 export interface Connection {
-  authenticated: boolean
   websocket: 'unavailable' | 'disconnected' | 'connecting' | 'connected'
   webrtc: WebRTC
   type: 'webrtc' | 'fallback' | 'none'
