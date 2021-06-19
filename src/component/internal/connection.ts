@@ -28,29 +28,48 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
 
     // initial state
     Vue.set(this._state, 'type', 'webrtc')
-    Vue.set(this._state, 'websocket', this.websocket.supported ? 'disconnected' : 'unavailable')
-    Vue.set(this._state.webrtc, 'status', this.webrtc.supported ? 'disconnected' : 'unavailable')
+
+    let webSocketStatus = 'disconnected'
+    let webRTCStatus = 'disconnected'
 
     // websocket
     this.websocket.on('connecting', () => {
-      Vue.set(this._state, 'websocket', 'connecting')
+      webSocketStatus = 'connecting'
+      if (this._state.status !== 'connecting') {
+        Vue.set(this._state, 'status', 'connecting')
+      }
     })
     this.websocket.on('connected', () => {
-      Vue.set(this._state, 'websocket', 'connected')
+      webSocketStatus = 'connected'
+      if (webSocketStatus == 'connected' && webRTCStatus == 'connected') {
+        Vue.set(this._state, 'status', 'connected')
+      }
     })
     this.websocket.on('disconnected', () => {
-      Vue.set(this._state, 'websocket', 'disconnected')
+      webSocketStatus = 'disconnected'
+      if (this._state.status !== 'disconnected') {
+        Vue.set(this._state, 'status', 'disconnected')
+      }
     })
 
     // webrtc
     this.webrtc.on('connecting', () => {
-      Vue.set(this._state.webrtc, 'status', 'connecting')
+      webRTCStatus = 'connecting'
+      if (this._state.status !== 'connecting') {
+        Vue.set(this._state, 'status', 'connecting')
+      }
     })
     this.webrtc.on('connected', () => {
-      Vue.set(this._state.webrtc, 'status', 'connected')
+      webRTCStatus = 'connected'
+      if (webSocketStatus == 'connected' && webRTCStatus == 'connected') {
+        Vue.set(this._state, 'status', 'connected')
+      }
     })
     this.webrtc.on('disconnected', () => {
-      Vue.set(this._state.webrtc, 'status', 'disconnected')
+      webRTCStatus = 'disconnected'
+      if (this._state.status !== 'disconnected') {
+        Vue.set(this._state, 'status', 'disconnected')
+      }
     })
   }
 
@@ -76,5 +95,6 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
 
   public disconnect() {
     this.websocket.disconnect()
+    Vue.set(this._state, 'status', 'disconnected')
   }
 }

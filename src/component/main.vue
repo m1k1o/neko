@@ -7,7 +7,7 @@
         :scroll="state.control.scroll"
         :screenSize="state.screen.size"
         :canvasSize="canvasSize"
-        :isControling="controlling && watching"
+        :isControling="controlling"
         :cursorTag="
           state.control.implicit_hosting && state.control.host_id != null
             ? state.sessions[state.control.host_id].profile.name
@@ -101,9 +101,8 @@
     public state = {
       authenticated: false,
       connection: {
-        websocket: 'disconnected',
+        status: 'disconnected',
         webrtc: {
-          status: 'disconnected',
           stats: null,
           video: null,
           videos: [],
@@ -148,11 +147,7 @@
     public connection = new NekoConnection(this.state.connection)
 
     public get connected() {
-      return this.state.connection.websocket == 'connected'
-    }
-
-    public get watching() {
-      return this.state.connection.webrtc.status == 'connected'
+      return this.state.connection.status == 'connected'
     }
 
     public get controlling() {
@@ -516,7 +511,6 @@
       }
 
       // websocket
-      Vue.set(this.state.connection, 'websocket', 'disconnected')
       Vue.set(this.state.connection.webrtc, 'videos', [])
       Vue.set(this.state.control, 'clipboard', null)
       Vue.set(this.state.control, 'host_id', null)
@@ -527,7 +521,6 @@
       Vue.set(this.state, 'sessions', {})
 
       // webrtc
-      Vue.set(this.state.connection.webrtc, 'status', 'disconnected')
       Vue.set(this.state.connection.webrtc, 'stats', null)
       Vue.set(this.state.connection.webrtc, 'video', null)
       Vue.set(this.state.connection, 'type', 'none')
