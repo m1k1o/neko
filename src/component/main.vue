@@ -184,20 +184,28 @@
         Vue.set(this.state, 'authenticated', false)
       }
 
-      // check if is user logged in
-      if (this.autologin) {
-        const token = localStorage.getItem('neko_session')
-        if (token) {
-          this.api.setToken(token)
-          this.connection.setToken(token)
-        }
+      if (!this.autologin) return
+      await this.authenticate()
 
-        await this.api.session.whoami()
-        Vue.set(this.state, 'authenticated', true)
+      if (!this.autoconnect) return
+      await this.connect()
+    }
 
-        if (this.autoconnect) {
-          await this.connect()
-        }
+    public async authenticate(token?: string) {
+      if (!token && this.autologin) {
+        token = localStorage.getItem('neko_session') ?? undefined
+      }
+
+      if (token) {
+        this.api.setToken(token)
+        this.connection.setToken(token)
+      }
+
+      await this.api.session.whoami()
+      Vue.set(this.state, 'authenticated', true)
+
+      if (token && this.autologin) {
+        localStorage.setItem('neko_session', token)
       }
     }
 
@@ -217,10 +225,6 @@
       }
 
       Vue.set(this.state, 'authenticated', true)
-
-      if (this.autoconnect) {
-        await this.connect()
-      }
     }
 
     public async logout() {
@@ -246,7 +250,6 @@
       }
     }
 
-    // TODO: Refactor.
     public async connect(video?: string) {
       if (!this.state.authenticated) {
         throw new Error('client not authenticated')
@@ -312,7 +315,6 @@
       this.connection.setVideo(video)
     }
 
-    // TODO: Refactor.
     public setWebRTCAuto(auto: boolean = true) {
       Vue.set(this.state.connection.webrtc, 'auto', auto)
     }
@@ -363,7 +365,6 @@
         this.clear()
       })
 
-      // webrtc
       this.connection.webrtc.on('track', (event: RTCTrackEvent) => {
         const { track, streams } = event
         if (track.kind === 'audio') return
