@@ -44,7 +44,7 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
       }
     })
     this.websocket.on('disconnected', () => {
-      if (this._state.status !== 'disconnected') {
+      if (this._state.status === 'connected') {
         Vue.set(this._state, 'status', 'disconnected')
       }
 
@@ -63,7 +63,7 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
       }
     })
     this.webrtc.on('disconnected', () => {
-      if (this._state.status !== 'disconnected') {
+      if (this._state.status === 'connected') {
         Vue.set(this._state, 'status', 'disconnected')
       }
 
