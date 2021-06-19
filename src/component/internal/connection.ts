@@ -123,8 +123,6 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
   }
 
   public async connect(video?: string): Promise<void> {
-    this._shouldReconnect = true
-
     await this._websocketConnect()
 
     if (video && !this._state.webrtc.videos.includes(video)) {
@@ -132,6 +130,8 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
     }
 
     this._webrtcConnect(video)
+
+    this._shouldReconnect = true
   }
 
   public disconnect() {
