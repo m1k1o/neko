@@ -156,8 +156,11 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
   _websocketIsReconnecting = false
   _websocketReconnect() {
     if (this._websocketIsReconnecting) {
+      this._log.debug(`websocket reconnection already in progress`)
       return
     }
+
+    this._log.debug(`starting websocket reconnection`)
 
     setTimeout(async () => {
       while (this._shouldReconnect) {
@@ -166,11 +169,12 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
           this._webrtcReconnect()
           break
         } catch (e) {
-          this._log.debug(`websocket reconnection`, e)
+          this._log.debug(`websocket reconnection failed`, e)
         }
       }
 
       this._websocketIsReconnecting = false
+      this._log.debug(`websocket reconnection finished`)
     }, 0)
   }
 
@@ -185,21 +189,26 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
   _webrtcReconnTimer?: number
   _webrtcReconnect() {
     if (this._webrtcReconnTimer) {
+      this._log.debug(`webrtc reconnection already in progress`)
       return
     }
 
     const lastVideo = this._state.webrtc.video ?? undefined
+    this._log.debug(`starting webrtc reconnection`)
 
     const reconnFunc = async () => {
       if (!this._shouldReconnect || !this.websocket.connected || this.webrtc.connected) {
         clearInterval(this._webrtcReconnTimer)
         this._webrtcReconnTimer = undefined
+        this._log.debug(`webrtc reconnection finished`)
         return
       }
 
       try {
         this._webrtcConnect(lastVideo)
-      } catch (e) {}
+      } catch (e) {
+        this._log.debug(`webrtc reconnection failed`, e)
+      }
     }
 
     this._webrtcReconnTimer = window.setInterval(reconnFunc, 1000)
