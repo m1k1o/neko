@@ -1,5 +1,6 @@
 import Vue from 'vue'
 import EventEmitter from 'eventemitter3'
+import { Logger } from '../utils/logger'
 import * as EVENT from '../types/events'
 
 import { NekoWebSocket } from './websocket'
@@ -14,6 +15,8 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
   private _url: string
   private _token: string
   private _state: Connection
+  private _log: Logger
+  private _shouldReconnect = false
 
   public websocket = new NekoWebSocket()
   public webrtc = new NekoWebRTC()
@@ -23,52 +26,48 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
 
     this._url = ''
     this._token = ''
+    this._log = new Logger('connection')
     this._state = state
 
     // initial state
     Vue.set(this._state, 'type', 'webrtc')
 
-    let webSocketStatus = 'disconnected'
-    let webRTCStatus = 'disconnected'
-
     // websocket
     this.websocket.on('connecting', () => {
-      webSocketStatus = 'connecting'
       if (this._state.status !== 'connecting') {
         Vue.set(this._state, 'status', 'connecting')
       }
     })
     this.websocket.on('connected', () => {
-      webSocketStatus = 'connected'
-      if (webSocketStatus == 'connected' && webRTCStatus == 'connected') {
+      if (this.websocket.connected && this.webrtc.connected) {
         Vue.set(this._state, 'status', 'connected')
       }
     })
     this.websocket.on('disconnected', () => {
-      webSocketStatus = 'disconnected'
       if (this._state.status !== 'disconnected') {
         Vue.set(this._state, 'status', 'disconnected')
       }
+
+      this._websocketReconnect()
     })
 
     // webrtc
     this.webrtc.on('connecting', () => {
-      webRTCStatus = 'connecting'
       if (this._state.status !== 'connecting') {
         Vue.set(this._state, 'status', 'connecting')
       }
     })
     this.webrtc.on('connected', () => {
-      webRTCStatus = 'connected'
-      if (webSocketStatus == 'connected' && webRTCStatus == 'connected') {
+      if (this.websocket.connected && this.webrtc.connected) {
         Vue.set(this._state, 'status', 'connected')
       }
     })
     this.webrtc.on('disconnected', () => {
-      webRTCStatus = 'disconnected'
       if (this._state.status !== 'disconnected') {
         Vue.set(this._state, 'status', 'disconnected')
       }
+
+      this._webrtcReconnect()
     })
 
     let webrtcCongestion: number = 0
@@ -123,22 +122,87 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
     this.websocket.send(EVENT.SIGNAL_VIDEO, { video: video })
   }
 
-  public async connect(): Promise<void> {
+  public async connect(video?: string): Promise<void> {
+    this._shouldReconnect = true
+
+    await this._websocketConnect()
+
+    if (video && !this._state.webrtc.videos.includes(video)) {
+      throw new Error('video id not found')
+    }
+
+    this._webrtcConnect(video)
+  }
+
+  public disconnect() {
+    this._shouldReconnect = false
+
+    this.webrtc.disconnect()
+    this.websocket.disconnect()
+
+    Vue.set(this._state, 'status', 'disconnected')
+    this.emit('disconnect')
+  }
+
+  async _websocketConnect() {
     let url = this._url
     if (this._token) {
       url += '?token=' + encodeURIComponent(this._token)
     }
 
     await this.websocket.connect(url)
-
-    // TODO: connect to WebRTC
-    //this.websocket.send(EVENT.SIGNAL_REQUEST, { video: video })
   }
 
-  public disconnect() {
-    this.webrtc.disconnect()
-    this.websocket.disconnect()
-    Vue.set(this._state, 'status', 'disconnected')
-    this.emit('disconnect')
+  _websocketIsReconnecting = false
+  _websocketReconnect() {
+    if (this._websocketIsReconnecting) {
+      return
+    }
+
+    setTimeout(async () => {
+      while (this._shouldReconnect) {
+        try {
+          await this._websocketConnect()
+          this._webrtcReconnect()
+          break
+        } catch (e) {
+          this._log.debug(`websocket reconnection`, e)
+        }
+      }
+
+      this._websocketIsReconnecting = false
+    }, 0)
+  }
+
+  _webrtcConnect(video?: string) {
+    if (video && !this._state.webrtc.videos.includes(video)) {
+      throw new Error('video id not found')
+    }
+
+    this.websocket.send(EVENT.SIGNAL_REQUEST, { video: video })
+  }
+
+  _webrtcReconnTimer?: number
+  _webrtcReconnect() {
+    if (this._webrtcReconnTimer) {
+      return
+    }
+
+    const lastVideo = this._state.webrtc.video ?? undefined
+
+    const reconnFunc = async () => {
+      if (!this._shouldReconnect || !this.websocket.connected || this.webrtc.connected) {
+        clearInterval(this._webrtcReconnTimer)
+        this._webrtcReconnTimer = undefined
+        return
+      }
+
+      try {
+        this._webrtcConnect(lastVideo)
+      } catch (e) {}
+    }
+
+    this._webrtcReconnTimer = window.setInterval(reconnFunc, 1000)
+    reconnFunc()
   }
 }

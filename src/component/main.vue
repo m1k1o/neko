@@ -256,13 +256,7 @@
         throw new Error('client is already connected')
       }
 
-      await this.connection.connect()
-
-      if (video && !this.state.connection.webrtc.videos.includes(video)) {
-        throw new Error('video id not found')
-      }
-
-      this.connection.websocket.send(EVENT.SIGNAL_REQUEST, { video: video })
+      await this.connection.connect(video)
     }
 
     public disconnect() {
