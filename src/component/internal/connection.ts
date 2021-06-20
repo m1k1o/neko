@@ -7,16 +7,19 @@ import { NekoWebSocket } from './websocket'
 import { NekoWebRTC, WebRTCStats } from './webrtc'
 import { Connection } from '../types/state'
 
+const websocketTimer = 1000
+const webrtcTimer = 10000
+
 export interface NekoConnectionEvents {
   disconnect: (error?: Error) => void
 }
 
 export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
+  private _shouldReconnect = false
   private _url: string
   private _token: string
   private _state: Connection
   private _log: Logger
-  private _shouldReconnect = false
 
   public websocket = new NekoWebSocket()
   public webrtc = new NekoWebRTC()
@@ -113,15 +116,20 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
   }
 
   public async connect(video?: string): Promise<void> {
-    await this._websocketConnect()
+    try {
+      await this._websocketConnect()
 
-    if (video && !this._state.webrtc.videos.includes(video)) {
-      throw new Error('video id not found')
+      if (video && !this._state.webrtc.videos.includes(video)) {
+        throw new Error('video id not found')
+      }
+
+      await this._webrtcConnect(video)
+
+      this._shouldReconnect = true
+    } catch (e) {
+      this.disconnect()
+      throw e
     }
-
-    this._webrtcConnect(video)
-
-    this._shouldReconnect = true
   }
 
   public disconnect() {
@@ -135,12 +143,29 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
   }
 
   async _websocketConnect() {
+    Vue.set(this._state, 'status', 'connecting')
+
     let url = this._url
     if (this._token) {
       url += '?token=' + encodeURIComponent(this._token)
     }
 
-    await this.websocket.connect(url)
+    this.websocket.connect(url)
+
+    await new Promise<void>((res, rej) => {
+      const timeout = window.setTimeout(() => {
+        this.websocket.disconnect()
+        rej(new Error('timeouted'))
+      }, websocketTimer)
+      this.websocket.once('connected', () => {
+        window.clearTimeout(timeout)
+        res()
+      })
+      this.websocket.once('disconnected', (reason) => {
+        window.clearTimeout(timeout)
+        rej(reason)
+      })
+    })
   }
 
   _websocketIsReconnecting = false
@@ -168,17 +193,33 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
     }, 0)
   }
 
-  _webrtcConnect(video?: string) {
+  async _webrtcConnect(video?: string) {
     if (video && !this._state.webrtc.videos.includes(video)) {
       throw new Error('video id not found')
     }
 
+    Vue.set(this._state, 'status', 'connecting')
     this.websocket.send(EVENT.SIGNAL_REQUEST, { video: video })
+
+    await new Promise<void>((res, rej) => {
+      const timeout = window.setTimeout(() => {
+        this.webrtc.disconnect()
+        rej(new Error('timeouted'))
+      }, webrtcTimer)
+      this.webrtc.once('connected', () => {
+        window.clearTimeout(timeout)
+        res()
+      })
+      this.webrtc.once('disconnected', (reason) => {
+        window.clearTimeout(timeout)
+        rej(reason)
+      })
+    })
   }
 
-  _webrtcReconnTimer?: number
+  _webrtcIsReconnecting = false
   _webrtcReconnect() {
-    if (this._webrtcReconnTimer) {
+    if (this._webrtcIsReconnecting) {
       this._log.debug(`webrtc reconnection already in progress`)
       return
     }
@@ -186,22 +227,18 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
     const lastVideo = this._state.webrtc.video ?? undefined
     this._log.debug(`starting webrtc reconnection`)
 
-    const reconnFunc = async () => {
-      if (!this._shouldReconnect || !this.websocket.connected || this.webrtc.connected) {
-        clearInterval(this._webrtcReconnTimer)
-        this._webrtcReconnTimer = undefined
-        this._log.debug(`webrtc reconnection finished`)
-        return
+    setTimeout(async () => {
+      while (this._shouldReconnect && this.websocket.connected) {
+        try {
+          await this._webrtcConnect(lastVideo)
+          break
+        } catch (e) {
+          this._log.debug(`webrtc reconnection failed`, e)
+        }
       }
 
-      try {
-        this._webrtcConnect(lastVideo)
-      } catch (e) {
-        this._log.debug(`webrtc reconnection failed`, e)
-      }
-    }
-
-    this._webrtcReconnTimer = window.setInterval(reconnFunc, 1000)
-    reconnFunc()
+      this._webrtcIsReconnecting = false
+      this._log.debug(`webrtc reconnection finished`)
+    }, 0)
   }
 }
