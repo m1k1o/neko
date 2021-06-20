@@ -1,9 +1,6 @@
 import EventEmitter from 'eventemitter3'
 import { Logger } from '../utils/logger'
 
-export const connTimeout = 15000
-export const reconnInterval = 1000
-
 export interface NekoWebSocketEvents {
   connecting: () => void
   connected: () => void
@@ -29,7 +26,7 @@ export class NekoWebSocket extends EventEmitter<NekoWebSocketEvents> {
     return typeof this._ws !== 'undefined' && this._ws.readyState === WebSocket.OPEN
   }
 
-  public async connect(url: string) {
+  public connect(url: string) {
     if (!this.supported) {
       throw new Error('browser does not support websockets')
     }
@@ -43,27 +40,15 @@ export class NekoWebSocket extends EventEmitter<NekoWebSocketEvents> {
       this.disconnect()
     }
 
-    await new Promise<void>((res, rej) => {
-      this._ws = new WebSocket(url)
+    this._ws = new WebSocket(url)
 
-      this._log.info(`connecting`)
-      this.emit('connecting')
+    this._log.info(`connecting`)
+    this.emit('connecting')
 
-      this._ws.onclose = rej.bind(this, new Error('connection close'))
-      this._ws.onerror = rej.bind(this, new Error('connection error'))
-      this._ws.onmessage = this.onMessage.bind(this)
-
-      const timeout = window.setTimeout(rej.bind(this, new Error('connection timeout')), connTimeout)
-      this._ws.onopen = () => {
-        window.clearTimeout(timeout)
-
-        this._ws!.onclose = this.onDisconnected.bind(this, 'close')
-        this._ws!.onerror = this.onDisconnected.bind(this, 'error')
-
-        this.onConnected()
-        res()
-      }
-    })
+    this._ws.onopen = this.onConnected.bind(this)
+    this._ws.onclose = this.onDisconnected.bind(this, 'close')
+    this._ws.onerror = this.onDisconnected.bind(this, 'error')
+    this._ws.onmessage = this.onMessage.bind(this)
   }
 
   public disconnect() {
