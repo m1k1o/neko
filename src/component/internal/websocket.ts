@@ -2,7 +2,6 @@ import EventEmitter from 'eventemitter3'
 import { Logger } from '../utils/logger'
 
 export interface NekoWebSocketEvents {
-  connecting: () => void
   connected: () => void
   disconnected: (error?: Error) => void
   message: (event: string, payload: any) => void
@@ -43,7 +42,6 @@ export class NekoWebSocket extends EventEmitter<NekoWebSocketEvents> {
     this._ws = new WebSocket(url)
 
     this._log.info(`connecting`)
-    this.emit('connecting')
 
     this._ws.onopen = this.onConnected.bind(this)
     this._ws.onclose = this.onDisconnected.bind(this, 'close')

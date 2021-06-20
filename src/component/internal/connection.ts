@@ -33,11 +33,6 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
     Vue.set(this._state, 'type', 'webrtc')
 
     // websocket
-    this.websocket.on('connecting', () => {
-      if (this._state.status !== 'connecting') {
-        Vue.set(this._state, 'status', 'connecting')
-      }
-    })
     this.websocket.on('connected', () => {
       if (this.websocket.connected && this.webrtc.connected) {
         Vue.set(this._state, 'status', 'connected')
@@ -52,11 +47,6 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
     })
 
     // webrtc
-    this.webrtc.on('connecting', () => {
-      if (this._state.status !== 'connecting') {
-        Vue.set(this._state, 'status', 'connecting')
-      }
-    })
     this.webrtc.on('connected', () => {
       if (this.websocket.connected && this.webrtc.connected) {
         Vue.set(this._state, 'status', 'connected')

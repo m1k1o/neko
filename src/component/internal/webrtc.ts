@@ -25,7 +25,6 @@ export interface ICEServer {
 }
 
 export interface NekoWebRTCEvents {
-  connecting: () => void
   connected: () => void
   disconnected: (error?: Error) => void
   track: (event: RTCTrackEvent) => void
@@ -73,8 +72,6 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
   }
 
   public async connect(sdp: string, iceServers: ICEServer[]): Promise<string> {
-    this._log.info(`connecting`)
-
     if (!this.supported) {
       throw new Error('browser does not support webrtc')
     }
@@ -83,7 +80,7 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
       throw new Error('attempting to create peer while connected')
     }
 
-    this.emit('connecting')
+    this._log.info(`connecting`)
 
     this._peer = new RTCPeerConnection({ iceServers })
 
