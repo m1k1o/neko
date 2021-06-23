@@ -81,17 +81,11 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
 
       // try to downgrade quality if it happend many times
       if (++webrtcCongestion >= 3) {
-        const index = this._state.webrtc.videos.indexOf(this._state.webrtc.video)
-
-        // edge case: current quality is not in qualities list
-        if (index === -1) return
-
-        // current quality is the lowest one
-        if (index + 1 == this._state.webrtc.videos.length) return
+        webrtcCongestion = 0
 
         // downgrade video quality
-        this.setVideo(this._state.webrtc.videos[index + 1])
-        webrtcCongestion = 0
+        const quality = this._webrtcQualityDowngrade()
+        if (quality) this.setVideo(quality)
       }
     })
   }
@@ -225,13 +219,15 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
       return
     }
 
-    const lastVideo = this._state.webrtc.video ?? undefined
+    let lastQuality: string | undefined
     this._log.debug(`starting webrtc reconnection`)
 
     setTimeout(async () => {
       while (this.activated && this.websocket.connected) {
         try {
-          await this._webrtcConnect(lastVideo)
+          const quality = this._webrtcQualityDowngrade(lastQuality)
+          if (quality) lastQuality = quality
+          await this._webrtcConnect(lastQuality)
           break
         } catch (e) {
           this._log.debug(`webrtc reconnection failed`, e)
@@ -241,5 +237,22 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
       this._webrtcIsReconnecting = false
       this._log.debug(`webrtc reconnection finished`)
     }, 0)
+  }
+
+  _webrtcQualityDowngrade(quality?: string): string | undefined {
+    // current quality is not known
+    if (typeof quality === 'undefined' || this._state.webrtc.video == null) return
+
+    // get index of selected or surrent quality
+    const index = this._state.webrtc.videos.indexOf(quality || this._state.webrtc.video)
+
+    // edge case: current quality is not in qualities list
+    if (index === -1) return
+
+    // current quality is the lowest one
+    if (index + 1 == this._state.webrtc.videos.length) return
+
+    // downgrade video quality
+    return this._state.webrtc.videos[index + 1]
   }
 }
