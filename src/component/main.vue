@@ -58,7 +58,6 @@
 
   import { NekoApi, MembersApi, RoomApi } from './internal/api'
   import { NekoConnection } from './internal/connection'
-  import { WebRTCStats } from './internal/webrtc'
   import { NekoMessages } from './internal/messages'
   import { register as VideoRegister } from './internal/video'
 
@@ -377,7 +376,7 @@
           this._video.src = window.URL.createObjectURL(streams[0]) // for older browsers
         }
 
-        if (this.autoplay) {
+        if (this.autoplay || this.connection.activated) {
           this._video.play()
         }
       })

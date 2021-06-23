@@ -15,11 +15,11 @@ export interface NekoConnectionEvents {
 }
 
 export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
-  private _shouldReconnect = false
-  private _url: string
-  private _token: string
+  private _activated = false
+  private _url = ''
+  private _token = ''
+  private _log = new Logger('connection')
   private _state: Connection
-  private _log: Logger
 
   public websocket = new NekoWebSocket()
   public webrtc = new NekoWebRTC()
@@ -27,9 +27,6 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
   constructor(state: Connection) {
     super()
 
-    this._url = ''
-    this._token = ''
-    this._log = new Logger('connection')
     this._state = state
 
     // initial state
@@ -125,7 +122,7 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
 
       await this._webrtcConnect(video)
 
-      this._shouldReconnect = true
+      this._activated = true
     } catch (e) {
       this.disconnect()
       throw e
@@ -133,13 +130,17 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
   }
 
   public disconnect() {
-    this._shouldReconnect = false
+    this._activated = false
 
     this.webrtc.disconnect()
     this.websocket.disconnect()
 
     Vue.set(this._state, 'status', 'disconnected')
     this.emit('disconnect')
+  }
+
+  public get activated() {
+    return this._activated
   }
 
   async _websocketConnect() {
@@ -178,7 +179,7 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
     this._log.debug(`starting websocket reconnection`)
 
     setTimeout(async () => {
-      while (this._shouldReconnect) {
+      while (this.activated) {
         try {
           await this._websocketConnect()
           this._webrtcReconnect()
@@ -228,7 +229,7 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
     this._log.debug(`starting webrtc reconnection`)
 
     setTimeout(async () => {
-      while (this._shouldReconnect && this.websocket.connected) {
+      while (this.activated && this.websocket.connected) {
         try {
           await this._webrtcConnect(lastVideo)
           break
