@@ -39,7 +39,7 @@
   import { NekoWebRTC } from './internal/webrtc'
   import { Scroll } from './types/state'
 
-  const inactiveCursorWin10 =
+  const INACTIVE_CURSOR =
     'url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAACEUlEQVR4nOzWz6sSURQH8O+89zJ5C32LKbAgktCSaPpBSL' +
     'uSNtHqLcOV+BeIGxei0oCtFME/wI0bF4GCK6mNuAghH7xFlBAO7bQoA/Vik3riyghTaCQzTsLzbIZZDPdzzj3nzt3Df44dYDsBRNSYTqcn5XL5KoADy1VERL' +
     'Is02g0+phIJG4BsFkOEEVxjhgOh59kWb5rKWIBWCAGg0EnFovdtgyhB+grkU6n7wA4ZzlgCWKzlVgGsLQnVgE2gVh7xvP5PH9ciUajFQDHyWTyHQDVKOS3+F' +
@@ -84,7 +84,7 @@
 
     get cursor(): string {
       if (!this.isControling) {
-        return inactiveCursorWin10
+        return INACTIVE_CURSOR
       }
 
       if (!this.cursorImage) {

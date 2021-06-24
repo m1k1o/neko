@@ -7,11 +7,11 @@ import { NekoWebSocket } from './websocket'
 import { NekoWebRTC, WebRTCStats } from './webrtc'
 import { Connection } from '../types/state'
 
-const websocketTimer = 1000
-const websocketReconnDelay = 750
+const WEBSOCKET_TIMEOUT = 1000
+const WEBSOCKET_RECONN_DELAY = 750
 
-const webrtcTimer = 10000
-const webrtcReconnDelay = 750
+const WEBRTC_TIMEOUT = 10000
+const WEBRTC_RECONN_DELAY = 750
 
 export interface NekoConnectionEvents {
   disconnect: (error?: Error) => void
@@ -154,7 +154,7 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
       const timeout = window.setTimeout(() => {
         this.websocket.disconnect()
         rej(new Error('timeouted'))
-      }, websocketTimer)
+      }, WEBSOCKET_TIMEOUT)
       this.websocket.once('connected', () => {
         window.clearTimeout(timeout)
         res()
@@ -188,7 +188,7 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
 
       this._websocketIsReconnecting = false
       this._log.debug(`websocket reconnection finished`)
-    }, websocketReconnDelay)
+    }, WEBSOCKET_RECONN_DELAY)
   }
 
   async _webrtcConnect(video?: string) {
@@ -203,7 +203,7 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
       const timeout = window.setTimeout(() => {
         this.webrtc.disconnect()
         rej(new Error('timeouted'))
-      }, webrtcTimer)
+      }, WEBRTC_TIMEOUT)
       this.webrtc.once('connected', () => {
         window.clearTimeout(timeout)
         res()
@@ -241,7 +241,7 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
 
       this._webrtcIsReconnecting = false
       this._log.debug(`webrtc reconnection finished`)
-    }, webrtcReconnDelay)
+    }, WEBRTC_RECONN_DELAY)
   }
 
   _webrtcQualityDowngrade(quality: string): string | undefined {
