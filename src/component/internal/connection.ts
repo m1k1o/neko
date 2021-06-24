@@ -73,8 +73,8 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
       // current quality is not known
       if (this._state.webrtc.video == null) return
 
-      // check if video is not playing
-      if (stats.fps) {
+      // check if video is not playing smoothly
+      if (stats.fps > 1 && stats.packetLoss < 50) {
         webrtcCongestion = 0
         return
       }
