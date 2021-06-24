@@ -84,7 +84,7 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
         webrtcCongestion = 0
 
         // downgrade video quality
-        const quality = this._webrtcQualityDowngrade()
+        const quality = this._webrtcQualityDowngrade(this._state.webrtc.video)
         if (quality) this.setVideo(quality)
       }
     })
@@ -219,15 +219,17 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
       return
     }
 
-    let lastQuality: string | undefined
     this._log.debug(`starting webrtc reconnection`)
 
     setTimeout(async () => {
+      let lastQuality: string | null = this._state.webrtc.video
       while (this.activated && this.websocket.connected) {
         try {
-          const quality = this._webrtcQualityDowngrade(lastQuality)
-          if (quality) lastQuality = quality
-          await this._webrtcConnect(lastQuality)
+          if (lastQuality != null) {
+            lastQuality = this._webrtcQualityDowngrade(lastQuality) || lastQuality
+          }
+
+          await this._webrtcConnect(lastQuality || undefined)
           break
         } catch (e) {
           this._log.debug(`webrtc reconnection failed`, e)
@@ -239,12 +241,9 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
     }, 0)
   }
 
-  _webrtcQualityDowngrade(quality?: string): string | undefined {
-    // current quality is not known
-    if (typeof quality === 'undefined' || this._state.webrtc.video == null) return
-
+  _webrtcQualityDowngrade(quality: string): string | undefined {
     // get index of selected or surrent quality
-    const index = this._state.webrtc.videos.indexOf(quality || this._state.webrtc.video)
+    const index = this._state.webrtc.videos.indexOf(quality)
 
     // edge case: current quality is not in qualities list
     if (index === -1) return
