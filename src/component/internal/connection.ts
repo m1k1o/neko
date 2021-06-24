@@ -12,6 +12,8 @@ const WEBSOCKET_RECONN_DELAY = 750
 
 const WEBRTC_TIMEOUT = 10000
 const WEBRTC_RECONN_DELAY = 750
+const WEBRTC_RECONN_MAX_LOSS = 25
+const WEBRTC_RECONN_FAILED_ATTEMPTS = 5
 
 export interface NekoConnectionEvents {
   disconnect: (error?: Error) => void
@@ -68,7 +70,7 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
       Vue.set(this._state.webrtc, 'stats', stats)
 
       // if automatic quality adjusting is turned off
-      if (!this._state.webrtc.auto) return
+      if (!this._state.webrtc.auto || !this.activated) return
 
       // if there are no or just one quality, no switching can be done
       if (this._state.webrtc.videos.length <= 1) return
@@ -77,18 +79,25 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
       if (this._state.webrtc.video == null) return
 
       // check if video is not playing smoothly
-      if (stats.fps > 1 && stats.packetLoss < 50) {
+      if (stats.fps && stats.packetLoss < WEBRTC_RECONN_MAX_LOSS && !stats.muted) {
         webrtcCongestion = 0
         return
       }
 
       // try to downgrade quality if it happend many times
-      if (++webrtcCongestion >= 3) {
-        webrtcCongestion = 0
-
-        // downgrade video quality
+      if (++webrtcCongestion >= WEBRTC_RECONN_FAILED_ATTEMPTS) {
         const quality = this._webrtcQualityDowngrade(this._state.webrtc.video)
-        if (quality) this.setVideo(quality)
+
+        // downgrade if lower video quality exists
+        if (quality && this.webrtc.connected) {
+          this.setVideo(quality)
+          webrtcCongestion = 0
+          return
+        }
+
+        // try to reconnect
+        this._webrtcReconnect()
+        webrtcCongestion = 0
       }
     })
   }
@@ -174,6 +183,7 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
     }
 
     this._log.debug(`starting websocket reconnection`)
+    this.websocket.disconnect()
 
     setTimeout(async () => {
       while (this.activated) {
@@ -223,6 +233,7 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
     }
 
     this._log.debug(`starting webrtc reconnection`)
+    this.webrtc.disconnect()
 
     setTimeout(async () => {
       let lastQuality: string | null = this._state.webrtc.video
