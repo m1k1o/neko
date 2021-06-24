@@ -16,6 +16,7 @@ export interface WebRTCStats {
   fps: number
   width: number
   height: number
+  muted: boolean | undefined
 }
 
 export interface ICEServer {
@@ -37,6 +38,7 @@ export interface NekoWebRTCEvents {
 export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
   private _peer?: RTCPeerConnection
   private _channel?: RTCDataChannel
+  private _track?: MediaStreamTrack
   private _state: RTCIceConnectionState = 'disconnected'
   private _candidates: RTCIceCandidateInit[] = []
   private _log: Logger
@@ -179,7 +181,9 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
       this._peer = undefined
     }
 
+    this._track = undefined
     this._state = 'disconnected'
+    this._candidates = []
   }
 
   public send(event: 'wheel' | 'mousemove', data: { x: number; y: number }): void
@@ -252,6 +256,10 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
     if (!stream) {
       this._log.warn(`no stream provided for track ${event.track.id}(${event.track.label})`)
       return
+    }
+
+    if (event.track.kind === 'video') {
+      this._track = event.track
     }
 
     this.emit('track', event)
@@ -372,6 +380,7 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
           fps: Number(report.framesPerSecond || framesDecodedDiff / (tsDiff / 1000)),
           width: report.frameWidth || NaN,
           height: report.frameHeight || NaN,
+          muted: this._track?.muted,
         })
       }
 
