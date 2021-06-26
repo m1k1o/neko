@@ -1,13 +1,16 @@
 ARG BASE_IMAGE=m1k1o/neko:base
 FROM $BASE_IMAGE
 
-ARG SRC_URL="https://github.com/macchrome/linchrome/releases/download/v91.0.4472.101-r870763-portable-ungoogled-Lin64/ungoogled-chromium_91.0.4472.101_1.vaapi_linux.tar.xz"
+ARG API_URL="https://api.github.com/repos/macchrome/linchrome/releases/latest"
 
 #
 # install custom chromium build from woolyss with support for hevc/x265
 RUN set -eux; apt-get update; \
     apt-get install -y --no-install-recommends wget unzip libatk1.0-0 libatk-bridge2.0-0 libatomic1 \
-    libcups2 libgtk-3-0 libnss3 libpci3 libxcomposite1 libxss1 openbox xz-utils; \
+    libcups2 libgtk-3-0 libnss3 libpci3 libxcomposite1 libxss1 openbox xz-utils jq; \
+    #
+    # fetch latest release
+    SRC_URL="$(wget -O - "${API_URL}" 2>/dev/null | jq -r ".assets[] | .browser_download_url" | grep tar.xz)"; \
     wget -O - /tmp/chromium.tar.xz "${SRC_URL}" | tar -xJf- -C /tmp; \
     mv /tmp/ungoogled-chromium_* /usr/lib/chromium; \
     #
@@ -24,7 +27,7 @@ RUN set -eux; apt-get update; \
     rm /tmp/widevine.zip; \
     #
     # clean up
-    apt-get --purge autoremove -y xz-utils; \
+    apt-get --purge autoremove -y xz-utils jq; \
     apt-get clean -y; \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/*
 
