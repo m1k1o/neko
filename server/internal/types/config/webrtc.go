@@ -64,7 +64,7 @@ func (s *WebRTC) Set() {
 	if iceServersJson != "" {
 		err := json.Unmarshal([]byte(iceServersJson), &s.ICEServers)
 		if err != nil {
-			panic(err)
+			log.Panic().Err(err).Msg("failed to process iceservers")
 		}
 	}
 
