@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"n.eko.moe/neko/internal/utils"
@@ -28,6 +29,11 @@ func (WebRTC) Init(cmd *cobra.Command) error {
 
 	cmd.PersistentFlags().StringSlice("nat1to1", []string{}, "sets a list of external IP addresses of 1:1 (D)NAT and a candidate type for which the external IP address is used")
 	if err := viper.BindPFlag("nat1to1", cmd.PersistentFlags().Lookup("nat1to1")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().String("ipfetch", "http://checkip.amazonaws.com", "automatically fetch IP address from given URL when nat1to1 is not present")
+	if err := viper.BindPFlag("ipfetch", cmd.PersistentFlags().Lookup("ipfetch")); err != nil {
 		return err
 	}
 
@@ -68,10 +74,12 @@ func (s *WebRTC) Set() {
 	}
 
 	if len(s.NAT1To1IPs) == 0 {
-		ip, err := utils.GetIP()
-		if err == nil {
-			s.NAT1To1IPs = append(s.NAT1To1IPs, ip)
+		ipfetch := viper.GetString("ipfetch")
+		ip, err := utils.GetIP(ipfetch)
+		if err != nil {
+			log.Panic().Err(err).Str("ipfetch", ipfetch).Msg("failed to fetch ip address")
 		}
+		s.NAT1To1IPs = append(s.NAT1To1IPs, ip)
 	}
 
 	min := uint16(59000)

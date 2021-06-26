@@ -10,7 +10,7 @@ import (
 
 // dig @resolver1.opendns.com ANY myip.opendns.com +short -4
 
-func GetIP() (string, error) {
+func GetIP(serverUrl string) (string, error) {
 	tr := &http.Transport{
 		Proxy: nil, // ignore proxy
 		DialContext: (&net.Dialer{
@@ -25,7 +25,7 @@ func GetIP() (string, error) {
 	}
 
 	client := &http.Client{Transport: tr}
-	rsp, err := client.Get("http://checkip.amazonaws.com")
+	rsp, err := client.Get(serverUrl)
 	if err != nil {
 		return "", err
 	}
