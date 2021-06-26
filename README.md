@@ -100,6 +100,8 @@ For ARM-based devices (like Raspberry Pi, with GPU hardware acceleration):
 - `m1k1o/neko:arm-chromium` - for Chromium.
 - `m1k1o/neko:arm-base` - for custom arm based.
 
+Images are built using github action on every push and on weekly basis to keep all browsers up-to-date,
+
 ### Networking:
 - If you want to use n.eko in **external** network, you can omit `NEKO_NAT1TO1`. It will automatically get your Public IP.
 - If you want to use n.eko in **internal** network, set `NEKO_NAT1TO1` to your local IP address (e.g. `NEKO_NAT1TO1: 192.168.1.20`)-
