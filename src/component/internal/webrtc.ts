@@ -90,14 +90,6 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
       this._log.warn(`iceservers are empty`)
     }
 
-    this._peer.onconnectionstatechange = (event) => {
-      this._log.debug(`peer connection state changed`, this._peer ? this._peer.connectionState : undefined)
-    }
-
-    this._peer.onsignalingstatechange = (event) => {
-      this._log.debug(`peer signaling state changed`, this._peer ? this._peer.signalingState : undefined)
-    }
-
     this._peer.onicecandidate = (event: RTCPeerConnectionIceEvent) => {
       if (!event.candidate) {
         this._log.debug(`sent all remote ICE candidates`)
@@ -109,19 +101,34 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
       this._log.debug(`sending remote ICE candidate`, init)
     }
 
+    this._peer.onconnectionstatechange = (event) => {
+      this._log.debug(`peer connection state changed: ${this._peer!.connectionState}`)
+    }
+
     this._peer.oniceconnectionstatechange = (event) => {
       this._state = this._peer!.iceConnectionState
       this._log.debug(`peer ice connection state changed: ${this._peer!.iceConnectionState}`)
 
       switch (this._state) {
-        case 'disconnected':
-          this.onDisconnected(new Error('peer disconnected'))
-          break
-        case 'failed':
-          this.onDisconnected(new Error('peer failed'))
-          break
+        // We don't watch the disconnected signaling state here as it can indicate temporary issues and may
+        // go back to a connected state after some time. Watching it would close the video call on any temporary
+        // network issue.
         case 'closed':
-          this.onDisconnected(new Error('peer closed'))
+        case 'failed':
+          this.onDisconnected(new Error('peer ' + this._state))
+          break
+      }
+    }
+
+    this._peer.onsignalingstatechange = (event) => {
+      const state = this._peer!.iceConnectionState
+      this._log.debug(`peer signaling state changed: ${state}`)
+
+      switch (state) {
+        // The closed signaling state has been deprecated in favor of the closed iceConnectionState.
+        // We are watching for it here to add a bit of backward compatibility.
+        case 'closed':
+          this.onDisconnected(new Error('peer ' + state))
           break
       }
     }
@@ -168,9 +175,10 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
 
     if (typeof this._peer != 'undefined') {
       // unmount all events
-      this._peer.onsignalingstatechange = () => {}
       this._peer.onicecandidate = () => {}
+      this._peer.onconnectionstatechange = () => {}
       this._peer.oniceconnectionstatechange = () => {}
+      this._peer.onsignalingstatechange = () => {}
       this._peer.ontrack = () => {}
       this._peer.ondatachannel = () => {}
 
