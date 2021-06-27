@@ -125,6 +125,18 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
     Vue.set(this._state.connection.webrtc, 'video', video)
   }
 
+  protected async [EVENT.SIGNAL_RESTART]({ event, sdp }: message.SignalAnswer) {
+    this._log.debug('EVENT.SIGNAL_RESTART')
+    this.emit('connection.webrtc.sdp', 'remote', sdp)
+
+    const localSdp = await this._connection.webrtc.offer(sdp)
+    this._connection.websocket.send(EVENT.SIGNAL_ANSWER, {
+      sdp: localSdp,
+    })
+
+    this.emit('connection.webrtc.sdp', 'local', localSdp)
+  }
+
   protected [EVENT.SIGNAL_CANDIDATE]({ event, ...candidate }: message.SignalCandidate) {
     this._log.debug('EVENT.SIGNAL_CANDIDATE')
     this._connection.webrtc.setCandidate(candidate)

@@ -3,6 +3,7 @@ export const SYSTEM_ADMIN = 'system/admin'
 export const SYSTEM_DISCONNECT = 'system/disconnect'
 
 export const SIGNAL_REQUEST = 'signal/request'
+export const SIGNAL_RESTART = 'signal/restart'
 export const SIGNAL_ANSWER = 'signal/answer'
 export const SIGNAL_PROVIDE = 'signal/provide'
 export const SIGNAL_CANDIDATE = 'signal/candidate'

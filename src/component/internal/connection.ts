@@ -86,18 +86,23 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
 
       // try to downgrade quality if it happend many times
       if (++webrtcCongestion >= WEBRTC_RECONN_FAILED_ATTEMPTS) {
+        webrtcCongestion = 0
+
         const quality = this._webrtcQualityDowngrade(this._state.webrtc.video)
 
         // downgrade if lower video quality exists
         if (quality && this.webrtc.connected) {
           this.setVideo(quality)
-          webrtcCongestion = 0
+        }
+
+        // try to perform ice restart, if available
+        if (this.webrtc.open) {
+          this.websocket.send(EVENT.SIGNAL_RESTART)
           return
         }
 
         // try to reconnect
         this._webrtcReconnect()
-        webrtcCongestion = 0
       }
     })
   }

@@ -54,13 +54,14 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
     return typeof RTCPeerConnection !== 'undefined' && typeof RTCPeerConnection.prototype.addTransceiver !== 'undefined'
   }
 
-  get connected() {
+  get open() {
     return (
-      typeof this._peer !== 'undefined' &&
-      ['connected', 'checking', 'completed'].includes(this._state) &&
-      typeof this._channel !== 'undefined' &&
-      this._channel.readyState == 'open'
+      typeof this._peer !== 'undefined' && typeof this._channel !== 'undefined' && this._channel.readyState == 'open'
     )
+  }
+
+  get connected() {
+    return this.open && ['connected', 'checking', 'completed'].includes(this._state)
   }
 
   public async setCandidate(candidate: RTCIceCandidateInit) {
@@ -137,6 +138,15 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
     this._peer.ondatachannel = this.onDataChannel.bind(this)
     this._peer.addTransceiver('audio', { direction: 'recvonly' })
     this._peer.addTransceiver('video', { direction: 'recvonly' })
+
+    return await this.offer(sdp)
+  }
+
+  public async offer(sdp: string) {
+    if (!this._peer) {
+      throw new Error('attempting to set offer for nonexistent peer')
+    }
+
     this._peer.setRemoteDescription({ type: 'offer', sdp })
 
     if (this._candidates.length > 0) {
