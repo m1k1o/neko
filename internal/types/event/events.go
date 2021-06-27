@@ -8,6 +8,7 @@ const (
 
 const (
 	SIGNAL_REQUEST   = "signal/request"
+	SIGNAL_RESTART   = "signal/restart"
 	SIGNAL_ANSWER    = "signal/answer"
 	SIGNAL_PROVIDE   = "signal/provide"
 	SIGNAL_CANDIDATE = "signal/candidate"

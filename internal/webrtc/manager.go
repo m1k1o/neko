@@ -20,9 +20,6 @@ import (
 	"demodesk/neko/internal/webrtc/cursor"
 )
 
-// how long is can take between sending offer and connecting
-const offerTimeout = 4 * time.Second
-
 // the duration without network activity before a Agent is considered disconnected. Default is 5 Seconds
 const disconnectedTimeout = 4 * time.Second
 
@@ -237,26 +234,6 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 		return nil, err
 	}
 
-	offer, err := connection.CreateOffer(nil)
-	if err != nil {
-		return nil, err
-	}
-
-	if !manager.config.ICETrickle {
-		// Create channel that is blocked until ICE Gathering is complete
-		gatherComplete := webrtc.GatheringCompletePromise(connection)
-
-		if err := connection.SetLocalDescription(offer); err != nil {
-			return nil, err
-		}
-
-		<-gatherComplete
-	} else {
-		if err := connection.SetLocalDescription(offer); err != nil {
-			return nil, err
-		}
-	}
-
 	peer := &WebRTCPeerCtx{
 		api:         api,
 		connection:  connection,
@@ -347,22 +324,6 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 		}
 	})
 
-	// offer timeout
-	go func() {
-		time.Sleep(offerTimeout)
-
-		// already disconnected
-		if connection.ConnectionState() == webrtc.PeerConnectionStateClosed {
-			return
-		}
-
-		// not connected
-		if connection.ConnectionState() != webrtc.PeerConnectionStateConnected {
-			logger.Warn().Msg("connection timeouted, closing")
-			connection.Close()
-		}
-	}()
-
 	go func() {
 		rtcpBuf := make([]byte, 1500)
 		for {
@@ -382,7 +343,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 	}()
 
 	session.SetWebRTCPeer(peer)
-	return connection.LocalDescription(), nil
+	return peer.CreateOffer(manager.config.ICETrickle, false)
 }
 
 func (manager *WebRTCManagerCtx) mediaEngine(videoID string) (*webrtc.MediaEngine, error) {

@@ -32,6 +32,25 @@ func (h *MessageHandlerCtx) signalRequest(session types.Session, payload *messag
 		})
 }
 
+func (h *MessageHandlerCtx) signalRestart(session types.Session) error {
+	peer := session.GetWebRTCPeer()
+	if peer == nil {
+		h.logger.Debug().Str("session_id", session.ID()).Msg("webRTC peer does not exist")
+		return nil
+	}
+
+	offer, err := peer.CreateOffer(true, true)
+	if err != nil {
+		return err
+	}
+
+	return session.Send(
+		message.SignalAnswer{
+			Event: event.SIGNAL_RESTART,
+			SDP:   offer.SDP,
+		})
+}
+
 func (h *MessageHandlerCtx) signalAnswer(session types.Session, payload *message.SignalAnswer) error {
 	peer := session.GetWebRTCPeer()
 	if peer == nil {
