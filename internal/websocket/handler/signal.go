@@ -39,7 +39,7 @@ func (h *MessageHandlerCtx) signalRestart(session types.Session) error {
 		return nil
 	}
 
-	offer, err := peer.CreateOffer(true, true)
+	offer, err := peer.CreateOffer(true)
 	if err != nil {
 		return err
 	}

@@ -239,6 +239,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 		connection:  connection,
 		changeVideo: changeVideo,
 		dataChannel: dataChannel,
+		iceTrickle:  manager.config.ICETrickle,
 	}
 
 	cursorImage := func(entry *cursor.ImageEntry) {
@@ -343,7 +344,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 	}()
 
 	session.SetWebRTCPeer(peer)
-	return peer.CreateOffer(manager.config.ICETrickle, false)
+	return peer.CreateOffer(false)
 }
 
 func (manager *WebRTCManagerCtx) mediaEngine(videoID string) (*webrtc.MediaEngine, error) {

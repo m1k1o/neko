@@ -15,9 +15,10 @@ type WebRTCPeerCtx struct {
 	connection  *webrtc.PeerConnection
 	dataChannel *webrtc.DataChannel
 	changeVideo func(videoID string) error
+	iceTrickle  bool
 }
 
-func (peer *WebRTCPeerCtx) CreateOffer(ICETrickle bool, ICERestart bool) (*webrtc.SessionDescription, error) {
+func (peer *WebRTCPeerCtx) CreateOffer(ICERestart bool) (*webrtc.SessionDescription, error) {
 	// offer timeout
 	go func() {
 		time.Sleep(offerTimeout)
@@ -41,7 +42,7 @@ func (peer *WebRTCPeerCtx) CreateOffer(ICETrickle bool, ICERestart bool) (*webrt
 		return nil, err
 	}
 
-	if !ICETrickle {
+	if !peer.iceTrickle {
 		// Create channel that is blocked until ICE Gathering is complete
 		gatherComplete := webrtc.GatheringCompletePromise(peer.connection)
 
