@@ -228,11 +228,15 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
         case 'connected':
           this.onConnected()
           break
+        // https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Signaling_and_video_calling#ice_connection_state
+        // We don't watch the disconnected signaling state here as it can indicate temporary issues and may
+        // go back to a connected state after some time. Watching it would close the video call on any temporary
+        // network issue.
         case 'failed':
           this.onDisconnected(new Error('peer failed'))
           break
-        case 'disconnected':
-          this.onDisconnected(new Error('peer disconnected'))
+        case 'closed':
+          this.onDisconnected(new Error('peer closed'))
           break
       }
     }
