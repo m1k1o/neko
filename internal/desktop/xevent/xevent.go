@@ -1,7 +1,7 @@
 package xevent
 
 /*
-#cgo linux LDFLAGS: -lX11 -lXfixes
+#cgo LDFLAGS: -lX11 -lXfixes
 
 #include "xevent.h"
 */
