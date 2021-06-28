@@ -1,12 +1,18 @@
 <div align="center">
-  <a href="https://n.eko.moe/#/" ><img src="https://raw.githubusercontent.com/nurdism/neko/master/docs/_media/logo.png" width="450" height="auto"/></a>
+  <a href="https://n.eko.moe/#/">
+    <img src="https://raw.githubusercontent.com/m1k1o/neko/master/docs/_media/logo.png" width="450" height="auto"/>
+  </a>
   <p align="center">
-    <img src="https://img.shields.io/github/v/release/nurdism/neko" alt="release">
-    <img src="https://img.shields.io/github/license/nurdism/neko" alt="license">
-    <img src="https://img.shields.io/docker/pulls/nurdism/neko" alt="pulls">
-    <img src="https://img.shields.io/github/issues/nurdism/neko" alt="issues">
-    <a href="https://discord.gg/3U6hWpC" ><img src="https://discordapp.com/api/guilds/665851821906067466/widget.png" alt="Chat on discord"><a/>
-    <a href="https://github.com/nurdism/neko/actions" ><img src="https://github.com/nurdism/neko/workflows/deploy/badge.svg" alt="build"><a/>
+    <img src="https://img.shields.io/github/v/release/m1k1o/neko" alt="release">
+    <img src="https://img.shields.io/github/license/m1k1o/neko" alt="license">
+    <img src="https://img.shields.io/docker/pulls/m1k1o/neko" alt="pulls">
+    <img src="https://img.shields.io/github/issues/m1k1o/neko" alt="issues">
+    <a href="https://discord.gg/3U6hWpC">
+      <img src="https://discordapp.com/api/guilds/665851821906067466/widget.png" alt="Chat on discord">
+    </a>
+    <a href="https://github.com/m1k1o/neko/actions">
+      <img src="https://github.com/m1k1o/neko/actions/workflows/build.yml/badge.svg" alt="build">
+    </a>
   </p>
   <br/>
   <br/>
