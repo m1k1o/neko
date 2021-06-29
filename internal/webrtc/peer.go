@@ -1,8 +1,13 @@
 package webrtc
 
-import "github.com/pion/webrtc/v3"
+import (
+	"sync"
+
+	"github.com/pion/webrtc/v3"
+)
 
 type WebRTCPeerCtx struct {
+	mu          sync.Mutex
 	api         *webrtc.API
 	connection  *webrtc.PeerConnection
 	dataChannel *webrtc.DataChannel
@@ -11,6 +16,9 @@ type WebRTCPeerCtx struct {
 }
 
 func (peer *WebRTCPeerCtx) CreateOffer(ICERestart bool) (*webrtc.SessionDescription, error) {
+	peer.mu.Lock()
+	defer peer.mu.Unlock()
+
 	offer, err := peer.connection.CreateOffer(&webrtc.OfferOptions{
 		ICERestart: ICERestart,
 	})
@@ -48,10 +56,16 @@ func (peer *WebRTCPeerCtx) SignalCandidate(candidate webrtc.ICECandidateInit) er
 }
 
 func (peer *WebRTCPeerCtx) SetVideoID(videoID string) error {
+	peer.mu.Lock()
+	defer peer.mu.Unlock()
+
 	return peer.changeVideo(videoID)
 }
 
 func (peer *WebRTCPeerCtx) Destroy() error {
+	peer.mu.Lock()
+	defer peer.mu.Unlock()
+
 	if peer.connection == nil || peer.connection.ConnectionState() != webrtc.PeerConnectionStateConnected {
 		return nil
 	}
