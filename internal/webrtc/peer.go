@@ -1,14 +1,6 @@
 package webrtc
 
-import (
-	"time"
-
-	"github.com/pion/webrtc/v3"
-	"github.com/rs/zerolog/log"
-)
-
-// how long is can take between sending offer and connecting
-const offerTimeout = 10 * time.Second
+import "github.com/pion/webrtc/v3"
 
 type WebRTCPeerCtx struct {
 	api         *webrtc.API
@@ -19,22 +11,6 @@ type WebRTCPeerCtx struct {
 }
 
 func (peer *WebRTCPeerCtx) CreateOffer(ICERestart bool) (*webrtc.SessionDescription, error) {
-	// offer timeout
-	go func() {
-		time.Sleep(offerTimeout)
-
-		// already disconnected
-		if peer.connection.ConnectionState() == webrtc.PeerConnectionStateClosed {
-			return
-		}
-
-		// not connected
-		if peer.connection.ConnectionState() != webrtc.PeerConnectionStateConnected {
-			log.Warn().Msg("connection timeouted, closing")
-			peer.connection.Close()
-		}
-	}()
-
 	offer, err := peer.connection.CreateOffer(&webrtc.OfferOptions{
 		ICERestart: ICERestart,
 	})
