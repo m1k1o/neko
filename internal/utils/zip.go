@@ -33,7 +33,7 @@ func Zip(source, zipPath string) error {
 			return err
 		}
 
-		if !info.IsDir() || !info.Mode().IsRegular() {
+		if !info.IsDir() && !info.Mode().IsRegular() {
 			return nil
 		}
 
