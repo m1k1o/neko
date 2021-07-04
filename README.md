@@ -84,6 +84,7 @@ For n.eko room management software visit https://github.com/m1k1o/neko-rooms.
 - Chat messages are dense, when repeated, they are joined together.
 - While IP address fetching is now proxy ignored.
 - Start unmuted on reconnects.
+- Switched to latest firefox version instead of esr.
 
 ### Roadmap & TODOs
 - Catch errors from gst pipeline, tell user if broadcast failed.

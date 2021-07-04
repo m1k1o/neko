@@ -77,7 +77,7 @@
     "HardwareAcceleration": false,
     "Homepage": {
       "Additional": [],
-      "StartPage": "none"
+      "StartPage": "home"
     },
     "NewTabPage": true,
     "NoDefaultBookmarks": true,

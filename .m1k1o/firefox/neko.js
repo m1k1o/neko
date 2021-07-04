@@ -32,4 +32,6 @@ lockPref("devtools.theme", "dark");
 lockPref("ui.systemUsesDarkTheme", 1);
 lockPref("lightweightThemes.usedThemes","[]");
 lockPref("lightweightThemes.selectedThemeID", "firefox-compact-dark@mozilla.org");
+lockPref("extensions.activeThemeID", "firefox-compact-dark@mozilla.org");
+lockPref("browser.theme.toolbar-theme", 0);
 lockPref("browser.in-content.dark-mode", true);
