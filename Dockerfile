@@ -24,7 +24,7 @@ ARG GIT_BRANCH=dev
 # build server
 COPY . .
 RUN go get -v -t -d . && go build \
-    -tags browser \
+    -tags "browser browser_profile" \
     -o bin/neko \
     -ldflags " \
         -s -w \
