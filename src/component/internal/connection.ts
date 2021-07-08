@@ -7,11 +7,11 @@ import { NekoWebSocket } from './websocket'
 import { NekoWebRTC, WebRTCStats } from './webrtc'
 import { Connection } from '../types/state'
 
-const WEBSOCKET_TIMEOUT = 1000
-const WEBSOCKET_RECONN_DELAY = 750
+const WEBSOCKET_TIMEOUT = 5000
+const WEBSOCKET_RECONN_DELAY = 1500
 
 const WEBRTC_TIMEOUT = 10000
-const WEBRTC_RECONN_DELAY = 750
+const WEBRTC_RECONN_DELAY = 1500
 const WEBRTC_RECONN_MAX_LOSS = 25
 const WEBRTC_RECONN_FAILED_ATTEMPTS = 5
 
