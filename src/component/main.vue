@@ -455,6 +455,11 @@
       }
     }
 
+    @Watch('state.connection.status')
+    onConnectionChange(status: 'connected' | 'connecting' | 'disconnected') {
+      this.events.emit('connection.status', status)
+    }
+
     clear() {
       // destroy video
       if (this._video) {
