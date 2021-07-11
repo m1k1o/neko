@@ -111,8 +111,16 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
     this._url = url.replace(/^http/, 'ws').replace(/\/+$/, '') + '/api/ws'
   }
 
+  public getUrl(): string {
+    return this._url
+  }
+
   public setToken(token: string) {
     this._token = token
+  }
+
+  public getToken(): string {
+    return this._token
   }
 
   public setVideo(video: string) {
