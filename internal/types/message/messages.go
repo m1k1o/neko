@@ -21,13 +21,14 @@ type SystemWebRTC struct {
 }
 
 type SystemInit struct {
-	Event           string                 `json:"event,omitempty"`
-	SessionId       string                 `json:"session_id"`
-	ControlHost     ControlHost            `json:"control_host"`
-	ScreenSize      ScreenSize             `json:"screen_size"`
-	Sessions        map[string]SessionData `json:"sessions"`
-	ImplicitHosting bool                   `json:"implicit_hosting"`
-	WebRTC          SystemWebRTC           `json:"webrtc"`
+	Event             string                 `json:"event,omitempty"`
+	SessionId         string                 `json:"session_id"`
+	ControlHost       ControlHost            `json:"control_host"`
+	ScreenSize        ScreenSize             `json:"screen_size"`
+	Sessions          map[string]SessionData `json:"sessions"`
+	ImplicitHosting   bool                   `json:"implicit_hosting"`
+	ScreencastEnabled bool                   `json:"screencast_enabled"`
+	WebRTC            SystemWebRTC           `json:"webrtc"`
 }
 
 type SystemAdmin struct {
