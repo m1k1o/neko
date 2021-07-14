@@ -8,7 +8,7 @@
         :muted="autoplay"
         playsinline
       />
-      <neko-screencast v-if="state.connection.type == 'screencast'" :api="api.room" />
+      <neko-screencast v-if="state.connection.type == 'screencast' && state.connection.screencast" :api="api.room" />
       <neko-overlay
         :webrtc="connection.webrtc"
         :scroll="state.control.scroll"
