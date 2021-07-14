@@ -1,7 +1,14 @@
 <template>
   <div ref="component" class="neko-component">
     <div ref="container" class="neko-container">
-      <video ref="video" :autoplay="autoplay" :muted="autoplay" playsinline />
+      <video
+        v-show="state.connection.type == 'webrtc'"
+        ref="video"
+        :autoplay="autoplay"
+        :muted="autoplay"
+        playsinline
+      />
+      <neko-screencast v-if="state.connection.type == 'screencast'" :api="api.room" />
       <neko-overlay
         :webrtc="connection.webrtc"
         :scroll="state.control.scroll"
@@ -32,7 +39,8 @@
   .neko-container {
     position: relative;
 
-    video {
+    video,
+    img {
       position: absolute;
       top: 0;
       bottom: 0;
@@ -63,11 +71,13 @@
 
   import NekoState from './types/state'
   import Overlay from './overlay.vue'
+  import Screencast from './screencast.vue'
 
   @Component({
     name: 'neko-canvas',
     components: {
       'neko-overlay': Overlay,
+      'neko-screencast': Screencast,
     },
   })
   export default class extends Vue {
