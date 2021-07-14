@@ -107,6 +107,7 @@
           videos: [],
           auto: true,
         },
+        screencast: false,
         type: 'none',
       },
       video: {

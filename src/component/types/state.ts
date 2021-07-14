@@ -15,7 +15,8 @@ export default interface State {
 export interface Connection {
   status: 'disconnected' | 'connecting' | 'connected'
   webrtc: WebRTC
-  type: 'webrtc' | 'fallback' | 'none'
+  screencast: boolean
+  type: 'webrtc' | 'screencast' | 'none'
 }
 
 export interface WebRTC {

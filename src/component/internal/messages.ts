@@ -76,6 +76,7 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
     this._log.debug('EVENT.SYSTEM_INIT')
     Vue.set(this._state, 'session_id', conf.session_id)
     Vue.set(this._state.control, 'implicit_hosting', conf.implicit_hosting)
+    Vue.set(this._state.connection, 'screencast', conf.screencast_enabled)
     Vue.set(this._state.connection.webrtc, 'videos', conf.webrtc.videos)
 
     for (const id in conf.sessions) {

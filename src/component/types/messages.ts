@@ -21,6 +21,7 @@ export interface SystemInit {
   screen_size: ScreenSize
   sessions: Record<string, SessionData>
   implicit_hosting: boolean
+  screencast_enabled: boolean
   webrtc: SystemWebRTC
 }
 
