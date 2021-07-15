@@ -57,8 +57,8 @@ export class Reconnecter extends EventEmitter<ReconnecterEvents> {
       ...config,
     }
 
-    this._conn.on('connect', this.onConnect)
-    this._conn.on('disconnect', this.onDisconnect)
+    this._conn.on('connect', this.onConnect.bind(this))
+    this._conn.on('disconnect', this.onDisconnect.bind(this))
   }
 
   private onConnect() {
@@ -126,12 +126,7 @@ export class Reconnecter extends EventEmitter<ReconnecterEvents> {
 
     this._open = true
     this.emit('open')
-
-    this._conn.connect()
-    this._timeout = window.setTimeout(() => {
-      this._conn.disconnect()
-      this.reconnect()
-    }, this._config.timeout_ms)
+    this.connect()
   }
 
   public close(error?: Error): void {
@@ -148,6 +143,11 @@ export class Reconnecter extends EventEmitter<ReconnecterEvents> {
     }
   }
 
+  public connect(): void {
+    this._conn.connect()
+    this._timeout = window.setTimeout(this.onDisconnect.bind(this), this._config.timeout_ms)
+  }
+
   public reconnect(): void {
     if (this._connected) {
       throw new Error('connection is already connected')
@@ -155,15 +155,15 @@ export class Reconnecter extends EventEmitter<ReconnecterEvents> {
 
     this._total_reconnects++
 
-    if (this._config.max_reconnects < this._total_reconnects || this._total_reconnects < 0) {
-      setTimeout(this._conn.connect, this._config.backoff_ms)
+    if (this._config.max_reconnects > this._total_reconnects || this._total_reconnects < 0) {
+      setTimeout(this.connect.bind(this), this._config.backoff_ms)
     } else {
       this.close(new Error('reconnection failed'))
     }
   }
 
   public destroy() {
-    this._conn.off('connect', this.onConnect)
-    this._conn.off('disconnect', this.onDisconnect)
+    this._conn.off('connect', this.onConnect.bind(this))
+    this._conn.off('disconnect', this.onDisconnect.bind(this))
   }
 }
