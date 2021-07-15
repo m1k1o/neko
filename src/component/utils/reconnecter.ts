@@ -119,14 +119,17 @@ export class Reconnecter extends EventEmitter<ReconnecterEvents> {
     }
   }
 
-  public open(): void {
+  public open(deferredConnection = false): void {
     if (this._open) {
       throw new Error('connection is already open')
     }
 
     this._open = true
     this.emit('open')
-    this.connect()
+
+    if (!deferredConnection) {
+      this.connect()
+    }
   }
 
   public close(error?: Error): void {
