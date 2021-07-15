@@ -104,6 +104,18 @@ export class Reconnecter extends EventEmitter<ReconnecterEvents> {
     return this._last_connected
   }
 
+  public get config(): ReconnecterConfig {
+    return { ...this._config }
+  }
+
+  public set config(conf: ReconnecterConfig) {
+    this._config = { ...conf }
+
+    if (this._config.max_reconnects > this._total_reconnects) {
+      this.close(new Error('reconnection config changed'))
+    }
+  }
+
   public open(): void {
     if (this._open) {
       throw new Error('connection is already open')
