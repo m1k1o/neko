@@ -57,35 +57,38 @@ export class Reconnecter extends EventEmitter<ReconnecterEvents> {
       ...config,
     }
 
-    this._conn.on('connect', () => {
-      if (this._timeout) {
-        window.clearTimeout(this._timeout)
-        this._timeout = undefined
-      }
+    this._conn.on('connect', this.onConnect)
+    this._conn.on('disconnect', this.onDisconnect)
+  }
 
-      this._connected = true
+  private onConnect() {
+    if (this._timeout) {
+      window.clearTimeout(this._timeout)
+      this._timeout = undefined
+    }
 
-      if (this._open) {
-        this._last_connected = new Date()
-        this.emit('connect')
-      } else {
-        this._conn.disconnect()
-      }
-    })
+    this._connected = true
 
-    this._conn.on('disconnect', () => {
-      if (this._timeout) {
-        window.clearTimeout(this._timeout)
-        this._timeout = undefined
-      }
+    if (this._open) {
+      this._last_connected = new Date()
+      this.emit('connect')
+    } else {
+      this._conn.disconnect()
+    }
+  }
 
-      this._connected = false
+  private onDisconnect() {
+    if (this._timeout) {
+      window.clearTimeout(this._timeout)
+      this._timeout = undefined
+    }
 
-      if (this._open) {
-        this.emit('disconnect')
-        this.reconnect()
-      }
-    })
+    this._connected = false
+
+    if (this._open) {
+      this.emit('disconnect')
+      this.reconnect()
+    }
   }
 
   public get isOpen(): boolean {
@@ -157,5 +160,10 @@ export class Reconnecter extends EventEmitter<ReconnecterEvents> {
     } else {
       this.close(new Error('reconnection failed'))
     }
+  }
+
+  public destroy() {
+    this._conn.off('connect', this.onConnect)
+    this._conn.off('disconnect', this.onDisconnect)
   }
 }
