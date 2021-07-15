@@ -10,16 +10,16 @@ export abstract class ReconnecterAbstract extends EventEmitter<ReconnecterAbstra
     super()
 
     if (this.constructor == ReconnecterAbstract) {
-      throw new Error("Abstract classes can't be instantiated.");
+      throw new Error("Abstract classes can't be instantiated.")
     }
   }
 
   public async connect() {
-    throw new Error("Method 'connect()' must be implemented.");
+    throw new Error("Method 'connect()' must be implemented.")
   }
 
   public async disconnect() {
-    throw new Error("Method 'disconnect()' must be implemented.");
+    throw new Error("Method 'disconnect()' must be implemented.")
   }
 }
 
