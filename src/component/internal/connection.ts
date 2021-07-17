@@ -72,7 +72,9 @@ class WebrtcReconnecter extends ReconnecterAbstract {
   }
 
   public async connect() {
-    this._websocket.send(EVENT.SIGNAL_REQUEST, { video: this._state.webrtc.video })
+    if (this._websocket.connected) {
+      this._websocket.send(EVENT.SIGNAL_REQUEST, { video: this._state.webrtc.video })
+    }
   }
 
   public async disconnect() {
