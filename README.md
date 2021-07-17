@@ -50,6 +50,7 @@ For n.eko room management software visit https://github.com/m1k1o/neko-rooms.
 - Support for password protected `NEKO_ICESERVERS` (by @mbattista).
 - Added bunch of translations (🇸🇰, 🇪🇸, 🇸🇪, 🇳🇴, 🇫🇷) by various people.
 - Added `m1k1o/neko:google-chrome` tag.
+- Show red dot badge on sidebar toggle if there are new messages, and user can't see them.
 
 ### Bugs
 - Fixed minor gst pipeline bug.

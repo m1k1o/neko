@@ -23,6 +23,7 @@ interface Message {
 export const state = () => ({
   history: [] as Message[],
   emotes: {} as Emotes,
+  texts: 0,
 })
 
 export const getters = getterTree(state, {
@@ -31,6 +32,10 @@ export const getters = getterTree(state, {
 
 export const mutations = mutationTree(state, {
   addMessage(state, message: Message) {
+    if (message.type == 'text') {
+      state.texts++
+    }
+
     state.history = state.history.concat([message])
   },
 
@@ -52,6 +57,7 @@ export const mutations = mutationTree(state, {
   reset(state) {
     state.emotes = {}
     state.history = []
+    state.texts = 0
   },
 })
 
