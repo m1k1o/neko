@@ -193,6 +193,8 @@
   // @ts-ignore
   import GuacamoleKeyboard from '~/utils/guacamole-keyboard.ts'
 
+  const WHEEL_LINE_HEIGHT = 19
+
   @Component({
     name: 'neko-video',
     components: {
@@ -549,6 +551,7 @@
       })
     }
 
+    wheelThrottle = false
     onWheel(e: WheelEvent) {
       if (!this.hosting || this.locked) {
         return
@@ -558,6 +561,16 @@
       let x = e.deltaX
       let y = e.deltaY
 
+      // Pixel units unless it's non-zero.
+      // Note that if deltamode is line or page won't matter since we aren't
+      // sending the mouse wheel delta to the server anyway.
+      // The difference between pixel and line can be important however since
+      // we have a threshold that can be smaller than the line height.
+      if (e.deltaMode !== 0) {
+        x *= WHEEL_LINE_HEIGHT
+        y *= WHEEL_LINE_HEIGHT
+      }
+
       if (this.scroll_invert) {
         x = x * -1
         y = y * -1
@@ -566,7 +579,14 @@
       x = Math.min(Math.max(x, -this.scroll), this.scroll)
       y = Math.min(Math.max(y, -this.scroll), this.scroll)
 
-      this.$client.sendData('wheel', { x, y })
+      if (!this.wheelThrottle) {
+        this.wheelThrottle = true
+        this.$client.sendData('wheel', { x, y })
+
+        window.setTimeout(() => {
+          this.wheelThrottle = false
+        }, 100)
+      }
     }
 
     onMouseDown(e: MouseEvent) {
