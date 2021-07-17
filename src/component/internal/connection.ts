@@ -1,11 +1,10 @@
 import Vue from 'vue'
 import EventEmitter from 'eventemitter3'
-import { Logger } from '../utils/logger'
 import * as EVENT from '../types/events'
 
 import { NekoWebSocket } from './websocket'
-import { NekoWebRTC, WebRTCStats } from './webrtc'
-import { Connection } from '../types/state'
+import { NekoWebRTC } from './webrtc'
+import { Connection, WebRTCStats } from '../types/state'
 import { Reconnecter, ReconnecterAbstract } from '../utils/reconnecter'
 
 const WEBRTC_RECONN_MAX_LOSS = 25
@@ -16,14 +15,13 @@ export interface NekoConnectionEvents {
 }
 
 class WebsocketReconnecter extends ReconnecterAbstract {
-  private _conn: NekoConnection
+  private _state: Connection
   private _websocket: NekoWebSocket
 
-  constructor(conn: NekoConnection, websocket: NekoWebSocket) {
+  constructor(state: Connection, websocket: NekoWebSocket) {
     super()
 
-    // TODO: Antipattern.
-    this._conn = conn
+    this._state = state
 
     // TODO: Unmount.
     this._websocket = websocket
@@ -32,8 +30,10 @@ class WebsocketReconnecter extends ReconnecterAbstract {
   }
 
   public async connect() {
-    let url = this._conn.getUrl()
-    const token = this._conn.getToken()
+    let url = this._state.url
+    url = url.replace(/^http/, 'ws').replace(/\/+$/, '') + '/api/ws'
+
+    const token = this._state.token
     if (token) {
       url += '?token=' + encodeURIComponent(token)
     }
@@ -47,15 +47,14 @@ class WebsocketReconnecter extends ReconnecterAbstract {
 }
 
 class WebrtcReconnecter extends ReconnecterAbstract {
-  private _conn: NekoConnection
+  private _state: Connection
   private _websocket: NekoWebSocket
   private _webrtc: NekoWebRTC
 
-  constructor(conn: NekoConnection, websocket: NekoWebSocket, webrtc: NekoWebRTC) {
+  constructor(state: Connection, websocket: NekoWebSocket, webrtc: NekoWebRTC) {
     super()
 
-    // TODO: Antipattern.
-    this._conn = conn
+    this._state = state
     this._websocket = websocket
 
     // TODO: Unmount.
@@ -65,7 +64,7 @@ class WebrtcReconnecter extends ReconnecterAbstract {
   }
 
   public async connect() {
-    this._websocket.send(EVENT.SIGNAL_REQUEST, { video: this._conn.getVideo() })
+    this._websocket.send(EVENT.SIGNAL_REQUEST, { video: this._state.webrtc.video })
   }
 
   public async disconnect() {
@@ -74,31 +73,23 @@ class WebrtcReconnecter extends ReconnecterAbstract {
 }
 
 export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
-  private _url = ''
-  private _token = ''
-  private _video = ''
-
-  private _log = new Logger('connection')
   private _state: Connection
 
   public websocket = new NekoWebSocket()
-  public _websocket_reconn = new Reconnecter(new WebsocketReconnecter(this, this.websocket), {
-    max_reconnects: 15,
-    timeout_ms: 5000,
-    backoff_ms: 1500,
-  })
+  public _websocket_reconn: Reconnecter
 
   public webrtc = new NekoWebRTC()
-  public _webrtc_reconn = new Reconnecter(new WebrtcReconnecter(this, this.websocket, this.webrtc), {
-    max_reconnects: 15,
-    timeout_ms: 10000,
-    backoff_ms: 1500,
-  })
+  public _webrtc_reconn: Reconnecter
 
   constructor(state: Connection) {
     super()
 
     this._state = state
+    this._websocket_reconn = new Reconnecter(new WebsocketReconnecter(state, this.websocket), state.websocket.config)
+    this._webrtc_reconn = new Reconnecter(
+      new WebrtcReconnecter(state, this.websocket, this.webrtc),
+      state.webrtc.config,
+    )
 
     // initial state
     Vue.set(this._state, 'type', 'screencast')
@@ -187,40 +178,22 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
     return this._websocket_reconn.isOpen && this._webrtc_reconn.isOpen
   }
 
-  public setUrl(url: string) {
-    this._url = url.replace(/^http/, 'ws').replace(/\/+$/, '') + '/api/ws'
-  }
-
-  public getUrl(): string {
-    return this._url
-  }
-
-  public setToken(token: string) {
-    this._token = token
-  }
-
-  public getToken(): string {
-    return this._token
-  }
-
   public setVideo(video: string) {
     if (!this._state.webrtc.videos.includes(video)) {
       throw new Error('video id not found')
     }
 
-    if (this.websocket.connected) {
-      this.websocket.send(EVENT.SIGNAL_VIDEO, { video })
-    }
-
-    this._video = video
-  }
-
-  public getVideo() {
-    return this._video
+    this.websocket.send(EVENT.SIGNAL_VIDEO, { video })
   }
 
   public async connect(video?: string): Promise<void> {
-    if (video) this._video = video
+    if (video) {
+      if (!this._state.webrtc.videos.includes(video)) {
+        throw new Error('video id not found')
+      }
+
+      Vue.set(this._state.webrtc, 'video', video)
+    }
 
     this._webrtc_reconn.open(true)
     this._websocket_reconn.open()

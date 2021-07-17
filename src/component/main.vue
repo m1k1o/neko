@@ -110,8 +110,22 @@
     public state = {
       authenticated: false,
       connection: {
+        url: location.href,
+        token: undefined,
         status: 'disconnected',
+        websocket: {
+          config: {
+            maxReconnects: 15,
+            timeoutMs: 5000,
+            backoffMs: 1500,
+          },
+        },
         webrtc: {
+          config: {
+            maxReconnects: 15,
+            timeoutMs: 10000,
+            backoffMs: 1500,
+          },
           stats: null,
           video: null,
           videos: [],
@@ -184,7 +198,7 @@
 
       const httpURL = url.replace(/^ws/, 'http').replace(/\/$|\/ws\/?$/, '')
       this.api.setUrl(httpURL)
-      this.connection.setUrl(httpURL)
+      Vue.set(this.state.connection, 'url', httpURL)
 
       if (this.connected) {
         this.connection.disconnect()
@@ -208,7 +222,7 @@
 
       if (token) {
         this.api.setToken(token)
-        this.connection.setToken(token)
+        Vue.set(this.state.connection, 'token', token)
       }
 
       await this.api.session.whoami()
@@ -227,7 +241,7 @@
       const res = await this.api.session.login({ username, password })
       if (res.data.token) {
         this.api.setToken(res.data.token)
-        this.connection.setToken(res.data.token)
+        Vue.set(this.state.connection, 'token', res.data.token)
 
         if (this.autologin) {
           localStorage.setItem('neko_session', res.data.token)
@@ -250,7 +264,7 @@
         await this.api.session.logout()
       } finally {
         this.api.setToken('')
-        this.connection.setToken('')
+        Vue.delete(this.state.connection, 'token')
 
         if (this.autologin) {
           localStorage.removeItem('neko_session')

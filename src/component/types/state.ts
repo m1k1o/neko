@@ -1,3 +1,6 @@
+import * as webrtcTypes from './webrtc'
+import * as reconnecterTypes from './reconnecter'
+
 export default interface State {
   authenticated: boolean
   connection: Connection
@@ -13,27 +16,30 @@ export default interface State {
 /////////////////////////////
 
 export interface Connection {
+  url: string
+  token?: string
   status: 'disconnected' | 'connecting' | 'connected'
+  websocket: WebSocket
   webrtc: WebRTC
   screencast: boolean
   type: 'webrtc' | 'screencast' | 'none'
 }
 
+export interface WebSocket {
+  config: ReconnecterConfig
+}
+
 export interface WebRTC {
+  config: ReconnecterConfig
   stats: WebRTCStats | null
   video: string | null
   videos: string[]
   auto: boolean
 }
 
-export interface WebRTCStats {
-  bitrate: number
-  packetLoss: number
-  fps: number
-  width: number
-  height: number
-  muted?: boolean
-}
+export interface ReconnecterConfig extends reconnecterTypes.ReconnecterConfig {}
+
+export interface WebRTCStats extends webrtcTypes.WebRTCStats {}
 
 /////////////////////////////
 // Video
