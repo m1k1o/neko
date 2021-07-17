@@ -1,4 +1,5 @@
 import EventEmitter from 'eventemitter3'
+import { ReconnecterConfig } from '../types/reconnecter'
 
 export interface ReconnecterAbstractEvents {
   connect: () => void
@@ -30,12 +31,6 @@ export interface ReconnecterEvents {
   close: (error?: Error) => void
 }
 
-export interface ReconnecterConfig {
-  max_reconnects: number
-  timeout_ms: number
-  backoff_ms: number
-}
-
 export class Reconnecter extends EventEmitter<ReconnecterEvents> {
   private _conn: ReconnecterAbstract
   private _config: ReconnecterConfig
@@ -51,9 +46,9 @@ export class Reconnecter extends EventEmitter<ReconnecterEvents> {
 
     this._conn = conn
     this._config = {
-      max_reconnects: 10,
-      timeout_ms: 1500,
-      backoff_ms: 750,
+      maxReconnects: 10,
+      timeoutMs: 1500,
+      backoffMs: 750,
       ...config,
     }
 
@@ -114,7 +109,7 @@ export class Reconnecter extends EventEmitter<ReconnecterEvents> {
   public set config(conf: ReconnecterConfig) {
     this._config = { ...conf }
 
-    if (this._config.max_reconnects > this._total_reconnects) {
+    if (this._config.maxReconnects > this._total_reconnects) {
       this.close(new Error('reconnection config changed'))
     }
   }
@@ -148,7 +143,7 @@ export class Reconnecter extends EventEmitter<ReconnecterEvents> {
 
   public connect(): void {
     this._conn.connect()
-    this._timeout = window.setTimeout(this.onDisconnect.bind(this), this._config.timeout_ms)
+    this._timeout = window.setTimeout(this.onDisconnect.bind(this), this._config.timeoutMs)
   }
 
   public reconnect(): void {
@@ -158,8 +153,8 @@ export class Reconnecter extends EventEmitter<ReconnecterEvents> {
 
     this._total_reconnects++
 
-    if (this._config.max_reconnects > this._total_reconnects || this._total_reconnects < 0) {
-      setTimeout(this.connect.bind(this), this._config.backoff_ms)
+    if (this._config.maxReconnects > this._total_reconnects || this._total_reconnects < 0) {
+      setTimeout(this.connect.bind(this), this._config.backoffMs)
     } else {
       this.close(new Error('reconnection failed'))
     }
