@@ -19,11 +19,11 @@ export abstract class ReconnecterAbstract extends EventEmitter<ReconnecterAbstra
     throw new Error("Getter'connected()' must be implemented.")
   }
 
-  public async connect() {
+  public connect() {
     throw new Error("Method 'connect()' must be implemented.")
   }
 
-  public async disconnect() {
+  public disconnect() {
     throw new Error("Method 'disconnect()' must be implemented.")
   }
 }

@@ -33,7 +33,7 @@ class WebsocketReconnecter extends ReconnecterAbstract {
     return this._websocket.connected
   }
 
-  public async connect() {
+  public connect() {
     let url = this._state.url
     url = url.replace(/^http/, 'ws').replace(/\/+$/, '') + '/api/ws'
 
@@ -45,7 +45,7 @@ class WebsocketReconnecter extends ReconnecterAbstract {
     this._websocket.connect(url)
   }
 
-  public async disconnect() {
+  public disconnect() {
     this._websocket.disconnect()
   }
 }
@@ -71,13 +71,13 @@ class WebrtcReconnecter extends ReconnecterAbstract {
     return this._webrtc.connected
   }
 
-  public async connect() {
+  public connect() {
     if (this._websocket.connected) {
       this._websocket.send(EVENT.SIGNAL_REQUEST, { video: this._state.webrtc.video })
     }
   }
 
-  public async disconnect() {
+  public disconnect() {
     this._webrtc.disconnect()
   }
 }
@@ -110,12 +110,12 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
         Vue.set(this._state, 'status', 'connected')
       }
 
-      if (!this._webrtc_reconn.isConnected) {
+      if (!this.webrtc.connected) {
         this._webrtc_reconn.connect()
       }
     })
     this._websocket_reconn.on('disconnect', () => {
-      if (this._state.status === 'connected') {
+      if (this._state.status === 'connected' && this.activated) {
         Vue.set(this._state, 'status', 'connecting')
       }
     })
@@ -132,7 +132,7 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
       Vue.set(this._state, 'type', 'webrtc')
     })
     this._webrtc_reconn.on('disconnect', () => {
-      if (this._state.status === 'connected') {
+      if (this._state.status === 'connected' && this.activated) {
         Vue.set(this._state, 'status', 'connecting')
       }
 
@@ -196,7 +196,7 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
     this.websocket.send(EVENT.SIGNAL_VIDEO, { video })
   }
 
-  public async connect(video?: string): Promise<void> {
+  public connect(video?: string) {
     if (video) {
       if (!this._state.webrtc.videos.includes(video)) {
         throw new Error('video id not found')

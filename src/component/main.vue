@@ -212,7 +212,7 @@
       await this.authenticate()
 
       if (!this.autoconnect) return
-      await this.connect()
+      this.connect()
     }
 
     public async authenticate(token?: string) {
@@ -274,7 +274,7 @@
       }
     }
 
-    public async connect(video?: string) {
+    public connect(video?: string) {
       if (!this.state.authenticated) {
         throw new Error('client not authenticated')
       }
@@ -283,7 +283,7 @@
         throw new Error('client is already connected')
       }
 
-      await this.connection.connect(video)
+      this.connection.connect(video)
     }
 
     public disconnect() {
