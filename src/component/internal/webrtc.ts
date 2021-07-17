@@ -1,4 +1,5 @@
 import EventEmitter from 'eventemitter3'
+import { WebRTCStats } from '../types/webrtc'
 import { Logger } from '../utils/logger'
 
 export const OPCODE = {
@@ -9,15 +10,6 @@ export const OPCODE = {
   BTN_DOWN: 0x05,
   BTN_UP: 0x06,
 } as const
-
-export interface WebRTCStats {
-  bitrate: number
-  packetLoss: number
-  fps: number
-  width: number
-  height: number
-  muted?: boolean
-}
 
 export interface ICEServer {
   urls: string
