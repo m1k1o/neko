@@ -86,6 +86,7 @@ For n.eko room management software visit https://github.com/m1k1o/neko-rooms.
 - While IP address fetching is now proxy ignored.
 - Start unmuted on reconnects.
 - Switched to latest firefox version instead of esr.
+- Fixed very fast scroll speed on MacOS.
 
 ### Roadmap & TODOs
 - Catch errors from gst pipeline, tell user if broadcast failed.
