@@ -34,10 +34,10 @@ export interface NekoEvents {
   ['session.updated']: (id: string) => void
 
   // room events
-  ['room.control.host']: (hasHost: boolean, hostID: string | undefined) => void
+  ['room.control.host']: (hasHost: boolean, hostID?: string) => void
   ['room.screen.updated']: (width: number, height: number, rate: number) => void
   ['room.clipboard.updated']: (text: string) => void
-  ['room.broadcast.status']: (isActive: boolean, url: string | undefined) => void
+  ['room.broadcast.status']: (isActive: boolean, url?: string) => void
 }
 
 export class NekoMessages extends EventEmitter<NekoEvents> {

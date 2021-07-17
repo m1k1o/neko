@@ -1,7 +1,7 @@
 import { ICEServer } from '../internal/webrtc'
 
 export interface Message {
-  event: string | undefined
+  event?: string
   payload: any
 }
 
@@ -10,12 +10,12 @@ export interface Message {
 /////////////////////////////
 
 export interface SystemWebRTC {
-  event: string | undefined
+  event?: string
   videos: string[]
 }
 
 export interface SystemInit {
-  event: string | undefined
+  event?: string
   session_id: string
   control_host: ControlHost
   screen_size: ScreenSize
@@ -26,13 +26,13 @@ export interface SystemInit {
 }
 
 export interface SystemAdmin {
-  event: string | undefined
+  event?: string
   screen_sizes_list: ScreenSize[]
   broadcast_status: BroadcastStatus
 }
 
 export interface SystemDisconnect {
-  event: string | undefined
+  event?: string
   message: string
 }
 
@@ -41,23 +41,23 @@ export interface SystemDisconnect {
 /////////////////////////////
 
 export interface SignalProvide {
-  event: string | undefined
+  event?: string
   sdp: string
   iceservers: ICEServer[]
   video: string
 }
 
 export interface SignalCandidate extends RTCIceCandidateInit {
-  event: string | undefined
+  event?: string
 }
 
 export interface SignalAnswer {
-  event: string | undefined
+  event?: string
   sdp: string
 }
 
 export interface SignalVideo {
-  event: string | undefined
+  event?: string
   video: string
 }
 
@@ -66,12 +66,12 @@ export interface SignalVideo {
 /////////////////////////////
 
 export interface SessionID {
-  event: string | undefined
+  event?: string
   id: string
 }
 
 export interface MemberProfile {
-  event: string | undefined
+  event?: string
   id: string
   name: string
   is_admin: boolean
@@ -83,14 +83,14 @@ export interface MemberProfile {
 }
 
 export interface SessionState {
-  event: string | undefined
+  event?: string
   id: string
   is_connected: boolean
   is_watching: boolean
 }
 
 export interface SessionData {
-  event: string | undefined
+  event?: string
   id: string
   profile: MemberProfile
   is_connected: boolean
@@ -102,28 +102,28 @@ export interface SessionData {
 /////////////////////////////
 
 export interface ControlHost {
-  event: string | undefined
+  event?: string
   has_host: boolean
   host_id: string | undefined
 }
 
 // TODO: New.
 export interface ControlMove {
-  event: string | undefined
+  event?: string
   x: number
   y: number
 }
 
 // TODO: New.
 export interface ControlScroll {
-  event: string | undefined
+  event?: string
   x: number
   y: number
 }
 
 // TODO: New.
 export interface ControlKey {
-  event: string | undefined
+  event?: string
   key: number
 }
 
@@ -132,7 +132,7 @@ export interface ControlKey {
 /////////////////////////////
 
 export interface ScreenSize {
-  event: string | undefined
+  event?: string
   width: number
   height: number
   rate: number
@@ -143,7 +143,7 @@ export interface ScreenSize {
 /////////////////////////////
 
 export interface ClipboardData {
-  event: string | undefined
+  event?: string
   text: string
 }
 
@@ -152,14 +152,14 @@ export interface ClipboardData {
 /////////////////////////////
 
 export interface KeyboardModifiers {
-  event: string | undefined
+  event?: string
   caps_lock: boolean
   num_lock: boolean
   scroll_lock: boolean
 }
 
 export interface KeyboardMap {
-  event: string | undefined
+  event?: string
   layout: string
   variant: string
 }
@@ -169,7 +169,7 @@ export interface KeyboardMap {
 /////////////////////////////
 
 export interface BroadcastStatus {
-  event: string | undefined
+  event?: string
   is_active: boolean
   url: string | undefined
 }
@@ -179,7 +179,7 @@ export interface BroadcastStatus {
 /////////////////////////////
 
 export interface SendMessage {
-  event: string | undefined
+  event?: string
   sender: string
   subject: string
   body: string

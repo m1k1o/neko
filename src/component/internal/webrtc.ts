@@ -16,7 +16,7 @@ export interface WebRTCStats {
   fps: number
   width: number
   height: number
-  muted: boolean | undefined
+  muted?: boolean
 }
 
 export interface ICEServer {

@@ -39,12 +39,12 @@ export interface ReconnecterConfig {
 export class Reconnecter extends EventEmitter<ReconnecterEvents> {
   private _conn: ReconnecterAbstract
   private _config: ReconnecterConfig
-  private _timeout: number | undefined
+  private _timeout?: number
 
   private _open = false
   private _connected = false
   private _total_reconnects = 0
-  private _last_connected: Date | undefined
+  private _last_connected?: Date
 
   constructor(conn: ReconnecterAbstract, config?: ReconnecterConfig) {
     super()
