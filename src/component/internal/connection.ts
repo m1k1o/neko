@@ -29,6 +29,10 @@ class WebsocketReconnecter extends ReconnecterAbstract {
     this._websocket.on('disconnected', (error) => this.emit('disconnect', error))
   }
 
+  public get connected() {
+    return this._websocket.connected
+  }
+
   public async connect() {
     let url = this._state.url
     url = url.replace(/^http/, 'ws').replace(/\/+$/, '') + '/api/ws'
@@ -61,6 +65,10 @@ class WebrtcReconnecter extends ReconnecterAbstract {
     this._webrtc = webrtc
     this._webrtc.on('connected', () => this.emit('connect'))
     this._webrtc.on('disconnected', (error) => this.emit('disconnect', error))
+  }
+
+  public get connected() {
+    return this._webrtc.connected
   }
 
   public async connect() {

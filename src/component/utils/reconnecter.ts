@@ -15,6 +15,10 @@ export abstract class ReconnecterAbstract extends EventEmitter<ReconnecterAbstra
     }
   }
 
+  public get connected(): boolean {
+    throw new Error("Getter'connected()' must be implemented.")
+  }
+
   public async connect() {
     throw new Error("Method 'connect()' must be implemented.")
   }
@@ -37,7 +41,6 @@ export class Reconnecter extends EventEmitter<ReconnecterEvents> {
   private _timeout?: number
 
   private _open = false
-  private _connected = false
   private _total_reconnects = 0
   private _last_connected?: Date
 
@@ -62,8 +65,6 @@ export class Reconnecter extends EventEmitter<ReconnecterEvents> {
       this._timeout = undefined
     }
 
-    this._connected = true
-
     if (this._open) {
       this._last_connected = new Date()
       this.emit('connect')
@@ -78,8 +79,6 @@ export class Reconnecter extends EventEmitter<ReconnecterEvents> {
       this._timeout = undefined
     }
 
-    this._connected = false
-
     if (this._open) {
       this.emit('disconnect')
       this.reconnect()
@@ -91,7 +90,7 @@ export class Reconnecter extends EventEmitter<ReconnecterEvents> {
   }
 
   public get isConnected(): boolean {
-    return this._connected
+    return this._conn.connected
   }
 
   public get totalReconnects(): number {
@@ -136,7 +135,7 @@ export class Reconnecter extends EventEmitter<ReconnecterEvents> {
     this._last_connected = undefined
     this.emit('close', error)
 
-    if (this._connected) {
+    if (this._conn.connected) {
       this._conn.disconnect()
     }
   }
@@ -147,7 +146,7 @@ export class Reconnecter extends EventEmitter<ReconnecterEvents> {
   }
 
   public reconnect(): void {
-    if (this._connected) {
+    if (this._conn.connected) {
       throw new Error('connection is already connected')
     }
 
