@@ -69,6 +69,7 @@ export const setting = {
 
 export const connection = {
   logged_out: 'Boli ste odhlásený/á',
+  reconnecting: 'Obnova spojenia...',
   connected: 'Úspešne pripojený/á',
   disconnected: 'Boli ste odpojený/á',
   button_confirm: 'Ok',

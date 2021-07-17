@@ -70,6 +70,16 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   /////////////////////////////
   // Internal Events
   /////////////////////////////
+  protected [EVENT.RECONNECTING]() {
+    this.$vue.$notify({
+      group: 'neko',
+      type: 'warning',
+      title: this.$vue.$t('connection.reconnecting') as string,
+      duration: 5000,
+      speed: 1000,
+    })
+  }
+
   protected [EVENT.CONNECTING]() {
     this.$accessor.setConnnecting()
   }
@@ -77,7 +87,11 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   protected [EVENT.CONNECTED]() {
     this.$accessor.user.setMember(this.id)
     this.$accessor.setConnected(true)
-    this.$accessor.setConnected(true)
+
+    this.$vue.$notify({
+      group: 'neko',
+      clean: true,
+    })
 
     this.$vue.$notify({
       group: 'neko',

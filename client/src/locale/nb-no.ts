@@ -69,6 +69,8 @@ export const setting = {
 
 export const connection = {
   logged_out: 'Du har blitt utlogget.',
+  // TODO
+  //reconnecting: 'Reconnecting',
   connected: 'Tilkoblet',
   disconnected: 'Frakoblet',
   button_confirm: 'OK',

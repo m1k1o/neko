@@ -69,6 +69,7 @@ export const setting = {
 
 export const connection = {
   logged_out: 'You have been logged out.',
+  reconnecting: 'Reconnecting...',
   connected: 'Connected',
   disconnected: 'Disconnected',
   button_confirm: 'OK',

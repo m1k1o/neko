@@ -230,6 +230,9 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
         case 'connected':
           this.onConnected()
           break
+        case 'disconnected':
+          this[EVENT.RECONNECTING]()
+          break
         // https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Signaling_and_video_calling#ice_connection_state
         // We don't watch the disconnected signaling state here as it can indicate temporary issues and may
         // go back to a connected state after some time. Watching it would close the video call on any temporary
@@ -358,6 +361,7 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
     this.emit('warn', `unhandled websocket event '${event}':`, payload)
   }
 
+  protected abstract [EVENT.RECONNECTING](): void
   protected abstract [EVENT.CONNECTING](): void
   protected abstract [EVENT.CONNECTED](): void
   protected abstract [EVENT.DISCONNECTED](reason?: Error): void
