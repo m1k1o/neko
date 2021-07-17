@@ -415,7 +415,7 @@
           return true
         }
 
-        this.$client.sendData('keydown', { key })
+        this.$client.sendData('keydown', { key: this.keyMap(key) })
         return false
       }
       this.keyboard.onkeyup = (key: number) => {
@@ -423,7 +423,7 @@
           return
         }
 
-        this.$client.sendData('keyup', { key })
+        this.$client.sendData('keyup', { key: this.keyMap(key) })
       }
       this.keyboard.listenTo(this._overlay)
     }
@@ -433,6 +433,51 @@
       this.$accessor.video.setPlayable(false)
       document.removeEventListener('focusin', this.onFocus.bind(this))
       /* Guacamole Keyboard does not provide destroy functions */
+    }
+
+    get hasMacOSKbd() {
+      return /(Mac|iPhone|iPod|iPad)/i.test(navigator.platform)
+    }
+
+    KeyTable = {
+      XK_ISO_Level3_Shift: 0xfe03, // AltGr
+      XK_Mode_switch: 0xff7e, // Character set switch
+      XK_Control_L: 0xffe3, // Left control
+      XK_Control_R: 0xffe4, // Right control
+      XK_Meta_L: 0xffe7, // Left meta
+      XK_Meta_R: 0xffe8, // Right meta
+      XK_Alt_L: 0xffe9, // Left alt
+      XK_Alt_R: 0xffea, // Right alt
+      XK_Super_L: 0xffeb, // Left super
+      XK_Super_R: 0xffec, // Right super
+    }
+
+    keyMap(key: number): number {
+      // Alt behaves more like AltGraph on macOS, so shuffle the
+      // keys around a bit to make things more sane for the remote
+      // server. This method is used by noVNC, RealVNC and TigerVNC
+      // (and possibly others).
+      if (this.hasMacOSKbd) {
+        switch (key) {
+          case this.KeyTable.XK_Meta_L:
+            key = this.KeyTable.XK_Control_L
+            break
+          case this.KeyTable.XK_Super_L:
+            key = this.KeyTable.XK_Alt_L
+            break
+          case this.KeyTable.XK_Super_R:
+            key = this.KeyTable.XK_Super_L
+            break
+          case this.KeyTable.XK_Alt_L:
+            key = this.KeyTable.XK_Mode_switch
+            break
+          case this.KeyTable.XK_Alt_R:
+            key = this.KeyTable.XK_ISO_Level3_Shift
+            break
+        }
+      }
+
+      return key
     }
 
     play() {
