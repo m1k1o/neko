@@ -22,7 +22,7 @@ export interface Connection {
   websocket: WebSocket
   webrtc: WebRTC
   screencast: boolean
-  type: 'webrtc' | 'screencast' | 'none'
+  type: 'webrtc' | 'fallback' | 'none'
 }
 
 export interface WebSocket {

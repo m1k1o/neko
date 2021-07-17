@@ -101,9 +101,6 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
       state.webrtc.config,
     )
 
-    // initial state
-    Vue.set(this._state, 'type', 'screencast')
-
     // websocket
     this._websocket_reconn.on('connect', () => {
       if (this.websocket.connected && this.webrtc.connected) {
@@ -136,7 +133,7 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
         Vue.set(this._state, 'status', 'connecting')
       }
 
-      Vue.set(this._state, 'type', 'screencast')
+      Vue.set(this._state, 'type', 'fallback')
     })
     this._webrtc_reconn.on('close', (error) => {
       this.disconnect(error)
@@ -157,8 +154,16 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
 
       // check if video is not playing smoothly
       if (stats.fps && stats.packetLoss < WEBRTC_RECONN_MAX_LOSS && !stats.muted) {
+        if (this._state.type === 'fallback') {
+          Vue.set(this._state, 'type', 'webrtc')
+        }
+
         webrtcCongestion = 0
         return
+      }
+
+      if (this._state.type === 'webrtc') {
+        Vue.set(this._state, 'type', 'fallback')
       }
 
       // try to downgrade quality if it happend many times
@@ -205,7 +210,9 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
       Vue.set(this._state.webrtc, 'video', video)
     }
 
+    Vue.set(this._state, 'type', 'fallback')
     Vue.set(this._state, 'status', 'connecting')
+
     this._webrtc_reconn.open(true)
     this._websocket_reconn.open()
   }
@@ -214,7 +221,9 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
     this._websocket_reconn.close()
     this._webrtc_reconn.close()
 
+    Vue.set(this._state, 'type', 'none')
     Vue.set(this._state, 'status', 'disconnected')
+
     this.emit('disconnect', error)
   }
 

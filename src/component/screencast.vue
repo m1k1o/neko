@@ -16,6 +16,9 @@
     active = false
 
     @Prop()
+    private readonly enabled!: boolean
+
+    @Prop()
     private readonly api!: RoomApi
 
     async loop() {
@@ -36,17 +39,36 @@
       }
     }
 
-    async mounted() {
+    mounted() {
+      if (this.enabled) {
+        this.start()
+      }
+    }
+
+    beforeDestroy() {
+      this.stop()
+    }
+
+    start() {
       this.active = true
 
       setTimeout(this.loop, 0)
     }
 
-    beforeDestroy() {
+    stop() {
       this.active = false
 
-      if (this._image.src) {
+      if (this._image && this._image.src) {
         URL.revokeObjectURL(this._image.src)
+      }
+    }
+
+    @Watch('enabled')
+    onEnabledChanged(enabled: boolean) {
+      if (enabled) {
+        this.start()
+      } else {
+        this.stop()
       }
     }
   }

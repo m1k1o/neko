@@ -1,14 +1,8 @@
 <template>
   <div ref="component" class="neko-component">
     <div ref="container" class="neko-container">
-      <video
-        v-show="state.connection.type == 'webrtc'"
-        ref="video"
-        :autoplay="autoplay"
-        :muted="autoplay"
-        playsinline
-      />
-      <neko-screencast v-if="state.connection.type == 'screencast' && state.connection.screencast" :api="api.room" />
+      <video v-show="!screencast" ref="video" :autoplay="autoplay" :muted="autoplay" playsinline />
+      <neko-screencast v-show="screencast" :enabled="screencast" :api="api.room" />
       <neko-overlay
         :webrtc="connection.webrtc"
         :scroll="state.control.scroll"
@@ -180,6 +174,10 @@
 
     public get is_admin() {
       return this.state.session_id != null ? this.state.sessions[this.state.session_id].profile.is_admin : false
+    }
+
+    public get screencast() {
+      return this.state.connection.type == 'fallback' && this.state.connection.screencast
     }
 
     /////////////////////////////
