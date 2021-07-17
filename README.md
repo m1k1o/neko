@@ -64,6 +64,7 @@ For n.eko room management software visit https://github.com/m1k1o/neko-rooms.
 - Respecting `NEKO_DEBUG` env variable.
 - Fullscreen support for iOS devices.
 - Added `chrome-sandbox` to fix weird bug when chromium didn't start.
+- Fixed keyboard mapping on macOS, when CMD could not be used for copy & paste.
 
 ### Misc
 - Custom docker workflow.
