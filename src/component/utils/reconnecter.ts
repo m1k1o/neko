@@ -127,6 +127,11 @@ export class Reconnecter extends EventEmitter<ReconnecterEvents> {
   }
 
   public close(error?: Error): void {
+    if (this._timeout) {
+      window.clearTimeout(this._timeout)
+      this._timeout = undefined
+    }
+
     if (!this._open) {
       throw new Error('connection is already closed')
     }
@@ -141,6 +146,11 @@ export class Reconnecter extends EventEmitter<ReconnecterEvents> {
   }
 
   public connect(): void {
+    if (this._timeout) {
+      window.clearTimeout(this._timeout)
+      this._timeout = undefined
+    }
+
     this._conn.connect()
     this._timeout = window.setTimeout(this.onDisconnect.bind(this), this._config.timeoutMs)
   }
