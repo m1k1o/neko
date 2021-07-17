@@ -120,7 +120,7 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
       }
     })
     this._websocket_reconn.on('close', (error) => {
-      this.emit('disconnect', error)
+      this.disconnect(error)
     })
 
     // webrtc
@@ -139,7 +139,7 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
       Vue.set(this._state, 'type', 'screencast')
     })
     this._webrtc_reconn.on('close', (error) => {
-      this.emit('disconnect', error)
+      this.disconnect(error)
     })
 
     let webrtcCongestion: number = 0
@@ -205,16 +205,17 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
       Vue.set(this._state.webrtc, 'video', video)
     }
 
+    Vue.set(this._state, 'status', 'connecting')
     this._webrtc_reconn.open(true)
     this._websocket_reconn.open()
   }
 
-  public disconnect() {
+  public disconnect(error?: Error) {
     this._websocket_reconn.close()
     this._webrtc_reconn.close()
 
     Vue.set(this._state, 'status', 'disconnected')
-    this.emit('disconnect')
+    this.emit('disconnect', error)
   }
 
   _webrtcQualityDowngrade(quality: string): string | undefined {
