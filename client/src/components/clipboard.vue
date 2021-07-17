@@ -45,7 +45,7 @@
     @Ref('textarea') readonly _textarea!: HTMLTextAreaElement
 
     private opened: boolean = false
-    private typing: any = null
+    private typing?: number
 
     get clipboard() {
       return this.$accessor.remote.clipboard
@@ -56,15 +56,16 @@
 
       if (this.typing) {
         clearTimeout(this.typing)
+        this.typing = undefined
       }
 
-      this.typing = setTimeout(() => this.$accessor.remote.sendClipboard(this.clipboard), 500)
+      this.typing = window.setTimeout(() => this.$accessor.remote.sendClipboard(this.clipboard), 500)
     }
 
     open() {
       this.opened = true
       document.body.addEventListener('click', this.close)
-      setTimeout(() => this._textarea.focus(), 0)
+      window.setTimeout(() => this._textarea.focus(), 0)
     }
 
     close() {

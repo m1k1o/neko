@@ -15,7 +15,7 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
   protected _ws?: WebSocket
   protected _peer?: RTCPeerConnection
   protected _channel?: RTCDataChannel
-  protected _timeout?: NodeJS.Timeout
+  protected _timeout?: number
   protected _displayname?: string
   protected _state: RTCIceConnectionState = 'disconnected'
   protected _id = ''
@@ -65,7 +65,7 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
       this._ws.onmessage = this.onMessage.bind(this)
       this._ws.onerror = (event) => this.onError.bind(this)
       this._ws.onclose = (event) => this.onDisconnected.bind(this, new Error('websocket closed'))
-      this._timeout = setTimeout(this.onTimeout.bind(this), 15000)
+      this._timeout = window.setTimeout(this.onTimeout.bind(this), 15000)
     } catch (err) {
       this.onDisconnected(err)
     }
@@ -74,6 +74,7 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
   protected disconnect() {
     if (this._timeout) {
       clearTimeout(this._timeout)
+      this._timeout = undefined
     }
 
     if (this._ws) {
@@ -223,6 +224,7 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
         case 'checking':
           if (this._timeout) {
             clearTimeout(this._timeout)
+            this._timeout = undefined
           }
           break
         case 'connected':
@@ -325,6 +327,7 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
   private onConnected() {
     if (this._timeout) {
       clearTimeout(this._timeout)
+      this._timeout = undefined
     }
 
     if (!this.connected) {
@@ -340,6 +343,7 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
     this.emit('debug', `connection timeout`)
     if (this._timeout) {
       clearTimeout(this._timeout)
+      this._timeout = undefined
     }
     this.onDisconnected(new Error('connection timeout'))
   }
