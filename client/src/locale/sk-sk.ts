@@ -72,6 +72,7 @@ export const connection = {
   reconnecting: 'Obnova spojenia...',
   connected: 'Úspešne pripojený/á',
   disconnected: 'Boli ste odpojený/á',
+  kicked: 'Boli ste odstránený/á z tejto miestnosti.',
   button_confirm: 'Ok',
 }
 

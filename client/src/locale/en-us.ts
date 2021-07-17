@@ -72,6 +72,7 @@ export const connection = {
   reconnecting: 'Reconnecting...',
   connected: 'Connected',
   disconnected: 'Disconnected',
+  kicked: 'You have been removed from this room.',
   button_confirm: 'OK',
 }
 

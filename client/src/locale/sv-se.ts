@@ -73,6 +73,8 @@ export const connection = {
   //reconnecting: 'Reconnecting',
   connected: 'Du har loggats in',
   disconnected: 'Du har blivit frånkopplad',
+  // TODO
+  //kicked: 'You have been removed from this room.',
   button_confirm: 'Ok',
 }
 
