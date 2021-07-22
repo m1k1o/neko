@@ -147,7 +147,7 @@
       if (this.about === '') {
         this.loading = true
         this.$http
-          .get<string>('https://raw.githubusercontent.com/m1k1o/neko/master/docs/README.md')
+          .get<string>('https://raw.githubusercontent.com/m1k1o/neko/dev/README.md')
           .then((res) => {
             return this.$http.post('https://api.github.com/markdown', {
               text: res.data,
