@@ -1,9 +1,9 @@
 <template>
   <div class="header">
-    <div class="neko">
+    <a href="https://github.com/m1k1o/neko" title="Github repository" target="_blank" class="neko">
       <img src="@/assets/images/logo.svg" alt="n.eko" />
       <span><b>n</b>.eko</span>
-    </div>
+    </a>
     <ul class="menu">
       <li>
         <i
@@ -46,6 +46,8 @@
       align-items: center;
       width: 150px;
       margin-left: 20px;
+      color: $text-normal;
+      text-decoration: none;
 
       img {
         display: block;
