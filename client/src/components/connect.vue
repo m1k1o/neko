@@ -1,7 +1,7 @@
 <template>
   <div class="connect">
     <div class="window">
-      <div class="logo">
+      <div class="logo" title="About n.eko" @click.stop.prevent="about">
         <img src="@/assets/images/logo.svg" alt="n.eko" />
         <span><b>n</b>.eko</span>
       </div>
@@ -47,6 +47,7 @@
         flex-direction: row;
         justify-content: center;
         align-items: center;
+        cursor: pointer;
 
         img {
           height: 90px;
@@ -220,6 +221,10 @@
           icon: 'error',
         })
       }
+    }
+
+    about() {
+      this.$accessor.client.toggleAbout()
     }
   }
 </script>

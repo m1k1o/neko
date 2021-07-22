@@ -1,5 +1,5 @@
 <div align="center">
-  <a href="https://n.eko.moe/#/">
+  <a href="https://github.com/m1k1o/neko" title="Neko's Github repository.">
     <img src="https://raw.githubusercontent.com/m1k1o/neko/master/docs/_media/logo.png" width="450" height="auto"/>
   </a>
   <p align="center">
