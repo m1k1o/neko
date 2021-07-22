@@ -25,7 +25,7 @@ const Header = `&34
   /  |/ / _ \/ //_/ __ \   )  ( ')
  / /|  /  __/ ,< / /_/ /  (  /  )
 /_/ |_/\___/_/|_|\____/    \(__)|
-&1&37   nurdism/neko &33%s v%s&0
+&1&37 nurdism/m1k1o &33%s v%s&0
 `
 
 var (
@@ -39,8 +39,8 @@ var (
 	// Major version when you make incompatible API changes,
 	major = "2"
 	// Minor version when you add functionality in a backwards-compatible manner, and
-	minor = "0"
-	// Patch version when you make backwards-compatible bug fixeneko.
+	minor = "3"
+	// Patch version when you make backwards-compatible bug fixes.
 	patch = "0"
 )
 
