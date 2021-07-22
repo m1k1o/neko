@@ -8,11 +8,13 @@ import (
 	"github.com/pion/webrtc/v3"
 )
 
-const OP_MOVE = 0x01
-const OP_SCROLL = 0x02
-const OP_KEY_DOWN = 0x03
-const OP_KEY_UP = 0x04
-const OP_KEY_CLK = 0x05
+const (
+	OP_MOVE     = 0x01
+	OP_SCROLL   = 0x02
+	OP_KEY_DOWN = 0x03
+	OP_KEY_UP   = 0x04
+	OP_KEY_CLK  = 0x05
+)
 
 type PayloadHeader struct {
 	Event  uint8
@@ -63,7 +65,6 @@ func (manager *WebRTCManager) handle(id string, msg webrtc.DataChannelMessage) e
 		}
 
 		manager.remote.Move(int(payload.X), int(payload.Y))
-		break
 	case OP_SCROLL:
 		payload := &PayloadScroll{}
 		if err := binary.Read(buffer, binary.LittleEndian, payload); err != nil {
@@ -77,7 +78,6 @@ func (manager *WebRTCManager) handle(id string, msg webrtc.DataChannelMessage) e
 			Msg("scroll")
 
 		manager.remote.Scroll(int(payload.X), int(payload.Y))
-		break
 	case OP_KEY_DOWN:
 		payload := &PayloadKey{}
 		if err := binary.Read(buffer, binary.LittleEndian, payload); err != nil {
@@ -101,8 +101,6 @@ func (manager *WebRTCManager) handle(id string, msg webrtc.DataChannelMessage) e
 
 			manager.logger.Debug().Msgf("key down %d", payload.Key)
 		}
-
-		break
 	case OP_KEY_UP:
 		payload := &PayloadKey{}
 		err := binary.Read(buffer, binary.LittleEndian, payload)
@@ -127,7 +125,6 @@ func (manager *WebRTCManager) handle(id string, msg webrtc.DataChannelMessage) e
 
 			manager.logger.Debug().Msgf("key up %d", payload.Key)
 		}
-		break
 	case OP_KEY_CLK:
 		// unused
 		break

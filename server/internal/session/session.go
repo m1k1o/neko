@@ -1,8 +1,6 @@
 package session
 
 import (
-	"sync"
-
 	"github.com/rs/zerolog"
 	"n.eko.moe/neko/internal/types"
 	"n.eko.moe/neko/internal/types/event"
@@ -19,7 +17,6 @@ type Session struct {
 	manager   *SessionManager
 	socket    types.WebSocket
 	peer      types.Peer
-	mu        sync.Mutex
 }
 
 func (session *Session) ID() string {
