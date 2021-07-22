@@ -16,6 +16,10 @@ RUN set -eux; apt-get update; \
     rm -f /tmp/firefox-setup.tar.bz2; \
     ln -s /usr/lib/firefox/firefox /usr/bin/firefox; \
     #
+    # create a profile directory
+    mkdir -p /home/neko/.mozilla/firefox/profile.default/extensions; \
+    chown -R neko:neko /home/neko/.mozilla/firefox/profile.default; \
+    #
     # clean up
     apt-get --purge autoremove -y xz-utils bzip2; \
     apt-get clean -y; \
@@ -27,4 +31,5 @@ COPY supervisord.conf /etc/neko/supervisord/firefox.conf
 COPY neko.js /usr/lib/firefox/mozilla.cfg
 COPY autoconfig.js /usr/lib/firefox/defaults/pref/autoconfig.js
 COPY policies.json /usr/lib/firefox/distribution/policies.json
+COPY --chown=neko profiles.ini /home/neko/.mozilla/firefox/profiles.ini
 COPY openbox.xml /etc/neko/openbox.xml
