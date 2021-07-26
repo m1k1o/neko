@@ -114,14 +114,17 @@ export class Reconnecter extends EventEmitter<ReconnecterEvents> {
   }
 
   public open(deferredConnection = false): void {
-    if (this._open) {
-      throw new Error('connection is already open')
+    if (this._timeout) {
+      window.clearTimeout(this._timeout)
+      this._timeout = undefined
     }
 
-    this._open = true
-    this.emit('open')
+    if (!this._open) {
+      this._open = true
+      this.emit('open')
+    }
 
-    if (!deferredConnection) {
+    if (!deferredConnection && !this._conn.connected) {
       this.connect()
     }
   }
@@ -132,13 +135,11 @@ export class Reconnecter extends EventEmitter<ReconnecterEvents> {
       this._timeout = undefined
     }
 
-    if (!this._open) {
-      throw new Error('connection is already closed')
+    if (this._open) {
+      this._open = false
+      this._last_connected = undefined
+      this.emit('close', error)
     }
-
-    this._open = false
-    this._last_connected = undefined
-    this.emit('close', error)
 
     if (this._conn.connected) {
       this._conn.disconnect()
@@ -156,10 +157,6 @@ export class Reconnecter extends EventEmitter<ReconnecterEvents> {
   }
 
   public reconnect(): void {
-    if (this._conn.connected) {
-      throw new Error('connection is already connected')
-    }
-
     if (this._timeout) {
       window.clearTimeout(this._timeout)
       this._timeout = undefined
