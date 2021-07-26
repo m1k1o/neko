@@ -22,26 +22,26 @@
 </div>
 
 # n.eko (m1k1o fork)
-This app uses Web RTC to stream a desktop inside of a docker container. This is fork of https://github.com/nurdism/neko.
+This app uses Web-RTC to stream a desktop inside a docker container. This is a fork of https://github.com/nurdism/neko.
 
-For n.eko room management software visit https://github.com/m1k1o/neko-rooms.
+For n.eko room management software, visit https://github.com/m1k1o/neko-rooms.
 
 ## Differences to original repository.
 
 ### New Features
-- Clipboard button with text area - for browsers, that don't support clipboard syncing (FireFox, what a shame...) or for HTTP.
-- Keyboard modifier state synchronization (Num Lock, Caps Lock, Scroll Lock) for each hosting.
+- Clipboard button with text area - for browsers, that don't support clipboard syncing (Firefox, what a shame...) or for HTTP.
+- Keyboard modifier state synchronization (Num-Lock, Caps-Lock, Scroll-Lock) for each hosting.
 - Added chromium ungoogled (with h265 support) an kept up to date (by @whalehub).
 - Added Picture in Picture button (only for watching screen, controlling not possible).
-- Added RTMP broadcast. Enables broadcasting neko screen to local RTMP server, YouTube or Twitch.
+- Added RTMP broadcast. Enables broadcasting n.eko screen to local RTMP server, YouTube or Twitch.
 - Stereo sound (works properly only in Firefox host).
 - Added limited support for some mobile browsers with `playsinline` attribute.
 - Added `VIDEO_BITRATE` and `AUDIO_BITRATE` in kbit/s to control stream quality (in collaboration with @mbattista).
-- Added `MAX_FPS`, where you can specify max WebRTC frame rate. When set to `0`, frame rate won't be capped and you can enjoy your real `60fps` experience. Originally, it was constant at `25fps`.
-- Invite links. You can invite people and they don't need to enter passwords by themselves (and get confused about user accounts that do not exits). You can put your password in URL using `?pwd=<your-password>` and it will be automatically used when logging in.
+- Added `MAX_FPS`, where you can specify max WebRTC frame rate. When set to `0`, frame rate won't be capped, and you can enjoy your real `60fps` experience. Originally, it was constant at `25fps`.
+- Invite links. You can invite people, and they don't need to enter passwords by themselves (and get confused about user accounts that do not exist). You can put your password in URL using `?pwd=<your-password>` and it will be automatically used when logging in.
 - Added `/stats?pwd=<admin>` endpoint to get total active connections, host and members.
 - Added `m1k1o/neko:vlc` tag, use VLC to watch local files together (by @mbattista).
-- Added `m1k1o/neko:xfce` tag, as an non video related showcase (by @mbattista).
+- Added `m1k1o/neko:xfce` tag, as a non-video related showcase (by @mbattista).
 - Added ARM-based images, for Raspberry Pi support (by @mbattista).
 - Added simple language picker.
 - Added `?usr=<display-name>` that will prefill username. This allows creating auto-join links.
@@ -59,43 +59,43 @@ For n.eko room management software visit https://github.com/m1k1o/neko-rooms.
 - Fixed h264 pipelines bugs (by @mbattista).
 - Fixed sessions manager thread safety by adding mutexes (caused panic in rare edge cases).
 - Now when user gets kicked, he won't join as a ghost user again but will be logged out.
-- **iOS compatibility!** Fixed really strange CSS bug, which prevented iOS from loading the video.
-- Proper disconnect only once with unsubscribing events. When webrtc fails, user won't be logged in without username again.
+- **iOS compatibility!** Fixed a really strange CSS bug, which prevented iOS from loading the video.
+- Proper disconnect only once with unsubscribing events. When Web-RTC fails, user won't be logged in without username again.
 - Upgraded and fixed emojis to a new major version.
 - Fixed bad `keymap -> keysym` translation to respect active modifiers (#45, with @mbattista).
 - Respecting `NEKO_DEBUG` env variable.
-- Fullscreen support for iOS devices.
+- Full-screen support for iOS devices.
 - Added `chrome-sandbox` to fix weird bug when chromium didn't start.
 - Fixed keyboard mapping on macOS, when CMD could not be used for copy & paste.
 
 ### Misc
 - Custom docker workflow.
-- Based on debian buster instead of stretch.
+- Based on Debian buster instead of stretch.
 - Versions bumped: Go 16, Node.js 14 (by @mbattista).
-- Custom avatars without any 3rd party depenency.
+- Custom avatars without any 3rd party dependency.
 - Ignore duplicate notify bars.
 - No pointer events for notify bars.
 - Disable debug mode by default.
-- Remove HTML tags from user name.
+- Remove HTML tags from username.
 - Upgraded `pion/webrtc` to v3 (by @mbattista).
-- Added `requestFullscreen` compatibility for older browsersn and iOS devices.
+- Added `requestFullscreen` compatibility for older browsers and iOS devices.
 - Fixed small lags in video and improved video UX (by @mbattista).
 - Added `m1k1o/neko:vncviewer` tag, use `NEKO_VNC_URL` to specify VNC target and use n.eko as a bridge.
-- Abiltiy to include neko as a component in another Vue.Js project (by @gbrian).
+- Ability to include n.eko as a component in another Vue.Js project (by @gbrian).
 - Added HEALTHCHECK to Dockerfile.
 - Arguments in broadcast pipeline are optional, not positional and can be repeated `{url} {device} {display}`.
 - Chat messages are dense, when repeated, they are joined together.
 - While IP address fetching is now proxy ignored.
 - Start unmuted on reconnects.
-- Switched to latest firefox version instead of esr.
-- Fixed very fast scroll speed on MacOS.
+- Switched to the latest Firefox version instead of esr.
+- Fixed very fast scroll speed on macOS.
 
 ### Roadmap & TODOs
 - Catch errors from gst pipeline, tell user if broadcast failed.
 
 # Getting started & FAQ
 
-Use following docker images:
+Use the following docker images:
 - `m1k1o/neko:latest` - for Firefox.
 - `m1k1o/neko:chromium` - for Chromium (needs `--cap-add=SYS_ADMIN`).
 - `m1k1o/neko:google-chrome` - for Google Chrome (needs `--cap-add=SYS_ADMIN`).
@@ -104,7 +104,7 @@ Use following docker images:
 - `m1k1o/neko:tor-browser` - for Tor Browser.
 - `m1k1o/neko:vncviewer` - for simple VNC viewer (specify `NEKO_VNC_URL` to your VNC target).
 - `m1k1o/neko:vlc` - for VLC Video player (needs volume mounted to `/media` with local video files, or setting `VLC_MEDIA=/media` path).
-- `m1k1o/neko:xfce` - for an shared desktop / installing shared software.
+- `m1k1o/neko:xfce` - for a shared desktop / installing shared software.
 - `m1k1o/neko:base` - for custom base.
 
 For ARM-based devices (like Raspberry Pi, with GPU hardware acceleration):
@@ -112,20 +112,20 @@ For ARM-based devices (like Raspberry Pi, with GPU hardware acceleration):
 - `m1k1o/neko:arm-chromium` - for Chromium.
 - `m1k1o/neko:arm-base` - for custom arm based.
 
-Images are built using github action on every push and on weekly basis to keep all browsers up-to-date,
+Images are built using GitHub actions on every push and on weekly basis to keep all browsers up-to-date,
 
 ### Networking:
 - If you want to use n.eko in **external** network, you can omit `NEKO_NAT1TO1`. It will automatically get your Public IP.
 - If you want to use n.eko in **internal** network, set `NEKO_NAT1TO1` to your local IP address (e.g. `NEKO_NAT1TO1: 192.168.1.20`)-
-- Currenty it is not supported to supply multiple NAT addresses.
+- Currently, it is not supported to supply multiple NAT addresses (see https://github.com/m1k1o/neko/issues/47).
 
 ### Why so many ports?
 - WebRTC needs UDP ports in order to transfer Audio/Video towards user and Mouse/Keyboard events to the server in real time.
 - If you don't set `NEKO_ICELITE=true`, every user will need 2 UDP ports.
 - If you set `NEKO_ICELITE=true`, every user will need only 1 UDP port. It is **recommended** to use *ice-lite*.
-- Do not forget, they are **UDP** ports, that configuraion must be correct in your firewall/router/docker.
-- You can freely limit number of UDP ports. But you can't map them to diferent ports.
-  - This **WONT** work: `32000-32100:52000-52100/udp`
+- Do not forget, they are **UDP** ports, that configuration must be correct in your firewall/router/docker.
+- You can freely limit number of UDP ports. But you can't map them to different ports.
+  - This **WON'T** work: `32000-32100:52000-52100/udp`
 - You can change API port (8080).
   - This **WILL** work: `3000:8080`
 
@@ -241,12 +241,12 @@ Images are built using github action on every push and on weekly basis to keep a
   (by @ccallahan, [source](https://github.com/nurdism/neko/pull/125/commits/eb4ceda75423b0d960c8aea0240acf6d7a10fef4))
 </details>
 
-### Want to customize and install own addons, set custom bookmarks?
-- You would need to modify existing policy file and mount it to your container.
+### Want to customize and install own add-ons, set custom bookmarks?
+- You would need to modify the existing policy file and mount it to your container.
 - For Firefox, copy [this](https://github.com/m1k1o/neko/blob/dev/.m1k1o/firefox/policies.json) file, modify and mount it as: ` -v '${PWD}/policies.json:/usr/share/firefox-esr/distribution/policies.json'`
 - For Chromium, copy [this](https://github.com/m1k1o/neko/blob/dev/.m1k1o/chromium/policies.json) file, modify and mount it as: ` -v '${PWD}/policies.json:/etc/chromium/policies/managed/policies.json'`
 
-### Want to use VPN for your neko browsing?
+### Want to use VPN for your n.eko browsing?
 - Check this out: https://github.com/m1k1o/neko-vpn
 
 ### Want to have multiple rooms on demand?
@@ -256,13 +256,13 @@ Images are built using github action on every push and on weekly basis to keep a
 - Check this out: https://github.com/m1k1o/neko-apps
 
 ### Accounts:
-- There are no accounts, display name (a.k.a. username) can be freely chosen. Only paword needs to match. Depeding on which password matches, visitor gets its privilege:
+- There are no accounts, display name (a.k.a. username) can be freely chosen. Only password needs to match. Depending on which password matches, the visitor gets its privilege:
   - Anyone, who enters with `NEKO_PASSWORD` will be **user**.
   - Anyone, who enters with `NEKO_PASSWORD_ADMIN` will be **admin**.
 
 ### Screen size
 - Only admins can change screen size.
-- You can set default screen size, but this size **MUST** be one from list, that your server supports.
+- You can set a default screen size, but this size **MUST** be one from the list, that your server supports.
 - You will get this list in frontend, where you can choose from.
 
 ## Firefox
@@ -367,11 +367,11 @@ services:
 
 ## Mobile support
 
-Neko is now working on iOS and Android! Also, the UI screens have been fixed for small screens.
+N.eko is now working on iOS and Android! Also, the UI screens have been fixed for small screens.
 
 ![mobile-screens](https://i.imgur.com/K9gfscU.png)
 
-## Docker-Compose Enviroment Options
+## Docker-Compose Environment Options
 
 ```code
 NEKO_SCREEN:
