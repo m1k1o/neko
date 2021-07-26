@@ -13,7 +13,7 @@
   })
   export default class extends Vue {
     @Ref('image') readonly _image!: HTMLImageElement
-    active = false
+    private active = false
 
     @Prop()
     private readonly enabled!: boolean
@@ -25,17 +25,19 @@
       while (this.active) {
         const lastLoad = Date.now()
 
-        if (this._image.src) {
-          URL.revokeObjectURL(this._image.src)
-        }
-
         const res = await this.api.screenCastImage({ responseType: 'blob' })
-        this._image.src = URL.createObjectURL(res.data)
+        const image = URL.createObjectURL(res.data)
+
+        if (this._image) {
+          this._image.src = image
+        }
 
         const delay = lastLoad - Date.now() + REFRESH_RATE
         if (delay > 0) {
           await new Promise((res) => setTimeout(res, delay))
         }
+
+        URL.revokeObjectURL(image)
       }
     }
 
@@ -50,17 +52,14 @@
     }
 
     start() {
-      this.active = true
-
-      setTimeout(this.loop, 0)
+      if (!this.active) {
+        this.active = true
+        setTimeout(this.loop, 0)
+      }
     }
 
     stop() {
       this.active = false
-
-      if (this._image && this._image.src) {
-        URL.revokeObjectURL(this._image.src)
-      }
     }
 
     @Watch('enabled')
