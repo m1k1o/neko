@@ -12,7 +12,7 @@ export interface NekoEvents {
   ['connection.status']: (status: 'connected' | 'connecting' | 'disconnected') => void
   ['connection.webrtc.sdp']: (type: 'local' | 'remote', data: string) => void
   ['connection.webrtc.sdp.candidate']: (type: 'local' | 'remote', data: RTCIceCandidateInit) => void
-  ['connection.disconnect']: (message: string) => void
+  ['connection.closed']: (error?: Error) => void
 
   // drag and drop events
   ['upload.drop.started']: () => void
@@ -106,8 +106,7 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
 
   protected [EVENT.SYSTEM_DISCONNECT]({ message }: message.SystemDisconnect) {
     this._log.debug('EVENT.SYSTEM_DISCONNECT')
-    this._connection.disconnect()
-    this.emit('connection.disconnect', message)
+    this._connection.close(new Error(message))
   }
 
   /////////////////////////////

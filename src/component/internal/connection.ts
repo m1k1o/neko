@@ -14,72 +14,69 @@ const WEBRTC_RECONN_MAX_LOSS = 25
 const WEBRTC_RECONN_FAILED_ATTEMPTS = 5
 
 export interface NekoConnectionEvents {
-  disconnect: (error?: Error) => void
+  close: (error?: Error) => void
 }
 
 export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
   private _state: Connection
 
   public websocket = new NekoWebSocket()
-  public _websocket_reconn: Reconnector
-
   public webrtc = new NekoWebRTC()
-  public _webrtc_reconn: Reconnector
+
+  private _reconnector: {
+    websocket: Reconnector
+    webrtc: Reconnector
+  }
 
   constructor(state: Connection) {
     super()
 
     this._state = state
-    this._websocket_reconn = new Reconnector(new WebsocketReconnector(state, this.websocket), state.websocket.config)
-    this._webrtc_reconn = new Reconnector(
-      new WebrtcReconnector(state, this.websocket, this.webrtc),
-      state.webrtc.config,
-    )
+    this._reconnector = {
+      websocket: new Reconnector(new WebsocketReconnector(state, this.websocket), state.websocket.config),
+      webrtc: new Reconnector(new WebrtcReconnector(state, this.websocket, this.webrtc), state.webrtc.config),
+    }
 
     // websocket
-    this._websocket_reconn.on('connect', () => {
+    this._reconnector.websocket.on('connect', () => {
       if (this.websocket.connected && this.webrtc.connected) {
         Vue.set(this._state, 'status', 'connected')
       }
 
       if (!this.webrtc.connected) {
-        this._webrtc_reconn.connect()
+        this._reconnector.webrtc.connect()
       }
     })
-    this._websocket_reconn.on('disconnect', () => {
+    this._reconnector.websocket.on('disconnect', () => {
       if (this._state.status === 'connected' && this.activated) {
         Vue.set(this._state, 'status', 'connecting')
       }
     })
-    this._websocket_reconn.on('close', (error) => {
-      this.disconnect(error)
-    })
+    this._reconnector.websocket.on('close', this.close.bind(this))
 
     // webrtc
-    this._webrtc_reconn.on('connect', () => {
+    this._reconnector.webrtc.on('connect', () => {
       if (this.websocket.connected && this.webrtc.connected) {
         Vue.set(this._state, 'status', 'connected')
       }
 
       Vue.set(this._state, 'type', 'webrtc')
     })
-    this._webrtc_reconn.on('disconnect', () => {
+    this._reconnector.webrtc.on('disconnect', () => {
       if (this._state.status === 'connected' && this.activated) {
         Vue.set(this._state, 'status', 'connecting')
       }
 
       Vue.set(this._state, 'type', 'fallback')
     })
-    this._webrtc_reconn.on('close', (error) => {
-      this.disconnect(error)
-    })
+    this._reconnector.webrtc.on('close', this.close.bind(this))
 
     let webrtcCongestion: number = 0
     this.webrtc.on('stats', (stats: WebRTCStats) => {
       Vue.set(this._state.webrtc, 'stats', stats)
 
       // if automatic quality adjusting is turned off
-      if (!this._state.webrtc.auto || !this._webrtc_reconn.isOpen) return
+      if (!this._state.webrtc.auto || !this._reconnector.webrtc.isOpen) return
 
       // if there are no or just one quality, no switching can be done
       if (this._state.webrtc.videos.length <= 1) return
@@ -118,14 +115,15 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
           return
         }
 
-        // try to reconnect
-        this._webrtc_reconn.reconnect()
+        // try to reconnect webrtc
+        this._reconnector.webrtc.reconnect()
       }
     })
   }
 
   public get activated() {
-    return this._websocket_reconn.isOpen && this._webrtc_reconn.isOpen
+    // check if every reconnecter is open
+    return Object.values(this._reconnector).every((r) => r.isOpen)
   }
 
   public setVideo(video: string) {
@@ -136,7 +134,7 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
     this.websocket.send(EVENT.SIGNAL_VIDEO, { video })
   }
 
-  public connect(video?: string) {
+  public open(video?: string) {
     if (video) {
       if (!this._state.webrtc.videos.includes(video)) {
         throw new Error('video id not found')
@@ -148,23 +146,27 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
     Vue.set(this._state, 'type', 'fallback')
     Vue.set(this._state, 'status', 'connecting')
 
-    this._webrtc_reconn.open(true)
-    this._websocket_reconn.open()
+    // open all reconnecters
+    Object.values(this._reconnector).forEach((r) => r.open(true))
+
+    this._reconnector.websocket.connect()
   }
 
-  public disconnect(error?: Error) {
-    this._websocket_reconn.close()
-    this._webrtc_reconn.close()
+  public close(error?: Error) {
+    if (this.activated) {
+      Vue.set(this._state, 'type', 'none')
+      Vue.set(this._state, 'status', 'disconnected')
 
-    Vue.set(this._state, 'type', 'none')
-    Vue.set(this._state, 'status', 'disconnected')
+      this.emit('close', error)
+    }
 
-    this.emit('disconnect', error)
+    // close all reconnecters
+    Object.values(this._reconnector).forEach((r) => r.close())
   }
 
   public destroy() {
-    this._websocket_reconn.destroy()
-    this._webrtc_reconn.destroy()
+    // destroy all reconnecters
+    Object.values(this._reconnector).forEach((r) => r.destroy())
 
     Vue.set(this._state, 'type', 'none')
     Vue.set(this._state, 'status', 'disconnected')

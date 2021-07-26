@@ -198,9 +198,9 @@
       this.api.setUrl(httpURL)
       Vue.set(this.state.connection, 'url', httpURL)
 
-      if (this.connected) {
-        this.connection.disconnect()
-      }
+      try {
+        this.disconnect()
+      } catch (e) {}
 
       if (this.state.authenticated) {
         Vue.set(this.state, 'authenticated', false)
@@ -254,9 +254,9 @@
         throw new Error('client not authenticated')
       }
 
-      if (this.connected) {
-        this.connection.disconnect()
-      }
+      try {
+        this.disconnect()
+      } catch (e) {}
 
       try {
         await this.api.session.logout()
@@ -281,7 +281,7 @@
         throw new Error('client is already connected')
       }
 
-      this.connection.connect(video)
+      this.connection.open(video)
     }
 
     public disconnect() {
@@ -289,7 +289,7 @@
         throw new Error('client is not connected')
       }
 
-      this.connection.disconnect()
+      this.connection.close()
     }
 
     public play() {
@@ -383,7 +383,8 @@
       // video events
       VideoRegister(this._video, this.state.video)
 
-      this.connection.on('disconnect', () => {
+      this.connection.on('close', (error) => {
+        this.events.emit('connection.closed', error)
         this.clear()
       })
 
