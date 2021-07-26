@@ -1,5 +1,5 @@
 import * as webrtcTypes from './webrtc'
-import * as reconnecterTypes from './reconnecter'
+import * as reconnecterTypes from './reconnector'
 
 export default interface State {
   authenticated: boolean
@@ -26,18 +26,18 @@ export interface Connection {
 }
 
 export interface WebSocket {
-  config: ReconnecterConfig
+  config: ReconnectorConfig
 }
 
 export interface WebRTC {
-  config: ReconnecterConfig
+  config: ReconnectorConfig
   stats: WebRTCStats | null
   video: string | null
   videos: string[]
   auto: boolean
 }
 
-export interface ReconnecterConfig extends reconnecterTypes.ReconnecterConfig {}
+export interface ReconnectorConfig extends reconnecterTypes.ReconnectorConfig {}
 
 export interface WebRTCStats extends webrtcTypes.WebRTCStats {}
 

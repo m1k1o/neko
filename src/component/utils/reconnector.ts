@@ -1,16 +1,16 @@
 import EventEmitter from 'eventemitter3'
-import { ReconnecterConfig } from '../types/reconnecter'
+import { ReconnectorConfig } from '../types/reconnector'
 
-export interface ReconnecterAbstractEvents {
+export interface ReconnectorAbstractEvents {
   connect: () => void
   disconnect: (error?: Error) => void
 }
 
-export abstract class ReconnecterAbstract extends EventEmitter<ReconnecterAbstractEvents> {
+export abstract class ReconnectorAbstract extends EventEmitter<ReconnectorAbstractEvents> {
   constructor() {
     super()
 
-    if (this.constructor == ReconnecterAbstract) {
+    if (this.constructor == ReconnectorAbstract) {
       throw new Error("Abstract classes can't be instantiated.")
     }
   }
@@ -22,16 +22,16 @@ export abstract class ReconnecterAbstract extends EventEmitter<ReconnecterAbstra
   public abstract destroy(): void
 }
 
-export interface ReconnecterEvents {
+export interface ReconnectorEvents {
   open: () => void
   connect: () => void
   disconnect: () => void
   close: (error?: Error) => void
 }
 
-export class Reconnecter extends EventEmitter<ReconnecterEvents> {
-  private _conn: ReconnecterAbstract
-  private _config: ReconnecterConfig
+export class Reconnector extends EventEmitter<ReconnectorEvents> {
+  private _conn: ReconnectorAbstract
+  private _config: ReconnectorConfig
   private _timeout?: number
 
   private _open = false
@@ -41,7 +41,7 @@ export class Reconnecter extends EventEmitter<ReconnecterEvents> {
   private _onConnectHandle: () => void
   private _onDisconnectHandle: (error?: Error) => void
 
-  constructor(conn: ReconnecterAbstract, config?: ReconnecterConfig) {
+  constructor(conn: ReconnectorAbstract, config?: ReconnectorConfig) {
     super()
 
     this._conn = conn
@@ -101,11 +101,11 @@ export class Reconnecter extends EventEmitter<ReconnecterEvents> {
     return this._last_connected
   }
 
-  public get config(): ReconnecterConfig {
+  public get config(): ReconnectorConfig {
     return { ...this._config }
   }
 
-  public set config(conf: ReconnecterConfig) {
+  public set config(conf: ReconnectorConfig) {
     this._config = { ...conf }
 
     if (this._config.maxReconnects > this._total_reconnects) {

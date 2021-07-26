@@ -5,7 +5,7 @@ import * as EVENT from '../types/events'
 import { NekoWebSocket } from './websocket'
 import { NekoWebRTC } from './webrtc'
 import { Connection, WebRTCStats } from '../types/state'
-import { Reconnecter, ReconnecterAbstract } from '../utils/reconnecter'
+import { Reconnector, ReconnectorAbstract } from '../utils/reconnector'
 
 const WEBRTC_RECONN_MAX_LOSS = 25
 const WEBRTC_RECONN_FAILED_ATTEMPTS = 5
@@ -14,7 +14,7 @@ export interface NekoConnectionEvents {
   disconnect: (error?: Error) => void
 }
 
-class WebsocketReconnecter extends ReconnecterAbstract {
+class WebsocketReconnector extends ReconnectorAbstract {
   private _state: Connection
   private _websocket: NekoWebSocket
 
@@ -60,7 +60,7 @@ class WebsocketReconnecter extends ReconnecterAbstract {
   }
 }
 
-class WebrtcReconnecter extends ReconnecterAbstract {
+class WebrtcReconnector extends ReconnectorAbstract {
   private _state: Connection
   private _websocket: NekoWebSocket
   private _webrtc: NekoWebRTC
@@ -106,18 +106,18 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
   private _state: Connection
 
   public websocket = new NekoWebSocket()
-  public _websocket_reconn: Reconnecter
+  public _websocket_reconn: Reconnector
 
   public webrtc = new NekoWebRTC()
-  public _webrtc_reconn: Reconnecter
+  public _webrtc_reconn: Reconnector
 
   constructor(state: Connection) {
     super()
 
     this._state = state
-    this._websocket_reconn = new Reconnecter(new WebsocketReconnecter(state, this.websocket), state.websocket.config)
-    this._webrtc_reconn = new Reconnecter(
-      new WebrtcReconnecter(state, this.websocket, this.webrtc),
+    this._websocket_reconn = new Reconnector(new WebsocketReconnector(state, this.websocket), state.websocket.config)
+    this._webrtc_reconn = new Reconnector(
+      new WebrtcReconnector(state, this.websocket, this.webrtc),
       state.webrtc.config,
     )
 
