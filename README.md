@@ -100,7 +100,7 @@ Use following docker images:
 - `m1k1o/neko:chromium` - for Chromium (needs `--cap-add=SYS_ADMIN`).
 - `m1k1o/neko:google-chrome` - for Google Chrome (needs `--cap-add=SYS_ADMIN`).
 - `m1k1o/neko:ungoogled-chromium` - for [Ungoogled Chromium](https://github.com/Eloston/ungoogled-chromium) (needs `--cap-add=SYS_ADMIN`) (by @whalehub).
-- `m1k1o/neko:brave` - for [Brave Browser](https://brave.com).
+- `m1k1o/neko:brave` - for [Brave Browser](https://brave.com) (needs `--cap-add=SYS_ADMIN`).
 - `m1k1o/neko:tor-browser` - for Tor Browser.
 - `m1k1o/neko:vncviewer` - for simple VNC viewer (specify `NEKO_VNC_URL` to your VNC target).
 - `m1k1o/neko:vlc` - for VLC Video player (needs volume mounted to `/media` with local video files, or setting `VLC_MEDIA=/media` path).
