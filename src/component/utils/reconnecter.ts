@@ -15,17 +15,11 @@ export abstract class ReconnecterAbstract extends EventEmitter<ReconnecterAbstra
     }
   }
 
-  public get connected(): boolean {
-    throw new Error("Getter'connected()' must be implemented.")
-  }
+  public abstract get connected(): boolean
 
-  public connect() {
-    throw new Error("Method 'connect()' must be implemented.")
-  }
-
-  public disconnect() {
-    throw new Error("Method 'disconnect()' must be implemented.")
-  }
+  public abstract connect(): void
+  public abstract disconnect(): void
+  public abstract destroy(): void
 }
 
 export interface ReconnecterEvents {
@@ -44,6 +38,9 @@ export class Reconnecter extends EventEmitter<ReconnecterEvents> {
   private _total_reconnects = 0
   private _last_connected?: Date
 
+  private _onConnectHandle: () => void
+  private _onDisconnectHandle: (error?: Error) => void
+
   constructor(conn: ReconnecterAbstract, config?: ReconnecterConfig) {
     super()
 
@@ -55,8 +52,11 @@ export class Reconnecter extends EventEmitter<ReconnecterEvents> {
       ...config,
     }
 
-    this._conn.on('connect', this.onConnect.bind(this))
-    this._conn.on('disconnect', this.onDisconnect.bind(this))
+    this._onConnectHandle = this.onConnect.bind(this)
+    this._conn.on('connect', this._onConnectHandle)
+
+    this._onDisconnectHandle = this.onDisconnect.bind(this)
+    this._conn.on('disconnect', this._onDisconnectHandle)
   }
 
   private onConnect() {
@@ -160,17 +160,28 @@ export class Reconnecter extends EventEmitter<ReconnecterEvents> {
       throw new Error('connection is already connected')
     }
 
+    if (this._timeout) {
+      window.clearTimeout(this._timeout)
+      this._timeout = undefined
+    }
+
     this._total_reconnects++
 
     if (this._config.maxReconnects > this._total_reconnects || this._total_reconnects < 0) {
-      setTimeout(this.connect.bind(this), this._config.backoffMs)
+      this._timeout = window.setTimeout(this.connect.bind(this), this._config.backoffMs)
     } else {
       this.close(new Error('reconnection failed'))
     }
   }
 
   public destroy() {
-    this._conn.off('connect', this.onConnect.bind(this))
-    this._conn.off('disconnect', this.onDisconnect.bind(this))
+    if (this._timeout) {
+      window.clearTimeout(this._timeout)
+      this._timeout = undefined
+    }
+
+    this._conn.off('connect', this._onConnectHandle)
+    this._conn.off('disconnect', this._onDisconnectHandle)
+    this._conn.destroy()
   }
 }

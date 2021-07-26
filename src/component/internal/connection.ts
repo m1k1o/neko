@@ -18,15 +18,20 @@ class WebsocketReconnecter extends ReconnecterAbstract {
   private _state: Connection
   private _websocket: NekoWebSocket
 
+  private _onConnectHandle: () => void
+  private _onDisconnectHandle: (error?: Error) => void
+
   constructor(state: Connection, websocket: NekoWebSocket) {
     super()
 
     this._state = state
-
-    // TODO: Unmount.
     this._websocket = websocket
-    this._websocket.on('connected', () => this.emit('connect'))
-    this._websocket.on('disconnected', (error) => this.emit('disconnect', error))
+
+    this._onConnectHandle = () => this.emit('connect')
+    this._websocket.on('connected', this._onConnectHandle)
+
+    this._onDisconnectHandle = (error?: Error) => this.emit('disconnect', error)
+    this._websocket.on('disconnected', this._onDisconnectHandle)
   }
 
   public get connected() {
@@ -48,6 +53,11 @@ class WebsocketReconnecter extends ReconnecterAbstract {
   public disconnect() {
     this._websocket.disconnect()
   }
+
+  public destroy() {
+    this._websocket.off('connected', this._onConnectHandle)
+    this._websocket.off('disconnected', this._onDisconnectHandle)
+  }
 }
 
 class WebrtcReconnecter extends ReconnecterAbstract {
@@ -55,16 +65,21 @@ class WebrtcReconnecter extends ReconnecterAbstract {
   private _websocket: NekoWebSocket
   private _webrtc: NekoWebRTC
 
+  private _onConnectHandle: () => void
+  private _onDisconnectHandle: (error?: Error) => void
+
   constructor(state: Connection, websocket: NekoWebSocket, webrtc: NekoWebRTC) {
     super()
 
     this._state = state
     this._websocket = websocket
-
-    // TODO: Unmount.
     this._webrtc = webrtc
-    this._webrtc.on('connected', () => this.emit('connect'))
-    this._webrtc.on('disconnected', (error) => this.emit('disconnect', error))
+
+    this._onConnectHandle = () => this.emit('connect')
+    this._webrtc.on('connected', this._onConnectHandle)
+
+    this._onDisconnectHandle = (error?: Error) => this.emit('disconnect', error)
+    this._webrtc.on('disconnected', this._onDisconnectHandle)
   }
 
   public get connected() {
@@ -79,6 +94,11 @@ class WebrtcReconnecter extends ReconnecterAbstract {
 
   public disconnect() {
     this._webrtc.disconnect()
+  }
+
+  public destroy() {
+    this._webrtc.off('connected', this._onConnectHandle)
+    this._webrtc.off('disconnected', this._onDisconnectHandle)
   }
 }
 
@@ -225,6 +245,11 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
     Vue.set(this._state, 'status', 'disconnected')
 
     this.emit('disconnect', error)
+  }
+
+  public destroy() {
+    this._websocket_reconn.destroy()
+    this._webrtc_reconn.destroy()
   }
 
   _webrtcQualityDowngrade(quality: string): string | undefined {

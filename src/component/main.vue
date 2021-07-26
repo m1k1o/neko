@@ -413,6 +413,8 @@
     beforeDestroy() {
       this.observer.disconnect()
       this.connection.disconnect()
+      this.connection.destroy()
+      this.clear()
 
       // remove users first interaction event
       document.removeEventListener('click', this.unmute)
