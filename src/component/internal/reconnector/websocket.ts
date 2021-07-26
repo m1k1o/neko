@@ -29,6 +29,10 @@ export class WebsocketReconnector extends ReconnectorAbstract {
   }
 
   public connect() {
+    if (this._websocket.connected) {
+      this._websocket.disconnect()
+    }
+
     let url = this._state.url
     url = url.replace(/^http/, 'ws').replace(/\/+$/, '') + '/api/ws'
 
