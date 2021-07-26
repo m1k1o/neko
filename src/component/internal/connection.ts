@@ -165,6 +165,9 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
   public destroy() {
     this._websocket_reconn.destroy()
     this._webrtc_reconn.destroy()
+
+    Vue.set(this._state, 'type', 'none')
+    Vue.set(this._state, 'status', 'disconnected')
   }
 
   _webrtcQualityDowngrade(quality: string): string | undefined {

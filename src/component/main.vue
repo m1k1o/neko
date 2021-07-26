@@ -412,7 +412,6 @@
 
     beforeDestroy() {
       this.observer.disconnect()
-      this.connection.disconnect()
       this.connection.destroy()
       this.clear()
 

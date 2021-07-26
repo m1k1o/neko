@@ -173,10 +173,7 @@ export class Reconnector extends EventEmitter<ReconnectorEvents> {
   }
 
   public destroy() {
-    if (this._timeout) {
-      window.clearTimeout(this._timeout)
-      this._timeout = undefined
-    }
+    this.close()
 
     this._conn.off('connect', this._onConnectHandle)
     this._conn.off('disconnect', this._onDisconnectHandle)
