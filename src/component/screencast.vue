@@ -13,7 +13,8 @@
   })
   export default class extends Vue {
     @Ref('image') readonly _image!: HTMLImageElement
-    private active = false
+    private running = false
+    private continue = false
 
     @Prop()
     private readonly enabled!: boolean
@@ -22,7 +23,10 @@
     private readonly api!: RoomApi
 
     async loop() {
-      while (this.active) {
+      if (this.running) return
+      this.running = true
+
+      while (this.continue) {
         const lastLoad = Date.now()
 
         const res = await this.api.screenCastImage({ responseType: 'blob' })
@@ -39,6 +43,8 @@
 
         URL.revokeObjectURL(image)
       }
+
+      this.running = false
     }
 
     mounted() {
@@ -52,14 +58,14 @@
     }
 
     start() {
-      if (!this.active) {
-        this.active = true
+      if (!this.running) {
+        this.continue = true
         setTimeout(this.loop, 0)
       }
     }
 
     stop() {
-      this.active = false
+      this.continue = false
     }
 
     @Watch('enabled')
