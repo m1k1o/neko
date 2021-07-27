@@ -13,6 +13,8 @@ import { WebrtcReconnector } from './reconnector/webrtc'
 const WEBRTC_RECONN_MAX_LOSS = 25
 const WEBRTC_RECONN_FAILED_ATTEMPTS = 5
 
+const WEBRTC_FALLBACK_TIMEOUT_MS = 750
+
 export interface NekoConnectionEvents {
   close: (error?: Error) => void
 }
@@ -72,6 +74,7 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
     this._reconnector.webrtc.on('close', this.close.bind(this))
 
     let webrtcCongestion: number = 0
+    let webrtcFallbackTimeout: number
     this.webrtc.on('stats', (stats: WebRTCStats) => {
       Vue.set(this._state.webrtc, 'stats', stats)
 
@@ -86,6 +89,10 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
 
       // check if video is not playing smoothly
       if (stats.fps && stats.packetLoss < WEBRTC_RECONN_MAX_LOSS && !stats.muted) {
+        if (webrtcFallbackTimeout) {
+          window.clearTimeout(webrtcFallbackTimeout)
+        }
+
         if (this._state.type === 'fallback') {
           Vue.set(this._state, 'type', 'webrtc')
         }
@@ -94,12 +101,14 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
         return
       }
 
-      if (this._state.type === 'webrtc') {
-        Vue.set(this._state, 'type', 'fallback')
-      }
-
       // try to downgrade quality if it happend many times
       if (++webrtcCongestion >= WEBRTC_RECONN_FAILED_ATTEMPTS) {
+        webrtcFallbackTimeout = window.setTimeout(() => {
+          if (this._state.type === 'webrtc') {
+            Vue.set(this._state, 'type', 'fallback')
+          }
+        }, WEBRTC_FALLBACK_TIMEOUT_MS)
+
         webrtcCongestion = 0
 
         const quality = this._webrtcQualityDowngrade(this._state.webrtc.video)
