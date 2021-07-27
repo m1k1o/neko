@@ -30,6 +30,12 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
     webrtc: Reconnector
   }
 
+  private _onConnectHandle: () => void
+  private _onDisconnectHandle: () => void
+  private _onCloseHandle: (error?: Error) => void
+
+  private _webrtcCongestionControlHandle: (stats: WebRTCStats) => void
+
   constructor(state: Connection) {
     super()
 
@@ -39,43 +45,47 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
       webrtc: new Reconnector(new WebrtcReconnector(state, this.websocket, this.webrtc), state.webrtc.config),
     }
 
-    // websocket
-    this._reconnector.websocket.on('connect', () => {
-      if (this.websocket.connected && this.webrtc.connected) {
+    this._onConnectHandle = () => {
+      if (this._state.status !== 'connected' && this.websocket.connected && this.webrtc.connected) {
         Vue.set(this._state, 'status', 'connected')
       }
 
-      if (!this.webrtc.connected) {
+      if (this._state.type !== 'webrtc' && this.webrtc.connected) {
+        Vue.set(this._state, 'type', 'webrtc')
+      }
+
+      if (this.websocket.connected && !this.webrtc.connected) {
         this._reconnector.webrtc.connect()
       }
-    })
-    this._reconnector.websocket.on('disconnect', () => {
-      if (this._state.status === 'connected' && this.activated) {
-        Vue.set(this._state, 'status', 'connecting')
-      }
-    })
-    this._reconnector.websocket.on('close', this.close.bind(this))
+    }
 
-    // webrtc
-    this._reconnector.webrtc.on('connect', () => {
-      if (this.websocket.connected && this.webrtc.connected) {
-        Vue.set(this._state, 'status', 'connected')
-      }
-
-      Vue.set(this._state, 'type', 'webrtc')
-    })
-    this._reconnector.webrtc.on('disconnect', () => {
+    this._onDisconnectHandle = () => {
       if (this._state.status === 'connected' && this.activated) {
         Vue.set(this._state, 'status', 'connecting')
       }
 
-      Vue.set(this._state, 'type', 'fallback')
+      if (this._state.type !== 'fallback' && !this.webrtc.connected) {
+        Vue.set(this._state, 'type', 'fallback')
+      }
+    }
+
+    this._onCloseHandle = this.close.bind(this)
+
+    // bind events to all reconnecters
+    Object.values(this._reconnector).forEach((r) => {
+      r.on('connect', this._onConnectHandle)
+      r.on('disconnect', this._onDisconnectHandle)
+      r.on('close', this._onCloseHandle)
     })
-    this._reconnector.webrtc.on('close', this.close.bind(this))
+
+    //
+    // TODO: Use server side congestion control.
+    //
 
     let webrtcCongestion: number = 0
     let webrtcFallbackTimeout: number
-    this.webrtc.on('stats', (stats: WebRTCStats) => {
+
+    this._webrtcCongestionControlHandle = (stats: WebRTCStats) => {
       Vue.set(this._state.webrtc, 'stats', stats)
 
       // if automatic quality adjusting is turned off
@@ -127,7 +137,9 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
         // try to reconnect webrtc
         this._reconnector.webrtc.reconnect()
       }
-    })
+    }
+
+    this.webrtc.on('stats', this._webrtcCongestionControlHandle)
   }
 
   public get activated() {
@@ -174,6 +186,16 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
   }
 
   public destroy() {
+    // TODO: Use server side congestion control.
+    this.webrtc.off('stats', this._webrtcCongestionControlHandle)
+
+    // unbind events from all reconnecters
+    Object.values(this._reconnector).forEach((r) => {
+      r.off('connect', this._onConnectHandle)
+      r.off('disconnect', this._onDisconnectHandle)
+      r.off('close', this._onCloseHandle)
+    })
+
     // destroy all reconnecters
     Object.values(this._reconnector).forEach((r) => r.destroy())
 
