@@ -1,5 +1,5 @@
 export interface ReconnectorConfig {
-  maxReconnects: number
-  timeoutMs: number
-  backoffMs: number
+  max_reconnects: number
+  timeout_ms: number
+  backoff_ms: number
 }

@@ -47,9 +47,9 @@ export class Reconnector extends EventEmitter<ReconnectorEvents> {
 
     this._conn = conn
     this._config = {
-      maxReconnects: 10,
-      timeoutMs: 1500,
-      backoffMs: 750,
+      max_reconnects: 10,
+      timeout_ms: 1500,
+      backoff_ms: 750,
       ...config,
     }
 
@@ -109,7 +109,7 @@ export class Reconnector extends EventEmitter<ReconnectorEvents> {
   public set config(conf: ReconnectorConfig) {
     this._config = { ...conf }
 
-    if (this._config.maxReconnects > this._total_reconnects) {
+    if (this._config.max_reconnects > this._total_reconnects) {
       this.close(new Error('reconnection config changed'))
     }
   }
@@ -154,7 +154,7 @@ export class Reconnector extends EventEmitter<ReconnectorEvents> {
     }
 
     this._conn.connect()
-    this._timeout = window.setTimeout(this.onDisconnect.bind(this), this._config.timeoutMs)
+    this._timeout = window.setTimeout(this.onDisconnect.bind(this), this._config.timeout_ms)
   }
 
   public reconnect(): void {
@@ -165,8 +165,8 @@ export class Reconnector extends EventEmitter<ReconnectorEvents> {
 
     this._total_reconnects++
 
-    if (this._config.maxReconnects > this._total_reconnects || this._total_reconnects < 0) {
-      this._timeout = window.setTimeout(this.connect.bind(this), this._config.backoffMs)
+    if (this._config.max_reconnects > this._total_reconnects || this._total_reconnects < 0) {
+      this._timeout = window.setTimeout(this.connect.bind(this), this._config.backoff_ms)
     } else {
       this.close(new Error('reconnection failed'))
     }

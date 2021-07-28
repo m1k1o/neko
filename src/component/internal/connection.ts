@@ -89,7 +89,7 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
       Vue.set(this._state.webrtc, 'stats', stats)
 
       // if automatic quality adjusting is turned off
-      if (!this._state.webrtc.auto || !this._reconnector.webrtc.isOpen) return
+      if (!this._reconnector.webrtc.isOpen) return
 
       // if there are no or just one quality, no switching can be done
       if (this._state.webrtc.videos.length <= 1) return
@@ -145,6 +145,11 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
   public get activated() {
     // check if every reconnecter is open
     return Object.values(this._reconnector).every((r) => r.isOpen)
+  }
+
+  public reloadConfigs() {
+    this._reconnector.websocket.config = this._state.websocket.config
+    this._reconnector.webrtc.config = this._state.webrtc.config
   }
 
   public setVideo(video: string) {

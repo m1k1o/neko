@@ -63,6 +63,7 @@
   import { NekoMessages } from './internal/messages'
   import { register as VideoRegister } from './internal/video'
 
+  import { ReconnectorConfig } from './types/reconnector'
   import NekoState from './types/state'
   import Overlay from './overlay.vue'
   import Screencast from './screencast.vue'
@@ -109,21 +110,20 @@
         status: 'disconnected',
         websocket: {
           config: {
-            maxReconnects: 15,
-            timeoutMs: 5000,
-            backoffMs: 1500,
+            max_reconnects: 15,
+            timeout_ms: 5000,
+            backoff_ms: 1500,
           },
         },
         webrtc: {
           config: {
-            maxReconnects: 15,
-            timeoutMs: 10000,
-            backoffMs: 1500,
+            max_reconnects: 15,
+            timeout_ms: 10000,
+            backoff_ms: 1500,
           },
           stats: null,
           video: null,
           videos: [],
-          auto: true,
         },
         screencast: false,
         type: 'none',
@@ -292,6 +292,15 @@
       this.connection.close()
     }
 
+    public setReconnectorConfig(type: 'websocket' | 'webrtc', config: ReconnectorConfig) {
+      if (type != 'websocket' && type != 'webrtc') {
+        throw new Error('unknown reconnector type')
+      }
+
+      Vue.set(this.state.connection[type], 'config', config)
+      this.connection.reloadConfigs()
+    }
+
     public play() {
       this._video.play()
     }
@@ -335,10 +344,6 @@
 
     public setWebRTCVideo(video: string) {
       this.connection.setVideo(video)
-    }
-
-    public setWebRTCAuto(auto: boolean = true) {
-      Vue.set(this.state.connection.webrtc, 'auto', auto)
     }
 
     public sendUnicast(receiver: string, subject: string, body: any) {
