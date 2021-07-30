@@ -285,10 +285,6 @@
     }
 
     public disconnect() {
-      if (!this.connected) {
-        throw new Error('client is not connected')
-      }
-
       this.connection.close()
     }
 
