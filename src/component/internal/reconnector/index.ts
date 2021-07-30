@@ -165,7 +165,7 @@ export class Reconnector extends EventEmitter<ReconnectorEvents> {
 
     this._total_reconnects++
 
-    if (this._config.max_reconnects > this._total_reconnects || this._total_reconnects < 0) {
+    if (this._config.max_reconnects > this._total_reconnects || this._config.max_reconnects == -1) {
       this._timeout = window.setTimeout(this.connect.bind(this), this._config.backoff_ms)
     } else {
       this.close(new Error('reconnection failed'))
