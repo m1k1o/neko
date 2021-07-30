@@ -21,6 +21,7 @@ export interface NekoConnectionEvents {
 
 export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
   private _state: Connection
+  private _open = false
 
   public websocket = new NekoWebSocket()
   public webrtc = new NekoWebRTC()
@@ -161,6 +162,12 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
   }
 
   public open(video?: string) {
+    if (this._open) {
+      throw new Error('connection already open')
+    }
+
+    this._open = true
+
     if (video) {
       if (!this._state.webrtc.videos.includes(video)) {
         throw new Error('video id not found')
@@ -179,7 +186,9 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
   }
 
   public close(error?: Error) {
-    if (this.activated) {
+    if (this._open) {
+      this._open = false
+
       Vue.set(this._state, 'type', 'none')
       Vue.set(this._state, 'status', 'disconnected')
 
