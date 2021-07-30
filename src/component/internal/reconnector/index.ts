@@ -123,6 +123,7 @@ export class Reconnector extends EventEmitter<ReconnectorEvents> {
 
     if (!this._open) {
       this._open = true
+      this._total_reconnects = 0
       this.emit('open')
     }
 
