@@ -110,7 +110,7 @@ export class Reconnector extends EventEmitter<ReconnectorEvents> {
   public set config(conf: ReconnectorConfig) {
     this._config = { ...conf }
 
-    if (this._config.max_reconnects > this._total_reconnects) {
+    if (this._config.max_reconnects <= this._total_reconnects) {
       this.close(new Error('reconnection config changed'))
     }
   }
