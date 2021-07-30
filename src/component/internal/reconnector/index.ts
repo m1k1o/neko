@@ -68,6 +68,7 @@ export class Reconnector extends EventEmitter<ReconnectorEvents> {
 
     if (this._open) {
       this._last_connected = new Date()
+      this._total_reconnects = 0
       this.emit('connect')
     } else {
       this._conn.disconnect()
