@@ -3,7 +3,6 @@ package webrtc
 import (
 	"bytes"
 	"encoding/binary"
-	"strconv"
 
 	"github.com/pion/webrtc/v3"
 )
@@ -71,8 +70,8 @@ func (manager *WebRTCManagerCtx) handle(msg webrtc.DataChannelMessage) error {
 
 		manager.logger.
 			Debug().
-			Str("x", strconv.Itoa(int(payload.X))).
-			Str("y", strconv.Itoa(int(payload.Y))).
+			Int16("x", payload.X).
+			Int16("y", payload.Y).
 			Msg("scroll")
 
 		manager.desktop.Scroll(int(payload.X), int(payload.Y))
