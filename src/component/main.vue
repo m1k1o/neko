@@ -127,7 +127,7 @@
           video: null,
           videos: [],
         },
-        screencast: false,
+        screencast: true, // TODO: Should get by API call.
         type: 'none',
       },
       video: {
