@@ -109,6 +109,7 @@
         token: undefined,
         status: 'disconnected',
         websocket: {
+          connected: false,
           config: {
             max_reconnects: 15,
             timeout_ms: 5000,
@@ -116,6 +117,7 @@
           },
         },
         webrtc: {
+          connected: false,
           config: {
             max_reconnects: 15,
             timeout_ms: 10000,
@@ -177,7 +179,11 @@
     }
 
     public get screencast() {
-      return this.state.connection.type == 'fallback' && this.state.connection.screencast
+      return (
+        this.state.connection.screencast &&
+        (!this.state.connection.webrtc.connected ||
+          (this.state.connection.webrtc.connected && !this.state.video.playable))
+      )
     }
 
     /////////////////////////////
@@ -484,6 +490,17 @@
     @Watch('state.connection.status')
     onConnectionChange(status: 'connected' | 'connecting' | 'disconnected') {
       this.events.emit('connection.status', status)
+    }
+
+    @Watch('screencast')
+    onScreencastChange(value: boolean) {
+      if (value) {
+        Vue.set(this.state.connection, 'type', 'fallback')
+      } else if (this.state.connection.webrtc.connected) {
+        Vue.set(this.state.connection, 'type', 'webrtc')
+      } else {
+        Vue.set(this.state.connection, 'type', 'none')
+      }
     }
 
     clear() {

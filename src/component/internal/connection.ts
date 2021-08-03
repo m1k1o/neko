@@ -47,12 +47,11 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
     }
 
     this._onConnectHandle = () => {
+      Vue.set(this._state.websocket, 'connected', this.websocket.connected)
+      Vue.set(this._state.webrtc, 'connected', this.webrtc.connected)
+
       if (this._state.status !== 'connected' && this.websocket.connected && this.webrtc.connected) {
         Vue.set(this._state, 'status', 'connected')
-      }
-
-      if (this._state.type !== 'webrtc' && this.webrtc.connected) {
-        Vue.set(this._state, 'type', 'webrtc')
       }
 
       if (this.websocket.connected && !this.webrtc.connected) {
@@ -61,12 +60,11 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
     }
 
     this._onDisconnectHandle = () => {
+      Vue.set(this._state.websocket, 'connected', this.websocket.connected)
+      Vue.set(this._state.webrtc, 'connected', this.webrtc.connected)
+
       if (this._state.status === 'connected' && this.activated) {
         Vue.set(this._state, 'status', 'connecting')
-      }
-
-      if (this._state.type !== 'fallback' && !this.webrtc.connected) {
-        Vue.set(this._state, 'type', 'fallback')
       }
     }
 
@@ -104,10 +102,7 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
           window.clearTimeout(webrtcFallbackTimeout)
         }
 
-        if (this._state.type === 'fallback') {
-          Vue.set(this._state, 'type', 'webrtc')
-        }
-
+        Vue.set(this._state.webrtc, 'connected', true)
         webrtcCongestion = 0
         return
       }
@@ -115,9 +110,7 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
       // try to downgrade quality if it happend many times
       if (++webrtcCongestion >= WEBRTC_RECONN_FAILED_ATTEMPTS) {
         webrtcFallbackTimeout = window.setTimeout(() => {
-          if (this._state.type === 'webrtc') {
-            Vue.set(this._state, 'type', 'fallback')
-          }
+          Vue.set(this._state.webrtc, 'connected', false)
         }, WEBRTC_FALLBACK_TIMEOUT_MS)
 
         webrtcCongestion = 0
@@ -176,7 +169,6 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
       Vue.set(this._state.webrtc, 'video', video)
     }
 
-    Vue.set(this._state, 'type', 'fallback')
     Vue.set(this._state, 'status', 'connecting')
 
     // open all reconnecters
@@ -189,7 +181,8 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
     if (this._open) {
       this._open = false
 
-      Vue.set(this._state, 'type', 'none')
+      Vue.set(this._state.websocket, 'connected', false)
+      Vue.set(this._state.webrtc, 'connected', false)
       Vue.set(this._state, 'status', 'disconnected')
 
       this.emit('close', error)
@@ -213,7 +206,8 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
     // destroy all reconnecters
     Object.values(this._reconnector).forEach((r) => r.destroy())
 
-    Vue.set(this._state, 'type', 'none')
+    Vue.set(this._state.websocket, 'connected', false)
+    Vue.set(this._state.webrtc, 'connected', false)
     Vue.set(this._state, 'status', 'disconnected')
   }
 

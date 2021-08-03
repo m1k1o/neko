@@ -26,10 +26,12 @@ export interface Connection {
 }
 
 export interface WebSocket {
+  connected: boolean
   config: ReconnectorConfig
 }
 
 export interface WebRTC {
+  connected: boolean
   config: ReconnectorConfig
   stats: WebRTCStats | null
   video: string | null
