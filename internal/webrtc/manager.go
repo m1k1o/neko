@@ -80,18 +80,13 @@ func (manager *WebRTCManagerCtx) Start() {
 		audio.RemoveListener(&audioListener)
 	}
 
-	var servers []string
-	for _, server := range manager.config.ICEServers {
-		servers = append(servers, server.URLs...)
-	}
-
 	manager.logger.Info().
-		Str("icelite", fmt.Sprintf("%t", manager.config.ICELite)).
-		Str("icetrickle", fmt.Sprintf("%t", manager.config.ICETrickle)).
-		Str("iceservers", strings.Join(servers, ",")).
+		Bool("icelite", manager.config.ICELite).
+		Bool("icetrickle", manager.config.ICETrickle).
+		Interface("iceservers", manager.config.ICEServers).
 		Str("nat1to1", strings.Join(manager.config.NAT1To1IPs, ",")).
 		Str("epr", fmt.Sprintf("%d-%d", manager.config.EphemeralMin, manager.config.EphemeralMax)).
-		Msgf("webrtc starting")
+		Msg("webrtc starting")
 
 	manager.curImage.Start()
 }
