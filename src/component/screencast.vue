@@ -7,6 +7,7 @@
   import { RoomApi } from './api'
 
   const REFRESH_RATE = 1e3
+  const ERROR_DELAY_MS = 2500
 
   @Component({
     name: 'neko-screencast',
@@ -29,19 +30,23 @@
       while (this.continue) {
         const lastLoad = Date.now()
 
-        const res = await this.api.screenCastImage({ responseType: 'blob' })
-        const image = URL.createObjectURL(res.data)
+        try {
+          const res = await this.api.screenCastImage({ responseType: 'blob' })
+          const image = URL.createObjectURL(res.data)
 
-        if (this._image) {
-          this._image.src = image
+          if (this._image) {
+            this._image.src = image
+          }
+
+          const delay = lastLoad - Date.now() + REFRESH_RATE
+          if (delay > 0) {
+            await new Promise((res) => setTimeout(res, delay))
+          }
+
+          URL.revokeObjectURL(image)
+        } catch (e) {
+          await new Promise((res) => setTimeout(res, ERROR_DELAY_MS))
         }
-
-        const delay = lastLoad - Date.now() + REFRESH_RATE
-        if (delay > 0) {
-          await new Promise((res) => setTimeout(res, delay))
-        }
-
-        URL.revokeObjectURL(image)
       }
 
       this.running = false
