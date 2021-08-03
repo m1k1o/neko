@@ -180,6 +180,8 @@
 
     public get screencast() {
       return (
+        this.state.authenticated &&
+        this.state.connection.status != 'disconnected' &&
         this.state.connection.screencast &&
         (!this.state.connection.webrtc.connected ||
           (this.state.connection.webrtc.connected && !this.state.video.playable))
