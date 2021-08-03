@@ -1,6 +1,7 @@
 package webrtc
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -66,6 +67,10 @@ func (manager *WebRTCManagerCtx) Start() {
 
 	audioListener := func(sample types.Sample) {
 		if err := manager.audioTrack.WriteSample(media.Sample(sample)); err != nil && err != io.ErrClosedPipe {
+			if errors.Is(err, io.ErrClosedPipe) {
+				// The peerConnection has been closed.
+				return
+			}
 			manager.logger.Warn().Err(err).Msg("audio pipeline failed to write")
 		}
 	}
@@ -167,6 +172,10 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 
 	videoListener := func(sample types.Sample) {
 		if err := videoTrack.WriteSample(media.Sample(sample)); err != nil && err != io.ErrClosedPipe {
+			if errors.Is(err, io.ErrClosedPipe) {
+				// The peerConnection has been closed.
+				return
+			}
 			manager.logger.Warn().Err(err).Msg("video pipeline failed to write")
 		}
 	}
