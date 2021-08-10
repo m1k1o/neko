@@ -489,20 +489,26 @@
       }
     }
 
-    @Watch('state.connection.status')
-    onConnectionChange(status: 'connected' | 'connecting' | 'disconnected') {
-      this.events.emit('connection.status', status)
-    }
-
     @Watch('screencast')
-    onScreencastChange(value: boolean) {
-      if (value) {
+    @Watch('state.connection.webrtc.connected')
+    updateConnectionType() {
+      if (this.screencast) {
         Vue.set(this.state.connection, 'type', 'fallback')
       } else if (this.state.connection.webrtc.connected) {
         Vue.set(this.state.connection, 'type', 'webrtc')
       } else {
         Vue.set(this.state.connection, 'type', 'none')
       }
+    }
+
+    @Watch('state.connection.status')
+    onConnectionStatusChange(status: 'connected' | 'connecting' | 'disconnected') {
+      this.events.emit('connection.status', status)
+    }
+
+    @Watch('state.connection.type')
+    onConnectionTypeChange(type: 'fallback' | 'webrtc' | 'none') {
+      this.events.emit('connection.type', type)
     }
 
     clear() {

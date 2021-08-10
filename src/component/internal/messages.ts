@@ -10,6 +10,7 @@ import NekoState from '../types/state'
 export interface NekoEvents {
   // connection events
   ['connection.status']: (status: 'connected' | 'connecting' | 'disconnected') => void
+  ['connection.type']: (status: 'fallback' | 'webrtc' | 'none') => void
   ['connection.webrtc.sdp']: (type: 'local' | 'remote', data: string) => void
   ['connection.webrtc.sdp.candidate']: (type: 'local' | 'remote', data: RTCIceCandidateInit) => void
   ['connection.closed']: (error?: Error) => void
