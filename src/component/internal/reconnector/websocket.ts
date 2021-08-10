@@ -29,6 +29,8 @@ export class WebsocketReconnector extends ReconnectorAbstract {
   }
 
   public connect() {
+    if (!this._websocket.supported) return
+
     if (this._websocket.connected) {
       this._websocket.disconnect()
     }

@@ -33,6 +33,8 @@ export class WebrtcReconnector extends ReconnectorAbstract {
   }
 
   public connect() {
+    if (!this._webrtc.supported) return
+
     if (this._webrtc.connected) {
       this._webrtc.disconnect()
     }
