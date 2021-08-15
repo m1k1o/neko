@@ -33,7 +33,7 @@ For n.eko room management software, visit https://github.com/m1k1o/neko-rooms.
 - Keyboard modifier state synchronization (Num-Lock, Caps-Lock, Scroll-Lock) for each hosting.
 - Added chromium ungoogled (with h265 support) an kept up to date (by @whalehub).
 - Added Picture in Picture button (only for watching screen, controlling not possible).
-- Added RTMP broadcast. Enables broadcasting n.eko screen to local RTMP server, YouTube or Twitch.
+- Added RTMP broadcast. Enables broadcasting n.eko screen to local RTMP server, YouTube or Twitch. Example: `rtmp://a.rtmp.youtube.com/live2/<your-streaming-key>`.
 - Stereo sound (works properly only in Firefox host).
 - Added limited support for some mobile browsers with `playsinline` attribute.
 - Added `VIDEO_BITRATE` and `AUDIO_BITRATE` in kbit/s to control stream quality (in collaboration with @mbattista).
