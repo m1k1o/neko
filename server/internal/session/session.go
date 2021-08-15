@@ -86,7 +86,7 @@ func (session *Session) Kick(reason string) error {
 	if session.socket == nil {
 		return nil
 	}
-	if err := session.socket.Send(&message.Disconnect{
+	if err := session.socket.Send(&message.SystemMessage{
 		Event:   event.SYSTEM_DISCONNECT,
 		Message: reason,
 	}); err != nil {

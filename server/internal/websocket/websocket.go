@@ -133,7 +133,7 @@ func (ws *WebSocketHandler) Upgrade(w http.ResponseWriter, r *http.Request) erro
 	if err != nil {
 		ws.logger.Warn().Err(err).Msg("authentication failed")
 
-		if err = connection.WriteJSON(message.Disconnect{
+		if err = connection.WriteJSON(message.SystemMessage{
 			Event:   event.SYSTEM_DISCONNECT,
 			Message: "invalid_password",
 		}); err != nil {
@@ -160,7 +160,7 @@ func (ws *WebSocketHandler) Upgrade(w http.ResponseWriter, r *http.Request) erro
 	}
 
 	if !ok {
-		if err = connection.WriteJSON(message.Disconnect{
+		if err = connection.WriteJSON(message.SystemMessage{
 			Event:   event.SYSTEM_DISCONNECT,
 			Message: reason,
 		}); err != nil {

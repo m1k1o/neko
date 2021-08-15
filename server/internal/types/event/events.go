@@ -2,6 +2,7 @@ package event
 
 const (
 	SYSTEM_DISCONNECT = "system/disconnect"
+	SYSTEM_ERROR      = "system/error"
 )
 
 const (
