@@ -121,7 +121,7 @@ Images are built using GitHub actions on every push and on weekly basis to keep 
 
 ### Why so many ports?
 - WebRTC needs UDP ports in order to transfer Audio/Video towards user and Mouse/Keyboard events to the server in real time.
-- If you don't set `NEKO_ICELITE=true`, every user will need 2 UDP ports.
+- If you don't set `NEKO_ICELITE=true`, every user will need 2 UHow to use RTMP feature #88DP ports.
 - If you set `NEKO_ICELITE=true`, every user will need only 1 UDP port. It is **recommended** to use *ice-lite*.
 - Do not forget, they are **UDP** ports, that configuration must be correct in your firewall/router/docker.
 - You can freely limit number of UDP ports. But you can't map them to different ports.
@@ -364,6 +364,10 @@ services:
           ! h264parse config-interval=3
           ! video/x-h264,profile=baseline,stream-format=byte-stream
 ```
+
+## Not using docker?
+
+You can execute `neko --help` to see available arguments. In [Dockerfile](https://github.com/m1k1o/neko/blob/dev/.m1k1o/base/Dockerfile) you can find required dependencies and install them manually.
 
 ## Mobile support
 
