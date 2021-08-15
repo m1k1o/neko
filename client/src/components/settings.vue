@@ -47,10 +47,19 @@
       <li class="broadcast" v-if="admin">
         <div>
           <span>{{ $t('setting.broadcast_title') }}</span>
-          <button v-if="!broadcast_is_active" @click.stop.prevent="$accessor.settings.broadcastCreate(broadcast_url)"><i class="fas fa-play"></i></button>
-          <button v-else @click.stop.prevent="$accessor.settings.broadcastDestroy()" class="btn-red"><i class="fas fa-stop"></i></button>
+          <button v-if="!broadcast_is_active" @click.stop.prevent="$accessor.settings.broadcastCreate(broadcast_url)">
+            <i class="fas fa-play"></i>
+          </button>
+          <button v-else @click.stop.prevent="$accessor.settings.broadcastDestroy()" class="btn-red">
+            <i class="fas fa-stop"></i>
+          </button>
         </div>
-        <input v-model="broadcast_url" :disabled="broadcast_is_active" class="input" placeholder="rtmp://a.rtmp.youtube.com/live2/<stream-key>" />
+        <input
+          v-model="broadcast_url"
+          :disabled="broadcast_is_active"
+          class="input"
+          placeholder="rtmp://a.rtmp.youtube.com/live2/<stream-key>"
+        />
       </li>
       <li v-if="connected">
         <button @click.stop.prevent="logout">{{ $t('logout') }}</button>
