@@ -1,10 +1,10 @@
 package types
 
 type BroadcastManager interface {
-	Start()
+	Start() error
 	Stop()
 	IsActive() bool
-	Create(url string)
+	Create(url string) error
 	Destroy()
 	GetUrl() string
 }

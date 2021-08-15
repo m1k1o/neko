@@ -12,7 +12,9 @@ func (h *MessageHandler) boradcastCreate(session types.Session, payload *message
 		return nil
 	}
 
-	h.broadcast.Create(payload.URL)
+	if err := h.broadcast.Create(payload.URL); err != nil {
+		return err
+	}
 
 	if err := h.boradcastStatus(session); err != nil {
 		return err
