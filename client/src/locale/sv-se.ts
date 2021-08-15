@@ -63,8 +63,8 @@ export const setting = {
   ignore_emotes: 'Ignorera Emotes',
   chat_sound: 'Spela Chatt Ljud',
   keyboard_layout: 'Tangentbordslayout',
-  broadcast_is_active: 'Sändning Aktiverad',
-  broadcast_url: 'RTMP url',
+  // TODO
+  //broadcast_title: 'Live Broadcast',
 }
 
 export const connection = {

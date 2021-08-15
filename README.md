@@ -89,9 +89,7 @@ For n.eko room management software, visit https://github.com/m1k1o/neko-rooms.
 - Start unmuted on reconnects.
 - Switched to the latest Firefox version instead of esr.
 - Fixed very fast scroll speed on macOS.
-
-### Roadmap & TODOs
-- Catch errors from gst pipeline, tell user if broadcast failed.
+- Broadcast pipeline errors are reported to the user.
 
 # Getting started & FAQ
 

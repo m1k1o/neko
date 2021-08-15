@@ -63,8 +63,8 @@ export const setting = {
   ignore_emotes: 'Ignorar Emotes',
   chat_sound: 'Reproducir Sonidos Chat',
   keyboard_layout: 'Keyboard Layout',
-  broadcast_is_active: 'Habilitar Broadcast',
-  broadcast_url: 'RTMP url',
+  // TODO
+  //broadcast_title: 'Live Broadcast',
 }
 
 export const connection = {
