@@ -78,8 +78,8 @@ COPY runtime/icon-theme /home/$USERNAME/.icons/default
 # copy browser files
 COPY runtime/browser/env_wrapper /usr/bin/env_wrapper
 # COPY runtime/browser/openbox.xml /etc/neko/openbox.xml
-COPY runtime/browser/supervisord.chromium.conf /etc/neko/supervisord/chromium.conf
-COPY runtime/browser/extension /usr/share/chromium/extensions/neko
+COPY runtime/browser/supervisord.conf /etc/neko/supervisord/chromium.conf
+COPY runtime/browser/extension /usr/share/browser/extensions/neko
 # COPY runtime/browser/policies.json /etc/chromium/policies/managed/policies.json
 COPY --chown=$USERNAME runtime/browser/preferences.json /home/neko/.config/chromium/Default/Preferences
 
