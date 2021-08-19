@@ -40,14 +40,15 @@ func screencastNew(enabled bool, pipelineStr string) *ScreencastManagerCtx {
 	}
 
 	go func() {
-		ticker := time.NewTicker(screencastTimeout)
 		manager.logger.Debug().Msg("started emitting samples")
+
+		ticker := time.NewTicker(screencastTimeout)
+		defer ticker.Stop()
 
 		for {
 			select {
 			case <-manager.emitStop:
 				manager.logger.Debug().Msg("stopped emitting samples")
-				ticker.Stop()
 				return
 			case <-manager.emitUpdate:
 				manager.logger.Debug().Msg("update emitting samples")

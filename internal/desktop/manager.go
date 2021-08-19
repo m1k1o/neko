@@ -18,7 +18,6 @@ var mu = sync.Mutex{}
 
 type DesktopManagerCtx struct {
 	logger   zerolog.Logger
-	cleanup  *time.Ticker
 	shutdown chan bool
 	emmiter  events.EventEmmiter
 	config   *config.Desktop
@@ -27,7 +26,6 @@ type DesktopManagerCtx struct {
 func New(config *config.Desktop) *DesktopManagerCtx {
 	return &DesktopManagerCtx{
 		logger:   log.With().Str("module", "desktop").Logger(),
-		cleanup:  time.NewTicker(1 * time.Second),
 		shutdown: make(chan bool),
 		emmiter:  events.New(),
 		config:   config,
@@ -64,16 +62,15 @@ func (manager *DesktopManagerCtx) Start() {
 	})
 
 	go func() {
-		defer func() {
-			xorg.DisplayClose()
-			manager.logger.Info().Msg("shutdown")
-		}()
+		ticker := time.NewTicker(1 * time.Second)
+		defer ticker.Stop()
 
 		for {
 			select {
 			case <-manager.shutdown:
+				xorg.DisplayClose()
 				return
-			case <-manager.cleanup.C:
+			case <-ticker.C:
 				xorg.CheckKeys(time.Second * 10)
 			}
 		}
@@ -95,7 +92,6 @@ func (manager *DesktopManagerCtx) OnAfterScreenSizeChange(listener func()) {
 func (manager *DesktopManagerCtx) Shutdown() error {
 	manager.logger.Info().Msgf("desktop shutting down")
 
-	manager.cleanup.Stop()
 	manager.shutdown <- true
 	return nil
 }
