@@ -304,3 +304,7 @@ func (manager *SessionManagerCtx) ImplicitHosting() bool {
 func (manager *SessionManagerCtx) CookieEnabled() bool {
 	return manager.config.CookieEnabled
 }
+
+func (manager *SessionManagerCtx) MercifulReconnect() bool {
+	return manager.config.MercifulReconnect
+}

@@ -8,8 +8,9 @@ import (
 )
 
 type Session struct {
-	ImplicitHosting bool
-	APIToken        string
+	ImplicitHosting   bool
+	MercifulReconnect bool
+	APIToken          string
 
 	CookieEnabled    bool
 	CookieName       string
@@ -20,6 +21,11 @@ type Session struct {
 func (Session) Init(cmd *cobra.Command) error {
 	cmd.PersistentFlags().Bool("session.implicit_hosting", true, "allow implicit control switching")
 	if err := viper.BindPFlag("session.implicit_hosting", cmd.PersistentFlags().Lookup("session.implicit_hosting")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().Bool("session.merciful_reconnect", true, "allow reconnecting to websocket even if previous connection was not closed")
+	if err := viper.BindPFlag("session.merciful_reconnect", cmd.PersistentFlags().Lookup("session.merciful_reconnect")); err != nil {
 		return err
 	}
 
@@ -54,6 +60,7 @@ func (Session) Init(cmd *cobra.Command) error {
 
 func (s *Session) Set() {
 	s.ImplicitHosting = viper.GetBool("session.implicit_hosting")
+	s.MercifulReconnect = viper.GetBool("session.merciful_reconnect")
 	s.APIToken = viper.GetString("session.api_token")
 
 	s.CookieEnabled = viper.GetBool("session.cookie.enabled")

@@ -189,22 +189,31 @@ func (manager *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Reque
 	}
 
 	if session.State().IsConnected {
-		manager.logger.Debug().Str("session_id", session.ID()).Msg("already connected")
+		manager.logger.Warn().Str("session_id", session.ID()).Msg("already connected")
 
-		// TODO: Refactor, return error code.
-		if err = connection.WriteJSON(
-			message.SystemDisconnect{
-				Event:   event.SYSTEM_DISCONNECT,
-				Message: "already connected",
-			}); err != nil {
-			manager.logger.Error().Err(err).Msg("failed to send disconnect event")
+		if !manager.sessions.MercifulReconnect() {
+			// TODO: Refactor, return error code.
+			if err = connection.WriteJSON(
+				message.SystemDisconnect{
+					Event:   event.SYSTEM_DISCONNECT,
+					Message: "already connected",
+				}); err != nil {
+				manager.logger.Error().Err(err).Msg("failed to send disconnect event")
+			}
+
+			if err := connection.Close(); err != nil {
+				manager.logger.Warn().Err(err).Msg("connection closed with an error")
+			}
+
+			return
 		}
 
-		if err := connection.Close(); err != nil {
-			manager.logger.Warn().Err(err).Msg("connection closed with an error")
-		}
+		manager.logger.Debug().Str("session_id", session.ID()).Msg("replacing peer connection")
 
-		return
+		// replace peer connection
+		if err := session.GetWebSocketPeer().Destroy(); err != nil {
+			manager.logger.Warn().Err(err).Msg("previous connection closed with an error")
+		}
 	}
 
 	peer := &WebSocketPeerCtx{
