@@ -95,7 +95,17 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
     }
 
     this._peer.onconnectionstatechange = (event) => {
-      this._log.debug(`peer connection state changed: ${this._peer!.connectionState}`)
+      const state = this._peer!.connectionState
+      this._log.debug(`peer connection state changed: ${state}`)
+
+      switch (state) {
+        // Chrome sends failed state change only for connectionState and not iceConnectionState, and firefox
+        // does not support connectionState at all.
+        case 'closed':
+        case 'failed':
+          this.onDisconnected(new Error('peer ' + state))
+          break
+      }
     }
 
     this._peer.oniceconnectionstatechange = (event) => {
@@ -121,6 +131,7 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
         // The closed signaling state has been deprecated in favor of the closed iceConnectionState.
         // We are watching for it here to add a bit of backward compatibility.
         case 'closed':
+        case 'failed':
           this.onDisconnected(new Error('peer ' + state))
           break
       }
