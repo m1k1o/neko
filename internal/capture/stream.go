@@ -27,9 +27,14 @@ type StreamManagerCtx struct {
 	started     bool
 }
 
-func streamNew(codec codec.RTPCodec, pipelineStr func() string) *StreamManagerCtx {
+func streamNew(codec codec.RTPCodec, pipelineStr func() string, video_id string) *StreamManagerCtx {
+	logger := log.With().
+		Str("module", "capture").
+		Str("submodule", "stream").
+		Str("video_id", video_id).Logger()
+
 	manager := &StreamManagerCtx{
-		logger:      log.With().Str("module", "capture").Str("submodule", "stream").Logger(),
+		logger:      logger,
 		codec:       codec,
 		pipelineStr: pipelineStr,
 		listeners:   map[uintptr]*func(sample types.Sample){},
@@ -85,6 +90,7 @@ func (manager *StreamManagerCtx) AddListener(listener *func(sample types.Sample)
 	if listener != nil {
 		ptr := reflect.ValueOf(listener).Pointer()
 		manager.listeners[ptr] = listener
+		manager.logger.Debug().Interface("ptr", ptr).Msgf("adding listener")
 	}
 }
 
@@ -95,6 +101,7 @@ func (manager *StreamManagerCtx) RemoveListener(listener *func(sample types.Samp
 	if listener != nil {
 		ptr := reflect.ValueOf(listener).Pointer()
 		delete(manager.listeners, ptr)
+		manager.logger.Debug().Interface("ptr", ptr).Msgf("removing listener")
 	}
 }
 
@@ -114,6 +121,7 @@ func (manager *StreamManagerCtx) Start() error {
 		return err
 	}
 
+	manager.logger.Info().Msgf("start")
 	manager.started = true
 	return nil
 }
@@ -122,6 +130,7 @@ func (manager *StreamManagerCtx) Stop() {
 	manager.mu.Lock()
 	defer manager.mu.Unlock()
 
+	manager.logger.Info().Msgf("stop")
 	manager.started = false
 	manager.destroyPipeline()
 }

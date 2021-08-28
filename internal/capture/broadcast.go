@@ -76,7 +76,7 @@ func (manager *BroacastManagerCtx) createPipeline() error {
 	pipelineStr := strings.Replace(manager.pipelineStr, "{url}", manager.url, 1)
 
 	manager.logger.Info().
-		Str("str", pipelineStr).
+		Str("src", pipelineStr).
 		Msgf("starting pipeline")
 
 	manager.pipeline, err = gst.CreatePipeline(pipelineStr)

@@ -57,7 +57,7 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 	}
 
 	videos := map[string]*StreamManagerCtx{}
-	for key, cnf := range config.VideoPipelines {
+	for video_id, cnf := range config.VideoPipelines {
 		pipelineConf := cnf
 
 		createPipeline := func() string {
@@ -69,7 +69,7 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 			pipeline, err := pipelineConf.GetPipeline(*screen)
 			if err != nil {
 				logger.Panic().Err(err).
-					Str("video_id", key).
+					Str("video_id", video_id).
 					Msg("unable to get video pipeline")
 			}
 
@@ -82,12 +82,12 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 		// trigger function to catch evaluation errors at startup
 		pipeline := createPipeline()
 		logger.Info().
-			Str("video_id", key).
+			Str("video_id", video_id).
 			Str("pipeline", pipeline).
 			Msg("syntax check for video stream pipeline passed")
 
 		// append to videos
-		videos[key] = streamNew(config.VideoCodec, createPipeline)
+		videos[video_id] = streamNew(config.VideoCodec, createPipeline, video_id)
 	}
 
 	return &CaptureManagerCtx{
@@ -109,7 +109,7 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 					"! %s "+
 					"! appsink name=appsink", config.AudioDevice, config.AudioCodec.Pipeline,
 			)
-		}),
+		}, "audio"),
 		videos:   videos,
 		videoIDs: config.VideoIDs,
 	}
