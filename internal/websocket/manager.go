@@ -28,7 +28,7 @@ func New(
 		sessions: sessions,
 		desktop:  desktop,
 		handler:  handler.New(sessions, desktop, capture, webrtc),
-		handlers: []types.HandlerFunction{},
+		handlers: []types.WebSocketHandler{},
 	}
 }
 
@@ -40,7 +40,7 @@ type WebSocketManagerCtx struct {
 	sessions types.SessionManager
 	desktop  types.DesktopManager
 	handler  *handler.MessageHandlerCtx
-	handlers []types.HandlerFunction
+	handlers []types.WebSocketHandler
 }
 
 func (manager *WebSocketManagerCtx) Start() {
@@ -156,7 +156,7 @@ func (manager *WebSocketManagerCtx) Shutdown() error {
 	return nil
 }
 
-func (manager *WebSocketManagerCtx) AddHandler(handler types.HandlerFunction) {
+func (manager *WebSocketManagerCtx) AddHandler(handler types.WebSocketHandler) {
 	manager.handlers = append(manager.handlers, handler)
 }
 

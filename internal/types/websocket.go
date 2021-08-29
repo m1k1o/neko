@@ -10,7 +10,7 @@ type WebSocketMessage struct {
 	Payload json.RawMessage `json:"payload"`
 }
 
-type HandlerFunction func(Session, WebSocketMessage) bool
+type WebSocketHandler func(Session, WebSocketMessage) bool
 
 type CheckOrigin func(r *http.Request) bool
 
@@ -22,6 +22,6 @@ type WebSocketPeer interface {
 type WebSocketManager interface {
 	Start()
 	Shutdown() error
-	AddHandler(handler HandlerFunction)
+	AddHandler(handler WebSocketHandler)
 	Upgrade(w http.ResponseWriter, r *http.Request, checkOrigin CheckOrigin)
 }
