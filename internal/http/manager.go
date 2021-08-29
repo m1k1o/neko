@@ -18,19 +18,19 @@ import (
 
 type HttpManagerCtx struct {
 	logger zerolog.Logger
+	config *config.Server
 	router *chi.Mux
 	http   *http.Server
-	conf   *config.Server
 }
 
-func New(WebSocketManager types.WebSocketManager, ApiManager types.ApiManager, conf *config.Server) *HttpManagerCtx {
+func New(WebSocketManager types.WebSocketManager, ApiManager types.ApiManager, config *config.Server) *HttpManagerCtx {
 	logger := log.With().Str("module", "http").Logger()
 
 	router := chi.NewRouter()
 	router.Use(middleware.Recoverer) // Recover from panics without crashing server
 	router.Use(cors.Handler(cors.Options{
 		AllowOriginFunc: func(r *http.Request, origin string) bool {
-			return conf.AllowOrigin(origin)
+			return config.AllowOrigin(origin)
 		},
 		AllowedMethods:   []string{"GET", "POST", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
@@ -45,14 +45,14 @@ func New(WebSocketManager types.WebSocketManager, ApiManager types.ApiManager, c
 
 	router.Get("/api/ws", func(w http.ResponseWriter, r *http.Request) {
 		WebSocketManager.Upgrade(w, r, func(r *http.Request) bool {
-			return conf.AllowOrigin(r.Header.Get("Origin"))
+			return config.AllowOrigin(r.Header.Get("Origin"))
 		})
 	})
 
-	if conf.Static != "" {
-		fs := http.FileServer(http.Dir(conf.Static))
+	if config.Static != "" {
+		fs := http.FileServer(http.Dir(config.Static))
 		router.Get("/*", func(w http.ResponseWriter, r *http.Request) {
-			if _, err := os.Stat(conf.Static + r.URL.Path); !os.IsNotExist(err) {
+			if _, err := os.Stat(config.Static + r.URL.Path); !os.IsNotExist(err) {
 				fs.ServeHTTP(w, r)
 			} else {
 				utils.HttpNotFound(w)
@@ -64,23 +64,21 @@ func New(WebSocketManager types.WebSocketManager, ApiManager types.ApiManager, c
 		utils.HttpNotFound(w)
 	}))
 
-	http := &http.Server{
-		Addr:    conf.Bind,
-		Handler: router,
-	}
-
 	return &HttpManagerCtx{
 		logger: logger,
+		config: config,
 		router: router,
-		http:   http,
-		conf:   conf,
+		http: &http.Server{
+			Addr:    config.Bind,
+			Handler: router,
+		},
 	}
 }
 
 func (manager *HttpManagerCtx) Start() {
-	if manager.conf.Cert != "" && manager.conf.Key != "" {
+	if manager.config.Cert != "" && manager.config.Key != "" {
 		go func() {
-			if err := manager.http.ListenAndServeTLS(manager.conf.Cert, manager.conf.Key); err != http.ErrServerClosed {
+			if err := manager.http.ListenAndServeTLS(manager.config.Cert, manager.config.Key); err != http.ErrServerClosed {
 				manager.logger.Panic().Err(err).Msg("unable to start https server")
 			}
 		}()
