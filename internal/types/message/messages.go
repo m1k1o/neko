@@ -6,11 +6,6 @@ import (
 	"demodesk/neko/internal/types"
 )
 
-type Message struct {
-	Event   string      `json:"event"`
-	Payload interface{} `json:"payload"` // TODO: New.
-}
-
 /////////////////////////////
 // System
 /////////////////////////////

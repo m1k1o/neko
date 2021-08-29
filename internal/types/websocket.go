@@ -1,8 +1,16 @@
 package types
 
-import "net/http"
+import (
+	"encoding/json"
+	"net/http"
+)
 
-type HandlerFunction func(Session, []byte) bool
+type WebSocketMessage struct {
+	Event   string          `json:"event"`
+	Payload json.RawMessage `json:"payload"`
+}
+
+type HandlerFunction func(Session, WebSocketMessage) bool
 
 type CheckOrigin func(r *http.Request) bool
 

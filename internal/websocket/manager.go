@@ -1,6 +1,7 @@
 package websocket
 
 import (
+	"encoding/json"
 	"net/http"
 	"time"
 
@@ -296,22 +297,32 @@ func (manager *WebSocketManagerCtx) handle(connection *websocket.Conn, session t
 	for {
 		select {
 		case raw := <-bytes:
+			data := types.WebSocketMessage{}
+			if err := json.Unmarshal(raw, &data); err != nil {
+				logger.Error().Err(err).Msg("message parsing has failed")
+				break
+			}
+
+			// TODO: Switch to payload based messages.
+			data.Payload = raw
+
 			logger.Debug().
 				Str("address", connection.RemoteAddr().String()).
-				Str("raw", string(raw)).
+				Str("event", data.Event).
+				Str("payload", string(data.Payload)).
 				Msg("received message from client")
 
-			handled := manager.handler.Message(session, raw)
+			handled := manager.handler.Message(session, data)
 			for _, handler := range manager.handlers {
 				if handled {
 					break
 				}
 
-				handled = handler(session, raw)
+				handled = handler(session, data)
 			}
 
 			if !handled {
-				logger.Warn().Msg("unhandled message")
+				logger.Warn().Str("event", data.Event).Msg("unhandled message")
 			}
 		case <-cancel:
 			return

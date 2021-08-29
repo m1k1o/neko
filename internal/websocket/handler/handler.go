@@ -1,8 +1,6 @@
 package handler
 
 import (
-	"encoding/json"
-
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
@@ -35,38 +33,35 @@ type MessageHandlerCtx struct {
 	capture  types.CaptureManager
 }
 
-func (h *MessageHandlerCtx) Message(session types.Session, raw []byte) bool {
-	logger := h.logger.With().Str("session_id", session.ID()).Logger()
-
-	header := message.Message{}
-	if err := json.Unmarshal(raw, &header); err != nil {
-		logger.Error().Err(err).Msg("message parsing has failed")
-		return false
-	}
+func (h *MessageHandlerCtx) Message(session types.Session, data types.WebSocketMessage) bool {
+	logger := h.logger.With().
+		Str("event", data.Event).
+		Str("session_id", session.ID()).
+		Logger()
 
 	var err error
-	switch header.Event {
+	switch data.Event {
 	// Signal Events
 	case event.SIGNAL_REQUEST:
 		payload := &message.SignalVideo{}
-		err = utils.Unmarshal(payload, raw, func() error {
+		err = utils.Unmarshal(payload, data.Payload, func() error {
 			return h.signalRequest(session, payload)
 		})
 	case event.SIGNAL_RESTART:
 		err = h.signalRestart(session)
 	case event.SIGNAL_ANSWER:
 		payload := &message.SignalAnswer{}
-		err = utils.Unmarshal(payload, raw, func() error {
+		err = utils.Unmarshal(payload, data.Payload, func() error {
 			return h.signalAnswer(session, payload)
 		})
 	case event.SIGNAL_CANDIDATE:
 		payload := &message.SignalCandidate{}
-		err = utils.Unmarshal(payload, raw, func() error {
+		err = utils.Unmarshal(payload, data.Payload, func() error {
 			return h.signalCandidate(session, payload)
 		})
 	case event.SIGNAL_VIDEO:
 		payload := &message.SignalVideo{}
-		err = utils.Unmarshal(payload, raw, func() error {
+		err = utils.Unmarshal(payload, data.Payload, func() error {
 			return h.signalVideo(session, payload)
 		})
 
@@ -79,38 +74,38 @@ func (h *MessageHandlerCtx) Message(session types.Session, raw []byte) bool {
 	// Screen Events
 	case event.SCREEN_SET:
 		payload := &message.ScreenSize{}
-		err = utils.Unmarshal(payload, raw, func() error {
+		err = utils.Unmarshal(payload, data.Payload, func() error {
 			return h.screenSet(session, payload)
 		})
 
 	// Clipboard Events
 	case event.CLIPBOARD_SET:
 		payload := &message.ClipboardData{}
-		err = utils.Unmarshal(payload, raw, func() error {
+		err = utils.Unmarshal(payload, data.Payload, func() error {
 			return h.clipboardSet(session, payload)
 		})
 
 	// Keyboard Events
 	case event.KEYBOARD_MAP:
 		payload := &message.KeyboardMap{}
-		err = utils.Unmarshal(payload, raw, func() error {
+		err = utils.Unmarshal(payload, data.Payload, func() error {
 			return h.keyboardMap(session, payload)
 		})
 	case event.KEYBOARD_MODIFIERS:
 		payload := &message.KeyboardModifiers{}
-		err = utils.Unmarshal(payload, raw, func() error {
+		err = utils.Unmarshal(payload, data.Payload, func() error {
 			return h.keyboardModifiers(session, payload)
 		})
 
 	// Send Events
 	case event.SEND_UNICAST:
 		payload := &message.SendUnicast{}
-		err = utils.Unmarshal(payload, raw, func() error {
+		err = utils.Unmarshal(payload, data.Payload, func() error {
 			return h.sendUnicast(session, payload)
 		})
 	case event.SEND_BROADCAST:
 		payload := &message.SendBroadcast{}
-		err = utils.Unmarshal(payload, raw, func() error {
+		err = utils.Unmarshal(payload, data.Payload, func() error {
 			return h.sendBroadcast(session, payload)
 		})
 	default:
@@ -118,7 +113,7 @@ func (h *MessageHandlerCtx) Message(session types.Session, raw []byte) bool {
 	}
 
 	if err != nil {
-		logger.Error().Err(err).Str("event", header.Event).Msg("message handler has failed")
+		logger.Error().Err(err).Msg("message handler has failed")
 	}
 
 	return true
