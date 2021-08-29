@@ -4,10 +4,12 @@ import (
 	"sync"
 
 	"github.com/pion/webrtc/v3"
+	"github.com/rs/zerolog"
 )
 
 type WebRTCPeerCtx struct {
 	mu          sync.Mutex
+	logger      zerolog.Logger
 	api         *webrtc.API
 	connection  *webrtc.PeerConnection
 	dataChannel *webrtc.DataChannel
@@ -59,6 +61,7 @@ func (peer *WebRTCPeerCtx) SetVideoID(videoID string) error {
 	peer.mu.Lock()
 	defer peer.mu.Unlock()
 
+	peer.logger.Info().Str("video_id", videoID).Msg("change video id")
 	return peer.changeVideo(videoID)
 }
 

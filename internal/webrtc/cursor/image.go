@@ -13,7 +13,7 @@ import (
 
 func NewImage(desktop types.DesktopManager) *ImageCtx {
 	return &ImageCtx{
-		logger:    log.With().Str("module", "cursor-image").Logger(),
+		logger:    log.With().Str("module", "webrtc").Str("submodule", "cursor-image").Logger(),
 		desktop:   desktop,
 		listeners: map[uintptr]*func(entry *ImageEntry){},
 		cache:     map[uint64]*ImageEntry{},
@@ -50,10 +50,12 @@ func (manager *ImageCtx) Start() {
 			(*emit)(entry)
 		}
 	})
+
+	manager.logger.Info().Msg("starting")
 }
 
 func (manager *ImageCtx) Shutdown() {
-	manager.logger.Info().Msgf("shutting down")
+	manager.logger.Info().Msg("shutdown")
 
 	manager.emitMu.Lock()
 	for key := range manager.listeners {

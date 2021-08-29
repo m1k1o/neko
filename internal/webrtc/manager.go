@@ -80,6 +80,8 @@ func (manager *WebRTCManagerCtx) Start() {
 		audio.RemoveListener(&audioListener)
 	}
 
+	manager.curImage.Start()
+
 	manager.logger.Info().
 		Bool("icelite", manager.config.ICELite).
 		Bool("icetrickle", manager.config.ICETrickle).
@@ -87,12 +89,10 @@ func (manager *WebRTCManagerCtx) Start() {
 		Str("nat1to1", strings.Join(manager.config.NAT1To1IPs, ",")).
 		Str("epr", fmt.Sprintf("%d-%d", manager.config.EphemeralMin, manager.config.EphemeralMax)).
 		Msg("webrtc starting")
-
-	manager.curImage.Start()
 }
 
 func (manager *WebRTCManagerCtx) Shutdown() error {
-	manager.logger.Info().Msgf("webrtc shutting down")
+	manager.logger.Info().Msg("webrtc shutdown")
 
 	manager.curImage.Shutdown()
 	manager.curPosition.Shutdown()
@@ -106,7 +106,9 @@ func (manager *WebRTCManagerCtx) ICEServers() []types.ICEServer {
 }
 
 func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID string) (*webrtc.SessionDescription, error) {
+	// add session id to logger context
 	logger := manager.logger.With().Str("session_id", session.ID()).Logger()
+	logger.Info().Msg("creating webrtc peer")
 
 	// Create MediaEngine
 	engine, err := manager.mediaEngine(videoID)
@@ -155,13 +157,13 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 	// create video track
 	videoStream, ok := manager.capture.Video(videoID)
 	if !ok {
-		manager.logger.Warn().Str("videoID", videoID).Msg("video stream not found")
+		logger.Warn().Str("video_id", videoID).Msg("video stream not found")
 		return nil, err
 	}
 
 	videoTrack, err := webrtc.NewTrackLocalStaticSample(videoStream.Codec().Capability, "video", "stream")
 	if err != nil {
-		manager.logger.Warn().Err(err).Msg("unable to create video track")
+		logger.Warn().Err(err).Msg("unable to create video track")
 		return nil, err
 	}
 
@@ -171,7 +173,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 				// The peerConnection has been closed.
 				return
 			}
-			manager.logger.Warn().Err(err).Msg("video pipeline failed to write")
+			logger.Warn().Err(err).Msg("video pipeline failed to write")
 		}
 	}
 
@@ -180,7 +182,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 	// should be stream started
 	if videoStream.ListenersCount() == 0 {
 		if err := videoStream.Start(); err != nil {
-			manager.logger.Warn().Err(err).Msg("unable to start video pipeline")
+			logger.Warn().Err(err).Msg("unable to start video pipeline")
 			return nil, err
 		}
 	}
@@ -239,6 +241,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 	}
 
 	peer := &WebRTCPeerCtx{
+		logger:      logger,
 		api:         api,
 		connection:  connection,
 		changeVideo: changeVideo,
@@ -248,7 +251,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 
 	cursorImage := func(entry *cursor.ImageEntry) {
 		if err := peer.SendCursorImage(entry.Cursor, entry.Image); err != nil {
-			manager.logger.Warn().Err(err).Msg("could not send cursor image")
+			logger.Warn().Err(err).Msg("could not send cursor image")
 		}
 	}
 
@@ -258,7 +261,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 		}
 
 		if err := peer.SendCursorPosition(x, y); err != nil {
-			manager.logger.Warn().Err(err).Msg("could not send cursor position")
+			logger.Warn().Err(err).Msg("could not send cursor position")
 		}
 	}
 
@@ -306,7 +309,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 		if err == nil {
 			cursorImage(entry)
 		} else {
-			manager.logger.Warn().Err(err).Msg("failed to get cursor image")
+			logger.Warn().Err(err).Msg("failed to get cursor image")
 		}
 
 		// send initial cursor position
@@ -324,7 +327,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 			return
 		}
 
-		if err = manager.handle(message); err != nil {
+		if err = manager.handle(message, session); err != nil {
 			logger.Warn().Err(err).Msg("data handle failed")
 		}
 	})

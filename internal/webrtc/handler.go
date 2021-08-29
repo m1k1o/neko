@@ -5,6 +5,8 @@ import (
 	"encoding/binary"
 
 	"github.com/pion/webrtc/v3"
+
+	"demodesk/neko/internal/types"
 )
 
 const (
@@ -38,7 +40,10 @@ type PayloadKey struct {
 	Key uint32
 }
 
-func (manager *WebRTCManagerCtx) handle(msg webrtc.DataChannelMessage) error {
+func (manager *WebRTCManagerCtx) handle(msg webrtc.DataChannelMessage, session types.Session) error {
+	// add session id to logger context
+	logger := manager.logger.With().Str("session_id", session.ID()).Logger()
+
 	buffer := bytes.NewBuffer(msg.Data)
 	header := &PayloadHeader{}
 	hbytes := make([]byte, 3)
@@ -68,13 +73,11 @@ func (manager *WebRTCManagerCtx) handle(msg webrtc.DataChannelMessage) error {
 			return err
 		}
 
-		manager.logger.
-			Debug().
+		manager.desktop.Scroll(int(payload.X), int(payload.Y))
+		logger.Trace().
 			Int16("x", payload.X).
 			Int16("y", payload.Y).
 			Msg("scroll")
-
-		manager.desktop.Scroll(int(payload.X), int(payload.Y))
 	case OP_KEY_DOWN:
 		payload := &PayloadKey{}
 		if err := binary.Read(buffer, binary.BigEndian, payload); err != nil {
@@ -82,11 +85,10 @@ func (manager *WebRTCManagerCtx) handle(msg webrtc.DataChannelMessage) error {
 		}
 
 		if err := manager.desktop.KeyDown(payload.Key); err != nil {
-			manager.logger.Warn().Err(err).Msg("key down failed")
-			break
+			logger.Warn().Err(err).Uint32("key", payload.Key).Msg("key down failed")
+		} else {
+			logger.Trace().Uint32("key", payload.Key).Msg("key down")
 		}
-
-		manager.logger.Debug().Msgf("key down %d", payload.Key)
 	case OP_KEY_UP:
 		payload := &PayloadKey{}
 		if err := binary.Read(buffer, binary.BigEndian, payload); err != nil {
@@ -94,11 +96,10 @@ func (manager *WebRTCManagerCtx) handle(msg webrtc.DataChannelMessage) error {
 		}
 
 		if err := manager.desktop.KeyUp(payload.Key); err != nil {
-			manager.logger.Warn().Err(err).Msg("key up failed")
-			break
+			logger.Warn().Err(err).Uint32("key", payload.Key).Msg("key up failed")
+		} else {
+			logger.Trace().Uint32("key", payload.Key).Msg("key up")
 		}
-
-		manager.logger.Debug().Msgf("key up %d", payload.Key)
 	case OP_BTN_DOWN:
 		payload := &PayloadKey{}
 		if err := binary.Read(buffer, binary.BigEndian, payload); err != nil {
@@ -106,11 +107,10 @@ func (manager *WebRTCManagerCtx) handle(msg webrtc.DataChannelMessage) error {
 		}
 
 		if err := manager.desktop.ButtonDown(payload.Key); err != nil {
-			manager.logger.Warn().Err(err).Msg("button down failed")
-			break
+			logger.Warn().Err(err).Uint32("key", payload.Key).Msg("button down failed")
+		} else {
+			logger.Trace().Uint32("key", payload.Key).Msg("button down")
 		}
-
-		manager.logger.Debug().Msgf("button down %d", payload.Key)
 	case OP_BTN_UP:
 		payload := &PayloadKey{}
 		if err := binary.Read(buffer, binary.BigEndian, payload); err != nil {
@@ -118,11 +118,10 @@ func (manager *WebRTCManagerCtx) handle(msg webrtc.DataChannelMessage) error {
 		}
 
 		if err := manager.desktop.ButtonUp(payload.Key); err != nil {
-			manager.logger.Warn().Err(err).Msg("button up failed")
-			break
+			logger.Warn().Err(err).Uint32("key", payload.Key).Msg("button up failed")
+		} else {
+			logger.Trace().Uint32("key", payload.Key).Msg("button up")
 		}
-
-		manager.logger.Debug().Msgf("button up %d", payload.Key)
 	}
 
 	return nil

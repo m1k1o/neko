@@ -81,6 +81,6 @@ func (l loggerFactory) NewLogger(subsystem string) logging.LeveledLogger {
 
 	return logger{
 		subsystem: subsystem,
-		logger:    l.logger.With().Str("subsystem", subsystem).Logger(),
+		logger:    l.logger.With().Str("submodule", "pion").Str("subsystem", subsystem).Logger(),
 	}
 }

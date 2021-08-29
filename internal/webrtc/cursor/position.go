@@ -12,7 +12,7 @@ import (
 
 func NewPosition(desktop types.DesktopManager) *PositionCtx {
 	return &PositionCtx{
-		logger:    log.With().Str("module", "cursor-position").Logger(),
+		logger:    log.With().Str("module", "webrtc").Str("submodule", "cursor-position").Logger(),
 		desktop:   desktop,
 		listeners: map[uintptr]*func(x, y int){},
 	}
@@ -26,7 +26,7 @@ type PositionCtx struct {
 }
 
 func (manager *PositionCtx) Shutdown() {
-	manager.logger.Info().Msgf("shutting down")
+	manager.logger.Info().Msg("shutdown")
 
 	manager.emitMu.Lock()
 	for key := range manager.listeners {
