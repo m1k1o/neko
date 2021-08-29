@@ -90,7 +90,7 @@ func (manager *WebSocketManagerCtx) Start() {
 		if err := manager.handler.SessionProfileChanged(session); err != nil {
 			logger.Warn().Err(err).Msg("session profile changed with an error")
 		} else {
-			logger.Debug().Msg("session profile changed")
+			logger.Debug().Interface("profile", session.Profile()).Msg("session profile changed")
 		}
 	})
 
@@ -100,7 +100,7 @@ func (manager *WebSocketManagerCtx) Start() {
 		if err := manager.handler.SessionStateChanged(session); err != nil {
 			logger.Warn().Err(err).Msg("session state changed with an error")
 		} else {
-			logger.Debug().Msg("session state changed")
+			logger.Debug().Interface("state", session.State()).Msg("session state changed")
 		}
 	})
 
@@ -161,7 +161,13 @@ func (manager *WebSocketManagerCtx) AddHandler(handler types.WebSocketHandler) {
 }
 
 func (manager *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Request, checkOrigin types.CheckOrigin) {
-	manager.logger.Debug().Msg("attempting to upgrade connection")
+	// add request data to logger context
+	logger := manager.logger.With().
+		Str("address", r.RemoteAddr).
+		Str("agent", r.UserAgent()).
+		Logger()
+
+	logger.Debug().Msg("attempting to upgrade connection")
 
 	upgrader := websocket.Upgrader{
 		CheckOrigin: checkOrigin,
@@ -169,13 +175,13 @@ func (manager *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Reque
 
 	connection, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		manager.logger.Error().Err(err).Msg("failed to upgrade connection")
+		logger.Error().Err(err).Msg("failed to upgrade connection")
 		return
 	}
 
 	session, err := manager.sessions.Authenticate(r)
 	if err != nil {
-		manager.logger.Debug().Err(err).Msg("authentication failed")
+		logger.Debug().Err(err).Msg("authentication failed")
 
 		// TODO: Refactor, return error code.
 		if err = connection.WriteJSON(
@@ -183,18 +189,18 @@ func (manager *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Reque
 				Event:   event.SYSTEM_DISCONNECT,
 				Message: err.Error(),
 			}); err != nil {
-			manager.logger.Error().Err(err).Msg("failed to send disconnect event")
+			logger.Error().Err(err).Msg("failed to send disconnect event")
 		}
 
 		if err := connection.Close(); err != nil {
-			manager.logger.Warn().Err(err).Msg("connection closed with an error")
+			logger.Warn().Err(err).Msg("connection closed with an error")
 		}
 
 		return
 	}
 
-	// add session id to logger context
-	logger := manager.logger.With().Str("session_id", session.ID()).Logger()
+	// use session id with defeault logger context
+	logger = manager.logger.With().Str("session_id", session.ID()).Logger()
 
 	if !session.Profile().CanConnect {
 		logger.Debug().Msg("connection disabled")
@@ -251,6 +257,7 @@ func (manager *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Reque
 
 	logger.Info().
 		Str("address", connection.RemoteAddr().String()).
+		Str("agent", r.UserAgent()).
 		Msg("connection started")
 
 	session.SetWebSocketConnected(peer, true)
@@ -258,6 +265,7 @@ func (manager *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Reque
 	defer func() {
 		logger.Info().
 			Str("address", connection.RemoteAddr().String()).
+			Str("agent", r.UserAgent()).
 			Msg("connection ended")
 
 		session.SetWebSocketConnected(peer, false)
