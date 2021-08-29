@@ -1,6 +1,7 @@
 package api
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/go-chi/chi"
@@ -74,7 +75,12 @@ func (api *ApiManagerCtx) Authenticate(next http.Handler) http.Handler {
 				api.sessions.CookieClearToken(w, r)
 			}
 
-			utils.HttpUnauthorized(w, err)
+			if errors.Is(err, types.ErrSessionLoginDisabled) {
+				utils.HttpForbidden(w, err)
+			} else {
+				utils.HttpUnauthorized(w, err)
+			}
+
 			return
 		}
 
