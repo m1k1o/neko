@@ -3,7 +3,7 @@ package members
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"demodesk/neko/internal/types"
@@ -16,7 +16,7 @@ type MemberBulkUpdatePayload struct {
 }
 
 func (h *MembersHandler) membersBulkUpdate(w http.ResponseWriter, r *http.Request) {
-	bytes, err := ioutil.ReadAll(r.Body)
+	bytes, err := io.ReadAll(r.Body)
 	if err != nil {
 		utils.HttpInternalServerError(w, err)
 		return

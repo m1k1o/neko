@@ -2,7 +2,6 @@ package room
 
 import (
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path"
@@ -44,7 +43,7 @@ func (h *RoomHandler) uploadDrop(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dir, err := ioutil.TempDir("", "neko-drop-*")
+	dir, err := os.MkdirTemp("", "neko-drop-*")
 	if err != nil {
 		utils.HttpInternalServerError(w, err)
 		return
@@ -108,7 +107,7 @@ func (h *RoomHandler) uploadDialogPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dir, err := ioutil.TempDir("", "neko-dialog-*")
+	dir, err := os.MkdirTemp("", "neko-dialog-*")
 	if err != nil {
 		utils.HttpInternalServerError(w, err)
 		return

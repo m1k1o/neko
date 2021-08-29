@@ -2,7 +2,7 @@ package file
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"os"
 
 	"demodesk/neko/internal/types"
@@ -152,7 +152,7 @@ func (provider *MemberProviderCtx) deserialize() (map[string]MemberEntry, error)
 		return nil, err
 	}
 
-	raw, err := ioutil.ReadAll(file)
+	raw, err := io.ReadAll(file)
 	if err != nil {
 		return nil, err
 	}
@@ -189,5 +189,5 @@ func (provider *MemberProviderCtx) serialize(data map[string]MemberEntry) error 
 		return err
 	}
 
-	return ioutil.WriteFile(provider.config.Path, raw, os.ModePerm)
+	return os.WriteFile(provider.config.Path, raw, os.ModePerm)
 }
