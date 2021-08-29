@@ -6,8 +6,10 @@ import (
 )
 
 func (h *MessageHandlerCtx) keyboardMap(session types.Session, payload *message.KeyboardMap) error {
+	logger := h.logger.With().Str("session_id", session.ID()).Logger()
+
 	if !session.IsHost() {
-		h.logger.Debug().Str("session_id", session.ID()).Msg("is not the host")
+		logger.Debug().Msg("is not the host")
 		return nil
 	}
 
@@ -18,8 +20,10 @@ func (h *MessageHandlerCtx) keyboardMap(session types.Session, payload *message.
 }
 
 func (h *MessageHandlerCtx) keyboardModifiers(session types.Session, payload *message.KeyboardModifiers) error {
+	logger := h.logger.With().Str("session_id", session.ID()).Logger()
+
 	if !session.IsHost() {
-		h.logger.Debug().Str("session_id", session.ID()).Msg("is not the host")
+		logger.Debug().Msg("is not the host")
 		return nil
 	}
 

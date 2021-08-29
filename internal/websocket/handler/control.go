@@ -7,13 +7,15 @@ import (
 )
 
 func (h *MessageHandlerCtx) controlRelease(session types.Session) error {
+	logger := h.logger.With().Str("session_id", session.ID()).Logger()
+
 	if !session.Profile().CanHost {
-		h.logger.Debug().Str("session_id", session.ID()).Msg("is not allowed to host")
+		logger.Debug().Msg("is not allowed to host")
 		return nil
 	}
 
 	if !session.IsHost() {
-		h.logger.Debug().Str("session_id", session.ID()).Msg("is not the host")
+		logger.Debug().Msg("is not the host")
 		return nil
 	}
 
@@ -24,13 +26,15 @@ func (h *MessageHandlerCtx) controlRelease(session types.Session) error {
 }
 
 func (h *MessageHandlerCtx) controlRequest(session types.Session) error {
+	logger := h.logger.With().Str("session_id", session.ID()).Logger()
+
 	if !session.Profile().CanHost {
-		h.logger.Debug().Str("session_id", session.ID()).Msg("is not allowed to host")
+		logger.Debug().Msg("is not allowed to host")
 		return nil
 	}
 
 	if session.IsHost() {
-		h.logger.Debug().Str("session_id", session.ID()).Msg("is already the host")
+		logger.Debug().Msg("is already the host")
 		return nil
 	}
 

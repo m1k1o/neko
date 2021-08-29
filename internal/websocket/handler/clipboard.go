@@ -6,13 +6,15 @@ import (
 )
 
 func (h *MessageHandlerCtx) clipboardSet(session types.Session, payload *message.ClipboardData) error {
+	logger := h.logger.With().Str("session_id", session.ID()).Logger()
+
 	if !session.Profile().CanAccessClipboard {
-		h.logger.Debug().Str("session_id", session.ID()).Msg("cannot access clipboard")
+		logger.Debug().Msg("cannot access clipboard")
 		return nil
 	}
 
 	if !session.IsHost() {
-		h.logger.Debug().Str("session_id", session.ID()).Msg("is not the host")
+		logger.Debug().Msg("is not the host")
 		return nil
 	}
 

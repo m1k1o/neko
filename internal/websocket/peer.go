@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/gorilla/websocket"
+	"github.com/rs/zerolog"
 
 	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/types/event"
@@ -14,8 +15,8 @@ import (
 
 type WebSocketPeerCtx struct {
 	mu         sync.Mutex
+	logger     zerolog.Logger
 	session    types.Session
-	manager    *WebSocketManagerCtx
 	connection *websocket.Conn
 }
 
@@ -32,8 +33,7 @@ func (peer *WebSocketPeerCtx) Send(v interface{}) error {
 		return err
 	}
 
-	peer.manager.logger.Debug().
-		Str("session_id", peer.session.ID()).
+	peer.logger.Debug().
 		Str("address", peer.connection.RemoteAddr().String()).
 		Str("raw", string(raw)).
 		Msg("sending message to client")

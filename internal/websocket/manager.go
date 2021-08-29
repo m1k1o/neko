@@ -44,50 +44,62 @@ type WebSocketManagerCtx struct {
 
 func (manager *WebSocketManagerCtx) Start() {
 	manager.sessions.OnCreated(func(session types.Session) {
+		logger := manager.logger.With().Str("session_id", session.ID()).Logger()
+
 		if err := manager.handler.SessionCreated(session); err != nil {
-			manager.logger.Warn().Str("session_id", session.ID()).Err(err).Msg("session created with an error")
+			logger.Warn().Err(err).Msg("session created with an error")
 		} else {
-			manager.logger.Debug().Str("session_id", session.ID()).Msg("session created")
+			logger.Debug().Msg("session created")
 		}
 	})
 
 	manager.sessions.OnDeleted(func(session types.Session) {
+		logger := manager.logger.With().Str("session_id", session.ID()).Logger()
+
 		if err := manager.handler.SessionDeleted(session); err != nil {
-			manager.logger.Warn().Str("session_id", session.ID()).Err(err).Msg("session deleted with an error")
+			logger.Warn().Err(err).Msg("session deleted with an error")
 		} else {
-			manager.logger.Debug().Str("session_id", session.ID()).Msg("session deleted")
+			logger.Debug().Msg("session deleted")
 		}
 	})
 
 	manager.sessions.OnConnected(func(session types.Session) {
+		logger := manager.logger.With().Str("session_id", session.ID()).Logger()
+
 		if err := manager.handler.SessionConnected(session); err != nil {
-			manager.logger.Warn().Str("session_id", session.ID()).Err(err).Msg("session connected with an error")
+			logger.Warn().Err(err).Msg("session connected with an error")
 		} else {
-			manager.logger.Debug().Str("session_id", session.ID()).Msg("session connected")
+			logger.Debug().Msg("session connected")
 		}
 	})
 
 	manager.sessions.OnDisconnected(func(session types.Session) {
+		logger := manager.logger.With().Str("session_id", session.ID()).Logger()
+
 		if err := manager.handler.SessionDisconnected(session); err != nil {
-			manager.logger.Warn().Str("session_id", session.ID()).Err(err).Msg("session disconnected with an error")
+			logger.Warn().Err(err).Msg("session disconnected with an error")
 		} else {
-			manager.logger.Debug().Str("session_id", session.ID()).Msg("session disconnected")
+			logger.Debug().Msg("session disconnected")
 		}
 	})
 
 	manager.sessions.OnProfileChanged(func(session types.Session) {
+		logger := manager.logger.With().Str("session_id", session.ID()).Logger()
+
 		if err := manager.handler.SessionProfileChanged(session); err != nil {
-			manager.logger.Warn().Str("session_id", session.ID()).Err(err).Msg("session profile changed with an error")
+			logger.Warn().Err(err).Msg("session profile changed with an error")
 		} else {
-			manager.logger.Debug().Str("session_id", session.ID()).Msg("session profile changed")
+			logger.Debug().Msg("session profile changed")
 		}
 	})
 
 	manager.sessions.OnStateChanged(func(session types.Session) {
+		logger := manager.logger.With().Str("session_id", session.ID()).Logger()
+
 		if err := manager.handler.SessionStateChanged(session); err != nil {
-			manager.logger.Warn().Str("session_id", session.ID()).Err(err).Msg("session state changed with an error")
+			logger.Warn().Err(err).Msg("session state changed with an error")
 		} else {
-			manager.logger.Debug().Str("session_id", session.ID()).Msg("session state changed")
+			logger.Debug().Msg("session state changed")
 		}
 	})
 
@@ -102,6 +114,11 @@ func (manager *WebSocketManagerCtx) Start() {
 		}
 
 		manager.sessions.Broadcast(msg, nil)
+
+		manager.logger.Debug().
+			Bool("has_host", msg.HasHost).
+			Str("host_id", msg.HostID).
+			Msg("session host changed")
 	})
 
 	manager.desktop.OnClipboardUpdated(func() {
@@ -122,13 +139,19 @@ func (manager *WebSocketManagerCtx) Start() {
 			// TODO: Send HTML?
 		}); err != nil {
 			manager.logger.Warn().Err(err).Msg("could not sync clipboard")
+			return
 		}
+
+		manager.logger.Debug().Msg("session sync clipboard")
 	})
 
 	manager.fileChooserDialogEvents()
+
+	manager.logger.Info().Msg("websocket starting")
 }
 
 func (manager *WebSocketManagerCtx) Shutdown() error {
+	manager.logger.Info().Msg("websocket shutdown")
 	return nil
 }
 
@@ -169,8 +192,11 @@ func (manager *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	// add session id to logger context
+	logger := manager.logger.With().Str("session_id", session.ID()).Logger()
+
 	if !session.Profile().CanConnect {
-		manager.logger.Debug().Str("session_id", session.ID()).Msg("connection disabled")
+		logger.Debug().Msg("connection disabled")
 
 		// TODO: Refactor, return error code.
 		if err = connection.WriteJSON(
@@ -178,18 +204,18 @@ func (manager *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Reque
 				Event:   event.SYSTEM_DISCONNECT,
 				Message: "connection disabled",
 			}); err != nil {
-			manager.logger.Error().Err(err).Msg("failed to send disconnect event")
+			logger.Error().Err(err).Msg("failed to send disconnect event")
 		}
 
 		if err := connection.Close(); err != nil {
-			manager.logger.Warn().Err(err).Msg("connection closed with an error")
+			logger.Warn().Err(err).Msg("connection closed with an error")
 		}
 
 		return
 	}
 
 	if session.State().IsConnected {
-		manager.logger.Warn().Str("session_id", session.ID()).Msg("already connected")
+		logger.Warn().Msg("already connected")
 
 		if !manager.sessions.MercifulReconnect() {
 			// TODO: Refactor, return error code.
@@ -198,44 +224,40 @@ func (manager *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Reque
 					Event:   event.SYSTEM_DISCONNECT,
 					Message: "already connected",
 				}); err != nil {
-				manager.logger.Error().Err(err).Msg("failed to send disconnect event")
+				logger.Error().Err(err).Msg("failed to send disconnect event")
 			}
 
 			if err := connection.Close(); err != nil {
-				manager.logger.Warn().Err(err).Msg("connection closed with an error")
+				logger.Warn().Err(err).Msg("connection closed with an error")
 			}
 
 			return
 		}
 
-		manager.logger.Debug().Str("session_id", session.ID()).Msg("replacing peer connection")
+		logger.Info().Msg("replacing peer connection")
 
 		// replace peer connection
 		if err := session.GetWebSocketPeer().Destroy(); err != nil {
-			manager.logger.Warn().Err(err).Msg("previous connection closed with an error")
+			logger.Warn().Err(err).Msg("previous connection closed with an error")
 		}
 	}
 
 	peer := &WebSocketPeerCtx{
+		logger:     logger,
 		session:    session,
-		manager:    manager,
 		connection: connection,
 	}
 
 	session.SetWebSocketPeer(peer)
 
-	manager.logger.
-		Debug().
-		Str("session_id", session.ID()).
+	logger.Info().
 		Str("address", connection.RemoteAddr().String()).
 		Msg("connection started")
 
 	session.SetWebSocketConnected(peer, true)
 
 	defer func() {
-		manager.logger.
-			Debug().
-			Str("session_id", session.ID()).
+		logger.Info().
 			Str("address", connection.RemoteAddr().String()).
 			Msg("connection ended")
 
@@ -246,6 +268,9 @@ func (manager *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Reque
 }
 
 func (manager *WebSocketManagerCtx) handle(connection *websocket.Conn, session types.Session) {
+	// add session id to logger context
+	logger := manager.logger.With().Str("session_id", session.ID()).Logger()
+
 	bytes := make(chan []byte)
 	cancel := make(chan struct{})
 
@@ -257,9 +282,9 @@ func (manager *WebSocketManagerCtx) handle(connection *websocket.Conn, session t
 			_, raw, err := connection.ReadMessage()
 			if err != nil {
 				if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-					manager.logger.Warn().Err(err).Msg("read message error")
+					logger.Warn().Err(err).Msg("read message error")
 				} else {
-					manager.logger.Debug().Err(err).Msg("read message error")
+					logger.Debug().Err(err).Msg("read message error")
 				}
 
 				close(cancel)
@@ -273,8 +298,7 @@ func (manager *WebSocketManagerCtx) handle(connection *websocket.Conn, session t
 	for {
 		select {
 		case raw := <-bytes:
-			manager.logger.Debug().
-				Str("session_id", session.ID()).
+			logger.Debug().
 				Str("address", connection.RemoteAddr().String()).
 				Str("raw", string(raw)).
 				Msg("received message from client")
@@ -289,13 +313,13 @@ func (manager *WebSocketManagerCtx) handle(connection *websocket.Conn, session t
 			}
 
 			if !handled {
-				manager.logger.Warn().Msg("unhandled message")
+				logger.Warn().Msg("unhandled message")
 			}
 		case <-cancel:
 			return
 		case <-ticker.C:
 			if err := connection.WriteMessage(websocket.PingMessage, nil); err != nil {
-				manager.logger.Error().Err(err).Msg("ping message has failed")
+				logger.Error().Err(err).Msg("ping message has failed")
 				return
 			}
 		}

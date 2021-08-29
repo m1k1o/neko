@@ -18,10 +18,8 @@ func New(
 	capture types.CaptureManager,
 	webrtc types.WebRTCManager,
 ) *MessageHandlerCtx {
-	logger := log.With().Str("module", "handler").Logger()
-
 	return &MessageHandlerCtx{
-		logger:   logger,
+		logger:   log.With().Str("module", "websocket").Str("submodule", "handler").Logger(),
 		sessions: sessions,
 		desktop:  desktop,
 		capture:  capture,
@@ -38,9 +36,11 @@ type MessageHandlerCtx struct {
 }
 
 func (h *MessageHandlerCtx) Message(session types.Session, raw []byte) bool {
+	logger := h.logger.With().Str("session_id", session.ID()).Logger()
+
 	header := message.Message{}
 	if err := json.Unmarshal(raw, &header); err != nil {
-		h.logger.Error().Err(err).Msg("message parsing has failed")
+		logger.Error().Err(err).Msg("message parsing has failed")
 		return false
 	}
 
@@ -114,12 +114,12 @@ func (h *MessageHandlerCtx) Message(session types.Session, raw []byte) bool {
 			return h.sendBroadcast(session, payload)
 		})
 	default:
-		h.logger.Warn().Str("event", header.Event).Msg("unknown message event")
+		logger.Warn().Str("event", header.Event).Msg("unknown message event")
 		return false
 	}
 
 	if err != nil {
-		h.logger.Error().Err(err).Str("event", header.Event).Msg("message handler has failed")
+		logger.Error().Err(err).Str("event", header.Event).Msg("message handler has failed")
 	}
 
 	return true
