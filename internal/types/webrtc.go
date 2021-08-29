@@ -1,6 +1,15 @@
 package types
 
-import "github.com/pion/webrtc/v3"
+import (
+	"errors"
+
+	"github.com/pion/webrtc/v3"
+)
+
+var (
+	ErrWebRTCVideoNotFound       = errors.New("webrtc video not found")
+	ErrWebRTCDataChannelNotFound = errors.New("webrtc data channel not found")
+)
 
 type ICEServer struct {
 	URLs       []string `mapstructure:"urls"       json:"urls"`

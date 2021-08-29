@@ -3,7 +3,6 @@ package webrtc
 import (
 	"bytes"
 	"encoding/binary"
-	"fmt"
 
 	"demodesk/neko/internal/types"
 )
@@ -28,8 +27,11 @@ type PayloadCursorImage struct {
 }
 
 func (peer *WebRTCPeerCtx) SendCursorPosition(x, y int) error {
+	peer.mu.Lock()
+	defer peer.mu.Unlock()
+
 	if peer.dataChannel == nil {
-		return fmt.Errorf("no data channel")
+		return types.ErrWebRTCDataChannelNotFound
 	}
 
 	data := PayloadCursorPosition{
@@ -50,8 +52,11 @@ func (peer *WebRTCPeerCtx) SendCursorPosition(x, y int) error {
 }
 
 func (peer *WebRTCPeerCtx) SendCursorImage(cur *types.CursorImage, img []byte) error {
+	peer.mu.Lock()
+	defer peer.mu.Unlock()
+
 	if peer.dataChannel == nil {
-		return fmt.Errorf("no data channel")
+		return types.ErrWebRTCDataChannelNotFound
 	}
 
 	data := PayloadCursorImage{

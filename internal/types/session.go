@@ -1,6 +1,16 @@
 package types
 
-import "net/http"
+import (
+	"errors"
+	"net/http"
+)
+
+var (
+	ErrSessionNotFound         = errors.New("session not found")
+	ErrSessionAlreadyExists    = errors.New("session already exists")
+	ErrSessionAlreadyConnected = errors.New("session is already connected")
+	ErrSessionLoginDisabled    = errors.New("session login disabled")
+)
 
 type SessionState struct {
 	IsConnected bool `json:"is_connected"`

@@ -2,6 +2,7 @@ package members
 
 import (
 	"context"
+	"errors"
 	"net/http"
 
 	"github.com/go-chi/chi"
@@ -68,14 +69,21 @@ func GetMember(r *http.Request) MemberData {
 func (h *MembersHandler) ExtractMember(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		memberId := chi.URLParam(r, "memberId")
+
 		profile, err := h.members.Select(memberId)
 		if err != nil {
-			utils.HttpNotFound(w, err)
-		} else {
-			next.ServeHTTP(w, SetMember(r, MemberData{
-				ID:      memberId,
-				Profile: profile,
-			}))
+			if errors.Is(err, types.ErrMemberDoesNotExist) {
+				utils.HttpNotFound(w, err)
+			} else {
+				utils.HttpInternalServerError(w, err)
+			}
+
+			return
 		}
+
+		next.ServeHTTP(w, SetMember(r, MemberData{
+			ID:      memberId,
+			Profile: profile,
+		}))
 	})
 }

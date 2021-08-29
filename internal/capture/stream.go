@@ -1,7 +1,6 @@
 package capture
 
 import (
-	"fmt"
 	"reflect"
 	"sync"
 
@@ -141,7 +140,7 @@ func (manager *StreamManagerCtx) Started() bool {
 
 func (manager *StreamManagerCtx) createPipeline() error {
 	if manager.pipeline != nil {
-		return fmt.Errorf("pipeline already exists")
+		return types.ErrCapturePipelineAlreadyExists
 	}
 
 	var err error

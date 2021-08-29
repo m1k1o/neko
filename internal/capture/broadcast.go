@@ -1,7 +1,6 @@
 package capture
 
 import (
-	"fmt"
 	"strings"
 	"sync"
 
@@ -9,6 +8,7 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"demodesk/neko/internal/capture/gst"
+	"demodesk/neko/internal/types"
 )
 
 type BroacastManagerCtx struct {
@@ -67,7 +67,7 @@ func (manager *BroacastManagerCtx) Url() string {
 
 func (manager *BroacastManagerCtx) createPipeline() error {
 	if manager.pipeline != nil {
-		return fmt.Errorf("pipeline already exists")
+		return types.ErrCapturePipelineAlreadyExists
 	}
 
 	var err error

@@ -2,6 +2,7 @@ package types
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math"
 	"strings"
@@ -10,6 +11,10 @@ import (
 	"github.com/pion/webrtc/v3/pkg/media"
 
 	"demodesk/neko/internal/types/codec"
+)
+
+var (
+	ErrCapturePipelineAlreadyExists = errors.New("capture pipeline already exists")
 )
 
 type Sample media.Sample

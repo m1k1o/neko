@@ -66,7 +66,7 @@ func (manager *WebRTCManagerCtx) Start() {
 	}
 
 	audioListener := func(sample types.Sample) {
-		if err := manager.audioTrack.WriteSample(media.Sample(sample)); err != nil && err != io.ErrClosedPipe {
+		if err := manager.audioTrack.WriteSample(media.Sample(sample)); err != nil {
 			if errors.Is(err, io.ErrClosedPipe) {
 				// The peerConnection has been closed.
 				return
@@ -166,7 +166,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 	}
 
 	videoListener := func(sample types.Sample) {
-		if err := videoTrack.WriteSample(media.Sample(sample)); err != nil && err != io.ErrClosedPipe {
+		if err := videoTrack.WriteSample(media.Sample(sample)); err != nil {
 			if errors.Is(err, io.ErrClosedPipe) {
 				// The peerConnection has been closed.
 				return
@@ -200,7 +200,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 	changeVideo := func(videoID string) error {
 		newVideoStream, ok := manager.capture.Video(videoID)
 		if !ok {
-			return fmt.Errorf("video stream not found")
+			return types.ErrWebRTCVideoNotFound
 		}
 
 		// should be new stream started
@@ -357,7 +357,7 @@ func (manager *WebRTCManagerCtx) mediaEngine(videoID string) (*webrtc.MediaEngin
 	// all videos must have the same codec
 	video, ok := manager.capture.Video(videoID)
 	if !ok {
-		return nil, fmt.Errorf("selected video track not found")
+		return nil, types.ErrWebRTCVideoNotFound
 	}
 
 	videoCodec := video.Codec()

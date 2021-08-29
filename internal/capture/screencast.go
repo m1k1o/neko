@@ -1,7 +1,7 @@
 package capture
 
 import (
-	"fmt"
+	"errors"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -93,12 +93,12 @@ func (manager *ScreencastManagerCtx) Image() ([]byte, error) {
 		case sample := <-manager.sample:
 			return sample.Data, nil
 		case <-time.After(1 * time.Second):
-			return nil, fmt.Errorf("timeouted")
+			return nil, errors.New("timeouted")
 		}
 	}
 
 	if manager.image.Data == nil {
-		return nil, fmt.Errorf("image sample not found")
+		return nil, errors.New("image sample not found")
 	}
 
 	return manager.image.Data, nil
@@ -109,7 +109,7 @@ func (manager *ScreencastManagerCtx) start() error {
 	defer manager.mu.Unlock()
 
 	if !manager.enabled {
-		return fmt.Errorf("screenshot pipeline not enabled")
+		return errors.New("screenshot pipeline not enabled")
 	}
 
 	err := manager.createPipeline()
@@ -131,7 +131,7 @@ func (manager *ScreencastManagerCtx) stop() {
 
 func (manager *ScreencastManagerCtx) createPipeline() error {
 	if manager.pipeline != nil {
-		return fmt.Errorf("pipeline already exists")
+		return types.ErrCapturePipelineAlreadyExists
 	}
 
 	var err error

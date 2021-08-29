@@ -1,5 +1,13 @@
 package types
 
+import "errors"
+
+var (
+	ErrMemberAlreadyExists   = errors.New("member already exists")
+	ErrMemberDoesNotExist    = errors.New("member does not exist")
+	ErrMemberInvalidPassword = errors.New("invalid password")
+)
+
 type MemberProfile struct {
 	Name               string `json:"name"`
 	IsAdmin            bool   `json:"is_admin"`

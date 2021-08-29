@@ -1,7 +1,7 @@
 package session
 
 import (
-	"fmt"
+	"errors"
 	"net/http"
 	"strings"
 	"time"
@@ -39,16 +39,16 @@ func (manager *SessionManagerCtx) CookieClearToken(w http.ResponseWriter, r *htt
 func (manager *SessionManagerCtx) Authenticate(r *http.Request) (types.Session, error) {
 	token, ok := manager.getToken(r)
 	if !ok {
-		return nil, fmt.Errorf("no authentication provided")
+		return nil, errors.New("no authentication provided")
 	}
 
 	session, ok := manager.GetByToken(token)
 	if !ok {
-		return nil, fmt.Errorf("session not found")
+		return nil, types.ErrSessionNotFound
 	}
 
 	if !session.Profile().CanLogin {
-		return nil, fmt.Errorf("login disabled")
+		return nil, types.ErrSessionLoginDisabled
 	}
 
 	return session, nil

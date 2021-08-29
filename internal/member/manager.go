@@ -1,7 +1,7 @@
 package member
 
 import (
-	"fmt"
+	"errors"
 	"sync"
 
 	"github.com/rs/zerolog"
@@ -41,7 +41,7 @@ type MemberManagerCtx struct {
 	config     *config.Member
 	providerMu sync.Mutex
 	provider   types.MemberProvider
-	sessionMu  sync.Mutex
+	loginMu    sync.Mutex
 }
 
 func (manager *MemberManagerCtx) Connect() error {
@@ -91,13 +91,10 @@ func (manager *MemberManagerCtx) UpdateProfile(id string, profile types.MemberPr
 	defer manager.providerMu.Unlock()
 
 	// update corresponding session, if exists
-	manager.sessionMu.Lock()
-	if _, ok := manager.sessions.Get(id); ok {
-		if err := manager.sessions.Update(id, profile); err != nil {
-			manager.logger.Err(err).Msg("error while updating session")
-		}
+	err := manager.sessions.Update(id, profile)
+	if err != nil && !errors.Is(err, types.ErrSessionNotFound) {
+		manager.logger.Err(err).Msg("error while updating session")
 	}
-	manager.sessionMu.Unlock()
 
 	return manager.provider.UpdateProfile(id, profile)
 }
@@ -114,13 +111,10 @@ func (manager *MemberManagerCtx) Delete(id string) error {
 	defer manager.providerMu.Unlock()
 
 	// destroy corresponding session, if exists
-	manager.sessionMu.Lock()
-	if _, ok := manager.sessions.Get(id); ok {
-		if err := manager.sessions.Delete(id); err != nil {
-			manager.logger.Err(err).Msg("error while deleting session")
-		}
+	err := manager.sessions.Delete(id)
+	if err != nil && !errors.Is(err, types.ErrSessionNotFound) {
+		manager.logger.Err(err).Msg("error while deleting session")
 	}
-	manager.sessionMu.Unlock()
 
 	return manager.provider.Delete(id)
 }
@@ -130,8 +124,8 @@ func (manager *MemberManagerCtx) Delete(id string) error {
 //
 
 func (manager *MemberManagerCtx) Login(username string, password string) (types.Session, string, error) {
-	manager.sessionMu.Lock()
-	defer manager.sessionMu.Unlock()
+	manager.loginMu.Lock()
+	defer manager.loginMu.Unlock()
 
 	id, profile, err := manager.provider.Authenticate(username, password)
 	if err != nil {
@@ -141,7 +135,7 @@ func (manager *MemberManagerCtx) Login(username string, password string) (types.
 	session, ok := manager.sessions.Get(id)
 	if ok {
 		if session.State().IsConnected {
-			return nil, "", fmt.Errorf("session is already connected")
+			return nil, "", types.ErrSessionAlreadyConnected
 		}
 
 		// TODO: Replace session.
@@ -154,12 +148,8 @@ func (manager *MemberManagerCtx) Login(username string, password string) (types.
 }
 
 func (manager *MemberManagerCtx) Logout(id string) error {
-	manager.sessionMu.Lock()
-	defer manager.sessionMu.Unlock()
-
-	if _, ok := manager.sessions.Get(id); !ok {
-		return fmt.Errorf("session not found")
-	}
+	manager.loginMu.Lock()
+	defer manager.loginMu.Unlock()
 
 	return manager.sessions.Delete(id)
 }

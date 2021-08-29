@@ -1,7 +1,7 @@
 package desktop
 
 import (
-	"fmt"
+	"errors"
 	"os/exec"
 	"time"
 )
@@ -46,7 +46,7 @@ func (manager *DesktopManagerCtx) HandleFileChooserDialog(uri string) error {
 
 	// if last command didn't return error, consider dialog as still open
 	if err2 == nil {
-		return fmt.Errorf("unable to select files in dialog")
+		return errors.New("unable to select files in dialog")
 	}
 
 	return nil
