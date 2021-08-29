@@ -65,13 +65,21 @@ func (peer *WebRTCPeerCtx) SetVideoID(videoID string) error {
 	return peer.changeVideo(videoID)
 }
 
-func (peer *WebRTCPeerCtx) Destroy() error {
+func (peer *WebRTCPeerCtx) Destroy() {
 	peer.mu.Lock()
 	defer peer.mu.Unlock()
 
 	if peer.connection == nil || peer.connection.ConnectionState() != webrtc.PeerConnectionStateConnected {
-		return nil
+		return
 	}
 
-	return peer.connection.Close()
+	// TODO: Send webrtc disconnect event via websocket.
+
+	if err := peer.connection.Close(); err != nil {
+		peer.logger.Warn().Err(err).Msg("peer connection destroyed with an error")
+	} else {
+		peer.logger.Info().Msg("peer connection destroyed")
+	}
+
+	peer.connection = nil
 }

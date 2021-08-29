@@ -31,15 +31,11 @@ func (session *SessionCtx) profileChanged() {
 	}
 
 	if (!session.profile.CanConnect || !session.profile.CanLogin || !session.profile.CanWatch) && session.state.IsWatching {
-		if err := session.webrtcPeer.Destroy(); err != nil {
-			session.logger.Warn().Err(err).Msgf("webrtc destroy has failed")
-		}
+		session.webrtcPeer.Destroy()
 	}
 
 	if (!session.profile.CanConnect || !session.profile.CanLogin) && session.state.IsConnected {
-		if err := session.websocketPeer.Destroy(); err != nil {
-			session.logger.Warn().Err(err).Msgf("websocket destroy has failed")
-		}
+		session.websocketPeer.Destroy()
 	}
 }
 
@@ -57,9 +53,7 @@ func (session *SessionCtx) IsHost() bool {
 
 func (session *SessionCtx) SetWebSocketPeer(websocketPeer types.WebSocketPeer) {
 	if session.websocketPeer != nil {
-		if err := session.websocketPeer.Destroy(); err != nil {
-			session.logger.Warn().Err(err).Msgf("websocket destroy has failed")
-		}
+		session.websocketPeer.Destroy()
 	}
 
 	session.websocketPeer = websocketPeer
@@ -99,9 +93,7 @@ func (session *SessionCtx) Send(v interface{}) error {
 
 func (session *SessionCtx) SetWebRTCPeer(webrtcPeer types.WebRTCPeer) {
 	if session.webrtcPeer != nil {
-		if err := session.webrtcPeer.Destroy(); err != nil {
-			session.logger.Warn().Err(err).Msgf("webrtc destroy has failed")
-		}
+		session.webrtcPeer.Destroy()
 	}
 
 	session.webrtcPeer = webrtcPeer

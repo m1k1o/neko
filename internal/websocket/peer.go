@@ -10,7 +10,6 @@ import (
 	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/types/event"
 	"demodesk/neko/internal/types/message"
-	"demodesk/neko/internal/utils"
 )
 
 type WebSocketPeerCtx struct {
@@ -41,24 +40,27 @@ func (peer *WebSocketPeerCtx) Send(v interface{}) error {
 	return peer.connection.WriteMessage(websocket.TextMessage, raw)
 }
 
-func (peer *WebSocketPeerCtx) Destroy() error {
+func (peer *WebSocketPeerCtx) Destroy() {
+	peer.mu.Lock()
+	defer peer.mu.Unlock()
+
 	if peer.connection == nil {
-		return nil
+		return
 	}
 
-	var errs []error
-
-	// send disconnect
-	err := peer.Send(
+	if err := peer.Send(
 		message.SystemDisconnect{
 			Event:   event.SYSTEM_DISCONNECT,
 			Message: "connection destroyed",
-		})
-	errs = append(errs, err)
+		}); err != nil {
+		peer.logger.Warn().Err(err).Msg("failed to send disconnect event")
+	}
 
-	// close connection
-	err = peer.connection.Close()
-	errs = append(errs, err)
+	if err := peer.connection.Close(); err != nil {
+		peer.logger.Warn().Err(err).Msg("peer connection destroyed with an error")
+	} else {
+		peer.logger.Info().Msg("peer connection destroyed")
+	}
 
-	return utils.ErrorsJoin(errs)
+	peer.connection = nil
 }

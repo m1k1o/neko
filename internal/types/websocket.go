@@ -8,7 +8,7 @@ type CheckOrigin func(r *http.Request) bool
 
 type WebSocketPeer interface {
 	Send(v interface{}) error
-	Destroy() error
+	Destroy()
 }
 
 type WebSocketManager interface {

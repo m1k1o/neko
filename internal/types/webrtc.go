@@ -26,7 +26,7 @@ type WebRTCPeer interface {
 	SendCursorPosition(x, y int) error
 	SendCursorImage(cur *CursorImage, img []byte) error
 
-	Destroy() error
+	Destroy()
 }
 
 type WebRTCManager interface {

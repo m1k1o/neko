@@ -236,10 +236,8 @@ func (manager *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Reque
 
 		logger.Info().Msg("replacing peer connection")
 
-		// replace peer connection
-		if err := session.GetWebSocketPeer().Destroy(); err != nil {
-			logger.Warn().Err(err).Msg("previous connection closed with an error")
-		}
+		// destroy previous peer connection
+		session.GetWebSocketPeer().Destroy()
 	}
 
 	peer := &WebSocketPeerCtx{
