@@ -7,7 +7,7 @@
 		"context": "../",
 		"args": {
 			// Update the VARIANT arg to pick a version of Go: 1, 1.16, 1.15
-			"VARIANT": "1.16",
+			"VARIANT": "1.17",
 			// Options
 			"INSTALL_NODE": "false",
 			"NODE_VERSION": "lts/*"

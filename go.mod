@@ -1,6 +1,6 @@
 module demodesk/neko
 
-go 1.16
+go 1.17
 
 require (
 	github.com/PaesslerAG/gval v1.1.1

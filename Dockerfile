@@ -1,7 +1,7 @@
 #
 # Stage 1: Build.
 #
-FROM golang:1.16-buster as build
+FROM golang:1.17-buster as build
 WORKDIR /src
 
 #
