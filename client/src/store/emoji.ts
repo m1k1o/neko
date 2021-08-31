@@ -66,7 +66,7 @@ export const actions = actionTree(
         }
         accessor.emoji.setList(req.data.list)
         accessor.emoji.setKeywords(req.data.keywords)
-      } catch (err) {
+      } catch (err: any) {
         console.error(err)
       }
     },

@@ -62,7 +62,7 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
       this._ws.onerror = (event) => this.onError.bind(this)
       this._ws.onclose = (event) => this.onDisconnected.bind(this, new Error('websocket closed'))
       this._timeout = window.setTimeout(this.onTimeout.bind(this), 15000)
-    } catch (err) {
+    } catch (err: any) {
       this.onDisconnected(err)
     }
   }
@@ -269,7 +269,7 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
           displayname: this._displayname,
         }),
       )
-    } catch (err) {
+    } catch (err: any) {
       this.emit('error', err)
     }
   }

@@ -154,7 +154,7 @@
           context: 'github/gollum',
         })
         this.$accessor.client.setAbout(res2.data)
-      } catch (err) {
+      } catch (err: any) {
         console.error(err)
       } finally {
         this.loading = false

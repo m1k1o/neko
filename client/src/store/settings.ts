@@ -74,7 +74,7 @@ export const actions = actionTree(
       try {
         const req = await $http.get<KeyboardLayouts>('keyboard_layouts.json')
         accessor.settings.setKeyboardLayoutsList(req.data)
-      } catch (err) {
+      } catch (err: any) {
         console.error(err)
       }
     },

@@ -490,7 +490,7 @@
       try {
         await this._video.play()
         this.onResise()
-      } catch (err) {
+      } catch (err: any) {
         this.$log.error(err)
       }
     }
@@ -577,7 +577,7 @@
             this.$accessor.remote.setClipboard(text)
             this.$accessor.remote.sendClipboard(text)
           }
-        } catch (err) {
+        } catch (err: any) {
           this.$log.error(err)
         }
       }
