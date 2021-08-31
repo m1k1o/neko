@@ -482,18 +482,14 @@
       return key
     }
 
-    play() {
+    async play() {
       if (!this._video.paused || !this.playable) {
         return
       }
 
       try {
-        this._video
-          .play()
-          .then(() => {
-            this.onResise()
-          })
-          .catch((err) => this.$log.error)
+        await this._video.play()
+        this.onResise()
       } catch (err) {
         this.$log.error(err)
       }
@@ -569,21 +565,21 @@
       this.onResise()
     }
 
-    onFocus() {
+    async onFocus() {
       if (!document.hasFocus() || !this.$accessor.active) {
         return
       }
 
       if (this.hosting && this.clipboard_read_available) {
-        navigator.clipboard
-          .readText()
-          .then((text) => {
-            if (this.clipboard !== text) {
-              this.$accessor.remote.setClipboard(text)
-              this.$accessor.remote.sendClipboard(text)
-            }
-          })
-          .catch(this.$log.error)
+        try {
+          const text = await navigator.clipboard.readText()
+          if (this.clipboard !== text) {
+            this.$accessor.remote.setClipboard(text)
+            this.$accessor.remote.sendClipboard(text)
+          }
+        } catch (err) {
+          this.$log.error(err)
+        }
       }
     }
 
