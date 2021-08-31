@@ -16,6 +16,8 @@ export const connect = {
   password: 'Mot de passe',
   connect: 'Connexion',
   error: 'Erreur de connexion',
+  // TODO
+  //empty_displayname: 'Display Name cannot be empty.',
 }
 
 export const context = {

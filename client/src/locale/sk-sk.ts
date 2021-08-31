@@ -15,6 +15,8 @@ export const connect = {
   displayname: 'Vaše meno',
   password: 'Heslo',
   connect: 'Pripojiť sa',
+  error: 'Chyba pri prihlasovaní',
+  empty_displayname: 'Meno nemôže byť prázdne.',
 }
 
 export const context = {

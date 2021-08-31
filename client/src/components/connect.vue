@@ -213,7 +213,7 @@
       if (this.displayname == '') {
         this.$swal({
           title: this.$t('connect.error') as string,
-          text: 'Display Name cannot be empty.' as string, // TODO: Add to i18n.
+          text: this.$t('connect.empty_displayname') as string,
           icon: 'error',
         })
         return
