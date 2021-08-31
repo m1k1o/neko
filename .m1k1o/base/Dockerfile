@@ -1,7 +1,7 @@
 #
 # STAGE 1: SERVER
 #
-FROM golang:1.16-buster as server
+FROM golang:1.17-buster as server
 WORKDIR /src
 
 #
