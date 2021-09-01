@@ -1,7 +1,7 @@
 #
 # Stage 1: Build.
 #
-FROM golang:1.17-buster as build
+FROM golang:1.17-bullseye as build
 WORKDIR /src
 
 #
@@ -37,7 +37,7 @@ RUN go get -v -t -d . && go build \
 #
 # Stage 2: Runtime.
 #
-FROM debian:buster-slim as runtime
+FROM debian:bullseye-slim as runtime
 
 #
 # set custom user
@@ -52,8 +52,8 @@ RUN set -eux; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
         wget ca-certificates supervisor \
-        pulseaudio dbus-x11 xserver-xorg-video-dummy xserver-xorg-input-void \
-        libcairo2 libxcb1 libxrandr2 libxv1 libopus0 libvpx5 \
+        pulseaudio dbus-x11 xserver-xorg-video-dummy \
+        libcairo2 libxcb1 libxrandr2 libxv1 libopus0 libvpx6 \
         #
         # file chooser handler, clipboard
         xdotool xclip \
