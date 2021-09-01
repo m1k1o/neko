@@ -30,7 +30,7 @@ func broadcastNew(pipelineStr string) *BroacastManagerCtx {
 }
 
 func (manager *BroacastManagerCtx) shutdown() {
-	manager.logger.Info().Msgf("shutting down")
+	manager.logger.Info().Msgf("shutdown")
 
 	manager.destroyPipeline()
 }

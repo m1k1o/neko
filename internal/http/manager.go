@@ -94,5 +94,7 @@ func (manager *HttpManagerCtx) Start() {
 }
 
 func (manager *HttpManagerCtx) Shutdown() error {
+	manager.logger.Info().Msg("shutdown")
+
 	return manager.http.Shutdown(context.Background())
 }

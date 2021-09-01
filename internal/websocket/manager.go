@@ -131,7 +131,8 @@ func (manager *WebSocketManagerCtx) Start() {
 }
 
 func (manager *WebSocketManagerCtx) Shutdown() error {
-	manager.logger.Info().Msg("websocket shutdown")
+	manager.logger.Info().Msg("shutdown")
+	// TODO: Kill all connections and add waitgroup for gorutines.
 	return nil
 }
 
@@ -178,10 +179,8 @@ func (manager *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Reque
 			manager.logger.Err(err).Msg("failed to send disconnect event")
 		}
 
-		if err := connection.Close(); err != nil {
-			manager.logger.Warn().Err(err).Msg("connection closed with an error")
-		}
-
+		err = connection.Close()
+		manager.logger.Err(err).Msg("connection closed")
 		return
 	}
 

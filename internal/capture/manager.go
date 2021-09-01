@@ -162,7 +162,7 @@ func (manager *CaptureManagerCtx) Start() {
 }
 
 func (manager *CaptureManagerCtx) Shutdown() error {
-	manager.logger.Info().Msgf("capture shutting down")
+	manager.logger.Info().Msgf("shutdown")
 
 	manager.broadcast.shutdown()
 	manager.screencast.shutdown()

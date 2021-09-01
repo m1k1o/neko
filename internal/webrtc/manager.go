@@ -92,7 +92,7 @@ func (manager *WebRTCManagerCtx) Start() {
 }
 
 func (manager *WebRTCManagerCtx) Shutdown() error {
-	manager.logger.Info().Msg("webrtc shutdown")
+	manager.logger.Info().Msg("shutdown")
 
 	manager.curImage.Shutdown()
 	manager.curPosition.Shutdown()
