@@ -45,63 +45,45 @@ type WebSocketManagerCtx struct {
 
 func (manager *WebSocketManagerCtx) Start() {
 	manager.sessions.OnCreated(func(session types.Session) {
-		logger := manager.logger.With().Str("session_id", session.ID()).Logger()
-
-		if err := manager.handler.SessionCreated(session); err != nil {
-			logger.Warn().Err(err).Msg("session created with an error")
-		} else {
-			logger.Debug().Msg("session created")
-		}
+		err := manager.handler.SessionCreated(session)
+		manager.logger.Err(err).
+			Str("session_id", session.ID()).
+			Msg("session created")
 	})
 
 	manager.sessions.OnDeleted(func(session types.Session) {
-		logger := manager.logger.With().Str("session_id", session.ID()).Logger()
-
-		if err := manager.handler.SessionDeleted(session); err != nil {
-			logger.Warn().Err(err).Msg("session deleted with an error")
-		} else {
-			logger.Debug().Msg("session deleted")
-		}
+		err := manager.handler.SessionDeleted(session)
+		manager.logger.Err(err).
+			Str("session_id", session.ID()).
+			Msg("session deleted")
 	})
 
 	manager.sessions.OnConnected(func(session types.Session) {
-		logger := manager.logger.With().Str("session_id", session.ID()).Logger()
-
-		if err := manager.handler.SessionConnected(session); err != nil {
-			logger.Warn().Err(err).Msg("session connected with an error")
-		} else {
-			logger.Debug().Msg("session connected")
-		}
+		err := manager.handler.SessionConnected(session)
+		manager.logger.Err(err).
+			Str("session_id", session.ID()).
+			Msg("session connected")
 	})
 
 	manager.sessions.OnDisconnected(func(session types.Session) {
-		logger := manager.logger.With().Str("session_id", session.ID()).Logger()
-
-		if err := manager.handler.SessionDisconnected(session); err != nil {
-			logger.Warn().Err(err).Msg("session disconnected with an error")
-		} else {
-			logger.Debug().Msg("session disconnected")
-		}
+		err := manager.handler.SessionDisconnected(session)
+		manager.logger.Err(err).
+			Str("session_id", session.ID()).
+			Msg("session disconnected")
 	})
 
 	manager.sessions.OnProfileChanged(func(session types.Session) {
-		logger := manager.logger.With().Str("session_id", session.ID()).Logger()
-
-		if err := manager.handler.SessionProfileChanged(session); err != nil {
-			logger.Warn().Err(err).Msg("session profile changed with an error")
-		} else {
-			logger.Debug().Interface("profile", session.Profile()).Msg("session profile changed")
-		}
+		err := manager.handler.SessionProfileChanged(session)
+		manager.logger.Err(err).
+			Str("session_id", session.ID()).
+			Msg("session profile changed")
 	})
 
 	manager.sessions.OnStateChanged(func(session types.Session) {
-		logger := manager.logger.With().Str("session_id", session.ID()).Logger()
-
-		if err := manager.handler.SessionStateChanged(session); err != nil {
-			logger.Warn().Err(err).Msg("session state changed with an error")
-		} else {
-			logger.Debug().Interface("state", session.State()).Msg("session state changed")
-		}
+		err := manager.handler.SessionStateChanged(session)
+		manager.logger.Err(err).
+			Str("session_id", session.ID()).
+			Msg("session state changed")
 	})
 
 	manager.sessions.OnHostChanged(func(session types.Session) {

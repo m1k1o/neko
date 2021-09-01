@@ -195,47 +195,28 @@ func (neko *Neko) Start() {
 }
 
 func (neko *Neko) Shutdown() {
-	if err := neko.memberManager.Disconnect(); err != nil {
-		neko.logger.Err(err).Msg("member manager disconnect with an error")
-	} else {
-		neko.logger.Debug().Msg("member manager disconnect")
-	}
+	var err error
 
-	if err := neko.desktopManager.Shutdown(); err != nil {
-		neko.logger.Err(err).Msg("desktop manager shutdown with an error")
-	} else {
-		neko.logger.Debug().Msg("desktop manager shutdown")
-	}
+	err = neko.memberManager.Disconnect()
+	neko.logger.Err(err).Msg("member manager disconnect")
 
-	if err := neko.captureManager.Shutdown(); err != nil {
-		neko.logger.Err(err).Msg("capture manager shutdown with an error")
-	} else {
-		neko.logger.Debug().Msg("capture manager shutdown")
-	}
+	err = neko.desktopManager.Shutdown()
+	neko.logger.Err(err).Msg("desktop manager shutdown")
 
-	if err := neko.webRTCManager.Shutdown(); err != nil {
-		neko.logger.Err(err).Msg("webrtc manager shutdown with an error")
-	} else {
-		neko.logger.Debug().Msg("webrtc manager shutdown")
-	}
+	err = neko.captureManager.Shutdown()
+	neko.logger.Err(err).Msg("capture manager shutdown")
 
-	if err := neko.webSocketManager.Shutdown(); err != nil {
-		neko.logger.Err(err).Msg("websocket manager shutdown with an error")
-	} else {
-		neko.logger.Debug().Msg("websocket manager shutdown")
-	}
+	err = neko.webRTCManager.Shutdown()
+	neko.logger.Err(err).Msg("webrtc manager shutdown")
 
-	if err := modules.Shutdown(); err != nil {
-		neko.logger.Err(err).Msg("modules shutdown with an error")
-	} else {
-		neko.logger.Debug().Msg("modules shutdown")
-	}
+	err = neko.webSocketManager.Shutdown()
+	neko.logger.Err(err).Msg("websocket manager shutdown")
 
-	if err := neko.httpManager.Shutdown(); err != nil {
-		neko.logger.Err(err).Msg("http manager shutdown with an error")
-	} else {
-		neko.logger.Debug().Msg("http manager shutdown")
-	}
+	err = modules.Shutdown()
+	neko.logger.Err(err).Msg("modules shutdown")
+
+	err = neko.httpManager.Shutdown()
+	neko.logger.Err(err).Msg("http manager shutdown")
 }
 
 func (neko *Neko) ServeCommand(cmd *cobra.Command, args []string) {
