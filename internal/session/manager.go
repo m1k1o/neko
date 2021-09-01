@@ -197,7 +197,7 @@ func (manager *SessionManagerCtx) ClearHost() {
 // broadcasts
 // ---
 
-func (manager *SessionManagerCtx) Broadcast(v interface{}, exclude interface{}) {
+func (manager *SessionManagerCtx) Broadcast(event string, payload interface{}, exclude interface{}) {
 	manager.sessionsMu.Lock()
 	defer manager.sessionsMu.Unlock()
 
@@ -212,13 +212,11 @@ func (manager *SessionManagerCtx) Broadcast(v interface{}, exclude interface{}) 
 			}
 		}
 
-		if err := session.Send(v); err != nil {
-			manager.logger.Warn().Err(err).Msgf("broadcasting event has failed")
-		}
+		session.Send(event, payload)
 	}
 }
 
-func (manager *SessionManagerCtx) AdminBroadcast(v interface{}, exclude interface{}) {
+func (manager *SessionManagerCtx) AdminBroadcast(event string, payload interface{}, exclude interface{}) {
 	manager.sessionsMu.Lock()
 	defer manager.sessionsMu.Unlock()
 
@@ -233,9 +231,7 @@ func (manager *SessionManagerCtx) AdminBroadcast(v interface{}, exclude interfac
 			}
 		}
 
-		if err := session.Send(v); err != nil {
-			manager.logger.Warn().Err(err).Msgf("broadcasting admin event has failed")
-		}
+		session.Send(event, payload)
 	}
 }
 

@@ -79,12 +79,12 @@ func (session *SessionCtx) GetWebSocketPeer() types.WebSocketPeer {
 	return session.websocketPeer
 }
 
-func (session *SessionCtx) Send(v interface{}) error {
+func (session *SessionCtx) Send(event string, payload interface{}) {
 	if session.websocketPeer == nil {
-		return nil
+		return
 	}
 
-	return session.websocketPeer.Send(v)
+	session.websocketPeer.Send(event, payload)
 }
 
 // ---

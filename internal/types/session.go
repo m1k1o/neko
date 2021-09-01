@@ -27,7 +27,7 @@ type Session interface {
 	SetWebSocketPeer(websocketPeer WebSocketPeer)
 	SetWebSocketConnected(websocketPeer WebSocketPeer, connected bool)
 	GetWebSocketPeer() WebSocketPeer
-	Send(v interface{}) error
+	Send(event string, payload interface{})
 
 	// webrtc
 	SetWebRTCPeer(webrtcPeer WebRTCPeer)
@@ -47,8 +47,8 @@ type SessionManager interface {
 	GetHost() Session
 	ClearHost()
 
-	Broadcast(v interface{}, exclude interface{})
-	AdminBroadcast(v interface{}, exclude interface{})
+	Broadcast(event string, payload interface{}, exclude interface{})
+	AdminBroadcast(event string, payload interface{}, exclude interface{})
 
 	OnCreated(listener func(session Session))
 	OnDeleted(listener func(session Session))
