@@ -18,7 +18,7 @@ export interface NekoEvents {
   // drag and drop events
   ['upload.drop.started']: () => void
   ['upload.drop.progress']: (progressEvent: ProgressEvent) => void
-  ['upload.drop.finished']: (error: Error | null) => void
+  ['upload.drop.finished']: (error?: Error) => void
 
   // upload dialog events
   ['upload.dialog.requested']: () => void

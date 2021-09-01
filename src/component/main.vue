@@ -376,8 +376,8 @@
           },
         })
 
-        this.events.emit('upload.drop.finished', null)
-      } catch (err) {
+        this.events.emit('upload.drop.finished')
+      } catch (err: any) {
         this.events.emit('upload.drop.finished', err)
       }
     }
