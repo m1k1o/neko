@@ -18,6 +18,7 @@ var mu = sync.Mutex{}
 
 type DesktopManagerCtx struct {
 	logger   zerolog.Logger
+	wg       sync.WaitGroup
 	shutdown chan bool
 	emmiter  events.EventEmmiter
 	config   *config.Desktop
@@ -39,13 +40,10 @@ func (manager *DesktopManagerCtx) Start() {
 
 	xorg.GetScreenConfigurations()
 
-	manager.logger.Info().
+	err := xorg.ChangeScreenSize(manager.config.ScreenWidth, manager.config.ScreenHeight, manager.config.ScreenRate)
+	manager.logger.Err(err).
 		Str("screen_size", fmt.Sprintf("%dx%d@%d", manager.config.ScreenWidth, manager.config.ScreenHeight, manager.config.ScreenRate)).
 		Msgf("setting initial screen size")
-
-	if err := xorg.ChangeScreenSize(manager.config.ScreenWidth, manager.config.ScreenHeight, manager.config.ScreenRate); err != nil {
-		manager.logger.Err(err).Msg("unable to set initial screen size")
-	}
 
 	go xevent.EventLoop(manager.config.Display)
 
@@ -61,14 +59,17 @@ func (manager *DesktopManagerCtx) Start() {
 			Msg("X event error occured")
 	})
 
+	manager.wg.Add(1)
+
 	go func() {
+		defer manager.wg.Done()
+
 		ticker := time.NewTicker(1 * time.Second)
 		defer ticker.Stop()
 
 		for {
 			select {
 			case <-manager.shutdown:
-				xorg.DisplayClose()
 				return
 			case <-ticker.C:
 				xorg.CheckKeys(time.Second * 10)
@@ -90,8 +91,11 @@ func (manager *DesktopManagerCtx) OnAfterScreenSizeChange(listener func()) {
 }
 
 func (manager *DesktopManagerCtx) Shutdown() error {
-	manager.logger.Info().Msgf("desktop shutting down")
+	manager.logger.Info().Msgf("shutdown")
 
 	manager.shutdown <- true
+	manager.wg.Wait()
+
+	xorg.DisplayClose()
 	return nil
 }

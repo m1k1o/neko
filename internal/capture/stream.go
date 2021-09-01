@@ -15,6 +15,7 @@ import (
 type StreamManagerCtx struct {
 	logger      zerolog.Logger
 	mu          sync.Mutex
+	wg          sync.WaitGroup
 	codec       codec.RTPCodec
 	pipelineStr func() string
 	pipeline    *gst.Pipeline
@@ -42,8 +43,11 @@ func streamNew(codec codec.RTPCodec, pipelineStr func() string, video_id string)
 		started:     false,
 	}
 
+	manager.wg.Add(1)
+
 	go func() {
 		manager.logger.Debug().Msg("started emitting samples")
+		defer manager.wg.Done()
 
 		for {
 			select {
@@ -66,7 +70,7 @@ func streamNew(codec codec.RTPCodec, pipelineStr func() string, video_id string)
 }
 
 func (manager *StreamManagerCtx) shutdown() {
-	manager.logger.Info().Msgf("shutting down")
+	manager.logger.Info().Msgf("shutdown")
 
 	manager.emitMu.Lock()
 	for key := range manager.listeners {
@@ -75,7 +79,9 @@ func (manager *StreamManagerCtx) shutdown() {
 	manager.emitMu.Unlock()
 
 	manager.destroyPipeline()
+
 	manager.emitStop <- true
+	manager.wg.Wait()
 }
 
 func (manager *StreamManagerCtx) Codec() codec.RTPCodec {

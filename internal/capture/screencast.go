@@ -16,6 +16,7 @@ import (
 type ScreencastManagerCtx struct {
 	logger      zerolog.Logger
 	mu          sync.Mutex
+	wg          sync.WaitGroup
 	pipelineStr string
 	pipeline    *gst.Pipeline
 	enabled     bool
@@ -39,8 +40,11 @@ func screencastNew(enabled bool, pipelineStr string) *ScreencastManagerCtx {
 		emitUpdate:  make(chan bool),
 	}
 
+	manager.wg.Add(1)
+
 	go func() {
 		manager.logger.Debug().Msg("started emitting samples")
+		defer manager.wg.Done()
 
 		ticker := time.NewTicker(screencastTimeout)
 		defer ticker.Stop()
@@ -66,10 +70,12 @@ func screencastNew(enabled bool, pipelineStr string) *ScreencastManagerCtx {
 }
 
 func (manager *ScreencastManagerCtx) shutdown() {
-	manager.logger.Info().Msgf("shutting down")
+	manager.logger.Info().Msgf("shutdown")
 
 	manager.destroyPipeline()
+
 	manager.emitStop <- true
+	manager.wg.Wait()
 }
 
 func (manager *ScreencastManagerCtx) Enabled() bool {
