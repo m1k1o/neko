@@ -1,18 +1,17 @@
 package handler
 
 import (
+	"errors"
+
 	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/types/event"
 	"demodesk/neko/internal/types/message"
 )
 
 func (h *MessageHandlerCtx) sendUnicast(session types.Session, payload *message.SendUnicast) error {
-	logger := h.logger.With().Str("session_id", session.ID()).Logger()
-
 	receiver, ok := h.sessions.Get(payload.Receiver)
 	if !ok {
-		logger.Debug().Msg("receiver session ID not found")
-		return nil
+		return errors.New("receiver session ID not found")
 	}
 
 	receiver.Send(

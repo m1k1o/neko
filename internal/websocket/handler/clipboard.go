@@ -1,21 +1,19 @@
 package handler
 
 import (
+	"errors"
+
 	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/types/message"
 )
 
 func (h *MessageHandlerCtx) clipboardSet(session types.Session, payload *message.ClipboardData) error {
-	logger := h.logger.With().Str("session_id", session.ID()).Logger()
-
 	if !session.Profile().CanAccessClipboard {
-		logger.Debug().Msg("cannot access clipboard")
-		return nil
+		return errors.New("cannot access clipboard")
 	}
 
 	if !session.IsHost() {
-		logger.Debug().Msg("is not the host")
-		return nil
+		return errors.New("is not the host")
 	}
 
 	return h.desktop.ClipboardSetText(types.ClipboardText{

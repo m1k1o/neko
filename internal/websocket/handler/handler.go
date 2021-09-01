@@ -113,7 +113,7 @@ func (h *MessageHandlerCtx) Message(session types.Session, data types.WebSocketM
 	}
 
 	if err != nil {
-		logger.Error().Err(err).Msg("message handler has failed")
+		logger.Warn().Err(err).Msg("message handler has failed")
 	}
 
 	return true

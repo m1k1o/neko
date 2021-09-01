@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"errors"
+
 	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/types/event"
 	"demodesk/neko/internal/types/message"
@@ -19,8 +21,7 @@ func (h *MessageHandlerCtx) systemInit(session types.Session) error {
 
 	size := h.desktop.GetScreenSize()
 	if size == nil {
-		h.logger.Warn().Msg("could not get screen size")
-		return nil
+		return errors.New("could not get screen size")
 	}
 
 	sessions := map[string]message.SessionData{}

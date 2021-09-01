@@ -1,17 +1,16 @@
 package handler
 
 import (
+	"errors"
+
 	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/types/event"
 	"demodesk/neko/internal/types/message"
 )
 
 func (h *MessageHandlerCtx) signalRequest(session types.Session, payload *message.SignalVideo) error {
-	logger := h.logger.With().Str("session_id", session.ID()).Logger()
-
 	if !session.Profile().CanWatch {
-		logger.Debug().Msg("not allowed to watch")
-		return nil
+		return errors.New("not allowed to watch")
 	}
 
 	// use default first video, if not provided
@@ -37,12 +36,9 @@ func (h *MessageHandlerCtx) signalRequest(session types.Session, payload *messag
 }
 
 func (h *MessageHandlerCtx) signalRestart(session types.Session) error {
-	logger := h.logger.With().Str("session_id", session.ID()).Logger()
-
 	peer := session.GetWebRTCPeer()
 	if peer == nil {
-		logger.Debug().Msg("webRTC peer does not exist")
-		return nil
+		return errors.New("webRTC peer does not exist")
 	}
 
 	offer, err := peer.CreateOffer(true)
@@ -60,36 +56,27 @@ func (h *MessageHandlerCtx) signalRestart(session types.Session) error {
 }
 
 func (h *MessageHandlerCtx) signalAnswer(session types.Session, payload *message.SignalAnswer) error {
-	logger := h.logger.With().Str("session_id", session.ID()).Logger()
-
 	peer := session.GetWebRTCPeer()
 	if peer == nil {
-		logger.Debug().Msg("webRTC peer does not exist")
-		return nil
+		return errors.New("webRTC peer does not exist")
 	}
 
 	return peer.SignalAnswer(payload.SDP)
 }
 
 func (h *MessageHandlerCtx) signalCandidate(session types.Session, payload *message.SignalCandidate) error {
-	logger := h.logger.With().Str("session_id", session.ID()).Logger()
-
 	peer := session.GetWebRTCPeer()
 	if peer == nil {
-		logger.Debug().Msg("webRTC peer does not exist")
-		return nil
+		return errors.New("webRTC peer does not exist")
 	}
 
 	return peer.SignalCandidate(payload.ICECandidateInit)
 }
 
 func (h *MessageHandlerCtx) signalVideo(session types.Session, payload *message.SignalVideo) error {
-	logger := h.logger.With().Str("session_id", session.ID()).Logger()
-
 	peer := session.GetWebRTCPeer()
 	if peer == nil {
-		logger.Debug().Msg("webRTC peer does not exist")
-		return nil
+		return errors.New("webRTC peer does not exist")
 	}
 
 	err := peer.SetVideoID(payload.Video)
