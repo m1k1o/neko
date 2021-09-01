@@ -13,10 +13,6 @@ module.exports = {
   devServer: {
     disableHostCheck: true,
     proxy: {
-      '^/ws': {
-        target: 'ws://' + process.env.NEKO_HOST + ':' + process.env.NEKO_PORT + '/',
-        ws: true,
-      },
       '^/api': {
         target: 'http://' + process.env.NEKO_HOST + ':' + process.env.NEKO_PORT + '/',
       },
