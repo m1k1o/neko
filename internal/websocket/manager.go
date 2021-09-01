@@ -307,12 +307,9 @@ func (manager *WebSocketManagerCtx) handle(connection *websocket.Conn, session t
 		case raw := <-bytes:
 			data := types.WebSocketMessage{}
 			if err := json.Unmarshal(raw, &data); err != nil {
-				logger.Error().Err(err).Msg("message parsing has failed")
+				logger.Error().Err(err).Msg("message unmarshalling has failed")
 				break
 			}
-
-			// TODO: Switch to payload based messages.
-			data.Payload = raw
 
 			logger.Debug().
 				Str("address", connection.RemoteAddr().String()).

@@ -19,25 +19,35 @@ type WebSocketPeerCtx struct {
 	connection *websocket.Conn
 }
 
-func (peer *WebSocketPeerCtx) Send(v interface{}) error {
+func (peer *WebSocketPeerCtx) Send(event string, payload interface{}) {
 	peer.mu.Lock()
 	defer peer.mu.Unlock()
 
 	if peer.connection == nil {
-		return nil
+		return
 	}
 
-	raw, err := json.Marshal(v)
+	raw, err := json.Marshal(payload)
 	if err != nil {
-		return err
+		peer.logger.Error().Err(err).Str("event", event).Msg("message marshalling has failed")
+		return
+	}
+
+	err = peer.connection.WriteJSON(types.WebSocketMessage{
+		Event:   event,
+		Payload: raw,
+	})
+
+	if err != nil {
+		peer.logger.Error().Err(err).Str("event", event).Msg("send message error")
+		return
 	}
 
 	peer.logger.Debug().
 		Str("address", peer.connection.RemoteAddr().String()).
-		Str("raw", string(raw)).
+		Str("event", event).
+		Str("payload", string(raw)).
 		Msg("sending message to client")
-
-	return peer.connection.WriteMessage(websocket.TextMessage, raw)
 }
 
 func (peer *WebSocketPeerCtx) Destroy() {
@@ -48,13 +58,11 @@ func (peer *WebSocketPeerCtx) Destroy() {
 		return
 	}
 
-	if err := peer.Send(
+	peer.Send(
+		event.SYSTEM_DISCONNECT,
 		message.SystemDisconnect{
-			Event:   event.SYSTEM_DISCONNECT,
 			Message: "connection destroyed",
-		}); err != nil {
-		peer.logger.Warn().Err(err).Msg("failed to send disconnect event")
-	}
+		})
 
 	if err := peer.connection.Close(); err != nil {
 		peer.logger.Warn().Err(err).Msg("peer connection destroyed with an error")
