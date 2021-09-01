@@ -44,7 +44,7 @@ func (manager *DesktopManagerCtx) Start() {
 		Msgf("setting initial screen size")
 
 	if err := xorg.ChangeScreenSize(manager.config.ScreenWidth, manager.config.ScreenHeight, manager.config.ScreenRate); err != nil {
-		manager.logger.Warn().Err(err).Msg("unable to set initial screen size")
+		manager.logger.Err(err).Msg("unable to set initial screen size")
 	}
 
 	go xevent.EventLoop(manager.config.Display)

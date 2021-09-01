@@ -29,7 +29,7 @@ func (peer *WebSocketPeerCtx) Send(event string, payload interface{}) {
 
 	raw, err := json.Marshal(payload)
 	if err != nil {
-		peer.logger.Error().Err(err).Str("event", event).Msg("message marshalling has failed")
+		peer.logger.Err(err).Str("event", event).Msg("message marshalling has failed")
 		return
 	}
 
@@ -39,7 +39,7 @@ func (peer *WebSocketPeerCtx) Send(event string, payload interface{}) {
 	})
 
 	if err != nil {
-		peer.logger.Error().Err(err).Str("event", event).Msg("send message error")
+		peer.logger.Err(err).Str("event", event).Msg("send message error")
 		return
 	}
 

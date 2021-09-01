@@ -32,9 +32,7 @@ func HttpJsonResponse(w http.ResponseWriter, status int, res interface{}) {
 	w.WriteHeader(status)
 
 	if err := json.NewEncoder(w).Encode(res); err != nil {
-		log.Warn().Err(err).
-			Str("module", "http").
-			Msg("failed writing json error response")
+		log.Err(err).Str("module", "http").Msg("sending http json response failed")
 	}
 }
 

@@ -131,7 +131,7 @@ func (manager *WebSocketManagerCtx) Start() {
 
 		data, err := manager.desktop.ClipboardGetText()
 		if err != nil {
-			manager.logger.Warn().Err(err).Msg("could not get clipboard content")
+			manager.logger.Err(err).Msg("could not get clipboard content")
 			return
 		}
 
@@ -169,7 +169,7 @@ func (manager *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Reque
 
 	connection, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		manager.logger.Error().Err(err).Msg("failed to upgrade connection")
+		manager.logger.Err(err).Msg("failed to upgrade connection")
 		return
 	}
 
@@ -183,7 +183,7 @@ func (manager *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Reque
 		})
 
 		if err != nil {
-			manager.logger.Error().Err(err).Msg("failed to create disconnect event")
+			manager.logger.Err(err).Msg("failed to create disconnect event")
 		}
 
 		err = connection.WriteJSON(
@@ -193,7 +193,7 @@ func (manager *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Reque
 			})
 
 		if err != nil {
-			manager.logger.Error().Err(err).Msg("failed to send disconnect event")
+			manager.logger.Err(err).Msg("failed to send disconnect event")
 		}
 
 		if err := connection.Close(); err != nil {
@@ -297,7 +297,7 @@ func (manager *WebSocketManagerCtx) handle(connection *websocket.Conn, session t
 		case raw := <-bytes:
 			data := types.WebSocketMessage{}
 			if err := json.Unmarshal(raw, &data); err != nil {
-				logger.Error().Err(err).Msg("message unmarshalling has failed")
+				logger.Err(err).Msg("message unmarshalling has failed")
 				break
 			}
 
@@ -323,7 +323,7 @@ func (manager *WebSocketManagerCtx) handle(connection *websocket.Conn, session t
 			return
 		case <-ticker.C:
 			if err := connection.WriteMessage(websocket.PingMessage, nil); err != nil {
-				logger.Error().Err(err).Msg("ping message has failed")
+				logger.Err(err).Msg("ping message has failed")
 				return
 			}
 		}

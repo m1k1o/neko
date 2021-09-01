@@ -98,10 +98,10 @@ func init() {
 
 		if err := viper.ReadInConfig(); err != nil {
 			if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
-				log.Error().Err(err)
+				log.Err(err)
 			}
 			if config != "" {
-				log.Error().Err(err)
+				log.Err(err)
 			}
 		}
 
@@ -124,7 +124,7 @@ func init() {
 			logger.Warn().Msg("preflight complete without config file")
 		} else {
 			if _, err := os.Stat(file); os.IsNotExist(err) {
-				logger.Error().Msg("preflight complete with nonexistent config file")
+				logger.Err(err).Msg("preflight complete with nonexistent config file")
 			} else {
 				logger.Info().Msg("preflight complete")
 			}

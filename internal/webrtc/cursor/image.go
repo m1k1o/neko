@@ -41,7 +41,7 @@ func (manager *ImageCtx) Start() {
 	manager.desktop.OnCursorChanged(func(serial uint64) {
 		entry, err := manager.GetCached(serial)
 		if err != nil {
-			manager.logger.Warn().Err(err).Msg("failed to get cursor image")
+			manager.logger.Err(err).Msg("failed to get cursor image")
 			return
 		}
 

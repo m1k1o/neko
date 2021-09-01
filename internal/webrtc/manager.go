@@ -158,7 +158,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 
 	videoTrack, err := webrtc.NewTrackLocalStaticSample(videoStream.Codec().Capability, "video", "stream")
 	if err != nil {
-		logger.Warn().Err(err).Msg("unable to create video track")
+		logger.Err(err).Msg("unable to create video track")
 		return nil, err
 	}
 
@@ -177,7 +177,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 	// should be stream started
 	if videoStream.ListenersCount() == 0 {
 		if err := videoStream.Start(); err != nil {
-			logger.Warn().Err(err).Msg("unable to start video pipeline")
+			logger.Err(err).Msg("unable to start video pipeline")
 			return nil, err
 		}
 	}
@@ -246,7 +246,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 
 	cursorImage := func(entry *cursor.ImageEntry) {
 		if err := peer.SendCursorImage(entry.Cursor, entry.Image); err != nil {
-			logger.Warn().Err(err).Msg("could not send cursor image")
+			logger.Err(err).Msg("could not send cursor image")
 		}
 	}
 
@@ -256,7 +256,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 		}
 
 		if err := peer.SendCursorPosition(x, y); err != nil {
-			logger.Warn().Err(err).Msg("could not send cursor position")
+			logger.Err(err).Msg("could not send cursor position")
 		}
 	}
 
@@ -304,7 +304,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 		if err == nil {
 			cursorImage(entry)
 		} else {
-			logger.Warn().Err(err).Msg("failed to get cursor image")
+			logger.Err(err).Msg("failed to get cursor image")
 		}
 
 		// send initial cursor position
@@ -323,7 +323,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 		}
 
 		if err = manager.handle(message, session); err != nil {
-			logger.Warn().Err(err).Msg("data handle failed")
+			logger.Err(err).Msg("data handle failed")
 		}
 	})
 
