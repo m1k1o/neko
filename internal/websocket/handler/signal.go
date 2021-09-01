@@ -25,13 +25,15 @@ func (h *MessageHandlerCtx) signalRequest(session types.Session, payload *messag
 		return err
 	}
 
-	return session.Send(
+	session.Send(
+		event.SIGNAL_PROVIDE,
 		message.SignalProvide{
-			Event:      event.SIGNAL_PROVIDE,
 			SDP:        offer.SDP,
 			ICEServers: h.webrtc.ICEServers(),
 			Video:      payload.Video,
 		})
+
+	return nil
 }
 
 func (h *MessageHandlerCtx) signalRestart(session types.Session) error {
@@ -48,11 +50,13 @@ func (h *MessageHandlerCtx) signalRestart(session types.Session) error {
 		return err
 	}
 
-	return session.Send(
+	session.Send(
+		event.SIGNAL_RESTART,
 		message.SignalAnswer{
-			Event: event.SIGNAL_RESTART,
-			SDP:   offer.SDP,
+			SDP: offer.SDP,
 		})
+
+	return nil
 }
 
 func (h *MessageHandlerCtx) signalAnswer(session types.Session, payload *message.SignalAnswer) error {
@@ -76,7 +80,7 @@ func (h *MessageHandlerCtx) signalCandidate(session types.Session, payload *mess
 		return nil
 	}
 
-	return peer.SignalCandidate(*payload.ICECandidateInit)
+	return peer.SignalCandidate(payload.ICECandidateInit)
 }
 
 func (h *MessageHandlerCtx) signalVideo(session types.Session, payload *message.SignalVideo) error {
@@ -93,9 +97,11 @@ func (h *MessageHandlerCtx) signalVideo(session types.Session, payload *message.
 		return err
 	}
 
-	return session.Send(
+	session.Send(
+		event.SIGNAL_VIDEO,
 		message.SignalVideo{
-			Event: event.SIGNAL_VIDEO,
 			Video: payload.Video,
 		})
+
+	return nil
 }

@@ -47,8 +47,8 @@ func (h *RoomHandler) screenConfigurationChange(w http.ResponseWriter, r *http.R
 	}
 
 	h.sessions.Broadcast(
+		event.SCREEN_UPDATED,
 		message.ScreenSize{
-			Event:  event.SCREEN_UPDATED,
 			Width:  data.Width,
 			Height: data.Height,
 			Rate:   data.Rate,

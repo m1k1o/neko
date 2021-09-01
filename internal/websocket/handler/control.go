@@ -41,12 +41,14 @@ func (h *MessageHandlerCtx) controlRequest(session types.Session) error {
 	if !h.sessions.ImplicitHosting() {
 		// tell session if there is a host
 		if host := h.sessions.GetHost(); host != nil {
-			return session.Send(
+			session.Send(
+				event.CONTROL_HOST,
 				message.ControlHost{
-					Event:   event.CONTROL_HOST,
 					HasHost: true,
 					HostID:  host.ID(),
 				})
+
+			return nil
 		}
 	}
 

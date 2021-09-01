@@ -23,8 +23,8 @@ func (h *MessageHandlerCtx) screenSet(session types.Session, payload *message.Sc
 	}
 
 	h.sessions.Broadcast(
+		event.SCREEN_UPDATED,
 		message.ScreenSize{
-			Event:  event.SCREEN_UPDATED,
 			Width:  payload.Width,
 			Height: payload.Height,
 			Rate:   payload.Rate,

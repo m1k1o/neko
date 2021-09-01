@@ -15,22 +15,26 @@ func (h *MessageHandlerCtx) sendUnicast(session types.Session, payload *message.
 		return nil
 	}
 
-	return receiver.Send(message.SendUnicast{
-		Event:    event.SEND_UNICAST,
-		Sender:   session.ID(),
-		Receiver: receiver.ID(),
-		Subject:  payload.Subject,
-		Body:     payload.Body,
-	})
+	receiver.Send(
+		event.SEND_UNICAST,
+		message.SendUnicast{
+			Sender:   session.ID(),
+			Receiver: receiver.ID(),
+			Subject:  payload.Subject,
+			Body:     payload.Body,
+		})
+
+	return nil
 }
 
 func (h *MessageHandlerCtx) sendBroadcast(session types.Session, payload *message.SendBroadcast) error {
-	h.sessions.Broadcast(message.SendBroadcast{
-		Event:   event.SEND_BROADCAST,
-		Sender:  session.ID(),
-		Subject: payload.Subject,
-		Body:    payload.Body,
-	}, []string{session.ID()})
+	h.sessions.Broadcast(
+		event.SEND_BROADCAST,
+		message.SendBroadcast{
+			Sender:  session.ID(),
+			Subject: payload.Subject,
+			Body:    payload.Body,
+		}, []string{session.ID()})
 
 	return nil
 }

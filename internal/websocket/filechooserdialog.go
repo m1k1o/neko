@@ -22,10 +22,11 @@ func (manager *WebSocketManagerCtx) fileChooserDialogEvents() {
 
 		activeSession = host
 
-		go manager.sessions.Broadcast(message.SessionID{
-			Event: event.FILE_CHOOSER_DIALOG_OPENED,
-			ID:    host.ID(),
-		}, nil)
+		go manager.sessions.Broadcast(
+			event.FILE_CHOOSER_DIALOG_OPENED,
+			message.SessionID{
+				ID: host.ID(),
+			}, nil)
 	})
 
 	// when dialog closes, everyone should be notified.
@@ -34,9 +35,9 @@ func (manager *WebSocketManagerCtx) fileChooserDialogEvents() {
 
 		activeSession = nil
 
-		go manager.sessions.Broadcast(message.SessionID{
-			Event: event.FILE_CHOOSER_DIALOG_CLOSED,
-		}, nil)
+		go manager.sessions.Broadcast(
+			event.FILE_CHOOSER_DIALOG_CLOSED,
+			message.SessionID{}, nil)
 	})
 
 	// when new user joins, and someone holds dialog, he shouldd be notified about it.
@@ -45,17 +46,13 @@ func (manager *WebSocketManagerCtx) fileChooserDialogEvents() {
 			return
 		}
 
-		logger := manager.logger.With().Str("session_id", session.ID()).Logger()
-		logger.Debug().Msg("sending file chooser dialog status to a new session")
+		manager.logger.Debug().Str("session_id", session.ID()).Msg("sending file chooser dialog status to a new session")
 
-		if err := session.Send(message.SessionID{
-			Event: event.FILE_CHOOSER_DIALOG_OPENED,
-			ID:    activeSession.ID(),
-		}); err != nil {
-			logger.Warn().Err(err).
-				Str("event", event.FILE_CHOOSER_DIALOG_OPENED).
-				Msg("could not send event")
-		}
+		session.Send(
+			event.FILE_CHOOSER_DIALOG_OPENED,
+			message.SessionID{
+				ID: activeSession.ID(),
+			})
 	})
 
 	// when user, that holds dialog, disconnects, it should be closed.

@@ -44,8 +44,8 @@ func (h *RoomHandler) boradcastStart(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.sessions.AdminBroadcast(
+		event.BORADCAST_STATUS,
 		message.BroadcastStatus{
-			Event:    event.BORADCAST_STATUS,
 			IsActive: broadcast.Started(),
 			URL:      broadcast.Url(),
 		}, nil)
@@ -63,8 +63,8 @@ func (h *RoomHandler) boradcastStop(w http.ResponseWriter, r *http.Request) {
 	broadcast.Stop()
 
 	h.sessions.AdminBroadcast(
+		event.BORADCAST_STATUS,
 		message.BroadcastStatus{
-			Event:    event.BORADCAST_STATUS,
 			IsActive: broadcast.Started(),
 			URL:      broadcast.Url(),
 		}, nil)

@@ -105,20 +105,19 @@ func (manager *WebSocketManagerCtx) Start() {
 	})
 
 	manager.sessions.OnHostChanged(func(session types.Session) {
-		msg := message.ControlHost{
-			Event:   event.CONTROL_HOST,
+		payload := message.ControlHost{
 			HasHost: session != nil,
 		}
 
-		if msg.HasHost {
-			msg.HostID = session.ID()
+		if payload.HasHost {
+			payload.HostID = session.ID()
 		}
 
-		manager.sessions.Broadcast(msg, nil)
+		manager.sessions.Broadcast(event.CONTROL_HOST, payload, nil)
 
 		manager.logger.Debug().
-			Bool("has_host", msg.HasHost).
-			Str("host_id", msg.HostID).
+			Bool("has_host", payload.HasHost).
+			Str("host_id", payload.HostID).
 			Msg("session host changed")
 	})
 
@@ -128,22 +127,20 @@ func (manager *WebSocketManagerCtx) Start() {
 			return
 		}
 
+		manager.logger.Debug().Msg("sync clipboard")
+
 		data, err := manager.desktop.ClipboardGetText()
 		if err != nil {
 			manager.logger.Warn().Err(err).Msg("could not get clipboard content")
 			return
 		}
 
-		if err := session.Send(message.ClipboardData{
-			Event: event.CLIPBOARD_UPDATED,
-			Text:  data.Text,
-			// TODO: Send HTML?
-		}); err != nil {
-			manager.logger.Warn().Err(err).Msg("could not sync clipboard")
-			return
-		}
-
-		manager.logger.Debug().Msg("session sync clipboard")
+		session.Send(
+			event.CLIPBOARD_UPDATED,
+			message.ClipboardData{
+				Text: data.Text,
+				// TODO: Send HTML?
+			})
 	})
 
 	manager.fileChooserDialogEvents()
@@ -161,13 +158,10 @@ func (manager *WebSocketManagerCtx) AddHandler(handler types.WebSocketHandler) {
 }
 
 func (manager *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Request, checkOrigin types.CheckOrigin) {
-	// add request data to logger context
-	logger := manager.logger.With().
+	manager.logger.Debug().
 		Str("address", r.RemoteAddr).
 		Str("agent", r.UserAgent()).
-		Logger()
-
-	logger.Debug().Msg("attempting to upgrade connection")
+		Msg("attempting to upgrade connection")
 
 	upgrader := websocket.Upgrader{
 		CheckOrigin: checkOrigin,
@@ -175,49 +169,60 @@ func (manager *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Reque
 
 	connection, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		logger.Error().Err(err).Msg("failed to upgrade connection")
+		manager.logger.Error().Err(err).Msg("failed to upgrade connection")
 		return
 	}
 
 	session, err := manager.sessions.Authenticate(r)
 	if err != nil {
-		logger.Debug().Err(err).Msg("authentication failed")
+		manager.logger.Warn().Err(err).Msg("authentication failed")
 
-		// TODO: Refactor, return error code.
-		if err = connection.WriteJSON(
-			message.SystemDisconnect{
+		// TODO: Better handling...
+		raw, err := json.Marshal(message.SystemDisconnect{
+			Message: err.Error(),
+		})
+
+		if err != nil {
+			manager.logger.Error().Err(err).Msg("failed to create disconnect event")
+		}
+
+		err = connection.WriteJSON(
+			types.WebSocketMessage{
 				Event:   event.SYSTEM_DISCONNECT,
-				Message: err.Error(),
-			}); err != nil {
-			logger.Error().Err(err).Msg("failed to send disconnect event")
+				Payload: raw,
+			})
+
+		if err != nil {
+			manager.logger.Error().Err(err).Msg("failed to send disconnect event")
 		}
 
 		if err := connection.Close(); err != nil {
-			logger.Warn().Err(err).Msg("connection closed with an error")
+			manager.logger.Warn().Err(err).Msg("connection closed with an error")
 		}
 
 		return
 	}
 
 	// use session id with defeault logger context
-	logger = manager.logger.With().Str("session_id", session.ID()).Logger()
+	logger := manager.logger.With().Str("session_id", session.ID()).Logger()
+
+	// create new peer
+	peer := &WebSocketPeerCtx{
+		logger:     logger,
+		session:    session,
+		connection: connection,
+	}
 
 	if !session.Profile().CanConnect {
-		logger.Debug().Msg("connection disabled")
+		logger.Warn().Msg("connection disabled")
 
-		// TODO: Refactor, return error code.
-		if err = connection.WriteJSON(
+		peer.Send(
+			event.SYSTEM_DISCONNECT,
 			message.SystemDisconnect{
-				Event:   event.SYSTEM_DISCONNECT,
 				Message: "connection disabled",
-			}); err != nil {
-			logger.Error().Err(err).Msg("failed to send disconnect event")
-		}
+			})
 
-		if err := connection.Close(); err != nil {
-			logger.Warn().Err(err).Msg("connection closed with an error")
-		}
-
+		peer.Destroy()
 		return
 	}
 
@@ -225,32 +230,17 @@ func (manager *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Reque
 		logger.Warn().Msg("already connected")
 
 		if !manager.sessions.MercifulReconnect() {
-			// TODO: Refactor, return error code.
-			if err = connection.WriteJSON(
+			peer.Send(
+				event.SYSTEM_DISCONNECT,
 				message.SystemDisconnect{
-					Event:   event.SYSTEM_DISCONNECT,
 					Message: "already connected",
-				}); err != nil {
-				logger.Error().Err(err).Msg("failed to send disconnect event")
-			}
+				})
 
-			if err := connection.Close(); err != nil {
-				logger.Warn().Err(err).Msg("connection closed with an error")
-			}
-
+			peer.Destroy()
 			return
 		}
 
 		logger.Info().Msg("replacing peer connection")
-
-		// destroy previous peer connection
-		session.GetWebSocketPeer().Destroy()
-	}
-
-	peer := &WebSocketPeerCtx{
-		logger:     logger,
-		session:    session,
-		connection: connection,
 	}
 
 	session.SetWebSocketPeer(peer)

@@ -33,9 +33,9 @@ func (h *MessageHandlerCtx) systemInit(session types.Session) error {
 		}
 	}
 
-	return session.Send(
+	session.Send(
+		event.SYSTEM_INIT,
 		message.SystemInit{
-			Event:       event.SYSTEM_INIT,
 			SessionId:   session.ID(),
 			ControlHost: controlHost,
 			ScreenSize: message.ScreenSize{
@@ -50,6 +50,8 @@ func (h *MessageHandlerCtx) systemInit(session types.Session) error {
 				Videos: h.capture.VideoIDs(),
 			},
 		})
+
+	return nil
 }
 
 func (h *MessageHandlerCtx) systemAdmin(session types.Session) error {
@@ -65,13 +67,15 @@ func (h *MessageHandlerCtx) systemAdmin(session types.Session) error {
 	}
 
 	broadcast := h.capture.Broadcast()
-	return session.Send(
+	session.Send(
+		event.SYSTEM_ADMIN,
 		message.SystemAdmin{
-			Event:           event.SYSTEM_ADMIN,
 			ScreenSizesList: screenSizesList,
 			BroadcastStatus: message.BroadcastStatus{
 				IsActive: broadcast.Started(),
 				URL:      broadcast.Url(),
 			},
 		})
+
+	return nil
 }

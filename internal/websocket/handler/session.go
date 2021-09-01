@@ -8,8 +8,8 @@ import (
 
 func (h *MessageHandlerCtx) SessionCreated(session types.Session) error {
 	h.sessions.Broadcast(
+		event.SESSION_CREATED,
 		message.SessionData{
-			Event:   event.SESSION_CREATED,
 			ID:      session.ID(),
 			Profile: session.Profile(),
 			State:   session.State(),
@@ -20,9 +20,9 @@ func (h *MessageHandlerCtx) SessionCreated(session types.Session) error {
 
 func (h *MessageHandlerCtx) SessionDeleted(session types.Session) error {
 	h.sessions.Broadcast(
+		event.SESSION_DELETED,
 		message.SessionID{
-			Event: event.SESSION_DELETED,
-			ID:    session.ID(),
+			ID: session.ID(),
 		}, nil)
 
 	return nil
@@ -53,26 +53,22 @@ func (h *MessageHandlerCtx) SessionDisconnected(session types.Session) error {
 }
 
 func (h *MessageHandlerCtx) SessionProfileChanged(session types.Session) error {
-	profile := session.Profile()
-
 	h.sessions.Broadcast(
+		event.SESSION_PROFILE,
 		message.MemberProfile{
-			Event:         event.SESSION_PROFILE,
 			ID:            session.ID(),
-			MemberProfile: &profile,
+			MemberProfile: session.Profile(),
 		}, nil)
 
 	return nil
 }
 
 func (h *MessageHandlerCtx) SessionStateChanged(session types.Session) error {
-	state := session.State()
-
 	h.sessions.Broadcast(
+		event.SESSION_STATE,
 		message.SessionState{
-			Event:        event.SESSION_STATE,
 			ID:           session.ID(),
-			SessionState: &state,
+			SessionState: session.State(),
 		}, nil)
 
 	return nil

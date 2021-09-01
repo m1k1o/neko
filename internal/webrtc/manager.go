@@ -141,16 +141,11 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 				return
 			}
 
-			ICECandidateInit := candidate.ToJSON()
-			err := session.Send(
+			session.Send(
+				event.SIGNAL_CANDIDATE,
 				message.SignalCandidate{
-					Event:            event.SIGNAL_CANDIDATE,
-					ICECandidateInit: &ICECandidateInit,
+					ICECandidateInit: candidate.ToJSON(),
 				})
-
-			if err != nil {
-				logger.Warn().Err(err).Msg("sending ice candidate failed")
-			}
 		})
 	}
 
