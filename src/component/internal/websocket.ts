@@ -59,7 +59,7 @@ export class NekoWebSocket extends EventEmitter<NekoWebSocketEvents> {
 
       try {
         this._ws.close()
-      } catch (err) {}
+      } catch {}
 
       this._ws = undefined
     }

@@ -208,7 +208,7 @@
 
       try {
         this.disconnect()
-      } catch (e) {}
+      } catch {}
 
       if (this.state.authenticated) {
         Vue.set(this.state, 'authenticated', false)
@@ -264,7 +264,7 @@
 
       try {
         this.disconnect()
-      } catch (e) {}
+      } catch {}
 
       try {
         await this.api.session.logout()

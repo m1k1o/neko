@@ -44,7 +44,7 @@
           }
 
           URL.revokeObjectURL(image)
-        } catch (e) {
+        } catch {
           await new Promise((res) => setTimeout(res, ERROR_DELAY_MS))
         }
       }

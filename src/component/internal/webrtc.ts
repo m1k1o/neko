@@ -181,7 +181,7 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
 
       try {
         this._channel.close()
-      } catch (err) {}
+      } catch {}
 
       this._channel = undefined
     }
@@ -197,7 +197,7 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
 
       try {
         this._peer.close()
-      } catch (err) {}
+      } catch {}
 
       this._peer = undefined
     }
