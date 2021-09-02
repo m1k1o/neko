@@ -10,7 +10,6 @@ import (
 type WebRTCPeerCtx struct {
 	mu          sync.Mutex
 	logger      zerolog.Logger
-	api         *webrtc.API
 	connection  *webrtc.PeerConnection
 	dataChannel *webrtc.DataChannel
 	changeVideo func(videoID string) error

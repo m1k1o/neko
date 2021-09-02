@@ -19,6 +19,7 @@ import (
 	"demodesk/neko/internal/types/event"
 	"demodesk/neko/internal/types/message"
 	"demodesk/neko/internal/webrtc/cursor"
+	"demodesk/neko/internal/webrtc/pionlog"
 )
 
 // the duration without network activity before a Agent is considered disconnected. Default is 5 Seconds
@@ -237,10 +238,9 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 
 	peer := &WebRTCPeerCtx{
 		logger:      logger,
-		api:         api,
 		connection:  connection,
-		changeVideo: changeVideo,
 		dataChannel: dataChannel,
+		changeVideo: changeVideo,
 		iceTrickle:  manager.config.ICETrickle,
 	}
 
@@ -373,9 +373,7 @@ func (manager *WebRTCManagerCtx) mediaEngine(videoID string) (*webrtc.MediaEngin
 
 func (manager *WebRTCManagerCtx) apiSettings(logger zerolog.Logger) webrtc.SettingEngine {
 	settings := webrtc.SettingEngine{
-		LoggerFactory: loggerFactory{
-			logger: logger,
-		},
+		LoggerFactory: pionlog.New(logger),
 	}
 
 	//nolint
