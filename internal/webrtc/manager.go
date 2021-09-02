@@ -322,7 +322,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 			return
 		}
 
-		if err = manager.handle(message, session); err != nil {
+		if err = manager.handle(message.Data, session); err != nil {
 			logger.Err(err).Msg("data handle failed")
 		}
 	})

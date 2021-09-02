@@ -5,26 +5,8 @@ import (
 	"encoding/binary"
 
 	"demodesk/neko/internal/types"
+	"demodesk/neko/internal/webrtc/payload"
 )
-
-const (
-	OP_CURSOR_POSITION = 0x01
-	OP_CURSOR_IMAGE    = 0x02
-)
-
-type PayloadCursorPosition struct {
-	PayloadHeader
-	X uint16
-	Y uint16
-}
-
-type PayloadCursorImage struct {
-	PayloadHeader
-	Width  uint16
-	Height uint16
-	Xhot   uint16
-	Yhot   uint16
-}
 
 func (peer *WebRTCPeerCtx) SendCursorPosition(x, y int) error {
 	peer.mu.Lock()
@@ -34,9 +16,9 @@ func (peer *WebRTCPeerCtx) SendCursorPosition(x, y int) error {
 		return types.ErrWebRTCDataChannelNotFound
 	}
 
-	data := PayloadCursorPosition{
-		PayloadHeader: PayloadHeader{
-			Event:  OP_CURSOR_POSITION,
+	data := payload.CursorPosition{
+		Header: payload.Header{
+			Event:  payload.OP_CURSOR_POSITION,
 			Length: 7,
 		},
 		X: uint16(x),
@@ -59,9 +41,9 @@ func (peer *WebRTCPeerCtx) SendCursorImage(cur *types.CursorImage, img []byte) e
 		return types.ErrWebRTCDataChannelNotFound
 	}
 
-	data := PayloadCursorImage{
-		PayloadHeader: PayloadHeader{
-			Event:  OP_CURSOR_IMAGE,
+	data := payload.CursorImage{
+		Header: payload.Header{
+			Event:  payload.OP_CURSOR_IMAGE,
 			Length: uint16(11 + len(img)),
 		},
 		Width:  cur.Width,

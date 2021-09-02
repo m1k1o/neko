@@ -4,48 +4,16 @@ import (
 	"bytes"
 	"encoding/binary"
 
-	"github.com/pion/webrtc/v3"
-
 	"demodesk/neko/internal/types"
+	"demodesk/neko/internal/webrtc/payload"
 )
 
-const (
-	OP_MOVE     = 0x01
-	OP_SCROLL   = 0x02
-	OP_KEY_DOWN = 0x03
-	OP_KEY_UP   = 0x04
-	OP_BTN_DOWN = 0x05
-	OP_BTN_UP   = 0x06
-)
-
-type PayloadHeader struct {
-	Event  uint8
-	Length uint16
-}
-
-type PayloadMove struct {
-	PayloadHeader
-	X uint16
-	Y uint16
-}
-
-type PayloadScroll struct {
-	PayloadHeader
-	X int16
-	Y int16
-}
-
-type PayloadKey struct {
-	PayloadHeader
-	Key uint32
-}
-
-func (manager *WebRTCManagerCtx) handle(msg webrtc.DataChannelMessage, session types.Session) error {
+func (manager *WebRTCManagerCtx) handle(data []byte, session types.Session) error {
 	// add session id to logger context
 	logger := manager.logger.With().Str("session_id", session.ID()).Logger()
 
-	buffer := bytes.NewBuffer(msg.Data)
-	header := &PayloadHeader{}
+	buffer := bytes.NewBuffer(data)
+	header := &payload.Header{}
 	hbytes := make([]byte, 3)
 
 	if _, err := buffer.Read(hbytes); err != nil {
@@ -56,19 +24,19 @@ func (manager *WebRTCManagerCtx) handle(msg webrtc.DataChannelMessage, session t
 		return err
 	}
 
-	buffer = bytes.NewBuffer(msg.Data)
+	buffer = bytes.NewBuffer(data)
 
 	switch header.Event {
-	case OP_MOVE:
-		payload := &PayloadMove{}
+	case payload.OP_MOVE:
+		payload := &payload.Move{}
 		if err := binary.Read(buffer, binary.BigEndian, payload); err != nil {
 			return err
 		}
 
 		manager.desktop.Move(int(payload.X), int(payload.Y))
 		manager.curPosition.Set(int(payload.X), int(payload.Y))
-	case OP_SCROLL:
-		payload := &PayloadScroll{}
+	case payload.OP_SCROLL:
+		payload := &payload.Scroll{}
 		if err := binary.Read(buffer, binary.BigEndian, payload); err != nil {
 			return err
 		}
@@ -78,8 +46,8 @@ func (manager *WebRTCManagerCtx) handle(msg webrtc.DataChannelMessage, session t
 			Int16("x", payload.X).
 			Int16("y", payload.Y).
 			Msg("scroll")
-	case OP_KEY_DOWN:
-		payload := &PayloadKey{}
+	case payload.OP_KEY_DOWN:
+		payload := &payload.Key{}
 		if err := binary.Read(buffer, binary.BigEndian, payload); err != nil {
 			return err
 		}
@@ -89,8 +57,8 @@ func (manager *WebRTCManagerCtx) handle(msg webrtc.DataChannelMessage, session t
 		} else {
 			logger.Trace().Uint32("key", payload.Key).Msg("key down")
 		}
-	case OP_KEY_UP:
-		payload := &PayloadKey{}
+	case payload.OP_KEY_UP:
+		payload := &payload.Key{}
 		if err := binary.Read(buffer, binary.BigEndian, payload); err != nil {
 			return err
 		}
@@ -100,8 +68,8 @@ func (manager *WebRTCManagerCtx) handle(msg webrtc.DataChannelMessage, session t
 		} else {
 			logger.Trace().Uint32("key", payload.Key).Msg("key up")
 		}
-	case OP_BTN_DOWN:
-		payload := &PayloadKey{}
+	case payload.OP_BTN_DOWN:
+		payload := &payload.Key{}
 		if err := binary.Read(buffer, binary.BigEndian, payload); err != nil {
 			return err
 		}
@@ -111,8 +79,8 @@ func (manager *WebRTCManagerCtx) handle(msg webrtc.DataChannelMessage, session t
 		} else {
 			logger.Trace().Uint32("key", payload.Key).Msg("button down")
 		}
-	case OP_BTN_UP:
-		payload := &PayloadKey{}
+	case payload.OP_BTN_UP:
+		payload := &payload.Key{}
 		if err := binary.Read(buffer, binary.BigEndian, payload); err != nil {
 			return err
 		}
