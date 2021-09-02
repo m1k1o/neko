@@ -156,43 +156,26 @@ func (manager *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	// create new peer
+	peer := newPeer(connection)
+
 	session, err := manager.sessions.Authenticate(r)
 	if err != nil {
 		manager.logger.Warn().Err(err).Msg("authentication failed")
 
-		// TODO: Better handling...
-		raw, err := json.Marshal(message.SystemDisconnect{
-			Message: err.Error(),
-		})
-
-		if err != nil {
-			manager.logger.Err(err).Msg("failed to create disconnect event")
-		}
-
-		err = connection.WriteJSON(
-			types.WebSocketMessage{
-				Event:   event.SYSTEM_DISCONNECT,
-				Payload: raw,
+		peer.Send(
+			event.SYSTEM_DISCONNECT,
+			message.SystemDisconnect{
+				Message: err.Error(),
 			})
 
-		if err != nil {
-			manager.logger.Err(err).Msg("failed to send disconnect event")
-		}
-
-		err = connection.Close()
-		manager.logger.Err(err).Msg("connection closed")
+		peer.Destroy()
 		return
 	}
 
-	// use session id with defeault logger context
+	// add session id to all log messages
 	logger := manager.logger.With().Str("session_id", session.ID()).Logger()
-
-	// create new peer
-	peer := &WebSocketPeerCtx{
-		logger:     logger,
-		session:    session,
-		connection: connection,
-	}
+	peer.setSessionID(session.ID())
 
 	if !session.Profile().CanConnect {
 		logger.Warn().Msg("connection disabled")

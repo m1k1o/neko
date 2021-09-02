@@ -6,6 +6,7 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 
 	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/types/event"
@@ -15,8 +16,23 @@ import (
 type WebSocketPeerCtx struct {
 	mu         sync.Mutex
 	logger     zerolog.Logger
-	session    types.Session
 	connection *websocket.Conn
+}
+
+func newPeer(connection *websocket.Conn) *WebSocketPeerCtx {
+	logger := log.With().
+		Str("module", "websocket").
+		Str("submodule", "peer").
+		Logger()
+
+	return &WebSocketPeerCtx{
+		logger:     logger,
+		connection: connection,
+	}
+}
+
+func (peer *WebSocketPeerCtx) setSessionID(sessionId string) {
+	peer.logger = peer.logger.With().Str("session_id", sessionId).Logger()
 }
 
 func (peer *WebSocketPeerCtx) Send(event string, payload interface{}) {
