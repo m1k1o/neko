@@ -80,11 +80,8 @@ func (peer *WebSocketPeerCtx) Destroy(reason string) {
 			Message: reason,
 		})
 
-	if err := peer.connection.Close(); err != nil {
-		peer.logger.Warn().Err(err).Msg("peer connection destroyed with an error")
-	} else {
-		peer.logger.Info().Msg("peer connection destroyed")
-	}
+	err := peer.connection.Close()
+	peer.logger.Err(err).Msg("peer connection destroyed")
 
 	peer.connection = nil
 }
