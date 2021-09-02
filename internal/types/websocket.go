@@ -16,7 +16,7 @@ type CheckOrigin func(r *http.Request) bool
 
 type WebSocketPeer interface {
 	Send(event string, payload interface{})
-	Destroy()
+	Destroy(reason string)
 }
 
 type WebSocketManager interface {

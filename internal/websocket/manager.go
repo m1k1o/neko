@@ -162,14 +162,7 @@ func (manager *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Reque
 	session, err := manager.sessions.Authenticate(r)
 	if err != nil {
 		manager.logger.Warn().Err(err).Msg("authentication failed")
-
-		peer.Send(
-			event.SYSTEM_DISCONNECT,
-			message.SystemDisconnect{
-				Message: err.Error(),
-			})
-
-		peer.Destroy()
+		peer.Destroy(err.Error())
 		return
 	}
 
@@ -179,14 +172,7 @@ func (manager *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Reque
 
 	if !session.Profile().CanConnect {
 		logger.Warn().Msg("connection disabled")
-
-		peer.Send(
-			event.SYSTEM_DISCONNECT,
-			message.SystemDisconnect{
-				Message: "connection disabled",
-			})
-
-		peer.Destroy()
+		peer.Destroy("connection disabled")
 		return
 	}
 
@@ -194,13 +180,7 @@ func (manager *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Reque
 		logger.Warn().Msg("already connected")
 
 		if !manager.sessions.MercifulReconnect() {
-			peer.Send(
-				event.SYSTEM_DISCONNECT,
-				message.SystemDisconnect{
-					Message: "already connected",
-				})
-
-			peer.Destroy()
+			peer.Destroy("already connected")
 			return
 		}
 

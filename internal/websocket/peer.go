@@ -66,7 +66,7 @@ func (peer *WebSocketPeerCtx) Send(event string, payload interface{}) {
 		Msg("sending message to client")
 }
 
-func (peer *WebSocketPeerCtx) Destroy() {
+func (peer *WebSocketPeerCtx) Destroy(reason string) {
 	peer.mu.Lock()
 	defer peer.mu.Unlock()
 
@@ -77,7 +77,7 @@ func (peer *WebSocketPeerCtx) Destroy() {
 	peer.Send(
 		event.SYSTEM_DISCONNECT,
 		message.SystemDisconnect{
-			Message: "connection destroyed",
+			Message: reason,
 		})
 
 	if err := peer.connection.Close(); err != nil {

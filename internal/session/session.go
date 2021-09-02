@@ -35,7 +35,7 @@ func (session *SessionCtx) profileChanged() {
 	}
 
 	if (!session.profile.CanConnect || !session.profile.CanLogin) && session.state.IsConnected {
-		session.websocketPeer.Destroy()
+		session.websocketPeer.Destroy("profile changed")
 	}
 }
 
@@ -53,7 +53,7 @@ func (session *SessionCtx) IsHost() bool {
 
 func (session *SessionCtx) SetWebSocketPeer(websocketPeer types.WebSocketPeer) {
 	if session.websocketPeer != nil {
-		session.websocketPeer.Destroy()
+		session.websocketPeer.Destroy("connection replaced")
 	}
 
 	session.websocketPeer = websocketPeer
