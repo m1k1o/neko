@@ -6,10 +6,11 @@ import (
 	"demodesk/neko/internal/desktop/drop"
 )
 
-const (
-	DROP_MOVE_REPEAT = 4
-	DROP_DELAY       = 100 * time.Millisecond
-)
+// repeat move event multiple times
+const dropMoveRepeat = 4
+
+// wait after each repeated move event
+const dropMoveDelay = 100 * time.Millisecond
 
 func (manager *DesktopManagerCtx) DropFiles(x int, y int, files []string) bool {
 	mu.Lock()
@@ -31,9 +32,9 @@ func (manager *DesktopManagerCtx) DropFiles(x int, y int, files []string) bool {
 	})
 
 	drop.Emmiter.Once("begin", func(payload ...interface{}) {
-		for i := 0; i < DROP_MOVE_REPEAT; i++ {
+		for i := 0; i < dropMoveRepeat; i++ {
 			manager.Move(x, y)
-			time.Sleep(DROP_DELAY)
+			time.Sleep(dropMoveDelay)
 		}
 
 		//nolint

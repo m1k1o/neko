@@ -10,9 +10,7 @@ import (
 
 type key int
 
-const (
-	keySessionCtx key = iota
-)
+const keySessionCtx key = iota
 
 func SetSession(r *http.Request, session types.Session) *http.Request {
 	ctx := context.WithValue(r.Context(), keySessionCtx, session)

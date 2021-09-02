@@ -15,6 +15,9 @@ import (
 	"demodesk/neko/internal/websocket/handler"
 )
 
+// send pings to peer with this period - must be less than pongWait
+const pingPeriod = 10 * time.Second
+
 func New(
 	sessions types.SessionManager,
 	desktop types.DesktopManager,
@@ -31,9 +34,6 @@ func New(
 		handlers: []types.WebSocketHandler{},
 	}
 }
-
-// Send pings to peer with this period. Must be less than pongWait.
-const pingPeriod = 10 * time.Second
 
 type WebSocketManagerCtx struct {
 	logger   zerolog.Logger

@@ -13,6 +13,15 @@ import (
 	"demodesk/neko/internal/utils"
 )
 
+// default port range - min
+const defEprMin = 59000
+
+// default port range - max
+const defEprMax = 59100
+
+// default stun server
+const defStunSrv = "stun:stun.l.google.com:19302"
+
 type WebRTC struct {
 	ICELite      bool
 	ICETrickle   bool
@@ -23,12 +32,6 @@ type WebRTC struct {
 	NAT1To1IPs     []string
 	IpRetrievalUrl string
 }
-
-const (
-	defEprMin = 59000
-	defEprMax = 59100
-	defStun   = "stun:stun.l.google.com:19302"
-)
 
 func (WebRTC) Init(cmd *cobra.Command) error {
 	cmd.PersistentFlags().Bool("webrtc.icelite", false, "configures whether or not the ICE agent should be a lite agent")
@@ -76,7 +79,7 @@ func (s *WebRTC) Set() {
 
 	if len(s.ICEServers) == 0 {
 		s.ICEServers = append(s.ICEServers, types.ICEServer{
-			URLs: []string{defStun},
+			URLs: []string{defStunSrv},
 		})
 	}
 

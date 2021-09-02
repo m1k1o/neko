@@ -14,9 +14,7 @@ import (
 
 type key int
 
-const (
-	keyMemberCtx key = iota
-)
+const keyMemberCtx key = iota
 
 type MembersHandler struct {
 	members types.MemberManager

@@ -95,19 +95,19 @@ func (manager *DesktopManagerCtx) GetKeyboardMap() (*types.KeyboardMap, error) {
 
 func (manager *DesktopManagerCtx) SetKeyboardModifiers(mod types.KeyboardModifiers) {
 	if mod.NumLock != nil {
-		xorg.SetKeyboardModifier(xorg.KBD_NUM_LOCK, *mod.NumLock)
+		xorg.SetKeyboardModifier(xorg.KbdModNumLock, *mod.NumLock)
 	}
 
 	if mod.CapsLock != nil {
-		xorg.SetKeyboardModifier(xorg.KBD_CAPS_LOCK, *mod.CapsLock)
+		xorg.SetKeyboardModifier(xorg.KbdModCapsLock, *mod.CapsLock)
 	}
 }
 
 func (manager *DesktopManagerCtx) GetKeyboardModifiers() types.KeyboardModifiers {
 	modifiers := xorg.GetKeyboardModifiers()
 
-	NumLock := (modifiers & xorg.KBD_NUM_LOCK) != 0
-	CapsLock := (modifiers & xorg.KBD_CAPS_LOCK) != 0
+	NumLock := (modifiers & xorg.KbdModNumLock) != 0
+	CapsLock := (modifiers & xorg.KbdModCapsLock) != 0
 
 	return types.KeyboardModifiers{
 		NumLock:  &NumLock,

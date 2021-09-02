@@ -28,6 +28,7 @@ type ScreencastManagerCtx struct {
 	image       types.Sample
 }
 
+// timeout between intervals, when screencast pipeline is checked
 const screencastTimeout = 5 * time.Second
 
 func screencastNew(enabled bool, pipelineStr string) *ScreencastManagerCtx {

@@ -6,11 +6,14 @@ import (
 	"time"
 )
 
-const (
-	FILE_CHOOSER_DIALOG_NAME        = "Open File"
-	FILE_CHOOSER_DIALOG_SHORT_SLEEP = "0.2"
-	FILE_CHOOSER_DIALOG_LONG_SLEEP  = "0.4"
-)
+// name of the window that is being controlled
+const fileChooserDialogName = "Open File"
+
+// short sleep value between fake user interactions
+const fileChooserDialogShortSleep = "0.2"
+
+// long sleep value between fake user interactions
+const fileChooserDialogLongSleep = "0.4"
 
 func (manager *DesktopManagerCtx) HandleFileChooserDialog(uri string) error {
 	mu.Lock()
@@ -19,19 +22,19 @@ func (manager *DesktopManagerCtx) HandleFileChooserDialog(uri string) error {
 	// TODO: Use native API.
 	err1 := exec.Command(
 		"xdotool",
-		"search", "--name", FILE_CHOOSER_DIALOG_NAME, "windowfocus",
-		"sleep", FILE_CHOOSER_DIALOG_SHORT_SLEEP,
+		"search", "--name", fileChooserDialogName, "windowfocus",
+		"sleep", fileChooserDialogShortSleep,
 		"key", "--clearmodifiers", "ctrl+l",
 		"type", "--args", "1", uri+"//",
-		"sleep", FILE_CHOOSER_DIALOG_SHORT_SLEEP,
+		"sleep", fileChooserDialogShortSleep,
 		"key", "Delete", // remove autocomplete results
-		"sleep", FILE_CHOOSER_DIALOG_SHORT_SLEEP,
+		"sleep", fileChooserDialogShortSleep,
 		"key", "Return",
-		"sleep", FILE_CHOOSER_DIALOG_LONG_SLEEP,
+		"sleep", fileChooserDialogLongSleep,
 		"key", "Down",
 		"key", "--clearmodifiers", "ctrl+a",
 		"key", "Return",
-		"sleep", FILE_CHOOSER_DIALOG_LONG_SLEEP,
+		"sleep", fileChooserDialogLongSleep,
 	).Run()
 
 	if err1 != nil {
@@ -41,7 +44,7 @@ func (manager *DesktopManagerCtx) HandleFileChooserDialog(uri string) error {
 	// TODO: Use native API.
 	err2 := exec.Command(
 		"xdotool",
-		"search", "--name", FILE_CHOOSER_DIALOG_NAME,
+		"search", "--name", fileChooserDialogName,
 	).Run()
 
 	// if last command didn't return error, consider dialog as still open
@@ -61,7 +64,7 @@ func (manager *DesktopManagerCtx) CloseFileChooserDialog() {
 		// TODO: Use native API.
 		err := exec.Command(
 			"xdotool",
-			"search", "--name", FILE_CHOOSER_DIALOG_NAME, "windowfocus",
+			"search", "--name", fileChooserDialogName, "windowfocus",
 		).Run()
 
 		if err != nil {
@@ -92,7 +95,7 @@ func (manager *DesktopManagerCtx) IsFileChooserDialogOpened() bool {
 	// TODO: Use native API.
 	err := exec.Command(
 		"xdotool",
-		"search", "--name", FILE_CHOOSER_DIALOG_NAME,
+		"search", "--name", fileChooserDialogName,
 	).Run()
 
 	return err == nil

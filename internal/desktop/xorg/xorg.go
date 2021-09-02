@@ -19,11 +19,11 @@ import (
 	"demodesk/neko/internal/types"
 )
 
-type KbdModifiers uint8
+type KbdMod uint8
 
 const (
-	KBD_CAPS_LOCK KbdModifiers = 2
-	KBD_NUM_LOCK  KbdModifiers = 16
+	KbdModCapsLock KbdMod = 2
+	KbdModNumLock  KbdMod = 16
 )
 
 var ScreenConfigurations = make(map[int]types.ScreenConfiguration)
@@ -213,7 +213,7 @@ func GetScreenSize() *types.ScreenSize {
 	return nil
 }
 
-func SetKeyboardModifier(mod KbdModifiers, active bool) {
+func SetKeyboardModifier(mod KbdMod, active bool) {
 	mu.Lock()
 	defer mu.Unlock()
 
@@ -225,11 +225,11 @@ func SetKeyboardModifier(mod KbdModifiers, active bool) {
 	C.XSetKeyboardModifier(C.int(mod), num)
 }
 
-func GetKeyboardModifiers() KbdModifiers {
+func GetKeyboardModifiers() KbdMod {
 	mu.Lock()
 	defer mu.Unlock()
 
-	return KbdModifiers(C.XGetKeyboardModifiers())
+	return KbdMod(C.XGetKeyboardModifiers())
 }
 
 func GetCursorImage() *types.CursorImage {

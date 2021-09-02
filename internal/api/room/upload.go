@@ -10,13 +10,11 @@ import (
 	"demodesk/neko/internal/utils"
 )
 
-const (
-	// Maximum upload of 32 MB files.
-	MAX_UPLOAD_SIZE = 32 << 20
-)
+// maximum upload size of 32 MB
+const maxUploadSize = 32 << 20
 
 func (h *RoomHandler) uploadDrop(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseMultipartForm(MAX_UPLOAD_SIZE)
+	err := r.ParseMultipartForm(maxUploadSize)
 	if err != nil {
 		utils.HttpBadRequest(w, "failed to parse multipart form")
 		return
@@ -87,7 +85,7 @@ func (h *RoomHandler) uploadDrop(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *RoomHandler) uploadDialogPost(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseMultipartForm(MAX_UPLOAD_SIZE)
+	err := r.ParseMultipartForm(maxUploadSize)
 	if err != nil {
 		utils.HttpBadRequest(w, "failed to parse multipart form")
 		return
