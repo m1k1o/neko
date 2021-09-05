@@ -153,13 +153,11 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 	// create video track
 	videoStream, ok := manager.capture.Video(videoID)
 	if !ok {
-		logger.Warn().Str("video_id", videoID).Msg("video stream not found")
-		return nil, err
+		return nil, types.ErrWebRTCVideoNotFound
 	}
 
 	videoTrack, err := webrtc.NewTrackLocalStaticSample(videoStream.Codec().Capability, "video", "stream")
 	if err != nil {
-		logger.Err(err).Msg("unable to create video track")
 		return nil, err
 	}
 
@@ -178,7 +176,6 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 	// should be stream started
 	if videoStream.ListenersCount() == 0 {
 		if err := videoStream.Start(); err != nil {
-			logger.Err(err).Msg("unable to start video pipeline")
 			return nil, err
 		}
 	}
