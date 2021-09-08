@@ -1,6 +1,7 @@
 package members
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -82,7 +83,11 @@ func (h *MembersHandler) membersCreate(w http.ResponseWriter, r *http.Request) {
 
 	id, err := h.members.Insert(data.Username, data.Password, data.Profile)
 	if err != nil {
-		utils.HttpInternalServerError(w, err)
+		if errors.Is(err, types.ErrMemberAlreadyExists) {
+			utils.HttpUnprocessableEntity(w, err)
+		} else {
+			utils.HttpInternalServerError(w, err)
+		}
 		return
 	}
 
