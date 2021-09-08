@@ -127,7 +127,7 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
     Vue.set(this._state.connection.webrtc, 'video', video)
   }
 
-  protected async [EVENT.SIGNAL_RESTART]({ event, sdp }: message.SignalAnswer) {
+  protected async [EVENT.SIGNAL_RESTART]({ sdp }: message.SignalAnswer) {
     this._log.debug('EVENT.SIGNAL_RESTART')
     this.emit('connection.webrtc.sdp', 'remote', sdp)
 
@@ -139,7 +139,7 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
     this.emit('connection.webrtc.sdp', 'local', localSdp)
   }
 
-  protected [EVENT.SIGNAL_CANDIDATE]({ event, ...candidate }: message.SignalCandidate) {
+  protected [EVENT.SIGNAL_CANDIDATE](candidate: message.SignalCandidate) {
     this._log.debug('EVENT.SIGNAL_CANDIDATE')
     this._connection.webrtc.setCandidate(candidate)
     this.emit('connection.webrtc.sdp.candidate', 'remote', candidate)
@@ -218,7 +218,7 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
   // Broadcast Events
   /////////////////////////////
 
-  protected [EVENT.BORADCAST_STATUS]({ event, url, is_active }: message.BroadcastStatus) {
+  protected [EVENT.BORADCAST_STATUS]({ url, is_active }: message.BroadcastStatus) {
     this._log.debug('EVENT.BORADCAST_STATUS')
     // TODO: Handle.
     this.emit('room.broadcast.status', is_active, url)

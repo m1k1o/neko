@@ -1,21 +1,14 @@
 import { ICEServer } from '../internal/webrtc'
 
-export interface Message {
-  event?: string
-  payload: any
-}
-
 /////////////////////////////
 // System
 /////////////////////////////
 
 export interface SystemWebRTC {
-  event?: string
   videos: string[]
 }
 
 export interface SystemInit {
-  event?: string
   session_id: string
   control_host: ControlHost
   screen_size: ScreenSize
@@ -26,13 +19,11 @@ export interface SystemInit {
 }
 
 export interface SystemAdmin {
-  event?: string
   screen_sizes_list: ScreenSize[]
   broadcast_status: BroadcastStatus
 }
 
 export interface SystemDisconnect {
-  event?: string
   message: string
 }
 
@@ -41,23 +32,18 @@ export interface SystemDisconnect {
 /////////////////////////////
 
 export interface SignalProvide {
-  event?: string
   sdp: string
   iceservers: ICEServer[]
   video: string
 }
 
-export interface SignalCandidate extends RTCIceCandidateInit {
-  event?: string
-}
+export type SignalCandidate = RTCIceCandidateInit
 
 export interface SignalAnswer {
-  event?: string
   sdp: string
 }
 
 export interface SignalVideo {
-  event?: string
   video: string
 }
 
@@ -66,12 +52,10 @@ export interface SignalVideo {
 /////////////////////////////
 
 export interface SessionID {
-  event?: string
   id: string
 }
 
 export interface MemberProfile {
-  event?: string
   id: string
   name: string
   is_admin: boolean
@@ -83,14 +67,12 @@ export interface MemberProfile {
 }
 
 export interface SessionState {
-  event?: string
   id: string
   is_connected: boolean
   is_watching: boolean
 }
 
 export interface SessionData {
-  event?: string
   id: string
   profile: MemberProfile
   is_connected: boolean
@@ -102,28 +84,24 @@ export interface SessionData {
 /////////////////////////////
 
 export interface ControlHost {
-  event?: string
   has_host: boolean
   host_id: string | undefined
 }
 
 // TODO: New.
 export interface ControlMove {
-  event?: string
   x: number
   y: number
 }
 
 // TODO: New.
 export interface ControlScroll {
-  event?: string
   x: number
   y: number
 }
 
 // TODO: New.
 export interface ControlKey {
-  event?: string
   key: number
 }
 
@@ -132,7 +110,6 @@ export interface ControlKey {
 /////////////////////////////
 
 export interface ScreenSize {
-  event?: string
   width: number
   height: number
   rate: number
@@ -143,7 +120,6 @@ export interface ScreenSize {
 /////////////////////////////
 
 export interface ClipboardData {
-  event?: string
   text: string
 }
 
@@ -152,14 +128,12 @@ export interface ClipboardData {
 /////////////////////////////
 
 export interface KeyboardModifiers {
-  event?: string
   caps_lock: boolean
   num_lock: boolean
   scroll_lock: boolean
 }
 
 export interface KeyboardMap {
-  event?: string
   layout: string
   variant: string
 }
@@ -169,7 +143,6 @@ export interface KeyboardMap {
 /////////////////////////////
 
 export interface BroadcastStatus {
-  event?: string
   is_active: boolean
   url: string | undefined
 }
@@ -179,7 +152,6 @@ export interface BroadcastStatus {
 /////////////////////////////
 
 export interface SendMessage {
-  event?: string
   sender: string
   subject: string
   body: string
