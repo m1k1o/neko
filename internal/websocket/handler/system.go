@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 
 	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/types/event"
@@ -84,14 +85,19 @@ func (h *MessageHandlerCtx) systemAdmin(session types.Session) error {
 }
 
 func (h *MessageHandlerCtx) systemLogs(session types.Session, payload *message.SystemLogs) error {
-	for _, log := range *payload {
-		level, _ := zerolog.ParseLevel(log.Level)
+	for _, msg := range *payload {
+		level, _ := zerolog.ParseLevel(msg.Level)
 
-		h.logger.WithLevel(level).
-			Fields(log.Fields).
+		if level < zerolog.DebugLevel || level > zerolog.ErrorLevel {
+			level = zerolog.NoLevel
+		}
+
+		// do not use handler logger context
+		log.WithLevel(level).
+			Fields(msg.Fields).
 			Str("session_id", session.ID()).
 			Str("service", "frontend").
-			Msg(log.Message)
+			Msg(msg.Message)
 	}
 
 	return nil
