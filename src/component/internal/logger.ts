@@ -33,7 +33,7 @@ export class NekoLogger extends Logger {
           if (!this._ws.connected || !this._interval) {
             return
           }
-  
+
           if (this._logs.length > 0) {
             this._ws.send(EVENT.SYSTEM_LOGS, this._logs)
           }

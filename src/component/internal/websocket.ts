@@ -1,4 +1,5 @@
 import EventEmitter from 'eventemitter3'
+import { SYSTEM_LOGS } from '../types/events'
 import { Logger } from '../utils/logger'
 
 export interface NekoWebSocketEvents {
@@ -71,7 +72,7 @@ export class NekoWebSocket extends EventEmitter<NekoWebSocketEvents> {
       return
     }
 
-    this._log.debug(`sending websocket event`, { event, payload })
+    if (event != SYSTEM_LOGS) this._log.debug(`sending websocket event`, { event, payload })
     this._ws!.send(JSON.stringify({ event, payload }))
   }
 
