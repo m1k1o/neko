@@ -32,9 +32,9 @@ type SystemAdmin struct {
 type SystemLogs = []SystemLog
 
 type SystemLog struct {
-	Level   string            `json:"level"`
-	Fields  map[string]string `json:"fields"`
-	Message string            `json:"message"`
+	Level   string                 `json:"level"`
+	Fields  map[string]interface{} `json:"fields"`
+	Message string                 `json:"message"`
 }
 
 type SystemDisconnect struct {
