@@ -3,6 +3,7 @@ package websocket
 import (
 	"encoding/json"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -28,6 +29,7 @@ func New(
 
 	return &WebSocketManagerCtx{
 		logger:   logger,
+		shutdown: make(chan interface{}),
 		sessions: sessions,
 		desktop:  desktop,
 		handler:  handler.New(sessions, desktop, capture, webrtc),
@@ -37,6 +39,8 @@ func New(
 
 type WebSocketManagerCtx struct {
 	logger   zerolog.Logger
+	wg       sync.WaitGroup
+	shutdown chan interface{}
 	sessions types.SessionManager
 	desktop  types.DesktopManager
 	handler  *handler.MessageHandlerCtx
@@ -132,7 +136,8 @@ func (manager *WebSocketManagerCtx) Start() {
 
 func (manager *WebSocketManagerCtx) Shutdown() error {
 	manager.logger.Info().Msg("shutdown")
-	// TODO: Kill all connections and add waitgroup for gorutines.
+	close(manager.shutdown)
+	manager.wg.Wait()
 	return nil
 }
 
@@ -218,7 +223,10 @@ func (manager *WebSocketManagerCtx) handle(connection *websocket.Conn, session t
 	ticker := time.NewTicker(pingPeriod)
 	defer ticker.Stop()
 
+	manager.wg.Add(1)
 	go func() {
+		defer manager.wg.Done()
+
 		for {
 			_, raw, err := connection.ReadMessage()
 			if err != nil {
@@ -266,6 +274,9 @@ func (manager *WebSocketManagerCtx) handle(connection *websocket.Conn, session t
 				logger.Warn().Str("event", data.Event).Msg("unhandled message")
 			}
 		case <-cancel:
+			return
+		case <-manager.shutdown:
+			connection.Close()
 			return
 		case <-ticker.C:
 			if err := connection.WriteMessage(websocket.PingMessage, nil); err != nil {
