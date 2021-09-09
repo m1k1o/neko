@@ -245,11 +245,13 @@ func (manager *WebSocketManagerCtx) handle(connection *websocket.Conn, session t
 				break
 			}
 
-			logger.Debug().
-				Str("address", connection.RemoteAddr().String()).
-				Str("event", data.Event).
-				Str("payload", string(data.Payload)).
-				Msg("received message from client")
+			if data.Event != event.SYSTEM_LOGS {
+				logger.Debug().
+					Str("address", connection.RemoteAddr().String()).
+					Str("event", data.Event).
+					Str("payload", string(data.Payload)).
+					Msg("received message from client")
+			}
 
 			handled := manager.handler.Message(session, data)
 			for _, handler := range manager.handlers {
