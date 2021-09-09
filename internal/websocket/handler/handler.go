@@ -41,6 +41,13 @@ func (h *MessageHandlerCtx) Message(session types.Session, data types.WebSocketM
 
 	var err error
 	switch data.Event {
+	// System Events
+	case event.SYSTEM_LOGS:
+		payload := &message.SystemLogs{}
+		err = utils.Unmarshal(payload, data.Payload, func() error {
+			return h.systemLogs(session, payload)
+		})
+
 	// Signal Events
 	case event.SIGNAL_REQUEST:
 		payload := &message.SignalVideo{}

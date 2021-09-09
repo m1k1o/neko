@@ -3,6 +3,8 @@ package handler
 import (
 	"errors"
 
+	"github.com/rs/zerolog"
+
 	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/types/event"
 	"demodesk/neko/internal/types/message"
@@ -77,6 +79,20 @@ func (h *MessageHandlerCtx) systemAdmin(session types.Session) error {
 				URL:      broadcast.Url(),
 			},
 		})
+
+	return nil
+}
+
+func (h *MessageHandlerCtx) systemLogs(session types.Session, payload *message.SystemLogs) error {
+	for _, log := range *payload {
+		level, _ := zerolog.ParseLevel(log.Level)
+
+		h.logger.WithLevel(level).
+			Fields(log.Fields).
+			Str("session_id", session.ID()).
+			Str("service", "frontend").
+			Msg(log.Message)
+	}
 
 	return nil
 }

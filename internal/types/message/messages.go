@@ -29,6 +29,14 @@ type SystemAdmin struct {
 	BroadcastStatus BroadcastStatus `json:"broadcast_status"`
 }
 
+type SystemLogs = []SystemLog
+
+type SystemLog struct {
+	Level   string            `json:"level"`
+	Fields  map[string]string `json:"fields"`
+	Message string            `json:"message"`
+}
+
 type SystemDisconnect struct {
 	Message string `json:"message"`
 }
