@@ -72,12 +72,11 @@ export class NekoWebSocket extends EventEmitter<NekoWebSocketEvents> {
     }
 
     this._log.debug(`sending event '${event}' ${payload ? `with payload: ` : ''}`, payload)
-    this._ws!.send(JSON.stringify({ event, payload, ...payload }))
+    this._ws!.send(JSON.stringify({ event, payload }))
   }
 
   private onMessage(e: MessageEvent) {
-    const { event, ...data } = JSON.parse(e.data)
-    const payload = 'payload' in data ? data.payload : data
+    const { event, payload } = JSON.parse(e.data)
 
     this._log.debug(`received websocket event ${event} ${payload ? `with payload: ` : ''}`, payload)
     this.emit('message', event, payload)
