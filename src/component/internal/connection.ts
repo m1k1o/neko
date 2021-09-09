@@ -3,6 +3,7 @@ import EventEmitter from 'eventemitter3'
 import * as EVENT from '../types/events'
 
 import { NekoWebSocket } from './websocket'
+import { NekoLogger } from './logger'
 import { NekoWebRTC } from './webrtc'
 import { Connection, WebRTCStats } from '../types/state'
 
@@ -24,7 +25,7 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
   private _open = false
 
   public websocket = new NekoWebSocket()
-  public webrtc = new NekoWebRTC()
+  public webrtc = new NekoWebRTC(new NekoLogger(this.websocket, 'webrtc'))
 
   private _reconnector: {
     websocket: Reconnector
