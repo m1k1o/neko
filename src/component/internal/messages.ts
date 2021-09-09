@@ -46,10 +46,10 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
   private _state: NekoState
   private _log: Logger
 
-  constructor(connection: NekoConnection, state: NekoState) {
+  constructor(connection: NekoConnection, state: NekoState, logger?: Logger) {
     super()
 
-    this._log = new Logger('messages')
+    this._log = logger || new Logger('messages')
     this._state = state
     this._connection = connection
 

@@ -36,10 +36,10 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
   private _log: Logger
   private _statsStop?: () => void
 
-  constructor() {
+  constructor(logger?: Logger) {
     super()
 
-    this._log = new Logger('webrtc')
+    this._log = logger || new Logger('webrtc')
   }
 
   get supported() {

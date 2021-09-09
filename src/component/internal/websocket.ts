@@ -11,10 +11,10 @@ export class NekoWebSocket extends EventEmitter<NekoWebSocketEvents> {
   private _ws?: WebSocket
   private _log: Logger
 
-  constructor() {
+  constructor(logger?: Logger) {
     super()
 
-    this._log = new Logger('websocket')
+    this._log = logger || new Logger('websocket')
   }
 
   get supported() {
