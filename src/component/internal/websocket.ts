@@ -71,14 +71,14 @@ export class NekoWebSocket extends EventEmitter<NekoWebSocketEvents> {
       return
     }
 
-    this._log.debug(`sending event '${event}' ${payload ? `with payload: ` : ''}`, payload)
+    this._log.debug(`sending websocket event`, { event, payload })
     this._ws!.send(JSON.stringify({ event, payload }))
   }
 
   private onMessage(e: MessageEvent) {
     const { event, payload } = JSON.parse(e.data)
 
-    this._log.debug(`received websocket event ${event} ${payload ? `with payload: ` : ''}`, payload)
+    this._log.debug(`received websocket event`, { event, payload })
     this.emit('message', event, payload)
   }
 
@@ -95,7 +95,7 @@ export class NekoWebSocket extends EventEmitter<NekoWebSocketEvents> {
   private onDisconnected(reason: string) {
     this.disconnect()
 
-    this._log.info(`connection ${reason}`)
+    this._log.info(`disconnected`, { reason })
     this.emit('disconnected', new Error(`connection ${reason}`))
   }
 }
