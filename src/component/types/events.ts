@@ -1,5 +1,6 @@
 export const SYSTEM_INIT = 'system/init'
 export const SYSTEM_ADMIN = 'system/admin'
+export const SYSTEM_LOGS = 'system/logs'
 export const SYSTEM_DISCONNECT = 'system/disconnect'
 
 export const SIGNAL_REQUEST = 'signal/request'

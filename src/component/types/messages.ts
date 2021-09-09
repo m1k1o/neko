@@ -23,6 +23,14 @@ export interface SystemAdmin {
   broadcast_status: BroadcastStatus
 }
 
+export type SystemLogs = SystemLog[]
+
+export interface SystemLog {
+  level: "debug" | "info" | "warn" | "error"
+  fields: Record<string, string>
+  message: string
+}
+
 export interface SystemDisconnect {
   message: string
 }
