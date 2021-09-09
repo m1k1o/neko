@@ -11,7 +11,12 @@ export class Logger {
     let t = ''
     const args = []
     for (const name in fields) {
-      t += ' %c%s=%c%o'
+      if (typeof fields[name] === 'string' || fields[name] instanceof String) {
+        t += ' %c%s=%c"%s"'
+      } else {
+        t += ' %c%s=%c%o'
+      }
+
       args.push('color:#498ad8;', name, '', fields[name])
     }
 
