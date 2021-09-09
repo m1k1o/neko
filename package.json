@@ -17,7 +17,7 @@
     "build": "vue-cli-service build --target lib --name neko ./src/index.ts"
   },
   "dependencies": {
-    "axios": "^0.21.1",
+    "axios": "^0.21.4",
     "eventemitter3": "^4.0.7",
     "resize-observer-polyfill": "^1.5.1",
     "vue": "^2.6.14",
@@ -26,10 +26,10 @@
   },
   "devDependencies": {
     "@fortawesome/fontawesome-free": "^5.15.4",
-    "@types/node": "^14.17.14",
+    "@types/node": "^14.17.15",
     "@types/vue": "^2.0.0",
-    "@typescript-eslint/eslint-plugin": "^4.30.0",
-    "@typescript-eslint/parser": "^4.30.0",
+    "@typescript-eslint/eslint-plugin": "^4.31.0",
+    "@typescript-eslint/parser": "^4.31.0",
     "@vue/cli-plugin-babel": "^4.5.13",
     "@vue/cli-plugin-eslint": "^4.5.13",
     "@vue/cli-plugin-typescript": "^4.5.13",
@@ -40,7 +40,7 @@
     "eslint-plugin-prettier": "^3.4.1",
     "eslint-plugin-vue": "^7.17.0",
     "node-sass": "^5.0.0",
-    "prettier": "^2.3.2",
+    "prettier": "^2.4.0",
     "sass-loader": "^10.2.0",
     "ts-node": "^9.1.1",
     "typescript": "^4.4.2",
