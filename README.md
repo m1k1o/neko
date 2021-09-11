@@ -91,6 +91,7 @@ For n.eko room management software, visit https://github.com/m1k1o/neko-rooms.
 - Switched to the latest Firefox version instead of esr.
 - Fixed very fast scroll speed on macOS.
 - Broadcast pipeline errors are reported to the user.
+- On stopping server all websocket connections are going to be gracefully disconnected.
 
 # Getting started & FAQ
 
