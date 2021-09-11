@@ -174,11 +174,11 @@ func (neko *Neko) ServeCommand(cmd *cobra.Command, args []string) {
 	neko.Start()
 	neko.logger.Info().Msg("neko ready")
 
-	quit := make(chan os.Signal)
+	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)
 	sig := <-quit
 
-	neko.logger.Warn().Msgf("received %s, attempting graceful shutdown: \n", sig)
+	neko.logger.Warn().Msgf("received %s, attempting graceful shutdown", sig)
 	neko.Shutdown()
 	neko.logger.Info().Msg("shutdown complete")
 }
