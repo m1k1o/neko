@@ -94,9 +94,14 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
       this._log.debug(`sending remote ICE candidate`, { init })
     }
 
+    this._peer.onicecandidateerror = (event: RTCPeerConnectionIceErrorEvent) => {
+      const fields = { error: event.errorText, code: event.errorCode, port: event.port, url: event.url }
+      this._log.warn(`ICE candidate error`, fields)
+    }
+
     this._peer.onconnectionstatechange = (event) => {
       const state = this._peer!.connectionState
-      this._log.debug(`peer connection state changed`, { state })
+      this._log.info(`peer connection state changed`, { state })
 
       switch (state) {
         // Chrome sends failed state change only for connectionState and not iceConnectionState, and firefox
@@ -110,7 +115,7 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
 
     this._peer.oniceconnectionstatechange = (event) => {
       this._state = this._peer!.iceConnectionState
-      this._log.debug(`peer ice connection state changed`, { state: this._state })
+      this._log.info(`peer ice connection state changed`, { state: this._state })
 
       switch (this._state) {
         // We don't watch the disconnected signaling state here as it can indicate temporary issues and may
@@ -125,7 +130,7 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
 
     this._peer.onsignalingstatechange = (event) => {
       const state = this._peer!.iceConnectionState
-      this._log.debug(`peer signaling state changed`, { state })
+      this._log.info(`peer signaling state changed`, { state })
 
       switch (state) {
         // The closed signaling state has been deprecated in favor of the closed iceConnectionState.
@@ -135,6 +140,10 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
           this.onDisconnected(new Error('peer ' + state))
           break
       }
+    }
+
+    this._peer.onnegotiationneeded = (event) => {
+      this._log.warn(`negotiation is neded`)
     }
 
     this._peer.ontrack = this.onTrack.bind(this)
@@ -189,9 +198,11 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
     if (typeof this._peer != 'undefined') {
       // unmount all events
       this._peer.onicecandidate = () => {}
+      this._peer.onicecandidateerror = () => {}
       this._peer.onconnectionstatechange = () => {}
       this._peer.oniceconnectionstatechange = () => {}
       this._peer.onsignalingstatechange = () => {}
+      this._peer.onnegotiationneeded = () => {}
       this._peer.ontrack = () => {}
       this._peer.ondatachannel = () => {}
 
@@ -211,7 +222,7 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
   public send(event: 'mousedown' | 'mouseup' | 'keydown' | 'keyup', data: { key: number }): void
   public send(event: string, data: any): void {
     if (!this.connected) {
-      this._log.warn(`attempting to send data while disconnected`)
+      this._log.warn(`attempting to send data while disconnected`, { event })
       return
     }
 
@@ -271,19 +282,11 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
   }
 
   private onTrack(event: RTCTrackEvent) {
-    this._log.debug(`received track from peer`, {
-      id: event.track.id,
-      label: event.track.label,
-      kind: event.track.label,
-    })
+    this._log.debug(`received track from peer`, { label: event.track.label })
 
     const stream = event.streams[0]
     if (!stream) {
-      this._log.warn(`no stream provided for track`, {
-        id: event.track.id,
-        label: event.track.label,
-        kind: event.track.label,
-      })
+      this._log.warn(`no stream provided for track`, { label: event.track.label })
       return
     }
 
@@ -295,9 +298,7 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
   }
 
   private onDataChannel(event: RTCDataChannelEvent) {
-    this._log.debug(`received data channel from peer`, {
-      label: event.channel.label,
-    })
+    this._log.debug(`received data channel from peer`, { label: event.channel.label })
 
     this._channel = event.channel
     this._channel.binaryType = 'arraybuffer'
@@ -354,11 +355,11 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
     this._statsStop = this.statsEmitter()
   }
 
-  private onDisconnected(reason?: Error) {
+  private onDisconnected(error?: Error) {
     this.disconnect()
 
-    this._log.info(`disconnected`, { message: reason?.message })
-    this.emit('disconnected', reason)
+    this._log.info(`disconnected`, { error })
+    this.emit('disconnected', error)
 
     if (this._statsStop && typeof this._statsStop === 'function') {
       this._statsStop()
