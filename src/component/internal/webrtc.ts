@@ -94,12 +94,13 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
       this._log.debug(`sending remote ICE candidate`, { init })
     }
 
-    this._peer.onicecandidateerror = (event: RTCPeerConnectionIceErrorEvent) => {
-      const fields = { error: event.errorText, code: event.errorCode, port: event.port, url: event.url }
+    this._peer.onicecandidateerror = (event: Event) => {
+      const e = event as RTCPeerConnectionIceErrorEvent
+      const fields = { error: e.errorText, code: e.errorCode, port: e.port, url: e.url }
       this._log.warn(`ICE candidate error`, fields)
     }
 
-    this._peer.onconnectionstatechange = (event) => {
+    this._peer.onconnectionstatechange = () => {
       const state = this._peer!.connectionState
       this._log.info(`peer connection state changed`, { state })
 
@@ -113,7 +114,7 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
       }
     }
 
-    this._peer.oniceconnectionstatechange = (event) => {
+    this._peer.oniceconnectionstatechange = () => {
       this._state = this._peer!.iceConnectionState
       this._log.info(`peer ice connection state changed`, { state: this._state })
 
@@ -128,7 +129,7 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
       }
     }
 
-    this._peer.onsignalingstatechange = (event) => {
+    this._peer.onsignalingstatechange = () => {
       const state = this._peer!.iceConnectionState
       this._log.info(`peer signaling state changed`, { state })
 
@@ -142,7 +143,7 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
       }
     }
 
-    this._peer.onnegotiationneeded = (event) => {
+    this._peer.onnegotiationneeded = () => {
       this._log.warn(`negotiation is neded`)
     }
 
