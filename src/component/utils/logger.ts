@@ -11,6 +11,12 @@ export class Logger {
     let t = ''
     const args = []
     for (const name in fields) {
+      if (fields[name] instanceof Error) {
+        t += ' %c%s="%s"%c'
+        args.push('color:#d84949;', name, (fields[name] as Error).message, '')
+        continue
+      }
+
       if (typeof fields[name] === 'string' || fields[name] instanceof String) {
         t += ' %c%s=%c"%s"'
       } else {

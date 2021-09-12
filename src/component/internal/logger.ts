@@ -28,9 +28,17 @@ export class NekoLogger extends Logger {
 
   protected _send(level: string, message: string, fields?: Record<string, any>) {
     if (!fields) {
-      fields = { scope: this._scope }
+      fields = { submodule: this._scope }
     } else {
-      fields['scope'] = this._scope
+      fields['submodule'] = this._scope
+    }
+
+    for (const key in fields) {
+      const field = fields[key]
+
+      if (field instanceof Error) {
+        fields[key] = (field as Error).message
+      }
     }
 
     const payload = { level, message, fields } as message.SystemLog
