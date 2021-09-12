@@ -3,13 +3,14 @@ import EventEmitter from 'eventemitter3'
 import * as EVENT from '../types/events'
 
 import { NekoWebSocket } from './websocket'
-import { NekoLogger } from './logger'
+import { NekoLoggerFactory } from './logger'
 import { NekoWebRTC } from './webrtc'
 import { Connection, WebRTCStats } from '../types/state'
 
 import { Reconnector } from './reconnector'
 import { WebsocketReconnector } from './reconnector/websocket'
 import { WebrtcReconnector } from './reconnector/webrtc'
+import { Logger } from '../utils/logger'
 
 const WEBRTC_RECONN_MAX_LOSS = 25
 const WEBRTC_RECONN_FAILED_ATTEMPTS = 5
@@ -25,7 +26,8 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
   private _open = false
 
   public websocket = new NekoWebSocket()
-  public webrtc = new NekoWebRTC(new NekoLogger(this.websocket, 'webrtc'))
+  public logger = new NekoLoggerFactory(this.websocket)
+  public webrtc = new NekoWebRTC(this.logger.new('webrtc'))
 
   private _reconnector: {
     websocket: Reconnector
@@ -155,6 +157,10 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
     this.websocket.send(EVENT.SIGNAL_VIDEO, { video })
   }
 
+  public getLogger(scope?: string): Logger {
+    return this.logger.new(scope)
+  }
+
   public open(video?: string) {
     if (this._open) {
       throw new Error('connection already open')
@@ -194,6 +200,8 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
   }
 
   public destroy() {
+    this.logger.destroy()
+
     // TODO: Use server side congestion control.
     this.webrtc.off('stats', this._webrtcCongestionControlHandle)
 

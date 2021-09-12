@@ -7,15 +7,13 @@ const MAX_LOG_MESSAGES = 25
 const FLUSH_TIMEOUT_MS = 250
 const RETRY_INTERVAL_MS = 2500
 
-export class NekoLogger extends Logger {
+export class NekoLoggerFactory {
   private _ws: NekoWebSocket
   private _logs: message.SystemLog[] = []
   private _timeout: number | null = null
   private _interval: number | null = null
 
-  constructor(websocket: NekoWebSocket, scope?: string) {
-    super(scope)
-
+  constructor(websocket: NekoWebSocket) {
     this._ws = websocket
   }
 
@@ -26,13 +24,7 @@ export class NekoLogger extends Logger {
     }
   }
 
-  protected _send(level: string, message: string, fields?: Record<string, any>) {
-    if (!fields) {
-      fields = { submodule: this._scope }
-    } else {
-      fields['submodule'] = this._scope
-    }
-
+  private _send(level: string, message: string, fields?: Record<string, any>) {
     for (const key in fields) {
       const field = fields[key]
 
@@ -76,24 +68,16 @@ export class NekoLogger extends Logger {
     }
   }
 
-  public error(message: string, fields?: Record<string, any>) {
-    this._console('error', message, fields)
-    this._send('error', message, fields)
-  }
+  public new(submodule?: string): Logger {
+    return new NekoLogger((level: string, message: string, fields?: Record<string, any>) => {
+      if (!fields) {
+        fields = { submodule }
+      } else {
+        fields['submodule'] = submodule
+      }
 
-  public warn(message: string, fields?: Record<string, any>) {
-    this._console('warn', message, fields)
-    this._send('warn', message, fields)
-  }
-
-  public info(message: string, fields?: Record<string, any>) {
-    this._console('info', message, fields)
-    this._send('info', message, fields)
-  }
-
-  public debug(message: string, fields?: Record<string, any>) {
-    this._console('debug', message, fields)
-    this._send('debug', message, fields)
+      this._send(level, message, fields)
+    }, submodule)
   }
 
   public destroy() {
@@ -110,5 +94,37 @@ export class NekoLogger extends Logger {
       window.clearTimeout(this._timeout)
       this._timeout = null
     }
+  }
+}
+
+type NekoLoggerMessage = (level: string, message: string, fields?: Record<string, any>) => void
+
+export class NekoLogger extends Logger {
+  private _on_send: NekoLoggerMessage
+
+  constructor(onSend: NekoLoggerMessage, scope?: string) {
+    super(scope)
+
+    this._on_send = onSend
+  }
+
+  public error(message: string, fields?: Record<string, any>) {
+    this._console('error', message, fields)
+    this._on_send('error', message, fields)
+  }
+
+  public warn(message: string, fields?: Record<string, any>) {
+    this._console('warn', message, fields)
+    this._on_send('warn', message, fields)
+  }
+
+  public info(message: string, fields?: Record<string, any>) {
+    this._console('info', message, fields)
+    this._on_send('info', message, fields)
+  }
+
+  public debug(message: string, fields?: Record<string, any>) {
+    this._console('debug', message, fields)
+    this._on_send('debug', message, fields)
   }
 }
