@@ -144,7 +144,7 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
     }
 
     this._peer.onnegotiationneeded = () => {
-      this._log.warn(`negotiation is neded`)
+      this._log.warn(`negotiation is needed`)
     }
 
     this._peer.ontrack = this.onTrack.bind(this)
