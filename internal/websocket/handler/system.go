@@ -95,8 +95,8 @@ func (h *MessageHandlerCtx) systemLogs(session types.Session, payload *message.S
 		// do not use handler logger context
 		log.WithLevel(level).
 			Fields(msg.Fields).
+			Str("module", "client").
 			Str("session_id", session.ID()).
-			Str("service", "frontend").
 			Msg(msg.Message)
 	}
 
