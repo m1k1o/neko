@@ -19,7 +19,7 @@ var mu = sync.Mutex{}
 type DesktopManagerCtx struct {
 	logger   zerolog.Logger
 	wg       sync.WaitGroup
-	shutdown chan bool
+	shutdown chan interface{}
 	emmiter  events.EventEmmiter
 	config   *config.Desktop
 }
@@ -27,7 +27,7 @@ type DesktopManagerCtx struct {
 func New(config *config.Desktop) *DesktopManagerCtx {
 	return &DesktopManagerCtx{
 		logger:   log.With().Str("module", "desktop").Logger(),
-		shutdown: make(chan bool),
+		shutdown: make(chan interface{}),
 		emmiter:  events.New(),
 		config:   config,
 	}
@@ -93,7 +93,7 @@ func (manager *DesktopManagerCtx) OnAfterScreenSizeChange(listener func()) {
 func (manager *DesktopManagerCtx) Shutdown() error {
 	manager.logger.Info().Msgf("shutdown")
 
-	manager.shutdown <- true
+	close(manager.shutdown)
 	manager.wg.Wait()
 
 	xorg.DisplayClose()
