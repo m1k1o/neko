@@ -145,7 +145,7 @@ func (manager *WebSocketManagerCtx) AddHandler(handler types.WebSocketHandler) {
 	manager.handlers = append(manager.handlers, handler)
 }
 
-func (manager *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Request, checkOrigin types.CheckOrigin) {
+func (manager *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Request, checkOrigin types.CheckOrigin) error {
 	manager.logger.Debug().
 		Str("address", r.RemoteAddr).
 		Str("agent", r.UserAgent()).
@@ -157,8 +157,7 @@ func (manager *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Reque
 
 	connection, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		manager.logger.Err(err).Msg("failed to upgrade connection")
-		return
+		return err
 	}
 
 	// create new peer
@@ -168,7 +167,7 @@ func (manager *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Reque
 	if err != nil {
 		manager.logger.Warn().Err(err).Msg("authentication failed")
 		peer.Destroy(err.Error())
-		return
+		return nil
 	}
 
 	// add session id to all log messages
@@ -178,7 +177,7 @@ func (manager *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Reque
 	if !session.Profile().CanConnect {
 		logger.Warn().Msg("connection disabled")
 		peer.Destroy("connection disabled")
-		return
+		return nil
 	}
 
 	if session.State().IsConnected {
@@ -186,7 +185,7 @@ func (manager *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Reque
 
 		if !manager.sessions.MercifulReconnect() {
 			peer.Destroy("already connected")
-			return
+			return nil
 		}
 
 		logger.Info().Msg("replacing peer connection")
@@ -211,6 +210,7 @@ func (manager *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Reque
 	}()
 
 	manager.handle(connection, session)
+	return nil
 }
 
 func (manager *WebSocketManagerCtx) handle(connection *websocket.Conn, session types.Session) {
