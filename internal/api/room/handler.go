@@ -1,9 +1,8 @@
 package room
 
 import (
+	"context"
 	"net/http"
-
-	"github.com/go-chi/chi"
 
 	"demodesk/neko/internal/http/auth"
 	"demodesk/neko/internal/types"
@@ -30,14 +29,14 @@ func New(
 	}
 }
 
-func (h *RoomHandler) Route(r chi.Router) {
-	r.With(auth.AdminsOnly).Route("/broadcast", func(r chi.Router) {
+func (h *RoomHandler) Route(r types.Router) {
+	r.With(auth.AdminsOnly).Route("/broadcast", func(r types.Router) {
 		r.Get("/", h.broadcastStatus)
 		r.Post("/start", h.boradcastStart)
 		r.Post("/stop", h.boradcastStop)
 	})
 
-	r.With(auth.CanAccessClipboardOnly).With(auth.HostsOnly).Route("/clipboard", func(r chi.Router) {
+	r.With(auth.CanAccessClipboardOnly).With(auth.HostsOnly).Route("/clipboard", func(r types.Router) {
 		r.Get("/", h.clipboardGetText)
 		r.Post("/", h.clipboardSetText)
 		r.Get("/image.png", h.clipboardGetImage)
@@ -52,7 +51,7 @@ func (h *RoomHandler) Route(r chi.Router) {
 		//r.Get("/targets", h.clipboardGetTargets)
 	})
 
-	r.With(auth.CanHostOnly).Route("/keyboard", func(r chi.Router) {
+	r.With(auth.CanHostOnly).Route("/keyboard", func(r types.Router) {
 		r.Get("/map", h.keyboardMapGet)
 		r.With(auth.HostsOnly).Post("/map", h.keyboardMapSet)
 
@@ -60,7 +59,7 @@ func (h *RoomHandler) Route(r chi.Router) {
 		r.With(auth.HostsOnly).Post("/modifiers", h.keyboardModifiersSet)
 	})
 
-	r.With(auth.CanHostOnly).Route("/control", func(r chi.Router) {
+	r.With(auth.CanHostOnly).Route("/control", func(r types.Router) {
 		r.Get("/", h.controlStatus)
 		r.Post("/request", h.controlRequest)
 		r.Post("/release", h.controlRelease)
@@ -70,7 +69,7 @@ func (h *RoomHandler) Route(r chi.Router) {
 		r.With(auth.AdminsOnly).Post("/reset", h.controlReset)
 	})
 
-	r.With(auth.CanWatchOnly).Route("/screen", func(r chi.Router) {
+	r.With(auth.CanWatchOnly).Route("/screen", func(r types.Router) {
 		r.Get("/", h.screenConfiguration)
 		r.With(auth.AdminsOnly).Post("/", h.screenConfigurationChange)
 		r.With(auth.AdminsOnly).Get("/configurations", h.screenConfigurationsList)
@@ -79,20 +78,18 @@ func (h *RoomHandler) Route(r chi.Router) {
 		r.With(auth.AdminsOnly).Get("/shot.jpg", h.screenShotGet)
 	})
 
-	r.With(h.uploadMiddleware).Route("/upload", func(r chi.Router) {
+	r.With(h.uploadMiddleware).Route("/upload", func(r types.Router) {
 		r.Post("/drop", h.uploadDrop)
 		r.Post("/dialog", h.uploadDialogPost)
 		r.Delete("/dialog", h.uploadDialogClose)
 	})
 }
 
-func (h *RoomHandler) uploadMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		session := auth.GetSession(r)
-		if !session.IsHost() && (!session.Profile().CanHost || !h.sessions.ImplicitHosting()) {
-			utils.HttpForbidden(w).Msg("without implicit hosting, only host can upload files")
-		} else {
-			next.ServeHTTP(w, r)
-		}
-	})
+func (h *RoomHandler) uploadMiddleware(w http.ResponseWriter, r *http.Request) (context.Context, error) {
+	session, ok := auth.GetSession(r)
+	if !ok || (!session.IsHost() && (!session.Profile().CanHost || !h.sessions.ImplicitHosting())) {
+		return nil, utils.HttpForbidden("without implicit hosting, only host can upload files")
+	}
+
+	return nil, nil
 }

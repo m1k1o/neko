@@ -20,16 +20,15 @@ type SessionDataPayload struct {
 	State   types.SessionState  `json:"state"`
 }
 
-func (api *ApiManagerCtx) Login(w http.ResponseWriter, r *http.Request) {
+func (api *ApiManagerCtx) Login(w http.ResponseWriter, r *http.Request) error {
 	data := &SessionLoginPayload{}
-	if !utils.HttpJsonRequest(w, r, data) {
-		return
+	if err := utils.HttpJsonRequest(w, r, data); err != nil {
+		return err
 	}
 
 	session, token, err := api.members.Login(data.Username, data.Password)
 	if err != nil {
-		utils.HttpUnauthorized(w).WithInternalErr(err).Send()
-		return
+		return utils.HttpUnauthorized().WithInternalErr(err)
 	}
 
 	sessionData := SessionDataPayload{
@@ -44,29 +43,28 @@ func (api *ApiManagerCtx) Login(w http.ResponseWriter, r *http.Request) {
 		sessionData.Token = token
 	}
 
-	utils.HttpSuccess(w, sessionData)
+	return utils.HttpSuccess(w, sessionData)
 }
 
-func (api *ApiManagerCtx) Logout(w http.ResponseWriter, r *http.Request) {
-	session := auth.GetSession(r)
+func (api *ApiManagerCtx) Logout(w http.ResponseWriter, r *http.Request) error {
+	session, _ := auth.GetSession(r)
 
 	err := api.members.Logout(session.ID())
 	if err != nil {
-		utils.HttpUnauthorized(w).WithInternalErr(err).Send()
-		return
+		return utils.HttpUnauthorized().WithInternalErr(err)
 	}
 
 	if api.sessions.CookieEnabled() {
 		api.sessions.CookieClearToken(w, r)
 	}
 
-	utils.HttpSuccess(w, true)
+	return utils.HttpSuccess(w, true)
 }
 
-func (api *ApiManagerCtx) Whoami(w http.ResponseWriter, r *http.Request) {
-	session := auth.GetSession(r)
+func (api *ApiManagerCtx) Whoami(w http.ResponseWriter, r *http.Request) error {
+	session, _ := auth.GetSession(r)
 
-	utils.HttpSuccess(w, SessionDataPayload{
+	return utils.HttpSuccess(w, SessionDataPayload{
 		ID:      session.ID(),
 		Profile: session.Profile(),
 		State:   session.State(),

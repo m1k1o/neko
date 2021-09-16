@@ -13,34 +13,32 @@ type BroadcastStatusPayload struct {
 	IsActive bool   `json:"is_active"`
 }
 
-func (h *RoomHandler) broadcastStatus(w http.ResponseWriter, r *http.Request) {
+func (h *RoomHandler) broadcastStatus(w http.ResponseWriter, r *http.Request) error {
 	broadcast := h.capture.Broadcast()
-	utils.HttpSuccess(w, BroadcastStatusPayload{
+
+	return utils.HttpSuccess(w, BroadcastStatusPayload{
 		IsActive: broadcast.Started(),
 		URL:      broadcast.Url(),
 	})
 }
 
-func (h *RoomHandler) boradcastStart(w http.ResponseWriter, r *http.Request) {
+func (h *RoomHandler) boradcastStart(w http.ResponseWriter, r *http.Request) error {
 	data := &BroadcastStatusPayload{}
-	if !utils.HttpJsonRequest(w, r, data) {
-		return
+	if err := utils.HttpJsonRequest(w, r, data); err != nil {
+		return err
 	}
 
 	if data.URL == "" {
-		utils.HttpBadRequest(w).Msg("missing broadcast URL")
-		return
+		return utils.HttpBadRequest("missing broadcast URL")
 	}
 
 	broadcast := h.capture.Broadcast()
 	if broadcast.Started() {
-		utils.HttpUnprocessableEntity(w).Msg("server is already broadcasting")
-		return
+		return utils.HttpUnprocessableEntity("server is already broadcasting")
 	}
 
 	if err := broadcast.Start(data.URL); err != nil {
-		utils.HttpInternalServerError(w, err).Send()
-		return
+		return utils.HttpInternalServerError().WithInternalErr(err)
 	}
 
 	h.sessions.AdminBroadcast(
@@ -50,14 +48,13 @@ func (h *RoomHandler) boradcastStart(w http.ResponseWriter, r *http.Request) {
 			URL:      broadcast.Url(),
 		}, nil)
 
-	utils.HttpSuccess(w)
+	return utils.HttpSuccess(w)
 }
 
-func (h *RoomHandler) boradcastStop(w http.ResponseWriter, r *http.Request) {
+func (h *RoomHandler) boradcastStop(w http.ResponseWriter, r *http.Request) error {
 	broadcast := h.capture.Broadcast()
 	if !broadcast.Started() {
-		utils.HttpUnprocessableEntity(w).Msg("server is not broadcasting")
-		return
+		return utils.HttpUnprocessableEntity("server is not broadcasting")
 	}
 
 	broadcast.Stop()
@@ -69,5 +66,5 @@ func (h *RoomHandler) boradcastStop(w http.ResponseWriter, r *http.Request) {
 			URL:      broadcast.Url(),
 		}, nil)
 
-	utils.HttpSuccess(w)
+	return utils.HttpSuccess(w)
 }

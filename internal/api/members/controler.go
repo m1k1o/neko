@@ -24,7 +24,7 @@ type MemberPasswordPayload struct {
 	Password string `json:"password"`
 }
 
-func (h *MembersHandler) membersList(w http.ResponseWriter, r *http.Request) {
+func (h *MembersHandler) membersList(w http.ResponseWriter, r *http.Request) error {
 	limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
 	if err != nil {
 		// TODO: Default zero.
@@ -39,8 +39,7 @@ func (h *MembersHandler) membersList(w http.ResponseWriter, r *http.Request) {
 
 	entries, err := h.members.SelectAll(limit, offset)
 	if err != nil {
-		utils.HttpInternalServerError(w, err).Send()
-		return
+		return utils.HttpInternalServerError().WithInternalErr(err)
 	}
 
 	members := []MemberDataPayload{}
@@ -51,10 +50,10 @@ func (h *MembersHandler) membersList(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	utils.HttpSuccess(w, members)
+	return utils.HttpSuccess(w, members)
 }
 
-func (h *MembersHandler) membersCreate(w http.ResponseWriter, r *http.Request) {
+func (h *MembersHandler) membersCreate(w http.ResponseWriter, r *http.Request) error {
 	data := &MemberCreatePayload{
 		// default values
 		Profile: types.MemberProfile{
@@ -67,82 +66,76 @@ func (h *MembersHandler) membersCreate(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	if !utils.HttpJsonRequest(w, r, data) {
-		return
+	if err := utils.HttpJsonRequest(w, r, data); err != nil {
+		return err
 	}
 
 	if data.Username == "" {
-		utils.HttpBadRequest(w).Msg("username cannot be empty")
-		return
+		return utils.HttpBadRequest("username cannot be empty")
 	}
 
 	if data.Password == "" {
-		utils.HttpBadRequest(w).Msg("password cannot be empty")
-		return
+		return utils.HttpBadRequest("password cannot be empty")
 	}
 
 	id, err := h.members.Insert(data.Username, data.Password, data.Profile)
 	if err != nil {
 		if errors.Is(err, types.ErrMemberAlreadyExists) {
-			utils.HttpUnprocessableEntity(w).Msg("member already exists")
-		} else {
-			utils.HttpInternalServerError(w, err).Send()
+			return utils.HttpUnprocessableEntity("member already exists")
 		}
-		return
+
+		return utils.HttpInternalServerError().WithInternalErr(err)
 	}
 
-	utils.HttpSuccess(w, MemberDataPayload{
+	return utils.HttpSuccess(w, MemberDataPayload{
 		ID:      id,
 		Profile: data.Profile,
 	})
 }
 
-func (h *MembersHandler) membersRead(w http.ResponseWriter, r *http.Request) {
+func (h *MembersHandler) membersRead(w http.ResponseWriter, r *http.Request) error {
 	member := GetMember(r)
 	profile := member.Profile
 
-	utils.HttpSuccess(w, profile)
+	return utils.HttpSuccess(w, profile)
 }
 
-func (h *MembersHandler) membersUpdateProfile(w http.ResponseWriter, r *http.Request) {
+func (h *MembersHandler) membersUpdateProfile(w http.ResponseWriter, r *http.Request) error {
 	member := GetMember(r)
-	profile := member.Profile
+	data := &member.Profile
 
-	if !utils.HttpJsonRequest(w, r, &profile) {
-		return
+	if err := utils.HttpJsonRequest(w, r, data); err != nil {
+		return err
 	}
 
-	if err := h.members.UpdateProfile(member.ID, profile); err != nil {
-		utils.HttpInternalServerError(w, err).Send()
-		return
+	if err := h.members.UpdateProfile(member.ID, *data); err != nil {
+		return utils.HttpInternalServerError().WithInternalErr(err)
 	}
 
-	utils.HttpSuccess(w)
+	return utils.HttpSuccess(w)
 }
 
-func (h *MembersHandler) membersUpdatePassword(w http.ResponseWriter, r *http.Request) {
+func (h *MembersHandler) membersUpdatePassword(w http.ResponseWriter, r *http.Request) error {
 	member := GetMember(r)
-	data := MemberPasswordPayload{}
+	data := &MemberPasswordPayload{}
 
-	if !utils.HttpJsonRequest(w, r, &data) {
-		return
+	if err := utils.HttpJsonRequest(w, r, data); err != nil {
+		return err
 	}
 
 	if err := h.members.UpdatePassword(member.ID, data.Password); err != nil {
-		utils.HttpInternalServerError(w, err).Send()
-		return
+		return utils.HttpInternalServerError().WithInternalErr(err)
 	}
 
-	utils.HttpSuccess(w)
+	return utils.HttpSuccess(w)
 }
 
-func (h *MembersHandler) membersDelete(w http.ResponseWriter, r *http.Request) {
+func (h *MembersHandler) membersDelete(w http.ResponseWriter, r *http.Request) error {
 	member := GetMember(r)
 
 	if err := h.members.Delete(member.ID); err != nil {
-		utils.HttpInternalServerError(w, err).Send()
-		return
+		return utils.HttpInternalServerError().WithInternalErr(err)
 	}
 
-	utils.HttpSuccess(w)
+	return utils.HttpSuccess(w)
 }

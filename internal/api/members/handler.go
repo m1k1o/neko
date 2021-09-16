@@ -30,12 +30,12 @@ func New(
 	}
 }
 
-func (h *MembersHandler) Route(r chi.Router) {
+func (h *MembersHandler) Route(r types.Router) {
 	r.Get("/", h.membersList)
 
-	r.With(auth.AdminsOnly).Group(func(r chi.Router) {
+	r.With(auth.AdminsOnly).Group(func(r types.Router) {
 		r.Post("/", h.membersCreate)
-		r.With(h.ExtractMember).Route("/{memberId}", func(r chi.Router) {
+		r.With(h.ExtractMember).Route("/{memberId}", func(r types.Router) {
 			r.Get("/", h.membersRead)
 			r.Post("/", h.membersUpdateProfile)
 			r.Post("/password", h.membersUpdatePassword)
@@ -44,8 +44,8 @@ func (h *MembersHandler) Route(r chi.Router) {
 	})
 }
 
-func (h *MembersHandler) RouteBulk(r chi.Router) {
-	r.With(auth.AdminsOnly).Group(func(r chi.Router) {
+func (h *MembersHandler) RouteBulk(r types.Router) {
+	r.With(auth.AdminsOnly).Group(func(r types.Router) {
 		r.Post("/update", h.membersBulkUpdate)
 	})
 }
@@ -55,33 +55,28 @@ type MemberData struct {
 	Profile types.MemberProfile
 }
 
-func SetMember(r *http.Request, session MemberData) *http.Request {
-	ctx := context.WithValue(r.Context(), keyMemberCtx, session)
-	return r.WithContext(ctx)
+func SetMember(r *http.Request, session MemberData) context.Context {
+	return context.WithValue(r.Context(), keyMemberCtx, session)
 }
 
 func GetMember(r *http.Request) MemberData {
 	return r.Context().Value(keyMemberCtx).(MemberData)
 }
 
-func (h *MembersHandler) ExtractMember(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		memberId := chi.URLParam(r, "memberId")
+func (h *MembersHandler) ExtractMember(w http.ResponseWriter, r *http.Request) (context.Context, error) {
+	memberId := chi.URLParam(r, "memberId")
 
-		profile, err := h.members.Select(memberId)
-		if err != nil {
-			if errors.Is(err, types.ErrMemberDoesNotExist) {
-				utils.HttpNotFound(w).Msg("member not found")
-			} else {
-				utils.HttpInternalServerError(w, err).Send()
-			}
-
-			return
+	profile, err := h.members.Select(memberId)
+	if err != nil {
+		if errors.Is(err, types.ErrMemberDoesNotExist) {
+			return nil, utils.HttpNotFound("member not found")
 		}
 
-		next.ServeHTTP(w, SetMember(r, MemberData{
-			ID:      memberId,
-			Profile: profile,
-		}))
-	})
+		return nil, utils.HttpInternalServerError().WithInternalErr(err)
+	}
+
+	return SetMember(r, MemberData{
+		ID:      memberId,
+		Profile: profile,
+	}), nil
 }

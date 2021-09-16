@@ -12,66 +12,56 @@ type key int
 
 const keySessionCtx key = iota
 
-func SetSession(r *http.Request, session types.Session) *http.Request {
-	ctx := context.WithValue(r.Context(), keySessionCtx, session)
-	return r.WithContext(ctx)
+func SetSession(r *http.Request, session types.Session) context.Context {
+	return context.WithValue(r.Context(), keySessionCtx, session)
 }
 
-func GetSession(r *http.Request) types.Session {
-	return r.Context().Value(keySessionCtx).(types.Session)
+func GetSession(r *http.Request) (types.Session, bool) {
+	session, ok := r.Context().Value(keySessionCtx).(types.Session)
+	return session, ok
 }
 
-func AdminsOnly(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		session := GetSession(r)
-		if !session.Profile().IsAdmin {
-			utils.HttpForbidden(w).Msg("session is not admin")
-		} else {
-			next.ServeHTTP(w, r)
-		}
-	})
+func AdminsOnly(w http.ResponseWriter, r *http.Request) (context.Context, error) {
+	session, ok := GetSession(r)
+	if !ok || !session.Profile().IsAdmin {
+		return nil, utils.HttpForbidden("session is not admin")
+	}
+
+	return nil, nil
 }
 
-func HostsOnly(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		session := GetSession(r)
-		if !session.IsHost() {
-			utils.HttpForbidden(w).Msg("session is not host")
-		} else {
-			next.ServeHTTP(w, r)
-		}
-	})
+func HostsOnly(w http.ResponseWriter, r *http.Request) (context.Context, error) {
+	session, ok := GetSession(r)
+	if !ok || !session.IsHost() {
+		return nil, utils.HttpForbidden("session is not host")
+	}
+
+	return nil, nil
 }
 
-func CanWatchOnly(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		session := GetSession(r)
-		if !session.Profile().CanWatch {
-			utils.HttpForbidden(w).Msg("session cannot watch")
-		} else {
-			next.ServeHTTP(w, r)
-		}
-	})
+func CanWatchOnly(w http.ResponseWriter, r *http.Request) (context.Context, error) {
+	session, ok := GetSession(r)
+	if !ok || !session.Profile().CanWatch {
+		return nil, utils.HttpForbidden("session cannot watch")
+	}
+
+	return nil, nil
 }
 
-func CanHostOnly(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		session := GetSession(r)
-		if !session.Profile().CanHost {
-			utils.HttpForbidden(w).Msg("session cannot host")
-		} else {
-			next.ServeHTTP(w, r)
-		}
-	})
+func CanHostOnly(w http.ResponseWriter, r *http.Request) (context.Context, error) {
+	session, ok := GetSession(r)
+	if !ok || !session.Profile().CanHost {
+		return nil, utils.HttpForbidden("session cannot host")
+	}
+
+	return nil, nil
 }
 
-func CanAccessClipboardOnly(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		session := GetSession(r)
-		if !session.Profile().CanAccessClipboard {
-			utils.HttpForbidden(w).Msg("session cannot access clipboard")
-		} else {
-			next.ServeHTTP(w, r)
-		}
-	})
+func CanAccessClipboardOnly(w http.ResponseWriter, r *http.Request) (context.Context, error) {
+	session, ok := GetSession(r)
+	if !ok || !session.Profile().CanAccessClipboard {
+		return nil, utils.HttpForbidden("session cannot access clipboard")
+	}
+
+	return nil, nil
 }

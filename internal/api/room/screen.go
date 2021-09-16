@@ -16,25 +16,24 @@ type ScreenConfigurationPayload struct {
 	Rate   int16 `json:"rate"`
 }
 
-func (h *RoomHandler) screenConfiguration(w http.ResponseWriter, r *http.Request) {
+func (h *RoomHandler) screenConfiguration(w http.ResponseWriter, r *http.Request) error {
 	size := h.desktop.GetScreenSize()
 
 	if size == nil {
-		utils.HttpInternalServerError(w, nil).WithInternalMsg("unable to get screen configuration").Send()
-		return
+		return utils.HttpInternalServerError().WithInternalMsg("unable to get screen configuration")
 	}
 
-	utils.HttpSuccess(w, ScreenConfigurationPayload{
+	return utils.HttpSuccess(w, ScreenConfigurationPayload{
 		Width:  size.Width,
 		Height: size.Height,
 		Rate:   size.Rate,
 	})
 }
 
-func (h *RoomHandler) screenConfigurationChange(w http.ResponseWriter, r *http.Request) {
+func (h *RoomHandler) screenConfigurationChange(w http.ResponseWriter, r *http.Request) error {
 	data := &ScreenConfigurationPayload{}
-	if !utils.HttpJsonRequest(w, r, data) {
-		return
+	if err := utils.HttpJsonRequest(w, r, data); err != nil {
+		return err
 	}
 
 	if err := h.desktop.SetScreenSize(types.ScreenSize{
@@ -42,8 +41,7 @@ func (h *RoomHandler) screenConfigurationChange(w http.ResponseWriter, r *http.R
 		Height: data.Height,
 		Rate:   data.Rate,
 	}); err != nil {
-		utils.HttpUnprocessableEntity(w).WithInternalErr(err).Msg("cannot set screen size")
-		return
+		return utils.HttpUnprocessableEntity("cannot set screen size").WithInternalErr(err)
 	}
 
 	h.sessions.Broadcast(
@@ -54,10 +52,10 @@ func (h *RoomHandler) screenConfigurationChange(w http.ResponseWriter, r *http.R
 			Rate:   data.Rate,
 		}, nil)
 
-	utils.HttpSuccess(w, data)
+	return utils.HttpSuccess(w, data)
 }
 
-func (h *RoomHandler) screenConfigurationsList(w http.ResponseWriter, r *http.Request) {
+func (h *RoomHandler) screenConfigurationsList(w http.ResponseWriter, r *http.Request) error {
 	list := []ScreenConfigurationPayload{}
 
 	ScreenConfigurations := h.desktop.ScreenConfigurations()
@@ -71,10 +69,10 @@ func (h *RoomHandler) screenConfigurationsList(w http.ResponseWriter, r *http.Re
 		}
 	}
 
-	utils.HttpSuccess(w, list)
+	return utils.HttpSuccess(w, list)
 }
 
-func (h *RoomHandler) screenShotGet(w http.ResponseWriter, r *http.Request) {
+func (h *RoomHandler) screenShotGet(w http.ResponseWriter, r *http.Request) error {
 	quality, err := strconv.Atoi(r.URL.Query().Get("quality"))
 	if err != nil {
 		quality = 90
@@ -83,31 +81,30 @@ func (h *RoomHandler) screenShotGet(w http.ResponseWriter, r *http.Request) {
 	img := h.desktop.GetScreenshotImage()
 	bytes, err := utils.CreateJPGImage(img, quality)
 	if err != nil {
-		utils.HttpInternalServerError(w, err).Send()
-		return
+		return utils.HttpInternalServerError().WithInternalErr(err)
 	}
 
 	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 	w.Header().Set("Content-Type", "image/jpeg")
-	//nolint
-	w.Write(bytes)
+
+	_, err = w.Write(bytes)
+	return err
 }
 
-func (h *RoomHandler) screenCastGet(w http.ResponseWriter, r *http.Request) {
+func (h *RoomHandler) screenCastGet(w http.ResponseWriter, r *http.Request) error {
 	screencast := h.capture.Screencast()
 	if !screencast.Enabled() {
-		utils.HttpBadRequest(w).Msg("screencast pipeline is not enabled")
-		return
+		return utils.HttpBadRequest("screencast pipeline is not enabled")
 	}
 
 	bytes, err := screencast.Image()
 	if err != nil {
-		utils.HttpInternalServerError(w, err).Send()
-		return
+		return utils.HttpInternalServerError().WithInternalErr(err)
 	}
 
 	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 	w.Header().Set("Content-Type", "image/jpeg")
-	//nolint
-	w.Write(bytes)
+
+	_, err = w.Write(bytes)
+	return err
 }

@@ -15,11 +15,10 @@ import (
 // maximum upload size of 32 MB
 const maxUploadSize = 32 << 20
 
-func (h *RoomHandler) uploadDrop(w http.ResponseWriter, r *http.Request) {
+func (h *RoomHandler) uploadDrop(w http.ResponseWriter, r *http.Request) error {
 	err := r.ParseMultipartForm(maxUploadSize)
 	if err != nil {
-		utils.HttpBadRequest(w).WithInternalErr(err).Msg("failed to parse multipart form")
-		return
+		return utils.HttpBadRequest("failed to parse multipart form").WithInternalErr(err)
 	}
 
 	//nolint
@@ -27,26 +26,24 @@ func (h *RoomHandler) uploadDrop(w http.ResponseWriter, r *http.Request) {
 
 	X, err := strconv.Atoi(r.FormValue("x"))
 	if err != nil {
-		utils.HttpBadRequest(w).WithInternalErr(err).Msg("no X coordinate received")
-		return
+		return utils.HttpBadRequest("no X coordinate received").WithInternalErr(err)
 	}
 
 	Y, err := strconv.Atoi(r.FormValue("y"))
 	if err != nil {
-		utils.HttpBadRequest(w).WithInternalErr(err).Msg("no Y coordinate received")
-		return
+		return utils.HttpBadRequest("no Y coordinate received").WithInternalErr(err)
 	}
 
 	req_files := r.MultipartForm.File["files"]
 	if len(req_files) == 0 {
-		utils.HttpBadRequest(w).Msg("no files received")
-		return
+		return utils.HttpBadRequest("no files received")
 	}
 
 	dir, err := os.MkdirTemp("", "neko-drop-*")
 	if err != nil {
-		utils.HttpInternalServerError(w, err).WithInternalMsg("unable to create temporary directory").Send()
-		return
+		return utils.HttpInternalServerError().
+			WithInternalErr(err).
+			WithInternalMsg("unable to create temporary directory")
 	}
 
 	files := []string{}
@@ -55,62 +52,65 @@ func (h *RoomHandler) uploadDrop(w http.ResponseWriter, r *http.Request) {
 
 		srcFile, err := req_file.Open()
 		if err != nil {
-			utils.HttpInternalServerError(w, err).WithInternalMsg("unable to open uploaded file").Send()
-			return
+			return utils.HttpInternalServerError().
+				WithInternalErr(err).
+				WithInternalMsg("unable to open uploaded file")
 		}
 
 		defer srcFile.Close()
 
 		dstFile, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 		if err != nil {
-			utils.HttpInternalServerError(w, err).WithInternalMsg("unable to open destination file").Send()
-			return
+			return utils.HttpInternalServerError().
+				WithInternalErr(err).
+				WithInternalMsg("unable to open destination file")
 		}
 
 		defer dstFile.Close()
 
 		_, err = io.Copy(dstFile, srcFile)
 		if err != nil {
-			utils.HttpInternalServerError(w, err).WithInternalMsg("unable to copy uploaded file to destination file").Send()
-			return
+			return utils.HttpInternalServerError().
+				WithInternalErr(err).
+				WithInternalMsg("unable to copy uploaded file to destination file")
 		}
 
 		files = append(files, path)
 	}
 
 	if !h.desktop.DropFiles(X, Y, files) {
-		utils.HttpInternalServerError(w, nil).WithInternalMsg("unable to drop files").Send()
-		return
+		return utils.HttpInternalServerError().
+			WithInternalMsg("unable to drop files")
 	}
 
-	utils.HttpSuccess(w)
+	return utils.HttpSuccess(w)
 }
 
-func (h *RoomHandler) uploadDialogPost(w http.ResponseWriter, r *http.Request) {
+func (h *RoomHandler) uploadDialogPost(w http.ResponseWriter, r *http.Request) error {
 	err := r.ParseMultipartForm(maxUploadSize)
 	if err != nil {
-		utils.HttpBadRequest(w).WithInternalErr(err).Msg("failed to parse multipart form")
-		return
+		return utils.HttpBadRequest("failed to parse multipart form").WithInternalErr(err)
 	}
 
 	//nolint
 	defer r.MultipartForm.RemoveAll()
 
 	if !h.desktop.IsFileChooserDialogOpened() {
-		utils.HttpUnprocessableEntity(w).Msg("file chooser dialog is not open")
-		return
+		return utils.HttpUnprocessableEntity("file chooser dialog is not open")
 	}
 
 	req_files := r.MultipartForm.File["files"]
 	if len(req_files) == 0 {
-		utils.HttpInternalServerError(w, err).WithInternalMsg("unable to copy uploaded file to destination file").Send()
-		return
+		return utils.HttpInternalServerError().
+			WithInternalErr(err).
+			WithInternalMsg("unable to copy uploaded file to destination file")
 	}
 
 	dir, err := os.MkdirTemp("", "neko-dialog-*")
 	if err != nil {
-		utils.HttpInternalServerError(w, err).WithInternalMsg("unable to create temporary directory").Send()
-		return
+		return utils.HttpInternalServerError().
+			WithInternalErr(err).
+			WithInternalMsg("unable to create temporary directory")
 	}
 
 	for _, req_file := range req_files {
@@ -118,41 +118,45 @@ func (h *RoomHandler) uploadDialogPost(w http.ResponseWriter, r *http.Request) {
 
 		srcFile, err := req_file.Open()
 		if err != nil {
-			utils.HttpInternalServerError(w, err).WithInternalMsg("unable to open uploaded file").Send()
-			return
+			return utils.HttpInternalServerError().
+				WithInternalErr(err).
+				WithInternalMsg("unable to open uploaded file")
 		}
 
 		defer srcFile.Close()
 
 		dstFile, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 		if err != nil {
-			utils.HttpInternalServerError(w, err).WithInternalMsg("unable to open destination file").Send()
-			return
+			return utils.HttpInternalServerError().
+				WithInternalErr(err).
+				WithInternalMsg("unable to open destination file")
 		}
 
 		defer dstFile.Close()
 
 		_, err = io.Copy(dstFile, srcFile)
 		if err != nil {
-			utils.HttpInternalServerError(w, err).WithInternalMsg("unable to copy uploaded file to destination file").Send()
-			return
+			return utils.HttpInternalServerError().
+				WithInternalErr(err).
+				WithInternalMsg("unable to copy uploaded file to destination file")
 		}
 	}
 
 	if err := h.desktop.HandleFileChooserDialog(dir); err != nil {
-		utils.HttpInternalServerError(w, err).WithInternalMsg("unable to handle file chooser dialog").Send()
-		return
+		return utils.HttpInternalServerError().
+			WithInternalErr(err).
+			WithInternalMsg("unable to handle file chooser dialog")
 	}
 
-	utils.HttpSuccess(w)
+	return utils.HttpSuccess(w)
 }
 
-func (h *RoomHandler) uploadDialogClose(w http.ResponseWriter, r *http.Request) {
+func (h *RoomHandler) uploadDialogClose(w http.ResponseWriter, r *http.Request) error {
 	if !h.desktop.IsFileChooserDialogOpened() {
-		utils.HttpUnprocessableEntity(w).Msg("file chooser dialog is not open")
-		return
+		return utils.HttpUnprocessableEntity("file chooser dialog is not open")
 	}
 
 	h.desktop.CloseFileChooserDialog()
-	utils.HttpSuccess(w)
+
+	return utils.HttpSuccess(w)
 }

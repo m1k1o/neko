@@ -23,5 +23,5 @@ type WebSocketManager interface {
 	Start()
 	Shutdown() error
 	AddHandler(handler WebSocketHandler)
-	Upgrade(w http.ResponseWriter, r *http.Request, checkOrigin CheckOrigin)
+	Upgrade(w http.ResponseWriter, r *http.Request, checkOrigin CheckOrigin) error
 }

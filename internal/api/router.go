@@ -1,10 +1,9 @@
 package api
 
 import (
+	"context"
 	"errors"
 	"net/http"
-
-	"github.com/go-chi/chi"
 
 	"demodesk/neko/internal/api/members"
 	"demodesk/neko/internal/api/room"
@@ -19,7 +18,7 @@ type ApiManagerCtx struct {
 	members  types.MemberManager
 	desktop  types.DesktopManager
 	capture  types.CaptureManager
-	routers  map[string]func(chi.Router)
+	routers  map[string]func(types.Router)
 }
 
 func New(
@@ -35,15 +34,15 @@ func New(
 		members:  members,
 		desktop:  desktop,
 		capture:  capture,
-		routers:  make(map[string]func(chi.Router)),
+		routers:  make(map[string]func(types.Router)),
 	}
 }
 
-func (api *ApiManagerCtx) Route(r chi.Router) {
+func (api *ApiManagerCtx) Route(r types.Router) {
 	r.Post("/login", api.Login)
 
 	// Authenticated area
-	r.Group(func(r chi.Router) {
+	r.Group(func(r types.Router) {
 		r.Use(api.Authenticate)
 
 		r.Post("/logout", api.Logout)
@@ -61,33 +60,29 @@ func (api *ApiManagerCtx) Route(r chi.Router) {
 		}
 	})
 
-	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
-		//nolint
-		w.Write([]byte("true"))
+	r.Get("/health", func(w http.ResponseWriter, r *http.Request) error {
+		_, err := w.Write([]byte("true"))
+		return err
 	})
 }
 
-func (api *ApiManagerCtx) Authenticate(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		session, err := api.sessions.Authenticate(r)
-		if err != nil {
-			if api.sessions.CookieEnabled() {
-				api.sessions.CookieClearToken(w, r)
-			}
-
-			if errors.Is(err, types.ErrSessionLoginDisabled) {
-				utils.HttpForbidden(w).Msg("login is disabled for this session")
-			} else {
-				utils.HttpUnauthorized(w).WithInternalErr(err).Send()
-			}
-
-			return
+func (api *ApiManagerCtx) Authenticate(w http.ResponseWriter, r *http.Request) (context.Context, error) {
+	session, err := api.sessions.Authenticate(r)
+	if err != nil {
+		if api.sessions.CookieEnabled() {
+			api.sessions.CookieClearToken(w, r)
 		}
 
-		next.ServeHTTP(w, auth.SetSession(r, session))
-	})
+		if errors.Is(err, types.ErrSessionLoginDisabled) {
+			return nil, utils.HttpForbidden("login is disabled for this session")
+		}
+
+		return nil, utils.HttpUnauthorized().WithInternalErr(err)
+	}
+
+	return auth.SetSession(r, session), nil
 }
 
-func (api *ApiManagerCtx) AddRouter(path string, router func(chi.Router)) {
+func (api *ApiManagerCtx) AddRouter(path string, router func(types.Router)) {
 	api.routers[path] = router
 }

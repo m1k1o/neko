@@ -4,6 +4,7 @@ import (
 	// TODO: Unused now.
 	//"bytes"
 	//"strings"
+
 	"net/http"
 
 	"demodesk/neko/internal/types"
@@ -15,23 +16,22 @@ type ClipboardPayload struct {
 	HTML string `json:"html,omitempty"`
 }
 
-func (h *RoomHandler) clipboardGetText(w http.ResponseWriter, r *http.Request) {
+func (h *RoomHandler) clipboardGetText(w http.ResponseWriter, r *http.Request) error {
 	data, err := h.desktop.ClipboardGetText()
 	if err != nil {
-		utils.HttpInternalServerError(w, err).Send()
-		return
+		return utils.HttpInternalServerError().WithInternalErr(err)
 	}
 
-	utils.HttpSuccess(w, ClipboardPayload{
+	return utils.HttpSuccess(w, ClipboardPayload{
 		Text: data.Text,
 		HTML: data.HTML,
 	})
 }
 
-func (h *RoomHandler) clipboardSetText(w http.ResponseWriter, r *http.Request) {
+func (h *RoomHandler) clipboardSetText(w http.ResponseWriter, r *http.Request) error {
 	data := &ClipboardPayload{}
-	if !utils.HttpJsonRequest(w, r, data) {
-		return
+	if err := utils.HttpJsonRequest(w, r, data); err != nil {
+		return err
 	}
 
 	err := h.desktop.ClipboardSetText(types.ClipboardText{
@@ -40,32 +40,30 @@ func (h *RoomHandler) clipboardSetText(w http.ResponseWriter, r *http.Request) {
 	})
 
 	if err != nil {
-		utils.HttpInternalServerError(w, err).Send()
-		return
+		return utils.HttpInternalServerError().WithInternalErr(err)
 	}
 
-	utils.HttpSuccess(w)
+	return utils.HttpSuccess(w)
 }
 
-func (h *RoomHandler) clipboardGetImage(w http.ResponseWriter, r *http.Request) {
+func (h *RoomHandler) clipboardGetImage(w http.ResponseWriter, r *http.Request) error {
 	bytes, err := h.desktop.ClipboardGetBinary("image/png")
 	if err != nil {
-		utils.HttpInternalServerError(w, err).Send()
-		return
+		return utils.HttpInternalServerError().WithInternalErr(err)
 	}
 
 	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 	w.Header().Set("Content-Type", "image/png")
-	//nolint
-	w.Write(bytes)
+
+	_, err = w.Write(bytes)
+	return err
 }
 
 /* TODO: Unused now.
-func (h *RoomHandler) clipboardSetImage(w http.ResponseWriter, r *http.Request) {
+func (h *RoomHandler) clipboardSetImage(w http.ResponseWriter, r *http.Request) error {
 	err := r.ParseMultipartForm(MAX_UPLOAD_SIZE)
 	if err != nil {
-		utils.HttpBadRequest(w).WithInternalErr(err).Msg("failed to parse multipart form")
-		return
+		return utils.HttpBadRequest("failed to parse multipart form").WithInternalErr(err)
 	}
 
 	//nolint
@@ -73,41 +71,37 @@ func (h *RoomHandler) clipboardSetImage(w http.ResponseWriter, r *http.Request) 
 
 	file, header, err := r.FormFile("file")
 	if err != nil {
-		utils.HttpBadRequest(w).WithInternalErr(err).Msg("no file received")
-		return
+		return utils.HttpBadRequest("no file received").WithInternalErr(err)
 	}
 
 	defer file.Close()
 
 	mime := header.Header.Get("Content-Type")
 	if !strings.HasPrefix(mime, "image/") {
-		utils.HttpBadRequest(w).Msg("file must be image")
-		return
+		return utils.HttpBadRequest("file must be image")
 	}
 
 	buffer := new(bytes.Buffer)
 	_, err = buffer.ReadFrom(file)
 	if err != nil {
-		utils.HttpInternalServerError(w, err).WithInternalMsg("unable to read from uploaded file").Send()
-		return
+		return utils.HttpInternalServerError().WithInternalErr(err).WithInternalMsg("unable to read from uploaded file")
 	}
 
 	err = h.desktop.ClipboardSetBinary("image/png", buffer.Bytes())
 	if err != nil {
-		utils.HttpInternalServerError(w, err).WithInternalMsg("unable set image to clipboard").Send()
-		return
+		return utils.HttpInternalServerError().WithInternalErr(err).WithInternalMsg("unable set image to clipboard")
 	}
 
-	utils.HttpSuccess(w)
+	return utils.HttpSuccess(w)
 }
 
-func (h *RoomHandler) clipboardGetTargets(w http.ResponseWriter, r *http.Request) {
+func (h *RoomHandler) clipboardGetTargets(w http.ResponseWriter, r *http.Request) error {
 	targets, err := h.desktop.ClipboardGetTargets()
 	if err != nil {
-		utils.HttpInternalServerError(w, err).Send()
-		return
+		return utils.HttpInternalServerError().WithInternalErr(err)
 	}
 
-	utils.HttpSuccess(w, targets)
+	return utils.HttpSuccess(w, targets)
 }
+
 */
