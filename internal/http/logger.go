@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/middleware"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
 	"demodesk/neko/internal/http/auth"
@@ -18,36 +19,43 @@ type logEntryKey int
 
 const logEntryKeyCtx logEntryKey = iota
 
-func setLogEntry(r *http.Request, data logEntry) *http.Request {
+func setLogEntry(r *http.Request, data *logEntry) *http.Request {
 	ctx := context.WithValue(r.Context(), logEntryKeyCtx, data)
 	return r.WithContext(ctx)
 }
 
-func getLogEntry(r *http.Request) logEntry {
-	return r.Context().Value(logEntryKeyCtx).(logEntry)
+func getLogEntry(r *http.Request) *logEntry {
+	return r.Context().Value(logEntryKeyCtx).(*logEntry)
 }
 
 func LoggerMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		next.ServeHTTP(w, setLogEntry(r, newLogEntry(w, r)))
+		ww := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
+
+		logEntry := newLogEntry(w, r)
+		defer func() {
+			logEntry.Write(ww.Status(), ww.BytesWritten())
+		}()
+
+		next.ServeHTTP(ww, setLogEntry(r, logEntry))
 	})
 }
 
 type logEntry struct {
 	req struct {
-		time   time.Time
-		id     string
-		scheme string
-		proto  string
-		method string
-		remote string
-		agent  string
-		uri    string
+		Time   time.Time
+		Id     string
+		Scheme string
+		Proto  string
+		Method string
+		Remote string
+		Agent  string
+		Uri    string
 	}
 	res struct {
-		time  time.Time
-		code  int
-		bytes int
+		Time  time.Time
+		Code  int
+		Bytes int
 	}
 	err        error
 	elapsed    time.Duration
@@ -55,12 +63,12 @@ type logEntry struct {
 	session    types.Session
 }
 
-func newLogEntry(w http.ResponseWriter, r *http.Request) logEntry {
+func newLogEntry(w http.ResponseWriter, r *http.Request) *logEntry {
 	e := logEntry{}
-	e.req.time = time.Now()
+	e.req.Time = time.Now()
 
 	if reqID := middleware.GetReqID(r.Context()); reqID != "" {
-		e.req.id = reqID
+		e.req.Id = reqID
 	}
 
 	scheme := "http"
@@ -68,22 +76,19 @@ func newLogEntry(w http.ResponseWriter, r *http.Request) logEntry {
 		scheme = "https"
 	}
 
-	e.req.scheme = scheme
-	e.req.proto = r.Proto
-	e.req.method = r.Method
-	e.req.remote = r.RemoteAddr
-	e.req.agent = r.UserAgent()
-	e.req.uri = fmt.Sprintf("%s://%s%s", scheme, r.Host, r.RequestURI)
-	return e
+	e.req.Scheme = scheme
+	e.req.Proto = r.Proto
+	e.req.Method = r.Method
+	e.req.Remote = r.RemoteAddr
+	e.req.Agent = r.UserAgent()
+	e.req.Uri = fmt.Sprintf("%s://%s%s", scheme, r.Host, r.RequestURI)
+	return &e
 }
 
 func (e *logEntry) SetResponse(w http.ResponseWriter, r *http.Request) {
-	ww := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
-	e.res.time = time.Now()
-	e.res.code = ww.Status()
-	e.res.bytes = ww.BytesWritten()
+	e.res.Time = time.Now()
 
-	e.elapsed = e.res.time.Sub(e.req.time)
+	e.elapsed = e.res.Time.Sub(e.req.Time)
 	e.session, e.hasSession = auth.GetSession(r)
 }
 
@@ -91,7 +96,10 @@ func (e *logEntry) SetError(err error) {
 	e.err = err
 }
 
-func (e *logEntry) Write() {
+func (e *logEntry) Write(status, bytes int) {
+	e.res.Code = status
+	e.res.Bytes = bytes
+
 	logger := log.With().
 		Str("module", "http").
 		Float64("elapsed", float64(e.elapsed.Nanoseconds())/1000000.0).
@@ -106,7 +114,7 @@ func (e *logEntry) Write() {
 	if e.err != nil {
 		httpErr, ok := e.err.(*utils.HTTPError)
 		if !ok {
-			logger.Err(e.err).Msgf("request failed (%d)", e.res.code)
+			logger.Err(e.err).Msgf("request failed (%d)", e.res.Code)
 			return
 		}
 
@@ -114,16 +122,21 @@ func (e *logEntry) Write() {
 			httpErr.Message = http.StatusText(httpErr.Code)
 		}
 
-		logger := logger.Error().Err(httpErr.InternalErr)
+		var logEvent *zerolog.Event
+		if httpErr.Code < 500 {
+			logEvent = logger.Warn()
+		} else {
+			logEvent = logger.Error()
+		}
 
 		message := httpErr.Message
 		if httpErr.InternalMsg != "" {
 			message = httpErr.InternalMsg
 		}
 
-		logger.Msgf("request failed (%d): %s", e.res.code, message)
+		logEvent.Err(httpErr.InternalErr).Msgf("request failed (%d): %s", e.res.Code, message)
 		return
 	}
 
-	logger.Debug().Msgf("request complete (%d)", e.res.code)
+	logger.Debug().Msgf("request complete (%d)", e.res.Code)
 }

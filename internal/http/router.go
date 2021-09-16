@@ -86,7 +86,6 @@ func routeHandler(fn types.RouterHandler) http.HandlerFunc {
 		}
 
 		logEntry.SetResponse(w, r)
-		logEntry.Write()
 	}
 }
 
@@ -100,7 +99,6 @@ func middlewareHandler(fn types.MiddlewareHandler) func(http.Handler) http.Handl
 				logEntry.SetError(err)
 				errorHandler(err, w, r)
 				logEntry.SetResponse(w, r)
-				logEntry.Write()
 				return
 			}
 			if ctx != nil {
