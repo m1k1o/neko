@@ -13,7 +13,6 @@ import (
 
 	"demodesk/neko/internal/config"
 	"demodesk/neko/internal/types"
-	"demodesk/neko/internal/utils"
 )
 
 type HttpManagerCtx struct {
@@ -55,13 +54,13 @@ func New(WebSocketManager types.WebSocketManager, ApiManager types.ApiManager, c
 			if _, err := os.Stat(config.Static + r.URL.Path); !os.IsNotExist(err) {
 				fs.ServeHTTP(w, r)
 			} else {
-				utils.HttpNotFound(w)
+				http.NotFound(w, r)
 			}
 		})
 	}
 
 	router.NotFound(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		utils.HttpNotFound(w)
+		http.NotFound(w, r)
 	}))
 
 	return &HttpManagerCtx{

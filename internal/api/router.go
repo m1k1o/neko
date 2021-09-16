@@ -76,9 +76,9 @@ func (api *ApiManagerCtx) Authenticate(next http.Handler) http.Handler {
 			}
 
 			if errors.Is(err, types.ErrSessionLoginDisabled) {
-				utils.HttpForbidden(w, err)
+				utils.HttpForbidden(w).Msg("login is disabled for this session")
 			} else {
-				utils.HttpUnauthorized(w, err)
+				utils.HttpUnauthorized(w).WithInternalErr(err).Send()
 			}
 
 			return

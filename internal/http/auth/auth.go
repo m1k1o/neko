@@ -25,7 +25,7 @@ func AdminsOnly(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		session := GetSession(r)
 		if !session.Profile().IsAdmin {
-			utils.HttpForbidden(w)
+			utils.HttpForbidden(w).Msg("session is not admin")
 		} else {
 			next.ServeHTTP(w, r)
 		}
@@ -36,7 +36,7 @@ func HostsOnly(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		session := GetSession(r)
 		if !session.IsHost() {
-			utils.HttpForbidden(w, "only host can do this")
+			utils.HttpForbidden(w).Msg("session is not host")
 		} else {
 			next.ServeHTTP(w, r)
 		}
@@ -47,7 +47,7 @@ func CanWatchOnly(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		session := GetSession(r)
 		if !session.Profile().CanWatch {
-			utils.HttpForbidden(w)
+			utils.HttpForbidden(w).Msg("session cannot watch")
 		} else {
 			next.ServeHTTP(w, r)
 		}
@@ -58,7 +58,7 @@ func CanHostOnly(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		session := GetSession(r)
 		if !session.Profile().CanHost {
-			utils.HttpForbidden(w)
+			utils.HttpForbidden(w).Msg("session cannot host")
 		} else {
 			next.ServeHTTP(w, r)
 		}
@@ -69,7 +69,7 @@ func CanAccessClipboardOnly(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		session := GetSession(r)
 		if !session.Profile().CanAccessClipboard {
-			utils.HttpForbidden(w)
+			utils.HttpForbidden(w).Msg("session cannot access clipboard")
 		} else {
 			next.ServeHTTP(w, r)
 		}

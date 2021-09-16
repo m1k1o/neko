@@ -71,9 +71,9 @@ func (h *MembersHandler) ExtractMember(next http.Handler) http.Handler {
 		profile, err := h.members.Select(memberId)
 		if err != nil {
 			if errors.Is(err, types.ErrMemberDoesNotExist) {
-				utils.HttpNotFound(w, err)
+				utils.HttpNotFound(w).Msg("member not found")
 			} else {
-				utils.HttpInternalServerError(w, err)
+				utils.HttpInternalServerError(w, err).Send()
 			}
 
 			return

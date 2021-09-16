@@ -20,7 +20,7 @@ func (h *RoomHandler) screenConfiguration(w http.ResponseWriter, r *http.Request
 	size := h.desktop.GetScreenSize()
 
 	if size == nil {
-		utils.HttpInternalServerError(w, "unable to get screen configuration")
+		utils.HttpInternalServerError(w, nil).WithInternalMsg("unable to get screen configuration").Send()
 		return
 	}
 
@@ -42,7 +42,7 @@ func (h *RoomHandler) screenConfigurationChange(w http.ResponseWriter, r *http.R
 		Height: data.Height,
 		Rate:   data.Rate,
 	}); err != nil {
-		utils.HttpUnprocessableEntity(w, err)
+		utils.HttpUnprocessableEntity(w).WithInternalErr(err).Msg("cannot set screen size")
 		return
 	}
 
@@ -83,7 +83,7 @@ func (h *RoomHandler) screenShotGet(w http.ResponseWriter, r *http.Request) {
 	img := h.desktop.GetScreenshotImage()
 	bytes, err := utils.CreateJPGImage(img, quality)
 	if err != nil {
-		utils.HttpInternalServerError(w, err)
+		utils.HttpInternalServerError(w, err).Send()
 		return
 	}
 
@@ -96,13 +96,13 @@ func (h *RoomHandler) screenShotGet(w http.ResponseWriter, r *http.Request) {
 func (h *RoomHandler) screenCastGet(w http.ResponseWriter, r *http.Request) {
 	screencast := h.capture.Screencast()
 	if !screencast.Enabled() {
-		utils.HttpBadRequest(w, "screencast pipeline is not enabled")
+		utils.HttpBadRequest(w).Msg("screencast pipeline is not enabled")
 		return
 	}
 
 	bytes, err := screencast.Image()
 	if err != nil {
-		utils.HttpInternalServerError(w, err)
+		utils.HttpInternalServerError(w, err).Send()
 		return
 	}
 

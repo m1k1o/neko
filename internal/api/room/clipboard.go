@@ -18,7 +18,7 @@ type ClipboardPayload struct {
 func (h *RoomHandler) clipboardGetText(w http.ResponseWriter, r *http.Request) {
 	data, err := h.desktop.ClipboardGetText()
 	if err != nil {
-		utils.HttpInternalServerError(w, err)
+		utils.HttpInternalServerError(w, err).Send()
 		return
 	}
 
@@ -40,7 +40,7 @@ func (h *RoomHandler) clipboardSetText(w http.ResponseWriter, r *http.Request) {
 	})
 
 	if err != nil {
-		utils.HttpInternalServerError(w, err)
+		utils.HttpInternalServerError(w, err).Send()
 		return
 	}
 
@@ -50,7 +50,7 @@ func (h *RoomHandler) clipboardSetText(w http.ResponseWriter, r *http.Request) {
 func (h *RoomHandler) clipboardGetImage(w http.ResponseWriter, r *http.Request) {
 	bytes, err := h.desktop.ClipboardGetBinary("image/png")
 	if err != nil {
-		utils.HttpInternalServerError(w, err)
+		utils.HttpInternalServerError(w, err).Send()
 		return
 	}
 
@@ -64,7 +64,7 @@ func (h *RoomHandler) clipboardGetImage(w http.ResponseWriter, r *http.Request) 
 func (h *RoomHandler) clipboardSetImage(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseMultipartForm(MAX_UPLOAD_SIZE)
 	if err != nil {
-		utils.HttpBadRequest(w, "failed to parse multipart form")
+		utils.HttpBadRequest(w).WithInternalErr(err).Msg("failed to parse multipart form")
 		return
 	}
 
@@ -73,7 +73,7 @@ func (h *RoomHandler) clipboardSetImage(w http.ResponseWriter, r *http.Request) 
 
 	file, header, err := r.FormFile("file")
 	if err != nil {
-		utils.HttpBadRequest(w, "no file received")
+		utils.HttpBadRequest(w).WithInternalErr(err).Msg("no file received")
 		return
 	}
 
@@ -81,20 +81,20 @@ func (h *RoomHandler) clipboardSetImage(w http.ResponseWriter, r *http.Request) 
 
 	mime := header.Header.Get("Content-Type")
 	if !strings.HasPrefix(mime, "image/") {
-		utils.HttpBadRequest(w, "file must be image")
+		utils.HttpBadRequest(w).Msg("file must be image")
 		return
 	}
 
 	buffer := new(bytes.Buffer)
 	_, err = buffer.ReadFrom(file)
 	if err != nil {
-		utils.HttpInternalServerError(w, err)
+		utils.HttpInternalServerError(w, err).WithInternalMsg("unable to read from uploaded file").Send()
 		return
 	}
 
 	err = h.desktop.ClipboardSetBinary("image/png", buffer.Bytes())
 	if err != nil {
-		utils.HttpInternalServerError(w, err)
+		utils.HttpInternalServerError(w, err).WithInternalMsg("unable set image to clipboard").Send()
 		return
 	}
 
@@ -104,7 +104,7 @@ func (h *RoomHandler) clipboardSetImage(w http.ResponseWriter, r *http.Request) 
 func (h *RoomHandler) clipboardGetTargets(w http.ResponseWriter, r *http.Request) {
 	targets, err := h.desktop.ClipboardGetTargets()
 	if err != nil {
-		utils.HttpInternalServerError(w, err)
+		utils.HttpInternalServerError(w, err).Send()
 		return
 	}
 

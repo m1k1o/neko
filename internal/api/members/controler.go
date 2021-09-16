@@ -39,7 +39,7 @@ func (h *MembersHandler) membersList(w http.ResponseWriter, r *http.Request) {
 
 	entries, err := h.members.SelectAll(limit, offset)
 	if err != nil {
-		utils.HttpInternalServerError(w, err)
+		utils.HttpInternalServerError(w, err).Send()
 		return
 	}
 
@@ -72,21 +72,21 @@ func (h *MembersHandler) membersCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if data.Username == "" {
-		utils.HttpBadRequest(w, "username cannot be empty")
+		utils.HttpBadRequest(w).Msg("username cannot be empty")
 		return
 	}
 
 	if data.Password == "" {
-		utils.HttpBadRequest(w, "password cannot be empty")
+		utils.HttpBadRequest(w).Msg("password cannot be empty")
 		return
 	}
 
 	id, err := h.members.Insert(data.Username, data.Password, data.Profile)
 	if err != nil {
 		if errors.Is(err, types.ErrMemberAlreadyExists) {
-			utils.HttpUnprocessableEntity(w, err)
+			utils.HttpUnprocessableEntity(w).Msg("member already exists")
 		} else {
-			utils.HttpInternalServerError(w, err)
+			utils.HttpInternalServerError(w, err).Send()
 		}
 		return
 	}
@@ -113,7 +113,7 @@ func (h *MembersHandler) membersUpdateProfile(w http.ResponseWriter, r *http.Req
 	}
 
 	if err := h.members.UpdateProfile(member.ID, profile); err != nil {
-		utils.HttpInternalServerError(w, err)
+		utils.HttpInternalServerError(w, err).Send()
 		return
 	}
 
@@ -129,7 +129,7 @@ func (h *MembersHandler) membersUpdatePassword(w http.ResponseWriter, r *http.Re
 	}
 
 	if err := h.members.UpdatePassword(member.ID, data.Password); err != nil {
-		utils.HttpInternalServerError(w, err)
+		utils.HttpInternalServerError(w, err).Send()
 		return
 	}
 
@@ -140,7 +140,7 @@ func (h *MembersHandler) membersDelete(w http.ResponseWriter, r *http.Request) {
 	member := GetMember(r)
 
 	if err := h.members.Delete(member.ID); err != nil {
-		utils.HttpInternalServerError(w, err)
+		utils.HttpInternalServerError(w, err).Send()
 		return
 	}
 

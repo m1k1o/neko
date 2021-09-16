@@ -28,18 +28,18 @@ func (h *RoomHandler) boradcastStart(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if data.URL == "" {
-		utils.HttpBadRequest(w, "missing broadcast URL")
+		utils.HttpBadRequest(w).Msg("missing broadcast URL")
 		return
 	}
 
 	broadcast := h.capture.Broadcast()
 	if broadcast.Started() {
-		utils.HttpUnprocessableEntity(w, "server is already broadcasting")
+		utils.HttpUnprocessableEntity(w).Msg("server is already broadcasting")
 		return
 	}
 
 	if err := broadcast.Start(data.URL); err != nil {
-		utils.HttpInternalServerError(w, err)
+		utils.HttpInternalServerError(w, err).Send()
 		return
 	}
 
@@ -56,7 +56,7 @@ func (h *RoomHandler) boradcastStart(w http.ResponseWriter, r *http.Request) {
 func (h *RoomHandler) boradcastStop(w http.ResponseWriter, r *http.Request) {
 	broadcast := h.capture.Broadcast()
 	if !broadcast.Started() {
-		utils.HttpUnprocessableEntity(w, "server is not broadcasting")
+		utils.HttpUnprocessableEntity(w).Msg("server is not broadcasting")
 		return
 	}
 

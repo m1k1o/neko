@@ -28,7 +28,7 @@ func (api *ApiManagerCtx) Login(w http.ResponseWriter, r *http.Request) {
 
 	session, token, err := api.members.Login(data.Username, data.Password)
 	if err != nil {
-		utils.HttpUnauthorized(w, err)
+		utils.HttpUnauthorized(w).WithInternalErr(err).Send()
 		return
 	}
 
@@ -52,7 +52,7 @@ func (api *ApiManagerCtx) Logout(w http.ResponseWriter, r *http.Request) {
 
 	err := api.members.Logout(session.ID())
 	if err != nil {
-		utils.HttpUnauthorized(w, err)
+		utils.HttpUnauthorized(w).WithInternalErr(err).Send()
 		return
 	}
 

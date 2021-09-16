@@ -2,7 +2,6 @@ package members
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 
@@ -18,13 +17,13 @@ type MemberBulkUpdatePayload struct {
 func (h *MembersHandler) membersBulkUpdate(w http.ResponseWriter, r *http.Request) {
 	bytes, err := io.ReadAll(r.Body)
 	if err != nil {
-		utils.HttpInternalServerError(w, err)
+		utils.HttpBadRequest(w).WithInternalErr(err).Msg("unable to read post body")
 		return
 	}
 
 	header := &MemberBulkUpdatePayload{}
 	if err := json.Unmarshal(bytes, &header); err != nil {
-		utils.HttpInternalServerError(w, err)
+		utils.HttpBadRequest(w).WithInternalErr(err).Msg("unable to unmarshal payload")
 		return
 	}
 
@@ -32,7 +31,7 @@ func (h *MembersHandler) membersBulkUpdate(w http.ResponseWriter, r *http.Reques
 		// TODO: Bulk select?
 		profile, err := h.members.Select(memberId)
 		if err != nil {
-			utils.HttpInternalServerError(w, fmt.Sprintf("member %s: %v", memberId, err))
+			utils.HttpInternalServerError(w, err).WithInternalMsg("unable to select member profile").Msgf("failed to update member %s", memberId)
 			return
 		}
 
@@ -41,12 +40,12 @@ func (h *MembersHandler) membersBulkUpdate(w http.ResponseWriter, r *http.Reques
 		}
 
 		if err := json.Unmarshal(bytes, &body); err != nil {
-			utils.HttpInternalServerError(w, fmt.Sprintf("member %s: %v", memberId, err))
+			utils.HttpBadRequest(w).WithInternalErr(err).Msgf("unable to unmarshal payload for member %s", memberId)
 			return
 		}
 
 		if err := h.members.UpdateProfile(memberId, body.Profile); err != nil {
-			utils.HttpInternalServerError(w, fmt.Sprintf("member %s: %v", memberId, err))
+			utils.HttpInternalServerError(w, err).WithInternalMsg("unable to update member profile").Msgf("failed to update member %s", memberId)
 			return
 		}
 	}

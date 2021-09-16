@@ -29,7 +29,7 @@ func (h *RoomHandler) keyboardMapSet(w http.ResponseWriter, r *http.Request) {
 	})
 
 	if err != nil {
-		utils.HttpInternalServerError(w, "unable to change keyboard map")
+		utils.HttpInternalServerError(w, err).Send()
 		return
 	}
 
@@ -40,7 +40,7 @@ func (h *RoomHandler) keyboardMapGet(w http.ResponseWriter, r *http.Request) {
 	data, err := h.desktop.GetKeyboardMap()
 
 	if err != nil {
-		utils.HttpInternalServerError(w, "unable to get keyboard map")
+		utils.HttpInternalServerError(w, err).Send()
 		return
 	}
 
