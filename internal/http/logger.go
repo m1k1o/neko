@@ -1,7 +1,6 @@
 package http
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"time"
@@ -10,60 +9,13 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"demodesk/neko/internal/http/auth"
 	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/utils"
 )
 
-type logEntryKey int
+type logFormatter struct{}
 
-const logEntryKeyCtx logEntryKey = iota
-
-func setLogEntry(r *http.Request, data *logEntry) *http.Request {
-	ctx := context.WithValue(r.Context(), logEntryKeyCtx, data)
-	return r.WithContext(ctx)
-}
-
-func getLogEntry(r *http.Request) *logEntry {
-	return r.Context().Value(logEntryKeyCtx).(*logEntry)
-}
-
-func LoggerMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ww := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
-
-		logEntry := newLogEntry(w, r)
-		defer func() {
-			logEntry.Write(ww.Status(), ww.BytesWritten())
-		}()
-
-		next.ServeHTTP(ww, setLogEntry(r, logEntry))
-	})
-}
-
-type logEntry struct {
-	req struct {
-		Time   time.Time
-		Id     string
-		Scheme string
-		Proto  string
-		Method string
-		Remote string
-		Agent  string
-		Uri    string
-	}
-	res struct {
-		Time  time.Time
-		Code  int
-		Bytes int
-	}
-	err        error
-	elapsed    time.Duration
-	hasSession bool
-	session    types.Session
-}
-
-func newLogEntry(w http.ResponseWriter, r *http.Request) *logEntry {
+func (l *logFormatter) NewLogEntry(r *http.Request) middleware.LogEntry {
 	e := logEntry{}
 	e.req.Time = time.Now()
 
@@ -85,30 +37,48 @@ func newLogEntry(w http.ResponseWriter, r *http.Request) *logEntry {
 	return &e
 }
 
-func (e *logEntry) SetResponse(w http.ResponseWriter, r *http.Request) {
-	e.res.Time = time.Now()
-
-	e.elapsed = e.res.Time.Sub(e.req.Time)
-	e.session, e.hasSession = auth.GetSession(r)
+type logEntry struct {
+	req struct {
+		Time   time.Time
+		Id     string
+		Scheme string
+		Proto  string
+		Method string
+		Remote string
+		Agent  string
+		Uri    string
+	}
+	res struct {
+		Time  time.Time
+		Code  int
+		Bytes int
+	}
+	err     error
+	session *types.Session
 }
 
 func (e *logEntry) SetError(err error) {
 	e.err = err
 }
 
-func (e *logEntry) Write(status, bytes int) {
+func (e *logEntry) SetSession(session types.Session) {
+	e.session = &session
+}
+
+func (e *logEntry) Write(status, bytes int, header http.Header, elapsed time.Duration, extra interface{}) {
+	e.res.Time = time.Now()
 	e.res.Code = status
 	e.res.Bytes = bytes
 
 	logger := log.With().
 		Str("module", "http").
-		Float64("elapsed", float64(e.elapsed.Nanoseconds())/1000000.0).
+		Float64("elapsed", float64(elapsed.Nanoseconds())/1000000.0).
 		Interface("req", e.req).
 		Interface("res", e.res).
 		Logger()
 
-	if e.hasSession {
-		logger = logger.With().Str("session_id", e.session.ID()).Logger()
+	if e.session != nil {
+		logger = logger.With().Str("session_id", (*e.session).ID()).Logger()
 	}
 
 	if e.err != nil {
@@ -139,4 +109,13 @@ func (e *logEntry) Write(status, bytes int) {
 	}
 
 	logger.Debug().Msgf("request complete (%d)", e.res.Code)
+}
+
+func (e *logEntry) Panic(v interface{}, stack []byte) {
+	message := fmt.Sprintf("%+v", v)
+
+	log.Fatal().
+		Str("message", message).
+		Str("stack", string(stack)).
+		Msg("got HTTP panic")
 }

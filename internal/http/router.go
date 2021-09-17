@@ -1,6 +1,7 @@
 package http
 
 import (
+	"demodesk/neko/internal/http/auth"
 	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/utils"
 	"net/http"
@@ -15,9 +16,9 @@ type RouterCtx struct {
 
 func newRouter() *RouterCtx {
 	router := chi.NewRouter()
-	router.Use(middleware.Recoverer) // Recover from panics without crashing server
 	router.Use(middleware.RequestID) // Create a request ID for each request
-	router.Use(LoggerMiddleware)
+	router.Use(middleware.RequestLogger(&logFormatter{}))
+	router.Use(middleware.Recoverer) // Recover from panics without crashing server
 	return &RouterCtx{router}
 }
 
@@ -78,27 +79,37 @@ func errorHandler(err error, w http.ResponseWriter, r *http.Request) {
 
 func routeHandler(fn types.RouterHandler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		logEntry := getLogEntry(r)
+		// get custom log entry pointer from context
+		logEntry, _ := r.Context().Value(middleware.LogEntryCtxKey).(*logEntry)
 
 		if err := fn(w, r); err != nil {
 			logEntry.SetError(err)
 			errorHandler(err, w, r)
 		}
 
-		logEntry.SetResponse(w, r)
+		// set session if exits
+		if session, ok := auth.GetSession(r); ok {
+			logEntry.SetSession(session)
+		}
 	}
 }
 
 func middlewareHandler(fn types.MiddlewareHandler) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			logEntry := getLogEntry(r)
+			// get custom log entry pointer from context
+			logEntry, _ := r.Context().Value(middleware.LogEntryCtxKey).(*logEntry)
 
 			ctx, err := fn(w, r)
 			if err != nil {
 				logEntry.SetError(err)
 				errorHandler(err, w, r)
-				logEntry.SetResponse(w, r)
+
+				// set session if exits
+				if session, ok := auth.GetSession(r); ok {
+					logEntry.SetSession(session)
+				}
+
 				return
 			}
 			if ctx != nil {
