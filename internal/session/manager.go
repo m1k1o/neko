@@ -198,16 +198,13 @@ func (manager *SessionManagerCtx) ClearHost() {
 // ---
 
 func (manager *SessionManagerCtx) Broadcast(event string, payload interface{}, exclude interface{}) {
-	manager.sessionsMu.Lock()
-	defer manager.sessionsMu.Unlock()
-
-	for id, session := range manager.sessions {
+	for _, session := range manager.List() {
 		if !session.State().IsConnected {
 			continue
 		}
 
 		if exclude != nil {
-			if in, _ := utils.ArrayIn(id, exclude); in {
+			if in, _ := utils.ArrayIn(session.ID(), exclude); in {
 				continue
 			}
 		}
@@ -217,16 +214,13 @@ func (manager *SessionManagerCtx) Broadcast(event string, payload interface{}, e
 }
 
 func (manager *SessionManagerCtx) AdminBroadcast(event string, payload interface{}, exclude interface{}) {
-	manager.sessionsMu.Lock()
-	defer manager.sessionsMu.Unlock()
-
-	for id, session := range manager.sessions {
+	for _, session := range manager.List() {
 		if !session.State().IsConnected || !session.Profile().IsAdmin {
 			continue
 		}
 
 		if exclude != nil {
-			if in, _ := utils.ArrayIn(id, exclude); in {
+			if in, _ := utils.ArrayIn(session.ID(), exclude); in {
 				continue
 			}
 		}

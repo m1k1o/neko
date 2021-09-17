@@ -67,21 +67,18 @@ func (peer *WebSocketPeerCtx) Send(event string, payload interface{}) {
 }
 
 func (peer *WebSocketPeerCtx) Destroy(reason string) {
-	peer.mu.Lock()
-	defer peer.mu.Unlock()
-
-	if peer.connection == nil {
-		return
-	}
-
 	peer.Send(
 		event.SYSTEM_DISCONNECT,
 		message.SystemDisconnect{
 			Message: reason,
 		})
 
-	err := peer.connection.Close()
-	peer.logger.Err(err).Msg("peer connection destroyed")
+	peer.mu.Lock()
+	defer peer.mu.Unlock()
 
-	peer.connection = nil
+	if peer.connection != nil {
+		err := peer.connection.Close()
+		peer.logger.Err(err).Msg("peer connection destroyed")
+		peer.connection = nil
+	}
 }

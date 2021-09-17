@@ -68,14 +68,9 @@ func (peer *WebRTCPeerCtx) Destroy() {
 	peer.mu.Lock()
 	defer peer.mu.Unlock()
 
-	if peer.connection == nil || peer.connection.ConnectionState() != webrtc.PeerConnectionStateConnected {
-		return
+	if peer.connection != nil {
+		err := peer.connection.Close()
+		peer.logger.Err(err).Msg("peer connection destroyed")
+		peer.connection = nil
 	}
-
-	// TODO: Send webrtc disconnect event via websocket.
-
-	err := peer.connection.Close()
-	peer.logger.Err(err).Msg("peer connection destroyed")
-
-	peer.connection = nil
 }
