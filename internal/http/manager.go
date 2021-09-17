@@ -23,7 +23,7 @@ type HttpManagerCtx struct {
 func New(WebSocketManager types.WebSocketManager, ApiManager types.ApiManager, config *config.Server) *HttpManagerCtx {
 	logger := log.With().Str("module", "http").Logger()
 
-	router := newRouter()
+	router := newRouter(logger)
 	router.UseBypass(cors.Handler(cors.Options{
 		AllowOriginFunc: func(r *http.Request, origin string) bool {
 			return config.AllowOrigin(origin)

@@ -13,10 +13,12 @@ import (
 	"demodesk/neko/internal/utils"
 )
 
-type logFormatter struct{}
+type logFormatter struct {
+	logger zerolog.Logger
+}
 
 func (l *logFormatter) NewLogEntry(r *http.Request) middleware.LogEntry {
-	e := logEntry{}
+	e := logEntry{logger: l.logger}
 	e.req.Time = time.Now()
 
 	if reqID := middleware.GetReqID(r.Context()); reqID != "" {
@@ -55,6 +57,7 @@ type logEntry struct {
 	}
 	err     error
 	session *types.Session
+	logger  zerolog.Logger
 }
 
 func (e *logEntry) SetError(err error) {
@@ -70,8 +73,7 @@ func (e *logEntry) Write(status, bytes int, header http.Header, elapsed time.Dur
 	e.res.Code = status
 	e.res.Bytes = bytes
 
-	logger := log.With().
-		Str("module", "http").
+	logger := e.logger.With().
 		Float64("elapsed", float64(elapsed.Nanoseconds())/1000000.0).
 		Interface("req", e.req).
 		Interface("res", e.res).

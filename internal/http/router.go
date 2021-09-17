@@ -1,23 +1,25 @@
 package http
 
 import (
-	"demodesk/neko/internal/http/auth"
-	"demodesk/neko/internal/types"
-	"demodesk/neko/internal/utils"
 	"net/http"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
+	"github.com/rs/zerolog"
+
+	"demodesk/neko/internal/http/auth"
+	"demodesk/neko/internal/types"
+	"demodesk/neko/internal/utils"
 )
 
 type router struct {
 	chi chi.Router
 }
 
-func newRouter() *router {
+func newRouter(logger zerolog.Logger) *router {
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID) // Create a request ID for each request
-	r.Use(middleware.RequestLogger(&logFormatter{}))
+	r.Use(middleware.RequestLogger(&logFormatter{logger}))
 	r.Use(middleware.Recoverer) // Recover from panics without crashing server
 	return &router{r}
 }
