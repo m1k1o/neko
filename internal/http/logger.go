@@ -17,11 +17,10 @@ type logFormatter struct {
 }
 
 func (l *logFormatter) NewLogEntry(r *http.Request) middleware.LogEntry {
-	e := logEntry{logger: l.logger}
-	e.req.Time = time.Now()
+	req := map[string]interface{}{}
 
 	if reqID := middleware.GetReqID(r.Context()); reqID != "" {
-		e.req.Id = reqID
+		req["id"] = reqID
 	}
 
 	scheme := "http"
@@ -29,37 +28,38 @@ func (l *logFormatter) NewLogEntry(r *http.Request) middleware.LogEntry {
 		scheme = "https"
 	}
 
-	e.req.Scheme = scheme
-	e.req.Proto = r.Proto
-	e.req.Method = r.Method
-	e.req.Remote = r.RemoteAddr
-	e.req.Agent = r.UserAgent()
-	e.req.Uri = fmt.Sprintf("%s://%s%s", scheme, r.Host, r.RequestURI)
-	return &e
+	req["scheme"] = scheme
+	req["proto"] = r.Proto
+	req["method"] = r.Method
+	req["remote"] = r.RemoteAddr
+	req["agent"] = r.UserAgent()
+	req["uri"] = fmt.Sprintf("%s://%s%s", scheme, r.Host, r.RequestURI)
+
+	return &logEntry{
+		logger: l.logger.With().Interface("req", req).Logger(),
+	}
 }
 
 type logEntry struct {
-	req struct {
-		Time   time.Time
-		Id     string
-		Scheme string
-		Proto  string
-		Method string
-		Remote string
-		Agent  string
-		Uri    string
-	}
-	res struct {
-		Time  time.Time
-		Code  int
-		Bytes int
-	}
-	err     error
-	session *types.Session
 	logger  zerolog.Logger
+	err     error
+	panic   *logPanic
+	session *types.Session
 }
 
-func (e *logEntry) SetError(err error) {
+type logPanic struct {
+	message string
+	stack   string
+}
+
+func (e *logEntry) Panic(v interface{}, stack []byte) {
+	e.panic = &logPanic{
+		message: fmt.Sprintf("%+v", v),
+		stack:   string(stack),
+	}
+}
+
+func (e *logEntry) Error(err error) {
 	e.err = err
 }
 
@@ -68,24 +68,33 @@ func (e *logEntry) SetSession(session types.Session) {
 }
 
 func (e *logEntry) Write(status, bytes int, header http.Header, elapsed time.Duration, extra interface{}) {
-	e.res.Time = time.Now()
-	e.res.Code = status
-	e.res.Bytes = bytes
+	res := map[string]interface{}{}
+	res["time"] = time.Now().UTC().Format(time.RFC1123)
+	res["status"] = status
+	res["bytes"] = bytes
+	res["elapsed"] = float64(elapsed.Nanoseconds()) / 1000000.0
 
-	logger := e.logger.With().
-		Float64("elapsed", float64(elapsed.Nanoseconds())/1000000.0).
-		Interface("req", e.req).
-		Interface("res", e.res).
-		Logger()
+	logger := e.logger.With().Interface("res", res).Logger()
 
+	// add session ID to logs (if exists)
 	if e.session != nil {
 		logger = logger.With().Str("session_id", (*e.session).ID()).Logger()
 	}
 
+	// handle panic error message
+	if e.panic != nil {
+		logger.WithLevel(zerolog.PanicLevel).
+			Err(e.err).
+			Str("stack", e.panic.stack).
+			Msgf("request failed (%d): %s", status, e.panic.message)
+		return
+	}
+
+	// handle panic error message
 	if e.err != nil {
 		httpErr, ok := e.err.(*utils.HTTPError)
 		if !ok {
-			logger.Err(e.err).Msgf("request failed (%d)", e.res.Code)
+			logger.Err(e.err).Msgf("request failed (%d)", status)
 			return
 		}
 
@@ -93,11 +102,11 @@ func (e *logEntry) Write(status, bytes int, header http.Header, elapsed time.Dur
 			httpErr.Message = http.StatusText(httpErr.Code)
 		}
 
-		var logEvent *zerolog.Event
+		var logLevel zerolog.Level
 		if httpErr.Code < 500 {
-			logEvent = logger.Warn()
+			logLevel = zerolog.WarnLevel
 		} else {
-			logEvent = logger.Error()
+			logLevel = zerolog.ErrorLevel
 		}
 
 		message := httpErr.Message
@@ -105,16 +114,9 @@ func (e *logEntry) Write(status, bytes int, header http.Header, elapsed time.Dur
 			message = httpErr.InternalMsg
 		}
 
-		logEvent.Err(httpErr.InternalErr).Msgf("request failed (%d): %s", e.res.Code, message)
+		logger.WithLevel(logLevel).Err(httpErr.InternalErr).Msgf("request failed (%d): %s", status, message)
 		return
 	}
 
-	logger.Debug().Msgf("request complete (%d)", e.res.Code)
-}
-
-func (e *logEntry) Panic(v interface{}, stack []byte) {
-	e.logger.WithLevel(zerolog.PanicLevel).
-		Interface("req", e.req).
-		Str("stack", string(stack)).
-		Msgf("request panic (500): %+v", v)
+	logger.Debug().Msgf("request complete (%d)", status)
 }

@@ -85,7 +85,7 @@ func routeHandler(fn types.RouterHandler) http.HandlerFunc {
 		logEntry, _ := r.Context().Value(middleware.LogEntryCtxKey).(*logEntry)
 
 		if err := fn(w, r); err != nil {
-			logEntry.SetError(err)
+			logEntry.Error(err)
 			errorHandler(err, w, r)
 		}
 
@@ -104,7 +104,7 @@ func middlewareHandler(fn types.MiddlewareHandler) func(http.Handler) http.Handl
 
 			ctx, err := fn(w, r)
 			if err != nil {
-				logEntry.SetError(err)
+				logEntry.Error(err)
 				errorHandler(err, w, r)
 
 				// set session if exits
