@@ -7,7 +7,6 @@ import (
 
 	"github.com/go-chi/chi/middleware"
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 
 	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/utils"
@@ -114,10 +113,8 @@ func (e *logEntry) Write(status, bytes int, header http.Header, elapsed time.Dur
 }
 
 func (e *logEntry) Panic(v interface{}, stack []byte) {
-	message := fmt.Sprintf("%+v", v)
-
-	log.Fatal().
-		Str("message", message).
+	e.logger.WithLevel(zerolog.PanicLevel).
+		Interface("req", e.req).
 		Str("stack", string(stack)).
-		Msg("got HTTP panic")
+		Msgf("request panic (500): %+v", v)
 }
