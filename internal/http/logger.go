@@ -17,6 +17,11 @@ type logFormatter struct {
 }
 
 func (l *logFormatter) NewLogEntry(r *http.Request) middleware.LogEntry {
+	// exclude healthcheck from logs
+	if r.RequestURI == "/api/health" {
+		return &nulllog{}
+	}
+
 	req := map[string]interface{}{}
 
 	if reqID := middleware.GetReqID(r.Context()); reqID != "" {
@@ -119,4 +124,12 @@ func (e *logEntry) Write(status, bytes int, header http.Header, elapsed time.Dur
 	}
 
 	logger.Debug().Msgf("request complete (%d)", status)
+}
+
+type nulllog struct{}
+
+func (e *nulllog) Panic(v interface{}, stack []byte) {}
+func (e *nulllog) Error(err error)                   {}
+func (e *nulllog) SetSession(session types.Session)  {}
+func (e *nulllog) Write(status, bytes int, header http.Header, elapsed time.Duration, extra interface{}) {
 }
