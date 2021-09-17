@@ -10,61 +10,61 @@ import (
 	"github.com/go-chi/chi/middleware"
 )
 
-type RouterCtx struct {
+type router struct {
 	chi chi.Router
 }
 
-func newRouter() *RouterCtx {
-	router := chi.NewRouter()
-	router.Use(middleware.RequestID) // Create a request ID for each request
-	router.Use(middleware.RequestLogger(&logFormatter{}))
-	router.Use(middleware.Recoverer) // Recover from panics without crashing server
-	return &RouterCtx{router}
+func newRouter() *router {
+	r := chi.NewRouter()
+	r.Use(middleware.RequestID) // Create a request ID for each request
+	r.Use(middleware.RequestLogger(&logFormatter{}))
+	r.Use(middleware.Recoverer) // Recover from panics without crashing server
+	return &router{r}
 }
 
-func (r *RouterCtx) Group(fn func(types.Router)) {
+func (r *router) Group(fn func(types.Router)) {
 	r.chi.Group(func(c chi.Router) {
-		fn(&RouterCtx{c})
+		fn(&router{c})
 	})
 }
 
-func (r *RouterCtx) Route(pattern string, fn func(types.Router)) {
+func (r *router) Route(pattern string, fn func(types.Router)) {
 	r.chi.Route(pattern, func(c chi.Router) {
-		fn(&RouterCtx{c})
+		fn(&router{c})
 	})
 }
 
-func (r *RouterCtx) Get(pattern string, fn types.RouterHandler) {
+func (r *router) Get(pattern string, fn types.RouterHandler) {
 	r.chi.Get(pattern, routeHandler(fn))
 }
-func (r *RouterCtx) Post(pattern string, fn types.RouterHandler) {
+func (r *router) Post(pattern string, fn types.RouterHandler) {
 	r.chi.Post(pattern, routeHandler(fn))
 }
-func (r *RouterCtx) Put(pattern string, fn types.RouterHandler) {
+func (r *router) Put(pattern string, fn types.RouterHandler) {
 	r.chi.Put(pattern, routeHandler(fn))
 }
-func (r *RouterCtx) Delete(pattern string, fn types.RouterHandler) {
+func (r *router) Delete(pattern string, fn types.RouterHandler) {
 	r.chi.Delete(pattern, routeHandler(fn))
 }
 
-func (r *RouterCtx) With(fn types.MiddlewareHandler) types.Router {
+func (r *router) With(fn types.MiddlewareHandler) types.Router {
 	c := r.chi.With(middlewareHandler(fn))
-	return &RouterCtx{c}
+	return &router{c}
 }
 
-func (r *RouterCtx) WithBypass(fn func(next http.Handler) http.Handler) types.Router {
+func (r *router) WithBypass(fn func(next http.Handler) http.Handler) types.Router {
 	c := r.chi.With(fn)
-	return &RouterCtx{c}
+	return &router{c}
 }
 
-func (r *RouterCtx) Use(fn types.MiddlewareHandler) {
+func (r *router) Use(fn types.MiddlewareHandler) {
 	r.chi.Use(middlewareHandler(fn))
 }
-func (r *RouterCtx) UseBypass(fn func(next http.Handler) http.Handler) {
+func (r *router) UseBypass(fn func(next http.Handler) http.Handler) {
 	r.chi.Use(fn)
 }
 
-func (r *RouterCtx) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+func (r *router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	r.chi.ServeHTTP(w, req)
 }
 

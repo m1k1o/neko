@@ -16,7 +16,7 @@ import (
 type HttpManagerCtx struct {
 	logger zerolog.Logger
 	config *config.Server
-	router *RouterCtx
+	router types.Router
 	http   *http.Server
 }
 
