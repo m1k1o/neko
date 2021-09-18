@@ -37,11 +37,9 @@ func New(WebSocketManager types.WebSocketManager, ApiManager types.ApiManager, c
 
 	router.Route("/api", ApiManager.Route)
 
-	router.Get("/api/ws", func(w http.ResponseWriter, r *http.Request) error {
-		return WebSocketManager.Upgrade(w, r, func(r *http.Request) bool {
-			return config.AllowOrigin(r.Header.Get("Origin"))
-		})
-	})
+	router.Get("/api/ws", WebSocketManager.Upgrade(func(r *http.Request) bool {
+		return config.AllowOrigin(r.Header.Get("Origin"))
+	}))
 
 	if config.Static != "" {
 		fs := http.FileServer(http.Dir(config.Static))

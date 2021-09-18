@@ -13,6 +13,7 @@ import (
 	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/types/event"
 	"demodesk/neko/internal/types/message"
+	"demodesk/neko/internal/utils"
 	"demodesk/neko/internal/websocket/handler"
 )
 
@@ -145,21 +146,26 @@ func (manager *WebSocketManagerCtx) AddHandler(handler types.WebSocketHandler) {
 	manager.handlers = append(manager.handlers, handler)
 }
 
-func (manager *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Request, checkOrigin types.CheckOrigin) error {
-	manager.logger.Debug().
-		Str("address", r.RemoteAddr).
-		Str("agent", r.UserAgent()).
-		Msg("attempting to upgrade connection")
+func (manager *WebSocketManagerCtx) Upgrade(checkOrigin types.CheckOrigin) types.RouterHandler {
+	return func(w http.ResponseWriter, r *http.Request) error {
+		upgrader := websocket.Upgrader{
+			CheckOrigin: checkOrigin,
+			// Do not return any error while handshake
+			Error: func(w http.ResponseWriter, r *http.Request, status int, reason error) {},
+		}
 
-	upgrader := websocket.Upgrader{
-		CheckOrigin: checkOrigin,
+		connection, err := upgrader.Upgrade(w, r, nil)
+		if err != nil {
+			return utils.HttpBadRequest().WithInternalErr(err)
+		}
+
+		// Cannot write HTTP response after connection upgrade
+		manager.connect(connection, r)
+		return nil
 	}
+}
 
-	connection, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		return err
-	}
-
+func (manager *WebSocketManagerCtx) connect(connection *websocket.Conn, r *http.Request) {
 	// create new peer
 	peer := newPeer(connection)
 
@@ -167,7 +173,7 @@ func (manager *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Reque
 	if err != nil {
 		manager.logger.Warn().Err(err).Msg("authentication failed")
 		peer.Destroy(err.Error())
-		return nil
+		return
 	}
 
 	// add session id to all log messages
@@ -177,7 +183,7 @@ func (manager *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Reque
 	if !session.Profile().CanConnect {
 		logger.Warn().Msg("connection disabled")
 		peer.Destroy("connection disabled")
-		return nil
+		return
 	}
 
 	if session.State().IsConnected {
@@ -185,7 +191,7 @@ func (manager *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Reque
 
 		if !manager.sessions.MercifulReconnect() {
 			peer.Destroy("already connected")
-			return nil
+			return
 		}
 
 		logger.Info().Msg("replacing peer connection")
@@ -210,7 +216,6 @@ func (manager *WebSocketManagerCtx) Upgrade(w http.ResponseWriter, r *http.Reque
 	}()
 
 	manager.handle(connection, session)
-	return nil
 }
 
 func (manager *WebSocketManagerCtx) handle(connection *websocket.Conn, session types.Session) {
@@ -278,6 +283,7 @@ func (manager *WebSocketManagerCtx) handle(connection *websocket.Conn, session t
 		case <-manager.shutdown:
 			err := connection.Close()
 			manager.logger.Err(err).Msg("connection shutdown")
+			return
 		case <-ticker.C:
 			if err := connection.WriteMessage(websocket.PingMessage, nil); err != nil {
 				logger.Err(err).Msg("ping message has failed")
