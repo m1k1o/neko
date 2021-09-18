@@ -276,8 +276,8 @@ func (manager *WebSocketManagerCtx) handle(connection *websocket.Conn, session t
 		case <-cancel:
 			return
 		case <-manager.shutdown:
-			connection.Close()
-			return
+			err := connection.Close()
+			manager.logger.Err(err).Msg("connection shutdown")
 		case <-ticker.C:
 			if err := connection.WriteMessage(websocket.PingMessage, nil); err != nil {
 				logger.Err(err).Msg("ping message has failed")
