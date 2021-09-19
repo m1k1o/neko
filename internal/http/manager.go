@@ -45,11 +45,14 @@ func New(WebSocketManager types.WebSocketManager, ApiManager types.ApiManager, c
 		fs := http.FileServer(http.Dir(config.Static))
 		router.Get("/*", func(w http.ResponseWriter, r *http.Request) error {
 			_, err := os.Stat(config.Static + r.URL.Path)
-
-			if !os.IsNotExist(err) {
+			if err == nil {
 				fs.ServeHTTP(w, r)
+				return nil
 			}
-
+			if os.IsNotExist(err) {
+				http.NotFound(w, r)
+				return nil
+			}
 			return err
 		})
 	}
