@@ -39,12 +39,15 @@ func (r *router) Route(pattern string, fn func(types.Router)) {
 func (r *router) Get(pattern string, fn types.RouterHandler) {
 	r.chi.Get(pattern, routeHandler(fn))
 }
+
 func (r *router) Post(pattern string, fn types.RouterHandler) {
 	r.chi.Post(pattern, routeHandler(fn))
 }
+
 func (r *router) Put(pattern string, fn types.RouterHandler) {
 	r.chi.Put(pattern, routeHandler(fn))
 }
+
 func (r *router) Delete(pattern string, fn types.RouterHandler) {
 	r.chi.Delete(pattern, routeHandler(fn))
 }
@@ -62,6 +65,7 @@ func (r *router) WithBypass(fn func(next http.Handler) http.Handler) types.Route
 func (r *router) Use(fn types.MiddlewareHandler) {
 	r.chi.Use(middlewareHandler(fn))
 }
+
 func (r *router) UseBypass(fn func(next http.Handler) http.Handler) {
 	r.chi.Use(fn)
 }
