@@ -1,6 +1,7 @@
 package capture
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -141,20 +142,23 @@ func (manager *CaptureManagerCtx) Start() {
 	manager.desktop.OnAfterScreenSizeChange(func() {
 		for _, video := range manager.videos {
 			if video.Started() {
-				if err := video.createPipeline(); err != nil {
+				err := video.createPipeline()
+				if err != nil && !errors.Is(err, types.ErrCapturePipelineAlreadyExists) {
 					manager.logger.Panic().Err(err).Msg("unable to recreate video pipeline")
 				}
 			}
 		}
 
 		if manager.broadcast.Started() {
-			if err := manager.broadcast.createPipeline(); err != nil {
+			err := manager.broadcast.createPipeline()
+			if err != nil && !errors.Is(err, types.ErrCapturePipelineAlreadyExists) {
 				manager.logger.Panic().Err(err).Msg("unable to recreate broadcast pipeline")
 			}
 		}
 
 		if manager.screencast.Started() {
-			if err := manager.screencast.createPipeline(); err != nil {
+			err := manager.screencast.createPipeline()
+			if err != nil && !errors.Is(err, types.ErrCapturePipelineAlreadyExists) {
 				manager.logger.Panic().Err(err).Msg("unable to recreate screencast pipeline")
 			}
 		}
