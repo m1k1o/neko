@@ -23,11 +23,8 @@ func (h *RoomHandler) screenConfiguration(w http.ResponseWriter, r *http.Request
 		return utils.HttpInternalServerError().WithInternalMsg("unable to get screen configuration")
 	}
 
-	return utils.HttpSuccess(w, ScreenConfigurationPayload{
-		Width:  size.Width,
-		Height: size.Height,
-		Rate:   size.Rate,
-	})
+	payload := ScreenConfigurationPayload(*size)
+	return utils.HttpSuccess(w, payload)
 }
 
 func (h *RoomHandler) screenConfigurationChange(w http.ResponseWriter, r *http.Request) error {
@@ -36,21 +33,13 @@ func (h *RoomHandler) screenConfigurationChange(w http.ResponseWriter, r *http.R
 		return err
 	}
 
-	if err := h.desktop.SetScreenSize(types.ScreenSize{
-		Width:  data.Width,
-		Height: data.Height,
-		Rate:   data.Rate,
-	}); err != nil {
+	size := types.ScreenSize(*data)
+	if err := h.desktop.SetScreenSize(size); err != nil {
 		return utils.HttpUnprocessableEntity("cannot set screen size").WithInternalErr(err)
 	}
 
-	h.sessions.Broadcast(
-		event.SCREEN_UPDATED,
-		message.ScreenSize{
-			Width:  data.Width,
-			Height: data.Height,
-			Rate:   data.Rate,
-		}, nil)
+	payload := message.ScreenSize(*data)
+	h.sessions.Broadcast(event.SCREEN_UPDATED, payload, nil)
 
 	return utils.HttpSuccess(w, data)
 }

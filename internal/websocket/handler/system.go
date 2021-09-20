@@ -40,13 +40,9 @@ func (h *MessageHandlerCtx) systemInit(session types.Session) error {
 	session.Send(
 		event.SYSTEM_INIT,
 		message.SystemInit{
-			SessionId:   session.ID(),
-			ControlHost: controlHost,
-			ScreenSize: message.ScreenSize{
-				Width:  size.Width,
-				Height: size.Height,
-				Rate:   size.Rate,
-			},
+			SessionId:         session.ID(),
+			ControlHost:       controlHost,
+			ScreenSize:        message.ScreenSize(*size),
 			Sessions:          sessions,
 			ImplicitHosting:   h.sessions.ImplicitHosting(),
 			ScreencastEnabled: h.capture.Screencast().Enabled(),
