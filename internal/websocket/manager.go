@@ -215,10 +215,10 @@ func (manager *WebSocketManagerCtx) connect(connection *websocket.Conn, r *http.
 		session.SetWebSocketConnected(peer, false)
 	}()
 
-	manager.handle(connection, session)
+	manager.handle(connection, peer, session)
 }
 
-func (manager *WebSocketManagerCtx) handle(connection *websocket.Conn, session types.Session) {
+func (manager *WebSocketManagerCtx) handle(connection *websocket.Conn, peer types.WebSocketPeer, session types.Session) {
 	// add session id to logger context
 	logger := manager.logger.With().Str("session_id", session.ID()).Logger()
 
@@ -281,11 +281,10 @@ func (manager *WebSocketManagerCtx) handle(connection *websocket.Conn, session t
 		case <-cancel:
 			return
 		case <-manager.shutdown:
-			err := connection.Close()
-			manager.logger.Err(err).Msg("connection shutdown")
+			peer.Destroy("connection shutdown")
 			return
 		case <-ticker.C:
-			if err := connection.WriteMessage(websocket.PingMessage, nil); err != nil {
+			if err := peer.Ping(); err != nil {
 				logger.Err(err).Msg("ping message has failed")
 				return
 			}

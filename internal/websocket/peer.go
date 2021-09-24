@@ -2,6 +2,7 @@ package websocket
 
 import (
 	"encoding/json"
+	"errors"
 	"sync"
 
 	"github.com/gorilla/websocket"
@@ -64,6 +65,17 @@ func (peer *WebSocketPeerCtx) Send(event string, payload interface{}) {
 		Str("event", event).
 		Str("payload", string(raw)).
 		Msg("sending message to client")
+}
+
+func (peer *WebSocketPeerCtx) Ping() error {
+	peer.mu.Lock()
+	defer peer.mu.Unlock()
+
+	if peer.connection == nil {
+		return errors.New("peer connection not found")
+	}
+
+	return peer.connection.WriteMessage(websocket.PingMessage, nil)
 }
 
 func (peer *WebSocketPeerCtx) Destroy(reason string) {

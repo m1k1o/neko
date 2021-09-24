@@ -16,6 +16,7 @@ type CheckOrigin func(r *http.Request) bool
 
 type WebSocketPeer interface {
 	Send(event string, payload interface{})
+	Ping() error
 	Destroy(reason string)
 }
 
