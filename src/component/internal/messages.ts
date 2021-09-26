@@ -173,15 +173,19 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
   }
 
   protected [EVENT.SESSION_PROFILE]({ id, ...profile }: message.MemberProfile) {
-    this._localLog.debug(`EVENT.SESSION_PROFILE`, { id })
-    Vue.set(this._state.sessions[id], 'profile', profile)
-    this.emit('session.updated', id)
+    if (id in this._state.sessions) {
+      this._localLog.debug(`EVENT.SESSION_PROFILE`, { id })
+      Vue.set(this._state.sessions[id], 'profile', profile)
+      this.emit('session.updated', id)
+    }
   }
 
   protected [EVENT.SESSION_STATE]({ id, ...state }: message.SessionState) {
-    this._localLog.debug(`EVENT.SESSION_STATE`, { id })
-    Vue.set(this._state.sessions[id], 'state', state)
-    this.emit('session.updated', id)
+    if (id in this._state.sessions) {
+      this._localLog.debug(`EVENT.SESSION_STATE`, { id })
+      Vue.set(this._state.sessions[id], 'state', state)
+      this.emit('session.updated', id)
+    }
   }
 
   /////////////////////////////
