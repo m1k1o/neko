@@ -1,6 +1,7 @@
 package capture
 
 import (
+	"errors"
 	"reflect"
 	"sync"
 
@@ -13,18 +14,22 @@ import (
 )
 
 type StreamManagerCtx struct {
-	logger      zerolog.Logger
-	mu          sync.Mutex
-	wg          sync.WaitGroup
-	codec       codec.RTPCodec
-	pipelineStr func() string
+	logger zerolog.Logger
+	mu     sync.Mutex
+	wg     sync.WaitGroup
+	codec  codec.RTPCodec
+
 	pipeline    *gst.Pipeline
-	sample      chan types.Sample
-	listeners   map[uintptr]*func(sample types.Sample)
-	emitMu      sync.Mutex
-	emitUpdate  chan bool
-	emitStop    chan bool
-	started     bool
+	pipelineMu  sync.Mutex
+	pipelineStr func() string
+
+	sample       chan types.Sample
+	sampleStop   chan interface{}
+	sampleUpdate chan interface{}
+
+	listeners      map[uintptr]*func(sample types.Sample)
+	listenersMu    sync.Mutex
+	listenersCount uint32
 }
 
 func streamNew(codec codec.RTPCodec, pipelineStr func() string, video_id string) *StreamManagerCtx {
@@ -34,13 +39,12 @@ func streamNew(codec codec.RTPCodec, pipelineStr func() string, video_id string)
 		Str("video_id", video_id).Logger()
 
 	manager := &StreamManagerCtx{
-		logger:      logger,
-		codec:       codec,
-		pipelineStr: pipelineStr,
-		listeners:   map[uintptr]*func(sample types.Sample){},
-		emitUpdate:  make(chan bool),
-		emitStop:    make(chan bool),
-		started:     false,
+		logger:       logger,
+		codec:        codec,
+		pipelineStr:  pipelineStr,
+		sampleStop:   make(chan interface{}),
+		sampleUpdate: make(chan interface{}),
+		listeners:    map[uintptr]*func(sample types.Sample){},
 	}
 
 	manager.wg.Add(1)
@@ -51,17 +55,17 @@ func streamNew(codec codec.RTPCodec, pipelineStr func() string, video_id string)
 
 		for {
 			select {
-			case <-manager.emitStop:
+			case <-manager.sampleStop:
 				manager.logger.Debug().Msg("stopped emitting samples")
 				return
-			case <-manager.emitUpdate:
+			case <-manager.sampleUpdate:
 				manager.logger.Debug().Msg("update emitting samples")
 			case sample := <-manager.sample:
-				manager.emitMu.Lock()
+				manager.listenersMu.Lock()
 				for _, emit := range manager.listeners {
 					(*emit)(sample)
 				}
-				manager.emitMu.Unlock()
+				manager.listenersMu.Unlock()
 			}
 		}
 	}()
@@ -72,15 +76,15 @@ func streamNew(codec codec.RTPCodec, pipelineStr func() string, video_id string)
 func (manager *StreamManagerCtx) shutdown() {
 	manager.logger.Info().Msgf("shutdown")
 
-	manager.emitMu.Lock()
+	manager.listenersMu.Lock()
 	for key := range manager.listeners {
 		delete(manager.listeners, key)
 	}
-	manager.emitMu.Unlock()
+	manager.listenersMu.Unlock()
 
 	manager.destroyPipeline()
 
-	manager.emitStop <- true
+	close(manager.sampleStop)
 	manager.wg.Wait()
 }
 
@@ -88,63 +92,78 @@ func (manager *StreamManagerCtx) Codec() codec.RTPCodec {
 	return manager.codec
 }
 
-func (manager *StreamManagerCtx) AddListener(listener *func(sample types.Sample)) {
-	manager.emitMu.Lock()
-	defer manager.emitMu.Unlock()
-
-	if listener != nil {
-		ptr := reflect.ValueOf(listener).Pointer()
-		manager.listeners[ptr] = listener
-		manager.logger.Debug().Interface("ptr", ptr).Msgf("adding listener")
+func (manager *StreamManagerCtx) NewListener(listener *func(sample types.Sample)) (addListener func(), err error) {
+	if listener == nil {
+		return addListener, errors.New("listener cannot be nil")
 	}
+
+	manager.mu.Lock()
+	defer manager.mu.Unlock()
+
+	if manager.listenersCount == 0 {
+		err := manager.createPipeline()
+		if err != nil && !errors.Is(err, types.ErrCapturePipelineAlreadyExists) {
+			return addListener, err
+		}
+
+		manager.listenersCount++
+		manager.logger.Info().Msgf("first listener, starting")
+	}
+
+	return func() {
+		ptr := reflect.ValueOf(listener).Pointer()
+
+		manager.listenersMu.Lock()
+		manager.listeners[ptr] = listener
+		manager.listenersMu.Unlock()
+
+		manager.logger.Debug().Interface("ptr", ptr).Msgf("adding listener")
+	}, nil
 }
 
 func (manager *StreamManagerCtx) RemoveListener(listener *func(sample types.Sample)) {
-	manager.emitMu.Lock()
-	defer manager.emitMu.Unlock()
-
-	if listener != nil {
-		ptr := reflect.ValueOf(listener).Pointer()
-		delete(manager.listeners, ptr)
-		manager.logger.Debug().Interface("ptr", ptr).Msgf("removing listener")
+	if listener == nil {
+		return
 	}
+
+	ptr := reflect.ValueOf(listener).Pointer()
+
+	manager.listenersMu.Lock()
+	delete(manager.listeners, ptr)
+	manager.listenersMu.Unlock()
+
+	manager.logger.Debug().Interface("ptr", ptr).Msgf("removing listener")
+
+	go func() {
+		manager.mu.Lock()
+		defer manager.mu.Unlock()
+
+		if manager.listenersCount == 1 {
+			manager.destroyPipeline()
+			manager.listenersCount = 0
+			manager.logger.Info().Msgf("last listener, stopping")
+		}
+	}()
 }
 
 func (manager *StreamManagerCtx) ListenersCount() int {
-	manager.emitMu.Lock()
-	defer manager.emitMu.Unlock()
+	manager.listenersMu.Lock()
+	defer manager.listenersMu.Unlock()
 
 	return len(manager.listeners)
 }
 
-func (manager *StreamManagerCtx) Start() error {
-	manager.mu.Lock()
-	defer manager.mu.Unlock()
-
-	err := manager.createPipeline()
-	if err != nil {
-		return err
-	}
-
-	manager.logger.Info().Msgf("start")
-	manager.started = true
-	return nil
-}
-
-func (manager *StreamManagerCtx) Stop() {
-	manager.mu.Lock()
-	defer manager.mu.Unlock()
-
-	manager.logger.Info().Msgf("stop")
-	manager.started = false
-	manager.destroyPipeline()
-}
-
 func (manager *StreamManagerCtx) Started() bool {
-	return manager.started
+	manager.mu.Lock()
+	defer manager.mu.Unlock()
+
+	return manager.listenersCount > 0
 }
 
 func (manager *StreamManagerCtx) createPipeline() error {
+	manager.pipelineMu.Lock()
+	defer manager.pipelineMu.Unlock()
+
 	if manager.pipeline != nil {
 		return types.ErrCapturePipelineAlreadyExists
 	}
@@ -166,11 +185,14 @@ func (manager *StreamManagerCtx) createPipeline() error {
 	manager.pipeline.Start()
 
 	manager.sample = manager.pipeline.Sample
-	manager.emitUpdate <- true
+	manager.sampleUpdate <- struct{}{}
 	return nil
 }
 
 func (manager *StreamManagerCtx) destroyPipeline() {
+	manager.pipelineMu.Lock()
+	defer manager.pipelineMu.Unlock()
+
 	if manager.pipeline == nil {
 		return
 	}

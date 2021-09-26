@@ -35,12 +35,12 @@ type ScreencastManager interface {
 type StreamManager interface {
 	Codec() codec.RTPCodec
 
-	AddListener(listener *func(sample Sample))
+	// starts pipeline if was not running before and returns register function
+	NewListener(listener *func(sample Sample)) (addListener func(), err error)
+	// stops pipeline if it was last listener
 	RemoveListener(listener *func(sample Sample))
-	ListenersCount() int
 
-	Start() error
-	Stop()
+	ListenersCount() int
 	Started() bool
 }
 
