@@ -34,28 +34,26 @@ func init() {
 		//////
 		// logs
 		//////
-		zerolog.TimeFieldFormat = ""
+		console := zerolog.ConsoleWriter{Out: os.Stdout}
+		zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 		zerolog.SetGlobalLevel(zerolog.InfoLevel)
 
-		console := zerolog.ConsoleWriter{Out: os.Stdout}
-
-		if !viper.GetBool("logs") {
+		logs := viper.GetBool("logs")
+		if !logs {
 			log.Logger = log.Output(console)
 		} else {
-			logs := filepath.Join(".", "logs")
+			logsPath := filepath.Join(".", "logs")
 			if runtime.GOOS == "linux" {
-				logs = "/var/log/neko"
+				logsPath = "/var/log/neko"
 			}
 
-			if _, err := os.Stat(logs); os.IsNotExist(err) {
-				//nolint
-				os.Mkdir(logs, os.ModePerm)
+			if _, err := os.Stat(logsPath); os.IsNotExist(err) {
+				_ = os.Mkdir(logsPath, os.ModePerm)
 			}
 
-			latest := filepath.Join(logs, "neko-latest.log")
-			_, err := os.Stat(latest)
-			if err == nil {
-				err = os.Rename(latest, filepath.Join(logs, "neko."+time.Now().Format("2006-01-02T15-04-05Z07-00")+".log"))
+			latest := filepath.Join(logsPath, "neko-latest.log")
+			if _, err := os.Stat(latest); err == nil {
+				err = os.Rename(latest, filepath.Join(logsPath, "neko."+time.Now().Format("2006-01-02T15-04-05Z07-00")+".log"))
 				if err != nil {
 					log.Panic().Err(err).Msg("failed to rotate log file")
 				}
@@ -96,14 +94,13 @@ func init() {
 		viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 		viper.AutomaticEnv() // read in environment variables that match
 
-		if err := viper.ReadInConfig(); err != nil {
-			if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
-				log.Err(err)
-			}
-			if config != "" {
-				log.Err(err)
-			}
+		err := viper.ReadInConfig()
+		if err != nil && config != "" {
+			log.Err(err)
 		}
+
+		// get full config file path
+		config = viper.ConfigFileUsed()
 
 		//////
 		// debug
@@ -113,20 +110,19 @@ func init() {
 			zerolog.SetGlobalLevel(zerolog.DebugLevel)
 		}
 
-		file := viper.ConfigFileUsed()
 		logger := log.With().
 			Bool("debug", debug).
-			Str("logging", viper.GetString("logs")).
-			Str("config", file).
+			Bool("logs", logs).
+			Str("config", config).
 			Logger()
 
-		if file == "" {
+		if config == "" {
 			logger.Warn().Msg("preflight complete without config file")
 		} else {
-			if _, err := os.Stat(file); os.IsNotExist(err) {
+			if _, err := os.Stat(config); os.IsNotExist(err) {
 				logger.Err(err).Msg("preflight complete with nonexistent config file")
 			} else {
-				logger.Info().Msg("preflight complete")
+				logger.Info().Msg("preflight complete with config file")
 			}
 		}
 
