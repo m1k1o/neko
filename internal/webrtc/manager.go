@@ -15,6 +15,7 @@ import (
 
 	"demodesk/neko/internal/config"
 	"demodesk/neko/internal/types"
+	"demodesk/neko/internal/types/codec"
 	"demodesk/neko/internal/types/event"
 	"demodesk/neko/internal/types/message"
 	"demodesk/neko/internal/webrtc/cursor"
@@ -117,7 +118,10 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 		return nil, types.ErrWebRTCVideoNotFound
 	}
 
-	connection, err := manager.newPeerConnection(videoStream.Codec(), logger)
+	connection, err := manager.newPeerConnection([]codec.RTPCodec{
+		videoStream.Codec(),
+		manager.capture.Audio().Codec(),
+	}, logger)
 	if err != nil {
 		return nil, err
 	}
@@ -244,9 +248,8 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 		switch state {
 		case webrtc.PeerConnectionStateConnected:
 			session.SetWebRTCConnected(peer, true)
-		case webrtc.PeerConnectionStateDisconnected:
-			fallthrough
-		case webrtc.PeerConnectionStateFailed:
+		case webrtc.PeerConnectionStateDisconnected,
+			webrtc.PeerConnectionStateFailed:
 			connection.Close()
 		case webrtc.PeerConnectionStateClosed:
 			manager.mu.Lock()

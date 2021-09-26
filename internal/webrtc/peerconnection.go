@@ -9,15 +9,24 @@ import (
 	"github.com/rs/zerolog"
 )
 
-func (manager *WebRTCManagerCtx) newPeerConnection(codec codec.RTPCodec, logger zerolog.Logger) (*webrtc.PeerConnection, error) {
+func (manager *WebRTCManagerCtx) newPeerConnection(codecs []codec.RTPCodec, logger zerolog.Logger) (*webrtc.PeerConnection, error) {
 	// create media engine
-	engine, err := manager.mediaEngine(codec)
-	if err != nil {
-		return nil, err
+	engine := &webrtc.MediaEngine{}
+	for _, codec := range codecs {
+		if err := codec.Register(engine); err != nil {
+			return nil, err
+		}
 	}
 
 	// create setting engine
-	settings := manager.settingEngine(logger)
+	settings := webrtc.SettingEngine{
+		LoggerFactory: pionlog.New(logger),
+	}
+
+	_ = settings.SetEphemeralUDPPortRange(manager.config.EphemeralMin, manager.config.EphemeralMax)
+	settings.SetICETimeouts(disconnectedTimeout, failedTimeout, keepAliveInterval)
+	settings.SetNAT1To1IPs(manager.config.NAT1To1IPs, webrtc.ICECandidateTypeHost)
+	settings.SetLite(manager.config.ICELite)
 
 	// create interceptor registry
 	registry := &interceptor.Registry{}
@@ -35,36 +44,6 @@ func (manager *WebRTCManagerCtx) newPeerConnection(codec codec.RTPCodec, logger 
 	// create new peer connection
 	configuration := manager.peerConfiguration()
 	return api.NewPeerConnection(configuration)
-}
-
-func (manager *WebRTCManagerCtx) mediaEngine(codec codec.RTPCodec) (*webrtc.MediaEngine, error) {
-	engine := &webrtc.MediaEngine{}
-
-	if err := codec.Register(engine); err != nil {
-		return nil, err
-	}
-
-	audioCodec := manager.capture.Audio().Codec()
-	if err := audioCodec.Register(engine); err != nil {
-		return nil, err
-	}
-
-	return engine, nil
-}
-
-func (manager *WebRTCManagerCtx) settingEngine(logger zerolog.Logger) webrtc.SettingEngine {
-	settings := webrtc.SettingEngine{
-		LoggerFactory: pionlog.New(logger),
-	}
-
-	//nolint
-	settings.SetEphemeralUDPPortRange(manager.config.EphemeralMin, manager.config.EphemeralMax)
-	settings.SetICETimeouts(disconnectedTimeout, failedTimeout, keepAliveInterval)
-	settings.SetNAT1To1IPs(manager.config.NAT1To1IPs, webrtc.ICECandidateTypeHost)
-	//settings.SetSRTPReplayProtectionWindow(512)
-	settings.SetLite(manager.config.ICELite)
-
-	return settings
 }
 
 func (manager *WebRTCManagerCtx) peerConfiguration() webrtc.Configuration {
