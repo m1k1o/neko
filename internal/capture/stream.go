@@ -29,7 +29,7 @@ type StreamManagerCtx struct {
 
 	listeners      map[uintptr]*func(sample types.Sample)
 	listenersMu    sync.Mutex
-	listenersCount uint32
+	listenersCount int
 }
 
 func streamNew(codec codec.RTPCodec, pipelineStr func() string, video_id string) *StreamManagerCtx {
@@ -142,10 +142,14 @@ func (manager *StreamManagerCtx) RemoveListener(listener *func(sample types.Samp
 		manager.mu.Lock()
 		defer manager.mu.Unlock()
 
-		if manager.listenersCount == 0 {
+		if manager.listenersCount <= 0 {
 			manager.destroyPipeline()
-			manager.listenersCount = 0
 			manager.logger.Info().Msgf("last listener, stopping")
+		}
+
+		if manager.listenersCount < 0 {
+			manager.listenersCount = 0
+			manager.logger.Error().Int("listeners-count", manager.listenersCount).Msgf("listener counter is < 0, something is wrong")
 		}
 	}()
 }
