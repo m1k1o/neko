@@ -135,9 +135,9 @@ func (manager *StreamManagerCtx) NewListener(listener *func(sample types.Sample)
 	return dispatcher, nil
 }
 
-func (manager *StreamManagerCtx) RemoveListener(listener *func(sample types.Sample)) {
+func (manager *StreamManagerCtx) RemoveListener(listener *func(sample types.Sample)) (dispatcher chan interface{}) {
 	if listener == nil {
-		return
+		return dispatcher
 	}
 
 	ptr := reflect.ValueOf(listener).Pointer()
@@ -152,7 +152,16 @@ func (manager *StreamManagerCtx) RemoveListener(listener *func(sample types.Samp
 	manager.listenersCount--
 	manager.mu.Unlock()
 
+	dispatcher = make(chan interface{}, 1)
 	go func() {
+		select {
+		case <-time.After(newListenerTimeout):
+			manager.logger.Warn().Msgf("remote listener channel was not called, timeouted")
+			break
+		case <-dispatcher:
+			break
+		}
+
 		manager.mu.Lock()
 		defer manager.mu.Unlock()
 
@@ -166,6 +175,8 @@ func (manager *StreamManagerCtx) RemoveListener(listener *func(sample types.Samp
 			manager.logger.Error().Int("listeners-count", manager.listenersCount).Msgf("listener counter is < 0, something is wrong")
 		}
 	}()
+
+	return dispatcher
 }
 
 func (manager *StreamManagerCtx) ListenersCount() int {

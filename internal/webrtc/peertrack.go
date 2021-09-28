@@ -52,18 +52,24 @@ func (peer *PeerTrack) SetStream(stream types.StreamManager) error {
 	defer peer.streamMu.Unlock()
 
 	// prepare new listener
-	dispatcher, err := stream.NewListener(&peer.listener)
+	addDispatcher, err := stream.NewListener(&peer.listener)
 	if err != nil {
 		return err
 	}
 
 	// remove previous listener (in case it existed)
+	var stopDispatcher chan interface{}
 	if peer.stream != nil {
-		peer.stream.RemoveListener(&peer.listener)
+		stopDispatcher = peer.stream.RemoveListener(&peer.listener)
 	}
 
 	// add new listener
-	close(dispatcher)
+	close(addDispatcher)
+
+	// stop old pipeline (in case it existed)
+	if stopDispatcher != nil {
+		close(stopDispatcher)
+	}
 
 	peer.stream = stream
 	return nil
@@ -74,7 +80,8 @@ func (peer *PeerTrack) RemoveStream() {
 	defer peer.streamMu.Unlock()
 
 	if peer.stream != nil {
-		peer.stream.RemoveListener(&peer.listener)
+		dispatcher := peer.stream.RemoveListener(&peer.listener)
+		close(dispatcher)
 	}
 }
 

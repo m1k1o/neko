@@ -39,7 +39,7 @@ type StreamManager interface {
 	// and returns dispatcher channel
 	NewListener(listener *func(sample Sample)) (dispatcher chan interface{}, err error)
 	// stops pipeline if it was last listener
-	RemoveListener(listener *func(sample Sample))
+	RemoveListener(listener *func(sample Sample)) (dispatcher chan interface{})
 
 	ListenersCount() int
 	Started() bool
