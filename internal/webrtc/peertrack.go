@@ -52,7 +52,7 @@ func (peer *PeerTrack) SetStream(stream types.StreamManager) error {
 	defer peer.streamMu.Unlock()
 
 	// prepare new listener
-	addListener, err := stream.NewListener(&peer.listener)
+	dispatcher, err := stream.NewListener(&peer.listener)
 	if err != nil {
 		return err
 	}
@@ -63,7 +63,7 @@ func (peer *PeerTrack) SetStream(stream types.StreamManager) error {
 	}
 
 	// add new listener
-	addListener()
+	close(dispatcher)
 
 	peer.stream = stream
 	return nil

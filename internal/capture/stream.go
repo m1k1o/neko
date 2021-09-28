@@ -4,6 +4,7 @@ import (
 	"errors"
 	"reflect"
 	"sync"
+	"time"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -13,12 +14,14 @@ import (
 	"demodesk/neko/internal/types/codec"
 )
 
+const newListenerTimeout = 500 * time.Millisecond
+
 type StreamManagerCtx struct {
 	logger zerolog.Logger
 	mu     sync.Mutex
 	wg     sync.WaitGroup
-	codec  codec.RTPCodec
 
+	codec       codec.RTPCodec
 	pipeline    *gst.Pipeline
 	pipelineMu  sync.Mutex
 	pipelineStr func() string
@@ -92,9 +95,9 @@ func (manager *StreamManagerCtx) Codec() codec.RTPCodec {
 	return manager.codec
 }
 
-func (manager *StreamManagerCtx) NewListener(listener *func(sample types.Sample)) (addListener func(), err error) {
+func (manager *StreamManagerCtx) NewListener(listener *func(sample types.Sample)) (dispatcher chan interface{}, err error) {
 	if listener == nil {
-		return addListener, errors.New("listener cannot be nil")
+		return dispatcher, errors.New("listener cannot be nil")
 	}
 
 	manager.mu.Lock()
@@ -104,13 +107,22 @@ func (manager *StreamManagerCtx) NewListener(listener *func(sample types.Sample)
 	if manager.listenersCount == 1 {
 		err := manager.createPipeline()
 		if err != nil && !errors.Is(err, types.ErrCapturePipelineAlreadyExists) {
-			return addListener, err
+			return dispatcher, err
 		}
 
 		manager.logger.Info().Msgf("first listener, starting")
 	}
 
-	return func() {
+	dispatcher = make(chan interface{}, 1)
+	go func() {
+		select {
+		case <-time.After(newListenerTimeout):
+			manager.logger.Warn().Msgf("add listener channel was not called, timeouted")
+			break
+		case <-dispatcher:
+			break
+		}
+
 		ptr := reflect.ValueOf(listener).Pointer()
 
 		manager.listenersMu.Lock()
@@ -118,7 +130,9 @@ func (manager *StreamManagerCtx) NewListener(listener *func(sample types.Sample)
 		manager.listenersMu.Unlock()
 
 		manager.logger.Debug().Interface("ptr", ptr).Msgf("adding listener")
-	}, nil
+	}()
+
+	return dispatcher, nil
 }
 
 func (manager *StreamManagerCtx) RemoveListener(listener *func(sample types.Sample)) {
