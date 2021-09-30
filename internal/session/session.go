@@ -54,7 +54,7 @@ func (session *SessionCtx) IsHost() bool {
 }
 
 // ---
-// webscoket
+// websocket
 // ---
 
 func (session *SessionCtx) SetWebSocketPeer(websocketPeer types.WebSocketPeer) {
@@ -69,25 +69,27 @@ func (session *SessionCtx) SetWebSocketPeer(websocketPeer types.WebSocketPeer) {
 
 func (session *SessionCtx) SetWebSocketConnected(websocketPeer types.WebSocketPeer, connected bool) {
 	session.websocketMu.Lock()
-	if websocketPeer != session.websocketPeer {
-		session.websocketMu.Unlock()
+	isCurrentPeer := websocketPeer == session.websocketPeer
+	session.websocketMu.Unlock()
+
+	if !isCurrentPeer {
 		return
 	}
-	session.websocketMu.Unlock()
 
 	session.state.IsConnected = connected
 
 	if connected {
 		session.manager.emmiter.Emit("connected", session)
-	} else {
-		session.manager.emmiter.Emit("disconnected", session)
-
-		session.websocketMu.Lock()
-		if websocketPeer == session.websocketPeer {
-			session.websocketPeer = nil
-		}
-		session.websocketMu.Unlock()
+		return
 	}
+
+	session.manager.emmiter.Emit("disconnected", session)
+
+	session.websocketMu.Lock()
+	if websocketPeer == session.websocketPeer {
+		session.websocketPeer = nil
+	}
+	session.websocketMu.Unlock()
 }
 
 func (session *SessionCtx) GetWebSocketPeer() types.WebSocketPeer {
@@ -120,22 +122,25 @@ func (session *SessionCtx) SetWebRTCPeer(webrtcPeer types.WebRTCPeer) {
 
 func (session *SessionCtx) SetWebRTCConnected(webrtcPeer types.WebRTCPeer, connected bool) {
 	session.webrtcMu.Lock()
-	if webrtcPeer != session.webrtcPeer {
-		session.webrtcMu.Unlock()
+	isCurrentPeer := webrtcPeer == session.webrtcPeer
+	session.webrtcMu.Unlock()
+
+	if !isCurrentPeer {
 		return
 	}
-	session.webrtcMu.Unlock()
 
 	session.state.IsWatching = connected
 	session.manager.emmiter.Emit("state_changed", session)
 
-	if !connected {
-		session.webrtcMu.Lock()
-		if webrtcPeer == session.webrtcPeer {
-			session.webrtcPeer = nil
-		}
-		session.webrtcMu.Unlock()
+	if connected {
+		return
 	}
+
+	session.webrtcMu.Lock()
+	if webrtcPeer == session.webrtcPeer {
+		session.webrtcPeer = nil
+	}
+	session.webrtcMu.Unlock()
 }
 
 func (session *SessionCtx) GetWebRTCPeer() types.WebRTCPeer {
