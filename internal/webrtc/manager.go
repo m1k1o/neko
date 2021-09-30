@@ -113,7 +113,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 
 	// audio track
 
-	audioTrack, err := manager.newPeerTrack(audioStream, logger)
+	audioTrack, err := manager.newPeerStreamTrack(audioStream, logger)
 	if err != nil {
 		return nil, err
 	}
@@ -125,7 +125,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 
 	// video track
 
-	videoTrack, err := manager.newPeerTrack(videoStream, logger)
+	videoTrack, err := manager.newPeerStreamTrack(videoStream, logger)
 	if err != nil {
 		return nil, err
 	}

@@ -11,7 +11,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-func (manager *WebRTCManagerCtx) newPeerTrack(stream types.StreamManager, logger zerolog.Logger) (*PeerTrack, error) {
+func (manager *WebRTCManagerCtx) newPeerStreamTrack(stream types.StreamManager, logger zerolog.Logger) (*PeerStreamTrack, error) {
 	codec := stream.Codec()
 
 	id := codec.Type.String()
@@ -22,7 +22,7 @@ func (manager *WebRTCManagerCtx) newPeerTrack(stream types.StreamManager, logger
 
 	logger = logger.With().Str("id", id).Logger()
 
-	peer := &PeerTrack{
+	peer := &PeerStreamTrack{
 		logger: logger,
 		track:  track,
 		listener: func(sample types.Sample) {
@@ -35,19 +35,18 @@ func (manager *WebRTCManagerCtx) newPeerTrack(stream types.StreamManager, logger
 
 	peer.SetStream(stream)
 	return peer, nil
-
 }
 
-type PeerTrack struct {
+type PeerStreamTrack struct {
 	logger   zerolog.Logger
 	track    *webrtc.TrackLocalStaticSample
 	listener func(sample types.Sample)
 
-	streamMu sync.Mutex
 	stream   types.StreamManager
+	streamMu sync.Mutex
 }
 
-func (peer *PeerTrack) SetStream(stream types.StreamManager) error {
+func (peer *PeerStreamTrack) SetStream(stream types.StreamManager) error {
 	peer.streamMu.Lock()
 	defer peer.streamMu.Unlock()
 
@@ -75,7 +74,7 @@ func (peer *PeerTrack) SetStream(stream types.StreamManager) error {
 	return nil
 }
 
-func (peer *PeerTrack) RemoveStream() {
+func (peer *PeerStreamTrack) RemoveStream() {
 	peer.streamMu.Lock()
 	defer peer.streamMu.Unlock()
 
@@ -85,7 +84,7 @@ func (peer *PeerTrack) RemoveStream() {
 	}
 }
 
-func (peer *PeerTrack) AddToConnection(connection *webrtc.PeerConnection) error {
+func (peer *PeerStreamTrack) AddToConnection(connection *webrtc.PeerConnection) error {
 	sender, err := connection.AddTrack(peer.track)
 	if err != nil {
 		return err
