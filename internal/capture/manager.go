@@ -13,9 +13,9 @@ import (
 )
 
 type CaptureManagerCtx struct {
-	logger     zerolog.Logger
-	desktop    types.DesktopManager
-	streaming  bool
+	logger  zerolog.Logger
+	desktop types.DesktopManager
+
 	broadcast  *BroacastManagerCtx
 	screencast *ScreencastManagerCtx
 	audio      *StreamManagerCtx
@@ -92,9 +92,9 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 	}
 
 	return &CaptureManagerCtx{
-		logger:     logger,
-		desktop:    desktop,
-		streaming:  false,
+		logger:  logger,
+		desktop: desktop,
+
 		broadcast:  broadcastNew(broadcastPipeline),
 		screencast: screencastNew(config.ScreencastEnabled, screencastPipeline),
 		audio: streamNew(config.AudioCodec, func() string {
