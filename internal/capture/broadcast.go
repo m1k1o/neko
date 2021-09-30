@@ -12,20 +12,28 @@ import (
 )
 
 type BroacastManagerCtx struct {
-	logger      zerolog.Logger
-	mu          sync.Mutex
-	pipelineStr string
+	logger zerolog.Logger
+	mu     sync.Mutex
+
 	pipeline    *gst.Pipeline
-	started     bool
-	url         string
+	pipelineStr string
+	pipelineMu  sync.Mutex
+
+	url     string
+	started bool
 }
 
 func broadcastNew(pipelineStr string) *BroacastManagerCtx {
+	logger := log.With().
+		Str("module", "capture").
+		Str("submodule", "broadcast").
+		Logger()
+
 	return &BroacastManagerCtx{
-		logger:      log.With().Str("module", "capture").Str("submodule", "broadcast").Logger(),
+		logger:      logger,
 		pipelineStr: pipelineStr,
-		started:     false,
 		url:         "",
+		started:     false,
 	}
 }
 
@@ -58,14 +66,23 @@ func (manager *BroacastManagerCtx) Stop() {
 }
 
 func (manager *BroacastManagerCtx) Started() bool {
+	manager.mu.Lock()
+	defer manager.mu.Unlock()
+
 	return manager.started
 }
 
 func (manager *BroacastManagerCtx) Url() string {
+	manager.mu.Lock()
+	defer manager.mu.Unlock()
+
 	return manager.url
 }
 
 func (manager *BroacastManagerCtx) createPipeline() error {
+	manager.pipelineMu.Lock()
+	defer manager.pipelineMu.Unlock()
+
 	if manager.pipeline != nil {
 		return types.ErrCapturePipelineAlreadyExists
 	}
@@ -89,6 +106,9 @@ func (manager *BroacastManagerCtx) createPipeline() error {
 }
 
 func (manager *BroacastManagerCtx) destroyPipeline() {
+	manager.pipelineMu.Lock()
+	defer manager.pipelineMu.Unlock()
+
 	if manager.pipeline == nil {
 		return
 	}
