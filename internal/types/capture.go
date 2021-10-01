@@ -35,11 +35,9 @@ type ScreencastManager interface {
 type StreamManager interface {
 	Codec() codec.RTPCodec
 
-	// starts pipeline if was not running before
-	// and returns dispatcher channel
-	NewListener(listener *func(sample Sample)) (dispatcher chan interface{}, err error)
-	// stops pipeline if it was last listener
-	RemoveListener(listener *func(sample Sample)) (dispatcher chan interface{})
+	AddListener(listener *func(sample Sample)) error
+	RemoveListener(listener *func(sample Sample)) error
+	MoveListenerTo(listener *func(sample Sample), targetStream StreamManager) error
 
 	ListenersCount() int
 	Started() bool

@@ -33,8 +33,8 @@ func (manager *WebRTCManagerCtx) newPeerStreamTrack(stream types.StreamManager, 
 		},
 	}
 
-	peer.SetStream(stream)
-	return peer, nil
+	err = peer.SetStream(stream)
+	return peer, err
 }
 
 type PeerStreamTrack struct {
@@ -50,28 +50,18 @@ func (peer *PeerStreamTrack) SetStream(stream types.StreamManager) error {
 	peer.streamMu.Lock()
 	defer peer.streamMu.Unlock()
 
-	// prepare new listener
-	addDispatcher, err := stream.NewListener(&peer.listener)
-	if err != nil {
-		return err
-	}
-
-	// remove previous listener (in case it existed)
-	var stopDispatcher chan interface{}
+	var err error
 	if peer.stream != nil {
-		stopDispatcher = peer.stream.RemoveListener(&peer.listener)
+		err = peer.stream.MoveListenerTo(&peer.listener, stream)
+	} else {
+		err = peer.stream.AddListener(&peer.listener)
 	}
 
-	// add new listener
-	close(addDispatcher)
-
-	// stop old pipeline (in case it existed)
-	if stopDispatcher != nil {
-		close(stopDispatcher)
+	if err != nil {
+		peer.stream = stream
 	}
 
-	peer.stream = stream
-	return nil
+	return err
 }
 
 func (peer *PeerStreamTrack) RemoveStream() {
@@ -79,8 +69,8 @@ func (peer *PeerStreamTrack) RemoveStream() {
 	defer peer.streamMu.Unlock()
 
 	if peer.stream != nil {
-		dispatcher := peer.stream.RemoveListener(&peer.listener)
-		close(dispatcher)
+		peer.stream.RemoveListener(&peer.listener)
+		peer.stream = nil
 	}
 }
 
