@@ -54,10 +54,10 @@ func (peer *PeerStreamTrack) SetStream(stream types.StreamManager) error {
 	if peer.stream != nil {
 		err = peer.stream.MoveListenerTo(&peer.listener, stream)
 	} else {
-		err = peer.stream.AddListener(&peer.listener)
+		err = stream.AddListener(&peer.listener)
 	}
 
-	if err != nil {
+	if err == nil {
 		peer.stream = stream
 	}
 
