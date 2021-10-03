@@ -42,18 +42,18 @@ export interface NekoEvents {
 }
 
 export class NekoMessages extends EventEmitter<NekoEvents> {
-  private _connection: NekoConnection
-  private _state: NekoState
   private _localLog: Logger
   private _remoteLog: Logger
 
-  constructor(connection: NekoConnection, state: NekoState) {
+  // eslint-disable-next-line
+  constructor(
+    private readonly _connection: NekoConnection,
+    private readonly _state: NekoState,
+  ) {
     super()
 
-    this._connection = connection
-    this._state = state
     this._localLog = new Logger('messages')
-    this._remoteLog = connection.getLogger('messages')
+    this._remoteLog = _connection.getLogger('messages')
 
     this._connection.websocket.on('message', async (event: string, payload: any) => {
       // @ts-ignore

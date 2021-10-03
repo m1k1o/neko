@@ -22,7 +22,6 @@ export interface NekoConnectionEvents {
 }
 
 export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
-  private _state: Connection
   private _open = false
 
   public websocket = new NekoWebSocket()
@@ -40,13 +39,15 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
 
   private _webrtcCongestionControlHandle: (stats: WebRTCStats) => void
 
-  constructor(state: Connection) {
+  // eslint-disable-next-line
+  constructor(
+    private readonly _state: Connection,
+  ) {
     super()
 
-    this._state = state
     this._reconnector = {
-      websocket: new Reconnector(new WebsocketReconnector(state, this.websocket), state.websocket.config),
-      webrtc: new Reconnector(new WebrtcReconnector(state, this.websocket, this.webrtc), state.webrtc.config),
+      websocket: new Reconnector(new WebsocketReconnector(_state, this.websocket), _state.websocket.config),
+      webrtc: new Reconnector(new WebrtcReconnector(_state, this.websocket, this.webrtc), _state.webrtc.config),
     }
 
     this._onConnectHandle = () => {

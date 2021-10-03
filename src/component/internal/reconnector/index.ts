@@ -31,7 +31,6 @@ export interface ReconnectorEvents {
 }
 
 export class Reconnector extends EventEmitter<ReconnectorEvents> {
-  private _conn: ReconnectorAbstract
   private _config: ReconnectorConfig
   private _timeout?: number
 
@@ -42,10 +41,13 @@ export class Reconnector extends EventEmitter<ReconnectorEvents> {
   private _onConnectHandle: () => void
   private _onDisconnectHandle: (error?: Error) => void
 
-  constructor(conn: ReconnectorAbstract, config?: ReconnectorConfig) {
+  // eslint-disable-next-line
+  constructor(
+    private readonly _conn: ReconnectorAbstract,
+    config?: ReconnectorConfig,
+  ) {
     super()
 
-    this._conn = conn
     this._config = {
       max_reconnects: 10,
       timeout_ms: 1500,

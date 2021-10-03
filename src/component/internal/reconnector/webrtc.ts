@@ -7,19 +7,16 @@ import { NekoWebRTC } from '../webrtc'
 import { ReconnectorAbstract } from '.'
 
 export class WebrtcReconnector extends ReconnectorAbstract {
-  private _state: Connection
-  private _websocket: NekoWebSocket
-  private _webrtc: NekoWebRTC
-
   private _onConnectHandle: () => void
   private _onDisconnectHandle: (error?: Error) => void
 
-  constructor(state: Connection, websocket: NekoWebSocket, webrtc: NekoWebRTC) {
+  // eslint-disable-next-line
+  constructor(
+    private readonly _state: Connection,
+    private readonly _websocket: NekoWebSocket,
+    private readonly _webrtc: NekoWebRTC,
+  ) {
     super()
-
-    this._state = state
-    this._websocket = websocket
-    this._webrtc = webrtc
 
     this._onConnectHandle = () => this.emit('connect')
     this._webrtc.on('connected', this._onConnectHandle)

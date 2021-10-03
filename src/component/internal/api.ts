@@ -1,7 +1,7 @@
 import * as Api from '../api'
 
 export class NekoApi {
-  private _config = new Api.Configuration({
+  private readonly _config = new Api.Configuration({
     basePath: location.href.replace(/\/+$/, ''),
     baseOptions: { withCredentials: true },
   })

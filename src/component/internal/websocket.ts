@@ -10,12 +10,12 @@ export interface NekoWebSocketEvents {
 
 export class NekoWebSocket extends EventEmitter<NekoWebSocketEvents> {
   private _ws?: WebSocket
-  private _log: Logger
 
-  constructor(logger?: Logger) {
+  // eslint-disable-next-line
+  constructor(
+    private readonly _log: Logger = new Logger('websocket'),
+  ) {
     super()
-
-    this._log = logger || new Logger('websocket')
   }
 
   get supported() {

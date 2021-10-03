@@ -33,13 +33,13 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
   private _track?: MediaStreamTrack
   private _state: RTCIceConnectionState = 'disconnected'
   private _candidates: RTCIceCandidateInit[] = []
-  private _log: Logger
   private _statsStop?: () => void
 
-  constructor(logger?: Logger) {
+  // eslint-disable-next-line
+  constructor(
+    private readonly _log: Logger = new Logger('webrtc'),
+  ) {
     super()
-
-    this._log = logger || new Logger('webrtc')
   }
 
   get supported() {

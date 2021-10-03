@@ -5,17 +5,15 @@ import { NekoWebSocket } from '../websocket'
 import { ReconnectorAbstract } from '.'
 
 export class WebsocketReconnector extends ReconnectorAbstract {
-  private _state: Connection
-  private _websocket: NekoWebSocket
-
   private _onConnectHandle: () => void
   private _onDisconnectHandle: (error?: Error) => void
 
-  constructor(state: Connection, websocket: NekoWebSocket) {
+  // eslint-disable-next-line
+  constructor(
+    private readonly _state: Connection,
+    private readonly _websocket: NekoWebSocket,
+  ) {
     super()
-
-    this._state = state
-    this._websocket = websocket
 
     this._onConnectHandle = () => this.emit('connect')
     this._websocket.on('connected', this._onConnectHandle)

@@ -8,14 +8,14 @@ const FLUSH_TIMEOUT_MS = 250
 const RETRY_INTERVAL_MS = 2500
 
 export class NekoLoggerFactory {
-  private _ws: NekoWebSocket
   private _logs: message.SystemLog[] = []
   private _timeout: number | null = null
   private _interval: number | null = null
 
-  constructor(websocket: NekoWebSocket) {
-    this._ws = websocket
-  }
+  // eslint-disable-next-line
+  constructor(
+    private readonly _ws: NekoWebSocket,
+  ) {}
 
   private _flush() {
     if (this._logs.length > 0) {

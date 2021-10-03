@@ -1,11 +1,8 @@
 export class Logger {
-  protected _scope: string = 'main'
-
-  constructor(scope?: string) {
-    if (scope) {
-      this._scope = scope
-    }
-  }
+  // eslint-disable-next-line
+  constructor(
+    protected readonly _scope: string = 'main',
+  ) {}
 
   protected _console(level: string, m: string, fields?: Record<string, any>) {
     let t = ''
