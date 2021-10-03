@@ -92,6 +92,7 @@ For n.eko room management software, visit https://github.com/m1k1o/neko-rooms.
 - Fixed very fast scroll speed on macOS.
 - Broadcast pipeline errors are reported to the user.
 - On stopping server all websocket connections are going to be gracefully disconnected.
+- ARM-based images not bound to Raspberry Pi only.
 
 # Getting started & FAQ
 
@@ -112,7 +113,7 @@ For ARM-based devices (like Raspberry Pi, with GPU hardware acceleration):
 - `m1k1o/neko:arm-chromium` - for Chromium.
 - `m1k1o/neko:arm-base` - for custom arm based.
 
-Images are built using GitHub actions on every push and on weekly basis to keep all browsers up-to-date,
+Images (except `arm-`) are built using GitHub actions on every push and on weekly basis to keep all browsers up-to-date,
 
 ### Networking:
 - If you want to use n.eko in **external** network, you can omit `NEKO_NAT1TO1`. It will automatically get your Public IP.
@@ -333,7 +334,7 @@ services:
 
 ## Raspberry Pi
 
-Note! Since this pipeline is using H264, that enables GPU HW acceleration for Raspberry Pi, you are only able to connect from browsers supporting H264 for WebRTC. At the time of implementing, [Firefox does not support this](https://developer.mozilla.org/en-US/docs/Web/Media/Formats/WebRTC_codecs#supported-foot-1).
+Note! Since HW accelerated pipeline is using H264, you are only able to connect from browsers supporting H264 for WebRTC. At the time of implementing, [Firefox does not support this](https://developer.mozilla.org/en-US/docs/Web/Media/Formats/WebRTC_codecs#supported-foot-1). When omitting `NEKO_VIDEO` and `NEKO_H264` parameters, you get default CPU encoding with VP8.
 
 ```yaml
 version: "3.4"
@@ -346,14 +347,16 @@ services:
     ports:
       - "8088:8080"
       - "52000-52100:52000-52100/udp"
-    # this is important since we need a GPU for hardware acceleration alternatively mount the devices into the docker.
+    # note: this is important since we need a GPU for hardware acceleration alternatively
+    #       mount the devices into the docker.
     privileged: true
     environment:
       NEKO_SCREEN: '1280x720@30'
       NEKO_PASSWORD: 'neko'
       NEKO_PASSWORD_ADMIN: 'admin'
       NEKO_EPR: 52000-52100
-      # optional: change target bitrate and framerate on this parameter.
+      # note: when setting NEKO_VIDEO, then variables NEKO_MAX_FPS and NEKO_VIDEO_BITRATE
+      #       are not being used, you can adjust them in this variable.
       NEKO_VIDEO: |
         ximagesrc display-name=%s use-damage=0 show-pointer=true use-damage=false
           ! video/x-raw,framerate=30/1
@@ -363,6 +366,7 @@ services:
           ! v4l2h264enc extra-controls="controls,h264_profile=0,video_bitrate=1250000;"
           ! h264parse config-interval=3
           ! video/x-h264,profile=baseline,stream-format=byte-stream
+      NEKO_H264: 1
 ```
 
 ## Not using docker?
@@ -442,6 +446,6 @@ NEKO_ICESERVERS:
   - [More information](https://developer.mozilla.org/en-US/docs/Web/API/RTCIceServer)
 ```
 
-# How to contribute?
+# How to contribute? How to build?
 
 Navigate to [.m1k1o/README.md](.m1k1o/README.md) for further information.
