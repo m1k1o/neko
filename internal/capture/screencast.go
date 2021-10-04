@@ -27,8 +27,8 @@ type ScreencastManagerCtx struct {
 
 	image        types.Sample
 	sample       chan types.Sample
-	sampleStop   chan interface{}
-	sampleUpdate chan interface{}
+	sampleStop   chan struct{}
+	sampleUpdate chan struct{}
 
 	enabled bool
 	started bool
@@ -44,8 +44,8 @@ func screencastNew(enabled bool, pipelineStr string) *ScreencastManagerCtx {
 	manager := &ScreencastManagerCtx{
 		logger:       logger,
 		pipelineStr:  pipelineStr,
-		sampleStop:   make(chan interface{}),
-		sampleUpdate: make(chan interface{}),
+		sampleStop:   make(chan struct{}),
+		sampleUpdate: make(chan struct{}),
 		enabled:      enabled,
 		started:      false,
 	}

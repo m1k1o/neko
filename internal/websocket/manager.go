@@ -30,7 +30,7 @@ func New(
 
 	return &WebSocketManagerCtx{
 		logger:   logger,
-		shutdown: make(chan interface{}),
+		shutdown: make(chan struct{}),
 		sessions: sessions,
 		desktop:  desktop,
 		handler:  handler.New(sessions, desktop, capture, webrtc),
@@ -41,7 +41,7 @@ func New(
 type WebSocketManagerCtx struct {
 	logger   zerolog.Logger
 	wg       sync.WaitGroup
-	shutdown chan interface{}
+	shutdown chan struct{}
 	sessions types.SessionManager
 	desktop  types.DesktopManager
 	handler  *handler.MessageHandlerCtx

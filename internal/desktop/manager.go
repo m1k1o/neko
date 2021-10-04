@@ -19,7 +19,7 @@ var mu = sync.Mutex{}
 type DesktopManagerCtx struct {
 	logger   zerolog.Logger
 	wg       sync.WaitGroup
-	shutdown chan interface{}
+	shutdown chan struct{}
 	emmiter  events.EventEmmiter
 	config   *config.Desktop
 }
@@ -27,7 +27,7 @@ type DesktopManagerCtx struct {
 func New(config *config.Desktop) *DesktopManagerCtx {
 	return &DesktopManagerCtx{
 		logger:   log.With().Str("module", "desktop").Logger(),
-		shutdown: make(chan interface{}),
+		shutdown: make(chan struct{}),
 		emmiter:  events.New(),
 		config:   config,
 	}

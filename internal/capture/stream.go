@@ -26,8 +26,8 @@ type StreamManagerCtx struct {
 	pipelineStr func() string
 
 	sample       chan types.Sample
-	sampleStop   chan interface{}
-	sampleUpdate chan interface{}
+	sampleStop   chan struct{}
+	sampleUpdate chan struct{}
 
 	listeners   map[uintptr]*func(sample types.Sample)
 	listenersMu sync.Mutex
@@ -43,8 +43,8 @@ func streamNew(codec codec.RTPCodec, pipelineStr func() string, video_id string)
 		logger:       logger,
 		codec:        codec,
 		pipelineStr:  pipelineStr,
-		sampleStop:   make(chan interface{}),
-		sampleUpdate: make(chan interface{}),
+		sampleStop:   make(chan struct{}),
+		sampleUpdate: make(chan struct{}),
 		listeners:    map[uintptr]*func(sample types.Sample){},
 	}
 
