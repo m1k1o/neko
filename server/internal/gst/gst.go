@@ -14,7 +14,7 @@ import (
 	"time"
 	"unsafe"
 
-	"n.eko.moe/neko/internal/types"
+	"m1k1o/neko/internal/types"
 )
 
 /*

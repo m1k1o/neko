@@ -8,8 +8,8 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"n.eko.moe/neko/internal/types"
-	"n.eko.moe/neko/internal/utils"
+	"m1k1o/neko/internal/types"
+	"m1k1o/neko/internal/utils"
 )
 
 func New(remote types.RemoteManager) *SessionManager {

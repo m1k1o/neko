@@ -1,7 +1,7 @@
 package message
 
 import (
-	"n.eko.moe/neko/internal/types"
+	"m1k1o/neko/internal/types"
 
 	"github.com/pion/webrtc/v3"
 )

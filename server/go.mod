@@ -1,4 +1,4 @@
-module n.eko.moe/neko
+module m1k1o/neko
 
 go 1.17
 

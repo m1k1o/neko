@@ -7,4 +7,4 @@ GIT_COMMIT=`git rev-parse --short HEAD`
 GIT_BRANCH=`git rev-parse --symbolic-full-name --abbrev-ref HEAD`
 GIT_DIRTY=`git diff-index --quiet HEAD -- || echo "✗-"`
 
-go build -o bin/neko -ldflags "-s -X 'n.eko.moe/neko.buildDate=${BUILD_TIME}' -X 'n.eko.moe/neko.gitCommit=${GIT_DIRTY}${GIT_COMMIT}' -X 'n.eko.moe/neko.gitBranch=${GIT_BRANCH}'" -i cmd/neko/main.go
+go build -o bin/neko -ldflags "-s -X 'm1k1o/neko.buildDate=${BUILD_TIME}' -X 'm1k1o/neko.gitCommit=${GIT_DIRTY}${GIT_COMMIT}' -X 'm1k1o/neko.gitBranch=${GIT_BRANCH}'" -i cmd/neko/main.go

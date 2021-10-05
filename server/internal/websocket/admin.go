@@ -3,9 +3,9 @@ package websocket
 import (
 	"strings"
 
-	"n.eko.moe/neko/internal/types"
-	"n.eko.moe/neko/internal/types/event"
-	"n.eko.moe/neko/internal/types/message"
+	"m1k1o/neko/internal/types"
+	"m1k1o/neko/internal/types/event"
+	"m1k1o/neko/internal/types/message"
 )
 
 func (h *MessageHandler) adminLock(id string, session types.Session) error {

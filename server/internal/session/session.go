@@ -1,10 +1,11 @@
 package session
 
 import (
+	"m1k1o/neko/internal/types"
+	"m1k1o/neko/internal/types/event"
+	"m1k1o/neko/internal/types/message"
+
 	"github.com/rs/zerolog"
-	"n.eko.moe/neko/internal/types"
-	"n.eko.moe/neko/internal/types/event"
-	"n.eko.moe/neko/internal/types/message"
 )
 
 type Session struct {

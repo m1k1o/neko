@@ -5,10 +5,11 @@ import (
 	"strconv"
 	"strings"
 
+	"m1k1o/neko/internal/utils"
+
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"n.eko.moe/neko/internal/utils"
 
 	"github.com/pion/webrtc/v3"
 )

@@ -11,9 +11,9 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"n.eko.moe/neko/internal/http/middleware"
-	"n.eko.moe/neko/internal/types"
-	"n.eko.moe/neko/internal/types/config"
+	"m1k1o/neko/internal/http/middleware"
+	"m1k1o/neko/internal/types"
+	"m1k1o/neko/internal/types/config"
 )
 
 type Server struct {
