@@ -16,6 +16,8 @@ export const connect = {
   password: 'Mot de passe',
   connect: 'Connexion',
   error: 'Erreur de connexion',
+  // TODO
+  //empty_displayname: 'Display Name cannot be empty.',
 }
 
 export const context = {
@@ -63,8 +65,8 @@ export const setting = {
   ignore_emotes: 'Ignorer les Emotes',
   chat_sound: 'Jouer le son du tchat',
   keyboard_layout: 'Langue du clavier',
-  broadcast_is_active: 'Broadcast activé',
-  broadcast_url: 'RTMP URL',
+  // TODO
+  //broadcast_title: 'Live Broadcast',
 }
 
 export const connection = {

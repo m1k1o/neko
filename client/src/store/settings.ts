@@ -70,13 +70,13 @@ export const mutations = mutationTree(state, {
 export const actions = actionTree(
   { state, getters, mutations },
   {
-    initialise() {
-      $http
-        .get<KeyboardLayouts>('keyboard_layouts.json')
-        .then((req) => {
-          accessor.settings.setKeyboardLayoutsList(req.data)
-        })
-        .catch(console.error)
+    async initialise() {
+      try {
+        const req = await $http.get<KeyboardLayouts>('keyboard_layouts.json')
+        accessor.settings.setKeyboardLayoutsList(req.data)
+      } catch (err: any) {
+        console.error(err)
+      }
     },
 
     broadcastStatus({ getters }, { url, isActive }) {

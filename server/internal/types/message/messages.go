@@ -10,8 +10,9 @@ type Message struct {
 	Event string `json:"event"`
 }
 
-type Disconnect struct {
+type SystemMessage struct {
 	Event   string `json:"event"`
+	Title   string `json:"title"`
 	Message string `json:"message"`
 }
 

@@ -44,19 +44,23 @@
           <span />
         </label>
       </li>
-      <template v-if="admin">
-        <li>
-          <span>{{ $t('setting.broadcast_is_active') }}</span>
-          <label class="switch">
-            <input type="checkbox" v-model="broadcast_is_active" />
-            <span />
-          </label>
-        </li>
-        <li>
-          <span>{{ $t('setting.broadcast_url') }}</span>
-          <input v-model="broadcast_url" :disabled="broadcast_is_active" class="input" />
-        </li>
-      </template>
+      <li class="broadcast" v-if="admin">
+        <div>
+          <span>{{ $t('setting.broadcast_title') }}</span>
+          <button v-if="!broadcast_is_active" @click.stop.prevent="$accessor.settings.broadcastCreate(broadcast_url)">
+            <i class="fas fa-play"></i>
+          </button>
+          <button v-else @click.stop.prevent="$accessor.settings.broadcastDestroy()" class="btn-red">
+            <i class="fas fa-stop"></i>
+          </button>
+        </div>
+        <input
+          v-model="broadcast_url"
+          :disabled="broadcast_is_active"
+          class="input"
+          placeholder="rtmp://a.rtmp.youtube.com/live2/<stream-key>"
+        />
+      </li>
       <li v-if="connected">
         <button @click.stop.prevent="logout">{{ $t('logout') }}</button>
       </li>
@@ -266,6 +270,34 @@
             background: none;
           }
         }
+
+        &.broadcast {
+          display: flex;
+          flex-direction: column;
+
+          div {
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+
+            button {
+              flex-shrink: 1;
+              width: auto !important;
+              margin: 0;
+              padding: 0 10px;
+
+              &.btn-red {
+                background: #a62626;
+              }
+            }
+          }
+
+          .input {
+            text-align: left;
+            width: auto !important;
+            margin: 0;
+          }
+        }
       }
     }
   }
@@ -336,14 +368,6 @@
 
     get broadcast_is_active() {
       return this.$accessor.settings.broadcast_is_active
-    }
-
-    set broadcast_is_active(value: boolean) {
-      if (value) {
-        this.$accessor.settings.broadcastCreate(this.broadcast_url)
-      } else {
-        this.$accessor.settings.broadcastDestroy()
-      }
     }
 
     get broadcast_url_remote() {

@@ -50,10 +50,12 @@ export interface WebSocketMessage {
   SYSTEM MESSAGES/PAYLOADS
 */
 // system/disconnect
-export interface DisconnectMessage extends WebSocketMessage, DisconnectPayload {
-  event: typeof EVENT.SYSTEM.DISCONNECT
+// system/error
+export interface SystemMessage extends WebSocketMessage, SystemMessagePayload {
+  event: typeof EVENT.SYSTEM.DISCONNECT | typeof EVENT.SYSTEM.ERROR
 }
-export interface DisconnectPayload {
+export interface SystemMessagePayload {
+  title: string
   message: string
 }
 

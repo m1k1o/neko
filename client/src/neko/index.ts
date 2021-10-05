@@ -6,7 +6,7 @@ import { EVENT } from './events'
 import { accessor } from '~/store'
 
 import {
-  DisconnectPayload,
+  SystemMessagePayload,
   SignalProvidePayload,
   MemberListPayload,
   MemberDisconnectPayload,
@@ -130,7 +130,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   /////////////////////////////
   // System Events
   /////////////////////////////
-  protected [EVENT.SYSTEM.DISCONNECT]({ message }: DisconnectPayload) {
+  protected [EVENT.SYSTEM.DISCONNECT]({ message }: SystemMessagePayload) {
     if (message == 'kicked') {
       this.$accessor.logout()
       message = this.$vue.$t('connection.kicked') as string
@@ -140,6 +140,15 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
 
     this.$vue.$swal({
       title: this.$vue.$t('connection.disconnected'),
+      text: message,
+      icon: 'error',
+      confirmButtonText: this.$vue.$t('connection.button_confirm') as string,
+    })
+  }
+
+  protected [EVENT.SYSTEM.ERROR]({ title, message }: SystemMessagePayload) {
+    this.$vue.$swal({
+      title,
       text: message,
       icon: 'error',
       confirmButtonText: this.$vue.$t('connection.button_confirm') as string,

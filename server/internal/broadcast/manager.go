@@ -1,6 +1,8 @@
 package broadcast
 
 import (
+	"sync"
+
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
@@ -9,6 +11,7 @@ import (
 )
 
 type BroadcastManager struct {
+	mu       sync.Mutex
 	logger   zerolog.Logger
 	pipeline *gst.Pipeline
 	remote   *config.Remote
@@ -27,9 +30,9 @@ func New(remote *config.Remote, config *config.Broadcast) *BroadcastManager {
 	}
 }
 
-func (manager *BroadcastManager) Start() {
+func (manager *BroadcastManager) Start() error {
 	if !manager.enabled || manager.IsActive() {
-		return
+		return nil
 	}
 
 	var err error
@@ -40,18 +43,19 @@ func (manager *BroadcastManager) Start() {
 		manager.url,
 	)
 
+	if err != nil {
+		manager.pipeline = nil
+		return err
+	}
+
 	manager.logger.Info().
 		Str("audio_device", manager.remote.Device).
 		Str("video_display", manager.remote.Display).
 		Str("rtmp_pipeline_src", manager.pipeline.Src).
 		Msgf("RTMP pipeline is starting...")
 
-	if err != nil {
-		manager.logger.Panic().Err(err).Msg("unable to create rtmp pipeline")
-		return
-	}
-
 	manager.pipeline.Play()
+	return nil
 }
 
 func (manager *BroadcastManager) Stop() {
@@ -67,13 +71,25 @@ func (manager *BroadcastManager) IsActive() bool {
 	return manager.pipeline != nil
 }
 
-func (manager *BroadcastManager) Create(url string) {
+func (manager *BroadcastManager) Create(url string) error {
+	manager.mu.Lock()
+	defer manager.mu.Unlock()
+
 	manager.url = url
 	manager.enabled = true
-	manager.Start()
+
+	err := manager.Start()
+	if err != nil {
+		manager.enabled = false
+	}
+
+	return err
 }
 
 func (manager *BroadcastManager) Destroy() {
+	manager.mu.Lock()
+	defer manager.mu.Unlock()
+
 	manager.Stop()
 	manager.enabled = false
 }

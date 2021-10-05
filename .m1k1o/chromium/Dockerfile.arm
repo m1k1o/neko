@@ -4,8 +4,8 @@ FROM $BASE_IMAGE
 #
 # install neko chromium
 RUN set -eux; apt-get update; \
-    apt-get install -y --no-install-recommends chromium-browser openbox libwidevinecdm0; \
-    ln -s /usr/bin/chromium-browser /usr/bin/chromium; \
+    # TODO: Bring back DRM support with arm32v7/debian:buster-slim image.
+    apt-get install -y --no-install-recommends chromium openbox; \
     #
     # clean up
     apt-get clean -y; \

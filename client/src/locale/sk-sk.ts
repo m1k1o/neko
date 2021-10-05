@@ -15,6 +15,8 @@ export const connect = {
   displayname: 'Vaše meno',
   password: 'Heslo',
   connect: 'Pripojiť sa',
+  error: 'Chyba pri prihlasovaní',
+  empty_displayname: 'Meno nemôže byť prázdne.',
 }
 
 export const context = {
@@ -63,8 +65,7 @@ export const setting = {
   ignore_emotes: 'Ignorovať smajlíky',
   chat_sound: 'Prehrávať zvuky chatu',
   keyboard_layout: 'Rozloženie klávesnice',
-  broadcast_is_active: 'Zapnúť vysielanie',
-  broadcast_url: 'RTMP adresa',
+  broadcast_title: 'Živé vysielanie',
 }
 
 export const connection = {

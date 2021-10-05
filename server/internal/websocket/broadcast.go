@@ -12,7 +12,18 @@ func (h *MessageHandler) boradcastCreate(session types.Session, payload *message
 		return nil
 	}
 
-	h.broadcast.Create(payload.URL)
+	pipelineErr := h.broadcast.Create(payload.URL)
+	if pipelineErr != nil {
+		if err := session.Send(
+			message.SystemMessage{
+				Event:   event.SYSTEM_ERROR,
+				Title:   "Error while starting broadcast",
+				Message: pipelineErr.Error(),
+			}); err != nil {
+			h.logger.Warn().Err(err).Msgf("sending event %s has failed", event.SYSTEM_ERROR)
+			return err
+		}
+	}
 
 	if err := h.boradcastStatus(session); err != nil {
 		return err

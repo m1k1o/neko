@@ -4,8 +4,8 @@ FROM $BASE_IMAGE
 #
 # install firefox-esr
 RUN set -eux; apt-get update; \
-    apt-get install -y --no-install-recommends openbox firefox-esr libwidevinecdm0; \
-    ln -s /usr/lib/firefox-esr/firefox-esr /usr/bin/firefox; \
+    # TODO: Bring back DRM support with arm32v7/debian:buster-slim image.
+    apt-get install -y --no-install-recommends openbox firefox-esr; \
     #
     # install extensions
     mkdir -p /usr/lib/firefox-esr/distribution/extensions; \

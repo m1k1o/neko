@@ -1,7 +1,7 @@
 #
 # STAGE 1: SERVER
 #
-FROM golang:1.16-buster as server
+FROM golang:1.17-bullseye as server
 WORKDIR /src
 
 #
@@ -32,7 +32,7 @@ RUN go get -v -t -d . && go build -o bin/neko cmd/neko/main.go
 #
 # STAGE 2: CLIENT
 #
-FROM node:14-buster-slim as client
+FROM node:14-bullseye-slim as client
 WORKDIR /src
 
 #
@@ -48,7 +48,7 @@ RUN npm run build
 #
 # STAGE 3: RUNTIME
 #
-FROM debian:buster-slim
+FROM debian:bullseye-slim
 
 #
 # avoid warnings by switching to noninteractive
@@ -64,8 +64,8 @@ ARG USER_GID=$USER_UID
 # install dependencies
 RUN set -eux; apt-get update; \
     apt-get install -y --no-install-recommends wget ca-certificates supervisor; \
-    apt-get install -y --no-install-recommends pulseaudio dbus-x11 xserver-xorg-video-dummy xserver-xorg-input-void; \
-    apt-get install -y --no-install-recommends libcairo2 libxcb1 libxrandr2 libxv1 libopus0 libvpx5; \
+    apt-get install -y --no-install-recommends pulseaudio dbus-x11 xserver-xorg-video-dummy; \
+    apt-get install -y --no-install-recommends libcairo2 libxcb1 libxrandr2 libxv1 libopus0 libvpx6; \
     #
     # gst
     apt-get install -y --no-install-recommends libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \

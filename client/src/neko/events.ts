@@ -11,6 +11,7 @@ export const EVENT = {
   // Websocket Events
   SYSTEM: {
     DISCONNECT: 'system/disconnect',
+    ERROR: 'system/error',
   },
   SIGNAL: {
     ANSWER: 'signal/answer',

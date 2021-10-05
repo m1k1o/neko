@@ -52,10 +52,6 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
       return
     }
 
-    if (displayname === '') {
-      throw new Error('Display Name cannot be empty.')
-    }
-
     this._displayname = displayname
     this[EVENT.CONNECTING]()
 
@@ -66,7 +62,7 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
       this._ws.onerror = (event) => this.onError.bind(this)
       this._ws.onclose = (event) => this.onDisconnected.bind(this, new Error('websocket closed'))
       this._timeout = window.setTimeout(this.onTimeout.bind(this), 15000)
-    } catch (err) {
+    } catch (err: any) {
       this.onDisconnected(err)
     }
   }
@@ -184,7 +180,7 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
     this._ws!.send(JSON.stringify({ event, ...payload }))
   }
 
-  public createPeer(sdp: string, lite: boolean, servers: RTCIceServer[]) {
+  public async createPeer(sdp: string, lite: boolean, servers: RTCIceServer[]) {
     this.emit('debug', `creating peer`)
     if (!this.socketOpen) {
       this.emit(
@@ -262,19 +258,20 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
     }
     this._candidates = []
 
-    this._peer
-      .createAnswer()
-      .then((d) => {
-        this._peer!.setLocalDescription(d)
-        this._ws!.send(
-          JSON.stringify({
-            event: EVENT.SIGNAL.ANSWER,
-            sdp: d.sdp,
-            displayname: this._displayname,
-          }),
-        )
-      })
-      .catch((err) => this.emit('error', err))
+    try {
+      const d = await this._peer.createAnswer()
+      this._peer!.setLocalDescription(d)
+
+      this._ws!.send(
+        JSON.stringify({
+          event: EVENT.SIGNAL.ANSWER,
+          sdp: d.sdp,
+          displayname: this._displayname,
+        }),
+      )
+    } catch (err: any) {
+      this.emit('error', err)
+    }
   }
 
   private onMessage(e: MessageEvent) {

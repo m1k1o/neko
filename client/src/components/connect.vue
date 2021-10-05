@@ -204,23 +204,23 @@
       }
     }
 
-    async login() {
+    login() {
       let password = this.password
       if (this.autoPassword !== null) {
         password = this.autoPassword
       }
 
-      try {
-        await this.$accessor.login({ displayname: this.displayname, password })
-
-        this.autoPassword = null
-      } catch (err) {
+      if (this.displayname == '') {
         this.$swal({
           title: this.$t('connect.error') as string,
-          text: err.message,
+          text: this.$t('connect.empty_displayname') as string,
           icon: 'error',
         })
+        return
       }
+
+      this.$accessor.login({ displayname: this.displayname, password })
+      this.autoPassword = null
     }
 
     about() {

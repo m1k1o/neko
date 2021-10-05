@@ -3,6 +3,7 @@ package websocket
 import (
 	"fmt"
 	"net/http"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -22,6 +23,7 @@ func New(sessions types.SessionManager, remote types.RemoteManager, broadcast ty
 
 	return &WebSocketHandler{
 		logger:   logger,
+		shutdown: make(chan interface{}),
 		conf:     conf,
 		sessions: sessions,
 		remote:   remote,
@@ -48,13 +50,14 @@ const pingPeriod = 60 * time.Second
 
 type WebSocketHandler struct {
 	logger   zerolog.Logger
+	wg       sync.WaitGroup
+	shutdown chan interface{}
 	upgrader websocket.Upgrader
 	sessions types.SessionManager
 	remote   types.RemoteManager
 	conf     *config.WebSocket
 	handler  *MessageHandler
 	conns    uint32
-	shutdown chan bool
 }
 
 func (ws *WebSocketHandler) Start() error {
@@ -82,9 +85,11 @@ func (ws *WebSocketHandler) Start() error {
 		}
 	})
 
+	ws.wg.Add(1)
 	go func() {
 		defer func() {
 			ws.logger.Info().Msg("shutdown")
+			ws.wg.Done()
 		}()
 
 		current := ws.remote.ReadClipboard()
@@ -116,7 +121,8 @@ func (ws *WebSocketHandler) Start() error {
 }
 
 func (ws *WebSocketHandler) Shutdown() error {
-	ws.shutdown <- true
+	close(ws.shutdown)
+	ws.wg.Wait()
 	return nil
 }
 
@@ -133,7 +139,7 @@ func (ws *WebSocketHandler) Upgrade(w http.ResponseWriter, r *http.Request) erro
 	if err != nil {
 		ws.logger.Warn().Err(err).Msg("authentication failed")
 
-		if err = connection.WriteJSON(message.Disconnect{
+		if err = connection.WriteJSON(message.SystemMessage{
 			Event:   event.SYSTEM_DISCONNECT,
 			Message: "invalid_password",
 		}); err != nil {
@@ -160,7 +166,7 @@ func (ws *WebSocketHandler) Upgrade(w http.ResponseWriter, r *http.Request) erro
 	}
 
 	if !ok {
-		if err = connection.WriteJSON(message.Disconnect{
+		if err = connection.WriteJSON(message.SystemMessage{
 			Event:   event.SYSTEM_DISCONNECT,
 			Message: reason,
 		}); err != nil {
@@ -250,11 +256,13 @@ func (ws *WebSocketHandler) handle(connection *websocket.Conn, id string) {
 	cancel := make(chan struct{})
 	ticker := time.NewTicker(pingPeriod)
 
+	ws.wg.Add(1)
 	go func() {
 		defer func() {
 			ticker.Stop()
 			ws.logger.Debug().Str("address", connection.RemoteAddr().String()).Msg("handle socket ending")
 			ws.handler.Disconnected(id)
+			ws.wg.Done()
 		}()
 
 		for {
@@ -283,6 +291,18 @@ func (ws *WebSocketHandler) handle(connection *websocket.Conn, id string) {
 			if err := ws.handler.Message(id, raw); err != nil {
 				ws.logger.Error().Err(err).Msg("message handler has failed")
 			}
+		case <-ws.shutdown:
+			if err := connection.WriteJSON(message.SystemMessage{
+				Event:   event.SYSTEM_DISCONNECT,
+				Message: "server_shutdown",
+			}); err != nil {
+				ws.logger.Err(err).Msg("failed to send disconnect")
+			}
+
+			if err := connection.Close(); err != nil {
+				ws.logger.Err(err).Msg("connection closed with an error")
+			}
+			return
 		case <-cancel:
 			return
 		case <-ticker.C:

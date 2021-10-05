@@ -165,64 +165,64 @@
       this.context.open(event, data)
     }
 
-    kick(member: Member) {
-      this.$swal({
+    async kick(member: Member) {
+      const value = await this.$swal({
         title: this.$t('context.confirm.kick_title', { name: member.displayname }) as string,
         text: this.$t('context.confirm.kick_text', { name: member.displayname }) as string,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonText: this.$t('context.confirm.button_yes') as string,
         cancelButtonText: this.$t('context.confirm.button_cancel') as string,
-      }).then(({ value }) => {
-        if (value) {
-          this.$accessor.user.kick(member)
-        }
       })
+
+      if (value) {
+        this.$accessor.user.kick(member)
+      }
     }
 
-    ban(member: Member) {
-      this.$swal({
+    async ban(member: Member) {
+      const value = await this.$swal({
         title: this.$t('context.confirm.ban_title', { name: member.displayname }) as string,
         text: this.$t('context.confirm.ban_text', { name: member.displayname }) as string,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonText: this.$t('context.confirm.button_yes') as string,
         cancelButtonText: this.$t('context.confirm.button_cancel') as string,
-      }).then(({ value }) => {
-        if (value) {
-          this.$accessor.user.ban(member)
-        }
       })
+
+      if (value) {
+        this.$accessor.user.ban(member)
+      }
     }
 
-    mute(member: Member) {
-      this.$swal({
+    async mute(member: Member) {
+      const value = await this.$swal({
         title: this.$t('context.confirm.mute_title', { name: member.displayname }) as string,
         text: this.$t('context.confirm.mute_text', { name: member.displayname }) as string,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonText: this.$t('context.confirm.button_yes') as string,
         cancelButtonText: this.$t('context.confirm.button_cancel') as string,
-      }).then(({ value }) => {
-        if (value) {
-          this.$accessor.user.mute(member)
-        }
       })
+
+      if (value) {
+        this.$accessor.user.mute(member)
+      }
     }
 
-    unmute(member: Member) {
-      this.$swal({
+    async unmute(member: Member) {
+      const value = await this.$swal({
         title: this.$t('context.confirm.unmute_title', { name: member.displayname }) as string,
         text: this.$t('context.confirm.unmute_text', { name: member.displayname }) as string,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonText: this.$t('context.confirm.button_yes') as string,
         cancelButtonText: this.$t('context.confirm.button_cancel') as string,
-      }).then(({ value }) => {
-        if (value) {
-          this.$accessor.user.unmute(member)
-        }
       })
+
+      if (value) {
+        this.$accessor.user.unmute(member)
+      }
     }
 
     adminRelease(member: Member) {

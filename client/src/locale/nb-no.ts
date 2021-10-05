@@ -16,6 +16,8 @@ export const connect = {
   password: 'Passord',
   connect: 'Koble til',
   error: 'Innloggingsfeil',
+  // TODO
+  //empty_displayname: 'Display Name cannot be empty.',
 }
 
 export const context = {
@@ -63,8 +65,8 @@ export const setting = {
   ignore_emotes: 'Ignorer smilefjes',
   chat_sound: 'Sludringslyd',
   keyboard_layout: 'Tastaturoppsett',
-  broadcast_is_active: 'Kringkasting påslått',
-  broadcast_url: 'RTMP-nettadresse',
+  // TODO
+  //broadcast_title: 'Live Broadcast',
 }
 
 export const connection = {

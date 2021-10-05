@@ -56,7 +56,9 @@ func (manager *RemoteManager) Start() {
 	}
 
 	manager.createPipelines()
-	manager.broadcast.Start()
+	if err := manager.broadcast.Start(); err != nil {
+		manager.logger.Panic().Err(err).Msg("unable to create rtmp pipeline")
+	}
 
 	go func() {
 		defer func() {
@@ -171,7 +173,9 @@ func (manager *RemoteManager) ChangeResolution(width int, height int, rate int) 
 
 	defer func() {
 		manager.video.Start()
-		manager.broadcast.Start()
+		if err := manager.broadcast.Start(); err != nil {
+			manager.logger.Panic().Err(err).Msg("unable to create rtmp pipeline")
+		}
 
 		manager.logger.Info().Msg("starting video pipeline...")
 	}()
