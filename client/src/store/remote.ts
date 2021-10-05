@@ -24,7 +24,7 @@ export const getters = getterTree(state, {
     return state.id !== ''
   },
   host: (state, getters, root) => {
-    return root.user.member[state.id] || null
+    return root.user.members[state.id] || null
   },
 })
 
