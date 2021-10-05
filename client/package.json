@@ -4,13 +4,13 @@
   "description": "Client for neko streaming server",
   "license": "Apache License 2.0",
   "author": "Nurdism <https://github.com/nurdism>",
-  "homepage": "https://github.com/nurdism/neko/client#readme",
+  "homepage": "https://github.com/m1k1o/neko/client#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/nurdism/neko.git"
+    "url": "git+https://github.com/m1k1o/neko.git"
   },
   "bugs": {
-    "url": "https://github.com/nurdism/neko/issues"
+    "url": "https://github.com/m1k1o/neko/issues"
   },
   "scripts": {
     "serve": "vue-cli-service serve --mode development",

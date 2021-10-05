@@ -4,7 +4,7 @@
 
 > A self hosted virtual browser that runs in docker
 
-[GitHub](https://github.com/nurdism/neko/)
+[GitHub](https://github.com/m1k1o/neko/)
 [Get Started](#neko)
 
 <!-- background color -->
