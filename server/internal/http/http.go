@@ -7,10 +7,10 @@ import (
 	"os"
 
 	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/middleware"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"m1k1o/neko/internal/http/middleware"
 	"m1k1o/neko/internal/types"
 	"m1k1o/neko/internal/types/config"
 )
@@ -26,9 +26,9 @@ func New(conf *config.Server, webSocketHandler types.WebSocketHandler) *Server {
 	logger := log.With().Str("module", "http").Logger()
 
 	router := chi.NewRouter()
-	// router.Use(middleware.Recoverer) // Recover from panics without crashing server
 	router.Use(middleware.RequestID) // Create a request ID for each request
-	router.Use(middleware.Logger)    // Log API request calls
+	router.Use(middleware.RequestLogger(&logformatter{logger}))
+	router.Use(middleware.Recoverer) // Recover from panics without crashing server
 
 	router.Get("/ws", func(w http.ResponseWriter, r *http.Request) {
 		err := webSocketHandler.Upgrade(w, r)
