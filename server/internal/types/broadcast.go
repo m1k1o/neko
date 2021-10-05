@@ -1,6 +1,7 @@
 package types
 
 type BroadcastManager interface {
+	Shutdown() error
 	Start() error
 	Stop()
 	IsActive() bool

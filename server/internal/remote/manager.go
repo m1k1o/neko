@@ -250,7 +250,7 @@ func (manager *RemoteManager) GetScreenSize() *types.ScreenSize {
 }
 
 func (manager *RemoteManager) SetKeyboardLayout(layout string) {
-	exec.Command("setxkbmap", layout).Run()
+	_ = exec.Command("setxkbmap", layout).Run()
 }
 
 func (manager *RemoteManager) SetKeyboardModifiers(NumLock int, CapsLock int, ScrollLock int) {

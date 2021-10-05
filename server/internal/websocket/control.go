@@ -35,7 +35,10 @@ func (h *MessageHandler) controlRequest(id string, session types.Session) error 
 	// check for host
 	if !h.sessions.HasHost() {
 		// set host
-		h.sessions.SetHost(id)
+		err := h.sessions.SetHost(id)
+		if err != nil {
+			return err
+		}
 
 		// let everyone know
 		if err := h.sessions.Broadcast(
@@ -89,7 +92,10 @@ func (h *MessageHandler) controlGive(id string, session types.Session, payload *
 	}
 
 	// set host
-	h.sessions.SetHost(payload.ID)
+	err := h.sessions.SetHost(payload.ID)
+	if err != nil {
+		return err
+	}
 
 	// let everyone know
 	if err := h.sessions.Broadcast(

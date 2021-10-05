@@ -42,8 +42,8 @@ func (h *MessageHandler) Connected(admin bool, socket *WebSocket) (bool, string,
 	return true, "", nil
 }
 
-func (h *MessageHandler) Disconnected(id string) error {
-	return h.sessions.Destroy(id)
+func (h *MessageHandler) Disconnected(id string) {
+	h.sessions.Destroy(id)
 }
 
 func (h *MessageHandler) Message(id string, raw []byte) error {

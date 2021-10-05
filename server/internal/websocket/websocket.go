@@ -60,7 +60,7 @@ type WebSocketHandler struct {
 	conns    uint32
 }
 
-func (ws *WebSocketHandler) Start() error {
+func (ws *WebSocketHandler) Start() {
 	ws.sessions.OnCreated(func(id string, session types.Session) {
 		if err := ws.handler.SessionCreated(id, session); err != nil {
 			ws.logger.Warn().Str("id", id).Err(err).Msg("session created with and error")
@@ -99,25 +99,33 @@ func (ws *WebSocketHandler) Start() error {
 			case <-ws.shutdown:
 				return
 			default:
-				if ws.sessions.HasHost() {
-					text := ws.remote.ReadClipboard()
-					if text != current {
-						session, ok := ws.sessions.GetHost()
-						if ok {
-							session.Send(message.Clipboard{
-								Event: event.CONTROL_CLIPBOARD,
-								Text:  text,
-							})
-						}
-						current = text
+				time.Sleep(100 * time.Millisecond)
+
+				if !ws.sessions.HasHost() {
+					continue
+				}
+
+				text := ws.remote.ReadClipboard()
+				if text == current {
+					continue
+				}
+
+				session, ok := ws.sessions.GetHost()
+				if ok {
+					err := session.Send(message.Clipboard{
+						Event: event.CONTROL_CLIPBOARD,
+						Text:  text,
+					})
+
+					if err != nil {
+						ws.logger.Err(err).Msg("unable to synchronize clipboard")
 					}
 				}
-				time.Sleep(100 * time.Millisecond)
+
+				current = text
 			}
 		}
 	}()
-
-	return nil
 }
 
 func (ws *WebSocketHandler) Shutdown() error {

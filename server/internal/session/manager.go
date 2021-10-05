@@ -141,7 +141,7 @@ func (manager *SessionManager) Members() []*types.Member {
 	return members
 }
 
-func (manager *SessionManager) Destroy(id string) error {
+func (manager *SessionManager) Destroy(id string) {
 	manager.mu.Lock()
 	session, ok := manager.members[id]
 	if ok {
@@ -154,11 +154,11 @@ func (manager *SessionManager) Destroy(id string) error {
 		manager.mu.Unlock()
 
 		manager.emmiter.Emit("destroyed", id, session)
-		return err
+		manager.logger.Err(err).Str("session_id", id).Msg("destorying session")
+		return
 	}
 
 	manager.mu.Unlock()
-	return nil
 }
 
 func (manager *SessionManager) Clear() error {

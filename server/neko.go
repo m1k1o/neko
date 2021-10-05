@@ -136,6 +136,7 @@ func (neko *Neko) Start() {
 	server := http.New(neko.Server, webSocketHandler)
 	server.Start()
 
+	neko.broadcastManager = broadcastManager
 	neko.sessionManager = sessionManager
 	neko.remoteManager = remoteManager
 	neko.webRTCManager = webRTCManager
@@ -144,6 +145,12 @@ func (neko *Neko) Start() {
 }
 
 func (neko *Neko) Shutdown() {
+	if err := neko.broadcastManager.Shutdown(); err != nil {
+		neko.logger.Err(err).Msg("broadcast manager shutdown with an error")
+	} else {
+		neko.logger.Debug().Msg("broadcast manager shutdown")
+	}
+
 	if err := neko.remoteManager.Shutdown(); err != nil {
 		neko.logger.Err(err).Msg("remote manager shutdown with an error")
 	} else {

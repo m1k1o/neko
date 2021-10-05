@@ -15,7 +15,7 @@ type WebSocket interface {
 }
 
 type WebSocketHandler interface {
-	Start() error
+	Start()
 	Shutdown() error
 	Upgrade(w http.ResponseWriter, r *http.Request) error
 	Stats() Stats

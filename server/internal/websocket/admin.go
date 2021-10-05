@@ -66,7 +66,10 @@ func (h *MessageHandler) adminControl(id string, session types.Session) error {
 
 	host, ok := h.sessions.GetHost()
 
-	h.sessions.SetHost(id)
+	err := h.sessions.SetHost(id)
+	if err != nil {
+		return err
+	}
 
 	if ok {
 		if err := h.sessions.Broadcast(
@@ -138,7 +141,10 @@ func (h *MessageHandler) adminGive(id string, session types.Session, payload *me
 	}
 
 	// set host
-	h.sessions.SetHost(payload.ID)
+	err := h.sessions.SetHost(payload.ID)
+	if err != nil {
+		return err
+	}
 
 	// let everyone know
 	if err := h.sessions.Broadcast(

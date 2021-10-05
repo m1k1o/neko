@@ -47,7 +47,7 @@ func init() {
 			}
 
 			if _, err := os.Stat(logs); os.IsNotExist(err) {
-				os.Mkdir(logs, os.ModePerm)
+				_ = os.Mkdir(logs, os.ModePerm)
 			}
 
 			latest := filepath.Join(logs, "neko-latest.log")

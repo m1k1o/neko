@@ -93,7 +93,7 @@ func (manager *WebRTCManager) CreatePeer(id string, session types.Session) (stri
 		settings.SetLite(true)
 	}
 
-	settings.SetEphemeralUDPPortRange(manager.config.EphemeralMin, manager.config.EphemeralMax)
+	_ = settings.SetEphemeralUDPPortRange(manager.config.EphemeralMin, manager.config.EphemeralMax)
 	settings.SetNAT1To1IPs(manager.config.NAT1To1IPs, webrtc.ICECandidateTypeHost)
 	settings.SetICETimeouts(6*time.Second, 6*time.Second, 3*time.Second)
 	settings.SetSRTPReplayProtectionWindow(512)
@@ -101,8 +101,8 @@ func (manager *WebRTCManager) CreatePeer(id string, session types.Session) (stri
 	// Create MediaEngine based off sdp
 	engine := webrtc.MediaEngine{}
 
-	engine.RegisterCodec(manager.audioCodec, webrtc.RTPCodecTypeAudio)
-	engine.RegisterCodec(manager.videoCodec, webrtc.RTPCodecTypeVideo)
+	_ = engine.RegisterCodec(manager.audioCodec, webrtc.RTPCodecTypeAudio)
+	_ = engine.RegisterCodec(manager.videoCodec, webrtc.RTPCodecTypeVideo)
 
 	i := &interceptor.Registry{}
 	if err := webrtc.RegisterDefaultInterceptors(&engine, i); err != nil {

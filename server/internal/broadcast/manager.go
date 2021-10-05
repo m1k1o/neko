@@ -30,6 +30,11 @@ func New(remote *config.Remote, config *config.Broadcast) *BroadcastManager {
 	}
 }
 
+func (manager *BroadcastManager) Shutdown() error {
+	manager.Destroy()
+	return nil
+}
+
 func (manager *BroadcastManager) Start() error {
 	if !manager.enabled || manager.IsActive() {
 		return nil

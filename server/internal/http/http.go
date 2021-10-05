@@ -3,7 +3,6 @@ package http
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"os"
 
@@ -32,21 +31,22 @@ func New(conf *config.Server, webSocketHandler types.WebSocketHandler) *Server {
 	router.Use(middleware.Logger)    // Log API request calls
 
 	router.Get("/ws", func(w http.ResponseWriter, r *http.Request) {
-		webSocketHandler.Upgrade(w, r)
+		err := webSocketHandler.Upgrade(w, r)
+		if err != nil {
+			logger.Warn().Err(err).Msg("failed to upgrade websocket conection")
+		}
 	})
 
 	router.Get("/stats", func(w http.ResponseWriter, r *http.Request) {
 		password := r.URL.Query().Get("pwd")
 		isAdmin, err := webSocketHandler.IsAdmin(password)
 		if err != nil {
-			w.WriteHeader(http.StatusForbidden)
-			fmt.Fprint(w, err)
+			http.Error(w, err.Error(), http.StatusForbidden)
 			return
 		}
 
 		if !isAdmin {
-			w.WriteHeader(http.StatusUnauthorized)
-			fmt.Fprint(w, "bad authorization")
+			http.Error(w, "bad authorization", http.StatusUnauthorized)
 			return
 		}
 
@@ -59,7 +59,7 @@ func New(conf *config.Server, webSocketHandler types.WebSocketHandler) *Server {
 	})
 
 	router.Get("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("true"))
+		_, _ = w.Write([]byte("true"))
 	})
 
 	fs := http.FileServer(http.Dir(conf.Static))
@@ -67,8 +67,7 @@ func New(conf *config.Server, webSocketHandler types.WebSocketHandler) *Server {
 		if _, err := os.Stat(conf.Static + r.URL.Path); !os.IsNotExist(err) {
 			fs.ServeHTTP(w, r)
 		} else {
-			w.WriteHeader(http.StatusNotFound)
-			fmt.Fprint(w, "404 page not found")
+			http.NotFound(w, r)
 		}
 	})
 

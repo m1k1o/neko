@@ -38,7 +38,7 @@ type SessionManager interface {
 	Get(id string) (Session, bool)
 	Members() []*Member
 	Admins() []*Member
-	Destroy(id string) error
+	Destroy(id string)
 	Clear() error
 	Broadcast(v interface{}, exclude interface{}) error
 	OnHost(listener func(id string))
