@@ -53,7 +53,7 @@ RUN npm run build
 #
 # STAGE 3: RUNTIME
 #
-FROM balenalib/raspberry-pi-debian:latest
+FROM arm32v7/debian:buster-slim
 
 #
 # avoid warnings by switching to noninteractive
