@@ -118,8 +118,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 		return nil, err
 	}
 
-	audioTrack.AddToConnection(connection)
-	if err != nil {
+	if err := audioTrack.AddToConnection(connection); err != nil {
 		return nil, err
 	}
 
@@ -130,8 +129,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 		return nil, err
 	}
 
-	videoTrack.AddToConnection(connection)
-	if err != nil {
+	if err := videoTrack.AddToConnection(connection); err != nil {
 		return nil, err
 	}
 
@@ -157,6 +155,20 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 		iceTrickle: manager.config.ICETrickle,
 	}
 
+	connection.OnConnectionStateChange(func(state webrtc.PeerConnectionState) {
+		switch state {
+		case webrtc.PeerConnectionStateConnected:
+			session.SetWebRTCConnected(peer, true)
+		case webrtc.PeerConnectionStateDisconnected,
+			webrtc.PeerConnectionStateFailed:
+			connection.Close()
+		case webrtc.PeerConnectionStateClosed:
+			session.SetWebRTCConnected(peer, false)
+			videoTrack.RemoveStream()
+			audioTrack.RemoveStream()
+		}
+	})
+
 	cursorImage := func(entry *cursor.ImageEntry) {
 		if err := peer.SendCursorImage(entry.Cursor, entry.Image); err != nil {
 			logger.Err(err).Msg("could not send cursor image")
@@ -172,20 +184,6 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 			logger.Err(err).Msg("could not send cursor position")
 		}
 	}
-
-	connection.OnConnectionStateChange(func(state webrtc.PeerConnectionState) {
-		switch state {
-		case webrtc.PeerConnectionStateConnected:
-			session.SetWebRTCConnected(peer, true)
-		case webrtc.PeerConnectionStateDisconnected,
-			webrtc.PeerConnectionStateFailed:
-			connection.Close()
-		case webrtc.PeerConnectionStateClosed:
-			session.SetWebRTCConnected(peer, false)
-			videoTrack.RemoveStream()
-			audioTrack.RemoveStream()
-		}
-	})
 
 	dataChannel.OnOpen(func() {
 		manager.curImage.AddListener(&cursorImage)
@@ -214,7 +212,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 			return
 		}
 
-		if err = manager.handle(message.Data, session); err != nil {
+		if err := manager.handle(message.Data, session); err != nil {
 			logger.Err(err).Msg("data handle failed")
 		}
 	})

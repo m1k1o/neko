@@ -69,7 +69,7 @@ func (peer *PeerStreamTrack) RemoveStream() {
 	defer peer.streamMu.Unlock()
 
 	if peer.stream != nil {
-		peer.stream.RemoveListener(&peer.listener)
+		_ = peer.stream.RemoveListener(&peer.listener)
 		peer.stream = nil
 	}
 }
