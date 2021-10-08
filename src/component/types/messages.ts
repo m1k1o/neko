@@ -26,7 +26,7 @@ export interface SystemAdmin {
 export type SystemLogs = SystemLog[]
 
 export interface SystemLog {
-  level: "debug" | "info" | "warn" | "error"
+  level: 'debug' | 'info' | 'warn' | 'error'
   fields: Record<string, string>
   message: string
 }
