@@ -2,7 +2,7 @@ name: "CI for builds"
 
 on:
   push:
-    branches: [ dev ]
+    branches: [ master ]
   #
   # Run this action periodically to keep browsers up-to-date
   # even if there is no activity in this repo.
