@@ -14,6 +14,7 @@
             ? state.sessions[state.control.host_id].profile.name
             : ''
         "
+        :cursorDraw="cursorDrawFunction"
         :implicitControl="state.control.implicit_hosting && state.sessions[state.session_id].profile.can_host"
         @implicitControlRequest="connection.websocket.send('control/request')"
         @implicitControlRelease="connection.websocket.send('control/release')"
@@ -65,6 +66,7 @@
 
   import { ReconnectorConfig } from './types/reconnector'
   import NekoState from './types/state'
+  import { Dimension, CursorDrawFunction } from './types/overlay'
   import Overlay from './overlay.vue'
   import Screencast from './screencast.vue'
 
@@ -82,10 +84,8 @@
 
     api = new NekoApi()
     observer = new ResizeObserver(this.onResize.bind(this))
-    canvasSize: { width: number; height: number } = {
-      width: 0,
-      height: 0,
-    }
+    canvasSize: Dimension = { width: 0, height: 0 }
+    cursorDrawFunction: CursorDrawFunction | null = null
 
     @Prop({ type: String })
     private readonly server!: string
@@ -339,6 +339,10 @@
 
     public setKeyboard(layout: string, variant: string = '') {
       Vue.set(this.state.control, 'keyboard', { layout, variant })
+    }
+
+    public setCursorDrawFunction(fn?: CursorDrawFunction) {
+      Vue.set(this, 'cursorDrawFunction', fn)
     }
 
     // TODO: Remove? Use REST API only?

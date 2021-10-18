@@ -38,25 +38,19 @@
   import { getFilesFromDataTansfer } from './utils/file-upload'
   import { NekoWebRTC } from './internal/webrtc'
   import { Scroll } from './types/state'
-
-  const INACTIVE_CURSOR =
-    'url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAACEUlEQVR4nOzWz6sSURQH8O+89zJ5C32LKbAgktCSaPpBSL' +
-    'uSNtHqLcOV+BeIGxei0oCtFME/wI0bF4GCK6mNuAghH7xFlBAO7bQoA/Vik3riyghTaCQzTsLzbIZZDPdzzj3nzt3Df44dYDsBRNSYTqcn5XL5KoADy1VERL' +
-    'Is02g0+phIJG4BsFkOEEVxjhgOh59kWb5rKWIBWCAGg0EnFovdtgyhB+grkU6n7wA4ZzlgCWKzlVgGsLQnVgE2gVh7xvP5PH9ciUajFQDHyWTyHQDVKOS3+F' +
-    'sF/pyOcDh83Uhj/nMFBEFANpuF0+nUQ92SJD0G8AXAdwAz0wE+nw8OhwPNZhPj8RiBQOC0Vqu9EgSBcrnc11Qq9R7AeW5cd/GVsdgCr9dLiqJQtVqdv/v9fm' +
-    'KM9UVRfArgJoBrAC4DsJsOcLlc1Gg0qNVqVRljI0mS5oh6vU6lUukFgEta5gemLr4AFAoF6nQ6b20223G73X6ZyWTmgFAoRL1ej3f+DQ1gfqiq+qbf73/weD' +
-    'zPADwoFouPut3uzO12UyQSoclkotrt9ocAHKZnr8UhAP4bvg/gIs+UMfaaMTZTFOUkHo8/B/AEwAWjl5pV+j1dZ//g4xUMBo8YY/cqlcqhNvffAJxq40dmA5' +
-    'bFPoAjrev5EfwZQNfoKbju/u1ri/PvfgKYGMl+K2I7b8U7wA5wpgC/AgAA///Yyif1MZXzRQAAAABJRU5ErkJggg==) 4 4, crosshair'
+  import { CursorPosition, CursorImage } from './types/webrtc'
+  import { CursorDrawFunction, Dimension, KeyboardModifiers } from './types/overlay'
 
   const WHEEL_STEP = 53 // Delta threshold for a mouse wheel step
   const WHEEL_LINE_HEIGHT = 19
+  const CANVAS_SCALE = 2
 
   @Component({
     name: 'neko-overlay',
   })
   export default class extends Vue {
     @Ref('overlay') readonly _overlay!: HTMLCanvasElement
-    private _ctx: any = null
+    private _ctx!: CanvasRenderingContext2D
 
     private keyboard = GuacamoleKeyboard()
     private focused = false
@@ -68,13 +62,16 @@
     private readonly scroll!: Scroll
 
     @Prop()
-    private readonly screenSize!: { width: number; height: number }
+    private readonly screenSize!: Dimension
 
     @Prop()
-    private readonly canvasSize!: { width: number; height: number }
+    private readonly canvasSize!: Dimension
 
     @Prop()
     private readonly cursorTag!: string
+
+    @Prop()
+    private readonly cursorDraw!: CursorDrawFunction | null
 
     @Prop()
     private readonly isControling!: boolean
@@ -83,11 +80,7 @@
     private readonly implicitControl!: boolean
 
     get cursor(): string {
-      if (!this.isControling) {
-        return INACTIVE_CURSOR
-      }
-
-      if (!this.cursorImage) {
+      if (!this.isControling || !this.cursorImage) {
         return 'auto'
       }
 
@@ -96,12 +89,16 @@
     }
 
     mounted() {
-      this._ctx = this._overlay.getContext('2d')
+      // get canvas overlay context
+      const ctx = this._overlay.getContext('2d')
+      if (ctx != null) {
+        this._ctx = ctx
+      }
 
       // synchronize intrinsic with extrinsic dimensions
       const { width, height } = this._overlay.getBoundingClientRect()
-      this._overlay.width = width
-      this._overlay.height = height
+      this._overlay.width = width * CANVAS_SCALE
+      this._overlay.height = height * CANVAS_SCALE
 
       // Initialize Guacamole Keyboard
       this.keyboard.onkeydown = (key: number) => {
@@ -136,7 +133,7 @@
       this.webrtc.addListener('cursor-position', this.onCursorPosition)
       this.webrtc.addListener('cursor-image', this.onCursorImage)
       this.webrtc.addListener('disconnected', this.canvasClear)
-      this.cursorElement.onload = this.canvasRedraw
+      this.cursorElement.onload = this.canvasRequestRedraw
     }
 
     beforeDestroy() {
@@ -331,7 +328,7 @@
     // keyboard modifiers
     //
 
-    private keyboardModifiers: { capslock: boolean; numlock: boolean } | null = null
+    private keyboardModifiers: KeyboardModifiers | null = null
 
     updateKeyboardModifiers(e: MouseEvent) {
       const capslock = e.getModifierState('CapsLock')
@@ -350,37 +347,26 @@
     // canvas
     //
 
-    private cursorImage: { width: number; height: number; x: number; y: number; uri: string } | null = null
+    private cursorImage: CursorImage | null = null
     private cursorElement: HTMLImageElement = new Image()
-    private cursorPosition: { x: number; y: number } | null = null
-
-    @Watch('cursorTag')
-    onCursorTagChange() {
-      if (!this.isControling) {
-        this.canvasRedraw()
-      }
-    }
+    private cursorPosition: CursorPosition | null = null
+    private canvasRequestedFrame = false
 
     @Watch('canvasSize')
-    onCanvasSizeChange({ width, height }: { width: number; height: number }) {
-      this._overlay.width = width
-      this._overlay.height = height
-
-      if (this.isControling) {
-        this.canvasClear()
-      } else {
-        this.canvasRedraw()
-      }
+    onCanvasSizeChange({ width, height }: Dimension) {
+      this._overlay.width = width * CANVAS_SCALE
+      this._overlay.height = height * CANVAS_SCALE
+      this.canvasRequestRedraw()
     }
 
-    onCursorPosition(data: { x: number; y: number }) {
+    onCursorPosition(data: CursorPosition) {
       if (!this.isControling) {
         Vue.set(this, 'cursorPosition', data)
-        this.canvasRedraw()
+        this.canvasRequestRedraw()
       }
     }
 
-    onCursorImage(data: { width: number; height: number; x: number; y: number; uri: string }) {
+    onCursorImage(data: CursorImage) {
       Vue.set(this, 'cursorImage', data)
 
       if (!this.isControling) {
@@ -388,27 +374,61 @@
       }
     }
 
+    @Watch('cursorDraw')
+    @Watch('cursorTag')
+    canvasRequestRedraw() {
+      // skip rendering if there is already in progress
+      if (this.canvasRequestedFrame) return
+
+      // request animation frame from a browser
+      this.canvasRequestedFrame = true
+      window.requestAnimationFrame(() => {
+        if (this.isControling) {
+          this.canvasClear()
+        } else {
+          this.canvasRedraw()
+        }
+
+        this.canvasRequestedFrame = false
+      })
+    }
+
     canvasRedraw() {
       if (this.cursorPosition == null || this.screenSize == null || this.cursorImage == null) return
 
-      // get intrinsic dimensions
-      const { width, height } = this._overlay
-
       // clear drawings
-      this._ctx.clearRect(0, 0, width, height)
+      this.canvasClear()
 
       // ignore hidden cursor
       if (this.cursorImage.width <= 1 && this.cursorImage.height <= 1) return
 
-      // redraw cursor
-      let x = Math.round((this.cursorPosition.x / this.screenSize.width) * width - this.cursorImage.x)
-      let y = Math.round((this.cursorPosition.y / this.screenSize.height) * height - this.cursorImage.y)
-      this._ctx.drawImage(this.cursorElement, x, y, this.cursorImage.width, this.cursorImage.height)
+      // get intrinsic dimensions
+      let { width, height } = this.canvasSize
+      this._ctx.setTransform(CANVAS_SCALE, 0, 0, CANVAS_SCALE, 0, 0)
 
-      // redraw cursor tag
+      // get cursor position
+      let x = Math.round((this.cursorPosition.x / this.screenSize.width) * width)
+      let y = Math.round((this.cursorPosition.y / this.screenSize.height) * height)
+
+      // use custom draw function, if available
+      if (this.cursorDraw) {
+        this.cursorDraw(this._ctx, x, y, this.cursorElement, this.cursorImage, this.cursorTag)
+        return
+      }
+
+      // draw cursor image
+      this._ctx.drawImage(
+        this.cursorElement,
+        x - this.cursorImage.x,
+        y - this.cursorImage.y,
+        this.cursorImage.width,
+        this.cursorImage.height,
+      )
+
+      // draw cursor tag
       if (this.cursorTag) {
-        x += this.cursorImage.width + this.cursorImage.x
-        y += this.cursorImage.height + this.cursorImage.y
+        x += this.cursorImage.width
+        y += this.cursorImage.height
 
         this._ctx.save()
         this._ctx.font = '14px Arial, sans-serif'
@@ -451,11 +471,7 @@
         this.webrtc.send('mouseup', { key: this.reqMouseUp.button + 1 })
       }
 
-      if (isControling) {
-        this.canvasClear()
-      } else {
-        this.canvasRedraw()
-      }
+      this.canvasRequestRedraw()
 
       this.reqMouseDown = null
       this.reqMouseUp = null

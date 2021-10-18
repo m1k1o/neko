@@ -1,5 +1,5 @@
 import EventEmitter from 'eventemitter3'
-import { WebRTCStats } from '../types/webrtc'
+import { WebRTCStats, CursorPosition, CursorImage } from '../types/webrtc'
 import { Logger } from '../utils/logger'
 
 export const OPCODE = {
@@ -23,8 +23,8 @@ export interface NekoWebRTCEvents {
   track: (event: RTCTrackEvent) => void
   candidate: (candidate: RTCIceCandidateInit) => void
   stats: (stats: WebRTCStats) => void
-  ['cursor-position']: (data: { x: number; y: number }) => void
-  ['cursor-image']: (data: { width: number; height: number; x: number; y: number; uri: string }) => void
+  ['cursor-position']: (data: CursorPosition) => void
+  ['cursor-image']: (data: CursorImage) => void
 }
 
 export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
