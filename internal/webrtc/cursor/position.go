@@ -6,21 +6,17 @@ import (
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-
-	"demodesk/neko/internal/types"
 )
 
-func NewPosition(desktop types.DesktopManager) *PositionCtx {
+func NewPosition() *PositionCtx {
 	return &PositionCtx{
 		logger:    log.With().Str("module", "webrtc").Str("submodule", "cursor-position").Logger(),
-		desktop:   desktop,
 		listeners: map[uintptr]*func(x, y int){},
 	}
 }
 
 type PositionCtx struct {
 	logger    zerolog.Logger
-	desktop   types.DesktopManager
 	emitMu    sync.Mutex
 	listeners map[uintptr]*func(x, y int)
 }
@@ -33,10 +29,6 @@ func (manager *PositionCtx) Shutdown() {
 		delete(manager.listeners, key)
 	}
 	manager.emitMu.Unlock()
-}
-
-func (manager *PositionCtx) Get() (x, y int) {
-	return manager.desktop.GetCursorPosition()
 }
 
 func (manager *PositionCtx) Set(x, y int) {

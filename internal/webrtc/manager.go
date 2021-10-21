@@ -34,7 +34,7 @@ func New(desktop types.DesktopManager, capture types.CaptureManager, config *con
 		desktop:     desktop,
 		capture:     capture,
 		curImage:    cursor.NewImage(desktop),
-		curPosition: cursor.NewPosition(desktop),
+		curPosition: cursor.NewPosition(),
 	}
 }
 
@@ -198,7 +198,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 		}
 
 		// send initial cursor position
-		x, y := manager.curPosition.Get()
+		x, y := manager.desktop.GetCursorPosition()
 		cursorPosition(x, y)
 	})
 
