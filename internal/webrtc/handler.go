@@ -12,17 +12,25 @@ func (manager *WebRTCManagerCtx) handle(data []byte, session types.Session) erro
 	// add session id to logger context
 	logger := manager.logger.With().Str("session_id", session.ID()).Logger()
 
-	buffer := bytes.NewBuffer(data)
-	header := &payload.Header{}
-	hbytes := make([]byte, 3)
+	//
+	// parse header
+	//
 
+	buffer := bytes.NewBuffer(data)
+
+	hbytes := make([]byte, 3)
 	if _, err := buffer.Read(hbytes); err != nil {
 		return err
 	}
 
+	header := &payload.Header{}
 	if err := binary.Read(bytes.NewBuffer(hbytes), binary.BigEndian, header); err != nil {
 		return err
 	}
+
+	//
+	// parse body
+	//
 
 	buffer = bytes.NewBuffer(data)
 
