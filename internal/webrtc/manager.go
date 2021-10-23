@@ -208,10 +208,6 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 	})
 
 	dataChannel.OnMessage(func(message webrtc.DataChannelMessage) {
-		if !session.IsHost() {
-			return
-		}
-
 		if err := manager.handle(message.Data, session); err != nil {
 			logger.Err(err).Msg("data handle failed")
 		}

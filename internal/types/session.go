@@ -23,6 +23,9 @@ type Session interface {
 	State() SessionState
 	IsHost() bool
 
+	// cursor position
+	SetPosition(x, y int)
+
 	// websocket
 	SetWebSocketPeer(websocketPeer WebSocketPeer)
 	SetWebSocketConnected(websocketPeer WebSocketPeer, connected bool)

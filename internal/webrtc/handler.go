@@ -34,15 +34,36 @@ func (manager *WebRTCManagerCtx) handle(data []byte, session types.Session) erro
 
 	buffer = bytes.NewBuffer(data)
 
-	switch header.Event {
-	case payload.OP_MOVE:
+	// handle cursor move event
+	if header.Event == payload.OP_MOVE {
 		payload := &payload.Move{}
 		if err := binary.Read(buffer, binary.BigEndian, payload); err != nil {
 			return err
 		}
 
-		manager.desktop.Move(int(payload.X), int(payload.Y))
-		manager.curPosition.Set(int(payload.X), int(payload.Y))
+		x, y := int(payload.X), int(payload.Y)
+
+		// handle active cursor movement
+		if session.IsHost() {
+			manager.desktop.Move(x, y)
+			manager.curPosition.Set(x, y)
+			return nil
+		}
+
+		// handle inactive cursor movement
+		if session.Profile().CanHost {
+			session.SetPosition(x, y)
+		}
+
+		return nil
+	}
+
+	// continue only if session is host
+	if !session.IsHost() {
+		return nil
+	}
+
+	switch header.Event {
 	case payload.OP_SCROLL:
 		payload := &payload.Scroll{}
 		if err := binary.Read(buffer, binary.BigEndian, payload); err != nil {

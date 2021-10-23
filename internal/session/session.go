@@ -16,6 +16,10 @@ type SessionCtx struct {
 	profile types.MemberProfile
 	state   types.SessionState
 
+	positionX  int
+	positionY  int
+	positionMu sync.Mutex
+
 	websocketPeer types.WebSocketPeer
 	websocketMu   sync.Mutex
 
@@ -51,6 +55,18 @@ func (session *SessionCtx) State() types.SessionState {
 
 func (session *SessionCtx) IsHost() bool {
 	return session.manager.GetHost() == session
+}
+
+// ---
+// cursor position
+// ---
+
+func (session *SessionCtx) SetPosition(x, y int) {
+	session.positionMu.Lock()
+	defer session.positionMu.Unlock()
+
+	session.positionX = x
+	session.positionY = y
 }
 
 // ---
