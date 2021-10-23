@@ -1,13 +1,52 @@
-# Using Apache for proxy pass and SSL
+# Behind reverse proxy?
+
+## Traefik2
+
+```yaml
+labels:
+  - "traefik.enable=true"
+  - "traefik.http.services.neko-frontend.loadbalancer.server.port=8080"
+  - "traefik.http.routers.neko.rule=${TRAEFIK_RULE}"
+  - "traefik.http.routers.neko.entrypoints=${TRAEFIK_ENTRYPOINTS}"
+  - "traefik.http.routers.neko.tls.certresolver=${TRAEFIK_CERTRESOLVER}"
+```
+
+(by @m1k1o, [example](https://github.com/m1k1o/neko-vpn/blob/a1b934515dcf597992a515d61d307c2450a11002/docker-compose.yml#L38-L43))
+
+## Nginx
+
+```conf
+server {
+  listen 443 ssl http2;
+  server_name example.com;
+
+  location / {
+    proxy_pass http://127.0.0.1:8080;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_read_timeout 86400;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $remote_addr;
+    proxy_set_header X-Forwarded-Host $host;
+    proxy_set_header X-Forwarded-Port $server_port;
+    proxy_set_header X-Forwarded-Protocol $scheme;
+  }
+}
+```
+
+(by @GigaFyde, [source](https://github.com/nurdism/neko/issues/111#issuecomment-742656957))
+
+## Apache
 
 After successfully installing and running neko, you might want to get rid of the port in the url, use DNS instead of IP address and also having SSL.
 This will remove the port from the URL and also enables HTTPS.
-To do this, you have to get running apache server. Now you can go into the ```/etc/apache2/sites-available``` folder and create new config file for example ```neko.conf```
+To do this, you have to get running apache server. Now you can go into the `/etc/apache2/sites-available` folder and create new config file for example `neko.conf`
 After creating new config file, you can use this example config and paste it in. Some thing might vary on your machine so read through and modify if needed.
 Bear in mind that your neko server doesn't have to run on the same computer as apache. They just have to be on the same network and then you replace localhost with correct internal IP.
 
-## Example apache config
-```apache
+```xml
 <VirtualHost *:80>
         # The ServerName directive sets the request scheme, hostname and port that
         # the server uses to identify itself. This is used when creating
@@ -52,9 +91,26 @@ Bear in mind that your neko server doesn't have to run on the same computer as a
 </VirtualHost>
 ```
 
-After creating your new config file, just use ```sudo a2ensite neko.conf``` and then ```sudo systemctl reload apache2```
+(by @DarkReaper231, [source](https://github.com/nurdism/neko/blob/cad98a62a5bd7f1daf2c11980631bb14ba81a1f6/docs/apache-proxypass-config.md#example-apache-config))
 
-# Enabling SSL
+After creating your new config file, just use `sudo a2ensite neko.conf` and then `sudo systemctl reload apache2`
 
-If you want to use SSL for your apache configuration, you can install certbot and use it with ```sudo certbot```
-Then you can just select both ```example.com``` and ```www.example.com``` and apply. This will copy your ```neko.conf``` file and creates one for SSL.
+### Enabling SSL
+
+If you want to use SSL for your apache configuration, you can install certbot and use it with `sudo certbot`
+Then you can just select both `example.com` and `www.example.com` and apply. This will copy your `neko.conf` file and creates one for SSL.
+
+## Caddy
+
+```conf
+https://example.com {
+  reverse_proxy localhost:8080 {
+    header_up Host {host}
+    header_up X-Real-IP {remote_host}
+    header_up X-Forwarded-For {remote_host}
+    header_up X-Forwarded-Proto {scheme}
+  }
+}
+```
+
+(by @ccallahan, [source](https://github.com/nurdism/neko/pull/125/commits/eb4ceda75423b0d960c8aea0240acf6d7a10fef4))
