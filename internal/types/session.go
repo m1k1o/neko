@@ -12,6 +12,11 @@ var (
 	ErrSessionLoginDisabled    = errors.New("session login disabled")
 )
 
+type Cursor struct {
+	X int
+	Y int
+}
+
 type SessionState struct {
 	IsConnected bool `json:"is_connected"`
 	IsWatching  bool `json:"is_watching"`
@@ -23,8 +28,8 @@ type Session interface {
 	State() SessionState
 	IsHost() bool
 
-	// cursor position
-	SetPosition(x, y int)
+	// cursor
+	SetCursor(x, y int)
 
 	// websocket
 	SetWebSocketPeer(websocketPeer WebSocketPeer)
@@ -49,6 +54,9 @@ type SessionManager interface {
 	SetHost(host Session)
 	GetHost() Session
 	ClearHost()
+
+	SetCursor(x, y int, session Session)
+	PopCursors() map[Session]Cursor
 
 	Broadcast(event string, payload interface{}, exclude interface{})
 	AdminBroadcast(event string, payload interface{}, exclude interface{})

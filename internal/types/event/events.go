@@ -21,6 +21,7 @@ const (
 	SESSION_DELETED = "session/deleted"
 	SESSION_PROFILE = "session/profile"
 	SESSION_STATE   = "session/state"
+	SESSION_CURSORS = "session/cursors"
 )
 
 const (

@@ -132,6 +132,41 @@ func (manager *WebSocketManagerCtx) Start() {
 
 	manager.fileChooserDialogEvents()
 
+	manager.wg.Add(1)
+	go func() {
+		defer manager.wg.Done()
+
+		ticker := time.NewTicker(500 * time.Millisecond)
+		defer ticker.Stop()
+
+		for {
+			select {
+			case <-manager.shutdown:
+				return
+			case <-ticker.C:
+				cursorsMap := manager.sessions.PopCursors()
+				if len(cursorsMap) == 0 {
+					continue
+				}
+
+				cursors := []message.SessionCursor{}
+				for session, cursor := range cursorsMap {
+					cursors = append(
+						cursors,
+						message.SessionCursor{
+							ID: session.ID(),
+							X:  uint16(cursor.X),
+							Y:  uint16(cursor.Y),
+						},
+					)
+				}
+
+				// TODO: Send to subscribers only.
+				manager.sessions.AdminBroadcast(event.SESSION_CURSORS, cursors, nil)
+			}
+		}
+	}()
+
 	manager.logger.Info().Msg("websocket starting")
 }
 

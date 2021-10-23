@@ -87,6 +87,12 @@ type SessionData struct {
 	State   types.SessionState  `json:"state"`
 }
 
+type SessionCursor struct {
+	ID string `json:"id"`
+	X  uint16 `json:"x"`
+	Y  uint16 `json:"y"`
+}
+
 /////////////////////////////
 // Control
 /////////////////////////////

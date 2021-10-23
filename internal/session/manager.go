@@ -15,14 +15,12 @@ import (
 
 func New(config *config.Session) *SessionManagerCtx {
 	manager := &SessionManagerCtx{
-		logger:     log.With().Str("module", "session").Logger(),
-		config:     config,
-		host:       nil,
-		hostMu:     sync.Mutex{},
-		tokens:     make(map[string]string),
-		sessions:   make(map[string]*SessionCtx),
-		sessionsMu: sync.Mutex{},
-		emmiter:    events.New(),
+		logger:   log.With().Str("module", "session").Logger(),
+		config:   config,
+		tokens:   make(map[string]string),
+		sessions: make(map[string]*SessionCtx),
+		cursors:  make(map[types.Session]types.Cursor),
+		emmiter:  events.New(),
 	}
 
 	// create API session
@@ -48,13 +46,19 @@ func New(config *config.Session) *SessionManagerCtx {
 }
 
 type SessionManagerCtx struct {
-	logger     zerolog.Logger
-	config     *config.Session
-	host       types.Session
-	hostMu     sync.Mutex
+	logger zerolog.Logger
+	config *config.Session
+
 	tokens     map[string]string
 	sessions   map[string]*SessionCtx
 	sessionsMu sync.Mutex
+
+	host   types.Session
+	hostMu sync.Mutex
+
+	cursors   map[types.Session]types.Cursor
+	cursorsMu sync.Mutex
+
 	emmiter    events.EventEmmiter
 	apiSession *SessionCtx
 }
@@ -191,6 +195,32 @@ func (manager *SessionManagerCtx) GetHost() types.Session {
 
 func (manager *SessionManagerCtx) ClearHost() {
 	manager.SetHost(nil)
+}
+
+// ---
+// cursors
+// ---
+
+func (manager *SessionManagerCtx) SetCursor(x, y int, session types.Session) {
+	manager.cursorsMu.Lock()
+	defer manager.cursorsMu.Unlock()
+
+	pos, ok := manager.cursors[session]
+	if ok {
+		pos.X, pos.Y = x, y
+	} else {
+		manager.cursors[session] = types.Cursor{X: x, Y: y}
+	}
+}
+
+func (manager *SessionManagerCtx) PopCursors() map[types.Session]types.Cursor {
+	manager.cursorsMu.Lock()
+	defer manager.cursorsMu.Unlock()
+
+	cursors := manager.cursors
+	manager.cursors = make(map[types.Session]types.Cursor)
+
+	return cursors
 }
 
 // ---

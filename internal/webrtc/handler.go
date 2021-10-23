@@ -52,7 +52,7 @@ func (manager *WebRTCManagerCtx) handle(data []byte, session types.Session) erro
 
 		// handle inactive cursor movement
 		if session.Profile().CanHost {
-			session.SetPosition(x, y)
+			session.SetCursor(x, y)
 		}
 
 		return nil
