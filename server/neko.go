@@ -145,35 +145,22 @@ func (neko *Neko) Start() {
 }
 
 func (neko *Neko) Shutdown() {
-	if err := neko.broadcastManager.Shutdown(); err != nil {
-		neko.logger.Err(err).Msg("broadcast manager shutdown with an error")
-	} else {
-		neko.logger.Debug().Msg("broadcast manager shutdown")
-	}
+	var err error
 
-	if err := neko.remoteManager.Shutdown(); err != nil {
-		neko.logger.Err(err).Msg("remote manager shutdown with an error")
-	} else {
-		neko.logger.Debug().Msg("remote manager shutdown")
-	}
+	err = neko.broadcastManager.Shutdown()
+	neko.logger.Err(err).Msg("broadcast manager shutdown")
 
-	if err := neko.webRTCManager.Shutdown(); err != nil {
-		neko.logger.Err(err).Msg("webrtc manager shutdown with an error")
-	} else {
-		neko.logger.Debug().Msg("webrtc manager shutdown")
-	}
+	err = neko.remoteManager.Shutdown()
+	neko.logger.Err(err).Msg("remote manager shutdown")
 
-	if err := neko.webSocketHandler.Shutdown(); err != nil {
-		neko.logger.Err(err).Msg("websocket handler shutdown with an error")
-	} else {
-		neko.logger.Debug().Msg("websocket handler shutdown")
-	}
+	err = neko.webRTCManager.Shutdown()
+	neko.logger.Err(err).Msg("webrtc manager shutdown")
 
-	if err := neko.server.Shutdown(); err != nil {
-		neko.logger.Err(err).Msg("server shutdown with an error")
-	} else {
-		neko.logger.Debug().Msg("server shutdown")
-	}
+	err = neko.webSocketHandler.Shutdown()
+	neko.logger.Err(err).Msg("websocket handler shutdown")
+
+	err = neko.server.Shutdown()
+	neko.logger.Err(err).Msg("server shutdown")
 }
 
 func (neko *Neko) ServeCommand(cmd *cobra.Command, args []string) {
