@@ -395,7 +395,7 @@
     }
 
     canvasRedraw() {
-      if (this.cursorPosition == null || this.screenSize == null || this.cursorImage == null) return
+      if (!this.cursorPosition || !this.screenSize || !this.cursorImage) return
 
       // clear drawings
       this.canvasClear()
