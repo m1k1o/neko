@@ -263,7 +263,9 @@
     onMouseMove(e: MouseEvent) {
       if (this.isControling) {
         this.sendMousePos(e)
-      } else if (this.inactiveCursors) {
+      }
+
+      if (this.inactiveCursors) {
         this.saveInactiveMousePos(e)
       }
     }
