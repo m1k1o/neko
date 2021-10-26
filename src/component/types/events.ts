@@ -14,6 +14,7 @@ export const SESSION_CREATED = 'session/created'
 export const SESSION_DELETED = 'session/deleted'
 export const SESSION_PROFILE = 'session/profile'
 export const SESSION_STATE = 'session/state'
+export const SESSION_CURSORS = 'session/cursors'
 
 export const CONTROL_HOST = 'control/host'
 export const CONTROL_RELEASE = 'control/release'

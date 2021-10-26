@@ -249,9 +249,10 @@
     }
 
     onMouseMove(e: MouseEvent) {
-      if (!this.isControling) {
-        return
-      }
+      // TODO: Send less events if not controlling.
+      //if (!this.isControling) {
+      //  return
+      //}
 
       this.setMousePos(e)
     }

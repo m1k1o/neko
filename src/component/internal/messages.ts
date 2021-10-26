@@ -188,6 +188,11 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
     }
   }
 
+  protected [EVENT.SESSION_CURSORS](cursors: message.SessionCursor[]) {
+    // TODO: State retention logic.
+    Vue.set(this._state, 'cursors', cursors)
+  }
+
   /////////////////////////////
   // Control Events
   /////////////////////////////

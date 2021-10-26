@@ -3,6 +3,7 @@
     <div ref="container" class="neko-container">
       <video v-show="!screencast" ref="video" :autoplay="autoplay" :muted="autoplay" playsinline />
       <neko-screencast v-show="screencast" :enabled="screencast" :api="api.room" />
+      <neko-cursors :screenSize="state.screen.size" :canvasSize="canvasSize" :cursors="state.cursors" />
       <neko-overlay
         :webrtc="connection.webrtc"
         :scroll="state.control.scroll"
@@ -69,12 +70,14 @@
   import { Dimension, CursorDrawFunction } from './types/overlay'
   import Overlay from './overlay.vue'
   import Screencast from './screencast.vue'
+  import Cursors from './cursors.vue'
 
   @Component({
     name: 'neko-canvas',
     components: {
       'neko-overlay': Overlay,
       'neko-screencast': Screencast,
+      'neko-cursors': Cursors,
     },
   })
   export default class extends Vue {
@@ -159,6 +162,7 @@
       },
       session_id: null,
       sessions: {},
+      cursors: [],
     } as NekoState
 
     /////////////////////////////

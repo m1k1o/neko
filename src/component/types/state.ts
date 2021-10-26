@@ -9,6 +9,7 @@ export default interface State {
   screen: Screen
   session_id: string | null
   sessions: Record<string, Session>
+  cursors: SessionCursor[]
 }
 
 /////////////////////////////
@@ -117,4 +118,10 @@ export interface Session {
   id: string
   profile: MemberProfile
   state: SessionState
+}
+
+export interface SessionCursor {
+  id: string
+  x: number
+  y: number
 }

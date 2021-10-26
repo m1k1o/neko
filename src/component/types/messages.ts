@@ -87,6 +87,12 @@ export interface SessionData {
   is_watching: boolean
 }
 
+export interface SessionCursor {
+  id: string
+  x: number
+  y: number
+}
+
 /////////////////////////////
 // Control
 /////////////////////////////
