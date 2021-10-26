@@ -147,15 +147,12 @@ func (manager *WebSocketManagerCtx) Start() {
 				return
 			case <-ticker.C:
 				cursorsMap := manager.sessions.PopCursors()
-				if len(cursorsMap) == 0 {
-					if lastEmpty {
-						continue
-					}
 
-					lastEmpty = true
-				} else {
-					lastEmpty = false
+				length := len(cursorsMap)
+				if length == 0 && lastEmpty {
+					continue
 				}
+				lastEmpty = length == 0
 
 				cursors := []message.SessionCursor{}
 				for session, cursor := range cursorsMap {
