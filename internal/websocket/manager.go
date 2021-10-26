@@ -139,6 +139,8 @@ func (manager *WebSocketManagerCtx) Start() {
 		ticker := time.NewTicker(500 * time.Millisecond)
 		defer ticker.Stop()
 
+		lastEmpty := false
+
 		for {
 			select {
 			case <-manager.shutdown:
@@ -146,7 +148,13 @@ func (manager *WebSocketManagerCtx) Start() {
 			case <-ticker.C:
 				cursorsMap := manager.sessions.PopCursors()
 				if len(cursorsMap) == 0 {
-					continue
+					if lastEmpty {
+						continue
+					}
+
+					lastEmpty = true
+				} else {
+					lastEmpty = false
 				}
 
 				cursors := []message.SessionCursor{}
