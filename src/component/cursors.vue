@@ -29,6 +29,9 @@
     private _ctx!: CanvasRenderingContext2D
 
     @Prop()
+    private readonly sessionId!: string
+
+    @Prop()
     private readonly screenSize!: Dimension
 
     @Prop()
@@ -90,6 +93,9 @@
 
       // draw cursors
       for (let { id, x, y } of this.cursors) {
+        // ignore own cursor
+        if (id == this.sessionId) continue
+
         // get cursor position
         x = Math.round((x / this.screenSize.width) * width)
         y = Math.round((y / this.screenSize.height) * height)

@@ -3,7 +3,12 @@
     <div ref="container" class="neko-container">
       <video v-show="!screencast" ref="video" :autoplay="autoplay" :muted="autoplay" playsinline />
       <neko-screencast v-show="screencast" :enabled="screencast" :api="api.room" />
-      <neko-cursors :screenSize="state.screen.size" :canvasSize="canvasSize" :cursors="state.cursors" />
+      <neko-cursors
+        :sessionId="state.session_id"
+        :screenSize="state.screen.size"
+        :canvasSize="canvasSize"
+        :cursors="state.cursors"
+      />
       <neko-overlay
         :webrtc="connection.webrtc"
         :scroll="state.control.scroll"
