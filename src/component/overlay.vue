@@ -43,7 +43,10 @@
 
   const WHEEL_STEP = 53 // Delta threshold for a mouse wheel step
   const WHEEL_LINE_HEIGHT = 19
+
   const CANVAS_SCALE = 2
+
+  const INACTIVE_CURSOR_INTERVAL = 250 // ms
 
   @Component({
     name: 'neko-overlay',
@@ -78,6 +81,9 @@
 
     @Prop()
     private readonly implicitControl!: boolean
+
+    @Prop()
+    private readonly inactiveCursors!: boolean
 
     get cursor(): string {
       if (!this.isControling || !this.cursorImage) {
@@ -143,6 +149,12 @@
       this.webrtc.removeListener('cursor-image', this.onCursorImage)
       this.webrtc.removeListener('disconnected', this.canvasClear)
       this.cursorElement.onload = null
+
+      // stop inactive cursor interval if exists
+      if (this.inactiveCursorInterval !== null) {
+        window.clearInterval(this.inactiveCursorInterval)
+        this.inactiveCursorInterval = null
+      }
     }
 
     getMousePos(clientX: number, clientY: number) {
@@ -154,7 +166,7 @@
       }
     }
 
-    setMousePos(e: MouseEvent) {
+    sendMousePos(e: MouseEvent) {
       const pos = this.getMousePos(e.clientX, e.clientY)
       this.webrtc.send('mousemove', pos)
       Vue.set(this, 'cursorPosition', pos)
@@ -195,7 +207,7 @@
         return
       }
 
-      this.setMousePos(e)
+      this.sendMousePos(e)
 
       const now = Date.now()
       const firstScroll = now - this.wheelDate > 250
@@ -249,12 +261,11 @@
     }
 
     onMouseMove(e: MouseEvent) {
-      // TODO: Send less events if not controlling.
-      //if (!this.isControling) {
-      //  return
-      //}
-
-      this.setMousePos(e)
+      if (this.isControling) {
+        this.sendMousePos(e)
+      } else if (this.inactiveCursors) {
+        this.saveInactiveMousePos(e)
+      }
     }
 
     onMouseDown(e: MouseEvent) {
@@ -263,7 +274,7 @@
         return
       }
 
-      this.setMousePos(e)
+      this.sendMousePos(e)
       this.webrtc.send('mousedown', { key: e.button + 1 })
     }
 
@@ -273,7 +284,7 @@
         return
       }
 
-      this.setMousePos(e)
+      this.sendMousePos(e)
       this.webrtc.send('mouseup', { key: e.button + 1 })
     }
 
@@ -322,6 +333,39 @@
         if (files.length === 0) return
 
         this.$emit('uploadDrop', { ...this.getMousePos(e.clientX, e.clientY), files })
+      }
+    }
+
+    //
+    // inactive cursor position
+    //
+
+    private inactiveCursorInterval: number | null = null
+    private inactiveCursorPosition: CursorPosition | null = null
+
+    @Watch('focused')
+    @Watch('isControling')
+    @Watch('inactiveCursors')
+    restartInactiveCursorInterval() {
+      // clear interval if exists
+      if (this.inactiveCursorInterval !== null) {
+        window.clearInterval(this.inactiveCursorInterval)
+        this.inactiveCursorInterval = null
+      }
+
+      if (this.inactiveCursors && this.focused && !this.isControling) {
+        this.inactiveCursorInterval = window.setInterval(this.sendInactiveMousePos.bind(this), INACTIVE_CURSOR_INTERVAL)
+      }
+    }
+
+    saveInactiveMousePos(e: MouseEvent) {
+      const pos = this.getMousePos(e.clientX, e.clientY)
+      Vue.set(this, 'inactiveCursorPosition', pos)
+    }
+
+    sendInactiveMousePos() {
+      if (this.inactiveCursorPosition != null) {
+        this.webrtc.send('mousemove', this.inactiveCursorPosition)
       }
     }
 
@@ -464,7 +508,7 @@
 
       if (isControling && this.reqMouseDown) {
         this.updateKeyboardModifiers(this.reqMouseDown)
-        this.setMousePos(this.reqMouseDown)
+        this.sendMousePos(this.reqMouseDown)
         this.webrtc.send('mousedown', { key: this.reqMouseDown.button + 1 })
       }
 

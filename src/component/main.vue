@@ -17,6 +17,7 @@
         "
         :cursorDraw="cursorDrawFunction"
         :implicitControl="state.control.implicit_hosting && state.sessions[state.session_id].profile.can_host"
+        :inactiveCursors="true"
         @implicitControlRequest="connection.websocket.send('control/request')"
         @implicitControlRelease="connection.websocket.send('control/release')"
         @updateKeyboardModifiers="updateKeyboardModifiers($event)"
