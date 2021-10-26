@@ -455,8 +455,8 @@
     // implicit hosting
     //
 
-    private reqMouseDown: any | null = null
-    private reqMouseUp: any | null = null
+    private reqMouseDown: MouseEvent | null = null
+    private reqMouseUp: MouseEvent | null = null
 
     @Watch('isControling')
     onControlChange(isControling: boolean) {
