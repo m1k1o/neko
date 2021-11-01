@@ -83,6 +83,7 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
     this._localLog.debug(`EVENT.SYSTEM_INIT`)
     Vue.set(this._state, 'session_id', conf.session_id)
     Vue.set(this._state.control, 'implicit_hosting', conf.implicit_hosting)
+    Vue.set(this._state.cursors, 'enabled', conf.inactive_cursors)
     Vue.set(this._state.connection, 'screencast', conf.screencast_enabled)
     Vue.set(this._state.connection.webrtc, 'videos', conf.webrtc.videos)
 
@@ -189,8 +190,7 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
   }
 
   protected [EVENT.SESSION_CURSORS](cursors: message.SessionCursor[]) {
-    // TODO: State retention logic.
-    Vue.set(this._state, 'cursors', cursors)
+    Vue.set(this._state.cursors, 'list', cursors)
   }
 
   /////////////////////////////

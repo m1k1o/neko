@@ -4,10 +4,11 @@
       <video v-show="!screencast" ref="video" :autoplay="autoplay" :muted="autoplay" playsinline />
       <neko-screencast v-show="screencast" :enabled="screencast" :api="api.room" />
       <neko-cursors
+        v-if="state.cursors.enabled"
         :sessionId="state.session_id"
         :screenSize="state.screen.size"
         :canvasSize="canvasSize"
-        :cursors="state.cursors"
+        :cursors="state.cursors.list"
       />
       <neko-overlay
         :webrtc="connection.webrtc"
@@ -22,7 +23,7 @@
         "
         :cursorDraw="cursorDrawFunction"
         :implicitControl="state.control.implicit_hosting && state.sessions[state.session_id].profile.can_host"
-        :inactiveCursors="true"
+        :inactiveCursors="state.cursors.enabled"
         @implicitControlRequest="connection.websocket.send('control/request')"
         @implicitControlRelease="connection.websocket.send('control/release')"
         @updateKeyboardModifiers="updateKeyboardModifiers($event)"
@@ -168,7 +169,10 @@
       },
       session_id: null,
       sessions: {},
-      cursors: [],
+      cursors: {
+        enabled: false,
+        list: [],
+      },
     } as NekoState
 
     /////////////////////////////
@@ -545,6 +549,8 @@
       Vue.set(this.state.screen, 'configurations', [])
       Vue.set(this.state, 'session_id', null)
       Vue.set(this.state, 'sessions', {})
+      Vue.set(this.state.cursors, 'enabled', false)
+      Vue.set(this.state.cursors, 'list', [])
 
       // webrtc
       Vue.set(this.state.connection.webrtc, 'stats', null)

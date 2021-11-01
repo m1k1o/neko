@@ -16,7 +16,7 @@
 <script lang="ts">
   import { Vue, Component, Ref, Prop, Watch } from 'vue-property-decorator'
 
-  import { SessionCursor } from './types/state'
+  import { Cursor } from './types/state'
   import { CursorDrawFunction, Dimension } from './types/cursors'
 
   const CANVAS_SCALE = 2
@@ -38,7 +38,7 @@
     private readonly canvasSize!: Dimension
 
     @Prop()
-    private readonly cursors!: SessionCursor[]
+    private readonly cursors!: Cursor[]
 
     @Prop()
     private readonly cursorDraw!: CursorDrawFunction | null
