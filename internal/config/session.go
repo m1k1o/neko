@@ -9,6 +9,7 @@ import (
 
 type Session struct {
 	ImplicitHosting   bool
+	InactiveCursors   bool
 	MercifulReconnect bool
 	APIToken          string
 
@@ -21,6 +22,11 @@ type Session struct {
 func (Session) Init(cmd *cobra.Command) error {
 	cmd.PersistentFlags().Bool("session.implicit_hosting", true, "allow implicit control switching")
 	if err := viper.BindPFlag("session.implicit_hosting", cmd.PersistentFlags().Lookup("session.implicit_hosting")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().Bool("session.inactive_cursors", true, "show inactive cursors on the screen")
+	if err := viper.BindPFlag("session.inactive_cursors", cmd.PersistentFlags().Lookup("session.inactive_cursors")); err != nil {
 		return err
 	}
 
@@ -60,6 +66,7 @@ func (Session) Init(cmd *cobra.Command) error {
 
 func (s *Session) Set() {
 	s.ImplicitHosting = viper.GetBool("session.implicit_hosting")
+	s.InactiveCursors = viper.GetBool("session.inactive_cursors")
 	s.MercifulReconnect = viper.GetBool("session.merciful_reconnect")
 	s.APIToken = viper.GetString("session.api_token")
 

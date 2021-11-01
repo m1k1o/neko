@@ -70,6 +70,7 @@ type SessionManager interface {
 	OnHostChanged(listener func(session Session))
 
 	ImplicitHosting() bool
+	InactiveCursors() bool
 	CookieEnabled() bool
 	MercifulReconnect() bool
 

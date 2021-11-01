@@ -312,6 +312,10 @@ func (manager *SessionManagerCtx) ImplicitHosting() bool {
 	return manager.config.ImplicitHosting
 }
 
+func (manager *SessionManagerCtx) InactiveCursors() bool {
+	return manager.config.InactiveCursors
+}
+
 func (manager *SessionManagerCtx) CookieEnabled() bool {
 	return manager.config.CookieEnabled
 }

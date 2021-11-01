@@ -20,6 +20,9 @@ import (
 // send pings to peer with this period - must be less than pongWait
 const pingPeriod = 10 * time.Second
 
+// period for sending inactive cursor messages
+const inactiveCursorsPeriod = 500 * time.Millisecond
+
 func New(
 	sessions types.SessionManager,
 	desktop types.DesktopManager,
@@ -132,45 +135,50 @@ func (manager *WebSocketManagerCtx) Start() {
 
 	manager.fileChooserDialogEvents()
 
-	manager.wg.Add(1)
-	go func() {
-		defer manager.wg.Done()
+	if manager.sessions.InactiveCursors() {
+		manager.logger.Info().Msg("starting inactive cursors handler")
 
-		ticker := time.NewTicker(500 * time.Millisecond)
-		defer ticker.Stop()
+		manager.wg.Add(1)
+		go func() {
+			defer manager.wg.Done()
 
-		lastEmpty := false
+			ticker := time.NewTicker(inactiveCursorsPeriod)
+			defer ticker.Stop()
 
-		for {
-			select {
-			case <-manager.shutdown:
-				return
-			case <-ticker.C:
-				cursorsMap := manager.sessions.PopCursors()
+			lastEmpty := false
 
-				length := len(cursorsMap)
-				if length == 0 && lastEmpty {
-					continue
+			for {
+				select {
+				case <-manager.shutdown:
+					manager.logger.Info().Msg("stopping inactive cursors handler")
+					return
+				case <-ticker.C:
+					cursorsMap := manager.sessions.PopCursors()
+
+					length := len(cursorsMap)
+					if length == 0 && lastEmpty {
+						continue
+					}
+					lastEmpty = length == 0
+
+					cursors := []message.SessionCursor{}
+					for session, cursor := range cursorsMap {
+						cursors = append(
+							cursors,
+							message.SessionCursor{
+								ID: session.ID(),
+								X:  uint16(cursor.X),
+								Y:  uint16(cursor.Y),
+							},
+						)
+					}
+
+					// TODO: Send to subscribers only.
+					manager.sessions.AdminBroadcast(event.SESSION_CURSORS, cursors, nil)
 				}
-				lastEmpty = length == 0
-
-				cursors := []message.SessionCursor{}
-				for session, cursor := range cursorsMap {
-					cursors = append(
-						cursors,
-						message.SessionCursor{
-							ID: session.ID(),
-							X:  uint16(cursor.X),
-							Y:  uint16(cursor.Y),
-						},
-					)
-				}
-
-				// TODO: Send to subscribers only.
-				manager.sessions.AdminBroadcast(event.SESSION_CURSORS, cursors, nil)
 			}
-		}
-	}()
+		}()
+	}
 
 	manager.logger.Info().Msg("websocket starting")
 }
