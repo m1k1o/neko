@@ -17,7 +17,7 @@
   import { Vue, Component, Ref, Prop, Watch } from 'vue-property-decorator'
 
   import { Cursor, Session } from './types/state'
-  import { CursorDrawFunction, Dimension } from './types/cursors'
+  import { InactiveCursorDrawFunction, Dimension } from './types/cursors'
 
   const CANVAS_SCALE = 2
 
@@ -44,7 +44,7 @@
     private readonly cursors!: Cursor[]
 
     @Prop()
-    private readonly cursorDraw!: CursorDrawFunction | null
+    private readonly cursorDraw!: InactiveCursorDrawFunction | null
 
     mounted() {
       // get canvas overlay context

@@ -10,6 +10,7 @@
         :screenSize="state.screen.size"
         :canvasSize="canvasSize"
         :cursors="state.cursors.list"
+        :cursorDraw="inactiveCursorDrawFunction"
       />
       <neko-overlay
         :webrtc="connection.webrtc"
@@ -75,7 +76,7 @@
 
   import { ReconnectorConfig } from './types/reconnector'
   import NekoState from './types/state'
-  import { Dimension, CursorDrawFunction } from './types/overlay'
+  import { CursorDrawFunction, InactiveCursorDrawFunction, Dimension } from './types/cursors'
   import Overlay from './overlay.vue'
   import Screencast from './screencast.vue'
   import Cursors from './cursors.vue'
@@ -97,6 +98,7 @@
     observer = new ResizeObserver(this.onResize.bind(this))
     canvasSize: Dimension = { width: 0, height: 0 }
     cursorDrawFunction: CursorDrawFunction | null = null
+    inactiveCursorDrawFunction: InactiveCursorDrawFunction | null = null
 
     @Prop({ type: String })
     private readonly server!: string
@@ -358,6 +360,10 @@
 
     public setCursorDrawFunction(fn?: CursorDrawFunction) {
       Vue.set(this, 'cursorDrawFunction', fn)
+    }
+
+    public setInactiveCursorDrawFunction(fn?: InactiveCursorDrawFunction) {
+      Vue.set(this, 'inactiveCursorDrawFunction', fn)
     }
 
     // TODO: Remove? Use REST API only?

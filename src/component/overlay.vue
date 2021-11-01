@@ -39,7 +39,7 @@
   import { NekoWebRTC } from './internal/webrtc'
   import { Scroll } from './types/state'
   import { CursorPosition, CursorImage } from './types/webrtc'
-  import { CursorDrawFunction, Dimension, KeyboardModifiers } from './types/overlay'
+  import { CursorDrawFunction, Dimension, KeyboardModifiers } from './types/cursors'
 
   const WHEEL_STEP = 53 // Delta threshold for a mouse wheel step
   const WHEEL_LINE_HEIGHT = 19
