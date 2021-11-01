@@ -16,7 +16,7 @@
 <script lang="ts">
   import { Vue, Component, Ref, Prop, Watch } from 'vue-property-decorator'
 
-  import { Cursor } from './types/state'
+  import { Cursor, Session } from './types/state'
   import { CursorDrawFunction, Dimension } from './types/cursors'
 
   const CANVAS_SCALE = 2
@@ -27,6 +27,9 @@
   export default class extends Vue {
     @Ref('overlay') readonly _overlay!: HTMLCanvasElement
     private _ctx!: CanvasRenderingContext2D
+
+    @Prop()
+    private readonly sessions!: Record<string, Session>
 
     @Prop()
     private readonly sessionId!: string
@@ -100,9 +103,12 @@
         x = Math.round((x / this.screenSize.width) * width)
         y = Math.round((y / this.screenSize.height) * height)
 
+        // get cursor tag
+        const cursorTag = this.sessions[id]?.profile.name || ''
+
         // use custom draw function, if available
         if (this.cursorDraw) {
-          this.cursorDraw(this._ctx, x, y, id)
+          this.cursorDraw(this._ctx, x, y, cursorTag)
           continue
         }
 
@@ -113,10 +119,10 @@
         this._ctx.shadowBlur = 2
         this._ctx.lineWidth = 2
         this._ctx.fillStyle = 'black'
-        this._ctx.strokeText(id, x, y)
+        this._ctx.strokeText(cursorTag, x, y)
         this._ctx.shadowBlur = 0
         this._ctx.fillStyle = 'white'
-        this._ctx.fillText(id, x, y)
+        this._ctx.fillText(cursorTag, x, y)
         this._ctx.restore()
       }
     }

@@ -5,6 +5,7 @@
       <neko-screencast v-show="screencast" :enabled="screencast" :api="api.room" />
       <neko-cursors
         v-if="state.cursors.enabled"
+        :sessions="state.sessions"
         :sessionId="state.session_id"
         :screenSize="state.screen.size"
         :canvasSize="canvasSize"
