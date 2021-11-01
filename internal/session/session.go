@@ -53,8 +53,8 @@ func (session *SessionCtx) IsHost() bool {
 	return session.manager.GetHost() == session
 }
 
-func (session *SessionCtx) SetCursor(x, y int) {
-	session.manager.SetCursor(x, y, session)
+func (session *SessionCtx) SetCursor(cursor types.Cursor) {
+	session.manager.SetCursor(cursor, session)
 }
 
 // ---

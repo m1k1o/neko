@@ -29,7 +29,7 @@ type Session interface {
 	IsHost() bool
 
 	// cursor
-	SetCursor(x, y int)
+	SetCursor(cursor Cursor)
 
 	// websocket
 	SetWebSocketPeer(websocketPeer WebSocketPeer)
@@ -55,7 +55,7 @@ type SessionManager interface {
 	GetHost() Session
 	ClearHost()
 
-	SetCursor(x, y int, session Session)
+	SetCursor(cursor Cursor, session Session)
 	PopCursors() map[Session]Cursor
 
 	Broadcast(event string, payload interface{}, exclude interface{})

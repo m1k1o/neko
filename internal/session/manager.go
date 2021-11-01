@@ -201,16 +201,11 @@ func (manager *SessionManagerCtx) ClearHost() {
 // cursors
 // ---
 
-func (manager *SessionManagerCtx) SetCursor(x, y int, session types.Session) {
+func (manager *SessionManagerCtx) SetCursor(cursor types.Cursor, session types.Session) {
 	manager.cursorsMu.Lock()
 	defer manager.cursorsMu.Unlock()
 
-	pos, ok := manager.cursors[session]
-	if ok {
-		pos.X, pos.Y = x, y
-	} else {
-		manager.cursors[session] = types.Cursor{X: x, Y: y}
-	}
+	manager.cursors[session] = cursor
 }
 
 func (manager *SessionManagerCtx) PopCursors() map[types.Session]types.Cursor {
