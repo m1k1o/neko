@@ -45,6 +45,7 @@ func (h *MessageHandlerCtx) systemInit(session types.Session) error {
 			ScreenSize:        message.ScreenSize(*size),
 			Sessions:          sessions,
 			ImplicitHosting:   h.sessions.ImplicitHosting(),
+			InactiveCursors:   h.sessions.InactiveCursors(),
 			ScreencastEnabled: h.capture.Screencast().Enabled(),
 			WebRTC: message.SystemWebRTC{
 				Videos: h.capture.VideoIDs(),
