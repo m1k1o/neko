@@ -25,7 +25,7 @@ func (Session) Init(cmd *cobra.Command) error {
 		return err
 	}
 
-	cmd.PersistentFlags().Bool("session.inactive_cursors", true, "show inactive cursors on the screen")
+	cmd.PersistentFlags().Bool("session.inactive_cursors", false, "show inactive cursors on the screen")
 	if err := viper.BindPFlag("session.inactive_cursors", cmd.PersistentFlags().Lookup("session.inactive_cursors")); err != nil {
 		return err
 	}
