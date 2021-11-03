@@ -9,12 +9,14 @@ import (
 func New() types.MemberProvider {
 	return &MemberProviderCtx{
 		profile: types.MemberProfile{
-			IsAdmin:            true,
-			CanLogin:           true,
-			CanConnect:         true,
-			CanWatch:           true,
-			CanHost:            true,
-			CanAccessClipboard: true,
+			IsAdmin:               true,
+			CanLogin:              true,
+			CanConnect:            true,
+			CanWatch:              true,
+			CanHost:               true,
+			CanAccessClipboard:    true,
+			SendsInactiveCursor:   true,
+			CanSeeInactiveCursors: true,
 		},
 	}
 }

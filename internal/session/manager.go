@@ -254,6 +254,22 @@ func (manager *SessionManagerCtx) AdminBroadcast(event string, payload interface
 	}
 }
 
+func (manager *SessionManagerCtx) InactiveCursorsBroadcast(event string, payload interface{}, exclude interface{}) {
+	for _, session := range manager.List() {
+		if !session.State().IsConnected || !session.Profile().CanSeeInactiveCursors {
+			continue
+		}
+
+		if exclude != nil {
+			if in, _ := utils.ArrayIn(session.ID(), exclude); in {
+				continue
+			}
+		}
+
+		session.Send(event, payload)
+	}
+}
+
 // ---
 // events
 // ---

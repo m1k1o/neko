@@ -173,8 +173,7 @@ func (manager *WebSocketManagerCtx) Start() {
 						)
 					}
 
-					// TODO: Send to subscribers only.
-					manager.sessions.AdminBroadcast(event.SESSION_CURSORS, cursors, nil)
+					manager.sessions.InactiveCursorsBroadcast(event.SESSION_CURSORS, cursors, nil)
 				}
 			}
 		}()

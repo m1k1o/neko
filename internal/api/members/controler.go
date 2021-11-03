@@ -57,12 +57,14 @@ func (h *MembersHandler) membersCreate(w http.ResponseWriter, r *http.Request) e
 	data := &MemberCreatePayload{
 		// default values
 		Profile: types.MemberProfile{
-			IsAdmin:            false,
-			CanLogin:           true,
-			CanConnect:         true,
-			CanWatch:           true,
-			CanHost:            true,
-			CanAccessClipboard: true,
+			IsAdmin:               false,
+			CanLogin:              true,
+			CanConnect:            true,
+			CanWatch:              true,
+			CanHost:               true,
+			CanAccessClipboard:    true,
+			SendsInactiveCursor:   true,
+			CanSeeInactiveCursors: true,
 		},
 	}
 

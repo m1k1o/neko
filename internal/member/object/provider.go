@@ -22,26 +22,30 @@ func (provider *MemberProviderCtx) Connect() error {
 	if provider.config.AdminPassword != "" {
 		// create default admin account at startup
 		_, err = provider.Insert("admin", provider.config.AdminPassword, types.MemberProfile{
-			Name:               "Administrator",
-			IsAdmin:            true,
-			CanLogin:           true,
-			CanConnect:         true,
-			CanWatch:           true,
-			CanHost:            true,
-			CanAccessClipboard: true,
+			Name:                  "Administrator",
+			IsAdmin:               true,
+			CanLogin:              true,
+			CanConnect:            true,
+			CanWatch:              true,
+			CanHost:               true,
+			CanAccessClipboard:    true,
+			SendsInactiveCursor:   true,
+			CanSeeInactiveCursors: true,
 		})
 	}
 
 	if provider.config.UserPassword != "" {
 		// create default user account at startup
 		_, err = provider.Insert("user", provider.config.UserPassword, types.MemberProfile{
-			Name:               "User",
-			IsAdmin:            false,
-			CanLogin:           true,
-			CanConnect:         true,
-			CanWatch:           true,
-			CanHost:            true,
-			CanAccessClipboard: true,
+			Name:                  "User",
+			IsAdmin:               false,
+			CanLogin:              true,
+			CanConnect:            true,
+			CanWatch:              true,
+			CanHost:               true,
+			CanAccessClipboard:    true,
+			SendsInactiveCursor:   true,
+			CanSeeInactiveCursors: false,
 		})
 	}
 

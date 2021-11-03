@@ -54,7 +54,7 @@ func (session *SessionCtx) IsHost() bool {
 }
 
 func (session *SessionCtx) SetCursor(cursor types.Cursor) {
-	if session.manager.InactiveCursors() {
+	if session.manager.InactiveCursors() && session.profile.SendsInactiveCursor {
 		session.manager.SetCursor(cursor, session)
 	}
 }
