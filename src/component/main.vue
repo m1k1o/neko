@@ -4,7 +4,7 @@
       <video v-show="!screencast" ref="video" :autoplay="autoplay" :muted="autoplay" playsinline />
       <neko-screencast v-show="screencast" :enabled="screencast" :api="api.room" />
       <neko-cursors
-        v-if="state.cursors.enabled"
+        v-if="state.cursors.enabled && state.sessions[state.session_id].profile.can_see_inactive_cursors"
         :sessions="state.sessions"
         :sessionId="state.session_id"
         :screenSize="state.screen.size"
@@ -25,7 +25,7 @@
         "
         :cursorDraw="cursorDrawFunction"
         :implicitControl="state.control.implicit_hosting && state.sessions[state.session_id].profile.can_host"
-        :inactiveCursors="state.cursors.enabled"
+        :inactiveCursors="state.cursors.enabled && state.sessions[state.session_id].profile.sends_inactive_cursor"
         @implicitControlRequest="connection.websocket.send('control/request')"
         @implicitControlRelease="connection.websocket.send('control/release')"
         @updateKeyboardModifiers="updateKeyboardModifiers($event)"

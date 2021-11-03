@@ -73,6 +73,8 @@ export interface MemberProfile {
   can_watch: boolean
   can_host: boolean
   can_access_clipboard: boolean
+  sends_inactive_cursor: boolean
+  can_see_inactive_cursors: boolean
 }
 
 export interface SessionState {
