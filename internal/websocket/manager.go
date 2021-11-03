@@ -136,47 +136,7 @@ func (manager *WebSocketManagerCtx) Start() {
 	manager.fileChooserDialogEvents()
 
 	if manager.sessions.InactiveCursors() {
-		manager.logger.Info().Msg("starting inactive cursors handler")
-
-		manager.wg.Add(1)
-		go func() {
-			defer manager.wg.Done()
-
-			ticker := time.NewTicker(inactiveCursorsPeriod)
-			defer ticker.Stop()
-
-			lastEmpty := false
-
-			for {
-				select {
-				case <-manager.shutdown:
-					manager.logger.Info().Msg("stopping inactive cursors handler")
-					return
-				case <-ticker.C:
-					cursorsMap := manager.sessions.PopCursors()
-
-					length := len(cursorsMap)
-					if length == 0 && lastEmpty {
-						continue
-					}
-					lastEmpty = length == 0
-
-					cursors := []message.SessionCursor{}
-					for session, cursor := range cursorsMap {
-						cursors = append(
-							cursors,
-							message.SessionCursor{
-								ID: session.ID(),
-								X:  uint16(cursor.X),
-								Y:  uint16(cursor.Y),
-							},
-						)
-					}
-
-					manager.sessions.InactiveCursorsBroadcast(event.SESSION_CURSORS, cursors, nil)
-				}
-			}
-		}()
+		manager.inactiveCursors()
 	}
 
 	manager.logger.Info().Msg("websocket starting")
@@ -337,4 +297,48 @@ func (manager *WebSocketManagerCtx) handle(connection *websocket.Conn, peer type
 			}
 		}
 	}
+}
+
+func (manager *WebSocketManagerCtx) inactiveCursors() {
+	manager.logger.Info().Msg("starting inactive cursors handler")
+
+	manager.wg.Add(1)
+	go func() {
+		defer manager.wg.Done()
+
+		ticker := time.NewTicker(inactiveCursorsPeriod)
+		defer ticker.Stop()
+
+		lastEmpty := false
+
+		for {
+			select {
+			case <-manager.shutdown:
+				manager.logger.Info().Msg("stopping inactive cursors handler")
+				return
+			case <-ticker.C:
+				cursorsMap := manager.sessions.PopCursors()
+
+				length := len(cursorsMap)
+				if length == 0 && lastEmpty {
+					continue
+				}
+				lastEmpty = length == 0
+
+				cursors := []message.SessionCursor{}
+				for session, cursor := range cursorsMap {
+					cursors = append(
+						cursors,
+						message.SessionCursor{
+							ID: session.ID(),
+							X:  uint16(cursor.X),
+							Y:  uint16(cursor.Y),
+						},
+					)
+				}
+
+				manager.sessions.InactiveCursorsBroadcast(event.SESSION_CURSORS, cursors, nil)
+			}
+		}
+	}()
 }
