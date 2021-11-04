@@ -10,7 +10,7 @@ RUN set -eux; apt-get update; \
     libcups2 libgtk-3-0 libnss3 libpci3 libxcomposite1 libxss1 openbox xz-utils jq; \
     #
     # fetch latest release
-    SRC_URL="$(wget -O - "${API_URL}" 2>/dev/null | jq -r ".assets[] | .browser_download_url" | grep tar.xz)"; \
+    SRC_URL="$(wget -O - "${API_URL}" 2>/dev/null | jq -r "[.assets[] | select(.browser_download_url | contains(\"tar.xz\"))][-1] | .browser_download_url")"; \
     wget -O - /tmp/chromium.tar.xz "${SRC_URL}" | tar -xJf- -C /tmp; \
     mv /tmp/ungoogled-chromium_* /usr/lib/chromium; \
     #
