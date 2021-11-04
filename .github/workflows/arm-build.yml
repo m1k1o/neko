@@ -1,0 +1,63 @@
+name: "CI for ARM builds"
+
+on:
+  push:
+    branches: [ dev ]
+
+env:
+  DOCKER_IMAGE: m1k1o/neko
+
+jobs:
+  build-arm-base:
+    runs-on: [self-hosted, linux, ARM64]
+    #
+    # do not run on forks
+    #
+    if: github.repository_owner == 'm1k1o'
+    steps:
+      - name: Check Out Repo
+        uses: actions/checkout@v2
+
+      - name: Login to Docker Hub
+        run: |
+          docker login --username "${DOCKER_USERNAME}" --password-stdin "${DOCKER_REGISTRY}" <<< "${DOCKER_TOKEN}"
+        env:
+          DOCKER_REGISTRY: ${{ secrets.DOCKER_REGISTRY }}
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
+
+      - name: Build base
+        run: |
+          BUILD_IMAGE=${DOCKER_IMAGE} .m1k1o/build ${DOCKER_TAG}
+          docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
+        env:
+          DOCKER_TAG: arm-base
+
+  build-arm:
+    runs-on: [self-hosted, linux, ARM64]
+    #
+    # do not run on forks
+    #
+    if: github.repository_owner == 'm1k1o'
+    needs: [ build-base ]
+    strategy:
+      matrix:
+        tags: [ firefox, chromium ]
+    env:
+      DOCKER_TAG: arm-${{ matrix.tags }}
+    steps:
+      - name: Check Out Repo
+        uses: actions/checkout@v2
+
+      - name: Login to Docker Hub
+        run: |
+          docker login --username "${DOCKER_USERNAME}" --password-stdin "${DOCKER_REGISTRY}" <<< "${DOCKER_TOKEN}"
+        env:
+          DOCKER_REGISTRY: ${{ secrets.DOCKER_REGISTRY }}
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
+
+      - name: Build container
+        run: |
+          BUILD_IMAGE=${DOCKER_IMAGE} .m1k1o/build ${DOCKER_TAG}
+          docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
