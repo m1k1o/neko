@@ -4,6 +4,7 @@
 
 ### Misc
 - ARM-based images not bound to Raspberry Pi only.
+- Add japanese characters support.
 
 ## [n.eko v2.4](https://github.com/m1k1o/neko/releases/tag/v2.4)
 
