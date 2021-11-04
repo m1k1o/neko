@@ -39,7 +39,7 @@ jobs:
     # do not run on forks
     #
     if: github.repository_owner == 'm1k1o'
-    needs: [ build-base ]
+    needs: [ build-arm-base ]
     strategy:
       matrix:
         tags: [ firefox, chromium ]
