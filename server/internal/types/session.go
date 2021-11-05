@@ -21,7 +21,6 @@ type Session interface {
 	SetPeer(peer Peer) error
 	Address() string
 	Kick(message string) error
-	Write(v interface{}) error
 	Send(v interface{}) error
 	SignalAnswer(sdp string) error
 	SignalCandidate(data string) error

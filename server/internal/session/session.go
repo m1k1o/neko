@@ -104,13 +104,6 @@ func (session *Session) Send(v interface{}) error {
 	return session.socket.Send(v)
 }
 
-func (session *Session) Write(v interface{}) error {
-	if session.socket == nil {
-		return nil
-	}
-	return session.socket.Send(v)
-}
-
 func (session *Session) SignalAnswer(sdp string) error {
 	if session.peer == nil {
 		return nil
