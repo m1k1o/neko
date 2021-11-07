@@ -309,7 +309,8 @@ func (manager *WebSocketManagerCtx) inactiveCursors() {
 		ticker := time.NewTicker(inactiveCursorsPeriod)
 		defer ticker.Stop()
 
-		lastEmpty := false
+		var currentEmpty bool
+		var lastEmpty = false
 
 		for {
 			select {
@@ -319,11 +320,11 @@ func (manager *WebSocketManagerCtx) inactiveCursors() {
 			case <-ticker.C:
 				cursorsMap := manager.sessions.PopCursors()
 
-				length := len(cursorsMap)
-				if length == 0 && lastEmpty {
+				currentEmpty = len(cursorsMap) == 0
+				if currentEmpty && lastEmpty {
 					continue
 				}
-				lastEmpty = length == 0
+				lastEmpty = currentEmpty
 
 				cursors := []message.SessionCursor{}
 				for session, cursor := range cursorsMap {
