@@ -1,20 +1,11 @@
 #include "gst.h"
 
-#include <gst/app/gstappsrc.h>
-
 typedef struct SampleHandlerUserData {
   int pipelineId;
 } SampleHandlerUserData;
 
 void gstreamer_init(void) {
   gst_init(NULL, NULL);
-}
-
-GMainLoop *gstreamer_send_main_loop = NULL;
-void gstreamer_send_start_mainloop(void) {
-  gstreamer_send_main_loop = g_main_loop_new(NULL, FALSE);
-
-  g_main_loop_run(gstreamer_send_main_loop);
 }
 
 static gboolean gstreamer_send_bus_call(GstBus *bus, GstMessage *msg, gpointer data) {
@@ -90,5 +81,3 @@ void gstreamer_send_play_pipeline(GstElement *pipeline) {
 void gstreamer_send_stop_pipeline(GstElement *pipeline) {
   gst_element_set_state(pipeline, GST_STATE_NULL);
 }
-
-
