@@ -42,16 +42,12 @@ func (manager *WebRTCManagerCtx) handle(data []byte, session types.Session) erro
 		}
 
 		x, y := int(payload.X), int(payload.Y)
-
-		// handle active cursor movement
 		if session.IsHost() {
+			// handle active cursor movement
 			manager.desktop.Move(x, y)
 			manager.curPosition.Set(x, y)
-			return nil
-		}
-
-		// handle inactive cursor movement
-		if session.Profile().CanHost {
+		} else {
+			// handle inactive cursor movement
 			session.SetCursor(types.Cursor{
 				X: x,
 				Y: y,
