@@ -128,11 +128,15 @@ export interface Session {
 
 export interface Cursors {
   enabled: boolean
-  list: Cursor[]
+  list: SessionCursors[]
+}
+
+export interface SessionCursors {
+  id: string
+  cursors: Cursor[]
 }
 
 export interface Cursor {
-  id: string
   x: number
   y: number
 }

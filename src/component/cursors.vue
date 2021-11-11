@@ -16,10 +16,12 @@
 <script lang="ts">
   import { Vue, Component, Ref, Prop, Watch } from 'vue-property-decorator'
 
-  import { Cursor, Session } from './types/state'
+  import { SessionCursors, Cursor, Session } from './types/state'
   import { InactiveCursorDrawFunction, Dimension } from './types/cursors'
+  import { getMovementXYatPercent } from './utils/canvas-movement'
 
   const CANVAS_SCALE = 2
+  const POS_INTERVAL_MS = 750
 
   @Component({
     name: 'neko-cursors',
@@ -41,7 +43,7 @@
     private readonly canvasSize!: Dimension
 
     @Prop()
-    private readonly cursors!: Cursor[]
+    private readonly cursors!: SessionCursors[]
 
     @Prop()
     private readonly cursorDraw!: InactiveCursorDrawFunction | null
@@ -57,74 +59,106 @@
       const { width, height } = this._overlay.getBoundingClientRect()
       this._overlay.width = width * CANVAS_SCALE
       this._overlay.height = height * CANVAS_SCALE
+
+      this._last_points = {}
     }
 
     beforeDestroy() {}
-
-    private canvasRequestedFrame = false
 
     @Watch('canvasSize')
     onCanvasSizeChange({ width, height }: Dimension) {
       this._overlay.width = width * CANVAS_SCALE
       this._overlay.height = height * CANVAS_SCALE
-      this.canvasRequestRedraw()
+    }
+
+    // start as undefined to prevent jumping
+    private _prev_time!: number
+    private _percent!: number
+    private _points!: SessionCursors[]
+    private _last_points!: Record<string, Cursor>
+
+    canvasAnimate(now: number = NaN) {
+      // request another frame
+      if (this._percent <= 1) requestAnimationFrame(this.canvasAnimate)
+
+      // calculate factor
+      const delta = (now - this._prev_time) / POS_INTERVAL_MS
+      this._prev_time = now
+
+      // skip very first delta to prevent jumping
+      if (isNaN(delta)) return
+
+      // set the animation position
+      this._percent += delta
+
+      this.canvasClear()
+
+      // scale
+      this._ctx.setTransform(CANVAS_SCALE, 0, 0, CANVAS_SCALE, 0, 0)
+
+      // draw current position
+      for (const p of this._points) {
+        const { x, y } = getMovementXYatPercent(p.cursors, this._percent)
+        this.canvasRedraw(x, y, p.id)
+      }
     }
 
     @Watch('cursors')
-    @Watch('cursorDraw')
-    canvasRequestRedraw() {
-      // skip rendering if there is already in progress
-      if (this.canvasRequestedFrame) return
+    canvasSetPosition(e: SessionCursors[]) {
+      console.log('consuming', e)
 
-      // request animation frame from a browser
-      this.canvasRequestedFrame = true
-      window.requestAnimationFrame(() => {
-        this.canvasRedraw()
-        this.canvasRequestedFrame = false
-      })
+      // clear on no cursor
+      if (e.length == 0) {
+        this._last_points = {}
+        this.canvasClear()
+        return
+      }
+
+      // create points for animation
+      this._points = []
+      for (const { id, cursors } of e) {
+        let pos = { id } as SessionCursors
+        if (id in this._last_points) {
+          pos.cursors = [this._last_points[id], ...cursors]
+        } else {
+          pos.cursors = [...cursors]
+        }
+        this._last_points[id] = cursors[cursors.length - 1]
+        this._points.push(pos)
+      }
+
+      const startAnimation = this._percent > 1 || this._percent == 0
+      this._percent = 0
+      if (startAnimation) this.canvasAnimate()
     }
 
-    canvasRedraw() {
-      if (this.screenSize == null) return
-
-      // clear drawings
-      this.canvasClear()
-
+    canvasRedraw(x: number, y: number, id: string) {
       // get intrinsic dimensions
       let { width, height } = this.canvasSize
-      this._ctx.setTransform(CANVAS_SCALE, 0, 0, CANVAS_SCALE, 0, 0)
+      x = Math.round((x / this.screenSize.width) * width)
+      y = Math.round((y / this.screenSize.height) * height)
 
-      // draw cursors
-      for (let { id, x, y } of this.cursors) {
-        // ignore own cursor
-        if (id == this.sessionId) continue
+      // get cursor tag
+      const cursorTag = this.sessions[id]?.profile.name || ''
 
-        // get cursor position
-        x = Math.round((x / this.screenSize.width) * width)
-        y = Math.round((y / this.screenSize.height) * height)
-
-        // get cursor tag
-        const cursorTag = this.sessions[id]?.profile.name || ''
-
-        // use custom draw function, if available
-        if (this.cursorDraw) {
-          this.cursorDraw(this._ctx, x, y, cursorTag)
-          continue
-        }
-
-        this._ctx.save()
-        this._ctx.font = '14px Arial, sans-serif'
-        this._ctx.textBaseline = 'top'
-        this._ctx.shadowColor = 'black'
-        this._ctx.shadowBlur = 2
-        this._ctx.lineWidth = 2
-        this._ctx.fillStyle = 'black'
-        this._ctx.strokeText(cursorTag, x, y)
-        this._ctx.shadowBlur = 0
-        this._ctx.fillStyle = 'white'
-        this._ctx.fillText(cursorTag, x, y)
-        this._ctx.restore()
+      // use custom draw function, if available
+      if (this.cursorDraw) {
+        this.cursorDraw(this._ctx, x, y, cursorTag)
+        return
       }
+
+      this._ctx.save()
+      this._ctx.font = '14px Arial, sans-serif'
+      this._ctx.textBaseline = 'top'
+      this._ctx.shadowColor = 'black'
+      this._ctx.shadowBlur = 2
+      this._ctx.lineWidth = 2
+      this._ctx.fillStyle = 'black'
+      this._ctx.strokeText(cursorTag, x, y)
+      this._ctx.shadowBlur = 0
+      this._ctx.fillStyle = 'white'
+      this._ctx.fillText(cursorTag, x, y)
+      this._ctx.restore()
     }
 
     canvasClear() {
