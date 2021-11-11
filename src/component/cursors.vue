@@ -72,6 +72,7 @@
     onCanvasSizeChange({ width, height }: Dimension) {
       this._overlay.width = width * CANVAS_SCALE
       this._overlay.height = height * CANVAS_SCALE
+      this.canvasUpdateCursors()
     }
 
     // start as undefined to prevent jumping
