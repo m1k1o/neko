@@ -37,6 +37,9 @@
     private readonly sessionId!: string
 
     @Prop()
+    private readonly hostId!: string | null
+
+    @Prop()
     private readonly screenSize!: Dimension
 
     @Prop()
@@ -99,36 +102,35 @@
       // draw current position
       for (const p of this._points) {
         const { x, y } = getMovementXYatPercent(p.cursors, this._percent)
-        this.canvasRedraw(x, y, p.id)
+        this.canvasDrawCursor(x, y, p.id)
       }
     }
 
+    @Watch('hostId')
     @Watch('cursors')
-    canvasSetPosition(e: SessionCursors[]) {
-      console.log('consuming', e)
-
-      // clear on no cursor
-      if (e.length == 0) {
-        this._last_points = {}
-        this.canvasClear()
-        return
-      }
-
+    canvasUpdateCursors() {
       // create points for animation
       this._points = []
-      for (const { id, cursors } of e) {
+      for (const { id, cursors } of this.cursors) {
+        // ignore my and host's cursor
+        if (id == this.sessionId || id == this.hostId) continue
+
+        // add last cursor position to cursors (if available)
         let pos = { id } as SessionCursors
         if (id in this._last_points) {
           pos.cursors = [this._last_points[id], ...cursors]
         } else {
           pos.cursors = [...cursors]
         }
+
         this._last_points[id] = cursors[cursors.length - 1]
         this._points.push(pos)
       }
 
       // no cursors to animate
       if (this._points.length == 0) {
+        this._last_points = {}
+        this.canvasClear()
         return
       }
 
@@ -140,7 +142,7 @@
       }
     }
 
-    canvasRedraw(x: number, y: number, id: string) {
+    canvasDrawCursor(x: number, y: number, id: string) {
       // get intrinsic dimensions
       let { width, height } = this.canvasSize
       x = Math.round((x / this.screenSize.width) * width)

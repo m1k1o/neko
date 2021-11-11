@@ -7,6 +7,7 @@
         v-if="state.cursors.enabled && state.sessions[state.session_id].profile.can_see_inactive_cursors"
         :sessions="state.sessions"
         :sessionId="state.session_id"
+        :hostId="state.control.host_id"
         :screenSize="state.screen.size"
         :canvasSize="canvasSize"
         :cursors="state.cursors.list"
