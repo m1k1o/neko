@@ -127,9 +127,17 @@
         this._points.push(pos)
       }
 
-      const startAnimation = this._percent > 1 || this._percent == 0
+      // no cursors to animate
+      if (this._points.length == 0) {
+        return
+      }
+
+      // start animation if not running
+      const percent = this._percent
       this._percent = 0
-      if (startAnimation) this.canvasAnimate()
+      if (percent > 1 || percent == 0) {
+        this.canvasAnimate()
+      }
     }
 
     canvasRedraw(x: number, y: number, id: string) {
