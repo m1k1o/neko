@@ -13,8 +13,8 @@ var (
 )
 
 type Cursor struct {
-	X int
-	Y int
+	X int `json:"x"`
+	Y int `json:"y"`
 }
 
 type SessionState struct {
@@ -56,7 +56,7 @@ type SessionManager interface {
 	ClearHost()
 
 	SetCursor(cursor Cursor, session Session)
-	PopCursors() map[Session]Cursor
+	PopCursors() map[Session][]Cursor
 
 	Broadcast(event string, payload interface{}, exclude interface{})
 	AdminBroadcast(event string, payload interface{}, exclude interface{})

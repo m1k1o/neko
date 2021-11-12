@@ -21,7 +21,7 @@ import (
 const pingPeriod = 10 * time.Second
 
 // period for sending inactive cursor messages
-const inactiveCursorsPeriod = 500 * time.Millisecond
+const inactiveCursorsPeriod = 750 * time.Millisecond
 
 func New(
 	sessions types.SessionManager,
@@ -326,19 +326,18 @@ func (manager *WebSocketManagerCtx) inactiveCursors() {
 				}
 				lastEmpty = currentEmpty
 
-				cursors := []message.SessionCursor{}
-				for session, cursor := range cursorsMap {
-					cursors = append(
-						cursors,
-						message.SessionCursor{
-							ID: session.ID(),
-							X:  uint16(cursor.X),
-							Y:  uint16(cursor.Y),
+				sessionCursors := []message.SessionCursors{}
+				for session, cursors := range cursorsMap {
+					sessionCursors = append(
+						sessionCursors,
+						message.SessionCursors{
+							ID:      session.ID(),
+							Cursors: cursors,
 						},
 					)
 				}
 
-				manager.sessions.InactiveCursorsBroadcast(event.SESSION_CURSORS, cursors, nil)
+				manager.sessions.InactiveCursorsBroadcast(event.SESSION_CURSORS, sessionCursors, nil)
 			}
 		}
 	}()

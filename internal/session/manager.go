@@ -19,7 +19,7 @@ func New(config *config.Session) *SessionManagerCtx {
 		config:   config,
 		tokens:   make(map[string]string),
 		sessions: make(map[string]*SessionCtx),
-		cursors:  make(map[types.Session]types.Cursor),
+		cursors:  make(map[types.Session][]types.Cursor),
 		emmiter:  events.New(),
 	}
 
@@ -56,7 +56,7 @@ type SessionManagerCtx struct {
 	host   types.Session
 	hostMu sync.Mutex
 
-	cursors   map[types.Session]types.Cursor
+	cursors   map[types.Session][]types.Cursor
 	cursorsMu sync.Mutex
 
 	emmiter    events.EventEmmiter
@@ -205,15 +205,21 @@ func (manager *SessionManagerCtx) SetCursor(cursor types.Cursor, session types.S
 	manager.cursorsMu.Lock()
 	defer manager.cursorsMu.Unlock()
 
-	manager.cursors[session] = cursor
+	list, ok := manager.cursors[session]
+	if !ok {
+		list = []types.Cursor{}
+	}
+
+	list = append(list, cursor)
+	manager.cursors[session] = list
 }
 
-func (manager *SessionManagerCtx) PopCursors() map[types.Session]types.Cursor {
+func (manager *SessionManagerCtx) PopCursors() map[types.Session][]types.Cursor {
 	manager.cursorsMu.Lock()
 	defer manager.cursorsMu.Unlock()
 
 	cursors := manager.cursors
-	manager.cursors = make(map[types.Session]types.Cursor)
+	manager.cursors = make(map[types.Session][]types.Cursor)
 
 	return cursors
 }
