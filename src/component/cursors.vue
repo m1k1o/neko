@@ -21,7 +21,10 @@
   import { getMovementXYatPercent } from './utils/canvas-movement'
 
   const CANVAS_SCALE = 2
+  // How often are position data arriving
   const POS_INTERVAL_MS = 750
+  // How many pixel change is considered as movement
+  const POS_THRESHOLD_PX = 20
 
   @Component({
     name: 'neko-cursors',
@@ -85,9 +88,9 @@
     // last points coordinates for each session
     private _last_points!: Record<string, Cursor>
 
-    canvasAnimate(now: number = NaN) {
+    canvasAnimateFrame(now: number = NaN) {
       // request another frame
-      if (this._percent <= 1) window.requestAnimationFrame(this.canvasAnimate)
+      if (this._percent <= 1) window.requestAnimationFrame(this.canvasAnimateFrame)
 
       // calculate factor
       const delta = (now - this._last_animation_time) / POS_INTERVAL_MS
@@ -113,21 +116,55 @@
     @Watch('hostId')
     @Watch('cursors')
     canvasUpdateCursors() {
+      // track unchanged cursors
+      let unchanged = 0
+
       // create points for animation
       this._points = []
       for (const { id, cursors } of this.cursors) {
-        // ignore my and host's cursor
-        if (id == this.sessionId || id == this.hostId) continue
+        if (
+          // if there are no positions
+          cursors.length == 0 ||
+          // ignore own cursor
+          id == this.sessionId ||
+          // ignore host's cursor
+          id == this.hostId
+        ) {
+          unchanged++
+          continue
+        }
+
+        // get last point
+        const new_last_point = cursors[cursors.length - 1]
 
         // add last cursor position to cursors (if available)
         let pos = { id } as SessionCursors
         if (id in this._last_points) {
-          pos.cursors = [this._last_points[id], ...cursors]
+          const last_point = this._last_points[id]
+
+          // if cursor did not move considerably
+          if (
+            Math.abs(last_point.x - new_last_point.x) < POS_THRESHOLD_PX &&
+            Math.abs(last_point.y - new_last_point.y) < POS_THRESHOLD_PX
+          ) {
+            // we knew that this cursor did not change, but other
+            // might, so we keep only one point to be drawn
+            pos.cursors = [new_last_point]
+            // and increate unchanged counter
+            unchanged++
+          } else {
+            // if cursor moved, we want to include last point
+            // in the animation, so that movement can be seamless
+            pos.cursors = [last_point, ...cursors]
+            this._last_points[id] = new_last_point
+          }
         } else {
+          // if cursor does not have last point, it is not
+          // displayed in canvas and it should be now
           pos.cursors = [...cursors]
+          this._last_points[id] = new_last_point
         }
 
-        this._last_points[id] = cursors[cursors.length - 1]
         this._points.push(pos)
       }
 
@@ -138,11 +175,16 @@
         return
       }
 
+      // if all cursors are unchanged
+      if (unchanged == this.cursors.length) {
+        return
+      }
+
       // start animation if not running
       const percent = this._percent
       this._percent = 0
-      if (percent > 1 || percent == 0) {
-        this.canvasAnimate()
+      if (percent > 1 || !percent) {
+        this.canvasAnimateFrame()
       }
     }
 
