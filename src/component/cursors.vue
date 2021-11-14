@@ -63,6 +63,7 @@
       this._overlay.width = width * CANVAS_SCALE
       this._overlay.height = height * CANVAS_SCALE
 
+      // store last drawing points
       this._last_points = {}
     }
 
@@ -76,18 +77,21 @@
     }
 
     // start as undefined to prevent jumping
-    private _prev_time!: number
+    private _last_animation_time!: number
+    // current animation progress (0-1)
     private _percent!: number
+    // points to be animated for each session
     private _points!: SessionCursors[]
+    // last points coordinates for each session
     private _last_points!: Record<string, Cursor>
 
     canvasAnimate(now: number = NaN) {
       // request another frame
-      if (this._percent <= 1) requestAnimationFrame(this.canvasAnimate)
+      if (this._percent <= 1) window.requestAnimationFrame(this.canvasAnimate)
 
       // calculate factor
-      const delta = (now - this._prev_time) / POS_INTERVAL_MS
-      this._prev_time = now
+      const delta = (now - this._last_animation_time) / POS_INTERVAL_MS
+      this._last_animation_time = now
 
       // skip very first delta to prevent jumping
       if (isNaN(delta)) return
@@ -95,9 +99,8 @@
       // set the animation position
       this._percent += delta
 
+      // clear & scale canvas
       this.canvasClear()
-
-      // scale
       this._ctx.setTransform(CANVAS_SCALE, 0, 0, CANVAS_SCALE, 0, 0)
 
       // draw current position
@@ -158,6 +161,7 @@
         return
       }
 
+      // draw inactive cursor tag
       this._ctx.save()
       this._ctx.font = '14px Arial, sans-serif'
       this._ctx.textBaseline = 'top'
