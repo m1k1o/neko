@@ -6,13 +6,22 @@ export interface Point {
 }
 
 // movement: percent is 0-1
-export function getMovementXYatPercent(points: Point[], percent: number): Point {
-  if (points.length == 0) { console.error('no points specified'); return { x:0, y:0 } }
-  if (points.length == 1) return points[0]
-  if (points.length == 2) return getLineXYatPercent(points[0], points[1], percent)
-  if (points.length == 3) return getQuadraticBezierXYatPercent(points[0], points[1], points[2], percent)
-  if (points.length == 4) return getCubicBezierXYatPercent(points[0], points[1], points[2], points[3], percent)
-  console.error('max 4 points supported'); return points[4]
+export function getMovementXYatPercent(p: Point[], percent: number): Point {
+  const len = p.length
+  if (len == 0) {
+    console.error('getMovementXYatPercent: no points specified');
+    return { x:0, y:0 }
+  }
+
+  if (len == 1) return p[0]
+  if (len == 2) return getLineXYatPercent(p[0], p[1], percent)
+  if (len == 3) return getQuadraticBezierXYatPercent(p[0], p[1], p[2], percent)
+  if (len == 4) return getCubicBezierXYatPercent(p[0], p[1], p[2], p[3], percent)
+
+  // TODO: Support more than 4 points
+  if (len-1 % 3 == 0) return getCubicBezierXYatPercent(p[0], p[(len-1)/3], p[((len-1)/3)*2], p[len-1], percent)
+  else if (len-1 % 2 == 0) return getQuadraticBezierXYatPercent(p[0], p[(len-1)/2], p[len-1], percent)
+  else return getLineXYatPercent(p[0], p[len-1], percent)
 }
 
 // line: percent is 0-1
