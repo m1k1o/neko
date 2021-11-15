@@ -37,7 +37,7 @@
   import { keySymsRemap } from './utils/keyboard-remapping'
   import { getFilesFromDataTansfer } from './utils/file-upload'
   import { NekoWebRTC } from './internal/webrtc'
-  import { Scroll } from './types/state'
+  import { Session, Scroll } from './types/state'
   import { CursorPosition, CursorImage } from './types/webrtc'
   import { CursorDrawFunction, Dimension, KeyboardModifiers } from './types/cursors'
 
@@ -59,6 +59,12 @@
     private focused = false
 
     @Prop()
+    private readonly sessions!: Record<string, Session>
+
+    @Prop()
+    private readonly hostId!: string
+
+    @Prop()
     private readonly webrtc!: NekoWebRTC
 
     @Prop()
@@ -69,9 +75,6 @@
 
     @Prop()
     private readonly canvasSize!: Dimension
-
-    @Prop()
-    private readonly cursorTag!: string
 
     @Prop()
     private readonly cursorDraw!: CursorDrawFunction | null
@@ -421,8 +424,8 @@
       }
     }
 
+    @Watch('hostId')
     @Watch('cursorDraw')
-    @Watch('cursorTag')
     canvasRequestRedraw() {
       // skip rendering if there is already in progress
       if (this.canvasRequestedFrame) return
@@ -459,7 +462,7 @@
 
       // use custom draw function, if available
       if (this.cursorDraw) {
-        this.cursorDraw(this._ctx, x, y, this.cursorElement, this.cursorImage, this.cursorTag)
+        this.cursorDraw(this._ctx, x, y, this.cursorElement, this.cursorImage, this.hostId)
         return
       }
 
@@ -473,7 +476,8 @@
       )
 
       // draw cursor tag
-      if (this.cursorTag) {
+      const cursorTag = this.sessions[this.hostId]?.profile.name || ''
+      if (cursorTag) {
         x += this.cursorImage.width
         y += this.cursorImage.height
 
@@ -484,10 +488,10 @@
         this._ctx.shadowBlur = 2
         this._ctx.lineWidth = 2
         this._ctx.fillStyle = 'black'
-        this._ctx.strokeText(this.cursorTag, x, y)
+        this._ctx.strokeText(cursorTag, x, y)
         this._ctx.shadowBlur = 0
         this._ctx.fillStyle = 'white'
-        this._ctx.fillText(this.cursorTag, x, y)
+        this._ctx.fillText(cursorTag, x, y)
         this._ctx.restore()
       }
     }

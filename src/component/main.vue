@@ -14,16 +14,13 @@
         :cursorDraw="inactiveCursorDrawFunction"
       />
       <neko-overlay
+        :sessions="state.sessions"
+        :hostId="state.control.host_id"
         :webrtc="connection.webrtc"
         :scroll="state.control.scroll"
         :screenSize="state.screen.size"
         :canvasSize="canvasSize"
         :isControling="controlling"
-        :cursorTag="
-          state.control.implicit_hosting && state.control.host_id != null
-            ? state.sessions[state.control.host_id].profile.name
-            : ''
-        "
         :cursorDraw="cursorDrawFunction"
         :implicitControl="state.control.implicit_hosting && state.sessions[state.session_id].profile.can_host"
         :inactiveCursors="state.cursors.enabled && state.sessions[state.session_id].profile.sends_inactive_cursor"

@@ -194,14 +194,14 @@
       x = Math.round((x / this.screenSize.width) * width)
       y = Math.round((y / this.screenSize.height) * height)
 
-      // get cursor tag
-      const cursorTag = this.sessions[id]?.profile.name || ''
-
       // use custom draw function, if available
       if (this.cursorDraw) {
-        this.cursorDraw(this._ctx, x, y, cursorTag)
+        this.cursorDraw(this._ctx, x, y, id)
         return
       }
+
+      // get cursor tag
+      const cursorTag = this.sessions[id]?.profile.name || ''
 
       // draw inactive cursor tag
       this._ctx.save()

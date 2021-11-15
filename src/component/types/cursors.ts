@@ -6,14 +6,14 @@ export type CursorDrawFunction = (
   y: number,
   cursorElement: HTMLImageElement,
   cursorImage: CursorImage,
-  cursorTag: string,
+  sessionId: string,
 ) => void
 
 export type InactiveCursorDrawFunction = (
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
-  cursorTag: string,
+  sessionId: string,
 ) => void
 
 export interface Dimension {
