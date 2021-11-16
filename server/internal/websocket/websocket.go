@@ -18,6 +18,8 @@ import (
 	"m1k1o/neko/internal/utils"
 )
 
+const CONTROL_PROTECTION_SESSION = "control_protection"
+
 func New(sessions types.SessionManager, remote types.RemoteManager, broadcast types.BroadcastManager, webrtc types.WebRTCManager, conf *config.WebSocket) *WebSocketHandler {
 	logger := log.With().Str("module", "websocket").Logger()
 
@@ -28,6 +30,12 @@ func New(sessions types.SessionManager, remote types.RemoteManager, broadcast ty
 
 	if len(conf.Locks) > 0 {
 		logger.Info().Msgf("locked resources: %+v", conf.Locks)
+	}
+
+	// if control protection is enabled
+	if conf.ControlProtection {
+		locks["control"] = CONTROL_PROTECTION_SESSION
+		logger.Info().Msgf("control locked on behalf of control protection")
 	}
 
 	return &WebSocketHandler{
@@ -84,6 +92,23 @@ func (ws *WebSocketHandler) Start() {
 		} else {
 			ws.logger.Debug().Str("id", id).Msg("session connected")
 		}
+
+		// if control protection is enabled and at least one admin
+		// and if room was locked on behalf control protection, unlock
+		sess, ok := ws.handler.locked["control"]
+		if ok && ws.conf.ControlProtection && sess == CONTROL_PROTECTION_SESSION && len(ws.sessions.Admins()) > 0 {
+			delete(ws.handler.locked, "control")
+			ws.logger.Info().Msgf("control unlocked on behalf of control protection")
+
+			if err := ws.sessions.Broadcast(
+				message.AdminLock{
+					Event:    event.ADMIN_UNLOCK,
+					ID:       id,
+					Resource: "control",
+				}, nil); err != nil {
+				ws.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.ADMIN_UNLOCK)
+			}
+		}
 	})
 
 	ws.sessions.OnDestroy(func(id string, session types.Session) {
@@ -91,6 +116,22 @@ func (ws *WebSocketHandler) Start() {
 			ws.logger.Warn().Str("id", id).Err(err).Msg("session destroyed with and error")
 		} else {
 			ws.logger.Debug().Str("id", id).Msg("session destroyed")
+		}
+
+		// if control protection is enabled and no admin
+		if ws.conf.ControlProtection && len(ws.sessions.Admins()) == 0 {
+			ws.handler.locked["control"] = CONTROL_PROTECTION_SESSION
+			ws.logger.Info().Msgf("control locked and released on behalf of control protection")
+			ws.handler.adminRelease(id, session)
+
+			if err := ws.sessions.Broadcast(
+				message.AdminLock{
+					Event:    event.ADMIN_LOCK,
+					ID:       id,
+					Resource: "control",
+				}, nil); err != nil {
+				ws.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.ADMIN_LOCK)
+			}
 		}
 	})
 

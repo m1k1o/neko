@@ -68,6 +68,9 @@ NEKO_ICESERVERS:
 NEKO_LOCKS:
   - Resources, that will be locked when starting, separated by whitespace.
   - Currently supported: control login
+NEKO_CONTROL_PROTECTION:
+  - Control protection means, users can gain control only if at least one admin is in the room.
+  - e.g. false
 ```
 
 ## Agruments
