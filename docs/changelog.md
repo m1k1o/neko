@@ -4,6 +4,7 @@
 
 ### New Features
 - Lock controls for users, globally.
+- Ability to set locks from config `NEKO_LOCKS=control login`.
 
 ### Misc
 - ARM-based images not bound to Raspberry Pi only.

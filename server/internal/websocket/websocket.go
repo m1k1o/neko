@@ -21,6 +21,15 @@ import (
 func New(sessions types.SessionManager, remote types.RemoteManager, broadcast types.BroadcastManager, webrtc types.WebRTCManager, conf *config.WebSocket) *WebSocketHandler {
 	logger := log.With().Str("module", "websocket").Logger()
 
+	locks := make(map[string]string)
+	for _, lock := range conf.Locks {
+		locks[lock] = "" // empty session ID
+	}
+
+	if len(conf.Locks) > 0 {
+		logger.Info().Msgf("locked resources: %+v", conf.Locks)
+	}
+
 	return &WebSocketHandler{
 		logger:   logger,
 		shutdown: make(chan interface{}),
@@ -39,7 +48,7 @@ func New(sessions types.SessionManager, remote types.RemoteManager, broadcast ty
 			sessions:  sessions,
 			webrtc:    webrtc,
 			banned:    make(map[string]bool),
-			locked:    make(map[string]string),
+			locked:    locks,
 		},
 		conns: 0,
 	}

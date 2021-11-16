@@ -65,6 +65,9 @@ NEKO_ICESERVERS:
   - Describes multiple STUN and TURN server that can be used by the ICEAgent to establish a connection with a peer
   - e.g. '[{"urls": ["turn:turn.example.com:19302", "stun:stun.example.com:19302"], "username": "name", "credential": "password"}, {"urls": ["stun:stun.example2.com:19302"]}]'
   - [More information](https://developer.mozilla.org/en-US/docs/Web/API/RTCIceServer)
+NEKO_LOCKS:
+  - Resources, that will be locked when starting, separated by whitespace.
+  - Currently supported: control login
 ```
 
 ## Agruments
