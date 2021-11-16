@@ -2,6 +2,9 @@
 
 ## master branch
 
+### New Features
+- Lock controls for users, globally.
+
 ### Misc
 - ARM-based images not bound to Raspberry Pi only.
 - Add japanese characters support.

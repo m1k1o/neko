@@ -106,6 +106,12 @@ type AdminTarget struct {
 	ID     string `json:"id"`
 }
 
+type AdminLock struct {
+	Event    string `json:"event"`
+	Resource string `json:"resource"`
+	ID       string `json:"id"`
+}
+
 type ScreenResolution struct {
 	Event  string `json:"event"`
 	ID     string `json:"id,omitempty"`

@@ -7,7 +7,6 @@ import (
 )
 
 func (h *MessageHandler) controlRelease(id string, session types.Session) error {
-
 	// check if session is host
 	if !h.sessions.IsHost(id) {
 		h.logger.Debug().Str("id", id).Msg("is not the host")
@@ -34,6 +33,13 @@ func (h *MessageHandler) controlRelease(id string, session types.Session) error 
 func (h *MessageHandler) controlRequest(id string, session types.Session) error {
 	// check for host
 	if !h.sessions.HasHost() {
+		// check if control is locked or user is admin
+		_, ok := h.locked["control"]
+		if ok && !session.Admin() {
+			h.logger.Debug().Msg("control is locked")
+			return nil
+		}
+
 		// set host
 		err := h.sessions.SetHost(id)
 		if err != nil {
@@ -88,6 +94,13 @@ func (h *MessageHandler) controlGive(id string, session types.Session, payload *
 
 	if !h.sessions.Has(payload.ID) {
 		h.logger.Debug().Str("id", payload.ID).Msg("user does not exist")
+		return nil
+	}
+
+	// check if control is locked or giver is admin
+	_, ok := h.locked["control"]
+	if ok && !session.Admin() {
+		h.logger.Debug().Msg("control is locked")
 		return nil
 	}
 

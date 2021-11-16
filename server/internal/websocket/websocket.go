@@ -39,7 +39,7 @@ func New(sessions types.SessionManager, remote types.RemoteManager, broadcast ty
 			sessions:  sessions,
 			webrtc:    webrtc,
 			banned:    make(map[string]bool),
-			locked:    false,
+			locked:    make(map[string]string),
 		},
 		conns: 0,
 	}

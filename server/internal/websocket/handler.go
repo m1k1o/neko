@@ -19,7 +19,7 @@ type MessageHandler struct {
 	remote    types.RemoteManager
 	broadcast types.BroadcastManager
 	banned    map[string]bool
-	locked    bool
+	locked    map[string]string
 }
 
 func (h *MessageHandler) Connected(admin bool, socket *WebSocket) (bool, string, error) {
@@ -34,7 +34,8 @@ func (h *MessageHandler) Connected(admin bool, socket *WebSocket) (bool, string,
 		}
 	}
 
-	if h.locked && !admin {
+	_, ok := h.locked["login"]
+	if ok && !admin {
 		h.logger.Debug().Msg("server locked")
 		return false, "locked", nil
 	}
@@ -128,9 +129,17 @@ func (h *MessageHandler) Message(id string, raw []byte) error {
 
 	// Admin Events
 	case event.ADMIN_LOCK:
-		return errors.Wrapf(h.adminLock(id, session), "%s failed", header.Event)
+		payload := &message.AdminLock{}
+		return errors.Wrapf(
+			utils.Unmarshal(payload, raw, func() error {
+				return h.adminLock(id, session, payload)
+			}), "%s failed", header.Event)
 	case event.ADMIN_UNLOCK:
-		return errors.Wrapf(h.adminUnlock(id, session), "%s failed", header.Event)
+		payload := &message.AdminLock{}
+		return errors.Wrapf(
+			utils.Unmarshal(payload, raw, func() error {
+				return h.adminUnlock(id, session, payload)
+			}), "%s failed", header.Event)
 	case event.ADMIN_CONTROL:
 		return errors.Wrapf(h.adminControl(id, session), "%s failed", header.Event)
 	case event.ADMIN_RELEASE:

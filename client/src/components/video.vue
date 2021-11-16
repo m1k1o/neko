@@ -213,7 +213,7 @@
     @Ref('resolution') readonly _resolution!: any
     @Ref('clipboard') readonly _clipboard!: any
 
-    @Prop(Boolean) readonly hideControls = false
+    @Prop(Boolean) readonly hideControls!: boolean
 
     private keyboard = GuacamoleKeyboard()
     private observer = new ResizeObserver(this.onResise.bind(this))

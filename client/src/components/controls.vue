@@ -1,17 +1,17 @@
 <template>
   <ul>
-    <li v-if="!isTouch">
+    <li v-if="!isTouch && seesControl">
       <i
         :class="[
-          shakeKbd ? 'shake' : '',
-          hosted && !hosting ? 'disabled' : '',
-          !hosted && !hosting ? 'faded' : '',
+          !disabeld && shakeKbd ? 'shake' : '',
+          disabeld && !hosting ? 'disabled' : '',
+          !disabeld && !hosting ? 'faded' : '',
           'fas',
           'fa-keyboard',
           'request',
         ]"
         v-tooltip="{
-          content: !hosted || hosting ? (hosting ? $t('controls.release') : $t('controls.request')) : '',
+          content: !disabeld || hosting ? (hosting ? $t('controls.release') : $t('controls.request')) : '',
           placement: 'top',
           offset: 5,
           boundariesElement: 'body',
@@ -20,7 +20,7 @@
         @click.stop.prevent="toggleControl"
       />
     </li>
-    <li>
+    <li v-if="seesControl">
       <label
         class="switch"
         v-tooltip="{
@@ -240,7 +240,7 @@
 
   @Component({ name: 'neko-controls' })
   export default class extends Vue {
-    @Prop(Boolean) readonly shakeKbd = false
+    @Prop(Boolean) readonly shakeKbd!: boolean
 
     get isTouch() {
       return (
@@ -249,7 +249,15 @@
       )
     }
 
-    get hosted() {
+    get severLocked(): boolean {
+      return 'control' in this.$accessor.locked && this.$accessor.locked['control']
+    }
+
+    get seesControl(): boolean {
+      return !this.severLocked || this.$accessor.user.admin || this.hosting
+    }
+
+    get disabeld() {
       return this.$accessor.remote.hosted
     }
 

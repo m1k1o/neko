@@ -2,6 +2,7 @@ import Vue from 'vue'
 import Vuex from 'vuex'
 import { useAccessor, mutationTree, actionTree } from 'typed-vuex'
 import { EVENT } from '~/neko/events'
+import { AdminLockResource } from '~/neko/messages'
 import { get, set } from '~/utils/localstorage'
 
 import * as video from './video'
@@ -18,7 +19,7 @@ export const state = () => ({
   active: false,
   connecting: false,
   connected: false,
-  locked: false,
+  locked: {} as Record<string, boolean>,
 })
 
 export const mutations = mutationTree(state, {
@@ -31,8 +32,12 @@ export const mutations = mutationTree(state, {
     state.password = password
   },
 
-  setLocked(state, locked: boolean) {
-    state.locked = locked
+  setLocked(state, resource: string) {
+    Vue.set(state.locked, resource, true)
+  },
+
+  setUnlocked(state, resource: string) {
+    Vue.set(state.locked, resource, false)
   },
 
   setConnnecting(state) {
@@ -58,20 +63,20 @@ export const actions = actionTree(
       accessor.settings.initialise()
     },
 
-    lock() {
+    lock(_, resource: AdminLockResource) {
       if (!accessor.connected || !accessor.user.admin) {
         return
       }
 
-      $client.sendMessage(EVENT.ADMIN.LOCK)
+      $client.sendMessage(EVENT.ADMIN.LOCK, { resource })
     },
 
-    unlock() {
+    unlock(_, resource: AdminLockResource) {
       if (!accessor.connected || !accessor.user.admin) {
         return
       }
 
-      $client.sendMessage(EVENT.ADMIN.UNLOCK)
+      $client.sendMessage(EVENT.ADMIN.UNLOCK, { resource })
     },
 
     login({ state }, { displayname, password }: { displayname: string; password: string }) {

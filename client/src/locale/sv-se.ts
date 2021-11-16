@@ -2,6 +2,8 @@ export const logout = 'logga ut'
 export const unsupported = 'denna webbläsare har inte stöd för webrtc'
 export const admin_loggedin = 'Du är inloggad som en administratör'
 export const you = 'Du'
+// TODO
+//export const somebody = 'Somebody'
 export const send_a_message = 'Skicka ett meddelande'
 
 export const side = {
@@ -51,11 +53,24 @@ export const controls = {
   unlock: 'Lås upp kontrollen',
 }
 
-export const room = {
-  lock: 'Lås rum (för användare)',
-  unlock: 'Lås upp rummet (för användare)',
-  locked: 'Rum låst (för användare)',
-  unlocked: 'Rum upplåst (för användare)',
+export const locks = {
+  // TODO
+  //control: {
+  //  lock: 'Lock Controls (for users)',
+  //  unlock: 'Unlock Controls (for users)',
+  //  locked: 'Controls Locked (for users)',
+  //  unlocked: 'Controls Unlocked (for users)',
+  //  notif_locked: 'locked controls for users',
+  //  notif_unlocked: 'unlocked controls for users',
+  //},
+  login: {
+    lock: 'Lås rum (för användare)',
+    unlock: 'Lås upp rummet (för användare)',
+    locked: 'Rum låst (för användare)',
+    unlocked: 'Rum upplåst (för användare)',
+    notif_locked: 'låste rummet',
+    notif_unlocked: 'låste upp rummet',
+  },
 }
 
 export const setting = {
@@ -98,6 +113,4 @@ export const notifications = {
   kicked: 'sparkade {name}',
   muted: 'tystade {name}',
   unmuted: 'tog bort tystningen på {name}',
-  room_locked: 'låste rummet',
-  room_unlocked: 'låste upp rummet',
 }

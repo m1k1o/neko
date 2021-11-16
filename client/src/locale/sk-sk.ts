@@ -2,6 +2,8 @@ export const logout = 'odhlásiť sa'
 export const unsupported = 'tento prehliadač nepodporuje webrtc'
 export const admin_loggedin = 'Ste prihlásení/á ako administrátor'
 // export const you = '' // Incorrect in some translations! Cannot be used!
+// TODO
+//export const somebody = 'Somebody'
 export const send_a_message = 'Odoslať správu'
 
 export const side = {
@@ -51,11 +53,23 @@ export const controls = {
   unlock: 'Odomknúť ovládanie',
 }
 
-export const room = {
-  lock: 'Zamknúť miestnosť (pre používateľov)',
-  unlock: 'Odomknúť miestnosť (pre používateľov)',
-  locked: 'Miestnosť je zamknutá (pre používateľov)',
-  unlocked: 'Miestnosť odomknutá (pre používateľov)',
+export const locks = {
+  control: {
+    lock: 'Zakázať ovládanie (pre používateľov)',
+    unlock: 'Povoliť ovládanie (pre používateľov)',
+    locked: 'Ovládanie je zakázané (pre používateľov)',
+    unlocked: 'Ovládanie je povolené (pre používateľov)',
+    notif_locked: 'zakázal/a ovládanie pre používateľov',
+    notif_unlocked: 'povolil/a ovládanie pre používateľov',
+  },
+  login: {
+    lock: 'Zamknúť miestnosť (pre používateľov)',
+    unlock: 'Odomknúť miestnosť (pre používateľov)',
+    locked: 'Miestnosť je zamknutá (pre používateľov)',
+    unlocked: 'Miestnosť odomknutá (pre používateľov)',
+    notif_locked: 'miestnosť bola zamknutá',
+    notif_unlocked: 'miestnosť bola odomknutá',
+  },
 }
 
 export const setting = {
@@ -95,6 +109,4 @@ export const notifications = {
   kicked: '{name} bol/a vykopnutý/a',
   muted: 'zakázal chat používateľovi {name}',
   unmuted: 'povolil chat používateľovi {name}',
-  room_locked: 'miestnosť bola zamknutá',
-  room_unlocked: 'miestnosť bola odomknutá',
 }

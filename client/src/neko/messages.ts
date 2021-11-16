@@ -39,6 +39,7 @@ export type WebSocketPayloads =
   | ScreenResolutionPayload
   | ScreenConfigurationsPayload
   | AdminPayload
+  | AdminLockPayload
   | BroadcastStatusPayload
   | BroadcastCreatePayload
 
@@ -221,4 +222,15 @@ export interface AdminTargetMessage extends WebSocketMessage, AdminTargetPayload
 export interface AdminTargetPayload {
   id: string
   target?: string
+}
+
+export interface AdminLockMessage extends WebSocketMessage, AdminLockPayload {
+  event: AdminEvents
+  id: string
+}
+
+export type AdminLockResource = 'login' | 'control'
+
+export interface AdminLockPayload {
+  resource: AdminLockResource
 }

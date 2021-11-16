@@ -2,6 +2,8 @@ export const logout = 'Se déconnecter'
 export const unsupported = 'ce navigateur ne prend pas en charge WebRTC'
 export const admin_loggedin = "Vous êtes connecté en tant qu'admin"
 export const you = 'Vous'
+// TODO
+//export const somebody = 'Somebody'
 export const send_a_message = 'Envoyer un message'
 
 export const side = {
@@ -44,11 +46,24 @@ export const context = {
   },
 }
 
-export const controls = {
-  release: 'Relacher le contrôle',
-  request: 'Demander le contrôle',
-  lock: 'Vérouiller le contrôle',
-  unlock: 'Débloquer le contrôle',
+export const locks = {
+  // TODO
+  //control: {
+  //  lock: 'Lock Controls (for users)',
+  //  unlock: 'Unlock Controls (for users)',
+  //  locked: 'Controls Locked (for users)',
+  //  unlocked: 'Controls Unlocked (for users)',
+  //  notif_locked: 'locked controls for users',
+  //  notif_unlocked: 'unlocked controls for users',
+  //},
+  login: {
+    release: 'Relacher le contrôle',
+    request: 'Demander le contrôle',
+    lock: 'Vérouiller le contrôle',
+    unlock: 'Débloquer le contrôle',
+    notif_locked: 'a vérouillé la salle',
+    notif_unlocked: 'a dévérouillé la salle',
+  },
 }
 
 export const room = {
@@ -98,6 +113,4 @@ export const notifications = {
   kicked: 'a kick {name}',
   muted: 'a mute {name}',
   unmuted: 'a démute {name}',
-  room_locked: 'a vérouillé la salle',
-  room_unlocked: 'a dévérouillé la salle',
 }

@@ -7,16 +7,23 @@
     <ul class="menu">
       <li>
         <i
-          :class="[{ disabled: !admin }, { 'fa-lock-open': !locked }, { 'fa-lock': locked }, 'fas', 'lock']"
-          @click="toggleLock"
+          :class="[{ disabled: !admin }, { locked: isLocked('control') }, 'fas', 'fa-mouse']"
+          @click="toggleLock('control')"
           v-tooltip="{
-            content: admin
-              ? locked
-                ? $t('room.unlock')
-                : $t('room.lock')
-              : locked
-              ? $t('room.locked')
-              : $t('room.unlocked'),
+            content: lockedTooltip('control'),
+            placement: 'bottom',
+            offset: 5,
+            boundariesElement: 'body',
+            delay: { show: 300, hide: 100 },
+          }"
+        />
+      </li>
+      <li>
+        <i
+          :class="[{ disabled: !admin }, { locked: isLocked('login') }, locked ? 'fa-lock' : 'fa-lock-open', 'fas']"
+          @click="toggleLock('login')"
+          v-tooltip="{
+            content: lockedTooltip('login'),
             placement: 'bottom',
             offset: 5,
             boundariesElement: 'body',
@@ -90,7 +97,7 @@
           opacity: 0.8;
         }
 
-        .fa-lock {
+        .locked {
           color: rgba($color: $style-error, $alpha: 0.5);
         }
 
@@ -138,6 +145,7 @@
 
 <script lang="ts">
   import { Component, Ref, Watch, Vue } from 'vue-property-decorator'
+  import { AdminLockResource } from '~/neko/messages'
 
   @Component({ name: 'neko-settings' })
   export default class extends Vue {
@@ -167,14 +175,26 @@
       this.readTexts = this.texts
     }
 
-    toggleLock() {
-      if (this.admin) {
-        if (this.locked) {
-          this.$accessor.unlock()
-        } else {
-          this.$accessor.lock()
-        }
+    toggleLock(resource: AdminLockResource) {
+      if (!this.admin) return
+
+      if (this.isLocked(resource)) {
+        this.$accessor.unlock(resource)
+      } else {
+        this.$accessor.lock(resource)
       }
+    }
+
+    isLocked(resource: AdminLockResource): boolean {
+      return resource in this.locked && this.locked[resource]
+    }
+
+    lockedTooltip(resource: AdminLockResource) {
+      if (this.admin) {
+        return this.$t(`locks.${resource}.` + (this.isLocked(resource) ? `unlock` : `lock`))
+      }
+
+      return this.$t(`locks.${resource}.` + (this.isLocked(resource) ? `locked` : `unlocked`))
     }
   }
 </script>

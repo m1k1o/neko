@@ -21,6 +21,7 @@ import {
   BroadcastStatusPayload,
   AdminPayload,
   AdminTargetPayload,
+  AdminLockMessage,
 } from './messages'
 
 interface NekoEvents extends BaseEvents {}
@@ -461,21 +462,23 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
     })
   }
 
-  protected [EVENT.ADMIN.LOCK]({ id }: AdminPayload) {
-    this.$accessor.setLocked(true)
+  protected [EVENT.ADMIN.LOCK]({ id, resource }: AdminLockMessage) {
+    this.$accessor.setLocked(resource)
+
     this.$accessor.chat.newMessage({
       id,
-      content: this.$vue.$t('notifications.room_locked') as string,
+      content: this.$vue.$t(`locks.${resource}.notif_locked`) as string,
       type: 'event',
       created: new Date(),
     })
   }
 
-  protected [EVENT.ADMIN.UNLOCK]({ id }: AdminPayload) {
-    this.$accessor.setLocked(false)
+  protected [EVENT.ADMIN.UNLOCK]({ id, resource }: AdminLockMessage) {
+    this.$accessor.setUnlocked(resource)
+
     this.$accessor.chat.newMessage({
       id,
-      content: this.$vue.$t('notifications.room_unlocked') as string,
+      content: this.$vue.$t(`locks.${resource}.notif_unlocked`) as string,
       type: 'event',
       created: new Date(),
     })
