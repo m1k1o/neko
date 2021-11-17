@@ -187,13 +187,19 @@ func (ws *WebSocketHandler) Shutdown() error {
 func (ws *WebSocketHandler) Upgrade(w http.ResponseWriter, r *http.Request) error {
 	ws.logger.Debug().Msg("attempting to upgrade connection")
 
+	id, err := utils.NewUID(32)
+	if err != nil {
+		ws.logger.Error().Err(err).Msg("failed to generate user id")
+		return err
+	}
+
 	connection, err := ws.upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		ws.logger.Error().Err(err).Msg("failed to upgrade connection")
 		return err
 	}
 
-	id, ip, admin, err := ws.authenticate(r)
+	admin, err := ws.authenticate(r)
 	if err != nil {
 		ws.logger.Warn().Err(err).Msg("authentication failed")
 
@@ -213,16 +219,11 @@ func (ws *WebSocketHandler) Upgrade(w http.ResponseWriter, r *http.Request) erro
 	socket := &WebSocket{
 		id:         id,
 		ws:         ws,
-		address:    ip,
+		address:    utils.GetHttpRequestIP(r, ws.conf.Proxy),
 		connection: connection,
 	}
 
-	ok, reason, err := ws.handler.Connected(admin, socket)
-	if err != nil {
-		ws.logger.Error().Err(err).Msg("connection failed")
-		return err
-	}
-
+	ok, reason := ws.handler.Connected(admin, socket)
 	if !ok {
 		if err = connection.WriteJSON(message.SystemMessage{
 			Event:   event.SYSTEM_DISCONNECT,
@@ -288,25 +289,13 @@ func (ws *WebSocketHandler) IsAdmin(password string) (bool, error) {
 	return false, fmt.Errorf("invalid password")
 }
 
-func (ws *WebSocketHandler) authenticate(r *http.Request) (string, string, bool, error) {
-	ip := r.RemoteAddr
-
-	if ws.conf.Proxy {
-		ip = utils.ReadUserIP(r)
-	}
-
-	id, err := utils.NewUID(32)
-	if err != nil {
-		return "", ip, false, err
-	}
-
+func (ws *WebSocketHandler) authenticate(r *http.Request) (bool, error) {
 	passwords, ok := r.URL.Query()["password"]
 	if !ok || len(passwords[0]) < 1 {
-		return "", ip, false, fmt.Errorf("no password provided")
+		return false, fmt.Errorf("no password provided")
 	}
 
-	isAdmin, err := ws.IsAdmin(passwords[0])
-	return id, ip, isAdmin, err
+	return ws.IsAdmin(passwords[0])
 }
 
 func (ws *WebSocketHandler) handle(connection *websocket.Conn, id string) {

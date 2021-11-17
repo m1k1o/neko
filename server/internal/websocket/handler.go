@@ -22,7 +22,7 @@ type MessageHandler struct {
 	locked    map[string]string
 }
 
-func (h *MessageHandler) Connected(admin bool, socket *WebSocket) (bool, string, error) {
+func (h *MessageHandler) Connected(admin bool, socket *WebSocket) (bool, string) {
 	address := socket.Address()
 	if address == "" {
 		h.logger.Debug().Msg("no remote address")
@@ -30,17 +30,17 @@ func (h *MessageHandler) Connected(admin bool, socket *WebSocket) (bool, string,
 		ok, banned := h.banned[address]
 		if ok && banned {
 			h.logger.Debug().Str("address", address).Msg("banned")
-			return false, "banned", nil
+			return false, "banned"
 		}
 	}
 
 	_, ok := h.locked["login"]
 	if ok && !admin {
 		h.logger.Debug().Msg("server locked")
-		return false, "locked", nil
+		return false, "locked"
 	}
 
-	return true, "", nil
+	return true, ""
 }
 
 func (h *MessageHandler) Disconnected(id string) {
