@@ -292,8 +292,7 @@ func (h *MessageHandler) adminBan(id string, session types.Session, payload *mes
 	}
 
 	h.logger.Debug().Str("address", remote).Msg("adding address to banned")
-
-	h.banned[address[0]] = true
+	h.banned[address[0]] = id
 
 	if err := target.Kick("banned"); err != nil {
 		return err

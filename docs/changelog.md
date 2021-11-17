@@ -7,6 +7,7 @@
 - Ability to set locks from config `NEKO_LOCKS=control login`.
 - Added control protection - users can gain control only if at least one admin is in the room `NEKO_CONTROL_PROTECTION=true`.
 - Emotes sending on mouse down holding.
+- Include `banned`, `locked`, `server_started_at`, `last_admin_left_at`, `last_user_left_at`, `control_protection` data in stats.
 
 ### Misc
 - ARM-based images not bound to Raspberry Pi only.

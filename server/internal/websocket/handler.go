@@ -18,8 +18,8 @@ type MessageHandler struct {
 	webrtc    types.WebRTCManager
 	remote    types.RemoteManager
 	broadcast types.BroadcastManager
-	banned    map[string]bool
-	locked    map[string]string
+	banned    map[string]string // IP -> session ID (that banned it)
+	locked    map[string]string // resource name -> session ID (that locked it)
 }
 
 func (h *MessageHandler) Connected(admin bool, socket *WebSocket) (bool, string) {
@@ -27,8 +27,8 @@ func (h *MessageHandler) Connected(admin bool, socket *WebSocket) (bool, string)
 	if address == "" {
 		h.logger.Debug().Msg("no remote address")
 	} else {
-		ok, banned := h.banned[address]
-		if ok && banned {
+		_, ok := h.banned[address]
+		if ok {
 			h.logger.Debug().Str("address", address).Msg("banned")
 			return false, "banned"
 		}

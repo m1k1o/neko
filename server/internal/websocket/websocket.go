@@ -18,24 +18,26 @@ import (
 	"m1k1o/neko/internal/utils"
 )
 
-const CONTROL_PROTECTION_SESSION = "control_protection"
+const CONTROL_PROTECTION_SESSION = "by_control_protection"
 
 func New(sessions types.SessionManager, remote types.RemoteManager, broadcast types.BroadcastManager, webrtc types.WebRTCManager, conf *config.WebSocket) *WebSocketHandler {
 	logger := log.With().Str("module", "websocket").Logger()
 
 	locks := make(map[string]string)
+
+	// if control protection is enabled
+	if conf.ControlProtection {
+		locks["control"] = CONTROL_PROTECTION_SESSION
+		logger.Info().Msgf("control locked on behalf of control protection")
+	}
+
+	// apply default locks
 	for _, lock := range conf.Locks {
 		locks[lock] = "" // empty session ID
 	}
 
 	if len(conf.Locks) > 0 {
 		logger.Info().Msgf("locked resources: %+v", conf.Locks)
-	}
-
-	// if control protection is enabled
-	if conf.ControlProtection {
-		locks["control"] = CONTROL_PROTECTION_SESSION
-		logger.Info().Msgf("control locked on behalf of control protection")
 	}
 
 	return &WebSocketHandler{
@@ -55,10 +57,10 @@ func New(sessions types.SessionManager, remote types.RemoteManager, broadcast ty
 			broadcast: broadcast,
 			sessions:  sessions,
 			webrtc:    webrtc,
-			banned:    make(map[string]bool),
+			banned:    make(map[string]string),
 			locked:    locks,
 		},
-		conns: 0,
+		serverStartedAt: time.Now(),
 	}
 }
 
@@ -74,7 +76,12 @@ type WebSocketHandler struct {
 	remote   types.RemoteManager
 	conf     *config.WebSocket
 	handler  *MessageHandler
-	conns    uint32
+
+	// stats
+	conns           uint32
+	serverStartedAt time.Time
+	lastAdminLeftAt *time.Time
+	lastUserLeftAt  *time.Time
 }
 
 func (ws *WebSocketHandler) Start() {
@@ -109,6 +116,13 @@ func (ws *WebSocketHandler) Start() {
 				ws.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.ADMIN_UNLOCK)
 			}
 		}
+
+		// remove outdated stats
+		if session.Admin() {
+			ws.lastAdminLeftAt = nil
+		} else {
+			ws.lastUserLeftAt = nil
+		}
 	})
 
 	ws.sessions.OnDestroy(func(id string, session types.Session) {
@@ -118,8 +132,13 @@ func (ws *WebSocketHandler) Start() {
 			ws.logger.Debug().Str("id", id).Msg("session destroyed")
 		}
 
+		membersCount := len(ws.sessions.Members())
+		adminCount := len(ws.sessions.Admins())
+
 		// if control protection is enabled and no admin
-		if ws.conf.ControlProtection && len(ws.sessions.Admins()) == 0 {
+		// and room is not locked, lock
+		_, ok := ws.handler.locked["control"]
+		if !ok && ws.conf.ControlProtection && adminCount == 0 {
 			ws.handler.locked["control"] = CONTROL_PROTECTION_SESSION
 			ws.logger.Info().Msgf("control locked and released on behalf of control protection")
 			ws.handler.adminRelease(id, session)
@@ -132,6 +151,18 @@ func (ws *WebSocketHandler) Start() {
 				}, nil); err != nil {
 				ws.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.ADMIN_LOCK)
 			}
+		}
+
+		// if this was the last admin
+		if session.Admin() && adminCount == 0 {
+			now := time.Now()
+			ws.lastAdminLeftAt = &now
+		}
+
+		// if this was the last user
+		if !session.Admin() && membersCount-adminCount == 0 {
+			now := time.Now()
+			ws.lastUserLeftAt = &now
 		}
 	})
 
@@ -274,6 +305,15 @@ func (ws *WebSocketHandler) Stats() types.Stats {
 		Connections: atomic.LoadUint32(&ws.conns),
 		Host:        host,
 		Members:     ws.sessions.Members(),
+
+		Banned: ws.handler.banned,
+		Locked: ws.handler.locked,
+
+		ServerStartedAt: ws.serverStartedAt,
+		LastAdminLeftAt: ws.lastAdminLeftAt,
+		LastUserLeftAt:  ws.lastUserLeftAt,
+
+		ControlProtection: ws.conf.ControlProtection,
 	}
 }
 
