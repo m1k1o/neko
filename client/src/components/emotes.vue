@@ -1,5 +1,5 @@
 <template>
-  <div class="emotes" @mouseleave="stopSendingEmotes"  @mouseup="stopSendingEmotes">
+  <div class="emotes" @mouseleave="stopSendingEmotes" @mouseup="stopSendingEmotes">
     <ul v-if="!muted">
       <li v-for="emote in recent" :key="emote">
         <div :class="['emote', emote]" @mousedown.stop.prevent="startSendingEmotes(emote)" />
