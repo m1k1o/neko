@@ -35,7 +35,7 @@ func (WebSocket) Init(cmd *cobra.Command) error {
 		return err
 	}
 
-	cmd.PersistentFlags().Bool("control_protection", true, "control protection means, users can gain control only if at least one admin is in the room")
+	cmd.PersistentFlags().Bool("control_protection", false, "control protection means, users can gain control only if at least one admin is in the room")
 	if err := viper.BindPFlag("control_protection", cmd.PersistentFlags().Lookup("control_protection")); err != nil {
 		return err
 	}
