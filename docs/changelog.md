@@ -6,6 +6,7 @@
 - Lock controls for users, globally.
 - Ability to set locks from config `NEKO_LOCKS=control login`.
 - Added control protection - users can gain control only if at least one admin is in the room `NEKO_CONTROL_PROTECTION=true`.
+- Emotes sending on mouse down holding.
 
 ### Misc
 - ARM-based images not bound to Raspberry Pi only.
