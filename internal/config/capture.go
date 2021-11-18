@@ -36,7 +36,7 @@ type Capture struct {
 
 func (Capture) Init(cmd *cobra.Command) error {
 	// audio
-	cmd.PersistentFlags().String("capture.audio.device", "auto_null.monitor", "audio device to capture")
+	cmd.PersistentFlags().String("capture.audio.device", "audio_output.monitor", "audio device to capture")
 	if err := viper.BindPFlag("capture.audio.device", cmd.PersistentFlags().Lookup("capture.audio.device")); err != nil {
 		return err
 	}
