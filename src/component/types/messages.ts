@@ -48,7 +48,7 @@ export interface SignalProvide {
 
 export type SignalCandidate = RTCIceCandidateInit
 
-export interface SignalAnswer {
+export interface SignalDescription {
   sdp: string
 }
 

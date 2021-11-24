@@ -82,9 +82,8 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
 
       if (type == 'answer') {
         this._connection.websocket.send(EVENT.SIGNAL_ANSWER, { sdp })
-      //} else if (type == 'offer') {
-      //  // Todo: Implement
-      //  this._connection.websocket.send(EVENT.SIGNAL_OFFER, { sdp })
+      } else if (type == 'offer') {
+        this._connection.websocket.send(EVENT.SIGNAL_OFFER, { sdp })
       } else {
         this._remoteLog.warn(`unsupported negotiation type`, { type })
       }
@@ -149,7 +148,7 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
   }
 
   // Todo: Use on-offer event intead.
-  protected async [EVENT.SIGNAL_RESTART]({ sdp }: message.SignalAnswer) {
+  protected async [EVENT.SIGNAL_RESTART]({ sdp }: message.SignalDescription) {
     this._localLog.debug(`EVENT.SIGNAL_RESTART`)
     this.emit('connection.webrtc.sdp', 'remote', sdp)
 
