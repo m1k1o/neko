@@ -22,6 +22,7 @@ export interface NekoWebRTCEvents {
   disconnected: (error?: Error) => void
   track: (event: RTCTrackEvent) => void
   candidate: (candidate: RTCIceCandidateInit) => void
+  negotiation: (description: RTCSessionDescriptionInit) => void
   stats: (stats: WebRTCStats) => void
   ['cursor-position']: (data: CursorPosition) => void
   ['cursor-image']: (data: CursorImage) => void
@@ -66,7 +67,7 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
     this._log.debug(`adding remote ICE candidate`, { candidate })
   }
 
-  public async connect(sdp: string, iceServers: ICEServer[]): Promise<string> {
+  public async connect(sdp: string, iceServers: ICEServer[]) {
     if (!this.supported) {
       throw new Error('browser does not support webrtc')
     }
@@ -143,19 +144,27 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
       }
     }
 
-    this._peer.onnegotiationneeded = () => {
-      this._log.warn(`negotiation is needed`)
+    this._peer.onnegotiationneeded = async () => {
+      const state = this._peer!.iceConnectionState
+      this._log.warn(`negotiation is needed`, { state })
+
+      const offer = await this._peer?.createOffer()
+      this._peer!.setLocalDescription(offer)
+
+      if (offer) {
+        this.emit('negotiation', offer)
+      } else {
+        this._log.warn(`megotiatoion offer is empty`)
+      }
     }
 
     this._peer.ontrack = this.onTrack.bind(this)
     this._peer.ondatachannel = this.onDataChannel.bind(this)
-    this._peer.addTransceiver('audio', { direction: 'recvonly' })
-    this._peer.addTransceiver('video', { direction: 'recvonly' })
 
-    return await this.offer(sdp)
+    await this.setOffer(sdp)
   }
 
-  public async offer(sdp: string) {
+  public async setOffer(sdp: string) {
     if (!this._peer) {
       throw new Error('attempting to set offer for nonexistent peer')
     }
@@ -174,11 +183,11 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
     const answer = await this._peer.createAnswer()
     this._peer!.setLocalDescription(answer)
 
-    if (!answer.sdp) {
-      throw new Error('sdp answer is empty')
+    if (answer) {
+      this.emit('negotiation', answer)
+    } else {
+      this._log.warn(`negiotation answer is empty`)
     }
-
-    return answer.sdp
   }
 
   public disconnect() {

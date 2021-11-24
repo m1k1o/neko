@@ -73,6 +73,25 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
       this._connection.websocket.send(EVENT.SIGNAL_CANDIDATE, candidate)
       this.emit('connection.webrtc.sdp.candidate', 'local', candidate)
     })
+
+    this._connection.webrtc.on('negotiation', ({ sdp, type }: RTCSessionDescriptionInit) => {
+      if (!sdp) {
+        this._remoteLog.warn(`sdp empty while negotiation event`)
+        return
+      }
+
+      if (type == 'answer') {
+        this._connection.websocket.send(EVENT.SIGNAL_ANSWER, { sdp })
+      //} else if (type == 'offer') {
+      //  // Todo: Implement
+      //  this._connection.websocket.send(EVENT.SIGNAL_OFFER, { sdp })
+      } else {
+        this._remoteLog.warn(`unsupported negotiation type`, { type })
+      }
+
+      // TODO: Pass type as well.
+      this.emit('connection.webrtc.sdp', 'local', sdp)
+    })
   }
 
   /////////////////////////////
@@ -121,29 +140,20 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
   // Signal Events
   /////////////////////////////
 
-  protected async [EVENT.SIGNAL_PROVIDE]({ sdp: remoteSdp, video, iceservers }: message.SignalProvide) {
+  protected async [EVENT.SIGNAL_PROVIDE]({ sdp, video, iceservers }: message.SignalProvide) {
     this._localLog.debug(`EVENT.SIGNAL_PROVIDE`)
-    this.emit('connection.webrtc.sdp', 'remote', remoteSdp)
+    this.emit('connection.webrtc.sdp', 'remote', sdp)
 
-    const localSdp = await this._connection.webrtc.connect(remoteSdp, iceservers)
-    this._connection.websocket.send(EVENT.SIGNAL_ANSWER, {
-      sdp: localSdp,
-    })
-
-    this.emit('connection.webrtc.sdp', 'local', localSdp)
+    await this._connection.webrtc.connect(sdp, iceservers)
     Vue.set(this._state.connection.webrtc, 'video', video)
   }
 
+  // Todo: Use on-offer event intead.
   protected async [EVENT.SIGNAL_RESTART]({ sdp }: message.SignalAnswer) {
     this._localLog.debug(`EVENT.SIGNAL_RESTART`)
     this.emit('connection.webrtc.sdp', 'remote', sdp)
 
-    const localSdp = await this._connection.webrtc.offer(sdp)
-    this._connection.websocket.send(EVENT.SIGNAL_ANSWER, {
-      sdp: localSdp,
-    })
-
-    this.emit('connection.webrtc.sdp', 'local', localSdp)
+    await this._connection.webrtc.setOffer(sdp)
   }
 
   protected [EVENT.SIGNAL_CANDIDATE](candidate: message.SignalCandidate) {
