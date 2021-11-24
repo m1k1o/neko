@@ -56,8 +56,13 @@ func (h *MessageHandlerCtx) Message(session types.Session, data types.WebSocketM
 		})
 	case event.SIGNAL_RESTART:
 		err = h.signalRestart(session)
+	case event.SIGNAL_OFFER:
+		payload := &message.SignalDescription{}
+		err = utils.Unmarshal(payload, data.Payload, func() error {
+			return h.signalOffer(session, payload)
+		})
 	case event.SIGNAL_ANSWER:
-		payload := &message.SignalAnswer{}
+		payload := &message.SignalDescription{}
 		err = utils.Unmarshal(payload, data.Payload, func() error {
 			return h.signalAnswer(session, payload)
 		})

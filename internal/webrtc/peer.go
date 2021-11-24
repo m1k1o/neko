@@ -45,6 +45,13 @@ func (peer *WebRTCPeerCtx) CreateOffer(ICERestart bool) (*webrtc.SessionDescript
 	return peer.connection.LocalDescription(), nil
 }
 
+func (peer *WebRTCPeerCtx) SignalOffer(sdp string) error {
+	return peer.connection.SetRemoteDescription(webrtc.SessionDescription{
+		SDP:  sdp,
+		Type: webrtc.SDPTypeOffer,
+	})
+}
+
 func (peer *WebRTCPeerCtx) SignalAnswer(sdp string) error {
 	return peer.connection.SetRemoteDescription(webrtc.SessionDescription{
 		SDP:  sdp,

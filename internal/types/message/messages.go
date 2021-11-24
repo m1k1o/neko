@@ -56,7 +56,7 @@ type SignalCandidate struct {
 	webrtc.ICECandidateInit
 }
 
-type SignalAnswer struct {
+type SignalDescription struct {
 	SDP string `json:"sdp"`
 }
 

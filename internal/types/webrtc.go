@@ -19,6 +19,7 @@ type ICEServer struct {
 
 type WebRTCPeer interface {
 	CreateOffer(ICERestart bool) (*webrtc.SessionDescription, error)
+	SignalOffer(sdp string) error
 	SignalAnswer(sdp string) error
 	SignalCandidate(candidate webrtc.ICECandidateInit) error
 
