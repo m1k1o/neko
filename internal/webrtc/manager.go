@@ -155,6 +155,14 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 		iceTrickle: manager.config.ICETrickle,
 	}
 
+	connection.OnTrack(func(tr *webrtc.TrackRemote, r *webrtc.RTPReceiver) {
+		logger.Info().Interface("track", tr).Interface("receiver", r).Msg("got remote track")
+	})
+
+	connection.OnDataChannel(func(dc *webrtc.DataChannel) {
+		logger.Info().Interface("data-channel", dc).Msg("got remote data channel")
+	})
+
 	connection.OnNegotiationNeeded(func() {
 		logger.Warn().Msg("negotiation is needed")
 
