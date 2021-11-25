@@ -155,6 +155,22 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 		iceTrickle: manager.config.ICETrickle,
 	}
 
+	connection.OnNegotiationNeeded(func() {
+		logger.Warn().Msg("negotiation is needed")
+
+		offer, err := peer.CreateOffer(false)
+		if err != nil {
+			logger.Err(err).Msg("sdp offer failed")
+			return
+		}
+
+		session.Send(
+			event.SIGNAL_OFFER,
+			message.SignalDescription{
+				SDP: offer.SDP,
+			})
+	})
+
 	connection.OnConnectionStateChange(func(state webrtc.PeerConnectionState) {
 		switch state {
 		case webrtc.PeerConnectionStateConnected:
