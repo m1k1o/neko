@@ -190,6 +190,14 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
     }
   }
 
+  public addTrack(track: MediaStreamTrack, ...streams: MediaStream[]): RTCRtpSender {
+    if (!this._peer) {
+      throw new Error('attempting to add track for nonexistent peer')
+    }
+
+    return this._peer.addTrack(track, ...streams)
+  }
+
   public disconnect() {
     if (typeof this._channel !== 'undefined') {
       // unmount all events
