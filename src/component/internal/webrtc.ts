@@ -145,16 +145,26 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
     }
 
     this._peer.onnegotiationneeded = async () => {
-      const state = this._peer!.iceConnectionState
+      const offer = await this._peer?.createOffer()
+
+      // If the connection hasn't yet achieved the "stable" state,
+      // return to the caller. Another negotiationneeded event
+      // will be fired when the state stabilizes.
+
+      const state = this._peer!.signalingState
       this._log.warn(`negotiation is needed`, { state })
 
-      const offer = await this._peer?.createOffer()
+      if (state != 'stable') {
+        this._log.info(`connection isn't stable yet; postponing...`)
+        return
+      }
+
       this._peer!.setLocalDescription(offer)
 
       if (offer) {
         this.emit('negotiation', offer)
       } else {
-        this._log.warn(`megotiatoion offer is empty`)
+        this._log.warn(`negotiatoion offer is empty`)
       }
     }
 
