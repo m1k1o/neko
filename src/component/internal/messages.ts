@@ -147,12 +147,16 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
     Vue.set(this._state.connection.webrtc, 'video', video)
   }
 
-  // Todo: Use on-offer event intead.
-  protected async [EVENT.SIGNAL_RESTART]({ sdp }: message.SignalDescription) {
-    this._localLog.debug(`EVENT.SIGNAL_RESTART`)
+  protected async [EVENT.SIGNAL_OFFER]({ sdp }: message.SignalDescription) {
+    this._localLog.debug(`EVENT.SIGNAL_OFFER`)
     this.emit('connection.webrtc.sdp', 'remote', sdp)
 
     await this._connection.webrtc.setOffer(sdp)
+  }
+
+  // Todo: Use offer event intead.
+  protected async [EVENT.SIGNAL_RESTART]({ sdp }: message.SignalDescription) {
+    this[EVENT.SIGNAL_OFFER]({ sdp })
   }
 
   protected [EVENT.SIGNAL_CANDIDATE](candidate: message.SignalCandidate) {
