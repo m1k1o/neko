@@ -90,7 +90,7 @@ const rules: MarkdownRules = {
       }
     },
     html(node, output, state) {
-      return htmlTag('pre', htmlTag('code', node.content, state), {}, state)
+      return htmlTag('pre', htmlTag('code', md.sanitizeText(node.content), {}, state), {}, state)
     },
   },
   blockQuote: {
