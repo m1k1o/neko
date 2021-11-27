@@ -21,8 +21,11 @@
           @mouseenter.stop.prevent="onMouseEnter"
           @mouseleave.stop.prevent="onMouseLeave"
         />
-        <div v-if="!playing" class="player-overlay">
-          <i @click.stop.prevent="toggle" v-if="playable" class="fas fa-play-circle" />
+        <div v-if="!playing && playable" class="player-overlay" @click.stop.prevent="toggle">
+          <i class="fas fa-play-circle" />
+        </div>
+        <div v-if="mutedOverlay && muted" class="player-overlay" @click.stop.prevent="unmute">
+          <i class="fas fa-volume-up" />
         </div>
         <div ref="aspect" class="player-aspect" />
       </div>
@@ -151,13 +154,11 @@
           display: flex;
           justify-content: center;
           align-items: center;
+          cursor: pointer;
 
-          i {
-            cursor: pointer;
-            &::before {
-              font-size: 120px;
-              text-align: center;
-            }
+          i::before {
+            font-size: 120px;
+            text-align: center;
           }
 
           &.hidden {
@@ -220,6 +221,7 @@
     private focused = false
     private fullscreen = false
     private startsMuted = true
+    private mutedOverlay = true
 
     get admin() {
       return this.$accessor.user.admin
@@ -513,6 +515,11 @@
       } else {
         this.$accessor.video.pause()
       }
+    }
+
+    unmute() {
+      this.$accessor.video.setMuted(false)
+      this.mutedOverlay = false
     }
 
     toggleControl() {
