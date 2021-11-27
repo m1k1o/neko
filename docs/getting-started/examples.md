@@ -105,4 +105,4 @@ services:
 
 ## Not using docker?
 
-You can execute `neko --help` to see available arguments. In [Dockerfile](https://github.com/m1k1o/neko/blob/master/.m1k1o/base/Dockerfile) you can find required dependencies and install them manually.
+You can execute `neko --help` to see available arguments. In [Dockerfile](https://github.com/m1k1o/neko/blob/master/.docker/base/Dockerfile) you can find required dependencies and install them manually.

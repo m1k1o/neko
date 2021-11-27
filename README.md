@@ -64,4 +64,4 @@ It also offers zero-knowledge [installation script](https://github.com/m1k1o/nek
 
 # How to contribute? How to build?
 
-Navigate to [.m1k1o](.m1k1o) folder for further information.
+Navigate to [.docker](.docker) folder for further information.

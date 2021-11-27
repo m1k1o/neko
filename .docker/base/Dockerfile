@@ -1,14 +1,14 @@
 #
 # STAGE 1: SERVER
 #
-FROM arm32v7/golang:1.17-buster as server
+FROM golang:1.17-bullseye as server
 WORKDIR /src
 
 #
 # install dependencies
 RUN set -eux; apt-get update; \
-    apt-get install -y --no-install-recommends git cmake make python2 libx11-dev libxrandr-dev libxtst-dev \
-    libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-omx; \
+    apt-get install -y --no-install-recommends git cmake make libx11-dev libxrandr-dev libxtst-dev \
+    libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly; \
     #
     # install libclipboard
     set -eux; \
@@ -32,12 +32,7 @@ RUN go get -v -t -d . && go build -o bin/neko cmd/neko/main.go
 #
 # STAGE 2: CLIENT
 #
-FROM node:14-buster-slim as client
-
-# install dependencies
-RUN set -eux; apt-get update; \
-    apt-get install -y --no-install-recommends python2 build-essential
-
+FROM node:14-bullseye-slim as client
 WORKDIR /src
 
 #
@@ -53,7 +48,7 @@ RUN npm run build
 #
 # STAGE 3: RUNTIME
 #
-FROM arm32v7/debian:buster-slim
+FROM debian:bullseye-slim
 
 #
 # avoid warnings by switching to noninteractive
@@ -70,11 +65,11 @@ ARG USER_GID=$USER_UID
 RUN set -eux; apt-get update; \
     apt-get install -y --no-install-recommends wget ca-certificates supervisor; \
     apt-get install -y --no-install-recommends pulseaudio dbus-x11 xserver-xorg-video-dummy; \
-    apt-get install -y --no-install-recommends libcairo2 libxcb1 libxrandr2 libxv1 libopus0 libvpx5; \
+    apt-get install -y --no-install-recommends libcairo2 libxcb1 libxrandr2 libxv1 libopus0 libvpx6; \
     #
     # gst
     apt-get install -y --no-install-recommends libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
-                    gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-pulseaudio gstreamer1.0-omx; \
+                    gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-pulseaudio; \
     #
     # fonts
     apt-get install -y --no-install-recommends fonts-takao-mincho; \
@@ -107,10 +102,10 @@ RUN set -eux; apt-get update; \
 
 #
 # copy config files
-COPY .m1k1o/base/dbus /usr/bin/dbus
-COPY .m1k1o/base/default.pa /etc/pulse/default.pa
-COPY .m1k1o/base/supervisord.conf /etc/neko/supervisord.conf
-COPY .m1k1o/base/xorg.conf /etc/neko/xorg.conf
+COPY .docker/base/dbus /usr/bin/dbus
+COPY .docker/base/default.pa /etc/pulse/default.pa
+COPY .docker/base/supervisord.conf /etc/neko/supervisord.conf
+COPY .docker/base/xorg.conf /etc/neko/xorg.conf
 
 #
 # set default envs
@@ -131,4 +126,3 @@ HEALTHCHECK --interval=10s --timeout=5s --retries=8 \
 #
 # run neko
 CMD ["/usr/bin/supervisord", "-c", "/etc/neko/supervisord.conf"]
-

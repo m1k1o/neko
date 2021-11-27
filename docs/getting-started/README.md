@@ -36,8 +36,8 @@ Images (except `arm-`) are built using GitHub actions on every push and on weekl
 
 ### Want to customize and install own add-ons, set custom bookmarks?
 - You would need to modify the existing policy file and mount it to your container.
-- For Firefox, copy [this](https://github.com/m1k1o/neko/blob/master/.m1k1o/firefox/policies.json) file, modify and mount it as: ` -v '${PWD}/policies.json:/usr/share/firefox-esr/distribution/policies.json'`
-- For Chromium, copy [this](https://github.com/m1k1o/neko/blob/master/.m1k1o/chromium/policies.json) file, modify and mount it as: ` -v '${PWD}/policies.json:/etc/chromium/policies/managed/policies.json'`
+- For Firefox, copy [this](https://github.com/m1k1o/neko/blob/master/.docker/firefox/policies.json) file, modify and mount it as: ` -v '${PWD}/policies.json:/usr/share/firefox-esr/distribution/policies.json'`
+- For Chromium, copy [this](https://github.com/m1k1o/neko/blob/master/.docker/chromium/policies.json) file, modify and mount it as: ` -v '${PWD}/policies.json:/etc/chromium/policies/managed/policies.json'`
 
 ### Want to use VPN for your n.eko browsing?
 - Check this out: https://github.com/m1k1o/neko-vpn
