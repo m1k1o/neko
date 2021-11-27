@@ -233,31 +233,39 @@ func (manager *WebRTCManager) CreatePeer(id string, session types.Session) (stri
 	return description.SDP, manager.config.ICELite, manager.config.ICEServers, nil
 }
 
-func (m *WebRTCManager) createTrack(codecName string) (*webrtc.TrackLocalStaticSample, webrtc.RTPCodecParameters, error) {
+func (manager *WebRTCManager) createTrack(codecName string) (*webrtc.TrackLocalStaticSample, webrtc.RTPCodecParameters, error) {
 	var codec webrtc.RTPCodecParameters
 
+	id := ""
 	fb := []webrtc.RTCPFeedback{}
 
 	switch codecName {
 	case "VP8":
 		codec = webrtc.RTPCodecParameters{RTPCodecCapability: webrtc.RTPCodecCapability{MimeType: webrtc.MimeTypeVP8, ClockRate: 90000, Channels: 0, SDPFmtpLine: "", RTCPFeedback: fb}, PayloadType: 96}
+		id = "video"
 	case "VP9":
 		codec = webrtc.RTPCodecParameters{RTPCodecCapability: webrtc.RTPCodecCapability{MimeType: webrtc.MimeTypeVP9, ClockRate: 90000, Channels: 0, SDPFmtpLine: "", RTCPFeedback: fb}, PayloadType: 98}
+		id = "video"
 	case "H264":
 		codec = webrtc.RTPCodecParameters{RTPCodecCapability: webrtc.RTPCodecCapability{MimeType: webrtc.MimeTypeH264, ClockRate: 90000, Channels: 0, SDPFmtpLine: "level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42001f", RTCPFeedback: fb}, PayloadType: 102}
+		id = "video"
 	case "Opus":
 		codec = webrtc.RTPCodecParameters{RTPCodecCapability: webrtc.RTPCodecCapability{MimeType: webrtc.MimeTypeOpus, ClockRate: 48000, Channels: 2, SDPFmtpLine: "", RTCPFeedback: fb}, PayloadType: 111}
+		id = "audio"
 	case "G722":
 		codec = webrtc.RTPCodecParameters{RTPCodecCapability: webrtc.RTPCodecCapability{MimeType: webrtc.MimeTypeG722, ClockRate: 8000, Channels: 0, SDPFmtpLine: "", RTCPFeedback: fb}, PayloadType: 9}
+		id = "audio"
 	case "PCMU":
 		codec = webrtc.RTPCodecParameters{RTPCodecCapability: webrtc.RTPCodecCapability{MimeType: webrtc.MimeTypePCMU, ClockRate: 8000, Channels: 0, SDPFmtpLine: "", RTCPFeedback: fb}, PayloadType: 0}
+		id = "audio"
 	case "PCMA":
 		codec = webrtc.RTPCodecParameters{RTPCodecCapability: webrtc.RTPCodecCapability{MimeType: webrtc.MimeTypePCMA, ClockRate: 8000, Channels: 0, SDPFmtpLine: "", RTCPFeedback: fb}, PayloadType: 8}
+		id = "audio"
 	default:
 		return nil, codec, fmt.Errorf("unknown codec %s", codecName)
 	}
 
-	track, err := webrtc.NewTrackLocalStaticSample(codec.RTPCodecCapability, "stream", "stream")
+	track, err := webrtc.NewTrackLocalStaticSample(codec.RTPCodecCapability, id, "stream")
 	if err != nil {
 		return nil, codec, err
 	}
