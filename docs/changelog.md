@@ -2,6 +2,9 @@
 
 ## master branch
 
+### Bugs
+- Audio on iOS works now!
+
 ### New Features
 - Lock controls for users, globally.
 - Ability to set locks from config `NEKO_LOCKS=control login`.
@@ -13,6 +16,7 @@
 - ARM-based images not bound to Raspberry Pi only.
 - Add japanese characters support.
 - Sanitize display name and markdown codeblock input to prevent xss.
+- Display unmute overlay when joined.
 
 ## [n.eko v2.4](https://github.com/m1k1o/neko/releases/tag/v2.4)
 
