@@ -63,11 +63,11 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
       return
     }
 
-    this._peer.addIceCandidate(candidate)
+    await this._peer.addIceCandidate(candidate)
     this._log.debug(`adding remote ICE candidate`, { candidate })
   }
 
-  public async connect(sdp: string, iceServers: ICEServer[]) {
+  public async connect(iceServers: ICEServer[]) {
     if (!this.supported) {
       throw new Error('browser does not support webrtc')
     }
@@ -170,8 +170,6 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
 
     this._peer.ontrack = this.onTrack.bind(this)
     this._peer.ondatachannel = this.onDataChannel.bind(this)
-
-    await this.setOffer(sdp)
   }
 
   public async setOffer(sdp: string) {
@@ -183,7 +181,7 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
 
     if (this._candidates.length > 0) {
       for (const candidate of this._candidates) {
-        this._peer.addIceCandidate(candidate)
+        await this._peer.addIceCandidate(candidate)
       }
 
       this._log.debug(`added ${this._candidates.length} remote ICE candidates`, { candidates: this._candidates })
@@ -191,13 +189,21 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
     }
 
     const answer = await this._peer.createAnswer()
-    this._peer!.setLocalDescription(answer)
+    this._peer.setLocalDescription(answer)
 
     if (answer) {
       this.emit('negotiation', answer)
     } else {
       this._log.warn(`negiotation answer is empty`)
     }
+  }
+
+  public async setAnswer(sdp: string) {
+    if (!this._peer) {
+      throw new Error('attempting to set answer for nonexistent peer')
+    }
+
+    this._peer.setRemoteDescription({ type: 'answer', sdp })
   }
 
   public addTrack(track: MediaStreamTrack, ...streams: MediaStream[]): RTCRtpSender {
