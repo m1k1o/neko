@@ -339,10 +339,13 @@
 
     @Watch('muted')
     onMutedChanged(muted: boolean) {
-      if (this._video) {
+      if (this._video && this._video.muted != muted) {
         this._video.muted = muted
         this.startsMuted = muted
-        if (!muted) this.mutedOverlay = false
+      }
+
+      if (!muted) {
+        this.mutedOverlay = false
       }
     }
 
@@ -392,9 +395,9 @@
       this._video.addEventListener('canplaythrough', () => {
         this.$accessor.video.setPlayable(true)
         if (this.autoplay) {
+          // start as muted due to restrictive browsers autoplay policy
           if (this.startsMuted && (!document.hasFocus() || !this.$accessor.active)) {
             this.$accessor.video.setMuted(true)
-            this._video.muted = true
           }
 
           this.$nextTick(() => {
