@@ -342,6 +342,7 @@
       if (this._video) {
         this._video.muted = muted
         this.startsMuted = muted
+        if (!muted) this.mutedOverlay = false
       }
     }
 
@@ -519,7 +520,6 @@
 
     unmute() {
       this.$accessor.video.setMuted(false)
-      this.mutedOverlay = false
     }
 
     toggleControl() {
