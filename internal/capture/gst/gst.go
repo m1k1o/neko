@@ -74,6 +74,16 @@ func (p *Pipeline) Stop() {
 	C.gstreamer_pipeline_stop(p.Pipeline)
 }
 
+func (p *Pipeline) Push(sinkName string, buffer []byte) {
+	sinkNameUnsafe := C.CString(sinkName)
+	defer C.free(unsafe.Pointer(sinkNameUnsafe))
+
+	bytes := C.CBytes(buffer)
+	defer C.free(bytes)
+
+	C.gstreamer_pipeline_push(p.Pipeline, sinkNameUnsafe, bytes, C.int(len(buffer)))
+}
+
 // gst-inspect-1.0
 func CheckPlugins(plugins []string) error {
 	var plugin *C.GstPlugin

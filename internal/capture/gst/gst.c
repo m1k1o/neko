@@ -82,3 +82,13 @@ void gstreamer_pipeline_stop(GstElement *pipeline) {
   gst_element_set_state(pipeline, GST_STATE_NULL);
   gst_object_unref(pipeline);
 }
+
+void gstreamer_pipeline_push(GstElement *pipeline, char *sinkName, void *buffer, int bufferLen) {
+  GstElement *src = gst_bin_get_by_name(GST_BIN(pipeline), sinkName);
+  if (src != NULL) {
+    gpointer p = g_memdup(buffer, bufferLen);
+    GstBuffer *buffer = gst_buffer_new_wrapped(p, bufferLen);
+    gst_app_src_push_buffer(GST_APP_SRC(src), buffer);
+    gst_object_unref(src);
+  }
+}

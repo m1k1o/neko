@@ -9,5 +9,6 @@ void gstreamer_pipeline_attach_appsink(GstElement *pipeline, char *sinkName, int
 GstElement *gstreamer_pipeline_create(char *pipelineStr, GError **error);
 void gstreamer_pipeline_play(GstElement *pipeline);
 void gstreamer_pipeline_stop(GstElement *pipeline);
+void gstreamer_pipeline_push(GstElement *pipeline, char *sinkName, void *buffer, int bufferLen);
 
 void gstreamer_init(void);
