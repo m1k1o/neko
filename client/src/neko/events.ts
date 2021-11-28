@@ -14,6 +14,7 @@ export const EVENT = {
     ERROR: 'system/error',
   },
   SIGNAL: {
+    OFFER: 'signal/offer',
     ANSWER: 'signal/answer',
     PROVIDE: 'signal/provide',
     CANDIDATE: 'signal/candidate',
@@ -81,7 +82,13 @@ export type ControlEvents =
 
 export type SystemEvents = typeof EVENT.SYSTEM.DISCONNECT
 export type MemberEvents = typeof EVENT.MEMBER.LIST | typeof EVENT.MEMBER.CONNECTED | typeof EVENT.MEMBER.DISCONNECTED
-export type SignalEvents = typeof EVENT.SIGNAL.ANSWER | typeof EVENT.SIGNAL.PROVIDE | typeof EVENT.SIGNAL.CANDIDATE
+
+export type SignalEvents =
+  | typeof EVENT.SIGNAL.OFFER
+  | typeof EVENT.SIGNAL.ANSWER
+  | typeof EVENT.SIGNAL.PROVIDE
+  | typeof EVENT.SIGNAL.CANDIDATE
+
 export type ChatEvents = typeof EVENT.CHAT.MESSAGE | typeof EVENT.CHAT.EMOTE
 export type ScreenEvents = typeof EVENT.SCREEN.CONFIGURATIONS | typeof EVENT.SCREEN.RESOLUTION | typeof EVENT.SCREEN.SET
 

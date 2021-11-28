@@ -17,7 +17,39 @@ type Peer struct {
 	mu            sync.Mutex
 }
 
-func (peer *Peer) SignalAnswer(sdp string) error {
+func (peer *Peer) CreateOffer() (string, error) {
+	desc, err := peer.connection.CreateOffer(nil)
+	if err != nil {
+		return "", err
+	}
+
+	err = peer.connection.SetLocalDescription(desc)
+	if err != nil {
+		return "", err
+	}
+
+	return desc.SDP, nil
+}
+
+func (peer *Peer) CreateAnswer() (string, error) {
+	desc, err := peer.connection.CreateAnswer(nil)
+	if err != nil {
+		return "", err
+	}
+
+	err = peer.connection.SetLocalDescription(desc)
+	if err != nil {
+		return "", nil
+	}
+
+	return desc.SDP, nil
+}
+
+func (peer *Peer) SetOffer(sdp string) error {
+	return peer.connection.SetRemoteDescription(webrtc.SessionDescription{SDP: sdp, Type: webrtc.SDPTypeOffer})
+}
+
+func (peer *Peer) SetAnswer(sdp string) error {
 	return peer.connection.SetRemoteDescription(webrtc.SessionDescription{SDP: sdp, Type: webrtc.SDPTypeAnswer})
 }
 

@@ -18,6 +18,7 @@
 - Sanitize display name and markdown codeblock input to prevent xss.
 - Display unmute overlay when joined.
 - Sync player play/pause/mute/umpute/volume state with store (beneficial for mobiles when using fullscreen mode).
+- Automatic WebRTC SDP negotiation using `onnegotiationneeded` handlers. This allows adding/removing track on demand in a session.
 
 ## [n.eko v2.4](https://github.com/m1k1o/neko/releases/tag/v2.4)
 
