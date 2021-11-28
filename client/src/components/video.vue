@@ -24,7 +24,7 @@
         <div v-if="!playing && playable" class="player-overlay" @click.stop.prevent="toggle">
           <i class="fas fa-play-circle" />
         </div>
-        <div v-if="mutedOverlay && muted" class="player-overlay" @click.stop.prevent="unmute">
+        <div v-if="mutedOverlay && muted" class="player-overlay" @click.stop.prevent="unmute">
           <i class="fas fa-volume-up" />
         </div>
         <div ref="aspect" class="player-aspect" />
