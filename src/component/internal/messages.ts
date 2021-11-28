@@ -88,7 +88,7 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
         this._remoteLog.warn(`unsupported negotiation type`, { type })
       }
 
-      // TODO: Pass type as well.
+      // TODO: Return whole signal description (if answer / offer).
       this.emit('connection.webrtc.sdp', 'local', sdp)
     })
   }
@@ -183,8 +183,6 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
 
     // set remote candidate
     await this._connection.webrtc.setCandidate(candidate)
-
-    // TODO: Return whole signal description (if answer / offer).
     this.emit('connection.webrtc.sdp.candidate', 'remote', candidate)
   }
 
