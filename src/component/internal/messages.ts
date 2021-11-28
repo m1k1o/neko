@@ -141,6 +141,7 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
 
   protected async [EVENT.SIGNAL_PROVIDE]({ sdp, video, iceservers }: message.SignalProvide) {
     this._localLog.debug(`EVENT.SIGNAL_PROVIDE`)
+    Vue.set(this._state.connection.webrtc, 'video', video)
 
     // create WebRTC connection
     await this._connection.webrtc.connect(iceservers)
@@ -148,8 +149,8 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
     // set remote offer
     await this._connection.webrtc.setOffer(sdp)
 
+    // TODO: Return whole signal description (if answer / offer).
     this.emit('connection.webrtc.sdp', 'remote', sdp)
-    Vue.set(this._state.connection.webrtc, 'video', video)
   }
 
   protected async [EVENT.SIGNAL_OFFER]({ sdp }: message.SignalDescription) {
@@ -158,15 +159,18 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
     // set remote offer
     await this._connection.webrtc.setOffer(sdp)
 
+    // TODO: Return whole signal description (if answer / offer).
     this.emit('connection.webrtc.sdp', 'remote', sdp)
   }
 
   protected async [EVENT.SIGNAL_ANSWER]({ sdp }: message.SignalDescription) {
     this._localLog.debug(`EVENT.SIGNAL_ANSWER`)
-    this.emit('connection.webrtc.sdp', 'remote', sdp)
 
     // set remote answer
     await this._connection.webrtc.setAnswer(sdp)
+
+    // TODO: Return whole signal description (if answer / offer).
+    this.emit('connection.webrtc.sdp', 'remote', sdp)
   }
 
   // TODO: Use offer event intead.
@@ -180,6 +184,7 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
     // set remote candidate
     await this._connection.webrtc.setCandidate(candidate)
 
+    // TODO: Return whole signal description (if answer / offer).
     this.emit('connection.webrtc.sdp.candidate', 'remote', candidate)
   }
 
