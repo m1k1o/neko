@@ -17,6 +17,7 @@
 - Add japanese characters support.
 - Sanitize display name and markdown codeblock input to prevent xss.
 - Display unmute overlay when joined.
+- Sync player play/pause/mute/umpute/volume state with store (beneficial for mobiles when using fullscreen mode).
 
 ## [n.eko v2.4](https://github.com/m1k1o/neko/releases/tag/v2.4)
 

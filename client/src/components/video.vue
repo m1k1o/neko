@@ -332,8 +332,10 @@
 
     @Watch('volume')
     onVolumeChanged(volume: number) {
-      if (this._video) {
-        this._video.volume = this.volume / 100
+      volume /= 100
+
+      if (this._video && this._video.volume != volume) {
+        this._video.volume = volume
       }
     }
 
@@ -342,10 +344,10 @@
       if (this._video && this._video.muted != muted) {
         this._video.muted = muted
         this.startsMuted = muted
-      }
 
-      if (!muted) {
-        this.mutedOverlay = false
+        if (!muted) {
+          this.mutedOverlay = false
+        }
       }
     }
 
@@ -365,9 +367,11 @@
 
     @Watch('playing')
     onPlayingChanged(playing: boolean) {
-      if (playing) {
+      if (this._video && this._video.paused && playing) {
         this.play()
-      } else {
+      }
+
+      if (this._video && !this._video.paused && !playing) {
         this.pause()
       }
     }
@@ -382,6 +386,7 @@
     mounted() {
       this._container.addEventListener('resize', this.onResise)
       this.onVolumeChanged(this.volume)
+      this.onMutedChanged(this.muted)
       this.onStreamChanged(this.stream)
       this.onResise()
 
@@ -413,6 +418,19 @@
       this._video.addEventListener('error', (event) => {
         this.$log.error(event.error)
         this.$accessor.video.setPlayable(false)
+      })
+
+      this._video.addEventListener('volumechange', (event) => {
+        this.$accessor.video.setMuted(this._video.muted)
+        this.$accessor.video.setVolume(this._video.volume * 100)
+      })
+
+      this._video.addEventListener('playing', () => {
+        this.$accessor.video.play()
+      })
+
+      this._video.addEventListener('pause', () => {
+        this.$accessor.video.pause()
       })
 
       document.addEventListener('focusin', this.onFocus.bind(this))
