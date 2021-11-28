@@ -73,7 +73,7 @@ func (manager *WebRTCManagerCtx) ICEServers() []types.ICEServer {
 	return manager.config.ICEServers
 }
 
-func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID string) (*webrtc.SessionDescription, error) {
+func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID string) (types.WebRTCPeer, error) {
 	// add session id to logger context
 	logger := manager.logger.With().Str("session_id", session.ID()).Logger()
 	logger.Info().Msg("creating webrtc peer")
@@ -238,5 +238,5 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 	})
 
 	session.SetWebRTCPeer(peer)
-	return peer.CreateOffer(false)
+	return peer, nil
 }

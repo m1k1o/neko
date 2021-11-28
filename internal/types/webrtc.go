@@ -19,9 +19,10 @@ type ICEServer struct {
 
 type WebRTCPeer interface {
 	CreateOffer(ICERestart bool) (*webrtc.SessionDescription, error)
-	SignalOffer(sdp string) error
-	SignalAnswer(sdp string) error
-	SignalCandidate(candidate webrtc.ICECandidateInit) error
+	CreateAnswer() (*webrtc.SessionDescription, error)
+	SetOffer(sdp string) error
+	SetAnswer(sdp string) error
+	SetCandidate(candidate webrtc.ICECandidateInit) error
 
 	SetVideoID(videoID string) error
 	SendCursorPosition(x, y int) error
@@ -36,5 +37,5 @@ type WebRTCManager interface {
 
 	ICEServers() []ICEServer
 
-	CreatePeer(session Session, videoID string) (*webrtc.SessionDescription, error)
+	CreatePeer(session Session, videoID string) (WebRTCPeer, error)
 }

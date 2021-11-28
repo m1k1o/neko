@@ -19,7 +19,12 @@ func (h *MessageHandlerCtx) signalRequest(session types.Session, payload *messag
 		payload.Video = videos[0]
 	}
 
-	offer, err := h.webrtc.CreatePeer(session, payload.Video)
+	peer, err := h.webrtc.CreatePeer(session, payload.Video)
+	if err != nil {
+		return err
+	}
+
+	offer, err := peer.CreateOffer(false)
 	if err != nil {
 		return err
 	}
@@ -46,6 +51,7 @@ func (h *MessageHandlerCtx) signalRestart(session types.Session) error {
 		return err
 	}
 
+	// TODO: Use offer event intead.
 	session.Send(
 		event.SIGNAL_RESTART,
 		message.SignalDescription{
@@ -61,7 +67,23 @@ func (h *MessageHandlerCtx) signalOffer(session types.Session, payload *message.
 		return errors.New("webRTC peer does not exist")
 	}
 
-	return peer.SignalOffer(payload.SDP)
+	err := peer.SetOffer(payload.SDP)
+	if err != nil {
+		return err
+	}
+
+	answer, err := peer.CreateAnswer()
+	if err != nil {
+		return err
+	}
+
+	session.Send(
+		event.SIGNAL_ANSWER,
+		message.SignalDescription{
+			SDP: answer.SDP,
+		})
+
+	return nil
 }
 
 func (h *MessageHandlerCtx) signalAnswer(session types.Session, payload *message.SignalDescription) error {
@@ -70,7 +92,7 @@ func (h *MessageHandlerCtx) signalAnswer(session types.Session, payload *message
 		return errors.New("webRTC peer does not exist")
 	}
 
-	return peer.SignalAnswer(payload.SDP)
+	return peer.SetAnswer(payload.SDP)
 }
 
 func (h *MessageHandlerCtx) signalCandidate(session types.Session, payload *message.SignalCandidate) error {
@@ -79,7 +101,7 @@ func (h *MessageHandlerCtx) signalCandidate(session types.Session, payload *mess
 		return errors.New("webRTC peer does not exist")
 	}
 
-	return peer.SignalCandidate(payload.ICECandidateInit)
+	return peer.SetCandidate(payload.ICECandidateInit)
 }
 
 func (h *MessageHandlerCtx) signalVideo(session types.Session, payload *message.SignalVideo) error {

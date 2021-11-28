@@ -27,17 +27,33 @@ func (peer *WebRTCPeerCtx) CreateOffer(ICERestart bool) (*webrtc.SessionDescript
 		return nil, err
 	}
 
+	return peer.setLocalDescription(offer)
+}
+
+func (peer *WebRTCPeerCtx) CreateAnswer() (*webrtc.SessionDescription, error) {
+	peer.mu.Lock()
+	defer peer.mu.Unlock()
+
+	answer, err := peer.connection.CreateAnswer(nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return peer.setLocalDescription(answer)
+}
+
+func (peer *WebRTCPeerCtx) setLocalDescription(description webrtc.SessionDescription) (*webrtc.SessionDescription, error) {
 	if !peer.iceTrickle {
 		// Create channel that is blocked until ICE Gathering is complete
 		gatherComplete := webrtc.GatheringCompletePromise(peer.connection)
 
-		if err := peer.connection.SetLocalDescription(offer); err != nil {
+		if err := peer.connection.SetLocalDescription(description); err != nil {
 			return nil, err
 		}
 
 		<-gatherComplete
 	} else {
-		if err := peer.connection.SetLocalDescription(offer); err != nil {
+		if err := peer.connection.SetLocalDescription(description); err != nil {
 			return nil, err
 		}
 	}
@@ -45,21 +61,30 @@ func (peer *WebRTCPeerCtx) CreateOffer(ICERestart bool) (*webrtc.SessionDescript
 	return peer.connection.LocalDescription(), nil
 }
 
-func (peer *WebRTCPeerCtx) SignalOffer(sdp string) error {
+func (peer *WebRTCPeerCtx) SetOffer(sdp string) error {
+	peer.mu.Lock()
+	defer peer.mu.Unlock()
+
 	return peer.connection.SetRemoteDescription(webrtc.SessionDescription{
 		SDP:  sdp,
 		Type: webrtc.SDPTypeOffer,
 	})
 }
 
-func (peer *WebRTCPeerCtx) SignalAnswer(sdp string) error {
+func (peer *WebRTCPeerCtx) SetAnswer(sdp string) error {
+	peer.mu.Lock()
+	defer peer.mu.Unlock()
+
 	return peer.connection.SetRemoteDescription(webrtc.SessionDescription{
 		SDP:  sdp,
 		Type: webrtc.SDPTypeAnswer,
 	})
 }
 
-func (peer *WebRTCPeerCtx) SignalCandidate(candidate webrtc.ICECandidateInit) error {
+func (peer *WebRTCPeerCtx) SetCandidate(candidate webrtc.ICECandidateInit) error {
+	peer.mu.Lock()
+	defer peer.mu.Unlock()
+
 	return peer.connection.AddICECandidate(candidate)
 }
 
