@@ -247,7 +247,8 @@ func (manager *StreamManagerCtx) createPipeline() error {
 		return err
 	}
 
-	manager.pipeline.Start()
+	manager.pipeline.AttachAppsink("appsink")
+	manager.pipeline.Play()
 
 	manager.sample = manager.pipeline.Sample
 	manager.sampleUpdate <- struct{}{}

@@ -8,14 +8,7 @@ void gstreamer_init(void) {
   gst_init(NULL, NULL);
 }
 
-GMainLoop *gstreamer_send_main_loop = NULL;
-void gstreamer_send_start_mainloop(void) {
-  gstreamer_send_main_loop = g_main_loop_new(NULL, FALSE);
-
-  g_main_loop_run(gstreamer_send_main_loop);
-}
-
-static gboolean gstreamer_send_bus_call(GstBus *bus, GstMessage *msg, gpointer data) {
+static gboolean gstreamer_bus_call(GstBus *bus, GstMessage *msg, gpointer data) {
   switch (GST_MESSAGE_TYPE(msg)) {
 
   case GST_MESSAGE_EOS:
@@ -41,7 +34,7 @@ static gboolean gstreamer_send_bus_call(GstBus *bus, GstMessage *msg, gpointer d
   return TRUE;
 }
 
-GstFlowReturn gstreamer_send_new_sample_handler(GstElement *object, gpointer user_data) {
+static GstFlowReturn gstreamer_send_new_sample_handler(GstElement *object, gpointer user_data) {
   GstSample *sample = NULL;
   GstBuffer *buffer = NULL;
   gpointer copy = NULL;
@@ -61,27 +54,31 @@ GstFlowReturn gstreamer_send_new_sample_handler(GstElement *object, gpointer use
   return GST_FLOW_OK;
 }
 
-void gstreamer_send_start_pipeline(GstElement *pipeline, int pipelineId) {
+void gstreamer_pipeline_attach_appsink(GstElement *pipeline, char *sinkName, int pipelineId) {
   SampleHandlerUserData *s = calloc(1, sizeof(SampleHandlerUserData));
   s->pipelineId = pipelineId;
 
-  GstBus *bus = gst_pipeline_get_bus(GST_PIPELINE(pipeline));
-  gst_bus_add_watch(bus, gstreamer_send_bus_call, NULL);
-  gst_object_unref(bus);
-
-  GstElement *appsink = gst_bin_get_by_name(GST_BIN(pipeline), "appsink");
+  GstElement *appsink = gst_bin_get_by_name(GST_BIN(pipeline), sinkName);
   g_object_set(appsink, "emit-signals", TRUE, NULL);
   g_signal_connect(appsink, "new-sample", G_CALLBACK(gstreamer_send_new_sample_handler), s);
   gst_object_unref(appsink);
+}
 
+GstElement *gstreamer_pipeline_create(char *pipelineStr, GError **error) {
+  GstElement *pipeline = gst_parse_launch(pipelineStr, error);
+
+  GstBus *bus = gst_pipeline_get_bus(GST_PIPELINE(pipeline));
+  gst_bus_add_watch(bus, gstreamer_bus_call, NULL);
+  gst_object_unref(bus);
+
+  return pipeline;
+}
+
+void gstreamer_pipeline_play(GstElement *pipeline) {
   gst_element_set_state(pipeline, GST_STATE_PLAYING);
 }
 
-void gstreamer_send_play_pipeline(GstElement *pipeline) {
-  gst_element_set_state(pipeline, GST_STATE_PLAYING);
-}
-
-void gstreamer_send_stop_pipeline(GstElement *pipeline) {
+void gstreamer_pipeline_stop(GstElement *pipeline) {
   gst_element_set_state(pipeline, GST_STATE_NULL);
   gst_object_unref(pipeline);
 }

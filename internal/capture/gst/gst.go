@@ -41,7 +41,7 @@ func CreatePipeline(pipelineStr string) (*Pipeline, error) {
 	var gstPipeline *C.GstElement
 	var gstError *C.GError
 
-	gstPipeline = C.gst_parse_launch(pipelineStrUnsafe, &gstError)
+	gstPipeline = C.gstreamer_pipeline_create(pipelineStrUnsafe, &gstError)
 
 	if gstError != nil {
 		defer C.g_error_free(gstError)
@@ -59,16 +59,19 @@ func CreatePipeline(pipelineStr string) (*Pipeline, error) {
 	return p, nil
 }
 
-func (p *Pipeline) Start() {
-	C.gstreamer_send_start_pipeline(p.Pipeline, C.int(p.id))
+func (p *Pipeline) AttachAppsink(sinkName string) {
+	sinkNameUnsafe := C.CString(sinkName)
+	defer C.free(unsafe.Pointer(sinkNameUnsafe))
+
+	C.gstreamer_pipeline_attach_appsink(p.Pipeline, sinkNameUnsafe, C.int(p.id))
 }
 
 func (p *Pipeline) Play() {
-	C.gstreamer_send_play_pipeline(p.Pipeline)
+	C.gstreamer_pipeline_play(p.Pipeline)
 }
 
 func (p *Pipeline) Stop() {
-	C.gstreamer_send_stop_pipeline(p.Pipeline)
+	C.gstreamer_pipeline_stop(p.Pipeline)
 }
 
 // gst-inspect-1.0
