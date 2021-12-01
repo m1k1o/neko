@@ -11,7 +11,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-func (manager *WebRTCManagerCtx) newPeerStreamTrack(stream types.StreamManager, logger zerolog.Logger) (*PeerStreamTrack, error) {
+func (manager *WebRTCManagerCtx) newPeerStreamTrack(stream types.StreamSinkManager, logger zerolog.Logger) (*PeerStreamTrack, error) {
 	codec := stream.Codec()
 
 	id := codec.Type.String()
@@ -42,11 +42,11 @@ type PeerStreamTrack struct {
 	track    *webrtc.TrackLocalStaticSample
 	listener func(sample types.Sample)
 
-	stream   types.StreamManager
+	stream   types.StreamSinkManager
 	streamMu sync.Mutex
 }
 
-func (peer *PeerStreamTrack) SetStream(stream types.StreamManager) error {
+func (peer *PeerStreamTrack) SetStream(stream types.StreamSinkManager) error {
 	peer.streamMu.Lock()
 	defer peer.streamMu.Unlock()
 

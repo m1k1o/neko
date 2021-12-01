@@ -18,8 +18,8 @@ type CaptureManagerCtx struct {
 
 	broadcast  *BroacastManagerCtx
 	screencast *ScreencastManagerCtx
-	audio      *StreamManagerCtx
-	videos     map[string]*StreamManagerCtx
+	audio      *StreamSinkManagerCtx
+	videos     map[string]*StreamSinkManagerCtx
 	videoIDs   []string
 }
 
@@ -57,7 +57,7 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 		)
 	}
 
-	videos := map[string]*StreamManagerCtx{}
+	videos := map[string]*StreamSinkManagerCtx{}
 	for video_id, cnf := range config.VideoPipelines {
 		pipelineConf := cnf
 
@@ -88,7 +88,7 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 			Msg("syntax check for video stream pipeline passed")
 
 		// append to videos
-		videos[video_id] = streamNew(config.VideoCodec, createPipeline, video_id)
+		videos[video_id] = streamSinkNew(config.VideoCodec, createPipeline, video_id)
 	}
 
 	return &CaptureManagerCtx{
@@ -97,7 +97,7 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 
 		broadcast:  broadcastNew(broadcastPipeline),
 		screencast: screencastNew(config.ScreencastEnabled, screencastPipeline),
-		audio: streamNew(config.AudioCodec, func() string {
+		audio: streamSinkNew(config.AudioCodec, func() string {
 			if config.AudioPipeline != "" {
 				return config.AudioPipeline
 			}
@@ -188,11 +188,11 @@ func (manager *CaptureManagerCtx) Screencast() types.ScreencastManager {
 	return manager.screencast
 }
 
-func (manager *CaptureManagerCtx) Audio() types.StreamManager {
+func (manager *CaptureManagerCtx) Audio() types.StreamSinkManager {
 	return manager.audio
 }
 
-func (manager *CaptureManagerCtx) Video(videoID string) (types.StreamManager, bool) {
+func (manager *CaptureManagerCtx) Video(videoID string) (types.StreamSinkManager, bool) {
 	video, ok := manager.videos[videoID]
 	return video, ok
 }

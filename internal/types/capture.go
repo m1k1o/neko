@@ -32,12 +32,12 @@ type ScreencastManager interface {
 	Image() ([]byte, error)
 }
 
-type StreamManager interface {
+type StreamSinkManager interface {
 	Codec() codec.RTPCodec
 
 	AddListener(listener *func(sample Sample)) error
 	RemoveListener(listener *func(sample Sample)) error
-	MoveListenerTo(listener *func(sample Sample), targetStream StreamManager) error
+	MoveListenerTo(listener *func(sample Sample), targetStream StreamSinkManager) error
 
 	ListenersCount() int
 	Started() bool
@@ -49,8 +49,8 @@ type CaptureManager interface {
 
 	Broadcast() BroadcastManager
 	Screencast() ScreencastManager
-	Audio() StreamManager
-	Video(videoID string) (StreamManager, bool)
+	Audio() StreamSinkManager
+	Video(videoID string) (StreamSinkManager, bool)
 	VideoIDs() []string
 }
 
