@@ -10,25 +10,25 @@ void gstreamer_init(void) {
 
 static gboolean gstreamer_bus_call(GstBus *bus, GstMessage *msg, gpointer data) {
   switch (GST_MESSAGE_TYPE(msg)) {
+    case GST_MESSAGE_EOS: {
+      g_print("End of stream\n");
+      exit(1);
+    }
 
-  case GST_MESSAGE_EOS:
-    g_print("End of stream\n");
-    exit(1);
-    break;
+    case GST_MESSAGE_ERROR: {
+      gchar *debug;
+      GError *error;
 
-  case GST_MESSAGE_ERROR: {
-    gchar *debug;
-    GError *error;
+      gst_message_parse_error(msg, &error, &debug);
+      g_free(debug);
 
-    gst_message_parse_error(msg, &error, &debug);
-    g_free(debug);
+      g_printerr("Error: %s\n", error->message);
+      g_error_free(error);
+      exit(1);
+    }
 
-    g_printerr("Error: %s\n", error->message);
-    g_error_free(error);
-    exit(1);
-  }
-  default:
-    break;
+    default:
+      break;
   }
 
   return TRUE;
@@ -67,9 +67,11 @@ void gstreamer_pipeline_attach_appsink(GstElement *pipeline, char *sinkName, int
 GstElement *gstreamer_pipeline_create(char *pipelineStr, GError **error) {
   GstElement *pipeline = gst_parse_launch(pipelineStr, error);
 
-  GstBus *bus = gst_pipeline_get_bus(GST_PIPELINE(pipeline));
-  gst_bus_add_watch(bus, gstreamer_bus_call, NULL);
-  gst_object_unref(bus);
+  if (pipeline != NULL) {
+    GstBus *bus = gst_pipeline_get_bus(GST_PIPELINE(pipeline));
+    gst_bus_add_watch(bus, gstreamer_bus_call, NULL);
+    gst_object_unref(bus);
+  }
 
   return pipeline;
 }
@@ -83,8 +85,9 @@ void gstreamer_pipeline_stop(GstElement *pipeline) {
   gst_object_unref(pipeline);
 }
 
-void gstreamer_pipeline_push(GstElement *pipeline, char *sinkName, void *buffer, int bufferLen) {
-  GstElement *src = gst_bin_get_by_name(GST_BIN(pipeline), sinkName);
+void gstreamer_pipeline_push(GstElement *pipeline, char *srcName, void *buffer, int bufferLen) {
+  GstElement *src = gst_bin_get_by_name(GST_BIN(pipeline), srcName);
+
   if (src != NULL) {
     gpointer p = g_memdup(buffer, bufferLen);
     GstBuffer *buffer = gst_buffer_new_wrapped(p, bufferLen);

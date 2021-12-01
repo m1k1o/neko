@@ -74,14 +74,14 @@ func (p *Pipeline) Stop() {
 	C.gstreamer_pipeline_stop(p.Pipeline)
 }
 
-func (p *Pipeline) Push(sinkName string, buffer []byte) {
-	sinkNameUnsafe := C.CString(sinkName)
-	defer C.free(unsafe.Pointer(sinkNameUnsafe))
+func (p *Pipeline) Push(srcName string, buffer []byte) {
+	srcNameUnsafe := C.CString(srcName)
+	defer C.free(unsafe.Pointer(srcNameUnsafe))
 
 	bytes := C.CBytes(buffer)
 	defer C.free(bytes)
 
-	C.gstreamer_pipeline_push(p.Pipeline, sinkNameUnsafe, bytes, C.int(len(buffer)))
+	C.gstreamer_pipeline_push(p.Pipeline, srcNameUnsafe, bytes, C.int(len(buffer)))
 }
 
 // gst-inspect-1.0
