@@ -10,7 +10,6 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"demodesk/neko/internal/capture/gst"
 	"demodesk/neko/internal/config"
 	"demodesk/neko/internal/types"
 	"demodesk/neko/internal/types/codec"
@@ -174,29 +173,17 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 			Uint8("payload-type", uint8(track.PayloadType())).
 			Msgf("received new track")
 
-		pipelineStr := "appsrc format=time is-live=true do-timestamp=true name=src"
-
-		//add appropriate decoder
-		switch strings.ToLower(codecName) {
-		case "opus":
-			pipelineStr += fmt.Sprintf(" ! application/x-rtp, payload=%d, encoding-name=OPUS ! rtpopusdepay ! decodebin", track.PayloadType())
-		case "g722":
-			pipelineStr += " ! application/x-rtp clock-rate=8000 ! rtpg722depay ! decodebin"
-		default:
-			logger.Panic().Msgf("Unhandled codec %s", codecName)
-		}
-
-		pipelineStr += " ! pulsesink device=audio_input"
-		logger.Info().Str("pipeline", pipelineStr).Msg("create pipeline")
-
-		pipeline, err := gst.CreatePipeline(pipelineStr)
-		if err != nil {
-			logger.Err(err).Str("pipeline", pipelineStr).Msg("unable to create pipeline")
+		// parse codec
+		codec, ok := codec.ParseRTC(track.Codec())
+		if !ok {
+			logger.Warn().Str("mime", track.Codec().RTPCodecCapability.MimeType).Msg("unknown codec")
 			return
 		}
 
-		pipeline.Play()
-		defer pipeline.Stop()
+		// add microphone
+		microphone := manager.capture.Microphone()
+		microphone.Start(codec)
+		defer microphone.Stop() // TODO: Ensure no new publisher took over.
 
 		// Send a PLI on an interval so that the publisher is pushing a keyframe every rtcpPLIInterval
 		ticker := time.NewTicker(time.Second * 3)
@@ -219,8 +206,10 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 				break
 			}
 
-			pipeline.Push("src", buf[:i])
+			microphone.Push(buf[:i])
 		}
+
+		logger.Warn().Msg("microphone connection died")
 	})
 
 	connection.OnDataChannel(func(dc *webrtc.DataChannel) {

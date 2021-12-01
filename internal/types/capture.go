@@ -43,6 +43,16 @@ type StreamSinkManager interface {
 	Started() bool
 }
 
+type StreamSrcManager interface {
+	Codec() codec.RTPCodec
+
+	Start(codec codec.RTPCodec) error
+	Stop()
+	Push(bytes []byte)
+
+	Started() bool
+}
+
 type CaptureManager interface {
 	Start()
 	Shutdown() error
@@ -52,6 +62,9 @@ type CaptureManager interface {
 	Audio() StreamSinkManager
 	Video(videoID string) (StreamSinkManager, bool)
 	VideoIDs() []string
+
+	Webcam() StreamSrcManager
+	Microphone() StreamSrcManager
 }
 
 type VideoConfig struct {

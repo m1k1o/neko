@@ -10,17 +10,23 @@ import (
 
 	"demodesk/neko/internal/config"
 	"demodesk/neko/internal/types"
+	"demodesk/neko/internal/types/codec"
 )
 
 type CaptureManagerCtx struct {
 	logger  zerolog.Logger
 	desktop types.DesktopManager
 
+	// sinks
 	broadcast  *BroacastManagerCtx
 	screencast *ScreencastManagerCtx
 	audio      *StreamSinkManagerCtx
 	videos     map[string]*StreamSinkManagerCtx
 	videoIDs   []string
+
+	// sources
+	webcam     *StreamSrcManagerCtx
+	microphone *StreamSrcManagerCtx
 }
 
 func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCtx {
@@ -95,6 +101,7 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 		logger:  logger,
 		desktop: desktop,
 
+		// sinks
 		broadcast:  broadcastNew(broadcastPipeline),
 		screencast: screencastNew(config.ScreencastEnabled, screencastPipeline),
 		audio: streamSinkNew(config.AudioCodec, func() string {
@@ -113,6 +120,21 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 		}, "audio"),
 		videos:   videos,
 		videoIDs: config.VideoIDs,
+
+		// sources
+		webcam: streamSrcNew(map[string]string{}, "webcam"), // TODO
+		microphone: streamSrcNew(map[string]string{
+			codec.Opus().Name: "appsrc format=time is-live=true do-timestamp=true name=src " +
+				"! application/x-rtp, payload=111, encoding-name=OPUS " +
+				"! rtpopusdepay " +
+				"! decodebin " +
+				"! pulsesink device=audio_input",
+			codec.G722().Name: "appsrc format=time is-live=true do-timestamp=true name=src " +
+				"! application/x-rtp clock-rate=8000 " +
+				"! rtpg722depay " +
+				"! decodebin " +
+				"! pulsesink device=audio_input",
+		}, "microphone"),
 	}
 }
 
@@ -177,6 +199,9 @@ func (manager *CaptureManagerCtx) Shutdown() error {
 		video.shutdown()
 	}
 
+	manager.webcam.shutdown()
+	manager.microphone.shutdown()
+
 	return nil
 }
 
@@ -199,4 +224,12 @@ func (manager *CaptureManagerCtx) Video(videoID string) (types.StreamSinkManager
 
 func (manager *CaptureManagerCtx) VideoIDs() []string {
 	return manager.videoIDs
+}
+
+func (manager *CaptureManagerCtx) Webcam() types.StreamSrcManager {
+	return manager.webcam
+}
+
+func (manager *CaptureManagerCtx) Microphone() types.StreamSrcManager {
+	return manager.microphone
 }
