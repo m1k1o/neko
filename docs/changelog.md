@@ -4,7 +4,7 @@
 
 ### Bugs
 - Fix ungoogled-chromium auto build bug.
-- Audio on iOS works now!
+- Audio on iOS works now! Apparently only for 15+ though [#62](https://github.com/m1k1o/neko/issues/62).
 
 ### New Features
 - Lock controls for users, globally.
