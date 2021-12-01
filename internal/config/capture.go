@@ -3,6 +3,7 @@ package config
 import (
 	"os"
 
+	"github.com/pion/webrtc/v3"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -113,19 +114,15 @@ func (Capture) Init(cmd *cobra.Command) error {
 }
 
 func (s *Capture) Set() {
+	var ok bool
+
 	// Display is provided by env variable
 	s.Display = os.Getenv("DISPLAY")
 
 	// video
 	videoCodec := viper.GetString("capture.video.codec")
-	switch videoCodec {
-	case "vp8":
-		s.VideoCodec = codec.VP8()
-	case "vp9":
-		s.VideoCodec = codec.VP9()
-	case "h264":
-		s.VideoCodec = codec.H264()
-	default:
+	s.VideoCodec, ok = codec.ParseStr(videoCodec)
+	if !ok || s.VideoCodec.Type != webrtc.RTPCodecTypeVideo {
 		log.Warn().Str("codec", videoCodec).Msgf("unknown video codec, using Vp8")
 		s.VideoCodec = codec.VP8()
 	}
@@ -143,7 +140,7 @@ func (s *Capture) Set() {
 
 		s.VideoCodec = codec.VP8()
 		s.VideoPipelines = map[string]types.VideoConfig{
-			"main": types.VideoConfig{
+			"main": {
 				GstPipeline: "ximagesrc display-name={display} show-pointer=false use-damage=false " +
 					"! video/x-raw " +
 					"! videoconvert " +
@@ -160,16 +157,8 @@ func (s *Capture) Set() {
 	s.AudioPipeline = viper.GetString("capture.audio.pipeline")
 
 	audioCodec := viper.GetString("capture.audio.codec")
-	switch audioCodec {
-	case "opus":
-		s.AudioCodec = codec.Opus()
-	case "g722":
-		s.AudioCodec = codec.G722()
-	case "pcmu":
-		s.AudioCodec = codec.PCMU()
-	case "pcma":
-		s.AudioCodec = codec.PCMA()
-	default:
+	s.AudioCodec, ok = codec.ParseStr(audioCodec)
+	if !ok || s.AudioCodec.Type != webrtc.RTPCodecTypeAudio {
 		log.Warn().Str("codec", audioCodec).Msgf("unknown audio codec, using Opus")
 		s.AudioCodec = codec.Opus()
 	}

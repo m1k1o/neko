@@ -1,6 +1,40 @@
 package codec
 
-import "github.com/pion/webrtc/v3"
+import (
+	"strings"
+
+	"github.com/pion/webrtc/v3"
+)
+
+func ParseRTC(codec webrtc.RTPCodecParameters) (RTPCodec, bool) {
+	codecName := strings.Split(codec.RTPCodecCapability.MimeType, "/")[1]
+	return ParseStr(codecName)
+}
+
+func ParseStr(codecName string) (codec RTPCodec, ok bool) {
+	ok = true
+
+	switch strings.ToLower(codecName) {
+	case VP8().Name:
+		codec = VP8()
+	case VP9().Name:
+		codec = VP9()
+	case H264().Name:
+		codec = H264()
+	case Opus().Name:
+		codec = Opus()
+	case G722().Name:
+		codec = G722()
+	case PCMU().Name:
+		codec = PCMU()
+	case PCMA().Name:
+		codec = PCMA()
+	default:
+		ok = false
+	}
+
+	return
+}
 
 type RTPCodec struct {
 	Name        string
