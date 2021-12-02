@@ -35,12 +35,12 @@ func (WebRTC) Init(cmd *cobra.Command) error {
 		return err
 	}
 
-	cmd.PersistentFlags().Int("icetcp", 8081, "ice tcp port")
+	cmd.PersistentFlags().Int("icetcp", 8083, "ice tcp port")
 	if err := viper.BindPFlag("icetcp", cmd.PersistentFlags().Lookup("icetcp")); err != nil {
 		return err
 	}
 
-	cmd.PersistentFlags().Int("iceudp", 8082, "ice udp port")
+	cmd.PersistentFlags().Int("iceudp", 8084, "ice udp port")
 	if err := viper.BindPFlag("iceudp", cmd.PersistentFlags().Lookup("iceudp")); err != nil {
 		return err
 	}

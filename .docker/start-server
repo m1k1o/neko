@@ -20,15 +20,13 @@ fi
 docker run --rm -it \
   --name "neko_dev" \
   -p "${SERVER_PORT}:8080" \
-  -p "8082:8082" \
-  -p "8083:8083" \
+  -p "8083:8083/tcp" \
+  -p "8084:8084/udp" \
   -p "${SERVER_EPR}:${SERVER_EPR}/udp" \
   -e "NEKO_SCREEN=1920x1080@60" \
   -e "NEKO_EPR=${SERVER_EPR}" \
   -e "NEKO_NAT1TO1=${SERVER_IP}" \
   -e "NEKO_ICELITE=true" \
-  -e "NEKO_ICETCP=8082" \
-  -e "NEKO_ICEUDP=8083" \
   -e "NEKO_MAX_FPS=25" \
   -v "${BINARY_PATH}:/usr/bin/neko" \
   --shm-size=2G \
