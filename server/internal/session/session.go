@@ -104,11 +104,50 @@ func (session *Session) Send(v interface{}) error {
 	return session.socket.Send(v)
 }
 
-func (session *Session) SignalAnswer(sdp string) error {
+func (session *Session) SignalLocalOffer(sdp string) error {
 	if session.peer == nil {
 		return nil
 	}
-	return session.peer.SignalAnswer(sdp)
+	session.logger.Info().Msg("signal update - LocalOffer")
+	return session.socket.Send(&message.SignalOffer{
+		Event: event.SIGNAL_OFFER,
+		SDP:   sdp,
+	})
+}
+
+func (session *Session) SignalLocalAnswer(sdp string) error {
+	if session.peer == nil {
+		return nil
+	}
+
+	session.logger.Info().Msg("signal update - LocalAnswer")
+	return session.socket.Send(&message.SignalAnswer{
+		Event: event.SIGNAL_ANSWER,
+		SDP:   sdp,
+	})
+}
+
+func (session *Session) SignalRemoteOffer(sdp string) error {
+	if session.peer == nil {
+		return nil
+	}
+	if err := session.peer.SetOffer(sdp); err != nil {
+		return err
+	}
+	sdp, err := session.peer.CreateAnswer()
+	if err != nil {
+		return err
+	}
+	session.logger.Info().Msg("signal update - RemoteOffer")
+	return session.SignalLocalAnswer(sdp)
+}
+
+func (session *Session) SignalRemoteAnswer(sdp string) error {
+	if session.peer == nil {
+		return nil
+	}
+	session.logger.Info().Msg("signal update - RemoteAnswer")
+	return session.peer.SetAnswer(sdp)
 }
 
 func (session *Session) SignalCandidate(data string) error {

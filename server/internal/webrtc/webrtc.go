@@ -74,7 +74,7 @@ func (manager *WebRTCManager) Shutdown() error {
 	return nil
 }
 
-func (manager *WebRTCManager) CreatePeer(id string, session types.Session) (string, bool, []webrtc.ICEServer, error) {
+func (manager *WebRTCManager) CreatePeer(id string, session types.Session) (types.Peer, error) {
 	configuration := &webrtc.Configuration{
 		ICEServers:   manager.config.ICEServers,
 		SDPSemantics: webrtc.SDPSemanticsUnifiedPlanWithFallback,
@@ -106,7 +106,7 @@ func (manager *WebRTCManager) CreatePeer(id string, session types.Session) (stri
 
 	i := &interceptor.Registry{}
 	if err := webrtc.RegisterDefaultInterceptors(&engine, i); err != nil {
-		return "", manager.config.ICELite, manager.config.ICEServers, err
+		return nil, err
 	}
 
 	// Create API with MediaEngine and SettingEngine
@@ -115,7 +115,7 @@ func (manager *WebRTCManager) CreatePeer(id string, session types.Session) (stri
 	// Create new peer connection
 	connection, err := api.NewPeerConnection(*configuration)
 	if err != nil {
-		return "", manager.config.ICELite, manager.config.ICEServers, err
+		return nil, err
 	}
 
 	negotiated := true
@@ -123,7 +123,7 @@ func (manager *WebRTCManager) CreatePeer(id string, session types.Session) (stri
 		Negotiated: &negotiated,
 	})
 	if err != nil {
-		return "", manager.config.ICELite, manager.config.ICEServers, err
+		return nil, err
 	}
 
 	connection.OnDataChannel(func(d *webrtc.DataChannel) {
@@ -144,22 +144,12 @@ func (manager *WebRTCManager) CreatePeer(id string, session types.Session) (stri
 
 	rtpVideo, err := connection.AddTrack(manager.videoTrack)
 	if err != nil {
-		return "", manager.config.ICELite, manager.config.ICEServers, err
+		return nil, err
 	}
 
 	rtpAudio, err := connection.AddTrack(manager.audioTrack)
 	if err != nil {
-		return "", manager.config.ICELite, manager.config.ICEServers, err
-	}
-
-	description, err := connection.CreateOffer(nil)
-	if err != nil {
-		return "", manager.config.ICELite, manager.config.ICEServers, err
-	}
-
-	err = connection.SetLocalDescription(description)
-	if err != nil {
-		return "", manager.config.ICELite, manager.config.ICEServers, err
+		return nil, err
 	}
 
 	connection.OnConnectionStateChange(func(state webrtc.PeerConnectionState) {
@@ -182,6 +172,32 @@ func (manager *WebRTCManager) CreatePeer(id string, session types.Session) (stri
 		}
 	})
 
+	peer := &Peer{
+		id:            id,
+		api:           api,
+		engine:        &engine,
+		manager:       manager,
+		settings:      &settings,
+		connection:    connection,
+		configuration: configuration,
+	}
+
+	connection.OnNegotiationNeeded(func() {
+		manager.logger.Warn().Msg("negotiation is needed")
+
+		sdp, err := peer.CreateOffer()
+		if err != nil {
+			manager.logger.Err(err).Msg("creating offer failed")
+			return
+		}
+
+		err = session.SignalLocalOffer(sdp)
+		if err != nil {
+			manager.logger.Warn().Err(err).Msg("sending SignalLocalOffer failed")
+			return
+		}
+	})
+
 	connection.OnICECandidate(func(i *webrtc.ICECandidate) {
 		if i == nil {
 			manager.logger.Info().Msg("sent all ICECandidates")
@@ -200,16 +216,8 @@ func (manager *WebRTCManager) CreatePeer(id string, session types.Session) (stri
 		}
 	})
 
-	if err := session.SetPeer(&Peer{
-		id:            id,
-		api:           api,
-		engine:        &engine,
-		manager:       manager,
-		settings:      &settings,
-		connection:    connection,
-		configuration: configuration,
-	}); err != nil {
-		return "", manager.config.ICELite, manager.config.ICEServers, err
+	if err := session.SetPeer(peer); err != nil {
+		return nil, err
 	}
 
 	go func() {
@@ -230,7 +238,15 @@ func (manager *WebRTCManager) CreatePeer(id string, session types.Session) (stri
 		}
 	}()
 
-	return description.SDP, manager.config.ICELite, manager.config.ICEServers, nil
+	return peer, nil
+}
+
+func (manager *WebRTCManager) ICELite() bool {
+	return manager.config.ICELite
+}
+
+func (manager *WebRTCManager) ICEServers() []webrtc.ICEServer {
+	return manager.config.ICEServers
 }
 
 func (manager *WebRTCManager) createTrack(codecName string) (*webrtc.TrackLocalStaticSample, webrtc.RTPCodecParameters, error) {

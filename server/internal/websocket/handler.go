@@ -60,11 +60,17 @@ func (h *MessageHandler) Message(id string, raw []byte) error {
 
 	switch header.Event {
 	// Signal Events
+	case event.SIGNAL_OFFER:
+		payload := &message.SignalOffer{}
+		return errors.Wrapf(
+			utils.Unmarshal(payload, raw, func() error {
+				return h.signalRemoteOffer(id, session, payload)
+			}), "%s failed", header.Event)
 	case event.SIGNAL_ANSWER:
 		payload := &message.SignalAnswer{}
 		return errors.Wrapf(
 			utils.Unmarshal(payload, raw, func() error {
-				return h.signalAnswer(id, session, payload)
+				return h.signalRemoteAnswer(id, session, payload)
 			}), "%s failed", header.Event)
 
 	// Control Events

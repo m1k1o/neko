@@ -1,5 +1,10 @@
 # Changelog
 
+## master branch
+
+### Misc
+- Automatic WebRTC SDP negotiation using onnegotiationneeded handlers. This allows adding/removing track on demand in a session.
+
 ## [n.eko v2.5](https://github.com/m1k1o/neko/releases/tag/v2.5)
 
 ### Bugs

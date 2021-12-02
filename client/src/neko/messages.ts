@@ -14,6 +14,7 @@ import { Member, ScreenConfigurations, ScreenResolution } from './types'
 export type WebSocketMessages =
   | WebSocketMessage
   | SignalProvideMessage
+  | SignalOfferMessage
   | SignalAnswerMessage
   | SignalCandidateMessage
   | MemberListMessage
@@ -26,6 +27,7 @@ export type WebSocketMessages =
 
 export type WebSocketPayloads =
   | SignalProvidePayload
+  | SignalOfferPayload
   | SignalAnswerPayload
   | SignalCandidatePayload
   | MemberListPayload
@@ -71,6 +73,14 @@ export interface SignalProvidePayload {
   id: string
   lite: boolean
   ice: RTCIceServer[]
+  sdp: string
+}
+
+// signal/offer
+export interface SignalOfferMessage extends WebSocketMessage, SignalOfferPayload {
+  event: typeof EVENT.SIGNAL.OFFER
+}
+export interface SignalOfferPayload {
   sdp: string
 }
 

@@ -22,7 +22,10 @@ type Session interface {
 	Address() string
 	Kick(message string) error
 	Send(v interface{}) error
-	SignalAnswer(sdp string) error
+	SignalLocalOffer(sdp string) error
+	SignalLocalAnswer(sdp string) error
+	SignalRemoteOffer(sdp string) error
+	SignalRemoteAnswer(sdp string) error
 	SignalCandidate(data string) error
 }
 

@@ -2,7 +2,14 @@ import EventEmitter from 'eventemitter3'
 import { OPCODE } from './data'
 import { EVENT, WebSocketEvents } from './events'
 
-import { WebSocketMessages, WebSocketPayloads, SignalProvidePayload, SignalCandidatePayload } from './messages'
+import {
+  WebSocketMessages,
+  WebSocketPayloads,
+  SignalProvidePayload,
+  SignalCandidatePayload,
+  SignalOfferPayload,
+  SignalAnswerMessage,
+} from './messages'
 
 export interface BaseEvents {
   info: (...message: any[]) => void
@@ -180,7 +187,7 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
     this._ws!.send(JSON.stringify({ event, ...payload }))
   }
 
-  public async createPeer(sdp: string, lite: boolean, servers: RTCIceServer[]) {
+  public async createPeer(lite: boolean, servers: RTCIceServer[]) {
     this.emit('debug', `creating peer`)
     if (!this.socketOpen) {
       this.emit(
@@ -243,13 +250,32 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
     }
 
     this._peer.ontrack = this.onTrack.bind(this)
-    this._peer.addTransceiver('audio', { direction: 'recvonly' })
-    this._peer.addTransceiver('video', { direction: 'recvonly' })
+
+    this._peer.onnegotiationneeded = async () => {
+      this.emit('warn', `negotiation is needed`)
+
+      const d = await this._peer!.createOffer()
+      this._peer!.setLocalDescription(d)
+
+      this._ws!.send(
+        JSON.stringify({
+          event: EVENT.SIGNAL.OFFER,
+          sdp: d.sdp,
+        }),
+      )
+    }
 
     this._channel = this._peer.createDataChannel('data')
     this._channel.onerror = this.onError.bind(this)
     this._channel.onmessage = this.onData.bind(this)
     this._channel.onclose = this.onDisconnected.bind(this, new Error('peer data channel closed'))
+  }
+
+  public async setRemoteOffer(sdp: string) {
+    if (!this._peer) {
+      this.emit('warn', `attempting to set remote offer while disconnected`)
+      return
+    }
 
     this._peer.setRemoteDescription({ type: 'offer', sdp })
 
@@ -274,7 +300,16 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
     }
   }
 
-  private onMessage(e: MessageEvent) {
+  public async setRemoteAnswer(sdp: string) {
+    if (!this._peer) {
+      this.emit('warn', `attempting to set remote answer while disconnected`)
+      return
+    }
+
+    this._peer.setRemoteDescription({ type: 'answer', sdp })
+  }
+
+  private async onMessage(e: MessageEvent) {
     const { event, ...payload } = JSON.parse(e.data) as WebSocketMessages
 
     this.emit('debug', `received websocket event ${event} ${payload ? `with payload: ` : ''}`, payload)
@@ -282,7 +317,20 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
     if (event === EVENT.SIGNAL.PROVIDE) {
       const { sdp, lite, ice, id } = payload as SignalProvidePayload
       this._id = id
-      this.createPeer(sdp, lite, ice)
+      await this.createPeer(lite, ice)
+      await this.setRemoteOffer(sdp)
+      return
+    }
+
+    if (event === EVENT.SIGNAL.OFFER) {
+      const { sdp } = payload as SignalOfferPayload
+      await this.setRemoteOffer(sdp)
+      return
+    }
+
+    if (event === EVENT.SIGNAL.ANSWER) {
+      const { sdp } = payload as SignalAnswerMessage
+      await this.setRemoteAnswer(sdp)
       return
     }
 

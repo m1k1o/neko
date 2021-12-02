@@ -24,6 +24,11 @@ type SignalProvide struct {
 	ICE   []webrtc.ICEServer `json:"ice"`
 }
 
+type SignalOffer struct {
+	Event string `json:"event"`
+	SDP   string `json:"sdp"`
+}
+
 type SignalAnswer struct {
 	Event       string `json:"event"`
 	DisplayName string `json:"displayname"`
