@@ -211,7 +211,15 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
       throw new Error('attempting to add track for nonexistent peer')
     }
 
-    return this._peer.addTrack(track, ...streams)
+    return this._peer.addTransceiver(track, { direction: 'sendonly', streams }).sender
+  }
+
+  public removeTrack(sender: RTCRtpSender) {
+    if (!this._peer) {
+      throw new Error('attempting to add track for nonexistent peer')
+    }
+
+    this._peer.removeTrack(sender)
   }
 
   public disconnect() {
