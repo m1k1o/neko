@@ -1,0 +1,19 @@
+ARG BASE_IMAGE=m1k1o/neko:arm-base
+FROM $BASE_IMAGE
+
+#
+# install neko chromium
+RUN set -eux; apt-get update; \
+    # TODO: Bring back DRM support with arm32v7/debian:buster-slim image.
+    apt-get install -y --no-install-recommends chromium openbox; \
+    #
+    # clean up
+    apt-get clean -y; \
+    rm -rf /var/lib/apt/lists/* /var/cache/apt/*
+
+#
+# copy configuation files
+COPY supervisord.conf /etc/neko/supervisord/chromium.conf
+COPY --chown=neko preferences.json /home/neko/.config/chromium/Default/Preferences
+COPY policies.json /etc/chromium/policies/managed/policies.json
+COPY openbox.xml /etc/neko/openbox.xml

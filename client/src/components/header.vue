@@ -1,22 +1,16 @@
 <template>
   <div class="header">
-    <div class="neko">
+    <a href="https://github.com/m1k1o/neko" title="Github repository" target="_blank" class="neko">
       <img src="@/assets/images/logo.svg" alt="n.eko" />
       <span><b>n</b>.eko</span>
-    </div>
+    </a>
     <ul class="menu">
       <li>
         <i
-          :class="[{ disabled: !admin }, { 'fa-lock-open': !locked }, { 'fa-lock': locked }, 'fas', 'lock']"
-          @click="toggleLock"
+          :class="[{ disabled: !admin }, { locked: isLocked('control') }, 'fas', 'fa-mouse']"
+          @click="toggleLock('control')"
           v-tooltip="{
-            content: admin
-              ? locked
-                ? $t('room.unlock')
-                : $t('room.lock')
-              : locked
-              ? $t('room.locked')
-              : $t('room.unlocked'),
+            content: lockedTooltip('control'),
             placement: 'bottom',
             offset: 5,
             boundariesElement: 'body',
@@ -25,6 +19,20 @@
         />
       </li>
       <li>
+        <i
+          :class="[{ disabled: !admin }, { locked: isLocked('login') }, locked ? 'fa-lock' : 'fa-lock-open', 'fas']"
+          @click="toggleLock('login')"
+          v-tooltip="{
+            content: lockedTooltip('login'),
+            placement: 'bottom',
+            offset: 5,
+            boundariesElement: 'body',
+            delay: { show: 300, hide: 100 },
+          }"
+        />
+      </li>
+      <li>
+        <span v-if="showBadge" class="badge">&bull;</span>
         <i class="fas fa-bars toggle" @click="toggleMenu" />
       </li>
     </ul>
@@ -45,6 +53,8 @@
       align-items: center;
       width: 150px;
       margin-left: 20px;
+      color: $text-normal;
+      text-decoration: none;
 
       img {
         display: block;
@@ -87,12 +97,46 @@
           opacity: 0.8;
         }
 
-        .fa-lock {
+        .locked {
           color: rgba($color: $style-error, $alpha: 0.5);
         }
 
         .toggle {
           background: $background-primary;
+        }
+
+        .badge {
+          position: absolute;
+          background: red;
+          font-weight: bold;
+          font-size: 1.25em;
+          border-radius: 50%;
+          width: 20px;
+          height: 20px;
+          text-align: center;
+          line-height: 20px;
+          pointer-events: none;
+
+          transform: translate(-50%, -25%) scale(1);
+          box-shadow: 0 0 0 0 rgba(0, 0, 0, 1);
+          animation: badger-pulse 2s infinite;
+        }
+
+        @keyframes badger-pulse {
+          0% {
+            transform: translate(-50%, -25%) scale(0.85);
+            box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.7);
+          }
+
+          70% {
+            transform: translate(-50%, -25%) scale(1);
+            box-shadow: 0 0 0 10px rgba(0, 0, 0, 0);
+          }
+
+          100% {
+            transform: translate(-50%, -25%) scale(0.85);
+            box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+          }
         }
       }
     }
@@ -101,6 +145,7 @@
 
 <script lang="ts">
   import { Component, Ref, Watch, Vue } from 'vue-property-decorator'
+  import { AdminLockResource } from '~/neko/messages'
 
   @Component({ name: 'neko-settings' })
   export default class extends Vue {
@@ -112,18 +157,44 @@
       return this.$accessor.locked
     }
 
-    toggleMenu() {
-      this.$accessor.client.toggleSide()
+    get side() {
+      return this.$accessor.client.side
     }
 
-    toggleLock() {
-      if (this.admin) {
-        if (this.locked) {
-          this.$accessor.unlock()
-        } else {
-          this.$accessor.lock()
-        }
+    get texts() {
+      return this.$accessor.chat.texts
+    }
+
+    get showBadge() {
+      return !this.side && this.readTexts != this.texts
+    }
+
+    readTexts: number = 0
+    toggleMenu() {
+      this.$accessor.client.toggleSide()
+      this.readTexts = this.texts
+    }
+
+    toggleLock(resource: AdminLockResource) {
+      if (!this.admin) return
+
+      if (this.isLocked(resource)) {
+        this.$accessor.unlock(resource)
+      } else {
+        this.$accessor.lock(resource)
       }
+    }
+
+    isLocked(resource: AdminLockResource): boolean {
+      return resource in this.locked && this.locked[resource]
+    }
+
+    lockedTooltip(resource: AdminLockResource) {
+      if (this.admin) {
+        return this.$t(`locks.${resource}.` + (this.isLocked(resource) ? `unlock` : `lock`))
+      }
+
+      return this.$t(`locks.${resource}.` + (this.isLocked(resource) ? `locked` : `unlocked`))
     }
   }
 </script>

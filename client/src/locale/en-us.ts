@@ -2,6 +2,7 @@ export const logout = 'log out'
 export const unsupported = 'this web-browser does not support WebRTC'
 export const admin_loggedin = 'You are logged in as an admin'
 export const you = 'You'
+export const somebody = 'Somebody'
 export const send_a_message = 'Send a message'
 
 export const side = {
@@ -16,6 +17,7 @@ export const connect = {
   password: 'Password',
   connect: 'Connect',
   error: 'Login error',
+  empty_displayname: 'Display Name cannot be empty.',
 }
 
 export const context = {
@@ -49,11 +51,23 @@ export const controls = {
   unlock: 'Unlock Controls',
 }
 
-export const room = {
-  lock: 'Lock Room (for users)',
-  unlock: 'Unlock Room (for users)',
-  locked: 'Room Locked (for users)',
-  unlocked: 'Room Unlocked (for users)',
+export const locks = {
+  control: {
+    lock: 'Lock Controls (for users)',
+    unlock: 'Unlock Controls (for users)',
+    locked: 'Controls Locked (for users)',
+    unlocked: 'Controls Unlocked (for users)',
+    notif_locked: 'locked controls for users',
+    notif_unlocked: 'unlocked controls for users',
+  },
+  login: {
+    lock: 'Lock Room (for users)',
+    unlock: 'Unlock Room (for users)',
+    locked: 'Room Locked (for users)',
+    unlocked: 'Room Unlocked (for users)',
+    notif_locked: 'locked the room',
+    notif_unlocked: 'unlocked the room',
+  },
 }
 
 export const setting = {
@@ -63,14 +77,15 @@ export const setting = {
   ignore_emotes: 'Ignore Emotes',
   chat_sound: 'Play Chat Sound',
   keyboard_layout: 'Keyboard Layout',
-  broadcast_is_active: 'Broadcast Enabled',
-  broadcast_url: 'RTMP URL',
+  broadcast_title: 'Live Broadcast',
 }
 
 export const connection = {
   logged_out: 'You have been logged out.',
+  reconnecting: 'Reconnecting...',
   connected: 'Connected',
   disconnected: 'Disconnected',
+  kicked: 'You have been removed from this room.',
   button_confirm: 'OK',
 }
 
@@ -92,6 +107,4 @@ export const notifications = {
   kicked: 'kicked {name}',
   muted: 'muted {name}',
   unmuted: 'unmuted {name}',
-  room_locked: 'locked the room',
-  room_unlocked: 'unlocked the room',
 }

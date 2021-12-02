@@ -9,6 +9,9 @@ type WebSocket struct {
 	Password      string
 	AdminPassword string
 	Proxy         bool
+	Locks         []string
+
+	ControlProtection bool
 }
 
 func (WebSocket) Init(cmd *cobra.Command) error {
@@ -27,6 +30,16 @@ func (WebSocket) Init(cmd *cobra.Command) error {
 		return err
 	}
 
+	cmd.PersistentFlags().StringSlice("locks", []string{}, "resources, that will be locked when starting (control, login)")
+	if err := viper.BindPFlag("locks", cmd.PersistentFlags().Lookup("locks")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().Bool("control_protection", false, "control protection means, users can gain control only if at least one admin is in the room")
+	if err := viper.BindPFlag("control_protection", cmd.PersistentFlags().Lookup("control_protection")); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -34,4 +47,7 @@ func (s *WebSocket) Set() {
 	s.Password = viper.GetString("password")
 	s.AdminPassword = viper.GetString("password_admin")
 	s.Proxy = viper.GetBool("proxy")
+	s.Locks = viper.GetStringSlice("locks")
+
+	s.ControlProtection = viper.GetBool("control_protection")
 }

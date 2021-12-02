@@ -2,6 +2,7 @@ import { getterTree, mutationTree, actionTree } from 'typed-vuex'
 import { Member } from '~/neko/types'
 import { EVENT } from '~/neko/events'
 
+import md from 'simple-markdown'
 import { accessor } from '~/store'
 
 export const namespaced = true
@@ -40,6 +41,7 @@ export const mutations = mutationTree(state, {
       data[member.id] = {
         connected: true,
         ...member,
+        displayname: md.sanitizeText(member.displayname),
       }
     }
     state.members = data
@@ -48,16 +50,12 @@ export const mutations = mutationTree(state, {
     state.id = id
   },
   addMember(state, member: Member) {
-    // remove html tags
-    const tmp = document.createElement('div')
-    tmp.innerHTML = member.displayname
-    member.displayname = tmp.textContent || tmp.innerText || ''
-
     state.members = {
       ...state.members,
       [member.id]: {
         connected: true,
         ...member,
+        displayname: md.sanitizeText(member.displayname),
       },
     }
   },

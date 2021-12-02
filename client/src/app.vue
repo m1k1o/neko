@@ -190,7 +190,7 @@
       if (this.shakeKbd || this.$accessor.remote.hosted) return
 
       this.shakeKbd = true
-      setTimeout(() => (this.shakeKbd = false), 5000)
+      window.setTimeout(() => (this.shakeKbd = false), 5000)
     }
 
     get about() {

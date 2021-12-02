@@ -6,13 +6,13 @@ import (
 	"os/signal"
 	"runtime"
 
-	"n.eko.moe/neko/internal/broadcast"
-	"n.eko.moe/neko/internal/http"
-	"n.eko.moe/neko/internal/remote"
-	"n.eko.moe/neko/internal/session"
-	"n.eko.moe/neko/internal/types/config"
-	"n.eko.moe/neko/internal/webrtc"
-	"n.eko.moe/neko/internal/websocket"
+	"m1k1o/neko/internal/broadcast"
+	"m1k1o/neko/internal/http"
+	"m1k1o/neko/internal/remote"
+	"m1k1o/neko/internal/session"
+	"m1k1o/neko/internal/types/config"
+	"m1k1o/neko/internal/webrtc"
+	"m1k1o/neko/internal/websocket"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -25,7 +25,7 @@ const Header = `&34
   /  |/ / _ \/ //_/ __ \   )  ( ')
  / /|  /  __/ ,< / /_/ /  (  /  )
 /_/ |_/\___/_/|_|\____/    \(__)|
-&1&37   nurdism/neko &33%s v%s&0
+&1&37 nurdism/m1k1o &33%s v%s&0
 `
 
 var (
@@ -39,8 +39,8 @@ var (
 	// Major version when you make incompatible API changes,
 	major = "2"
 	// Minor version when you add functionality in a backwards-compatible manner, and
-	minor = "0"
-	// Patch version when you make backwards-compatible bug fixeneko.
+	minor = "5"
+	// Patch version when you make backwards-compatible bug fixes.
 	patch = "0"
 )
 
@@ -136,6 +136,7 @@ func (neko *Neko) Start() {
 	server := http.New(neko.Server, webSocketHandler)
 	server.Start()
 
+	neko.broadcastManager = broadcastManager
 	neko.sessionManager = sessionManager
 	neko.remoteManager = remoteManager
 	neko.webRTCManager = webRTCManager
@@ -144,29 +145,22 @@ func (neko *Neko) Start() {
 }
 
 func (neko *Neko) Shutdown() {
-	if err := neko.remoteManager.Shutdown(); err != nil {
-		neko.logger.Err(err).Msg("remote manager shutdown with an error")
-	} else {
-		neko.logger.Debug().Msg("remote manager shutdown")
-	}
+	var err error
 
-	if err := neko.webRTCManager.Shutdown(); err != nil {
-		neko.logger.Err(err).Msg("webrtc manager shutdown with an error")
-	} else {
-		neko.logger.Debug().Msg("webrtc manager shutdown")
-	}
+	err = neko.broadcastManager.Shutdown()
+	neko.logger.Err(err).Msg("broadcast manager shutdown")
 
-	if err := neko.webSocketHandler.Shutdown(); err != nil {
-		neko.logger.Err(err).Msg("websocket handler shutdown with an error")
-	} else {
-		neko.logger.Debug().Msg("websocket handler shutdown")
-	}
+	err = neko.remoteManager.Shutdown()
+	neko.logger.Err(err).Msg("remote manager shutdown")
 
-	if err := neko.server.Shutdown(); err != nil {
-		neko.logger.Err(err).Msg("server shutdown with an error")
-	} else {
-		neko.logger.Debug().Msg("server shutdown")
-	}
+	err = neko.webRTCManager.Shutdown()
+	neko.logger.Err(err).Msg("webrtc manager shutdown")
+
+	err = neko.webSocketHandler.Shutdown()
+	neko.logger.Err(err).Msg("websocket handler shutdown")
+
+	err = neko.server.Shutdown()
+	neko.logger.Err(err).Msg("server shutdown")
 }
 
 func (neko *Neko) ServeCommand(cmd *cobra.Command, args []string) {
@@ -174,11 +168,11 @@ func (neko *Neko) ServeCommand(cmd *cobra.Command, args []string) {
 	neko.Start()
 	neko.logger.Info().Msg("neko ready")
 
-	quit := make(chan os.Signal)
+	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)
 	sig := <-quit
 
-	neko.logger.Warn().Msgf("received %s, attempting graceful shutdown: \n", sig)
+	neko.logger.Warn().Msgf("received %s, attempting graceful shutdown", sig)
 	neko.Shutdown()
 	neko.logger.Info().Msg("shutdown complete")
 }

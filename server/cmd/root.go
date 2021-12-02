@@ -14,7 +14,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"n.eko.moe/neko"
+	"m1k1o/neko"
 )
 
 func Execute() error {
@@ -47,7 +47,7 @@ func init() {
 			}
 
 			if _, err := os.Stat(logs); os.IsNotExist(err) {
-				os.Mkdir(logs, os.ModePerm)
+				_ = os.Mkdir(logs, os.ModePerm)
 			}
 
 			latest := filepath.Join(logs, "neko-latest.log")

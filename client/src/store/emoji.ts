@@ -58,17 +58,17 @@ export const mutations = mutationTree(state, {
 export const actions = actionTree(
   { state, getters, mutations },
   {
-    initialise() {
-      $http
-        .get<Emojis>('emoji.json')
-        .then((req) => {
-          for (const group of req.data.groups) {
-            accessor.emoji.addGroup(group)
-          }
-          accessor.emoji.setList(req.data.list)
-          accessor.emoji.setKeywords(req.data.keywords)
-        })
-        .catch(console.error)
+    async initialise() {
+      try {
+        const req = await $http.get<Emojis>('emoji.json')
+        for (const group of req.data.groups) {
+          accessor.emoji.addGroup(group)
+        }
+        accessor.emoji.setList(req.data.list)
+        accessor.emoji.setKeywords(req.data.keywords)
+      } catch (err: any) {
+        console.error(err)
+      }
     },
   },
 )

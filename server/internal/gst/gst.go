@@ -4,7 +4,6 @@ package gst
 #cgo pkg-config: gstreamer-1.0 gstreamer-app-1.0
 
 #include "gst.h"
-
 */
 import "C"
 import (
@@ -14,7 +13,7 @@ import (
 	"time"
 	"unsafe"
 
-	"n.eko.moe/neko/internal/types"
+	"m1k1o/neko/internal/types"
 )
 
 /*
@@ -208,8 +207,15 @@ func CreatePipeline(pipelineStr string) (*Pipeline, error) {
 	pipelinesLock.Lock()
 	defer pipelinesLock.Unlock()
 
+	var err *C.GError
+	gstPipeline := C.gstreamer_send_create_pipeline(pipelineStrUnsafe, &err)
+	if err != nil {
+		defer C.g_error_free(err)
+		return nil, fmt.Errorf("%s", C.GoString(err.message))
+	}
+
 	p := &Pipeline{
-		Pipeline: C.gstreamer_send_create_pipeline(pipelineStrUnsafe),
+		Pipeline: gstPipeline,
 		Sample:   make(chan types.Sample),
 		Src:      pipelineStr,
 		id:       len(pipelines),

@@ -1,15 +1,27 @@
 package websocket
 
 import (
-	"n.eko.moe/neko/internal/types"
-	"n.eko.moe/neko/internal/types/event"
-	"n.eko.moe/neko/internal/types/message"
+	"m1k1o/neko/internal/types"
+	"m1k1o/neko/internal/types/event"
+	"m1k1o/neko/internal/types/message"
 )
 
 func (h *MessageHandler) SessionCreated(id string, session types.Session) error {
 	// send sdp and id over to client
 	if err := h.signalProvide(id, session); err != nil {
 		return err
+	}
+
+	// notify all about what is locked
+	for resource, id := range h.locked {
+		if err := session.Send(message.AdminLock{
+			Event:    event.ADMIN_LOCK,
+			ID:       id,
+			Resource: resource,
+		}); err != nil {
+			h.logger.Warn().Str("id", id).Err(err).Msgf("sending event %s has failed", event.ADMIN_LOCK)
+			return err
+		}
 	}
 
 	if session.Admin() {
@@ -21,17 +33,6 @@ func (h *MessageHandler) SessionCreated(id string, session types.Session) error 
 		// send broadcast status if admin
 		if err := h.boradcastStatus(session); err != nil {
 			return err
-		}
-
-		// if locked, notify admin about that
-		if h.locked {
-			if err := session.Send(message.Admin{
-				Event: event.ADMIN_LOCK,
-				ID:    id,
-			}); err != nil {
-				h.logger.Warn().Str("id", id).Err(err).Msgf("sending event %s has failed", event.ADMIN_LOCK)
-				return err
-			}
 		}
 	}
 

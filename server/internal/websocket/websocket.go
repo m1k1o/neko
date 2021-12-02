@@ -3,6 +3,7 @@ package websocket
 import (
 	"fmt"
 	"net/http"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -10,18 +11,38 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"n.eko.moe/neko/internal/types"
-	"n.eko.moe/neko/internal/types/config"
-	"n.eko.moe/neko/internal/types/event"
-	"n.eko.moe/neko/internal/types/message"
-	"n.eko.moe/neko/internal/utils"
+	"m1k1o/neko/internal/types"
+	"m1k1o/neko/internal/types/config"
+	"m1k1o/neko/internal/types/event"
+	"m1k1o/neko/internal/types/message"
+	"m1k1o/neko/internal/utils"
 )
+
+const CONTROL_PROTECTION_SESSION = "by_control_protection"
 
 func New(sessions types.SessionManager, remote types.RemoteManager, broadcast types.BroadcastManager, webrtc types.WebRTCManager, conf *config.WebSocket) *WebSocketHandler {
 	logger := log.With().Str("module", "websocket").Logger()
 
+	locks := make(map[string]string)
+
+	// if control protection is enabled
+	if conf.ControlProtection {
+		locks["control"] = CONTROL_PROTECTION_SESSION
+		logger.Info().Msgf("control locked on behalf of control protection")
+	}
+
+	// apply default locks
+	for _, lock := range conf.Locks {
+		locks[lock] = "" // empty session ID
+	}
+
+	if len(conf.Locks) > 0 {
+		logger.Info().Msgf("locked resources: %+v", conf.Locks)
+	}
+
 	return &WebSocketHandler{
 		logger:   logger,
+		shutdown: make(chan interface{}),
 		conf:     conf,
 		sessions: sessions,
 		remote:   remote,
@@ -36,10 +57,10 @@ func New(sessions types.SessionManager, remote types.RemoteManager, broadcast ty
 			broadcast: broadcast,
 			sessions:  sessions,
 			webrtc:    webrtc,
-			banned:    make(map[string]bool),
-			locked:    false,
+			banned:    make(map[string]string),
+			locked:    locks,
 		},
-		conns: 0,
+		serverStartedAt: time.Now(),
 	}
 }
 
@@ -48,16 +69,22 @@ const pingPeriod = 60 * time.Second
 
 type WebSocketHandler struct {
 	logger   zerolog.Logger
+	wg       sync.WaitGroup
+	shutdown chan interface{}
 	upgrader websocket.Upgrader
 	sessions types.SessionManager
 	remote   types.RemoteManager
 	conf     *config.WebSocket
 	handler  *MessageHandler
-	conns    uint32
-	shutdown chan bool
+
+	// stats
+	conns           uint32
+	serverStartedAt time.Time
+	lastAdminLeftAt *time.Time
+	lastUserLeftAt  *time.Time
 }
 
-func (ws *WebSocketHandler) Start() error {
+func (ws *WebSocketHandler) Start() {
 	ws.sessions.OnCreated(func(id string, session types.Session) {
 		if err := ws.handler.SessionCreated(id, session); err != nil {
 			ws.logger.Warn().Str("id", id).Err(err).Msg("session created with and error")
@@ -72,6 +99,30 @@ func (ws *WebSocketHandler) Start() error {
 		} else {
 			ws.logger.Debug().Str("id", id).Msg("session connected")
 		}
+
+		// if control protection is enabled and at least one admin
+		// and if room was locked on behalf control protection, unlock
+		sess, ok := ws.handler.locked["control"]
+		if ok && ws.conf.ControlProtection && sess == CONTROL_PROTECTION_SESSION && len(ws.sessions.Admins()) > 0 {
+			delete(ws.handler.locked, "control")
+			ws.logger.Info().Msgf("control unlocked on behalf of control protection")
+
+			if err := ws.sessions.Broadcast(
+				message.AdminLock{
+					Event:    event.ADMIN_UNLOCK,
+					ID:       id,
+					Resource: "control",
+				}, nil); err != nil {
+				ws.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.ADMIN_UNLOCK)
+			}
+		}
+
+		// remove outdated stats
+		if session.Admin() {
+			ws.lastAdminLeftAt = nil
+		} else {
+			ws.lastUserLeftAt = nil
+		}
 	})
 
 	ws.sessions.OnDestroy(func(id string, session types.Session) {
@@ -80,11 +131,46 @@ func (ws *WebSocketHandler) Start() error {
 		} else {
 			ws.logger.Debug().Str("id", id).Msg("session destroyed")
 		}
+
+		membersCount := len(ws.sessions.Members())
+		adminCount := len(ws.sessions.Admins())
+
+		// if control protection is enabled and no admin
+		// and room is not locked, lock
+		_, ok := ws.handler.locked["control"]
+		if !ok && ws.conf.ControlProtection && adminCount == 0 {
+			ws.handler.locked["control"] = CONTROL_PROTECTION_SESSION
+			ws.logger.Info().Msgf("control locked and released on behalf of control protection")
+			ws.handler.adminRelease(id, session)
+
+			if err := ws.sessions.Broadcast(
+				message.AdminLock{
+					Event:    event.ADMIN_LOCK,
+					ID:       id,
+					Resource: "control",
+				}, nil); err != nil {
+				ws.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.ADMIN_LOCK)
+			}
+		}
+
+		// if this was the last admin
+		if session.Admin() && adminCount == 0 {
+			now := time.Now()
+			ws.lastAdminLeftAt = &now
+		}
+
+		// if this was the last user
+		if !session.Admin() && membersCount-adminCount == 0 {
+			now := time.Now()
+			ws.lastUserLeftAt = &now
+		}
 	})
 
+	ws.wg.Add(1)
 	go func() {
 		defer func() {
 			ws.logger.Info().Msg("shutdown")
+			ws.wg.Done()
 		}()
 
 		current := ws.remote.ReadClipboard()
@@ -94,34 +180,49 @@ func (ws *WebSocketHandler) Start() error {
 			case <-ws.shutdown:
 				return
 			default:
-				if ws.sessions.HasHost() {
-					text := ws.remote.ReadClipboard()
-					if text != current {
-						session, ok := ws.sessions.GetHost()
-						if ok {
-							session.Send(message.Clipboard{
-								Event: event.CONTROL_CLIPBOARD,
-								Text:  text,
-							})
-						}
-						current = text
+				time.Sleep(100 * time.Millisecond)
+
+				if !ws.sessions.HasHost() {
+					continue
+				}
+
+				text := ws.remote.ReadClipboard()
+				if text == current {
+					continue
+				}
+
+				session, ok := ws.sessions.GetHost()
+				if ok {
+					err := session.Send(message.Clipboard{
+						Event: event.CONTROL_CLIPBOARD,
+						Text:  text,
+					})
+
+					if err != nil {
+						ws.logger.Err(err).Msg("unable to synchronize clipboard")
 					}
 				}
-				time.Sleep(100 * time.Millisecond)
+
+				current = text
 			}
 		}
 	}()
-
-	return nil
 }
 
 func (ws *WebSocketHandler) Shutdown() error {
-	ws.shutdown <- true
+	close(ws.shutdown)
+	ws.wg.Wait()
 	return nil
 }
 
 func (ws *WebSocketHandler) Upgrade(w http.ResponseWriter, r *http.Request) error {
 	ws.logger.Debug().Msg("attempting to upgrade connection")
+
+	id, err := utils.NewUID(32)
+	if err != nil {
+		ws.logger.Error().Err(err).Msg("failed to generate user id")
+		return err
+	}
 
 	connection, err := ws.upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -129,11 +230,11 @@ func (ws *WebSocketHandler) Upgrade(w http.ResponseWriter, r *http.Request) erro
 		return err
 	}
 
-	id, ip, admin, err := ws.authenticate(r)
+	admin, err := ws.authenticate(r)
 	if err != nil {
 		ws.logger.Warn().Err(err).Msg("authentication failed")
 
-		if err = connection.WriteJSON(message.Disconnect{
+		if err = connection.WriteJSON(message.SystemMessage{
 			Event:   event.SYSTEM_DISCONNECT,
 			Message: "invalid_password",
 		}); err != nil {
@@ -149,18 +250,13 @@ func (ws *WebSocketHandler) Upgrade(w http.ResponseWriter, r *http.Request) erro
 	socket := &WebSocket{
 		id:         id,
 		ws:         ws,
-		address:    ip,
+		address:    utils.GetHttpRequestIP(r, ws.conf.Proxy),
 		connection: connection,
 	}
 
-	ok, reason, err := ws.handler.Connected(admin, socket)
-	if err != nil {
-		ws.logger.Error().Err(err).Msg("connection failed")
-		return err
-	}
-
+	ok, reason := ws.handler.Connected(admin, socket)
 	if !ok {
-		if err = connection.WriteJSON(message.Disconnect{
+		if err = connection.WriteJSON(message.SystemMessage{
 			Event:   event.SYSTEM_DISCONNECT,
 			Message: reason,
 		}); err != nil {
@@ -209,6 +305,15 @@ func (ws *WebSocketHandler) Stats() types.Stats {
 		Connections: atomic.LoadUint32(&ws.conns),
 		Host:        host,
 		Members:     ws.sessions.Members(),
+
+		Banned: ws.handler.banned,
+		Locked: ws.handler.locked,
+
+		ServerStartedAt: ws.serverStartedAt,
+		LastAdminLeftAt: ws.lastAdminLeftAt,
+		LastUserLeftAt:  ws.lastUserLeftAt,
+
+		ControlProtection: ws.conf.ControlProtection,
 	}
 }
 
@@ -224,25 +329,13 @@ func (ws *WebSocketHandler) IsAdmin(password string) (bool, error) {
 	return false, fmt.Errorf("invalid password")
 }
 
-func (ws *WebSocketHandler) authenticate(r *http.Request) (string, string, bool, error) {
-	ip := r.RemoteAddr
-
-	if ws.conf.Proxy {
-		ip = utils.ReadUserIP(r)
-	}
-
-	id, err := utils.NewUID(32)
-	if err != nil {
-		return "", ip, false, err
-	}
-
+func (ws *WebSocketHandler) authenticate(r *http.Request) (bool, error) {
 	passwords, ok := r.URL.Query()["password"]
 	if !ok || len(passwords[0]) < 1 {
-		return "", ip, false, fmt.Errorf("no password provided")
+		return false, fmt.Errorf("no password provided")
 	}
 
-	isAdmin, err := ws.IsAdmin(passwords[0])
-	return id, ip, isAdmin, err
+	return ws.IsAdmin(passwords[0])
 }
 
 func (ws *WebSocketHandler) handle(connection *websocket.Conn, id string) {
@@ -250,11 +343,13 @@ func (ws *WebSocketHandler) handle(connection *websocket.Conn, id string) {
 	cancel := make(chan struct{})
 	ticker := time.NewTicker(pingPeriod)
 
+	ws.wg.Add(1)
 	go func() {
 		defer func() {
 			ticker.Stop()
 			ws.logger.Debug().Str("address", connection.RemoteAddr().String()).Msg("handle socket ending")
 			ws.handler.Disconnected(id)
+			ws.wg.Done()
 		}()
 
 		for {
@@ -283,9 +378,21 @@ func (ws *WebSocketHandler) handle(connection *websocket.Conn, id string) {
 			if err := ws.handler.Message(id, raw); err != nil {
 				ws.logger.Error().Err(err).Msg("message handler has failed")
 			}
+		case <-ws.shutdown:
+			if err := connection.WriteJSON(message.SystemMessage{
+				Event:   event.SYSTEM_DISCONNECT,
+				Message: "server_shutdown",
+			}); err != nil {
+				ws.logger.Err(err).Msg("failed to send disconnect")
+			}
+
+			if err := connection.Close(); err != nil {
+				ws.logger.Err(err).Msg("connection closed with an error")
+			}
+			return
 		case <-cancel:
 			return
-		case _ = <-ticker.C:
+		case <-ticker.C:
 			if err := connection.WriteMessage(websocket.PingMessage, nil); err != nil {
 				return
 			}

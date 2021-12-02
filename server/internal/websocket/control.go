@@ -1,13 +1,12 @@
 package websocket
 
 import (
-	"n.eko.moe/neko/internal/types"
-	"n.eko.moe/neko/internal/types/event"
-	"n.eko.moe/neko/internal/types/message"
+	"m1k1o/neko/internal/types"
+	"m1k1o/neko/internal/types/event"
+	"m1k1o/neko/internal/types/message"
 )
 
 func (h *MessageHandler) controlRelease(id string, session types.Session) error {
-
 	// check if session is host
 	if !h.sessions.IsHost(id) {
 		h.logger.Debug().Str("id", id).Msg("is not the host")
@@ -34,8 +33,18 @@ func (h *MessageHandler) controlRelease(id string, session types.Session) error 
 func (h *MessageHandler) controlRequest(id string, session types.Session) error {
 	// check for host
 	if !h.sessions.HasHost() {
+		// check if control is locked or user is admin
+		_, ok := h.locked["control"]
+		if ok && !session.Admin() {
+			h.logger.Debug().Msg("control is locked")
+			return nil
+		}
+
 		// set host
-		h.sessions.SetHost(id)
+		err := h.sessions.SetHost(id)
+		if err != nil {
+			return err
+		}
 
 		// let everyone know
 		if err := h.sessions.Broadcast(
@@ -88,8 +97,18 @@ func (h *MessageHandler) controlGive(id string, session types.Session, payload *
 		return nil
 	}
 
+	// check if control is locked or giver is admin
+	_, ok := h.locked["control"]
+	if ok && !session.Admin() {
+		h.logger.Debug().Msg("control is locked")
+		return nil
+	}
+
 	// set host
-	h.sessions.SetHost(payload.ID)
+	err := h.sessions.SetHost(payload.ID)
+	if err != nil {
+		return err
+	}
 
 	// let everyone know
 	if err := h.sessions.Broadcast(

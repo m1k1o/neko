@@ -1,8 +1,8 @@
 <template>
-  <div class="emotes">
+  <div class="emotes" @mouseleave="stopSendingEmotes" @mouseup="stopSendingEmotes">
     <ul v-if="!muted">
       <li v-for="emote in recent" :key="emote">
-        <div @click.stop.prevent="sendEmote(emote)" :class="['emote', emote]" />
+        <div :class="['emote', emote]" @mousedown.stop.prevent="startSendingEmotes(emote)" />
       </li>
       <li>
         <i @click.stop.prevent="open" class="fas fa-grin-beam"></i>
@@ -170,6 +170,23 @@
         set('emote_recent', JSON.stringify(this.recent))
       }
       this.$accessor.chat.sendEmote(emote)
+    }
+
+    private interval!: number
+
+    startSendingEmotes(emote: string) {
+      this.$accessor.chat.sendEmote(emote)
+      this.stopSendingEmotes()
+
+      this.interval = window.setInterval(() => {
+        this.$accessor.chat.sendEmote(emote)
+      }, 350)
+    }
+
+    stopSendingEmotes() {
+      if (this.interval) {
+        clearInterval(this.interval)
+      }
     }
   }
 </script>

@@ -14,6 +14,7 @@ import { Member, ScreenConfigurations, ScreenResolution } from './types'
 export type WebSocketMessages =
   | WebSocketMessage
   | SignalProvideMessage
+  | SignalOfferMessage
   | SignalAnswerMessage
   | SignalCandidateMessage
   | MemberListMessage
@@ -26,6 +27,7 @@ export type WebSocketMessages =
 
 export type WebSocketPayloads =
   | SignalProvidePayload
+  | SignalOfferPayload
   | SignalAnswerPayload
   | SignalCandidatePayload
   | MemberListPayload
@@ -39,6 +41,7 @@ export type WebSocketPayloads =
   | ScreenResolutionPayload
   | ScreenConfigurationsPayload
   | AdminPayload
+  | AdminLockPayload
   | BroadcastStatusPayload
   | BroadcastCreatePayload
 
@@ -50,10 +53,12 @@ export interface WebSocketMessage {
   SYSTEM MESSAGES/PAYLOADS
 */
 // system/disconnect
-export interface DisconnectMessage extends WebSocketMessage, DisconnectPayload {
-  event: typeof EVENT.SYSTEM.DISCONNECT
+// system/error
+export interface SystemMessage extends WebSocketMessage, SystemMessagePayload {
+  event: typeof EVENT.SYSTEM.DISCONNECT | typeof EVENT.SYSTEM.ERROR
 }
-export interface DisconnectPayload {
+export interface SystemMessagePayload {
+  title: string
   message: string
 }
 
@@ -68,6 +73,14 @@ export interface SignalProvidePayload {
   id: string
   lite: boolean
   ice: RTCIceServer[]
+  sdp: string
+}
+
+// signal/offer
+export interface SignalOfferMessage extends WebSocketMessage, SignalOfferPayload {
+  event: typeof EVENT.SIGNAL.OFFER
+}
+export interface SignalOfferPayload {
   sdp: string
 }
 
@@ -219,4 +232,15 @@ export interface AdminTargetMessage extends WebSocketMessage, AdminTargetPayload
 export interface AdminTargetPayload {
   id: string
   target?: string
+}
+
+export interface AdminLockMessage extends WebSocketMessage, AdminLockPayload {
+  event: AdminEvents
+  id: string
+}
+
+export type AdminLockResource = 'login' | 'control'
+
+export interface AdminLockPayload {
+  resource: AdminLockResource
 }

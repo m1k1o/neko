@@ -2,6 +2,8 @@ export const logout = 'logg ut'
 export const unsupported = 'Denne nettleseren støtter ikke WebRTC'
 export const admin_loggedin = 'Du er innlogget som administrator'
 export const you = 'Deg'
+// TODO
+//export const somebody = 'Somebody'
 export const send_a_message = 'Send en melding'
 
 export const side = {
@@ -16,6 +18,8 @@ export const connect = {
   password: 'Passord',
   connect: 'Koble til',
   error: 'Innloggingsfeil',
+  // TODO
+  //empty_displayname: 'Display Name cannot be empty.',
 }
 
 export const context = {
@@ -49,11 +53,24 @@ export const controls = {
   unlock: 'Lås opp kontrollen',
 }
 
-export const room = {
-  lock: 'Lås rommet (for brukere)',
-  unlock: 'Lås opp rommet (for brukere)',
-  locked: 'Rom låst (for brukere)',
-  unlocked: 'Rom opplåst (for brukere)',
+export const locks = {
+  // TODO
+  //control: {
+  //  lock: 'Lock Controls (for users)',
+  //  unlock: 'Unlock Controls (for users)',
+  //  locked: 'Controls Locked (for users)',
+  //  unlocked: 'Controls Unlocked (for users)',
+  //  notif_locked: 'locked controls for users',
+  //  notif_unlocked: 'unlocked controls for users',
+  //},
+  login: {
+    lock: 'Lås rommet (for brukere)',
+    unlock: 'Lås opp rommet (for brukere)',
+    locked: 'Rom låst (for brukere)',
+    unlocked: 'Rom opplåst (for brukere)',
+    notif_locked: 'låste rommet',
+    notif_unlocked: 'låste opp rommet',
+  },
 }
 
 export const setting = {
@@ -63,14 +80,18 @@ export const setting = {
   ignore_emotes: 'Ignorer smilefjes',
   chat_sound: 'Sludringslyd',
   keyboard_layout: 'Tastaturoppsett',
-  broadcast_is_active: 'Kringkasting påslått',
-  broadcast_url: 'RTMP-nettadresse',
+  // TODO
+  //broadcast_title: 'Live Broadcast',
 }
 
 export const connection = {
   logged_out: 'Du har blitt utlogget.',
+  // TODO
+  //reconnecting: 'Reconnecting',
   connected: 'Tilkoblet',
   disconnected: 'Frakoblet',
+  // TODO
+  //kicked: 'You have been removed from this room.',
   button_confirm: 'OK',
 }
 
@@ -92,6 +113,4 @@ export const notifications = {
   kicked: 'kastet ut {name}',
   muted: 'forstummet {name}',
   unmuted: 'opphevet forstummingen av {name}',
-  room_locked: 'låste rommet',
-  room_unlocked: 'låste opp rommet',
 }

@@ -1,7 +1,7 @@
 <template>
   <div class="connect">
     <div class="window">
-      <div class="logo">
+      <div class="logo" title="About n.eko" @click.stop.prevent="about">
         <img src="@/assets/images/logo.svg" alt="n.eko" />
         <span><b>n</b>.eko</span>
       </div>
@@ -47,6 +47,7 @@
         flex-direction: row;
         justify-content: center;
         align-items: center;
+        cursor: pointer;
 
         img {
           height: 90px;
@@ -203,23 +204,27 @@
       }
     }
 
-    async login() {
+    login() {
       let password = this.password
       if (this.autoPassword !== null) {
         password = this.autoPassword
       }
 
-      try {
-        await this.$accessor.login({ displayname: this.displayname, password })
-
-        this.autoPassword = null
-      } catch (err) {
+      if (this.displayname == '') {
         this.$swal({
           title: this.$t('connect.error') as string,
-          text: err.message,
+          text: this.$t('connect.empty_displayname') as string,
           icon: 'error',
         })
+        return
       }
+
+      this.$accessor.login({ displayname: this.displayname, password })
+      this.autoPassword = null
+    }
+
+    about() {
+      this.$accessor.client.toggleAbout()
     }
   }
 </script>

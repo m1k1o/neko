@@ -14,7 +14,7 @@ import (
 	"time"
 	"unsafe"
 
-	"n.eko.moe/neko/internal/types"
+	"m1k1o/neko/internal/types"
 )
 
 var ScreenConfigurations = make(map[int]types.ScreenConfiguration)
@@ -129,12 +129,12 @@ func WriteClipboard(data string) {
 
 func ResetKeys() {
 	for code := range debounce_button {
-		ButtonUp(code)
+		_ = ButtonUp(code)
 
 		delete(debounce_button, code)
 	}
 	for code := range debounce_key {
-		KeyUp(code)
+		_ = KeyUp(code)
 
 		delete(debounce_key, code)
 	}
@@ -146,7 +146,7 @@ func CheckKeys(duration time.Duration) {
 		if t.Sub(start) < duration {
 			continue
 		}
-		ButtonUp(code)
+		_ = ButtonUp(code)
 
 		delete(debounce_button, code)
 	}
@@ -154,7 +154,7 @@ func CheckKeys(duration time.Duration) {
 		if t.Sub(start) < duration {
 			continue
 		}
-		KeyUp(code)
+		_ = KeyUp(code)
 
 		delete(debounce_key, code)
 	}

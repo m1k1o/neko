@@ -5,13 +5,14 @@ import (
 	"os/exec"
 	"time"
 
+	"m1k1o/neko/internal/gst"
+	"m1k1o/neko/internal/types"
+	"m1k1o/neko/internal/types/config"
+	"m1k1o/neko/internal/xorg"
+
 	"github.com/kataras/go-events"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"n.eko.moe/neko/internal/gst"
-	"n.eko.moe/neko/internal/types"
-	"n.eko.moe/neko/internal/types/config"
-	"n.eko.moe/neko/internal/xorg"
 )
 
 type RemoteManager struct {
@@ -56,7 +57,9 @@ func (manager *RemoteManager) Start() {
 	}
 
 	manager.createPipelines()
-	manager.broadcast.Start()
+	if err := manager.broadcast.Start(); err != nil {
+		manager.logger.Panic().Err(err).Msg("unable to create rtmp pipeline")
+	}
 
 	go func() {
 		defer func() {
@@ -171,7 +174,9 @@ func (manager *RemoteManager) ChangeResolution(width int, height int, rate int) 
 
 	defer func() {
 		manager.video.Start()
-		manager.broadcast.Start()
+		if err := manager.broadcast.Start(); err != nil {
+			manager.logger.Panic().Err(err).Msg("unable to create rtmp pipeline")
+		}
 
 		manager.logger.Info().Msg("starting video pipeline...")
 	}()
@@ -245,7 +250,7 @@ func (manager *RemoteManager) GetScreenSize() *types.ScreenSize {
 }
 
 func (manager *RemoteManager) SetKeyboardLayout(layout string) {
-	exec.Command("setxkbmap", layout).Run()
+	_ = exec.Command("setxkbmap", layout).Run()
 }
 
 func (manager *RemoteManager) SetKeyboardModifiers(NumLock int, CapsLock int, ScrollLock int) {

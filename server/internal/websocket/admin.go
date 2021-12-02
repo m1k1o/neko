@@ -3,28 +3,35 @@ package websocket
 import (
 	"strings"
 
-	"n.eko.moe/neko/internal/types"
-	"n.eko.moe/neko/internal/types/event"
-	"n.eko.moe/neko/internal/types/message"
+	"m1k1o/neko/internal/types"
+	"m1k1o/neko/internal/types/event"
+	"m1k1o/neko/internal/types/message"
 )
 
-func (h *MessageHandler) adminLock(id string, session types.Session) error {
+func (h *MessageHandler) adminLock(id string, session types.Session, payload *message.AdminLock) error {
 	if !session.Admin() {
 		h.logger.Debug().Msg("user not admin")
 		return nil
 	}
 
-	if h.locked {
-		h.logger.Debug().Msg("server already locked...")
+	_, ok := h.locked[payload.Resource]
+	if ok {
+		h.logger.Debug().Str("resource", payload.Resource).Msg("resource already locked...")
 		return nil
 	}
 
-	h.locked = true
+	if payload.Resource != "login" && payload.Resource != "control" {
+		h.logger.Debug().Msg("unknown lock resource")
+		return nil
+	}
+
+	h.locked[payload.Resource] = id
 
 	if err := h.sessions.Broadcast(
-		message.Admin{
-			Event: event.ADMIN_LOCK,
-			ID:    id,
+		message.AdminLock{
+			Event:    event.ADMIN_LOCK,
+			ID:       id,
+			Resource: payload.Resource,
 		}, nil); err != nil {
 		h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.ADMIN_LOCK)
 		return err
@@ -33,23 +40,25 @@ func (h *MessageHandler) adminLock(id string, session types.Session) error {
 	return nil
 }
 
-func (h *MessageHandler) adminUnlock(id string, session types.Session) error {
+func (h *MessageHandler) adminUnlock(id string, session types.Session, payload *message.AdminLock) error {
 	if !session.Admin() {
 		h.logger.Debug().Msg("user not admin")
 		return nil
 	}
 
-	if !h.locked {
-		h.logger.Debug().Msg("server not locked...")
+	_, ok := h.locked[payload.Resource]
+	if !ok {
+		h.logger.Debug().Str("resource", payload.Resource).Msg("resource not locked...")
 		return nil
 	}
 
-	h.locked = false
+	delete(h.locked, payload.Resource)
 
 	if err := h.sessions.Broadcast(
-		message.Admin{
-			Event: event.ADMIN_UNLOCK,
-			ID:    id,
+		message.AdminLock{
+			Event:    event.ADMIN_UNLOCK,
+			ID:       id,
+			Resource: payload.Resource,
 		}, nil); err != nil {
 		h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.ADMIN_UNLOCK)
 		return err
@@ -66,7 +75,10 @@ func (h *MessageHandler) adminControl(id string, session types.Session) error {
 
 	host, ok := h.sessions.GetHost()
 
-	h.sessions.SetHost(id)
+	err := h.sessions.SetHost(id)
+	if err != nil {
+		return err
+	}
 
 	if ok {
 		if err := h.sessions.Broadcast(
@@ -138,7 +150,10 @@ func (h *MessageHandler) adminGive(id string, session types.Session, payload *me
 	}
 
 	// set host
-	h.sessions.SetHost(payload.ID)
+	err := h.sessions.SetHost(payload.ID)
+	if err != nil {
+		return err
+	}
 
 	// let everyone know
 	if err := h.sessions.Broadcast(
@@ -277,8 +292,7 @@ func (h *MessageHandler) adminBan(id string, session types.Session, payload *mes
 	}
 
 	h.logger.Debug().Str("address", remote).Msg("adding address to banned")
-
-	h.banned[address[0]] = true
+	h.banned[address[0]] = id
 
 	if err := target.Kick("banned"); err != nil {
 		return err

@@ -21,8 +21,11 @@
           @mouseenter.stop.prevent="onMouseEnter"
           @mouseleave.stop.prevent="onMouseLeave"
         />
-        <div v-if="!playing" class="player-overlay">
-          <i @click.stop.prevent="toggle" v-if="playable" class="fas fa-play-circle" />
+        <div v-if="!playing && playable" class="player-overlay" @click.stop.prevent="toggle">
+          <i class="fas fa-play-circle" />
+        </div>
+        <div v-if="mutedOverlay && muted" class="player-overlay" @click.stop.prevent="unmute">
+          <i class="fas fa-volume-up" />
         </div>
         <div ref="aspect" class="player-aspect" />
       </div>
@@ -151,13 +154,11 @@
           display: flex;
           justify-content: center;
           align-items: center;
+          cursor: pointer;
 
-          i {
-            cursor: pointer;
-            &::before {
-              font-size: 120px;
-              text-align: center;
-            }
+          i::before {
+            font-size: 120px;
+            text-align: center;
           }
 
           &.hidden {
@@ -193,6 +194,8 @@
   // @ts-ignore
   import GuacamoleKeyboard from '~/utils/guacamole-keyboard.ts'
 
+  const WHEEL_LINE_HEIGHT = 19
+
   @Component({
     name: 'neko-video',
     components: {
@@ -211,12 +214,14 @@
     @Ref('resolution') readonly _resolution!: any
     @Ref('clipboard') readonly _clipboard!: any
 
-    @Prop(Boolean) readonly hideControls = false
+    @Prop(Boolean) readonly hideControls!: boolean
 
     private keyboard = GuacamoleKeyboard()
     private observer = new ResizeObserver(this.onResise.bind(this))
     private focused = false
     private fullscreen = false
+    private startsMuted = true
+    private mutedOverlay = true
 
     get admin() {
       return this.$accessor.user.admin
@@ -327,15 +332,22 @@
 
     @Watch('volume')
     onVolumeChanged(volume: number) {
-      if (this._video) {
-        this._video.volume = this.volume / 100
+      volume /= 100
+
+      if (this._video && this._video.volume != volume) {
+        this._video.volume = volume
       }
     }
 
     @Watch('muted')
     onMutedChanged(muted: boolean) {
-      if (this._video) {
+      if (this._video && this._video.muted != muted) {
         this._video.muted = muted
+        this.startsMuted = muted
+
+        if (!muted) {
+          this.mutedOverlay = false
+        }
       }
     }
 
@@ -355,9 +367,11 @@
 
     @Watch('playing')
     onPlayingChanged(playing: boolean) {
-      if (playing) {
+      if (this._video && this._video.paused && playing) {
         this.play()
-      } else {
+      }
+
+      if (this._video && !this._video.paused && !playing) {
         this.pause()
       }
     }
@@ -372,6 +386,7 @@
     mounted() {
       this._container.addEventListener('resize', this.onResise)
       this.onVolumeChanged(this.volume)
+      this.onMutedChanged(this.muted)
       this.onStreamChanged(this.stream)
       this.onResise()
 
@@ -385,9 +400,9 @@
       this._video.addEventListener('canplaythrough', () => {
         this.$accessor.video.setPlayable(true)
         if (this.autoplay) {
-          if (!document.hasFocus() || !this.$accessor.active) {
+          // start as muted due to restrictive browsers autoplay policy
+          if (this.startsMuted && (!document.hasFocus() || !this.$accessor.active)) {
             this.$accessor.video.setMuted(true)
-            this._video.muted = true
           }
 
           this.$nextTick(() => {
@@ -405,6 +420,19 @@
         this.$accessor.video.setPlayable(false)
       })
 
+      this._video.addEventListener('volumechange', (event) => {
+        this.$accessor.video.setMuted(this._video.muted)
+        this.$accessor.video.setVolume(this._video.volume * 100)
+      })
+
+      this._video.addEventListener('playing', () => {
+        this.$accessor.video.play()
+      })
+
+      this._video.addEventListener('pause', () => {
+        this.$accessor.video.pause()
+      })
+
       document.addEventListener('focusin', this.onFocus.bind(this))
 
       /* Initialize Guacamole Keyboard */
@@ -413,7 +441,7 @@
           return true
         }
 
-        this.$client.sendData('keydown', { key })
+        this.$client.sendData('keydown', { key: this.keyMap(key) })
         return false
       }
       this.keyboard.onkeyup = (key: number) => {
@@ -421,7 +449,7 @@
           return
         }
 
-        this.$client.sendData('keyup', { key })
+        this.$client.sendData('keyup', { key: this.keyMap(key) })
       }
       this.keyboard.listenTo(this._overlay)
     }
@@ -433,19 +461,60 @@
       /* Guacamole Keyboard does not provide destroy functions */
     }
 
-    play() {
+    get hasMacOSKbd() {
+      return /(Mac|iPhone|iPod|iPad)/i.test(navigator.platform)
+    }
+
+    KeyTable = {
+      XK_ISO_Level3_Shift: 0xfe03, // AltGr
+      XK_Mode_switch: 0xff7e, // Character set switch
+      XK_Control_L: 0xffe3, // Left control
+      XK_Control_R: 0xffe4, // Right control
+      XK_Meta_L: 0xffe7, // Left meta
+      XK_Meta_R: 0xffe8, // Right meta
+      XK_Alt_L: 0xffe9, // Left alt
+      XK_Alt_R: 0xffea, // Right alt
+      XK_Super_L: 0xffeb, // Left super
+      XK_Super_R: 0xffec, // Right super
+    }
+
+    keyMap(key: number): number {
+      // Alt behaves more like AltGraph on macOS, so shuffle the
+      // keys around a bit to make things more sane for the remote
+      // server. This method is used by noVNC, RealVNC and TigerVNC
+      // (and possibly others).
+      if (this.hasMacOSKbd) {
+        switch (key) {
+          case this.KeyTable.XK_Meta_L:
+            key = this.KeyTable.XK_Control_L
+            break
+          case this.KeyTable.XK_Super_L:
+            key = this.KeyTable.XK_Alt_L
+            break
+          case this.KeyTable.XK_Super_R:
+            key = this.KeyTable.XK_Super_L
+            break
+          case this.KeyTable.XK_Alt_L:
+            key = this.KeyTable.XK_Mode_switch
+            break
+          case this.KeyTable.XK_Alt_R:
+            key = this.KeyTable.XK_ISO_Level3_Shift
+            break
+        }
+      }
+
+      return key
+    }
+
+    async play() {
       if (!this._video.paused || !this.playable) {
         return
       }
 
       try {
-        this._video
-          .play()
-          .then(() => {
-            this.onResise()
-          })
-          .catch((err) => this.$log.error)
-      } catch (err) {
+        await this._video.play()
+        this.onResise()
+      } catch (err: any) {
         this.$log.error(err)
       }
     }
@@ -470,6 +539,10 @@
       }
     }
 
+    unmute() {
+      this.$accessor.video.setMuted(false)
+    }
+
     toggleControl() {
       if (!this.playable) {
         return
@@ -478,24 +551,40 @@
       this.$accessor.remote.toggle()
     }
 
-    requestFullscreen() {
-      if (typeof this._player.requestFullscreen === 'function') {
-        this._player.requestFullscreen()
+    _elementRequestFullscreen(el: HTMLElement) {
+      if (typeof el.requestFullscreen === 'function') {
+        el.requestFullscreen()
         //@ts-ignore
-      } else if (typeof this._player.webkitRequestFullscreen === 'function') {
+      } else if (typeof el.webkitRequestFullscreen === 'function') {
         //@ts-ignore
-        this._player.webkitRequestFullscreen()
+        el.webkitRequestFullscreen()
         //@ts-ignore
-      } else if (typeof this._player.webkitEnterFullscreen === 'function') {
+      } else if (typeof el.webkitEnterFullscreen === 'function') {
         //@ts-ignore
-        this._player.webkitEnterFullscreen()
+        el.webkitEnterFullscreen()
         //@ts-ignore
-      } else if (typeof this._player.msRequestFullScreen === 'function') {
+      } else if (typeof el.msRequestFullScreen === 'function') {
         //@ts-ignore
-        this._player.msRequestFullScreen()
+        el.msRequestFullScreen()
+      } else {
+        return false
       }
 
-      this.onResise()
+      return true
+    }
+
+    requestFullscreen() {
+      // try to fullscreen player element
+      if (this._elementRequestFullscreen(this._player)) {
+        this.onResise()
+        return
+      }
+
+      // fallback to fullscreen video itself (on mobile devices)
+      if (this._elementRequestFullscreen(this._video)) {
+        this.onResise()
+        return
+      }
     }
 
     requestPictureInPicture() {
@@ -504,21 +593,21 @@
       this.onResise()
     }
 
-    onFocus() {
+    async onFocus() {
       if (!document.hasFocus() || !this.$accessor.active) {
         return
       }
 
       if (this.hosting && this.clipboard_read_available) {
-        navigator.clipboard
-          .readText()
-          .then((text) => {
-            if (this.clipboard !== text) {
-              this.$accessor.remote.setClipboard(text)
-              this.$accessor.remote.sendClipboard(text)
-            }
-          })
-          .catch(this.$log.error)
+        try {
+          const text = await navigator.clipboard.readText()
+          if (this.clipboard !== text) {
+            this.$accessor.remote.setClipboard(text)
+            this.$accessor.remote.sendClipboard(text)
+          }
+        } catch (err: any) {
+          this.$log.error(err)
+        }
       }
     }
 
@@ -531,6 +620,7 @@
       })
     }
 
+    wheelThrottle = false
     onWheel(e: WheelEvent) {
       if (!this.hosting || this.locked) {
         return
@@ -540,6 +630,16 @@
       let x = e.deltaX
       let y = e.deltaY
 
+      // Pixel units unless it's non-zero.
+      // Note that if deltamode is line or page won't matter since we aren't
+      // sending the mouse wheel delta to the server anyway.
+      // The difference between pixel and line can be important however since
+      // we have a threshold that can be smaller than the line height.
+      if (e.deltaMode !== 0) {
+        x *= WHEEL_LINE_HEIGHT
+        y *= WHEEL_LINE_HEIGHT
+      }
+
       if (this.scroll_invert) {
         x = x * -1
         y = y * -1
@@ -548,7 +648,14 @@
       x = Math.min(Math.max(x, -this.scroll), this.scroll)
       y = Math.min(Math.max(y, -this.scroll), this.scroll)
 
-      this.$client.sendData('wheel', { x, y })
+      if (!this.wheelThrottle) {
+        this.wheelThrottle = true
+        this.$client.sendData('wheel', { x, y })
+
+        window.setTimeout(() => {
+          this.wheelThrottle = false
+        }, 100)
+      }
     }
 
     onMouseDown(e: MouseEvent) {

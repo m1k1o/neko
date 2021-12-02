@@ -5,9 +5,11 @@ import (
 	"strconv"
 	"strings"
 
+	"m1k1o/neko/internal/utils"
+
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"n.eko.moe/neko/internal/utils"
 
 	"github.com/pion/webrtc/v3"
 )
@@ -43,6 +45,11 @@ func (WebRTC) Init(cmd *cobra.Command) error {
 		return err
 	}
 
+	cmd.PersistentFlags().String("ipfetch", "http://checkip.amazonaws.com", "automatically fetch IP address from given URL when nat1to1 is not present")
+	if err := viper.BindPFlag("ipfetch", cmd.PersistentFlags().Lookup("ipfetch")); err != nil {
+		return err
+	}
+
 	cmd.PersistentFlags().Bool("icelite", false, "configures whether or not the ice agent should be a lite agent")
 	if err := viper.BindPFlag("icelite", cmd.PersistentFlags().Lookup("icelite")); err != nil {
 		return err
@@ -72,7 +79,7 @@ func (s *WebRTC) Set() {
 	if iceServersJson != "" {
 		err := json.Unmarshal([]byte(iceServersJson), &s.ICEServers)
 		if err != nil {
-			panic(err)
+			log.Panic().Err(err).Msg("failed to process iceservers")
 		}
 	}
 
@@ -82,10 +89,12 @@ func (s *WebRTC) Set() {
 	}
 
 	if len(s.NAT1To1IPs) == 0 {
-		ip, err := utils.GetIP()
-		if err == nil {
-			s.NAT1To1IPs = append(s.NAT1To1IPs, ip)
+		ipfetch := viper.GetString("ipfetch")
+		ip, err := utils.GetIP(ipfetch)
+		if err != nil {
+			log.Panic().Err(err).Str("ipfetch", ipfetch).Msg("failed to fetch ip address")
 		}
+		s.NAT1To1IPs = append(s.NAT1To1IPs, ip)
 	}
 
 	min := uint16(59000)

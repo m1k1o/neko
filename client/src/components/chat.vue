@@ -404,7 +404,7 @@
     }
 
     member(id: string) {
-      return this.$accessor.user.members[id]
+      return this.$accessor.user.members[id] || { id, displayname: this.$t('somebody') }
     }
 
     timestamp(time: Date) {

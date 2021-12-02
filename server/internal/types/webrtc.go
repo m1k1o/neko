@@ -10,11 +10,16 @@ type Sample media.Sample
 type WebRTCManager interface {
 	Start()
 	Shutdown() error
-	CreatePeer(id string, session Session) (string, bool, []webrtc.ICEServer, error)
+	CreatePeer(id string, session Session) (Peer, error)
+	ICELite() bool
+	ICEServers() []webrtc.ICEServer
 }
 
 type Peer interface {
-	SignalAnswer(sdp string) error
+	CreateOffer() (string, error)
+	CreateAnswer() (string, error)
+	SetOffer(sdp string) error
+	SetAnswer(sdp string) error
 	WriteData(v interface{}) error
 	Destroy() error
 }

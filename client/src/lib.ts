@@ -48,6 +48,7 @@ const plugini18n: PluginObject<undefined> = {
   install(Vue) {
     Vue.prototype.i18n = i18n
     Vue.prototype.$t = i18n.t.bind(i18n)
+    Vue.prototype.$te = i18n.te.bind(i18n)
   },
 }
 

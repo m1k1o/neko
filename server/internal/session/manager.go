@@ -8,8 +8,8 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"n.eko.moe/neko/internal/types"
-	"n.eko.moe/neko/internal/utils"
+	"m1k1o/neko/internal/types"
+	"m1k1o/neko/internal/utils"
 )
 
 func New(remote types.RemoteManager) *SessionManager {
@@ -43,7 +43,7 @@ func (manager *SessionManager) New(id string, admin bool, socket types.WebSocket
 
 	manager.mu.Lock()
 	manager.members[id] = session
-	if manager.remote.Streaming() != true && len(manager.members) > 0 {
+	if !manager.remote.Streaming() && len(manager.members) > 0 {
 		manager.remote.StartStream()
 	}
 	manager.mu.Unlock()
@@ -141,24 +141,24 @@ func (manager *SessionManager) Members() []*types.Member {
 	return members
 }
 
-func (manager *SessionManager) Destroy(id string) error {
+func (manager *SessionManager) Destroy(id string) {
 	manager.mu.Lock()
 	session, ok := manager.members[id]
 	if ok {
 		err := session.destroy()
 		delete(manager.members, id)
 
-		if manager.remote.Streaming() != false && len(manager.members) <= 0 {
+		if manager.remote.Streaming() && len(manager.members) <= 0 {
 			manager.remote.StopStream()
 		}
 		manager.mu.Unlock()
 
 		manager.emmiter.Emit("destroyed", id, session)
-		return err
+		manager.logger.Err(err).Str("session_id", id).Msg("destroying session")
+		return
 	}
 
 	manager.mu.Unlock()
-	return nil
 }
 
 func (manager *SessionManager) Clear() error {

@@ -21,9 +21,11 @@ type Session interface {
 	SetPeer(peer Peer) error
 	Address() string
 	Kick(message string) error
-	Write(v interface{}) error
 	Send(v interface{}) error
-	SignalAnswer(sdp string) error
+	SignalLocalOffer(sdp string) error
+	SignalLocalAnswer(sdp string) error
+	SignalRemoteOffer(sdp string) error
+	SignalRemoteAnswer(sdp string) error
 	SignalCandidate(data string) error
 }
 
@@ -38,7 +40,7 @@ type SessionManager interface {
 	Get(id string) (Session, bool)
 	Members() []*Member
 	Admins() []*Member
-	Destroy(id string) error
+	Destroy(id string)
 	Clear() error
 	Broadcast(v interface{}, exclude interface{}) error
 	OnHost(listener func(id string))

@@ -1,7 +1,7 @@
 package message
 
 import (
-	"n.eko.moe/neko/internal/types"
+	"m1k1o/neko/internal/types"
 
 	"github.com/pion/webrtc/v3"
 )
@@ -10,8 +10,9 @@ type Message struct {
 	Event string `json:"event"`
 }
 
-type Disconnect struct {
+type SystemMessage struct {
 	Event   string `json:"event"`
+	Title   string `json:"title"`
 	Message string `json:"message"`
 }
 
@@ -21,6 +22,11 @@ type SignalProvide struct {
 	SDP   string             `json:"sdp"`
 	Lite  bool               `json:"lite"`
 	ICE   []webrtc.ICEServer `json:"ice"`
+}
+
+type SignalOffer struct {
+	Event string `json:"event"`
+	SDP   string `json:"sdp"`
 }
 
 type SignalAnswer struct {
@@ -103,6 +109,12 @@ type AdminTarget struct {
 	Event  string `json:"event"`
 	Target string `json:"target"`
 	ID     string `json:"id"`
+}
+
+type AdminLock struct {
+	Event    string `json:"event"`
+	Resource string `json:"resource"`
+	ID       string `json:"id"`
 }
 
 type ScreenResolution struct {

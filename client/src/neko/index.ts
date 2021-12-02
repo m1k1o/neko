@@ -6,7 +6,7 @@ import { EVENT } from './events'
 import { accessor } from '~/store'
 
 import {
-  DisconnectPayload,
+  SystemMessagePayload,
   SignalProvidePayload,
   MemberListPayload,
   MemberDisconnectPayload,
@@ -21,6 +21,7 @@ import {
   BroadcastStatusPayload,
   AdminPayload,
   AdminTargetPayload,
+  AdminLockMessage,
 } from './messages'
 
 interface NekoEvents extends BaseEvents {}
@@ -70,6 +71,16 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   /////////////////////////////
   // Internal Events
   /////////////////////////////
+  protected [EVENT.RECONNECTING]() {
+    this.$vue.$notify({
+      group: 'neko',
+      type: 'warning',
+      title: this.$vue.$t('connection.reconnecting') as string,
+      duration: 5000,
+      speed: 1000,
+    })
+  }
+
   protected [EVENT.CONNECTING]() {
     this.$accessor.setConnnecting()
   }
@@ -77,7 +88,11 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   protected [EVENT.CONNECTED]() {
     this.$accessor.user.setMember(this.id)
     this.$accessor.setConnected(true)
-    this.$accessor.setConnected(true)
+
+    this.$vue.$notify({
+      group: 'neko',
+      clean: true,
+    })
 
     this.$vue.$notify({
       group: 'neko',
@@ -90,10 +105,6 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
 
   protected [EVENT.DISCONNECTED](reason?: Error) {
     this.cleanup()
-
-    if (reason && reason.message == 'kicked') {
-      this.$accessor.logout()
-    }
 
     this.$vue.$notify({
       group: 'neko',
@@ -120,10 +131,25 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   /////////////////////////////
   // System Events
   /////////////////////////////
-  protected [EVENT.SYSTEM.DISCONNECT]({ message }: DisconnectPayload) {
+  protected [EVENT.SYSTEM.DISCONNECT]({ message }: SystemMessagePayload) {
+    if (message == 'kicked') {
+      this.$accessor.logout()
+      message = this.$vue.$t('connection.kicked') as string
+    }
+
     this.onDisconnected(new Error(message))
+
     this.$vue.$swal({
       title: this.$vue.$t('connection.disconnected'),
+      text: message,
+      icon: 'error',
+      confirmButtonText: this.$vue.$t('connection.button_confirm') as string,
+    })
+  }
+
+  protected [EVENT.SYSTEM.ERROR]({ title, message }: SystemMessagePayload) {
+    this.$vue.$swal({
+      title,
       text: message,
       icon: 'error',
       confirmButtonText: this.$vue.$t('connection.button_confirm') as string,
@@ -436,21 +462,23 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
     })
   }
 
-  protected [EVENT.ADMIN.LOCK]({ id }: AdminPayload) {
-    this.$accessor.setLocked(true)
+  protected [EVENT.ADMIN.LOCK]({ id, resource }: AdminLockMessage) {
+    this.$accessor.setLocked(resource)
+
     this.$accessor.chat.newMessage({
       id,
-      content: this.$vue.$t('notifications.room_locked') as string,
+      content: this.$vue.$t(`locks.${resource}.notif_locked`) as string,
       type: 'event',
       created: new Date(),
     })
   }
 
-  protected [EVENT.ADMIN.UNLOCK]({ id }: AdminPayload) {
-    this.$accessor.setLocked(false)
+  protected [EVENT.ADMIN.UNLOCK]({ id, resource }: AdminLockMessage) {
+    this.$accessor.setUnlocked(resource)
+
     this.$accessor.chat.newMessage({
       id,
-      content: this.$vue.$t('notifications.room_unlocked') as string,
+      content: this.$vue.$t(`locks.${resource}.notif_unlocked`) as string,
       type: 'event',
       created: new Date(),
     })

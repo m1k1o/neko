@@ -143,23 +143,27 @@
       return this.$accessor.client.about_page
     }
 
+    async Load() {
+      this.loading = true
+
+      try {
+        const res = await this.$http.get<string>('https://raw.githubusercontent.com/m1k1o/neko/master/README.md')
+        const res2 = await this.$http.post('https://api.github.com/markdown', {
+          text: res.data,
+          mode: 'gfm',
+          context: 'github/gollum',
+        })
+        this.$accessor.client.setAbout(res2.data)
+      } catch (err: any) {
+        console.error(err)
+      } finally {
+        this.loading = false
+      }
+    }
+
     mounted() {
       if (this.about === '') {
-        this.loading = true
-        this.$http
-          .get<string>('https://raw.githubusercontent.com/nurdism/neko/master/docs/README.md')
-          .then((res) => {
-            return this.$http.post('https://api.github.com/markdown', {
-              text: res.data,
-              mode: 'gfm',
-              context: 'github/gollum',
-            })
-          })
-          .then((res) => {
-            this.$accessor.client.setAbout(res.data)
-            this.loading = false
-          })
-          .catch((err) => console.error(err))
+        this.Load()
       }
     }
 

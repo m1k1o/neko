@@ -2,6 +2,8 @@ export const logout = 'salir'
 export const unsupported = 'este navegador no soporta webrtc'
 export const admin_loggedin = 'Registrado como admin'
 export const you = 'Tú'
+// TODO
+//export const somebody = 'Somebody'
 export const send_a_message = 'Enviar un mensaje'
 
 export const side = {
@@ -16,6 +18,8 @@ export const connect = {
   password: 'Contraseña',
   connect: 'Conectar',
   error: 'Error de login',
+  // TODO
+  //empty_displayname: 'Display Name cannot be empty.',
 }
 
 export const context = {
@@ -49,11 +53,24 @@ export const controls = {
   unlock: 'Controles desbloqueados',
 }
 
-export const room = {
-  lock: 'Bloquear sala (para usuarios)',
-  unlock: 'Desbloquear sala (para usuarios)',
-  locked: 'Sala bloqueada (para usuarios)',
-  unlocked: 'Sala desbloqueada (para usuarios)',
+export const locks = {
+  // TODO
+  //control: {
+  //  lock: 'Lock Controls (for users)',
+  //  unlock: 'Unlock Controls (for users)',
+  //  locked: 'Controls Locked (for users)',
+  //  unlocked: 'Controls Unlocked (for users)',
+  //  notif_locked: 'locked controls for users',
+  //  notif_unlocked: 'unlocked controls for users',
+  //},
+  login: {
+    lock: 'Bloquear sala (para usuarios)',
+    unlock: 'Desbloquear sala (para usuarios)',
+    locked: 'Sala bloqueada (para usuarios)',
+    unlocked: 'Sala desbloqueada (para usuarios)',
+    notif_locked: 'bloqueó la sala',
+    notif_unlocked: 'desbloqueó la sala',
+  },
 }
 
 export const setting = {
@@ -63,14 +80,18 @@ export const setting = {
   ignore_emotes: 'Ignorar Emotes',
   chat_sound: 'Reproducir Sonidos Chat',
   keyboard_layout: 'Keyboard Layout',
-  broadcast_is_active: 'Habilitar Broadcast',
-  broadcast_url: 'RTMP url',
+  // TODO
+  //broadcast_title: 'Live Broadcast',
 }
 
 export const connection = {
   logged_out: 'Has salido!',
+  // TODO
+  //reconnecting: 'Reconnecting',
   connected: 'Connectado correctamente',
   disconnected: 'Has sido desconectado',
+  // TODO
+  //kicked: 'You have been removed from this room.',
   button_confirm: 'De acuerdo',
 }
 
@@ -92,6 +113,4 @@ export const notifications = {
   kicked: '{name} expulsado',
   muted: '{name} silenciado',
   unmuted: '{name} no silenciado',
-  room_locked: 'bloqueó la sala',
-  room_unlocked: 'desbloqueó la sala',
 }
