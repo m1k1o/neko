@@ -27,6 +27,8 @@ docker run --rm -it \
   -e "NEKO_EPR=${SERVER_EPR}" \
   -e "NEKO_NAT1TO1=${SERVER_IP}" \
   -e "NEKO_ICELITE=true" \
+  -e "NEKO_TCPMUX=8083" \
+  -e "NEKO_UDPMUX=8084" \
   -e "NEKO_MAX_FPS=25" \
   -v "${BINARY_PATH}:/usr/bin/neko" \
   --shm-size=2G \

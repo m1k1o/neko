@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pion/ice/v2"
 	"github.com/pion/interceptor"
 	"github.com/pion/webrtc/v3"
 	"github.com/pion/webrtc/v3/pkg/media"
@@ -37,9 +36,7 @@ type WebRTCManager struct {
 	sessions   types.SessionManager
 	remote     types.RemoteManager
 	config     *config.WebRTC
-
-	tcpMux ice.TCPMux
-	udpMux ice.UDPMux
+	api        *webrtc.API
 }
 
 func (manager *WebRTCManager) Start() {
@@ -66,35 +63,9 @@ func (manager *WebRTCManager) Start() {
 		}
 	})
 
-	logger := loggerFactory{
-		logger: manager.logger,
+	if err := manager.initAPI(); err != nil {
+		manager.logger.Panic().Err(err).Msg("failed to initialize webrtc API")
 	}
-
-	// TCP Mux
-
-	tcpListener, err := net.ListenTCP("tcp", &net.TCPAddr{
-		IP:   net.IP{0, 0, 0, 0},
-		Port: manager.config.ICETCP,
-	})
-
-	if err != nil {
-		manager.logger.Panic().Err(err).Msg("failed to prepare tcp mux")
-	}
-
-	manager.tcpMux = webrtc.NewICETCPMux(logger.NewLogger("ice-tcp"), tcpListener, 32)
-
-	// UDP Mux
-
-	udpListener, err := net.ListenUDP("udp", &net.UDPAddr{
-		IP:   net.IP{0, 0, 0, 0},
-		Port: manager.config.ICEUDP,
-	})
-
-	if err != nil {
-		manager.logger.Panic().Err(err).Msg("failed to prepare udp mux")
-	}
-
-	manager.udpMux = webrtc.NewICEUDPMux(logger.NewLogger("ice-udp"), udpListener)
 
 	manager.logger.Info().
 		Str("ice_lite", fmt.Sprintf("%t", manager.config.ICELite)).
@@ -109,55 +80,96 @@ func (manager *WebRTCManager) Shutdown() error {
 	return nil
 }
 
-func (manager *WebRTCManager) CreatePeer(id string, session types.Session) (types.Peer, error) {
-	configuration := &webrtc.Configuration{
-		ICEServers:   manager.config.ICEServers,
-		SDPSemantics: webrtc.SDPSemanticsUnifiedPlanWithFallback,
+func (manager *WebRTCManager) initAPI() error {
+	logger := loggerFactory{
+		logger: manager.logger,
 	}
 
 	settings := webrtc.SettingEngine{
-		LoggerFactory: loggerFactory{
-			logger: manager.logger,
-		},
+		LoggerFactory: logger,
 	}
 
-	if manager.config.ICELite {
-		configuration = &webrtc.Configuration{
-			SDPSemantics: webrtc.SDPSemanticsUnifiedPlanWithFallback,
-		}
-		settings.SetLite(true)
-	}
-
-	//_ = settings.SetEphemeralUDPPortRange(manager.config.EphemeralMin, manager.config.EphemeralMax)
+	_ = settings.SetEphemeralUDPPortRange(manager.config.EphemeralMin, manager.config.EphemeralMax)
 	settings.SetNAT1To1IPs(manager.config.NAT1To1IPs, webrtc.ICECandidateTypeHost)
 	settings.SetICETimeouts(6*time.Second, 6*time.Second, 3*time.Second)
 	settings.SetSRTPReplayProtectionWindow(512)
+	settings.SetLite(manager.config.ICELite)
 
-	// Enable support for TCP and UDP ICE candidates.
-	settings.SetNetworkTypes([]webrtc.NetworkType{
-		webrtc.NetworkTypeUDP4,
-		webrtc.NetworkTypeTCP4,
-	})
+	var networkType []webrtc.NetworkType
 
-	settings.SetICETCPMux(manager.tcpMux)
-	settings.SetICEUDPMux(manager.udpMux)
+	// Add TCP Mux
+	if manager.config.TCPMUX > 0 {
+		tcpListener, err := net.ListenTCP("tcp", &net.TCPAddr{
+			IP:   net.IP{0, 0, 0, 0},
+			Port: manager.config.TCPMUX,
+		})
 
-	// Create MediaEngine based off sdp
+		if err != nil {
+			return err
+		}
+
+		tcpMux := webrtc.NewICETCPMux(logger.NewLogger("ice-tcp"), tcpListener, 32)
+		settings.SetICETCPMux(tcpMux)
+
+		networkType = append(networkType, webrtc.NetworkTypeTCP4)
+		manager.logger.Info().Str("listener", tcpListener.Addr().String()).Msg("using TCP MUX")
+	}
+
+	// Add UDP Mux
+	if manager.config.UDPMUX > 0 {
+		udpListener, err := net.ListenUDP("udp", &net.UDPAddr{
+			IP:   net.IP{0, 0, 0, 0},
+			Port: manager.config.UDPMUX,
+		})
+
+		if err != nil {
+			return err
+		}
+
+		udpMux := webrtc.NewICEUDPMux(logger.NewLogger("ice-udp"), udpListener)
+		settings.SetICEUDPMux(udpMux)
+
+		networkType = append(networkType, webrtc.NetworkTypeUDP4)
+		manager.logger.Info().Str("listener", udpListener.LocalAddr().String()).Msg("using UDP MUX")
+	}
+
+	// Enable support for TCP and UDP ICE candidates
+	if len(networkType) > 0 {
+		settings.SetNetworkTypes(networkType)
+	}
+
+	// Create MediaEngine with selected codecs
 	engine := webrtc.MediaEngine{}
-
 	_ = engine.RegisterCodec(manager.audioCodec, webrtc.RTPCodecTypeAudio)
 	_ = engine.RegisterCodec(manager.videoCodec, webrtc.RTPCodecTypeVideo)
 
+	// Register Interceptors
 	i := &interceptor.Registry{}
 	if err := webrtc.RegisterDefaultInterceptors(&engine, i); err != nil {
-		return nil, err
+		return err
 	}
 
 	// Create API with MediaEngine and SettingEngine
-	api := webrtc.NewAPI(webrtc.WithMediaEngine(&engine), webrtc.WithSettingEngine(settings), webrtc.WithInterceptorRegistry(i))
+	manager.api = webrtc.NewAPI(
+		webrtc.WithMediaEngine(&engine),
+		webrtc.WithSettingEngine(settings),
+		webrtc.WithInterceptorRegistry(i),
+	)
+
+	return nil
+}
+
+func (manager *WebRTCManager) CreatePeer(id string, session types.Session) (types.Peer, error) {
+	configuration := webrtc.Configuration{
+		SDPSemantics: webrtc.SDPSemanticsUnifiedPlanWithFallback,
+	}
+
+	if !manager.config.ICELite {
+		configuration.ICEServers = manager.config.ICEServers
+	}
 
 	// Create new peer connection
-	connection, err := api.NewPeerConnection(*configuration)
+	connection, err := manager.api.NewPeerConnection(configuration)
 	if err != nil {
 		return nil, err
 	}
@@ -217,13 +229,9 @@ func (manager *WebRTCManager) CreatePeer(id string, session types.Session) (type
 	})
 
 	peer := &Peer{
-		id:            id,
-		api:           api,
-		engine:        &engine,
-		manager:       manager,
-		settings:      &settings,
-		connection:    connection,
-		configuration: configuration,
+		id:         id,
+		manager:    manager,
+		connection: connection,
 	}
 
 	connection.OnNegotiationNeeded(func() {

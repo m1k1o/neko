@@ -7,14 +7,10 @@ import (
 )
 
 type Peer struct {
-	id            string
-	api           *webrtc.API
-	engine        *webrtc.MediaEngine
-	manager       *WebRTCManager
-	settings      *webrtc.SettingEngine
-	connection    *webrtc.PeerConnection
-	configuration *webrtc.Configuration
-	mu            sync.Mutex
+	id         string
+	mu         sync.Mutex
+	manager    *WebRTCManager
+	connection *webrtc.PeerConnection
 }
 
 func (peer *Peer) CreateOffer() (string, error) {
