@@ -154,7 +154,7 @@ func (manager *SessionManager) Destroy(id string) {
 		manager.mu.Unlock()
 
 		manager.emmiter.Emit("destroyed", id, session)
-		manager.logger.Err(err).Str("session_id", id).Msg("destorying session")
+		manager.logger.Err(err).Str("session_id", id).Msg("destroying session")
 		return
 	}
 
