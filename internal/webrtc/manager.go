@@ -157,19 +157,11 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 	}
 
 	connection.OnTrack(func(track *webrtc.TrackRemote, receiver *webrtc.RTPReceiver) {
-		// if we did not get audio
-		if track.Kind() != webrtc.RTPCodecTypeAudio {
-			logger.Warn().Msg("got remote track, but not audio")
-			return
-		}
-
-		codecName := strings.Split(track.Codec().RTPCodecCapability.MimeType, "/")[1]
-
 		logger.Info().
 			Str("stream-id", track.StreamID()).
 			Str("id", track.ID()).
 			Str("rid", track.RID()).
-			Str("codec", codecName).
+			Str("mime", track.Codec().RTPCodecCapability.MimeType).
 			Uint8("payload-type", uint8(track.PayloadType())).
 			Msgf("received new track")
 
@@ -180,10 +172,17 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 			return
 		}
 
-		// add microphone
-		microphone := manager.capture.Microphone()
-		microphone.Start(codec)
-		defer microphone.Stop() // TODO: Ensure no new publisher took over.
+		var srcManager types.StreamSrcManager
+		if track.Kind() == webrtc.RTPCodecTypeAudio {
+			// audio -> microphone
+			srcManager = manager.capture.Microphone()
+		} else if track.Kind() == webrtc.RTPCodecTypeVideo {
+			// video -> webcam
+			srcManager = manager.capture.Webcam()
+		}
+
+		srcManager.Start(codec)
+		defer srcManager.Stop() // TODO: Ensure no new publisher took over.
 
 		// Send a PLI on an interval so that the publisher is pushing a keyframe every rtcpPLIInterval
 		ticker := time.NewTicker(time.Second * 3)
@@ -206,10 +205,10 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 				break
 			}
 
-			microphone.Push(buf[:i])
+			srcManager.Push(buf[:i])
 		}
 
-		logger.Warn().Msg("microphone connection died")
+		logger.Warn().Msg("src manager stream connection died")
 	})
 
 	connection.OnDataChannel(func(dc *webrtc.DataChannel) {
