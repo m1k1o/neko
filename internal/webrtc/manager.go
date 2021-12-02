@@ -181,7 +181,11 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 			srcManager = manager.capture.Webcam()
 		}
 
-		srcManager.Start(codec)
+		err := srcManager.Start(codec)
+		if err != nil {
+			logger.Err(err).Msg("failed to start pipeline")
+			return
+		}
 		defer srcManager.Stop() // TODO: Ensure no new publisher took over.
 
 		// Send a PLI on an interval so that the publisher is pushing a keyframe every rtcpPLIInterval
