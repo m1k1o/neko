@@ -4,6 +4,8 @@
 
 ### Misc
 - Automatic WebRTC SDP negotiation using onnegotiationneeded handlers. This allows adding/removing track on demand in a session.
+- Upgraded dependencies.
+- Added UDP and TCP mux for WebRTC connection. It should handle multiple peers.
 
 ## [n.eko v2.5](https://github.com/m1k1o/neko/releases/tag/v2.5)
 
