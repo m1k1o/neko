@@ -20,6 +20,8 @@ type WebRTC struct {
 	EphemeralMin uint16
 	EphemeralMax uint16
 	NAT1To1IPs   []string
+	TCPMUX       int
+	UDPMUX       int
 }
 
 func (WebRTC) Init(cmd *cobra.Command) error {
@@ -30,6 +32,16 @@ func (WebRTC) Init(cmd *cobra.Command) error {
 
 	cmd.PersistentFlags().StringSlice("nat1to1", []string{}, "sets a list of external IP addresses of 1:1 (D)NAT and a candidate type for which the external IP address is used")
 	if err := viper.BindPFlag("nat1to1", cmd.PersistentFlags().Lookup("nat1to1")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().Int("tcpmux", 0, "single TCP mux port for all peers")
+	if err := viper.BindPFlag("tcpmux", cmd.PersistentFlags().Lookup("tcpmux")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().Int("udpmux", 0, "single UDP mux port for all peers")
+	if err := viper.BindPFlag("udpmux", cmd.PersistentFlags().Lookup("udpmux")); err != nil {
 		return err
 	}
 
@@ -58,6 +70,8 @@ func (WebRTC) Init(cmd *cobra.Command) error {
 
 func (s *WebRTC) Set() {
 	s.NAT1To1IPs = viper.GetStringSlice("nat1to1")
+	s.TCPMUX = viper.GetInt("tcpmux")
+	s.UDPMUX = viper.GetInt("udpmux")
 	s.ICELite = viper.GetBool("icelite")
 	s.ICEServers = []webrtc.ICEServer{}
 
