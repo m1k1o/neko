@@ -12,16 +12,14 @@ func (h *MessageHandler) SessionCreated(id string, session types.Session) error 
 		return err
 	}
 
-	// notify all about what is locked
-	for resource, id := range h.locked {
-		if err := session.Send(message.AdminLock{
-			Event:    event.ADMIN_LOCK,
-			ID:       id,
-			Resource: resource,
-		}); err != nil {
-			h.logger.Warn().Str("id", id).Err(err).Msgf("sending event %s has failed", event.ADMIN_LOCK)
-			return err
-		}
+	// send initialization information
+	if err := session.Send(message.SystemInit{
+		Event:           event.SYSTEM_INIT,
+		ImplicitHosting: true,
+		Locks:           h.locked,
+	}); err != nil {
+		h.logger.Warn().Str("id", id).Err(err).Msgf("sending event %s has failed", event.SYSTEM_INIT)
+		return err
 	}
 
 	if session.Admin() {

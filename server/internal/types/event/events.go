@@ -1,6 +1,7 @@
 package event
 
 const (
+	SYSTEM_INIT       = "system/init"
 	SYSTEM_DISCONNECT = "system/disconnect"
 	SYSTEM_ERROR      = "system/error"
 )
