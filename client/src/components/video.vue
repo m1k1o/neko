@@ -186,6 +186,7 @@
 <script lang="ts">
   import { Component, Ref, Watch, Vue, Prop } from 'vue-property-decorator'
   import ResizeObserver from 'resize-observer-polyfill'
+  import { elementRequestFullscreen } from '~/utils'
 
   import Emote from './emote.vue'
   import Resolution from './resolution.vue'
@@ -555,37 +556,15 @@
       this.$accessor.remote.request()
     }
 
-    _elementRequestFullscreen(el: HTMLElement) {
-      if (typeof el.requestFullscreen === 'function') {
-        el.requestFullscreen()
-        //@ts-ignore
-      } else if (typeof el.webkitRequestFullscreen === 'function') {
-        //@ts-ignore
-        el.webkitRequestFullscreen()
-        //@ts-ignore
-      } else if (typeof el.webkitEnterFullscreen === 'function') {
-        //@ts-ignore
-        el.webkitEnterFullscreen()
-        //@ts-ignore
-      } else if (typeof el.msRequestFullScreen === 'function') {
-        //@ts-ignore
-        el.msRequestFullScreen()
-      } else {
-        return false
-      }
-
-      return true
-    }
-
     requestFullscreen() {
       // try to fullscreen player element
-      if (this._elementRequestFullscreen(this._player)) {
+      if (elementRequestFullscreen(this._player)) {
         this.onResize()
         return
       }
 
       // fallback to fullscreen video itself (on mobile devices)
-      if (this._elementRequestFullscreen(this._video)) {
+      if (elementRequestFullscreen(this._video)) {
         this.onResize()
         return
       }
