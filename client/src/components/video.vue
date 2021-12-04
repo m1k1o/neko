@@ -217,7 +217,7 @@
     @Prop(Boolean) readonly hideControls!: boolean
 
     private keyboard = GuacamoleKeyboard()
-    private observer = new ResizeObserver(this.onResise.bind(this))
+    private observer = new ResizeObserver(this.onResize.bind(this))
     private focused = false
     private fullscreen = false
     private startsMuted = true
@@ -322,12 +322,12 @@
 
     @Watch('width')
     onWidthChanged(width: number) {
-      this.onResise()
+      this.onResize()
     }
 
     @Watch('height')
     onHeightChanged(height: number) {
-      this.onResise()
+      this.onResize()
     }
 
     @Watch('volume')
@@ -384,17 +384,17 @@
     }
 
     mounted() {
-      this._container.addEventListener('resize', this.onResise)
+      this._container.addEventListener('resize', this.onResize)
       this.onVolumeChanged(this.volume)
       this.onMutedChanged(this.muted)
       this.onStreamChanged(this.stream)
-      this.onResise()
+      this.onResize()
 
       this.observer.observe(this._component)
 
       this._player.addEventListener('fullscreenchange', () => {
         this.fullscreen = document.fullscreenElement !== null
-        this.onResise()
+        this.onResize()
       })
 
       this._video.addEventListener('canplaythrough', () => {
@@ -513,7 +513,7 @@
 
       try {
         await this._video.play()
-        this.onResise()
+        this.onResize()
       } catch (err: any) {
         this.$log.error(err)
       }
@@ -551,6 +551,10 @@
       this.$accessor.remote.toggle()
     }
 
+    requestControl() {
+      this.$accessor.remote.request()
+    }
+
     _elementRequestFullscreen(el: HTMLElement) {
       if (typeof el.requestFullscreen === 'function') {
         el.requestFullscreen()
@@ -576,13 +580,13 @@
     requestFullscreen() {
       // try to fullscreen player element
       if (this._elementRequestFullscreen(this._player)) {
-        this.onResise()
+        this.onResize()
         return
       }
 
       // fallback to fullscreen video itself (on mobile devices)
       if (this._elementRequestFullscreen(this._video)) {
-        this.onResise()
+        this.onResize()
         return
       }
     }
@@ -590,7 +594,7 @@
     requestPictureInPicture() {
       //@ts-ignore
       this._video.requestPictureInPicture()
-      this.onResise()
+      this.onResize()
     }
 
     async onFocus() {
@@ -611,9 +615,10 @@
       }
     }
 
-    onMousePos(e: MouseEvent) {
+    sendMousePos(e: MouseEvent) {
       const { w, h } = this.$accessor.video.resolution
       const rect = this._overlay.getBoundingClientRect()
+
       this.$client.sendData('mousemove', {
         x: Math.round((w / rect.width) * (e.clientX - rect.left)),
         y: Math.round((h / rect.height) * (e.clientY - rect.top)),
@@ -625,7 +630,6 @@
       if (!this.hosting || this.locked) {
         return
       }
-      this.onMousePos(e)
 
       let x = e.deltaX
       let y = e.deltaY
@@ -648,6 +652,8 @@
       x = Math.min(Math.max(x, -this.scroll), this.scroll)
       y = Math.min(Math.max(y, -this.scroll), this.scroll)
 
+      this.sendMousePos(e)
+
       if (!this.wheelThrottle) {
         this.wheelThrottle = true
         this.$client.sendData('wheel', { x, y })
@@ -667,7 +673,7 @@
         return
       }
 
-      this.onMousePos(e)
+      this.sendMousePos(e)
       this.$client.sendData('mousedown', { key: e.button + 1 })
     }
 
@@ -676,7 +682,7 @@
         return
       }
 
-      this.onMousePos(e)
+      this.sendMousePos(e)
       this.$client.sendData('mouseup', { key: e.button + 1 })
     }
 
@@ -685,7 +691,7 @@
         return
       }
 
-      this.onMousePos(e)
+      this.sendMousePos(e)
     }
 
     onMouseEnter(e: MouseEvent) {
@@ -715,7 +721,7 @@
       this.focused = false
     }
 
-    onResise() {
+    onResize() {
       let height = 0
       if (!this.fullscreen) {
         const { offsetWidth, offsetHeight } = this._component
