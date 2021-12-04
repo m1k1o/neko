@@ -31,7 +31,7 @@
       </div>
       <ul v-if="!fullscreen && !hideControls" class="video-menu top">
         <li><i @click.stop.prevent="requestFullscreen" class="fas fa-expand"></i></li>
-        <li v-if="admin"><i @click.stop.prevent="onResolution" class="fas fa-desktop"></i></li>
+        <li v-if="admin"><i @click.stop.prevent="openResolution" class="fas fa-desktop"></i></li>
         <li class="request-control">
           <i
             :class="[hosted && !hosting ? 'disabled' : '', !hosted && !hosting ? 'faded' : '', 'fas', 'fa-keyboard']"
@@ -41,7 +41,7 @@
       </ul>
       <ul v-if="!fullscreen && !hideControls" class="video-menu bottom">
         <li v-if="hosting && (!clipboard_read_available || !clipboard_write_available)">
-          <i @click.stop.prevent="onClipboard" class="fas fa-clipboard"></i>
+          <i @click.stop.prevent="openClipboard" class="fas fa-clipboard"></i>
         </li>
         <li>
           <i
@@ -212,8 +212,8 @@
     @Ref('aspect') readonly _aspect!: HTMLElement
     @Ref('player') readonly _player!: HTMLElement
     @Ref('video') readonly _video!: HTMLVideoElement
-    @Ref('resolution') readonly _resolution!: any
-    @Ref('clipboard') readonly _clipboard!: any
+    @Ref('resolution') readonly _resolution!: Resolution
+    @Ref('clipboard') readonly _clipboard!: Clipboard
 
     @Prop(Boolean) readonly hideControls!: boolean
 
@@ -576,6 +576,14 @@
       this.onResize()
     }
 
+    openResolution(event: MouseEvent) {
+      this._resolution.open(event)
+    }
+
+    openClipboard() {
+      this._clipboard.open()
+    }
+
     async onFocus() {
       if (!document.hasFocus() || !this.$accessor.active) {
         return
@@ -714,14 +722,6 @@
 
       this._container.style.maxWidth = `${(this.horizontal / this.vertical) * height}px`
       this._aspect.style.paddingBottom = `${(this.vertical / this.horizontal) * 100}%`
-    }
-
-    onResolution(event: MouseEvent) {
-      this._resolution.open(event)
-    }
-
-    onClipboard(event: MouseEvent) {
-      this._clipboard.open(event)
     }
   }
 </script>
