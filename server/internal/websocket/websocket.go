@@ -105,6 +105,7 @@ func (ws *WebSocketHandler) Start() {
 		sess, ok := ws.handler.locked["control"]
 		if ok && ws.conf.ControlProtection && sess == CONTROL_PROTECTION_SESSION && len(ws.sessions.Admins()) > 0 {
 			delete(ws.handler.locked, "control")
+			ws.sessions.SetControlLocked(false) // TODO: Handle locks in sessions as flags.
 			ws.logger.Info().Msgf("control unlocked on behalf of control protection")
 
 			if err := ws.sessions.Broadcast(
@@ -140,6 +141,7 @@ func (ws *WebSocketHandler) Start() {
 		_, ok := ws.handler.locked["control"]
 		if !ok && ws.conf.ControlProtection && adminCount == 0 {
 			ws.handler.locked["control"] = CONTROL_PROTECTION_SESSION
+			ws.sessions.SetControlLocked(true) // TODO: Handle locks in sessions as flags.
 			ws.logger.Info().Msgf("control locked and released on behalf of control protection")
 			ws.handler.adminRelease(id, session)
 

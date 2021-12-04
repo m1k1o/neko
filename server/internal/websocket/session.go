@@ -15,7 +15,7 @@ func (h *MessageHandler) SessionCreated(id string, session types.Session) error 
 	// send initialization information
 	if err := session.Send(message.SystemInit{
 		Event:           event.SYSTEM_INIT,
-		ImplicitHosting: true,
+		ImplicitHosting: h.webrtc.ImplicitControl(),
 		Locks:           h.locked,
 	}); err != nil {
 		h.logger.Warn().Str("id", id).Err(err).Msgf("sending event %s has failed", event.SYSTEM_INIT)

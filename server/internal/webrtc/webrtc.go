@@ -301,6 +301,10 @@ func (manager *WebRTCManager) ICEServers() []webrtc.ICEServer {
 	return manager.config.ICEServers
 }
 
+func (manager *WebRTCManager) ImplicitControl() bool {
+	return manager.config.ImplicitControl
+}
+
 func (manager *WebRTCManager) createTrack(codecName string) (*webrtc.TrackLocalStaticSample, webrtc.RTPCodecParameters, error) {
 	var codec webrtc.RTPCodecParameters
 

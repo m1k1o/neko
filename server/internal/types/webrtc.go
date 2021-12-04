@@ -13,6 +13,7 @@ type WebRTCManager interface {
 	CreatePeer(id string, session Session) (Peer, error)
 	ICELite() bool
 	ICEServers() []webrtc.ICEServer
+	ImplicitControl() bool
 }
 
 type Peer interface {

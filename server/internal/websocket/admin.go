@@ -25,6 +25,11 @@ func (h *MessageHandler) adminLock(id string, session types.Session, payload *me
 		return nil
 	}
 
+	// TODO: Handle locks in sessions as flags.
+	if payload.Resource == "control" {
+		h.sessions.SetControlLocked(true)
+	}
+
 	h.locked[payload.Resource] = id
 
 	if err := h.sessions.Broadcast(
@@ -50,6 +55,11 @@ func (h *MessageHandler) adminUnlock(id string, session types.Session, payload *
 	if !ok {
 		h.logger.Debug().Str("resource", payload.Resource).Msg("resource not locked...")
 		return nil
+	}
+
+	// TODO: Handle locks in sessions as flags.
+	if payload.Resource == "control" {
+		h.sessions.SetControlLocked(false)
 	}
 
 	delete(h.locked, payload.Resource)
