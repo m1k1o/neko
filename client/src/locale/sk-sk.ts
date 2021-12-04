@@ -51,6 +51,9 @@ export const controls = {
   request: 'Požiadať o ovládanie',
   lock: 'Zamknúť ovládanie',
   unlock: 'Odomknúť ovládanie',
+  // TODO
+  //has: 'You have control',
+  //hasnot: 'You do not have control',
 }
 
 export const locks = {

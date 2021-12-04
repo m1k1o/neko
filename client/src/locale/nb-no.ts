@@ -51,6 +51,9 @@ export const controls = {
   request: 'Forespør kontroll',
   lock: 'Lås kontrollen',
   unlock: 'Lås opp kontrollen',
+  // TODO
+  //has: 'You have control',
+  //hasnot: 'You do not have control',
 }
 
 export const locks = {

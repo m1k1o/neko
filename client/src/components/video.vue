@@ -240,6 +240,10 @@
       return this.$accessor.remote.hosting
     }
 
+    get implicitHosting() {
+      return this.$accessor.remote.implicitHosting
+    }
+
     get hosted() {
       return this.$accessor.remote.hosted
     }
@@ -272,8 +276,13 @@
       return this.$accessor.settings.autoplay
     }
 
+    // server-side lock
+    get controlLocked() {
+      return 'control' in this.$accessor.locked && this.$accessor.locked['control'] && !this.$accessor.user.admin
+    }
+
     get locked() {
-      return this.$accessor.remote.locked
+      return this.$accessor.remote.locked || (this.controlLocked && (!this.hosting || this.implicitHosting))
     }
 
     get scroll() {

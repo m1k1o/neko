@@ -46,6 +46,16 @@ export const context = {
   },
 }
 
+export const controls = {
+  release: 'Relacher le contrôle',
+  request: 'Demander le contrôle',
+  lock: 'Vérouiller le contrôle',
+  unlock: 'Débloquer le contrôle',
+  // TODO
+  //  has: 'You have control',
+  //  hasnot: 'You do not have control',
+}
+
 export const locks = {
   // TODO
   //control: {
@@ -57,20 +67,13 @@ export const locks = {
   //  notif_unlocked: 'unlocked controls for users',
   //},
   login: {
-    release: 'Relacher le contrôle',
-    request: 'Demander le contrôle',
-    lock: 'Vérouiller le contrôle',
-    unlock: 'Débloquer le contrôle',
+    lock: 'Vérouiller la salle (pour les utilisateurs)',
+    unlock: 'Dévérouiller la salle (pour les utilisateurs)',
+    locked: 'Salle vérouillée (pour les utilisateurs)',
+    unlocked: 'Salle dévérouillée (pour les utilisateurs)',
     notif_locked: 'a vérouillé la salle',
     notif_unlocked: 'a dévérouillé la salle',
   },
-}
-
-export const room = {
-  lock: 'Vérouiller la salle (pour les utilisateurs)',
-  unlock: 'Dévérouiller la salle (pour les utilisateurs)',
-  locked: 'Salle vérouillée (pour les utilisateurs)',
-  unlocked: 'Salle dévérouillée (pour les utilisateurs)',
 }
 
 export const setting = {
