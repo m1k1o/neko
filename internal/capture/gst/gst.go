@@ -135,7 +135,8 @@ func goHandlePipelineBuffer(buffer unsafe.Pointer, bufferLen C.int, duration C.i
 		log.Warn().
 			Str("module", "capture").
 			Str("submodule", "gstreamer").
-			Msgf("discarding sample, no pipeline with id %d", int(pipelineID))
+			Int("pipeline-id", int(pipelineID)).
+			Msgf("discarding sample, pipeline not found")
 	}
 }
 
@@ -144,21 +145,10 @@ func goPipelineLog(levelUnsafe *C.char, msgUnsafe *C.char, pipelineID C.int) {
 	levelStr := C.GoString(levelUnsafe)
 	msg := C.GoString(msgUnsafe)
 
-	logger := log.With().
+	level, _ := zerolog.ParseLevel(levelStr)
+	log.WithLevel(level).
 		Str("module", "capture").
 		Str("submodule", "gstreamer").
-		Logger()
-
-	pipelinesLock.Lock()
-	pipeline, ok := pipelines[int(pipelineID)]
-	pipelinesLock.Unlock()
-
-	if ok {
-		logger = logger.With().
-			Int("id", pipeline.id).
-			Logger()
-	}
-
-	level, _ := zerolog.ParseLevel(levelStr)
-	logger.WithLevel(level).Msg(msg)
+		Int("pipeline-id", int(pipelineID)).
+		Msg(msg)
 }
