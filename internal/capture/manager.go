@@ -123,19 +123,19 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 
 		// sources
 		webcam: streamSrcNew(map[string]string{
-			codec.VP8().Name: "appsrc format=time is-live=true do-timestamp=true name=src " +
+			codec.VP8().Name: "appsrc format=time is-live=true do-timestamp=true name=appsrc " +
 				fmt.Sprintf("! application/x-rtp, payload=%d, encoding-name=VP8-DRAFT-IETF-01 ", codec.VP8().PayloadType) +
 				"! rtpvp8depay " +
 				"! decodebin " +
 				"! videoconvert " +
 				"! v4l2sink device=/dev/video0",
-			codec.VP9().Name: "appsrc format=time is-live=true do-timestamp=true name=src " +
+			codec.VP9().Name: "appsrc format=time is-live=true do-timestamp=true name=appsrc " +
 				"! application/x-rtp " +
 				"! rtpvp9depay " +
 				"! decodebin " +
 				"! videoconvert " +
 				"! v4l2sink device=/dev/video0",
-			codec.H264().Name: "appsrc format=time is-live=true do-timestamp=true name=src " +
+			codec.H264().Name: "appsrc format=time is-live=true do-timestamp=true name=appsrc " +
 				"! application/x-rtp " +
 				"! rtph264depay " +
 				"! decodebin " +
@@ -143,12 +143,12 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 				"! v4l2sink device=/dev/video0",
 		}, "webcam"),
 		microphone: streamSrcNew(map[string]string{
-			codec.Opus().Name: "appsrc format=time is-live=true do-timestamp=true name=src " +
+			codec.Opus().Name: "appsrc format=time is-live=true do-timestamp=true name=appsrc " +
 				fmt.Sprintf("! application/x-rtp, payload=%d, encoding-name=OPUS ", codec.Opus().PayloadType) +
 				"! rtpopusdepay " +
 				"! decodebin " +
 				"! pulsesink device=audio_input",
-			codec.G722().Name: "appsrc format=time is-live=true do-timestamp=true name=src " +
+			codec.G722().Name: "appsrc format=time is-live=true do-timestamp=true name=appsrc " +
 				"! application/x-rtp clock-rate=8000 " +
 				"! rtpg722depay " +
 				"! decodebin " +

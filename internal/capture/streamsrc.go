@@ -78,6 +78,7 @@ func (manager *StreamSrcManagerCtx) Start(codec codec.RTPCodec) error {
 		return err
 	}
 
+	manager.pipeline.AttachAppsrc("appsrc")
 	manager.pipeline.Play()
 	return nil
 }
@@ -103,7 +104,7 @@ func (manager *StreamSrcManagerCtx) Push(bytes []byte) {
 		return
 	}
 
-	manager.pipeline.Push("src", bytes)
+	manager.pipeline.Push(bytes)
 }
 
 func (manager *StreamSrcManagerCtx) Started() bool {

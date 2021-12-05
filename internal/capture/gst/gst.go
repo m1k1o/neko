@@ -73,6 +73,13 @@ func (p *Pipeline) AttachAppsink(sinkName string) {
 	C.gstreamer_pipeline_attach_appsink(p.Ctx, sinkNameUnsafe)
 }
 
+func (p *Pipeline) AttachAppsrc(srcName string) {
+	srcNameUnsafe := C.CString(srcName)
+	defer C.free(unsafe.Pointer(srcNameUnsafe))
+
+	C.gstreamer_pipeline_attach_appsrc(p.Ctx, srcNameUnsafe)
+}
+
 func (p *Pipeline) Play() {
 	C.gstreamer_pipeline_play(p.Ctx)
 }
@@ -93,14 +100,11 @@ func (p *Pipeline) Destroy() {
 	p = nil
 }
 
-func (p *Pipeline) Push(srcName string, buffer []byte) {
-	srcNameUnsafe := C.CString(srcName)
-	defer C.free(unsafe.Pointer(srcNameUnsafe))
-
+func (p *Pipeline) Push(buffer []byte) {
 	bytes := C.CBytes(buffer)
 	defer C.free(bytes)
 
-	C.gstreamer_pipeline_push(p.Ctx, srcNameUnsafe, bytes, C.int(len(buffer)))
+	C.gstreamer_pipeline_push(p.Ctx, bytes, C.int(len(buffer)))
 }
 
 // gst-inspect-1.0
