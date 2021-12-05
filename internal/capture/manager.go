@@ -128,18 +128,21 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 				"! rtpvp8depay " +
 				"! decodebin " +
 				"! videoconvert " +
+				"! identity drop-allocation=true " +
 				"! v4l2sink device=/dev/video0",
 			codec.VP9().Name: "appsrc format=time is-live=true do-timestamp=true name=appsrc " +
 				"! application/x-rtp " +
 				"! rtpvp9depay " +
 				"! decodebin " +
 				"! videoconvert " +
+				"! identity drop-allocation=true " +
 				"! v4l2sink device=/dev/video0",
 			codec.H264().Name: "appsrc format=time is-live=true do-timestamp=true name=appsrc " +
 				"! application/x-rtp " +
 				"! rtph264depay " +
 				"! decodebin " +
 				"! videoconvert " +
+				"! identity drop-allocation=true " +
 				"! v4l2sink device=/dev/video0",
 		}, "webcam"),
 		microphone: streamSrcNew(map[string]string{
