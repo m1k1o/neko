@@ -9,6 +9,7 @@ import "C"
 import (
 	"fmt"
 	"sync"
+	"sync/atomic"
 	"time"
 	"unsafe"
 
@@ -25,6 +26,7 @@ type Pipeline struct {
 	Sample chan types.Sample
 }
 
+var pSerial int32
 var pipelines = make(map[int]*Pipeline)
 var pipelinesLock sync.Mutex
 var registry *C.GstRegistry
@@ -37,13 +39,13 @@ func init() {
 }
 
 func CreatePipeline(pipelineStr string) (*Pipeline, error) {
+	id := atomic.AddInt32(&pSerial, 1)
+
 	pipelineStrUnsafe := C.CString(pipelineStr)
 	defer C.free(unsafe.Pointer(pipelineStrUnsafe))
 
 	pipelinesLock.Lock()
 	defer pipelinesLock.Unlock()
-
-	id := len(pipelines)
 
 	var gstError *C.GError
 	ctx := C.gstreamer_pipeline_create(pipelineStrUnsafe, C.int(id), &gstError)
@@ -54,7 +56,7 @@ func CreatePipeline(pipelineStr string) (*Pipeline, error) {
 	}
 
 	p := &Pipeline{
-		id:     id,
+		id:     int(id),
 		Src:    pipelineStr,
 		Ctx:    ctx,
 		Sample: make(chan types.Sample),
@@ -81,8 +83,14 @@ func (p *Pipeline) Pause() {
 
 func (p *Pipeline) Destroy() {
 	C.gstreamer_pipeline_destory(p.Ctx)
-	p.Ctx = nil
+
+	pipelinesLock.Lock()
+	delete(pipelines, p.id)
+	pipelinesLock.Unlock()
+
 	close(p.Sample)
+	C.free(unsafe.Pointer(p.Ctx))
+	p = nil
 }
 
 func (p *Pipeline) Push(srcName string, buffer []byte) {

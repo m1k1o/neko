@@ -131,7 +131,6 @@ void gstreamer_pipeline_pause(GstPipelineCtx *ctx) {
 void gstreamer_pipeline_destory(GstPipelineCtx *ctx) {
   gst_element_set_state(GST_ELEMENT(ctx->pipeline), GST_STATE_NULL);
   gst_object_unref(ctx->pipeline);
-  free(ctx);
 }
 
 void gstreamer_pipeline_push(GstPipelineCtx *ctx, char *srcName, void *buffer, int bufferLen) {
