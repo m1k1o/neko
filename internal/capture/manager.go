@@ -127,16 +127,19 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 				fmt.Sprintf("! application/x-rtp, payload=%d, encoding-name=VP8-DRAFT-IETF-01 ", codec.VP8().PayloadType) +
 				"! rtpvp8depay " +
 				"! decodebin " +
+				"! videoconvert " +
 				"! v4l2sink device=/dev/video0",
 			codec.VP9().Name: "appsrc format=time is-live=true do-timestamp=true name=src " +
 				"! application/x-rtp " +
 				"! rtpvp9depay " +
 				"! decodebin " +
+				"! videoconvert " +
 				"! v4l2sink device=/dev/video0",
 			codec.H264().Name: "appsrc format=time is-live=true do-timestamp=true name=src " +
 				"! application/x-rtp " +
 				"! rtph264depay " +
 				"! decodebin " +
+				"! videoconvert " +
 				"! v4l2sink device=/dev/video0",
 		}, "webcam"),
 		microphone: streamSrcNew(map[string]string{
