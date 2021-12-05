@@ -90,7 +90,7 @@ func (manager *StreamSrcManagerCtx) Stop() {
 		return
 	}
 
-	manager.pipeline.Stop()
+	manager.pipeline.Destroy()
 	manager.logger.Info().Msgf("destroying pipeline")
 	manager.pipeline = nil
 }

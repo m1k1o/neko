@@ -113,7 +113,7 @@ func (manager *BroacastManagerCtx) destroyPipeline() {
 		return
 	}
 
-	manager.pipeline.Stop()
+	manager.pipeline.Destroy()
 	manager.logger.Info().Msgf("destroying pipeline")
 	manager.pipeline = nil
 }

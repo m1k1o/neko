@@ -19,10 +19,10 @@ import (
 )
 
 type Pipeline struct {
-	Pipeline *C.GstElement
-	Sample   chan types.Sample
-	Src      string
-	id       int
+	id     int
+	Src    string
+	Ctx    *C.GstPipelineCtx
+	Sample chan types.Sample
 }
 
 var pipelines = make(map[int]*Pipeline)
@@ -43,10 +43,10 @@ func CreatePipeline(pipelineStr string) (*Pipeline, error) {
 	pipelinesLock.Lock()
 	defer pipelinesLock.Unlock()
 
-	var gstPipeline *C.GstElement
-	var gstError *C.GError
+	id := len(pipelines)
 
-	gstPipeline = C.gstreamer_pipeline_create(pipelineStrUnsafe, &gstError)
+	var gstError *C.GError
+	ctx := C.gstreamer_pipeline_create(pipelineStrUnsafe, C.int(id), &gstError)
 
 	if gstError != nil {
 		defer C.g_error_free(gstError)
@@ -54,10 +54,10 @@ func CreatePipeline(pipelineStr string) (*Pipeline, error) {
 	}
 
 	p := &Pipeline{
-		Pipeline: gstPipeline,
-		Sample:   make(chan types.Sample),
-		Src:      pipelineStr,
-		id:       len(pipelines),
+		id:     id,
+		Src:    pipelineStr,
+		Ctx:    ctx,
+		Sample: make(chan types.Sample),
 	}
 
 	pipelines[p.id] = p
@@ -68,15 +68,21 @@ func (p *Pipeline) AttachAppsink(sinkName string) {
 	sinkNameUnsafe := C.CString(sinkName)
 	defer C.free(unsafe.Pointer(sinkNameUnsafe))
 
-	C.gstreamer_pipeline_attach_appsink(p.Pipeline, sinkNameUnsafe, C.int(p.id))
+	C.gstreamer_pipeline_attach_appsink(p.Ctx, sinkNameUnsafe)
 }
 
 func (p *Pipeline) Play() {
-	C.gstreamer_pipeline_play(p.Pipeline)
+	C.gstreamer_pipeline_play(p.Ctx)
 }
 
-func (p *Pipeline) Stop() {
-	C.gstreamer_pipeline_stop(p.Pipeline)
+func (p *Pipeline) Pause() {
+	C.gstreamer_pipeline_pause(p.Ctx)
+}
+
+func (p *Pipeline) Destroy() {
+	C.gstreamer_pipeline_destory(p.Ctx)
+	p.Ctx = nil
+	close(p.Sample)
 }
 
 func (p *Pipeline) Push(srcName string, buffer []byte) {
@@ -86,7 +92,7 @@ func (p *Pipeline) Push(srcName string, buffer []byte) {
 	bytes := C.CBytes(buffer)
 	defer C.free(bytes)
 
-	C.gstreamer_pipeline_push(p.Pipeline, srcNameUnsafe, bytes, C.int(len(buffer)))
+	C.gstreamer_pipeline_push(p.Ctx, srcNameUnsafe, bytes, C.int(len(buffer)))
 }
 
 // gst-inspect-1.0
@@ -121,18 +127,30 @@ func goHandlePipelineBuffer(buffer unsafe.Pointer, bufferLen C.int, duration C.i
 		log.Warn().
 			Str("module", "capture").
 			Str("submodule", "gstreamer").
-			Msgf("discarding buffer, no pipeline with id %d", int(pipelineID))
+			Msgf("discarding sample, no pipeline with id %d", int(pipelineID))
 	}
 }
 
 //export goPipelineLog
-func goPipelineLog(levelUnsafe *C.char, msgUnsafe *C.char) {
+func goPipelineLog(levelUnsafe *C.char, msgUnsafe *C.char, pipelineID C.int) {
 	levelStr := C.GoString(levelUnsafe)
 	msg := C.GoString(msgUnsafe)
 
-	level, _ := zerolog.ParseLevel(levelStr)
-	log.WithLevel(level).
+	logger := log.With().
 		Str("module", "capture").
 		Str("submodule", "gstreamer").
-		Msg(msg)
+		Logger()
+
+	pipelinesLock.Lock()
+	pipeline, ok := pipelines[int(pipelineID)]
+	pipelinesLock.Unlock()
+
+	if ok {
+		logger = logger.With().
+			Int("id", pipeline.id).
+			Logger()
+	}
+
+	level, _ := zerolog.ParseLevel(levelStr)
+	logger.WithLevel(level).Msg(msg)
 }
