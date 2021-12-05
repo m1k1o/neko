@@ -13,6 +13,9 @@ import (
 	"unsafe"
 
 	"demodesk/neko/internal/types"
+
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 )
 
 type Pipeline struct {
@@ -28,6 +31,8 @@ var registry *C.GstRegistry
 
 func init() {
 	C.gstreamer_init()
+	go C.gstreamer_loop()
+
 	registry = C.gst_registry_get()
 }
 
@@ -113,6 +118,21 @@ func goHandlePipelineBuffer(buffer unsafe.Pointer, bufferLen C.int, duration C.i
 			Duration: time.Duration(duration),
 		}
 	} else {
-		fmt.Printf("discarding buffer, no pipeline with id %d", int(pipelineID))
+		log.Warn().
+			Str("module", "capture").
+			Str("submodule", "gstreamer").
+			Msgf("discarding buffer, no pipeline with id %d", int(pipelineID))
 	}
+}
+
+//export goPipelineLog
+func goPipelineLog(levelUnsafe *C.char, msgUnsafe *C.char) {
+	levelStr := C.GoString(levelUnsafe)
+	msg := C.GoString(msgUnsafe)
+
+	level, _ := zerolog.ParseLevel(levelStr)
+	log.WithLevel(level).
+		Str("module", "capture").
+		Str("submodule", "gstreamer").
+		Msg(msg)
 }
