@@ -1,6 +1,6 @@
 <template>
   <ul>
-    <li v-if="!isTouch && seesControl">
+    <li v-if="seesControl">
       <i
         :class="[
           !disabeld && shakeKbd ? 'shake' : '',
@@ -241,13 +241,6 @@
   @Component({ name: 'neko-controls' })
   export default class extends Vue {
     @Prop(Boolean) readonly shakeKbd!: boolean
-
-    get isTouch() {
-      return (
-        (typeof navigator.maxTouchPoints !== 'undefined' ? navigator.maxTouchPoints < 0 : false) ||
-        'ontouchstart' in document.documentElement
-      )
-    }
 
     get severLocked(): boolean {
       return 'control' in this.$accessor.locked && this.$accessor.locked['control']
