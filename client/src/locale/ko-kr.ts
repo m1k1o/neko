@@ -97,7 +97,7 @@ export const notifications = {
   controls_taken_steal: '{name} 님으로 부터 조작 권한을 가져왔습니다',
   controls_released: '{name} 님이 조작 권한을 내려놨습니다',
   controls_released_force: '조작 권한을 강제로 내려놨습니다',
-  controls_released_steal: 'released the controls from {name} 님의 조작 권한을 내려놨습니다',
+  controls_released_steal: '{name} 님의 조작 권한을 내려놨습니다',
   controls_given: '{name} 님에게 조작 권한을 줬습니다',
   controls_has: '{name} 님이 조작 권한을 가지고 있습니다',
   controls_has_alt: '가지고 있는 사람에게 가지고 싶어한다고 알려드리겠습니다',
