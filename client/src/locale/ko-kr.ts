@@ -106,5 +106,5 @@ export const notifications = {
   banned: '{name} 님이 차단됐습니다',
   kicked: '{name} 님이 추방됐습니다',
   muted: '{name} 님이 뮤트됐습니다',
-  unmuted: 'unmuted {name} 님의 뮤트가 해제됐습니다',
+  unmuted: '{name} 님의 뮤트가 해제됐습니다',
 }
