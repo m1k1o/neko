@@ -133,6 +133,15 @@ func CreateAppPipeline(codecName string, pipelineDevice string, pipelineSrc stri
 		}
 
 		pipelineStr = fmt.Sprintf(videoSrc+"video/x-raw,format=NV12 ! x264enc threads=4 bitrate=%d key-int-max=60 vbv-buf-capacity=%d byte-stream=true tune=zerolatency speed-preset=veryfast ! video/x-h264,stream-format=byte-stream"+pipelineStr, pipelineDevice, fps, bitrate, vbvbuf)
+	case "H265":
+		// https://gstreamer.freedesktop.org/documentation/vpx/vp9enc.html?gi-language=c
+		// gstreamer1.0-plugins-good
+		// vp9enc
+		if err := CheckPlugins([]string{"ximagesrc", "x265"}); err != nil {
+			return nil, err
+		}
+
+		pipelineStr = fmt.Sprintf(videoSrc+"x265enc bitrate=%d key-int-max=60 tune=zerolatency speed-preset=veryfast ! video/x-h265,stream-format=byte-stream"+pipelineStr, pipelineDevice, fps, bitrate)
 	case "Opus":
 		// https://gstreamer.freedesktop.org/documentation/opus/opusenc.html
 		// gstreamer1.0-plugins-base
