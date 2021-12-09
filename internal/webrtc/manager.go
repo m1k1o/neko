@@ -157,12 +157,18 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 	}
 
 	connection.OnTrack(func(track *webrtc.TrackRemote, receiver *webrtc.RTPReceiver) {
+		if !session.Profile().CanShareMedia {
+			logger.Warn().
+				Str("kind", track.Kind().String()).
+				Msgf("got track but share media is disabled for this session")
+
+			receiver.Stop()
+			return
+		}
+
 		logger.Info().
-			Str("stream-id", track.StreamID()).
-			Str("id", track.ID()).
-			Str("rid", track.RID()).
+			Str("kind", track.Kind().String()).
 			Str("mime", track.Codec().RTPCodecCapability.MimeType).
-			Uint8("payload-type", uint8(track.PayloadType())).
 			Msgf("received new track")
 
 		// parse codec
@@ -186,7 +192,6 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 			logger.Err(err).Msg("failed to start pipeline")
 			return
 		}
-		defer srcManager.Stop() // TODO: Ensure no new publisher took over.
 
 		// Send a PLI on an interval so that the publisher is pushing a keyframe every rtcpPLIInterval
 		ticker := time.NewTicker(time.Second * 3)
@@ -212,7 +217,9 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 			srcManager.Push(buf[:i])
 		}
 
-		logger.Warn().Msg("src manager stream connection died")
+		logger.Warn().Msg("src manager stream connection died, stopping")
+		srcManager.Stop()
+		logger.Warn().Msg("src manager stream stopped!!!!!!!!!!!!!!!")
 	})
 
 	connection.OnDataChannel(func(dc *webrtc.DataChannel) {

@@ -14,6 +14,7 @@ func New() types.MemberProvider {
 			CanConnect:            true,
 			CanWatch:              true,
 			CanHost:               true,
+			CanShareMedia:         true,
 			CanAccessClipboard:    true,
 			SendsInactiveCursor:   true,
 			CanSeeInactiveCursors: true,

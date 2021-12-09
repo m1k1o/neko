@@ -15,6 +15,7 @@ type MemberProfile struct {
 	CanConnect            bool   `json:"can_connect"`
 	CanWatch              bool   `json:"can_watch"`
 	CanHost               bool   `json:"can_host"`
+	CanShareMedia         bool   `json:"can_share_media"`
 	CanAccessClipboard    bool   `json:"can_access_clipboard"`
 	SendsInactiveCursor   bool   `json:"sends_inactive_cursor"`
 	CanSeeInactiveCursors bool   `json:"can_see_inactive_cursors"`

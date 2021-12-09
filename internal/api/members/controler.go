@@ -62,6 +62,7 @@ func (h *MembersHandler) membersCreate(w http.ResponseWriter, r *http.Request) e
 			CanConnect:            true,
 			CanWatch:              true,
 			CanHost:               true,
+			CanShareMedia:         true,
 			CanAccessClipboard:    true,
 			SendsInactiveCursor:   true,
 			CanSeeInactiveCursors: true,
