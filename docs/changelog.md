@@ -2,6 +2,9 @@
 
 ## master branch
 
+### New Features
+- Added `m1k1o/neko:microsoft-edge` tag.
+
 ### Misc
 - Automatic WebRTC SDP negotiation using onnegotiationneeded handlers. This allows adding/removing track on demand in a session.
 - Added UDP and TCP mux for WebRTC connection. It should handle multiple peers.

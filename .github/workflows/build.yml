@@ -48,7 +48,7 @@ jobs:
     needs: [ build-base ]
     strategy:
       matrix:
-        tags: [ firefox, chromium, google-chrome, ungoogled-chromium, brave, tor-browser, vncviewer, vlc, xfce ]
+        tags: [ firefox, chromium, google-chrome, ungoogled-chromium, microsoft-edge, brave, tor-browser, vncviewer, vlc, xfce ]
     env:
       DOCKER_TAG: ${{ matrix.tags }}
     steps:
