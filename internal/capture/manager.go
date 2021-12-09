@@ -122,7 +122,7 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 		videoIDs: config.VideoIDs,
 
 		// sources
-		webcam: streamSrcNew(map[string]string{
+		webcam: streamSrcNew(config.WebcamEnabled, map[string]string{
 			codec.VP8().Name: "appsrc format=time is-live=true do-timestamp=true name=appsrc " +
 				fmt.Sprintf("! application/x-rtp, payload=%d, encoding-name=VP8-DRAFT-IETF-01 ", codec.VP8().PayloadType) +
 				"! rtpvp8depay " +
@@ -130,7 +130,8 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 				"! videoconvert " +
 				"! videorate " +
 				"! identity drop-allocation=true " +
-				"! v4l2sink sync=false device=/dev/video0",
+				fmt.Sprintf("! v4l2sink sync=false device=%s", config.WebcamDevice),
+			// TODO: Test this pipeline.
 			codec.VP9().Name: "appsrc format=time is-live=true do-timestamp=true name=appsrc " +
 				"! application/x-rtp " +
 				"! rtpvp9depay " +
@@ -138,7 +139,8 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 				"! videoconvert " +
 				"! videorate " +
 				"! identity drop-allocation=true " +
-				"! v4l2sink sync=false device=/dev/video0",
+				fmt.Sprintf("! v4l2sink sync=false device=%s", config.WebcamDevice),
+			// TODO: Test this pipeline.
 			codec.H264().Name: "appsrc format=time is-live=true do-timestamp=true name=appsrc " +
 				"! application/x-rtp " +
 				"! rtph264depay " +
@@ -146,19 +148,20 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 				"! videoconvert " +
 				"! videorate " +
 				"! identity drop-allocation=true " +
-				"! v4l2sink sync=false device=/dev/video0",
+				fmt.Sprintf("! v4l2sink sync=false device=%s", config.WebcamDevice),
 		}, "webcam"),
-		microphone: streamSrcNew(map[string]string{
+		microphone: streamSrcNew(config.MicrophoneEnabled, map[string]string{
 			codec.Opus().Name: "appsrc format=time is-live=true do-timestamp=true name=appsrc " +
 				fmt.Sprintf("! application/x-rtp, payload=%d, encoding-name=OPUS ", codec.Opus().PayloadType) +
 				"! rtpopusdepay " +
 				"! decodebin " +
-				"! pulsesink device=audio_input",
+				fmt.Sprintf("! pulsesink device=%s", config.MicrophoneDevice),
+			// TODO: Test this pipeline.
 			codec.G722().Name: "appsrc format=time is-live=true do-timestamp=true name=appsrc " +
 				"! application/x-rtp clock-rate=8000 " +
 				"! rtpg722depay " +
 				"! decodebin " +
-				"! pulsesink device=audio_input",
+				fmt.Sprintf("! pulsesink device=%s", config.MicrophoneDevice),
 		}, "microphone"),
 	}
 }

@@ -33,11 +33,17 @@ type Capture struct {
 	ScreencastRate     string
 	ScreencastQuality  string
 	ScreencastPipeline string
+
+	WebcamEnabled bool
+	WebcamDevice  string
+
+	MicrophoneEnabled bool
+	MicrophoneDevice  string
 }
 
 func (Capture) Init(cmd *cobra.Command) error {
 	// audio
-	cmd.PersistentFlags().String("capture.audio.device", "audio_output.monitor", "audio device to capture")
+	cmd.PersistentFlags().String("capture.audio.device", "audio_output.monitor", "pulseaudio device to capture")
 	if err := viper.BindPFlag("capture.audio.device", cmd.PersistentFlags().Lookup("capture.audio.device")); err != nil {
 		return err
 	}
@@ -110,6 +116,28 @@ func (Capture) Init(cmd *cobra.Command) error {
 		return err
 	}
 
+	// webcam
+	cmd.PersistentFlags().Bool("capture.webcam.enabled", false, "enable webcam stream")
+	if err := viper.BindPFlag("capture.webcam.enabled", cmd.PersistentFlags().Lookup("capture.webcam.enabled")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().String("capture.webcam.device", "/dev/video0", "v4l2sink device used for webcam")
+	if err := viper.BindPFlag("capture.webcam.device", cmd.PersistentFlags().Lookup("capture.webcam.device")); err != nil {
+		return err
+	}
+
+	// microphone
+	cmd.PersistentFlags().Bool("capture.microphone.enabled", true, "enable microphone stream")
+	if err := viper.BindPFlag("capture.microphone.enabled", cmd.PersistentFlags().Lookup("capture.microphone.enabled")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().String("capture.microphone.device", "audio_input", "pulseaudio device used for microphone")
+	if err := viper.BindPFlag("capture.microphone.device", cmd.PersistentFlags().Lookup("capture.microphone.device")); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -174,4 +202,12 @@ func (s *Capture) Set() {
 	s.ScreencastRate = viper.GetString("capture.screencast.rate")
 	s.ScreencastQuality = viper.GetString("capture.screencast.quality")
 	s.ScreencastPipeline = viper.GetString("capture.screencast.pipeline")
+
+	// webcam
+	s.WebcamEnabled = viper.GetBool("capture.webcam.enabled")
+	s.WebcamDevice = viper.GetString("capture.webcam.device")
+
+	// microphone
+	s.MicrophoneEnabled = viper.GetBool("capture.microphone.enabled")
+	s.MicrophoneDevice = viper.GetString("capture.microphone.device")
 }

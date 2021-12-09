@@ -157,24 +157,24 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 	}
 
 	connection.OnTrack(func(track *webrtc.TrackRemote, receiver *webrtc.RTPReceiver) {
-		if !session.Profile().CanShareMedia {
-			logger.Warn().
-				Str("kind", track.Kind().String()).
-				Msgf("got track but share media is disabled for this session")
+		defer receiver.Stop()
 
-			receiver.Stop()
-			return
-		}
-
-		logger.Info().
+		logger := logger.With().
 			Str("kind", track.Kind().String()).
 			Str("mime", track.Codec().RTPCodecCapability.MimeType).
-			Msgf("received new track")
+			Logger()
+
+		logger.Info().Msgf("received new track")
+
+		if !session.Profile().CanShareMedia {
+			logger.Warn().Msg("share media is disabled for this session")
+			return
+		}
 
 		// parse codec
 		codec, ok := codec.ParseRTC(track.Codec())
 		if !ok {
-			logger.Warn().Str("mime", track.Codec().RTPCodecCapability.MimeType).Msg("unknown codec")
+			logger.Warn().Msg("unknown codec")
 			return
 		}
 
@@ -192,6 +192,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 			logger.Err(err).Msg("failed to start pipeline")
 			return
 		}
+		defer srcManager.Stop()
 
 		// Send a PLI on an interval so that the publisher is pushing a keyframe every rtcpPLIInterval
 		ticker := time.NewTicker(time.Second * 3)
@@ -199,9 +200,9 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 
 		go func() {
 			for range ticker.C {
-				rtcpSendErr := connection.WriteRTCP([]rtcp.Packet{&rtcp.PictureLossIndication{MediaSSRC: uint32(track.SSRC())}})
-				if rtcpSendErr != nil {
-					fmt.Println(rtcpSendErr)
+				err := connection.WriteRTCP([]rtcp.Packet{&rtcp.PictureLossIndication{MediaSSRC: uint32(track.SSRC())}})
+				if err != nil {
+					logger.Err(err).Msg("rtcp send err")
 				}
 			}
 		}()
@@ -210,16 +211,14 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 		for {
 			i, _, err := track.Read(buf)
 			if err != nil {
-				logger.Warn().Err(err).Msg("failed read from pipeline")
+				logger.Warn().Err(err).Msg("failed read from track")
 				break
 			}
 
 			srcManager.Push(buf[:i])
 		}
 
-		logger.Warn().Msg("src manager stream connection died, stopping")
-		srcManager.Stop()
-		logger.Warn().Msg("src manager stream stopped!!!!!!!!!!!!!!!")
+		logger.Info().Msg("track data finished")
 	})
 
 	connection.OnDataChannel(func(dc *webrtc.DataChannel) {

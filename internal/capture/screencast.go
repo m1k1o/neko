@@ -131,7 +131,7 @@ func (manager *ScreencastManagerCtx) start() error {
 	defer manager.mu.Unlock()
 
 	if !manager.enabled {
-		return errors.New("screenshot pipeline not enabled")
+		return errors.New("screencast not enabled")
 	}
 
 	err := manager.createPipeline()

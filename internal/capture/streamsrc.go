@@ -14,6 +14,7 @@ import (
 
 type StreamSrcManagerCtx struct {
 	logger        zerolog.Logger
+	enabled       bool
 	codecPipeline map[string]string // codec -> pipeline
 
 	codec       codec.RTPCodec
@@ -22,7 +23,7 @@ type StreamSrcManagerCtx struct {
 	pipelineStr string
 }
 
-func streamSrcNew(codecPipeline map[string]string, video_id string) *StreamSrcManagerCtx {
+func streamSrcNew(enabled bool, codecPipeline map[string]string, video_id string) *StreamSrcManagerCtx {
 	logger := log.With().
 		Str("module", "capture").
 		Str("submodule", "stream-src").
@@ -30,6 +31,7 @@ func streamSrcNew(codecPipeline map[string]string, video_id string) *StreamSrcMa
 
 	return &StreamSrcManagerCtx{
 		logger:        logger,
+		enabled:       enabled,
 		codecPipeline: codecPipeline,
 	}
 }
@@ -50,6 +52,10 @@ func (manager *StreamSrcManagerCtx) Start(codec codec.RTPCodec) error {
 
 	if manager.pipeline != nil {
 		return types.ErrCapturePipelineAlreadyExists
+	}
+
+	if !manager.enabled {
+		return errors.New("stream-src not enabled")
 	}
 
 	found := false
