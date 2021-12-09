@@ -69,18 +69,18 @@ func (Capture) Init(cmd *cobra.Command) error {
 	}
 
 	// broadcast
-	cmd.PersistentFlags().Int("capture.screencast.audio_bitrate", 128, "broadcast audio bitrate in KB/s")
-	if err := viper.BindPFlag("capture.screencast.audio_bitrate", cmd.PersistentFlags().Lookup("capture.screencast.audio_bitrate")); err != nil {
+	cmd.PersistentFlags().Int("capture.broadcast.audio_bitrate", 128, "broadcast audio bitrate in KB/s")
+	if err := viper.BindPFlag("capture.broadcast.audio_bitrate", cmd.PersistentFlags().Lookup("capture.broadcast.audio_bitrate")); err != nil {
 		return err
 	}
 
-	cmd.PersistentFlags().Int("capture.screencast.video_bitrate", 4096, "broadcast video bitrate in KB/s")
-	if err := viper.BindPFlag("capture.screencast.video_bitrate", cmd.PersistentFlags().Lookup("capture.screencast.video_bitrate")); err != nil {
+	cmd.PersistentFlags().Int("capture.broadcast.video_bitrate", 4096, "broadcast video bitrate in KB/s")
+	if err := viper.BindPFlag("capture.broadcast.video_bitrate", cmd.PersistentFlags().Lookup("capture.broadcast.video_bitrate")); err != nil {
 		return err
 	}
 
-	cmd.PersistentFlags().String("capture.screencast.preset", "veryfast", "broadcast speed preset for h264 encoding")
-	if err := viper.BindPFlag("capture.screencast.preset", cmd.PersistentFlags().Lookup("capture.screencast.preset")); err != nil {
+	cmd.PersistentFlags().String("capture.broadcast.preset", "veryfast", "broadcast speed preset for h264 encoding")
+	if err := viper.BindPFlag("capture.broadcast.preset", cmd.PersistentFlags().Lookup("capture.broadcast.preset")); err != nil {
 		return err
 	}
 
