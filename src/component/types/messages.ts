@@ -72,6 +72,7 @@ export interface MemberProfile {
   can_connect: boolean
   can_watch: boolean
   can_host: boolean
+  can_share_media: boolean
   can_access_clipboard: boolean
   sends_inactive_cursor: boolean
   can_see_inactive_cursors: boolean
