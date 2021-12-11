@@ -125,9 +125,9 @@ func (h *MessageHandler) controlGive(id string, session types.Session, payload *
 }
 
 func (h *MessageHandler) controlClipboard(id string, session types.Session, payload *message.Clipboard) error {
-	// check if session is host
-	if !h.sessions.IsHost(id) {
-		h.logger.Debug().Str("id", id).Msg("is not the host")
+	// check if session can access clipboard
+	if (!h.webrtc.ImplicitControl() && !h.sessions.IsHost(id)) || (h.webrtc.ImplicitControl() && !h.sessions.CanControl(id)) {
+		h.logger.Debug().Str("id", id).Msg("cannot access clipboard")
 		return nil
 	}
 
@@ -136,9 +136,9 @@ func (h *MessageHandler) controlClipboard(id string, session types.Session, payl
 }
 
 func (h *MessageHandler) controlKeyboard(id string, session types.Session, payload *message.Keyboard) error {
-	// check if session is host
-	if !h.sessions.IsHost(id) {
-		h.logger.Debug().Str("id", id).Msg("is not the host")
+	// check if session can control keyboard
+	if (!h.webrtc.ImplicitControl() && !h.sessions.IsHost(id)) || (h.webrtc.ImplicitControl() && !h.sessions.CanControl(id)) {
+		h.logger.Debug().Str("id", id).Msg("cannot control keyboard")
 		return nil
 	}
 
