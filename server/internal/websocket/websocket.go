@@ -316,6 +316,7 @@ func (ws *WebSocketHandler) Stats() types.Stats {
 		LastUserLeftAt:  ws.lastUserLeftAt,
 
 		ControlProtection: ws.conf.ControlProtection,
+		ImplicitControl:   ws.handler.webrtc.ImplicitControl(),
 	}
 }
 

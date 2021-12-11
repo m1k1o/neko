@@ -68,8 +68,8 @@ func (WebRTC) Init(cmd *cobra.Command) error {
 	}
 
 	// TODO: Should be moved to session config.
-	cmd.PersistentFlags().Bool("implicit-control", false, "if enabled members can gain control implicitly")
-	if err := viper.BindPFlag("implicit-control", cmd.PersistentFlags().Lookup("implicit-control")); err != nil {
+	cmd.PersistentFlags().Bool("implicit_control", false, "if enabled members can gain control implicitly")
+	if err := viper.BindPFlag("implicit_control", cmd.PersistentFlags().Lookup("implicit_control")); err != nil {
 		return err
 	}
 
@@ -130,5 +130,5 @@ func (s *WebRTC) Set() {
 	}
 
 	// TODO: Should be moved to session config.
-	s.ImplicitControl = viper.GetBool("implicit-control")
+	s.ImplicitControl = viper.GetBool("implicit_control")
 }
