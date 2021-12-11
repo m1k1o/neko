@@ -22,6 +22,8 @@ import {
   AdminPayload,
   AdminTargetPayload,
   AdminLockMessage,
+  SystemInitPayload,
+  AdminLockResource,
 } from './messages'
 
 interface NekoEvents extends BaseEvents {}
@@ -131,6 +133,18 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   /////////////////////////////
   // System Events
   /////////////////////////////
+  protected [EVENT.SYSTEM.INIT]({ implicit_hosting, locks }: SystemInitPayload) {
+    this.$accessor.remote.setImplicitHosting(implicit_hosting)
+
+    for (const resource in locks) {
+      this[EVENT.ADMIN.LOCK]({
+        event: EVENT.ADMIN.LOCK,
+        resource: resource as AdminLockResource,
+        id: locks[resource],
+      })
+    }
+  }
+
   protected [EVENT.SYSTEM.DISCONNECT]({ message }: SystemMessagePayload) {
     if (message == 'kicked') {
       this.$accessor.logout()

@@ -184,6 +184,30 @@ func (manager *SessionManager) Broadcast(v interface{}, exclude interface{}) err
 			return err
 		}
 	}
+
+	return nil
+}
+
+func (manager *SessionManager) AdminBroadcast(v interface{}, exclude interface{}) error {
+	manager.mu.Lock()
+	defer manager.mu.Unlock()
+
+	for id, session := range manager.members {
+		if !session.connected || !session.admin {
+			continue
+		}
+
+		if exclude != nil {
+			if in, _ := utils.ArrayIn(id, exclude); in {
+				continue
+			}
+		}
+
+		if err := session.Send(v); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 

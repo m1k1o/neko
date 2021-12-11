@@ -52,6 +52,15 @@ export interface WebSocketMessage {
 /*
   SYSTEM MESSAGES/PAYLOADS
 */
+// system/init
+export interface SystemInit extends WebSocketMessage, SystemInitPayload {
+  event: typeof EVENT.SYSTEM.INIT
+}
+export interface SystemInitPayload {
+  implicit_hosting: boolean
+  locks: Record<string, string>
+}
+
 // system/disconnect
 // system/error
 export interface SystemMessage extends WebSocketMessage, SystemMessagePayload {

@@ -7,3 +7,24 @@ export function makeid(length: number) {
   }
   return result
 }
+
+export function elementRequestFullscreen(el: HTMLElement) {
+  if (typeof el.requestFullscreen === 'function') {
+    el.requestFullscreen()
+    //@ts-ignore
+  } else if (typeof el.webkitRequestFullscreen === 'function') {
+    //@ts-ignore
+    el.webkitRequestFullscreen()
+    //@ts-ignore
+  } else if (typeof el.webkitEnterFullscreen === 'function') {
+    //@ts-ignore
+    el.webkitEnterFullscreen()
+    //@ts-ignore
+  } else if (typeof el.msRequestFullScreen === 'function') {
+    //@ts-ignore
+    el.msRequestFullScreen()
+  } else {
+    return false
+  }
+  return true
+}

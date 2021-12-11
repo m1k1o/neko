@@ -10,6 +10,12 @@ type Message struct {
 	Event string `json:"event"`
 }
 
+type SystemInit struct {
+	Event           string            `json:"event"`
+	ImplicitHosting bool              `json:"implicit_hosting"`
+	Locks           map[string]string `json:"locks"`
+}
+
 type SystemMessage struct {
 	Event   string `json:"event"`
 	Title   string `json:"title"`

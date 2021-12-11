@@ -4,10 +4,12 @@
 
 ### New Features
 - Added `m1k1o/neko:microsoft-edge` tag.
+- Fixed clipboard sync in chromium based browsers.
 
 ### Misc
 - Automatic WebRTC SDP negotiation using onnegotiationneeded handlers. This allows adding/removing track on demand in a session.
 - Added UDP and TCP mux for WebRTC connection. It should handle multiple peers.
+- Broadcast status change is sent to all admins now.
 
 ## [n.eko v2.5](https://github.com/m1k1o/neko/releases/tag/v2.5)
 

@@ -12,7 +12,7 @@ export const state = () => ({
   id: '',
   clipboard: '',
   locked: false,
-
+  implicitHosting: true,
   keyboardModifierState: -1,
 })
 
@@ -49,10 +49,15 @@ export const mutations = mutationTree(state, {
     state.locked = locked
   },
 
+  setImplicitHosting(state, val: boolean) {
+    state.implicitHosting = val
+  },
+
   reset(state) {
     state.id = ''
     state.clipboard = ''
     state.locked = false
+    state.implicitHosting = false
     state.keyboardModifierState = -1
   },
 })
