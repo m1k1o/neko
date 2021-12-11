@@ -51,6 +51,9 @@ export const controls = {
   request: 'Controles solicitados',
   lock: 'Controles bloqueados',
   unlock: 'Controles desbloqueados',
+  // TODO
+  //has: 'You have control',
+  //hasnot: 'You do not have control',
 }
 
 export const locks = {

@@ -1,6 +1,6 @@
 <template>
   <ul>
-    <li v-if="seesControl">
+    <li v-if="!implicitHosting && (!controlLocked || hosting)">
       <i
         :class="[
           !disabeld && shakeKbd ? 'shake' : '',
@@ -20,7 +20,19 @@
         @click.stop.prevent="toggleControl"
       />
     </li>
-    <li v-if="seesControl">
+    <li class="no-pointer" v-if="implicitHosting">
+      <i
+        :class="[controlLocked ? 'disabled' : '', 'fas', 'fa-mouse-pointer']"
+        v-tooltip="{
+          content: controlLocked ? $t('controls.hasnot') : $t('controls.has'),
+          placement: 'top',
+          offset: 5,
+          boundariesElement: 'body',
+          delay: { show: 300, hide: 100 },
+        }"
+      />
+    </li>
+    <li v-if="implicitHosting || (!implicitHosting && (!controlLocked || hosting))">
       <label
         class="switch"
         v-tooltip="{
@@ -31,7 +43,7 @@
           delay: { show: 300, hide: 100 },
         }"
       >
-        <input type="checkbox" v-model="locked" :disabled="!hosting" />
+        <input type="checkbox" v-model="locked" :disabled="!hosting || (implicitHosting && controlLocked)" />
         <span />
       </label>
     </li>
@@ -104,6 +116,10 @@
     li {
       font-size: 24px;
       cursor: pointer;
+
+      &.no-pointer {
+        cursor: default;
+      }
 
       i {
         padding: 0 5px;
@@ -242,12 +258,8 @@
   export default class extends Vue {
     @Prop(Boolean) readonly shakeKbd!: boolean
 
-    get severLocked(): boolean {
-      return 'control' in this.$accessor.locked && this.$accessor.locked['control']
-    }
-
-    get seesControl(): boolean {
-      return !this.severLocked || this.$accessor.user.admin || this.hosting
+    get controlLocked() {
+      return 'control' in this.$accessor.locked && this.$accessor.locked['control'] && !this.$accessor.user.admin
     }
 
     get disabeld() {
@@ -256,6 +268,10 @@
 
     get hosting() {
       return this.$accessor.remote.hosting
+    }
+
+    get implicitHosting() {
+      return this.$accessor.remote.implicitHosting
     }
 
     get volume() {

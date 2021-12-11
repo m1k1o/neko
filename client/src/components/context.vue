@@ -18,20 +18,20 @@
           <span @click="mute(child.data.member)" v-if="!child.data.member.muted">{{ $t('context.mute') }}</span>
           <span @click="unmute(child.data.member)" v-else>{{ $t('context.unmute') }}</span>
         </li>
-        <li v-if="child.data.member.id === host">
+        <li v-if="child.data.member.id === host && !implicitHosting">
           <span @click="adminRelease(child.data.member)">{{ $t('context.release') }}</span>
         </li>
-        <li v-if="child.data.member.id === host">
+        <li v-if="child.data.member.id === host && !implicitHosting">
           <span @click="adminControl(child.data.member)">{{ $t('context.take') }}</span>
         </li>
         <li>
-          <span v-if="child.data.member.id !== host" @click="adminGive(child.data.member)">{{
+          <span v-if="child.data.member.id !== host && !implicitHosting" @click="adminGive(child.data.member)">{{
             $t('context.give')
           }}</span>
         </li>
       </template>
       <template v-else>
-        <li v-if="hosting">
+        <li v-if="hosting && !implicitHosting">
           <span @click="give(child.data.member)">{{ $t('context.give') }}</span>
         </li>
       </template>
@@ -159,6 +159,10 @@
 
     get host() {
       return this.$accessor.remote.id
+    }
+
+    get implicitHosting() {
+      return this.$accessor.remote.implicitHosting
     }
 
     open(event: MouseEvent, data: any) {

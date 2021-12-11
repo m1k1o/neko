@@ -29,6 +29,8 @@ type SessionManager struct {
 	remote  types.RemoteManager
 	members map[string]*Session
 	emmiter events.EventEmmiter
+	// TODO: Handle locks in sessions as flags.
+	controlLocked bool
 }
 
 func (manager *SessionManager) New(id string, admin bool, socket types.WebSocket) types.Session {
@@ -102,6 +104,16 @@ func (manager *SessionManager) Get(id string) (types.Session, bool) {
 
 	session, ok := manager.members[id]
 	return session, ok
+}
+
+// TODO: Handle locks in sessions as flags.
+func (manager *SessionManager) SetControlLocked(locked bool) {
+	manager.controlLocked = locked
+}
+
+func (manager *SessionManager) CanControl(id string) bool {
+	session, ok := manager.Get(id)
+	return ok && (!manager.controlLocked || session.Admin())
 }
 
 func (manager *SessionManager) Admins() []*types.Member {

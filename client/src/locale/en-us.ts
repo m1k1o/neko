@@ -49,6 +49,8 @@ export const controls = {
   request: 'Request Controls',
   lock: 'Lock Controls',
   unlock: 'Unlock Controls',
+  has: 'You have control',
+  hasnot: 'You do not have control',
 }
 
 export const locks = {
