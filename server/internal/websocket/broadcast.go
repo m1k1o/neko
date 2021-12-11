@@ -25,7 +25,7 @@ func (h *MessageHandler) boradcastCreate(session types.Session, payload *message
 		}
 	}
 
-	if err := h.boradcastStatus(session); err != nil {
+	if err := h.boradcastStatus(nil); err != nil {
 		return err
 	}
 
@@ -40,7 +40,7 @@ func (h *MessageHandler) boradcastDestroy(session types.Session) error {
 
 	h.broadcast.Destroy()
 
-	if err := h.boradcastStatus(session); err != nil {
+	if err := h.boradcastStatus(nil); err != nil {
 		return err
 	}
 
@@ -48,6 +48,21 @@ func (h *MessageHandler) boradcastDestroy(session types.Session) error {
 }
 
 func (h *MessageHandler) boradcastStatus(session types.Session) error {
+	// if no session, broadcast change
+	if session == nil {
+		if err := h.sessions.AdminBroadcast(
+			message.BroadcastStatus{
+				Event:    event.BORADCAST_STATUS,
+				IsActive: h.broadcast.IsActive(),
+				URL:      h.broadcast.GetUrl(),
+			}, nil); err != nil {
+			h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.BORADCAST_STATUS)
+			return err
+		}
+
+		return nil
+	}
+
 	if !session.Admin() {
 		h.logger.Debug().Msg("user not admin")
 		return nil

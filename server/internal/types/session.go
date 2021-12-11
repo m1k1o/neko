@@ -43,6 +43,7 @@ type SessionManager interface {
 	Destroy(id string)
 	Clear() error
 	Broadcast(v interface{}, exclude interface{}) error
+	AdminBroadcast(v interface{}, exclude interface{}) error
 	OnHost(listener func(id string))
 	OnHostCleared(listener func(id string))
 	OnDestroy(listener func(id string, session Session))
