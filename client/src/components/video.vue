@@ -378,9 +378,14 @@
     }
 
     @Watch('clipboard')
-    onClipboardChanged(clipboard: string) {
+    async onClipboardChanged(clipboard: string) {
       if (this.clipboard_write_available) {
-        navigator.clipboard.writeText(clipboard).catch(console.error)
+        try {
+          await navigator.clipboard.writeText(clipboard)
+          this.$accessor.remote.setClipboard(clipboard)
+        } catch (err: any) {
+          this.$log.error(err)
+        }
       }
     }
 
@@ -434,8 +439,6 @@
         this.$accessor.video.pause()
       })
 
-      document.addEventListener('focusin', this.onFocus.bind(this))
-
       /* Initialize Guacamole Keyboard */
       this.keyboard.onkeydown = (key: number) => {
         if (!this.focused || !this.hosting || this.locked) {
@@ -458,7 +461,6 @@
     beforeDestroy() {
       this.observer.disconnect()
       this.$accessor.video.setPlayable(false)
-      document.removeEventListener('focusin', this.onFocus.bind(this))
       /* Guacamole Keyboard does not provide destroy functions */
     }
 
@@ -584,12 +586,8 @@
       this._clipboard.open()
     }
 
-    async onFocus() {
-      if (!document.hasFocus() || !this.$accessor.active) {
-        return
-      }
-
-      if (this.hosting && this.clipboard_read_available) {
+    async syncClipboard() {
+      if (this.clipboard_read_available) {
         try {
           const text = await navigator.clipboard.readText()
           if (this.clipboard !== text) {
@@ -688,10 +686,11 @@
           numLock: e.getModifierState('NumLock'),
           scrollLock: e.getModifierState('ScrollLock'),
         })
+
+        this.syncClipboard()
       }
 
       this._overlay.focus()
-      this.onFocus()
       this.focused = true
     }
 
