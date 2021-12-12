@@ -235,7 +235,15 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
       throw new Error('attempting to add track for nonexistent peer')
     }
 
-    return this._peer.addTransceiver(track, { direction: 'sendonly', streams }).sender
+    // @ts-ignore
+    const isChromium = !!window.chrome
+
+    // TOOD: Ugly workaround, find real cause of this issue.
+    if (isChromium) {
+      return this._peer.addTrack(track, ...streams)
+    } else {
+      return this._peer.addTransceiver(track, { direction: 'sendonly', streams }).sender
+    }
   }
 
   public removeTrack(sender: RTCRtpSender) {
