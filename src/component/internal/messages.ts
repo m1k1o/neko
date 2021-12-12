@@ -60,7 +60,7 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
       if (typeof this[event] === 'function') {
         try {
           // @ts-ignore
-          this[event](payload)
+          await this[event](payload)
         } catch (error: any) {
           this._remoteLog.error(`error while processing websocket event`, { event, error })
         }
