@@ -68,6 +68,7 @@
       display: flex;
       justify-content: center;
       align-items: center;
+      background: #000;
 
       .video-menu {
         position: absolute;
@@ -186,7 +187,7 @@
 <script lang="ts">
   import { Component, Ref, Watch, Vue, Prop } from 'vue-property-decorator'
   import ResizeObserver from 'resize-observer-polyfill'
-  import { elementRequestFullscreen } from '~/utils'
+  import { elementRequestFullscreen, onFullscreenChange, isFullscreen } from '~/utils'
 
   import Emote from './emote.vue'
   import Resolution from './resolution.vue'
@@ -407,8 +408,8 @@
 
       this.observer.observe(this._component)
 
-      this._player.addEventListener('fullscreenchange', () => {
-        this.fullscreen = document.fullscreenElement !== null
+      onFullscreenChange(this._player, () => {
+        this.fullscreen = isFullscreen()
         this.onResize()
       })
 
@@ -717,18 +718,10 @@
     }
 
     onResize() {
-      let height = 0
-      if (!this.fullscreen) {
-        const { offsetWidth, offsetHeight } = this._component
-        this._player.style.width = `${offsetWidth}px`
-        this._player.style.height = `${offsetHeight}px`
-        height = offsetHeight
-      } else {
-        const { offsetWidth, offsetHeight } = this._player
-        height = offsetHeight
-      }
-
-      this._container.style.maxWidth = `${(this.horizontal / this.vertical) * height}px`
+      const { offsetWidth, offsetHeight } = !this.fullscreen ? this._component : document.body
+      this._player.style.width = `${offsetWidth}px`
+      this._player.style.height = `${offsetHeight}px`
+      this._container.style.maxWidth = `${(this.horizontal / this.vertical) * offsetHeight}px`
       this._aspect.style.paddingBottom = `${(this.vertical / this.horizontal) * 100}%`
     }
   }
