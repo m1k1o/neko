@@ -102,7 +102,12 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
     }
 
     this._peer.onconnectionstatechange = () => {
-      const state = this._peer!.connectionState
+      if (!this._peer) {
+        this._log.warn(`attempting to call 'onconnectionstatechange' for nonexistent peer`)
+        return
+      }
+
+      const state = this._peer.connectionState
       this._log.info(`peer connection state changed`, { state })
 
       switch (state) {
@@ -116,7 +121,12 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
     }
 
     this._peer.oniceconnectionstatechange = () => {
-      this._state = this._peer!.iceConnectionState
+      if (!this._peer) {
+        this._log.warn(`attempting to call 'oniceconnectionstatechange' for nonexistent peer`)
+        return
+      }
+
+      this._state = this._peer.iceConnectionState
       this._log.info(`peer ice connection state changed`, { state: this._state })
 
       switch (this._state) {
@@ -131,7 +141,12 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
     }
 
     this._peer.onsignalingstatechange = () => {
-      const state = this._peer!.iceConnectionState
+      if (!this._peer) {
+        this._log.warn(`attempting to call 'onsignalingstatechange' for nonexistent peer`)
+        return
+      }
+
+      const state = this._peer.iceConnectionState
       this._log.info(`peer signaling state changed`, { state })
 
       switch (state) {
@@ -145,26 +160,35 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
     }
 
     this._peer.onnegotiationneeded = async () => {
-      const offer = await this._peer?.createOffer()
-
-      // If the connection hasn't yet achieved the "stable" state,
-      // return to the caller. Another negotiationneeded event
-      // will be fired when the state stabilizes.
-
-      const state = this._peer!.signalingState
-      this._log.warn(`negotiation is needed`, { state })
-
-      if (state != 'stable') {
-        this._log.info(`connection isn't stable yet; postponing...`)
+      if (!this._peer) {
+        this._log.warn(`attempting to call 'onsignalingstatechange' for nonexistent peer`)
         return
       }
 
-      this._peer!.setLocalDescription(offer)
+      try {
+        const offer = await this._peer.createOffer()
 
-      if (offer) {
-        this.emit('negotiation', offer)
-      } else {
-        this._log.warn(`negotiatoion offer is empty`)
+        // If the connection hasn't yet achieved the "stable" state,
+        // return to the caller. Another negotiationneeded event
+        // will be fired when the state stabilizes.
+
+        const state = this._peer.signalingState
+        this._log.warn(`negotiation is needed`, { state })
+
+        if (state != 'stable') {
+          this._log.info(`connection isn't stable yet; postponing...`)
+          return
+        }
+
+        await this._peer.setLocalDescription(offer)
+
+        if (offer) {
+          this.emit('negotiation', offer)
+        } else {
+          this._log.warn(`negotiatoion offer is empty`)
+        }
+      } catch (error: any) {
+        this._log.error(`on negotiation needed failed`, { error })
       }
     }
 
@@ -177,7 +201,7 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
       throw new Error('attempting to set offer for nonexistent peer')
     }
 
-    this._peer.setRemoteDescription({ type: 'offer', sdp })
+    await this._peer.setRemoteDescription({ type: 'offer', sdp })
 
     if (this._candidates.length > 0) {
       for (const candidate of this._candidates) {
@@ -203,7 +227,7 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
       throw new Error('attempting to set answer for nonexistent peer')
     }
 
-    this._peer.setRemoteDescription({ type: 'answer', sdp })
+    await this._peer.setRemoteDescription({ type: 'answer', sdp })
   }
 
   public addTrack(track: MediaStreamTrack, ...streams: MediaStream[]): RTCRtpSender {
