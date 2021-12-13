@@ -2,6 +2,9 @@
 
 ## master branch
 
+### Bugs
+- Fixed fullscreen incompatibility for Safari [#121](https://github.com/m1k1o/neko/issues/121).
+
 ### New Features
 - Added `m1k1o/neko:microsoft-edge` tag.
 - Fixed clipboard sync in chromium based browsers.
