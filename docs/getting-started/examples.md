@@ -6,7 +6,7 @@
 version: "3.4"
 services:
   neko:
-    image: "m1k1o/neko:latest"
+    image: "m1k1o/neko:firefox"
     restart: "unless-stopped"
     shm_size: "2gb"
     ports:

@@ -20,7 +20,7 @@ In following example, specified range `52000-52100` must be also exposed using d
 version: "3.4"
 services:
   neko:
-    image: "m1k1o/neko:latest"
+    image: "m1k1o/neko:firefox"
     restart: "unless-stopped"
     shm_size: "2gb"
     ports:
@@ -75,7 +75,7 @@ If your IP is not correct, you can specify own IP resover using `NEKO_IPFETCH`. 
 version: "3.4"
 services:
   neko:
-    image: "m1k1o/neko:latest"
+    image: "m1k1o/neko:firefox"
     restart: "unless-stopped"
     shm_size: "2gb"
     ports:
@@ -96,7 +96,7 @@ Or you can specify your IP address manually using `NEKO_NAT1TO1`:
 version: "3.4"
 services:
   neko:
-    image: "m1k1o/neko:latest"
+    image: "m1k1o/neko:firefox"
     restart: "unless-stopped"
     shm_size: "2gb"
     ports:
@@ -121,7 +121,7 @@ To see verbose information from n.eko server, you can enable debug mode using `N
 version: "3.4"
 services:
   neko:
-    image: "m1k1o/neko:latest"
+    image: "m1k1o/neko:firefox"
     restart: "unless-stopped"
     shm_size: "2gb"
     ports:
