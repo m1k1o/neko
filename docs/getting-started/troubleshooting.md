@@ -4,7 +4,7 @@ Neko UI loads but you don't see the screen and it gives you `connection timeout`
 
 ## Test your client
 
-Test whether your client can connect to WebRTC here: https://test.webrtc.org/
+Test whether your client [supports](https://www.webrtc-experiment.com/DetectRTC/) and can [connect to WebRTC](https://www.webcasts.com/webrtc/).
 
 ## Networking
 
