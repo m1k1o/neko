@@ -71,6 +71,8 @@ NEKO_LOCKS:
 NEKO_CONTROL_PROTECTION:
   - Control protection means, users can gain control only if at least one admin is in the room.
   - e.g. false
+NEKO_BROADCAST_DEFAULT_ENDPOINT:
+  - Set a default endpoint for broadcast streams. Setting an endpoint will automatically enable broadcasting.
 ```
 
 ## Agruments
@@ -82,36 +84,37 @@ Usage:
   neko serve [flags]
 
 Flags:
-      --audio string                audio codec parameters to use for streaming
-      --audio_bitrate int           audio bitrate in kbit/s (default 128)
-      --bind string                 address/port/socket to serve neko (default "127.0.0.1:8080")
-      --broadcast_pipeline string   custom gst pipeline used for broadcasting, strings {url} {device} {display} will be replaced
-      --cert string                 path to the SSL cert used to secure the neko server
-      --device string               audio device to capture (default "auto_null.monitor")
-      --display string              XDisplay to capture (default ":99.0")
-      --epr string                  limits the pool of ephemeral ports that ICE UDP connections can allocate from (default "59000-59100")
-      --g722                        use G722 audio codec
-      --h264                        use H264 video codec
-  -h, --help                        help for serve
-      --icelite                     configures whether or not the ice agent should be a lite agent
-      --iceserver strings           describes a single STUN and TURN server that can be used by the ICEAgent to establish a connection with a peer (default [stun:stun.l.google.com:19302])
-      --iceservers string           describes a single STUN and TURN server that can be used by the ICEAgent to establish a connection with a peer
-      --ipfetch string              automatically fetch IP address from given URL when nat1to1 is not present (default "http://checkip.amazonaws.com")
-      --key string                  path to the SSL key used to secure the neko server
-      --max_fps int                 maximum fps delivered via WebRTC, 0 is for no maximum (default 25)
-      --nat1to1 strings             sets a list of external IP addresses of 1:1 (D)NAT and a candidate type for which the external IP address is used
-      --opus                        use Opus audio codec
-      --password string             password for connecting to stream (default "neko")
-      --password_admin string       admin password for connecting to stream (default "admin")
-      --pcma                        use PCMA audio codec
-      --pcmu                        use PCMU audio codec
-      --proxy                       enable reverse proxy mode
-      --screen string               default screen resolution and framerate (default "1280x720@30")
-      --static string               path to neko client files to serve (default "./www")
-      --video string                video codec parameters to use for streaming
-      --video_bitrate int           video bitrate in kbit/s (default 3072)
-      --vp8                         use VP8 video codec
-      --vp9                         use VP9 video codec
+      --audio string                        audio codec parameters to use for streaming
+      --audio_bitrate int                   audio bitrate in kbit/s (default 128)
+      --bind string                         address/port/socket to serve neko (default "127.0.0.1:8080")
+      --broadcast_default_endpoint string   default endpoint for broadcasting. Setting an endpoint will automatically enable broadcasting
+      --broadcast_pipeline string           custom gst pipeline used for broadcasting, strings {url} {device} {display} will be replaced
+      --cert string                         path to the SSL cert used to secure the neko server
+      --device string                       audio device to capture (default "auto_null.monitor")
+      --display string                      XDisplay to capture (default ":99.0")
+      --epr string                          limits the pool of ephemeral ports that ICE UDP connections can allocate from (default "59000-59100")
+      --g722                                use G722 audio codec
+      --h264                                use H264 video codec
+  -h, --help                                help for serve
+      --icelite                             configures whether or not the ice agent should be a lite agent
+      --iceserver strings                   describes a single STUN and TURN server that can be used by the ICEAgent to establish a connection with a peer (default [stun:stun.l.google.com:19302])
+      --iceservers string                   describes a single STUN and TURN server that can be used by the ICEAgent to establish a connection with a peer
+      --ipfetch string                      automatically fetch IP address from given URL when nat1to1 is not present (default "http://checkip.amazonaws.com")
+      --key string                          path to the SSL key used to secure the neko server
+      --max_fps int                         maximum fps delivered via WebRTC, 0 is for no maximum (default 25)
+      --nat1to1 strings                     sets a list of external IP addresses of 1:1 (D)NAT and a candidate type for which the external IP address is used
+      --opus                                use Opus audio codec
+      --password string                     password for connecting to stream (default "neko")
+      --password_admin string               admin password for connecting to stream (default "admin")
+      --pcma                                use PCMA audio codec
+      --pcmu                                use PCMU audio codec
+      --proxy                               enable reverse proxy mode
+      --screen string                       default screen resolution and framerate (default "1280x720@30")
+      --static string                       path to neko client files to serve (default "./www")
+      --video string                        video codec parameters to use for streaming
+      --video_bitrate int                   video bitrate in kbit/s (default 3072)
+      --vp8                                 use VP8 video codec
+      --vp9                                 use VP9 video codec
 
 Global Flags:
       --config string   configuration file path
