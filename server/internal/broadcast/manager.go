@@ -26,7 +26,7 @@ func New(remote *config.Remote, config *config.Broadcast) *BroadcastManager {
 		remote:  remote,
 		config:  config,
 		enabled: config.Enabled,
-		url:     config.DefaultEndpoint,
+		url:     config.URL,
 	}
 }
 
