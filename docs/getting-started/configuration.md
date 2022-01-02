@@ -71,6 +71,8 @@ NEKO_LOCKS:
 NEKO_CONTROL_PROTECTION:
   - Control protection means, users can gain control only if at least one admin is in the room.
   - e.g. false
+NEKO_BROADCAST_URL:
+  - Set a default URL for broadcast streams. Setting this value will automatically enable broadcasting when n.eko starts. It can be disabled/changed later in GUI.
 ```
 
 ## Agruments
@@ -86,7 +88,9 @@ Flags:
       --audio_bitrate int           audio bitrate in kbit/s (default 128)
       --bind string                 address/port/socket to serve neko (default "127.0.0.1:8080")
       --broadcast_pipeline string   custom gst pipeline used for broadcasting, strings {url} {device} {display} will be replaced
+      --broadcast_url string        URL for broadcasting, setting this value will automatically enable broadcasting
       --cert string                 path to the SSL cert used to secure the neko server
+      --control_protection          control protection means, users can gain control only if at least one admin is in the room
       --device string               audio device to capture (default "auto_null.monitor")
       --display string              XDisplay to capture (default ":99.0")
       --epr string                  limits the pool of ephemeral ports that ICE UDP connections can allocate from (default "59000-59100")
@@ -96,8 +100,10 @@ Flags:
       --icelite                     configures whether or not the ice agent should be a lite agent
       --iceserver strings           describes a single STUN and TURN server that can be used by the ICEAgent to establish a connection with a peer (default [stun:stun.l.google.com:19302])
       --iceservers string           describes a single STUN and TURN server that can be used by the ICEAgent to establish a connection with a peer
+      --implicit_control            if enabled members can gain control implicitly
       --ipfetch string              automatically fetch IP address from given URL when nat1to1 is not present (default "http://checkip.amazonaws.com")
       --key string                  path to the SSL key used to secure the neko server
+      --locks strings               resources, that will be locked when starting (control, login)
       --max_fps int                 maximum fps delivered via WebRTC, 0 is for no maximum (default 25)
       --nat1to1 strings             sets a list of external IP addresses of 1:1 (D)NAT and a candidate type for which the external IP address is used
       --opus                        use Opus audio codec
@@ -108,6 +114,8 @@ Flags:
       --proxy                       enable reverse proxy mode
       --screen string               default screen resolution and framerate (default "1280x720@30")
       --static string               path to neko client files to serve (default "./www")
+      --tcpmux int                  single TCP mux port for all peers
+      --udpmux int                  single UDP mux port for all peers
       --video string                video codec parameters to use for streaming
       --video_bitrate int           video bitrate in kbit/s (default 3072)
       --vp8                         use VP8 video codec

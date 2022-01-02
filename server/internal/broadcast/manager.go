@@ -25,8 +25,8 @@ func New(remote *config.Remote, config *config.Broadcast) *BroadcastManager {
 		logger:  log.With().Str("module", "remote").Logger(),
 		remote:  remote,
 		config:  config,
-		enabled: false,
-		url:     "",
+		enabled: config.Enabled,
+		url:     config.URL,
 	}
 }
 
