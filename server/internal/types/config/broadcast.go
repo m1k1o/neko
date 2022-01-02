@@ -6,7 +6,9 @@ import (
 )
 
 type Broadcast struct {
-	Pipeline string
+	Pipeline        string
+	DefaultEndpoint string
+	Enabled         bool
 }
 
 func (Broadcast) Init(cmd *cobra.Command) error {
@@ -15,9 +17,16 @@ func (Broadcast) Init(cmd *cobra.Command) error {
 		return err
 	}
 
+	cmd.PersistentFlags().String("broadcast_default_endpoint", "", "default endpoint for broadcasting. Setting an endpoint will automatically enable broadcasting")
+	if err := viper.BindPFlag("broadcast_default_endpoint", cmd.PersistentFlags().Lookup("broadcast_default_endpoint")); err != nil {
+		return err
+	}
+
 	return nil
 }
 
 func (s *Broadcast) Set() {
 	s.Pipeline = viper.GetString("broadcast_pipeline")
+	s.DefaultEndpoint = viper.GetString("broadcast_default_endpoint")
+	s.Enabled = s.DefaultEndpoint != ""
 }
