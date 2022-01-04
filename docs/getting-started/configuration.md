@@ -9,7 +9,7 @@ NEKO_SCREEN:
 NEKO_PASSWORD:
   - Password for the user login
   - e.g. 'user_password'
-NEKO_PASSWORD_ADMIN
+NEKO_PASSWORD_ADMIN:
   - Password for the admin login
   - e.g. 'admin_password'
 NEKO_EPR:
