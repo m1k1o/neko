@@ -373,6 +373,14 @@
       this.connection.setVideo(video)
     }
 
+    public addTrack(track: MediaStreamTrack, ...streams: MediaStream[]): RTCRtpSender {
+      return this.connection.webrtc.addTrack(track, ...streams)
+    }
+
+    public removeTrack(sender: RTCRtpSender) {
+      this.connection.webrtc.removeTrack(sender)
+    }
+
     public sendUnicast(receiver: string, subject: string, body: any) {
       this.connection.websocket.send(EVENT.SEND_UNICAST, { receiver, subject, body })
     }
