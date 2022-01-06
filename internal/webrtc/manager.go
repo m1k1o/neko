@@ -27,6 +27,9 @@ const failedTimeout = 6 * time.Second
 // how often the ICE Agent sends extra traffic if there is no activity, if media is flowing no traffic will be sent. Default is 2 seconds
 const keepAliveInterval = 2 * time.Second
 
+// send a PLI on an interval so that the publisher is pushing a keyframe every rtcpPLIInterval
+const rtcpPLIInterval = 3 * time.Second
+
 func New(desktop types.DesktopManager, capture types.CaptureManager, config *config.WebRTC) *WebRTCManagerCtx {
 	return &WebRTCManagerCtx{
 		logger: log.With().Str("module", "webrtc").Logger(),
@@ -164,17 +167,17 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 			Str("mime", track.Codec().RTPCodecCapability.MimeType).
 			Logger()
 
-		logger.Info().Msgf("received new track")
+		logger.Info().Msgf("received new remote track")
 
 		if !session.Profile().CanShareMedia {
-			logger.Warn().Msg("share media is disabled for this session")
+			logger.Warn().Msg("media sharing is disabled for this session")
 			return
 		}
 
-		// parse codec
+		// parse codec from remote track
 		codec, ok := codec.ParseRTC(track.Codec())
 		if !ok {
-			logger.Warn().Msg("unknown codec")
+			logger.Warn().Msg("remote track with unknown codec")
 			return
 		}
 
@@ -194,15 +197,14 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 		}
 		defer srcManager.Stop()
 
-		// Send a PLI on an interval so that the publisher is pushing a keyframe every rtcpPLIInterval
-		ticker := time.NewTicker(time.Second * 3)
+		ticker := time.NewTicker(rtcpPLIInterval)
 		defer ticker.Stop()
 
 		go func() {
 			for range ticker.C {
 				err := connection.WriteRTCP([]rtcp.Packet{&rtcp.PictureLossIndication{MediaSSRC: uint32(track.SSRC())}})
 				if err != nil {
-					logger.Err(err).Msg("rtcp send err")
+					logger.Err(err).Msg("remote track rtcp send err")
 				}
 			}
 		}()
@@ -211,14 +213,14 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 		for {
 			i, _, err := track.Read(buf)
 			if err != nil {
-				logger.Warn().Err(err).Msg("failed read from track")
+				logger.Warn().Err(err).Msg("failed read from remote track")
 				break
 			}
 
 			srcManager.Push(buf[:i])
 		}
 
-		logger.Info().Msg("track data finished")
+		logger.Info().Msg("remote track data finished")
 	})
 
 	connection.OnDataChannel(func(dc *webrtc.DataChannel) {
