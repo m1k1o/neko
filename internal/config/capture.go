@@ -122,6 +122,9 @@ func (Capture) Init(cmd *cobra.Command) error {
 		return err
 	}
 
+	// sudo apt install v4l2loopback-dkms v4l2loopback-utils
+	// sudo apt-get install linux-headers-`uname -r` linux-modules-extra-`uname -r`
+	// sudo modprobe v4l2loopback exclusive_caps=1
 	cmd.PersistentFlags().String("capture.webcam.device", "/dev/video0", "v4l2sink device used for webcam")
 	if err := viper.BindPFlag("capture.webcam.device", cmd.PersistentFlags().Lookup("capture.webcam.device")); err != nil {
 		return err
