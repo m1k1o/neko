@@ -201,7 +201,7 @@ const rules: MarkdownRules = {
   },
   emoji: {
     order: md.defaultRules.strong.order,
-    match: (source) => /^:([a-zA-z_-]*):/.exec(source),
+    match: (source) => /^:([^:\s]+):/.exec(source),
     parse(capture) {
       return {
         id: capture[1],
