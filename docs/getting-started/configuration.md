@@ -15,6 +15,9 @@ NEKO_PASSWORD_ADMIN:
 NEKO_EPR:
   - For WebRTC needed range of ports
   - e.g. 52000-52100
+NEKO_BIND:
+  - neko server ip and port settings
+  - default 127.0.0.1:8080
 NEKO_VP8:
   - If vp8 should be used as video encoder for the stream (default encoder)
   - e.g. 'true'
