@@ -1,6 +1,6 @@
 {
   "name": "@demodesk/neko",
-  "version": "1.5.1",
+  "version": "1.5.2",
   "description": "Client as reusable Vue.js component for neko streaming server.",
   "repository": {
     "type": "git",
