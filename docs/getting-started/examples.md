@@ -68,8 +68,6 @@ services:
 
 ## Raspberry Pi
 
-Note! Since HW accelerated pipeline is using H264, you are only able to connect from browsers supporting H264 for WebRTC. At the time of implementing, [Firefox does not support this](https://developer.mozilla.org/en-US/docs/Web/Media/Formats/WebRTC_codecs#supported-foot-1). When omitting `NEKO_VIDEO` and `NEKO_H264` parameters, you get default CPU encoding with VP8.
-
 ```yaml
 version: "3.4"
 services:
