@@ -33,14 +33,7 @@ func init() {
 		Run:   service.ServeCommand,
 	}
 
-	cobra.OnInitialize(func() {
-		service.Configs.Set()
-		service.Preflight()
-	})
-
-	if err := service.Configs.Init(command); err != nil {
-		log.Panic().Err(err).Msg("unable to run serve command")
-	}
+	cobra.OnInitialize(service.Preflight)
 
 	root.AddCommand(command)
 }

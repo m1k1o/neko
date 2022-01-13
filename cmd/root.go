@@ -16,6 +16,8 @@ import (
 	"github.com/spf13/viper"
 
 	"demodesk/neko"
+	"demodesk/neko/internal/config"
+	"demodesk/neko/modules"
 )
 
 func Execute() error {
@@ -30,6 +32,16 @@ var root = &cobra.Command{
 }
 
 func init() {
+	configs := append([]config.Config{
+		neko.Service.Configs.Root,
+		neko.Service.Configs.Desktop,
+		neko.Service.Configs.Capture,
+		neko.Service.Configs.WebRTC,
+		neko.Service.Configs.Member,
+		neko.Service.Configs.Session,
+		neko.Service.Configs.Server,
+	}, modules.Configs()...)
+
 	cobra.OnInitialize(func() {
 		//////
 		// logs
@@ -126,11 +138,15 @@ func init() {
 			}
 		}
 
-		neko.Service.Configs.Root.Set()
+		for _, cfg := range configs {
+			cfg.Set()
+		}
 	})
 
-	if err := neko.Service.Configs.Root.Init(root); err != nil {
-		log.Panic().Err(err).Msg("unable to run root command")
+	for _, cfg := range configs {
+		if err := cfg.Init(root); err != nil {
+			log.Panic().Err(err).Msg("unable to initialize configuration")
+		}
 	}
 
 	root.SetVersionTemplate(neko.Service.Version.Details())

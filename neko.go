@@ -4,10 +4,7 @@ import (
 	"fmt"
 	"runtime"
 
-	"github.com/spf13/cobra"
-
 	"demodesk/neko/internal/config"
-	"demodesk/neko/modules"
 )
 
 const Header = `&34
@@ -99,45 +96,6 @@ type Configs struct {
 	Member  *config.Member
 	Session *config.Session
 	Server  *config.Server
-}
-
-func (i *Configs) Set() {
-	i.Root.Set()
-	i.Desktop.Set()
-	i.Capture.Set()
-	i.WebRTC.Set()
-	i.Member.Set()
-	i.Session.Set()
-	i.Server.Set()
-	modules.SetConfigs()
-}
-
-func (i *Configs) Init(cmd *cobra.Command) error {
-	if err := i.Root.Init(cmd); err != nil {
-		return err
-	}
-	if err := i.Desktop.Init(cmd); err != nil {
-		return err
-	}
-	if err := i.Capture.Init(cmd); err != nil {
-		return err
-	}
-	if err := i.WebRTC.Init(cmd); err != nil {
-		return err
-	}
-	if err := i.Member.Init(cmd); err != nil {
-		return err
-	}
-	if err := i.Session.Init(cmd); err != nil {
-		return err
-	}
-	if err := i.Server.Init(cmd); err != nil {
-		return err
-	}
-	if err := modules.InitConfigs(cmd); err != nil {
-		return err
-	}
-	return nil
 }
 
 type Neko struct {
