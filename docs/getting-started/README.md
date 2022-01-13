@@ -35,6 +35,31 @@ Images (except `arm-`) are built using GitHub actions on every push and on weekl
 - You can change API port (8080).
   - This **WILL** work: `3000:8080`
 
+#### But there is a hope!
+There has been an attempt to implement [single port ice using tcp and udp mux](https://github.com/m1k1o/neko/commit/c97b1fc4541caabf6b00331d081b02d2f9c58751) ([#106](https://github.com/m1k1o/neko/pull/106)), that allows using one port instead (each for TCP and/or UDP). This feature is not properly tested yet and only experimental.
+
+We can use TCP mux and/or UDP mux, example:
+
+```yaml
+version: "3.4"
+services:
+  neko:
+    image: "m1k1o/neko:firefox"
+    restart: "unless-stopped"
+    shm_size: "2gb"
+    ports:
+      - "8080:8080"
+      - "8081:8081/tcp"
+      - "8082:8082/udp"
+    environment:
+      NEKO_SCREEN: 1920x1080@30
+      NEKO_PASSWORD: neko
+      NEKO_PASSWORD_ADMIN: admin
+      NEKO_TCPMUX: 8081
+      NEKO_UDPMUX: 8082
+      NEKO_ICELITE: 1
+```
+
 ### Want to customize and install own add-ons, set custom bookmarks?
 - You would need to modify the existing policy file and mount it to your container.
 - For Firefox, copy [this](https://github.com/m1k1o/neko/blob/master/.docker/firefox/policies.json) file, modify and mount it as: ` -v '${PWD}/policies.json:/usr/lib/firefox/distribution/policies.json'`
