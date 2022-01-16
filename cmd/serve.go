@@ -8,9 +8,9 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
-	"demodesk/neko"
 	"demodesk/neko/internal/api"
 	"demodesk/neko/internal/capture"
+	"demodesk/neko/internal/config"
 	"demodesk/neko/internal/desktop"
 	"demodesk/neko/internal/http"
 	"demodesk/neko/internal/member"
@@ -21,139 +21,190 @@ import (
 )
 
 func init() {
-	service := Serve{
-		Version: neko.Service.Version,
-		Configs: neko.Service.Configs,
-	}
+	service := serve{}
 
 	command := &cobra.Command{
 		Use:   "serve",
 		Short: "serve neko streaming server",
 		Long:  `serve neko streaming server`,
-		Run:   service.ServeCommand,
+		Run:   service.Command,
 	}
 
 	cobra.OnInitialize(service.Preflight)
 
+	if err := service.Init(command); err != nil {
+		log.Panic().Err(err).Msg("unable to initialize configuration")
+	}
+
 	root.AddCommand(command)
 }
 
-type Serve struct {
-	Version *neko.Version
-	Configs *neko.Configs
+type serve struct {
+	logger zerolog.Logger
 
-	logger           zerolog.Logger
-	desktopManager   *desktop.DesktopManagerCtx
-	captureManager   *capture.CaptureManagerCtx
-	webRTCManager    *webrtc.WebRTCManagerCtx
-	memberManager    *member.MemberManagerCtx
-	sessionManager   *session.SessionManagerCtx
-	webSocketManager *websocket.WebSocketManagerCtx
-	apiManager       *api.ApiManagerCtx
-	httpManager      *http.HttpManagerCtx
-}
-
-func (neko *Serve) Preflight() {
-	neko.logger = log.With().Str("service", "neko").Logger()
-}
-
-func (neko *Serve) Start() {
-	neko.sessionManager = session.New(
-		neko.Configs.Session,
-	)
-
-	neko.memberManager = member.New(
-		neko.sessionManager,
-		neko.Configs.Member,
-	)
-
-	if err := neko.memberManager.Connect(); err != nil {
-		neko.logger.Panic().Err(err).Msg("unable to connect to member manager")
+	configs struct {
+		Root    config.Root
+		Desktop config.Desktop
+		Capture config.Capture
+		WebRTC  config.WebRTC
+		Member  config.Member
+		Session config.Session
+		Server  config.Server
 	}
 
-	neko.desktopManager = desktop.New(
-		neko.Configs.Desktop,
-	)
-	neko.desktopManager.Start()
+	managers struct {
+		desktop   *desktop.DesktopManagerCtx
+		capture   *capture.CaptureManagerCtx
+		webRTC    *webrtc.WebRTCManagerCtx
+		member    *member.MemberManagerCtx
+		session   *session.SessionManagerCtx
+		webSocket *websocket.WebSocketManagerCtx
+		api       *api.ApiManagerCtx
+		http      *http.HttpManagerCtx
+	}
+}
 
-	neko.captureManager = capture.New(
-		neko.desktopManager,
-		neko.Configs.Capture,
-	)
-	neko.captureManager.Start()
+func (c *serve) Init(cmd *cobra.Command) error {
+	if err := c.configs.Desktop.Init(cmd); err != nil {
+		return err
+	}
+	if err := c.configs.Capture.Init(cmd); err != nil {
+		return err
+	}
+	if err := c.configs.WebRTC.Init(cmd); err != nil {
+		return err
+	}
+	if err := c.configs.Member.Init(cmd); err != nil {
+		return err
+	}
+	if err := c.configs.Session.Init(cmd); err != nil {
+		return err
+	}
+	if err := c.configs.Server.Init(cmd); err != nil {
+		return err
+	}
 
-	neko.webRTCManager = webrtc.New(
-		neko.desktopManager,
-		neko.captureManager,
-		neko.Configs.WebRTC,
-	)
-	neko.webRTCManager.Start()
+	for _, cfg := range modules.Configs() {
+		if err := cfg.Init(root); err != nil {
+			log.Panic().Err(err).Msg("unable to initialize configuration")
+		}
+	}
 
-	neko.webSocketManager = websocket.New(
-		neko.sessionManager,
-		neko.desktopManager,
-		neko.captureManager,
-		neko.webRTCManager,
-	)
-	neko.webSocketManager.Start()
+	return nil
+}
 
-	neko.apiManager = api.New(
-		neko.sessionManager,
-		neko.memberManager,
-		neko.desktopManager,
-		neko.captureManager,
-		neko.Configs.Server,
+func (c *serve) Preflight() {
+	c.logger = log.With().Str("service", "neko").Logger()
+
+	c.configs.Desktop.Set()
+	c.configs.Capture.Set()
+	c.configs.WebRTC.Set()
+	c.configs.Member.Set()
+	c.configs.Session.Set()
+	c.configs.Server.Set()
+
+	for _, cfg := range modules.Configs() {
+		cfg.Set()
+	}
+}
+
+func (c *serve) Start() {
+	c.managers.session = session.New(
+		&c.configs.Session,
+	)
+
+	c.managers.member = member.New(
+		c.managers.session,
+		&c.configs.Member,
+	)
+
+	if err := c.managers.member.Connect(); err != nil {
+		c.logger.Panic().Err(err).Msg("unable to connect to member manager")
+	}
+
+	c.managers.desktop = desktop.New(
+		&c.configs.Desktop,
+	)
+	c.managers.desktop.Start()
+
+	c.managers.capture = capture.New(
+		c.managers.desktop,
+		&c.configs.Capture,
+	)
+	c.managers.capture.Start()
+
+	c.managers.webRTC = webrtc.New(
+		c.managers.desktop,
+		c.managers.capture,
+		&c.configs.WebRTC,
+	)
+	c.managers.webRTC.Start()
+
+	c.managers.webSocket = websocket.New(
+		c.managers.session,
+		c.managers.desktop,
+		c.managers.capture,
+		c.managers.webRTC,
+	)
+	c.managers.webSocket.Start()
+
+	c.managers.api = api.New(
+		c.managers.session,
+		c.managers.member,
+		c.managers.desktop,
+		c.managers.capture,
+		&c.configs.Server,
 	)
 
 	modules.Start(
-		neko.sessionManager,
-		neko.webSocketManager,
-		neko.apiManager,
+		c.managers.session,
+		c.managers.webSocket,
+		c.managers.api,
 	)
 
-	neko.httpManager = http.New(
-		neko.webSocketManager,
-		neko.apiManager,
-		neko.Configs.Server,
+	c.managers.http = http.New(
+		c.managers.webSocket,
+		c.managers.api,
+		&c.configs.Server,
 	)
-	neko.httpManager.Start()
+	c.managers.http.Start()
 }
 
-func (neko *Serve) Shutdown() {
+func (c *serve) Shutdown() {
 	var err error
 
-	err = neko.memberManager.Disconnect()
-	neko.logger.Err(err).Msg("member manager disconnect")
+	err = c.managers.member.Disconnect()
+	c.logger.Err(err).Msg("member manager disconnect")
 
-	err = neko.desktopManager.Shutdown()
-	neko.logger.Err(err).Msg("desktop manager shutdown")
+	err = c.managers.desktop.Shutdown()
+	c.logger.Err(err).Msg("desktop manager shutdown")
 
-	err = neko.captureManager.Shutdown()
-	neko.logger.Err(err).Msg("capture manager shutdown")
+	err = c.managers.capture.Shutdown()
+	c.logger.Err(err).Msg("capture manager shutdown")
 
-	err = neko.webRTCManager.Shutdown()
-	neko.logger.Err(err).Msg("webrtc manager shutdown")
+	err = c.managers.webRTC.Shutdown()
+	c.logger.Err(err).Msg("webrtc manager shutdown")
 
-	err = neko.webSocketManager.Shutdown()
-	neko.logger.Err(err).Msg("websocket manager shutdown")
+	err = c.managers.webSocket.Shutdown()
+	c.logger.Err(err).Msg("websocket manager shutdown")
 
 	err = modules.Shutdown()
-	neko.logger.Err(err).Msg("modules shutdown")
+	c.logger.Err(err).Msg("modules shutdown")
 
-	err = neko.httpManager.Shutdown()
-	neko.logger.Err(err).Msg("http manager shutdown")
+	err = c.managers.http.Shutdown()
+	c.logger.Err(err).Msg("http manager shutdown")
 }
 
-func (neko *Serve) ServeCommand(cmd *cobra.Command, args []string) {
-	neko.logger.Info().Msg("starting neko server")
-	neko.Start()
-	neko.logger.Info().Msg("neko ready")
+func (c *serve) Command(cmd *cobra.Command, args []string) {
+	c.logger.Info().Msg("starting neko server")
+	c.Start()
+	c.logger.Info().Msg("neko ready")
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)
 	sig := <-quit
 
-	neko.logger.Warn().Msgf("received %s, attempting graceful shutdown", sig)
-	neko.Shutdown()
-	neko.logger.Info().Msg("shutdown complete")
+	c.logger.Warn().Msgf("received %s, attempting graceful shutdown", sig)
+	c.Shutdown()
+	c.logger.Info().Msg("shutdown complete")
 }

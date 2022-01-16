@@ -3,8 +3,6 @@ package neko
 import (
 	"fmt"
 	"runtime"
-
-	"demodesk/neko/internal/config"
 )
 
 const Header = `&34
@@ -32,34 +30,19 @@ var (
 	patch = "dev"
 )
 
-var Service *Neko
-
-func init() {
-	Service = &Neko{
-		Version: &Version{
-			Major:     major,
-			Minor:     minor,
-			Patch:     patch,
-			GitCommit: gitCommit,
-			GitBranch: gitBranch,
-			BuildDate: buildDate,
-			GoVersion: runtime.Version(),
-			Compiler:  runtime.Compiler,
-			Platform:  fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH),
-		},
-		Configs: &Configs{
-			Root:    &config.Root{},
-			Desktop: &config.Desktop{},
-			Capture: &config.Capture{},
-			WebRTC:  &config.WebRTC{},
-			Member:  &config.Member{},
-			Session: &config.Session{},
-			Server:  &config.Server{},
-		},
-	}
+var Version = &version{
+	Major:     major,
+	Minor:     minor,
+	Patch:     patch,
+	GitCommit: gitCommit,
+	GitBranch: gitBranch,
+	BuildDate: buildDate,
+	GoVersion: runtime.Version(),
+	Compiler:  runtime.Compiler,
+	Platform:  fmt.Sprintf("%s/%s", runtime.GOOS, runtime.GOARCH),
 }
 
-type Version struct {
+type version struct {
 	Major     string
 	Minor     string
 	Patch     string
@@ -71,11 +54,11 @@ type Version struct {
 	Platform  string
 }
 
-func (i *Version) String() string {
+func (i *version) String() string {
 	return fmt.Sprintf("%s.%s.%s %s", i.Major, i.Minor, i.Patch, i.GitCommit)
 }
 
-func (i *Version) Details() string {
+func (i *version) Details() string {
 	return fmt.Sprintf(
 		"%s\n%s\n%s\n%s\n%s\n%s\n%s\n",
 		fmt.Sprintf("Version %s.%s.%s", i.Major, i.Minor, i.Patch),
@@ -86,19 +69,4 @@ func (i *Version) Details() string {
 		fmt.Sprintf("Compiler %s", i.Compiler),
 		fmt.Sprintf("Platform %s", i.Platform),
 	)
-}
-
-type Configs struct {
-	Root    *config.Root
-	Desktop *config.Desktop
-	Capture *config.Capture
-	WebRTC  *config.WebRTC
-	Member  *config.Member
-	Session *config.Session
-	Server  *config.Server
-}
-
-type Neko struct {
-	Version *Version
-	Configs *Configs
 }

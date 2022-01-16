@@ -17,7 +17,6 @@ import (
 
 	"demodesk/neko"
 	"demodesk/neko/internal/config"
-	"demodesk/neko/modules"
 )
 
 func Execute() error {
@@ -28,19 +27,11 @@ var root = &cobra.Command{
 	Use:     "neko",
 	Short:   "neko streaming server",
 	Long:    `neko streaming server`,
-	Version: neko.Service.Version.String(),
+	Version: neko.Version.String(),
 }
 
 func init() {
-	configs := append([]config.Config{
-		neko.Service.Configs.Root,
-		neko.Service.Configs.Desktop,
-		neko.Service.Configs.Capture,
-		neko.Service.Configs.WebRTC,
-		neko.Service.Configs.Member,
-		neko.Service.Configs.Session,
-		neko.Service.Configs.Server,
-	}, modules.Configs()...)
+	rootConfig := config.Root{}
 
 	cobra.OnInitialize(func() {
 		//////
@@ -138,16 +129,12 @@ func init() {
 			}
 		}
 
-		for _, cfg := range configs {
-			cfg.Set()
-		}
+		rootConfig.Set()
 	})
 
-	for _, cfg := range configs {
-		if err := cfg.Init(root); err != nil {
-			log.Panic().Err(err).Msg("unable to initialize configuration")
-		}
+	if err := rootConfig.Init(root); err != nil {
+		log.Panic().Err(err).Msg("unable to run root command")
 	}
 
-	root.SetVersionTemplate(neko.Service.Version.Details())
+	root.SetVersionTemplate(neko.Version.Details())
 }
