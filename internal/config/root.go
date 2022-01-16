@@ -6,9 +6,9 @@ import (
 )
 
 type Root struct {
-	Debug   bool
-	Logs    bool
-	CfgFile string
+	Debug  bool
+	Logs   bool
+	Config string
 }
 
 func (Root) Init(cmd *cobra.Command) error {
@@ -22,7 +22,7 @@ func (Root) Init(cmd *cobra.Command) error {
 		return err
 	}
 
-	cmd.PersistentFlags().String("config", "", "configuration file path")
+	cmd.PersistentFlags().StringP("config", "c", "", "configuration file path")
 	if err := viper.BindPFlag("config", cmd.PersistentFlags().Lookup("config")); err != nil {
 		return err
 	}
@@ -33,5 +33,5 @@ func (Root) Init(cmd *cobra.Command) error {
 func (s *Root) Set() {
 	s.Logs = viper.GetBool("logs")
 	s.Debug = viper.GetBool("debug")
-	s.CfgFile = viper.GetString("config")
+	s.Config = viper.GetString("config")
 }
