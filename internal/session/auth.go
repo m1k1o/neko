@@ -18,7 +18,7 @@ func (manager *SessionManagerCtx) CookieSetToken(w http.ResponseWriter, token st
 	http.SetCookie(w, &http.Cookie{
 		Name:     manager.config.CookieName,
 		Value:    token,
-		Expires:  manager.config.CookieExpiration,
+		Expires:  time.Now().Add(manager.config.CookieExpiration),
 		Secure:   manager.config.CookieSecure,
 		SameSite: sameSite,
 		HttpOnly: true,

@@ -15,7 +15,7 @@ type Session struct {
 
 	CookieEnabled    bool
 	CookieName       string
-	CookieExpiration time.Time
+	CookieExpiration time.Duration
 	CookieSecure     bool
 }
 
@@ -72,6 +72,6 @@ func (s *Session) Set() {
 
 	s.CookieEnabled = viper.GetBool("session.cookie.enabled")
 	s.CookieName = viper.GetString("session.cookie.name")
-	s.CookieExpiration = time.Now().Add(time.Duration(viper.GetInt("session.cookie.expiration")) * time.Hour)
+	s.CookieExpiration = time.Duration(viper.GetInt("session.cookie.expiration")) * time.Hour
 	s.CookieSecure = viper.GetBool("session.cookie.secure")
 }
