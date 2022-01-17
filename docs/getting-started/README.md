@@ -84,3 +84,13 @@ services:
 - Only admins can change screen size.
 - You can set a default screen size, but this size **MUST** be one from the list, that your server supports.
 - You will get this list in frontend, where you can choose from.
+
+### Clipboard sharing
+- Browsers have certain requirements to allow clipboard sharing.
+  - You instance must be HTTPs.
+  - Firefox does not support clipboard sharing.
+  - Use chrome for best experience.
+- If browser does not support clipboard sharing:
+  - Clipboard icon in right bottom corner will be displayed for host.
+  - It opens text area that can share clipboard content bi-directionally.
+  - Only plain-text is supported.
