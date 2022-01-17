@@ -181,9 +181,11 @@
     }
 
     @Watch('hideControls', { immediate: true })
-    onHideControls() {
-      this.$accessor.video.setMuted(false)
-      this.$accessor.settings.setSound(false)
+    onHideControls(enabled: boolean) {
+      if (enabled) {
+        this.$accessor.video.setMuted(false)
+        this.$accessor.settings.setSound(false)
+      }
     }
 
     controlAttempt() {
