@@ -87,10 +87,10 @@ services:
 
 ### Clipboard sharing
 - Browsers have certain requirements to allow clipboard sharing.
-  - You instance must be HTTPs.
+  - Your instance must be HTTPS.
   - Firefox does not support clipboard sharing.
-  - Use chrome for best experience.
-- If browser does not support clipboard sharing:
-  - Clipboard icon in right bottom corner will be displayed for host.
+  - Use Chrome for the best experience.
+- If your browser does not support clipboard sharing:
+  - Clipboard icon in the bottom right corner will be displayed for host.
   - It opens text area that can share clipboard content bi-directionally.
   - Only plain-text is supported.
