@@ -2,7 +2,7 @@
 
 If you want to contribute, but do not want to install anything on your host system, we got you covered. You only need docker. Technically, it could be done using vs code development in container, but this is more fun:).
 
-You need to copy `.env.development` to `.env` and customize values.
+You need to copy `.env.default` to `.env` and customize values.
 
 ## Step 1: Building server
 
