@@ -55,6 +55,9 @@ RUN set -eux; \
         pulseaudio dbus-x11 xserver-xorg-video-dummy \
         libcairo2 libxcb1 libxrandr2 libxv1 libopus0 libvpx6 \
         #
+        # needed for profile upload preStop hook
+        zip curl \
+        #
         # file chooser handler, clipboard
         xdotool xclip \
         #
