@@ -25,10 +25,6 @@ type StreamSinkManagerCtx struct {
 	pipelineMu  sync.Mutex
 	pipelineStr func() string
 
-	sample       chan types.Sample
-	sampleStop   chan struct{}
-	sampleUpdate chan struct{}
-
 	listeners   map[uintptr]*func(sample types.Sample)
 	listenersMu sync.Mutex
 }
@@ -40,36 +36,11 @@ func streamSinkNew(codec codec.RTPCodec, pipelineStr func() string, video_id str
 		Str("video_id", video_id).Logger()
 
 	manager := &StreamSinkManagerCtx{
-		logger:       logger,
-		codec:        codec,
-		pipelineStr:  pipelineStr,
-		sampleStop:   make(chan struct{}),
-		sampleUpdate: make(chan struct{}),
-		listeners:    map[uintptr]*func(sample types.Sample){},
+		logger:      logger,
+		codec:       codec,
+		pipelineStr: pipelineStr,
+		listeners:   map[uintptr]*func(sample types.Sample){},
 	}
-
-	manager.wg.Add(1)
-
-	go func() {
-		manager.logger.Debug().Msg("started emitting samples")
-		defer manager.wg.Done()
-
-		for {
-			select {
-			case <-manager.sampleStop:
-				manager.logger.Debug().Msg("stopped emitting samples")
-				return
-			case <-manager.sampleUpdate:
-				manager.logger.Debug().Msg("update emitting samples")
-			case sample := <-manager.sample:
-				manager.listenersMu.Lock()
-				for _, emit := range manager.listeners {
-					(*emit)(sample)
-				}
-				manager.listenersMu.Unlock()
-			}
-		}
-	}()
 
 	return manager
 }
@@ -84,8 +55,6 @@ func (manager *StreamSinkManagerCtx) shutdown() {
 	manager.listenersMu.Unlock()
 
 	manager.destroyPipeline()
-
-	close(manager.sampleStop)
 	manager.wg.Wait()
 }
 
@@ -249,8 +218,27 @@ func (manager *StreamSinkManagerCtx) createPipeline() error {
 	manager.pipeline.AttachAppsink("appsink")
 	manager.pipeline.Play()
 
-	manager.sample = manager.pipeline.Sample
-	manager.sampleUpdate <- struct{}{}
+	manager.wg.Add(1)
+
+	go func() {
+		manager.logger.Debug().Msg("started emitting samples")
+		defer manager.wg.Done()
+
+		for {
+			sample, ok := <-manager.pipeline.Sample
+			if !ok {
+				manager.logger.Debug().Msg("stopped emitting samples")
+				return
+			}
+
+			manager.listenersMu.Lock()
+			for _, emit := range manager.listeners {
+				(*emit)(sample)
+			}
+			manager.listenersMu.Unlock()
+		}
+	}()
+
 	return nil
 }
 
