@@ -71,7 +71,6 @@ jobs:
         tags: [ firefox, chromium, google-chrome, ungoogled-chromium, microsoft-edge, brave, tor-browser, vncviewer, vlc, xfce ]
     env:
       TAG_NAME: ${{ matrix.tags }}
-      BASE_IMAGE: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/base
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -106,4 +105,4 @@ jobs:
 #          tags: ${{ steps.meta.outputs.tags }}
 #          labels: ${{ steps.meta.outputs.labels }}
 #          build-args: |
-#            BASE_IMAGE=${BASE_IMAGE}
+#            BASE_IMAGE=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/base
