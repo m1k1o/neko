@@ -32,7 +32,7 @@ RUN go get -v -t -d . && go build -o bin/neko cmd/neko/main.go
 #
 # STAGE 2: CLIENT
 #
-FROM node:14-bullseye-slim as client
+FROM node:14-bullseye as client
 WORKDIR /src
 
 #
