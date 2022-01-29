@@ -1,10 +1,12 @@
 ARG BASE_IMAGE=m1k1o/neko:base
 FROM $BASE_IMAGE
 
+ARG VERSION="90.0.4430.212-1"
+
 #
 # install neko chromium
 RUN set -eux; apt-get update; \
-    apt-get install -y --no-install-recommends unzip chromium chromium-sandbox openbox; \
+    apt-get install -y --no-install-recommends unzip chromium=$VERSION chromium-common=$VERSION chromium-sandbox=$VERSION openbox; \
     #
     # install widevine module
     WIDEVINE_VERSION=$(wget --quiet -O - https://dl.google.com/widevine-cdm/versions.txt | tail -n 1); \
