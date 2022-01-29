@@ -1,5 +1,7 @@
 // Variables
 
+@use "sass:math";
+
 $fa-font-path:                "~@fortawesome/fontawesome-free/webfonts";
 $fa-font-size-base:    16px;
 $fa-font-display:      auto;
@@ -7,7 +9,7 @@ $fa-css-prefix:        fa;
 $fa-border-color:      #eee;
 $fa-inverse:           #fff;
 $fa-li-width:          2em;
-$fa-fw-width:          (20em / 16);
+$fa-fw-width:          math.div(20em, 16);
 $fa-primary-opacity:   1;
 $fa-secondary-opacity: .4;
 
