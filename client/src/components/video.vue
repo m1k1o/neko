@@ -124,7 +124,7 @@
       .player-container {
         position: relative;
         width: 100%;
-        max-width: 16 / 9 * 100vh;
+        max-width: calc(16 / 9 * 100vh);
 
         video {
           position: absolute;
