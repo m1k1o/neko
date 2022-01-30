@@ -14,6 +14,7 @@
         :cursorDraw="inactiveCursorDrawFunction"
       />
       <neko-overlay
+        :style="{ pointerEvents: state.control.locked ? 'none' : 'auto' }"
         :sessions="state.sessions"
         :hostId="state.control.host_id"
         :webrtc="connection.webrtc"
@@ -24,8 +25,8 @@
         :cursorDraw="cursorDrawFunction"
         :implicitControl="state.control.implicit_hosting && state.sessions[state.session_id].profile.can_host"
         :inactiveCursors="state.cursors.enabled && state.sessions[state.session_id].profile.sends_inactive_cursor"
-        @implicitControlRequest="connection.websocket.send('control/request')"
-        @implicitControlRelease="connection.websocket.send('control/release')"
+        @implicitControlRequest="control.request()"
+        @implicitControlRelease="control.release()"
         @updateKeyboardModifiers="updateKeyboardModifiers($event)"
         @uploadDrop="uploadDrop($event)"
         @onAction="events.emit('overlay.' + $event)"
@@ -161,6 +162,7 @@
         },
         host_id: null,
         implicit_hosting: false,
+        locked: false,
       },
       screen: {
         size: {
@@ -391,7 +393,7 @@
       this.connection.websocket.send(EVENT.SEND_BROADCAST, { subject, body })
     }
 
-    public control = new NekoControl(this.connection)
+    public control = new NekoControl(this.connection, this.state.control)
 
     public get room(): RoomApi {
       return this.api.room

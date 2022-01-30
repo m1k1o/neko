@@ -64,6 +64,7 @@ export interface Control {
   keyboard: Keyboard
   host_id: string | null
   implicit_hosting: boolean
+  locked: boolean
 }
 
 export interface Scroll {
