@@ -37,6 +37,7 @@ const (
 	CONTROL_KEYDOWN  = "control/keydown"
 	CONTROL_KEYUP    = "control/keyup"
 	// actions
+	CONTROL_CUT        = "control/cut"
 	CONTROL_COPY       = "control/copy"
 	CONTROL_PASTE      = "control/paste"
 	CONTROL_SELECT_ALL = "control/select_all"

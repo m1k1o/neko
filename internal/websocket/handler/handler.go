@@ -92,6 +92,8 @@ func (h *MessageHandlerCtx) Message(session types.Session, data types.WebSocketM
 		err = utils.Unmarshal(payload, data.Payload, func() error {
 			return h.controlKeyUp(session, payload)
 		})
+	case event.CONTROL_CUT:
+		err = h.controlCut(session)
 	case event.CONTROL_COPY:
 		err = h.controlCopy(session)
 	case event.CONTROL_PASTE:

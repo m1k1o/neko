@@ -83,6 +83,14 @@ func (h *MessageHandlerCtx) controlKeyUp(session types.Session, payload *message
 	return h.desktop.KeyUp(payload.Keysym)
 }
 
+func (h *MessageHandlerCtx) controlCut(session types.Session) error {
+	if err := h.controlRequest(session); err != nil && !errors.Is(err, ErrIsAlreadyTheHost) {
+		return err
+	}
+
+	return h.desktop.KeyPress(xorg.XK_Control_L, xorg.XK_x)
+}
+
 func (h *MessageHandlerCtx) controlCopy(session types.Session) error {
 	if err := h.controlRequest(session); err != nil && !errors.Is(err, ErrIsAlreadyTheHost) {
 		return err
