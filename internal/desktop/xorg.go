@@ -4,6 +4,7 @@ import (
 	"image"
 	"os/exec"
 	"regexp"
+	"time"
 
 	"demodesk/neko/internal/desktop/xorg"
 	"demodesk/neko/internal/types"
@@ -35,6 +36,23 @@ func (manager *DesktopManagerCtx) ButtonUp(code uint32) error {
 
 func (manager *DesktopManagerCtx) KeyUp(code uint32) error {
 	return xorg.KeyUp(code)
+}
+
+func (manager *DesktopManagerCtx) KeyPress(codes ...uint32) error {
+	xorg.ResetKeys()
+	defer xorg.ResetKeys()
+
+	for _, code := range codes {
+		if err := xorg.KeyDown(code); err != nil {
+			return err
+		}
+	}
+
+	if len(codes) > 1 {
+		time.Sleep(10 * time.Millisecond)
+	}
+
+	return nil
 }
 
 func (manager *DesktopManagerCtx) ResetKeys() {
