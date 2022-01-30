@@ -34,11 +34,6 @@ type MessageHandlerCtx struct {
 }
 
 func (h *MessageHandlerCtx) Message(session types.Session, data types.WebSocketMessage) bool {
-	logger := h.logger.With().
-		Str("event", data.Event).
-		Str("session_id", session.ID()).
-		Logger()
-
 	var err error
 	switch data.Event {
 	// System Events
@@ -146,7 +141,10 @@ func (h *MessageHandlerCtx) Message(session types.Session, data types.WebSocketM
 	}
 
 	if err != nil {
-		logger.Warn().Err(err).Msg("message handler has failed")
+		h.logger.Warn().Err(err).
+			Str("event", data.Event).
+			Str("session_id", session.ID()).
+			Msg("message handler has failed")
 	}
 
 	return true
