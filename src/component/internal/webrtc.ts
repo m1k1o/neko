@@ -86,13 +86,13 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
 
     this._peer.onicecandidate = (event: RTCPeerConnectionIceEvent) => {
       if (!event.candidate) {
-        this._log.debug(`sent all remote ICE candidates`)
+        this._log.debug(`sent all local ICE candidates`)
         return
       }
 
       const init = event.candidate.toJSON()
       this.emit('candidate', init)
-      this._log.debug(`sending remote ICE candidate`, { init })
+      this._log.debug(`sending local ICE candidate`, { init })
     }
 
     this._peer.onicecandidateerror = (event: Event) => {
