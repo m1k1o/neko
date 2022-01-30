@@ -9,17 +9,20 @@ import (
 	"demodesk/neko/internal/types/message"
 )
 
-func (h *MessageHandlerCtx) controlRelease(session types.Session) error {
-	logger := h.logger.With().Str("session_id", session.ID()).Logger()
+var (
+	ErrIsNotAllowedToHost = errors.New("is not allowed to host")
+	ErrIsNotTheHost       = errors.New("is not the host")
+	ErrIsAlreadyTheHost   = errors.New("is already the host")
+	ErrIsAlreadyHosted    = errors.New("is already hosted")
+)
 
+func (h *MessageHandlerCtx) controlRelease(session types.Session) error {
 	if !session.Profile().CanHost {
-		logger.Debug().Msg("is not allowed to host")
-		return nil
+		return ErrIsNotAllowedToHost
 	}
 
 	if !session.IsHost() {
-		logger.Debug().Msg("is not the host")
-		return nil
+		return ErrIsNotTheHost
 	}
 
 	h.desktop.ResetKeys()
@@ -30,11 +33,11 @@ func (h *MessageHandlerCtx) controlRelease(session types.Session) error {
 
 func (h *MessageHandlerCtx) controlRequest(session types.Session) error {
 	if !session.Profile().CanHost {
-		return errors.New("is not allowed to host")
+		return ErrIsNotAllowedToHost
 	}
 
 	if session.IsHost() {
-		return errors.New("is already the host")
+		return ErrIsAlreadyTheHost
 	}
 
 	if !h.sessions.ImplicitHosting() {
@@ -47,75 +50,58 @@ func (h *MessageHandlerCtx) controlRequest(session types.Session) error {
 					HostID:  host.ID(),
 				})
 
-			return nil
+			return ErrIsAlreadyHosted
 		}
 	}
 
 	h.sessions.SetHost(session)
+
 	return nil
 }
 
 func (h *MessageHandlerCtx) controlKeyPress(session types.Session, payload *message.ControlKey) error {
-	logger := h.logger.With().Str("session_id", session.ID()).Logger()
-
-	if !session.IsHost() {
-		logger.Debug().Msg("is not the host")
-		return nil
+	if err := h.controlRequest(session); err != nil && !errors.Is(err, ErrIsAlreadyTheHost) {
+		return err
 	}
 
 	return h.desktop.KeyPress(payload.Keysym)
 }
 
 func (h *MessageHandlerCtx) controlKeyDown(session types.Session, payload *message.ControlKey) error {
-	logger := h.logger.With().Str("session_id", session.ID()).Logger()
-
-	if !session.IsHost() {
-		logger.Debug().Msg("is not the host")
-		return nil
+	if err := h.controlRequest(session); err != nil && !errors.Is(err, ErrIsAlreadyTheHost) {
+		return err
 	}
 
 	return h.desktop.KeyDown(payload.Keysym)
 }
 
 func (h *MessageHandlerCtx) controlKeyUp(session types.Session, payload *message.ControlKey) error {
-	logger := h.logger.With().Str("session_id", session.ID()).Logger()
-
-	if !session.IsHost() {
-		logger.Debug().Msg("is not the host")
-		return nil
+	if err := h.controlRequest(session); err != nil && !errors.Is(err, ErrIsAlreadyTheHost) {
+		return err
 	}
 
 	return h.desktop.KeyUp(payload.Keysym)
 }
 
 func (h *MessageHandlerCtx) controlCopy(session types.Session) error {
-	logger := h.logger.With().Str("session_id", session.ID()).Logger()
-
-	if !session.IsHost() {
-		logger.Debug().Msg("is not the host")
-		return nil
+	if err := h.controlRequest(session); err != nil && !errors.Is(err, ErrIsAlreadyTheHost) {
+		return err
 	}
 
 	return h.desktop.KeyPress(xorg.XK_Control_L, xorg.XK_c)
 }
 
 func (h *MessageHandlerCtx) controlPaste(session types.Session) error {
-	logger := h.logger.With().Str("session_id", session.ID()).Logger()
-
-	if !session.IsHost() {
-		logger.Debug().Msg("is not the host")
-		return nil
+	if err := h.controlRequest(session); err != nil && !errors.Is(err, ErrIsAlreadyTheHost) {
+		return err
 	}
 
 	return h.desktop.KeyPress(xorg.XK_Control_L, xorg.XK_v)
 }
 
 func (h *MessageHandlerCtx) controlSelectAll(session types.Session) error {
-	logger := h.logger.With().Str("session_id", session.ID()).Logger()
-
-	if !session.IsHost() {
-		logger.Debug().Msg("is not the host")
-		return nil
+	if err := h.controlRequest(session); err != nil && !errors.Is(err, ErrIsAlreadyTheHost) {
+		return err
 	}
 
 	return h.desktop.KeyPress(xorg.XK_Control_L, xorg.XK_a)
