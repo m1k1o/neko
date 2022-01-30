@@ -19,6 +19,8 @@ import (
 	"demodesk/neko/internal/types"
 )
 
+//go:generate ./keysymdef.sh
+
 type KbdMod uint8
 
 const (
