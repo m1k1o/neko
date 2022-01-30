@@ -28,6 +28,7 @@
         @implicitControlRelease="connection.websocket.send('control/release')"
         @updateKeyboardModifiers="updateKeyboardModifiers($event)"
         @uploadDrop="uploadDrop($event)"
+        @onAction="events.emit('overlay.' + $event)"
       />
     </div>
   </div>

@@ -4,8 +4,8 @@
     class="neko-overlay"
     tabindex="0"
     :style="{ cursor }"
-    @click.stop.prevent
-    @contextmenu.stop.prevent
+    @click.stop.prevent="$emit('onAction', 'click')"
+    @contextmenu.stop.prevent="$emit('onAction', 'contextmenu')"
     @wheel.stop.prevent="onWheel"
     @mousemove.stop.prevent="onMouseMove"
     @mousedown.stop.prevent="onMouseDown"
