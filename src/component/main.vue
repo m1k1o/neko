@@ -71,6 +71,7 @@
   import { NekoApi, MembersApi, RoomApi } from './internal/api'
   import { NekoConnection } from './internal/connection'
   import { NekoMessages } from './internal/messages'
+  import { NekoControl } from './internal/control'
   import { register as VideoRegister } from './internal/video'
 
   import { ReconnectorConfig } from './types/reconnector'
@@ -389,6 +390,8 @@
     public sendBroadcast(subject: string, body: any) {
       this.connection.websocket.send(EVENT.SEND_BROADCAST, { subject, body })
     }
+
+    public control = new NekoControl(this.connection)
 
     public get room(): RoomApi {
       return this.api.room

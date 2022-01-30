@@ -20,10 +20,18 @@ export const SESSION_CURSORS = 'session/cursors'
 export const CONTROL_HOST = 'control/host'
 export const CONTROL_RELEASE = 'control/release'
 export const CONTROL_REQUEST = 'control/request'
+// mouse
 export const CONTROL_MOVE = 'control/move' // TODO: New. (fallback)
 export const CONTROL_SCROLL = 'control/scroll' // TODO: New. (fallback)
-export const CONTROL_KEYDOWN = 'control/keydown' // TODO: New. (fallback)
-export const CONTROL_KEYUP = 'control/keyup' // TODO: New. (fallback)
+// keyboard
+export const CONTROL_KEYPRESS = 'control/keypress'
+export const CONTROL_KEYDOWN = 'control/keydown'
+export const CONTROL_KEYUP = 'control/keyup'
+// actions
+export const CONTROL_CUT = 'control/cut'
+export const CONTROL_COPY = 'control/copy'
+export const CONTROL_PASTE = 'control/paste'
+export const CONTROL_SELECT_ALL = 'control/select_all'
 
 export const SCREEN_UPDATED = 'screen/updated'
 export const SCREEN_SET = 'screen/set'

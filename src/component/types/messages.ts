@@ -118,9 +118,8 @@ export interface ControlScroll {
   y: number
 }
 
-// TODO: New.
 export interface ControlKey {
-  key: number
+  keysym: number
 }
 
 /////////////////////////////
