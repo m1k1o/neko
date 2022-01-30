@@ -39,10 +39,6 @@ export interface NekoEvents {
   ['room.screen.updated']: (width: number, height: number, rate: number) => void
   ['room.clipboard.updated']: (text: string) => void
   ['room.broadcast.status']: (isActive: boolean, url?: string) => void
-
-  // overlay events
-  ['overlay.click']: () => void
-  ['overlay.contextmenu']: () => void
 }
 
 export class NekoMessages extends EventEmitter<NekoEvents> {
