@@ -3,7 +3,8 @@ package desktop
 import (
 	"errors"
 	"os/exec"
-	"time"
+
+	"demodesk/neko/internal/desktop/xorg"
 )
 
 // name of the window that is being controlled
@@ -76,13 +77,8 @@ func (manager *DesktopManagerCtx) CloseFileChooserDialog() {
 		// custom press Alt + F4
 		// because xdotool is failing to send proper Alt+F4
 
-		manager.ResetKeys()
 		//nolint
-		manager.KeyDown(65513) // Alt
-		//nolint
-		manager.KeyDown(65473) // F4
-		time.Sleep(10 * time.Millisecond)
-		manager.ResetKeys()
+		manager.KeyPress(xorg.XK_Alt_L, xorg.XK_F4)
 
 		mu.Unlock()
 	}
