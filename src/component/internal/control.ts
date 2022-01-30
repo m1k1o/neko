@@ -37,15 +37,15 @@ export class NekoControl extends EventEmitter<NekoControlEvents> {
     this._connection.websocket.send(EVENT.CONTROL_RELEASE)
   }
 
-  public keypress(keysym: number) {
+  public keyPress(keysym: number) {
     this._connection.websocket.send(EVENT.CONTROL_KEYPRESS, { keysym } as message.ControlKey)
   }
 
-  public keydown(keysym: number) {
+  public keyDown(keysym: number) {
     this._connection.websocket.send(EVENT.CONTROL_KEYDOWN, { keysym } as message.ControlKey)
   }
 
-  public keyup(keysym: number) {
+  public keyUp(keysym: number) {
     this._connection.websocket.send(EVENT.CONTROL_KEYUP, { keysym } as message.ControlKey)
   }
 
