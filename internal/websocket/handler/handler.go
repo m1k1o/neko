@@ -82,6 +82,27 @@ func (h *MessageHandlerCtx) Message(session types.Session, data types.WebSocketM
 		err = h.controlRelease(session)
 	case event.CONTROL_REQUEST:
 		err = h.controlRequest(session)
+	case event.CONTROL_KEYPRESS:
+		payload := &message.ControlKey{}
+		err = utils.Unmarshal(payload, data.Payload, func() error {
+			return h.controlKeyPress(session, payload)
+		})
+	case event.CONTROL_KEYDOWN:
+		payload := &message.ControlKey{}
+		err = utils.Unmarshal(payload, data.Payload, func() error {
+			return h.controlKeyDown(session, payload)
+		})
+	case event.CONTROL_KEYUP:
+		payload := &message.ControlKey{}
+		err = utils.Unmarshal(payload, data.Payload, func() error {
+			return h.controlKeyUp(session, payload)
+		})
+	case event.CONTROL_COPY:
+		err = h.controlCopy(session)
+	case event.CONTROL_PASTE:
+		err = h.controlPaste(session)
+	case event.CONTROL_SELECT_ALL:
+		err = h.controlSelectAll(session)
 
 	// Screen Events
 	case event.SCREEN_SET:

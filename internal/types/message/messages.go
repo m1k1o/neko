@@ -114,9 +114,8 @@ type ControlScroll struct {
 	Y int16 `json:"y"`
 }
 
-// TODO: New.
 type ControlKey struct {
-	Key uint32 `json:"key"`
+	Keysym uint32 `json:"keysym"`
 }
 
 /////////////////////////////

@@ -29,10 +29,17 @@ const (
 	CONTROL_HOST    = "control/host"
 	CONTROL_RELEASE = "control/release"
 	CONTROL_REQUEST = "control/request"
-	CONTROL_MOVE    = "control/move"    // TODO: New. (fallback)
-	CONTROL_SCROLL  = "control/scroll"  // TODO: New. (fallback)
-	CONTROL_KEYDOWN = "control/keydown" // TODO: New. (fallback)
-	CONTROL_KEYUP   = "control/keyup"   // TODO: New. (fallback)
+	// mouse
+	CONTROL_MOVE   = "control/move"   // TODO: New. (fallback)
+	CONTROL_SCROLL = "control/scroll" // TODO: New. (fallback)
+	// keyboard
+	CONTROL_KEYPRESS = "control/keypress"
+	CONTROL_KEYDOWN  = "control/keydown"
+	CONTROL_KEYUP    = "control/keyup"
+	// actions
+	CONTROL_COPY       = "control/copy"
+	CONTROL_PASTE      = "control/paste"
+	CONTROL_SELECT_ALL = "control/select_all"
 )
 
 const (
