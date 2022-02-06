@@ -1,5 +1,15 @@
 # Configuration
 
+Config values can be set using three methods, sorted on this page by priority.
+
+Example, setting `nat1to1` variable:
+- As env variable: `NEKO_NAT1TO1=<ip>`
+- As argument: `--nat1to1=<ip>`
+- In YAML config file:
+```yaml
+nat1to1: <ip>
+```
+
 ## Environment variables
 
 ```
@@ -130,3 +140,30 @@ Global Flags:
 ## Config file
 
 You can mount YAML config file to docker container on this path `/etc/neko/neko.yaml` and store your configuration there.
+
+Config uses the keys from arguments, that can be viewed in program's help output.
+
+Example (with just some of the available arguments):
+
+```yaml
+# audio bitrate in kbit/s
+audio_bitrate: 128
+
+# video bitrate in kbit/s
+video_bitrate: 3072
+
+# maximum fps delivered via WebRTC, 0 is for no maximum
+max_fps: 25
+
+# password for connecting to stream
+password: "neko"
+
+# admin password for connecting to stream
+password_admin: "admin"
+
+# default screen resolution and framerate
+screen: "1280x720@30"
+
+# limits the pool of ephemeral ports that ICE UDP connections can allocate from
+epr: "59000-59100"
+```
