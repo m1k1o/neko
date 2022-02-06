@@ -56,8 +56,8 @@
       "*": {
         "installation_mode": "blocked"
       },
-      "nordvpnproxy@nordvpn.com": {
-        "install_url": "https://addons.mozilla.org/firefox/downloads/latest/nordvpn-proxy-extension/latest.xpi",
+      "sponsorBlocker@ajay.app": {
+        "install_url": "https://addons.mozilla.org/firefox/downloads/latest/sponsorblock/latest.xpi",
         "installation_mode": "force_installed"
       },
       "uBlock0@raymondhill.net": {
