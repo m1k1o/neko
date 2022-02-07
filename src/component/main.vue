@@ -1,8 +1,13 @@
 <template>
   <div ref="component" class="neko-component">
     <div ref="container" class="neko-container">
-      <video v-show="!screencast" ref="video" :autoplay="autoplay" :muted="autoplay" playsinline />
-      <neko-screencast v-show="screencast" :enabled="screencast" :api="api.room" />
+      <video v-show="!screencast || !screencastReady" ref="video" :autoplay="autoplay" :muted="autoplay" playsinline />
+      <neko-screencast
+        v-show="screencast && screencastReady"
+        :enabled="screencast"
+        :api="api.room"
+        @imageReady="screencastReady = $event"
+      />
       <neko-cursors
         v-if="state.cursors.enabled && state.sessions[state.session_id].profile.can_see_inactive_cursors"
         :sessions="state.sessions"
@@ -197,6 +202,7 @@
       return this.state.session_id != null ? this.state.sessions[this.state.session_id].profile.is_admin : false
     }
 
+    screencastReady = false
     public get screencast() {
       return (
         this.state.authenticated &&

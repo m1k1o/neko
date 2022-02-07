@@ -1,5 +1,5 @@
 <template>
-  <img ref="image" />
+  <img ref="image" @load="onImageLoad" />
 </template>
 
 <script lang="ts">
@@ -50,6 +50,11 @@
       }
 
       this.running = false
+      this.$emit('imageReady', false)
+
+      if (this._image) {
+        this._image.src = ''
+      }
     }
 
     mounted() {
@@ -80,6 +85,10 @@
       } else {
         this.stop()
       }
+    }
+
+    onImageLoad() {
+      this.$emit('imageReady', this.running)
     }
   }
 </script>
