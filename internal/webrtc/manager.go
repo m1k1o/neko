@@ -2,9 +2,11 @@ package webrtc
 
 import (
 	"fmt"
+	"net"
 	"strings"
 	"time"
 
+	"github.com/pion/ice/v2"
 	"github.com/pion/rtcp"
 	"github.com/pion/webrtc/v3"
 	"github.com/rs/zerolog"
@@ -16,6 +18,7 @@ import (
 	"demodesk/neko/internal/types/event"
 	"demodesk/neko/internal/types/message"
 	"demodesk/neko/internal/webrtc/cursor"
+	"demodesk/neko/internal/webrtc/pionlog"
 )
 
 // the duration without network activity before a Agent is considered disconnected. Default is 5 Seconds
@@ -51,11 +54,44 @@ type WebRTCManagerCtx struct {
 	curImage    *cursor.ImageCtx
 	curPosition *cursor.PositionCtx
 
+	tcpMux ice.TCPMux
+	udpMux ice.UDPMux
+
 	camStop, micStop *func()
 }
 
 func (manager *WebRTCManagerCtx) Start() {
 	manager.curImage.Start()
+
+	logger := pionlog.New(manager.logger)
+
+	// add TCP Mux listener
+	if manager.config.TCPMux > 0 {
+		tcpListener, err := net.ListenTCP("tcp", &net.TCPAddr{
+			IP:   net.IP{0, 0, 0, 0},
+			Port: manager.config.TCPMux,
+		})
+
+		if err != nil {
+			manager.logger.Panic().Err(err).Msg("unable to setup ice TCP mux")
+		}
+
+		manager.tcpMux = webrtc.NewICETCPMux(logger.NewLogger("ice-tcp"), tcpListener, 32)
+	}
+
+	// add UDP Mux listener
+	if manager.config.UDPMux > 0 {
+		udpListener, err := net.ListenUDP("udp", &net.UDPAddr{
+			IP:   net.IP{0, 0, 0, 0},
+			Port: manager.config.UDPMux,
+		})
+
+		if err != nil {
+			manager.logger.Panic().Err(err).Msg("unable to setup ice UDP mux")
+		}
+
+		manager.udpMux = webrtc.NewICEUDPMux(logger.NewLogger("ice-udp"), udpListener)
+	}
 
 	manager.logger.Info().
 		Bool("icelite", manager.config.ICELite).
@@ -63,6 +99,8 @@ func (manager *WebRTCManagerCtx) Start() {
 		Interface("iceservers", manager.config.ICEServers).
 		Str("nat1to1", strings.Join(manager.config.NAT1To1IPs, ",")).
 		Str("epr", fmt.Sprintf("%d-%d", manager.config.EphemeralMin, manager.config.EphemeralMax)).
+		Int("tcpmux", manager.config.TCPMux).
+		Int("udpmux", manager.config.UDPMux).
 		Msg("webrtc starting")
 }
 

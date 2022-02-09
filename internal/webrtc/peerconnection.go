@@ -23,10 +23,38 @@ func (manager *WebRTCManagerCtx) newPeerConnection(codecs []codec.RTPCodec, logg
 		LoggerFactory: pionlog.New(logger),
 	}
 
-	_ = settings.SetEphemeralUDPPortRange(manager.config.EphemeralMin, manager.config.EphemeralMax)
 	settings.SetICETimeouts(disconnectedTimeout, failedTimeout, keepAliveInterval)
 	settings.SetNAT1To1IPs(manager.config.NAT1To1IPs, webrtc.ICECandidateTypeHost)
 	settings.SetLite(manager.config.ICELite)
+
+	var networkType []webrtc.NetworkType
+
+	// udp candidates
+	if manager.udpMux != nil {
+		settings.SetICEUDPMux(manager.udpMux)
+		networkType = append(networkType,
+			webrtc.NetworkTypeUDP4,
+			webrtc.NetworkTypeUDP6,
+		)
+	} else if manager.config.EphemeralMax != 0 {
+		_ = settings.SetEphemeralUDPPortRange(manager.config.EphemeralMin, manager.config.EphemeralMax)
+		networkType = append(networkType,
+			webrtc.NetworkTypeUDP4,
+			webrtc.NetworkTypeUDP6,
+		)
+	}
+
+	// tcp candidates
+	if manager.tcpMux != nil {
+		settings.SetICETCPMux(manager.tcpMux)
+		networkType = append(networkType,
+			webrtc.NetworkTypeTCP4,
+			webrtc.NetworkTypeTCP6,
+		)
+	}
+
+	// enable support for TCP and UDP ICE candidates
+	settings.SetNetworkTypes(networkType)
 
 	// create interceptor registry
 	registry := &interceptor.Registry{}
