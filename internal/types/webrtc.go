@@ -9,6 +9,7 @@ import (
 var (
 	ErrWebRTCVideoNotFound       = errors.New("webrtc video not found")
 	ErrWebRTCDataChannelNotFound = errors.New("webrtc data channel not found")
+	ErrWebRTCConnectionNotFound  = errors.New("webrtc connection not found")
 )
 
 type ICEServer struct {
