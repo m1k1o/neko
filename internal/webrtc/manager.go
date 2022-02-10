@@ -117,7 +117,7 @@ func (manager *WebRTCManagerCtx) ICEServers() []types.ICEServer {
 	return manager.config.ICEServers
 }
 
-func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID string) (types.WebRTCPeer, error) {
+func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID string) (*webrtc.SessionDescription, error) {
 	// add session id to logger context
 	logger := manager.logger.With().Str("session_id", session.ID()).Logger()
 	logger.Info().Msg("creating webrtc peer")
@@ -295,22 +295,6 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 		logger.Info().Interface("data-channel", dc).Msg("got remote data channel")
 	})
 
-	connection.OnNegotiationNeeded(func() {
-		logger.Warn().Msg("negotiation is needed")
-
-		offer, err := peer.CreateOffer(false)
-		if err != nil {
-			logger.Err(err).Msg("sdp offer failed")
-			return
-		}
-
-		session.Send(
-			event.SIGNAL_OFFER,
-			message.SignalDescription{
-				SDP: offer.SDP,
-			})
-	})
-
 	connection.OnConnectionStateChange(func(state webrtc.PeerConnectionState) {
 		switch state {
 		case webrtc.PeerConnectionStateConnected:
@@ -370,5 +354,35 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 	})
 
 	session.SetWebRTCPeer(peer)
-	return peer, nil
+
+	offer, err := peer.CreateOffer(false)
+	if err != nil {
+		return nil, err
+	}
+
+	// on negotiation needed handler must be registered after creating initial
+	// offer, otherwise it can fire and intercept sucessful negotiation
+
+	connection.OnNegotiationNeeded(func() {
+		logger.Warn().Msg("negotiation is needed")
+
+		if connection.SignalingState() != webrtc.SignalingStateStable {
+			logger.Warn().Msg("connection isn't stable yet; postponing...")
+			return
+		}
+
+		offer, err := peer.CreateOffer(false)
+		if err != nil {
+			logger.Err(err).Msg("sdp offer failed")
+			return
+		}
+
+		session.Send(
+			event.SIGNAL_OFFER,
+			message.SignalDescription{
+				SDP: offer.SDP,
+			})
+	})
+
+	return offer, nil
 }

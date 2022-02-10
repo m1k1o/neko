@@ -19,12 +19,7 @@ func (h *MessageHandlerCtx) signalRequest(session types.Session, payload *messag
 		payload.Video = videos[0]
 	}
 
-	peer, err := h.webrtc.CreatePeer(session, payload.Video)
-	if err != nil {
-		return err
-	}
-
-	offer, err := peer.CreateOffer(false)
+	offer, err := h.webrtc.CreatePeer(session, payload.Video)
 	if err != nil {
 		return err
 	}

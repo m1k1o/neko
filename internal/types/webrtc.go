@@ -38,5 +38,5 @@ type WebRTCManager interface {
 
 	ICEServers() []ICEServer
 
-	CreatePeer(session Session, videoID string) (WebRTCPeer, error)
+	CreatePeer(session Session, videoID string) (*webrtc.SessionDescription, error)
 }
