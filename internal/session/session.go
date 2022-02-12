@@ -83,6 +83,10 @@ func (session *SessionCtx) SetWebSocketConnected(websocketPeer types.WebSocketPe
 		return
 	}
 
+	session.logger.Info().
+		Bool("connected", connected).
+		Msg("set websocket connected")
+
 	session.state.IsConnected = connected
 
 	if connected {
@@ -135,6 +139,10 @@ func (session *SessionCtx) SetWebRTCConnected(webrtcPeer types.WebRTCPeer, conne
 	if !isCurrentPeer {
 		return
 	}
+
+	session.logger.Info().
+		Bool("connected", connected).
+		Msg("set webrtc connected")
 
 	session.state.IsWatching = connected
 	session.manager.emmiter.Emit("state_changed", session)

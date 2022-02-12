@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/pion/ice/v2"
@@ -48,6 +49,7 @@ func New(desktop types.DesktopManager, capture types.CaptureManager, config *con
 type WebRTCManagerCtx struct {
 	logger zerolog.Logger
 	config *config.WebRTC
+	peerId int32
 
 	desktop     types.DesktopManager
 	capture     types.CaptureManager
@@ -118,8 +120,10 @@ func (manager *WebRTCManagerCtx) ICEServers() []types.ICEServer {
 }
 
 func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID string) (*webrtc.SessionDescription, error) {
+	id := atomic.AddInt32(&manager.peerId, 1)
+
 	// add session id to logger context
-	logger := manager.logger.With().Str("session_id", session.ID()).Logger()
+	logger := manager.logger.With().Str("session_id", session.ID()).Int32("peer_id", id).Logger()
 	logger.Info().Msg("creating webrtc peer")
 
 	// all audios must have the same codec
@@ -292,7 +296,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 	})
 
 	connection.OnDataChannel(func(dc *webrtc.DataChannel) {
-		logger.Info().Interface("data-channel", dc).Msg("got remote data channel")
+		logger.Info().Interface("data_channel", dc).Msg("got remote data channel")
 	})
 
 	connection.OnConnectionStateChange(func(state webrtc.PeerConnectionState) {
