@@ -33,6 +33,7 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
   private _channel?: RTCDataChannel
   private _track?: MediaStreamTrack
   private _state: RTCIceConnectionState = 'disconnected'
+  private _connected = false
   private _candidates: RTCIceCandidateInit[] = []
   private _statsStop?: () => void
 
@@ -78,6 +79,7 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
 
     this._log.info(`connecting`)
 
+    this._connected = false
     this._peer = new RTCPeerConnection({ iceServers })
 
     if (iceServers.length == 0) {
@@ -111,6 +113,9 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
       this._log.info(`peer connection state changed`, { state })
 
       switch (state) {
+        case 'connected':
+          this.onConnected()
+          break
         // Chrome sends failed state change only for connectionState and not iceConnectionState, and firefox
         // does not support connectionState at all.
         case 'closed':
@@ -130,6 +135,9 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
       this._log.info(`peer ice connection state changed`, { state: this._state })
 
       switch (this._state) {
+        case 'connected':
+          this.onConnected()
+          break
         // We don't watch the disconnected signaling state here as it can indicate temporary issues and may
         // go back to a connected state after some time. Watching it would close the video call on any temporary
         // network issue.
@@ -150,6 +158,9 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
       this._log.info(`peer signaling state changed`, { state })
 
       switch (state) {
+        case 'connected':
+          this.onConnected()
+          break
         // The closed signaling state has been deprecated in favor of the closed iceConnectionState.
         // We are watching for it here to add a bit of backward compatibility.
         case 'closed':
@@ -297,6 +308,7 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
 
     this._track = undefined
     this._state = 'disconnected'
+    this._connected = false
     this._candidates = []
   }
 
@@ -426,8 +438,7 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
   }
 
   private onConnected() {
-    if (!this.connected) {
-      this._log.warn(`onConnected called while being disconnected`)
+    if (!this.connected || this._connected) {
       return
     }
 
@@ -435,13 +446,19 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
     this.emit('connected')
 
     this._statsStop = this.statsEmitter()
+    this._connected = true
   }
 
   private onDisconnected(error?: Error) {
     this.disconnect()
 
+    if (!this._connected) {
+      return
+    }
+
     this._log.info(`disconnected`, { error })
     this.emit('disconnected', error)
+    this._connected = false
 
     if (this._statsStop && typeof this._statsStop === 'function') {
       this._statsStop()
