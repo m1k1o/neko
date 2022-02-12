@@ -6,6 +6,7 @@ import (
 	"github.com/rs/zerolog"
 
 	"demodesk/neko/internal/types"
+	"demodesk/neko/internal/types/event"
 )
 
 type SessionCtx struct {
@@ -143,10 +144,15 @@ func (session *SessionCtx) SetWebRTCConnected(webrtcPeer types.WebRTCPeer, conne
 	}
 
 	session.webrtcMu.Lock()
-	if webrtcPeer == session.webrtcPeer {
+	isCurrentPeer = webrtcPeer == session.webrtcPeer
+	if isCurrentPeer {
 		session.webrtcPeer = nil
 	}
 	session.webrtcMu.Unlock()
+
+	if isCurrentPeer {
+		session.Send(event.SIGNAL_CLOSE, nil)
+	}
 }
 
 func (session *SessionCtx) GetWebRTCPeer() types.WebRTCPeer {
