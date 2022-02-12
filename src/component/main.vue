@@ -34,7 +34,7 @@
         @implicitControlRelease="control.release()"
         @updateKeyboardModifiers="updateKeyboardModifiers($event)"
         @uploadDrop="uploadDrop($event)"
-        @onAction="control.emit('overlay.' + $event)"
+        @onAction="control.emit('overlay.' + $event.action, $event.target)"
       />
     </div>
   </div>

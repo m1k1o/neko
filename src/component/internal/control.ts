@@ -8,8 +8,8 @@ import { NekoConnection } from './connection'
 import { Control } from '../types/state'
 
 export interface NekoControlEvents {
-  ['overlay.click']: () => void
-  ['overlay.contextmenu']: () => void
+  ['overlay.click']: (e: MouseEvent) => void
+  ['overlay.contextmenu']: (e: MouseEvent) => void
 }
 
 export class NekoControl extends EventEmitter<NekoControlEvents> {
