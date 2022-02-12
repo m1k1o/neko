@@ -57,6 +57,10 @@ func New(WebSocketManager types.WebSocketManager, ApiManager types.ApiManager, c
 		})
 	}
 
+	if config.PProf {
+		pprofHandler(router)
+	}
+
 	return &HttpManagerCtx{
 		logger: logger,
 		config: config,

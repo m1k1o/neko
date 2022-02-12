@@ -12,6 +12,7 @@ type Server struct {
 	Key    string
 	Bind   string
 	Static string
+	PProf  bool
 	CORS   []string
 }
 
@@ -36,6 +37,11 @@ func (Server) Init(cmd *cobra.Command) error {
 		return err
 	}
 
+	cmd.PersistentFlags().Bool("server.pprof", false, "enable pprof endpoint available at /debug/pprof")
+	if err := viper.BindPFlag("server.pprof", cmd.PersistentFlags().Lookup("server.pprof")); err != nil {
+		return err
+	}
+
 	cmd.PersistentFlags().StringSlice("server.cors", []string{"*"}, "list of allowed origins for CORS")
 	if err := viper.BindPFlag("server.cors", cmd.PersistentFlags().Lookup("server.cors")); err != nil {
 		return err
@@ -49,6 +55,7 @@ func (s *Server) Set() {
 	s.Key = viper.GetString("server.key")
 	s.Bind = viper.GetString("server.bind")
 	s.Static = viper.GetString("server.static")
+	s.PProf = viper.GetBool("server.pprof")
 
 	s.CORS = viper.GetStringSlice("server.cors")
 	in, _ := utils.ArrayIn("*", s.CORS)
