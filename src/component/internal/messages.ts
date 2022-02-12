@@ -191,6 +191,11 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
     Vue.set(this._state.connection.webrtc, 'video', video)
   }
 
+  protected [EVENT.SIGNAL_CLOSE]() {
+    this._localLog.debug(`EVENT.SIGNAL_CLOSE`)
+    this._connection.webrtc.close()
+  }
+
   /////////////////////////////
   // Session Events
   /////////////////////////////

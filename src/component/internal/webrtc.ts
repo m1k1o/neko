@@ -230,6 +230,14 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
     await this._peer.setRemoteDescription({ type: 'answer', sdp })
   }
 
+  public async close() {
+    if (!this._peer) {
+      throw new Error('attempting to close nonexistent peer')
+    }
+
+    this._peer.close()
+  }
+
   public addTrack(track: MediaStreamTrack, ...streams: MediaStream[]): RTCRtpSender {
     if (!this._peer) {
       throw new Error('attempting to add track for nonexistent peer')
