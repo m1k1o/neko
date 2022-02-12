@@ -306,6 +306,11 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
       this._peer = undefined
     }
 
+    if (this._statsStop && typeof this._statsStop === 'function') {
+      this._statsStop()
+      this._statsStop = undefined
+    }
+
     this._track = undefined
     this._state = 'disconnected'
     this._connected = false
@@ -459,11 +464,6 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
     this._log.info(`disconnected`, { error })
     this.emit('disconnected', error)
     this._connected = false
-
-    if (this._statsStop && typeof this._statsStop === 'function') {
-      this._statsStop()
-      this._statsStop = undefined
-    }
   }
 
   private statsEmitter(ms: number = 2000) {
