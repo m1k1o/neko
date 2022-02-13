@@ -455,15 +455,13 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
   }
 
   private onDisconnected(error?: Error) {
+    const wasConnected = this._connected
     this.disconnect()
 
-    if (!this._connected) {
-      return
+    if (wasConnected) {
+      this._log.info(`disconnected`, { error })
+      this.emit('disconnected', error)
     }
-
-    this._log.info(`disconnected`, { error })
-    this.emit('disconnected', error)
-    this._connected = false
   }
 
   private statsEmitter(ms: number = 2000) {
