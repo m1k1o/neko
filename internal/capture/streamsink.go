@@ -219,13 +219,14 @@ func (manager *StreamSinkManagerCtx) createPipeline() error {
 	manager.pipeline.Play()
 
 	manager.wg.Add(1)
+	pipeline := manager.pipeline
 
 	go func() {
 		manager.logger.Debug().Msg("started emitting samples")
 		defer manager.wg.Done()
 
 		for {
-			sample, ok := <-manager.pipeline.Sample
+			sample, ok := <-pipeline.Sample
 			if !ok {
 				manager.logger.Debug().Msg("stopped emitting samples")
 				return

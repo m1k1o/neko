@@ -26,6 +26,7 @@ type ScreencastManagerCtx struct {
 	pipelineMu  sync.Mutex
 
 	image      types.Sample
+	imageMu    sync.Mutex
 	tickerStop chan struct{}
 
 	enabled bool
@@ -101,6 +102,9 @@ func (manager *ScreencastManagerCtx) Image() ([]byte, error) {
 		return nil, err
 	}
 
+	manager.imageMu.Lock()
+	defer manager.imageMu.Unlock()
+
 	if manager.image.Data == nil {
 		return nil, errors.New("image data not found")
 	}
@@ -156,30 +160,36 @@ func (manager *ScreencastManagerCtx) createPipeline() error {
 	manager.pipeline.Play()
 
 	// get first image
-	var ok bool
 	select {
-	case manager.image, ok = <-manager.pipeline.Sample:
+	case image, ok := <-manager.pipeline.Sample:
 		if !ok {
 			return errors.New("unable to get first image")
+		} else {
+			manager.imageMu.Lock()
+			manager.image = image
+			manager.imageMu.Unlock()
 		}
 	case <-time.After(1 * time.Second):
 		return errors.New("timeouted while waiting for first image")
 	}
 
 	manager.wg.Add(1)
+	pipeline := manager.pipeline
 
 	go func() {
 		manager.logger.Debug().Msg("started receiving images")
 		defer manager.wg.Done()
 
 		for {
-			image, ok := <-manager.pipeline.Sample
+			image, ok := <-pipeline.Sample
 			if !ok {
 				manager.logger.Debug().Msg("stopped receiving images")
 				return
 			}
 
+			manager.imageMu.Lock()
 			manager.image = image
+			manager.imageMu.Unlock()
 		}
 	}()
 

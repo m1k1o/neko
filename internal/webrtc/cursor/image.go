@@ -22,12 +22,14 @@ func NewImage(desktop types.DesktopManager) *ImageCtx {
 }
 
 type ImageCtx struct {
-	logger    zerolog.Logger
-	desktop   types.DesktopManager
-	emitMu    sync.Mutex
-	listeners map[uintptr]*func(entry *ImageEntry)
-	cacheMu   sync.Mutex
+	logger  zerolog.Logger
+	desktop types.DesktopManager
+
+	listeners   map[uintptr]*func(entry *ImageEntry)
+	listenersMu sync.Mutex
+
 	cache     map[uint64]*ImageEntry
+	cacheMu   sync.Mutex
 	current   *ImageEntry
 	maxSerial uint64
 }
@@ -46,9 +48,12 @@ func (manager *ImageCtx) Start() {
 		}
 
 		manager.current = entry
+
+		manager.listenersMu.Lock()
 		for _, emit := range manager.listeners {
 			(*emit)(entry)
 		}
+		manager.listenersMu.Unlock()
 	})
 
 	manager.logger.Info().Msg("starting")
@@ -57,11 +62,11 @@ func (manager *ImageCtx) Start() {
 func (manager *ImageCtx) Shutdown() {
 	manager.logger.Info().Msg("shutdown")
 
-	manager.emitMu.Lock()
+	manager.listenersMu.Lock()
 	for key := range manager.listeners {
 		delete(manager.listeners, key)
 	}
-	manager.emitMu.Unlock()
+	manager.listenersMu.Unlock()
 }
 
 func (manager *ImageCtx) GetCached(serial uint64) (*ImageEntry, error) {
@@ -101,8 +106,8 @@ func (manager *ImageCtx) Get() (*ImageEntry, error) {
 }
 
 func (manager *ImageCtx) AddListener(listener *func(entry *ImageEntry)) {
-	manager.emitMu.Lock()
-	defer manager.emitMu.Unlock()
+	manager.listenersMu.Lock()
+	defer manager.listenersMu.Unlock()
 
 	if listener != nil {
 		ptr := reflect.ValueOf(listener).Pointer()
@@ -111,8 +116,8 @@ func (manager *ImageCtx) AddListener(listener *func(entry *ImageEntry)) {
 }
 
 func (manager *ImageCtx) RemoveListener(listener *func(entry *ImageEntry)) {
-	manager.emitMu.Lock()
-	defer manager.emitMu.Unlock()
+	manager.listenersMu.Lock()
+	defer manager.listenersMu.Unlock()
 
 	if listener != nil {
 		ptr := reflect.ValueOf(listener).Pointer()
