@@ -11,10 +11,15 @@ RUN set -eux; \
     apt-get install -y --no-install-recommends unzip chromium=$VERSION chromium-common=$VERSION chromium-sandbox=$VERSION openbox; \
     #
     # install widevine module
+    CHROMIUM_DIR="/usr/lib/chromium"; \
     WIDEVINE_VERSION=$(wget --quiet -O - https://dl.google.com/widevine-cdm/versions.txt | tail -n 1); \
-    wget -O /tmp/widevine.zip "https://dl.google.com/widevine-cdm/$WIDEVINE_VERSION-linux-x64.zip"; \
-    unzip -p /tmp/widevine.zip libwidevinecdm.so > /usr/lib/chromium/libwidevinecdm.so; \
-    chmod 644 /usr/lib/chromium/libwidevinecdm.so; \
+    wget -O /tmp/widevine.zip "https://dl.google.com/widevine-cdm/${WIDEVINE_VERSION}-linux-x64.zip"; \
+    mkdir -p "${CHROMIUM_DIR}/WidevineCdm/_platform_specific/linux_x64"; \
+    unzip -p /tmp/widevine.zip LICENSE.txt > "${CHROMIUM_DIR}/WidevineCdm/LICENSE"; \
+    unzip -p /tmp/widevine.zip manifest.json > "${CHROMIUM_DIR}/WidevineCdm/manifest.json"; \
+    unzip -p /tmp/widevine.zip libwidevinecdm.so > "${CHROMIUM_DIR}/WidevineCdm/_platform_specific/linux_x64/libwidevinecdm.so"; \
+    find "${CHROMIUM_DIR}/WidevineCdm" -type d -exec chmod 0755 '{}' \;; \
+    find "${CHROMIUM_DIR}/WidevineCdm" -type f -exec chmod 0644 '{}' \;; \
     rm /tmp/widevine.zip; \
     #
     # clean up
