@@ -79,6 +79,11 @@ services:
 - There are no accounts, display name (a.k.a. username) can be freely chosen. Only password needs to match. Depending on which password matches, the visitor gets its privilege:
   - Anyone, who enters with `NEKO_PASSWORD` will be **user**.
   - Anyone, who enters with `NEKO_PASSWORD_ADMIN` will be **admin**.
+- Disabling passwords is not possible. However, you can use following query parameters to create auto-join links:
+  - Adding `?pwd=<password>` will prefill password.
+  - Adding `?usr=<display-name>` will prefill username.
+  - Adding `?cast=1` will hide all control and show only video.
+  - e.g. `http(s)://<URL:Port>/?pwd=neko&usr=guest&cast=1`
 
 ### Screen size
 - Only admins can change screen size.
