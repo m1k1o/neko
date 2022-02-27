@@ -20,6 +20,7 @@
   "PromptForDownloadLocation": false,
   "BookmarkBarEnabled": false,
   "PasswordManagerEnabled": false,
+  "BrowserLabsEnabled": false,
   "URLBlacklist": [
       "file://*",
       "chrome://policy"
