@@ -105,7 +105,7 @@ func (manager *WebSocketManagerCtx) Start() {
 
 		manager.sessions.Broadcast(event.CONTROL_HOST, payload, nil)
 
-		manager.logger.Debug().
+		manager.logger.Info().
 			Bool("has_host", payload.HasHost).
 			Str("host_id", payload.HostID).
 			Msg("session host changed")
@@ -117,7 +117,7 @@ func (manager *WebSocketManagerCtx) Start() {
 			return
 		}
 
-		manager.logger.Debug().Msg("sync clipboard")
+		manager.logger.Info().Msg("sync clipboard")
 
 		data, err := manager.desktop.ClipboardGetText()
 		if err != nil {
