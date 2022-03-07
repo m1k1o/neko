@@ -444,17 +444,24 @@
         const { track, streams } = event
         if (track.kind === 'audio') return
 
-        // create stream
-        if ('srcObject' in this._video) {
-          this._video.srcObject = streams[0]
-        } else {
-          // @ts-ignore
-          this._video.src = window.URL.createObjectURL(streams[0]) // for older browsers
-        }
+        // apply track only once it is unmuted
+        track.addEventListener(
+          'unmute',
+          () => {
+            // create stream
+            if ('srcObject' in this._video) {
+              this._video.srcObject = streams[0]
+            } else {
+              // @ts-ignore
+              this._video.src = window.URL.createObjectURL(streams[0]) // for older browsers
+            }
 
-        if (this.autoplay || this.connection.activated) {
-          this._video.play()
-        }
+            if (this.autoplay || this.connection.activated) {
+              this._video.play()
+            }
+          },
+          { once: true },
+        )
       })
 
       // unmute on users first interaction
