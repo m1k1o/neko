@@ -74,7 +74,7 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
 
     this._onCloseHandle = this.close.bind(this)
 
-    // bind events to all reconnecters
+    // bind events to all reconnectors
     Object.values(this._reconnector).forEach((r) => {
       r.on('connect', this._onConnectHandle)
       r.on('disconnect', this._onDisconnectHandle)
@@ -179,7 +179,7 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
 
     Vue.set(this._state, 'status', 'connecting')
 
-    // open all reconnecters
+    // open all reconnectors with deferred connection
     Object.values(this._reconnector).forEach((r) => r.open(true))
 
     this._reconnector.websocket.connect()
@@ -189,6 +189,7 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
     if (this._open) {
       this._open = false
 
+      // set state to disconnected
       Vue.set(this._state.websocket, 'connected', false)
       Vue.set(this._state.webrtc, 'connected', false)
       Vue.set(this._state, 'status', 'disconnected')
@@ -196,7 +197,7 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
       this.emit('close', error)
     }
 
-    // close all reconnecters
+    // close all reconnectors
     Object.values(this._reconnector).forEach((r) => r.close())
   }
 
@@ -206,16 +207,17 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
     // TODO: Use server side congestion control.
     this.webrtc.off('stats', this._webrtcCongestionControlHandle)
 
-    // unbind events from all reconnecters
+    // unbind events from all reconnectors
     Object.values(this._reconnector).forEach((r) => {
       r.off('connect', this._onConnectHandle)
       r.off('disconnect', this._onDisconnectHandle)
       r.off('close', this._onCloseHandle)
     })
 
-    // destroy all reconnecters
+    // destroy all reconnectors
     Object.values(this._reconnector).forEach((r) => r.destroy())
 
+    // set state to disconnected
     Vue.set(this._state.websocket, 'connected', false)
     Vue.set(this._state.webrtc, 'connected', false)
     Vue.set(this._state, 'status', 'disconnected')
