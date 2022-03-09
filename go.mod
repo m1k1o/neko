@@ -8,6 +8,7 @@ require (
 	github.com/go-chi/cors v1.2.0
 	github.com/gorilla/websocket v1.4.2
 	github.com/kataras/go-events v0.0.2
+	github.com/pion/ice/v2 v2.1.18
 	github.com/pion/interceptor v0.1.5
 	github.com/pion/logging v0.2.2
 	github.com/pion/rtcp v1.2.9
@@ -27,7 +28,6 @@ require (
 	github.com/pelletier/go-toml v1.9.4 // indirect
 	github.com/pion/datachannel v1.5.2 // indirect
 	github.com/pion/dtls/v2 v2.1.0 // indirect
-	github.com/pion/ice/v2 v2.1.18 // indirect
 	github.com/pion/mdns v0.0.5 // indirect
 	github.com/pion/randutil v0.1.0 // indirect
 	github.com/pion/rtp v1.7.4 // indirect
