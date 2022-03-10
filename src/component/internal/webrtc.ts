@@ -23,6 +23,7 @@ export interface NekoWebRTCEvents {
   track: (event: RTCTrackEvent) => void
   candidate: (candidate: RTCIceCandidateInit) => void
   negotiation: (description: RTCSessionDescriptionInit) => void
+  stable: (isStable: boolean) => void
   stats: (stats: WebRTCStats) => void
   ['cursor-position']: (data: CursorPosition) => void
   ['cursor-image']: (data: CursorImage) => void
@@ -137,6 +138,13 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
       switch (this._state) {
         case 'connected':
           this.onConnected()
+          // Connected event makes connection stable.
+          this.emit('stable', true)
+          break
+        case 'disconnected':
+          // Disconnected event makes connection unstable,
+          // may go back to a connected state after some time.
+          this.emit('stable', false)
           break
         // We don't watch the disconnected signaling state here as it can indicate temporary issues and may
         // go back to a connected state after some time. Watching it would close the video call on any temporary

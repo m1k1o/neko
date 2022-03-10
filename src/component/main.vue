@@ -137,6 +137,7 @@
         },
         webrtc: {
           connected: false,
+          stable: false,
           config: {
             max_reconnects: 15,
             timeout_ms: 10000,

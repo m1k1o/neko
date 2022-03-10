@@ -33,6 +33,7 @@ export interface WebSocket {
 
 export interface WebRTC {
   connected: boolean
+  stable: boolean
   config: ReconnectorConfig
   stats: WebRTCStats | null
   video: string | null
