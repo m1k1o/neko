@@ -1,10 +1,10 @@
 <template>
   <div ref="component" class="neko-component">
     <div ref="container" class="neko-container">
-      <video v-show="!screencast || !screencastReady" ref="video" :autoplay="autoplay" :muted="autoplay" playsinline />
+      <video ref="video" :autoplay="autoplay" :muted="autoplay" playsinline />
       <neko-screencast
         v-show="screencast && screencastReady"
-        :enabled="screencast"
+        :enabled="screencast || !state.connection.webrtc.stable"
         :api="api.room"
         @imageReady="screencastReady = $event"
       />
@@ -57,7 +57,7 @@
       width: 100%;
       height: 100%;
       display: flex;
-      background: #000;
+      background: transparent !important;
 
       &::-webkit-media-controls {
         display: none !important;
