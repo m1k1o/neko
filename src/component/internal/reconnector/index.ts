@@ -78,7 +78,7 @@ export class Reconnector extends EventEmitter<ReconnectorEvents> {
     // register connect and disconnect handlers with current class
     // as 'this' context, store them to a variable so that they
     // can be later unregistered
-  
+
     this._onConnectHandle = this.onConnect.bind(this)
     this._conn.on('connect', this._onConnectHandle)
 
@@ -111,7 +111,7 @@ export class Reconnector extends EventEmitter<ReconnectorEvents> {
   private onDisconnect() {
     this.clearTimeout()
 
-    // only if connection is open, fire disconnect event 
+    // only if connection is open, fire disconnect event
     // and start reconnecteing logic
     if (this._open) {
       this.emit('disconnect')
@@ -174,7 +174,7 @@ export class Reconnector extends EventEmitter<ReconnectorEvents> {
     // assuming close event can fire multiple times, the same
     // precautions need to be taken as in open event, so that
     // close event fires only once
-  
+
     if (this._open) {
       this._open = false
       this._last_connected = undefined
