@@ -328,8 +328,8 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
   public send(event: 'wheel' | 'mousemove', data: { x: number; y: number }): void
   public send(event: 'mousedown' | 'mouseup' | 'keydown' | 'keyup', data: { key: number }): void
   public send(event: string, data: any): void {
-    if (!this.connected) {
-      this._log.warn(`attempting to send data while disconnected`, { event })
+    if (typeof this._channel === 'undefined' || this._channel.readyState !== 'open') {
+      this._log.warn(`attempting to send data, but data-channel is not open`, { event })
       return
     }
 
@@ -385,7 +385,7 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
         return
     }
 
-    this._channel!.send(buffer)
+    this._channel.send(buffer)
   }
 
   private onTrack(event: RTCTrackEvent) {
