@@ -133,7 +133,7 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
       }
 
       this._state = this._peer.iceConnectionState
-      this._log.info(`peer ice connection state changed`, { state: this._state })
+      this._log.info(`ice connection state changed`, { state: this._state })
 
       switch (this._state) {
         case 'connected':
@@ -162,19 +162,13 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
         return
       }
 
-      const state = this._peer.iceConnectionState
-      this._log.info(`peer signaling state changed`, { state })
+      const state = this._peer.signalingState
+      this._log.info(`signaling state changed`, { state })
 
-      switch (state) {
-        case 'connected':
-          this.onConnected()
-          break
-        // The closed signaling state has been deprecated in favor of the closed iceConnectionState.
-        // We are watching for it here to add a bit of backward compatibility.
-        case 'closed':
-        case 'failed':
-          this.onDisconnected(new Error('peer ' + state))
-          break
+      // The closed signaling state has been deprecated in favor of the closed iceConnectionState.
+      // We are watching for it here to add a bit of backward compatibility.
+      if (state == 'closed') {
+        this.onDisconnected(new Error('signaling state changed to closed'))
       }
     }
 
