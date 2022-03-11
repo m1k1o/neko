@@ -1,5 +1,5 @@
 <template>
-  <img ref="image" @load="onImageLoad" />
+  <img :src="imageSrc" @load="onImageLoad" @error="onImageError" />
 </template>
 
 <script lang="ts">
@@ -13,7 +13,7 @@
     name: 'neko-screencast',
   })
   export default class extends Vue {
-    @Ref('image') readonly _image!: HTMLImageElement
+    private imageSrc = ''
     private running = false
     private continue = false
 
@@ -32,29 +32,19 @@
 
         try {
           const res = await this.api.screenCastImage({ responseType: 'blob' })
-          const image = URL.createObjectURL(res.data)
-
-          if (this._image) {
-            this._image.src = image
-          }
+          this.imageSrc = URL.createObjectURL(res.data)
 
           const delay = lastLoad - Date.now() + REFRESH_RATE
           if (delay > 0) {
             await new Promise((res) => setTimeout(res, delay))
           }
-
-          URL.revokeObjectURL(image)
         } catch {
           await new Promise((res) => setTimeout(res, ERROR_DELAY_MS))
         }
       }
 
       this.running = false
-      this.$emit('imageReady', false)
-
-      if (this._image) {
-        this._image.src = ''
-      }
+      this.imageSrc = ''
     }
 
     mounted() {
@@ -88,7 +78,13 @@
     }
 
     onImageLoad() {
+      URL.revokeObjectURL(this.imageSrc)
       this.$emit('imageReady', this.running)
+    }
+
+    onImageError() {
+      if (this.imageSrc) URL.revokeObjectURL(this.imageSrc)
+      this.$emit('imageReady', false)
     }
   }
 </script>
