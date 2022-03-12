@@ -80,6 +80,11 @@ func (Remote) Init(cmd *cobra.Command) error {
 		return err
 	}
 
+	cmd.PersistentFlags().Bool("h265", false, "use H265 video codec")
+	if err := viper.BindPFlag("h265", cmd.PersistentFlags().Lookup("h265")); err != nil {
+		return err
+	}
+
 	// audio codecs
 	cmd.PersistentFlags().Bool("opus", false, "use Opus audio codec")
 	if err := viper.BindPFlag("opus", cmd.PersistentFlags().Lookup("opus")); err != nil {
@@ -112,6 +117,8 @@ func (s *Remote) Set() {
 		videoCodec = "VP9"
 	} else if viper.GetBool("h264") {
 		videoCodec = "H264"
+	} else if viper.GetBool("h265") {
+		videoCodec = "H265"
 	}
 
 	audioCodec := "Opus"
