@@ -14,6 +14,7 @@ type Remote struct {
 	AudioCodec   string
 	AudioParams  string
 	AudioBitrate uint
+	VideoHWEnc   string
 	VideoCodec   string
 	VideoParams  string
 	VideoBitrate uint
@@ -64,6 +65,12 @@ func (Remote) Init(cmd *cobra.Command) error {
 		return err
 	}
 
+	// hw encoding
+	cmd.PersistentFlags().String("hwenc", "", "use hardware accelerated encoding")
+	if err := viper.BindPFlag("hwenc", cmd.PersistentFlags().Lookup("hwenc")); err != nil {
+		return err
+	}
+
 	// video codecs
 	cmd.PersistentFlags().Bool("vp8", false, "use VP8 video codec")
 	if err := viper.BindPFlag("vp8", cmd.PersistentFlags().Lookup("vp8")); err != nil {
@@ -105,15 +112,6 @@ func (Remote) Init(cmd *cobra.Command) error {
 }
 
 func (s *Remote) Set() {
-	videoCodec := "VP8"
-	if viper.GetBool("vp8") {
-		videoCodec = "VP8"
-	} else if viper.GetBool("vp9") {
-		videoCodec = "VP9"
-	} else if viper.GetBool("h264") {
-		videoCodec = "H264"
-	}
-
 	audioCodec := "Opus"
 	if viper.GetBool("opus") {
 		audioCodec = "Opus"
@@ -129,7 +127,21 @@ func (s *Remote) Set() {
 	s.AudioCodec = audioCodec
 	s.AudioParams = viper.GetString("audio")
 	s.AudioBitrate = viper.GetUint("audio_bitrate")
+
+	videoCodec := "VP8"
+	if viper.GetBool("vp8") {
+		videoCodec = "VP8"
+	} else if viper.GetBool("vp9") {
+		videoCodec = "VP9"
+	} else if viper.GetBool("h264") {
+		videoCodec = "H264"
+	}
+	videoHWEnc := ""
+	if viper.GetString("hwenc") == "VAAPI" {
+		videoHWEnc = "VAAPI"
+	}
 	s.Display = viper.GetString("display")
+	s.VideoHWEnc = videoHWEnc
 	s.VideoCodec = videoCodec
 	s.VideoParams = viper.GetString("video")
 	s.VideoBitrate = viper.GetUint("video_bitrate")

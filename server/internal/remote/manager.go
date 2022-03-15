@@ -147,6 +147,7 @@ func (manager *RemoteManager) createPipelines() {
 		manager.config.VideoParams,
 		rate,
 		manager.config.VideoBitrate,
+		manager.config.VideoHWEnc,
 	)
 	if err != nil {
 		manager.logger.Panic().Err(err).Msg("unable to create video pipeline")
@@ -158,6 +159,7 @@ func (manager *RemoteManager) createPipelines() {
 		manager.config.AudioParams,
 		0, // fps: n/a for audio
 		manager.config.AudioBitrate,
+		"", // hwenc: n/a for audio
 	)
 	if err != nil {
 		manager.logger.Panic().Err(err).Msg("unable to create audio pipeline")
@@ -197,6 +199,7 @@ func (manager *RemoteManager) ChangeResolution(width int, height int, rate int) 
 		manager.config.VideoParams,
 		rate,
 		manager.config.VideoBitrate,
+		manager.config.VideoHWEnc,
 	)
 	if err != nil {
 		manager.logger.Panic().Err(err).Msg("unable to create new video pipeline")
