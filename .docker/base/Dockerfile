@@ -13,7 +13,7 @@ RUN set -eux; apt-get update; \
     # install libclipboard
     set -eux; \
     cd /tmp; \
-    git clone https://github.com/jtanx/libclipboard; \
+    git clone --depth=1 https://github.com/jtanx/libclipboard; \
     cd libclipboard; \
     cmake .; \
     make -j4; \
