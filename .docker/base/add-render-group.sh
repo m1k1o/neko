@@ -1,10 +1,13 @@
 #!/bin/bash
 
-# if no var is passed, noop
-[[ -z "$RENDER_GID" ]] && exit 0
+# if no hwenc required, noop
+[[ -z "$NEKO_HWENC" ]] && exit 0
 
-cnt_gid=$(getent group render | cut -d: -f3)
-[[ -z "$cnt_gid" ]] && exit 1
+if [[ -z "$RENDER_GID" ]]; then
+  RENDER_GID=$(stat -c "%g" /dev/dri/render* | tail -n 1)
+  # is /dev/dri passed to the container?
+  [[ -z "$RENDER_GID" ]] && exit 1
+fi
 
 # note that this could conceivably be a security risk...
 cnt_group=$(getent group "$RENDER_GID" | cut -d: -f1)
