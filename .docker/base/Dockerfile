@@ -13,7 +13,7 @@ RUN set -eux; apt-get update; \
     # install libclipboard
     set -eux; \
     cd /tmp; \
-    git clone https://github.com/jtanx/libclipboard; \
+    git clone --depth=1 https://github.com/jtanx/libclipboard; \
     cd libclipboard; \
     cmake .; \
     make -j4; \
@@ -60,16 +60,26 @@ ARG USERNAME=neko
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
 
-#
-# install dependencies
-RUN set -eux; apt-get update; \
+RUN set -eux; \
+    #
+    # add non-free repo for intel drivers
+    echo deb http://deb.debian.org/debian bullseye main contrib non-free > /etc/apt/sources.list; \
+    echo deb http://deb.debian.org/debian-security/ bullseye-security main contrib non-free >> /etc/apt/sources.list; \
+    echo deb http://deb.debian.org/debian bullseye-updates main contrib non-free >> /etc/apt/sources.list; \
+    apt-get update; \
+    #
+    # install dependencies
     apt-get install -y --no-install-recommends wget ca-certificates supervisor; \
     apt-get install -y --no-install-recommends pulseaudio dbus-x11 xserver-xorg-video-dummy; \
     apt-get install -y --no-install-recommends libcairo2 libxcb1 libxrandr2 libxv1 libopus0 libvpx6; \
     #
-    # gst
+    # intel driver + vaapi
+    apt-get install -y --no-install-recommends intel-media-va-driver-non-free libva2 vainfo; \
+    #
+    # gst + vaapi plugin
     apt-get install -y --no-install-recommends libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
-                    gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-pulseaudio; \
+                    gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-pulseaudio \
+                    gstreamer1.0-vaapi ;\
     #
     # fonts
     apt-get install -y --no-install-recommends fonts-takao-mincho; \
@@ -106,6 +116,7 @@ COPY .docker/base/dbus /usr/bin/dbus
 COPY .docker/base/default.pa /etc/pulse/default.pa
 COPY .docker/base/supervisord.conf /etc/neko/supervisord.conf
 COPY .docker/base/xorg.conf /etc/neko/xorg.conf
+COPY .docker/base/add-render-group.sh /usr/bin/add-render-group.sh
 
 #
 # set default envs
@@ -114,6 +125,7 @@ ENV DISPLAY=:99.0
 ENV NEKO_PASSWORD=neko
 ENV NEKO_PASSWORD_ADMIN=admin
 ENV NEKO_BIND=:8080
+ENV RENDER_GID=
 
 #
 # copy static files from previous stages

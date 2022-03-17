@@ -79,7 +79,7 @@ func CreateRTMPPipeline(pipelineDevice string, pipelineDisplay string, pipelineS
 }
 
 // CreateAppPipeline creates a GStreamer Pipeline
-func CreateAppPipeline(codecName string, pipelineDevice string, pipelineSrc string, fps int, bitrate uint) (*Pipeline, error) {
+func CreateAppPipeline(codecName string, pipelineDevice string, pipelineSrc string, fps int, bitrate uint, hwenc string) (*Pipeline, error) {
 	pipelineStr := " ! appsink name=appsink"
 
 	// if using custom pipeline
@@ -90,14 +90,24 @@ func CreateAppPipeline(codecName string, pipelineDevice string, pipelineSrc stri
 
 	switch codecName {
 	case "VP8":
-		// https://gstreamer.freedesktop.org/documentation/vpx/vp8enc.html?gi-language=c
-		// gstreamer1.0-plugins-good
-		// vp8enc error-resilient=partitions keyframe-max-dist=10 auto-alt-ref=true cpu-used=5 deadline=1
-		if err := CheckPlugins([]string{"ximagesrc", "vpx"}); err != nil {
-			return nil, err
-		}
+		if hwenc == "VAAPI" {
+			if err := CheckPlugins([]string{"ximagesrc", "vaapi"}); err != nil {
+				return nil, err
+			}
+			// vp8 encode is missing from gstreamer.freedesktop.org/documentation
+			// note that it was removed from some recent intel CPUs: https://trac.ffmpeg.org/wiki/Hardware/QuickSync
+			// https://gstreamer.freedesktop.org/data/doc/gstreamer/head/gstreamer-vaapi-plugins/html/gstreamer-vaapi-plugins-vaapivp8enc.html
+			pipelineStr = fmt.Sprintf(videoSrc+"video/x-raw,format=NV12 ! vaapivp8enc rate-control=vbr bitrate=%d keyframe-period=180"+pipelineStr, pipelineDevice, fps, bitrate)
+		} else {
+			// https://gstreamer.freedesktop.org/documentation/vpx/vp8enc.html?gi-language=c
+			// gstreamer1.0-plugins-good
+			// vp8enc error-resilient=partitions keyframe-max-dist=10 auto-alt-ref=true cpu-used=5 deadline=1
+			if err := CheckPlugins([]string{"ximagesrc", "vpx"}); err != nil {
+				return nil, err
+			}
 
-		pipelineStr = fmt.Sprintf(videoSrc+"vp8enc target-bitrate=%d cpu-used=4 end-usage=cbr threads=4 deadline=1 undershoot=95 buffer-size=%d buffer-initial-size=%d buffer-optimal-size=%d keyframe-max-dist=180 min-quantizer=3 max-quantizer=40"+pipelineStr, pipelineDevice, fps, bitrate*1000, bitrate*6, bitrate*4, bitrate*5)
+			pipelineStr = fmt.Sprintf(videoSrc+"vp8enc target-bitrate=%d cpu-used=4 end-usage=cbr threads=4 deadline=1 undershoot=95 buffer-size=%d buffer-initial-size=%d buffer-optimal-size=%d keyframe-max-dist=180 min-quantizer=3 max-quantizer=40"+pipelineStr, pipelineDevice, fps, bitrate*1000, bitrate*6, bitrate*4, bitrate*5)
+		}
 	case "VP9":
 		// https://gstreamer.freedesktop.org/documentation/vpx/vp9enc.html?gi-language=c
 		// gstreamer1.0-plugins-good
@@ -112,27 +122,36 @@ func CreateAppPipeline(codecName string, pipelineDevice string, pipelineSrc stri
 			return nil, err
 		}
 
-		// https://gstreamer.freedesktop.org/documentation/openh264/openh264enc.html?gi-language=c#openh264enc
-		// gstreamer1.0-plugins-bad
-		// openh264enc multi-thread=4 complexity=high bitrate=3072000 max-bitrate=4096000
-		if err := CheckPlugins([]string{"openh264"}); err == nil {
-			pipelineStr = fmt.Sprintf(videoSrc+"openh264enc multi-thread=4 complexity=high bitrate=%d max-bitrate=%d ! video/x-h264,stream-format=byte-stream"+pipelineStr, pipelineDevice, fps, bitrate*1000, (bitrate+1024)*1000)
-			break
-		}
+		if hwenc == "VAAPI" {
+			if err := CheckPlugins([]string{"vaapi"}); err != nil {
+				return nil, err
+			}
 
-		// https://gstreamer.freedesktop.org/documentation/x264/index.html?gi-language=c
-		// gstreamer1.0-plugins-ugly
-		// video/x-raw,format=I420 ! x264enc bframes=0 key-int-max=60 byte-stream=true tune=zerolatency speed-preset=veryfast ! video/x-h264,stream-format=byte-stream
-		if err := CheckPlugins([]string{"x264"}); err != nil {
-			return nil, err
-		}
+			pipelineStr = fmt.Sprintf(videoSrc+"video/x-raw,format=NV12 ! vaapih264enc rate-control=vbr bitrate=%d keyframe-period=180 quality-level=7 ! video/x-h264,stream-format=byte-stream"+pipelineStr, pipelineDevice, fps, bitrate)
 
-		vbvbuf := uint(1000)
-		if bitrate > 1000 {
-			vbvbuf = bitrate
-		}
+		} else {
+			// https://gstreamer.freedesktop.org/documentation/openh264/openh264enc.html?gi-language=c#openh264enc
+			// gstreamer1.0-plugins-bad
+			// openh264enc multi-thread=4 complexity=high bitrate=3072000 max-bitrate=4096000
+			if err := CheckPlugins([]string{"openh264"}); err == nil {
+				pipelineStr = fmt.Sprintf(videoSrc+"openh264enc multi-thread=4 complexity=high bitrate=%d max-bitrate=%d ! video/x-h264,stream-format=byte-stream"+pipelineStr, pipelineDevice, fps, bitrate*1000, (bitrate+1024)*1000)
+				break
+			}
 
-		pipelineStr = fmt.Sprintf(videoSrc+"video/x-raw,format=NV12 ! x264enc threads=4 bitrate=%d key-int-max=60 vbv-buf-capacity=%d byte-stream=true tune=zerolatency speed-preset=veryfast ! video/x-h264,stream-format=byte-stream"+pipelineStr, pipelineDevice, fps, bitrate, vbvbuf)
+			// https://gstreamer.freedesktop.org/documentation/x264/index.html?gi-language=c
+			// gstreamer1.0-plugins-ugly
+			// video/x-raw,format=I420 ! x264enc bframes=0 key-int-max=60 byte-stream=true tune=zerolatency speed-preset=veryfast ! video/x-h264,stream-format=byte-stream
+			if err := CheckPlugins([]string{"x264"}); err != nil {
+				return nil, err
+			}
+
+			vbvbuf := uint(1000)
+			if bitrate > 1000 {
+				vbvbuf = bitrate
+			}
+
+			pipelineStr = fmt.Sprintf(videoSrc+"video/x-raw,format=NV12 ! x264enc threads=4 bitrate=%d key-int-max=60 vbv-buf-capacity=%d byte-stream=true tune=zerolatency speed-preset=veryfast ! video/x-h264,stream-format=byte-stream"+pipelineStr, pipelineDevice, fps, bitrate, vbvbuf)
+		}
 	case "Opus":
 		// https://gstreamer.freedesktop.org/documentation/opus/opusenc.html
 		// gstreamer1.0-plugins-base
