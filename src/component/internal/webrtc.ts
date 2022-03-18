@@ -254,8 +254,12 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
     }
 
     // create and emit video snap before closing connection
-    const imageSrc = await videoSnap(this.video)
-    this.emit('fallback', imageSrc)
+    try {
+      const imageSrc = await videoSnap(this.video)
+      this.emit('fallback', imageSrc)
+    } catch (error: any) {
+      this._log.warn(`unable to generate video snap`, { error })
+    }
 
     this._peer.close()
   }
