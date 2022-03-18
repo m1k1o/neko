@@ -66,8 +66,9 @@
     }
 
     start() {
+      this.continue = true
+
       if (!this.running) {
-        this.continue = true
         setTimeout(this.loop, 0)
       }
     }
