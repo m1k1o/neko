@@ -28,13 +28,8 @@ echo "Parsed url in 'REMMINA_URL': proto:$proto username:$user host:$host"
 [[ "$proto" != "vnc" && "$proto" != "rdp" && "$proto" != "spice" ]] && err "Unsupported protocol $proto in connection url 'REMMINA_URL'"
 
 profile="$profile_dir"/"$proto".remmina
-if [[ -n "$pw" ]]; then
-  encpw=$(echo "$pw" | remmina --encrypt-password | grep Encrypted | sed 's/Encrypted password: //')
-  remmina --set-option password="$encpw" --update-profile "$profile"
-else
-  remmina --set-option password= --update-profile "$profile"
-fi
 remmina --set-option username="$user" --update-profile "$profile"
+remmina --set-option password="$pw" --update-profile "$profile"
 remmina --set-option server="$host" --update-profile "$profile"
 
 # remmina --set-option window_maximize=1 --update-profile "$profile"
