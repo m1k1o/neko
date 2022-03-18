@@ -81,6 +81,8 @@ jobs:
             platforms: linux/amd64,linux/arm64
           - tag: vncviewer
             platforms: linux/amd64,linux/arm64
+          - tag: remmina
+            platforms: linux/amd64
           - tag: vlc
             platforms: linux/amd64,linux/arm64
           - tag: xfce
