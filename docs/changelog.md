@@ -11,6 +11,7 @@
 - Fixed clipboard sync in chromium based browsers.
 - Added support for implicit control (using `NEKO_IMPLICITCONTROL=1`). That means, users do not need to request control prior usage.
 - Automatically start broadcasting using `NEKO_BROADCAST_URL=rtmp://your-rtmp-endpoint/live` (thanks @konsti).
+- Added `m1k1o/neko:remmina` tag (by @lowne).
 
 ### Misc
 - Automatic WebRTC SDP negotiation using onnegotiationneeded handlers. This allows adding/removing track on demand in a session.
