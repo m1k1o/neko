@@ -4,6 +4,7 @@
       <video ref="video" :autoplay="autoplay" :muted="autoplay" playsinline />
       <neko-screencast
         v-show="screencast && screencastReady"
+        :image="fallbackImage"
         :enabled="screencast || !state.connection.webrtc.stable"
         :api="api.room"
         @imageReady="screencastReady = $event"
@@ -99,6 +100,12 @@
     @Ref('component') readonly _component!: HTMLElement
     @Ref('container') readonly _container!: HTMLElement
     @Ref('video') readonly _video!: HTMLVideoElement
+
+    // fallback image for webrtc reconnections:
+    // chrome shows black screen when closing webrtc connection, that's why
+    // we need to grab video image before closing connection ans show that
+    // while reconnecting, to not see black screen
+    fallbackImage = ''
 
     api = new NekoApi()
     observer = new ResizeObserver(this.onResize.bind(this))
@@ -433,12 +440,25 @@
       // component size change
       this.observer.observe(this._component)
 
+      // webrtc needs video tag to capture video snaps for fallback mode
+      this.connection.webrtc.video = this._video
+
       // video events
       VideoRegister(this._video, this.state.video)
 
       this.connection.on('close', (error) => {
         this.events.emit('connection.closed', error)
         this.clear()
+      })
+
+      // when webrtc emits fallback event, it means it is about to reconnect
+      // so we image that it provided (it is last frame of the video), we set
+      // it to the screencast module and pause video in order to show fallback
+      this.connection.webrtc.on('fallback', (image: string) => {
+        this.fallbackImage = image
+
+        // this ensures that fallback mode starts immediatly
+        this._video.pause()
       })
 
       this.connection.webrtc.on('track', (event: RTCTrackEvent) => {

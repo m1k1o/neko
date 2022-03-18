@@ -1,6 +1,7 @@
 import EventEmitter from 'eventemitter3'
 import { WebRTCStats, CursorPosition, CursorImage } from '../types/webrtc'
 import { Logger } from '../utils/logger'
+import { videoSnap } from '../utils/video-snap'
 
 export const OPCODE = {
   MOVE: 0x01,
@@ -25,11 +26,15 @@ export interface NekoWebRTCEvents {
   negotiation: (description: RTCSessionDescriptionInit) => void
   stable: (isStable: boolean) => void
   stats: (stats: WebRTCStats) => void
+  fallback: (image: string) => void // send last frame image URL as fallback
   ['cursor-position']: (data: CursorPosition) => void
   ['cursor-image']: (data: CursorImage) => void
 }
 
 export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
+  // used for creating snaps from video for fallback mode
+  public video!: HTMLVideoElement
+
   private _peer?: RTCPeerConnection
   private _channel?: RTCDataChannel
   private _track?: MediaStreamTrack
@@ -247,6 +252,10 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
     if (!this._peer) {
       throw new Error('attempting to close nonexistent peer')
     }
+
+    // create and emit video snap before closing connection
+    const imageSrc = await videoSnap(this.video)
+    this.emit('fallback', imageSrc)
 
     this._peer.close()
   }

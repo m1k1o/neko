@@ -18,6 +18,14 @@
     private continue = false
 
     @Prop()
+    private readonly image!: string
+
+    @Watch('image')
+    setImage(image: string) {
+      this.imageSrc = image
+    }
+
+    @Prop()
     private readonly enabled!: boolean
 
     @Prop()
