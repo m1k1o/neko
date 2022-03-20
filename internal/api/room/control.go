@@ -5,8 +5,8 @@ import (
 
 	"github.com/go-chi/chi"
 
-	"demodesk/neko/internal/http/auth"
-	"demodesk/neko/internal/utils"
+	"gitlab.com/demodesk/neko/server/internal/http/auth"
+	"gitlab.com/demodesk/neko/server/internal/utils"
 )
 
 type ControlStatusPayload struct {

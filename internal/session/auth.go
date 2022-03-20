@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"demodesk/neko/internal/types"
+	"gitlab.com/demodesk/neko/server/internal/types"
 )
 
 func (manager *SessionManagerCtx) CookieSetToken(w http.ResponseWriter, token string) {

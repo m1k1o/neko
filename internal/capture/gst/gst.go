@@ -13,7 +13,7 @@ import (
 	"time"
 	"unsafe"
 
-	"demodesk/neko/internal/types"
+	"gitlab.com/demodesk/neko/server/internal/types"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"

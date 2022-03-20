@@ -8,9 +8,9 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"demodesk/neko/internal/config"
-	"demodesk/neko/internal/types"
-	"demodesk/neko/internal/utils"
+	"gitlab.com/demodesk/neko/server/internal/config"
+	"gitlab.com/demodesk/neko/server/internal/types"
+	"gitlab.com/demodesk/neko/server/internal/utils"
 )
 
 func New(config *config.Session) *SessionManagerCtx {

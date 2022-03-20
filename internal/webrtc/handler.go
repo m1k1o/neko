@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"encoding/binary"
 
-	"demodesk/neko/internal/types"
-	"demodesk/neko/internal/webrtc/payload"
+	"gitlab.com/demodesk/neko/server/internal/types"
+	"gitlab.com/demodesk/neko/server/internal/webrtc/payload"
 )
 
 func (manager *WebRTCManagerCtx) handle(data []byte, session types.Session) error {

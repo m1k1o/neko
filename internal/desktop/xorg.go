@@ -6,8 +6,8 @@ import (
 	"regexp"
 	"time"
 
-	"demodesk/neko/internal/desktop/xorg"
-	"demodesk/neko/internal/types"
+	"gitlab.com/demodesk/neko/server/internal/desktop/xorg"
+	"gitlab.com/demodesk/neko/server/internal/types"
 )
 
 func (manager *DesktopManagerCtx) Move(x, y int) {

@@ -3,10 +3,10 @@ package handler
 import (
 	"errors"
 
-	"demodesk/neko/internal/desktop/xorg"
-	"demodesk/neko/internal/types"
-	"demodesk/neko/internal/types/event"
-	"demodesk/neko/internal/types/message"
+	"gitlab.com/demodesk/neko/server/internal/desktop/xorg"
+	"gitlab.com/demodesk/neko/server/internal/types"
+	"gitlab.com/demodesk/neko/server/internal/types/event"
+	"gitlab.com/demodesk/neko/server/internal/types/message"
 )
 
 var (

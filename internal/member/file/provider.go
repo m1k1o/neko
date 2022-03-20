@@ -5,7 +5,7 @@ import (
 	"io"
 	"os"
 
-	"demodesk/neko/internal/types"
+	"gitlab.com/demodesk/neko/server/internal/types"
 )
 
 func New(config Config) types.MemberProvider {

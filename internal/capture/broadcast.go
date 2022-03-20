@@ -7,8 +7,8 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"demodesk/neko/internal/capture/gst"
-	"demodesk/neko/internal/types"
+	"gitlab.com/demodesk/neko/server/internal/capture/gst"
+	"gitlab.com/demodesk/neko/server/internal/types"
 )
 
 type BroacastManagerCtx struct {

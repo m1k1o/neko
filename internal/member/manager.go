@@ -7,11 +7,11 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"demodesk/neko/internal/config"
-	"demodesk/neko/internal/member/dummy"
-	"demodesk/neko/internal/member/file"
-	"demodesk/neko/internal/member/object"
-	"demodesk/neko/internal/types"
+	"gitlab.com/demodesk/neko/server/internal/config"
+	"gitlab.com/demodesk/neko/server/internal/member/dummy"
+	"gitlab.com/demodesk/neko/server/internal/member/file"
+	"gitlab.com/demodesk/neko/server/internal/member/object"
+	"gitlab.com/demodesk/neko/server/internal/types"
 )
 
 func New(sessions types.SessionManager, config *config.Member) *MemberManagerCtx {

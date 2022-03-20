@@ -8,9 +8,9 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"demodesk/neko/internal/types"
-	"demodesk/neko/internal/types/codec"
-	"demodesk/neko/internal/utils"
+	"gitlab.com/demodesk/neko/server/internal/types"
+	"gitlab.com/demodesk/neko/server/internal/types/codec"
+	"gitlab.com/demodesk/neko/server/internal/utils"
 )
 
 type Capture struct {

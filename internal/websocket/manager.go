@@ -10,11 +10,11 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"demodesk/neko/internal/types"
-	"demodesk/neko/internal/types/event"
-	"demodesk/neko/internal/types/message"
-	"demodesk/neko/internal/utils"
-	"demodesk/neko/internal/websocket/handler"
+	"gitlab.com/demodesk/neko/server/internal/types"
+	"gitlab.com/demodesk/neko/server/internal/types/event"
+	"gitlab.com/demodesk/neko/server/internal/types/message"
+	"gitlab.com/demodesk/neko/server/internal/utils"
+	"gitlab.com/demodesk/neko/server/internal/websocket/handler"
 )
 
 // send pings to peer with this period - must be less than pongWait

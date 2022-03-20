@@ -13,13 +13,13 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"demodesk/neko/internal/config"
-	"demodesk/neko/internal/types"
-	"demodesk/neko/internal/types/codec"
-	"demodesk/neko/internal/types/event"
-	"demodesk/neko/internal/types/message"
-	"demodesk/neko/internal/webrtc/cursor"
-	"demodesk/neko/internal/webrtc/pionlog"
+	"gitlab.com/demodesk/neko/server/internal/config"
+	"gitlab.com/demodesk/neko/server/internal/types"
+	"gitlab.com/demodesk/neko/server/internal/types/codec"
+	"gitlab.com/demodesk/neko/server/internal/types/event"
+	"gitlab.com/demodesk/neko/server/internal/types/message"
+	"gitlab.com/demodesk/neko/server/internal/webrtc/cursor"
+	"gitlab.com/demodesk/neko/server/internal/webrtc/pionlog"
 )
 
 // the duration without network activity before a Agent is considered disconnected. Default is 5 Seconds

@@ -16,7 +16,7 @@ import (
 	"image"
 	"image/color"
 
-	"demodesk/neko/internal/types"
+	"gitlab.com/demodesk/neko/server/internal/types"
 )
 
 //go:generate ./keysymdef.sh

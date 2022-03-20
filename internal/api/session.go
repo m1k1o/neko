@@ -3,9 +3,9 @@ package api
 import (
 	"net/http"
 
-	"demodesk/neko/internal/http/auth"
-	"demodesk/neko/internal/types"
-	"demodesk/neko/internal/utils"
+	"gitlab.com/demodesk/neko/server/internal/http/auth"
+	"gitlab.com/demodesk/neko/server/internal/types"
+	"gitlab.com/demodesk/neko/server/internal/utils"
 )
 
 type SessionLoginPayload struct {

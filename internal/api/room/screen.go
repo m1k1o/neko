@@ -4,10 +4,10 @@ import (
 	"net/http"
 	"strconv"
 
-	"demodesk/neko/internal/types"
-	"demodesk/neko/internal/types/event"
-	"demodesk/neko/internal/types/message"
-	"demodesk/neko/internal/utils"
+	"gitlab.com/demodesk/neko/server/internal/types"
+	"gitlab.com/demodesk/neko/server/internal/types/event"
+	"gitlab.com/demodesk/neko/server/internal/types/message"
+	"gitlab.com/demodesk/neko/server/internal/utils"
 )
 
 type ScreenConfigurationPayload struct {

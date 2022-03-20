@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"encoding/binary"
 
-	"demodesk/neko/internal/types"
-	"demodesk/neko/internal/webrtc/payload"
+	"gitlab.com/demodesk/neko/server/internal/types"
+	"gitlab.com/demodesk/neko/server/internal/webrtc/payload"
 )
 
 func (peer *WebRTCPeerCtx) SendCursorPosition(x, y int) error {

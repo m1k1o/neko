@@ -6,9 +6,9 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"demodesk/neko/internal/types"
-	"demodesk/neko/internal/types/event"
-	"demodesk/neko/internal/types/message"
+	"gitlab.com/demodesk/neko/server/internal/types"
+	"gitlab.com/demodesk/neko/server/internal/types/event"
+	"gitlab.com/demodesk/neko/server/internal/types/message"
 )
 
 func (h *MessageHandlerCtx) systemInit(session types.Session) error {

@@ -4,8 +4,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"demodesk/neko/internal/member/file"
-	"demodesk/neko/internal/member/object"
+	"gitlab.com/demodesk/neko/server/internal/member/file"
+	"gitlab.com/demodesk/neko/server/internal/member/object"
 )
 
 type Member struct {

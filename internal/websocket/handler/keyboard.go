@@ -3,8 +3,8 @@ package handler
 import (
 	"errors"
 
-	"demodesk/neko/internal/types"
-	"demodesk/neko/internal/types/message"
+	"gitlab.com/demodesk/neko/server/internal/types"
+	"gitlab.com/demodesk/neko/server/internal/types/message"
 )
 
 func (h *MessageHandlerCtx) keyboardMap(session types.Session, payload *message.KeyboardMap) error {

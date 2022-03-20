@@ -1,4 +1,4 @@
-module demodesk/neko
+module gitlab.com/demodesk/neko/server
 
 go 1.17
 

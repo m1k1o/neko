@@ -3,9 +3,9 @@ package room
 import (
 	"net/http"
 
-	"demodesk/neko/internal/types/event"
-	"demodesk/neko/internal/types/message"
-	"demodesk/neko/internal/utils"
+	"gitlab.com/demodesk/neko/server/internal/types/event"
+	"gitlab.com/demodesk/neko/server/internal/types/message"
+	"gitlab.com/demodesk/neko/server/internal/utils"
 )
 
 type BroadcastStatusPayload struct {

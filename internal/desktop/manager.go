@@ -9,9 +9,9 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"demodesk/neko/internal/config"
-	"demodesk/neko/internal/desktop/xevent"
-	"demodesk/neko/internal/desktop/xorg"
+	"gitlab.com/demodesk/neko/server/internal/config"
+	"gitlab.com/demodesk/neko/server/internal/desktop/xevent"
+	"gitlab.com/demodesk/neko/server/internal/desktop/xorg"
 )
 
 var mu = sync.Mutex{}

@@ -8,8 +8,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"demodesk/neko/internal/types"
-	"demodesk/neko/internal/utils"
+	"gitlab.com/demodesk/neko/server/internal/types"
+	"gitlab.com/demodesk/neko/server/internal/utils"
 )
 
 // default stun server

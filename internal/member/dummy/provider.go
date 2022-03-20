@@ -3,7 +3,7 @@ package dummy
 import (
 	"errors"
 
-	"demodesk/neko/internal/types"
+	"gitlab.com/demodesk/neko/server/internal/types"
 )
 
 func New() types.MemberProvider {
