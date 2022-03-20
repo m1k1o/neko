@@ -8,9 +8,9 @@ import (
 	"gitlab.com/demodesk/neko/server/internal/api/members"
 	"gitlab.com/demodesk/neko/server/internal/api/room"
 	"gitlab.com/demodesk/neko/server/internal/config"
-	"gitlab.com/demodesk/neko/server/internal/http/auth"
-	"gitlab.com/demodesk/neko/server/internal/types"
-	"gitlab.com/demodesk/neko/server/internal/utils"
+	"gitlab.com/demodesk/neko/server/pkg/auth"
+	"gitlab.com/demodesk/neko/server/pkg/types"
+	"gitlab.com/demodesk/neko/server/pkg/utils"
 )
 
 type ApiManagerCtx struct {

@@ -11,7 +11,7 @@ import (
 	"gitlab.com/demodesk/neko/server/internal/member/dummy"
 	"gitlab.com/demodesk/neko/server/internal/member/file"
 	"gitlab.com/demodesk/neko/server/internal/member/object"
-	"gitlab.com/demodesk/neko/server/internal/types"
+	"gitlab.com/demodesk/neko/server/pkg/types"
 )
 
 func New(sessions types.SessionManager, config *config.Member) *MemberManagerCtx {

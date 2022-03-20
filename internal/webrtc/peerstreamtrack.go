@@ -9,7 +9,7 @@ import (
 	"github.com/pion/webrtc/v3/pkg/media"
 	"github.com/rs/zerolog"
 
-	"gitlab.com/demodesk/neko/server/internal/types"
+	"gitlab.com/demodesk/neko/server/pkg/types"
 )
 
 func (manager *WebRTCManagerCtx) newPeerStreamTrack(stream types.StreamSinkManager, logger zerolog.Logger) (*PeerStreamTrack, error) {

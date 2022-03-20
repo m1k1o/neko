@@ -1,7 +1,7 @@
 package file
 
 import (
-	"gitlab.com/demodesk/neko/server/internal/types"
+	"gitlab.com/demodesk/neko/server/pkg/types"
 )
 
 type MemberEntry struct {

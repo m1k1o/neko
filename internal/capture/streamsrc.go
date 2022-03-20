@@ -7,9 +7,9 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"gitlab.com/demodesk/neko/server/internal/capture/gst"
-	"gitlab.com/demodesk/neko/server/internal/types"
-	"gitlab.com/demodesk/neko/server/internal/types/codec"
+	"gitlab.com/demodesk/neko/server/pkg/gst"
+	"gitlab.com/demodesk/neko/server/pkg/types"
+	"gitlab.com/demodesk/neko/server/pkg/types/codec"
 )
 
 type StreamSrcManagerCtx struct {

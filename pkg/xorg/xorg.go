@@ -9,14 +9,13 @@ import "C"
 
 import (
 	"fmt"
+	"image"
+	"image/color"
 	"sync"
 	"time"
 	"unsafe"
 
-	"image"
-	"image/color"
-
-	"gitlab.com/demodesk/neko/server/internal/types"
+	"gitlab.com/demodesk/neko/server/pkg/types"
 )
 
 //go:generate ./keysymdef.sh

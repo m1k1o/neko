@@ -7,7 +7,7 @@ import (
 
 	neko "gitlab.com/demodesk/neko/server"
 	"gitlab.com/demodesk/neko/server/cmd"
-	"gitlab.com/demodesk/neko/server/internal/utils"
+	"gitlab.com/demodesk/neko/server/pkg/utils"
 )
 
 func main() {

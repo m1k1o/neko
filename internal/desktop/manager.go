@@ -10,8 +10,8 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"gitlab.com/demodesk/neko/server/internal/config"
-	"gitlab.com/demodesk/neko/server/internal/desktop/xevent"
-	"gitlab.com/demodesk/neko/server/internal/desktop/xorg"
+	"gitlab.com/demodesk/neko/server/pkg/xevent"
+	"gitlab.com/demodesk/neko/server/pkg/xorg"
 )
 
 var mu = sync.Mutex{}

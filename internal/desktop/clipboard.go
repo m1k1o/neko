@@ -6,7 +6,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"gitlab.com/demodesk/neko/server/internal/types"
+	"gitlab.com/demodesk/neko/server/pkg/types"
 )
 
 func (manager *DesktopManagerCtx) ClipboardGetText() (*types.ClipboardText, error) {

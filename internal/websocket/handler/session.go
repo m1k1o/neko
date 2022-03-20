@@ -1,9 +1,9 @@
 package handler
 
 import (
-	"gitlab.com/demodesk/neko/server/internal/types"
-	"gitlab.com/demodesk/neko/server/internal/types/event"
-	"gitlab.com/demodesk/neko/server/internal/types/message"
+	"gitlab.com/demodesk/neko/server/pkg/types"
+	"gitlab.com/demodesk/neko/server/pkg/types/event"
+	"gitlab.com/demodesk/neko/server/pkg/types/message"
 )
 
 func (h *MessageHandlerCtx) SessionCreated(session types.Session) error {

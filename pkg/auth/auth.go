@@ -4,8 +4,8 @@ import (
 	"context"
 	"net/http"
 
-	"gitlab.com/demodesk/neko/server/internal/types"
-	"gitlab.com/demodesk/neko/server/internal/utils"
+	"gitlab.com/demodesk/neko/server/pkg/types"
+	"gitlab.com/demodesk/neko/server/pkg/utils"
 )
 
 type key int

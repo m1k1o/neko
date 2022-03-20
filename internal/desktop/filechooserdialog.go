@@ -4,7 +4,7 @@ import (
 	"errors"
 	"os/exec"
 
-	"gitlab.com/demodesk/neko/server/internal/desktop/xorg"
+	"gitlab.com/demodesk/neko/server/pkg/xorg"
 )
 
 // name of the window that is being controlled

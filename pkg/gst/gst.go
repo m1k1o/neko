@@ -13,10 +13,10 @@ import (
 	"time"
 	"unsafe"
 
-	"gitlab.com/demodesk/neko/server/internal/types"
-
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+
+	"gitlab.com/demodesk/neko/server/pkg/types"
 )
 
 type Pipeline struct {

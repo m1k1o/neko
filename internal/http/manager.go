@@ -10,7 +10,7 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"gitlab.com/demodesk/neko/server/internal/config"
-	"gitlab.com/demodesk/neko/server/internal/types"
+	"gitlab.com/demodesk/neko/server/pkg/types"
 )
 
 type HttpManagerCtx struct {
