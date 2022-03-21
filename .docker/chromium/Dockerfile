@@ -1,14 +1,12 @@
 ARG BASE_IMAGE=m1k1o/neko:base
 FROM $BASE_IMAGE
 
-ARG VERSION="98.0.4758.102-1"
-
 #
 # install neko chromium
 RUN set -eux; \
     echo "deb http://ftp.de.debian.org/debian bookworm main" >> /etc/apt/sources.list; \
     apt-get update; \
-    apt-get install -y --no-install-recommends unzip chromium=$VERSION chromium-common=$VERSION chromium-sandbox=$VERSION openbox; \
+    apt-get install -y --no-install-recommends unzip chromium chromium-common chromium-sandbox openbox; \
     #
     # install widevine module
     CHROMIUM_DIR="/usr/lib/chromium"; \
