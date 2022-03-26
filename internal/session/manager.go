@@ -15,8 +15,14 @@ import (
 
 func New(config *config.Session) *SessionManagerCtx {
 	manager := &SessionManagerCtx{
-		logger:   log.With().Str("module", "session").Logger(),
-		config:   config,
+		logger: log.With().Str("module", "session").Logger(),
+		config: config,
+		settings: types.Settings{
+			PrivateMode:       false, // By default disabled.
+			ImplicitHosting:   config.ImplicitHosting,
+			InactiveCursors:   config.InactiveCursors,
+			MercifulReconnect: config.MercifulReconnect,
+		},
 		tokens:   make(map[string]string),
 		sessions: make(map[string]*SessionCtx),
 		cursors:  make(map[types.Session][]types.Cursor),
@@ -49,15 +55,15 @@ type SessionManagerCtx struct {
 	logger zerolog.Logger
 	config *config.Session
 
+	settings   types.Settings
+	settingsMu sync.Mutex
+
 	tokens     map[string]string
 	sessions   map[string]*SessionCtx
 	sessionsMu sync.Mutex
 
 	host   types.Session
 	hostMu sync.Mutex
-
-	privateMode   bool
-	privateModeMu sync.Mutex
 
 	cursors   map[types.Session][]types.Cursor
 	cursorsMu sync.Mutex
@@ -201,39 +207,6 @@ func (manager *SessionManagerCtx) ClearHost() {
 }
 
 // ---
-// private mode
-// ---
-
-func (manager *SessionManagerCtx) SetPrivateMode(isPrivateMode bool) {
-	manager.privateModeMu.Lock()
-
-	// only if value changed
-	if manager.privateMode == isPrivateMode {
-		manager.privateModeMu.Unlock()
-		return
-	}
-
-	// update webrtc paused state for all sessions
-	for _, session := range manager.List() {
-		if webrtcPeer := session.GetWebRTCPeer(); webrtcPeer != nil {
-			webrtcPeer.SetPaused(isPrivateMode && !session.Profile().IsAdmin)
-		}
-	}
-
-	manager.privateMode = isPrivateMode
-	manager.privateModeMu.Unlock()
-
-	manager.emmiter.Emit("private_mode_changed", isPrivateMode)
-}
-
-func (manager *SessionManagerCtx) PrivateMode() bool {
-	manager.privateModeMu.Lock()
-	defer manager.privateModeMu.Unlock()
-
-	return manager.privateMode
-}
-
-// ---
 // cursors
 // ---
 
@@ -362,28 +335,42 @@ func (manager *SessionManagerCtx) OnHostChanged(listener func(session types.Sess
 	})
 }
 
-func (manager *SessionManagerCtx) OnPrivateModeChanged(listener func(isPrivateMode bool)) {
-	manager.emmiter.On("private_mode_changed", func(payload ...interface{}) {
-		listener(payload[0].(bool))
+func (manager *SessionManagerCtx) OnSettingsChanged(listener func(new types.Settings, old types.Settings)) {
+	manager.emmiter.On("settings_changed", func(payload ...interface{}) {
+		listener(payload[0].(types.Settings), payload[1].(types.Settings))
 	})
 }
 
 // ---
-// config
+// settings
 // ---
 
-func (manager *SessionManagerCtx) ImplicitHosting() bool {
-	return manager.config.ImplicitHosting
+func (manager *SessionManagerCtx) UpdateSettings(new types.Settings) {
+	manager.settingsMu.Lock()
+	old := manager.settings
+	manager.settings = new
+	manager.settingsMu.Unlock()
+
+	// if private mode changed
+	if old.PrivateMode != new.PrivateMode {
+		// update webrtc paused state for all sessions
+		for _, session := range manager.List() {
+			if webrtcPeer := session.GetWebRTCPeer(); webrtcPeer != nil {
+				webrtcPeer.SetPaused(session.PrivateModeEnabled())
+			}
+		}
+	}
+
+	manager.emmiter.Emit("settings_changed", new, old)
 }
 
-func (manager *SessionManagerCtx) InactiveCursors() bool {
-	return manager.config.InactiveCursors
+func (manager *SessionManagerCtx) Settings() types.Settings {
+	manager.settingsMu.Lock()
+	defer manager.settingsMu.Unlock()
+
+	return manager.settings
 }
 
 func (manager *SessionManagerCtx) CookieEnabled() bool {
 	return manager.config.CookieEnabled
-}
-
-func (manager *SessionManagerCtx) MercifulReconnect() bool {
-	return manager.config.MercifulReconnect
 }

@@ -22,6 +22,13 @@ type SessionState struct {
 	IsWatching  bool `json:"is_watching"`
 }
 
+type Settings struct {
+	PrivateMode       bool `json:"private_mode"`
+	ImplicitHosting   bool `json:"implicit_hosting"`
+	InactiveCursors   bool `json:"inactive_cursors"`
+	MercifulReconnect bool `json:"merciful_reconnect"`
+}
+
 type Session interface {
 	ID() string
 	Profile() MemberProfile
@@ -56,9 +63,6 @@ type SessionManager interface {
 	GetHost() Session
 	ClearHost()
 
-	SetPrivateMode(isPrivateMode bool)
-	PrivateMode() bool
-
 	SetCursor(cursor Cursor, session Session)
 	PopCursors() map[Session][]Cursor
 
@@ -73,12 +77,11 @@ type SessionManager interface {
 	OnProfileChanged(listener func(session Session))
 	OnStateChanged(listener func(session Session))
 	OnHostChanged(listener func(session Session))
-	OnPrivateModeChanged(listener func(isPrivateMode bool))
+	OnSettingsChanged(listener func(new Settings, old Settings))
 
-	ImplicitHosting() bool
-	InactiveCursors() bool
+	UpdateSettings(Settings)
+	Settings() Settings
 	CookieEnabled() bool
-	MercifulReconnect() bool
 
 	CookieSetToken(w http.ResponseWriter, token string)
 	CookieClearToken(w http.ResponseWriter, r *http.Request)

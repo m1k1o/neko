@@ -31,22 +31,24 @@ func New(
 	}
 
 	// generate fallback image for private mode when needed
-	sessions.OnPrivateModeChanged(func(isPrivateMode bool) {
-		if !isPrivateMode {
+	sessions.OnSettingsChanged(func(new types.Settings, old types.Settings) {
+		if old.PrivateMode && !new.PrivateMode {
 			log.Debug().Msg("clearing private mode fallback image")
 			h.privateModeImage = nil
 			return
 		}
 
-		img := h.desktop.GetScreenshotImage()
-		bytes, err := utils.CreateJPGImage(img, 90)
-		if err != nil {
-			log.Err(err).Msg("could not generate private mode fallback image")
-			return
-		}
+		if !old.PrivateMode && new.PrivateMode {
+			img := h.desktop.GetScreenshotImage()
+			bytes, err := utils.CreateJPGImage(img, 90)
+			if err != nil {
+				log.Err(err).Msg("could not generate private mode fallback image")
+				return
+			}
 
-		log.Debug().Msg("using private mode fallback image")
-		h.privateModeImage = bytes
+			log.Debug().Msg("using private mode fallback image")
+			h.privateModeImage = bytes
+		}
 	})
 
 	return h
@@ -110,7 +112,7 @@ func (h *RoomHandler) Route(r types.Router) {
 
 func (h *RoomHandler) uploadMiddleware(w http.ResponseWriter, r *http.Request) (context.Context, error) {
 	session, ok := auth.GetSession(r)
-	if !ok || (!session.IsHost() && (!session.Profile().CanHost || !h.sessions.ImplicitHosting())) {
+	if !ok || (!session.IsHost() && (!session.Profile().CanHost || !h.sessions.Settings().ImplicitHosting)) {
 		return nil, utils.HttpForbidden("without implicit hosting, only host can upload files")
 	}
 

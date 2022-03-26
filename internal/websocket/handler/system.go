@@ -44,12 +44,15 @@ func (h *MessageHandlerCtx) systemInit(session types.Session) error {
 			ControlHost:       controlHost,
 			ScreenSize:        message.ScreenSize(*size),
 			Sessions:          sessions,
-			ImplicitHosting:   h.sessions.ImplicitHosting(),
-			InactiveCursors:   h.sessions.InactiveCursors(),
+			Settings:          h.sessions.Settings(),
 			ScreencastEnabled: h.capture.Screencast().Enabled(),
 			WebRTC: message.SystemWebRTC{
 				Videos: h.capture.VideoIDs(),
 			},
+
+			// TODO: Left for compatibility with old client, remove.
+			ImplicitHosting: h.sessions.Settings().ImplicitHosting,
+			InactiveCursors: h.sessions.Settings().InactiveCursors,
 		})
 
 	return nil

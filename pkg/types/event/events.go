@@ -3,6 +3,7 @@ package event
 const (
 	SYSTEM_INIT       = "system/init"
 	SYSTEM_ADMIN      = "system/admin"
+	SYSTEM_SETTINGS   = "system/settings"
 	SYSTEM_LOGS       = "system/logs"
 	SYSTEM_DISCONNECT = "system/disconnect"
 )

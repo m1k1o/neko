@@ -60,11 +60,11 @@ func (session *SessionCtx) IsHost() bool {
 }
 
 func (session *SessionCtx) PrivateModeEnabled() bool {
-	return session.manager.PrivateMode() && !session.profile.IsAdmin
+	return session.manager.Settings().PrivateMode && !session.profile.IsAdmin
 }
 
 func (session *SessionCtx) SetCursor(cursor types.Cursor) {
-	if session.manager.InactiveCursors() && session.profile.SendsInactiveCursor {
+	if session.manager.Settings().InactiveCursors && session.profile.SendsInactiveCursor {
 		session.manager.SetCursor(cursor, session)
 	}
 }

@@ -49,6 +49,8 @@ type WebSocketManagerCtx struct {
 	desktop  types.DesktopManager
 	handler  *handler.MessageHandlerCtx
 	handlers []types.WebSocketHandler
+
+	shutdownInactiveCursors chan struct{}
 }
 
 func (manager *WebSocketManagerCtx) Start() {
@@ -111,6 +113,24 @@ func (manager *WebSocketManagerCtx) Start() {
 			Msg("session host changed")
 	})
 
+	manager.sessions.OnSettingsChanged(func(new types.Settings, old types.Settings) {
+		// start inactive cursors
+		if new.InactiveCursors && !old.InactiveCursors {
+			manager.startInactiveCursors()
+		}
+
+		// stop inactive cursors
+		if !new.InactiveCursors && old.InactiveCursors {
+			manager.stopInactiveCursors()
+		}
+
+		manager.sessions.Broadcast(event.SYSTEM_SETTINGS, new, nil)
+		manager.logger.Info().
+			Interface("new", new).
+			Interface("old", old).
+			Msg("settings changed")
+	})
+
 	manager.desktop.OnClipboardUpdated(func() {
 		session := manager.sessions.GetHost()
 		if session == nil || !session.Profile().CanAccessClipboard {
@@ -135,8 +155,8 @@ func (manager *WebSocketManagerCtx) Start() {
 
 	manager.fileChooserDialogEvents()
 
-	if manager.sessions.InactiveCursors() {
-		manager.inactiveCursors()
+	if manager.sessions.Settings().InactiveCursors {
+		manager.startInactiveCursors()
 	}
 
 	manager.logger.Info().Msg("websocket starting")
@@ -145,6 +165,7 @@ func (manager *WebSocketManagerCtx) Start() {
 func (manager *WebSocketManagerCtx) Shutdown() error {
 	manager.logger.Info().Msg("shutdown")
 	close(manager.shutdown)
+	manager.stopInactiveCursors()
 	manager.wg.Wait()
 	return nil
 }
@@ -196,7 +217,7 @@ func (manager *WebSocketManagerCtx) connect(connection *websocket.Conn, r *http.
 	if session.State().IsConnected {
 		logger.Warn().Msg("already connected")
 
-		if !manager.sessions.MercifulReconnect() {
+		if !manager.sessions.Settings().MercifulReconnect {
 			peer.Destroy("already connected")
 			return
 		}
@@ -299,8 +320,14 @@ func (manager *WebSocketManagerCtx) handle(connection *websocket.Conn, peer type
 	}
 }
 
-func (manager *WebSocketManagerCtx) inactiveCursors() {
+func (manager *WebSocketManagerCtx) startInactiveCursors() {
+	if manager.shutdownInactiveCursors != nil {
+		manager.logger.Warn().Msg("inactive cursors handler already running")
+		return
+	}
+
 	manager.logger.Info().Msg("starting inactive cursors handler")
+	manager.shutdownInactiveCursors = make(chan struct{})
 
 	manager.wg.Add(1)
 	go func() {
@@ -314,8 +341,9 @@ func (manager *WebSocketManagerCtx) inactiveCursors() {
 
 		for {
 			select {
-			case <-manager.shutdown:
+			case <-manager.shutdownInactiveCursors:
 				manager.logger.Info().Msg("stopping inactive cursors handler")
+				manager.shutdownInactiveCursors = nil
 				return
 			case <-ticker.C:
 				cursorsMap := manager.sessions.PopCursors()
@@ -341,4 +369,10 @@ func (manager *WebSocketManagerCtx) inactiveCursors() {
 			}
 		}
 	}()
+}
+
+func (manager *WebSocketManagerCtx) stopInactiveCursors() {
+	if manager.shutdownInactiveCursors != nil {
+		close(manager.shutdownInactiveCursors)
+	}
 }

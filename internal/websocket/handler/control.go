@@ -40,7 +40,7 @@ func (h *MessageHandlerCtx) controlRequest(session types.Session) error {
 		return ErrIsAlreadyTheHost
 	}
 
-	if !h.sessions.ImplicitHosting() {
+	if !h.sessions.Settings().ImplicitHosting {
 		// tell session if there is a host
 		if host := h.sessions.GetHost(); host != nil {
 			session.Send(
