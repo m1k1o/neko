@@ -344,6 +344,10 @@ func (manager *WebSocketManagerCtx) startInactiveCursors() {
 			case <-manager.shutdownInactiveCursors:
 				manager.logger.Info().Msg("stopping inactive cursors handler")
 				manager.shutdownInactiveCursors = nil
+
+				// remove last cursor entries and send empty message
+				_ = manager.sessions.PopCursors()
+				manager.sessions.InactiveCursorsBroadcast(event.SESSION_CURSORS, []message.SessionCursors{}, nil)
 				return
 			case <-ticker.C:
 				cursorsMap := manager.sessions.PopCursors()
