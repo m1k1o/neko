@@ -355,8 +355,16 @@ func (manager *SessionManagerCtx) UpdateSettings(new types.Settings) {
 	if old.PrivateMode != new.PrivateMode {
 		// update webrtc paused state for all sessions
 		for _, session := range manager.List() {
+			enabled := session.PrivateModeEnabled()
+
+			// if session had control, it must release it
+			if enabled && session.IsHost() {
+				manager.ClearHost()
+			}
+
+			// its webrtc connection will be paused or unpaused
 			if webrtcPeer := session.GetWebRTCPeer(); webrtcPeer != nil {
-				webrtcPeer.SetPaused(session.PrivateModeEnabled())
+				webrtcPeer.SetPaused(enabled)
 			}
 		}
 	}
