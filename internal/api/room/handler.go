@@ -55,6 +55,11 @@ func New(
 }
 
 func (h *RoomHandler) Route(r types.Router) {
+	r.With(auth.AdminsOnly).Route("/settings", func(r types.Router) {
+		r.Post("/", h.settingsSet)
+		r.Get("/", h.settingsGet)
+	})
+
 	r.With(auth.AdminsOnly).Route("/broadcast", func(r types.Router) {
 		r.Get("/", h.broadcastStatus)
 		r.Post("/start", h.boradcastStart)
@@ -108,6 +113,7 @@ func (h *RoomHandler) Route(r types.Router) {
 		r.Post("/dialog", h.uploadDialogPost)
 		r.Delete("/dialog", h.uploadDialogClose)
 	})
+
 }
 
 func (h *RoomHandler) uploadMiddleware(w http.ResponseWriter, r *http.Request) (context.Context, error) {
