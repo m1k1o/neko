@@ -17,7 +17,7 @@ var (
 )
 
 func (h *MessageHandlerCtx) controlRelease(session types.Session) error {
-	if !session.Profile().CanHost {
+	if !session.Profile().CanHost || session.PrivateModeEnabled() {
 		return ErrIsNotAllowedToHost
 	}
 
@@ -32,7 +32,7 @@ func (h *MessageHandlerCtx) controlRelease(session types.Session) error {
 }
 
 func (h *MessageHandlerCtx) controlRequest(session types.Session) error {
-	if !session.Profile().CanHost {
+	if !session.Profile().CanHost || session.PrivateModeEnabled() {
 		return ErrIsNotAllowedToHost
 	}
 

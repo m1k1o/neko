@@ -200,6 +200,12 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 
 			return videoTrack.SetStream(videoStream)
 		},
+		setPaused: func(isPaused bool) {
+			videoTrack.SetPaused(isPaused)
+			audioTrack.SetPaused(isPaused)
+
+			// TODO: Send fresh cursor position & image when unpausing.
+		},
 		iceTrickle: manager.config.ICETrickle,
 	}
 
@@ -314,12 +320,22 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 	})
 
 	cursorImage := func(entry *cursor.ImageEntry) {
+		// TODO: Refactor.
+		if videoTrack.paused {
+			return
+		}
+
 		if err := peer.SendCursorImage(entry.Cursor, entry.Image); err != nil {
 			logger.Err(err).Msg("could not send cursor image")
 		}
 	}
 
 	cursorPosition := func(x, y int) {
+		// TODO: Refactor.
+		if videoTrack.paused {
+			return
+		}
+
 		if session.IsHost() {
 			return
 		}
@@ -352,6 +368,11 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 	})
 
 	dataChannel.OnMessage(func(message webrtc.DataChannelMessage) {
+		// TODO: Refactor.
+		if videoTrack.paused {
+			return
+		}
+
 		if err := manager.handle(message.Data, session); err != nil {
 			logger.Err(err).Msg("data handle failed")
 		}

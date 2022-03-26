@@ -24,6 +24,11 @@ func (h *MessageHandlerCtx) signalRequest(session types.Session, payload *messag
 		return err
 	}
 
+	// set webrtc as paused if session has private mode enabled
+	if webrtcPeer := session.GetWebRTCPeer(); webrtcPeer != nil && session.PrivateModeEnabled() {
+		webrtcPeer.SetPaused(true)
+	}
+
 	session.Send(
 		event.SIGNAL_PROVIDE,
 		message.SignalProvide{

@@ -15,6 +15,7 @@ type WebRTCPeerCtx struct {
 	connection  *webrtc.PeerConnection
 	dataChannel *webrtc.DataChannel
 	changeVideo func(videoID string) error
+	setPaused   func(isPaused bool)
 	iceTrickle  bool
 }
 
@@ -120,6 +121,19 @@ func (peer *WebRTCPeerCtx) SetVideoID(videoID string) error {
 
 	peer.logger.Info().Str("video_id", videoID).Msg("change video id")
 	return peer.changeVideo(videoID)
+}
+
+func (peer *WebRTCPeerCtx) SetPaused(isPaused bool) error {
+	peer.mu.Lock()
+	defer peer.mu.Unlock()
+
+	if peer.connection == nil {
+		return types.ErrWebRTCConnectionNotFound
+	}
+
+	peer.logger.Info().Bool("is_paused", isPaused).Msg("set paused")
+	peer.setPaused(isPaused)
+	return nil
 }
 
 func (peer *WebRTCPeerCtx) Destroy() {

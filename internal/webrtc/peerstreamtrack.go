@@ -26,12 +26,17 @@ func (manager *WebRTCManagerCtx) newPeerStreamTrack(stream types.StreamSinkManag
 	peer := &PeerStreamTrack{
 		logger: logger,
 		track:  track,
-		listener: func(sample types.Sample) {
-			err := track.WriteSample(media.Sample(sample))
-			if err != nil && errors.Is(err, io.ErrClosedPipe) {
-				logger.Warn().Err(err).Msg("pipeline failed to write")
-			}
-		},
+	}
+
+	peer.listener = func(sample types.Sample) {
+		if peer.paused {
+			return
+		}
+
+		err := track.WriteSample(media.Sample(sample))
+		if err != nil && errors.Is(err, io.ErrClosedPipe) {
+			logger.Warn().Err(err).Msg("pipeline failed to write")
+		}
 	}
 
 	err = peer.SetStream(stream)
@@ -41,6 +46,7 @@ func (manager *WebRTCManagerCtx) newPeerStreamTrack(stream types.StreamSinkManag
 type PeerStreamTrack struct {
 	logger   zerolog.Logger
 	track    *webrtc.TrackLocalStaticSample
+	paused   bool
 	listener func(sample types.Sample)
 
 	stream   types.StreamSinkManager
@@ -91,4 +97,8 @@ func (peer *PeerStreamTrack) AddToConnection(connection *webrtc.PeerConnection) 
 	}()
 
 	return nil
+}
+
+func (peer *PeerStreamTrack) SetPaused(paused bool) {
+	peer.paused = paused
 }

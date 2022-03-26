@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"gitlab.com/demodesk/neko/server/pkg/auth"
 	"gitlab.com/demodesk/neko/server/pkg/types"
 	"gitlab.com/demodesk/neko/server/pkg/types/event"
 	"gitlab.com/demodesk/neko/server/pkg/types/message"
@@ -81,6 +82,19 @@ func (h *RoomHandler) screenShotGet(w http.ResponseWriter, r *http.Request) erro
 }
 
 func (h *RoomHandler) screenCastGet(w http.ResponseWriter, r *http.Request) error {
+	// display fallback image when private mode is enabled even if screencast is not
+	if session, ok := auth.GetSession(r); ok && session.PrivateModeEnabled() {
+		if h.privateModeImage != nil {
+			w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+			w.Header().Set("Content-Type", "image/jpeg")
+
+			_, err := w.Write(h.privateModeImage)
+			return err
+		}
+
+		return utils.HttpBadRequest("private mode is enabled but no fallback image available")
+	}
+
 	screencast := h.capture.Screencast()
 	if !screencast.Enabled() {
 		return utils.HttpBadRequest("screencast pipeline is not enabled")

@@ -4,6 +4,8 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/rs/zerolog/log"
+
 	"gitlab.com/demodesk/neko/server/pkg/auth"
 	"gitlab.com/demodesk/neko/server/pkg/types"
 	"gitlab.com/demodesk/neko/server/pkg/utils"
@@ -13,6 +15,8 @@ type RoomHandler struct {
 	sessions types.SessionManager
 	desktop  types.DesktopManager
 	capture  types.CaptureManager
+
+	privateModeImage []byte
 }
 
 func New(
@@ -20,13 +24,32 @@ func New(
 	desktop types.DesktopManager,
 	capture types.CaptureManager,
 ) *RoomHandler {
-	// Init
-
-	return &RoomHandler{
+	h := &RoomHandler{
 		sessions: sessions,
 		desktop:  desktop,
 		capture:  capture,
 	}
+
+	// generate fallback image for private mode when needed
+	sessions.OnPrivateModeChanged(func(isPrivateMode bool) {
+		if !isPrivateMode {
+			log.Debug().Msg("clearing private mode fallback image")
+			h.privateModeImage = nil
+			return
+		}
+
+		img := h.desktop.GetScreenshotImage()
+		bytes, err := utils.CreateJPGImage(img, 90)
+		if err != nil {
+			log.Err(err).Msg("could not generate private mode fallback image")
+			return
+		}
+
+		log.Debug().Msg("using private mode fallback image")
+		h.privateModeImage = bytes
+	})
+
+	return h
 }
 
 func (h *RoomHandler) Route(r types.Router) {

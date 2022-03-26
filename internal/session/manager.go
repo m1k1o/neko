@@ -56,6 +56,9 @@ type SessionManagerCtx struct {
 	host   types.Session
 	hostMu sync.Mutex
 
+	privateMode   bool
+	privateModeMu sync.Mutex
+
 	cursors   map[types.Session][]types.Cursor
 	cursorsMu sync.Mutex
 
@@ -198,6 +201,39 @@ func (manager *SessionManagerCtx) ClearHost() {
 }
 
 // ---
+// private mode
+// ---
+
+func (manager *SessionManagerCtx) SetPrivateMode(isPrivateMode bool) {
+	manager.privateModeMu.Lock()
+
+	// only if value changed
+	if manager.privateMode == isPrivateMode {
+		manager.privateModeMu.Unlock()
+		return
+	}
+
+	// update webrtc paused state for all sessions
+	for _, session := range manager.List() {
+		if webrtcPeer := session.GetWebRTCPeer(); webrtcPeer != nil {
+			webrtcPeer.SetPaused(isPrivateMode && !session.Profile().IsAdmin)
+		}
+	}
+
+	manager.privateMode = isPrivateMode
+	manager.privateModeMu.Unlock()
+
+	manager.emmiter.Emit("private_mode_changed", isPrivateMode)
+}
+
+func (manager *SessionManagerCtx) PrivateMode() bool {
+	manager.privateModeMu.Lock()
+	defer manager.privateModeMu.Unlock()
+
+	return manager.privateMode
+}
+
+// ---
 // cursors
 // ---
 
@@ -323,6 +359,12 @@ func (manager *SessionManagerCtx) OnHostChanged(listener func(session types.Sess
 		} else {
 			listener(payload[0].(*SessionCtx))
 		}
+	})
+}
+
+func (manager *SessionManagerCtx) OnPrivateModeChanged(listener func(isPrivateMode bool)) {
+	manager.emmiter.On("private_mode_changed", func(payload ...interface{}) {
+		listener(payload[0].(bool))
 	})
 }
 

@@ -54,6 +54,10 @@ func CanHostOnly(w http.ResponseWriter, r *http.Request) (context.Context, error
 		return nil, utils.HttpForbidden("session cannot host")
 	}
 
+	if session.PrivateModeEnabled() {
+		return nil, utils.HttpUnprocessableEntity("private mode is enabled")
+	}
+
 	return nil, nil
 }
 

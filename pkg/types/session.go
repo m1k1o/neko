@@ -27,6 +27,7 @@ type Session interface {
 	Profile() MemberProfile
 	State() SessionState
 	IsHost() bool
+	PrivateModeEnabled() bool
 
 	// cursor
 	SetCursor(cursor Cursor)
@@ -55,6 +56,9 @@ type SessionManager interface {
 	GetHost() Session
 	ClearHost()
 
+	SetPrivateMode(isPrivateMode bool)
+	PrivateMode() bool
+
 	SetCursor(cursor Cursor, session Session)
 	PopCursors() map[Session][]Cursor
 
@@ -69,6 +73,7 @@ type SessionManager interface {
 	OnProfileChanged(listener func(session Session))
 	OnStateChanged(listener func(session Session))
 	OnHostChanged(listener func(session Session))
+	OnPrivateModeChanged(listener func(isPrivateMode bool))
 
 	ImplicitHosting() bool
 	InactiveCursors() bool

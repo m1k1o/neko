@@ -44,6 +44,11 @@ func (session *SessionCtx) profileChanged() {
 	if (!session.profile.CanConnect || !session.profile.CanLogin) && session.state.IsConnected {
 		session.GetWebSocketPeer().Destroy("profile changed")
 	}
+
+	// update webrtc paused state
+	if webrtcPeer := session.GetWebRTCPeer(); webrtcPeer != nil {
+		webrtcPeer.SetPaused(session.PrivateModeEnabled())
+	}
 }
 
 func (session *SessionCtx) State() types.SessionState {
@@ -52,6 +57,10 @@ func (session *SessionCtx) State() types.SessionState {
 
 func (session *SessionCtx) IsHost() bool {
 	return session.manager.GetHost() == session
+}
+
+func (session *SessionCtx) PrivateModeEnabled() bool {
+	return session.manager.PrivateMode() && !session.profile.IsAdmin
 }
 
 func (session *SessionCtx) SetCursor(cursor types.Cursor) {
