@@ -5,7 +5,7 @@
       <neko-screencast
         v-show="screencast && screencastReady"
         :image="fallbackImage"
-        :enabled="screencast || !state.connection.webrtc.stable"
+        :enabled="screencast || (!state.connection.webrtc.stable && state.connection.webrtc.connected)"
         :api="api.room"
         @imageReady="screencastReady = $event"
       />
