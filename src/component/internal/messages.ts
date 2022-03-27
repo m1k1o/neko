@@ -100,8 +100,6 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
   protected [EVENT.SYSTEM_INIT](conf: message.SystemInit) {
     this._localLog.debug(`EVENT.SYSTEM_INIT`)
     Vue.set(this._state, 'session_id', conf.session_id)
-    Vue.set(this._state.control, 'implicit_hosting', conf.implicit_hosting)
-    Vue.set(this._state.cursors, 'enabled', conf.inactive_cursors)
     Vue.set(this._state.connection, 'screencast', conf.screencast_enabled)
     Vue.set(this._state.connection.webrtc, 'videos', conf.webrtc.videos)
 
@@ -111,6 +109,7 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
 
     this[EVENT.SCREEN_UPDATED](conf.screen_size)
     this[EVENT.CONTROL_HOST](conf.control_host)
+    this[EVENT.SYSTEM_SETTINGS](conf.settings)
   }
 
   protected [EVENT.SYSTEM_ADMIN]({ screen_sizes_list, broadcast_status }: message.SystemAdmin) {
@@ -128,6 +127,11 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
     Vue.set(this._state.screen, 'configurations', list)
 
     this[EVENT.BORADCAST_STATUS](broadcast_status)
+  }
+
+  protected [EVENT.SYSTEM_SETTINGS](settings: message.SystemSettings) {
+    this._localLog.debug(`EVENT.SYSTEM_SETTINGS`)
+    Vue.set(this._state, 'settings', settings)
   }
 
   protected [EVENT.SYSTEM_DISCONNECT]({ message }: message.SystemDisconnect) {
@@ -229,7 +233,7 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
   }
 
   protected [EVENT.SESSION_CURSORS](cursors: message.SessionCursor[]) {
-    Vue.set(this._state.cursors, 'list', cursors)
+    Vue.set(this._state, 'cursors', cursors)
   }
 
   /////////////////////////////

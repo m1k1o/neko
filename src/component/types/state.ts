@@ -9,6 +9,7 @@ export default interface State {
   screen: Screen
   session_id: string | null
   sessions: Record<string, Session>
+  settings: Settings
   cursors: Cursors
 }
 
@@ -64,7 +65,6 @@ export interface Control {
   clipboard: Clipboard | null
   keyboard: Keyboard
   host_id: string | null
-  implicit_hosting: boolean
   locked: boolean
 }
 
@@ -126,13 +126,21 @@ export interface Session {
 }
 
 /////////////////////////////
+// Settings
+/////////////////////////////
+
+export interface Settings {
+  private_mode: boolean
+  implicit_hosting: boolean
+  inactive_cursors: boolean
+  merciful_reconnect: boolean
+}
+
+/////////////////////////////
 // Cursors
 /////////////////////////////
 
-export interface Cursors {
-  enabled: boolean
-  list: SessionCursors[]
-}
+type Cursors = SessionCursors[]
 
 export interface SessionCursors {
   id: string

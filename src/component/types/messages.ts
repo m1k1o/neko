@@ -1,8 +1,11 @@
 import { ICEServer } from '../internal/webrtc'
+import { Settings } from './state'
 
 /////////////////////////////
 // System
 /////////////////////////////
+
+export interface SystemSettings extends Settings {}
 
 export interface SystemWebRTC {
   videos: string[]
@@ -13,8 +16,7 @@ export interface SystemInit {
   control_host: ControlHost
   screen_size: ScreenSize
   sessions: Record<string, SessionData>
-  implicit_hosting: boolean
-  inactive_cursors: boolean
+  settings: Settings
   screencast_enabled: boolean
   webrtc: SystemWebRTC
 }

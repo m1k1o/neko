@@ -10,13 +10,13 @@
         @imageReady="screencastReady = $event"
       />
       <neko-cursors
-        v-if="state.cursors.enabled && state.sessions[state.session_id].profile.can_see_inactive_cursors"
+        v-if="state.settings.inactive_cursors && state.sessions[state.session_id].profile.can_see_inactive_cursors"
         :sessions="state.sessions"
         :sessionId="state.session_id"
         :hostId="state.control.host_id"
         :screenSize="state.screen.size"
         :canvasSize="canvasSize"
-        :cursors="state.cursors.list"
+        :cursors="state.cursors"
         :cursorDraw="inactiveCursorDrawFunction"
       />
       <neko-overlay
@@ -29,8 +29,10 @@
         :canvasSize="canvasSize"
         :isControling="controlling"
         :cursorDraw="cursorDrawFunction"
-        :implicitControl="state.control.implicit_hosting && state.sessions[state.session_id].profile.can_host"
-        :inactiveCursors="state.cursors.enabled && state.sessions[state.session_id].profile.sends_inactive_cursor"
+        :implicitControl="state.settings.implicit_hosting && state.sessions[state.session_id].profile.can_host"
+        :inactiveCursors="
+          state.settings.inactive_cursors && state.sessions[state.session_id].profile.sends_inactive_cursor
+        "
         @implicitControlRequest="control.request()"
         @implicitControlRelease="control.release()"
         @updateKeyboardModifiers="updateKeyboardModifiers($event)"
@@ -174,7 +176,6 @@
           variant: '',
         },
         host_id: null,
-        implicit_hosting: false,
         locked: false,
       },
       screen: {
@@ -187,10 +188,13 @@
       },
       session_id: null,
       sessions: {},
-      cursors: {
-        enabled: false,
-        list: [],
+      settings: {
+        private_mode: false,
+        implicit_hosting: false,
+        inactive_cursors: false,
+        merciful_reconnect: false,
       },
+      cursors: [],
     } as NekoState
 
     /////////////////////////////
@@ -597,13 +601,17 @@
       Vue.set(this.state.connection.webrtc, 'videos', [])
       Vue.set(this.state.control, 'clipboard', null)
       Vue.set(this.state.control, 'host_id', null)
-      Vue.set(this.state.control, 'implicit_hosting', false)
       Vue.set(this.state.screen, 'size', { width: 1280, height: 720, rate: 30 })
       Vue.set(this.state.screen, 'configurations', [])
       Vue.set(this.state, 'session_id', null)
       Vue.set(this.state, 'sessions', {})
-      Vue.set(this.state.cursors, 'enabled', false)
-      Vue.set(this.state.cursors, 'list', [])
+      Vue.set(this.state, 'settings', {
+        private_mode: false,
+        implicit_hosting: false,
+        inactive_cursors: false,
+        merciful_reconnect: false,
+      })
+      Vue.set(this.state, 'cursors', [])
 
       // webrtc
       Vue.set(this.state.connection.webrtc, 'stats', null)
