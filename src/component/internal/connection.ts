@@ -24,6 +24,7 @@ export interface NekoConnectionEvents {
 export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
   private _open = false
 
+  public paused = false
   public websocket = new NekoWebSocket()
   public logger = new NekoLoggerFactory(this.websocket)
   public webrtc = new NekoWebRTC(this.logger.new('webrtc'))
@@ -101,6 +102,11 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
 
     this._webrtcCongestionControlHandle = (stats: WebRTCStats) => {
       Vue.set(this._state.webrtc, 'stats', stats)
+
+      // when connection is paused, 0fps and muted track is expected
+      if (this.paused) {
+        return
+      }
 
       // if automatic quality adjusting is turned off
       if (!this._reconnector.webrtc.isOpen) return

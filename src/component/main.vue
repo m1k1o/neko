@@ -10,7 +10,7 @@
         @imageReady="screencastReady = $event"
       />
       <neko-cursors
-        v-if="state.settings.inactive_cursors && state.sessions[state.session_id].profile.can_see_inactive_cursors"
+        v-if="state.settings.inactive_cursors && session.profile.can_see_inactive_cursors"
         :sessions="state.sessions"
         :sessionId="state.session_id"
         :hostId="state.control.host_id"
@@ -20,6 +20,7 @@
         :cursorDraw="inactiveCursorDrawFunction"
       />
       <neko-overlay
+        v-show="!private_mode_enabled && connected"
         :style="{ pointerEvents: state.control.locked ? 'none' : 'auto' }"
         :sessions="state.sessions"
         :hostId="state.control.host_id"
@@ -29,10 +30,8 @@
         :canvasSize="canvasSize"
         :isControling="controlling"
         :cursorDraw="cursorDrawFunction"
-        :implicitControl="state.settings.implicit_hosting && state.sessions[state.session_id].profile.can_host"
-        :inactiveCursors="
-          state.settings.inactive_cursors && state.sessions[state.session_id].profile.sends_inactive_cursor
-        "
+        :implicitControl="state.settings.implicit_hosting && session.profile.can_host"
+        :inactiveCursors="state.settings.inactive_cursors && session.profile.sends_inactive_cursor"
         @implicitControlRequest="control.request()"
         @implicitControlRelease="control.release()"
         @updateKeyboardModifiers="updateKeyboardModifiers($event)"
@@ -210,8 +209,21 @@
       return this.state.control.host_id !== null && this.state.session_id === this.state.control.host_id
     }
 
+    public get session() {
+      return this.state.session_id != null ? this.state.sessions[this.state.session_id] : null
+    }
+
     public get is_admin() {
-      return this.state.session_id != null ? this.state.sessions[this.state.session_id].profile.is_admin : false
+      return this.session?.profile.is_admin || false
+    }
+
+    public get private_mode_enabled() {
+      return this.state.settings.private_mode && !this.is_admin
+    }
+
+    @Watch('private_mode_enabled')
+    private setConnectionPaused(paused: boolean) {
+      this.connection.paused = paused
     }
 
     screencastReady = false
