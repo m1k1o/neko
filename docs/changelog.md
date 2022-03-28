@@ -19,6 +19,7 @@
 - Broadcast status change is sent to all admins now.
 - NordVPN replaced with Sponsorblock extension in default configuration #144.
 - Removed `vncviewer` image, as its functionality is replaced and extended by remmina.
+- Opus uses `useinbandfec=1` from now on, hopefully fixes minor audio loss issues.
 
 ## [n.eko v2.5](https://github.com/m1k1o/neko/releases/tag/v2.5)
 
