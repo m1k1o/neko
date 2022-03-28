@@ -12,78 +12,137 @@ nat1to1: <ip>
 
 ## Environment variables
 
-```
-NEKO_SCREEN:
+#### `NEKO_SCREEN`:
   - Resolution after startup. Only Admins can change this later.
-  - e.g. '1920x1080@30'
-NEKO_PASSWORD:
-  - Password for the user login
-  - e.g. 'user_password'
-NEKO_PASSWORD_ADMIN:
-  - Password for the admin login
-  - e.g. 'admin_password'
-NEKO_EPR:
-  - For WebRTC needed range of ports
-  - e.g. 52000-52100
-NEKO_VP8:
-  - If vp8 should be used as video encoder for the stream (default encoder)
-  - e.g. 'true'
-NEKO_VP9:
-  - If vp9 should be used as video encoder for the stream (Parameter not optimized yet)
-  - e.g. 'false'
-NEKO_H264:
-  - If h264 should be used as video encoder for the stream (second best option)
-  - e.g. 'false'
-NEKO_VIDEO_BITRATE:
-  - Bitrate of the video stream in kb/s
-  - e.g. 3500
-NEKO_VIDEO:
-  - Makes it possible to create custom gstreamer pipelines. With this you could find the best quality for your CPU
-  - Installed are gstreamer1.0-plugins-base /  gstreamer1.0-plugins-good /  gstreamer1.0-plugins-bad /  gstreamer1.0-plugins-ugly
-  - e.g. ' ximagesrc display-name=%s show-pointer=true use-damage=false ! video/x-raw,framerate=30/1 ! videoconvert ! queue ! video/x-raw,format=NV12 ! x264enc threads=4 bitrate=3500 key-int-max=60 vbv-buf-capacity=4000 byte-stream=true tune=zerolatency speed-preset=veryfast ! video/x-h264,stream-format=byte-stream '
-NEKO_MAX_FPS:
-  - The resulting stream frames per seconds should be capped (0 for uncapped)
-  - e.g. 0
-NEKO_OPUS:
-  - If opus should be used as audio encoder for the stream (default encoder)
-  - e.g. 'true'
-NEKO_G722:
-  - If g722 should be used as audio encoder for the stream
-  - e.g. 'false'
-NEKO_PCMU:
-  - If pcmu should be used as audio encoder for the stream
-  - e.g. 'false'
-NEKO_PCMA:
-  - If pcma should be used as audio encoder for the stream
-  - e.g. 'false'
-NEKO_AUDIO_BITRATE:
-  - Bitrate of the audio stream in kb/s
-  - e.g. 196
-NEKO_CERT:
-  - Path to the SSL-Certificate
-  - e.g. '/certs/cert.pem'
-NEKO_KEY:
-  - Path to the SSL-Certificate private key
-  - e.g. '/certs/key.pem'
-NEKO_ICELITE:
-  - Use the ice lite protocol
-  - e.g. false
-NEKO_ICESERVER:
-  - Describes a single STUN and TURN server that can be used by the ICEAgent to establish a connection with a peer (simple usage for server without authentication)
-  - e.g. 'stun:stun.l.google.com:19302'
-NEKO_ICESERVERS:
-  - Describes multiple STUN and TURN server that can be used by the ICEAgent to establish a connection with a peer
-  - e.g. '[{"urls": ["turn:turn.example.com:19302", "stun:stun.example.com:19302"], "username": "name", "credential": "password"}, {"urls": ["stun:stun.example2.com:19302"]}]'
-  - [More information](https://developer.mozilla.org/en-US/docs/Web/API/RTCIceServer)
-NEKO_LOCKS:
-  - Resources, that will be locked when starting, separated by whitespace.
-  - Currently supported: control login
-NEKO_CONTROL_PROTECTION:
+  - e.g. `1920x1080@30`
+#### `NEKO_PASSWORD`:
+  - Password for the user login.
+  - e.g. `user_password`
+#### `NEKO_PASSWORD_ADMIN`:
+  - Password for the admin login.
+  - e.g. `admin_password`
+#### `NEKO_CONTROL_PROTECTION`:
   - Control protection means, users can gain control only if at least one admin is in the room.
-  - e.g. false
-NEKO_BROADCAST_URL:
-  - Set a default URL for broadcast streams. Setting this value will automatically enable broadcasting when n.eko starts. It can be disabled/changed later in GUI.
-```
+  - e.g. `false`
+#### `NEKO_IMPLICIT_CONTROL`:
+  - If enabled members can gain control implicitly, they don't needd to request control.
+  - e.g. `false`
+#### `NEKO_LOCKS`:
+  - Resources, that will be locked when starting, separated by whitespace.
+  - Currently supported:
+    - `control`
+    - `login`
+  - e.g. `control`
+
+### WebRTC
+
+#### `NEKO_EPR`:
+  - For WebRTC needed range of UDP ports.
+  - e.g. `52000-52099`
+#### `NEKO_UDPMUX`:
+  - Alternative to epr with only one UDP port.
+  - e.g. `52100`
+#### `NEKO_TCPMUX`:
+  - Use TCP connection, meant as fallback for UDP.
+  - e.g. `52100`
+#### `NEKO_NAT1TO1`:
+  - IP of the server that will be sent to client, if not specified, public IP is automatically resolved.
+  - e.g. `10.0.0.1`
+#### `NEKO_IPFETCH`:
+  - Automatically fetch IP address from given URL when `nat1to1` is not specified.
+  - e.g. `http://checkip.amazonaws.com`
+#### `NEKO_ICELITE`:
+  - Use the ice lite protocol.
+  - e.g. `false`
+#### `NEKO_ICESERVER`:
+  - Describes a single STUN and TURN server that can be used by the ICEAgent to establish a connection with a peer (simple usage for server without authentication).
+  - e.g. `stun:stun.l.google.com:19302`
+#### `NEKO_ICESERVERS`:
+  - Describes multiple STUN and TURN server that can be used by the ICEAgent to establish a connection with a peer.
+  - e.g. `[{"urls": ["turn:turn.example.com:19302", "stun:stun.example.com:19302"], "username": "name", "credential": "password"}, {"urls": ["stun:stun.example2.com:19302"]}]`
+  - [More information](https://developer.mozilla.org/en-US/docs/Web/API/RTCIceServer)
+
+### Video
+
+#### `NEKO_VP8`:
+  - If vp8 should be used as video encoder for the stream *(default encoder)*.
+  - e.g. `true`
+#### `NEKO_VP9`:
+  - If vp9 should be used as video encoder for the stream *(parameter not optimized yet)*.
+  - e.g. `false`
+#### `NEKO_H264`:
+  - If h264 should be used as video encoder for the stream *(second best option)*.
+  - e.g. `false`
+#### `NEKO_VIDEO_BITRATE`:
+  - Bitrate of the video stream in kb/s.
+  - e.g. 3500
+#### `NEKO_VIDEO`:
+  - Makes it possible to create custom gstreamer video pipeline. With this you could find the best quality for your CPU.
+  - Installed are
+    - `gstreamer1.0-plugins-base`
+    - `gstreamer1.0-plugins-good`
+    - `gstreamer1.0-plugins-bad`
+    - `gstreamer1.0-plugins-ugly`
+  - e.g. `ximagesrc display-name=%s show-pointer=true use-damage=false ! video/x-raw,framerate=30/1 ! videoconvert ! queue ! video/x-raw,format=NV12 ! x264enc threads=4 bitrate=3500 key-int-max=60 vbv-buf-capacity=4000 byte-stream=true tune=zerolatency speed-preset=veryfast ! video/x-h264,stream-format=byte-stream`
+#### `NEKO_MAX_FPS`:
+  - The resulting stream frames per seconds should be capped *(0 for uncapped)*.
+  - e.g. `0`
+#### `NEKO_HWENC`:
+  - Use hardware accelerated encoding, for now supported only `VAAPI`.
+  - e.g. `VAAPI`
+
+### Audio
+
+#### `NEKO_OPUS`:
+  - If opus should be used as audio encoder for the stream *(default encoder)*.
+  - e.g. `true`
+#### `NEKO_G722`:
+  - If g722 should be used as audio encoder for the stream.
+  - e.g. `false`
+#### `NEKO_PCMU`:
+  - If pcmu should be used as audio encoder for the stream.
+  - e.g. `false`
+#### `NEKO_PCMA`:
+  - If pcma should be used as audio encoder for the stream.
+  - e.g. `false`
+#### `NEKO_AUDIO_BITRATE`:
+  - Bitrate of the audio stream in kb/s.
+  - e.g. `196`
+#### `NEKO_AUDIO`:
+  - Makes it possible to create custom gstreamer audio pipeline, same as for video.
+  e.g. `pulsesrc device=%s ! audio/x-raw,channels=2 ! audioconvert ! opusenc bitrate=128000`
+
+### Broadcast
+
+#### `NEKO_BROADCAST_PIPELINE`:
+  - Makes it possible to create custom gstreamer pipeline used for broadcasting, strings `{url}`, `{device}` and `{display}` will be replaced.
+#### `NEKO_BROADCAST_URL`:
+  - Set a default URL for broadcast streams. Setting this value will automatically enable broadcasting when n.eko starts. It can be disabled/changed later by admins in the GUI.
+  - e.g. `rtmp://<your-server>:1935/ingest/<stream-key>`
+
+### Server
+
+#### `NEKO_BIND`:
+  - Address/port/socket where neko binds to *(default 127.0.0.1:8080)*.
+  - e.g. `:8080`
+#### `NEKO_CERT`:
+  - Path to the SSL-Certificate.
+  - e.g. `/certs/cert.pem`
+#### `NEKO_KEY`:
+  - Path to the SSL-Certificate private key.
+  - e.g. `/certs/key.pem`
+#### `NEKO_PROXY`:
+  - Enable reverse proxy mode, so that neko trusts `X-Forwarded-For` headers.
+  - e.g. `false`
+
+### Expert settings
+
+#### `NEKO_DISPLAY`:
+  - XDisplay to capture.
+#### `NEKO_DEVICE`:
+  - Audio device be to captured.
+#### `NEKO_STATIC`:
+  - Path to neko client files to serve.
 
 ## Agruments
 
@@ -107,6 +166,7 @@ Flags:
       --g722                        use G722 audio codec
       --h264                        use H264 video codec
   -h, --help                        help for serve
+      --hwenc string                use hardware accelerated encoding
       --icelite                     configures whether or not the ice agent should be a lite agent
       --iceserver strings           describes a single STUN and TURN server that can be used by the ICEAgent to establish a connection with a peer (default [stun:stun.l.google.com:19302])
       --iceservers string           describes a single STUN and TURN server that can be used by the ICEAgent to establish a connection with a peer
