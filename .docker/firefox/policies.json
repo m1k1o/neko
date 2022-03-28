@@ -108,7 +108,7 @@
       "datareporting.policy.dataSubmissionPolicyBypassNotification": true,
       "dom.disable_window_flip": true,
       "dom.disable_window_move_resize": true,
-      "dom.event.contextmenu.enabled": false,
+      "dom.event.contextmenu.enabled": true,
       "extensions.getAddons.showPane": false,
       "places.history.enabled": false,
       "privacy.file_unique_origin": true,
