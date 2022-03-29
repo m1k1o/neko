@@ -1,4 +1,15 @@
 package types
+import (
+	"github.com/spf13/cobra"
+)
+
+type ControlMode string
+
+const (
+	None ControlMode 	= ""
+	OnClick        			= "on_click"
+	OnMove        			= "on_click"
+)
 
 type Member struct {
 	ID    string `json:"id"`
@@ -30,6 +41,7 @@ type Session interface {
 }
 
 type SessionManager interface {
+	Init(cmd *cobra.Command) error
 	New(id string, admin bool, socket WebSocket) Session
 	HasHost() bool
 	IsHost(id string) bool
@@ -51,4 +63,6 @@ type SessionManager interface {
 	OnDestroy(listener func(id string, session Session))
 	OnCreated(listener func(id string, session Session))
 	OnConnected(listener func(id string, session Session))
+	ImplicitControl() bool
+	ImplicitControlMode() ControlMode
 }
