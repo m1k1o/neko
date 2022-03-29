@@ -34,6 +34,8 @@ export interface NekoWebRTCEvents {
 export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
   // used for creating snaps from video for fallback mode
   public video!: HTMLVideoElement
+  // information for WebRTC that server video has been paused, 0fps is expected
+  public paused = false
 
   private _peer?: RTCPeerConnection
   private _channel?: RTCDataChannel
@@ -519,6 +521,9 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
         const packetsReceivedDiff = report.packetsReceived - packetsReceived
 
         this.emit('stats', {
+          // Firefox does not emit any event when starting paused
+          // because there is no video report found in stats.
+          paused: this.paused,
           bitrate: (bytesDiff / tsDiff) * 1000,
           packetLoss: (packetsLostDiff / (packetsLostDiff + packetsReceivedDiff)) * 100,
           fps: Number(report.framesPerSecond || framesDecodedDiff / (tsDiff / 1000)),

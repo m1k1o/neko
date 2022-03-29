@@ -1,4 +1,5 @@
 export interface WebRTCStats {
+  paused: boolean
   bitrate: number
   packetLoss: number
   fps: number

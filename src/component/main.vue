@@ -222,8 +222,8 @@
     }
 
     @Watch('private_mode_enabled')
-    private setConnectionPaused(paused: boolean) {
-      this.connection.paused = paused
+    private setWebRTCPaused(paused: boolean) {
+      this.connection.webrtc.paused = paused
     }
 
     screencastReady = false
