@@ -48,6 +48,10 @@ func (r *router) Put(pattern string, fn types.RouterHandler) {
 	r.chi.Put(pattern, routeHandler(fn))
 }
 
+func (r *router) Patch(pattern string, fn types.RouterHandler) {
+	r.chi.Patch(pattern, routeHandler(fn))
+}
+
 func (r *router) Delete(pattern string, fn types.RouterHandler) {
 	r.chi.Delete(pattern, routeHandler(fn))
 }

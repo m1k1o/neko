@@ -14,6 +14,7 @@ type Router interface {
 	Get(pattern string, fn RouterHandler)
 	Post(pattern string, fn RouterHandler)
 	Put(pattern string, fn RouterHandler)
+	Patch(pattern string, fn RouterHandler)
 	Delete(pattern string, fn RouterHandler)
 	With(fn MiddlewareHandler) Router
 	WithBypass(fn func(next http.Handler) http.Handler) Router
