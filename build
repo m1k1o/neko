@@ -1,0 +1,55 @@
+#!/bin/bash
+
+mkdir -p bin/plugins
+rm bin/plugins/*
+
+#
+# aborting if any command returns a non-zero value
+set -e
+
+#
+# set git build variables if git exists
+if git version > /dev/null && [ -z $GIT_COMMIT ] && [ -z $GIT_COMMIT ];
+then
+    GIT_COMMIT=`git rev-parse --short HEAD`
+    GIT_BRANCH=`git rev-parse --symbolic-full-name --abbrev-ref HEAD`
+fi
+
+#
+# load server dependencies
+go get -v -t -d .
+
+#
+# build server
+go build \
+    -o bin/neko \
+    -ldflags "
+        -s -w
+        -X 'demodesk/neko.buildDate=`date -u +'%Y-%m-%dT%H:%M:%SZ'`'
+        -X 'demodesk/neko.gitCommit=${GIT_COMMIT}'
+        -X 'demodesk/neko.gitBranch=${GIT_BRANCH}'
+    " \
+    cmd/neko/main.go;
+
+#
+# if plugins directory does not exist
+if [ ! -d "./plugins" ];
+then
+    echo "No plugins directory found, skipping..."
+    exit 0
+fi
+
+#
+# build plugins
+for plugPath in ./plugins/*; do
+    pushd $plugPath
+
+    # replace plugin dependecy
+    go mod edit -replace "gitlab.com/demodesk/neko/server=../../"
+    # load plugin dependencies
+    go get -v -t -d .
+    # build plugin
+    go build -buildmode=plugin -o "../../bin/plugins/${plugPath##*/}.so"
+
+    popd
+done

@@ -7,7 +7,6 @@ import (
 
 	"gitlab.com/demodesk/neko/server/internal/api/members"
 	"gitlab.com/demodesk/neko/server/internal/api/room"
-	"gitlab.com/demodesk/neko/server/internal/config"
 	"gitlab.com/demodesk/neko/server/pkg/auth"
 	"gitlab.com/demodesk/neko/server/pkg/types"
 	"gitlab.com/demodesk/neko/server/pkg/utils"
@@ -26,7 +25,6 @@ func New(
 	members types.MemberManager,
 	desktop types.DesktopManager,
 	capture types.CaptureManager,
-	conf *config.Server,
 ) *ApiManagerCtx {
 
 	return &ApiManagerCtx{

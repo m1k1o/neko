@@ -14,10 +14,10 @@ import (
 	"gitlab.com/demodesk/neko/server/internal/desktop"
 	"gitlab.com/demodesk/neko/server/internal/http"
 	"gitlab.com/demodesk/neko/server/internal/member"
+	"gitlab.com/demodesk/neko/server/internal/plugins"
 	"gitlab.com/demodesk/neko/server/internal/session"
 	"gitlab.com/demodesk/neko/server/internal/webrtc"
 	"gitlab.com/demodesk/neko/server/internal/websocket"
-	"gitlab.com/demodesk/neko/server/modules"
 )
 
 func init() {
@@ -43,12 +43,12 @@ type serve struct {
 	logger zerolog.Logger
 
 	configs struct {
-		Root    config.Root
 		Desktop config.Desktop
 		Capture config.Capture
 		WebRTC  config.WebRTC
 		Member  config.Member
 		Session config.Session
+		Plugins config.Plugins
 		Server  config.Server
 	}
 
@@ -59,6 +59,7 @@ type serve struct {
 		member    *member.MemberManagerCtx
 		session   *session.SessionManagerCtx
 		webSocket *websocket.WebSocketManagerCtx
+		plugins   *plugins.PluginsManagerCtx
 		api       *api.ApiManagerCtx
 		http      *http.HttpManagerCtx
 	}
@@ -80,14 +81,11 @@ func (c *serve) Init(cmd *cobra.Command) error {
 	if err := c.configs.Session.Init(cmd); err != nil {
 		return err
 	}
-	if err := c.configs.Server.Init(cmd); err != nil {
+	if err := c.configs.Plugins.Init(cmd); err != nil {
 		return err
 	}
-
-	for _, cfg := range modules.Configs() {
-		if err := cfg.Init(root); err != nil {
-			log.Panic().Err(err).Msg("unable to initialize configuration")
-		}
+	if err := c.configs.Server.Init(cmd); err != nil {
+		return err
 	}
 
 	return nil
@@ -101,14 +99,11 @@ func (c *serve) Preflight() {
 	c.configs.WebRTC.Set()
 	c.configs.Member.Set()
 	c.configs.Session.Set()
+	c.configs.Plugins.Set()
 	c.configs.Server.Set()
-
-	for _, cfg := range modules.Configs() {
-		cfg.Set()
-	}
 }
 
-func (c *serve) Start() {
+func (c *serve) Start(cmd *cobra.Command) {
 	c.managers.session = session.New(
 		&c.configs.Session,
 	)
@@ -153,10 +148,18 @@ func (c *serve) Start() {
 		c.managers.member,
 		c.managers.desktop,
 		c.managers.capture,
-		&c.configs.Server,
 	)
 
-	modules.Start(
+	c.managers.plugins = plugins.New(
+		&c.configs.Plugins,
+	)
+
+	// init and set configuration now
+	// this means it won't be in --help
+	c.managers.plugins.InitConfigs(cmd)
+	c.managers.plugins.SetConfigs()
+
+	c.managers.plugins.Start(
 		c.managers.session,
 		c.managers.webSocket,
 		c.managers.api,
@@ -188,8 +191,8 @@ func (c *serve) Shutdown() {
 	err = c.managers.webSocket.Shutdown()
 	c.logger.Err(err).Msg("websocket manager shutdown")
 
-	err = modules.Shutdown()
-	c.logger.Err(err).Msg("modules shutdown")
+	err = c.managers.plugins.Shutdown()
+	c.logger.Err(err).Msg("plugins manager shutdown")
 
 	err = c.managers.http.Shutdown()
 	c.logger.Err(err).Msg("http manager shutdown")
@@ -197,7 +200,7 @@ func (c *serve) Shutdown() {
 
 func (c *serve) Command(cmd *cobra.Command, args []string) {
 	c.logger.Info().Msg("starting neko server")
-	c.Start()
+	c.Start(cmd)
 	c.logger.Info().Msg("neko ready")
 
 	quit := make(chan os.Signal, 1)

@@ -23,16 +23,7 @@ ARG GIT_BRANCH=dev
 #
 # build server
 COPY . .
-RUN go get -v -t -d . && go build \
-    -tags "browser browser_profile" \
-    -o bin/neko \
-    -ldflags " \
-        -s -w \
-        -X 'demodesk/neko.buildDate=`date -u +'%Y-%m-%dT%H:%M:%SZ'`' \
-        -X 'demodesk/neko.gitCommit=${GIT_COMMIT}' \
-        -X 'demodesk/neko.gitBranch=${GIT_BRANCH}' \
-    " \
-    cmd/neko/main.go;
+RUN ./build
 
 #
 # Stage 2: Runtime.
@@ -123,9 +114,15 @@ COPY runtime/fonts /usr/local/share/fonts
 ENV USER=$USERNAME
 ENV DISPLAY=:99.0
 ENV NEKO_SERVER_BIND=:8080
+ENV NEKO_PLUGINS_ENABLED=true
+ENV NEKO_PLUGINS_DIR=/etc/neko/plugins/
 
 #
-# copy executabe from previous stage
+# copy plugins from previous stage
+COPY --from=build /src/bin/plugins/ $NEKO_PLUGINS_DIR
+
+#
+# copy executable from previous stage
 COPY --from=build /src/bin/neko /usr/bin/neko
 
 #
