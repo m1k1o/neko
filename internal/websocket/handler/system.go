@@ -49,10 +49,6 @@ func (h *MessageHandlerCtx) systemInit(session types.Session) error {
 			WebRTC: message.SystemWebRTC{
 				Videos: h.capture.VideoIDs(),
 			},
-
-			// TODO: Left for compatibility with old client, remove.
-			ImplicitHosting: h.sessions.Settings().ImplicitHosting,
-			InactiveCursors: h.sessions.Settings().InactiveCursors,
 		})
 
 	return nil

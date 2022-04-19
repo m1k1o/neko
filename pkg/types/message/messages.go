@@ -22,10 +22,6 @@ type SystemInit struct {
 	Settings          types.Settings         `json:"settings"`
 	ScreencastEnabled bool                   `json:"screencast_enabled"`
 	WebRTC            SystemWebRTC           `json:"webrtc"`
-
-	// TODO: Left for compatibility with old client, remove.
-	ImplicitHosting bool `json:"implicit_hosting"`
-	InactiveCursors bool `json:"inactive_cursors"`
 }
 
 type SystemAdmin struct {
