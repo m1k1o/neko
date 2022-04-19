@@ -59,7 +59,7 @@ type serve struct {
 		member    *member.MemberManagerCtx
 		session   *session.SessionManagerCtx
 		webSocket *websocket.WebSocketManagerCtx
-		plugins   *plugins.PluginsManagerCtx
+		plugins   *plugins.ManagerCtx
 		api       *api.ApiManagerCtx
 		http      *http.HttpManagerCtx
 	}

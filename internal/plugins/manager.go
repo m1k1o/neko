@@ -14,13 +14,13 @@ import (
 	"gitlab.com/demodesk/neko/server/pkg/types"
 )
 
-type PluginsManagerCtx struct {
+type ManagerCtx struct {
 	logger  zerolog.Logger
 	plugins map[string]types.Plugin
 }
 
-func New(config *config.Plugins) *PluginsManagerCtx {
-	manager := &PluginsManagerCtx{
+func New(config *config.Plugins) *ManagerCtx {
+	manager := &ManagerCtx{
 		logger:  log.With().Str("module", "plugins").Logger(),
 		plugins: map[string]types.Plugin{},
 	}
@@ -33,7 +33,7 @@ func New(config *config.Plugins) *PluginsManagerCtx {
 	return manager
 }
 
-func (manager *PluginsManagerCtx) loadDir(dir string) error {
+func (manager *ManagerCtx) loadDir(dir string) error {
 	return filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -50,7 +50,7 @@ func (manager *PluginsManagerCtx) loadDir(dir string) error {
 	})
 }
 
-func (manager *PluginsManagerCtx) load(path string) error {
+func (manager *ManagerCtx) load(path string) error {
 	pl, err := plugin.Open(path)
 	if err != nil {
 		return err
@@ -66,11 +66,16 @@ func (manager *PluginsManagerCtx) load(path string) error {
 		return fmt.Errorf("not a valid plugin")
 	}
 
-	manager.plugins[path] = p
+	_, ok = manager.plugins[p.Name()]
+	if ok {
+		return fmt.Errorf("plugin '%s' already exists", p.Name())
+	}
+
+	manager.plugins[p.Name()] = p
 	return nil
 }
 
-func (manager *PluginsManagerCtx) InitConfigs(cmd *cobra.Command) {
+func (manager *ManagerCtx) InitConfigs(cmd *cobra.Command) {
 	for path, plug := range manager.plugins {
 		if err := plug.Config().Init(cmd); err != nil {
 			log.Err(err).Str("plugin", path).Msg("unable to initialize configuration")
@@ -78,31 +83,46 @@ func (manager *PluginsManagerCtx) InitConfigs(cmd *cobra.Command) {
 	}
 }
 
-func (manager *PluginsManagerCtx) SetConfigs() {
+func (manager *ManagerCtx) SetConfigs() {
 	for _, plug := range manager.plugins {
 		plug.Config().Set()
 	}
 }
 
-func (manager *PluginsManagerCtx) Start(
+func (manager *ManagerCtx) Start(
 	sessionManager types.SessionManager,
 	webSocketManager types.WebSocketManager,
 	apiManager types.ApiManager,
 ) {
 	for _, plug := range manager.plugins {
 		plug.Start(types.PluginManagers{
-			SessionManager:   sessionManager,
-			WebSocketManager: webSocketManager,
-			ApiManager:       apiManager,
+			SessionManager:        sessionManager,
+			WebSocketManager:      webSocketManager,
+			ApiManager:            apiManager,
+			LoadServiceFromPlugin: manager.LookupService,
 		})
 	}
 }
 
-func (manager *PluginsManagerCtx) Shutdown() error {
+func (manager *ManagerCtx) Shutdown() error {
 	for path, plug := range manager.plugins {
 		err := plug.Shutdown()
 		manager.logger.Err(err).Str("plugin", path).Msg("plugin shutdown")
 	}
 
 	return nil
+}
+
+func (manager *ManagerCtx) LookupService(pluginName string) (any, error) {
+	plug, ok := manager.plugins[pluginName]
+	if !ok {
+		return nil, fmt.Errorf("plugin '%s' not found", pluginName)
+	}
+
+	expPlug, ok := plug.(types.ExposablePlugin)
+	if !ok {
+		return nil, fmt.Errorf("plugin '%s' is not exposable", pluginName)
+	}
+
+	return expPlug.ExposeService(), nil
 }
