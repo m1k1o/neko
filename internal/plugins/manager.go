@@ -94,13 +94,15 @@ func (manager *ManagerCtx) Start(
 	webSocketManager types.WebSocketManager,
 	apiManager types.ApiManager,
 ) {
-	for _, plug := range manager.plugins {
-		plug.Start(types.PluginManagers{
+	for path, plug := range manager.plugins {
+		err := plug.Start(types.PluginManagers{
 			SessionManager:        sessionManager,
 			WebSocketManager:      webSocketManager,
 			ApiManager:            apiManager,
 			LoadServiceFromPlugin: manager.LookupService,
 		})
+
+		manager.logger.Err(err).Str("plugin", path).Msg("plugin start")
 	}
 }
 

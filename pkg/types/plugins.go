@@ -9,7 +9,7 @@ import (
 type Plugin interface {
 	Name() string
 	Config() PluginConfig
-	Start(PluginManagers)
+	Start(PluginManagers) error
 	Shutdown() error
 }
 
