@@ -57,8 +57,8 @@ export class NekoControl extends EventEmitter<NekoControlEvents> {
     this._connection.websocket.send(EVENT.CONTROL_COPY)
   }
 
-  public paste() {
-    this._connection.websocket.send(EVENT.CONTROL_PASTE)
+  public paste(text?: string) {
+    this._connection.websocket.send(EVENT.CONTROL_PASTE, { text } as message.ClipboardData)
   }
 
   public selectAll() {
