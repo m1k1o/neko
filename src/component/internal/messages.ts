@@ -269,6 +269,7 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
   protected [EVENT.CLIPBOARD_UPDATED]({ text }: message.ClipboardData) {
     this._localLog.debug(`EVENT.CLIPBOARD_UPDATED`)
     Vue.set(this._state.control, 'clipboard', { text })
+    navigator.clipboard.writeText(text) // sync user's clipboard
     this.emit('room.clipboard.updated', text)
   }
 
