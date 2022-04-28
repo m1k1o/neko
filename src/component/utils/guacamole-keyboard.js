@@ -1427,9 +1427,9 @@ Guacamole.Keyboard = function Keyboard(element) {
         };
 
         // Automatically type text entered into the wrapped field
-        element.addEventListener("input", handleInput, false);
-        element.addEventListener("compositionend", handleComposition, false);
-
+        //20220428: NEKO: Removed because of clipboard handling.
+        //element.addEventListener("input", handleInput, false);
+        //element.addEventListener("compositionend", handleComposition, false);
     };
 
     // Listen to given element, if any

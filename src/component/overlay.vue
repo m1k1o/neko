@@ -29,7 +29,7 @@
     bottom: 0;
     width: 100%;
     height: 100%;
-    font-size: 0;
+    font-size: 1px; /* chrome would not paste text if 0px */
     outline: 0;
     border: 0;
     color: transparent;
@@ -227,8 +227,10 @@
       return x
     }
 
-    // TODO: Custom clipboard sharing logic.
-    onInput() {}
+    onInput(e: InputEvent) {
+      this.$emit('clipboard', this._textarea.value)
+      this._textarea.value = ''
+    }
 
     onWheel(e: WheelEvent) {
       if (!this.isControling) {

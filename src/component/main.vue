@@ -37,6 +37,7 @@
         @updateKeyboardModifiers="updateKeyboardModifiers($event)"
         @uploadDrop="uploadDrop($event)"
         @onAction="control.emit('overlay.' + $event.action, $event.target)"
+        @clipboard="control.paste($event)"
       />
     </div>
   </div>
