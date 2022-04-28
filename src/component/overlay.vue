@@ -1,22 +1,25 @@
 <template>
-  <canvas
-    ref="overlay"
-    class="neko-overlay"
-    tabindex="0"
-    :style="{ cursor }"
-    @click.stop.prevent="$emit('onAction', { action: 'click', target: $event })"
-    @contextmenu.stop.prevent="$emit('onAction', { action: 'contextmenu', target: $event })"
-    @wheel.stop.prevent="onWheel"
-    @mousemove.stop.prevent="onMouseMove"
-    @mousedown.stop.prevent="onMouseDown"
-    @mouseup.stop.prevent="onMouseUp"
-    @mouseenter.stop.prevent="onMouseEnter"
-    @mouseleave.stop.prevent="onMouseLeave"
-    @dragenter.stop.prevent="onDragEnter"
-    @dragleave.stop.prevent="onDragLeave"
-    @dragover.stop.prevent="onDragOver"
-    @drop.stop.prevent="onDrop"
-  />
+  <div>
+    <canvas ref="overlay" class="neko-overlay" tabindex="0" />
+    <textarea
+      ref="textarea"
+      class="neko-overlay"
+      :style="{ cursor }"
+      @click.stop.prevent="$emit('onAction', { action: 'click', target: $event })"
+      @contextmenu.stop.prevent="$emit('onAction', { action: 'contextmenu', target: $event })"
+      @input.stop.prevent="onInput"
+      @wheel.stop.prevent="onWheel"
+      @mousemove.stop.prevent="onMouseMove"
+      @mousedown.stop.prevent="onMouseDown"
+      @mouseup.stop.prevent="onMouseUp"
+      @mouseenter.stop.prevent="onMouseEnter"
+      @mouseleave.stop.prevent="onMouseLeave"
+      @dragenter.stop.prevent="onDragEnter"
+      @dragleave.stop.prevent="onDragLeave"
+      @dragover.stop.prevent="onDragOver"
+      @drop.stop.prevent="onDrop"
+    />
+  </div>
 </template>
 
 <style lang="scss" scoped>
@@ -26,7 +29,11 @@
     bottom: 0;
     width: 100%;
     height: 100%;
+    font-size: 0;
     outline: 0;
+    border: 0;
+    color: transparent;
+    background: transparent;
   }
 </style>
 
@@ -34,7 +41,7 @@
   import { Vue, Component, Ref, Prop, Watch } from 'vue-property-decorator'
 
   import GuacamoleKeyboard from './utils/guacamole-keyboard'
-  import { keySymsRemap } from './utils/keyboard-remapping'
+  import { KeyTable, keySymsRemap } from './utils/keyboard-remapping'
   import { getFilesFromDataTansfer } from './utils/file-upload'
   import { NekoWebRTC } from './internal/webrtc'
   import { Session, Scroll } from './types/state'
@@ -53,10 +60,12 @@
   })
   export default class extends Vue {
     @Ref('overlay') readonly _overlay!: HTMLCanvasElement
+    @Ref('textarea') readonly _textarea!: HTMLTextAreaElement
     private _ctx!: CanvasRenderingContext2D
 
     private keyboard = GuacamoleKeyboard()
     private focused = false
+    private ctrlKey = 0
 
     @Prop()
     private readonly sessions!: Record<string, Session>
@@ -119,10 +128,20 @@
           return true
         }
 
+        // ctrl+v is aborted
+        if (this.ctrlKey != 0 && key == KeyTable.XK_v) {
+          this.keyboard.release(this.ctrlKey)
+          return true
+        }
+
+        // save information if it is ctrl key event
+        const isCtrlKey = key == KeyTable.XK_Control_L || key == KeyTable.XK_Control_R
+        if (isCtrlKey) this.ctrlKey = key
+
         this.webrtc.send('keydown', {
           key: keySymsRemap(key),
         })
-        return false
+        return isCtrlKey
       }
       this.keyboard.onkeyup = (key: number) => {
         if (!this.focused) {
@@ -133,11 +152,14 @@
           return
         }
 
+        const isCtrlKey = key == KeyTable.XK_Control_L || key == KeyTable.XK_Control_R
+        if (isCtrlKey) this.ctrlKey = 0
+
         this.webrtc.send('keyup', {
           key: keySymsRemap(key),
         })
       }
-      this.keyboard.listenTo(this._overlay)
+      this.keyboard.listenTo(this._textarea)
 
       this.webrtc.addListener('cursor-position', this.onCursorPosition)
       this.webrtc.addListener('cursor-image', this.onCursorImage)
@@ -204,6 +226,9 @@
 
       return x
     }
+
+    // TODO: Custom clipboard sharing logic.
+    onInput() {}
 
     onWheel(e: WheelEvent) {
       if (!this.isControling) {
@@ -294,7 +319,7 @@
     }
 
     onMouseEnter(e: MouseEvent) {
-      this._overlay.focus()
+      this._textarea.focus()
       this.focused = true
 
       if (this.isControling) {
@@ -313,7 +338,7 @@
         })
       }
 
-      this._overlay.blur()
+      this._textarea.blur()
       this.focused = false
     }
 

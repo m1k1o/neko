@@ -1,4 +1,6 @@
-const KeyTable = {
+export const KeyTable = {
+  XK_v: 0x0076, // U+0076 LATIN SMALL LETTER V
+
   XK_Control_L: 0xffe3, // Left control
   XK_Control_R: 0xffe4, // Right control
 
