@@ -451,7 +451,7 @@
 
       /* Initialize Guacamole Keyboard */
       this.keyboard.onkeydown = (key: number) => {
-        if (!this.focused || !this.hosting || this.locked) {
+        if (!this.hosting || this.locked) {
           return true
         }
 
@@ -459,7 +459,7 @@
         return false
       }
       this.keyboard.onkeyup = (key: number) => {
-        if (!this.focused || !this.hosting || this.locked) {
+        if (!this.hosting || this.locked) {
           return
         }
 
@@ -700,7 +700,6 @@
         this.syncClipboard()
       }
 
-      this._overlay.focus()
       this.focused = true
     }
 
@@ -723,6 +722,16 @@
       this._player.style.height = `${offsetHeight}px`
       this._container.style.maxWidth = `${(this.horizontal / this.vertical) * offsetHeight}px`
       this._aspect.style.paddingBottom = `${(this.vertical / this.horizontal) * 100}%`
+    }
+
+    @Watch('focused')
+    @Watch('hosting')
+    @Watch('locked')
+    onFocus() {
+      // in order to capture key events, overlay must be focused
+      if (this.focused && this.hosting && !this.locked) {
+        this._overlay.focus()
+      }
     }
   }
 </script>
