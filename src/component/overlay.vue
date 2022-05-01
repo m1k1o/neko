@@ -65,7 +65,6 @@
 
     private keyboard = GuacamoleKeyboard()
     private focused = false
-    private ctrlKey = 0
 
     @Prop()
     private readonly sessions!: Record<string, Session>
@@ -118,25 +117,26 @@
       this._overlay.width = width * CANVAS_SCALE
       this._overlay.height = height * CANVAS_SCALE
 
+      let ctrlKey = 0
+      let noKeyUp = {} as Record<number, boolean>
+
       // Initialize Guacamole Keyboard
       this.keyboard.onkeydown = (key: number) => {
-        if (!this.focused) {
-          return true
-        }
-
-        if (!this.isControling) {
+        if (!this.focused || !this.isControling) {
+          noKeyUp[key] = true
           return true
         }
 
         // ctrl+v is aborted
-        if (this.ctrlKey != 0 && key == KeyTable.XK_v) {
-          this.keyboard.release(this.ctrlKey)
+        if (ctrlKey != 0 && key == KeyTable.XK_v) {
+          this.keyboard.release(ctrlKey)
+          noKeyUp[key] = true
           return true
         }
 
         // save information if it is ctrl key event
         const isCtrlKey = key == KeyTable.XK_Control_L || key == KeyTable.XK_Control_R
-        if (isCtrlKey) this.ctrlKey = key
+        if (isCtrlKey) ctrlKey = key
 
         this.webrtc.send('keydown', {
           key: keySymsRemap(key),
@@ -144,16 +144,13 @@
         return isCtrlKey
       }
       this.keyboard.onkeyup = (key: number) => {
-        if (!this.focused) {
-          return
-        }
-
-        if (!this.isControling) {
+        if (key in noKeyUp) {
+          delete noKeyUp[key]
           return
         }
 
         const isCtrlKey = key == KeyTable.XK_Control_L || key == KeyTable.XK_Control_R
-        if (isCtrlKey) this.ctrlKey = 0
+        if (isCtrlKey) ctrlKey = 0
 
         this.webrtc.send('keyup', {
           key: keySymsRemap(key),
