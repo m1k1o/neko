@@ -122,6 +122,8 @@
 
       // Initialize Guacamole Keyboard
       this.keyboard.onkeydown = (key: number) => {
+        key = keySymsRemap(key)
+
         if (!this.isControling) {
           noKeyUp[key] = true
           return true
@@ -138,12 +140,12 @@
         const isCtrlKey = key == KeyTable.XK_Control_L || key == KeyTable.XK_Control_R
         if (isCtrlKey) ctrlKey = key
 
-        this.webrtc.send('keydown', {
-          key: keySymsRemap(key),
-        })
+        this.webrtc.send('keydown', { key })
         return isCtrlKey
       }
       this.keyboard.onkeyup = (key: number) => {
+        key = keySymsRemap(key)
+
         if (key in noKeyUp) {
           delete noKeyUp[key]
           return
@@ -152,9 +154,7 @@
         const isCtrlKey = key == KeyTable.XK_Control_L || key == KeyTable.XK_Control_R
         if (isCtrlKey) ctrlKey = 0
 
-        this.webrtc.send('keyup', {
-          key: keySymsRemap(key),
-        })
+        this.webrtc.send('keyup', { key })
       }
       this.keyboard.listenTo(this._textarea)
 
