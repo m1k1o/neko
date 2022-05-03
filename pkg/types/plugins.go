@@ -13,6 +13,11 @@ type Plugin interface {
 	Shutdown() error
 }
 
+type DependablePlugin interface {
+	Plugin
+	DependsOn() []string
+}
+
 type ExposablePlugin interface {
 	Plugin
 	ExposeService() any

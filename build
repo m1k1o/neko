@@ -44,6 +44,8 @@ fi
 for plugPath in ./plugins/*; do
     pushd $plugPath
 
+    echo "Building plugin: $plugPath"
+
     # build plugin
     go build -modfile=go.plug.mod -buildmode=plugin -o "../../bin/plugins/${plugPath##*/}.so"
 
