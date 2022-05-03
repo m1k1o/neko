@@ -44,12 +44,8 @@ fi
 for plugPath in ./plugins/*; do
     pushd $plugPath
 
-    # replace plugin dependecy
-    go mod edit -replace "gitlab.com/demodesk/neko/server=../../"
-    # load plugin dependencies
-    go get -v -t -d .
     # build plugin
-    go build -buildmode=plugin -o "../../bin/plugins/${plugPath##*/}.so"
+    go build -modfile=go.plug.mod -buildmode=plugin -o "../../bin/plugins/${plugPath##*/}.so"
 
     popd
 done
