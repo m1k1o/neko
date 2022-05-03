@@ -122,7 +122,7 @@
 
       // Initialize Guacamole Keyboard
       this.keyboard.onkeydown = (key: number) => {
-        if (!this.focused || !this.isControling) {
+        if (!this.isControling) {
           noKeyUp[key] = true
           return true
         }
@@ -337,7 +337,6 @@
         })
       }
 
-      this._textarea.blur()
       this.focused = false
     }
 
