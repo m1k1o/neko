@@ -97,7 +97,10 @@ func (h *MessageHandlerCtx) Message(session types.Session, data types.WebSocketM
 	case event.CONTROL_COPY:
 		err = h.controlCopy(session)
 	case event.CONTROL_PASTE:
-		err = h.controlPaste(session)
+		payload := &message.ClipboardData{}
+		err = utils.Unmarshal(payload, data.Payload, func() error {
+			return h.controlPaste(session, payload)
+		})
 	case event.CONTROL_SELECT_ALL:
 		err = h.controlSelectAll(session)
 

@@ -99,9 +99,16 @@ func (h *MessageHandlerCtx) controlCopy(session types.Session) error {
 	return h.desktop.KeyPress(xorg.XK_Control_L, xorg.XK_c)
 }
 
-func (h *MessageHandlerCtx) controlPaste(session types.Session) error {
+func (h *MessageHandlerCtx) controlPaste(session types.Session, payload *message.ClipboardData) error {
 	if err := h.controlRequest(session); err != nil && !errors.Is(err, ErrIsAlreadyTheHost) {
 		return err
+	}
+
+	// if there have been set clipboard data, set them first
+	if payload != nil && payload.Text != "" {
+		if err := h.clipboardSet(session, payload); err != nil {
+			return err
+		}
 	}
 
 	return h.desktop.KeyPress(xorg.XK_Control_L, xorg.XK_v)

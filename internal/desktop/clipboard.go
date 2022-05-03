@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"gitlab.com/demodesk/neko/server/pkg/types"
+	"gitlab.com/demodesk/neko/server/pkg/xevent"
 )
 
 func (manager *DesktopManagerCtx) ClipboardGetText() (*types.ClipboardText, error) {
@@ -63,6 +64,13 @@ func (manager *DesktopManagerCtx) ClipboardSetBinary(mime string, data []byte) e
 		return err
 	}
 
+	// TODO: Refactor.
+	// We need to wait until the data came to the clipboard.
+	wait := make(chan struct{})
+	xevent.Emmiter.Once("clipboard-updated", func(payload ...interface{}) {
+		wait <- struct{}{}
+	})
+
 	err = cmd.Start()
 	if err != nil {
 		msg := strings.TrimSpace(stderr.String())
@@ -78,6 +86,8 @@ func (manager *DesktopManagerCtx) ClipboardSetBinary(mime string, data []byte) e
 
 	// TODO: Refactor.
 	// cmd.Wait()
+	<-wait
+
 	return nil
 }
 
