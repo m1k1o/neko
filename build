@@ -1,11 +1,15 @@
 #!/bin/bash
 
-mkdir -p bin/plugins
-rm bin/plugins/* 2>/dev/null
-
 #
 # aborting if any command returns a non-zero value
 set -e
+
+#
+# do not build plugins when passing "core" as first argument
+if [ "$1" = "core" ];
+then
+    skip_plugins="true"
+fi
 
 #
 # set git build variables if git exists
@@ -32,12 +36,25 @@ go build \
     cmd/neko/main.go;
 
 #
+# if plugins are ignored
+if [ "$skip_plugins" = "true" ];
+then
+    echo "Not building plugins..."
+    exit 0
+fi
+
+#
 # if plugins directory does not exist
 if [ ! -d "./plugins" ];
 then
     echo "No plugins directory found, skipping..."
     exit 0
 fi
+
+#
+# ensure plugins folder exits and remove old plugins
+mkdir -p bin/plugins
+rm -f bin/plugins/*
 
 #
 # build plugins
