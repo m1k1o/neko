@@ -9,16 +9,21 @@ var (
 )
 
 type MemberProfile struct {
-	Name                  string `json:"name"`
-	IsAdmin               bool   `json:"is_admin"`
-	CanLogin              bool   `json:"can_login"`
-	CanConnect            bool   `json:"can_connect"`
-	CanWatch              bool   `json:"can_watch"`
-	CanHost               bool   `json:"can_host"`
-	CanShareMedia         bool   `json:"can_share_media"`
-	CanAccessClipboard    bool   `json:"can_access_clipboard"`
-	SendsInactiveCursor   bool   `json:"sends_inactive_cursor"`
-	CanSeeInactiveCursors bool   `json:"can_see_inactive_cursors"`
+	Name string `json:"name"`
+
+	// permissions
+	IsAdmin               bool `json:"is_admin"`
+	CanLogin              bool `json:"can_login"`
+	CanConnect            bool `json:"can_connect"`
+	CanWatch              bool `json:"can_watch"`
+	CanHost               bool `json:"can_host"`
+	CanShareMedia         bool `json:"can_share_media"`
+	CanAccessClipboard    bool `json:"can_access_clipboard"`
+	SendsInactiveCursor   bool `json:"sends_inactive_cursor"`
+	CanSeeInactiveCursors bool `json:"can_see_inactive_cursors"`
+
+	// plugin scope
+	Plugins map[string]any `json:"plugins"`
 }
 
 type MemberProvider interface {
