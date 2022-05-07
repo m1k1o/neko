@@ -1,7 +1,7 @@
 #!/bin/bash
 
 mkdir -p bin/plugins
-rm bin/plugins/*
+rm bin/plugins/* 2>/dev/null
 
 #
 # aborting if any command returns a non-zero value
@@ -45,6 +45,13 @@ for plugPath in ./plugins/*; do
     pushd $plugPath
 
     echo "Building plugin: $plugPath"
+
+    if [ ! -f "go.plug.mod" ];
+    then
+        echo "go.plug.mod not found, skipping..."
+        popd
+        continue
+    fi
 
     # build plugin
     go build -modfile=go.plug.mod -buildmode=plugin -o "../../bin/plugins/${plugPath##*/}.so"
