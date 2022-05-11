@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"gitlab.com/demodesk/neko/server/pkg/types"
@@ -68,4 +69,20 @@ func CanAccessClipboardOnly(w http.ResponseWriter, r *http.Request) (context.Con
 	}
 
 	return nil, nil
+}
+
+func PluginsGenericOnly[V comparable](key string, value V) func(w http.ResponseWriter, r *http.Request) (context.Context, error)  {
+	return func(w http.ResponseWriter, r *http.Request) (context.Context, error) {
+		session, ok := GetSession(r)
+		if !ok {
+			return nil, utils.HttpForbidden("session not found")
+		}
+
+		plugins := session.Profile().Plugins
+		if val, ok := plugins[key].(V); !ok || val != value {
+			return nil, utils.HttpForbidden(fmt.Sprintf("%s is set to %v; expected %v", key, value, val))
+		}
+	
+		return nil, nil
+	}
 }
