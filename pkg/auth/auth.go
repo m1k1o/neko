@@ -71,7 +71,7 @@ func CanAccessClipboardOnly(w http.ResponseWriter, r *http.Request) (context.Con
 	return nil, nil
 }
 
-func PluginsGenericOnly[V comparable](key string, value V) func(w http.ResponseWriter, r *http.Request) (context.Context, error)  {
+func PluginsGenericOnly[V comparable](key string, exp V) func(w http.ResponseWriter, r *http.Request) (context.Context, error) {
 	return func(w http.ResponseWriter, r *http.Request) (context.Context, error) {
 		session, ok := GetSession(r)
 		if !ok {
@@ -79,10 +79,16 @@ func PluginsGenericOnly[V comparable](key string, value V) func(w http.ResponseW
 		}
 
 		plugins := session.Profile().Plugins
-		if val, ok := plugins[key].(V); !ok || val != value {
-			return nil, utils.HttpForbidden(fmt.Sprintf("%s is set to %v; expected %v", key, value, val))
+
+		val, ok := plugins[key].(V)
+		if !ok {
+			return nil, utils.HttpForbidden(fmt.Sprintf("%s is %T, but expected %T", key, plugins[key], exp))
 		}
-	
+
+		if val != exp {
+			return nil, utils.HttpForbidden(fmt.Sprintf("%s is set to %v, but expected %v", key, val, exp))
+		}
+
 		return nil, nil
 	}
 }
