@@ -20,6 +20,7 @@
 - NordVPN replaced with Sponsorblock extension in default configuration #144.
 - Removed `vncviewer` image, as its functionality is replaced and extended by remmina.
 - Opus uses `useinbandfec=1` from now on, hopefully fixes minor audio loss issues.
+- Font Awesome and Sweetalert2 upgraded to newest major version.
 
 ## [n.eko v2.5](https://github.com/m1k1o/neko/releases/tag/v2.5)
 
