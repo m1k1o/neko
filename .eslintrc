@@ -8,6 +8,7 @@
     "parser": "@typescript-eslint/parser"
   },
   "rules": {
+    "vue/multi-word-component-names": "off",
     "vue/valid-v-for": "off",
     "no-case-declarations": "off",
     "no-dupe-class-members": "off",
