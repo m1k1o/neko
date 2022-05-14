@@ -28,7 +28,7 @@
     "eventemitter3": "^4.0.7",
     "resize-observer-polyfill": "^1.5.1",
     "simple-markdown": "^0.7.2",
-    "sweetalert2": "^10.15.7",
+    "sweetalert2": "^11.4.14",
     "typed-vuex": "^0.1.21",
     "v-tooltip": "^2.0.3",
     "vue": "^2.6.14",
