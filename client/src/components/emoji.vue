@@ -90,7 +90,7 @@
         &::before {
           content: '\f002';
           font-weight: 900;
-          font-family: 'Font Awesome 5 Free';
+          font-family: 'Font Awesome 6 Free';
           position: absolute;
           width: 15px;
           height: 15px;

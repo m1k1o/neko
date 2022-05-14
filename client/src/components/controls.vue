@@ -212,7 +212,7 @@
           &:before {
             color: $background-tertiary;
             font-weight: 900;
-            font-family: 'Font Awesome 5 Free';
+            font-family: 'Font Awesome 6 Free';
             content: '\f3c1';
             font-size: 8px;
             line-height: 18px;
