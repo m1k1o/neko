@@ -11,7 +11,7 @@ module.exports = {
     },
   },
   devServer: {
-    disableHostCheck: true,
+    allowedHosts: "all",
     proxy: {
       '^/api': {
         target: 'http://' + process.env.NEKO_HOST + ':' + process.env.NEKO_PORT + '/',
