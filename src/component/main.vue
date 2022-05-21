@@ -74,6 +74,9 @@
   export * as StateModels from './types/state'
   import * as EVENT from './types/events'
 
+  import { Configuration } from './api/configuration'
+  import { AxiosInstance } from 'axios'
+
   import { Vue, Component, Ref, Watch, Prop } from 'vue-property-decorator'
   import ResizeObserver from 'resize-observer-polyfill'
 
@@ -422,6 +425,10 @@
 
     public sendBroadcast(subject: string, body: any) {
       this.connection.websocket.send(EVENT.SEND_BROADCAST, { subject, body })
+    }
+
+    public withApi<T>(c: new (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) => T): T {
+      return new c(this.api.config)
     }
 
     public control = new NekoControl(this.connection, this.state.control)

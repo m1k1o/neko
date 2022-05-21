@@ -1,33 +1,33 @@
 import * as Api from '../api'
 
 export class NekoApi {
-  private readonly _config = new Api.Configuration({
+  public readonly config = new Api.Configuration({
     basePath: location.href.replace(/\/+$/, ''),
     baseOptions: { withCredentials: true },
   })
 
   public setUrl(url: string) {
-    this._config.basePath = url.replace(/\/+$/, '')
+    this.config.basePath = url.replace(/\/+$/, '')
   }
 
   public setToken(token: string) {
-    this._config.accessToken = token
+    this.config.accessToken = token
   }
 
   get url(): string {
-    return this._config.basePath || location.href.replace(/\/+$/, '')
+    return this.config.basePath || location.href.replace(/\/+$/, '')
   }
 
   get session(): SessionApi {
-    return new Api.SessionApi(this._config)
+    return new Api.SessionApi(this.config)
   }
 
   get room(): RoomApi {
-    return new Api.RoomApi(this._config)
+    return new Api.RoomApi(this.config)
   }
 
   get members(): MembersApi {
-    return new Api.MembersApi(this._config)
+    return new Api.MembersApi(this.config)
   }
 }
 
