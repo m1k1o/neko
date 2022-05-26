@@ -39,6 +39,9 @@ export interface NekoEvents {
   ['room.screen.updated']: (width: number, height: number, rate: number) => void
   ['room.clipboard.updated']: (text: string) => void
   ['room.broadcast.status']: (isActive: boolean, url?: string) => void
+
+  // external message events
+  ['message']: (event: string, payload: any) => void
 }
 
 export class NekoMessages extends EventEmitter<NekoEvents> {
@@ -65,7 +68,8 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
           this._remoteLog.error(`error while processing websocket event`, { event, error })
         }
       } else {
-        this._remoteLog.warn(`unhandled websocket event`, { event, payload })
+        this._remoteLog.debug(`emitting external message`, { event, payload })
+        this.emit('message', event, payload)
       }
     })
 
