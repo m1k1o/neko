@@ -1,7 +1,7 @@
 #
 # STAGE 1: SERVER
 #
-FROM arm32v7/golang:1.17-buster as server
+FROM arm32v7/golang:1.18-buster as server
 WORKDIR /src
 
 #

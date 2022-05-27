@@ -1,7 +1,7 @@
 #
 # STAGE 1: SERVER
 #
-FROM golang:1.17-bullseye as server
+FROM golang:1.18-bullseye as server
 WORKDIR /src
 
 #

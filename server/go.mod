@@ -1,6 +1,6 @@
 module m1k1o/neko
 
-go 1.17
+go 1.18
 
 require (
 	github.com/fsnotify/fsnotify v1.5.4 // indirect
