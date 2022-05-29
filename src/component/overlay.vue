@@ -98,11 +98,11 @@
 
     get cursor(): string {
       if (!this.isControling || !this.cursorImage) {
-        return 'auto'
+        return 'default'
       }
 
       const { uri, x, y } = this.cursorImage
-      return 'url(' + uri + ') ' + x + ' ' + y + ', auto'
+      return 'url(' + uri + ') ' + x + ' ' + y + ', default'
     }
 
     mounted() {
