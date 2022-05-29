@@ -427,6 +427,10 @@
       this.connection.websocket.send(EVENT.SEND_BROADCAST, { subject, body })
     }
 
+    public sendMessage(event: string, payload?: any) {
+      this.connection.websocket.send(event, payload)
+    }
+
     public withApi<T>(c: new (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) => T): T {
       return new c(this.api.config)
     }
