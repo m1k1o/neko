@@ -63,6 +63,7 @@ jobs:
     if: github.repository_owner == 'm1k1o'
     needs: [ build-base ]
     strategy:
+      # Will build all images even if some fail.
       matrix:
         include:
           - tag: firefox
