@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=xeddius/neko:base
+ARG BASE_IMAGE=m1k1o/neko:base
 FROM $BASE_IMAGE
 
 ARG SRC_URL="https://downloads.vivaldi.com/stable/vivaldi-stable_5.3.2679.34-1_amd64.deb"
