@@ -13,7 +13,7 @@
 
 <applications>
     <!-- Match all windows and remove their decorations (obxprop | grep "^_OB_APP") -->
-    <application class="vivaldi-stable*" name="vivaldi-stable*">
+    <application class="Vivaldi-stable*" name="vivaldi-stable*" role="browser">
       <decor>no</decor>
       <maximized>true</maximized>
       <focus>yes</focus>
