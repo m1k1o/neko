@@ -19,6 +19,4 @@ COPY supervisord.conf /etc/neko/supervisord/vivaldi-browser.conf
 COPY --chown=neko preferences.json /home/neko/.config/vivaldi/Default/Preferences
 COPY policies.json /etc/opt/vivaldi/policies/managed/policies.json
 COPY openbox.xml /etc/neko/openbox.xml
-COPY Default.tar.gz /tmp/
-RUN tar -xzf /tmp/Default.tar.gz --directory /home/neko/.config/vivaldi/ && rm /tmp/Default.tar.gz
 RUN /opt/vivaldi/update-ffmpeg
