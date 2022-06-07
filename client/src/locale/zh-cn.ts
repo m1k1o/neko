@@ -3,7 +3,7 @@ export const unsupported = '你的浏览器不支持 WebRTC'
 export const admin_loggedin = '您以管理钻身份登陆'
 export const you = '你'
 export const somebody = '某人'
-export const send_a_message = '也能够卢斯'
+export const send_a_message = '发送消息'
 
 export const side = {
     chat: '聊天',
