@@ -5,6 +5,9 @@ import (
 	"reflect"
 	"sync"
 
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
+
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
@@ -27,6 +30,10 @@ type StreamSinkManagerCtx struct {
 
 	listeners   map[uintptr]*func(sample types.Sample)
 	listenersMu sync.Mutex
+
+	// metrics
+	currentListeners prometheus.Gauge
+	pipelinesCounter prometheus.Counter
 }
 
 func streamSinkNew(codec codec.RTPCodec, pipelineStr func() string, video_id string) *StreamSinkManagerCtx {
@@ -40,6 +47,28 @@ func streamSinkNew(codec codec.RTPCodec, pipelineStr func() string, video_id str
 		codec:       codec,
 		pipelineStr: pipelineStr,
 		listeners:   map[uintptr]*func(sample types.Sample){},
+
+		// metrics
+		currentListeners: promauto.NewGauge(prometheus.GaugeOpts{
+			Name:      "listeners",
+			Namespace: "neko",
+			Subsystem: "capture_streamsink",
+			Help:      "Current number of listeners for a pipeline.",
+			ConstLabels: map[string]string{
+				"video_id": video_id,
+				"codec":    codec.Name,
+			},
+		}),
+		pipelinesCounter: promauto.NewCounter(prometheus.CounterOpts{
+			Name:      "pipelines_total",
+			Namespace: "neko",
+			Subsystem: "capture_streamsink",
+			Help:      "Total number of created pipelines.",
+			ConstLabels: map[string]string{
+				"video_id": video_id,
+				"codec":    codec.Name,
+			},
+		}),
 	}
 
 	return manager
@@ -90,6 +119,7 @@ func (manager *StreamSinkManagerCtx) addListener(listener *func(sample types.Sam
 	manager.listenersMu.Unlock()
 
 	manager.logger.Debug().Interface("ptr", ptr).Msgf("adding listener")
+	manager.currentListeners.Set(float64(manager.ListenersCount()))
 }
 
 func (manager *StreamSinkManagerCtx) removeListener(listener *func(sample types.Sample)) {
@@ -100,6 +130,7 @@ func (manager *StreamSinkManagerCtx) removeListener(listener *func(sample types.
 	manager.listenersMu.Unlock()
 
 	manager.logger.Debug().Interface("ptr", ptr).Msgf("removing listener")
+	manager.currentListeners.Set(float64(manager.ListenersCount()))
 }
 
 func (manager *StreamSinkManagerCtx) AddListener(listener *func(sample types.Sample)) error {
@@ -240,6 +271,7 @@ func (manager *StreamSinkManagerCtx) createPipeline() error {
 		}
 	}()
 
+	manager.pipelinesCounter.Inc()
 	return nil
 }
 

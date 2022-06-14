@@ -6,6 +6,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
@@ -32,6 +34,10 @@ type ScreencastManagerCtx struct {
 	enabled bool
 	started bool
 	expired int32
+
+	// metrics
+	imagesCounter    prometheus.Counter
+	pipelinesCounter prometheus.Counter
 }
 
 func screencastNew(enabled bool, pipelineStr string) *ScreencastManagerCtx {
@@ -46,6 +52,20 @@ func screencastNew(enabled bool, pipelineStr string) *ScreencastManagerCtx {
 		tickerStop:  make(chan struct{}),
 		enabled:     enabled,
 		started:     false,
+
+		// metrics
+		imagesCounter: promauto.NewCounter(prometheus.CounterOpts{
+			Name:      "images_total",
+			Namespace: "neko",
+			Subsystem: "capture_screencast",
+			Help:      "Total number of created images.",
+		}),
+		pipelinesCounter: promauto.NewCounter(prometheus.CounterOpts{
+			Name:      "pipelines_total",
+			Namespace: "neko",
+			Subsystem: "capture_screencast",
+			Help:      "Total number of created pipelines.",
+		}),
 	}
 
 	manager.wg.Add(1)
@@ -158,6 +178,7 @@ func (manager *ScreencastManagerCtx) createPipeline() error {
 
 	manager.pipeline.AttachAppsink("appsink")
 	manager.pipeline.Play()
+	manager.pipelinesCounter.Inc()
 
 	// get first image
 	select {
@@ -168,6 +189,8 @@ func (manager *ScreencastManagerCtx) createPipeline() error {
 			manager.imageMu.Lock()
 			manager.image = image
 			manager.imageMu.Unlock()
+
+			manager.imagesCounter.Inc()
 		}
 	case <-time.After(1 * time.Second):
 		return errors.New("timeouted while waiting for first image")
@@ -190,6 +213,8 @@ func (manager *ScreencastManagerCtx) createPipeline() error {
 			manager.imageMu.Lock()
 			manager.image = image
 			manager.imageMu.Unlock()
+
+			manager.imagesCounter.Inc()
 		}
 	}()
 

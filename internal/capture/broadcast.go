@@ -4,6 +4,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
@@ -21,6 +23,9 @@ type BroacastManagerCtx struct {
 
 	url     string
 	started bool
+
+	// metrics
+	pipelinesCounter prometheus.Counter
 }
 
 func broadcastNew(pipelineStr string) *BroacastManagerCtx {
@@ -34,6 +39,14 @@ func broadcastNew(pipelineStr string) *BroacastManagerCtx {
 		pipelineStr: pipelineStr,
 		url:         "",
 		started:     false,
+
+		// metrics
+		pipelinesCounter: promauto.NewCounter(prometheus.CounterOpts{
+			Name:      "pipelines_total",
+			Namespace: "neko",
+			Subsystem: "capture_broadcast",
+			Help:      "Total number of created pipelines.",
+		}),
 	}
 }
 
@@ -102,6 +115,8 @@ func (manager *BroacastManagerCtx) createPipeline() error {
 	}
 
 	manager.pipeline.Play()
+	manager.pipelinesCounter.Inc()
+
 	return nil
 }
 

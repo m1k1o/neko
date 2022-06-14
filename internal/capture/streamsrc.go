@@ -4,6 +4,8 @@ import (
 	"errors"
 	"sync"
 
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
@@ -21,6 +23,10 @@ type StreamSrcManagerCtx struct {
 	pipeline    *gst.Pipeline
 	pipelineMu  sync.Mutex
 	pipelineStr string
+
+	// metrics
+	pushedData       map[string]prometheus.Summary
+	pipelinesCounter map[string]prometheus.Counter
 }
 
 func streamSrcNew(enabled bool, codecPipeline map[string]string, video_id string) *StreamSrcManagerCtx {
@@ -29,10 +35,39 @@ func streamSrcNew(enabled bool, codecPipeline map[string]string, video_id string
 		Str("submodule", "stream-src").
 		Str("video_id", video_id).Logger()
 
+	pushedData := map[string]prometheus.Summary{}
+	pipelinesCounter := map[string]prometheus.Counter{}
+	for codec := range codecPipeline {
+		pushedData[codec] = promauto.NewSummary(prometheus.SummaryOpts{
+			Name:      "data_bytes",
+			Namespace: "neko",
+			Subsystem: "capture_streamsrc",
+			Help:      "Data pushed to a pipeline (in bytes).",
+			ConstLabels: map[string]string{
+				"video_id": video_id,
+				"codec":    codec,
+			},
+		})
+		pipelinesCounter[codec] = promauto.NewCounter(prometheus.CounterOpts{
+			Name:      "pipelines_total",
+			Namespace: "neko",
+			Subsystem: "capture_streamsrc",
+			Help:      "Total number of created pipelines.",
+			ConstLabels: map[string]string{
+				"video_id": video_id,
+				"codec":    codec,
+			},
+		})
+	}
+
 	return &StreamSrcManagerCtx{
 		logger:        logger,
 		enabled:       enabled,
 		codecPipeline: codecPipeline,
+
+		// metrics
+		pushedData:       pushedData,
+		pipelinesCounter: pipelinesCounter,
 	}
 }
 
@@ -86,6 +121,8 @@ func (manager *StreamSrcManagerCtx) Start(codec codec.RTPCodec) error {
 
 	manager.pipeline.AttachAppsrc("appsrc")
 	manager.pipeline.Play()
+
+	manager.pipelinesCounter[codec.Name].Inc()
 	return nil
 }
 
@@ -111,8 +148,12 @@ func (manager *StreamSrcManagerCtx) Push(bytes []byte) {
 	}
 
 	manager.pipeline.Push(bytes)
+	manager.pushedData[manager.codec.Name].Observe(float64(len(bytes)))
 }
 
 func (manager *StreamSrcManagerCtx) Started() bool {
+	manager.pipelineMu.Lock()
+	defer manager.pipelineMu.Unlock()
+
 	return manager.pipeline != nil
 }
