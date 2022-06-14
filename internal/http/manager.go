@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/go-chi/cors"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
@@ -40,6 +41,11 @@ func New(WebSocketManager types.WebSocketManager, ApiManager types.ApiManager, c
 	router.Get("/api/ws", WebSocketManager.Upgrade(func(r *http.Request) bool {
 		return config.AllowOrigin(r.Header.Get("Origin"))
 	}))
+
+	router.Get("/metrics", func(w http.ResponseWriter, r *http.Request) error {
+		promhttp.Handler().ServeHTTP(w, r)
+		return nil
+	})
 
 	if config.Static != "" {
 		fs := http.FileServer(http.Dir(config.Static))
