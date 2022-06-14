@@ -5,6 +5,8 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+
 	"gitlab.com/demodesk/neko/server/internal/api/members"
 	"gitlab.com/demodesk/neko/server/internal/api/room"
 	"gitlab.com/demodesk/neko/server/pkg/auth"
@@ -61,6 +63,11 @@ func (api *ApiManagerCtx) Route(r types.Router) {
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) error {
 		_, err := w.Write([]byte("true"))
 		return err
+	})
+
+	r.Get("/metrics", func(w http.ResponseWriter, r *http.Request) error {
+		promhttp.Handler().ServeHTTP(w, r)
+		return nil
 	})
 }
 
