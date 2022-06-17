@@ -77,7 +77,7 @@ RUN set -eux; apt-get update; \
                     gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-pulseaudio gstreamer1.0-omx; \
     #
     # fonts
-    apt-get install -y --no-install-recommends fonts-takao-mincho; \
+    apt-get install -y --no-install-recommends fonts-takao-mincho fonts-wqy-zenhei; \
     #
     # create a non-root user
     groupadd --gid $USER_GID $USERNAME; \
