@@ -2,6 +2,8 @@
 
 ## master branch
 
+## [n.eko v2.6](https://github.com/m1k1o/neko/releases/tag/v2.6)
+
 ### Bugs
 - Fixed fullscreen incompatibility for Safari [#121](https://github.com/m1k1o/neko/issues/121).
 - Fixed bad emoji matching for e.g. `:+1:` and `:100:` with new regex `/^:([^:\s]+):/`.
