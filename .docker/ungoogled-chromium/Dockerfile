@@ -21,11 +21,24 @@ RUN set -eux; apt-get update; \
     #
     # install widevine module
     WIDEVINE_VERSION=$(wget --quiet -O - https://dl.google.com/widevine-cdm/versions.txt | tail -n 1); \
-    wget -O /tmp/widevine.zip "https://dl.google.com/widevine-cdm/$WIDEVINE_VERSION-linux-x64.zip"; \
+    wget -O /tmp/widevine.zip "https://dl.google.com/widevine-cdm/${WIDEVINE_VERSION}-linux-x64.zip"; \
     unzip -p /tmp/widevine.zip libwidevinecdm.so > /usr/lib/chromium/libwidevinecdm.so; \
     chmod 644 /usr/lib/chromium/libwidevinecdm.so; \
     rm /tmp/widevine.zip; \
     #
+    # install latest version of uBlock Origin and SponsorBlock for YouTube
+    CHROMIUM_VERSION="$(wget -O - "${API_URL}" 2>/dev/null | jq -r .tag_name | sed -e 's/v//' -e 's/-.*//')"; \
+    EXTENSIONS_DIR="/usr/share/chromium/extensions"; \
+    UBLOCK_ID="cjpalhdlnbpafiamejdnhcphjbkeiagm"; \
+    UBLOCK_URL="https://clients2.google.com/service/update2/crx?response=redirect&nacl_arch=x86-64&prodversion=${CHROMIUM_VERSION}&acceptformat=crx2,crx3&x=id%3D${UBLOCK_ID}%26installsource%3Dondemand%26uc"; \
+    SPONSORBLOCK_ID="mnjggcdmjocbbbhaepdhchncahnbgone"; \
+    SPONSORBLOCK_URL="https://clients2.google.com/service/update2/crx?response=redirect&nacl_arch=x86-64&prodversion=${CHROMIUM_VERSION}&acceptformat=crx2,crx3&x=id%3D${SPONSORBLOCK_ID}%26installsource%3Dondemand%26uc"; \
+    wget -O ${EXTENSIONS_DIR}/${UBLOCK_ID}.crx "${UBLOCK_URL}"; \
+    wget -O ${EXTENSIONS_DIR}/${SPONSORBLOCK_ID}.crx "${SPONSORBLOCK_URL}"; \
+    UBLOCK_VERSION="$(unzip -p ${EXTENSIONS_DIR}/${UBLOCK_ID}.crx manifest.json 2>/dev/null | jq -r ".version")"; \
+    SPONSORBLOCK_VERSION="$(unzip -p ${EXTENSIONS_DIR}/${SPONSORBLOCK_ID}.crx manifest.json 2>/dev/null | jq -r ".version")"; \
+    echo -e "{\n  \"external_crx\": \"${EXTENSIONS_DIR}/${UBLOCK_ID}.crx\"\n  \"external_version\": \"${UBLOCK_VERSION}\"\n}" > ${EXTENSIONS_DIR}/${UBLOCK_ID}.json; \
+    echo -e "{\n  \"external_crx\": \"${EXTENSIONS_DIR}/${SPONSORBLOCK_ID}.crx\"\n  \"external_version\": \"${SPONSORBLOCK_VERSION}\"\n}" > ${EXTENSIONS_DIR}/${SPONSORBLOCK_ID}.json; \
     # clean up
     apt-get --purge autoremove -y xz-utils jq; \
     apt-get clean -y; \
@@ -37,7 +50,3 @@ COPY supervisord.conf /etc/neko/supervisord/ungoogled-chromium.conf
 COPY preferences.json /usr/lib/chromium/master_preferences
 COPY policies.json /etc/chromium/policies/managed/policies.json
 COPY openbox.xml /etc/neko/openbox.xml
-
-#
-# copy extensions and policy files
-COPY extensions /usr/share/chromium/extensions
