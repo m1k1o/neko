@@ -34,6 +34,7 @@ type StreamSinkManagerCtx struct {
 	// metrics
 	currentListeners prometheus.Gauge
 	pipelinesCounter prometheus.Counter
+	pipelinesActive  prometheus.Gauge
 }
 
 func streamSinkNew(codec codec.RTPCodec, pipelineStr func() string, video_id string) *StreamSinkManagerCtx {
@@ -65,6 +66,18 @@ func streamSinkNew(codec codec.RTPCodec, pipelineStr func() string, video_id str
 			Namespace: "neko",
 			Subsystem: "capture",
 			Help:      "Total number of created pipelines.",
+			ConstLabels: map[string]string{
+				"submodule":  "streamsink",
+				"video_id":   video_id,
+				"codec_name": codec.Name,
+				"codec_type": codec.Type.String(),
+			},
+		}),
+		pipelinesActive: promauto.NewGauge(prometheus.GaugeOpts{
+			Name:      "pipelines_active",
+			Namespace: "neko",
+			Subsystem: "capture",
+			Help:      "Total number of active pipelines.",
 			ConstLabels: map[string]string{
 				"submodule":  "streamsink",
 				"video_id":   video_id,
@@ -275,6 +288,8 @@ func (manager *StreamSinkManagerCtx) createPipeline() error {
 	}()
 
 	manager.pipelinesCounter.Inc()
+	manager.pipelinesActive.Set(1)
+
 	return nil
 }
 
@@ -289,4 +304,6 @@ func (manager *StreamSinkManagerCtx) destroyPipeline() {
 	manager.pipeline.Destroy()
 	manager.logger.Info().Msgf("destroying pipeline")
 	manager.pipeline = nil
+
+	manager.pipelinesActive.Set(0)
 }

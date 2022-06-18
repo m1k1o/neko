@@ -38,6 +38,7 @@ type ScreencastManagerCtx struct {
 	// metrics
 	imagesCounter    prometheus.Counter
 	pipelinesCounter prometheus.Counter
+	pipelinesActive  prometheus.Gauge
 }
 
 func screencastNew(enabled bool, pipelineStr string) *ScreencastManagerCtx {
@@ -65,6 +66,18 @@ func screencastNew(enabled bool, pipelineStr string) *ScreencastManagerCtx {
 			Namespace: "neko",
 			Subsystem: "capture",
 			Help:      "Total number of created pipelines.",
+			ConstLabels: map[string]string{
+				"submodule":  "screencast",
+				"video_id":   "main",
+				"codec_name": "-",
+				"codec_type": "-",
+			},
+		}),
+		pipelinesActive: promauto.NewGauge(prometheus.GaugeOpts{
+			Name:      "pipelines_active",
+			Namespace: "neko",
+			Subsystem: "capture",
+			Help:      "Total number of active pipelines.",
 			ConstLabels: map[string]string{
 				"submodule":  "screencast",
 				"video_id":   "main",
@@ -185,6 +198,7 @@ func (manager *ScreencastManagerCtx) createPipeline() error {
 	manager.pipeline.AttachAppsink("appsink")
 	manager.pipeline.Play()
 	manager.pipelinesCounter.Inc()
+	manager.pipelinesActive.Set(1)
 
 	// get first image
 	select {
@@ -192,11 +206,7 @@ func (manager *ScreencastManagerCtx) createPipeline() error {
 		if !ok {
 			return errors.New("unable to get first image")
 		} else {
-			manager.imageMu.Lock()
-			manager.image = image
-			manager.imageMu.Unlock()
-
-			manager.imagesCounter.Inc()
+			manager.setImage(image)
 		}
 	case <-time.After(1 * time.Second):
 		return errors.New("timeouted while waiting for first image")
@@ -216,15 +226,19 @@ func (manager *ScreencastManagerCtx) createPipeline() error {
 				return
 			}
 
-			manager.imageMu.Lock()
-			manager.image = image
-			manager.imageMu.Unlock()
-
-			manager.imagesCounter.Inc()
+			manager.setImage(image)
 		}
 	}()
 
 	return nil
+}
+
+func (manager *ScreencastManagerCtx) setImage(image types.Sample) {
+	manager.imageMu.Lock()
+	manager.image = image
+	manager.imageMu.Unlock()
+
+	manager.imagesCounter.Inc()
 }
 
 func (manager *ScreencastManagerCtx) destroyPipeline() {
@@ -238,4 +252,6 @@ func (manager *ScreencastManagerCtx) destroyPipeline() {
 	manager.pipeline.Destroy()
 	manager.logger.Info().Msgf("destroying pipeline")
 	manager.pipeline = nil
+
+	manager.pipelinesActive.Set(0)
 }

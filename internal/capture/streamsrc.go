@@ -27,6 +27,7 @@ type StreamSrcManagerCtx struct {
 	// metrics
 	pushedData       map[string]prometheus.Summary
 	pipelinesCounter map[string]prometheus.Counter
+	pipelinesActive  map[string]prometheus.Gauge
 }
 
 func streamSrcNew(enabled bool, codecPipeline map[string]string, video_id string) *StreamSrcManagerCtx {
@@ -37,6 +38,7 @@ func streamSrcNew(enabled bool, codecPipeline map[string]string, video_id string
 
 	pushedData := map[string]prometheus.Summary{}
 	pipelinesCounter := map[string]prometheus.Counter{}
+	pipelinesActive := map[string]prometheus.Gauge{}
 	for codecName, pipeline := range codecPipeline {
 		codec, ok := codec.ParseStr(codecName)
 		if !ok {
@@ -62,6 +64,18 @@ func streamSrcNew(enabled bool, codecPipeline map[string]string, video_id string
 			Namespace: "neko",
 			Subsystem: "capture",
 			Help:      "Total number of created pipelines.",
+			ConstLabels: map[string]string{
+				"submodule":  "streamsrc",
+				"video_id":   video_id,
+				"codec_name": codec.Name,
+				"codec_type": codec.Type.String(),
+			},
+		})
+		pipelinesActive[codecName] = promauto.NewGauge(prometheus.GaugeOpts{
+			Name:      "pipelines_active",
+			Namespace: "neko",
+			Subsystem: "capture",
+			Help:      "Total number of active pipelines.",
 			ConstLabels: map[string]string{
 				"submodule":  "streamsrc",
 				"video_id":   video_id,
@@ -133,7 +147,9 @@ func (manager *StreamSrcManagerCtx) Start(codec codec.RTPCodec) error {
 	manager.pipeline.AttachAppsrc("appsrc")
 	manager.pipeline.Play()
 
-	manager.pipelinesCounter[codec.Name].Inc()
+	manager.pipelinesCounter[manager.codec.Name].Inc()
+	manager.pipelinesActive[manager.codec.Name].Set(1)
+
 	return nil
 }
 
@@ -148,6 +164,8 @@ func (manager *StreamSrcManagerCtx) Stop() {
 	manager.pipeline.Destroy()
 	manager.logger.Info().Msgf("destroying pipeline")
 	manager.pipeline = nil
+
+	manager.pipelinesActive[manager.codec.Name].Set(0)
 }
 
 func (manager *StreamSrcManagerCtx) Push(bytes []byte) {

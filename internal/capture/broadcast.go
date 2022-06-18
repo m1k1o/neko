@@ -26,6 +26,7 @@ type BroacastManagerCtx struct {
 
 	// metrics
 	pipelinesCounter prometheus.Counter
+	pipelinesActive  prometheus.Gauge
 }
 
 func broadcastNew(pipelineStr string) *BroacastManagerCtx {
@@ -46,6 +47,18 @@ func broadcastNew(pipelineStr string) *BroacastManagerCtx {
 			Namespace: "neko",
 			Subsystem: "capture",
 			Help:      "Total number of created pipelines.",
+			ConstLabels: map[string]string{
+				"submodule":  "broadcast",
+				"video_id":   "main",
+				"codec_name": "-",
+				"codec_type": "-",
+			},
+		}),
+		pipelinesActive: promauto.NewGauge(prometheus.GaugeOpts{
+			Name:      "pipelines_active",
+			Namespace: "neko",
+			Subsystem: "capture",
+			Help:      "Total number of active pipelines.",
 			ConstLabels: map[string]string{
 				"submodule":  "broadcast",
 				"video_id":   "main",
@@ -122,6 +135,7 @@ func (manager *BroacastManagerCtx) createPipeline() error {
 
 	manager.pipeline.Play()
 	manager.pipelinesCounter.Inc()
+	manager.pipelinesActive.Set(1)
 
 	return nil
 }
@@ -137,4 +151,6 @@ func (manager *BroacastManagerCtx) destroyPipeline() {
 	manager.pipeline.Destroy()
 	manager.logger.Info().Msgf("destroying pipeline")
 	manager.pipeline = nil
+
+	manager.pipelinesActive.Set(0)
 }
