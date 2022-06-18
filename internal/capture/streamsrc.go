@@ -37,25 +37,36 @@ func streamSrcNew(enabled bool, codecPipeline map[string]string, video_id string
 
 	pushedData := map[string]prometheus.Summary{}
 	pipelinesCounter := map[string]prometheus.Counter{}
-	for codec := range codecPipeline {
-		pushedData[codec] = promauto.NewSummary(prometheus.SummaryOpts{
-			Name:      "data_bytes",
+	for codecName, pipeline := range codecPipeline {
+		codec, ok := codec.ParseStr(codecName)
+		if !ok {
+			logger.Fatal().
+				Str("codec", codecName).
+				Str("pipeline", pipeline).
+				Msg("unknown codec name")
+		}
+
+		pushedData[codecName] = promauto.NewSummary(prometheus.SummaryOpts{
+			Name:      "streamsrc_data_bytes",
 			Namespace: "neko",
-			Subsystem: "capture_streamsrc",
+			Subsystem: "capture",
 			Help:      "Data pushed to a pipeline (in bytes).",
 			ConstLabels: map[string]string{
-				"video_id": video_id,
-				"codec":    codec,
+				"video_id":   video_id,
+				"codec_name": codec.Name,
+				"codec_type": codec.Type.String(),
 			},
 		})
-		pipelinesCounter[codec] = promauto.NewCounter(prometheus.CounterOpts{
+		pipelinesCounter[codecName] = promauto.NewCounter(prometheus.CounterOpts{
 			Name:      "pipelines_total",
 			Namespace: "neko",
-			Subsystem: "capture_streamsrc",
+			Subsystem: "capture",
 			Help:      "Total number of created pipelines.",
 			ConstLabels: map[string]string{
-				"video_id": video_id,
-				"codec":    codec,
+				"submodule":  "streamsrc",
+				"video_id":   video_id,
+				"codec_name": codec.Name,
+				"codec_type": codec.Type.String(),
 			},
 		})
 	}

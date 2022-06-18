@@ -44,8 +44,14 @@ func broadcastNew(pipelineStr string) *BroacastManagerCtx {
 		pipelinesCounter: promauto.NewCounter(prometheus.CounterOpts{
 			Name:      "pipelines_total",
 			Namespace: "neko",
-			Subsystem: "capture_broadcast",
+			Subsystem: "capture",
 			Help:      "Total number of created pipelines.",
+			ConstLabels: map[string]string{
+				"submodule":  "broadcast",
+				"video_id":   "main",
+				"codec_name": "-",
+				"codec_type": "-",
+			},
 		}),
 	}
 }

@@ -50,23 +50,26 @@ func streamSinkNew(codec codec.RTPCodec, pipelineStr func() string, video_id str
 
 		// metrics
 		currentListeners: promauto.NewGauge(prometheus.GaugeOpts{
-			Name:      "listeners",
+			Name:      "streamsink_listeners",
 			Namespace: "neko",
-			Subsystem: "capture_streamsink",
+			Subsystem: "capture",
 			Help:      "Current number of listeners for a pipeline.",
 			ConstLabels: map[string]string{
-				"video_id": video_id,
-				"codec":    codec.Name,
+				"video_id":   video_id,
+				"codec_name": codec.Name,
+				"codec_type": codec.Type.String(),
 			},
 		}),
 		pipelinesCounter: promauto.NewCounter(prometheus.CounterOpts{
 			Name:      "pipelines_total",
 			Namespace: "neko",
-			Subsystem: "capture_streamsink",
+			Subsystem: "capture",
 			Help:      "Total number of created pipelines.",
 			ConstLabels: map[string]string{
-				"video_id": video_id,
-				"codec":    codec.Name,
+				"submodule":  "streamsink",
+				"video_id":   video_id,
+				"codec_name": codec.Name,
+				"codec_type": codec.Type.String(),
 			},
 		}),
 	}
