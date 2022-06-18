@@ -1,0 +1,339 @@
+{
+  "homepage": "http://www.google.com",
+  "homepage_is_newtabpage": false,
+  "first_run_tabs": [
+    "https://www.google.com/_/chrome/newtab?ie=UTF-8"
+  ],
+  "custom_links": {
+    "initialized": true,
+    "list": [
+      {
+        "title": "YouTube",
+        "url": "https://www.youtube.com/"
+      },
+      {
+        "title": "Netflix",
+        "url": "https://netflix.com"
+      },
+      {
+        "title": "Hulu",
+        "url": "https://www.hulu.com/"
+      },
+      {
+        "title": "9Anime",
+        "url": "https://9anime.to/"
+      },
+      {
+        "title": "Crunchy Roll",
+        "url": "https://www.crunchyroll.com/"
+      },
+      {
+        "title": "Funimation",
+        "url": "https://www.funimation.com/"
+      },
+      {
+        "title": "Disney+",
+        "url": "https://www.disneyplus.com/"
+      },
+      {
+        "title": "HBO Now",
+        "url": "https://play.hbonow.com/"
+      },
+      {
+        "title": "Amazon Video",
+        "url": "https://www.amazon.com/Amazon-Video/b?node=2858778011"
+      },
+      {
+        "title": "VRV",
+        "url": "https://vrv.co/"
+      },
+      {
+        "title": "Twitch",
+        "url": "https://www.twitch.tv/"
+      },
+      {
+        "title": "Mixer",
+        "url": "https://mixer.com/"
+      }
+    ]
+  },
+  "browser": {
+    "custom_chrome_frame": false,
+    "show_home_button": true,
+    "window_placement": {
+      "maximized": true
+    }
+  },
+  "bookmark_bar": {
+    "show_on_all_tabs": false
+  },
+  "sync_promo": {
+    "show_on_first_run_allowed": false
+  },
+  "default_search_provider_data": {
+    "image_template_url_data": {
+      "alternate_urls": ["https://www.google.com/#q={searchTerms}", "https://www.google.com/search#q={searchTerms}", "https://www.google.com/webhp#q={searchTerms}", "https://www.google.com/s#q={searchTerms}", "https://www.google.com/s?q={searchTerms}"],
+      "contextual_search_url": "",
+      "created_by_policy": false,
+      "created_from_play_api": false,
+      "date_created": "0",
+      "doodle_url": "",
+      "favicon_url": "https://www.google.com/favicon.ico",
+      "id": "11",
+      "image_url": "https://www.google.com/searchbyimage/upload",
+      "image_url_post_params": "encoded_image={google:imageThumbnail},image_url={google:imageURL},sbisrc={google:imageSearchSource},original_width={google:imageOriginalWidth},original_height={google:imageOriginalHeight}",
+      "input_encodings": ["UTF-8"],
+      "is_active": 0,
+      "keyword": "g",
+      "last_modified": "0",
+      "last_visited": "0",
+      "logo_url": "",
+      "new_tab_url": "",
+      "originating_url": "",
+      "position": "IhxEc1dKb3ZJanppM1NCWTZhRHNGN0ljYkRHeVk9",
+      "preconnect_to_search_url": false,
+      "prepopulate_id": 1,
+      "safe_for_autoreplace": true,
+      "search_url_post_params": "",
+      "short_name": "Google",
+      "side_search_param": "",
+      "suggestions_url": "",
+      "suggestions_url_post_params": "",
+      "url": "https://www.google.com/search?q={searchTerms}&{google:originalQueryForSuggestion}{google:prefetchSource}{google:sourceId}{google:contextualSearchVersion}ie={inputEncoding}",
+      "usage_count": 0
+    },
+    "private_template_url_data": {
+      "alternate_urls": [],
+      "contextual_search_url": "",
+      "created_by_policy": false,
+      "created_from_play_api": false,
+      "date_created": "0",
+      "doodle_url": "",
+      "favicon_url": "https://duckduckgo.com/favicon.ico",
+      "id": "4",
+      "image_url": "",
+      "image_url_post_params": "",
+      "input_encodings": ["UTF-8"],
+      "is_active": 0,
+      "keyword": "d",
+      "last_modified": "0",
+      "last_visited": "0",
+      "logo_url": "",
+      "new_tab_url": "",
+      "originating_url": "",
+      "position": "Ih3bMkFheVB5WitEdGZmeU9hV0d5K3RGUXRhR3RFPQ==",
+      "preconnect_to_search_url": false,
+      "prepopulate_id": 7,
+      "safe_for_autoreplace": true,
+      "search_url_post_params": "",
+      "short_name": "DuckDuckGo",
+      "side_search_param": "",
+      "suggestions_url": "https://duckduckgo.com/ac/?q={searchTerms}&type=list",
+      "suggestions_url_post_params": "",
+      "url": "https://duckduckgo.com/?q={searchTerms}&{ddg:Referral}",
+      "usage_count": 0
+    },
+    "speeddials_template_url_data": {
+      "alternate_urls": ["https://www.google.com/#q={searchTerms}", "https://www.google.com/search#q={searchTerms}", "https://www.google.com/webhp#q={searchTerms}", "https://www.google.com/s#q={searchTerms}", "https://www.google.com/s?q={searchTerms}"],
+      "contextual_search_url": "",
+      "created_by_policy": false,
+      "created_from_play_api": false,
+      "date_created": "0",
+      "doodle_url": "",
+      "favicon_url": "https://www.google.com/favicon.ico",
+      "id": "11",
+      "image_url": "https://www.google.com/searchbyimage/upload",
+      "image_url_post_params": "encoded_image={google:imageThumbnail},image_url={google:imageURL},sbisrc={google:imageSearchSource},original_width={google:imageOriginalWidth},original_height={google:imageOriginalHeight}",
+      "input_encodings": ["UTF-8"],
+      "is_active": 0,
+      "keyword": "g",
+      "last_modified": "0",
+      "last_visited": "0",
+      "logo_url": "",
+      "new_tab_url": "",
+      "originating_url": "",
+      "position": "IhxEc1dKb3ZJanppM1NCWTZhRHNGN0ljYkRHeVk9",
+      "preconnect_to_search_url": false,
+      "prepopulate_id": 1,
+      "safe_for_autoreplace": true,
+      "search_url_post_params": "",
+      "short_name": "Google",
+      "side_search_param": "",
+      "suggestions_url": "",
+      "suggestions_url_post_params": "",
+      "url": "https://www.google.com/search?q={searchTerms}&{google:originalQueryForSuggestion}{google:prefetchSource}{google:sourceId}{google:contextualSearchVersion}ie={inputEncoding}",
+      "usage_count": 0
+    },
+    "template_url_data": {
+      "alternate_urls": ["https://www.google.com/#q={searchTerms}", "https://www.google.com/search#q={searchTerms}", "https://www.google.com/webhp#q={searchTerms}", "https://www.google.com/s#q={searchTerms}", "https://www.google.com/s?q={searchTerms}"],
+      "contextual_search_url": "",
+      "created_by_policy": false,
+      "created_from_play_api": false,
+      "date_created": "0",
+      "doodle_url": "",
+      "favicon_url": "https://www.google.com/favicon.ico",
+      "id": "11",
+      "image_url": "https://www.google.com/searchbyimage/upload",
+      "image_url_post_params": "encoded_image={google:imageThumbnail},image_url={google:imageURL},sbisrc={google:imageSearchSource},original_width={google:imageOriginalWidth},original_height={google:imageOriginalHeight}",
+      "input_encodings": ["UTF-8"],
+      "is_active": 0,
+      "keyword": "g",
+      "last_modified": "0",
+      "last_visited": "0",
+      "logo_url": "",
+      "new_tab_url": "",
+      "originating_url": "",
+      "position": "IhxEc1dKb3ZJanppM1NCWTZhRHNGN0ljYkRHeVk9",
+      "preconnect_to_search_url": false,
+      "prepopulate_id": 1,
+      "safe_for_autoreplace": true,
+      "search_url_post_params": "",
+      "short_name": "Google",
+      "side_search_param": "",
+      "suggestions_url": "",
+      "suggestions_url_post_params": "",
+      "url": "https://www.google.com/search?q={searchTerms}&{google:originalQueryForSuggestion}{google:prefetchSource}{google:sourceId}{google:contextualSearchVersion}ie={inputEncoding}",
+      "usage_count": 0
+    }
+  },
+  "distribution": {
+    "import_bookmarks_from_file": "bookmarks.html",
+    "import_bookmarks": true,
+    "import_history": true,
+    "import_home_page": true,
+    "import_search_engine": true,
+    "ping_delay": 60,
+    "do_not_create_desktop_shortcut": true,
+    "do_not_create_quick_launch_shortcut": true,
+    "do_not_create_taskbar_shortcut": true,
+    "do_not_launch_chrome": true,
+    "do_not_register_for_update_launch": true,
+    "make_chrome_default": true,
+    "make_chrome_default_for_user": true,
+    "system_level": false,
+    "verbose_logging": false
+  },
+  "enable_do_not_track": true,
+  "profile": {
+    "avatar_index": 34,
+    "default_content_setting_values": {
+      "clipboard": 2,
+      "cookies": 4,
+      "geolocation": 2,
+      "media_stream_camera": 2,
+      "media_stream_mic": 2,
+      "midi_sysex": 2,
+      "payment_handler": 2,
+      "usb_guard": 2
+    },
+    "name": "Neko",
+    "using_default_avatar": false,
+    "using_default_name": false,
+    "using_gaia_avatar": false
+  },
+  "signin": {
+    "allowed": false
+  },
+  "vivaldi": {
+    "address_bar": {
+      "autocomplete": {
+        "enabled": false
+      },
+      "omnibox": {
+        "show_browser_history": false,
+        "show_search_history": false,
+        "show_typed_history": false
+      },
+      "search": {
+        "display": 1,
+        "in_new_tab": false
+      },
+      "show_full_url": true,
+      "show_qr_generator": true,
+      "visible": true
+    },
+    "bookmarks": {
+      "deleted_partners": [
+        "f79cd6e8-ebc0-444d-ac96-00da456dcb59",
+        "d680347f-1073-46b9-a546-ae0238e7b9d9"
+      ],
+      "language": "en-US",
+      "version": "24"
+    },
+    "downloads": {
+      "notify_on_complete": false,
+      "open_panel_on_new": false,
+      "start_automatically": false,
+      "update_default_download_when_saving_as": false
+    },
+    "history": {
+      "days_to_keep_visits": 0
+    },
+    "homepage": "vivaldi://startpage",
+    "incognito": {
+      "show_intro": false
+    },
+    "language_at_install": "en-US",
+    "menu": {
+      "icon_type": 1
+    },
+    "mouse_gestures": {
+      "enabled": false,
+      "rocker_gestures": {
+        "enabled": false
+      }
+    },
+    "popups": {
+      "show_in_tab": true
+    },
+    "settings": {
+      "in_tab": true
+    },
+    "startpage": {
+      "navigation": 1,
+      "speed_dial": {
+        "add_button_visible": false,
+        "allow_dnd": false,
+        "columns": 4,
+        "delete_visible": false,
+        "display_search": true,
+        "privacy_stats_show": false,
+        "tracker_suggestion_show": false,
+        "width": 170
+      }
+    },
+    "startup": {
+      "check_is_default": false,
+      "has_seen_feature": 1
+    },
+    "status_bar": {
+      "display": 0,
+      "minimized": 0
+    },
+    "system": {
+      "show_exit_confirmation_dialog": true
+    },
+    "tabs": {
+      "new_placement": 3,
+      "open_new_in_background": false,
+      "stacking": {
+        "open_accordions": []
+      }
+    },
+    "theme": {
+      "schedule": {
+        "o_s": {
+          "dark": "Vivaldi2",
+          "light": "Vivaldi2"
+        }
+      },
+      "use_animation": false
+    },
+    "translate": {
+      "enabled": false
+    },
+    "windows": {
+      "use_native_decoration": true
+    }
+  }
+}
