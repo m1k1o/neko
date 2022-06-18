@@ -82,7 +82,7 @@ RUN set -eux; \
                     gstreamer1.0-vaapi ;\
     #
     # fonts
-    apt-get install -y --no-install-recommends fonts-takao-mincho; \
+    apt-get install -y --no-install-recommends fonts-takao-mincho fonts-wqy-zenhei; \
     #
     # create a non-root user
     groupadd --gid $USER_GID $USERNAME; \

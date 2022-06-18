@@ -2,6 +2,8 @@
 
 ## master branch
 
+## [n.eko v2.6](https://github.com/m1k1o/neko/releases/tag/v2.6)
+
 ### Bugs
 - Fixed fullscreen incompatibility for Safari [#121](https://github.com/m1k1o/neko/issues/121).
 - Fixed bad emoji matching for e.g. `:+1:` and `:100:` with new regex `/^:([^:\s]+):/`.
@@ -21,6 +23,7 @@
 - Removed `vncviewer` image, as its functionality is replaced and extended by remmina.
 - Opus uses `useinbandfec=1` from now on, hopefully fixes minor audio loss issues.
 - Font Awesome and Sweetalert2 upgraded to newest major version.
+- Add chinese characters support.
 
 ## [n.eko v2.5](https://github.com/m1k1o/neko/releases/tag/v2.5)
 
