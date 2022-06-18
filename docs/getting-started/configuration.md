@@ -144,7 +144,7 @@ nat1to1: <ip>
 #### `NEKO_STATIC`:
   - Path to neko client files to serve.
 
-## Agruments
+## Arguments
 
 You can execute `neko serve --help` to see available arguments.
 
