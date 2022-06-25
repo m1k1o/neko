@@ -36,8 +36,9 @@ const rtcpPLIInterval = 3 * time.Second
 
 func New(desktop types.DesktopManager, capture types.CaptureManager, config *config.WebRTC) *WebRTCManagerCtx {
 	return &WebRTCManagerCtx{
-		logger: log.With().Str("module", "webrtc").Logger(),
-		config: config,
+		logger:  log.With().Str("module", "webrtc").Logger(),
+		config:  config,
+		metrics: newMetrics(),
 
 		desktop:     desktop,
 		capture:     capture,
@@ -47,9 +48,10 @@ func New(desktop types.DesktopManager, capture types.CaptureManager, config *con
 }
 
 type WebRTCManagerCtx struct {
-	logger zerolog.Logger
-	config *config.WebRTC
-	peerId int32
+	logger  zerolog.Logger
+	config  *config.WebRTC
+	metrics *metricsCtx
+	peerId  int32
 
 	desktop     types.DesktopManager
 	capture     types.CaptureManager
@@ -121,6 +123,7 @@ func (manager *WebRTCManagerCtx) ICEServers() []types.ICEServer {
 
 func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID string) (*webrtc.SessionDescription, error) {
 	id := atomic.AddInt32(&manager.peerId, 1)
+	manager.metrics.NewConnection(session)
 
 	// add session id to logger context
 	logger := manager.logger.With().Str("session_id", session.ID()).Int32("peer_id", id).Logger()
@@ -315,6 +318,8 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 			videoTrack.RemoveStream()
 			audioTrack.RemoveStream()
 		}
+
+		manager.metrics.SetState(session, state)
 	})
 
 	cursorImage := func(entry *cursor.ImageEntry) {
@@ -391,6 +396,23 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 				SDP: offer.SDP,
 			})
 	})
+
+	go func() {
+		ticker := time.NewTicker(5 * time.Second)
+		defer ticker.Stop()
+
+		for range ticker.C {
+			if connection.ConnectionState() == webrtc.PeerConnectionStateClosed {
+				break
+			}
+
+			stats := connection.GetStats()
+			data, ok := stats["iceTransport"].(webrtc.TransportStats)
+			if ok {
+				manager.metrics.SetTransportStats(session, data)
+			}
+		}
+	}()
 
 	return offer, nil
 }
