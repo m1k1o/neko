@@ -39,6 +39,7 @@ func streamSrcNew(enabled bool, codecPipeline map[string]string, video_id string
 	pushedData := map[string]prometheus.Summary{}
 	pipelinesCounter := map[string]prometheus.Counter{}
 	pipelinesActive := map[string]prometheus.Gauge{}
+
 	for codecName, pipeline := range codecPipeline {
 		codec, ok := codec.ParseStr(codecName)
 		if !ok {
@@ -103,6 +104,9 @@ func (manager *StreamSrcManagerCtx) shutdown() {
 }
 
 func (manager *StreamSrcManagerCtx) Codec() codec.RTPCodec {
+	manager.pipelineMu.Lock()
+	defer manager.pipelineMu.Unlock()
+
 	return manager.codec
 }
 
