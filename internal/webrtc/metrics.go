@@ -10,8 +10,9 @@ import (
 )
 
 type metrics struct {
-	connectionState prometheus.Gauge
-	connectionCount prometheus.Counter
+	connectionState      prometheus.Gauge
+	connectionStateCount prometheus.Counter
+	connectionCount      prometheus.Counter
 
 	iceCandidates      map[string]struct{}
 	iceCandidatesCount prometheus.Counter
@@ -47,6 +48,15 @@ func (m *metricsCtx) getBySession(session types.Session) metrics {
 			Namespace: "neko",
 			Subsystem: "webrtc",
 			Help:      "Connection state of session.",
+			ConstLabels: map[string]string{
+				"session_id": session.ID(),
+			},
+		}),
+		connectionStateCount: promauto.NewCounter(prometheus.CounterOpts{
+			Name:      "connection_state_count",
+			Namespace: "neko",
+			Subsystem: "webrtc",
+			Help:      "Count of connection state changes for a session.",
 			ConstLabels: map[string]string{
 				"session_id": session.ID(),
 			},
@@ -131,6 +141,8 @@ func (m *metricsCtx) SetState(session types.Session, state webrtc.PeerConnection
 	default:
 		met.connectionState.Set(-1)
 	}
+
+	met.connectionStateCount.Add(1)
 }
 
 func (m *metricsCtx) SetTransportStats(session types.Session, data webrtc.TransportStats) {
