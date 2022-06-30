@@ -17,8 +17,10 @@ type metrics struct {
 	iceCandidates      map[string]struct{}
 	iceCandidatesCount prometheus.Counter
 
-	bytesSent     prometheus.Gauge
-	bytesReceived prometheus.Gauge
+	iceBytesSent      prometheus.Gauge
+	iceBytesReceived  prometheus.Gauge
+	sctpBytesSent     prometheus.Gauge
+	sctpBytesReceived prometheus.Gauge
 }
 
 type metricsCtx struct {
@@ -82,20 +84,39 @@ func (m *metricsCtx) getBySession(session types.Session) metrics {
 			},
 		}),
 
-		bytesSent: promauto.NewGauge(prometheus.GaugeOpts{
-			Name:      "bytes_sent",
+		iceBytesSent: promauto.NewGauge(prometheus.GaugeOpts{
+			Name:      "ice_bytes_sent",
 			Namespace: "neko",
 			Subsystem: "webrtc",
-			Help:      "Sent bytes to a session.",
+			Help:      "Sent bytes using ICE transport to a session.",
 			ConstLabels: map[string]string{
 				"session_id": session.ID(),
 			},
 		}),
-		bytesReceived: promauto.NewGauge(prometheus.GaugeOpts{
-			Name:      "bytes_received",
+		iceBytesReceived: promauto.NewGauge(prometheus.GaugeOpts{
+			Name:      "ice_bytes_received",
 			Namespace: "neko",
 			Subsystem: "webrtc",
-			Help:      "Received bytes from a session.",
+			Help:      "Received bytes using ICE transport from a session.",
+			ConstLabels: map[string]string{
+				"session_id": session.ID(),
+			},
+		}),
+
+		sctpBytesSent: promauto.NewGauge(prometheus.GaugeOpts{
+			Name:      "sctp_bytes_sent",
+			Namespace: "neko",
+			Subsystem: "webrtc",
+			Help:      "Sent bytes using SCTP transport to a session.",
+			ConstLabels: map[string]string{
+				"session_id": session.ID(),
+			},
+		}),
+		sctpBytesReceived: promauto.NewGauge(prometheus.GaugeOpts{
+			Name:      "sctp_bytes_received",
+			Namespace: "neko",
+			Subsystem: "webrtc",
+			Help:      "Received bytes using SCTP transport from a session.",
 			ConstLabels: map[string]string{
 				"session_id": session.ID(),
 			},
@@ -145,9 +166,16 @@ func (m *metricsCtx) SetState(session types.Session, state webrtc.PeerConnection
 	met.connectionStateCount.Add(1)
 }
 
-func (m *metricsCtx) SetTransportStats(session types.Session, data webrtc.TransportStats) {
+func (m *metricsCtx) SetIceTransportStats(session types.Session, data webrtc.TransportStats) {
 	met := m.getBySession(session)
 
-	met.bytesSent.Set(float64(data.BytesSent))
-	met.bytesReceived.Set(float64(data.BytesReceived))
+	met.iceBytesSent.Set(float64(data.BytesSent))
+	met.iceBytesReceived.Set(float64(data.BytesReceived))
+}
+
+func (m *metricsCtx) SetSctpTransportStats(session types.Session, data webrtc.TransportStats) {
+	met := m.getBySession(session)
+
+	met.sctpBytesSent.Set(float64(data.BytesSent))
+	met.sctpBytesReceived.Set(float64(data.BytesReceived))
 }

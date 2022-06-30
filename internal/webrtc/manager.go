@@ -409,7 +409,12 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 			stats := connection.GetStats()
 			data, ok := stats["iceTransport"].(webrtc.TransportStats)
 			if ok {
-				manager.metrics.SetTransportStats(session, data)
+				manager.metrics.SetIceTransportStats(session, data)
+			}
+
+			data, ok = stats["sctpTransport"].(webrtc.TransportStats)
+			if ok {
+				manager.metrics.SetSctpTransportStats(session, data)
 			}
 
 			for _, entry := range stats {
