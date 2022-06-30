@@ -411,6 +411,14 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 			if ok {
 				manager.metrics.SetTransportStats(session, data)
 			}
+
+			for _, entry := range stats {
+				// only remote ice candidate stats
+				candidate, ok := entry.(webrtc.ICECandidateStats)
+				if ok && candidate.Type == webrtc.StatsTypeRemoteCandidate {
+					manager.metrics.NewICECandidate(session, candidate.ID)
+				}
+			}
 		}
 	}()
 

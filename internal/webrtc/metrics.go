@@ -13,6 +13,9 @@ type metrics struct {
 	connectionState prometheus.Gauge
 	connectionCount prometheus.Counter
 
+	iceCandidates      map[string]struct{}
+	iceCandidatesCount prometheus.Counter
+
 	bytesSent     prometheus.Gauge
 	bytesReceived prometheus.Gauge
 }
@@ -57,6 +60,18 @@ func (m *metricsCtx) getBySession(session types.Session) metrics {
 				"session_id": session.ID(),
 			},
 		}),
+
+		iceCandidates: map[string]struct{}{},
+		iceCandidatesCount: promauto.NewCounter(prometheus.CounterOpts{
+			Name:      "ice_candidates_count",
+			Namespace: "neko",
+			Subsystem: "webrtc",
+			Help:      "Count of ICE candidates sent by a remote client.",
+			ConstLabels: map[string]string{
+				"session_id": session.ID(),
+			},
+		}),
+
 		bytesSent: promauto.NewGauge(prometheus.GaugeOpts{
 			Name:      "bytes_sent",
 			Namespace: "neko",
@@ -84,6 +99,17 @@ func (m *metricsCtx) getBySession(session types.Session) metrics {
 func (m *metricsCtx) NewConnection(session types.Session) {
 	met := m.getBySession(session)
 	met.connectionCount.Add(1)
+}
+
+func (m *metricsCtx) NewICECandidate(session types.Session, id string) {
+	met := m.getBySession(session)
+
+	if _, found := met.iceCandidates[id]; found {
+		return
+	}
+
+	met.iceCandidates[id] = struct{}{}
+	met.iceCandidatesCount.Add(1)
 }
 
 func (m *metricsCtx) SetState(session types.Session, state webrtc.PeerConnectionState) {
