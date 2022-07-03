@@ -105,40 +105,44 @@ func (m *metricsCtx) getBySession(session types.Session) metrics {
 		}),
 
 		iceBytesSent: promauto.NewGauge(prometheus.GaugeOpts{
-			Name:      "ice_bytes_sent",
+			Name:      "bytes_sent",
 			Namespace: "neko",
 			Subsystem: "webrtc",
-			Help:      "Sent bytes using ICE transport to a session.",
+			Help:      "Sent bytes to a session.",
 			ConstLabels: map[string]string{
 				"session_id": session.ID(),
+				"transport":  "ice",
 			},
 		}),
 		iceBytesReceived: promauto.NewGauge(prometheus.GaugeOpts{
-			Name:      "ice_bytes_received",
+			Name:      "bytes_received",
 			Namespace: "neko",
 			Subsystem: "webrtc",
-			Help:      "Received bytes using ICE transport from a session.",
+			Help:      "Received bytes from a session.",
 			ConstLabels: map[string]string{
 				"session_id": session.ID(),
+				"transport":  "ice",
 			},
 		}),
 
 		sctpBytesSent: promauto.NewGauge(prometheus.GaugeOpts{
-			Name:      "sctp_bytes_sent",
+			Name:      "bytes_sent",
 			Namespace: "neko",
 			Subsystem: "webrtc",
-			Help:      "Sent bytes using SCTP transport to a session.",
+			Help:      "Sent bytes to a session.",
 			ConstLabels: map[string]string{
 				"session_id": session.ID(),
+				"transport":  "sctp",
 			},
 		}),
 		sctpBytesReceived: promauto.NewGauge(prometheus.GaugeOpts{
-			Name:      "sctp_bytes_received",
+			Name:      "bytes_received",
 			Namespace: "neko",
 			Subsystem: "webrtc",
-			Help:      "Received bytes using SCTP transport from a session.",
+			Help:      "Received bytes from a session.",
 			ConstLabels: map[string]string{
 				"session_id": session.ID(),
+				"transport":  "sctp",
 			},
 		}),
 	}
