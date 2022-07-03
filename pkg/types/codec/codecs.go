@@ -6,6 +6,18 @@ import (
 	"github.com/pion/webrtc/v3"
 )
 
+var RTCPFeedback = []webrtc.RTCPFeedback{
+	{Type: webrtc.TypeRTCPFBTransportCC, Parameter: ""},
+	{Type: webrtc.TypeRTCPFBGoogREMB, Parameter: ""},
+
+	// https://www.iana.org/assignments/sdp-parameters/sdp-parameters.xhtml#sdp-parameters-19
+	{Type: webrtc.TypeRTCPFBCCM, Parameter: "fir"},
+
+	// https://www.iana.org/assignments/sdp-parameters/sdp-parameters.xhtml#sdp-parameters-15
+	{Type: webrtc.TypeRTCPFBNACK, Parameter: "pli"},
+	{Type: webrtc.TypeRTCPFBNACK, Parameter: ""},
+}
+
 func ParseRTC(codec webrtc.RTPCodecParameters) (RTPCodec, bool) {
 	codecName := strings.Split(codec.RTPCodecCapability.MimeType, "/")[1]
 	return ParseStr(codecName)
@@ -61,7 +73,7 @@ func VP8() RTPCodec {
 			ClockRate:    90000,
 			Channels:     0,
 			SDPFmtpLine:  "",
-			RTCPFeedback: []webrtc.RTCPFeedback{},
+			RTCPFeedback: RTCPFeedback,
 		},
 		// https://gstreamer.freedesktop.org/documentation/vpx/vp8enc.html
 		// gstreamer1.0-plugins-good
@@ -80,7 +92,7 @@ func VP9() RTPCodec {
 			ClockRate:    90000,
 			Channels:     0,
 			SDPFmtpLine:  "profile-id=0",
-			RTCPFeedback: []webrtc.RTCPFeedback{},
+			RTCPFeedback: RTCPFeedback,
 		},
 		// https://gstreamer.freedesktop.org/documentation/vpx/vp9enc.html
 		// gstreamer1.0-plugins-good
@@ -99,7 +111,7 @@ func H264() RTPCodec {
 			ClockRate:    90000,
 			Channels:     0,
 			SDPFmtpLine:  "level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42001f",
-			RTCPFeedback: []webrtc.RTCPFeedback{},
+			RTCPFeedback: RTCPFeedback,
 		},
 		// https://gstreamer.freedesktop.org/documentation/x264/index.html
 		// gstreamer1.0-plugins-ugly

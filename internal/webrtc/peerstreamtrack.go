@@ -5,6 +5,7 @@ import (
 	"io"
 	"sync"
 
+	"github.com/pion/rtcp"
 	"github.com/pion/webrtc/v3"
 	"github.com/pion/webrtc/v3/pkg/media"
 	"github.com/rs/zerolog"
@@ -51,6 +52,9 @@ type PeerStreamTrack struct {
 
 	stream   types.StreamSinkManager
 	streamMu sync.Mutex
+
+	onRtcp   func(rtcp.Packet)
+	onRtcpMu sync.RWMutex
 }
 
 func (peer *PeerStreamTrack) SetStream(stream types.StreamSinkManager) error {
@@ -90,8 +94,30 @@ func (peer *PeerStreamTrack) AddToConnection(connection *webrtc.PeerConnection) 
 	go func() {
 		rtcpBuf := make([]byte, 1500)
 		for {
-			if _, _, err := sender.Read(rtcpBuf); err != nil {
-				return
+			n, _, err := sender.Read(rtcpBuf)
+			if err != nil {
+				if err == io.EOF || err == io.ErrClosedPipe {
+					return
+				}
+
+				peer.logger.Err(err).Msg("RTCP read error")
+				continue
+			}
+
+			packets, err := rtcp.Unmarshal(rtcpBuf[:n])
+			if err != nil {
+				peer.logger.Err(err).Msg("RTCP unmarshal error")
+				continue
+			}
+
+			peer.onRtcpMu.RLock()
+			handler := peer.onRtcp
+			peer.onRtcpMu.RUnlock()
+
+			for _, packet := range packets {
+				if handler != nil {
+					go handler(packet)
+				}
 			}
 		}
 	}()
@@ -101,4 +127,11 @@ func (peer *PeerStreamTrack) AddToConnection(connection *webrtc.PeerConnection) 
 
 func (peer *PeerStreamTrack) SetPaused(paused bool) {
 	peer.paused = paused
+}
+
+func (peer *PeerStreamTrack) OnRTCP(f func(rtcp.Packet)) {
+	peer.onRtcpMu.Lock()
+	defer peer.onRtcpMu.Unlock()
+
+	peer.onRtcp = f
 }

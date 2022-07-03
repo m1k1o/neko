@@ -21,6 +21,8 @@ type metrics struct {
 	videoIds   map[string]prometheus.Gauge
 	videoIdsMu *sync.Mutex
 
+	receiverEstimatedMaximumBitrate prometheus.Gauge
+
 	iceBytesSent      prometheus.Gauge
 	iceBytesReceived  prometheus.Gauge
 	sctpBytesSent     prometheus.Gauge
@@ -91,6 +93,16 @@ func (m *metricsCtx) getBySession(session types.Session) metrics {
 
 		videoIds:   map[string]prometheus.Gauge{},
 		videoIdsMu: &sync.Mutex{},
+
+		receiverEstimatedMaximumBitrate: promauto.NewGauge(prometheus.GaugeOpts{
+			Name:      "receiver_estimated_maximum_bitrate",
+			Namespace: "neko",
+			Subsystem: "webrtc",
+			Help:      "Receiver Estimated Maximum Bitrate from SCTP.",
+			ConstLabels: map[string]string{
+				"session_id": session.ID(),
+			},
+		}),
 
 		iceBytesSent: promauto.NewGauge(prometheus.GaugeOpts{
 			Name:      "ice_bytes_sent",
@@ -203,6 +215,12 @@ func (m *metricsCtx) SetVideoID(session types.Session, videoId string) {
 			entry.Set(0)
 		}
 	}
+}
+
+func (m *metricsCtx) SetReceiverEstimatedMaximumBitrate(session types.Session, bitrate float32) {
+	met := m.getBySession(session)
+
+	met.receiverEstimatedMaximumBitrate.Set(float64(bitrate))
 }
 
 func (m *metricsCtx) SetIceTransportStats(session types.Session, data webrtc.TransportStats) {

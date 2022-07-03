@@ -400,6 +400,13 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 			})
 	})
 
+	videoTrack.OnRTCP(func(p rtcp.Packet) {
+		switch rtcpPacket := p.(type) {
+		case *rtcp.ReceiverEstimatedMaximumBitrate: // TODO: Deprecated.
+			manager.metrics.SetReceiverEstimatedMaximumBitrate(session, rtcpPacket.Bitrate)
+		}
+	})
+
 	go func() {
 		ticker := time.NewTicker(5 * time.Second)
 		defer ticker.Stop()
