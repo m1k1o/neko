@@ -138,6 +138,8 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 		return nil, types.ErrWebRTCVideoNotFound
 	}
 
+	manager.metrics.SetVideoID(session, videoID)
+
 	connection, err := manager.newPeerConnection([]codec.RTPCodec{
 		audioStream.Codec(),
 		videoStream.Codec(),
@@ -201,6 +203,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 				return types.ErrWebRTCVideoNotFound
 			}
 
+			manager.metrics.SetVideoID(session, videoID)
 			return videoTrack.SetStream(videoStream)
 		},
 		setPaused: func(isPaused bool) {

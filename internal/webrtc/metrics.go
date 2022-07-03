@@ -18,6 +18,9 @@ type metrics struct {
 	iceCandidatesMu    *sync.Mutex
 	iceCandidatesCount prometheus.Counter
 
+	videoIds   map[string]prometheus.Gauge
+	videoIdsMu *sync.Mutex
+
 	iceBytesSent      prometheus.Gauge
 	iceBytesReceived  prometheus.Gauge
 	sctpBytesSent     prometheus.Gauge
@@ -85,6 +88,9 @@ func (m *metricsCtx) getBySession(session types.Session) metrics {
 				"session_id": session.ID(),
 			},
 		}),
+
+		videoIds:   map[string]prometheus.Gauge{},
+		videoIdsMu: &sync.Mutex{},
 
 		iceBytesSent: promauto.NewGauge(prometheus.GaugeOpts{
 			Name:      "ice_bytes_sent",
@@ -169,6 +175,34 @@ func (m *metricsCtx) SetState(session types.Session, state webrtc.PeerConnection
 	}
 
 	met.connectionStateCount.Add(1)
+}
+
+func (m *metricsCtx) SetVideoID(session types.Session, videoId string) {
+	met := m.getBySession(session)
+
+	met.videoIdsMu.Lock()
+	defer met.videoIdsMu.Unlock()
+
+	if _, found := met.videoIds[videoId]; !found {
+		met.videoIds[videoId] = promauto.NewGauge(prometheus.GaugeOpts{
+			Name:      "video_id",
+			Namespace: "neko",
+			Subsystem: "webrtc",
+			Help:      "Current Video ID of a session.",
+			ConstLabels: map[string]string{
+				"session_id": session.ID(),
+				"video_id":   videoId,
+			},
+		})
+	}
+
+	for id, entry := range met.videoIds {
+		if id == videoId {
+			entry.Set(1)
+		} else {
+			entry.Set(0)
+		}
+	}
 }
 
 func (m *metricsCtx) SetIceTransportStats(session types.Session, data webrtc.TransportStats) {
