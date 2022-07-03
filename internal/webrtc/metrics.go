@@ -15,6 +15,7 @@ type metrics struct {
 	connectionCount      prometheus.Counter
 
 	iceCandidates      map[string]struct{}
+	iceCandidatesMu    *sync.Mutex
 	iceCandidatesCount prometheus.Counter
 
 	iceBytesSent      prometheus.Gauge
@@ -73,7 +74,8 @@ func (m *metricsCtx) getBySession(session types.Session) metrics {
 			},
 		}),
 
-		iceCandidates: map[string]struct{}{},
+		iceCandidates:   map[string]struct{}{},
+		iceCandidatesMu: &sync.Mutex{},
 		iceCandidatesCount: promauto.NewCounter(prometheus.CounterOpts{
 			Name:      "ice_candidates_count",
 			Namespace: "neko",
@@ -134,6 +136,9 @@ func (m *metricsCtx) NewConnection(session types.Session) {
 
 func (m *metricsCtx) NewICECandidate(session types.Session, id string) {
 	met := m.getBySession(session)
+
+	met.iceCandidatesMu.Lock()
+	defer met.iceCandidatesMu.Unlock()
 
 	if _, found := met.iceCandidates[id]; found {
 		return
