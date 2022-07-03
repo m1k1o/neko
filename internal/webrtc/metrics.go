@@ -3,6 +3,7 @@ package webrtc
 import (
 	"sync"
 
+	"github.com/pion/rtcp"
 	"github.com/pion/webrtc/v3"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
@@ -22,6 +23,10 @@ type metrics struct {
 	videoIdsMu *sync.Mutex
 
 	receiverEstimatedMaximumBitrate prometheus.Gauge
+
+	receiverReportDelay     prometheus.Gauge
+	receiverReportJitter    prometheus.Gauge
+	receiverReportTotalLost prometheus.Gauge
 
 	iceBytesSent      prometheus.Gauge
 	iceBytesReceived  prometheus.Gauge
@@ -99,6 +104,34 @@ func (m *metricsCtx) getBySession(session types.Session) metrics {
 			Namespace: "neko",
 			Subsystem: "webrtc",
 			Help:      "Receiver Estimated Maximum Bitrate from SCTP.",
+			ConstLabels: map[string]string{
+				"session_id": session.ID(),
+			},
+		}),
+
+		receiverReportDelay: promauto.NewGauge(prometheus.GaugeOpts{
+			Name:      "receiver_report_delay",
+			Namespace: "neko",
+			Subsystem: "webrtc",
+			Help:      "Receiver Report Delay from SCTP, expressed in units of 1/65536 seconds.",
+			ConstLabels: map[string]string{
+				"session_id": session.ID(),
+			},
+		}),
+		receiverReportJitter: promauto.NewGauge(prometheus.GaugeOpts{
+			Name:      "receiver_report_jitter",
+			Namespace: "neko",
+			Subsystem: "webrtc",
+			Help:      "Receiver Report Jitter from SCTP.",
+			ConstLabels: map[string]string{
+				"session_id": session.ID(),
+			},
+		}),
+		receiverReportTotalLost: promauto.NewGauge(prometheus.GaugeOpts{
+			Name:      "receiver_report_total_lost",
+			Namespace: "neko",
+			Subsystem: "webrtc",
+			Help:      "Receiver Report Total Lost from SCTP.",
 			ConstLabels: map[string]string{
 				"session_id": session.ID(),
 			},
@@ -225,6 +258,14 @@ func (m *metricsCtx) SetReceiverEstimatedMaximumBitrate(session types.Session, b
 	met := m.getBySession(session)
 
 	met.receiverEstimatedMaximumBitrate.Set(float64(bitrate))
+}
+
+func (m *metricsCtx) SetReceiverReport(session types.Session, report rtcp.ReceptionReport) {
+	met := m.getBySession(session)
+
+	met.receiverReportDelay.Set(float64(report.Delay))
+	met.receiverReportJitter.Set(float64(report.Jitter))
+	met.receiverReportTotalLost.Set(float64(report.TotalLost))
 }
 
 func (m *metricsCtx) SetIceTransportStats(session types.Session, data webrtc.TransportStats) {

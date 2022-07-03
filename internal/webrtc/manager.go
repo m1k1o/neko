@@ -404,6 +404,13 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 		switch rtcpPacket := p.(type) {
 		case *rtcp.ReceiverEstimatedMaximumBitrate: // TODO: Deprecated.
 			manager.metrics.SetReceiverEstimatedMaximumBitrate(session, rtcpPacket.Bitrate)
+
+		case *rtcp.ReceiverReport:
+			l := len(rtcpPacket.Reports)
+			if l > 0 {
+				// use only last report
+				manager.metrics.SetReceiverReport(session, rtcpPacket.Reports[l-1])
+			}
 		}
 	})
 
