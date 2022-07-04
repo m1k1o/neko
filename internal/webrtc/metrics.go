@@ -184,6 +184,19 @@ func (m *metricsCtx) getBySession(session types.Session) metrics {
 	return met
 }
 
+func (m *metricsCtx) reset(met metrics) {
+	met.videoIdsMu.Lock()
+	for _, entry := range met.videoIds {
+		entry.Set(0)
+	}
+	met.videoIdsMu.Unlock()
+
+	met.receiverEstimatedMaximumBitrate.Set(0)
+
+	met.receiverReportDelay.Set(0)
+	met.receiverReportJitter.Set(0)
+}
+
 func (m *metricsCtx) NewConnection(session types.Session) {
 	met := m.getBySession(session)
 	met.connectionCount.Add(1)
@@ -219,6 +232,7 @@ func (m *metricsCtx) SetState(session types.Session, state webrtc.PeerConnection
 		met.connectionState.Set(2)
 	case webrtc.PeerConnectionStateClosed:
 		met.connectionState.Set(1)
+		m.reset(met)
 	default:
 		met.connectionState.Set(-1)
 	}
