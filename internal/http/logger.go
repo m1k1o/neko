@@ -17,8 +17,8 @@ type logFormatter struct {
 }
 
 func (l *logFormatter) NewLogEntry(r *http.Request) middleware.LogEntry {
-	// exclude healthcheck from logs
-	if r.RequestURI == "/api/health" {
+	// exclude health & metrics from logs
+	if r.RequestURI == "/health" || r.RequestURI == "/metrics" {
 		return &nulllog{}
 	}
 

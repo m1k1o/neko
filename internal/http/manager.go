@@ -42,6 +42,11 @@ func New(WebSocketManager types.WebSocketManager, ApiManager types.ApiManager, c
 		return config.AllowOrigin(r.Header.Get("Origin"))
 	}))
 
+	router.Get("/health", func(w http.ResponseWriter, r *http.Request) error {
+		_, err := w.Write([]byte("true"))
+		return err
+	})
+
 	router.Get("/metrics", func(w http.ResponseWriter, r *http.Request) error {
 		promhttp.Handler().ServeHTTP(w, r)
 		return nil

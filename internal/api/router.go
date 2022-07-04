@@ -57,11 +57,6 @@ func (api *ApiManagerCtx) Route(r types.Router) {
 			r.Route(path, router)
 		}
 	})
-
-	r.Get("/health", func(w http.ResponseWriter, r *http.Request) error {
-		_, err := w.Write([]byte("true"))
-		return err
-	})
 }
 
 func (api *ApiManagerCtx) Authenticate(w http.ResponseWriter, r *http.Request) (context.Context, error) {
