@@ -8,12 +8,13 @@ import (
 )
 
 type Server struct {
-	Cert   string
-	Key    string
-	Bind   string
-	Static string
-	PProf  bool
-	CORS   []string
+	Cert    string
+	Key     string
+	Bind    string
+	Static  string
+	PProf   bool
+	Metrics bool
+	CORS    []string
 }
 
 func (Server) Init(cmd *cobra.Command) error {
@@ -42,6 +43,11 @@ func (Server) Init(cmd *cobra.Command) error {
 		return err
 	}
 
+	cmd.PersistentFlags().Bool("server.metrics", true, "enable prometheus metrics available at /metrics")
+	if err := viper.BindPFlag("server.metrics", cmd.PersistentFlags().Lookup("server.metrics")); err != nil {
+		return err
+	}
+
 	cmd.PersistentFlags().StringSlice("server.cors", []string{"*"}, "list of allowed origins for CORS")
 	if err := viper.BindPFlag("server.cors", cmd.PersistentFlags().Lookup("server.cors")); err != nil {
 		return err
@@ -56,6 +62,7 @@ func (s *Server) Set() {
 	s.Bind = viper.GetString("server.bind")
 	s.Static = viper.GetString("server.static")
 	s.PProf = viper.GetBool("server.pprof")
+	s.Metrics = viper.GetBool("server.metrics")
 
 	s.CORS = viper.GetStringSlice("server.cors")
 	in, _ := utils.ArrayIn("*", s.CORS)

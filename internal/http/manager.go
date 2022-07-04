@@ -47,10 +47,12 @@ func New(WebSocketManager types.WebSocketManager, ApiManager types.ApiManager, c
 		return err
 	})
 
-	router.Get("/metrics", func(w http.ResponseWriter, r *http.Request) error {
-		promhttp.Handler().ServeHTTP(w, r)
-		return nil
-	})
+	if config.Metrics {
+		router.Get("/metrics", func(w http.ResponseWriter, r *http.Request) error {
+			promhttp.Handler().ServeHTTP(w, r)
+			return nil
+		})
+	}
 
 	if config.Static != "" {
 		fs := http.FileServer(http.Dir(config.Static))
