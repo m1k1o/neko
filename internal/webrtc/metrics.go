@@ -248,10 +248,10 @@ func (m *metricsCtx) SetVideoID(session types.Session, videoId string) {
 
 	if _, found := met.videoIds[videoId]; !found {
 		met.videoIds[videoId] = promauto.NewGauge(prometheus.GaugeOpts{
-			Name:      "video_id",
+			Name:      "video_listeners",
 			Namespace: "neko",
 			Subsystem: "webrtc",
-			Help:      "Current Video ID of a session.",
+			Help:      "Listeners for Video pipelines by a session.",
 			ConstLabels: map[string]string{
 				"session_id": session.ID(),
 				"video_id":   videoId,

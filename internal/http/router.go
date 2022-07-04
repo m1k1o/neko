@@ -20,7 +20,6 @@ func newRouter(logger zerolog.Logger) *router {
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID) // Create a request ID for each request
 	r.Use(middleware.RequestLogger(&logFormatter{logger}))
-	r.Use(middlewareMetrics)
 	r.Use(middleware.Recoverer) // Recover from panics without crashing server
 	return &router{r}
 }
