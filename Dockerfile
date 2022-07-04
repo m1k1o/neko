@@ -17,8 +17,9 @@ RUN set -eux; \
     apt-get clean -y; \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/*
 
-ARG GIT_COMMIT=dev
-ARG GIT_BRANCH=dev
+ARG GIT_COMMIT
+ARG GIT_BRANCH
+ARG GIT_TAG
 
 #
 # build server
@@ -49,8 +50,8 @@ RUN set -eux; \
         # needed for profile upload preStop hook
         zip curl \
         #
-        # file chooser handler, clipboard
-        xdotool xclip \
+        # file chooser handler, clipboard, drop
+        xdotool xclip libgtk-3-0 \
         #
         # gst
         gstreamer1.0-plugins-base gstreamer1.0-plugins-good \

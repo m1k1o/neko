@@ -13,10 +13,11 @@ fi
 
 #
 # set git build variables if git exists
-if git version > /dev/null && [ -z $GIT_COMMIT ] && [ -z $GIT_COMMIT ];
+if git version > /dev/null && [ -z $GIT_COMMIT ] && [ -z $GIT_BRANCH ] && [ -z $GIT_TAG ];
 then
     GIT_COMMIT=`git rev-parse --short HEAD`
     GIT_BRANCH=`git rev-parse --symbolic-full-name --abbrev-ref HEAD`
+    GIT_TAG=`git tag --points-at $GIT_COMMIT | head -n 1`
 fi
 
 #
@@ -29,9 +30,10 @@ go build \
     -o bin/neko \
     -ldflags "
         -s -w
-        -X 'demodesk/neko.buildDate=`date -u +'%Y-%m-%dT%H:%M:%SZ'`'
-        -X 'demodesk/neko.gitCommit=${GIT_COMMIT}'
-        -X 'demodesk/neko.gitBranch=${GIT_BRANCH}'
+        -X 'gitlab.com/demodesk/neko/server.buildDate=`date -u +'%Y-%m-%dT%H:%M:%SZ'`'
+        -X 'gitlab.com/demodesk/neko/server.gitCommit=${GIT_COMMIT}'
+        -X 'gitlab.com/demodesk/neko/server.gitBranch=${GIT_BRANCH}'
+        -X 'gitlab.com/demodesk/neko/server.gitTag=${GIT_TAG}'
     " \
     cmd/neko/main.go;
 
