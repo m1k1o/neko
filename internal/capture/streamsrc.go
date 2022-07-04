@@ -94,6 +94,7 @@ func streamSrcNew(enabled bool, codecPipeline map[string]string, video_id string
 		// metrics
 		pushedData:       pushedData,
 		pipelinesCounter: pipelinesCounter,
+		pipelinesActive:  pipelinesActive,
 	}
 }
 
@@ -166,8 +167,12 @@ func (manager *StreamSrcManagerCtx) Stop() {
 	}
 
 	manager.pipeline.Destroy()
-	manager.logger.Info().Msgf("destroying pipeline")
 	manager.pipeline = nil
+
+	manager.logger.Info().
+		Str("codec", manager.codec.Name).
+		Str("src", manager.pipelineStr).
+		Msgf("destroying pipeline")
 
 	manager.pipelinesActive[manager.codec.Name].Set(0)
 }
