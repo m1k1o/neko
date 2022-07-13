@@ -1,0 +1,95 @@
+capture:
+  video:
+    codec: vp8
+    ids: [ hq, lq ]
+    pipelines:
+      hq:
+        fps: 25
+        gst_encoder: vp8enc
+        gst_params:
+          target-bitrate: (3072 * 650)
+          cpu-used: 4
+          end-usage: cbr
+          threads: 4
+          deadline: 1
+          undershoot: 95
+          buffer-size: (3072 * 4)
+          buffer-initial-size: (3072 * 2)
+          buffer-optimal-size: (3072 * 3)
+          keyframe-max-dist: 25
+          min-quantizer: 4
+          max-quantizer: 20
+      lq:
+        fps: 25
+        gst_encoder: vp8enc
+        gst_params:
+          target-bitrate: (1024 * 650)
+          cpu-used: 4
+          end-usage: cbr
+          threads: 4
+          deadline: 1
+          undershoot: 95
+          buffer-size: (1024 * 4)
+          buffer-initial-size: (1024 * 2)
+          buffer-optimal-size: (1024 * 3)
+          keyframe-max-dist: 25
+          min-quantizer: 4
+          max-quantizer: 20
+  # video:
+  #   codec: h264
+  #   ids: [ main ]
+  #   pipelines:
+  #     main:
+  #       width: (width / 3) * 2
+  #       height: (height / 3) * 2
+  #       fps: 20
+  #       gst_prefix: "!  video/x-raw,format=I420"
+  #       gst_encoder: "x264enc"
+  #       gst_params:
+  #         threads: 4
+  #         bitrate: 4096
+  #         key-int-max: 15
+  #         byte-stream: true
+  #         tune: zerolatency
+  #         speed-preset: veryfast 
+  #       gst_suffix: "! video/x-h264,stream-format=byte-stream"
+  screencast:
+    enabled: true
+
+server:
+  pprof: true
+
+desktop:
+  screen: "1920x1080@60"
+
+member:
+  provider: "object"
+  object:
+    admin_password: "admin"
+    user_password: "neko"
+  # provider: "file"
+  # file:
+  #   path: "/home/neko/members.json"
+
+session:
+  # Allows reconnecting the websocket even if the previous
+  # connection was not closed. Can lead to session hijacking.
+  merciful_reconnect: true
+  # Show inactive cursors on the screen. Can lead to multiple
+  # data sent via WebSockets and additonal rendering cost on
+  # the clients.
+  inactive_cursors: true
+  api_token: "neko123"
+  cookie:
+    # Disabling cookies will result to use Bearer Authentication.
+    # This is less secure, because access token will be sent to
+    # client in playload and accessible via JS app.
+    enabled: false
+    secure: false
+
+webrtc:
+  icelite: true
+  iceservers:
+    - urls: [ stun:stun.l.google.com:19302 ]
+    #  username: foo
+    #  credential: bar

@@ -1,0 +1,32 @@
+#!/bin/bash
+cd "$(dirname "$0")"
+
+#
+# aborting if any command returns a non-zero value
+set -e
+
+#
+# build server
+docker run --rm -it \
+    -v "${PWD}/../:/src" \
+    --entrypoint="/bin/bash" \
+    neko_server_build "./build" "$@";
+
+#
+# remove old plugins
+docker exec neko_server_dev rm -rf /etc/neko/plugins
+
+#
+# replace server binary in container
+docker cp "${PWD}/../bin/neko" neko_server_dev:/usr/bin/neko
+
+#
+# replace plugin binaries in container
+if [ -d "${PWD}/../bin/plugins" ];
+then
+    docker cp "${PWD}/../bin/plugins" neko_server_dev:/etc/neko/plugins
+fi
+
+#
+# restart server
+docker exec neko_server_dev supervisorctl restart neko

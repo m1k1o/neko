@@ -1,0 +1,12 @@
+#!/bin/bash
+cd "$(dirname "$0")"
+
+if [ "$(docker images -q neko_server_build 2> /dev/null)" == "" ]; then
+	echo "Image 'neko_server_build' not found. Run ./build first."
+	exit 1
+fi
+
+docker run -it --rm \
+    --entrypoint="go" \
+    -v "${PWD}/../:/src" \
+    neko_server_build fmt ./...

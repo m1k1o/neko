@@ -1,0 +1,45 @@
+#!/bin/bash
+cd "$(dirname "$0")"
+
+if [ -z "$(docker images -q neko_server_app 2> /dev/null)" ]; then
+	echo "Image 'neko_server_app' not found. Running ./build first."
+	./build
+fi
+
+if [ -z $NEKO_PORT ]; then
+    NEKO_PORT="3000"
+fi
+
+if [ -z $NEKO_MUX ]; then
+    NEKO_MUX="52100"
+fi
+
+if [ -z $NEKO_NAT1TO1 ]; then
+    for i in $(ifconfig -l 2>/dev/null); do
+        NEKO_NAT1TO1=$(ipconfig getifaddr $i)
+        if [ ! -z $NEKO_NAT1TO1 ]; then
+            break
+        fi
+    done
+
+    if [ -z $NEKO_NAT1TO1 ]; then
+        NEKO_NAT1TO1=$(hostname -i 2>/dev/null)
+    fi
+fi
+
+echo "Using app port: ${NEKO_PORT}"
+echo "Using mux port: ${NEKO_MUX}"
+echo "Using IP address: ${NEKO_NAT1TO1}"
+
+# start server
+docker run --rm -it \
+    --name "neko_server_dev" \
+    -p "${NEKO_PORT}:8080" \
+    -p "${NEKO_MUX}:${NEKO_MUX}/tcp" \
+    -p "${NEKO_MUX}:${NEKO_MUX}/udp" \
+    -e "NEKO_WEBRTC_UDPMUX=${NEKO_MUX}" \
+    -e "NEKO_WEBRTC_TCPMUX=${NEKO_MUX}" \
+    -e "NEKO_WEBRTC_NAT1TO1=${NEKO_NAT1TO1}" \
+    -v "${PWD}/runtime/config.yml:/etc/neko/neko.yml" \
+    -e "NEKO_DEBUG=1" \
+    neko_server_app:latest;
