@@ -7,7 +7,7 @@ capture:
         fps: 25
         gst_encoder: vp8enc
         gst_params:
-          target-bitrate: (3072 * 650)
+          target-bitrate: round(3072 * 650)
           cpu-used: 4
           end-usage: cbr
           threads: 4
@@ -23,7 +23,7 @@ capture:
         fps: 25
         gst_encoder: vp8enc
         gst_params:
-          target-bitrate: (1024 * 650)
+          target-bitrate: round(1024 * 650)
           cpu-used: 4
           end-usage: cbr
           threads: 4
