@@ -1,9 +1,9 @@
 package websocket
 
 import (
-	"gitlab.com/demodesk/neko/server/pkg/types"
-	"gitlab.com/demodesk/neko/server/pkg/types/event"
-	"gitlab.com/demodesk/neko/server/pkg/types/message"
+	"github.com/demodesk/neko/pkg/types"
+	"github.com/demodesk/neko/pkg/types/event"
+	"github.com/demodesk/neko/pkg/types/message"
 )
 
 func (manager *WebSocketManagerCtx) fileChooserDialogEvents() {

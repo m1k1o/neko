@@ -1,7 +1,7 @@
 package desktop
 
 import (
-	"gitlab.com/demodesk/neko/server/pkg/xevent"
+	"github.com/demodesk/neko/pkg/xevent"
 )
 
 func (manager *DesktopManagerCtx) OnCursorChanged(listener func(serial uint64)) {

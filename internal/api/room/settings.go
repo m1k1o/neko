@@ -3,7 +3,7 @@ package room
 import (
 	"net/http"
 
-	"gitlab.com/demodesk/neko/server/pkg/utils"
+	"github.com/demodesk/neko/pkg/utils"
 )
 
 func (h *RoomHandler) settingsGet(w http.ResponseWriter, r *http.Request) error {

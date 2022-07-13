@@ -6,8 +6,8 @@ import (
 	"os/exec"
 	"strings"
 
-	"gitlab.com/demodesk/neko/server/pkg/types"
-	"gitlab.com/demodesk/neko/server/pkg/xevent"
+	"github.com/demodesk/neko/pkg/types"
+	"github.com/demodesk/neko/pkg/xevent"
 )
 
 func (manager *DesktopManagerCtx) ClipboardGetText() (*types.ClipboardText, error) {

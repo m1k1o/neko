@@ -8,16 +8,16 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
-	"gitlab.com/demodesk/neko/server/internal/api"
-	"gitlab.com/demodesk/neko/server/internal/capture"
-	"gitlab.com/demodesk/neko/server/internal/config"
-	"gitlab.com/demodesk/neko/server/internal/desktop"
-	"gitlab.com/demodesk/neko/server/internal/http"
-	"gitlab.com/demodesk/neko/server/internal/member"
-	"gitlab.com/demodesk/neko/server/internal/plugins"
-	"gitlab.com/demodesk/neko/server/internal/session"
-	"gitlab.com/demodesk/neko/server/internal/webrtc"
-	"gitlab.com/demodesk/neko/server/internal/websocket"
+	"github.com/demodesk/neko/internal/api"
+	"github.com/demodesk/neko/internal/capture"
+	"github.com/demodesk/neko/internal/config"
+	"github.com/demodesk/neko/internal/desktop"
+	"github.com/demodesk/neko/internal/http"
+	"github.com/demodesk/neko/internal/member"
+	"github.com/demodesk/neko/internal/plugins"
+	"github.com/demodesk/neko/internal/session"
+	"github.com/demodesk/neko/internal/webrtc"
+	"github.com/demodesk/neko/internal/websocket"
 )
 
 func init() {

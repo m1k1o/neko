@@ -15,8 +15,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	neko "gitlab.com/demodesk/neko/server"
-	"gitlab.com/demodesk/neko/server/internal/config"
+	"github.com/demodesk/neko"
+	"github.com/demodesk/neko/internal/config"
 )
 
 func Execute() error {

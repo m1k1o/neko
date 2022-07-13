@@ -6,7 +6,7 @@ import (
 	"github.com/pion/webrtc/v3"
 	"github.com/rs/zerolog"
 
-	"gitlab.com/demodesk/neko/server/pkg/types"
+	"github.com/demodesk/neko/pkg/types"
 )
 
 type WebRTCPeerCtx struct {

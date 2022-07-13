@@ -7,8 +7,8 @@ import (
 
 	"net/http"
 
-	"gitlab.com/demodesk/neko/server/pkg/types"
-	"gitlab.com/demodesk/neko/server/pkg/utils"
+	"github.com/demodesk/neko/pkg/types"
+	"github.com/demodesk/neko/pkg/utils"
 )
 
 type ClipboardPayload struct {

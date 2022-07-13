@@ -5,8 +5,8 @@ import (
 
 	"github.com/rs/zerolog"
 
-	"gitlab.com/demodesk/neko/server/pkg/types"
-	"gitlab.com/demodesk/neko/server/pkg/types/event"
+	"github.com/demodesk/neko/pkg/types"
+	"github.com/demodesk/neko/pkg/types/event"
 )
 
 type SessionCtx struct {

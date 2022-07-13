@@ -10,7 +10,7 @@ import (
 	"github.com/PaesslerAG/gval"
 	"github.com/pion/webrtc/v3/pkg/media"
 
-	"gitlab.com/demodesk/neko/server/pkg/types/codec"
+	"github.com/demodesk/neko/pkg/types/codec"
 )
 
 var (

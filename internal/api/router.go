@@ -5,11 +5,11 @@ import (
 	"errors"
 	"net/http"
 
-	"gitlab.com/demodesk/neko/server/internal/api/members"
-	"gitlab.com/demodesk/neko/server/internal/api/room"
-	"gitlab.com/demodesk/neko/server/pkg/auth"
-	"gitlab.com/demodesk/neko/server/pkg/types"
-	"gitlab.com/demodesk/neko/server/pkg/utils"
+	"github.com/demodesk/neko/internal/api/members"
+	"github.com/demodesk/neko/internal/api/room"
+	"github.com/demodesk/neko/pkg/auth"
+	"github.com/demodesk/neko/pkg/types"
+	"github.com/demodesk/neko/pkg/utils"
 )
 
 type ApiManagerCtx struct {

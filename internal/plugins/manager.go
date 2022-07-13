@@ -10,8 +10,8 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 
-	"gitlab.com/demodesk/neko/server/internal/config"
-	"gitlab.com/demodesk/neko/server/pkg/types"
+	"github.com/demodesk/neko/internal/config"
+	"github.com/demodesk/neko/pkg/types"
 )
 
 type ManagerCtx struct {

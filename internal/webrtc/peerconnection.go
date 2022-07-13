@@ -5,8 +5,8 @@ import (
 	"github.com/pion/webrtc/v3"
 	"github.com/rs/zerolog"
 
-	"gitlab.com/demodesk/neko/server/internal/webrtc/pionlog"
-	"gitlab.com/demodesk/neko/server/pkg/types/codec"
+	"github.com/demodesk/neko/internal/webrtc/pionlog"
+	"github.com/demodesk/neko/pkg/types/codec"
 )
 
 func (manager *WebRTCManagerCtx) newPeerConnection(codecs []codec.RTPCodec, logger zerolog.Logger) (*webrtc.PeerConnection, error) {

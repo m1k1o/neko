@@ -3,11 +3,11 @@ package webrtc
 import (
 	"sync"
 
+	"github.com/demodesk/neko/pkg/types"
 	"github.com/pion/rtcp"
 	"github.com/pion/webrtc/v3"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	"gitlab.com/demodesk/neko/server/pkg/types"
 )
 
 type metrics struct {

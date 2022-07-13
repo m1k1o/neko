@@ -6,9 +6,9 @@ import (
 
 	"github.com/rs/zerolog/log"
 
-	"gitlab.com/demodesk/neko/server/pkg/auth"
-	"gitlab.com/demodesk/neko/server/pkg/types"
-	"gitlab.com/demodesk/neko/server/pkg/utils"
+	"github.com/demodesk/neko/pkg/auth"
+	"github.com/demodesk/neko/pkg/types"
+	"github.com/demodesk/neko/pkg/utils"
 )
 
 type RoomHandler struct {

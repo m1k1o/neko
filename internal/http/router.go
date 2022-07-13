@@ -7,9 +7,9 @@ import (
 	"github.com/go-chi/chi/middleware"
 	"github.com/rs/zerolog"
 
-	"gitlab.com/demodesk/neko/server/pkg/auth"
-	"gitlab.com/demodesk/neko/server/pkg/types"
-	"gitlab.com/demodesk/neko/server/pkg/utils"
+	"github.com/demodesk/neko/pkg/auth"
+	"github.com/demodesk/neko/pkg/types"
+	"github.com/demodesk/neko/pkg/utils"
 )
 
 type router struct {

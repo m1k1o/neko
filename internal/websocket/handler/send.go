@@ -3,9 +3,9 @@ package handler
 import (
 	"errors"
 
-	"gitlab.com/demodesk/neko/server/pkg/types"
-	"gitlab.com/demodesk/neko/server/pkg/types/event"
-	"gitlab.com/demodesk/neko/server/pkg/types/message"
+	"github.com/demodesk/neko/pkg/types"
+	"github.com/demodesk/neko/pkg/types/event"
+	"github.com/demodesk/neko/pkg/types/message"
 )
 
 func (h *MessageHandlerCtx) sendUnicast(session types.Session, payload *message.SendUnicast) error {

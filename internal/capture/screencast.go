@@ -11,8 +11,8 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"gitlab.com/demodesk/neko/server/pkg/gst"
-	"gitlab.com/demodesk/neko/server/pkg/types"
+	"github.com/demodesk/neko/pkg/gst"
+	"github.com/demodesk/neko/pkg/types"
 )
 
 // timeout between intervals, when screencast pipeline is checked

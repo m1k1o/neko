@@ -30,10 +30,10 @@ go build \
     -o bin/neko \
     -ldflags "
         -s -w
-        -X 'gitlab.com/demodesk/neko/server.buildDate=`date -u +'%Y-%m-%dT%H:%M:%SZ'`'
-        -X 'gitlab.com/demodesk/neko/server.gitCommit=${GIT_COMMIT}'
-        -X 'gitlab.com/demodesk/neko/server.gitBranch=${GIT_BRANCH}'
-        -X 'gitlab.com/demodesk/neko/server.gitTag=${GIT_TAG}'
+        -X 'github.com/demodesk/neko.buildDate=`date -u +'%Y-%m-%dT%H:%M:%SZ'`'
+        -X 'github.com/demodesk/neko.gitCommit=${GIT_COMMIT}'
+        -X 'github.com/demodesk/neko.gitBranch=${GIT_BRANCH}'
+        -X 'github.com/demodesk/neko.gitTag=${GIT_TAG}'
     " \
     cmd/neko/main.go;
 

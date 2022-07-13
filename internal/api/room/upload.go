@@ -7,7 +7,7 @@ import (
 	"path"
 	"strconv"
 
-	"gitlab.com/demodesk/neko/server/pkg/utils"
+	"github.com/demodesk/neko/pkg/utils"
 )
 
 // TODO: Extract file uploading to custom utility.
