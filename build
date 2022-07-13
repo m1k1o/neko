@@ -38,6 +38,10 @@ go build \
     cmd/neko/main.go;
 
 #
+# ensure plugins folder exists
+mkdir -p bin/plugins
+
+#
 # if plugins are ignored
 if [ "$skip_plugins" = "true" ];
 then
@@ -54,8 +58,7 @@ then
 fi
 
 #
-# ensure plugins folder exits and remove old plugins
-mkdir -p bin/plugins
+# remove old plugins
 rm -f bin/plugins/*
 
 #
