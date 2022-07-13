@@ -1,0 +1,1104 @@
+openapi: 3.0.0
+
+info:
+  title: n.eko REST API
+  description: Next Gen Renderer.
+  license:
+    name: Apache 2.0
+    url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+  version: "1.0.0"
+
+servers:
+  - description: Local server
+    url: http://localhost:3000
+
+tags:
+  - name: session
+    description: Session management.
+  - name: room
+    description: Room releated operations.
+  - name: members
+    description: Members management.
+
+paths:
+  /health:
+    get:
+      summary: healthcheck
+      operationId: healthcheck
+      security: []
+      responses:
+        '200':
+          description: OK
+  /metrics:
+    get:
+      summary: metrics
+      operationId: metrics
+      security: []
+      responses:
+        '200':
+          description: OK
+
+  #
+  # session
+  #
+
+  /api/login:
+    post:
+      tags:
+        - session
+      summary: login
+      operationId: login
+      security: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionData'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SessionLogin'
+        required: true
+  /api/logout:
+    post:
+      tags:
+        - session
+      summary: logout
+      operationId: logout
+      responses:
+        '200':
+          description: OK
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /api/whoami:
+    get:
+      tags:
+        - session
+      summary: whoami
+      operationId: whoami
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionData'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  #
+  # room
+  #
+
+  /api/room/settings:
+    get:
+      tags:
+        - room
+      summary: get settings
+      operationId: settingsGet
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Settings'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags:
+        - room
+      summary: set settings
+      operationId: settingsSet
+      responses:
+        '204':
+          description: OK
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Settings'
+        required: true
+  /api/room/broadcast:
+    get:
+      tags:
+        - room
+      summary: get broadcast status
+      operationId: broadcastStatus
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BroadcastStatus'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/room/broadcast/start:
+    post:
+      tags:
+        - room
+      summary: start broadcast
+      operationId: boradcastStart
+      responses:
+        '204':
+          description: OK
+        '400':
+          description: Missing broadcast URL
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          description: Server is already broadcasting
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '500':
+          description: Unable to start broadcast
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BroadcastStatus'
+        required: true
+  /api/room/broadcast/stop:
+    post:
+      tags:
+        - room
+      summary: stop broadcast
+      operationId: boradcastStop
+      responses:
+        '204':
+          description: OK
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          description: Server is not broadcasting
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+
+  /api/room/clipboard:
+    get:
+      tags:
+        - room
+      summary: get clipboard rich-text or plain-text content
+      operationId: clipboardGetText
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClipboardText'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          description: Unable to get clipboard content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+    post:
+      tags:
+        - room
+      summary: set clipboard rich-text or plain-text content
+      operationId: clipboardSetText
+      responses:
+        '204':
+          description: OK
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          description: Unable to set clipboard content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClipboardText'
+        required: true
+  /api/room/clipboard/image.png:
+    get:
+      tags:
+        - room
+      summary: get clipboard image content
+      operationId: clipboardGetImage
+      responses:
+        '200':
+          description: OK
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          description: Unable to get clipboard content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+
+  /api/room/keyboard/map:
+    get:
+      tags:
+        - room
+      summary: get keyboard map
+      operationId: keyboardMapGet
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KeyboardMap'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          description: Unable to get keyboard map
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+    post:
+      tags:
+        - room
+      summary: set keyboard map
+      operationId: keyboardMapSet
+      responses:
+        '204':
+          description: OK
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          description: Unable to change keyboard map
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/KeyboardMap'
+        required: true
+  /api/room/keyboard/modifiers:
+    get:
+      tags:
+        - room
+      summary: get keyboard modifiers
+      operationId: keyboardModifiersGet
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KeyboardModifiers'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags:
+        - room
+      summary: set keyboard modifiers
+      operationId: keyboardModifiersSet
+      responses:
+        '204':
+          description: OK
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/KeyboardModifiers'
+        required: true
+
+  /api/room/control:
+    get:
+      tags:
+        - room
+      summary: get control status
+      operationId: controlStatus
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ControlStatus'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/room/control/request:
+    post:
+      tags:
+        - room
+      summary: request control
+      operationId: controlRequest
+      responses:
+        '204':
+          description: OK
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          description: There is already a host
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  /api/room/control/release:
+    post:
+      tags:
+        - room
+      summary: release control
+      operationId: controlRelease
+      responses:
+        '204':
+          description: OK
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          description: There is already a host
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  /api/room/control/take:
+    post:
+      tags:
+        - room
+      summary: take control
+      operationId: controlTake
+      responses:
+        '204':
+          description: OK
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/room/control/give/{sessionId}:
+    post:
+      tags:
+        - room
+      summary: give control
+      operationId: controlGive
+      parameters:
+        - in: path
+          name: sessionId
+          description: session ID
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: OK
+        '400':
+          description: Target session is not allowed to host
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/room/control/reset:
+    post:
+      tags:
+        - room
+      summary: reset control
+      operationId: controlReset
+      responses:
+        '204':
+          description: OK
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/room/screen:
+    get:
+      tags:
+        - room
+      summary: get current screen configuration
+      operationId: screenConfiguration
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScreenConfiguration'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          description: Unable to get screen configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+    post:
+      tags:
+        - room
+      summary: change screen configuration
+      operationId: screenConfigurationChange
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScreenConfiguration'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          description: Invalid screen configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScreenConfiguration'
+        required: true
+  /api/room/screen/configurations:
+    get:
+      tags:
+        - room
+      summary: get list of all available screen configurations
+      operationId: screenConfigurationsList
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ScreenConfiguration'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/room/screen/cast.jpg:
+    get:
+      tags:
+        - room
+      summary: get screencast image
+      operationId: screenCastImage
+      responses:
+        '200':
+          description: OK
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: Screencast is not enabled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          description: Unable to fetch image
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  /api/room/screen/shot.jpg:
+    get:
+      tags:
+        - room
+      summary: get screenshot image
+      operationId: screenShotImage
+      responses:
+        '200':
+          description: OK
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          description: Unable to create image
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+
+  /api/room/upload/drop:
+    post:
+      tags:
+        - room
+      summary: upload and drop file
+      operationId: uploadDrop
+      responses:
+        '204':
+          description: OK
+        '400':
+          description: Unable to upload file
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          description: Unable to process uploaded file
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                x:
+                  type: number
+                  description: X coordinate of drop
+                y:
+                  type: number
+                  description: Y coordinate of drop
+                files:
+                  type: array
+                  description: files to be uploaded
+                  items:
+                    type: string
+                    format: binary
+        required: true
+  /api/room/upload/dialog:
+    post:
+      tags:
+        - room
+      summary: upload file to a dialog
+      operationId: uploadDialog
+      responses:
+        '204':
+          description: OK
+        '400':
+          description: Unable to upload file
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          description: No upload dialog prompt active
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '500':
+          description: Unable to process uploaded file
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                files:
+                  type: array
+                  description: files to be uploaded
+                  items:
+                    type: string
+                    format: binary
+        required: true
+    delete:
+      tags:
+        - room
+      summary: close file chooser dialog
+      operationId: uploadDialogClose
+      responses:
+        '204':
+          description: OK
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          description: No upload dialog prompt active
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+
+  #
+  # members
+  #
+
+  /api/members:
+    get:
+      tags:
+        - members
+      summary: list of members
+      operationId: membersList
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: number
+        - in: query
+          name: offset
+          schema:
+            type: number
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MemberData'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags:
+        - members
+      summary: create new member
+      operationId: membersCreate
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberData'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          description: Member with chosen ID already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemberCreate'
+        required: true
+  /api/members/{memberId}:
+    get:
+      tags:
+        - members
+      summary: get member's profile
+      operationId: membersGetProfile
+      parameters:
+        - in: path
+          name: memberId
+          description: member identifier
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberProfile'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags:
+        - members
+      summary: update member's profile
+      operationId: membersUpdateProfile
+      parameters:
+        - in: path
+          name: memberId
+          description: member identifier
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: OK
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemberProfile'
+        required: true
+    delete:
+      tags:
+        - members
+      summary: remove member
+      operationId: membersRemove
+      parameters:
+        - in: path
+          name: memberId
+          description: member identifier
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: OK
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/members/{memberId}/password:
+    post:
+      tags:
+        - members
+      summary: update member's password
+      operationId: membersUpdatePassword
+      parameters:
+        - in: path
+          name: memberId
+          description: member identifier
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: OK
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemberPassword'
+        required: true
+  /api/members_bulk/update:
+    post:
+      tags:
+        - members
+      summary: bulk update members
+      operationId: membersBulkUpdate
+      responses:
+        '204':
+          description: OK
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemberBulkUpdate'
+        required: true
+
+components:
+  securitySchemes:
+    CookieAuth:
+      type: apiKey
+      in: cookie
+      name: NEKO_SESSION
+    BearerAuth:
+      type: http
+      scheme: bearer
+    TokenAuth:
+      type: apiKey
+      in: query
+      name: token
+
+  responses:
+    NotFound:
+      description: The specified resource was not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorMessage'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorMessage'
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorMessage'
+
+  schemas:
+    ErrorMessage:
+      type: object
+      properties:
+        message:
+          type: string
+
+    #
+    # session
+    #
+
+    SessionLogin:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+
+    SessionData:
+      type: object
+      properties:
+        id:
+          type: string
+        token:
+          type: string
+          description: Only if cookie authentication is disabled.
+        profile:
+          $ref: '#/components/schemas/MemberProfile'
+        state:
+          $ref: '#/components/schemas/SessionState'
+
+    SessionState:
+      type: object
+      properties:
+        is_connected:
+          type: boolean
+        is_watching:
+          type: boolean
+
+    #
+    # room
+    #
+
+    Settings:
+      type: object
+      properties:
+        private_mode:
+          type: boolean
+        implicit_hosting:
+          type: boolean
+        inactive_cursors:
+          type: boolean
+        merciful_reconnect:
+          type: boolean
+
+    BroadcastStatus:
+      type: object
+      properties:
+        url:
+          type: string
+          example: rtmp://localhost/live
+        is_active:
+          type: boolean
+
+    ClipboardText:
+      type: object
+      properties:
+        text:
+          type: string
+          example: Copied Content 123
+        html:
+          type: string
+          example: <b>Copied Content 123</b>
+
+    KeyboardMap:
+      type: object
+      properties:
+        layout:
+          type: string
+          example: sk
+        variant:
+          type: string
+          example: qwerty
+
+    KeyboardModifiers:
+      type: object
+      properties:
+        numlock:
+          type: boolean
+        capslock:
+          type: boolean
+
+    ControlStatus:
+      type: object
+      properties:
+        has_host:
+          type: boolean
+        host_id:
+          type: string
+
+    ScreenConfiguration:
+      type: object
+      properties:
+        width:
+          type: integer
+          example: 1280
+        height:
+          type: integer
+          example: 720
+        rate:
+          type: integer
+          example: 30
+
+    #
+    # members
+    #
+
+    MemberProfile:
+      type: object
+      properties:
+        name:
+          type: string
+        is_admin:
+          type: boolean
+        can_login:
+          type: boolean
+        can_connect:
+          type: boolean
+        can_watch:
+          type: boolean
+        can_host:
+          type: boolean
+        can_share_media:
+          type: boolean
+        can_access_clipboard:
+          type: boolean
+        sends_inactive_cursor:
+          type: boolean
+        can_see_inactive_cursors:
+          type: boolean
+        plugins:
+          type: object
+          additionalProperties: true
+
+    MemberData:
+      properties:
+        id:
+          type: string
+        profile:
+          $ref: '#/components/schemas/MemberProfile'
+
+    MemberCreate:
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+        profile:
+          $ref: '#/components/schemas/MemberProfile'
+
+    MemberPassword:
+      properties:
+        password:
+          type: string
+
+    MemberBulkUpdate:
+      properties:
+        ids:
+          type: array
+          items:
+            type: string
+        profile:
+          $ref: '#/components/schemas/MemberProfile'
+
+security:
+  - BearerAuth: []
+  - CookieAuth: []
+  - TokenAuth: []
