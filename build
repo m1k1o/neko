@@ -64,6 +64,11 @@ rm -f bin/plugins/*
 #
 # build plugins
 for plugPath in ./plugins/*; do
+    if [ ! -d $plugPath ];
+    then
+        continue
+    fi
+
     pushd $plugPath
 
     echo "Building plugin: $plugPath"
