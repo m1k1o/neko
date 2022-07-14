@@ -81,7 +81,7 @@ for plugPath in ./plugins/*; do
     fi
 
     # build plugin
-    go build -modfile=go.plug.mod -buildmode=plugin -o "../../bin/plugins/${plugPath##*/}.so"
+    go build -modfile=go.plug.mod -buildmode=plugin -buildvcs=false -o "../../bin/plugins/${plugPath##*/}.so"
 
     popd
 done
