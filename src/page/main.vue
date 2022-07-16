@@ -92,6 +92,9 @@
             <i class="fas fa-comment-alt" />
             <span v-show="tab === 'chat'">Chat</span>
           </li>
+
+          <!-- Plugins -->
+          <component v-for="(el, key) in pluginsTabs" :key="key" :is="el" :tab="tab" @tab="tab = $event" />
         </ul>
       </div>
       <div class="page-container">
@@ -99,6 +102,9 @@
         <neko-members v-if="tab === 'members'" :neko="neko" />
         <neko-media v-if="tab === 'media'" :neko="neko" />
         <neko-chat v-show="tab === 'chat'" :neko="neko" />
+
+        <!-- Plugins -->
+        <component v-for="(el, key) in pluginsComponents" :key="key" :is="el" :tab="tab" :neko="neko" />
       </div>
     </aside>
   </div>
@@ -297,6 +303,22 @@
 </style>
 
 <script lang="ts">
+  // plugins must be available at:
+  // ./plugins/{name}/main-tabs.vue
+  // ./plugins/{name}/main-components.vue
+  let plugins = [] as string[]
+
+  // dynamic plugins loader
+  ;(function (r: any) {
+    r.keys().forEach((key: string) => {
+      const found = key.match(/\.\/(.*?)\//)
+      if (found) {
+        plugins.push(found[1])
+        console.log('loading a plugin:', found[1])
+      }
+    })
+  })(require.context('./plugins/', true, /(main-tabs|main-components)\.vue$/))
+
   import { Vue, Component, Ref, Watch } from 'vue-property-decorator'
   import NekoCanvas from '~/component/main.vue'
   import NekoHeader from './components/header.vue'
@@ -318,6 +340,22 @@
       'neko-members': NekoMembers,
       'neko-media': NekoMedia,
       'neko-chat': NekoChat,
+    },
+    computed: {
+      pluginsTabs() {
+        let x = {} as Record<string, any>
+        for (let p of plugins) {
+          x[p] = () => import('./plugins/' + p + '/main-tabs.vue')
+        }
+        return x
+      },
+      pluginsComponents() {
+        let x = {} as Record<string, any>
+        for (let p of plugins) {
+          x[p] = () => import('./plugins/' + p + '/main-components.vue')
+        }
+        return x
+      },
     },
   })
   export default class extends Vue {

@@ -1,3 +1,6 @@
 .env.local
 node_modules
 dist
+
+/src/page/plugins/*
+!/src/page/plugins/.gitkeep
