@@ -1,0 +1,22 @@
+// Variables
+
+@use "sass:math";
+
+$fa-font-path:         "~@fortawesome/fontawesome-free/webfonts";
+$fa-font-size-base:    16px;
+$fa-font-display:      auto;
+$fa-css-prefix:        fa;
+$fa-border-color:      #eee;
+$fa-inverse:           #fff;
+$fa-li-width:          2em;
+$fa-fw-width:          math.div(20em, 16);
+$fa-primary-opacity:   1;
+$fa-secondary-opacity: .4;
+
+$fa-family-default:    'Font Awesome 6 Free';
+
+// Import FA source files
+@import "~@fortawesome/fontawesome-free/scss/brands";
+@import "~@fortawesome/fontawesome-free/scss/solid";
+@import "~@fortawesome/fontawesome-free/scss/regular";
+@import "~@fortawesome/fontawesome-free/scss/fontawesome";
