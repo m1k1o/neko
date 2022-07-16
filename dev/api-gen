@@ -1,0 +1,20 @@
+#!/bin/bash
+OPENAPI_URL="https://raw.githubusercontent.com/demodesk/neko/master/openapi.yaml"
+
+rm -rf "${PWD}/../src/component/api"
+mkdir "${PWD}/../src/component/api"
+
+docker run --rm \
+    --user "$(id -u):$(id -g)" \
+    -v "${PWD}/../src/component/api:/local/out" \
+    openapitools/openapi-generator-cli generate \
+        -i "$OPENAPI_URL" \
+        -g typescript-axios \
+        -o /local/out \
+        --additional-properties=enumPropertyNaming=original,modelPropertyNaming=original,withSeparateModelsAndApi=true,modelPackage=models,apiPackage=api
+
+# Remove not needed git_push.sh
+rm -f "${PWD}/../src/component/api/git_push.sh"
+
+# Fix lint errors
+./npm run lint -- --fix src/component/api

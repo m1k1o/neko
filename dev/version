@@ -1,0 +1,23 @@
+#!/bin/bash
+cd "$(dirname "$0")"
+
+if ! git diff-index --quiet HEAD
+then
+    echo "Please clean git before publishing."
+    exit
+fi
+
+# bump npm version
+VERSION=$(./npm version "${1-patch}" --no-git-tag-version)
+if [ $? -ne 0 ]; then
+    echo "Npm version bump failed."
+    exit
+fi
+
+VERSION=$(echo "$VERSION" | head -1 | cut -c 2- | tr -d '\r')
+echo "New version is: $VERSION"
+
+git add ../package*
+git commit -m "version ${VERSION}"
+git tag -a "v${VERSION}" -m "version ${VERSION}"
+git push origin "v${VERSION}"

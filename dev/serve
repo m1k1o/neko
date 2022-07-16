@@ -1,0 +1,33 @@
+#!/bin/sh
+cd "$(dirname "$0")"
+
+if [ -z $NEKO_PORT ]; then
+    NEKO_PORT="3000"
+fi
+
+if [ -z $NEKO_HOST ]; then
+    for i in $(ifconfig -l 2>/dev/null); do
+        NEKO_HOST=$(ipconfig getifaddr $i)
+        if [ ! -z $NEKO_HOST ]; then
+            break
+        fi
+    done
+
+    if [ -z $NEKO_HOST ]; then
+        NEKO_HOST=$(hostname -i 2>/dev/null)
+    fi
+fi
+
+echo "Using app port: ${NEKO_PORT}"
+echo "Using IP address: ${NEKO_HOST}"
+
+# npm run serve
+docker run --rm -it \
+    -p 3001:8080 \
+    -e "NEKO_HOST=$NEKO_HOST" \
+    -e "NEKO_PORT=$NEKO_PORT" \
+    --user "$(id -u):$(id -g)" \
+    --volume "${PWD}/../:/app" \
+    --entrypoint="npm" \
+    --workdir="/app" \
+    node:16-buster-slim run serve
