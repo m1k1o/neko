@@ -2,12 +2,9 @@
   "name": "@demodesk/neko",
   "version": "1.6.4",
   "description": "Client as reusable Vue.js component for neko streaming server.",
-  "repository": {
-    "type": "git",
-    "url": "https://gitlab.com/demodesk/neko/client.git"
-  },
-  "bugs": {
-    "url": "https://gitlab.com/demodesk/neko/client/-/issues"
+  "repository": "https://github.com/demodesk/neko-client",
+  "publishConfig": {
+    "registry":"https://npm.pkg.github.com"
   },
   "main": "dist/neko.umd.js",
   "module": "dist/neko.common.js",
