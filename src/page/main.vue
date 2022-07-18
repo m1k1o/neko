@@ -272,8 +272,10 @@
       max-height: 100%;
       flex-grow: 1;
       display: flex;
+      flex-direction: column;
       overflow: auto;
-      padding-top: 5px;
+      padding: 5px;
+      box-sizing: border-box;
     }
   }
 

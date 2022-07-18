@@ -326,7 +326,6 @@
   .members {
     display: block;
     width: 100%;
-    padding: 5px;
     overflow: hidden;
 
     .member {
@@ -384,6 +383,11 @@
 
       th {
         text-align: right;
+      }
+
+      input[type='text'] {
+        width: 100%;
+        box-sizing: border-box;
       }
     }
 
