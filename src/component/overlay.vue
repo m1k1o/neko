@@ -30,6 +30,7 @@
     width: 100%;
     height: 100%;
     font-size: 1px; /* chrome would not paste text if 0px */
+    resize: none; /* hide textarea resize corner */
     outline: 0;
     border: 0;
     color: transparent;
