@@ -77,6 +77,16 @@ func (h *MessageHandlerCtx) Message(session types.Session, data types.WebSocketM
 		err = h.controlRelease(session)
 	case event.CONTROL_REQUEST:
 		err = h.controlRequest(session)
+	case event.CONTROL_MOVE:
+		payload := &message.ControlPos{}
+		err = utils.Unmarshal(payload, data.Payload, func() error {
+			return h.controlMove(session, payload)
+		})
+	case event.CONTROL_SCROLL:
+		payload := &message.ControlPos{}
+		err = utils.Unmarshal(payload, data.Payload, func() error {
+			return h.controlScroll(session, payload)
+		})
 	case event.CONTROL_KEYPRESS:
 		payload := &message.ControlKey{}
 		err = utils.Unmarshal(payload, data.Payload, func() error {

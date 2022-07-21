@@ -59,6 +59,24 @@ func (h *MessageHandlerCtx) controlRequest(session types.Session) error {
 	return nil
 }
 
+func (h *MessageHandlerCtx) controlMove(session types.Session, payload *message.ControlPos) error {
+	if err := h.controlRequest(session); err != nil && !errors.Is(err, ErrIsAlreadyTheHost) {
+		return err
+	}
+
+	h.desktop.Move(payload.X, payload.Y)
+	return nil
+}
+
+func (h *MessageHandlerCtx) controlScroll(session types.Session, payload *message.ControlPos) error {
+	if err := h.controlRequest(session); err != nil && !errors.Is(err, ErrIsAlreadyTheHost) {
+		return err
+	}
+
+	h.desktop.Scroll(payload.X, payload.Y)
+	return nil
+}
+
 func (h *MessageHandlerCtx) controlKeyPress(session types.Session, payload *message.ControlKey) error {
 	if err := h.controlRequest(session); err != nil && !errors.Is(err, ErrIsAlreadyTheHost) {
 		return err

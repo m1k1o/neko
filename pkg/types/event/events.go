@@ -32,8 +32,8 @@ const (
 	CONTROL_RELEASE = "control/release"
 	CONTROL_REQUEST = "control/request"
 	// mouse
-	CONTROL_MOVE   = "control/move"   // TODO: New. (fallback)
-	CONTROL_SCROLL = "control/scroll" // TODO: New. (fallback)
+	CONTROL_MOVE   = "control/move"
+	CONTROL_SCROLL = "control/scroll"
 	// keyboard
 	CONTROL_KEYPRESS = "control/keypress"
 	CONTROL_KEYDOWN  = "control/keydown"

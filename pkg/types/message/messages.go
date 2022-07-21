@@ -101,16 +101,9 @@ type ControlHost struct {
 	HostID  string `json:"host_id,omitempty"`
 }
 
-// TODO: New.
-type ControlMove struct {
-	X uint16 `json:"x"`
-	Y uint16 `json:"y"`
-}
-
-// TODO: New.
-type ControlScroll struct {
-	X int16 `json:"x"`
-	Y int16 `json:"y"`
+type ControlPos struct {
+	X int `json:"x"`
+	Y int `json:"y"`
 }
 
 type ControlKey struct {
