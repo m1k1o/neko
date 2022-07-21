@@ -23,8 +23,8 @@ export const CONTROL_HOST = 'control/host'
 export const CONTROL_RELEASE = 'control/release'
 export const CONTROL_REQUEST = 'control/request'
 // mouse
-export const CONTROL_MOVE = 'control/move' // TODO: New. (fallback)
-export const CONTROL_SCROLL = 'control/scroll' // TODO: New. (fallback)
+export const CONTROL_MOVE = 'control/move'
+export const CONTROL_SCROLL = 'control/scroll'
 // keyboard
 export const CONTROL_KEYPRESS = 'control/keypress'
 export const CONTROL_KEYDOWN = 'control/keydown'

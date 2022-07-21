@@ -108,14 +108,7 @@ export interface ControlHost {
   host_id: string | undefined
 }
 
-// TODO: New.
-export interface ControlMove {
-  x: number
-  y: number
-}
-
-// TODO: New.
-export interface ControlScroll {
+export interface ControlPos {
   x: number
   y: number
 }

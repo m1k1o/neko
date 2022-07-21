@@ -37,6 +37,14 @@ export class NekoControl extends EventEmitter<NekoControlEvents> {
     this._connection.websocket.send(EVENT.CONTROL_RELEASE)
   }
 
+  public move(x: number, y: number) {
+    this._connection.websocket.send(EVENT.CONTROL_MOVE, { x, y } as message.ControlPos)
+  }
+
+  public scroll(x: number, y: number) {
+    this._connection.websocket.send(EVENT.CONTROL_SCROLL, { x, y } as message.ControlPos)
+  }
+
   public keyPress(keysym: number) {
     this._connection.websocket.send(EVENT.CONTROL_KEYPRESS, { keysym } as message.ControlKey)
   }
