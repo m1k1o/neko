@@ -446,3 +446,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 
 	return offer, nil
 }
+
+func (manager *WebRTCManagerCtx) SetCursorPosition(x, y int) {
+	manager.curPosition.Set(x, y)
+}

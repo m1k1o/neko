@@ -64,7 +64,9 @@ func (h *MessageHandlerCtx) controlMove(session types.Session, payload *message.
 		return err
 	}
 
+	// handle active cursor movement
 	h.desktop.Move(payload.X, payload.Y)
+	h.webrtc.SetCursorPosition(payload.X, payload.Y)
 	return nil
 }
 
