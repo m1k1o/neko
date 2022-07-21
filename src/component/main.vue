@@ -22,6 +22,7 @@
       <neko-overlay
         v-show="!private_mode_enabled && connected"
         :style="{ pointerEvents: state.control.locked ? 'none' : 'auto' }"
+        :control="control"
         :sessions="state.sessions"
         :hostId="state.control.host_id"
         :webrtc="connection.webrtc"
@@ -32,12 +33,9 @@
         :cursorDraw="cursorDrawFunction"
         :implicitControl="state.settings.implicit_hosting && session.profile.can_host"
         :inactiveCursors="state.settings.inactive_cursors && session.profile.sends_inactive_cursor"
-        @implicitControlRequest="control.request()"
-        @implicitControlRelease="control.release()"
         @updateKeyboardModifiers="updateKeyboardModifiers($event)"
         @uploadDrop="uploadDrop($event)"
         @onAction="control.emit('overlay.' + $event.action, $event.target)"
-        @clipboard="control.paste($event)"
       />
     </div>
   </div>
