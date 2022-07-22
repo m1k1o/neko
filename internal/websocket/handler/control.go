@@ -80,7 +80,11 @@ func (h *MessageHandlerCtx) controlScroll(session types.Session, payload *messag
 }
 
 func (h *MessageHandlerCtx) controlButtonPress(session types.Session, payload *message.ControlButton) error {
-	if err := h.controlRequest(session); err != nil && !errors.Is(err, ErrIsAlreadyTheHost) {
+	if payload.ControlPos != nil {
+		if err := h.controlMove(session, payload.ControlPos); err != nil {
+			return err
+		}
+	} else if err := h.controlRequest(session); err != nil && !errors.Is(err, ErrIsAlreadyTheHost) {
 		return err
 	}
 
@@ -88,7 +92,11 @@ func (h *MessageHandlerCtx) controlButtonPress(session types.Session, payload *m
 }
 
 func (h *MessageHandlerCtx) controlButtonDown(session types.Session, payload *message.ControlButton) error {
-	if err := h.controlRequest(session); err != nil && !errors.Is(err, ErrIsAlreadyTheHost) {
+	if payload.ControlPos != nil {
+		if err := h.controlMove(session, payload.ControlPos); err != nil {
+			return err
+		}
+	} else if err := h.controlRequest(session); err != nil && !errors.Is(err, ErrIsAlreadyTheHost) {
 		return err
 	}
 
@@ -96,7 +104,11 @@ func (h *MessageHandlerCtx) controlButtonDown(session types.Session, payload *me
 }
 
 func (h *MessageHandlerCtx) controlButtonUp(session types.Session, payload *message.ControlButton) error {
-	if err := h.controlRequest(session); err != nil && !errors.Is(err, ErrIsAlreadyTheHost) {
+	if payload.ControlPos != nil {
+		if err := h.controlMove(session, payload.ControlPos); err != nil {
+			return err
+		}
+	} else if err := h.controlRequest(session); err != nil && !errors.Is(err, ErrIsAlreadyTheHost) {
 		return err
 	}
 
@@ -104,7 +116,11 @@ func (h *MessageHandlerCtx) controlButtonUp(session types.Session, payload *mess
 }
 
 func (h *MessageHandlerCtx) controlKeyPress(session types.Session, payload *message.ControlKey) error {
-	if err := h.controlRequest(session); err != nil && !errors.Is(err, ErrIsAlreadyTheHost) {
+	if payload.ControlPos != nil {
+		if err := h.controlMove(session, payload.ControlPos); err != nil {
+			return err
+		}
+	} else if err := h.controlRequest(session); err != nil && !errors.Is(err, ErrIsAlreadyTheHost) {
 		return err
 	}
 
@@ -112,7 +128,11 @@ func (h *MessageHandlerCtx) controlKeyPress(session types.Session, payload *mess
 }
 
 func (h *MessageHandlerCtx) controlKeyDown(session types.Session, payload *message.ControlKey) error {
-	if err := h.controlRequest(session); err != nil && !errors.Is(err, ErrIsAlreadyTheHost) {
+	if payload.ControlPos != nil {
+		if err := h.controlMove(session, payload.ControlPos); err != nil {
+			return err
+		}
+	} else if err := h.controlRequest(session); err != nil && !errors.Is(err, ErrIsAlreadyTheHost) {
 		return err
 	}
 
@@ -120,7 +140,11 @@ func (h *MessageHandlerCtx) controlKeyDown(session types.Session, payload *messa
 }
 
 func (h *MessageHandlerCtx) controlKeyUp(session types.Session, payload *message.ControlKey) error {
-	if err := h.controlRequest(session); err != nil && !errors.Is(err, ErrIsAlreadyTheHost) {
+	if payload.ControlPos != nil {
+		if err := h.controlMove(session, payload.ControlPos); err != nil {
+			return err
+		}
+	} else if err := h.controlRequest(session); err != nil && !errors.Is(err, ErrIsAlreadyTheHost) {
 		return err
 	}
 

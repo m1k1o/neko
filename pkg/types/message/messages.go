@@ -107,10 +107,12 @@ type ControlPos struct {
 }
 
 type ControlButton struct {
+	*ControlPos
 	Code uint32 `json:"code"`
 }
 
 type ControlKey struct {
+	*ControlPos
 	Keysym uint32 `json:"keysym"`
 }
 
