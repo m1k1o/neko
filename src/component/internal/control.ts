@@ -45,16 +45,28 @@ export class NekoControl extends EventEmitter<NekoControlEvents> {
     this._connection.websocket.send(EVENT.CONTROL_SCROLL, { x, y } as message.ControlPos)
   }
 
-  public keyPress(keysym: number) {
-    this._connection.websocket.send(EVENT.CONTROL_KEYPRESS, { keysym } as message.ControlKey)
+  public buttonPress(code: number, x?: number, y?: number) {
+    this._connection.websocket.send(EVENT.CONTROL_BUTTONPRESS, { code, x, y } as message.ControlButton)
   }
 
-  public keyDown(keysym: number) {
-    this._connection.websocket.send(EVENT.CONTROL_KEYDOWN, { keysym } as message.ControlKey)
+  public buttonDown(code: number, x?: number, y?: number) {
+    this._connection.websocket.send(EVENT.CONTROL_BUTTONDOWN, { code, x, y } as message.ControlButton)
   }
 
-  public keyUp(keysym: number) {
-    this._connection.websocket.send(EVENT.CONTROL_KEYUP, { keysym } as message.ControlKey)
+  public buttonUp(code: number, x?: number, y?: number) {
+    this._connection.websocket.send(EVENT.CONTROL_BUTTONUP, { code, x, y } as message.ControlButton)
+  }
+
+  public keyPress(keysym: number, x?: number, y?: number) {
+    this._connection.websocket.send(EVENT.CONTROL_KEYPRESS, { keysym, x, y } as message.ControlKey)
+  }
+
+  public keyDown(keysym: number, x?: number, y?: number) {
+    this._connection.websocket.send(EVENT.CONTROL_KEYDOWN, { keysym, x, y } as message.ControlKey)
+  }
+
+  public keyUp(keysym: number, x?: number, y?: number) {
+    this._connection.websocket.send(EVENT.CONTROL_KEYUP, { keysym, x, y } as message.ControlKey)
   }
 
   public cut() {

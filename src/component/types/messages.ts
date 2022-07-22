@@ -113,7 +113,11 @@ export interface ControlPos {
   y: number
 }
 
-export interface ControlKey {
+export interface ControlButton extends Partial<ControlPos> {
+  code: number
+}
+
+export interface ControlKey extends Partial<ControlPos> {
   keysym: number
 }
 

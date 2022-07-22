@@ -25,6 +25,9 @@ export const CONTROL_REQUEST = 'control/request'
 // mouse
 export const CONTROL_MOVE = 'control/move'
 export const CONTROL_SCROLL = 'control/scroll'
+export const CONTROL_BUTTONPRESS = 'control/buttonpress'
+export const CONTROL_BUTTONDOWN = 'control/buttondown'
+export const CONTROL_BUTTONUP = 'control/buttonup'
 // keyboard
 export const CONTROL_KEYPRESS = 'control/keypress'
 export const CONTROL_KEYDOWN = 'control/keydown'
