@@ -547,12 +547,11 @@
 
       if (isControling && this.reqMouseDown) {
         this.updateKeyboardModifiers(this.reqMouseDown)
-        this.sendMousePos(this.reqMouseDown)
-        this.webrtc.send('mousedown', { key: this.reqMouseDown.button + 1 })
+        this.onMouseDown(this.reqMouseDown)
       }
 
       if (isControling && this.reqMouseUp) {
-        this.webrtc.send('mouseup', { key: this.reqMouseUp.button + 1 })
+        this.onMouseUp(this.reqMouseUp)
       }
 
       this.canvasRequestRedraw()
