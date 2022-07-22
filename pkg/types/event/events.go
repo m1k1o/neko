@@ -32,8 +32,11 @@ const (
 	CONTROL_RELEASE = "control/release"
 	CONTROL_REQUEST = "control/request"
 	// mouse
-	CONTROL_MOVE   = "control/move"
-	CONTROL_SCROLL = "control/scroll"
+	CONTROL_MOVE        = "control/move"
+	CONTROL_SCROLL      = "control/scroll"
+	CONTROL_BUTTONPRESS = "control/buttonpress"
+	CONTROL_BUTTONDOWN  = "control/buttondown"
+	CONTROL_BUTTONUP    = "control/buttonup"
 	// keyboard
 	CONTROL_KEYPRESS = "control/keypress"
 	CONTROL_KEYDOWN  = "control/keydown"

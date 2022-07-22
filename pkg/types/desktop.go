@@ -54,6 +54,7 @@ type DesktopManager interface {
 	KeyDown(code uint32) error
 	ButtonUp(code uint32) error
 	KeyUp(code uint32) error
+	ButtonPress(code uint32) error
 	KeyPress(codes ...uint32) error
 	ResetKeys()
 	ScreenConfigurations() map[int]ScreenConfiguration

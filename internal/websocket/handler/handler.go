@@ -87,6 +87,21 @@ func (h *MessageHandlerCtx) Message(session types.Session, data types.WebSocketM
 		err = utils.Unmarshal(payload, data.Payload, func() error {
 			return h.controlScroll(session, payload)
 		})
+	case event.CONTROL_BUTTONPRESS:
+		payload := &message.ControlButton{}
+		err = utils.Unmarshal(payload, data.Payload, func() error {
+			return h.controlButtonPress(session, payload)
+		})
+	case event.CONTROL_BUTTONDOWN:
+		payload := &message.ControlButton{}
+		err = utils.Unmarshal(payload, data.Payload, func() error {
+			return h.controlButtonDown(session, payload)
+		})
+	case event.CONTROL_BUTTONUP:
+		payload := &message.ControlButton{}
+		err = utils.Unmarshal(payload, data.Payload, func() error {
+			return h.controlButtonUp(session, payload)
+		})
 	case event.CONTROL_KEYPRESS:
 		payload := &message.ControlKey{}
 		err = utils.Unmarshal(payload, data.Payload, func() error {
@@ -102,6 +117,7 @@ func (h *MessageHandlerCtx) Message(session types.Session, data types.WebSocketM
 		err = utils.Unmarshal(payload, data.Payload, func() error {
 			return h.controlKeyUp(session, payload)
 		})
+	// actions
 	case event.CONTROL_CUT:
 		err = h.controlCut(session)
 	case event.CONTROL_COPY:

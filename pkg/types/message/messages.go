@@ -106,6 +106,10 @@ type ControlPos struct {
 	Y int `json:"y"`
 }
 
+type ControlButton struct {
+	Code uint32 `json:"code"`
+}
+
 type ControlKey struct {
 	Keysym uint32 `json:"keysym"`
 }

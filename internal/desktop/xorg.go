@@ -38,6 +38,13 @@ func (manager *DesktopManagerCtx) KeyUp(code uint32) error {
 	return xorg.KeyUp(code)
 }
 
+func (manager *DesktopManagerCtx) ButtonPress(code uint32) error {
+	xorg.ResetKeys()
+	defer xorg.ResetKeys()
+
+	return xorg.ButtonDown(code)
+}
+
 func (manager *DesktopManagerCtx) KeyPress(codes ...uint32) error {
 	xorg.ResetKeys()
 	defer xorg.ResetKeys()
