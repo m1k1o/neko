@@ -35,7 +35,6 @@
         :inactiveCursors="state.settings.inactive_cursors && session.profile.sends_inactive_cursor"
         @updateKeyboardModifiers="updateKeyboardModifiers($event)"
         @uploadDrop="uploadDrop($event)"
-        @onAction="control.emit('overlay.' + $event.action, $event.target)"
       />
     </div>
   </div>
