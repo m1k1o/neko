@@ -5,8 +5,8 @@
       ref="textarea"
       class="neko-overlay"
       :style="{ cursor }"
-      @click.stop.prevent="control.emit('overlay.click', $event)"
-      @contextmenu.stop.prevent="control.emit('overlay.contextmenu', $event)"
+      @click.stop.prevent="wsControl.emit('overlay.click', $event)"
+      @contextmenu.stop.prevent="wsControl.emit('overlay.contextmenu', $event)"
       @input.stop.prevent="onInput"
       @wheel.stop.prevent="onWheel"
       @mousemove.stop.prevent="onMouseMove"
@@ -74,7 +74,7 @@
     private focused = false
 
     @Prop()
-    private readonly control!: NekoControl
+    private readonly wsControl!: NekoControl
 
     @Prop()
     private readonly sessions!: Record<string, Session>
@@ -153,7 +153,7 @@
         if (this.webrtc.connected) {
           this.webrtc.send('keydown', { key })
         } else {
-          this.control.keyDown(key)
+          this.wsControl.keyDown(key)
         }
 
         return isCtrlKey
@@ -172,7 +172,7 @@
         if (this.webrtc.connected) {
           this.webrtc.send('keyup', { key })
         } else {
-          this.control.keyUp(key)
+          this.wsControl.keyUp(key)
         }
       }
       this.keyboard.listenTo(this._textarea)
@@ -244,7 +244,7 @@
     }
 
     onInput(e: InputEvent) {
-      this.control.paste(this._textarea.value)
+      this.wsControl.paste(this._textarea.value)
       this._textarea.value = ''
     }
 
@@ -306,7 +306,7 @@
         this.sendMousePos(e)
         this.webrtc.send('wheel', { x, y })
       } else {
-        this.control.scroll(x, y)
+        this.wsControl.scroll(x, y)
       }
     }
 
@@ -332,7 +332,7 @@
         this.webrtc.send('mousedown', { key })
       } else {
         const { x, y } = this.getMousePos(e.clientX, e.clientY)
-        this.control.buttonDown(key, x, y)
+        this.wsControl.buttonDown(key, x, y)
       }
     }
 
@@ -348,7 +348,7 @@
         this.webrtc.send('mouseup', { key })
       } else {
         const { x, y } = this.getMousePos(e.clientX, e.clientY)
-        this.control.buttonUp(key, x, y)
+        this.wsControl.buttonUp(key, x, y)
       }
     }
 
@@ -588,7 +588,7 @@
     implicitControlRequest(e: MouseEvent) {
       if (this.implicitControl && e.type === 'mousedown' && this.reqMouseDown == null) {
         this.reqMouseDown = e
-        this.control.request()
+        this.wsControl.request()
       }
 
       if (this.implicitControl && e.type === 'mouseup' && this.reqMouseUp == null) {
@@ -599,7 +599,7 @@
     // unused
     implicitControlRelease() {
       if (this.implicitControl) {
-        this.control.release()
+        this.wsControl.release()
       }
     }
   }

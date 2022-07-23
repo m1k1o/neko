@@ -22,7 +22,7 @@
       <neko-overlay
         v-show="!private_mode_enabled && connected"
         :style="{ pointerEvents: state.control.locked ? 'none' : 'auto' }"
-        :control="control"
+        :wsControl="control"
         :sessions="state.sessions"
         :hostId="state.control.host_id"
         :webrtc="connection.webrtc"
