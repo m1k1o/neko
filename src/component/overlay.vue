@@ -306,7 +306,7 @@
         this.sendMousePos(e)
         this.webrtc.send('wheel', { x, y })
       } else {
-        this.wsControl.scroll(x, y)
+        this.wsControl.scroll({ x, y })
       }
     }
 
@@ -331,8 +331,8 @@
         this.sendMousePos(e)
         this.webrtc.send('mousedown', { key })
       } else {
-        const { x, y } = this.getMousePos(e.clientX, e.clientY)
-        this.wsControl.buttonDown(key, x, y)
+        const pos = this.getMousePos(e.clientX, e.clientY)
+        this.wsControl.buttonDown(key, pos)
       }
     }
 
@@ -347,8 +347,8 @@
         this.sendMousePos(e)
         this.webrtc.send('mouseup', { key })
       } else {
-        const { x, y } = this.getMousePos(e.clientX, e.clientY)
-        this.wsControl.buttonUp(key, x, y)
+        const pos = this.getMousePos(e.clientX, e.clientY)
+        this.wsControl.buttonUp(key, pos)
       }
     }
 

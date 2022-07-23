@@ -12,6 +12,11 @@ export interface NekoControlEvents {
   ['overlay.contextmenu']: (e: MouseEvent) => void
 }
 
+export interface ControlPos {
+  x: number
+  y: number
+}
+
 export class NekoControl extends EventEmitter<NekoControlEvents> {
   // eslint-disable-next-line
   constructor(
@@ -37,36 +42,36 @@ export class NekoControl extends EventEmitter<NekoControlEvents> {
     this._connection.websocket.send(EVENT.CONTROL_RELEASE)
   }
 
-  public move(x: number, y: number) {
-    this._connection.websocket.send(EVENT.CONTROL_MOVE, { x, y } as message.ControlPos)
+  public move(pos: ControlPos) {
+    this._connection.websocket.send(EVENT.CONTROL_MOVE, pos as message.ControlPos)
   }
 
-  public scroll(x: number, y: number) {
-    this._connection.websocket.send(EVENT.CONTROL_SCROLL, { x, y } as message.ControlPos)
+  public scroll(pos: ControlPos) {
+    this._connection.websocket.send(EVENT.CONTROL_SCROLL, pos as message.ControlPos)
   }
 
-  public buttonPress(code: number, x?: number, y?: number) {
-    this._connection.websocket.send(EVENT.CONTROL_BUTTONPRESS, { code, x, y } as message.ControlButton)
+  public buttonPress(code: number, pos?: ControlPos) {
+    this._connection.websocket.send(EVENT.CONTROL_BUTTONPRESS, { code, ...pos } as message.ControlButton)
   }
 
-  public buttonDown(code: number, x?: number, y?: number) {
-    this._connection.websocket.send(EVENT.CONTROL_BUTTONDOWN, { code, x, y } as message.ControlButton)
+  public buttonDown(code: number, pos?: ControlPos) {
+    this._connection.websocket.send(EVENT.CONTROL_BUTTONDOWN, { code, ...pos } as message.ControlButton)
   }
 
-  public buttonUp(code: number, x?: number, y?: number) {
-    this._connection.websocket.send(EVENT.CONTROL_BUTTONUP, { code, x, y } as message.ControlButton)
+  public buttonUp(code: number, pos?: ControlPos) {
+    this._connection.websocket.send(EVENT.CONTROL_BUTTONUP, { code, ...pos } as message.ControlButton)
   }
 
-  public keyPress(keysym: number, x?: number, y?: number) {
-    this._connection.websocket.send(EVENT.CONTROL_KEYPRESS, { keysym, x, y } as message.ControlKey)
+  public keyPress(keysym: number, pos?: ControlPos) {
+    this._connection.websocket.send(EVENT.CONTROL_KEYPRESS, { keysym, ...pos } as message.ControlKey)
   }
 
-  public keyDown(keysym: number, x?: number, y?: number) {
-    this._connection.websocket.send(EVENT.CONTROL_KEYDOWN, { keysym, x, y } as message.ControlKey)
+  public keyDown(keysym: number, pos?: ControlPos) {
+    this._connection.websocket.send(EVENT.CONTROL_KEYDOWN, { keysym, ...pos } as message.ControlKey)
   }
 
-  public keyUp(keysym: number, x?: number, y?: number) {
-    this._connection.websocket.send(EVENT.CONTROL_KEYUP, { keysym, x, y } as message.ControlKey)
+  public keyUp(keysym: number, pos?: ControlPos) {
+    this._connection.websocket.send(EVENT.CONTROL_KEYUP, { keysym, ...pos } as message.ControlKey)
   }
 
   public cut() {
