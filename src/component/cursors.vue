@@ -2,7 +2,7 @@
   <canvas ref="overlay" class="neko-cursors" tabindex="0" />
 </template>
 
-<style lang="scss" scoped>
+<style lang="scss">
   .neko-cursors {
     position: absolute;
     top: 0;

@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="neko-overlay-wrap">
     <canvas ref="overlay" class="neko-overlay" tabindex="0" />
     <textarea
       ref="textarea"
@@ -22,7 +22,12 @@
   </div>
 </template>
 
-<style lang="scss" scoped>
+<style lang="scss">
+  /* hide elements around textarea if added by browsers extensions */
+  .neko-overlay-wrap *:not(.neko-overlay) {
+    display: none;
+  }
+
   .neko-overlay {
     position: absolute;
     top: 0;
