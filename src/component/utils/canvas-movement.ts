@@ -10,7 +10,7 @@ export function getMovementXYatPercent(p: Point[], percent: number): Point {
   const len = p.length
   if (len == 0) {
     console.error('getMovementXYatPercent: no points specified');
-    return { x:0, y:0 }
+    return { x:0, y:0 }
   }
 
   if (len == 1) return p[0]

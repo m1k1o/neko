@@ -102,13 +102,18 @@
       // set the animation position
       this._percent += delta
 
+      // draw points for current frame
+      this.canvasDrawPoints(this._percent)
+    }
+
+    canvasDrawPoints(percent: number = 1) {
       // clear & scale canvas
       this.canvasClear()
       this._ctx.setTransform(CANVAS_SCALE, 0, 0, CANVAS_SCALE, 0, 0)
 
       // draw current position
       for (const p of this._points) {
-        const { x, y } = getMovementXYatPercent(p.cursors, this._percent)
+        const { x, y } = getMovementXYatPercent(p.cursors, percent)
         this.canvasDrawCursor(x, y, p.id)
       }
     }
@@ -116,6 +121,8 @@
     @Watch('hostId')
     @Watch('cursors')
     canvasUpdateCursors() {
+      let new_last_points = {} as Record<string, Cursor>
+
       // track unchanged cursors
       let unchanged = 0
 
@@ -150,33 +157,36 @@
             // we knew that this cursor did not change, but other
             // might, so we keep only one point to be drawn
             pos.cursors = [new_last_point]
-            // and increate unchanged counter
+            // and increase unchanged counter
             unchanged++
           } else {
             // if cursor moved, we want to include last point
             // in the animation, so that movement can be seamless
             pos.cursors = [last_point, ...cursors]
-            this._last_points[id] = new_last_point
           }
         } else {
           // if cursor does not have last point, it is not
           // displayed in canvas and it should be now
           pos.cursors = [...cursors]
-          this._last_points[id] = new_last_point
         }
 
+        new_last_points[id] = new_last_point
         this._points.push(pos)
       }
 
+      // apply new last points
+      this._last_points = new_last_points
+
       // no cursors to animate
       if (this._points.length == 0) {
-        this._last_points = {}
         this.canvasClear()
         return
       }
 
       // if all cursors are unchanged
       if (unchanged == this.cursors.length) {
+        // draw only last known position without animation
+        this.canvasDrawPoints()
         return
       }
 
