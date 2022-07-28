@@ -176,26 +176,26 @@ func (c *serve) Start(cmd *cobra.Command) {
 func (c *serve) Shutdown() {
 	var err error
 
-	err = c.managers.member.Disconnect()
-	c.logger.Err(err).Msg("member manager disconnect")
-
-	err = c.managers.desktop.Shutdown()
-	c.logger.Err(err).Msg("desktop manager shutdown")
-
-	err = c.managers.capture.Shutdown()
-	c.logger.Err(err).Msg("capture manager shutdown")
-
-	err = c.managers.webRTC.Shutdown()
-	c.logger.Err(err).Msg("webrtc manager shutdown")
-
-	err = c.managers.webSocket.Shutdown()
-	c.logger.Err(err).Msg("websocket manager shutdown")
+	err = c.managers.http.Shutdown()
+	c.logger.Err(err).Msg("http manager shutdown")
 
 	err = c.managers.plugins.Shutdown()
 	c.logger.Err(err).Msg("plugins manager shutdown")
 
-	err = c.managers.http.Shutdown()
-	c.logger.Err(err).Msg("http manager shutdown")
+	err = c.managers.webSocket.Shutdown()
+	c.logger.Err(err).Msg("websocket manager shutdown")
+
+	err = c.managers.webRTC.Shutdown()
+	c.logger.Err(err).Msg("webrtc manager shutdown")
+
+	err = c.managers.capture.Shutdown()
+	c.logger.Err(err).Msg("capture manager shutdown")
+
+	err = c.managers.desktop.Shutdown()
+	c.logger.Err(err).Msg("desktop manager shutdown")
+
+	err = c.managers.member.Disconnect()
+	c.logger.Err(err).Msg("member manager disconnect")
 }
 
 func (c *serve) Command(cmd *cobra.Command, args []string) {
