@@ -119,7 +119,7 @@ func (session *SessionCtx) GetWebSocketPeer() types.WebSocketPeer {
 	return session.websocketPeer
 }
 
-func (session *SessionCtx) Send(event string, payload interface{}) {
+func (session *SessionCtx) Send(event string, payload any) {
 	peer := session.GetWebSocketPeer()
 	if peer != nil {
 		peer.Send(event, payload)

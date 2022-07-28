@@ -5,15 +5,15 @@ import (
 	"reflect"
 )
 
-func Unmarshal(in interface{}, raw []byte, callback func() error) error {
+func Unmarshal(in any, raw []byte, callback func() error) error {
 	if err := json.Unmarshal(raw, &in); err != nil {
 		return err
 	}
 	return callback()
 }
 
-func JsonStringAutoDecode(m interface{}) func(rf reflect.Kind, rt reflect.Kind, data interface{}) (interface{}, error) {
-	return func(rf reflect.Kind, rt reflect.Kind, data interface{}) (interface{}, error) {
+func JsonStringAutoDecode(m any) func(rf reflect.Kind, rt reflect.Kind, data any) (any, error) {
+	return func(rf reflect.Kind, rt reflect.Kind, data any) (any, error) {
 		if rf != reflect.String || rt == reflect.String {
 			return data, nil
 		}

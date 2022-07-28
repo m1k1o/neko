@@ -67,7 +67,7 @@ func (manager *DesktopManagerCtx) ClipboardSetBinary(mime string, data []byte) e
 	// TODO: Refactor.
 	// We need to wait until the data came to the clipboard.
 	wait := make(chan struct{})
-	xevent.Emmiter.Once("clipboard-updated", func(payload ...interface{}) {
+	xevent.Emmiter.Once("clipboard-updated", func(payload ...any) {
 		wait <- struct{}{}
 	})
 

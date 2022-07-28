@@ -26,7 +26,7 @@ func (manager *WebSocketManagerCtx) fileChooserDialogEvents() {
 			event.FILE_CHOOSER_DIALOG_OPENED,
 			message.SessionID{
 				ID: host.ID(),
-			}, nil)
+			})
 	})
 
 	// when dialog closes, everyone should be notified.
@@ -37,7 +37,7 @@ func (manager *WebSocketManagerCtx) fileChooserDialogEvents() {
 
 		go manager.sessions.Broadcast(
 			event.FILE_CHOOSER_DIALOG_CLOSED,
-			message.SessionID{}, nil)
+			message.SessionID{})
 	})
 
 	// when new user joins, and someone holds dialog, he shouldd be notified about it.

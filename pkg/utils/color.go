@@ -29,6 +29,6 @@ func Color(str string) string {
 	return result + str[lastIndex:]
 }
 
-func Colorf(format string, a ...interface{}) string {
+func Colorf(format string, a ...any) string {
 	return fmt.Sprintf(Color(format), a...)
 }

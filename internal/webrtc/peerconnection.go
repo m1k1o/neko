@@ -83,7 +83,7 @@ func (manager *WebRTCManagerCtx) peerConfiguration() webrtc.Configuration {
 
 	ICEServers := []webrtc.ICEServer{}
 	for _, server := range manager.config.ICEServers {
-		var credential interface{}
+		var credential any
 		if server.Credential != "" {
 			credential = server.Credential
 		} else {

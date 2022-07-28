@@ -18,6 +18,6 @@ func (h *MessageHandlerCtx) screenSet(session types.Session, payload *message.Sc
 		return err
 	}
 
-	h.sessions.Broadcast(event.SCREEN_UPDATED, payload, nil)
+	h.sessions.Broadcast(event.SCREEN_UPDATED, payload)
 	return nil
 }

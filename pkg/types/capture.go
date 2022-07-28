@@ -79,14 +79,14 @@ type VideoConfig struct {
 }
 
 func (config *VideoConfig) GetPipeline(screen ScreenSize) (string, error) {
-	values := map[string]interface{}{
+	values := map[string]any{
 		"width":  screen.Width,
 		"height": screen.Height,
 		"fps":    screen.Rate,
 	}
 
 	language := []gval.Language{
-		gval.Function("round", func(args ...interface{}) (interface{}, error) {
+		gval.Function("round", func(args ...any) (any, error) {
 			return (int)(math.Round(args[0].(float64))), nil
 		}),
 	}

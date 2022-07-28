@@ -9,7 +9,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func HttpJsonRequest(w http.ResponseWriter, r *http.Request, res interface{}) error {
+func HttpJsonRequest(w http.ResponseWriter, r *http.Request, res any) error {
 	err := json.NewDecoder(r.Body).Decode(res)
 
 	if err == nil {
@@ -23,7 +23,7 @@ func HttpJsonRequest(w http.ResponseWriter, r *http.Request, res interface{}) er
 	return HttpBadRequest("unable to parse provided data").WithInternalErr(err)
 }
 
-func HttpJsonResponse(w http.ResponseWriter, code int, res interface{}) {
+func HttpJsonResponse(w http.ResponseWriter, code int, res any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
 
@@ -32,7 +32,7 @@ func HttpJsonResponse(w http.ResponseWriter, code int, res interface{}) {
 	}
 }
 
-func HttpSuccess(w http.ResponseWriter, res ...interface{}) error {
+func HttpSuccess(w http.ResponseWriter, res ...any) error {
 	if len(res) == 0 {
 		w.WriteHeader(http.StatusNoContent)
 	} else {
@@ -78,13 +78,13 @@ func (e *HTTPError) WithInternalMsg(msg string) *HTTPError {
 }
 
 // WithInternalMsg adds internal formated message information to the error
-func (e *HTTPError) WithInternalMsgf(fmtStr string, args ...interface{}) *HTTPError {
+func (e *HTTPError) WithInternalMsgf(fmtStr string, args ...any) *HTTPError {
 	e.InternalMsg = fmt.Sprintf(fmtStr, args...)
 	return e
 }
 
 // Sends error with custom formated message
-func (e *HTTPError) Msgf(fmtSt string, args ...interface{}) *HTTPError {
+func (e *HTTPError) Msgf(fmtSt string, args ...any) *HTTPError {
 	e.Message = fmt.Sprintf(fmtSt, args...)
 	return e
 }

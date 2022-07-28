@@ -13,7 +13,7 @@ func (h *MessageHandlerCtx) SessionCreated(session types.Session) error {
 			ID:      session.ID(),
 			Profile: session.Profile(),
 			State:   session.State(),
-		}, nil)
+		})
 
 	return nil
 }
@@ -23,7 +23,7 @@ func (h *MessageHandlerCtx) SessionDeleted(session types.Session) error {
 		event.SESSION_DELETED,
 		message.SessionID{
 			ID: session.ID(),
-		}, nil)
+		})
 
 	return nil
 }
@@ -58,7 +58,7 @@ func (h *MessageHandlerCtx) SessionProfileChanged(session types.Session) error {
 		message.MemberProfile{
 			ID:            session.ID(),
 			MemberProfile: session.Profile(),
-		}, nil)
+		})
 
 	return nil
 }
@@ -69,7 +69,7 @@ func (h *MessageHandlerCtx) SessionStateChanged(session types.Session) error {
 		message.SessionState{
 			ID:           session.ID(),
 			SessionState: session.State(),
-		}, nil)
+		})
 
 	return nil
 }

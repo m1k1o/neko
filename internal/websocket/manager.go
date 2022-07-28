@@ -105,7 +105,7 @@ func (manager *WebSocketManagerCtx) Start() {
 			payload.HostID = session.ID()
 		}
 
-		manager.sessions.Broadcast(event.CONTROL_HOST, payload, nil)
+		manager.sessions.Broadcast(event.CONTROL_HOST, payload)
 
 		manager.logger.Info().
 			Bool("has_host", payload.HasHost).
@@ -124,7 +124,7 @@ func (manager *WebSocketManagerCtx) Start() {
 			manager.stopInactiveCursors()
 		}
 
-		manager.sessions.Broadcast(event.SYSTEM_SETTINGS, new, nil)
+		manager.sessions.Broadcast(event.SYSTEM_SETTINGS, new)
 		manager.logger.Info().
 			Interface("new", new).
 			Interface("old", old).
@@ -347,7 +347,7 @@ func (manager *WebSocketManagerCtx) startInactiveCursors() {
 
 				// remove last cursor entries and send empty message
 				_ = manager.sessions.PopCursors()
-				manager.sessions.InactiveCursorsBroadcast(event.SESSION_CURSORS, []message.SessionCursors{}, nil)
+				manager.sessions.InactiveCursorsBroadcast(event.SESSION_CURSORS, []message.SessionCursors{})
 				return
 			case <-ticker.C:
 				cursorsMap := manager.sessions.PopCursors()
@@ -369,7 +369,7 @@ func (manager *WebSocketManagerCtx) startInactiveCursors() {
 					)
 				}
 
-				manager.sessions.InactiveCursorsBroadcast(event.SESSION_CURSORS, sessionCursors, nil)
+				manager.sessions.InactiveCursorsBroadcast(event.SESSION_CURSORS, sessionCursors)
 			}
 		}
 	}()

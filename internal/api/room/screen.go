@@ -40,7 +40,7 @@ func (h *RoomHandler) screenConfigurationChange(w http.ResponseWriter, r *http.R
 	}
 
 	payload := message.ScreenSize(*data)
-	h.sessions.Broadcast(event.SCREEN_UPDATED, payload, nil)
+	h.sessions.Broadcast(event.SCREEN_UPDATED, payload)
 
 	return utils.HttpSuccess(w, data)
 }

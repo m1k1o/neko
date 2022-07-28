@@ -22,7 +22,7 @@ func (l *logFormatter) NewLogEntry(r *http.Request) middleware.LogEntry {
 		return &nulllog{}
 	}
 
-	req := map[string]interface{}{}
+	req := map[string]any{}
 
 	if reqID := middleware.GetReqID(r.Context()); reqID != "" {
 		req["id"] = reqID
@@ -57,7 +57,7 @@ type logPanic struct {
 	stack   string
 }
 
-func (e *logEntry) Panic(v interface{}, stack []byte) {
+func (e *logEntry) Panic(v any, stack []byte) {
 	e.panic = &logPanic{
 		message: fmt.Sprintf("%+v", v),
 		stack:   string(stack),
@@ -72,8 +72,8 @@ func (e *logEntry) SetSession(session types.Session) {
 	e.session = &session
 }
 
-func (e *logEntry) Write(status, bytes int, header http.Header, elapsed time.Duration, extra interface{}) {
-	res := map[string]interface{}{}
+func (e *logEntry) Write(status, bytes int, header http.Header, elapsed time.Duration, extra any) {
+	res := map[string]any{}
 	res["time"] = time.Now().UTC().Format(time.RFC1123)
 	res["status"] = status
 	res["bytes"] = bytes
@@ -128,8 +128,8 @@ func (e *logEntry) Write(status, bytes int, header http.Header, elapsed time.Dur
 
 type nulllog struct{}
 
-func (e *nulllog) Panic(v interface{}, stack []byte) {}
-func (e *nulllog) Error(err error)                   {}
-func (e *nulllog) SetSession(session types.Session)  {}
-func (e *nulllog) Write(status, bytes int, header http.Header, elapsed time.Duration, extra interface{}) {
+func (e *nulllog) Panic(v any, stack []byte)        {}
+func (e *nulllog) Error(err error)                  {}
+func (e *nulllog) SetSession(session types.Session) {}
+func (e *nulllog) Write(status, bytes int, header http.Header, elapsed time.Duration, extra any) {
 }

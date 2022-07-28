@@ -36,7 +36,7 @@ func (peer *WebSocketPeerCtx) setSessionID(sessionId string) {
 	peer.logger = peer.logger.With().Str("session_id", sessionId).Logger()
 }
 
-func (peer *WebSocketPeerCtx) Send(event string, payload interface{}) {
+func (peer *WebSocketPeerCtx) Send(event string, payload any) {
 	peer.mu.Lock()
 	defer peer.mu.Unlock()
 

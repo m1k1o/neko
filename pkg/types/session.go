@@ -43,7 +43,7 @@ type Session interface {
 	SetWebSocketPeer(websocketPeer WebSocketPeer)
 	SetWebSocketConnected(websocketPeer WebSocketPeer, connected bool)
 	GetWebSocketPeer() WebSocketPeer
-	Send(event string, payload interface{})
+	Send(event string, payload any)
 
 	// webrtc
 	SetWebRTCPeer(webrtcPeer WebRTCPeer)
@@ -66,9 +66,9 @@ type SessionManager interface {
 	SetCursor(cursor Cursor, session Session)
 	PopCursors() map[Session][]Cursor
 
-	Broadcast(event string, payload interface{}, exclude interface{})
-	AdminBroadcast(event string, payload interface{}, exclude interface{})
-	InactiveCursorsBroadcast(event string, payload interface{}, exclude interface{})
+	Broadcast(event string, payload any, exclude ...string)
+	AdminBroadcast(event string, payload any, exclude ...string)
+	InactiveCursorsBroadcast(event string, payload any, exclude ...string)
 
 	OnCreated(listener func(session Session))
 	OnDeleted(listener func(session Session))

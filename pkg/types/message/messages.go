@@ -32,9 +32,9 @@ type SystemAdmin struct {
 type SystemLogs = []SystemLog
 
 type SystemLog struct {
-	Level   string                 `json:"level"`
-	Fields  map[string]interface{} `json:"fields"`
-	Message string                 `json:"message"`
+	Level   string         `json:"level"`
+	Fields  map[string]any `json:"fields"`
+	Message string         `json:"message"`
 }
 
 type SystemDisconnect struct {
@@ -163,14 +163,14 @@ type BroadcastStatus struct {
 /////////////////////////////
 
 type SendUnicast struct {
-	Sender   string      `json:"sender"`
-	Receiver string      `json:"receiver"`
-	Subject  string      `json:"subject"`
-	Body     interface{} `json:"body"`
+	Sender   string `json:"sender"`
+	Receiver string `json:"receiver"`
+	Subject  string `json:"subject"`
+	Body     any    `json:"body"`
 }
 
 type SendBroadcast struct {
-	Sender  string      `json:"sender"`
-	Subject string      `json:"subject"`
-	Body    interface{} `json:"body"`
+	Sender  string `json:"sender"`
+	Subject string `json:"subject"`
+	Body    any    `json:"body"`
 }

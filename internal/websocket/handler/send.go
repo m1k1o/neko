@@ -33,7 +33,7 @@ func (h *MessageHandlerCtx) sendBroadcast(session types.Session, payload *messag
 			Sender:  session.ID(),
 			Subject: payload.Subject,
 			Body:    payload.Body,
-		}, []string{session.ID()})
+		}, session.ID())
 
 	return nil
 }

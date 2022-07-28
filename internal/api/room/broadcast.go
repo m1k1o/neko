@@ -46,7 +46,7 @@ func (h *RoomHandler) boradcastStart(w http.ResponseWriter, r *http.Request) err
 		message.BroadcastStatus{
 			IsActive: broadcast.Started(),
 			URL:      broadcast.Url(),
-		}, nil)
+		})
 
 	return utils.HttpSuccess(w)
 }
@@ -64,7 +64,7 @@ func (h *RoomHandler) boradcastStop(w http.ResponseWriter, r *http.Request) erro
 		message.BroadcastStatus{
 			IsActive: broadcast.Started(),
 			URL:      broadcast.Url(),
-		}, nil)
+		})
 
 	return utils.HttpSuccess(w)
 }
