@@ -35,6 +35,7 @@ Then I found [this](https://github.com/nurdism/neko) project and started to dig 
   * Emote overlay
   * Ignore user (chat and emotes)
   * Persistent settings
+  * Automatic Login with custom url args. (add `?usr=<your-user-name>&pwd=<room-pass>` to the url.)
 
 ### Why n.eko?
 
