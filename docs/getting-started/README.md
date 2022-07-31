@@ -38,10 +38,9 @@ Images (except `arm-`) are built using GitHub actions on every push and on weekl
 - You can change API port (8080).
   - This **WILL** work: `3000:8080`
 
-#### But there is a hope!
-There has been an attempt to implement [single port ice using tcp and udp mux](https://github.com/m1k1o/neko/commit/c97b1fc4541caabf6b00331d081b02d2f9c58751) ([#106](https://github.com/m1k1o/neko/pull/106)), that allows using one port instead (each for TCP and/or UDP). This feature is not properly tested yet and only experimental.
+### Using mux instead of epr
 
-We can use TCP mux and/or UDP mux, example:
+When using a mux, not so many ports are needed.
 
 ```yaml
 version: "3.4"
@@ -62,6 +61,13 @@ services:
       NEKO_UDPMUX: 8082
       NEKO_ICELITE: 1
 ```
+
+- When using mux, `NEKO_EPR` is ignored.
+- You only need to expose maximum two ports for WebRTC on your router/firewall and have many users connected.
+- It can even be the same port number, so e.g. `NEKO_TCPMUX: 8081` and `NEKO_UDPMUX: 8081`.
+- You can use them alone (either TCP or UDP) when needed.
+  - UDP is generally better for latency. But some networks block UDP so it is good to have TCP available as fallback.
+- Still, using `NEKO_ICELITE=true` is recommended.
 
 ### Want to customize and install own add-ons, set custom bookmarks?
 - You would need to modify the existing policy file and mount it to your container.
