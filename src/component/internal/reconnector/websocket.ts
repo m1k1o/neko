@@ -30,7 +30,7 @@ export class WebsocketReconnector extends ReconnectorAbstract {
     if (!this._websocket.supported) return
 
     if (this._websocket.connected) {
-      this._websocket.disconnect()
+      this._websocket.disconnect('connection replaced')
     }
 
     let url = this._state.url
@@ -45,7 +45,7 @@ export class WebsocketReconnector extends ReconnectorAbstract {
   }
 
   public disconnect() {
-    this._websocket.disconnect()
+    this._websocket.disconnect('manual disconnect')
   }
 
   public destroy() {
