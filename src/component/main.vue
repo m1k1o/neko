@@ -20,7 +20,7 @@
         :cursorDraw="inactiveCursorDrawFunction"
       />
       <neko-overlay
-        v-show="!private_mode_enabled && connected"
+        v-show="!private_mode_enabled && state.connection.status != 'disconnected'"
         :style="{ pointerEvents: state.control.locked ? 'none' : 'auto' }"
         :wsControl="control"
         :sessions="state.sessions"
