@@ -201,18 +201,19 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
 
   public close(error?: Error) {
     if (this._open) {
-      this._open = false
-
       // set state to disconnected
       Vue.set(this._state.websocket, 'connected', false)
       Vue.set(this._state.webrtc, 'connected', false)
       Vue.set(this._state, 'status', 'disconnected')
-
-      this.emit('close', error)
     }
 
     // close all reconnectors
     Object.values(this._reconnector).forEach((r) => r.close())
+
+    if (this._open) {
+      this._open = false
+      this.emit('close', error)
+    }
   }
 
   public destroy() {
