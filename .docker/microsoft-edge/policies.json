@@ -1,6 +1,4 @@
 {
-  "HomepageLocation": "",
-  "AutoFillEnabled": false,
   "AutofillAddressEnabled": false,
   "AutofillCreditCardEnabled": false,
   "BrowserSignin": 0,
@@ -20,7 +18,7 @@
   "PromptForDownloadLocation": false,
   "BookmarkBarEnabled": false,
   "PasswordManagerEnabled": false,
-  "URLBlacklist": [
+  "URLBlocklist": [
       "file://*",
       "edge://policy"
   ],
@@ -28,11 +26,11 @@
       "cjpalhdlnbpafiamejdnhcphjbkeiagm;https://clients2.google.com/service/update2/crx",
       "mnjggcdmjocbbbhaepdhchncahnbgone;https://clients2.google.com/service/update2/crx"
   ],
-  "ExtensionInstallWhitelist": [
+  "ExtensionInstallAllowlist": [
       "cjpalhdlnbpafiamejdnhcphjbkeiagm",
       "mnjggcdmjocbbbhaepdhchncahnbgone"
   ],
-  "ExtensionInstallBlacklist": [
+  "ExtensionInstallBlocklist": [
       "*"
   ]
 }

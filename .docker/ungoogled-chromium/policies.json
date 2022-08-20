@@ -1,6 +1,4 @@
 {
-  "HomepageLocation": "",
-  "AutoFillEnabled": false,
   "AutofillAddressEnabled": false,
   "AutofillCreditCardEnabled": false,
   "BrowserSignin": 0,
@@ -20,15 +18,15 @@
   "PromptForDownloadLocation": false,
   "BookmarkBarEnabled": false,
   "PasswordManagerEnabled": false,
-  "URLBlacklist": [
+  "URLBlocklist": [
       "file://*",
       "chrome://policy"
   ],
-  "ExtensionInstallWhitelist": [
+  "ExtensionInstallAllowlist": [
       "cjpalhdlnbpafiamejdnhcphjbkeiagm",
       "mnjggcdmjocbbbhaepdhchncahnbgone"
   ],
-  "ExtensionInstallBlacklist": [
+  "ExtensionInstallBlocklist": [
       "*"
   ]
 }
