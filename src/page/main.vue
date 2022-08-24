@@ -514,7 +514,6 @@
           y -= 4
 
           // draw arrow path
-          ctx.save()
           const arrowPath = new Path2D('M5 5L19 12.5L12.3286 14.465L8.29412 20L5 5Z')
           ctx.globalAlpha = 0.5
           ctx.translate(x, y)
@@ -527,15 +526,12 @@
           ctx.lineJoin = 'round'
           ctx.strokeStyle = colorDark
           ctx.stroke(arrowPath)
-          ctx.restore()
-          ctx.save()
 
           // draw cursor tag
           if (cursorTag) {
-            x += 20 // box margin x
-            y += 20 // box margin y
+            const x = 20 // box margin x
+            const y = 20 // box margin y
 
-            ctx.save()
             ctx.globalAlpha = 0.5
             ctx.font = '10px Arial, sans-serif'
             ctx.textBaseline = 'top'
@@ -547,7 +543,6 @@
             ctx.shadowBlur = 0
             ctx.fillStyle = 'white'
             ctx.fillText(cursorTag, x, y)
-            ctx.restore()
           }
         },
       )
@@ -576,7 +571,6 @@
           y -= 4
 
           // draw arrow path
-          ctx.save()
           const arrowPath = new Path2D('M5 5L26 16.5L15.9929 19.513L9.94118 28L5 5Z')
           ctx.translate(x, y)
           ctx.fillStyle = colorLight
@@ -588,7 +582,6 @@
           ctx.lineJoin = 'round'
           ctx.strokeStyle = colorDark
           ctx.stroke(arrowPath)
-          ctx.restore()
 
           // draw cursor tag
           if (cursorTag) {
@@ -596,15 +589,14 @@
             const boxPaddingX = 9
             const boxPaddingY = 6
 
-            x += 22 // box margin x
-            y += 28 // box margin y
+            const x = 22 // box margin x
+            const y = 28 // box margin y
 
             // prepare tag text
             ctx.font = '500 ' + fontSize + 'px Roboto, sans-serif'
             ctx.textBaseline = 'ideographic'
 
             // create tag container
-            ctx.save()
             const txtWidth = ctx.measureText(cursorTag).width
             const w = txtWidth + boxPaddingX * 2
             const h = fontSize + boxPaddingY * 2
@@ -618,7 +610,6 @@
             ctx.closePath()
             ctx.fillStyle = colorDark
             ctx.fill()
-            ctx.restore()
 
             // fill in tag text
             ctx.fillStyle = fontColor

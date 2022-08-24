@@ -124,8 +124,7 @@
 
       // synchronize intrinsic with extrinsic dimensions
       const { width, height } = this._overlay.getBoundingClientRect()
-      this._overlay.width = width * CANVAS_SCALE
-      this._overlay.height = height * CANVAS_SCALE
+      this.canvasResize({ width, height })
 
       let ctrlKey = 0
       let noKeyUp = {} as Record<number, boolean>
@@ -462,8 +461,7 @@
 
     @Watch('canvasSize')
     onCanvasSizeChange({ width, height }: Dimension) {
-      this._overlay.width = width * CANVAS_SCALE
-      this._overlay.height = height * CANVAS_SCALE
+      this.canvasResize({ width, height })
       this.canvasRequestRedraw()
     }
 
@@ -480,6 +478,12 @@
       if (!this.isControling) {
         this.cursorElement.src = data.uri
       }
+    }
+
+    canvasResize({ width, height }: Dimension) {
+      this._overlay.width = width * CANVAS_SCALE
+      this._overlay.height = height * CANVAS_SCALE
+      this._ctx.setTransform(CANVAS_SCALE, 0, 0, CANVAS_SCALE, 0, 0)
     }
 
     @Watch('hostId')
@@ -512,6 +516,8 @@
 
       // get intrinsic dimensions
       let { width, height } = this.canvasSize
+
+      // reset transformation, X and Y will be 0 again
       this._ctx.setTransform(CANVAS_SCALE, 0, 0, CANVAS_SCALE, 0, 0)
 
       // get cursor position
@@ -536,10 +542,9 @@
       // draw cursor tag
       const cursorTag = this.sessions[this.hostId]?.profile.name || ''
       if (cursorTag) {
-        x += this.cursorImage.width
-        y += this.cursorImage.height
+        const x = this.cursorImage.width
+        const y = this.cursorImage.height
 
-        this._ctx.save()
         this._ctx.font = '14px Arial, sans-serif'
         this._ctx.textBaseline = 'top'
         this._ctx.shadowColor = 'black'
@@ -550,7 +555,6 @@
         this._ctx.shadowBlur = 0
         this._ctx.fillStyle = 'white'
         this._ctx.fillText(cursorTag, x, y)
-        this._ctx.restore()
       }
     }
 

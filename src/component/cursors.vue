@@ -63,8 +63,7 @@
 
       // synchronize intrinsic with extrinsic dimensions
       const { width, height } = this._overlay.getBoundingClientRect()
-      this._overlay.width = width * CANVAS_SCALE
-      this._overlay.height = height * CANVAS_SCALE
+      this.canvasResize({ width, height })
 
       // store last drawing points
       this._last_points = {}
@@ -74,9 +73,14 @@
 
     @Watch('canvasSize')
     onCanvasSizeChange({ width, height }: Dimension) {
+      this.canvasResize({ width, height })
+      this.canvasUpdateCursors()
+    }
+
+    canvasResize({ width, height }: Dimension) {
       this._overlay.width = width * CANVAS_SCALE
       this._overlay.height = height * CANVAS_SCALE
-      this.canvasUpdateCursors()
+      this._ctx.setTransform(CANVAS_SCALE, 0, 0, CANVAS_SCALE, 0, 0)
     }
 
     // start as undefined to prevent jumping
@@ -107,9 +111,8 @@
     }
 
     canvasDrawPoints(percent: number = 1) {
-      // clear & scale canvas
+      // clear canvas
       this.canvasClear()
-      this._ctx.setTransform(CANVAS_SCALE, 0, 0, CANVAS_SCALE, 0, 0)
 
       // draw current position
       for (const p of this._points) {
@@ -204,6 +207,9 @@
       x = Math.round((x / this.screenSize.width) * width)
       y = Math.round((y / this.screenSize.height) * height)
 
+      // reset transformation, X and Y will be 0 again
+      this._ctx.setTransform(CANVAS_SCALE, 0, 0, CANVAS_SCALE, 0, 0)
+
       // use custom draw function, if available
       if (this.cursorDraw) {
         this.cursorDraw(this._ctx, x, y, id)
@@ -214,7 +220,6 @@
       const cursorTag = this.sessions[id]?.profile.name || ''
 
       // draw inactive cursor tag
-      this._ctx.save()
       this._ctx.font = '14px Arial, sans-serif'
       this._ctx.textBaseline = 'top'
       this._ctx.shadowColor = 'black'
@@ -225,7 +230,6 @@
       this._ctx.shadowBlur = 0
       this._ctx.fillStyle = 'white'
       this._ctx.fillText(cursorTag, x, y)
-      this._ctx.restore()
     }
 
     canvasClear() {
