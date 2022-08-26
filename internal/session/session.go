@@ -2,12 +2,17 @@ package session
 
 import (
 	"sync"
+	"time"
 
 	"github.com/rs/zerolog"
 
 	"github.com/demodesk/neko/pkg/types"
 	"github.com/demodesk/neko/pkg/types/event"
 )
+
+// client is expected to reconnect within 5 second
+// if some unexpected websocket disconnect happens
+const WS_DELAYED_DURATION = 5 * time.Second
 
 type SessionCtx struct {
 	id      string
@@ -19,6 +24,10 @@ type SessionCtx struct {
 
 	websocketPeer types.WebSocketPeer
 	websocketMu   sync.Mutex
+
+	// websocket delayed set connected events
+	wsDelayedMu    sync.Mutex
+	wsDelayedTimer *time.Timer
 
 	webrtcPeer types.WebRTCPeer
 	webrtcMu   sync.Mutex
@@ -56,7 +65,7 @@ func (session *SessionCtx) State() types.SessionState {
 }
 
 func (session *SessionCtx) IsHost() bool {
-	return session.manager.GetHost() == session
+	return session.manager.isHost(session)
 }
 
 func (session *SessionCtx) PrivateModeEnabled() bool {
@@ -83,7 +92,7 @@ func (session *SessionCtx) SetWebSocketPeer(websocketPeer types.WebSocketPeer) {
 	}
 }
 
-func (session *SessionCtx) SetWebSocketConnected(websocketPeer types.WebSocketPeer, connected bool) {
+func (session *SessionCtx) SetWebSocketConnected(websocketPeer types.WebSocketPeer, connected bool, delayed bool) {
 	session.websocketMu.Lock()
 	isCurrentPeer := websocketPeer == session.websocketPeer
 	session.websocketMu.Unlock()
@@ -94,7 +103,35 @@ func (session *SessionCtx) SetWebSocketConnected(websocketPeer types.WebSocketPe
 
 	session.logger.Info().
 		Bool("connected", connected).
+		Bool("delayed", delayed).
 		Msg("set websocket connected")
+
+	//
+	// ws delayed
+	//
+
+	var wsDelayedTimer *time.Timer
+
+	if delayed {
+		wsDelayedTimer = time.AfterFunc(WS_DELAYED_DURATION, func() {
+			session.SetWebSocketConnected(websocketPeer, connected, false)
+		})
+	}
+
+	session.wsDelayedMu.Lock()
+	if session.wsDelayedTimer != nil {
+		session.wsDelayedTimer.Stop()
+	}
+	session.wsDelayedTimer = wsDelayedTimer
+	session.wsDelayedMu.Unlock()
+
+	if delayed {
+		return
+	}
+
+	//
+	// not delayed
+	//
 
 	session.state.IsConnected = connected
 

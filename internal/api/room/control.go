@@ -19,23 +19,22 @@ type ControlTargetPayload struct {
 }
 
 func (h *RoomHandler) controlStatus(w http.ResponseWriter, r *http.Request) error {
-	host := h.sessions.GetHost()
+	host, hasHost := h.sessions.GetHost()
 
-	if host != nil {
-		return utils.HttpSuccess(w, ControlStatusPayload{
-			HasHost: true,
-			HostId:  host.ID(),
-		})
+	var hostId string
+	if hasHost {
+		hostId = host.ID()
 	}
 
 	return utils.HttpSuccess(w, ControlStatusPayload{
-		HasHost: false,
+		HasHost: hasHost,
+		HostId:  hostId,
 	})
 }
 
 func (h *RoomHandler) controlRequest(w http.ResponseWriter, r *http.Request) error {
-	host := h.sessions.GetHost()
-	if host != nil {
+	_, hasHost := h.sessions.GetHost()
+	if hasHost {
 		return utils.HttpUnprocessableEntity("there is already a host")
 	}
 
@@ -82,9 +81,9 @@ func (h *RoomHandler) controlGive(w http.ResponseWriter, r *http.Request) error 
 }
 
 func (h *RoomHandler) controlReset(w http.ResponseWriter, r *http.Request) error {
-	host := h.sessions.GetHost()
+	_, hasHost := h.sessions.GetHost()
 
-	if host != nil {
+	if hasHost {
 		h.desktop.ResetKeys()
 		h.sessions.ClearHost()
 	}

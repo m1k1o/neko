@@ -12,14 +12,16 @@ import (
 )
 
 func (h *MessageHandlerCtx) systemInit(session types.Session) error {
-	host := h.sessions.GetHost()
+	host, hasHost := h.sessions.GetHost()
 
-	controlHost := message.ControlHost{
-		HasHost: host != nil,
+	var hostID string
+	if hasHost {
+		hostID = host.ID()
 	}
 
-	if controlHost.HasHost {
-		controlHost.HostID = host.ID()
+	controlHost := message.ControlHost{
+		HasHost: hasHost,
+		HostID:  hostID,
 	}
 
 	size := h.desktop.GetScreenSize()

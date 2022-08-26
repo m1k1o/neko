@@ -41,7 +41,7 @@ type Session interface {
 
 	// websocket
 	SetWebSocketPeer(websocketPeer WebSocketPeer)
-	SetWebSocketConnected(websocketPeer WebSocketPeer, connected bool)
+	SetWebSocketConnected(websocketPeer WebSocketPeer, connected bool, delayed bool)
 	GetWebSocketPeer() WebSocketPeer
 	Send(event string, payload any)
 
@@ -60,7 +60,7 @@ type SessionManager interface {
 	List() []Session
 
 	SetHost(host Session)
-	GetHost() Session
+	GetHost() (Session, bool)
 	ClearHost()
 
 	SetCursor(cursor Cursor, session Session)

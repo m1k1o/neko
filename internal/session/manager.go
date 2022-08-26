@@ -3,6 +3,7 @@ package session
 import (
 	"errors"
 	"sync"
+	"sync/atomic"
 
 	"github.com/kataras/go-events"
 	"github.com/rs/zerolog"
@@ -62,8 +63,7 @@ type SessionManagerCtx struct {
 	sessions   map[string]*SessionCtx
 	sessionsMu sync.Mutex
 
-	host   types.Session
-	hostMu sync.Mutex
+	hostId atomic.Value
 
 	cursors   map[types.Session][]types.Cursor
 	cursorsMu sync.Mutex
@@ -188,22 +188,31 @@ func (manager *SessionManagerCtx) List() []types.Session {
 // ---
 
 func (manager *SessionManagerCtx) SetHost(host types.Session) {
-	manager.hostMu.Lock()
-	manager.host = host
-	manager.hostMu.Unlock()
+	var hostId string
+	if host != nil {
+		hostId = host.ID()
+	}
 
+	manager.hostId.Store(hostId)
 	manager.emmiter.Emit("host_changed", host)
 }
 
-func (manager *SessionManagerCtx) GetHost() types.Session {
-	manager.hostMu.Lock()
-	defer manager.hostMu.Unlock()
+func (manager *SessionManagerCtx) GetHost() (types.Session, bool) {
+	hostId, ok := manager.hostId.Load().(string)
+	if !ok || hostId == "" {
+		return nil, false
+	}
 
-	return manager.host
+	return manager.Get(hostId)
 }
 
 func (manager *SessionManagerCtx) ClearHost() {
 	manager.SetHost(nil)
+}
+
+func (manager *SessionManagerCtx) isHost(host types.Session) bool {
+	hostId, ok := manager.hostId.Load().(string)
+	return ok && hostId == host.ID()
 }
 
 // ---

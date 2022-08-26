@@ -49,7 +49,7 @@ type logEntry struct {
 	logger  zerolog.Logger
 	err     error
 	panic   *logPanic
-	session *types.Session
+	session types.Session
 }
 
 type logPanic struct {
@@ -69,7 +69,7 @@ func (e *logEntry) Error(err error) {
 }
 
 func (e *logEntry) SetSession(session types.Session) {
-	e.session = &session
+	e.session = session
 }
 
 func (e *logEntry) Write(status, bytes int, header http.Header, elapsed time.Duration, extra any) {
@@ -83,7 +83,7 @@ func (e *logEntry) Write(status, bytes int, header http.Header, elapsed time.Dur
 
 	// add session ID to logs (if exists)
 	if e.session != nil {
-		logger = logger.With().Str("session_id", (*e.session).ID()).Logger()
+		logger = logger.With().Str("session_id", e.session.ID()).Logger()
 	}
 
 	// handle panic error message

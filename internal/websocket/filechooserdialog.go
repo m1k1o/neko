@@ -13,8 +13,8 @@ func (manager *WebSocketManagerCtx) fileChooserDialogEvents() {
 	manager.desktop.OnFileChooserDialogOpened(func() {
 		manager.logger.Info().Msg("file chooser dialog opened")
 
-		host := manager.sessions.GetHost()
-		if host == nil {
+		host, hasHost := manager.sessions.GetHost()
+		if !hasHost {
 			manager.logger.Warn().Msg("no host for file chooser dialog found, closing")
 			go manager.desktop.CloseFileChooserDialog()
 			return

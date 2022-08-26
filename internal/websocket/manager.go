@@ -132,8 +132,8 @@ func (manager *WebSocketManagerCtx) Start() {
 	})
 
 	manager.desktop.OnClipboardUpdated(func() {
-		session := manager.sessions.GetHost()
-		if session == nil || !session.Profile().CanAccessClipboard {
+		host, hasHost := manager.sessions.GetHost()
+		if !hasHost || !host.Profile().CanAccessClipboard {
 			return
 		}
 
@@ -145,7 +145,7 @@ func (manager *WebSocketManagerCtx) Start() {
 			return
 		}
 
-		session.Send(
+		host.Send(
 			event.CLIPBOARD_UPDATED,
 			message.ClipboardData{
 				Text: data.Text,
@@ -232,26 +232,47 @@ func (manager *WebSocketManagerCtx) connect(connection *websocket.Conn, r *http.
 		Str("agent", r.UserAgent()).
 		Msg("connection started")
 
-	session.SetWebSocketConnected(peer, true)
+	session.SetWebSocketConnected(peer, true, false)
 
-	defer func() {
-		logger.Info().
-			Str("address", connection.RemoteAddr().String()).
-			Str("agent", r.UserAgent()).
-			Msg("connection ended")
+	// this is a blocking function that lives
+	// throughout whole websocket connection
+	err = manager.handle(connection, peer, session)
 
-		session.SetWebSocketConnected(peer, false)
-	}()
+	logger.Info().
+		Str("address", connection.RemoteAddr().String()).
+		Str("agent", r.UserAgent()).
+		Msg("connection ended")
 
-	manager.handle(connection, peer, session)
+	delayedDisconnect := false
+
+	e, ok := err.(*websocket.CloseError)
+	if !ok {
+		logger.Err(err).Msg("read message error")
+		// client is expected to reconnect soon
+		delayedDisconnect = true
+	} else {
+		switch e.Code {
+		case websocket.CloseNormalClosure:
+			logger.Info().Str("reason", e.Text).Msg("websocket close")
+		case websocket.CloseGoingAway:
+			logger.Info().Str("reason", "going away").Msg("websocket close")
+		default:
+			logger.Warn().Err(err).Msg("websocket close")
+			// abnormal websocket closure:
+			// client is expected to reconnect soon
+			delayedDisconnect = true
+		}
+	}
+
+	session.SetWebSocketConnected(peer, false, delayedDisconnect)
 }
 
-func (manager *WebSocketManagerCtx) handle(connection *websocket.Conn, peer types.WebSocketPeer, session types.Session) {
+func (manager *WebSocketManagerCtx) handle(connection *websocket.Conn, peer types.WebSocketPeer, session types.Session) error {
 	// add session id to logger context
 	logger := manager.logger.With().Str("session_id", session.ID()).Logger()
 
 	bytes := make(chan []byte)
-	cancel := make(chan struct{})
+	cancel := make(chan error)
 
 	ticker := time.NewTicker(pingPeriod)
 	defer ticker.Stop()
@@ -263,13 +284,7 @@ func (manager *WebSocketManagerCtx) handle(connection *websocket.Conn, peer type
 		for {
 			_, raw, err := connection.ReadMessage()
 			if err != nil {
-				if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-					logger.Warn().Err(err).Msg("read message error")
-				} else {
-					logger.Debug().Err(err).Msg("read message error")
-				}
-
-				close(cancel)
+				cancel <- err
 				break
 			}
 
@@ -306,15 +321,14 @@ func (manager *WebSocketManagerCtx) handle(connection *websocket.Conn, peer type
 			if !handled {
 				logger.Warn().Str("event", data.Event).Msg("unhandled message")
 			}
-		case <-cancel:
-			return
+		case err := <-cancel:
+			return err
 		case <-manager.shutdown:
 			peer.Destroy("connection shutdown")
-			return
+			return nil
 		case <-ticker.C:
 			if err := peer.Ping(); err != nil {
-				logger.Err(err).Msg("ping message has failed")
-				return
+				return err
 			}
 		}
 	}
