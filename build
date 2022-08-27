@@ -13,7 +13,7 @@ fi
 
 #
 # set git build variables if git exists
-if git status 2> /dev/null && [ -z $GIT_COMMIT ] && [ -z $GIT_BRANCH ] && [ -z $GIT_TAG ];
+if git status 2>&1 > /dev/null && [ -z $GIT_COMMIT ] && [ -z $GIT_BRANCH ] && [ -z $GIT_TAG ];
 then
     GIT_COMMIT=`git rev-parse --short HEAD`
     GIT_BRANCH=`git rev-parse --symbolic-full-name --abbrev-ref HEAD`
