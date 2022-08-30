@@ -559,6 +559,9 @@
     }
 
     canvasClear() {
+      // reset transformation, X and Y will be 0 again
+      this._ctx.setTransform(CANVAS_SCALE, 0, 0, CANVAS_SCALE, 0, 0)
+
       const { width, height } = this._overlay
       this._ctx.clearRect(0, 0, width, height)
     }
