@@ -30,6 +30,12 @@ func New(conf *config.Server, webSocketHandler types.WebSocketHandler) *Server {
 	router.Use(middleware.RequestLogger(&logformatter{logger}))
 	router.Use(middleware.Recoverer) // Recover from panics without crashing server
 
+	if conf.PathPrefix != "/" {
+		router.Use(func(h http.Handler) http.Handler {
+			return http.StripPrefix(conf.PathPrefix, h)
+		})
+	}
+
 	router.Get("/ws", func(w http.ResponseWriter, r *http.Request) {
 		err := webSocketHandler.Upgrade(w, r)
 		if err != nil {

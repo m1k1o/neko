@@ -134,6 +134,9 @@ nat1to1: <ip>
 #### `NEKO_PROXY`:
   - Enable reverse proxy mode, so that neko trusts `X-Forwarded-For` headers.
   - e.g. `false`
+#### `NEKO_PATH_PREFIX`:
+  - Path prefix for HTTP requests.
+  - e.g. `/neko/`
 
 ### Expert settings
 

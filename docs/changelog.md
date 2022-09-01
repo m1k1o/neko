@@ -4,6 +4,7 @@
 
 ### New Features
 - Added `m1k1o/neko:vivaldi` tag (thanks @Xeddius).
+- Added `NEKO_PATH_PREFIX`.
 
 ## [n.eko v2.6](https://github.com/m1k1o/neko/releases/tag/v2.6)
 
