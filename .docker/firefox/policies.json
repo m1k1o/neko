@@ -6,9 +6,9 @@
     "BlockAboutSupport": true,
     "Bookmarks": [
       {
-        "Title": "IPLeak",
-        "URL": "https://ipleak.net/",
-        "Favicon": "https://ipleak.net/favicon.ico",
+        "Title": "Google",
+        "URL": "https://www.google.com/",
+        "Favicon": "https://www.google.com/favicon.ico",
         "Folder": "Pages",
         "Placement": "toolbar"
       },
@@ -20,9 +20,86 @@
         "Placement": "toolbar"
       },
       {
-        "Title": "Google",
-        "URL": "https://www.google.com/",
-        "Favicon": "https://www.google.com/favicon.ico",
+        "Title": "Netflix",
+        "URL": "https://netflix.com",
+        "Favicon": "https://netflix.com/favicon.ico",
+        "Folder": "Pages",
+        "Placement": "toolbar"
+      },
+      {
+        "Title": "Hulu",
+        "URL": "https://www.hulu.com/",
+        "Favicon": "https://www.hulu.com/favicon.ico",
+        "Folder": "Pages",
+        "Placement": "toolbar"
+      },
+      {
+        "Title": "9Anime",
+        "URL": "https://9anime.pl/",
+        "Favicon": "https://s2.bunnycdn.ru/assets/sites/9anime/icons/favicon.png",
+        "Folder": "Pages",
+        "Placement": "toolbar"
+      },
+      {
+        "Title": "AniMixPlay",
+        "URL": "https://animixplay.to/",
+        "Favicon": "https://animixplay.to/favicon.ico",
+        "Folder": "Pages",
+        "Placement": "toolbar"
+      },
+      {
+        "Title": "Crunchy Roll",
+        "URL": "https://www.crunchyroll.com/",
+        "Favicon": "https://www.crunchyroll.com/favicons/apple-touch-icon.png",
+        "Folder": "Pages",
+        "Placement": "toolbar"
+      },
+      {
+        "Title": "Funimation",
+        "URL": "https://www.funimation.com/",
+        "Favicon": "https://www.funimation.com/favicon.ico",
+        "Folder": "Pages",
+        "Placement": "toolbar"
+      },
+      {
+        "Title": "Disney+",
+        "URL": "https://www.disneyplus.com/",
+        "Favicon": "https://www.disneyplus.com/favicon.ico",
+        "Folder": "Pages",
+        "Placement": "toolbar"
+      },
+      {
+        "Title": "HBO Now",
+        "URL": "https://play.hbonow.com/",
+        "Favicon": "https://play.hbonow.com/assets/images/branding/desktop/hbonow/favicon.ico",
+        "Folder": "Pages",
+        "Placement": "toolbar"
+      },
+      {
+        "Title": "Amazon Video",
+        "URL": "https://www.amazon.com/Amazon-Video/b?node=2858778011",
+        "Favicon": "https://www.amazon.com/favicon.ico",
+        "Folder": "Pages",
+        "Placement": "toolbar"
+      },
+      {
+        "Title": "VRV",
+        "URL": "https://vrv.co/",
+        "Favicon": "https://static.vrv.co/vrvweb/assets/img/favicons/favicon-96x96.png",
+        "Folder": "Pages",
+        "Placement": "toolbar"
+      },
+      {
+        "Title": "Twitch",
+        "URL": "https://www.twitch.tv/",
+        "Favicon": "https://twitch.tv/favicon.ico",
+        "Folder": "Pages",
+        "Placement": "toolbar"
+      },
+      {
+        "Title": "Facebook Gaming",
+        "URL": "https://www.facebook.com/gaming/",
+        "Favicon": "https://www.facebook.com/favicon.ico",
         "Folder": "Pages",
         "Placement": "toolbar"
       }
