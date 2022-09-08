@@ -22,6 +22,6 @@ RUN rm -rf /var/lib/apt/lists/* /var/cache/apt/*
 
 #
 # copy configuation files
-COPY supervisord.conf /etc/neko/supervisord/vlc.conf
+COPY supervisord.conf /etc/neko/supervisord/opera.conf
 COPY openbox.xml /etc/neko/openbox.xml
 

@@ -13,7 +13,7 @@
 
 <applications>
     <!-- Match all windows and remove their decorations (obxprop | grep "^_OB_APP") -->
-    <application class="vlc" name="vlc" role="vlc-main">
+    <application class="opera" name="opera">
       <decor>no</decor>
       <maximized>true</maximized>
       <focus>yes</focus>
