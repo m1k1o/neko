@@ -1,15 +1,18 @@
 package config
 
 import (
+	"path"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
 type Server struct {
-	Cert   string
-	Key    string
-	Bind   string
-	Static string
+	Cert       string
+	Key        string
+	Bind       string
+	Static     string
+	PathPrefix string
 }
 
 func (Server) Init(cmd *cobra.Command) error {
@@ -33,6 +36,11 @@ func (Server) Init(cmd *cobra.Command) error {
 		return err
 	}
 
+	cmd.PersistentFlags().String("path_prefix", "/", "path prefix for HTTP requests")
+	if err := viper.BindPFlag("path_prefix", cmd.PersistentFlags().Lookup("path_prefix")); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -41,4 +49,5 @@ func (s *Server) Set() {
 	s.Key = viper.GetString("key")
 	s.Bind = viper.GetString("bind")
 	s.Static = viper.GetString("static")
+	s.PathPrefix = path.Join("/", path.Clean(viper.GetString("path_prefix")))
 }
