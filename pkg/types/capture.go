@@ -104,7 +104,7 @@ func (config *VideoConfig) GetPipeline(screen ScreenSize) (string, error) {
 			return "", err
 		}
 
-		fpsPipeline = fmt.Sprintf("! video/x-raw,framerate=%d/100 ! videoconvert ! queue", int(val*100))
+		fpsPipeline = fmt.Sprintf("! capsfilter caps=video/x-raw,framerate=%d/100 name=framerate ! videoconvert ! queue", int(val*100))
 	}
 
 	// get scale pipeline
@@ -130,11 +130,11 @@ func (config *VideoConfig) GetPipeline(screen ScreenSize) (string, error) {
 			return "", err
 		}
 
-		scalePipeline = fmt.Sprintf("! videoscale ! video/x-raw,width=%d,height=%d ! queue", w, h)
+		scalePipeline = fmt.Sprintf("! videoscale ! capsfilter caps=video/x-raw,width=%d,height=%d name=resolution ! queue", w, h)
 	}
 
 	// get encoder pipeline
-	encPipeline := fmt.Sprintf("! %s", config.GstEncoder)
+	encPipeline := fmt.Sprintf("! %s name=encoder", config.GstEncoder)
 	for key, expr := range config.GstParams {
 		if expr == "" {
 			continue
