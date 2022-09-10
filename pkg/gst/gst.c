@@ -47,7 +47,7 @@ static gboolean gstreamer_bus_call(GstBus *bus, GstMessage *msg, gpointer user_d
       gstreamer_pipeline_log(ctx, "debug",
         "got tags from element %s",
           GST_OBJECT_NAME(msg->src));
-  
+
       gst_tag_list_unref(tags);
       break;
     }
@@ -162,4 +162,51 @@ void gstreamer_pipeline_push(GstPipelineCtx *ctx, void *buffer, int bufferLen) {
     GstBuffer *buffer = gst_buffer_new_wrapped(p, bufferLen);
     gst_app_src_push_buffer(GST_APP_SRC(ctx->appsrc), buffer);
   }
+}
+
+gboolean gstreamer_pipeline_set_prop_int(GstPipelineCtx *ctx, char *binName, char *prop, gint value) {
+  GstElement *el = gst_bin_get_by_name(GST_BIN(ctx->pipeline), binName);
+  if (el == NULL) return FALSE;
+
+  g_object_set(G_OBJECT(el),
+    prop, value,
+    NULL);
+
+  gst_object_unref(el);
+  return TRUE;
+}
+
+gboolean gstreamer_pipeline_set_caps_framerate(GstPipelineCtx *ctx, const gchar* binName, gint numerator, gint denominator) {
+  GstElement *el = gst_bin_get_by_name(GST_BIN(ctx->pipeline), binName);
+  if (el == NULL) return FALSE;
+
+  GstCaps *caps = gst_caps_new_simple("video/x-raw",
+    "framerate", GST_TYPE_FRACTION, numerator, denominator,
+    NULL);
+
+  g_object_set(G_OBJECT(el),
+    "caps", caps,
+    NULL);
+
+  gst_caps_unref(caps);
+  gst_object_unref(el);
+  return TRUE;
+}
+
+gboolean gstreamer_pipeline_set_caps_resolution(GstPipelineCtx *ctx, const gchar* binName, gint width, gint height) {
+  GstElement *el = gst_bin_get_by_name(GST_BIN(ctx->pipeline), binName);
+  if (el == NULL) return FALSE;
+
+  GstCaps *caps = gst_caps_new_simple("video/x-raw",
+    "width", G_TYPE_INT, width,
+    "height", G_TYPE_INT, height,
+    NULL);
+
+  g_object_set(G_OBJECT(el),
+    "caps", caps,
+    NULL);
+
+  gst_caps_unref(caps);
+  gst_object_unref(el);
+  return TRUE;
 }

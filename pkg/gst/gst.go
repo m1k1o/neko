@@ -21,6 +21,7 @@ import (
 
 type Pipeline struct {
 	id     int
+	logger zerolog.Logger
 	Src    string
 	Ctx    *C.GstPipelineCtx
 	Sample chan types.Sample
@@ -56,7 +57,11 @@ func CreatePipeline(pipelineStr string) (*Pipeline, error) {
 	}
 
 	p := &Pipeline{
-		id:     int(id),
+		id: int(id),
+		logger: log.With().
+			Str("module", "capture").
+			Str("submodule", "gstreamer").
+			Int("pipeline_id", int(id)).Logger(),
 		Src:    pipelineStr,
 		Ctx:    ctx,
 		Sample: make(chan types.Sample),
@@ -105,6 +110,47 @@ func (p *Pipeline) Push(buffer []byte) {
 	defer C.free(bytes)
 
 	C.gstreamer_pipeline_push(p.Ctx, bytes, C.int(len(buffer)))
+}
+
+func (p *Pipeline) SetPropInt(binName string, prop string, value int) bool {
+	cBinName := C.CString(binName)
+	defer C.free(unsafe.Pointer(cBinName))
+
+	cProp := C.CString(prop)
+	defer C.free(unsafe.Pointer(cProp))
+
+	cValue := C.int(value)
+
+	p.logger.Debug().Msgf("setting prop %s of %s to %d", prop, binName, value)
+
+	ok := C.gstreamer_pipeline_set_prop_int(p.Ctx, cBinName, cProp, cValue)
+	return ok == C.TRUE
+}
+
+func (p *Pipeline) SetCapsFramerate(binName string, numerator, denominator int) bool {
+	cBinName := C.CString(binName)
+	cNumerator := C.int(numerator)
+	cDenominator := C.int(denominator)
+
+	defer C.free(unsafe.Pointer(cBinName))
+
+	p.logger.Debug().Msgf("setting caps framerate of %s to %d/%d", binName, numerator, denominator)
+
+	ok := C.gstreamer_pipeline_set_caps_framerate(p.Ctx, cBinName, cNumerator, cDenominator)
+	return ok == C.TRUE
+}
+
+func (p *Pipeline) SetCapsResolution(binName string, width, height int) bool {
+	cBinName := C.CString(binName)
+	cWidth := C.int(width)
+	cHeight := C.int(height)
+
+	defer C.free(unsafe.Pointer(cBinName))
+
+	p.logger.Debug().Msgf("setting caps resolution of %s to %dx%d", binName, width, height)
+
+	ok := C.gstreamer_pipeline_set_caps_resolution(p.Ctx, cBinName, cWidth, cHeight)
+	return ok == C.TRUE
 }
 
 // gst-inspect-1.0
