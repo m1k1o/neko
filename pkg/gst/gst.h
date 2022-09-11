@@ -25,6 +25,3 @@ void gstreamer_pipeline_push(GstPipelineCtx *ctx, void *buffer, int bufferLen);
 gboolean gstreamer_pipeline_set_prop_int(GstPipelineCtx *ctx, char *binName, char *prop, gint value);
 gboolean gstreamer_pipeline_set_caps_framerate(GstPipelineCtx *ctx, const gchar* binName, gint numerator, gint denominator);
 gboolean gstreamer_pipeline_set_caps_resolution(GstPipelineCtx *ctx, const gchar* binName, gint width, gint height);
-
-void gstreamer_init(void);
-void gstreamer_loop(void);

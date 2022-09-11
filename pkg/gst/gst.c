@@ -1,15 +1,5 @@
 #include "gst.h"
 
-void gstreamer_init(void) {
-  gst_init(NULL, NULL);
-}
-
-GMainLoop *gstreamer_main_loop = NULL;
-void gstreamer_loop(void) {
-  gstreamer_main_loop = g_main_loop_new (NULL, FALSE);
-  g_main_loop_run(gstreamer_main_loop);
-}
-
 static void gstreamer_pipeline_log(GstPipelineCtx *ctx, char* level, const char* format, ...) {
   va_list argptr;
   va_start(argptr, format);

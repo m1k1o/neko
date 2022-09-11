@@ -33,9 +33,7 @@ var pipelinesLock sync.Mutex
 var registry *C.GstRegistry
 
 func init() {
-	C.gstreamer_init()
-	go C.gstreamer_loop()
-
+	C.gst_init(nil, nil)
 	registry = C.gst_registry_get()
 }
 
