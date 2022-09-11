@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="100px" height="100px" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1">
+	<g transform="scale(0.521)">
+	  <g transform="scale(1.8) translate(3,3)">
+	    <defs>
+	      <radialGradient id="RG1" cx="50%" cy="50%" fx="50%" fy="50%" r="50%">
+	        <stop style="stop-color:rgb(255,29,48);stop-opacity:0.75;" offset="0%"/>
+	        <stop style="stop-color:rgb(180,4,15);stop-opacity:1;" offset="100%"/>
+	      </radialGradient>
+	      <linearGradient id="LG1"  x1="20%" y1="80%" x2="20%" y2="0%">
+	        <stop style="stop-color:rgb(253,76,86);stop-opacity:0.75;" offset="0%"/>
+	        <stop style="stop-color:rgb(158,4,4);stop-opacity:1;" offset="100%"/>
+	      </linearGradient>
+	    </defs>
+	    <path style="fill:url(#RG1)" d="m 81,11 a 50,50 1 1 0 0,78 a 36.9,45 0 1 1 0,-78"/>
+	    <path style="fill:url(#LG1)" d="m 36,19 a 36.9,45 1 0 1 45,-8 a 50,50 1 0 1 0,78 a 36.9,45 1 0 1 -45,-8 a 26.5,35 1 1 0 0,-62"/> 
+	  </g>
+	</g>
+</svg>

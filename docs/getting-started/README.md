@@ -1,5 +1,19 @@
 # Getting started & FAQ
 
+<div align="center">
+  <img src="../_media/icons/firefox.svg" title="m1k1o/neko:firefox" width="60" height="auto"/>
+  <img src="../_media/icons/google-chrome.svg" title="m1k1o/neko:google-chrome" width="60" height="auto"/>
+  <img src="../_media/icons/chromium.svg" title="m1k1o/neko:chromium" width="60" height="auto"/>
+  <img src="../_media/icons/microsoft-edge.svg" title="m1k1o/neko:microsoft-edge" width="60" height="auto"/>
+  <img src="../_media/icons/brave.svg" title="m1k1o/neko:brave" width="60" height="auto"/>
+  <img src="../_media/icons/vivaldi.svg" title="m1k1o/neko:vivaldi" width="60" height="auto"/>
+  <img src="../_media/icons/opera.svg" title="m1k1o/neko:opera" width="60" height="auto"/>
+  <img src="../_media/icons/tor-browser.svg" title="m1k1o/neko:tor-browser" width="60" height="auto"/>
+  <img src="../_media/icons/remmina.png" title="m1k1o/neko:remmina" width="60" height="auto"/>
+  <img src="../_media/icons/vlc.svg" title="m1k1o/neko:vlc" width="60" height="auto"/>
+  <img src="../_media/icons/xfce.svg" title="m1k1o/neko:xfce" width="60" height="auto"/>
+</div>
+
 Use the following docker images:
 - `m1k1o/neko:latest` or `m1k1o/neko:firefox` - for Firefox.
 - `m1k1o/neko:chromium` - for Chromium (needs `--cap-add=SYS_ADMIN`, see the [security implications](https://www.redhat.com/en/blog/container-tidbits-adding-capabilities-container)).
