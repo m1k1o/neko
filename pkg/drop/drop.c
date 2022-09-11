@@ -39,7 +39,7 @@ void dragWindowOpen(char **uris) {
 
   gtk_init(NULL, NULL);
 
-  GtkWidget *widget = gtk_window_new(GTK_WINDOW_TOPLEVEL);;
+  GtkWidget *widget = gtk_window_new(GTK_WINDOW_POPUP);
   GtkWindow *window = GTK_WINDOW(widget);
 
   gtk_window_move(window, 0, 0);
