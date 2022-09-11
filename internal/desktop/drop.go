@@ -43,7 +43,12 @@ func (manager *DesktopManagerCtx) DropFiles(x int, y int, files []string) bool {
 
 	finished := make(chan bool)
 	drop.Emmiter.Once("finish", func(payload ...any) {
-		finished <- payload[0].(bool)
+		b, ok := payload[0].(bool)
+		// workaround until https://github.com/kataras/go-events/pull/8 is merged
+		if !ok {
+			b = (payload[0].([]any))[0].(bool)
+		}
+		finished <- b
 	})
 
 	manager.ResetKeys()
