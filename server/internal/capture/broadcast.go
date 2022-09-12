@@ -1,4 +1,4 @@
-package broadcast
+package capture
 
 import (
 	"sync"
@@ -6,7 +6,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"m1k1o/neko/internal/gst"
+	"m1k1o/neko/internal/capture/gst"
 	"m1k1o/neko/internal/types/config"
 )
 
@@ -20,7 +20,7 @@ type BroadcastManager struct {
 	url      string
 }
 
-func New(capture *config.Capture, config *config.Broadcast) *BroadcastManager {
+func NewBroadcast(capture *config.Capture, config *config.Broadcast) *BroadcastManager {
 	return &BroadcastManager{
 		logger:  log.With().Str("module", "broadcast").Logger(),
 		capture: capture,

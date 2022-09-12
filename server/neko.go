@@ -6,7 +6,6 @@ import (
 	"os/signal"
 	"runtime"
 
-	"m1k1o/neko/internal/broadcast"
 	"m1k1o/neko/internal/capture"
 	"m1k1o/neko/internal/desktop"
 	"m1k1o/neko/internal/http"
@@ -114,7 +113,7 @@ type Neko struct {
 	sessionManager   *session.SessionManager
 	captureManager   *capture.CaptureManagerCtx
 	desktopManager   *desktop.DesktopManagerCtx
-	broadcastManager *broadcast.BroadcastManager
+	broadcastManager *capture.BroadcastManager
 	webRTCManager    *webrtc.WebRTCManager
 	webSocketHandler *websocket.WebSocketHandler
 }
@@ -124,7 +123,7 @@ func (neko *Neko) Preflight() {
 }
 
 func (neko *Neko) Start() {
-	broadcastManager := broadcast.New(neko.Capture, neko.Broadcast)
+	broadcastManager := capture.NewBroadcast(neko.Capture, neko.Broadcast)
 
 	desktopManager := desktop.New(neko.Desktop, broadcastManager)
 	desktopManager.Start()
