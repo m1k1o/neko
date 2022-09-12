@@ -11,8 +11,8 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
+	"m1k1o/neko/internal/config"
 	"m1k1o/neko/internal/types"
-	"m1k1o/neko/internal/types/config"
 )
 
 type Server struct {
