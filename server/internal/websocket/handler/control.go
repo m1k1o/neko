@@ -1,4 +1,4 @@
-package websocket
+package handler
 
 import (
 	"m1k1o/neko/internal/types"
@@ -34,7 +34,7 @@ func (h *MessageHandler) controlRequest(id string, session types.Session) error 
 	// check for host
 	if !h.sessions.HasHost() {
 		// check if control is locked or user is admin
-		_, ok := h.locked["control"]
+		_, ok := h.Locked["control"]
 		if ok && !session.Admin() {
 			h.logger.Debug().Msg("control is locked")
 			return nil
@@ -98,7 +98,7 @@ func (h *MessageHandler) controlGive(id string, session types.Session, payload *
 	}
 
 	// check if control is locked or giver is admin
-	_, ok := h.locked["control"]
+	_, ok := h.Locked["control"]
 	if ok && !session.Admin() {
 		h.logger.Debug().Msg("control is locked")
 		return nil

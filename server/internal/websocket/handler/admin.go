@@ -1,4 +1,4 @@
-package websocket
+package handler
 
 import (
 	"strings"
@@ -14,7 +14,7 @@ func (h *MessageHandler) adminLock(id string, session types.Session, payload *me
 		return nil
 	}
 
-	_, ok := h.locked[payload.Resource]
+	_, ok := h.Locked[payload.Resource]
 	if ok {
 		h.logger.Debug().Str("resource", payload.Resource).Msg("resource already locked...")
 		return nil
@@ -30,7 +30,7 @@ func (h *MessageHandler) adminLock(id string, session types.Session, payload *me
 		h.sessions.SetControlLocked(true)
 	}
 
-	h.locked[payload.Resource] = id
+	h.Locked[payload.Resource] = id
 
 	if err := h.sessions.Broadcast(
 		message.AdminLock{
@@ -51,7 +51,7 @@ func (h *MessageHandler) adminUnlock(id string, session types.Session, payload *
 		return nil
 	}
 
-	_, ok := h.locked[payload.Resource]
+	_, ok := h.Locked[payload.Resource]
 	if !ok {
 		h.logger.Debug().Str("resource", payload.Resource).Msg("resource not locked...")
 		return nil
@@ -62,7 +62,7 @@ func (h *MessageHandler) adminUnlock(id string, session types.Session, payload *
 		h.sessions.SetControlLocked(false)
 	}
 
-	delete(h.locked, payload.Resource)
+	delete(h.Locked, payload.Resource)
 
 	if err := h.sessions.Broadcast(
 		message.AdminLock{
@@ -114,7 +114,7 @@ func (h *MessageHandler) adminControl(id string, session types.Session) error {
 	return nil
 }
 
-func (h *MessageHandler) adminRelease(id string, session types.Session) error {
+func (h *MessageHandler) AdminRelease(id string, session types.Session) error {
 	if !session.Admin() {
 		h.logger.Debug().Msg("user not admin")
 		return nil
@@ -302,7 +302,7 @@ func (h *MessageHandler) adminBan(id string, session types.Session, payload *mes
 	}
 
 	h.logger.Debug().Str("address", remote).Msg("adding address to banned")
-	h.banned[address[0]] = id
+	h.Banned[address[0]] = id
 
 	if err := target.Kick("banned"); err != nil {
 		return err
