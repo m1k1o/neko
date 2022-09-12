@@ -7,8 +7,9 @@ import (
 	"runtime"
 
 	"m1k1o/neko/internal/broadcast"
+	"m1k1o/neko/internal/capture"
+	"m1k1o/neko/internal/desktop"
 	"m1k1o/neko/internal/http"
-	"m1k1o/neko/internal/remote"
 	"m1k1o/neko/internal/session"
 	"m1k1o/neko/internal/types/config"
 	"m1k1o/neko/internal/webrtc"
@@ -61,7 +62,8 @@ func init() {
 		},
 		Root:      &config.Root{},
 		Server:    &config.Server{},
-		Remote:    &config.Remote{},
+		Capture:   &config.Capture{},
+		Desktop:   &config.Desktop{},
 		Broadcast: &config.Broadcast{},
 		WebRTC:    &config.WebRTC{},
 		WebSocket: &config.WebSocket{},
@@ -100,7 +102,8 @@ func (i *Version) Details() string {
 type Neko struct {
 	Version   *Version
 	Root      *config.Root
-	Remote    *config.Remote
+	Capture   *config.Capture
+	Desktop   *config.Desktop
 	Broadcast *config.Broadcast
 	Server    *config.Server
 	WebRTC    *config.WebRTC
@@ -109,7 +112,8 @@ type Neko struct {
 	logger           zerolog.Logger
 	server           *http.Server
 	sessionManager   *session.SessionManager
-	remoteManager    *remote.RemoteManager
+	captureManager   *capture.CaptureManagerCtx
+	desktopManager   *desktop.DesktopManagerCtx
 	broadcastManager *broadcast.BroadcastManager
 	webRTCManager    *webrtc.WebRTCManager
 	webSocketHandler *websocket.WebSocketHandler
@@ -120,17 +124,20 @@ func (neko *Neko) Preflight() {
 }
 
 func (neko *Neko) Start() {
-	broadcastManager := broadcast.New(neko.Remote, neko.Broadcast)
+	broadcastManager := broadcast.New(neko.Capture, neko.Broadcast)
 
-	remoteManager := remote.New(neko.Remote, broadcastManager)
-	remoteManager.Start()
+	desktopManager := desktop.New(neko.Desktop, broadcastManager)
+	desktopManager.Start()
 
-	sessionManager := session.New(remoteManager)
+	captureManager := capture.New(desktopManager, broadcastManager, neko.Capture)
+	captureManager.Start()
 
-	webRTCManager := webrtc.New(sessionManager, remoteManager, neko.WebRTC)
+	sessionManager := session.New(captureManager)
+
+	webRTCManager := webrtc.New(sessionManager, captureManager, desktopManager, neko.WebRTC)
 	webRTCManager.Start()
 
-	webSocketHandler := websocket.New(sessionManager, remoteManager, broadcastManager, webRTCManager, neko.WebSocket)
+	webSocketHandler := websocket.New(sessionManager, desktopManager, captureManager, broadcastManager, webRTCManager, neko.WebSocket)
 	webSocketHandler.Start()
 
 	server := http.New(neko.Server, webSocketHandler)
@@ -138,7 +145,8 @@ func (neko *Neko) Start() {
 
 	neko.broadcastManager = broadcastManager
 	neko.sessionManager = sessionManager
-	neko.remoteManager = remoteManager
+	neko.captureManager = captureManager
+	neko.desktopManager = desktopManager
 	neko.webRTCManager = webRTCManager
 	neko.webSocketHandler = webSocketHandler
 	neko.server = server
@@ -150,8 +158,11 @@ func (neko *Neko) Shutdown() {
 	err = neko.broadcastManager.Shutdown()
 	neko.logger.Err(err).Msg("broadcast manager shutdown")
 
-	err = neko.remoteManager.Shutdown()
-	neko.logger.Err(err).Msg("remote manager shutdown")
+	err = neko.desktopManager.Shutdown()
+	neko.logger.Err(err).Msg("desktop manager shutdown")
+
+	err = neko.captureManager.Shutdown()
+	neko.logger.Err(err).Msg("capture manager shutdown")
 
 	err = neko.webRTCManager.Shutdown()
 	neko.logger.Err(err).Msg("webrtc manager shutdown")

@@ -14,16 +14,16 @@ type BroadcastManager struct {
 	mu       sync.Mutex
 	logger   zerolog.Logger
 	pipeline *gst.Pipeline
-	remote   *config.Remote
+	capture  *config.Capture
 	config   *config.Broadcast
 	enabled  bool
 	url      string
 }
 
-func New(remote *config.Remote, config *config.Broadcast) *BroadcastManager {
+func New(capture *config.Capture, config *config.Broadcast) *BroadcastManager {
 	return &BroadcastManager{
-		logger:  log.With().Str("module", "remote").Logger(),
-		remote:  remote,
+		logger:  log.With().Str("module", "broadcast").Logger(),
+		capture: capture,
 		config:  config,
 		enabled: config.Enabled,
 		url:     config.URL,
@@ -42,8 +42,8 @@ func (manager *BroadcastManager) Start() error {
 
 	var err error
 	manager.pipeline, err = gst.CreateRTMPPipeline(
-		manager.remote.Device,
-		manager.remote.Display,
+		manager.capture.Device,
+		manager.capture.Display,
 		manager.config.Pipeline,
 		manager.url,
 	)
@@ -54,8 +54,8 @@ func (manager *BroadcastManager) Start() error {
 	}
 
 	manager.logger.Info().
-		Str("audio_device", manager.remote.Device).
-		Str("video_display", manager.remote.Display).
+		Str("audio_device", manager.capture.Device).
+		Str("video_display", manager.capture.Display).
 		Str("rtmp_pipeline_src", manager.pipeline.Src).
 		Msgf("RTMP pipeline is starting...")
 

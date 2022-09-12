@@ -18,10 +18,11 @@ import (
 	"m1k1o/neko/internal/types/config"
 )
 
-func New(sessions types.SessionManager, remote types.RemoteManager, config *config.WebRTC) *WebRTCManager {
+func New(sessions types.SessionManager, capture types.CaptureManager, desktop types.DesktopManager, config *config.WebRTC) *WebRTCManager {
 	return &WebRTCManager{
 		logger:   log.With().Str("module", "webrtc").Logger(),
-		remote:   remote,
+		capture:  capture,
+		desktop:  desktop,
 		sessions: sessions,
 		config:   config,
 	}
@@ -34,30 +35,31 @@ type WebRTCManager struct {
 	videoCodec webrtc.RTPCodecParameters
 	audioCodec webrtc.RTPCodecParameters
 	sessions   types.SessionManager
-	remote     types.RemoteManager
+	capture    types.CaptureManager
+	desktop    types.DesktopManager
 	config     *config.WebRTC
 	api        *webrtc.API
 }
 
 func (manager *WebRTCManager) Start() {
 	var err error
-	manager.audioTrack, manager.audioCodec, err = manager.createTrack(manager.remote.AudioCodec())
+	manager.audioTrack, manager.audioCodec, err = manager.createTrack(manager.capture.AudioCodec())
 	if err != nil {
 		manager.logger.Panic().Err(err).Msg("unable to create audio track")
 	}
 
-	manager.remote.OnAudioFrame(func(sample types.Sample) {
+	manager.capture.OnAudioFrame(func(sample types.Sample) {
 		if err := manager.audioTrack.WriteSample(media.Sample(sample)); err != nil && err != io.ErrClosedPipe {
 			manager.logger.Warn().Err(err).Msg("audio pipeline failed to write")
 		}
 	})
 
-	manager.videoTrack, manager.videoCodec, err = manager.createTrack(manager.remote.VideoCodec())
+	manager.videoTrack, manager.videoCodec, err = manager.createTrack(manager.capture.VideoCodec())
 	if err != nil {
 		manager.logger.Panic().Err(err).Msg("unable to create video track")
 	}
 
-	manager.remote.OnVideoFrame(func(sample types.Sample) {
+	manager.capture.OnVideoFrame(func(sample types.Sample) {
 		if err := manager.videoTrack.WriteSample(media.Sample(sample)); err != nil && err != io.ErrClosedPipe {
 			manager.logger.Warn().Err(err).Msg("video pipeline failed to write")
 		}

@@ -1,11 +1,11 @@
-package remote
+package capture
 
 import (
 	"fmt"
 	"time"
 
+	"m1k1o/neko/internal/desktop/xorg"
 	"m1k1o/neko/internal/gst"
-	"m1k1o/neko/internal/remote/xorg"
 	"m1k1o/neko/internal/types"
 	"m1k1o/neko/internal/types/config"
 
@@ -14,47 +14,41 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type RemoteManager struct {
+type CaptureManagerCtx struct {
 	logger    zerolog.Logger
 	video     *gst.Pipeline
 	audio     *gst.Pipeline
-	config    *config.Remote
+	config    *config.Capture
 	broadcast types.BroadcastManager
+	desktop   types.DesktopManager
 	cleanup   *time.Ticker
 	shutdown  chan bool
 	emmiter   events.EventEmmiter
 	streaming bool
 }
 
-func New(config *config.Remote, broadcast types.BroadcastManager) *RemoteManager {
-	return &RemoteManager{
-		logger:    log.With().Str("module", "remote").Logger(),
+func New(desktop types.DesktopManager, broadcast types.BroadcastManager, config *config.Capture) *CaptureManagerCtx {
+	return &CaptureManagerCtx{
+		logger:    log.With().Str("module", "capture").Logger(),
 		cleanup:   time.NewTicker(1 * time.Second),
 		shutdown:  make(chan bool),
 		emmiter:   events.New(),
 		config:    config,
 		broadcast: broadcast,
+		desktop:   desktop,
 		streaming: false,
 	}
 }
 
-func (manager *RemoteManager) VideoCodec() string {
+func (manager *CaptureManagerCtx) VideoCodec() string {
 	return manager.config.VideoCodec
 }
 
-func (manager *RemoteManager) AudioCodec() string {
+func (manager *CaptureManagerCtx) AudioCodec() string {
 	return manager.config.AudioCodec
 }
 
-func (manager *RemoteManager) Start() {
-	xorg.Display(manager.config.Display)
-
-	if !xorg.ValidScreenSize(manager.config.ScreenWidth, manager.config.ScreenHeight, manager.config.ScreenRate) {
-		manager.logger.Warn().Msgf("invalid screen option %dx%d@%d", manager.config.ScreenWidth, manager.config.ScreenHeight, manager.config.ScreenRate)
-	} else if err := xorg.ChangeScreenSize(manager.config.ScreenWidth, manager.config.ScreenHeight, manager.config.ScreenRate); err != nil {
-		manager.logger.Warn().Err(err).Msg("unable to change screen size")
-	}
-
+func (manager *CaptureManagerCtx) Start() {
 	manager.createPipelines()
 	if err := manager.broadcast.Start(); err != nil {
 		manager.logger.Panic().Err(err).Msg("unable to create rtmp pipeline")
@@ -74,14 +68,14 @@ func (manager *RemoteManager) Start() {
 			case sample := <-manager.audio.Sample:
 				manager.emmiter.Emit("audio", sample)
 			case <-manager.cleanup.C:
-				xorg.CheckKeys(time.Second * 10)
+				// TODO: refactor.
 			}
 		}
 	}()
 }
 
-func (manager *RemoteManager) Shutdown() error {
-	manager.logger.Info().Msgf("remote shutting down")
+func (manager *CaptureManagerCtx) Shutdown() error {
+	manager.logger.Info().Msgf("capture shutting down")
 	manager.video.Stop()
 	manager.audio.Stop()
 	manager.broadcast.Stop()
@@ -91,19 +85,19 @@ func (manager *RemoteManager) Shutdown() error {
 	return nil
 }
 
-func (manager *RemoteManager) OnVideoFrame(listener func(sample types.Sample)) {
+func (manager *CaptureManagerCtx) OnVideoFrame(listener func(sample types.Sample)) {
 	manager.emmiter.On("video", func(payload ...interface{}) {
 		listener(payload[0].(types.Sample))
 	})
 }
 
-func (manager *RemoteManager) OnAudioFrame(listener func(sample types.Sample)) {
+func (manager *CaptureManagerCtx) OnAudioFrame(listener func(sample types.Sample)) {
 	manager.emmiter.On("audio", func(payload ...interface{}) {
 		listener(payload[0].(types.Sample))
 	})
 }
 
-func (manager *RemoteManager) StartStream() {
+func (manager *CaptureManagerCtx) StartStream() {
 	manager.createPipelines()
 
 	manager.logger.Info().
@@ -113,7 +107,6 @@ func (manager *RemoteManager) StartStream() {
 		Str("audio_codec", manager.config.AudioCodec).
 		Str("audio_pipeline_src", manager.audio.Src).
 		Str("video_pipeline_src", manager.video.Src).
-		Str("screen_resolution", fmt.Sprintf("%dx%d@%d", manager.config.ScreenWidth, manager.config.ScreenHeight, manager.config.ScreenRate)).
 		Msgf("Pipelines starting...")
 
 	manager.video.Start()
@@ -121,21 +114,21 @@ func (manager *RemoteManager) StartStream() {
 	manager.streaming = true
 }
 
-func (manager *RemoteManager) StopStream() {
+func (manager *CaptureManagerCtx) StopStream() {
 	manager.logger.Info().Msgf("Pipelines shutting down...")
 	manager.video.Stop()
 	manager.audio.Stop()
 	manager.streaming = false
 }
 
-func (manager *RemoteManager) Streaming() bool {
+func (manager *CaptureManagerCtx) Streaming() bool {
 	return manager.streaming
 }
 
-func (manager *RemoteManager) createPipelines() {
+func (manager *CaptureManagerCtx) createPipelines() {
 	// handle maximum fps
-	rate := manager.config.ScreenRate
-	if manager.config.MaxFPS != 0 && manager.config.MaxFPS < manager.config.ScreenRate {
+	rate := int(manager.desktop.GetScreenSize().Rate)
+	if manager.config.MaxFPS != 0 && manager.config.MaxFPS < rate {
 		rate = manager.config.MaxFPS
 	}
 
@@ -165,7 +158,7 @@ func (manager *RemoteManager) createPipelines() {
 	}
 }
 
-func (manager *RemoteManager) ChangeResolution(width int, height int, rate int) error {
+func (manager *CaptureManagerCtx) ChangeResolution(width int, height int, rate int) error {
 	if !xorg.ValidScreenSize(width, height, rate) {
 		return fmt.Errorf("unknown configuration")
 	}

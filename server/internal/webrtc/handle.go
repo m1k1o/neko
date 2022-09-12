@@ -64,7 +64,7 @@ func (manager *WebRTCManager) handle(id string, msg webrtc.DataChannelMessage) e
 			return err
 		}
 
-		manager.remote.Move(int(payload.X), int(payload.Y))
+		manager.desktop.Move(int(payload.X), int(payload.Y))
 	case OP_SCROLL:
 		payload := &PayloadScroll{}
 		if err := binary.Read(buffer, binary.LittleEndian, payload); err != nil {
@@ -77,7 +77,7 @@ func (manager *WebRTCManager) handle(id string, msg webrtc.DataChannelMessage) e
 			Str("y", strconv.Itoa(int(payload.Y))).
 			Msg("scroll")
 
-		manager.remote.Scroll(int(payload.X), int(payload.Y))
+		manager.desktop.Scroll(int(payload.X), int(payload.Y))
 	case OP_KEY_DOWN:
 		payload := &PayloadKey{}
 		if err := binary.Read(buffer, binary.LittleEndian, payload); err != nil {
@@ -85,7 +85,7 @@ func (manager *WebRTCManager) handle(id string, msg webrtc.DataChannelMessage) e
 		}
 
 		if payload.Key < 8 {
-			err := manager.remote.ButtonDown(int(payload.Key))
+			err := manager.desktop.ButtonDown(int(payload.Key))
 			if err != nil {
 				manager.logger.Warn().Err(err).Msg("button down failed")
 				return nil
@@ -93,7 +93,7 @@ func (manager *WebRTCManager) handle(id string, msg webrtc.DataChannelMessage) e
 
 			manager.logger.Debug().Msgf("button down %d", payload.Key)
 		} else {
-			err := manager.remote.KeyDown(uint64(payload.Key))
+			err := manager.desktop.KeyDown(uint64(payload.Key))
 			if err != nil {
 				manager.logger.Warn().Err(err).Msg("key down failed")
 				return nil
@@ -109,7 +109,7 @@ func (manager *WebRTCManager) handle(id string, msg webrtc.DataChannelMessage) e
 		}
 
 		if payload.Key < 8 {
-			err := manager.remote.ButtonUp(int(payload.Key))
+			err := manager.desktop.ButtonUp(int(payload.Key))
 			if err != nil {
 				manager.logger.Warn().Err(err).Msg("button up failed")
 				return nil
@@ -117,7 +117,7 @@ func (manager *WebRTCManager) handle(id string, msg webrtc.DataChannelMessage) e
 
 			manager.logger.Debug().Msgf("button up %d", payload.Key)
 		} else {
-			err := manager.remote.KeyUp(uint64(payload.Key))
+			err := manager.desktop.KeyUp(uint64(payload.Key))
 			if err != nil {
 				manager.logger.Warn().Err(err).Msg("key up failed")
 				return nil

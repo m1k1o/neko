@@ -12,11 +12,11 @@ import (
 	"m1k1o/neko/internal/utils"
 )
 
-func New(remote types.RemoteManager) *SessionManager {
+func New(capture types.CaptureManager) *SessionManager {
 	return &SessionManager{
 		logger:  log.With().Str("module", "session").Logger(),
 		host:    "",
-		remote:  remote,
+		capture: capture,
 		members: make(map[string]*Session),
 		emmiter: events.New(),
 	}
@@ -26,7 +26,7 @@ type SessionManager struct {
 	mu      sync.Mutex
 	logger  zerolog.Logger
 	host    string
-	remote  types.RemoteManager
+	capture types.CaptureManager
 	members map[string]*Session
 	emmiter events.EventEmmiter
 	// TODO: Handle locks in sessions as flags.
@@ -45,8 +45,8 @@ func (manager *SessionManager) New(id string, admin bool, socket types.WebSocket
 
 	manager.mu.Lock()
 	manager.members[id] = session
-	if !manager.remote.Streaming() && len(manager.members) > 0 {
-		manager.remote.StartStream()
+	if !manager.capture.Streaming() && len(manager.members) > 0 {
+		manager.capture.StartStream()
 	}
 	manager.mu.Unlock()
 
@@ -160,8 +160,8 @@ func (manager *SessionManager) Destroy(id string) {
 		err := session.destroy()
 		delete(manager.members, id)
 
-		if manager.remote.Streaming() && len(manager.members) <= 0 {
-			manager.remote.StopStream()
+		if manager.capture.Streaming() && len(manager.members) <= 0 {
+			manager.capture.StopStream()
 		}
 		manager.mu.Unlock()
 
