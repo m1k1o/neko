@@ -41,7 +41,7 @@ func (manager *BroadcastManager) Start() error {
 	}
 
 	var err error
-	manager.pipeline, err = gst.CreateRTMPPipeline(
+	manager.pipeline, err = CreateRTMPPipeline(
 		manager.capture.Device,
 		manager.capture.Display,
 		manager.config.Pipeline,

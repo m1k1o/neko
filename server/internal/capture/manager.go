@@ -133,7 +133,7 @@ func (manager *CaptureManagerCtx) createPipelines() {
 	}
 
 	var err error
-	manager.video, err = gst.CreateAppPipeline(
+	manager.video, err = CreateAppPipeline(
 		manager.config.VideoCodec,
 		manager.config.Display,
 		manager.config.VideoParams,
@@ -145,7 +145,7 @@ func (manager *CaptureManagerCtx) createPipelines() {
 		manager.logger.Panic().Err(err).Msg("unable to create video pipeline")
 	}
 
-	manager.audio, err = gst.CreateAppPipeline(
+	manager.audio, err = CreateAppPipeline(
 		manager.config.AudioCodec,
 		manager.config.Device,
 		manager.config.AudioParams,
@@ -185,7 +185,7 @@ func (manager *CaptureManagerCtx) ChangeResolution(width int, height int, rate i
 	}
 
 	var err error
-	manager.video, err = gst.CreateAppPipeline(
+	manager.video, err = CreateAppPipeline(
 		manager.config.VideoCodec,
 		manager.config.Display,
 		manager.config.VideoParams,
