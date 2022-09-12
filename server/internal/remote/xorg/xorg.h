@@ -3,7 +3,6 @@
 #include <X11/XKBlib.h>
 #include <X11/extensions/Xrandr.h>
 #include <X11/extensions/XTest.h>
-#include <libclipboard.h>
 #include <stdlib.h> /* For free() */
 #include <stdio.h> /* For fputs() */
 #include <string.h> /* For strdup() */
@@ -23,15 +22,11 @@ typedef struct xkeys_t {
 *
 * Note that this is almost certainly not thread safe. */
 Display *getXDisplay(void);
-clipboard_c *getClipboard(void);
 
 void XMove(int x, int y);
 void XScroll(int x, int y);
 void XButton(unsigned int button, int down);
 void XKey(unsigned long key, int down);
-
-void XClipboardSet(char *src);
-char *XClipboardGet();
 
 void XGetScreenConfigurations();
 void XSetScreenConfiguration(int index, short rate);
