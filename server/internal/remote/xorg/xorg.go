@@ -2,7 +2,7 @@ package xorg
 
 /*
 #cgo CFLAGS: -I/usr/local/include/
-#cgo LDFLAGS: /usr/local/lib/libclipboard.a -L/usr/local/lib -lX11 -lXtst -lXrandr -lxcb
+#cgo LDFLAGS: -lX11 -lXtst -lXrandr -lxcb
 
 #include "xorg.h"
 */
@@ -105,26 +105,6 @@ func KeyUp(code uint64) error {
 
 	C.XKey(C.KeySym(code), C.int(0))
 	return nil
-}
-
-func ReadClipboard() string {
-	mu.Lock()
-	defer mu.Unlock()
-
-	clipboardUnsafe := C.XClipboardGet()
-	defer C.free(unsafe.Pointer(clipboardUnsafe))
-
-	return C.GoString(clipboardUnsafe)
-}
-
-func WriteClipboard(data string) {
-	mu.Lock()
-	defer mu.Unlock()
-
-	clipboardUnsafe := C.CString(data)
-	defer C.free(unsafe.Pointer(clipboardUnsafe))
-
-	C.XClipboardSet(clipboardUnsafe)
 }
 
 func ResetKeys() {

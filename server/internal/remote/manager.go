@@ -6,9 +6,10 @@ import (
 	"time"
 
 	"m1k1o/neko/internal/gst"
+	"m1k1o/neko/internal/remote/clipboard"
+	"m1k1o/neko/internal/remote/xorg"
 	"m1k1o/neko/internal/types"
 	"m1k1o/neko/internal/types/config"
-	"m1k1o/neko/internal/xorg"
 
 	"github.com/kataras/go-events"
 	"github.com/rs/zerolog"
@@ -233,11 +234,11 @@ func (manager *RemoteManager) KeyUp(code uint64) error {
 }
 
 func (manager *RemoteManager) ReadClipboard() string {
-	return xorg.ReadClipboard()
+	return clipboard.Read()
 }
 
 func (manager *RemoteManager) WriteClipboard(data string) {
-	xorg.WriteClipboard(data)
+	clipboard.Write(data)
 }
 
 func (manager *RemoteManager) ResetKeys() {
