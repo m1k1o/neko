@@ -1,10 +1,11 @@
-package websocket
+package handler
 
 import (
 	"encoding/json"
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 
 	"m1k1o/neko/internal/types"
 	"m1k1o/neko/internal/types/event"
@@ -15,27 +16,46 @@ import (
 type MessageHandler struct {
 	logger    zerolog.Logger
 	sessions  types.SessionManager
-	webrtc    types.WebRTCManager
 	desktop   types.DesktopManager
 	capture   types.CaptureManager
+	webrtc    types.WebRTCManager
 	broadcast types.BroadcastManager
-	banned    map[string]string // IP -> session ID (that banned it)
-	locked    map[string]string // resource name -> session ID (that locked it)
+
+	Banned map[string]string // IP -> session ID (that banned it)
+	Locked map[string]string // resource name -> session ID (that locked it)
 }
 
-func (h *MessageHandler) Connected(admin bool, socket *WebSocket) (bool, string) {
-	address := socket.Address()
+func New(
+	sessions types.SessionManager,
+	desktop types.DesktopManager,
+	capture types.CaptureManager,
+	webrtc types.WebRTCManager,
+	broadcast types.BroadcastManager,
+) *MessageHandler {
+	return &MessageHandler{
+		logger:    log.With().Str("module", "websocket").Str("submodule", "handler").Logger(),
+		sessions:  sessions,
+		desktop:   desktop,
+		capture:   capture,
+		webrtc:    webrtc,
+		broadcast: broadcast,
+		Banned:    make(map[string]string),
+		Locked:    make(map[string]string),
+	}
+}
+
+func (h *MessageHandler) Connected(admin bool, address string) (bool, string) {
 	if address == "" {
 		h.logger.Debug().Msg("no remote address")
 	} else {
-		_, ok := h.banned[address]
+		_, ok := h.Banned[address]
 		if ok {
 			h.logger.Debug().Str("address", address).Msg("banned")
 			return false, "banned"
 		}
 	}
 
-	_, ok := h.locked["login"]
+	_, ok := h.Locked["login"]
 	if ok && !admin {
 		h.logger.Debug().Msg("server locked")
 		return false, "locked"
@@ -150,7 +170,7 @@ func (h *MessageHandler) Message(id string, raw []byte) error {
 	case event.ADMIN_CONTROL:
 		return errors.Wrapf(h.adminControl(id, session), "%s failed", header.Event)
 	case event.ADMIN_RELEASE:
-		return errors.Wrapf(h.adminRelease(id, session), "%s failed", header.Event)
+		return errors.Wrapf(h.AdminRelease(id, session), "%s failed", header.Event)
 	case event.ADMIN_GIVE:
 		payload := &message.Admin{}
 		return errors.Wrapf(

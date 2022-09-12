@@ -1,4 +1,4 @@
-package websocket
+package handler
 
 import (
 	"m1k1o/neko/internal/types"
