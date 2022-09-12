@@ -7,10 +7,10 @@ import (
 	"runtime"
 
 	"m1k1o/neko/internal/capture"
+	"m1k1o/neko/internal/config"
 	"m1k1o/neko/internal/desktop"
 	"m1k1o/neko/internal/http"
 	"m1k1o/neko/internal/session"
-	"m1k1o/neko/internal/types/config"
 	"m1k1o/neko/internal/webrtc"
 	"m1k1o/neko/internal/websocket"
 

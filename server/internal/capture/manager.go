@@ -5,9 +5,9 @@ import (
 	"time"
 
 	"m1k1o/neko/internal/capture/gst"
+	"m1k1o/neko/internal/config"
 	"m1k1o/neko/internal/desktop/xorg"
 	"m1k1o/neko/internal/types"
-	"m1k1o/neko/internal/types/config"
 
 	"github.com/kataras/go-events"
 	"github.com/rs/zerolog"

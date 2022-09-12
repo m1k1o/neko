@@ -4,9 +4,9 @@ import (
 	"sync"
 	"time"
 
+	"m1k1o/neko/internal/config"
 	"m1k1o/neko/internal/desktop/xorg"
 	"m1k1o/neko/internal/types"
-	"m1k1o/neko/internal/types/config"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"

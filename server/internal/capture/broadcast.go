@@ -7,7 +7,7 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"m1k1o/neko/internal/capture/gst"
-	"m1k1o/neko/internal/types/config"
+	"m1k1o/neko/internal/config"
 )
 
 type BroadcastManager struct {
