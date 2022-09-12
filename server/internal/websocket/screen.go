@@ -12,7 +12,7 @@ func (h *MessageHandler) screenSet(id string, session types.Session, payload *me
 		return nil
 	}
 
-	if err := h.remote.ChangeResolution(payload.Width, payload.Height, payload.Rate); err != nil {
+	if err := h.capture.ChangeResolution(payload.Width, payload.Height, payload.Rate); err != nil {
 		h.logger.Warn().Err(err).Msgf("unable to change screen size")
 		return err
 	}
@@ -33,7 +33,7 @@ func (h *MessageHandler) screenSet(id string, session types.Session, payload *me
 }
 
 func (h *MessageHandler) screenResolution(id string, session types.Session) error {
-	if size := h.remote.GetScreenSize(); size != nil {
+	if size := h.desktop.GetScreenSize(); size != nil {
 		if err := session.Send(message.ScreenResolution{
 			Event:  event.SCREEN_RESOLUTION,
 			Width:  size.Width,
@@ -56,7 +56,7 @@ func (h *MessageHandler) screenConfigurations(id string, session types.Session) 
 
 	if err := session.Send(message.ScreenConfigurations{
 		Event:          event.SCREEN_CONFIGURATIONS,
-		Configurations: h.remote.ScreenConfigurations(),
+		Configurations: h.desktop.ScreenConfigurations(),
 	}); err != nil {
 		h.logger.Warn().Err(err).Msgf("sending event %s has failed", event.SCREEN_CONFIGURATIONS)
 		return err

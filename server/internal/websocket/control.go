@@ -131,7 +131,7 @@ func (h *MessageHandler) controlClipboard(id string, session types.Session, payl
 		return nil
 	}
 
-	h.remote.WriteClipboard(payload.Text)
+	h.desktop.WriteClipboard(payload.Text)
 	return nil
 }
 
@@ -144,7 +144,7 @@ func (h *MessageHandler) controlKeyboard(id string, session types.Session, paylo
 
 	// change layout
 	if payload.Layout != nil {
-		h.remote.SetKeyboardLayout(*payload.Layout)
+		h.desktop.SetKeyboardLayout(*payload.Layout)
 	}
 
 	// set num lock
@@ -177,6 +177,6 @@ func (h *MessageHandler) controlKeyboard(id string, session types.Session, paylo
 		Int("ScrollLock", ScrollLock).
 		Msg("setting keyboard modifiers")
 
-	h.remote.SetKeyboardModifiers(NumLock, CapsLock, ScrollLock)
+	h.desktop.SetKeyboardModifiers(NumLock, CapsLock, ScrollLock)
 	return nil
 }

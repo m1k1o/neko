@@ -20,7 +20,7 @@ import (
 
 const CONTROL_PROTECTION_SESSION = "by_control_protection"
 
-func New(sessions types.SessionManager, remote types.RemoteManager, broadcast types.BroadcastManager, webrtc types.WebRTCManager, conf *config.WebSocket) *WebSocketHandler {
+func New(sessions types.SessionManager, desktop types.DesktopManager, capture types.CaptureManager, broadcast types.BroadcastManager, webrtc types.WebRTCManager, conf *config.WebSocket) *WebSocketHandler {
 	logger := log.With().Str("module", "websocket").Logger()
 
 	locks := make(map[string]string)
@@ -45,7 +45,8 @@ func New(sessions types.SessionManager, remote types.RemoteManager, broadcast ty
 		shutdown: make(chan interface{}),
 		conf:     conf,
 		sessions: sessions,
-		remote:   remote,
+		desktop:  desktop,
+
 		upgrader: websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool {
 				return true
@@ -53,7 +54,8 @@ func New(sessions types.SessionManager, remote types.RemoteManager, broadcast ty
 		},
 		handler: &MessageHandler{
 			logger:    logger.With().Str("subsystem", "handler").Logger(),
-			remote:    remote,
+			desktop:   desktop,
+			capture:   capture,
 			broadcast: broadcast,
 			sessions:  sessions,
 			webrtc:    webrtc,
@@ -73,7 +75,7 @@ type WebSocketHandler struct {
 	shutdown chan interface{}
 	upgrader websocket.Upgrader
 	sessions types.SessionManager
-	remote   types.RemoteManager
+	desktop  types.DesktopManager
 	conf     *config.WebSocket
 	handler  *MessageHandler
 
@@ -175,7 +177,7 @@ func (ws *WebSocketHandler) Start() {
 			ws.wg.Done()
 		}()
 
-		current := ws.remote.ReadClipboard()
+		current := ws.desktop.ReadClipboard()
 
 		for {
 			select {
@@ -188,7 +190,7 @@ func (ws *WebSocketHandler) Start() {
 					continue
 				}
 
-				text := ws.remote.ReadClipboard()
+				text := ws.desktop.ReadClipboard()
 				if text == current {
 					continue
 				}

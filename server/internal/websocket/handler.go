@@ -16,7 +16,8 @@ type MessageHandler struct {
 	logger    zerolog.Logger
 	sessions  types.SessionManager
 	webrtc    types.WebRTCManager
-	remote    types.RemoteManager
+	desktop   types.DesktopManager
+	capture   types.CaptureManager
 	broadcast types.BroadcastManager
 	banned    map[string]string // IP -> session ID (that banned it)
 	locked    map[string]string // resource name -> session ID (that locked it)
