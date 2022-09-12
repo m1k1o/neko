@@ -22,8 +22,6 @@ type WebRTC struct {
 	NAT1To1IPs   []string
 	TCPMUX       int
 	UDPMUX       int
-
-	ImplicitControl bool
 }
 
 func (WebRTC) Init(cmd *cobra.Command) error {
@@ -64,12 +62,6 @@ func (WebRTC) Init(cmd *cobra.Command) error {
 
 	cmd.PersistentFlags().String("iceservers", "", "describes a single STUN and TURN server that can be used by the ICEAgent to establish a connection with a peer")
 	if err := viper.BindPFlag("iceservers", cmd.PersistentFlags().Lookup("iceservers")); err != nil {
-		return err
-	}
-
-	// TODO: Should be moved to session config.
-	cmd.PersistentFlags().Bool("implicit_control", false, "if enabled members can gain control implicitly")
-	if err := viper.BindPFlag("implicit_control", cmd.PersistentFlags().Lookup("implicit_control")); err != nil {
 		return err
 	}
 
@@ -128,7 +120,4 @@ func (s *WebRTC) Set() {
 		s.EphemeralMin = min
 		s.EphemeralMax = max
 	}
-
-	// TODO: Should be moved to session config.
-	s.ImplicitControl = viper.GetBool("implicit_control")
 }

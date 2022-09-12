@@ -10,6 +10,9 @@ import (
 
 	"m1k1o/neko/internal/types"
 	"m1k1o/neko/internal/utils"
+
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 func New(remote types.RemoteManager) *SessionManager {
@@ -31,6 +34,16 @@ type SessionManager struct {
 	emmiter events.EventEmmiter
 	// TODO: Handle locks in sessions as flags.
 	controlLocked bool
+	implicitControl bool
+}
+
+func (manager *SessionManager) Init(cmd *cobra.Command) error {
+	cmd.PersistentFlags().Bool("implicit_control", "", "if enabled members can gain control implicitly. Valid values: none, free, on_click")
+	if err := viper.BindPFlag("implicit_control", cmd.PersistentFlags().Lookup("implicit_control")); err != nil {
+		return err
+	}
+
+	manager.implicitControl = viper.GetBool("implicit_control")
 }
 
 func (manager *SessionManager) New(id string, admin bool, socket types.WebSocket) types.Session {
@@ -111,8 +124,23 @@ func (manager *SessionManager) SetControlLocked(locked bool) {
 	manager.controlLocked = locked
 }
 
-func (manager *SessionManager) CanControl(id string) bool {
+func (manager *SessionManager) CanControl(id string, isClickEvent bool) bool {
 	session, ok := manager.Get(id)
+	if !manager.IsHost(id) {
+		ok = false
+	}
+	if !ok {
+		switch manager.sessions.ImplicitControl {
+			case types.session.ControlMode.OnMove:
+				ok = true
+			case types.session.ControlMode.OnClick:
+				if isClickEvent: {
+					// Switch host
+					manager.
+				}
+		}
+	}
+
 	return ok && (!manager.controlLocked || session.Admin())
 }
 
@@ -251,4 +279,8 @@ func (manager *SessionManager) OnConnected(listener func(id string, session type
 	manager.emmiter.On("connected", func(payload ...interface{}) {
 		listener(payload[0].(string), payload[1].(*Session))
 	})
+}
+
+func (manager *SessionManager) ImplicitControl() bool {
+	return manager.implicitControl
 }

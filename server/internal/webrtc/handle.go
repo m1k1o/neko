@@ -39,10 +39,6 @@ type PayloadKey struct {
 }
 
 func (manager *WebRTCManager) handle(id string, msg webrtc.DataChannelMessage) error {
-	if (!manager.config.ImplicitControl && !manager.sessions.IsHost(id)) || (manager.config.ImplicitControl && !manager.sessions.CanControl(id)) {
-		return nil
-	}
-
 	buffer := bytes.NewBuffer(msg.Data)
 	header := &PayloadHeader{}
 	hbytes := make([]byte, 3)
@@ -53,6 +49,12 @@ func (manager *WebRTCManager) handle(id string, msg webrtc.DataChannelMessage) e
 
 	if err := binary.Read(bytes.NewBuffer(hbytes), binary.LittleEndian, header); err != nil {
 		return err
+	}
+
+	isClickEvent = header.Event == OP_KEY_CLK
+	// Confirm we can can continue
+	if (!manager.sessions.CanControl(id, isClickEvent)) {
+		return nil
 	}
 
 	buffer = bytes.NewBuffer(msg.Data)
