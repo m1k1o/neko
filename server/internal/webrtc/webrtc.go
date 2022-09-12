@@ -16,6 +16,7 @@ import (
 
 	"m1k1o/neko/internal/config"
 	"m1k1o/neko/internal/types"
+	"m1k1o/neko/internal/webrtc/pionlog"
 )
 
 func New(sessions types.SessionManager, capture types.CaptureManager, desktop types.DesktopManager, config *config.WebRTC) *WebRTCManager {
@@ -83,9 +84,7 @@ func (manager *WebRTCManager) Shutdown() error {
 }
 
 func (manager *WebRTCManager) initAPI() error {
-	logger := loggerFactory{
-		logger: manager.logger,
-	}
+	logger := pionlog.New(manager.logger)
 
 	settings := webrtc.SettingEngine{
 		LoggerFactory: logger,
