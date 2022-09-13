@@ -11,6 +11,7 @@ import (
 	"m1k1o/neko/internal/types/event"
 	"m1k1o/neko/internal/types/message"
 	"m1k1o/neko/internal/utils"
+	"m1k1o/neko/internal/websocket/state"
 )
 
 type MessageHandler struct {
@@ -20,9 +21,7 @@ type MessageHandler struct {
 	capture   types.CaptureManager
 	webrtc    types.WebRTCManager
 	broadcast types.BroadcastManager
-
-	Banned map[string]string // IP -> session ID (that banned it)
-	Locked map[string]string // resource name -> session ID (that locked it)
+	state     *state.State
 }
 
 func New(
@@ -31,6 +30,7 @@ func New(
 	capture types.CaptureManager,
 	webrtc types.WebRTCManager,
 	broadcast types.BroadcastManager,
+	state *state.State,
 ) *MessageHandler {
 	return &MessageHandler{
 		logger:    log.With().Str("module", "websocket").Str("submodule", "handler").Logger(),
@@ -39,8 +39,7 @@ func New(
 		capture:   capture,
 		webrtc:    webrtc,
 		broadcast: broadcast,
-		Banned:    make(map[string]string),
-		Locked:    make(map[string]string),
+		state:     state,
 	}
 }
 
@@ -48,15 +47,13 @@ func (h *MessageHandler) Connected(admin bool, address string) (bool, string) {
 	if address == "" {
 		h.logger.Debug().Msg("no remote address")
 	} else {
-		_, ok := h.Banned[address]
-		if ok {
+		if h.state.IsBanned(address) {
 			h.logger.Debug().Str("address", address).Msg("banned")
 			return false, "banned"
 		}
 	}
 
-	_, ok := h.Locked["login"]
-	if ok && !admin {
+	if h.state.IsLocked("login") && !admin {
 		h.logger.Debug().Msg("server locked")
 		return false, "locked"
 	}
