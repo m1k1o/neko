@@ -5,7 +5,6 @@ import (
 
 	"m1k1o/neko/internal/capture/gst"
 	"m1k1o/neko/internal/config"
-	"m1k1o/neko/internal/desktop/xorg"
 	"m1k1o/neko/internal/types"
 
 	"github.com/kataras/go-events"
@@ -170,7 +169,11 @@ func (manager *CaptureManagerCtx) ChangeResolution(width int, height int, rate i
 		manager.logger.Info().Msg("starting video pipeline...")
 	}()
 
-	if err := xorg.ChangeScreenSize(width, height, rate); err != nil {
+	if err := manager.desktop.SetScreenSize(types.ScreenSize{
+		Width:  width,
+		Height: height,
+		Rate:   rate,
+	}); err != nil {
 		return err
 	}
 
