@@ -140,41 +140,18 @@ func (h *MessageHandler) controlKeyboard(id string, session types.Session, paylo
 		return nil
 	}
 
+	h.desktop.SetKeyboardModifiers(types.KeyboardModifiers{
+		NumLock:  payload.NumLock,
+		CapsLock: payload.CapsLock,
+		// TODO: ScrollLock is deprecated.
+	})
+
 	// change layout
 	if payload.Layout != nil {
-		h.desktop.SetKeyboardLayout(*payload.Layout)
+		return h.desktop.SetKeyboardMap(types.KeyboardMap{
+			Layout: *payload.Layout,
+		})
 	}
 
-	// set num lock
-	var NumLock = 0
-	if payload.NumLock == nil {
-		NumLock = -1
-	} else if *payload.NumLock {
-		NumLock = 1
-	}
-
-	// set caps lock
-	var CapsLock = 0
-	if payload.CapsLock == nil {
-		CapsLock = -1
-	} else if *payload.CapsLock {
-		CapsLock = 1
-	}
-
-	// set scroll lock
-	var ScrollLock = 0
-	if payload.ScrollLock == nil {
-		ScrollLock = -1
-	} else if *payload.ScrollLock {
-		ScrollLock = 1
-	}
-
-	h.logger.Debug().
-		Int("NumLock", NumLock).
-		Int("CapsLock", CapsLock).
-		Int("ScrollLock", ScrollLock).
-		Msg("setting keyboard modifiers")
-
-	h.desktop.SetKeyboardModifiers(NumLock, CapsLock, ScrollLock)
 	return nil
 }

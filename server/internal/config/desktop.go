@@ -14,7 +14,7 @@ type Desktop struct {
 
 	ScreenWidth  int
 	ScreenHeight int
-	ScreenRate   int
+	ScreenRate   int16
 }
 
 func (Desktop) Init(cmd *cobra.Command) error {
@@ -45,7 +45,7 @@ func (s *Desktop) Set() {
 		if err1 == nil && err2 == nil && err3 == nil {
 			s.ScreenWidth = int(width)
 			s.ScreenHeight = int(height)
-			s.ScreenRate = int(rate)
+			s.ScreenRate = int16(rate)
 		}
 	}
 }

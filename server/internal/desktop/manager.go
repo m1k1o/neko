@@ -1,6 +1,7 @@
 package desktop
 
 import (
+	"fmt"
 	"sync"
 	"time"
 
@@ -28,13 +29,16 @@ func New(config *config.Desktop, broadcast types.BroadcastManager) *DesktopManag
 }
 
 func (manager *DesktopManagerCtx) Start() {
-	xorg.Display(manager.config.Display)
-
-	if !xorg.ValidScreenSize(manager.config.ScreenWidth, manager.config.ScreenHeight, manager.config.ScreenRate) {
-		manager.logger.Warn().Msgf("invalid screen option %dx%d@%d", manager.config.ScreenWidth, manager.config.ScreenHeight, manager.config.ScreenRate)
-	} else if err := xorg.ChangeScreenSize(manager.config.ScreenWidth, manager.config.ScreenHeight, manager.config.ScreenRate); err != nil {
-		manager.logger.Warn().Err(err).Msg("unable to change screen size")
+	if xorg.DisplayOpen(manager.config.Display) {
+		manager.logger.Panic().Str("display", manager.config.Display).Msg("unable to open display")
 	}
+
+	xorg.GetScreenConfigurations()
+
+	err := xorg.ChangeScreenSize(manager.config.ScreenWidth, manager.config.ScreenHeight, manager.config.ScreenRate)
+	manager.logger.Err(err).
+		Str("screen_size", fmt.Sprintf("%dx%d@%d", manager.config.ScreenWidth, manager.config.ScreenHeight, manager.config.ScreenRate)).
+		Msgf("setting initial screen size")
 
 	manager.wg.Add(1)
 
@@ -61,5 +65,6 @@ func (manager *DesktopManagerCtx) Shutdown() error {
 	close(manager.shutdown)
 	manager.wg.Wait()
 
+	xorg.DisplayClose()
 	return nil
 }

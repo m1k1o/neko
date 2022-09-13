@@ -1,95 +1,33 @@
 #include "xorg.h"
 
 static Display *DISPLAY = NULL;
-static char *NAME = ":0.0";
-static int REGISTERED = 0;
-static int DIRTY = 0;
-
-xkeys_t *xKeysHead = NULL;
-
-void XKeysInsert(KeySym keysym, KeyCode keycode) {
-  xkeys_t *node = (xkeys_t *) malloc(sizeof(xkeys_t));
-
-  node->keysym = keysym;
-  node->keycode = keycode;
-  node->next = xKeysHead;
-  xKeysHead = node;
-}
-
-KeyCode XKeysPop(KeySym keysym) {
-  KeyCode keycode = 0;
-  xkeys_t *node = xKeysHead,
-          *previous = NULL;
-  int i = 0;
-
-  while (node) {
-    if (node->keysym == keysym) {
-      keycode = node->keycode;
-
-      if (!previous)
-        xKeysHead = node->next;
-      else
-        previous->next = node->next;
-
-      free(node);
-      return keycode;
-    }
-
-    previous = node;
-    node = node->next;
-    if (i++ > 120) {
-      // this should NEVER HAPPEN
-      fprintf(stderr, "[FATAL-ERROR] XKeysPop() in xorg.c: reached maximum loop limit! Something is wrong\n");
-      break;
-    }
-  }
-
-  return 0;
-}
 
 Display *getXDisplay(void) {
-  /* Close the display if displayName has changed */
-  if (DIRTY) {
-    XDisplayClose();
-    DIRTY = 0;
-  }
-
-  if (DISPLAY == NULL) {
-    /* First try the user set displayName */
-    DISPLAY = XOpenDisplay(NAME);
-
-    /* Then try using environment variable DISPLAY */
-    if (DISPLAY == NULL) {
-      DISPLAY = XOpenDisplay(NULL);
-    }
-
-    if (DISPLAY == NULL) {
-      fprintf(stderr, "[FATAL-ERROR] XKeysPop() in xorg.c: Could not open main display!");
-    } else if (!REGISTERED) {
-      atexit(&XDisplayClose);
-      REGISTERED = 1;
-    }
-  }
-
   return DISPLAY;
 }
 
-void XDisplayClose(void) {
-  if (DISPLAY != NULL) {
-    XCloseDisplay(DISPLAY);
-    DISPLAY = NULL;
-  }
+int XDisplayOpen(char *name) {
+  DISPLAY = XOpenDisplay(name);
+  return DISPLAY == NULL;
 }
 
-void XDisplaySet(char *input) {
-  NAME = strdup(input);
-  DIRTY = 1;
+void XDisplayClose(void) {
+  XCloseDisplay(DISPLAY);
 }
 
 void XMove(int x, int y) {
   Display *display = getXDisplay();
-  XWarpPointer(display, None, DefaultRootWindow(display),  0, 0, 0, 0, x, y);
+  XWarpPointer(display, None, DefaultRootWindow(display), 0, 0, 0, 0, x, y);
   XSync(display, 0);
+}
+
+void XCursorPosition(int *x, int *y) {
+  Display *display = getXDisplay();
+  Window root = DefaultRootWindow(display);
+  Window window;
+  int i;
+  unsigned mask;
+  XQueryPointer(display, root, &root, &window, x, y, &i, &i, &mask);
 }
 
 void XScroll(int x, int y) {
@@ -123,15 +61,55 @@ void XScroll(int x, int y) {
 }
 
 void XButton(unsigned int button, int down) {
-  if (button != 0) {
-    Display *display = getXDisplay();
-    XTestFakeButtonEvent(display, button, down, CurrentTime);
-    XSync(display, 0);
-  }
+  if (button == 0)
+    return;
+
+  Display *display = getXDisplay();
+  XTestFakeButtonEvent(display, button, down, CurrentTime);
+  XSync(display, 0);
 }
 
-// From: https://github.com/TigerVNC/tigervnc/blob/0946e298075f8f7b6d63e552297a787c5f84d27c/unix/x0vncserver/XDesktop.cxx#L343-L379
-KeyCode XkbKeysymToKeycode(Display *dpy, KeySym keysym) {
+static xkeyentry_t *xKeysHead = NULL;
+
+void XKeyEntryAdd(KeySym keysym, KeyCode keycode) {
+  xkeyentry_t *entry = (xkeyentry_t *) malloc(sizeof(xkeyentry_t));
+  if (entry == NULL)
+    return;
+
+  entry->keysym = keysym;
+  entry->keycode = keycode;
+  entry->next = xKeysHead;
+  xKeysHead = entry;
+}
+
+KeyCode XKeyEntryGet(KeySym keysym) {
+  xkeyentry_t *prev = NULL;
+  xkeyentry_t *curr = xKeysHead;
+
+  KeyCode keycode = 0;
+  while (curr != NULL) {
+    if (curr->keysym == keysym) {
+      keycode = curr->keycode;
+
+      if (prev == NULL) {
+        xKeysHead = curr->next;
+      } else {
+        prev->next = curr->next;
+      }
+
+      free(curr);
+      return keycode;
+    }
+
+    prev = curr;
+    curr = curr->next;
+  }
+
+  return 0;
+}
+
+// From https://github.com/TigerVNC/tigervnc/blob/0946e298075f8f7b6d63e552297a787c5f84d27c/unix/x0vncserver/XDesktop.cxx#L343-L379
+KeyCode XkbKeysymToKeycode(Display* dpy, KeySym keysym) {
   XkbDescPtr xkb;
   XkbStateRec state;
   unsigned int mods;
@@ -169,51 +147,52 @@ KeyCode XkbKeysymToKeycode(Display *dpy, KeySym keysym) {
   return keycode;
 }
 
-void XKey(KeySym key, int down) {
+void XKey(KeySym keysym, int down) {
+  if (keysym == 0)
+    return;
+
   Display *display = getXDisplay();
-  KeyCode code = 0;
+  KeyCode keycode = 0;
 
   if (!down)
-    code = XKeysPop(key);
+    keycode = XKeyEntryGet(keysym);
 
-  if (!code)
-    code = XkbKeysymToKeycode(display, key);
+  if (keycode == 0)
+    keycode = XkbKeysymToKeycode(display, keysym);
 
-  if (!code) {
+  // Map non-existing keysyms to new keycodes
+  if (keycode == 0) {
     int min, max, numcodes;
     XDisplayKeycodes(display, &min, &max);
     XGetKeyboardMapping(display, min, max-min, &numcodes);
 
-    code = (max-min+1)*numcodes;
+    keycode = (max-min+1)*numcodes;
     KeySym keysym_list[numcodes];
-    for (int i=0;i<numcodes;i++) keysym_list[i] = key;
-    XChangeKeyboardMapping(display, code, numcodes, keysym_list, 1);
+    for(int i=0;i<numcodes;i++) keysym_list[i] = keysym;
+    XChangeKeyboardMapping(display, keycode, numcodes, keysym_list, 1);
   }
 
-  if (!code)
-    return;
-
   if (down)
-    XKeysInsert(key, code);
+    XKeyEntryAdd(keysym, keycode);
 
-  XTestFakeKeyEvent(display, code, down, CurrentTime);
+  XTestFakeKeyEvent(display, keycode, down, CurrentTime);
   XSync(display, 0);
 }
 
 void XGetScreenConfigurations() {
-  Display       *display = getXDisplay();
-  Window        root = RootWindow(display, 0);
+  Display *display = getXDisplay();
+  Window root = RootWindow(display, 0);
   XRRScreenSize *xrrs;
-  int           num_sizes;
+  int num_sizes;
 
   xrrs = XRRSizes(display, 0, &num_sizes);
-  for(int i = 0; i < num_sizes; i ++) {
+  for (int i = 0; i < num_sizes; i++) {
     short *rates;
-    int   num_rates;
+    int num_rates;
 
     goCreateScreenSize(i, xrrs[i].width, xrrs[i].height, xrrs[i].mwidth, xrrs[i].mheight);
     rates = XRRRates(display, 0, i, &num_rates);
-    for (int j = 0; j < num_rates; j ++) {
+    for (int j = 0; j < num_rates; j++) {
       goSetScreenRates(i, j, rates[j]);
     }
   }
@@ -227,34 +206,61 @@ void XSetScreenConfiguration(int index, short rate) {
 
 int XGetScreenSize() {
   Display *display = getXDisplay();
-  XRRScreenConfiguration *conf  = XRRGetScreenInfo(display, RootWindow(display, 0));
+  XRRScreenConfiguration *conf = XRRGetScreenInfo(display, RootWindow(display, 0));
   Rotation original_rotation;
   return XRRConfigCurrentConfiguration(conf, &original_rotation);
 }
 
 short XGetScreenRate() {
   Display *display = getXDisplay();
-  XRRScreenConfiguration *conf  = XRRGetScreenInfo(display, RootWindow(display, 0));
+  XRRScreenConfiguration *conf = XRRGetScreenInfo(display, RootWindow(display, 0));
   return XRRConfigCurrentRate(conf);
 }
 
-void SetKeyboardModifiers(int num_lock, int caps_lock, int scroll_lock) {
+void XSetKeyboardModifier(int mod, int on) {
   Display *display = getXDisplay();
-
-  if (num_lock != -1) {
-    XkbLockModifiers(display, XkbUseCoreKbd, 16, num_lock * 16);
-  }
-
-  if (caps_lock != -1) {
-    XkbLockModifiers(display, XkbUseCoreKbd, 2, caps_lock * 2);
-  }
-
-  if (scroll_lock != -1) {
-    XKeyboardControl values;
-    values.led_mode = scroll_lock ? LedModeOn : LedModeOff;
-    values.led = 3;
-    XChangeKeyboardControl(display, KBLedMode, &values);
-  }
-
+  XkbLockModifiers(display, XkbUseCoreKbd, mod, on ? mod : 0);
   XFlush(display);
+}
+
+char XGetKeyboardModifiers() {
+  XkbStateRec xkbState;
+  Display *display = getXDisplay();
+  XkbGetState(display, XkbUseCoreKbd, &xkbState);
+  return xkbState.locked_mods;
+}
+
+XFixesCursorImage *XGetCursorImage(void) {
+  Display *display = getXDisplay();
+  return XFixesGetCursorImage(display);
+}
+
+char *XGetScreenshot(int *w, int *h) {
+  Display *display = getXDisplay();
+  Window root = DefaultRootWindow(display);
+
+  XWindowAttributes attr;
+  XGetWindowAttributes(display, root, &attr);
+  int width = attr.width;
+  int height = attr.height;
+
+  XImage *ximage = XGetImage(display, root, 0, 0, width, height, AllPlanes, ZPixmap);
+
+  *w = width;
+  *h = height;
+  char *pixels = (char *)malloc(width * height * 3);
+
+	for (int row = 0; row < height; row++) {
+		for (int col = 0; col < width; col++) {
+			int pos = ((row * width) + col) * 3;
+      unsigned long pixel = XGetPixel(ximage, col, row);
+
+			pixels[pos]   = (pixel & ximage->red_mask)   >> 16;
+			pixels[pos+1] = (pixel & ximage->green_mask) >> 8;
+			pixels[pos+2] =  pixel & ximage->blue_mask;
+    }
+  }
+
+  XDestroyImage(ximage);
+  return pixels;
 }

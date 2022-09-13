@@ -35,7 +35,7 @@ type PayloadScroll struct {
 
 type PayloadKey struct {
 	PayloadHeader
-	Key uint64
+	Key uint64 // TODO: uint32
 }
 
 func (manager *WebRTCManager) handle(id string, msg webrtc.DataChannelMessage) error {
@@ -85,7 +85,7 @@ func (manager *WebRTCManager) handle(id string, msg webrtc.DataChannelMessage) e
 		}
 
 		if payload.Key < 8 {
-			err := manager.desktop.ButtonDown(int(payload.Key))
+			err := manager.desktop.ButtonDown(uint32(payload.Key))
 			if err != nil {
 				manager.logger.Warn().Err(err).Msg("button down failed")
 				return nil
@@ -93,7 +93,7 @@ func (manager *WebRTCManager) handle(id string, msg webrtc.DataChannelMessage) e
 
 			manager.logger.Debug().Msgf("button down %d", payload.Key)
 		} else {
-			err := manager.desktop.KeyDown(uint64(payload.Key))
+			err := manager.desktop.KeyDown(uint32(payload.Key))
 			if err != nil {
 				manager.logger.Warn().Err(err).Msg("key down failed")
 				return nil
@@ -109,7 +109,7 @@ func (manager *WebRTCManager) handle(id string, msg webrtc.DataChannelMessage) e
 		}
 
 		if payload.Key < 8 {
-			err := manager.desktop.ButtonUp(int(payload.Key))
+			err := manager.desktop.ButtonUp(uint32(payload.Key))
 			if err != nil {
 				manager.logger.Warn().Err(err).Msg("button up failed")
 				return nil
@@ -117,7 +117,7 @@ func (manager *WebRTCManager) handle(id string, msg webrtc.DataChannelMessage) e
 
 			manager.logger.Debug().Msgf("button up %d", payload.Key)
 		} else {
-			err := manager.desktop.KeyUp(uint64(payload.Key))
+			err := manager.desktop.KeyUp(uint32(payload.Key))
 			if err != nil {
 				manager.logger.Warn().Err(err).Msg("key up failed")
 				return nil

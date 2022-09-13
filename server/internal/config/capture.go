@@ -15,7 +15,7 @@ type Capture struct {
 	VideoCodec   string
 	VideoParams  string
 	VideoBitrate uint
-	MaxFPS       int
+	MaxFPS       int16
 }
 
 func (Capture) Init(cmd *cobra.Command) error {
@@ -135,5 +135,5 @@ func (s *Capture) Set() {
 	s.VideoParams = viper.GetString("video")
 	s.VideoBitrate = viper.GetUint("video_bitrate")
 
-	s.MaxFPS = viper.GetInt("max_fps")
+	s.MaxFPS = int16(viper.GetInt("max_fps"))
 }

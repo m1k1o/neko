@@ -70,7 +70,7 @@ type Keyboard struct {
 	Layout     *string `json:"layout,omitempty"`
 	CapsLock   *bool   `json:"capsLock,omitempty"`
 	NumLock    *bool   `json:"numLock,omitempty"`
-	ScrollLock *bool   `json:"scrollLock,omitempty"`
+	ScrollLock *bool   `json:"scrollLock,omitempty"` // TODO: ScrollLock is deprecated.
 }
 
 type Control struct {
@@ -128,7 +128,7 @@ type ScreenResolution struct {
 	ID     string `json:"id,omitempty"`
 	Width  int    `json:"width"`
 	Height int    `json:"height"`
-	Rate   int    `json:"rate"`
+	Rate   int16  `json:"rate"`
 }
 
 type ScreenConfigurations struct {

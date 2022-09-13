@@ -1,7 +1,6 @@
 package capture
 
 import (
-	"fmt"
 	"time"
 
 	"m1k1o/neko/internal/capture/gst"
@@ -127,7 +126,7 @@ func (manager *CaptureManagerCtx) Streaming() bool {
 
 func (manager *CaptureManagerCtx) createPipelines() {
 	// handle maximum fps
-	rate := int(manager.desktop.GetScreenSize().Rate)
+	rate := manager.desktop.GetScreenSize().Rate
 	if manager.config.MaxFPS != 0 && manager.config.MaxFPS < rate {
 		rate = manager.config.MaxFPS
 	}
@@ -158,11 +157,7 @@ func (manager *CaptureManagerCtx) createPipelines() {
 	}
 }
 
-func (manager *CaptureManagerCtx) ChangeResolution(width int, height int, rate int) error {
-	if !xorg.ValidScreenSize(width, height, rate) {
-		return fmt.Errorf("unknown configuration")
-	}
-
+func (manager *CaptureManagerCtx) ChangeResolution(width int, height int, rate int16) error {
 	manager.video.Stop()
 	manager.broadcast.Stop()
 

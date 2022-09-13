@@ -38,7 +38,7 @@ func (h *MessageHandler) screenResolution(id string, session types.Session) erro
 			Event:  event.SCREEN_RESOLUTION,
 			Width:  size.Width,
 			Height: size.Height,
-			Rate:   int(size.Rate),
+			Rate:   size.Rate,
 		}); err != nil {
 			h.logger.Warn().Err(err).Msgf("sending event %s has failed", event.SCREEN_RESOLUTION)
 			return err

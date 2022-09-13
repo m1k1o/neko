@@ -10,5 +10,5 @@ type CaptureManager interface {
 	StartStream()
 	StopStream()
 	Streaming() bool
-	ChangeResolution(width int, height int, rate int) error
+	ChangeResolution(width int, height int, rate int16) error
 }
