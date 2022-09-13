@@ -250,14 +250,14 @@ char *XGetScreenshot(int *w, int *h) {
   *h = height;
   char *pixels = (char *)malloc(width * height * 3);
 
-	for (int row = 0; row < height; row++) {
-		for (int col = 0; col < width; col++) {
-			int pos = ((row * width) + col) * 3;
+  for (int row = 0; row < height; row++) {
+    for (int col = 0; col < width; col++) {
+      int pos = ((row * width) + col) * 3;
       unsigned long pixel = XGetPixel(ximage, col, row);
 
-			pixels[pos]   = (pixel & ximage->red_mask)   >> 16;
-			pixels[pos+1] = (pixel & ximage->green_mask) >> 8;
-			pixels[pos+2] =  pixel & ximage->blue_mask;
+      pixels[pos]   = (pixel & ximage->red_mask)   >> 16;
+      pixels[pos+1] = (pixel & ximage->green_mask) >> 8;
+      pixels[pos+2] =  pixel & ximage->blue_mask;
     }
   }
 
