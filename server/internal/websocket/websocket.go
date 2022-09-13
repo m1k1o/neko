@@ -17,6 +17,7 @@ import (
 	"m1k1o/neko/internal/types/message"
 	"m1k1o/neko/internal/utils"
 	"m1k1o/neko/internal/websocket/handler"
+	"m1k1o/neko/internal/websocket/state"
 )
 
 const CONTROL_PROTECTION_SESSION = "by_control_protection"
@@ -24,17 +25,17 @@ const CONTROL_PROTECTION_SESSION = "by_control_protection"
 func New(sessions types.SessionManager, desktop types.DesktopManager, capture types.CaptureManager, broadcast types.BroadcastManager, webrtc types.WebRTCManager, conf *config.WebSocket) *WebSocketHandler {
 	logger := log.With().Str("module", "websocket").Logger()
 
-	locks := make(map[string]string)
+	state := state.New()
 
 	// if control protection is enabled
 	if conf.ControlProtection {
-		locks["control"] = CONTROL_PROTECTION_SESSION
+		state.Lock("control", CONTROL_PROTECTION_SESSION)
 		logger.Info().Msgf("control locked on behalf of control protection")
 	}
 
 	// apply default locks
 	for _, lock := range conf.Locks {
-		locks[lock] = "" // empty session ID
+		state.Lock(lock, "") // empty session ID
 	}
 
 	if len(conf.Locks) > 0 {
@@ -47,10 +48,8 @@ func New(sessions types.SessionManager, desktop types.DesktopManager, capture ty
 		capture,
 		webrtc,
 		broadcast,
+		state,
 	)
-
-	// set inital locks
-	handler.Locked = locks
 
 	return &WebSocketHandler{
 		logger:   logger,
@@ -59,6 +58,7 @@ func New(sessions types.SessionManager, desktop types.DesktopManager, capture ty
 		sessions: sessions,
 		desktop:  desktop,
 		webrtc:   webrtc,
+		state:    state,
 		upgrader: websocket.Upgrader{
 			CheckOrigin: func(r *http.Request) bool {
 				return true
@@ -80,6 +80,7 @@ type WebSocketHandler struct {
 	sessions types.SessionManager
 	desktop  types.DesktopManager
 	webrtc   types.WebRTCManager
+	state    *state.State
 	conf     *config.WebSocket
 	handler  *handler.MessageHandler
 
@@ -108,9 +109,9 @@ func (ws *WebSocketHandler) Start() {
 
 		// if control protection is enabled and at least one admin
 		// and if room was locked on behalf control protection, unlock
-		sess, ok := ws.handler.Locked["control"]
+		sess, ok := ws.state.GetLocked("control")
 		if ok && ws.conf.ControlProtection && sess == CONTROL_PROTECTION_SESSION && len(ws.sessions.Admins()) > 0 {
-			delete(ws.handler.Locked, "control")
+			ws.state.Unlock("control")
 			ws.sessions.SetControlLocked(false) // TODO: Handle locks in sessions as flags.
 			ws.logger.Info().Msgf("control unlocked on behalf of control protection")
 
@@ -144,9 +145,9 @@ func (ws *WebSocketHandler) Start() {
 
 		// if control protection is enabled and no admin
 		// and room is not locked, lock
-		_, ok := ws.handler.Locked["control"]
+		ok := ws.state.IsLocked("control")
 		if !ok && ws.conf.ControlProtection && adminCount == 0 {
-			ws.handler.Locked["control"] = CONTROL_PROTECTION_SESSION
+			ws.state.Lock("control", CONTROL_PROTECTION_SESSION)
 			ws.sessions.SetControlLocked(true) // TODO: Handle locks in sessions as flags.
 			ws.logger.Info().Msgf("control locked and released on behalf of control protection")
 			ws.handler.AdminRelease(id, session)
@@ -314,8 +315,8 @@ func (ws *WebSocketHandler) Stats() types.Stats {
 		Host:        host,
 		Members:     ws.sessions.Members(),
 
-		Banned: ws.handler.Banned,
-		Locked: ws.handler.Locked,
+		Banned: ws.state.AllBanned(),
+		Locked: ws.state.AllLocked(),
 
 		ServerStartedAt: ws.serverStartedAt,
 		LastAdminLeftAt: ws.lastAdminLeftAt,

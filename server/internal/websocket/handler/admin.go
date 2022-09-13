@@ -14,8 +14,7 @@ func (h *MessageHandler) adminLock(id string, session types.Session, payload *me
 		return nil
 	}
 
-	_, ok := h.Locked[payload.Resource]
-	if ok {
+	if h.state.IsLocked(payload.Resource) {
 		h.logger.Debug().Str("resource", payload.Resource).Msg("resource already locked...")
 		return nil
 	}
@@ -30,7 +29,7 @@ func (h *MessageHandler) adminLock(id string, session types.Session, payload *me
 		h.sessions.SetControlLocked(true)
 	}
 
-	h.Locked[payload.Resource] = id
+	h.state.Lock(payload.Resource, id)
 
 	if err := h.sessions.Broadcast(
 		message.AdminLock{
@@ -51,8 +50,7 @@ func (h *MessageHandler) adminUnlock(id string, session types.Session, payload *
 		return nil
 	}
 
-	_, ok := h.Locked[payload.Resource]
-	if !ok {
+	if !h.state.IsLocked(payload.Resource) {
 		h.logger.Debug().Str("resource", payload.Resource).Msg("resource not locked...")
 		return nil
 	}
@@ -62,7 +60,7 @@ func (h *MessageHandler) adminUnlock(id string, session types.Session, payload *
 		h.sessions.SetControlLocked(false)
 	}
 
-	delete(h.Locked, payload.Resource)
+	h.state.Unlock(payload.Resource)
 
 	if err := h.sessions.Broadcast(
 		message.AdminLock{
@@ -302,7 +300,7 @@ func (h *MessageHandler) adminBan(id string, session types.Session, payload *mes
 	}
 
 	h.logger.Debug().Str("address", remote).Msg("adding address to banned")
-	h.Banned[address[0]] = id
+	h.state.Ban(address[0], id)
 
 	if err := target.Kick("banned"); err != nil {
 		return err
