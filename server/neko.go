@@ -154,23 +154,23 @@ func (neko *Neko) Start() {
 func (neko *Neko) Shutdown() {
 	var err error
 
-	err = neko.broadcastManager.Shutdown()
-	neko.logger.Err(err).Msg("broadcast manager shutdown")
-
-	err = neko.desktopManager.Shutdown()
-	neko.logger.Err(err).Msg("desktop manager shutdown")
-
-	err = neko.captureManager.Shutdown()
-	neko.logger.Err(err).Msg("capture manager shutdown")
-
-	err = neko.webRTCManager.Shutdown()
-	neko.logger.Err(err).Msg("webrtc manager shutdown")
+	err = neko.server.Shutdown()
+	neko.logger.Err(err).Msg("server shutdown")
 
 	err = neko.webSocketHandler.Shutdown()
 	neko.logger.Err(err).Msg("websocket handler shutdown")
 
-	err = neko.server.Shutdown()
-	neko.logger.Err(err).Msg("server shutdown")
+	err = neko.webRTCManager.Shutdown()
+	neko.logger.Err(err).Msg("webrtc manager shutdown")
+
+	err = neko.captureManager.Shutdown()
+	neko.logger.Err(err).Msg("capture manager shutdown")
+
+	err = neko.desktopManager.Shutdown()
+	neko.logger.Err(err).Msg("desktop manager shutdown")
+
+	err = neko.broadcastManager.Shutdown()
+	neko.logger.Err(err).Msg("broadcast manager shutdown")
 }
 
 func (neko *Neko) ServeCommand(cmd *cobra.Command, args []string) {
