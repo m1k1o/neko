@@ -252,6 +252,12 @@
         url = location.href
       }
 
+      // url can contain ?token=<string>
+      let token = new URL(url).searchParams.get('token') || undefined
+
+      // get URL without query params
+      url = url.split('?')[0]
+
       const httpURL = url.replace(/^ws/, 'http').replace(/\/$|\/ws\/?$/, '')
       this.api.setUrl(httpURL)
       Vue.set(this.state.connection, 'url', httpURL)
@@ -264,6 +270,9 @@
         Vue.set(this.state, 'authenticated', false)
       }
 
+      // save token to state
+      Vue.set(this.state.connection, 'token', token)
+
       if (!this.autologin) return
       await this.authenticate()
 
@@ -272,6 +281,10 @@
     }
 
     public async authenticate(token?: string) {
+      if (!token) {
+        token = this.state.connection.token
+      }
+
       if (!token && this.autologin) {
         token = localStorage.getItem('neko_session') ?? undefined
       }
