@@ -94,7 +94,12 @@
   export default class extends Vue {
     @Prop() readonly neko!: Neko
 
-    url: string = location.href
+    @Watch('neko.state.connection.url')
+    updateUrl(url: string) {
+      this.url = url
+    }
+
+    url: string = ''
 
     async setUrl() {
       if (this.url == '') {

@@ -5,7 +5,7 @@
         <neko-header :neko="neko" @toggle="expanded = !expanded" />
       </div>
       <div class="video-container">
-        <neko-canvas ref="neko" autologin autoconnect autoplay />
+        <neko-canvas ref="neko" :server="server" autologin autoconnect autoplay />
         <div v-if="loaded && neko.private_mode_enabled" class="player-notif">Private mode is currently enabled.</div>
         <div
           v-if="loaded && neko.state.connection.type === 'webrtc' && !neko.state.video.playing"
@@ -366,6 +366,8 @@
     loaded: boolean = false
     tab: string = ''
 
+    server: string = location.href
+
     uploadActive = false
     uploadProgress = 0
 
@@ -398,6 +400,12 @@
       this.tab = 'events'
       //@ts-ignore
       window.neko = this.neko
+
+      // initial URL
+      const url = new URL(location.href).searchParams.get('url')
+      if (url) {
+        this.server = url
+      }
 
       //
       // connection events
