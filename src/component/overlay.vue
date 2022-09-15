@@ -593,12 +593,13 @@
     }
 
     implicitControlRequest(e: MouseEvent) {
-      if (this.implicitControl && e.type === 'mousedown' && this.reqMouseDown == null) {
+      if (this.implicitControl && e.type === 'mousedown') {
         this.reqMouseDown = e
+        this.reqMouseUp = null
         this.wsControl.request()
       }
 
-      if (this.implicitControl && e.type === 'mouseup' && this.reqMouseUp == null) {
+      if (this.implicitControl && e.type === 'mouseup') {
         this.reqMouseUp = e
       }
     }
