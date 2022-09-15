@@ -11,7 +11,6 @@
       @wheel.stop.prevent="onWheel"
       @mousemove.stop.prevent="onMouseMove"
       @mousedown.stop.prevent="onMouseDown"
-      @mouseup.stop.prevent="onMouseUp"
       @mouseenter.stop.prevent="onMouseEnter"
       @mouseleave.stop.prevent="onMouseLeave"
       @dragenter.stop.prevent="onDragEnter"
@@ -116,6 +115,9 @@
     }
 
     mounted() {
+      // register mouseup globally as user can release mouse button outside of overlay
+      window.addEventListener('mouseup', this.onMouseUp, true)
+
       // get canvas overlay context
       const ctx = this._overlay.getContext('2d')
       if (ctx != null) {
@@ -183,6 +185,8 @@
     }
 
     beforeDestroy() {
+      window.removeEventListener('mouseup', this.onMouseUp, true)
+
       // Guacamole Keyboard does not provide destroy functions
 
       this.webrtc.removeListener('cursor-position', this.onCursorPosition)
@@ -319,7 +323,11 @@
       }
     }
 
+    isMouseDown = false
+
     onMouseDown(e: MouseEvent) {
+      this.isMouseDown = true
+
       if (!this.isControling) {
         this.implicitControlRequest(e)
         return
@@ -336,6 +344,10 @@
     }
 
     onMouseUp(e: MouseEvent) {
+      // only if we are the one who started the mouse down
+      if (!this.isMouseDown) return
+      this.isMouseDown = false
+
       if (!this.isControling) {
         this.implicitControlRequest(e)
         return
