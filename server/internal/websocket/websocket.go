@@ -175,47 +175,19 @@ func (ws *WebSocketHandler) Start() {
 		}
 	})
 
-	ws.wg.Add(1)
-	go func() {
-		defer func() {
-			ws.logger.Info().Msg("shutdown")
-			ws.wg.Done()
-		}()
-
-		current := ws.desktop.ReadClipboard()
-
-		for {
-			select {
-			case <-ws.shutdown:
-				return
-			default:
-				time.Sleep(100 * time.Millisecond)
-
-				if !ws.sessions.HasHost() {
-					continue
-				}
-
-				text := ws.desktop.ReadClipboard()
-				if text == current {
-					continue
-				}
-
-				session, ok := ws.sessions.GetHost()
-				if ok {
-					err := session.Send(message.Clipboard{
-						Event: event.CONTROL_CLIPBOARD,
-						Text:  text,
-					})
-
-					if err != nil {
-						ws.logger.Err(err).Msg("unable to synchronize clipboard")
-					}
-				}
-
-				current = text
-			}
+	ws.desktop.OnClipboardUpdated(func() {
+		session, ok := ws.sessions.GetHost()
+		if !ok {
+			return
 		}
-	}()
+
+		err := session.Send(message.Clipboard{
+			Event: event.CONTROL_CLIPBOARD,
+			Text:  ws.desktop.ReadClipboard(),
+		})
+
+		ws.logger.Err(err).Msg("sync clipboard")
+	})
 }
 
 func (ws *WebSocketHandler) Shutdown() error {
