@@ -362,8 +362,6 @@
 
     onMouseLeave(e: MouseEvent) {
       if (this.isControling) {
-        this.keyboard.reset()
-
         // save current keyboard modifiers state
         Vue.set(this, 'keyboardModifiers', {
           capslock: e.getModifierState('CapsLock'),
