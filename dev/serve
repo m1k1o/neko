@@ -26,6 +26,7 @@ docker run --rm -it \
     -p 3001:8080 \
     -e "NEKO_HOST=$NEKO_HOST" \
     -e "NEKO_PORT=$NEKO_PORT" \
+    -e "VUE_APP_LOG_COLOR=true" \
     --user "$(id -u):$(id -g)" \
     --volume "${PWD}/../:/app" \
     --entrypoint="npm" \
