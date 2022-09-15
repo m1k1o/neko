@@ -61,4 +61,11 @@ type DesktopManager interface {
 	GetKeyboardModifiers() KeyboardModifiers
 	GetCursorImage() *CursorImage
 	GetScreenshotImage() *image.RGBA
+
+	// xevent
+	OnCursorChanged(listener func(serial uint64))
+	OnClipboardUpdated(listener func())
+	OnFileChooserDialogOpened(listener func())
+	OnFileChooserDialogClosed(listener func())
+	OnEventError(listener func(error_code uint8, message string, request_code uint8, minor_code uint8))
 }

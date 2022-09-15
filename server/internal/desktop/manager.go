@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"m1k1o/neko/internal/config"
+	"m1k1o/neko/internal/desktop/xevent"
 	"m1k1o/neko/internal/desktop/xorg"
 	"m1k1o/neko/internal/types"
 
@@ -39,6 +40,17 @@ func (manager *DesktopManagerCtx) Start() {
 	manager.logger.Err(err).
 		Str("screen_size", fmt.Sprintf("%dx%d@%d", manager.config.ScreenWidth, manager.config.ScreenHeight, manager.config.ScreenRate)).
 		Msgf("setting initial screen size")
+
+	go xevent.EventLoop(manager.config.Display)
+
+	manager.OnEventError(func(error_code uint8, message string, request_code uint8, minor_code uint8) {
+		manager.logger.Warn().
+			Uint8("error_code", error_code).
+			Str("message", message).
+			Uint8("request_code", request_code).
+			Uint8("minor_code", minor_code).
+			Msg("X event error occurred")
+	})
 
 	manager.wg.Add(1)
 
