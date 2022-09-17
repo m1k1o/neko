@@ -7,6 +7,10 @@
 - Added `m1k1o/neko:opera` tag (thanks @prophetofxenu).
 - Added `NEKO_PATH_PREFIX`.
 
+### Misc
+- Server: Split `remote` to `desktop` and `capture`.
+- Server: Refactored `xorg` - added `xevent` and clipboard is handled as event (no looped polling anymore).
+
 ## [n.eko v2.6](https://github.com/m1k1o/neko/releases/tag/v2.6)
 
 ### Bugs
