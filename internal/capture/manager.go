@@ -32,25 +32,6 @@ type CaptureManagerCtx struct {
 func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCtx {
 	logger := log.With().Str("module", "capture").Logger()
 
-	broadcastPipeline := config.BroadcastPipeline
-	if broadcastPipeline == "" {
-		broadcastPipeline = fmt.Sprintf(
-			"flvmux name=mux ! rtmpsink location='{url} live=1' "+
-				"pulsesrc device=%s "+
-				"! audio/x-raw,channels=2 "+
-				"! audioconvert "+
-				"! queue "+
-				"! voaacenc bitrate=%d "+
-				"! mux. "+
-				"ximagesrc display-name=%s show-pointer=true use-damage=false "+
-				"! video/x-raw "+
-				"! videoconvert "+
-				"! queue "+
-				"! x264enc threads=4 bitrate=%d key-int-max=15 byte-stream=true tune=zerolatency speed-preset=%s "+
-				"! mux.", config.AudioDevice, config.BroadcastAudioBitrate*1000, config.Display, config.BroadcastVideoBitrate, config.BroadcastPreset,
-		)
-	}
-
 	screencastPipeline := config.ScreencastPipeline
 	if screencastPipeline == "" {
 		screencastPipeline = fmt.Sprintf(
@@ -69,6 +50,7 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 
 		createPipeline := func() (string, error) {
 			if pipelineConf.GstPipeline != "" {
+				// replace {display} with valid display
 				return strings.Replace(pipelineConf.GstPipeline, "{display}", config.Display, 1), nil
 			}
 
@@ -106,11 +88,33 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 		desktop: desktop,
 
 		// sinks
-		broadcast:  broadcastNew(broadcastPipeline),
+		broadcast: broadcastNew(func(url string) (string, error) {
+			if config.BroadcastPipeline != "" {
+				// replace {url} with valid URL
+				return strings.Replace(config.BroadcastPipeline, "{url}", url, 1), nil
+			}
+
+			return fmt.Sprintf(
+				"flvmux name=mux ! rtmpsink location='%s live=1' "+
+					"pulsesrc device=%s "+
+					"! audio/x-raw,channels=2 "+
+					"! audioconvert "+
+					"! queue "+
+					"! voaacenc bitrate=%d "+
+					"! mux. "+
+					"ximagesrc display-name=%s show-pointer=true use-damage=false "+
+					"! video/x-raw "+
+					"! videoconvert "+
+					"! queue "+
+					"! x264enc threads=4 bitrate=%d key-int-max=15 byte-stream=true tune=zerolatency speed-preset=%s "+
+					"! mux.", url, config.AudioDevice, config.BroadcastAudioBitrate*1000, config.Display, config.BroadcastVideoBitrate, config.BroadcastPreset,
+			), nil
+		}, ""),
 		screencast: screencastNew(config.ScreencastEnabled, screencastPipeline),
 		audio: streamSinkNew(config.AudioCodec, func() (string, error) {
 			if config.AudioPipeline != "" {
-				return config.AudioPipeline, nil
+				// replace {device} with valid device
+				return strings.Replace(config.AudioPipeline, "{device}", config.AudioDevice, 1), nil
 			}
 
 			return fmt.Sprintf(

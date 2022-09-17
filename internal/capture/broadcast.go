@@ -1,7 +1,6 @@
 package capture
 
 import (
-	"strings"
 	"sync"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -17,9 +16,9 @@ type BroacastManagerCtx struct {
 	logger zerolog.Logger
 	mu     sync.Mutex
 
-	pipeline    *gst.Pipeline
-	pipelineStr string
-	pipelineMu  sync.Mutex
+	pipeline   *gst.Pipeline
+	pipelineMu sync.Mutex
+	pipelineFn func(url string) (string, error)
 
 	url     string
 	started bool
@@ -29,17 +28,17 @@ type BroacastManagerCtx struct {
 	pipelinesActive  prometheus.Gauge
 }
 
-func broadcastNew(pipelineStr string) *BroacastManagerCtx {
+func broadcastNew(pipelineFn func(url string) (string, error), defaultUrl string) *BroacastManagerCtx {
 	logger := log.With().
 		Str("module", "capture").
 		Str("submodule", "broadcast").
 		Logger()
 
 	return &BroacastManagerCtx{
-		logger:      logger,
-		pipelineStr: pipelineStr,
-		url:         "",
-		started:     false,
+		logger:     logger,
+		pipelineFn: pipelineFn,
+		url:        defaultUrl,
+		started:    defaultUrl != "",
 
 		// metrics
 		pipelinesCounter: promauto.NewCounter(prometheus.CounterOpts{
@@ -119,10 +118,10 @@ func (manager *BroacastManagerCtx) createPipeline() error {
 		return types.ErrCapturePipelineAlreadyExists
 	}
 
-	var err error
-
-	// replace {url} with valid URL
-	pipelineStr := strings.Replace(manager.pipelineStr, "{url}", manager.url, 1)
+	pipelineStr, err := manager.pipelineFn(manager.url)
+	if err != nil {
+		return err
+	}
 
 	manager.logger.Info().
 		Str("src", pipelineStr).
