@@ -45,9 +45,8 @@ func (manager *SessionManager) New(id string, admin bool, socket types.WebSocket
 
 	manager.mu.Lock()
 	manager.members[id] = session
-	if !manager.capture.Streaming() && len(manager.members) > 0 {
-		manager.capture.StartStream()
-	}
+	manager.capture.Audio().AddListener()
+	manager.capture.Video().AddListener()
 	manager.mu.Unlock()
 
 	manager.emmiter.Emit("created", id, session)
@@ -160,9 +159,8 @@ func (manager *SessionManager) Destroy(id string) {
 		err := session.destroy()
 		delete(manager.members, id)
 
-		if manager.capture.Streaming() && len(manager.members) <= 0 {
-			manager.capture.StopStream()
-		}
+		manager.capture.Audio().RemoveListener()
+		manager.capture.Video().RemoveListener()
 		manager.mu.Unlock()
 
 		manager.emmiter.Emit("destroyed", id, session)

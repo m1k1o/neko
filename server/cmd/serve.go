@@ -21,7 +21,6 @@ func init() {
 		neko.Service.WebRTC,
 		neko.Service.Capture,
 		neko.Service.Desktop,
-		neko.Service.Broadcast,
 		neko.Service.WebSocket,
 	}
 

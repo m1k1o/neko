@@ -63,7 +63,6 @@ func init() {
 		Server:    &config.Server{},
 		Capture:   &config.Capture{},
 		Desktop:   &config.Desktop{},
-		Broadcast: &config.Broadcast{},
 		WebRTC:    &config.WebRTC{},
 		WebSocket: &config.WebSocket{},
 	}
@@ -103,7 +102,6 @@ type Neko struct {
 	Root      *config.Root
 	Capture   *config.Capture
 	Desktop   *config.Desktop
-	Broadcast *config.Broadcast
 	Server    *config.Server
 	WebRTC    *config.WebRTC
 	WebSocket *config.WebSocket
@@ -113,7 +111,6 @@ type Neko struct {
 	sessionManager   *session.SessionManager
 	captureManager   *capture.CaptureManagerCtx
 	desktopManager   *desktop.DesktopManagerCtx
-	broadcastManager *capture.BroadcastManager
 	webRTCManager    *webrtc.WebRTCManager
 	webSocketHandler *websocket.WebSocketHandler
 }
@@ -123,12 +120,10 @@ func (neko *Neko) Preflight() {
 }
 
 func (neko *Neko) Start() {
-	broadcastManager := capture.NewBroadcast(neko.Capture, neko.Broadcast)
-
-	desktopManager := desktop.New(neko.Desktop, broadcastManager)
+	desktopManager := desktop.New(neko.Desktop)
 	desktopManager.Start()
 
-	captureManager := capture.New(desktopManager, broadcastManager, neko.Capture)
+	captureManager := capture.New(desktopManager, neko.Capture)
 	captureManager.Start()
 
 	sessionManager := session.New(captureManager)
@@ -136,13 +131,12 @@ func (neko *Neko) Start() {
 	webRTCManager := webrtc.New(sessionManager, captureManager, desktopManager, neko.WebRTC)
 	webRTCManager.Start()
 
-	webSocketHandler := websocket.New(sessionManager, desktopManager, captureManager, broadcastManager, webRTCManager, neko.WebSocket)
+	webSocketHandler := websocket.New(sessionManager, desktopManager, captureManager, webRTCManager, neko.WebSocket)
 	webSocketHandler.Start()
 
 	server := http.New(neko.Server, webSocketHandler)
 	server.Start()
 
-	neko.broadcastManager = broadcastManager
 	neko.sessionManager = sessionManager
 	neko.captureManager = captureManager
 	neko.desktopManager = desktopManager
@@ -168,9 +162,6 @@ func (neko *Neko) Shutdown() {
 
 	err = neko.desktopManager.Shutdown()
 	neko.logger.Err(err).Msg("desktop manager shutdown")
-
-	err = neko.broadcastManager.Shutdown()
-	neko.logger.Err(err).Msg("broadcast manager shutdown")
 }
 
 func (neko *Neko) ServeCommand(cmd *cobra.Command, args []string) {
