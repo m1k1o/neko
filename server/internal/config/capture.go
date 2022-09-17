@@ -3,6 +3,8 @@ package config
 import (
 	"m1k1o/neko/internal/types/codec"
 
+	"github.com/pion/webrtc/v3"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -38,23 +40,28 @@ func (Capture) Init(cmd *cobra.Command) error {
 		return err
 	}
 
-	// video codecs
-	// TODO: video.codec
-	cmd.PersistentFlags().Bool("vp8", false, "use VP8 video codec")
+	cmd.PersistentFlags().String("video_codec", "vp8", "video codec to be used")
+	if err := viper.BindPFlag("video_codec", cmd.PersistentFlags().Lookup("video_codec")); err != nil {
+		return err
+	}
+
+	// DEPRECATED: video codec
+	cmd.PersistentFlags().Bool("vp8", false, "DEPRECATED: use video_codec")
 	if err := viper.BindPFlag("vp8", cmd.PersistentFlags().Lookup("vp8")); err != nil {
 		return err
 	}
 
-	cmd.PersistentFlags().Bool("vp9", false, "use VP9 video codec")
+	// DEPRECATED: video codec
+	cmd.PersistentFlags().Bool("vp9", false, "DEPRECATED: use video_codec")
 	if err := viper.BindPFlag("vp9", cmd.PersistentFlags().Lookup("vp9")); err != nil {
 		return err
 	}
 
-	cmd.PersistentFlags().Bool("h264", false, "use H264 video codec")
+	// DEPRECATED: video codec
+	cmd.PersistentFlags().Bool("h264", false, "DEPRECATED: use video_codec")
 	if err := viper.BindPFlag("h264", cmd.PersistentFlags().Lookup("h264")); err != nil {
 		return err
 	}
-	// video codecs
 
 	cmd.PersistentFlags().String("hwenc", "", "use hardware accelerated encoding")
 	if err := viper.BindPFlag("hwenc", cmd.PersistentFlags().Lookup("hwenc")); err != nil {
@@ -85,24 +92,31 @@ func (Capture) Init(cmd *cobra.Command) error {
 		return err
 	}
 
-	// audio codecs
-	// TODO: audio.codec
-	cmd.PersistentFlags().Bool("opus", false, "use Opus audio codec")
+	cmd.PersistentFlags().String("audio_codec", "opus", "audio codec to be used")
+	if err := viper.BindPFlag("audio_codec", cmd.PersistentFlags().Lookup("audio_codec")); err != nil {
+		return err
+	}
+
+	// DEPRECATED: audio codec
+	cmd.PersistentFlags().Bool("opus", false, "DEPRECATED: use audio_codec")
 	if err := viper.BindPFlag("opus", cmd.PersistentFlags().Lookup("opus")); err != nil {
 		return err
 	}
 
-	cmd.PersistentFlags().Bool("g722", false, "use G722 audio codec")
+	// DEPRECATED: audio codec
+	cmd.PersistentFlags().Bool("g722", false, "DEPRECATED: use audio_codec")
 	if err := viper.BindPFlag("g722", cmd.PersistentFlags().Lookup("g722")); err != nil {
 		return err
 	}
 
-	cmd.PersistentFlags().Bool("pcmu", false, "use PCMU audio codec")
+	// DEPRECATED: audio codec
+	cmd.PersistentFlags().Bool("pcmu", false, "DEPRECATED: use audio_codec")
 	if err := viper.BindPFlag("pcmu", cmd.PersistentFlags().Lookup("pcmu")); err != nil {
 		return err
 	}
 
-	cmd.PersistentFlags().Bool("pcma", false, "use PCMA audio codec")
+	// DEPRECATED: audio codec
+	cmd.PersistentFlags().Bool("pcma", false, "DEPRECATED: use audio_codec")
 	if err := viper.BindPFlag("pcma", cmd.PersistentFlags().Lookup("pcma")); err != nil {
 		return err
 	}
@@ -136,21 +150,31 @@ func (Capture) Init(cmd *cobra.Command) error {
 }
 
 func (s *Capture) Set() {
+	var ok bool
+
 	//
 	// video
 	//
 
 	s.Display = viper.GetString("display")
 
-	videoCodec := codec.VP8()
-	if viper.GetBool("vp8") {
-		videoCodec = codec.VP8()
-	} else if viper.GetBool("vp9") {
-		videoCodec = codec.VP9()
-	} else if viper.GetBool("h264") {
-		videoCodec = codec.H264()
+	videoCodec := viper.GetString("video_codec")
+	s.VideoCodec, ok = codec.ParseStr(videoCodec)
+	if !ok || s.VideoCodec.Type != webrtc.RTPCodecTypeVideo {
+		log.Warn().Str("codec", videoCodec).Msgf("unknown video codec, using Vp8")
+		s.VideoCodec = codec.VP8()
 	}
-	s.VideoCodec = videoCodec
+
+	if viper.GetBool("vp8") {
+		s.VideoCodec = codec.VP8()
+		log.Warn().Msg("you are using deprecated config setting 'NEKO_VP8=true', use 'NEKO_VIDEO_CODEC=vp8' instead")
+	} else if viper.GetBool("vp9") {
+		s.VideoCodec = codec.VP9()
+		log.Warn().Msg("you are using deprecated config setting 'NEKO_VP9=true', use 'NEKO_VIDEO_CODEC=vp9' instead")
+	} else if viper.GetBool("h264") {
+		s.VideoCodec = codec.H264()
+		log.Warn().Msg("you are using deprecated config setting 'NEKO_H264=true', use 'NEKO_VIDEO_CODEC=h264' instead")
+	}
 
 	videoHWEnc := ""
 	if viper.GetString("hwenc") == "VAAPI" {
@@ -168,17 +192,26 @@ func (s *Capture) Set() {
 
 	s.AudioDevice = viper.GetString("device")
 
-	audioCodec := codec.Opus()
-	if viper.GetBool("opus") {
-		audioCodec = codec.Opus()
-	} else if viper.GetBool("g722") {
-		audioCodec = codec.G722()
-	} else if viper.GetBool("pcmu") {
-		audioCodec = codec.PCMU()
-	} else if viper.GetBool("pcma") {
-		audioCodec = codec.PCMA()
+	audioCodec := viper.GetString("audio_codec")
+	s.AudioCodec, ok = codec.ParseStr(audioCodec)
+	if !ok || s.AudioCodec.Type != webrtc.RTPCodecTypeAudio {
+		log.Warn().Str("codec", audioCodec).Msgf("unknown audio codec, using Opus")
+		s.AudioCodec = codec.Opus()
 	}
-	s.AudioCodec = audioCodec
+
+	if viper.GetBool("opus") {
+		s.AudioCodec = codec.Opus()
+		log.Warn().Msg("you are using deprecated config setting 'NEKO_OPUS=true', use 'NEKO_VIDEO_CODEC=opus' instead")
+	} else if viper.GetBool("g722") {
+		s.AudioCodec = codec.G722()
+		log.Warn().Msg("you are using deprecated config setting 'NEKO_G722=true', use 'NEKO_VIDEO_CODEC=g722' instead")
+	} else if viper.GetBool("pcmu") {
+		s.AudioCodec = codec.PCMU()
+		log.Warn().Msg("you are using deprecated config setting 'NEKO_PCMU=true', use 'NEKO_VIDEO_CODEC=pcmu' instead")
+	} else if viper.GetBool("pcma") {
+		s.AudioCodec = codec.PCMA()
+		log.Warn().Msg("you are using deprecated config setting 'NEKO_PCMA=true', use 'NEKO_VIDEO_CODEC=pcma' instead")
+	}
 
 	s.AudioBitrate = viper.GetUint("audio_bitrate")
 	s.AudioPipeline = viper.GetString("audio")

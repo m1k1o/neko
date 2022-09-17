@@ -98,7 +98,7 @@ services:
           ! v4l2h264enc extra-controls="controls,h264_profile=0,video_bitrate=1250000;"
           ! h264parse config-interval=3
           ! video/x-h264,profile=baseline,stream-format=byte-stream
-      NEKO_H264: 1
+      NEKO_VIDEO_CODEC: h264
 ```
 
 ## Not using docker?

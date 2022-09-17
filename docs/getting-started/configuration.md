@@ -64,15 +64,10 @@ nat1to1: <ip>
 
 ### Video
 
-#### `NEKO_VP8`:
-  - If vp8 should be used as video encoder for the stream *(default encoder)*.
-  - e.g. `true`
-#### `NEKO_VP9`:
-  - If vp9 should be used as video encoder for the stream *(parameter not optimized yet)*.
-  - e.g. `false`
-#### `NEKO_H264`:
-  - If h264 should be used as video encoder for the stream *(second best option)*.
-  - e.g. `false`
+#### `NEKO_VIDEO_CODEC`:
+  - vp8 *(default encoder)*
+  - vp9 *(parameter not optimized yet)*
+  - h264 *(second best option)*
 #### `NEKO_VIDEO_BITRATE`:
   - Bitrate of the video stream in kb/s.
   - e.g. 3500
@@ -93,18 +88,11 @@ nat1to1: <ip>
 
 ### Audio
 
-#### `NEKO_OPUS`:
-  - If opus should be used as audio encoder for the stream *(default encoder)*.
-  - e.g. `true`
-#### `NEKO_G722`:
-  - If g722 should be used as audio encoder for the stream.
-  - e.g. `false`
-#### `NEKO_PCMU`:
-  - If pcmu should be used as audio encoder for the stream.
-  - e.g. `false`
-#### `NEKO_PCMA`:
-  - If pcma should be used as audio encoder for the stream.
-  - e.g. `false`
+#### `NEKO_AUDIO_CODEC`:
+  - opus *(default encoder)*
+  - g722
+  - pcmu
+  - pcma 
 #### `NEKO_AUDIO_BITRATE`:
   - Bitrate of the audio stream in kb/s.
   - e.g. `196`
@@ -158,6 +146,7 @@ Usage:
 Flags:
       --audio string                audio codec parameters to use for streaming
       --audio_bitrate int           audio bitrate in kbit/s (default 128)
+      --audio_codec string          audio codec to be used (default "opus")
       --bind string                 address/port/socket to serve neko (default "127.0.0.1:8080")
       --broadcast_pipeline string   custom gst pipeline used for broadcasting, strings {url} {device} {display} will be replaced
       --broadcast_url string        URL for broadcasting, setting this value will automatically enable broadcasting
@@ -166,8 +155,8 @@ Flags:
       --device string               audio device to capture (default "auto_null.monitor")
       --display string              XDisplay to capture (default ":99.0")
       --epr string                  limits the pool of ephemeral ports that ICE UDP connections can allocate from (default "59000-59100")
-      --g722                        use G722 audio codec
-      --h264                        use H264 video codec
+      --g722                        DEPRECATED: use audio_codec
+      --h264                        DEPRECATED: use video_codec
   -h, --help                        help for serve
       --hwenc string                use hardware accelerated encoding
       --icelite                     configures whether or not the ice agent should be a lite agent
@@ -179,11 +168,12 @@ Flags:
       --locks strings               resources, that will be locked when starting (control, login)
       --max_fps int                 maximum fps delivered via WebRTC, 0 is for no maximum (default 25)
       --nat1to1 strings             sets a list of external IP addresses of 1:1 (D)NAT and a candidate type for which the external IP address is used
-      --opus                        use Opus audio codec
+      --opus                        DEPRECATED: use audio_codec
       --password string             password for connecting to stream (default "neko")
       --password_admin string       admin password for connecting to stream (default "admin")
-      --pcma                        use PCMA audio codec
-      --pcmu                        use PCMU audio codec
+      --path_prefix string          path prefix for HTTP requests (default "/")
+      --pcma                        DEPRECATED: use audio_codec
+      --pcmu                        DEPRECATED: use audio_codec
       --proxy                       enable reverse proxy mode
       --screen string               default screen resolution and framerate (default "1280x720@30")
       --static string               path to neko client files to serve (default "./www")
@@ -191,8 +181,9 @@ Flags:
       --udpmux int                  single UDP mux port for all peers
       --video string                video codec parameters to use for streaming
       --video_bitrate int           video bitrate in kbit/s (default 3072)
-      --vp8                         use VP8 video codec
-      --vp9                         use VP9 video codec
+      --video_codec string          video codec to be used (default "vp8")
+      --vp8                         DEPRECATED: use video_codec
+      --vp9                         DEPRECATED: use video_codec
 
 Global Flags:
       --config string   configuration file path
