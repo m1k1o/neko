@@ -157,18 +157,8 @@ func (manager *WebRTCManager) initAPI() error {
 
 	// Create MediaEngine with selected codecs
 	engine := webrtc.MediaEngine{}
-
-	audioCodec := manager.capture.Audio().Codec()
-	_ = engine.RegisterCodec(webrtc.RTPCodecParameters{
-		RTPCodecCapability: audioCodec.Capability,
-		PayloadType:        audioCodec.PayloadType,
-	}, audioCodec.Type)
-
-	videoCodec := manager.capture.Video().Codec()
-	_ = engine.RegisterCodec(webrtc.RTPCodecParameters{
-		RTPCodecCapability: videoCodec.Capability,
-		PayloadType:        videoCodec.PayloadType,
-	}, videoCodec.Type)
+	manager.capture.Audio().Codec().Register(&engine)
+	manager.capture.Video().Codec().Register(&engine)
 
 	// Register Interceptors
 	i := &interceptor.Registry{}

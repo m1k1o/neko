@@ -55,7 +55,7 @@ type RTPCodec struct {
 	Capability  webrtc.RTPCodecCapability
 }
 
-func (codec *RTPCodec) Register(engine *webrtc.MediaEngine) error {
+func (codec RTPCodec) Register(engine *webrtc.MediaEngine) error {
 	return engine.RegisterCodec(webrtc.RTPCodecParameters{
 		RTPCodecCapability: codec.Capability,
 		PayloadType:        codec.PayloadType,
