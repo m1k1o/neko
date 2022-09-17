@@ -10,6 +10,7 @@
 ### Misc
 - Server: Split `remote` to `desktop` and `capture`.
 - Server: Refactored `xorg` - added `xevent` and clipboard is handled as event (no looped polling anymore).
+- Introduced `NEKO_AUDIO_CODEC=` and `NEKO_VIDEO_CODEC=` as a new way of setting codecs.
 
 ## [n.eko v2.6](https://github.com/m1k1o/neko/releases/tag/v2.6)
 
