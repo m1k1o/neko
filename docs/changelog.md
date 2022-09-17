@@ -6,6 +6,7 @@
 - Added `m1k1o/neko:vivaldi` tag (thanks @Xeddius).
 - Added `m1k1o/neko:opera` tag (thanks @prophetofxenu).
 - Added `NEKO_PATH_PREFIX`.
+- Added screenshot function `/screenshot.jpg?pwd=<admin>`, works only for unlocked rooms.
 
 ### Misc
 - Server: Split `remote` to `desktop` and `capture`.

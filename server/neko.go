@@ -134,7 +134,7 @@ func (neko *Neko) Start() {
 	webSocketHandler := websocket.New(sessionManager, desktopManager, captureManager, webRTCManager, neko.WebSocket)
 	webSocketHandler.Start()
 
-	server := http.New(neko.Server, webSocketHandler)
+	server := http.New(neko.Server, webSocketHandler, desktopManager)
 	server.Start()
 
 	neko.sessionManager = sessionManager

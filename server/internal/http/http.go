@@ -3,8 +3,10 @@ package http
 import (
 	"context"
 	"encoding/json"
+	"image/jpeg"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
@@ -22,7 +24,7 @@ type Server struct {
 	conf   *config.Server
 }
 
-func New(conf *config.Server, webSocketHandler types.WebSocketHandler) *Server {
+func New(conf *config.Server, webSocketHandler types.WebSocketHandler, desktop types.DesktopManager) *Server {
 	logger := log.With().Str("module", "http").Logger()
 
 	router := chi.NewRouter()
@@ -61,6 +63,39 @@ func New(conf *config.Server, webSocketHandler types.WebSocketHandler) *Server {
 		stats := webSocketHandler.Stats()
 		if err := json.NewEncoder(w).Encode(stats); err != nil {
 			logger.Warn().Err(err).Msg("failed writing json error response")
+		}
+	})
+
+	router.Get("/screenshot.jpg", func(w http.ResponseWriter, r *http.Request) {
+		password := r.URL.Query().Get("pwd")
+		isAdmin, err := webSocketHandler.IsAdmin(password)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusForbidden)
+			return
+		}
+
+		if !isAdmin {
+			http.Error(w, "bad authorization", http.StatusUnauthorized)
+			return
+		}
+
+		if webSocketHandler.IsLocked("login") {
+			http.Error(w, "room is locked", http.StatusLocked)
+			return
+		}
+
+		quality, err := strconv.Atoi(r.URL.Query().Get("quality"))
+		if err != nil {
+			quality = 90
+		}
+
+		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+		w.Header().Set("Content-Type", "image/jpeg")
+
+		img := desktop.GetScreenshotImage()
+		if err := jpeg.Encode(w, img, &jpeg.Options{Quality: quality}); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 	})
 
