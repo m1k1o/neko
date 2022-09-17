@@ -32,5 +32,6 @@ type WebSocketHandler interface {
 	Shutdown() error
 	Upgrade(w http.ResponseWriter, r *http.Request) error
 	Stats() Stats
+	IsLocked(resource string) bool
 	IsAdmin(password string) (bool, error)
 }

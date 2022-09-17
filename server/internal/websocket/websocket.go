@@ -298,6 +298,10 @@ func (ws *WebSocketHandler) Stats() types.Stats {
 	}
 }
 
+func (ws *WebSocketHandler) IsLocked(resource string) bool {
+	return ws.state.IsLocked(resource)
+}
+
 func (ws *WebSocketHandler) IsAdmin(password string) (bool, error) {
 	if password == ws.conf.AdminPassword {
 		return true, nil
