@@ -67,27 +67,31 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 	for video_id, cnf := range config.VideoPipelines {
 		pipelineConf := cnf
 
-		createPipeline := func() string {
+		createPipeline := func() (string, error) {
 			if pipelineConf.GstPipeline != "" {
-				return strings.Replace(pipelineConf.GstPipeline, "{display}", config.Display, 1)
+				return strings.Replace(pipelineConf.GstPipeline, "{display}", config.Display, 1), nil
 			}
 
 			screen := desktop.GetScreenSize()
 			pipeline, err := pipelineConf.GetPipeline(*screen)
 			if err != nil {
-				logger.Panic().Err(err).
-					Str("video_id", video_id).
-					Msg("unable to get video pipeline")
+				return "", err
 			}
 
 			return fmt.Sprintf(
 				"ximagesrc display-name=%s show-pointer=false use-damage=false "+
 					"%s ! appsink name=appsink", config.Display, pipeline,
-			)
+			), nil
 		}
 
 		// trigger function to catch evaluation errors at startup
-		pipeline := createPipeline()
+		pipeline, err := createPipeline()
+		if err != nil {
+			logger.Panic().Err(err).
+				Str("video_id", video_id).
+				Msg("failed to create video pipeline")
+		}
+
 		logger.Info().
 			Str("video_id", video_id).
 			Str("pipeline", pipeline).
@@ -104,9 +108,9 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 		// sinks
 		broadcast:  broadcastNew(broadcastPipeline),
 		screencast: screencastNew(config.ScreencastEnabled, screencastPipeline),
-		audio: streamSinkNew(config.AudioCodec, func() string {
+		audio: streamSinkNew(config.AudioCodec, func() (string, error) {
 			if config.AudioPipeline != "" {
-				return config.AudioPipeline
+				return config.AudioPipeline, nil
 			}
 
 			return fmt.Sprintf(
@@ -116,7 +120,7 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 					"! queue "+
 					"! %s "+
 					"! appsink name=appsink", config.AudioDevice, config.AudioCodec.Pipeline,
-			)
+			), nil
 		}, "audio"),
 		videos:   videos,
 		videoIDs: config.VideoIDs,

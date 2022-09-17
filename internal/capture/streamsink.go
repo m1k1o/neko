@@ -23,10 +23,10 @@ type StreamSinkManagerCtx struct {
 	mu     sync.Mutex
 	wg     sync.WaitGroup
 
-	codec       codec.RTPCodec
-	pipeline    *gst.Pipeline
-	pipelineMu  sync.Mutex
-	pipelineStr func() string
+	codec      codec.RTPCodec
+	pipeline   *gst.Pipeline
+	pipelineMu sync.Mutex
+	pipelineFn func() (string, error)
 
 	listeners   map[uintptr]*func(sample types.Sample)
 	listenersMu sync.Mutex
@@ -37,17 +37,17 @@ type StreamSinkManagerCtx struct {
 	pipelinesActive  prometheus.Gauge
 }
 
-func streamSinkNew(codec codec.RTPCodec, pipelineStr func() string, video_id string) *StreamSinkManagerCtx {
+func streamSinkNew(codec codec.RTPCodec, pipelineFn func() (string, error), video_id string) *StreamSinkManagerCtx {
 	logger := log.With().
 		Str("module", "capture").
 		Str("submodule", "stream-sink").
 		Str("video_id", video_id).Logger()
 
 	manager := &StreamSinkManagerCtx{
-		logger:      logger,
-		codec:       codec,
-		pipelineStr: pipelineStr,
-		listeners:   map[uintptr]*func(sample types.Sample){},
+		logger:     logger,
+		codec:      codec,
+		pipelineFn: pipelineFn,
+		listeners:  map[uintptr]*func(sample types.Sample){},
 
 		// metrics
 		currentListeners: promauto.NewGauge(prometheus.GaugeOpts{
@@ -249,9 +249,11 @@ func (manager *StreamSinkManagerCtx) createPipeline() error {
 		return types.ErrCapturePipelineAlreadyExists
 	}
 
-	var err error
+	pipelineStr, err := manager.pipelineFn()
+	if err != nil {
+		return err
+	}
 
-	pipelineStr := manager.pipelineStr()
 	manager.logger.Info().
 		Str("codec", manager.codec.Name).
 		Str("src", pipelineStr).
