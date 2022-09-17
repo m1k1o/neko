@@ -10,14 +10,18 @@ import (
 	"m1k1o/neko/internal/desktop/xorg"
 	"m1k1o/neko/internal/types"
 
+	"github.com/kataras/go-events"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
+
+var mu = sync.Mutex{}
 
 type DesktopManagerCtx struct {
 	logger   zerolog.Logger
 	wg       sync.WaitGroup
 	shutdown chan struct{}
+	emmiter  events.EventEmmiter
 	config   *config.Desktop
 }
 
@@ -25,6 +29,7 @@ func New(config *config.Desktop, broadcast types.BroadcastManager) *DesktopManag
 	return &DesktopManagerCtx{
 		logger:   log.With().Str("module", "desktop").Logger(),
 		shutdown: make(chan struct{}),
+		emmiter:  events.New(),
 		config:   config,
 	}
 }
@@ -69,6 +74,18 @@ func (manager *DesktopManagerCtx) Start() {
 			}
 		}
 	}()
+}
+
+func (manager *DesktopManagerCtx) OnBeforeScreenSizeChange(listener func()) {
+	manager.emmiter.On("before_screen_size_change", func(payload ...any) {
+		listener()
+	})
+}
+
+func (manager *DesktopManagerCtx) OnAfterScreenSizeChange(listener func()) {
+	manager.emmiter.On("after_screen_size_change", func(payload ...any) {
+		listener()
+	})
 }
 
 func (manager *DesktopManagerCtx) Shutdown() error {

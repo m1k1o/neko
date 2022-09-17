@@ -36,6 +36,8 @@ type KeyboardMap struct {
 type DesktopManager interface {
 	Start()
 	Shutdown() error
+	OnBeforeScreenSizeChange(listener func())
+	OnAfterScreenSizeChange(listener func())
 
 	// clipboard
 	ReadClipboard() string
