@@ -8,7 +8,6 @@ import (
 	"m1k1o/neko/internal/config"
 	"m1k1o/neko/internal/desktop/xevent"
 	"m1k1o/neko/internal/desktop/xorg"
-	"m1k1o/neko/internal/types"
 
 	"github.com/kataras/go-events"
 	"github.com/rs/zerolog"
@@ -25,7 +24,7 @@ type DesktopManagerCtx struct {
 	config   *config.Desktop
 }
 
-func New(config *config.Desktop, broadcast types.BroadcastManager) *DesktopManagerCtx {
+func New(config *config.Desktop) *DesktopManagerCtx {
 	return &DesktopManagerCtx{
 		logger:   log.With().Str("module", "desktop").Logger(),
 		shutdown: make(chan struct{}),

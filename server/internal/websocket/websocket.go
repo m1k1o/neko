@@ -22,7 +22,7 @@ import (
 
 const CONTROL_PROTECTION_SESSION = "by_control_protection"
 
-func New(sessions types.SessionManager, desktop types.DesktopManager, capture types.CaptureManager, broadcast types.BroadcastManager, webrtc types.WebRTCManager, conf *config.WebSocket) *WebSocketHandler {
+func New(sessions types.SessionManager, desktop types.DesktopManager, capture types.CaptureManager, webrtc types.WebRTCManager, conf *config.WebSocket) *WebSocketHandler {
 	logger := log.With().Str("module", "websocket").Logger()
 
 	state := state.New()
@@ -47,7 +47,6 @@ func New(sessions types.SessionManager, desktop types.DesktopManager, capture ty
 		desktop,
 		capture,
 		webrtc,
-		broadcast,
 		state,
 	)
 

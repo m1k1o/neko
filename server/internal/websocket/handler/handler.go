@@ -15,13 +15,12 @@ import (
 )
 
 type MessageHandler struct {
-	logger    zerolog.Logger
-	sessions  types.SessionManager
-	desktop   types.DesktopManager
-	capture   types.CaptureManager
-	webrtc    types.WebRTCManager
-	broadcast types.BroadcastManager
-	state     *state.State
+	logger   zerolog.Logger
+	sessions types.SessionManager
+	desktop  types.DesktopManager
+	capture  types.CaptureManager
+	webrtc   types.WebRTCManager
+	state    *state.State
 }
 
 func New(
@@ -29,17 +28,15 @@ func New(
 	desktop types.DesktopManager,
 	capture types.CaptureManager,
 	webrtc types.WebRTCManager,
-	broadcast types.BroadcastManager,
 	state *state.State,
 ) *MessageHandler {
 	return &MessageHandler{
-		logger:    log.With().Str("module", "websocket").Str("submodule", "handler").Logger(),
-		sessions:  sessions,
-		desktop:   desktop,
-		capture:   capture,
-		webrtc:    webrtc,
-		broadcast: broadcast,
-		state:     state,
+		logger:   log.With().Str("module", "websocket").Str("submodule", "handler").Logger(),
+		sessions: sessions,
+		desktop:  desktop,
+		capture:  capture,
+		webrtc:   webrtc,
+		state:    state,
 	}
 }
 

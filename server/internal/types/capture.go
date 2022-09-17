@@ -1,14 +1,38 @@
 package types
 
+import (
+	"errors"
+
+	"m1k1o/neko/internal/types/codec"
+)
+
+var (
+	ErrCapturePipelineAlreadyExists = errors.New("capture pipeline already exists")
+)
+
+type BroadcastManager interface {
+	Start(url string) error
+	Stop()
+	Started() bool
+	Url() string
+}
+
+type StreamSinkManager interface {
+	Codec() codec.RTPCodec
+	OnSample(listener func(sample Sample))
+
+	AddListener() error
+	RemoveListener() error
+
+	ListenersCount() int
+	Started() bool
+}
+
 type CaptureManager interface {
-	VideoCodec() string
-	AudioCodec() string
 	Start()
 	Shutdown() error
-	OnVideoFrame(listener func(sample Sample))
-	OnAudioFrame(listener func(sample Sample))
-	StartStream()
-	StopStream()
-	Streaming() bool
-	ChangeResolution(width int, height int, rate int16) error
+
+	Broadcast() BroadcastManager
+	Audio() StreamSinkManager
+	Video() StreamSinkManager
 }
