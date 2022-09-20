@@ -80,6 +80,8 @@ jobs:
             platforms: linux/amd64
           - tag: vivaldi
             platforms: linux/amd64
+          - tag: opera
+            platforms: linux/amd64
           - tag: tor-browser
             platforms: linux/amd64,linux/arm64
           - tag: remmina
