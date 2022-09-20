@@ -22,6 +22,7 @@ Use the following docker images:
 - `m1k1o/neko:microsoft-edge` - for Microsoft Edge (needs `--cap-add=SYS_ADMIN`, see the [security implications](https://www.redhat.com/en/blog/container-tidbits-adding-capabilities-container)).
 - `m1k1o/neko:brave` - for [Brave Browser](https://brave.com) (needs `--cap-add=SYS_ADMIN`, see the [security implications](https://www.redhat.com/en/blog/container-tidbits-adding-capabilities-container)).
 - `m1k1o/neko:vivaldi` - for [Vivaldi Browser](https://vivaldi.com) (needs `--cap-add=SYS_ADMIN`, see the [security implications](https://www.redhat.com/en/blog/container-tidbits-adding-capabilities-container)) (by @Xeddius).
+- `m1k1o/neko:opera` for [Opera Browser](https://opera.com) (requires extra steps to enable DRM, see instructions [here](https://www.reddit.com/r/operabrowser/wiki/opera/linux_widevine_config/). libffmpeg is already configured.) (by @prophetofxenu)
 - `m1k1o/neko:tor-browser` - for Tor Browser.
 - `m1k1o/neko:remmina` - for remote desktop connection (by @lowne).
   - Pass env var `REMMINA_URL=<proto>://[<username>[:<password>]@]server[:port]` (proto being `vnc`, `rdp` or `spice`).
