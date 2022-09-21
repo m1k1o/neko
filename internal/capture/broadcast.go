@@ -124,6 +124,7 @@ func (manager *BroacastManagerCtx) createPipeline() error {
 	}
 
 	manager.logger.Info().
+		Str("url", manager.url).
 		Str("src", pipelineStr).
 		Msgf("starting pipeline")
 
