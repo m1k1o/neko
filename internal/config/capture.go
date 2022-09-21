@@ -28,6 +28,7 @@ type Capture struct {
 	BroadcastVideoBitrate int
 	BroadcastPreset       string
 	BroadcastPipeline     string
+	BroadcastUrl          string
 
 	ScreencastEnabled  bool
 	ScreencastRate     string
@@ -94,6 +95,11 @@ func (Capture) Init(cmd *cobra.Command) error {
 
 	cmd.PersistentFlags().String("capture.broadcast.pipeline", "", "gstreamer pipeline used for broadcasting")
 	if err := viper.BindPFlag("capture.broadcast.pipeline", cmd.PersistentFlags().Lookup("capture.broadcast.pipeline")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().String("capture.broadcast.url", "", "initial URL for broadcasting, setting this value will automatically start broadcasting")
+	if err := viper.BindPFlag("capture.broadcast.url", cmd.PersistentFlags().Lookup("capture.broadcast.url")); err != nil {
 		return err
 	}
 
@@ -211,6 +217,7 @@ func (s *Capture) Set() {
 	s.BroadcastVideoBitrate = viper.GetInt("capture.broadcast.video_bitrate")
 	s.BroadcastPreset = viper.GetString("capture.broadcast.preset")
 	s.BroadcastPipeline = viper.GetString("capture.broadcast.pipeline")
+	s.BroadcastUrl = viper.GetString("capture.broadcast.url")
 
 	// screencast
 	s.ScreencastEnabled = viper.GetBool("capture.screencast.enabled")
