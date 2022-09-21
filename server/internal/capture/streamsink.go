@@ -12,8 +12,6 @@ import (
 	"m1k1o/neko/internal/types/codec"
 )
 
-var moveSinkListenerMu = sync.Mutex{}
-
 type StreamSinkManagerCtx struct {
 	logger zerolog.Logger
 	mu     sync.Mutex
@@ -22,7 +20,7 @@ type StreamSinkManagerCtx struct {
 	codec      codec.RTPCodec
 	pipeline   *gst.Pipeline
 	pipelineMu sync.Mutex
-	pipelineFn func() (*gst.Pipeline, error)
+	pipelineFn func() (string, error)
 
 	listeners   int
 	listenersMu sync.Mutex
@@ -30,7 +28,7 @@ type StreamSinkManagerCtx struct {
 	sampleFn func(sample types.Sample)
 }
 
-func streamSinkNew(codec codec.RTPCodec, pipelineFn func() (*gst.Pipeline, error), video_id string) *StreamSinkManagerCtx {
+func streamSinkNew(codec codec.RTPCodec, pipelineFn func() (string, error), video_id string) *StreamSinkManagerCtx {
 	logger := log.With().
 		Str("module", "capture").
 		Str("submodule", "stream-sink").
@@ -139,21 +137,20 @@ func (manager *StreamSinkManagerCtx) createPipeline() error {
 		return types.ErrCapturePipelineAlreadyExists
 	}
 
-	var err error
-
-	manager.logger.Info().
-		Str("codec", manager.codec.Name).
-		Msgf("creating pipeline")
-
-	manager.pipeline, err = manager.pipelineFn()
+	pipelineStr, err := manager.pipelineFn()
 	if err != nil {
 		return err
 	}
 
 	manager.logger.Info().
 		Str("codec", manager.codec.Name).
-		Str("src", manager.pipeline.Src).
-		Msgf("created pipeline")
+		Str("src", pipelineStr).
+		Msgf("creating pipeline")
+
+	manager.pipeline, err = gst.CreatePipeline(pipelineStr)
+	if err != nil {
+		return err
+	}
 
 	manager.pipeline.AttachAppsink("appsink")
 	manager.pipeline.Play()

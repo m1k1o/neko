@@ -33,7 +33,7 @@ const (
 	audioSrc = "pulsesrc device=%s ! audio/x-raw,channels=2 ! audioconvert ! "
 )
 
-func NewBroadcastPipeline(device string, display string, pipelineSrc string, url string) (*gst.Pipeline, error) {
+func NewBroadcastPipeline(device string, display string, pipelineSrc string, url string) (string, error) {
 	video := fmt.Sprintf(videoSrc, display, 25)
 	audio := fmt.Sprintf(audioSrc, device)
 
@@ -49,23 +49,23 @@ func NewBroadcastPipeline(device string, display string, pipelineSrc string, url
 		pipelineStr = fmt.Sprintf("flvmux name=mux ! rtmpsink location='%s live=1' %s audio/x-raw,channels=2 ! audioconvert ! voaacenc ! mux. %s x264enc bframes=0 key-int-max=60 byte-stream=true tune=zerolatency speed-preset=veryfast ! mux.", url, audio, video)
 	}
 
-	return gst.CreatePipeline(pipelineStr)
+	return pipelineStr, nil
 }
 
-func NewVideoPipeline(rtpCodec codec.RTPCodec, display string, pipelineSrc string, fps int16, bitrate uint, hwenc string) (*gst.Pipeline, error) {
+func NewVideoPipeline(rtpCodec codec.RTPCodec, display string, pipelineSrc string, fps int16, bitrate uint, hwenc string) (string, error) {
 	pipelineStr := " ! appsink name=appsink"
 
 	// if using custom pipeline
 	if pipelineSrc != "" {
 		pipelineStr = fmt.Sprintf(pipelineSrc+pipelineStr, display)
-		return gst.CreatePipeline(pipelineStr)
+		return pipelineStr, nil
 	}
 
 	switch rtpCodec.Name {
 	case codec.VP8().Name:
 		if hwenc == "VAAPI" {
 			if err := gst.CheckPlugins([]string{"ximagesrc", "vaapi"}); err != nil {
-				return nil, err
+				return "", err
 			}
 			// vp8 encode is missing from gstreamer.freedesktop.org/documentation
 			// note that it was removed from some recent intel CPUs: https://trac.ffmpeg.org/wiki/Hardware/QuickSync
@@ -76,7 +76,7 @@ func NewVideoPipeline(rtpCodec codec.RTPCodec, display string, pipelineSrc strin
 			// gstreamer1.0-plugins-good
 			// vp8enc error-resilient=partitions keyframe-max-dist=10 auto-alt-ref=true cpu-used=5 deadline=1
 			if err := gst.CheckPlugins([]string{"ximagesrc", "vpx"}); err != nil {
-				return nil, err
+				return "", err
 			}
 
 			pipelineStr = strings.Join([]string{
@@ -102,18 +102,18 @@ func NewVideoPipeline(rtpCodec codec.RTPCodec, display string, pipelineSrc strin
 		// gstreamer1.0-plugins-good
 		// vp9enc
 		if err := gst.CheckPlugins([]string{"ximagesrc", "vpx"}); err != nil {
-			return nil, err
+			return "", err
 		}
 
 		pipelineStr = fmt.Sprintf(videoSrc+"vp9enc target-bitrate=%d cpu-used=-5 threads=4 deadline=1 keyframe-max-dist=30 auto-alt-ref=true"+pipelineStr, display, fps, bitrate*1000)
 	case codec.H264().Name:
 		if err := gst.CheckPlugins([]string{"ximagesrc"}); err != nil {
-			return nil, err
+			return "", err
 		}
 
 		if hwenc == "VAAPI" {
 			if err := gst.CheckPlugins([]string{"vaapi"}); err != nil {
-				return nil, err
+				return "", err
 			}
 
 			pipelineStr = fmt.Sprintf(videoSrc+"video/x-raw,format=NV12 ! vaapih264enc rate-control=vbr bitrate=%d keyframe-period=180 quality-level=7 ! video/x-h264,stream-format=byte-stream"+pipelineStr, display, fps, bitrate)
@@ -131,7 +131,7 @@ func NewVideoPipeline(rtpCodec codec.RTPCodec, display string, pipelineSrc strin
 			// gstreamer1.0-plugins-ugly
 			// video/x-raw,format=I420 ! x264enc bframes=0 key-int-max=60 byte-stream=true tune=zerolatency speed-preset=veryfast ! video/x-h264,stream-format=byte-stream
 			if err := gst.CheckPlugins([]string{"x264"}); err != nil {
-				return nil, err
+				return "", err
 			}
 
 			vbvbuf := uint(1000)
@@ -142,19 +142,19 @@ func NewVideoPipeline(rtpCodec codec.RTPCodec, display string, pipelineSrc strin
 			pipelineStr = fmt.Sprintf(videoSrc+"video/x-raw,format=NV12 ! x264enc threads=4 bitrate=%d key-int-max=60 vbv-buf-capacity=%d byte-stream=true tune=zerolatency speed-preset=veryfast ! video/x-h264,stream-format=byte-stream"+pipelineStr, display, fps, bitrate, vbvbuf)
 		}
 	default:
-		return nil, fmt.Errorf("unknown codec %s", rtpCodec.Name)
+		return "", fmt.Errorf("unknown codec %s", rtpCodec.Name)
 	}
 
-	return gst.CreatePipeline(pipelineStr)
+	return pipelineStr, nil
 }
 
-func NewAudioPipeline(rtpCodec codec.RTPCodec, device string, pipelineSrc string, bitrate uint) (*gst.Pipeline, error) {
+func NewAudioPipeline(rtpCodec codec.RTPCodec, device string, pipelineSrc string, bitrate uint) (string, error) {
 	pipelineStr := " ! appsink name=appsink"
 
 	// if using custom pipeline
 	if pipelineSrc != "" {
 		pipelineStr = fmt.Sprintf(pipelineSrc+pipelineStr, device)
-		return gst.CreatePipeline(pipelineStr)
+		return pipelineStr, nil
 	}
 
 	switch rtpCodec.Name {
@@ -163,7 +163,7 @@ func NewAudioPipeline(rtpCodec codec.RTPCodec, device string, pipelineSrc string
 		// gstreamer1.0-plugins-base
 		// opusenc
 		if err := gst.CheckPlugins([]string{"pulseaudio", "opus"}); err != nil {
-			return nil, err
+			return "", err
 		}
 
 		pipelineStr = fmt.Sprintf(audioSrc+"opusenc inband-fec=true bitrate=%d"+pipelineStr, device, bitrate*1000)
@@ -172,7 +172,7 @@ func NewAudioPipeline(rtpCodec codec.RTPCodec, device string, pipelineSrc string
 		// gstreamer1.0-libav
 		// avenc_g722
 		if err := gst.CheckPlugins([]string{"pulseaudio", "libav"}); err != nil {
-			return nil, err
+			return "", err
 		}
 
 		pipelineStr = fmt.Sprintf(audioSrc+"avenc_g722 bitrate=%d"+pipelineStr, device, bitrate*1000)
@@ -181,7 +181,7 @@ func NewAudioPipeline(rtpCodec codec.RTPCodec, device string, pipelineSrc string
 		// gstreamer1.0-plugins-good
 		// audio/x-raw, rate=8000 ! mulawenc
 		if err := gst.CheckPlugins([]string{"pulseaudio", "mulaw"}); err != nil {
-			return nil, err
+			return "", err
 		}
 
 		pipelineStr = fmt.Sprintf(audioSrc+"audio/x-raw, rate=8000 ! mulawenc"+pipelineStr, device)
@@ -190,13 +190,13 @@ func NewAudioPipeline(rtpCodec codec.RTPCodec, device string, pipelineSrc string
 		// gstreamer1.0-plugins-good
 		// audio/x-raw, rate=8000 ! alawenc
 		if err := gst.CheckPlugins([]string{"pulseaudio", "alaw"}); err != nil {
-			return nil, err
+			return "", err
 		}
 
 		pipelineStr = fmt.Sprintf(audioSrc+"audio/x-raw, rate=8000 ! alawenc"+pipelineStr, device)
 	default:
-		return nil, fmt.Errorf("unknown codec %s", rtpCodec.Name)
+		return "", fmt.Errorf("unknown codec %s", rtpCodec.Name)
 	}
 
-	return gst.CreatePipeline(pipelineStr)
+	return pipelineStr, nil
 }

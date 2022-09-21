@@ -6,7 +6,6 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"m1k1o/neko/internal/capture/gst"
 	"m1k1o/neko/internal/config"
 	"m1k1o/neko/internal/types"
 )
@@ -29,13 +28,13 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 		desktop: desktop,
 
 		// sinks
-		broadcast: broadcastNew(func(url string) (*gst.Pipeline, error) {
+		broadcast: broadcastNew(func(url string) (string, error) {
 			return NewBroadcastPipeline(config.AudioDevice, config.Display, config.BroadcastPipeline, url)
 		}, config.BroadcastUrl, config.BroadcastStarted),
-		audio: streamSinkNew(config.AudioCodec, func() (*gst.Pipeline, error) {
+		audio: streamSinkNew(config.AudioCodec, func() (string, error) {
 			return NewAudioPipeline(config.AudioCodec, config.AudioDevice, config.AudioPipeline, config.AudioBitrate)
 		}, "audio"),
-		video: streamSinkNew(config.VideoCodec, func() (*gst.Pipeline, error) {
+		video: streamSinkNew(config.VideoCodec, func() (string, error) {
 			return NewVideoPipeline(config.VideoCodec, config.Display, config.VideoPipeline, config.VideoMaxFPS, config.VideoBitrate, config.VideoHWEnc)
 		}, "audio"),
 	}

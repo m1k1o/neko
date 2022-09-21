@@ -16,13 +16,13 @@ type BroacastManagerCtx struct {
 
 	pipeline   *gst.Pipeline
 	pipelineMu sync.Mutex
-	pipelineFn func(url string) (*gst.Pipeline, error)
+	pipelineFn func(url string) (string, error)
 
 	url     string
 	started bool
 }
 
-func broadcastNew(pipelineFn func(url string) (*gst.Pipeline, error), url string, started bool) *BroacastManagerCtx {
+func broadcastNew(pipelineFn func(url string) (string, error), url string, started bool) *BroacastManagerCtx {
 	logger := log.With().
 		Str("module", "capture").
 		Str("submodule", "broadcast").
@@ -87,20 +87,20 @@ func (manager *BroacastManagerCtx) createPipeline() error {
 	}
 
 	var err error
-
-	manager.logger.Info().
-		Str("url", manager.url).
-		Msgf("creating pipeline")
-
-	manager.pipeline, err = manager.pipelineFn(manager.url)
+	pipelineStr, err := manager.pipelineFn(manager.url)
 	if err != nil {
 		return err
 	}
 
 	manager.logger.Info().
 		Str("url", manager.url).
-		Str("src", manager.pipeline.Src).
-		Msgf("created pipeline")
+		Str("src", pipelineStr).
+		Msgf("starting pipeline")
+
+	manager.pipeline, err = gst.CreatePipeline(pipelineStr)
+	if err != nil {
+		return err
+	}
 
 	manager.pipeline.Play()
 
