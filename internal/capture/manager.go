@@ -32,18 +32,6 @@ type CaptureManagerCtx struct {
 func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCtx {
 	logger := log.With().Str("module", "capture").Logger()
 
-	screencastPipeline := config.ScreencastPipeline
-	if screencastPipeline == "" {
-		screencastPipeline = fmt.Sprintf(
-			"ximagesrc display-name=%s show-pointer=true use-damage=false "+
-				"! video/x-raw,framerate=%s "+
-				"! videoconvert "+
-				"! queue "+
-				"! jpegenc quality=%s "+
-				"! appsink name=appsink", config.Display, config.ScreencastRate, config.ScreencastQuality,
-		)
-	}
-
 	videos := map[string]*StreamSinkManagerCtx{}
 	for video_id, cnf := range config.VideoPipelines {
 		pipelineConf := cnf
@@ -90,8 +78,13 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 		// sinks
 		broadcast: broadcastNew(func(url string) (string, error) {
 			if config.BroadcastPipeline != "" {
+				var pipeline = config.BroadcastPipeline
+				// replace {display} with valid display
+				pipeline = strings.Replace(pipeline, "{display}", config.Display, 1)
+				// replace {device} with valid device
+				pipeline = strings.Replace(pipeline, "{device}", config.AudioDevice, 1)
 				// replace {url} with valid URL
-				return strings.Replace(config.BroadcastPipeline, "{url}", url, 1), nil
+				return strings.Replace(pipeline, "{url}", url, 1), nil
 			}
 
 			return fmt.Sprintf(
@@ -110,7 +103,21 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 					"! mux.", url, config.AudioDevice, config.BroadcastAudioBitrate*1000, config.Display, config.BroadcastVideoBitrate, config.BroadcastPreset,
 			), nil
 		}, ""),
-		screencast: screencastNew(config.ScreencastEnabled, screencastPipeline),
+		screencast: screencastNew(config.ScreencastEnabled, func() string {
+			if config.ScreencastPipeline != "" {
+				// replace {display} with valid display
+				return strings.Replace(config.ScreencastPipeline, "{display}", config.Display, 1)
+			}
+
+			return fmt.Sprintf(
+				"ximagesrc display-name=%s show-pointer=true use-damage=false "+
+					"! video/x-raw,framerate=%s "+
+					"! videoconvert "+
+					"! queue "+
+					"! jpegenc quality=%s "+
+					"! appsink name=appsink", config.Display, config.ScreencastRate, config.ScreencastQuality,
+			)
+		}()),
 		audio: streamSinkNew(config.AudioCodec, func() (string, error) {
 			if config.AudioPipeline != "" {
 				// replace {device} with valid device
