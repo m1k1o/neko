@@ -27,7 +27,6 @@ type Capture struct {
 	// broadcast
 	BroadcastPipeline string
 	BroadcastUrl      string
-	BroadcastStarted  bool
 }
 
 func (Capture) Init(cmd *cobra.Command) error {
@@ -222,5 +221,4 @@ func (s *Capture) Set() {
 
 	s.BroadcastPipeline = viper.GetString("broadcast_pipeline")
 	s.BroadcastUrl = viper.GetString("broadcast_url")
-	s.BroadcastStarted = s.BroadcastUrl != ""
 }
