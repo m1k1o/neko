@@ -36,7 +36,7 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 		}, "audio"),
 		video: streamSinkNew(config.VideoCodec, func() (string, error) {
 			return NewVideoPipeline(config.VideoCodec, config.Display, config.VideoPipeline, config.VideoMaxFPS, config.VideoBitrate, config.VideoHWEnc)
-		}, "audio"),
+		}, "video"),
 	}
 }
 
