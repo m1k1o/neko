@@ -8,7 +8,7 @@
             <neko-emote :id="index" :key="index" />
           </template>
         </div>
-        <div
+        <textarea
           ref="overlay"
           class="overlay"
           tabindex="0"
@@ -173,6 +173,11 @@
           bottom: 0;
           width: 100%;
           height: 100%;
+          cursor: default;
+          outline: 0;
+          border: 0;
+          color: transparent;
+          background: transparent;
         }
 
         .player-aspect {
@@ -209,7 +214,7 @@
   export default class extends Vue {
     @Ref('component') readonly _component!: HTMLElement
     @Ref('container') readonly _container!: HTMLElement
-    @Ref('overlay') readonly _overlay!: HTMLElement
+    @Ref('overlay') readonly _overlay!: HTMLTextAreaElement
     @Ref('aspect') readonly _aspect!: HTMLElement
     @Ref('player') readonly _player!: HTMLElement
     @Ref('video') readonly _video!: HTMLVideoElement
