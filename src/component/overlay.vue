@@ -5,9 +5,9 @@
       ref="textarea"
       class="neko-overlay"
       :style="{ cursor }"
+      v-model="textInput"
       @click.stop.prevent="wsControl.emit('overlay.click', $event)"
       @contextmenu.stop.prevent="wsControl.emit('overlay.contextmenu', $event)"
-      @input.stop.prevent="onInput"
       @wheel.stop.prevent="onWheel"
       @mousemove.stop.prevent="onMouseMove"
       @mousedown.stop.prevent="onMouseDown"
@@ -69,6 +69,7 @@
     @Ref('textarea') readonly _textarea!: HTMLTextAreaElement
     private _ctx!: CanvasRenderingContext2D
 
+    private textInput = ''
     private keyboard = GuacamoleKeyboard()
     private focused = false
 
@@ -246,9 +247,13 @@
       return x
     }
 
-    onInput(e: InputEvent) {
-      this.wsControl.paste(this._textarea.value)
-      this._textarea.value = ''
+    // use v-model instead of @input because v-model
+    // doesn't get updated during IME composition
+    @Watch('textInput')
+    onTextInputChange() {
+      if (this.textInput == '') return
+      this.wsControl.paste(this.textInput)
+      this.textInput = ''
     }
 
     onWheel(e: WheelEvent) {
