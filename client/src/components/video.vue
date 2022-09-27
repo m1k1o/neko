@@ -178,6 +178,7 @@
           border: 0;
           color: transparent;
           background: transparent;
+          resize: none;
         }
 
         .player-aspect {
