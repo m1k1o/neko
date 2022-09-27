@@ -1365,60 +1365,7 @@ Guacamole.Keyboard = function Keyboard(element) {
 
         }, true);
 
-        /**
-         * Handles the given "input" event, typing the data within the input text.
-         * If the event is complete (text is provided), handling of "compositionend"
-         * events is suspended, as such events may conflict with input events.
-         *
-         * @private
-         * @param {!InputEvent} e
-         *     The "input" event to handle.
-         */
-        var handleInput = function handleInput(e) {
-
-            // Only intercept if handler set
-            if (!guac_keyboard.onkeydown && !guac_keyboard.onkeyup) return;
-
-            // Ignore events which have already been handled
-            if (!markEvent(e)) return;
-
-            // Type all content written
-            if (e.data && !e.isComposing) {
-                element.removeEventListener("compositionend", handleComposition, false);
-                guac_keyboard.type(e.data);
-            }
-
-        };
-
-        /**
-         * Handles the given "compositionend" event, typing the data within the
-         * composed text. If the event is complete (composed text is provided),
-         * handling of "input" events is suspended, as such events may conflict
-         * with composition events.
-         *
-         * @private
-         * @param {!CompositionEvent} e
-         *     The "compositionend" event to handle.
-         */
-        var handleComposition = function handleComposition(e) {
-
-            // Only intercept if handler set
-            if (!guac_keyboard.onkeydown && !guac_keyboard.onkeyup) return;
-
-            // Ignore events which have already been handled
-            if (!markEvent(e)) return;
-
-            // Type all content written
-            if (e.data) {
-                element.removeEventListener("input", handleInput, false);
-                guac_keyboard.type(e.data);
-            }
-
-        };
-
-        // Automatically type text entered into the wrapped field
-        element.addEventListener("input", handleInput, false);
-        element.addEventListener("compositionend", handleComposition, false);
+        // NEKO: Do not automatically type text entered into the wrapped field
 
     };
 
