@@ -12,6 +12,7 @@
           ref="overlay"
           class="overlay"
           tabindex="0"
+          data-gramm="false"
           @click.stop.prevent
           @contextmenu.stop.prevent
           @wheel.stop.prevent="onWheel"
