@@ -1,4 +1,5 @@
 const path = require('path')
+const webpack = require('webpack')
 
 module.exports = {
   productionSourceMap: false,
@@ -9,6 +10,15 @@ module.exports = {
         '~': path.resolve(__dirname, 'src/'),
       },
     },
+    plugins: [
+      new webpack.NormalModuleReplacementPlugin(
+        /(.*)__KEYBOARD__/,
+        function(resource){
+          resource.request = resource.request
+            .replace(/__KEYBOARD__/, process.env.KEYBOARD || 'guacamole');
+        },
+      ),
+    ],
   },
   devServer: {
     allowedHosts: "all",

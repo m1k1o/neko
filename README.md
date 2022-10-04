@@ -21,6 +21,16 @@ echo @demodesk:registry=https://npm.pkg.github.com >> .npmrc
 # yarn command
 echo \"@demodesk:registry\" \"https://npm.pkg.github.com\" >> .yarnrc
 ```
+### Build
+
+You can set keyboard provider at build time, either `novnc` or the default `guacamole`.
+
+```bash
+# by default uses guacamole keybaord
+npm run build
+# uses novnc keybaord
+KEYBOARD=novnc npm run build
+```
 
 ### Example
 API consists of accessing Vue reactive state, calling various methods and subscribing to events. Simple usage:

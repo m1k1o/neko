@@ -1,4 +1,4 @@
-import GuacamoleKeyboard from './guacamole-keyboard.js'
+import GuacamoleKeyboard from './guacamole.js'
 
 export interface GuacamoleKeyboardInterface {
   /**
@@ -65,12 +65,20 @@ export interface GuacamoleKeyboardInterface {
    *     key or input events.
    */
   listenTo: (element: Element | Document) => void
+
+  // custom functions
+  removeListener: () => void
 }
 
 export default function (element?: Element): GuacamoleKeyboardInterface {
-  const Keyboard = {}
+  const keyboard = {} as GuacamoleKeyboardInterface
 
-  GuacamoleKeyboard.bind(Keyboard, element)()
+  GuacamoleKeyboard.bind(keyboard, element)()
 
-  return Keyboard as GuacamoleKeyboardInterface
+  // add removeListener function
+  keyboard.removeListener = function () {
+    // Guacamole Keyboard does not provide destroy functions
+  }
+
+  return keyboard
 }

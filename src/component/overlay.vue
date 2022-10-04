@@ -45,7 +45,7 @@
 <script lang="ts">
   import { Vue, Component, Ref, Prop, Watch } from 'vue-property-decorator'
 
-  import GuacamoleKeyboard from './utils/guacamole-keyboard'
+  import { KeyboardInterface, NewKeyboard } from './utils/keyboard'
   import { KeyTable, keySymsRemap } from './utils/keyboard-remapping'
   import { getFilesFromDataTansfer } from './utils/file-upload'
   import { NekoControl } from './internal/control'
@@ -69,8 +69,9 @@
     @Ref('textarea') readonly _textarea!: HTMLTextAreaElement
     private _ctx!: CanvasRenderingContext2D
 
+    private keyboard!: KeyboardInterface
     private textInput = ''
-    private keyboard = GuacamoleKeyboard()
+
     private focused = false
 
     @Prop()
@@ -132,7 +133,8 @@
       let ctrlKey = 0
       let noKeyUp = {} as Record<number, boolean>
 
-      // Initialize Guacamole Keyboard
+      // Initialize Keyboard
+      this.keyboard = NewKeyboard()
       this.keyboard.onkeydown = (key: number) => {
         key = keySymsRemap(key)
 
@@ -188,7 +190,9 @@
     beforeDestroy() {
       window.removeEventListener('mouseup', this.onMouseUp, true)
 
-      // Guacamole Keyboard does not provide destroy functions
+      if (this.keyboard) {
+        this.keyboard.removeListener()
+      }
 
       this.webrtc.removeListener('cursor-position', this.onCursorPosition)
       this.webrtc.removeListener('cursor-image', this.onCursorImage)
