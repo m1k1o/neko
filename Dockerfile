@@ -99,6 +99,7 @@ RUN set -eux; \
 
 #
 # copy runtime configs
+COPY --chown=neko:neko runtime/.Xresources /home/$USERNAME/.Xresources
 COPY runtime/dbus /usr/bin/dbus
 COPY runtime/default.pa /etc/pulse/default.pa
 COPY runtime/supervisord.conf /etc/neko/supervisord.conf
