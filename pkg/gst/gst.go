@@ -19,25 +19,44 @@ import (
 	"github.com/demodesk/neko/pkg/types"
 )
 
-type Pipeline struct {
-	id     int
-	logger zerolog.Logger
-	Src    string
-	Ctx    *C.GstPipelineCtx
-	Sample chan types.Sample
-}
-
-var pSerial int32
-var pipelines = make(map[int]*Pipeline)
-var pipelinesLock sync.Mutex
-var registry *C.GstRegistry
+var (
+	pSerial       int32
+	pipelines     = make(map[int]*pipeline)
+	pipelinesLock sync.Mutex
+	registry      *C.GstRegistry
+)
 
 func init() {
 	C.gst_init(nil, nil)
 	registry = C.gst_registry_get()
 }
 
-func CreatePipeline(pipelineStr string) (*Pipeline, error) {
+type Pipeline interface {
+	Src() string
+	Sample() chan types.Sample
+	// attach sink or src to pipeline
+	AttachAppsink(sinkName string)
+	AttachAppsrc(srcName string)
+	// control pipeline lifecycle
+	Play()
+	Pause()
+	Destroy()
+	Push(buffer []byte)
+	// modify the property of a bin
+	SetPropInt(binName string, prop string, value int) bool
+	SetCapsFramerate(binName string, numerator, denominator int) bool
+	SetCapsResolution(binName string, width, height int) bool
+}
+
+type pipeline struct {
+	id     int
+	logger zerolog.Logger
+	src    string
+	ctx    *C.GstPipelineCtx
+	sample chan types.Sample
+}
+
+func CreatePipeline(pipelineStr string) (Pipeline, error) {
 	id := atomic.AddInt32(&pSerial, 1)
 
 	pipelineStrUnsafe := C.CString(pipelineStr)
@@ -54,63 +73,70 @@ func CreatePipeline(pipelineStr string) (*Pipeline, error) {
 		return nil, fmt.Errorf("(pipeline error) %s", C.GoString(gstError.message))
 	}
 
-	p := &Pipeline{
+	p := &pipeline{
 		id: int(id),
 		logger: log.With().
 			Str("module", "capture").
 			Str("submodule", "gstreamer").
 			Int("pipeline_id", int(id)).Logger(),
-		Src:    pipelineStr,
-		Ctx:    ctx,
-		Sample: make(chan types.Sample),
+		src:    pipelineStr,
+		ctx:    ctx,
+		sample: make(chan types.Sample),
 	}
 
 	pipelines[p.id] = p
 	return p, nil
 }
 
-func (p *Pipeline) AttachAppsink(sinkName string) {
+func (p *pipeline) Src() string {
+	return p.src
+}
+
+func (p *pipeline) Sample() chan types.Sample {
+	return p.sample
+}
+
+func (p *pipeline) AttachAppsink(sinkName string) {
 	sinkNameUnsafe := C.CString(sinkName)
 	defer C.free(unsafe.Pointer(sinkNameUnsafe))
 
-	C.gstreamer_pipeline_attach_appsink(p.Ctx, sinkNameUnsafe)
+	C.gstreamer_pipeline_attach_appsink(p.ctx, sinkNameUnsafe)
 }
 
-func (p *Pipeline) AttachAppsrc(srcName string) {
+func (p *pipeline) AttachAppsrc(srcName string) {
 	srcNameUnsafe := C.CString(srcName)
 	defer C.free(unsafe.Pointer(srcNameUnsafe))
 
-	C.gstreamer_pipeline_attach_appsrc(p.Ctx, srcNameUnsafe)
+	C.gstreamer_pipeline_attach_appsrc(p.ctx, srcNameUnsafe)
 }
 
-func (p *Pipeline) Play() {
-	C.gstreamer_pipeline_play(p.Ctx)
+func (p *pipeline) Play() {
+	C.gstreamer_pipeline_play(p.ctx)
 }
 
-func (p *Pipeline) Pause() {
-	C.gstreamer_pipeline_pause(p.Ctx)
+func (p *pipeline) Pause() {
+	C.gstreamer_pipeline_pause(p.ctx)
 }
 
-func (p *Pipeline) Destroy() {
-	C.gstreamer_pipeline_destory(p.Ctx)
+func (p *pipeline) Destroy() {
+	C.gstreamer_pipeline_destory(p.ctx)
 
 	pipelinesLock.Lock()
 	delete(pipelines, p.id)
 	pipelinesLock.Unlock()
 
-	close(p.Sample)
-	C.free(unsafe.Pointer(p.Ctx))
-	p = nil
+	close(p.sample)
+	C.free(unsafe.Pointer(p.ctx))
 }
 
-func (p *Pipeline) Push(buffer []byte) {
+func (p *pipeline) Push(buffer []byte) {
 	bytes := C.CBytes(buffer)
 	defer C.free(bytes)
 
-	C.gstreamer_pipeline_push(p.Ctx, bytes, C.int(len(buffer)))
+	C.gstreamer_pipeline_push(p.ctx, bytes, C.int(len(buffer)))
 }
 
-func (p *Pipeline) SetPropInt(binName string, prop string, value int) bool {
+func (p *pipeline) SetPropInt(binName string, prop string, value int) bool {
 	cBinName := C.CString(binName)
 	defer C.free(unsafe.Pointer(cBinName))
 
@@ -121,11 +147,11 @@ func (p *Pipeline) SetPropInt(binName string, prop string, value int) bool {
 
 	p.logger.Debug().Msgf("setting prop %s of %s to %d", prop, binName, value)
 
-	ok := C.gstreamer_pipeline_set_prop_int(p.Ctx, cBinName, cProp, cValue)
+	ok := C.gstreamer_pipeline_set_prop_int(p.ctx, cBinName, cProp, cValue)
 	return ok == C.TRUE
 }
 
-func (p *Pipeline) SetCapsFramerate(binName string, numerator, denominator int) bool {
+func (p *pipeline) SetCapsFramerate(binName string, numerator, denominator int) bool {
 	cBinName := C.CString(binName)
 	cNumerator := C.int(numerator)
 	cDenominator := C.int(denominator)
@@ -134,11 +160,11 @@ func (p *Pipeline) SetCapsFramerate(binName string, numerator, denominator int) 
 
 	p.logger.Debug().Msgf("setting caps framerate of %s to %d/%d", binName, numerator, denominator)
 
-	ok := C.gstreamer_pipeline_set_caps_framerate(p.Ctx, cBinName, cNumerator, cDenominator)
+	ok := C.gstreamer_pipeline_set_caps_framerate(p.ctx, cBinName, cNumerator, cDenominator)
 	return ok == C.TRUE
 }
 
-func (p *Pipeline) SetCapsResolution(binName string, width, height int) bool {
+func (p *pipeline) SetCapsResolution(binName string, width, height int) bool {
 	cBinName := C.CString(binName)
 	cWidth := C.int(width)
 	cHeight := C.int(height)
@@ -147,7 +173,7 @@ func (p *Pipeline) SetCapsResolution(binName string, width, height int) bool {
 
 	p.logger.Debug().Msgf("setting caps resolution of %s to %dx%d", binName, width, height)
 
-	ok := C.gstreamer_pipeline_set_caps_resolution(p.Ctx, cBinName, cWidth, cHeight)
+	ok := C.gstreamer_pipeline_set_caps_resolution(p.ctx, cBinName, cWidth, cHeight)
 	return ok == C.TRUE
 }
 
@@ -175,7 +201,7 @@ func goHandlePipelineBuffer(buffer unsafe.Pointer, bufferLen C.int, duration C.i
 	pipelinesLock.Unlock()
 
 	if ok {
-		pipeline.Sample <- types.Sample{
+		pipeline.sample <- types.Sample{
 			Data:     C.GoBytes(buffer, bufferLen),
 			Duration: time.Duration(duration),
 		}

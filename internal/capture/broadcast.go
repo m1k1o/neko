@@ -16,7 +16,7 @@ type BroacastManagerCtx struct {
 	logger zerolog.Logger
 	mu     sync.Mutex
 
-	pipeline   *gst.Pipeline
+	pipeline   gst.Pipeline
 	pipelineMu sync.Mutex
 	pipelineFn func(url string) (string, error)
 

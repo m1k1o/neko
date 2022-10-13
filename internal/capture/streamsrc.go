@@ -20,7 +20,7 @@ type StreamSrcManagerCtx struct {
 	codecPipeline map[string]string // codec -> pipeline
 
 	codec       codec.RTPCodec
-	pipeline    *gst.Pipeline
+	pipeline    gst.Pipeline
 	pipelineMu  sync.Mutex
 	pipelineStr string
 

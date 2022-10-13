@@ -23,7 +23,7 @@ type ScreencastManagerCtx struct {
 	mu     sync.Mutex
 	wg     sync.WaitGroup
 
-	pipeline    *gst.Pipeline
+	pipeline    gst.Pipeline
 	pipelineStr string
 	pipelineMu  sync.Mutex
 
@@ -202,7 +202,7 @@ func (manager *ScreencastManagerCtx) createPipeline() error {
 
 	// get first image
 	select {
-	case image, ok := <-manager.pipeline.Sample:
+	case image, ok := <-manager.pipeline.Sample():
 		if !ok {
 			return errors.New("unable to get first image")
 		} else {
@@ -220,7 +220,7 @@ func (manager *ScreencastManagerCtx) createPipeline() error {
 		defer manager.wg.Done()
 
 		for {
-			image, ok := <-pipeline.Sample
+			image, ok := <-pipeline.Sample()
 			if !ok {
 				manager.logger.Debug().Msg("stopped receiving images")
 				return

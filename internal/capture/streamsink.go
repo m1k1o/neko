@@ -24,7 +24,7 @@ type StreamSinkManagerCtx struct {
 	wg     sync.WaitGroup
 
 	codec      codec.RTPCodec
-	pipeline   *gst.Pipeline
+	pipeline   gst.Pipeline
 	pipelineMu sync.Mutex
 	pipelineFn func() (string, error)
 
@@ -275,7 +275,7 @@ func (manager *StreamSinkManagerCtx) createPipeline() error {
 		defer manager.wg.Done()
 
 		for {
-			sample, ok := <-pipeline.Sample
+			sample, ok := <-pipeline.Sample()
 			if !ok {
 				manager.logger.Debug().Msg("stopped emitting samples")
 				return
