@@ -6,6 +6,10 @@
           <i class="fas fa-comment-alt" />
           <span>{{ $t('side.chat') }}</span>
         </li>
+        <li :class="{ active: tab === 'files' }" @click.stop.prevent="change('files')">
+          <i class="fas fa-file" />
+          <span>{{ $t('side.files') }}</span>
+        </li>
         <li :class="{ active: tab === 'settings' }" @click.stop.prevent="change('settings')">
           <i class="fas fa-sliders-h" />
           <span>{{ $t('side.settings') }}</span>
@@ -14,6 +18,7 @@
     </div>
     <div class="page-container">
       <neko-chat v-if="tab === 'chat'" />
+      <neko-files v-if="tab === 'files'" />
       <neko-settings v-if="tab === 'settings'" />
     </div>
   </aside>
@@ -78,12 +83,14 @@
 
   import Settings from '~/components/settings.vue'
   import Chat from '~/components/chat.vue'
+  import Files from '~/components/files.vue'
 
   @Component({
     name: 'neko',
     components: {
       'neko-settings': Settings,
       'neko-chat': Chat,
+      'neko-files': Files
     },
   })
   export default class extends Vue {

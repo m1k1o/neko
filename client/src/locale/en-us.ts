@@ -7,6 +7,7 @@ export const send_a_message = 'Send a message'
 
 export const side = {
   chat: 'Chat',
+  files: 'Files',
   settings: 'Settings',
 }
 
