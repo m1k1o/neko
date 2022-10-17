@@ -15,7 +15,7 @@ func (h *MessageHandlerCtx) signalRequest(session types.Session, payload *messag
 
 	// use default first video, if not provided
 	if payload.Video == "" {
-		videos := h.capture.VideoIDs()
+		videos := h.capture.Video().IDs()
 		payload.Video = videos[0]
 	}
 

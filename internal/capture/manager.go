@@ -21,8 +21,7 @@ type CaptureManagerCtx struct {
 	broadcast  *BroacastManagerCtx
 	screencast *ScreencastManagerCtx
 	audio      *StreamSinkManagerCtx
-	videos     map[string]*StreamSinkManagerCtx
-	videoIDs   []string
+	video      *BucketsManagerCtx
 
 	// sources
 	webcam     *StreamSrcManagerCtx
@@ -118,6 +117,7 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 					"! appsink name=appsink", config.Display, config.ScreencastRate, config.ScreencastQuality,
 			)
 		}()),
+
 		audio: streamSinkNew(config.AudioCodec, func() (string, error) {
 			if config.AudioPipeline != "" {
 				// replace {device} with valid device
@@ -133,8 +133,7 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 					"! appsink name=appsink", config.AudioDevice, config.AudioCodec.Pipeline,
 			), nil
 		}, "audio"),
-		videos:   videos,
-		videoIDs: config.VideoIDs,
+		video: bucketsNew(config.VideoCodec, videos, config.VideoIDs),
 
 		// sources
 		webcam: streamSrcNew(config.WebcamEnabled, map[string]string{
@@ -195,11 +194,7 @@ func (manager *CaptureManagerCtx) Start() {
 	}
 
 	manager.desktop.OnBeforeScreenSizeChange(func() {
-		for _, video := range manager.videos {
-			if video.Started() {
-				video.destroyPipeline()
-			}
-		}
+		manager.video.destroyAll()
 
 		if manager.broadcast.Started() {
 			manager.broadcast.destroyPipeline()
@@ -211,13 +206,9 @@ func (manager *CaptureManagerCtx) Start() {
 	})
 
 	manager.desktop.OnAfterScreenSizeChange(func() {
-		for _, video := range manager.videos {
-			if video.Started() {
-				err := video.createPipeline()
-				if err != nil && !errors.Is(err, types.ErrCapturePipelineAlreadyExists) {
-					manager.logger.Panic().Err(err).Msg("unable to recreate video pipeline")
-				}
-			}
+		err := manager.video.recreateAll()
+		if err != nil {
+			manager.logger.Panic().Err(err).Msg("unable to recreate video pipelines")
 		}
 
 		if manager.broadcast.Started() {
@@ -243,10 +234,7 @@ func (manager *CaptureManagerCtx) Shutdown() error {
 	manager.screencast.shutdown()
 
 	manager.audio.shutdown()
-
-	for _, video := range manager.videos {
-		video.shutdown()
-	}
+	manager.video.shutdown()
 
 	manager.webcam.shutdown()
 	manager.microphone.shutdown()
@@ -266,13 +254,8 @@ func (manager *CaptureManagerCtx) Audio() types.StreamSinkManager {
 	return manager.audio
 }
 
-func (manager *CaptureManagerCtx) Video(videoID string) (types.StreamSinkManager, bool) {
-	video, ok := manager.videos[videoID]
-	return video, ok
-}
-
-func (manager *CaptureManagerCtx) VideoIDs() []string {
-	return manager.videoIDs
+func (manager *CaptureManagerCtx) Video() types.BucketsManager {
+	return manager.video
 }
 
 func (manager *CaptureManagerCtx) Webcam() types.StreamSrcManager {

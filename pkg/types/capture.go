@@ -19,6 +19,19 @@ var (
 
 type Sample media.Sample
 
+type Receiver interface {
+	SetStream(stream StreamSinkManager) error
+	RemoveStream()
+	OnVideoIdChange(f func(string) error)
+}
+
+type BucketsManager interface {
+	IDs() []string
+	Codec() codec.RTPCodec
+	SetReceiver(receiver Receiver) error
+	RemoveReceiver(receiver Receiver) error
+}
+
 type BroadcastManager interface {
 	Start(url string) error
 	Stop()
@@ -60,8 +73,7 @@ type CaptureManager interface {
 	Broadcast() BroadcastManager
 	Screencast() ScreencastManager
 	Audio() StreamSinkManager
-	Video(videoID string) (StreamSinkManager, bool)
-	VideoIDs() []string
+	Video() BucketsManager
 
 	Webcam() StreamSrcManager
 	Microphone() StreamSrcManager
