@@ -561,8 +561,8 @@
       // draw cursor tag
       const cursorTag = this.sessions[this.hostId]?.profile.name || ''
       if (cursorTag) {
-        const x = this.cursorImage.width
-        const y = this.cursorImage.height
+        x += this.cursorImage.width
+        y += this.cursorImage.height
 
         this._ctx.font = '14px Arial, sans-serif'
         this._ctx.textBaseline = 'top'
