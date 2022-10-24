@@ -73,6 +73,9 @@ RUN set -eux; \
     apt-get install -y --no-install-recommends pulseaudio dbus-x11 xserver-xorg-video-dummy; \
     apt-get install -y --no-install-recommends libcairo2 libxcb1 libxrandr2 libxv1 libopus0 libvpx6; \
     #
+    # google emojis for emoji support
+    apt-get install -y --no-install-recommends fonts-noto-color-emoji; \
+    #
     # intel driver + vaapi
     apt-get install -y --no-install-recommends intel-media-va-driver-non-free libva2 vainfo; \
     #
