@@ -73,9 +73,6 @@ RUN set -eux; \
     apt-get install -y --no-install-recommends pulseaudio dbus-x11 xserver-xorg-video-dummy; \
     apt-get install -y --no-install-recommends libcairo2 libxcb1 libxrandr2 libxv1 libopus0 libvpx6; \
     #
-    # google emojis for emoji support
-    apt-get install -y --no-install-recommends fonts-noto-color-emoji; \
-    #
     # intel driver + vaapi
     apt-get install -y --no-install-recommends intel-media-va-driver-non-free libva2 vainfo; \
     #
@@ -84,8 +81,14 @@ RUN set -eux; \
                     gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-pulseaudio \
                     gstreamer1.0-vaapi ;\
     #
-    # fonts
-    apt-get install -y --no-install-recommends fonts-takao-mincho fonts-wqy-zenhei; \
+    # install fonts
+    apt-get install -y --no-install-recommends \
+        # Google emojis
+        fonts-noto-color-emoji \
+        # Japanese fonts
+        fonts-takao-mincho \
+        # Chinese fonts
+        fonts-wqy-zenhei; \
     #
     # create a non-root user
     groupadd --gid $USER_GID $USERNAME; \
