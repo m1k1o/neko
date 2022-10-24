@@ -379,7 +379,7 @@
       this.uploadActive = true
       this.uploadProgress = 0
       try {
-        await this.neko.room.uploadDialog(files, {
+        await this.neko.room.uploadDialog([...files], {
           onUploadProgress: (progressEvent: ProgressEvent) => {
             this.uploadProgress = (progressEvent.loaded / progressEvent.total) * 100
           },
