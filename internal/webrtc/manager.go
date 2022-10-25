@@ -214,7 +214,7 @@ func (manager *WebRTCManagerCtx) newPeerConnection(codecs []codec.RTPCodec, logg
 	return api.NewPeerConnection(manager.webrtcConfiguration)
 }
 
-func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID string) (*webrtc.SessionDescription, error) {
+func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int) (*webrtc.SessionDescription, error) {
 	id := atomic.AddInt32(&manager.peerId, 1)
 	manager.metrics.NewConnection(session)
 
@@ -280,11 +280,12 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 		return nil, err
 	}
 
-	// set default video id
-	err = videoTrack.SetVideoID(videoID)
-	if err != nil {
+	// set initial video bitrate
+	if err = videoTrack.SetBitrate(bitrate); err != nil {
 		return nil, err
 	}
+
+	videoID := videoTrack.stream.ID()
 	manager.metrics.SetVideoID(session, videoID)
 
 	// data channel
@@ -298,13 +299,18 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 		logger:      logger,
 		connection:  connection,
 		dataChannel: dataChannel,
-		changeVideo: func(videoID string) error {
-			if err := videoTrack.SetVideoID(videoID); err != nil {
+		changeVideo: func(bitrate int) error {
+			if err := videoTrack.SetBitrate(bitrate); err != nil {
 				return err
 			}
 
+			videoID := videoTrack.stream.ID()
 			manager.metrics.SetVideoID(session, videoID)
 			return nil
+		},
+		// TODO: Refactor.
+		videoId: func() string {
+			return videoTrack.stream.ID()
 		},
 		setPaused: func(isPaused bool) {
 			videoTrack.SetPaused(isPaused)
@@ -418,7 +424,9 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, videoID strin
 			connection.Close()
 		case webrtc.PeerConnectionStateClosed:
 			session.SetWebRTCConnected(peer, false)
-			video.RemoveReceiver(videoTrack)
+			if err = video.RemoveReceiver(videoTrack); err != nil {
+				logger.Err(err).Msg("failed to remove video receiver")
+			}
 			audioTrack.RemoveStream()
 		}
 

@@ -19,6 +19,9 @@ import (
 var moveSinkListenerMu = sync.Mutex{}
 
 type StreamSinkManagerCtx struct {
+	id         string
+	getBitrate func() (int, error)
+
 	logger zerolog.Logger
 	mu     sync.Mutex
 	wg     sync.WaitGroup
@@ -37,13 +40,16 @@ type StreamSinkManagerCtx struct {
 	pipelinesActive  prometheus.Gauge
 }
 
-func streamSinkNew(codec codec.RTPCodec, pipelineFn func() (string, error), video_id string) *StreamSinkManagerCtx {
+func streamSinkNew(codec codec.RTPCodec, pipelineFn func() (string, error), id string, getBitrate func() (int, error)) *StreamSinkManagerCtx {
 	logger := log.With().
 		Str("module", "capture").
 		Str("submodule", "stream-sink").
-		Str("video_id", video_id).Logger()
+		Str("id", id).Logger()
 
 	manager := &StreamSinkManagerCtx{
+		id:         id,
+		getBitrate: getBitrate,
+
 		logger:     logger,
 		codec:      codec,
 		pipelineFn: pipelineFn,
@@ -56,7 +62,7 @@ func streamSinkNew(codec codec.RTPCodec, pipelineFn func() (string, error), vide
 			Subsystem: "capture",
 			Help:      "Current number of listeners for a pipeline.",
 			ConstLabels: map[string]string{
-				"video_id":   video_id,
+				"video_id":   id,
 				"codec_name": codec.Name,
 				"codec_type": codec.Type.String(),
 			},
@@ -68,7 +74,7 @@ func streamSinkNew(codec codec.RTPCodec, pipelineFn func() (string, error), vide
 			Help:      "Total number of created pipelines.",
 			ConstLabels: map[string]string{
 				"submodule":  "streamsink",
-				"video_id":   video_id,
+				"video_id":   id,
 				"codec_name": codec.Name,
 				"codec_type": codec.Type.String(),
 			},
@@ -80,7 +86,7 @@ func streamSinkNew(codec codec.RTPCodec, pipelineFn func() (string, error), vide
 			Help:      "Total number of active pipelines.",
 			ConstLabels: map[string]string{
 				"submodule":  "streamsink",
-				"video_id":   video_id,
+				"video_id":   id,
 				"codec_name": codec.Name,
 				"codec_type": codec.Type.String(),
 			},
@@ -101,6 +107,18 @@ func (manager *StreamSinkManagerCtx) shutdown() {
 
 	manager.destroyPipeline()
 	manager.wg.Wait()
+}
+
+func (manager *StreamSinkManagerCtx) ID() string {
+	return manager.id
+}
+
+func (manager *StreamSinkManagerCtx) Bitrate() (int, error) {
+	if manager.getBitrate == nil {
+		return 0, nil
+	}
+	// recalculate bitrate every time, take screen resolution (and fps) into account
+	return manager.getBitrate()
 }
 
 func (manager *StreamSinkManagerCtx) Codec() codec.RTPCodec {

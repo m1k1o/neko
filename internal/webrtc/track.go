@@ -27,7 +27,7 @@ type Track struct {
 	onRtcp   func(rtcp.Packet)
 	onRtcpMu sync.RWMutex
 
-	videoIdChange func(string) error
+	bitrateChange func(int) error
 }
 
 func NewTrack(logger zerolog.Logger, codec codec.RTPCodec, connection *webrtc.PeerConnection) (*Track, error) {
@@ -140,14 +140,14 @@ func (t *Track) OnRTCP(f func(rtcp.Packet)) {
 	t.onRtcp = f
 }
 
-func (t *Track) SetVideoID(videoID string) error {
-	if t.videoIdChange == nil {
-		return fmt.Errorf("video id change not supported")
+func (t *Track) SetBitrate(bitrate int) error {
+	if t.bitrateChange == nil {
+		return fmt.Errorf("bitrate change not supported")
 	}
 
-	return t.videoIdChange(videoID)
+	return t.bitrateChange(bitrate)
 }
 
-func (t *Track) OnVideoIdChange(f func(string) error) {
-	t.videoIdChange = f
+func (t *Track) OnBitrateChange(f func(int) error) {
+	t.bitrateChange = f
 }

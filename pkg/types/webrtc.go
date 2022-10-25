@@ -7,7 +7,6 @@ import (
 )
 
 var (
-	ErrWebRTCVideoNotFound       = errors.New("webrtc video not found")
 	ErrWebRTCDataChannelNotFound = errors.New("webrtc data channel not found")
 	ErrWebRTCConnectionNotFound  = errors.New("webrtc connection not found")
 )
@@ -25,7 +24,8 @@ type WebRTCPeer interface {
 	SetAnswer(sdp string) error
 	SetCandidate(candidate webrtc.ICECandidateInit) error
 
-	SetVideoID(videoID string) error
+	SetVideoBitrate(bitrate int) error
+	GetVideoId() string
 	SetPaused(isPaused bool) error
 
 	SendCursorPosition(x, y int) error
@@ -40,6 +40,6 @@ type WebRTCManager interface {
 
 	ICEServers() []ICEServer
 
-	CreatePeer(session Session, videoID string) (*webrtc.SessionDescription, error)
+	CreatePeer(session Session, bitrate int) (*webrtc.SessionDescription, error)
 	SetCursorPosition(x, y int)
 }

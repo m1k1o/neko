@@ -16,6 +16,7 @@ import (
 type CaptureManagerCtx struct {
 	logger  zerolog.Logger
 	desktop types.DesktopManager
+	config  *config.Capture
 
 	// sinks
 	broadcast  *BroacastManagerCtx
@@ -66,13 +67,18 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 			Str("pipeline", pipeline).
 			Msg("syntax check for video stream pipeline passed")
 
+		getVideoBitrate := pipelineConf.GetBitrateFn(desktop.GetScreenSize)
+		if err != nil {
+			logger.Panic().Err(err).Msg("unable to get video bitrate")
+		}
 		// append to videos
-		videos[video_id] = streamSinkNew(config.VideoCodec, createPipeline, video_id)
+		videos[video_id] = streamSinkNew(config.VideoCodec, createPipeline, video_id, getVideoBitrate)
 	}
 
 	return &CaptureManagerCtx{
 		logger:  logger,
 		desktop: desktop,
+		config:  config,
 
 		// sinks
 		broadcast: broadcastNew(func(url string) (string, error) {
@@ -132,7 +138,7 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 					"! %s "+
 					"! appsink name=appsink", config.AudioDevice, config.AudioCodec.Pipeline,
 			), nil
-		}, "audio"),
+		}, "audio", nil),
 		video: bucketsNew(config.VideoCodec, videos, config.VideoIDs),
 
 		// sources
@@ -240,6 +246,15 @@ func (manager *CaptureManagerCtx) Shutdown() error {
 	manager.microphone.shutdown()
 
 	return nil
+}
+
+func (manager *CaptureManagerCtx) GetBitrateFromVideoID(videoID string) (int, error) {
+	cfg, ok := manager.config.VideoPipelines[videoID]
+	if !ok {
+		return 0, fmt.Errorf("video config not found for %s", videoID)
+	}
+
+	return cfg.GetBitrateFn(manager.desktop.GetScreenSize)()
 }
 
 func (manager *CaptureManagerCtx) Broadcast() types.BroadcastManager {

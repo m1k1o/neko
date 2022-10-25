@@ -48,7 +48,7 @@ type SystemDisconnect struct {
 type SignalProvide struct {
 	SDP        string            `json:"sdp"`
 	ICEServers []types.ICEServer `json:"iceservers"`
-	Video      string            `json:"video"`
+	Video      string            `json:"video"` // TODO: Refactor.
 }
 
 type SignalCandidate struct {
@@ -60,7 +60,8 @@ type SignalDescription struct {
 }
 
 type SignalVideo struct {
-	Video string `json:"video"`
+	Video   string `json:"video"` // TODO: Refactor.
+	Bitrate int    `json:"bitrate"`
 }
 
 /////////////////////////////
