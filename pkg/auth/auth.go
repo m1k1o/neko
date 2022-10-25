@@ -80,13 +80,17 @@ func PluginsGenericOnly[V comparable](key string, exp V) func(w http.ResponseWri
 
 		plugins := session.Profile().Plugins
 
+		if plugins[key] == nil {
+			return nil, utils.HttpForbidden(fmt.Sprintf("missing plugin permission: %s=%T", key, exp))
+		}
+
 		val, ok := plugins[key].(V)
 		if !ok {
-			return nil, utils.HttpForbidden(fmt.Sprintf("%s is %T, but expected %T", key, plugins[key], exp))
+			return nil, utils.HttpForbidden(fmt.Sprintf("invalid plugin permission type: %s=%T expected %T", key, plugins[key], exp))
 		}
 
 		if val != exp {
-			return nil, utils.HttpForbidden(fmt.Sprintf("%s is set to %v, but expected %v", key, val, exp))
+			return nil, utils.HttpForbidden(fmt.Sprintf("wrong plugin permission value for %s=%T", key, exp))
 		}
 
 		return nil, nil
