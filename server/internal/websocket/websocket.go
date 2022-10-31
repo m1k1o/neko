@@ -3,6 +3,7 @@ package websocket
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -31,6 +32,14 @@ func New(sessions types.SessionManager, desktop types.DesktopManager, capture ty
 	if conf.ControlProtection {
 		state.Lock("control", CONTROL_PROTECTION_SESSION)
 		logger.Info().Msgf("control locked on behalf of control protection")
+	}
+
+	if conf.FileTransferPath[len(conf.FileTransferPath)-1] != '/' {
+		conf.FileTransferPath += "/"
+	}
+	err := os.Mkdir(conf.FileTransferPath, 0755)
+	if err != nil && !os.IsExist(err) {
+		logger.Panic().Err(err).Msg("unable to create file transfer directory")
 	}
 
 	// apply default locks
@@ -312,6 +321,22 @@ func (ws *WebSocketHandler) IsAdmin(password string) (bool, error) {
 	}
 
 	return false, fmt.Errorf("invalid password")
+}
+
+func (ws *WebSocketHandler) CanTransferFiles(password string) (bool, error) {
+	if !ws.conf.FileTransfer {
+		return false, nil
+	}
+
+	if !ws.conf.UnprivFileTransfer {
+		return ws.IsAdmin(password)
+	}
+
+	return password == ws.conf.Password, nil
+}
+
+func (ws *WebSocketHandler) MakeFilePath(filename string) string {
+	return fmt.Sprintf("%s%s", ws.conf.FileTransferPath, filename)
 }
 
 func (ws *WebSocketHandler) authenticate(r *http.Request) (bool, error) {
