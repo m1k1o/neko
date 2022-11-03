@@ -35,6 +35,14 @@ const (
 )
 
 const (
+	FILETRANSFER_ENABLE        = "filetransfer/enable"
+	FILETRANSFER_DISABLE       = "filetransfer/disable"
+	FILETRANSFER_UNPRIVENABLE  = "filetransfer/unprivenable"
+	FILETRANSFER_UNPRIVDISABLE = "filetransfer/unprivdisable"
+	FILETRANSFER_LIST          = "filetransfer/list"
+)
+
+const (
 	SCREEN_CONFIGURATIONS = "screen/configurations"
 	SCREEN_RESOLUTION     = "screen/resolution"
 	SCREEN_SET            = "screen/set"

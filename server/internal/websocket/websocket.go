@@ -133,6 +133,21 @@ func (ws *WebSocketHandler) Start() {
 			}
 		}
 
+		// send file list if necessary
+		if session.Admin() && ws.conf.FileTransfer || ws.conf.FileTransfer && ws.conf.UnprivFileTransfer {
+			files, err := utils.ListFiles(ws.conf.FileTransferPath)
+			if err == nil {
+				if err := session.Send(
+					message.FileList{
+						Event: event.FILETRANSFER_LIST,
+						Cwd:   ws.conf.FileTransferPath,
+						Files: *files,
+					}); err != nil {
+					ws.logger.Warn().Err(err).Msg("file list event has failed")
+				}
+			}
+		}
+
 		// remove outdated stats
 		if session.Admin() {
 			ws.lastAdminLeftAt = nil

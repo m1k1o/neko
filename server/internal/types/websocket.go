@@ -37,3 +37,8 @@ type WebSocketHandler interface {
 	CanTransferFiles(password string) (bool, error)
 	MakeFilePath(filename string) string
 }
+
+type FileListItem struct {
+	Filename string `json:"name"`
+	Type     string `json:"type"`
+}

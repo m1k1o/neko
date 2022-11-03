@@ -8,7 +8,8 @@
       <div v-for="item in files" :key="item.name" class="files-list-item">
         <i :class="fileIcon(item)" />
         <p>{{ item.name }}</p>
-        <i class="fas fa-download download" @click="() => download(item)" />
+        <i v-if="item.type !== 'dir'" class="fas fa-download download"
+        @click="() => download(item)" />
       </div>
     </div>
     <div class="files-transfer" @dragover.prevent @drop.prevent="onFileDrop">
@@ -111,7 +112,6 @@
 <script lang="ts">
 
   import { Component, Vue } from 'vue-property-decorator'
-  import { onMounted, onUnmounted } from 'vue'
 
   import Markdown from './markdown'
   import Content from './context.vue'
@@ -125,28 +125,12 @@
   })
   export default class extends Vue {
 
-    data() {
-      return {
-        cwd: '~/Downloads',
-        files: [
-          {
-            name: 'a.txt',
-            type: 'file'
-          },
-          {
-            name: 'b',
-            type: 'dir'
-          },
-          {
-            name: 'c.mkv',
-            type: 'file'
-          },
-          {
-            name: 'd.mp3',
-            type: 'file'
-          }
-        ]
-      }
+    get cwd() {
+      return this.$accessor.files.cwd
+    }
+
+    get files() {
+      return this.$accessor.files.files
     }
     
     refresh() {

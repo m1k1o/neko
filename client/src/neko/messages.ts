@@ -8,8 +8,14 @@ import {
   ChatEvents,
   ScreenEvents,
   AdminEvents,
+  FileTransferEvents,
 } from './events'
-import { Member, ScreenConfigurations, ScreenResolution } from './types'
+import {
+  FileListItem,
+  Member,
+  ScreenConfigurations,
+  ScreenResolution
+} from './types'
 
 export type WebSocketMessages =
   | WebSocketMessage
@@ -190,6 +196,15 @@ export interface EmotePayload {
 
 export interface EmojiSendPayload {
   emote: string
+}
+
+// file transfer
+export interface FileTransferMessage extends WebSocketMessage, FileTransferListPayload {
+  event: FileTransferEvents
+}
+export interface FileTransferListPayload {
+  cwd: string,
+  files: FileListItem[]
 }
 
 /*

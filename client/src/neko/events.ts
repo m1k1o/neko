@@ -38,6 +38,13 @@ export const EVENT = {
     MESSAGE: 'chat/message',
     EMOTE: 'chat/emote',
   },
+  FILETRANSFER: {
+    ENABLE: 'filetransfer/enable',
+    DISABLE: 'filetransfer/disable',
+    UNPRIVENABLE: 'filetransfer/unprivenable',
+    UNPRIVDISABLE: 'filetransfer/unprivdisable',
+    LIST: 'filetransfer/list'
+  },
   SCREEN: {
     CONFIGURATIONS: 'screen/configurations',
     RESOLUTION: 'screen/resolution',
@@ -69,6 +76,7 @@ export type WebSocketEvents =
   | MemberEvents
   | SignalEvents
   | ChatEvents
+  | FileTransferEvents
   | ScreenEvents
   | BroadcastEvents
   | AdminEvents
@@ -91,6 +99,14 @@ export type SignalEvents =
   | typeof EVENT.SIGNAL.CANDIDATE
 
 export type ChatEvents = typeof EVENT.CHAT.MESSAGE | typeof EVENT.CHAT.EMOTE
+
+export type FileTransferEvents =
+  | typeof EVENT.FILETRANSFER.ENABLE
+  | typeof EVENT.FILETRANSFER.DISABLE
+  | typeof EVENT.FILETRANSFER.UNPRIVENABLE
+  | typeof EVENT.FILETRANSFER.UNPRIVDISABLE
+  | typeof EVENT.FILETRANSFER.LIST
+
 export type ScreenEvents = typeof EVENT.SCREEN.CONFIGURATIONS | typeof EVENT.SCREEN.RESOLUTION | typeof EVENT.SCREEN.SET
 
 export type BroadcastEvents =

@@ -24,6 +24,7 @@ import {
   AdminLockMessage,
   SystemInitPayload,
   AdminLockResource,
+  FileTransferListPayload,
 } from './messages'
 
 interface NekoEvents extends BaseEvents {}
@@ -349,6 +350,14 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
     }
 
     this.$accessor.chat.newEmote({ type: emote })
+  }
+
+  /////////////////////////////
+  // Chat Events
+  /////////////////////////////
+  protected [EVENT.FILETRANSFER.LIST]({ cwd, files }: FileTransferListPayload) {
+    this.$accessor.files.setCwd(cwd)
+    this.$accessor.files.setFileList(files)
   }
 
   /////////////////////////////

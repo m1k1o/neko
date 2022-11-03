@@ -22,3 +22,8 @@ export interface ScreenResolution {
   height: number
   rate: number
 }
+
+export interface FileListItem {
+  name: string,
+  type: 'file' | 'dir'
+}
