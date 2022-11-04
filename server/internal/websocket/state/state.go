@@ -3,12 +3,20 @@ package state
 type State struct {
 	banned map[string]string // IP -> session ID (that banned it)
 	locked map[string]string // resource name -> session ID (that locked it)
+
+	fileTransferEnabled       bool   // admins can transfer files
+	fileTransferUnprivEnabled bool   // all users can transfer files
+	fileTransferPath          string // path where files are located
 }
 
-func New() *State {
+func New(fileTransferEnabled bool, fileTransferUnprivEnabled bool, fileTransferPath string) *State {
 	return &State{
 		banned: make(map[string]string),
 		locked: make(map[string]string),
+
+		fileTransferEnabled:       fileTransferEnabled,
+		fileTransferUnprivEnabled: fileTransferUnprivEnabled,
+		fileTransferPath:          fileTransferPath,
 	}
 }
 
@@ -58,4 +66,18 @@ func (s *State) GetLocked(resource string) (string, bool) {
 
 func (s *State) AllLocked() map[string]string {
 	return s.locked
+}
+
+// File Transfer
+
+func (s *State) FileTransferEnabled() bool {
+	return s.fileTransferEnabled
+}
+
+func (s *State) UnprivFileTransferEnabled() bool {
+	return s.fileTransferUnprivEnabled
+}
+
+func (s *State) FileTransferPath() string {
+	return s.fileTransferPath
 }

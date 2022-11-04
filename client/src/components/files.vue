@@ -134,7 +134,7 @@
     }
     
     refresh() {
-      console.log('refresh')
+      this.$accessor.files.refresh()
     }
 
     download(item: any) {

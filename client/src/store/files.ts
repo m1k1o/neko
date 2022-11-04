@@ -30,6 +30,13 @@ export const actions = actionTree(
 
     setFileList(store, files: FileListItem[]) {
       accessor.files._setFileList(files)
+    },
+
+    refresh(store) {
+      if (!accessor.connected) {
+        return
+      }
+      $client.refreshFiles()
     }
   }
 )

@@ -26,7 +26,7 @@ const CONTROL_PROTECTION_SESSION = "by_control_protection"
 func New(sessions types.SessionManager, desktop types.DesktopManager, capture types.CaptureManager, webrtc types.WebRTCManager, conf *config.WebSocket) *WebSocketHandler {
 	logger := log.With().Str("module", "websocket").Logger()
 
-	state := state.New()
+	state := state.New(conf.FileTransfer, conf.UnprivFileTransfer, conf.FileTransferPath)
 
 	// if control protection is enabled
 	if conf.ControlProtection {

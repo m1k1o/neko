@@ -43,7 +43,8 @@ export const EVENT = {
     DISABLE: 'filetransfer/disable',
     UNPRIVENABLE: 'filetransfer/unprivenable',
     UNPRIVDISABLE: 'filetransfer/unprivdisable',
-    LIST: 'filetransfer/list'
+    LIST: 'filetransfer/list',
+    REFRESH: 'filetransfer/refresh'
   },
   SCREEN: {
     CONFIGURATIONS: 'screen/configurations',
@@ -106,6 +107,7 @@ export type FileTransferEvents =
   | typeof EVENT.FILETRANSFER.UNPRIVENABLE
   | typeof EVENT.FILETRANSFER.UNPRIVDISABLE
   | typeof EVENT.FILETRANSFER.LIST
+  | typeof EVENT.FILETRANSFER.REFRESH
 
 export type ScreenEvents = typeof EVENT.SCREEN.CONFIGURATIONS | typeof EVENT.SCREEN.RESOLUTION | typeof EVENT.SCREEN.SET
 
