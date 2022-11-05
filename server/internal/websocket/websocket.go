@@ -8,6 +8,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/fsnotify/fsnotify"
 	"github.com/gorilla/websocket"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -211,6 +212,30 @@ func (ws *WebSocketHandler) Start() {
 
 		ws.logger.Err(err).Msg("sync clipboard")
 	})
+
+	// watch for file changes
+	if ws.conf.FileTransfer {
+		watcher, err := fsnotify.NewWatcher()
+		if err != nil {
+			ws.logger.Err(err).Msg("unable to start file transfer dir watcher")
+			return
+		}
+
+		go func() {
+			for {
+				select {
+				case <-watcher.Events:
+					ws.sendFileTransferUpdate()
+				case err := <-watcher.Errors:
+					ws.logger.Err(err).Msg("error in file transfer dir watcher")
+				}
+			}
+		}()
+
+		if err := watcher.Add(ws.conf.FileTransferPath); err != nil {
+			ws.logger.Err(err).Msg("unable to add file transfer path to watcher")
+		}
+	}
 }
 
 func (ws *WebSocketHandler) Shutdown() error {
@@ -352,6 +377,30 @@ func (ws *WebSocketHandler) CanTransferFiles(password string) (bool, error) {
 
 func (ws *WebSocketHandler) MakeFilePath(filename string) string {
 	return fmt.Sprintf("%s%s", ws.conf.FileTransferPath, filename)
+}
+
+func (ws *WebSocketHandler) sendFileTransferUpdate() {
+	files, err := utils.ListFiles(ws.conf.FileTransferPath)
+	if err != nil {
+		ws.logger.Err(err).Msg("unable to ls file transfer path")
+		return
+	}
+
+	message := message.FileList{
+		Event: event.FILETRANSFER_LIST,
+		Cwd:   ws.conf.FileTransferPath,
+		Files: *files,
+	}
+
+	var broadcastErr error
+	if ws.conf.UnprivFileTransfer {
+		broadcastErr = ws.sessions.Broadcast(message, nil)
+	} else {
+		broadcastErr = ws.sessions.AdminBroadcast(message, nil)
+	}
+	if broadcastErr != nil {
+		ws.logger.Err(broadcastErr).Msg("unable to broadcast file list")
+	}
 }
 
 func (ws *WebSocketHandler) authenticate(r *http.Request) (bool, error) {
