@@ -158,6 +158,9 @@
               {{ video }}
             </option>
           </select>
+          or
+          <input type="text" v-model="bitrate" style="width: 60px" placeholder="Bitrate" />
+          <button @click="neko.setWebRTCVideo('', Number(bitrate))">Set</button>
         </td>
       </tr>
       <tr>
@@ -446,7 +449,7 @@
 </style>
 
 <script lang="ts">
-  import { Vue, Component, Prop } from 'vue-property-decorator'
+  import { Vue, Component, Prop, Watch } from 'vue-property-decorator'
   import Neko from '~/component/main.vue'
 
   @Component({
@@ -456,6 +459,12 @@
     @Prop() readonly neko!: Neko
 
     clipboardText: string = ''
+    bitrate: number | null = null
+
+    @Watch('neko.state.connection.webrtc.bitrate')
+    onBitrateChange(val: number) {
+      this.bitrate = val
+    }
 
     shift = false
     get letters(): number[] {

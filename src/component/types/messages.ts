@@ -56,6 +56,7 @@ export interface SignalDescription {
 
 export interface SignalVideo {
   video: string
+  bitrate: number
 }
 
 /////////////////////////////

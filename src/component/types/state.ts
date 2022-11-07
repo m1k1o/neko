@@ -38,6 +38,7 @@ export interface WebRTC {
   config: ReconnectorConfig
   stats: WebRTCStats | null
   video: string | null
+  bitrate: number | null
   videos: string[]
 }
 

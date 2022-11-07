@@ -164,12 +164,16 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
     this._reconnector.webrtc.config = this._state.webrtc.config
   }
 
-  public setVideo(video: string) {
-    if (!this._state.webrtc.videos.includes(video)) {
+  public setVideo(video: string, bitrate: number = 0) {
+    if (video != '' && !this._state.webrtc.videos.includes(video)) {
       throw new Error('video id not found')
     }
 
-    this.websocket.send(EVENT.SIGNAL_VIDEO, { video })
+    if (video == '' && bitrate == 0) {
+      throw new Error('video id and bitrate cannot be empty')
+    }
+
+    this.websocket.send(EVENT.SIGNAL_VIDEO, { video, bitrate })
   }
 
   public getLogger(scope?: string): Logger {
