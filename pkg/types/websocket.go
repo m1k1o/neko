@@ -7,7 +7,7 @@ import (
 
 type WebSocketMessage struct {
 	Event   string          `json:"event"`
-	Payload json.RawMessage `json:"payload"`
+	Payload json.RawMessage `json:"payload,omitempty"`
 }
 
 type WebSocketHandler func(Session, WebSocketMessage) bool

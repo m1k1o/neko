@@ -75,6 +75,13 @@ func (peer *WebSocketPeerCtx) Ping() error {
 		return errors.New("peer connection not found")
 	}
 
+	// application level heartbeat
+	if err := peer.connection.WriteJSON(types.WebSocketMessage{
+		Event: event.SYSTEM_HEARTBEAT,
+	}); err != nil {
+		return err
+	}
+
 	return peer.connection.WriteMessage(websocket.PingMessage, nil)
 }
 

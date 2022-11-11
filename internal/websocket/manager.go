@@ -23,6 +23,16 @@ const pingPeriod = 10 * time.Second
 // period for sending inactive cursor messages
 const inactiveCursorsPeriod = 750 * time.Millisecond
 
+// events that are not logged in debug mode
+var nologEvents = []string{
+	// don't log twice
+	event.SYSTEM_LOGS,
+	// don't log heartbeat
+	event.SYSTEM_HEARTBEAT,
+	// don't log every cursor update
+	event.SESSION_CURSORS,
+}
+
 func New(
 	sessions types.SessionManager,
 	desktop types.DesktopManager,
@@ -301,7 +311,8 @@ func (manager *WebSocketManagerCtx) handle(connection *websocket.Conn, peer type
 				break
 			}
 
-			if data.Event != event.SYSTEM_LOGS {
+			// log events if not ignored
+			if ok, _ := utils.ArrayIn(data.Event, nologEvents); !ok {
 				logger.Debug().
 					Str("address", connection.RemoteAddr().String()).
 					Str("event", data.Event).
