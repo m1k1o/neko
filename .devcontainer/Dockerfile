@@ -65,9 +65,7 @@ RUN set -eux; \
     chown $USERNAME /tmp/.X11-unix/; \
     #
     # make directories for neko
-    mkdir -p /etc/neko /var/www /var/log/neko; \
-    chmod 1777 /var/log/neko; \
-    chown $USERNAME /var/log/neko/; \
+    mkdir -p /etc/neko /var/www; \
     chown -R $USERNAME:$USERNAME /home/$USERNAME; \
     #
     # install fonts
