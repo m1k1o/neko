@@ -134,4 +134,4 @@ HEALTHCHECK --interval=10s --timeout=5s --retries=8 \
 
 #
 # run neko
-CMD ["/usr/bin/supervisord", "-c", "/etc/neko/supervisord.conf"]
+CMD ["/usr/bin/supervisord", "-s", "-c", "/etc/neko/supervisord.conf"]
