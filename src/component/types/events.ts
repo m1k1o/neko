@@ -3,6 +3,7 @@ export const SYSTEM_ADMIN = 'system/admin'
 export const SYSTEM_SETTINGS = 'system/settings'
 export const SYSTEM_LOGS = 'system/logs'
 export const SYSTEM_DISCONNECT = 'system/disconnect'
+export const SYSTEM_HEARTBEAT = 'system/heartbeat'
 
 export const SIGNAL_REQUEST = 'signal/request'
 export const SIGNAL_RESTART = 'signal/restart'
