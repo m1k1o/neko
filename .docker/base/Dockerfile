@@ -81,8 +81,14 @@ RUN set -eux; \
                     gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-pulseaudio \
                     gstreamer1.0-vaapi ;\
     #
-    # fonts
-    apt-get install -y --no-install-recommends fonts-takao-mincho fonts-wqy-zenhei; \
+    # install fonts
+    apt-get install -y --no-install-recommends \
+        # Google emojis
+        fonts-noto-color-emoji \
+        # Japanese fonts
+        fonts-takao-mincho \
+        # Chinese fonts
+        fonts-wqy-zenhei; \
     #
     # create a non-root user
     groupadd --gid $USER_GID $USERNAME; \

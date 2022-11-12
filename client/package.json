@@ -20,18 +20,18 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
-    "@fortawesome/fontawesome-free": "^6.1.2",
+    "@fortawesome/fontawesome-free": "^6.2.0",
     "animejs": "^3.2.0",
     "axios": "^0.21.4",
-    "date-fns": "^2.29.1",
+    "date-fns": "^2.29.3",
     "emoji-datasource": "^6.0.1",
     "eventemitter3": "^4.0.7",
     "resize-observer-polyfill": "^1.5.1",
     "simple-markdown": "^0.7.2",
-    "sweetalert2": "^11.4.24",
+    "sweetalert2": "11.4.8",
     "typed-vuex": "^0.1.21",
     "v-tooltip": "^2.0.3",
-    "vue": "^2.7.8",
+    "vue": "^2.7.13",
     "vue-class-component": "^7.2.6",
     "vue-clickaway": "^2.2.2",
     "vue-context": "^5.2.0",
@@ -41,8 +41,8 @@
     "vuex": "^3.5.1"
   },
   "devDependencies": {
-    "@types/animejs": "^3.1.5",
-    "@types/node": "^14.18.23",
+    "@types/animejs": "^3.1.6",
+    "@types/node": "^14.18.32",
     "@types/vue": "^2.0.0",
     "@types/vue-clickaway": "^2.2.0",
     "@typescript-eslint/eslint-plugin": "^4.33.0",
@@ -54,16 +54,16 @@
     "@vue/cli-service": "^4.5.19",
     "@vue/eslint-config-prettier": "^6.0.0",
     "@vue/eslint-config-typescript": "^7.0.0",
-    "core-js": "^3.24.1",
+    "core-js": "^3.26.0",
     "emojilib": "^3.0.7",
     "eslint": "^6.8.0",
     "eslint-plugin-prettier": "^3.4.1",
     "eslint-plugin-vue": "^7.20.0",
     "prettier": "^2.7.1",
-    "sass": "^1.54.0",
+    "sass": "^1.55.0",
     "sass-loader": "^10.3.1",
     "ts-node": "^9.1.1",
-    "typescript": "^4.7.4",
-    "vue-template-compiler": "^2.7.8"
+    "typescript": "^4.8.4",
+    "vue-template-compiler": "^2.7.13"
   }
 }

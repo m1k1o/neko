@@ -7,6 +7,7 @@
 - Added `m1k1o/neko:opera` tag (thanks @prophetofxenu).
 - Added `NEKO_PATH_PREFIX`.
 - Added screenshot function `/screenshot.jpg?pwd=<admin>`, works only for unlocked rooms.
+- Added emoji support (by @yesBad).
 
 ### Misc
 - Server: Split `remote` to `desktop` and `capture`.
