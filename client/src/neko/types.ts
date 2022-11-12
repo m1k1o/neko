@@ -25,5 +25,17 @@ export interface ScreenResolution {
 
 export interface FileListItem {
   name: string,
-  type: 'file' | 'dir'
+  type: 'file' | 'dir',
+  size: number
+}
+
+export interface FileTransfer {
+  id: number,
+  name: string,
+  direction: 'upload' | 'download',
+  size: number,
+  progress: number,
+  status: 'pending' | 'inprogress' | 'completed',
+  axios: Promise<void> | null,
+  abortController: AbortController | null
 }

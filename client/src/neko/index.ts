@@ -71,6 +71,14 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
     })
   }
 
+  public refreshFiles() {
+    if (!this.connected) {
+      this.emit('warn', 'attempting to refresh files while disconnected')
+    }
+    this.emit('debug', `sending event '${EVENT.FILETRANSFER.REFRESH}'`)
+    this._ws!.send(JSON.stringify({ event: EVENT.FILETRANSFER.REFRESH }))
+  }
+
   /////////////////////////////
   // Internal Events
   /////////////////////////////

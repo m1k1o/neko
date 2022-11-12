@@ -1,10 +1,11 @@
 import { actionTree, getterTree, mutationTree } from 'typed-vuex'
-import { FileListItem } from '~/neko/types'
+import { FileListItem, FileTransfer } from '~/neko/types'
 import { accessor } from '~/store'
 
 export const state = () => ({
   cwd: '',
-  files: [] as FileListItem[]
+  files: [] as FileListItem[],
+  transfers: [] as FileTransfer[]
 })
 
 export const getters = getterTree(state, {
@@ -18,6 +19,14 @@ export const mutations = mutationTree(state, {
 
   _setFileList(state, files: FileListItem[]) {
     state.files = files
+  },
+
+  _addTransfer(state, transfer: FileTransfer) {
+    state.transfers = [...state.transfers, transfer]
+  },
+
+  _removeTransfer(state, transfer: FileTransfer) {
+    state.transfers = state.transfers.filter((t) => t.id !== transfer.id)
   }
 })
 
@@ -30,6 +39,17 @@ export const actions = actionTree(
 
     setFileList(store, files: FileListItem[]) {
       accessor.files._setFileList(files)
+    },
+
+    addTransfer(store, transfer: FileTransfer) {
+      if (transfer.status !== 'pending') {
+        return
+      }
+      accessor.files._addTransfer(transfer)
+    },
+
+    removeTransfer(store, transfer: FileTransfer) {
+      accessor.files._removeTransfer(transfer)
     },
 
     refresh(store) {

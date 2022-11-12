@@ -35,6 +35,7 @@ func New(conf *config.Server, webSocketHandler types.WebSocketHandler, desktop t
 	router.Use(middleware.RequestID) // Create a request ID for each request
 	router.Use(middleware.RequestLogger(&logformatter{logger}))
 	router.Use(middleware.Recoverer) // Recover from panics without crashing server
+	router.Use(middleware.Compress(5, "application/octet-stream"))
 
 	if conf.PathPrefix != "/" {
 		router.Use(func(h http.Handler) http.Handler {

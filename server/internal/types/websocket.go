@@ -41,4 +41,5 @@ type WebSocketHandler interface {
 type FileListItem struct {
 	Filename string `json:"name"`
 	Type     string `json:"type"`
+	Size     int64  `json:"size"`
 }

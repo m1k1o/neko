@@ -187,14 +187,6 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
     this._ws!.send(JSON.stringify({ event, ...payload }))
   }
 
-  public refreshFiles() {
-    if (!this.connected) {
-      this.emit('warn', 'attempting to refresh files while disconnected')
-    }
-    this.emit('debug', `sending event '${EVENT.FILETRANSFER.REFRESH}'`)
-    this._ws!.send(JSON.stringify({ event: EVENT.FILETRANSFER.REFRESH }))
-  }
-
   public async createPeer(lite: boolean, servers: RTCIceServer[]) {
     this.emit('debug', `creating peer`)
     if (!this.socketOpen) {

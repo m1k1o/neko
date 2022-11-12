@@ -15,14 +15,20 @@ func ListFiles(path string) (*[]types.FileListItem, error) {
 	out := make([]types.FileListItem, len(items))
 	for i, item := range items {
 		var itemType string = ""
+		var size int64 = 0
 		if item.IsDir() {
 			itemType = "dir"
 		} else {
 			itemType = "file"
+			info, err := item.Info()
+			if err == nil {
+				size = info.Size()
+			}
 		}
 		out[i] = types.FileListItem{
 			Filename: item.Name(),
 			Type:     itemType,
+			Size:     size,
 		}
 	}
 
