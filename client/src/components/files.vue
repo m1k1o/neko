@@ -19,7 +19,7 @@
         <div v-for="download in downloads" :key="download.name" class="transfers-list-item">
           <div class="transfer-info">
             <p>{{ download.name }}</p>
-            <p class="file-size">{{ Math.max(100, Math.round(download.progress / download.size * 100))}}%</p>
+            <p class="file-size">{{ Math.min(100, Math.round(download.progress / download.size * 100))}}%</p>
             <i class="fas fa-xmark remove-transfer" @click="() => removeTransfer(download)"></i>
           </div>
           <progress class="transfer-progress" :aria-label="download.name + ' progress'" :value="download.progress"
@@ -199,6 +199,10 @@ import { FileTransfer } from '~/neko/types'
     }
 
     download(item: any) {
+      if (this.downloads.map((t) => t.name).includes(item.name)) {
+        return
+      }
+
       const url = `/file?pwd=${this.$accessor.password}&filename=${item.name}`
       let transfer: FileTransfer = {
         id: Math.round(Math.random() * 10000),
@@ -210,15 +214,16 @@ import { FileTransfer } from '~/neko/types'
         progress: 0,
         status: 'pending',
         axios: null,
-        // TODO add support for aborting in progress requests, requires axios >=0.22
         abortController: null
       }
+      transfer.abortController = new AbortController()
       transfer.axios = this.$http.get(url, {
         responseType: 'blob',
+        signal: transfer.abortController.signal,
         onDownloadProgress: (x) => {
           transfer.progress = x.loaded
 
-          if (x.lengthComputable) {
+          if (x.lengthComputable && transfer.size !== x.total) {
             transfer.size = x.total
           }
           if (transfer.progress === transfer.size) {
@@ -240,9 +245,11 @@ import { FileTransfer } from '~/neko/types'
       this.$accessor.files.addTransfer(transfer)
     }
 
-    removeTransfer(item: FileTransfer) {
-      console.log(item)
-      this.$accessor.files.removeTransfer(item)
+    removeTransfer(transfer: FileTransfer) {
+      if (transfer.status !== 'completed') {
+        transfer.abortController?.abort()
+      }
+      this.$accessor.files.removeTransfer(transfer)
     }
 
     fileIcon(file: any) {
@@ -261,16 +268,16 @@ import { FileTransfer } from '~/neko/types'
         case 'mp3':
         case 'flac':
           className += 'fa-music'
-          break;
+          break
         case 'webm':
         case 'mp4':
         case 'mkv':
           className += 'fa-film'
-          break;
+          break
         default:
           className += 'fa-file'
       }
-      return className;
+      return className
     }
 
     fileSize(size: number) {
