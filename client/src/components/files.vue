@@ -15,8 +15,8 @@
     </div>
     <div class="transfer-area">
       <div class="transfers" v-if="transfers.length > 0">
-        <p>Downloads</p>
-        <div v-for="download in downloads" :key="download.name" class="transfers-list-item">
+        <p v-if="downloads.length > 0">Downloads</p>
+        <div v-for="download in downloads" :key="download.id" class="transfers-list-item">
           <div class="transfer-info">
             <p>{{ download.name }}</p>
             <p class="file-size">{{ Math.min(100, Math.round(download.progress / download.size * 100))}}%</p>
@@ -25,10 +25,22 @@
           <progress class="transfer-progress" :aria-label="download.name + ' progress'" :value="download.progress"
           :max="download.size"></progress>
         </div>
+        <p v-if="uploads.length > 0">Uploads</p>
+        <div v-for="upload in uploads" :key="upload.id" class="transfers-list-item">
+          <div class="transfer-info">
+            <p>{{ upload.name }}</p>
+            <p class="file-size">{{ Math.min(100, Math.round(upload.progress / upload.size * 100))}}%</p>
+            <i class="fas fa-xmark remove-transfer" @click="() => removeTransfer(upload)"></i>
+          </div>
+          <progress class="transfer-progress" :aria-label="upload.name + ' progress'" :value="upload.progress"
+          :max="upload.size"></progress>
+        </div>
       </div>
-      <div class="upload-area" @dragover.prevent @drop.prevent="onFileDrop">
+      <div class="upload-area" :class="{ 'upload-area-drag': uploadAreaDrag }"
+      @dragover.prevent="() => uploadAreaDrag = true" @dragleave.prevent="() => uploadAreaDrag = false"
+      @drop.prevent="(e) => upload(e.dataTransfer)" @click="openFileBrowser">
         <i class="fas fa-file-arrow-up" />
-        <p>Drag files here to upload</p>
+        <p>Click or drag files here to upload</p>
       </div>
     </div>
   </div>
@@ -116,6 +128,9 @@
       margin: 10px 10px 10px 10px;
       background-color: rgba($color: #fff, $alpha: 0.05);
       border-radius: 5px;
+      max-height: 50vh;
+      overflow-y: scroll;
+      overflow-x: hidden;
     }
 
     .transfers > p {
@@ -145,6 +160,14 @@
       border-radius: 5px;
     }
 
+    .upload-area:hover {
+      cursor: pointer;
+    }
+
+    .upload-area-drag, .upload-area:hover {
+      background-color: rgba($color: #fff, $alpha: 0.10);
+    }
+
     .upload-area > i {
       font-size: 4em;
       margin: 10px 10px 10px 10px;
@@ -163,7 +186,7 @@
 
   import Markdown from './markdown'
   import Content from './context.vue'
-import { FileTransfer } from '~/neko/types'
+  import { FileTransfer } from '~/neko/types'
 
   @Component({
     name: 'neko-files',
@@ -173,6 +196,8 @@ import { FileTransfer } from '~/neko/types'
     }
   })
   export default class extends Vue {
+
+    public uploadAreaDrag: boolean = false;
 
     get cwd() {
       return this.$accessor.files.cwd
@@ -208,8 +233,8 @@ import { FileTransfer } from '~/neko/types'
         id: Math.round(Math.random() * 10000),
         name: item.name,
         direction: 'download',
-        // this is just an estimation, but for large files the content length
-        // is not sent (chunked transfer)
+        // this may be smaller than the actual transfer amount, but for large files the
+        // content length is not sent (chunked transfer)
         size: item.size,
         progress: 0,
         status: 'pending',
@@ -228,6 +253,8 @@ import { FileTransfer } from '~/neko/types'
           }
           if (transfer.progress === transfer.size) {
             transfer.status = 'completed'
+          } else if (transfer.status !== 'inprogress') {
+            transfer.status = 'inprogress'
           }
         }
       }).then((res) => {
@@ -243,6 +270,64 @@ import { FileTransfer } from '~/neko/types'
         this.$log.error(err)
       })
       this.$accessor.files.addTransfer(transfer)
+    }
+
+    upload(dt: DataTransfer) {
+      this.uploadAreaDrag = false
+
+      for (const file of dt.files) {
+        const formdata = new FormData()
+        formdata.append("files", file, file.name)
+
+        const url = `/file?pwd=${this.$accessor.password}`
+        let transfer: FileTransfer = {
+          id: Math.round(Math.random() * 10000),
+          name: file.name,
+          direction: 'upload',
+          size: file.size,
+          progress: 0,
+          status: 'pending',
+          axios: null,
+          abortController: null
+        }
+        transfer.abortController = new AbortController()
+        this.$http.post(url, formdata, {
+          onUploadProgress: (x: any) => {
+            transfer.progress = x.loaded
+
+            if (transfer.size !== x.total) {
+              transfer.size = x.total
+            }
+            if (transfer.progress === transfer.size) {
+              transfer.status = 'completed'
+            } else if (transfer.status !== 'inprogress') {
+              transfer.status = 'inprogress'
+            }
+          }
+        }).catch((err) => {
+          this.$log.error(err)
+        })
+        this.$accessor.files.addTransfer(transfer)
+      }
+    }
+
+    openFileBrowser() {
+      const input = document.createElement('input')
+      input.type = 'file'
+      input.setAttribute('multiple', 'true')
+      input.click()
+
+      input.onchange = (e) => {
+        if (e === null) {
+          return
+        }
+        const dt = new DataTransfer()
+        const target = e.target as any
+        for (const f of target.files) {
+          dt.items.add(f)
+        }
+        this.upload(dt)
+      }
     }
 
     removeTransfer(transfer: FileTransfer) {
@@ -296,10 +381,6 @@ import { FileTransfer } from '~/neko/types'
       return `${(size / 1000 ** 4).toFixed(3)} tb`
     }
 
-    onFileDrop(e: any) {
-      console.log('file dropped', e)
-      console.log(e.dataTransfer.files)
-    }
   }
 
 </script>
