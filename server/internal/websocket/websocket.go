@@ -135,7 +135,19 @@ func (ws *WebSocketHandler) Start() {
 		}
 
 		// send file list if necessary
-		if session.Admin() && ws.conf.FileTransfer || ws.conf.FileTransfer && ws.conf.UnprivFileTransfer {
+		if session.Admin() && ws.state.FileTransferEnabled() ||
+			ws.state.FileTransferEnabled() && ws.state.UnprivFileTransferEnabled() {
+			err := session.Send(
+				message.FileTransferStatus{
+					Event:  event.FILETRANSFER_STATUS,
+					Admin:  ws.state.FileTransferEnabled(),
+					Unpriv: ws.state.UnprivFileTransferEnabled(),
+				})
+			if err != nil {
+				ws.logger.Warn().Err(err).Msgf("file transfer status event has failed")
+				return
+			}
+
 			files, err := utils.ListFiles(ws.conf.FileTransferPath)
 			if err == nil {
 				if err := session.Send(
@@ -214,27 +226,25 @@ func (ws *WebSocketHandler) Start() {
 	})
 
 	// watch for file changes
-	if ws.conf.FileTransfer {
-		watcher, err := fsnotify.NewWatcher()
-		if err != nil {
-			ws.logger.Err(err).Msg("unable to start file transfer dir watcher")
-			return
-		}
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		ws.logger.Err(err).Msg("unable to start file transfer dir watcher")
+		return
+	}
 
-		go func() {
-			for {
-				select {
-				case <-watcher.Events:
-					ws.sendFileTransferUpdate()
-				case err := <-watcher.Errors:
-					ws.logger.Err(err).Msg("error in file transfer dir watcher")
-				}
+	go func() {
+		for {
+			select {
+			case <-watcher.Events:
+				ws.sendFileTransferUpdate()
+			case err := <-watcher.Errors:
+				ws.logger.Err(err).Msg("error in file transfer dir watcher")
 			}
-		}()
-
-		if err := watcher.Add(ws.conf.FileTransferPath); err != nil {
-			ws.logger.Err(err).Msg("unable to add file transfer path to watcher")
 		}
+	}()
+
+	if err := watcher.Add(ws.conf.FileTransferPath); err != nil {
+		ws.logger.Err(err).Msg("unable to add file transfer path to watcher")
 	}
 }
 
@@ -364,11 +374,11 @@ func (ws *WebSocketHandler) IsAdmin(password string) (bool, error) {
 }
 
 func (ws *WebSocketHandler) CanTransferFiles(password string) (bool, error) {
-	if !ws.conf.FileTransfer {
+	if !ws.state.FileTransferEnabled() {
 		return false, nil
 	}
 
-	if !ws.conf.UnprivFileTransfer {
+	if !ws.state.UnprivFileTransferEnabled() {
 		return ws.IsAdmin(password)
 	}
 
@@ -380,6 +390,10 @@ func (ws *WebSocketHandler) MakeFilePath(filename string) string {
 }
 
 func (ws *WebSocketHandler) sendFileTransferUpdate() {
+	if !ws.state.FileTransferEnabled() {
+		return
+	}
+
 	files, err := utils.ListFiles(ws.conf.FileTransferPath)
 	if err != nil {
 		ws.logger.Err(err).Msg("unable to ls file transfer path")
@@ -393,7 +407,7 @@ func (ws *WebSocketHandler) sendFileTransferUpdate() {
 	}
 
 	var broadcastErr error
-	if ws.conf.UnprivFileTransfer {
+	if ws.state.UnprivFileTransferEnabled() {
 		broadcastErr = ws.sessions.Broadcast(message, nil)
 	} else {
 		broadcastErr = ws.sessions.AdminBroadcast(message, nil)

@@ -44,6 +44,7 @@ export type WebSocketPayloads =
   | ChatPayload
   | ChatSendPayload
   | EmojiSendPayload
+  | FileTransferStatusPayload
   | ScreenResolutionPayload
   | ScreenConfigurationsPayload
   | AdminPayload
@@ -198,8 +199,17 @@ export interface EmojiSendPayload {
   emote: string
 }
 
-// file transfer
-export interface FileTransferMessage extends WebSocketMessage, FileTransferListPayload {
+// file transfer enabled
+export interface FileTransferStatusMessage extends WebSocketMessage, FileTransferStatusPayload {
+  event: typeof EVENT.FILETRANSFER.STATUS
+}
+export interface FileTransferStatusPayload {
+  admin: boolean,
+  unpriv: boolean
+}
+
+// file transfer list
+export interface FileTransferListMessage extends WebSocketMessage, FileTransferListPayload {
   event: FileTransferEvents
 }
 export interface FileTransferListPayload {

@@ -35,12 +35,9 @@ const (
 )
 
 const (
-	FILETRANSFER_ENABLE        = "filetransfer/enable"
-	FILETRANSFER_DISABLE       = "filetransfer/disable"
-	FILETRANSFER_UNPRIVENABLE  = "filetransfer/unprivenable"
-	FILETRANSFER_UNPRIVDISABLE = "filetransfer/unprivdisable"
-	FILETRANSFER_LIST          = "filetransfer/list"
-	FILETRANSFER_REFRESH       = "filetransfer/refresh"
+	FILETRANSFER_STATUS  = "filetransfer/status"
+	FILETRANSFER_LIST    = "filetransfer/list"
+	FILETRANSFER_REFRESH = "filetransfer/refresh"
 )
 
 const (

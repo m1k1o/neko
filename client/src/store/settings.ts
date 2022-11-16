@@ -20,6 +20,9 @@ export const state = () => {
 
     keyboard_layouts_list: {} as KeyboardLayouts,
 
+    file_transfer: false,
+    unpriv_file_transfer: false,
+
     broadcast_is_active: false,
     broadcast_url: '',
   }
@@ -58,6 +61,14 @@ export const mutations = mutationTree(state, {
     set('keyboard_layout', value)
   },
 
+  setFileTransfer(state, value: boolean) {
+    state.file_transfer = value
+  },
+
+  setUnprivFileTransfer(state, value: boolean) {
+    state.unpriv_file_transfer = value
+  },
+
   setKeyboardLayoutsList(state, value: KeyboardLayouts) {
     state.keyboard_layouts_list = value
   },
@@ -77,6 +88,23 @@ export const actions = actionTree(
       } catch (err: any) {
         console.error(err)
       }
+    },
+
+    setLocalFileTransferStatus({ getters }, { admin, unpriv }) {
+      accessor.settings.setFileTransfer(admin)
+      accessor.settings.setUnprivFileTransfer(unpriv)
+
+      if (!admin || !accessor.user.admin && !unpriv) {
+        accessor.files.cancelAllTransfers()
+      }
+      
+      if (accessor.client.tab === 'files' && !unpriv) {
+        accessor.client.setTab('chat')
+      }
+    },
+
+    setGlobalFileTransferStatus({ getters}, { admin, unpriv }) {
+      $client.sendMessage(EVENT.FILETRANSFER.STATUS, { admin, unpriv })
     },
 
     broadcastStatus({ getters }, { url, isActive }) {

@@ -108,7 +108,12 @@ type EmoteSend struct {
 
 type FileTransferTarget struct {
 	Event string `json:"event"`
-	ID    string `json:"id"`
+}
+
+type FileTransferStatus struct {
+	Event  string `json:"event"`
+	Admin  bool   `json:"admin"`
+	Unpriv bool   `json:"unpriv"`
 }
 
 type FileList struct {

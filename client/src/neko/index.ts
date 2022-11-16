@@ -25,6 +25,7 @@ import {
   SystemInitPayload,
   AdminLockResource,
   FileTransferListPayload,
+  FileTransferStatusPayload,
 } from './messages'
 
 interface NekoEvents extends BaseEvents {}
@@ -361,8 +362,12 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   }
 
   /////////////////////////////
-  // Chat Events
+  // Filetransfer Events
   /////////////////////////////
+  protected [EVENT.FILETRANSFER.STATUS]({ admin, unpriv }: FileTransferStatusPayload) {
+    this.$accessor.settings.setLocalFileTransferStatus({ admin, unpriv })
+  }
+
   protected [EVENT.FILETRANSFER.LIST]({ cwd, files }: FileTransferListPayload) {
     this.$accessor.files.setCwd(cwd)
     this.$accessor.files.setFileList(files)

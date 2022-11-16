@@ -6,7 +6,7 @@
           <i class="fas fa-comment-alt" />
           <span>{{ $t('side.chat') }}</span>
         </li>
-        <li :class="{ active: tab === 'files' }" @click.stop.prevent="change('files')">
+        <li v-if="filetransferAllowed" :class="{ active: tab === 'files' }" @click.stop.prevent="change('files')">
           <i class="fas fa-file" />
           <span>{{ $t('side.files') }}</span>
         </li>
@@ -94,6 +94,20 @@
     },
   })
   export default class extends Vue {
+
+    constructor() {
+      super()
+      if (this.tab === 'files' && (!this.$accessor.settings.file_transfer ||
+      !this.$accessor.user.admin && this.$accessor.settings.unpriv_file_transfer)) {
+        this.change('chat')
+      }
+    }
+
+    get filetransferAllowed() {
+      return this.$accessor.user.admin && this.$accessor.settings.file_transfer ||
+        this.$accessor.settings.unpriv_file_transfer
+    }
+
     get tab() {
       return this.$accessor.client.tab
     }

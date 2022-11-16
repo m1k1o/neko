@@ -39,10 +39,7 @@ export const EVENT = {
     EMOTE: 'chat/emote',
   },
   FILETRANSFER: {
-    ENABLE: 'filetransfer/enable',
-    DISABLE: 'filetransfer/disable',
-    UNPRIVENABLE: 'filetransfer/unprivenable',
-    UNPRIVDISABLE: 'filetransfer/unprivdisable',
+    STATUS: 'filetransfer/status',
     LIST: 'filetransfer/list',
     REFRESH: 'filetransfer/refresh'
   },
@@ -102,10 +99,7 @@ export type SignalEvents =
 export type ChatEvents = typeof EVENT.CHAT.MESSAGE | typeof EVENT.CHAT.EMOTE
 
 export type FileTransferEvents =
-  | typeof EVENT.FILETRANSFER.ENABLE
-  | typeof EVENT.FILETRANSFER.DISABLE
-  | typeof EVENT.FILETRANSFER.UNPRIVENABLE
-  | typeof EVENT.FILETRANSFER.UNPRIVDISABLE
+  | typeof EVENT.FILETRANSFER.STATUS
   | typeof EVENT.FILETRANSFER.LIST
   | typeof EVENT.FILETRANSFER.REFRESH
 

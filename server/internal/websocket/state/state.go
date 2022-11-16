@@ -78,6 +78,11 @@ func (s *State) UnprivFileTransferEnabled() bool {
 	return s.fileTransferUnprivEnabled
 }
 
+func (s *State) SetFileTransferState(admin bool, unpriv bool) {
+	s.fileTransferEnabled = admin
+	s.fileTransferUnprivEnabled = unpriv
+}
+
 func (s *State) FileTransferPath() string {
 	return s.fileTransferPath
 }

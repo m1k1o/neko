@@ -131,6 +131,26 @@
       max-height: 50vh;
       overflow-y: scroll;
       overflow-x: hidden;
+      scrollbar-width: thin;
+      scrollbar-color: $background-tertiary transparent;
+
+      &::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      &::-webkit-scrollbar-track {
+        background-color: transparent;
+      }
+
+      &::-webkit-scrollbar-thumb {
+        background-color: $background-tertiary;
+        border: 2px solid $background-primary;
+        border-radius: 4px;
+      }
+
+      &::-webkit-scrollbar-thumb:hover {
+        background-color: $background-floating;
+      }
     }
 
     .transfers > p {
