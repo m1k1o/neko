@@ -15,7 +15,7 @@
     </div>
     <div class="transfer-area">
       <div class="transfers" v-if="transfers.length > 0">
-        <p v-if="downloads.length > 0">Downloads</p>
+        <p v-if="downloads.length > 0">{{ $t('files.downloads') }}</p>
         <div v-for="download in downloads" :key="download.id" class="transfers-list-item">
           <div class="transfer-info">
             <i class="fas transfer-status" :class="{ 'fa-arrows-rotate': download.status !== 'completed', 'fa-check': download.status === 'completed' }"></i>
@@ -26,7 +26,7 @@
           <progress class="transfer-progress" :aria-label="download.name + ' progress'" :value="download.progress"
           :max="download.size"></progress>
         </div>
-        <p v-if="uploads.length > 0">Uploads</p>
+        <p v-if="uploads.length > 0">{{ $t('files.uploads' )}}</p>
         <div v-for="upload in uploads" :key="upload.id" class="transfers-list-item">
           <div class="transfer-info">
             <i class="fas transfer-status" :class="{ 'fa-arrows-rotate': upload.status !== 'completed', 'fa-check': upload.status === 'completed' }"></i>
@@ -42,7 +42,7 @@
       @dragover.prevent="() => uploadAreaDrag = true" @dragleave.prevent="() => uploadAreaDrag = false"
       @drop.prevent="(e) => upload(e.dataTransfer)" @click="openFileBrowser">
         <i class="fas fa-file-arrow-up" />
-        <p>Click or drag files here to upload</p>
+        <p>{{ $t('files.upload_here') }}</p>
       </div>
     </div>
   </div>

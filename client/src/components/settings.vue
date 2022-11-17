@@ -45,14 +45,14 @@
         </label>
       </li>
       <li v-if="admin">
-        <span>File transfer</span>
+        <span>{{ $t('setting.file_transfer') }}</span>
         <label class="switch">
           <input type="checkbox" v-model="file_transfer" />
           <span />
         </label>
       </li>
       <li v-if="admin && file_transfer">
-        <span>Non-admin file transfer</span>
+        <span>{{ $t('setting.unpriv_file_transfer') }}</span>
         <label class="switch">
           <input type="checkbox" v-model="unpriv_file_transfer" />
           <span />

@@ -7,6 +7,7 @@ export const send_a_message = 'Отправить сообщение'
 
 export const side = {
   chat: 'Чат',
+  files: 'Файлы',
   settings: 'Настройки',
 }
 
@@ -79,6 +80,8 @@ export const setting = {
   ignore_emotes: 'Игнорировать эмоции',
   chat_sound: 'Проигрывать звук чата',
   keyboard_layout: 'Раскладка клавиатуры',
+  file_transfer: 'Передача файлов',
+  unpriv_file_transfer: 'Передача файлов пользователей',
   broadcast_title: 'Прямой эфир',
 }
 
@@ -109,4 +112,10 @@ export const notifications = {
   kicked: 'выкинут {name}',
   muted: 'заглушен {name}',
   unmuted: 'не заглушен {name}',
+}
+
+export const files = {
+  downloads: 'Загрузки',
+  uploads: 'Загрузить',
+  upload_here: 'Нажмите или перетащите сюда файлы для загрузки'
 }

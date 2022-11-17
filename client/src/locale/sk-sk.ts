@@ -8,6 +8,7 @@ export const send_a_message = 'Odoslať správu'
 
 export const side = {
   chat: 'Chat',
+  files: 'Súbory',
   settings: 'Nastavenia',
 }
 
@@ -82,6 +83,8 @@ export const setting = {
   ignore_emotes: 'Ignorovať smajlíky',
   chat_sound: 'Prehrávať zvuky chatu',
   keyboard_layout: 'Rozloženie klávesnice',
+  file_transfer: 'Prenos súborov',
+  unpriv_file_transfer: 'Prenos súborov používateľa',
   broadcast_title: 'Živé vysielanie',
 }
 
@@ -112,4 +115,10 @@ export const notifications = {
   kicked: '{name} bol/a vykopnutý/a',
   muted: 'zakázal chat používateľovi {name}',
   unmuted: 'povolil chat používateľovi {name}',
+}
+
+export const files = {
+  downloads: 'Stiahnutia',
+  uploads: 'Nahrávanie',
+  upload_here: 'Kliknutím alebo pretiahnutím súborov sem ich môžete nahrať'
 }

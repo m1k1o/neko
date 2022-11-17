@@ -7,6 +7,7 @@ export const send_a_message = 'Sende eine Nachricht'
 
 export const side = {
   chat: 'Chat',
+  files: 'Dateien',
   settings: 'Einstellungen',
 }
 
@@ -77,6 +78,8 @@ export const setting = {
   ignore_emotes: 'Emotes ignorieren',
   chat_sound: 'Chat-Sound abspielen',
   keyboard_layout: 'Tastaturbelegung',
+  file_transfer: 'Dateiübertragung',
+  unpriv_file_transfer: 'Übertragung von Benutzerdateien',
   broadcast_title: 'Live-Übertragung',
 }
 
@@ -107,4 +110,10 @@ export const notifications = {
   kicked: '{name} wurde rausgeworfen',
   muted: '{name} stummgeschaltet',
   unmuted: '{name} stummschaltung aufgehoben',
+}
+
+export const files = {
+  downloads: 'Herunterladen',
+  uploads: 'Hochladen',
+  upload_here: 'Klicken oder ziehen Sie Dateien zum Hochladen hierher'
 }

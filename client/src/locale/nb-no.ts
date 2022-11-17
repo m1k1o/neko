@@ -8,6 +8,7 @@ export const send_a_message = 'Send en melding'
 
 export const side = {
   chat: 'Sludring',
+  files: 'Filer',
   settings: 'Innstillinger',
 }
 
@@ -83,6 +84,8 @@ export const setting = {
   ignore_emotes: 'Ignorer smilefjes',
   chat_sound: 'Sludringslyd',
   keyboard_layout: 'Tastaturoppsett',
+  file_transfer: 'Filoverførsel',
+  unpriv_file_transfer: 'Overførsel af brugerfiler',
   // TODO
   //broadcast_title: 'Live Broadcast',
 }
@@ -116,4 +119,10 @@ export const notifications = {
   kicked: 'kastet ut {name}',
   muted: 'forstummet {name}',
   unmuted: 'opphevet forstummingen av {name}',
+}
+
+export const files = {
+  downloads: 'Overførsler',
+  uploads: 'Overfør',
+  upload_here: 'Klik eller træk filer her for at uploade'
 }

@@ -8,6 +8,7 @@ export const send_a_message = 'Skicka ett meddelande'
 
 export const side = {
   chat: 'Chatt',
+  files: 'Filer',
   settings: 'Inställningar',
 }
 
@@ -83,6 +84,8 @@ export const setting = {
   ignore_emotes: 'Ignorera Emotes',
   chat_sound: 'Spela Chatt Ljud',
   keyboard_layout: 'Tangentbordslayout',
+  file_transfer: 'Överföring av filer',
+  unpriv_file_transfer: 'Överföring av användarfiler',
   // TODO
   //broadcast_title: 'Live Broadcast',
 }
@@ -116,4 +119,10 @@ export const notifications = {
   kicked: 'sparkade {name}',
   muted: 'tystade {name}',
   unmuted: 'tog bort tystningen på {name}',
+}
+
+export const files = {
+  downloads: 'Nedladdningar',
+  uploads: 'Ladda upp',
+  upload_here: 'Klicka eller dra filer hit för att ladda upp dem'
 }
