@@ -18,6 +18,7 @@
         <p v-if="downloads.length > 0">Downloads</p>
         <div v-for="download in downloads" :key="download.id" class="transfers-list-item">
           <div class="transfer-info">
+            <i class="fas transfer-status" :class="{ 'fa-arrows-rotate': download.status !== 'completed', 'fa-check': download.status === 'completed' }"></i>
             <p>{{ download.name }}</p>
             <p class="file-size">{{ Math.min(100, Math.round(download.progress / download.size * 100))}}%</p>
             <i class="fas fa-xmark remove-transfer" @click="() => removeTransfer(download)"></i>
@@ -28,6 +29,7 @@
         <p v-if="uploads.length > 0">Uploads</p>
         <div v-for="upload in uploads" :key="upload.id" class="transfers-list-item">
           <div class="transfer-info">
+            <i class="fas transfer-status" :class="{ 'fa-arrows-rotate': upload.status !== 'completed', 'fa-check': upload.status === 'completed' }"></i>
             <p>{{ upload.name }}</p>
             <p class="file-size">{{ Math.min(100, Math.round(upload.progress / upload.size * 100))}}%</p>
             <i class="fas fa-xmark remove-transfer" @click="() => removeTransfer(upload)"></i>
@@ -97,7 +99,7 @@
       flex-direction: row;
     }
 
-    .file-icon {
+    .file-icon, .transfer-status {
       width: 14px;
       margin-right: 0.5em;
     }
@@ -286,6 +288,9 @@
         document.body.appendChild(link)
         link.click()
         document.body.removeChild(link)
+
+        transfer.progress = transfer.size
+        transfer.status = 'completed'
       }).catch((err) => {
         this.$log.error(err)
       })
@@ -370,15 +375,31 @@
       }
       const ext = parts[parts.length - 1]
       switch (ext) {
-        case 'mp3':
+        case 'aac':
         case 'flac':
+        case 'midi':
+        case 'mp3':
+        case 'ogg':
+        case 'wav':
           className += 'fa-music'
           break
-        case 'webm':
-        case 'mp4':
         case 'mkv':
+        case 'mov':
+        case 'mpeg':
+        case 'mp4':
+        case 'webm':
           className += 'fa-film'
           break
+        case 'bmp':
+        case 'gif':
+        case 'jpeg':
+        case 'jpg':
+        case 'png':
+        case 'svg':
+        case 'tiff':
+        case 'webp':
+          className += 'fa-image'
+          break;
         default:
           className += 'fa-file'
       }
