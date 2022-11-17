@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"image/jpeg"
+	"io"
 	"net/http"
 	"os"
 	"regexp"
@@ -131,21 +132,10 @@ func New(conf *config.Server, webSocketHandler types.WebSocketHandler, desktop t
 			return
 		}
 		defer f.Close()
-		fileinfo, err := f.Stat()
-		if err != nil {
-			http.Error(w, "unable to stat file", http.StatusInternalServerError)
-			return
-		}
 
-		buffer := make([]byte, fileinfo.Size())
-		_, err = f.Read(buffer)
-		if err != nil {
-			http.Error(w, "error reading file", http.StatusInternalServerError)
-			return
-		}
 		w.Header().Set("Content-Type", "application/octet-stream")
 		w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
-		w.Write(buffer)
+		io.Copy(w, f)
 	})
 
 	router.Post("/file", func(w http.ResponseWriter, r *http.Request) {
@@ -162,7 +152,6 @@ func New(conf *config.Server, webSocketHandler types.WebSocketHandler, desktop t
 		}
 
 		r.ParseMultipartForm(32 << 20)
-		buffer := make([]byte, FILE_UPLOAD_BUF_SIZE)
 		for _, formheader := range r.MultipartForm.File["files"] {
 			formfile, err := formheader.Open()
 			if err != nil {
@@ -170,30 +159,14 @@ func New(conf *config.Server, webSocketHandler types.WebSocketHandler, desktop t
 				http.Error(w, "error writing file", http.StatusInternalServerError)
 				return
 			}
+			defer formfile.Close()
 			f, err := os.OpenFile(webSocketHandler.MakeFilePath(formheader.Filename), os.O_WRONLY|os.O_CREATE, 0644)
 			if err != nil {
 				http.Error(w, "unable to open file for writing", http.StatusInternalServerError)
 				return
 			}
-
-			var copied int64 = 0
-			for copied < formheader.Size {
-				var limit int64 = int64(len(buffer))
-				if limit > formheader.Size-copied {
-					limit = formheader.Size - copied
-				}
-				bytesRead, err := formfile.ReadAt(buffer[:limit], copied)
-				if err != nil {
-					logger.Warn().Err(err).Msg("failed copying file in upload")
-					http.Error(w, "error writing file", http.StatusInternalServerError)
-					return
-				}
-				f.Write(buffer[:bytesRead])
-				copied += int64(bytesRead)
-			}
-
-			formfile.Close()
-			f.Close()
+			defer f.Close()
+			io.Copy(f, formfile)
 		}
 	})
 
