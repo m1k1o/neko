@@ -78,8 +78,10 @@ services:
 ```
 
 - When using mux, `NEKO_EPR` is ignored.
+- Mux accepts only one port, not a range.
 - You only need to expose maximum two ports for WebRTC on your router/firewall and have many users connected.
 - It can even be the same port number, so e.g. `NEKO_TCPMUX: 8081` and `NEKO_UDPMUX: 8081`.
+- The same port must be exposed from docker container, you can't map them to different ports. So `8082:8082` is OK, but `"5454:8082` will not work.
 - You can use them alone (either TCP or UDP) when needed.
   - UDP is generally better for latency. But some networks block UDP so it is good to have TCP available as fallback.
 - Still, using `NEKO_ICELITE=true` is recommended.
