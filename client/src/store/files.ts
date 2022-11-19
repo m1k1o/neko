@@ -1,5 +1,6 @@
 import { actionTree, getterTree, mutationTree } from 'typed-vuex'
 import { FileListItem, FileTransfer } from '~/neko/types'
+import { EVENT } from '~/neko/events'
 import { accessor } from '~/store'
 
 export const state = () => ({
@@ -65,7 +66,7 @@ export const actions = actionTree(
       if (!accessor.connected) {
         return
       }
-      $client.refreshFiles()
+      $client.sendMessage(EVENT.FILETRANSFER.REFRESH)
     }
   }
 )
