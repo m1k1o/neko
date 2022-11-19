@@ -136,6 +136,7 @@
       border-bottom: 2px solid rgba($color: #fff, $alpha: 0.1);
       display: flex;
       flex-direction: row;
+      line-height: 1.2;
     }
 
     .transfers-list-header {
