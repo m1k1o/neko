@@ -47,6 +47,8 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
     this.$vue = vue
     this.$accessor = vue.$accessor
     this.url = url
+    // convert ws url to http url
+    this.$vue.$http.defaults.baseURL = url.replace(/^ws/, 'http').replace(/\/ws$/, '')
   }
 
   private cleanup() {

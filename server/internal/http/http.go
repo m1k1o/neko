@@ -13,6 +13,7 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
+	"github.com/go-chi/cors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
@@ -37,6 +38,15 @@ func New(conf *config.Server, webSocketHandler types.WebSocketHandler, desktop t
 	router.Use(middleware.RequestLogger(&logformatter{logger}))
 	router.Use(middleware.Recoverer) // Recover from panics without crashing server
 	router.Use(middleware.Compress(5, "application/octet-stream"))
+
+	router.Use(cors.Handler(cors.Options{
+		AllowOriginFunc:  conf.AllowOrigin,
+		AllowedMethods:   []string{"GET", "POST", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: true,
+		MaxAge:           300, // Maximum value not ignored by any of major browsers
+	}))
 
 	if conf.PathPrefix != "/" {
 		router.Use(func(h http.Handler) http.Handler {

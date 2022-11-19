@@ -1,6 +1,8 @@
 package config
 
 import (
+	"m1k1o/neko/internal/utils"
+	"net/http"
 	"path"
 
 	"github.com/spf13/cobra"
@@ -13,6 +15,7 @@ type Server struct {
 	Bind       string
 	Static     string
 	PathPrefix string
+	CORS       []string
 }
 
 func (Server) Init(cmd *cobra.Command) error {
@@ -41,6 +44,11 @@ func (Server) Init(cmd *cobra.Command) error {
 		return err
 	}
 
+	cmd.PersistentFlags().StringSlice("cors", []string{"*"}, "list of allowed origins for CORS")
+	if err := viper.BindPFlag("cors", cmd.PersistentFlags().Lookup("cors")); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -50,4 +58,15 @@ func (s *Server) Set() {
 	s.Bind = viper.GetString("bind")
 	s.Static = viper.GetString("static")
 	s.PathPrefix = path.Join("/", path.Clean(viper.GetString("path_prefix")))
+
+	s.CORS = viper.GetStringSlice("cors")
+	in, _ := utils.ArrayIn("*", s.CORS)
+	if len(s.CORS) == 0 || in {
+		s.CORS = []string{"*"}
+	}
+}
+
+func (s *Server) AllowOrigin(r *http.Request, origin string) bool {
+	in, _ := utils.ArrayIn(origin, s.CORS)
+	return in || s.CORS[0] == "*"
 }
