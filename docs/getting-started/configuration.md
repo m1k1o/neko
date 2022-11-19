@@ -32,6 +32,7 @@ nat1to1: <ip>
   - Currently supported:
     - `control`
     - `login`
+    - `file_transfer`
   - e.g. `control`
 
 ### WebRTC
@@ -125,18 +126,18 @@ nat1to1: <ip>
 #### `NEKO_PATH_PREFIX`:
   - Path prefix for HTTP requests.
   - e.g. `/neko/`
+#### `NEKO_CORS`:
+  - Cross origin request sharing, whitespace separated list of allowed hosts, `*` for all.
+  - e.g. `127.0.0.1 neko.example.com`
 
 ### File Transfer
 
-#### `NEKO_FILE_TRANSFER`:
-  - Enable file transfer for admins at start
-  - e.g. `1`
-#### `NEKO_UNPRIV_FILE_TRANSFER`:
-  - Enable file transfer for all users at start. Ignored if NEKO_FILE_TRANSFER not enabled.
-  - e.g. `1`
+#### `NEKO_FILE_TRANSFER_ENABLED`:
+  - Enable file transfer feature.
+  - e.g. `true`
 #### `NEKO_FILE_TRANSFER_PATH`:
   - Path where files will be transferred between the host and users. By default this is
-  /home/neko/Downloads. If the path doesn't exist, it will be created.
+  `/home/neko/Downloads`. If the path doesn't exist, it will be created.
   - e.g. `/home/neko/Desktop`
 
 ### Expert settings
@@ -165,10 +166,11 @@ Flags:
       --broadcast_url string        URL for broadcasting, setting this value will automatically enable broadcasting
       --cert string                 path to the SSL cert used to secure the neko server
       --control_protection          control protection means, users can gain control only if at least one admin is in the room
+      --cors strings                list of allowed origins for CORS (default [*])
       --device string               audio device to capture (default "auto_null.monitor")
       --display string              XDisplay to capture (default ":99.0")
       --epr string                  limits the pool of ephemeral ports that ICE UDP connections can allocate from (default "59000-59100")
-      --file_transfer               allow file transfer for admins
+      --file_transfer_enabled       enable file transfer feature (default false)
       --file_transfer_path string   path to use for file transfer (default "/home/neko/Downloads")
       --g722                        DEPRECATED: use audio_codec
       --h264                        DEPRECATED: use video_codec
@@ -194,7 +196,6 @@ Flags:
       --static string               path to neko client files to serve (default "./www")
       --tcpmux int                  single TCP mux port for all peers
       --udpmux int                  single UDP mux port for all peers
-      --unpriv_file_transfer        allow file transfer for non admins
       --video string                video codec parameters to use for streaming
       --video_bitrate int           video bitrate in kbit/s (default 3072)
       --video_codec string          video codec to be used (default "vp8")

@@ -47,7 +47,7 @@ func (WebSocket) Init(cmd *cobra.Command) error {
 
 	// File transfer
 
-	cmd.PersistentFlags().Bool("file_transfer_enabled", true, "enable file transfer feature")
+	cmd.PersistentFlags().Bool("file_transfer_enabled", false, "enable file transfer feature")
 	if err := viper.BindPFlag("file_transfer_enabled", cmd.PersistentFlags().Lookup("file_transfer_enabled")); err != nil {
 		return err
 	}

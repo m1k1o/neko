@@ -1,12 +1,13 @@
 package config
 
 import (
-	"m1k1o/neko/internal/utils"
 	"net/http"
 	"path"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+
+	"m1k1o/neko/internal/utils"
 )
 
 type Server struct {
