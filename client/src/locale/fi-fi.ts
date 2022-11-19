@@ -7,6 +7,7 @@ export const send_a_message = 'Lähetä viesti'
 
 export const side = {
   chat: 'Chatti',
+  files: 'Tiedostot',
   settings: 'Asetukset',
 }
 
@@ -70,6 +71,15 @@ export const locks = {
     notif_locked: 'lukittu huone',
     notif_unlocked: 'vapautettu huone',
   },
+  // TODO
+  //file_transfer: {
+  //  lock: 'Lock File Transfer (for users)',
+  //  unlock: 'Unlock File Transfer (for users)',
+  //  locked: 'File Transfer Locked (for users)',
+  //  unlocked: 'File Transfer Unlocked (for users)',
+  //  notif_locked: 'locked file transfer',
+  //  notif_unlocked: 'unlocked file transfer',
+  //},
 }
 
 export const setting = {
@@ -109,4 +119,10 @@ export const notifications = {
   kicked: 'heitetty {name} ulos',
   muted: 'mykistetty {name}',
   unmuted: 'poistettu mykistys {name}',
+}
+
+export const files = {
+  downloads: 'Lataukset',
+  uploads: 'Lataa',
+  upload_here: 'Klikkaa tai vedä tiedostoja tähän ladataksesi',
 }

@@ -19,7 +19,12 @@ func (h *MessageHandler) adminLock(id string, session types.Session, payload *me
 		return nil
 	}
 
-	if payload.Resource != "login" && payload.Resource != "control" {
+	// allow only known resources
+	switch payload.Resource {
+	case "login":
+	case "control":
+	case "file_transfer":
+	default:
 		h.logger.Debug().Msg("unknown lock resource")
 		return nil
 	}

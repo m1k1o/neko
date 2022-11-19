@@ -7,6 +7,7 @@ export const send_a_message = '发送消息'
 
 export const side = {
   chat: '聊天',
+  files: '文件',
   settings: '设置',
 }
 
@@ -70,6 +71,15 @@ export const locks = {
     notif_locked: '锁上房间',
     notif_unlocked: '解锁房间',
   },
+  // TODO
+  //file_transfer: {
+  //  lock: 'Lock File Transfer (for users)',
+  //  unlock: 'Unlock File Transfer (for users)',
+  //  locked: 'File Transfer Locked (for users)',
+  //  unlocked: 'File Transfer Unlocked (for users)',
+  //  notif_locked: 'locked file transfer',
+  //  notif_unlocked: 'unlocked file transfer',
+  //},
 }
 
 export const setting = {
@@ -109,4 +119,10 @@ export const notifications = {
   kicked: '被踢的 {name}',
   muted: '鸟粪 {name}',
   unmuted: '取消静音 {name}',
+}
+
+export const files = {
+  downloads: '下载',
+  uploads: '上传',
+  upload_here: '点击或拖动文件到这里来上传',
 }

@@ -7,6 +7,7 @@ export const send_a_message = '메세지 보내기'
 
 export const side = {
   chat: '채팅',
+  files: '파일',
   settings: '설정',
 }
 
@@ -68,6 +69,15 @@ export const locks = {
     notif_locked: '방이 잠겼습니다',
     notif_unlocked: '방 잠금이 해제됐습니다',
   },
+  // TODO
+  //file_transfer: {
+  //  lock: 'Lock File Transfer (for users)',
+  //  unlock: 'Unlock File Transfer (for users)',
+  //  locked: 'File Transfer Locked (for users)',
+  //  unlocked: 'File Transfer Unlocked (for users)',
+  //  notif_locked: 'locked file transfer',
+  //  notif_unlocked: 'unlocked file transfer',
+  //},
 }
 
 export const setting = {
@@ -107,4 +117,10 @@ export const notifications = {
   kicked: '{name} 님이 추방됐습니다',
   muted: '{name} 님이 뮤트됐습니다',
   unmuted: '{name} 님의 뮤트가 해제됐습니다',
+}
+
+export const files = {
+  downloads: '다운로드',
+  uploads: '업로드',
+  upload_here: '업로드할 파일을 여기로 클릭하거나 드래그하세요.',
 }

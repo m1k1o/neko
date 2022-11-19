@@ -8,8 +8,9 @@ import {
   ChatEvents,
   ScreenEvents,
   AdminEvents,
+  FileTransferEvents,
 } from './events'
-import { Member, ScreenConfigurations, ScreenResolution } from './types'
+import { FileListItem, Member, ScreenConfigurations, ScreenResolution } from './types'
 
 export type WebSocketMessages =
   | WebSocketMessage
@@ -59,6 +60,7 @@ export interface SystemInit extends WebSocketMessage, SystemInitPayload {
 export interface SystemInitPayload {
   implicit_hosting: boolean
   locks: Record<string, string>
+  file_transfer: boolean
 }
 
 // system/disconnect
@@ -193,6 +195,18 @@ export interface EmojiSendPayload {
 }
 
 /*
+  FILE TRANSFER PAYLOADS
+*/
+export interface FileTransferListMessage extends WebSocketMessage, FileTransferListPayload {
+  event: FileTransferEvents
+}
+
+export interface FileTransferListPayload {
+  cwd: string
+  files: FileListItem[]
+}
+
+/*
   SCREEN PAYLOADS
 */
 export interface ScreenResolutionMessage extends WebSocketMessage, ScreenResolutionPayload {
@@ -215,11 +229,11 @@ export interface ScreenConfigurationsPayload {
   BROADCAST PAYLOADS
 */
 export interface BroadcastCreatePayload {
-  url:   string
+  url: string
 }
 
 export interface BroadcastStatusPayload {
-  url:      string
+  url: string
   isActive: boolean
 }
 
@@ -248,7 +262,7 @@ export interface AdminLockMessage extends WebSocketMessage, AdminLockPayload {
   id: string
 }
 
-export type AdminLockResource = 'login' | 'control'
+export type AdminLockResource = 'login' | 'control' | 'file_transfer'
 
 export interface AdminLockPayload {
   resource: AdminLockResource

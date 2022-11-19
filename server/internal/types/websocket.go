@@ -34,4 +34,15 @@ type WebSocketHandler interface {
 	Stats() Stats
 	IsLocked(resource string) bool
 	IsAdmin(password string) (bool, error)
+
+	// File Transfer
+	CanTransferFiles(password string) (bool, error)
+	FileTransferPath(filename string) string
+	FileTransferEnabled() bool
+}
+
+type FileListItem struct {
+	Filename string `json:"name"`
+	Type     string `json:"type"`
+	Size     int64  `json:"size"`
 }

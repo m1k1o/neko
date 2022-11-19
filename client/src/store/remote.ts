@@ -13,6 +13,7 @@ export const state = () => ({
   clipboard: '',
   locked: false,
   implicitHosting: true,
+  fileTransfer: true,
   keyboardModifierState: -1,
 })
 
@@ -51,6 +52,10 @@ export const mutations = mutationTree(state, {
 
   setImplicitHosting(state, val: boolean) {
     state.implicitHosting = val
+  },
+
+  setFileTransfer(state, val: boolean) {
+    state.fileTransfer = val
   },
 
   reset(state) {

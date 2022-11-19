@@ -38,9 +38,9 @@ const exportMixin = {
     $accessor() {
       return neko
     },
-    $client () {
+    $client() {
       return window.$client
-    }
+    },
   },
 }
 
@@ -52,15 +52,8 @@ const plugini18n: PluginObject<undefined> = {
   },
 }
 
-function extend (component: any) {
-  return component
-    .use(plugini18n)
-    .use(Logger)
-    .use(Axios)
-    .use(Swal)
-    .use(Anime)
-    .use(Client)
-    .extend(exportMixin)
+function extend(component: any) {
+  return component.use(plugini18n).use(Logger).use(Axios).use(Swal).use(Anime).use(Client).extend(exportMixin)
 }
 
 export const NekoConnect = extend(Connect)

@@ -8,6 +8,7 @@ export const send_a_message = 'Skicka ett meddelande'
 
 export const side = {
   chat: 'Chatt',
+  files: 'Filer',
   settings: 'Inställningar',
 }
 
@@ -74,6 +75,15 @@ export const locks = {
     notif_locked: 'låste rummet',
     notif_unlocked: 'låste upp rummet',
   },
+  // TODO
+  //file_transfer: {
+  //  lock: 'Lock File Transfer (for users)',
+  //  unlock: 'Unlock File Transfer (for users)',
+  //  locked: 'File Transfer Locked (for users)',
+  //  unlocked: 'File Transfer Unlocked (for users)',
+  //  notif_locked: 'locked file transfer',
+  //  notif_unlocked: 'unlocked file transfer',
+  //},
 }
 
 export const setting = {
@@ -116,4 +126,10 @@ export const notifications = {
   kicked: 'sparkade {name}',
   muted: 'tystade {name}',
   unmuted: 'tog bort tystningen på {name}',
+}
+
+export const files = {
+  downloads: 'Nedladdningar',
+  uploads: 'Ladda upp',
+  upload_here: 'Klicka eller dra filer hit för att ladda upp dem',
 }

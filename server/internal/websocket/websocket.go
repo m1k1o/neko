@@ -3,10 +3,12 @@ package websocket
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"sync"
 	"sync/atomic"
 	"time"
 
+	"github.com/fsnotify/fsnotify"
 	"github.com/gorilla/websocket"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -25,12 +27,20 @@ const CONTROL_PROTECTION_SESSION = "by_control_protection"
 func New(sessions types.SessionManager, desktop types.DesktopManager, capture types.CaptureManager, webrtc types.WebRTCManager, conf *config.WebSocket) *WebSocketHandler {
 	logger := log.With().Str("module", "websocket").Logger()
 
-	state := state.New()
+	state := state.New(conf.FileTransferEnabled, conf.FileTransferPath)
 
 	// if control protection is enabled
 	if conf.ControlProtection {
 		state.Lock("control", CONTROL_PROTECTION_SESSION)
 		logger.Info().Msgf("control locked on behalf of control protection")
+	}
+
+	// create file transfer directory if not exists
+	if conf.FileTransferEnabled {
+		if _, err := os.Stat(conf.FileTransferPath); os.IsNotExist(err) {
+			err = os.Mkdir(conf.FileTransferPath, os.ModePerm)
+			logger.Err(err).Msg("creating file transfer directory")
+		}
 	}
 
 	// apply default locks
@@ -187,6 +197,37 @@ func (ws *WebSocketHandler) Start() {
 
 		ws.logger.Err(err).Msg("sync clipboard")
 	})
+
+	// watch for file changes and send file list if file transfer is enabled
+	if ws.conf.FileTransferEnabled {
+		watcher, err := fsnotify.NewWatcher()
+		if err != nil {
+			ws.logger.Err(err).Msg("unable to start file transfer dir watcher")
+			return
+		}
+
+		go func() {
+			for {
+				select {
+				case e, ok := <-watcher.Events:
+					if !ok {
+						ws.logger.Info().Msg("file transfer dir watcher closed")
+						return
+					}
+					if e.Has(fsnotify.Create) || e.Has(fsnotify.Remove) || e.Has(fsnotify.Rename) {
+						ws.logger.Debug().Str("event", e.String()).Msg("file transfer dir watcher event")
+						ws.handler.FileTransferRefresh(nil)
+					}
+				case err := <-watcher.Errors:
+					ws.logger.Err(err).Msg("error in file transfer dir watcher")
+				}
+			}
+		}()
+
+		if err := watcher.Add(ws.conf.FileTransferPath); err != nil {
+			ws.logger.Err(err).Msg("unable to add file transfer path to watcher")
+		}
+	}
 }
 
 func (ws *WebSocketHandler) Shutdown() error {
@@ -383,4 +424,29 @@ func (ws *WebSocketHandler) handle(connection *websocket.Conn, id string) {
 			}
 		}
 	}
+}
+
+//
+// File transfer
+//
+
+func (ws *WebSocketHandler) CanTransferFiles(password string) (bool, error) {
+	if !ws.conf.FileTransferEnabled {
+		return false, nil
+	}
+
+	isAdmin, err := ws.IsAdmin(password)
+	if err != nil {
+		return false, err
+	}
+
+	return isAdmin || !ws.state.IsLocked("file_transfer"), nil
+}
+
+func (ws *WebSocketHandler) FileTransferPath(filename string) string {
+	return ws.state.FileTransferPath(filename)
+}
+
+func (ws *WebSocketHandler) FileTransferEnabled() bool {
+	return ws.conf.FileTransferEnabled
 }

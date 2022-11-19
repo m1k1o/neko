@@ -8,6 +8,7 @@ export const send_a_message = 'Enviar un mensaje'
 
 export const side = {
   chat: 'Chat',
+  files: 'Archivos',
   settings: 'Configuración',
 }
 
@@ -74,6 +75,15 @@ export const locks = {
     notif_locked: 'bloqueó la sala',
     notif_unlocked: 'desbloqueó la sala',
   },
+  // TODO
+  //file_transfer: {
+  //  lock: 'Lock File Transfer (for users)',
+  //  unlock: 'Unlock File Transfer (for users)',
+  //  locked: 'File Transfer Locked (for users)',
+  //  unlocked: 'File Transfer Unlocked (for users)',
+  //  notif_locked: 'locked file transfer',
+  //  notif_unlocked: 'unlocked file transfer',
+  //},
 }
 
 export const setting = {
@@ -116,4 +126,10 @@ export const notifications = {
   kicked: '{name} expulsado',
   muted: '{name} silenciado',
   unmuted: '{name} no silenciado',
+}
+
+export const files = {
+  downloads: 'Descargas',
+  uploads: 'Cargar',
+  upload_here: 'Haga clic o arrastre los archivos aquí para cargarlos',
 }

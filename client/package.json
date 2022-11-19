@@ -22,7 +22,7 @@
   "dependencies": {
     "@fortawesome/fontawesome-free": "^6.2.0",
     "animejs": "^3.2.0",
-    "axios": "^0.21.4",
+    "axios": "^0.24.0",
     "date-fns": "^2.29.3",
     "emoji-datasource": "^6.0.1",
     "eventemitter3": "^4.0.7",

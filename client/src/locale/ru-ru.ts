@@ -7,6 +7,7 @@ export const send_a_message = 'Отправить сообщение'
 
 export const side = {
   chat: 'Чат',
+  files: 'Файлы',
   settings: 'Настройки',
 }
 
@@ -70,6 +71,15 @@ export const locks = {
     notif_locked: 'комната закрыта',
     notif_unlocked: 'комната открыта',
   },
+  // TODO
+  //file_transfer: {
+  //  lock: 'Lock File Transfer (for users)',
+  //  unlock: 'Unlock File Transfer (for users)',
+  //  locked: 'File Transfer Locked (for users)',
+  //  unlocked: 'File Transfer Unlocked (for users)',
+  //  notif_locked: 'locked file transfer',
+  //  notif_unlocked: 'unlocked file transfer',
+  //},
 }
 
 export const setting = {
@@ -109,4 +119,10 @@ export const notifications = {
   kicked: 'выкинут {name}',
   muted: 'заглушен {name}',
   unmuted: 'не заглушен {name}',
+}
+
+export const files = {
+  downloads: 'Загрузки',
+  uploads: 'Загрузить',
+  upload_here: 'Нажмите или перетащите сюда файлы для загрузки',
 }

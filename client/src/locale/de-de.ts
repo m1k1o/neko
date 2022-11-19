@@ -7,6 +7,7 @@ export const send_a_message = 'Sende eine Nachricht'
 
 export const side = {
   chat: 'Chat',
+  files: 'Dateien',
   settings: 'Einstellungen',
 }
 
@@ -68,6 +69,14 @@ export const locks = {
     notif_locked: 'Raum gesperrt',
     notif_unlocked: 'Raum entsperrt',
   },
+  file_transfer: {
+    lock: 'Dateiübertragung sperren (für Nutzer)',
+    unlock: 'Dateiübertragung entsperren (für Nutzer)',
+    locked: 'Dateiübertragung gesperrt (für Nutzer)',
+    unlocked: 'Dateiübertragung entsperrt (für Nutzer)',
+    notif_locked: 'Dateiübertragung gesperrt',
+    notif_unlocked: 'Dateiübertragung entsperrt',
+  },
 }
 
 export const setting = {
@@ -107,4 +116,10 @@ export const notifications = {
   kicked: '{name} wurde rausgeworfen',
   muted: '{name} stummgeschaltet',
   unmuted: '{name} stummschaltung aufgehoben',
+}
+
+export const files = {
+  downloads: 'Herunterladen',
+  uploads: 'Hochladen',
+  upload_here: 'Klicken oder ziehen Sie Dateien zum Hochladen hierher',
 }

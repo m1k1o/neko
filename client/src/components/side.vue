@@ -6,6 +6,10 @@
           <i class="fas fa-comment-alt" />
           <span>{{ $t('side.chat') }}</span>
         </li>
+        <li v-if="filetransferAllowed" :class="{ active: tab === 'files' }" @click.stop.prevent="change('files')">
+          <i class="fas fa-file" />
+          <span>{{ $t('side.files') }}</span>
+        </li>
         <li :class="{ active: tab === 'settings' }" @click.stop.prevent="change('settings')">
           <i class="fas fa-sliders-h" />
           <span>{{ $t('side.settings') }}</span>
@@ -14,6 +18,7 @@
     </div>
     <div class="page-container">
       <neko-chat v-if="tab === 'chat'" />
+      <neko-files v-if="tab === 'files'" />
       <neko-settings v-if="tab === 'settings'" />
     </div>
   </aside>
@@ -74,21 +79,45 @@
 </style>
 
 <script lang="ts">
-  import { Vue, Component } from 'vue-property-decorator'
+  import { Vue, Component, Watch } from 'vue-property-decorator'
 
   import Settings from '~/components/settings.vue'
   import Chat from '~/components/chat.vue'
+  import Files from '~/components/files.vue'
 
   @Component({
     name: 'neko',
     components: {
       'neko-settings': Settings,
       'neko-chat': Chat,
+      'neko-files': Files,
     },
   })
   export default class extends Vue {
+    get filetransferAllowed() {
+      return (
+        this.$accessor.remote.fileTransfer && (this.$accessor.user.admin || !this.$accessor.isLocked('file_transfer'))
+      )
+    }
+
     get tab() {
       return this.$accessor.client.tab
+    }
+
+    @Watch('tab', { immediate: true })
+    @Watch('filetransferAllowed', { immediate: true })
+    onTabChange() {
+      // do not show the files tab if file transfer is disabled
+      if (this.tab === 'files' && !this.filetransferAllowed) {
+        this.change('chat')
+      }
+    }
+
+    @Watch('filetransferAllowed')
+    onFileTransferAllowedChange() {
+      if (this.filetransferAllowed) {
+        this.$accessor.files.refresh()
+      }
     }
 
     change(tab: string) {

@@ -35,6 +35,11 @@ const (
 )
 
 const (
+	FILETRANSFER_LIST    = "filetransfer/list"
+	FILETRANSFER_REFRESH = "filetransfer/refresh"
+)
+
+const (
 	SCREEN_CONFIGURATIONS = "screen/configurations"
 	SCREEN_RESOLUTION     = "screen/resolution"
 	SCREEN_SET            = "screen/set"
