@@ -8,6 +8,10 @@ import (
 )
 
 func (h *MessageHandler) FileTransferRefresh(session types.Session) error {
+	if !h.state.FileTransferEnabled() {
+		return nil
+	}
+
 	fileTransferPath := h.state.FileTransferPath("") // root
 
 	// allow users only if file transfer is not locked
@@ -16,6 +20,7 @@ func (h *MessageHandler) FileTransferRefresh(session types.Session) error {
 		return nil
 	}
 
+	// TODO: keep list of files in memory and update it on file changes
 	files, err := utils.ListFiles(fileTransferPath)
 	if err != nil {
 		return err
