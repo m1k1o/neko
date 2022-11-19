@@ -1,6 +1,8 @@
 package config
 
 import (
+	"path/filepath"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -73,4 +75,5 @@ func (s *WebSocket) Set() {
 	s.FileTransfer = viper.GetBool("file_transfer")
 	s.UnprivFileTransfer = viper.GetBool("unpriv_file_transfer")
 	s.FileTransferPath = viper.GetString("file_transfer_path")
+	s.FileTransferPath = filepath.Clean(s.FileTransferPath)
 }

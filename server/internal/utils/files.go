@@ -6,7 +6,7 @@ import (
 	"m1k1o/neko/internal/types"
 )
 
-func ListFiles(path string) (*[]types.FileListItem, error) {
+func ListFiles(path string) ([]types.FileListItem, error) {
 	items, err := os.ReadDir(path)
 	if err != nil {
 		return nil, err
@@ -32,5 +32,5 @@ func ListFiles(path string) (*[]types.FileListItem, error) {
 		}
 	}
 
-	return &out, nil
+	return out, nil
 }

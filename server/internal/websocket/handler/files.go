@@ -10,9 +10,12 @@ import (
 
 func (h *MessageHandler) setFileTransferStatus(session types.Session, payload *message.FileTransferStatus) error {
 	if !session.Admin() {
-		return errors.New(session.Member().Name + " tried to toggle file transfer but they're not admin")
+		h.logger.Debug().Msg("user not admin")
+		return nil
 	}
+
 	h.state.SetFileTransferState(payload.Admin, payload.Unpriv)
+
 	err := h.sessions.Broadcast(message.FileTransferStatus{
 		Event:  event.FILETRANSFER_STATUS,
 		Admin:  payload.Admin,
@@ -26,11 +29,13 @@ func (h *MessageHandler) setFileTransferStatus(session types.Session, payload *m
 	if err != nil {
 		return err
 	}
+
 	msg := message.FileList{
 		Event: event.FILETRANSFER_LIST,
 		Cwd:   h.state.FileTransferPath(),
-		Files: *files,
+		Files: files,
 	}
+
 	if payload.Unpriv {
 		return h.sessions.Broadcast(msg, nil)
 	} else {
@@ -47,10 +52,11 @@ func (h *MessageHandler) refresh(session types.Session) error {
 	if err != nil {
 		return err
 	}
+
 	return session.Send(
 		message.FileList{
 			Event: event.FILETRANSFER_LIST,
 			Cwd:   h.state.FileTransferPath(),
-			Files: *files,
+			Files: files,
 		})
 }
