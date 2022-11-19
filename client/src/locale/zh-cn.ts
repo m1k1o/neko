@@ -117,5 +117,5 @@ export const notifications = {
 export const files = {
   downloads: '下载',
   uploads: '上传',
-  upload_here: '点击或拖动文件到这里来上传'
+  upload_here: '点击或拖动文件到这里来上传',
 }

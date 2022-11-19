@@ -124,5 +124,5 @@ export const notifications = {
 export const files = {
   downloads: 'Nedladdningar',
   uploads: 'Ladda upp',
-  upload_here: 'Klicka eller dra filer hit för att ladda upp dem'
+  upload_here: 'Klicka eller dra filer hit för att ladda upp dem',
 }

@@ -117,5 +117,5 @@ export const notifications = {
 export const files = {
   downloads: 'Downloads',
   uploads: 'Uploads',
-  upload_here: 'Click or drag files here to upload'
+  upload_here: 'Click or drag files here to upload',
 }

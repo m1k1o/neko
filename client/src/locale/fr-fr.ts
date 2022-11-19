@@ -85,7 +85,7 @@ export const setting = {
   chat_sound: 'Jouer le son du tchat',
   keyboard_layout: 'Langue du clavier',
   file_transfer: 'Transfert de fichiers',
-  unpriv_file_transfer: 'Transfert de fichiers d\'utilisateurs',
+  unpriv_file_transfer: "Transfert de fichiers d'utilisateurs",
   // TODO
   //broadcast_title: 'Live Broadcast',
 }
@@ -124,5 +124,5 @@ export const notifications = {
 export const files = {
   downloads: 'Téléchargements',
   uploads: 'Télécharger',
-  upload_here: 'Cliquez ou faites glisser les fichiers ici pour les télécharger'
+  upload_here: 'Cliquez ou faites glisser les fichiers ici pour les télécharger',
 }

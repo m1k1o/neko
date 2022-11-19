@@ -115,5 +115,5 @@ export const notifications = {
 export const files = {
   downloads: '다운로드',
   uploads: '업로드',
-  upload_here: '업로드할 파일을 여기로 클릭하거나 드래그하세요.'
+  upload_here: '업로드할 파일을 여기로 클릭하거나 드래그하세요.',
 }

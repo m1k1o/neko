@@ -41,7 +41,7 @@ export const EVENT = {
   FILETRANSFER: {
     STATUS: 'filetransfer/status',
     LIST: 'filetransfer/list',
-    REFRESH: 'filetransfer/refresh'
+    REFRESH: 'filetransfer/refresh',
   },
   SCREEN: {
     CONFIGURATIONS: 'screen/configurations',

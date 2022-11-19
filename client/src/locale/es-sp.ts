@@ -124,5 +124,5 @@ export const notifications = {
 export const files = {
   downloads: 'Descargas',
   uploads: 'Cargar',
-  upload_here: 'Haga clic o arrastre los archivos aquí para cargarlos'
+  upload_here: 'Haga clic o arrastre los archivos aquí para cargarlos',
 }

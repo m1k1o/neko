@@ -6,7 +6,7 @@ import { accessor } from '~/store'
 export const state = () => ({
   cwd: '',
   files: [] as FileListItem[],
-  transfers: [] as FileTransfer[]
+  transfers: [] as FileTransfer[],
 })
 
 export const getters = getterTree(state, {
@@ -28,7 +28,7 @@ export const mutations = mutationTree(state, {
 
   _removeTransfer(state, transfer: FileTransfer) {
     state.transfers = state.transfers.filter((t) => t.id !== transfer.id)
-  }
+  },
 })
 
 export const actions = actionTree(
@@ -67,6 +67,6 @@ export const actions = actionTree(
         return
       }
       $client.sendMessage(EVENT.FILETRANSFER.REFRESH)
-    }
-  }
+    },
+  },
 )

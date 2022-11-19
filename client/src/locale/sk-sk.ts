@@ -120,5 +120,5 @@ export const notifications = {
 export const files = {
   downloads: 'Stiahnutia',
   uploads: 'Nahrávanie',
-  upload_here: 'Kliknutím alebo pretiahnutím súborov sem ich môžete nahrať'
+  upload_here: 'Kliknutím alebo pretiahnutím súborov sem ich môžete nahrať',
 }

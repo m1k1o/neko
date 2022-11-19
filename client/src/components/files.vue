@@ -9,8 +9,7 @@
         <i :class="fileIcon(item)" />
         <p>{{ item.name }}</p>
         <p class="file-size">{{ fileSize(item.size) }}</p>
-        <i v-if="item.type !== 'dir'" class="fas fa-download download"
-        @click="() => download(item)" />
+        <i v-if="item.type !== 'dir'" class="fas fa-download download" @click="() => download(item)" />
       </div>
     </div>
     <div class="transfer-area">
@@ -18,29 +17,51 @@
         <p v-if="downloads.length > 0">{{ $t('files.downloads') }}</p>
         <div v-for="download in downloads" :key="download.id" class="transfers-list-item">
           <div class="transfer-info">
-            <i class="fas transfer-status" :class="{ 'fa-arrows-rotate': download.status !== 'completed', 'fa-check': download.status === 'completed' }"></i>
+            <i
+              class="fas transfer-status"
+              :class="{
+                'fa-arrows-rotate': download.status !== 'completed',
+                'fa-check': download.status === 'completed',
+              }"
+            ></i>
             <p>{{ download.name }}</p>
-            <p class="file-size">{{ Math.min(100, Math.round(download.progress / download.size * 100))}}%</p>
+            <p class="file-size">{{ Math.min(100, Math.round((download.progress / download.size) * 100)) }}%</p>
             <i class="fas fa-xmark remove-transfer" @click="() => removeTransfer(download)"></i>
           </div>
-          <progress class="transfer-progress" :aria-label="download.name + ' progress'" :value="download.progress"
-          :max="download.size"></progress>
+          <progress
+            class="transfer-progress"
+            :aria-label="download.name + ' progress'"
+            :value="download.progress"
+            :max="download.size"
+          ></progress>
         </div>
-        <p v-if="uploads.length > 0">{{ $t('files.uploads' )}}</p>
+        <p v-if="uploads.length > 0">{{ $t('files.uploads') }}</p>
         <div v-for="upload in uploads" :key="upload.id" class="transfers-list-item">
           <div class="transfer-info">
-            <i class="fas transfer-status" :class="{ 'fa-arrows-rotate': upload.status !== 'completed', 'fa-check': upload.status === 'completed' }"></i>
+            <i
+              class="fas transfer-status"
+              :class="{ 'fa-arrows-rotate': upload.status !== 'completed', 'fa-check': upload.status === 'completed' }"
+            ></i>
             <p>{{ upload.name }}</p>
-            <p class="file-size">{{ Math.min(100, Math.round(upload.progress / upload.size * 100))}}%</p>
+            <p class="file-size">{{ Math.min(100, Math.round((upload.progress / upload.size) * 100)) }}%</p>
             <i class="fas fa-xmark remove-transfer" @click="() => removeTransfer(upload)"></i>
           </div>
-          <progress class="transfer-progress" :aria-label="upload.name + ' progress'" :value="upload.progress"
-          :max="upload.size"></progress>
+          <progress
+            class="transfer-progress"
+            :aria-label="upload.name + ' progress'"
+            :value="upload.progress"
+            :max="upload.size"
+          ></progress>
         </div>
       </div>
-      <div class="upload-area" :class="{ 'upload-area-drag': uploadAreaDrag }"
-      @dragover.prevent="() => uploadAreaDrag = true" @dragleave.prevent="() => uploadAreaDrag = false"
-      @drop.prevent="(e) => upload(e.dataTransfer)" @click="openFileBrowser">
+      <div
+        class="upload-area"
+        :class="{ 'upload-area-drag': uploadAreaDrag }"
+        @dragover.prevent="() => (uploadAreaDrag = true)"
+        @dragleave.prevent="() => (uploadAreaDrag = false)"
+        @drop.prevent="(e) => upload(e.dataTransfer)"
+        @click="openFileBrowser"
+      >
         <i class="fas fa-file-arrow-up" />
         <p>{{ $t('files.upload_here') }}</p>
       </div>
@@ -94,12 +115,13 @@
 
     .files-list-item {
       padding: 0.5em;
-      border-bottom: 2px solid rgba($color: #fff, $alpha: 0.10);
+      border-bottom: 2px solid rgba($color: #fff, $alpha: 0.1);
       display: flex;
       flex-direction: row;
     }
 
-    .file-icon, .transfer-status {
+    .file-icon,
+    .transfer-status {
       width: 14px;
       margin-right: 0.5em;
     }
@@ -115,10 +137,12 @@
     .file-size {
       margin-left: auto;
       margin-right: 0.5em;
-      color: rgba($color: #fff, $alpha: 0.40);
+      color: rgba($color: #fff, $alpha: 0.4);
     }
 
-    .refresh:hover, .download:hover, .remove-transfer:hover {
+    .refresh:hover,
+    .download:hover,
+    .remove-transfer:hover {
       cursor: pointer;
     }
 
@@ -186,8 +210,9 @@
       cursor: pointer;
     }
 
-    .upload-area-drag, .upload-area:hover {
-      background-color: rgba($color: #fff, $alpha: 0.10);
+    .upload-area-drag,
+    .upload-area:hover {
+      background-color: rgba($color: #fff, $alpha: 0.1);
     }
 
     .upload-area > i {
@@ -198,12 +223,10 @@
     .upload-area > p {
       margin: 0px 10px 10px 10px;
     }
-
   }
 </style>
 
 <script lang="ts">
-
   import { Component, Vue } from 'vue-property-decorator'
 
   import Markdown from './markdown'
@@ -215,11 +238,10 @@
     components: {
       'neko-markdown': Markdown,
       'neko-context': Content,
-    }
+    },
   })
   export default class extends Vue {
-
-    public uploadAreaDrag: boolean = false;
+    public uploadAreaDrag: boolean = false
 
     get cwd() {
       return this.$accessor.files.cwd
@@ -234,13 +256,13 @@
     }
 
     get downloads() {
-      return this.$accessor.files.transfers.filter((t => t.direction === 'download'))
+      return this.$accessor.files.transfers.filter((t) => t.direction === 'download')
     }
 
     get uploads() {
-      return this.$accessor.files.transfers.filter((t => t.direction === 'upload'))
+      return this.$accessor.files.transfers.filter((t) => t.direction === 'upload')
     }
-    
+
     refresh() {
       this.$accessor.files.refresh()
     }
@@ -261,39 +283,41 @@
         progress: 0,
         status: 'pending',
         axios: null,
-        abortController: null
+        abortController: null,
       }
       transfer.abortController = new AbortController()
-      transfer.axios = this.$http.get(url, {
-        responseType: 'blob',
-        signal: transfer.abortController.signal,
-        onDownloadProgress: (x) => {
-          transfer.progress = x.loaded
+      transfer.axios = this.$http
+        .get(url, {
+          responseType: 'blob',
+          signal: transfer.abortController.signal,
+          onDownloadProgress: (x) => {
+            transfer.progress = x.loaded
 
-          if (x.lengthComputable && transfer.size !== x.total) {
-            transfer.size = x.total
-          }
-          if (transfer.progress === transfer.size) {
-            transfer.status = 'completed'
-          } else if (transfer.status !== 'inprogress') {
-            transfer.status = 'inprogress'
-          }
-        }
-      }).then((res) => {
-        const url = window.URL
-        .createObjectURL(new Blob([res.data]))
-        const link = document.createElement('a')
-        link.href = url
-        link.setAttribute('download', item.name)
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
+            if (x.lengthComputable && transfer.size !== x.total) {
+              transfer.size = x.total
+            }
+            if (transfer.progress === transfer.size) {
+              transfer.status = 'completed'
+            } else if (transfer.status !== 'inprogress') {
+              transfer.status = 'inprogress'
+            }
+          },
+        })
+        .then((res) => {
+          const url = window.URL.createObjectURL(new Blob([res.data]))
+          const link = document.createElement('a')
+          link.href = url
+          link.setAttribute('download', item.name)
+          document.body.appendChild(link)
+          link.click()
+          document.body.removeChild(link)
 
-        transfer.progress = transfer.size
-        transfer.status = 'completed'
-      }).catch((err) => {
-        this.$log.error(err)
-      })
+          transfer.progress = transfer.size
+          transfer.status = 'completed'
+        })
+        .catch((err) => {
+          this.$log.error(err)
+        })
       this.$accessor.files.addTransfer(transfer)
     }
 
@@ -302,7 +326,7 @@
 
       for (const file of dt.files) {
         const formdata = new FormData()
-        formdata.append("files", file, file.name)
+        formdata.append('files', file, file.name)
 
         const url = `/file?pwd=${this.$accessor.password}`
         let transfer: FileTransfer = {
@@ -313,25 +337,27 @@
           progress: 0,
           status: 'pending',
           axios: null,
-          abortController: null
+          abortController: null,
         }
         transfer.abortController = new AbortController()
-        this.$http.post(url, formdata, {
-          onUploadProgress: (x: any) => {
-            transfer.progress = x.loaded
+        this.$http
+          .post(url, formdata, {
+            onUploadProgress: (x: any) => {
+              transfer.progress = x.loaded
 
-            if (transfer.size !== x.total) {
-              transfer.size = x.total
-            }
-            if (transfer.progress === transfer.size) {
-              transfer.status = 'completed'
-            } else if (transfer.status !== 'inprogress') {
-              transfer.status = 'inprogress'
-            }
-          }
-        }).catch((err) => {
-          this.$log.error(err)
-        })
+              if (transfer.size !== x.total) {
+                transfer.size = x.total
+              }
+              if (transfer.progress === transfer.size) {
+                transfer.status = 'completed'
+              } else if (transfer.status !== 'inprogress') {
+                transfer.status = 'inprogress'
+              }
+            },
+          })
+          .catch((err) => {
+            this.$log.error(err)
+          })
         this.$accessor.files.addTransfer(transfer)
       }
     }
@@ -399,7 +425,7 @@
         case 'tiff':
         case 'webp':
           className += 'fa-image'
-          break;
+          break
         default:
           className += 'fa-file'
       }
@@ -421,7 +447,5 @@
       }
       return `${(size / 1000 ** 4).toFixed(3)} tb`
     }
-
   }
-
 </script>

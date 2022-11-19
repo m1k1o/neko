@@ -10,12 +10,7 @@ import {
   AdminEvents,
   FileTransferEvents,
 } from './events'
-import {
-  FileListItem,
-  Member,
-  ScreenConfigurations,
-  ScreenResolution
-} from './types'
+import { FileListItem, Member, ScreenConfigurations, ScreenResolution } from './types'
 
 export type WebSocketMessages =
   | WebSocketMessage
@@ -199,12 +194,15 @@ export interface EmojiSendPayload {
   emote: string
 }
 
-// file transfer enabled
+/*
+  FILE TRANSFER PAYLOADS
+*/
 export interface FileTransferStatusMessage extends WebSocketMessage, FileTransferStatusPayload {
   event: typeof EVENT.FILETRANSFER.STATUS
 }
+
 export interface FileTransferStatusPayload {
-  admin: boolean,
+  admin: boolean
   unpriv: boolean
 }
 
@@ -212,8 +210,9 @@ export interface FileTransferStatusPayload {
 export interface FileTransferListMessage extends WebSocketMessage, FileTransferListPayload {
   event: FileTransferEvents
 }
+
 export interface FileTransferListPayload {
-  cwd: string,
+  cwd: string
   files: FileListItem[]
 }
 
@@ -240,11 +239,11 @@ export interface ScreenConfigurationsPayload {
   BROADCAST PAYLOADS
 */
 export interface BroadcastCreatePayload {
-  url:   string
+  url: string
 }
 
 export interface BroadcastStatusPayload {
-  url:      string
+  url: string
   isActive: boolean
 }
 

@@ -385,7 +385,7 @@
     }
 
     set file_transfer(value: boolean) {
-      this.$accessor.settings.setGlobalFileTransferStatus({ admin: value, unpriv: false })
+      this.$accessor.settings.setRemoteFileTransferStatus({ admin: value, unpriv: false })
     }
 
     get unpriv_file_transfer() {
@@ -393,7 +393,7 @@
     }
 
     set unpriv_file_transfer(value: boolean) {
-      this.$accessor.settings.setGlobalFileTransferStatus({ admin: this.file_transfer, unpriv: value }) 
+      this.$accessor.settings.setRemoteFileTransferStatus({ admin: this.file_transfer, unpriv: value })
     }
 
     get broadcast_is_active() {

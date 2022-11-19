@@ -94,16 +94,15 @@ export const actions = actionTree(
       accessor.settings.setFileTransfer(admin)
       accessor.settings.setUnprivFileTransfer(unpriv)
 
-      if (!admin || !accessor.user.admin && !unpriv) {
+      if (!admin || (!accessor.user.admin && !unpriv)) {
         accessor.files.cancelAllTransfers()
       }
-      
+
       if (accessor.client.tab === 'files' && !unpriv) {
         accessor.client.setTab('chat')
       }
     },
-
-    setGlobalFileTransferStatus({ getters}, { admin, unpriv }) {
+    setRemoteFileTransferStatus({ getters }, { admin, unpriv }) {
       $client.sendMessage(EVENT.FILETRANSFER.STATUS, { admin, unpriv })
     },
 

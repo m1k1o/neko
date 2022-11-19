@@ -79,7 +79,7 @@
 </style>
 
 <script lang="ts">
-  import { Vue, Component } from 'vue-property-decorator'
+  import { Vue, Component, Watch } from 'vue-property-decorator'
 
   import Settings from '~/components/settings.vue'
   import Chat from '~/components/chat.vue'
@@ -90,26 +90,27 @@
     components: {
       'neko-settings': Settings,
       'neko-chat': Chat,
-      'neko-files': Files
+      'neko-files': Files,
     },
   })
   export default class extends Vue {
-
-    constructor() {
-      super()
-      if (this.tab === 'files' && (!this.$accessor.settings.file_transfer ||
-      !this.$accessor.user.admin && this.$accessor.settings.unpriv_file_transfer)) {
-        this.change('chat')
-      }
-    }
-
     get filetransferAllowed() {
-      return this.$accessor.user.admin && this.$accessor.settings.file_transfer ||
+      return (
+        (this.$accessor.user.admin && this.$accessor.settings.file_transfer) ||
         this.$accessor.settings.unpriv_file_transfer
+      )
     }
 
     get tab() {
       return this.$accessor.client.tab
+    }
+
+    @Watch('tab', { immediate: true })
+    onTabChange() {
+      // do not show the files tab if file transfer is disabled
+      if (this.tab === 'files' && !this.filetransferAllowed) {
+        this.change('chat')
+      }
     }
 
     change(tab: string) {

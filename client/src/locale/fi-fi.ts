@@ -117,5 +117,5 @@ export const notifications = {
 export const files = {
   downloads: 'Lataukset',
   uploads: 'Lataa',
-  upload_here: 'Klikkaa tai vedä tiedostoja tähän ladataksesi'
+  upload_here: 'Klikkaa tai vedä tiedostoja tähän ladataksesi',
 }
