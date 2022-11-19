@@ -95,7 +95,9 @@
   })
   export default class extends Vue {
     get filetransferAllowed() {
-      return this.$accessor.remote.fileTransfer && (this.$accessor.user.admin || !this.$accessor.isLocked('file_transfer'))
+      return (
+        this.$accessor.remote.fileTransfer && (this.$accessor.user.admin || !this.$accessor.isLocked('file_transfer'))
+      )
     }
 
     get tab() {
