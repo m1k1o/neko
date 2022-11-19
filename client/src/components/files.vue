@@ -14,39 +14,57 @@
     </div>
     <div class="transfer-area">
       <div class="transfers" v-if="transfers.length > 0">
-        <p v-if="downloads.length > 0">{{ $t('files.downloads') }}</p>
+        <p v-if="downloads.length > 0" class="transfers-list-header">
+          <span>{{ $t('files.downloads') }}</span>
+          <i class="fas fa-xmark remove-transfer" @click="downloads.forEach((t) => removeTransfer(t))"></i>
+        </p>
         <div v-for="download in downloads" :key="download.id" class="transfers-list-item">
           <div class="transfer-info">
             <i
               class="fas transfer-status"
               :class="{
-                'fa-arrows-rotate': download.status !== 'completed',
+                'fa-clock': download.status === 'pending',
+                'fa-arrows-rotate': download.status === 'inprogress',
                 'fa-check': download.status === 'completed',
+                'fa-warning': download.status === 'failed',
               }"
             ></i>
             <p>{{ download.name }}</p>
             <p class="file-size">{{ Math.min(100, Math.round((download.progress / download.size) * 100)) }}%</p>
             <i class="fas fa-xmark remove-transfer" @click="() => removeTransfer(download)"></i>
           </div>
+          <div v-if="download.status === 'failed'" class="transfer-error">{{ download.error }}</div>
           <progress
+            v-else
             class="transfer-progress"
             :aria-label="download.name + ' progress'"
             :value="download.progress"
             :max="download.size"
           ></progress>
         </div>
-        <p v-if="uploads.length > 0">{{ $t('files.uploads') }}</p>
+        <p v-if="uploads.length > 0" class="transfers-list-header">
+          <span>{{ $t('files.uploads') }}</span>
+          <i class="fas fa-xmark remove-transfer" @click="uploads.forEach((t) => removeTransfer(t))"></i>
+        </p>
         <div v-for="upload in uploads" :key="upload.id" class="transfers-list-item">
           <div class="transfer-info">
             <i
               class="fas transfer-status"
-              :class="{ 'fa-arrows-rotate': upload.status !== 'completed', 'fa-check': upload.status === 'completed' }"
+              :title="upload.status"
+              :class="{
+                'fa-clock': upload.status === 'pending',
+                'fa-arrows-rotate': upload.status === 'inprogress',
+                'fa-check': upload.status === 'completed',
+                'fa-warning': upload.status === 'failed',
+              }"
             ></i>
             <p>{{ upload.name }}</p>
             <p class="file-size">{{ Math.min(100, Math.round((upload.progress / upload.size) * 100)) }}%</p>
             <i class="fas fa-xmark remove-transfer" @click="() => removeTransfer(upload)"></i>
           </div>
+          <div v-if="upload.status === 'failed'" class="transfer-error">{{ upload.error }}</div>
           <progress
+            v-else
             class="transfer-progress"
             :aria-label="upload.name + ' progress'"
             :value="upload.progress"
@@ -120,10 +138,22 @@
       flex-direction: row;
     }
 
+    .transfers-list-header {
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 2px solid rgba($color: #fff, $alpha: 0.1);
+    }
+
     .file-icon,
     .transfer-status {
       width: 14px;
       margin-right: 0.5em;
+    }
+
+    .transfer-error {
+      border: 1px solid $style-error;
+      border-radius: 5px;
+      padding: 10px;
     }
 
     .files-list-item:last-child {
@@ -317,8 +347,11 @@
           transfer.progress = transfer.size
           transfer.status = 'completed'
         })
-        .catch((err) => {
-          this.$log.error(err)
+        .catch((error) => {
+          this.$log.error(error)
+
+          transfer.status = 'failed'
+          transfer.error = error.message
         })
 
       this.$accessor.files.addTransfer(transfer)
@@ -360,8 +393,11 @@
               }
             },
           })
-          .catch((err) => {
-            this.$log.error(err)
+          .catch((error) => {
+            this.$log.error(error)
+
+            transfer.status = 'failed'
+            transfer.error = error.message
           })
 
         this.$accessor.files.addTransfer(transfer)

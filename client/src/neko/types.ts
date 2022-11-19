@@ -35,6 +35,7 @@ export interface FileTransfer {
   direction: 'upload' | 'download'
   size: number
   progress: number
-  status: 'pending' | 'inprogress' | 'completed'
-  abortController: AbortController | null
+  status: 'pending' | 'inprogress' | 'completed' | 'failed'
+  error?: string
+  abortController?: AbortController
 }
