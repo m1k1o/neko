@@ -231,7 +231,7 @@
 
   import Markdown from './markdown'
   import Content from './context.vue'
-  import { FileTransfer } from '~/neko/types'
+  import { FileTransfer, FileListItem } from '~/neko/types'
 
   @Component({
     name: 'neko-files',
@@ -267,12 +267,15 @@
       this.$accessor.files.refresh()
     }
 
-    download(item: any) {
+    download(item: FileListItem) {
       if (this.downloads.map((t) => t.name).includes(item.name)) {
         return
       }
 
-      const url = `/file?pwd=${this.$accessor.password}&filename=${item.name}`
+      const url =
+        '/file?pwd=' + encodeURIComponent(this.$accessor.password) + '&filename=' + encodeURIComponent(item.name)
+      const abortController = new AbortController()
+
       let transfer: FileTransfer = {
         id: Math.round(Math.random() * 10000),
         name: item.name,
@@ -283,13 +286,13 @@
         progress: 0,
         status: 'pending',
         axios: null,
-        abortController: null,
+        abortController: abortController,
       }
-      transfer.abortController = new AbortController()
+
       transfer.axios = this.$http
         .get(url, {
           responseType: 'blob',
-          signal: transfer.abortController.signal,
+          signal: abortController.signal,
           onDownloadProgress: (x) => {
             transfer.progress = x.loaded
 
@@ -318,17 +321,20 @@
         .catch((err) => {
           this.$log.error(err)
         })
+
       this.$accessor.files.addTransfer(transfer)
     }
 
     upload(dt: DataTransfer) {
+      const url = '/file?pwd=' + encodeURIComponent(this.$accessor.password)
       this.uploadAreaDrag = false
 
       for (const file of dt.files) {
+        const abortController = new AbortController()
+
         const formdata = new FormData()
         formdata.append('files', file, file.name)
 
-        const url = `/file?pwd=${this.$accessor.password}`
         let transfer: FileTransfer = {
           id: Math.round(Math.random() * 10000),
           name: file.name,
@@ -337,11 +343,12 @@
           progress: 0,
           status: 'pending',
           axios: null,
-          abortController: null,
+          abortController: abortController,
         }
-        transfer.abortController = new AbortController()
+
         this.$http
           .post(url, formdata, {
+            signal: abortController.signal,
             onUploadProgress: (x: any) => {
               transfer.progress = x.loaded
 
@@ -358,6 +365,7 @@
           .catch((err) => {
             this.$log.error(err)
           })
+
         this.$accessor.files.addTransfer(transfer)
       }
     }
@@ -366,19 +374,20 @@
       const input = document.createElement('input')
       input.type = 'file'
       input.setAttribute('multiple', 'true')
-      input.click()
+      input.onchange = (e: Event) => {
+        if (e === null) return
 
-      input.onchange = (e) => {
-        if (e === null) {
-          return
-        }
         const dt = new DataTransfer()
-        const target = e.target as any
+        const target = e.target as HTMLInputElement
+        if (target.files === null) return
+
         for (const f of target.files) {
           dt.items.add(f)
         }
+
         this.upload(dt)
       }
+      input.click()
     }
 
     removeTransfer(transfer: FileTransfer) {
@@ -388,19 +397,34 @@
       this.$accessor.files.removeTransfer(transfer)
     }
 
-    fileIcon(file: any) {
+    fileIcon(file: FileListItem) {
       let className = 'file-icon fas '
+      // if is directory
       if (file.type === 'dir') {
         className += 'fa-folder'
         return className
       }
-      const parts = file.name.split('.')
-      if (!parts) {
+      // try to get file extension
+      const ext = file.name.split('.').pop()
+      if (ext === undefined) {
         className += 'fa-file'
         return className
       }
-      const ext = parts[parts.length - 1]
-      switch (ext) {
+      // try to find icon
+      switch (ext.toLowerCase()) {
+        case 'txt':
+        case 'md':
+          className += 'fa-file-text'
+          break
+        case 'pdf':
+          className += 'fa-file-pdf'
+          break
+        case 'zip':
+        case 'rar':
+        case '7z':
+        case 'gz':
+          className += 'fa-archive'
+          break
         case 'aac':
         case 'flac':
         case 'midi':
@@ -409,6 +433,7 @@
         case 'wav':
           className += 'fa-music'
           break
+        case 'avi':
         case 'mkv':
         case 'mov':
         case 'mpeg':
@@ -433,19 +458,19 @@
     }
 
     fileSize(size: number) {
-      if (size < 1000) {
-        return `${size} b`
+      if (size < 1024) {
+        return size + ' B'
       }
-      if (size < 1000 ** 2) {
-        return `${(size / 1000).toFixed(2)} kb`
+      if (size < 1024 * 1024) {
+        return Math.round(size / 1024) + ' KB'
       }
-      if (size < 1000 ** 3) {
-        return `${(size / 1000 ** 2).toFixed(2)} mb`
+      if (size < 1024 * 1024 * 1024) {
+        return Math.round(size / (1024 * 1024)) + ' MB'
       }
-      if (size < 1000 ** 4) {
-        return `${(size / 1000 ** 3).toFixed(2)} gb`
+      if (size < 1024 * 1024 * 1024 * 1024) {
+        return Math.round(size / (1024 * 1024 * 1024)) + ' GB'
       }
-      return `${(size / 1000 ** 4).toFixed(3)} tb`
+      return Math.round(size / (1024 * 1024 * 1024 * 1024)) + ' TB'
     }
   }
 </script>
