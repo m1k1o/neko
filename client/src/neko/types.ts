@@ -36,6 +36,5 @@ export interface FileTransfer {
   size: number
   progress: number
   status: 'pending' | 'inprogress' | 'completed'
-  axios: Promise<void> | null
   abortController: AbortController | null
 }

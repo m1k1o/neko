@@ -285,11 +285,10 @@
         size: item.size,
         progress: 0,
         status: 'pending',
-        axios: null,
         abortController: abortController,
       }
 
-      transfer.axios = this.$http
+      this.$http
         .get(url, {
           responseType: 'blob',
           signal: abortController.signal,
@@ -342,7 +341,6 @@
           size: file.size,
           progress: 0,
           status: 'pending',
-          axios: null,
           abortController: abortController,
         }
 
