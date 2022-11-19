@@ -8,6 +8,7 @@ export const send_a_message = 'Envoyer un message'
 
 export const side = {
   chat: 'Chat',
+  files: 'Fichiers',
   settings: 'Paramètres',
 }
 
@@ -83,6 +84,8 @@ export const setting = {
   ignore_emotes: 'Ignorer les Emotes',
   chat_sound: 'Jouer le son du tchat',
   keyboard_layout: 'Langue du clavier',
+  file_transfer: 'Transfert de fichiers',
+  unpriv_file_transfer: 'Transfert de fichiers d\'utilisateurs',
   // TODO
   //broadcast_title: 'Live Broadcast',
 }
@@ -116,4 +119,10 @@ export const notifications = {
   kicked: 'a kick {name}',
   muted: 'a mute {name}',
   unmuted: 'a démute {name}',
+}
+
+export const files = {
+  downloads: 'Téléchargements',
+  uploads: 'Télécharger',
+  upload_here: 'Cliquez ou faites glisser les fichiers ici pour les télécharger'
 }

@@ -126,6 +126,16 @@ func (h *MessageHandler) Message(id string, raw []byte) error {
 				return h.chatEmote(id, session, payload)
 			}), "%s failed", header.Event)
 
+	// File Transfer Events
+	case event.FILETRANSFER_STATUS:
+		payload := &message.FileTransferStatus{}
+		return errors.Wrapf(
+			utils.Unmarshal(payload, raw, func() error {
+				return h.setFileTransferStatus(session, payload)
+			}), "%s failed", header.Event)
+	case event.FILETRANSFER_REFRESH:
+		return errors.Wrapf(h.refresh(session), "%s failed", header.Event)
+
 	// Screen Events
 	case event.SCREEN_RESOLUTION:
 		return errors.Wrapf(h.screenResolution(id, session), "%s failed", header.Event)

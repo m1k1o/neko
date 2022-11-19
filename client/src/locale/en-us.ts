@@ -7,6 +7,7 @@ export const send_a_message = 'Send a message'
 
 export const side = {
   chat: 'Chat',
+  files: 'Files',
   settings: 'Settings',
 }
 
@@ -79,6 +80,8 @@ export const setting = {
   ignore_emotes: 'Ignore Emotes',
   chat_sound: 'Play Chat Sound',
   keyboard_layout: 'Keyboard Layout',
+  file_transfer: 'File Transfer',
+  unpriv_file_transfer: 'Non-admin File Transfer',
   broadcast_title: 'Live Broadcast',
 }
 
@@ -109,4 +112,10 @@ export const notifications = {
   kicked: 'kicked {name}',
   muted: 'muted {name}',
   unmuted: 'unmuted {name}',
+}
+
+export const files = {
+  downloads: 'Downloads',
+  uploads: 'Uploads',
+  upload_here: 'Click or drag files here to upload'
 }

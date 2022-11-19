@@ -3,10 +3,12 @@ package websocket
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"sync"
 	"sync/atomic"
 	"time"
 
+	"github.com/fsnotify/fsnotify"
 	"github.com/gorilla/websocket"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -25,12 +27,20 @@ const CONTROL_PROTECTION_SESSION = "by_control_protection"
 func New(sessions types.SessionManager, desktop types.DesktopManager, capture types.CaptureManager, webrtc types.WebRTCManager, conf *config.WebSocket) *WebSocketHandler {
 	logger := log.With().Str("module", "websocket").Logger()
 
-	state := state.New()
+	state := state.New(conf.FileTransfer, conf.UnprivFileTransfer, conf.FileTransferPath)
 
 	// if control protection is enabled
 	if conf.ControlProtection {
 		state.Lock("control", CONTROL_PROTECTION_SESSION)
 		logger.Info().Msgf("control locked on behalf of control protection")
+	}
+
+	if conf.FileTransferPath[len(conf.FileTransferPath)-1] != '/' {
+		conf.FileTransferPath += "/"
+	}
+	err := os.Mkdir(conf.FileTransferPath, 0755)
+	if err != nil && !os.IsExist(err) {
+		logger.Panic().Err(err).Msg("unable to create file transfer directory")
 	}
 
 	// apply default locks
@@ -124,6 +134,33 @@ func (ws *WebSocketHandler) Start() {
 			}
 		}
 
+		// send file list if necessary
+		if session.Admin() && ws.state.FileTransferEnabled() ||
+			ws.state.FileTransferEnabled() && ws.state.UnprivFileTransferEnabled() {
+			err := session.Send(
+				message.FileTransferStatus{
+					Event:  event.FILETRANSFER_STATUS,
+					Admin:  ws.state.FileTransferEnabled(),
+					Unpriv: ws.state.UnprivFileTransferEnabled(),
+				})
+			if err != nil {
+				ws.logger.Warn().Err(err).Msgf("file transfer status event has failed")
+				return
+			}
+
+			files, err := utils.ListFiles(ws.conf.FileTransferPath)
+			if err == nil {
+				if err := session.Send(
+					message.FileList{
+						Event: event.FILETRANSFER_LIST,
+						Cwd:   ws.conf.FileTransferPath,
+						Files: *files,
+					}); err != nil {
+					ws.logger.Warn().Err(err).Msg("file list event has failed")
+				}
+			}
+		}
+
 		// remove outdated stats
 		if session.Admin() {
 			ws.lastAdminLeftAt = nil
@@ -187,6 +224,28 @@ func (ws *WebSocketHandler) Start() {
 
 		ws.logger.Err(err).Msg("sync clipboard")
 	})
+
+	// watch for file changes
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		ws.logger.Err(err).Msg("unable to start file transfer dir watcher")
+		return
+	}
+
+	go func() {
+		for {
+			select {
+			case <-watcher.Events:
+				ws.sendFileTransferUpdate()
+			case err := <-watcher.Errors:
+				ws.logger.Err(err).Msg("error in file transfer dir watcher")
+			}
+		}
+	}()
+
+	if err := watcher.Add(ws.conf.FileTransferPath); err != nil {
+		ws.logger.Err(err).Msg("unable to add file transfer path to watcher")
+	}
 }
 
 func (ws *WebSocketHandler) Shutdown() error {
@@ -312,6 +371,50 @@ func (ws *WebSocketHandler) IsAdmin(password string) (bool, error) {
 	}
 
 	return false, fmt.Errorf("invalid password")
+}
+
+func (ws *WebSocketHandler) CanTransferFiles(password string) (bool, error) {
+	if !ws.state.FileTransferEnabled() {
+		return false, nil
+	}
+
+	if !ws.state.UnprivFileTransferEnabled() {
+		return ws.IsAdmin(password)
+	}
+
+	return password == ws.conf.Password, nil
+}
+
+func (ws *WebSocketHandler) MakeFilePath(filename string) string {
+	return fmt.Sprintf("%s%s", ws.conf.FileTransferPath, filename)
+}
+
+func (ws *WebSocketHandler) sendFileTransferUpdate() {
+	if !ws.state.FileTransferEnabled() {
+		return
+	}
+
+	files, err := utils.ListFiles(ws.conf.FileTransferPath)
+	if err != nil {
+		ws.logger.Err(err).Msg("unable to ls file transfer path")
+		return
+	}
+
+	message := message.FileList{
+		Event: event.FILETRANSFER_LIST,
+		Cwd:   ws.conf.FileTransferPath,
+		Files: *files,
+	}
+
+	var broadcastErr error
+	if ws.state.UnprivFileTransferEnabled() {
+		broadcastErr = ws.sessions.Broadcast(message, nil)
+	} else {
+		broadcastErr = ws.sessions.AdminBroadcast(message, nil)
+	}
+	if broadcastErr != nil {
+		ws.logger.Err(broadcastErr).Msg("unable to broadcast file list")
+	}
 }
 
 func (ws *WebSocketHandler) authenticate(r *http.Request) (bool, error) {

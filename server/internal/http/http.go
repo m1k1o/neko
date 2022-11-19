@@ -3,9 +3,12 @@ package http
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"image/jpeg"
+	"io"
 	"net/http"
 	"os"
+	"regexp"
 	"strconv"
 
 	"github.com/go-chi/chi"
@@ -16,6 +19,8 @@ import (
 	"m1k1o/neko/internal/config"
 	"m1k1o/neko/internal/types"
 )
+
+const FILE_UPLOAD_BUF_SIZE = 65000
 
 type Server struct {
 	logger zerolog.Logger
@@ -31,6 +36,7 @@ func New(conf *config.Server, webSocketHandler types.WebSocketHandler, desktop t
 	router.Use(middleware.RequestID) // Create a request ID for each request
 	router.Use(middleware.RequestLogger(&logformatter{logger}))
 	router.Use(middleware.Recoverer) // Recover from panics without crashing server
+	router.Use(middleware.Compress(5, "application/octet-stream"))
 
 	if conf.PathPrefix != "/" {
 		router.Use(func(h http.Handler) http.Handler {
@@ -96,6 +102,71 @@ func New(conf *config.Server, webSocketHandler types.WebSocketHandler, desktop t
 		if err := jpeg.Encode(w, img, &jpeg.Options{Quality: quality}); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
+		}
+	})
+
+	router.Get("/file", func(w http.ResponseWriter, r *http.Request) {
+		password := r.URL.Query().Get("pwd")
+		isAuthorized, err := webSocketHandler.CanTransferFiles(password)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusForbidden)
+			return
+		}
+
+		if !isAuthorized {
+			http.Error(w, "bad authorization", http.StatusUnauthorized)
+			return
+		}
+
+		filename := r.URL.Query().Get("filename")
+		badChars, _ := regexp.MatchString(`(?m)\.\.(?:\/|$)`, filename)
+		if filename == "" || badChars {
+			http.Error(w, "bad filename", http.StatusBadRequest)
+			return
+		}
+
+		path := webSocketHandler.MakeFilePath(filename)
+		f, err := os.Open(path)
+		if err != nil {
+			http.Error(w, "not found or unable to open", http.StatusNotFound)
+			return
+		}
+		defer f.Close()
+
+		w.Header().Set("Content-Type", "application/octet-stream")
+		w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
+		io.Copy(w, f)
+	})
+
+	router.Post("/file", func(w http.ResponseWriter, r *http.Request) {
+		password := r.URL.Query().Get("pwd")
+		isAuthorized, err := webSocketHandler.CanTransferFiles(password)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusForbidden)
+			return
+		}
+
+		if !isAuthorized {
+			http.Error(w, "bad authorization", http.StatusUnauthorized)
+			return
+		}
+
+		r.ParseMultipartForm(32 << 20)
+		for _, formheader := range r.MultipartForm.File["files"] {
+			formfile, err := formheader.Open()
+			if err != nil {
+				logger.Warn().Err(err).Msg("failed to open formdata file")
+				http.Error(w, "error writing file", http.StatusInternalServerError)
+				return
+			}
+			defer formfile.Close()
+			f, err := os.OpenFile(webSocketHandler.MakeFilePath(formheader.Filename), os.O_WRONLY|os.O_CREATE, 0644)
+			if err != nil {
+				http.Error(w, "unable to open file for writing", http.StatusInternalServerError)
+				return
+			}
+			defer f.Close()
+			io.Copy(f, formfile)
 		}
 	})
 

@@ -7,6 +7,7 @@ export const send_a_message = 'Lähetä viesti'
 
 export const side = {
   chat: 'Chatti',
+  files: 'Tiedostot',
   settings: 'Asetukset',
 }
 
@@ -79,6 +80,8 @@ export const setting = {
   ignore_emotes: 'Estä emojit',
   chat_sound: 'Soita viesti ääni',
   keyboard_layout: 'Näppäimistöasettelu',
+  file_transfer: 'Tiedoston siirto',
+  unpriv_file_transfer: 'Käyttäjän tiedostojen siirto',
   broadcast_title: 'Suora Lähetys',
 }
 
@@ -109,4 +112,10 @@ export const notifications = {
   kicked: 'heitetty {name} ulos',
   muted: 'mykistetty {name}',
   unmuted: 'poistettu mykistys {name}',
+}
+
+export const files = {
+  downloads: 'Lataukset',
+  uploads: 'Lataa',
+  upload_here: 'Klikkaa tai vedä tiedostoja tähän ladataksesi'
 }

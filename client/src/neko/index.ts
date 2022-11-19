@@ -24,6 +24,8 @@ import {
   AdminLockMessage,
   SystemInitPayload,
   AdminLockResource,
+  FileTransferListPayload,
+  FileTransferStatusPayload,
 } from './messages'
 
 interface NekoEvents extends BaseEvents {}
@@ -68,6 +70,14 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
       icon: 'info',
       confirmButtonText: this.$vue.$t('connection.button_confirm') as string,
     })
+  }
+
+  public refreshFiles() {
+    if (!this.connected) {
+      this.emit('warn', 'attempting to refresh files while disconnected')
+    }
+    this.emit('debug', `sending event '${EVENT.FILETRANSFER.REFRESH}'`)
+    this._ws!.send(JSON.stringify({ event: EVENT.FILETRANSFER.REFRESH }))
   }
 
   /////////////////////////////
@@ -349,6 +359,18 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
     }
 
     this.$accessor.chat.newEmote({ type: emote })
+  }
+
+  /////////////////////////////
+  // Filetransfer Events
+  /////////////////////////////
+  protected [EVENT.FILETRANSFER.STATUS]({ admin, unpriv }: FileTransferStatusPayload) {
+    this.$accessor.settings.setLocalFileTransferStatus({ admin, unpriv })
+  }
+
+  protected [EVENT.FILETRANSFER.LIST]({ cwd, files }: FileTransferListPayload) {
+    this.$accessor.files.setCwd(cwd)
+    this.$accessor.files.setFileList(files)
   }
 
   /////////////////////////////

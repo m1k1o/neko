@@ -7,6 +7,7 @@ export const send_a_message = '发送消息'
 
 export const side = {
   chat: '聊天',
+  files: '文件',
   settings: '设置',
 }
 
@@ -79,6 +80,8 @@ export const setting = {
   ignore_emotes: '忽略表情符号',
   chat_sound: '播放聊天声音',
   keyboard_layout: '键盘布局',
+  file_transfer: '文件传输',
+  unpriv_file_transfer: '用户文件传输',
   broadcast_title: '现场流媒体',
 }
 
@@ -109,4 +112,10 @@ export const notifications = {
   kicked: '被踢的 {name}',
   muted: '鸟粪 {name}',
   unmuted: '取消静音 {name}',
+}
+
+export const files = {
+  downloads: '下载',
+  uploads: '上传',
+  upload_here: '点击或拖动文件到这里来上传'
 }
