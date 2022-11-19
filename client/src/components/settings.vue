@@ -44,20 +44,6 @@
           <span />
         </label>
       </li>
-      <li v-if="admin">
-        <span>{{ $t('setting.file_transfer') }}</span>
-        <label class="switch">
-          <input type="checkbox" v-model="file_transfer" />
-          <span />
-        </label>
-      </li>
-      <li v-if="admin && file_transfer">
-        <span>{{ $t('setting.unpriv_file_transfer') }}</span>
-        <label class="switch">
-          <input type="checkbox" v-model="unpriv_file_transfer" />
-          <span />
-        </label>
-      </li>
       <li class="broadcast" v-if="admin">
         <div>
           <span>{{ $t('setting.broadcast_title') }}</span>
@@ -378,22 +364,6 @@
 
     get keyboard_layout() {
       return this.$accessor.settings.keyboard_layout
-    }
-
-    get file_transfer() {
-      return this.$accessor.settings.file_transfer
-    }
-
-    set file_transfer(value: boolean) {
-      this.$accessor.settings.setRemoteFileTransferStatus({ admin: value, unpriv: false })
-    }
-
-    get unpriv_file_transfer() {
-      return this.$accessor.settings.unpriv_file_transfer
-    }
-
-    set unpriv_file_transfer(value: boolean) {
-      this.$accessor.settings.setRemoteFileTransferStatus({ admin: this.file_transfer, unpriv: value })
     }
 
     get broadcast_is_active() {

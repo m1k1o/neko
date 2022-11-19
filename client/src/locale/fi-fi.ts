@@ -71,6 +71,15 @@ export const locks = {
     notif_locked: 'lukittu huone',
     notif_unlocked: 'vapautettu huone',
   },
+  // TODO
+  //file_transfer: {
+  //  lock: 'Lock File Transfer (for users)',
+  //  unlock: 'Unlock File Transfer (for users)',
+  //  locked: 'File Transfer Locked (for users)',
+  //  unlocked: 'File Transfer Unlocked (for users)',
+  //  notif_locked: 'locked file transfer',
+  //  notif_unlocked: 'unlocked file transfer',
+  //},
 }
 
 export const setting = {
@@ -80,8 +89,6 @@ export const setting = {
   ignore_emotes: 'Estä emojit',
   chat_sound: 'Soita viesti ääni',
   keyboard_layout: 'Näppäimistöasettelu',
-  file_transfer: 'Tiedoston siirto',
-  unpriv_file_transfer: 'Käyttäjän tiedostojen siirto',
   broadcast_title: 'Suora Lähetys',
 }
 

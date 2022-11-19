@@ -15,9 +15,8 @@ type WebSocket struct {
 
 	ControlProtection bool
 
-	FileTransfer       bool
-	UnprivFileTransfer bool
-	FileTransferPath   string
+	FileTransferEnabled bool
+	FileTransferPath    string
 }
 
 func (WebSocket) Init(cmd *cobra.Command) error {
@@ -46,13 +45,10 @@ func (WebSocket) Init(cmd *cobra.Command) error {
 		return err
 	}
 
-	cmd.PersistentFlags().Bool("file_transfer", false, "allow file transfer for admins")
-	if err := viper.BindPFlag("file_transfer", cmd.PersistentFlags().Lookup("file_transfer")); err != nil {
-		return err
-	}
+	// File transfer
 
-	cmd.PersistentFlags().Bool("unpriv_file_transfer", false, "allow file transfer for non admins")
-	if err := viper.BindPFlag("unpriv_file_transfer", cmd.PersistentFlags().Lookup("unpriv_file_transfer")); err != nil {
+	cmd.PersistentFlags().Bool("file_transfer_enabled", true, "enable file transfer feature")
+	if err := viper.BindPFlag("file_transfer_enabled", cmd.PersistentFlags().Lookup("file_transfer_enabled")); err != nil {
 		return err
 	}
 
@@ -72,8 +68,7 @@ func (s *WebSocket) Set() {
 
 	s.ControlProtection = viper.GetBool("control_protection")
 
-	s.FileTransfer = viper.GetBool("file_transfer")
-	s.UnprivFileTransfer = viper.GetBool("unpriv_file_transfer")
+	s.FileTransferEnabled = viper.GetBool("file_transfer_enabled")
 	s.FileTransferPath = viper.GetString("file_transfer_path")
 	s.FileTransferPath = filepath.Clean(s.FileTransferPath)
 }

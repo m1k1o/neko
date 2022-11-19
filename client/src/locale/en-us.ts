@@ -71,6 +71,14 @@ export const locks = {
     notif_locked: 'locked the room',
     notif_unlocked: 'unlocked the room',
   },
+  file_transfer: {
+    lock: 'Lock File Transfer (for users)',
+    unlock: 'Unlock File Transfer (for users)',
+    locked: 'File Transfer Locked (for users)',
+    unlocked: 'File Transfer Unlocked (for users)',
+    notif_locked: 'locked file transfer',
+    notif_unlocked: 'unlocked file transfer',
+  },
 }
 
 export const setting = {
@@ -80,8 +88,6 @@ export const setting = {
   ignore_emotes: 'Ignore Emotes',
   chat_sound: 'Play Chat Sound',
   keyboard_layout: 'Keyboard Layout',
-  file_transfer: 'File Transfer',
-  unpriv_file_transfer: 'Non-admin File Transfer',
   broadcast_title: 'Live Broadcast',
 }
 

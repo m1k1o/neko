@@ -14,6 +14,7 @@ type SystemInit struct {
 	Event           string            `json:"event"`
 	ImplicitHosting bool              `json:"implicit_hosting"`
 	Locks           map[string]string `json:"locks"`
+	FileTransfer    bool              `json:"file_transfer"`
 }
 
 type SystemMessage struct {
@@ -47,8 +48,8 @@ type SignalCandidate struct {
 }
 
 type MembersList struct {
-	Event    string          `json:"event"`
-	Memebers []*types.Member `json:"members"`
+	Event   string          `json:"event"`
+	Members []*types.Member `json:"members"`
 }
 
 type Member struct {
@@ -106,17 +107,7 @@ type EmoteSend struct {
 	Emote string `json:"emote"`
 }
 
-type FileTransferTarget struct {
-	Event string `json:"event"`
-}
-
-type FileTransferStatus struct {
-	Event  string `json:"event"`
-	Admin  bool   `json:"admin"`
-	Unpriv bool   `json:"unpriv"`
-}
-
-type FileList struct {
+type FileTransferList struct {
 	Event string               `json:"event"`
 	Cwd   string               `json:"cwd"`
 	Files []types.FileListItem `json:"files"`

@@ -25,7 +25,6 @@ import {
   SystemInitPayload,
   AdminLockResource,
   FileTransferListPayload,
-  FileTransferStatusPayload,
 } from './messages'
 
 interface NekoEvents extends BaseEvents {}
@@ -135,8 +134,9 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   /////////////////////////////
   // System Events
   /////////////////////////////
-  protected [EVENT.SYSTEM.INIT]({ implicit_hosting, locks }: SystemInitPayload) {
+  protected [EVENT.SYSTEM.INIT]({ implicit_hosting, locks, file_transfer }: SystemInitPayload) {
     this.$accessor.remote.setImplicitHosting(implicit_hosting)
+    this.$accessor.remote.setFileTransfer(file_transfer)
 
     for (const resource in locks) {
       this[EVENT.ADMIN.LOCK]({
@@ -354,12 +354,8 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   }
 
   /////////////////////////////
-  // Filetransfer Events
+  // File Transfer Events
   /////////////////////////////
-  protected [EVENT.FILETRANSFER.STATUS]({ admin, unpriv }: FileTransferStatusPayload) {
-    this.$accessor.settings.setLocalFileTransferStatus({ admin, unpriv })
-  }
-
   protected [EVENT.FILETRANSFER.LIST]({ cwd, files }: FileTransferListPayload) {
     this.$accessor.files.setCwd(cwd)
     this.$accessor.files.setFileList(files)

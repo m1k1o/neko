@@ -35,7 +35,6 @@ const (
 )
 
 const (
-	FILETRANSFER_STATUS  = "filetransfer/status"
 	FILETRANSFER_LIST    = "filetransfer/list"
 	FILETRANSFER_REFRESH = "filetransfer/refresh"
 )

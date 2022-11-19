@@ -69,6 +69,14 @@ export const locks = {
     notif_locked: 'Raum gesperrt',
     notif_unlocked: 'Raum entsperrt',
   },
+  file_transfer: {
+    lock: 'Dateiübertragung sperren (für Nutzer)',
+    unlock: 'Dateiübertragung entsperren (für Nutzer)',
+    locked: 'Dateiübertragung gesperrt (für Nutzer)',
+    unlocked: 'Dateiübertragung entsperrt (für Nutzer)',
+    notif_locked: 'Dateiübertragung gesperrt',
+    notif_unlocked: 'Dateiübertragung entsperrt',
+  },
 }
 
 export const setting = {
@@ -78,8 +86,6 @@ export const setting = {
   ignore_emotes: 'Emotes ignorieren',
   chat_sound: 'Chat-Sound abspielen',
   keyboard_layout: 'Tastaturbelegung',
-  file_transfer: 'Dateiübertragung',
-  unpriv_file_transfer: 'Übertragung von Benutzerdateien',
   broadcast_title: 'Live-Übertragung',
 }
 

@@ -75,6 +75,15 @@ export const locks = {
     notif_locked: 'låste rummet',
     notif_unlocked: 'låste upp rummet',
   },
+  // TODO
+  //file_transfer: {
+  //  lock: 'Lock File Transfer (for users)',
+  //  unlock: 'Unlock File Transfer (for users)',
+  //  locked: 'File Transfer Locked (for users)',
+  //  unlocked: 'File Transfer Unlocked (for users)',
+  //  notif_locked: 'locked file transfer',
+  //  notif_unlocked: 'unlocked file transfer',
+  //},
 }
 
 export const setting = {
@@ -84,8 +93,6 @@ export const setting = {
   ignore_emotes: 'Ignorera Emotes',
   chat_sound: 'Spela Chatt Ljud',
   keyboard_layout: 'Tangentbordslayout',
-  file_transfer: 'Överföring av filer',
-  unpriv_file_transfer: 'Överföring av användarfiler',
   // TODO
   //broadcast_title: 'Live Broadcast',
 }

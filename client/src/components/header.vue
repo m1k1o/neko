@@ -31,6 +31,19 @@
           }"
         />
       </li>
+      <li v-if="fileTransfer">
+        <i
+          :class="[{ disabled: !admin }, { locked: isLocked('file_transfer') }, 'fas', 'fa-file']"
+          @click="toggleLock('file_transfer')"
+          v-tooltip="{
+            content: lockedTooltip('file_transfer'),
+            placement: 'bottom',
+            offset: 5,
+            boundariesElement: 'body',
+            delay: { show: 300, hide: 100 },
+          }"
+        />
+      </li>
       <li>
         <span v-if="showBadge" class="badge">&bull;</span>
         <i class="fas fa-bars toggle" @click="toggleMenu" />
@@ -169,24 +182,22 @@
       return !this.side && this.readTexts != this.texts
     }
 
+    get fileTransfer() {
+      return this.$accessor.remote.fileTransfer
+    }
+
+    toggleLock(resource: AdminLockResource) {
+      this.$accessor.toggleLock(resource)
+    }
+
+    isLocked(resource: AdminLockResource): boolean {
+      return this.$accessor.isLocked(resource)
+    }
+
     readTexts: number = 0
     toggleMenu() {
       this.$accessor.client.toggleSide()
       this.readTexts = this.texts
-    }
-
-    toggleLock(resource: AdminLockResource) {
-      if (!this.admin) return
-
-      if (this.isLocked(resource)) {
-        this.$accessor.unlock(resource)
-      } else {
-        this.$accessor.lock(resource)
-      }
-    }
-
-    isLocked(resource: AdminLockResource): boolean {
-      return resource in this.locked && this.locked[resource]
     }
 
     lockedTooltip(resource: AdminLockResource) {

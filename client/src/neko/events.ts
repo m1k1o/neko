@@ -39,7 +39,6 @@ export const EVENT = {
     EMOTE: 'chat/emote',
   },
   FILETRANSFER: {
-    STATUS: 'filetransfer/status',
     LIST: 'filetransfer/list',
     REFRESH: 'filetransfer/refresh',
   },
@@ -98,10 +97,7 @@ export type SignalEvents =
 
 export type ChatEvents = typeof EVENT.CHAT.MESSAGE | typeof EVENT.CHAT.EMOTE
 
-export type FileTransferEvents =
-  | typeof EVENT.FILETRANSFER.STATUS
-  | typeof EVENT.FILETRANSFER.LIST
-  | typeof EVENT.FILETRANSFER.REFRESH
+export type FileTransferEvents = typeof EVENT.FILETRANSFER.LIST | typeof EVENT.FILETRANSFER.REFRESH
 
 export type ScreenEvents = typeof EVENT.SCREEN.CONFIGURATIONS | typeof EVENT.SCREEN.RESOLUTION | typeof EVENT.SCREEN.SET
 

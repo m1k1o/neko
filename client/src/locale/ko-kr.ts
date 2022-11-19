@@ -69,6 +69,15 @@ export const locks = {
     notif_locked: '방이 잠겼습니다',
     notif_unlocked: '방 잠금이 해제됐습니다',
   },
+  // TODO
+  //file_transfer: {
+  //  lock: 'Lock File Transfer (for users)',
+  //  unlock: 'Unlock File Transfer (for users)',
+  //  locked: 'File Transfer Locked (for users)',
+  //  unlocked: 'File Transfer Unlocked (for users)',
+  //  notif_locked: 'locked file transfer',
+  //  notif_unlocked: 'unlocked file transfer',
+  //},
 }
 
 export const setting = {
@@ -78,8 +87,6 @@ export const setting = {
   ignore_emotes: '이모지 무시',
   chat_sound: '채팅 소리 재생',
   keyboard_layout: '키보드 레이아웃',
-  file_transfer: '파일 전송',
-  unpriv_file_transfer: '사용자 파일 전송',
   broadcast_title: '실시간 방송',
 }
 

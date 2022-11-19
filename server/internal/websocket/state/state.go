@@ -1,22 +1,22 @@
 package state
 
+import "path/filepath"
+
 type State struct {
 	banned map[string]string // IP -> session ID (that banned it)
 	locked map[string]string // resource name -> session ID (that locked it)
 
-	fileTransferEnabled       bool   // admins can transfer files
-	fileTransferUnprivEnabled bool   // all users can transfer files
-	fileTransferPath          string // path where files are located
+	fileTransferEnabled bool
+	fileTransferPath    string // path where files are located
 }
 
-func New(fileTransferEnabled bool, fileTransferUnprivEnabled bool, fileTransferPath string) *State {
+func New(fileTransferEnabled bool, fileTransferPath string) *State {
 	return &State{
 		banned: make(map[string]string),
 		locked: make(map[string]string),
 
-		fileTransferEnabled:       fileTransferEnabled,
-		fileTransferUnprivEnabled: fileTransferUnprivEnabled,
-		fileTransferPath:          fileTransferPath,
+		fileTransferEnabled: fileTransferEnabled,
+		fileTransferPath:    fileTransferPath,
 	}
 }
 
@@ -68,21 +68,17 @@ func (s *State) AllLocked() map[string]string {
 	return s.locked
 }
 
-// File Transfer
+// File transfer
+
+func (s *State) FileTransferPath(filename string) string {
+	if filename == "" {
+		return s.fileTransferPath
+	}
+
+	cleanPath := filepath.Clean(filename)
+	return filepath.Join(s.fileTransferPath, cleanPath)
+}
 
 func (s *State) FileTransferEnabled() bool {
 	return s.fileTransferEnabled
-}
-
-func (s *State) UnprivFileTransferEnabled() bool {
-	return s.fileTransferUnprivEnabled
-}
-
-func (s *State) SetFileTransferState(admin bool, unpriv bool) {
-	s.fileTransferEnabled = admin
-	s.fileTransferUnprivEnabled = unpriv
-}
-
-func (s *State) FileTransferPath() string {
-	return s.fileTransferPath
 }

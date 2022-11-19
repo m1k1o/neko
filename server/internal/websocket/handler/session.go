@@ -17,6 +17,7 @@ func (h *MessageHandler) SessionCreated(id string, session types.Session) error 
 		Event:           event.SYSTEM_INIT,
 		ImplicitHosting: h.webrtc.ImplicitControl(),
 		Locks:           h.state.AllLocked(),
+		FileTransfer:    h.state.FileTransferEnabled(),
 	}); err != nil {
 		h.logger.Warn().Str("id", id).Err(err).Msgf("sending event %s has failed", event.SYSTEM_INIT)
 		return err
@@ -34,14 +35,21 @@ func (h *MessageHandler) SessionCreated(id string, session types.Session) error 
 		}
 	}
 
+	// send file list if file transfer is enabled
+	if h.state.FileTransferEnabled() && (session.Admin() || !h.state.IsLocked("file_transfer")) {
+		if err := h.FileTransferRefresh(session); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
 func (h *MessageHandler) SessionConnected(id string, session types.Session) error {
 	// send list of members to session
 	if err := session.Send(message.MembersList{
-		Event:    event.MEMBER_LIST,
-		Memebers: h.sessions.Members(),
+		Event:   event.MEMBER_LIST,
+		Members: h.sessions.Members(),
 	}); err != nil {
 		h.logger.Warn().Str("id", id).Err(err).Msgf("sending event %s has failed", event.MEMBER_LIST)
 		return err

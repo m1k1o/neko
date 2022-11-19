@@ -9,7 +9,7 @@
         <i :class="fileIcon(item)" />
         <p>{{ item.name }}</p>
         <p class="file-size">{{ fileSize(item.size) }}</p>
-        <i v-if="item.type !== 'dir'" class="fas fa-download download" @click="() => download(item)" />
+        <i v-if="item.type !== 'dir'" class="fas fa-download download" @click="download(item)" />
       </div>
     </div>
     <div class="transfer-area">
@@ -31,7 +31,7 @@
             ></i>
             <p>{{ download.name }}</p>
             <p class="file-size">{{ Math.min(100, Math.round((download.progress / download.size) * 100)) }}%</p>
-            <i class="fas fa-xmark remove-transfer" @click="() => removeTransfer(download)"></i>
+            <i class="fas fa-xmark remove-transfer" @click="removeTransfer(download)"></i>
           </div>
           <div v-if="download.status === 'failed'" class="transfer-error">{{ download.error }}</div>
           <progress
@@ -60,7 +60,7 @@
             ></i>
             <p>{{ upload.name }}</p>
             <p class="file-size">{{ Math.min(100, Math.round((upload.progress / upload.size) * 100)) }}%</p>
-            <i class="fas fa-xmark remove-transfer" @click="() => removeTransfer(upload)"></i>
+            <i class="fas fa-xmark remove-transfer" @click="removeTransfer(upload)"></i>
           </div>
           <div v-if="upload.status === 'failed'" class="transfer-error">{{ upload.error }}</div>
           <progress
@@ -75,8 +75,8 @@
       <div
         class="upload-area"
         :class="{ 'upload-area-drag': uploadAreaDrag }"
-        @dragover.prevent="() => (uploadAreaDrag = true)"
-        @dragleave.prevent="() => (uploadAreaDrag = false)"
+        @dragover.prevent="uploadAreaDrag = true"
+        @dragleave.prevent="uploadAreaDrag = false"
         @drop.prevent="(e) => upload(e.dataTransfer)"
         @click="openFileBrowser"
       >
@@ -322,6 +322,7 @@
         .get(url, {
           responseType: 'blob',
           signal: abortController.signal,
+          withCredentials: false,
           onDownloadProgress: (x) => {
             transfer.progress = x.loaded
 
@@ -380,6 +381,7 @@
         this.$http
           .post(url, formdata, {
             signal: abortController.signal,
+            withCredentials: false,
             onUploadProgress: (x: any) => {
               transfer.progress = x.loaded
 

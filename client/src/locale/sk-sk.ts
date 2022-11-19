@@ -74,6 +74,15 @@ export const locks = {
     notif_locked: 'miestnosť bola zamknutá',
     notif_unlocked: 'miestnosť bola odomknutá',
   },
+  // TODO
+  //file_transfer: {
+  //  lock: 'Lock File Transfer (for users)',
+  //  unlock: 'Unlock File Transfer (for users)',
+  //  locked: 'File Transfer Locked (for users)',
+  //  unlocked: 'File Transfer Unlocked (for users)',
+  //  notif_locked: 'locked file transfer',
+  //  notif_unlocked: 'unlocked file transfer',
+  //},
 }
 
 export const setting = {
@@ -83,8 +92,6 @@ export const setting = {
   ignore_emotes: 'Ignorovať smajlíky',
   chat_sound: 'Prehrávať zvuky chatu',
   keyboard_layout: 'Rozloženie klávesnice',
-  file_transfer: 'Prenos súborov',
-  unpriv_file_transfer: 'Prenos súborov používateľa',
   broadcast_title: 'Živé vysielanie',
 }
 

@@ -39,7 +39,6 @@ export type WebSocketPayloads =
   | ChatPayload
   | ChatSendPayload
   | EmojiSendPayload
-  | FileTransferStatusPayload
   | ScreenResolutionPayload
   | ScreenConfigurationsPayload
   | AdminPayload
@@ -61,6 +60,7 @@ export interface SystemInit extends WebSocketMessage, SystemInitPayload {
 export interface SystemInitPayload {
   implicit_hosting: boolean
   locks: Record<string, string>
+  file_transfer: boolean
 }
 
 // system/disconnect
@@ -197,16 +197,6 @@ export interface EmojiSendPayload {
 /*
   FILE TRANSFER PAYLOADS
 */
-export interface FileTransferStatusMessage extends WebSocketMessage, FileTransferStatusPayload {
-  event: typeof EVENT.FILETRANSFER.STATUS
-}
-
-export interface FileTransferStatusPayload {
-  admin: boolean
-  unpriv: boolean
-}
-
-// file transfer list
 export interface FileTransferListMessage extends WebSocketMessage, FileTransferListPayload {
   event: FileTransferEvents
 }
@@ -272,7 +262,7 @@ export interface AdminLockMessage extends WebSocketMessage, AdminLockPayload {
   id: string
 }
 
-export type AdminLockResource = 'login' | 'control'
+export type AdminLockResource = 'login' | 'control' | 'file_transfer'
 
 export interface AdminLockPayload {
   resource: AdminLockResource

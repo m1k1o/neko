@@ -75,6 +75,15 @@ export const locks = {
     notif_locked: 'bloqueó la sala',
     notif_unlocked: 'desbloqueó la sala',
   },
+  // TODO
+  //file_transfer: {
+  //  lock: 'Lock File Transfer (for users)',
+  //  unlock: 'Unlock File Transfer (for users)',
+  //  locked: 'File Transfer Locked (for users)',
+  //  unlocked: 'File Transfer Unlocked (for users)',
+  //  notif_locked: 'locked file transfer',
+  //  notif_unlocked: 'unlocked file transfer',
+  //},
 }
 
 export const setting = {
@@ -84,8 +93,6 @@ export const setting = {
   ignore_emotes: 'Ignorar Emotes',
   chat_sound: 'Reproducir Sonidos Chat',
   keyboard_layout: 'Keyboard Layout',
-  file_transfer: 'Transferencia de archivos',
-  unpriv_file_transfer: 'Transferencia de archivos de usuario',
   // TODO
   //broadcast_title: 'Live Broadcast',
 }

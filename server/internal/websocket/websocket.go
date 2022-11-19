@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"path/filepath"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -28,7 +27,7 @@ const CONTROL_PROTECTION_SESSION = "by_control_protection"
 func New(sessions types.SessionManager, desktop types.DesktopManager, capture types.CaptureManager, webrtc types.WebRTCManager, conf *config.WebSocket) *WebSocketHandler {
 	logger := log.With().Str("module", "websocket").Logger()
 
-	state := state.New(conf.FileTransfer, conf.UnprivFileTransfer, conf.FileTransferPath)
+	state := state.New(conf.FileTransferEnabled, conf.FileTransferPath)
 
 	// if control protection is enabled
 	if conf.ControlProtection {
@@ -36,9 +35,12 @@ func New(sessions types.SessionManager, desktop types.DesktopManager, capture ty
 		logger.Info().Msgf("control locked on behalf of control protection")
 	}
 
-	if _, err := os.Stat(conf.FileTransferPath); os.IsNotExist(err) {
-		err = os.Mkdir(conf.FileTransferPath, os.ModePerm)
-		logger.Err(err).Msg("creating file transfer directory")
+	// create file transfer directory if not exists
+	if conf.FileTransferEnabled {
+		if _, err := os.Stat(conf.FileTransferPath); os.IsNotExist(err) {
+			err = os.Mkdir(conf.FileTransferPath, os.ModePerm)
+			logger.Err(err).Msg("creating file transfer directory")
+		}
 	}
 
 	// apply default locks
@@ -132,32 +134,6 @@ func (ws *WebSocketHandler) Start() {
 			}
 		}
 
-		// send file list if necessary
-		if ws.state.FileTransferEnabled() && (session.Admin() || ws.state.UnprivFileTransferEnabled()) {
-			err := session.Send(
-				message.FileTransferStatus{
-					Event:  event.FILETRANSFER_STATUS,
-					Admin:  ws.state.FileTransferEnabled(),
-					Unpriv: ws.state.UnprivFileTransferEnabled(),
-				})
-			if err != nil {
-				ws.logger.Warn().Err(err).Msgf("file transfer status event has failed")
-				return
-			}
-
-			files, err := utils.ListFiles(ws.conf.FileTransferPath)
-			if err == nil {
-				if err := session.Send(
-					message.FileList{
-						Event: event.FILETRANSFER_LIST,
-						Cwd:   ws.conf.FileTransferPath,
-						Files: files,
-					}); err != nil {
-					ws.logger.Warn().Err(err).Msg("file list event has failed")
-				}
-			}
-		}
-
 		// remove outdated stats
 		if session.Admin() {
 			ws.lastAdminLeftAt = nil
@@ -222,32 +198,35 @@ func (ws *WebSocketHandler) Start() {
 		ws.logger.Err(err).Msg("sync clipboard")
 	})
 
-	// watch for file changes
-	watcher, err := fsnotify.NewWatcher()
-	if err != nil {
-		ws.logger.Err(err).Msg("unable to start file transfer dir watcher")
-		return
-	}
-
-	go func() {
-		for {
-			select {
-			case e, ok := <-watcher.Events:
-				if !ok {
-					ws.logger.Info().Msg("file transfer dir watcher closed")
-					return
-				}
-				if e.Has(fsnotify.Create) || e.Has(fsnotify.Remove) || e.Has(fsnotify.Rename) {
-					ws.sendFileTransferUpdate()
-				}
-			case err := <-watcher.Errors:
-				ws.logger.Err(err).Msg("error in file transfer dir watcher")
-			}
+	// watch for file changes and send file list if file transfer is enabled
+	if ws.conf.FileTransferEnabled {
+		watcher, err := fsnotify.NewWatcher()
+		if err != nil {
+			ws.logger.Err(err).Msg("unable to start file transfer dir watcher")
+			return
 		}
-	}()
 
-	if err := watcher.Add(ws.conf.FileTransferPath); err != nil {
-		ws.logger.Err(err).Msg("unable to add file transfer path to watcher")
+		go func() {
+			for {
+				select {
+				case e, ok := <-watcher.Events:
+					if !ok {
+						ws.logger.Info().Msg("file transfer dir watcher closed")
+						return
+					}
+					if e.Has(fsnotify.Create) || e.Has(fsnotify.Remove) || e.Has(fsnotify.Rename) {
+						ws.logger.Debug().Str("event", e.String()).Msg("file transfer dir watcher event")
+						ws.handler.FileTransferRefresh(nil)
+					}
+				case err := <-watcher.Errors:
+					ws.logger.Err(err).Msg("error in file transfer dir watcher")
+				}
+			}
+		}()
+
+		if err := watcher.Add(ws.conf.FileTransferPath); err != nil {
+			ws.logger.Err(err).Msg("unable to add file transfer path to watcher")
+		}
 	}
 }
 
@@ -376,52 +355,6 @@ func (ws *WebSocketHandler) IsAdmin(password string) (bool, error) {
 	return false, fmt.Errorf("invalid password")
 }
 
-func (ws *WebSocketHandler) CanTransferFiles(password string) (bool, error) {
-	if !ws.state.FileTransferEnabled() {
-		return false, nil
-	}
-
-	isAdmin, err := ws.IsAdmin(password)
-	if err != nil {
-		return false, err
-	}
-
-	return isAdmin || ws.state.UnprivFileTransferEnabled(), nil
-}
-
-func (ws *WebSocketHandler) MakeFilePath(filename string) string {
-	cleanPath := filepath.Clean(filename)
-	return filepath.Join(ws.conf.FileTransferPath, cleanPath)
-}
-
-func (ws *WebSocketHandler) sendFileTransferUpdate() {
-	if !ws.state.FileTransferEnabled() {
-		return
-	}
-
-	files, err := utils.ListFiles(ws.conf.FileTransferPath)
-	if err != nil {
-		ws.logger.Err(err).Msg("unable to ls file transfer path")
-		return
-	}
-
-	message := message.FileList{
-		Event: event.FILETRANSFER_LIST,
-		Cwd:   ws.conf.FileTransferPath,
-		Files: files,
-	}
-
-	if ws.state.UnprivFileTransferEnabled() {
-		err = ws.sessions.Broadcast(message, nil)
-	} else {
-		err = ws.sessions.AdminBroadcast(message, nil)
-	}
-
-	if err != nil {
-		ws.logger.Err(err).Msg("unable to broadcast file list")
-	}
-}
-
 func (ws *WebSocketHandler) authenticate(r *http.Request) (bool, error) {
 	passwords, ok := r.URL.Query()["password"]
 	if !ok || len(passwords[0]) < 1 {
@@ -491,4 +424,29 @@ func (ws *WebSocketHandler) handle(connection *websocket.Conn, id string) {
 			}
 		}
 	}
+}
+
+//
+// File transfer
+//
+
+func (ws *WebSocketHandler) CanTransferFiles(password string) (bool, error) {
+	if !ws.conf.FileTransferEnabled {
+		return false, nil
+	}
+
+	isAdmin, err := ws.IsAdmin(password)
+	if err != nil {
+		return false, err
+	}
+
+	return isAdmin || !ws.state.IsLocked("file_transfer"), nil
+}
+
+func (ws *WebSocketHandler) FileTransferPath(filename string) string {
+	return ws.state.FileTransferPath(filename)
+}
+
+func (ws *WebSocketHandler) FileTransferEnabled() bool {
+	return ws.conf.FileTransferEnabled
 }

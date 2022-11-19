@@ -71,6 +71,15 @@ export const locks = {
     notif_locked: '锁上房间',
     notif_unlocked: '解锁房间',
   },
+  // TODO
+  //file_transfer: {
+  //  lock: 'Lock File Transfer (for users)',
+  //  unlock: 'Unlock File Transfer (for users)',
+  //  locked: 'File Transfer Locked (for users)',
+  //  unlocked: 'File Transfer Unlocked (for users)',
+  //  notif_locked: 'locked file transfer',
+  //  notif_unlocked: 'unlocked file transfer',
+  //},
 }
 
 export const setting = {
@@ -80,8 +89,6 @@ export const setting = {
   ignore_emotes: '忽略表情符号',
   chat_sound: '播放聊天声音',
   keyboard_layout: '键盘布局',
-  file_transfer: '文件传输',
-  unpriv_file_transfer: '用户文件传输',
   broadcast_title: '现场流媒体',
 }
 

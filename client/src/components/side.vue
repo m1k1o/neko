@@ -95,10 +95,7 @@
   })
   export default class extends Vue {
     get filetransferAllowed() {
-      return (
-        (this.$accessor.user.admin && this.$accessor.settings.file_transfer) ||
-        this.$accessor.settings.unpriv_file_transfer
-      )
+      return this.$accessor.remote.fileTransfer && (this.$accessor.user.admin || !this.$accessor.isLocked('file_transfer'))
     }
 
     get tab() {
@@ -106,10 +103,18 @@
     }
 
     @Watch('tab', { immediate: true })
+    @Watch('filetransferAllowed', { immediate: true })
     onTabChange() {
       // do not show the files tab if file transfer is disabled
       if (this.tab === 'files' && !this.filetransferAllowed) {
         this.change('chat')
+      }
+    }
+
+    @Watch('filetransferAllowed')
+    onFileTransferAllowedChange() {
+      if (this.filetransferAllowed) {
+        this.$accessor.files.refresh()
       }
     }
 

@@ -71,6 +71,15 @@ export const locks = {
     notif_locked: 'комната закрыта',
     notif_unlocked: 'комната открыта',
   },
+  // TODO
+  //file_transfer: {
+  //  lock: 'Lock File Transfer (for users)',
+  //  unlock: 'Unlock File Transfer (for users)',
+  //  locked: 'File Transfer Locked (for users)',
+  //  unlocked: 'File Transfer Unlocked (for users)',
+  //  notif_locked: 'locked file transfer',
+  //  notif_unlocked: 'unlocked file transfer',
+  //},
 }
 
 export const setting = {
@@ -80,8 +89,6 @@ export const setting = {
   ignore_emotes: 'Игнорировать эмоции',
   chat_sound: 'Проигрывать звук чата',
   keyboard_layout: 'Раскладка клавиатуры',
-  file_transfer: 'Передача файлов',
-  unpriv_file_transfer: 'Передача файлов пользователей',
   broadcast_title: 'Прямой эфир',
 }
 
