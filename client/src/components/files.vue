@@ -7,7 +7,7 @@
     <div class="files-list">
       <div v-for="item in files" :key="item.name" class="files-list-item">
         <i :class="fileIcon(item)" />
-        <p>{{ item.name }}</p>
+        <p class="file-name" :title="item.name">{{ item.name }}</p>
         <p class="file-size">{{ fileSize(item.size) }}</p>
         <i v-if="item.type !== 'dir'" class="fas fa-download download" @click="download(item)" />
       </div>
@@ -29,7 +29,7 @@
                 'fa-warning': download.status === 'failed',
               }"
             ></i>
-            <p>{{ download.name }}</p>
+            <p class="file-name" :title="download.name">{{ download.name }}</p>
             <p class="file-size">{{ Math.min(100, Math.round((download.progress / download.size) * 100)) }}%</p>
             <i class="fas fa-xmark remove-transfer" @click="removeTransfer(download)"></i>
           </div>
@@ -58,7 +58,7 @@
                 'fa-warning': upload.status === 'failed',
               }"
             ></i>
-            <p>{{ upload.name }}</p>
+            <p class="file-name" :title="upload.name">{{ upload.name }}</p>
             <p class="file-size">{{ Math.min(100, Math.round((upload.progress / upload.size) * 100)) }}%</p>
             <i class="fas fa-xmark remove-transfer" @click="removeTransfer(upload)"></i>
           </div>
@@ -164,10 +164,17 @@
       margin-left: auto;
     }
 
+    .file-name {
+      text-overflow: ellipsis;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
     .file-size {
       margin-left: auto;
       margin-right: 0.5em;
       color: rgba($color: #fff, $alpha: 0.4);
+      white-space: nowrap;
     }
 
     .refresh:hover,
