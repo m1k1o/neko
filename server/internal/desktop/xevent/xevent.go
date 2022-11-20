@@ -8,15 +8,12 @@ package xevent
 import "C"
 
 import (
-	"strings"
-	"time"
 	"unsafe"
 
 	"github.com/kataras/go-events"
 )
 
 var Emmiter events.EventEmmiter
-var file_chooser_dialog_window uint32 = 0
 
 func init() {
 	Emmiter = events.New()
@@ -41,36 +38,12 @@ func goXEventClipboardUpdated() {
 
 //export goXEventConfigureNotify
 func goXEventConfigureNotify(display *C.Display, window C.Window, name *C.char, role *C.char) {
-	if C.GoString(role) != "GtkFileChooserDialog" {
-		return
-	}
 
-	// TODO: Refactor. Right now processing of this dialog relies on identifying
-	// via its name. When that changes to role, this condition should be removed.
-	if !strings.HasPrefix(C.GoString(name), "Open File") {
-		return
-	}
-
-	C.XFileChooserHide(display, window)
-
-	// Because first dialog is not put properly to background
-	time.Sleep(10 * time.Millisecond)
-	C.XFileChooserHide(display, window)
-
-	if file_chooser_dialog_window == 0 {
-		file_chooser_dialog_window = uint32(window)
-		Emmiter.Emit("file-chooser-dialog-opened")
-	}
 }
 
 //export goXEventUnmapNotify
 func goXEventUnmapNotify(window C.Window) {
-	if uint32(window) != file_chooser_dialog_window {
-		return
-	}
 
-	file_chooser_dialog_window = 0
-	Emmiter.Emit("file-chooser-dialog-closed")
 }
 
 //export goXEventError
