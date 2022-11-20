@@ -92,6 +92,12 @@ services:
 - For Chromium, copy [this](https://github.com/m1k1o/neko/blob/master/.docker/chromium/policies.json) file, modify and mount it as: ` -v '${PWD}/policies.json:/etc/chromium/policies/managed/policies.json'`
 - For others, see where existing `policies.json` is placed in their `Dockerfile`.
 
+### Want to preserve browser data between restarts?
+- You need to mount browser profile as volume.
+- For Firefox, that is this `/home/neko/.mozilla/firefox/profile.default` folder, mount it as: ` -v '${PWD}/data:/home/neko/.mozilla/firefox/profile.default'`
+- For Chromium, that is this `/home/neko/.config/chromium` folder, mount it as: ` -v '${PWD}/data:/home/neko/.config/chromium'`
+- For other chromium based browsers, see in `supervisord.conf` folder that is specified in `--user-data-dir`.
+
 ### Want to use VPN for your n.eko browsing?
 - Check this out: https://github.com/m1k1o/neko-vpn
 
