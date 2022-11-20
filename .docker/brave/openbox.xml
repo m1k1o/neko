@@ -13,7 +13,7 @@
 
 <applications>
     <!-- Match all windows and remove their decorations (obxprop | grep "^_OB_APP") -->
-    <application class="Brave-browser*" name="brave-browser*">
+    <application class="Brave-browser*" name="brave-browser*" role="browser">
       <decor>no</decor>
       <maximized>true</maximized>
       <focus>yes</focus>
