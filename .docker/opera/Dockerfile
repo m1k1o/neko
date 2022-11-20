@@ -1,24 +1,28 @@
 ARG BASE_IMAGE=m1k1o/neko:base
 FROM $BASE_IMAGE
 
-ARG SRC_URL="https://download.opera.com/download/get/?id=58545&location=415&nothanks=yes&sub=marine&utm_tryagain=yes"
-
-ARG LIBFFMPEG_URL="https://github.com/nwjs-ffmpeg-prebuilt/nwjs-ffmpeg-prebuilt/releases/download/0.67.1/0.67.1-linux-x64.zip"
+ARG API_URL="https://download5.operacdn.com/pub/opera/desktop/"
+ARG LIBFFMPEG_API_URL="https://api.github.com/repos/nwjs-ffmpeg-prebuilt/nwjs-ffmpeg-prebuilt/releases/latest"
 
 #
 # install opera
-RUN apt-get update
-RUN wget -O /tmp/opera.deb $SRC_URL
-RUN apt-get install -y --no-install-recommends openbox unzip /tmp/opera.deb
-
-## install libffmpeg
-RUN wget -O /tmp/libffmpeg.zip $LIBFFMPEG_URL
-RUN unzip -o /tmp/libffmpeg.zip libffmpeg.so -d /usr/lib/x86_64-linux-gnu/opera/lib_extra
-RUN echo '[]' > /usr/lib/x86_64-linux-gnu/opera/resources/ffmpeg_preload_config.json
-#
-# clean up
-RUN apt-get clean -y
-RUN rm -rf /var/lib/apt/lists/* /var/cache/apt/*
+RUN set -eux; apt-get update; \
+    #
+    # fetch latest release
+    VERSION="$(wget -O - "${API_URL}" 2>/dev/null | sed -n 's/.*href="\([^"/]*\).*/\1/p' | tail -1)"; \
+    wget -O /tmp/opera.deb "${API_URL}${VERSION}/linux/opera-stable_${VERSION}_amd64.deb"; \
+    apt-get install -y --no-install-recommends openbox jq unzip /tmp/opera.deb; \
+    #
+    # install libffmpeg
+    LIBFFMPEG_URL="$(wget -O - "${LIBFFMPEG_API_URL}" 2>/dev/null | jq -r "[.assets[] | select(.browser_download_url | contains(\"linux-x64.zip\"))][-1] | .browser_download_url")"; \
+    wget -O /tmp/libffmpeg.zip $LIBFFMPEG_URL; \
+    unzip -o /tmp/libffmpeg.zip libffmpeg.so -d /usr/lib/x86_64-linux-gnu/opera/lib_extra; \
+    echo '[]' > /usr/lib/x86_64-linux-gnu/opera/resources/ffmpeg_preload_config.json; \
+    #
+    # clean up
+    apt-get --purge autoremove -y unzip jq; \
+    apt-get clean -y; \
+    rm -rf /var/lib/apt/lists/* /var/cache/apt/*
 
 #
 # copy configuation files
