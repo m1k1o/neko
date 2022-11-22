@@ -44,11 +44,11 @@ Neko started as a virtual browser that is streamed using WebRTC to multiple user
   - Like implementing RDP or VNC protocol, where neko would only act as WebRTC relay server. This is currently only future.
 
 Primary use case is connecting with multiple people, leveraging real time synchronization and interactivity:
-- **Watch party** - watching video content together with multiple people and reacting to it (chat, emotes) - open source alternative to [giggl.app](https://giggl.app/).
+- **Watch party** - watching video content together with multiple people and reacting to it (chat, emotes) - open source alternative to [giggl.app](https://giggl.app/) or [hyperbeam](https://watch.hyperbeam.com).
 - **Interactive presentation** - not only screen sharing, but others can control the screen.
 - **Collaborative tool** - brainstorming ideas, cobrowsing, code debugging together.
 - **Support/Teaching** - interactively guiding people in controlled environment.
-- **Embed anything** - embed virtual browser in your web app - open source alternative to [hyperbeam](https://hyperbeam.com/).
+- **Embed anything** - embed virtual browser in your web app - open source alternative to [hyperbeam API](https://hyperbeam.com/).
   - open any third-party website or application, synchronize audio and video flawlessly among multiple participants.
   - request rooms using API with [neko-rooms](https://github.com/m1k1o/neko-rooms).
 
@@ -107,9 +107,12 @@ Compared to clientless remote desktop gateway (e.g. [Apache Guacamole](https://g
   * Broadcasting room content using RTMP (to e.g. twitch or youtube...)
   * Bidirectional file transfer (if enabled)
 
+<div align="center">
+
 With `NEKO_FILE_TRANSFER_ENABLED=true`:
 
 <img src="https://raw.githubusercontent.com/m1k1o/neko/master/docs/_media/file-transfer.gif" width="650" height="auto"/>
+</div>
 
 ### Why n.eko?
 
