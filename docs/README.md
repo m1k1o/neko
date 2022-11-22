@@ -1,8 +1,12 @@
 <div align="center">
-<a href="https://neko.m1k1o.net/#/" ><img src="https://raw.githubusercontent.com/m1k1o/neko/master/docs/_media/logo.png" width="450" height="auto"/></a>
+<a href="https://neko.m1k1o.net/#/" ><img src="./_media/logo.png" width="450" height="auto"/></a>
 <br/>
 <br/>
-<img src="https://i.imgur.com/ZSzbQr7.gif" width="650" height="auto"/>
+<img src="./_media/intro.gif" width="650" height="auto"/>
+
+With `NEKO_FILE_TRANSFER_ENABLED=true`:
+
+<img src="./_media/file-transfer.gif" width="650" height="auto"/>
 <br/>
 <br/>
 </div>

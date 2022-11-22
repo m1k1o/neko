@@ -25,7 +25,7 @@
       <img src="https://github.com/m1k1o/neko/actions/workflows/build.yml/badge.svg" alt="build">
     </a>
   </p>
-  <img src="https://i.imgur.com/ZSzbQr7.gif" width="650" height="auto"/>
+  <img src="https://raw.githubusercontent.com/m1k1o/neko/master/docs/_media/intro.gif" width="650" height="auto"/>
 </div>
 
 # n.eko
@@ -105,6 +105,11 @@ Compared to clientless remote desktop gateway (e.g. [Apache Guacamole](https://g
   * Persistent settings
   * Automatic Login with custom url args. (add `?usr=<your-user-name>&pwd=<room-pass>` to the url.)
   * Broadcasting room content using RTMP (to e.g. twitch or youtube...)
+  * Bidirectional file transfer (if enabled)
+
+With `NEKO_FILE_TRANSFER_ENABLED=true`:
+
+<img src="https://raw.githubusercontent.com/m1k1o/neko/master/docs/_media/file-transfer.gif" width="650" height="auto"/>
 
 ### Why n.eko?
 
