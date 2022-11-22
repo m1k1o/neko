@@ -19,6 +19,9 @@
   "BookmarkBarEnabled": false,
   "PasswordManagerEnabled": false,
   "BrowserLabsEnabled": false,
+  "URLAllowlist": [
+    "file:///home/neko/Downloads"
+  ],
   "URLBlocklist": [
       "file://*",
       "chrome://policy"
