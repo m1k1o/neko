@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pion/ice/v2"
 	"github.com/pion/interceptor"
 	"github.com/pion/webrtc/v3"
 	"github.com/pion/webrtc/v3/pkg/media"
@@ -125,7 +126,12 @@ func (manager *WebRTCManager) initAPI() error {
 			return err
 		}
 
-		tcpMux := webrtc.NewICETCPMux(logger.NewLogger("ice-tcp"), tcpListener, 32)
+		tcpMux := ice.NewTCPMuxDefault(ice.TCPMuxParams{
+			Listener:        tcpListener,
+			Logger:          logger.NewLogger("ice-tcp"),
+			ReadBufferSize:  32,              // receiving channel size
+			WriteBufferSize: 4 * 1024 * 1024, // write buffer size, 4MB
+		})
 		settings.SetICETCPMux(tcpMux)
 
 		networkType = append(networkType, webrtc.NetworkTypeTCP4)
@@ -134,20 +140,18 @@ func (manager *WebRTCManager) initAPI() error {
 
 	// Add UDP Mux
 	if manager.config.UDPMUX > 0 {
-		udpListener, err := net.ListenUDP("udp", &net.UDPAddr{
-			IP:   net.IP{0, 0, 0, 0},
-			Port: manager.config.UDPMUX,
-		})
+		udpMux, err := ice.NewMultiUDPMuxFromPort(manager.config.UDPMUX,
+			ice.UDPMuxFromPortWithLogger(logger.NewLogger("ice-udp")),
+		)
 
 		if err != nil {
 			return err
 		}
 
-		udpMux := webrtc.NewICEUDPMux(logger.NewLogger("ice-udp"), udpListener)
 		settings.SetICEUDPMux(udpMux)
 
 		networkType = append(networkType, webrtc.NetworkTypeUDP4)
-		manager.logger.Info().Str("listener", udpListener.LocalAddr().String()).Msg("using UDP MUX")
+		manager.logger.Info().Int("port", manager.config.UDPMUX).Msg("using UDP MUX")
 	}
 
 	// Enable support for TCP and UDP ICE candidates

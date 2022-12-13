@@ -2,6 +2,9 @@
 
 ## master branch
 
+### Bugs
+- Fixed TCP mux occasional freeze by adding write buffer to it.
+
 ## [n.eko v2.7](https://github.com/m1k1o/neko/releases/tag/v2.7)
 
 ### New Features
