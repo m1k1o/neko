@@ -11,6 +11,7 @@ RUN set -eux; apt-get update; \
 	echo "Downloading $DOWNLOAD_URI"; \
 	curl -sSL -o /tmp/tor.tar.xz "https://www.torproject.org/$DOWNLOAD_URI"; \
     tar -xvJf /tmp/tor.tar.xz -C /opt; \
+    mv /opt/tor-browser* /opt/tor-browser_en-US; \
     chown -R neko:neko /opt/tor-browser_en-US/; \
     rm -f /tmp/tor.tar.xz; \
     #
