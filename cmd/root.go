@@ -20,6 +20,14 @@ import (
 )
 
 func Execute() error {
+	// properly log unhandled panics
+	defer func() {
+		panicVal := recover()
+		if panicVal != nil {
+			log.Panic().Msgf("%v", panicVal)
+		}
+	}()
+
 	return root.Execute()
 }
 
