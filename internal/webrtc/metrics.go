@@ -15,9 +15,13 @@ type metrics struct {
 	connectionStateCount prometheus.Counter
 	connectionCount      prometheus.Counter
 
-	iceCandidates      map[string]struct{}
-	iceCandidatesMu    *sync.Mutex
-	iceCandidatesCount prometheus.Counter
+	iceCandidates         map[string]struct{}
+	iceCandidatesMu       *sync.Mutex
+	iceCandidatesUdpCount prometheus.Counter
+	iceCandidatesTcpCount prometheus.Counter
+
+	iceCandidatesUsedUdp prometheus.Gauge
+	iceCandidatesUsedTcp prometheus.Gauge
 
 	videoIds   map[string]prometheus.Gauge
 	videoIdsMu *sync.Mutex
@@ -86,13 +90,45 @@ func (m *metricsCtx) getBySession(session types.Session) metrics {
 
 		iceCandidates:   map[string]struct{}{},
 		iceCandidatesMu: &sync.Mutex{},
-		iceCandidatesCount: promauto.NewCounter(prometheus.CounterOpts{
+		iceCandidatesUdpCount: promauto.NewCounter(prometheus.CounterOpts{
 			Name:      "ice_candidates_count",
 			Namespace: "neko",
 			Subsystem: "webrtc",
 			Help:      "Count of ICE candidates sent by a remote client.",
 			ConstLabels: map[string]string{
 				"session_id": session.ID(),
+				"protocol":   "udp",
+			},
+		}),
+		iceCandidatesTcpCount: promauto.NewCounter(prometheus.CounterOpts{
+			Name:      "ice_candidates_count",
+			Namespace: "neko",
+			Subsystem: "webrtc",
+			Help:      "Count of ICE candidates sent by a remote client.",
+			ConstLabels: map[string]string{
+				"session_id": session.ID(),
+				"protocol":   "tcp",
+			},
+		}),
+
+		iceCandidatesUsedUdp: promauto.NewGauge(prometheus.GaugeOpts{
+			Name:      "ice_candidates_used",
+			Namespace: "neko",
+			Subsystem: "webrtc",
+			Help:      "Used ICE candidates that are currently in use.",
+			ConstLabels: map[string]string{
+				"session_id": session.ID(),
+				"protocol":   "udp",
+			},
+		}),
+		iceCandidatesUsedTcp: promauto.NewGauge(prometheus.GaugeOpts{
+			Name:      "ice_candidates_used",
+			Namespace: "neko",
+			Subsystem: "webrtc",
+			Help:      "Used ICE candidates that are currently in use.",
+			ConstLabels: map[string]string{
+				"session_id": session.ID(),
+				"protocol":   "tcp",
 			},
 		}),
 
@@ -191,6 +227,9 @@ func (m *metricsCtx) reset(met metrics) {
 	}
 	met.videoIdsMu.Unlock()
 
+	met.iceCandidatesUsedUdp.Set(float64(0))
+	met.iceCandidatesUsedTcp.Set(float64(0))
+
 	met.receiverEstimatedMaximumBitrate.Set(0)
 
 	met.receiverReportDelay.Set(0)
@@ -202,18 +241,38 @@ func (m *metricsCtx) NewConnection(session types.Session) {
 	met.connectionCount.Add(1)
 }
 
-func (m *metricsCtx) NewICECandidate(session types.Session, id string) {
+func (m *metricsCtx) NewICECandidate(session types.Session, candidate webrtc.ICECandidateStats) {
 	met := m.getBySession(session)
 
 	met.iceCandidatesMu.Lock()
 	defer met.iceCandidatesMu.Unlock()
 
-	if _, found := met.iceCandidates[id]; found {
+	if _, found := met.iceCandidates[candidate.ID]; found {
 		return
 	}
 
-	met.iceCandidates[id] = struct{}{}
-	met.iceCandidatesCount.Add(1)
+	met.iceCandidates[candidate.ID] = struct{}{}
+	if candidate.Protocol == "udp" {
+		met.iceCandidatesUdpCount.Add(1)
+	} else if candidate.Protocol == "tcp" {
+		met.iceCandidatesTcpCount.Add(1)
+	}
+}
+
+func (m *metricsCtx) SetICECandidatesUsed(session types.Session, candidates []webrtc.ICECandidateStats) {
+	met := m.getBySession(session)
+
+	udp, tcp := 0, 0
+	for _, candidate := range candidates {
+		if candidate.Protocol == "udp" {
+			udp++
+		} else if candidate.Protocol == "tcp" {
+			tcp++
+		}
+	}
+
+	met.iceCandidatesUsedUdp.Set(float64(udp))
+	met.iceCandidatesUsedTcp.Set(float64(tcp))
 }
 
 func (m *metricsCtx) SetState(session types.Session, state webrtc.PeerConnectionState) {

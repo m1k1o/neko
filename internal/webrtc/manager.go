@@ -545,13 +545,31 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int) 
 				manager.metrics.SetSctpTransportStats(session, data)
 			}
 
+			remoteCandidates := map[string]webrtc.ICECandidateStats{}
+			nominatedRemoteCandidates := map[string]struct{}{}
 			for _, entry := range stats {
 				// only remote ice candidate stats
 				candidate, ok := entry.(webrtc.ICECandidateStats)
 				if ok && candidate.Type == webrtc.StatsTypeRemoteCandidate {
-					manager.metrics.NewICECandidate(session, candidate.ID)
+					manager.metrics.NewICECandidate(session, candidate)
+					remoteCandidates[candidate.ID] = candidate
+				}
+
+				// only nominated ice candidate pair stats
+				pair, ok := entry.(webrtc.ICECandidatePairStats)
+				if ok && pair.Nominated {
+					nominatedRemoteCandidates[pair.RemoteCandidateID] = struct{}{}
 				}
 			}
+
+			iceCandidatesUsed := []webrtc.ICECandidateStats{}
+			for id := range nominatedRemoteCandidates {
+				if candidate, ok := remoteCandidates[id]; ok {
+					iceCandidatesUsed = append(iceCandidatesUsed, candidate)
+				}
+			}
+
+			manager.metrics.SetICECandidatesUsed(session, iceCandidatesUsed)
 		}
 	}()
 
