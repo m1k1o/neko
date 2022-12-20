@@ -10,7 +10,7 @@ env:
   IMAGE_NAME: m1k1o/neko
 
 jobs:
-  build-base:
+  build-base-amd64:
     runs-on: ubuntu-latest
     #
     # do not run on forks
@@ -50,7 +50,52 @@ jobs:
         with:
           context: ./
           file: .docker/base/Dockerfile
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+  build-base-arm64:
+    runs-on: ubuntu-latest
+    #
+    # do not run on forks
+    #
+    if: github.repository_owner == 'm1k1o'
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v2
+      -
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - 
+        name: Extract metadata (tags, labels) for Docker
+        uses: docker/metadata-action@v3
+        id: meta
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/base
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=sha,format=long
+      - 
+        name: Log in to the Container registry
+        uses: docker/login-action@v1
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_ACCESS_TOKEN }}
+      - 
+        name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: ./
+          file: .docker/base/Dockerfile
+          platforms: linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -61,7 +106,7 @@ jobs:
     # do not run on forks
     #
     if: github.repository_owner == 'm1k1o'
-    needs: [ build-base ]
+    needs: [ build-base-amd64, build-base-arm64 ]
     strategy:
       # Will build all images even if some fail.
       matrix:
