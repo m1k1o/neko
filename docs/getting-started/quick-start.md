@@ -1,5 +1,7 @@
 # Quick Start
 
+Neko is easy to use and requires no technical expertise to get started. All you need to do is download the Docker image and you're ready to go:
+
 1. Deploy a server or VPS.
 
     **Recommended Specs:**
