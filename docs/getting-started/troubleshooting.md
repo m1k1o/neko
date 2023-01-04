@@ -4,6 +4,10 @@ Neko UI loads but you don't see the screen and it gives you `connection timeout`
 
 ## Test your client
 
+Some browser may block WebRTC access by default. You can check if it is enabled by going to `about:webrtc` or `chrome://webrtc-internals` in your browser.
+
+Check if your extensions are not blocking WebRTC access. For example, Privacy Badger or Private Internet Access blocks WebRTC by default.
+
 Test whether your client [supports](https://www.webrtc-experiment.com/DetectRTC/) and can [connect to WebRTC](https://www.webcasts.com/webrtc/).
 
 ## Networking
@@ -112,6 +116,25 @@ services:
 ```
 
 If you want to use n.eko only locally, you must put here your local IP address, otherwise public address will be used.
+
+### Neko works externally, but not locally
+
+You are probabbly missing NAT Loopback (NAT Hairpinning) setting on your router.
+
+Example for pfsense with truecharts docker container:
+- First, port forward the relevant ports 8080 and 52000-52100/udp for the container.
+- Then turn on `Pure NAT` pfsense (under system > advanced > firewall and nat).
+  - Make sure to check the two boxes so it works.
+- Make sure `NEKO_NAT1TO1` is blank and `NEKO_IPFETCH` address is working correclty (if unset default value is chosen).
+- Test externally to confirm it works.
+- Internally you have to access it using `<your-public-ip>:port`
+
+
+### Neko works locally, but not externally
+
+Make sure, that you are exposing your ports correctly.
+
+If you put local ip as `NEKO_NAT1TO1`, external clients try to connect to that ip. But it is unreachable for them, because it is your local IP. You must use your public IP address with port forwarding.
 
 ## Debug mode
 
