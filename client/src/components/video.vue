@@ -194,7 +194,7 @@
 <script lang="ts">
   import { Component, Ref, Watch, Vue, Prop } from 'vue-property-decorator'
   import ResizeObserver from 'resize-observer-polyfill'
-  import { elementRequestFullscreen, onFullscreenChange, isFullscreen } from '~/utils'
+  import { elementRequestFullscreen, onFullscreenChange, isFullscreen, lockKeyboard, unlockKeyboard } from '~/utils'
 
   import Emote from './emote.vue'
   import Resolution from './resolution.vue'
@@ -417,6 +417,7 @@
 
       onFullscreenChange(this._player, () => {
         this.fullscreen = isFullscreen()
+        this.fullscreen ? lockKeyboard() : unlockKeyboard()
         this.onResize()
       })
 
