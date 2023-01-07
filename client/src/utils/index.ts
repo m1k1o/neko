@@ -8,6 +8,18 @@ export function makeid(length: number) {
   return result
 }
 
+export function lockKeyboard() {
+  if (navigator && navigator.keyboard) {
+    navigator.keyboard.lock();
+  }
+}
+
+export function unlockKeyboard() {
+  if (navigator && navigator.keyboard) {
+    navigator.keyboard.unlock();
+  }
+}
+
 export function elementRequestFullscreen(el: HTMLElement) {
   if (typeof el.requestFullscreen === 'function') {
     el.requestFullscreen()
