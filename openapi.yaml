@@ -38,6 +38,28 @@ paths:
         '200':
           description: OK
 
+  /api/batch:
+    post:
+      summary: batch
+      operationId: batch
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BatchResponse'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/BatchRequest'
+        required: true
+
   #
   # session
   #
@@ -929,6 +951,36 @@ components:
       properties:
         message:
           type: string
+
+    BatchRequest:
+      type: object
+      properties:
+        path:
+          type: string
+        method:
+          type: string
+          enum:
+            - GET
+            - POST
+            - DELETE
+        body:
+          description: Request body
+
+    BatchResponse:
+      type: object
+      properties:
+        path:
+          type: string
+        method:
+          type: string
+          enum:
+            - GET
+            - POST
+            - DELETE
+        body:
+          description: Response body
+        status:
+          type: integer
 
     #
     # session

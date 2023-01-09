@@ -42,6 +42,16 @@ func New(WebSocketManager types.WebSocketManager, ApiManager types.ApiManager, c
 		return config.AllowOrigin(r.Header.Get("Origin"))
 	}))
 
+	batch := batchHandler{
+		Router:     router,
+		PathPrefix: "/api",
+		Excluded: []string{
+			"/api/batch", // do not allow batchception
+			"/api/ws",
+		},
+	}
+	router.Post("/api/batch", batch.Handle)
+
 	router.Get("/health", func(w http.ResponseWriter, r *http.Request) error {
 		_, err := w.Write([]byte("true"))
 		return err
