@@ -10,6 +10,7 @@ import (
 	"github.com/demodesk/neko/internal/config"
 	"github.com/demodesk/neko/internal/member/dummy"
 	"github.com/demodesk/neko/internal/member/file"
+	"github.com/demodesk/neko/internal/member/multiuser"
 	"github.com/demodesk/neko/internal/member/object"
 	"github.com/demodesk/neko/pkg/types"
 )
@@ -26,6 +27,8 @@ func New(sessions types.SessionManager, config *config.Member) *MemberManagerCtx
 		manager.provider = file.New(config.File)
 	case "object":
 		manager.provider = object.New(config.Object)
+	case "multiuser":
+		manager.provider = multiuser.New(config.Multiuser)
 	case "dummy":
 		fallthrough
 	default:

@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/demodesk/neko/internal/member/file"
+	"github.com/demodesk/neko/internal/member/multiuser"
 	"github.com/demodesk/neko/internal/member/object"
 )
 
@@ -12,8 +13,9 @@ type Member struct {
 	Provider string
 
 	// providers
-	File   file.Config
-	Object object.Config
+	File      file.Config
+	Object    object.Config
+	Multiuser multiuser.Config
 }
 
 func (Member) Init(cmd *cobra.Command) error {
@@ -39,6 +41,17 @@ func (Member) Init(cmd *cobra.Command) error {
 		return err
 	}
 
+	// multiuser provider
+	cmd.PersistentFlags().String("member.multiuser.user_password", "", "member multiuser provider: user password")
+	if err := viper.BindPFlag("member.multiuser.user_password", cmd.PersistentFlags().Lookup("member.multiuser.user_password")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().String("member.multiuser.admin_password", "", "member multiuser provider: admin password")
+	if err := viper.BindPFlag("member.multiuser.admin_password", cmd.PersistentFlags().Lookup("member.multiuser.admin_password")); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -51,4 +64,8 @@ func (s *Member) Set() {
 	// object provider
 	s.Object.UserPassword = viper.GetString("member.object.user_password")
 	s.Object.AdminPassword = viper.GetString("member.object.admin_password")
+
+	// multiuser provider
+	s.Multiuser.UserPassword = viper.GetString("member.multiuser.user_password")
+	s.Multiuser.AdminPassword = viper.GetString("member.multiuser.admin_password")
 }
