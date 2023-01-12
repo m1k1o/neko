@@ -72,7 +72,7 @@ func (Capture) Init(cmd *cobra.Command) error {
 		return err
 	}
 
-	cmd.PersistentFlags().String("capture.video.pipelines", "", "pipelines config in JSON used for video streaming")
+	cmd.PersistentFlags().String("capture.video.pipelines", "[]", "pipelines config in JSON used for video streaming")
 	if err := viper.BindPFlag("capture.video.pipelines", cmd.PersistentFlags().Lookup("capture.video.pipelines")); err != nil {
 		return err
 	}
@@ -190,12 +190,22 @@ func (s *Capture) Set() {
 		s.VideoCodec = codec.VP8()
 		s.VideoPipelines = map[string]types.VideoConfig{
 			"main": {
-				GstPipeline: "ximagesrc display-name={display} show-pointer=false use-damage=false " +
-					"! video/x-raw " +
-					"! videoconvert " +
-					"! queue " +
-					"! vp8enc end-usage=cbr cpu-used=4 threads=4 deadline=1 keyframe-max-dist=25 " +
-					"! appsink name=appsink",
+				Fps:        "25",
+				GstEncoder: "vp8enc",
+				GstParams: map[string]string{
+					"target-bitrate":      "round(3072 * 650)",
+					"cpu-used":            "4",
+					"end-usage":           "cbr",
+					"threads":             "4",
+					"deadline":            "1",
+					"undershoot":          "95",
+					"buffer-size":         "(3072 * 4)",
+					"buffer-initial-size": "(3072 * 2)",
+					"buffer-optimal-size": "(3072 * 3)",
+					"keyframe-max-dist":   "25",
+					"min-quantizer":       "4",
+					"max-quantizer":       "20",
+				},
 			},
 		}
 		s.VideoIDs = []string{"main"}
