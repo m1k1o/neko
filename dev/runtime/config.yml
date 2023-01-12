@@ -65,11 +65,41 @@ desktop:
 member:
   provider: "object"
   object:
-    admin_password: "admin"
-    user_password: "neko"
+    users:
+      - username: "admin"
+        password: "admin"
+        profile:
+          name: "Administrator"
+          is_admin: true
+          can_login: true
+          can_connect: true
+          can_watch: true
+          can_host: true
+          can_share_media: true
+          can_access_clipboard: true
+          sends_inactive_cursor: true
+          can_see_inactive_cursors: true
+      - username: "user"
+        password: "neko"
+        profile:
+          name: "User"
+          is_admin: false
+          can_login: true
+          can_connect: true
+          can_watch: true
+          can_host: true
+          can_share_media: true
+          can_access_clipboard: true
+          sends_inactive_cursor: true
+          can_see_inactive_cursors: false
   # provider: "file"
   # file:
   #   path: "/home/neko/members.json"
+  # provider: "multiuser"
+  # multiuser:
+  #  admin_password: "admin"
+  #  user_password: "neko"
+  # provider: "noauth"
 
 session:
   # Allows reconnecting the websocket even if the previous

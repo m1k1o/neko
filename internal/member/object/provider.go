@@ -7,48 +7,20 @@ import (
 func New(config Config) types.MemberProvider {
 	return &MemberProviderCtx{
 		config:  config,
-		entries: make(map[string]*MemberEntry),
+		entries: make(map[string]*memberEntry),
 	}
 }
 
 type MemberProviderCtx struct {
 	config  Config
-	entries map[string]*MemberEntry
+	entries map[string]*memberEntry
 }
 
 func (provider *MemberProviderCtx) Connect() error {
 	var err error
 
-	if provider.config.AdminPassword != "" {
-		// create default admin account at startup
-		_, err = provider.Insert("admin", provider.config.AdminPassword, types.MemberProfile{
-			Name:                  "Administrator",
-			IsAdmin:               true,
-			CanLogin:              true,
-			CanConnect:            true,
-			CanWatch:              true,
-			CanHost:               true,
-			CanShareMedia:         true,
-			CanAccessClipboard:    true,
-			SendsInactiveCursor:   true,
-			CanSeeInactiveCursors: true,
-		})
-	}
-
-	if provider.config.UserPassword != "" {
-		// create default user account at startup
-		_, err = provider.Insert("user", provider.config.UserPassword, types.MemberProfile{
-			Name:                  "User",
-			IsAdmin:               false,
-			CanLogin:              true,
-			CanConnect:            true,
-			CanWatch:              true,
-			CanHost:               true,
-			CanShareMedia:         true,
-			CanAccessClipboard:    true,
-			SendsInactiveCursor:   true,
-			CanSeeInactiveCursors: false,
-		})
+	for _, entry := range provider.config.Users {
+		_, err = provider.Insert(entry.Username, entry.Password, entry.Profile)
 	}
 
 	return err
@@ -68,11 +40,11 @@ func (provider *MemberProviderCtx) Authenticate(username string, password string
 	}
 
 	// TODO: Use hash function.
-	if entry.Password != password {
+	if !entry.CheckPassword(password) {
 		return "", types.MemberProfile{}, types.ErrMemberInvalidPassword
 	}
 
-	return id, entry.Profile, nil
+	return id, entry.profile, nil
 }
 
 func (provider *MemberProviderCtx) Insert(username string, password string, profile types.MemberProfile) (string, error) {
@@ -84,10 +56,10 @@ func (provider *MemberProviderCtx) Insert(username string, password string, prof
 		return "", types.ErrMemberAlreadyExists
 	}
 
-	provider.entries[id] = &MemberEntry{
+	provider.entries[id] = &memberEntry{
 		// TODO: Use hash function.
-		Password: password,
-		Profile:  profile,
+		password: password,
+		profile:  profile,
 	}
 
 	return id, nil
@@ -99,7 +71,7 @@ func (provider *MemberProviderCtx) UpdateProfile(id string, profile types.Member
 		return types.ErrMemberDoesNotExist
 	}
 
-	entry.Profile = profile
+	entry.profile = profile
 
 	return nil
 }
@@ -111,7 +83,7 @@ func (provider *MemberProviderCtx) UpdatePassword(id string, password string) er
 	}
 
 	// TODO: Use hash function.
-	entry.Password = password
+	entry.password = password
 
 	return nil
 }
@@ -122,7 +94,7 @@ func (provider *MemberProviderCtx) Select(id string) (types.MemberProfile, error
 		return types.MemberProfile{}, types.ErrMemberDoesNotExist
 	}
 
-	return entry.Profile, nil
+	return entry.profile, nil
 }
 
 func (provider *MemberProviderCtx) SelectAll(limit int, offset int) (map[string]types.MemberProfile, error) {
@@ -131,7 +103,7 @@ func (provider *MemberProviderCtx) SelectAll(limit int, offset int) (map[string]
 	i := 0
 	for id, entry := range provider.entries {
 		if i >= offset && (limit == 0 || i < offset+limit) {
-			profiles[id] = entry.Profile
+			profiles[id] = entry.profile
 		}
 
 		i = i + 1

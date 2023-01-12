@@ -12,15 +12,15 @@ type MemberProfile struct {
 	Name string `json:"name"`
 
 	// permissions
-	IsAdmin               bool `json:"is_admin"`
-	CanLogin              bool `json:"can_login"`
-	CanConnect            bool `json:"can_connect"`
-	CanWatch              bool `json:"can_watch"`
-	CanHost               bool `json:"can_host"`
-	CanShareMedia         bool `json:"can_share_media"`
-	CanAccessClipboard    bool `json:"can_access_clipboard"`
-	SendsInactiveCursor   bool `json:"sends_inactive_cursor"`
-	CanSeeInactiveCursors bool `json:"can_see_inactive_cursors"`
+	IsAdmin               bool `json:"is_admin"                 mapstructure:"is_admin"`
+	CanLogin              bool `json:"can_login"                mapstructure:"can_login"`
+	CanConnect            bool `json:"can_connect"              mapstructure:"can_connect"`
+	CanWatch              bool `json:"can_watch"                mapstructure:"can_watch"`
+	CanHost               bool `json:"can_host"                 mapstructure:"can_host"`
+	CanShareMedia         bool `json:"can_share_media"          mapstructure:"can_share_media"`
+	CanAccessClipboard    bool `json:"can_access_clipboard"     mapstructure:"can_access_clipboard"`
+	SendsInactiveCursor   bool `json:"sends_inactive_cursor"    mapstructure:"sends_inactive_cursor"`
+	CanSeeInactiveCursors bool `json:"can_see_inactive_cursors" mapstructure:"can_see_inactive_cursors"`
 
 	// plugin scope
 	Plugins map[string]any `json:"plugins"`
