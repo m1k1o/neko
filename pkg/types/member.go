@@ -30,11 +30,11 @@ type MemberProvider interface {
 	Connect() error
 	Disconnect() error
 
-	Authenticate(username string, password string) (string, MemberProfile, error)
+	Authenticate(username string, password string) (id string, profile MemberProfile, err error)
 
-	Insert(username string, password string, profile MemberProfile) (string, error)
-	Select(id string) (MemberProfile, error)
-	SelectAll(limit int, offset int) (map[string]MemberProfile, error)
+	Insert(username string, password string, profile MemberProfile) (id string, err error)
+	Select(id string) (profile MemberProfile, err error)
+	SelectAll(limit int, offset int) (profiles map[string]MemberProfile, err error)
 	UpdateProfile(id string, profile MemberProfile) error
 	UpdatePassword(id string, password string) error
 	Delete(id string) error
