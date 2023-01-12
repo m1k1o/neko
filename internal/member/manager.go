@@ -8,9 +8,9 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"github.com/demodesk/neko/internal/config"
-	"github.com/demodesk/neko/internal/member/dummy"
 	"github.com/demodesk/neko/internal/member/file"
 	"github.com/demodesk/neko/internal/member/multiuser"
+	"github.com/demodesk/neko/internal/member/noauth"
 	"github.com/demodesk/neko/internal/member/object"
 	"github.com/demodesk/neko/pkg/types"
 )
@@ -29,10 +29,10 @@ func New(sessions types.SessionManager, config *config.Member) *MemberManagerCtx
 		manager.provider = object.New(config.Object)
 	case "multiuser":
 		manager.provider = multiuser.New(config.Multiuser)
-	case "dummy":
+	case "noauth":
 		fallthrough
 	default:
-		manager.provider = dummy.New()
+		manager.provider = noauth.New()
 	}
 
 	return manager
