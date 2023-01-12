@@ -68,8 +68,11 @@ func init() {
 
 		// read config values
 		err := viper.ReadInConfig()
-		if err != nil && config != "" {
-			panic("unable to read config file: " + err.Error())
+		if err != nil {
+			_, notFound := err.(viper.ConfigFileNotFoundError)
+			if !notFound {
+				log.Fatal().Err(err).Msg("unable to read config file")
+			}
 		}
 
 		// get full config file path
@@ -93,13 +96,13 @@ func init() {
 			if _, err := os.Stat(latest); err == nil {
 				err = os.Rename(latest, filepath.Join(rootConfig.LogDir, "neko."+time.Now().Format("2006-01-02T15-04-05Z07-00")+".log"))
 				if err != nil {
-					panic("failed to rotate log file: " + err.Error())
+					log.Fatal().Err(err).Msg("failed to rotate log file")
 				}
 			}
 
 			logf, err := os.OpenFile(latest, os.O_RDWR|os.O_CREATE, 0666)
 			if err != nil {
-				panic("failed to open log file: " + err.Error())
+				log.Fatal().Err(err).Msg("failed to open log file")
 			}
 
 			logWriter = diode.NewWriter(logf, 1000, 10*time.Millisecond, func(missed int) {
