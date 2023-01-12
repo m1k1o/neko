@@ -131,7 +131,7 @@ func Opus() RTPCodec {
 			MimeType:     webrtc.MimeTypeOpus,
 			ClockRate:    48000,
 			Channels:     2,
-			SDPFmtpLine:  "useinbandfec=1",
+			SDPFmtpLine:  "useinbandfec=1;stereo=1",
 			RTCPFeedback: []webrtc.RTCPFeedback{},
 		},
 		// https://gstreamer.freedesktop.org/documentation/opus/opusenc.html
