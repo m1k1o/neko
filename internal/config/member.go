@@ -21,7 +21,7 @@ type Member struct {
 }
 
 func (Member) Init(cmd *cobra.Command) error {
-	cmd.PersistentFlags().String("member.provider", "object", "choose member provider")
+	cmd.PersistentFlags().String("member.provider", "multiuser", "choose member provider")
 	if err := viper.BindPFlag("member.provider", cmd.PersistentFlags().Lookup("member.provider")); err != nil {
 		return err
 	}
@@ -39,12 +39,12 @@ func (Member) Init(cmd *cobra.Command) error {
 	}
 
 	// multiuser provider
-	cmd.PersistentFlags().String("member.multiuser.user_password", "", "member multiuser provider: user password")
+	cmd.PersistentFlags().String("member.multiuser.user_password", "neko", "member multiuser provider: user password")
 	if err := viper.BindPFlag("member.multiuser.user_password", cmd.PersistentFlags().Lookup("member.multiuser.user_password")); err != nil {
 		return err
 	}
 
-	cmd.PersistentFlags().String("member.multiuser.admin_password", "", "member multiuser provider: admin password")
+	cmd.PersistentFlags().String("member.multiuser.admin_password", "admin", "member multiuser provider: admin password")
 	if err := viper.BindPFlag("member.multiuser.admin_password", cmd.PersistentFlags().Lookup("member.multiuser.admin_password")); err != nil {
 		return err
 	}
