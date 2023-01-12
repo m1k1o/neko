@@ -79,6 +79,12 @@ func (manager *MemberManagerCtx) Select(id string) (types.MemberProfile, error) 
 	manager.providerMu.Lock()
 	defer manager.providerMu.Unlock()
 
+	// get primarily from corresponding session, if exists
+	session, ok := manager.sessions.Get(id)
+	if ok {
+		return session.Profile(), nil
+	}
+
 	return manager.provider.Select(id)
 }
 
