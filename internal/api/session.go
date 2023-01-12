@@ -1,6 +1,7 @@
 package api
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/demodesk/neko/pkg/auth"
@@ -28,7 +29,13 @@ func (api *ApiManagerCtx) Login(w http.ResponseWriter, r *http.Request) error {
 
 	session, token, err := api.members.Login(data.Username, data.Password)
 	if err != nil {
-		return utils.HttpUnauthorized().WithInternalErr(err)
+		if errors.Is(err, types.ErrSessionAlreadyConnected) {
+			return utils.HttpUnprocessableEntity("session already connected")
+		} else if errors.Is(err, types.ErrMemberDoesNotExist) || errors.Is(err, types.ErrMemberInvalidPassword) {
+			return utils.HttpUnauthorized().WithInternalErr(err)
+		} else {
+			return utils.HttpInternalServerError().WithInternalErr(err)
+		}
 	}
 
 	sessionData := SessionDataPayload{
@@ -51,7 +58,11 @@ func (api *ApiManagerCtx) Logout(w http.ResponseWriter, r *http.Request) error {
 
 	err := api.members.Logout(session.ID())
 	if err != nil {
-		return utils.HttpUnauthorized().WithInternalErr(err)
+		if errors.Is(err, types.ErrSessionNotFound) {
+			return utils.HttpBadRequest("session is not logged in")
+		} else {
+			return utils.HttpInternalServerError().WithInternalErr(err)
+		}
 	}
 
 	if api.sessions.CookieEnabled() {
