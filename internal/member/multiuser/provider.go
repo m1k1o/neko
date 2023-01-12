@@ -76,7 +76,7 @@ func (provider *MemberProviderCtx) Insert(username string, password string, prof
 }
 
 func (provider *MemberProviderCtx) UpdateProfile(id string, profile types.MemberProfile) error {
-	return errors.New("cannot update user profile in multiuser mode")
+	return nil
 }
 
 func (provider *MemberProviderCtx) UpdatePassword(id string, password string) error {
@@ -88,7 +88,7 @@ func (provider *MemberProviderCtx) Select(id string) (types.MemberProfile, error
 }
 
 func (provider *MemberProviderCtx) SelectAll(limit int, offset int) (map[string]types.MemberProfile, error) {
-	return map[string]types.MemberProfile{}, errors.New("cannot select users in multiuser mode")
+	return map[string]types.MemberProfile{}, nil
 }
 
 func (provider *MemberProviderCtx) Delete(id string) error {

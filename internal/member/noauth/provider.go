@@ -55,11 +55,11 @@ func (provider *MemberProviderCtx) Insert(username string, password string, prof
 }
 
 func (provider *MemberProviderCtx) UpdateProfile(id string, profile types.MemberProfile) error {
-	return errors.New("cannot update user profile in noauth mode")
+	return nil
 }
 
 func (provider *MemberProviderCtx) UpdatePassword(id string, password string) error {
-	return errors.New("password can only be modified in config while in noauth mode")
+	return errors.New("noauth mode does not have password")
 }
 
 func (provider *MemberProviderCtx) Select(id string) (types.MemberProfile, error) {
@@ -67,7 +67,7 @@ func (provider *MemberProviderCtx) Select(id string) (types.MemberProfile, error
 }
 
 func (provider *MemberProviderCtx) SelectAll(limit int, offset int) (map[string]types.MemberProfile, error) {
-	return map[string]types.MemberProfile{}, errors.New("cannot select users in noauth mode")
+	return map[string]types.MemberProfile{}, nil
 }
 
 func (provider *MemberProviderCtx) Delete(id string) error {
