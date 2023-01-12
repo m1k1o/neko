@@ -4,6 +4,7 @@
 
 ### Bugs
 - Fixed TCP mux occasional freeze by adding write buffer to it.
+- Fixed stereo problem in chromium-based browsers, where it was only as mono by adding `stereo=1` to opus SDP to clients answer.
 
 ## [n.eko v2.7](https://github.com/m1k1o/neko/releases/tag/v2.7)
 

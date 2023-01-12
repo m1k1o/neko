@@ -286,6 +286,10 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
 
     try {
       const d = await this._peer.createAnswer()
+
+      // add stereo=1 to answer sdp to enable stereo audio for chromium
+      d.sdp = d.sdp?.replace(/(stereo=1;)?useinbandfec=1/, 'useinbandfec=1;stereo=1')
+
       this._peer!.setLocalDescription(d)
 
       this._ws!.send(
