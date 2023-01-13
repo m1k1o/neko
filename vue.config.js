@@ -3,6 +3,8 @@ const webpack = require('webpack')
 
 module.exports = {
   productionSourceMap: false,
+  publicPath: './',
+  assetsDir: './',  
   configureWebpack: {
     resolve: {
       alias: {
