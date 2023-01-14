@@ -26,6 +26,11 @@ typedef struct xkeyentry_t {
   struct xkeyentry_t *next;
 } xkeyentry_t;
 
+typedef struct xkeycode_t {
+  KeyCode keycode;
+  struct xkeycode_t *next;
+} xkeycode_t;
+
 static void XKeyEntryAdd(KeySym keysym, KeyCode keycode);
 static KeyCode XKeyEntryGet(KeySym keysym);
 static KeyCode XkbKeysymToKeycode(Display *dpy, KeySym keysym);

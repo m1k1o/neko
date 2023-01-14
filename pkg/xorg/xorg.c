@@ -71,6 +71,7 @@ void XButton(unsigned int button, int down) {
 
 static xkeyentry_t *xKeysHead = NULL;
 
+// add keycode->keysym mapping to list
 void XKeyEntryAdd(KeySym keysym, KeyCode keycode) {
   xkeyentry_t *entry = (xkeyentry_t *) malloc(sizeof(xkeyentry_t));
   if (entry == NULL)
@@ -82,6 +83,7 @@ void XKeyEntryAdd(KeySym keysym, KeyCode keycode) {
   xKeysHead = entry;
 }
 
+// get keycode for keysym from list
 KeyCode XKeyEntryGet(KeySym keysym) {
   xkeyentry_t *prev = NULL;
   xkeyentry_t *curr = xKeysHead;
@@ -147,6 +149,87 @@ KeyCode XkbKeysymToKeycode(Display* dpy, KeySym keysym) {
   return keycode;
 }
 
+static xkeycode_t *xFreeKeycodesHead = NULL;
+int xNumcodes = 0;
+
+void XFreeKeycodesInit(Display* dpy) {
+  if (xFreeKeycodesHead != NULL)
+    return;
+
+  KeyCode keycode;
+  KeySym *keysyms;
+  int min, max, numcodes;
+
+  // get full keyboard mapping
+  XDisplayKeycodes(dpy, &min, &max);
+  keysyms = XGetKeyboardMapping(dpy, min, max-min, &numcodes);
+  xNumcodes = numcodes;
+
+  // loop through all keycodes
+  xkeycode_t *last = NULL;
+  for (int i = min; i <= max; ++i) {
+    // check if keycode is empty
+    int isEmpty = 1;
+    for (int j = 0; j < numcodes; ++j) {
+      int symindex = ((i - min) * numcodes) + j;
+      if (keysyms[symindex] != 0) {
+        isEmpty = 0;
+        break;
+      }
+    }
+    if (!isEmpty) continue;
+
+    xkeycode_t *entry = (xkeycode_t *) malloc(sizeof(xkeycode_t));
+    if (entry == NULL) return;
+
+    entry->keycode = i;
+    if (last == NULL) {
+      xFreeKeycodesHead = entry;
+    } else {
+      last->next = entry;
+    } 
+    last = entry;
+  }
+
+  if (last != NULL) {
+    // make as circular list
+    last->next = xFreeKeycodesHead;
+  }
+
+  XFree(keysyms);
+}
+
+// get free keycode from list
+KeyCode XFreeKeycodeGet() {
+  if (xFreeKeycodesHead == NULL)
+    return 0;
+
+  // move head to next entry
+  xkeycode_t *entry = xFreeKeycodesHead;
+  xFreeKeycodesHead = entry->next;
+
+  return entry->keycode;
+}
+
+// map keysym to new keycode
+KeyCode XKeysymMapNew(Display* dpy, KeySym keysym) {
+  // initialize free keycodes list
+  if (xFreeKeycodesHead == NULL) {
+    XFreeKeycodesInit(dpy);
+  }
+
+  KeyCode keycode = XFreeKeycodeGet();
+
+  // no free keycodes, cannot map keysym
+  if (keycode != 0) {
+    KeySym keysym_list[xNumcodes];
+    for(int i=0;i<xNumcodes;i++) keysym_list[i] = keysym;
+    XChangeKeyboardMapping(dpy, keycode, xNumcodes, keysym_list, 1);
+  }
+
+  return keycode;
+}
+
 void XKey(KeySym keysym, int down) {
   if (keysym == 0)
     return;
@@ -157,20 +240,13 @@ void XKey(KeySym keysym, int down) {
   if (!down)
     keycode = XKeyEntryGet(keysym);
 
+  // Try to get keysyms from existing keycodes
   if (keycode == 0)
     keycode = XkbKeysymToKeycode(display, keysym);
 
   // Map non-existing keysyms to new keycodes
-  if (keycode == 0) {
-    int min, max, numcodes;
-    XDisplayKeycodes(display, &min, &max);
-    XGetKeyboardMapping(display, min, max-min, &numcodes);
-
-    keycode = (max-min+1)*numcodes;
-    KeySym keysym_list[numcodes];
-    for(int i=0;i<numcodes;i++) keysym_list[i] = keysym;
-    XChangeKeyboardMapping(display, keycode, numcodes, keysym_list, 1);
-  }
+  if (keycode == 0)
+    keycode = XKeysymMapNew(display, keysym);
 
   if (down)
     XKeyEntryAdd(keysym, keycode);
