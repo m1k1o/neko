@@ -191,10 +191,23 @@ void XFreeKeycodesInit(Display* dpy) {
     last = entry;
   }
 
-  if (last != NULL) {
-    // make as circular list
-    last->next = xFreeKeycodesHead;
+  // no free keycodes, pick last two keycodes anyway
+  if (last == NULL) {
+    xkeycode_t *entry1 = (xkeycode_t *) malloc(sizeof(xkeycode_t));
+    if (entry1 == NULL) return;
+    entry1->keycode = max-1;
+
+    xkeycode_t *entry2 = (xkeycode_t *) malloc(sizeof(xkeycode_t));
+    if (entry2 == NULL) return;
+    entry2->keycode = max-2;
+
+    xFreeKeycodesHead = entry1;
+    entry1->next = entry2;
+    last = entry2;
   }
+
+  // make as circular list
+  last->next = xFreeKeycodesHead;
 
   XFree(keysyms);
 }
