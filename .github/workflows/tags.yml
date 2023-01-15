@@ -38,7 +38,7 @@ jobs:
         uses: docker/metadata-action@v3
         id: meta
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}//${{ env.TAG_PREFIX }}base
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ env.TAG_PREFIX }}base
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
@@ -137,4 +137,4 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            BASE_IMAGE=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}//${{ env.TAG_PREFIX }}base:sha-${{ github.sha }}
+            BASE_IMAGE=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ env.TAG_PREFIX }}base:sha-${{ github.sha }}
