@@ -1,0 +1,20 @@
+name: "AMD build for tags"
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: m1k1o/neko
+  TAG_PREFIX: intel-
+  BASE_DOCKERFILE: Dockerfile.intel
+  PLATFORMS: linux/amd64
+
+jobs:
+  build-base:
+    uses: ./.github/workflows/tags.yml@build-base
+
+  build:
+    uses: ./.github/workflows/tags.yml@build
