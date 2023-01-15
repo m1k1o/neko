@@ -86,13 +86,9 @@ RUN set -eux; \
     # hardware acclerations utilities
     apt-get install -y --no-install-recommends libgtk-3-bin mesa-utils mesa-utils-extra mesa-va-drivers mesa-vulkan-drivers libvulkan-dev libvulkan-dev:i386 vdpauinfo; \
     #
-    # intel driver + vaapi
-    apt-get install -y --no-install-recommends intel-media-va-driver-non-free libva2 vainfo; \
-    #
-    # gst + vaapi plugin
+    # gst
     apt-get install -y --no-install-recommends libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
-                    gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-pulseaudio \
-                    gstreamer1.0-vaapi ;\
+                    gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-pulseaudio; \
     #
     # install fonts
     apt-get install -y --no-install-recommends \
@@ -176,8 +172,7 @@ COPY .docker/base/dbus /usr/bin/dbus
 COPY .docker/base/default.pa /etc/pulse/default.pa
 COPY .docker/base/supervisord.conf /etc/neko/supervisord.conf
 COPY .docker/base/xorg.conf /etc/neko/xorg.conf
-COPY .docker/base/add-render-group.sh /usr/bin/add-render-group.sh
-COPY .docker/base/nvidia-entrypoint.sh /bin/nvidia-entrypoint.sh
+COPY .docker/base/nvidia/entrypoint.sh /bin/entrypoint.sh
 
 #
 # set default envs
@@ -186,7 +181,6 @@ ENV DISPLAY=:99.0
 ENV NEKO_PASSWORD=neko
 ENV NEKO_PASSWORD_ADMIN=admin
 ENV NEKO_BIND=:8080
-ENV RENDER_GID=
 
 #
 # copy static files from previous stages

@@ -1,4 +1,5 @@
 #!/bin/bash -e
+
 # Add VirtualGL directories to path
 export PATH="${PATH}:/opt/VirtualGL/bin"
 
