@@ -4,6 +4,10 @@ on:
   push:
     tags:
       - 'v*'
+  # Only for testing.
+  pull_request:
+    branches:
+      - 'master'
 
 env:
   REGISTRY: ghcr.io
@@ -71,16 +75,16 @@ jobs:
         include:
           - tag: firefox
             dockerfile: Dockerfile.arm
-          - tag: chromium
-            dockerfile: Dockerfile.arm
-          - tag: ungoogled-chromium
-            dockerfile: Dockerfile
-          - tag: tor-browser
-            dockerfile: Dockerfile
-          - tag: vlc
-            dockerfile: Dockerfile
-          - tag: xfce
-            dockerfile: Dockerfile
+          #- tag: chromium
+          #  dockerfile: Dockerfile.arm
+          #- tag: ungoogled-chromium
+          #  dockerfile: Dockerfile
+          #- tag: tor-browser
+          #  dockerfile: Dockerfile
+          #- tag: vlc
+          #  dockerfile: Dockerfile
+          #- tag: xfce
+          #  dockerfile: Dockerfile
     env:
       TAG_NAME: ${{ matrix.tag }}
       DOCKERFILE: ${{ matrix.dockerfile }}
