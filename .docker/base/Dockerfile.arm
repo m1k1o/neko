@@ -1,7 +1,7 @@
 #
 # STAGE 1: SERVER
 #
-FROM arm32v7/golang:1.18-buster as server
+FROM golang:1.18-bullseye as server
 WORKDIR /src
 
 #
@@ -13,7 +13,7 @@ RUN set -eux; apt-get update; \
     # install libclipboard
     set -eux; \
     cd /tmp; \
-    git clone https://github.com/jtanx/libclipboard; \
+    git clone --depth=1 https://github.com/jtanx/libclipboard; \
     cd libclipboard; \
     cmake .; \
     make -j4; \
@@ -32,7 +32,7 @@ RUN go get -v -t -d . && go build -o bin/neko cmd/neko/main.go
 #
 # STAGE 2: CLIENT
 #
-FROM node:14-buster-slim as client
+FROM node:14-bullseye-slim as client
 
 # install dependencies
 RUN set -eux; apt-get update; \
@@ -53,7 +53,7 @@ RUN npm run build
 #
 # STAGE 3: RUNTIME
 #
-FROM arm32v7/debian:buster-slim
+FROM debian:bullseye-slim
 
 #
 # avoid warnings by switching to noninteractive
@@ -65,19 +65,27 @@ ARG USERNAME=neko
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
 
-#
-# install dependencies
-RUN set -eux; apt-get update; \
+RUN set -eux; \
+    apt-get update; \
+    #
+    # install dependencies
     apt-get install -y --no-install-recommends wget ca-certificates supervisor; \
     apt-get install -y --no-install-recommends pulseaudio dbus-x11 xserver-xorg-video-dummy; \
-    apt-get install -y --no-install-recommends libcairo2 libxcb1 libxrandr2 libxv1 libopus0 libvpx5; \
+    apt-get install -y --no-install-recommends libcairo2 libxcb1 libxrandr2 libxv1 libopus0 libvpx6; \
     #
     # gst
     apt-get install -y --no-install-recommends libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
-                    gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-pulseaudio gstreamer1.0-omx; \
+                    gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-pulseaudio \
+                    gstreamer1.0-omx; \
     #
-    # fonts
-    apt-get install -y --no-install-recommends fonts-takao-mincho fonts-wqy-zenhei; \
+    # install fonts
+    apt-get install -y --no-install-recommends \
+        # Google emojis
+        fonts-noto-color-emoji \
+        # Japanese fonts
+        fonts-takao-mincho \
+        # Chinese fonts
+        fonts-wqy-zenhei; \
     #
     # create a non-root user
     groupadd --gid $USER_GID $USERNAME; \
@@ -131,4 +139,3 @@ HEALTHCHECK --interval=10s --timeout=5s --retries=8 \
 #
 # run neko
 CMD ["/usr/bin/supervisord", "-c", "/etc/neko/supervisord.conf"]
-
