@@ -1,4 +1,4 @@
-name: "CI for version tags"
+name: "arm64v8 and arm32v7 images"
 
 on:
   push:
@@ -8,6 +8,9 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: m1k1o/neko
+  TAG_PREFIX: arm-
+  BASE_DOCKERFILE: Dockerfile.arm
+  PLATFORMS: linux/arm64,linux/arm/v7
 
 jobs:
   build-base:
@@ -31,7 +34,7 @@ jobs:
         uses: docker/metadata-action@v3
         id: meta
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/base
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ env.TAG_PREFIX }}base
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
@@ -49,8 +52,8 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: ./
-          file: .docker/base/Dockerfile
-          platforms: linux/amd64,linux/arm64
+          file: .docker/base/${{ env.BASE_DOCKERFILE }}
+          platforms: ${{ env.PLATFORMS }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -67,32 +70,20 @@ jobs:
       matrix:
         include:
           - tag: firefox
-            platforms: linux/amd64,linux/arm64
+            dockerfile: Dockerfile.arm
           - tag: chromium
-            platforms: linux/amd64,linux/arm64
-          - tag: google-chrome
-            platforms: linux/amd64
+            dockerfile: Dockerfile.arm
           - tag: ungoogled-chromium
-            platforms: linux/amd64,linux/arm64
-          - tag: microsoft-edge
-            platforms: linux/amd64
-          - tag: brave
-            platforms: linux/amd64
-          - tag: vivaldi
-            platforms: linux/amd64
-          - tag: opera
-            platforms: linux/amd64
+            dockerfile: Dockerfile
           - tag: tor-browser
-            platforms: linux/amd64,linux/arm64
-          - tag: remmina
-            platforms: linux/amd64
+            dockerfile: Dockerfile
           - tag: vlc
-            platforms: linux/amd64,linux/arm64
+            dockerfile: Dockerfile
           - tag: xfce
-            platforms: linux/amd64,linux/arm64
+            dockerfile: Dockerfile
     env:
       TAG_NAME: ${{ matrix.tag }}
-      PLATFORMS: ${{ matrix.platforms }}
+      DOCKERFILE: ${{ matrix.dockerfile }}
     steps:
       -
         name: Checkout
@@ -108,11 +99,12 @@ jobs:
         uses: docker/metadata-action@v3
         id: meta
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ env.TAG_NAME }}
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ env.TAG_PREFIX }}${{ env.TAG_NAME }}
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
+            type=sha,format=long
       - 
         name: Log in to the Container registry
         uses: docker/login-action@v1
@@ -125,9 +117,10 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .docker/${{ env.TAG_NAME }}
+          file: .docker/${{ env.TAG_NAME }}/${{ env.DOCKERFILE }}
           platforms: ${{ env.PLATFORMS }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            BASE_IMAGE=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/base:sha-${{ github.sha }}
+            BASE_IMAGE=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ env.TAG_PREFIX }}base:sha-${{ github.sha }}

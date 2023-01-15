@@ -14,7 +14,7 @@
   <img src="../_media/icons/xfce.svg" title="m1k1o/neko:xfce" width="60" height="auto"/>
 </div>
 
-Use the following docker images:
+Use the following docker images from [Docker Hub](https://hub.docker.com/r/m1k1o/neko) for x86_64:
 - `m1k1o/neko:latest` or `m1k1o/neko:firefox` - for Firefox.
 - `m1k1o/neko:chromium` - for Chromium (needs `--cap-add=SYS_ADMIN`, see the [security implications](https://www.redhat.com/en/blog/container-tidbits-adding-capabilities-container)).
 - `m1k1o/neko:google-chrome` - for Google Chrome (needs `--cap-add=SYS_ADMIN`, see the [security implications](https://www.redhat.com/en/blog/container-tidbits-adding-capabilities-container)).
@@ -31,12 +31,47 @@ Use the following docker images:
 - `m1k1o/neko:xfce` - for a shared desktop / installing shared software.
 - `m1k1o/neko:base` - for custom base.
 
-For ARM-based devices (like Raspberry Pi, with GPU hardware acceleration):
-- `m1k1o/neko:arm-firefox` - for Firefox.
-- `m1k1o/neko:arm-chromium` - for Chromium.
-- `m1k1o/neko:arm-base` - for custom arm based.
+Dockerhub images are built using GitHub actions on every push and on weekly basis to keep all browsers up-to-date.
 
-Images (except `arm-`) are built using GitHub actions on every push and on weekly basis to keep all browsers up-to-date,
+All images are also available on [GitHub Container Registry](https://github.com/m1k1o?tab=packages&repo_name=neko) for faster pulls:
+
+- `ghcr.io/m1k1o/neko/firefox:latest`
+- `ghcr.io/m1k1o/neko/chromium:latest`
+- `ghcr.io/m1k1o/neko/google-chrome:latest`
+- `ghcr.io/m1k1o/neko/ungoogled-chromium:latest`
+- `ghcr.io/m1k1o/neko/microsoft-edge:latest`
+- `ghcr.io/m1k1o/neko/brave:latest`
+- `ghcr.io/m1k1o/neko/vivaldi:latest`
+- `ghcr.io/m1k1o/neko/opera:latest`
+- `ghcr.io/m1k1o/neko/tor-browser:latest`
+- `ghcr.io/m1k1o/neko/remmina:latest`
+- `ghcr.io/m1k1o/neko/vlc:latest`
+- `ghcr.io/m1k1o/neko/xfce:latest`
+
+For ARM-based images (like Raspberry Pi - with GPU hardware acceleration, Oracle Cloud ARM tier). Currently not all images are available for ARM, because not all applications are available for ARM.
+
+- `ghcr.io/m1k1o/neko/arm-firefox:latest`
+- `ghcr.io/m1k1o/neko/arm-chromium:latest`
+- `ghcr.io/m1k1o/neko/arm-ungoogled-chromium:latest`
+- `ghcr.io/m1k1o/neko/arm-vlc:latest`
+- `ghcr.io/m1k1o/neko/arm-xfce:latest`
+
+For images with VAAPI GPU hardware acceleration using intel drivers use:
+
+- `ghcr.io/m1k1o/neko/intel-firefox:latest`
+- `ghcr.io/m1k1o/neko/intel-chromium:latest`
+- `ghcr.io/m1k1o/neko/intel-google-chrome:latest`
+- `ghcr.io/m1k1o/neko/intel-ungoogled-chromium:latest`
+- `ghcr.io/m1k1o/neko/intel-microsoft-edge:latest`
+- `ghcr.io/m1k1o/neko/intel-brave:latest`
+- `ghcr.io/m1k1o/neko/intel-vivaldi:latest`
+- `ghcr.io/m1k1o/neko/intel-opera:latest`
+- `ghcr.io/m1k1o/neko/intel-tor-browser:latest`
+- `ghcr.io/m1k1o/neko/intel-remmina:latest`
+- `ghcr.io/m1k1o/neko/intel-vlc:latest`
+- `ghcr.io/m1k1o/neko/intel-xfce:latest`
+
+GHCR images are built using GitHub actions for every tag.
 
 ### Networking:
 - If you want to use n.eko in **external** network, you can omit `NEKO_NAT1TO1`. It will automatically get your Public IP.

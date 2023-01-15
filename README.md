@@ -22,7 +22,7 @@
       <img src="https://discordapp.com/api/guilds/665851821906067466/widget.png" alt="Chat on discord">
     </a>
     <a href="https://github.com/m1k1o/neko/actions">
-      <img src="https://github.com/m1k1o/neko/actions/workflows/build.yml/badge.svg" alt="build">
+      <img src="https://github.com/m1k1o/neko/actions/workflows/ghcr-amd.yml/badge.svg" alt="build">
     </a>
   </p>
   <img src="https://raw.githubusercontent.com/m1k1o/neko/master/docs/_media/intro.gif" width="650" height="auto"/>

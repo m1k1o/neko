@@ -149,98 +149,59 @@ KeyCode XkbKeysymToKeycode(Display* dpy, KeySym keysym) {
   return keycode;
 }
 
-static xkeycode_t *xFreeKeycodesHead = NULL;
-int xNumcodes = 0;
+// From https://github.com/TigerVNC/tigervnc/blob/a434ef3377943e89165ac13c537cd0f28be97f84/unix/x0vncserver/XDesktop.cxx#L401-L453
+KeyCode XkbAddKeyKeysym(Display* dpy, KeySym keysym) {
+  int types[1];
+  unsigned int key;
+  XkbDescPtr xkb;
+  XkbMapChangesRec changes;
+  KeySym *syms;
+  KeySym upper, lower;
 
-void XFreeKeycodesInit(Display* dpy) {
-  if (xFreeKeycodesHead != NULL)
-    return;
+  xkb = XkbGetMap(dpy, XkbAllComponentsMask, XkbUseCoreKbd);
 
-  KeyCode keycode;
-  KeySym *keysyms;
-  int min, max, numcodes;
-
-  // get full keyboard mapping
-  XDisplayKeycodes(dpy, &min, &max);
-  keysyms = XGetKeyboardMapping(dpy, min, max-min, &numcodes);
-  xNumcodes = numcodes;
-
-  // loop through all keycodes
-  xkeycode_t *last = NULL;
-  for (int i = min; i <= max; ++i) {
-    // check if keycode is empty
-    int isEmpty = 1;
-    for (int j = 0; j < numcodes; ++j) {
-      int symindex = ((i - min) * numcodes) + j;
-      if (keysyms[symindex] != 0) {
-        isEmpty = 0;
-        break;
-      }
-    }
-    if (!isEmpty) continue;
-
-    xkeycode_t *entry = (xkeycode_t *) malloc(sizeof(xkeycode_t));
-    if (entry == NULL) return;
-
-    entry->keycode = i;
-    if (last == NULL) {
-      xFreeKeycodesHead = entry;
-    } else {
-      last->next = entry;
-    } 
-    last = entry;
-  }
-
-  // no free keycodes, pick last two keycodes anyway
-  if (last == NULL) {
-    xkeycode_t *entry1 = (xkeycode_t *) malloc(sizeof(xkeycode_t));
-    if (entry1 == NULL) return;
-    entry1->keycode = max-1;
-
-    xkeycode_t *entry2 = (xkeycode_t *) malloc(sizeof(xkeycode_t));
-    if (entry2 == NULL) return;
-    entry2->keycode = max-2;
-
-    xFreeKeycodesHead = entry1;
-    entry1->next = entry2;
-    last = entry2;
-  }
-
-  // make as circular list
-  last->next = xFreeKeycodesHead;
-
-  XFree(keysyms);
-}
-
-// get free keycode from list
-KeyCode XFreeKeycodeGet() {
-  if (xFreeKeycodesHead == NULL)
+  if (!xkb)
     return 0;
 
-  // move head to next entry
-  xkeycode_t *entry = xFreeKeycodesHead;
-  xFreeKeycodesHead = entry->next;
-
-  return entry->keycode;
-}
-
-// map keysym to new keycode
-KeyCode XKeysymMapNew(Display* dpy, KeySym keysym) {
-  // initialize free keycodes list
-  if (xFreeKeycodesHead == NULL) {
-    XFreeKeycodesInit(dpy);
+  for (key = xkb->max_key_code; key >= xkb->min_key_code; key--) {
+    if (XkbKeyNumGroups(xkb, key) == 0)
+      break;
   }
 
-  KeyCode keycode = XFreeKeycodeGet();
+  // no free keycodes
+  if (key < xkb->min_key_code)
+    return 0;
 
-  // no free keycodes, cannot map keysym
-  if (keycode != 0) {
-    KeySym keysym_list[xNumcodes];
-    for(int i=0;i<xNumcodes;i++) keysym_list[i] = keysym;
-    XChangeKeyboardMapping(dpy, keycode, xNumcodes, keysym_list, 1);
+  // assign empty structure
+  changes = *(XkbMapChangesRec *) malloc(sizeof(XkbMapChangesRec));
+  for (int i = 0; i < sizeof(changes); i++) ((char *) &changes)[i] = 0;
+
+  XConvertCase(keysym, &lower, &upper);
+
+  if (upper == lower)
+    types[XkbGroup1Index] = XkbOneLevelIndex;
+  else
+    types[XkbGroup1Index] = XkbAlphabeticIndex;
+
+  XkbChangeTypesOfKey(xkb, key, 1, XkbGroup1Mask, types, &changes);
+
+  syms = XkbKeySymsPtr(xkb,key);
+  if (upper == lower)
+    syms[0] = keysym;
+  else {
+    syms[0] = lower;
+    syms[1] = upper;
   }
 
-  return keycode;
+  changes.changed |= XkbKeySymsMask;
+  changes.first_key_sym = key;
+  changes.num_key_syms = 1;
+
+  if (XkbChangeMap(dpy, xkb, &changes)) {
+    return key;
+  }
+
+  return 0;
 }
 
 void XKey(KeySym keysym, int down) {
@@ -259,7 +220,7 @@ void XKey(KeySym keysym, int down) {
 
   // Map non-existing keysyms to new keycodes
   if (keycode == 0)
-    keycode = XKeysymMapNew(display, keysym);
+    keycode = XkbAddKeyKeysym(display, keysym);
 
   if (down)
     XKeyEntryAdd(keysym, keycode);

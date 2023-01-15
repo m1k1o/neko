@@ -1,4 +1,4 @@
-name: "CI for builds"
+name: "build and push amd64 images to Docker Hub"
 
 on:
   push:
