@@ -4,10 +4,6 @@ on:
   push:
     tags:
       - 'v*'
-  # Only for testing.
-  pull_request:
-    branches:
-      - 'master'
 
 env:
   REGISTRY: ghcr.io
@@ -74,17 +70,17 @@ jobs:
       matrix:
         include:
           - tag: firefox
-          #- tag: chromium
-          #- tag: google-chrome
-          #- tag: ungoogled-chromium
-          #- tag: microsoft-edge
-          #- tag: brave
-          #- tag: vivaldi
-          #- tag: opera
-          #- tag: tor-browser
-          #- tag: remmina
-          #- tag: vlc
-          #- tag: xfce
+          - tag: chromium
+          - tag: google-chrome
+          - tag: ungoogled-chromium
+          - tag: microsoft-edge
+          - tag: brave
+          - tag: vivaldi
+          - tag: opera
+          - tag: tor-browser
+          - tag: remmina
+          - tag: vlc
+          - tag: xfce
     env:
       TAG_NAME: ${{ matrix.tag }}
       DOCKERFILE: ${{ matrix.dockerfile }}
