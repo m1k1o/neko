@@ -1,4 +1,4 @@
-name: "AMD build for tags"
+name: "intel gpu supported images"
 
 on:
   push:

@@ -1,13 +1,9 @@
-name: "ARM build and push"
+name: "arm64v8 and arm32v7 images"
 
 on:
   push:
     tags:
       - 'v*'
-  # Only for testing.
-  pull_request:
-    branches:
-      - 'master'
 
 env:
   REGISTRY: ghcr.io
@@ -75,16 +71,16 @@ jobs:
         include:
           - tag: firefox
             dockerfile: Dockerfile.arm
-          #- tag: chromium
-          #  dockerfile: Dockerfile.arm
-          #- tag: ungoogled-chromium
-          #  dockerfile: Dockerfile
-          #- tag: tor-browser
-          #  dockerfile: Dockerfile
-          #- tag: vlc
-          #  dockerfile: Dockerfile
-          #- tag: xfce
-          #  dockerfile: Dockerfile
+          - tag: chromium
+            dockerfile: Dockerfile.arm
+          - tag: ungoogled-chromium
+            dockerfile: Dockerfile
+          - tag: tor-browser
+            dockerfile: Dockerfile
+          - tag: vlc
+            dockerfile: Dockerfile
+          - tag: xfce
+            dockerfile: Dockerfile
     env:
       TAG_NAME: ${{ matrix.tag }}
       DOCKERFILE: ${{ matrix.dockerfile }}
@@ -108,6 +104,7 @@ jobs:
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
+            type=sha,format=long
       - 
         name: Log in to the Container registry
         uses: docker/login-action@v1
