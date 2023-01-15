@@ -1,15 +1,24 @@
 version: "3.4"
 services:
   neko:
-    image: "m1k1o/neko:firefox"
+    image: "m1k1o/neko:chromium"
     restart: "unless-stopped"
     shm_size: "2gb"
     ports:
       - "8080:8080"
       - "52000-52100:52000-52100/udp"
+    cap_add:
+      - ALL
     environment:
+      NEKO_BIND: :8080
       NEKO_SCREEN: 1920x1080@30
+      NEKO_MAX_FPS: 30
+      #NEKO_AV1: "true"
+      NEKO_VIDEO_CODEC: av1
+      NEKO_VIDEO_BITRATE: 1000
+      NEKO_VIDEO: ximagesrc display-name=%s show-pointer=true use-damage=false ! video/x-raw,framerate=25/1 ! videoconvert ! queue ! rav1enc low-latency=true speed-preset=10
       NEKO_PASSWORD: neko
       NEKO_PASSWORD_ADMIN: admin
       NEKO_EPR: 52000-52100
-      NEKO_ICELITE: 1
+      NEKO_ICELITE: "true"
+      #GST_DEBUG: 3

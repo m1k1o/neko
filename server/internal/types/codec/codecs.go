@@ -27,6 +27,8 @@ func ParseStr(codecName string) (codec RTPCodec, ok bool) {
 	ok = true
 
 	switch strings.ToLower(codecName) {
+	case AV1().Name:
+		codec = AV1()
 	case VP8().Name:
 		codec = VP8()
 	case VP9().Name:
@@ -60,6 +62,21 @@ func (codec RTPCodec) Register(engine *webrtc.MediaEngine) error {
 		RTPCodecCapability: codec.Capability,
 		PayloadType:        codec.PayloadType,
 	}, codec.Type)
+}
+
+func AV1() RTPCodec {
+	return RTPCodec{
+			Name:        "av1",
+			PayloadType: 100,
+			Type:        webrtc.RTPCodecTypeVideo,
+			Capability: webrtc.RTPCodecCapability{
+					MimeType:     webrtc.MimeTypeAV1,
+					ClockRate:    90000,
+					Channels:     0,
+					SDPFmtpLine:  "",
+					RTCPFeedback: RTCPFeedback,
+			},
+	}
 }
 
 func VP8() RTPCodec {
