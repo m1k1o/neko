@@ -44,6 +44,12 @@ func (Capture) Init(cmd *cobra.Command) error {
 		return err
 	}
 
+         // DEPRECATED: video codec
+        cmd.PersistentFlags().Bool("av1", false, "DEPRECATED: use video_codec")
+        if err := viper.BindPFlag("av1", cmd.PersistentFlags().Lookup("av1")); err != nil {
+                return err
+        }
+
 	// DEPRECATED: video codec
 	cmd.PersistentFlags().Bool("vp8", false, "DEPRECATED: use video_codec")
 	if err := viper.BindPFlag("vp8", cmd.PersistentFlags().Lookup("vp8")); err != nil {
@@ -164,7 +170,10 @@ func (s *Capture) Set() {
 		s.VideoCodec = codec.VP8()
 	}
 
-	if viper.GetBool("vp8") {
+        if viper.GetBool("av1") {
+                s.VideoCodec = codec.AV1()
+                log.Warn().Msg("you are using deprecated config setting 'NEKO_AV1=true', use 'NEKO_VIDEO_CODEC=av1' instead")
+	} else if viper.GetBool("vp8") {
 		s.VideoCodec = codec.VP8()
 		log.Warn().Msg("you are using deprecated config setting 'NEKO_VP8=true', use 'NEKO_VIDEO_CODEC=vp8' instead")
 	} else if viper.GetBool("vp9") {

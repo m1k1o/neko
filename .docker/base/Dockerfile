@@ -1,14 +1,25 @@
 #
 # STAGE 1: SERVER
 #
+FROM rust:1-bullseye as rav1enc
+WORKDIR /src
+
+RUN set -eux; apt-get update; \
+    apt-get install -y gstreamer1.0-tools libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev gstreamer1.0-plugins-base; \
+    cd /tmp; \
+    git clone --depth=1 https://gitlab.freedesktop.org/gstreamer/gst-plugins-rs.git; \
+    cd gst-plugins-rs; \
+    cargo build -r -p gst-plugin-rav1e;
+
 FROM golang:1.18-bullseye as server
 WORKDIR /src
 
+COPY .docker/base/0001-Fix-MIME-type.patch .
 #
 # install dependencies
 RUN set -eux; apt-get update; \
-    apt-get install -y --no-install-recommends git cmake make libx11-dev libxrandr-dev libxtst-dev \
-    libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly; \
+    apt-get install -y --no-install-recommends git cmake make libx11-dev libxrandr-dev libxtst-dev python3-pip pkg-config yasm \
+    gstreamer1.0-tools libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly; \
     #
     # install libclipboard
     set -eux; \
@@ -18,7 +29,21 @@ RUN set -eux; apt-get update; \
     cmake .; \
     make -j4; \
     make install; \
+    cd /tmp; \
     rm -rf /tmp/libclipboard; \
+    #
+    # install libgstsvtav1enc.so
+    pip3 install meson ninja; \
+    git clone --depth=1 --branch v1.4.1 https://gitlab.com/AOMediaCodec/SVT-AV1.git; \
+    git config --global user.email "you@example.com"; \
+    git config --global user.name "Your Name"; \
+    git -C SVT-AV1 am /src/0001-Fix-MIME-type.patch; \
+    SVT-AV1/Build/linux/build.sh debug; \
+    cp /tmp/SVT-AV1/Source/API/Eb*.h /usr/local/include; \
+    cmake -P SVT-AV1/Build/linux/Debug/Source/Lib/Encoder/cmake_install.cmake; \
+    cd SVT-AV1/gstreamer-plugin; \
+    meson -Dprefix=/usr build; \
+    ninja -C build install; \
     #
     # clean up
     apt-get clean -y; \
@@ -70,7 +95,8 @@ RUN set -eux; \
     #
     # gst
     apt-get install -y --no-install-recommends libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
-                    gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-pulseaudio; \
+                    gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-pulseaudio \
+                    gstreamer1.0-vaapi gstreamer1.0-tools;\
     #
     # install fonts
     apt-get install -y --no-install-recommends \
@@ -125,6 +151,11 @@ ENV NEKO_BIND=:8080
 #
 # copy static files from previous stages
 COPY --from=server /src/bin/neko /usr/bin/neko
+COPY --from=server /usr/local/lib/libSvtAv1Enc.so.1.4.1 /usr/lib/x86_64-linux-gnu/libSvtAv1Enc.so.1.4.1
+COPY --from=server /usr/local/lib/libSvtAv1Enc.so.1 /usr/lib/x86_64-linux-gnu/libSvtAv1Enc.so.1
+COPY --from=server /usr/lib/gstreamer-1.0/libgstsvtav1enc.so /usr/lib/x86_64-linux-gnu/gstreamer-1.0/libgstsvtav1enc.so
+COPY --from=rav1enc /tmp/gst-plugins-rs/target/release/libgstrav1e.so /usr/lib/x86_64-linux-gnu/gstreamer-1.0/libgstrav1e.so
+
 COPY --from=client /src/dist/ /var/www
 
 HEALTHCHECK --interval=10s --timeout=5s --retries=8 \

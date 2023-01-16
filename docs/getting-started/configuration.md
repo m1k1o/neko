@@ -66,6 +66,7 @@ nat1to1: <ip>
 ### Video
 
 #### `NEKO_VIDEO_CODEC`:
+  - av1 *(best option)*
   - vp8 *(default encoder)*
   - vp9 *(parameter not optimized yet)*
   - h264 *(second best option)*
@@ -161,6 +162,7 @@ Flags:
       --audio string                audio codec parameters to use for streaming
       --audio_bitrate int           audio bitrate in kbit/s (default 128)
       --audio_codec string          audio codec to be used (default "opus")
+      --av1                         DEPRECATED: use video_codec
       --bind string                 address/port/socket to serve neko (default "127.0.0.1:8080")
       --broadcast_pipeline string   custom gst pipeline used for broadcasting, strings {url} {device} {display} will be replaced
       --broadcast_url string        URL for broadcasting, setting this value will automatically enable broadcasting

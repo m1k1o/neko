@@ -62,6 +62,17 @@ func NewVideoPipeline(rtpCodec codec.RTPCodec, display string, pipelineSrc strin
 	}
 
 	switch rtpCodec.Name {
+        case codec.AV1().Name:
+			if err := gst.CheckPlugins([]string{"ximagesrc", "vpx"}); err != nil {
+					return "", err
+			}
+
+			pipelineStr = strings.Join([]string{
+							fmt.Sprintf(videoSrc, display, fps),
+							"svtav1enc",
+							fmt.Sprintf("bitrate=%d", bitrate),
+							pipelineStr,
+					}, " ")
 	case codec.VP8().Name:
 		if hwenc == "VAAPI" {
 			if err := gst.CheckPlugins([]string{"ximagesrc", "vaapi"}); err != nil {
@@ -105,7 +116,7 @@ func NewVideoPipeline(rtpCodec codec.RTPCodec, display string, pipelineSrc strin
 			return "", err
 		}
 
-		pipelineStr = fmt.Sprintf(videoSrc+"vp9enc target-bitrate=%d cpu-used=-5 threads=4 deadline=1 keyframe-max-dist=30 auto-alt-ref=true"+pipelineStr, display, fps, bitrate*1000)
+		pipelineStr = fmt.Sprintf(videoSrc+"vp9enc target-bitrate=%d cpu-used=5 threads=4 deadline=1 keyframe-max-dist=30 auto-alt-ref=true"+pipelineStr, display, fps, bitrate*1000)
 	case codec.H264().Name:
 		if err := gst.CheckPlugins([]string{"ximagesrc"}); err != nil {
 			return "", err

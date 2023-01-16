@@ -1,0 +1,25 @@
+From d84ef27b1b2ec2769aa2805bcc54f5601a4ba59a Mon Sep 17 00:00:00 2001
+From: Ethan Waldo <ewaldo@healthetechs.com>
+Date: Sat, 7 Jan 2023 17:45:27 -0500
+Subject: [PATCH] Fix MIME type
+
+---
+ gstreamer-plugin/gstsvtav1enc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/gstreamer-plugin/gstsvtav1enc.c b/gstreamer-plugin/gstsvtav1enc.c
+index 108824c1..86ee29da 100644
+--- a/gstreamer-plugin/gstsvtav1enc.c
++++ b/gstreamer-plugin/gstsvtav1enc.c
+@@ -129,7 +129,7 @@ static GstStaticPadTemplate gst_svtav1enc_src_pad_template =
+ GST_STATIC_PAD_TEMPLATE ("src",
+     GST_PAD_SRC,
+     GST_PAD_ALWAYS,
+-    GST_STATIC_CAPS ("video/x-av1, "
++    GST_STATIC_CAPS ("video/AV1, "
+         "stream-format = (string) byte-stream, "
+         "alignment = (string) au, "
+         "width = (int) [64, 3840], "
+--
+2.20.1
+
