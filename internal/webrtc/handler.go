@@ -3,12 +3,15 @@ package webrtc
 import (
 	"bytes"
 	"encoding/binary"
+	"math"
+	"time"
 
 	"github.com/demodesk/neko/internal/webrtc/payload"
 	"github.com/demodesk/neko/pkg/types"
+	"github.com/pion/webrtc/v3"
 )
 
-func (manager *WebRTCManagerCtx) handle(data []byte, session types.Session) error {
+func (manager *WebRTCManagerCtx) handle(data []byte, dataChannel *webrtc.DataChannel, session types.Session) error {
 	// add session id to logger context
 	logger := manager.logger.With().Str("session_id", session.ID()).Logger()
 
@@ -55,6 +58,34 @@ func (manager *WebRTCManagerCtx) handle(data []byte, session types.Session) erro
 		}
 
 		return nil
+	} else if header.Event == payload.OP_PING {
+		ping := &payload.Ping{}
+		if err := binary.Read(buffer, binary.BigEndian, ping); err != nil {
+			return err
+		}
+
+		// change header event to pong
+		ping.Header = payload.Header{
+			Event:  payload.OP_PONG,
+			Length: 19,
+		}
+
+		// generate server timestamp
+		serverTs := uint64(time.Now().UnixMilli())
+
+		// generate pong payload
+		pong := payload.Pong{
+			Ping:      *ping,
+			ServerTs1: uint32(serverTs / math.MaxUint32),
+			ServerTs2: uint32(serverTs % math.MaxUint32),
+		}
+
+		buffer := &bytes.Buffer{}
+		if err := binary.Write(buffer, binary.BigEndian, pong); err != nil {
+			return err
+		}
+
+		return dataChannel.Send(buffer.Bytes())
 	}
 
 	// continue only if session is host

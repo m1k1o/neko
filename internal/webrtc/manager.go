@@ -475,7 +475,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int) 
 	})
 
 	dataChannel.OnMessage(func(message webrtc.DataChannelMessage) {
-		if err := manager.handle(message.Data, session); err != nil {
+		if err := manager.handle(message.Data, dataChannel, session); err != nil {
 			logger.Err(err).Msg("data handle failed")
 		}
 	})
