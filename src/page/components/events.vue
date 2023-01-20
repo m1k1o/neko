@@ -110,6 +110,20 @@
               <td>{{ Math.floor(neko.state.connection.webrtc.stats.bitrate / 1024 / 8) }} KB/s</td>
             </tr>
             <tr>
+              <th style="width: 40%">latency</th>
+              <td
+                :title="
+                  'request: ' +
+                  neko.state.connection.webrtc.stats.requestLatency +
+                  'ms, response: ' +
+                  neko.state.connection.webrtc.stats.responseLatency +
+                  'ms'
+                "
+              >
+                {{ neko.state.connection.webrtc.stats.latency }}ms
+              </td>
+            </tr>
+            <tr>
               <th>loss</th>
               <td :style="neko.state.connection.webrtc.stats.packetLoss >= 1 ? 'background: red' : ''">
                 {{ Math.floor(neko.state.connection.webrtc.stats.packetLoss) }}%
