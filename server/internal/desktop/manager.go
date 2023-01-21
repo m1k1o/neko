@@ -9,7 +9,6 @@ import (
 	"m1k1o/neko/internal/desktop/xevent"
 	"m1k1o/neko/internal/desktop/xorg"
 
-	"github.com/kataras/go-events"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
@@ -17,18 +16,20 @@ import (
 var mu = sync.Mutex{}
 
 type DesktopManagerCtx struct {
-	logger   zerolog.Logger
-	wg       sync.WaitGroup
-	shutdown chan struct{}
-	emmiter  events.EventEmmiter
-	config   *config.Desktop
+	logger                         zerolog.Logger
+	wg                             sync.WaitGroup
+	shutdown                       chan struct{}
+	beforeScreenSizeChangeChannel  chan bool
+	afterScreenSizeChangeChannel   chan int16
+	config                         *config.Desktop
 }
 
 func New(config *config.Desktop) *DesktopManagerCtx {
 	return &DesktopManagerCtx{
 		logger:   log.With().Str("module", "desktop").Logger(),
 		shutdown: make(chan struct{}),
-		emmiter:  events.New(),
+		beforeScreenSizeChangeChannel: make (chan bool),
+		afterScreenSizeChangeChannel: make (chan int16),
 		config:   config,
 	}
 }
@@ -47,14 +48,17 @@ func (manager *DesktopManagerCtx) Start() {
 
 	go xevent.EventLoop(manager.config.Display)
 
-	manager.OnEventError(func(error_code uint8, message string, request_code uint8, minor_code uint8) {
-		manager.logger.Warn().
-			Uint8("error_code", error_code).
-			Str("message", message).
-			Uint8("request_code", request_code).
-			Uint8("minor_code", minor_code).
+	go func() {
+		for {
+			desktopErrorMessage := <- xevent.EventErrorChannel
+			manager.logger.Warn().
+			Uint8("error_code", desktopErrorMessage.Error_code).
+			Str("message", desktopErrorMessage.Message).
+			Uint8("request_code", desktopErrorMessage.Request_code).
+			Uint8("minor_code", desktopErrorMessage.Minor_code).
 			Msg("X event error occurred")
-	})
+		}
+	}()
 
 	manager.wg.Add(1)
 
@@ -75,16 +79,12 @@ func (manager *DesktopManagerCtx) Start() {
 	}()
 }
 
-func (manager *DesktopManagerCtx) OnBeforeScreenSizeChange(listener func()) {
-	manager.emmiter.On("before_screen_size_change", func(payload ...any) {
-		listener()
-	})
+func (manager *DesktopManagerCtx) GetBeforeScreenSizeChangeChannel() (chan bool) {
+	return manager.beforeScreenSizeChangeChannel
 }
 
-func (manager *DesktopManagerCtx) OnAfterScreenSizeChange(listener func()) {
-	manager.emmiter.On("after_screen_size_change", func(payload ...any) {
-		listener()
-	})
+func (manager *DesktopManagerCtx) GetAfterScreenSizeChangeChannel() (chan int16) {
+	return manager.afterScreenSizeChangeChannel
 }
 
 func (manager *DesktopManagerCtx) Shutdown() error {

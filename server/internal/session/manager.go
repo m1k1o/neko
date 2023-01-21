@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/kataras/go-events"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
@@ -17,20 +16,22 @@ func New(capture types.CaptureManager) *SessionManager {
 		logger:  log.With().Str("module", "session").Logger(),
 		host:    "",
 		capture: capture,
+		sessionChannel: make(chan types.SessionInformation, 10),
+		hostChannel: make(chan types.HostInformation, 10),
 		members: make(map[string]*Session),
-		emmiter: events.New(),
 	}
 }
 
 type SessionManager struct {
-	mu      sync.Mutex
-	logger  zerolog.Logger
-	host    string
-	capture types.CaptureManager
-	members map[string]*Session
-	emmiter events.EventEmmiter
+	mu                sync.Mutex
+	logger            zerolog.Logger
+	host              string
+	capture           types.CaptureManager
+	members           map[string]*Session
+	sessionChannel    chan types.SessionInformation
+	hostChannel       chan types.HostInformation
 	// TODO: Handle locks in sessions as flags.
-	controlLocked bool
+	controlLocked     bool
 }
 
 func (manager *SessionManager) New(id string, admin bool, socket types.WebSocket) types.Session {
@@ -49,7 +50,13 @@ func (manager *SessionManager) New(id string, admin bool, socket types.WebSocket
 	manager.capture.Video().AddListener()
 	manager.mu.Unlock()
 
-	manager.emmiter.Emit("created", id, session)
+	manager.sessionChannel <- types.SessionInformation{ "created", id, session }
+
+	go func() {
+		for {
+			_ = <- manager.hostChannel
+		}
+	}()
 	return session
 }
 
@@ -68,7 +75,8 @@ func (manager *SessionManager) SetHost(id string) error {
 
 	if ok {
 		manager.host = id
-		manager.emmiter.Emit("host", id)
+
+		manager.hostChannel <- types.HostInformation{ "host", id }
 		return nil
 	}
 
@@ -86,7 +94,7 @@ func (manager *SessionManager) GetHost() (types.Session, bool) {
 func (manager *SessionManager) ClearHost() {
 	id := manager.host
 	manager.host = ""
-	manager.emmiter.Emit("host_cleared", id)
+	manager.hostChannel <- types.HostInformation{ "host_cleared", id }
 }
 
 func (manager *SessionManager) Has(id string) bool {
@@ -163,7 +171,7 @@ func (manager *SessionManager) Destroy(id string) {
 		manager.capture.Video().RemoveListener()
 		manager.mu.Unlock()
 
-		manager.emmiter.Emit("destroyed", id, session)
+		manager.sessionChannel <- types.SessionInformation{ "destroyed", id, session }
 		manager.logger.Err(err).Str("session_id", id).Msg("destroying session")
 		return
 	}
@@ -221,32 +229,10 @@ func (manager *SessionManager) AdminBroadcast(v interface{}, exclude interface{}
 	return nil
 }
 
-func (manager *SessionManager) OnHost(listener func(id string)) {
-	manager.emmiter.On("host", func(payload ...interface{}) {
-		listener(payload[0].(string))
-	})
+func (manager *SessionManager) GetSessionChannel() (chan types.SessionInformation) {
+	return manager.sessionChannel
 }
 
-func (manager *SessionManager) OnHostCleared(listener func(id string)) {
-	manager.emmiter.On("host_cleared", func(payload ...interface{}) {
-		listener(payload[0].(string))
-	})
-}
-
-func (manager *SessionManager) OnDestroy(listener func(id string, session types.Session)) {
-	manager.emmiter.On("destroyed", func(payload ...interface{}) {
-		listener(payload[0].(string), payload[1].(*Session))
-	})
-}
-
-func (manager *SessionManager) OnCreated(listener func(id string, session types.Session)) {
-	manager.emmiter.On("created", func(payload ...interface{}) {
-		listener(payload[0].(string), payload[1].(*Session))
-	})
-}
-
-func (manager *SessionManager) OnConnected(listener func(id string, session types.Session)) {
-	manager.emmiter.On("connected", func(payload ...interface{}) {
-		listener(payload[0].(string), payload[1].(*Session))
-	})
+func (manager *SessionManager) GetHostChannel() (chan types.HostInformation) {
+	return manager.hostChannel
 }

@@ -1,33 +1,26 @@
 package desktop
 
-import "m1k1o/neko/internal/desktop/xevent"
+import (
+	"m1k1o/neko/internal/desktop/xevent"
+	"m1k1o/neko/internal/types"
+)
 
-func (manager *DesktopManagerCtx) OnCursorChanged(listener func(serial uint64)) {
-	xevent.Emmiter.On("cursor-changed", func(payload ...any) {
-		listener(payload[0].(uint64))
-	})
+func (manager *DesktopManagerCtx) GetCursorChangedChannel() (chan uint64) {
+	return xevent.CursorChangedChannel
 }
 
-func (manager *DesktopManagerCtx) OnClipboardUpdated(listener func()) {
-	xevent.Emmiter.On("clipboard-updated", func(payload ...any) {
-		listener()
-	})
+func (manager *DesktopManagerCtx) GetClipboardUpdatedChannel() (chan bool) {
+	return xevent.ClipboardUpdatedChannel
 }
 
-func (manager *DesktopManagerCtx) OnFileChooserDialogOpened(listener func()) {
-	xevent.Emmiter.On("file-chooser-dialog-opened", func(payload ...any) {
-		listener()
-	})
+func (manager *DesktopManagerCtx) GetFileChooserDialogOpenedChannel() (chan bool) {
+	return xevent.FileChooserDialogOpenedChannel
 }
 
-func (manager *DesktopManagerCtx) OnFileChooserDialogClosed(listener func()) {
-	xevent.Emmiter.On("file-chooser-dialog-closed", func(payload ...any) {
-		listener()
-	})
+func (manager *DesktopManagerCtx) GetFileChooserDialogClosedChannel() (chan bool) {
+	return xevent.FileChooserDialogClosedChannel
 }
 
-func (manager *DesktopManagerCtx) OnEventError(listener func(error_code uint8, message string, request_code uint8, minor_code uint8)) {
-	xevent.Emmiter.On("event-error", func(payload ...any) {
-		listener(payload[0].(uint8), payload[1].(string), payload[2].(uint8), payload[3].(uint8))
-	})
+func (manager *DesktopManagerCtx) GetEventErrorChannel() (chan types.DesktopErrorMessage) {
+	return xevent.EventErrorChannel
 }

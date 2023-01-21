@@ -31,6 +31,8 @@ func ParseStr(codecName string) (codec RTPCodec, ok bool) {
 		codec = VP8()
 	case VP9().Name:
 		codec = VP9()
+	case AV1().Name:
+		codec = AV1()
 	case H264().Name:
 		codec = H264()
 	case Opus().Name:
@@ -44,6 +46,12 @@ func ParseStr(codecName string) (codec RTPCodec, ok bool) {
 	default:
 		ok = false
 	}
+
+	return
+}
+
+func IsVideo(codecType webrtc.RTPCodecType) (ok bool) {
+	ok = codecType == webrtc.RTPCodecTypeVideo
 
 	return
 }
@@ -104,6 +112,21 @@ func H264() RTPCodec {
 			ClockRate:    90000,
 			Channels:     0,
 			SDPFmtpLine:  "level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f",
+			RTCPFeedback: RTCPFeedback,
+		},
+	}
+}
+// TODO: Profile ID.
+func AV1() RTPCodec {
+	return RTPCodec{
+		Name:        "av1",
+		PayloadType: 96,
+		Type:        webrtc.RTPCodecTypeVideo,
+		Capability: webrtc.RTPCodecCapability{
+			MimeType:     webrtc.MimeTypeAV1,
+			ClockRate:    90000,
+			Channels:     0,
+			SDPFmtpLine:  "",
 			RTCPFeedback: RTCPFeedback,
 		},
 	}

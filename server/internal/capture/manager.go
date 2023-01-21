@@ -18,12 +18,12 @@ type CaptureManagerCtx struct {
 	broadcast *BroacastManagerCtx
 	audio     *StreamSinkManagerCtx
 	video     *StreamSinkManagerCtx
+
 }
 
 func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCtx {
 	logger := log.With().Str("module", "capture").Logger()
-
-	return &CaptureManagerCtx{
+	manager := &CaptureManagerCtx{
 		logger:  logger,
 		desktop: desktop,
 
@@ -38,6 +38,10 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 			return NewVideoPipeline(config.VideoCodec, config.Display, config.VideoPipeline, config.VideoMaxFPS, config.VideoBitrate, config.VideoHWEnc)
 		}, "video"),
 	}
+
+	manager.Video().SetAdaptiveFramerate(config.VideoAdaptiveFramerate)
+
+	return manager
 }
 
 func (manager *CaptureManagerCtx) Start() {
@@ -47,31 +51,38 @@ func (manager *CaptureManagerCtx) Start() {
 		}
 	}
 
-	manager.desktop.OnBeforeScreenSizeChange(func() {
-		if manager.video.Started() {
-			manager.video.destroyPipeline()
-		}
+	go func() {
+		for {
+			_ = <- manager.desktop.GetBeforeScreenSizeChangeChannel()
+			if manager.video.Started() {
+				manager.video.destroyPipeline()
+			}
 
-		if manager.broadcast.Started() {
-			manager.broadcast.destroyPipeline()
-		}
-	})
-
-	manager.desktop.OnAfterScreenSizeChange(func() {
-		if manager.video.Started() {
-			err := manager.video.createPipeline()
-			if err != nil && !errors.Is(err, types.ErrCapturePipelineAlreadyExists) {
-				manager.logger.Panic().Err(err).Msg("unable to recreate video pipeline")
+			if manager.broadcast.Started() {
+				manager.broadcast.destroyPipeline()
 			}
 		}
+	}()
 
-		if manager.broadcast.Started() {
-			err := manager.broadcast.createPipeline()
-			if err != nil && !errors.Is(err, types.ErrCapturePipelineAlreadyExists) {
-				manager.logger.Panic().Err(err).Msg("unable to recreate broadcast pipeline")
+	go func() {
+		for {
+			framerate := <- manager.desktop.GetAfterScreenSizeChangeChannel();
+			if manager.video.Started() {
+				manager.video.SetChangeFramerate(framerate)
+				err := manager.video.createPipeline()
+				if err != nil && !errors.Is(err, types.ErrCapturePipelineAlreadyExists) {
+					manager.logger.Panic().Err(err).Msg("unable to recreate video pipeline")
+				}
+			}
+
+			if manager.broadcast.Started() {
+				err := manager.broadcast.createPipeline()
+				if err != nil && !errors.Is(err, types.ErrCapturePipelineAlreadyExists) {
+					manager.logger.Panic().Err(err).Msg("unable to recreate broadcast pipeline")
+				}
 			}
 		}
-	})
+	}()
 }
 
 func (manager *CaptureManagerCtx) Shutdown() error {

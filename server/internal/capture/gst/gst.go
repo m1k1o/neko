@@ -51,6 +51,7 @@ func CreatePipeline(pipelineStr string) (*Pipeline, error) {
 
 	if gstError != nil {
 		defer C.g_error_free(gstError)
+		fmt.Printf("(pipeline error) %s", C.GoString(gstError.message))
 		return nil, fmt.Errorf("(pipeline error) %s", C.GoString(gstError.message))
 	}
 
@@ -177,6 +178,7 @@ func goHandlePipelineBuffer(buffer unsafe.Pointer, bufferLen C.int, duration C.i
 	if ok {
 		pipeline.Sample <- types.Sample{
 			Data:     C.GoBytes(buffer, bufferLen),
+			Timestamp: time.Now(), 
 			Duration: time.Duration(duration),
 		}
 	} else {
