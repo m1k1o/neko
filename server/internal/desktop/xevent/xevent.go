@@ -9,14 +9,38 @@ import "C"
 
 import (
 	"unsafe"
-
-	"github.com/kataras/go-events"
+	"m1k1o/neko/internal/types"
 )
 
-var Emmiter events.EventEmmiter
+var CursorChangedChannel chan uint64
+var ClipboardUpdatedChannel chan bool
+var FileChooserDialogClosedChannel chan bool
+var FileChooserDialogOpenedChannel chan bool
+var EventErrorChannel chan types.DesktopErrorMessage
 
 func init() {
-	Emmiter = events.New()
+	CursorChangedChannel = make(chan uint64)
+	ClipboardUpdatedChannel = make(chan bool)
+	FileChooserDialogClosedChannel = make(chan bool)
+	FileChooserDialogOpenedChannel = make(chan bool)
+	EventErrorChannel = make(chan types.DesktopErrorMessage)
+
+	// Dummy goroutines since there is no consumer for the channel otherwise
+	go func() {
+		for {
+			_ = <-CursorChangedChannel
+		}
+	}()
+	go func() {
+		for {
+			_ = <-FileChooserDialogClosedChannel
+		}
+	}()
+	go func() {
+		for {
+			_ = <-FileChooserDialogOpenedChannel
+		}
+	}()
 }
 
 func EventLoop(display string) {
@@ -28,12 +52,12 @@ func EventLoop(display string) {
 
 //export goXEventCursorChanged
 func goXEventCursorChanged(event C.XFixesCursorNotifyEvent) {
-	Emmiter.Emit("cursor-changed", uint64(event.cursor_serial))
+	CursorChangedChannel <- uint64(event.cursor_serial)
 }
 
 //export goXEventClipboardUpdated
 func goXEventClipboardUpdated() {
-	Emmiter.Emit("clipboard-updated")
+	ClipboardUpdatedChannel <- true
 }
 
 //export goXEventConfigureNotify
@@ -48,7 +72,7 @@ func goXEventUnmapNotify(window C.Window) {
 
 //export goXEventError
 func goXEventError(event *C.XErrorEvent, message *C.char) {
-	Emmiter.Emit("event-error", uint8(event.error_code), C.GoString(message), uint8(event.request_code), uint8(event.minor_code))
+	EventErrorChannel <- types.DesktopErrorMessage{ uint8(event.error_code), C.GoString(message), uint8(event.request_code), uint8(event.minor_code) }
 }
 
 //export goXEventActive

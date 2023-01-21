@@ -3,6 +3,8 @@ package capture
 import (
 	"errors"
 	"sync"
+	"regexp"
+	"strconv"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -17,15 +19,17 @@ type StreamSinkManagerCtx struct {
 	mu     sync.Mutex
 	wg     sync.WaitGroup
 
-	codec      codec.RTPCodec
-	pipeline   *gst.Pipeline
-	pipelineMu sync.Mutex
-	pipelineFn func() (string, error)
+	codec             codec.RTPCodec
+	pipeline          *gst.Pipeline
+	pipelineMu        sync.Mutex
+	pipelineFn        func() (string, error)
+	adaptiveFramerate bool
 
 	listeners   int
 	listenersMu sync.Mutex
 
-	sampleFn func(sample types.Sample)
+	changeFramerate int16
+	sampleChannel  chan types.Sample
 }
 
 func streamSinkNew(codec codec.RTPCodec, pipelineFn func() (string, error), video_id string) *StreamSinkManagerCtx {
@@ -35,9 +39,12 @@ func streamSinkNew(codec codec.RTPCodec, pipelineFn func() (string, error), vide
 		Str("video_id", video_id).Logger()
 
 	manager := &StreamSinkManagerCtx{
-		logger:     logger,
-		codec:      codec,
-		pipelineFn: pipelineFn,
+		logger:            logger,
+		codec:             codec,
+		pipelineFn:        pipelineFn,
+		changeFramerate:   0,
+		adaptiveFramerate: false,
+		sampleChannel:     make(chan types.Sample, 100),
 	}
 
 	return manager
@@ -48,10 +55,6 @@ func (manager *StreamSinkManagerCtx) shutdown() {
 
 	manager.destroyPipeline()
 	manager.wg.Wait()
-}
-
-func (manager *StreamSinkManagerCtx) OnSample(listener func(sample types.Sample)) {
-	manager.sampleFn = listener
 }
 
 func (manager *StreamSinkManagerCtx) Codec() codec.RTPCodec {
@@ -142,6 +145,11 @@ func (manager *StreamSinkManagerCtx) createPipeline() error {
 		return err
 	}
 
+	if manager.changeFramerate > 0 && manager.adaptiveFramerate {
+		m1 := regexp.MustCompile(`framerate=\d+/1`)
+		pipelineStr = m1.ReplaceAllString(pipelineStr, "framerate=" + strconv.FormatInt(int64(manager.changeFramerate), 10) + "/1")
+	}
+
 	manager.logger.Info().
 		Str("codec", manager.codec.Name).
 		Str("src", pipelineStr).
@@ -152,7 +160,12 @@ func (manager *StreamSinkManagerCtx) createPipeline() error {
 		return err
 	}
 
-	manager.pipeline.AttachAppsink("appsink")
+	appsinkSubfix := "audio"
+	if codec.IsVideo(manager.codec.Type) {
+		appsinkSubfix = "video"
+	}
+
+	manager.pipeline.AttachAppsink("appsink" + appsinkSubfix)
 	manager.pipeline.Play()
 
 	manager.wg.Add(1)
@@ -169,7 +182,7 @@ func (manager *StreamSinkManagerCtx) createPipeline() error {
 				return
 			}
 
-			manager.sampleFn(sample)
+			manager.sampleChannel <- sample
 		}
 	}()
 
@@ -187,4 +200,16 @@ func (manager *StreamSinkManagerCtx) destroyPipeline() {
 	manager.pipeline.Destroy()
 	manager.logger.Info().Msgf("destroying pipeline")
 	manager.pipeline = nil
+}
+
+func (manager *StreamSinkManagerCtx) GetSampleChannel() (chan types.Sample) {
+	return manager.sampleChannel
+}
+
+func (manager *StreamSinkManagerCtx) SetChangeFramerate(rate int16) {
+	manager.changeFramerate = rate
+}
+
+func (manager *StreamSinkManagerCtx) SetAdaptiveFramerate(allow bool) {
+	manager.adaptiveFramerate = allow
 }

@@ -19,13 +19,15 @@ type BroadcastManager interface {
 
 type StreamSinkManager interface {
 	Codec() codec.RTPCodec
-	OnSample(listener func(sample Sample))
 
 	AddListener() error
 	RemoveListener() error
 
 	ListenersCount() int
 	Started() bool
+	GetSampleChannel() (chan Sample)
+	SetChangeFramerate(rate int16)
+	SetAdaptiveFramerate(allow bool)
 }
 
 type CaptureManager interface {

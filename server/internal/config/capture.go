@@ -17,6 +17,7 @@ type Capture struct {
 	VideoBitrate  uint   // TODO: Pipeline builder.
 	VideoMaxFPS   int16  // TODO: Pipeline builder.
 	VideoPipeline string
+	VideoAdaptiveFramerate bool
 
 	// audio
 	AudioDevice   string
@@ -57,6 +58,12 @@ func (Capture) Init(cmd *cobra.Command) error {
 	}
 
 	// DEPRECATED: video codec
+	cmd.PersistentFlags().Bool("av1", false, "DEPRECATED: use video_codec")
+	if err := viper.BindPFlag("av1", cmd.PersistentFlags().Lookup("av1")); err != nil {
+			return err
+	}
+
+	// DEPRECATED: video codec
 	cmd.PersistentFlags().Bool("h264", false, "DEPRECATED: use video_codec")
 	if err := viper.BindPFlag("h264", cmd.PersistentFlags().Lookup("h264")); err != nil {
 		return err
@@ -79,6 +86,11 @@ func (Capture) Init(cmd *cobra.Command) error {
 
 	cmd.PersistentFlags().String("video", "", "video codec parameters to use for streaming")
 	if err := viper.BindPFlag("video", cmd.PersistentFlags().Lookup("video")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().Bool("adaptive_framerate", false, "use the framerate given from the source display")
+	if err := viper.BindPFlag("adaptive_framerate", cmd.PersistentFlags().Lookup("adaptive_framerate")); err != nil {
 		return err
 	}
 
@@ -173,6 +185,9 @@ func (s *Capture) Set() {
 	} else if viper.GetBool("h264") {
 		s.VideoCodec = codec.H264()
 		log.Warn().Msg("you are using deprecated config setting 'NEKO_H264=true', use 'NEKO_VIDEO_CODEC=h264' instead")
+	} else if viper.GetBool("av1") {
+		s.VideoCodec = codec.AV1()
+		log.Warn().Msg("you are using deprecated config setting 'NEKO_AV1=true', use 'NEKO_VIDEO_CODEC=av1' instead")
 	}
 
 	videoHWEnc := ""
@@ -183,7 +198,11 @@ func (s *Capture) Set() {
 
 	s.VideoBitrate = viper.GetUint("video_bitrate")
 	s.VideoMaxFPS = int16(viper.GetInt("max_fps"))
+	if s.VideoMaxFPS == 0 {
+		s.VideoMaxFPS = 60
+	}
 	s.VideoPipeline = viper.GetString("video")
+	s.VideoAdaptiveFramerate = viper.GetBool("adaptive_framerate")
 
 	//
 	// audio
