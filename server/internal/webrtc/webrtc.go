@@ -57,6 +57,11 @@ func (manager *WebRTCManager) Start() {
 
 	go func() {
 		for {
+			if manager.capture.Audio().GetSampleChannel() == nil {
+				// Pipeline not yet initialized
+				time.Sleep(50 * time.Millisecond)
+				continue
+			}
 			newSample := <- manager.capture.Audio().GetSampleChannel()
 			err := manager.audioTrack.WriteSample(media.Sample(newSample))
 			if err != nil && errors.Is(err, io.ErrClosedPipe) {
@@ -77,6 +82,11 @@ func (manager *WebRTCManager) Start() {
 
 	go func() {
 		for {
+			if manager.capture.Video().GetSampleChannel() == nil {
+				// Pipeline not yet initialized
+				time.Sleep(50 * time.Millisecond)
+				continue
+			}
 			newSample := <- manager.capture.Video().GetSampleChannel()
 			err := manager.videoTrack.WriteSample(media.Sample(newSample))
 			if err != nil && errors.Is(err, io.ErrClosedPipe) {

@@ -17,7 +17,6 @@ import (
 type StreamSinkManagerCtx struct {
 	logger zerolog.Logger
 	mu     sync.Mutex
-	wg     sync.WaitGroup
 
 	codec             codec.RTPCodec
 	pipeline          *gst.Pipeline
@@ -29,7 +28,6 @@ type StreamSinkManagerCtx struct {
 	listenersMu sync.Mutex
 
 	changeFramerate int16
-	sampleChannel  chan types.Sample
 }
 
 func streamSinkNew(codec codec.RTPCodec, pipelineFn func() (string, error), video_id string) *StreamSinkManagerCtx {
@@ -44,7 +42,6 @@ func streamSinkNew(codec codec.RTPCodec, pipelineFn func() (string, error), vide
 		pipelineFn:        pipelineFn,
 		changeFramerate:   0,
 		adaptiveFramerate: false,
-		sampleChannel:     make(chan types.Sample, 100),
 	}
 
 	return manager
@@ -54,7 +51,6 @@ func (manager *StreamSinkManagerCtx) shutdown() {
 	manager.logger.Info().Msgf("shutdown")
 
 	manager.destroyPipeline()
-	manager.wg.Wait()
 }
 
 func (manager *StreamSinkManagerCtx) Codec() codec.RTPCodec {
@@ -168,24 +164,6 @@ func (manager *StreamSinkManagerCtx) createPipeline() error {
 	manager.pipeline.AttachAppsink("appsink" + appsinkSubfix)
 	manager.pipeline.Play()
 
-	manager.wg.Add(1)
-	pipeline := manager.pipeline
-
-	go func() {
-		manager.logger.Debug().Msg("started emitting samples")
-		defer manager.wg.Done()
-
-		for {
-			sample, ok := <-pipeline.Sample
-			if !ok {
-				manager.logger.Debug().Msg("stopped emitting samples")
-				return
-			}
-
-			manager.sampleChannel <- sample
-		}
-	}()
-
 	return nil
 }
 
@@ -203,7 +181,11 @@ func (manager *StreamSinkManagerCtx) destroyPipeline() {
 }
 
 func (manager *StreamSinkManagerCtx) GetSampleChannel() (chan types.Sample) {
-	return manager.sampleChannel
+	if manager.pipeline != nil {
+		return manager.pipeline.Sample
+	}
+
+	return nil
 }
 
 func (manager *StreamSinkManagerCtx) SetChangeFramerate(rate int16) {
