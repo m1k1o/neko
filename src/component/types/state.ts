@@ -11,6 +11,7 @@ export default interface State {
   sessions: Record<string, Session>
   settings: Settings
   cursors: Cursors
+  mobile_keyboard_open: boolean
 }
 
 /////////////////////////////

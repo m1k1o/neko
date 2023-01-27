@@ -33,8 +33,9 @@
     bottom: 0;
     width: 100%;
     height: 100%;
-    font-size: 1px; /* chrome would not paste text if 0px */
+    font-size: 16px; /* at least 16px to avoid zooming on mobile */
     resize: none; /* hide textarea resize corner */
+    caret-color: transparent; /* hide caret */
     outline: 0;
     border: 0;
     color: transparent;
@@ -114,6 +115,10 @@
 
       const { uri, x, y } = this.cursorImage
       return 'url(' + uri + ') ' + x + ' ' + y + ', default'
+    }
+
+    get isTouchDevice(): boolean {
+      return 'ontouchstart' in window || navigator.maxTouchPoints > 0
     }
 
     mounted() {
@@ -373,7 +378,11 @@
     }
 
     onMouseEnter(e: MouseEvent) {
-      this._textarea.focus()
+      // focus opens the keyboard on mobile (only for android)
+      if (!this.isTouchDevice) {
+        this._textarea.focus()
+      }
+
       this.focused = true
 
       if (this.isControling) {
@@ -627,6 +636,49 @@
     implicitControlRelease() {
       if (this.implicitControl) {
         this.wsControl.release()
+      }
+    }
+
+    //
+    // mobile keyboard
+    //
+
+    public kbdShow = false
+    public kbdOpen = false
+
+    public mobileKeyboardShow() {
+      // skip if not a touch device
+      if (!this.isTouchDevice) return
+
+      this.kbdShow = true
+      this.kbdOpen = false
+
+      this._textarea.focus()
+      window.visualViewport.addEventListener('resize', this.onVisualViewportResize)
+      this.$emit('mobileKeyboardOpen', true)
+    }
+
+    public mobileKeyboardHide() {
+      // skip if not a touch device
+      if (!this.isTouchDevice) return
+
+      this.kbdShow = false
+      this.kbdOpen = false
+
+      this.$emit('mobileKeyboardOpen', false)
+      window.visualViewport.removeEventListener('resize', this.onVisualViewportResize)
+      this._textarea.blur()
+    }
+
+    // visual viewport resize event is fired when keyboard is opened or closed
+    // android does not blur textarea when keyboard is closed, so we need to do it manually
+    onVisualViewportResize() {
+      if (!this.kbdShow) return
+
+      if (!this.kbdOpen) {
+        this.kbdOpen = true
+      } else {
+        this.mobileKeyboardHide()
       }
     }
   }

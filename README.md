@@ -26,9 +26,9 @@ echo \"@demodesk:registry\" \"https://npm.pkg.github.com\" >> .yarnrc
 You can set keyboard provider at build time, either `novnc` or the default `guacamole`.
 
 ```bash
-# by default uses guacamole keybaord
+# by default uses guacamole keyboard
 npm run build
-# uses novnc keybaord
+# uses novnc keyboard
 KEYBOARD=novnc npm run build
 ```
 

@@ -43,6 +43,13 @@
         </div>
       </div>
       <div class="room-container" style="text-align: center">
+        <button
+          v-if="loaded && isTouchDevice"
+          @click="neko.mobileKeyboardToggle"
+          style="position: absolute; left: 5px; transform: translateY(-100%)"
+        >
+          <i class="fa fa-keyboard" />
+        </button>
         <span v-if="loaded && neko.state.session_id" style="padding-top: 10px">
           You are logged in as
           <strong style="font-weight: bold">
@@ -193,6 +200,9 @@
       flex-shrink: 0;
       flex-direction: column;
       display: flex;
+      /* for mobile */
+      overflow-y: hidden;
+      overflow-x: auto;
 
       .room-menu {
         max-width: 100%;
@@ -279,10 +289,14 @@
     }
   }
 
+  /* for mobile */
   @media only screen and (max-width: 600px) {
+    $offset: 38px;
+
     #neko.expanded {
+      /* show only enough of the menu to see the toggle button */
       .neko-main {
-        transform: translateX(calc(-100% + 65px));
+        transform: translateX(calc(-100% + $offset));
         video {
           display: none;
         }
@@ -292,14 +306,14 @@
         top: 0;
         right: 0;
         bottom: 0;
-        left: 65px;
-        width: calc(100% - 65px);
+        left: $offset;
+        width: calc(100% - $offset);
       }
-    }
-  }
-  @media only screen and (max-width: 768px) {
-    #neko .neko-main .room-container {
-      display: none;
+      /* display menu toggle button far right */
+      .header .menu,
+      .header .menu li {
+        margin-right: 2px;
+      }
     }
   }
 </style>
@@ -362,7 +376,7 @@
   })
   export default class extends Vue {
     @Ref('neko') readonly neko!: NekoCanvas
-    expanded: boolean = true
+    expanded: boolean = !window.matchMedia('(max-width: 600px)').matches // default to expanded on bigger screens
     loaded: boolean = false
     tab: string = ''
 
@@ -370,6 +384,10 @@
 
     uploadActive = false
     uploadProgress = 0
+
+    get isTouchDevice(): boolean {
+      return 'ontouchstart' in window || navigator.maxTouchPoints > 0
+    }
 
     dialogOverlayActive = false
     dialogRequestActive = false

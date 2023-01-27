@@ -401,6 +401,18 @@
       </tr>
 
       <tr>
+        <th>mobile_keyboard_open</th>
+        <td>
+          <div class="space-between">
+            <span>{{ neko.state.mobile_keyboard_open }}</span>
+            <button @click="neko.mobileKeyboardToggle">
+              <i class="fas fa-toggle-on"></i>
+            </button>
+          </div>
+        </td>
+      </tr>
+
+      <tr>
         <th>control actions</th>
         <td>
           <button title="cut" @click="neko.control.cut()"><i class="fas fa-cut" /></button>

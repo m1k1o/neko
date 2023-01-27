@@ -20,6 +20,7 @@
         :cursorDraw="inactiveCursorDrawFunction"
       />
       <neko-overlay
+        ref="overlay"
         v-show="!private_mode_enabled && state.connection.status != 'disconnected'"
         :style="{ pointerEvents: state.control.locked ? 'none' : 'auto' }"
         :wsControl="control"
@@ -35,6 +36,7 @@
         :inactiveCursors="state.settings.inactive_cursors && session.profile.sends_inactive_cursor"
         @updateKeyboardModifiers="updateKeyboardModifiers($event)"
         @uploadDrop="uploadDrop($event)"
+        @mobileKeyboardOpen="state.mobile_keyboard_open = $event"
       />
     </div>
   </div>
@@ -102,6 +104,7 @@
     @Ref('component') readonly _component!: HTMLElement
     @Ref('container') readonly _container!: HTMLElement
     @Ref('video') readonly _video!: HTMLVideoElement
+    @Ref('overlay') readonly _overlay!: Overlay
 
     // fallback image for webrtc reconnections:
     // chrome shows black screen when closing webrtc connection, that's why
@@ -196,6 +199,7 @@
         merciful_reconnect: false,
       },
       cursors: [],
+      mobile_keyboard_open: false,
     } as NekoState
 
     /////////////////////////////
@@ -403,6 +407,22 @@
 
     public setKeyboard(layout: string, variant: string = '') {
       Vue.set(this.state.control, 'keyboard', { layout, variant })
+    }
+
+    public mobileKeyboardShow() {
+      this._overlay.mobileKeyboardShow()
+    }
+
+    public mobileKeyboardHide() {
+      this._overlay.mobileKeyboardHide()
+    }
+
+    public mobileKeyboardToggle() {
+      if (this.state.mobile_keyboard_open) {
+        this.mobileKeyboardHide()
+      } else {
+        this.mobileKeyboardShow()
+      }
     }
 
     public setCursorDrawFunction(fn?: CursorDrawFunction) {
