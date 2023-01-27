@@ -1,0 +1,180 @@
+ARG UBUNTU_RELEASE=20.04
+ARG CUDA_VERSION=11.2.2
+
+#
+# Stage 1: Build.
+#
+FROM golang:1.18-bullseye as build
+WORKDIR /src
+
+#
+# install dependencies
+ENV DEBIAN_FRONTEND=noninteractive
+RUN set -eux; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends \
+        libx11-dev libxrandr-dev libxtst-dev libgtk-3-dev \
+        libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev; \
+    #
+    # clean up
+    apt-get clean -y; \
+    rm -rf /var/lib/apt/lists/* /var/cache/apt/*
+
+ARG GIT_COMMIT
+ARG GIT_BRANCH
+ARG GIT_TAG
+
+#
+# build server
+COPY . .
+RUN ./build
+
+#
+# Stage 2: Runtime.
+#
+FROM nvcr.io/nvidia/cudagl:${CUDA_VERSION}-runtime-ubuntu${UBUNTU_RELEASE} as runtime
+
+# Make all NVIDIA GPUs visible by default
+ARG NVIDIA_VISIBLE_DEVICES=all
+# All NVIDIA driver capabilities should preferably be used, check `NVIDIA_DRIVER_CAPABILITIES` inside the container if things do not work
+ENV NVIDIA_DRIVER_CAPABILITIES all
+
+#
+# set vgl-display to headless 3d gpu card/// correct values are egl[n] or /dev/dri/card0:if this is passed into container
+ENV VGL_DISPLAY egl
+
+#
+# set custom user
+ARG USERNAME=neko
+ARG USER_UID=1000
+ARG USER_GID=$USER_UID
+
+#
+# install dependencies
+ENV DEBIAN_FRONTEND=noninteractive
+RUN set -eux; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends \
+        wget ca-certificates supervisor \
+        pulseaudio dbus-x11 xserver-xorg-video-dummy \
+        libcairo2 libxcb1 libxrandr2 libxv1 libopus0 libvpx6 \
+        software-properties-common cabextract aptitude vim curl \
+        #
+        # needed for profile upload preStop hook
+        zip curl \
+        #
+        # file chooser handler, clipboard, drop
+        xdotool xclip libgtk-3-0 \
+        #
+        # hardware acclerations utilities
+        libgtk-3-bin mesa-utils mesa-utils-extra mesa-va-drivers mesa-vulkan-drivers libvulkan-dev libvulkan-dev:i386 vdpauinfo \
+        #
+        # gst
+        gstreamer1.0-plugins-base gstreamer1.0-plugins-good \
+        gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly \
+        gstreamer1.0-pulseaudio; \
+    #
+    # create a non-root user
+    groupadd --gid $USER_GID $USERNAME; \
+    useradd --uid $USER_UID --gid $USERNAME --shell /bin/bash --create-home $USERNAME; \
+    adduser $USERNAME audio; \
+    adduser $USERNAME video; \
+    adduser $USERNAME pulse; \
+    #
+    # setup pulseaudio
+    mkdir -p /home/$USERNAME/.config/pulse/; \
+    echo "default-server=unix:/tmp/pulseaudio.socket" > /home/$USERNAME/.config/pulse/client.conf; \
+    #
+    # workaround for an X11 problem: http://blog.tigerteufel.de/?p=476
+    mkdir /tmp/.X11-unix; \
+    chmod 1777 /tmp/.X11-unix; \
+    chown $USERNAME /tmp/.X11-unix/; \
+    #
+    # make directories for neko
+    mkdir -p /etc/neko /var/www; \
+    chown -R $USERNAME:$USERNAME /home/$USERNAME; \
+    #
+    # install fonts
+    apt-get install -y --no-install-recommends \
+        # Emojis
+        fonts-noto-color-emoji \
+        # Chinese fonts
+        fonts-arphic-ukai fonts-arphic-uming \
+        # Japanese fonts
+        fonts-ipafont-mincho fonts-ipafont-gothic \
+        # Korean fonts
+        fonts-unfonts-core \
+        # Indian fonts
+        fonts-indic; \
+    #
+    # clean up
+    apt-get clean -y; \
+    rm -rf /var/lib/apt/lists/* /var/cache/apt/*
+
+#
+# Install and configure Vulkan manually
+RUN if [ "${UBUNTU_RELEASE}" = "18.04" ]; then apt-get update && apt-get install --no-install-recommends -y vulkan-utils; else apt-get update && apt-get install --no-install-recommends -y vulkan-tools; fi && \
+    rm -rf /var/lib/apt/lists/* && \
+    VULKAN_API_VERSION=$(dpkg -s libvulkan1 | grep -oP 'Version: [0-9|\.]+' | grep -oP '[0-9]+(\.[0-9]+)(\.[0-9]+)') && \
+    mkdir -p /etc/vulkan/icd.d/ && \
+    echo "{\n\
+    \"file_format_version\" : \"1.0.0\",\n\
+    \"ICD\": {\n\
+        \"library_path\": \"libGLX_nvidia.so.0\",\n\
+        \"api_version\" : \"${VULKAN_API_VERSION}\"\n\
+    }\n\
+}" > /etc/vulkan/icd.d/nvidia_icd.json
+
+ARG VIRTUALGL_VERSION=3.0.2
+#
+# Install VirtualGL and make libraries available for preload
+RUN curl -fsSL -O "https://sourceforge.net/projects/virtualgl/files/virtualgl_${VIRTUALGL_VERSION}_amd64.deb" && \
+    curl -fsSL -O "https://sourceforge.net/projects/virtualgl/files/virtualgl32_${VIRTUALGL_VERSION}_amd64.deb" && \
+    apt-get update && apt-get install -y --no-install-recommends ./virtualgl_${VIRTUALGL_VERSION}_amd64.deb ./virtualgl32_${VIRTUALGL_VERSION}_amd64.deb && \
+    rm -f "virtualgl_${VIRTUALGL_VERSION}_amd64.deb" "virtualgl32_${VIRTUALGL_VERSION}_amd64.deb" && \
+    rm -rf /var/lib/apt/lists/* && \
+    chmod u+s /usr/lib/libvglfaker.so && \
+    chmod u+s /usr/lib/libdlfaker.so && \
+    chmod u+s /usr/lib32/libvglfaker.so && \
+    chmod u+s /usr/lib32/libdlfaker.so && \
+    chmod u+s /usr/lib/i386-linux-gnu/libvglfaker.so && \
+    chmod u+s /usr/lib/i386-linux-gnu/libdlfaker.so
+
+#
+# copy runtime configs
+COPY --chown=neko:neko runtime/.Xresources /home/$USERNAME/.Xresources
+COPY runtime/dbus /usr/bin/dbus
+COPY runtime/default.pa /etc/pulse/default.pa
+COPY runtime/supervisord.conf /etc/neko/supervisord.conf
+COPY runtime/xorg.conf /etc/neko/xorg.conf
+
+#
+# copy runtime folders
+COPY --chown=neko:neko runtime/icon-theme /home/$USERNAME/.icons/default
+COPY runtime/fontconfig/* /etc/fonts/conf.d/
+COPY runtime/fonts /usr/local/share/fonts
+
+#
+# set default envs
+ENV USER=$USERNAME
+ENV DISPLAY=:99.0
+ENV NEKO_SERVER_BIND=:8080
+ENV NEKO_PLUGINS_ENABLED=true
+ENV NEKO_PLUGINS_DIR=/etc/neko/plugins/
+
+#
+# copy plugins from previous stage
+COPY --from=build /src/bin/plugins/ $NEKO_PLUGINS_DIR
+
+#
+# copy executable from previous stage
+COPY --from=build /src/bin/neko /usr/bin/neko
+
+#
+# add healthcheck
+HEALTHCHECK --interval=10s --timeout=5s --retries=8 \
+    CMD wget -O - http://localhost:${NEKO_SERVER_BIND#*:}/health || exit 1
+
+#
+# run neko
+CMD ["/usr/bin/supervisord", "-c", "/etc/neko/supervisord.conf"]
