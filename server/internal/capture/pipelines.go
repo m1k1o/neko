@@ -107,26 +107,27 @@ func NewVideoPipeline(rtpCodec codec.RTPCodec, display string, pipelineSrc strin
 
 		pipelineStr = fmt.Sprintf(videoSrc+"vp9enc target-bitrate=%d cpu-used=-5 threads=4 deadline=1 keyframe-max-dist=30 auto-alt-ref=true"+pipelineStr, display, fps, bitrate*1000)
 	case codec.AV1().Name:
-			// https://gstreamer.freedesktop.org/documentation/aom/av1enc.html?gi-language=c
-			// gstreamer1.0-plugins-bad
-			// av1enc usage-profile=1
-			if err := gst.CheckPlugins([]string{"ximagesrc", "vpx"}); err != nil {
-				return "", err
-			}
+		// https://gstreamer.freedesktop.org/documentation/aom/av1enc.html?gi-language=c
+		// gstreamer1.0-plugins-bad
+		// av1enc usage-profile=1
+		// TODO: check for plugin.
+		if err := gst.CheckPlugins([]string{"ximagesrc", "vpx"}); err != nil {
+			return "", err
+		}
 
-			pipelineStr = strings.Join([]string{
-				fmt.Sprintf(videoSrc, display, fps),
-				"av1enc",
-				fmt.Sprintf("target-bitrate=%d", bitrate*650),
-				"cpu-used=4",
-				"end-usage=cbr",
-//				"usage-profile=realtime",
-				"undershoot=95",
-				"keyframe-max-dist=25",
-				"min-quantizer=4",
-				"max-quantizer=20",
-				pipelineStr,
-			}, " ")
+		pipelineStr = strings.Join([]string{
+			fmt.Sprintf(videoSrc, display, fps),
+			"av1enc",
+			fmt.Sprintf("target-bitrate=%d", bitrate*650),
+			"cpu-used=4",
+			"end-usage=cbr",
+			// "usage-profile=realtime",
+			"undershoot=95",
+			"keyframe-max-dist=25",
+			"min-quantizer=4",
+			"max-quantizer=20",
+			pipelineStr,
+		}, " ")
 	case codec.H264().Name:
 		if err := gst.CheckPlugins([]string{"ximagesrc"}); err != nil {
 			return "", err

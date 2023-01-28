@@ -101,9 +101,9 @@ type WebSocketHandler struct {
 }
 
 func (ws *WebSocketHandler) Start() {
-	go func () {
+	go func() {
 		for {
-			channelMessage := <- ws.sessions.GetSessionChannel()
+			channelMessage := <-ws.sessions.GetSessionChannel()
 
 			switch channelMessage.Type {
 			case "created":
@@ -189,7 +189,7 @@ func (ws *WebSocketHandler) Start() {
 
 	go func() {
 		for {
-			_ = <- ws.desktop.GetClipboardUpdatedChannel()
+			_ = <-ws.desktop.GetClipboardUpdatedChannel()
 			session, ok := ws.sessions.GetHost()
 			if !ok {
 				return

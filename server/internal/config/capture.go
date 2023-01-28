@@ -11,12 +11,12 @@ import (
 
 type Capture struct {
 	// video
-	Display       string
-	VideoCodec    codec.RTPCodec
-	VideoHWEnc    string // TODO: Pipeline builder.
-	VideoBitrate  uint   // TODO: Pipeline builder.
-	VideoMaxFPS   int16  // TODO: Pipeline builder.
-	VideoPipeline string
+	Display                string
+	VideoCodec             codec.RTPCodec
+	VideoHWEnc             string // TODO: Pipeline builder.
+	VideoBitrate           uint   // TODO: Pipeline builder.
+	VideoMaxFPS            int16  // TODO: Pipeline builder.
+	VideoPipeline          string
 	VideoAdaptiveFramerate bool
 
 	// audio
@@ -60,7 +60,7 @@ func (Capture) Init(cmd *cobra.Command) error {
 	// DEPRECATED: video codec
 	cmd.PersistentFlags().Bool("av1", false, "DEPRECATED: use video_codec")
 	if err := viper.BindPFlag("av1", cmd.PersistentFlags().Lookup("av1")); err != nil {
-			return err
+		return err
 	}
 
 	// DEPRECATED: video codec

@@ -62,7 +62,8 @@ func (manager *WebRTCManager) Start() {
 				time.Sleep(50 * time.Millisecond)
 				continue
 			}
-			newSample := <- manager.capture.Audio().GetSampleChannel()
+
+			newSample := <-manager.capture.Audio().GetSampleChannel()
 			err := manager.audioTrack.WriteSample(media.Sample(newSample))
 			if err != nil && errors.Is(err, io.ErrClosedPipe) {
 				manager.logger.Warn().Err(err).Msg("audio pipeline failed to write")
@@ -87,7 +88,8 @@ func (manager *WebRTCManager) Start() {
 				time.Sleep(50 * time.Millisecond)
 				continue
 			}
-			newSample := <- manager.capture.Video().GetSampleChannel()
+
+			newSample := <-manager.capture.Video().GetSampleChannel()
 			err := manager.videoTrack.WriteSample(media.Sample(newSample))
 			if err != nil && errors.Is(err, io.ErrClosedPipe) {
 				manager.logger.Warn().Err(err).Msg("video pipeline failed to write")

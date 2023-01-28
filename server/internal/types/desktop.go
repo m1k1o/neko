@@ -43,8 +43,8 @@ type DesktopErrorMessage struct {
 type DesktopManager interface {
 	Start()
 	Shutdown() error
-	GetBeforeScreenSizeChangeChannel() (chan bool)
-	GetAfterScreenSizeChangeChannel() (chan int16)
+	GetBeforeScreenSizeChangeChannel() chan bool
+	GetAfterScreenSizeChangeChannel() chan int16
 
 	// clipboard
 	ReadClipboard() string
@@ -72,9 +72,9 @@ type DesktopManager interface {
 	GetScreenshotImage() *image.RGBA
 
 	// xevent
-	GetCursorChangedChannel() (chan uint64)
-	GetClipboardUpdatedChannel() (chan bool)
-	GetFileChooserDialogOpenedChannel() (chan bool)
-	GetFileChooserDialogClosedChannel() (chan bool)
-	GetEventErrorChannel() (chan DesktopErrorMessage)
+	GetCursorChangedChannel() chan uint64
+	GetClipboardUpdatedChannel() chan bool
+	GetFileChooserDialogOpenedChannel() chan bool
+	GetFileChooserDialogClosedChannel() chan bool
+	GetEventErrorChannel() chan DesktopErrorMessage
 }

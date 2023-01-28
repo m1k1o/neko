@@ -177,9 +177,9 @@ func goHandlePipelineBuffer(buffer unsafe.Pointer, bufferLen C.int, duration C.i
 
 	if ok {
 		pipeline.Sample <- types.Sample{
-			Data:     C.GoBytes(buffer, bufferLen),
-			Timestamp: time.Now(), 
-			Duration: time.Duration(duration),
+			Data:      C.GoBytes(buffer, bufferLen),
+			Timestamp: time.Now(),
+			Duration:  time.Duration(duration),
 		}
 	} else {
 		log.Warn().
