@@ -10,13 +10,13 @@ export function makeid(length: number) {
 
 export function lockKeyboard() {
   if (navigator && navigator.keyboard) {
-    navigator.keyboard.lock();
+    navigator.keyboard.lock()
   }
 }
 
 export function unlockKeyboard() {
   if (navigator && navigator.keyboard) {
-    navigator.keyboard.unlock();
+    navigator.keyboard.unlock()
   }
 }
 

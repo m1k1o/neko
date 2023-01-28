@@ -53,7 +53,7 @@ export const actions = actionTree(
       accessor.files._removeTransfer(transfer)
     },
 
-    cancelAllTransfers(store) {
+    cancelAllTransfers() {
       for (const t of accessor.files.transfers) {
         if (t.status !== 'completed') {
           t.abortController?.abort()
@@ -62,7 +62,7 @@ export const actions = actionTree(
       }
     },
 
-    refresh(store) {
+    refresh() {
       if (!accessor.connected) {
         return
       }

@@ -21,7 +21,7 @@ export const getters = getterTree(state, {
   hosting: (state, getters, root) => {
     return root.user.id === state.id || state.implicitHosting
   },
-  hosted: (state, getters, root) => {
+  hosted: (state) => {
     return state.id !== '' || state.implicitHosting
   },
   host: (state, getters, root) => {
@@ -136,7 +136,7 @@ export const actions = actionTree(
       $client.sendMessage(EVENT.ADMIN.RELEASE)
     },
 
-    adminGive({ getters }, member: string | Member) {
+    adminGive(store, member: string | Member) {
       if (!accessor.connected) {
         return
       }
@@ -160,7 +160,7 @@ export const actions = actionTree(
       $client.sendMessage(EVENT.CONTROL.KEYBOARD, { layout: accessor.settings.keyboard_layout })
     },
 
-    syncKeyboardModifierState({ state, getters }, { capsLock, numLock, scrollLock }) {
+    syncKeyboardModifierState({ state }, { capsLock, numLock, scrollLock }) {
       if (state.keyboardModifierState === keyboardModifierState(capsLock, numLock, scrollLock)) {
         return
       }

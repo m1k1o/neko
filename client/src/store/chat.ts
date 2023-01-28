@@ -73,7 +73,7 @@ export const actions = actionTree(
       accessor.chat.addEmote({ id, emote })
     },
 
-    newMessage({ state }, message: Message) {
+    newMessage(store, message: Message) {
       if (accessor.settings.chat_sound) {
         new Audio('chat.mp3').play().catch(console.error)
       }

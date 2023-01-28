@@ -169,7 +169,7 @@ export const mutations = mutationTree(state, {
 export const actions = actionTree(
   { state, getters, mutations },
   {
-    screenConfiguations({ state }) {
+    screenConfiguations() {
       if (!accessor.connected || !accessor.user.admin) {
         return
       }
@@ -177,7 +177,7 @@ export const actions = actionTree(
       $client.sendMessage(EVENT.SCREEN.CONFIGURATIONS)
     },
 
-    screenGet({ state }) {
+    screenGet() {
       if (!accessor.connected) {
         return
       }
@@ -185,7 +185,7 @@ export const actions = actionTree(
       $client.sendMessage(EVENT.SCREEN.RESOLUTION)
     },
 
-    screenSet({ state }, resolution: ScreenResolution) {
+    screenSet(store, resolution: ScreenResolution) {
       if (!accessor.connected || !accessor.user.admin) {
         return
       }
