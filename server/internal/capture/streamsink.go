@@ -2,9 +2,9 @@ package capture
 
 import (
 	"errors"
-	"sync"
 	"regexp"
 	"strconv"
+	"sync"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -143,7 +143,7 @@ func (manager *StreamSinkManagerCtx) createPipeline() error {
 
 	if manager.changeFramerate > 0 && manager.adaptiveFramerate {
 		m1 := regexp.MustCompile(`framerate=\d+/1`)
-		pipelineStr = m1.ReplaceAllString(pipelineStr, "framerate=" + strconv.FormatInt(int64(manager.changeFramerate), 10) + "/1")
+		pipelineStr = m1.ReplaceAllString(pipelineStr, "framerate="+strconv.FormatInt(int64(manager.changeFramerate), 10)+"/1")
 	}
 
 	manager.logger.Info().
@@ -180,7 +180,7 @@ func (manager *StreamSinkManagerCtx) destroyPipeline() {
 	manager.pipeline = nil
 }
 
-func (manager *StreamSinkManagerCtx) GetSampleChannel() (chan types.Sample) {
+func (manager *StreamSinkManagerCtx) GetSampleChannel() chan types.Sample {
 	if manager.pipeline != nil {
 		return manager.pipeline.Sample
 	}

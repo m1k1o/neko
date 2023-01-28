@@ -18,7 +18,6 @@ type CaptureManagerCtx struct {
 	broadcast *BroacastManagerCtx
 	audio     *StreamSinkManagerCtx
 	video     *StreamSinkManagerCtx
-
 }
 
 func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCtx {
@@ -53,7 +52,8 @@ func (manager *CaptureManagerCtx) Start() {
 
 	go func() {
 		for {
-			_ = <- manager.desktop.GetBeforeScreenSizeChangeChannel()
+			<-manager.desktop.GetBeforeScreenSizeChangeChannel()
+
 			if manager.video.Started() {
 				manager.video.destroyPipeline()
 			}
@@ -66,7 +66,8 @@ func (manager *CaptureManagerCtx) Start() {
 
 	go func() {
 		for {
-			framerate := <- manager.desktop.GetAfterScreenSizeChangeChannel();
+			framerate := <-manager.desktop.GetAfterScreenSizeChangeChannel()
+
 			if manager.video.Started() {
 				manager.video.SetChangeFramerate(framerate)
 				err := manager.video.createPipeline()

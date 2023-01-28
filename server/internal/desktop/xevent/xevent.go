@@ -9,6 +9,7 @@ import "C"
 
 import (
 	"unsafe"
+
 	"m1k1o/neko/internal/types"
 )
 
@@ -25,20 +26,22 @@ func init() {
 	FileChooserDialogOpenedChannel = make(chan bool)
 	EventErrorChannel = make(chan types.DesktopErrorMessage)
 
-	// Dummy goroutines since there is no consumer for the channel otherwise
 	go func() {
 		for {
-			_ = <-CursorChangedChannel
+			// TODO: Unused.
+			<-CursorChangedChannel
 		}
 	}()
 	go func() {
 		for {
-			_ = <-FileChooserDialogClosedChannel
+			// TODO: Unused.
+			<-FileChooserDialogClosedChannel
 		}
 	}()
 	go func() {
 		for {
-			_ = <-FileChooserDialogOpenedChannel
+			// TODO: Unused.
+			<-FileChooserDialogOpenedChannel
 		}
 	}()
 }
@@ -72,7 +75,12 @@ func goXEventUnmapNotify(window C.Window) {
 
 //export goXEventError
 func goXEventError(event *C.XErrorEvent, message *C.char) {
-	EventErrorChannel <- types.DesktopErrorMessage{ uint8(event.error_code), C.GoString(message), uint8(event.request_code), uint8(event.minor_code) }
+	EventErrorChannel <- types.DesktopErrorMessage{
+		Error_code:   uint8(event.error_code),
+		Message:      C.GoString(message),
+		Request_code: uint8(event.request_code),
+		Minor_code:   uint8(event.minor_code),
+	}
 }
 
 //export goXEventActive

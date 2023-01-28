@@ -25,7 +25,7 @@ type StreamSinkManager interface {
 
 	ListenersCount() int
 	Started() bool
-	GetSampleChannel() (chan Sample)
+	GetSampleChannel() chan Sample
 	SetChangeFramerate(rate int16)
 	SetAdaptiveFramerate(allow bool)
 }

@@ -8,9 +8,9 @@ type Member struct {
 }
 
 type SessionInformation struct {
-	Type     string
-	Id       string
-	Session  Session
+	Type    string
+	Id      string
+	Session Session
 }
 
 type HostInformation struct {
@@ -57,6 +57,6 @@ type SessionManager interface {
 	Clear() error
 	Broadcast(v interface{}, exclude interface{}) error
 	AdminBroadcast(v interface{}, exclude interface{}) error
-	GetSessionChannel() (chan SessionInformation)
-	GetHostChannel() (chan HostInformation)
+	GetSessionChannel() chan SessionInformation
+	GetHostChannel() chan HostInformation
 }
