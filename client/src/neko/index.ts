@@ -7,7 +7,6 @@ import { accessor } from '~/store'
 
 import {
   SystemMessagePayload,
-  SignalProvidePayload,
   MemberListPayload,
   MemberDisconnectPayload,
   MemberPayload,
@@ -19,7 +18,6 @@ import {
   ScreenConfigurationsPayload,
   ScreenResolutionPayload,
   BroadcastStatusPayload,
-  AdminPayload,
   AdminTargetPayload,
   AdminLockMessage,
   SystemInitPayload,
@@ -131,7 +129,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
     this.$accessor.video.setStream(0)
   }
 
-  protected [EVENT.DATA](data: any) {}
+  protected [EVENT.DATA]() {}
 
   /////////////////////////////
   // System Events

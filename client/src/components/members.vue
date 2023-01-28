@@ -157,8 +157,7 @@
 </style>
 
 <script lang="ts">
-  import { Component, Ref, Watch, Vue } from 'vue-property-decorator'
-  import { Member } from '~/neko/types'
+  import { Component, Ref, Vue } from 'vue-property-decorator'
 
   import Content from './context.vue'
   import Avatar from './avatar.vue'

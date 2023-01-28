@@ -147,8 +147,7 @@
 </style>
 
 <script lang="ts">
-  import { Component, Ref, Watch, Vue } from 'vue-property-decorator'
-  import { get, set } from '~/utils/localstorage'
+  import { Component, Vue } from 'vue-property-decorator'
 
   @Component({ name: 'neko-connect' })
   export default class extends Vue {

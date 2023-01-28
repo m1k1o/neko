@@ -132,8 +132,7 @@
 </style>
 
 <script lang="ts">
-  import { Component, Ref, Watch, Vue } from 'vue-property-decorator'
-  import md, { HtmlOutputRule } from 'simple-markdown'
+  import { Component, Vue } from 'vue-property-decorator'
 
   @Component({ name: 'neko-about' })
   export default class extends Vue {

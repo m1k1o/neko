@@ -339,12 +339,12 @@
     }
 
     @Watch('width')
-    onWidthChanged(width: number) {
+    onWidthChanged() {
       this.onResize()
     }
 
     @Watch('height')
-    onHeightChanged(height: number) {
+    onHeightChanged() {
       this.onResize()
     }
 
@@ -444,7 +444,7 @@
         this.$accessor.video.setPlayable(false)
       })
 
-      this._video.addEventListener('volumechange', (event) => {
+      this._video.addEventListener('volumechange', () => {
         this.$accessor.video.setMuted(this._video.muted)
         this.$accessor.video.setVolume(this._video.volume * 100)
       })

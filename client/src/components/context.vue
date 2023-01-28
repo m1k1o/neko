@@ -132,7 +132,7 @@
 </style>
 
 <script lang="ts">
-  import { Component, Ref, Watch, Vue } from 'vue-property-decorator'
+  import { Component, Ref, Vue } from 'vue-property-decorator'
   import { Member } from '~/neko/types'
 
   // @ts-ignore
@@ -229,11 +229,11 @@
       }
     }
 
-    adminRelease(member: Member) {
+    adminRelease() {
       this.$accessor.remote.adminRelease()
     }
 
-    adminControl(member: Member) {
+    adminControl() {
       this.$accessor.remote.adminControl()
     }
 

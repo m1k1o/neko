@@ -157,7 +157,7 @@
 </style>
 
 <script lang="ts">
-  import { Component, Ref, Watch, Vue } from 'vue-property-decorator'
+  import { Component, Vue } from 'vue-property-decorator'
   import { AdminLockResource } from '~/neko/messages'
 
   @Component({ name: 'neko-settings' })

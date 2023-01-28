@@ -79,13 +79,13 @@ export const actions = actionTree(
       }
     },
 
-    broadcastStatus({ getters }, { url, isActive }) {
+    broadcastStatus(store, { url, isActive }) {
       accessor.settings.setBroadcastStatus({ url, isActive })
     },
-    broadcastCreate({ getters }, url: string) {
+    broadcastCreate(store, url: string) {
       $client.sendMessage(EVENT.BROADCAST.CREATE, { url })
     },
-    broadcastDestroy({ getters }) {
+    broadcastDestroy() {
       $client.sendMessage(EVENT.BROADCAST.DESTROY)
     },
   },

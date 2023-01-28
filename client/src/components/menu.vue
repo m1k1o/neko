@@ -60,7 +60,7 @@
 </style>
 
 <script lang="ts">
-  import { Component, Ref, Watch, Vue } from 'vue-property-decorator'
+  import { Component, Vue } from 'vue-property-decorator'
   import { messages } from '~/locale'
 
   @Component({ name: 'neko-menu' })
