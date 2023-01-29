@@ -55,41 +55,37 @@ func (manager *CaptureManagerCtx) Start() {
 
 	go func() {
 		for {
-			_, ok := <-manager.desktop.GetBeforeScreenSizeChangeChannel()
+			before, ok := <-manager.desktop.GetScreenSizeChangeChannel()
 			if !ok {
-				manager.logger.Info().Msg("before screen size change channel was closed")
+				manager.logger.Info().Msg("screen size change channel was closed")
 				return
 			}
 
-			if manager.video.Started() {
-				manager.video.destroyPipeline()
-			}
+			if before {
+				// before screen size change, we need to destroy all pipelines
 
-			if manager.broadcast.Started() {
-				manager.broadcast.destroyPipeline()
-			}
-		}
-	}()
-
-	go func() {
-		for {
-			_, ok := <-manager.desktop.GetAfterScreenSizeChangeChannel()
-			if !ok {
-				manager.logger.Info().Msg("after screen size change channel was closed")
-				return
-			}
-
-			if manager.video.Started() {
-				err := manager.video.createPipeline()
-				if err != nil && !errors.Is(err, types.ErrCapturePipelineAlreadyExists) {
-					manager.logger.Panic().Err(err).Msg("unable to recreate video pipeline")
+				if manager.video.Started() {
+					manager.video.destroyPipeline()
 				}
-			}
 
-			if manager.broadcast.Started() {
-				err := manager.broadcast.createPipeline()
-				if err != nil && !errors.Is(err, types.ErrCapturePipelineAlreadyExists) {
-					manager.logger.Panic().Err(err).Msg("unable to recreate broadcast pipeline")
+				if manager.broadcast.Started() {
+					manager.broadcast.destroyPipeline()
+				}
+			} else {
+				// after screen size change, we need to recreate all pipelines
+
+				if manager.video.Started() {
+					err := manager.video.createPipeline()
+					if err != nil && !errors.Is(err, types.ErrCapturePipelineAlreadyExists) {
+						manager.logger.Panic().Err(err).Msg("unable to recreate video pipeline")
+					}
+				}
+
+				if manager.broadcast.Started() {
+					err := manager.broadcast.createPipeline()
+					if err != nil && !errors.Is(err, types.ErrCapturePipelineAlreadyExists) {
+						manager.logger.Panic().Err(err).Msg("unable to recreate broadcast pipeline")
+					}
 				}
 			}
 		}
