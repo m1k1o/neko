@@ -63,12 +63,13 @@ func (manager *WebRTCManager) Start() {
 				continue
 			}
 
-			newSample, ok := <-manager.capture.Audio().GetSampleChannel()
+			sample, ok := <-manager.capture.Audio().GetSampleChannel()
 			if !ok {
-				manager.logger.Info().Msg("Audio capture channel was closed")
-				return
+				manager.logger.Info().Msg("audio capture channel was closed")
+				continue // TOOD: Create this goroutine when creating the pipeline.
 			}
-			err := manager.audioTrack.WriteSample(media.Sample(newSample))
+
+			err := manager.audioTrack.WriteSample(media.Sample(sample))
 			if err != nil && errors.Is(err, io.ErrClosedPipe) {
 				manager.logger.Warn().Err(err).Msg("audio pipeline failed to write")
 			}
@@ -93,12 +94,13 @@ func (manager *WebRTCManager) Start() {
 				continue
 			}
 
-			newSample, ok := <-manager.capture.Video().GetSampleChannel()
+			sample, ok := <-manager.capture.Video().GetSampleChannel()
 			if !ok {
-				manager.logger.Info().Msg("Video capture channel was closed")
-				return
+				manager.logger.Info().Msg("video capture channel was closed")
+				continue // TOOD: Create this goroutine when creating the pipeline.
 			}
-			err := manager.videoTrack.WriteSample(media.Sample(newSample))
+
+			err := manager.videoTrack.WriteSample(media.Sample(sample))
 			if err != nil && errors.Is(err, io.ErrClosedPipe) {
 				manager.logger.Warn().Err(err).Msg("video pipeline failed to write")
 			}
