@@ -15,6 +15,7 @@ import (
 type StreamSinkManagerCtx struct {
 	logger zerolog.Logger
 	mu     sync.Mutex
+	sampleChannel  chan types.Sample
 
 	codec      codec.RTPCodec
 	pipeline   *gst.Pipeline
@@ -35,6 +36,7 @@ func streamSinkNew(codec codec.RTPCodec, pipelineFn func() (string, error), vide
 		logger:     logger,
 		codec:      codec,
 		pipelineFn: pipelineFn,
+		sampleChannel: make(chan types.Sample),
 	}
 
 	return manager
@@ -139,7 +141,7 @@ func (manager *StreamSinkManagerCtx) createPipeline() error {
 		Str("src", pipelineStr).
 		Msgf("creating pipeline")
 
-	manager.pipeline, err = gst.CreatePipeline(pipelineStr)
+	manager.pipeline, err = gst.CreatePipeline(pipelineStr, manager.sampleChannel)
 	if err != nil {
 		return err
 	}
@@ -169,9 +171,5 @@ func (manager *StreamSinkManagerCtx) destroyPipeline() {
 }
 
 func (manager *StreamSinkManagerCtx) GetSampleChannel() chan types.Sample {
-	if manager.pipeline != nil {
-		return manager.pipeline.Sample
-	}
-
-	return nil
+	return manager.sampleChannel
 }

@@ -57,16 +57,10 @@ func (manager *WebRTCManager) Start() {
 
 	go func() {
 		for {
-			if manager.capture.Audio().GetSampleChannel() == nil {
-				// Pipeline not yet initialized
-				time.Sleep(50 * time.Millisecond)
-				continue
-			}
-
 			sample, ok := <-manager.capture.Audio().GetSampleChannel()
 			if !ok {
 				manager.logger.Debug().Msg("audio capture channel is closed")
-				continue // TOOD: Create this goroutine when creating the pipeline.
+				continue
 			}
 
 			err := manager.audioTrack.WriteSample(media.Sample(sample))
@@ -88,16 +82,10 @@ func (manager *WebRTCManager) Start() {
 
 	go func() {
 		for {
-			if manager.capture.Video().GetSampleChannel() == nil {
-				// Pipeline not yet initialized
-				time.Sleep(50 * time.Millisecond)
-				continue
-			}
-
 			sample, ok := <-manager.capture.Video().GetSampleChannel()
 			if !ok {
 				manager.logger.Debug().Msg("video capture channel is closed")
-				continue // TOOD: Create this goroutine when creating the pipeline.
+				continue
 			}
 
 			err := manager.videoTrack.WriteSample(media.Sample(sample))

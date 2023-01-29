@@ -13,6 +13,7 @@ import (
 type BroacastManagerCtx struct {
 	logger zerolog.Logger
 	mu     sync.Mutex
+	sampleChannel chan types.Sample
 
 	pipeline   *gst.Pipeline
 	pipelineMu sync.Mutex
@@ -31,6 +32,7 @@ func broadcastNew(pipelineFn func(url string) (string, error), defaultUrl string
 	return &BroacastManagerCtx{
 		logger:     logger,
 		pipelineFn: pipelineFn,
+		sampleChannel: make(chan types.Sample),
 		url:        defaultUrl,
 		started:    defaultUrl != "",
 	}
@@ -97,7 +99,7 @@ func (manager *BroacastManagerCtx) createPipeline() error {
 		Str("src", pipelineStr).
 		Msgf("starting pipeline")
 
-	manager.pipeline, err = gst.CreatePipeline(pipelineStr)
+	manager.pipeline, err = gst.CreatePipeline(pipelineStr, manager.sampleChannel)
 	if err != nil {
 		return err
 	}

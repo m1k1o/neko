@@ -37,7 +37,7 @@ func init() {
 	registry = C.gst_registry_get()
 }
 
-func CreatePipeline(pipelineStr string) (*Pipeline, error) {
+func CreatePipeline(pipelineStr string, sampleChannel chan types.Sample) (*Pipeline, error) {
 	id := atomic.AddInt32(&pSerial, 1)
 
 	pipelineStrUnsafe := C.CString(pipelineStr)
@@ -63,7 +63,7 @@ func CreatePipeline(pipelineStr string) (*Pipeline, error) {
 			Int("pipeline_id", int(id)).Logger(),
 		Src:    pipelineStr,
 		Ctx:    ctx,
-		Sample: make(chan types.Sample),
+		Sample: sampleChannel,
 	}
 
 	pipelines[p.id] = p
