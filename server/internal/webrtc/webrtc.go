@@ -11,6 +11,7 @@ import (
 
 	"github.com/pion/ice/v2"
 	"github.com/pion/interceptor"
+	"github.com/pion/rtcp"
 	"github.com/pion/webrtc/v3"
 	"github.com/pion/webrtc/v3/pkg/media"
 	"github.com/rs/zerolog"
@@ -18,6 +19,7 @@ import (
 
 	"m1k1o/neko/internal/config"
 	"m1k1o/neko/internal/types"
+	"m1k1o/neko/internal/types/codec"
 	"m1k1o/neko/internal/webrtc/pionlog"
 )
 
@@ -40,6 +42,8 @@ type WebRTCManager struct {
 	desktop    types.DesktopManager
 	config     *config.WebRTC
 	api        *webrtc.API
+
+	screenshareStop *func()
 }
 
 func (manager *WebRTCManager) Start() {
@@ -82,7 +86,19 @@ func (manager *WebRTCManager) Start() {
 
 	go func() {
 		for {
-			sample, ok := <-manager.capture.Video().GetSampleChannel()
+			var sample types.Sample
+			var ok bool
+
+			select {
+			case sample, ok = <-manager.capture.Video().GetSampleChannel():
+				// if screenshare is active, we need to drop all video samples
+				// ideally we would stop the video capture meanwhile.
+				if manager.capture.Screenshare().Started() {
+					continue
+				}
+			case sample, ok = <-manager.capture.Screenshare().GetSampleChannel():
+			}
+
 			if !ok {
 				manager.logger.Debug().Msg("video capture channel is closed")
 				continue
@@ -302,6 +318,84 @@ func (manager *WebRTCManager) CreatePeer(id string, session types.Session) (type
 		if err := session.SignalCandidate(string(candidateString)); err != nil {
 			manager.logger.Warn().Err(err).Msg("sending SignalCandidate failed")
 			return
+		}
+	})
+
+	connection.OnTrack(func(track *webrtc.TrackRemote, receiver *webrtc.RTPReceiver) {
+		logger := manager.logger.With().
+			Str("kind", track.Kind().String()).
+			Str("mime", track.Codec().RTPCodecCapability.MimeType).
+			Logger()
+
+		logger.Info().Msgf("received new remote track")
+
+		// parse codec from remote track
+		codec, ok := codec.ParseRTC(track.Codec())
+		if !ok {
+			logger.Warn().Msg("remote track with unknown codec")
+			receiver.Stop()
+			return
+		}
+
+		var srcSinkManager types.StreamSrcSinkManager
+
+		stopped := false
+		stopFn := func() {
+			if stopped {
+				return
+			}
+
+			stopped = true
+			receiver.Stop()
+			srcSinkManager.Stop()
+			logger.Info().Msg("remote track stopped")
+		}
+
+		logger.Info().Msgf("found codec %s", codec.Name)
+
+		if track.Kind() == webrtc.RTPCodecTypeVideo {
+			// video -> webcam
+			srcSinkManager = manager.capture.Screenshare()
+			defer stopFn()
+
+			if manager.screenshareStop != nil {
+				(*manager.screenshareStop)()
+			}
+			manager.screenshareStop = &stopFn
+		} else {
+			logger.Warn().Msg("expected only video tracks")
+			receiver.Stop()
+			return
+		}
+
+		logger.Info().Msg("starting srcSinkManager")
+		err := srcSinkManager.Start(codec)
+		if err != nil {
+			logger.Err(err).Msg("failed to start pipeline")
+			return
+		}
+
+		ticker := time.NewTicker(3 * time.Second)
+		defer ticker.Stop()
+
+		go func() {
+			for range ticker.C {
+				err := connection.WriteRTCP([]rtcp.Packet{&rtcp.PictureLossIndication{MediaSSRC: uint32(track.SSRC())}})
+				if err != nil {
+					logger.Err(err).Msg("remote track rtcp send err")
+				}
+			}
+		}()
+
+		buf := make([]byte, 1400)
+		for {
+			i, _, err := track.Read(buf)
+			if err != nil {
+				logger.Warn().Err(err).Msg("failed read from remote track")
+				break
+			}
+
+			srcSinkManager.Push(buf[:i])
 		}
 	})
 

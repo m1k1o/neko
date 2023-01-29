@@ -27,6 +27,9 @@ type Capture struct {
 	// broadcast
 	BroadcastPipeline string
 	BroadcastUrl      string
+
+	// screenshare
+	ScreenshareEnabled bool
 }
 
 func (Capture) Init(cmd *cobra.Command) error {
@@ -151,6 +154,15 @@ func (Capture) Init(cmd *cobra.Command) error {
 		return err
 	}
 
+	//
+	// screenshare
+	//
+
+	cmd.PersistentFlags().Bool("screenshare.enabled", true, "enable screenshare")
+	if err := viper.BindPFlag("screenshare.enabled", cmd.PersistentFlags().Lookup("screenshare.enabled")); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -230,4 +242,10 @@ func (s *Capture) Set() {
 
 	s.BroadcastPipeline = viper.GetString("broadcast_pipeline")
 	s.BroadcastUrl = viper.GetString("broadcast_url")
+
+	//
+	// screenshare
+	//
+
+	s.ScreenshareEnabled = viper.GetBool("screenshare.enabled")
 }

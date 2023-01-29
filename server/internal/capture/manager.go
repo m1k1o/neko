@@ -2,12 +2,14 @@ package capture
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
 	"m1k1o/neko/internal/config"
 	"m1k1o/neko/internal/types"
+	"m1k1o/neko/internal/types/codec"
 )
 
 type CaptureManagerCtx struct {
@@ -18,6 +20,9 @@ type CaptureManagerCtx struct {
 	broadcast *BroacastManagerCtx
 	audio     *StreamSinkManagerCtx
 	video     *StreamSinkManagerCtx
+
+	// source-sinks
+	screenshare *StreamSrcSinkManagerCtx
 }
 
 func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCtx {
@@ -43,6 +48,15 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 			}
 			return NewVideoPipeline(config.VideoCodec, config.Display, config.VideoPipeline, fps, config.VideoBitrate, config.VideoHWEnc)
 		}, "video"),
+
+		// source-sinks
+		screenshare: streamSrcSinkNew(config.ScreenshareEnabled, map[string]string{
+			codec.VP8().Name: "appsrc format=time is-live=true do-timestamp=true name=appsrc " +
+				fmt.Sprintf("! application/x-rtp, payload=%d, encoding-name=VP8-DRAFT-IETF-01 ", codec.VP8().PayloadType) +
+				"! rtpvp8depay " +
+				"! appsink name=appsink",
+			// TODO: Add support for more codecs.
+		}, "webcam"),
 	}
 }
 
@@ -95,6 +109,7 @@ func (manager *CaptureManagerCtx) Start() {
 func (manager *CaptureManagerCtx) Shutdown() error {
 	manager.logger.Info().Msgf("shutdown")
 
+	manager.screenshare.shutdown()
 	manager.broadcast.shutdown()
 
 	manager.audio.shutdown()
@@ -113,4 +128,8 @@ func (manager *CaptureManagerCtx) Audio() types.StreamSinkManager {
 
 func (manager *CaptureManagerCtx) Video() types.StreamSinkManager {
 	return manager.video
+}
+
+func (manager *CaptureManagerCtx) Screenshare() types.StreamSrcSinkManager {
+	return manager.screenshare
 }

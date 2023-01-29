@@ -313,6 +313,22 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
     this._peer.setRemoteDescription({ type: 'answer', sdp })
   }
 
+  public addTrack(track: MediaStreamTrack, ...streams: MediaStream[]): RTCRtpSender {
+    if (!this._peer) {
+      throw new Error('peer not connected')
+    }
+
+    return this._peer.addTrack(track, ...streams)
+  }
+
+  public removeTrack(sender: RTCRtpSender) {
+    if (!this._peer) {
+      throw new Error('peer not connected')
+    }
+
+    this._peer.removeTrack(sender)
+  }
+
   private async onMessage(e: MessageEvent) {
     const { event, ...payload } = JSON.parse(e.data) as WebSocketMessages
 
