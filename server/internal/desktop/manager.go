@@ -16,21 +16,21 @@ import (
 var mu = sync.Mutex{}
 
 type DesktopManagerCtx struct {
-	logger                        zerolog.Logger
-	wg                            sync.WaitGroup
-	shutdown                      chan struct{}
-	beforeScreenSizeChangeChannel chan bool
-	afterScreenSizeChangeChannel  chan int16
-	config                        *config.Desktop
+	logger   zerolog.Logger
+	wg       sync.WaitGroup
+	shutdown chan struct{}
+	config   *config.Desktop
+
+	screenSizeChangeChannel chan bool
 }
 
 func New(config *config.Desktop) *DesktopManagerCtx {
 	return &DesktopManagerCtx{
-		logger:                        log.With().Str("module", "desktop").Logger(),
-		shutdown:                      make(chan struct{}),
-		beforeScreenSizeChangeChannel: make(chan bool),
-		afterScreenSizeChangeChannel:  make(chan int16),
-		config:                        config,
+		logger:   log.With().Str("module", "desktop").Logger(),
+		shutdown: make(chan struct{}),
+		config:   config,
+
+		screenSizeChangeChannel: make(chan bool),
 	}
 }
 
@@ -84,18 +84,15 @@ func (manager *DesktopManagerCtx) Start() {
 	}()
 }
 
-func (manager *DesktopManagerCtx) GetBeforeScreenSizeChangeChannel() chan bool {
-	return manager.beforeScreenSizeChangeChannel
-}
-
-func (manager *DesktopManagerCtx) GetAfterScreenSizeChangeChannel() chan int16 {
-	return manager.afterScreenSizeChangeChannel
+func (manager *DesktopManagerCtx) GetScreenSizeChangeChannel() chan bool {
+	return manager.screenSizeChangeChannel
 }
 
 func (manager *DesktopManagerCtx) Shutdown() error {
 	manager.logger.Info().Msgf("desktop shutting down")
 
 	close(manager.shutdown)
+	close(manager.screenSizeChangeChannel)
 	manager.wg.Wait()
 
 	xorg.DisplayClose()

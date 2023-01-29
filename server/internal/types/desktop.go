@@ -43,8 +43,7 @@ type DesktopErrorMessage struct {
 type DesktopManager interface {
 	Start()
 	Shutdown() error
-	GetBeforeScreenSizeChangeChannel() chan bool
-	GetAfterScreenSizeChangeChannel() chan int16
+	GetScreenSizeChangeChannel() (before chan bool) // true - before, false - after
 
 	// clipboard
 	ReadClipboard() string
@@ -73,8 +72,6 @@ type DesktopManager interface {
 
 	// xevent
 	GetCursorChangedChannel() chan uint64
-	GetClipboardUpdatedChannel() chan bool
-	GetFileChooserDialogOpenedChannel() chan bool
-	GetFileChooserDialogClosedChannel() chan bool
+	GetClipboardUpdatedChannel() chan struct{}
 	GetEventErrorChannel() chan DesktopErrorMessage
 }
