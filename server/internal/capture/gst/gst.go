@@ -99,7 +99,6 @@ func (p *Pipeline) Destroy() {
 	delete(pipelines, p.id)
 	pipelinesLock.Unlock()
 
-	close(p.Sample)
 	C.free(unsafe.Pointer(p.Ctx))
 	p = nil
 }
