@@ -61,6 +61,11 @@ func NewVideoPipeline(rtpCodec codec.RTPCodec, display string, pipelineSrc strin
 		return pipelineStr, nil
 	}
 
+	// use default fps if not set
+	if fps == 0 {
+		fps = 25
+	}
+
 	switch rtpCodec.Name {
 	case codec.VP8().Name:
 		if hwenc == "VAAPI" {
