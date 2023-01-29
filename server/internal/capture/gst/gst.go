@@ -37,7 +37,7 @@ func init() {
 	registry = C.gst_registry_get()
 }
 
-func CreatePipeline(pipelineStr string, sampleChannel chan types.Sample) (*Pipeline, error) {
+func CreatePipeline(pipelineStr string) (*Pipeline, error) {
 	id := atomic.AddInt32(&pSerial, 1)
 
 	pipelineStrUnsafe := C.CString(pipelineStr)
@@ -61,18 +61,19 @@ func CreatePipeline(pipelineStr string, sampleChannel chan types.Sample) (*Pipel
 			Str("module", "capture").
 			Str("submodule", "gstreamer").
 			Int("pipeline_id", int(id)).Logger(),
-		Src:    pipelineStr,
-		Ctx:    ctx,
-		Sample: sampleChannel,
+		Src: pipelineStr,
+		Ctx: ctx,
 	}
 
 	pipelines[p.id] = p
 	return p, nil
 }
 
-func (p *Pipeline) AttachAppsink(sinkName string) {
+func (p *Pipeline) AttachAppsink(sinkName string, sampleChannel chan types.Sample) {
 	sinkNameUnsafe := C.CString(sinkName)
 	defer C.free(unsafe.Pointer(sinkNameUnsafe))
+
+	p.Sample = sampleChannel
 
 	C.gstreamer_pipeline_attach_appsink(p.Ctx, sinkNameUnsafe)
 }

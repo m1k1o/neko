@@ -13,9 +13,9 @@ import (
 )
 
 type StreamSinkManagerCtx struct {
-	logger zerolog.Logger
-	mu     sync.Mutex
-	sampleChannel  chan types.Sample
+	logger        zerolog.Logger
+	mu            sync.Mutex
+	sampleChannel chan types.Sample
 
 	codec      codec.RTPCodec
 	pipeline   *gst.Pipeline
@@ -33,9 +33,9 @@ func streamSinkNew(codec codec.RTPCodec, pipelineFn func() (string, error), vide
 		Str("video_id", video_id).Logger()
 
 	manager := &StreamSinkManagerCtx{
-		logger:     logger,
-		codec:      codec,
-		pipelineFn: pipelineFn,
+		logger:        logger,
+		codec:         codec,
+		pipelineFn:    pipelineFn,
 		sampleChannel: make(chan types.Sample),
 	}
 
@@ -141,7 +141,7 @@ func (manager *StreamSinkManagerCtx) createPipeline() error {
 		Str("src", pipelineStr).
 		Msgf("creating pipeline")
 
-	manager.pipeline, err = gst.CreatePipeline(pipelineStr, manager.sampleChannel)
+	manager.pipeline, err = gst.CreatePipeline(pipelineStr)
 	if err != nil {
 		return err
 	}
@@ -151,7 +151,7 @@ func (manager *StreamSinkManagerCtx) createPipeline() error {
 		appsinkSubfix = "video"
 	}
 
-	manager.pipeline.AttachAppsink("appsink" + appsinkSubfix)
+	manager.pipeline.AttachAppsink("appsink"+appsinkSubfix, manager.sampleChannel)
 	manager.pipeline.Play()
 
 	return nil
