@@ -65,7 +65,7 @@ func (manager *WebRTCManager) Start() {
 
 			sample, ok := <-manager.capture.Audio().GetSampleChannel()
 			if !ok {
-				manager.logger.Info().Msg("audio capture channel was closed")
+				manager.logger.Debug().Msg("audio capture channel is closed")
 				continue // TOOD: Create this goroutine when creating the pipeline.
 			}
 
@@ -96,7 +96,7 @@ func (manager *WebRTCManager) Start() {
 
 			sample, ok := <-manager.capture.Video().GetSampleChannel()
 			if !ok {
-				manager.logger.Info().Msg("video capture channel was closed")
+				manager.logger.Debug().Msg("video capture channel is closed")
 				continue // TOOD: Create this goroutine when creating the pipeline.
 			}
 

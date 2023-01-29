@@ -23,11 +23,6 @@ type SessionEvent struct {
 	Session Session
 }
 
-type HostInformation struct {
-	Type string
-	Id   string
-}
-
 type Session interface {
 	ID() string
 	Name() string
