@@ -89,11 +89,6 @@ func (Capture) Init(cmd *cobra.Command) error {
 		return err
 	}
 
-	cmd.PersistentFlags().Bool("adaptive_framerate", false, "use the framerate given from the source display")
-	if err := viper.BindPFlag("adaptive_framerate", cmd.PersistentFlags().Lookup("adaptive_framerate")); err != nil {
-		return err
-	}
-
 	//
 	// audio
 	//
@@ -197,12 +192,14 @@ func (s *Capture) Set() {
 	s.VideoHWEnc = videoHWEnc
 
 	s.VideoBitrate = viper.GetUint("video_bitrate")
+	s.VideoAdaptiveFramerate = false
 	s.VideoMaxFPS = int16(viper.GetInt("max_fps"))
 	if s.VideoMaxFPS == 0 {
-		s.VideoMaxFPS = 60
+		// TODO: Get the starting fps from the screen parameter.
+		s.VideoMaxFPS = 30
+		s.VideoAdaptiveFramerate = true
 	}
 	s.VideoPipeline = viper.GetString("video")
-	s.VideoAdaptiveFramerate = viper.GetBool("adaptive_framerate")
 
 	//
 	// audio

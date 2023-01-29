@@ -201,7 +201,6 @@ Flags:
       --video_codec string          video codec to be used (default "vp8")
       --vp8                         DEPRECATED: use video_codec
       --vp9                         DEPRECATED: use video_codec
-      --adaptive_framerate          use the framerate given from the source display (default false)
 
 Global Flags:
       --config string   configuration file path

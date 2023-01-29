@@ -52,7 +52,11 @@ func (manager *CaptureManagerCtx) Start() {
 
 	go func() {
 		for {
-			<-manager.desktop.GetBeforeScreenSizeChangeChannel()
+			_, ok := <-manager.desktop.GetBeforeScreenSizeChangeChannel()
+			if !ok {
+				manager.logger.Info().Msg("Before screen size change channel was closed")
+				return
+			}
 
 			if manager.video.Started() {
 				manager.video.destroyPipeline()
@@ -66,7 +70,11 @@ func (manager *CaptureManagerCtx) Start() {
 
 	go func() {
 		for {
-			framerate := <-manager.desktop.GetAfterScreenSizeChangeChannel()
+			framerate, ok := <-manager.desktop.GetAfterScreenSizeChangeChannel()
+			if !ok {
+				manager.logger.Info().Msg("After screen size change channel was closed")
+				return
+			}
 
 			if manager.video.Started() {
 				manager.video.SetChangeFramerate(framerate)

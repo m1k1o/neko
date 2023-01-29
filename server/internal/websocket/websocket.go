@@ -103,7 +103,12 @@ type WebSocketHandler struct {
 func (ws *WebSocketHandler) Start() {
 	go func() {
 		for {
-			channelMessage := <-ws.sessions.GetSessionChannel()
+			channelMessage, ok := <-ws.sessions.GetSessionChannel()
+			if !ok {
+				ws.logger.Info().Str("id", channelMessage.Id).Msg("session channel was closed")
+				// channel closed
+				return
+			}
 
 			switch channelMessage.Type {
 			case "created":
@@ -189,7 +194,11 @@ func (ws *WebSocketHandler) Start() {
 
 	go func() {
 		for {
-			_ = <-ws.desktop.GetClipboardUpdatedChannel()
+			_, ok = <-ws.desktop.GetClipboardUpdatedChannel()
+			if !ok {
+				ws.logger.Info()).Msg("Clipboard update channel closed")
+				return
+			}
 			session, ok := ws.sessions.GetHost()
 			if !ok {
 				return

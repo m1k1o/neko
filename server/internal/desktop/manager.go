@@ -50,7 +50,11 @@ func (manager *DesktopManagerCtx) Start() {
 
 	go func() {
 		for {
-			msg := <-xevent.EventErrorChannel
+			msg, ok := <-xevent.EventErrorChannel
+			if !ok {
+				manager.logger.Info().Msg("Error channel was closed")
+				return
+			}
 			manager.logger.Warn().
 				Uint8("error_code", msg.Error_code).
 				Str("message", msg.Message).
