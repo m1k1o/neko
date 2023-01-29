@@ -2,8 +2,6 @@ package capture
 
 import (
 	"errors"
-	"regexp"
-	"strconv"
 	"sync"
 
 	"github.com/rs/zerolog"
@@ -18,16 +16,13 @@ type StreamSinkManagerCtx struct {
 	logger zerolog.Logger
 	mu     sync.Mutex
 
-	codec             codec.RTPCodec
-	pipeline          *gst.Pipeline
-	pipelineMu        sync.Mutex
-	pipelineFn        func() (string, error)
-	adaptiveFramerate bool
+	codec      codec.RTPCodec
+	pipeline   *gst.Pipeline
+	pipelineMu sync.Mutex
+	pipelineFn func() (string, error)
 
 	listeners   int
 	listenersMu sync.Mutex
-
-	changeFramerate int16
 }
 
 func streamSinkNew(codec codec.RTPCodec, pipelineFn func() (string, error), video_id string) *StreamSinkManagerCtx {
@@ -37,11 +32,9 @@ func streamSinkNew(codec codec.RTPCodec, pipelineFn func() (string, error), vide
 		Str("video_id", video_id).Logger()
 
 	manager := &StreamSinkManagerCtx{
-		logger:            logger,
-		codec:             codec,
-		pipelineFn:        pipelineFn,
-		changeFramerate:   0,
-		adaptiveFramerate: false,
+		logger:     logger,
+		codec:      codec,
+		pipelineFn: pipelineFn,
 	}
 
 	return manager
@@ -141,11 +134,6 @@ func (manager *StreamSinkManagerCtx) createPipeline() error {
 		return err
 	}
 
-	if manager.changeFramerate > 0 && manager.adaptiveFramerate {
-		m1 := regexp.MustCompile(`framerate=\d+/1`)
-		pipelineStr = m1.ReplaceAllString(pipelineStr, "framerate="+strconv.FormatInt(int64(manager.changeFramerate), 10)+"/1")
-	}
-
 	manager.logger.Info().
 		Str("codec", manager.codec.Name).
 		Str("src", pipelineStr).
@@ -186,12 +174,4 @@ func (manager *StreamSinkManagerCtx) GetSampleChannel() chan types.Sample {
 	}
 
 	return nil
-}
-
-func (manager *StreamSinkManagerCtx) SetChangeFramerate(rate int16) {
-	manager.changeFramerate = rate
-}
-
-func (manager *StreamSinkManagerCtx) SetAdaptiveFramerate(allow bool) {
-	manager.adaptiveFramerate = allow
 }

@@ -11,13 +11,12 @@ import (
 
 type Capture struct {
 	// video
-	Display                string
-	VideoCodec             codec.RTPCodec
-	VideoHWEnc             string // TODO: Pipeline builder.
-	VideoBitrate           uint   // TODO: Pipeline builder.
-	VideoMaxFPS            int16  // TODO: Pipeline builder.
-	VideoPipeline          string
-	VideoAdaptiveFramerate bool
+	Display       string
+	VideoCodec    codec.RTPCodec
+	VideoHWEnc    string // TODO: Pipeline builder.
+	VideoBitrate  uint   // TODO: Pipeline builder.
+	VideoMaxFPS   int16  // TODO: Pipeline builder.
+	VideoPipeline string
 
 	// audio
 	AudioDevice   string
@@ -192,13 +191,7 @@ func (s *Capture) Set() {
 	s.VideoHWEnc = videoHWEnc
 
 	s.VideoBitrate = viper.GetUint("video_bitrate")
-	s.VideoAdaptiveFramerate = false
 	s.VideoMaxFPS = int16(viper.GetInt("max_fps"))
-	if s.VideoMaxFPS == 0 {
-		// TODO: Get the starting fps from the screen parameter.
-		s.VideoMaxFPS = 30
-		s.VideoAdaptiveFramerate = true
-	}
 	s.VideoPipeline = viper.GetString("video")
 
 	//

@@ -22,7 +22,7 @@ type CaptureManagerCtx struct {
 
 func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCtx {
 	logger := log.With().Str("module", "capture").Logger()
-	manager := &CaptureManagerCtx{
+	return &CaptureManagerCtx{
 		logger:  logger,
 		desktop: desktop,
 
@@ -34,13 +34,15 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 			return NewAudioPipeline(config.AudioCodec, config.AudioDevice, config.AudioPipeline, config.AudioBitrate)
 		}, "audio"),
 		video: streamSinkNew(config.VideoCodec, func() (string, error) {
-			return NewVideoPipeline(config.VideoCodec, config.Display, config.VideoPipeline, config.VideoMaxFPS, config.VideoBitrate, config.VideoHWEnc)
+			// use screen fps as default
+			fps := desktop.GetScreenSize().Rate
+			// if max fps is set, cap it to that value
+			if config.VideoMaxFPS > 0 && config.VideoMaxFPS < fps {
+				fps = config.VideoMaxFPS
+			}
+			return NewVideoPipeline(config.VideoCodec, config.Display, config.VideoPipeline, fps, config.VideoBitrate, config.VideoHWEnc)
 		}, "video"),
 	}
-
-	manager.Video().SetAdaptiveFramerate(config.VideoAdaptiveFramerate)
-
-	return manager
 }
 
 func (manager *CaptureManagerCtx) Start() {
@@ -54,7 +56,7 @@ func (manager *CaptureManagerCtx) Start() {
 		for {
 			_, ok := <-manager.desktop.GetBeforeScreenSizeChangeChannel()
 			if !ok {
-				manager.logger.Info().Msg("Before screen size change channel was closed")
+				manager.logger.Info().Msg("before screen size change channel was closed")
 				return
 			}
 
@@ -70,14 +72,13 @@ func (manager *CaptureManagerCtx) Start() {
 
 	go func() {
 		for {
-			framerate, ok := <-manager.desktop.GetAfterScreenSizeChangeChannel()
+			_, ok := <-manager.desktop.GetAfterScreenSizeChangeChannel()
 			if !ok {
-				manager.logger.Info().Msg("After screen size change channel was closed")
+				manager.logger.Info().Msg("after screen size change channel was closed")
 				return
 			}
 
 			if manager.video.Started() {
-				manager.video.SetChangeFramerate(framerate)
 				err := manager.video.createPipeline()
 				if err != nil && !errors.Is(err, types.ErrCapturePipelineAlreadyExists) {
 					manager.logger.Panic().Err(err).Msg("unable to recreate video pipeline")

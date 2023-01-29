@@ -105,8 +105,7 @@ func (ws *WebSocketHandler) Start() {
 		for {
 			channelMessage, ok := <-ws.sessions.GetSessionChannel()
 			if !ok {
-				ws.logger.Info().Str("id", channelMessage.Id).Msg("session channel was closed")
-				// channel closed
+				ws.logger.Info().Msg("session channel was closed")
 				return
 			}
 
@@ -194,11 +193,12 @@ func (ws *WebSocketHandler) Start() {
 
 	go func() {
 		for {
-			_, ok = <-ws.desktop.GetClipboardUpdatedChannel()
+			_, ok := <-ws.desktop.GetClipboardUpdatedChannel()
 			if !ok {
-				ws.logger.Info()).Msg("Clipboard update channel closed")
+				ws.logger.Info().Msg("clipboard update channel closed")
 				return
 			}
+
 			session, ok := ws.sessions.GetHost()
 			if !ok {
 				return
