@@ -2,10 +2,18 @@
 
 ## master branch
 
+### New Features
+- Added AV1 tag, metadata and pipeline. Unfortunately does not work yet, since the encoding is way too slow (by @mbattista).
+
 ### Bugs
 - Fixed TCP mux occasional freeze by adding write buffer to it.
 - Fixed stereo problem in chromium-based browsers, where it was only as mono by adding `stereo=1` to opus SDP to clients answer.
 - Fixed keysym mapping for unknown keycodes, which was causing some key combinations to not work on some keyboards.
+- Fixed a bug where `max_fps=0` would lead to an invalid pipeline.
+
+### Misc
+- Updated to go 1.19 and Node 18, removed go-events as dependency (by @mbattista).
+- Added adaptive framerate which now streams in the framerate you selected from the dropdown.
 
 ## [n.eko v2.7](https://github.com/m1k1o/neko/releases/tag/v2.7)
 
