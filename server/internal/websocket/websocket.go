@@ -103,24 +103,24 @@ type WebSocketHandler struct {
 func (ws *WebSocketHandler) Start() {
 	go func() {
 		for {
-			channelMessage, ok := <-ws.sessions.GetSessionChannel()
+			e, ok := <-ws.sessions.GetEventsChannel()
 			if !ok {
 				ws.logger.Info().Msg("session channel was closed")
 				return
 			}
 
-			switch channelMessage.Type {
-			case "created":
-				if err := ws.handler.SessionCreated(channelMessage.Id, channelMessage.Session); err != nil {
-					ws.logger.Warn().Str("id", channelMessage.Id).Err(err).Msg("session created with and error")
+			switch e.Type {
+			case types.SESSION_CREATED:
+				if err := ws.handler.SessionCreated(e.Id, e.Session); err != nil {
+					ws.logger.Warn().Str("id", e.Id).Err(err).Msg("session created with and error")
 				} else {
-					ws.logger.Debug().Str("id", channelMessage.Id).Msg("session created")
+					ws.logger.Debug().Str("id", e.Id).Msg("session created")
 				}
-			case "connected":
-				if err := ws.handler.SessionConnected(channelMessage.Id, channelMessage.Session); err != nil {
-					ws.logger.Warn().Str("id", channelMessage.Id).Err(err).Msg("session connected with and error")
+			case types.SESSION_CONNECTED:
+				if err := ws.handler.SessionConnected(e.Id, e.Session); err != nil {
+					ws.logger.Warn().Str("id", e.Id).Err(err).Msg("session connected with and error")
 				} else {
-					ws.logger.Debug().Str("id", channelMessage.Id).Msg("session connected")
+					ws.logger.Debug().Str("id", e.Id).Msg("session connected")
 				}
 
 				// if control protection is enabled and at least one admin
@@ -134,7 +134,7 @@ func (ws *WebSocketHandler) Start() {
 					if err := ws.sessions.Broadcast(
 						message.AdminLock{
 							Event:    event.ADMIN_UNLOCK,
-							ID:       channelMessage.Id,
+							ID:       e.Id,
 							Resource: "control",
 						}, nil); err != nil {
 						ws.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.ADMIN_UNLOCK)
@@ -142,16 +142,16 @@ func (ws *WebSocketHandler) Start() {
 				}
 
 				// remove outdated stats
-				if channelMessage.Session.Admin() {
+				if e.Session.Admin() {
 					ws.lastAdminLeftAt = nil
 				} else {
 					ws.lastUserLeftAt = nil
 				}
-			case "destroyed":
-				if err := ws.handler.SessionDestroyed(channelMessage.Id); err != nil {
-					ws.logger.Warn().Str("id", channelMessage.Id).Err(err).Msg("session destroyed with and error")
+			case types.SESSION_DESTROYED:
+				if err := ws.handler.SessionDestroyed(e.Id); err != nil {
+					ws.logger.Warn().Str("id", e.Id).Err(err).Msg("session destroyed with and error")
 				} else {
-					ws.logger.Debug().Str("id", channelMessage.Id).Msg("session destroyed")
+					ws.logger.Debug().Str("id", e.Id).Msg("session destroyed")
 				}
 
 				membersCount := len(ws.sessions.Members())
@@ -164,12 +164,12 @@ func (ws *WebSocketHandler) Start() {
 					ws.state.Lock("control", CONTROL_PROTECTION_SESSION)
 					ws.sessions.SetControlLocked(true) // TODO: Handle locks in sessions as flags.
 					ws.logger.Info().Msgf("control locked and released on behalf of control protection")
-					ws.handler.AdminRelease(channelMessage.Id, channelMessage.Session)
+					ws.handler.AdminRelease(e.Id, e.Session)
 
 					if err := ws.sessions.Broadcast(
 						message.AdminLock{
 							Event:    event.ADMIN_LOCK,
-							ID:       channelMessage.Id,
+							ID:       e.Id,
 							Resource: "control",
 						}, nil); err != nil {
 						ws.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.ADMIN_LOCK)
@@ -177,16 +177,20 @@ func (ws *WebSocketHandler) Start() {
 				}
 
 				// if this was the last admin
-				if channelMessage.Session.Admin() && adminCount == 0 {
+				if e.Session.Admin() && adminCount == 0 {
 					now := time.Now()
 					ws.lastAdminLeftAt = &now
 				}
 
 				// if this was the last user
-				if !channelMessage.Session.Admin() && membersCount-adminCount == 0 {
+				if !e.Session.Admin() && membersCount-adminCount == 0 {
 					now := time.Now()
 					ws.lastUserLeftAt = &now
 				}
+			case types.SESSION_HOST_SET:
+				// TODO: Unused.
+			case types.SESSION_HOST_CLEARED:
+				// TODO: Unused.
 			}
 		}
 	}()

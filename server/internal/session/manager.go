@@ -13,23 +13,21 @@ import (
 
 func New(capture types.CaptureManager) *SessionManager {
 	return &SessionManager{
-		logger:         log.With().Str("module", "session").Logger(),
-		host:           "",
-		capture:        capture,
-		sessionChannel: make(chan types.SessionInformation, 10),
-		hostChannel:    make(chan types.HostInformation, 10),
-		members:        make(map[string]*Session),
+		logger:        log.With().Str("module", "session").Logger(),
+		host:          "",
+		capture:       capture,
+		eventsChannel: make(chan types.SessionEvent, 10),
+		members:       make(map[string]*Session),
 	}
 }
 
 type SessionManager struct {
-	mu             sync.Mutex
-	logger         zerolog.Logger
-	host           string
-	capture        types.CaptureManager
-	members        map[string]*Session
-	sessionChannel chan types.SessionInformation
-	hostChannel    chan types.HostInformation
+	mu            sync.Mutex
+	logger        zerolog.Logger
+	host          string
+	capture       types.CaptureManager
+	members       map[string]*Session
+	eventsChannel chan types.SessionEvent
 	// TODO: Handle locks in sessions as flags.
 	controlLocked bool
 }
@@ -50,18 +48,12 @@ func (manager *SessionManager) New(id string, admin bool, socket types.WebSocket
 	manager.capture.Video().AddListener()
 	manager.mu.Unlock()
 
-	manager.sessionChannel <- types.SessionInformation{
-		Type:    "created",
+	manager.eventsChannel <- types.SessionEvent{
+		Type:    types.SESSION_CREATED,
 		Id:      id,
 		Session: session,
 	}
 
-	go func() {
-		for {
-			// TODO: Unused.
-			<-manager.hostChannel
-		}
-	}()
 	return session
 }
 
@@ -81,10 +73,11 @@ func (manager *SessionManager) SetHost(id string) error {
 	if ok {
 		manager.host = id
 
-		manager.hostChannel <- types.HostInformation{
-			Type: "host",
+		manager.eventsChannel <- types.SessionEvent{
+			Type: types.SESSION_HOST_SET,
 			Id:   id,
 		}
+
 		return nil
 	}
 
@@ -102,8 +95,9 @@ func (manager *SessionManager) GetHost() (types.Session, bool) {
 func (manager *SessionManager) ClearHost() {
 	id := manager.host
 	manager.host = ""
-	manager.hostChannel <- types.HostInformation{
-		Type: "host_cleared",
+
+	manager.eventsChannel <- types.SessionEvent{
+		Type: types.SESSION_HOST_CLEARED,
 		Id:   id,
 	}
 }
@@ -182,8 +176,8 @@ func (manager *SessionManager) Destroy(id string) {
 		manager.capture.Video().RemoveListener()
 		manager.mu.Unlock()
 
-		manager.sessionChannel <- types.SessionInformation{
-			Type:    "destroyed",
+		manager.eventsChannel <- types.SessionEvent{
+			Type:    types.SESSION_DESTROYED,
 			Id:      id,
 			Session: session,
 		}
@@ -244,10 +238,6 @@ func (manager *SessionManager) AdminBroadcast(v interface{}, exclude interface{}
 	return nil
 }
 
-func (manager *SessionManager) GetSessionChannel() chan types.SessionInformation {
-	return manager.sessionChannel
-}
-
-func (manager *SessionManager) GetHostChannel() chan types.HostInformation {
-	return manager.hostChannel
+func (manager *SessionManager) GetEventsChannel() chan types.SessionEvent {
+	return manager.eventsChannel
 }
