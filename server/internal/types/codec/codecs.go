@@ -50,14 +50,6 @@ func ParseStr(codecName string) (codec RTPCodec, ok bool) {
 	return
 }
 
-func IsVideo(codecType webrtc.RTPCodecType) bool {
-	return codecType == webrtc.RTPCodecTypeVideo
-}
-
-func IsAudio(codecType webrtc.RTPCodecType) bool {
-	return codecType == webrtc.RTPCodecTypeAudio
-}
-
 type RTPCodec struct {
 	Name        string
 	PayloadType webrtc.PayloadType
@@ -70,6 +62,14 @@ func (codec RTPCodec) Register(engine *webrtc.MediaEngine) error {
 		RTPCodecCapability: codec.Capability,
 		PayloadType:        codec.PayloadType,
 	}, codec.Type)
+}
+
+func (codec RTPCodec) IsVideo() bool {
+	return codec.Type == webrtc.RTPCodecTypeVideo
+}
+
+func (codec RTPCodec) IsAudio() bool {
+	return codec.Type == webrtc.RTPCodecTypeAudio
 }
 
 func VP8() RTPCodec {

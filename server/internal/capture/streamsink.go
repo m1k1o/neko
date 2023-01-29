@@ -145,7 +145,7 @@ func (manager *StreamSinkManagerCtx) createPipeline() error {
 	}
 
 	appsinkSubfix := "audio"
-	if codec.IsVideo(manager.codec.Type) {
+	if manager.codec.IsVideo() {
 		appsinkSubfix = "video"
 	}
 
