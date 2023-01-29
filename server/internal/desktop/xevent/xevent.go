@@ -14,34 +14,18 @@ import (
 )
 
 var CursorChangedChannel chan uint64
-var ClipboardUpdatedChannel chan bool
-var FileChooserDialogClosedChannel chan bool
-var FileChooserDialogOpenedChannel chan bool
+var ClipboardUpdatedChannel chan struct{}
 var EventErrorChannel chan types.DesktopErrorMessage
 
 func init() {
 	CursorChangedChannel = make(chan uint64)
-	ClipboardUpdatedChannel = make(chan bool)
-	FileChooserDialogClosedChannel = make(chan bool)
-	FileChooserDialogOpenedChannel = make(chan bool)
+	ClipboardUpdatedChannel = make(chan struct{})
 	EventErrorChannel = make(chan types.DesktopErrorMessage)
 
 	go func() {
 		for {
-			// TODO: Unused.
+			// TODO: Reserved for future use.
 			<-CursorChangedChannel
-		}
-	}()
-	go func() {
-		for {
-			// TODO: Unused.
-			<-FileChooserDialogClosedChannel
-		}
-	}()
-	go func() {
-		for {
-			// TODO: Unused.
-			<-FileChooserDialogOpenedChannel
 		}
 	}()
 }
@@ -53,6 +37,11 @@ func EventLoop(display string) {
 	C.XEventLoop(displayUnsafe)
 }
 
+// TODO: Shutdown function.
+//close(CursorChangedChannel)
+//close(ClipboardUpdatedChannel)
+//close(EventErrorChannel)
+
 //export goXEventCursorChanged
 func goXEventCursorChanged(event C.XFixesCursorNotifyEvent) {
 	CursorChangedChannel <- uint64(event.cursor_serial)
@@ -60,7 +49,7 @@ func goXEventCursorChanged(event C.XFixesCursorNotifyEvent) {
 
 //export goXEventClipboardUpdated
 func goXEventClipboardUpdated() {
-	ClipboardUpdatedChannel <- true
+	ClipboardUpdatedChannel <- struct{}{}
 }
 
 //export goXEventConfigureNotify

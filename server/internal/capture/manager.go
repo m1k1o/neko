@@ -22,6 +22,7 @@ type CaptureManagerCtx struct {
 
 func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCtx {
 	logger := log.With().Str("module", "capture").Logger()
+
 	return &CaptureManagerCtx{
 		logger:  logger,
 		desktop: desktop,
