@@ -50,10 +50,12 @@ func ParseStr(codecName string) (codec RTPCodec, ok bool) {
 	return
 }
 
-func IsVideo(codecType webrtc.RTPCodecType) (ok bool) {
-	ok = codecType == webrtc.RTPCodecTypeVideo
+func IsVideo(codecType webrtc.RTPCodecType) bool {
+	return codecType == webrtc.RTPCodecTypeVideo
+}
 
-	return
+func IsAudio(codecType webrtc.RTPCodecType) bool {
+	return codecType == webrtc.RTPCodecTypeAudio
 }
 
 type RTPCodec struct {
