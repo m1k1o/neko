@@ -78,8 +78,8 @@ func (session *Session) SetPeer(peer types.Peer) error {
 func (session *Session) SetConnected(connected bool) error {
 	session.connected = connected
 	if connected {
-		session.manager.sessionChannel <- types.SessionInformation{
-			Type:    "connected",
+		session.manager.eventsChannel <- types.SessionEvent{
+			Type:    types.SESSION_CONNECTED,
 			Id:      session.id,
 			Session: session,
 		}
