@@ -170,6 +170,9 @@ func (manager *WebRTCManagerCtx) newPeerConnection(codecs []codec.RTPCodec, logg
 	settings.SetICETimeouts(disconnectedTimeout, failedTimeout, keepAliveInterval)
 	settings.SetNAT1To1IPs(manager.config.NAT1To1IPs, webrtc.ICECandidateTypeHost)
 	settings.SetLite(manager.config.ICELite)
+	// make sure server answer sdp setup as passive, to not force DTLS renegotiation
+	// otherwise iOS renegotiation fails with: Failed to set SSL role for the transport.
+	settings.SetAnsweringDTLSRole(webrtc.DTLSRoleServer)
 
 	var networkType []webrtc.NetworkType
 
