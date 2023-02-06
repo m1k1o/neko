@@ -28,7 +28,7 @@ func (h *MessageHandlerCtx) signalRequest(session types.Session, payload *messag
 		}
 	}
 
-	offer, err := h.webrtc.CreatePeer(session, payload.Bitrate)
+	offer, err := h.webrtc.CreatePeer(session, payload.Bitrate, payload.VideoAuto)
 	if err != nil {
 		return err
 	}
@@ -39,7 +39,7 @@ func (h *MessageHandlerCtx) signalRequest(session types.Session, payload *messag
 			webrtcPeer.SetPaused(true)
 		}
 
-		payload.Video = webrtcPeer.GetVideoId()
+		payload.Video = webrtcPeer.GetVideoID()
 	}
 
 	session.Send(
@@ -47,7 +47,9 @@ func (h *MessageHandlerCtx) signalRequest(session types.Session, payload *messag
 		message.SignalProvide{
 			SDP:        offer.SDP,
 			ICEServers: h.webrtc.ICEServers(),
-			Video:      payload.Video, // TODO: Refactor.
+			Video:      payload.Video, // TODO: Refactor
+			Bitrate:    payload.Bitrate,
+			VideoAuto:  payload.VideoAuto,
 		})
 
 	return nil
@@ -64,7 +66,7 @@ func (h *MessageHandlerCtx) signalRestart(session types.Session) error {
 		return err
 	}
 
-	// TODO: Use offer event intead.
+	// TODO: Use offer event instead.
 	session.Send(
 		event.SIGNAL_RESTART,
 		message.SignalDescription{
@@ -123,25 +125,17 @@ func (h *MessageHandlerCtx) signalVideo(session types.Session, payload *message.
 		return errors.New("webRTC peer does not exist")
 	}
 
-	var err error
-	if payload.Bitrate == 0 {
-		// get bitrate from video id
-		payload.Bitrate, err = h.capture.GetBitrateFromVideoID(payload.Video)
-		if err != nil {
-			return err
+	peer.SetVideoAuto(payload.VideoAuto)
+
+	if payload.Video != "" {
+		if err := peer.SetVideoID(payload.Video); err != nil {
+			h.logger.Error().Err(err).Msg("failed to set video id")
+		}
+	} else {
+		if err := peer.SetVideoBitrate(payload.Bitrate); err != nil {
+			h.logger.Error().Err(err).Msg("failed to set video bitrate")
 		}
 	}
-
-	if err = peer.SetVideoBitrate(payload.Bitrate); err != nil {
-		return err
-	}
-
-	session.Send(
-		event.SIGNAL_VIDEO,
-		message.SignalVideo{
-			Video:   peer.GetVideoId(), // TODO: Refactor.
-			Bitrate: payload.Bitrate,
-		})
 
 	return nil
 }

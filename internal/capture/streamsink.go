@@ -105,7 +105,7 @@ func (manager *StreamSinkManagerCtx) shutdown() {
 	}
 	manager.listenersMu.Unlock()
 
-	manager.destroyPipeline()
+	manager.DestroyPipeline()
 	manager.wg.Wait()
 }
 
@@ -113,12 +113,19 @@ func (manager *StreamSinkManagerCtx) ID() string {
 	return manager.id
 }
 
-func (manager *StreamSinkManagerCtx) Bitrate() (int, error) {
+func (manager *StreamSinkManagerCtx) Bitrate() int {
 	if manager.getBitrate == nil {
-		return 0, nil
+		return 0
 	}
+
 	// recalculate bitrate every time, take screen resolution (and fps) into account
-	return manager.getBitrate()
+	// we called this function during startup, so it shouldn't error here
+	bitrate, err := manager.getBitrate()
+	if err != nil {
+		manager.logger.Err(err).Msg("unexpected error while getting bitrate")
+	}
+
+	return bitrate
 }
 
 func (manager *StreamSinkManagerCtx) Codec() codec.RTPCodec {
@@ -127,7 +134,7 @@ func (manager *StreamSinkManagerCtx) Codec() codec.RTPCodec {
 
 func (manager *StreamSinkManagerCtx) start() error {
 	if len(manager.listeners) == 0 {
-		err := manager.createPipeline()
+		err := manager.CreatePipeline()
 		if err != nil && !errors.Is(err, types.ErrCapturePipelineAlreadyExists) {
 			return err
 		}
@@ -140,7 +147,7 @@ func (manager *StreamSinkManagerCtx) start() error {
 
 func (manager *StreamSinkManagerCtx) stop() {
 	if len(manager.listeners) == 0 {
-		manager.destroyPipeline()
+		manager.DestroyPipeline()
 		manager.logger.Info().Msgf("last listener, stopping")
 	}
 }
@@ -259,7 +266,7 @@ func (manager *StreamSinkManagerCtx) Started() bool {
 	return manager.ListenersCount() > 0
 }
 
-func (manager *StreamSinkManagerCtx) createPipeline() error {
+func (manager *StreamSinkManagerCtx) CreatePipeline() error {
 	manager.pipelineMu.Lock()
 	defer manager.pipelineMu.Unlock()
 
@@ -313,7 +320,7 @@ func (manager *StreamSinkManagerCtx) createPipeline() error {
 	return nil
 }
 
-func (manager *StreamSinkManagerCtx) destroyPipeline() {
+func (manager *StreamSinkManagerCtx) DestroyPipeline() {
 	manager.pipelineMu.Lock()
 	defer manager.pipelineMu.Unlock()
 

@@ -327,10 +327,10 @@ func (m *metricsCtx) SetVideoID(session types.Session, videoId string) {
 	}
 }
 
-func (m *metricsCtx) SetReceiverEstimatedMaximumBitrate(session types.Session, bitrate float32) {
+func (m *metricsCtx) SetReceiverEstimatedMaximumBitrate(session types.Session, bitrate float64) {
 	met := m.getBySession(session)
 
-	met.receiverEstimatedMaximumBitrate.Set(float64(bitrate))
+	met.receiverEstimatedMaximumBitrate.Set(bitrate)
 }
 
 func (m *metricsCtx) SetReceiverReport(session types.Session, report rtcp.ReceptionReport) {

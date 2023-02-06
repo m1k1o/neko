@@ -13,14 +13,17 @@ import (
 )
 
 type WebRTCPeerCtx struct {
-	mu          sync.Mutex
-	logger      zerolog.Logger
-	connection  *webrtc.PeerConnection
-	dataChannel *webrtc.DataChannel
-	changeVideo func(bitrate int) error
-	videoId     func() string
-	setPaused   func(isPaused bool)
-	iceTrickle  bool
+	mu                     sync.Mutex
+	logger                 zerolog.Logger
+	connection             *webrtc.PeerConnection
+	dataChannel            *webrtc.DataChannel
+	changeVideoFromBitrate func(bitrate int)
+	changeVideoFromID      func(id string) int
+	videoId                func() string
+	setPaused              func(isPaused bool)
+	setVideoAuto           func(auto bool)
+	getVideoAuto           func() bool
+	iceTrickle             bool
 }
 
 func (peer *WebRTCPeerCtx) CreateOffer(ICERestart bool) (*webrtc.SessionDescription, error) {
@@ -115,7 +118,7 @@ func (peer *WebRTCPeerCtx) SetCandidate(candidate webrtc.ICECandidateInit) error
 	return peer.connection.AddICECandidate(candidate)
 }
 
-func (peer *WebRTCPeerCtx) SetVideoBitrate(bitrate int) error {
+func (peer *WebRTCPeerCtx) SetVideoBitrate(peerBitrate int) error {
 	peer.mu.Lock()
 	defer peer.mu.Unlock()
 
@@ -123,12 +126,24 @@ func (peer *WebRTCPeerCtx) SetVideoBitrate(bitrate int) error {
 		return types.ErrWebRTCConnectionNotFound
 	}
 
-	peer.logger.Info().Int("bitrate", bitrate).Msg("change video bitrate")
-	return peer.changeVideo(bitrate)
+	peer.changeVideoFromBitrate(peerBitrate)
+	return nil
+}
+
+func (peer *WebRTCPeerCtx) SetVideoID(videoID string) error {
+	peer.mu.Lock()
+	defer peer.mu.Unlock()
+
+	if peer.connection == nil {
+		return types.ErrWebRTCConnectionNotFound
+	}
+
+	peer.changeVideoFromID(videoID)
+	return nil
 }
 
 // TODO: Refactor.
-func (peer *WebRTCPeerCtx) GetVideoId() string {
+func (peer *WebRTCPeerCtx) GetVideoID() string {
 	peer.mu.Lock()
 	defer peer.mu.Unlock()
 
@@ -214,4 +229,12 @@ func (peer *WebRTCPeerCtx) Destroy() {
 		peer.logger.Err(err).Msg("peer connection destroyed")
 		peer.connection = nil
 	}
+}
+
+func (peer *WebRTCPeerCtx) SetVideoAuto(auto bool) {
+	peer.setVideoAuto(auto)
+}
+
+func (peer *WebRTCPeerCtx) VideoAuto() bool {
+	return peer.getVideoAuto()
 }

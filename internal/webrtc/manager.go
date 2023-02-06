@@ -9,6 +9,8 @@ import (
 
 	"github.com/pion/ice/v2"
 	"github.com/pion/interceptor"
+	"github.com/pion/interceptor/pkg/cc"
+	"github.com/pion/interceptor/pkg/gcc"
 	"github.com/pion/rtcp"
 	"github.com/pion/webrtc/v3"
 	"github.com/rs/zerolog"
@@ -34,6 +36,9 @@ const keepAliveInterval = 2 * time.Second
 
 // send a PLI on an interval so that the publisher is pushing a keyframe every rtcpPLIInterval
 const rtcpPLIInterval = 3 * time.Second
+
+// how often we check the bitrate of each client. Default is 250ms
+const bitrateCheckInterval = 250 * time.Millisecond
 
 func New(desktop types.DesktopManager, capture types.CaptureManager, config *config.WebRTC) *WebRTCManagerCtx {
 	configuration := webrtc.Configuration{
@@ -153,12 +158,12 @@ func (manager *WebRTCManagerCtx) ICEServers() []types.ICEServer {
 	return manager.config.ICEServers
 }
 
-func (manager *WebRTCManagerCtx) newPeerConnection(codecs []codec.RTPCodec, logger zerolog.Logger) (*webrtc.PeerConnection, error) {
+func (manager *WebRTCManagerCtx) newPeerConnection(bitrate int, codecs []codec.RTPCodec, logger zerolog.Logger) (*webrtc.PeerConnection, cc.BandwidthEstimator, error) {
 	// create media engine
 	engine := &webrtc.MediaEngine{}
 	for _, codec := range codecs {
 		if err := codec.Register(engine); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
 
@@ -205,8 +210,29 @@ func (manager *WebRTCManagerCtx) newPeerConnection(codecs []codec.RTPCodec, logg
 
 	// create interceptor registry
 	registry := &interceptor.Registry{}
+
+	congestionController, err := cc.NewInterceptor(func() (cc.BandwidthEstimator, error) {
+		if bitrate == 0 {
+			bitrate = 1000000
+		}
+		return gcc.NewSendSideBWE(gcc.SendSideBWEInitialBitrate(bitrate))
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	estimatorChan := make(chan cc.BandwidthEstimator, 1)
+	congestionController.OnNewPeerConnection(func(id string, estimator cc.BandwidthEstimator) {
+		estimatorChan <- estimator
+	})
+
+	registry.Add(congestionController)
+	if err = webrtc.ConfigureTWCCHeaderExtensionSender(engine, registry); err != nil {
+		return nil, nil, err
+	}
+
 	if err := webrtc.RegisterDefaultInterceptors(engine, registry); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// create new API
@@ -217,10 +243,12 @@ func (manager *WebRTCManagerCtx) newPeerConnection(codecs []codec.RTPCodec, logg
 	)
 
 	// create new peer connection
-	return api.NewPeerConnection(manager.webrtcConfiguration)
+	configuration := manager.webrtcConfiguration
+	connection, err := api.NewPeerConnection(configuration)
+	return connection, <-estimatorChan, err
 }
 
-func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int) (*webrtc.SessionDescription, error) {
+func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int, videoAuto bool) (*webrtc.SessionDescription, error) {
 	id := atomic.AddInt32(&manager.peerId, 1)
 	manager.metrics.NewConnection(session)
 
@@ -236,12 +264,16 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int) 
 	video := manager.capture.Video()
 	videoCodec := video.Codec()
 
-	connection, err := manager.newPeerConnection([]codec.RTPCodec{
+	connection, estimator, err := manager.newPeerConnection(bitrate, []codec.RTPCodec{
 		audioCodec,
 		videoCodec,
 	}, logger)
 	if err != nil {
 		return nil, err
+	}
+
+	if bitrate == 0 {
+		bitrate = estimator.GetTargetBitrate()
 	}
 
 	// asynchronously send local ICE Candidates
@@ -268,31 +300,117 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int) 
 	}
 
 	// set stream for audio track
-	err = audioTrack.SetStream(audio)
+	_, err = audioTrack.SetStream(audio)
 	if err != nil {
 		return nil, err
 	}
 
 	// video track
-
-	videoTrack, err := NewTrack(logger, videoCodec, connection)
+	videoTrack, err := NewTrack(logger, videoCodec, connection, WithVideoAuto(videoAuto))
 	if err != nil {
 		return nil, err
 	}
 
 	// let video stream bucket manager handle stream subscriptions
-	err = video.SetReceiver(videoTrack)
-	if err != nil {
-		return nil, err
+	video.SetReceiver(videoTrack)
+
+	changeVideoFromBitrate := func(peerBitrate int) {
+		// when switching from manual to auto bitrate estimation, in case the estimator is
+		// idle (lastBitrate > maxBitrate), we want to go back to the previous estimated bitrate
+		if peerBitrate == 0 {
+			peerBitrate = estimator.GetTargetBitrate()
+			manager.logger.Debug().
+				Int("peer_bitrate", peerBitrate).
+				Msg("evaluated bitrate")
+		}
+
+		ok, err := videoTrack.SetBitrate(peerBitrate)
+		if err != nil {
+			logger.Error().Err(err).
+				Int("peer_bitrate", peerBitrate).
+				Msg("unable to set video bitrate")
+			return
+		}
+
+		if !ok {
+			return
+		}
+
+		videoID := videoTrack.stream.ID()
+		bitrate := videoTrack.stream.Bitrate()
+
+		manager.metrics.SetVideoID(session, videoID)
+		manager.logger.Debug().
+			Int("peer_bitrate", peerBitrate).
+			Int("video_bitrate", bitrate).
+			Str("video_id", videoID).
+			Msg("peer bitrate triggered video stream change")
+
+		go session.Send(
+			event.SIGNAL_VIDEO,
+			message.SignalVideo{
+				Video:     videoID,
+				Bitrate:   bitrate,
+				VideoAuto: videoTrack.VideoAuto(),
+			})
 	}
+
+	changeVideoFromID := func(videoID string) (bitrate int) {
+		changed, err := videoTrack.SetVideoID(videoID)
+		if err != nil {
+			logger.Error().Err(err).
+				Str("video_id", videoID).
+				Msg("unable to set video stream")
+			return
+		}
+
+		if !changed {
+			return
+		}
+
+		bitrate = videoTrack.stream.Bitrate()
+
+		manager.logger.Debug().
+			Str("video_id", videoID).
+			Int("video_bitrate", bitrate).
+			Msg("peer video id triggered video stream change")
+
+		go session.Send(
+			event.SIGNAL_VIDEO,
+			message.SignalVideo{
+				Video:     videoID,
+				Bitrate:   bitrate,
+				VideoAuto: videoTrack.VideoAuto(),
+			})
+
+		return
+	}
+
+	manager.logger.Info().
+		Int("target_bitrate", bitrate).
+		Msg("estimated initial peer bitrate")
 
 	// set initial video bitrate
-	if err = videoTrack.SetBitrate(bitrate); err != nil {
-		return nil, err
-	}
+	changeVideoFromBitrate(bitrate)
 
-	videoID := videoTrack.stream.ID()
-	manager.metrics.SetVideoID(session, videoID)
+	// use a ticker to get current client target bitrate
+	go func() {
+		ticker := time.NewTicker(bitrateCheckInterval)
+		defer ticker.Stop()
+
+		for range ticker.C {
+			targetBitrate := estimator.GetTargetBitrate()
+			manager.metrics.SetReceiverEstimatedMaximumBitrate(session, float64(targetBitrate))
+
+			if connection.ConnectionState() == webrtc.PeerConnectionStateClosed {
+				break
+			}
+			if !videoTrack.VideoAuto() {
+				continue
+			}
+			changeVideoFromBitrate(targetBitrate)
+		}
+	}()
 
 	// data channel
 
@@ -302,27 +420,20 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int) 
 	}
 
 	peer := &WebRTCPeerCtx{
-		logger:      logger,
-		connection:  connection,
-		dataChannel: dataChannel,
-		changeVideo: func(bitrate int) error {
-			if err := videoTrack.SetBitrate(bitrate); err != nil {
-				return err
-			}
-
-			videoID := videoTrack.stream.ID()
-			manager.metrics.SetVideoID(session, videoID)
-			return nil
-		},
+		logger:                 logger,
+		connection:             connection,
+		dataChannel:            dataChannel,
+		changeVideoFromBitrate: changeVideoFromBitrate,
+		changeVideoFromID:      changeVideoFromID,
 		// TODO: Refactor.
-		videoId: func() string {
-			return videoTrack.stream.ID()
-		},
+		videoId: videoTrack.stream.ID,
 		setPaused: func(isPaused bool) {
 			videoTrack.SetPaused(isPaused)
 			audioTrack.SetPaused(isPaused)
 		},
-		iceTrickle: manager.config.ICETrickle,
+		iceTrickle:   manager.config.ICETrickle,
+		setVideoAuto: videoTrack.SetVideoAuto,
+		getVideoAuto: videoTrack.VideoAuto,
 	}
 
 	connection.OnTrack(func(track *webrtc.TrackRemote, receiver *webrtc.RTPReceiver) {
@@ -515,11 +626,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int) 
 	})
 
 	videoTrack.OnRTCP(func(p rtcp.Packet) {
-		switch rtcpPacket := p.(type) {
-		case *rtcp.ReceiverEstimatedMaximumBitrate: // TODO: Deprecated.
-			manager.metrics.SetReceiverEstimatedMaximumBitrate(session, rtcpPacket.Bitrate)
-
-		case *rtcp.ReceiverReport:
+		if rtcpPacket, ok := p.(*rtcp.ReceiverReport); ok {
 			l := len(rtcpPacket.Reports)
 			if l > 0 {
 				// use only last report

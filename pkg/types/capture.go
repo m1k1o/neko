@@ -8,9 +8,8 @@ import (
 	"strings"
 
 	"github.com/PaesslerAG/gval"
-	"github.com/pion/webrtc/v3/pkg/media"
-
 	"github.com/demodesk/neko/pkg/types/codec"
+	"github.com/pion/webrtc/v3/pkg/media"
 )
 
 var (
@@ -20,16 +19,23 @@ var (
 type Sample media.Sample
 
 type Receiver interface {
-	SetStream(stream StreamSinkManager) error
+	SetStream(stream StreamSinkManager) (changed bool, err error)
 	RemoveStream()
-	OnBitrateChange(f func(int) error)
+	OnBitrateChange(f func(bitrate int) (changed bool, err error))
+	OnVideoChange(f func(videoID string) (changed bool, err error))
+	VideoAuto() bool
+	SetVideoAuto(videoAuto bool)
 }
 
 type BucketsManager interface {
 	IDs() []string
 	Codec() codec.RTPCodec
-	SetReceiver(receiver Receiver) error
+	SetReceiver(receiver Receiver)
 	RemoveReceiver(receiver Receiver) error
+
+	DestroyAll()
+	RecreateAll() error
+	Shutdown()
 }
 
 type BroadcastManager interface {
@@ -48,6 +54,7 @@ type ScreencastManager interface {
 type StreamSinkManager interface {
 	ID() string
 	Codec() codec.RTPCodec
+	Bitrate() int
 
 	AddListener(listener *func(sample Sample)) error
 	RemoveListener(listener *func(sample Sample)) error
@@ -55,6 +62,9 @@ type StreamSinkManager interface {
 
 	ListenersCount() int
 	Started() bool
+
+	CreatePipeline() error
+	DestroyPipeline()
 }
 
 type StreamSrcManager interface {
@@ -201,17 +211,33 @@ func (config *VideoConfig) GetBitrateFn(getScreen func() *ScreenSize) func() (in
 			}),
 		}
 
+		// TOOD: do not read target-bitrate from pipeline, but only from config.
+
 		// TODO: This is only for vp8.
 		expr, ok := config.GstParams["target-bitrate"]
 		if !ok {
-			return 0, fmt.Errorf("target-bitrate not found")
+			// TODO: This is only for h264.
+			expr, ok = config.GstParams["bitrate"]
+			if !ok {
+				return 0, fmt.Errorf("bitrate not found")
+			}
 		}
 
-		targetBitrate, err := gval.Evaluate(expr, values, language...)
+		bitrate, err := gval.Evaluate(expr, values, language...)
 		if err != nil {
-			return 0, err
+			return 0, fmt.Errorf("failed to evaluate bitrate: %w", err)
 		}
 
-		return targetBitrate.(int), nil
+		var bitrateInt int
+		switch val := bitrate.(type) {
+		case int:
+			bitrateInt = val
+		case float64:
+			bitrateInt = (int)(val)
+		default:
+			return 0, fmt.Errorf("bitrate is not int or float64")
+		}
+
+		return bitrateInt, nil
 	}
 }
