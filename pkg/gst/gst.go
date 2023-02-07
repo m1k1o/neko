@@ -1,7 +1,7 @@
 package gst
 
 /*
-#cgo pkg-config: gstreamer-1.0 gstreamer-app-1.0
+#cgo pkg-config: gstreamer-1.0 gstreamer-app-1.0 gstreamer-video-1.0
 
 #include "gst.h"
 */
@@ -46,6 +46,8 @@ type Pipeline interface {
 	SetPropInt(binName string, prop string, value int) bool
 	SetCapsFramerate(binName string, numerator, denominator int) bool
 	SetCapsResolution(binName string, width, height int) bool
+	// emit video keyframe
+	EmitVideoKeyframe() bool
 }
 
 type pipeline struct {
@@ -174,6 +176,11 @@ func (p *pipeline) SetCapsResolution(binName string, width, height int) bool {
 	p.logger.Debug().Msgf("setting caps resolution of %s to %dx%d", binName, width, height)
 
 	ok := C.gstreamer_pipeline_set_caps_resolution(p.ctx, cBinName, cWidth, cHeight)
+	return ok == C.TRUE
+}
+
+func (p *pipeline) EmitVideoKeyframe() bool {
+	ok := C.gstreamer_pipeline_emit_video_keyframe(p.ctx)
 	return ok == C.TRUE
 }
 

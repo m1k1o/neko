@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <gst/gst.h>
 #include <gst/app/gstappsrc.h>
+#include <gst/video/video.h>
 
 typedef struct GstPipelineCtx {
   int pipelineId;
@@ -25,3 +26,4 @@ void gstreamer_pipeline_push(GstPipelineCtx *ctx, void *buffer, int bufferLen);
 gboolean gstreamer_pipeline_set_prop_int(GstPipelineCtx *ctx, char *binName, char *prop, gint value);
 gboolean gstreamer_pipeline_set_caps_framerate(GstPipelineCtx *ctx, const gchar* binName, gint numerator, gint denominator);
 gboolean gstreamer_pipeline_set_caps_resolution(GstPipelineCtx *ctx, const gchar* binName, gint width, gint height);
+gboolean gstreamer_pipeline_emit_video_keyframe(GstPipelineCtx *ctx);

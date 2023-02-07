@@ -200,3 +200,15 @@ gboolean gstreamer_pipeline_set_caps_resolution(GstPipelineCtx *ctx, const gchar
   gst_object_unref(el);
   return TRUE;
 }
+
+gboolean gstreamer_pipeline_emit_video_keyframe(GstPipelineCtx *ctx) {
+	GstClock *clock = gst_pipeline_get_clock(GST_PIPELINE(ctx->pipeline));
+	gst_object_ref(clock);
+
+	GstClockTime time = gst_clock_get_time(clock);
+	GstClockTime now = time - gst_element_get_base_time(ctx->pipeline);
+	gst_object_unref(clock);
+
+	GstEvent *keyFrameEvent = gst_video_event_new_downstream_force_key_unit(now, time, now, TRUE, 0);
+	return gst_element_send_event(GST_ELEMENT(ctx->pipeline), keyFrameEvent);
+}
