@@ -92,6 +92,8 @@
   import Screencast from './screencast.vue'
   import Cursors from './cursors.vue'
 
+  const SCREEN_SYNC_THROTTLE = 500 // wait 500ms before reacting to automatic screen size change
+
   @Component({
     name: 'neko-canvas',
     components: {
@@ -189,6 +191,7 @@
           rate: 30,
         },
         configurations: [],
+        sync: false,
       },
       session_id: null,
       sessions: {},
@@ -571,6 +574,32 @@
       this.connection.websocket.send(EVENT.KEYBOARD_MODIFIERS, modifiers)
     }
 
+    @Watch('state.screen.sync')
+    onScreenSyncChange() {
+      if (this.state.screen.sync) {
+        this.syncScreenSize()
+        window.addEventListener('resize', this.syncScreenSize)
+      } else {
+        window.removeEventListener('resize', this.syncScreenSize)
+      }
+    }
+
+    syncScreenSizeTimeout = 0
+    public syncScreenSize() {
+      if (this.syncScreenSizeTimeout) {
+        window.clearTimeout(this.syncScreenSizeTimeout)
+      }
+      this.syncScreenSizeTimeout = window.setTimeout(() => {
+        this.syncScreenSizeTimeout = 0
+        const { offsetWidth, offsetHeight } = this._component
+        this.setScreenSize(
+          Math.round(offsetWidth * window.devicePixelRatio),
+          Math.round(offsetHeight * window.devicePixelRatio),
+          60, // TODO: make it configurable?
+        )
+      }, SCREEN_SYNC_THROTTLE)
+    }
+
     @Watch('state.screen.size')
     onResize() {
       const { width, height } = this.state.screen.size
@@ -658,6 +687,7 @@
       Vue.set(this.state.control, 'host_id', null)
       Vue.set(this.state.screen, 'size', { width: 1280, height: 720, rate: 30 })
       Vue.set(this.state.screen, 'configurations', [])
+      Vue.set(this.state.screen, 'sync', false)
       Vue.set(this.state, 'session_id', null)
       Vue.set(this.state, 'sessions', {})
       Vue.set(this.state, 'settings', {

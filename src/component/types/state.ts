@@ -91,6 +91,7 @@ export interface Keyboard {
 export interface Screen {
   size: ScreenSize
   configurations: ScreenSize[]
+  sync: boolean
 }
 
 export interface ScreenSize {

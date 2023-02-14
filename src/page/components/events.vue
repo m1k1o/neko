@@ -317,27 +317,37 @@
         </tr>
         <tr>
           <td>
-            <select
-              :value="Object.values(neko.state.screen.size).join()"
-              @input="
-                a = String($event.target.value).split(',')
-                neko.setScreenSize(parseInt(a[0]), parseInt(a[1]), parseInt(a[2]))
-              "
-            >
+            <input
+              list="screen-configuration"
+              v-model="screenConfiguration"
+              style="width: 100%; box-sizing: border-box"
+            />
+            <datalist id="screen-configuration">
               <option
                 v-for="{ width, height, rate } in neko.state.screen.configurations"
-                :key="String(width) + String(height) + String(rate)"
-                :value="[width, height, rate].join()"
-              >
-                {{ width }}x{{ height }}@{{ rate }}
-              </option>
-            </select>
-            <button @click="screenChangingToggle">screenChangingToggle</button>
+                :key="String(width) + 'x' + String(height) + '@' + String(rate)"
+                :value="String(width) + 'x' + String(height) + '@' + String(rate)"
+              />
+            </datalist>
+            <button @click="setScreenConfiguration">set</button>
+          </td>
+        </tr>
+        <tr>
+          <th class="middle">screen.sync</th>
+          <td>
+            <div class="space-between">
+              <span>{{ neko.state.screen.sync }}</span>
+              <button @click="neko.state.screen.sync = !neko.state.screen.sync">
+                <i class="fas fa-toggle-on"></i>
+              </button>
+            </div>
           </td>
         </tr>
       </template>
       <tr v-else>
         <th>screen.configurations</th>
+        <td>Session is not admin.</td>
+        <th>screen.sync</th>
         <td>Session is not admin.</td>
       </tr>
 
@@ -440,6 +450,13 @@
           </div>
         </td>
       </tr>
+      <tr>
+        <th>chaos monkey</th>
+        <td>
+          <button @click="cursorMovingToggle">cursor moving</button>
+          <button @click="screenChangingToggle">screen cfg changing</button>
+        </td>
+      </tr>
     </table>
   </div>
 </template>
@@ -518,6 +535,37 @@
         //@ts-ignore
         clearInterval(this.screen_interval)
         this.screen_interval = null
+      }
+    }
+
+    screenConfiguration = ''
+    setScreenConfiguration() {
+      let [width, height, rate] = this.screenConfiguration.split(/[@x]/)
+      this.neko.setScreenSize(parseInt(width), parseInt(height), parseInt(rate))
+    }
+
+    @Watch('neko.state.screen.size', { immediate: true })
+    onScreenSizeChange(val: any) {
+      this.screenConfiguration = `${val.width}x${val.height}@${val.rate}`
+    }
+
+    // fast cursor moving test
+    cursor_interval = null
+    cursorMovingToggle() {
+      if (this.cursor_interval === null) {
+        let len = this.neko.state.screen.size.width
+
+        //@ts-ignore
+        this.cursor_interval = setInterval(() => {
+          let x = Math.floor(Math.random() * len)
+          let y = Math.floor(Math.random() * len)
+
+          this.neko.control.move({ x, y })
+        }, 10)
+      } else {
+        //@ts-ignore
+        clearInterval(this.cursor_interval)
+        this.cursor_interval = null
       }
     }
 
