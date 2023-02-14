@@ -6,7 +6,7 @@ static void gstreamer_pipeline_log(GstPipelineCtx *ctx, char* level, const char*
   char buffer[100];
   vsprintf(buffer, format, argptr);
   va_end(argptr);
-  goPipelineLog(level, buffer, ctx->pipelineId);
+  goPipelineLog(ctx->pipelineId, level, buffer);
 }
 
 static gboolean gstreamer_bus_call(GstBus *bus, GstMessage *msg, gpointer user_data) {
@@ -95,7 +95,10 @@ static GstFlowReturn gstreamer_send_new_sample_handler(GstElement *object, gpoin
     buffer = gst_sample_get_buffer(sample);
     if (buffer) {
       gst_buffer_extract_dup(buffer, 0, gst_buffer_get_size(buffer), &copy, &copy_size);
-      goHandlePipelineBuffer(copy, copy_size, GST_BUFFER_DURATION(buffer), ctx->pipelineId);
+      goHandlePipelineBuffer(ctx->pipelineId, copy, copy_size,
+        GST_BUFFER_DURATION(buffer),
+        GST_BUFFER_FLAG_IS_SET(buffer, GST_BUFFER_FLAG_DELTA_UNIT)
+      );
     }
     gst_sample_unref(sample);
   }

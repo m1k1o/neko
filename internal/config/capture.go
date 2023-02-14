@@ -3,7 +3,6 @@ package config
 import (
 	"os"
 
-	"github.com/pion/webrtc/v3"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -171,7 +170,7 @@ func (s *Capture) Set() {
 	// video
 	videoCodec := viper.GetString("capture.video.codec")
 	s.VideoCodec, ok = codec.ParseStr(videoCodec)
-	if !ok || s.VideoCodec.Type != webrtc.RTPCodecTypeVideo {
+	if !ok || !s.VideoCodec.IsVideo() {
 		log.Warn().Str("codec", videoCodec).Msgf("unknown video codec, using Vp8")
 		s.VideoCodec = codec.VP8()
 	}
@@ -217,7 +216,7 @@ func (s *Capture) Set() {
 
 	audioCodec := viper.GetString("capture.audio.codec")
 	s.AudioCodec, ok = codec.ParseStr(audioCodec)
-	if !ok || s.AudioCodec.Type != webrtc.RTPCodecTypeAudio {
+	if !ok || !s.AudioCodec.IsAudio() {
 		log.Warn().Str("codec", audioCodec).Msgf("unknown audio codec, using Opus")
 		s.AudioCodec = codec.Opus()
 	}

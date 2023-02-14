@@ -21,6 +21,7 @@ var moveSinkListenerMu = sync.Mutex{}
 type StreamSinkManagerCtx struct {
 	id         string
 	getBitrate func() (int, error)
+	waitForKf  bool // wait for a keyframe before sending samples
 
 	logger zerolog.Logger
 	mu     sync.Mutex
@@ -32,6 +33,7 @@ type StreamSinkManagerCtx struct {
 	pipelineFn func() (string, error)
 
 	listeners   map[uintptr]*func(sample types.Sample)
+	listenersKf map[uintptr]*func(sample types.Sample) // keyframe lobby
 	listenersMu sync.Mutex
 
 	// metrics
@@ -40,7 +42,7 @@ type StreamSinkManagerCtx struct {
 	pipelinesActive  prometheus.Gauge
 }
 
-func streamSinkNew(codec codec.RTPCodec, pipelineFn func() (string, error), id string, getBitrate func() (int, error)) *StreamSinkManagerCtx {
+func streamSinkNew(c codec.RTPCodec, pipelineFn func() (string, error), id string, getBitrate func() (int, error)) *StreamSinkManagerCtx {
 	logger := log.With().
 		Str("module", "capture").
 		Str("submodule", "stream-sink").
@@ -49,11 +51,15 @@ func streamSinkNew(codec codec.RTPCodec, pipelineFn func() (string, error), id s
 	manager := &StreamSinkManagerCtx{
 		id:         id,
 		getBitrate: getBitrate,
+		// only wait for keyframes if the codec is video
+		waitForKf: c.IsVideo(),
 
 		logger:     logger,
-		codec:      codec,
+		codec:      c,
 		pipelineFn: pipelineFn,
-		listeners:  map[uintptr]*func(sample types.Sample){},
+
+		listeners:   map[uintptr]*func(sample types.Sample){},
+		listenersKf: map[uintptr]*func(sample types.Sample){},
 
 		// metrics
 		currentListeners: promauto.NewGauge(prometheus.GaugeOpts{
@@ -63,8 +69,8 @@ func streamSinkNew(codec codec.RTPCodec, pipelineFn func() (string, error), id s
 			Help:      "Current number of listeners for a pipeline.",
 			ConstLabels: map[string]string{
 				"video_id":   id,
-				"codec_name": codec.Name,
-				"codec_type": codec.Type.String(),
+				"codec_name": c.Name,
+				"codec_type": c.Type.String(),
 			},
 		}),
 		pipelinesCounter: promauto.NewCounter(prometheus.CounterOpts{
@@ -75,8 +81,8 @@ func streamSinkNew(codec codec.RTPCodec, pipelineFn func() (string, error), id s
 			ConstLabels: map[string]string{
 				"submodule":  "streamsink",
 				"video_id":   id,
-				"codec_name": codec.Name,
-				"codec_type": codec.Type.String(),
+				"codec_name": c.Name,
+				"codec_type": c.Type.String(),
 			},
 		}),
 		pipelinesActive: promauto.NewGauge(prometheus.GaugeOpts{
@@ -87,8 +93,8 @@ func streamSinkNew(codec codec.RTPCodec, pipelineFn func() (string, error), id s
 			ConstLabels: map[string]string{
 				"submodule":  "streamsink",
 				"video_id":   id,
-				"codec_name": codec.Name,
-				"codec_type": codec.Type.String(),
+				"codec_name": c.Name,
+				"codec_type": c.Type.String(),
 			},
 		}),
 	}
@@ -102,6 +108,9 @@ func (manager *StreamSinkManagerCtx) shutdown() {
 	manager.listenersMu.Lock()
 	for key := range manager.listeners {
 		delete(manager.listeners, key)
+	}
+	for key := range manager.listenersKf {
+		delete(manager.listenersKf, key)
 	}
 	manager.listenersMu.Unlock()
 
@@ -133,7 +142,7 @@ func (manager *StreamSinkManagerCtx) Codec() codec.RTPCodec {
 }
 
 func (manager *StreamSinkManagerCtx) start() error {
-	if len(manager.listeners) == 0 {
+	if len(manager.listeners)+len(manager.listenersKf) == 0 {
 		err := manager.CreatePipeline()
 		if err != nil && !errors.Is(err, types.ErrCapturePipelineAlreadyExists) {
 			return err
@@ -146,7 +155,7 @@ func (manager *StreamSinkManagerCtx) start() error {
 }
 
 func (manager *StreamSinkManagerCtx) stop() {
-	if len(manager.listeners) == 0 {
+	if len(manager.listeners)+len(manager.listenersKf) == 0 {
 		manager.DestroyPipeline()
 		manager.logger.Info().Msgf("last listener, stopping")
 	}
@@ -156,11 +165,22 @@ func (manager *StreamSinkManagerCtx) addListener(listener *func(sample types.Sam
 	ptr := reflect.ValueOf(listener).Pointer()
 
 	manager.listenersMu.Lock()
-	manager.listeners[ptr] = listener
+	if manager.waitForKf {
+		// if we're waiting for a keyframe, add it to the keyframe lobby
+		manager.listenersKf[ptr] = listener
+	} else {
+		// otherwise, add it as a regular listener
+		manager.listeners[ptr] = listener
+	}
 	manager.listenersMu.Unlock()
 
 	manager.logger.Debug().Interface("ptr", ptr).Msgf("adding listener")
 	manager.currentListeners.Set(float64(manager.ListenersCount()))
+
+	// if we will be waiting for a keyframe, emit one now
+	if manager.pipeline != nil && manager.waitForKf {
+		manager.pipeline.EmitVideoKeyframe()
+	}
 }
 
 func (manager *StreamSinkManagerCtx) removeListener(listener *func(sample types.Sample)) {
@@ -168,6 +188,7 @@ func (manager *StreamSinkManagerCtx) removeListener(listener *func(sample types.
 
 	manager.listenersMu.Lock()
 	delete(manager.listeners, ptr)
+	delete(manager.listenersKf, ptr) //	if it's a keyframe listener, remove it too
 	manager.listenersMu.Unlock()
 
 	manager.logger.Debug().Interface("ptr", ptr).Msgf("removing listener")
@@ -259,7 +280,7 @@ func (manager *StreamSinkManagerCtx) ListenersCount() int {
 	manager.listenersMu.Lock()
 	defer manager.listenersMu.Unlock()
 
-	return len(manager.listeners)
+	return len(manager.listeners) + len(manager.listenersKf)
 }
 
 func (manager *StreamSinkManagerCtx) Started() bool {
@@ -307,6 +328,15 @@ func (manager *StreamSinkManagerCtx) CreatePipeline() error {
 			}
 
 			manager.listenersMu.Lock()
+			// if is not delta unit -> it can be decoded independently -> it is a keyframe
+			if manager.waitForKf && !sample.DeltaUnit && len(manager.listenersKf) > 0 {
+				// if current sample is a keyframe, move listeners from
+				// keyframe lobby to actual listeners map and clear lobby
+				for k, v := range manager.listenersKf {
+					manager.listeners[k] = v
+				}
+				manager.listenersKf = make(map[uintptr]*func(sample types.Sample))
+			}
 			for _, emit := range manager.listeners {
 				(*emit)(sample)
 			}

@@ -12,8 +12,8 @@ typedef struct GstPipelineCtx {
   GstElement *appsrc;
 } GstPipelineCtx;
 
-extern void goHandlePipelineBuffer(void *buffer, int bufferLen, int samples, int pipelineId);
-extern void goPipelineLog(char *level, char *msg, int pipelineId);
+extern void goHandlePipelineBuffer(int pipelineId, void *buffer, int bufferLen, guint64 duration, gboolean deltaUnit);
+extern void goPipelineLog(int pipelineId, char *level, char *msg);
 
 GstPipelineCtx *gstreamer_pipeline_create(char *pipelineStr, int pipelineId, GError **error);
 void gstreamer_pipeline_attach_appsink(GstPipelineCtx *ctx, char *sinkName);

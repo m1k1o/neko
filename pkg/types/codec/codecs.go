@@ -63,6 +63,18 @@ func (codec *RTPCodec) Register(engine *webrtc.MediaEngine) error {
 	}, codec.Type)
 }
 
+func (codec *RTPCodec) IsVideo() bool {
+	return codec.Type == webrtc.RTPCodecTypeVideo
+}
+
+func (codec *RTPCodec) IsAudio() bool {
+	return codec.Type == webrtc.RTPCodecTypeAudio
+}
+
+func (codec *RTPCodec) String() string {
+	return codec.Type.String() + "/" + codec.Name
+}
+
 func VP8() RTPCodec {
 	return RTPCodec{
 		Name:        "vp8",

@@ -200,8 +200,8 @@ func CheckPlugins(plugins []string) error {
 }
 
 //export goHandlePipelineBuffer
-func goHandlePipelineBuffer(buffer unsafe.Pointer, bufferLen C.int, duration C.int, pipelineID C.int) {
-	defer C.free(buffer)
+func goHandlePipelineBuffer(pipelineID C.int, buf unsafe.Pointer, bufLen C.int, duration C.guint64, deltaUnit C.gboolean) {
+	defer C.free(buf)
 
 	pipelinesLock.Lock()
 	pipeline, ok := pipelines[int(pipelineID)]
@@ -209,8 +209,9 @@ func goHandlePipelineBuffer(buffer unsafe.Pointer, bufferLen C.int, duration C.i
 
 	if ok {
 		pipeline.sample <- types.Sample{
-			Data:     C.GoBytes(buffer, bufferLen),
-			Duration: time.Duration(duration),
+			Data:      C.GoBytes(buf, bufLen),
+			Duration:  time.Duration(duration),
+			DeltaUnit: deltaUnit == C.TRUE,
 		}
 	} else {
 		log.Warn().
@@ -222,7 +223,7 @@ func goHandlePipelineBuffer(buffer unsafe.Pointer, bufferLen C.int, duration C.i
 }
 
 //export goPipelineLog
-func goPipelineLog(levelUnsafe *C.char, msgUnsafe *C.char, pipelineID C.int) {
+func goPipelineLog(pipelineID C.int, levelUnsafe *C.char, msgUnsafe *C.char) {
 	levelStr := C.GoString(levelUnsafe)
 	msg := C.GoString(msgUnsafe)
 

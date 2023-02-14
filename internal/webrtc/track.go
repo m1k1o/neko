@@ -64,7 +64,10 @@ func NewTrack(logger zerolog.Logger, codec codec.RTPCodec, connection *webrtc.Pe
 			return
 		}
 
-		err := track.WriteSample(media.Sample(sample))
+		err := track.WriteSample(media.Sample{
+			Data:     sample.Data,
+			Duration: sample.Duration,
+		})
 		if err != nil && !errors.Is(err, io.ErrClosedPipe) {
 			logger.Warn().Err(err).Msg("failed to write sample to track")
 		}

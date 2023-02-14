@@ -6,17 +6,21 @@ import (
 	"fmt"
 	"math"
 	"strings"
+	"time"
 
 	"github.com/PaesslerAG/gval"
 	"github.com/demodesk/neko/pkg/types/codec"
-	"github.com/pion/webrtc/v3/pkg/media"
 )
 
 var (
 	ErrCapturePipelineAlreadyExists = errors.New("capture pipeline already exists")
 )
 
-type Sample media.Sample
+type Sample struct {
+	Data      []byte
+	Duration  time.Duration
+	DeltaUnit bool // this unit cannot be decoded independently.
+}
 
 type Receiver interface {
 	SetStream(stream StreamSinkManager) (changed bool, err error)
