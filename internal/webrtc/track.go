@@ -26,7 +26,7 @@ type Track struct {
 	stream   types.StreamSinkManager
 	streamMu sync.Mutex
 
-	onRtcp   func(rtcp.Packet)
+	onRtcp   func([]rtcp.Packet)
 	onRtcpMu sync.RWMutex
 
 	bitrateChange func(int) (bool, error)
@@ -84,9 +84,8 @@ func NewTrack(logger zerolog.Logger, codec codec.RTPCodec, connection *webrtc.Pe
 }
 
 func (t *Track) rtcpReader(sender *webrtc.RTPSender) {
-	rtcpBuf := make([]byte, 1500)
 	for {
-		n, _, err := sender.Read(rtcpBuf)
+		packets, _, err := sender.ReadRTCP()
 		if err != nil {
 			if err == io.EOF || err == io.ErrClosedPipe {
 				return
@@ -96,21 +95,11 @@ func (t *Track) rtcpReader(sender *webrtc.RTPSender) {
 			continue
 		}
 
-		packets, err := rtcp.Unmarshal(rtcpBuf[:n])
-		if err != nil {
-			t.logger.Err(err).Msg("RTCP unmarshal error")
-			continue
-		}
-
 		t.onRtcpMu.RLock()
-		handler := t.onRtcp
-		t.onRtcpMu.RUnlock()
-
-		for _, packet := range packets {
-			if handler != nil {
-				go handler(packet)
-			}
+		if t.onRtcp != nil {
+			go t.onRtcp(packets)
 		}
+		t.onRtcpMu.RUnlock()
 	}
 }
 
@@ -152,7 +141,7 @@ func (t *Track) SetPaused(paused bool) {
 	t.paused = paused
 }
 
-func (t *Track) OnRTCP(f func(rtcp.Packet)) {
+func (t *Track) OnRTCP(f func([]rtcp.Packet)) {
 	t.onRtcpMu.Lock()
 	defer t.onRtcpMu.Unlock()
 

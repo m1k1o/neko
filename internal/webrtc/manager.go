@@ -213,9 +213,13 @@ func (manager *WebRTCManagerCtx) newPeerConnection(bitrate int, codecs []codec.R
 
 	congestionController, err := cc.NewInterceptor(func() (cc.BandwidthEstimator, error) {
 		if bitrate == 0 {
-			bitrate = 1000000
+			bitrate = 1_000_000
 		}
-		return gcc.NewSendSideBWE(gcc.SendSideBWEInitialBitrate(bitrate))
+
+		return gcc.NewSendSideBWE(
+			gcc.SendSideBWEInitialBitrate(bitrate),
+			gcc.SendSideBWEPacer(gcc.NewNoOpPacer()),
+		)
 	})
 	if err != nil {
 		return nil, nil, err
@@ -625,12 +629,14 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int, 
 			})
 	})
 
-	videoTrack.OnRTCP(func(p rtcp.Packet) {
-		if rtcpPacket, ok := p.(*rtcp.ReceiverReport); ok {
-			l := len(rtcpPacket.Reports)
-			if l > 0 {
-				// use only last report
-				manager.metrics.SetReceiverReport(session, rtcpPacket.Reports[l-1])
+	videoTrack.OnRTCP(func(packets []rtcp.Packet) {
+		for _, p := range packets {
+			if rtcpPacket, ok := p.(*rtcp.ReceiverReport); ok {
+				l := len(rtcpPacket.Reports)
+				if l > 0 {
+					// use only last report
+					manager.metrics.SetReceiverReport(session, rtcpPacket.Reports[l-1])
+				}
 			}
 		}
 	})
