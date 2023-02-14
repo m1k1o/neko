@@ -229,6 +229,82 @@ void XKey(KeySym keysym, int down) {
   XSync(display, 0);
 }
 
+Status XSetScreenConfiguration(int width, int height, short *rate) {
+  Display *display = getXDisplay();
+  Window root = RootWindow(display, 0);
+  XRRScreenConfiguration *conf = XRRGetScreenInfo(display, root);
+
+  XRRScreenSize *xrrs;
+  int num_sizes;
+  xrrs = XRRConfigSizes(conf, &num_sizes);
+
+  int size_index = -1;
+  for (int i = 0; i < num_sizes; i++) {
+    if (xrrs[i].width == width && xrrs[i].height == height) {
+      size_index = i;
+      break;
+    }
+  }
+
+  // if we cannot find the size
+  if (size_index == -1) {
+    return RRSetConfigFailed;
+  }
+
+  short current_rate = 0;
+  if (rate != NULL) {
+    short *rates;
+    int num_rates;
+    rates = XRRConfigRates(conf, size_index, &num_rates);
+
+    // try to find the nearest rate
+    short nearest_rate = 0;
+    float diff = 0;
+    for (int i = 0; i < num_rates; i++) {
+      if (nearest_rate == 0 || abs(rates[i] - *rate) < diff) {
+        nearest_rate = rates[i];
+        diff = abs(rates[i] - *rate);
+      }
+    }
+
+    if (nearest_rate != 0 && diff < 10) {
+      current_rate = nearest_rate;
+    }
+
+    *rate = current_rate;
+  }
+
+  Status status;
+  status = XRRSetScreenConfigAndRate(display, conf, root, size_index, RR_Rotate_0, current_rate, CurrentTime);
+
+  XRRFreeScreenConfigInfo(conf);
+  return status;
+}
+
+void XGetScreenConfiguration(int *width, int *height, short *rate) {
+  Display *display = getXDisplay();
+  Window root = RootWindow(display, 0);
+  XRRScreenConfiguration *conf = XRRGetScreenInfo(display, root);
+
+  Rotation current_rotation;
+  SizeID current_size_id = XRRConfigCurrentConfiguration(conf, &current_rotation);
+
+  XRRScreenSize *xrrs;
+  int num_sizes;
+  xrrs = XRRConfigSizes(conf, &num_sizes);
+
+  // if we cannot find the size
+  if (current_size_id >= num_sizes) {
+    return;
+  }
+
+  *width = xrrs[current_size_id].width;
+  *height = xrrs[current_size_id].height;
+  *rate = XRRConfigCurrentRate(conf);
+
+  XRRFreeScreenConfigInfo(conf);
+}
+
 void XGetScreenConfigurations() {
   Display *display = getXDisplay();
   Window root = RootWindow(display, 0);
@@ -248,23 +324,71 @@ void XGetScreenConfigurations() {
   }
 }
 
-void XSetScreenConfiguration(int index, short rate) {
+// Inspired by https://github.com/raboof/xrandr/blob/master/xrandr.c
+void XCreateScreenMode(int width, int height, short rate) {
   Display *display = getXDisplay();
   Window root = RootWindow(display, 0);
-  XRRSetScreenConfigAndRate(display, XRRGetScreenInfo(display, root), root, index, RR_Rotate_0, rate, CurrentTime);
+
+  char name[128];
+  XRRModeInfo mode;
+  mode = XCreateScreenModeInfo(width, height, rate);
+
+  snprintf(name, sizeof name, "%dx%d_%d", width, height, rate);
+  mode.nameLength = strlen(name);
+  mode.name = name;
+
+  // create new mode
+  XRRCreateMode(display, root, &mode);
+  XSync(display, 0);
+
+  // find newly created mode in resources
+  RRMode mode_id;
+	XRRScreenResources *resources = XRRGetScreenResources(display, root);
+  for (int i = 0; i < resources->nmode; ++i) {
+    if (strcmp(resources->modes[i].name, mode.name) == 0) {
+      mode_id = resources->modes[i].id;
+      break;
+    }
+  }
+
+  // add new mode to all outputs
+  for (int i = 0; i < resources->noutput; ++i) {
+    XRRAddOutputMode(display, resources->outputs[i], mode_id);
+  }
+
+  XRRFreeScreenResources(resources);
 }
 
-int XGetScreenSize() {
-  Display *display = getXDisplay();
-  XRRScreenConfiguration *conf = XRRGetScreenInfo(display, RootWindow(display, 0));
-  Rotation original_rotation;
-  return XRRConfigCurrentConfiguration(conf, &original_rotation);
-}
+// Inspired by https://fossies.org/linux/xwayland/hw/xwayland/xwayland-cvt.c
+XRRModeInfo XCreateScreenModeInfo(int hdisplay, int vdisplay, short vrefresh) {
+  XRRModeInfo modeinfo;
+  memset(&modeinfo, 0, sizeof modeinfo);
 
-short XGetScreenRate() {
-  Display *display = getXDisplay();
-  XRRScreenConfiguration *conf = XRRGetScreenInfo(display, RootWindow(display, 0));
-  return XRRConfigCurrentRate(conf);
+#ifdef _LIBCVT_H_
+  struct libxcvt_mode_info *mode_info;
+
+  // get screen mode from libxcvt, if available
+  mode_info = libxcvt_gen_mode_info(hdisplay, vdisplay, vrefresh, false, false);
+
+  modeinfo.width      = mode_info->hdisplay;
+  modeinfo.height     = mode_info->vdisplay;
+  modeinfo.dotClock   = mode_info->dot_clock * 1000;
+  modeinfo.hSyncStart = mode_info->hsync_start;
+  modeinfo.hSyncEnd   = mode_info->hsync_end;
+  modeinfo.hTotal     = mode_info->htotal;
+  modeinfo.vSyncStart = mode_info->vsync_start;
+  modeinfo.vSyncEnd   = mode_info->vsync_end;
+  modeinfo.vTotal     = mode_info->vtotal;
+  modeinfo.modeFlags  = mode_info->mode_flags;
+
+  free(mode_info);
+#else
+  // fallback to a simple mode without refresh rate
+  modeinfo.width = hdisplay;
+  modeinfo.height = vdisplay;
+#endif
+
+  return modeinfo;
 }
 
 void XSetKeyboardModifier(int mod, int on) {

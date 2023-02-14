@@ -40,9 +40,9 @@ func (manager *DesktopManagerCtx) Start() {
 
 	xorg.GetScreenConfigurations()
 
-	err := xorg.ChangeScreenSize(manager.config.ScreenWidth, manager.config.ScreenHeight, manager.config.ScreenRate)
+	width, height, rate, err := xorg.ChangeScreenSize(manager.config.ScreenWidth, manager.config.ScreenHeight, manager.config.ScreenRate)
 	manager.logger.Err(err).
-		Str("screen_size", fmt.Sprintf("%dx%d@%d", manager.config.ScreenWidth, manager.config.ScreenHeight, manager.config.ScreenRate)).
+		Str("screen_size", fmt.Sprintf("%dx%d@%d", width, height, rate)).
 		Msgf("setting initial screen size")
 
 	go xevent.EventLoop(manager.config.Display)

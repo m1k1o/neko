@@ -13,11 +13,20 @@ func (h *MessageHandlerCtx) screenSet(session types.Session, payload *message.Sc
 		return errors.New("is not the admin")
 	}
 
-	data := types.ScreenSize(*payload)
-	if err := h.desktop.SetScreenSize(data); err != nil {
+	size, err := h.desktop.SetScreenSize(types.ScreenSize{
+		Width:  payload.Width,
+		Height: payload.Height,
+		Rate:   payload.Rate,
+	})
+
+	if err != nil {
 		return err
 	}
 
-	h.sessions.Broadcast(event.SCREEN_UPDATED, payload)
+	h.sessions.Broadcast(event.SCREEN_UPDATED, message.ScreenSize{
+		Width:  size.Width,
+		Height: size.Height,
+		Rate:   size.Rate,
+	})
 	return nil
 }

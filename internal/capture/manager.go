@@ -44,7 +44,7 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 			}
 
 			screen := desktop.GetScreenSize()
-			pipeline, err := pipelineConf.GetPipeline(*screen)
+			pipeline, err := pipelineConf.GetPipeline(screen)
 			if err != nil {
 				return "", err
 			}

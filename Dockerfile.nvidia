@@ -2,6 +2,36 @@ ARG UBUNTU_RELEASE=20.04
 ARG CUDA_VERSION=11.2.2
 
 #
+# Stage 0: Build xserver-xorg-video-dummy 0.3.8-2 with RandR support.
+#
+FROM debian:bullseye-slim as xserver-xorg-video-dummy
+
+WORKDIR /usr/local/src
+
+ENV DEBIAN_FRONTEND=noninteractive
+RUN set -eux; \
+    cp /etc/apt/sources.list /etc/apt/sources.list~; \
+    sed -Ei 's/^deb /deb-src /' /etc/apt/sources.list; \
+    cat /etc/apt/sources.list~ >> /etc/apt/sources.list; \
+    apt-get update; \
+	apt-get install -y dpkg-dev git; \
+    apt-get build-dep -y xserver-xorg-video-dummy; \
+    git clone --depth 1 --branch xserver-xorg-video-dummy-1_0.3.8-2 https://salsa.debian.org/xorg-team/driver/xserver-xorg-video-dummy; \
+    #
+    # clean up
+    apt-get clean -y; \
+    rm -rf /var/lib/apt/lists/* /var/cache/apt/*
+
+COPY runtime/xdummy-randr.patch /tmp/xdummy-randr.patch
+
+RUN set -eux; \
+    cd xserver-xorg-video-dummy; \
+    patch -p1 < /tmp/xdummy-randr.patch; \
+	bash ./autogen.sh; \
+	make; \
+    make install;
+
+#
 # Stage 1: Build.
 #
 FROM golang:1.18-bullseye as build
@@ -15,6 +45,10 @@ RUN set -eux; \
     apt-get install -y --no-install-recommends \
         libx11-dev libxrandr-dev libxtst-dev libgtk-3-dev \
         libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev; \
+    # install libxcvt-dev (not available in debian:bullseye)
+    wget http://ftp.de.debian.org/debian/pool/main/libx/libxcvt/libxcvt-dev_0.1.2-1_amd64.deb; \
+    wget http://ftp.de.debian.org/debian/pool/main/libx/libxcvt/libxcvt0_0.1.2-1_amd64.deb; \
+    apt-get install  --no-install-recommends ./libxcvt0_0.1.2-1_amd64.deb ./libxcvt-dev_0.1.2-1_amd64.deb; \
     #
     # clean up
     apt-get clean -y; \
@@ -73,6 +107,10 @@ RUN set -eux; \
         gstreamer1.0-plugins-base gstreamer1.0-plugins-good \
         gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly \
         gstreamer1.0-pulseaudio; \
+    # install libxcvt0 (not available in debian:bullseye)
+    wget http://ftp.de.debian.org/debian/pool/main/libx/libxcvt/libxcvt0_0.1.2-1_amd64.deb; \
+    apt-get install  --no-install-recommends ./libxcvt0_0.1.2-1_amd64.deb; \
+    rm ./libxcvt0_0.1.2-1_amd64.deb; \
     #
     # create a non-root user
     groupadd --gid $USER_GID $USERNAME; \
@@ -110,6 +148,9 @@ RUN set -eux; \
     # clean up
     apt-get clean -y; \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/*
+
+# replace version
+COPY --from=xserver-xorg-video-dummy /usr/local/lib/xorg/modules/drivers/dummy_drv.so /usr/lib/xorg/modules/drivers/dummy_drv.so
 
 #
 # Install and configure Vulkan manually

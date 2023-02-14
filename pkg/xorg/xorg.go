@@ -1,7 +1,7 @@
 package xorg
 
 /*
-#cgo LDFLAGS: -lX11 -lXrandr -lXtst -lXfixes
+#cgo LDFLAGS: -lX11 -lXrandr -lXtst -lXfixes -lxcvt
 
 #include "xorg.h"
 */
@@ -27,7 +27,13 @@ const (
 	KbdModNumLock  KbdMod = 16
 )
 
-var ScreenConfigurations = make(map[int]types.ScreenConfiguration)
+type ScreenConfiguration struct {
+	Width  int
+	Height int
+	Rates  map[int]int16
+}
+
+var ScreenConfigurations = make(map[int]ScreenConfiguration)
 
 var debounce_button = make(map[uint32]time.Time)
 var debounce_key = make(map[uint32]time.Time)
@@ -178,40 +184,46 @@ func CheckKeys(duration time.Duration) {
 	}
 }
 
-func ChangeScreenSize(width int, height int, rate int16) error {
+// set screen configuration, create new one if not exists
+func ChangeScreenSize(width int, height int, rate int16) (int, int, int16, error) {
 	mu.Lock()
 	defer mu.Unlock()
 
-	for index, size := range ScreenConfigurations {
-		if size.Width == width && size.Height == height {
-			for _, fps := range size.Rates {
-				if rate == fps {
-					C.XSetScreenConfiguration(C.int(index), C.short(fps))
-					return nil
-				}
-			}
-		}
+	// round width and height to 8
+	width = width - (width % 8)
+	height = height - (height % 8)
+
+	// convert variables to C types
+	c_width, c_height, c_rate := C.int(width), C.int(height), C.short(rate)
+
+	// if screen configuration already exists, just set it
+	if status := C.XSetScreenConfiguration(c_width, c_height, &c_rate); status == C.RRSetConfigSuccess {
+		return width, height, int16(c_rate), nil
 	}
 
-	return fmt.Errorf("unknown screen configuration %dx%d@%d", width, height, rate)
+	// create new screen configuration
+	C.XCreateScreenMode(c_width, c_height, c_rate)
+
+	// screen configuration should exist now, set it
+	if status := C.XSetScreenConfiguration(c_width, c_height, &c_rate); status == C.RRSetConfigSuccess {
+		return width, height, int16(c_rate), nil
+	}
+
+	return 0, 0, 0, fmt.Errorf("unknown screen configuration %dx%d@%d", width, height, rate)
 }
 
-func GetScreenSize() *types.ScreenSize {
+func GetScreenSize() types.ScreenSize {
 	mu.Lock()
 	defer mu.Unlock()
 
-	index := int(C.XGetScreenSize())
-	rate := int16(C.XGetScreenRate())
+	c_width, c_height, c_rate := C.int(0), C.int(0), C.short(0)
+	C.XGetScreenConfiguration(&c_width, &c_height, &c_rate)
 
-	if conf, ok := ScreenConfigurations[index]; ok {
-		return &types.ScreenSize{
-			Width:  conf.Width,
-			Height: conf.Height,
-			Rate:   rate,
-		}
+	return types.ScreenSize{
+		Width:  int(c_width),
+		Height: int(c_height),
+		Rate:   int16(c_rate),
 	}
-
-	return nil
 }
 
 func SetKeyboardModifier(mod KbdMod, active bool) {
@@ -300,7 +312,7 @@ func GetScreenshotImage() *image.RGBA {
 
 //export goCreateScreenSize
 func goCreateScreenSize(index C.int, width C.int, height C.int, mwidth C.int, mheight C.int) {
-	ScreenConfigurations[int(index)] = types.ScreenConfiguration{
+	ScreenConfigurations[int(index)] = ScreenConfiguration{
 		Width:  int(width),
 		Height: int(height),
 		Rates:  make(map[int]int16),
@@ -309,12 +321,5 @@ func goCreateScreenSize(index C.int, width C.int, height C.int, mwidth C.int, mh
 
 //export goSetScreenRates
 func goSetScreenRates(index C.int, rate_index C.int, rateC C.short) {
-	rate := int16(rateC)
-
-	// filter out all irrelevant rates
-	if rate > 60 || (rate > 30 && rate%10 != 0) {
-		return
-	}
-
-	ScreenConfigurations[int(index)].Rates[int(rate_index)] = rate
+	ScreenConfigurations[int(index)].Rates[int(rate_index)] = int16(rateC)
 }

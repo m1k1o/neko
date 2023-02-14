@@ -188,16 +188,13 @@ func (config *VideoConfig) GetPipeline(screen ScreenSize) (string, error) {
 	}[:], " "), nil
 }
 
-func (config *VideoConfig) GetBitrateFn(getScreen func() *ScreenSize) func() (int, error) {
+func (config *VideoConfig) GetBitrateFn(getScreen func() ScreenSize) func() (int, error) {
 	return func() (int, error) {
 		if config.Bitrate > 0 {
 			return config.Bitrate, nil
 		}
 
 		screen := getScreen()
-		if screen == nil {
-			return 0, fmt.Errorf("screen is nil")
-		}
 
 		values := map[string]any{
 			"width":  screen.Width,

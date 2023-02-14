@@ -20,12 +20,11 @@ type ScreenConfigurationPayload struct {
 func (h *RoomHandler) screenConfiguration(w http.ResponseWriter, r *http.Request) error {
 	size := h.desktop.GetScreenSize()
 
-	if size == nil {
-		return utils.HttpInternalServerError().WithInternalMsg("unable to get screen configuration")
-	}
-
-	payload := ScreenConfigurationPayload(*size)
-	return utils.HttpSuccess(w, payload)
+	return utils.HttpSuccess(w, ScreenConfigurationPayload{
+		Width:  size.Width,
+		Height: size.Height,
+		Rate:   size.Rate,
+	})
 }
 
 func (h *RoomHandler) screenConfigurationChange(w http.ResponseWriter, r *http.Request) error {
@@ -34,29 +33,36 @@ func (h *RoomHandler) screenConfigurationChange(w http.ResponseWriter, r *http.R
 		return err
 	}
 
-	size := types.ScreenSize(*data)
-	if err := h.desktop.SetScreenSize(size); err != nil {
+	size, err := h.desktop.SetScreenSize(types.ScreenSize{
+		Width:  data.Width,
+		Height: data.Height,
+		Rate:   data.Rate,
+	})
+
+	if err != nil {
 		return utils.HttpUnprocessableEntity("cannot set screen size").WithInternalErr(err)
 	}
 
-	payload := message.ScreenSize(*data)
-	h.sessions.Broadcast(event.SCREEN_UPDATED, payload)
+	h.sessions.Broadcast(event.SCREEN_UPDATED, message.ScreenSize{
+		Width:  size.Width,
+		Height: size.Height,
+		Rate:   size.Rate,
+	})
 
 	return utils.HttpSuccess(w, data)
 }
 
+// TODO: remove.
 func (h *RoomHandler) screenConfigurationsList(w http.ResponseWriter, r *http.Request) error {
-	list := []ScreenConfigurationPayload{}
+	configurations := h.desktop.ScreenConfigurations()
 
-	ScreenConfigurations := h.desktop.ScreenConfigurations()
-	for _, size := range ScreenConfigurations {
-		for _, fps := range size.Rates {
-			list = append(list, ScreenConfigurationPayload{
-				Width:  size.Width,
-				Height: size.Height,
-				Rate:   fps,
-			})
-		}
+	list := make([]ScreenConfigurationPayload, 0, len(configurations))
+	for _, conf := range configurations {
+		list = append(list, ScreenConfigurationPayload{
+			Width:  conf.Width,
+			Height: conf.Height,
+			Rate:   conf.Rate,
+		})
 	}
 
 	return utils.HttpSuccess(w, list)

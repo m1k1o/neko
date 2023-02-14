@@ -7,6 +7,11 @@
 #include <X11/extensions/XTest.h>
 #include <X11/extensions/Xfixes.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+
+// for computing xrandr modelines at runtime
+#include <libxcvt/libxcvt.h>
 
 extern void goCreateScreenSize(int index, int width, int height, int mwidth, int mheight);
 extern void goSetScreenRates(int index, int rate_index, short rate);
@@ -31,10 +36,11 @@ static KeyCode XKeyEntryGet(KeySym keysym);
 static KeyCode XkbKeysymToKeycode(Display *dpy, KeySym keysym);
 void XKey(KeySym keysym, int down);
 
+Status XSetScreenConfiguration(int width, int height, short *rate);
+void XGetScreenConfiguration(int *width, int *height, short *rate);
 void XGetScreenConfigurations();
-void XSetScreenConfiguration(int index, short rate);
-int XGetScreenSize();
-short XGetScreenRate();
+void XCreateScreenMode(int width, int height, short rate);
+XRRModeInfo XCreateScreenModeInfo(int hdisplay, int vdisplay, short vrefresh);
 
 void XSetKeyboardModifier(int mod, int on);
 char XGetKeyboardModifiers();
