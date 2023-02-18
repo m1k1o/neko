@@ -457,6 +457,12 @@
           <button @click="screenChangingToggle">screen cfg changing</button>
         </td>
       </tr>
+      <tr>
+        <th>click on color</th>
+        <td>
+          <NekoColor @colorChange="neko.control.buttonPress(1, $event)" />
+        </td>
+      </tr>
     </table>
   </div>
 </template>
@@ -494,9 +500,13 @@
 <script lang="ts">
   import { Vue, Component, Prop, Watch } from 'vue-property-decorator'
   import Neko from '~/component/main.vue'
+  import NekoColor from './color.vue'
 
   @Component({
     name: 'neko-events',
+    components: {
+      NekoColor,
+    },
   })
   export default class extends Vue {
     @Prop() readonly neko!: Neko
