@@ -16,13 +16,14 @@ import (
 )
 
 type Track struct {
-	logger      zerolog.Logger
-	track       *webrtc.TrackLocalStaticSample
-	paused      bool
+	logger   zerolog.Logger
+	track    *webrtc.TrackLocalStaticSample
+	listener func(sample types.Sample)
+
 	videoAuto   bool
 	videoAutoMu sync.RWMutex
-	listener    func(sample types.Sample)
 
+	paused   bool
 	stream   types.StreamSinkManager
 	streamMu sync.Mutex
 
@@ -60,10 +61,6 @@ func NewTrack(logger zerolog.Logger, codec codec.RTPCodec, connection *webrtc.Pe
 	}
 
 	t.listener = func(sample types.Sample) {
-		if t.paused {
-			return
-		}
-
 		err := track.WriteSample(media.Sample{
 			Data:     sample.Data,
 			Duration: sample.Duration,
@@ -112,6 +109,12 @@ func (t *Track) SetStream(stream types.StreamSinkManager) (bool, error) {
 		return false, nil
 	}
 
+	// if paused, we switch the stream but don't add the listener
+	if t.paused {
+		t.stream = stream
+		return true, nil
+	}
+
 	var err error
 	if t.stream != nil {
 		err = t.stream.MoveListenerTo(&t.listener, stream)
@@ -123,7 +126,6 @@ func (t *Track) SetStream(stream types.StreamSinkManager) (bool, error) {
 	}
 
 	t.stream = stream
-
 	return true, nil
 }
 
@@ -131,13 +133,39 @@ func (t *Track) RemoveStream() {
 	t.streamMu.Lock()
 	defer t.streamMu.Unlock()
 
-	if t.stream != nil {
-		_ = t.stream.RemoveListener(&t.listener)
-		t.stream = nil
+	// if there is no stream, or paused, do nothing
+	if t.stream == nil || t.paused {
+		return
 	}
+
+	err := t.stream.RemoveListener(&t.listener)
+	if err != nil {
+		t.logger.Warn().Err(err).Msg("failed to remove listener from stream")
+	}
+
+	t.stream = nil
 }
 
 func (t *Track) SetPaused(paused bool) {
+	t.streamMu.Lock()
+	defer t.streamMu.Unlock()
+
+	// if there is no state change or no stream, do nothing
+	if t.paused == paused || t.stream == nil {
+		return
+	}
+
+	var err error
+	if paused {
+		err = t.stream.RemoveListener(&t.listener)
+	} else {
+		err = t.stream.AddListener(&t.listener)
+	}
+	if err != nil {
+		t.logger.Warn().Err(err).Msg("failed to change listener state")
+		return
+	}
+
 	t.paused = paused
 }
 

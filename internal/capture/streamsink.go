@@ -163,9 +163,12 @@ func (manager *StreamSinkManagerCtx) stop() {
 
 func (manager *StreamSinkManagerCtx) addListener(listener *func(sample types.Sample)) {
 	ptr := reflect.ValueOf(listener).Pointer()
+	emitKeyframe := false
 
 	manager.listenersMu.Lock()
 	if manager.waitForKf {
+		// if this is the first listener, we need to emit a keyframe
+		emitKeyframe = len(manager.listenersKf) == 0
 		// if we're waiting for a keyframe, add it to the keyframe lobby
 		manager.listenersKf[ptr] = listener
 	} else {
@@ -178,7 +181,7 @@ func (manager *StreamSinkManagerCtx) addListener(listener *func(sample types.Sam
 	manager.currentListeners.Set(float64(manager.ListenersCount()))
 
 	// if we will be waiting for a keyframe, emit one now
-	if manager.pipeline != nil && manager.waitForKf {
+	if manager.pipeline != nil && emitKeyframe {
 		manager.pipeline.EmitVideoKeyframe()
 	}
 }
