@@ -189,9 +189,8 @@ func ChangeScreenSize(width int, height int, rate int16) (int, int, int16, error
 	mu.Lock()
 	defer mu.Unlock()
 
-	// round width and height to 8
+	// round width to 8, because of Xorg
 	width = width - (width % 8)
-	height = height - (height % 8)
 
 	// convert variables to C types
 	c_width, c_height, c_rate := C.int(width), C.int(height), C.short(rate)
