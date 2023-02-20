@@ -17,7 +17,7 @@ func NewImage(desktop types.DesktopManager) *ImageCtx {
 		desktop:   desktop,
 		listeners: map[uintptr]*func(entry *ImageEntry){},
 		cache:     map[uint64]*ImageEntry{},
-		maxSerial: 200, // TODO: Cleanup?
+		maxSerial: 300, // TODO: Cleanup?
 	}
 }
 
