@@ -61,7 +61,7 @@ jobs:
           registry-url: 'https://npm.pkg.github.com'
 
       - name: Publish package to npm.pkg.github.com
-        run: npm publish --registry=https://npm.pkg.github.com
+        run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -85,7 +85,10 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           registry-url: 'https://registry.npmjs.org'
 
+      - name: Replace npm.pkg.github.com with registry.npmjs.org
+        run: sed -i 's/npm\.pkg\.github\.com/registry\.npmjs\.org/' package.json
+
       - name: Publish package to registry.npmjs.org
-        run: npm publish --registry=https://registry.npmjs.org
+        run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_ACCESS_TOKEN }}
