@@ -40,6 +40,7 @@ func (h *MessageHandlerCtx) signalRequest(session types.Session, payload *messag
 		}
 
 		payload.Video = webrtcPeer.GetVideoID()
+		payload.VideoAuto = webrtcPeer.VideoAuto()
 	}
 
 	session.Send(

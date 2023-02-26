@@ -26,6 +26,9 @@ type WebRTC struct {
 
 	NAT1To1IPs     []string
 	IpRetrievalUrl string
+
+	EstimatorEnabled        bool
+	EstimatorInitialBitrate int
 }
 
 func (WebRTC) Init(cmd *cobra.Command) error {
@@ -66,6 +69,18 @@ func (WebRTC) Init(cmd *cobra.Command) error {
 
 	cmd.PersistentFlags().String("webrtc.ip_retrieval_url", "https://checkip.amazonaws.com", "URL address used for retrieval of the external IP address")
 	if err := viper.BindPFlag("webrtc.ip_retrieval_url", cmd.PersistentFlags().Lookup("webrtc.ip_retrieval_url")); err != nil {
+		return err
+	}
+
+	// bandwidth estimator
+
+	cmd.PersistentFlags().Bool("webrtc.estimator.enabled", false, "enables the bandwidth estimator")
+	if err := viper.BindPFlag("webrtc.estimator.enabled", cmd.PersistentFlags().Lookup("webrtc.estimator.enabled")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().Int("webrtc.estimator.initial_bitrate", 1_000_000, "initial bitrate for the bandwidth estimator")
+	if err := viper.BindPFlag("webrtc.estimator.initial_bitrate", cmd.PersistentFlags().Lookup("webrtc.estimator.initial_bitrate")); err != nil {
 		return err
 	}
 
@@ -135,4 +150,9 @@ func (s *WebRTC) Set() {
 			log.Warn().Err(err).Msgf("IP retrieval failed")
 		}
 	}
+
+	// bandwidth estimator
+
+	s.EstimatorEnabled = viper.GetBool("webrtc.estimator.enabled")
+	s.EstimatorInitialBitrate = viper.GetInt("webrtc.estimator.initial_bitrate")
 }

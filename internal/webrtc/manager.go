@@ -211,28 +211,34 @@ func (manager *WebRTCManagerCtx) newPeerConnection(bitrate int, codecs []codec.R
 	// create interceptor registry
 	registry := &interceptor.Registry{}
 
-	congestionController, err := cc.NewInterceptor(func() (cc.BandwidthEstimator, error) {
-		if bitrate == 0 {
-			bitrate = 1_000_000
+	// create bandwidth estimator
+	estimatorChan := make(chan cc.BandwidthEstimator, 1)
+	if manager.config.EstimatorEnabled {
+		congestionController, err := cc.NewInterceptor(func() (cc.BandwidthEstimator, error) {
+			if bitrate == 0 {
+				bitrate = manager.config.EstimatorInitialBitrate
+			}
+
+			return gcc.NewSendSideBWE(
+				gcc.SendSideBWEInitialBitrate(bitrate),
+				gcc.SendSideBWEPacer(gcc.NewNoOpPacer()),
+			)
+		})
+		if err != nil {
+			return nil, nil, err
 		}
 
-		return gcc.NewSendSideBWE(
-			gcc.SendSideBWEInitialBitrate(bitrate),
-			gcc.SendSideBWEPacer(gcc.NewNoOpPacer()),
-		)
-	})
-	if err != nil {
-		return nil, nil, err
-	}
+		congestionController.OnNewPeerConnection(func(id string, estimator cc.BandwidthEstimator) {
+			estimatorChan <- estimator
+		})
 
-	estimatorChan := make(chan cc.BandwidthEstimator, 1)
-	congestionController.OnNewPeerConnection(func(id string, estimator cc.BandwidthEstimator) {
-		estimatorChan <- estimator
-	})
-
-	registry.Add(congestionController)
-	if err = webrtc.ConfigureTWCCHeaderExtensionSender(engine, registry); err != nil {
-		return nil, nil, err
+		registry.Add(congestionController)
+		if err = webrtc.ConfigureTWCCHeaderExtensionSender(engine, registry); err != nil {
+			return nil, nil, err
+		}
+	} else {
+		// no estimator, send nil
+		estimatorChan <- nil
 	}
 
 	if err := webrtc.RegisterDefaultInterceptors(engine, registry); err != nil {
@@ -276,7 +282,8 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int, 
 		return nil, err
 	}
 
-	if bitrate == 0 {
+	// if bitrate is 0, and estimator is enabled, use estimator bitrate
+	if bitrate == 0 && estimator != nil {
 		bitrate = estimator.GetTargetBitrate()
 	}
 
@@ -309,6 +316,11 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int, 
 		return nil, err
 	}
 
+	// if estimator is disabled, disable video auto
+	if !manager.config.EstimatorEnabled {
+		videoAuto = false
+	}
+
 	// video track
 	videoTrack, err := NewTrack(logger, videoCodec, connection, WithVideoAuto(videoAuto))
 	if err != nil {
@@ -321,7 +333,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int, 
 	changeVideoFromBitrate := func(peerBitrate int) {
 		// when switching from manual to auto bitrate estimation, in case the estimator is
 		// idle (lastBitrate > maxBitrate), we want to go back to the previous estimated bitrate
-		if peerBitrate == 0 {
+		if peerBitrate == 0 && estimator != nil {
 			peerBitrate = estimator.GetTargetBitrate()
 			manager.logger.Debug().
 				Int("peer_bitrate", peerBitrate).
@@ -397,24 +409,27 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int, 
 	// set initial video bitrate
 	changeVideoFromBitrate(bitrate)
 
-	// use a ticker to get current client target bitrate
-	go func() {
-		ticker := time.NewTicker(bitrateCheckInterval)
-		defer ticker.Stop()
+	// if estimator is enabled, use it to change video stream
+	if estimator != nil {
+		go func() {
+			// use a ticker to get current client target bitrate
+			ticker := time.NewTicker(bitrateCheckInterval)
+			defer ticker.Stop()
 
-		for range ticker.C {
-			targetBitrate := estimator.GetTargetBitrate()
-			manager.metrics.SetReceiverEstimatedMaximumBitrate(session, float64(targetBitrate))
+			for range ticker.C {
+				targetBitrate := estimator.GetTargetBitrate()
+				manager.metrics.SetReceiverEstimatedMaximumBitrate(session, float64(targetBitrate))
 
-			if connection.ConnectionState() == webrtc.PeerConnectionStateClosed {
-				break
+				if connection.ConnectionState() == webrtc.PeerConnectionStateClosed {
+					break
+				}
+				if !videoTrack.VideoAuto() {
+					continue
+				}
+				changeVideoFromBitrate(targetBitrate)
 			}
-			if !videoTrack.VideoAuto() {
-				continue
-			}
-			changeVideoFromBitrate(targetBitrate)
-		}
-	}()
+		}()
+	}
 
 	// data channel
 
@@ -435,8 +450,15 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int, 
 			videoTrack.SetPaused(isPaused)
 			audioTrack.SetPaused(isPaused)
 		},
-		iceTrickle:   manager.config.ICETrickle,
-		setVideoAuto: videoTrack.SetVideoAuto,
+		iceTrickle: manager.config.ICETrickle,
+		setVideoAuto: func(videoAuto bool) {
+			if manager.config.EstimatorEnabled {
+				videoTrack.SetVideoAuto(videoAuto)
+			} else {
+				logger.Warn().Msg("estimator is disabled, cannot change video auto")
+				videoTrack.SetVideoAuto(false) // ensure video auto is disabled
+			}
+		},
 		getVideoAuto: videoTrack.VideoAuto,
 	}
 
