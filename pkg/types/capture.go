@@ -160,7 +160,8 @@ func (config *VideoConfig) GetPipeline(screen ScreenSize) (string, error) {
 			return "", err
 		}
 
-		scalePipeline = fmt.Sprintf("! videoscale ! capsfilter caps=video/x-raw,width=%d,height=%d name=resolution ! queue", w, h)
+		// element videoscale parameter method to 0 meaning nearest neighbor
+		scalePipeline = fmt.Sprintf("! videoscale method=0 ! capsfilter caps=video/x-raw,width=%d,height=%d name=resolution ! queue", w, h)
 	}
 
 	// get encoder pipeline
