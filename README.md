@@ -4,7 +4,7 @@ Connect to [demodesk/neko](https://github.com/demodesk/neko) backend with self c
 For **community edition** neko with GUI and _plug & play_ deployment visit [m1k1o/neko](https://github.com/m1k1o/neko).
 
 ## Installation
-Code is published to public GitHub npm repository.
+Code is published to public NPM registry and GitHub npm repository.
 
 ```bash
 # npm command
@@ -13,14 +13,6 @@ npm i @demodesk/neko
 yarn add @demodesk/neko
 ```
 
-### Registry setup
-
-```bash
-# npm command
-echo @demodesk:registry=https://npm.pkg.github.com >> .npmrc
-# yarn command
-echo \"@demodesk:registry\" \"https://npm.pkg.github.com\" >> .yarnrc
-```
 ### Build
 
 You can set keyboard provider at build time, either `novnc` or the default `guacamole`.
