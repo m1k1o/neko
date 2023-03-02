@@ -128,7 +128,7 @@ services:
 - For others, see where existing `policies.json` is placed in their `Dockerfile`.
 
 #### Allow file uploading & downloading
-- From security perespective, browser is not enabled to access local file data.
+- From security perspective, browser is not enabled to access local file data.
 - If you want to enable this, you need to modify following policies:
 ```json
   "DownloadRestrictions": 0,
@@ -145,7 +145,7 @@ services:
 - For other chromium based browsers, see in `supervisord.conf` folder that is specified in `--user-data-dir`.
 
 #### Allow persistent data in policies
-- From security perespective, browser is set up to forget all cookies and brwosing history when its closed.
+- From security perespective, browser is set up to forget all cookies and browsing history when its closed.
 - If you want to enable this, you need to modify following policies:
 ```json
   "DefaultCookiesSetting": 1,
