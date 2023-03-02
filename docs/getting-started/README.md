@@ -48,7 +48,7 @@ All images are also available on [GitHub Container Registry](https://github.com/
 - `ghcr.io/m1k1o/neko/vlc:latest`
 - `ghcr.io/m1k1o/neko/xfce:latest`
 
-For ARM-based images (like Raspberry Pi - with GPU hardware acceleration, Oracle Cloud ARM tier). Currently not all images are available for ARM, because not all applications are available for ARM.
+For ARM-based images (like Raspberry Pi - with GPU hardware acceleration, Oracle Cloud ARM tier). Currently, not all images are available for ARM, because not all applications are available for ARM.
 
 - `ghcr.io/m1k1o/neko/arm-firefox:latest`
 - `ghcr.io/m1k1o/neko/arm-chromium:latest`
@@ -145,7 +145,7 @@ services:
 - For other chromium based browsers, see in `supervisord.conf` folder that is specified in `--user-data-dir`.
 
 #### Allow persistent data in policies
-- From security perespective, browser is set up to forget all cookies and browsing history when its closed.
+- From security perspective, browser is set up to forget all cookies and browsing history when its closed.
 - If you want to enable this, you need to modify following policies:
 ```json
   "DefaultCookiesSetting": 1,

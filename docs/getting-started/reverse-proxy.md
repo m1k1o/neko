@@ -42,9 +42,9 @@ server {
 
 After successfully installing and running neko, you might want to get rid of the port in the url, use DNS instead of IP address and also having SSL.
 This will remove the port from the URL and also enables HTTPS.
-To do this, you have to get running apache server. Now you can go into the `/etc/apache2/sites-available` folder and create new config file for example `neko.conf`
-After creating new config file, you can use this example config and paste it in. Some thing might vary on your machine so read through and modify if needed.
-Bear in mind that your neko server doesn't have to run on the same computer as apache. They just have to be on the same network and then you replace localhost with correct internal IP.
+To do this, you have to get running Apache server. Now you can go into the `/etc/apache2/sites-available` folder and create new config file for example `neko.conf`
+After creating new config file, you can use this example config and paste it in. Some things may vary on your machine so read through and modify if needed.
+Bear in mind that your neko server doesn't have to run on the same computer as Apache. They just have to be on the same network, and then you replace localhost with correct internal IP.
 
 ```xml
 <VirtualHost *:80>
