@@ -4,6 +4,8 @@ import (
 	"errors"
 	"reflect"
 	"sync"
+	"sync/atomic"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
@@ -23,6 +25,9 @@ type StreamSinkManagerCtx struct {
 	getBitrate func() (int, error)
 	waitForKf  bool // wait for a keyframe before sending samples
 
+	bitrate   uint64 // atomic
+	brBuckets map[int]float64
+
 	logger zerolog.Logger
 	mu     sync.Mutex
 	wg     sync.WaitGroup
@@ -32,12 +37,13 @@ type StreamSinkManagerCtx struct {
 	pipelineMu sync.Mutex
 	pipelineFn func() (string, error)
 
-	listeners   map[uintptr]*func(sample types.Sample)
-	listenersKf map[uintptr]*func(sample types.Sample) // keyframe lobby
+	listeners   map[uintptr]types.SampleListener
+	listenersKf map[uintptr]types.SampleListener // keyframe lobby
 	listenersMu sync.Mutex
 
 	// metrics
 	currentListeners prometheus.Gauge
+	totalBytes       prometheus.Counter
 	pipelinesCounter prometheus.Counter
 	pipelinesActive  prometheus.Gauge
 }
@@ -54,12 +60,14 @@ func streamSinkNew(c codec.RTPCodec, pipelineFn func() (string, error), id strin
 		// only wait for keyframes if the codec is video
 		waitForKf: c.IsVideo(),
 
+		brBuckets: map[int]float64{},
+
 		logger:     logger,
 		codec:      c,
 		pipelineFn: pipelineFn,
 
-		listeners:   map[uintptr]*func(sample types.Sample){},
-		listenersKf: map[uintptr]*func(sample types.Sample){},
+		listeners:   map[uintptr]types.SampleListener{},
+		listenersKf: map[uintptr]types.SampleListener{},
 
 		// metrics
 		currentListeners: promauto.NewGauge(prometheus.GaugeOpts{
@@ -67,6 +75,17 @@ func streamSinkNew(c codec.RTPCodec, pipelineFn func() (string, error), id strin
 			Namespace: "neko",
 			Subsystem: "capture",
 			Help:      "Current number of listeners for a pipeline.",
+			ConstLabels: map[string]string{
+				"video_id":   id,
+				"codec_name": c.Name,
+				"codec_type": c.Type.String(),
+			},
+		}),
+		totalBytes: promauto.NewGauge(prometheus.GaugeOpts{
+			Name:      "streamsink_bytes",
+			Namespace: "neko",
+			Subsystem: "capture",
+			Help:      "Total number of bytes created by the pipeline.",
 			ConstLabels: map[string]string{
 				"video_id":   id,
 				"codec_name": c.Name,
@@ -123,6 +142,14 @@ func (manager *StreamSinkManagerCtx) ID() string {
 }
 
 func (manager *StreamSinkManagerCtx) Bitrate() int {
+	// TODO: fix bitrate switching calculation
+	// return real bitrate if available
+	//realBitrate := atomic.LoadUint64(&manager.bitrate)
+	//if realBitrate != 0 {
+	//	return int(realBitrate)
+	//}
+
+	// if we do not have function to estimate bitrate, return 0
 	if manager.getBitrate == nil {
 		return 0
 	}
@@ -161,7 +188,7 @@ func (manager *StreamSinkManagerCtx) stop() {
 	}
 }
 
-func (manager *StreamSinkManagerCtx) addListener(listener *func(sample types.Sample)) {
+func (manager *StreamSinkManagerCtx) addListener(listener types.SampleListener) {
 	ptr := reflect.ValueOf(listener).Pointer()
 	emitKeyframe := false
 
@@ -186,7 +213,7 @@ func (manager *StreamSinkManagerCtx) addListener(listener *func(sample types.Sam
 	}
 }
 
-func (manager *StreamSinkManagerCtx) removeListener(listener *func(sample types.Sample)) {
+func (manager *StreamSinkManagerCtx) removeListener(listener types.SampleListener) {
 	ptr := reflect.ValueOf(listener).Pointer()
 
 	manager.listenersMu.Lock()
@@ -198,7 +225,7 @@ func (manager *StreamSinkManagerCtx) removeListener(listener *func(sample types.
 	manager.currentListeners.Set(float64(manager.ListenersCount()))
 }
 
-func (manager *StreamSinkManagerCtx) AddListener(listener *func(sample types.Sample)) error {
+func (manager *StreamSinkManagerCtx) AddListener(listener types.SampleListener) error {
 	manager.mu.Lock()
 	defer manager.mu.Unlock()
 
@@ -217,7 +244,7 @@ func (manager *StreamSinkManagerCtx) AddListener(listener *func(sample types.Sam
 	return nil
 }
 
-func (manager *StreamSinkManagerCtx) RemoveListener(listener *func(sample types.Sample)) error {
+func (manager *StreamSinkManagerCtx) RemoveListener(listener types.SampleListener) error {
 	manager.mu.Lock()
 	defer manager.mu.Unlock()
 
@@ -236,7 +263,7 @@ func (manager *StreamSinkManagerCtx) RemoveListener(listener *func(sample types.
 
 // moving listeners between streams ensures, that target pipeline is running
 // before listener is added, and stops source pipeline if there are 0 listeners
-func (manager *StreamSinkManagerCtx) MoveListenerTo(listener *func(sample types.Sample), stream types.StreamSinkManager) error {
+func (manager *StreamSinkManagerCtx) MoveListenerTo(listener types.SampleListener, stream types.StreamSinkManager) error {
 	if listener == nil {
 		return errors.New("listener cannot be nil")
 	}
@@ -330,20 +357,7 @@ func (manager *StreamSinkManagerCtx) CreatePipeline() error {
 				return
 			}
 
-			manager.listenersMu.Lock()
-			// if is not delta unit -> it can be decoded independently -> it is a keyframe
-			if manager.waitForKf && !sample.DeltaUnit && len(manager.listenersKf) > 0 {
-				// if current sample is a keyframe, move listeners from
-				// keyframe lobby to actual listeners map and clear lobby
-				for k, v := range manager.listenersKf {
-					manager.listeners[k] = v
-				}
-				manager.listenersKf = make(map[uintptr]*func(sample types.Sample))
-			}
-			for _, emit := range manager.listeners {
-				(*emit)(sample)
-			}
-			manager.listenersMu.Unlock()
+			manager.onSample(sample)
 		}
 	}()
 
@@ -351,6 +365,51 @@ func (manager *StreamSinkManagerCtx) CreatePipeline() error {
 	manager.pipelinesActive.Set(1)
 
 	return nil
+}
+
+func (manager *StreamSinkManagerCtx) saveSampleBitrate(timestamp time.Time, delta float64) {
+	// get unix timestamp in seconds
+	sec := timestamp.Unix()
+	// last bucket is timestamp rounded to 3 seconds - 1 second
+	last := int((sec - 1) % 3)
+	// current bucket is timestamp rounded to 3 seconds
+	curr := int(sec % 3)
+	// next bucket is timestamp rounded to 3 seconds + 1 second
+	next := int((sec + 1) % 3)
+
+	if manager.brBuckets[next] != 0 {
+		// atomic update bitrate
+		atomic.StoreUint64(&manager.bitrate, uint64(manager.brBuckets[last]))
+		// empty next bucket
+		manager.brBuckets[next] = 0
+	}
+
+	// add rate to current bucket
+	manager.brBuckets[curr] += delta
+}
+
+func (manager *StreamSinkManagerCtx) onSample(sample types.Sample) {
+	manager.listenersMu.Lock()
+	defer manager.listenersMu.Unlock()
+
+	// save to metrics
+	length := float64(sample.Length)
+	manager.totalBytes.Add(length)
+	manager.saveSampleBitrate(sample.Timestamp, length)
+
+	// if is not delta unit -> it can be decoded independently -> it is a keyframe
+	if manager.waitForKf && !sample.DeltaUnit && len(manager.listenersKf) > 0 {
+		// if current sample is a keyframe, move listeners from
+		// keyframe lobby to actual listeners map and clear lobby
+		for k, v := range manager.listenersKf {
+			manager.listeners[k] = v
+		}
+		manager.listenersKf = make(map[uintptr]types.SampleListener)
+	}
+
+	for _, l := range manager.listeners {
+		l.WriteSample(sample)
+	}
 }
 
 func (manager *StreamSinkManagerCtx) DestroyPipeline() {
@@ -366,4 +425,7 @@ func (manager *StreamSinkManagerCtx) DestroyPipeline() {
 	manager.pipeline = nil
 
 	manager.pipelinesActive.Set(0)
+
+	manager.brBuckets = make(map[int]float64)
+	atomic.StoreUint64(&manager.bitrate, 0)
 }

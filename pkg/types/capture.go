@@ -17,9 +17,18 @@ var (
 )
 
 type Sample struct {
-	Data      []byte
+	// buffer with encoded media
+	Data   []byte
+	Length int
+	// timing information
+	Timestamp time.Time
 	Duration  time.Duration
+	// metadata
 	DeltaUnit bool // this unit cannot be decoded independently.
+}
+
+type SampleListener interface {
+	WriteSample(Sample)
 }
 
 type Receiver interface {
@@ -60,9 +69,9 @@ type StreamSinkManager interface {
 	Codec() codec.RTPCodec
 	Bitrate() int
 
-	AddListener(listener *func(sample Sample)) error
-	RemoveListener(listener *func(sample Sample)) error
-	MoveListenerTo(listener *func(sample Sample), targetStream StreamSinkManager) error
+	AddListener(listener SampleListener) error
+	RemoveListener(listener SampleListener) error
+	MoveListenerTo(listener SampleListener, targetStream StreamSinkManager) error
 
 	ListenersCount() int
 	Started() bool

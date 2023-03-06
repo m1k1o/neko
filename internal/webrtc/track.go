@@ -16,9 +16,11 @@ import (
 )
 
 type Track struct {
-	logger   zerolog.Logger
-	track    *webrtc.TrackLocalStaticSample
-	listener func(sample types.Sample)
+	logger zerolog.Logger
+	track  *webrtc.TrackLocalStaticSample
+
+	rtcpCh chan []rtcp.Packet
+	sample chan types.Sample
 
 	videoAuto   bool
 	videoAutoMu sync.RWMutex
@@ -26,9 +28,6 @@ type Track struct {
 	paused   bool
 	stream   types.StreamSinkManager
 	streamMu sync.Mutex
-
-	onRtcp   func([]rtcp.Packet)
-	onRtcpMu sync.RWMutex
 
 	bitrateChange func(int) (bool, error)
 	videoChange   func(string) (bool, error)
@@ -39,6 +38,12 @@ type option func(*Track)
 func WithVideoAuto(auto bool) option {
 	return func(t *Track) {
 		t.videoAuto = auto
+	}
+}
+
+func WithRtcpChan(rtcp chan []rtcp.Packet) option {
+	return func(t *Track) {
+		t.rtcpCh = rtcp
 	}
 }
 
@@ -54,20 +59,12 @@ func NewTrack(logger zerolog.Logger, codec codec.RTPCodec, connection *webrtc.Pe
 	t := &Track{
 		logger: logger,
 		track:  track,
+		rtcpCh: make(chan []rtcp.Packet),
+		sample: make(chan types.Sample),
 	}
 
 	for _, opt := range opts {
 		opt(t)
-	}
-
-	t.listener = func(sample types.Sample) {
-		err := track.WriteSample(media.Sample{
-			Data:     sample.Data,
-			Duration: sample.Duration,
-		})
-		if err != nil && !errors.Is(err, io.ErrClosedPipe) {
-			logger.Warn().Err(err).Msg("failed to write sample to track")
-		}
 	}
 
 	sender, err := connection.AddTrack(t.track)
@@ -76,27 +73,52 @@ func NewTrack(logger zerolog.Logger, codec codec.RTPCodec, connection *webrtc.Pe
 	}
 
 	go t.rtcpReader(sender)
+	go t.sampleReader()
 
 	return t, nil
+}
+
+func (t *Track) Shutdown() {
+	t.RemoveStream()
+	close(t.sample)
 }
 
 func (t *Track) rtcpReader(sender *webrtc.RTPSender) {
 	for {
 		packets, _, err := sender.ReadRTCP()
 		if err != nil {
-			if err == io.EOF || err == io.ErrClosedPipe {
+			if errors.Is(err, io.EOF) || errors.Is(err, io.ErrClosedPipe) {
+				t.logger.Debug().Msg("track rtcp reader closed")
 				return
 			}
 
-			t.logger.Err(err).Msg("RTCP read error")
+			t.logger.Warn().Err(err).Msg("failed to read track rtcp")
 			continue
 		}
 
-		t.onRtcpMu.RLock()
-		if t.onRtcp != nil {
-			go t.onRtcp(packets)
+		if t.rtcpCh != nil {
+			t.rtcpCh <- packets
 		}
-		t.onRtcpMu.RUnlock()
+	}
+}
+
+func (t *Track) sampleReader() {
+	for {
+		sample, ok := <-t.sample
+		if !ok {
+			t.logger.Debug().Msg("track sample reader closed")
+			return
+		}
+
+		err := t.track.WriteSample(media.Sample{
+			Data:      sample.Data,
+			Duration:  sample.Duration,
+			Timestamp: sample.Timestamp,
+		})
+
+		if err != nil && !errors.Is(err, io.ErrClosedPipe) {
+			t.logger.Warn().Err(err).Msg("failed to write sample to track")
+		}
 	}
 }
 
@@ -117,9 +139,9 @@ func (t *Track) SetStream(stream types.StreamSinkManager) (bool, error) {
 
 	var err error
 	if t.stream != nil {
-		err = t.stream.MoveListenerTo(&t.listener, stream)
+		err = t.stream.MoveListenerTo(t, stream)
 	} else {
-		err = stream.AddListener(&t.listener)
+		err = stream.AddListener(t)
 	}
 	if err != nil {
 		return false, err
@@ -138,7 +160,7 @@ func (t *Track) RemoveStream() {
 		return
 	}
 
-	err := t.stream.RemoveListener(&t.listener)
+	err := t.stream.RemoveListener(t)
 	if err != nil {
 		t.logger.Warn().Err(err).Msg("failed to remove listener from stream")
 	}
@@ -157,9 +179,9 @@ func (t *Track) SetPaused(paused bool) {
 
 	var err error
 	if paused {
-		err = t.stream.RemoveListener(&t.listener)
+		err = t.stream.RemoveListener(t)
 	} else {
-		err = t.stream.AddListener(&t.listener)
+		err = t.stream.AddListener(t)
 	}
 	if err != nil {
 		t.logger.Warn().Err(err).Msg("failed to change listener state")
@@ -169,11 +191,8 @@ func (t *Track) SetPaused(paused bool) {
 	t.paused = paused
 }
 
-func (t *Track) OnRTCP(f func([]rtcp.Packet)) {
-	t.onRtcpMu.Lock()
-	defer t.onRtcpMu.Unlock()
-
-	t.onRtcp = f
+func (t *Track) WriteSample(sample types.Sample) {
+	t.sample <- sample
 }
 
 func (t *Track) SetBitrate(bitrate int) (bool, error) {

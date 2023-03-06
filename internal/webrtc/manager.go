@@ -321,8 +321,13 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int, 
 		videoAuto = false
 	}
 
+	videoRtcp := make(chan []rtcp.Packet, 1)
+
 	// video track
-	videoTrack, err := NewTrack(logger, videoCodec, connection, WithVideoAuto(videoAuto))
+	videoTrack, err := NewTrack(logger, videoCodec, connection,
+		WithVideoAuto(videoAuto),
+		WithRtcpChan(videoRtcp),
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -570,7 +575,9 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int, 
 			if err = video.RemoveReceiver(videoTrack); err != nil {
 				logger.Err(err).Msg("failed to remove video receiver")
 			}
-			audioTrack.RemoveStream()
+			audioTrack.Shutdown()
+			videoTrack.Shutdown()
+			close(videoRtcp)
 		}
 
 		manager.metrics.SetState(session, state)
@@ -651,17 +658,24 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int, 
 			})
 	})
 
-	videoTrack.OnRTCP(func(packets []rtcp.Packet) {
-		for _, p := range packets {
-			if rtcpPacket, ok := p.(*rtcp.ReceiverReport); ok {
-				l := len(rtcpPacket.Reports)
-				if l > 0 {
-					// use only last report
-					manager.metrics.SetReceiverReport(session, rtcpPacket.Reports[l-1])
+	go func() {
+		for {
+			packets, ok := <-videoRtcp
+			if !ok {
+				break
+			}
+
+			for _, p := range packets {
+				if rtcpPacket, ok := p.(*rtcp.ReceiverReport); ok {
+					l := len(rtcpPacket.Reports)
+					if l > 0 {
+						// use only last report
+						manager.metrics.SetReceiverReport(session, rtcpPacket.Reports[l-1])
+					}
 				}
 			}
 		}
-	})
+	}()
 
 	go func() {
 		ticker := time.NewTicker(5 * time.Second)
