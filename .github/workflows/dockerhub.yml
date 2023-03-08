@@ -50,7 +50,7 @@ jobs:
       # Will build all images even if some fail.
       fail-fast: false
       matrix:
-        tags: [ firefox, chromium, google-chrome, ungoogled-chromium, microsoft-edge, brave, vivaldi, opera, tor-browser, remmina, vlc, xfce ]
+        tags: [ firefox, chromium, google-chrome, ungoogled-chromium, microsoft-edge, brave, vivaldi, opera, tor-browser, remmina, vlc, xfce, kde ]
     env:
       DOCKER_TAG: ${{ matrix.tags }}
     steps:

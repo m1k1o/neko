@@ -46,7 +46,7 @@ Then I found [this](https://github.com/nurdism/neko) project and started to dig 
 
 Neko started as a virtual browser that is streamed using WebRTC to multiple users.
 - It is **not only limited to a browser**; it can run anything that runs on linux (e.g. VLC). Browser only happens to be the most popular and widely used use-case.
-- In fact, it is not limited to a single program either; you can install a full desktop environment (e.g. XFCE).
+- In fact, it is not limited to a single program either; you can install a full desktop environment (e.g. XFCE, KDE).
 - Speaking of limits, it does not need to run in a container; you could install neko on your host, connect to your X server and control your whole VM.
 - Theoretically it is not limited to only X server, anything that can be controlled and scraped periodically for images could be used instead.
   - Like implementing RDP or VNC protocol, where neko would only act as WebRTC relay server. This is currently only future.
@@ -99,6 +99,7 @@ Compared to clientless remote desktop gateway (e.g. [Apache Guacamole](https://g
   <img src="https://raw.githubusercontent.com/m1k1o/neko/master/docs/_media/icons/remmina.png" title="m1k1o/neko:remmina" width="60" height="auto"/>
   <img src="https://raw.githubusercontent.com/m1k1o/neko/master/docs/_media/icons/vlc.svg" title="m1k1o/neko:vlc" width="60" height="auto"/>
   <img src="https://raw.githubusercontent.com/m1k1o/neko/master/docs/_media/icons/xfce.svg" title="m1k1o/neko:xfce" width="60" height="auto"/>
+  <img src="https://raw.githubusercontent.com/m1k1o/neko/master/docs/_media/icons/kde.svg" title="m1k1o/neko:kde" width="60" height="auto"/>
 
   ... others in <a href="https://github.com/m1k1o/neko-apps">m1k1o/neko-apps</a>
 </div>

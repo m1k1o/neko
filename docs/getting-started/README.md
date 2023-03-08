@@ -12,6 +12,7 @@
   <img src="../_media/icons/remmina.png" title="m1k1o/neko:remmina" width="60" height="auto"/>
   <img src="../_media/icons/vlc.svg" title="m1k1o/neko:vlc" width="60" height="auto"/>
   <img src="../_media/icons/xfce.svg" title="m1k1o/neko:xfce" width="60" height="auto"/>
+  <img src="../_media/icons/kde.svg" title="m1k1o/neko:kde" width="60" height="auto"/>
 </div>
 
 Use the following docker images from [Docker Hub](https://hub.docker.com/r/m1k1o/neko) for x86_64:
@@ -28,7 +29,7 @@ Use the following docker images from [Docker Hub](https://hub.docker.com/r/m1k1o
   - Pass env var `REMMINA_URL=<proto>://[<username>[:<password>]@]server[:port]` (proto being `vnc`, `rdp` or `spice`).
   - Or create your custom configuration with remmina locally (it's saved in `~/.local/share/remmina/path_to_profile.remmina`) and bind-mount it, then pass env var `REMMINA_PROFILE=<path_to_profile.remmina>`.
 - `m1k1o/neko:vlc` - for VLC Video player (needs volume mounted to `/media` with local video files, or setting `VLC_MEDIA=/media` path).
-- `m1k1o/neko:xfce` - for a shared desktop / installing shared software.
+- `m1k1o/neko:xfce` or `m1k1o/neko:kde` - for a shared desktop / installing shared software.
 - `m1k1o/neko:base` - for custom base.
 
 Dockerhub images are built using GitHub actions on every push and on weekly basis to keep all browsers up-to-date.
@@ -47,6 +48,7 @@ All images are also available on [GitHub Container Registry](https://github.com/
 - `ghcr.io/m1k1o/neko/remmina:latest`
 - `ghcr.io/m1k1o/neko/vlc:latest`
 - `ghcr.io/m1k1o/neko/xfce:latest`
+- `ghcr.io/m1k1o/neko/kde:latest`
 
 For ARM-based images (like Raspberry Pi - with GPU hardware acceleration, Oracle Cloud ARM tier). Currently, not all images are available for ARM, because not all applications are available for ARM.
 
@@ -70,6 +72,7 @@ For images with VAAPI GPU hardware acceleration using intel drivers use:
 - `ghcr.io/m1k1o/neko/intel-remmina:latest`
 - `ghcr.io/m1k1o/neko/intel-vlc:latest`
 - `ghcr.io/m1k1o/neko/intel-xfce:latest`
+- `ghcr.io/m1k1o/neko/intel-kde:latest`
 
 GHCR images are built using GitHub actions for every tag.
 
