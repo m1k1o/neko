@@ -229,7 +229,7 @@ void XKey(KeySym keysym, int down) {
   XSync(display, 0);
 }
 
-Status XSetScreenConfiguration(int width, int height, short *rate) {
+Status XSetScreenConfiguration(int width, int height, short rate) {
   Display *display = getXDisplay();
   Window root = RootWindow(display, 0);
   XRRScreenConfiguration *conf = XRRGetScreenInfo(display, root);
@@ -251,31 +251,8 @@ Status XSetScreenConfiguration(int width, int height, short *rate) {
     return RRSetConfigFailed;
   }
 
-  short current_rate = 0;
-  if (rate != NULL) {
-    short *rates;
-    int num_rates;
-    rates = XRRConfigRates(conf, size_index, &num_rates);
-
-    // try to find the nearest rate
-    short nearest_rate = 0;
-    float diff = 0;
-    for (int i = 0; i < num_rates; i++) {
-      if (nearest_rate == 0 || abs(rates[i] - *rate) < diff) {
-        nearest_rate = rates[i];
-        diff = abs(rates[i] - *rate);
-      }
-    }
-
-    if (nearest_rate != 0 && diff < 10) {
-      current_rate = nearest_rate;
-    }
-
-    *rate = current_rate;
-  }
-
   Status status;
-  status = XRRSetScreenConfigAndRate(display, conf, root, size_index, RR_Rotate_0, current_rate, CurrentTime);
+  status = XRRSetScreenConfigAndRate(display, conf, root, size_index, RR_Rotate_0, rate, CurrentTime);
 
   XRRFreeScreenConfigInfo(conf);
   return status;

@@ -192,23 +192,37 @@ func ChangeScreenSize(width int, height int, rate int16) (int, int, int16, error
 	// round width to 8, because of Xorg
 	width = width - (width % 8)
 
+	// if rate is 0, set it to 60
+	if rate == 0 {
+		rate = 60
+	}
+
 	// convert variables to C types
 	c_width, c_height, c_rate := C.int(width), C.int(height), C.short(rate)
 
 	// if screen configuration already exists, just set it
-	if status := C.XSetScreenConfiguration(c_width, c_height, &c_rate); status == C.RRSetConfigSuccess {
-		return width, height, int16(c_rate), nil
+	status := C.XSetScreenConfiguration(c_width, c_height, c_rate)
+	if status != C.RRSetConfigSuccess {
+		// create new screen configuration
+		C.XCreateScreenMode(c_width, c_height, c_rate)
+
+		// screen configuration should exist now, set it
+		status = C.XSetScreenConfiguration(c_width, c_height, c_rate)
 	}
 
-	// create new screen configuration
-	C.XCreateScreenMode(c_width, c_height, c_rate)
+	var err error
 
-	// screen configuration should exist now, set it
-	if status := C.XSetScreenConfiguration(c_width, c_height, &c_rate); status == C.RRSetConfigSuccess {
-		return width, height, int16(c_rate), nil
+	// if screen configuration was not set successfully, return error
+	if status != C.RRSetConfigSuccess {
+		err = fmt.Errorf("unknown screen configuration %dx%d@%d", width, height, rate)
 	}
 
-	return 0, 0, 0, fmt.Errorf("unknown screen configuration %dx%d@%d", width, height, rate)
+	// if specified rate is not supported a BadValue error is returned
+	if status == C.BadValue {
+		err = fmt.Errorf("unsupported screen rate %d", rate)
+	}
+
+	return width, height, rate, err
 }
 
 func GetScreenSize() types.ScreenSize {

@@ -36,7 +36,7 @@ static KeyCode XKeyEntryGet(KeySym keysym);
 static KeyCode XkbKeysymToKeycode(Display *dpy, KeySym keysym);
 void XKey(KeySym keysym, int down);
 
-Status XSetScreenConfiguration(int width, int height, short *rate);
+Status XSetScreenConfiguration(int width, int height, short rate);
 void XGetScreenConfiguration(int *width, int *height, short *rate);
 void XGetScreenConfigurations();
 void XCreateScreenMode(int width, int height, short rate);
