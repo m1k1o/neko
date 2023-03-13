@@ -28,6 +28,7 @@ type WebRTC struct {
 	IpRetrievalUrl string
 
 	EstimatorEnabled        bool
+	EstimatorPassive        bool
 	EstimatorInitialBitrate int
 }
 
@@ -76,6 +77,11 @@ func (WebRTC) Init(cmd *cobra.Command) error {
 
 	cmd.PersistentFlags().Bool("webrtc.estimator.enabled", false, "enables the bandwidth estimator")
 	if err := viper.BindPFlag("webrtc.estimator.enabled", cmd.PersistentFlags().Lookup("webrtc.estimator.enabled")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().Bool("webrtc.estimator.passive", false, "passive estimator mode, when it does not switch pipelines, only estimates")
+	if err := viper.BindPFlag("webrtc.estimator.passive", cmd.PersistentFlags().Lookup("webrtc.estimator.passive")); err != nil {
 		return err
 	}
 
@@ -154,5 +160,6 @@ func (s *WebRTC) Set() {
 	// bandwidth estimator
 
 	s.EstimatorEnabled = viper.GetBool("webrtc.estimator.enabled")
+	s.EstimatorPassive = viper.GetBool("webrtc.estimator.passive")
 	s.EstimatorInitialBitrate = viper.GetInt("webrtc.estimator.initial_bitrate")
 }

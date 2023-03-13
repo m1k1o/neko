@@ -316,8 +316,8 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int, 
 		return nil, err
 	}
 
-	// if estimator is disabled, disable video auto
-	if !manager.config.EstimatorEnabled {
+	// if estimator is disabled, or in passive mode, disable video auto bitrate
+	if !manager.config.EstimatorEnabled || manager.config.EstimatorPassive {
 		videoAuto = false
 	}
 
@@ -338,7 +338,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int, 
 	changeVideoFromBitrate := func(peerBitrate int) {
 		// when switching from manual to auto bitrate estimation, in case the estimator is
 		// idle (lastBitrate > maxBitrate), we want to go back to the previous estimated bitrate
-		if peerBitrate == 0 && estimator != nil {
+		if peerBitrate == 0 && estimator != nil && !manager.config.EstimatorPassive {
 			peerBitrate = estimator.GetTargetBitrate()
 			manager.logger.Debug().
 				Int("peer_bitrate", peerBitrate).
@@ -423,7 +423,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int, 
 
 			for range ticker.C {
 				targetBitrate := estimator.GetTargetBitrate()
-				manager.metrics.SetReceiverEstimatedMaximumBitrate(session, float64(targetBitrate))
+				manager.metrics.SetReceiverEstimatedTargetBitrate(session, float64(targetBitrate))
 
 				if connection.ConnectionState() == webrtc.PeerConnectionStateClosed {
 					break
@@ -431,7 +431,9 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int, 
 				if !videoTrack.VideoAuto() {
 					continue
 				}
-				changeVideoFromBitrate(targetBitrate)
+				if !manager.config.EstimatorPassive {
+					changeVideoFromBitrate(targetBitrate)
+				}
 			}
 		}()
 	}
@@ -457,10 +459,11 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int, 
 		},
 		iceTrickle: manager.config.ICETrickle,
 		setVideoAuto: func(videoAuto bool) {
-			if manager.config.EstimatorEnabled {
+			// if estimator is enabled and not in passive mode, enable video auto bitrate
+			if manager.config.EstimatorEnabled && !manager.config.EstimatorPassive {
 				videoTrack.SetVideoAuto(videoAuto)
 			} else {
-				logger.Warn().Msg("estimator is disabled, cannot change video auto")
+				logger.Warn().Msg("estimator is disabled or in passive mode, cannot change video auto")
 				videoTrack.SetVideoAuto(false) // ensure video auto is disabled
 			}
 		},
@@ -666,7 +669,11 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int, 
 			}
 
 			for _, p := range packets {
-				if rtcpPacket, ok := p.(*rtcp.ReceiverReport); ok {
+				switch rtcpPacket := p.(type) {
+				case *rtcp.ReceiverEstimatedMaximumBitrate: // TODO: Deprecated.
+					manager.metrics.SetReceiverEstimatedMaximumBitrate(session, rtcpPacket.Bitrate)
+
+				case *rtcp.ReceiverReport:
 					l := len(rtcpPacket.Reports)
 					if l > 0 {
 						// use only last report

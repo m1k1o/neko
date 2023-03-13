@@ -27,6 +27,7 @@ type metrics struct {
 	videoIdsMu *sync.Mutex
 
 	receiverEstimatedMaximumBitrate prometheus.Gauge
+	receiverEstimatedTargetBitrate  prometheus.Gauge
 
 	receiverReportDelay     prometheus.Gauge
 	receiverReportJitter    prometheus.Gauge
@@ -140,6 +141,15 @@ func (m *metricsCtx) getBySession(session types.Session) metrics {
 			Namespace: "neko",
 			Subsystem: "webrtc",
 			Help:      "Receiver Estimated Maximum Bitrate from SCTP.",
+			ConstLabels: map[string]string{
+				"session_id": session.ID(),
+			},
+		}),
+		receiverEstimatedTargetBitrate: promauto.NewGauge(prometheus.GaugeOpts{
+			Name:      "receiver_estimated_target_bitrate",
+			Namespace: "neko",
+			Subsystem: "webrtc",
+			Help:      "Receiver Estimated Target Bitrate using Google's congestion control.",
 			ConstLabels: map[string]string{
 				"session_id": session.ID(),
 			},
@@ -327,10 +337,16 @@ func (m *metricsCtx) SetVideoID(session types.Session, videoId string) {
 	}
 }
 
-func (m *metricsCtx) SetReceiverEstimatedMaximumBitrate(session types.Session, bitrate float64) {
+func (m *metricsCtx) SetReceiverEstimatedMaximumBitrate(session types.Session, bitrate float32) {
 	met := m.getBySession(session)
 
-	met.receiverEstimatedMaximumBitrate.Set(bitrate)
+	met.receiverEstimatedMaximumBitrate.Set(float64(bitrate))
+}
+
+func (m *metricsCtx) SetReceiverEstimatedTargetBitrate(session types.Session, bitrate float64) {
+	met := m.getBySession(session)
+
+	met.receiverEstimatedTargetBitrate.Set(bitrate)
 }
 
 func (m *metricsCtx) SetReceiverReport(session types.Session, report rtcp.ReceptionReport) {

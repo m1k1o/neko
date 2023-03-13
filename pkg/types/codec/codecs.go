@@ -8,7 +8,7 @@ import (
 
 var RTCPFeedback = []webrtc.RTCPFeedback{
 	{Type: webrtc.TypeRTCPFBTransportCC, Parameter: ""},
-	{Type: webrtc.TypeRTCPFBGoogREMB, Parameter: ""},
+	{Type: webrtc.TypeRTCPFBGoogREMB, Parameter: ""}, // TODO: Deprecated.
 
 	// https://www.iana.org/assignments/sdp-parameters/sdp-parameters.xhtml#sdp-parameters-19
 	{Type: webrtc.TypeRTCPFBCCM, Parameter: "fir"},
