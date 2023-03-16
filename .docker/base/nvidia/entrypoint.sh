@@ -5,7 +5,7 @@ export PATH="${PATH}:/opt/VirtualGL/bin"
 
 # Use VirtualGL to run wine with OpenGL if the GPU is available, otherwise use barebone wine
 if [ -n "$(nvidia-smi --query-gpu=uuid --format=csv | sed -n 2p)" ]; then
-    exec vglrun "$@"
+    exec vglrun -d $VGL_DISPLAY "$@"
 else
     echo "No GPU detected"
     exec "$@"
