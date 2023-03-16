@@ -66,8 +66,8 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
       this._ws = new WebSocket(`${url}?password=${encodeURIComponent(password)}`)
       this.emit('debug', `connecting to ${this._ws.url}`)
       this._ws.onmessage = this.onMessage.bind(this)
-      this._ws.onerror = (event) => this.onError.bind(this)
-      this._ws.onclose = (event) => this.onDisconnected.bind(this, new Error('websocket closed'))
+      this._ws.onerror = () => this.onError.bind(this)
+      this._ws.onclose = () => this.onDisconnected.bind(this, new Error('websocket closed'))
       this._timeout = window.setTimeout(this.onTimeout.bind(this), 15000)
     } catch (err: any) {
       this.onDisconnected(err)
@@ -210,15 +210,15 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
       })
     }
 
-    this._peer.onconnectionstatechange = (event) => {
+    this._peer.onconnectionstatechange = () => {
       this.emit('debug', `peer connection state changed`, this._peer ? this._peer.connectionState : undefined)
     }
 
-    this._peer.onsignalingstatechange = (event) => {
+    this._peer.onsignalingstatechange = () => {
       this.emit('debug', `peer signaling state changed`, this._peer ? this._peer.signalingState : undefined)
     }
 
-    this._peer.oniceconnectionstatechange = (event) => {
+    this._peer.oniceconnectionstatechange = () => {
       this._state = this._peer!.iceConnectionState
 
       this.emit('debug', `peer ice connection state changed: ${this._peer!.iceConnectionState}`)

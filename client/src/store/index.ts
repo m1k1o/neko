@@ -63,7 +63,7 @@ export const getters = getterTree(state, {
 export const actions = actionTree(
   { state, getters, mutations },
   {
-    initialise(store) {
+    initialise() {
       accessor.emoji.initialise()
       accessor.settings.initialise()
     },
@@ -92,12 +92,12 @@ export const actions = actionTree(
       }
     },
 
-    login({ state }, { displayname, password }: { displayname: string; password: string }) {
+    login(store, { displayname, password }: { displayname: string; password: string }) {
       accessor.setLogin({ displayname, password })
       $client.login(password, displayname)
     },
 
-    logout({ state }) {
+    logout() {
       accessor.setLogin({ displayname: '', password: '' })
       set('displayname', '')
       set('password', '')

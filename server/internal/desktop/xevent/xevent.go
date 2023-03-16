@@ -10,13 +10,24 @@ import "C"
 import (
 	"unsafe"
 
-	"github.com/kataras/go-events"
+	"m1k1o/neko/internal/types"
 )
 
-var Emmiter events.EventEmmiter
+var CursorChangedChannel chan uint64
+var ClipboardUpdatedChannel chan struct{}
+var EventErrorChannel chan types.DesktopErrorMessage
 
 func init() {
-	Emmiter = events.New()
+	CursorChangedChannel = make(chan uint64)
+	ClipboardUpdatedChannel = make(chan struct{})
+	EventErrorChannel = make(chan types.DesktopErrorMessage)
+
+	go func() {
+		for {
+			// TODO: Reserved for future use.
+			<-CursorChangedChannel
+		}
+	}()
 }
 
 func EventLoop(display string) {
@@ -26,14 +37,19 @@ func EventLoop(display string) {
 	C.XEventLoop(displayUnsafe)
 }
 
+// TODO: Shutdown function.
+//close(CursorChangedChannel)
+//close(ClipboardUpdatedChannel)
+//close(EventErrorChannel)
+
 //export goXEventCursorChanged
 func goXEventCursorChanged(event C.XFixesCursorNotifyEvent) {
-	Emmiter.Emit("cursor-changed", uint64(event.cursor_serial))
+	CursorChangedChannel <- uint64(event.cursor_serial)
 }
 
 //export goXEventClipboardUpdated
 func goXEventClipboardUpdated() {
-	Emmiter.Emit("clipboard-updated")
+	ClipboardUpdatedChannel <- struct{}{}
 }
 
 //export goXEventConfigureNotify
@@ -48,7 +64,12 @@ func goXEventUnmapNotify(window C.Window) {
 
 //export goXEventError
 func goXEventError(event *C.XErrorEvent, message *C.char) {
-	Emmiter.Emit("event-error", uint8(event.error_code), C.GoString(message), uint8(event.request_code), uint8(event.minor_code))
+	EventErrorChannel <- types.DesktopErrorMessage{
+		Error_code:   uint8(event.error_code),
+		Message:      C.GoString(message),
+		Request_code: uint8(event.request_code),
+		Minor_code:   uint8(event.minor_code),
+	}
 }
 
 //export goXEventActive

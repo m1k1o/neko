@@ -35,7 +35,13 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 			return NewAudioPipeline(config.AudioCodec, config.AudioDevice, config.AudioPipeline, config.AudioBitrate)
 		}, "audio"),
 		video: streamSinkNew(config.VideoCodec, func() (string, error) {
-			return NewVideoPipeline(config.VideoCodec, config.Display, config.VideoPipeline, config.VideoMaxFPS, config.VideoBitrate, config.VideoHWEnc)
+			// use screen fps as default
+			fps := desktop.GetScreenSize().Rate
+			// if max fps is set, cap it to that value
+			if config.VideoMaxFPS > 0 && config.VideoMaxFPS < fps {
+				fps = config.VideoMaxFPS
+			}
+			return NewVideoPipeline(config.VideoCodec, config.Display, config.VideoPipeline, fps, config.VideoBitrate, config.VideoHWEnc)
 		}, "video"),
 	}
 }
@@ -47,31 +53,43 @@ func (manager *CaptureManagerCtx) Start() {
 		}
 	}
 
-	manager.desktop.OnBeforeScreenSizeChange(func() {
-		if manager.video.Started() {
-			manager.video.destroyPipeline()
-		}
+	go func() {
+		for {
+			before, ok := <-manager.desktop.GetScreenSizeChangeChannel()
+			if !ok {
+				manager.logger.Info().Msg("screen size change channel was closed")
+				return
+			}
 
-		if manager.broadcast.Started() {
-			manager.broadcast.destroyPipeline()
-		}
-	})
+			if before {
+				// before screen size change, we need to destroy all pipelines
 
-	manager.desktop.OnAfterScreenSizeChange(func() {
-		if manager.video.Started() {
-			err := manager.video.createPipeline()
-			if err != nil && !errors.Is(err, types.ErrCapturePipelineAlreadyExists) {
-				manager.logger.Panic().Err(err).Msg("unable to recreate video pipeline")
+				if manager.video.Started() {
+					manager.video.destroyPipeline()
+				}
+
+				if manager.broadcast.Started() {
+					manager.broadcast.destroyPipeline()
+				}
+			} else {
+				// after screen size change, we need to recreate all pipelines
+
+				if manager.video.Started() {
+					err := manager.video.createPipeline()
+					if err != nil && !errors.Is(err, types.ErrCapturePipelineAlreadyExists) {
+						manager.logger.Panic().Err(err).Msg("unable to recreate video pipeline")
+					}
+				}
+
+				if manager.broadcast.Started() {
+					err := manager.broadcast.createPipeline()
+					if err != nil && !errors.Is(err, types.ErrCapturePipelineAlreadyExists) {
+						manager.logger.Panic().Err(err).Msg("unable to recreate broadcast pipeline")
+					}
+				}
 			}
 		}
-
-		if manager.broadcast.Started() {
-			err := manager.broadcast.createPipeline()
-			if err != nil && !errors.Is(err, types.ErrCapturePipelineAlreadyExists) {
-				manager.logger.Panic().Err(err).Msg("unable to recreate broadcast pipeline")
-			}
-		}
-	})
+	}()
 }
 
 func (manager *CaptureManagerCtx) Shutdown() error {

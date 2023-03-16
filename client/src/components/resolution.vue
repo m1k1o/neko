@@ -97,7 +97,7 @@
 </style>
 
 <script lang="ts">
-  import { Component, Ref, Watch, Vue } from 'vue-property-decorator'
+  import { Component, Ref, Vue } from 'vue-property-decorator'
   import { ScreenResolution } from '~/neko/types'
 
   // @ts-ignore

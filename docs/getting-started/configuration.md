@@ -93,7 +93,7 @@ nat1to1: <ip>
   - opus *(default encoder)*
   - g722
   - pcmu
-  - pcma 
+  - pcma
 #### `NEKO_AUDIO_BITRATE`:
   - Bitrate of the audio stream in kb/s.
   - e.g. `196`
@@ -136,7 +136,7 @@ nat1to1: <ip>
   - Enable file transfer feature.
   - e.g. `true`
 #### `NEKO_FILE_TRANSFER_PATH`:
-  - Path where files will be transferred between the host and users. By default this is
+  - Path where files will be transferred between the host and users. By default, this is
   `/home/neko/Downloads`. If the path doesn't exist, it will be created.
   - e.g. `/home/neko/Desktop`
 

@@ -30,17 +30,17 @@
         </div>
         <div ref="aspect" class="player-aspect" />
       </div>
-      <ul v-if="!fullscreen && !hideControls" class="video-menu top">
+      <ul v-if="!fullscreen" class="video-menu top">
         <li><i @click.stop.prevent="requestFullscreen" class="fas fa-expand"></i></li>
         <li v-if="admin"><i @click.stop.prevent="openResolution" class="fas fa-desktop"></i></li>
-        <li class="request-control">
+        <li :class="hideControls || 'request-control'">
           <i
             :class="[hosted && !hosting ? 'disabled' : '', !hosted && !hosting ? 'faded' : '', 'fas', 'fa-keyboard']"
             @click.stop.prevent="toggleControl"
           />
         </li>
       </ul>
-      <ul v-if="!fullscreen && !hideControls" class="video-menu bottom">
+      <ul v-if="!fullscreen" class="video-menu bottom">
         <li v-if="hosting && (!clipboard_read_available || !clipboard_write_available)">
           <i @click.stop.prevent="openClipboard" class="fas fa-clipboard"></i>
         </li>
@@ -339,12 +339,12 @@
     }
 
     @Watch('width')
-    onWidthChanged(width: number) {
+    onWidthChanged() {
       this.onResize()
     }
 
     @Watch('height')
-    onHeightChanged(height: number) {
+    onHeightChanged() {
       this.onResize()
     }
 
@@ -444,7 +444,7 @@
         this.$accessor.video.setPlayable(false)
       })
 
-      this._video.addEventListener('volumechange', (event) => {
+      this._video.addEventListener('volumechange', () => {
         this.$accessor.video.setMuted(this._video.muted)
         this.$accessor.video.setVolume(this._video.volume * 100)
       })

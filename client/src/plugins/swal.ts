@@ -10,7 +10,7 @@ declare module 'vue/types/vue' {
     $swal: VueSwalInstance
   }
 
-  interface VueConstructor<V extends Vue = Vue> {
+  interface VueConstructor {
     swal: VueSwalInstance
   }
 }

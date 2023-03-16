@@ -101,102 +101,121 @@ type WebSocketHandler struct {
 }
 
 func (ws *WebSocketHandler) Start() {
-	ws.sessions.OnCreated(func(id string, session types.Session) {
-		if err := ws.handler.SessionCreated(id, session); err != nil {
-			ws.logger.Warn().Str("id", id).Err(err).Msg("session created with and error")
-		} else {
-			ws.logger.Debug().Str("id", id).Msg("session created")
-		}
-	})
+	go func() {
+		for {
+			e, ok := <-ws.sessions.GetEventsChannel()
+			if !ok {
+				ws.logger.Info().Msg("session channel was closed")
+				return
+			}
 
-	ws.sessions.OnConnected(func(id string, session types.Session) {
-		if err := ws.handler.SessionConnected(id, session); err != nil {
-			ws.logger.Warn().Str("id", id).Err(err).Msg("session connected with and error")
-		} else {
-			ws.logger.Debug().Str("id", id).Msg("session connected")
-		}
+			switch e.Type {
+			case types.SESSION_CREATED:
+				if err := ws.handler.SessionCreated(e.Id, e.Session); err != nil {
+					ws.logger.Warn().Str("id", e.Id).Err(err).Msg("session created with and error")
+				} else {
+					ws.logger.Debug().Str("id", e.Id).Msg("session created")
+				}
+			case types.SESSION_CONNECTED:
+				if err := ws.handler.SessionConnected(e.Id, e.Session); err != nil {
+					ws.logger.Warn().Str("id", e.Id).Err(err).Msg("session connected with and error")
+				} else {
+					ws.logger.Debug().Str("id", e.Id).Msg("session connected")
+				}
 
-		// if control protection is enabled and at least one admin
-		// and if room was locked on behalf control protection, unlock
-		sess, ok := ws.state.GetLocked("control")
-		if ok && ws.conf.ControlProtection && sess == CONTROL_PROTECTION_SESSION && len(ws.sessions.Admins()) > 0 {
-			ws.state.Unlock("control")
-			ws.sessions.SetControlLocked(false) // TODO: Handle locks in sessions as flags.
-			ws.logger.Info().Msgf("control unlocked on behalf of control protection")
+				// if control protection is enabled and at least one admin
+				// and if room was locked on behalf control protection, unlock
+				sess, ok := ws.state.GetLocked("control")
+				if ok && ws.conf.ControlProtection && sess == CONTROL_PROTECTION_SESSION && len(ws.sessions.Admins()) > 0 {
+					ws.state.Unlock("control")
+					ws.sessions.SetControlLocked(false) // TODO: Handle locks in sessions as flags.
+					ws.logger.Info().Msgf("control unlocked on behalf of control protection")
 
-			if err := ws.sessions.Broadcast(
-				message.AdminLock{
-					Event:    event.ADMIN_UNLOCK,
-					ID:       id,
-					Resource: "control",
-				}, nil); err != nil {
-				ws.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.ADMIN_UNLOCK)
+					if err := ws.sessions.Broadcast(
+						message.AdminLock{
+							Event:    event.ADMIN_UNLOCK,
+							ID:       e.Id,
+							Resource: "control",
+						}, nil); err != nil {
+						ws.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.ADMIN_UNLOCK)
+					}
+				}
+
+				// remove outdated stats
+				if e.Session.Admin() {
+					ws.lastAdminLeftAt = nil
+				} else {
+					ws.lastUserLeftAt = nil
+				}
+			case types.SESSION_DESTROYED:
+				if err := ws.handler.SessionDestroyed(e.Id); err != nil {
+					ws.logger.Warn().Str("id", e.Id).Err(err).Msg("session destroyed with and error")
+				} else {
+					ws.logger.Debug().Str("id", e.Id).Msg("session destroyed")
+				}
+
+				membersCount := len(ws.sessions.Members())
+				adminCount := len(ws.sessions.Admins())
+
+				// if control protection is enabled and no admin
+				// and room is not locked, lock
+				ok := ws.state.IsLocked("control")
+				if !ok && ws.conf.ControlProtection && adminCount == 0 {
+					ws.state.Lock("control", CONTROL_PROTECTION_SESSION)
+					ws.sessions.SetControlLocked(true) // TODO: Handle locks in sessions as flags.
+					ws.logger.Info().Msgf("control locked and released on behalf of control protection")
+					ws.handler.AdminRelease(e.Id, e.Session)
+
+					if err := ws.sessions.Broadcast(
+						message.AdminLock{
+							Event:    event.ADMIN_LOCK,
+							ID:       e.Id,
+							Resource: "control",
+						}, nil); err != nil {
+						ws.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.ADMIN_LOCK)
+					}
+				}
+
+				// if this was the last admin
+				if e.Session.Admin() && adminCount == 0 {
+					now := time.Now()
+					ws.lastAdminLeftAt = &now
+				}
+
+				// if this was the last user
+				if !e.Session.Admin() && membersCount-adminCount == 0 {
+					now := time.Now()
+					ws.lastUserLeftAt = &now
+				}
+			case types.SESSION_HOST_SET:
+				// TODO: Unused.
+			case types.SESSION_HOST_CLEARED:
+				// TODO: Unused.
 			}
 		}
+	}()
 
-		// remove outdated stats
-		if session.Admin() {
-			ws.lastAdminLeftAt = nil
-		} else {
-			ws.lastUserLeftAt = nil
-		}
-	})
-
-	ws.sessions.OnDestroy(func(id string, session types.Session) {
-		if err := ws.handler.SessionDestroyed(id); err != nil {
-			ws.logger.Warn().Str("id", id).Err(err).Msg("session destroyed with and error")
-		} else {
-			ws.logger.Debug().Str("id", id).Msg("session destroyed")
-		}
-
-		membersCount := len(ws.sessions.Members())
-		adminCount := len(ws.sessions.Admins())
-
-		// if control protection is enabled and no admin
-		// and room is not locked, lock
-		ok := ws.state.IsLocked("control")
-		if !ok && ws.conf.ControlProtection && adminCount == 0 {
-			ws.state.Lock("control", CONTROL_PROTECTION_SESSION)
-			ws.sessions.SetControlLocked(true) // TODO: Handle locks in sessions as flags.
-			ws.logger.Info().Msgf("control locked and released on behalf of control protection")
-			ws.handler.AdminRelease(id, session)
-
-			if err := ws.sessions.Broadcast(
-				message.AdminLock{
-					Event:    event.ADMIN_LOCK,
-					ID:       id,
-					Resource: "control",
-				}, nil); err != nil {
-				ws.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.ADMIN_LOCK)
+	go func() {
+		for {
+			_, ok := <-ws.desktop.GetClipboardUpdatedChannel()
+			if !ok {
+				ws.logger.Info().Msg("clipboard update channel closed")
+				return
 			}
+
+			session, ok := ws.sessions.GetHost()
+			if !ok {
+				return
+			}
+
+			err := session.Send(message.Clipboard{
+				Event: event.CONTROL_CLIPBOARD,
+				Text:  ws.desktop.ReadClipboard(),
+			})
+
+			ws.logger.Err(err).Msg("sync clipboard")
 		}
-
-		// if this was the last admin
-		if session.Admin() && adminCount == 0 {
-			now := time.Now()
-			ws.lastAdminLeftAt = &now
-		}
-
-		// if this was the last user
-		if !session.Admin() && membersCount-adminCount == 0 {
-			now := time.Now()
-			ws.lastUserLeftAt = &now
-		}
-	})
-
-	ws.desktop.OnClipboardUpdated(func() {
-		session, ok := ws.sessions.GetHost()
-		if !ok {
-			return
-		}
-
-		err := session.Send(message.Clipboard{
-			Event: event.CONTROL_CLIPBOARD,
-			Text:  ws.desktop.ReadClipboard(),
-		})
-
-		ws.logger.Err(err).Msg("sync clipboard")
-	})
+	}()
 
 	// watch for file changes and send file list if file transfer is enabled
 	if ws.conf.FileTransferEnabled {

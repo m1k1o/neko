@@ -81,6 +81,7 @@ jobs:
           - tag: remmina
           - tag: vlc
           - tag: xfce
+          - tag: kde
     env:
       TAG_NAME: ${{ matrix.tag }}
       DOCKERFILE: ${{ matrix.dockerfile }}

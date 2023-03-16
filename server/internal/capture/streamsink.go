@@ -13,9 +13,9 @@ import (
 )
 
 type StreamSinkManagerCtx struct {
-	logger zerolog.Logger
-	mu     sync.Mutex
-	wg     sync.WaitGroup
+	logger        zerolog.Logger
+	mu            sync.Mutex
+	sampleChannel chan types.Sample
 
 	codec      codec.RTPCodec
 	pipeline   *gst.Pipeline
@@ -24,8 +24,6 @@ type StreamSinkManagerCtx struct {
 
 	listeners   int
 	listenersMu sync.Mutex
-
-	sampleFn func(sample types.Sample)
 }
 
 func streamSinkNew(codec codec.RTPCodec, pipelineFn func() (string, error), video_id string) *StreamSinkManagerCtx {
@@ -35,9 +33,10 @@ func streamSinkNew(codec codec.RTPCodec, pipelineFn func() (string, error), vide
 		Str("video_id", video_id).Logger()
 
 	manager := &StreamSinkManagerCtx{
-		logger:     logger,
-		codec:      codec,
-		pipelineFn: pipelineFn,
+		logger:        logger,
+		codec:         codec,
+		pipelineFn:    pipelineFn,
+		sampleChannel: make(chan types.Sample),
 	}
 
 	return manager
@@ -47,11 +46,6 @@ func (manager *StreamSinkManagerCtx) shutdown() {
 	manager.logger.Info().Msgf("shutdown")
 
 	manager.destroyPipeline()
-	manager.wg.Wait()
-}
-
-func (manager *StreamSinkManagerCtx) OnSample(listener func(sample types.Sample)) {
-	manager.sampleFn = listener
 }
 
 func (manager *StreamSinkManagerCtx) Codec() codec.RTPCodec {
@@ -152,26 +146,13 @@ func (manager *StreamSinkManagerCtx) createPipeline() error {
 		return err
 	}
 
-	manager.pipeline.AttachAppsink("appsink")
+	appsinkSubfix := "audio"
+	if manager.codec.IsVideo() {
+		appsinkSubfix = "video"
+	}
+
+	manager.pipeline.AttachAppsink("appsink"+appsinkSubfix, manager.sampleChannel)
 	manager.pipeline.Play()
-
-	manager.wg.Add(1)
-	pipeline := manager.pipeline
-
-	go func() {
-		manager.logger.Debug().Msg("started emitting samples")
-		defer manager.wg.Done()
-
-		for {
-			sample, ok := <-pipeline.Sample
-			if !ok {
-				manager.logger.Debug().Msg("stopped emitting samples")
-				return
-			}
-
-			manager.sampleFn(sample)
-		}
-	}()
 
 	return nil
 }
@@ -187,4 +168,8 @@ func (manager *StreamSinkManagerCtx) destroyPipeline() {
 	manager.pipeline.Destroy()
 	manager.logger.Info().Msgf("destroying pipeline")
 	manager.pipeline = nil
+}
+
+func (manager *StreamSinkManagerCtx) GetSampleChannel() chan types.Sample {
+	return manager.sampleChannel
 }

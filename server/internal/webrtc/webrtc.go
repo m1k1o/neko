@@ -55,12 +55,20 @@ func (manager *WebRTCManager) Start() {
 		manager.logger.Panic().Err(err).Msg("unable to create audio track")
 	}
 
-	manager.capture.Audio().OnSample(func(sample types.Sample) {
-		err := manager.audioTrack.WriteSample(media.Sample(sample))
-		if err != nil && errors.Is(err, io.ErrClosedPipe) {
-			manager.logger.Warn().Err(err).Msg("audio pipeline failed to write")
+	go func() {
+		for {
+			sample, ok := <-manager.capture.Audio().GetSampleChannel()
+			if !ok {
+				manager.logger.Debug().Msg("audio capture channel is closed")
+				continue
+			}
+
+			err := manager.audioTrack.WriteSample(media.Sample(sample))
+			if err != nil && errors.Is(err, io.ErrClosedPipe) {
+				manager.logger.Warn().Err(err).Msg("audio pipeline failed to write")
+			}
 		}
-	})
+	}()
 
 	//
 	// video
@@ -72,12 +80,20 @@ func (manager *WebRTCManager) Start() {
 		manager.logger.Panic().Err(err).Msg("unable to create video track")
 	}
 
-	manager.capture.Video().OnSample(func(sample types.Sample) {
-		err := manager.videoTrack.WriteSample(media.Sample(sample))
-		if err != nil && errors.Is(err, io.ErrClosedPipe) {
-			manager.logger.Warn().Err(err).Msg("video pipeline failed to write")
+	go func() {
+		for {
+			sample, ok := <-manager.capture.Video().GetSampleChannel()
+			if !ok {
+				manager.logger.Debug().Msg("video capture channel is closed")
+				continue
+			}
+
+			err := manager.videoTrack.WriteSample(media.Sample(sample))
+			if err != nil && errors.Is(err, io.ErrClosedPipe) {
+				manager.logger.Warn().Err(err).Msg("video pipeline failed to write")
+			}
 		}
-	})
+	}()
 
 	//
 	// api

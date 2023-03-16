@@ -334,7 +334,7 @@
           onDownloadProgress: (x) => {
             transfer.progress = x.loaded
 
-            if (x.lengthComputable && transfer.size !== x.total) {
+            if (x.total && transfer.size !== x.total) {
               transfer.size = x.total
             }
             if (transfer.progress === transfer.size) {

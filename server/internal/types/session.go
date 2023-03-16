@@ -7,6 +7,22 @@ type Member struct {
 	Muted bool   `json:"muted"`
 }
 
+type SessionEventType int
+
+const (
+	SESSION_CREATED SessionEventType = iota
+	SESSION_CONNECTED
+	SESSION_DESTROYED
+	SESSION_HOST_SET
+	SESSION_HOST_CLEARED
+)
+
+type SessionEvent struct {
+	Type    SessionEventType
+	Id      string
+	Session Session
+}
+
 type Session interface {
 	ID() string
 	Name() string
@@ -46,9 +62,5 @@ type SessionManager interface {
 	Clear() error
 	Broadcast(v interface{}, exclude interface{}) error
 	AdminBroadcast(v interface{}, exclude interface{}) error
-	OnHost(listener func(id string))
-	OnHostCleared(listener func(id string))
-	OnDestroy(listener func(id string, session Session))
-	OnCreated(listener func(id string, session Session))
-	OnConnected(listener func(id string, session Session))
+	GetEventsChannel() chan SessionEvent
 }

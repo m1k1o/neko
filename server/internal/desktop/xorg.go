@@ -72,10 +72,10 @@ func (manager *DesktopManagerCtx) ScreenConfigurations() map[int]types.ScreenCon
 
 func (manager *DesktopManagerCtx) SetScreenSize(size types.ScreenSize) error {
 	mu.Lock()
-	manager.emmiter.Emit("before_screen_size_change")
+	manager.GetScreenSizeChangeChannel() <- true
 
 	defer func() {
-		manager.emmiter.Emit("after_screen_size_change")
+		manager.GetScreenSizeChangeChannel() <- false
 		mu.Unlock()
 	}()
 

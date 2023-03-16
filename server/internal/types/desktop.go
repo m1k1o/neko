@@ -33,11 +33,17 @@ type KeyboardMap struct {
 	Variant string
 }
 
+type DesktopErrorMessage struct {
+	Error_code   uint8
+	Message      string
+	Request_code uint8
+	Minor_code   uint8
+}
+
 type DesktopManager interface {
 	Start()
 	Shutdown() error
-	OnBeforeScreenSizeChange(listener func())
-	OnAfterScreenSizeChange(listener func())
+	GetScreenSizeChangeChannel() (before chan bool) // true - before, false - after
 
 	// clipboard
 	ReadClipboard() string
@@ -65,9 +71,7 @@ type DesktopManager interface {
 	GetScreenshotImage() *image.RGBA
 
 	// xevent
-	OnCursorChanged(listener func(serial uint64))
-	OnClipboardUpdated(listener func())
-	OnFileChooserDialogOpened(listener func())
-	OnFileChooserDialogClosed(listener func())
-	OnEventError(listener func(error_code uint8, message string, request_code uint8, minor_code uint8))
+	GetCursorChangedChannel() chan uint64
+	GetClipboardUpdatedChannel() chan struct{}
+	GetEventErrorChannel() chan DesktopErrorMessage
 }

@@ -287,9 +287,9 @@
 </style>
 
 <script lang="ts">
-  import { Component, Ref, Watch, Vue } from 'vue-property-decorator'
+  import { Component, Ref, Vue } from 'vue-property-decorator'
   import { directive as onClickaway } from 'vue-clickaway'
-  import { get, set } from '../utils/localstorage'
+  import { get } from '../utils/localstorage'
 
   @Component({
     name: 'neko-emoji',
@@ -356,7 +356,7 @@
       this.waitingForPaint = false
       let scrollTop = this._scroll.scrollTop
       let active = 0
-      for (const [i, group] of this.groups.entries()) {
+      for (const [i] of this.groups.entries()) {
         let component = this._groups[i]
         if (component && component.offsetTop > scrollTop) {
           break
@@ -368,7 +368,7 @@
       }
     }
 
-    onMouseExit(event: MouseEvent, emoji: string) {
+    onMouseExit() {
       this.hovered = ''
     }
 
@@ -382,7 +382,7 @@
       this.$emit('picked', emoji)
     }
 
-    onClickAway(event: MouseEvent) {
+    onClickAway() {
       this.$emit('done')
     }
   }
