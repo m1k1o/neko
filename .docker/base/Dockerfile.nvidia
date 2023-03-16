@@ -148,7 +148,7 @@ RUN set -eux; \
 
 #
 # install VirtualGL and make libraries available for preload
-ARG VIRTUALGL_VERSION=3.0.2
+ARG VIRTUALGL_VERSION=3.1
 RUN set -eux; \
     apt-get update; \
     wget "https://sourceforge.net/projects/virtualgl/files/virtualgl_${VIRTUALGL_VERSION}_amd64.deb"; \
