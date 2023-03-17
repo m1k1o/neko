@@ -81,7 +81,7 @@ func streamSinkNew(c codec.RTPCodec, pipelineFn func() (string, error), id strin
 				"codec_type": c.Type.String(),
 			},
 		}),
-		totalBytes: promauto.NewGauge(prometheus.GaugeOpts{
+		totalBytes: promauto.NewCounter(prometheus.CounterOpts{
 			Name:      "streamsink_bytes",
 			Namespace: "neko",
 			Subsystem: "capture",
