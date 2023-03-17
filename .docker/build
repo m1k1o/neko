@@ -92,6 +92,21 @@ build_intel() {
   fi
 }
 
+build_nvidia() {
+  if [ "$1" = "base" ]
+  then
+    # build nvidia base
+    docker build -t "${BUILD_IMAGE}:nvidia-base" -f base/Dockerfile.nvidia "${BASE}"
+  elif [ -f "$1/Dockerfile.nvidia" ]
+  then
+    # build dedicated nvidia image
+    docker build -t "${BUILD_IMAGE}:nvidia-$1" --build-arg="BASE_IMAGE=${BUILD_IMAGE}:nvidia-base" -f "$1/Dockerfile.nvidia" "$1/"
+  else
+    # try to build nvidia image with common Dockerfile
+    docker build -t "${BUILD_IMAGE}:nvidia-$1" --build-arg="BASE_IMAGE=${BUILD_IMAGE}:nvidia-base" -f "$1/Dockerfile" "$1/"
+  fi
+}
+
 case $1 in
   client) build_client;;
   server) build_server;;
@@ -101,6 +116,9 @@ case $1 in
 
   # build intel- images
   intel-*) build_intel "${1#intel-}";;
+
+  # build nvidia- images
+  nvidia-*) build_nvidia "${1#nvidia-}";;
 
   # build images
   *) build "$1";;

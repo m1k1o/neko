@@ -17,6 +17,7 @@ if [ ! -f "${BINARY_PATH}" ] || [ "$1" == "-r" ]; then
   ./rebuild-server
 fi
 
+# use --gpus all to enable GPU acceleration
 docker run --rm -it \
   --name "neko_dev" \
   -p "${SERVER_PORT}:8080" \

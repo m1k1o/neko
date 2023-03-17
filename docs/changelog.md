@@ -5,6 +5,7 @@
 ### New Features
 - Added AV1 tag, metadata and pipeline. Unfortunately does not work yet, since the encoding is way too slow (by @mbattista).
 - Added `m1k1o/neko:kde` tag as an alternative to `m1k1o/neko:xfce`.
+- New VirtualGL version 3.1 was released, adding support for Chromium browsers to use Nvidia GPU acceleration!
 
 ### Bugs
 - Fixed TCP mux occasional freeze by adding write buffer to it.
