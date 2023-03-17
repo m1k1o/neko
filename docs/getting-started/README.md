@@ -162,6 +162,57 @@ services:
   "RestoreOnStartup": 1,
 ```
 
+### Nvidia GPU acceleration
+
+You need to have nvidia-docker installed, start the container with `--gpus all` flag and use images built for nvidia (see above).
+
+```bash
+docker run -d --gpus all \
+  -p 8080:8080 \
+  -p 56000-56100:56000-56100/udp \
+  -e NEKO_SCREEN=1920x1080@30 \
+  -e NEKO_PASSWORD=neko \
+  -e NEKO_PASSWORD_ADMIN=admin \
+  -e NEKO_EPR=56000-56100 \
+  -e NEKO_NAT1TO1=192.168.1.10 \
+  -e NEKO_ICELITE=1 \
+  --shm-size=2gb \
+  --cap-add=SYS_ADMIN \
+  --name neko \
+  ghcr.io/m1k1o/neko/nvidia-google-chrome:latest
+```
+
+If you want to use docker-compose, you can use this example:
+
+```yaml
+version: "3.4"
+services:
+  neko:
+    image: "ghcr.io/m1k1o/neko/nvidia-google-chrome:latest"
+    restart: "unless-stopped"
+    shm_size: "2gb"
+    ports:
+      - "8080:8080"
+      - "56000-56100:56000-56100/udp"
+    cap_add:
+      - SYS_ADMIN
+    environment:
+      NEKO_SCREEN: '1920x1080@30'
+      NEKO_PASSWORD: neko
+      NEKO_PASSWORD_ADMIN: admin
+      NEKO_EPR: 56000-56100
+      NEKO_NAT1TO1: 192.168.1.10
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+```
+
+Note, currently only browser GPU acceleration is supported, not encoding.
+
 ### Want to use VPN for your n.eko browsing?
 - Check this out: https://github.com/m1k1o/neko-vpn
 
