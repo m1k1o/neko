@@ -203,11 +203,12 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
       return
     }
 
-    this._peer = new RTCPeerConnection()
     if (lite !== true) {
       this._peer = new RTCPeerConnection({
         iceServers: servers,
       })
+    } else {
+      this._peer = new RTCPeerConnection()
     }
 
     this._peer.onconnectionstatechange = () => {
@@ -251,11 +252,28 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
 
     this._peer.ontrack = this.onTrack.bind(this)
 
+    this._peer.onicecandidate = (event: RTCPeerConnectionIceEvent) => {
+      if (!event.candidate) {
+        this.emit('debug', `sent all local ICE candidates`)
+        return
+      }
+
+      const init = event.candidate.toJSON()
+      this.emit('debug', `sending local ICE candidate`, init)
+
+      this._ws!.send(
+        JSON.stringify({
+          event: EVENT.SIGNAL.CANDIDATE,
+          data: JSON.stringify(init),
+        }),
+      )
+    }
+
     this._peer.onnegotiationneeded = async () => {
       this.emit('warn', `negotiation is needed`)
 
       const d = await this._peer!.createOffer()
-      this._peer!.setLocalDescription(d)
+      await this._peer!.setLocalDescription(d)
 
       this._ws!.send(
         JSON.stringify({
@@ -277,10 +295,10 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
       return
     }
 
-    this._peer.setRemoteDescription({ type: 'offer', sdp })
+    await this._peer.setRemoteDescription({ type: 'offer', sdp })
 
     for (const candidate of this._candidates) {
-      this._peer.addIceCandidate(candidate)
+      await this._peer.addIceCandidate(candidate)
     }
     this._candidates = []
 
@@ -310,7 +328,7 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
       return
     }
 
-    this._peer.setRemoteDescription({ type: 'answer', sdp })
+    await this._peer.setRemoteDescription({ type: 'answer', sdp })
   }
 
   private async onMessage(e: MessageEvent) {

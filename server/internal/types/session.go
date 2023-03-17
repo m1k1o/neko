@@ -40,9 +40,10 @@ type Session interface {
 	Send(v interface{}) error
 	SignalLocalOffer(sdp string) error
 	SignalLocalAnswer(sdp string) error
+	SignalLocalCandidate(data string) error
 	SignalRemoteOffer(sdp string) error
 	SignalRemoteAnswer(sdp string) error
-	SignalCandidate(data string) error
+	SignalRemoteCandidate(data string) error
 }
 
 type SessionManager interface {

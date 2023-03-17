@@ -45,3 +45,7 @@ func (h *MessageHandler) signalRemoteAnswer(id string, session types.Session, pa
 
 	return nil
 }
+
+func (h *MessageHandler) signalRemoteCandidate(id string, session types.Session, payload *message.SignalCandidate) error {
+	return session.SignalRemoteCandidate(payload.Data)
+}

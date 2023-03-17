@@ -131,6 +131,17 @@ func (session *Session) SignalLocalAnswer(sdp string) error {
 	})
 }
 
+func (session *Session) SignalLocalCandidate(data string) error {
+	if session.socket == nil {
+		return nil
+	}
+	session.peer.SetCandidate(data)
+	return session.socket.Send(&message.SignalCandidate{
+		Event: event.SIGNAL_CANDIDATE,
+		Data:  data,
+	})
+}
+
 func (session *Session) SignalRemoteOffer(sdp string) error {
 	if session.peer == nil {
 		return nil
@@ -154,14 +165,12 @@ func (session *Session) SignalRemoteAnswer(sdp string) error {
 	return session.peer.SetAnswer(sdp)
 }
 
-func (session *Session) SignalCandidate(data string) error {
+func (session *Session) SignalRemoteCandidate(data string) error {
 	if session.socket == nil {
 		return nil
 	}
-	return session.socket.Send(&message.SignalCandidate{
-		Event: event.SIGNAL_CANDIDATE,
-		Data:  data,
-	})
+	session.logger.Info().Msg("signal update - RemoteCandidate")
+	return session.peer.SetCandidate(data)
 }
 
 func (session *Session) destroy() error {

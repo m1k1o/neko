@@ -123,7 +123,6 @@ func (manager *WebRTCManager) initAPI() error {
 		LoggerFactory: logger,
 	}
 
-	_ = settings.SetEphemeralUDPPortRange(manager.config.EphemeralMin, manager.config.EphemeralMax)
 	settings.SetNAT1To1IPs(manager.config.NAT1To1IPs, webrtc.ICECandidateTypeHost)
 	settings.SetICETimeouts(6*time.Second, 6*time.Second, 3*time.Second)
 	settings.SetSRTPReplayProtectionWindow(512)
@@ -168,12 +167,15 @@ func (manager *WebRTCManager) initAPI() error {
 
 		networkType = append(networkType, webrtc.NetworkTypeUDP4)
 		manager.logger.Info().Int("port", manager.config.UDPMUX).Msg("using UDP MUX")
+	} else if manager.config.EphemeralMax != 0 {
+		_ = settings.SetEphemeralUDPPortRange(manager.config.EphemeralMin, manager.config.EphemeralMax)
+		networkType = append(networkType,
+			webrtc.NetworkTypeUDP4,
+			webrtc.NetworkTypeUDP6,
+		)
 	}
 
-	// Enable support for TCP and UDP ICE candidates
-	if len(networkType) > 0 {
-		settings.SetNetworkTypes(networkType)
-	}
+	settings.SetNetworkTypes(networkType)
 
 	// Create MediaEngine with selected codecs
 	engine := webrtc.MediaEngine{}
@@ -299,7 +301,7 @@ func (manager *WebRTCManager) CreatePeer(id string, session types.Session) (type
 			return
 		}
 
-		if err := session.SignalCandidate(string(candidateString)); err != nil {
+		if err := session.SignalLocalCandidate(string(candidateString)); err != nil {
 			manager.logger.Warn().Err(err).Msg("sending SignalCandidate failed")
 			return
 		}

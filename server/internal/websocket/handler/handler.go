@@ -87,6 +87,12 @@ func (h *MessageHandler) Message(id string, raw []byte) error {
 			utils.Unmarshal(payload, raw, func() error {
 				return h.signalRemoteAnswer(id, session, payload)
 			}), "%s failed", header.Event)
+	case event.SIGNAL_CANDIDATE:
+		payload := &message.SignalCandidate{}
+		return errors.Wrapf(
+			utils.Unmarshal(payload, raw, func() error {
+				return h.signalRemoteCandidate(id, session, payload)
+			}), "%s failed", header.Event)
 
 	// Control Events
 	case event.CONTROL_RELEASE:

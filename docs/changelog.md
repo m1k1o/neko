@@ -12,6 +12,7 @@
 - Fixed stereo problem in chromium-based browsers, where it was only as mono by adding `stereo=1` to opus SDP to clients answer.
 - Fixed keysym mapping for unknown keycodes, which was causing some key combinations to not work on some keyboards.
 - Fixed a bug where `max_fps=0` would lead to an invalid pipeline.
+- Fixed client side webrtc ICE gathering, so that neko can be used without exposed ports, only with STUN and TURN servers.
 
 ### Misc
 - Updated to go 1.19 and Node 18, removed go-events as dependency (by @mbattista).
