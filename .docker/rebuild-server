@@ -17,5 +17,9 @@ fi
 
 docker run --rm -it \
   -v "${PWD}/../server:/src" \
-  --entrypoint="go" \
-  neko_dev_server build -o "bin/neko" "cmd/neko/main.go"
+  -e GIT_COMMIT=`git rev-parse --short HEAD` \
+  -e GIT_BRANCH=`git rev-parse --symbolic-full-name --abbrev-ref HEAD` \
+  -e GIT_DIRTY=`git diff-index --quiet HEAD -- || echo "✗-"` \
+  --entrypoint="bash" \
+  --workdir="/src" \
+  neko_dev_server ./build
