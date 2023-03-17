@@ -166,7 +166,7 @@ RUN if [ "${UBUNTU_RELEASE}" = "18.04" ]; then apt-get update && apt-get install
     }\n\
 }" > /etc/vulkan/icd.d/nvidia_icd.json
 
-ARG VIRTUALGL_VERSION=3.0.2
+ARG VIRTUALGL_VERSION=3.1
 #
 # Install VirtualGL and make libraries available for preload
 RUN curl -fsSL -O "https://sourceforge.net/projects/virtualgl/files/virtualgl_${VIRTUALGL_VERSION}_amd64.deb" && \
