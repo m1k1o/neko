@@ -71,7 +71,11 @@ jobs:
         include:
           - tag: brave
             dockerfile: Dockerfile.nvidia
+          - tag: chromium
+            dockerfile: Dockerfile.nvidia
           - tag: google-chrome
+            dockerfile: Dockerfile.nvidia
+          - tag: microsoft-edge
             dockerfile: Dockerfile.nvidia
     env:
       TAG_NAME: ${{ matrix.tag }}

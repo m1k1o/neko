@@ -74,6 +74,13 @@ For images with VAAPI GPU hardware acceleration using intel drivers use:
 - `ghcr.io/m1k1o/neko/intel-xfce:latest`
 - `ghcr.io/m1k1o/neko/intel-kde:latest`
 
+For images with Nvidia GPU hardware acceleration using EGL use:
+
+- `ghcr.io/m1k1o/neko/nvidia-chromium:latest`
+- `ghcr.io/m1k1o/neko/nvidia-google-chrome:latest`
+- `ghcr.io/m1k1o/neko/nvidia-microsoft-edge:latest`
+- `ghcr.io/m1k1o/neko/nvidia-brave:latest`
+
 GHCR images are built using GitHub actions for every tag.
 
 ### Networking:
