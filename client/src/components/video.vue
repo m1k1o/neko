@@ -22,10 +22,10 @@
           @mouseenter.stop.prevent="onMouseEnter"
           @mouseleave.stop.prevent="onMouseLeave"
         />
-        <div v-if="!playing && playable" class="player-overlay" @click.stop.prevent="toggle">
+        <div v-if="!playing && playable" class="player-overlay" @click.stop.prevent="playAndUnmute">
           <i class="fas fa-play-circle" />
         </div>
-        <div v-if="mutedOverlay && muted" class="player-overlay" @click.stop.prevent="unmute">
+        <div v-else-if="mutedOverlay && muted" class="player-overlay" @click.stop.prevent="unmute">
           <i class="fas fa-volume-up" />
         </div>
         <div ref="aspect" class="player-aspect" />
@@ -384,9 +384,16 @@
     }
 
     @Watch('playing')
-    onPlayingChanged(playing: boolean) {
+    async onPlayingChanged(playing: boolean) {
       if (this._video && this._video.paused && playing) {
-        this.play()
+        // if autoplay is disabled, play() will throw an error
+        // and we need to properly save the state otherwise we
+        // would be thinking we're playing when we're not
+        try {
+          await this._video.play()
+        } catch (err: any) {
+          this.$accessor.video.pause()
+        }
       }
 
       if (this._video && !this._video.paused && !playing) {
@@ -558,6 +565,11 @@
       } else {
         this.$accessor.video.pause()
       }
+    }
+
+    playAndUnmute() {
+      this.$accessor.video.play()
+      this.$accessor.video.setMuted(false)
     }
 
     unmute() {
