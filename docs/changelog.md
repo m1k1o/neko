@@ -17,6 +17,7 @@
 ### Misc
 - Updated to go 1.19 and Node 18, removed go-events as dependency (by @mbattista).
 - Added adaptive framerate which now streams in the framerate you selected from the dropdown.
+- Improved chinese and korean characters support.
 
 ## [n.eko v2.7](https://github.com/m1k1o/neko/releases/tag/v2.7)
 

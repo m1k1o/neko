@@ -79,7 +79,9 @@ RUN set -eux; \
         # Japanese fonts
         fonts-takao-mincho \
         # Chinese fonts
-        fonts-wqy-zenhei; \
+        fonts-wqy-zenhei xfonts-intl-chinese xfonts-wqy \
+        # Korean fonts
+        fonts-wqy-microhei; \
     #
     # create a non-root user
     groupadd --gid $USER_GID $USERNAME; \
