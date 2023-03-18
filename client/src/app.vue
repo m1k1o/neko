@@ -1,5 +1,5 @@
 <template>
-  <div id="neko" :class="[side ? 'expanded' : '']">
+  <div id="neko" :class="[!hideControls && side ? 'expanded' : '']">
     <template v-if="!$client.supported">
       <neko-unsupported />
     </template>
