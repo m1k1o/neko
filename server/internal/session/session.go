@@ -135,7 +135,6 @@ func (session *Session) SignalLocalCandidate(data string) error {
 	if session.socket == nil {
 		return nil
 	}
-	session.peer.SetCandidate(data)
 	return session.socket.Send(&message.SignalCandidate{
 		Event: event.SIGNAL_CANDIDATE,
 		Data:  data,
