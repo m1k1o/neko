@@ -135,6 +135,7 @@ func (session *Session) SignalLocalCandidate(data string) error {
 	if session.socket == nil {
 		return nil
 	}
+	session.logger.Info().Msg("signal update - LocalCandidate")
 	return session.socket.Send(&message.SignalCandidate{
 		Event: event.SIGNAL_CANDIDATE,
 		Data:  data,
