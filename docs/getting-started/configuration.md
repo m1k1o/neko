@@ -25,7 +25,7 @@ nat1to1: <ip>
   - Control protection means, users can gain control only if at least one admin is in the room.
   - e.g. `false`
 #### `NEKO_IMPLICIT_CONTROL`:
-  - If enabled members can gain control implicitly, they don't needd to request control.
+  - If enabled members can gain control implicitly, they don't need to request control.
   - e.g. `false`
 #### `NEKO_LOCKS`:
   - Resources, that will be locked when starting, separated by whitespace.
