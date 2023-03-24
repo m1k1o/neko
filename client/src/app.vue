@@ -1,17 +1,17 @@
 <template>
-  <div id="neko" :class="[!hideControls && side ? 'expanded' : '']">
+  <div id="neko" :class="[!videoOnly && side ? 'expanded' : '']">
     <template v-if="!$client.supported">
       <neko-unsupported />
     </template>
     <template v-else>
       <main class="neko-main">
-        <div v-if="!hideControls" class="header-container">
+        <div v-if="!videoOnly" class="header-container">
           <neko-header />
         </div>
         <div class="video-container">
           <neko-video ref="video" :hideControls="hideControls" @control-attempt="controlAttempt" />
         </div>
-        <div v-if="!hideControls" class="room-container">
+        <div v-if="!videoOnly" class="room-container">
           <neko-members />
           <div class="room-menu">
             <div class="settings">
@@ -26,11 +26,11 @@
           </div>
         </div>
       </main>
-      <neko-side v-if="!hideControls && side" />
+      <neko-side v-if="!videoOnly && side" />
       <neko-connect v-if="!connected" />
       <neko-about v-if="about" />
       <notifications
-        v-if="!hideControls"
+        v-if="!videoOnly"
         group="neko"
         position="top left"
         style="top: 50px; pointer-events: none"
@@ -176,8 +176,20 @@
 
     shakeKbd = false
 
-    get hideControls() {
+    get isCastMode() {
       return !!new URL(location.href).searchParams.get('cast')
+    }
+
+    get isEmbedMode() {
+      return !!new URL(location.href).searchParams.get('embed')
+    }
+
+    get hideControls() {
+      return this.isCastMode
+    }
+
+    get videoOnly() {
+      return this.isCastMode || this.isEmbedMode
     }
 
     @Watch('hideControls', { immediate: true })
