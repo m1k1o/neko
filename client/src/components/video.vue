@@ -390,14 +390,15 @@
         try {
           await this._video.play()
         } catch (err: any) {
-          if (!this._video.muted ) {
-            // video.play() can fail if audio is set due restrictive browsers autoplay policy
-            // retry with muted audio
+          if (!this._video.muted) {
+            // video.play() can fail if audio is set due restrictive
+            // browsers autoplay policy -> retry with muted audio
             try {
               this.$accessor.video.setMuted(true)
               this._video.muted = true
               await this._video.play()
             } catch (err: any) {
+              // if it still fails, we're not playing anything
               this.$accessor.video.pause()
             }
           } else {
@@ -441,7 +442,6 @@
       this._video.addEventListener('canplaythrough', () => {
         this.$accessor.video.setPlayable(true)
         if (this.autoplay) {
-
           this.$nextTick(() => {
             this.$accessor.video.play()
           })
