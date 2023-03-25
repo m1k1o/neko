@@ -16,6 +16,11 @@ RUN set -eux; apt-get update; \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/*
 
 #
+# disable autolock
+RUN kwriteconfig5 --file /home/neko/.config/kscreenlockerrc --group Daemon --key Autolock false; \
+    chown neko:neko /home/neko/.config/kscreenlockerrc
+
+#
 # copy configuation files
 COPY supervisord.conf /etc/neko/supervisord/kde.conf
 

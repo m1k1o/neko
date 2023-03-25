@@ -20,6 +20,7 @@
 - Updated to go 1.19 and Node 18, removed go-events as dependency (by @mbattista).
 - Added adaptive framerate which now streams in the framerate you selected from the dropdown.
 - Improved chinese and korean characters support.
+- Disabled autolock for kde, so that it does not lock the screen when you are not using it.
 
 ## [n.eko v2.7](https://github.com/m1k1o/neko/releases/tag/v2.7)
 
