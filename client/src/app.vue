@@ -9,7 +9,12 @@
           <neko-header />
         </div>
         <div class="video-container">
-          <neko-video ref="video" :hideControls="hideControls" @control-attempt="controlAttempt" />
+          <neko-video
+            ref="video"
+            :hideControls="hideControls"
+            :extraControls="isEmbedMode"
+            @control-attempt="controlAttempt"
+          />
         </div>
         <div v-if="!videoOnly" class="room-container">
           <neko-members />

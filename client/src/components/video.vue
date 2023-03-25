@@ -33,7 +33,7 @@
       <ul v-if="!fullscreen && !hideControls" class="video-menu top">
         <li><i @click.stop.prevent="requestFullscreen" class="fas fa-expand"></i></li>
         <li v-if="admin"><i @click.stop.prevent="openResolution" class="fas fa-desktop"></i></li>
-        <li v-if="!this.implicitHosting" class="request-control">
+        <li v-if="!implicitHosting" :class="extraControls || 'extra-control'">
           <i
             :class="[hosted && !hosting ? 'disabled' : '', !hosted && !hosting ? 'faded' : '', 'fas', 'fa-keyboard']"
             @click.stop.prevent="toggleControl"
@@ -106,8 +106,14 @@
             }
           }
 
-          &.request-control {
-            display: inline-block;
+          /* usually extra controls are only shown on mobile */
+          &.extra-control {
+            display: none;
+          }
+          @media (max-width: 768px) {
+            &.extra-control {
+              display: inline-block;
+            }
           }
 
           &:last-child {
@@ -217,7 +223,10 @@
     @Ref('resolution') readonly _resolution!: Resolution
     @Ref('clipboard') readonly _clipboard!: Clipboard
 
+    // all controls are hidden (e.g. for cast mode)
     @Prop(Boolean) readonly hideControls!: boolean
+    // extra controls are shown (e.g. for embed mode)
+    @Prop(Boolean) readonly extraControls!: boolean
 
     private keyboard = GuacamoleKeyboard()
     private observer = new ResizeObserver(this.onResize.bind(this))
