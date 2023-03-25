@@ -21,6 +21,7 @@
 - Added adaptive framerate which now streams in the framerate you selected from the dropdown.
 - Improved chinese and korean characters support.
 - Disabled autolock for kde, so that it does not lock the screen when you are not using it.
+- Refactored autoplay, so that it will start playing audio, if it's allowed by the browser (by @urbanekpj).
 
 ## [n.eko v2.7](https://github.com/m1k1o/neko/releases/tag/v2.7)
 
