@@ -232,7 +232,6 @@
     private observer = new ResizeObserver(this.onResize.bind(this))
     private focused = false
     private fullscreen = false
-    private startsMuted = true
     private mutedOverlay = true
 
     get admin() {
@@ -364,7 +363,6 @@
     onMutedChanged(muted: boolean) {
       if (this._video && this._video.muted != muted) {
         this._video.muted = muted
-        this.startsMuted = muted
 
         if (!muted) {
           this.mutedOverlay = false
@@ -395,7 +393,20 @@
         try {
           await this._video.play()
         } catch (err: any) {
-          this.$accessor.video.pause()
+          if (!this._video.muted) {
+            // video.play() can fail if audio is set due restrictive
+            // browsers autoplay policy -> retry with muted audio
+            try {
+              this.$accessor.video.setMuted(true)
+              this._video.muted = true
+              await this._video.play()
+            } catch (err: any) {
+              // if it still fails, we're not playing anything
+              this.$accessor.video.pause()
+            }
+          } else {
+            this.$accessor.video.pause()
+          }
         }
       }
 
@@ -434,11 +445,6 @@
       this._video.addEventListener('canplaythrough', () => {
         this.$accessor.video.setPlayable(true)
         if (this.autoplay) {
-          // start as muted due to restrictive browsers autoplay policy
-          if (this.startsMuted && (!document.hasFocus() || !this.$accessor.active)) {
-            this.$accessor.video.setMuted(true)
-          }
-
           this.$nextTick(() => {
             this.$accessor.video.play()
           })
