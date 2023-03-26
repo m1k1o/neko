@@ -167,7 +167,7 @@ Flags:
       --cert string                 path to the SSL cert used to secure the neko server
       --control_protection          control protection means, users can gain control only if at least one admin is in the room
       --cors strings                list of allowed origins for CORS (default [*])
-      --device string               audio device to capture (default "auto_null.monitor")
+      --device string               audio device to capture (default "audio_output.monitor")
       --display string              XDisplay to capture (default ":99.0")
       --epr string                  limits the pool of ephemeral ports that ICE UDP connections can allocate from (default "59000-59100")
       --file_transfer_enabled       enable file transfer feature (default false)

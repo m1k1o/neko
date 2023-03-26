@@ -22,6 +22,7 @@
 - Improved chinese and korean characters support.
 - Disabled autolock for kde, so that it does not lock the screen when you are not using it.
 - Refactored autoplay, so that it will start playing audio, if it's allowed by the browser (by @urbanekpj).
+- Renamed pulseaudio sink from `auto_null` to `audio_output`, because it was ignored by KDE.
 
 ## [n.eko v2.7](https://github.com/m1k1o/neko/releases/tag/v2.7)
 

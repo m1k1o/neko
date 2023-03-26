@@ -1,5 +1,8 @@
 #!/usr/bin/pulseaudio -nF
 
+### Create virtual output device sink
+load-module module-null-sink sink_name=audio_output sink_properties=device.description="Virtual\ Audio\ Output"
+
 # Allow pulse audio to be accessed via TCP (from localhost only), to allow other users to access the virtual devices
 load-module module-native-protocol-unix socket=/tmp/pulseaudio.socket auth-anonymous=1
 

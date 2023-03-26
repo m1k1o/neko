@@ -92,7 +92,7 @@ func (Capture) Init(cmd *cobra.Command) error {
 	// audio
 	//
 
-	cmd.PersistentFlags().String("device", "auto_null.monitor", "audio device to capture")
+	cmd.PersistentFlags().String("device", "audio_output.monitor", "audio device to capture")
 	if err := viper.BindPFlag("device", cmd.PersistentFlags().Lookup("device")); err != nil {
 		return err
 	}
