@@ -90,10 +90,6 @@ RUN set -eux; \
     adduser $USERNAME video; \
     adduser $USERNAME pulse; \
     #
-    # setup pulseaudio
-    mkdir -p /home/$USERNAME/.config/pulse/; \
-    echo "default-server=unix:/tmp/pulseaudio.socket" > /home/$USERNAME/.config/pulse/client.conf; \
-    #
     # workaround for an X11 problem: http://blog.tigerteufel.de/?p=476
     mkdir /tmp/.X11-unix; \
     chmod 1777 /tmp/.X11-unix; \
@@ -120,6 +116,7 @@ COPY .docker/base/xorg.conf /etc/neko/xorg.conf
 # set default envs
 ENV USER=$USERNAME
 ENV DISPLAY=:99.0
+ENV PULSE_SERVER=unix:/tmp/pulseaudio.socket
 ENV NEKO_PASSWORD=neko
 ENV NEKO_PASSWORD_ADMIN=admin
 ENV NEKO_BIND=:8080
