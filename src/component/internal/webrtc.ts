@@ -16,7 +16,7 @@ export const OPCODE = {
 } as const
 
 export interface ICEServer {
-  urls: string
+  urls: string[]
   username: string
   credential: string
 }
