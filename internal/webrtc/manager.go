@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -567,6 +568,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int, 
 		logger.Info().Interface("data_channel", dc).Msg("got remote data channel")
 	})
 
+	var once sync.Once
 	connection.OnConnectionStateChange(func(state webrtc.PeerConnectionState) {
 		switch state {
 		case webrtc.PeerConnectionStateConnected:
@@ -575,13 +577,16 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int, 
 			webrtc.PeerConnectionStateFailed:
 			connection.Close()
 		case webrtc.PeerConnectionStateClosed:
-			session.SetWebRTCConnected(peer, false)
-			if err = video.RemoveReceiver(videoTrack); err != nil {
-				logger.Err(err).Msg("failed to remove video receiver")
-			}
-			audioTrack.Shutdown()
-			videoTrack.Shutdown()
-			close(videoRtcp)
+			// ensure we only run this once
+			once.Do(func() {
+				session.SetWebRTCConnected(peer, false)
+				if err = video.RemoveReceiver(videoTrack); err != nil {
+					logger.Err(err).Msg("failed to remove video receiver")
+				}
+				audioTrack.Shutdown()
+				videoTrack.Shutdown()
+				close(videoRtcp)
+			})
 		}
 
 		manager.metrics.SetState(session, state)
