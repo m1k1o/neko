@@ -690,11 +690,11 @@
         }, 100)
       }
     }
-    onTouchHandler(event: TouchEvent) {
-      let touches = event.changedTouches
-      let first = touches[0]
+
+    onTouchHandler(e: TouchEvent) {
+      let first = e.changedTouches[0]
       let type = ''
-      switch (event.type) {
+      switch (e.type) {
         case 'touchstart':
           type = 'mousedown'
           break
