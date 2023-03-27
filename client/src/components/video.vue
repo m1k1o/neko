@@ -21,6 +21,9 @@
           @mouseup.stop.prevent="onMouseUp"
           @mouseenter.stop.prevent="onMouseEnter"
           @mouseleave.stop.prevent="onMouseLeave"
+          @touchmove.stop.prevent="onTouchHandler"
+          @touchstart.stop.prevent="onTouchHandler"
+          @touchend.stop.prevent="onTouchHandler"
         />
         <div v-if="!playing && playable" class="player-overlay" @click.stop.prevent="playAndUnmute">
           <i class="fas fa-play-circle" />
@@ -686,6 +689,35 @@
           this.wheelThrottle = false
         }, 100)
       }
+    }
+
+    onTouchHandler(e: TouchEvent) {
+      let first = e.changedTouches[0]
+      let type = ''
+      switch (e.type) {
+        case 'touchstart':
+          type = 'mousedown'
+          break
+        case 'touchmove':
+          type = 'mousemove'
+          break
+        case 'touchend':
+          type = 'mouseup'
+          break
+        default:
+          return
+      }
+
+      const simulatedEvent = new MouseEvent(type, {
+        bubbles: true,
+        cancelable: true,
+        view: window,
+        screenX: first.screenX,
+        screenY: first.screenY,
+        clientX: first.clientX,
+        clientY: first.clientY,
+      })
+      first.target.dispatchEvent(simulatedEvent)
     }
 
     onMouseDown(e: MouseEvent) {
