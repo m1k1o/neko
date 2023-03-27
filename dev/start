@@ -40,6 +40,7 @@ docker run --rm -it \
     -e "NEKO_WEBRTC_UDPMUX=${NEKO_MUX}" \
     -e "NEKO_WEBRTC_TCPMUX=${NEKO_MUX}" \
     -e "NEKO_WEBRTC_NAT1TO1=${NEKO_NAT1TO1}" \
+    -e "NEKO_SESSION_FILE=/home/neko/sessions.txt" \
     -v "${PWD}/runtime/config.yml:/etc/neko/neko.yml" \
     -e "NEKO_DEBUG=1" \
     neko_server_app:latest;

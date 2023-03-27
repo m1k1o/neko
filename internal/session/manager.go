@@ -49,6 +49,9 @@ func New(config *config.Session) *SessionManagerCtx {
 		}
 	}
 
+	// try to load sessions from file
+	manager.load()
+
 	return manager
 }
 
@@ -102,6 +105,8 @@ func (manager *SessionManagerCtx) Create(id string, profile types.MemberProfile)
 	manager.sessionsMu.Unlock()
 
 	manager.emmiter.Emit("created", session)
+	manager.save()
+
 	return session, token, nil
 }
 
@@ -118,6 +123,8 @@ func (manager *SessionManagerCtx) Update(id string, profile types.MemberProfile)
 	manager.sessionsMu.Unlock()
 
 	manager.emmiter.Emit("profile_changed", session)
+	manager.save()
+
 	session.profileChanged()
 	return nil
 }
@@ -143,6 +150,8 @@ func (manager *SessionManagerCtx) Delete(id string) error {
 	}
 
 	manager.emmiter.Emit("deleted", session)
+	manager.save()
+
 	return nil
 }
 

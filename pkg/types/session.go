@@ -17,6 +17,12 @@ type Cursor struct {
 	Y int `json:"y"`
 }
 
+type SessionProfile struct {
+	Id      string
+	Token   string
+	Profile MemberProfile
+}
+
 type SessionState struct {
 	IsConnected bool `json:"is_connected"`
 	IsWatching  bool `json:"is_watching"`

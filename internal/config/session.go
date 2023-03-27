@@ -8,6 +8,8 @@ import (
 )
 
 type Session struct {
+	File string
+
 	ImplicitHosting   bool
 	InactiveCursors   bool
 	MercifulReconnect bool
@@ -20,6 +22,11 @@ type Session struct {
 }
 
 func (Session) Init(cmd *cobra.Command) error {
+	cmd.PersistentFlags().String("session.file", "", "if sessions should be stored in a file, otherwise they will be stored only in memory")
+	if err := viper.BindPFlag("session.file", cmd.PersistentFlags().Lookup("session.file")); err != nil {
+		return err
+	}
+
 	cmd.PersistentFlags().Bool("session.implicit_hosting", true, "allow implicit control switching")
 	if err := viper.BindPFlag("session.implicit_hosting", cmd.PersistentFlags().Lookup("session.implicit_hosting")); err != nil {
 		return err
@@ -65,6 +72,8 @@ func (Session) Init(cmd *cobra.Command) error {
 }
 
 func (s *Session) Set() {
+	s.File = viper.GetString("session.file")
+
 	s.ImplicitHosting = viper.GetBool("session.implicit_hosting")
 	s.InactiveCursors = viper.GetBool("session.inactive_cursors")
 	s.MercifulReconnect = viper.GetBool("session.merciful_reconnect")
