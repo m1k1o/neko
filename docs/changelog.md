@@ -7,6 +7,7 @@
 - Added `m1k1o/neko:kde` tag as an alternative to `m1k1o/neko:xfce`.
 - New VirtualGL version 3.1 was released, adding support for Chromium browsers to use Nvidia GPU acceleration!
 - Added `?embed=1` parameter to the URL, which will hide the sidebar and the top bar, so that it can be embedded in other websites.
+- Added `?volume=<0-1>` parameter to the URL, which will set the inital volume of the player (by @urbanekpj).
 
 ### Bugs
 - Fixed TCP mux occasional freeze by adding write buffer to it.

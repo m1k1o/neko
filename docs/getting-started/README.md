@@ -231,6 +231,7 @@ Note, currently only browser GPU acceleration is supported, not encoding.
   - Adding `?usr=<display-name>` will prefill username.
   - Adding `?cast=1` will hide all control and show only video.
   - Adding `?embed=1` will hide most additional components and show only video.
+  - Adding `?volume=<0-1>` will set volume to given value.
   - e.g. `http(s)://<URL:Port>/?pwd=neko&usr=guest&cast=1`
 
 ### Screen size
