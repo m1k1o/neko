@@ -47,7 +47,7 @@ func New(desktop types.DesktopManager, capture types.CaptureManager, config *con
 
 	if !config.ICELite {
 		ICEServers := []webrtc.ICEServer{}
-		for _, server := range config.ICEServers {
+		for _, server := range config.ICEServersBackend {
 			var credential any
 			if server.Credential != "" {
 				credential = server.Credential
@@ -137,7 +137,8 @@ func (manager *WebRTCManagerCtx) Start() {
 	manager.logger.Info().
 		Bool("icelite", manager.config.ICELite).
 		Bool("icetrickle", manager.config.ICETrickle).
-		Interface("iceservers", manager.config.ICEServers).
+		Interface("iceservers-frontend", manager.config.ICEServersFrontend).
+		Interface("iceservers-backend", manager.config.ICEServersBackend).
 		Str("nat1to1", strings.Join(manager.config.NAT1To1IPs, ",")).
 		Str("epr", fmt.Sprintf("%d-%d", manager.config.EphemeralMin, manager.config.EphemeralMax)).
 		Int("tcpmux", manager.config.TCPMux).
@@ -155,7 +156,7 @@ func (manager *WebRTCManagerCtx) Shutdown() error {
 }
 
 func (manager *WebRTCManagerCtx) ICEServers() []types.ICEServer {
-	return manager.config.ICEServers
+	return manager.config.ICEServersFrontend
 }
 
 func (manager *WebRTCManagerCtx) newPeerConnection(bitrate int, codecs []codec.RTPCodec, logger zerolog.Logger) (*webrtc.PeerConnection, cc.BandwidthEstimator, error) {

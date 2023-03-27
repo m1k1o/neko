@@ -16,13 +16,14 @@ import (
 const defStunSrv = "stun:stun.l.google.com:19302"
 
 type WebRTC struct {
-	ICELite      bool
-	ICETrickle   bool
-	ICEServers   []types.ICEServer
-	EphemeralMin uint16
-	EphemeralMax uint16
-	TCPMux       int
-	UDPMux       int
+	ICELite            bool
+	ICETrickle         bool
+	ICEServersFrontend []types.ICEServer
+	ICEServersBackend  []types.ICEServer
+	EphemeralMin       uint16
+	EphemeralMax       uint16
+	TCPMux             int
+	UDPMux             int
 
 	NAT1To1IPs     []string
 	IpRetrievalUrl string
@@ -43,8 +44,18 @@ func (WebRTC) Init(cmd *cobra.Command) error {
 		return err
 	}
 
-	cmd.PersistentFlags().String("webrtc.iceservers", "[]", "STUN and TURN servers in JSON format with `urls`, `username`, `password` keys")
+	cmd.PersistentFlags().String("webrtc.iceservers", "[]", "Global STUN and TURN servers in JSON format with `urls`, `username` and `credential` keys")
 	if err := viper.BindPFlag("webrtc.iceservers", cmd.PersistentFlags().Lookup("webrtc.iceservers")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().String("webrtc.iceservers.frontend", "[]", "Frontend only STUN and TURN servers in JSON format with `urls`, `username` and `credential` keys")
+	if err := viper.BindPFlag("webrtc.iceservers.frontend", cmd.PersistentFlags().Lookup("webrtc.iceservers.frontend")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().String("webrtc.iceservers.backend", "[]", "Backend only STUN and TURN servers in JSON format with `urls`, `username` and `credential` keys")
+	if err := viper.BindPFlag("webrtc.iceservers.backend", cmd.PersistentFlags().Lookup("webrtc.iceservers.backend")); err != nil {
 		return err
 	}
 
@@ -97,16 +108,43 @@ func (s *WebRTC) Set() {
 	s.ICELite = viper.GetBool("webrtc.icelite")
 	s.ICETrickle = viper.GetBool("webrtc.icetrickle")
 
-	if err := viper.UnmarshalKey("webrtc.iceservers", &s.ICEServers, viper.DecodeHook(
-		utils.JsonStringAutoDecode(s.ICEServers),
+	// parse frontend ice servers
+	if err := viper.UnmarshalKey("webrtc.iceservers.frontend", &s.ICEServersFrontend, viper.DecodeHook(
+		utils.JsonStringAutoDecode([]types.ICEServer{}),
 	)); err != nil {
-		log.Warn().Err(err).Msgf("unable to parse ICE servers")
+		log.Warn().Err(err).Msgf("unable to parse frontend ICE servers")
 	}
 
-	if len(s.ICEServers) == 0 {
-		s.ICEServers = append(s.ICEServers, types.ICEServer{
-			URLs: []string{defStunSrv},
-		})
+	// parse backend ice servers
+	if err := viper.UnmarshalKey("webrtc.iceservers.backend", &s.ICEServersBackend, viper.DecodeHook(
+		utils.JsonStringAutoDecode([]types.ICEServer{}),
+	)); err != nil {
+		log.Warn().Err(err).Msgf("unable to parse backend ICE servers")
+	}
+
+	if s.ICELite && len(s.ICEServersBackend) > 0 {
+		log.Warn().Msgf("ICE Lite is enabled, but backend ICE servers are configured. Backend ICE servers will be ignored.")
+	}
+
+	// if no frontend or backend ice servers are configured
+	if len(s.ICEServersFrontend) == 0 && len(s.ICEServersBackend) == 0 {
+		// parse global ice servers
+		var iceServers []types.ICEServer
+		if err := viper.UnmarshalKey("webrtc.iceservers", &iceServers, viper.DecodeHook(
+			utils.JsonStringAutoDecode([]types.ICEServer{}),
+		)); err != nil {
+			log.Warn().Err(err).Msgf("unable to parse global ICE servers")
+		}
+
+		// add default stun server if none are configured
+		if len(iceServers) == 0 {
+			iceServers = append(iceServers, types.ICEServer{
+				URLs: []string{defStunSrv},
+			})
+		}
+
+		s.ICEServersFrontend = append(s.ICEServersFrontend, iceServers...)
+		s.ICEServersBackend = append(s.ICEServersBackend, iceServers...)
 	}
 
 	s.TCPMux = viper.GetInt("webrtc.tcpmux")
