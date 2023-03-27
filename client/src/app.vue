@@ -181,6 +181,11 @@
 
     shakeKbd = false
 
+    get volume() {
+      const numberParam = parseFloat(new URL(location.href).searchParams.get('volume') || '1.0')
+      return Math.max(0.0, Math.min(!isNaN(numberParam) ? numberParam * 100 : 100, 100))
+    }
+
     get isCastMode() {
       return !!new URL(location.href).searchParams.get('cast')
     }
@@ -195,6 +200,11 @@
 
     get videoOnly() {
       return this.isCastMode || this.isEmbedMode
+    }
+
+    @Watch('volume', { immediate: true })
+    onVolume(volume: number) {
+      this.$accessor.video.setVolume(volume)
     }
 
     @Watch('hideControls', { immediate: true })
