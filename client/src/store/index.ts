@@ -41,7 +41,7 @@ export const mutations = mutationTree(state, {
     Vue.set(state.locked, resource, false)
   },
 
-  setConnnecting(state) {
+  setConnecting(state) {
     state.connected = false
     state.connecting = true
   },
