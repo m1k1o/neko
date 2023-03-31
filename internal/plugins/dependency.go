@@ -15,88 +15,113 @@ type dependency struct {
 	logger    zerolog.Logger
 }
 
+func (a *dependency) findPlugin(name string) (*dependency, bool) {
+	if a == nil {
+		return nil, false
+	}
+
+	if a.plugin.Name() == name {
+		return a, true
+	}
+
+	for _, dep := range a.dependsOn {
+		plug, ok := dep.findPlugin(name)
+		if ok {
+			return plug, true
+		}
+	}
+
+	return nil, false
+}
+
+func (a *dependency) startPlugin(pm types.PluginManagers) error {
+	if a.invoked {
+		return nil
+	}
+
+	a.invoked = true
+
+	for _, do := range a.dependsOn {
+		if err := do.startPlugin(pm); err != nil {
+			return fmt.Errorf("plugin's '%s' dependency: %w", a.plugin.Name(), err)
+		}
+	}
+
+	err := a.plugin.Start(pm)
+	if err != nil {
+		return fmt.Errorf("plugin '%s' failed to start: %w", a.plugin.Name(), err)
+	}
+
+	a.logger.Info().Str("plugin", a.plugin.Name()).Msg("plugin started")
+	return nil
+}
+
 type dependiencies struct {
 	deps   map[string]*dependency
 	logger zerolog.Logger
 }
 
 func (d *dependiencies) addPlugin(plugin types.Plugin) error {
-	plug, ok := d.deps[plugin.Name()]
+	pluginName := plugin.Name()
+
+	plug, ok := d.deps[pluginName]
 	if !ok {
 		plug = &dependency{}
 	} else if plug.plugin != nil {
-		return fmt.Errorf("plugin '%s' already added", plugin.Name())
+		return fmt.Errorf("plugin '%s' already added", pluginName)
 	}
 
 	plug.plugin = plugin
 	plug.logger = d.logger
-	d.deps[plugin.Name()] = plug
+	d.deps[pluginName] = plug
 
 	dplug, ok := plugin.(types.DependablePlugin)
 	if !ok {
 		return nil
 	}
 
-	for _, dep := range dplug.DependsOn() {
-		var dependsOn *dependency
-		dependsOn, ok = d.deps[dep]
+	for _, depName := range dplug.DependsOn() {
+		dependsOn, ok := d.deps[depName]
 		if !ok {
 			dependsOn = &dependency{}
 		} else if dependsOn.plugin != nil {
 			// if there is a cyclical dependency, break it and return error
-			if tdep := dependsOn.findPlugin(plugin.Name()); tdep != nil {
+			if tdep, ok := dependsOn.findPlugin(pluginName); ok {
 				dependsOn.dependsOn = nil
-				delete(d.deps, plugin.Name())
-				return fmt.Errorf("cyclical dependency detected: '%s' <-> '%s'", plugin.Name(), tdep.plugin.Name())
+				delete(d.deps, pluginName)
+				return fmt.Errorf("cyclical dependency detected: '%s' <-> '%s'", pluginName, tdep.plugin.Name())
 			}
 		}
 
 		plug.dependsOn = append(plug.dependsOn, dependsOn)
-		d.deps[dep] = dependsOn
+		d.deps[depName] = dependsOn
 	}
 
 	return nil
 }
 
+func (d *dependiencies) findPlugin(name string) (*dependency, bool) {
+	for _, dep := range d.deps {
+		plug, ok := dep.findPlugin(name)
+		if ok {
+			return plug, true
+		}
+	}
+	return nil, false
+}
+
 func (d *dependiencies) start(pm types.PluginManagers) error {
-	for _, p := range d.deps {
-		if err := p.start(pm); err != nil {
+	for _, dep := range d.deps {
+		if err := dep.startPlugin(pm); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (d *dependiencies) findPlugin(name string) (*dependency, bool) {
-	for _, p := range d.deps {
-		if found := p.findPlugin(name); found != nil {
-			return found, true
-		}
-	}
-	return nil, false
-}
-
-func (a *dependency) findPlugin(name string) *dependency {
-	if a == nil {
-		return nil
-	}
-
-	if a.plugin.Name() == name {
-		return a
-	}
-
-	for _, p := range a.dependsOn {
-		if found := p.findPlugin(name); found != nil {
-			return found
-		}
-	}
-
-	return nil
-}
-
 func (d *dependiencies) forEach(f func(*dependency) error) error {
-	for _, dp := range d.deps {
-		if err := f(dp); err != nil {
+	for _, dep := range d.deps {
+		if err := f(dep); err != nil {
 			return err
 		}
 	}
@@ -105,26 +130,4 @@ func (d *dependiencies) forEach(f func(*dependency) error) error {
 
 func (d *dependiencies) len() int {
 	return len(d.deps)
-}
-
-func (a *dependency) start(pm types.PluginManagers) error {
-	if a.invoked {
-		return nil
-	}
-
-	a.invoked = true
-
-	for _, do := range a.dependsOn {
-		if err := do.start(pm); err != nil {
-			return err
-		}
-	}
-
-	err := a.plugin.Start(pm)
-	a.logger.Err(err).Str("plugin", a.plugin.Name()).Msg("plugin start")
-	if err != nil {
-		return fmt.Errorf("plugin %s failed to start: %s", a.plugin.Name(), err)
-	}
-
-	return nil
 }

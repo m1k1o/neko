@@ -16,12 +16,14 @@ import (
 
 type ManagerCtx struct {
 	logger  zerolog.Logger
+	config  *config.Plugins
 	plugins dependiencies
 }
 
 func New(config *config.Plugins) *ManagerCtx {
 	manager := &ManagerCtx{
 		logger: log.With().Str("module", "plugins").Logger(),
+		config: config,
 		plugins: dependiencies{
 			deps: make(map[string]*dependency),
 		},
@@ -31,7 +33,13 @@ func New(config *config.Plugins) *ManagerCtx {
 
 	if config.Enabled {
 		err := manager.loadDir(config.Dir)
-		manager.logger.Err(err).Msgf("loading finished, total %d plugins", manager.plugins.len())
+
+		// only log error if plugin is not required
+		if err != nil && config.Required {
+			manager.logger.Fatal().Err(err).Msg("error loading plugins")
+		}
+
+		manager.logger.Info().Msgf("loading finished, total %d plugins", manager.plugins.len())
 	}
 
 	return manager
@@ -48,6 +56,13 @@ func (manager *ManagerCtx) loadDir(dir string) error {
 		}
 
 		err = manager.load(path)
+
+		// return error if plugin is required
+		if err != nil && manager.config.Required {
+			return err
+		}
+
+		// otherwise only log error if plugin is not required
 		manager.logger.Err(err).Str("plugin", path).Msg("loading a plugin")
 		return nil
 	})
@@ -70,25 +85,24 @@ func (manager *ManagerCtx) load(path string) error {
 	}
 
 	if err = manager.plugins.addPlugin(p); err != nil {
-		return fmt.Errorf("failed to add plugin '%s': %w", p.Name(), err)
+		return fmt.Errorf("failed to add plugin: %w", err)
 	}
 
-	manager.logger.Info().Msgf("loaded plugin '%s', total %d plugins", p.Name(), manager.plugins.len())
 	return nil
 }
 
 func (manager *ManagerCtx) InitConfigs(cmd *cobra.Command) {
-	_ = manager.plugins.forEach(func(plug *dependency) error {
-		if err := plug.plugin.Config().Init(cmd); err != nil {
-			log.Err(err).Str("plugin", plug.plugin.Name()).Msg("unable to initialize configuration")
+	_ = manager.plugins.forEach(func(d *dependency) error {
+		if err := d.plugin.Config().Init(cmd); err != nil {
+			log.Err(err).Str("plugin", d.plugin.Name()).Msg("unable to initialize configuration")
 		}
 		return nil
 	})
 }
 
 func (manager *ManagerCtx) SetConfigs() {
-	_ = manager.plugins.forEach(func(plug *dependency) error {
-		plug.plugin.Config().Set()
+	_ = manager.plugins.forEach(func(d *dependency) error {
+		d.plugin.Config().Set()
 		return nil
 	})
 }
@@ -98,18 +112,26 @@ func (manager *ManagerCtx) Start(
 	webSocketManager types.WebSocketManager,
 	apiManager types.ApiManager,
 ) {
-	_ = manager.plugins.start(types.PluginManagers{
+	err := manager.plugins.start(types.PluginManagers{
 		SessionManager:        sessionManager,
 		WebSocketManager:      webSocketManager,
 		ApiManager:            apiManager,
 		LoadServiceFromPlugin: manager.LookupService,
 	})
+
+	if err != nil {
+		if manager.config.Required {
+			manager.logger.Fatal().Err(err).Msg("failed to start plugins, exiting...")
+		} else {
+			manager.logger.Err(err).Msg("failed to start plugins, skipping...")
+		}
+	}
 }
 
 func (manager *ManagerCtx) Shutdown() error {
-	_ = manager.plugins.forEach(func(plug *dependency) error {
-		err := plug.plugin.Shutdown()
-		manager.logger.Err(err).Str("plugin", plug.plugin.Name()).Msg("plugin shutdown")
+	_ = manager.plugins.forEach(func(d *dependency) error {
+		err := d.plugin.Shutdown()
+		manager.logger.Err(err).Str("plugin", d.plugin.Name()).Msg("plugin shutdown")
 		return nil
 	})
 	return nil
@@ -127,4 +149,29 @@ func (manager *ManagerCtx) LookupService(pluginName string) (any, error) {
 	}
 
 	return expPlug.ExposeService(), nil
+}
+
+func (manager *ManagerCtx) Metadata() []types.PluginMetadata {
+	var plugins []types.PluginMetadata
+
+	_ = manager.plugins.forEach(func(d *dependency) error {
+		dependsOn := make([]string, 0)
+		deps, isDependalbe := d.plugin.(types.DependablePlugin)
+		if isDependalbe {
+			dependsOn = deps.DependsOn()
+		}
+
+		_, isExposable := d.plugin.(types.ExposablePlugin)
+
+		plugins = append(plugins, types.PluginMetadata{
+			Name:         d.plugin.Name(),
+			IsDependable: isDependalbe,
+			IsExposable:  isExposable,
+			DependsOn:    dependsOn,
+		})
+
+		return nil
+	})
+
+	return plugins
 }

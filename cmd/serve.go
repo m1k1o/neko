@@ -24,13 +24,12 @@ func init() {
 	service := serve{}
 
 	command := &cobra.Command{
-		Use:   "serve",
-		Short: "serve neko streaming server",
-		Long:  `serve neko streaming server`,
-		Run:   service.Command,
+		Use:    "serve",
+		Short:  "serve neko streaming server",
+		Long:   `serve neko streaming server`,
+		PreRun: service.PreRun,
+		Run:    service.Run,
 	}
-
-	cobra.OnInitialize(service.Preflight)
 
 	if err := service.Init(command); err != nil {
 		log.Panic().Err(err).Msg("unable to initialize configuration")
@@ -91,7 +90,7 @@ func (c *serve) Init(cmd *cobra.Command) error {
 	return nil
 }
 
-func (c *serve) Preflight() {
+func (c *serve) PreRun(cmd *cobra.Command, args []string) {
 	c.logger = log.With().Str("service", "neko").Logger()
 
 	c.configs.Desktop.Set()
@@ -198,7 +197,7 @@ func (c *serve) Shutdown() {
 	c.logger.Err(err).Msg("member manager disconnect")
 }
 
-func (c *serve) Command(cmd *cobra.Command, args []string) {
+func (c *serve) Run(cmd *cobra.Command, args []string) {
 	c.logger.Info().Msg("starting neko server")
 	c.Start(cmd)
 	c.logger.Info().Msg("neko ready")

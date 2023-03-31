@@ -6,8 +6,9 @@ import (
 )
 
 type Plugins struct {
-	Enabled bool
-	Dir     string
+	Enabled  bool
+	Dir      string
+	Required bool
 }
 
 func (Plugins) Init(cmd *cobra.Command) error {
@@ -21,10 +22,16 @@ func (Plugins) Init(cmd *cobra.Command) error {
 		return err
 	}
 
+	cmd.PersistentFlags().Bool("plugins.required", false, "if true, neko will exit if there is an error when loading a plugin")
+	if err := viper.BindPFlag("plugins.required", cmd.PersistentFlags().Lookup("plugins.required")); err != nil {
+		return err
+	}
+
 	return nil
 }
 
 func (s *Plugins) Set() {
 	s.Enabled = viper.GetBool("plugins.enabled")
 	s.Dir = viper.GetString("plugins.dir")
+	s.Required = viper.GetBool("plugins.required")
 }

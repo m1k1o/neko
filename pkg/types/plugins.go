@@ -28,6 +28,13 @@ type PluginConfig interface {
 	Set()
 }
 
+type PluginMetadata struct {
+	Name         string
+	IsDependable bool
+	IsExposable  bool
+	DependsOn    []string `json:",omitempty"`
+}
+
 type PluginManagers struct {
 	SessionManager        SessionManager
 	WebSocketManager      WebSocketManager
