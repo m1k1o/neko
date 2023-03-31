@@ -79,7 +79,7 @@ nat1to1: <ip>
     - `gstreamer1.0-plugins-good`
     - `gstreamer1.0-plugins-bad`
     - `gstreamer1.0-plugins-ugly`
-  - e.g. `ximagesrc display-name=%s show-pointer=true use-damage=false ! video/x-raw,framerate=30/1 ! videoconvert ! queue ! video/x-raw,format=NV12 ! x264enc threads=4 bitrate=3500 key-int-max=60 vbv-buf-capacity=4000 byte-stream=true tune=zerolatency speed-preset=veryfast ! video/x-h264,stream-format=byte-stream`
+  - e.g. `ximagesrc display-name=%s show-pointer=true use-damage=false ! video/x-raw,framerate=30/1 ! videoconvert ! queue ! video/x-raw,format=NV12 ! x264enc threads=4 bitrate=3500 key-int-max=60 vbv-buf-capacity=4000 byte-stream=true tune=zerolatency speed-preset=veryfast ! video/x-h264,stream-format=byte-stream,profile=constrained-baseline`
 #### `NEKO_MAX_FPS`:
   - The resulting stream frames per seconds should be capped *(0 for uncapped)*.
   - e.g. `0`
