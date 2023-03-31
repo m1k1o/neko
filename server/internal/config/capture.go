@@ -2,6 +2,7 @@ package config
 
 import (
 	"m1k1o/neko/internal/types/codec"
+	"strings"
 
 	"github.com/pion/webrtc/v3"
 	"github.com/rs/zerolog/log"
@@ -9,13 +10,21 @@ import (
 	"github.com/spf13/viper"
 )
 
+type HwEnc int
+
+const (
+	HwEncNone HwEnc = iota
+	HwEncVAAPI
+	HwEncNVENC
+)
+
 type Capture struct {
 	// video
 	Display       string
 	VideoCodec    codec.RTPCodec
-	VideoHWEnc    string // TODO: Pipeline builder.
-	VideoBitrate  uint   // TODO: Pipeline builder.
-	VideoMaxFPS   int16  // TODO: Pipeline builder.
+	VideoHWEnc    HwEnc // TODO: Pipeline builder.
+	VideoBitrate  uint  // TODO: Pipeline builder.
+	VideoMaxFPS   int16 // TODO: Pipeline builder.
 	VideoPipeline string
 
 	// audio
@@ -184,11 +193,19 @@ func (s *Capture) Set() {
 		log.Warn().Msg("you are using deprecated config setting 'NEKO_AV1=true', use 'NEKO_VIDEO_CODEC=av1' instead")
 	}
 
-	videoHWEnc := ""
-	if viper.GetString("hwenc") == "VAAPI" {
-		videoHWEnc = "VAAPI"
+	videoHWEnc := strings.ToLower(viper.GetString("hwenc"))
+	switch videoHWEnc {
+	case "":
+		fallthrough
+	case "none":
+		s.VideoHWEnc = HwEncNone
+	case "vaapi":
+		s.VideoHWEnc = HwEncVAAPI
+	case "nvenc":
+		s.VideoHWEnc = HwEncNVENC
+	default:
+		log.Warn().Str("hwenc", videoHWEnc).Msgf("unknown video hw encoder, using CPU")
 	}
-	s.VideoHWEnc = videoHWEnc
 
 	s.VideoBitrate = viper.GetUint("video_bitrate")
 	s.VideoMaxFPS = int16(viper.GetInt("max_fps"))
