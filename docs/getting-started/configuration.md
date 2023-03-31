@@ -84,8 +84,9 @@ nat1to1: <ip>
   - The resulting stream frames per seconds should be capped *(0 for uncapped)*.
   - e.g. `0`
 #### `NEKO_HWENC`:
-  - Use hardware accelerated encoding, for now supported only `VAAPI`.
-  - e.g. `VAAPI`
+  - none *(default CPU encoding)*
+  - vaapi
+  - nvenc
 
 ### Audio
 
