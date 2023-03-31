@@ -23,6 +23,9 @@ const pingPeriod = 10 * time.Second
 // period for sending inactive cursor messages
 const inactiveCursorsPeriod = 750 * time.Millisecond
 
+// maximum payload length for logging
+const maxPayloadLogLength = 10_000
+
 // events that are not logged in debug mode
 var nologEvents = []string{
 	// don't log twice
@@ -313,10 +316,15 @@ func (manager *WebSocketManagerCtx) handle(connection *websocket.Conn, peer type
 
 			// log events if not ignored
 			if ok, _ := utils.ArrayIn(data.Event, nologEvents); !ok {
+				payload := data.Payload
+				if len(payload) > maxPayloadLogLength {
+					payload = []byte("<truncated>")
+				}
+
 				logger.Debug().
 					Str("address", connection.RemoteAddr().String()).
 					Str("event", data.Event).
-					Str("payload", string(data.Payload)).
+					Str("payload", string(payload)).
 					Msg("received message from client")
 			}
 

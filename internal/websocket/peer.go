@@ -12,6 +12,7 @@ import (
 	"github.com/demodesk/neko/pkg/types"
 	"github.com/demodesk/neko/pkg/types/event"
 	"github.com/demodesk/neko/pkg/types/message"
+	"github.com/demodesk/neko/pkg/utils"
 )
 
 type WebSocketPeerCtx struct {
@@ -60,11 +61,18 @@ func (peer *WebSocketPeerCtx) Send(event string, payload any) {
 		return
 	}
 
-	peer.logger.Debug().
-		Str("address", peer.connection.RemoteAddr().String()).
-		Str("event", event).
-		Str("payload", string(raw)).
-		Msg("sending message to client")
+	// log events if not ignored
+	if ok, _ := utils.ArrayIn(event, nologEvents); !ok {
+		if len(raw) > maxPayloadLogLength {
+			raw = []byte("<truncated>")
+		}
+
+		peer.logger.Debug().
+			Str("address", peer.connection.RemoteAddr().String()).
+			Str("event", event).
+			Str("payload", string(raw)).
+			Msg("sending message to client")
+	}
 }
 
 func (peer *WebSocketPeerCtx) Ping() error {
