@@ -139,6 +139,11 @@ func NewVideoPipeline(rtpCodec codec.RTPCodec, display string, pipelineSrc strin
 			return "", err
 		}
 
+		vbvbuf := uint(1000)
+		if bitrate > 1000 {
+			vbvbuf = bitrate
+		}
+
 		if hwenc == config.HwEncVAAPI {
 			if err := gst.CheckPlugins([]string{"vaapi"}); err != nil {
 				return "", err
@@ -150,7 +155,7 @@ func NewVideoPipeline(rtpCodec codec.RTPCodec, display string, pipelineSrc strin
 				return "", err
 			}
 
-			pipelineStr = fmt.Sprintf(videoSrc+"video/x-raw,format=NV12 ! nvh264enc name=encoder preset=2 bitrate=%d rc-mode=6 ! h264parse config-interval=3 ! video/x-h264,stream-format=byte-stream,profile=constrained-baseline"+pipelineStr, display, fps, bitrate)
+			pipelineStr = fmt.Sprintf(videoSrc+"video/x-raw,format=NV12 ! nvh264enc name=encoder preset=2 gop-size=25 spatial-aq=true temporal-aq=true bitrate=%d vbv-buffer-size=%d rc-mode=6 ! h264parse config-interval=-1 ! video/x-h264,stream-format=byte-stream,profile=constrained-baseline"+pipelineStr, display, fps, bitrate, vbvbuf)
 		} else {
 			// https://gstreamer.freedesktop.org/documentation/openh264/openh264enc.html?gi-language=c#openh264enc
 			// gstreamer1.0-plugins-bad
@@ -165,11 +170,6 @@ func NewVideoPipeline(rtpCodec codec.RTPCodec, display string, pipelineSrc strin
 			// video/x-raw,format=I420 ! x264enc bframes=0 key-int-max=60 byte-stream=true tune=zerolatency speed-preset=veryfast ! video/x-h264,stream-format=byte-stream,profile=constrained-baseline
 			if err := gst.CheckPlugins([]string{"x264"}); err != nil {
 				return "", err
-			}
-
-			vbvbuf := uint(1000)
-			if bitrate > 1000 {
-				vbvbuf = bitrate
 			}
 
 			pipelineStr = fmt.Sprintf(videoSrc+"video/x-raw,format=NV12 ! x264enc threads=4 bitrate=%d key-int-max=60 vbv-buf-capacity=%d byte-stream=true tune=zerolatency speed-preset=veryfast ! video/x-h264,stream-format=byte-stream,profile=constrained-baseline"+pipelineStr, display, fps, bitrate, vbvbuf)
