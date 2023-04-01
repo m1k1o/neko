@@ -2,6 +2,8 @@
 
 ## master branch
 
+## [n.eko v2.8.0](https://github.com/m1k1o/neko/releases/tag/v2.8.0)
+
 ### New Features
 - Added AV1 tag, metadata and pipeline. Unfortunately does not work yet, since the encoding is way too slow (by @mbattista).
 - Added `m1k1o/neko:kde` tag as an alternative to `m1k1o/neko:xfce`.

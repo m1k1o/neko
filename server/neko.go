@@ -39,7 +39,7 @@ var (
 	// Major version when you make incompatible API changes,
 	major = "2"
 	// Minor version when you add functionality in a backwards-compatible manner, and
-	minor = "7"
+	minor = "8"
 	// Patch version when you make backwards-compatible bug fixes.
 	patch = "0"
 )
