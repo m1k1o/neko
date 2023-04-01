@@ -9,6 +9,8 @@
 - Added `?embed=1` parameter to the URL, which will hide the sidebar and the top bar, so that it can be embedded in other websites.
 - Added `?volume=<0-1>` parameter to the URL, which will set the inital volume of the player (by @urbanekpj).
 - Touch events are now supported on mobile devices (by @urbanekpj).
+- Added NVENC support, hardware h264 encoding for Nvidia GPUs!
+- Fixed an issue where `nvh264enc` did not send SPS and PPS NAL units (by @mbattista).
 
 ### Bugs
 - Fixed TCP mux occasional freeze by adding write buffer to it.
