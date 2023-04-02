@@ -164,7 +164,7 @@ services:
 
 ### Nvidia GPU acceleration
 
-You need to have nvidia-docker installed, start the container with `--gpus all` flag and use images built for nvidia (see above).
+You need to have [nvidia-docker](https://github.com/NVIDIA/nvidia-docker) installed, start the container with `--gpus all` flag and use images built for nvidia (see above).
 
 ```bash
 docker run -d --gpus all \
@@ -176,6 +176,8 @@ docker run -d --gpus all \
   -e NEKO_EPR=56000-56100 \
   -e NEKO_NAT1TO1=192.168.1.10 \
   -e NEKO_ICELITE=1 \
+  -e NEKO_VIDEO_CODEC=h264 \
+  -e NEKO_HWENC=nvenc \
   --shm-size=2gb \
   --cap-add=SYS_ADMIN \
   --name neko \
@@ -202,6 +204,8 @@ services:
       NEKO_PASSWORD_ADMIN: admin
       NEKO_EPR: 56000-56100
       NEKO_NAT1TO1: 192.168.1.10
+      NEKO_VIDEO_CODEC: h264
+      NEKO_HWENC: nvenc
     deploy:
       resources:
         reservations:
@@ -211,7 +215,9 @@ services:
               capabilities: [gpu]
 ```
 
-Note, currently only browser GPU acceleration is supported, not encoding.
+- You can verify that GPU is available inside the container by running `docker exec -it neko nvidia-smi` command.
+- You can verify that GPU is used for encoding by searching for `nvh264enc` in `docker logs neko` output.
+- If you don'ŧ specify `NEKO_HWENC: nvenc` environment variable, CPU encoding will be used but GPU will still be available for browser rendering.
 
 ### Want to use VPN for your n.eko browsing?
 - Check this out: https://github.com/m1k1o/neko-vpn
