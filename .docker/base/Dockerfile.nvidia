@@ -22,6 +22,8 @@ RUN set -eux; \
         # Install build deps
         autopoint autoconf automake autotools-dev libtool gettext bison flex gtk-doc-tools \
         # Install libraries
+        librtmp-dev \
+        libvo-aacenc-dev \
         libtool-bin \
         libgtk2.0-dev \
         libgl1-mesa-dev \
@@ -172,7 +174,7 @@ RUN set -eux; \
     # install dependencies
     apt-get install -y --no-install-recommends wget ca-certificates supervisor; \
     apt-get install -y --no-install-recommends pulseaudio dbus-x11 xserver-xorg-video-dummy; \
-    apt-get install -y --no-install-recommends libcairo2 libxcb1 libxrandr2 libxv1 libopus0 libvpx6 libx264-155; \
+    apt-get install -y --no-install-recommends libcairo2 libxcb1 libxrandr2 libxv1 libopus0 libvpx6 libx264-155 libvo-aacenc0 librtmp1; \
     apt-get install -y --no-install-recommends libgtk-3-bin software-properties-common cabextract aptitude vim curl; \
     #
     # install fonts
