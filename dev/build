@@ -8,7 +8,16 @@ set -e
 GIT_COMMIT=`git rev-parse --short HEAD`
 GIT_BRANCH=`git rev-parse --symbolic-full-name --abbrev-ref HEAD`
 
-docker build -t neko_server_build --target build --build-arg "GIT_COMMIT=$GIT_COMMIT" --build-arg "GIT_BRANCH=$GIT_BRANCH" ..
-docker build -t neko_server_runtime --target runtime --build-arg "GIT_COMMIT=$GIT_COMMIT" --build-arg "GIT_BRANCH=$GIT_BRANCH" ..
+# if first argument is nvidia, use nvidia dockerfile
+if [ "$1" = "nvidia" ]; then
+    echo "Building nvidia docker image"
+    DOCKERFILE="Dockerfile.nvidia"
+else
+    echo "Building default docker image"
+    DOCKERFILE="Dockerfile"
+fi
 
-docker build -t neko_server_app --build-arg "BASE_IMAGE=neko_server_runtime" ./runtime
+docker build -t neko_server_build --target build --build-arg "GIT_COMMIT=$GIT_COMMIT" --build-arg "GIT_BRANCH=$GIT_BRANCH" -f ../$DOCKERFILE ..
+docker build -t neko_server_runtime --target runtime --build-arg "GIT_COMMIT=$GIT_COMMIT" --build-arg "GIT_BRANCH=$GIT_BRANCH" -f ../$DOCKERFILE ..
+
+docker build -t neko_server_app --build-arg "BASE_IMAGE=neko_server_runtime" -f ./runtime/$DOCKERFILE ./runtime

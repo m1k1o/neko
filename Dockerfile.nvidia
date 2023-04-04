@@ -1,5 +1,55 @@
 ARG UBUNTU_RELEASE=20.04
-ARG CUDA_VERSION=11.2.2
+ARG CUDA_VERSION=11.4.3
+ARG VIRTUALGL_VERSION=3.1
+ARG GSTREAMER_VERSION=1.20
+
+#
+# Stage 0: Build gstreamer with nvidia plugins.
+#
+FROM ubuntu:${UBUNTU_RELEASE} AS gstreamer
+ARG GSTREAMER_VERSION
+
+#
+# install dependencies
+ENV DEBIAN_FRONTEND=noninteractive
+RUN set -eux; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends \
+        # Install essentials
+        curl build-essential ca-certificates git \
+        # Install pip and ninja
+        python3-pip python-gi-dev ninja-build \
+        # Install build deps
+        autopoint autoconf automake autotools-dev libtool gettext bison flex gtk-doc-tools \
+        # Install libraries
+        libtool-bin \
+        libgtk2.0-dev \
+        libgl1-mesa-dev \
+        libopus-dev \
+        libpulse-dev \
+        libssl-dev \
+        libx264-dev \
+        libvpx-dev; \
+    # Install meson
+    pip3 install meson; \
+    #
+    # clean up
+    apt-get clean -y; \
+    rm -rf /var/lib/apt/lists/* /var/cache/apt/*
+
+#
+# build gstreamer
+RUN set -eux; \
+    git clone --depth 1 --branch $GSTREAMER_VERSION https://gitlab.freedesktop.org/gstreamer/gstreamer.git /gstreamer/src; \
+    cd /gstreamer/src; \
+    mkdir -p /opt/gstreamer; \
+    meson --prefix /opt/gstreamer \
+        -Dgpl=enabled \
+        -Dugly=enabled \
+        -Dgst-plugins-ugly:x264=enabled \
+        build; \
+    ninja -C build; \
+    meson install -C build;
 
 #
 # Stage 0: Build xserver-xorg-video-dummy 0.3.8-2 with RandR support.
@@ -66,10 +116,12 @@ RUN ./build
 #
 # Stage 2: Runtime.
 #
-FROM nvcr.io/nvidia/cudagl:${CUDA_VERSION}-runtime-ubuntu${UBUNTU_RELEASE} as runtime
+FROM nvidia/cuda:${CUDA_VERSION}-runtime-ubuntu${UBUNTU_RELEASE} as runtime
+ARG UBUNTU_RELEASE
+ARG VIRTUALGL_VERSION
 
 # Make all NVIDIA GPUs visible by default
-ARG NVIDIA_VISIBLE_DEVICES=all
+ENV NVIDIA_VISIBLE_DEVICES all
 # All NVIDIA driver capabilities should preferably be used, check `NVIDIA_DRIVER_CAPABILITIES` inside the container if things do not work
 ENV NVIDIA_DRIVER_CAPABILITIES all
 
@@ -84,33 +136,72 @@ ARG USER_UID=1000
 ARG USER_GID=$USER_UID
 
 #
+# install hardware accleration dependencies
+ENV DEBIAN_FRONTEND=noninteractive
+RUN set -eux; \
+    dpkg --add-architecture i386; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends \
+        # opengl base: https://gitlab.com/nvidia/container-images/opengl/-/blob/ubuntu20.04/base/Dockerfile
+        libxau6 libxau6:i386 \
+        libxdmcp6 libxdmcp6:i386 \
+        libxcb1 libxcb1:i386 \
+        libxext6 libxext6:i386 \
+        libx11-6 libx11-6:i386 \
+        # opengl runtime: https://gitlab.com/nvidia/container-images/opengl/-/blob/ubuntu20.04/glvnd/runtime/Dockerfile
+        libglvnd0 libglvnd0:i386 \
+        libgl1 libgl1:i386 \
+        libglx0 libglx0:i386 \
+        libegl1 libegl1:i386 \
+        libgles2 libgles2:i386 \
+        # hardware accleration utilities
+        libglu1 libglu1:i386 \
+        libvulkan-dev libvulkan-dev:i386 \
+        mesa-utils mesa-utils-extra \
+        mesa-va-drivers mesa-vulkan-drivers \
+        vainfo vdpauinfo; \
+    #
+    # install vulkan-utils or vulkan-tools depending on ubuntu release
+    if [ "${UBUNTU_RELEASE}" = "18.04" ]; then \
+        apt-get install -y --no-install-recommends vulkan-utils; \
+    else \
+        apt-get install -y --no-install-recommends vulkan-tools; \
+    fi; \
+    #
+    # create symlink for libnvrtc.so (needed for cudaconvert)
+    find /usr/local/cuda/lib64/ -maxdepth 1 -type l -name "*libnvrtc.so.*" -exec sh -c 'ln -sf {} /usr/local/cuda/lib64/libnvrtc.so' \;; \
+    #
+    # clean up
+    apt-get clean -y; \
+    rm -rf /var/lib/apt/lists/* /var/cache/apt/*
+
+#
+# add cuda to ld path, for gstreamer cuda plugins
+ENV LD_LIBRARY_PATH="/usr/lib/x86_64-linux-gnu:/usr/lib/i386-linux-gnu${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}:/usr/local/cuda/lib:/usr/local/cuda/lib64"
+
+#
 # install dependencies
 ENV DEBIAN_FRONTEND=noninteractive
 RUN set -eux; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
-        wget ca-certificates supervisor \
+        wget ca-certificates \
         pulseaudio dbus-x11 xserver-xorg-video-dummy \
-        libcairo2 libxcb1 libxrandr2 libxv1 libopus0 libvpx6 \
-        software-properties-common cabextract aptitude vim curl \
+        libcairo2 libxcb1 libxrandr2 libxv1 libopus0 libvpx6 libx264-155 \
+        libgtk-3-bin software-properties-common cabextract aptitude vim curl \
         #
         # needed for profile upload preStop hook
         zip curl \
         #
         # file chooser handler, clipboard, drop
-        xdotool xclip libgtk-3-0 \
-        #
-        # hardware acclerations utilities
-        libgtk-3-bin mesa-utils mesa-utils-extra mesa-va-drivers mesa-vulkan-drivers libvulkan-dev libvulkan-dev:i386 vdpauinfo \
-        #
-        # gst
-        gstreamer1.0-plugins-base gstreamer1.0-plugins-good \
-        gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly \
-        gstreamer1.0-pulseaudio; \
+        xdotool xclip libgtk-3-0; \
     # install libxcvt0 (not available in debian:bullseye)
     wget http://ftp.de.debian.org/debian/pool/main/libx/libxcvt/libxcvt0_0.1.2-1_amd64.deb; \
     apt-get install  --no-install-recommends ./libxcvt0_0.1.2-1_amd64.deb; \
     rm ./libxcvt0_0.1.2-1_amd64.deb; \
+    # install never version for supervisor that supports -s flag
+    apt-get install -y --no-install-recommends pip; \
+    pip install supervisor --upgrade; \
     #
     # create a non-root user
     groupadd --gid $USER_GID $USERNAME; \
@@ -149,10 +240,17 @@ RUN set -eux; \
 COPY --from=xserver-xorg-video-dummy /usr/local/lib/xorg/modules/drivers/dummy_drv.so /usr/lib/xorg/modules/drivers/dummy_drv.so
 
 #
-# Install and configure Vulkan manually
-RUN if [ "${UBUNTU_RELEASE}" = "18.04" ]; then apt-get update && apt-get install --no-install-recommends -y vulkan-utils; else apt-get update && apt-get install --no-install-recommends -y vulkan-tools; fi && \
-    rm -rf /var/lib/apt/lists/* && \
-    VULKAN_API_VERSION=$(dpkg -s libvulkan1 | grep -oP 'Version: [0-9|\.]+' | grep -oP '[0-9]+(\.[0-9]+)(\.[0-9]+)') && \
+# configure EGL and Vulkan manually
+RUN VULKAN_API_VERSION=$(dpkg -s libvulkan1 | grep -oP 'Version: [0-9|\.]+' | grep -oP '[0-9]+(\.[0-9]+)(\.[0-9]+)') && \
+    # Configure EGL manually
+    mkdir -p /usr/share/glvnd/egl_vendor.d/ && \
+    echo "{\n\
+    \"file_format_version\" : \"1.0.0\",\n\
+    \"ICD\": {\n\
+        \"library_path\": \"libEGL_nvidia.so.0\"\n\
+    }\n\
+}" > /usr/share/glvnd/egl_vendor.d/10_nvidia.json && \
+    # Configure Vulkan manually
     mkdir -p /etc/vulkan/icd.d/ && \
     echo "{\n\
     \"file_format_version\" : \"1.0.0\",\n\
@@ -162,20 +260,24 @@ RUN if [ "${UBUNTU_RELEASE}" = "18.04" ]; then apt-get update && apt-get install
     }\n\
 }" > /etc/vulkan/icd.d/nvidia_icd.json
 
-ARG VIRTUALGL_VERSION=3.1
 #
-# Install VirtualGL and make libraries available for preload
-RUN curl -fsSL -O "https://sourceforge.net/projects/virtualgl/files/virtualgl_${VIRTUALGL_VERSION}_amd64.deb" && \
-    curl -fsSL -O "https://sourceforge.net/projects/virtualgl/files/virtualgl32_${VIRTUALGL_VERSION}_amd64.deb" && \
-    apt-get update && apt-get install -y --no-install-recommends ./virtualgl_${VIRTUALGL_VERSION}_amd64.deb ./virtualgl32_${VIRTUALGL_VERSION}_amd64.deb && \
-    rm -f "virtualgl_${VIRTUALGL_VERSION}_amd64.deb" "virtualgl32_${VIRTUALGL_VERSION}_amd64.deb" && \
-    rm -rf /var/lib/apt/lists/* && \
-    chmod u+s /usr/lib/libvglfaker.so && \
-    chmod u+s /usr/lib/libdlfaker.so && \
-    chmod u+s /usr/lib32/libvglfaker.so && \
-    chmod u+s /usr/lib32/libdlfaker.so && \
-    chmod u+s /usr/lib/i386-linux-gnu/libvglfaker.so && \
-    chmod u+s /usr/lib/i386-linux-gnu/libdlfaker.so
+# install VirtualGL and make libraries available for preload
+RUN set -eux; \
+    apt-get update; \
+    wget "https://sourceforge.net/projects/virtualgl/files/virtualgl_${VIRTUALGL_VERSION}_amd64.deb"; \
+    wget "https://sourceforge.net/projects/virtualgl/files/virtualgl32_${VIRTUALGL_VERSION}_amd64.deb"; \
+    apt-get install -y --no-install-recommends ./virtualgl_${VIRTUALGL_VERSION}_amd64.deb ./virtualgl32_${VIRTUALGL_VERSION}_amd64.deb; \
+    rm -f "virtualgl_${VIRTUALGL_VERSION}_amd64.deb" "virtualgl32_${VIRTUALGL_VERSION}_amd64.deb"; \
+    chmod u+s /usr/lib/libvglfaker.so; \
+    chmod u+s /usr/lib/libdlfaker.so; \
+    chmod u+s /usr/lib32/libvglfaker.so; \
+    chmod u+s /usr/lib32/libdlfaker.so; \
+    chmod u+s /usr/lib/i386-linux-gnu/libvglfaker.so; \
+    chmod u+s /usr/lib/i386-linux-gnu/libdlfaker.so; \
+    #
+    # clean up
+    apt-get clean -y; \
+    rm -rf /var/lib/apt/lists/* /var/cache/apt/*;
 
 #
 # copy runtime configs
@@ -201,6 +303,16 @@ ENV NEKO_PLUGINS_ENABLED=true
 ENV NEKO_PLUGINS_DIR=/etc/neko/plugins/
 
 #
+# set gstreamer envs
+ENV PATH="/opt/gstreamer/bin:${PATH}"
+ENV LD_LIBRARY_PATH="/opt/gstreamer/lib/x86_64-linux-gnu${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
+ENV PKG_CONFIG_PATH="/opt/gstreamer/lib/x86_64-linux-gnu/pkgconfig${PKG_CONFIG_PATH:+:${PKG_CONFIG_PATH}}"
+
+#
+# copy gstreamer from previous stage
+COPY --from=gstreamer /opt/gstreamer /opt/gstreamer
+
+#
 # copy plugins from previous stage
 COPY --from=build /src/bin/plugins/ $NEKO_PLUGINS_DIR
 
@@ -215,4 +327,4 @@ HEALTHCHECK --interval=10s --timeout=5s --retries=8 \
 
 #
 # run neko
-CMD ["/usr/bin/supervisord", "-c", "/etc/neko/supervisord.conf"]
+CMD ["/usr/local/bin/supervisord", "-s", "-c", "/etc/neko/supervisord.conf"]

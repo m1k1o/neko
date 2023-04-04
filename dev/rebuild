@@ -29,4 +29,4 @@ fi
 
 #
 # restart server
-docker exec neko_server_dev supervisorctl restart neko
+docker exec neko_server_dev supervisorctl -c /etc/neko/supervisord.conf restart neko

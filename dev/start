@@ -27,6 +27,17 @@ if [ -z $NEKO_NAT1TO1 ]; then
     fi
 fi
 
+# if first argument is nvidia, start with nvidia runtime
+if [ "$1" = "nvidia" ]; then
+    echo "Starting nvidia docker image"
+    EXTRAOPTS="--gpus all"
+    CONFIG="config.nvidia.yml"
+else
+    echo "Starting default docker image"
+    EXTRAOPTS=""
+    CONFIG="config.yml"
+fi
+
 echo "Using app port: ${NEKO_PORT}"
 echo "Using mux port: ${NEKO_MUX}"
 echo "Using IP address: ${NEKO_NAT1TO1}"
@@ -41,6 +52,8 @@ docker run --rm -it \
     -e "NEKO_WEBRTC_TCPMUX=${NEKO_MUX}" \
     -e "NEKO_WEBRTC_NAT1TO1=${NEKO_NAT1TO1}" \
     -e "NEKO_SESSION_FILE=/home/neko/sessions.txt" \
-    -v "${PWD}/runtime/config.yml:/etc/neko/neko.yml" \
+    -v "${PWD}/runtime/$CONFIG:/etc/neko/neko.yml" \
     -e "NEKO_DEBUG=1" \
+    --shm-size=2G \
+    $EXTRAOPTS \
     neko_server_app:latest;
