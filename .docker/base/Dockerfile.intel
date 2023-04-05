@@ -105,7 +105,7 @@ RUN set -eux; \
     chown $USERNAME /tmp/.X11-unix/; \
     #
     # make directories for neko
-    mkdir -p /etc/neko /var/www /var/log/neko; \
+    mkdir -p /etc/neko /var/www /var/log/neko /home/$USERNAME/.config/pulse /home/$USERNAME/.local/share/xorg; \
     chmod 1777 /var/log/neko; \
     chown $USERNAME /var/log/neko/; \
     chown -R $USERNAME:$USERNAME /home/$USERNAME; \
