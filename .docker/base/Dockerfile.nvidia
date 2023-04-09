@@ -201,9 +201,12 @@ RUN set -eux; \
     chown $USERNAME /tmp/.X11-unix/; \
     #
     # make directories for neko
-    mkdir -p /etc/neko /var/www /var/log/neko /home/$USERNAME/.config/pulse /home/$USERNAME/.local/share/xorg; \
+    mkdir -p /etc/neko /var/www /var/log/neko \
+        /tmp/runtime-$USERNAME \
+        /home/$USERNAME/.config/pulse  \
+        /home/$USERNAME/.local/share/xorg; \
     chmod 1777 /var/log/neko; \
-    chown $USERNAME /var/log/neko/; \
+    chown $USERNAME /var/log/neko/ /tmp/runtime-$USERNAME; \
     chown -R $USERNAME:$USERNAME /home/$USERNAME; \
     #
     # clean up
@@ -263,6 +266,7 @@ COPY .docker/base/nvidia/entrypoint.sh /bin/entrypoint.sh
 ENV USER=$USERNAME
 ENV DISPLAY=:99.0
 ENV PULSE_SERVER=unix:/tmp/pulseaudio.socket
+ENV XDG_RUNTIME_DIR=/tmp/runtime-$USERNAME
 ENV NEKO_PASSWORD=neko
 ENV NEKO_PASSWORD_ADMIN=admin
 ENV NEKO_BIND=:8080
