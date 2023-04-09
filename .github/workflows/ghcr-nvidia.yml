@@ -69,6 +69,8 @@ jobs:
       # Will build all images even if some fail.
       matrix:
         include:
+          - tag: firefox
+            dockerfile: Dockerfile.nvidia
           - tag: brave
             dockerfile: Dockerfile.nvidia
           - tag: chromium
