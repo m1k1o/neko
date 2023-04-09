@@ -2,6 +2,9 @@
 
 ## master branch
 
+### New Features
+- Added nvidia support for firefox.
+
 ## [n.eko v2.8.0](https://github.com/m1k1o/neko/releases/tag/v2.8.0)
 
 ### New Features
