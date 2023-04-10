@@ -2,6 +2,7 @@ package webrtc
 
 import (
 	"sync"
+	"time"
 
 	"github.com/demodesk/neko/pkg/types"
 	"github.com/pion/rtcp"
@@ -9,6 +10,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 )
+
+var connectionStatsInterval = 5 * time.Second
 
 type metricsManager struct {
 	mu sync.Mutex
@@ -356,4 +359,80 @@ func (met *metrics) SetIceTransportStats(data webrtc.TransportStats) {
 func (met *metrics) SetSctpTransportStats(data webrtc.TransportStats) {
 	met.sctpBytesSent.Set(float64(data.BytesSent))
 	met.sctpBytesReceived.Set(float64(data.BytesReceived))
+}
+
+//
+// collectors
+//
+
+func (met *metrics) rtcpReceiver(rtcpCh chan []rtcp.Packet) {
+	for {
+		packets, ok := <-rtcpCh
+		if !ok {
+			break
+		}
+
+		for _, p := range packets {
+			switch rtcpPacket := p.(type) {
+			case *rtcp.ReceiverEstimatedMaximumBitrate: // TODO: Deprecated.
+				met.SetReceiverEstimatedMaximumBitrate(rtcpPacket.Bitrate)
+
+			case *rtcp.ReceiverReport:
+				l := len(rtcpPacket.Reports)
+				if l > 0 {
+					// use only last report
+					met.SetReceiverReport(rtcpPacket.Reports[l-1])
+				}
+			}
+		}
+	}
+}
+
+func (met *metrics) connectionStats(connection *webrtc.PeerConnection) {
+	ticker := time.NewTicker(connectionStatsInterval)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		if connection.ConnectionState() == webrtc.PeerConnectionStateClosed {
+			break
+		}
+
+		stats := connection.GetStats()
+
+		data, ok := stats["iceTransport"].(webrtc.TransportStats)
+		if ok {
+			met.SetIceTransportStats(data)
+		}
+
+		data, ok = stats["sctpTransport"].(webrtc.TransportStats)
+		if ok {
+			met.SetSctpTransportStats(data)
+		}
+
+		remoteCandidates := map[string]webrtc.ICECandidateStats{}
+		nominatedRemoteCandidates := map[string]struct{}{}
+		for _, entry := range stats {
+			// only remote ice candidate stats
+			candidate, ok := entry.(webrtc.ICECandidateStats)
+			if ok && candidate.Type == webrtc.StatsTypeRemoteCandidate {
+				met.NewICECandidate(candidate)
+				remoteCandidates[candidate.ID] = candidate
+			}
+
+			// only nominated ice candidate pair stats
+			pair, ok := entry.(webrtc.ICECandidatePairStats)
+			if ok && pair.Nominated {
+				nominatedRemoteCandidates[pair.RemoteCandidateID] = struct{}{}
+			}
+		}
+
+		iceCandidatesUsed := []webrtc.ICECandidateStats{}
+		for id := range nominatedRemoteCandidates {
+			if candidate, ok := remoteCandidates[id]; ok {
+				iceCandidatesUsed = append(iceCandidatesUsed, candidate)
+			}
+		}
+
+		met.SetICECandidatesUsed(iceCandidatesUsed)
+	}
 }

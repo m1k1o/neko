@@ -309,7 +309,6 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int, 
 	}
 
 	// audio track
-
 	audioTrack, err := NewTrack(logger, audioCodec, connection)
 	if err != nil {
 		return nil, err
@@ -593,76 +592,9 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int, 
 			})
 	})
 
-	go func() {
-		for {
-			packets, ok := <-videoRtcp
-			if !ok {
-				break
-			}
-
-			for _, p := range packets {
-				switch rtcpPacket := p.(type) {
-				case *rtcp.ReceiverEstimatedMaximumBitrate: // TODO: Deprecated.
-					metrics.SetReceiverEstimatedMaximumBitrate(rtcpPacket.Bitrate)
-
-				case *rtcp.ReceiverReport:
-					l := len(rtcpPacket.Reports)
-					if l > 0 {
-						// use only last report
-						metrics.SetReceiverReport(rtcpPacket.Reports[l-1])
-					}
-				}
-			}
-		}
-	}()
-
-	go func() {
-		ticker := time.NewTicker(5 * time.Second)
-		defer ticker.Stop()
-
-		for range ticker.C {
-			if connection.ConnectionState() == webrtc.PeerConnectionStateClosed {
-				break
-			}
-
-			stats := connection.GetStats()
-			data, ok := stats["iceTransport"].(webrtc.TransportStats)
-			if ok {
-				metrics.SetIceTransportStats(data)
-			}
-
-			data, ok = stats["sctpTransport"].(webrtc.TransportStats)
-			if ok {
-				metrics.SetSctpTransportStats(data)
-			}
-
-			remoteCandidates := map[string]webrtc.ICECandidateStats{}
-			nominatedRemoteCandidates := map[string]struct{}{}
-			for _, entry := range stats {
-				// only remote ice candidate stats
-				candidate, ok := entry.(webrtc.ICECandidateStats)
-				if ok && candidate.Type == webrtc.StatsTypeRemoteCandidate {
-					metrics.NewICECandidate(candidate)
-					remoteCandidates[candidate.ID] = candidate
-				}
-
-				// only nominated ice candidate pair stats
-				pair, ok := entry.(webrtc.ICECandidatePairStats)
-				if ok && pair.Nominated {
-					nominatedRemoteCandidates[pair.RemoteCandidateID] = struct{}{}
-				}
-			}
-
-			iceCandidatesUsed := []webrtc.ICECandidateStats{}
-			for id := range nominatedRemoteCandidates {
-				if candidate, ok := remoteCandidates[id]; ok {
-					iceCandidatesUsed = append(iceCandidatesUsed, candidate)
-				}
-			}
-
-			metrics.SetICECandidatesUsed(iceCandidatesUsed)
-		}
-	}()
+	// start metrics collectors
+	go metrics.rtcpReceiver(videoRtcp)
+	go metrics.connectionStats(connection)
 
 	return offer, nil
 }
