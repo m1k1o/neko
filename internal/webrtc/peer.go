@@ -30,11 +30,6 @@ type WebRTCPeerCtx struct {
 	rtcpChannel chan []rtcp.Packet
 	// config
 	iceTrickle bool
-	// deprecated functions
-	videoId      func() string
-	setPaused    func(isPaused bool)
-	setVideoAuto func(auto bool)
-	getVideoAuto func() bool
 }
 
 func (peer *WebRTCPeerCtx) CreateOffer(ICERestart bool) (*webrtc.SessionDescription, error) {
@@ -185,12 +180,12 @@ func (peer *WebRTCPeerCtx) SetVideoID(videoID string) error {
 	return nil
 }
 
-// TODO: Refactor.
 func (peer *WebRTCPeerCtx) GetVideoID() string {
 	peer.mu.Lock()
 	defer peer.mu.Unlock()
 
-	return peer.videoId()
+	// TODO: Refactor.
+	return peer.videoTrack.stream.ID()
 }
 
 func (peer *WebRTCPeerCtx) SetPaused(isPaused bool) error {
@@ -198,7 +193,8 @@ func (peer *WebRTCPeerCtx) SetPaused(isPaused bool) error {
 	defer peer.mu.Unlock()
 
 	peer.logger.Info().Bool("is_paused", isPaused).Msg("set paused")
-	peer.setPaused(isPaused)
+	peer.videoTrack.SetPaused(isPaused)
+	peer.audioTrack.SetPaused(isPaused)
 	return nil
 }
 
@@ -262,10 +258,16 @@ func (peer *WebRTCPeerCtx) Destroy() {
 	}
 }
 
-func (peer *WebRTCPeerCtx) SetVideoAuto(auto bool) {
-	peer.setVideoAuto(auto)
+func (peer *WebRTCPeerCtx) SetVideoAuto(videoAuto bool) {
+	// if estimator is enabled, enable video auto bitrate
+	if peer.estimator != nil {
+		peer.videoTrack.SetVideoAuto(videoAuto)
+	} else {
+		peer.logger.Warn().Msg("estimator is disabled or in passive mode, cannot change video auto")
+		peer.videoTrack.SetVideoAuto(false) // ensure video auto is disabled
+	}
 }
 
 func (peer *WebRTCPeerCtx) VideoAuto() bool {
-	return peer.getVideoAuto()
+	return peer.videoTrack.VideoAuto()
 }

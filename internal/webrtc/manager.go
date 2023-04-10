@@ -360,22 +360,6 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int, 
 		rtcpChannel: videoRtcp,
 		// config
 		iceTrickle: manager.config.ICETrickle,
-		// deprecated functions
-		videoId: videoTrack.stream.ID,
-		setPaused: func(isPaused bool) {
-			videoTrack.SetPaused(isPaused)
-			audioTrack.SetPaused(isPaused)
-		},
-		setVideoAuto: func(videoAuto bool) {
-			// if estimator is enabled and not in passive mode, enable video auto bitrate
-			if manager.config.EstimatorEnabled && !manager.config.EstimatorPassive {
-				videoTrack.SetVideoAuto(videoAuto)
-			} else {
-				logger.Warn().Msg("estimator is disabled or in passive mode, cannot change video auto")
-				videoTrack.SetVideoAuto(false) // ensure video auto is disabled
-			}
-		},
-		getVideoAuto: videoTrack.VideoAuto,
 	}
 
 	manager.logger.Info().
