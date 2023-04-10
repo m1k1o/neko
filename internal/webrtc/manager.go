@@ -452,6 +452,8 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int, 
 
 	peer := &WebRTCPeerCtx{
 		logger:     logger,
+		session:    session,
+		metrics:    metrics,
 		connection: connection,
 		// tracks & channels
 		audioTrack:  audioTrack,

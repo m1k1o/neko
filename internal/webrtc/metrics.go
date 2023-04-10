@@ -13,16 +13,16 @@ import (
 type metricsManager struct {
 	mu sync.Mutex
 
-	sessions map[string]metrics
+	sessions map[string]*metrics
 }
 
 func newMetricsManager() *metricsManager {
 	return &metricsManager{
-		sessions: map[string]metrics{},
+		sessions: map[string]*metrics{},
 	}
 }
 
-func (m *metricsManager) getBySession(session types.Session) metrics {
+func (m *metricsManager) getBySession(session types.Session) *metrics {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -33,7 +33,7 @@ func (m *metricsManager) getBySession(session types.Session) metrics {
 		return met
 	}
 
-	met = metrics{
+	met = &metrics{
 		sessionId: sessionId,
 
 		connectionState: promauto.NewGauge(prometheus.GaugeOpts{

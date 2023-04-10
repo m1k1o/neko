@@ -16,6 +16,8 @@ import (
 type WebRTCPeerCtx struct {
 	mu         sync.Mutex
 	logger     zerolog.Logger
+	session    types.Session
+	metrics    *metrics
 	connection *webrtc.PeerConnection
 	// tracks & channels
 	audioTrack  *Track
