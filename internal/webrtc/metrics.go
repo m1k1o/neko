@@ -10,7 +10,204 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promauto"
 )
 
+type metricsManager struct {
+	mu sync.Mutex
+
+	sessions map[string]metrics
+}
+
+func newMetricsManager() *metricsManager {
+	return &metricsManager{
+		sessions: map[string]metrics{},
+	}
+}
+
+func (m *metricsManager) getBySession(session types.Session) metrics {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	sessionId := session.ID()
+
+	met, ok := m.sessions[sessionId]
+	if ok {
+		return met
+	}
+
+	met = metrics{
+		sessionId: sessionId,
+
+		connectionState: promauto.NewGauge(prometheus.GaugeOpts{
+			Name:      "connection_state",
+			Namespace: "neko",
+			Subsystem: "webrtc",
+			Help:      "Connection state of session.",
+			ConstLabels: map[string]string{
+				"session_id": sessionId,
+			},
+		}),
+		connectionStateCount: promauto.NewCounter(prometheus.CounterOpts{
+			Name:      "connection_state_count",
+			Namespace: "neko",
+			Subsystem: "webrtc",
+			Help:      "Count of connection state changes for a session.",
+			ConstLabels: map[string]string{
+				"session_id": sessionId,
+			},
+		}),
+		connectionCount: promauto.NewCounter(prometheus.CounterOpts{
+			Name:      "connection_count",
+			Namespace: "neko",
+			Subsystem: "webrtc",
+			Help:      "Connection count of a session.",
+			ConstLabels: map[string]string{
+				"session_id": sessionId,
+			},
+		}),
+
+		iceCandidates:   map[string]struct{}{},
+		iceCandidatesMu: &sync.Mutex{},
+		iceCandidatesUdpCount: promauto.NewCounter(prometheus.CounterOpts{
+			Name:      "ice_candidates_count",
+			Namespace: "neko",
+			Subsystem: "webrtc",
+			Help:      "Count of ICE candidates sent by a remote client.",
+			ConstLabels: map[string]string{
+				"session_id": sessionId,
+				"protocol":   "udp",
+			},
+		}),
+		iceCandidatesTcpCount: promauto.NewCounter(prometheus.CounterOpts{
+			Name:      "ice_candidates_count",
+			Namespace: "neko",
+			Subsystem: "webrtc",
+			Help:      "Count of ICE candidates sent by a remote client.",
+			ConstLabels: map[string]string{
+				"session_id": sessionId,
+				"protocol":   "tcp",
+			},
+		}),
+
+		iceCandidatesUsedUdp: promauto.NewGauge(prometheus.GaugeOpts{
+			Name:      "ice_candidates_used",
+			Namespace: "neko",
+			Subsystem: "webrtc",
+			Help:      "Used ICE candidates that are currently in use.",
+			ConstLabels: map[string]string{
+				"session_id": sessionId,
+				"protocol":   "udp",
+			},
+		}),
+		iceCandidatesUsedTcp: promauto.NewGauge(prometheus.GaugeOpts{
+			Name:      "ice_candidates_used",
+			Namespace: "neko",
+			Subsystem: "webrtc",
+			Help:      "Used ICE candidates that are currently in use.",
+			ConstLabels: map[string]string{
+				"session_id": sessionId,
+				"protocol":   "tcp",
+			},
+		}),
+
+		videoIds:   map[string]prometheus.Gauge{},
+		videoIdsMu: &sync.Mutex{},
+
+		receiverEstimatedMaximumBitrate: promauto.NewGauge(prometheus.GaugeOpts{
+			Name:      "receiver_estimated_maximum_bitrate",
+			Namespace: "neko",
+			Subsystem: "webrtc",
+			Help:      "Receiver Estimated Maximum Bitrate from SCTP.",
+			ConstLabels: map[string]string{
+				"session_id": sessionId,
+			},
+		}),
+		receiverEstimatedTargetBitrate: promauto.NewGauge(prometheus.GaugeOpts{
+			Name:      "receiver_estimated_target_bitrate",
+			Namespace: "neko",
+			Subsystem: "webrtc",
+			Help:      "Receiver Estimated Target Bitrate using Google's congestion control.",
+			ConstLabels: map[string]string{
+				"session_id": sessionId,
+			},
+		}),
+
+		receiverReportDelay: promauto.NewGauge(prometheus.GaugeOpts{
+			Name:      "receiver_report_delay",
+			Namespace: "neko",
+			Subsystem: "webrtc",
+			Help:      "Receiver Report Delay from SCTP, expressed in units of 1/65536 seconds.",
+			ConstLabels: map[string]string{
+				"session_id": sessionId,
+			},
+		}),
+		receiverReportJitter: promauto.NewGauge(prometheus.GaugeOpts{
+			Name:      "receiver_report_jitter",
+			Namespace: "neko",
+			Subsystem: "webrtc",
+			Help:      "Receiver Report Jitter from SCTP.",
+			ConstLabels: map[string]string{
+				"session_id": sessionId,
+			},
+		}),
+		receiverReportTotalLost: promauto.NewGauge(prometheus.GaugeOpts{
+			Name:      "receiver_report_total_lost",
+			Namespace: "neko",
+			Subsystem: "webrtc",
+			Help:      "Receiver Report Total Lost from SCTP.",
+			ConstLabels: map[string]string{
+				"session_id": sessionId,
+			},
+		}),
+
+		iceBytesSent: promauto.NewGauge(prometheus.GaugeOpts{
+			Name:      "bytes_sent",
+			Namespace: "neko",
+			Subsystem: "webrtc",
+			Help:      "Sent bytes to a session.",
+			ConstLabels: map[string]string{
+				"session_id": sessionId,
+				"transport":  "ice",
+			},
+		}),
+		iceBytesReceived: promauto.NewGauge(prometheus.GaugeOpts{
+			Name:      "bytes_received",
+			Namespace: "neko",
+			Subsystem: "webrtc",
+			Help:      "Received bytes from a session.",
+			ConstLabels: map[string]string{
+				"session_id": sessionId,
+				"transport":  "ice",
+			},
+		}),
+
+		sctpBytesSent: promauto.NewGauge(prometheus.GaugeOpts{
+			Name:      "bytes_sent",
+			Namespace: "neko",
+			Subsystem: "webrtc",
+			Help:      "Sent bytes to a session.",
+			ConstLabels: map[string]string{
+				"session_id": sessionId,
+				"transport":  "sctp",
+			},
+		}),
+		sctpBytesReceived: promauto.NewGauge(prometheus.GaugeOpts{
+			Name:      "bytes_received",
+			Namespace: "neko",
+			Subsystem: "webrtc",
+			Help:      "Received bytes from a session.",
+			ConstLabels: map[string]string{
+				"session_id": sessionId,
+				"transport":  "sctp",
+			},
+		}),
+	}
+
+	m.sessions[sessionId] = met
+	return met
+}
+
 type metrics struct {
+	sessionId string
+
 	connectionState      prometheus.Gauge
 	connectionStateCount prometheus.Counter
 	connectionCount      prometheus.Counter
@@ -39,198 +236,7 @@ type metrics struct {
 	sctpBytesReceived prometheus.Gauge
 }
 
-type metricsCtx struct {
-	mu sync.Mutex
-
-	sessions map[string]metrics
-}
-
-func newMetrics() *metricsCtx {
-	return &metricsCtx{
-		sessions: map[string]metrics{},
-	}
-}
-
-func (m *metricsCtx) getBySession(session types.Session) metrics {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
-	met, ok := m.sessions[session.ID()]
-	if ok {
-		return met
-	}
-
-	met = metrics{
-		connectionState: promauto.NewGauge(prometheus.GaugeOpts{
-			Name:      "connection_state",
-			Namespace: "neko",
-			Subsystem: "webrtc",
-			Help:      "Connection state of session.",
-			ConstLabels: map[string]string{
-				"session_id": session.ID(),
-			},
-		}),
-		connectionStateCount: promauto.NewCounter(prometheus.CounterOpts{
-			Name:      "connection_state_count",
-			Namespace: "neko",
-			Subsystem: "webrtc",
-			Help:      "Count of connection state changes for a session.",
-			ConstLabels: map[string]string{
-				"session_id": session.ID(),
-			},
-		}),
-		connectionCount: promauto.NewCounter(prometheus.CounterOpts{
-			Name:      "connection_count",
-			Namespace: "neko",
-			Subsystem: "webrtc",
-			Help:      "Connection count of a session.",
-			ConstLabels: map[string]string{
-				"session_id": session.ID(),
-			},
-		}),
-
-		iceCandidates:   map[string]struct{}{},
-		iceCandidatesMu: &sync.Mutex{},
-		iceCandidatesUdpCount: promauto.NewCounter(prometheus.CounterOpts{
-			Name:      "ice_candidates_count",
-			Namespace: "neko",
-			Subsystem: "webrtc",
-			Help:      "Count of ICE candidates sent by a remote client.",
-			ConstLabels: map[string]string{
-				"session_id": session.ID(),
-				"protocol":   "udp",
-			},
-		}),
-		iceCandidatesTcpCount: promauto.NewCounter(prometheus.CounterOpts{
-			Name:      "ice_candidates_count",
-			Namespace: "neko",
-			Subsystem: "webrtc",
-			Help:      "Count of ICE candidates sent by a remote client.",
-			ConstLabels: map[string]string{
-				"session_id": session.ID(),
-				"protocol":   "tcp",
-			},
-		}),
-
-		iceCandidatesUsedUdp: promauto.NewGauge(prometheus.GaugeOpts{
-			Name:      "ice_candidates_used",
-			Namespace: "neko",
-			Subsystem: "webrtc",
-			Help:      "Used ICE candidates that are currently in use.",
-			ConstLabels: map[string]string{
-				"session_id": session.ID(),
-				"protocol":   "udp",
-			},
-		}),
-		iceCandidatesUsedTcp: promauto.NewGauge(prometheus.GaugeOpts{
-			Name:      "ice_candidates_used",
-			Namespace: "neko",
-			Subsystem: "webrtc",
-			Help:      "Used ICE candidates that are currently in use.",
-			ConstLabels: map[string]string{
-				"session_id": session.ID(),
-				"protocol":   "tcp",
-			},
-		}),
-
-		videoIds:   map[string]prometheus.Gauge{},
-		videoIdsMu: &sync.Mutex{},
-
-		receiverEstimatedMaximumBitrate: promauto.NewGauge(prometheus.GaugeOpts{
-			Name:      "receiver_estimated_maximum_bitrate",
-			Namespace: "neko",
-			Subsystem: "webrtc",
-			Help:      "Receiver Estimated Maximum Bitrate from SCTP.",
-			ConstLabels: map[string]string{
-				"session_id": session.ID(),
-			},
-		}),
-		receiverEstimatedTargetBitrate: promauto.NewGauge(prometheus.GaugeOpts{
-			Name:      "receiver_estimated_target_bitrate",
-			Namespace: "neko",
-			Subsystem: "webrtc",
-			Help:      "Receiver Estimated Target Bitrate using Google's congestion control.",
-			ConstLabels: map[string]string{
-				"session_id": session.ID(),
-			},
-		}),
-
-		receiverReportDelay: promauto.NewGauge(prometheus.GaugeOpts{
-			Name:      "receiver_report_delay",
-			Namespace: "neko",
-			Subsystem: "webrtc",
-			Help:      "Receiver Report Delay from SCTP, expressed in units of 1/65536 seconds.",
-			ConstLabels: map[string]string{
-				"session_id": session.ID(),
-			},
-		}),
-		receiverReportJitter: promauto.NewGauge(prometheus.GaugeOpts{
-			Name:      "receiver_report_jitter",
-			Namespace: "neko",
-			Subsystem: "webrtc",
-			Help:      "Receiver Report Jitter from SCTP.",
-			ConstLabels: map[string]string{
-				"session_id": session.ID(),
-			},
-		}),
-		receiverReportTotalLost: promauto.NewGauge(prometheus.GaugeOpts{
-			Name:      "receiver_report_total_lost",
-			Namespace: "neko",
-			Subsystem: "webrtc",
-			Help:      "Receiver Report Total Lost from SCTP.",
-			ConstLabels: map[string]string{
-				"session_id": session.ID(),
-			},
-		}),
-
-		iceBytesSent: promauto.NewGauge(prometheus.GaugeOpts{
-			Name:      "bytes_sent",
-			Namespace: "neko",
-			Subsystem: "webrtc",
-			Help:      "Sent bytes to a session.",
-			ConstLabels: map[string]string{
-				"session_id": session.ID(),
-				"transport":  "ice",
-			},
-		}),
-		iceBytesReceived: promauto.NewGauge(prometheus.GaugeOpts{
-			Name:      "bytes_received",
-			Namespace: "neko",
-			Subsystem: "webrtc",
-			Help:      "Received bytes from a session.",
-			ConstLabels: map[string]string{
-				"session_id": session.ID(),
-				"transport":  "ice",
-			},
-		}),
-
-		sctpBytesSent: promauto.NewGauge(prometheus.GaugeOpts{
-			Name:      "bytes_sent",
-			Namespace: "neko",
-			Subsystem: "webrtc",
-			Help:      "Sent bytes to a session.",
-			ConstLabels: map[string]string{
-				"session_id": session.ID(),
-				"transport":  "sctp",
-			},
-		}),
-		sctpBytesReceived: promauto.NewGauge(prometheus.GaugeOpts{
-			Name:      "bytes_received",
-			Namespace: "neko",
-			Subsystem: "webrtc",
-			Help:      "Received bytes from a session.",
-			ConstLabels: map[string]string{
-				"session_id": session.ID(),
-				"transport":  "sctp",
-			},
-		}),
-	}
-
-	m.sessions[session.ID()] = met
-	return met
-}
-
-func (m *metricsCtx) reset(met metrics) {
+func (met *metrics) reset() {
 	met.videoIdsMu.Lock()
 	for _, entry := range met.videoIds {
 		entry.Set(0)
@@ -246,14 +252,11 @@ func (m *metricsCtx) reset(met metrics) {
 	met.receiverReportJitter.Set(0)
 }
 
-func (m *metricsCtx) NewConnection(session types.Session) {
-	met := m.getBySession(session)
+func (met *metrics) NewConnection() {
 	met.connectionCount.Add(1)
 }
 
-func (m *metricsCtx) NewICECandidate(session types.Session, candidate webrtc.ICECandidateStats) {
-	met := m.getBySession(session)
-
+func (met *metrics) NewICECandidate(candidate webrtc.ICECandidateStats) {
 	met.iceCandidatesMu.Lock()
 	defer met.iceCandidatesMu.Unlock()
 
@@ -269,9 +272,7 @@ func (m *metricsCtx) NewICECandidate(session types.Session, candidate webrtc.ICE
 	}
 }
 
-func (m *metricsCtx) SetICECandidatesUsed(session types.Session, candidates []webrtc.ICECandidateStats) {
-	met := m.getBySession(session)
-
+func (met *metrics) SetICECandidatesUsed(candidates []webrtc.ICECandidateStats) {
 	udp, tcp := 0, 0
 	for _, candidate := range candidates {
 		if candidate.Protocol == "udp" {
@@ -285,9 +286,7 @@ func (m *metricsCtx) SetICECandidatesUsed(session types.Session, candidates []we
 	met.iceCandidatesUsedTcp.Set(float64(tcp))
 }
 
-func (m *metricsCtx) SetState(session types.Session, state webrtc.PeerConnectionState) {
-	met := m.getBySession(session)
-
+func (met *metrics) SetState(state webrtc.PeerConnectionState) {
 	switch state {
 	case webrtc.PeerConnectionStateNew:
 		met.connectionState.Set(0)
@@ -301,7 +300,7 @@ func (m *metricsCtx) SetState(session types.Session, state webrtc.PeerConnection
 		met.connectionState.Set(2)
 	case webrtc.PeerConnectionStateClosed:
 		met.connectionState.Set(1)
-		m.reset(met)
+		met.reset()
 	default:
 		met.connectionState.Set(-1)
 	}
@@ -309,9 +308,7 @@ func (m *metricsCtx) SetState(session types.Session, state webrtc.PeerConnection
 	met.connectionStateCount.Add(1)
 }
 
-func (m *metricsCtx) SetVideoID(session types.Session, videoId string) {
-	met := m.getBySession(session)
-
+func (met *metrics) SetVideoID(videoId string) {
 	met.videoIdsMu.Lock()
 	defer met.videoIdsMu.Unlock()
 
@@ -322,7 +319,7 @@ func (m *metricsCtx) SetVideoID(session types.Session, videoId string) {
 			Subsystem: "webrtc",
 			Help:      "Listeners for Video pipelines by a session.",
 			ConstLabels: map[string]string{
-				"session_id": session.ID(),
+				"session_id": met.sessionId,
 				"video_id":   videoId,
 			},
 		})
@@ -337,36 +334,26 @@ func (m *metricsCtx) SetVideoID(session types.Session, videoId string) {
 	}
 }
 
-func (m *metricsCtx) SetReceiverEstimatedMaximumBitrate(session types.Session, bitrate float32) {
-	met := m.getBySession(session)
-
+func (met *metrics) SetReceiverEstimatedMaximumBitrate(bitrate float32) {
 	met.receiverEstimatedMaximumBitrate.Set(float64(bitrate))
 }
 
-func (m *metricsCtx) SetReceiverEstimatedTargetBitrate(session types.Session, bitrate float64) {
-	met := m.getBySession(session)
-
+func (met *metrics) SetReceiverEstimatedTargetBitrate(bitrate float64) {
 	met.receiverEstimatedTargetBitrate.Set(bitrate)
 }
 
-func (m *metricsCtx) SetReceiverReport(session types.Session, report rtcp.ReceptionReport) {
-	met := m.getBySession(session)
-
+func (met *metrics) SetReceiverReport(report rtcp.ReceptionReport) {
 	met.receiverReportDelay.Set(float64(report.Delay))
 	met.receiverReportJitter.Set(float64(report.Jitter))
 	met.receiverReportTotalLost.Set(float64(report.TotalLost))
 }
 
-func (m *metricsCtx) SetIceTransportStats(session types.Session, data webrtc.TransportStats) {
-	met := m.getBySession(session)
-
+func (met *metrics) SetIceTransportStats(data webrtc.TransportStats) {
 	met.iceBytesSent.Set(float64(data.BytesSent))
 	met.iceBytesReceived.Set(float64(data.BytesReceived))
 }
 
-func (m *metricsCtx) SetSctpTransportStats(session types.Session, data webrtc.TransportStats) {
-	met := m.getBySession(session)
-
+func (met *metrics) SetSctpTransportStats(data webrtc.TransportStats) {
 	met.sctpBytesSent.Set(float64(data.BytesSent))
 	met.sctpBytesReceived.Set(float64(data.BytesReceived))
 }

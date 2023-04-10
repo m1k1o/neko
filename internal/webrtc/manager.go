@@ -69,7 +69,7 @@ func New(desktop types.DesktopManager, capture types.CaptureManager, config *con
 	return &WebRTCManagerCtx{
 		logger:  log.With().Str("module", "webrtc").Logger(),
 		config:  config,
-		metrics: newMetrics(),
+		metrics: newMetricsManager(),
 
 		webrtcConfiguration: configuration,
 
@@ -83,7 +83,7 @@ func New(desktop types.DesktopManager, capture types.CaptureManager, config *con
 type WebRTCManagerCtx struct {
 	logger  zerolog.Logger
 	config  *config.WebRTC
-	metrics *metricsCtx
+	metrics *metricsManager
 	peerId  int32
 
 	desktop     types.DesktopManager
@@ -262,7 +262,10 @@ func (manager *WebRTCManagerCtx) newPeerConnection(bitrate int, codecs []codec.R
 
 func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int, videoAuto bool) (*webrtc.SessionDescription, error) {
 	id := atomic.AddInt32(&manager.peerId, 1)
-	manager.metrics.NewConnection(session)
+
+	// get metrics for session
+	metrics := manager.metrics.getBySession(session)
+	metrics.NewConnection()
 
 	// add session id to logger context
 	logger := manager.logger.With().Str("session_id", session.ID()).Int32("peer_id", id).Logger()
@@ -362,7 +365,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int, 
 		videoID := videoTrack.stream.ID()
 		bitrate := videoTrack.stream.Bitrate()
 
-		manager.metrics.SetVideoID(session, videoID)
+		metrics.SetVideoID(videoID)
 		manager.logger.Debug().
 			Int("peer_bitrate", peerBitrate).
 			Int("video_bitrate", bitrate).
@@ -425,7 +428,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int, 
 
 			for range ticker.C {
 				targetBitrate := estimator.GetTargetBitrate()
-				manager.metrics.SetReceiverEstimatedTargetBitrate(session, float64(targetBitrate))
+				metrics.SetReceiverEstimatedTargetBitrate(float64(targetBitrate))
 
 				if connection.ConnectionState() == webrtc.PeerConnectionStateClosed {
 					break
@@ -594,7 +597,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int, 
 			})
 		}
 
-		manager.metrics.SetState(session, state)
+		metrics.SetState(state)
 	})
 
 	cursorImage := func(entry *cursor.ImageEntry) {
@@ -682,13 +685,13 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int, 
 			for _, p := range packets {
 				switch rtcpPacket := p.(type) {
 				case *rtcp.ReceiverEstimatedMaximumBitrate: // TODO: Deprecated.
-					manager.metrics.SetReceiverEstimatedMaximumBitrate(session, rtcpPacket.Bitrate)
+					metrics.SetReceiverEstimatedMaximumBitrate(rtcpPacket.Bitrate)
 
 				case *rtcp.ReceiverReport:
 					l := len(rtcpPacket.Reports)
 					if l > 0 {
 						// use only last report
-						manager.metrics.SetReceiverReport(session, rtcpPacket.Reports[l-1])
+						metrics.SetReceiverReport(rtcpPacket.Reports[l-1])
 					}
 				}
 			}
@@ -707,12 +710,12 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int, 
 			stats := connection.GetStats()
 			data, ok := stats["iceTransport"].(webrtc.TransportStats)
 			if ok {
-				manager.metrics.SetIceTransportStats(session, data)
+				metrics.SetIceTransportStats(data)
 			}
 
 			data, ok = stats["sctpTransport"].(webrtc.TransportStats)
 			if ok {
-				manager.metrics.SetSctpTransportStats(session, data)
+				metrics.SetSctpTransportStats(data)
 			}
 
 			remoteCandidates := map[string]webrtc.ICECandidateStats{}
@@ -721,7 +724,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int, 
 				// only remote ice candidate stats
 				candidate, ok := entry.(webrtc.ICECandidateStats)
 				if ok && candidate.Type == webrtc.StatsTypeRemoteCandidate {
-					manager.metrics.NewICECandidate(session, candidate)
+					metrics.NewICECandidate(candidate)
 					remoteCandidates[candidate.ID] = candidate
 				}
 
@@ -739,7 +742,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int, 
 				}
 			}
 
-			manager.metrics.SetICECandidatesUsed(session, iceCandidatesUsed)
+			metrics.SetICECandidatesUsed(iceCandidatesUsed)
 		}
 	}()
 
