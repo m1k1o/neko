@@ -21,21 +21,14 @@ func (manager *WebRTCManagerCtx) handle(data []byte, dataChannel *webrtc.DataCha
 
 	buffer := bytes.NewBuffer(data)
 
-	hbytes := make([]byte, 3)
-	if _, err := buffer.Read(hbytes); err != nil {
-		return err
-	}
-
 	header := &payload.Header{}
-	if err := binary.Read(bytes.NewBuffer(hbytes), binary.BigEndian, header); err != nil {
+	if err := binary.Read(buffer, binary.BigEndian, header); err != nil {
 		return err
 	}
 
 	//
 	// parse body
 	//
-
-	buffer = bytes.NewBuffer(data)
 
 	// handle cursor move event
 	if header.Event == payload.OP_MOVE {
@@ -64,8 +57,8 @@ func (manager *WebRTCManagerCtx) handle(data []byte, dataChannel *webrtc.DataCha
 			return err
 		}
 
-		// change header event to pong
-		ping.Header = payload.Header{
+		// create pong header
+		header := payload.Header{
 			Event:  payload.OP_PONG,
 			Length: 19,
 		}
@@ -81,6 +74,11 @@ func (manager *WebRTCManagerCtx) handle(data []byte, dataChannel *webrtc.DataCha
 		}
 
 		buffer := &bytes.Buffer{}
+
+		if err := binary.Write(buffer, binary.BigEndian, header); err != nil {
+			return err
+		}
+
 		if err := binary.Write(buffer, binary.BigEndian, pong); err != nil {
 			return err
 		}

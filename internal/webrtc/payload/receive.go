@@ -13,28 +13,20 @@ const (
 )
 
 type Move struct {
-	Header
-
 	X uint16
 	Y uint16
 }
 
 type Scroll struct {
-	Header
-
 	X int16
 	Y int16
 }
 
 type Key struct {
-	Header
-
 	Key uint32
 }
 
 type Ping struct {
-	Header
-
 	// client's timestamp split into two uint32
 	ClientTs1 uint32
 	ClientTs2 uint32

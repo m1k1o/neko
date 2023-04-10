@@ -202,16 +202,22 @@ func (peer *WebRTCPeerCtx) SendCursorPosition(x, y int) error {
 	peer.mu.Lock()
 	defer peer.mu.Unlock()
 
+	header := payload.Header{
+		Event:  payload.OP_CURSOR_POSITION,
+		Length: 7,
+	}
+
 	data := payload.CursorPosition{
-		Header: payload.Header{
-			Event:  payload.OP_CURSOR_POSITION,
-			Length: 7,
-		},
 		X: uint16(x),
 		Y: uint16(y),
 	}
 
 	buffer := &bytes.Buffer{}
+
+	if err := binary.Write(buffer, binary.BigEndian, header); err != nil {
+		return err
+	}
+
 	if err := binary.Write(buffer, binary.BigEndian, data); err != nil {
 		return err
 	}
@@ -223,11 +229,12 @@ func (peer *WebRTCPeerCtx) SendCursorImage(cur *types.CursorImage, img []byte) e
 	peer.mu.Lock()
 	defer peer.mu.Unlock()
 
+	header := payload.Header{
+		Event:  payload.OP_CURSOR_IMAGE,
+		Length: uint16(11 + len(img)),
+	}
+
 	data := payload.CursorImage{
-		Header: payload.Header{
-			Event:  payload.OP_CURSOR_IMAGE,
-			Length: uint16(11 + len(img)),
-		},
 		Width:  cur.Width,
 		Height: cur.Height,
 		Xhot:   cur.Xhot,
@@ -235,6 +242,10 @@ func (peer *WebRTCPeerCtx) SendCursorImage(cur *types.CursorImage, img []byte) e
 	}
 
 	buffer := &bytes.Buffer{}
+
+	if err := binary.Write(buffer, binary.BigEndian, header); err != nil {
+		return err
+	}
 
 	if err := binary.Write(buffer, binary.BigEndian, data); err != nil {
 		return err
