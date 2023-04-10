@@ -131,6 +131,17 @@ services:
   - UDP is generally better for latency. But some networks block UDP so it is good to have TCP available as fallback.
 - Still, using `NEKO_ICELITE=true` is recommended.
 
+### Using turn servers instead of port forwarding
+
+- If you don't want to use port forwarding, you can use turn servers.
+- But you need to have your own turn server (e.g. [cotrun](https://github.com/coturn/coturn)) or have access to one.
+- They are generally not free, because they require a lot of bandwidth.
+- Please make sure that you correctly escape your turn server credentials in the environment variable or use aphostrophes.
+
+```yaml
+NEKO_ICESERVERS: '[{"urls": ["turn:<MY-COTURN-SERVER>:443?transport=udp", "turn:<MY-COTURN-SERVER>:443?transport=tcp", "turns:<MY-COTURN-SERVER>:443?transport=udp", "turns:<MY-COTURN-SERVER>:443?transport=tcp"], "credential": "<MY-COTURN-CREDENTIAL"}, {"urls": ["stun:stun.nextcloud.com:443"]}]'
+```
+
 ### Want to customize and install own add-ons, set custom bookmarks?
 - You would need to modify the existing policy file and mount it to your container.
 - For Firefox, copy [this](https://github.com/m1k1o/neko/blob/master/.docker/firefox/policies.json) file, modify and mount it as: ` -v '${PWD}/policies.json:/usr/lib/firefox/distribution/policies.json'`
