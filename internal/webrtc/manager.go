@@ -448,18 +448,23 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int, 
 	}
 
 	peer := &WebRTCPeerCtx{
-		logger:                 logger,
-		connection:             connection,
-		dataChannel:            dataChannel,
+		logger:     logger,
+		connection: connection,
+		// tracks & channels
+		audioTrack:  audioTrack,
+		videoTrack:  videoTrack,
+		dataChannel: dataChannel,
+		rtcpChannel: videoRtcp,
+		// config
+		iceTrickle: manager.config.ICETrickle,
+		// deprecated functions
 		changeVideoFromBitrate: changeVideoFromBitrate,
 		changeVideoFromID:      changeVideoFromID,
-		// TODO: Refactor.
-		videoId: videoTrack.stream.ID,
+		videoId:                videoTrack.stream.ID,
 		setPaused: func(isPaused bool) {
 			videoTrack.SetPaused(isPaused)
 			audioTrack.SetPaused(isPaused)
 		},
-		iceTrickle: manager.config.ICETrickle,
 		setVideoAuto: func(videoAuto bool) {
 			// if estimator is enabled and not in passive mode, enable video auto bitrate
 			if manager.config.EstimatorEnabled && !manager.config.EstimatorPassive {

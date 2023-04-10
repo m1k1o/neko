@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"sync"
 
+	"github.com/pion/rtcp"
 	"github.com/pion/webrtc/v3"
 	"github.com/rs/zerolog"
 
@@ -13,26 +14,28 @@ import (
 )
 
 type WebRTCPeerCtx struct {
-	mu                     sync.Mutex
-	logger                 zerolog.Logger
-	connection             *webrtc.PeerConnection
-	dataChannel            *webrtc.DataChannel
+	mu         sync.Mutex
+	logger     zerolog.Logger
+	connection *webrtc.PeerConnection
+	// tracks & channels
+	audioTrack  *Track
+	videoTrack  *Track
+	dataChannel *webrtc.DataChannel
+	rtcpChannel chan []rtcp.Packet
+	// config
+	iceTrickle bool
+	// deprecated functions
 	changeVideoFromBitrate func(bitrate int)
 	changeVideoFromID      func(id string) int
 	videoId                func() string
 	setPaused              func(isPaused bool)
 	setVideoAuto           func(auto bool)
 	getVideoAuto           func() bool
-	iceTrickle             bool
 }
 
 func (peer *WebRTCPeerCtx) CreateOffer(ICERestart bool) (*webrtc.SessionDescription, error) {
 	peer.mu.Lock()
 	defer peer.mu.Unlock()
-
-	if peer.connection == nil {
-		return nil, types.ErrWebRTCConnectionNotFound
-	}
 
 	offer, err := peer.connection.CreateOffer(&webrtc.OfferOptions{
 		ICERestart: ICERestart,
@@ -47,10 +50,6 @@ func (peer *WebRTCPeerCtx) CreateOffer(ICERestart bool) (*webrtc.SessionDescript
 func (peer *WebRTCPeerCtx) CreateAnswer() (*webrtc.SessionDescription, error) {
 	peer.mu.Lock()
 	defer peer.mu.Unlock()
-
-	if peer.connection == nil {
-		return nil, types.ErrWebRTCConnectionNotFound
-	}
 
 	answer, err := peer.connection.CreateAnswer(nil)
 	if err != nil {
@@ -83,10 +82,6 @@ func (peer *WebRTCPeerCtx) SetOffer(sdp string) error {
 	peer.mu.Lock()
 	defer peer.mu.Unlock()
 
-	if peer.connection == nil {
-		return types.ErrWebRTCConnectionNotFound
-	}
-
 	return peer.connection.SetRemoteDescription(webrtc.SessionDescription{
 		SDP:  sdp,
 		Type: webrtc.SDPTypeOffer,
@@ -96,10 +91,6 @@ func (peer *WebRTCPeerCtx) SetOffer(sdp string) error {
 func (peer *WebRTCPeerCtx) SetAnswer(sdp string) error {
 	peer.mu.Lock()
 	defer peer.mu.Unlock()
-
-	if peer.connection == nil {
-		return types.ErrWebRTCConnectionNotFound
-	}
 
 	return peer.connection.SetRemoteDescription(webrtc.SessionDescription{
 		SDP:  sdp,
@@ -111,20 +102,12 @@ func (peer *WebRTCPeerCtx) SetCandidate(candidate webrtc.ICECandidateInit) error
 	peer.mu.Lock()
 	defer peer.mu.Unlock()
 
-	if peer.connection == nil {
-		return types.ErrWebRTCConnectionNotFound
-	}
-
 	return peer.connection.AddICECandidate(candidate)
 }
 
 func (peer *WebRTCPeerCtx) SetVideoBitrate(peerBitrate int) error {
 	peer.mu.Lock()
 	defer peer.mu.Unlock()
-
-	if peer.connection == nil {
-		return types.ErrWebRTCConnectionNotFound
-	}
 
 	peer.changeVideoFromBitrate(peerBitrate)
 	return nil
@@ -133,10 +116,6 @@ func (peer *WebRTCPeerCtx) SetVideoBitrate(peerBitrate int) error {
 func (peer *WebRTCPeerCtx) SetVideoID(videoID string) error {
 	peer.mu.Lock()
 	defer peer.mu.Unlock()
-
-	if peer.connection == nil {
-		return types.ErrWebRTCConnectionNotFound
-	}
 
 	peer.changeVideoFromID(videoID)
 	return nil
@@ -154,10 +133,6 @@ func (peer *WebRTCPeerCtx) SetPaused(isPaused bool) error {
 	peer.mu.Lock()
 	defer peer.mu.Unlock()
 
-	if peer.connection == nil {
-		return types.ErrWebRTCConnectionNotFound
-	}
-
 	peer.logger.Info().Bool("is_paused", isPaused).Msg("set paused")
 	peer.setPaused(isPaused)
 	return nil
@@ -166,10 +141,6 @@ func (peer *WebRTCPeerCtx) SetPaused(isPaused bool) error {
 func (peer *WebRTCPeerCtx) SendCursorPosition(x, y int) error {
 	peer.mu.Lock()
 	defer peer.mu.Unlock()
-
-	if peer.dataChannel == nil {
-		return types.ErrWebRTCDataChannelNotFound
-	}
 
 	data := payload.CursorPosition{
 		Header: payload.Header{
@@ -191,10 +162,6 @@ func (peer *WebRTCPeerCtx) SendCursorPosition(x, y int) error {
 func (peer *WebRTCPeerCtx) SendCursorImage(cur *types.CursorImage, img []byte) error {
 	peer.mu.Lock()
 	defer peer.mu.Unlock()
-
-	if peer.dataChannel == nil {
-		return types.ErrWebRTCDataChannelNotFound
-	}
 
 	data := payload.CursorImage{
 		Header: payload.Header{
