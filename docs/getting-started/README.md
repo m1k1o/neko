@@ -74,7 +74,7 @@ For images with VAAPI GPU hardware acceleration using intel drivers use:
 - `ghcr.io/m1k1o/neko/intel-xfce:latest`
 - `ghcr.io/m1k1o/neko/intel-kde:latest`
 
-For images with Nvidia GPU hardware acceleration using EGL use:
+For images with Nvidia GPU hardware acceleration using EGL (see example below) use:
 
 - `ghcr.io/m1k1o/neko/nvidia-chromium:latest`
 - `ghcr.io/m1k1o/neko/nvidia-google-chrome:latest`
@@ -218,6 +218,12 @@ services:
 - You can verify that GPU is available inside the container by running `docker exec -it neko nvidia-smi` command.
 - You can verify that GPU is used for encoding by searching for `nvh264enc` in `docker logs neko` output.
 - If you don'ŧ specify `NEKO_HWENC: nvenc` environment variable, CPU encoding will be used but GPU will still be available for browser rendering.
+
+Broadcast pipeline is not hardware accelerated by default. You can use this pipeline created by [@evilalmus](https://github.com/m1k1o/neko/issues/276#issuecomment-1498362533).
+
+```yaml
+NEKO_BROADCAST_PIPELINE: "flvmux name=mux ! rtmpsink location={url} pulsesrc device={device} ! audio/x-raw,channels=2 ! audioconvert ! voaacenc ! mux. ximagesrc display-name={display} show-pointer=false use-damage=false ! video/x-raw,framerate=30/1 ! videoconvert ! queue ! video/x-raw,format=NV12 ! nvh264enc name=encoder preset=low-latency-hq gop-size=25 spatial-aq=true temporal-aq=true bitrate=2800 vbv-buffer-size=2800 rc-mode=6 ! h264parse config-interval=-1 ! video/x-h264,stream-format=byte-stream,profile=high ! h264parse ! mux."
+```
 
 ### Want to use VPN for your n.eko browsing?
 - Check this out: https://github.com/m1k1o/neko-vpn
