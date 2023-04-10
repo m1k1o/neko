@@ -340,76 +340,42 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int, 
 	// let video stream bucket manager handle stream subscriptions
 	video.SetReceiver(videoTrack)
 
-	changeVideoFromBitrate := func(peerBitrate int) {
-		// when switching from manual to auto bitrate estimation, in case the estimator is
-		// idle (lastBitrate > maxBitrate), we want to go back to the previous estimated bitrate
-		if peerBitrate == 0 && estimator != nil && !manager.config.EstimatorPassive {
-			peerBitrate = estimator.GetTargetBitrate()
-			manager.logger.Debug().
-				Int("peer_bitrate", peerBitrate).
-				Msg("evaluated bitrate")
-		}
+	// data channel
 
-		ok, err := videoTrack.SetBitrate(peerBitrate)
-		if err != nil {
-			logger.Error().Err(err).
-				Int("peer_bitrate", peerBitrate).
-				Msg("unable to set video bitrate")
-			return
-		}
-
-		if !ok {
-			return
-		}
-
-		videoID := videoTrack.stream.ID()
-		bitrate := videoTrack.stream.Bitrate()
-
-		metrics.SetVideoID(videoID)
-		manager.logger.Debug().
-			Int("peer_bitrate", peerBitrate).
-			Int("video_bitrate", bitrate).
-			Str("video_id", videoID).
-			Msg("peer bitrate triggered video stream change")
-
-		go session.Send(
-			event.SIGNAL_VIDEO,
-			message.SignalVideo{
-				Video:     videoID,
-				Bitrate:   bitrate,
-				VideoAuto: videoTrack.VideoAuto(),
-			})
+	dataChannel, err := connection.CreateDataChannel("data", nil)
+	if err != nil {
+		return nil, err
 	}
 
-	changeVideoFromID := func(videoID string) (bitrate int) {
-		changed, err := videoTrack.SetVideoID(videoID)
-		if err != nil {
-			logger.Error().Err(err).
-				Str("video_id", videoID).
-				Msg("unable to set video stream")
-			return
-		}
-
-		if !changed {
-			return
-		}
-
-		bitrate = videoTrack.stream.Bitrate()
-
-		manager.logger.Debug().
-			Str("video_id", videoID).
-			Int("video_bitrate", bitrate).
-			Msg("peer video id triggered video stream change")
-
-		go session.Send(
-			event.SIGNAL_VIDEO,
-			message.SignalVideo{
-				Video:     videoID,
-				Bitrate:   bitrate,
-				VideoAuto: videoTrack.VideoAuto(),
-			})
-
-		return
+	peer := &WebRTCPeerCtx{
+		logger:     logger,
+		session:    session,
+		metrics:    metrics,
+		connection: connection,
+		estimator:  estimator,
+		// tracks & channels
+		audioTrack:  audioTrack,
+		videoTrack:  videoTrack,
+		dataChannel: dataChannel,
+		rtcpChannel: videoRtcp,
+		// config
+		iceTrickle: manager.config.ICETrickle,
+		// deprecated functions
+		videoId: videoTrack.stream.ID,
+		setPaused: func(isPaused bool) {
+			videoTrack.SetPaused(isPaused)
+			audioTrack.SetPaused(isPaused)
+		},
+		setVideoAuto: func(videoAuto bool) {
+			// if estimator is enabled and not in passive mode, enable video auto bitrate
+			if manager.config.EstimatorEnabled && !manager.config.EstimatorPassive {
+				videoTrack.SetVideoAuto(videoAuto)
+			} else {
+				logger.Warn().Msg("estimator is disabled or in passive mode, cannot change video auto")
+				videoTrack.SetVideoAuto(false) // ensure video auto is disabled
+			}
+		},
+		getVideoAuto: videoTrack.VideoAuto,
 	}
 
 	manager.logger.Info().
@@ -417,7 +383,9 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int, 
 		Msg("estimated initial peer bitrate")
 
 	// set initial video bitrate
-	changeVideoFromBitrate(bitrate)
+	if err := peer.SetVideoBitrate(bitrate); err != nil {
+		return nil, err
+	}
 
 	// if estimator is enabled, use it to change video stream
 	if estimator != nil {
@@ -437,49 +405,13 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int, 
 					continue
 				}
 				if !manager.config.EstimatorPassive {
-					changeVideoFromBitrate(targetBitrate)
+					err := peer.SetVideoBitrate(targetBitrate)
+					if err != nil {
+						logger.Warn().Err(err).Msg("failed to set video bitrate")
+					}
 				}
 			}
 		}()
-	}
-
-	// data channel
-
-	dataChannel, err := connection.CreateDataChannel("data", nil)
-	if err != nil {
-		return nil, err
-	}
-
-	peer := &WebRTCPeerCtx{
-		logger:     logger,
-		session:    session,
-		metrics:    metrics,
-		connection: connection,
-		// tracks & channels
-		audioTrack:  audioTrack,
-		videoTrack:  videoTrack,
-		dataChannel: dataChannel,
-		rtcpChannel: videoRtcp,
-		// config
-		iceTrickle: manager.config.ICETrickle,
-		// deprecated functions
-		changeVideoFromBitrate: changeVideoFromBitrate,
-		changeVideoFromID:      changeVideoFromID,
-		videoId:                videoTrack.stream.ID,
-		setPaused: func(isPaused bool) {
-			videoTrack.SetPaused(isPaused)
-			audioTrack.SetPaused(isPaused)
-		},
-		setVideoAuto: func(videoAuto bool) {
-			// if estimator is enabled and not in passive mode, enable video auto bitrate
-			if manager.config.EstimatorEnabled && !manager.config.EstimatorPassive {
-				videoTrack.SetVideoAuto(videoAuto)
-			} else {
-				logger.Warn().Msg("estimator is disabled or in passive mode, cannot change video auto")
-				videoTrack.SetVideoAuto(false) // ensure video auto is disabled
-			}
-		},
-		getVideoAuto: videoTrack.VideoAuto,
 	}
 
 	connection.OnTrack(func(track *webrtc.TrackRemote, receiver *webrtc.RTPReceiver) {

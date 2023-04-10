@@ -5,12 +5,15 @@ import (
 	"encoding/binary"
 	"sync"
 
+	"github.com/pion/interceptor/pkg/cc"
 	"github.com/pion/rtcp"
 	"github.com/pion/webrtc/v3"
 	"github.com/rs/zerolog"
 
 	"github.com/demodesk/neko/internal/webrtc/payload"
 	"github.com/demodesk/neko/pkg/types"
+	"github.com/demodesk/neko/pkg/types/event"
+	"github.com/demodesk/neko/pkg/types/message"
 )
 
 type WebRTCPeerCtx struct {
@@ -19,6 +22,7 @@ type WebRTCPeerCtx struct {
 	session    types.Session
 	metrics    *metrics
 	connection *webrtc.PeerConnection
+	estimator  cc.BandwidthEstimator
 	// tracks & channels
 	audioTrack  *Track
 	videoTrack  *Track
@@ -27,12 +31,10 @@ type WebRTCPeerCtx struct {
 	// config
 	iceTrickle bool
 	// deprecated functions
-	changeVideoFromBitrate func(bitrate int)
-	changeVideoFromID      func(id string) int
-	videoId                func() string
-	setPaused              func(isPaused bool)
-	setVideoAuto           func(auto bool)
-	getVideoAuto           func() bool
+	videoId      func() string
+	setPaused    func(isPaused bool)
+	setVideoAuto func(auto bool)
+	getVideoAuto func() bool
 }
 
 func (peer *WebRTCPeerCtx) CreateOffer(ICERestart bool) (*webrtc.SessionDescription, error) {
@@ -111,7 +113,43 @@ func (peer *WebRTCPeerCtx) SetVideoBitrate(peerBitrate int) error {
 	peer.mu.Lock()
 	defer peer.mu.Unlock()
 
-	peer.changeVideoFromBitrate(peerBitrate)
+	// when switching from manual to auto bitrate estimation, in case the estimator is
+	// idle (lastBitrate > maxBitrate), we want to go back to the previous estimated bitrate
+	if peerBitrate == 0 && peer.estimator != nil {
+		peerBitrate = peer.estimator.GetTargetBitrate()
+		peer.logger.Debug().
+			Int("peer_bitrate", peerBitrate).
+			Msg("evaluated bitrate")
+	}
+
+	changed, err := peer.videoTrack.SetBitrate(peerBitrate)
+	if err != nil {
+		return err
+	}
+
+	if !changed {
+		// TODO: return error?
+		return nil
+	}
+
+	videoID := peer.videoTrack.stream.ID()
+	bitrate := peer.videoTrack.stream.Bitrate()
+
+	peer.metrics.SetVideoID(videoID)
+	peer.logger.Debug().
+		Int("peer_bitrate", peerBitrate).
+		Int("video_bitrate", bitrate).
+		Str("video_id", videoID).
+		Msg("peer bitrate triggered video stream change")
+
+	go peer.session.Send(
+		event.SIGNAL_VIDEO,
+		message.SignalVideo{
+			Video:     videoID,
+			Bitrate:   bitrate,
+			VideoAuto: peer.videoTrack.VideoAuto(),
+		})
+
 	return nil
 }
 
@@ -119,7 +157,31 @@ func (peer *WebRTCPeerCtx) SetVideoID(videoID string) error {
 	peer.mu.Lock()
 	defer peer.mu.Unlock()
 
-	peer.changeVideoFromID(videoID)
+	changed, err := peer.videoTrack.SetVideoID(videoID)
+	if err != nil {
+		return err
+	}
+
+	if !changed {
+		// TODO: return error?
+		return nil
+	}
+
+	bitrate := peer.videoTrack.stream.Bitrate()
+
+	peer.logger.Debug().
+		Str("video_id", videoID).
+		Int("video_bitrate", bitrate).
+		Msg("peer video id triggered video stream change")
+
+	go peer.session.Send(
+		event.SIGNAL_VIDEO,
+		message.SignalVideo{
+			Video:     videoID,
+			Bitrate:   bitrate,
+			VideoAuto: peer.videoTrack.VideoAuto(),
+		})
+
 	return nil
 }
 
