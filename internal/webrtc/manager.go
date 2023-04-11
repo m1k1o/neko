@@ -406,16 +406,16 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int, 
 		logger.Info().Msgf("received new remote track")
 
 		if !session.Profile().CanShareMedia {
-			logger.Warn().Msg("media sharing is disabled for this session")
-			receiver.Stop()
+			err := receiver.Stop()
+			logger.Warn().Err(err).Msg("media sharing is disabled for this session")
 			return
 		}
 
 		// parse codec from remote track
 		codec, ok := codec.ParseRTC(track.Codec())
 		if !ok {
-			logger.Warn().Msg("remote track with unknown codec")
-			receiver.Stop()
+			err := receiver.Stop()
+			logger.Warn().Err(err).Msg("remote track with unknown codec")
 			return
 		}
 
@@ -428,9 +428,9 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int, 
 			}
 
 			stopped = true
-			receiver.Stop()
+			err := receiver.Stop()
 			srcManager.Stop()
-			logger.Info().Msg("remote track stopped")
+			logger.Err(err).Msg("remote track stopped")
 		}
 
 		if track.Kind() == webrtc.RTPCodecTypeAudio {
@@ -452,8 +452,8 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int, 
 			}
 			manager.camStop = &stopFn
 		} else {
-			logger.Warn().Msg("remote track with unsupported codec type")
-			receiver.Stop()
+			err := receiver.Stop()
+			logger.Warn().Err(err).Msg("remote track with unsupported codec type")
 			return
 		}
 
@@ -468,7 +468,12 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int, 
 
 		go func() {
 			for range ticker.C {
-				err := connection.WriteRTCP([]rtcp.Packet{&rtcp.PictureLossIndication{MediaSSRC: uint32(track.SSRC())}})
+				err := connection.WriteRTCP([]rtcp.Packet{
+					&rtcp.PictureLossIndication{
+						MediaSSRC: uint32(track.SSRC()),
+					},
+				})
+
 				if err != nil {
 					logger.Err(err).Msg("remote track rtcp send err")
 				}
