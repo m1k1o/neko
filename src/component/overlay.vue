@@ -60,7 +60,8 @@
 
   const CANVAS_SCALE = 2
 
-  const INACTIVE_CURSOR_INTERVAL = 250 // ms
+  const MOUSE_MOVE_THROTTLE = 1000 / 60 // in ms, 60fps
+  const INACTIVE_CURSOR_INTERVAL = 1000 / 4 // in ms, 4fps
 
   @Component({
     name: 'neko-overlay',
@@ -205,10 +206,7 @@
       this.cursorElement.onload = null
 
       // stop inactive cursor interval if exists
-      if (this.inactiveCursorInterval !== null) {
-        window.clearInterval(this.inactiveCursorInterval)
-        this.inactiveCursorInterval = null
-      }
+      this.clearInactiveCursorInterval()
     }
 
     getMousePos(clientX: number, clientY: number) {
@@ -327,7 +325,13 @@
       }
     }
 
+    lastMouseMove = 0
+
     onMouseMove(e: MouseEvent) {
+      // throttle mousemove events
+      if (e.timeStamp - this.lastMouseMove < MOUSE_MOVE_THROTTLE) return
+      this.lastMouseMove = e.timeStamp
+
       if (this.isControling) {
         this.sendMousePos(e)
       }
@@ -433,15 +437,19 @@
     private inactiveCursorInterval: number | null = null
     private inactiveCursorPosition: CursorPosition | null = null
 
+    clearInactiveCursorInterval() {
+      if (this.inactiveCursorInterval) {
+        window.clearInterval(this.inactiveCursorInterval)
+        this.inactiveCursorInterval = null
+      }
+    }
+
     @Watch('focused')
     @Watch('isControling')
     @Watch('inactiveCursors')
     restartInactiveCursorInterval() {
       // clear interval if exists
-      if (this.inactiveCursorInterval !== null) {
-        window.clearInterval(this.inactiveCursorInterval)
-        this.inactiveCursorInterval = null
-      }
+      this.clearInactiveCursorInterval()
 
       if (this.inactiveCursors && this.focused && !this.isControling) {
         this.inactiveCursorInterval = window.setInterval(this.sendInactiveMousePos.bind(this), INACTIVE_CURSOR_INTERVAL)
@@ -450,11 +458,11 @@
 
     saveInactiveMousePos(e: MouseEvent) {
       const pos = this.getMousePos(e.clientX, e.clientY)
-      Vue.set(this, 'inactiveCursorPosition', pos)
+      this.inactiveCursorPosition = pos
     }
 
     sendInactiveMousePos() {
-      if (this.inactiveCursorPosition != null) {
+      if (this.inactiveCursorPosition) {
         this.webrtc.send('mousemove', this.inactiveCursorPosition)
       }
     }
@@ -654,7 +662,7 @@
       this.kbdOpen = false
 
       this._textarea.focus()
-      window.visualViewport.addEventListener('resize', this.onVisualViewportResize)
+      window.visualViewport?.addEventListener('resize', this.onVisualViewportResize)
       this.$emit('mobileKeyboardOpen', true)
     }
 
@@ -666,7 +674,7 @@
       this.kbdOpen = false
 
       this.$emit('mobileKeyboardOpen', false)
-      window.visualViewport.removeEventListener('resize', this.onVisualViewportResize)
+      window.visualViewport?.removeEventListener('resize', this.onVisualViewportResize)
       this._textarea.blur()
     }
 
