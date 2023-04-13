@@ -58,8 +58,6 @@
   const WHEEL_STEP = 53 // Delta threshold for a mouse wheel step
   const WHEEL_LINE_HEIGHT = 19
 
-  const CANVAS_SCALE = 2
-
   const MOUSE_MOVE_THROTTLE = 1000 / 60 // in ms, 60fps
   const INACTIVE_CURSOR_INTERVAL = 1000 / 4 // in ms, 4fps
 
@@ -70,6 +68,8 @@
     @Ref('overlay') readonly _overlay!: HTMLCanvasElement
     @Ref('textarea') readonly _textarea!: HTMLTextAreaElement
     private _ctx!: CanvasRenderingContext2D
+
+    private canvasScale = window.devicePixelRatio
 
     private keyboard!: KeyboardInterface
     private textInput = ''
@@ -108,6 +108,9 @@
 
     @Prop()
     private readonly inactiveCursors!: boolean
+
+    @Prop()
+    private readonly fps!: number
 
     get cursor(): string {
       if (!this.isControling || !this.cursorImage) {
@@ -221,12 +224,12 @@
     sendMousePos(e: MouseEvent) {
       const pos = this.getMousePos(e.clientX, e.clientY)
       this.webrtc.send('mousemove', pos)
-      Vue.set(this, 'cursorPosition', pos)
+      this.cursorPosition = pos
     }
 
     private wheelX = 0
     private wheelY = 0
-    private wheelDate = Date.now()
+    private wheelTimeStamp = 0
 
     // negative sensitivity can be acheived using increased step value
     get wheelStep() {
@@ -268,13 +271,13 @@
         return
       }
 
-      const now = Date.now()
-      const firstScroll = now - this.wheelDate > 250
+      // when the last scroll was more than 250ms ago
+      const firstScroll = e.timeStamp - this.wheelTimeStamp > 250
 
       if (firstScroll) {
         this.wheelX = 0
         this.wheelY = 0
-        this.wheelDate = now
+        this.wheelTimeStamp = e.timeStamp
       }
 
       let dx = e.deltaX
@@ -397,10 +400,10 @@
     onMouseLeave(e: MouseEvent) {
       if (this.isControling) {
         // save current keyboard modifiers state
-        Vue.set(this, 'keyboardModifiers', {
+        this.keyboardModifiers = {
           capslock: e.getModifierState('CapsLock'),
           numlock: e.getModifierState('NumLock'),
-        })
+        }
       }
 
       this.focused = false
@@ -493,7 +496,9 @@
     private cursorImage: CursorImage | null = null
     private cursorElement: HTMLImageElement = new Image()
     private cursorPosition: CursorPosition | null = null
+    private cursorLastTime = 0
     private canvasRequestedFrame = false
+    private canvasRenderTimeout: number | null = null
 
     @Watch('canvasSize')
     onCanvasSizeChange({ width, height }: Dimension) {
@@ -503,13 +508,13 @@
 
     onCursorPosition(data: CursorPosition) {
       if (!this.isControling) {
-        Vue.set(this, 'cursorPosition', data)
+        this.cursorPosition = data
         this.canvasRequestRedraw()
       }
     }
 
     onCursorImage(data: CursorImage) {
-      Vue.set(this, 'cursorImage', data)
+      this.cursorImage = data
 
       if (!this.isControling) {
         this.cursorElement.src = data.uri
@@ -517,9 +522,9 @@
     }
 
     canvasResize({ width, height }: Dimension) {
-      this._overlay.width = width * CANVAS_SCALE
-      this._overlay.height = height * CANVAS_SCALE
-      this._ctx.setTransform(CANVAS_SCALE, 0, 0, CANVAS_SCALE, 0, 0)
+      this._overlay.width = width * this.canvasScale
+      this._overlay.height = height * this.canvasScale
+      this._ctx.setTransform(this.canvasScale, 0, 0, this.canvasScale, 0, 0)
     }
 
     @Watch('hostId')
@@ -527,6 +532,23 @@
     canvasRequestRedraw() {
       // skip rendering if there is already in progress
       if (this.canvasRequestedFrame) return
+
+      // throttle rendering according to fps
+      if (this.fps > 0) {
+        if (this.canvasRenderTimeout) {
+          window.clearTimeout(this.canvasRenderTimeout)
+          this.canvasRenderTimeout = null
+        }
+
+        const now = Date.now()
+        if (now - this.cursorLastTime < 1000 / this.fps) {
+          // ensure that last frame is rendered
+          this.canvasRenderTimeout = window.setTimeout(this.canvasRequestRedraw, 1000 / this.fps)
+          return
+        }
+
+        this.cursorLastTime = now
+      }
 
       // request animation frame from a browser
       this.canvasRequestedFrame = true
@@ -554,7 +576,7 @@
       let { width, height } = this.canvasSize
 
       // reset transformation, X and Y will be 0 again
-      this._ctx.setTransform(CANVAS_SCALE, 0, 0, CANVAS_SCALE, 0, 0)
+      this._ctx.setTransform(this.canvasScale, 0, 0, this.canvasScale, 0, 0)
 
       // get cursor position
       let x = Math.round((this.cursorPosition.x / this.screenSize.width) * width)
@@ -596,7 +618,7 @@
 
     canvasClear() {
       // reset transformation, X and Y will be 0 again
-      this._ctx.setTransform(CANVAS_SCALE, 0, 0, CANVAS_SCALE, 0, 0)
+      this._ctx.setTransform(this.canvasScale, 0, 0, this.canvasScale, 0, 0)
 
       const { width, height } = this._overlay
       this._ctx.clearRect(0, 0, width, height)
@@ -611,7 +633,7 @@
 
     @Watch('isControling')
     onControlChange(isControling: boolean) {
-      Vue.set(this, 'keyboardModifiers', null)
+      this.keyboardModifiers = null
 
       if (isControling && this.reqMouseDown) {
         this.updateKeyboardModifiers(this.reqMouseDown)

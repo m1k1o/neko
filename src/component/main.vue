@@ -18,6 +18,7 @@
         :canvasSize="canvasSize"
         :cursors="state.cursors"
         :cursorDraw="inactiveCursorDrawFunction"
+        :fps="fps"
       />
       <neko-overlay
         ref="overlay"
@@ -34,6 +35,7 @@
         :cursorDraw="cursorDrawFunction"
         :implicitControl="state.settings.implicit_hosting && session.profile.can_host"
         :inactiveCursors="state.settings.inactive_cursors && session.profile.sends_inactive_cursor"
+        :fps="fps"
         @updateKeyboardModifiers="updateKeyboardModifiers($event)"
         @uploadDrop="uploadDrop($event)"
         @mobileKeyboardOpen="state.mobile_keyboard_open = $event"
@@ -131,6 +133,10 @@
 
     @Prop({ type: Boolean })
     private readonly autoplay!: boolean
+
+    // fps for cursor rendering, 0 for no cap
+    @Prop({ type: Number, default: 0 })
+    private readonly fps!: number
 
     /////////////////////////////
     // Public state
