@@ -3,7 +3,7 @@ FROM $BASE_IMAGE
 
 # latest working version with EGL: 111.0.5563.146, revert when resolved
 # 112.0.5615.49 fails: https://github.com/VirtualGL/virtualgl/issues/229
-ARG SRC_URL="https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_112.0.5615.49-1_amd64.deb"
+ARG SRC_URL="https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_111.0.5563.146-1_amd64.deb"
 
 #
 # install google chrome
