@@ -44,9 +44,6 @@ const (
 
 	// send a PLI on an interval so that the publisher is pushing a keyframe every rtcpPLIInterval
 	rtcpPLIInterval = 3 * time.Second
-
-	// how often we check the bitrate of each client. Default is 250ms
-	bitrateCheckInterval = 250 * time.Millisecond
 )
 
 func New(desktop types.DesktopManager, capture types.CaptureManager, config *config.WebRTC) *WebRTCManagerCtx {

@@ -17,6 +17,11 @@ import (
 	"github.com/demodesk/neko/pkg/types/message"
 )
 
+const (
+	// how often to read and process bandwidth estimation reports
+	estimatorReadInterval = 250 * time.Millisecond
+)
+
 type WebRTCPeerCtx struct {
 	mu         sync.Mutex
 	logger     zerolog.Logger
@@ -115,7 +120,7 @@ func (peer *WebRTCPeerCtx) estimatorReader() {
 	}
 
 	// use a ticker to get current client target bitrate
-	ticker := time.NewTicker(bitrateCheckInterval)
+	ticker := time.NewTicker(estimatorReadInterval)
 	defer ticker.Stop()
 
 	for range ticker.C {

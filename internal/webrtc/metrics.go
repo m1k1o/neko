@@ -11,7 +11,10 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promauto"
 )
 
-var connectionStatsInterval = 5 * time.Second
+const (
+	// how often to read and process webrtc connection stats
+	connectionStatsInterval = 5 * time.Second
+)
 
 type metricsManager struct {
 	mu sync.Mutex
