@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"sync"
+	"time"
 
 	"github.com/pion/interceptor/pkg/cc"
 	"github.com/pion/rtcp"
@@ -29,7 +30,8 @@ type WebRTCPeerCtx struct {
 	dataChannel *webrtc.DataChannel
 	rtcpChannel chan []rtcp.Packet
 	// config
-	iceTrickle bool
+	iceTrickle       bool
+	estimatorPassive bool
 }
 
 //
@@ -106,6 +108,37 @@ func (peer *WebRTCPeerCtx) Destroy() {
 	}
 }
 
+func (peer *WebRTCPeerCtx) estimatorReader() {
+	// if estimator is disabled, do nothing
+	if peer.estimator == nil {
+		return
+	}
+
+	// use a ticker to get current client target bitrate
+	ticker := time.NewTicker(bitrateCheckInterval)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		targetBitrate := peer.estimator.GetTargetBitrate()
+		peer.metrics.SetReceiverEstimatedTargetBitrate(float64(targetBitrate))
+
+		if peer.connection.ConnectionState() == webrtc.PeerConnectionStateClosed {
+			break
+		}
+
+		if !peer.videoTrack.VideoAuto() {
+			continue
+		}
+
+		if !peer.estimatorPassive {
+			err := peer.SetVideoBitrate(targetBitrate)
+			if err != nil {
+				peer.logger.Warn().Err(err).Msg("failed to set video bitrate")
+			}
+		}
+	}
+}
+
 //
 // video
 //
@@ -116,7 +149,7 @@ func (peer *WebRTCPeerCtx) SetVideoBitrate(peerBitrate int) error {
 
 	// when switching from manual to auto bitrate estimation, in case the estimator is
 	// idle (lastBitrate > maxBitrate), we want to go back to the previous estimated bitrate
-	if peerBitrate == 0 && peer.estimator != nil {
+	if peerBitrate == 0 && peer.estimator != nil && !peer.estimatorPassive {
 		peerBitrate = peer.estimator.GetTargetBitrate()
 		peer.logger.Debug().
 			Int("peer_bitrate", peerBitrate).
@@ -205,8 +238,8 @@ func (peer *WebRTCPeerCtx) SetPaused(isPaused bool) error {
 }
 
 func (peer *WebRTCPeerCtx) SetVideoAuto(videoAuto bool) {
-	// if estimator is enabled, enable video auto bitrate
-	if peer.estimator != nil {
+	// if estimator is enabled and is not passive, enable video auto bitrate
+	if peer.estimator != nil && !peer.estimatorPassive {
 		peer.videoTrack.SetVideoAuto(videoAuto)
 	} else {
 		peer.logger.Warn().Msg("estimator is disabled or in passive mode, cannot change video auto")

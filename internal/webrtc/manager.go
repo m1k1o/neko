@@ -369,7 +369,8 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int, 
 		dataChannel: dataChannel,
 		rtcpChannel: videoRtcp,
 		// config
-		iceTrickle: manager.config.ICETrickle,
+		iceTrickle:       manager.config.ICETrickle,
+		estimatorPassive: manager.config.EstimatorPassive,
 	}
 
 	logger.Info().
@@ -379,33 +380,6 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int, 
 	// set initial video bitrate
 	if err := peer.SetVideoBitrate(bitrate); err != nil {
 		return nil, err
-	}
-
-	// if estimator is enabled, use it to change video stream
-	if estimator != nil {
-		go func() {
-			// use a ticker to get current client target bitrate
-			ticker := time.NewTicker(bitrateCheckInterval)
-			defer ticker.Stop()
-
-			for range ticker.C {
-				targetBitrate := estimator.GetTargetBitrate()
-				metrics.SetReceiverEstimatedTargetBitrate(float64(targetBitrate))
-
-				if connection.ConnectionState() == webrtc.PeerConnectionStateClosed {
-					break
-				}
-				if !videoTrack.VideoAuto() {
-					continue
-				}
-				if !manager.config.EstimatorPassive {
-					err := peer.SetVideoBitrate(targetBitrate)
-					if err != nil {
-						logger.Warn().Err(err).Msg("failed to set video bitrate")
-					}
-				}
-			}
-		}()
 	}
 
 	connection.OnTrack(func(track *webrtc.TrackRemote, receiver *webrtc.RTPReceiver) {
@@ -601,6 +575,9 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int, 
 	// start metrics collectors
 	go metrics.rtcpReceiver(videoRtcp)
 	go metrics.connectionStats(connection)
+
+	// start estimator reader
+	go peer.estimatorReader()
 
 	return offer, nil
 }
