@@ -33,33 +33,31 @@ type Track struct {
 	videoChange   func(string) (bool, error)
 }
 
-type option func(*Track)
+type trackOption func(*Track)
 
-func WithVideoAuto(auto bool) option {
+func WithVideoAuto(auto bool) trackOption {
 	return func(t *Track) {
 		t.videoAuto = auto
 	}
 }
 
-func WithRtcpChan(rtcp chan []rtcp.Packet) option {
+func WithRtcpChan(rtcp chan []rtcp.Packet) trackOption {
 	return func(t *Track) {
 		t.rtcpCh = rtcp
 	}
 }
 
-func NewTrack(logger zerolog.Logger, codec codec.RTPCodec, connection *webrtc.PeerConnection, opts ...option) (*Track, error) {
+func NewTrack(logger zerolog.Logger, codec codec.RTPCodec, connection *webrtc.PeerConnection, opts ...trackOption) (*Track, error) {
 	id := codec.Type.String()
 	track, err := webrtc.NewTrackLocalStaticSample(codec.Capability, id, "stream")
 	if err != nil {
 		return nil, err
 	}
 
-	logger = logger.With().Str("id", id).Logger()
-
 	t := &Track{
-		logger: logger,
+		logger: logger.With().Str("id", id).Logger(),
 		track:  track,
-		rtcpCh: make(chan []rtcp.Packet),
+		rtcpCh: nil,
 		sample: make(chan types.Sample),
 	}
 
@@ -155,8 +153,9 @@ func (t *Track) RemoveStream() {
 	t.streamMu.Lock()
 	defer t.streamMu.Unlock()
 
-	// if there is no stream, or paused, do nothing
+	// if there is no stream, or paused we don't need to remove the listener
 	if t.stream == nil || t.paused {
+		t.stream = nil
 		return
 	}
 
