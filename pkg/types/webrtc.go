@@ -20,9 +20,8 @@ type ICEServer struct {
 type WebRTCPeer interface {
 	CreateOffer(ICERestart bool) (*webrtc.SessionDescription, error)
 	CreateAnswer() (*webrtc.SessionDescription, error)
-	SetOffer(sdp string) error
-	SetAnswer(sdp string) error
-	SetCandidate(candidate webrtc.ICECandidateInit) error
+	SetRemoteDescription(webrtc.SessionDescription) error
+	SetCandidate(webrtc.ICECandidateInit) error
 
 	SetVideoBitrate(bitrate int) error
 	SetVideoID(videoID string) error

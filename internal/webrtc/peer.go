@@ -32,6 +32,10 @@ type WebRTCPeerCtx struct {
 	iceTrickle bool
 }
 
+//
+// connection
+//
+
 func (peer *WebRTCPeerCtx) CreateOffer(ICERestart bool) (*webrtc.SessionDescription, error) {
 	peer.mu.Lock()
 	defer peer.mu.Unlock()
@@ -77,24 +81,11 @@ func (peer *WebRTCPeerCtx) setLocalDescription(description webrtc.SessionDescrip
 	return peer.connection.LocalDescription(), nil
 }
 
-func (peer *WebRTCPeerCtx) SetOffer(sdp string) error {
+func (peer *WebRTCPeerCtx) SetRemoteDescription(desc webrtc.SessionDescription) error {
 	peer.mu.Lock()
 	defer peer.mu.Unlock()
 
-	return peer.connection.SetRemoteDescription(webrtc.SessionDescription{
-		SDP:  sdp,
-		Type: webrtc.SDPTypeOffer,
-	})
-}
-
-func (peer *WebRTCPeerCtx) SetAnswer(sdp string) error {
-	peer.mu.Lock()
-	defer peer.mu.Unlock()
-
-	return peer.connection.SetRemoteDescription(webrtc.SessionDescription{
-		SDP:  sdp,
-		Type: webrtc.SDPTypeAnswer,
-	})
+	return peer.connection.SetRemoteDescription(desc)
 }
 
 func (peer *WebRTCPeerCtx) SetCandidate(candidate webrtc.ICECandidateInit) error {
@@ -103,6 +94,21 @@ func (peer *WebRTCPeerCtx) SetCandidate(candidate webrtc.ICECandidateInit) error
 
 	return peer.connection.AddICECandidate(candidate)
 }
+
+func (peer *WebRTCPeerCtx) Destroy() {
+	peer.mu.Lock()
+	defer peer.mu.Unlock()
+
+	if peer.connection != nil {
+		err := peer.connection.Close()
+		peer.logger.Err(err).Msg("peer connection destroyed")
+		peer.connection = nil
+	}
+}
+
+//
+// video
+//
 
 func (peer *WebRTCPeerCtx) SetVideoBitrate(peerBitrate int) error {
 	peer.mu.Lock()
@@ -198,6 +204,24 @@ func (peer *WebRTCPeerCtx) SetPaused(isPaused bool) error {
 	return nil
 }
 
+func (peer *WebRTCPeerCtx) SetVideoAuto(videoAuto bool) {
+	// if estimator is enabled, enable video auto bitrate
+	if peer.estimator != nil {
+		peer.videoTrack.SetVideoAuto(videoAuto)
+	} else {
+		peer.logger.Warn().Msg("estimator is disabled or in passive mode, cannot change video auto")
+		peer.videoTrack.SetVideoAuto(false) // ensure video auto is disabled
+	}
+}
+
+func (peer *WebRTCPeerCtx) VideoAuto() bool {
+	return peer.videoTrack.VideoAuto()
+}
+
+//
+// data channel
+//
+
 func (peer *WebRTCPeerCtx) SendCursorPosition(x, y int) error {
 	peer.mu.Lock()
 	defer peer.mu.Unlock()
@@ -256,29 +280,4 @@ func (peer *WebRTCPeerCtx) SendCursorImage(cur *types.CursorImage, img []byte) e
 	}
 
 	return peer.dataChannel.Send(buffer.Bytes())
-}
-
-func (peer *WebRTCPeerCtx) Destroy() {
-	peer.mu.Lock()
-	defer peer.mu.Unlock()
-
-	if peer.connection != nil {
-		err := peer.connection.Close()
-		peer.logger.Err(err).Msg("peer connection destroyed")
-		peer.connection = nil
-	}
-}
-
-func (peer *WebRTCPeerCtx) SetVideoAuto(videoAuto bool) {
-	// if estimator is enabled, enable video auto bitrate
-	if peer.estimator != nil {
-		peer.videoTrack.SetVideoAuto(videoAuto)
-	} else {
-		peer.logger.Warn().Msg("estimator is disabled or in passive mode, cannot change video auto")
-		peer.videoTrack.SetVideoAuto(false) // ensure video auto is disabled
-	}
-}
-
-func (peer *WebRTCPeerCtx) VideoAuto() bool {
-	return peer.videoTrack.VideoAuto()
 }

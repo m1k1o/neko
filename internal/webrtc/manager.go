@@ -26,24 +26,32 @@ import (
 	"github.com/demodesk/neko/pkg/types/message"
 )
 
-// the duration without network activity before a Agent is considered disconnected. Default is 5 Seconds
-const disconnectedTimeout = 4 * time.Second
+const (
+	// size of receiving channel used to buffer incoming TCP packets
+	tcpReadChanBufferSize = 50
 
-// the duration without network activity before a Agent is considered failed after disconnected. Default is 25 Seconds
-const failedTimeout = 6 * time.Second
+	// size of buffer used to buffer outgoing TCP packets. Default is 4MB
+	tcpWriteBufferSizeInBytes = 4 * 1024 * 1024
 
-// how often the ICE Agent sends extra traffic if there is no activity, if media is flowing no traffic will be sent. Default is 2 seconds
-const keepAliveInterval = 2 * time.Second
+	// the duration without network activity before a Agent is considered disconnected. Default is 5 Seconds
+	disconnectedTimeout = 4 * time.Second
 
-// send a PLI on an interval so that the publisher is pushing a keyframe every rtcpPLIInterval
-const rtcpPLIInterval = 3 * time.Second
+	// the duration without network activity before a Agent is considered failed after disconnected. Default is 25 Seconds
+	failedTimeout = 6 * time.Second
 
-// how often we check the bitrate of each client. Default is 250ms
-const bitrateCheckInterval = 250 * time.Millisecond
+	// how often the ICE Agent sends extra traffic if there is no activity, if media is flowing no traffic will be sent. Default is 2 seconds
+	keepAliveInterval = 2 * time.Second
+
+	// send a PLI on an interval so that the publisher is pushing a keyframe every rtcpPLIInterval
+	rtcpPLIInterval = 3 * time.Second
+
+	// how often we check the bitrate of each client. Default is 250ms
+	bitrateCheckInterval = 250 * time.Millisecond
+)
 
 func New(desktop types.DesktopManager, capture types.CaptureManager, config *config.WebRTC) *WebRTCManagerCtx {
 	configuration := webrtc.Configuration{
-		SDPSemantics: webrtc.SDPSemanticsUnifiedPlanWithFallback,
+		SDPSemantics: webrtc.SDPSemanticsUnifiedPlan,
 	}
 
 	if !config.ICELite {
@@ -112,14 +120,14 @@ func (manager *WebRTCManagerCtx) Start() {
 		})
 
 		if err != nil {
-			manager.logger.Panic().Err(err).Msg("unable to setup ice TCP mux")
+			manager.logger.Fatal().Err(err).Msg("unable to setup ice TCP mux")
 		}
 
 		manager.tcpMux = ice.NewTCPMuxDefault(ice.TCPMuxParams{
 			Listener:        tcpListener,
 			Logger:          logger.NewLogger("ice-tcp"),
-			ReadBufferSize:  32,              // receiving channel size
-			WriteBufferSize: 4 * 1024 * 1024, // write buffer size, 4MB
+			ReadBufferSize:  tcpReadChanBufferSize,
+			WriteBufferSize: tcpWriteBufferSizeInBytes,
 		})
 	}
 
@@ -131,7 +139,7 @@ func (manager *WebRTCManagerCtx) Start() {
 		)
 
 		if err != nil {
-			manager.logger.Panic().Err(err).Msg("unable to setup ice UDP mux")
+			manager.logger.Fatal().Err(err).Msg("unable to setup ice UDP mux")
 		}
 	}
 
@@ -174,6 +182,7 @@ func (manager *WebRTCManagerCtx) newPeerConnection(bitrate int, codecs []codec.R
 		LoggerFactory: pionlog.New(logger),
 	}
 
+	settings.DisableMediaEngineCopy(true)
 	settings.SetICETimeouts(disconnectedTimeout, failedTimeout, keepAliveInterval)
 	settings.SetNAT1To1IPs(manager.config.NAT1To1IPs, webrtc.ICECandidateTypeHost)
 	settings.SetLite(manager.config.ICELite)
@@ -361,7 +370,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int, 
 		iceTrickle: manager.config.ICETrickle,
 	}
 
-	manager.logger.Info().
+	logger.Info().
 		Int("target_bitrate", bitrate).
 		Msg("estimated initial peer bitrate")
 

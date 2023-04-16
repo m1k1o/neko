@@ -6,6 +6,7 @@ import (
 	"github.com/demodesk/neko/pkg/types"
 	"github.com/demodesk/neko/pkg/types/event"
 	"github.com/demodesk/neko/pkg/types/message"
+	"github.com/pion/webrtc/v3"
 )
 
 func (h *MessageHandlerCtx) signalRequest(session types.Session, payload *message.SignalVideo) error {
@@ -83,7 +84,10 @@ func (h *MessageHandlerCtx) signalOffer(session types.Session, payload *message.
 		return errors.New("webRTC peer does not exist")
 	}
 
-	err := peer.SetOffer(payload.SDP)
+	err := peer.SetRemoteDescription(webrtc.SessionDescription{
+		SDP:  payload.SDP,
+		Type: webrtc.SDPTypeOffer,
+	})
 	if err != nil {
 		return err
 	}
@@ -108,7 +112,10 @@ func (h *MessageHandlerCtx) signalAnswer(session types.Session, payload *message
 		return errors.New("webRTC peer does not exist")
 	}
 
-	return peer.SetAnswer(payload.SDP)
+	return peer.SetRemoteDescription(webrtc.SessionDescription{
+		SDP:  payload.SDP,
+		Type: webrtc.SDPTypeAnswer,
+	})
 }
 
 func (h *MessageHandlerCtx) signalCandidate(session types.Session, payload *message.SignalCandidate) error {
