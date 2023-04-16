@@ -50,6 +50,8 @@ const (
 )
 
 func New(desktop types.DesktopManager, capture types.CaptureManager, config *config.WebRTC) *WebRTCManagerCtx {
+	logger := log.With().Str("module", "webrtc").Logger()
+
 	configuration := webrtc.Configuration{
 		SDPSemantics: webrtc.SDPSemanticsUnifiedPlan,
 	}
@@ -75,7 +77,7 @@ func New(desktop types.DesktopManager, capture types.CaptureManager, config *con
 	}
 
 	return &WebRTCManagerCtx{
-		logger:  log.With().Str("module", "webrtc").Logger(),
+		logger:  logger,
 		config:  config,
 		metrics: newMetricsManager(),
 
@@ -83,8 +85,8 @@ func New(desktop types.DesktopManager, capture types.CaptureManager, config *con
 
 		desktop:     desktop,
 		capture:     capture,
-		curImage:    cursor.NewImage(desktop),
-		curPosition: cursor.NewPosition(),
+		curImage:    cursor.NewImage(logger, desktop),
+		curPosition: cursor.NewPosition(logger),
 	}
 }
 
@@ -96,8 +98,8 @@ type WebRTCManagerCtx struct {
 
 	desktop     types.DesktopManager
 	capture     types.CaptureManager
-	curImage    *cursor.ImageCtx
-	curPosition *cursor.PositionCtx
+	curImage    cursor.Image
+	curPosition cursor.Position
 
 	webrtcConfiguration webrtc.Configuration
 
@@ -168,7 +170,7 @@ func (manager *WebRTCManagerCtx) ICEServers() []types.ICEServer {
 	return manager.config.ICEServersFrontend
 }
 
-func (manager *WebRTCManagerCtx) newPeerConnection(bitrate int, codecs []codec.RTPCodec, logger zerolog.Logger) (*webrtc.PeerConnection, cc.BandwidthEstimator, error) {
+func (manager *WebRTCManagerCtx) newPeerConnection(logger zerolog.Logger, codecs []codec.RTPCodec, bitrate int) (*webrtc.PeerConnection, cc.BandwidthEstimator, error) {
 	// create media engine
 	engine := &webrtc.MediaEngine{}
 	for _, codec := range codecs {
@@ -288,17 +290,12 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int, 
 	video := manager.capture.Video()
 	videoCodec := video.Codec()
 
-	connection, estimator, err := manager.newPeerConnection(bitrate, []codec.RTPCodec{
+	connection, estimator, err := manager.newPeerConnection(logger, []codec.RTPCodec{
 		audioCodec,
 		videoCodec,
-	}, logger)
+	}, bitrate)
 	if err != nil {
 		return nil, err
-	}
-
-	// if bitrate is 0, and estimator is enabled, use estimator bitrate
-	if bitrate == 0 && estimator != nil {
-		bitrate = estimator.GetTargetBitrate()
 	}
 
 	// asynchronously send local ICE Candidates
@@ -315,6 +312,11 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int, 
 					ICECandidateInit: candidate.ToJSON(),
 				})
 		})
+	}
+
+	// if bitrate is 0, and estimator is enabled, use estimator bitrate
+	if bitrate == 0 && estimator != nil {
+		bitrate = estimator.GetTargetBitrate()
 	}
 
 	// audio track
@@ -531,42 +533,32 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int, 
 		metrics.SetState(state)
 	})
 
-	cursorImage := func(entry *cursor.ImageEntry) {
-		if err := peer.SendCursorImage(entry.Cursor, entry.Image); err != nil {
-			logger.Err(err).Msg("could not send cursor image")
-		}
-	}
-
-	cursorPosition := func(x, y int) {
-		if session.IsHost() {
-			return
-		}
-
-		if err := peer.SendCursorPosition(x, y); err != nil {
-			logger.Err(err).Msg("could not send cursor position")
-		}
-	}
-
 	dataChannel.OnOpen(func() {
-		manager.curImage.AddListener(&cursorImage)
-		manager.curPosition.AddListener(&cursorPosition)
+		manager.curImage.AddListener(peer)
+		manager.curPosition.AddListener(peer)
 
 		// send initial cursor image
-		entry, err := manager.curImage.Get()
+		cur, img, err := manager.curImage.GetCurrent()
 		if err == nil {
-			cursorImage(entry)
+			err := peer.SendCursorImage(cur, img)
+			if err != nil {
+				logger.Err(err).Msg("failed to set cursor image")
+			}
 		} else {
 			logger.Err(err).Msg("failed to get cursor image")
 		}
 
 		// send initial cursor position
 		x, y := manager.desktop.GetCursorPosition()
-		cursorPosition(x, y)
+		err = peer.SendCursorPosition(x, y)
+		if err != nil {
+			logger.Err(err).Msg("failed to set cursor position")
+		}
 	})
 
 	dataChannel.OnClose(func() {
-		manager.curImage.RemoveListener(&cursorImage)
-		manager.curPosition.RemoveListener(&cursorPosition)
+		manager.curImage.RemoveListener(peer)
+		manager.curPosition.RemoveListener(peer)
 	})
 
 	dataChannel.OnMessage(func(message webrtc.DataChannelMessage) {

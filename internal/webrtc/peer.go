@@ -226,6 +226,11 @@ func (peer *WebRTCPeerCtx) SendCursorPosition(x, y int) error {
 	peer.mu.Lock()
 	defer peer.mu.Unlock()
 
+	// do not send cursor position to host
+	if peer.session.IsHost() {
+		return nil
+	}
+
 	header := payload.Header{
 		Event:  payload.OP_CURSOR_POSITION,
 		Length: 7,

@@ -5,24 +5,34 @@ import (
 	"sync"
 
 	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 )
 
-func NewPosition() *PositionCtx {
-	return &PositionCtx{
-		logger:    log.With().Str("module", "webrtc").Str("submodule", "cursor-position").Logger(),
-		listeners: map[uintptr]*func(x, y int){},
+type PositionListener interface {
+	SendCursorPosition(x, y int) error
+}
+
+type Position interface {
+	Shutdown()
+	Set(x, y int)
+	AddListener(listener PositionListener)
+	RemoveListener(listener PositionListener)
+}
+
+type position struct {
+	logger zerolog.Logger
+
+	listeners   map[uintptr]PositionListener
+	listenersMu sync.RWMutex
+}
+
+func NewPosition(logger zerolog.Logger) *position {
+	return &position{
+		logger:    logger.With().Str("submodule", "cursor-position").Logger(),
+		listeners: map[uintptr]PositionListener{},
 	}
 }
 
-type PositionCtx struct {
-	logger zerolog.Logger
-
-	listeners   map[uintptr]*func(x, y int)
-	listenersMu sync.Mutex
-}
-
-func (manager *PositionCtx) Shutdown() {
+func (manager *position) Shutdown() {
 	manager.logger.Info().Msg("shutdown")
 
 	manager.listenersMu.Lock()
@@ -32,16 +42,18 @@ func (manager *PositionCtx) Shutdown() {
 	manager.listenersMu.Unlock()
 }
 
-func (manager *PositionCtx) Set(x, y int) {
-	manager.listenersMu.Lock()
-	defer manager.listenersMu.Unlock()
+func (manager *position) Set(x, y int) {
+	manager.listenersMu.RLock()
+	defer manager.listenersMu.RUnlock()
 
-	for _, emit := range manager.listeners {
-		(*emit)(x, y)
+	for _, l := range manager.listeners {
+		if err := l.SendCursorPosition(x, y); err != nil {
+			manager.logger.Err(err).Msg("failed to set cursor position")
+		}
 	}
 }
 
-func (manager *PositionCtx) AddListener(listener *func(x, y int)) {
+func (manager *position) AddListener(listener PositionListener) {
 	manager.listenersMu.Lock()
 	defer manager.listenersMu.Unlock()
 
@@ -51,7 +63,7 @@ func (manager *PositionCtx) AddListener(listener *func(x, y int)) {
 	}
 }
 
-func (manager *PositionCtx) RemoveListener(listener *func(x, y int)) {
+func (manager *position) RemoveListener(listener PositionListener) {
 	manager.listenersMu.Lock()
 	defer manager.listenersMu.Unlock()
 
