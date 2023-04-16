@@ -110,8 +110,8 @@ func (manager *image) getCached(serial uint64) (*imageEntry, error) {
 
 	if entry.Serial != serial {
 		manager.logger.Warn().
-			Uint64("requested_serial", serial).
-			Uint64("received_serial", entry.Serial).
+			Uint64("expected-serial", serial).
+			Uint64("received-serial", entry.Serial).
 			Msg("serial mismatch")
 	}
 
