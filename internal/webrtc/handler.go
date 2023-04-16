@@ -9,11 +9,15 @@ import (
 	"github.com/demodesk/neko/internal/webrtc/payload"
 	"github.com/demodesk/neko/pkg/types"
 	"github.com/pion/webrtc/v3"
+	"github.com/rs/zerolog"
 )
 
-func (manager *WebRTCManagerCtx) handle(data []byte, dataChannel *webrtc.DataChannel, session types.Session) error {
-	// add session id to logger context
-	logger := manager.logger.With().Str("session_id", session.ID()).Logger()
+func (manager *WebRTCManagerCtx) handle(
+	logger zerolog.Logger, data []byte,
+	dataChannel *webrtc.DataChannel,
+	session types.Session,
+) error {
+	isHost := session.IsHost()
 
 	//
 	// parse header
@@ -38,7 +42,7 @@ func (manager *WebRTCManagerCtx) handle(data []byte, dataChannel *webrtc.DataCha
 		}
 
 		x, y := int(payload.X), int(payload.Y)
-		if session.IsHost() {
+		if isHost {
 			// handle active cursor movement
 			manager.desktop.Move(x, y)
 			manager.curPosition.Set(x, y)
@@ -87,7 +91,7 @@ func (manager *WebRTCManagerCtx) handle(data []byte, dataChannel *webrtc.DataCha
 	}
 
 	// continue only if session is host
-	if !session.IsHost() {
+	if !isHost {
 		return nil
 	}
 
