@@ -106,11 +106,8 @@ func (peer *WebRTCPeerCtx) Destroy() {
 	peer.mu.Lock()
 	defer peer.mu.Unlock()
 
-	if peer.connection != nil {
-		err := peer.connection.Close()
-		peer.logger.Err(err).Msg("peer connection destroyed")
-		peer.connection = nil
-	}
+	err := peer.connection.Close()
+	peer.logger.Err(err).Msg("peer connection destroyed")
 }
 
 func (peer *WebRTCPeerCtx) estimatorReader() {

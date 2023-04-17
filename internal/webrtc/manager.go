@@ -487,7 +487,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int, 
 			session.SetWebRTCConnected(peer, true)
 		case webrtc.PeerConnectionStateDisconnected,
 			webrtc.PeerConnectionStateFailed:
-			connection.Close()
+			peer.Destroy()
 		case webrtc.PeerConnectionStateClosed:
 			// ensure we only run this once
 			once.Do(func() {
