@@ -23,6 +23,9 @@ void XEventLoop(char *name) {
     return;
   }
 
+  // save last size id for fullscreen bug fix
+  SizeID last_size_id;
+
   Atom WM_WINDOW_ROLE = XInternAtom(display, "WM_WINDOW_ROLE", 1);
   Atom XA_CLIPBOARD = XInternAtom(display, "CLIPBOARD", 0);
   XFixesSelectSelectionInput(display, root, XA_CLIPBOARD, XFixesSetSelectionOwnerNotifyMask);
@@ -75,27 +78,61 @@ void XEventLoop(char *name) {
       goXEventUnmapNotify(window);
       continue;
     }
+
+    // ClientMessage
+    if (event.type == ClientMessage) {
+      Window window = event.xclient.window;
+
+      // check for window manager state change
+      if (event.xclient.message_type == XInternAtom(display, "_NET_WM_STATE", 0)) {
+        // see documentation in XWindowManagerStateEvent
+        Atom action = event.xclient.data.l[0];
+        Atom first = event.xclient.data.l[1];
+        Atom second = event.xclient.data.l[2];
+
+        // check if user is entering or exiting fullscreen
+        if (first == XInternAtom(display, "_NET_WM_STATE_FULLSCREEN", 0)) {
+          // get current size id
+          Rotation current_rotation;
+          XRRScreenConfiguration *conf = XRRGetScreenInfo(display, root);
+          SizeID current_size_id = XRRConfigCurrentConfiguration(conf, &current_rotation);
+
+          // window just went fullscreen
+          if (action == 1) {
+            // save current size id
+            last_size_id = current_size_id;
+            continue;
+          }
+
+          // window just exited fullscreen
+          if (action == 0) {
+            // if size id changed, that means user changed resolution while in fullscreen
+            // there is a bug in some window managers that causes the window to not resize
+            // if it was previously maximized, so we need to unmaximize it and maximize it again
+            if (current_size_id != last_size_id) {
+              // toggle maximized state twice
+              XWindowManagerStateEvent(display, window, 2,
+                XInternAtom(display, "_NET_WM_STATE_MAXIMIZED_VERT", 0),
+                XInternAtom(display, "_NET_WM_STATE_MAXIMIZED_HORZ", 0));
+              XWindowManagerStateEvent(display, window, 2,
+                XInternAtom(display, "_NET_WM_STATE_MAXIMIZED_VERT", 0),
+                XInternAtom(display, "_NET_WM_STATE_MAXIMIZED_HORZ", 0));
+            }
+          }
+        }
+      }
+
+      continue;
+    }
+
   }
 
   XCloseDisplay(display);
 }
 
-void XFileChooserHide(Display *display, Window window) {
-  Window root = RootWindow(display, 0);
+static void XWindowManagerStateEvent(Display *display, Window window, ulong action, ulong first, ulong second) {
+  Window root = DefaultRootWindow(display);
 
-  // The WM_TRANSIENT_FOR property is defined by the [ICCCM] for managed windows.
-  // This specification extends the use of the property to override-redirect windows.
-  // If an override-redirect is a pop-up on behalf of another window, then the Client
-  // SHOULD set WM_TRANSIENT_FOR on the override-redirect to this other window.
-  //
-  // As an example, a Client should set WM_TRANSIENT_FOR on dropdown menus to the
-  // toplevel application window that contains the menubar.
-
-  // Remove WM_TRANSIENT_FOR
-  Atom WM_TRANSIENT_FOR = XInternAtom(display, "WM_TRANSIENT_FOR", 0);
-  XDeleteProperty(display, window, WM_TRANSIENT_FOR);
-
-  // Add _NET_WM_STATE_BELOW
   XClientMessageEvent clientMessageEvent;
   memset(&clientMessageEvent, 0, sizeof(clientMessageEvent));
 
@@ -115,9 +152,29 @@ void XFileChooserHide(Display *display, Window window) {
   clientMessageEvent.window       = window;
   clientMessageEvent.message_type = XInternAtom(display, "_NET_WM_STATE", 0);
   clientMessageEvent.format       = 32;
-  clientMessageEvent.data.l[0]    = 1;
-  clientMessageEvent.data.l[1]    = XInternAtom(display, "_NET_WM_STATE_BELOW", 0);
+  clientMessageEvent.data.l[0]    = action;
+  clientMessageEvent.data.l[1]    = first;
+  clientMessageEvent.data.l[2]    = second;
   clientMessageEvent.data.l[3]    = 1;
 
   XSendEvent(display, root, 0, SubstructureRedirectMask | SubstructureNotifyMask, (XEvent *)&clientMessageEvent);
+  XFlush(display);
+}
+
+void XFileChooserHide(Display *display, Window window) {
+  // The WM_TRANSIENT_FOR property is defined by the [ICCCM] for managed windows.
+  // This specification extends the use of the property to override-redirect windows.
+  // If an override-redirect is a pop-up on behalf of another window, then the Client
+  // SHOULD set WM_TRANSIENT_FOR on the override-redirect to this other window.
+  //
+  // As an example, a Client should set WM_TRANSIENT_FOR on dropdown menus to the
+  // toplevel application window that contains the menubar.
+
+  // Remove WM_TRANSIENT_FOR
+  Atom WM_TRANSIENT_FOR = XInternAtom(display, "WM_TRANSIENT_FOR", 0);
+  XDeleteProperty(display, window, WM_TRANSIENT_FOR);
+
+  // Add _NET_WM_STATE_BELOW
+  XWindowManagerStateEvent(display, window, 1, // set property
+    XInternAtom(display, "_NET_WM_STATE_BELOW", 0), 0);
 }
