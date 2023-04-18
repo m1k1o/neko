@@ -36,6 +36,7 @@
         :implicitControl="state.settings.implicit_hosting && session.profile.can_host"
         :inactiveCursors="state.settings.inactive_cursors && session.profile.sends_inactive_cursor"
         :fps="fps"
+        :hasMobileKeyboard="is_touch_device"
         @updateKeyboardModifiers="updateKeyboardModifiers($event)"
         @uploadDrop="uploadDrop($event)"
         @mobileKeyboardOpen="state.mobile_keyboard_open = $event"
@@ -138,6 +139,10 @@
     @Prop({ type: Number, default: 0 })
     private readonly fps!: number
 
+    // auto / touch / mouse
+    @Prop({ type: String, default: 'auto' })
+    private readonly inputMode!: String
+
     /////////////////////////////
     // Public state
     /////////////////////////////
@@ -234,6 +239,20 @@
 
     public get private_mode_enabled() {
       return this.state.settings.private_mode && !this.is_admin
+    }
+
+    public get is_touch_device() {
+      if (this.inputMode == 'mouse') return false
+      if (this.inputMode == 'touch') return true
+
+      return (
+        // check if the device has a touch screen
+        ('ontouchstart' in window || navigator.maxTouchPoints > 0) &&
+        // we also check if the device has a pointer
+        !matchMedia('(pointer:fine)').matches &&
+        // and is capable of hover, then it probably has a mouse
+        !matchMedia('(hover:hover)').matches
+      )
     }
 
     @Watch('private_mode_enabled')

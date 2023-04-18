@@ -112,6 +112,9 @@
     @Prop()
     private readonly fps!: number
 
+    @Prop()
+    private readonly hasMobileKeyboard!: boolean
+
     get cursor(): string {
       if (!this.isControling || !this.cursorImage) {
         return 'default'
@@ -119,10 +122,6 @@
 
       const { uri, x, y } = this.cursorImage
       return 'url(' + uri + ') ' + x + ' ' + y + ', default'
-    }
-
-    get isTouchDevice(): boolean {
-      return 'ontouchstart' in window || navigator.maxTouchPoints > 0
     }
 
     mounted() {
@@ -386,7 +385,7 @@
 
     onMouseEnter(e: MouseEvent) {
       // focus opens the keyboard on mobile (only for android)
-      if (!this.isTouchDevice) {
+      if (!this.hasMobileKeyboard) {
         this._textarea.focus()
       }
 
@@ -678,7 +677,7 @@
 
     public mobileKeyboardShow() {
       // skip if not a touch device
-      if (!this.isTouchDevice) return
+      if (!this.hasMobileKeyboard) return
 
       this.kbdShow = true
       this.kbdOpen = false
@@ -690,7 +689,7 @@
 
     public mobileKeyboardHide() {
       // skip if not a touch device
-      if (!this.isTouchDevice) return
+      if (!this.hasMobileKeyboard) return
 
       this.kbdShow = false
       this.kbdOpen = false
