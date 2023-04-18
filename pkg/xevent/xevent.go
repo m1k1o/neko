@@ -9,7 +9,6 @@ import "C"
 
 import (
 	"strings"
-	"time"
 	"unsafe"
 
 	"github.com/kataras/go-events"
@@ -51,10 +50,6 @@ func goXEventConfigureNotify(display *C.Display, window C.Window, name *C.char, 
 		return
 	}
 
-	C.XFileChooserHide(display, window)
-
-	// Because first dialog is not put properly to background
-	time.Sleep(10 * time.Millisecond)
 	C.XFileChooserHide(display, window)
 
 	if file_chooser_dialog_window == 0 {
