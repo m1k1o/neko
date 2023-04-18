@@ -16,7 +16,7 @@ static int XEventError(Display *display, XErrorEvent *event) {
 
 void XEventLoop(char *name) {
   Display *display = XOpenDisplay(name);
-  Window root = RootWindow(display, 0);
+  Window root = DefaultRootWindow(display);
 
   int xfixes_event_base, xfixes_error_base;
   if (!XFixesQueryExtension(display, &xfixes_event_base, &xfixes_error_base)) {

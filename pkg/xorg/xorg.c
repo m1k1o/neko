@@ -231,7 +231,7 @@ void XKey(KeySym keysym, int down) {
 
 Status XSetScreenConfiguration(int width, int height, short rate) {
   Display *display = getXDisplay();
-  Window root = RootWindow(display, 0);
+  Window root = DefaultRootWindow(display);
   XRRScreenConfiguration *conf = XRRGetScreenInfo(display, root);
 
   XRRScreenSize *xrrs;
@@ -260,7 +260,7 @@ Status XSetScreenConfiguration(int width, int height, short rate) {
 
 void XGetScreenConfiguration(int *width, int *height, short *rate) {
   Display *display = getXDisplay();
-  Window root = RootWindow(display, 0);
+  Window root = DefaultRootWindow(display);
   XRRScreenConfiguration *conf = XRRGetScreenInfo(display, root);
 
   Rotation current_rotation;
@@ -284,7 +284,7 @@ void XGetScreenConfiguration(int *width, int *height, short *rate) {
 
 void XGetScreenConfigurations() {
   Display *display = getXDisplay();
-  Window root = RootWindow(display, 0);
+  Window root = DefaultRootWindow(display);
   XRRScreenSize *xrrs;
   int num_sizes;
 
@@ -304,7 +304,7 @@ void XGetScreenConfigurations() {
 // Inspired by https://github.com/raboof/xrandr/blob/master/xrandr.c
 void XCreateScreenMode(int width, int height, short rate) {
   Display *display = getXDisplay();
-  Window root = RootWindow(display, 0);
+  Window root = DefaultRootWindow(display);
 
   char name[128];
   XRRModeInfo mode;
