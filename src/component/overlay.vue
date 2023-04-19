@@ -572,7 +572,7 @@
       if (this.cursorImage.width <= 1 && this.cursorImage.height <= 1) return
 
       // get intrinsic dimensions
-      let { width, height } = this.canvasSize
+      const { width, height } = this.canvasSize
 
       // reset transformation, X and Y will be 0 again
       this._ctx.setTransform(this.canvasScale, 0, 0, this.canvasScale, 0, 0)
@@ -619,7 +619,7 @@
       // reset transformation, X and Y will be 0 again
       this._ctx.setTransform(this.canvasScale, 0, 0, this.canvasScale, 0, 0)
 
-      const { width, height } = this._overlay
+      const { width, height } = this.canvasSize
       this._ctx.clearRect(0, 0, width, height)
     }
 
