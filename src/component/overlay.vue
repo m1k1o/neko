@@ -138,6 +138,9 @@
       const { width, height } = this._overlay.getBoundingClientRect()
       this.canvasResize({ width, height })
 
+      // react to pixel ratio changes
+      this.onPixelRatioChange()
+
       let ctrlKey = 0
       let noKeyUp = {} as Record<number, boolean>
 
@@ -209,6 +212,11 @@
 
       // stop inactive cursor interval if exists
       this.clearInactiveCursorInterval()
+
+      // stop pixel ratio change listener
+      if (this.unsubscribePixelRatioChange) {
+        this.unsubscribePixelRatioChange()
+      }
     }
 
     getMousePos(clientX: number, clientY: number) {
@@ -498,6 +506,22 @@
     private cursorLastTime = 0
     private canvasRequestedFrame = false
     private canvasRenderTimeout: number | null = null
+
+    private unsubscribePixelRatioChange?: () => void
+    private onPixelRatioChange() {
+      if (this.unsubscribePixelRatioChange) {
+        this.unsubscribePixelRatioChange()
+      }
+
+      const media = matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`)
+      media.addEventListener('change', this.onPixelRatioChange)
+      this.unsubscribePixelRatioChange = () => {
+        media.removeEventListener('change', this.onPixelRatioChange)
+      }
+
+      this.canvasScale = window.devicePixelRatio
+      this.onCanvasSizeChange(this.canvasSize)
+    }
 
     @Watch('canvasSize')
     onCanvasSizeChange({ width, height }: Dimension) {

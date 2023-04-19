@@ -69,11 +69,35 @@
       const { width, height } = this._overlay.getBoundingClientRect()
       this.canvasResize({ width, height })
 
+      // react to pixel ratio changes
+      this.onPixelRatioChange()
+
       // store last drawing points
       this._last_points = {}
     }
 
-    beforeDestroy() {}
+    beforeDestroy() {
+      // stop pixel ratio change listener
+      if (this.unsubscribePixelRatioChange) {
+        this.unsubscribePixelRatioChange()
+      }
+    }
+
+    private unsubscribePixelRatioChange?: () => void
+    private onPixelRatioChange() {
+      if (this.unsubscribePixelRatioChange) {
+        this.unsubscribePixelRatioChange()
+      }
+
+      const media = matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`)
+      media.addEventListener('change', this.onPixelRatioChange)
+      this.unsubscribePixelRatioChange = () => {
+        media.removeEventListener('change', this.onPixelRatioChange)
+      }
+
+      this.canvasScale = window.devicePixelRatio
+      this.onCanvasSizeChange(this.canvasSize)
+    }
 
     @Watch('canvasSize')
     onCanvasSizeChange({ width, height }: Dimension) {
