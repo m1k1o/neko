@@ -249,9 +249,9 @@
         // check if the device has a touch screen
         ('ontouchstart' in window || navigator.maxTouchPoints > 0) &&
         // we also check if the device has a pointer
-        !matchMedia('(pointer:fine)').matches &&
+        !window.matchMedia('(pointer:fine)').matches &&
         // and is capable of hover, then it probably has a mouse
-        !matchMedia('(hover:hover)').matches
+        !window.matchMedia('(hover:hover)').matches
       )
     }
 

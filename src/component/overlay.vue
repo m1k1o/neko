@@ -513,7 +513,7 @@
         this.unsubscribePixelRatioChange()
       }
 
-      const media = matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`)
+      const media = window.matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`)
       media.addEventListener('change', this.onPixelRatioChange)
       this.unsubscribePixelRatioChange = () => {
         media.removeEventListener('change', this.onPixelRatioChange)
