@@ -4,6 +4,7 @@
 
 ### New Features
 - Added nvidia support for firefox.
+- Added `?lang=<lang>` parameter to the URL, which will set the language of the interface (by @mbattista).
 
 ## [n.eko v2.8.0](https://github.com/m1k1o/neko/releases/tag/v2.8.0)
 

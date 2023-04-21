@@ -76,5 +76,12 @@
     about() {
       this.$accessor.client.toggleAbout()
     }
+
+    mounted() {
+      const default_lang = new URL(location.href).searchParams.get('lang')
+      if (default_lang && this.langs.includes(default_lang)) {
+        this.$i18n.locale = default_lang
+      }
+    }
   }
 </script>

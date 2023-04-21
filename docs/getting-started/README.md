@@ -255,6 +255,7 @@ NEKO_BROADCAST_PIPELINE: "flvmux name=mux ! rtmpsink location={url} pulsesrc dev
   - Adding `?cast=1` will hide all control and show only video.
   - Adding `?embed=1` will hide most additional components and show only video.
   - Adding `?volume=<0-1>` will set volume to given value.
+  - Adding `?lang=<language>` will set language to given value.
   - e.g. `http(s)://<URL:Port>/?pwd=neko&usr=guest&cast=1`
 
 ### Screen size
