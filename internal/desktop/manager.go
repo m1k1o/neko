@@ -45,6 +45,7 @@ func (manager *DesktopManagerCtx) Start() {
 		Str("screen_size", fmt.Sprintf("%dx%d@%d", width, height, rate)).
 		Msgf("setting initial screen size")
 
+	xevent.Unminimize = manager.config.Unminimize
 	go xevent.EventLoop(manager.config.Display)
 
 	// In case it was opened

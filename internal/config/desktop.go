@@ -12,6 +12,8 @@ import (
 type Desktop struct {
 	Display string
 
+	Unminimize bool
+
 	ScreenWidth  int
 	ScreenHeight int
 	ScreenRate   int16
@@ -23,12 +25,19 @@ func (Desktop) Init(cmd *cobra.Command) error {
 		return err
 	}
 
+	cmd.PersistentFlags().Bool("desktop.unminimize", true, "automatically unminimize window when it is minimized")
+	if err := viper.BindPFlag("desktop.unminimize", cmd.PersistentFlags().Lookup("desktop.unminimize")); err != nil {
+		return err
+	}
+
 	return nil
 }
 
 func (s *Desktop) Set() {
 	// Display is provided by env variable
 	s.Display = os.Getenv("DISPLAY")
+
+	s.Unminimize = viper.GetBool("desktop.unminimize")
 
 	s.ScreenWidth = 1280
 	s.ScreenHeight = 720

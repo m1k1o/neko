@@ -83,7 +83,7 @@ void XEventLoop(char *name) {
     if (event.type == ClientMessage) {
       Window window = event.xclient.window;
 
-      // check for window manager state change
+      // check for net window manager state (fullscreen, maximized, etc)
       if (event.xclient.message_type == XInternAtom(display, "_NET_WM_STATE", 0)) {
         // see documentation in XWindowManagerStateEvent
         Atom action = event.xclient.data.l[0];
@@ -120,6 +120,15 @@ void XEventLoop(char *name) {
             }
           }
         }
+      }
+
+      // check for window manager change state (minimize, maximize, etc)
+      if (event.xclient.message_type == XInternAtom(display, "WM_CHANGE_STATE", 0)) {
+        int window_state = event.xclient.data.l[0];
+        // NormalState - The client's top-level window is viewable.
+        // IconicState - The client's top-level window is iconic (whatever that means for this window manager).
+        // WithdrawnState - Neither the client's top-level window nor its icon is visible.
+        goXEventWMChangeState(display, window, window_state);
       }
 
       continue;

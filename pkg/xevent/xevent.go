@@ -15,6 +15,7 @@ import (
 )
 
 var Emmiter events.EventEmmiter
+var Unminimize bool = false
 var file_chooser_dialog_window uint32 = 0
 
 func init() {
@@ -66,6 +67,17 @@ func goXEventUnmapNotify(window C.Window) {
 
 	file_chooser_dialog_window = 0
 	Emmiter.Emit("file-chooser-dialog-closed")
+}
+
+//export goXEventWMChangeState
+func goXEventWMChangeState(display *C.Display, window C.Window, window_state C.ulong) {
+	// if we just realized that window is minimized and we want it to be unminimized
+	if window_state != C.NormalState && Unminimize {
+		// we want to unmap and map the window to force it to redraw
+		C.XUnmapWindow(display, window)
+		C.XMapWindow(display, window)
+		C.XFlush(display)
+	}
 }
 
 //export goXEventError

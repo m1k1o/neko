@@ -12,6 +12,7 @@ extern void goXEventCursorChanged(XFixesCursorNotifyEvent event);
 extern void goXEventClipboardUpdated();
 extern void goXEventConfigureNotify(Display *display, Window window, char *name, char *role);
 extern void goXEventUnmapNotify(Window window);
+extern void goXEventWMChangeState(Display *display, Window window, ulong state);
 extern void goXEventError(XErrorEvent *event, char *message);
 extern int goXEventActive();
 
