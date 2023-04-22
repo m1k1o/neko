@@ -19,6 +19,8 @@ export async function getFilesFromDataTansfer(dataTransfer: DataTransfer): Promi
   }
 
   const promises: Array<Promise<any>> = []
+  // Type 'DataTransferItemList' is not an array type or a string type. Use compiler option '--downlevelIteration' to allow iterating of iterators.
+  // @ts-ignore
   for (const item of dataTransfer.items) {
     if ('webkitGetAsEntry' in item) {
       promises.push(traverse(item.webkitGetAsEntry()))
@@ -29,6 +31,8 @@ export async function getFilesFromDataTansfer(dataTransfer: DataTransfer): Promi
   }
 
   if (promises.length === 0) {
+    // Type 'FileList' is not an array type or a string type. Use compiler option '--downlevelIteration' to allow iterating of iterators.
+    // @ts-ignore
     return [...dataTransfer.files]
   }
 

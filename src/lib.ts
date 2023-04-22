@@ -18,5 +18,4 @@ if (typeof window !== 'undefined' && window.Vue) {
   window.Vue.use(NekoElements, {})
 }
 
-export { Neko }
-export default NekoElements
+export default Neko

@@ -8,10 +8,11 @@
   },
   "main": "dist/neko.umd.js",
   "module": "dist/neko.common.js",
+  "typings": "dist/types/main.d.ts",
   "scripts": {
     "serve": "vue-cli-service serve --mode development",
     "lint": "vue-cli-service lint",
-    "build": "vue-cli-service build --target lib --name neko ./src/index.ts",
+    "build": "vue-cli-service build --target lib --name neko ./src/lib.ts && ./types-build.sh",
     "build:page": "vue-cli-service build"
   },
   "dependencies": {
