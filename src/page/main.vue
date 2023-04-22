@@ -442,7 +442,7 @@
       })
       this.neko.events.on('connection.closed', (error?: Error) => {
         if (error) {
-          alert('Connection closed with error:' + error.message)
+          alert('Connection closed with error: ' + error.message)
         } else {
           alert('Connection closed without error.')
         }

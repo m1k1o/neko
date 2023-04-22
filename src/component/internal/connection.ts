@@ -23,6 +23,7 @@ export interface NekoConnectionEvents {
 
 export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
   private _open = false
+  private _closing = false
 
   public websocket = new NekoWebSocket()
   public logger = new NekoLoggerFactory(this.websocket)
@@ -204,18 +205,24 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
   }
 
   public close(error?: Error) {
-    if (this._open) {
+    // we want to make sure that close event is only emitted once
+    // and is not intercepted by any other close event
+    const active = this._open && !this._closing
+
+    if (active) {
       // set state to disconnected
       Vue.set(this._state.websocket, 'connected', false)
       Vue.set(this._state.webrtc, 'connected', false)
       Vue.set(this._state, 'status', 'disconnected')
+      this._closing = true
     }
 
     // close all reconnectors
     Object.values(this._reconnector).forEach((r) => r.close())
 
-    if (this._open) {
+    if (active) {
       this._open = false
+      this._closing = false
       this.emit('close', error)
     }
   }
