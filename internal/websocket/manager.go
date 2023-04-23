@@ -207,19 +207,18 @@ func (manager *WebSocketManagerCtx) Upgrade(checkOrigin types.CheckOrigin) types
 }
 
 func (manager *WebSocketManagerCtx) connect(connection *websocket.Conn, r *http.Request) {
-	// create new peer
-	peer := newPeer(connection)
-
 	session, err := manager.sessions.Authenticate(r)
 	if err != nil {
 		manager.logger.Warn().Err(err).Msg("authentication failed")
-		peer.Destroy(err.Error())
+		newPeer(manager.logger, connection).Destroy(err.Error())
 		return
 	}
 
 	// add session id to all log messages
 	logger := manager.logger.With().Str("session_id", session.ID()).Logger()
-	peer.setSessionID(session.ID())
+
+	// create new peer
+	peer := newPeer(logger, connection)
 
 	if !session.Profile().CanConnect {
 		logger.Warn().Msg("connection disabled")
@@ -238,14 +237,12 @@ func (manager *WebSocketManagerCtx) connect(connection *websocket.Conn, r *http.
 		logger.Info().Msg("replacing peer connection")
 	}
 
-	session.SetWebSocketPeer(peer)
-
 	logger.Info().
 		Str("address", connection.RemoteAddr().String()).
 		Str("agent", r.UserAgent()).
 		Msg("connection started")
 
-	session.SetWebSocketConnected(peer, true, false)
+	session.ConnectWebSocketPeer(peer)
 
 	// this is a blocking function that lives
 	// throughout whole websocket connection
@@ -277,7 +274,7 @@ func (manager *WebSocketManagerCtx) connect(connection *websocket.Conn, r *http.
 		}
 	}
 
-	session.SetWebSocketConnected(peer, false, delayedDisconnect)
+	session.DisconnectWebSocketPeer(peer, delayedDisconnect)
 }
 
 func (manager *WebSocketManagerCtx) handle(connection *websocket.Conn, peer types.WebSocketPeer, session types.Session) error {

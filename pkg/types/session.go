@@ -46,9 +46,9 @@ type Session interface {
 	SetCursor(cursor Cursor)
 
 	// websocket
-	SetWebSocketPeer(websocketPeer WebSocketPeer)
-	SetWebSocketConnected(websocketPeer WebSocketPeer, connected bool, delayed bool)
-	GetWebSocketPeer() WebSocketPeer
+	ConnectWebSocketPeer(websocketPeer WebSocketPeer)
+	DisconnectWebSocketPeer(websocketPeer WebSocketPeer, delayed bool)
+	DestroyWebSocketPeer(reason string)
 	Send(event string, payload any)
 
 	// webrtc

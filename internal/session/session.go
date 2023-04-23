@@ -51,7 +51,7 @@ func (session *SessionCtx) profileChanged() {
 	}
 
 	if (!session.profile.CanConnect || !session.profile.CanLogin) && session.state.IsConnected {
-		session.GetWebSocketPeer().Destroy("profile changed")
+		session.DestroyWebSocketPeer("profile changed")
 	}
 
 	// update webrtc paused state
@@ -82,29 +82,48 @@ func (session *SessionCtx) SetCursor(cursor types.Cursor) {
 // websocket
 // ---
 
-func (session *SessionCtx) SetWebSocketPeer(websocketPeer types.WebSocketPeer) {
+//
+// Connect WebSocket peer sets current peer and emits connected event. It also destroys the
+// previous peer, if there was one. If the peer is already set, it will be ignored.
+//
+func (session *SessionCtx) ConnectWebSocketPeer(websocketPeer types.WebSocketPeer) {
 	session.websocketMu.Lock()
+	isCurrentPeer := websocketPeer == session.websocketPeer
 	session.websocketPeer, websocketPeer = websocketPeer, session.websocketPeer
 	session.websocketMu.Unlock()
 
-	if websocketPeer != nil && websocketPeer != session.websocketPeer {
+	// ignore if already set
+	if isCurrentPeer {
+		return
+	}
+
+	session.logger.Info().Msg("set websocket connected")
+	session.state.IsConnected = true
+	session.manager.emmiter.Emit("connected", session)
+
+	// if there is a previous peer, destroy it
+	if websocketPeer != nil {
 		websocketPeer.Destroy("connection replaced")
 	}
 }
 
-func (session *SessionCtx) SetWebSocketConnected(websocketPeer types.WebSocketPeer, connected bool, delayed bool) {
+//
+// Disconnect WebSocket peer sets current peer to nil and emits disconnected event. It also
+// allows for a delayed disconnect. That means, the peer will not be disconnected immediately,
+// but after a delay. If the peer is connected again before the delay, the disconnect will be
+// cancelled.
+//
+// If the peer is not the current peer or the peer is nil, it will be ignored.
+//
+func (session *SessionCtx) DisconnectWebSocketPeer(websocketPeer types.WebSocketPeer, delayed bool) {
 	session.websocketMu.Lock()
-	isCurrentPeer := websocketPeer == session.websocketPeer
+	isCurrentPeer := websocketPeer == session.websocketPeer && websocketPeer != nil
 	session.websocketMu.Unlock()
 
+	// ignore if not current peer
 	if !isCurrentPeer {
 		return
 	}
-
-	session.logger.Info().
-		Bool("connected", connected).
-		Bool("delayed", delayed).
-		Msg("set websocket connected")
 
 	//
 	// ws delayed
@@ -114,7 +133,7 @@ func (session *SessionCtx) SetWebSocketConnected(websocketPeer types.WebSocketPe
 
 	if delayed {
 		wsDelayedTimer = time.AfterFunc(WS_DELAYED_DURATION, func() {
-			session.SetWebSocketConnected(websocketPeer, connected, false)
+			session.DisconnectWebSocketPeer(websocketPeer, false)
 		})
 	}
 
@@ -126,6 +145,7 @@ func (session *SessionCtx) SetWebSocketConnected(websocketPeer types.WebSocketPe
 	session.wsDelayedMu.Unlock()
 
 	if delayed {
+		session.logger.Info().Msg("delayed websocket disconnected")
 		return
 	}
 
@@ -133,13 +153,8 @@ func (session *SessionCtx) SetWebSocketConnected(websocketPeer types.WebSocketPe
 	// not delayed
 	//
 
-	session.state.IsConnected = connected
-
-	if connected {
-		session.manager.emmiter.Emit("connected", session)
-		return
-	}
-
+	session.logger.Info().Msg("set websocket disconnected")
+	session.state.IsConnected = false
 	session.manager.emmiter.Emit("disconnected", session)
 
 	session.websocketMu.Lock()
@@ -149,15 +164,34 @@ func (session *SessionCtx) SetWebSocketConnected(websocketPeer types.WebSocketPe
 	session.websocketMu.Unlock()
 }
 
-func (session *SessionCtx) GetWebSocketPeer() types.WebSocketPeer {
+//
+// Destroy WebSocket peer disconnects the peer and destroys it. It ensures that the peer is
+// disconnected immediately even though normal flow would be to disconnect it delayed.
+//
+func (session *SessionCtx) DestroyWebSocketPeer(reason string) {
 	session.websocketMu.Lock()
-	defer session.websocketMu.Unlock()
+	peer := session.websocketPeer
+	session.websocketMu.Unlock()
 
-	return session.websocketPeer
+	if peer == nil {
+		return
+	}
+
+	// disconnect peer first, so that it is not used anymore
+	session.DisconnectWebSocketPeer(peer, false)
+
+	// destroy it afterwards
+	peer.Destroy(reason)
 }
 
+//
+// Send event to websocket peer.
+//
 func (session *SessionCtx) Send(event string, payload any) {
-	peer := session.GetWebSocketPeer()
+	session.websocketMu.Lock()
+	peer := session.websocketPeer
+	session.websocketMu.Unlock()
+
 	if peer != nil {
 		peer.Send(event, payload)
 	}
@@ -167,6 +201,9 @@ func (session *SessionCtx) Send(event string, payload any) {
 // webrtc
 // ---
 
+//
+// Set webrtc peer and destroy the old one, if there is old one.
+//
 func (session *SessionCtx) SetWebRTCPeer(webrtcPeer types.WebRTCPeer) {
 	session.webrtcMu.Lock()
 	session.webrtcPeer, webrtcPeer = webrtcPeer, session.webrtcPeer
@@ -177,6 +214,14 @@ func (session *SessionCtx) SetWebRTCPeer(webrtcPeer types.WebRTCPeer) {
 	}
 }
 
+//
+// Set if current webrtc peer is connected or not. Since there might be lefover calls from
+// webrtc peer, that are not used anymore, we need to check if the webrtc peer is still the
+// same as the one we are setting the connected state for.
+//
+// If webrtc peer is disconnected, we don't expect it to be reconnected, so we set it to nil
+// and send a signal close to the client. New connection is expected to use a new webrtc peer.
+//
 func (session *SessionCtx) SetWebRTCConnected(webrtcPeer types.WebRTCPeer, connected bool) {
 	session.webrtcMu.Lock()
 	isCurrentPeer := webrtcPeer == session.webrtcPeer
@@ -209,6 +254,9 @@ func (session *SessionCtx) SetWebRTCConnected(webrtcPeer types.WebRTCPeer, conne
 	}
 }
 
+//
+// Get current WebRTC peer. Nil if not connected.
+//
 func (session *SessionCtx) GetWebRTCPeer() types.WebRTCPeer {
 	session.webrtcMu.Lock()
 	defer session.webrtcMu.Unlock()

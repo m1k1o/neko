@@ -142,7 +142,7 @@ func (manager *SessionManagerCtx) Delete(id string) error {
 	manager.sessionsMu.Unlock()
 
 	if session.State().IsConnected {
-		session.GetWebSocketPeer().Destroy("session deleted")
+		session.DestroyWebSocketPeer("session deleted")
 	}
 
 	if session.State().IsWatching {
