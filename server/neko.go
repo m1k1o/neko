@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
+	"strings"
 
 	"m1k1o/neko/internal/capture"
 	"m1k1o/neko/internal/config"
@@ -25,7 +26,7 @@ const Header = `&34
   /  |/ / _ \/ //_/ __ \   )  ( ')
  / /|  /  __/ ,< / /_/ /  (  /  )
 /_/ |_/\___/_/|_|\____/    \(__)|
-&1&37 nurdism/m1k1o &33%s v%s&0
+&1&37  nurdism/m1k1o &33%s %s&0
 `
 
 var (
@@ -35,13 +36,8 @@ var (
 	gitCommit = "dev"
 	//
 	gitBranch = "dev"
-
-	// Major version when you make incompatible API changes,
-	major = "2"
-	// Minor version when you add functionality in a backwards-compatible manner, and
-	minor = "8"
-	// Patch version when you make backwards-compatible bug fixes.
-	patch = "0"
+	//
+	gitTag = "dev"
 )
 
 var Service *Neko
@@ -49,11 +45,9 @@ var Service *Neko
 func init() {
 	Service = &Neko{
 		Version: &Version{
-			Major:     major,
-			Minor:     minor,
-			Patch:     patch,
 			GitCommit: gitCommit,
 			GitBranch: gitBranch,
+			GitTag:    gitTag,
 			BuildDate: buildDate,
 			GoVersion: runtime.Version(),
 			Compiler:  runtime.Compiler,
@@ -69,11 +63,9 @@ func init() {
 }
 
 type Version struct {
-	Major     string
-	Minor     string
-	Patch     string
 	GitCommit string
 	GitBranch string
+	GitTag    string
 	BuildDate string
 	GoVersion string
 	Compiler  string
@@ -81,20 +73,25 @@ type Version struct {
 }
 
 func (i *Version) String() string {
-	return fmt.Sprintf("%s.%s.%s %s", i.Major, i.Minor, i.Patch, i.GitCommit)
+	version := i.GitTag
+	if version == "" || version == "dev" {
+		version = i.GitBranch
+	}
+
+	return fmt.Sprintf("%s@%s", version, i.GitCommit)
 }
 
 func (i *Version) Details() string {
-	return fmt.Sprintf(
-		"%s\n%s\n%s\n%s\n%s\n%s\n%s\n",
-		fmt.Sprintf("Version %s.%s.%s", i.Major, i.Minor, i.Patch),
+	return "\n" + strings.Join([]string{
+		fmt.Sprintf("Version %s", i.String()),
 		fmt.Sprintf("GitCommit %s", i.GitCommit),
 		fmt.Sprintf("GitBranch %s", i.GitBranch),
+		fmt.Sprintf("GitTag %s", i.GitTag),
 		fmt.Sprintf("BuildDate %s", i.BuildDate),
 		fmt.Sprintf("GoVersion %s", i.GoVersion),
 		fmt.Sprintf("Compiler %s", i.Compiler),
 		fmt.Sprintf("Platform %s", i.Platform),
-	)
+	}, "\n") + "\n"
 }
 
 type Neko struct {

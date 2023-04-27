@@ -27,7 +27,7 @@ RUN set -eux; apt-get update; \
 #
 # build server
 COPY server/ .
-RUN go get -v -t -d . && go build -o bin/neko cmd/neko/main.go
+RUN ./build
 
 #
 # STAGE 2: CLIENT
