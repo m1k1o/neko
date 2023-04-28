@@ -33,6 +33,9 @@ type Settings struct {
 	ImplicitHosting   bool `json:"implicit_hosting"`
 	InactiveCursors   bool `json:"inactive_cursors"`
 	MercifulReconnect bool `json:"merciful_reconnect"`
+
+	// plugin scope
+	Plugins map[string]any `json:"plugins"`
 }
 
 type Session interface {
