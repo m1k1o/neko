@@ -6,6 +6,9 @@
 - Added nvidia support for firefox.
 - Added `?lang=<lang>` parameter to the URL, which will set the language of the interface (by @mbattista).
 
+### Misc
+- Git commit and tag are now included in the build when creating a docker image.
+
 ## [n.eko v2.8.0](https://github.com/m1k1o/neko/releases/tag/v2.8.0)
 
 ### New Features

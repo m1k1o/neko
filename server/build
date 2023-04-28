@@ -1,24 +1,35 @@
 #!/bin/bash
 
-set -ex
+#
+# aborting if any command returns a non-zero value
+set -e
 
 BUILD_TIME=`date -u +'%Y-%m-%dT%H:%M:%SZ'`
 
 #
 # set git build variables if git exists
-if git status > /dev/null 2>&1 && [ -z $GIT_COMMIT ] && [ -z $GIT_BRANCH ] && [ -z $GIT_DIRTY ];
+if git status > /dev/null 2>&1 && [ -z $GIT_COMMIT ] && [ -z $GIT_BRANCH ] && [ -z $GIT_TAG ];
 then
     GIT_COMMIT=`git rev-parse --short HEAD`
     GIT_BRANCH=`git rev-parse --symbolic-full-name --abbrev-ref HEAD`
+    GIT_TAG=`git tag --points-at $GIT_COMMIT | head -n 1`
     GIT_DIRTY=`git diff-index --quiet HEAD -- || echo "✗-"`
+    GIT_COMMIT="${GIT_DIRTY}${GIT_COMMIT}"
 fi
 
+#
+# load dependencies
+go get -v -t -d .
+
+#
+# build server
 go build \
     -o bin/neko \
     -ldflags "
         -s -w
         -X 'm1k1o/neko.buildDate=${BUILD_TIME}'
-        -X 'm1k1o/neko.gitCommit=${GIT_DIRTY}${GIT_COMMIT}'
+        -X 'm1k1o/neko.gitCommit=${GIT_COMMIT}'
         -X 'm1k1o/neko.gitBranch=${GIT_BRANCH}'
+        -X 'm1k1o/neko.gitTag=${GIT_TAG}'
     " \
     cmd/neko/main.go;
