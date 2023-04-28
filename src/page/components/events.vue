@@ -333,14 +333,46 @@
           </td>
         </tr>
         <tr>
-          <th class="middle">screen.sync</th>
+          <th class="middle">screen.sync.enabled</th>
           <td>
             <div class="space-between">
-              <span>{{ neko.state.screen.sync }}</span>
-              <button @click="neko.state.screen.sync = !neko.state.screen.sync">
+              <span>{{ neko.state.screen.sync.enabled }}</span>
+              <button @click="neko.state.screen.sync.enabled = !neko.state.screen.sync.enabled">
                 <i class="fas fa-toggle-on"></i>
               </button>
             </div>
+          </td>
+        </tr>
+        <tr>
+          <th rowspan="2">screen.sync.multiplier</th>
+          <td>{{ neko.state.screen.sync.multiplier || 'use device pixel ratio' }}</td>
+        </tr>
+        <tr>
+          <td>
+            <input
+              type="range"
+              min="0"
+              max="10"
+              :value="neko.state.screen.sync.multiplier"
+              @input="neko.state.screen.sync.multiplier = Number($event.target.value)"
+              step="0.1"
+            />
+          </td>
+        </tr>
+        <tr>
+          <th rowspan="2">screen.sync.rate</th>
+          <td>{{ neko.state.screen.sync.rate }}</td>
+        </tr>
+        <tr>
+          <td>
+            <input
+              type="range"
+              min="5"
+              max="60"
+              :value="neko.state.screen.sync.rate"
+              @input="neko.state.screen.sync.rate = Number($event.target.value)"
+              step="5"
+            />
           </td>
         </tr>
       </template>

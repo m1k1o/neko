@@ -202,7 +202,11 @@
           rate: 30,
         },
         configurations: [],
-        sync: false,
+        sync: {
+          enabled: false,
+          multiplier: 0,
+          rate: 30,
+        },
       },
       session_id: null,
       sessions: {},
@@ -453,6 +457,12 @@
       }
     }
 
+    public setScreenSync(enabled: boolean = true, multiplier: number = 0, rate: number = 60) {
+      Vue.set(this.state.screen.sync, 'enabled', enabled)
+      Vue.set(this.state.screen.sync, 'multiplier', multiplier)
+      Vue.set(this.state.screen.sync, 'rate', rate)
+    }
+
     public setCursorDrawFunction(fn?: CursorDrawFunction) {
       Vue.set(this, 'cursorDrawFunction', fn)
     }
@@ -599,9 +609,9 @@
       this.connection.websocket.send(EVENT.KEYBOARD_MODIFIERS, modifiers)
     }
 
-    @Watch('state.screen.sync')
+    @Watch('state.screen.sync.enabled')
     onScreenSyncChange() {
-      if (this.state.screen.sync) {
+      if (this.state.screen.sync.enabled) {
         this.syncScreenSize()
         window.addEventListener('resize', this.syncScreenSize)
       } else {
@@ -615,12 +625,13 @@
         window.clearTimeout(this.syncScreenSizeTimeout)
       }
       this.syncScreenSizeTimeout = window.setTimeout(() => {
+        const multiplier = this.state.screen.sync.multiplier || window.devicePixelRatio
         this.syncScreenSizeTimeout = 0
         const { offsetWidth, offsetHeight } = this._component
         this.setScreenSize(
-          Math.round(offsetWidth * window.devicePixelRatio),
-          Math.round(offsetHeight * window.devicePixelRatio),
-          60, // TODO: make it configurable?
+          Math.round(offsetWidth * multiplier),
+          Math.round(offsetHeight * multiplier),
+          this.state.screen.sync.rate,
         )
       }, SCREEN_SYNC_THROTTLE)
     }
