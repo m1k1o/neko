@@ -192,6 +192,10 @@
       }
       this.keyboard.listenTo(this._textarea)
 
+      this._textarea.addEventListener('touchstart', this.onTouchHandler, { passive: false })
+      this._textarea.addEventListener('touchmove', this.onTouchHandler, { passive: false })
+      this._textarea.addEventListener('touchend', this.onTouchHandler, { passive: false })
+
       this.webrtc.addListener('cursor-position', this.onCursorPosition)
       this.webrtc.addListener('cursor-image', this.onCursorImage)
       this.webrtc.addListener('disconnected', this.canvasClear)
@@ -205,6 +209,10 @@
         this.keyboard.removeListener()
       }
 
+      this._textarea.removeEventListener('touchstart', this.onTouchHandler)
+      this._textarea.removeEventListener('touchmove', this.onTouchHandler)
+      this._textarea.removeEventListener('touchend', this.onTouchHandler)
+
       this.webrtc.removeListener('cursor-position', this.onCursorPosition)
       this.webrtc.removeListener('cursor-image', this.onCursorImage)
       this.webrtc.removeListener('disconnected', this.canvasClear)
@@ -217,6 +225,36 @@
       if (this.unsubscribePixelRatioChange) {
         this.unsubscribePixelRatioChange()
       }
+    }
+
+    onTouchHandler(e: TouchEvent) {
+      let type = ''
+      switch (e.type) {
+        case 'touchstart':
+          type = 'mousedown'
+          break
+        case 'touchmove':
+          type = 'mousemove'
+          break
+        case 'touchend':
+          type = 'mouseup'
+          break
+        default:
+          // unknown event
+          return
+      }
+
+      const touch = e.changedTouches[0]
+      touch.target.dispatchEvent(
+        new MouseEvent(type, {
+          button: 0, // currently only left button is supported
+          clientX: touch.clientX,
+          clientY: touch.clientY,
+        }),
+      )
+
+      e.preventDefault()
+      e.stopPropagation()
     }
 
     getMousePos(clientX: number, clientY: number) {
