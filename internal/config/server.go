@@ -1,6 +1,8 @@
 package config
 
 import (
+	"path"
+
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -8,13 +10,14 @@ import (
 )
 
 type Server struct {
-	Cert    string
-	Key     string
-	Bind    string
-	Static  string
-	PProf   bool
-	Metrics bool
-	CORS    []string
+	Cert       string
+	Key        string
+	Bind       string
+	Static     string
+	PathPrefix string
+	PProf      bool
+	Metrics    bool
+	CORS       []string
 }
 
 func (Server) Init(cmd *cobra.Command) error {
@@ -35,6 +38,11 @@ func (Server) Init(cmd *cobra.Command) error {
 
 	cmd.PersistentFlags().String("server.static", "", "path to neko client files to serve")
 	if err := viper.BindPFlag("server.static", cmd.PersistentFlags().Lookup("server.static")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().String("server.path_prefix", "/", "path prefix for HTTP requests")
+	if err := viper.BindPFlag("server.path_prefix", cmd.PersistentFlags().Lookup("server.path_prefix")); err != nil {
 		return err
 	}
 
@@ -61,6 +69,7 @@ func (s *Server) Set() {
 	s.Key = viper.GetString("server.key")
 	s.Bind = viper.GetString("server.bind")
 	s.Static = viper.GetString("server.static")
+	s.PathPrefix = path.Join("/", path.Clean(viper.GetString("server.path_prefix")))
 	s.PProf = viper.GetBool("server.pprof")
 	s.Metrics = viper.GetBool("server.metrics")
 

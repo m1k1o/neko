@@ -36,6 +36,12 @@ func New(WebSocketManager types.WebSocketManager, ApiManager types.ApiManager, c
 		MaxAge:           300, // Maximum value not ignored by any of major browsers
 	}))
 
+	if config.PathPrefix != "/" {
+		router.UseBypass(func(h http.Handler) http.Handler {
+			return http.StripPrefix(config.PathPrefix, h)
+		})
+	}
+
 	router.Route("/api", ApiManager.Route)
 
 	router.Get("/api/ws", WebSocketManager.Upgrade(func(r *http.Request) bool {
