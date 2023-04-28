@@ -6,6 +6,7 @@
     "strict": true,
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
+    "skipLibCheck": true,
     "declaration": true,
     "rootDir": "src/component",
     "outDir": "dist/types",
