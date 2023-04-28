@@ -1030,6 +1030,9 @@ components:
           type: boolean
         merciful_reconnect:
           type: boolean
+        plugins:
+          type: object
+          additionalProperties: true
 
     BroadcastStatus:
       type: object
