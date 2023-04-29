@@ -32,6 +32,9 @@ RUN ./build
 #
 # STAGE 2: CLIENT
 #
+#
+# Because client builds fail in Github Actions, therefor we build it outside of Docker.
+#
 # FROM node:18-bullseye-slim as client
 # 
 # # install dependencies

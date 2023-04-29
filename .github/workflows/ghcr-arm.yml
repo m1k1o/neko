@@ -36,7 +36,7 @@ jobs:
           npm install
           npm run build
       - 
-        name: Upload dist
+        name: Upload client dist
         uses: actions/upload-artifact@v3
         with:
           name: client-dist
@@ -54,9 +54,10 @@ jobs:
         name: Checkout
         uses: actions/checkout@v2
       -
-        name: Download dist
+        name: Download client dist
         uses: actions/download-artifact@v3
         with:
           name: client-dist
+          path: client/dist
       -
         run: ls -la * client/dist
