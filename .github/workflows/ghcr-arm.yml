@@ -13,7 +13,7 @@ env:
   PLATFORMS: linux/arm64,linux/arm/v7
 
 jobs:
-  build-base:
+  build-client:
     runs-on: ubuntu-latest
     #
     # do not run on forks
@@ -23,6 +23,41 @@ jobs:
       -
         name: Checkout
         uses: actions/checkout@v2
+      -
+        name: Set up node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+      -
+        name: Build client
+        run: |
+          cd client
+          npm install
+          npm run build
+      - 
+        name: Upload client dist
+        uses: actions/upload-artifact@v3
+        with:
+          name: client-dist
+          path: client/dist
+
+  build-base:
+    runs-on: ubuntu-latest
+    #
+    # do not run on forks
+    #
+    if: github.repository_owner == 'm1k1o'
+    needs: [ build-client ]
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v2
+      -
+        name: Download client dist
+        uses: actions/download-artifact@v3
+        with:
+          name: client-dist
+          path: client/dist
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v1
