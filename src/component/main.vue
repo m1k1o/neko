@@ -310,11 +310,13 @@
       // save token to state
       Vue.set(this.state.connection, 'token', token)
 
-      if (!this.autologin) return
-      await this.authenticate()
-
-      if (!this.autoconnect) return
-      this.connect()
+      // try to authenticate and connect
+      if (this.autoconnect) {
+        try {
+          await this.authenticate()
+          this.connect()
+        } catch {}
+      }
     }
 
     public async authenticate(token?: string) {
