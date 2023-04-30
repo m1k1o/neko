@@ -1,7 +1,7 @@
 <template>
   <div ref="component" class="neko-component">
     <div ref="container" class="neko-container">
-      <video ref="video" :autoplay="autoplay" :muted="autoplay" playsinline />
+      <video ref="video" playsinline />
       <neko-screencast
         v-show="screencast && screencastReady"
         :image="fallbackImage"
@@ -407,8 +407,31 @@
       this.connection.reloadConfigs()
     }
 
-    public play() {
-      this._video.play()
+    public async play() {
+      // if autoplay is disabled, play() will throw an error
+      // and we need to properly save the state otherwise we
+      // would be thinking we're playing when we're not
+      try {
+        await this._video.play()
+      } catch (e: any) {
+        if (this._video.muted) {
+          throw e
+        }
+
+        // video.play() can fail if audio is set due restrictive
+        // browsers autoplay policy -> retry with muted audio
+        try {
+          this._video.muted = true
+          await this._video.play()
+          // unmute on users first interaction
+          document.addEventListener('click', this.autoUnmute, { once: true })
+          this.control.once('overlay.click', this.autoUnmute)
+        } catch (e: any) {
+          // if it still fails, we're not playing anything
+          this._video.muted = false
+          throw e
+        }
+      }
     }
 
     public pause() {
@@ -421,6 +444,16 @@
 
     public unmute() {
       this._video.muted = false
+    }
+
+    // when autoplay fails, we mute the video and wait for the user
+    // to interact with the page to unmute it again
+    public autoUnmute() {
+      this.unmute()
+
+      // remove listeners
+      document.removeEventListener('click', this.autoUnmute)
+      this.control.removeListener('overlay.click', this.autoUnmute)
     }
 
     public setVolume(value: number) {
@@ -557,7 +590,7 @@
         this.fallbackImage = image
 
         // this ensures that fallback mode starts immediatly
-        this._video.pause()
+        this.pause()
       })
 
       this.connection.webrtc.on('track', (event: RTCTrackEvent) => {
@@ -577,17 +610,12 @@
             }
 
             if (this.autoplay || this.connection.activated) {
-              this._video.play()
+              this.play()
             }
           },
           { once: true },
         )
       })
-
-      // unmute on users first interaction
-      if (this.autoplay) {
-        document.addEventListener('click', this.unmute, { once: true })
-      }
     }
 
     beforeDestroy() {
@@ -595,8 +623,8 @@
       this.connection.destroy()
       this.clear()
 
-      // remove users first interaction event
-      document.removeEventListener('click', this.unmute)
+      // removes users first interaction events
+      this.autoUnmute()
     }
 
     @Watch('controlling')
