@@ -35,7 +35,7 @@ const (
 )
 
 func NewBroadcastPipeline(device string, display string, pipelineSrc string, url string) (string, error) {
-	video := fmt.Sprintf(videoSrc, display, 25)
+	video := fmt.Sprintf(videoSrc, display, 60)
 	audio := fmt.Sprintf(audioSrc, device)
 
 	var pipelineStr string
@@ -47,7 +47,7 @@ func NewBroadcastPipeline(device string, display string, pipelineSrc string, url
 		// replace display
 		pipelineStr = strings.Replace(pipelineStr, "{display}", display, -1)
 	} else {
-		pipelineStr = fmt.Sprintf("flvmux name=mux ! rtmpsink location='%s live=1' %s audio/x-raw,channels=2 ! audioconvert ! voaacenc ! mux. %s x264enc bframes=0 key-int-max=60 byte-stream=true tune=zerolatency speed-preset=veryfast ! mux.", url, audio, video)
+		pipelineStr = fmt.Sprintf("flvmux name=mux ! rtmpsink location='%s live=1' %s audio/x-raw,channels=2 ! audioconvert ! voaacenc ! mux. %s video/x-raw,format=NV12 ! x264enc bitrate=%d bframes=0 key-int-max=60 byte-stream=true tune=zerolatency speed-preset=veryfast ! mux.", url, audio, video, 70000)
 	}
 
 	return pipelineStr, nil

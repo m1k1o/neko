@@ -1,15 +1,18 @@
 {
 	"folders": [
-		{
-			"path": "server"
-		},
-		{
-			"path": "client"
-		},
-		{
-			"path": "."
-		}
-	],
+    {
+      "path": "server"
+    },
+    {
+      "path": "client"
+    },
+    {
+      "path": "."
+    },
+    {
+      "path": "upstream"
+    }
+  ],
   "settings": {
     "editor.tabSize": 2,
     "editor.insertSpaces": true,

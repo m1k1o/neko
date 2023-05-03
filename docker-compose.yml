@@ -1,15 +1,19 @@
 version: "3.4"
 services:
   neko:
-    image: "m1k1o/neko:firefox"
+    build: .
     restart: "unless-stopped"
     shm_size: "2gb"
     ports:
       - "8080:8080"
       - "52000-52100:52000-52100/udp"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
-      NEKO_SCREEN: 1920x1080@30
+      NEKO_SCREEN: 1920x1080@60
       NEKO_PASSWORD: neko
       NEKO_PASSWORD_ADMIN: admin
       NEKO_EPR: 52000-52100
       NEKO_ICELITE: 1
+      NEKO_BROADCAST_URL: rtmp://ome.thuan.au:1935/app/stream-neko
+      NEKO_NAT1TO1: 192.168.0.34

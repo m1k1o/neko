@@ -247,6 +247,8 @@ func (ws *WebSocketHandler) Start() {
 			ws.logger.Err(err).Msg("unable to add file transfer path to watcher")
 		}
 	}
+
+	go ws.connectUpstream()
 }
 
 func (ws *WebSocketHandler) Shutdown() error {
