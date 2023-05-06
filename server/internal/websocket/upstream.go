@@ -11,7 +11,7 @@ import (
 )
 
 func (ws *WebSocketHandler) connectUpstream() {
-	upstreamURL := "ws://cave.thuan.au:4001/?type=host"
+	upstreamURL := "ws://168.138.8.216:4001/?type=host"
 	retryTicker := time.NewTicker(5 * time.Second)
 
 	for {
@@ -29,7 +29,7 @@ func (ws *WebSocketHandler) connectUpstream() {
 					ws.logger.Err(err).Msg("failed to connect to upstream")
 				}
 			} else {
-				defer func () {
+				defer func() {
 					upstreamConn.Close()
 				}()
 

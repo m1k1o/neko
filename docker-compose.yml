@@ -9,6 +9,10 @@ services:
       - "52000-52100:52000-52100/udp"
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    devices:
+      - /dev/dri/renderD128:/dev/dri/renderD128
+      - /dev/dri/card0:/dev/dri/card0
+    privileged: true
     environment:
       NEKO_SCREEN: 1920x1080@60
       NEKO_PASSWORD: neko
@@ -17,3 +21,4 @@ services:
       NEKO_ICELITE: 1
       NEKO_BROADCAST_URL: rtmp://ome.thuan.au:1935/app/stream-neko
       NEKO_NAT1TO1: 192.168.0.34
+      NEKO_HWENC:
