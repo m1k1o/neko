@@ -91,7 +91,6 @@ func (c *Client) writePump() {
 
 			if err := c.conn.WriteMessage(websocket.BinaryMessage, raw); err != nil {
 				log.Printf("Error writing message: %v", err)
-				c.hub.unregister <- c
 				return
 			}
 		case <-ticker.C:
