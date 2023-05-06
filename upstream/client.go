@@ -53,7 +53,10 @@ func (c *Client) readPump() {
 	}()
 	c.conn.SetReadLimit(maxMessageSize)
 	c.conn.SetReadDeadline(time.Now().Add(pongWait))
-	c.conn.SetPongHandler(func(string) error { c.conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
+	c.conn.SetPongHandler(func(string) error {
+		c.conn.SetReadDeadline(time.Now().Add(pongWait))
+		return nil
+	})
 
 	for {
 		_, raw, err := c.conn.ReadMessage()
@@ -61,6 +64,7 @@ func (c *Client) readPump() {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 				log.Printf("error: %v", err)
 			}
+			c.hub.unregister <- c
 			break
 		}
 		c.hub.broadcast <- raw
@@ -86,6 +90,7 @@ func (c *Client) writePump() {
 			}
 
 			if err := c.conn.WriteMessage(websocket.BinaryMessage, raw); err != nil {
+				log.Printf("Error writing message: %v", err)
 				c.hub.unregister <- c
 				return
 			}

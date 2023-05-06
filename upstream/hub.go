@@ -1,5 +1,7 @@
 package main
 
+import "log"
+
 type Hub struct {
 	hosts      map[*Client]bool
 	clients    map[*Client]bool
@@ -24,6 +26,7 @@ func (h *Hub) Run() {
 	for {
 		select {
 		case <-h.close:
+			log.Println("Closing all connections")
 			for client := range h.hosts {
 				h.unregister <- client
 			}
@@ -31,19 +34,22 @@ func (h *Hub) Run() {
 				h.unregister <- client
 			}
 		case client := <-h.register:
-			h.clients[client] = true
+			switch client.connectionType {
+			case ClientConn:
+				h.clients[client] = true
+			case HostConn:
+				h.hosts[client] = true
+			}
+			log.Printf("New connection: %s", client.connectionType)
 		case client := <-h.unregister:
+			log.Printf("Disconnecting %s", client.connectionType)
 			if _, ok := h.clients[client]; ok {
 				delete(h.clients, client)
 				close(client.send)
 			}
 		case raw := <-h.broadcast:
 			for client := range h.hosts {
-				select {
-				case client.send <- raw:
-				default:
-					h.unregister <- client
-				}
+				client.send <- raw
 			}
 		}
 	}

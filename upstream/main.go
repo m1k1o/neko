@@ -29,12 +29,6 @@ var allowedTypes = map[string]empty{
 
 var hub *Hub
 
-func contains(haystack map[string]empty, needle string) bool {
-	_, ok := haystack[needle]
-
-	return ok
-}
-
 func upgrade(w http.ResponseWriter, r *http.Request) {
 	var t []string
 	var ok bool
@@ -44,6 +38,7 @@ func upgrade(w http.ResponseWriter, r *http.Request) {
 
 	connType := ConnectionTypeFromString(t[0])
 	if connType == UnknownConn {
+		log.Printf("Unknown connection type: %v", r.URL.String())
 		return
 	}
 
@@ -61,6 +56,9 @@ func upgrade(w http.ResponseWriter, r *http.Request) {
 		send:           make(chan []byte),
 	}
 	client.hub.register <- client
+
+	go client.readPump()
+	go client.writePump()
 }
 
 func broadcast(receivers map[*websocket.Conn]empty, messType int, raw []byte) {
@@ -71,6 +69,7 @@ func broadcast(receivers map[*websocket.Conn]empty, messType int, raw []byte) {
 
 func main() {
 	hub = NewHub()
+	go hub.Run()
 	defer func() {
 		close(hub.close)
 	}()
