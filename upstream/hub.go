@@ -45,7 +45,6 @@ func (h *Hub) Run() {
 			log.Printf("Disconnecting %s", client.connectionType)
 			if _, ok := h.clients[client]; ok {
 				delete(h.clients, client)
-				close(client.send)
 			}
 		case raw := <-h.broadcast:
 			for client := range h.hosts {

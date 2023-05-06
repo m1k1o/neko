@@ -9,6 +9,8 @@ services:
       - "52000-52100:52000-52100/udp"
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    volumes:
+      - ./bin/firefox:/home/neko/.mozilla/firefox
     devices:
       - /dev/dri/renderD128:/dev/dri/renderD128
       - /dev/dri/card0:/dev/dri/card0
