@@ -48,9 +48,6 @@ type Client struct {
 }
 
 func (c *Client) readPump() {
-	defer func() {
-		c.hub.unregister <- c
-	}()
 	c.conn.SetReadLimit(maxMessageSize)
 	c.conn.SetReadDeadline(time.Now().Add(pongWait))
 	c.conn.SetPongHandler(func(string) error {
@@ -64,8 +61,7 @@ func (c *Client) readPump() {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 				log.Printf("error: %v", err)
 			}
-			c.hub.unregister <- c
-			break
+			return
 		}
 		c.hub.broadcast <- raw
 	}
@@ -77,18 +73,13 @@ func (c *Client) writePump() {
 		ticker.Stop()
 		c.hub.unregister <- c
 		close(c.send)
+		c.conn.Close()
 	}()
 
 	for {
 		select {
-		case raw, ok := <-c.send:
+		case raw := <-c.send:
 			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
-			if !ok {
-				// The hub closed the channel.
-				c.conn.WriteMessage(websocket.CloseMessage, []byte{})
-				c.conn.Close()
-				return
-			}
 
 			if err := c.conn.WriteMessage(websocket.BinaryMessage, raw); err != nil {
 				log.Printf("Error writing message: %v", err)
