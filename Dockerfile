@@ -36,7 +36,7 @@ RUN ./build
 FROM ghcr.io/m1k1o/neko/intel-firefox:latest
 
 RUN set -eux; apt-get update; \
-    apt-get install -y --no-install-recommends i965-va-driver-shaders; \
+    apt-get install -y --no-install-recommends i965-va-driver; \
     #
     # clean up
     apt-get clean -y; \

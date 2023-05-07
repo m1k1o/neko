@@ -43,8 +43,20 @@ func (h *Hub) Run() {
 			log.Printf("New connection: %s", client.connectionType)
 		case client := <-h.unregister:
 			log.Printf("Disconnecting %s", client.connectionType)
-			if _, ok := h.clients[client]; ok {
-				delete(h.clients, client)
+
+			var pool map[*Client]bool
+			switch client.connectionType {
+			case ClientConn:
+				pool = h.clients
+			case HostConn:
+				pool = h.hosts
+			}
+			if pool == nil {
+				continue
+			}
+
+			if _, ok := pool[client]; ok {
+				delete(pool, client)
 			}
 		case raw := <-h.broadcast:
 			for client := range h.hosts {
