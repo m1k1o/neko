@@ -54,6 +54,10 @@ func (c *Client) readPump() {
 		c.conn.SetReadDeadline(time.Now().Add(pongWait))
 		return nil
 	})
+	defer func() {
+		c.hub.unregister <- c
+		c.conn.Close()
+	}()
 
 	for {
 		_, raw, err := c.conn.ReadMessage()
@@ -61,7 +65,7 @@ func (c *Client) readPump() {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 				log.Printf("error: %v", err)
 			}
-			return
+			break
 		}
 		c.hub.broadcast <- raw
 	}
@@ -71,15 +75,18 @@ func (c *Client) writePump() {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
 		ticker.Stop()
-		c.hub.unregister <- c
-		close(c.send)
 		c.conn.Close()
 	}()
 
 	for {
 		select {
-		case raw := <-c.send:
+		case raw, ok := <-c.send:
 			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
+
+			if !ok {
+				c.conn.WriteMessage(websocket.CloseMessage, []byte{})
+				return
+			}
 
 			if err := c.conn.WriteMessage(websocket.BinaryMessage, raw); err != nil {
 				log.Printf("Error writing message: %v", err)

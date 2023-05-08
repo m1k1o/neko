@@ -22,6 +22,10 @@ func NewHub() *Hub {
 	}
 }
 
+func (h *Hub) PrintConns() {
+	log.Printf("Current connections, clients: %d, hosts: %d", len(h.clients), len(h.hosts))
+}
+
 func (h *Hub) Run() {
 	for {
 		select {
@@ -41,6 +45,7 @@ func (h *Hub) Run() {
 				h.hosts[client] = true
 			}
 			log.Printf("New connection: %s", client.connectionType)
+			h.PrintConns()
 		case client := <-h.unregister:
 			log.Printf("Disconnecting %s", client.connectionType)
 
@@ -57,7 +62,9 @@ func (h *Hub) Run() {
 
 			if _, ok := pool[client]; ok {
 				delete(pool, client)
+				close(client.send)
 			}
+			h.PrintConns()
 		case raw := <-h.broadcast:
 			for client := range h.hosts {
 				client.send <- raw
