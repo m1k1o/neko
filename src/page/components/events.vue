@@ -404,6 +404,17 @@
         </td>
       </tr>
       <tr>
+        <th class="middle">settings.locked_controls</th>
+        <td>
+          <div class="space-between">
+            <span>{{ neko.state.settings.locked_controls }}</span>
+            <button @click="updateSettings({ locked_controls: !neko.state.settings.locked_controls })">
+              <i class="fas fa-toggle-on"></i>
+            </button>
+          </div>
+        </td>
+      </tr>
+      <tr>
         <th class="middle">settings.implicit_hosting</th>
         <td>
           <div class="space-between">

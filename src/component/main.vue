@@ -212,6 +212,7 @@
       sessions: {},
       settings: {
         private_mode: false,
+        locked_controls: false,
         implicit_hosting: false,
         inactive_cursors: false,
         merciful_reconnect: false,
