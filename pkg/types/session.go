@@ -3,6 +3,7 @@ package types
 import (
 	"errors"
 	"net/http"
+	"time"
 )
 
 var (
@@ -25,7 +26,16 @@ type SessionProfile struct {
 
 type SessionState struct {
 	IsConnected bool `json:"is_connected"`
-	IsWatching  bool `json:"is_watching"`
+	// when the session was last connected
+	ConnectedSince *time.Time `json:"connected_since,omitempty"`
+	// when the session was last not connected
+	NotConnectedSince *time.Time `json:"not_connected_since,omitempty"`
+
+	IsWatching bool `json:"is_watching"`
+	// when the session was last watching
+	WatchingSince *time.Time `json:"watching_since,omitempty"`
+	// when the session was last not watching
+	NotWatchingSince *time.Time `json:"not_watching_since,omitempty"`
 }
 
 type Settings struct {

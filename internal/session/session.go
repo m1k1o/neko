@@ -98,7 +98,13 @@ func (session *SessionCtx) ConnectWebSocketPeer(websocketPeer types.WebSocketPee
 	}
 
 	session.logger.Info().Msg("set websocket connected")
+
+	// update state
+	now := time.Now()
 	session.state.IsConnected = true
+	session.state.ConnectedSince = &now
+	session.state.NotConnectedSince = nil
+
 	session.manager.emmiter.Emit("connected", session)
 
 	// if there is a previous peer, destroy it
@@ -154,7 +160,12 @@ func (session *SessionCtx) DisconnectWebSocketPeer(websocketPeer types.WebSocket
 	//
 
 	session.logger.Info().Msg("set websocket disconnected")
+
+	now := time.Now()
 	session.state.IsConnected = false
+	session.state.ConnectedSince = nil
+	session.state.NotConnectedSince = &now
+
 	session.manager.emmiter.Emit("disconnected", session)
 
 	session.websocketMu.Lock()
@@ -235,7 +246,16 @@ func (session *SessionCtx) SetWebRTCConnected(webrtcPeer types.WebRTCPeer, conne
 		Bool("connected", connected).
 		Msg("set webrtc connected")
 
+	// update state
 	session.state.IsWatching = connected
+	if now := time.Now(); connected {
+		session.state.WatchingSince = &now
+		session.state.NotWatchingSince = nil
+	} else {
+		session.state.WatchingSince = nil
+		session.state.NotWatchingSince = &now
+	}
+
 	session.manager.emmiter.Emit("state_changed", session)
 
 	if connected {
