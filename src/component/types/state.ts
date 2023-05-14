@@ -125,7 +125,11 @@ export interface MemberProfile {
 
 export interface SessionState {
   is_connected: boolean
+  connected_since?: Date
+  not_connected_since?: Date
   is_watching: boolean
+  watching_since?: Date
+  not_watching_since?: Date
 }
 
 export interface Session {
