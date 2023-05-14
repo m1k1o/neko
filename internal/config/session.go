@@ -10,6 +10,8 @@ import (
 type Session struct {
 	File string
 
+	PrivateMode       bool
+	LockedControls    bool
 	ImplicitHosting   bool
 	InactiveCursors   bool
 	MercifulReconnect bool
@@ -24,6 +26,16 @@ type Session struct {
 func (Session) Init(cmd *cobra.Command) error {
 	cmd.PersistentFlags().String("session.file", "", "if sessions should be stored in a file, otherwise they will be stored only in memory")
 	if err := viper.BindPFlag("session.file", cmd.PersistentFlags().Lookup("session.file")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().Bool("session.private_mode", false, "whether private mode should be enabled initially")
+	if err := viper.BindPFlag("session.private_mode", cmd.PersistentFlags().Lookup("session.private_mode")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().Bool("session.locked_controls", false, "whether controls should be locked for users initially")
+	if err := viper.BindPFlag("session.locked_controls", cmd.PersistentFlags().Lookup("session.locked_controls")); err != nil {
 		return err
 	}
 
@@ -74,6 +86,8 @@ func (Session) Init(cmd *cobra.Command) error {
 func (s *Session) Set() {
 	s.File = viper.GetString("session.file")
 
+	s.PrivateMode = viper.GetBool("session.private_mode")
+	s.LockedControls = viper.GetBool("session.locked_controls")
 	s.ImplicitHosting = viper.GetBool("session.implicit_hosting")
 	s.InactiveCursors = viper.GetBool("session.inactive_cursors")
 	s.MercifulReconnect = viper.GetBool("session.merciful_reconnect")

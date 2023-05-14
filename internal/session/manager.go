@@ -19,8 +19,8 @@ func New(config *config.Session) *SessionManagerCtx {
 		logger: log.With().Str("module", "session").Logger(),
 		config: config,
 		settings: types.Settings{
-			PrivateMode:       false, // By default disabled.
-			LockedControls:    false, // By default disabled.
+			PrivateMode:       config.PrivateMode,
+			LockedControls:    config.LockedControls,
 			ImplicitHosting:   config.ImplicitHosting,
 			InactiveCursors:   config.InactiveCursors,
 			MercifulReconnect: config.MercifulReconnect,
