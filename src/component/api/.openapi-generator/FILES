@@ -11,6 +11,8 @@ common.ts
 configuration.ts
 git_push.sh
 index.ts
+models/batch-request.ts
+models/batch-response.ts
 models/broadcast-status.ts
 models/clipboard-text.ts
 models/control-status.ts

@@ -13,7 +13,11 @@
  */
 
 
+// May contain unused imports in some cases
+// @ts-ignore
 import { MemberProfile } from './member-profile';
+// May contain unused imports in some cases
+// @ts-ignore
 import { SessionState } from './session-state';
 
 /**

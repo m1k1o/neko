@@ -31,6 +31,12 @@ export interface Settings {
      * @type {boolean}
      * @memberof Settings
      */
+    'locked_controls'?: boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof Settings
+     */
     'implicit_hosting'?: boolean;
     /**
      * 
@@ -44,5 +50,11 @@ export interface Settings {
      * @memberof Settings
      */
     'merciful_reconnect'?: boolean;
+    /**
+     * 
+     * @type {{ [key: string]: any; }}
+     * @memberof Settings
+     */
+    'plugins'?: { [key: string]: any; };
 }
 

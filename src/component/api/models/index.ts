@@ -1,3 +1,5 @@
+export * from './batch-request'
+export * from './batch-response'
 export * from './broadcast-status'
 export * from './clipboard-text'
 export * from './control-status'

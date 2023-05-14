@@ -13,8 +13,9 @@
  */
 
 
-import globalAxios, { AxiosPromise, AxiosInstance, AxiosRequestConfig } from 'axios';
-import { Configuration } from '../configuration';
+import type { Configuration } from '../configuration';
+import type { AxiosPromise, AxiosInstance, AxiosRequestConfig } from 'axios';
+import globalAxios from 'axios';
 // Some imports not used depending on template conditions
 // @ts-ignore
 import { DUMMY_BASE_URL, assertParamExists, setApiKeyToObject, setBasicAuthToObject, setBearerAuthToObject, setOAuthToObject, setSearchParams, serializeDataIfNeeded, toPathString, createRequestFunction } from '../common';
@@ -64,14 +65,14 @@ export const RoomApiAxiosParamCreator = function (configuration?: Configuration)
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
-            // authentication BearerAuth required
-            // http bearer authentication required
-            await setBearerAuthToObject(localVarHeaderParameter, configuration)
-
             // authentication CookieAuth required
 
             // authentication TokenAuth required
             await setApiKeyToObject(localVarQueryParameter, "token", configuration)
+
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
     
@@ -106,14 +107,14 @@ export const RoomApiAxiosParamCreator = function (configuration?: Configuration)
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
-            // authentication BearerAuth required
-            // http bearer authentication required
-            await setBearerAuthToObject(localVarHeaderParameter, configuration)
-
             // authentication CookieAuth required
 
             // authentication TokenAuth required
             await setApiKeyToObject(localVarQueryParameter, "token", configuration)
+
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
     
@@ -145,14 +146,14 @@ export const RoomApiAxiosParamCreator = function (configuration?: Configuration)
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
-            // authentication BearerAuth required
-            // http bearer authentication required
-            await setBearerAuthToObject(localVarHeaderParameter, configuration)
-
             // authentication CookieAuth required
 
             // authentication TokenAuth required
             await setApiKeyToObject(localVarQueryParameter, "token", configuration)
+
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
     
@@ -184,14 +185,14 @@ export const RoomApiAxiosParamCreator = function (configuration?: Configuration)
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
-            // authentication BearerAuth required
-            // http bearer authentication required
-            await setBearerAuthToObject(localVarHeaderParameter, configuration)
-
             // authentication CookieAuth required
 
             // authentication TokenAuth required
             await setApiKeyToObject(localVarQueryParameter, "token", configuration)
+
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
     
@@ -223,14 +224,14 @@ export const RoomApiAxiosParamCreator = function (configuration?: Configuration)
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
-            // authentication BearerAuth required
-            // http bearer authentication required
-            await setBearerAuthToObject(localVarHeaderParameter, configuration)
-
             // authentication CookieAuth required
 
             // authentication TokenAuth required
             await setApiKeyToObject(localVarQueryParameter, "token", configuration)
+
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
     
@@ -265,14 +266,14 @@ export const RoomApiAxiosParamCreator = function (configuration?: Configuration)
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
-            // authentication BearerAuth required
-            // http bearer authentication required
-            await setBearerAuthToObject(localVarHeaderParameter, configuration)
-
             // authentication CookieAuth required
 
             // authentication TokenAuth required
             await setApiKeyToObject(localVarQueryParameter, "token", configuration)
+
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
     
@@ -311,14 +312,14 @@ export const RoomApiAxiosParamCreator = function (configuration?: Configuration)
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
-            // authentication BearerAuth required
-            // http bearer authentication required
-            await setBearerAuthToObject(localVarHeaderParameter, configuration)
-
             // authentication CookieAuth required
 
             // authentication TokenAuth required
             await setApiKeyToObject(localVarQueryParameter, "token", configuration)
+
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
     
@@ -350,14 +351,14 @@ export const RoomApiAxiosParamCreator = function (configuration?: Configuration)
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
-            // authentication BearerAuth required
-            // http bearer authentication required
-            await setBearerAuthToObject(localVarHeaderParameter, configuration)
-
             // authentication CookieAuth required
 
             // authentication TokenAuth required
             await setApiKeyToObject(localVarQueryParameter, "token", configuration)
+
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
     
@@ -389,14 +390,14 @@ export const RoomApiAxiosParamCreator = function (configuration?: Configuration)
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
-            // authentication BearerAuth required
-            // http bearer authentication required
-            await setBearerAuthToObject(localVarHeaderParameter, configuration)
-
             // authentication CookieAuth required
 
             // authentication TokenAuth required
             await setApiKeyToObject(localVarQueryParameter, "token", configuration)
+
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
     
@@ -428,14 +429,14 @@ export const RoomApiAxiosParamCreator = function (configuration?: Configuration)
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
-            // authentication BearerAuth required
-            // http bearer authentication required
-            await setBearerAuthToObject(localVarHeaderParameter, configuration)
-
             // authentication CookieAuth required
 
             // authentication TokenAuth required
             await setApiKeyToObject(localVarQueryParameter, "token", configuration)
+
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
     
@@ -467,14 +468,14 @@ export const RoomApiAxiosParamCreator = function (configuration?: Configuration)
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
-            // authentication BearerAuth required
-            // http bearer authentication required
-            await setBearerAuthToObject(localVarHeaderParameter, configuration)
-
             // authentication CookieAuth required
 
             // authentication TokenAuth required
             await setApiKeyToObject(localVarQueryParameter, "token", configuration)
+
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
     
@@ -506,14 +507,14 @@ export const RoomApiAxiosParamCreator = function (configuration?: Configuration)
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
-            // authentication BearerAuth required
-            // http bearer authentication required
-            await setBearerAuthToObject(localVarHeaderParameter, configuration)
-
             // authentication CookieAuth required
 
             // authentication TokenAuth required
             await setApiKeyToObject(localVarQueryParameter, "token", configuration)
+
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
     
@@ -545,14 +546,14 @@ export const RoomApiAxiosParamCreator = function (configuration?: Configuration)
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
-            // authentication BearerAuth required
-            // http bearer authentication required
-            await setBearerAuthToObject(localVarHeaderParameter, configuration)
-
             // authentication CookieAuth required
 
             // authentication TokenAuth required
             await setApiKeyToObject(localVarQueryParameter, "token", configuration)
+
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
     
@@ -587,14 +588,14 @@ export const RoomApiAxiosParamCreator = function (configuration?: Configuration)
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
-            // authentication BearerAuth required
-            // http bearer authentication required
-            await setBearerAuthToObject(localVarHeaderParameter, configuration)
-
             // authentication CookieAuth required
 
             // authentication TokenAuth required
             await setApiKeyToObject(localVarQueryParameter, "token", configuration)
+
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
     
@@ -629,14 +630,14 @@ export const RoomApiAxiosParamCreator = function (configuration?: Configuration)
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
-            // authentication BearerAuth required
-            // http bearer authentication required
-            await setBearerAuthToObject(localVarHeaderParameter, configuration)
-
             // authentication CookieAuth required
 
             // authentication TokenAuth required
             await setApiKeyToObject(localVarQueryParameter, "token", configuration)
+
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
     
@@ -671,14 +672,14 @@ export const RoomApiAxiosParamCreator = function (configuration?: Configuration)
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
-            // authentication BearerAuth required
-            // http bearer authentication required
-            await setBearerAuthToObject(localVarHeaderParameter, configuration)
-
             // authentication CookieAuth required
 
             // authentication TokenAuth required
             await setApiKeyToObject(localVarQueryParameter, "token", configuration)
+
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
     
@@ -713,14 +714,14 @@ export const RoomApiAxiosParamCreator = function (configuration?: Configuration)
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
-            // authentication BearerAuth required
-            // http bearer authentication required
-            await setBearerAuthToObject(localVarHeaderParameter, configuration)
-
             // authentication CookieAuth required
 
             // authentication TokenAuth required
             await setApiKeyToObject(localVarQueryParameter, "token", configuration)
+
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
     
@@ -752,14 +753,14 @@ export const RoomApiAxiosParamCreator = function (configuration?: Configuration)
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
-            // authentication BearerAuth required
-            // http bearer authentication required
-            await setBearerAuthToObject(localVarHeaderParameter, configuration)
-
             // authentication CookieAuth required
 
             // authentication TokenAuth required
             await setApiKeyToObject(localVarQueryParameter, "token", configuration)
+
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
     
@@ -794,14 +795,14 @@ export const RoomApiAxiosParamCreator = function (configuration?: Configuration)
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
-            // authentication BearerAuth required
-            // http bearer authentication required
-            await setBearerAuthToObject(localVarHeaderParameter, configuration)
-
             // authentication CookieAuth required
 
             // authentication TokenAuth required
             await setApiKeyToObject(localVarQueryParameter, "token", configuration)
+
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
     
@@ -836,14 +837,14 @@ export const RoomApiAxiosParamCreator = function (configuration?: Configuration)
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
-            // authentication BearerAuth required
-            // http bearer authentication required
-            await setBearerAuthToObject(localVarHeaderParameter, configuration)
-
             // authentication CookieAuth required
 
             // authentication TokenAuth required
             await setApiKeyToObject(localVarQueryParameter, "token", configuration)
+
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
     
@@ -875,14 +876,14 @@ export const RoomApiAxiosParamCreator = function (configuration?: Configuration)
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
-            // authentication BearerAuth required
-            // http bearer authentication required
-            await setBearerAuthToObject(localVarHeaderParameter, configuration)
-
             // authentication CookieAuth required
 
             // authentication TokenAuth required
             await setApiKeyToObject(localVarQueryParameter, "token", configuration)
+
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
     
@@ -914,14 +915,14 @@ export const RoomApiAxiosParamCreator = function (configuration?: Configuration)
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
-            // authentication BearerAuth required
-            // http bearer authentication required
-            await setBearerAuthToObject(localVarHeaderParameter, configuration)
-
             // authentication CookieAuth required
 
             // authentication TokenAuth required
             await setApiKeyToObject(localVarQueryParameter, "token", configuration)
+
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
     
@@ -956,14 +957,14 @@ export const RoomApiAxiosParamCreator = function (configuration?: Configuration)
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
-            // authentication BearerAuth required
-            // http bearer authentication required
-            await setBearerAuthToObject(localVarHeaderParameter, configuration)
-
             // authentication CookieAuth required
 
             // authentication TokenAuth required
             await setApiKeyToObject(localVarQueryParameter, "token", configuration)
+
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
     
@@ -982,11 +983,11 @@ export const RoomApiAxiosParamCreator = function (configuration?: Configuration)
         /**
          * 
          * @summary upload file to a dialog
-         * @param {Array<any>} [files] files to be uploaded
+         * @param {Array<File>} [files] files to be uploaded
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        uploadDialog: async (files?: Array<any>, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        uploadDialog: async (files?: Array<File>, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/room/upload/dialog`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -1000,14 +1001,14 @@ export const RoomApiAxiosParamCreator = function (configuration?: Configuration)
             const localVarQueryParameter = {} as any;
             const localVarFormParams = new ((configuration && configuration.formDataCtor) || FormData)();
 
-            // authentication BearerAuth required
-            // http bearer authentication required
-            await setBearerAuthToObject(localVarHeaderParameter, configuration)
-
             // authentication CookieAuth required
 
             // authentication TokenAuth required
             await setApiKeyToObject(localVarQueryParameter, "token", configuration)
+
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
             if (files) {
                 files.forEach((element) => {
@@ -1048,14 +1049,14 @@ export const RoomApiAxiosParamCreator = function (configuration?: Configuration)
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
-            // authentication BearerAuth required
-            // http bearer authentication required
-            await setBearerAuthToObject(localVarHeaderParameter, configuration)
-
             // authentication CookieAuth required
 
             // authentication TokenAuth required
             await setApiKeyToObject(localVarQueryParameter, "token", configuration)
+
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
     
@@ -1073,11 +1074,11 @@ export const RoomApiAxiosParamCreator = function (configuration?: Configuration)
          * @summary upload and drop file
          * @param {number} [x] X coordinate of drop
          * @param {number} [y] Y coordinate of drop
-         * @param {Array<any>} [files] files to be uploaded
+         * @param {Array<File>} [files] files to be uploaded
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        uploadDrop: async (x?: number, y?: number, files?: Array<any>, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        uploadDrop: async (x?: number, y?: number, files?: Array<File>, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/room/upload/drop`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -1091,14 +1092,14 @@ export const RoomApiAxiosParamCreator = function (configuration?: Configuration)
             const localVarQueryParameter = {} as any;
             const localVarFormParams = new ((configuration && configuration.formDataCtor) || FormData)();
 
-            // authentication BearerAuth required
-            // http bearer authentication required
-            await setBearerAuthToObject(localVarHeaderParameter, configuration)
-
             // authentication CookieAuth required
 
             // authentication TokenAuth required
             await setApiKeyToObject(localVarQueryParameter, "token", configuration)
+
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
 
 
             if (x !== undefined) { 
@@ -1175,7 +1176,7 @@ export const RoomApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async clipboardGetImage(options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+        async clipboardGetImage(options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<File>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.clipboardGetImage(options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
@@ -1309,7 +1310,7 @@ export const RoomApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async screenCastImage(options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+        async screenCastImage(options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<File>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.screenCastImage(options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
@@ -1350,7 +1351,7 @@ export const RoomApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async screenShotImage(options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<any>> {
+        async screenShotImage(options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<File>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.screenShotImage(options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
@@ -1378,11 +1379,11 @@ export const RoomApiFp = function(configuration?: Configuration) {
         /**
          * 
          * @summary upload file to a dialog
-         * @param {Array<any>} [files] files to be uploaded
+         * @param {Array<File>} [files] files to be uploaded
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async uploadDialog(files?: Array<any>, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+        async uploadDialog(files?: Array<File>, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.uploadDialog(files, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
@@ -1401,11 +1402,11 @@ export const RoomApiFp = function(configuration?: Configuration) {
          * @summary upload and drop file
          * @param {number} [x] X coordinate of drop
          * @param {number} [y] Y coordinate of drop
-         * @param {Array<any>} [files] files to be uploaded
+         * @param {Array<File>} [files] files to be uploaded
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async uploadDrop(x?: number, y?: number, files?: Array<any>, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+        async uploadDrop(x?: number, y?: number, files?: Array<File>, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.uploadDrop(x, y, files, options);
             return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
         },
@@ -1453,7 +1454,7 @@ export const RoomApiFactory = function (configuration?: Configuration, basePath?
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        clipboardGetImage(options?: any): AxiosPromise<any> {
+        clipboardGetImage(options?: any): AxiosPromise<File> {
             return localVarFp.clipboardGetImage(options).then((request) => request(axios, basePath));
         },
         /**
@@ -1574,7 +1575,7 @@ export const RoomApiFactory = function (configuration?: Configuration, basePath?
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        screenCastImage(options?: any): AxiosPromise<any> {
+        screenCastImage(options?: any): AxiosPromise<File> {
             return localVarFp.screenCastImage(options).then((request) => request(axios, basePath));
         },
         /**
@@ -1611,7 +1612,7 @@ export const RoomApiFactory = function (configuration?: Configuration, basePath?
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        screenShotImage(options?: any): AxiosPromise<any> {
+        screenShotImage(options?: any): AxiosPromise<File> {
             return localVarFp.screenShotImage(options).then((request) => request(axios, basePath));
         },
         /**
@@ -1636,11 +1637,11 @@ export const RoomApiFactory = function (configuration?: Configuration, basePath?
         /**
          * 
          * @summary upload file to a dialog
-         * @param {Array<any>} [files] files to be uploaded
+         * @param {Array<File>} [files] files to be uploaded
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        uploadDialog(files?: Array<any>, options?: any): AxiosPromise<void> {
+        uploadDialog(files?: Array<File>, options?: any): AxiosPromise<void> {
             return localVarFp.uploadDialog(files, options).then((request) => request(axios, basePath));
         },
         /**
@@ -1657,11 +1658,11 @@ export const RoomApiFactory = function (configuration?: Configuration, basePath?
          * @summary upload and drop file
          * @param {number} [x] X coordinate of drop
          * @param {number} [y] Y coordinate of drop
-         * @param {Array<any>} [files] files to be uploaded
+         * @param {Array<File>} [files] files to be uploaded
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        uploadDrop(x?: number, y?: number, files?: Array<any>, options?: any): AxiosPromise<void> {
+        uploadDrop(x?: number, y?: number, files?: Array<File>, options?: any): AxiosPromise<void> {
             return localVarFp.uploadDrop(x, y, files, options).then((request) => request(axios, basePath));
         },
     };
@@ -1937,12 +1938,12 @@ export class RoomApi extends BaseAPI {
     /**
      * 
      * @summary upload file to a dialog
-     * @param {Array<any>} [files] files to be uploaded
+     * @param {Array<File>} [files] files to be uploaded
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof RoomApi
      */
-    public uploadDialog(files?: Array<any>, options?: AxiosRequestConfig) {
+    public uploadDialog(files?: Array<File>, options?: AxiosRequestConfig) {
         return RoomApiFp(this.configuration).uploadDialog(files, options).then((request) => request(this.axios, this.basePath));
     }
 
@@ -1962,12 +1963,12 @@ export class RoomApi extends BaseAPI {
      * @summary upload and drop file
      * @param {number} [x] X coordinate of drop
      * @param {number} [y] Y coordinate of drop
-     * @param {Array<any>} [files] files to be uploaded
+     * @param {Array<File>} [files] files to be uploaded
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof RoomApi
      */
-    public uploadDrop(x?: number, y?: number, files?: Array<any>, options?: AxiosRequestConfig) {
+    public uploadDrop(x?: number, y?: number, files?: Array<File>, options?: AxiosRequestConfig) {
         return RoomApiFp(this.configuration).uploadDrop(x, y, files, options).then((request) => request(this.axios, this.basePath));
     }
 }

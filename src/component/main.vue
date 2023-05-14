@@ -550,7 +550,7 @@
       return this.api.members
     }
 
-    async uploadDrop({ x, y, files }: { x: number; y: number; files: Array<Blob> }) {
+    async uploadDrop({ x, y, files }: { x: number; y: number; files: Array<File> }) {
       try {
         this.events.emit('upload.drop.started')
 
