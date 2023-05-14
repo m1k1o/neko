@@ -45,6 +45,7 @@ func (api *ApiManagerCtx) Route(r types.Router) {
 
 		r.Post("/logout", api.Logout)
 		r.Get("/whoami", api.Whoami)
+		r.Get("/sessions", api.Sessions)
 
 		membersHandler := members.New(api.members)
 		r.Route("/members", membersHandler.Route)

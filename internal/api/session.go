@@ -81,3 +81,16 @@ func (api *ApiManagerCtx) Whoami(w http.ResponseWriter, r *http.Request) error {
 		State:   session.State(),
 	})
 }
+
+func (api *ApiManagerCtx) Sessions(w http.ResponseWriter, r *http.Request) error {
+	sessions := []SessionDataPayload{}
+	for _, session := range api.sessions.List() {
+		sessions = append(sessions, SessionDataPayload{
+			ID:      session.ID(),
+			Profile: session.Profile(),
+			State:   session.State(),
+		})
+	}
+
+	return utils.HttpSuccess(w, sessions)
+}
