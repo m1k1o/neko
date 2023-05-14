@@ -39,6 +39,10 @@ func (h *RoomHandler) controlRequest(w http.ResponseWriter, r *http.Request) err
 	}
 
 	session, _ := auth.GetSession(r)
+	if h.sessions.Settings().LockedControls && !session.Profile().IsAdmin {
+		return utils.HttpForbidden("controls are locked")
+	}
+
 	h.sessions.SetHost(session)
 
 	return utils.HttpSuccess(w)

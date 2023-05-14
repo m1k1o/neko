@@ -40,6 +40,10 @@ func (h *MessageHandlerCtx) controlRequest(session types.Session) error {
 		return ErrIsAlreadyTheHost
 	}
 
+	if h.sessions.Settings().LockedControls && !session.Profile().IsAdmin {
+		return ErrIsNotAllowedToHost
+	}
+
 	if !h.sessions.Settings().ImplicitHosting {
 		// tell session if there is a host
 		if host, hasHost := h.sessions.GetHost(); hasHost {

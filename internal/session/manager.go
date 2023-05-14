@@ -20,6 +20,7 @@ func New(config *config.Session) *SessionManagerCtx {
 		config: config,
 		settings: types.Settings{
 			PrivateMode:       false, // By default disabled.
+			LockedControls:    false, // By default disabled.
 			ImplicitHosting:   config.ImplicitHosting,
 			InactiveCursors:   config.InactiveCursors,
 			MercifulReconnect: config.MercifulReconnect,
@@ -384,6 +385,15 @@ func (manager *SessionManagerCtx) UpdateSettings(new types.Settings) {
 			if webrtcPeer := session.GetWebRTCPeer(); webrtcPeer != nil {
 				webrtcPeer.SetPaused(enabled)
 			}
+		}
+	}
+
+	// if contols have been locked
+	if old.LockedControls != new.LockedControls && new.LockedControls {
+		// if the host is not admin, it must release controls
+		host, hasHost := manager.GetHost()
+		if hasHost && !host.Profile().IsAdmin {
+			manager.ClearHost()
 		}
 	}
 

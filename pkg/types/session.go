@@ -30,6 +30,7 @@ type SessionState struct {
 
 type Settings struct {
 	PrivateMode       bool `json:"private_mode"`
+	LockedControls    bool `json:"locked_controls"`
 	ImplicitHosting   bool `json:"implicit_hosting"`
 	InactiveCursors   bool `json:"inactive_cursors"`
 	MercifulReconnect bool `json:"merciful_reconnect"`
