@@ -1024,6 +1024,8 @@ components:
       properties:
         private_mode:
           type: boolean
+        locked_controls:
+          type: boolean
         implicit_hosting:
           type: boolean
         inactive_cursors:
