@@ -24,6 +24,7 @@ import (
 	"github.com/demodesk/neko/pkg/types/codec"
 	"github.com/demodesk/neko/pkg/types/event"
 	"github.com/demodesk/neko/pkg/types/message"
+	"github.com/demodesk/neko/pkg/utils"
 )
 
 const (
@@ -167,7 +168,7 @@ func (manager *WebRTCManagerCtx) ICEServers() []types.ICEServer {
 	return manager.config.ICEServersFrontend
 }
 
-func (manager *WebRTCManagerCtx) newPeerConnection(logger zerolog.Logger, codecs []codec.RTPCodec, bitrate int) (*webrtc.PeerConnection, cc.BandwidthEstimator, error) {
+func (manager *WebRTCManagerCtx) newPeerConnection(logger zerolog.Logger, codecs []codec.RTPCodec) (*webrtc.PeerConnection, cc.BandwidthEstimator, error) {
 	// create media engine
 	engine := &webrtc.MediaEngine{}
 	for _, codec := range codecs {
@@ -223,14 +224,10 @@ func (manager *WebRTCManagerCtx) newPeerConnection(logger zerolog.Logger, codecs
 
 	// create bandwidth estimator
 	estimatorChan := make(chan cc.BandwidthEstimator, 1)
-	if manager.config.EstimatorEnabled {
+	if manager.config.Estimator.Enabled {
 		congestionController, err := cc.NewInterceptor(func() (cc.BandwidthEstimator, error) {
-			if bitrate == 0 {
-				bitrate = manager.config.EstimatorInitialBitrate
-			}
-
 			return gcc.NewSendSideBWE(
-				gcc.SendSideBWEInitialBitrate(bitrate),
+				gcc.SendSideBWEInitialBitrate(manager.config.Estimator.InitialBitrate),
 				gcc.SendSideBWEPacer(gcc.NewNoOpPacer()),
 			)
 		})
@@ -268,7 +265,7 @@ func (manager *WebRTCManagerCtx) newPeerConnection(logger zerolog.Logger, codecs
 	return connection, <-estimatorChan, err
 }
 
-func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int, videoAuto bool) (*webrtc.SessionDescription, error) {
+func (manager *WebRTCManagerCtx) CreatePeer(session types.Session) (*webrtc.SessionDescription, types.WebRTCPeer, error) {
 	id := atomic.AddInt32(&manager.peerId, 1)
 
 	// get metrics for session
@@ -287,12 +284,10 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int, 
 	video := manager.capture.Video()
 	videoCodec := video.Codec()
 
-	connection, estimator, err := manager.newPeerConnection(logger, []codec.RTPCodec{
-		audioCodec,
-		videoCodec,
-	}, bitrate)
+	connection, estimator, err := manager.newPeerConnection(
+		logger, []codec.RTPCodec{audioCodec, videoCodec})
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// asynchronously send local ICE Candidates
@@ -311,47 +306,34 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int, 
 		})
 	}
 
-	// if bitrate is 0, and estimator is enabled, use estimator bitrate
-	if bitrate == 0 && estimator != nil {
-		bitrate = estimator.GetTargetBitrate()
-	}
-
 	// audio track
 	audioTrack, err := NewTrack(logger, audioCodec, connection)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// set stream for audio track
 	_, err = audioTrack.SetStream(audio)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-
-	// if estimator is disabled, or in passive mode, disable video auto bitrate
-	if !manager.config.EstimatorEnabled || manager.config.EstimatorPassive {
-		videoAuto = false
-	}
-
-	videoRtcp := make(chan []rtcp.Packet, 1)
 
 	// video track
-	videoTrack, err := NewTrack(logger, videoCodec, connection,
-		WithVideoAuto(videoAuto),
-		WithRtcpChan(videoRtcp),
-	)
+	videoRtcp := make(chan []rtcp.Packet, 1)
+	videoTrack, err := NewTrack(logger, videoCodec, connection, WithRtcpChan(videoRtcp))
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	// let video stream bucket manager handle stream subscriptions
-	video.SetReceiver(videoTrack)
+	//
+	// stream for video track will be set later
+	//
 
 	// data channel
 
 	dataChannel, err := connection.CreateDataChannel("data", nil)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	peer := &WebRTCPeerCtx{
@@ -359,24 +341,29 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int, 
 		session:    session,
 		metrics:    metrics,
 		connection: connection,
-		estimator:  estimator,
+		// bandwidth estimator
+		estimator: estimator,
+		estimateTrend: utils.NewTrendDetector(
+			utils.TrendDetectorParams{
+				// Probing
+				//RequiredSamples:        3,
+				//DownwardTrendThreshold: 0.0,
+				//CollapseValues:         false,
+				// Non-Probing
+				RequiredSamples:        8,
+				DownwardTrendThreshold: -0.5,
+				CollapseValues:         true,
+			}),
+		// stream selectors
+		videoSelector: manager.capture.Video(),
 		// tracks & channels
 		audioTrack:  audioTrack,
 		videoTrack:  videoTrack,
 		dataChannel: dataChannel,
 		rtcpChannel: videoRtcp,
 		// config
-		iceTrickle:       manager.config.ICETrickle,
-		estimatorPassive: manager.config.EstimatorPassive,
-	}
-
-	logger.Info().
-		Int("target_bitrate", bitrate).
-		Msg("estimated initial peer bitrate")
-
-	// set initial video bitrate
-	if err := peer.SetVideoBitrate(bitrate); err != nil {
-		return nil, err
+		iceTrickle:      manager.config.ICETrickle,
+		estimatorConfig: manager.config.Estimator,
 	}
 
 	connection.OnTrack(func(track *webrtc.TrackRemote, receiver *webrtc.RTPReceiver) {
@@ -492,9 +479,9 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int, 
 			// ensure we only run this once
 			once.Do(func() {
 				session.SetWebRTCConnected(peer, false)
-				if err = video.RemoveReceiver(videoTrack); err != nil {
-					logger.Err(err).Msg("failed to remove video receiver")
-				}
+				//
+				// TODO: Shutdown peer?
+				//
 				audioTrack.Shutdown()
 				videoTrack.Shutdown()
 				close(videoRtcp)
@@ -542,7 +529,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int, 
 
 	offer, err := peer.CreateOffer(false)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// on negotiation needed handler must be registered after creating initial
@@ -576,7 +563,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, bitrate int, 
 	// start estimator reader
 	go peer.estimatorReader()
 
-	return offer, nil
+	return offer, peer, nil
 }
 
 func (manager *WebRTCManagerCtx) SetCursorPosition(x, y int) {

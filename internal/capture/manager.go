@@ -8,7 +8,6 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"github.com/demodesk/neko/internal/capture/buckets"
 	"github.com/demodesk/neko/internal/config"
 	"github.com/demodesk/neko/pkg/types"
 	"github.com/demodesk/neko/pkg/types/codec"
@@ -23,7 +22,7 @@ type CaptureManagerCtx struct {
 	broadcast  *BroacastManagerCtx
 	screencast *ScreencastManagerCtx
 	audio      *StreamSinkManagerCtx
-	video      types.BucketsManager
+	video      *StreamSelectorManagerCtx
 
 	// sources
 	webcam     *StreamSrcManagerCtx
@@ -68,13 +67,8 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 			Str("pipeline", pipeline).
 			Msg("syntax check for video stream pipeline passed")
 
-		getVideoBitrate := pipelineConf.GetBitrateFn(desktop.GetScreenSize)
-		if _, err = getVideoBitrate(); err != nil {
-			logger.Panic().Err(err).Msg("unable to get video bitrate")
-		}
-
 		// append to videos
-		videos[video_id] = streamSinkNew(config.VideoCodec, createPipeline, video_id, getVideoBitrate)
+		videos[video_id] = streamSinkNew(config.VideoCodec, createPipeline, video_id)
 	}
 
 	return &CaptureManagerCtx{
@@ -140,8 +134,8 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 					"! %s "+
 					"! appsink name=appsink", config.AudioDevice, config.AudioCodec.Pipeline,
 			), nil
-		}, "audio", nil),
-		video: buckets.BucketsNew(config.VideoCodec, videos, config.VideoIDs),
+		}, "audio"),
+		video: streamSelectorNew(config.VideoCodec, videos, config.VideoIDs),
 
 		// sources
 		webcam: streamSrcNew(config.WebcamEnabled, map[string]string{
@@ -202,7 +196,7 @@ func (manager *CaptureManagerCtx) Start() {
 	}
 
 	manager.desktop.OnBeforeScreenSizeChange(func() {
-		manager.video.DestroyAll()
+		manager.video.destroyPipelines()
 
 		if manager.broadcast.Started() {
 			manager.broadcast.destroyPipeline()
@@ -214,7 +208,7 @@ func (manager *CaptureManagerCtx) Start() {
 	})
 
 	manager.desktop.OnAfterScreenSizeChange(func() {
-		err := manager.video.RecreateAll()
+		err := manager.video.recreatePipelines()
 		if err != nil {
 			manager.logger.Panic().Err(err).Msg("unable to recreate video pipelines")
 		}
@@ -242,21 +236,12 @@ func (manager *CaptureManagerCtx) Shutdown() error {
 	manager.screencast.shutdown()
 
 	manager.audio.shutdown()
-	manager.video.Shutdown()
+	manager.video.shutdown()
 
 	manager.webcam.shutdown()
 	manager.microphone.shutdown()
 
 	return nil
-}
-
-func (manager *CaptureManagerCtx) GetBitrateFromVideoID(videoID string) (int, error) {
-	cfg, ok := manager.config.VideoPipelines[videoID]
-	if !ok {
-		return 0, fmt.Errorf("video config not found for %s", videoID)
-	}
-
-	return cfg.GetBitrateFn(manager.desktop.GetScreenSize)()
 }
 
 func (manager *CaptureManagerCtx) Broadcast() types.BroadcastManager {
@@ -271,7 +256,7 @@ func (manager *CaptureManagerCtx) Audio() types.StreamSinkManager {
 	return manager.audio
 }
 
-func (manager *CaptureManagerCtx) Video() types.BucketsManager {
+func (manager *CaptureManagerCtx) Video() types.StreamSelectorManager {
 	return manager.video
 }
 

@@ -48,10 +48,6 @@ type SystemDisconnect struct {
 type SignalProvide struct {
 	SDP        string            `json:"sdp"`
 	ICEServers []types.ICEServer `json:"iceservers"`
-	// TODO: Use SignalVideo struct.
-	Video     string `json:"video"`
-	Bitrate   int    `json:"bitrate"`
-	VideoAuto bool   `json:"video_auto"`
 }
 
 type SignalCandidate struct {
@@ -63,9 +59,8 @@ type SignalDescription struct {
 }
 
 type SignalVideo struct {
-	Video     string `json:"video"`
-	Bitrate   int    `json:"bitrate"`
-	VideoAuto bool   `json:"video_auto"`
+	Video string `json:"video"`
+	Auto  bool   `json:"auto"`
 }
 
 /////////////////////////////

@@ -2,7 +2,6 @@ package webrtc
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"sync"
 
@@ -22,24 +21,12 @@ type Track struct {
 	rtcpCh chan []rtcp.Packet
 	sample chan types.Sample
 
-	videoAuto   bool
-	videoAutoMu sync.RWMutex
-
 	paused   bool
 	stream   types.StreamSinkManager
 	streamMu sync.Mutex
-
-	bitrateChange func(int) (bool, error)
-	videoChange   func(string) (bool, error)
 }
 
 type trackOption func(*Track)
-
-func WithVideoAuto(auto bool) trackOption {
-	return func(t *Track) {
-		t.videoAuto = auto
-	}
-}
 
 func WithRtcpChan(rtcp chan []rtcp.Packet) trackOption {
 	return func(t *Track) {
@@ -100,6 +87,8 @@ func (t *Track) rtcpReader(sender *webrtc.RTPSender) {
 	}
 }
 
+// --- sample  ---
+
 func (t *Track) sampleReader() {
 	for {
 		sample, ok := <-t.sample
@@ -119,6 +108,12 @@ func (t *Track) sampleReader() {
 		}
 	}
 }
+
+func (t *Track) WriteSample(sample types.Sample) {
+	t.sample <- sample
+}
+
+// --- stream ---
 
 func (t *Track) SetStream(stream types.StreamSinkManager) (bool, error) {
 	t.streamMu.Lock()
@@ -167,6 +162,15 @@ func (t *Track) RemoveStream() {
 	t.stream = nil
 }
 
+func (t *Track) Stream() (types.StreamSinkManager, bool) {
+	t.streamMu.Lock()
+	defer t.streamMu.Unlock()
+
+	return t.stream, t.stream != nil
+}
+
+// --- paused ---
+
 func (t *Track) SetPaused(paused bool) {
 	t.streamMu.Lock()
 	defer t.streamMu.Unlock()
@@ -190,42 +194,9 @@ func (t *Track) SetPaused(paused bool) {
 	t.paused = paused
 }
 
-func (t *Track) WriteSample(sample types.Sample) {
-	t.sample <- sample
-}
+func (t *Track) Paused() bool {
+	t.streamMu.Lock()
+	defer t.streamMu.Unlock()
 
-func (t *Track) SetBitrate(bitrate int) (bool, error) {
-	if t.bitrateChange == nil {
-		return false, fmt.Errorf("bitrate change not supported")
-	}
-
-	return t.bitrateChange(bitrate)
-}
-
-func (t *Track) SetVideoID(videoID string) (bool, error) {
-	if t.videoChange == nil {
-		return false, fmt.Errorf("video change not supported")
-	}
-
-	return t.videoChange(videoID)
-}
-
-func (t *Track) OnBitrateChange(f func(bitrate int) (bool, error)) {
-	t.bitrateChange = f
-}
-
-func (t *Track) OnVideoChange(f func(string) (bool, error)) {
-	t.videoChange = f
-}
-
-func (t *Track) SetVideoAuto(auto bool) {
-	t.videoAutoMu.Lock()
-	defer t.videoAutoMu.Unlock()
-	t.videoAuto = auto
-}
-
-func (t *Track) VideoAuto() bool {
-	t.videoAutoMu.RLock()
-	defer t.videoAutoMu.RUnlock()
-	return t.videoAuto
+	return t.paused
 }

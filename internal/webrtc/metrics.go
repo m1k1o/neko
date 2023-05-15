@@ -121,7 +121,7 @@ func (m *metricsManager) getBySession(session types.Session) *metrics {
 			Name:      "receiver_estimated_maximum_bitrate",
 			Namespace: "neko",
 			Subsystem: "webrtc",
-			Help:      "Receiver Estimated Maximum Bitrate from SCTP.",
+			Help:      "Receiver Estimated Maximum Bitrate from RTCP.",
 			ConstLabels: map[string]string{
 				"session_id": sessionId,
 			},
@@ -140,7 +140,7 @@ func (m *metricsManager) getBySession(session types.Session) *metrics {
 			Name:      "receiver_report_delay",
 			Namespace: "neko",
 			Subsystem: "webrtc",
-			Help:      "Receiver Report Delay from SCTP, expressed in units of 1/65536 seconds.",
+			Help:      "Receiver Report Delay from RTCP, expressed in units of 1/65536 seconds.",
 			ConstLabels: map[string]string{
 				"session_id": sessionId,
 			},
@@ -149,7 +149,7 @@ func (m *metricsManager) getBySession(session types.Session) *metrics {
 			Name:      "receiver_report_jitter",
 			Namespace: "neko",
 			Subsystem: "webrtc",
-			Help:      "Receiver Report Jitter from SCTP.",
+			Help:      "Receiver Report Jitter from RTCP.",
 			ConstLabels: map[string]string{
 				"session_id": sessionId,
 			},
@@ -158,7 +158,17 @@ func (m *metricsManager) getBySession(session types.Session) *metrics {
 			Name:      "receiver_report_total_lost",
 			Namespace: "neko",
 			Subsystem: "webrtc",
-			Help:      "Receiver Report Total Lost from SCTP.",
+			Help:      "Receiver Report Total Lost from RTCP.",
+			ConstLabels: map[string]string{
+				"session_id": sessionId,
+			},
+		}),
+
+		transportLayerNacks: promauto.NewCounter(prometheus.CounterOpts{
+			Name:      "transport_layer_nacks",
+			Namespace: "neko",
+			Subsystem: "webrtc",
+			Help:      "Transport Layer NACKs from RTCP.",
 			ConstLabels: map[string]string{
 				"session_id": sessionId,
 			},
@@ -235,6 +245,8 @@ type metrics struct {
 	receiverReportDelay     prometheus.Gauge
 	receiverReportJitter    prometheus.Gauge
 	receiverReportTotalLost prometheus.Gauge
+
+	transportLayerNacks prometheus.Counter
 
 	iceBytesSent      prometheus.Gauge
 	iceBytesReceived  prometheus.Gauge
@@ -385,6 +397,11 @@ func (met *metrics) rtcpReceiver(rtcpCh chan []rtcp.Packet) {
 				if l > 0 {
 					// use only last report
 					met.SetReceiverReport(rtcpPacket.Reports[l-1])
+				}
+			case *rtcp.TransportLayerNack:
+				for _, pair := range rtcpPacket.Nacks {
+					packetList := pair.PacketList()
+					met.transportLayerNacks.Add(float64(len(packetList)))
 				}
 			}
 		}

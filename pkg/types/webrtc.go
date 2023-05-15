@@ -9,6 +9,7 @@ import (
 var (
 	ErrWebRTCDataChannelNotFound = errors.New("webrtc data channel not found")
 	ErrWebRTCConnectionNotFound  = errors.New("webrtc connection not found")
+	ErrWebRTCStreamNotFound      = errors.New("webrtc stream not found")
 )
 
 type ICEServer struct {
@@ -23,10 +24,10 @@ type WebRTCPeer interface {
 	SetRemoteDescription(webrtc.SessionDescription) error
 	SetCandidate(webrtc.ICECandidateInit) error
 
-	SetVideoBitrate(bitrate int) error
-	SetVideoID(videoID string) error
-	GetVideoID() string
+	SetVideo(StreamSelector) error
+	VideoID() (string, bool)
 	SetPaused(isPaused bool) error
+	Paused() bool
 	SetVideoAuto(auto bool)
 	VideoAuto() bool
 
@@ -42,6 +43,6 @@ type WebRTCManager interface {
 
 	ICEServers() []ICEServer
 
-	CreatePeer(session Session, bitrate int, videoAuto bool) (*webrtc.SessionDescription, error)
+	CreatePeer(session Session) (*webrtc.SessionDescription, WebRTCPeer, error)
 	SetCursorPosition(x, y int)
 }

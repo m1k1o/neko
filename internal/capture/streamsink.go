@@ -21,9 +21,10 @@ import (
 var moveSinkListenerMu = sync.Mutex{}
 
 type StreamSinkManagerCtx struct {
-	id         string
-	getBitrate func() (int, error)
-	waitForKf  bool // wait for a keyframe before sending samples
+	id string
+
+	// wait for a keyframe before sending samples
+	waitForKf bool
 
 	bitrate   uint64 // atomic
 	brBuckets map[int]float64
@@ -48,22 +49,23 @@ type StreamSinkManagerCtx struct {
 	pipelinesActive  prometheus.Gauge
 }
 
-func streamSinkNew(c codec.RTPCodec, pipelineFn func() (string, error), id string, getBitrate func() (int, error)) *StreamSinkManagerCtx {
+func streamSinkNew(codec codec.RTPCodec, pipelineFn func() (string, error), id string) *StreamSinkManagerCtx {
 	logger := log.With().
 		Str("module", "capture").
 		Str("submodule", "stream-sink").
 		Str("id", id).Logger()
 
 	manager := &StreamSinkManagerCtx{
-		id:         id,
-		getBitrate: getBitrate,
-		// only wait for keyframes if the codec is video
-		waitForKf: c.IsVideo(),
+		id: id,
 
+		// only wait for keyframes if the codec is video
+		waitForKf: codec.IsVideo(),
+
+		bitrate:   0,
 		brBuckets: map[int]float64{},
 
 		logger:     logger,
-		codec:      c,
+		codec:      codec,
 		pipelineFn: pipelineFn,
 
 		listeners:   map[uintptr]types.SampleListener{},
@@ -77,8 +79,8 @@ func streamSinkNew(c codec.RTPCodec, pipelineFn func() (string, error), id strin
 			Help:      "Current number of listeners for a pipeline.",
 			ConstLabels: map[string]string{
 				"video_id":   id,
-				"codec_name": c.Name,
-				"codec_type": c.Type.String(),
+				"codec_name": codec.Name,
+				"codec_type": codec.Type.String(),
 			},
 		}),
 		totalBytes: promauto.NewCounter(prometheus.CounterOpts{
@@ -88,8 +90,8 @@ func streamSinkNew(c codec.RTPCodec, pipelineFn func() (string, error), id strin
 			Help:      "Total number of bytes created by the pipeline.",
 			ConstLabels: map[string]string{
 				"video_id":   id,
-				"codec_name": c.Name,
-				"codec_type": c.Type.String(),
+				"codec_name": codec.Name,
+				"codec_type": codec.Type.String(),
 			},
 		}),
 		pipelinesCounter: promauto.NewCounter(prometheus.CounterOpts{
@@ -100,8 +102,8 @@ func streamSinkNew(c codec.RTPCodec, pipelineFn func() (string, error), id strin
 			ConstLabels: map[string]string{
 				"submodule":  "streamsink",
 				"video_id":   id,
-				"codec_name": c.Name,
-				"codec_type": c.Type.String(),
+				"codec_name": codec.Name,
+				"codec_type": codec.Type.String(),
 			},
 		}),
 		pipelinesActive: promauto.NewGauge(prometheus.GaugeOpts{
@@ -112,8 +114,8 @@ func streamSinkNew(c codec.RTPCodec, pipelineFn func() (string, error), id strin
 			ConstLabels: map[string]string{
 				"submodule":  "streamsink",
 				"video_id":   id,
-				"codec_name": c.Name,
-				"codec_type": c.Type.String(),
+				"codec_name": codec.Name,
+				"codec_type": codec.Type.String(),
 			},
 		}),
 	}
@@ -141,27 +143,8 @@ func (manager *StreamSinkManagerCtx) ID() string {
 	return manager.id
 }
 
-func (manager *StreamSinkManagerCtx) Bitrate() int {
-	// TODO: fix bitrate switching calculation
-	// return real bitrate if available
-	//realBitrate := atomic.LoadUint64(&manager.bitrate)
-	//if realBitrate != 0 {
-	//	return int(realBitrate)
-	//}
-
-	// if we do not have function to estimate bitrate, return 0
-	if manager.getBitrate == nil {
-		return 0
-	}
-
-	// recalculate bitrate every time, take screen resolution (and fps) into account
-	// we called this function during startup, so it shouldn't error here
-	bitrate, err := manager.getBitrate()
-	if err != nil {
-		manager.logger.Err(err).Msg("unexpected error while getting bitrate")
-	}
-
-	return bitrate
+func (manager *StreamSinkManagerCtx) Bitrate() uint64 {
+	return atomic.LoadUint64(&manager.bitrate)
 }
 
 func (manager *StreamSinkManagerCtx) Codec() codec.RTPCodec {
