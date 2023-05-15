@@ -162,19 +162,27 @@
         <td>{{ neko.state.connection.webrtc.video }}</td>
       </tr>
       <tr>
+        <th>connection.webrtc.auto</th>
+        <td>
+          <div class="space-between">
+            <span>{{ neko.state.connection.webrtc.auto }}</span>
+            <button @click="neko.setWebRTCVideo(undefined, !neko.state.connection.webrtc.auto)">
+              <i class="fas fa-toggle-on"></i>
+            </button>
+          </div>
+        </td>
+      </tr>
+      <tr>
         <th rowspan="2">connection.webrtc.videos</th>
         <td>Total {{ neko.state.connection.webrtc.videos.length }} videos.</td>
       </tr>
       <tr>
         <td>
-          <select :value="neko.state.connection.webrtc.video" @input="neko.setWebRTCVideo($event.target.value)">
+          <select :value="neko.state.connection.webrtc.video" @input="neko.setWebRTCVideo($event.target.value, false)">
             <option v-for="video in neko.state.connection.webrtc.videos" :key="video" :value="video">
               {{ video }}
             </option>
           </select>
-          or
-          <input type="text" v-model="bitrate" style="width: 60px" placeholder="Bitrate" />
-          <button @click="neko.setWebRTCVideo('', Number(bitrate))">Set</button>
         </td>
       </tr>
       <tr>
@@ -376,13 +384,15 @@
           </td>
         </tr>
       </template>
-      <tr v-else>
-        <th>screen.configurations</th>
-        <td>Session is not admin.</td>
-        <th>screen.sync</th>
-        <td>Session is not admin.</td>
-      </tr>
-
+      <template v-else>
+        <tr>
+          <th>screen.configurations</th>
+          <td rowspan="2" style="vertical-align: middle">Session is not admin.</td>
+        </tr>
+        <tr>
+          <th>screen.sync</th>
+        </tr>
+      </template>
       <tr>
         <th>session_id</th>
         <td>{{ neko.state.session_id }}</td>

@@ -170,7 +170,7 @@
           },
           stats: null,
           video: null,
-          bitrate: null,
+          auto: false,
           videos: [],
         },
         screencast: true, // TODO: Should get by API call.
@@ -383,7 +383,7 @@
       }
     }
 
-    public connect(video?: string) {
+    public connect(video?: string, auto?: boolean) {
       if (!this.state.authenticated) {
         throw new Error('client not authenticated')
       }
@@ -392,7 +392,7 @@
         throw new Error('client is already connected')
       }
 
-      this.connection.open(video)
+      this.connection.open(video, auto)
     }
 
     public disconnect() {
@@ -512,8 +512,19 @@
       this.connection.websocket.send(EVENT.SCREEN_SET, { width, height, rate })
     }
 
-    public setWebRTCVideo(video: string, bitrate: number = 0) {
-      this.connection.setVideo(video, bitrate)
+    public setWebRTCVideo(video?: string, auto?: boolean) {
+      // if video has been set, check if it exists
+      if (video && !this.state.connection.webrtc.videos.includes(video)) {
+        throw new Error('video id not found')
+      }
+
+      // if we didn't specify auto
+      if (typeof auto == 'undefined') {
+        // if we didn't specify video, set auto to true
+        auto = !video
+      }
+
+      this.connection.websocket.send(EVENT.SIGNAL_VIDEO, { video, auto })
     }
 
     public addTrack(track: MediaStreamTrack, ...streams: MediaStream[]): RTCRtpSender {
@@ -749,7 +760,6 @@
       }
 
       // websocket
-      Vue.set(this.state.connection.webrtc, 'videos', [])
       Vue.set(this.state.control, 'clipboard', null)
       Vue.set(this.state.control, 'host_id', null)
       Vue.set(this.state.screen, 'size', { width: 1280, height: 720, rate: 30 })
@@ -768,6 +778,8 @@
       // webrtc
       Vue.set(this.state.connection.webrtc, 'stats', null)
       Vue.set(this.state.connection.webrtc, 'video', null)
+      Vue.set(this.state.connection.webrtc, 'auto', false)
+      Vue.set(this.state.connection.webrtc, 'videos', [])
       Vue.set(this.state.connection, 'type', 'none')
     }
   }

@@ -38,8 +38,9 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
   private _onDisconnectHandle: () => void
   private _onCloseHandle: (error?: Error) => void
 
-  private _webrtcCongestionControlHandle: (stats: WebRTCStats) => void
+  private _webrtcStatsHandle: (stats: WebRTCStats) => void
   private _webrtcStableHandle: (isStable: boolean) => void
+  private _webrtcCongestionControlHandle: (stats: WebRTCStats) => void
 
   // eslint-disable-next-line
   constructor(
@@ -87,6 +88,12 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
       r.on('close', this._onCloseHandle)
     })
 
+    // synchronize webrtc stats with global state
+    this._webrtcStatsHandle = (stats: WebRTCStats) => {
+      Vue.set(this._state.webrtc, 'stats', stats)
+    }
+    this.webrtc.on('stats', this._webrtcStatsHandle)
+
     // synchronize webrtc stable with global state
     this._webrtcStableHandle = (isStable: boolean) => {
       Vue.set(this._state.webrtc, 'stable', isStable)
@@ -101,7 +108,8 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
     let webrtcFallbackTimeout: number
 
     this._webrtcCongestionControlHandle = (stats: WebRTCStats) => {
-      Vue.set(this._state.webrtc, 'stats', stats)
+      // if automatic quality adjusting is turned off
+      if (this._state.webrtc.auto) return
 
       // when connection is paused, 0fps and muted track is expected
       if (stats.paused) return
@@ -138,7 +146,7 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
 
         // downgrade if lower video quality exists
         if (quality && this.webrtc.connected) {
-          this.setVideo(quality)
+          this.websocket.send(EVENT.SIGNAL_VIDEO, { video: quality })
         }
 
         // try to perform ice restart, if available
@@ -151,7 +159,6 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
         this._reconnector.webrtc.reconnect()
       }
     }
-
     this.webrtc.on('stats', this._webrtcCongestionControlHandle)
   }
 
@@ -165,23 +172,11 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
     this._reconnector.webrtc.config = this._state.webrtc.config
   }
 
-  public setVideo(video: string, bitrate: number = 0) {
-    if (video != '' && !this._state.webrtc.videos.includes(video)) {
-      throw new Error('video id not found')
-    }
-
-    if (video == '' && bitrate == 0) {
-      throw new Error('video id and bitrate cannot be empty')
-    }
-
-    this.websocket.send(EVENT.SIGNAL_VIDEO, { video, bitrate })
-  }
-
   public getLogger(scope?: string): Logger {
     return this.logger.new(scope)
   }
 
-  public open(video?: string) {
+  public open(video?: string, auto?: boolean) {
     if (this._open) {
       throw new Error('connection already open')
     }
@@ -195,6 +190,13 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
 
       Vue.set(this._state.webrtc, 'video', video)
     }
+
+    // if we didn't specify auto
+    if (typeof auto == 'undefined') {
+      // if we didn't specify video, set auto to true
+      auto = !video
+    }
+    Vue.set(this._state.webrtc, 'auto', auto)
 
     Vue.set(this._state, 'status', 'connecting')
 
@@ -230,9 +232,10 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
   public destroy() {
     this.logger.destroy()
 
+    this.webrtc.off('stats', this._webrtcStatsHandle)
+    this.webrtc.off('stable', this._webrtcStableHandle)
     // TODO: Use server side congestion control.
     this.webrtc.off('stats', this._webrtcCongestionControlHandle)
-    this.webrtc.off('stable', this._webrtcStableHandle)
 
     // unbind events from all reconnectors
     Object.values(this._reconnector).forEach((r) => {

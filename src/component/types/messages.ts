@@ -45,7 +45,6 @@ export interface SystemDisconnect {
 export interface SignalProvide {
   sdp: string
   iceservers: ICEServer[]
-  video: string
 }
 
 export type SignalCandidate = RTCIceCandidateInit
@@ -56,7 +55,7 @@ export interface SignalDescription {
 
 export interface SignalVideo {
   video: string
-  bitrate: number
+  auto: boolean
 }
 
 /////////////////////////////

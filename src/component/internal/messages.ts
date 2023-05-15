@@ -147,9 +147,8 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
   // Signal Events
   /////////////////////////////
 
-  protected async [EVENT.SIGNAL_PROVIDE]({ sdp, video, iceservers }: message.SignalProvide) {
+  protected async [EVENT.SIGNAL_PROVIDE]({ sdp, iceservers }: message.SignalProvide) {
     this._localLog.debug(`EVENT.SIGNAL_PROVIDE`)
-    Vue.set(this._state.connection.webrtc, 'video', video)
 
     // create WebRTC connection
     await this._connection.webrtc.connect(iceservers)
@@ -194,10 +193,10 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
     this.emit('connection.webrtc.sdp.candidate', 'remote', candidate)
   }
 
-  protected [EVENT.SIGNAL_VIDEO]({ video, bitrate }: message.SignalVideo) {
-    this._localLog.debug(`EVENT.SIGNAL_VIDEO`, { video, bitrate })
+  protected [EVENT.SIGNAL_VIDEO]({ video, auto }: message.SignalVideo) {
+    this._localLog.debug(`EVENT.SIGNAL_VIDEO`, { video, auto })
     Vue.set(this._state.connection.webrtc, 'video', video)
-    Vue.set(this._state.connection.webrtc, 'bitrate', bitrate)
+    Vue.set(this._state.connection.webrtc, 'auto', !!auto)
   }
 
   protected [EVENT.SIGNAL_CLOSE]() {

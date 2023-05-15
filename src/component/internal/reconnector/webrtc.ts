@@ -37,7 +37,10 @@ export class WebrtcReconnector extends ReconnectorAbstract {
     }
 
     if (this._websocket.connected) {
-      this._websocket.send(EVENT.SIGNAL_REQUEST, { video: this._state.webrtc.video })
+      this._websocket.send(EVENT.SIGNAL_REQUEST, {
+        video: this._state.webrtc.video,
+        auto: this._state.webrtc.auto,
+      })
     }
   }
 
