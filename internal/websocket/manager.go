@@ -2,6 +2,7 @@ package websocket
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"sync"
 	"time"
@@ -253,19 +254,26 @@ func (manager *WebSocketManagerCtx) connect(connection *websocket.Conn, r *http.
 		Str("agent", r.UserAgent()).
 		Msg("connection ended")
 
+	if err == nil {
+		logger.Debug().Msg("websocket close")
+		session.DisconnectWebSocketPeer(peer, false)
+		return
+	}
+
 	delayedDisconnect := false
 
 	e, ok := err.(*websocket.CloseError)
 	if !ok {
-		logger.Err(err).Msg("read message error")
+		err = errors.Unwrap(err) // unwrap if possible
+		logger.Warn().Err(err).Msg("read message error")
 		// client is expected to reconnect soon
 		delayedDisconnect = true
 	} else {
 		switch e.Code {
 		case websocket.CloseNormalClosure:
-			logger.Info().Str("reason", e.Text).Msg("websocket close")
+			logger.Debug().Str("reason", e.Text).Msg("websocket close")
 		case websocket.CloseGoingAway:
-			logger.Info().Str("reason", "going away").Msg("websocket close")
+			logger.Debug().Str("reason", "going away").Msg("websocket close")
 		default:
 			logger.Warn().Err(err).Msg("websocket close")
 			// abnormal websocket closure:

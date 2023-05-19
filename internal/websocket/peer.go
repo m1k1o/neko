@@ -2,6 +2,7 @@ package websocket
 
 import (
 	"encoding/json"
+	"errors"
 	"sync"
 
 	"github.com/gorilla/websocket"
@@ -42,7 +43,8 @@ func (peer *WebSocketPeerCtx) Send(event string, payload any) {
 	})
 
 	if err != nil {
-		peer.logger.Err(err).Str("event", event).Msg("send message error")
+		err = errors.Unwrap(err) // unwrap if possible
+		peer.logger.Warn().Err(err).Str("event", event).Msg("send message error")
 		return
 	}
 

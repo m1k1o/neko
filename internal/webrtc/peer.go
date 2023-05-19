@@ -109,7 +109,13 @@ func (peer *WebRTCPeerCtx) Destroy() {
 	peer.mu.Lock()
 	defer peer.mu.Unlock()
 
-	err := peer.connection.Close()
+	var err error
+
+	// if peer connection is not closed, close it
+	if peer.connection.ConnectionState() != webrtc.PeerConnectionStateClosed {
+		err = peer.connection.Close()
+	}
+
 	peer.logger.Err(err).Msg("peer connection destroyed")
 }
 

@@ -95,15 +95,13 @@ func (h *RoomHandler) uploadDialogPost(w http.ResponseWriter, r *http.Request) e
 	//nolint
 	defer r.MultipartForm.RemoveAll()
 
-	if !h.desktop.IsFileChooserDialogOpened() {
-		return utils.HttpUnprocessableEntity("file chooser dialog is not open")
-	}
-
 	req_files := r.MultipartForm.File["files"]
 	if len(req_files) == 0 {
-		return utils.HttpInternalServerError().
-			WithInternalErr(err).
-			WithInternalMsg("unable to copy uploaded file to destination file")
+		return utils.HttpBadRequest("no files received")
+	}
+
+	if !h.desktop.IsFileChooserDialogOpened() {
+		return utils.HttpUnprocessableEntity("file chooser dialog is not open")
 	}
 
 	dir, err := os.MkdirTemp("", "neko-dialog-*")
