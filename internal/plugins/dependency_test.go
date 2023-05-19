@@ -1,9 +1,8 @@
 package plugins
 
 import (
+	"reflect"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
 
 	"github.com/demodesk/neko/pkg/types"
 )
@@ -591,7 +590,9 @@ func Test_deps_addPlugin(t *testing.T) {
 				}
 			}
 
-			assert.Equal(t, tt.want, d.deps)
+			if !reflect.DeepEqual(d.deps, tt.want) {
+				t.Errorf("deps = %v, want %v", d.deps, tt.want)
+			}
 		})
 	}
 }
