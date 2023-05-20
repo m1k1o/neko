@@ -121,6 +121,7 @@ export interface MemberProfile {
   can_access_clipboard: boolean
   sends_inactive_cursor: boolean
   can_see_inactive_cursors: boolean
+  plugins?: Record<string, any>
 }
 
 export interface SessionState {
@@ -148,6 +149,7 @@ export interface Settings {
   implicit_hosting: boolean
   inactive_cursors: boolean
   merciful_reconnect: boolean
+  plugins?: Record<string, any>
 }
 
 /////////////////////////////
