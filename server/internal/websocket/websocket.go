@@ -66,6 +66,7 @@ func New(sessions types.SessionManager, desktop types.DesktopManager, capture ty
 		conf:     conf,
 		sessions: sessions,
 		desktop:  desktop,
+		capture:  capture,
 		webrtc:   webrtc,
 		state:    state,
 		upgrader: websocket.Upgrader{
@@ -88,6 +89,7 @@ type WebSocketHandler struct {
 	upgrader websocket.Upgrader
 	sessions types.SessionManager
 	desktop  types.DesktopManager
+	capture  types.CaptureManager
 	webrtc   types.WebRTCManager
 	state    *state.State
 	conf     *config.WebSocket

@@ -14,6 +14,7 @@ type BroadcastManager interface {
 	Start(url string) error
 	Stop()
 	Started() bool
+	GetRestart() chan bool
 	Url() string
 }
 

@@ -10,10 +10,16 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
-      - ./bin/firefox:/home/neko/.mozilla/firefox
+      - ./bin/home/neko:/home/neko
     devices:
-      - /dev/dri/renderD128:/dev/dri/renderD128
-      - /dev/dri/card0:/dev/dri/card0
+      - /dev/dri:/dev/dri
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
     privileged: true
     environment:
       NEKO_SCREEN: 1920x1080@60
@@ -23,4 +29,5 @@ services:
       NEKO_ICELITE: 1
       NEKO_BROADCAST_URL: rtmp://ome.thuan.au:1935/app/stream-neko
       NEKO_NAT1TO1: 192.168.0.34
-      NEKO_HWENC:
+      NEKO_HWENC: NVENC
+      NEKO_VIDEO_CODEC: h264

@@ -121,6 +121,9 @@ func (ws *WebSocketHandler) connectUpstream() {
 
 							ws.logger.Debug().Msgf("key up %d", payload.Key)
 						}
+					case webrtc.OP_RESTART_BROADCAST:
+						ws.logger.Info().Msg("Restarting broadcast")
+						ws.capture.Broadcast().GetRestart() <- true
 					}
 				}
 			}

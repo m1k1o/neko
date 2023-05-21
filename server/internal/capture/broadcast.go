@@ -14,9 +14,10 @@ type BroacastManagerCtx struct {
 	logger zerolog.Logger
 	mu     sync.Mutex
 
-	pipeline   *gst.Pipeline
-	pipelineMu sync.Mutex
-	pipelineFn func(url string) (string, error)
+	pipeline        *gst.Pipeline
+	pipelineMu      sync.Mutex
+	pipelineFn      func(url string) (string, error)
+	pipelineRestart chan bool
 
 	url     string
 	started bool
@@ -29,10 +30,11 @@ func broadcastNew(pipelineFn func(url string) (string, error), defaultUrl string
 		Logger()
 
 	return &BroacastManagerCtx{
-		logger:     logger,
-		pipelineFn: pipelineFn,
-		url:        defaultUrl,
-		started:    defaultUrl != "",
+		logger:          logger,
+		pipelineFn:      pipelineFn,
+		pipelineRestart: make(chan bool),
+		url:             defaultUrl,
+		started:         defaultUrl != "",
 	}
 }
 
@@ -69,6 +71,10 @@ func (manager *BroacastManagerCtx) Started() bool {
 	defer manager.mu.Unlock()
 
 	return manager.started
+}
+
+func (manager *BroacastManagerCtx) GetRestart() chan bool {
+	return manager.pipelineRestart
 }
 
 func (manager *BroacastManagerCtx) Url() string {

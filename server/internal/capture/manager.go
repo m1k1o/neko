@@ -55,6 +55,25 @@ func (manager *CaptureManagerCtx) Start() {
 
 	go func() {
 		for {
+			_, ok := <-manager.broadcast.GetRestart()
+			if !ok {
+				return
+			}
+
+			if !manager.broadcast.Started() {
+				return
+			}
+
+			manager.broadcast.destroyPipeline()
+			err := manager.broadcast.createPipeline()
+			if err != nil && !errors.Is(err, types.ErrCapturePipelineAlreadyExists) {
+				manager.logger.Panic().Err(err).Msg("unable to recreate broadcast pipeline")
+			}
+		}
+	}()
+
+	go func() {
+		for {
 			before, ok := <-manager.desktop.GetScreenSizeChangeChannel()
 			if !ok {
 				manager.logger.Info().Msg("screen size change channel was closed")
