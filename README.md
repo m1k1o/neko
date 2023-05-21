@@ -14,6 +14,8 @@ Notable differences to the [m1k1o/neko](https://github.com/m1k1o/neko) are:
 
 - Go plugin support.
 - Multiple encoding qualities simulcast.
+   - Bandwidth estimation and adaptive quality.
+- Custom screen size (with automatic sync).
 - Single cursor for host - cursor image proxying.
 - Custom cursor style/badge for participants.
 - Inactive cursors (participants that are not hosting).
@@ -24,13 +26,13 @@ Notable differences to the [m1k1o/neko](https://github.com/m1k1o/neko) are:
   - Access control (view, interactivity, clipboard).
   - Posibility to add external members providers.
   - Persistent login (using cookies).
-  - Split members and sessions.
 - Drag and drop passthrough.
 - File upload passthrough (experimental).
 - Microphone passthrough.
 - Webcam passthrough (experimental).
 - Bi-directional text/html clipboard.
 - Keyboard layouts/variants.
+- Metrics and REST API.
 
 ## Docs
 
