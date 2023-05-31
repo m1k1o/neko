@@ -238,11 +238,17 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
     await this._peer.setRemoteDescription({ type: 'offer', sdp })
 
     if (this._candidates.length > 0) {
+      let candidates = 0
       for (const candidate of this._candidates) {
-        await this._peer.addIceCandidate(candidate)
+        try {
+          await this._peer.addIceCandidate(candidate)
+          candidates++
+        } catch (error: any) {
+          this._log.warn(`unable to add remote ICE candidate`, { error })
+        }
       }
 
-      this._log.debug(`added ${this._candidates.length} remote ICE candidates`, { candidates: this._candidates })
+      this._log.debug(`added ${candidates} remote ICE candidates`, { candidates: this._candidates })
       this._candidates = []
     }
 
