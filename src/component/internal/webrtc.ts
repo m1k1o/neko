@@ -251,7 +251,7 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
     // add stereo=1 to answer sdp to enable stereo audio for chromium
     answer.sdp = answer.sdp?.replace(/(stereo=1;)?useinbandfec=1/, 'useinbandfec=1;stereo=1')
 
-    this._peer.setLocalDescription(answer)
+    await this._peer.setLocalDescription(answer)
 
     if (answer) {
       this.emit('negotiation', answer)
