@@ -281,7 +281,7 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
       this._log.warn(`unable to generate video snap`, { error })
     }
 
-    this._peer.close()
+    this.onDisconnected(new Error('connection closed'))
   }
 
   public addTrack(track: MediaStreamTrack, ...streams: MediaStream[]): RTCRtpSender {
