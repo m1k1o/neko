@@ -127,3 +127,15 @@ webrtc:
       - urls: [ stun:stun.l.google.com:19305 ]
         #username: foo
         #credential: bar
+  # estimator:
+  #   enabled: true
+  #   passive: false
+  #   debug: true
+  #   initial_bitrate: 1000000
+  #   read_interval: 1s
+  #   stable_duration: 10s
+  #   unstable_duration: 5s
+  #   stalled_duration: 20s
+  #   downgrade_backoff: 10s
+  #   upgrade_backoff: 30s
+  #   diff_threshold: 0.5
