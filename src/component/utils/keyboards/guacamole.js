@@ -1357,6 +1357,16 @@ Guacamole.Keyboard = function Keyboard(element) {
 
             e.preventDefault();
 
+            //20230613: NEKO: Fix capslock on macos chrome
+            // if is capslock, keyup is unreliable and event was not marked, then
+            // we need to pretend that this is a keydown event because we obviously
+            // did not receive it
+            if (e.keyCode == 20 && quirks.capsLockKeyupUnreliable) {
+              eventLog.push(new KeydownEvent(e));
+              interpret_events();
+              return;
+            }
+
             // Log event, call for interpretation
             eventLog.push(new KeyupEvent(e));
             interpret_events();
