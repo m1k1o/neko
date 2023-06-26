@@ -74,8 +74,9 @@ For images with VAAPI GPU hardware acceleration using intel drivers use:
 - `ghcr.io/m1k1o/neko/intel-xfce:latest`
 - `ghcr.io/m1k1o/neko/intel-kde:latest`
 
-For images with Nvidia GPU hardware acceleration using EGL (see example below) use:
+For images with Nvidia GPU hardware acceleration using EGL (see example below) use (please note, there is a known issue with EGL and Chromium-based browsers, see [here](https://github.com/m1k1o/neko/issues/279)):
 
+- `ghcr.io/m1k1o/neko/nvidia-firefox:latest`
 - `ghcr.io/m1k1o/neko/nvidia-chromium:latest`
 - `ghcr.io/m1k1o/neko/nvidia-google-chrome:latest`
 - `ghcr.io/m1k1o/neko/nvidia-microsoft-edge:latest`
