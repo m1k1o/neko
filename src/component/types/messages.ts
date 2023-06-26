@@ -1,5 +1,6 @@
 import { ICEServer } from '../internal/webrtc'
 import { Settings } from './state'
+import { PeerRequest, PeerVideo, PeerAudio } from './webrtc'
 
 /////////////////////////////
 // System
@@ -42,9 +43,13 @@ export interface SystemDisconnect {
 // Signal
 /////////////////////////////
 
+export type SignalRequest = PeerRequest
+
 export interface SignalProvide {
   sdp: string
   iceservers: ICEServer[]
+  video: PeerVideo
+  audio: PeerAudio
 }
 
 export type SignalCandidate = RTCIceCandidateInit
@@ -53,10 +58,9 @@ export interface SignalDescription {
   sdp: string
 }
 
-export interface SignalVideo {
-  video: string
-  auto: boolean
-}
+export type SignalVideo = PeerVideo
+
+export type SignalAudio = PeerAudio
 
 /////////////////////////////
 // Session

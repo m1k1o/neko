@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import EventEmitter from 'eventemitter3'
 import * as EVENT from '../types/events'
+import * as webrtcTypes from '../types/webrtc'
 
 import { NekoWebSocket } from './websocket'
 import { NekoLoggerFactory } from './logger'
@@ -24,6 +25,7 @@ export interface NekoConnectionEvents {
 export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
   private _open = false
   private _closing = false
+  private _peerRequest?: webrtcTypes.PeerRequest
 
   public websocket = new NekoWebSocket()
   public logger = new NekoLoggerFactory(this.websocket)
@@ -62,7 +64,14 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
       }
 
       if (this.websocket.connected && !this.webrtc.connected) {
-        this._reconnector.webrtc.connect()
+        // if custom peer request is set, send custom peer request
+        if (this._peerRequest) {
+          this.websocket.send(EVENT.SIGNAL_REQUEST, this._peerRequest)
+          this._peerRequest = undefined
+        } else {
+          // otherwise use reconnectors connect method
+          this._reconnector.webrtc.connect()
+        }
       }
     }
 
@@ -109,10 +118,10 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
 
     this._webrtcCongestionControlHandle = (stats: WebRTCStats) => {
       // if automatic quality adjusting is turned off
-      if (this._state.webrtc.auto) return
+      if (this._state.webrtc.video.auto) return
 
-      // when connection is paused, 0fps and muted track is expected
-      if (stats.paused) return
+      // when connection is paused or video disabled, 0fps and muted track is expected
+      if (stats.paused || this._state.webrtc.video.disabled) return
 
       // if automatic quality adjusting is turned off
       if (!this._reconnector.webrtc.isOpen) return
@@ -121,7 +130,7 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
       if (this._state.webrtc.videos.length <= 1) return
 
       // current quality is not known
-      if (this._state.webrtc.video == null) return
+      if (this._state.webrtc.video.id == '') return
 
       // check if video is not playing smoothly
       if (stats.fps && stats.packetLoss < WEBRTC_RECONN_MAX_LOSS && !stats.muted) {
@@ -142,7 +151,7 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
 
         webrtcCongestion = 0
 
-        const quality = this._webrtcQualityDowngrade(this._state.webrtc.video)
+        const quality = this._webrtcQualityDowngrade(this._state.webrtc.video.id)
 
         // downgrade if lower video quality exists
         if (quality && this.webrtc.connected) {
@@ -176,27 +185,13 @@ export class NekoConnection extends EventEmitter<NekoConnectionEvents> {
     return this.logger.new(scope)
   }
 
-  public open(video?: string, auto?: boolean) {
+  public open(peerRequest?: webrtcTypes.PeerRequest) {
     if (this._open) {
       throw new Error('connection already open')
     }
 
     this._open = true
-
-    if (video) {
-      if (!this._state.webrtc.videos.includes(video)) {
-        throw new Error('video id not found')
-      }
-
-      Vue.set(this._state.webrtc, 'video', video)
-    }
-
-    // if we didn't specify auto
-    if (typeof auto == 'undefined') {
-      // if we didn't specify video, set auto to true
-      auto = !video
-    }
-    Vue.set(this._state.webrtc, 'auto', auto)
+    this._peerRequest = peerRequest
 
     Vue.set(this._state, 'status', 'connecting')
 

@@ -74,7 +74,7 @@
 <script lang="ts">
   export * as ApiModels from './api/models'
   export * as StateModels from './types/state'
-  import * as EVENT from './types/events'
+  export * as webrtcTypes from './types/webrtc'
 
   import { Configuration } from './api/configuration'
   import { AxiosInstance } from 'axios'
@@ -89,6 +89,8 @@
   import { register as VideoRegister } from './internal/video'
 
   import { ReconnectorConfig } from './types/reconnector'
+  import * as EVENT from './types/events'
+  import * as webrtcTypes from './types/webrtc'
   import NekoState from './types/state'
   import { CursorDrawFunction, InactiveCursorDrawFunction, Dimension } from './types/cursors'
   import Overlay from './overlay.vue'
@@ -169,8 +171,14 @@
             backoff_ms: 1500,
           },
           stats: null,
-          video: null,
-          auto: false,
+          video: {
+            disabled: false,
+            id: '',
+            auto: false,
+          },
+          audio: {
+            disabled: false,
+          },
           videos: [],
         },
         screencast: true, // TODO: Should get by API call.
@@ -383,7 +391,7 @@
       }
     }
 
-    public connect(video?: string, auto?: boolean) {
+    public connect(peerRequest?: webrtcTypes.PeerRequest) {
       if (!this.state.authenticated) {
         throw new Error('client not authenticated')
       }
@@ -392,7 +400,7 @@
         throw new Error('client is already connected')
       }
 
-      this.connection.open(video, auto)
+      this.connection.open(peerRequest)
     }
 
     public disconnect() {
@@ -512,19 +520,12 @@
       this.connection.websocket.send(EVENT.SCREEN_SET, { width, height, rate })
     }
 
-    public setWebRTCVideo(video?: string, auto?: boolean) {
-      // if video has been set, check if it exists
-      if (video && !this.state.connection.webrtc.videos.includes(video)) {
-        throw new Error('video id not found')
-      }
+    public setWebRTCVideo(peerVideo: webrtcTypes.PeerVideoRequest) {
+      this.connection.websocket.send(EVENT.SIGNAL_VIDEO, peerVideo)
+    }
 
-      // if we didn't specify auto
-      if (typeof auto == 'undefined') {
-        // if we didn't specify video, set auto to true
-        auto = !video
-      }
-
-      this.connection.websocket.send(EVENT.SIGNAL_VIDEO, { video, auto })
+    public setWebRTCAudio(peerAudio: webrtcTypes.PeerAudioRequest) {
+      this.connection.websocket.send(EVENT.SIGNAL_AUDIO, peerAudio)
     }
 
     public addTrack(track: MediaStreamTrack, ...streams: MediaStream[]): RTCRtpSender {
@@ -778,8 +779,10 @@
 
       // webrtc
       Vue.set(this.state.connection.webrtc, 'stats', null)
-      Vue.set(this.state.connection.webrtc, 'video', null)
-      Vue.set(this.state.connection.webrtc, 'auto', false)
+      Vue.set(this.state.connection.webrtc.video, 'disabled', false)
+      Vue.set(this.state.connection.webrtc.video, 'id', '')
+      Vue.set(this.state.connection.webrtc.video, 'auto', false)
+      Vue.set(this.state.connection.webrtc.audio, 'disabled', false)
       Vue.set(this.state.connection.webrtc, 'videos', [])
       Vue.set(this.state.connection, 'type', 'none')
     }

@@ -147,7 +147,7 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
   // Signal Events
   /////////////////////////////
 
-  protected async [EVENT.SIGNAL_PROVIDE]({ sdp, iceservers }: message.SignalProvide) {
+  protected async [EVENT.SIGNAL_PROVIDE]({ sdp, iceservers, video, audio }: message.SignalProvide) {
     this._localLog.debug(`EVENT.SIGNAL_PROVIDE`)
 
     // create WebRTC connection
@@ -158,6 +158,9 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
 
     // TODO: Return whole signal description (if answer / offer).
     this.emit('connection.webrtc.sdp', 'remote', sdp)
+
+    this[EVENT.SIGNAL_VIDEO](video)
+    this[EVENT.SIGNAL_AUDIO](audio)
   }
 
   protected async [EVENT.SIGNAL_OFFER]({ sdp }: message.SignalDescription) {
@@ -193,10 +196,16 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
     this.emit('connection.webrtc.sdp.candidate', 'remote', candidate)
   }
 
-  protected [EVENT.SIGNAL_VIDEO]({ video, auto }: message.SignalVideo) {
-    this._localLog.debug(`EVENT.SIGNAL_VIDEO`, { video, auto })
-    Vue.set(this._state.connection.webrtc, 'video', video)
-    Vue.set(this._state.connection.webrtc, 'auto', !!auto)
+  protected [EVENT.SIGNAL_VIDEO]({ disabled, id, auto }: message.SignalVideo) {
+    this._localLog.debug(`EVENT.SIGNAL_VIDEO`, { disabled, id, auto })
+    Vue.set(this._state.connection.webrtc.video, 'disabled', disabled)
+    Vue.set(this._state.connection.webrtc.video, 'id', id)
+    Vue.set(this._state.connection.webrtc.video, 'auto', auto)
+  }
+
+  protected [EVENT.SIGNAL_AUDIO]({ disabled }: message.SignalAudio) {
+    this._localLog.debug(`EVENT.SIGNAL_AUDIO`, { disabled })
+    Vue.set(this._state.connection.webrtc.audio, 'disabled', disabled)
   }
 
   protected [EVENT.SIGNAL_CLOSE]() {

@@ -37,9 +37,25 @@ export class WebrtcReconnector extends ReconnectorAbstract {
     }
 
     if (this._websocket.connected) {
+      // use requests from state to connect with selected values
+
+      let selector = null
+      if (this._state.webrtc.video.id) {
+        selector = {
+          id: this._state.webrtc.video.id,
+          type: 'exact',
+        }
+      }
+
       this._websocket.send(EVENT.SIGNAL_REQUEST, {
-        video: this._state.webrtc.video,
-        auto: this._state.webrtc.auto,
+        video: {
+          disabled: this._state.webrtc.video.disabled,
+          selector,
+          auto: this._state.webrtc.video.auto,
+        },
+        audio: {
+          disabled: this._state.webrtc.audio.disabled,
+        },
       })
     }
   }

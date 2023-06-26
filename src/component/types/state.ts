@@ -38,14 +38,18 @@ export interface WebRTC {
   stable: boolean
   config: ReconnectorConfig
   stats: WebRTCStats | null
-  video: string | null
-  auto: boolean
+  video: PeerVideo
+  audio: PeerAudio
   videos: string[]
 }
 
 export interface ReconnectorConfig extends reconnectorTypes.ReconnectorConfig {}
 
 export interface WebRTCStats extends webrtcTypes.WebRTCStats {}
+
+export interface PeerVideo extends webrtcTypes.PeerVideo {}
+
+export interface PeerAudio extends webrtcTypes.PeerAudio {}
 
 /////////////////////////////
 // Video
