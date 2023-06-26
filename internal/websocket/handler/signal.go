@@ -9,15 +9,9 @@ import (
 	"github.com/pion/webrtc/v3"
 )
 
-func (h *MessageHandlerCtx) signalRequest(session types.Session, payload *message.SignalVideo) error {
+func (h *MessageHandlerCtx) signalRequest(session types.Session, payload *message.SignalRequest) error {
 	if !session.Profile().CanWatch {
 		return errors.New("not allowed to watch")
-	}
-
-	// use default first video, if not provided
-	if payload.Video == "" {
-		videos := h.capture.Video().IDs()
-		payload.Video = videos[0]
 	}
 
 	offer, peer, err := h.webrtc.CreatePeer(session)
@@ -30,14 +24,38 @@ func (h *MessageHandlerCtx) signalRequest(session types.Session, payload *messag
 		peer.SetPaused(true)
 	}
 
-	// set video auto state
-	peer.SetVideoAuto(payload.Auto)
+	video := payload.Video
+
+	// use default first video, if not provided
+	if video.Selector == nil {
+		videos := h.capture.Video().IDs()
+		video.Selector = &types.StreamSelector{
+			ID:   videos[0],
+			Type: types.StreamSelectorTypeExact,
+		}
+	}
+
+	// TODO: Remove, used for compatibility with old clients.
+	if video.Auto == nil {
+		video.Auto = &payload.Auto
+	}
 
 	// set video stream
-	err = peer.SetVideo(types.StreamSelector{
-		ID:   payload.Video,
-		Type: types.StreamSelectorTypeNearest,
-	})
+	err = peer.SetVideo(video)
+	if err != nil {
+		return err
+	}
+
+	audio := payload.Audio
+
+	// enable by default if not requested otherwise
+	if audio.Disabled == nil {
+		disabled := false
+		audio.Disabled = &disabled
+	}
+
+	// set audio stream
+	err = peer.SetAudio(audio)
 	if err != nil {
 		return err
 	}
@@ -47,6 +65,9 @@ func (h *MessageHandlerCtx) signalRequest(session types.Session, payload *messag
 		message.SignalProvide{
 			SDP:        offer.SDP,
 			ICEServers: h.webrtc.ICEServers(),
+
+			Video: peer.Video(),
+			Audio: peer.Audio(),
 		})
 
 	return nil
@@ -128,14 +149,14 @@ func (h *MessageHandlerCtx) signalVideo(session types.Session, payload *message.
 		return errors.New("webRTC peer does not exist")
 	}
 
-	peer.SetVideoAuto(payload.Auto)
+	return peer.SetVideo(payload.PeerVideoRequest)
+}
 
-	if payload.Video != "" {
-		return peer.SetVideo(types.StreamSelector{
-			ID:   payload.Video,
-			Type: types.StreamSelectorTypeNearest,
-		})
+func (h *MessageHandlerCtx) signalAudio(session types.Session, payload *message.SignalAudio) error {
+	peer := session.GetWebRTCPeer()
+	if peer == nil {
+		return errors.New("webRTC peer does not exist")
 	}
 
-	return nil
+	return peer.SetAudio(payload.PeerAudioRequest)
 }

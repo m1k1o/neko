@@ -45,7 +45,7 @@ func (h *MessageHandlerCtx) Message(session types.Session, data types.WebSocketM
 
 	// Signal Events
 	case event.SIGNAL_REQUEST:
-		payload := &message.SignalVideo{}
+		payload := &message.SignalRequest{}
 		err = utils.Unmarshal(payload, data.Payload, func() error {
 			return h.signalRequest(session, payload)
 		})
@@ -70,6 +70,11 @@ func (h *MessageHandlerCtx) Message(session types.Session, data types.WebSocketM
 		payload := &message.SignalVideo{}
 		err = utils.Unmarshal(payload, data.Payload, func() error {
 			return h.signalVideo(session, payload)
+		})
+	case event.SIGNAL_AUDIO:
+		payload := &message.SignalAudio{}
+		err = utils.Unmarshal(payload, data.Payload, func() error {
+			return h.signalAudio(session, payload)
 		})
 
 	// Control Events

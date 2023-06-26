@@ -177,6 +177,7 @@ func (t *Track) SetPaused(paused bool) {
 
 	// if there is no state change or no stream, do nothing
 	if t.paused == paused || t.stream == nil {
+		t.paused = paused
 		return
 	}
 

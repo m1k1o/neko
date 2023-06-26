@@ -45,9 +45,19 @@ type SystemDisconnect struct {
 // Signal
 /////////////////////////////
 
+type SignalRequest struct {
+	Video types.PeerVideoRequest `json:"video"`
+	Audio types.PeerAudioRequest `json:"audio"`
+
+	Auto bool `json:"auto"` // TODO: Remove this
+}
+
 type SignalProvide struct {
 	SDP        string            `json:"sdp"`
 	ICEServers []types.ICEServer `json:"iceservers"`
+
+	Video types.PeerVideo `json:"video"`
+	Audio types.PeerAudio `json:"audio"`
 }
 
 type SignalCandidate struct {
@@ -59,8 +69,11 @@ type SignalDescription struct {
 }
 
 type SignalVideo struct {
-	Video string `json:"video"`
-	Auto  bool   `json:"auto"`
+	types.PeerVideoRequest
+}
+
+type SignalAudio struct {
+	types.PeerAudioRequest
 }
 
 /////////////////////////////

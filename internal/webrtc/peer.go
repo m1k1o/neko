@@ -15,7 +15,6 @@ import (
 	"github.com/demodesk/neko/internal/webrtc/payload"
 	"github.com/demodesk/neko/pkg/types"
 	"github.com/demodesk/neko/pkg/types/event"
-	"github.com/demodesk/neko/pkg/types/message"
 	"github.com/demodesk/neko/pkg/utils"
 )
 
@@ -29,7 +28,8 @@ type WebRTCPeerCtx struct {
 	estimator     cc.BandwidthEstimator
 	estimateTrend *utils.TrendDetector
 	// stream selectors
-	videoSelector types.StreamSelectorManager
+	video types.StreamSelectorManager
+	audio types.StreamSinkManager
 	// tracks & channels
 	audioTrack  *Track
 	videoTrack  *Track
@@ -38,7 +38,10 @@ type WebRTCPeerCtx struct {
 	// config
 	iceTrickle      bool
 	estimatorConfig config.WebRTCEstimator
+	paused          bool
 	videoAuto       bool
+	videoDisabled   bool
+	audioDisabled   bool
 }
 
 //
@@ -158,8 +161,8 @@ func (peer *WebRTCPeerCtx) estimatorReader() {
 			break
 		}
 
-		// if estimation is disabled, do nothing
-		if !peer.videoAuto || conf.Passive {
+		// if estimation or video is disabled, do nothing
+		if !peer.videoAuto || peer.videoDisabled || peer.paused || conf.Passive {
 			continue
 		}
 
@@ -236,9 +239,11 @@ func (peer *WebRTCPeerCtx) estimatorReader() {
 				continue
 			}
 
-			err := peer.SetVideo(types.StreamSelector{
-				ID:   streamId,
-				Type: types.StreamSelectorTypeLower,
+			err := peer.SetVideo(types.PeerVideoRequest{
+				Selector: &types.StreamSelector{
+					ID:   streamId,
+					Type: types.StreamSelectorTypeLower,
+				},
 			})
 			if err != nil && err != types.ErrWebRTCStreamNotFound {
 				peer.logger.Warn().Err(err).Msg("failed to downgrade video stream")
@@ -287,9 +292,11 @@ func (peer *WebRTCPeerCtx) estimatorReader() {
 			continue
 		}
 
-		err := peer.SetVideo(types.StreamSelector{
-			ID:   streamId,
-			Type: types.StreamSelectorTypeHigher,
+		err := peer.SetVideo(types.PeerVideoRequest{
+			Selector: &types.StreamSelector{
+				ID:   streamId,
+				Type: types.StreamSelectorTypeHigher,
+			},
 		})
 		if err != nil && err != types.ErrWebRTCStreamNotFound {
 			peer.logger.Warn().Err(err).Msg("failed to upgrade video stream")
@@ -304,65 +311,16 @@ func (peer *WebRTCPeerCtx) estimatorReader() {
 	}
 }
 
-//
-// video
-//
-
-func (peer *WebRTCPeerCtx) SetVideo(selector types.StreamSelector) error {
-	peer.mu.Lock()
-	defer peer.mu.Unlock()
-
-	// get requested video stream from selector
-	stream, ok := peer.videoSelector.GetStream(selector)
-	if !ok {
-		return types.ErrWebRTCStreamNotFound
-	}
-
-	// set video stream to track
-	changed, err := peer.videoTrack.SetStream(stream)
-	if err != nil {
-		return err
-	}
-
-	// if video stream was already set, do nothing
-	if !changed {
-		return nil
-	}
-
-	videoID := stream.ID()
-	peer.metrics.SetVideoID(videoID)
-
-	peer.logger.Info().Str("video_id", videoID).Msg("set video")
-
-	go peer.session.Send(
-		event.SIGNAL_VIDEO,
-		message.SignalVideo{
-			Video: videoID,
-			Auto:  peer.videoAuto,
-		})
-
-	return nil
-}
-
-func (peer *WebRTCPeerCtx) VideoID() (string, bool) {
-	peer.mu.Lock()
-	defer peer.mu.Unlock()
-
-	stream, ok := peer.videoTrack.Stream()
-	if !ok {
-		return "", false
-	}
-
-	return stream.ID(), true
-}
-
 func (peer *WebRTCPeerCtx) SetPaused(isPaused bool) error {
 	peer.mu.Lock()
 	defer peer.mu.Unlock()
 
+	peer.videoTrack.SetPaused(isPaused || peer.videoDisabled)
+	peer.audioTrack.SetPaused(isPaused || peer.audioDisabled)
+
 	peer.logger.Info().Bool("is_paused", isPaused).Msg("set paused")
-	peer.videoTrack.SetPaused(isPaused)
-	peer.audioTrack.SetPaused(isPaused)
+	peer.paused = isPaused
+
 	return nil
 }
 
@@ -370,28 +328,149 @@ func (peer *WebRTCPeerCtx) Paused() bool {
 	peer.mu.Lock()
 	defer peer.mu.Unlock()
 
-	return peer.videoTrack.Paused() || peer.audioTrack.Paused()
+	return peer.paused
 }
 
-func (peer *WebRTCPeerCtx) SetVideoAuto(videoAuto bool) {
+//
+// video
+//
+
+func (peer *WebRTCPeerCtx) SetVideo(r types.PeerVideoRequest) error {
 	peer.mu.Lock()
 	defer peer.mu.Unlock()
 
-	// if estimator is enabled and is not passive, enable video auto bitrate
-	if peer.estimator != nil && !peer.estimatorConfig.Passive {
-		peer.logger.Info().Bool("video_auto", videoAuto).Msg("set video auto")
-		peer.videoAuto = videoAuto
-	} else {
-		peer.logger.Warn().Msg("estimator is disabled or in passive mode, cannot change video auto")
-		peer.videoAuto = false // ensure video auto is disabled
+	modified := false
+
+	// video disabled
+	if r.Disabled != nil {
+		disabled := *r.Disabled
+
+		// update only if changed
+		if peer.videoDisabled != disabled {
+			peer.videoDisabled = disabled
+			peer.videoTrack.SetPaused(disabled || peer.paused)
+
+			peer.logger.Info().Bool("disabled", disabled).Msg("set video disabled")
+			modified = true
+		}
+	}
+
+	// video selector
+	if r.Selector != nil {
+		selector := *r.Selector
+
+		// get requested video stream from selector
+		stream, ok := peer.video.GetStream(selector)
+		if !ok {
+			return types.ErrWebRTCStreamNotFound
+		}
+
+		// set video stream to track
+		changed, err := peer.videoTrack.SetStream(stream)
+		if err != nil {
+			return err
+		}
+
+		// update only if stream changed
+		if changed {
+			videoID := stream.ID()
+			peer.metrics.SetVideoID(videoID)
+
+			peer.logger.Info().Str("video_id", videoID).Msg("set video")
+			modified = true
+		}
+	}
+
+	// video auto
+	if r.Auto != nil {
+		videoAuto := *r.Auto
+
+		if peer.estimator == nil || peer.estimatorConfig.Passive {
+			peer.logger.Warn().Msg("estimator is disabled or in passive mode, cannot change video auto")
+			videoAuto = false // ensure video auto is disabled
+		}
+
+		// update only if video auto changed
+		if peer.videoAuto != videoAuto {
+			peer.videoAuto = videoAuto
+
+			peer.logger.Info().Bool("video_auto", videoAuto).Msg("set video auto")
+			modified = true
+		}
+	}
+
+	// send video signal if modified
+	if modified {
+		go func() {
+			// in goroutine because of mutex and we don't want to block
+			peer.session.Send(event.SIGNAL_VIDEO, peer.Video())
+		}()
+	}
+
+	return nil
+}
+
+func (peer *WebRTCPeerCtx) Video() types.PeerVideo {
+	peer.mu.Lock()
+	defer peer.mu.Unlock()
+
+	// get current video stream ID
+	ID := ""
+	stream, ok := peer.videoTrack.Stream()
+	if ok {
+		ID = stream.ID()
+	}
+
+	return types.PeerVideo{
+		Disabled: peer.videoDisabled,
+		ID:       ID,
+		Video:    ID, // TODO: Remove, used for backward compatibility
+		Auto:     peer.videoAuto,
 	}
 }
 
-func (peer *WebRTCPeerCtx) VideoAuto() bool {
+//
+// audio
+//
+
+func (peer *WebRTCPeerCtx) SetAudio(r types.PeerAudioRequest) error {
 	peer.mu.Lock()
 	defer peer.mu.Unlock()
 
-	return peer.videoAuto
+	modified := false
+
+	// audio disabled
+	if r.Disabled != nil {
+		disabled := *r.Disabled
+
+		// update only if changed
+		if peer.audioDisabled != disabled {
+			peer.audioDisabled = disabled
+			peer.audioTrack.SetPaused(disabled || peer.paused)
+
+			peer.logger.Info().Bool("disabled", disabled).Msg("set audio disabled")
+			modified = true
+		}
+	}
+
+	// send video signal if modified
+	if modified {
+		go func() {
+			// in goroutine because of mutex and we don't want to block
+			peer.session.Send(event.SIGNAL_AUDIO, peer.Audio())
+		}()
+	}
+
+	return nil
+}
+
+func (peer *WebRTCPeerCtx) Audio() types.PeerAudio {
+	peer.mu.Lock()
+	defer peer.mu.Unlock()
+
+	return types.PeerAudio{
+		Disabled: peer.audioDisabled,
+	}
 }
 
 //

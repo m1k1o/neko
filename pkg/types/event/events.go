@@ -17,6 +17,7 @@ const (
 	SIGNAL_PROVIDE   = "signal/provide"
 	SIGNAL_CANDIDATE = "signal/candidate"
 	SIGNAL_VIDEO     = "signal/video"
+	SIGNAL_AUDIO     = "signal/audio"
 	SIGNAL_CLOSE     = "signal/close"
 )
 

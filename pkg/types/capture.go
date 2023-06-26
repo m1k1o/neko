@@ -94,11 +94,11 @@ func (s StreamSelectorType) MarshalText() ([]byte, error) {
 
 type StreamSelector struct {
 	// type of stream selector
-	Type StreamSelectorType
+	Type StreamSelectorType `json:"type"`
 	// select stream by its ID
-	ID string
+	ID string `json:"id"`
 	// select stream by its bitrate
-	Bitrate uint64
+	Bitrate uint64 `json:"bitrate"`
 }
 
 type StreamSelectorManager interface {
