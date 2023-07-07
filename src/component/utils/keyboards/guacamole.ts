@@ -1,3 +1,4 @@
+// https://github.com/apache/guacamole-client/blob/1ca1161a68030565a37319ec6275556dfcd1a1af/guacamole-common-js/src/main/webapp/modules/Keyboard.js
 import GuacamoleKeyboard from './guacamole.js'
 
 export interface GuacamoleKeyboardInterface {

@@ -26,6 +26,13 @@ export class NekoControl extends EventEmitter<NekoControlEvents> {
     super()
   }
 
+  get useWebrtc() {
+    // we want to use webrtc if we're connected and we're the host
+    // because webrtc is faster and it doesn't request control
+    // in contrast to the websocket
+    return this._connection.webrtc.connected && this._state.is_host
+  }
+
   public lock() {
     Vue.set(this._state, 'locked', true)
   }
@@ -43,35 +50,66 @@ export class NekoControl extends EventEmitter<NekoControlEvents> {
   }
 
   public move(pos: ControlPos) {
-    this._connection.websocket.send(EVENT.CONTROL_MOVE, pos as message.ControlPos)
+    if (this.useWebrtc) {
+      this._connection.webrtc.send('mousemove', pos)
+    } else {
+      this._connection.websocket.send(EVENT.CONTROL_MOVE, pos as message.ControlPos)
+    }
   }
 
+  // TODO: rename pos to delta, and add a new pos parameter
   public scroll(pos: ControlPos) {
-    this._connection.websocket.send(EVENT.CONTROL_SCROLL, pos as message.ControlPos)
+    if (this.useWebrtc) {
+      this._connection.webrtc.send('wheel', pos)
+    } else {
+      this._connection.websocket.send(EVENT.CONTROL_SCROLL, pos as message.ControlPos)
+    }
   }
 
+  // buttonpress ensures that only one button is pressed at a time
   public buttonPress(code: number, pos?: ControlPos) {
     this._connection.websocket.send(EVENT.CONTROL_BUTTONPRESS, { code, ...pos } as message.ControlButton)
   }
 
   public buttonDown(code: number, pos?: ControlPos) {
-    this._connection.websocket.send(EVENT.CONTROL_BUTTONDOWN, { code, ...pos } as message.ControlButton)
+    if (this.useWebrtc) {
+      if (pos) this._connection.webrtc.send('mousemove', pos)
+      this._connection.webrtc.send('mousedown', { key: code })
+    } else {
+      this._connection.websocket.send(EVENT.CONTROL_BUTTONDOWN, { code, ...pos } as message.ControlButton)
+    }
   }
 
   public buttonUp(code: number, pos?: ControlPos) {
-    this._connection.websocket.send(EVENT.CONTROL_BUTTONUP, { code, ...pos } as message.ControlButton)
+    if (this.useWebrtc) {
+      if (pos) this._connection.webrtc.send('mousemove', pos)
+      this._connection.webrtc.send('mouseup', { key: code })
+    } else {
+      this._connection.websocket.send(EVENT.CONTROL_BUTTONUP, { code, ...pos } as message.ControlButton)
+    }
   }
 
+  // keypress ensures that only one key is pressed at a time
   public keyPress(keysym: number, pos?: ControlPos) {
     this._connection.websocket.send(EVENT.CONTROL_KEYPRESS, { keysym, ...pos } as message.ControlKey)
   }
 
   public keyDown(keysym: number, pos?: ControlPos) {
-    this._connection.websocket.send(EVENT.CONTROL_KEYDOWN, { keysym, ...pos } as message.ControlKey)
+    if (this.useWebrtc) {
+      if (pos) this._connection.webrtc.send('mousemove', pos)
+      this._connection.webrtc.send('keydown', { key: keysym })
+    } else {
+      this._connection.websocket.send(EVENT.CONTROL_KEYDOWN, { keysym, ...pos } as message.ControlKey)
+    }
   }
 
   public keyUp(keysym: number, pos?: ControlPos) {
-    this._connection.websocket.send(EVENT.CONTROL_KEYUP, { keysym, ...pos } as message.ControlKey)
+    if (this.useWebrtc) {
+      if (pos) this._connection.webrtc.send('mousemove', pos)
+      this._connection.webrtc.send('keyup', { key: keysym })
+    } else {
+      this._connection.websocket.send(EVENT.CONTROL_KEYUP, { keysym, ...pos } as message.ControlKey)
+    }
   }
 
   public cut() {

@@ -1,3 +1,4 @@
+// https://github.com/novnc/noVNC/blob/ca6527c1bf7131adccfdcc5028964a1e67f9018c/core/input/keyboard.js
 import Keyboard from './novnc.js'
 
 export interface NoVncKeyboardInterface {

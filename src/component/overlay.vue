@@ -6,8 +6,8 @@
       class="neko-overlay"
       :style="{ cursor }"
       v-model="textInput"
-      @click.stop.prevent="wsControl.emit('overlay.click', $event)"
-      @contextmenu.stop.prevent="wsControl.emit('overlay.contextmenu', $event)"
+      @click.stop.prevent="control.emit('overlay.click', $event)"
+      @contextmenu.stop.prevent="control.emit('overlay.contextmenu', $event)"
       @wheel.stop.prevent="onWheel"
       @mousemove.stop.prevent="onMouseMove"
       @mousedown.stop.prevent="onMouseDown"
@@ -47,6 +47,7 @@
   import { Vue, Component, Ref, Prop, Watch } from 'vue-property-decorator'
 
   import { KeyboardInterface, NewKeyboard } from './utils/keyboard'
+  import GestureHandlerInit, { GestureHandler } from './utils/gesturehandler'
   import { KeyTable, keySymsRemap } from './utils/keyboard-remapping'
   import { getFilesFromDataTansfer } from './utils/file-upload'
   import { NekoControl } from './internal/control'
@@ -55,8 +56,15 @@
   import { CursorPosition, CursorImage } from './types/webrtc'
   import { CursorDrawFunction, Dimension, KeyboardModifiers } from './types/cursors'
 
-  const WHEEL_STEP = 53 // Delta threshold for a mouse wheel step
-  const WHEEL_LINE_HEIGHT = 19
+  // Wheel thresholds
+  const WHEEL_STEP = 53 // Pixels needed for one step
+  const WHEEL_LINE_HEIGHT = 19 // Assumed pixels for one line step
+
+  // Gesture thresholds
+  const GESTURE_ZOOMSENS = 75
+  const GESTURE_SCRLSENS = 50
+  const DOUBLE_TAP_TIMEOUT = 1000
+  const DOUBLE_TAP_THRESHOLD = 50
 
   const MOUSE_MOVE_THROTTLE = 1000 / 60 // in ms, 60fps
   const INACTIVE_CURSOR_INTERVAL = 1000 / 4 // in ms, 4fps
@@ -72,12 +80,13 @@
     private canvasScale = window.devicePixelRatio
 
     private keyboard!: KeyboardInterface
+    private gestureHandler!: GestureHandler
     private textInput = ''
 
     private focused = false
 
     @Prop()
-    private readonly wsControl!: NekoControl
+    private readonly control!: NekoControl
 
     @Prop()
     private readonly sessions!: Record<string, Session>
@@ -165,12 +174,7 @@
         const isCtrlKey = key == KeyTable.XK_Control_L || key == KeyTable.XK_Control_R
         if (isCtrlKey) ctrlKey = key
 
-        if (this.webrtc.connected) {
-          this.webrtc.send('keydown', { key })
-        } else {
-          this.wsControl.keyDown(key)
-        }
-
+        this.control.keyDown(key)
         return isCtrlKey
       }
       this.keyboard.onkeyup = (key: number) => {
@@ -184,17 +188,17 @@
         const isCtrlKey = key == KeyTable.XK_Control_L || key == KeyTable.XK_Control_R
         if (isCtrlKey) ctrlKey = 0
 
-        if (this.webrtc.connected) {
-          this.webrtc.send('keyup', { key })
-        } else {
-          this.wsControl.keyUp(key)
-        }
+        this.control.keyUp(key)
       }
       this.keyboard.listenTo(this._textarea)
 
-      this._textarea.addEventListener('touchstart', this.onTouchHandler, { passive: false })
-      this._textarea.addEventListener('touchmove', this.onTouchHandler, { passive: false })
-      this._textarea.addEventListener('touchend', this.onTouchHandler, { passive: false })
+      // Initialize GestureHandler
+      this.gestureHandler = new GestureHandlerInit()
+      this.gestureHandler.attach(this._textarea)
+
+      this._textarea.addEventListener('gesturestart', this.onGestureHandler)
+      this._textarea.addEventListener('gesturemove', this.onGestureHandler)
+      this._textarea.addEventListener('gestureend', this.onGestureHandler)
 
       this.webrtc.addListener('cursor-position', this.onCursorPosition)
       this.webrtc.addListener('cursor-image', this.onCursorImage)
@@ -209,9 +213,13 @@
         this.keyboard.removeListener()
       }
 
-      this._textarea.removeEventListener('touchstart', this.onTouchHandler)
-      this._textarea.removeEventListener('touchmove', this.onTouchHandler)
-      this._textarea.removeEventListener('touchend', this.onTouchHandler)
+      if (this.gestureHandler) {
+        this.gestureHandler.detach()
+      }
+
+      this._textarea.removeEventListener('gesturestart', this.onGestureHandler)
+      this._textarea.removeEventListener('gesturemove', this.onGestureHandler)
+      this._textarea.removeEventListener('gestureend', this.onGestureHandler)
 
       this.webrtc.removeListener('cursor-position', this.onCursorPosition)
       this.webrtc.removeListener('cursor-image', this.onCursorImage)
@@ -227,34 +235,161 @@
       }
     }
 
-    onTouchHandler(e: TouchEvent) {
-      let type = ''
-      switch (e.type) {
-        case 'touchstart':
-          type = 'mousedown'
-          break
-        case 'touchmove':
-          type = 'mousemove'
-          break
-        case 'touchend':
-          type = 'mouseup'
-          break
-        default:
-          // unknown event
-          return
+    // Gesture state
+    private _gestureLastTapTime: any | null = null
+    private _gestureFirstDoubleTapEv: any | null = null
+    private _gestureLastMagnitudeX = 0
+    private _gestureLastMagnitudeY = 0
+
+    _handleTapEvent(ev: any, code: number) {
+      let pos = this.getMousePos(ev.detail.clientX, ev.detail.clientY)
+
+      // If the user quickly taps multiple times we assume they meant to
+      // hit the same spot, so slightly adjust coordinates
+
+      if (
+        this._gestureLastTapTime !== null &&
+        Date.now() - this._gestureLastTapTime < DOUBLE_TAP_TIMEOUT &&
+        this._gestureFirstDoubleTapEv.detail.type === ev.detail.type
+      ) {
+        let dx = this._gestureFirstDoubleTapEv.detail.clientX - ev.detail.clientX
+        let dy = this._gestureFirstDoubleTapEv.detail.clientY - ev.detail.clientY
+        let distance = Math.hypot(dx, dy)
+
+        if (distance < DOUBLE_TAP_THRESHOLD) {
+          pos = this.getMousePos(
+            this._gestureFirstDoubleTapEv.detail.clientX,
+            this._gestureFirstDoubleTapEv.detail.clientY,
+          )
+        } else {
+          this._gestureFirstDoubleTapEv = ev
+        }
+      } else {
+        this._gestureFirstDoubleTapEv = ev
+      }
+      this._gestureLastTapTime = Date.now()
+
+      this.control.buttonDown(code, pos)
+      this.control.buttonUp(code, pos)
+    }
+
+    // https://github.com/novnc/noVNC/blob/ca6527c1bf7131adccfdcc5028964a1e67f9018c/core/rfb.js#L1227-L1345
+    onGestureHandler(ev: any) {
+      // we cannot use implicitControlRequest because we don't have mouse event
+      if (!this.isControling) {
+        // if implicitControl is enabled, request control
+        if (this.implicitControl) {
+          this.control.request()
+        }
+        // otherwise, ignore event
+        return
       }
 
-      const touch = e.changedTouches[0]
-      touch.target.dispatchEvent(
-        new MouseEvent(type, {
-          button: 0, // currently only left button is supported
-          clientX: touch.clientX,
-          clientY: touch.clientY,
-        }),
-      )
+      const pos = this.getMousePos(ev.detail.clientX, ev.detail.clientY)
 
-      e.preventDefault()
-      e.stopPropagation()
+      let magnitude
+      switch (ev.type) {
+        case 'gesturestart':
+          switch (ev.detail.type) {
+            case 'onetap':
+              this._handleTapEvent(ev, 1)
+              break
+            case 'twotap':
+              this._handleTapEvent(ev, 3)
+              break
+            case 'threetap':
+              this._handleTapEvent(ev, 2)
+              break
+            case 'drag':
+              this.control.buttonDown(1, pos)
+              break
+            case 'longpress':
+              this.control.buttonDown(3, pos)
+              break
+
+            case 'twodrag':
+              this._gestureLastMagnitudeX = ev.detail.magnitudeX
+              this._gestureLastMagnitudeY = ev.detail.magnitudeY
+              this.control.move(pos)
+              break
+            case 'pinch':
+              this._gestureLastMagnitudeX = Math.hypot(ev.detail.magnitudeX, ev.detail.magnitudeY)
+              this.control.move(pos)
+              break
+          }
+          break
+
+        case 'gesturemove':
+          switch (ev.detail.type) {
+            case 'onetap':
+            case 'twotap':
+            case 'threetap':
+              break
+            case 'drag':
+            case 'longpress':
+              this.control.move(pos)
+              break
+            case 'twodrag':
+              // Always scroll in the same position.
+              // We don't know if the mouse was moved so we need to move it
+              // every update.
+              this.control.move(pos)
+              while (ev.detail.magnitudeY - this._gestureLastMagnitudeY > GESTURE_SCRLSENS) {
+                this.control.scroll({ x: 0, y: 1 })
+                this._gestureLastMagnitudeY += GESTURE_SCRLSENS
+              }
+              while (ev.detail.magnitudeY - this._gestureLastMagnitudeY < -GESTURE_SCRLSENS) {
+                this.control.scroll({ x: 0, y: -1 })
+                this._gestureLastMagnitudeY -= GESTURE_SCRLSENS
+              }
+              while (ev.detail.magnitudeX - this._gestureLastMagnitudeX > GESTURE_SCRLSENS) {
+                this.control.scroll({ x: 1, y: 0 })
+                this._gestureLastMagnitudeX += GESTURE_SCRLSENS
+              }
+              while (ev.detail.magnitudeX - this._gestureLastMagnitudeX < -GESTURE_SCRLSENS) {
+                this.control.scroll({ x: -1, y: 0 })
+                this._gestureLastMagnitudeX -= GESTURE_SCRLSENS
+              }
+              break
+            case 'pinch':
+              // Always scroll in the same position.
+              // We don't know if the mouse was moved so we need to move it
+              // every update.
+              this.control.move(pos)
+              magnitude = Math.hypot(ev.detail.magnitudeX, ev.detail.magnitudeY)
+              if (Math.abs(magnitude - this._gestureLastMagnitudeX) > GESTURE_ZOOMSENS) {
+                this.control.keyDown(KeyTable.XK_Control_L)
+                while (magnitude - this._gestureLastMagnitudeX > GESTURE_ZOOMSENS) {
+                  this.control.scroll({ x: 0, y: 1 })
+                  this._gestureLastMagnitudeX += GESTURE_ZOOMSENS
+                }
+                while (magnitude - this._gestureLastMagnitudeX < -GESTURE_ZOOMSENS) {
+                  this.control.scroll({ x: 0, y: -1 })
+                  this._gestureLastMagnitudeX -= GESTURE_ZOOMSENS
+                }
+                this.control.keyUp(KeyTable.XK_Control_L)
+              }
+              break
+          }
+          break
+
+        case 'gestureend':
+          switch (ev.detail.type) {
+            case 'onetap':
+            case 'twotap':
+            case 'threetap':
+            case 'pinch':
+            case 'twodrag':
+              break
+            case 'drag':
+              this.control.buttonUp(1, pos)
+              break
+            case 'longpress':
+              this.control.buttonUp(3, pos)
+              break
+          }
+          break
+      }
     }
 
     getMousePos(clientX: number, clientY: number) {
@@ -268,7 +403,11 @@
 
     sendMousePos(e: MouseEvent) {
       const pos = this.getMousePos(e.clientX, e.clientY)
-      this.webrtc.send('mousemove', pos)
+      // not using NekoControl here because we want to avoid
+      // sending mousemove events over websocket
+      if (this.webrtc.connected) {
+        this.webrtc.send('mousemove', pos)
+      } // otherwise, no events are sent
       this.cursorPosition = pos
     }
 
@@ -307,7 +446,7 @@
     @Watch('textInput')
     onTextInputChange() {
       if (this.textInput == '') return
-      this.wsControl.paste(this.textInput)
+      this.control.paste(this.textInput)
       this.textInput = ''
     }
 
@@ -365,12 +504,8 @@
       // skip if not scrolled
       if (x == 0 && y == 0) return
 
-      if (this.webrtc.connected) {
-        this.sendMousePos(e)
-        this.webrtc.send('wheel', { x, y })
-      } else {
-        this.wsControl.scroll({ x, y })
-      }
+      // TODO: add position for precision scrolling
+      this.control.scroll({ x, y })
     }
 
     lastMouseMove = 0
@@ -400,13 +535,8 @@
       }
 
       const key = e.button + 1
-      if (this.webrtc.connected) {
-        this.sendMousePos(e)
-        this.webrtc.send('mousedown', { key })
-      } else {
-        const pos = this.getMousePos(e.clientX, e.clientY)
-        this.wsControl.buttonDown(key, pos)
-      }
+      const pos = this.getMousePos(e.clientX, e.clientY)
+      this.control.buttonDown(key, pos)
     }
 
     onMouseUp(e: MouseEvent) {
@@ -420,13 +550,8 @@
       }
 
       const key = e.button + 1
-      if (this.webrtc.connected) {
-        this.sendMousePos(e)
-        this.webrtc.send('mouseup', { key })
-      } else {
-        const pos = this.getMousePos(e.clientX, e.clientY)
-        this.wsControl.buttonUp(key, pos)
-      }
+      const pos = this.getMousePos(e.clientX, e.clientY)
+      this.control.buttonUp(key, pos)
     }
 
     onMouseEnter(e: MouseEvent) {
@@ -474,7 +599,8 @@
         const files = await getFilesFromDataTansfer(dt)
         if (files.length === 0) return
 
-        this.$emit('uploadDrop', { ...this.getMousePos(e.clientX, e.clientY), files })
+        const pos = this.getMousePos(e.clientX, e.clientY)
+        this.$emit('uploadDrop', { ...pos, files })
       }
     }
 
@@ -510,9 +636,11 @@
     }
 
     sendInactiveMousePos() {
-      if (this.inactiveCursorPosition) {
+      if (this.inactiveCursorPosition && this.webrtc.connected) {
+        // not using NekoControl here, because inactive cursors are
+        // treated differently than moving the mouse while controling
         this.webrtc.send('mousemove', this.inactiveCursorPosition)
-      }
+      } // if webrtc is not connected, we don't need to send anything
     }
 
     //
@@ -715,7 +843,7 @@
       if (this.implicitControl && e.type === 'mousedown') {
         this.reqMouseDown = e
         this.reqMouseUp = null
-        this.wsControl.request()
+        this.control.request()
       }
 
       if (this.implicitControl && e.type === 'mouseup') {
@@ -726,7 +854,7 @@
     // unused
     implicitControlRelease() {
       if (this.implicitControl) {
-        this.wsControl.release()
+        this.control.release()
       }
     }
 

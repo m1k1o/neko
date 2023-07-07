@@ -262,6 +262,9 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
       Vue.set(this._state.control, 'host_id', null)
     }
 
+    // save if user is host
+    Vue.set(this._state.control, 'is_host', has_host && this._state.control.host_id === this._state.session_id)
+
     this.emit('room.control.host', has_host, host_id)
   }
 

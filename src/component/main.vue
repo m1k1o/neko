@@ -24,7 +24,7 @@
         ref="overlay"
         v-show="!private_mode_enabled && state.connection.status != 'disconnected'"
         :style="{ pointerEvents: state.control.locked ? 'none' : 'auto' }"
-        :wsControl="control"
+        :control="control"
         :sessions="state.sessions"
         :hostId="state.control.host_id"
         :webrtc="connection.webrtc"
@@ -201,6 +201,7 @@
           variant: '',
         },
         host_id: null,
+        is_host: false,
         locked: false,
       },
       screen: {
@@ -763,6 +764,7 @@
       // websocket
       Vue.set(this.state.control, 'clipboard', null)
       Vue.set(this.state.control, 'host_id', null)
+      Vue.set(this.state.control, 'is_host', false)
       Vue.set(this.state.screen, 'size', { width: 1280, height: 720, rate: 30 })
       Vue.set(this.state.screen, 'configurations', [])
       Vue.set(this.state.screen, 'sync', false)

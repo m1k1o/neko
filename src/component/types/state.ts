@@ -71,6 +71,7 @@ export interface Control {
   clipboard: Clipboard | null
   keyboard: Keyboard
   host_id: string | null
+  is_host: boolean
   locked: boolean
 }
 
