@@ -11,7 +11,7 @@ RUN set -eux; \
     sed -Ei 's/^deb /deb-src /' /etc/apt/sources.list; \
     cat /etc/apt/sources.list~ >> /etc/apt/sources.list; \
     apt-get update; \
-	apt-get install -y dpkg-dev git; \
+    apt-get install -y dpkg-dev git; \
     apt-get build-dep -y xserver-xorg-video-dummy; \
     git clone --depth 1 --branch xserver-xorg-video-dummy-1_0.3.8-2 https://salsa.debian.org/xorg-team/driver/xserver-xorg-video-dummy; \
     #
@@ -24,8 +24,8 @@ COPY runtime/xdummy-randr.patch /tmp/xdummy-randr.patch
 RUN set -eux; \
     cd xserver-xorg-video-dummy; \
     patch -p1 < /tmp/xdummy-randr.patch; \
-	bash ./autogen.sh; \
-	make; \
+    bash ./autogen.sh; \
+    make; \
     make install;
 
 #
