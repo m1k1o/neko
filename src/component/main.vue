@@ -23,7 +23,7 @@
       <neko-overlay
         ref="overlay"
         v-show="!private_mode_enabled && state.connection.status != 'disconnected'"
-        :style="{ pointerEvents: state.control.locked ? 'none' : 'auto' }"
+        :style="{ pointerEvents: state.control.locked || (session && !session.profile.can_host) ? 'none' : 'auto' }"
         :control="control"
         :sessions="state.sessions"
         :hostId="state.control.host_id"
