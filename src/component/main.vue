@@ -200,6 +200,7 @@
           layout: 'us',
           variant: '',
         },
+        touch_events: false,
         host_id: null,
         is_host: false,
         locked: false,

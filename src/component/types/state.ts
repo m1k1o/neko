@@ -70,6 +70,7 @@ export interface Control {
   scroll: Scroll
   clipboard: Clipboard | null
   keyboard: Keyboard
+  touch_events: boolean
   host_id: string | null
   is_host: boolean
   locked: boolean

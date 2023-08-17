@@ -13,6 +13,10 @@ export const OPCODE = {
   BTN_DOWN: 0x05,
   BTN_UP: 0x06,
   PING: 0x07,
+  // touch events
+  TOUCH_BEGIN: 0x08,
+  TOUCH_UPDATE: 0x09,
+  TOUCH_END: 0x0a,
 } as const
 
 export interface ICEServer {
@@ -361,6 +365,10 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
   public send(event: 'wheel' | 'mousemove', data: { x: number; y: number }): void
   public send(event: 'mousedown' | 'mouseup' | 'keydown' | 'keyup', data: { key: number }): void
   public send(event: 'ping', data: number): void
+  public send(
+    event: 'touchbegin' | 'touchupdate' | 'touchend',
+    data: { touchId: number; x: number; y: number; pressure: number },
+  ): void
   public send(event: string, data: any): void {
     if (typeof this._channel === 'undefined' || this._channel.readyState !== 'open') {
       this._log.warn(`attempting to send data, but data-channel is not open`, { event })
@@ -421,6 +429,24 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
         payload.setUint16(1, 8)
         payload.setUint32(3, Math.trunc(data / maxUint32))
         payload.setUint32(7, data % maxUint32)
+        break
+      case 'touchbegin':
+      case 'touchupdate':
+      case 'touchend':
+        buffer = new ArrayBuffer(16)
+        payload = new DataView(buffer)
+        if (event === 'touchbegin') {
+          payload.setUint8(0, OPCODE.TOUCH_BEGIN)
+        } else if (event === 'touchupdate') {
+          payload.setUint8(0, OPCODE.TOUCH_UPDATE)
+        } else if (event === 'touchend') {
+          payload.setUint8(0, OPCODE.TOUCH_END)
+        }
+        payload.setUint16(1, 13)
+        payload.setUint32(3, data.touchId)
+        payload.setInt32(7, data.x)
+        payload.setInt32(11, data.y)
+        payload.setUint8(15, data.pressure)
         break
       default:
         this._log.warn(`unknown data event`, { event })

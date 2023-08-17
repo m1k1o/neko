@@ -33,6 +33,10 @@ export class NekoControl extends EventEmitter<NekoControlEvents> {
     return this._connection.webrtc.connected && this._state.is_host
   }
 
+  get hasTouchEvents() {
+    return this._state.touch_events
+  }
+
   public lock() {
     Vue.set(this._state, 'locked', true)
   }
@@ -109,6 +113,30 @@ export class NekoControl extends EventEmitter<NekoControlEvents> {
       this._connection.webrtc.send('keyup', { key: keysym })
     } else {
       this._connection.websocket.send(EVENT.CONTROL_KEYUP, { keysym, ...pos } as message.ControlKey)
+    }
+  }
+
+  public touchBegin(touchId: number, pos: ControlPos, pressure: number) {
+    if (this.useWebrtc) {
+      this._connection.webrtc.send('touchbegin', { touchId, ...pos, pressure })
+    } else {
+      this._connection.websocket.send(EVENT.CONTROL_TOUCHBEGIN, { touchId, ...pos, pressure } as message.ControlTouch)
+    }
+  }
+
+  public touchUpdate(touchId: number, pos: ControlPos, pressure: number) {
+    if (this.useWebrtc) {
+      this._connection.webrtc.send('touchupdate', { touchId, ...pos, pressure })
+    } else {
+      this._connection.websocket.send(EVENT.CONTROL_TOUCHUPDATE, { touchId, ...pos, pressure } as message.ControlTouch)
+    }
+  }
+
+  public touchEnd(touchId: number, pos: ControlPos, pressure: number) {
+    if (this.useWebrtc) {
+      this._connection.webrtc.send('touchend', { touchId, ...pos, pressure })
+    } else {
+      this._connection.websocket.send(EVENT.CONTROL_TOUCHEND, { touchId, ...pos, pressure } as message.ControlTouch)
     }
   }
 

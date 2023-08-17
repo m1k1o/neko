@@ -194,11 +194,13 @@
 
       // Initialize GestureHandler
       this.gestureHandler = new GestureHandlerInit()
-      this.gestureHandler.attach(this._textarea)
 
-      this._textarea.addEventListener('gesturestart', this.onGestureHandler)
-      this._textarea.addEventListener('gesturemove', this.onGestureHandler)
-      this._textarea.addEventListener('gestureend', this.onGestureHandler)
+      // bind touch handler using @Watch on hasTouchEvents
+      // because we need to know if touch events are supported
+      // by the server before we can bind touch handler
+
+      // default value is false, so we can bind touch handler
+      this.bindGestureHandler()
 
       this.webrtc.addListener('cursor-position', this.onCursorPosition)
       this.webrtc.addListener('cursor-image', this.onCursorImage)
@@ -213,13 +215,11 @@
         this.keyboard.removeListener()
       }
 
-      if (this.gestureHandler) {
-        this.gestureHandler.detach()
-      }
+      // unbind touch handler
+      this.unbindTouchHandler()
 
-      this._textarea.removeEventListener('gesturestart', this.onGestureHandler)
-      this._textarea.removeEventListener('gesturemove', this.onGestureHandler)
-      this._textarea.removeEventListener('gestureend', this.onGestureHandler)
+      // unbind gesture handler
+      this.unbindGestureHandler()
 
       this.webrtc.removeListener('cursor-position', this.onCursorPosition)
       this.webrtc.removeListener('cursor-image', this.onCursorImage)
@@ -235,7 +235,78 @@
       }
     }
 
-    // Gesture state
+    //
+    // touch handler for native touch events
+    //
+
+    bindTouchHandler() {
+      this._textarea.addEventListener('touchstart', this.onTouchHandler, { passive: false })
+      this._textarea.addEventListener('touchmove', this.onTouchHandler, { passive: false })
+      this._textarea.addEventListener('touchend', this.onTouchHandler, { passive: false })
+      this._textarea.addEventListener('touchcancel', this.onTouchHandler, { passive: false })
+    }
+
+    unbindTouchHandler() {
+      this._textarea.removeEventListener('touchstart', this.onTouchHandler)
+      this._textarea.removeEventListener('touchmove', this.onTouchHandler)
+      this._textarea.removeEventListener('touchend', this.onTouchHandler)
+      this._textarea.removeEventListener('touchcancel', this.onTouchHandler)
+    }
+
+    onTouchHandler(ev: TouchEvent) {
+      // we cannot use implicitControlRequest because we don't have mouse event
+      if (!this.isControling) {
+        // if implicitControl is enabled, request control
+        if (this.implicitControl) {
+          this.control.request()
+        }
+        // otherwise, ignore event
+        return
+      }
+
+      ev.stopPropagation()
+      ev.preventDefault()
+
+      for (let i = 0; i < ev.changedTouches.length; i++) {
+        const touch = ev.changedTouches[i]
+        const pos = this.getMousePos(touch.clientX, touch.clientY)
+        // force is float value between 0 and 1
+        // pressure is integer value between 0 and 255
+        const pressure = Math.round(touch.force * 255)
+
+        switch (ev.type) {
+          case 'touchstart':
+            this.control.touchBegin(touch.identifier, pos, pressure)
+            break
+          case 'touchmove':
+            this.control.touchUpdate(touch.identifier, pos, pressure)
+            break
+          case 'touchend':
+          case 'touchcancel':
+            this.control.touchEnd(touch.identifier, pos, pressure)
+            break
+        }
+      }
+    }
+
+    //
+    // gesture handler for emulated mouse events
+    //
+
+    bindGestureHandler() {
+      this.gestureHandler.attach(this._textarea)
+      this._textarea.addEventListener('gesturestart', this.onGestureHandler)
+      this._textarea.addEventListener('gesturemove', this.onGestureHandler)
+      this._textarea.addEventListener('gestureend', this.onGestureHandler)
+    }
+
+    unbindGestureHandler() {
+      this.gestureHandler.detach()
+      this._textarea.removeEventListener('gesturestart', this.onGestureHandler)
+      this._textarea.removeEventListener('gesturemove', this.onGestureHandler)
+      this._textarea.removeEventListener('gestureend', this.onGestureHandler)
+    }
+
     private _gestureLastTapTime: any | null = null
     private _gestureFirstDoubleTapEv: any | null = null
     private _gestureLastMagnitudeX = 0
@@ -389,6 +460,21 @@
               break
           }
           break
+      }
+    }
+
+    //
+    // touch and gesture handlers cannot be used together
+    //
+
+    @Watch('control.hasTouchEvents')
+    onTouchEventsChange() {
+      if (this.control.hasTouchEvents) {
+        this.unbindGestureHandler()
+        this.bindTouchHandler()
+      } else {
+        this.unbindTouchHandler()
+        this.bindGestureHandler()
       }
     }
 

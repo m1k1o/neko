@@ -335,6 +335,10 @@
         </td>
       </tr>
       <tr>
+        <th>control.touch_events</th>
+        <td>{{ neko.state.control.touch_events ? 'backend supports' : 'backend does not support' }}</td>
+      </tr>
+      <tr>
         <th rowspan="2">control.host_id</th>
         <td>{{ neko.state.control.host_id }}</td>
       </tr>

@@ -34,6 +34,10 @@ export const CONTROL_BUTTONUP = 'control/buttonup'
 export const CONTROL_KEYPRESS = 'control/keypress'
 export const CONTROL_KEYDOWN = 'control/keydown'
 export const CONTROL_KEYUP = 'control/keyup'
+// touch
+export const CONTROL_TOUCHBEGIN = 'control/touchbegin'
+export const CONTROL_TOUCHUPDATE = 'control/touchupdate'
+export const CONTROL_TOUCHEND = 'control/touchend'
 // actions
 export const CONTROL_CUT = 'control/cut'
 export const CONTROL_COPY = 'control/copy'

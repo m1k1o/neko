@@ -18,6 +18,7 @@ export interface SystemInit {
   screen_size: ScreenSize
   sessions: Record<string, SessionData>
   settings: Settings
+  touch_events: boolean
   screencast_enabled: boolean
   webrtc: SystemWebRTC
 }
@@ -123,6 +124,11 @@ export interface ControlButton extends Partial<ControlPos> {
 
 export interface ControlKey extends Partial<ControlPos> {
   keysym: number
+}
+
+export interface ControlTouch extends Partial<ControlPos> {
+  touchId: number
+  pressure: number
 }
 
 /////////////////////////////
