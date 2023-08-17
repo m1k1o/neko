@@ -43,6 +43,10 @@ const (
 	CONTROL_KEYPRESS = "control/keypress"
 	CONTROL_KEYDOWN  = "control/keydown"
 	CONTROL_KEYUP    = "control/keyup"
+	// touch
+	CONTROL_TOUCHBEGIN  = "control/touchbegin"
+	CONTROL_TOUCHUPDATE = "control/touchupdate"
+	CONTROL_TOUCHEND    = "control/touchend"
 	// actions
 	CONTROL_CUT        = "control/cut"
 	CONTROL_COPY       = "control/copy"

@@ -122,6 +122,22 @@ func (h *MessageHandlerCtx) Message(session types.Session, data types.WebSocketM
 		err = utils.Unmarshal(payload, data.Payload, func() error {
 			return h.controlKeyUp(session, payload)
 		})
+	// touch
+	case event.CONTROL_TOUCHBEGIN:
+		payload := &message.ControlTouch{}
+		err = utils.Unmarshal(payload, data.Payload, func() error {
+			return h.controlTouchBegin(session, payload)
+		})
+	case event.CONTROL_TOUCHUPDATE:
+		payload := &message.ControlTouch{}
+		err = utils.Unmarshal(payload, data.Payload, func() error {
+			return h.controlTouchUpdate(session, payload)
+		})
+	case event.CONTROL_TOUCHEND:
+		payload := &message.ControlTouch{}
+		err = utils.Unmarshal(payload, data.Payload, func() error {
+			return h.controlTouchEnd(session, payload)
+		})
 	// actions
 	case event.CONTROL_CUT:
 		err = h.controlCut(session)

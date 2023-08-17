@@ -52,33 +52,38 @@ RUN set -eux; \
     meson install -C build;
 
 #
-# Stage 0: Build xserver-xorg-video-dummy 0.3.8-2 with RandR support.
+# Stage 0: Build xorg dependencies.
 #
-FROM debian:bullseye-slim as xserver-xorg-video-dummy
-
-WORKDIR /usr/local/src
+FROM debian:bullseye-slim as xorg-deps
 
 ENV DEBIAN_FRONTEND=noninteractive
+
 RUN set -eux; \
-    cp /etc/apt/sources.list /etc/apt/sources.list~; \
-    sed -Ei 's/^deb /deb-src /' /etc/apt/sources.list; \
-    cat /etc/apt/sources.list~ >> /etc/apt/sources.list; \
     apt-get update; \
-	apt-get install -y dpkg-dev git; \
-    apt-get build-dep -y xserver-xorg-video-dummy; \
-    git clone --depth 1 --branch xserver-xorg-video-dummy-1_0.3.8-2 https://salsa.debian.org/xorg-team/driver/xserver-xorg-video-dummy; \
-    #
-    # clean up
-    apt-get clean -y; \
-    rm -rf /var/lib/apt/lists/* /var/cache/apt/*
+    apt-get install -y \
+        git gcc pkgconf autoconf automake libtool make xorg-dev xutils-dev \
+    && rm -rf /var/lib/apt/lists/*;
 
-COPY runtime/xdummy-randr.patch /tmp/xdummy-randr.patch
+WORKDIR /xorg
 
+COPY xorg/ /xorg/
+
+# build xserver-xorg-video-dummy 0.3.8-2 with RandR support.
 RUN set -eux; \
+    cd xf86-video-dummy; \
+    git clone --depth 1 --branch xserver-xorg-video-dummy-1_0.3.8-2 https://salsa.debian.org/xorg-team/driver/xserver-xorg-video-dummy; \
     cd xserver-xorg-video-dummy; \
-    patch -p1 < /tmp/xdummy-randr.patch; \
-	bash ./autogen.sh; \
-	make; \
+    patch -p1 < ../xdummy-randr.patch; \
+    ./autogen.sh; \
+    make -j$(nproc); \
+    make install;
+
+# build custom input driver
+RUN set -eux; \
+    cd xf86-input-neko; \
+    ./autogen.sh --prefix=/usr; \
+    ./configure; \
+    make -j$(nproc); \
     make install;
 
 #
@@ -236,8 +241,9 @@ RUN set -eux; \
     apt-get clean -y; \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/*
 
-# replace version
-COPY --from=xserver-xorg-video-dummy /usr/local/lib/xorg/modules/drivers/dummy_drv.so /usr/lib/xorg/modules/drivers/dummy_drv.so
+# copy dependencies from previous stage
+COPY --from=xorg-deps /usr/local/lib/xorg/modules/drivers/dummy_drv.so /usr/lib/xorg/modules/drivers/dummy_drv.so
+COPY --from=xorg-deps /usr/local/lib/xorg/modules/input/neko_drv.so /usr/lib/xorg/modules/input/neko_drv.so
 
 #
 # configure EGL and Vulkan manually

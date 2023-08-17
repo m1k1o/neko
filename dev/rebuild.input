@@ -1,0 +1,32 @@
+#!/bin/bash
+cd "$(dirname "$0")"
+cd ../xorg/xf86-input-neko
+
+#
+# aborting if any command returns a non-zero value
+set -e
+
+#
+# check if docker image exists
+if [ -z "$(docker images -q xf86-input-neko)" ]; then
+    echo "Docker image not found, building it"
+    docker build -t xf86-input-neko .
+fi
+
+#
+# if there is no ./configure script, run autogen.sh and configure
+if [ ! -f ./configure ]; then
+    docker run -v $PWD/:/app --rm xf86-input-neko bash -c './autogen.sh && ./configure'
+fi
+
+#
+# make install
+docker run -v $PWD/:/app --rm xf86-input-neko bash -c 'make && make install DESTDIR=/app/build'
+
+#
+# replace input driver in container
+docker cp "${PWD}/build/usr/local/lib/xorg/modules/input/neko_drv.so" neko_server_dev:/usr/lib/xorg/modules/input/neko_drv.so
+
+#
+# restart server
+docker exec neko_server_dev supervisorctl -c /etc/neko/supervisord.conf restart x-server

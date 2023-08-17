@@ -47,6 +47,7 @@ func (h *MessageHandlerCtx) systemInit(session types.Session) error {
 			ScreenSize:        screenSize,
 			Sessions:          sessions,
 			Settings:          h.sessions.Settings(),
+			TouchEvents:       h.desktop.HasTouchSupport(),
 			ScreencastEnabled: h.capture.Screencast().Enabled(),
 			WebRTC: message.SystemWebRTC{
 				Videos: h.capture.Video().IDs(),

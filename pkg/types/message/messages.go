@@ -20,6 +20,7 @@ type SystemInit struct {
 	ScreenSize        ScreenSize             `json:"screen_size"`
 	Sessions          map[string]SessionData `json:"sessions"`
 	Settings          types.Settings         `json:"settings"`
+	TouchEvents       bool                   `json:"touch_events"`
 	ScreencastEnabled bool                   `json:"screencast_enabled"`
 	WebRTC            SystemWebRTC           `json:"webrtc"`
 }
@@ -127,6 +128,12 @@ type ControlButton struct {
 type ControlKey struct {
 	*ControlPos
 	Keysym uint32 `json:"keysym"`
+}
+
+type ControlTouch struct {
+	TouchId uint32 `json:"touch_id"`
+	*ControlPos
+	Pressure uint8 `json:"pressure"`
 }
 
 /////////////////////////////

@@ -10,6 +10,10 @@ const (
 	OP_BTN_DOWN = 0x05
 	OP_BTN_UP   = 0x06
 	OP_PING     = 0x07
+	// touch events
+	OP_TOUCH_BEGIN  = 0x08
+	OP_TOUCH_UPDATE = 0x09
+	OP_TOUCH_END    = 0x0a
 )
 
 type Move struct {
@@ -34,4 +38,11 @@ type Ping struct {
 
 func (p Ping) ClientTs() uint64 {
 	return (uint64(p.ClientTs1) * uint64(math.MaxUint32)) + uint64(p.ClientTs2)
+}
+
+type Touch struct {
+	TouchId  uint32
+	X        int32
+	Y        int32
+	Pressure uint8
 }
