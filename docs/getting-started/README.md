@@ -50,7 +50,7 @@ All images are also available on [GitHub Container Registry](https://github.com/
 - `ghcr.io/m1k1o/neko/xfce:latest`
 - `ghcr.io/m1k1o/neko/kde:latest`
 
-For ARM-based images (like Raspberry Pi - with GPU hardware acceleration, Oracle Cloud ARM tier). Currently, not all images are available for ARM, because not all applications are available for ARM.
+For ARM-based images (like Raspberry Pi - with GPU hardware acceleration, Oracle Cloud ARM tier). Currently, not all images are available for ARM, because not all applications are available for ARM. Please note, that `m1k1o/neko:arm-*` images from dockerhub are currently not maintained and they can contain outdated software. Please use images below:
 
 - `ghcr.io/m1k1o/neko/arm-firefox:latest`
 - `ghcr.io/m1k1o/neko/arm-chromium:latest`
