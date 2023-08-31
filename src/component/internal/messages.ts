@@ -104,7 +104,8 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
   protected [EVENT.SYSTEM_INIT](conf: message.SystemInit) {
     this._localLog.debug(`EVENT.SYSTEM_INIT`)
     Vue.set(this._state, 'session_id', conf.session_id)
-    Vue.set(this._state.control, 'touch_events', conf.touch_events)
+    // check if backend supports touch events
+    Vue.set(this._state.control.touch, 'supported', conf.touch_events)
     Vue.set(this._state.connection, 'screencast', conf.screencast_enabled)
     Vue.set(this._state.connection.webrtc, 'videos', conf.webrtc.videos)
 

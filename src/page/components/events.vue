@@ -335,8 +335,19 @@
         </td>
       </tr>
       <tr>
-        <th>control.touch_events</th>
-        <td>{{ neko.state.control.touch_events ? 'backend supports' : 'backend does not support' }}</td>
+        <th>control.touch.enabled</th>
+        <td>
+          <div class="space-between">
+            <span>{{ neko.state.control.touch.enabled }}</span>
+            <button @click="neko.setTouchEnabled(!neko.state.control.touch.enabled)">
+              <i class="fas fa-toggle-on"></i>
+            </button>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <th>control.touch.supported</th>
+        <td>{{ neko.state.control.touch.supported }}</td>
       </tr>
       <tr>
         <th rowspan="2">control.host_id</th>

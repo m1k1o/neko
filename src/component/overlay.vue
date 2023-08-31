@@ -195,7 +195,7 @@
       // Initialize GestureHandler
       this.gestureHandler = new GestureHandlerInit()
 
-      // bind touch handler using @Watch on hasTouchEvents
+      // bind touch handler using @Watch on supportedTouchEvents
       // because we need to know if touch events are supported
       // by the server before we can bind touch handler
 
@@ -467,13 +467,19 @@
     // touch and gesture handlers cannot be used together
     //
 
-    @Watch('control.hasTouchEvents')
+    @Watch('control.enabledTouchEvents')
+    @Watch('control.supportedTouchEvents')
     onTouchEventsChange() {
-      if (this.control.hasTouchEvents) {
-        this.unbindGestureHandler()
+      this.unbindGestureHandler()
+      this.unbindTouchHandler()
+
+      if (!this.control.enabledTouchEvents) {
+        return
+      }
+
+      if (this.control.supportedTouchEvents) {
         this.bindTouchHandler()
       } else {
-        this.unbindTouchHandler()
         this.bindGestureHandler()
       }
     }

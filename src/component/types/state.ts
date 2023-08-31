@@ -70,7 +70,7 @@ export interface Control {
   scroll: Scroll
   clipboard: Clipboard | null
   keyboard: Keyboard
-  touch_events: boolean
+  touch: Touch
   host_id: string | null
   is_host: boolean
   locked: boolean
@@ -88,6 +88,11 @@ export interface Clipboard {
 export interface Keyboard {
   layout: string
   variant: string
+}
+
+export interface Touch {
+  enabled: boolean
+  supported: boolean
 }
 
 /////////////////////////////

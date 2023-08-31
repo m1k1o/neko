@@ -33,8 +33,12 @@ export class NekoControl extends EventEmitter<NekoControlEvents> {
     return this._connection.webrtc.connected && this._state.is_host
   }
 
-  get hasTouchEvents() {
-    return this._state.touch_events
+  get enabledTouchEvents() {
+    return this._state.touch.enabled
+  }
+
+  get supportedTouchEvents() {
+    return this._state.touch.supported
   }
 
   public lock() {

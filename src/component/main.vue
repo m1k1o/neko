@@ -200,7 +200,10 @@
           layout: 'us',
           variant: '',
         },
-        touch_events: false,
+        touch: {
+          enabled: true,
+          supported: false,
+        },
         host_id: null,
         is_host: false,
         locked: false,
@@ -485,6 +488,10 @@
 
     public setKeyboard(layout: string, variant: string = '') {
       Vue.set(this.state.control, 'keyboard', { layout, variant })
+    }
+
+    public setTouchEnabled(value: boolean = true) {
+      Vue.set(this.state.control.touch, 'enabled', value)
     }
 
     public mobileKeyboardShow() {
