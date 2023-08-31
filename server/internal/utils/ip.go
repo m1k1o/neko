@@ -2,7 +2,7 @@ package utils
 
 import (
 	"bytes"
-	"io/ioutil"
+	"io"
 	"net"
 	"net/http"
 	"time"
@@ -31,7 +31,7 @@ func GetIP(serverUrl string) (string, error) {
 	}
 	defer rsp.Body.Close()
 
-	buf, err := ioutil.ReadAll(rsp.Body)
+	buf, err := io.ReadAll(rsp.Body)
 	if err != nil {
 		return "", err
 	}
