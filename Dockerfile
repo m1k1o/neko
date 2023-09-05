@@ -1,7 +1,7 @@
 #
 # Stage 0: Build xorg dependencies.
 #
-FROM debian:bullseye-slim as xorg-deps
+FROM debian:bookworm-slim as xorg-deps
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -36,7 +36,7 @@ RUN set -eux; \
 #
 # Stage 1: Build.
 #
-FROM golang:1.20-bullseye as build
+FROM golang:1.21-bookworm as build
 WORKDIR /src
 
 #
@@ -45,12 +45,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN set -eux; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
-        libx11-dev libxrandr-dev libxtst-dev libgtk-3-dev \
+        libx11-dev libxrandr-dev libxtst-dev libgtk-3-dev libxcvt-dev \
         libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev; \
-    # install libxcvt-dev (not available in debian:bullseye)
-    wget http://ftp.de.debian.org/debian/pool/main/libx/libxcvt/libxcvt-dev_0.1.2-1_amd64.deb; \
-    wget http://ftp.de.debian.org/debian/pool/main/libx/libxcvt/libxcvt0_0.1.2-1_amd64.deb; \
-    apt-get install  --no-install-recommends ./libxcvt0_0.1.2-1_amd64.deb ./libxcvt-dev_0.1.2-1_amd64.deb; \
     #
     # clean up
     apt-get clean -y; \
@@ -68,7 +64,7 @@ RUN ./build
 #
 # Stage 2: Runtime.
 #
-FROM debian:bullseye-slim as runtime
+FROM debian:bookworm-slim as runtime
 
 #
 # set custom user
@@ -84,7 +80,7 @@ RUN set -eux; \
     apt-get install -y --no-install-recommends \
         wget ca-certificates supervisor \
         pulseaudio dbus-x11 xserver-xorg-video-dummy \
-        libcairo2 libxcb1 libxrandr2 libxv1 libopus0 libvpx6 \
+        libcairo2 libxcb1 libxrandr2 libxv1 libopus0 libvpx7 libxcvt0 \
         #
         # needed for profile upload preStop hook
         zip curl \
@@ -96,10 +92,6 @@ RUN set -eux; \
         gstreamer1.0-plugins-base gstreamer1.0-plugins-good \
         gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly \
         gstreamer1.0-pulseaudio; \
-    # install libxcvt0 (not available in debian:bullseye)
-    wget http://ftp.de.debian.org/debian/pool/main/libx/libxcvt/libxcvt0_0.1.2-1_amd64.deb; \
-    apt-get install  --no-install-recommends ./libxcvt0_0.1.2-1_amd64.deb; \
-    rm ./libxcvt0_0.1.2-1_amd64.deb; \
     #
     # create a non-root user
     groupadd --gid $USER_GID $USERNAME; \

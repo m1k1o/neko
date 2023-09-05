@@ -1,7 +1,7 @@
-ARG UBUNTU_RELEASE=20.04
-ARG CUDA_VERSION=11.4.3
+ARG UBUNTU_RELEASE=22.04
+ARG CUDA_VERSION=12.2.0
 ARG VIRTUALGL_VERSION=3.1
-ARG GSTREAMER_VERSION=1.20
+ARG GSTREAMER_VERSION=1.22
 
 #
 # Stage 0: Build gstreamer with nvidia plugins.
@@ -54,7 +54,7 @@ RUN set -eux; \
 #
 # Stage 0: Build xorg dependencies.
 #
-FROM debian:bullseye-slim as xorg-deps
+FROM debian:bookworm-slim as xorg-deps
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -89,7 +89,7 @@ RUN set -eux; \
 #
 # Stage 1: Build.
 #
-FROM golang:1.20-bullseye as build
+FROM golang:1.21-bookworm as build
 WORKDIR /src
 
 #
@@ -98,12 +98,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN set -eux; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
-        libx11-dev libxrandr-dev libxtst-dev libgtk-3-dev \
+        libx11-dev libxrandr-dev libxtst-dev libgtk-3-dev libxcvt-dev \
         libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev; \
-    # install libxcvt-dev (not available in debian:bullseye)
-    wget http://ftp.de.debian.org/debian/pool/main/libx/libxcvt/libxcvt-dev_0.1.2-1_amd64.deb; \
-    wget http://ftp.de.debian.org/debian/pool/main/libx/libxcvt/libxcvt0_0.1.2-1_amd64.deb; \
-    apt-get install  --no-install-recommends ./libxcvt0_0.1.2-1_amd64.deb ./libxcvt-dev_0.1.2-1_amd64.deb; \
     #
     # clean up
     apt-get clean -y; \
@@ -192,7 +188,7 @@ RUN set -eux; \
     apt-get install -y --no-install-recommends \
         wget ca-certificates \
         pulseaudio dbus-x11 xserver-xorg-video-dummy \
-        libcairo2 libxcb1 libxrandr2 libxv1 libopus0 libvpx6 libx264-155 \
+        libcairo2 libxcb1 libxrandr2 libxv1 libopus0 libvpx7 libx264-163 libxcvt0 \
         libgtk-3-bin software-properties-common cabextract aptitude vim curl \
         #
         # needed for profile upload preStop hook
@@ -200,10 +196,6 @@ RUN set -eux; \
         #
         # file chooser handler, clipboard, drop
         xdotool xclip libgtk-3-0; \
-    # install libxcvt0 (not available in debian:bullseye)
-    wget http://ftp.de.debian.org/debian/pool/main/libx/libxcvt/libxcvt0_0.1.2-1_amd64.deb; \
-    apt-get install  --no-install-recommends ./libxcvt0_0.1.2-1_amd64.deb; \
-    rm ./libxcvt0_0.1.2-1_amd64.deb; \
     # install never version for supervisor that supports -s flag
     apt-get install -y --no-install-recommends pip; \
     pip install supervisor --upgrade; \

@@ -151,7 +151,7 @@ void gstreamer_pipeline_destory(GstPipelineCtx *ctx) {
 
 void gstreamer_pipeline_push(GstPipelineCtx *ctx, void *buffer, int bufferLen) {
   if (ctx->appsrc != NULL) {
-    gpointer p = g_memdup(buffer, bufferLen);
+    gpointer p = g_memdup2(buffer, bufferLen);
     GstBuffer *buffer = gst_buffer_new_wrapped(p, bufferLen);
     gst_app_src_push_buffer(GST_APP_SRC(ctx->appsrc), buffer);
   }

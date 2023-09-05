@@ -15,19 +15,23 @@
 	},
 	"runArgs": [ "--cap-add=SYS_PTRACE", "--cap-add=SYS_ADMIN", "--shm-size=2G", "--security-opt", "seccomp=unconfined" ],
 
-	// Set *default* container specific settings.json values on container create.
-	"settings": {
-		"terminal.integrated.shell.linux": "/bin/bash",
-		"go.toolsManagement.checkForUpdates": "local",
-		"go.useLanguageServer": true,
-		"go.gopath": "/go",
-		"go.goroot": "/usr/local/go"
-	},
-
-	// Add the IDs of extensions you want installed when the container is created.
-	"extensions": [
-		"golang.Go"
-	],
+    "customizations": {
+        "vscode": {    
+			// Set *default* container specific settings.json values on container create.
+			"settings": {
+				"terminal.integrated.shell.linux": "/bin/bash",
+				"go.toolsManagement.checkForUpdates": "local",
+				"go.useLanguageServer": true,
+				"go.gopath": "/go",
+				"go.goroot": "/usr/local/go"
+			},
+		
+			// Add the IDs of extensions you want installed when the container is created.
+			"extensions": [
+				"golang.Go"
+			]			  
+        }
+    },
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	"appPort": ["3000:3000", "3001:3001/udp", "3002:3002/udp", "3003:3003/udp", "3004:3004/udp"],
