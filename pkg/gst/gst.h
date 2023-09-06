@@ -5,6 +5,17 @@
 #include <gst/app/gstappsrc.h>
 #include <gst/video/video.h>
 
+#define GLIB_CHECK_VERSION(major,minor,micro)    \
+    (GLIB_MAJOR_VERSION > (major) || \
+    (GLIB_MAJOR_VERSION == (major) && GLIB_MINOR_VERSION > (minor)) || \
+    (GLIB_MAJOR_VERSION == (major) && GLIB_MINOR_VERSION == (minor) && \
+      GLIB_MICRO_VERSION >= (micro)))
+
+// g_memdup2 was added in glib 2.67.4, maintain compatibility with older versions
+#if !GLIB_CHECK_VERSION(2, 67, 4)
+#define g_memdup2 g_memdup
+#endif
+
 typedef struct GstPipelineCtx {
   int pipelineId;
   GstElement *pipeline;
