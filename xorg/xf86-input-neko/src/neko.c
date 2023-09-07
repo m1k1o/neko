@@ -56,9 +56,8 @@
 #include <xserver-properties.h>
 #include <pthread.h>
 
-#define MAXBUTTONS 11   /* > 10 */
-#define TOUCH_NUM_AXES 3 /* x, y, pressure */
-#define TOUCH_MAX_SLOTS 10
+#define MAX_USED_VALUATORS 3 /* x, y, pressure */
+#define TOUCH_MAX_SLOTS 10 /* max number of simultaneous touches */
 
 struct neko_message
 {
@@ -176,6 +175,131 @@ PointerCtrl(__attribute__ ((unused)) DeviceIntPtr device,
 }
 
 static int
+InitTouch(InputInfoPtr pInfo)
+{
+    // custom private data
+    struct neko_priv *priv = pInfo->private;
+
+	const int nbtns = 11;
+	const int naxes = 3;
+
+    unsigned char map[nbtns + 1];
+    Atom btn_labels[nbtns];
+    Atom axis_labels[naxes];
+
+    // init button map
+    memset(map, 0, sizeof(map));
+    for (int i = 0; i < nbtns; i++)
+    {
+        map[i + 1] = i + 1;
+    }
+
+    // init btn_labels
+    memset(btn_labels, 0, ARRAY_SIZE(btn_labels) * sizeof(Atom));
+    btn_labels[0] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_LEFT);
+    btn_labels[1] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_MIDDLE);
+    btn_labels[2] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_RIGHT);
+    btn_labels[3] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_WHEEL_UP);
+    btn_labels[4] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_WHEEL_DOWN);
+    btn_labels[5] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_HWHEEL_LEFT);
+    btn_labels[6] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_HWHEEL_RIGHT);
+    btn_labels[7] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_SIDE);
+    btn_labels[8] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_EXTRA);
+    btn_labels[9] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_FORWARD);
+    btn_labels[10] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_BACK);
+
+    // init axis labels
+    memset(axis_labels, 0, ARRAY_SIZE(axis_labels) * sizeof(Atom));
+    axis_labels[0] = XIGetKnownProperty(AXIS_LABEL_PROP_ABS_MT_POSITION_X);
+    axis_labels[1] = XIGetKnownProperty(AXIS_LABEL_PROP_ABS_MT_POSITION_Y);
+    axis_labels[2] = XIGetKnownProperty(AXIS_LABEL_PROP_ABS_MT_PRESSURE);
+
+    /* initialize mouse emulation valuators */
+    if (InitPointerDeviceStruct((DevicePtr)pInfo->dev,
+            map,
+            nbtns, btn_labels,
+            PointerCtrl,
+            GetMotionHistorySize(),
+            naxes, axis_labels) == FALSE)
+    {
+        xf86IDrvMsg(pInfo, X_ERROR,
+            "unable to allocate PointerDeviceStruct\n");
+        return !Success;
+    }
+
+    /* 
+        This function is provided to initialize an XAxisInfoRec, and should be
+        called for core and extension devices that have valuators. The space
+        for the XAxisInfoRec is allocated by the InitValuatorClassDeviceStruct
+        function, but is not initialized.
+        
+        InitValuatorAxisStruct should be called once for each axis of motion
+        reported by the device. Each invocation should be passed the axis
+        number (starting with 0), the minimum value for that axis, the maximum
+        value for that axis, and the resolution of the device in counts per meter.
+        If the device reports relative motion, 0 should be reported as the
+        minimum and maximum values.
+
+        InitValuatorAxisStruct(dev, axnum, minval, maxval, resolution)
+            DeviceIntPtr dev;
+            int axnum;
+            int minval;
+            int maxval;
+            int resolution;
+    */
+    xf86InitValuatorAxisStruct(pInfo->dev, 0,
+        XIGetKnownProperty(AXIS_LABEL_PROP_ABS_MT_POSITION_X),
+        0,                /* min val */
+        priv->width - 1,  /* max val */
+        priv->width,      /* resolution */
+        0,                /* min_res */
+        priv->width,      /* max_res */
+        Absolute);
+
+    xf86InitValuatorAxisStruct(pInfo->dev, 1,
+        XIGetKnownProperty(AXIS_LABEL_PROP_ABS_MT_POSITION_Y),
+        0,                /* min val */
+        priv->height - 1, /* max val */
+        priv->height,     /* resolution */
+        0,                /* min_res */
+        priv->height,     /* max_res */
+        Absolute);
+
+    xf86InitValuatorAxisStruct(pInfo->dev, 2,
+        XIGetKnownProperty(AXIS_LABEL_PROP_ABS_MT_PRESSURE),
+        0,                /* min val */
+        priv->pmax,       /* max val */
+        priv->pmax + 1,   /* resolution */
+        0,                /* min_res */
+        priv->pmax + 1,   /* max_res */
+        Absolute);
+
+    /*
+        The mode field is either XIDirectTouch for direct−input touch devices
+        such as touchscreens or XIDependentTouch for indirect input devices such
+        as touchpads. For XIDirectTouch devices, touch events are sent to window
+        at the position the touch occured. For XIDependentTouch devices, touch
+        events are sent to the window at the position of the device's sprite.
+
+        The num_touches field defines the maximum number of simultaneous touches
+        the device supports. A num_touches of 0 means the maximum number of
+        simultaneous touches is undefined or unspecified. This field should be
+        used as a guide only, devices will lie about their capabilities.
+    */
+    if (InitTouchClassDeviceStruct(pInfo->dev,
+            priv->slots,
+            XIDirectTouch,
+            naxes) == FALSE)
+    {
+        xf86IDrvMsg(pInfo, X_ERROR,
+            "unable to allocate TouchClassDeviceStruct\n");
+        return !Success;
+    }
+
+    return Success;
+}
+
+static int
 DeviceControl(DeviceIntPtr device, int what)
 {
     // device pInfo
@@ -187,119 +311,11 @@ DeviceControl(DeviceIntPtr device, int what)
     case DEVICE_INIT:
         device->public.on = FALSE;
 
-        unsigned char map[MAXBUTTONS + 1];
-        Atom labels[MAXBUTTONS];
-        Atom axis_labels[TOUCH_NUM_AXES];
-
-        // init button map
-        memset(map, 0, sizeof(map));
-        for (int i = 0; i < MAXBUTTONS; i++)
+        if (InitTouch(pInfo) != Success)
         {
-            map[i + 1] = i + 1;
-        }
-
-        // init labels
-        memset(labels, 0, ARRAY_SIZE(labels) * sizeof(Atom));
-        labels[0] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_LEFT);
-        labels[1] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_MIDDLE);
-        labels[2] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_RIGHT);
-        labels[3] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_WHEEL_UP);
-        labels[4] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_WHEEL_DOWN);
-        labels[5] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_HWHEEL_LEFT);
-        labels[6] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_HWHEEL_RIGHT);
-        labels[7] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_SIDE);
-        labels[8] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_EXTRA);
-        labels[9] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_FORWARD);
-        labels[10] = XIGetKnownProperty(BTN_LABEL_PROP_BTN_BACK);
-
-        // init axis labels
-        memset(axis_labels, 0, ARRAY_SIZE(axis_labels) * sizeof(Atom));
-        axis_labels[0] = XIGetKnownProperty(AXIS_LABEL_PROP_ABS_MT_POSITION_X);
-        axis_labels[1] = XIGetKnownProperty(AXIS_LABEL_PROP_ABS_MT_POSITION_Y);
-        axis_labels[2] = XIGetKnownProperty(AXIS_LABEL_PROP_ABS_MT_PRESSURE);
-
-        /* initialize mouse emulation valuators */
-        if (InitPointerDeviceStruct((DevicePtr)device,
-                map,
-                MAXBUTTONS, labels,
-                PointerCtrl,
-                GetMotionHistorySize(),
-                TOUCH_NUM_AXES, axis_labels) == FALSE)
-        {
-            xf86IDrvMsg(pInfo, X_ERROR,
-                "unable to allocate PointerDeviceStruct\n");
+            xf86IDrvMsg(pInfo, X_ERROR, "unable to init touch\n");
             return !Success;
         }
-
-        /* 
-            This function is provided to initialize an XAxisInfoRec, and should be
-            called for core and extension devices that have valuators. The space
-            for the XAxisInfoRec is allocated by the InitValuatorClassDeviceStruct
-            function, but is not initialized.
-            
-            InitValuatorAxisStruct should be called once for each axis of motion
-            reported by the device. Each invocation should be passed the axis
-            number (starting with 0), the minimum value for that axis, the maximum
-            value for that axis, and the resolution of the device in counts per meter.
-            If the device reports relative motion, 0 should be reported as the
-            minimum and maximum values.
-
-            InitValuatorAxisStruct(dev, axnum, minval, maxval, resolution)
-                DeviceIntPtr dev;
-                int axnum;
-                int minval;
-                int maxval;
-                int resolution;
-        */
-        xf86InitValuatorAxisStruct(device, 0,
-            XIGetKnownProperty(AXIS_LABEL_PROP_ABS_MT_POSITION_X),
-            0,                /* min val */
-            priv->width - 1,  /* max val */
-            priv->width,      /* resolution */
-            0,                /* min_res */
-            priv->width,      /* max_res */
-            Absolute);
-
-        xf86InitValuatorAxisStruct(device, 1,
-            XIGetKnownProperty(AXIS_LABEL_PROP_ABS_MT_POSITION_Y),
-            0,                /* min val */
-            priv->height - 1, /* max val */
-            priv->height,     /* resolution */
-            0,                /* min_res */
-            priv->height,     /* max_res */
-            Absolute);
-
-        xf86InitValuatorAxisStruct(device, 2,
-            XIGetKnownProperty(AXIS_LABEL_PROP_ABS_MT_PRESSURE),
-            0,                /* min val */
-            priv->pmax,       /* max val */
-            priv->pmax + 1,   /* resolution */
-            0,                /* min_res */
-            priv->pmax + 1,   /* max_res */
-            Absolute);
-
-        /*
-            The mode field is either XIDirectTouch for direct−input touch devices
-            such as touchscreens or XIDependentTouch for indirect input devices such
-            as touchpads. For XIDirectTouch devices, touch events are sent to window
-            at the position the touch occured. For XIDependentTouch devices, touch
-            events are sent to the window at the position of the device's sprite.
-
-            The num_touches field defines the maximum number of simultaneous touches
-            the device supports. A num_touches of 0 means the maximum number of
-            simultaneous touches is undefined or unspecified. This field should be
-            used as a guide only, devices will lie about their capabilities.
-        */
-        if (InitTouchClassDeviceStruct(device,
-                priv->slots,
-                XIDirectTouch,
-                TOUCH_NUM_AXES) == FALSE)
-        {
-            xf86IDrvMsg(pInfo, X_ERROR,
-                "unable to allocate TouchClassDeviceStruct\n");
-            return !Success;
-        }
-
         break;
 
     case DEVICE_ON:
@@ -402,7 +418,7 @@ PreInit(__attribute__ ((unused)) InputDriverPtr drv,
     xf86ProcessCommonOptions(pInfo, pInfo->options);
 
     /* create valuators */
-    priv->valuators = valuator_mask_new(TOUCH_NUM_AXES);
+    priv->valuators = valuator_mask_new(MAX_USED_VALUATORS);
     if (!priv->valuators)
     {
         xf86IDrvMsg(pInfo, X_ERROR, "%s: out of memory\n", __FUNCTION__);
