@@ -441,8 +441,8 @@ UnInit(__attribute__ ((unused)) InputDriverPtr drv,
         priv->thread = 0;
     }
 
+    /* free valuators */
     valuator_mask_free(&priv->valuators);
-    DeviceControl(pInfo->dev, DEVICE_OFF);
 
     free(pInfo->private);
     pInfo->private = NULL;
