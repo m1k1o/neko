@@ -22,6 +22,8 @@ RUN set -eux; \
         # Install build deps
         autopoint autoconf automake autotools-dev libtool gettext bison flex gtk-doc-tools \
         # Install libraries
+        librtmp-dev \
+        libvo-aacenc-dev \
         libtool-bin \
         libgtk2.0-dev \
         libgl1-mesa-dev \
@@ -42,8 +44,8 @@ RUN set -eux; \
 RUN set -eux; \
     git clone --depth 1 --branch $GSTREAMER_VERSION https://gitlab.freedesktop.org/gstreamer/gstreamer.git /gstreamer/src; \
     cd /gstreamer/src; \
-    mkdir -p /opt/gstreamer; \
-    meson --prefix /opt/gstreamer \
+    mkdir -p /usr/share/gstreamer; \
+    meson --prefix /usr/share/gstreamer \
         -Dgpl=enabled \
         -Dugly=enabled \
         -Dgst-plugins-ugly:x264=enabled \
@@ -186,9 +188,9 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN set -eux; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
-        wget ca-certificates \
+        wget ca-certificates supervisor \
         pulseaudio dbus-x11 xserver-xorg-video-dummy \
-        libcairo2 libxcb1 libxrandr2 libxv1 libopus0 libvpx7 libx264-163 libxcvt0 \
+        libcairo2 libxcb1 libxrandr2 libxv1 libopus0 libvpx7 libx264-163 libvo-aacenc0 librtmp1 libxcvt0 \
         libgtk-3-bin software-properties-common cabextract aptitude vim curl \
         #
         # needed for profile upload preStop hook
@@ -196,9 +198,6 @@ RUN set -eux; \
         #
         # file chooser handler, clipboard, drop
         xdotool xclip libgtk-3-0; \
-    # install never version for supervisor that supports -s flag
-    apt-get install -y --no-install-recommends pip; \
-    pip install supervisor --upgrade; \
     #
     # create a non-root user
     groupadd --gid $USER_GID $USERNAME; \
@@ -302,13 +301,13 @@ ENV NEKO_PLUGINS_DIR=/etc/neko/plugins/
 
 #
 # set gstreamer envs
-ENV PATH="/opt/gstreamer/bin:${PATH}"
-ENV LD_LIBRARY_PATH="/opt/gstreamer/lib/x86_64-linux-gnu${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
-ENV PKG_CONFIG_PATH="/opt/gstreamer/lib/x86_64-linux-gnu/pkgconfig${PKG_CONFIG_PATH:+:${PKG_CONFIG_PATH}}"
+ENV PATH="/usr/share/gstreamer/bin:${PATH}"
+ENV LD_LIBRARY_PATH="/usr/share/gstreamer/lib/x86_64-linux-gnu${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
+ENV PKG_CONFIG_PATH="/usr/share/gstreamer/lib/x86_64-linux-gnu/pkgconfig${PKG_CONFIG_PATH:+:${PKG_CONFIG_PATH}}"
 
 #
 # copy gstreamer from previous stage
-COPY --from=gstreamer /opt/gstreamer /opt/gstreamer
+COPY --from=gstreamer /usr/share/gstreamer /usr/share/gstreamer
 
 #
 # copy plugins from previous stage
@@ -325,4 +324,4 @@ HEALTHCHECK --interval=10s --timeout=5s --retries=8 \
 
 #
 # run neko
-CMD ["/usr/local/bin/supervisord", "-s", "-c", "/etc/neko/supervisord.conf"]
+CMD ["/usr/bin/supervisord", "-s", "-c", "/etc/neko/supervisord.conf"]
