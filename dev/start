@@ -55,5 +55,6 @@ docker run --rm -it \
     -v "${PWD}/runtime/$CONFIG:/etc/neko/neko.yml" \
     -e "NEKO_DEBUG=1" \
     --shm-size=2G \
+    --security-opt seccomp=unconfined \
     $EXTRAOPTS \
     neko_server_app:latest;

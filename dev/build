@@ -20,4 +20,4 @@ fi
 docker build -t neko_server_build --target build --build-arg "GIT_COMMIT=$GIT_COMMIT" --build-arg "GIT_BRANCH=$GIT_BRANCH" -f ../$DOCKERFILE ..
 docker build -t neko_server_runtime --target runtime --build-arg "GIT_COMMIT=$GIT_COMMIT" --build-arg "GIT_BRANCH=$GIT_BRANCH" -f ../$DOCKERFILE ..
 
-docker build -t neko_server_app --build-arg "BASE_IMAGE=neko_server_runtime" -f ./runtime/$DOCKERFILE ./runtime
+docker build -t neko_server_app --build-arg "BASE_IMAGE=neko_server_runtime" -f ./runtime/Dockerfile ./runtime
