@@ -22,6 +22,12 @@ export interface Dimension {
 }
 
 export interface KeyboardModifiers {
-  capslock: boolean
-  numlock: boolean
+  shift?: boolean
+  capslock?: boolean
+  control?: boolean
+  alt?: boolean
+  numlock?: boolean
+  meta?: boolean
+  super?: boolean
+  altgr?: boolean
 }

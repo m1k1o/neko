@@ -362,12 +362,13 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
     this._candidates = []
   }
 
-  public send(event: 'wheel' | 'mousemove', data: { x: number; y: number }): void
+  public send(event: 'wheel', data: { delta_x: number; delta_y: number; control_key?: boolean }): void
+  public send(event: 'mousemove', data: { x: number; y: number }): void
   public send(event: 'mousedown' | 'mouseup' | 'keydown' | 'keyup', data: { key: number }): void
   public send(event: 'ping', data: number): void
   public send(
     event: 'touchbegin' | 'touchupdate' | 'touchend',
-    data: { touchId: number; x: number; y: number; pressure: number },
+    data: { touch_id: number; x: number; y: number; pressure: number },
   ): void
   public send(event: string, data: any): void {
     if (typeof this._channel === 'undefined' || this._channel.readyState !== 'open') {
@@ -387,12 +388,13 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
         payload.setUint16(5, data.y)
         break
       case 'wheel':
-        buffer = new ArrayBuffer(7)
+        buffer = new ArrayBuffer(8)
         payload = new DataView(buffer)
         payload.setUint8(0, OPCODE.SCROLL)
-        payload.setUint16(1, 4)
-        payload.setInt16(3, data.x)
-        payload.setInt16(5, data.y)
+        payload.setUint16(1, 5)
+        payload.setInt16(3, data.delta_x)
+        payload.setInt16(5, data.delta_y)
+        payload.setUint8(7, data.control_key ? 1 : 0)
         break
       case 'keydown':
         buffer = new ArrayBuffer(7)
@@ -443,7 +445,7 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
           payload.setUint8(0, OPCODE.TOUCH_END)
         }
         payload.setUint16(1, 13)
-        payload.setUint32(3, data.touchId)
+        payload.setUint32(3, data.touch_id)
         payload.setInt32(7, data.x)
         payload.setInt32(11, data.y)
         payload.setUint8(15, data.pressure)

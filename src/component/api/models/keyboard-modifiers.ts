@@ -25,12 +25,48 @@ export interface KeyboardModifiers {
      * @type {boolean}
      * @memberof KeyboardModifiers
      */
-    'numlock'?: boolean;
+    'shift'?: boolean;
     /**
      * 
      * @type {boolean}
      * @memberof KeyboardModifiers
      */
     'capslock'?: boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof KeyboardModifiers
+     */
+    'control'?: boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof KeyboardModifiers
+     */
+    'alt'?: boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof KeyboardModifiers
+     */
+    'numlock'?: boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof KeyboardModifiers
+     */
+    'meta'?: boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof KeyboardModifiers
+     */
+    'super'?: boolean;
+    /**
+     * 
+     * @type {boolean}
+     * @memberof KeyboardModifiers
+     */
+    'altgr'?: boolean;
 }
 

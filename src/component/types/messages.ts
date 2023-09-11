@@ -113,6 +113,12 @@ export interface ControlHost {
   host_id: string | undefined
 }
 
+export interface ControlScroll {
+  delta_x: number
+  delta_y: number
+  control_key: boolean
+}
+
 export interface ControlPos {
   x: number
   y: number
@@ -127,7 +133,7 @@ export interface ControlKey extends Partial<ControlPos> {
 }
 
 export interface ControlTouch extends Partial<ControlPos> {
-  touchId: number
+  touch_id: number
   pressure: number
 }
 

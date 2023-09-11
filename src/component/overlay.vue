@@ -406,19 +406,19 @@
               // every update.
               this.control.move(pos)
               while (ev.detail.magnitudeY - this._gestureLastMagnitudeY > GESTURE_SCRLSENS) {
-                this.control.scroll({ x: 0, y: 1 })
+                this.control.scroll({ delta_x: 0, delta_y: 1 })
                 this._gestureLastMagnitudeY += GESTURE_SCRLSENS
               }
               while (ev.detail.magnitudeY - this._gestureLastMagnitudeY < -GESTURE_SCRLSENS) {
-                this.control.scroll({ x: 0, y: -1 })
+                this.control.scroll({ delta_x: 0, delta_y: -1 })
                 this._gestureLastMagnitudeY -= GESTURE_SCRLSENS
               }
               while (ev.detail.magnitudeX - this._gestureLastMagnitudeX > GESTURE_SCRLSENS) {
-                this.control.scroll({ x: 1, y: 0 })
+                this.control.scroll({ delta_x: 1, delta_y: 0 })
                 this._gestureLastMagnitudeX += GESTURE_SCRLSENS
               }
               while (ev.detail.magnitudeX - this._gestureLastMagnitudeX < -GESTURE_SCRLSENS) {
-                this.control.scroll({ x: -1, y: 0 })
+                this.control.scroll({ delta_x: -1, delta_y: 0 })
                 this._gestureLastMagnitudeX -= GESTURE_SCRLSENS
               }
               break
@@ -429,16 +429,14 @@
               this.control.move(pos)
               magnitude = Math.hypot(ev.detail.magnitudeX, ev.detail.magnitudeY)
               if (Math.abs(magnitude - this._gestureLastMagnitudeX) > GESTURE_ZOOMSENS) {
-                this.control.keyDown(KeyTable.XK_Control_L)
                 while (magnitude - this._gestureLastMagnitudeX > GESTURE_ZOOMSENS) {
-                  this.control.scroll({ x: 0, y: 1 })
+                  this.control.scroll({ delta_x: 0, delta_y: 1, control_key: true })
                   this._gestureLastMagnitudeX += GESTURE_ZOOMSENS
                 }
                 while (magnitude - this._gestureLastMagnitudeX < -GESTURE_ZOOMSENS) {
-                  this.control.scroll({ x: 0, y: -1 })
+                  this.control.scroll({ delta_x: 0, delta_y: -1, control_key: true })
                   this._gestureLastMagnitudeX -= GESTURE_ZOOMSENS
                 }
-                this.control.keyUp(KeyTable.XK_Control_L)
               }
               break
           }
@@ -481,6 +479,23 @@
         this.bindTouchHandler()
       } else {
         this.bindGestureHandler()
+      }
+    }
+
+    getModifierState(e: MouseEvent): KeyboardModifiers {
+      // we can only use locks, because when someone holds key outside
+      // of the renderer, and releases it inside, keyup event is not fired
+      // by guacamole keyboard and modifier state is not updated
+
+      return {
+        //shift: e.getModifierState('Shift'),
+        capslock: e.getModifierState('CapsLock'),
+        //control: e.getModifierState('Control'),
+        //alt: e.getModifierState('Alt'),
+        numlock: e.getModifierState('NumLock'),
+        //meta: e.getModifierState('Meta'),
+        //super: e.getModifierState('Super'),
+        //altgr: e.getModifierState('AltGraph'),
       }
     }
 
@@ -597,7 +612,11 @@
       if (x == 0 && y == 0) return
 
       // TODO: add position for precision scrolling
-      this.control.scroll({ x, y })
+      this.control.scroll({
+        delta_x: x,
+        delta_y: y,
+        control_key: e.ctrlKey,
+      })
     }
 
     lastMouseMove = 0
@@ -662,10 +681,7 @@
     onMouseLeave(e: MouseEvent) {
       if (this.isControling) {
         // save current keyboard modifiers state
-        this.keyboardModifiers = {
-          capslock: e.getModifierState('CapsLock'),
-          numlock: e.getModifierState('NumLock'),
-        }
+        this.keyboardModifiers = this.getModifierState(e)
       }
 
       this.focused = false
@@ -742,15 +758,13 @@
     private keyboardModifiers: KeyboardModifiers | null = null
 
     updateKeyboardModifiers(e: MouseEvent) {
-      const capslock = e.getModifierState('CapsLock')
-      const numlock = e.getModifierState('NumLock')
+      const mods = this.getModifierState(e)
+      const newMods = Object.values(mods).join()
+      const oldMods = Object.values(this.keyboardModifiers || {}).join()
 
-      if (
-        this.keyboardModifiers === null ||
-        this.keyboardModifiers.capslock !== capslock ||
-        this.keyboardModifiers.numlock !== numlock
-      ) {
-        this.$emit('updateKeyboardModifiers', { capslock, numlock })
+      // update keyboard modifiers only if they changed
+      if (newMods !== oldMods) {
+        this.$emit('updateKeyboardModifiers', mods)
       }
     }
 

@@ -17,6 +17,12 @@ export interface ControlPos {
   y: number
 }
 
+export interface ControlScroll {
+  delta_x: number
+  delta_y: number
+  control_key?: boolean
+}
+
 export class NekoControl extends EventEmitter<NekoControlEvents> {
   // eslint-disable-next-line
   constructor(
@@ -65,12 +71,12 @@ export class NekoControl extends EventEmitter<NekoControlEvents> {
     }
   }
 
-  // TODO: rename pos to delta, and add a new pos parameter
-  public scroll(pos: ControlPos) {
+  // TODO: add pos parameter
+  public scroll(scroll: ControlScroll) {
     if (this.useWebrtc) {
-      this._connection.webrtc.send('wheel', pos)
+      this._connection.webrtc.send('wheel', scroll)
     } else {
-      this._connection.websocket.send(EVENT.CONTROL_SCROLL, pos as message.ControlPos)
+      this._connection.websocket.send(EVENT.CONTROL_SCROLL, scroll as message.ControlScroll)
     }
   }
 
@@ -120,27 +126,27 @@ export class NekoControl extends EventEmitter<NekoControlEvents> {
     }
   }
 
-  public touchBegin(touchId: number, pos: ControlPos, pressure: number) {
+  public touchBegin(touch_id: number, pos: ControlPos, pressure: number) {
     if (this.useWebrtc) {
-      this._connection.webrtc.send('touchbegin', { touchId, ...pos, pressure })
+      this._connection.webrtc.send('touchbegin', { touch_id, ...pos, pressure })
     } else {
-      this._connection.websocket.send(EVENT.CONTROL_TOUCHBEGIN, { touchId, ...pos, pressure } as message.ControlTouch)
+      this._connection.websocket.send(EVENT.CONTROL_TOUCHBEGIN, { touch_id, ...pos, pressure } as message.ControlTouch)
     }
   }
 
-  public touchUpdate(touchId: number, pos: ControlPos, pressure: number) {
+  public touchUpdate(touch_id: number, pos: ControlPos, pressure: number) {
     if (this.useWebrtc) {
-      this._connection.webrtc.send('touchupdate', { touchId, ...pos, pressure })
+      this._connection.webrtc.send('touchupdate', { touch_id, ...pos, pressure })
     } else {
-      this._connection.websocket.send(EVENT.CONTROL_TOUCHUPDATE, { touchId, ...pos, pressure } as message.ControlTouch)
+      this._connection.websocket.send(EVENT.CONTROL_TOUCHUPDATE, { touch_id, ...pos, pressure } as message.ControlTouch)
     }
   }
 
-  public touchEnd(touchId: number, pos: ControlPos, pressure: number) {
+  public touchEnd(touch_id: number, pos: ControlPos, pressure: number) {
     if (this.useWebrtc) {
-      this._connection.webrtc.send('touchend', { touchId, ...pos, pressure })
+      this._connection.webrtc.send('touchend', { touch_id, ...pos, pressure })
     } else {
-      this._connection.websocket.send(EVENT.CONTROL_TOUCHEND, { touchId, ...pos, pressure } as message.ControlTouch)
+      this._connection.websocket.send(EVENT.CONTROL_TOUCHEND, { touch_id, ...pos, pressure } as message.ControlTouch)
     }
   }
 
