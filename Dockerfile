@@ -79,7 +79,7 @@ RUN set -eux; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
         wget ca-certificates supervisor \
-        pulseaudio dbus-x11 xserver-xorg-video-dummy \
+        pulseaudio xserver-xorg-video-dummy \
         libcairo2 libxcb1 libxrandr2 libxv1 libopus0 libvpx7 libxcvt0 \
         #
         # needed for profile upload preStop hook
@@ -133,7 +133,6 @@ COPY --from=xorg-deps /usr/local/lib/xorg/modules/input/neko_drv.so /usr/lib/xor
 #
 # copy runtime configs
 COPY --chown=neko:neko runtime/.Xresources /home/$USERNAME/.Xresources
-COPY runtime/dbus /usr/bin/dbus
 COPY runtime/default.pa /etc/pulse/default.pa
 COPY runtime/supervisord.conf /etc/neko/supervisord.conf
 COPY runtime/xorg.conf /etc/neko/xorg.conf

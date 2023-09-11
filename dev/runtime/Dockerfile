@@ -7,7 +7,7 @@ ARG SRC_URL="https://download.mozilla.org/?product=firefox-latest&os=linux64&lan
 # install xfce and firefox
 RUN set -eux; apt-get update; \
     apt-get install -y --no-install-recommends \
-        xfce4 xfce4-terminal sudo \
+        dbus-x11 xfce4 xfce4-terminal sudo \
         xz-utils bzip2 libgtk-3-0 libdbus-glib-1-2; \
     #
     # fetch latest firefox release
