@@ -30,31 +30,31 @@ void XCursorPosition(int *x, int *y) {
   XQueryPointer(display, root, &root, &window, x, y, &i, &i, &mask);
 }
 
-void XScroll(int x, int y) {
-  int ydir = 4; /* Button 4 is up, 5 is down. */
-  int xdir = 6;
-
+void XScroll(int deltaX, int deltaY) {
   Display *display = getXDisplay();
 
-  if (y < 0) {
-    ydir = 5;
+  int ydir;
+  if (deltaY > 0) {
+    ydir = 4; // button 4 is up
+  } else {
+    ydir = 5; // button 5 is down
   }
 
-  if (x < 0) {
-    xdir = 7;
+  int xdir;
+  if (deltaX > 0) {
+    xdir = 6; // button 6 is right
+  } else {
+    xdir = 7; // button 7 is left
   }
 
-  int xi;
-  int yi;
-
-  for (xi = 0; xi < abs(x); xi++) {
-    XTestFakeButtonEvent(display, xdir, 1, CurrentTime);
-    XTestFakeButtonEvent(display, xdir, 0, CurrentTime);
-  }
-
-  for (yi = 0; yi < abs(y); yi++) {
+  for (int i = 0; i < abs(deltaY); i++) {
     XTestFakeButtonEvent(display, ydir, 1, CurrentTime);
     XTestFakeButtonEvent(display, ydir, 0, CurrentTime);
+  }
+
+  for (int i = 0; i < abs(deltaX); i++) {
+    XTestFakeButtonEvent(display, xdir, 1, CurrentTime);
+    XTestFakeButtonEvent(display, xdir, 0, CurrentTime);
   }
 
   XSync(display, 0);
@@ -368,17 +368,19 @@ XRRModeInfo XCreateScreenModeInfo(int hdisplay, int vdisplay, short vrefresh) {
   return modeinfo;
 }
 
-void XSetKeyboardModifier(int mod, int on) {
+void XSetKeyboardModifier(unsigned char mod, int on) {
   Display *display = getXDisplay();
   XkbLockModifiers(display, XkbUseCoreKbd, mod, on ? mod : 0);
   XFlush(display);
 }
 
-char XGetKeyboardModifiers() {
+unsigned char XGetKeyboardModifiers() {
   XkbStateRec xkbState;
   Display *display = getXDisplay();
   XkbGetState(display, XkbUseCoreKbd, &xkbState);
-  return xkbState.locked_mods;
+  // XkbStateFieldFromRec() doesn't work properly because
+  // state.lookup_mods isn't properly updated, so we do this manually
+  return XkbBuildCoreState(XkbStateMods(&xkbState), xkbState.group);
 }
 
 XFixesCursorImage *XGetCursorImage(void) {

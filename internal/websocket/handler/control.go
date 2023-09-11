@@ -74,12 +74,18 @@ func (h *MessageHandlerCtx) controlMove(session types.Session, payload *message.
 	return nil
 }
 
-func (h *MessageHandlerCtx) controlScroll(session types.Session, payload *message.ControlPos) error {
+func (h *MessageHandlerCtx) controlScroll(session types.Session, payload *message.ControlScroll) error {
 	if err := h.controlRequest(session); err != nil && !errors.Is(err, ErrIsAlreadyTheHost) {
 		return err
 	}
 
-	h.desktop.Scroll(payload.X, payload.Y)
+	// TOOD: remove this once the client is fixed
+	if payload.DeltaX == 0 && payload.DeltaY == 0 {
+		payload.DeltaX = payload.X
+		payload.DeltaY = payload.Y
+	}
+
+	h.desktop.Scroll(payload.DeltaX, payload.DeltaY, payload.ControlKey)
 	return nil
 }
 

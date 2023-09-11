@@ -12,10 +12,7 @@ func (h *MessageHandlerCtx) keyboardMap(session types.Session, payload *message.
 		return errors.New("is not the host")
 	}
 
-	return h.desktop.SetKeyboardMap(types.KeyboardMap{
-		Layout:  payload.Layout,
-		Variant: payload.Variant,
-	})
+	return h.desktop.SetKeyboardMap(payload.KeyboardMap)
 }
 
 func (h *MessageHandlerCtx) keyboardModifiers(session types.Session, payload *message.KeyboardModifiers) error {
@@ -23,10 +20,6 @@ func (h *MessageHandlerCtx) keyboardModifiers(session types.Session, payload *me
 		return errors.New("is not the host")
 	}
 
-	h.desktop.SetKeyboardModifiers(types.KeyboardModifiers{
-		NumLock:  payload.NumLock,
-		CapsLock: payload.CapsLock,
-	})
-
+	h.desktop.SetKeyboardModifiers(payload.KeyboardModifiers)
 	return nil
 }

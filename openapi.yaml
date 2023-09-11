@@ -1087,9 +1087,21 @@ components:
     KeyboardModifiers:
       type: object
       properties:
-        numlock:
+        shift:
           type: boolean
         capslock:
+          type: boolean
+        control:
+          type: boolean
+        alt:
+          type: boolean
+        numlock:
+          type: boolean
+        meta:
+          type: boolean
+        super:
+          type: boolean
+        altgr:
           type: boolean
 
     ControlStatus:

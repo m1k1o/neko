@@ -88,7 +88,7 @@ func (h *MessageHandlerCtx) Message(session types.Session, data types.WebSocketM
 			return h.controlMove(session, payload)
 		})
 	case event.CONTROL_SCROLL:
-		payload := &message.ControlPos{}
+		payload := &message.ControlScroll{}
 		err = utils.Unmarshal(payload, data.Payload, func() error {
 			return h.controlScroll(session, payload)
 		})

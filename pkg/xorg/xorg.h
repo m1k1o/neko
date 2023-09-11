@@ -22,7 +22,7 @@ void XDisplayClose(void);
 
 void XMove(int x, int y);
 void XCursorPosition(int *x, int *y);
-void XScroll(int x, int y);
+void XScroll(int deltaX, int deltaY);
 void XButton(unsigned int button, int down);
 
 typedef struct xkeyentry_t {
@@ -42,8 +42,8 @@ void XGetScreenConfigurations();
 void XCreateScreenMode(int width, int height, short rate);
 XRRModeInfo XCreateScreenModeInfo(int hdisplay, int vdisplay, short vrefresh);
 
-void XSetKeyboardModifier(int mod, int on);
-char XGetKeyboardModifiers();
+void XSetKeyboardModifier(unsigned char mod, int on);
+unsigned char XGetKeyboardModifiers();
 XFixesCursorImage *XGetCursorImage(void);
 
 char *XGetScreenshot(int *w, int *h);

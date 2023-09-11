@@ -23,8 +23,14 @@ import (
 type KbdMod uint8
 
 const (
-	KbdModCapsLock KbdMod = 2
-	KbdModNumLock  KbdMod = 16
+	KbdModShift    KbdMod = C.ShiftMask
+	KbdModCapsLock KbdMod = C.LockMask
+	KbdModControl  KbdMod = C.ControlMask
+	KbdModAlt      KbdMod = C.Mod1Mask
+	KbdModNumLock  KbdMod = C.Mod2Mask
+	KbdModMeta     KbdMod = C.Mod3Mask
+	KbdModSuper    KbdMod = C.Mod4Mask
+	KbdModAltGr    KbdMod = C.Mod5Mask
 )
 
 type ScreenConfiguration struct {
@@ -82,11 +88,16 @@ func GetCursorPosition() (int, int) {
 	return int(x), int(y)
 }
 
-func Scroll(x, y int) {
+func Scroll(deltaX, deltaY int, controlKey bool) {
 	mu.Lock()
 	defer mu.Unlock()
 
-	C.XScroll(C.int(x), C.int(y))
+	if controlKey {
+		C.XSetKeyboardModifier(C.uchar(C.ControlMask), 1)
+		defer C.XSetKeyboardModifier(C.uchar(C.ControlMask), 0)
+	}
+
+	C.XScroll(C.int(deltaX), C.int(deltaY))
 }
 
 func ButtonDown(code uint32) error {
@@ -248,7 +259,7 @@ func SetKeyboardModifier(mod KbdMod, active bool) {
 		num = C.int(1)
 	}
 
-	C.XSetKeyboardModifier(C.int(mod), num)
+	C.XSetKeyboardModifier(C.uchar(mod), num)
 }
 
 func GetKeyboardModifiers() KbdMod {

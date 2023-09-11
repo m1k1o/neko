@@ -18,8 +18,8 @@ func (manager *DesktopManagerCtx) GetCursorPosition() (int, int) {
 	return xorg.GetCursorPosition()
 }
 
-func (manager *DesktopManagerCtx) Scroll(x, y int) {
-	xorg.Scroll(x, y)
+func (manager *DesktopManagerCtx) Scroll(deltaX, deltaY int, controlKey bool) {
+	xorg.Scroll(deltaX, deltaY, controlKey)
 }
 
 func (manager *DesktopManagerCtx) ButtonDown(code uint32) error {
@@ -140,24 +140,56 @@ func (manager *DesktopManagerCtx) GetKeyboardMap() (*types.KeyboardMap, error) {
 }
 
 func (manager *DesktopManagerCtx) SetKeyboardModifiers(mod types.KeyboardModifiers) {
-	if mod.NumLock != nil {
-		xorg.SetKeyboardModifier(xorg.KbdModNumLock, *mod.NumLock)
+	if mod.Shift != nil {
+		xorg.SetKeyboardModifier(xorg.KbdModShift, *mod.Shift)
 	}
 
 	if mod.CapsLock != nil {
 		xorg.SetKeyboardModifier(xorg.KbdModCapsLock, *mod.CapsLock)
+	}
+
+	if mod.Control != nil {
+		xorg.SetKeyboardModifier(xorg.KbdModControl, *mod.Control)
+	}
+
+	if mod.Alt != nil {
+		xorg.SetKeyboardModifier(xorg.KbdModAlt, *mod.Alt)
+	}
+
+	if mod.NumLock != nil {
+		xorg.SetKeyboardModifier(xorg.KbdModNumLock, *mod.NumLock)
+	}
+
+	if mod.Meta != nil {
+		xorg.SetKeyboardModifier(xorg.KbdModMeta, *mod.Meta)
+	}
+
+	if mod.Super != nil {
+		xorg.SetKeyboardModifier(xorg.KbdModSuper, *mod.Super)
+	}
+
+	if mod.AltGr != nil {
+		xorg.SetKeyboardModifier(xorg.KbdModAltGr, *mod.AltGr)
 	}
 }
 
 func (manager *DesktopManagerCtx) GetKeyboardModifiers() types.KeyboardModifiers {
 	modifiers := xorg.GetKeyboardModifiers()
 
-	NumLock := (modifiers & xorg.KbdModNumLock) != 0
-	CapsLock := (modifiers & xorg.KbdModCapsLock) != 0
+	isset := func(mod xorg.KbdMod) *bool {
+		x := modifiers&mod != 0
+		return &x
+	}
 
 	return types.KeyboardModifiers{
-		NumLock:  &NumLock,
-		CapsLock: &CapsLock,
+		Shift:    isset(xorg.KbdModShift),
+		CapsLock: isset(xorg.KbdModCapsLock),
+		Control:  isset(xorg.KbdModControl),
+		Alt:      isset(xorg.KbdModAlt),
+		NumLock:  isset(xorg.KbdModNumLock),
+		Meta:     isset(xorg.KbdModMeta),
+		Super:    isset(xorg.KbdModSuper),
+		AltGr:    isset(xorg.KbdModAltGr),
 	}
 }
 

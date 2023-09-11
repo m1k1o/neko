@@ -115,6 +115,16 @@ type ControlHost struct {
 	HostID  string `json:"host_id,omitempty"`
 }
 
+type ControlScroll struct {
+	// TOOD: remove this once the client is fixed
+	X int `json:"x"`
+	Y int `json:"y"`
+
+	DeltaX     int  `json:"delta_x"`
+	DeltaY     int  `json:"delta_y"`
+	ControlKey bool `json:"control_key"`
+}
+
 type ControlPos struct {
 	X int `json:"x"`
 	Y int `json:"y"`
@@ -159,13 +169,11 @@ type ClipboardData struct {
 /////////////////////////////
 
 type KeyboardMap struct {
-	Layout  string `json:"layout"`
-	Variant string `json:"variant"`
+	types.KeyboardMap
 }
 
 type KeyboardModifiers struct {
-	CapsLock *bool `json:"capslock"`
-	NumLock  *bool `json:"numlock"`
+	types.KeyboardModifiers
 }
 
 /////////////////////////////

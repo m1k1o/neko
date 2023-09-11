@@ -25,13 +25,19 @@ func (s ScreenSize) String() string {
 }
 
 type KeyboardModifiers struct {
-	NumLock  *bool
-	CapsLock *bool
+	Shift    *bool `json:"shift"`
+	CapsLock *bool `json:"capslock"`
+	Control  *bool `json:"control"`
+	Alt      *bool `json:"alt"`
+	NumLock  *bool `json:"numlock"`
+	Meta     *bool `json:"meta"`
+	Super    *bool `json:"super"`
+	AltGr    *bool `json:"altgr"`
 }
 
 type KeyboardMap struct {
-	Layout  string
-	Variant string
+	Layout  string `json:"layout"`
+	Variant string `json:"variant"`
 }
 
 type ClipboardText struct {
@@ -48,7 +54,7 @@ type DesktopManager interface {
 	// xorg
 	Move(x, y int)
 	GetCursorPosition() (int, int)
-	Scroll(x, y int)
+	Scroll(deltaX, deltaY int, controlKey bool)
 	ButtonDown(code uint32) error
 	KeyDown(code uint32) error
 	ButtonUp(code uint32) error

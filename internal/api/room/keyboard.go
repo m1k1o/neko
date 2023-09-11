@@ -8,13 +8,11 @@ import (
 )
 
 type KeyboardMapData struct {
-	Layout  string `json:"layout"`
-	Variant string `json:"variant"`
+	types.KeyboardMap
 }
 
 type KeyboardModifiersData struct {
-	NumLock  *bool `json:"numlock"`
-	CapsLock *bool `json:"capslock"`
+	types.KeyboardModifiers
 }
 
 func (h *RoomHandler) keyboardMapSet(w http.ResponseWriter, r *http.Request) error {
@@ -23,11 +21,7 @@ func (h *RoomHandler) keyboardMapSet(w http.ResponseWriter, r *http.Request) err
 		return err
 	}
 
-	err := h.desktop.SetKeyboardMap(types.KeyboardMap{
-		Layout:  data.Layout,
-		Variant: data.Variant,
-	})
-
+	err := h.desktop.SetKeyboardMap(data.KeyboardMap)
 	if err != nil {
 		return utils.HttpInternalServerError().WithInternalErr(err)
 	}
@@ -37,14 +31,12 @@ func (h *RoomHandler) keyboardMapSet(w http.ResponseWriter, r *http.Request) err
 
 func (h *RoomHandler) keyboardMapGet(w http.ResponseWriter, r *http.Request) error {
 	data, err := h.desktop.GetKeyboardMap()
-
 	if err != nil {
 		return utils.HttpInternalServerError().WithInternalErr(err)
 	}
 
 	return utils.HttpSuccess(w, KeyboardMapData{
-		Layout:  data.Layout,
-		Variant: data.Variant,
+		KeyboardMap: *data,
 	})
 }
 
@@ -54,19 +46,12 @@ func (h *RoomHandler) keyboardModifiersSet(w http.ResponseWriter, r *http.Reques
 		return err
 	}
 
-	h.desktop.SetKeyboardModifiers(types.KeyboardModifiers{
-		NumLock:  data.NumLock,
-		CapsLock: data.CapsLock,
-	})
-
+	h.desktop.SetKeyboardModifiers(data.KeyboardModifiers)
 	return utils.HttpSuccess(w)
 }
 
 func (h *RoomHandler) keyboardModifiersGet(w http.ResponseWriter, r *http.Request) error {
-	data := h.desktop.GetKeyboardModifiers()
-
 	return utils.HttpSuccess(w, KeyboardModifiersData{
-		NumLock:  data.NumLock,
-		CapsLock: data.CapsLock,
+		KeyboardModifiers: h.desktop.GetKeyboardModifiers(),
 	})
 }
