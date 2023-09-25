@@ -99,6 +99,8 @@ member:
   # multiuser:
   #  admin_password: "admin"
   #  user_password: "neko"
+  #  admin_profile: # optional
+  #  user_profile: # optional
   # provider: "noauth"
 
 session:

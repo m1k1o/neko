@@ -38,34 +38,20 @@ func (provider *MemberProviderCtx) Authenticate(username string, password string
 
 	// if logged in as administrator
 	if provider.config.AdminPassword == password {
-		return id, types.MemberProfile{
-			Name:                  username,
-			IsAdmin:               true,
-			CanLogin:              true,
-			CanConnect:            true,
-			CanWatch:              true,
-			CanHost:               true,
-			CanShareMedia:         true,
-			CanAccessClipboard:    true,
-			SendsInactiveCursor:   true,
-			CanSeeInactiveCursors: true,
-		}, nil
+		profile := provider.config.AdminProfile
+		if profile.Name == "" {
+			profile.Name = username
+		}
+		return id, profile, nil
 	}
 
 	// if logged in as user
 	if provider.config.UserPassword == password {
-		return id, types.MemberProfile{
-			Name:                  username,
-			IsAdmin:               false,
-			CanLogin:              true,
-			CanConnect:            true,
-			CanWatch:              true,
-			CanHost:               true,
-			CanShareMedia:         true,
-			CanAccessClipboard:    true,
-			SendsInactiveCursor:   true,
-			CanSeeInactiveCursors: false,
-		}, nil
+		profile := provider.config.UserProfile
+		if profile.Name == "" {
+			profile.Name = username
+		}
+		return id, profile, nil
 	}
 
 	return "", types.MemberProfile{}, types.ErrMemberInvalidPassword

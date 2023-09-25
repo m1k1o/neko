@@ -8,6 +8,7 @@ import (
 	"github.com/demodesk/neko/internal/member/file"
 	"github.com/demodesk/neko/internal/member/multiuser"
 	"github.com/demodesk/neko/internal/member/object"
+	"github.com/demodesk/neko/pkg/types"
 	"github.com/demodesk/neko/pkg/utils"
 )
 
@@ -49,6 +50,16 @@ func (Member) Init(cmd *cobra.Command) error {
 		return err
 	}
 
+	cmd.PersistentFlags().String("member.multiuser.user_profile", "{}", "member multiuser provider: user profile in JSON format")
+	if err := viper.BindPFlag("member.multiuser.user_profile", cmd.PersistentFlags().Lookup("member.multiuser.user_profile")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().String("member.multiuser.admin_profile", "{}", "member multiuser provider: admin profile in JSON format")
+	if err := viper.BindPFlag("member.multiuser.admin_profile", cmd.PersistentFlags().Lookup("member.multiuser.admin_profile")); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -68,4 +79,44 @@ func (s *Member) Set() {
 	// multiuser provider
 	s.Multiuser.UserPassword = viper.GetString("member.multiuser.user_password")
 	s.Multiuser.AdminPassword = viper.GetString("member.multiuser.admin_password")
+
+	// default user profile
+	s.Multiuser.UserProfile = types.MemberProfile{
+		IsAdmin:               false,
+		CanLogin:              true,
+		CanConnect:            true,
+		CanWatch:              true,
+		CanHost:               true,
+		CanShareMedia:         true,
+		CanAccessClipboard:    true,
+		SendsInactiveCursor:   true,
+		CanSeeInactiveCursors: false,
+	}
+
+	// override user profile
+	if err := viper.UnmarshalKey("member.multiuser.user_profile", &s.Multiuser.UserProfile, viper.DecodeHook(
+		utils.JsonStringAutoDecode(s.Multiuser.UserProfile),
+	)); err != nil {
+		log.Warn().Err(err).Msgf("unable to parse member multiuser user profile")
+	}
+
+	// default admin profile
+	s.Multiuser.AdminProfile = types.MemberProfile{
+		IsAdmin:               true,
+		CanLogin:              true,
+		CanConnect:            true,
+		CanWatch:              true,
+		CanHost:               true,
+		CanShareMedia:         true,
+		CanAccessClipboard:    true,
+		SendsInactiveCursor:   true,
+		CanSeeInactiveCursors: true,
+	}
+
+	// override admin profile
+	if err := viper.UnmarshalKey("member.multiuser.admin_profile", &s.Multiuser.AdminProfile, viper.DecodeHook(
+		utils.JsonStringAutoDecode(s.Multiuser.AdminProfile),
+	)); err != nil {
+		log.Warn().Err(err).Msgf("unable to parse member multiuser admin profile")
+	}
 }
