@@ -1,0 +1,64 @@
+version: "3.4"
+
+volumes:
+  X11-unix:
+
+services:
+  xserver:
+    build: "./xserver"
+    restart: "unless-stopped"
+    user: "1000:1000"
+    command: ":0.0"
+    volumes:
+      - "X11-unix:/tmp/.X11-unix:rw"
+
+  pulseaudio:
+    build: "./pulseaudio"
+    restart: "unless-stopped"
+
+  neko:
+    build:
+      context: "../"
+      dockerfile: "test/neko/Dockerfile"
+    restart: "unless-stopped"
+    shm_size: "2gb"
+    ports:
+      - "8081:8080"
+      - "52000-52100:52000-52100/udp"
+    environment:
+      DISPLAY: ":0.0"
+      NEKO_DISPLAY: ":0.0 remote=true"
+      PULSE_SERVER: tcp:pulseaudio:4713
+      NEKO_SCREEN: 1920x1080@30
+      NEKO_PASSWORD: neko
+      NEKO_PASSWORD_ADMIN: admin
+      NEKO_EPR: 52000-52100
+      NEKO_NAT1TO1: 192.168.1.38
+      NEKO_ICELITE: 1
+    volumes:
+      - "X11-unix:/tmp/.X11-unix:ro"
+    depends_on:
+      - xserver
+      - pulseaudio
+
+  openbox:
+    build: "./openbox"
+    restart: "unless-stopped"
+    environment:
+      DISPLAY: ":0.0"
+    volumes:
+      - "X11-unix:/tmp/.X11-unix:ro"
+    depends_on:
+      - xserver
+    
+  firefox:
+    build: "./firefox"
+    restart: "unless-stopped"
+    environment:
+      DISPLAY: ":0.0"
+      PULSE_SERVER: tcp:pulseaudio:4713
+    volumes:
+      - "X11-unix:/tmp/.X11-unix:ro"
+    depends_on:
+      - neko
+      - openbox
