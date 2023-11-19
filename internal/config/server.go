@@ -13,6 +13,7 @@ type Server struct {
 	Cert       string
 	Key        string
 	Bind       string
+	Proxy      bool
 	Static     string
 	PathPrefix string
 	PProf      bool
@@ -36,6 +37,11 @@ func (Server) Init(cmd *cobra.Command) error {
 		return err
 	}
 
+	cmd.PersistentFlags().Bool("server.proxy", false, "trust reverse proxy headers")
+	if err := viper.BindPFlag("server.proxy", cmd.PersistentFlags().Lookup("server.proxy")); err != nil {
+		return err
+	}
+
 	cmd.PersistentFlags().String("server.static", "", "path to neko client files to serve")
 	if err := viper.BindPFlag("server.static", cmd.PersistentFlags().Lookup("server.static")); err != nil {
 		return err
@@ -56,7 +62,7 @@ func (Server) Init(cmd *cobra.Command) error {
 		return err
 	}
 
-	cmd.PersistentFlags().StringSlice("server.cors", []string{"*"}, "list of allowed origins for CORS")
+	cmd.PersistentFlags().StringSlice("server.cors", []string{}, "list of allowed origins for CORS, if empty CORS is disabled, if '*' is present all origins are allowed")
 	if err := viper.BindPFlag("server.cors", cmd.PersistentFlags().Lookup("server.cors")); err != nil {
 		return err
 	}
@@ -68,6 +74,7 @@ func (s *Server) Set() {
 	s.Cert = viper.GetString("server.cert")
 	s.Key = viper.GetString("server.key")
 	s.Bind = viper.GetString("server.bind")
+	s.Proxy = viper.GetBool("server.proxy")
 	s.Static = viper.GetString("server.static")
 	s.PathPrefix = path.Join("/", path.Clean(viper.GetString("server.path_prefix")))
 	s.PProf = viper.GetBool("server.pprof")
@@ -80,7 +87,17 @@ func (s *Server) Set() {
 	}
 }
 
+func (s *Server) HasCors() bool {
+	return len(s.CORS) > 0
+}
+
 func (s *Server) AllowOrigin(origin string) bool {
+	// if CORS is disabled, allow all origins
+	if len(s.CORS) == 0 {
+		return true
+	}
+
+	// if CORS is enabled, allow only origins in the list
 	in, _ := utils.ArrayIn(origin, s.CORS)
 	return in || s.CORS[0] == "*"
 }

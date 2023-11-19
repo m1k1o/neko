@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/go-chi/cors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -24,23 +23,30 @@ type HttpManagerCtx struct {
 func New(WebSocketManager types.WebSocketManager, ApiManager types.ApiManager, config *config.Server) *HttpManagerCtx {
 	logger := log.With().Str("module", "http").Logger()
 
-	router := newRouter(logger)
-	router.UseBypass(cors.Handler(cors.Options{
-		AllowOriginFunc: func(r *http.Request, origin string) bool {
-			return config.AllowOrigin(origin)
-		},
-		AllowedMethods:   []string{"GET", "POST", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
-		ExposedHeaders:   []string{"Link"},
-		AllowCredentials: true,
-		MaxAge:           300, // Maximum value not ignored by any of major browsers
-	}))
+	opts := []RouterOption{
+		WithRequestID(), // create a request id for each request
+	}
+
+	// use real ip if behind proxy
+	// before logger so it can log the real ip
+	if config.Proxy {
+		opts = append(opts, WithRealIP())
+	}
+
+	opts = append(opts,
+		WithLogger(logger),
+		WithRecoverer(), // recover from panics without crashing server
+	)
+
+	if config.HasCors() {
+		opts = append(opts, WithCORS(config.AllowOrigin))
+	}
 
 	if config.PathPrefix != "/" {
-		router.UseBypass(func(h http.Handler) http.Handler {
-			return http.StripPrefix(config.PathPrefix, h)
-		})
+		opts = append(opts, WithPathPrefix(config.PathPrefix))
 	}
+
+	router := newRouter(opts...)
 
 	router.Route("/api", ApiManager.Route)
 

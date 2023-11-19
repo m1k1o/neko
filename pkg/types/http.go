@@ -17,9 +17,7 @@ type Router interface {
 	Patch(pattern string, fn RouterHandler)
 	Delete(pattern string, fn RouterHandler)
 	With(fn MiddlewareHandler) Router
-	WithBypass(fn func(next http.Handler) http.Handler) Router
 	Use(fn MiddlewareHandler)
-	UseBypass(fn func(next http.Handler) http.Handler)
 	ServeHTTP(w http.ResponseWriter, req *http.Request)
 }
 

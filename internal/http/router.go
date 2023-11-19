@@ -5,6 +5,7 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
+	"github.com/go-chi/cors"
 	"github.com/rs/zerolog"
 
 	"github.com/demodesk/neko/pkg/auth"
@@ -12,16 +13,65 @@ import (
 	"github.com/demodesk/neko/pkg/utils"
 )
 
+type RouterOption func(*router)
+
+func WithRequestID() RouterOption {
+	return func(r *router) {
+		r.chi.Use(middleware.RequestID)
+	}
+}
+
+func WithLogger(logger zerolog.Logger) RouterOption {
+	return func(r *router) {
+		r.chi.Use(middleware.RequestLogger(&logFormatter{logger}))
+	}
+}
+
+func WithRecoverer() RouterOption {
+	return func(r *router) {
+		r.chi.Use(middleware.Recoverer)
+	}
+}
+
+func WithCORS(allowOrigin func(origin string) bool) RouterOption {
+	return func(r *router) {
+		r.chi.Use(cors.Handler(cors.Options{
+			AllowOriginFunc: func(r *http.Request, origin string) bool {
+				return allowOrigin(origin)
+			},
+			AllowedMethods:   []string{"GET", "POST", "DELETE", "OPTIONS"},
+			AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+			ExposedHeaders:   []string{"Link"},
+			AllowCredentials: true,
+			MaxAge:           300, // Maximum value not ignored by any of major browsers
+		}))
+	}
+}
+
+func WithPathPrefix(prefix string) RouterOption {
+	return func(r *router) {
+		r.chi.Use(func(h http.Handler) http.Handler {
+			return http.StripPrefix(prefix, h)
+		})
+	}
+}
+
+func WithRealIP() RouterOption {
+	return func(r *router) {
+		r.chi.Use(middleware.RealIP)
+	}
+}
+
 type router struct {
 	chi chi.Router
 }
 
-func newRouter(logger zerolog.Logger) *router {
-	r := chi.NewRouter()
-	r.Use(middleware.RequestID) // Create a request ID for each request
-	r.Use(middleware.RequestLogger(&logFormatter{logger}))
-	r.Use(middleware.Recoverer) // Recover from panics without crashing server
-	return &router{r}
+func newRouter(opts ...RouterOption) types.Router {
+	r := &router{chi.NewRouter()}
+	for _, opt := range opts {
+		opt(r)
+	}
+	return r
 }
 
 func (r *router) Group(fn func(types.Router)) {
@@ -61,17 +111,8 @@ func (r *router) With(fn types.MiddlewareHandler) types.Router {
 	return &router{c}
 }
 
-func (r *router) WithBypass(fn func(next http.Handler) http.Handler) types.Router {
-	c := r.chi.With(fn)
-	return &router{c}
-}
-
 func (r *router) Use(fn types.MiddlewareHandler) {
 	r.chi.Use(middlewareHandler(fn))
-}
-
-func (r *router) UseBypass(fn func(next http.Handler) http.Handler) {
-	r.chi.Use(fn)
 }
 
 func (r *router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
