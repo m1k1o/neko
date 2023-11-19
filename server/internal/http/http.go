@@ -35,6 +35,9 @@ func New(conf *config.Server, webSocketHandler types.WebSocketHandler, desktop t
 
 	router := chi.NewRouter()
 	router.Use(middleware.RequestID) // Create a request ID for each request
+	if conf.Proxy {
+		router.Use(middleware.RealIP)
+	}
 	router.Use(middleware.RequestLogger(&logformatter{logger}))
 	router.Use(middleware.Recoverer) // Recover from panics without crashing server
 	router.Use(middleware.Compress(5, "application/octet-stream"))

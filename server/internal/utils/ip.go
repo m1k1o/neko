@@ -38,14 +38,3 @@ func GetIP(serverUrl string) (string, error) {
 
 	return string(bytes.TrimSpace(buf)), nil
 }
-
-func GetHttpRequestIP(r *http.Request, proxy bool) string {
-	IPAddress := r.Header.Get("X-Real-Ip")
-	if IPAddress == "" {
-		IPAddress = r.Header.Get("X-Forwarded-For")
-	}
-	if IPAddress == "" || !proxy {
-		IPAddress = r.RemoteAddr
-	}
-	return IPAddress
-}

@@ -14,6 +14,7 @@ type Server struct {
 	Cert       string
 	Key        string
 	Bind       string
+	Proxy      bool
 	Static     string
 	PathPrefix string
 	CORS       []string
@@ -32,6 +33,11 @@ func (Server) Init(cmd *cobra.Command) error {
 
 	cmd.PersistentFlags().String("key", "", "path to the SSL key used to secure the neko server")
 	if err := viper.BindPFlag("key", cmd.PersistentFlags().Lookup("key")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().Bool("proxy", false, "enable reverse proxy mode")
+	if err := viper.BindPFlag("proxy", cmd.PersistentFlags().Lookup("proxy")); err != nil {
 		return err
 	}
 
@@ -57,6 +63,7 @@ func (s *Server) Set() {
 	s.Cert = viper.GetString("cert")
 	s.Key = viper.GetString("key")
 	s.Bind = viper.GetString("bind")
+	s.Proxy = viper.GetBool("proxy")
 	s.Static = viper.GetString("static")
 	s.PathPrefix = path.Join("/", path.Clean(viper.GetString("path_prefix")))
 

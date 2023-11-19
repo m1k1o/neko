@@ -290,7 +290,7 @@ func (ws *WebSocketHandler) Upgrade(w http.ResponseWriter, r *http.Request) erro
 	socket := &WebSocket{
 		id:         id,
 		ws:         ws,
-		address:    utils.GetHttpRequestIP(r, ws.conf.Proxy),
+		address:    r.RemoteAddr,
 		connection: connection,
 	}
 
