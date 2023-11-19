@@ -929,6 +929,27 @@ paths:
             schema:
               $ref: '#/components/schemas/MemberBulkUpdate'
         required: true
+  /api/members_bulk/delete:
+    post:
+      tags:
+        - members
+      summary: bulk delete members
+      operationId: membersBulkDelete
+      responses:
+        '204':
+          description: OK
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemberBulkDelete'
+        required: true
 
 components:
   securitySchemes:
@@ -1185,6 +1206,13 @@ components:
             type: string
         profile:
           $ref: '#/components/schemas/MemberProfile'
+
+    MemberBulkDelete:
+      properties:
+        ids:
+          type: array
+          items:
+            type: string
 
 security:
   - BearerAuth: []

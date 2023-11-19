@@ -55,3 +55,30 @@ func (h *MembersHandler) membersBulkUpdate(w http.ResponseWriter, r *http.Reques
 
 	return utils.HttpSuccess(w)
 }
+
+type MemberBulkDeletePayload struct {
+	IDs []string `json:"ids"`
+}
+
+func (h *MembersHandler) membersBulkDelete(w http.ResponseWriter, r *http.Request) error {
+	bytes, err := io.ReadAll(r.Body)
+	if err != nil {
+		return utils.HttpBadRequest("unable to read post body").WithInternalErr(err)
+	}
+
+	data := &MemberBulkDeletePayload{}
+	if err := json.Unmarshal(bytes, &data); err != nil {
+		return utils.HttpBadRequest("unable to unmarshal payload").WithInternalErr(err)
+	}
+
+	for _, memberId := range data.IDs {
+		if err := h.members.Delete(memberId); err != nil {
+			return utils.HttpInternalServerError().
+				WithInternalErr(err).
+				WithInternalMsg("unable to delete member").
+				Msgf("failed to delete member %s", memberId)
+		}
+	}
+
+	return utils.HttpSuccess(w)
+}

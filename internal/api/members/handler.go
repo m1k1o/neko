@@ -47,6 +47,7 @@ func (h *MembersHandler) Route(r types.Router) {
 func (h *MembersHandler) RouteBulk(r types.Router) {
 	r.With(auth.AdminsOnly).Group(func(r types.Router) {
 		r.Post("/update", h.membersBulkUpdate)
+		r.Post("/delete", h.membersBulkDelete)
 	})
 }
 
