@@ -11,4 +11,5 @@ type MemberEntry struct {
 
 type Config struct {
 	Path string
+	Hash bool
 }

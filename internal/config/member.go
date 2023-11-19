@@ -33,6 +33,11 @@ func (Member) Init(cmd *cobra.Command) error {
 		return err
 	}
 
+	cmd.PersistentFlags().Bool("member.file.hash", true, "member file provider: whether to hash passwords using sha256 (recommended)")
+	if err := viper.BindPFlag("member.file.hash", cmd.PersistentFlags().Lookup("member.file.hash")); err != nil {
+		return err
+	}
+
 	// object provider
 	cmd.PersistentFlags().String("member.object.users", "[]", "member object provider: users in JSON format")
 	if err := viper.BindPFlag("member.object.users", cmd.PersistentFlags().Lookup("member.object.users")); err != nil {
@@ -68,6 +73,7 @@ func (s *Member) Set() {
 
 	// file provider
 	s.File.Path = viper.GetString("member.file.path")
+	s.File.Hash = viper.GetBool("member.file.hash")
 
 	// object provider
 	if err := viper.UnmarshalKey("member.object.users", &s.Object.Users, viper.DecodeHook(

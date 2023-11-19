@@ -1,6 +1,7 @@
 package file
 
 import (
+	"crypto/sha256"
 	"encoding/json"
 	"io"
 	"os"
@@ -16,6 +17,17 @@ func New(config Config) types.MemberProvider {
 
 type MemberProviderCtx struct {
 	config Config
+}
+
+func (provider *MemberProviderCtx) hash(password string) string {
+	// if hash is disabled, return password as plain text
+	if !provider.config.Hash {
+		return password
+	}
+
+	sha256 := sha256.New()
+	sha256.Write([]byte(password))
+	return string(sha256.Sum(nil))
 }
 
 func (provider *MemberProviderCtx) Connect() error {
@@ -35,8 +47,7 @@ func (provider *MemberProviderCtx) Authenticate(username string, password string
 		return "", types.MemberProfile{}, err
 	}
 
-	// TODO: Use hash function.
-	if entry.Password != password {
+	if entry.Password != provider.hash(password) {
 		return "", types.MemberProfile{}, types.ErrMemberInvalidPassword
 	}
 
@@ -58,8 +69,7 @@ func (provider *MemberProviderCtx) Insert(username string, password string, prof
 	}
 
 	entries[id] = MemberEntry{
-		// TODO: Use hash function.
-		Password: password,
+		Password: provider.hash(password),
 		Profile:  profile,
 	}
 
@@ -94,8 +104,7 @@ func (provider *MemberProviderCtx) UpdatePassword(id string, password string) er
 		return types.ErrMemberDoesNotExist
 	}
 
-	// TODO: Use hash function.
-	entry.Password = password
+	entry.Password = provider.hash(password)
 	entries[id] = entry
 
 	return provider.serialize(entries)
