@@ -19,7 +19,8 @@ type Desktop struct {
 	UseInputDriver bool
 	InputSocket    string
 
-	Unminimize bool
+	Unminimize        bool
+	FileChooserDialog bool
 }
 
 func (Desktop) Init(cmd *cobra.Command) error {
@@ -40,6 +41,11 @@ func (Desktop) Init(cmd *cobra.Command) error {
 
 	cmd.PersistentFlags().Bool("desktop.unminimize", true, "automatically unminimize window when it is minimized")
 	if err := viper.BindPFlag("desktop.unminimize", cmd.PersistentFlags().Lookup("desktop.unminimize")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().Bool("desktop.file_chooser_dialog", false, "whether to handle file chooser dialog externally")
+	if err := viper.BindPFlag("desktop.file_chooser_dialog", cmd.PersistentFlags().Lookup("desktop.file_chooser_dialog")); err != nil {
 		return err
 	}
 
@@ -74,4 +80,5 @@ func (s *Desktop) Set() {
 	s.UseInputDriver = viper.GetBool("desktop.input.enabled")
 	s.InputSocket = viper.GetString("desktop.input.socket")
 	s.Unminimize = viper.GetBool("desktop.unminimize")
+	s.FileChooserDialog = viper.GetBool("desktop.file_chooser_dialog")
 }

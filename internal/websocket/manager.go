@@ -167,7 +167,9 @@ func (manager *WebSocketManagerCtx) Start() {
 			})
 	})
 
-	manager.fileChooserDialogEvents()
+	if manager.desktop.IsFileChooserDialogEnabled() {
+		manager.fileChooserDialogEvents()
+	}
 
 	if manager.sessions.Settings().InactiveCursors {
 		manager.startInactiveCursors()

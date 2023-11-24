@@ -98,5 +98,6 @@ type DesktopManager interface {
 	// filechooser
 	HandleFileChooserDialog(uri string) error
 	CloseFileChooserDialog()
+	IsFileChooserDialogEnabled() bool
 	IsFileChooserDialogOpened() bool
 }

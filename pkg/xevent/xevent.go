@@ -16,7 +16,8 @@ import (
 
 var Emmiter events.EventEmmiter
 var Unminimize bool = false
-var file_chooser_dialog_window uint32 = 0
+var FileChooserDialog bool = false
+var fileChooserDialogWindow uint32 = 0
 
 func init() {
 	Emmiter = events.New()
@@ -41,7 +42,7 @@ func goXEventClipboardUpdated() {
 
 //export goXEventConfigureNotify
 func goXEventConfigureNotify(display *C.Display, window C.Window, name *C.char, role *C.char) {
-	if C.GoString(role) != "GtkFileChooserDialog" {
+	if C.GoString(role) != "GtkFileChooserDialog" || !FileChooserDialog {
 		return
 	}
 
@@ -53,19 +54,19 @@ func goXEventConfigureNotify(display *C.Display, window C.Window, name *C.char, 
 
 	C.XFileChooserHide(display, window)
 
-	if file_chooser_dialog_window == 0 {
-		file_chooser_dialog_window = uint32(window)
+	if fileChooserDialogWindow == 0 {
+		fileChooserDialogWindow = uint32(window)
 		Emmiter.Emit("file-chooser-dialog-opened")
 	}
 }
 
 //export goXEventUnmapNotify
 func goXEventUnmapNotify(window C.Window) {
-	if uint32(window) != file_chooser_dialog_window {
+	if uint32(window) != fileChooserDialogWindow || !FileChooserDialog {
 		return
 	}
 
-	file_chooser_dialog_window = 0
+	fileChooserDialogWindow = 0
 	Emmiter.Emit("file-chooser-dialog-closed")
 }
 

@@ -84,6 +84,10 @@ func (manager *DesktopManagerCtx) CloseFileChooserDialog() {
 	}
 }
 
+func (manager *DesktopManagerCtx) IsFileChooserDialogEnabled() bool {
+	return manager.config.FileChooserDialog
+}
+
 func (manager *DesktopManagerCtx) IsFileChooserDialogOpened() bool {
 	mu.Lock()
 	defer mu.Unlock()

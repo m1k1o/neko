@@ -71,11 +71,15 @@ func (manager *DesktopManagerCtx) Start() {
 		manager.logger.Panic().Err(err).Msg("unable to connect to input driver")
 	}
 
+	// set up event listeners
 	xevent.Unminimize = manager.config.Unminimize
+	xevent.FileChooserDialog = manager.config.FileChooserDialog
 	go xevent.EventLoop(manager.config.Display)
 
-	// In case it was opened
-	go manager.CloseFileChooserDialog()
+	// in case it was opened
+	if manager.config.FileChooserDialog {
+		go manager.CloseFileChooserDialog()
+	}
 
 	manager.OnEventError(func(error_code uint8, message string, request_code uint8, minor_code uint8) {
 		manager.logger.Warn().
