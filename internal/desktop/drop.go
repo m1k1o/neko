@@ -62,3 +62,7 @@ func (manager *DesktopManagerCtx) DropFiles(x int, y int, files []string) bool {
 		return false
 	}
 }
+
+func (manager *DesktopManagerCtx) IsUploadDropEnabled() bool {
+	return manager.config.UploadDrop
+}

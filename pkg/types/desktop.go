@@ -94,6 +94,7 @@ type DesktopManager interface {
 
 	// drop
 	DropFiles(x int, y int, files []string) bool
+	IsUploadDropEnabled() bool
 
 	// filechooser
 	HandleFileChooserDialog(uri string) error

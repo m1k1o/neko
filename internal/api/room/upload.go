@@ -16,6 +16,10 @@ import (
 const maxUploadSize = 32 << 20
 
 func (h *RoomHandler) uploadDrop(w http.ResponseWriter, r *http.Request) error {
+	if !h.desktop.IsUploadDropEnabled() {
+		return utils.HttpBadRequest("upload drop is disabled")
+	}
+
 	err := r.ParseMultipartForm(maxUploadSize)
 	if err != nil {
 		return utils.HttpBadRequest("failed to parse multipart form").WithInternalErr(err)
