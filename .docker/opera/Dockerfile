@@ -9,7 +9,7 @@ ARG LIBFFMPEG_API_URL="https://api.github.com/repos/nwjs-ffmpeg-prebuilt/nwjs-ff
 RUN set -eux; apt-get update; \
     #
     # fetch latest release
-    VERSION="$(wget -O - "${API_URL}" 2>/dev/null | sed -n 's/.*href="\([^"/]*\).*/\1/p' | tail -1)"; \
+    VERSION="$(wget -O - "${API_URL}" 2>/dev/null | sed -n 's/.*href="\([^"/]*\).*/\1/p' | sort --version-sort | tail -1)"; \
     wget -O /tmp/opera.deb "${API_URL}${VERSION}/linux/opera-stable_${VERSION}_amd64.deb"; \
     apt-get install -y --no-install-recommends openbox jq unzip /tmp/opera.deb; \
     #

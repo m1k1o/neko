@@ -21,7 +21,7 @@ RUN set -eux; apt-get update; \
     chmod 4755 /usr/lib/chromium/chrome-sandbox; \
     #
     # install widevine module
-    WIDEVINE_VERSION=$(wget --quiet -O - https://dl.google.com/widevine-cdm/versions.txt | tail -n 1); \
+    WIDEVINE_VERSION=$(wget --quiet -O - https://dl.google.com/widevine-cdm/versions.txt | sort --version-sort | tail -n 1); \
     wget -O /tmp/widevine.zip "https://dl.google.com/widevine-cdm/${WIDEVINE_VERSION}-linux-x64.zip"; \
     unzip -p /tmp/widevine.zip libwidevinecdm.so > /usr/lib/chromium/libwidevinecdm.so; \
     chmod 644 /usr/lib/chromium/libwidevinecdm.so; \
