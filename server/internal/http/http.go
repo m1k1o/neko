@@ -166,7 +166,13 @@ func New(conf *config.Server, webSocketHandler types.WebSocketHandler, desktop t
 				return
 			}
 
-			r.ParseMultipartForm(32 << 20)
+			err = r.ParseMultipartForm(32 << 20)
+			if err != nil || r.MultipartForm == nil {
+				logger.Warn().Err(err).Msg("failed to parse multipart form")
+				http.Error(w, "error parsing form", http.StatusBadRequest)
+				return
+			}
+
 			for _, formheader := range r.MultipartForm.File["files"] {
 				filePath := webSocketHandler.FileTransferPath(formheader.Filename)
 
@@ -186,6 +192,11 @@ func New(conf *config.Server, webSocketHandler types.WebSocketHandler, desktop t
 				defer f.Close()
 
 				io.Copy(f, formfile)
+			}
+
+			err = r.MultipartForm.RemoveAll()
+			if err != nil {
+				logger.Warn().Err(err).Msg("failed to remove multipart form")
 			}
 		})
 	}
