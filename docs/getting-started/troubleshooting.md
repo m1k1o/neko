@@ -94,7 +94,7 @@ services:
 +     NEKO_IPFETCH: https://ifconfig.co/ip
 ```
 
-Or you can specify your IP address manually using `NEKO_NAT1TO1`:
+Or you can specify your IP address manually using `NEKO_NAT1TO1`: (It's read as NAT 1 to 1, so it's capital letter 'O', not zero '0', in NAT1`TO`1)
 
 ```diff
 version: "3.4"
