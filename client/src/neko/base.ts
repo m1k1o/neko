@@ -173,7 +173,7 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
     }
 
     // @ts-ignore
-    if (typeof buffer !== 'undefined') {
+    if (typeof buffer !== 'undefined' && this._channel?.readyState == 'open') {
       this._channel!.send(buffer)
     }
   }

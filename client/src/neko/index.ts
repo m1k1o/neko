@@ -85,7 +85,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   }
 
   protected [EVENT.CONNECTING]() {
-    this.$accessor.setConnnecting()
+    this.$accessor.setConnecting()
   }
 
   protected [EVENT.CONNECTED]() {
@@ -117,6 +117,11 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
       duration: 5000,
       speed: 1000,
     })
+    if (reason?.message == 'connection timeout') {
+      if (this.$accessor.displayname && this.$accessor.password) {
+        this.login(this.$accessor.password, this.$accessor.displayname)
+      }
+    }
   }
 
   protected [EVENT.TRACK](event: RTCTrackEvent) {
@@ -160,6 +165,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
       text: message,
       icon: 'error',
       confirmButtonText: this.$vue.$t('connection.button_confirm') as string,
+      timer: 15000,
     })
   }
 

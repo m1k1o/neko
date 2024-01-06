@@ -158,22 +158,22 @@
 
     mounted() {
       // auto-password fill
-      let password = this.$accessor.password
+      this.password = this.$accessor.password
       if (this.autoPassword !== null) {
         this.removeUrlParam('pwd')
-        password = this.autoPassword
+        this.password = this.autoPassword
       }
 
       // auto-user fill
-      let displayname = this.$accessor.displayname
+      this.displayname = this.$accessor.displayname
       const usr = new URL(location.href).searchParams.get('usr')
       if (usr) {
         this.removeUrlParam('usr')
-        displayname = this.$accessor.displayname || usr
+        this.displayname = this.$accessor.displayname || usr
       }
 
-      if (displayname !== '' && password !== '') {
-        this.$accessor.login({ displayname, password })
+      if (this.displayname !== '' && this.password !== '') {
+        this.$accessor.login({ displayname: this.displayname, password: this.password })
         this.autoPassword = null
       }
     }
@@ -208,7 +208,6 @@
       if (this.autoPassword !== null) {
         password = this.autoPassword
       }
-
       if (this.displayname == '') {
         this.$swal({
           title: this.$t('connect.error') as string,
