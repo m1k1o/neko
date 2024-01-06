@@ -27,6 +27,14 @@ export const mutations = mutationTree(state, {
     state.side = !state.side
     set('side', state.side)
   },
+  showSide(state) {
+    state.side = true
+    set('side', state.side)
+  },
+  hideSide(state) {
+    state.side = false
+    set('side', state.side)
+  },
 })
 
 export const actions = actionTree({ state, getters, mutations }, {})

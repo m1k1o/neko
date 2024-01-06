@@ -82,6 +82,18 @@
       if (default_lang && this.langs.includes(default_lang)) {
         this.$i18n.locale = default_lang
       }
+      const show_side = new URL(location.href).searchParams.get('show_side')
+      if (show_side && show_side === 'true') {
+        this.$accessor.client.showSide()
+      } else if (show_side && show_side === 'false') {
+        this.$accessor.client.hideSide()
+      }
+      const mute_chat = new URL(location.href).searchParams.get('mute_chat')
+      if (mute_chat && mute_chat === 'true') {
+        this.$accessor.settings.setSound(false)
+      } else if  (mute_chat && mute_chat === 'false') {
+        this.$accessor.settings.setSound(true)
+      }
     }
   }
 </script>
