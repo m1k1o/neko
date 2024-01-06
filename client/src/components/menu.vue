@@ -83,16 +83,12 @@
         this.$i18n.locale = default_lang
       }
       const show_side = new URL(location.href).searchParams.get('show_side')
-      if (show_side && show_side === 'true') {
-        this.$accessor.client.showSide()
-      } else if (show_side && show_side === 'false') {
-        this.$accessor.client.hideSide()
+      if (show_side !== null) {
+        this.$accessor.client.setSide(show_side === '1')
       }
       const mute_chat = new URL(location.href).searchParams.get('mute_chat')
-      if (mute_chat && mute_chat === 'true') {
-        this.$accessor.settings.setSound(false)
-      } else if  (mute_chat && mute_chat === 'false') {
-        this.$accessor.settings.setSound(true)
+      if (mute_chat !== null) {
+        this.$accessor.settings.setSound(mute_chat !== '1')
       }
     }
   }
