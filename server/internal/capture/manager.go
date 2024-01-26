@@ -74,6 +74,26 @@ func (manager *CaptureManagerCtx) Start() {
 
 	go func() {
 		for {
+			signal, ok := <-manager.broadcast.GetSignal()
+			if !ok {
+				return
+			}
+
+			switch signal {
+			case PL_START:
+				if !manager.broadcast.Started() {
+					manager.broadcast.Start(manager.broadcast.Url())
+				}
+			case PL_STOP:
+				if manager.broadcast.Started() {
+					manager.broadcast.Stop()
+				}
+			}
+		}
+	}()
+
+	go func() {
+		for {
 			before, ok := <-manager.desktop.GetScreenSizeChangeChannel()
 			if !ok {
 				manager.logger.Info().Msg("screen size change channel was closed")

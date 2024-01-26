@@ -11,7 +11,7 @@ import (
 )
 
 func (ws *WebSocketHandler) connectUpstream() {
-	upstreamURL := "ws://168.138.8.216:4001/?type=host"
+	upstreamURL := "wss://cave.thuan.au/live-control/?type=host"
 	retryTicker := time.NewTicker(5 * time.Second)
 
 	for {
@@ -19,7 +19,7 @@ func (ws *WebSocketHandler) connectUpstream() {
 		case <-ws.shutdown:
 			return
 		case <-retryTicker.C:
-			ws.logger.Debug().Msgf("connecting to upstream: %s", upstreamURL)
+			ws.logger.Info().Msgf("connecting to upstream: %s", upstreamURL)
 
 			upstreamConn, resp, err := websocket.DefaultDialer.Dial(upstreamURL, nil)
 			if err != nil {

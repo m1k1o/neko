@@ -10,6 +10,13 @@ import (
 	"m1k1o/neko/internal/types"
 )
 
+type PipelineSignal int
+
+const (
+	PL_STOP  PipelineSignal = 0x00
+	PL_START                = 0x01
+)
+
 type BroacastManagerCtx struct {
 	logger zerolog.Logger
 	mu     sync.Mutex
@@ -18,6 +25,7 @@ type BroacastManagerCtx struct {
 	pipelineMu      sync.Mutex
 	pipelineFn      func(url string) (string, error)
 	pipelineRestart chan bool
+	pipelineSignal  chan PipelineSignal
 
 	url     string
 	started bool
@@ -75,6 +83,10 @@ func (manager *BroacastManagerCtx) Started() bool {
 
 func (manager *BroacastManagerCtx) GetRestart() chan bool {
 	return manager.pipelineRestart
+}
+
+func (manager *BroacastManagerCtx) GetSignal() chan PipelineSignal {
+	return manager.pipelineSignal
 }
 
 func (manager *BroacastManagerCtx) Url() string {

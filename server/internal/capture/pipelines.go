@@ -47,8 +47,9 @@ func NewBroadcastPipeline(device string, display string, pipelineSrc string, url
 		// replace display
 		pipelineStr = strings.Replace(pipelineStr, "{display}", display, -1)
 	} else {
-		birate := 8000
+		birate := 5000
 		pipelineStr = fmt.Sprintf("flvmux name=mux ! rtmpsink location='%s live=1 subscribe=stream-neko buffer=1200000' %s audio/x-raw,channels=2 ! audioconvert ! voaacenc ! mux. %s video/x-raw,format=NV12 ! nvh264enc name=encoder rc-lookahead=20 preset=2 gop-size=120 temporal-aq=true bitrate=%d vbv-buffer-size=%d rc-mode=cbr bframes=0 ! h264parse config-interval=-1 ! mux.", url, audio, video, birate, birate)
+		// pipelineStr = fmt.Sprintf("flvmux name=mux ! rtmpsink location='%s live=1 subscribe=stream-neko buffer=1200000' %s audio/x-raw,channels=2 ! audioconvert ! voaacenc ! mux. %s video/x-raw,format=NV12 ! openh264enc name=encoder bitrate=%d vbv-buffer-size=%d ! h264parse config-interval=-1 ! mux.", url, audio, video, birate, birate)
 	}
 
 	return pipelineStr, nil

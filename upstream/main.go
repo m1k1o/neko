@@ -56,9 +56,6 @@ func upgrade(w http.ResponseWriter, r *http.Request) {
 		send:           make(chan []byte),
 	}
 	client.hub.register <- client
-
-	go client.readPump()
-	go client.writePump()
 }
 
 func broadcast(receivers map[*websocket.Conn]empty, messType int, raw []byte) {

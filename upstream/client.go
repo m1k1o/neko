@@ -47,6 +47,11 @@ type Client struct {
 	send           chan []byte
 }
 
+func (c *Client) start() {
+	go c.readPump()
+	go c.writePump()
+}
+
 func (c *Client) readPump() {
 	c.conn.SetReadLimit(maxMessageSize)
 	c.conn.SetReadDeadline(time.Now().Add(pongWait))
@@ -54,9 +59,9 @@ func (c *Client) readPump() {
 		c.conn.SetReadDeadline(time.Now().Add(pongWait))
 		return nil
 	})
+
 	defer func() {
 		c.hub.unregister <- c
-		c.conn.Close()
 	}()
 
 	for {
@@ -73,9 +78,11 @@ func (c *Client) readPump() {
 
 func (c *Client) writePump() {
 	ticker := time.NewTicker(pingPeriod)
+
 	defer func() {
 		ticker.Stop()
 		c.conn.Close()
+		c.hub.unregister <- c
 	}()
 
 	for {

@@ -10,7 +10,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
-      - ./bin/home/neko:/home/neko
+      - ./bin/home/neko:/home/neko:rw
     devices:
       - /dev/dri:/dev/dri
     deploy:
@@ -22,7 +22,7 @@ services:
               capabilities: [gpu]
     privileged: true
     environment:
-      NEKO_SCREEN: 1920x1080@60
+      NEKO_SCREEN: 1280x720@30
       NEKO_PASSWORD: neko
       NEKO_PASSWORD_ADMIN: admin
       NEKO_EPR: 52000-52100

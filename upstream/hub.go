@@ -37,6 +37,7 @@ func (h *Hub) Run() {
 			for client := range h.clients {
 				h.unregister <- client
 			}
+			return
 		case client := <-h.register:
 			switch client.connectionType {
 			case ClientConn:
@@ -46,6 +47,9 @@ func (h *Hub) Run() {
 			}
 			log.Printf("New connection: %s", client.connectionType)
 			h.PrintConns()
+
+			go client.readPump()
+			go client.writePump()
 		case client := <-h.unregister:
 			log.Printf("Disconnecting %s", client.connectionType)
 
