@@ -193,7 +193,7 @@ RUN set -eux; \
     apt-get install -y --no-install-recommends \
         wget ca-certificates supervisor \
         pulseaudio dbus-x11 xserver-xorg-video-dummy \
-        libcairo2 libxcb1 libxrandr2 libxv1 libopus0 libvpx6 libx264-155 libvo-aacenc0 librtmp1 libxcvt0 \
+        libcairo2 libxcb1 libxrandr2 libxv1 libopus0 libvpx6 libx264-155 libvo-aacenc0 librtmp1 \
         libgtk-3-bin software-properties-common cabextract aptitude vim curl \
         #
         # needed for profile upload preStop hook
