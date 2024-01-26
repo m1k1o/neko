@@ -20,7 +20,7 @@ RUN set -eux; \
         # Install pip and ninja
         python3-pip python-gi-dev ninja-build \
         # Install build deps
-        autopoint autoconf automake autotools-dev libtool gettext bison flex gtk-doc-tools \
+        autopoint autoconf automake autotools-dev libtool gettext bison flex gtk-doc-tools nasm wget \
         # Install libraries
         librtmp-dev \
         libvo-aacenc-dev \
@@ -40,6 +40,15 @@ RUN set -eux; \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/*
 
 #
+# build openh264
+RUN set -eux; \
+    cd /tmp; wget https://github.com/cisco/openh264/archive/refs/tags/v2.4.0.tar.gz && tar xvf v2.4.0.tar.gz; \
+    cd openh264-2.4.0; \
+    meson builddir; \
+    ninja -C builddir; \
+    ninja -C builddir install;
+
+#
 # build gstreamer
 RUN set -eux; \
     git clone --depth 1 --branch $GSTREAMER_VERSION https://gitlab.freedesktop.org/gstreamer/gstreamer.git /gstreamer/src; \
@@ -48,7 +57,9 @@ RUN set -eux; \
     meson --prefix /opt/gstreamer \
         -Dgpl=enabled \
         -Dugly=enabled \
+        -Dbad=enabled \
         -Dgst-plugins-ugly:x264=enabled \
+        -Dgst-plugins-bad:openh264=enabled \
         build; \
     ninja -C build; \
     meson install -C build;
@@ -274,12 +285,13 @@ ENV NEKO_BIND=:8080
 #
 # set gstreamer envs
 ENV PATH="/opt/gstreamer/bin:${PATH}"
-ENV LD_LIBRARY_PATH="/opt/gstreamer/lib/x86_64-linux-gnu${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
-ENV PKG_CONFIG_PATH="/opt/gstreamer/lib/x86_64-linux-gnu/pkgconfig${PKG_CONFIG_PATH:+:${PKG_CONFIG_PATH}}"
+ENV LD_LIBRARY_PATH="/opt/gstreamer/lib/x86_64-linux-gnu:/usr/local/lib/x86_64-linux-gnu${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
+ENV PKG_CONFIG_PATH="/opt/gstreamer/lib/x86_64-linux-gnu/pkgconfig:/usr/local/lib/x86_64-linux-gnu/pkgconfig${PKG_CONFIG_PATH:+:${PKG_CONFIG_PATH}}"
 
 #
 # copy gstreamer from previous stage
 COPY --from=gstreamer /opt/gstreamer /opt/gstreamer
+COPY --from=gstreamer /usr/local/lib/x86_64-linux-gnu /usr/local/lib/x86_64-linux-gnu
 
 #
 # copy static files from previous stages

@@ -33,6 +33,6 @@ RUN go mod download
 COPY server/ .
 RUN ./build
 
-FROM cave-firefox:latest
+FROM cave-firefox:202401261754
 
 COPY --from=server /src/bin/neko /usr/bin/neko

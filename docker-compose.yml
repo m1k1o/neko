@@ -29,5 +29,5 @@ services:
       NEKO_ICELITE: 1
       NEKO_BROADCAST_URL: rtmp://ome.thuan.au:1935/app/stream-neko
       NEKO_NAT1TO1: 192.168.0.34
-      NEKO_HWENC: NVENC
+      # NEKO_HWENC: NVENC
       NEKO_VIDEO_CODEC: h264

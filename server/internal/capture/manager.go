@@ -41,7 +41,11 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 			if config.VideoMaxFPS > 0 && config.VideoMaxFPS < fps {
 				fps = config.VideoMaxFPS
 			}
-			return NewVideoPipeline(config.VideoCodec, config.Display, config.VideoPipeline, fps, config.VideoBitrate, config.VideoHWEnc)
+			pipelineStr, err := NewVideoPipeline(config.VideoCodec, config.Display, config.VideoPipeline, fps, config.VideoBitrate, config.VideoHWEnc)
+
+			logger.Info().Msgf("pipelineStr: %s", pipelineStr)
+
+			return pipelineStr, err
 		}, "video"),
 	}
 }
