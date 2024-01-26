@@ -7,4 +7,4 @@ docker run --rm -it \
     --volume "${PWD}/../:/app" \
     --entrypoint="/bin/bash" \
     --workdir="/app" \
-    node:16-buster-slim
+    node:18-buster-slim

@@ -498,7 +498,7 @@
 
     async updateProfile(memberId: string, memberProfile: ApiModels.MemberProfile) {
       try {
-        const res = await this.neko.members.membersUpdateProfile(memberId, memberProfile)
+        await this.neko.members.membersUpdateProfile(memberId, memberProfile)
         const members = this.members.map((member) => {
           if (member.id == memberId) {
             return {

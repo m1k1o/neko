@@ -3,7 +3,7 @@
 </template>
 
 <script lang="ts">
-  import { Vue, Component, Ref, Watch, Prop } from 'vue-property-decorator'
+  import { Vue, Component, Watch, Prop } from 'vue-property-decorator'
   import { RoomApi } from './api'
 
   const REFRESH_RATE = 1e3

@@ -7,4 +7,4 @@ docker run --rm -it \
     --volume "${PWD}/../:/app" \
     --entrypoint="npm" \
     --workdir="/app" \
-    node:16-buster-slim run build
+    node:18-buster-slim run build

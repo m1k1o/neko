@@ -85,7 +85,7 @@
 </style>
 
 <script lang="ts">
-  import { Component, Prop, Ref, Watch, Vue } from 'vue-property-decorator'
+  import { Component, Prop, Watch, Vue } from 'vue-property-decorator'
   import Neko from '~/component/main.vue'
 
   @Component({

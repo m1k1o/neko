@@ -335,7 +335,8 @@
     })
   })(require.context('./plugins/', true, /(main-tabs|main-components)\.vue$/))
 
-  import { Vue, Component, Ref, Watch } from 'vue-property-decorator'
+  import { Vue, Component, Ref } from 'vue-property-decorator'
+  import { AxiosProgressEvent } from 'axios'
   import NekoCanvas from '~/component/main.vue'
   import NekoHeader from './components/header.vue'
   import NekoConnect from './components/connect.vue'
@@ -398,7 +399,11 @@
       this.uploadProgress = 0
       try {
         await this.neko.room.uploadDialog([...files], {
-          onUploadProgress: (progressEvent: ProgressEvent) => {
+          onUploadProgress: (progressEvent: AxiosProgressEvent) => {
+            if (!progressEvent.total) {
+              this.uploadProgress = 0
+              return
+            }
             this.uploadProgress = (progressEvent.loaded / progressEvent.total) * 100
           },
         })
@@ -455,7 +460,11 @@
         this.uploadActive = true
         this.uploadProgress = 0
       })
-      this.neko.events.on('upload.drop.progress', (progressEvent: ProgressEvent) => {
+      this.neko.events.on('upload.drop.progress', (progressEvent: AxiosProgressEvent) => {
+        if (!progressEvent.total) {
+          this.uploadProgress = 0
+          return
+        }
         this.uploadProgress = (progressEvent.loaded / progressEvent.total) * 100
       })
       this.neko.events.on('upload.drop.finished', (e?: any) => {
@@ -473,6 +482,7 @@
       })
       this.neko.events.on('upload.dialog.overlay', (id: string) => {
         this.dialogOverlayActive = true
+        console.log('upload.dialog.overlay', id)
       })
       this.neko.events.on('upload.dialog.closed', () => {
         this.dialogOverlayActive = false

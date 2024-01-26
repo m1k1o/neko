@@ -3,6 +3,7 @@ import * as EVENT from '../types/events'
 import * as message from '../types/messages'
 
 import EventEmitter from 'eventemitter3'
+import { AxiosProgressEvent } from 'axios'
 import { Logger } from '../utils/logger'
 import { NekoConnection } from './connection'
 import NekoState from '../types/state'
@@ -17,7 +18,7 @@ export interface NekoEvents {
 
   // drag and drop events
   ['upload.drop.started']: () => void
-  ['upload.drop.progress']: (progressEvent: ProgressEvent) => void
+  ['upload.drop.progress']: (progressEvent: AxiosProgressEvent) => void
   ['upload.drop.finished']: (error?: Error) => void
 
   // upload dialog events
@@ -340,7 +341,7 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
     }
   }
 
-  protected [EVENT.FILE_CHOOSER_DIALOG_CLOSED]({ id }: message.SessionID) {
+  protected [EVENT.FILE_CHOOSER_DIALOG_CLOSED]({}: message.SessionID) {
     this._localLog.debug(`EVENT.FILE_CHOOSER_DIALOG_CLOSED`)
     this.emit('upload.dialog.closed')
   }

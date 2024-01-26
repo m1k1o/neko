@@ -20,8 +20,8 @@
             neko.state.connection.status == 'disconnected'
               ? 'background: red;'
               : neko.state.connection.status == 'connecting'
-              ? 'background: #17448a;'
-              : ''
+                ? 'background: #17448a;'
+                : ''
           "
         >
           {{ neko.state.connection.status }}

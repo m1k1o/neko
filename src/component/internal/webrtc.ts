@@ -569,7 +569,7 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
         stats = await this._peer.getStats()
       } else {
         // callback browsers support
-        await new Promise((res, rej) => {
+        await new Promise((res) => {
           //@ts-ignore
           this._peer.getStats((stats) => res(stats))
         })

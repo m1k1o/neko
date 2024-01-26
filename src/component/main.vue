@@ -77,7 +77,7 @@
   export * as webrtcTypes from './types/webrtc'
 
   import { Configuration } from './api/configuration'
-  import { AxiosInstance } from 'axios'
+  import { AxiosInstance, AxiosProgressEvent } from 'axios'
 
   import { Vue, Component, Ref, Watch, Prop } from 'vue-property-decorator'
   import ResizeObserver from 'resize-observer-polyfill'
@@ -576,7 +576,7 @@
         this.events.emit('upload.drop.started')
 
         await this.api.room.uploadDrop(x, y, files, {
-          onUploadProgress: (progressEvent: ProgressEvent) => {
+          onUploadProgress: (progressEvent: AxiosProgressEvent) => {
             this.events.emit('upload.drop.progress', progressEvent)
           },
         })
