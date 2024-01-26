@@ -1,0 +1,809 @@
+commit 4a6df6b4eecae769771eba0136bf8271d01258fb
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Wed Dec 14 21:57:18 2016 +0100
+
+    xf86-video-dummy 0.3.8
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit 52a6346c63c20c79f54c34e2950ccc5f1d2fb138
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Wed Dec 14 21:59:29 2016 +0100
+
+    configure: require xorg-server 1.4.99.901
+    
+    dixChangeWindowProperty was introduced in that release.
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit e434975017eb90fa702653592ae590bc22aa483c
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Thu Sep 22 09:14:26 2016 -0700
+
+    Remove pointless empty functions
+    
+    These functions might be useful in a real driver, but with no
+    hardware, they're pointless.  Get rid of them.
+    
+    v2: Rebase, get rid of pointless calls to DUMMYAdjustFrame, return TRUE from
+    DUMMYSwitchMode.
+    
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+    Reviewed-by: Antoine Martin <antoine@nagafix.co.uk>
+    Tested-by: Antoine Martin <antoine@nagafix.co.uk>
+
+commit 367c778240b4266958f33cec3653d5389e283557
+Author: Antoine Martin <antoine@nagafix.co.uk>
+Date:   Tue Sep 20 13:34:40 2016 +0700
+
+    remove dead code in dummy driver
+    
+    Signed-off-by: Antoine Martin <antoine@nagafix.co.uk>
+    Reviewed-by: Eric Engestrom <eric.engestrom@imgtec.com>
+    Reviewed-by: Aaron Plattner <aplattner@nvidia.com>
+    Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
+
+commit 8706f60ab457867c120dd44e812b8fadc2be7179
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jan 14 10:30:40 2016 +1000
+
+    Switch to using dixChangeWindowProperty
+    
+    eb36924ead40564325aa56d54a973dc8fb4eae83 removed ChangeWindowProperty from the
+    server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Jon Turney <jon.turney@dronecode.org.uk>
+
+commit 29433844c8b8989ea2ac64bd92b3ad61b6f9cf10
+Author: Antoine Martin <antoine@nagafix.co.uk>
+Date:   Thu Sep 17 10:55:25 2015 -0400
+
+    Honor DacSpeed setting in xorg.conf
+    
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+    Signed-off-by: Antoine Martin <antoine@nagafix.co.uk>
+
+commit 0e339b256a858bfd832c92e3c14619023dea826c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 21:39:32 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 85402253d0f9ca464d54336e48e9a7ac91fc39bb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 21:38:41 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4160421c642fc6b2dd3100a06f236efc6bbe0e08
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Mon Sep 9 19:45:23 2013 +0200
+
+    Bump to 0.3.7
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit 44f04fd3046043ed31369025f34353c4e0e5c1cd
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Sep 25 08:54:36 2012 -0400
+
+    Remove mibstore.h
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit fee6b520a620eed80e22840b8149abc50815f771
+Author: Dave Airlie <airlied@gmail.com>
+Date:   Wed Jul 18 19:39:32 2012 +1000
+
+    dummy: bump to 0.3.6 for release
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 1491470ee0745bf8303fa085bd30f7464098f1f2
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Tue Jun 5 11:14:37 2012 +0100
+
+    dummy: convert to the new server APIs.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 6ff612955a1a8591bf21f6aa56e7b6ebd8e2db48
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed May 23 11:37:01 2012 +0100
+
+    dummy: convert to new scrn conversion APIs.
+    
+    Generated from util/modular/x-driver-screen-scrn-conv.sh
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit 20fcd59d3f8d7393586d8b64bfac18adede726ca
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Wed May 23 11:36:22 2012 +0100
+
+    dummy: add scrn conversion api compat header.
+    
+    Signed-off-by: Dave Airlie <airlied@redhat.com>
+
+commit a78d524cfb332909dba89df5d709081515f0ed36
+Author: Yaakov Selkowitz <yselkowitz@users.sourceforge.net>
+Date:   Wed Mar 28 00:07:28 2012 -0500
+
+    Add XORG_LIBS to LIBADD
+    
+    This affects only Cygwin, where drivers must be linked against the
+    Xorg implib.  On other systems, XORG_LIBS will be empty.
+    
+    Signed-off-by: Yaakov Selkowitz <yselkowitz@users.sourceforge.net>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 668223a665af38600b8b20152c7e53e731c76234
+Author: Yaakov Selkowitz <yselkowitz@users.sourceforge.net>
+Date:   Wed Mar 28 00:06:32 2012 -0500
+
+    Only include Xv headers if server supports it
+    
+    Signed-off-by: Yaakov Selkowitz <yselkowitz@users.sourceforge.net>
+    Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 02918fd53434a23a72fe878a90f4ec48ef0e0416
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Mon Jan 9 01:00:40 2012 -0800
+
+    Don't use XFreeXDGA to determine DGA support
+    
+    If our server supports DGA and we want to build the dummy driver without it,
+    XFreeXDGA will be defined by the server and will be picked up rather than
+    our configuration option.  This change forces us to honor our configuration
+    hoice.
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit bccf37f052748386902112b770b89d81bddfaeb8
+Author: Cyril Brulebois <kibi@debian.org>
+Date:   Sun Jan 1 07:15:36 2012 +0100
+
+    dummy 0.3.5
+    
+    Signed-off-by: Cyril Brulebois <kibi@debian.org>
+
+commit dd9be3b21842aacdee5501cd2e0bfafb11b5ec08
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Wed Sep 14 14:50:36 2011 -0500
+
+    Add a configure option to disable dga
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+    Reviewed-by: Jamey Sharp <jamey@minilop.net>
+    Signed-off-by: Jamey Sharp <jamey@minilop.net>
+
+commit dd598ca433d2386687f9543457e4c6ffdb16d7c4
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Wed Sep 14 14:32:02 2011 -0500
+
+    Use malloc/free instead of deprecated X versions
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+    Reviewed-by: Jamey Sharp <jamey@minilop.net>
+    Signed-off-by: Jamey Sharp <jamey@minilop.net>
+
+commit d70dde48087a0d5c3930860ab97585d39de7b57e
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Wed Sep 14 14:30:55 2011 -0500
+
+    Dummy drivers don't need PCI.
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+    Reviewed-by: Jamey Sharp <jamey@minilop.net>
+    Signed-off-by: Jamey Sharp <jamey@minilop.net>
+
+commit bdc59411136b16ca3447336f22e95010bf709a53
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed May 25 06:05:29 2011 -0400
+
+    Port away from xalloc/xfree
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 7f57ed6be7c561b83da44a6ecb0562e8f562e48e
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed May 25 06:04:39 2011 -0400
+
+    Fix DGA includes
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit fb0888f90d5d1c10d69ec2add0a66e88c94f5d5c
+Author: Antoine Martin <antoine@devloop.org.uk>
+Date:   Wed May 25 06:03:10 2011 -0400
+
+    Increase the maximum framebuffer size to 32767x32767
+    
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+    Signed-off-by: Antoine Martin <antoine@devloop.org.uk>
+    Tested-by: Antoine Martin <antoine@devloop.org.uk>
+
+commit f8dc281042b328c2fad4df38f8fb3f967a025c6f
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 16:49:04 2010 -0400
+
+    config: add comments for main statements
+
+commit ca77f09bd68587e7579f139660c8cef81662fdd0
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 16:07:00 2010 -0400
+
+    config: replace deprecated use of AC_OUTPUT with AC_CONFIG_FILES
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 945a1619300291ffe08c82f19bea6bb2e1da8f86
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 14:05:22 2010 -0400
+
+    config: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 8fbbafb7ed5988a63d16d3d9fad17dd336a32b82
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Jul 21 09:27:42 2010 -0400
+
+    config: complete AC_INIT m4 quoting
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 93898c6d620cb005bca60ed20b89faf9a3b8434e
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 20:24:42 2010 -0400
+
+    config: remove unrequired AC_HEADER_STDC
+    
+    Autoconf says:
+    "This macro is obsolescent, as current systems have conforming
+    header files. New programs need not use this macro".
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit c26603e9c0ab3cb04bcac5a370c9b5de9fe0d1d6
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 19:41:30 2010 -0400
+
+    config: remove AC_PROG_CC as it overrides AC_PROG_C_C99
+    
+    XORG_STRICT_OPTION from XORG_DEFAULT_OPTIONS calls
+    AC_PROG_C_C99. This sets gcc with -std=gnu99.
+    If AC_PROG_CC macro is called afterwards, it resets CC to gcc.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 839b7420661db5e1a9e6cffe97308a34f3196e58
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 18:45:18 2010 -0400
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 51642de730f264fdfaf1c78f68a767a9347e1520
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Jul 5 12:05:40 2010 +1000
+
+    dummy 0.3.4
+
+commit 77ae177fd77e90a6eaeebde9df88911256264329
+Author: Jamey Sharp <jamey@minilop.net>
+Date:   Fri Jun 4 16:09:34 2010 -0700
+
+    Use new server API to find the root window.
+    
+    Signed-off-by: Jamey Sharp <jamey@minilop.net>
+
+commit 2503a68673c6012a0bf2abba58aa5060654965f9
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Jun 12 15:39:03 2010 -0400
+
+    COPYING: replace stub file with actual Copyright notice
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit c4134a6cb6bf3d9364fd2374e79647859dbd57c3
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Feb 8 20:08:52 2010 -0500
+
+    config: move compiler flags from configure.ac to Makefile.am
+    
+    CFLAGS is an automake defined variable that should not be set
+    by the module. It should not be AC_SUBST either, it already is.
+    
+    Use AM_CFLAGS in Makefile.am. This will allow the user to override
+    the flags as they will be in the right order.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 3370539eea599ff51a556507ec16a1570b8ed076
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Feb 8 19:07:22 2010 -0500
+
+    config: remove unrequired '-I$(top_srcdir)/src'
+    
+    The current dir is already included by default in the makefile
+    top_builddir = ..
+    DEFAULT_INCLUDES = -I. -I$(top_builddir)
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit ea7cc253b0f4ea97a197ec36b3ac06279b0b95f6
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Feb 8 18:42:52 2010 -0500
+
+    config: remove unused INCLUDES='-I$(top_srcdir)/src'
+    
+    This statement is redundant and not used in the makefile
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit bff6fc2f25648df0bbc0ea0723636260df987d34
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Feb 8 17:45:42 2010 -0500
+
+    config: remove unused variable XORG_INCS
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 17f6ec36df36a8999a95fd86e17013b1c44a7a2e
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Dec 15 20:59:46 2009 -0500
+
+    configure.ac: sdkdir usage duplicates the sdk include dir
+    
+    The sdkdir variable provides a duplicate copy of the include/xorg
+    directory. The statement is removed as this was it's only used.
+    In the Makefile, there is now only one instance of the -I sdkdir
+    The sdkdir is provided in XORG_CFLAGS.
+    
+    Acked-by: Dan Nicholson <dbn.lists@gmail.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 86a7baa4156dc9569b7dde51b3042b7fd8093821
+Author: Michael Olbrich <m.olbrich@pengutronix.de>
+Date:   Thu Dec 10 14:53:50 2009 -0500
+
+    configure.ac: remove wrong include path. #24675
+    
+    Don't use $(prefix)/include as include path. It can break things
+    when cross-compiling with DESTDIR and prefix=/usr
+    
+    Signed-off-by: Michael Olbrich <m.olbrich@pengutronix.de>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 483db0376d08be806c9bd51646f226f9510a4e48
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Dec 1 10:51:30 2009 -0500
+
+    dummy 0.3.3
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 1ea8367691e69b289c2b5ca67d8ace39994347f8
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Dec 1 10:36:35 2009 -0500
+
+    Don't try to make an INSTALL file
+    
+    INSTALL_CMD is empty.  This breaks make distcheck.  I don't know why,
+    but I also don't care.
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 84b8dac3e6d869aa7e7b012add892fad9c3ce136
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Nov 23 09:25:05 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit be0e614859c5754a18dc7c8ad2dd55090ab166c7
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:41:41 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Automake 'foreign' option is specified in configure.ac.
+    Remove from Makefile.am
+
+commit 2fc665b979a56faaac388b065c4cd91e0d2994d3
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Wed Oct 28 14:09:09 2009 -0400
+
+    INSTALL, NEWS, README or AUTHORS files are missing/incorrect #24206
+    
+    Add missing INSTALL file. Use standard GNU file on building tarball
+    README may have been updated
+    Remove AUTHORS file as it is empty and no content available yet.
+    Remove NEWS file as it is empty and no content available yet.
+
+commit 27946998e6ec8537e7137fd453e229d81c092f54
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 26 12:54:21 2009 -0400
+
+    Several driver modules do not have a ChangeLog target in Makefile.am #23814
+    
+    The git generated ChangeLog replaces the hand written one.
+    Update configure.ac to xorg-macros level 1.3.
+    Use XORG_DEFAULT_OPTIONS which replaces four XORG_* macros
+    Update Makefile.am to add ChangeLog target if missing
+    Remove ChangeLog from EXTRA_DIST or *CLEAN variables
+    This is a pre-req for the INSTALL_CMD
+
+commit 50b546f499ae1cafbdf8e890234616733e2e6633
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 13:00:42 2009 -0400
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
+commit 7aefb53beeaac7de52c44be0032a5a699706b74b
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Thu Oct 22 12:34:16 2009 -0400
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
+
+commit 4d4e41812e21490e39da34ac123b2c66bf20598c
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Nov 18 09:37:49 2009 -0500
+
+    Canonically re-wrap too.
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit b5983dbbd5f0cb4416b0e484fb43c80208feca25
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Nov 18 09:36:34 2009 -0500
+
+    Compile fix.
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit e39d9a265572c273915f1803a729e7211d7b247b
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Nov 17 13:46:27 2009 -0500
+
+    Add support for HW_SKIP_CONSOLE
+    
+    Acked-by: Aaron Plattner <aplattner@nvidia.com>
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit a8366277a70797a7fa9c8c0b739a5fdac066816f
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Nov 17 13:36:30 2009 -0500
+
+    Properly un/rewrap CreateWindow
+    
+    Acked-by: Aaron Plattner <aplattner@nvidia.com>
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit ecf513ae11399c5778ff7d988e838a2b6211a88b
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu Jul 2 11:08:25 2009 -0400
+
+    dummy 0.3.2
+
+commit 8fe24e48acc7ec03972ee0acb5d7ab205ecbf7e0
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Thu May 28 14:54:17 2009 -0400
+
+    Remove useless loader symbol lists.
+
+commit 17885c5cb1dbcfb48ee593260bcd1b1ff2887989
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Fri Jan 30 20:38:25 2009 -0800
+
+    Add README with pointers to mailing list, bugzilla & git repos
+
+commit d876e719969e9d33e7e4502448a544f12eb0fab8
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sun Jan 25 23:25:33 2009 +0100
+
+    dummy 0.3.1
+
+commit 33e86171bd1815a23f35bb992a91c02785c22402
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Fri Aug 15 14:05:04 2008 -0400
+
+    Uninclude xf86Version.h
+
+commit 0dcdce106d01aa6ff611436c3f8374241e7a8da8
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Mar 19 17:31:28 2008 -0400
+
+    dummy 0.3.0
+
+commit ba7ab1d468e9a5ba37c064b3b128fa3bbb721044
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Mar 19 17:26:51 2008 -0400
+
+    Death to RCS tags.
+
+commit 2aeec40b3d48705bc1de9da3f06deac365c25895
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Mon Sep 3 05:52:30 2007 -0400
+
+    Add *~ to .gitignore to skip patch/emacs droppings
+
+commit 1874204e0c807c1686c28782d5eef62bd49fab04
+Author: James Cloos <cloos@jhcloos.com>
+Date:   Thu Aug 23 19:25:48 2007 -0400
+
+    Rename .cvsignore to .gitignore
+
+commit 345de2bd048fcc7b177a3b504522fe100b34f1e0
+Author: Brice Goglin <bgoglin@debian.org>
+Date:   Tue Aug 7 10:50:06 2007 +0200
+
+    Define DUMMY_*_VERSION* using PACKAGE_VERSION_*
+
+commit 22e38bed8cd2d1e54c47d0763436012eeccb2d32
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Fri Apr 7 18:59:48 2006 +0000
+
+    VERSION -> DUMMY_VERSION
+
+commit 7432eaf48b70437bd55e5cc98833cce224d9e131
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Fri Apr 7 18:50:19 2006 +0000
+
+    Unlibcwrap. Bump server version requirement. Bump to 1.1.0.
+
+commit 474af880791908da7e006c4d500bc7318107bbd1
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Dec 21 02:29:59 2005 +0000
+
+    Update package version for X11R7 release.
+
+commit 9b9ea496e698e4d078c67b8f5674fd6479e3b2bb
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Dec 19 16:25:53 2005 +0000
+
+    Stub COPYING files
+
+commit d2cff58c1e7ff03109bd17c5f8247b9b166b71f2
+Author: Kevin E Martin <kem@kem.org>
+Date:   Thu Dec 15 00:24:17 2005 +0000
+
+    Update package version number for final X11R7 release candidate.
+
+commit 39f1e4449acb3e5da96aaaaa86e2544e9be968b1
+Author: Kevin E Martin <kem@kem.org>
+Date:   Sat Dec 3 05:49:33 2005 +0000
+
+    Update package version number for X11R7 RC3 release.
+
+commit 1b47f2e8f47501122a3b613b95ea5de99f76a8c2
+Author: Kevin E Martin <kem@kem.org>
+Date:   Fri Dec 2 02:16:08 2005 +0000
+
+    Remove extraneous AC_MSG_RESULT.
+
+commit c2c245b18409db7013dee0b0b4b7176daae7e290
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Tue Nov 29 23:29:58 2005 +0000
+
+    Only build dlloader modules by default.
+
+commit e6887d858e8b837c29c7833ab4b55034b736c6d8
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Mon Nov 21 10:49:12 2005 +0000
+
+    Add .cvsignores for drivers.
+
+commit ec562722d0ae21f82a0dcc1a4a3e45ed52592aed
+Author: Kevin E Martin <kem@kem.org>
+Date:   Tue Nov 15 05:42:03 2005 +0000
+
+    Add check for DGA extension to fix issues when building with separate build
+        roots.
+
+commit 1073cc5a2bd62b6972fcda4d4d9ccbe43f2506d4
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Nov 9 21:15:14 2005 +0000
+
+    Update package version number for X11R7 RC2 release.
+
+commit 5ced29a35f7571899f281af094fbd1f242f95e7d
+Author: Kevin E Martin <kem@kem.org>
+Date:   Tue Nov 1 15:08:52 2005 +0000
+
+    Update pkgcheck depedencies to work with separate build roots.
+
+commit ffa97f23462ff045834b4abae33cf645ed6c3517
+Author: Kevin E Martin <kem@kem.org>
+Date:   Wed Oct 19 02:48:02 2005 +0000
+
+    Update package version number for RC1 release.
+
+commit 4bb6048d8d0d87f3d91a93fef737882434702bb0
+Author: Alan Coopersmith <Alan.Coopersmith@sun.com>
+Date:   Mon Oct 17 00:09:02 2005 +0000
+
+    Use sed & cpp to substitute variables in driver man pages
+
+commit f586bde47b9ed6561b5350c03b088acfe2e227f6
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Thu Aug 18 09:03:46 2005 +0000
+
+    Update autogen.sh to one that does objdir != srcdir.
+
+commit d43c40d00ab34ae85e4684cc3860f641b0bea65c
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Wed Aug 10 14:07:24 2005 +0000
+
+    Don\'t lose existing CFLAGS in all the input drivers and some of the video
+        drivers
+
+commit ef552d7e1765386c652748a97df67f4ba00beef0
+Author: Kevin E Martin <kem@kem.org>
+Date:   Fri Jul 29 21:22:43 2005 +0000
+
+    Various changes preparing packages for RC0:
+    - Verify and update package version numbers as needed
+    - Implement versioning scheme
+    - Change bug address to point to bugzilla bug entry form
+    - Disable loadable i18n in libX11 by default (use --enable-loadable-i18n to
+        reenable it)
+    - Fix makedepend to use pkgconfig and pass distcheck
+    - Update build script to build macros first
+    - Update modular Xorg version
+
+commit c5f63f703d838cfae54269c595e14a06ea04f243
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Wed Jul 13 21:52:24 2005 +0000
+
+    Add Makefile.am here. Also, for the record, CVS needs a bullet through its
+        head
+
+commit 30a2cce4b61e2b0e550479ee87f25c895cbca513
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Date:   Wed Jul 13 21:45:21 2005 +0000
+
+    Build system for dummy video driver
+
+commit ec9e85771609d6ec8a94b777fc784db4d1026f20
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Mon Jul 11 02:29:47 2005 +0000
+
+    Prep for modular builds by adding guarded #include "config.h" everywhere.
+
+commit 7b856f1c89ceae998c2133fcd9bba2c1493744e0
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Sat Jun 25 21:16:54 2005 +0000
+
+    Bug #3626: _X_EXPORT tags for video and input drivers.
+
+commit a467602c6c419bd7288d80ad50a6fa62aeff3ec8
+Author: Daniel Stone <daniel@fooishbar.org>
+Date:   Wed Apr 20 12:25:23 2005 +0000
+
+    Fix includes right throughout the Xserver tree:
+    change "foo.h" to <X11/foo.h> for core headers, e.g. X.h, Xpoll.h;
+    change "foo.h", "extensions/foo.h" and "X11/foo.h" to
+        <X11/extensions/foo.h> for extension headers, e.g. Xv.h;
+    change "foo.[ch]" to <X11/Xtrans/foo.[ch]> for Xtrans files.
+
+commit 53407449153e20f7529ed9b403cee5aab25880d0
+Author: Adam Jackson <ajax@nwnk.net>
+Date:   Fri Feb 25 16:38:34 2005 +0000
+
+    Bug #2605: Make the cyrix, dummy, glint, neomagic, tga, and trident drivers
+        build when BuildXF86DGA NO.
+    (also fix some datestamps in the changelog)
+
+commit 73816949f2a28a0b8fe39108a8e493f9e47f7718
+Author: Egbert Eich <eich@suse.de>
+Date:   Fri Jan 28 16:12:59 2005 +0000
+
+    Modifying X.Org Xserver DDX to allow to run X with ordinary user
+        permissions when no access to HW registers is required. For API changes
+        which mostly involve the modifications to make the RRFunc (introduced
+        with 6.8) more flexible please check Bugzilla #2407. NOTE: This patch
+        applies changes to OS specific files for other OSes which I cannot
+        test.
+
+commit 720c9b05f47c3529aa2561ab4c88319322893780
+Author: Markus Kuhn <Markus.Kuhn@cl.cam.ac.uk>
+Date:   Sat Dec 4 00:43:05 2004 +0000
+
+    Encoding of numerous files changed to UTF-8
+
+commit b227226476ae94d094376c561d77e85589592fe6
+Author: Stuart Kreitman <stuart.kreitman@sun.com>
+Date:   Fri Oct 15 21:09:00 2004 +0000
+
+    Bugzilla #1644: Attach an atom "VFB" to root window of dummy driver.
+        Committing in Head.
+    Modified Files: dummy.h dummy_driver.c
+
+commit a571d5efb53cfe793d61d1b48c2bddc8d337d381
+Author: Eric Anholt <anholt@freebsd.org>
+Date:   Wed Jun 16 09:23:03 2004 +0000
+
+    DRI XFree86-4_3_99_12-merge import
+
+commit 289ef4abc51e6ba8e902db4093cb5380721cbfe7
+Author: Egbert Eich <eich@suse.de>
+Date:   Wed May 26 16:24:08 2004 +0000
+
+    Fixing setting of physical framebuffer base for several drivers. C&T
+        driver: Fixed setting of minimal clocks for HiQV chipsets. Neomagic
+        driver: improved support for lowres double scan modes.
+
+commit 5d8038b2977b7c0ab0ea17e263b3720cef83db59
+Author: Egbert Eich <eich@suse.de>
+Date:   Fri Apr 23 19:30:15 2004 +0000
+
+    Merging XORG-CURRENT into trunk
+
+commit f8e1ff3e00a773139aa1ab0ae72c83dc7792c175
+Author: Egbert Eich <eich@suse.de>
+Date:   Sun Mar 14 08:33:20 2004 +0000
+
+    Importing vendor version xf86-4_4_99_1 on Sun Mar 14 00:26:39 PST 2004
+
+commit d268ada4b7e5c48cf48825a632af7f0faeaff6d0
+Author: Egbert Eich <eich@suse.de>
+Date:   Wed Mar 3 12:12:18 2004 +0000
+
+    Importing vendor version xf86-4_4_0 on Wed Mar 3 04:09:24 PST 2004
+
+commit 2ba39037fa8840a654432f032cc97b6830946cf9
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 13:35:52 2004 +0000
+
+    readding XFree86's cvs IDs
+
+commit f352d52a2a89e4c55689a90db83a9f7e03e562c1
+Author: Egbert Eich <eich@suse.de>
+Date:   Thu Feb 26 09:23:18 2004 +0000
+
+    Importing vendor version xf86-4_3_99_903 on Wed Feb 26 01:21:00 PST 2004
+
+commit 77748634e71f2c42d03d708515e65351f0b755cb
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Tue Nov 25 19:28:36 2003 +0000
+
+    XFree86 4.3.99.16 Bring the tree up to date for the Cygwin folks
+
+commit 106069b23188837f06b1057e03db24cad2018ea3
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:48:55 2003 +0000
+
+    XFree86 4.3.0.1
+
+commit ca3b63783fc4aa1df725dbd0e560a446dcc17913
+Author: Kaleb Keithley <kaleb@freedesktop.org>
+Date:   Fri Nov 14 16:48:55 2003 +0000
+
+    Initial revision

@@ -58,7 +58,7 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     && apt-get -y install --no-install-recommends \
         wget ca-certificates supervisor \
-        pulseaudio xserver-xorg-video-dummy \
+        pulseaudio dbus-x11 xserver-xorg-video-dummy \
         libcairo2 libxcb1 libxrandr2 libxv1 libopus0 libvpx6 \
         #
         # needed for profile upload preStop hook
@@ -122,6 +122,7 @@ COPY --from=xorg-deps /usr/local/lib/xorg/modules/drivers/dummy_drv.so /usr/lib/
 COPY --from=xorg-deps /usr/local/lib/xorg/modules/input/neko_drv.so /usr/lib/xorg/modules/input/neko_drv.so
 
 # copy runtime files
+COPY runtime/dbus /usr/bin/dbus
 COPY runtime/default.pa /etc/pulse/default.pa
 COPY runtime/supervisord.conf /etc/neko/supervisord.conf
 COPY runtime/xorg.conf /etc/neko/xorg.conf
@@ -132,7 +133,8 @@ COPY dev/runtime/config.yml /etc/neko/neko.yml
 COPY dev/runtime/supervisord.conf /etc/neko/supervisord/dev.conf
 
 # customized scripts
-RUN echo '#!/bin/sh\nsleep infinity' > /usr/bin/neko; \
+RUN chmod +x /usr/bin/dbus;\
+    echo '#!/bin/sh\nsleep infinity' > /usr/bin/neko; \
     chmod +x /usr/bin/neko; \
     echo '#!/bin/sh\nsudo sh -c "export USER='$USERNAME'\nexport HOME=/home/'$USERNAME'\n/usr/bin/supervisord -c /etc/neko/supervisord.conf"' > /usr/bin/deps; \
     chmod +x /usr/bin/deps; \
