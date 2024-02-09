@@ -10,7 +10,7 @@
 
 ## Server build dependencies
 
-If you want to compile goalng code locally, you must install additional dependencies in order for it to compile.
+If you want to compile Golang code locally, you must install additional dependencies in order for it to compile.
 
 ```shell
 apt-get install -y --no-install-recommends libx11-dev libxrandr-dev libxtst-dev libgstreamer1.0-dev
