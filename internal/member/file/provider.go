@@ -2,6 +2,7 @@ package file
 
 import (
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/json"
 	"io"
 	"os"
@@ -27,7 +28,8 @@ func (provider *MemberProviderCtx) hash(password string) string {
 
 	sha256 := sha256.New()
 	sha256.Write([]byte(password))
-	return string(sha256.Sum(nil))
+	hashedPassword := sha256.Sum(nil)
+	return base64.StdEncoding.EncodeToString(hashedPassword)
 }
 
 func (provider *MemberProviderCtx) Connect() error {
