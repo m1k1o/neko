@@ -40,7 +40,7 @@ Status XSetScreenConfiguration(int width, int height, short rate);
 void XGetScreenConfiguration(int *width, int *height, short *rate);
 void XGetScreenConfigurations();
 void XCreateScreenMode(int width, int height, short rate);
-XRRModeInfo XCreateScreenModeInfo(int hdisplay, int vdisplay, short vrefresh);
+XRRModeInfo *XCreateScreenModeInfo(int hdisplay, int vdisplay, short vrefresh);
 
 void XSetKeyboardModifier(unsigned char mod, int on);
 unsigned char XGetKeyboardModifiers();

@@ -306,40 +306,28 @@ void XCreateScreenMode(int width, int height, short rate) {
   Display *display = getXDisplay();
   Window root = DefaultRootWindow(display);
 
-  char name[128];
-  XRRModeInfo mode;
-  mode = XCreateScreenModeInfo(width, height, rate);
-
-  snprintf(name, sizeof name, "%dx%d_%d", width, height, rate);
-  mode.nameLength = strlen(name);
-  mode.name = name;
+  // create new mode info
+  XRRModeInfo *mode_info = XCreateScreenModeInfo(width, height, rate);
 
   // create new mode
-  XRRCreateMode(display, root, &mode);
+  RRMode mode = XRRCreateMode(display, root, mode_info);
   XSync(display, 0);
 
-  // find newly created mode in resources
-  RRMode mode_id;
-	XRRScreenResources *resources = XRRGetScreenResources(display, root);
-  for (int i = 0; i < resources->nmode; ++i) {
-    if (strcmp(resources->modes[i].name, mode.name) == 0) {
-      mode_id = resources->modes[i].id;
-      break;
-    }
-  }
-
   // add new mode to all outputs
+	XRRScreenResources *resources = XRRGetScreenResources(display, root);
   for (int i = 0; i < resources->noutput; ++i) {
-    XRRAddOutputMode(display, resources->outputs[i], mode_id);
+    XRRAddOutputMode(display, resources->outputs[i], mode);
   }
 
   XRRFreeScreenResources(resources);
+  XRRFreeModeInfo(mode_info);
 }
 
 // Inspired by https://fossies.org/linux/xwayland/hw/xwayland/xwayland-cvt.c
-XRRModeInfo XCreateScreenModeInfo(int hdisplay, int vdisplay, short vrefresh) {
-  XRRModeInfo modeinfo;
-  memset(&modeinfo, 0, sizeof modeinfo);
+XRRModeInfo *XCreateScreenModeInfo(int hdisplay, int vdisplay, short vrefresh) {
+  char name[128];
+  snprintf(name, sizeof name, "%dx%d_%d", hdisplay, vdisplay, vrefresh);
+  XRRModeInfo *modeinfo = XRRAllocModeInfo(name, strlen(name));
 
 #ifdef _LIBCVT_H_
   struct libxcvt_mode_info *mode_info;
@@ -347,22 +335,22 @@ XRRModeInfo XCreateScreenModeInfo(int hdisplay, int vdisplay, short vrefresh) {
   // get screen mode from libxcvt, if available
   mode_info = libxcvt_gen_mode_info(hdisplay, vdisplay, vrefresh, false, false);
 
-  modeinfo.width      = mode_info->hdisplay;
-  modeinfo.height     = mode_info->vdisplay;
-  modeinfo.dotClock   = mode_info->dot_clock * 1000;
-  modeinfo.hSyncStart = mode_info->hsync_start;
-  modeinfo.hSyncEnd   = mode_info->hsync_end;
-  modeinfo.hTotal     = mode_info->htotal;
-  modeinfo.vSyncStart = mode_info->vsync_start;
-  modeinfo.vSyncEnd   = mode_info->vsync_end;
-  modeinfo.vTotal     = mode_info->vtotal;
-  modeinfo.modeFlags  = mode_info->mode_flags;
+  modeinfo->width      = mode_info->hdisplay;
+  modeinfo->height     = mode_info->vdisplay;
+  modeinfo->dotClock   = mode_info->dot_clock * 1000;
+  modeinfo->hSyncStart = mode_info->hsync_start;
+  modeinfo->hSyncEnd   = mode_info->hsync_end;
+  modeinfo->hTotal     = mode_info->htotal;
+  modeinfo->vSyncStart = mode_info->vsync_start;
+  modeinfo->vSyncEnd   = mode_info->vsync_end;
+  modeinfo->vTotal     = mode_info->vtotal;
+  modeinfo->modeFlags  = mode_info->mode_flags;
 
   free(mode_info);
 #else
   // fallback to a simple mode without refresh rate
-  modeinfo.width = hdisplay;
-  modeinfo.height = vdisplay;
+  modeinfo->width = hdisplay;
+  modeinfo->height = vdisplay;
 #endif
 
   return modeinfo;
