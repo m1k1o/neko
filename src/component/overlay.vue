@@ -75,54 +75,54 @@
   export default class extends Vue {
     @Ref('overlay') readonly _overlay!: HTMLCanvasElement
     @Ref('textarea') readonly _textarea!: HTMLTextAreaElement
-    private _ctx!: CanvasRenderingContext2D
+    _ctx!: CanvasRenderingContext2D
 
-    private canvasScale = window.devicePixelRatio
+    canvasScale = window.devicePixelRatio
 
-    private keyboard!: KeyboardInterface
-    private gestureHandler!: GestureHandler
-    private textInput = ''
+    keyboard!: KeyboardInterface
+    gestureHandler!: GestureHandler
+    textInput = ''
 
-    private focused = false
-
-    @Prop()
-    private readonly control!: NekoControl
+    focused = false
 
     @Prop()
-    private readonly sessions!: Record<string, Session>
+    readonly control!: NekoControl
 
     @Prop()
-    private readonly hostId!: string
+    readonly sessions!: Record<string, Session>
 
     @Prop()
-    private readonly webrtc!: NekoWebRTC
+    readonly hostId!: string
 
     @Prop()
-    private readonly scroll!: Scroll
+    readonly webrtc!: NekoWebRTC
 
     @Prop()
-    private readonly screenSize!: Dimension
+    readonly scroll!: Scroll
 
     @Prop()
-    private readonly canvasSize!: Dimension
+    readonly screenSize!: Dimension
 
     @Prop()
-    private readonly cursorDraw!: CursorDrawFunction | null
+    readonly canvasSize!: Dimension
 
     @Prop()
-    private readonly isControling!: boolean
+    readonly cursorDraw!: CursorDrawFunction | null
 
     @Prop()
-    private readonly implicitControl!: boolean
+    readonly isControling!: boolean
 
     @Prop()
-    private readonly inactiveCursors!: boolean
+    readonly implicitControl!: boolean
 
     @Prop()
-    private readonly fps!: number
+    readonly inactiveCursors!: boolean
 
     @Prop()
-    private readonly hasMobileKeyboard!: boolean
+    readonly fps!: number
+
+    @Prop()
+    readonly hasMobileKeyboard!: boolean
 
     get cursor(): string {
       if (!this.isControling || !this.cursorImage) {

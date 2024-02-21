@@ -13,12 +13,12 @@
     name: 'neko-screencast',
   })
   export default class extends Vue {
-    private imageSrc = ''
-    private running = false
-    private continue = false
+    imageSrc = ''
+    running = false
+    continue = false
 
     @Prop()
-    private readonly image!: string
+    readonly image!: string
 
     @Watch('image')
     setImage(image: string) {
@@ -26,10 +26,10 @@
     }
 
     @Prop()
-    private readonly enabled!: boolean
+    readonly enabled!: boolean
 
     @Prop()
-    private readonly api!: RoomApi
+    readonly api!: RoomApi
 
     async loop() {
       if (this.running) return

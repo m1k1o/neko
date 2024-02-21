@@ -10,7 +10,7 @@
         @imageReady="screencastReady = $event"
       />
       <neko-cursors
-        v-if="state.settings.inactive_cursors && session.profile.can_see_inactive_cursors"
+        v-if="state.settings.inactive_cursors && session && session.profile.can_see_inactive_cursors"
         :sessions="state.sessions"
         :sessionId="state.session_id"
         :hostId="state.control.host_id"
@@ -33,8 +33,8 @@
         :canvasSize="canvasSize"
         :isControling="controlling"
         :cursorDraw="cursorDrawFunction"
-        :implicitControl="state.settings.implicit_hosting && session.profile.can_host"
-        :inactiveCursors="state.settings.inactive_cursors && session.profile.sends_inactive_cursor"
+        :implicitControl="state.settings.implicit_hosting && session && session.profile.can_host"
+        :inactiveCursors="state.settings.inactive_cursors && session && session.profile.sends_inactive_cursor"
         :fps="fps"
         :hasMobileKeyboard="is_touch_device"
         @updateKeyboardModifiers="updateKeyboardModifiers($event)"
@@ -126,24 +126,24 @@
     inactiveCursorDrawFunction: InactiveCursorDrawFunction | null = null
 
     @Prop({ type: String })
-    private readonly server!: string
+    readonly server!: string
 
     @Prop({ type: Boolean })
-    private readonly autologin!: boolean
+    readonly autologin!: boolean
 
     @Prop({ type: Boolean })
-    private readonly autoconnect!: boolean
+    readonly autoconnect!: boolean
 
     @Prop({ type: Boolean })
-    private readonly autoplay!: boolean
+    readonly autoplay!: boolean
 
     // fps for cursor rendering, 0 for no cap
     @Prop({ type: Number, default: 0 })
-    private readonly fps!: number
+    readonly fps!: number
 
     // auto / touch / mouse
     @Prop({ type: String, default: 'auto' })
-    private readonly inputMode!: String
+    readonly inputMode!: String
 
     /////////////////////////////
     // Public state
@@ -235,9 +235,9 @@
     } as NekoState
 
     /////////////////////////////
-    // Public connection manager
+    // Connection manager
     /////////////////////////////
-    public connection = new NekoConnection(this.state.connection)
+    connection = new NekoConnection(this.state.connection)
 
     public get connected() {
       return this.state.connection.status == 'connected'

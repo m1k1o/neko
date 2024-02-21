@@ -30,33 +30,33 @@
   })
   export default class extends Vue {
     @Ref('overlay') readonly _overlay!: HTMLCanvasElement
-    private _ctx!: CanvasRenderingContext2D
+    _ctx!: CanvasRenderingContext2D
 
-    private canvasScale = window.devicePixelRatio
-
-    @Prop()
-    private readonly sessions!: Record<string, Session>
+    canvasScale = window.devicePixelRatio
 
     @Prop()
-    private readonly sessionId!: string
+    readonly sessions!: Record<string, Session>
 
     @Prop()
-    private readonly hostId!: string | null
+    readonly sessionId!: string
 
     @Prop()
-    private readonly screenSize!: Dimension
+    readonly hostId!: string | null
 
     @Prop()
-    private readonly canvasSize!: Dimension
+    readonly screenSize!: Dimension
 
     @Prop()
-    private readonly cursors!: SessionCursors[]
+    readonly canvasSize!: Dimension
 
     @Prop()
-    private readonly cursorDraw!: InactiveCursorDrawFunction | null
+    readonly cursors!: SessionCursors[]
 
     @Prop()
-    private readonly fps!: number
+    readonly cursorDraw!: InactiveCursorDrawFunction | null
+
+    @Prop()
+    readonly fps!: number
 
     mounted() {
       // get canvas overlay context
