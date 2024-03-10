@@ -6,6 +6,14 @@
     </a>
     <ul class="menu">
       <li>
+        <button class="btn" @click="startShareScreen" v-if="!mediaStream">
+          START SCREEN SHARE
+        </button>
+        <button class="btn" @click="stopShareScreen" v-else>
+          STOP SCREEN SHARE
+        </button>
+      </li>
+      <li>
         <i
           :class="[{ disabled: !admin }, { locked: isLocked('control') }, 'fas', 'fa-mouse']"
           @click="toggleLock('control')"
@@ -206,6 +214,32 @@
       }
 
       return this.$t(`locks.${resource}.` + (this.isLocked(resource) ? `locked` : `unlocked`))
+    }
+
+    //
+    // Screen Share
+    //
+    mediaStream: MediaStream | null = null
+    mediaRtcpSender: RTCRtpSender | null = null
+    async startShareScreen() {
+      // get media stream from user's browser
+      this.mediaStream = await navigator.mediaDevices
+        .getDisplayMedia({
+          video: true,
+          audio: false,
+        })
+      const mediaTrack = this.mediaStream.getVideoTracks()[0];
+      this.mediaRtcpSender = this.$client.addTrack(mediaTrack, this.mediaStream)
+    }
+    async stopShareScreen() {
+      if (this.mediaStream) {
+        this.mediaStream.getTracks().forEach(track => track.stop())
+        this.mediaStream = null
+      }
+      if (this.mediaRtcpSender) {
+        this.$client.removeTrack(this.mediaRtcpSender)
+        this.mediaRtcpSender = null
+      }
     }
   }
 </script>

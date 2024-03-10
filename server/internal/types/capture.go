@@ -28,6 +28,17 @@ type StreamSinkManager interface {
 	GetSampleChannel() chan Sample
 }
 
+type StreamSrcSinkManager interface {
+	Codec() codec.RTPCodec
+
+	Start(codec codec.RTPCodec) error
+	Stop()
+
+	Push(bytes []byte)
+	Started() bool
+	GetSampleChannel() chan Sample
+}
+
 type CaptureManager interface {
 	Start()
 	Shutdown() error
@@ -35,4 +46,5 @@ type CaptureManager interface {
 	Broadcast() BroadcastManager
 	Audio() StreamSinkManager
 	Video() StreamSinkManager
+	Screenshare() StreamSrcSinkManager
 }
