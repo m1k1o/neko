@@ -145,6 +145,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
         id: locks[resource],
       })
     }
+    this.$accessor.remote.setLocked('remote' in this.$accessor.locked && this.$accessor.locked['remote'])
   }
 
   protected [EVENT.SYSTEM.DISCONNECT]({ message }: SystemMessagePayload) {
