@@ -13,26 +13,18 @@
  */
 
 
-// May contain unused imports in some cases
-import type { MemberProfile } from './member-profile';
 
 /**
  * 
  * @export
- * @interface MemberData
+ * @interface MemberBulkDelete
  */
-export interface MemberData {
+export interface MemberBulkDelete {
     /**
      * 
-     * @type {string}
-     * @memberof MemberData
+     * @type {Array<string>}
+     * @memberof MemberBulkDelete
      */
-    'id'?: string;
-    /**
-     * 
-     * @type {MemberProfile}
-     * @memberof MemberData
-     */
-    'profile'?: MemberProfile;
+    'ids'?: Array<string>;
 }
 

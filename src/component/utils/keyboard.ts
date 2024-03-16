@@ -1,5 +1,7 @@
-//@ts-ignore
-import Keyboard from './keyboards/__KEYBOARD__'
+//
+// TODO: add support for other keyboards
+//
+import Keyboard from './keyboards/guacamole'
 
 // conditional import at build time:
 // __KEYBOARD__ is replaced by the value of the env variable KEYBOARD

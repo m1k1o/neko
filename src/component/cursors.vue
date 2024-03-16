@@ -13,265 +13,250 @@
   }
 </style>
 
-<script lang="ts">
-  import { Vue, Component, Ref, Prop, Watch } from 'vue-property-decorator'
+<script lang="ts" setup>
 
-  import { SessionCursors, Cursor, Session } from './types/state'
-  import { InactiveCursorDrawFunction, Dimension } from './types/cursors'
-  import { getMovementXYatPercent } from './utils/canvas-movement'
+import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 
-  // How often are position data arriving
-  const POS_INTERVAL_MS = 750
-  // How many pixel change is considered as movement
-  const POS_THRESHOLD_PX = 20
+import type { SessionCursors, Cursor, Session } from './types/state'
+import type { InactiveCursorDrawFunction, Dimension } from './types/cursors'
+import { getMovementXYatPercent } from './utils/canvas-movement'
 
-  @Component({
-    name: 'neko-cursors',
-  })
-  export default class extends Vue {
-    @Ref('overlay') readonly _overlay!: HTMLCanvasElement
-    _ctx!: CanvasRenderingContext2D
+// How often are position data arriving
+const POS_INTERVAL_MS = 750
+// How many pixel change is considered as movement
+const POS_THRESHOLD_PX = 20
 
-    canvasScale = window.devicePixelRatio
+const props = defineProps<{
+  sessions: Record<string, Session>
+  sessionId: string
+  hostId: string | null
+  screenSize: Dimension
+  canvasSize: Dimension
+  cursors: SessionCursors[]
+  cursorDraw: InactiveCursorDrawFunction | null
+  fps: number
+}>()
 
-    @Prop()
-    readonly sessions!: Record<string, Session>
+const overlay = ref<HTMLCanvasElement | null>(null)
+const ctx = ref<CanvasRenderingContext2D | null>(null)
+const canvasScale = ref(window.devicePixelRatio)
 
-    @Prop()
-    readonly sessionId!: string
+let unsubscribePixelRatioChange = null as (() => void) | null
 
-    @Prop()
-    readonly hostId!: string | null
+onMounted(() => {
+  // get canvas overlay context
+  const canvas = overlay.value
+  if (canvas != null) {
+    ctx.value = canvas.getContext('2d')
 
-    @Prop()
-    readonly screenSize!: Dimension
-
-    @Prop()
-    readonly canvasSize!: Dimension
-
-    @Prop()
-    readonly cursors!: SessionCursors[]
-
-    @Prop()
-    readonly cursorDraw!: InactiveCursorDrawFunction | null
-
-    @Prop()
-    readonly fps!: number
-
-    mounted() {
-      // get canvas overlay context
-      const ctx = this._overlay.getContext('2d')
-      if (ctx != null) {
-        this._ctx = ctx
-      }
-
-      // synchronize intrinsic with extrinsic dimensions
-      const { width, height } = this._overlay.getBoundingClientRect()
-      this.canvasResize({ width, height })
-
-      // react to pixel ratio changes
-      this.onPixelRatioChange()
-
-      // store last drawing points
-      this._last_points = {}
-    }
-
-    beforeDestroy() {
-      // stop pixel ratio change listener
-      if (this.unsubscribePixelRatioChange) {
-        this.unsubscribePixelRatioChange()
-      }
-    }
-
-    private unsubscribePixelRatioChange?: () => void
-    private onPixelRatioChange() {
-      if (this.unsubscribePixelRatioChange) {
-        this.unsubscribePixelRatioChange()
-      }
-
-      const media = window.matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`)
-      media.addEventListener('change', this.onPixelRatioChange)
-      this.unsubscribePixelRatioChange = () => {
-        media.removeEventListener('change', this.onPixelRatioChange)
-      }
-
-      this.canvasScale = window.devicePixelRatio
-      this.onCanvasSizeChange(this.canvasSize)
-    }
-
-    @Watch('canvasSize')
-    onCanvasSizeChange({ width, height }: Dimension) {
-      this.canvasResize({ width, height })
-      this.canvasUpdateCursors()
-    }
-
-    canvasResize({ width, height }: Dimension) {
-      this._overlay.width = width * this.canvasScale
-      this._overlay.height = height * this.canvasScale
-      this._ctx.setTransform(this.canvasScale, 0, 0, this.canvasScale, 0, 0)
-    }
-
-    // start as undefined to prevent jumping
-    private _last_animation_time!: number
-    // current animation progress (0-1)
-    private _percent!: number
-    // points to be animated for each session
-    private _points!: SessionCursors[]
-    // last points coordinates for each session
-    private _last_points!: Record<string, Cursor>
-
-    canvasAnimateFrame(now: number = NaN) {
-      // request another frame
-      if (this._percent <= 1) window.requestAnimationFrame(this.canvasAnimateFrame)
-
-      // calc elapsed time since last loop
-      const elapsed = now - this._last_animation_time
-
-      // skip if fps is set and elapsed time is less than fps
-      if (this.fps > 0 && elapsed < 1000 / this.fps) return
-
-      // calc current animation progress
-      const delta = elapsed / POS_INTERVAL_MS
-      this._last_animation_time = now
-
-      // skip very first delta to prevent jumping
-      if (isNaN(delta)) return
-
-      // set the animation position
-      this._percent += delta
-
-      // draw points for current frame
-      this.canvasDrawPoints(this._percent)
-    }
-
-    canvasDrawPoints(percent: number = 1) {
-      // clear canvas
-      this.canvasClear()
-
-      // draw current position
-      for (const p of this._points) {
-        const { x, y } = getMovementXYatPercent(p.cursors, percent)
-        this.canvasDrawCursor(x, y, p.id)
-      }
-    }
-
-    @Watch('hostId')
-    @Watch('cursors')
-    canvasUpdateCursors() {
-      let new_last_points = {} as Record<string, Cursor>
-
-      // track unchanged cursors
-      let unchanged = 0
-
-      // create points for animation
-      this._points = []
-      for (const { id, cursors } of this.cursors) {
-        if (
-          // if there are no positions
-          cursors.length == 0 ||
-          // ignore own cursor
-          id == this.sessionId ||
-          // ignore host's cursor
-          id == this.hostId
-        ) {
-          unchanged++
-          continue
-        }
-
-        // get last point
-        const new_last_point = cursors[cursors.length - 1]
-
-        // add last cursor position to cursors (if available)
-        let pos = { id } as SessionCursors
-        if (id in this._last_points) {
-          const last_point = this._last_points[id]
-
-          // if cursor did not move considerably
-          if (
-            Math.abs(last_point.x - new_last_point.x) < POS_THRESHOLD_PX &&
-            Math.abs(last_point.y - new_last_point.y) < POS_THRESHOLD_PX
-          ) {
-            // we knew that this cursor did not change, but other
-            // might, so we keep only one point to be drawn
-            pos.cursors = [new_last_point]
-            // and increase unchanged counter
-            unchanged++
-          } else {
-            // if cursor moved, we want to include last point
-            // in the animation, so that movement can be seamless
-            pos.cursors = [last_point, ...cursors]
-          }
-        } else {
-          // if cursor does not have last point, it is not
-          // displayed in canvas and it should be now
-          pos.cursors = [...cursors]
-        }
-
-        new_last_points[id] = new_last_point
-        this._points.push(pos)
-      }
-
-      // apply new last points
-      this._last_points = new_last_points
-
-      // no cursors to animate
-      if (this._points.length == 0) {
-        this.canvasClear()
-        return
-      }
-
-      // if all cursors are unchanged
-      if (unchanged == this.cursors.length) {
-        // draw only last known position without animation
-        this.canvasDrawPoints()
-        return
-      }
-
-      // start animation if not running
-      const percent = this._percent
-      this._percent = 0
-      if (percent > 1 || !percent) {
-        this.canvasAnimateFrame()
-      }
-    }
-
-    canvasDrawCursor(x: number, y: number, id: string) {
-      // get intrinsic dimensions
-      const { width, height } = this.canvasSize
-      x = Math.round((x / this.screenSize.width) * width)
-      y = Math.round((y / this.screenSize.height) * height)
-
-      // reset transformation, X and Y will be 0 again
-      this._ctx.setTransform(this.canvasScale, 0, 0, this.canvasScale, 0, 0)
-
-      // use custom draw function, if available
-      if (this.cursorDraw) {
-        this.cursorDraw(this._ctx, x, y, id)
-        return
-      }
-
-      // get cursor tag
-      const cursorTag = this.sessions[id]?.profile.name || ''
-
-      // draw inactive cursor tag
-      this._ctx.font = '14px Arial, sans-serif'
-      this._ctx.textBaseline = 'top'
-      this._ctx.shadowColor = 'black'
-      this._ctx.shadowBlur = 2
-      this._ctx.lineWidth = 2
-      this._ctx.fillStyle = 'black'
-      this._ctx.strokeText(cursorTag, x, y)
-      this._ctx.shadowBlur = 0
-      this._ctx.fillStyle = 'white'
-      this._ctx.fillText(cursorTag, x, y)
-    }
-
-    canvasClear() {
-      // reset transformation, X and Y will be 0 again
-      this._ctx.setTransform(this.canvasScale, 0, 0, this.canvasScale, 0, 0)
-
-      const { width, height } = this.canvasSize
-      this._ctx.clearRect(0, 0, width, height)
-    }
+    // synchronize intrinsic with extrinsic dimensions
+    const { width, height } = canvas.getBoundingClientRect()
+    canvasResize({ width, height })
   }
+
+  // react to pixel ratio changes
+  onPixelRatioChange()
+
+  // store last drawing points
+  last_points.value = {}
+})
+
+onBeforeUnmount(() => {
+  // stop pixel ratio change listener
+  if (unsubscribePixelRatioChange) {
+    unsubscribePixelRatioChange()
+  }
+})
+
+function onPixelRatioChange() {
+  if (unsubscribePixelRatioChange) {
+    unsubscribePixelRatioChange()
+  }
+
+  const media = window.matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`)
+  media.addEventListener('change', onPixelRatioChange)
+  unsubscribePixelRatioChange = () => {
+    media.removeEventListener('change', onPixelRatioChange)
+  }
+
+  canvasScale.value = window.devicePixelRatio
+  onCanvasSizeChange(props.canvasSize)
+}
+
+function onCanvasSizeChange({ width, height }: Dimension) {
+  canvasResize({ width, height })
+  canvasUpdateCursors()
+}
+
+watch(() => props.canvasSize, onCanvasSizeChange)
+
+function canvasResize({ width, height }: Dimension) {
+  overlay.value!.width = width * canvasScale.value
+  overlay.value!.height = height * canvasScale.value
+  ctx.value?.setTransform(canvasScale.value, 0, 0, canvasScale.value, 0, 0)
+}
+
+// start as undefined to prevent jumping
+const last_animation_time = ref<number>(0)
+// current animation progress (0-1)
+const percent = ref<number>(0)
+// points to be animated for each session
+const points = ref<SessionCursors[]>([])
+// last points coordinates for each session
+const last_points = ref<Record<string, Cursor>>({})
+
+function canvasAnimateFrame(now: number = NaN) {
+  // request another frame
+  if (percent.value <= 1) window.requestAnimationFrame(canvasAnimateFrame)
+
+  // calc elapsed time since last loop
+  const elapsed = now - last_animation_time.value
+
+  // skip if fps is set and elapsed time is less than fps
+  if (props.fps > 0 && elapsed < 1000 / props.fps) return
+
+  // calc current animation progress
+  const delta = elapsed / POS_INTERVAL_MS
+  last_animation_time.value = now
+
+  // skip very first delta to prevent jumping
+  if (isNaN(delta)) return
+
+  // set the animation position
+  percent.value += delta
+
+  // draw points for current frame
+  canvasDrawPoints(percent.value)
+}
+
+function canvasDrawPoints(percent: number = 1) {
+  // clear canvas
+  canvasClear()
+
+  // draw current position
+  for (const p of points.value) {
+    const { x, y } = getMovementXYatPercent(p.cursors, percent)
+    canvasDrawCursor(x, y, p.id)
+  }
+}
+
+function canvasUpdateCursors() {
+  let new_last_points = {} as Record<string, Cursor>
+
+  // track unchanged cursors
+  let unchanged = 0
+
+  // create points for animation
+  points.value = []
+  for (const { id, cursors } of props.cursors) {
+    if (
+      // if there are no positions
+      cursors.length == 0 ||
+      // ignore own cursor
+      id == props.sessionId ||
+      // ignore host's cursor
+      id == props.hostId
+    ) {
+      unchanged++
+      continue
+    }
+
+    // get last point
+    const new_last_point = cursors[cursors.length - 1]
+
+    // add last cursor position to cursors (if available)
+    let pos = { id } as SessionCursors
+    if (id in last_points.value) {
+      const last_point = last_points.value[id]
+
+      // if cursor did not move considerably
+      if (
+        Math.abs(last_point.x - new_last_point.x) < POS_THRESHOLD_PX &&
+        Math.abs(last_point.y - new_last_point.y) < POS_THRESHOLD_PX
+      ) {
+        // we knew that this cursor did not change, but other
+        // might, so we keep only one point to be drawn
+        pos.cursors = [new_last_point]
+        // and increase unchanged counter
+        unchanged++
+      } else {
+        // if cursor moved, we want to include last point
+        // in the animation, so that movement can be seamless
+        pos.cursors = [last_point, ...cursors]
+      }
+    } else {
+      // if cursor does not have last point, it is not
+      // displayed in canvas and it should be now
+      pos.cursors = [...cursors]
+    }
+
+    new_last_points[id] = new_last_point
+    points.value.push(pos)
+  }
+
+  // apply new last points
+  last_points.value = new_last_points
+
+  // no cursors to animate
+  if (points.value.length == 0) {
+    canvasClear()
+    return
+  }
+
+  // if all cursors are unchanged
+  if (unchanged == props.cursors.length) {
+    // draw only last known position without animation
+    canvasDrawPoints()
+    return
+  }
+
+  // start animation if not running
+  const p = percent.value
+  percent.value = 0
+  if (p > 1 || !p) {
+    canvasAnimateFrame()
+  }
+}
+
+watch(() => props.hostId, canvasUpdateCursors)
+watch(() => props.cursors, canvasUpdateCursors)
+
+function canvasDrawCursor(x: number, y: number, id: string) {
+  // get intrinsic dimensions
+  const { width, height } = props.canvasSize
+  x = Math.round((x / props.screenSize.width) * width)
+  y = Math.round((y / props.screenSize.height) * height)
+
+  // reset transformation, X and Y will be 0 again
+  ctx.value!.setTransform(canvasScale.value, 0, 0, canvasScale.value, 0, 0)
+
+  // use custom draw function, if available
+  if (props.cursorDraw) {
+    props.cursorDraw(ctx.value!, x, y, id)
+    return
+  }
+
+  // get cursor tag
+  const cursorTag = props.sessions[id]?.profile.name || ''
+
+  // draw inactive cursor tag
+  ctx.value!.font = '14px Arial, sans-serif'
+  ctx.value!.textBaseline = 'top'
+  ctx.value!.shadowColor = 'black'
+  ctx.value!.shadowBlur = 2
+  ctx.value!.lineWidth = 2
+  ctx.value!.fillStyle = 'black'
+  ctx.value!.strokeText(cursorTag, x, y)
+  ctx.value!.shadowBlur = 0
+  ctx.value!.fillStyle = 'white'
+  ctx.value!.fillText(cursorTag, x, y)
+}
+
+function canvasClear() {
+  // reset transformation, X and Y will be 0 again
+  ctx.value?.setTransform(canvasScale.value, 0, 0, canvasScale.value, 0, 0)
+
+  const { width, height } = props.canvasSize
+  ctx.value?.clearRect(0, 0, width, height)
+}
 </script>

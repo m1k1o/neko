@@ -1,6 +1,6 @@
-import { ICEServer } from '../internal/webrtc'
-import { Settings } from './state'
-import { PeerRequest, PeerVideo, PeerAudio } from './webrtc'
+import type { ICEServer } from '../internal/webrtc'
+import type { Settings } from './state'
+import type { PeerRequest, PeerVideo, PeerAudio } from './webrtc'
 
 /////////////////////////////
 // System

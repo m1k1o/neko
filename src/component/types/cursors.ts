@@ -1,4 +1,4 @@
-import { CursorImage } from './webrtc'
+import type { CursorImage } from './webrtc'
 
 export type CursorDrawFunction = (
   ctx: CanvasRenderingContext2D,

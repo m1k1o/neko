@@ -84,34 +84,29 @@
   }
 </style>
 
-<script lang="ts">
-  import { Component, Prop, Watch, Vue } from 'vue-property-decorator'
-  import Neko from '~/component/main.vue'
+<script lang="ts" setup>
+import { ref, watch, computed, onMounted, onBeforeUnmount } from 'vue'
+import Neko from '@/component/main.vue'
 
-  @Component({
-    name: 'neko-header',
-  })
-  export default class extends Vue {
-    @Prop() readonly neko!: Neko
+const props = defineProps<{
+  neko: typeof Neko
+}>()
 
-    @Watch('neko.state.connection.url')
-    updateUrl(url: string) {
-      this.url = url
-    }
+const url = ref('')
 
-    url: string = ''
+watch(() => props.neko.state.connection.url, (u) => {
+  url.value = u
+})
 
-    async setUrl() {
-      if (this.url == '') {
-        this.url = location.href
-      }
-
-      await this.neko.setUrl(this.url)
-    }
-
-    toggleMenu() {
-      this.$emit('toggle')
-      //this.$accessor.client.toggleSide()
-    }
+async function setUrl() {
+  if (url.value == '') {
+    url.value = location.href
   }
+
+  await props.neko.setUrl(url.value)
+}
+
+function toggleMenu() {
+  props.neko.toggleSide()
+}
 </script>

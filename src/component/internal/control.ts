@@ -1,11 +1,9 @@
-import Vue from 'vue'
-
 import * as EVENT from '../types/events'
 import * as message from '../types/messages'
 
 import EventEmitter from 'eventemitter3'
 import { NekoConnection } from './connection'
-import { Control } from '../types/state'
+import type { Control } from '../types/state'
 
 export interface NekoControlEvents {
   ['overlay.click']: (e: MouseEvent) => void
@@ -48,11 +46,11 @@ export class NekoControl extends EventEmitter<NekoControlEvents> {
   }
 
   public lock() {
-    Vue.set(this._state, 'locked', true)
+    this._state.locked = true // TODO: Vue.Set
   }
 
   public unlock() {
-    Vue.set(this._state, 'locked', false)
+    this._state.locked = false // TODO: Vue.Set
   }
 
   public request() {

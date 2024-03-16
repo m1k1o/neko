@@ -1,5 +1,5 @@
 import EventEmitter from 'eventemitter3'
-import { WebRTCStats, CursorPosition, CursorImage } from '../types/webrtc'
+import type { WebRTCStats, CursorPosition, CursorImage } from '../types/webrtc'
 import { Logger } from '../utils/logger'
 import { videoSnap } from '../utils/video-snap'
 

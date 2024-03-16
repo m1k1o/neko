@@ -35,185 +35,182 @@
   }
 </style>
 
-<script lang="ts">
-  import { Vue, Component, Ref, Watch } from 'vue-property-decorator'
+<script lang="ts" setup>
+import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
 
-  @Component({
-    name: 'neko-color',
-  })
-  export default class extends Vue {
-    @Ref('canvas') readonly _canvas!: HTMLCanvasElement
-    @Ref('color') readonly _color!: HTMLDivElement
+const canvas = ref<HTMLCanvasElement | null>(null)
+const color = ref<HTMLDivElement | null>(null)
 
-    ctx!: CanvasRenderingContext2D | null
-    video!: HTMLVideoElement | null
-    interval!: number
-    picker!: HTMLDivElement | null
-    bullet!: HTMLDivElement | null
-    color!: string
+const ctx = ref<CanvasRenderingContext2D | null>(null)
+const video = ref<HTMLVideoElement | null>(null)
+const interval = ref<number>(0)
+const picker = ref<HTMLDivElement | null>(null)
+const bullet = ref<HTMLDivElement | null>(null)
+const currColor = ref<string>('')
 
-    x = 0
-    y = 0
-    clickOnChange = false
+const x = ref<number>(0)
+const y = ref<number>(0)
+const clickOnChange = ref<boolean>(false)
 
-    mounted() {
-      this.video = document.querySelector('video')
-      this.ctx = this._canvas.getContext('2d')
-    }
+const emit = defineEmits(['colorChange'])
 
-    beforeDestroy() {
-      if (this.interval) {
-        window.clearInterval(this.interval)
-      }
+onMounted(() => {
+  video.value = document.querySelector('video')
+  ctx.value = canvas.value?.getContext('2d') || null
+})
 
-      this.clearPoint()
-    }
-
-    @Watch('clickOnChange')
-    clickOnChangeChanged() {
-      if (this.clickOnChange) {
-        // register interval timer
-        this.interval = window.setInterval(this.intervalTimer, 0)
-      } else {
-        // unregister interval timer
-        window.clearInterval(this.interval)
-        this.color = ''
-      }
-    }
-
-    intervalTimer() {
-      if (!this.video || !this.ctx) {
-        return
-      }
-
-      this._canvas.width = this.video.videoWidth
-      this._canvas.height = this.video.videoHeight
-      this.ctx.clearRect(0, 0, this.video.videoWidth, this.video.videoHeight)
-      this.ctx.drawImage(this.video, 0, 0, this.video.videoWidth, this.video.videoHeight)
-
-      // get color from pixel at x,y
-      var pixel = this.ctx.getImageData(this.x, this.y, 1, 1)
-      var data = pixel.data
-      var rgba = 'rgba(' + data[0] + ', ' + data[1] + ', ' + data[2] + ', ' + data[3] / 255 + ')'
-
-      // if color is different, update it
-      if (this.color != rgba) {
-        if (this.clickOnChange && this.color) {
-          this.$emit('colorChange', { x: this.x, y: this.y })
-          this.clickOnChange = false
-        }
-
-        console.log('color change', rgba, this.color)
-        this._color.style.backgroundColor = rgba
-        this.color = rgba
-      }
-    }
-
-    getCoords(elem: HTMLElement) {
-      // crossbrowser version
-      let box = elem.getBoundingClientRect()
-
-      let body = document.body
-      let docEl = document.documentElement
-
-      let scrollTop = window.pageYOffset || docEl.scrollTop || body.scrollTop
-      let scrollLeft = window.pageXOffset || docEl.scrollLeft || body.scrollLeft
-
-      let clientTop = docEl.clientTop || body.clientTop || 0
-      let clientLeft = docEl.clientLeft || body.clientLeft || 0
-
-      let top = box.top + scrollTop - clientTop
-      let left = box.left + scrollLeft - clientLeft
-
-      return { top: Math.round(top), left: Math.round(left) }
-    }
-
-    setPoint() {
-      // create new element and add to body
-      var picker = document.createElement('div')
-
-      // coordinates of video element
-      var video = this.getCoords(this.video!)
-
-      // match that dimensions and offset matches video
-      picker.style.width = this.video!.offsetWidth + 'px'
-      picker.style.height = this.video!.offsetHeight + 'px'
-      picker.style.left = video.left + 'px'
-      picker.style.top = video.top + 'px'
-      picker.style.position = 'absolute'
-      picker.style.backgroundColor = 'rgba(0, 0, 0, 0.5)'
-      picker.style.cursor = 'crosshair'
-
-      // put it on top of video
-      picker.style.zIndex = '100'
-
-      document.body.appendChild(picker)
-
-      // add click event listener to new element
-      picker.addEventListener('click', this.clickPicker)
-      this.picker = picker
-    }
-
-    clearPoint() {
-      this.x = 0
-      this.y = 0
-      this.color = ''
-      this._color.style.backgroundColor = 'transparent'
-
-      if (this.bullet) {
-        this.bullet.remove()
-      }
-
-      if (this.picker) {
-        this.picker.remove()
-      }
-    }
-
-    clickPicker(e: any) {
-      // get mouse position
-      var x = e.pageX
-      var y = e.pageY
-
-      // get picker position
-      var picker = this.getCoords(this.picker!)
-
-      // calculate new x,y position
-      var newX = x - picker.left
-      var newY = y - picker.top
-
-      // make it relative to video size
-      newX = Math.round((newX / this.video!.offsetWidth) * this.video!.videoWidth)
-      newY = Math.round((newY / this.video!.offsetHeight) * this.video!.videoHeight)
-
-      console.log(newX, newY)
-
-      // set new x,y position
-      this.x = newX
-      this.y = newY
-
-      // remove picker element
-      this.picker!.remove()
-
-      // add bullet element to the position
-      if (this.bullet) {
-        this.bullet.remove()
-      }
-      var bullet = document.createElement('div')
-      bullet.style.left = x + 'px'
-      bullet.style.top = y + 'px'
-      // width and height of bullet
-      bullet.style.width = '10px'
-      bullet.style.height = '10px'
-      // background color of bullet
-      bullet.style.backgroundColor = 'red'
-      // border radius of bullet
-      bullet.style.borderRadius = '50%'
-      // transform bullet to center
-      bullet.style.transform = 'translate(-50%, -50%)'
-      bullet.style.position = 'absolute'
-      bullet.style.zIndex = '100'
-      document.body.appendChild(bullet)
-      this.bullet = bullet
-    }
+onBeforeUnmount(() => {
+  if (interval.value) {
+    window.clearInterval(interval.value)
   }
+
+  clearPoint()
+})
+
+function clickOnChangeChanged() {
+  if (clickOnChange.value) {
+    // register interval timer
+    interval.value = window.setInterval(intervalTimer, 0)
+  } else {
+    // unregister interval timer
+    window.clearInterval(interval.value)
+    currColor.value = ''
+  }
+}
+
+watch(clickOnChange, clickOnChangeChanged)
+
+function intervalTimer() {
+  if (!video.value || !ctx.value) {
+    return
+  }
+
+  canvas.value!.width = video.value.videoWidth
+  canvas.value!.height = video.value.videoHeight
+  ctx.value.clearRect(0, 0, video.value.videoWidth, video.value.videoHeight)
+  ctx.value.drawImage(video.value, 0, 0, video.value.videoWidth, video.value.videoHeight)
+
+  // get color from pixel at x,y
+  const pixel = ctx.value.getImageData(x.value, y.value, 1, 1)
+  const data = pixel.data
+  const rgba = `rgba(${data[0]}, ${data[1]}, ${data[2]}, ${data[3] / 255})`
+
+  // if color is different, update it
+  if (currColor.value !== rgba) {
+    if (clickOnChange.value && currColor.value) {
+      emit('colorChange', { x: x.value, y: y.value })
+      clickOnChange.value = false
+    }
+
+    console.log('color change', rgba, currColor.value)
+    color.value!.style.backgroundColor = rgba
+    currColor.value = rgba
+  }
+}
+
+function getCoords(elem: HTMLElement) {
+  // crossbrowser version
+  const box = elem.getBoundingClientRect()
+
+  const body = document.body
+  const docEl = document.documentElement
+
+  const scrollTop = window.pageYOffset || docEl.scrollTop || body.scrollTop
+  const scrollLeft = window.pageXOffset || docEl.scrollLeft || body.scrollLeft
+
+  const clientTop = docEl.clientTop || body.clientTop || 0
+  const clientLeft = docEl.clientLeft || body.clientLeft || 0
+
+  const top = box.top + scrollTop - clientTop
+  const left = box.left + scrollLeft - clientLeft
+
+  return { top: Math.round(top), left: Math.round(left) }
+}
+
+function setPoint() {
+  // create new element and add to body
+  const p = document.createElement('div')
+
+  // coordinates of video element
+  const v = getCoords(video.value!)
+
+  // match that dimensions and offset matches video
+  p.style.width = video.value!.offsetWidth + 'px'
+  p.style.height = video.value!.offsetHeight + 'px'
+  p.style.left = v.left + 'px'
+  p.style.top = v.top + 'px'
+  p.style.position = 'absolute'
+  p.style.backgroundColor = 'rgba(0, 0, 0, 0.5)'
+  p.style.cursor = 'crosshair'
+
+  // put it on top of video
+  p.style.zIndex = '100'
+
+  document.body.appendChild(p)
+
+  // add click event listener to new element
+  p.addEventListener('click', clickPicker)
+  picker.value = p
+}
+
+function clearPoint() {
+  x.value = 0
+  y.value = 0
+  color.value!.style.backgroundColor = 'transparent'
+
+  if (bullet.value) {
+    bullet.value.remove()
+  }
+
+  if (picker.value) {
+    picker.value.remove()
+  }
+}
+
+function clickPicker(e: any) {
+  // get mouse position
+  const x = e.pageX
+  const y = e.pageY
+
+  // get picker position
+  const p = getCoords(picker.value!)
+
+  // calculate new x,y position
+  let newX = x - p.left
+  let newY = y - p.top
+
+  // make it relative to video size
+  newX = Math.round((newX / video.value!.offsetWidth) * video.value!.videoWidth)
+  newY = Math.round((newY / video.value!.offsetHeight) * video.value!.videoHeight)
+
+  console.log(newX, newY)
+
+  // set new x,y position
+  x.value = newX
+  y.value = newY
+
+  // remove picker element
+  picker.value!.remove()
+
+  // add bullet element to the position
+  if (bullet.value) {
+    bullet.value.remove()
+  }
+  const b = document.createElement('div')
+  b.style.left = x + 'px'
+  b.style.top = y + 'px'
+  // width and height of bullet
+  b.style.width = '10px'
+  b.style.height = '10px'
+  // background color of bullet
+  b.style.backgroundColor = 'red'
+  // border radius of bullet
+  b.style.borderRadius = '50%'
+  // transform bullet to center
+  b.style.transform = 'translate(-50%, -50%)'
+  b.style.position = 'absolute'
+  b.style.zIndex = '100'
+  document.body.appendChild(b)
+  bullet.value = b
+}
 </script>

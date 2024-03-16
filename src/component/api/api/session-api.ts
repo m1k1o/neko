@@ -14,19 +14,15 @@
 
 
 import type { Configuration } from '../configuration';
-import type { AxiosPromise, AxiosInstance, AxiosRequestConfig } from 'axios';
+import type { AxiosPromise, AxiosInstance, RawAxiosRequestConfig } from 'axios';
 import globalAxios from 'axios';
 // Some imports not used depending on template conditions
-// @ts-ignore
 import { DUMMY_BASE_URL, assertParamExists, setApiKeyToObject, setBasicAuthToObject, setBearerAuthToObject, setOAuthToObject, setSearchParams, serializeDataIfNeeded, toPathString, createRequestFunction } from '../common';
-// @ts-ignore
-import { BASE_PATH, COLLECTION_FORMATS, RequestArgs, BaseAPI, RequiredError } from '../base';
-// @ts-ignore
-import { ErrorMessage } from '../models';
-// @ts-ignore
-import { SessionData } from '../models';
-// @ts-ignore
-import { SessionLogin } from '../models';
+import { BASE_PATH, COLLECTION_FORMATS, BaseAPI, RequiredError, operationServerMap } from '../base';
+import type { RequestArgs } from '../base';
+import type { ErrorMessage } from '../models';
+import type { SessionData } from '../models';
+import type { SessionLogin } from '../models';
 /**
  * SessionApi - axios parameter creator
  * @export
@@ -40,7 +36,7 @@ export const SessionApiAxiosParamCreator = function (configuration?: Configurati
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        login: async (sessionLogin: SessionLogin, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        login: async (sessionLogin: SessionLogin, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'sessionLogin' is not null or undefined
             assertParamExists('login', 'sessionLogin', sessionLogin)
             const localVarPath = `/api/login`;
@@ -75,7 +71,7 @@ export const SessionApiAxiosParamCreator = function (configuration?: Configurati
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        logout: async (options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        logout: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/logout`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -110,11 +106,50 @@ export const SessionApiAxiosParamCreator = function (configuration?: Configurati
         },
         /**
          * 
+         * @summary get sessions
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        sessionsGet: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/sessions`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication CookieAuth required
+
+            // authentication TokenAuth required
+            await setApiKeyToObject(localVarQueryParameter, "token", configuration)
+
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
          * @summary whoami
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        whoami: async (options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        whoami: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/whoami`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -164,9 +199,11 @@ export const SessionApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async login(sessionLogin: SessionLogin, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SessionData>> {
+        async login(sessionLogin: SessionLogin, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SessionData>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.login(sessionLogin, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['SessionApi.login']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
@@ -174,9 +211,23 @@ export const SessionApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async logout(options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+        async logout(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.logout(options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['SessionApi.logout']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary get sessions
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async sessionsGet(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<SessionData>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.sessionsGet(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['SessionApi.sessionsGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
@@ -184,9 +235,11 @@ export const SessionApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async whoami(options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SessionData>> {
+        async whoami(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SessionData>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.whoami(options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['SessionApi.whoami']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
     }
 };
@@ -219,6 +272,15 @@ export const SessionApiFactory = function (configuration?: Configuration, basePa
         },
         /**
          * 
+         * @summary get sessions
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        sessionsGet(options?: any): AxiosPromise<Array<SessionData>> {
+            return localVarFp.sessionsGet(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
          * @summary whoami
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -244,7 +306,7 @@ export class SessionApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof SessionApi
      */
-    public login(sessionLogin: SessionLogin, options?: AxiosRequestConfig) {
+    public login(sessionLogin: SessionLogin, options?: RawAxiosRequestConfig) {
         return SessionApiFp(this.configuration).login(sessionLogin, options).then((request) => request(this.axios, this.basePath));
     }
 
@@ -255,8 +317,19 @@ export class SessionApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof SessionApi
      */
-    public logout(options?: AxiosRequestConfig) {
+    public logout(options?: RawAxiosRequestConfig) {
         return SessionApiFp(this.configuration).logout(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary get sessions
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof SessionApi
+     */
+    public sessionsGet(options?: RawAxiosRequestConfig) {
+        return SessionApiFp(this.configuration).sessionsGet(options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -266,7 +339,8 @@ export class SessionApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof SessionApi
      */
-    public whoami(options?: AxiosRequestConfig) {
+    public whoami(options?: RawAxiosRequestConfig) {
         return SessionApiFp(this.configuration).whoami(options).then((request) => request(this.axios, this.basePath));
     }
 }
+

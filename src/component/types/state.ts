@@ -1,5 +1,5 @@
-import * as webrtcTypes from './webrtc'
-import * as reconnectorTypes from './reconnector'
+import type * as webrtcTypes from './webrtc'
+import type * as reconnectorTypes from './reconnector'
 
 export default interface State {
   authenticated: boolean

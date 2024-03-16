@@ -1,12 +1,11 @@
-import Vue from 'vue'
 import * as EVENT from '../types/events'
 import * as message from '../types/messages'
 
 import EventEmitter from 'eventemitter3'
-import { AxiosProgressEvent } from 'axios'
+import type { AxiosProgressEvent } from 'axios'
 import { Logger } from '../utils/logger'
 import { NekoConnection } from './connection'
-import NekoState from '../types/state'
+import type NekoState from '../types/state'
 
 export interface NekoEvents {
   // connection events
@@ -104,11 +103,11 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
 
   protected [EVENT.SYSTEM_INIT](conf: message.SystemInit) {
     this._localLog.debug(`EVENT.SYSTEM_INIT`)
-    Vue.set(this._state, 'session_id', conf.session_id)
+    this._state.session_id = conf.session_id // TODO: Vue.Set
     // check if backend supports touch events
-    Vue.set(this._state.control.touch, 'supported', conf.touch_events)
-    Vue.set(this._state.connection, 'screencast', conf.screencast_enabled)
-    Vue.set(this._state.connection.webrtc, 'videos', conf.webrtc.videos)
+    this._state.control.touch.supported = conf.touch_events // TODO: Vue.Set
+    this._state.connection.screencast = conf.screencast_enabled // TODO: Vue.Set
+    this._state.connection.webrtc.videos = conf.webrtc.videos // TODO: Vue.Set
 
     for (const id in conf.sessions) {
       this[EVENT.SESSION_CREATED](conf.sessions[id])
@@ -131,14 +130,14 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
       return b.width - a.width
     })
 
-    Vue.set(this._state.screen, 'configurations', list)
+    this._state.screen.configurations = list // TODO: Vue.Set
 
     this[EVENT.BORADCAST_STATUS](broadcast_status)
   }
 
   protected [EVENT.SYSTEM_SETTINGS](settings: message.SystemSettings) {
     this._localLog.debug(`EVENT.SYSTEM_SETTINGS`)
-    Vue.set(this._state, 'settings', settings)
+    this._state.settings = settings // TODO: Vue.Set
   }
 
   protected [EVENT.SYSTEM_DISCONNECT]({ message }: message.SystemDisconnect) {
@@ -201,14 +200,14 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
 
   protected [EVENT.SIGNAL_VIDEO]({ disabled, id, auto }: message.SignalVideo) {
     this._localLog.debug(`EVENT.SIGNAL_VIDEO`, { disabled, id, auto })
-    Vue.set(this._state.connection.webrtc.video, 'disabled', disabled)
-    Vue.set(this._state.connection.webrtc.video, 'id', id)
-    Vue.set(this._state.connection.webrtc.video, 'auto', auto)
+    this._state.connection.webrtc.video.disabled = disabled // TODO: Vue.Set
+    this._state.connection.webrtc.video.id = id // TODO: Vue.Set
+    this._state.connection.webrtc.video.auto = auto // TODO: Vue.Set
   }
 
   protected [EVENT.SIGNAL_AUDIO]({ disabled }: message.SignalAudio) {
     this._localLog.debug(`EVENT.SIGNAL_AUDIO`, { disabled })
-    Vue.set(this._state.connection.webrtc.audio, 'disabled', disabled)
+    this._state.connection.webrtc.audio.disabled = disabled // TODO: Vue.Set
   }
 
   protected [EVENT.SIGNAL_CLOSE]() {
@@ -220,22 +219,22 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
   // Session Events
   /////////////////////////////
 
-  protected [EVENT.SESSION_CREATED]({ id, ...data }: message.SessionData) {
+  protected [EVENT.SESSION_CREATED]({ id, profile, ...state }: message.SessionData) {
     this._localLog.debug(`EVENT.SESSION_CREATED`, { id })
-    Vue.set(this._state.sessions, id, data)
+    this._state.sessions[id] = { id, profile, state } // TODO: Vue.Set
     this.emit('session.created', id)
   }
 
   protected [EVENT.SESSION_DELETED]({ id }: message.SessionID) {
     this._localLog.debug(`EVENT.SESSION_DELETED`, { id })
-    Vue.delete(this._state.sessions, id)
+    delete this._state.sessions[id] // TODO: Vue.Delete
     this.emit('session.deleted', id)
   }
 
   protected [EVENT.SESSION_PROFILE]({ id, ...profile }: message.MemberProfile) {
     if (id in this._state.sessions) {
       this._localLog.debug(`EVENT.SESSION_PROFILE`, { id })
-      Vue.set(this._state.sessions[id], 'profile', profile)
+      this._state.sessions[id].profile = profile // TODO: Vue.Set
       this.emit('session.updated', id)
     }
   }
@@ -243,13 +242,17 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
   protected [EVENT.SESSION_STATE]({ id, ...state }: message.SessionState) {
     if (id in this._state.sessions) {
       this._localLog.debug(`EVENT.SESSION_STATE`, { id })
-      Vue.set(this._state.sessions[id], 'state', state)
+      this._state.sessions[id].state = state // TODO: Vue.Set
       this.emit('session.updated', id)
     }
   }
 
   protected [EVENT.SESSION_CURSORS](cursors: message.SessionCursor[]) {
-    Vue.set(this._state, 'cursors', cursors)
+    //
+    // TODO: Resolve conflict with state.cursors.
+    //
+    //@ts-ignore
+    this._state.cursors = cursors // TODO: Vue.Set
   }
 
   /////////////////////////////
@@ -260,13 +263,13 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
     this._localLog.debug(`EVENT.CONTROL_HOST`)
 
     if (has_host && host_id) {
-      Vue.set(this._state.control, 'host_id', host_id)
+      this._state.control.host_id = host_id // TODO: Vue.Set
     } else {
-      Vue.set(this._state.control, 'host_id', null)
+      this._state.control.host_id = null // TODO: Vue.Set
     }
 
     // save if user is host
-    Vue.set(this._state.control, 'is_host', has_host && this._state.control.host_id === this._state.session_id)
+    this._state.control.is_host = has_host && this._state.control.host_id === this._state.session_id // TODO: Vue.Set
 
     this.emit('room.control.host', has_host, host_id)
   }
@@ -277,7 +280,7 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
 
   protected [EVENT.SCREEN_UPDATED]({ width, height, rate }: message.ScreenSize) {
     this._localLog.debug(`EVENT.SCREEN_UPDATED`)
-    Vue.set(this._state.screen, 'size', { width, height, rate })
+    this._state.screen.size = { width, height, rate } // TODO: Vue.Set
     this.emit('room.screen.updated', width, height, rate)
   }
 
@@ -287,7 +290,7 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
 
   protected [EVENT.CLIPBOARD_UPDATED]({ text }: message.ClipboardData) {
     this._localLog.debug(`EVENT.CLIPBOARD_UPDATED`)
-    Vue.set(this._state.control, 'clipboard', { text })
+    this._state.control.clipboard = { text } // TODO: Vue.Set
 
     try {
       navigator.clipboard.writeText(text) // sync user's clipboard

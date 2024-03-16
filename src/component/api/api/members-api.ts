@@ -14,25 +14,19 @@
 
 
 import type { Configuration } from '../configuration';
-import type { AxiosPromise, AxiosInstance, AxiosRequestConfig } from 'axios';
+import type { AxiosPromise, AxiosInstance, RawAxiosRequestConfig } from 'axios';
 import globalAxios from 'axios';
 // Some imports not used depending on template conditions
-// @ts-ignore
 import { DUMMY_BASE_URL, assertParamExists, setApiKeyToObject, setBasicAuthToObject, setBearerAuthToObject, setOAuthToObject, setSearchParams, serializeDataIfNeeded, toPathString, createRequestFunction } from '../common';
-// @ts-ignore
-import { BASE_PATH, COLLECTION_FORMATS, RequestArgs, BaseAPI, RequiredError } from '../base';
-// @ts-ignore
-import { ErrorMessage } from '../models';
-// @ts-ignore
-import { MemberBulkUpdate } from '../models';
-// @ts-ignore
-import { MemberCreate } from '../models';
-// @ts-ignore
-import { MemberData } from '../models';
-// @ts-ignore
-import { MemberPassword } from '../models';
-// @ts-ignore
-import { MemberProfile } from '../models';
+import { BASE_PATH, COLLECTION_FORMATS, BaseAPI, RequiredError, operationServerMap } from '../base';
+import type { RequestArgs } from '../base';
+import type { ErrorMessage } from '../models';
+import type { MemberBulkDelete } from '../models';
+import type { MemberBulkUpdate } from '../models';
+import type { MemberCreate } from '../models';
+import type { MemberData } from '../models';
+import type { MemberPassword } from '../models';
+import type { MemberProfile } from '../models';
 /**
  * MembersApi - axios parameter creator
  * @export
@@ -41,12 +35,57 @@ export const MembersApiAxiosParamCreator = function (configuration?: Configurati
     return {
         /**
          * 
+         * @summary bulk delete members
+         * @param {MemberBulkDelete} memberBulkDelete 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        membersBulkDelete: async (memberBulkDelete: MemberBulkDelete, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'memberBulkDelete' is not null or undefined
+            assertParamExists('membersBulkDelete', 'memberBulkDelete', memberBulkDelete)
+            const localVarPath = `/api/members_bulk/delete`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication CookieAuth required
+
+            // authentication TokenAuth required
+            await setApiKeyToObject(localVarQueryParameter, "token", configuration)
+
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(memberBulkDelete, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
          * @summary bulk update members
          * @param {MemberBulkUpdate} memberBulkUpdate 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        membersBulkUpdate: async (memberBulkUpdate: MemberBulkUpdate, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        membersBulkUpdate: async (memberBulkUpdate: MemberBulkUpdate, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'memberBulkUpdate' is not null or undefined
             assertParamExists('membersBulkUpdate', 'memberBulkUpdate', memberBulkUpdate)
             const localVarPath = `/api/members_bulk/update`;
@@ -91,7 +130,7 @@ export const MembersApiAxiosParamCreator = function (configuration?: Configurati
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        membersCreate: async (memberCreate: MemberCreate, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        membersCreate: async (memberCreate: MemberCreate, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'memberCreate' is not null or undefined
             assertParamExists('membersCreate', 'memberCreate', memberCreate)
             const localVarPath = `/api/members`;
@@ -136,7 +175,7 @@ export const MembersApiAxiosParamCreator = function (configuration?: Configurati
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        membersGetProfile: async (memberId: string, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        membersGetProfile: async (memberId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'memberId' is not null or undefined
             assertParamExists('membersGetProfile', 'memberId', memberId)
             const localVarPath = `/api/members/{memberId}`
@@ -180,7 +219,7 @@ export const MembersApiAxiosParamCreator = function (configuration?: Configurati
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        membersList: async (limit?: number, offset?: number, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        membersList: async (limit?: number, offset?: number, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/members`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -228,7 +267,7 @@ export const MembersApiAxiosParamCreator = function (configuration?: Configurati
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        membersRemove: async (memberId: string, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        membersRemove: async (memberId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'memberId' is not null or undefined
             assertParamExists('membersRemove', 'memberId', memberId)
             const localVarPath = `/api/members/{memberId}`
@@ -272,7 +311,7 @@ export const MembersApiAxiosParamCreator = function (configuration?: Configurati
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        membersUpdatePassword: async (memberId: string, memberPassword: MemberPassword, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        membersUpdatePassword: async (memberId: string, memberPassword: MemberPassword, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'memberId' is not null or undefined
             assertParamExists('membersUpdatePassword', 'memberId', memberId)
             // verify required parameter 'memberPassword' is not null or undefined
@@ -321,7 +360,7 @@ export const MembersApiAxiosParamCreator = function (configuration?: Configurati
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        membersUpdateProfile: async (memberId: string, memberProfile: MemberProfile, options: AxiosRequestConfig = {}): Promise<RequestArgs> => {
+        membersUpdateProfile: async (memberId: string, memberProfile: MemberProfile, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'memberId' is not null or undefined
             assertParamExists('membersUpdateProfile', 'memberId', memberId)
             // verify required parameter 'memberProfile' is not null or undefined
@@ -374,14 +413,29 @@ export const MembersApiFp = function(configuration?: Configuration) {
     return {
         /**
          * 
+         * @summary bulk delete members
+         * @param {MemberBulkDelete} memberBulkDelete 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async membersBulkDelete(memberBulkDelete: MemberBulkDelete, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.membersBulkDelete(memberBulkDelete, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['MembersApi.membersBulkDelete']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
          * @summary bulk update members
          * @param {MemberBulkUpdate} memberBulkUpdate 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async membersBulkUpdate(memberBulkUpdate: MemberBulkUpdate, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+        async membersBulkUpdate(memberBulkUpdate: MemberBulkUpdate, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.membersBulkUpdate(memberBulkUpdate, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['MembersApi.membersBulkUpdate']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
@@ -390,9 +444,11 @@ export const MembersApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async membersCreate(memberCreate: MemberCreate, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<MemberData>> {
+        async membersCreate(memberCreate: MemberCreate, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<MemberData>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.membersCreate(memberCreate, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['MembersApi.membersCreate']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
@@ -401,9 +457,11 @@ export const MembersApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async membersGetProfile(memberId: string, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<MemberProfile>> {
+        async membersGetProfile(memberId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<MemberProfile>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.membersGetProfile(memberId, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['MembersApi.membersGetProfile']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
@@ -413,9 +471,11 @@ export const MembersApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async membersList(limit?: number, offset?: number, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<MemberData>>> {
+        async membersList(limit?: number, offset?: number, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<MemberData>>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.membersList(limit, offset, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['MembersApi.membersList']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
@@ -424,9 +484,11 @@ export const MembersApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async membersRemove(memberId: string, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+        async membersRemove(memberId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.membersRemove(memberId, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['MembersApi.membersRemove']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
@@ -436,9 +498,11 @@ export const MembersApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async membersUpdatePassword(memberId: string, memberPassword: MemberPassword, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+        async membersUpdatePassword(memberId: string, memberPassword: MemberPassword, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.membersUpdatePassword(memberId, memberPassword, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['MembersApi.membersUpdatePassword']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
@@ -448,9 +512,11 @@ export const MembersApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async membersUpdateProfile(memberId: string, memberProfile: MemberProfile, options?: AxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+        async membersUpdateProfile(memberId: string, memberProfile: MemberProfile, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.membersUpdateProfile(memberId, memberProfile, options);
-            return createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['MembersApi.membersUpdateProfile']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
     }
 };
@@ -462,6 +528,16 @@ export const MembersApiFp = function(configuration?: Configuration) {
 export const MembersApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
     const localVarFp = MembersApiFp(configuration)
     return {
+        /**
+         * 
+         * @summary bulk delete members
+         * @param {MemberBulkDelete} memberBulkDelete 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        membersBulkDelete(memberBulkDelete: MemberBulkDelete, options?: any): AxiosPromise<void> {
+            return localVarFp.membersBulkDelete(memberBulkDelete, options).then((request) => request(axios, basePath));
+        },
         /**
          * 
          * @summary bulk update members
@@ -547,13 +623,25 @@ export const MembersApiFactory = function (configuration?: Configuration, basePa
 export class MembersApi extends BaseAPI {
     /**
      * 
+     * @summary bulk delete members
+     * @param {MemberBulkDelete} memberBulkDelete 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof MembersApi
+     */
+    public membersBulkDelete(memberBulkDelete: MemberBulkDelete, options?: RawAxiosRequestConfig) {
+        return MembersApiFp(this.configuration).membersBulkDelete(memberBulkDelete, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
      * @summary bulk update members
      * @param {MemberBulkUpdate} memberBulkUpdate 
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof MembersApi
      */
-    public membersBulkUpdate(memberBulkUpdate: MemberBulkUpdate, options?: AxiosRequestConfig) {
+    public membersBulkUpdate(memberBulkUpdate: MemberBulkUpdate, options?: RawAxiosRequestConfig) {
         return MembersApiFp(this.configuration).membersBulkUpdate(memberBulkUpdate, options).then((request) => request(this.axios, this.basePath));
     }
 
@@ -565,7 +653,7 @@ export class MembersApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof MembersApi
      */
-    public membersCreate(memberCreate: MemberCreate, options?: AxiosRequestConfig) {
+    public membersCreate(memberCreate: MemberCreate, options?: RawAxiosRequestConfig) {
         return MembersApiFp(this.configuration).membersCreate(memberCreate, options).then((request) => request(this.axios, this.basePath));
     }
 
@@ -577,7 +665,7 @@ export class MembersApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof MembersApi
      */
-    public membersGetProfile(memberId: string, options?: AxiosRequestConfig) {
+    public membersGetProfile(memberId: string, options?: RawAxiosRequestConfig) {
         return MembersApiFp(this.configuration).membersGetProfile(memberId, options).then((request) => request(this.axios, this.basePath));
     }
 
@@ -590,7 +678,7 @@ export class MembersApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof MembersApi
      */
-    public membersList(limit?: number, offset?: number, options?: AxiosRequestConfig) {
+    public membersList(limit?: number, offset?: number, options?: RawAxiosRequestConfig) {
         return MembersApiFp(this.configuration).membersList(limit, offset, options).then((request) => request(this.axios, this.basePath));
     }
 
@@ -602,7 +690,7 @@ export class MembersApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof MembersApi
      */
-    public membersRemove(memberId: string, options?: AxiosRequestConfig) {
+    public membersRemove(memberId: string, options?: RawAxiosRequestConfig) {
         return MembersApiFp(this.configuration).membersRemove(memberId, options).then((request) => request(this.axios, this.basePath));
     }
 
@@ -615,7 +703,7 @@ export class MembersApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof MembersApi
      */
-    public membersUpdatePassword(memberId: string, memberPassword: MemberPassword, options?: AxiosRequestConfig) {
+    public membersUpdatePassword(memberId: string, memberPassword: MemberPassword, options?: RawAxiosRequestConfig) {
         return MembersApiFp(this.configuration).membersUpdatePassword(memberId, memberPassword, options).then((request) => request(this.axios, this.basePath));
     }
 
@@ -628,7 +716,8 @@ export class MembersApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof MembersApi
      */
-    public membersUpdateProfile(memberId: string, memberProfile: MemberProfile, options?: AxiosRequestConfig) {
+    public membersUpdateProfile(memberId: string, memberProfile: MemberProfile, options?: RawAxiosRequestConfig) {
         return MembersApiFp(this.configuration).membersUpdateProfile(memberId, memberProfile, options).then((request) => request(this.axios, this.basePath));
     }
 }
+

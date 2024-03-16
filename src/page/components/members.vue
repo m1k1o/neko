@@ -14,7 +14,7 @@
       </tr>
       <tr>
         <td colspan="2" style="text-align: center">
-          <button @click="$set(plugins, 'new', [...plugins.new, ['', '']])">+</button>
+          <button @click="plugins.new = [...plugins.new, ['', '']]">+</button>
         </td>
       </tr>
       <tr>
@@ -114,7 +114,7 @@
               'state-is':
                 session.profile.sends_inactive_cursor &&
                 neko.state.settings.inactive_cursors &&
-                neko.state.cursors.some((e) => e.id == id),
+                neko.state.cursors.some((e:any) => e.id == id),
               'state-disabled': !session.profile.can_login || !session.profile.can_connect,
             }"
             @click="
@@ -141,7 +141,7 @@
 
     <p class="title">
       <span>Members</span>
-      <button @click="membersLoad">reload</button>
+      <button @click="membersLoad()">reload</button>
     </p>
 
     <div
@@ -152,7 +152,7 @@
       v-for="member in membersWithoutSessions"
       :key="'member-' + member.id"
     >
-      <div class="topbar">
+      <div class="topbar" v-if="member.profile && member.id">
         <div class="name">
           <i v-if="neko.is_admin" class="fa fa-trash-alt" @click="memberRemove(member.id)" title="remove" />
           {{ member.profile.name }}
@@ -406,168 +406,160 @@
   }
 </style>
 
-<script lang="ts">
-  import { Vue, Component, Prop } from 'vue-property-decorator'
-  import Neko, { ApiModels, StateModels } from '~/component/main.vue'
+<script lang="ts" setup>
+import { ref, watch, computed, onMounted, onBeforeUnmount } from 'vue'
+import Neko from '@/component/main.vue'
 
-  @Component({
-    name: 'neko-members',
-  })
-  export default class extends Vue {
-    @Prop() readonly neko!: Neko
+// TODO: get from lib ts?
+import type * as ApiModels from '@/component/api/models'
+import type * as StateModels from '@/component/types/state'
 
-    constructor() {
-      super()
+const props = defineProps<{
+  neko: typeof Neko
+}>()
 
-      // init
-      this.newProfile = Object.assign({}, this.defProfile)
+const sessions = computed(() => props.neko.state.sessions as Record<string, StateModels.Session>)
+const membersWithoutSessions = computed(() => {
+  return props.neko.state.members.filter(({ id }: { id: string }) => id && !(id in sessions.value)) as ApiModels.MemberData[]
+})
+
+const members = ref<ApiModels.MemberData[]>([])
+const plugins = ref<{
+  id: string
+  old: Array<Array<string>>
+  new: Array<Array<string>>
+  profile: ApiModels.MemberProfile
+} | null>(null)
+
+const newUsername = ref('')
+const newPassword = ref('')
+const newProfile = ref<ApiModels.MemberProfile>({})
+const defProfile = ref<ApiModels.MemberProfile>({
+  name: '',
+  is_admin: false,
+  can_login: true,
+  can_connect: true,
+  can_watch: true,
+  can_host: true,
+  can_share_media: true,
+  can_access_clipboard: true,
+  sends_inactive_cursor: true,
+  can_see_inactive_cursors: true,
+})
+newProfile.value = Object.assign({}, defProfile.value)
+
+async function memberCreate() {
+  try {
+    const res = await props.neko.members.membersCreate({
+      username: newUsername.value,
+      password: newPassword.value,
+      profile: newProfile.value,
+    })
+
+    if (res.data) {
+      members.value = [...members.value, res.data]
     }
 
-    get sessions(): Record<string, StateModels.Session> {
-      return this.neko.state.sessions
-    }
-
-    get membersWithoutSessions(): ApiModels.MemberData[] {
-      return this.members.filter(({ id }) => id && !(id in this.sessions))
-    }
-
-    members: ApiModels.MemberData[] = []
-    plugins: {
-      id: string
-      old: Array<Array<string>>
-      new: Array<Array<string>>
-      profile: ApiModels.MemberProfile
-    } | null = null
-
-    newUsername: string = ''
-    newPassword: string = ''
-    newProfile: ApiModels.MemberProfile = {}
-    defProfile: ApiModels.MemberProfile = {
-      name: '',
-      is_admin: false,
-      can_login: true,
-      can_connect: true,
-      can_watch: true,
-      can_host: true,
-      can_share_media: true,
-      can_access_clipboard: true,
-      sends_inactive_cursor: true,
-      can_see_inactive_cursors: true,
-    }
-
-    async memberCreate() {
-      try {
-        const res = await this.neko.members.membersCreate({
-          username: this.newUsername,
-          password: this.newPassword,
-          profile: this.newProfile,
-        })
-
-        if (res.data) {
-          Vue.set(this, 'members', [...this.members, res.data])
-        }
-
-        // clear
-        Vue.set(this, 'newUsername', '')
-        Vue.set(this, 'newPassword', '')
-        Vue.set(this, 'newProfile', Object.assign({}, this.defProfile))
-      } catch (e: any) {
-        alert(e.response ? e.response.data.message : e)
-      }
-    }
-
-    async membersLoad(limit: number = 0) {
-      const offset = 0
-
-      try {
-        const res = await this.neko.members.membersList(limit, offset)
-        Vue.set(this, 'members', res.data)
-      } catch (e: any) {
-        alert(e.response ? e.response.data.message : e)
-      }
-    }
-
-    async memberGetProfile(memberId: string): Promise<ApiModels.MemberProfile | undefined> {
-      try {
-        const res = await this.neko.members.membersGetProfile(memberId)
-        return res.data
-      } catch (e: any) {
-        alert(e.response ? e.response.data.message : e)
-      }
-    }
-
-    async updateProfile(memberId: string, memberProfile: ApiModels.MemberProfile) {
-      try {
-        await this.neko.members.membersUpdateProfile(memberId, memberProfile)
-        const members = this.members.map((member) => {
-          if (member.id == memberId) {
-            return {
-              id: memberId,
-              profile: { ...member.profile, ...memberProfile },
-            }
-          } else {
-            return member
-          }
-        })
-        Vue.set(this, 'members', members)
-      } catch (e: any) {
-        alert(e.response ? e.response.data.message : e)
-      }
-    }
-
-    async updatePassword(memberId: string, password: string) {
-      try {
-        await this.neko.members.membersUpdatePassword(memberId, { password })
-      } catch (e: any) {
-        alert(e.response ? e.response.data.message : e)
-      }
-    }
-
-    async memberRemove(memberId: string) {
-      try {
-        await this.neko.members.membersRemove(memberId)
-        const members = this.members.filter(({ id }) => id != memberId)
-        Vue.set(this, 'members', members)
-      } catch (e: any) {
-        alert(e.response ? e.response.data.message : e)
-      }
-    }
-
-    showPlugins(id: string, profile: ApiModels.MemberProfile) {
-      const old = Object.entries(profile.plugins || {}).map(([key, val]) => [key, JSON.stringify(val, null, 2)])
-
-      this.plugins = {
-        id,
-        old,
-        new: old.length > 0 ? [] : [['', '']],
-        profile,
-      }
-    }
-
-    savePlugins() {
-      if (!this.plugins) return
-
-      let errKey = ''
-      try {
-        let plugins = {} as any
-        for (let [key, val] of this.plugins.old) {
-          errKey = key
-          plugins[key] = JSON.parse(val)
-        }
-        for (let [key, val] of this.plugins.new) {
-          errKey = key
-          plugins[key] = JSON.parse(val)
-        }
-
-        this.updateProfile(this.plugins.id, { plugins })
-        this.plugins = null
-      } catch (e: any) {
-        alert(errKey + ': ' + e)
-      }
-    }
-
-    mounted() {
-      this.membersLoad(10)
-    }
+    // clear
+    newUsername.value = ''
+    newPassword.value = ''
+    newProfile.value = Object.assign({}, defProfile.value)
+  } catch (e: any) {
+    alert(e.response ? e.response.data.message : e)
   }
+}
+
+async function membersLoad(limit: number = 0) {
+  const offset = 0
+
+  try {
+    const res = await props.neko.members.membersList(limit, offset)
+    members.value = res.data
+  } catch (e: any) {
+    alert(e.response ? e.response.data.message : e)
+  }
+}
+
+async function memberGetProfile(memberId: string): Promise<ApiModels.MemberProfile | undefined> {
+  try {
+    const res = await props.neko.members.membersGetProfile(memberId)
+    return res.data
+  } catch (e: any) {
+    alert(e.response ? e.response.data.message : e)
+  }
+}
+
+async function updateProfile(memberId: string, memberProfile: ApiModels.MemberProfile) {
+  try {
+    await props.neko.members.membersUpdateProfile(memberId, memberProfile)
+    const newMembers = members.value.map((member) => {
+      if (member.id == memberId) {
+        return {
+          id: memberId,
+          profile: { ...member.profile, ...memberProfile },
+        }
+      } else {
+        return member
+      }
+    })
+    members.value = newMembers // TODO: Vue.Set
+  } catch (e: any) {
+    alert(e.response ? e.response.data.message : e)
+  }
+}
+
+async function updatePassword(memberId: string, password: string) {
+  try {
+    await props.neko.members.membersUpdatePassword(memberId, { password })
+  } catch (e: any) {
+    alert(e.response ? e.response.data.message : e)
+  }
+}
+
+async function memberRemove(memberId: string) {
+  try {
+    await props.neko.members.membersRemove(memberId)
+    const newMembers = members.value.filter(({ id }) => id != memberId)
+    members.value = newMembers // TODO: Vue.Set
+  } catch (e: any) {
+    alert(e.response ? e.response.data.message : e)
+  }
+}
+
+function showPlugins(id: string, profile: ApiModels.MemberProfile) {
+  const old = Object.entries(profile.plugins || {}).map(([key, val]) => [key, JSON.stringify(val, null, 2)])
+
+  plugins.value = {
+    id,
+    old,
+    new: old.length > 0 ? [] : [['', '']],
+    profile,
+  }
+}
+
+function savePlugins() {
+  if (!plugins.value) return
+
+  let errKey = ''
+  try {
+    let plugins = {} as any
+    for (let [key, val] of plugins.value.old) {
+      errKey = key
+      plugins[key] = JSON.parse(val)
+    }
+    for (let [key, val] of plugins.value.new) {
+      errKey = key
+      plugins[key] = JSON.parse(val)
+    }
+
+    updateProfile(plugins.value.id, { plugins })
+    plugins.value = null
+  } catch (e: any) {
+    alert(errKey + ': ' + e)
+  }
+}
+
+onMounted(() => {
+  membersLoad(10)
+})
 </script>

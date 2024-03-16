@@ -1,17 +1,17 @@
 <template>
   <div id="neko" :class="[expanded ? 'expanded' : '']">
     <main class="neko-main">
-      <div class="header-container">
-        <neko-header :neko="neko" @toggle="expanded = !expanded" />
+      <div class="header-container" v-if="neko">
+        <NekoHeader :neko="neko" @toggle="expanded = !expanded" />
       </div>
       <div class="video-container">
-        <neko-canvas ref="neko" :server="server" autologin autoconnect autoplay />
-        <div v-if="loaded && neko.private_mode_enabled" class="player-notif">Private mode is currently enabled.</div>
+        <NekoCanvas ref="neko" :server="server" autologin autoconnect autoplay />
+        <div v-if="loaded && neko!.private_mode_enabled" class="player-notif">Private mode is currently enabled.</div>
         <div
-          v-if="loaded && neko.state.connection.type === 'webrtc' && !neko.state.video.playing"
+          v-if="loaded && neko!.state.connection.type === 'webrtc' && !neko!.state.video.playing"
           class="player-overlay"
         >
-          <i @click.stop.prevent="neko.play()" v-if="neko.state.video.playable" class="fas fa-play-circle" />
+          <i @click.stop.prevent="neko!.play()" v-if="neko!.state.video.playable" class="fas fa-play-circle" />
         </div>
         <div v-if="uploadActive" class="player-overlay" style="background: rgba(0, 0, 0, 0.8); font-size: 1vw">
           UPLOAD IN PROGRESS: {{ Math.round(uploadProgress) }}%
@@ -30,11 +30,11 @@
           @dragenter.stop.prevent
           @dragleave.stop.prevent
           @dragover.stop.prevent
-          @drop.stop.prevent="dialogUploadFiles($event.dataTransfer.files)"
+          @drop.stop.prevent="dialogUploadFiles([...$event.dataTransfer!.files])"
         >
           <span style="padding: 1em">UPLOAD REQUESTED:</span>
           <span style="background: white">
-            <input type="file" @change="dialogUploadFiles($event.target.files)" multiple />
+            <input type="file" @change="dialogUploadFiles([...($event.target as HTMLInputElement)!.files!])" multiple />
           </span>
           <span style="padding: 1em; padding-bottom: 0; font-style: italic">(or drop files here)</span>
           <span style="padding: 1em">
@@ -45,15 +45,15 @@
       <div class="room-container" style="text-align: center">
         <button
           v-if="loaded && isTouchDevice"
-          @click="neko.mobileKeyboardToggle"
+          @click="neko!.mobileKeyboardToggle"
           style="position: absolute; left: 5px; transform: translateY(-100%)"
         >
           <i class="fa fa-keyboard" />
         </button>
-        <span v-if="loaded && neko.state.session_id" style="padding-top: 10px">
+        <span v-if="loaded && neko!.state.session_id" style="padding-top: 10px">
           You are logged in as
           <strong style="font-weight: bold">
-            {{ neko.state.sessions[neko.state.session_id].profile.name }}
+            {{ neko!.state.sessions[neko!.state.session_id].profile.name }}
           </strong>
         </span>
 
@@ -65,14 +65,14 @@
             </button>
           </div>
           <div class="controls">
-            <template v-if="loaded">
-              <neko-connect v-if="neko.state.connection.status == 'disconnected'" :neko="neko" />
-              <neko-controls v-else :neko="neko" />
+            <template v-if="loaded && neko">
+              <NekoConnect v-if="neko!.state.connection.status == 'disconnected'" :neko="neko" />
+              <NekoControls v-else :neko="neko" />
             </template>
           </div>
           <div class="right-menu">
             <div style="text-align: right" v-if="loaded">
-              <button v-if="neko.state.connection.status != 'disconnected'" @click="neko.disconnect()">
+              <button v-if="neko!.state.connection.status != 'disconnected'" @click="neko!.disconnect()">
                 disconnect
               </button>
             </div>
@@ -104,11 +104,11 @@
           <component v-for="(el, key) in pluginsTabs" :key="key" :is="el" :tab="tab" @tab="tab = $event" />
         </ul>
       </div>
-      <div class="page-container">
-        <neko-events v-if="tab === 'events'" :neko="neko" />
-        <neko-members v-if="tab === 'members'" :neko="neko" />
-        <neko-media v-if="tab === 'media'" :neko="neko" />
-        <neko-chat v-show="tab === 'chat'" :neko="neko" />
+      <div class="page-container" v-if="neko">
+        <NekoEvents v-if="tab === 'events'" :neko="neko" />
+        <NekoMembers v-if="tab === 'members'" :neko="neko" />
+        <NekoMedia v-if="tab === 'media'" :neko="neko" />
+        <NekoChat v-show="tab === 'chat'" :neko="neko" />
 
         <!-- Plugins -->
         <component v-for="(el, key) in pluginsComponents" :key="key" :is="el" :tab="tab" :neko="neko" />
@@ -318,345 +318,331 @@
   }
 </style>
 
-<script lang="ts">
-  // plugins must be available at:
-  // ./plugins/{name}/main-tabs.vue
-  // ./plugins/{name}/main-components.vue
-  let plugins = [] as string[]
+<script lang="ts" setup>
+// plugins must be available at:
+// ./plugins/{name}/main-tabs.vue
+// ./plugins/{name}/main-components.vue
+let plugins = [] as string[]
 
-  // dynamic plugins loader
-  ;(function (r: any) {
-    r.keys().forEach((key: string) => {
-      const found = key.match(/\.\/(.*?)\//)
-      if (found) {
-        plugins.push(found[1])
-        console.log('loading a plugin:', found[1])
-      }
-    })
-  })(require.context('./plugins/', true, /(main-tabs|main-components)\.vue$/))
+// dynamic plugins loader
+//;(function (r: any) {
+//  r.keys().forEach((key: string) => {
+//    const found = key.match(/\.\/(.*?)\//)
+//    if (found) {
+//      plugins.push(found[1])
+//      console.log('loading a plugin:', found[1])
+//    }
+//  })
+//})(require.context('./plugins/', true, /(main-tabs|main-components)\.vue$/))
 
-  import { Vue, Component, Ref } from 'vue-property-decorator'
-  import { AxiosProgressEvent } from 'axios'
-  import NekoCanvas from '~/component/main.vue'
-  import NekoHeader from './components/header.vue'
-  import NekoConnect from './components/connect.vue'
-  import NekoControls from './components/controls.vue'
-  import NekoEvents from './components/events.vue'
-  import NekoMembers from './components/members.vue'
-  import NekoMedia from './components/media.vue'
-  import NekoChat from './components/chat.vue'
+import { ref, computed, onMounted } from 'vue'
 
-  @Component({
-    name: 'neko',
-    components: {
-      'neko-canvas': NekoCanvas,
-      'neko-header': NekoHeader,
-      'neko-connect': NekoConnect,
-      'neko-controls': NekoControls,
-      'neko-events': NekoEvents,
-      'neko-members': NekoMembers,
-      'neko-media': NekoMedia,
-      'neko-chat': NekoChat,
-    },
-    computed: {
-      pluginsTabs() {
-        let x = {} as Record<string, any>
-        for (let p of plugins) {
-          x[p] = () => import('./plugins/' + p + '/main-tabs.vue')
-        }
-        return x
-      },
-      pluginsComponents() {
-        let x = {} as Record<string, any>
-        for (let p of plugins) {
-          x[p] = () => import('./plugins/' + p + '/main-components.vue')
-        }
-        return x
-      },
-    },
-  })
-  export default class extends Vue {
-    @Ref('neko') readonly neko!: NekoCanvas
-    expanded: boolean = !window.matchMedia('(max-width: 600px)').matches // default to expanded on bigger screens
-    loaded: boolean = false
-    tab: string = ''
+import type { AxiosProgressEvent } from 'axios'
+import NekoCanvas from '@/component/main.vue'
+import NekoHeader from './components/header.vue'
+import NekoConnect from './components/connect.vue'
+import NekoControls from './components/controls.vue'
+import NekoEvents from './components/events.vue'
+import NekoMembers from './components/members.vue'
+import NekoMedia from './components/media.vue'
+import NekoChat from './components/chat.vue'
 
-    server: string = location.href
+const pluginsTabs = computed(() => {
+  let x = {} as Record<string, any>
+  for (let p of plugins) {
+    x[p] = () => import('./plugins/' + p + '/main-tabs.vue')
+  }
+  return x
+})
 
-    uploadActive = false
-    uploadProgress = 0
+const pluginsComponents = computed(() => {
+  let x = {} as Record<string, any>
+  for (let p of plugins) {
+    x[p] = () => import('./plugins/' + p + '/main-components.vue')
+  }
+  return x
+})
 
-    get isTouchDevice(): boolean {
-      return 'ontouchstart' in window || navigator.maxTouchPoints > 0
-    }
+const neko = ref<typeof NekoCanvas>()
 
-    dialogOverlayActive = false
-    dialogRequestActive = false
-    async dialogUploadFiles(files: File[]) {
-      console.log('will upload files', files)
+const expanded = ref(!window.matchMedia('(max-width: 600px)').matches) // default to expanded on bigger screens
+const loaded = ref(false)
+const tab = ref('')
 
-      this.uploadActive = true
-      this.uploadProgress = 0
-      try {
-        await this.neko.room.uploadDialog([...files], {
-          onUploadProgress: (progressEvent: AxiosProgressEvent) => {
-            if (!progressEvent.total) {
-              this.uploadProgress = 0
-              return
-            }
-            this.uploadProgress = (progressEvent.loaded / progressEvent.total) * 100
-          },
-        })
-      } catch (e: any) {
-        alert(e.response ? e.response.data.message : e)
-      } finally {
-        this.uploadActive = false
-      }
-    }
+const server = ref(location.href)
 
-    dialogCancel() {
-      this.neko.room.uploadDialogClose()
-    }
+const uploadActive = ref(false)
+const uploadProgress = ref(0)
 
-    mounted() {
-      this.loaded = true
-      this.tab = 'events'
-      //@ts-ignore
-      window.neko = this.neko
+const isTouchDevice = computed(() => 'ontouchstart' in window || navigator.maxTouchPoints > 0)
 
-      // initial URL
-      const url = new URL(location.href).searchParams.get('url')
-      if (url) {
-        this.server = url
-      }
+const dialogOverlayActive = ref(false)
+const dialogRequestActive = ref(false)
+async function dialogUploadFiles(files: File[]) {
+  console.log('will upload files', files)
 
-      //
-      // connection events
-      //
-      this.neko.events.on('connection.status', (status: 'connected' | 'connecting' | 'disconnected') => {
-        console.log('connection.status', status)
-      })
-      this.neko.events.on('connection.type', (type: 'fallback' | 'webrtc' | 'none') => {
-        console.log('connection.type', type)
-      })
-      this.neko.events.on('connection.webrtc.sdp', (type: 'local' | 'remote', data: string) => {
-        console.log('connection.webrtc.sdp', type, data)
-      })
-      this.neko.events.on('connection.webrtc.sdp.candidate', (type: 'local' | 'remote', data: RTCIceCandidateInit) => {
-        console.log('connection.webrtc.sdp.candidate', type, data)
-      })
-      this.neko.events.on('connection.closed', (error?: Error) => {
-        if (error) {
-          alert('Connection closed with error: ' + error.message)
-        } else {
-          alert('Connection closed without error.')
-        }
-      })
-
-      //
-      // drag and drop events
-      //
-      this.neko.events.on('upload.drop.started', () => {
-        this.uploadActive = true
-        this.uploadProgress = 0
-      })
-      this.neko.events.on('upload.drop.progress', (progressEvent: AxiosProgressEvent) => {
+  uploadActive.value = true
+  uploadProgress.value = 0
+  try {
+    await neko.value!.room.uploadDialog([...files], {
+      onUploadProgress: (progressEvent: AxiosProgressEvent) => {
         if (!progressEvent.total) {
-          this.uploadProgress = 0
+          uploadProgress.value = 0
           return
         }
-        this.uploadProgress = (progressEvent.loaded / progressEvent.total) * 100
-      })
-      this.neko.events.on('upload.drop.finished', (e?: any) => {
-        this.uploadActive = false
-        if (e) {
-          alert(e.response ? e.response.data.message : e)
-        }
-      })
-
-      //
-      // upload dialog events
-      //
-      this.neko.events.on('upload.dialog.requested', () => {
-        this.dialogRequestActive = true
-      })
-      this.neko.events.on('upload.dialog.overlay', (id: string) => {
-        this.dialogOverlayActive = true
-        console.log('upload.dialog.overlay', id)
-      })
-      this.neko.events.on('upload.dialog.closed', () => {
-        this.dialogOverlayActive = false
-        this.dialogRequestActive = false
-      })
-
-      //
-      // custom messages events
-      //
-      this.neko.events.on('receive.unicast', (sender: string, subject: string, body: string) => {
-        console.log('receive.unicast', sender, subject, body)
-      })
-      this.neko.events.on('receive.broadcast', (sender: string, subject: string, body: string) => {
-        console.log('receive.broadcast', sender, subject, body)
-      })
-
-      //
-      // session events
-      //
-      this.neko.events.on('session.created', (id: string) => {
-        console.log('session.created', id)
-      })
-      this.neko.events.on('session.deleted', (id: string) => {
-        console.log('session.deleted', id)
-      })
-      this.neko.events.on('session.updated', (id: string) => {
-        console.log('session.updated', id)
-      })
-
-      //
-      // room events
-      //
-      this.neko.events.on('room.control.host', (hasHost: boolean, hostID?: string) => {
-        console.log('room.control.host', hasHost, hostID)
-      })
-      this.neko.events.on('room.screen.updated', (width: number, height: number, rate: number) => {
-        console.log('room.screen.updated', width, height, rate)
-      })
-      this.neko.events.on('room.clipboard.updated', (text: string) => {
-        console.log('room.clipboard.updated', text)
-      })
-      this.neko.events.on('room.broadcast.status', (isActive: boolean, url?: string) => {
-        console.log('room.broadcast.status', isActive, url)
-      })
-
-      //
-      // control events
-      //
-      this.neko.control.on('overlay.click', (e: MouseEvent) => {
-        console.log('control: overlay.click', e)
-      })
-      this.neko.control.on('overlay.contextmenu', (e: MouseEvent) => {
-        console.log('control: overlay.contextmenu', e)
-      })
-
-      // custom inactive cursor draw function
-      this.neko.setInactiveCursorDrawFunction(
-        (ctx: CanvasRenderingContext2D, x: number, y: number, sessionId: string) => {
-          const cursorTag = this.neko.state.sessions[sessionId]?.profile.name || ''
-          const colorLight = '#CCDFF6'
-          const colorDark = '#488DDE'
-
-          // get current cursor position
-          x -= 4
-          y -= 4
-
-          // draw arrow path
-          const arrowPath = new Path2D('M5 5L19 12.5L12.3286 14.465L8.29412 20L5 5Z')
-          ctx.globalAlpha = 0.5
-          ctx.translate(x, y)
-          ctx.fillStyle = colorLight
-          ctx.fill(arrowPath)
-          ctx.lineWidth = 1.5
-          ctx.lineJoin = 'miter'
-          ctx.miterLimit = 10
-          ctx.lineCap = 'round'
-          ctx.lineJoin = 'round'
-          ctx.strokeStyle = colorDark
-          ctx.stroke(arrowPath)
-
-          // draw cursor tag
-          if (cursorTag) {
-            const x = 20 // box margin x
-            const y = 20 // box margin y
-
-            ctx.globalAlpha = 0.5
-            ctx.font = '10px Arial, sans-serif'
-            ctx.textBaseline = 'top'
-            ctx.shadowColor = 'black'
-            ctx.shadowBlur = 2
-            ctx.lineWidth = 2
-            ctx.fillStyle = 'black'
-            ctx.strokeText(cursorTag, x, y)
-            ctx.shadowBlur = 0
-            ctx.fillStyle = 'white'
-            ctx.fillText(cursorTag, x, y)
-          }
-        },
-      )
-
-      this.toggleCursor()
-    }
-
-    private usesCursor = false
-    toggleCursor() {
-      if (this.usesCursor) {
-        this.usesCursor = false
-        this.neko.setCursorDrawFunction()
-        return
-      }
-
-      // custom cursor draw function
-      this.neko.setCursorDrawFunction(
-        (ctx: CanvasRenderingContext2D, x: number, y: number, {}, {}, sessionId: string) => {
-          const cursorTag = this.neko.state.sessions[sessionId]?.profile.name || ''
-          const colorLight = '#CCDFF6'
-          const colorDark = '#488DDE'
-          const fontColor = '#ffffff'
-
-          // get current cursor position
-          x -= 4
-          y -= 4
-
-          // draw arrow path
-          const arrowPath = new Path2D('M5 5L26 16.5L15.9929 19.513L9.94118 28L5 5Z')
-          ctx.translate(x, y)
-          ctx.fillStyle = colorLight
-          ctx.fill(arrowPath)
-          ctx.lineWidth = 2
-          ctx.lineJoin = 'miter'
-          ctx.miterLimit = 10
-          ctx.lineCap = 'round'
-          ctx.lineJoin = 'round'
-          ctx.strokeStyle = colorDark
-          ctx.stroke(arrowPath)
-
-          // draw cursor tag
-          if (cursorTag) {
-            const fontSize = 12
-            const boxPaddingX = 9
-            const boxPaddingY = 6
-
-            const x = 22 // box margin x
-            const y = 28 // box margin y
-
-            // prepare tag text
-            ctx.font = '500 ' + fontSize + 'px Roboto, sans-serif'
-            ctx.textBaseline = 'ideographic'
-
-            // create tag container
-            const txtWidth = ctx.measureText(cursorTag).width
-            const w = txtWidth + boxPaddingX * 2
-            const h = fontSize + boxPaddingY * 2
-            const r = Math.min(w / 2, h / 2)
-            ctx.beginPath()
-            ctx.moveTo(x + r, y)
-            ctx.arcTo(x + w, y, x + w, y + h, r) // Top-Right
-            ctx.arcTo(x + w, y + h, x, y + h, r) // Bottom-Right
-            ctx.arcTo(x, y + h, x, y, r) // Bottom-Left
-            ctx.arcTo(x, y, x + w, y, 2) // Top-Left
-            ctx.closePath()
-            ctx.fillStyle = colorDark
-            ctx.fill()
-
-            // fill in tag text
-            ctx.fillStyle = fontColor
-            ctx.fillText(cursorTag, x + boxPaddingX, y + fontSize + boxPaddingY)
-          }
-        },
-      )
-
-      this.usesCursor = true
-    }
+        uploadProgress.value = (progressEvent.loaded / progressEvent.total) * 100
+      },
+    })
+  } catch (e: any) {
+    alert(e.response ? e.response.data.message : e)
+  } finally {
+    uploadActive.value = false
   }
+}
+
+function dialogCancel() {
+  neko.value!.room.uploadDialogClose()
+}
+
+onMounted(() => {
+  loaded.value = true
+  tab.value = 'events'
+  //@ts-ignore
+  window.neko = neko
+
+  // initial URL
+  const url = new URL(location.href).searchParams.get('url')
+  if (url) {
+    server.value = url
+  }
+
+  //
+  // connection events
+  //
+  neko.value!.events.on('connection.status', (status: 'connected' | 'connecting' | 'disconnected') => {
+    console.log('connection.status', status)
+  })
+  neko.value!.events.on('connection.type', (type: 'fallback' | 'webrtc' | 'none') => {
+    console.log('connection.type', type)
+  })
+  neko.value!.events.on('connection.webrtc.sdp', (type: 'local' | 'remote', data: string) => {
+    console.log('connection.webrtc.sdp', type, data)
+  })
+  neko.value!.events.on('connection.webrtc.sdp.candidate', (type: 'local' | 'remote', data: RTCIceCandidateInit) => {
+    console.log('connection.webrtc.sdp.candidate', type, data)
+  })
+  neko.value!.events.on('connection.closed', (error?: Error) => {
+    if (error) {
+      alert('Connection closed with error: ' + error.message)
+    } else {
+      alert('Connection closed without error.')
+    }
+  })
+
+  //
+  // drag and drop events
+  //
+  neko.value!.events.on('upload.drop.started', () => {
+    uploadActive.value = true
+    uploadProgress.value = 0
+  })
+  neko.value!.events.on('upload.drop.progress', (progressEvent: AxiosProgressEvent) => {
+    if (!progressEvent.total) {
+      uploadProgress.value = 0
+      return
+    }
+    uploadProgress.value = (progressEvent.loaded / progressEvent.total) * 100
+  })
+  neko.value!.events.on('upload.drop.finished', (e?: any) => {
+    uploadActive.value = false
+    if (e) {
+      alert(e.response ? e.response.data.message : e)
+    }
+  })
+
+  //
+  // upload dialog events
+  //
+  neko.value!.events.on('upload.dialog.requested', () => {
+    dialogRequestActive.value = true
+  })
+  neko.value!.events.on('upload.dialog.overlay', (id: string) => {
+    dialogOverlayActive.value = true
+    console.log('upload.dialog.overlay', id)
+  })
+  neko.value!.events.on('upload.dialog.closed', () => {
+    dialogOverlayActive.value = false
+    dialogRequestActive.value = false
+  })
+
+  //
+  // custom messages events
+  //
+  neko.value!.events.on('receive.unicast', (sender: string, subject: string, body: string) => {
+    console.log('receive.unicast', sender, subject, body)
+  })
+  neko.value!.events.on('receive.broadcast', (sender: string, subject: string, body: string) => {
+    console.log('receive.broadcast', sender, subject, body)
+  })
+
+  //
+  // session events
+  //
+  neko.value!.events.on('session.created', (id: string) => {
+    console.log('session.created', id)
+  })
+  neko.value!.events.on('session.deleted', (id: string) => {
+    console.log('session.deleted', id)
+  })
+  neko.value!.events.on('session.updated', (id: string) => {
+    console.log('session.updated', id)
+  })
+
+  //
+  // room events
+  //
+  neko.value!.events.on('room.control.host', (hasHost: boolean, hostID?: string) => {
+    console.log('room.control.host', hasHost, hostID)
+  })
+  neko.value!.events.on('room.screen.updated', (width: number, height: number, rate: number) => {
+    console.log('room.screen.updated', width, height, rate)
+  })
+  neko.value!.events.on('room.clipboard.updated', (text: string) => {
+    console.log('room.clipboard.updated', text)
+  })
+  neko.value!.events.on('room.broadcast.status', (isActive: boolean, url?: string) => {
+    console.log('room.broadcast.status', isActive, url)
+  })
+
+  //
+  // control events
+  //
+  neko.value!.control.on('overlay.click', (e: MouseEvent) => {
+    console.log('control: overlay.click', e)
+  })
+  neko.value!.control.on('overlay.contextmenu', (e: MouseEvent) => {
+    console.log('control: overlay.contextmenu', e)
+  })
+
+  // custom inactive cursor draw function
+  neko.value!.setInactiveCursorDrawFunction(
+    (ctx: CanvasRenderingContext2D, x: number, y: number, sessionId: string) => {
+      const cursorTag = neko.value!.state.sessions[sessionId]?.profile.name || ''
+      const colorLight = '#CCDFF6'
+      const colorDark = '#488DDE'
+
+      // get current cursor position
+      x -= 4
+      y -= 4
+
+      // draw arrow path
+      const arrowPath = new Path2D('M5 5L19 12.5L12.3286 14.465L8.29412 20L5 5Z')
+      ctx.globalAlpha = 0.5
+      ctx.translate(x, y)
+      ctx.fillStyle = colorLight
+      ctx.fill(arrowPath)
+      ctx.lineWidth = 1.5
+      ctx.lineJoin = 'miter'
+      ctx.miterLimit = 10
+      ctx.lineCap = 'round'
+      ctx.lineJoin = 'round'
+      ctx.strokeStyle = colorDark
+      ctx.stroke(arrowPath)
+
+      // draw cursor tag
+      if (cursorTag) {
+        const x = 20 // box margin x
+        const y = 20 // box margin y
+
+        ctx.globalAlpha = 0.5
+        ctx.font = '10px Arial, sans-serif'
+        ctx.textBaseline = 'top'
+        ctx.shadowColor = 'black'
+        ctx.shadowBlur = 2
+        ctx.lineWidth = 2
+        ctx.fillStyle = 'black'
+        ctx.strokeText(cursorTag, x, y)
+        ctx.shadowBlur = 0
+        ctx.fillStyle = 'white'
+        ctx.fillText(cursorTag, x, y)
+      }
+    },
+  )
+
+  toggleCursor()
+})
+
+const usesCursor = ref(false)
+
+function toggleCursor() {
+  if (usesCursor.value) {
+    neko.value!.setCursorDrawFunction()
+    usesCursor.value = false
+    return
+  }
+
+  // custom cursor draw function
+  neko.value!.setCursorDrawFunction(
+    (ctx: CanvasRenderingContext2D, x: number, y: number, {}, {}, sessionId: string) => {
+      const cursorTag = neko.value!.state.sessions[sessionId]?.profile.name || ''
+      const colorLight = '#CCDFF6'
+      const colorDark = '#488DDE'
+      const fontColor = '#ffffff'
+
+      // get current cursor position
+      x -= 4
+      y -= 4
+
+      // draw arrow path
+      const arrowPath = new Path2D('M5 5L26 16.5L15.9929 19.513L9.94118 28L5 5Z')
+      ctx.translate(x, y)
+      ctx.fillStyle = colorLight
+      ctx.fill(arrowPath)
+      ctx.lineWidth = 2
+      ctx.lineJoin = 'miter'
+      ctx.miterLimit = 10
+      ctx.lineCap = 'round'
+      ctx.lineJoin = 'round'
+      ctx.strokeStyle = colorDark
+      ctx.stroke(arrowPath)
+
+      // draw cursor tag
+      if (cursorTag) {
+        const fontSize = 12
+        const boxPaddingX = 9
+        const boxPaddingY = 6
+
+        const x = 22 // box margin x
+        const y = 28 // box margin y
+
+        // prepare tag text
+        ctx.font = '500 ' + fontSize + 'px Roboto, sans-serif'
+        ctx.textBaseline = 'ideographic'
+
+        // create tag container
+        const txtWidth = ctx.measureText(cursorTag).width
+        const w = txtWidth + boxPaddingX * 2
+        const h = fontSize + boxPaddingY * 2
+        const r = Math.min(w / 2, h / 2)
+        ctx.beginPath()
+        ctx.moveTo(x + r, y)
+        ctx.arcTo(x + w, y, x + w, y + h, r) // Top-Right
+        ctx.arcTo(x + w, y + h, x, y + h, r) // Bottom-Right
+        ctx.arcTo(x, y + h, x, y, r * 2) // Bottom-Left
+        ctx.arcTo(x, y, x + w, y, r * 2) // Top-Left
+        ctx.closePath()
+        ctx.fillStyle = colorDark
+        ctx.fill()
+
+        // fill in tag text
+        ctx.fillStyle = fontColor
+        ctx.fillText(cursorTag, x + boxPaddingX, y + fontSize + boxPaddingY)
+      }
+    },
+  )
+
+  usesCursor.value = true
+}
 </script>
 
 <style>

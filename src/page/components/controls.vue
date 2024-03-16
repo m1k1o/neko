@@ -67,7 +67,6 @@
           background: transparent;
           width: 150px;
           height: 20px;
-          -webkit-appearance: none;
           &::-moz-range-thumb {
             height: 12px;
             width: 12px;
@@ -160,88 +159,67 @@
   }
 </style>
 
-<script lang="ts">
-  import { Vue, Component, Prop } from 'vue-property-decorator'
-  import Neko from '~/component/main.vue'
+<script lang="ts" setup>
+import { ref, watch, computed, onMounted, onBeforeUnmount } from 'vue'
+import Neko from '@/component/main.vue'
 
-  @Component({
-    name: 'neko-controls',
-  })
-  export default class extends Vue {
-    @Prop() readonly neko!: Neko
+const props = defineProps<{
+  neko: typeof Neko
+}>()
 
-    get can_host() {
-      return this.neko.connected
+const can_host = computed(() => props.neko.connected)
+const hosting = computed(() => props.neko.controlling)
+const volume = computed({
+  get: () => props.neko.state.video.volume * 100,
+  set: (volume: number) => {
+    props.neko.setVolume(volume / 100)
+  },
+})
+const muted = computed(() => props.neko.state.video.muted || props.neko.state.video.volume === 0)
+const playing = computed(() => props.neko.state.video.playing)
+const playable = computed(() => props.neko.state.video.playable)
+const locked = computed({
+  get: () => props.neko.state.control.locked,
+  set: (lock: boolean) => {
+    if (lock) {
+      props.neko.control.lock()
+    } else {
+      props.neko.control.unlock()
     }
+  },
+})
 
-    get hosting() {
-      return this.neko.controlling
-    }
-
-    get volume() {
-      return this.neko.state.video.volume * 100
-    }
-
-    set volume(volume: number) {
-      this.neko.setVolume(volume / 100)
-    }
-
-    get muted() {
-      return this.neko.state.video.muted || this.neko.state.video.volume === 0
-    }
-
-    get playing() {
-      return this.neko.state.video.playing
-    }
-
-    get playable() {
-      return this.neko.state.video.playable
-    }
-
-    get locked() {
-      return this.neko.state.control.locked
-    }
-
-    set locked(lock: boolean) {
-      if (lock) {
-        this.neko.control.lock()
-      } else {
-        this.neko.control.unlock()
-      }
-    }
-
-    toggleControl() {
-      if (this.can_host && this.hosting) {
-        this.neko.room.controlRelease()
-      }
-
-      if (this.can_host && !this.hosting) {
-        this.neko.room.controlRequest()
-      }
-    }
-
-    toggleMedia() {
-      if (this.playable && this.playing) {
-        this.neko.pause()
-      }
-
-      if (this.playable && !this.playing) {
-        this.neko.play()
-      }
-    }
-
-    toggleMute() {
-      if (this.playable && this.muted) {
-        this.neko.unmute()
-      }
-
-      if (this.playable && !this.muted) {
-        this.neko.mute()
-      }
-    }
-
-    disconnect() {
-      this.neko.logout()
-    }
+function toggleControl() {
+  if (can_host.value && hosting.value) {
+    props.neko.room.controlRelease()
   }
+
+  if (can_host.value && !hosting.value) {
+    props.neko.room.controlRequest()
+  }
+}
+
+function toggleMedia() {
+  if (playable.value && playing.value) {
+    props.neko.video.pause()
+  }
+
+  if (playable.value && !playing.value) {
+    props.neko.video.play()
+  }
+}
+
+function toggleMute() {
+  if (playable.value && muted.value) {
+    props.neko.video.unmute()
+  }
+
+  if (playable.value && !muted.value) {
+    props.neko.video.mute()
+  }
+}
+
+function disconnect() {
+  props.neko.logout()
+}
 </script>

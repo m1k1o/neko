@@ -1,5 +1,5 @@
 import * as EVENT from '../../types/events'
-import { Connection } from '../../types/state'
+import type { Connection } from '../../types/state'
 
 import { NekoWebSocket } from '../websocket'
 import { NekoWebRTC } from '../webrtc'

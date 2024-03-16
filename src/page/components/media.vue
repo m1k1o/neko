@@ -40,146 +40,144 @@
 
 <style lang="scss" scoped></style>
 
-<script lang="ts">
-  import { Vue, Component, Prop, Ref } from 'vue-property-decorator'
-  import Neko from '~/component/main.vue'
+<script lang="ts" setup>
+import { ref, watch, computed, onMounted, onBeforeUnmount } from 'vue'
+import Neko from '@/component/main.vue'
 
-  @Component({
-    name: 'neko-media',
-  })
-  export default class extends Vue {
-    @Prop() readonly neko!: Neko
-    @Ref('audio') readonly _audio!: HTMLAudioElement
-    @Ref('video') readonly _video!: HTMLVideoElement
+const props = defineProps<{
+  neko: typeof Neko
+}>()
 
-    private audioDevice: string = ''
-    private audioDevices: MediaDeviceInfo[] = []
+const audio = ref<HTMLAudioElement | null>(null)
+const video = ref<HTMLVideoElement | null>(null)
 
-    private micTracks: MediaStreamTrack[] = []
-    private micSenders: RTCRtpSender[] = []
+const audioDevice = ref<string>('')
+const audioDevices = ref<MediaDeviceInfo[]>([])
 
-    private videoDevice: string = ''
-    private videoDevices: MediaDeviceInfo[] = []
+const micTracks = ref<MediaStreamTrack[]>([])
+const micSenders = ref<RTCRtpSender[]>([])
 
-    private camTracks: MediaStreamTrack[] = []
-    private camSenders: RTCRtpSender[] = []
+const videoDevice = ref<string>('')
+const videoDevices = ref<MediaDeviceInfo[]>([])
 
-    mounted() {
-      this.loadAudioDevices()
-      this.loadVideoDevices()
+const camTracks = ref<MediaStreamTrack[]>([])
+const camSenders = ref<RTCRtpSender[]>([])
+
+onMounted(() => {
+  loadAudioDevices()
+  loadVideoDevices()
+})
+
+async function loadAudioDevices() {
+  let devices = await navigator.mediaDevices.enumerateDevices()
+  audioDevices.value = devices.filter((device) => device.kind === 'audioinput')
+  console.log('audioDevices', audioDevices.value)
+}
+
+async function addMicrophone() {
+  micTracks.value = []
+  micSenders.value = []
+
+  try {
+    let a = { echoCancellation: true } as MediaTrackConstraints
+    if (audioDevice.value != '') {
+      a.deviceId = audioDevice.value
     }
 
-    async loadAudioDevices() {
-      let devices = await navigator.mediaDevices.enumerateDevices()
-      this.audioDevices = devices.filter((device) => device.kind === 'audioinput')
-      console.log('audioDevices', this.audioDevices)
-    }
+    const stream = await navigator.mediaDevices.getUserMedia({ video: false, audio: a })
+    audio.value!.srcObject = stream
+    console.log('Got MediaStream:', stream)
 
-    async addMicrophone() {
-      this.micTracks = []
-      this.micSenders = []
+    const tracks = stream.getTracks()
+    console.log('Got tracks:', tracks)
 
-      try {
-        let audio = { echoCancellation: true } as MediaTrackConstraints
-        if (this.audioDevice != '') {
-          audio.deviceId = this.audioDevice
-        }
+    tracks.forEach((track) => {
+      micTracks.value.push(track)
+      console.log('Adding track', track, stream)
 
-        const stream = await navigator.mediaDevices.getUserMedia({ video: false, audio })
-        this._audio.srcObject = stream
-        console.log('Got MediaStream:', stream)
+      const rtcp = props.neko.addTrack(track, stream)
+      micSenders.value.push(rtcp)
+      console.log('rtcp sender', rtcp, rtcp.transport)
 
-        const tracks = stream.getTracks()
-        console.log('Got tracks:', tracks)
-
-        tracks.forEach((track) => {
-          this.micTracks.push(track)
-          console.log('Adding track', track, stream)
-
-          const rtcp = this.neko.addTrack(track, stream)
-          this.micSenders.push(rtcp)
-          console.log('rtcp sender', rtcp, rtcp.transport)
-
-          // TODO: Can be null.
-          rtcp.transport?.addEventListener('statechange', () => {
-            console.log('track - on state change', rtcp.transport?.state)
-          })
-        })
-      } catch (error) {
-        alert('Error accessing media devices.' + error)
-      }
-    }
-
-    stopMicrophone() {
-      this.micTracks.forEach((track) => {
-        track.stop()
+      // TODO: Can be null.
+      rtcp.transport?.addEventListener('statechange', () => {
+        console.log('track - on state change', rtcp.transport?.state)
       })
-
-      this.micSenders.forEach((rtcp) => {
-        this.neko.removeTrack(rtcp)
-      })
-
-      this._audio.srcObject = null
-      this.micTracks = []
-      this.micSenders = []
-    }
-
-    async loadVideoDevices() {
-      let devices = await navigator.mediaDevices.enumerateDevices()
-      this.videoDevices = devices.filter((device) => device.kind === 'videoinput')
-      console.log('videoDevices', this.videoDevices)
-    }
-
-    async addWebcam() {
-      this.camTracks = []
-      this.camSenders = []
-
-      try {
-        let video = {
-          width: 1280,
-          height: 720,
-        } as MediaTrackConstraints
-        if (this.videoDevice != '') {
-          video.deviceId = this.videoDevice
-        }
-
-        const stream = await navigator.mediaDevices.getUserMedia({ video, audio: false })
-        this._video.srcObject = stream
-        console.log('Got MediaStream:', stream)
-
-        const tracks = stream.getTracks()
-        console.log('Got tracks:', tracks)
-
-        tracks.forEach((track) => {
-          this.camTracks.push(track)
-          console.log('Adding track', track, stream)
-
-          const rtcp = this.neko.addTrack(track, stream)
-          this.camSenders.push(rtcp)
-          console.log('rtcp sender', rtcp, rtcp.transport)
-
-          // TODO: Can be null.
-          rtcp.transport?.addEventListener('statechange', () => {
-            console.log('track - on state change', rtcp.transport?.state)
-          })
-        })
-      } catch (error) {
-        alert('Error accessing media devices.' + error)
-      }
-    }
-
-    stopWebcam() {
-      this.camTracks.forEach((track) => {
-        track.stop()
-      })
-
-      this.camSenders.forEach((rtcp) => {
-        this.neko.removeTrack(rtcp)
-      })
-
-      this._audio.srcObject = null
-      this.camTracks = []
-      this.camSenders = []
-    }
+    })
+  } catch (error) {
+    alert('Error accessing media devices.' + error)
   }
+}
+
+function stopMicrophone() {
+  micTracks.value.forEach((track) => {
+    track.stop()
+  })
+
+  micSenders.value.forEach((rtcp) => {
+    props.neko.removeTrack(rtcp)
+  })
+
+  audio.value!.srcObject = null
+  micTracks.value = []
+  micSenders.value = []
+}
+
+async function loadVideoDevices() {
+  let devices = await navigator.mediaDevices.enumerateDevices()
+  videoDevices.value = devices.filter((device) => device.kind === 'videoinput')
+  console.log('videoDevices', videoDevices.value)
+}
+
+async function addWebcam() {
+  camTracks.value = []
+  camSenders.value = []
+
+  try {
+    let v = {
+      width: 1280,
+      height: 720,
+    } as MediaTrackConstraints
+    if (videoDevice.value != '') {
+      v.deviceId = videoDevice.value
+    }
+
+    const stream = await navigator.mediaDevices.getUserMedia({ video: v, audio: false })
+    video.value!.srcObject = stream
+    console.log('Got MediaStream:', stream)
+
+    const tracks = stream.getTracks()
+    console.log('Got tracks:', tracks)
+
+    tracks.forEach((track) => {
+      camTracks.value.push(track)
+      console.log('Adding track', track, stream)
+
+      const rtcp = props.neko.addTrack(track, stream)
+      camSenders.value.push(rtcp)
+      console.log('rtcp sender', rtcp, rtcp.transport)
+
+      // TODO: Can be null.
+      rtcp.transport?.addEventListener('statechange', () => {
+        console.log('track - on state change', rtcp.transport?.state)
+      })
+    })
+  } catch (error) {
+    alert('Error accessing media devices.' + error)
+  }
+}
+
+function stopWebcam() {
+  camTracks.value.forEach((track) => {
+    track.stop()
+  })
+
+  camSenders.value.forEach((rtcp) => {
+    props.neko.removeTrack(rtcp)
+  })
+
+  video.value!.srcObject = null
+  camTracks.value = []
+  camSenders.value = []
+}
 </script>

@@ -1,31 +1,30 @@
-import Vue from 'vue'
-import { Video } from '../types/state'
+import type { Video } from '../types/state'
 
 export function register(el: HTMLVideoElement, state: Video) {
   el.addEventListener('canplaythrough', () => {
-    Vue.set(state, 'playable', true)
+    state.playable = true
   })
   el.addEventListener('playing', () => {
-    Vue.set(state, 'playing', true)
+    state.playing = true
   })
   el.addEventListener('pause', () => {
-    Vue.set(state, 'playing', false)
+    state.playing = false
   })
   el.addEventListener('emptied', () => {
-    Vue.set(state, 'playable', false)
-    Vue.set(state, 'playing', false)
+    state.playable = false
+    state.playing = false
   })
   el.addEventListener('error', () => {
-    Vue.set(state, 'playable', false)
-    Vue.set(state, 'playing', false)
+    state.playable = false
+    state.playing = false
   })
   el.addEventListener('volumechange', () => {
-    Vue.set(state, 'muted', el.muted)
-    Vue.set(state, 'volume', el.volume)
+    state.muted = el.muted
+    state.volume = el.volume
   })
 
   // Initial state
-  Vue.set(state, 'muted', el.muted)
-  Vue.set(state, 'volume', el.volume)
-  Vue.set(state, 'playing', !el.paused)
+  state.muted = el.muted
+  state.volume = el.volume
+  state.playing = !el.paused
 }

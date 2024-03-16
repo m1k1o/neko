@@ -209,7 +209,7 @@
         <td>
           <select
             :value="neko.state.connection.webrtc.video.id"
-            @input="neko.setWebRTCVideo({ selector: { id: $event.target.value } })"
+            @input="neko.setWebRTCVideo({ selector: { id: ($event.target as HTMLSelectElement)!.value || '' } })"
           >
             <option v-for="video in neko.state.connection.webrtc.videos" :key="video" :value="video">
               {{ video }}
@@ -252,7 +252,7 @@
             min="0"
             max="1"
             :value="neko.state.video.volume"
-            @input="neko.setVolume(Number($event.target.value))"
+            @input="neko.setVolume(Number(($event.target as HTMLInputElement)!.value))"
             step="0.01"
           />
         </td>
@@ -289,7 +289,7 @@
             min="-5"
             max="5"
             :value="neko.state.control.scroll.sensitivity"
-            @input="neko.setScrollSensitivity(Number($event.target.value))"
+            @input="neko.setScrollSensitivity(Number(($event.target as HTMLInputElement)!.value))"
             step="1"
           />
         </td>
@@ -300,7 +300,7 @@
           <textarea
             :readonly="!neko.controlling"
             :value="neko.state.control.clipboard ? neko.state.control.clipboard.text : ''"
-            @input="clipboardText = $event.target.value"
+            @input="clipboardText = ($event.target as HTMLTextAreaElement)!.value"
           ></textarea>
           <button :disabled="!neko.controlling" @click="neko.room.clipboardSetText({ text: clipboardText })">
             send clipboard
@@ -322,14 +322,14 @@
             type="text"
             placeholder="Layout"
             :value="neko.state.control.keyboard.layout"
-            @input="neko.setKeyboard($event.target.value, neko.state.control.keyboard.variant)"
+            @input="neko.setKeyboard(($event.target as HTMLInputElement)!.value, neko.state.control.keyboard.variant)"
             style="width: 50%; box-sizing: border-box"
           />
           <input
             type="text"
             placeholder="Variant"
             :value="neko.state.control.keyboard.variant"
-            @input="neko.setKeyboard(neko.state.control.keyboard.layout, $event.target.value)"
+            @input="neko.setKeyboard(neko.state.control.keyboard.layout, ($event.target as HTMLInputElement)!.value)"
             style="width: 50%; box-sizing: border-box"
           />
         </td>
@@ -409,7 +409,7 @@
               min="0"
               max="10"
               :value="neko.state.screen.sync.multiplier"
-              @input="neko.state.screen.sync.multiplier = Number($event.target.value)"
+              @input="neko.state.screen.sync.multiplier = Number(($event.target as HTMLInputElement)!.value)"
               step="0.1"
             />
           </td>
@@ -425,7 +425,7 @@
               min="5"
               max="60"
               :value="neko.state.screen.sync.rate"
-              @input="neko.state.screen.sync.rate = Number($event.target.value)"
+              @input="neko.state.screen.sync.rate = Number(($event.target as HTMLInputElement)!.value)"
               step="5"
             />
           </td>
@@ -597,94 +597,82 @@
   }
 </style>
 
-<script lang="ts">
-  import { Vue, Component, Prop, Watch } from 'vue-property-decorator'
-  import Neko from '~/component/main.vue'
-  import NekoColor from './color.vue'
+<script lang="ts" setup>
+import { ref, watch, computed, onMounted, onBeforeUnmount } from 'vue'
+import Neko from '@/component/main.vue'
+import NekoColor from './color.vue'
 
-  @Component({
-    name: 'neko-events',
-    components: {
-      NekoColor,
-    },
-  })
-  export default class extends Vue {
-    @Prop() readonly neko!: Neko
+const props = defineProps<{
+  neko: typeof Neko
+}>()
 
-    clipboardText: string = ''
-    bitrate: number | null = null
+const clipboardText = ref('')
+const bitrate = ref<number | null>(null)
 
-    @Watch('neko.state.connection.webrtc.bitrate')
-    onBitrateChange(val: number) {
-      this.bitrate = val
-    }
+watch(() => props.neko.state.connection.webrtc.bitrate, (val) => {
+  bitrate.value = val
+})
 
-    shift = false
-    get letters(): number[] {
-      let letters = [] as number[]
-      for (let i = (this.shift ? 'A' : 'a').charCodeAt(0); i <= (this.shift ? 'Z' : 'z').charCodeAt(0); i++) {
-        letters.push(i)
-      }
-      return letters
-    }
-
-    // fast sceen changing test
-    screen_interval = null
-    screenChangingToggle() {
-      if (this.screen_interval === null) {
-        let sizes = this.neko.state.screen.configurations
-        let len = sizes.length
-
-        //@ts-ignore
-        this.screen_interval = setInterval(() => {
-          let { width, height, rate } = sizes[Math.floor(Math.random() * len)]
-
-          this.neko.setScreenSize(width, height, rate)
-        }, 10)
-      } else {
-        //@ts-ignore
-        clearInterval(this.screen_interval)
-        this.screen_interval = null
-      }
-    }
-
-    screenConfiguration = ''
-    setScreenConfiguration() {
-      let [width, height, rate] = this.screenConfiguration.split(/[@x]/)
-      this.neko.setScreenSize(parseInt(width), parseInt(height), parseInt(rate))
-    }
-
-    @Watch('neko.state.screen.size', { immediate: true })
-    onScreenSizeChange(val: any) {
-      this.screenConfiguration = `${val.width}x${val.height}@${val.rate}`
-    }
-
-    // fast cursor moving test
-    cursor_interval = null
-    cursorMovingToggle() {
-      if (this.cursor_interval === null) {
-        let len = this.neko.state.screen.size.width
-
-        //@ts-ignore
-        this.cursor_interval = setInterval(() => {
-          let x = Math.floor(Math.random() * len)
-          let y = Math.floor(Math.random() * len)
-
-          this.neko.control.move({ x, y })
-        }, 10)
-      } else {
-        //@ts-ignore
-        clearInterval(this.cursor_interval)
-        this.cursor_interval = null
-      }
-    }
-
-    async updateSettings(settings: any) {
-      try {
-        await this.neko.room.settingsSet(settings)
-      } catch (e: any) {
-        alert(e.response ? e.response.data.message : e)
-      }
-    }
+const shift = ref(false)
+const letters = computed(() => {
+  let letters = [] as number[]
+  for (let i = (shift.value ? 'A' : 'a').charCodeAt(0); i <= (shift.value ? 'Z' : 'z').charCodeAt(0); i++) {
+    letters.push(i)
   }
+  return letters
+})
+
+// fast sceen changing test
+let screen_interval: number | null = null
+function screenChangingToggle() {
+  if (screen_interval === null) {
+    let sizes = props.neko.state.screen.configurations
+    let len = sizes.length
+
+    screen_interval = setInterval(() => {
+      let { width, height, rate } = sizes[Math.floor(Math.random() * len)]
+
+      props.neko.setScreenSize(width, height, rate)
+    }, 10)
+  } else {
+    clearInterval(screen_interval)
+    screen_interval = null
+  }
+}
+
+const screenConfiguration = ref('')
+function setScreenConfiguration() {
+  let [width, height, rate] = screenConfiguration.value.split(/[@x]/)
+  props.neko.setScreenSize(parseInt(width), parseInt(height), parseInt(rate))
+}
+
+watch(props.neko.state.screen.size, (val) => {
+  screenConfiguration.value = `${val.width}x${val.height}@${val.rate}`
+})
+
+// fast cursor moving test
+let cursor_interval: number | null = null
+function cursorMovingToggle() {
+  if (cursor_interval === null) {
+    let len = props.neko.state.screen.size.width
+
+    cursor_interval = setInterval(() => {
+      let x = Math.floor(Math.random() * len)
+      let y = Math.floor(Math.random() * len)
+
+      props.neko.control.move({ x, y })
+    }, 10)
+  } else {
+    clearInterval(cursor_interval)
+    cursor_interval = null
+  }
+}
+
+async function updateSettings(settings: any) {
+  try {
+    await props.neko.room.settingsSet(settings)
+  } catch (e: any) {
+    alert(e.response ? e.response.data.message : e)
+  }
+}
 </script>

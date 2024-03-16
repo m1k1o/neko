@@ -1,4 +1,4 @@
-import { Connection } from '../../types/state'
+import type { Connection } from '../../types/state'
 
 import { NekoWebSocket } from '../websocket'
 

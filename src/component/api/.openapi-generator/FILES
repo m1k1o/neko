@@ -20,6 +20,7 @@ models/error-message.ts
 models/index.ts
 models/keyboard-map.ts
 models/keyboard-modifiers.ts
+models/member-bulk-delete.ts
 models/member-bulk-update.ts
 models/member-create.ts
 models/member-data.ts

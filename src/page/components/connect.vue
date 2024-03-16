@@ -24,56 +24,53 @@
 
 <style lang="scss"></style>
 
-<script lang="ts">
-  import { Vue, Component, Prop } from 'vue-property-decorator'
-  import Neko from '~/component/main.vue'
+<script lang="ts" setup>
+import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
+import Neko from '@/component/main.vue'
 
-  @Component({
-    name: 'neko-controls',
-  })
-  export default class extends Vue {
-    @Prop() readonly neko!: Neko
+const props = defineProps<{
+  neko: typeof Neko
+}>()
 
-    username: string = 'admin'
-    password: string = 'admin'
+const username = ref('admin')
+const password = ref('admin')
 
-    async login() {
-      localStorage.setItem('username', this.username)
-      localStorage.setItem('password', this.password)
+async function login() {
+  localStorage.setItem('username', username.value)
+  localStorage.setItem('password', password.value)
 
-      try {
-        await this.neko.login(this.username, this.password)
-      } catch (e: any) {
-        alert(e.response ? e.response.data.message : e)
-      }
-    }
-
-    async connect() {
-      try {
-        await this.neko.connect()
-      } catch (e: any) {
-        alert(e)
-      }
-    }
-
-    async logout() {
-      try {
-        await this.neko.logout()
-      } catch (e: any) {
-        alert(e.response ? e.response.data.message : e)
-      }
-    }
-
-    mounted() {
-      const username = localStorage.getItem('username')
-      if (username) {
-        this.username = username
-      }
-
-      const password = localStorage.getItem('password')
-      if (password) {
-        this.password = password
-      }
-    }
+  try {
+    await props.neko.login(username.value, password.value)
+  } catch (e: any) {
+    alert(e.response ? e.response.data.message : e)
   }
+}
+
+async function connect() {
+  try {
+    await props.neko.connect()
+  } catch (e: any) {
+    alert(e)
+  }
+}
+
+async function logout() {
+  try {
+    await props.neko.logout()
+  } catch (e: any) {
+    alert(e.response ? e.response.data.message : e)
+  }
+}
+
+onMounted(() => {
+  const u = localStorage.getItem('username')
+  if (u) {
+    username.value = u
+  }
+
+  const p = localStorage.getItem('password')
+  if (p) {
+    password.value = p
+  }
+})
 </script>

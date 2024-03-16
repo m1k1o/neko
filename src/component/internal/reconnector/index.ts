@@ -1,6 +1,6 @@
 import EventEmitter from 'eventemitter3'
 
-import { ReconnectorConfig } from '../../types/reconnector'
+import type { ReconnectorConfig } from '../../types/reconnector'
 
 export interface ReconnectorAbstractEvents {
   connect: () => void

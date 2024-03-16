@@ -2,7 +2,7 @@ export class Logger {
   // eslint-disable-next-line
   constructor(
     protected readonly _scope: string = 'main',
-    private readonly _color: boolean = !!process.env.VUE_APP_LOG_COLOR,
+    private readonly _color: boolean = false // !!process.env.VUE_APP_LOG_COLOR, // TODO: add support for color
   ) {}
 
   protected _console(level: string, m: string, fields?: Record<string, any>) {

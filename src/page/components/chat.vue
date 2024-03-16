@@ -1,8 +1,8 @@
 <template>
   <div class="chat">
     <ul class="chat-history" ref="history">
-      <template v-for="(message, index) in history">
-        <li :key="index" class="message" v-show="neko && neko.connected">
+      <template v-for="(message, index) in messages" :key="index">
+        <li class="message" v-show="neko && neko.connected">
           <div class="content">
             <div class="content-head">
               <span class="session">{{ session(message.id) }}</span>
@@ -162,105 +162,114 @@
   }
 </style>
 
-<script lang="ts">
-  import { Vue, Component, Prop, Watch, Ref } from 'vue-property-decorator'
-  import Neko from '~/component/main.vue'
+<script lang="ts" setup>
+import { ref, watch, onMounted } from 'vue'
+import Neko from '@/component/main.vue'
 
-  const length = 512 // max length of message
+const length = 512 // max length of message
 
-  @Component({
-    name: 'neko-chat',
+const history = ref<HTMLUListElement | null>(null)
+
+const props = defineProps<{
+  neko: typeof Neko
+}>()
+
+const emit = defineEmits(['send_message'])
+
+type Message = {
+  id: string
+  created: Date
+  content: string
+}
+
+const messages = ref<Message[]>([])
+const content = ref('')
+
+onMounted(() => {
+  setTimeout(() => {
+    history.value!.scrollTop = history.value!.scrollHeight
+  }, 0)
+})
+
+function timestamp(date: Date | string) {
+  date = new Date(date)
+
+  return (
+    date.getFullYear() +
+    '-' +
+    String(date.getMonth() + 1).padStart(2, '0') +
+    '-' +
+    String(date.getDate()).padStart(2, '0') +
+    ' ' +
+    String(date.getHours()).padStart(2, '0') +
+    ':' +
+    String(date.getMinutes()).padStart(2, '0') +
+    ':' +
+    String(date.getSeconds()).padStart(2, '0')
+  )
+}
+
+function session(id: string) {
+  let session = props.neko.state.sessions[id]
+  return session ? session.profile.name : id
+}
+
+function onNekoChange() {
+  props.neko.events.on('receive.broadcast', (sender: string, subject: string, body: any) => {
+    if (subject === 'chat') {
+      const message = body as Message
+      messages.value = [...messages.value, message]
+    }
   })
-  export default class extends Vue {
-    @Ref('history') readonly _history!: HTMLElement
-    @Prop() readonly neko!: Neko
+}
 
-    history = []
-    content = ''
+watch(() => props.neko, onNekoChange)
 
-    mounted() {
-      this.$nextTick(() => {
-        this._history.scrollTop = this._history.scrollHeight
-      })
-    }
+function onHistroyChange() {
+  setTimeout(() => {
+    history.value!.scrollTop = history.value!.scrollHeight
+  }, 0)
+}
 
-    timestamp(date: Date | string) {
-      date = new Date(date)
+watch(messages, onHistroyChange)
 
-      return (
-        date.getFullYear() +
-        '-' +
-        String(date.getMonth() + 1).padStart(2, '0') +
-        '-' +
-        String(date.getDate()).padStart(2, '0') +
-        ' ' +
-        String(date.getHours()).padStart(2, '0') +
-        ':' +
-        String(date.getMinutes()).padStart(2, '0') +
-        ':' +
-        String(date.getSeconds()).padStart(2, '0')
-      )
-    }
-
-    session(id: string) {
-      let session = this.neko.state.sessions[id]
-      return session ? session.profile.name : id
-    }
-
-    @Watch('neko')
-    onNekoChange() {
-      this.neko.events.on('receive.broadcast', (sender: string, subject: string, body: string) => {
-        if (subject === 'chat') {
-          Vue.set(this, 'history', [...this.history, body])
-        }
-      })
-    }
-
-    @Watch('history')
-    onHistroyChange() {
-      this.$nextTick(() => {
-        this._history.scrollTop = this._history.scrollHeight
-      })
-    }
-
-    onKeyDown(event: KeyboardEvent) {
-      if (this.content.length > length) {
-        this.content = this.content.substring(0, length)
-      }
-
-      if (this.content.length == length) {
-        if (
-          [8, 16, 17, 18, 20, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 91, 93, 144].includes(event.keyCode) ||
-          (event.ctrlKey && [67, 65, 88].includes(event.keyCode))
-        ) {
-          return
-        }
-        event.preventDefault()
-        return
-      }
-
-      if (event.keyCode !== 13 || event.shiftKey) {
-        return
-      }
-
-      if (this.content === '') {
-        event.preventDefault()
-        return
-      }
-
-      this.$emit('send_message', this.content)
-
-      let message = {
-        id: this.neko.state.session_id,
-        created: new Date(),
-        content: this.content,
-      }
-
-      this.neko.sendBroadcast('chat', message)
-      Vue.set(this, 'history', [...this.history, message])
-
-      this.content = ''
-      event.preventDefault()
-    }
+function onKeyDown(event: KeyboardEvent) {
+  if (content.value.length > length) {
+    content.value = content.value.substring(0, length)
   }
+
+  if (content.value.length == length) {
+    if (
+      [8, 16, 17, 18, 20, 33, 34, 35, 36, 37, 38, 39, 40, 45, 46, 91, 93, 144].includes(event.keyCode) ||
+      (event.ctrlKey && [67, 65, 88].includes(event.keyCode))
+    ) {
+      return
+    }
+    event.preventDefault()
+    return
+  }
+
+  if (event.keyCode !== 13 || event.shiftKey) {
+    return
+  }
+
+  if (content.value === '') {
+    event.preventDefault()
+    return
+  }
+
+  emit('send_message', content.value)
+
+  let message = {
+    id: props.neko.state.session_id,
+    created: new Date(),
+    content: content.value,
+  }
+  
+  props.neko.sendBroadcast('chat', message)
+  messages.value = [...messages.value, message]
+
+  content.value = ''
+  event.preventDefault()
+}
 </script>

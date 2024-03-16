@@ -14,11 +14,9 @@
 
 
 // May contain unused imports in some cases
-// @ts-ignore
-import { MemberProfile } from './member-profile';
+import type { MemberProfile } from './member-profile';
 // May contain unused imports in some cases
-// @ts-ignore
-import { SessionState } from './session-state';
+import type { SessionState } from './session-state';
 
 /**
  * 
