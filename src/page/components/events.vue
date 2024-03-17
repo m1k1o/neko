@@ -629,13 +629,13 @@ function screenChangingToggle() {
     let sizes = props.neko.state.screen.configurations
     let len = sizes.length
 
-    screen_interval = setInterval(() => {
+    screen_interval = window.setInterval(() => {
       let { width, height, rate } = sizes[Math.floor(Math.random() * len)]
 
       props.neko.setScreenSize(width, height, rate)
     }, 10)
   } else {
-    clearInterval(screen_interval)
+    window.clearInterval(screen_interval)
     screen_interval = null
   }
 }
@@ -646,7 +646,7 @@ function setScreenConfiguration() {
   props.neko.setScreenSize(parseInt(width), parseInt(height), parseInt(rate))
 }
 
-watch(props.neko.state.screen.size, (val) => {
+watch(() => props.neko.state.screen.size, (val) => {
   screenConfiguration.value = `${val.width}x${val.height}@${val.rate}`
 })
 
@@ -656,14 +656,14 @@ function cursorMovingToggle() {
   if (cursor_interval === null) {
     let len = props.neko.state.screen.size.width
 
-    cursor_interval = setInterval(() => {
+    cursor_interval = window.setInterval(() => {
       let x = Math.floor(Math.random() * len)
       let y = Math.floor(Math.random() * len)
 
       props.neko.control.move({ x, y })
     }, 10)
   } else {
-    clearInterval(cursor_interval)
+    window.clearInterval(cursor_interval)
     cursor_interval = null
   }
 }

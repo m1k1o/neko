@@ -722,7 +722,9 @@ function restartInactiveCursorInterval() {
   }
 }
 
-watch([focused, props.isControling, props.inactiveCursors], restartInactiveCursorInterval)
+watch(focused, restartInactiveCursorInterval)
+watch(() => props.inactiveCursors, restartInactiveCursorInterval)
+watch(() => props.isControling, restartInactiveCursorInterval)
 
 function saveInactiveMousePos(e: MouseEvent) {
   const pos = getMousePos(e.clientX, e.clientY)

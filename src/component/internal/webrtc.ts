@@ -561,7 +561,7 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
     let packetsLost: number
     let packetsReceived: number
 
-    const timer = setInterval(async () => {
+    const timer = window.setInterval(async () => {
       if (!this._peer) return
 
       let stats: RTCStatsReport | undefined = undefined
@@ -620,7 +620,7 @@ export class NekoWebRTC extends EventEmitter<NekoWebRTCEvents> {
     }, ms)
 
     return function () {
-      clearInterval(timer)
+      window.clearInterval(timer)
     }
   }
 }

@@ -243,12 +243,9 @@ const is_touch_device = computed(() => {
   )
 })
 
-watch(
-  () => private_mode_enabled.value,
-  (enabled) => {
-    connection.webrtc.paused = enabled
-  },
-)
+watch(private_mode_enabled, (enabled) => {
+  connection.webrtc.paused = enabled
+})
 
 const screencastReady = ref(false)
 const screencast = computed(() => {
@@ -304,13 +301,9 @@ function setUrl(url: string) {
   }
 }
 
-watch(
-  () => props.server,
-  (url) => {
-    url && setUrl(url)
-  },
-  { immediate: true },
-)
+watch(() => props.server, (url) => {
+  url && setUrl(url)
+}, { immediate: true })
 
 async function authenticate(token?: string) {
   if (!token) {
