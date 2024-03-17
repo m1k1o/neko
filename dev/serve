@@ -23,7 +23,7 @@ echo "Using IP address: ${NEKO_HOST}"
 
 # npm run serve
 docker run --rm -it \
-    -p 3001:8080 \
+    -p 3001:3001 \
     -e "NEKO_HOST=$NEKO_HOST" \
     -e "NEKO_PORT=$NEKO_PORT" \
     -e "VUE_APP_LOG_COLOR=true" \
@@ -31,4 +31,4 @@ docker run --rm -it \
     --volume "${PWD}/../:/app" \
     --entrypoint="npm" \
     --workdir="/app" \
-    node:18-buster-slim run serve
+    node:18-buster-slim run dev -- --port 3001 --host
