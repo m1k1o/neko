@@ -38,16 +38,16 @@ const props = defineProps<{
 }>()
 
 const overlay = ref<HTMLCanvasElement | null>(null)
-const ctx = ref<CanvasRenderingContext2D | null>(null)
-const canvasScale = ref(window.devicePixelRatio)
 
+let ctx: CanvasRenderingContext2D | null = null
+let canvasScale = window.devicePixelRatio
 let unsubscribePixelRatioChange = null as (() => void) | null
 
 onMounted(() => {
   // get canvas overlay context
   const canvas = overlay.value
   if (canvas != null) {
-    ctx.value = canvas.getContext('2d')
+    ctx = canvas.getContext('2d')
 
     // synchronize intrinsic with extrinsic dimensions
     const { width, height } = canvas.getBoundingClientRect()
@@ -58,7 +58,7 @@ onMounted(() => {
   onPixelRatioChange()
 
   // store last drawing points
-  last_points.value = {}
+  last_points = {}
 })
 
 onBeforeUnmount(() => {
@@ -79,7 +79,7 @@ function onPixelRatioChange() {
     media.removeEventListener('change', onPixelRatioChange)
   }
 
-  canvasScale.value = window.devicePixelRatio
+  canvasScale = window.devicePixelRatio
   onCanvasSizeChange(props.canvasSize)
 }
 
@@ -91,42 +91,42 @@ function onCanvasSizeChange({ width, height }: Dimension) {
 watch(() => props.canvasSize, onCanvasSizeChange)
 
 function canvasResize({ width, height }: Dimension) {
-  overlay.value!.width = width * canvasScale.value
-  overlay.value!.height = height * canvasScale.value
-  ctx.value?.setTransform(canvasScale.value, 0, 0, canvasScale.value, 0, 0)
+  overlay.value!.width = width * canvasScale
+  overlay.value!.height = height * canvasScale
+  ctx?.setTransform(canvasScale, 0, 0, canvasScale, 0, 0)
 }
 
 // start as undefined to prevent jumping
-const last_animation_time = ref<number>(0)
+let last_animation_time = 0
 // current animation progress (0-1)
-const percent = ref<number>(0)
+let percent = 0
 // points to be animated for each session
-const points = ref<SessionCursors[]>([])
+let points: SessionCursors[] = []
 // last points coordinates for each session
-const last_points = ref<Record<string, Cursor>>({})
+let last_points: Record<string, Cursor> = {}
 
 function canvasAnimateFrame(now: number = NaN) {
   // request another frame
-  if (percent.value <= 1) window.requestAnimationFrame(canvasAnimateFrame)
+  if (percent <= 1) window.requestAnimationFrame(canvasAnimateFrame)
 
   // calc elapsed time since last loop
-  const elapsed = now - last_animation_time.value
+  const elapsed = now - last_animation_time
 
   // skip if fps is set and elapsed time is less than fps
   if (props.fps > 0 && elapsed < 1000 / props.fps) return
 
   // calc current animation progress
   const delta = elapsed / POS_INTERVAL_MS
-  last_animation_time.value = now
+  last_animation_time = now
 
   // skip very first delta to prevent jumping
   if (isNaN(delta)) return
 
   // set the animation position
-  percent.value += delta
+  percent += delta
 
   // draw points for current frame
-  canvasDrawPoints(percent.value)
+  canvasDrawPoints(percent)
 }
 
 function canvasDrawPoints(percent: number = 1) {
@@ -134,7 +134,7 @@ function canvasDrawPoints(percent: number = 1) {
   canvasClear()
 
   // draw current position
-  for (const p of points.value) {
+  for (const p of points) {
     const { x, y } = getMovementXYatPercent(p.cursors, percent)
     canvasDrawCursor(x, y, p.id)
   }
@@ -147,7 +147,7 @@ function canvasUpdateCursors() {
   let unchanged = 0
 
   // create points for animation
-  points.value = []
+  points = []
   for (const { id, cursors } of props.cursors) {
     if (
       // if there are no positions
@@ -166,8 +166,8 @@ function canvasUpdateCursors() {
 
     // add last cursor position to cursors (if available)
     let pos = { id } as SessionCursors
-    if (id in last_points.value) {
-      const last_point = last_points.value[id]
+    if (id in last_points) {
+      const last_point = last_points[id]
 
       // if cursor did not move considerably
       if (
@@ -191,14 +191,14 @@ function canvasUpdateCursors() {
     }
 
     new_last_points[id] = new_last_point
-    points.value.push(pos)
+    points.push(pos)
   }
 
   // apply new last points
-  last_points.value = new_last_points
+  last_points = new_last_points
 
   // no cursors to animate
-  if (points.value.length == 0) {
+  if (points.length == 0) {
     canvasClear()
     return
   }
@@ -211,8 +211,8 @@ function canvasUpdateCursors() {
   }
 
   // start animation if not running
-  const p = percent.value
-  percent.value = 0
+  const p = percent
+  percent = 0
   if (p > 1 || !p) {
     canvasAnimateFrame()
   }
@@ -222,17 +222,19 @@ watch(() => props.hostId, canvasUpdateCursors)
 watch(() => props.cursors, canvasUpdateCursors)
 
 function canvasDrawCursor(x: number, y: number, id: string) {
+  if (!ctx) return
+
   // get intrinsic dimensions
   const { width, height } = props.canvasSize
   x = Math.round((x / props.screenSize.width) * width)
   y = Math.round((y / props.screenSize.height) * height)
 
   // reset transformation, X and Y will be 0 again
-  ctx.value!.setTransform(canvasScale.value, 0, 0, canvasScale.value, 0, 0)
+  ctx.setTransform(canvasScale, 0, 0, canvasScale, 0, 0)
 
   // use custom draw function, if available
   if (props.cursorDraw) {
-    props.cursorDraw(ctx.value!, x, y, id)
+    props.cursorDraw(ctx, x, y, id)
     return
   }
 
@@ -240,23 +242,25 @@ function canvasDrawCursor(x: number, y: number, id: string) {
   const cursorTag = props.sessions[id]?.profile.name || ''
 
   // draw inactive cursor tag
-  ctx.value!.font = '14px Arial, sans-serif'
-  ctx.value!.textBaseline = 'top'
-  ctx.value!.shadowColor = 'black'
-  ctx.value!.shadowBlur = 2
-  ctx.value!.lineWidth = 2
-  ctx.value!.fillStyle = 'black'
-  ctx.value!.strokeText(cursorTag, x, y)
-  ctx.value!.shadowBlur = 0
-  ctx.value!.fillStyle = 'white'
-  ctx.value!.fillText(cursorTag, x, y)
+  ctx.font = '14px Arial, sans-serif'
+  ctx.textBaseline = 'top'
+  ctx.shadowColor = 'black'
+  ctx.shadowBlur = 2
+  ctx.lineWidth = 2
+  ctx.fillStyle = 'black'
+  ctx.strokeText(cursorTag, x, y)
+  ctx.shadowBlur = 0
+  ctx.fillStyle = 'white'
+  ctx.fillText(cursorTag, x, y)
 }
 
 function canvasClear() {
+  if (!ctx) return
+
   // reset transformation, X and Y will be 0 again
-  ctx.value?.setTransform(canvasScale.value, 0, 0, canvasScale.value, 0, 0)
+  ctx.setTransform(canvasScale, 0, 0, canvasScale, 0, 0)
 
   const { width, height } = props.canvasSize
-  ctx.value?.clearRect(0, 0, width, height)
+  ctx.clearRect(0, 0, width, height)
 }
 </script>

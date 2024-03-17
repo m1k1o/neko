@@ -266,7 +266,7 @@ const events = new NekoMessages(connection, state)
 // Public methods
 /////////////////////////////
 
-function setUrl(url: string) {
+function setUrl(url?: string) {
   if (!url) {
     url = location.href
   }
@@ -302,7 +302,7 @@ function setUrl(url: string) {
 }
 
 watch(() => props.server, (url) => {
-  url && setUrl(url)
+  setUrl(url)
 }, { immediate: true })
 
 async function authenticate(token?: string) {
@@ -641,15 +641,15 @@ function onScreenSyncChange() {
 
 watch(() => state.screen.sync.enabled, onScreenSyncChange)
 
-const syncScreenSizeTimeout = ref(0)
+let syncScreenSizeTimeout = 0
 
 function syncScreenSize() {
-  if (syncScreenSizeTimeout.value) {
-    window.clearTimeout(syncScreenSizeTimeout.value)
+  if (syncScreenSizeTimeout) {
+    window.clearTimeout(syncScreenSizeTimeout)
   }
-  syncScreenSizeTimeout.value = window.setTimeout(() => {
+  syncScreenSizeTimeout = window.setTimeout(() => {
     const multiplier = state.screen.sync.multiplier || window.devicePixelRatio
-    syncScreenSizeTimeout.value = 0
+    syncScreenSizeTimeout = 0
     const { offsetWidth, offsetHeight } = component.value!
     setScreenSize(
       Math.round(offsetWidth * multiplier),

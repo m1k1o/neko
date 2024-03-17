@@ -76,15 +76,15 @@ const INACTIVE_CURSOR_INTERVAL = 1000 / 4 // in ms, 4fps
 
 const overlay = ref<HTMLCanvasElement | null>(null)
 const textarea = ref<HTMLTextAreaElement | null>(null)
-const ctx = ref<CanvasRenderingContext2D | null>(null)
 
-const canvasScale = ref(window.devicePixelRatio)
+let ctx: CanvasRenderingContext2D | null = null
+let canvasScale = window.devicePixelRatio
 
-const keyboard = ref<KeyboardInterface | null>(null)
-const gestureHandler = ref<GestureHandler | null>(null)
-const textInput = ref('')
+let keyboard: KeyboardInterface = NewKeyboard()
+let gestureHandler: GestureHandler = new GestureHandlerInit()
 
 const focused = ref(false)
+const textInput = ref('')
 
 // props and emits
 
@@ -124,10 +124,7 @@ onMounted(() => {
   window.addEventListener('mouseup', onMouseUp, true)
 
   // get canvas overlay context
-  const _ctx = overlay.value?.getContext('2d')
-  if (_ctx != null) {
-    ctx.value = _ctx
-  }
+  ctx = overlay.value!.getContext('2d')
 
   // synchronize intrinsic with extrinsic dimensions
   const { width, height } = overlay.value?.getBoundingClientRect() || { width: 0, height: 0 }
@@ -140,8 +137,7 @@ onMounted(() => {
   let noKeyUp = {} as Record<number, boolean>
 
   // Initialize Keyboard
-  keyboard.value = NewKeyboard()
-  keyboard.value.onkeydown = (key: number) => {
+  keyboard.onkeydown = (key: number) => {
     key = keySymsRemap(key)
 
     if (!props.isControling) {
@@ -151,7 +147,7 @@ onMounted(() => {
 
     // ctrl+v is aborted
     if (ctrlKey != 0 && key == KeyTable.XK_v) {
-      keyboard.value!.release(ctrlKey)
+      keyboard!.release(ctrlKey)
       noKeyUp[key] = true
       return true
     }
@@ -163,7 +159,7 @@ onMounted(() => {
     props.control.keyDown(key)
     return isCtrlKey
   }
-  keyboard.value.onkeyup = (key: number) => {
+  keyboard.onkeyup = (key: number) => {
     key = keySymsRemap(key)
 
     if (key in noKeyUp) {
@@ -176,10 +172,7 @@ onMounted(() => {
 
     props.control.keyUp(key)
   }
-  keyboard.value.listenTo(textarea.value!)
-
-  // Initialize GestureHandler
-  gestureHandler.value = new GestureHandlerInit()
+  keyboard.listenTo(textarea.value!)
 
   // bind touch handler using @Watch on supportedTouchEvents
   // because we need to know if touch events are supported
@@ -196,10 +189,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   window.removeEventListener('mouseup', onMouseUp, true)
-
-  if (keyboard.value) {
-    keyboard.value.removeListener()
-  }
+  keyboard.removeListener()
 
   // unbind touch handler
   unbindTouchHandler()
@@ -216,8 +206,8 @@ onBeforeUnmount(() => {
   clearInactiveCursorInterval()
 
   // stop pixel ratio change listener
-  if (unsubscribePixelRatioChange.value) {
-    unsubscribePixelRatioChange.value()
+  if (unsubscribePixelRatioChange) {
+    unsubscribePixelRatioChange()
   }
 })
 
@@ -280,23 +270,23 @@ function onTouchHandler(ev: TouchEvent) {
 //
 
 function bindGestureHandler() {
-  gestureHandler.value?.attach(textarea.value!)
+  gestureHandler.attach(textarea.value!)
   textarea.value?.addEventListener('gesturestart', onGestureHandler)
   textarea.value?.addEventListener('gesturemove', onGestureHandler)
   textarea.value?.addEventListener('gestureend', onGestureHandler)
 }
 
 function unbindGestureHandler() {
-  gestureHandler.value?.detach()
+  gestureHandler.detach()
   textarea.value?.removeEventListener('gesturestart', onGestureHandler)
   textarea.value?.removeEventListener('gesturemove', onGestureHandler)
   textarea.value?.removeEventListener('gestureend', onGestureHandler)
 }
 
-const gestureLastTapTime = ref<number | null>(null)
-const gestureFirstDoubleTapEv = ref<any | null>(null)
-const gestureLastMagnitudeX = ref(0)
-const gestureLastMagnitudeY = ref(0)
+let gestureLastTapTime: number | null = null
+let gestureFirstDoubleTapEv: any | null = null
+let gestureLastMagnitudeX = 0
+let gestureLastMagnitudeY = 0
 
 function _handleTapEvent(ev: any, code: number) {
   let pos = getMousePos(ev.detail.clientX, ev.detail.clientY)
@@ -305,23 +295,23 @@ function _handleTapEvent(ev: any, code: number) {
   // hit the same spot, so slightly adjust coordinates
 
   if (
-    gestureLastTapTime.value !== null &&
-    Date.now() - gestureLastTapTime.value < DOUBLE_TAP_TIMEOUT &&
-    gestureFirstDoubleTapEv.value?.detail.type === ev.detail.type
+    gestureLastTapTime !== null &&
+    Date.now() - gestureLastTapTime < DOUBLE_TAP_TIMEOUT &&
+    gestureFirstDoubleTapEv?.detail.type === ev.detail.type
   ) {
-    const dx = gestureFirstDoubleTapEv.value.detail.clientX - ev.detail.clientX
-    const dy = gestureFirstDoubleTapEv.value.detail.clientY - ev.detail.clientY
+    const dx = gestureFirstDoubleTapEv.detail.clientX - ev.detail.clientX
+    const dy = gestureFirstDoubleTapEv.detail.clientY - ev.detail.clientY
     const distance = Math.hypot(dx, dy)
 
     if (distance < DOUBLE_TAP_THRESHOLD) {
-      pos = getMousePos(gestureFirstDoubleTapEv.value.detail.clientX, gestureFirstDoubleTapEv.value.detail.clientY)
+      pos = getMousePos(gestureFirstDoubleTapEv.detail.clientX, gestureFirstDoubleTapEv.detail.clientY)
     } else {
-      gestureFirstDoubleTapEv.value = ev
+      gestureFirstDoubleTapEv = ev
     }
   } else {
-    gestureFirstDoubleTapEv.value = ev
+    gestureFirstDoubleTapEv = ev
   }
-  gestureLastTapTime.value = Date.now()
+  gestureLastTapTime = Date.now()
 
   props.control.buttonDown(code, pos)
   props.control.buttonUp(code, pos)
@@ -361,12 +351,12 @@ function onGestureHandler(ev: any) {
           break
 
         case 'twodrag':
-          gestureLastMagnitudeX.value = ev.detail.magnitudeX
-          gestureLastMagnitudeY.value = ev.detail.magnitudeY
+          gestureLastMagnitudeX = ev.detail.magnitudeX
+          gestureLastMagnitudeY = ev.detail.magnitudeY
           props.control.move(pos)
           break
         case 'pinch':
-          gestureLastMagnitudeX.value = Math.hypot(ev.detail.magnitudeX, ev.detail.magnitudeY)
+          gestureLastMagnitudeX = Math.hypot(ev.detail.magnitudeX, ev.detail.magnitudeY)
           props.control.move(pos)
           break
       }
@@ -387,21 +377,21 @@ function onGestureHandler(ev: any) {
           // We don't know if the mouse was moved so we need to move it
           // every update.
           props.control.move(pos)
-          while (ev.detail.magnitudeY - gestureLastMagnitudeY.value > GESTURE_SCRLSENS) {
+          while (ev.detail.magnitudeY - gestureLastMagnitudeY > GESTURE_SCRLSENS) {
             props.control.scroll({ delta_x: 0, delta_y: 1 })
-            gestureLastMagnitudeY.value += GESTURE_SCRLSENS
+            gestureLastMagnitudeY += GESTURE_SCRLSENS
           }
-          while (ev.detail.magnitudeY - gestureLastMagnitudeY.value < -GESTURE_SCRLSENS) {
+          while (ev.detail.magnitudeY - gestureLastMagnitudeY < -GESTURE_SCRLSENS) {
             props.control.scroll({ delta_x: 0, delta_y: -1 })
-            gestureLastMagnitudeY.value -= GESTURE_SCRLSENS
+            gestureLastMagnitudeY -= GESTURE_SCRLSENS
           }
-          while (ev.detail.magnitudeX - gestureLastMagnitudeX.value > GESTURE_SCRLSENS) {
+          while (ev.detail.magnitudeX - gestureLastMagnitudeX > GESTURE_SCRLSENS) {
             props.control.scroll({ delta_x: 1, delta_y: 0 })
-            gestureLastMagnitudeX.value += GESTURE_SCRLSENS
+            gestureLastMagnitudeX+= GESTURE_SCRLSENS
           }
-          while (ev.detail.magnitudeX - gestureLastMagnitudeX.value < -GESTURE_SCRLSENS) {
+          while (ev.detail.magnitudeX - gestureLastMagnitudeX < -GESTURE_SCRLSENS) {
             props.control.scroll({ delta_x: -1, delta_y: 0 })
-            gestureLastMagnitudeX.value -= GESTURE_SCRLSENS
+            gestureLastMagnitudeX-= GESTURE_SCRLSENS
           }
           break
         case 'pinch':
@@ -410,14 +400,14 @@ function onGestureHandler(ev: any) {
           // every update.
           props.control.move(pos)
           magnitude = Math.hypot(ev.detail.magnitudeX, ev.detail.magnitudeY)
-          if (Math.abs(magnitude - gestureLastMagnitudeX.value) > GESTURE_ZOOMSENS) {
-            while (magnitude - gestureLastMagnitudeX.value > GESTURE_ZOOMSENS) {
+          if (Math.abs(magnitude - gestureLastMagnitudeX) > GESTURE_ZOOMSENS) {
+            while (magnitude - gestureLastMagnitudeX > GESTURE_ZOOMSENS) {
               props.control.scroll({ delta_x: 0, delta_y: 1, control_key: true })
-              gestureLastMagnitudeX.value += GESTURE_ZOOMSENS
+              gestureLastMagnitudeX+= GESTURE_ZOOMSENS
             }
-            while (magnitude - gestureLastMagnitudeX.value < -GESTURE_ZOOMSENS) {
+            while (magnitude - gestureLastMagnitudeX < -GESTURE_ZOOMSENS) {
               props.control.scroll({ delta_x: 0, delta_y: -1, control_key: true })
-              gestureLastMagnitudeX.value -= GESTURE_ZOOMSENS
+              gestureLastMagnitudeX-= GESTURE_ZOOMSENS
             }
           }
           break
@@ -500,12 +490,12 @@ function sendMousePos(e: MouseEvent) {
   if (props.webrtc.connected) {
     props.webrtc.send('mousemove', pos)
   } // otherwise, no events are sent
-  cursorPosition.value = pos
+  cursorPosition = pos
 }
 
-const wheelX = ref(0)
-const wheelY = ref(0)
-const wheelTimeStamp = ref(0)
+let wheelX = 0
+let wheelY = 0
+let wheelTimeStamp = 0
 
 // negative sensitivity can be acheived using increased step value
 const wheelStep = computed(() => {
@@ -550,12 +540,12 @@ function onWheel(e: WheelEvent) {
   }
 
   // when the last scroll was more than 250ms ago
-  const firstScroll = e.timeStamp - wheelTimeStamp.value > 250
+  const firstScroll = e.timeStamp - wheelTimeStamp > 250
 
   if (firstScroll) {
-    wheelX.value = 0
-    wheelY.value = 0
-    wheelTimeStamp.value = e.timeStamp
+    wheelX = 0
+    wheelY = 0
+    wheelTimeStamp = e.timeStamp
   }
 
   let dx = e.deltaX
@@ -566,32 +556,32 @@ function onWheel(e: WheelEvent) {
     dy *= WHEEL_LINE_HEIGHT
   }
 
-  wheelX.value += dx
-  wheelY.value += dy
+  wheelX += dx
+  wheelY += dy
 
   let x = 0
-  if (Math.abs(wheelX.value) >= wheelStep.value || firstScroll) {
-    if (wheelX.value < 0) {
+  if (Math.abs(wheelX) >= wheelStep.value || firstScroll) {
+    if (wheelX < 0) {
       x = wheelSensitivity.value * -1
-    } else if (wheelX.value > 0) {
+    } else if (wheelX > 0) {
       x = wheelSensitivity.value
     }
 
     if (!firstScroll) {
-      wheelX.value = 0
+      wheelX = 0
     }
   }
 
   let y = 0
-  if (Math.abs(wheelY.value) >= wheelStep.value || firstScroll) {
-    if (wheelY.value < 0) {
+  if (Math.abs(wheelY) >= wheelStep.value || firstScroll) {
+    if (wheelY < 0) {
       y = wheelSensitivity.value * -1
-    } else if (wheelY.value > 0) {
+    } else if (wheelY > 0) {
       y = wheelSensitivity.value
     }
 
     if (!firstScroll) {
-      wheelY.value = 0
+      wheelY = 0
     }
   }
 
@@ -606,12 +596,12 @@ function onWheel(e: WheelEvent) {
   })
 }
 
-const lastMouseMove = ref(0)
+let lastMouseMove = 0
 
 function onMouseMove(e: MouseEvent) {
   // throttle mousemove events
-  if (e.timeStamp - lastMouseMove.value < MOUSE_MOVE_THROTTLE) return
-  lastMouseMove.value = e.timeStamp
+  if (e.timeStamp - lastMouseMove < MOUSE_MOVE_THROTTLE) return
+  lastMouseMove = e.timeStamp
 
   if (props.isControling) {
     sendMousePos(e)
@@ -622,10 +612,10 @@ function onMouseMove(e: MouseEvent) {
   }
 }
 
-const isMouseDown = ref(false)
+let isMouseDown = false
 
 function onMouseDown(e: MouseEvent) {
-  isMouseDown.value = true
+  isMouseDown = true
 
   if (!props.isControling) {
     implicitControlRequest(e)
@@ -639,8 +629,8 @@ function onMouseDown(e: MouseEvent) {
 
 function onMouseUp(e: MouseEvent) {
   // only if we are the one who started the mouse down
-  if (!isMouseDown.value) return
-  isMouseDown.value = false
+  if (!isMouseDown) return
+  isMouseDown = false
 
   if (!props.isControling) {
     implicitControlRequest(e)
@@ -668,7 +658,7 @@ function onMouseEnter(e: MouseEvent) {
 function onMouseLeave(e: MouseEvent) {
   if (props.isControling) {
     // save current keyboard modifiers state
-    keyboardModifiers.value = getModifierState(e)
+    keyboardModifiers = getModifierState(e)
   }
 
   focused.value = false
@@ -703,13 +693,13 @@ async function onDrop(e: DragEvent) {
 // inactive cursor position
 //
 
-const inactiveCursorInterval = ref<number | null>(null)
-const inactiveCursorPosition = ref<CursorPosition | null>(null)
+let inactiveCursorInterval: number | null = null
+let inactiveCursorPosition: CursorPosition | null = null
 
 function clearInactiveCursorInterval() {
-  if (inactiveCursorInterval.value) {
-    window.clearInterval(inactiveCursorInterval.value)
-    inactiveCursorInterval.value = null
+  if (inactiveCursorInterval) {
+    window.clearInterval(inactiveCursorInterval)
+    inactiveCursorInterval = null
   }
 }
 
@@ -718,7 +708,7 @@ function restartInactiveCursorInterval() {
   clearInactiveCursorInterval()
 
   if (props.inactiveCursors && focused.value && !props.isControling) {
-    inactiveCursorInterval.value = window.setInterval(sendInactiveMousePos, INACTIVE_CURSOR_INTERVAL)
+    inactiveCursorInterval = window.setInterval(sendInactiveMousePos, INACTIVE_CURSOR_INTERVAL)
   }
 }
 
@@ -728,14 +718,14 @@ watch(() => props.isControling, restartInactiveCursorInterval)
 
 function saveInactiveMousePos(e: MouseEvent) {
   const pos = getMousePos(e.clientX, e.clientY)
-  inactiveCursorPosition.value = pos
+  inactiveCursorPosition = pos
 }
 
 function sendInactiveMousePos() {
-  if (inactiveCursorPosition.value && props.webrtc.connected) {
+  if (inactiveCursorPosition && props.webrtc.connected) {
     // not using NekoControl here, because inactive cursors are
     // treated differently than moving the mouse while controling
-    props.webrtc.send('mousemove', inactiveCursorPosition.value)
+    props.webrtc.send('mousemove', inactiveCursorPosition)
   } // if webrtc is not connected, we don't need to send anything
 }
 
@@ -743,12 +733,12 @@ function sendInactiveMousePos() {
 // keyboard modifiers
 //
 
-const keyboardModifiers = ref<KeyboardModifiers | null>(null)
+let keyboardModifiers: KeyboardModifiers | null = null
 
 function updateKeyboardModifiers(e: MouseEvent) {
   const mods = getModifierState(e)
   const newMods = Object.values(mods).join()
-  const oldMods = Object.values(keyboardModifiers.value || {}).join()
+  const oldMods = Object.values(keyboardModifiers || {}).join()
 
   // update keyboard modifiers only if they changed
   if (newMods !== oldMods) {
@@ -762,25 +752,26 @@ function updateKeyboardModifiers(e: MouseEvent) {
 
 const cursorImage = ref<CursorImage | null>(null)
 const cursorElement = new Image()
-const cursorPosition = ref<CursorPosition | null>(null)
-const cursorLastTime = ref(0)
-const canvasRequestedFrame = ref(false)
-const canvasRenderTimeout = ref<number | null>(null)
 
-const unsubscribePixelRatioChange = ref<(() => void) | null>(null)
+let cursorPosition: CursorPosition | null = null
+let cursorLastTime = 0
+let canvasRequestedFrame = false
+let canvasRenderTimeout: number | null = null
+
+let unsubscribePixelRatioChange: (() => void) | null = null
 
 function onPixelRatioChange() {
-  if (unsubscribePixelRatioChange.value) {
-    unsubscribePixelRatioChange.value()
+  if (unsubscribePixelRatioChange) {
+    unsubscribePixelRatioChange()
   }
 
   const media = window.matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`)
   media.addEventListener('change', onPixelRatioChange)
-  unsubscribePixelRatioChange.value = () => {
+  unsubscribePixelRatioChange = () => {
     media.removeEventListener('change', onPixelRatioChange)
   }
 
-  canvasScale.value = window.devicePixelRatio
+  canvasScale = window.devicePixelRatio
   onCanvasSizeChange(props.canvasSize)
 }
 
@@ -793,7 +784,7 @@ watch(() => props.canvasSize, onCanvasSizeChange)
 
 function onCursorPosition(data: CursorPosition) {
   if (!props.isControling) {
-    cursorPosition.value = data
+    cursorPosition = data
     canvasRequestRedraw()
   }
 }
@@ -807,30 +798,32 @@ function onCursorImage(data: CursorImage) {
 }
 
 function canvasResize({ width, height }: Dimension) {
-  overlay.value!.width = width * canvasScale.value
-  overlay.value!.height = height * canvasScale.value
-  ctx.value!.setTransform(canvasScale.value, 0, 0, canvasScale.value, 0, 0)
+  if (!ctx || !overlay.value) return
+
+  overlay.value.width = width * canvasScale
+  overlay.value.height = height * canvasScale
+  ctx.setTransform(canvasScale, 0, 0, canvasScale, 0, 0)
 }
 
 function canvasRequestRedraw() {
-  if (canvasRequestedFrame.value) return
+  if (canvasRequestedFrame) return
 
   if (props.fps > 0) {
-    if (canvasRenderTimeout.value) {
-      window.clearTimeout(canvasRenderTimeout.value)
-      canvasRenderTimeout.value = null
+    if (canvasRenderTimeout) {
+      window.clearTimeout(canvasRenderTimeout)
+      canvasRenderTimeout = null
     }
 
     const now = Date.now()
-    if (now - cursorLastTime.value < 1000 / props.fps) {
-      canvasRenderTimeout.value = window.setTimeout(canvasRequestRedraw, 1000 / props.fps)
+    if (now - cursorLastTime < 1000 / props.fps) {
+      canvasRenderTimeout = window.setTimeout(canvasRequestRedraw, 1000 / props.fps)
       return
     }
 
-    cursorLastTime.value = now
+    cursorLastTime = now
   }
 
-  canvasRequestedFrame.value = true
+  canvasRequestedFrame = true
   window.requestAnimationFrame(() => {
     if (props.isControling) {
       canvasClear()
@@ -838,7 +831,7 @@ function canvasRequestRedraw() {
       canvasRedraw()
     }
 
-    canvasRequestedFrame.value = false
+    canvasRequestedFrame = false
   })
 }
 
@@ -846,7 +839,7 @@ watch(() => props.hostId, canvasRequestRedraw)
 watch(() => props.cursorDraw, canvasRequestRedraw)
 
 function canvasRedraw() {
-  if (!cursorPosition.value || !props.screenSize || !cursorImage.value) return
+  if (!ctx || !cursorPosition || !props.screenSize || !cursorImage.value) return
 
   // clear drawings
   canvasClear()
@@ -858,20 +851,20 @@ function canvasRedraw() {
   const { width, height } = props.canvasSize
 
   // reset transformation, X and Y will be 0 again
-  ctx.value!.setTransform(canvasScale.value, 0, 0, canvasScale.value, 0, 0)
+  ctx.setTransform(canvasScale, 0, 0, canvasScale, 0, 0)
 
   // get cursor position
-  let x = Math.round((cursorPosition.value.x / props.screenSize.width) * width)
-  let y = Math.round((cursorPosition.value.y / props.screenSize.height) * height)
+  let x = Math.round((cursorPosition.x / props.screenSize.width) * width)
+  let y = Math.round((cursorPosition.y / props.screenSize.height) * height)
 
   // use custom draw function, if available
   if (props.cursorDraw) {
-    props.cursorDraw(ctx.value!, x, y, cursorElement, cursorImage.value, props.hostId)
+    props.cursorDraw(ctx, x, y, cursorElement, cursorImage.value, props.hostId)
     return
   }
 
   // draw cursor image
-  ctx.value!.drawImage(
+  ctx.drawImage(
     cursorElement,
     x - cursorImage.value.x,
     y - cursorImage.value.y,
@@ -885,63 +878,65 @@ function canvasRedraw() {
     x += cursorImage.value.width
     y += cursorImage.value.height
 
-    ctx.value!.font = '14px Arial, sans-serif'
-    ctx.value!.textBaseline = 'top'
-    ctx.value!.shadowColor = 'black'
-    ctx.value!.shadowBlur = 2
-    ctx.value!.lineWidth = 2
-    ctx.value!.fillStyle = 'black'
-    ctx.value!.strokeText(cursorTag, x, y)
-    ctx.value!.shadowBlur = 0
-    ctx.value!.fillStyle = 'white'
-    ctx.value!.fillText(cursorTag, x, y)
+    ctx.font = '14px Arial, sans-serif'
+    ctx.textBaseline = 'top'
+    ctx.shadowColor = 'black'
+    ctx.shadowBlur = 2
+    ctx.lineWidth = 2
+    ctx.fillStyle = 'black'
+    ctx.strokeText(cursorTag, x, y)
+    ctx.shadowBlur = 0
+    ctx.fillStyle = 'white'
+    ctx.fillText(cursorTag, x, y)
   }
 }
 
 function canvasClear() {
+  if (!ctx) return
+
   // reset transformation, X and Y will be 0 again
-  ctx.value!.setTransform(canvasScale.value, 0, 0, canvasScale.value, 0, 0)
+  ctx.setTransform(canvasScale, 0, 0, canvasScale, 0, 0)
 
   const { width, height } = props.canvasSize
-  ctx.value!.clearRect(0, 0, width, height)
+  ctx.clearRect(0, 0, width, height)
 }
 
 //
 // implicit hosting
 //
 
-const reqMouseDown = ref<MouseEvent | null>(null)
-const reqMouseUp = ref<MouseEvent | null>(null)
+let reqMouseDown: MouseEvent | null = null
+let reqMouseUp: MouseEvent | null = null
 
 function onControlChange(isControling: boolean) {
-  keyboardModifiers.value = null
+  keyboardModifiers = null
 
-  if (isControling && reqMouseDown.value) {
-    updateKeyboardModifiers(reqMouseDown.value)
-    onMouseDown(reqMouseDown.value)
+  if (isControling && reqMouseDown) {
+    updateKeyboardModifiers(reqMouseDown)
+    onMouseDown(reqMouseDown)
   }
 
-  if (isControling && reqMouseUp.value) {
-    onMouseUp(reqMouseUp.value)
+  if (isControling && reqMouseUp) {
+    onMouseUp(reqMouseUp)
   }
 
   canvasRequestRedraw()
 
-  reqMouseDown.value = null
-  reqMouseUp.value = null
+  reqMouseDown = null
+  reqMouseUp = null
 }
 
 watch(() => props.isControling, onControlChange)
 
 function implicitControlRequest(e: MouseEvent) {
   if (props.implicitControl && e.type === 'mousedown') {
-    reqMouseDown.value = e
-    reqMouseUp.value = null
+    reqMouseDown = e
+    reqMouseUp = null
     props.control.request()
   }
 
   if (props.implicitControl && e.type === 'mouseup') {
-    reqMouseUp.value = e
+    reqMouseUp = e
   }
 }
 
@@ -956,15 +951,15 @@ function implicitControlRelease() {
 // mobile keyboard
 //
 
-const kbdShow = ref(false)
-const kbdOpen = ref(false)
+let kbdShow = false
+let kbdOpen = false
 
 function mobileKeyboardShow() {
   // skip if not a touch device
   if (!props.hasMobileKeyboard) return
 
-  kbdShow.value = true
-  kbdOpen.value = false
+  kbdShow = true
+  kbdOpen = false
 
   textarea.value!.focus()
   window.visualViewport?.addEventListener('resize', onVisualViewportResize)
@@ -975,8 +970,8 @@ function mobileKeyboardHide() {
   // skip if not a touch device
   if (!props.hasMobileKeyboard) return
 
-  kbdShow.value = false
-  kbdOpen.value = false
+  kbdShow = false
+  kbdOpen = false
 
   emit('mobileKeyboardOpen', false)
   window.visualViewport?.removeEventListener('resize', onVisualViewportResize)
@@ -986,10 +981,10 @@ function mobileKeyboardHide() {
 // visual viewport resize event is fired when keyboard is opened or closed
 // android does not blur textarea when keyboard is closed, so we need to do it manually
 function onVisualViewportResize() {
-  if (!kbdShow.value) return
+  if (!kbdShow) return
 
-  if (!kbdOpen.value) {
-    kbdOpen.value = true
+  if (!kbdOpen) {
+    kbdOpen = true
   } else {
     mobileKeyboardHide()
   }
