@@ -537,22 +537,22 @@ function showPlugins(id: string, profile: ApiModels.MemberProfile) {
   }
 }
 
-function savePlugins() {
+async function savePlugins() {
   if (!plugins.value) return
 
   let errKey = ''
   try {
-    let plugins = {} as any
+    let p = {} as any
     for (let [key, val] of plugins.value.old) {
       errKey = key
-      plugins[key] = JSON.parse(val)
+      p[key] = JSON.parse(val)
     }
     for (let [key, val] of plugins.value.new) {
       errKey = key
-      plugins[key] = JSON.parse(val)
+      p[key] = JSON.parse(val)
     }
 
-    updateProfile(plugins.value.id, { plugins })
+    await updateProfile(plugins.value.id, { plugins: p })
     plugins.value = null
   } catch (e: any) {
     alert(errKey + ': ' + e)
