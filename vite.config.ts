@@ -12,5 +12,15 @@ export default defineConfig({
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
     }
+  },
+  server: {
+    port: 3001,
+    proxy: process.env.NEKO_HOST ? {
+      '/api': {
+        target: 'http://' + process.env.NEKO_HOST + ':' + process.env.NEKO_PORT + '/',
+        changeOrigin: true,
+        ws: true
+      }
+    } : undefined
   }
 })
