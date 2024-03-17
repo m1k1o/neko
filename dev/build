@@ -1,10 +1,12 @@
 #!/bin/sh
 cd "$(dirname "$0")"
 
+APP_PATH="$(realpath ../)"
+
 # start component watch
 docker run --rm -it \
     --user "$(id -u):$(id -g)" \
-    --volume "${PWD}/../:/app" \
+    --volume "$APP_PATH:$APP_PATH" \
     --entrypoint="npm" \
-    --workdir="/app" \
+    --workdir="$APP_PATH" \
     node:18-buster-slim run build

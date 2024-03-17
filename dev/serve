@@ -21,6 +21,8 @@ fi
 echo "Using app port: ${NEKO_PORT}"
 echo "Using IP address: ${NEKO_HOST}"
 
+APP_PATH="$(realpath ../)"
+
 # npm run serve
 docker run --rm -it \
     -p 3001:3001 \
@@ -28,7 +30,7 @@ docker run --rm -it \
     -e "NEKO_PORT=$NEKO_PORT" \
     -e "VUE_APP_LOG_COLOR=true" \
     --user "$(id -u):$(id -g)" \
-    --volume "${PWD}/../:/app" \
+    --volume "$APP_PATH:$APP_PATH" \
     --entrypoint="npm" \
-    --workdir="/app" \
+    --workdir="$APP_PATH" \
     node:18-buster-slim run dev -- --port 3001 --host
