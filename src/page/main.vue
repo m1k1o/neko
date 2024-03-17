@@ -320,22 +320,29 @@
 
 <script lang="ts" setup>
 // plugins must be available at:
-// ./plugins/{name}/main-tabs.vue
-// ./plugins/{name}/main-components.vue
-let plugins = [] as string[]
+// ./plugins/{name}/index.ts -> { Components, Tabs }
+const plugins = import.meta.glob('./plugins/*/index.ts')
+
+const pluginsTabs = shallowRef<Record<string, any>>({})
+const pluginsComponents = shallowRef<Record<string, any>>({})
 
 // dynamic plugins loader
-//;(function (r: any) {
-//  r.keys().forEach((key: string) => {
-//    const found = key.match(/\.\/(.*?)\//)
-//    if (found) {
-//      plugins.push(found[1])
-//      console.log('loading a plugin:', found[1])
-//    }
-//  })
-//})(require.context('./plugins/', true, /(main-tabs|main-components)\.vue$/))
+onMounted(async () => {
+  const resolvedPlugins = await Promise.all(
+    Object.entries(plugins).map(async ([path, component]) => {
+      return [path, await component()]
+    }),
+  ) as [string, { Components: any, Tabs: any }][]
 
-import { ref, computed, onMounted } from 'vue'
+  pluginsTabs.value = {}
+  pluginsComponents.value = {}
+  for (const [path, { Components, Tabs }] of resolvedPlugins) {
+    pluginsTabs.value[path] = Tabs
+    pluginsComponents.value[path] = Components
+  }
+})
+
+import { ref, shallowRef, computed, onMounted } from 'vue'
 
 import type { AxiosProgressEvent } from 'axios'
 import NekoCanvas from '@/component/main.vue'
@@ -346,22 +353,6 @@ import NekoEvents from './components/events.vue'
 import NekoMembers from './components/members.vue'
 import NekoMedia from './components/media.vue'
 import NekoChat from './components/chat.vue'
-
-const pluginsTabs = computed(() => {
-  let x = {} as Record<string, any>
-  for (let p of plugins) {
-    x[p] = () => import('./plugins/' + p + '/main-tabs.vue')
-  }
-  return x
-})
-
-const pluginsComponents = computed(() => {
-  let x = {} as Record<string, any>
-  for (let p of plugins) {
-    x[p] = () => import('./plugins/' + p + '/main-components.vue')
-  }
-  return x
-})
 
 const neko = ref<typeof NekoCanvas>()
 

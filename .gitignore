@@ -31,3 +31,6 @@ coverage
 
 test-results/
 playwright-report/
+
+/src/page/plugins/*
+!/src/page/plugins/.gitkeep
