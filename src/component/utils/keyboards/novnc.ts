@@ -1,13 +1,7 @@
 // https://github.com/novnc/noVNC/blob/ca6527c1bf7131adccfdcc5028964a1e67f9018c/core/input/keyboard.js
-import Keyboard from './novnc.js'
+import Keyboard from './novnc/keyboard'
 
-export interface NoVncKeyboardInterface {
-  // original functions
-  onkeyevent: (keysym: number | null, code: string, down: boolean) => boolean
-  grab: () => void
-  ungrab: () => void
-
-  // custom functions
+export interface NoVncKeyboardInterface extends Keyboard {
   onkeydown?: (keysym: number) => boolean
   onkeyup?: (keysym: number) => void
   release: (keysym: number) => void
@@ -16,14 +10,14 @@ export interface NoVncKeyboardInterface {
 }
 
 export default function (element?: Element): NoVncKeyboardInterface {
-  // @ts-ignore
-  const keyboard = new Keyboard(element)
+  const keyboard = new Keyboard(element) as NoVncKeyboardInterface
 
   // map on key event to onkeydown and onkeyup
   keyboard.onkeyevent = function (keysym: number | null, code: string, down: boolean) {
     if (keysym === null) return false
-    if (down) return this.onkeydown(keysym, code)
-    this.onkeyup(keysym, code)
+    if (down && this.onkeydown) return this.onkeydown(keysym)
+    if (!down && this.onkeyup) this.onkeyup(keysym)
+    return false
   }
 
   // add release function
