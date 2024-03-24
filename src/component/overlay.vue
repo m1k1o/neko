@@ -174,7 +174,7 @@ onMounted(() => {
   }
   keyboard.listenTo(textarea.value!)
 
-  // bind touch handler using @Watch on supportedTouchEvents
+  // bind touch handler using `watch` on supportedTouchEvents
   // because we need to know if touch events are supported
   // by the server before we can bind touch handler
 
@@ -532,7 +532,7 @@ function onTextInputChange() {
   textInput.value = ''
 }
 
-watch(() => textInput.value, onTextInputChange)
+watch(textInput, onTextInputChange)
 
 function onWheel(e: WheelEvent) {
   if (!props.isControling) {
@@ -713,8 +713,8 @@ function restartInactiveCursorInterval() {
 }
 
 watch(focused, restartInactiveCursorInterval)
-watch(() => props.inactiveCursors, restartInactiveCursorInterval)
 watch(() => props.isControling, restartInactiveCursorInterval)
+watch(() => props.inactiveCursors, restartInactiveCursorInterval)
 
 function saveInactiveMousePos(e: MouseEvent) {
   const pos = getMousePos(e.clientX, e.clientY)

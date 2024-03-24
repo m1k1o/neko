@@ -706,7 +706,7 @@ function onResize() {
   }
 }
 
-watch(() => state.screen.size, onScreenSyncChange)
+watch(() => state.screen.size, onResize)
 
 function updateConnectionType() {
   if (screencast.value) {
