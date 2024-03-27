@@ -23,6 +23,10 @@ func init() {
 	Emmiter = events.New()
 }
 
+func SetupErrorHandler() {
+	C.XSetupErrorHandler()
+}
+
 func EventLoop(display string) {
 	displayUnsafe := C.CString(display)
 	defer C.free(unsafe.Pointer(displayUnsafe))

@@ -17,6 +17,7 @@ extern void goXEventError(XErrorEvent *event, char *message);
 extern int goXEventActive();
 
 static int XEventError(Display *display, XErrorEvent *event);
+void XSetupErrorHandler();
 void XEventLoop(char *display);
 
 static void XWindowManagerStateEvent(Display *display, Window window, ulong action, ulong first, ulong second);

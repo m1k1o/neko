@@ -14,6 +14,10 @@ static int XEventError(Display *display, XErrorEvent *event) {
   return 1;
 }
 
+void XSetupErrorHandler() {
+  XSetErrorHandler(XEventError);
+}
+
 void XEventLoop(char *name) {
   Display *display = XOpenDisplay(name);
   Window root = DefaultRootWindow(display);
@@ -33,7 +37,6 @@ void XEventLoop(char *name) {
   XSelectInput(display, root, SubstructureNotifyMask);
 
   XSync(display, 0);
-  XSetErrorHandler(XEventError);
 
   while (goXEventActive()) {
     XEvent event;

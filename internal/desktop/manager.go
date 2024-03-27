@@ -50,6 +50,9 @@ func (manager *DesktopManagerCtx) Start() {
 		manager.logger.Panic().Str("display", manager.config.Display).Msg("unable to open display")
 	}
 
+	// X11 can throw errors below, and the default error handler exits
+	xevent.SetupErrorHandler()
+
 	xorg.GetScreenConfigurations()
 
 	screenSize, err := xorg.ChangeScreenSize(manager.config.ScreenSize)
