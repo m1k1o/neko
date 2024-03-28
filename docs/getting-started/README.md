@@ -176,7 +176,7 @@ NEKO_ICESERVERS: '[{"urls": ["turn:<MY-COTURN-SERVER>:443?transport=udp", "turn:
 
 ### Nvidia GPU acceleration
 
-You need to have [nvidia-docker](https://github.com/NVIDIA/nvidia-docker) installed, start the container with `--gpus all` flag and use images built for nvidia (see above).
+You need to have [NVIDIA Container Toolkit](https://github.com/NVIDIA/nvidia-container-toolkit) installed, start the container with `--gpus all` flag and use images built for nvidia (see above).
 
 ```bash
 docker run -d --gpus all \
