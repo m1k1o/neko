@@ -129,6 +129,7 @@ Example for pfsense with truecharts docker container:
 - Test externally to confirm it works.
 - Internally you have to access it using `<your-public-ip>:port`
 
+If your router does not support NAT Loopback (NAT Hairpinning), you can use turn servers to overcome this issue. See [more details here](https://neko.m1k1o.net/#/getting-started/?id=networking) on how to setup local coturn instance.
 
 ### Neko works locally, but not externally
 
