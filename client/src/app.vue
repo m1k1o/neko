@@ -119,7 +119,7 @@
     }
   }
 
-  @media only screen and (max-width: 600px) {
+  @media only screen and (max-width: 1024px) {
     html,
     body {
       overflow-y: auto !important;
