@@ -13,6 +13,7 @@
           class="overlay"
           tabindex="0"
           data-gramm="false"
+          :style="{ pointerEvents: hosting ? 'auto' : 'none' }"
           @click.stop.prevent
           @contextmenu.stop.prevent
           @wheel.stop.prevent="onWheel"
