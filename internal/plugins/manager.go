@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/demodesk/neko/internal/config"
+	"github.com/demodesk/neko/internal/plugins/filetransfer"
 	"github.com/demodesk/neko/pkg/types"
 )
 
@@ -41,6 +42,9 @@ func New(config *config.Plugins) *ManagerCtx {
 
 		manager.logger.Info().Msgf("loading finished, total %d plugins", manager.plugins.len())
 	}
+
+	// add built-in plugins
+	manager.plugins.addPlugin(filetransfer.NewPlugin())
 
 	return manager
 }
