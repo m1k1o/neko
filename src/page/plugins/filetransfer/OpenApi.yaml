@@ -1,0 +1,128 @@
+openapi: 3.0.0
+
+info:
+  title: n.eko REST API
+  description: Next Gen Renderer Browser.
+  license:
+    name: Apache 2.0
+    url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+  version: "1.0.0"
+
+servers:
+  - description: Local server
+    url: http://localhost:3000
+  # Added by API Auto Mocking Plugin
+  - description: SwaggerHub API Auto Mocking
+    url: https://virtserver.swaggerhub.com/m1k1o/n.eko/1.0.0
+
+tags:
+  - name: filetransfer
+    description: File Transfer API
+
+paths:
+
+  #
+  # filetransfer
+  #
+
+  /api/filetransfer:
+    get:
+      tags:
+        - filetransfer
+      parameters:
+        - name: filename
+          in: query
+          required: true
+          schema:
+            type: string
+          description: The file name
+      summary: download file
+      operationId: downloadFile
+      responses:
+        '200':
+          description: OK
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags:
+        - filetransfer
+      summary: upload file
+      operationId: uploadFile
+      responses:
+        '200':
+          description: OK
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/FileUpload'
+
+components:
+  securitySchemes:
+    CookieAuth:
+      type: apiKey
+      in: cookie
+      name: NEKO_SESSION
+    BearerAuth:
+      type: http
+      scheme: bearer
+    TokenAuth:
+      type: apiKey
+      in: query
+      name: token
+
+  responses:
+    NotFound:
+      description: The specified resource was not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorMessage'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorMessage'
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorMessage'
+
+  schemas:
+    ErrorMessage:
+      type: object
+      properties:
+        message:
+          type: string
+    
+    #
+    # filetransfer
+    #
+
+    FileUpload:
+      type: object
+      properties:
+        files:
+          type: array
+          items:
+            type: string
+            format: binary
+
+security:
+  - BearerAuth: []
+  - CookieAuth: []
+  - TokenAuth: []

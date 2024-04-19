@@ -1,0 +1,12 @@
+.gitignore
+.npmignore
+.openapi-generator-ignore
+api.ts
+api/filetransfer-api.ts
+base.ts
+common.ts
+configuration.ts
+git_push.sh
+index.ts
+models/error-message.ts
+models/index.ts

@@ -1,0 +1,18 @@
+#!/bin/bash
+VERSION="1.0.0"
+
+rm -rf "${PWD}/api"
+mkdir "${PWD}/api"
+
+docker run --rm \
+    --user "$(id -u):$(id -g)" \
+    -v "${PWD}/api:/local/out" \
+    -v "${PWD}/OpenApi.yaml:/local/in.yaml" \
+    openapitools/openapi-generator-cli generate \
+        -i /local/in.yaml \
+        -g typescript-axios \
+        -o /local/out \
+        --additional-properties=enumPropertyNaming=original,modelPropertyNaming=original,withSeparateModelsAndApi=true,modelPackage=models,apiPackage=api
+
+# Remove not needed git_push.sh
+rm -f "${PWD}/api/git_push.sh"
