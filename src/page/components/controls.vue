@@ -201,21 +201,21 @@ function toggleControl() {
 
 function toggleMedia() {
   if (playable.value && playing.value) {
-    props.neko.video.pause()
+    props.neko.pause()
   }
 
   if (playable.value && !playing.value) {
-    props.neko.video.play()
+    props.neko.play()
   }
 }
 
 function toggleMute() {
   if (playable.value && muted.value) {
-    props.neko.video.unmute()
+    props.neko.unmute()
   }
 
   if (playable.value && !muted.value) {
-    props.neko.video.mute()
+    props.neko.mute()
   }
 }
 

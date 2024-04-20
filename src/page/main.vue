@@ -255,6 +255,7 @@
       ul {
         display: inline-block;
         padding: 16px 0 0 0;
+        overflow-x: auto;
 
         li {
           background: $background-secondary;
