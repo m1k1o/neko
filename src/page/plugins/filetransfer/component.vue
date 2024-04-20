@@ -2,6 +2,10 @@
   <div style="width: 100%">
     <div class="files" v-if="tab === 'filetransfer'">
       <div class="files-cwd">
+        <p>Filetransfer is {{ isLocked ? 'locked' : 'unlocked' }} for users</p>
+        <i :class="['fas', isLocked ? 'fa-lock' : 'fa-unlock', 'refresh']" @click="setLock(!isLocked)" :title="isLocked ? 'Unlock' : 'Lock'" />
+      </div>
+      <div class="files-cwd">
         <p>{{ enabled ? cwd  : 'Filetransfer is disabled' }}</p>
         <i class="fas fa-rotate-right refresh" @click="refresh" />
       </div>
@@ -10,10 +14,10 @@
           <i :class="fileIcon(item)" />
           <p class="file-name" :title="item.name">{{ item.name }}</p>
           <p class="file-size">{{ fileSize(item.size) }}</p>
-          <i v-if="item.type !== 'dir'" class="fas fa-download download" @click="download(item)" />
+          <i v-if="item.type !== 'dir' && enabledForMe" class="fas fa-download download" @click="download(item)" />
         </div>
       </div>
-      <div class="transfer-area" v-if="enabled">
+      <div class="transfer-area" v-if="enabledForMe">
         <div class="transfers" v-if="transfers.length > 0">
           <p v-if="downloads.length > 0" class="transfers-list-header">
             <span> Downloads </span>
@@ -284,6 +288,7 @@ const props = defineProps<{
 const api = props.neko.withApi(FiletransferApi) as FiletransferApi
 
 const enabled = ref(false)
+const enabledForMe = computed(() => enabled && (props.neko.is_admin || (!props.neko.is_admin && !isLocked.value)))
 const cwd = ref('')
 const files = ref<Item[]>([])
 const transfers = reactive<FileTransfer[]>([])
@@ -518,5 +523,15 @@ function fileSize(size: number) {
     return Math.round(size / (1024 * 1024 * 1024)) + ' GB'
   }
   return Math.round(size / (1024 * 1024 * 1024 * 1024)) + ' TB'
+}
+
+const isLocked = computed(() => props.neko.state.settings?.plugins?.filetransfer === true)
+
+async function setLock(isLocked = true) {
+  try {
+    await props.neko.room.settingsSet({ plugins: { filetransfer: isLocked } })
+  } catch (e: any) {
+    alert(e.response ? e.response.data.message : e)
+  }
 }
 </script>
