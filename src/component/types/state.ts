@@ -156,6 +156,7 @@ export interface Session {
 
 export interface Settings {
   private_mode: boolean
+  locked_logins: boolean
   locked_controls: boolean
   implicit_hosting: boolean
   inactive_cursors: boolean

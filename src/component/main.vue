@@ -209,6 +209,7 @@ const state = reactive<NekoState>({
   sessions: {},
   settings: {
     private_mode: false,
+    locked_logins: false,
     locked_controls: false,
     implicit_hosting: false,
     inactive_cursors: false,
@@ -755,6 +756,7 @@ function clear() {
   state.sessions = {} // TODO: Vue.Set
   state.settings =  {
     private_mode: false,
+    locked_logins: false,
     locked_controls: false,
     implicit_hosting: false,
     inactive_cursors: false,

@@ -461,6 +461,17 @@
         </td>
       </tr>
       <tr>
+        <th class="middle">settings.locked_logins</th>
+        <td>
+          <div class="space-between">
+            <span>{{ neko.state.settings.locked_logins }}</span>
+            <button @click="updateSettings({ locked_logins: !neko.state.settings.locked_logins })">
+              <i class="fas fa-toggle-on"></i>
+            </button>
+          </div>
+        </td>
+      </tr>
+      <tr>
         <th class="middle">settings.locked_controls</th>
         <td>
           <div class="space-between">
