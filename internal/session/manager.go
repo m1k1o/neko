@@ -20,6 +20,7 @@ func New(config *config.Session) *SessionManagerCtx {
 		config: config,
 		settings: types.Settings{
 			PrivateMode:       config.PrivateMode,
+			LockedLogins:      config.LockedLogins,
 			LockedControls:    config.LockedControls,
 			ImplicitHosting:   config.ImplicitHosting,
 			InactiveCursors:   config.InactiveCursors,

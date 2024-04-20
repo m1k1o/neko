@@ -11,6 +11,7 @@ var (
 	ErrSessionAlreadyExists    = errors.New("session already exists")
 	ErrSessionAlreadyConnected = errors.New("session is already connected")
 	ErrSessionLoginDisabled    = errors.New("session login disabled")
+	ErrSessionLoginsLocked     = errors.New("session logins locked")
 )
 
 type Cursor struct {
@@ -40,6 +41,7 @@ type SessionState struct {
 
 type Settings struct {
 	PrivateMode       bool `json:"private_mode"`
+	LockedLogins      bool `json:"locked_logins"`
 	LockedControls    bool `json:"locked_controls"`
 	ImplicitHosting   bool `json:"implicit_hosting"`
 	InactiveCursors   bool `json:"inactive_cursors"`

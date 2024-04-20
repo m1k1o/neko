@@ -141,6 +141,10 @@ func (manager *MemberManagerCtx) Login(username string, password string) (types.
 		return nil, "", err
 	}
 
+	if !profile.IsAdmin && manager.sessions.Settings().LockedLogins {
+		return nil, "", types.ErrSessionLoginsLocked
+	}
+
 	session, ok := manager.sessions.Get(id)
 	if ok {
 		if session.State().IsConnected {

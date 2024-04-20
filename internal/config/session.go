@@ -11,6 +11,7 @@ type Session struct {
 	File string
 
 	PrivateMode       bool
+	LockedLogins      bool
 	LockedControls    bool
 	ImplicitHosting   bool
 	InactiveCursors   bool
@@ -31,6 +32,11 @@ func (Session) Init(cmd *cobra.Command) error {
 
 	cmd.PersistentFlags().Bool("session.private_mode", false, "whether private mode should be enabled initially")
 	if err := viper.BindPFlag("session.private_mode", cmd.PersistentFlags().Lookup("session.private_mode")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().Bool("session.locked_logins", false, "whether logins should be locked for users initially")
+	if err := viper.BindPFlag("session.locked_logins", cmd.PersistentFlags().Lookup("session.locked_logins")); err != nil {
 		return err
 	}
 
@@ -87,6 +93,7 @@ func (s *Session) Set() {
 	s.File = viper.GetString("session.file")
 
 	s.PrivateMode = viper.GetBool("session.private_mode")
+	s.LockedLogins = viper.GetBool("session.locked_logins")
 	s.LockedControls = viper.GetBool("session.locked_controls")
 	s.ImplicitHosting = viper.GetBool("session.implicit_hosting")
 	s.InactiveCursors = viper.GetBool("session.inactive_cursors")
