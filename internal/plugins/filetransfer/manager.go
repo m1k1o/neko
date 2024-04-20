@@ -56,9 +56,17 @@ func (m *Manager) isEnabledForSession(session types.Session) bool {
 		}
 	}
 
+	settings, ok := m.sessions.Settings().Plugins["filetransfer"]
+	// by default, allow file transfer if the plugin config is not present
+	if ok && canTransfer && session.Profile().IsAdmin {
+		canTransfer, ok = settings.(bool)
+		// if the plugin is present but not a boolean, allow file transfer
+		if !ok {
+			canTransfer = true
+		}
+	}
+
 	return m.config.Enabled && canTransfer
-	// TODO: when locking is implemented
-	// && (session.Profile().IsAdmin || !h.state.IsLocked("file_transfer"))
 }
 
 func (m *Manager) refresh() (error, bool) {
