@@ -21,7 +21,8 @@ func New(config *config.Session) *SessionManagerCtx {
 		settings: types.Settings{
 			PrivateMode:       config.PrivateMode,
 			LockedLogins:      config.LockedLogins,
-			LockedControls:    config.LockedControls,
+			LockedControls:    config.LockedControls || config.ControlProtection,
+			ControlProtection: config.ControlProtection,
 			ImplicitHosting:   config.ImplicitHosting,
 			InactiveCursors:   config.InactiveCursors,
 			MercifulReconnect: config.MercifulReconnect,
@@ -192,6 +193,17 @@ func (manager *SessionManagerCtx) List() []types.Session {
 	}
 
 	return sessions
+}
+
+func (manager *SessionManagerCtx) Range(f func(session types.Session) bool) {
+	manager.sessionsMu.Lock()
+	defer manager.sessionsMu.Unlock()
+
+	for _, session := range manager.sessions {
+		if !f(session) {
+			return
+		}
+	}
 }
 
 // ---
@@ -371,6 +383,23 @@ func (manager *SessionManagerCtx) UpdateSettings(new types.Settings) {
 	manager.settings = new
 	manager.settingsMu.Unlock()
 
+	manager.updateSettings(new, old)
+}
+
+func (manager *SessionManagerCtx) UpdateSettingsFunc(f func(settings *types.Settings) bool) {
+	manager.settingsMu.Lock()
+	new := manager.settings
+	if f(&new) {
+		old := manager.settings
+		manager.settings = new
+		manager.settingsMu.Unlock()
+		manager.updateSettings(new, old)
+		return
+	}
+	manager.settingsMu.Unlock()
+}
+
+func (manager *SessionManagerCtx) updateSettings(new, old types.Settings) {
 	// if private mode changed
 	if old.PrivateMode != new.PrivateMode {
 		// update webrtc paused state for all sessions
@@ -386,6 +415,26 @@ func (manager *SessionManagerCtx) UpdateSettings(new types.Settings) {
 			if webrtcPeer := session.GetWebRTCPeer(); webrtcPeer != nil {
 				webrtcPeer.SetPaused(enabled)
 			}
+		}
+	}
+
+	// if control protection changed and controls are not locked
+	if old.ControlProtection != new.ControlProtection && new.ControlProtection && !new.LockedControls {
+		// if there is no admin, lock controls
+		hasAdmin := false
+		manager.Range(func(session types.Session) bool {
+			if session.Profile().IsAdmin && session.State().IsConnected {
+				hasAdmin = true
+				return false
+			}
+			return true
+		})
+
+		if !hasAdmin {
+			manager.settingsMu.Lock()
+			manager.settings.LockedControls = true
+			new.LockedControls = true
+			manager.settingsMu.Unlock()
 		}
 	}
 

@@ -13,6 +13,7 @@ type Session struct {
 	PrivateMode       bool
 	LockedLogins      bool
 	LockedControls    bool
+	ControlProtection bool
 	ImplicitHosting   bool
 	InactiveCursors   bool
 	MercifulReconnect bool
@@ -42,6 +43,11 @@ func (Session) Init(cmd *cobra.Command) error {
 
 	cmd.PersistentFlags().Bool("session.locked_controls", false, "whether controls should be locked for users initially")
 	if err := viper.BindPFlag("session.locked_controls", cmd.PersistentFlags().Lookup("session.locked_controls")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().Bool("session.control_protection", false, "users can gain control only if at least one admin is in the room")
+	if err := viper.BindPFlag("session.control_protection", cmd.PersistentFlags().Lookup("session.control_protection")); err != nil {
 		return err
 	}
 
@@ -95,6 +101,7 @@ func (s *Session) Set() {
 	s.PrivateMode = viper.GetBool("session.private_mode")
 	s.LockedLogins = viper.GetBool("session.locked_logins")
 	s.LockedControls = viper.GetBool("session.locked_controls")
+	s.ControlProtection = viper.GetBool("session.control_protection")
 	s.ImplicitHosting = viper.GetBool("session.implicit_hosting")
 	s.InactiveCursors = viper.GetBool("session.inactive_cursors")
 	s.MercifulReconnect = viper.GetBool("session.merciful_reconnect")

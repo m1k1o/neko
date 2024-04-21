@@ -43,6 +43,7 @@ type Settings struct {
 	PrivateMode       bool `json:"private_mode"`
 	LockedLogins      bool `json:"locked_logins"`
 	LockedControls    bool `json:"locked_controls"`
+	ControlProtection bool `json:"control_protection"`
 	ImplicitHosting   bool `json:"implicit_hosting"`
 	InactiveCursors   bool `json:"inactive_cursors"`
 	MercifulReconnect bool `json:"merciful_reconnect"`
@@ -80,6 +81,7 @@ type SessionManager interface {
 	Get(id string) (Session, bool)
 	GetByToken(token string) (Session, bool)
 	List() []Session
+	Range(func(Session) bool)
 
 	SetHost(host Session)
 	GetHost() (Session, bool)
@@ -102,6 +104,7 @@ type SessionManager interface {
 	OnSettingsChanged(listener func(new Settings, old Settings))
 
 	UpdateSettings(Settings)
+	UpdateSettingsFunc(f func(settings *Settings) bool)
 	Settings() Settings
 	CookieEnabled() bool
 
