@@ -483,6 +483,17 @@
         </td>
       </tr>
       <tr>
+        <th class="middle">settings.control_protection</th>
+        <td>
+          <div class="space-between">
+            <span>{{ neko.state.settings.control_protection }}</span>
+            <button @click="updateSettings({ control_protection: !neko.state.settings.control_protection })">
+              <i class="fas fa-toggle-on"></i>
+            </button>
+          </div>
+        </td>
+      </tr>
+      <tr>
         <th class="middle">settings.implicit_hosting</th>
         <td>
           <div class="space-between">

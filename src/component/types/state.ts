@@ -158,6 +158,7 @@ export interface Settings {
   private_mode: boolean
   locked_logins: boolean
   locked_controls: boolean
+  control_protection: boolean
   implicit_hosting: boolean
   inactive_cursors: boolean
   merciful_reconnect: boolean
