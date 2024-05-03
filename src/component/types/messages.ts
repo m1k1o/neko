@@ -1,5 +1,5 @@
 import type { ICEServer } from '../internal/webrtc'
-import type { Settings } from './state'
+import type { Settings, ScreenSize } from './state'
 import type { PeerRequest, PeerVideo, PeerAudio } from './webrtc'
 
 /////////////////////////////
@@ -141,10 +141,8 @@ export interface ControlTouch extends Partial<ControlPos> {
 // Screen
 /////////////////////////////
 
-export interface ScreenSize {
-  width: number
-  height: number
-  rate: number
+export interface ScreenSizeUpdate extends ScreenSize {
+  id?: string
 }
 
 /////////////////////////////

@@ -496,8 +496,8 @@ onMounted(() => {
   neko.value!.events.on('room.control.host', (hasHost: boolean, hostID?: string) => {
     console.log('room.control.host', hasHost, hostID)
   })
-  neko.value!.events.on('room.screen.updated', (width: number, height: number, rate: number) => {
-    console.log('room.screen.updated', width, height, rate)
+  neko.value!.events.on('room.screen.updated', (width: number, height: number, rate: number, id: string) => {
+    console.log('room.screen.updated', width, height, rate, 'by', id)
   })
   neko.value!.events.on('room.clipboard.updated', (text: string) => {
     console.log('room.clipboard.updated', text)

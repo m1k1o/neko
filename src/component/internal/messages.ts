@@ -36,7 +36,7 @@ export interface NekoEvents {
 
   // room events
   ['room.control.host']: (hasHost: boolean, hostID?: string) => void
-  ['room.screen.updated']: (width: number, height: number, rate: number) => void
+  ['room.screen.updated']: (width: number, height: number, rate: number, id?: string) => void
   ['room.clipboard.updated']: (text: string) => void
   ['room.broadcast.status']: (isActive: boolean, url?: string) => void
 
@@ -278,10 +278,10 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
   // Screen Events
   /////////////////////////////
 
-  protected [EVENT.SCREEN_UPDATED]({ width, height, rate }: message.ScreenSize) {
+  protected [EVENT.SCREEN_UPDATED]({ width, height, rate, id }: message.ScreenSizeUpdate) {
     this._localLog.debug(`EVENT.SCREEN_UPDATED`)
     this._state.screen.size = { width, height, rate } // TODO: Vue.Set
-    this.emit('room.screen.updated', width, height, rate)
+    this.emit('room.screen.updated', width, height, rate, id)
   }
 
   /////////////////////////////
