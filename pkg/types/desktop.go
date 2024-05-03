@@ -15,9 +15,9 @@ type CursorImage struct {
 }
 
 type ScreenSize struct {
-	Width  int
-	Height int
-	Rate   int16
+	Width  int   `json:"width"`
+	Height int   `json:"height"`
+	Rate   int16 `json:"rate"`
 }
 
 func (s ScreenSize) String() string {

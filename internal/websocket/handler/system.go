@@ -22,13 +22,6 @@ func (h *MessageHandlerCtx) systemInit(session types.Session) error {
 		HostID:  hostID,
 	}
 
-	size := h.desktop.GetScreenSize()
-	screenSize := message.ScreenSize{
-		Width:  size.Width,
-		Height: size.Height,
-		Rate:   size.Rate,
-	}
-
 	sessions := map[string]message.SessionData{}
 	for _, session := range h.sessions.List() {
 		sessionId := session.ID()
@@ -44,7 +37,7 @@ func (h *MessageHandlerCtx) systemInit(session types.Session) error {
 		message.SystemInit{
 			SessionId:         session.ID(),
 			ControlHost:       controlHost,
-			ScreenSize:        screenSize,
+			ScreenSize:        h.desktop.GetScreenSize(),
 			Sessions:          sessions,
 			Settings:          h.sessions.Settings(),
 			TouchEvents:       h.desktop.HasTouchSupport(),
@@ -60,9 +53,9 @@ func (h *MessageHandlerCtx) systemInit(session types.Session) error {
 func (h *MessageHandlerCtx) systemAdmin(session types.Session) error {
 	configurations := h.desktop.ScreenConfigurations()
 
-	list := make([]message.ScreenSize, 0, len(configurations))
+	list := make([]types.ScreenSize, 0, len(configurations))
 	for _, conf := range configurations {
-		list = append(list, message.ScreenSize{
+		list = append(list, types.ScreenSize{
 			Width:  conf.Width,
 			Height: conf.Height,
 			Rate:   conf.Rate,

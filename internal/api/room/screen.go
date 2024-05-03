@@ -11,24 +11,16 @@ import (
 	"github.com/demodesk/neko/pkg/utils"
 )
 
-type ScreenConfigurationPayload struct {
-	Width  int   `json:"width"`
-	Height int   `json:"height"`
-	Rate   int16 `json:"rate"`
-}
-
 func (h *RoomHandler) screenConfiguration(w http.ResponseWriter, r *http.Request) error {
-	size := h.desktop.GetScreenSize()
+	screenSize := h.desktop.GetScreenSize()
 
-	return utils.HttpSuccess(w, ScreenConfigurationPayload{
-		Width:  size.Width,
-		Height: size.Height,
-		Rate:   size.Rate,
-	})
+	return utils.HttpSuccess(w, screenSize)
 }
 
 func (h *RoomHandler) screenConfigurationChange(w http.ResponseWriter, r *http.Request) error {
-	data := &ScreenConfigurationPayload{}
+	auth, _ := auth.GetSession(r)
+
+	data := &types.ScreenSize{}
 	if err := utils.HttpJsonRequest(w, r, data); err != nil {
 		return err
 	}
@@ -43,10 +35,9 @@ func (h *RoomHandler) screenConfigurationChange(w http.ResponseWriter, r *http.R
 		return utils.HttpUnprocessableEntity("cannot set screen size").WithInternalErr(err)
 	}
 
-	h.sessions.Broadcast(event.SCREEN_UPDATED, message.ScreenSize{
-		Width:  size.Width,
-		Height: size.Height,
-		Rate:   size.Rate,
+	h.sessions.Broadcast(event.SCREEN_UPDATED, message.ScreenSizeUpdate{
+		ID:         auth.ID(),
+		ScreenSize: size,
 	})
 
 	return utils.HttpSuccess(w, data)
@@ -56,16 +47,7 @@ func (h *RoomHandler) screenConfigurationChange(w http.ResponseWriter, r *http.R
 func (h *RoomHandler) screenConfigurationsList(w http.ResponseWriter, r *http.Request) error {
 	configurations := h.desktop.ScreenConfigurations()
 
-	list := make([]ScreenConfigurationPayload, 0, len(configurations))
-	for _, conf := range configurations {
-		list = append(list, ScreenConfigurationPayload{
-			Width:  conf.Width,
-			Height: conf.Height,
-			Rate:   conf.Rate,
-		})
-	}
-
-	return utils.HttpSuccess(w, list)
+	return utils.HttpSuccess(w, configurations)
 }
 
 func (h *RoomHandler) screenShotGet(w http.ResponseWriter, r *http.Request) error {

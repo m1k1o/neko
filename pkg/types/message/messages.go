@@ -17,7 +17,7 @@ type SystemWebRTC struct {
 type SystemInit struct {
 	SessionId         string                 `json:"session_id"`
 	ControlHost       ControlHost            `json:"control_host"`
-	ScreenSize        ScreenSize             `json:"screen_size"`
+	ScreenSize        types.ScreenSize       `json:"screen_size"`
 	Sessions          map[string]SessionData `json:"sessions"`
 	Settings          types.Settings         `json:"settings"`
 	TouchEvents       bool                   `json:"touch_events"`
@@ -26,8 +26,8 @@ type SystemInit struct {
 }
 
 type SystemAdmin struct {
-	ScreenSizesList []ScreenSize    `json:"screen_sizes_list"`
-	BroadcastStatus BroadcastStatus `json:"broadcast_status"`
+	ScreenSizesList []types.ScreenSize `json:"screen_sizes_list"`
+	BroadcastStatus BroadcastStatus    `json:"broadcast_status"`
 }
 
 type SystemLogs = []SystemLog
@@ -151,9 +151,12 @@ type ControlTouch struct {
 /////////////////////////////
 
 type ScreenSize struct {
-	Width  int   `json:"width"`
-	Height int   `json:"height"`
-	Rate   int16 `json:"rate"`
+	types.ScreenSize
+}
+
+type ScreenSizeUpdate struct {
+	ID string `json:"id"`
+	types.ScreenSize
 }
 
 /////////////////////////////
