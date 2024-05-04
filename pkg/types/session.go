@@ -101,10 +101,9 @@ type SessionManager interface {
 	OnProfileChanged(listener func(session Session))
 	OnStateChanged(listener func(session Session))
 	OnHostChanged(listener func(session Session))
-	OnSettingsChanged(listener func(new Settings, old Settings))
+	OnSettingsChanged(listener func(session Session, new Settings, old Settings))
 
-	UpdateSettings(Settings)
-	UpdateSettingsFunc(f func(settings *Settings) bool)
+	UpdateSettingsFunc(session Session, f func(settings *Settings) bool)
 	Settings() Settings
 	CookieEnabled() bool
 

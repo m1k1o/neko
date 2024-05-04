@@ -224,9 +224,11 @@ func TestCanHostOnly(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			settings := sessionManager.Settings()
-			settings.PrivateMode = tt.privateMode
-			sessionManager.UpdateSettings(settings)
+			session, _ := GetSession(tt.r)
+			sessionManager.UpdateSettingsFunc(session, func(s *types.Settings) bool {
+				s.PrivateMode = tt.privateMode
+				return true
+			})
 
 			_, err := CanHostOnly(nil, tt.r)
 			if (err != nil) != tt.wantErr {

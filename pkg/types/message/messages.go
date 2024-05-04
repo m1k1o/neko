@@ -42,6 +42,11 @@ type SystemDisconnect struct {
 	Message string `json:"message"`
 }
 
+type SystemSettingsUpdate struct {
+	ID string `json:"id"`
+	types.Settings
+}
+
 /////////////////////////////
 // Signal
 /////////////////////////////

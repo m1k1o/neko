@@ -39,7 +39,7 @@ func (h *MessageHandlerCtx) SessionConnected(session types.Session) error {
 		}
 
 		// update settings in atomic way
-		h.sessions.UpdateSettingsFunc(func(settings *types.Settings) bool {
+		h.sessions.UpdateSettingsFunc(session, func(settings *types.Settings) bool {
 			// if control protection & locked controls: unlock controls
 			if settings.LockedControls && settings.ControlProtection {
 				settings.LockedControls = false
@@ -70,7 +70,7 @@ func (h *MessageHandlerCtx) SessionDisconnected(session types.Session) error {
 		})
 
 		// update settings in atomic way
-		h.sessions.UpdateSettingsFunc(func(settings *types.Settings) bool {
+		h.sessions.UpdateSettingsFunc(session, func(settings *types.Settings) bool {
 			// if control protection & not locked controls & no admin: lock controls
 			if !settings.LockedControls && settings.ControlProtection && !hasAdmin {
 				settings.LockedControls = true

@@ -31,7 +31,7 @@ func New(
 	}
 
 	// generate fallback image for private mode when needed
-	sessions.OnSettingsChanged(func(new types.Settings, old types.Settings) {
+	sessions.OnSettingsChanged(func(session types.Session, new types.Settings, old types.Settings) {
 		if old.PrivateMode && !new.PrivateMode {
 			log.Debug().Msg("clearing private mode fallback image")
 			h.privateModeImage = nil

@@ -367,9 +367,9 @@ func (manager *SessionManagerCtx) OnHostChanged(listener func(session types.Sess
 	})
 }
 
-func (manager *SessionManagerCtx) OnSettingsChanged(listener func(new types.Settings, old types.Settings)) {
+func (manager *SessionManagerCtx) OnSettingsChanged(listener func(session types.Session, new types.Settings, old types.Settings)) {
 	manager.emmiter.On("settings_changed", func(payload ...any) {
-		listener(payload[0].(types.Settings), payload[1].(types.Settings))
+		listener(payload[0].(types.Session), payload[1].(types.Settings), payload[2].(types.Settings))
 	})
 }
 
@@ -377,29 +377,20 @@ func (manager *SessionManagerCtx) OnSettingsChanged(listener func(new types.Sett
 // settings
 // ---
 
-func (manager *SessionManagerCtx) UpdateSettings(new types.Settings) {
-	manager.settingsMu.Lock()
-	old := manager.settings
-	manager.settings = new
-	manager.settingsMu.Unlock()
-
-	manager.updateSettings(new, old)
-}
-
-func (manager *SessionManagerCtx) UpdateSettingsFunc(f func(settings *types.Settings) bool) {
+func (manager *SessionManagerCtx) UpdateSettingsFunc(session types.Session, f func(settings *types.Settings) bool) {
 	manager.settingsMu.Lock()
 	new := manager.settings
 	if f(&new) {
 		old := manager.settings
 		manager.settings = new
 		manager.settingsMu.Unlock()
-		manager.updateSettings(new, old)
+		manager.updateSettings(session, new, old)
 		return
 	}
 	manager.settingsMu.Unlock()
 }
 
-func (manager *SessionManagerCtx) updateSettings(new, old types.Settings) {
+func (manager *SessionManagerCtx) updateSettings(session types.Session, new, old types.Settings) {
 	// if private mode changed
 	if old.PrivateMode != new.PrivateMode {
 		// update webrtc paused state for all sessions
@@ -447,7 +438,7 @@ func (manager *SessionManagerCtx) updateSettings(new, old types.Settings) {
 		}
 	}
 
-	manager.emmiter.Emit("settings_changed", new, old)
+	manager.emmiter.Emit("settings_changed", session, new, old)
 }
 
 func (manager *SessionManagerCtx) Settings() types.Settings {

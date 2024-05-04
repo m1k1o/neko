@@ -127,7 +127,7 @@ func (manager *WebSocketManagerCtx) Start() {
 			Msg("session host changed")
 	})
 
-	manager.sessions.OnSettingsChanged(func(new types.Settings, old types.Settings) {
+	manager.sessions.OnSettingsChanged(func(session types.Session, new types.Settings, old types.Settings) {
 		// start inactive cursors
 		if new.InactiveCursors && !old.InactiveCursors {
 			manager.startInactiveCursors()
@@ -138,8 +138,13 @@ func (manager *WebSocketManagerCtx) Start() {
 			manager.stopInactiveCursors()
 		}
 
-		manager.sessions.Broadcast(event.SYSTEM_SETTINGS, new)
+		manager.sessions.Broadcast(event.SYSTEM_SETTINGS, message.SystemSettingsUpdate{
+			ID:       session.ID(),
+			Settings: new,
+		})
+
 		manager.logger.Info().
+			Str("session_id", session.ID()).
 			Interface("new", new).
 			Interface("old", old).
 			Msg("settings changed")
