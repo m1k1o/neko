@@ -1,5 +1,4 @@
 {
-  "go.formatTool": "goformat",
   "go.inferGopath": false,
   "go.autocompleteUnimportedPackages": true,
   "go.delveConfig": {
