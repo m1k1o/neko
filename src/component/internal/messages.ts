@@ -6,6 +6,7 @@ import type { AxiosProgressEvent } from 'axios'
 import { Logger } from '../utils/logger'
 import { NekoConnection } from './connection'
 import type NekoState from '../types/state'
+import type { Settings } from '../types/state'
 
 export interface NekoEvents {
   // connection events
@@ -36,7 +37,8 @@ export interface NekoEvents {
 
   // room events
   ['room.control.host']: (hasHost: boolean, hostID?: string) => void
-  ['room.screen.updated']: (width: number, height: number, rate: number, id?: string) => void
+  ['room.screen.updated']: (width: number, height: number, rate: number, id: string) => void
+  ['room.settings.updated']: (settings: Settings, id: string) => void
   ['room.clipboard.updated']: (text: string) => void
   ['room.broadcast.status']: (isActive: boolean, url?: string) => void
 
@@ -113,9 +115,10 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
       this[EVENT.SESSION_CREATED](conf.sessions[id])
     }
 
-    this[EVENT.SCREEN_UPDATED](conf.screen_size)
+    const { width, height, rate } = conf.screen_size
+    this._state.screen.size = { width, height, rate } // TODO: Vue.Set
     this[EVENT.CONTROL_HOST](conf.control_host)
-    this[EVENT.SYSTEM_SETTINGS](conf.settings)
+    this._state.settings = conf.settings // TODO: Vue.Set
   }
 
   protected [EVENT.SYSTEM_ADMIN]({ screen_sizes_list, broadcast_status }: message.SystemAdmin) {
@@ -135,9 +138,10 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
     this[EVENT.BORADCAST_STATUS](broadcast_status)
   }
 
-  protected [EVENT.SYSTEM_SETTINGS](settings: message.SystemSettings) {
+  protected [EVENT.SYSTEM_SETTINGS]({ id, ...settings }: message.SystemSettingsUpdate) {
     this._localLog.debug(`EVENT.SYSTEM_SETTINGS`)
     this._state.settings = settings // TODO: Vue.Set
+    this.emit('room.settings.updated', settings, id)
   }
 
   protected [EVENT.SYSTEM_DISCONNECT]({ message }: message.SystemDisconnect) {

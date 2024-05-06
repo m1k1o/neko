@@ -347,6 +347,7 @@ import { ref, shallowRef, computed, onMounted } from 'vue'
 
 import type { AxiosProgressEvent } from 'axios'
 import NekoCanvas from '@/component/main.vue'
+import type { Settings } from '@/component/types/state'
 import NekoHeader from './components/header.vue'
 import NekoConnect from './components/connect.vue'
 import NekoControls from './components/controls.vue'
@@ -501,6 +502,9 @@ onMounted(() => {
   })
   neko.value!.events.on('room.clipboard.updated', (text: string) => {
     console.log('room.clipboard.updated', text)
+  })
+  neko.value!.events.on('room.settings.updated', (settings: Settings, id: string) => {
+    console.log('room.settings.updated', settings, 'by', id)
   })
   neko.value!.events.on('room.broadcast.status', (isActive: boolean, url?: string) => {
     console.log('room.broadcast.status', isActive, url)

@@ -6,7 +6,9 @@ import type { PeerRequest, PeerVideo, PeerAudio } from './webrtc'
 // System
 /////////////////////////////
 
-export interface SystemSettings extends Settings {}
+export interface SystemSettingsUpdate extends Settings {
+  id: string
+}
 
 export interface SystemWebRTC {
   videos: string[]
@@ -142,7 +144,7 @@ export interface ControlTouch extends Partial<ControlPos> {
 /////////////////////////////
 
 export interface ScreenSizeUpdate extends ScreenSize {
-  id?: string
+  id: string
 }
 
 /////////////////////////////
