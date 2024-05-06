@@ -110,18 +110,20 @@ func (manager *WebSocketManagerCtx) Start() {
 			Msg("session state changed")
 	})
 
-	manager.sessions.OnHostChanged(func(session types.Session) {
+	manager.sessions.OnHostChanged(func(session, host types.Session) {
 		payload := message.ControlHost{
-			HasHost: session != nil,
+			ID:      session.ID(),
+			HasHost: host != nil,
 		}
 
 		if payload.HasHost {
-			payload.HostID = session.ID()
+			payload.HostID = host.ID()
 		}
 
 		manager.sessions.Broadcast(event.CONTROL_HOST, payload)
 
 		manager.logger.Info().
+			Str("session_id", session.ID()).
 			Bool("has_host", payload.HasHost).
 			Str("host_id", payload.HostID).
 			Msg("session host changed")

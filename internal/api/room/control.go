@@ -43,7 +43,7 @@ func (h *RoomHandler) controlRequest(w http.ResponseWriter, r *http.Request) err
 		return utils.HttpForbidden("controls are locked")
 	}
 
-	h.sessions.SetHost(session)
+	session.SetAsHost()
 
 	return utils.HttpSuccess(w)
 }
@@ -55,19 +55,20 @@ func (h *RoomHandler) controlRelease(w http.ResponseWriter, r *http.Request) err
 	}
 
 	h.desktop.ResetKeys()
-	h.sessions.ClearHost()
+	session.ClearHost()
 
 	return utils.HttpSuccess(w)
 }
 
 func (h *RoomHandler) controlTake(w http.ResponseWriter, r *http.Request) error {
 	session, _ := auth.GetSession(r)
-	h.sessions.SetHost(session)
+	session.SetAsHost()
 
 	return utils.HttpSuccess(w)
 }
 
 func (h *RoomHandler) controlGive(w http.ResponseWriter, r *http.Request) error {
+	session, _ := auth.GetSession(r)
 	sessionId := chi.URLParam(r, "sessionId")
 
 	target, ok := h.sessions.Get(sessionId)
@@ -79,17 +80,18 @@ func (h *RoomHandler) controlGive(w http.ResponseWriter, r *http.Request) error 
 		return utils.HttpBadRequest("target session is not allowed to host")
 	}
 
-	h.sessions.SetHost(target)
+	target.SetAsHostBy(session)
 
 	return utils.HttpSuccess(w)
 }
 
 func (h *RoomHandler) controlReset(w http.ResponseWriter, r *http.Request) error {
+	session, _ := auth.GetSession(r)
 	_, hasHost := h.sessions.GetHost()
 
 	if hasHost {
 		h.desktop.ResetKeys()
-		h.sessions.ClearHost()
+		session.ClearHost()
 	}
 
 	return utils.HttpSuccess(w)

@@ -210,14 +210,14 @@ func (manager *SessionManagerCtx) Range(f func(session types.Session) bool) {
 // host
 // ---
 
-func (manager *SessionManagerCtx) SetHost(host types.Session) {
+func (manager *SessionManagerCtx) setHost(session, host types.Session) {
 	var hostId string
 	if host != nil {
 		hostId = host.ID()
 	}
 
 	manager.hostId.Store(hostId)
-	manager.emmiter.Emit("host_changed", host)
+	manager.emmiter.Emit("host_changed", session, host)
 }
 
 func (manager *SessionManagerCtx) GetHost() (types.Session, bool) {
@@ -227,10 +227,6 @@ func (manager *SessionManagerCtx) GetHost() (types.Session, bool) {
 	}
 
 	return manager.Get(hostId)
-}
-
-func (manager *SessionManagerCtx) ClearHost() {
-	manager.SetHost(nil)
 }
 
 func (manager *SessionManagerCtx) isHost(host types.Session) bool {
@@ -357,12 +353,12 @@ func (manager *SessionManagerCtx) OnStateChanged(listener func(session types.Ses
 	})
 }
 
-func (manager *SessionManagerCtx) OnHostChanged(listener func(session types.Session)) {
+func (manager *SessionManagerCtx) OnHostChanged(listener func(session, host types.Session)) {
 	manager.emmiter.On("host_changed", func(payload ...any) {
-		if payload[0] == nil {
-			listener(nil)
+		if payload[1] == nil {
+			listener(payload[0].(*SessionCtx), nil)
 		} else {
-			listener(payload[0].(*SessionCtx))
+			listener(payload[0].(*SessionCtx), payload[1].(*SessionCtx))
 		}
 	})
 }
@@ -394,16 +390,16 @@ func (manager *SessionManagerCtx) updateSettings(session types.Session, new, old
 	// if private mode changed
 	if old.PrivateMode != new.PrivateMode {
 		// update webrtc paused state for all sessions
-		for _, session := range manager.List() {
-			enabled := session.PrivateModeEnabled()
+		for _, s := range manager.List() {
+			enabled := s.PrivateModeEnabled()
 
 			// if session had control, it must release it
-			if enabled && session.IsHost() {
-				manager.ClearHost()
+			if enabled && s.IsHost() {
+				session.ClearHost()
 			}
 
 			// its webrtc connection will be paused or unpaused
-			if webrtcPeer := session.GetWebRTCPeer(); webrtcPeer != nil {
+			if webrtcPeer := s.GetWebRTCPeer(); webrtcPeer != nil {
 				webrtcPeer.SetPaused(enabled)
 			}
 		}
@@ -434,7 +430,7 @@ func (manager *SessionManagerCtx) updateSettings(session types.Session, new, old
 		// if the host is not admin, it must release controls
 		host, hasHost := manager.GetHost()
 		if hasHost && !host.Profile().IsAdmin {
-			manager.ClearHost()
+			session.ClearHost()
 		}
 	}
 

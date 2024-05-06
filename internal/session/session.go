@@ -43,7 +43,7 @@ func (session *SessionCtx) Profile() types.MemberProfile {
 
 func (session *SessionCtx) profileChanged() {
 	if !session.profile.CanHost && session.IsHost() {
-		session.manager.ClearHost()
+		session.ClearHost()
 	}
 
 	if (!session.profile.CanConnect || !session.profile.CanLogin || !session.profile.CanWatch) && session.state.IsWatching {
@@ -68,6 +68,18 @@ func (session *SessionCtx) IsHost() bool {
 	return session.manager.isHost(session)
 }
 
+func (session *SessionCtx) SetAsHost() {
+	session.manager.setHost(session, session)
+}
+
+func (session *SessionCtx) SetAsHostBy(host types.Session) {
+	session.manager.setHost(session, host)
+}
+
+func (session *SessionCtx) ClearHost() {
+	session.manager.setHost(session, nil)
+}
+
 func (session *SessionCtx) PrivateModeEnabled() bool {
 	return session.manager.Settings().PrivateMode && !session.profile.IsAdmin
 }
@@ -82,10 +94,8 @@ func (session *SessionCtx) SetCursor(cursor types.Cursor) {
 // websocket
 // ---
 
-//
 // Connect WebSocket peer sets current peer and emits connected event. It also destroys the
 // previous peer, if there was one. If the peer is already set, it will be ignored.
-//
 func (session *SessionCtx) ConnectWebSocketPeer(websocketPeer types.WebSocketPeer) {
 	session.websocketMu.Lock()
 	isCurrentPeer := websocketPeer == session.websocketPeer
@@ -113,14 +123,12 @@ func (session *SessionCtx) ConnectWebSocketPeer(websocketPeer types.WebSocketPee
 	}
 }
 
-//
 // Disconnect WebSocket peer sets current peer to nil and emits disconnected event. It also
 // allows for a delayed disconnect. That means, the peer will not be disconnected immediately,
 // but after a delay. If the peer is connected again before the delay, the disconnect will be
 // cancelled.
 //
 // If the peer is not the current peer or the peer is nil, it will be ignored.
-//
 func (session *SessionCtx) DisconnectWebSocketPeer(websocketPeer types.WebSocketPeer, delayed bool) {
 	session.websocketMu.Lock()
 	isCurrentPeer := websocketPeer == session.websocketPeer && websocketPeer != nil
@@ -175,10 +183,8 @@ func (session *SessionCtx) DisconnectWebSocketPeer(websocketPeer types.WebSocket
 	session.websocketMu.Unlock()
 }
 
-//
 // Destroy WebSocket peer disconnects the peer and destroys it. It ensures that the peer is
 // disconnected immediately even though normal flow would be to disconnect it delayed.
-//
 func (session *SessionCtx) DestroyWebSocketPeer(reason string) {
 	session.websocketMu.Lock()
 	peer := session.websocketPeer
@@ -195,9 +201,7 @@ func (session *SessionCtx) DestroyWebSocketPeer(reason string) {
 	peer.Destroy(reason)
 }
 
-//
 // Send event to websocket peer.
-//
 func (session *SessionCtx) Send(event string, payload any) {
 	session.websocketMu.Lock()
 	peer := session.websocketPeer
@@ -212,9 +216,7 @@ func (session *SessionCtx) Send(event string, payload any) {
 // webrtc
 // ---
 
-//
 // Set webrtc peer and destroy the old one, if there is old one.
-//
 func (session *SessionCtx) SetWebRTCPeer(webrtcPeer types.WebRTCPeer) {
 	session.webrtcMu.Lock()
 	session.webrtcPeer, webrtcPeer = webrtcPeer, session.webrtcPeer
@@ -225,14 +227,12 @@ func (session *SessionCtx) SetWebRTCPeer(webrtcPeer types.WebRTCPeer) {
 	}
 }
 
-//
 // Set if current webrtc peer is connected or not. Since there might be lefover calls from
 // webrtc peer, that are not used anymore, we need to check if the webrtc peer is still the
 // same as the one we are setting the connected state for.
 //
 // If webrtc peer is disconnected, we don't expect it to be reconnected, so we set it to nil
 // and send a signal close to the client. New connection is expected to use a new webrtc peer.
-//
 func (session *SessionCtx) SetWebRTCConnected(webrtcPeer types.WebRTCPeer, connected bool) {
 	session.webrtcMu.Lock()
 	isCurrentPeer := webrtcPeer == session.webrtcPeer
@@ -274,9 +274,7 @@ func (session *SessionCtx) SetWebRTCConnected(webrtcPeer types.WebRTCPeer, conne
 	}
 }
 
-//
 // Get current WebRTC peer. Nil if not connected.
-//
 func (session *SessionCtx) GetWebRTCPeer() types.WebRTCPeer {
 	session.webrtcMu.Lock()
 	defer session.webrtcMu.Unlock()

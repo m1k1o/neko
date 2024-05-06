@@ -57,6 +57,9 @@ type Session interface {
 	Profile() MemberProfile
 	State() SessionState
 	IsHost() bool
+	SetAsHost()
+	SetAsHostBy(session Session)
+	ClearHost()
 	PrivateModeEnabled() bool
 
 	// cursor
@@ -83,9 +86,7 @@ type SessionManager interface {
 	List() []Session
 	Range(func(Session) bool)
 
-	SetHost(host Session)
 	GetHost() (Session, bool)
-	ClearHost()
 
 	SetCursor(cursor Cursor, session Session)
 	PopCursors() map[Session][]Cursor
@@ -100,7 +101,7 @@ type SessionManager interface {
 	OnDisconnected(listener func(session Session))
 	OnProfileChanged(listener func(session Session))
 	OnStateChanged(listener func(session Session))
-	OnHostChanged(listener func(session Session))
+	OnHostChanged(listener func(session, host Session))
 	OnSettingsChanged(listener func(session Session, new Settings, old Settings))
 
 	UpdateSettingsFunc(session Session, f func(settings *Settings) bool)

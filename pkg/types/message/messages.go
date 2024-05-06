@@ -116,6 +116,7 @@ type SessionCursors struct {
 /////////////////////////////
 
 type ControlHost struct {
+	ID      string `json:"id"`
 	HasHost bool   `json:"has_host"`
 	HostID  string `json:"host_id,omitempty"`
 }

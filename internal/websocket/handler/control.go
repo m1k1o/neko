@@ -26,7 +26,7 @@ func (h *MessageHandlerCtx) controlRelease(session types.Session) error {
 	}
 
 	h.desktop.ResetKeys()
-	h.sessions.ClearHost()
+	session.ClearHost()
 
 	return nil
 }
@@ -58,7 +58,7 @@ func (h *MessageHandlerCtx) controlRequest(session types.Session) error {
 		}
 	}
 
-	h.sessions.SetHost(session)
+	session.SetAsHost()
 
 	return nil
 }

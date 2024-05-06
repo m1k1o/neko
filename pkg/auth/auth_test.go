@@ -97,7 +97,7 @@ func TestHostsOnly(t *testing.T) {
 	}
 
 	// r2 is host
-	sessionManager.SetHost(session)
+	session.SetAsHost()
 
 	r3, _, err := rWithSession(types.MemberProfile{CanHost: false})
 	if err != nil {
