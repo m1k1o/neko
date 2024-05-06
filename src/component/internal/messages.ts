@@ -36,7 +36,7 @@ export interface NekoEvents {
   ['session.updated']: (id: string) => void
 
   // room events
-  ['room.control.host']: (hasHost: boolean, hostID?: string) => void
+  ['room.control.host']: (hasHost: boolean, hostID: string | undefined, id: string) => void
   ['room.screen.updated']: (width: number, height: number, rate: number, id: string) => void
   ['room.settings.updated']: (settings: Settings, id: string) => void
   ['room.clipboard.updated']: (text: string) => void
@@ -263,7 +263,7 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
   // Control Events
   /////////////////////////////
 
-  protected [EVENT.CONTROL_HOST]({ has_host, host_id }: message.ControlHost) {
+  protected [EVENT.CONTROL_HOST]({ has_host, host_id, id }: message.ControlHost) {
     this._localLog.debug(`EVENT.CONTROL_HOST`)
 
     if (has_host && host_id) {
@@ -275,7 +275,7 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
     // save if user is host
     this._state.control.is_host = has_host && this._state.control.host_id === this._state.session_id // TODO: Vue.Set
 
-    this.emit('room.control.host', has_host, host_id)
+    this.emit('room.control.host', has_host, host_id, id)
   }
 
   /////////////////////////////

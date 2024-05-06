@@ -111,6 +111,7 @@ export interface SessionCursor {
 /////////////////////////////
 
 export interface ControlHost {
+  id: string
   has_host: boolean
   host_id: string | undefined
 }
