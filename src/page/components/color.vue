@@ -168,26 +168,16 @@ function clearPoint() {
 }
 
 function clickPicker(e: any) {
-  // get mouse position
-  const x = e.pageX
-  const y = e.pageY
-
   // get picker position
   const p = getCoords(picker.value!)
 
-  // calculate new x,y position
-  let newX = x - p.left
-  let newY = y - p.top
+  // get mouse position
+  let pageX = e.pageX
+  let pageY = e.pageY
 
-  // make it relative to video size
-  newX = Math.round((newX / video.value!.offsetWidth) * video.value!.videoWidth)
-  newY = Math.round((newY / video.value!.offsetHeight) * video.value!.videoHeight)
-
-  console.log(newX, newY)
-
-  // set new x,y position
-  x.value = newX
-  y.value = newY
+  // make it relative to video size and save it
+  x.value = Math.round(((pageX - p.left) / video.value!.offsetWidth) * video.value!.videoWidth)
+  y.value = Math.round(((pageY - p.top) / video.value!.offsetHeight) * video.value!.videoHeight)
 
   // remove picker element
   picker.value!.remove()
@@ -197,8 +187,8 @@ function clickPicker(e: any) {
     bullet.value.remove()
   }
   const b = document.createElement('div')
-  b.style.left = x + 'px'
-  b.style.top = y + 'px'
+  b.style.left = pageX + 'px'
+  b.style.top = pageY + 'px'
   // width and height of bullet
   b.style.width = '10px'
   b.style.height = '10px'
