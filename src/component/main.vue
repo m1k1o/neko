@@ -84,7 +84,7 @@ import type { AxiosInstance, AxiosProgressEvent } from 'axios'
 import ResizeObserver from 'resize-observer-polyfill'
 
 import { NekoApi } from './internal/api'
-import type { MembersApi, RoomApi } from './internal/api'
+import type { SessionsApi, MembersApi, RoomApi } from './internal/api'
 import { NekoConnection } from './internal/connection'
 import { NekoMessages } from './internal/messages'
 import { NekoControl } from './internal/control'
@@ -321,7 +321,7 @@ async function authenticate(token?: string) {
     state.connection.token = token // TODO: Vue.Set
   }
 
-  await api.session.whoami()
+  await api.default.whoami()
   state.authenticated = true // TODO: Vue.Set
 
   if (token && props.autologin) {
@@ -334,7 +334,7 @@ async function login(username: string, password: string) {
     throw new Error('client already authenticated')
   }
 
-  const res = await api.session.login({ username, password })
+  const res = await api.default.login({ username, password })
   if (res.data.token) {
     api.setToken(res.data.token)
     state.connection.token = res.data.token // TODO: Vue.Set
@@ -357,7 +357,7 @@ async function logout() {
   } catch {}
 
   try {
-    await api.session.logout()
+    await api.default.logout()
   } finally {
     api.setToken('')
     delete state.connection.token // TODO: Vue.Delete
@@ -537,6 +537,7 @@ function withApi<T>(c: new (configuration?: Configuration, basePath?: string, ax
 
 const control = new NekoControl(connection, state.control)
 
+const sessions = computed<SessionsApi>(() => api.sessions)
 const room = computed<RoomApi>(() => api.room)
 const members = computed<MembersApi>(() => api.members)
 
@@ -824,6 +825,7 @@ defineExpose({
   // public methods
   control,
   // public api
+  sessions,
   room,
   members,
 })

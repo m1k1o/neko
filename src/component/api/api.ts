@@ -17,5 +17,5 @@
 export * from './api/default-api';
 export * from './api/members-api';
 export * from './api/room-api';
-export * from './api/session-api';
+export * from './api/sessions-api';
 

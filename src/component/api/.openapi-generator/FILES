@@ -5,7 +5,7 @@ api.ts
 api/default-api.ts
 api/members-api.ts
 api/room-api.ts
-api/session-api.ts
+api/sessions-api.ts
 base.ts
 common.ts
 configuration.ts

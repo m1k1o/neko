@@ -17,16 +17,25 @@ import type { Configuration } from '../configuration';
 import type { AxiosPromise, AxiosInstance, RawAxiosRequestConfig } from 'axios';
 import globalAxios from 'axios';
 // Some imports not used depending on template conditions
+// @ts-ignore
 import { DUMMY_BASE_URL, assertParamExists, setApiKeyToObject, setBasicAuthToObject, setBearerAuthToObject, setOAuthToObject, setSearchParams, serializeDataIfNeeded, toPathString, createRequestFunction } from '../common';
-import { BASE_PATH, COLLECTION_FORMATS, BaseAPI, RequiredError, operationServerMap } from '../base';
-import type { RequestArgs } from '../base';
+// @ts-ignore
+import { BASE_PATH, COLLECTION_FORMATS, type RequestArgs, BaseAPI, RequiredError, operationServerMap } from '../base';
+// @ts-ignore
 import type { BroadcastStatus } from '../models';
+// @ts-ignore
 import type { ClipboardText } from '../models';
+// @ts-ignore
 import type { ControlStatus } from '../models';
+// @ts-ignore
 import type { ErrorMessage } from '../models';
+// @ts-ignore
 import type { KeyboardMap } from '../models';
+// @ts-ignore
 import type { KeyboardModifiers } from '../models';
+// @ts-ignore
 import type { ScreenConfiguration } from '../models';
+// @ts-ignore
 import type { Settings } from '../models';
 /**
  * RoomApi - axios parameter creator
@@ -1003,7 +1012,7 @@ export const RoomApiAxiosParamCreator = function (configuration?: Configuration)
 
             if (files) {
                 files.forEach((element) => {
-                    localVarFormParams.append('files', element as any);
+                  localVarFormParams.append('files', element as any);
                 })
             }
 
@@ -1102,7 +1111,7 @@ export const RoomApiAxiosParamCreator = function (configuration?: Configuration)
             }
                 if (files) {
                 files.forEach((element) => {
-                    localVarFormParams.append('files', element as any);
+                  localVarFormParams.append('files', element as any);
                 })
             }
 

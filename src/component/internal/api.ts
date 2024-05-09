@@ -18,8 +18,12 @@ export class NekoApi {
     return this.config.basePath || location.href.replace(/\/+$/, '')
   }
 
-  get session(): SessionApi {
-    return new Api.SessionApi(this.config)
+  get default(): DefaultApi {
+    return new Api.DefaultApi(this.config)
+  }
+
+  get sessions(): SessionsApi {
+    return new Api.SessionsApi(this.config)
   }
 
   get room(): RoomApi {
@@ -31,6 +35,7 @@ export class NekoApi {
   }
 }
 
-export type SessionApi = Api.SessionApi
+export type DefaultApi = Api.DefaultApi
+export type SessionsApi = Api.SessionsApi
 export type RoomApi = Api.RoomApi
 export type MembersApi = Api.MembersApi

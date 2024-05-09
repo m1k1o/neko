@@ -17,15 +17,23 @@ import type { Configuration } from '../configuration';
 import type { AxiosPromise, AxiosInstance, RawAxiosRequestConfig } from 'axios';
 import globalAxios from 'axios';
 // Some imports not used depending on template conditions
+// @ts-ignore
 import { DUMMY_BASE_URL, assertParamExists, setApiKeyToObject, setBasicAuthToObject, setBearerAuthToObject, setOAuthToObject, setSearchParams, serializeDataIfNeeded, toPathString, createRequestFunction } from '../common';
-import { BASE_PATH, COLLECTION_FORMATS, BaseAPI, RequiredError, operationServerMap } from '../base';
-import type { RequestArgs } from '../base';
+// @ts-ignore
+import { BASE_PATH, COLLECTION_FORMATS, type RequestArgs, BaseAPI, RequiredError, operationServerMap } from '../base';
+// @ts-ignore
 import type { ErrorMessage } from '../models';
+// @ts-ignore
 import type { MemberBulkDelete } from '../models';
+// @ts-ignore
 import type { MemberBulkUpdate } from '../models';
+// @ts-ignore
 import type { MemberCreate } from '../models';
+// @ts-ignore
 import type { MemberData } from '../models';
+// @ts-ignore
 import type { MemberPassword } from '../models';
+// @ts-ignore
 import type { MemberProfile } from '../models';
 /**
  * MembersApi - axios parameter creator

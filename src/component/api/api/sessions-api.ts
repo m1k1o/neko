@@ -17,29 +17,32 @@ import type { Configuration } from '../configuration';
 import type { AxiosPromise, AxiosInstance, RawAxiosRequestConfig } from 'axios';
 import globalAxios from 'axios';
 // Some imports not used depending on template conditions
+// @ts-ignore
 import { DUMMY_BASE_URL, assertParamExists, setApiKeyToObject, setBasicAuthToObject, setBearerAuthToObject, setOAuthToObject, setSearchParams, serializeDataIfNeeded, toPathString, createRequestFunction } from '../common';
-import { BASE_PATH, COLLECTION_FORMATS, BaseAPI, RequiredError, operationServerMap } from '../base';
-import type { RequestArgs } from '../base';
+// @ts-ignore
+import { BASE_PATH, COLLECTION_FORMATS, type RequestArgs, BaseAPI, RequiredError, operationServerMap } from '../base';
+// @ts-ignore
 import type { ErrorMessage } from '../models';
+// @ts-ignore
 import type { SessionData } from '../models';
-import type { SessionLogin } from '../models';
 /**
- * SessionApi - axios parameter creator
+ * SessionsApi - axios parameter creator
  * @export
  */
-export const SessionApiAxiosParamCreator = function (configuration?: Configuration) {
+export const SessionsApiAxiosParamCreator = function (configuration?: Configuration) {
     return {
         /**
          * 
-         * @summary login
-         * @param {SessionLogin} sessionLogin 
+         * @summary disconnect session
+         * @param {string} sessionId session identifier
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        login: async (sessionLogin: SessionLogin, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            // verify required parameter 'sessionLogin' is not null or undefined
-            assertParamExists('login', 'sessionLogin', sessionLogin)
-            const localVarPath = `/api/login`;
+        sessionDisconnect: async (sessionId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'sessionId' is not null or undefined
+            assertParamExists('sessionDisconnect', 'sessionId', sessionId)
+            const localVarPath = `/api/sessions/{sessionId}/disconnect`
+                .replace(`{${"sessionId"}}`, encodeURIComponent(String(sessionId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -51,14 +54,20 @@ export const SessionApiAxiosParamCreator = function (configuration?: Configurati
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
+            // authentication CookieAuth required
+
+            // authentication TokenAuth required
+            await setApiKeyToObject(localVarQueryParameter, "token", configuration)
+
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
 
     
-            localVarHeaderParameter['Content-Type'] = 'application/json';
-
             setSearchParams(localVarUrlObj, localVarQueryParameter);
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-            localVarRequestOptions.data = serializeDataIfNeeded(sessionLogin, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -67,12 +76,16 @@ export const SessionApiAxiosParamCreator = function (configuration?: Configurati
         },
         /**
          * 
-         * @summary logout
+         * @summary get session
+         * @param {string} sessionId session identifier
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        logout: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/api/logout`;
+        sessionGet: async (sessionId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'sessionId' is not null or undefined
+            assertParamExists('sessionGet', 'sessionId', sessionId)
+            const localVarPath = `/api/sessions/{sessionId}`
+                .replace(`{${"sessionId"}}`, encodeURIComponent(String(sessionId)));
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -80,7 +93,50 @@ export const SessionApiAxiosParamCreator = function (configuration?: Configurati
                 baseOptions = configuration.baseOptions;
             }
 
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication CookieAuth required
+
+            // authentication TokenAuth required
+            await setApiKeyToObject(localVarQueryParameter, "token", configuration)
+
+            // authentication BearerAuth required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @summary remove session
+         * @param {string} sessionId session identifier
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        sessionRemove: async (sessionId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'sessionId' is not null or undefined
+            assertParamExists('sessionRemove', 'sessionId', sessionId)
+            const localVarPath = `/api/sessions/{sessionId}`
+                .replace(`{${"sessionId"}}`, encodeURIComponent(String(sessionId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
@@ -143,78 +199,53 @@ export const SessionApiAxiosParamCreator = function (configuration?: Configurati
                 options: localVarRequestOptions,
             };
         },
-        /**
-         * 
-         * @summary whoami
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        whoami: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
-            const localVarPath = `/api/whoami`;
-            // use dummy base URL string because the URL constructor only accepts absolute URLs.
-            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
-            let baseOptions;
-            if (configuration) {
-                baseOptions = configuration.baseOptions;
-            }
-
-            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
-            const localVarHeaderParameter = {} as any;
-            const localVarQueryParameter = {} as any;
-
-            // authentication CookieAuth required
-
-            // authentication TokenAuth required
-            await setApiKeyToObject(localVarQueryParameter, "token", configuration)
-
-            // authentication BearerAuth required
-            // http bearer authentication required
-            await setBearerAuthToObject(localVarHeaderParameter, configuration)
-
-
-    
-            setSearchParams(localVarUrlObj, localVarQueryParameter);
-            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
-            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
-
-            return {
-                url: toPathString(localVarUrlObj),
-                options: localVarRequestOptions,
-            };
-        },
     }
 };
 
 /**
- * SessionApi - functional programming interface
+ * SessionsApi - functional programming interface
  * @export
  */
-export const SessionApiFp = function(configuration?: Configuration) {
-    const localVarAxiosParamCreator = SessionApiAxiosParamCreator(configuration)
+export const SessionsApiFp = function(configuration?: Configuration) {
+    const localVarAxiosParamCreator = SessionsApiAxiosParamCreator(configuration)
     return {
         /**
          * 
-         * @summary login
-         * @param {SessionLogin} sessionLogin 
+         * @summary disconnect session
+         * @param {string} sessionId session identifier
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async login(sessionLogin: SessionLogin, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SessionData>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.login(sessionLogin, options);
+        async sessionDisconnect(sessionId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.sessionDisconnect(sessionId, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['SessionApi.login']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['SessionsApi.sessionDisconnect']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
          * 
-         * @summary logout
+         * @summary get session
+         * @param {string} sessionId session identifier
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async logout(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.logout(options);
+        async sessionGet(sessionId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SessionData>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.sessionGet(sessionId, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['SessionApi.logout']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['SessionsApi.sessionGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @summary remove session
+         * @param {string} sessionId session identifier
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async sessionRemove(sessionId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.sessionRemove(sessionId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['SessionsApi.sessionRemove']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -226,49 +257,48 @@ export const SessionApiFp = function(configuration?: Configuration) {
         async sessionsGet(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<SessionData>>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.sessionsGet(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['SessionApi.sessionsGet']?.[localVarOperationServerIndex]?.url;
-            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
-        },
-        /**
-         * 
-         * @summary whoami
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        async whoami(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<SessionData>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.whoami(options);
-            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['SessionApi.whoami']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['SessionsApi.sessionsGet']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
     }
 };
 
 /**
- * SessionApi - factory interface
+ * SessionsApi - factory interface
  * @export
  */
-export const SessionApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
-    const localVarFp = SessionApiFp(configuration)
+export const SessionsApiFactory = function (configuration?: Configuration, basePath?: string, axios?: AxiosInstance) {
+    const localVarFp = SessionsApiFp(configuration)
     return {
         /**
          * 
-         * @summary login
-         * @param {SessionLogin} sessionLogin 
+         * @summary disconnect session
+         * @param {string} sessionId session identifier
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        login(sessionLogin: SessionLogin, options?: any): AxiosPromise<SessionData> {
-            return localVarFp.login(sessionLogin, options).then((request) => request(axios, basePath));
+        sessionDisconnect(sessionId: string, options?: any): AxiosPromise<void> {
+            return localVarFp.sessionDisconnect(sessionId, options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @summary logout
+         * @summary get session
+         * @param {string} sessionId session identifier
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        logout(options?: any): AxiosPromise<void> {
-            return localVarFp.logout(options).then((request) => request(axios, basePath));
+        sessionGet(sessionId: string, options?: any): AxiosPromise<SessionData> {
+            return localVarFp.sessionGet(sessionId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @summary remove session
+         * @param {string} sessionId session identifier
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        sessionRemove(sessionId: string, options?: any): AxiosPromise<void> {
+            return localVarFp.sessionRemove(sessionId, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -279,46 +309,50 @@ export const SessionApiFactory = function (configuration?: Configuration, basePa
         sessionsGet(options?: any): AxiosPromise<Array<SessionData>> {
             return localVarFp.sessionsGet(options).then((request) => request(axios, basePath));
         },
-        /**
-         * 
-         * @summary whoami
-         * @param {*} [options] Override http request option.
-         * @throws {RequiredError}
-         */
-        whoami(options?: any): AxiosPromise<SessionData> {
-            return localVarFp.whoami(options).then((request) => request(axios, basePath));
-        },
     };
 };
 
 /**
- * SessionApi - object-oriented interface
+ * SessionsApi - object-oriented interface
  * @export
- * @class SessionApi
+ * @class SessionsApi
  * @extends {BaseAPI}
  */
-export class SessionApi extends BaseAPI {
+export class SessionsApi extends BaseAPI {
     /**
      * 
-     * @summary login
-     * @param {SessionLogin} sessionLogin 
+     * @summary disconnect session
+     * @param {string} sessionId session identifier
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
-     * @memberof SessionApi
+     * @memberof SessionsApi
      */
-    public login(sessionLogin: SessionLogin, options?: RawAxiosRequestConfig) {
-        return SessionApiFp(this.configuration).login(sessionLogin, options).then((request) => request(this.axios, this.basePath));
+    public sessionDisconnect(sessionId: string, options?: RawAxiosRequestConfig) {
+        return SessionsApiFp(this.configuration).sessionDisconnect(sessionId, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
-     * @summary logout
+     * @summary get session
+     * @param {string} sessionId session identifier
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
-     * @memberof SessionApi
+     * @memberof SessionsApi
      */
-    public logout(options?: RawAxiosRequestConfig) {
-        return SessionApiFp(this.configuration).logout(options).then((request) => request(this.axios, this.basePath));
+    public sessionGet(sessionId: string, options?: RawAxiosRequestConfig) {
+        return SessionsApiFp(this.configuration).sessionGet(sessionId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @summary remove session
+     * @param {string} sessionId session identifier
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof SessionsApi
+     */
+    public sessionRemove(sessionId: string, options?: RawAxiosRequestConfig) {
+        return SessionsApiFp(this.configuration).sessionRemove(sessionId, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -326,21 +360,10 @@ export class SessionApi extends BaseAPI {
      * @summary get sessions
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
-     * @memberof SessionApi
+     * @memberof SessionsApi
      */
     public sessionsGet(options?: RawAxiosRequestConfig) {
-        return SessionApiFp(this.configuration).sessionsGet(options).then((request) => request(this.axios, this.basePath));
-    }
-
-    /**
-     * 
-     * @summary whoami
-     * @param {*} [options] Override http request option.
-     * @throws {RequiredError}
-     * @memberof SessionApi
-     */
-    public whoami(options?: RawAxiosRequestConfig) {
-        return SessionApiFp(this.configuration).whoami(options).then((request) => request(this.axios, this.basePath));
+        return SessionsApiFp(this.configuration).sessionsGet(options).then((request) => request(this.axios, this.basePath));
     }
 }
 
