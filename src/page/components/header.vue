@@ -85,8 +85,8 @@
 </style>
 
 <script lang="ts" setup>
-import { ref, watch, computed, onMounted, onBeforeUnmount } from 'vue'
-import Neko from '@/component/main.vue'
+import { ref, watch } from 'vue'
+import type Neko from '@/component/main.vue'
 
 const props = defineProps<{
   neko: typeof Neko

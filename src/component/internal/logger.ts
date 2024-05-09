@@ -1,6 +1,6 @@
-import { NekoWebSocket } from './websocket'
+import type { NekoWebSocket } from './websocket'
 import * as EVENT from '../types/events'
-import * as message from '../types/messages'
+import type * as message from '../types/messages'
 import { Logger } from '../utils/logger'
 
 const MAX_LOG_MESSAGES = 25

@@ -10,7 +10,7 @@ import type { Connection, WebRTCStats } from '../types/state'
 import { Reconnector } from './reconnector'
 import { WebsocketReconnector } from './reconnector/websocket'
 import { WebrtcReconnector } from './reconnector/webrtc'
-import { Logger } from '../utils/logger'
+import type { Logger } from '../utils/logger'
 
 const WEBRTC_RECONN_MAX_LOSS = 25
 const WEBRTC_RECONN_FAILED_ATTEMPTS = 5

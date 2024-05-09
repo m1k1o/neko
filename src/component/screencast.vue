@@ -4,7 +4,7 @@
 
 <script lang="ts" setup>
 import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
-import { RoomApi } from './api'
+import type { RoomApi } from './api'
 
 const REFRESH_RATE = 1e3
 const ERROR_DELAY_MS = 2500

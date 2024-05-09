@@ -1,8 +1,8 @@
 import * as EVENT from '../../types/events'
 import type { Connection } from '../../types/state'
 
-import { NekoWebSocket } from '../websocket'
-import { NekoWebRTC } from '../webrtc'
+import type { NekoWebSocket } from '../websocket'
+import type { NekoWebRTC } from '../webrtc'
 
 import { ReconnectorAbstract } from '.'
 

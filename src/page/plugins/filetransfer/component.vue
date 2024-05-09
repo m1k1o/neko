@@ -274,11 +274,10 @@
 
 <script lang="ts" setup>
 import { ref, reactive, computed, onMounted } from 'vue'
-import Neko from '@/component/main.vue'
+import type Neko from '@/component/main.vue'
 import type { FileTransfer, Message, Item } from './types'
 import { FILETRANSFER_UPDATE } from './types'
 import { FiletransferApi } from './api'
-import * as ApiModels from './api/models'
 
 const props = defineProps<{
   neko: typeof Neko
@@ -288,7 +287,7 @@ const props = defineProps<{
 const api = props.neko.withApi(FiletransferApi) as FiletransferApi
 
 const enabled = ref(false)
-const enabledForMe = computed(() => enabled && (props.neko.is_admin || (!props.neko.is_admin && !isLocked.value)))
+const enabledForMe = computed(() => enabled.value && (props.neko.is_admin || (!props.neko.is_admin && !isLocked.value)))
 const cwd = ref('')
 const files = ref<Item[]>([])
 const transfers = reactive<FileTransfer[]>([])

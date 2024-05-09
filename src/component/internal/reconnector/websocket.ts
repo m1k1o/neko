@@ -1,6 +1,6 @@
 import type { Connection } from '../../types/state'
 
-import { NekoWebSocket } from '../websocket'
+import type { NekoWebSocket } from '../websocket'
 
 import { ReconnectorAbstract } from '.'
 

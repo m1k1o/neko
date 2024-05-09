@@ -1,10 +1,10 @@
 import * as EVENT from '../types/events'
-import * as message from '../types/messages'
+import type * as message from '../types/messages'
 
 import EventEmitter from 'eventemitter3'
 import type { AxiosProgressEvent } from 'axios'
 import { Logger } from '../utils/logger'
-import { NekoConnection } from './connection'
+import type { NekoConnection } from './connection'
 import type NekoState from '../types/state'
 import type { Settings } from '../types/state'
 

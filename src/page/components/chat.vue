@@ -164,7 +164,7 @@
 
 <script lang="ts" setup>
 import { ref, watch, onMounted } from 'vue'
-import Neko from '@/component/main.vue'
+import type Neko from '@/component/main.vue'
 
 const length = 512 // max length of message
 

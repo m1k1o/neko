@@ -1,8 +1,8 @@
 import * as EVENT from '../types/events'
-import * as message from '../types/messages'
+import type * as message from '../types/messages'
 
 import EventEmitter from 'eventemitter3'
-import { NekoConnection } from './connection'
+import type { NekoConnection } from './connection'
 import type { Control } from '../types/state'
 
 export interface NekoControlEvents {

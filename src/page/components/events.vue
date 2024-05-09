@@ -620,8 +620,8 @@
 </style>
 
 <script lang="ts" setup>
-import { ref, watch, computed, onMounted, onBeforeUnmount } from 'vue'
-import Neko from '@/component/main.vue'
+import { ref, watch, computed } from 'vue'
+import type Neko from '@/component/main.vue'
 import NekoColor from './color.vue'
 
 const props = defineProps<{

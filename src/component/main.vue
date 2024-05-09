@@ -78,7 +78,7 @@ import { ref, watch, computed, reactive, onMounted, onBeforeUnmount } from 'vue'
 //export * as StateModels from './types/state'
 //export * as webrtcTypes from './types/webrtc'
 
-import { Configuration } from './api/configuration'
+import type { Configuration } from './api/configuration'
 import type { AxiosInstance, AxiosProgressEvent } from 'axios'
 
 import ResizeObserver from 'resize-observer-polyfill'

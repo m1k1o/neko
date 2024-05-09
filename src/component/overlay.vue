@@ -56,8 +56,8 @@ import { NewKeyboard } from './utils/keyboard'
 import GestureHandlerInit from './utils/gesturehandler'
 import { KeyTable, keySymsRemap } from './utils/keyboard-remapping'
 import { getFilesFromDataTansfer } from './utils/file-upload'
-import { NekoControl } from './internal/control'
-import { NekoWebRTC } from './internal/webrtc'
+import type { NekoControl } from './internal/control'
+import type { NekoWebRTC } from './internal/webrtc'
 
 // Wheel thresholds
 const WHEEL_STEP = 53 // Pixels needed for one step

@@ -407,8 +407,8 @@
 </style>
 
 <script lang="ts" setup>
-import { ref, watch, computed, onMounted, onBeforeUnmount } from 'vue'
-import Neko from '@/component/main.vue'
+import { ref, computed, onMounted } from 'vue'
+import type Neko from '@/component/main.vue'
 
 // TODO: get from lib ts?
 import type * as ApiModels from '@/component/api/models'
