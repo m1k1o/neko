@@ -7,6 +7,7 @@ import (
 
 	"github.com/demodesk/neko/internal/api/members"
 	"github.com/demodesk/neko/internal/api/room"
+	"github.com/demodesk/neko/internal/api/sessions"
 	"github.com/demodesk/neko/pkg/auth"
 	"github.com/demodesk/neko/pkg/types"
 	"github.com/demodesk/neko/pkg/utils"
@@ -45,7 +46,9 @@ func (api *ApiManagerCtx) Route(r types.Router) {
 
 		r.Post("/logout", api.Logout)
 		r.Get("/whoami", api.Whoami)
-		r.Get("/sessions", api.Sessions)
+
+		sessionsHandler := sessions.New(api.sessions)
+		r.Route("/sessions", sessionsHandler.Route)
 
 		membersHandler := members.New(api.members)
 		r.Route("/members", membersHandler.Route)

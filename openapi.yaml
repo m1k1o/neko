@@ -13,8 +13,8 @@ servers:
     url: http://localhost:3000
 
 tags:
-  - name: session
-    description: Session management.
+  - name: sessions
+    description: Sessions management.
   - name: room
     description: Room releated operations.
   - name: members
@@ -61,13 +61,11 @@ paths:
         required: true
 
   #
-  # session
+  # current session
   #
 
   /api/login:
     post:
-      tags:
-        - session
       summary: login
       operationId: login
       security: []
@@ -90,8 +88,6 @@ paths:
         required: true
   /api/logout:
     post:
-      tags:
-        - session
       summary: logout
       operationId: logout
       responses:
@@ -101,8 +97,6 @@ paths:
           $ref: '#/components/responses/Unauthorized'
   /api/whoami:
     get:
-      tags:
-        - session
       summary: whoami
       operationId: whoami
       responses:
@@ -116,10 +110,15 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+
+  #
+  # sessions
+  #
+
   /api/sessions:
     get:
       tags:
-        - session
+        - sessions
       summary: get sessions
       operationId: sessionsGet
       responses:
@@ -135,6 +134,75 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+  /api/sessions/{sessionId}:
+    get:
+      tags:
+        - sessions
+      summary: get session
+      operationId: sessionGet
+      parameters:
+        - in: path
+          name: sessionId
+          description: session identifier
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionData'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags:
+        - sessions
+      summary: remove session
+      operationId: sessionRemove
+      parameters:
+        - in: path
+          name: sessionId
+          description: session identifier
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: OK
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/sessions/{sessionId}/disconnect:
+    post:
+      tags:
+        - sessions
+      summary: disconnect session
+      operationId: sessionDisconnect
+      parameters:
+        - in: path
+          name: sessionId
+          description: session identifier
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: OK
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
 
   #
   # room
@@ -1023,7 +1091,7 @@ components:
           type: integer
 
     #
-    # session
+    # sessions
     #
 
     SessionLogin:

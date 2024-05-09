@@ -81,6 +81,7 @@ type SessionManager interface {
 	Create(id string, profile MemberProfile) (Session, string, error)
 	Update(id string, profile MemberProfile) error
 	Delete(id string) error
+	Disconnect(id string) error
 	Get(id string) (Session, bool)
 	GetByToken(token string) (Session, bool)
 	List() []Session

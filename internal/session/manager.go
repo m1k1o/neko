@@ -158,6 +158,26 @@ func (manager *SessionManagerCtx) Delete(id string) error {
 	return nil
 }
 
+func (manager *SessionManagerCtx) Disconnect(id string) error {
+	manager.sessionsMu.Lock()
+	session, ok := manager.sessions[id]
+	if !ok {
+		manager.sessionsMu.Unlock()
+		return types.ErrSessionNotFound
+	}
+	manager.sessionsMu.Unlock()
+
+	if session.State().IsConnected {
+		session.DestroyWebSocketPeer("session disconnected")
+	}
+
+	if session.State().IsWatching {
+		session.GetWebRTCPeer().Destroy()
+	}
+
+	return nil
+}
+
 func (manager *SessionManagerCtx) Get(id string) (types.Session, bool) {
 	manager.sessionsMu.Lock()
 	defer manager.sessionsMu.Unlock()
