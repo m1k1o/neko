@@ -6,6 +6,8 @@ import (
 	"github.com/go-chi/chi"
 
 	"github.com/demodesk/neko/pkg/auth"
+	"github.com/demodesk/neko/pkg/types/event"
+	"github.com/demodesk/neko/pkg/types/message"
 	"github.com/demodesk/neko/pkg/utils"
 )
 
@@ -33,12 +35,21 @@ func (h *RoomHandler) controlStatus(w http.ResponseWriter, r *http.Request) erro
 }
 
 func (h *RoomHandler) controlRequest(w http.ResponseWriter, r *http.Request) error {
-	_, hasHost := h.sessions.GetHost()
+	session, _ := auth.GetSession(r)
+	host, hasHost := h.sessions.GetHost()
 	if hasHost {
-		return utils.HttpUnprocessableEntity("there is already a host")
+		// TODO: Some throttling mechanism to prevent spamming.
+
+		// let host know that someone wants to take control
+		host.Send(
+			event.CONTROL_REQUEST,
+			message.SessionID{
+				ID: session.ID(),
+			})
+
+		return utils.HttpError(http.StatusAccepted, "control request sent")
 	}
 
-	session, _ := auth.GetSession(r)
 	if h.sessions.Settings().LockedControls && !session.Profile().IsAdmin {
 		return utils.HttpForbidden("controls are locked")
 	}

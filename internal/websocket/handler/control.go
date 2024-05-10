@@ -44,23 +44,29 @@ func (h *MessageHandlerCtx) controlRequest(session types.Session) error {
 		return ErrIsNotAllowedToHost
 	}
 
-	if !h.sessions.Settings().ImplicitHosting {
-		// tell session if there is a host
-		if host, hasHost := h.sessions.GetHost(); hasHost {
-			session.Send(
-				event.CONTROL_HOST,
-				message.ControlHost{
-					HasHost: true,
-					HostID:  host.ID(),
-				})
-
-			return ErrIsAlreadyHosted
-		}
+	// if implicit hosting is enabled, set session as host without asking
+	if h.sessions.Settings().ImplicitHosting {
+		session.SetAsHost()
+		return nil
 	}
 
-	session.SetAsHost()
+	// if there is no host, set session as host
+	host, hasHost := h.sessions.GetHost()
+	if !hasHost {
+		session.SetAsHost()
+		return nil
+	}
 
-	return nil
+	// TODO: Some throttling mechanism to prevent spamming.
+
+	// let host know that someone wants to take control
+	host.Send(
+		event.CONTROL_REQUEST,
+		message.SessionID{
+			ID: session.ID(),
+		})
+
+	return ErrIsAlreadyHosted
 }
 
 func (h *MessageHandlerCtx) controlMove(session types.Session, payload *message.ControlPos) error {
