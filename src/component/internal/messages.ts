@@ -37,6 +37,7 @@ export interface NekoEvents {
 
   // room events
   ['room.control.host']: (hasHost: boolean, hostID: string | undefined, id: string) => void
+  ['room.control.request']: (id: string) => void
   ['room.screen.updated']: (width: number, height: number, rate: number, id: string) => void
   ['room.settings.updated']: (settings: Settings, id: string) => void
   ['room.clipboard.updated']: (text: string) => void
@@ -262,6 +263,11 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
   /////////////////////////////
   // Control Events
   /////////////////////////////
+
+  protected [EVENT.CONTROL_REQUEST]({ id }: message.SessionID) {
+    this._localLog.debug(`EVENT.CONTROL_REQUEST`)
+    this.emit('room.control.request', id)
+  }
 
   protected [EVENT.CONTROL_HOST]({ has_host, host_id, id }: message.ControlHost) {
     this._localLog.debug(`EVENT.CONTROL_HOST`)
