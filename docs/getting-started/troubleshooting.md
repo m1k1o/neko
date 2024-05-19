@@ -59,6 +59,13 @@ Then try to type on one end, you should see characters on the other side.
 
 If it does not work for you, then most likely your port forwarding is not working correctly. Or your ISP is blocking traffic.
 
+
+If you get [`Command 'nc' not found.`](https://command-not-found.com/nc) error, you can install `netcat` package using:
+
+```shell
+sudo apt-get install netcat
+```
+
 ### Check if your external IP was determined correctly
 
 One of the first logs, when the server starts, writes down your external IP that will be sent to your clients to connect to.
@@ -66,6 +73,8 @@ One of the first logs, when the server starts, writes down your external IP that
 ```shell
 docker-compose logs neko | grep nat_ips
 ```
+
+Note: Some newer versions of docker-compose use `docker compose` instead of `docker-compose`.
 
 You should see this:
 
