@@ -100,10 +100,10 @@ type SessionManager interface {
 	OnDeleted(listener func(session Session))
 	OnConnected(listener func(session Session))
 	OnDisconnected(listener func(session Session))
-	OnProfileChanged(listener func(session Session))
+	OnProfileChanged(listener func(session Session, new, old MemberProfile))
 	OnStateChanged(listener func(session Session))
 	OnHostChanged(listener func(session, host Session))
-	OnSettingsChanged(listener func(session Session, new Settings, old Settings))
+	OnSettingsChanged(listener func(session Session, new, old Settings))
 
 	UpdateSettingsFunc(session Session, f func(settings *Settings) bool)
 	Settings() Settings

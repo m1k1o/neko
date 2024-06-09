@@ -122,10 +122,11 @@ func (manager *SessionManagerCtx) Update(id string, profile types.MemberProfile)
 		return types.ErrSessionNotFound
 	}
 
+	old := session.profile
 	session.profile = profile
 	manager.sessionsMu.Unlock()
 
-	manager.emmiter.Emit("profile_changed", session)
+	manager.emmiter.Emit("profile_changed", session, profile, old)
 	manager.save()
 
 	session.profileChanged()
@@ -361,9 +362,9 @@ func (manager *SessionManagerCtx) OnDisconnected(listener func(session types.Ses
 	})
 }
 
-func (manager *SessionManagerCtx) OnProfileChanged(listener func(session types.Session)) {
+func (manager *SessionManagerCtx) OnProfileChanged(listener func(session types.Session, new, old types.MemberProfile)) {
 	manager.emmiter.On("profile_changed", func(payload ...any) {
-		listener(payload[0].(*SessionCtx))
+		listener(payload[0].(*SessionCtx), payload[1].(types.MemberProfile), payload[2].(types.MemberProfile))
 	})
 }
 
@@ -383,7 +384,7 @@ func (manager *SessionManagerCtx) OnHostChanged(listener func(session, host type
 	})
 }
 
-func (manager *SessionManagerCtx) OnSettingsChanged(listener func(session types.Session, new types.Settings, old types.Settings)) {
+func (manager *SessionManagerCtx) OnSettingsChanged(listener func(session types.Session, new, old types.Settings)) {
 	manager.emmiter.On("settings_changed", func(payload ...any) {
 		listener(payload[0].(types.Session), payload[1].(types.Settings), payload[2].(types.Settings))
 	})

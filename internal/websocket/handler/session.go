@@ -83,12 +83,12 @@ func (h *MessageHandlerCtx) SessionDisconnected(session types.Session) error {
 	return h.SessionStateChanged(session)
 }
 
-func (h *MessageHandlerCtx) SessionProfileChanged(session types.Session) error {
+func (h *MessageHandlerCtx) SessionProfileChanged(session types.Session, new, old types.MemberProfile) error {
 	h.sessions.Broadcast(
 		event.SESSION_PROFILE,
 		message.MemberProfile{
 			ID:            session.ID(),
-			MemberProfile: session.Profile(),
+			MemberProfile: new,
 		})
 
 	return nil
