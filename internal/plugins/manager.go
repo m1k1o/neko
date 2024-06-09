@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/demodesk/neko/internal/config"
+	"github.com/demodesk/neko/internal/plugins/chat"
 	"github.com/demodesk/neko/internal/plugins/filetransfer"
 	"github.com/demodesk/neko/pkg/types"
 )
@@ -45,6 +46,7 @@ func New(config *config.Plugins) *ManagerCtx {
 
 	// add built-in plugins
 	manager.plugins.addPlugin(filetransfer.NewPlugin())
+	manager.plugins.addPlugin(chat.NewPlugin())
 
 	return manager
 }
