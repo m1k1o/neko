@@ -1,5 +1,13 @@
 <template>
-  <div class="chat">
+  <div class="chat" v-if="tab === 'chat'">
+    <div class="chat-header">
+      <p>Chat is {{ isLocked ? 'locked' : 'unlocked' }} for users</p>
+      <i :class="['fas', isLocked ? 'fa-lock' : 'fa-unlock', 'refresh']" @click="setLock(!isLocked)" :title="isLocked ? 'Unlock' : 'Lock'" />
+    </div>
+    <div class="chat-header">
+      <p>Chat is {{ !enabled ? 'disabled' : 'enabled' }}</p>
+      <i class="fas fa-rotate-right refresh" />
+    </div>
     <ul class="chat-history" ref="history">
       <template v-for="(message, index) in messages" :key="index">
         <li class="message" v-show="neko && neko.connected">
@@ -8,7 +16,7 @@
               <span class="session">{{ session(message.id) }}</span>
               <span class="timestamp">{{ timestamp(message.created) }}</span>
             </div>
-            <p>{{ message.content }}</p>
+            <p>{{ message.content.text }}</p>
           </div>
         </li>
       </template>
@@ -31,6 +39,20 @@
     max-height: 100%;
     max-width: 100%;
     overflow-x: hidden;
+
+    .chat-header {
+      display: flex;
+      flex-direction: row;
+      margin: 10px 10px 0px 10px;
+      padding: 0.5em;
+      font-weight: 600;
+      background-color: rgba($color: #fff, $alpha: 0.05);
+      border-radius: 5px;
+
+      .refresh {
+        margin-left: auto;
+      }
+    }
 
     .chat-history {
       flex: 1;
@@ -163,31 +185,46 @@
 </style>
 
 <script lang="ts" setup>
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, computed, onMounted } from 'vue'
 import type Neko from '@/component/main.vue'
+import * as types from './types'
+
+// TODO: Use API.
+// import { ChatApi } from './api'
+// const api = props.neko.withApi(ChatApi) as ChatApi
 
 const length = 512 // max length of message
-
 const history = ref<HTMLUListElement | null>(null)
 
 const props = defineProps<{
-  neko: typeof Neko
+  neko: typeof Neko,
+  tab: string
 }>()
 
-const emit = defineEmits(['send_message'])
-
-type Message = {
-  id: string
-  created: Date
-  content: string
-}
-
-const messages = ref<Message[]>([])
+const enabled = ref(false)
+const enabledForMe = computed(() => enabled.value && (props.neko.is_admin || (!props.neko.is_admin && !isLocked.value)))
+const messages = ref<types.Message[]>([])
 const content = ref('')
 
 onMounted(() => {
+  props.neko.events.on('message', async (event: string, payload: any) => {
+    switch (event) {
+      case types.CHAT_INIT: {
+        const message = payload as types.Init
+        enabled.value = message.enabled
+        break
+      }
+      case types.CHAT_MESSAGE: {
+        const message = payload as types.Message
+        messages.value = [...messages.value, message]
+        break
+      }
+    }
+  })
+
   setTimeout(() => {
-    history.value!.scrollTop = history.value!.scrollHeight
+    if (history.value)
+      history.value.scrollTop = history.value.scrollHeight
   }, 0)
 })
 
@@ -214,24 +251,12 @@ function session(id: string) {
   return session ? session.profile.name : id
 }
 
-function onNekoChange() {
-  props.neko.events.on('receive.broadcast', (sender: string, subject: string, body: any) => {
-    if (subject === 'chat') {
-      const message = body as Message
-      messages.value = [...messages.value, message]
-    }
-  })
-}
-
-watch(() => props.neko, onNekoChange)
-
-function onHistroyChange() {
+watch(messages, function() {
   setTimeout(() => {
-    history.value!.scrollTop = history.value!.scrollHeight
+    if (history.value)
+      history.value.scrollTop = history.value.scrollHeight
   }, 0)
-}
-
-watch(messages, onHistroyChange)
+})
 
 function onKeyDown(event: KeyboardEvent) {
   if (content.value.length > length) {
@@ -252,24 +277,30 @@ function onKeyDown(event: KeyboardEvent) {
   if (event.keyCode !== 13 || event.shiftKey) {
     return
   }
+  
+  sendMessage()
+  event.preventDefault()
+}
 
+function sendMessage() {
   if (content.value === '') {
-    event.preventDefault()
     return
   }
 
-  emit('send_message', content.value)
-
-  let message = {
-    id: props.neko.state.session_id,
-    created: new Date(),
-    content: content.value,
-  }
-  
-  props.neko.sendBroadcast('chat', message)
-  messages.value = [...messages.value, message]
+  props.neko.sendMessage(types.CHAT_MESSAGE, {
+    text: content.value,
+  } as types.Content)
 
   content.value = ''
-  event.preventDefault()
+}
+
+const isLocked = computed(() => props.neko.state.settings?.plugins?.chat === true)
+
+async function setLock(isLocked = true) {
+  try {
+    await props.neko.room.settingsSet({ plugins: { chat: isLocked } })
+  } catch (e: any) {
+    alert(e.response ? e.response.data.message : e)
+  }
 }
 </script>

@@ -95,10 +95,6 @@
             <i class="fas fa-microphone" />
             <span v-show="tab === 'media'">Media</span>
           </li>
-          <li :class="{ active: tab === 'chat' }" @click.prevent="tab = 'chat'">
-            <i class="fas fa-comment-alt" />
-            <span v-show="tab === 'chat'">Chat</span>
-          </li>
 
           <!-- Plugins -->
           <component v-for="(el, key) in pluginsTabs" :key="key" :is="el" :tab="tab" @tab="tab = $event" />
@@ -108,7 +104,6 @@
         <NekoEvents v-if="tab === 'events'" :neko="neko" />
         <NekoMembers v-if="tab === 'members'" :neko="neko" />
         <NekoMedia v-if="tab === 'media'" :neko="neko" />
-        <NekoChat v-show="tab === 'chat'" :neko="neko" />
 
         <!-- Plugins -->
         <component v-for="(el, key) in pluginsComponents" :key="key" :is="el" :tab="tab" :neko="neko" />
@@ -354,7 +349,6 @@ import NekoControls from './components/controls.vue'
 import NekoEvents from './components/events.vue'
 import NekoMembers from './components/members.vue'
 import NekoMedia from './components/media.vue'
-import NekoChat from './components/chat.vue'
 
 const neko = ref<typeof NekoCanvas>()
 
