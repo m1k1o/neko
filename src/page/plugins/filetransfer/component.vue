@@ -2,11 +2,11 @@
   <div style="width: 100%">
     <div class="files" v-if="tab === 'filetransfer'">
       <div class="files-cwd">
-        <p>Filetransfer is {{ isLocked ? 'locked' : 'unlocked' }} for users</p>
-        <i :class="['fas', isLocked ? 'fa-lock' : 'fa-unlock', 'refresh']" @click="setLock(!isLocked)" :title="isLocked ? 'Unlock' : 'Lock'" />
+        <p>Filetransfer is {{ enabledInSettings ? 'unlocked' : 'locked' }} for users</p>
+        <i v-if="props.neko.is_admin" :class="['fas', enabledInSettings ? 'fa-unlock' : 'fa-lock', 'refresh']" @click="toggleEnabled(!enabledInSettings)" :title="enabledInSettings ? 'Lock' : 'Unlock'" />
       </div>
       <div class="files-cwd">
-        <p>{{ enabled ? cwd  : 'Filetransfer is disabled' }}</p>
+        <p>{{ enabledSystemWide ? cwd  : 'Filetransfer is disabled system wide' }}</p>
         <i class="fas fa-rotate-right refresh" @click="refresh" />
       </div>
       <div class="files-list">
@@ -14,10 +14,10 @@
           <i :class="fileIcon(item)" />
           <p class="file-name" :title="item.name">{{ item.name }}</p>
           <p class="file-size">{{ fileSize(item.size) }}</p>
-          <i v-if="item.type !== 'dir' && enabledForMe" class="fas fa-download download" @click="download(item)" />
+          <i v-if="item.type !== 'dir' && enabled" class="fas fa-download download" @click="download(item)" />
         </div>
       </div>
-      <div class="transfer-area" v-if="enabledForMe">
+      <div class="transfer-area" v-if="enabled">
         <div class="transfers" v-if="transfers.length > 0">
           <p v-if="downloads.length > 0" class="transfers-list-header">
             <span> Downloads </span>
@@ -286,8 +286,15 @@ const props = defineProps<{
 
 const api = props.neko.withApi(FiletransferApi) as FiletransferApi
 
-const enabled = ref(false)
-const enabledForMe = computed(() => enabled.value && (props.neko.is_admin || (!props.neko.is_admin && !isLocked.value)))
+// config option to enable/disable filetransfer plugin
+const enabledSystemWide = ref(false)
+// dynamic settings for filetransfer plugin
+const enabledInSettings = computed(() => !(props.neko.state.settings?.plugins?.filetransfer?.enabled === false))
+// user specific setting to enable/disable filetransfer plugin
+const enabledForMe = computed(() => !(props.neko.session?.profile?.plugins?.filetransfer?.enabled === false))
+// combined enabled state for filetransfer plugin and user
+const enabled = computed(() => enabledSystemWide.value && (enabledInSettings.value || props.neko.is_admin) && enabledForMe.value)
+
 const cwd = ref('')
 const files = ref<Item[]>([])
 const transfers = reactive<FileTransfer[]>([])
@@ -301,13 +308,21 @@ onMounted(async () => {
     switch (event) {
       case FILETRANSFER_UPDATE:
         const msg = payload as Message
-        enabled.value = msg.enabled
+        enabledSystemWide.value = msg.enabled
         cwd.value = msg.root_dir
         files.value = msg.files
         break
     }
   })
 })
+
+async function toggleEnabled(inEnabled = true) {
+  try {
+    await props.neko.room.settingsSet({ plugins: { filetransfer: {  "enabled": inEnabled} } })
+  } catch (e: any) {
+    alert(e.response ? e.response.data.message : e)
+  }
+}
 
 function refresh() {
   props.neko.sendMessage(FILETRANSFER_UPDATE)
@@ -522,15 +537,5 @@ function fileSize(size: number) {
     return Math.round(size / (1024 * 1024 * 1024)) + ' GB'
   }
   return Math.round(size / (1024 * 1024 * 1024 * 1024)) + ' TB'
-}
-
-const isLocked = computed(() => props.neko.state.settings?.plugins?.filetransfer === true)
-
-async function setLock(isLocked = true) {
-  try {
-    await props.neko.room.settingsSet({ plugins: { filetransfer: isLocked } })
-  } catch (e: any) {
-    alert(e.response ? e.response.data.message : e)
-  }
 }
 </script>

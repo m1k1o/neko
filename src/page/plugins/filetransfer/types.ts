@@ -1,3 +1,7 @@
+export interface Settings {
+  enabled: boolean
+}
+
 export const FILETRANSFER_UPDATE = "filetransfer/update"
 
 export interface Message {
