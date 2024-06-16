@@ -1,6 +1,7 @@
 package filetransfer
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -43,30 +44,25 @@ type Manager struct {
 	fileList []Item
 }
 
-func (m *Manager) isEnabledForSession(session types.Session) bool {
-	canTransfer := true
-
-	profile, ok := session.Profile().Plugins["filetransfer"]
-	// by default, allow file transfer if the plugin config is not present
-	if ok {
-		canTransfer, ok = profile.(bool)
-		// if the plugin is present but not a boolean, allow file transfer
-		if !ok {
-			canTransfer = true
-		}
+func (m *Manager) isEnabledForSession(session types.Session) (bool, error) {
+	settings := Settings{
+		Enabled: true, // defaults to true
+	}
+	err := m.sessions.Settings().Plugins.Unmarshal(PluginName, &settings)
+	if err != nil && !errors.Is(err, types.ErrPluginSettingsNotFound) {
+		return false, fmt.Errorf("unable to unmarshal %s plugin settings from global settings: %w", PluginName, err)
 	}
 
-	settings, ok := m.sessions.Settings().Plugins["filetransfer"]
-	// by default, allow file transfer if the plugin config is not present
-	if ok && canTransfer && session.Profile().IsAdmin {
-		canTransfer, ok = settings.(bool)
-		// if the plugin is present but not a boolean, allow file transfer
-		if !ok {
-			canTransfer = true
-		}
+	profile := Settings{
+		Enabled: true, // defaults to true
 	}
 
-	return m.config.Enabled && canTransfer
+	err = session.Profile().Plugins.Unmarshal(PluginName, &profile)
+	if err != nil && !errors.Is(err, types.ErrPluginSettingsNotFound) {
+		return false, fmt.Errorf("unable to unmarshal %s plugin settings from profile: %w", PluginName, err)
+	}
+
+	return m.config.Enabled && (settings.Enabled || session.Profile().IsAdmin) && profile.Enabled, nil
 }
 
 func (m *Manager) refresh() (error, bool) {
@@ -102,31 +98,32 @@ func (m *Manager) refresh() (error, bool) {
 
 func (m *Manager) broadcastUpdate() {
 	m.mu.RLock()
-	defer m.mu.RUnlock()
+	fileList := m.fileList
+	m.mu.RUnlock()
 
 	m.sessions.Broadcast(FILETRANSFER_UPDATE, Message{
 		Enabled: m.config.Enabled,
 		RootDir: m.config.RootDir,
-		Files:   m.fileList,
+		Files:   fileList,
+	})
+}
+
+func (m *Manager) sendUpdate(session types.Session) {
+	m.mu.RLock()
+	fileList := m.fileList
+	m.mu.RUnlock()
+
+	session.Send(FILETRANSFER_UPDATE, Message{
+		Enabled: m.config.Enabled,
+		RootDir: m.config.RootDir,
+		Files:   fileList,
 	})
 }
 
 func (m *Manager) Start() error {
 	// send init message once a user connects
 	m.sessions.OnConnected(func(session types.Session) {
-		isEnabled := m.isEnabledForSession(session)
-
-		// get file list
-		m.mu.RLock()
-		fileList := m.fileList
-		m.mu.RUnlock()
-
-		// send init message
-		session.Send(FILETRANSFER_UPDATE, Message{
-			Enabled: isEnabled,
-			RootDir: m.config.RootDir,
-			Files:   fileList,
-		})
+		m.sendUpdate(session)
 	})
 
 	// if file transfer is disabled, return immediately without starting the watcher
@@ -192,6 +189,15 @@ func (m *Manager) Start() error {
 		return fmt.Errorf("unable to watch file transfer dir: %w", err)
 	}
 
+	// initial refresh
+	err, changed := m.refresh()
+	if err != nil {
+		return fmt.Errorf("unable to refresh file transfer list: %w", err)
+	}
+	if changed {
+		m.broadcastUpdate()
+	}
+
 	return nil
 }
 
@@ -214,22 +220,16 @@ func (m *Manager) WebSocketHandler(session types.Session, msg types.WebSocketMes
 		}
 
 		if changed {
+			// broadcast update message to all clients
 			m.broadcastUpdate()
 		} else {
-			// get file list
-			m.mu.RLock()
-			fileList := m.fileList
-			m.mu.RUnlock()
-
 			// send update message to this client only
-			session.Send(FILETRANSFER_UPDATE, Message{
-				Enabled: m.config.Enabled,
-				RootDir: m.config.RootDir,
-				Files:   fileList,
-			})
+			m.sendUpdate(session)
 		}
 		return true
 	}
+
+	// not handled by this plugin
 	return false
 }
 
@@ -239,7 +239,13 @@ func (m *Manager) downloadFileHandler(w http.ResponseWriter, r *http.Request) er
 		return utils.HttpUnauthorized("session not found")
 	}
 
-	enabled := m.isEnabledForSession(session)
+	enabled, err := m.isEnabledForSession(session)
+	if err != nil {
+		return utils.HttpInternalServerError().
+			WithInternalErr(err).
+			Msg("error checking file transfer permissions")
+	}
+
 	if !enabled {
 		return utils.HttpForbidden("file transfer is disabled")
 	}
@@ -267,12 +273,18 @@ func (m *Manager) uploadFileHandler(w http.ResponseWriter, r *http.Request) erro
 		return utils.HttpUnauthorized("session not found")
 	}
 
-	enabled := m.isEnabledForSession(session)
+	enabled, err := m.isEnabledForSession(session)
+	if err != nil {
+		return utils.HttpInternalServerError().
+			WithInternalErr(err).
+			Msg("error checking file transfer permissions")
+	}
+
 	if !enabled {
 		return utils.HttpForbidden("file transfer is disabled")
 	}
 
-	err := r.ParseMultipartForm(MULTIPART_FORM_MAX_MEMORY)
+	err = r.ParseMultipartForm(MULTIPART_FORM_MAX_MEMORY)
 	if err != nil || r.MultipartForm == nil {
 		return utils.HttpBadRequest().
 			WithInternalErr(err).

@@ -2,6 +2,10 @@ package filetransfer
 
 const PluginName = "filetransfer"
 
+type Settings struct {
+	Enabled bool `json:"enabled" mapstructure:"enabled"`
+}
+
 const (
 	FILETRANSFER_UPDATE = "filetransfer/update"
 )
