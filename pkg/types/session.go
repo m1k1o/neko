@@ -49,7 +49,7 @@ type Settings struct {
 	MercifulReconnect bool `json:"merciful_reconnect"`
 
 	// plugin scope
-	Plugins map[string]any `json:"plugins"`
+	Plugins PluginSettings `json:"plugins"`
 }
 
 type Session interface {

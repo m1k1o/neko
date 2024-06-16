@@ -23,7 +23,7 @@ type MemberProfile struct {
 	CanSeeInactiveCursors bool `json:"can_see_inactive_cursors" mapstructure:"can_see_inactive_cursors"`
 
 	// plugin scope
-	Plugins map[string]any `json:"plugins"`
+	Plugins PluginSettings `json:"plugins"`
 }
 
 type MemberProvider interface {
