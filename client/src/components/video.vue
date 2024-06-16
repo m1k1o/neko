@@ -313,7 +313,15 @@
     }
 
     get clipboard_read_available() {
-      return 'clipboard' in navigator && typeof navigator.clipboard.readText === 'function'
+      return (
+        'clipboard' in navigator &&
+        typeof navigator.clipboard.readText === 'function' &&
+        // Firefox 122+ incorrectly reports that it can read the clipboard but it can't
+        // instead it hangs when reading clipboard, until user clicks on the page
+        // and the click itself is not handled by the page at all, also the clipboard
+        // reads always fail with "Clipboard read operation is not allowed."
+        navigator.userAgent.indexOf('Firefox') == -1
+      )
     }
 
     get clipboard_write_available() {
