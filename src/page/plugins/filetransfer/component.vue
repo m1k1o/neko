@@ -289,9 +289,9 @@ const api = props.neko.withApi(FiletransferApi) as FiletransferApi
 // config option to enable/disable filetransfer plugin
 const enabledSystemWide = ref(false)
 // dynamic settings for filetransfer plugin
-const enabledInSettings = computed(() => !(props.neko.state.settings?.plugins?.filetransfer?.enabled === false))
+const enabledInSettings = computed(() => !(props.neko.state.settings?.plugins?.['filetransfer.enabled'] === false))
 // user specific setting to enable/disable filetransfer plugin
-const enabledForMe = computed(() => !(props.neko.session?.profile?.plugins?.filetransfer?.enabled === false))
+const enabledForMe = computed(() => !(props.neko.session?.profile?.plugins?.['filetransfer.enabled'] === false))
 // combined enabled state for filetransfer plugin and user
 const enabled = computed(() => enabledSystemWide.value && (enabledInSettings.value || props.neko.is_admin) && enabledForMe.value)
 
@@ -316,9 +316,9 @@ onMounted(async () => {
   })
 })
 
-async function toggleEnabled(inEnabled = true) {
+async function toggleEnabled(isEnabled = true) {
   try {
-    await props.neko.room.settingsSet({ plugins: { filetransfer: {  "enabled": inEnabled} } })
+    await props.neko.room.settingsSet({ plugins: { "filetransfer.enabled": isEnabled } })
   } catch (e: any) {
     alert(e.response ? e.response.data.message : e)
   }
