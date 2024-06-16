@@ -1,3 +1,8 @@
+export interface Settings {
+  can_send: boolean
+  can_receive: boolean
+}
+
 export const CHAT_INIT = "chat/init"
 export const CHAT_MESSAGE = "chat/message"
 

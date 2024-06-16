@@ -1,12 +1,15 @@
 <template>
   <div class="chat" v-if="tab === 'chat'">
     <div class="chat-header">
-      <p>Chat is {{ isLocked ? 'locked' : 'unlocked' }} for users</p>
-      <i :class="['fas', isLocked ? 'fa-lock' : 'fa-unlock', 'refresh']" @click="setLock(!isLocked)" :title="isLocked ? 'Unlock' : 'Lock'" />
+      <p>Chat sending is {{ canSendInSettings ? 'unlocked' : 'locked' }} for users</p>
+      <i v-if="props.neko.is_admin" :class="['fas', canSendInSettings ? 'fa-unlock' : 'fa-lock', 'refresh']" @click="toggleCanSend(!canSendInSettings)" :title="canSendInSettings ? 'Lock' : 'Unlock'" />
     </div>
     <div class="chat-header">
-      <p>Chat is {{ !enabled ? 'disabled' : 'enabled' }}</p>
-      <i class="fas fa-rotate-right refresh" />
+      <p>Chat receiving is {{ canReceiveInSettings ? 'unlocked' : 'locked' }} for users</p>
+      <i v-if="props.neko.is_admin" :class="['fas', canReceiveInSettings ? 'fa-unlock' : 'fa-lock', 'refresh']" @click="toggleCanReceive(!canReceiveInSettings)" :title="canReceiveInSettings ? 'Lock' : 'Unlock'" />
+    </div>
+    <div v-if="!enabledSystemWide" class="chat-header">
+      <p>Chat is disabled system-wide</p>
     </div>
     <ul class="chat-history" ref="history">
       <template v-for="(message, index) in messages" :key="index">
@@ -21,7 +24,7 @@
         </li>
       </template>
     </ul>
-    <div class="chat-send">
+    <div class="chat-send" v-if="canSend">
       <div class="text-container">
         <textarea ref="input" placeholder="Send a message" @keydown="onKeyDown" v-model="content" />
       </div>
@@ -51,6 +54,7 @@
 
       .refresh {
         margin-left: auto;
+        cursor: pointer;
       }
     }
 
@@ -61,6 +65,8 @@
       max-width: 100%;
       scrollbar-width: thin;
       scrollbar-color: $background-tertiary transparent;
+      margin: 10px 0;
+      box-sizing: border-box;
 
       &::-webkit-scrollbar {
         width: 8px;
@@ -91,6 +97,7 @@
         user-select: text;
         word-wrap: break-word;
         font-size: 16px;
+        line-height: 1.2;
       }
 
       .content-head {
@@ -121,7 +128,7 @@
       flex-shrink: 0;
       height: 80px;
       max-height: 80px;
-      padding: 0 10px 10px 10px;
+      padding: 10px 10px 10px 10px;
       flex-direction: column;
       display: flex;
 
@@ -201,8 +208,18 @@ const props = defineProps<{
   tab: string
 }>()
 
-const enabled = ref(false)
-const enabledForMe = computed(() => enabled.value && (props.neko.is_admin || (!props.neko.is_admin && !isLocked.value)))
+// config option to enable/disable chat plugin
+const enabledSystemWide = ref(false)
+// dynamic settings for chat plugin
+const canSendInSettings = computed(() => !(props.neko.state.settings?.plugins?.['chat.can_send'] === false))
+const canReceiveInSettings = computed(() => !(props.neko.state.settings?.plugins?.['chat.can_receive'] === false))
+// user specific setting to enable/disable chat plugin
+const canSendForMe = computed(() => !(props.neko.session?.profile?.plugins?.['chat.can_send'] === false))
+const canReceiveForMe = computed(() => !(props.neko.session?.profile?.plugins?.['chat.can_receive'] === false))
+// combined enabled state for chat plugin and user
+const canSend = computed(() => enabledSystemWide.value && (canSendInSettings.value || props.neko.is_admin) && canSendForMe.value)
+const canReceive = computed(() => enabledSystemWide.value && (canReceiveInSettings.value || props.neko.is_admin) && canReceiveForMe.value)
+
 const messages = ref<types.Message[]>([])
 const content = ref('')
 
@@ -211,7 +228,7 @@ onMounted(() => {
     switch (event) {
       case types.CHAT_INIT: {
         const message = payload as types.Init
-        enabled.value = message.enabled
+        enabledSystemWide.value = message.enabled
         break
       }
       case types.CHAT_MESSAGE: {
@@ -227,6 +244,22 @@ onMounted(() => {
       history.value.scrollTop = history.value.scrollHeight
   }, 0)
 })
+
+async function toggleCanSend(isEnabled = true) {
+  try {
+    await props.neko.room.settingsSet({ plugins: { "chat.can_send": isEnabled } })
+  } catch (e: any) {
+    alert(e.response ? e.response.data.message : e)
+  }
+}
+
+async function toggleCanReceive(isEnabled = true) {
+  try {
+    await props.neko.room.settingsSet({ plugins: { "chat.can_receive": isEnabled } })
+  } catch (e: any) {
+    alert(e.response ? e.response.data.message : e)
+  }
+}
 
 function timestamp(date: Date | string) {
   date = new Date(date)
@@ -292,15 +325,5 @@ function sendMessage() {
   } as types.Content)
 
   content.value = ''
-}
-
-const isLocked = computed(() => props.neko.state.settings?.plugins?.chat === true)
-
-async function setLock(isLocked = true) {
-  try {
-    await props.neko.room.settingsSet({ plugins: { chat: isLocked } })
-  } catch (e: any) {
-    alert(e.response ? e.response.data.message : e)
-  }
 }
 </script>
