@@ -630,7 +630,7 @@
     }
 
     async syncClipboard() {
-      if (this.clipboard_read_available) {
+      if (this.clipboard_read_available && window.document.hasFocus()) {
         try {
           const text = await navigator.clipboard.readText()
           if (this.clipboard !== text) {
