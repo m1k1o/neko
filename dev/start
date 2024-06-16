@@ -2,8 +2,8 @@
 cd "$(dirname "$0")"
 
 if [ -z "$(docker images -q neko_server_app 2> /dev/null)" ]; then
-	echo "Image 'neko_server_app' not found. Running ./build first."
-	./build
+    echo "Image 'neko_server_app' not found. Running ./build first."
+    ./build
 fi
 
 if [ -z $NEKO_PORT ]; then
@@ -21,6 +21,10 @@ if [ -z $NEKO_NAT1TO1 ]; then
             break
         fi
     done
+
+    if [ -z $NEKO_NAT1TO1 ]; then
+        NEKO_NAT1TO1=$(hostname -I 2>/dev/null | awk '{print $1}')
+    fi
 
     if [ -z $NEKO_NAT1TO1 ]; then
         NEKO_NAT1TO1=$(hostname -i 2>/dev/null)

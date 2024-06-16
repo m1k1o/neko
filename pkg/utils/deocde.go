@@ -3,7 +3,13 @@ package utils
 import (
 	"encoding/json"
 	"reflect"
+
+	"github.com/mitchellh/mapstructure"
 )
+
+func Decode(input interface{}, output interface{}) error {
+	return mapstructure.Decode(input, output)
+}
 
 func Unmarshal(in any, raw []byte, callback func() error) error {
 	if err := json.Unmarshal(raw, &in); err != nil {
