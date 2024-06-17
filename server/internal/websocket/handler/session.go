@@ -30,7 +30,7 @@ func (h *MessageHandler) SessionCreated(id string, session types.Session) error 
 		}
 
 		// send broadcast status if admin
-		if err := h.boradcastStatus(session); err != nil {
+		if err := h.broadcastStatus(session); err != nil {
 			return err
 		}
 	}
