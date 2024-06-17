@@ -6,6 +6,7 @@
 - Added nvidia support for firefox.
 - Added `?lang=<lang>` parameter to the URL, which will set the language of the interface (by @mbattista).
 - Added `?show_side=1` and `?mute_chat=1` parameter to the URL, for chat mute and show side (by @mbattista).
+- Added `NEKO_BROADCAST_AUTOSTART` to automatically start or do not start broadcasting when the room is created. By default, it is set to `true` because it was the previous behavior.
 
 ### Bugs
 - Fix incorrect version sorting for chromium, microsoft-edge, opera and ungoogledchromium.
