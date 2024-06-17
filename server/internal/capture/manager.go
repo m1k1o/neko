@@ -31,7 +31,7 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 		// sinks
 		broadcast: broadcastNew(func(url string) (string, error) {
 			return NewBroadcastPipeline(config.AudioDevice, config.Display, config.BroadcastPipeline, url)
-		}, config.BroadcastUrl),
+		}, config.BroadcastUrl, config.BroadcastAutostart),
 		audio: streamSinkNew(config.AudioCodec, func() (string, error) {
 			return NewAudioPipeline(config.AudioCodec, config.AudioDevice, config.AudioPipeline, config.AudioBitrate)
 		}, "audio"),

@@ -107,9 +107,11 @@ nat1to1: <ip>
 #### `NEKO_BROADCAST_PIPELINE`:
   - Makes it possible to create custom gstreamer pipeline used for broadcasting, strings `{url}`, `{device}` and `{display}` will be replaced.
 #### `NEKO_BROADCAST_URL`:
-  - Set a default URL for broadcast streams. Setting this value will automatically enable broadcasting when n.eko starts. It can be disabled/changed later by admins in the GUI.
+  - Set a default URL for broadcast streams. It can be disabled/changed later by admins in the GUI.
   - e.g. `rtmp://<your-server>:1935/ingest/<stream-key>`
-
+#### `NEKO_BROADCAST_AUTOSTART`:
+  - Automatically start broadcasting when neko starts and broadcast_url is set.
+  - e.g. `true`
 ### Server
 
 #### `NEKO_BIND`:

@@ -22,7 +22,7 @@ type BroacastManagerCtx struct {
 	started bool
 }
 
-func broadcastNew(pipelineFn func(url string) (string, error), defaultUrl string) *BroacastManagerCtx {
+func broadcastNew(pipelineFn func(url string) (string, error), url string, started bool) *BroacastManagerCtx {
 	logger := log.With().
 		Str("module", "capture").
 		Str("submodule", "broadcast").
@@ -31,8 +31,8 @@ func broadcastNew(pipelineFn func(url string) (string, error), defaultUrl string
 	return &BroacastManagerCtx{
 		logger:     logger,
 		pipelineFn: pipelineFn,
-		url:        defaultUrl,
-		started:    defaultUrl != "",
+		url:        url,
+		started:    started,
 	}
 }
 
