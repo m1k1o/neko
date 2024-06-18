@@ -32,7 +32,7 @@ func broadcastNew(pipelineFn func(url string) (string, error), url string, start
 		logger:     logger,
 		pipelineFn: pipelineFn,
 		url:        url,
-		started:    started,
+		started:    started && url != "",
 	}
 }
 
