@@ -10,11 +10,11 @@
             "debugAdapter": "dlv-dap",
             "request": "launch",
             "mode": "debug",
-            "program": "${workspaceFolder}/cmd/neko",
-            "output": "${workspaceFolder}/bin/debug/neko",
-            "cwd": "${workspaceFolder}/",
+            "program": "${workspaceFolder}/server/cmd/neko",
+            "output": "${workspaceFolder}/server/bin/debug/neko",
+            "cwd": "${workspaceFolder}/server/",
             "args": ["serve", "-d", "-c", "dev/runtime/config.yml"],
-            "envFile": "${workspaceFolder}/.env.development"
+            "envFile": "${workspaceFolder}/server/.env.development"
         }
     ]
 }
