@@ -31,6 +31,8 @@ func ParseStr(codecName string) (codec RTPCodec, ok bool) {
 		codec = VP8()
 	case VP9().Name:
 		codec = VP9()
+	case AV1().Name:
+		codec = AV1()
 	case H264().Name:
 		codec = H264()
 	case Opus().Name:
@@ -131,6 +133,25 @@ func H264() RTPCodec {
 		// https://gstreamer.freedesktop.org/documentation/openh264/openh264enc.html
 		// gstreamer1.0-plugins-bad
 		//Pipeline: "openh264enc multi-thread=4 complexity=high bitrate=3072000 max-bitrate=4096000 ! video/x-h264,stream-format=byte-stream",
+	}
+}
+
+// TODO: Profile ID.
+func AV1() RTPCodec {
+	return RTPCodec{
+		Name:        "av1",
+		PayloadType: 96,
+		Type:        webrtc.RTPCodecTypeVideo,
+		Capability: webrtc.RTPCodecCapability{
+			MimeType:     webrtc.MimeTypeAV1,
+			ClockRate:    90000,
+			Channels:     0,
+			SDPFmtpLine:  "",
+			RTCPFeedback: RTCPFeedback,
+		},
+		// https://gstreamer.freedesktop.org/documentation/av1/av1enc.html
+		// gstreamer1.0-plugins-bad
+		Pipeline: "av1enc target-bitrate=4096 cpu-used=4 end-usage=cbr undershoot=95 keyframe-max-dist=15 min-quantizer=4 max-quantizer=20",
 	}
 }
 
