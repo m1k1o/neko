@@ -136,7 +136,7 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
 
     this._state.screen.configurations = list // TODO: Vue.Set
 
-    this[EVENT.BORADCAST_STATUS](broadcast_status)
+    this[EVENT.BROADCAST_STATUS](broadcast_status)
   }
 
   protected [EVENT.SYSTEM_SETTINGS]({ id, ...settings }: message.SystemSettingsUpdate) {
@@ -320,8 +320,8 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
   // Broadcast Events
   /////////////////////////////
 
-  protected [EVENT.BORADCAST_STATUS]({ url, is_active }: message.BroadcastStatus) {
-    this._localLog.debug(`EVENT.BORADCAST_STATUS`)
+  protected [EVENT.BROADCAST_STATUS]({ url, is_active }: message.BroadcastStatus) {
+    this._localLog.debug(`EVENT.BROADCAST_STATUS`)
     // TODO: Handle.
     this.emit('room.broadcast.status', is_active, url)
   }
@@ -336,7 +336,7 @@ export class NekoMessages extends EventEmitter<NekoEvents> {
   }
 
   protected [EVENT.SEND_BROADCAST]({ sender, subject, body }: message.SendMessage) {
-    this._localLog.debug(`EVENT.BORADCAST_STATUS`)
+    this._localLog.debug(`EVENT.BROADCAST_STATUS`)
     this.emit('receive.broadcast', sender, subject, body)
   }
 

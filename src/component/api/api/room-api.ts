@@ -50,9 +50,9 @@ export const RoomApiAxiosParamCreator = function (configuration?: Configuration)
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        boradcastStart: async (broadcastStatus: BroadcastStatus, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        broadcastStart: async (broadcastStatus: BroadcastStatus, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'broadcastStatus' is not null or undefined
-            assertParamExists('boradcastStart', 'broadcastStatus', broadcastStatus)
+            assertParamExists('broadcastStart', 'broadcastStatus', broadcastStatus)
             const localVarPath = `/api/room/broadcast/start`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -94,7 +94,7 @@ export const RoomApiAxiosParamCreator = function (configuration?: Configuration)
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        boradcastStop: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        broadcastStop: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             const localVarPath = `/api/room/broadcast/stop`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -1146,10 +1146,10 @@ export const RoomApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async boradcastStart(broadcastStatus: BroadcastStatus, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.boradcastStart(broadcastStatus, options);
+        async broadcastStart(broadcastStatus: BroadcastStatus, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.broadcastStart(broadcastStatus, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['RoomApi.boradcastStart']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['RoomApi.broadcastStart']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -1158,10 +1158,10 @@ export const RoomApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async boradcastStop(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.boradcastStop(options);
+        async broadcastStop(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<void>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.broadcastStop(options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['RoomApi.boradcastStop']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['RoomApi.broadcastStop']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -1479,8 +1479,8 @@ export const RoomApiFactory = function (configuration?: Configuration, basePath?
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        boradcastStart(broadcastStatus: BroadcastStatus, options?: any): AxiosPromise<void> {
-            return localVarFp.boradcastStart(broadcastStatus, options).then((request) => request(axios, basePath));
+        broadcastStart(broadcastStatus: BroadcastStatus, options?: any): AxiosPromise<void> {
+            return localVarFp.broadcastStart(broadcastStatus, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -1488,8 +1488,8 @@ export const RoomApiFactory = function (configuration?: Configuration, basePath?
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        boradcastStop(options?: any): AxiosPromise<void> {
-            return localVarFp.boradcastStop(options).then((request) => request(axios, basePath));
+        broadcastStop(options?: any): AxiosPromise<void> {
+            return localVarFp.broadcastStop(options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -1735,8 +1735,8 @@ export class RoomApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof RoomApi
      */
-    public boradcastStart(broadcastStatus: BroadcastStatus, options?: RawAxiosRequestConfig) {
-        return RoomApiFp(this.configuration).boradcastStart(broadcastStatus, options).then((request) => request(this.axios, this.basePath));
+    public broadcastStart(broadcastStatus: BroadcastStatus, options?: RawAxiosRequestConfig) {
+        return RoomApiFp(this.configuration).broadcastStart(broadcastStatus, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -1746,8 +1746,8 @@ export class RoomApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof RoomApi
      */
-    public boradcastStop(options?: RawAxiosRequestConfig) {
-        return RoomApiFp(this.configuration).boradcastStop(options).then((request) => request(this.axios, this.basePath));
+    public broadcastStop(options?: RawAxiosRequestConfig) {
+        return RoomApiFp(this.configuration).broadcastStop(options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

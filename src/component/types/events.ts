@@ -53,7 +53,7 @@ export const CLIPBOARD_SET = 'clipboard/set'
 export const KEYBOARD_MODIFIERS = 'keyboard/modifiers'
 export const KEYBOARD_MAP = 'keyboard/map'
 
-export const BORADCAST_STATUS = 'broadcast/status'
+export const BROADCAST_STATUS = 'broadcast/status'
 
 export const SEND_UNICAST = 'send/unicast'
 export const SEND_BROADCAST = 'send/broadcast'
