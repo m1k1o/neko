@@ -26,6 +26,11 @@ type Desktop struct {
 }
 
 func (Desktop) Init(cmd *cobra.Command) error {
+	cmd.PersistentFlags().String("desktop.display", "", "X display to use for desktop sharing")
+	if err := viper.BindPFlag("desktop.display", cmd.PersistentFlags().Lookup("desktop.display")); err != nil {
+		return err
+	}
+
 	cmd.PersistentFlags().String("desktop.screen", "1280x720@30", "default screen size and framerate")
 	if err := viper.BindPFlag("desktop.screen", cmd.PersistentFlags().Lookup("desktop.screen")); err != nil {
 		return err
@@ -69,8 +74,12 @@ func (Desktop) InitV2(cmd *cobra.Command) error {
 }
 
 func (s *Desktop) Set() {
-	// Display is provided by env variable
-	s.Display = os.Getenv("DISPLAY")
+	s.Display = viper.GetString("desktop.display")
+
+	// Display is provided by env variable unless explicitly set
+	if s.Display == "" {
+		s.Display = os.Getenv("DISPLAY")
+	}
 
 	s.ScreenSize = types.ScreenSize{
 		Width:  1280,

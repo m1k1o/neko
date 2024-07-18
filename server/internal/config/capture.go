@@ -75,6 +75,11 @@ func (Capture) Init(cmd *cobra.Command) error {
 	}
 
 	// videos
+	cmd.PersistentFlags().String("capture.video.display", "", "X display to capture")
+	if err := viper.BindPFlag("capture.video.display", cmd.PersistentFlags().Lookup("capture.video.display")); err != nil {
+		return err
+	}
+
 	cmd.PersistentFlags().String("capture.video.codec", "vp8", "video codec to be used")
 	if err := viper.BindPFlag("capture.video.codec", cmd.PersistentFlags().Lookup("capture.video.codec")); err != nil {
 		return err
@@ -309,8 +314,12 @@ func (Capture) InitV2(cmd *cobra.Command) error {
 func (s *Capture) Set() {
 	var ok bool
 
-	// Display is provided by env variable
-	s.Display = os.Getenv("DISPLAY")
+	s.Display = viper.GetString("capture.video.display")
+
+	// Display is provided by env variable unless explicitly set
+	if s.Display == "" {
+		s.Display = os.Getenv("DISPLAY")
+	}
 
 	// video
 	videoCodec := viper.GetString("capture.video.codec")
@@ -400,7 +409,7 @@ func (s *Capture) SetV2() {
 
 	if display := viper.GetString("display"); display != "" {
 		s.Display = display
-		log.Warn().Msg("you are using v2 configuration 'NEKO_DISPLAY' which is deprecated, please use 'DISPLAY' instead")
+		log.Warn().Msg("you are using v2 configuration 'NEKO_DISPLAY' which is deprecated, please use 'NEKO_CAPTURE_VIDEO_DISPLAY' and/or 'NEKO_DESKTOP_DISPLAY' instead, also consider using 'DISPLAY' env variable if both should be the same")
 	}
 
 	if videoCodec := viper.GetString("video_codec"); videoCodec != "" {
