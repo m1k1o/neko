@@ -28,7 +28,7 @@ type BroacastManagerCtx struct {
 	pipelinesActive  prometheus.Gauge
 }
 
-func broadcastNew(pipelineFn func(url string) (string, error), defaultUrl string) *BroacastManagerCtx {
+func broadcastNew(pipelineFn func(url string) (string, error), defaultUrl string, autostart bool) *BroacastManagerCtx {
 	logger := log.With().
 		Str("module", "capture").
 		Str("submodule", "broadcast").
@@ -38,7 +38,7 @@ func broadcastNew(pipelineFn func(url string) (string, error), defaultUrl string
 		logger:     logger,
 		pipelineFn: pipelineFn,
 		url:        defaultUrl,
-		started:    defaultUrl != "",
+		started:    defaultUrl != "" && autostart,
 
 		// metrics
 		pipelinesCounter: promauto.NewCounter(prometheus.CounterOpts{

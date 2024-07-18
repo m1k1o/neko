@@ -28,6 +28,7 @@ type Capture struct {
 	BroadcastPreset       string
 	BroadcastPipeline     string
 	BroadcastUrl          string
+	BroadcastAutostart    bool
 
 	ScreencastEnabled  bool
 	ScreencastRate     string
@@ -99,6 +100,11 @@ func (Capture) Init(cmd *cobra.Command) error {
 
 	cmd.PersistentFlags().String("capture.broadcast.url", "", "initial URL for broadcasting, setting this value will automatically start broadcasting")
 	if err := viper.BindPFlag("capture.broadcast.url", cmd.PersistentFlags().Lookup("capture.broadcast.url")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().Bool("capture.broadcast.autostart", true, "automatically start broadcasting when neko starts and broadcast_url is set")
+	if err := viper.BindPFlag("capture.broadcast.autostart", cmd.PersistentFlags().Lookup("capture.broadcast.autostart")); err != nil {
 		return err
 	}
 
@@ -227,6 +233,7 @@ func (s *Capture) Set() {
 	s.BroadcastPreset = viper.GetString("capture.broadcast.preset")
 	s.BroadcastPipeline = viper.GetString("capture.broadcast.pipeline")
 	s.BroadcastUrl = viper.GetString("capture.broadcast.url")
+	s.BroadcastAutostart = viper.GetBool("capture.broadcast.autostart")
 
 	// screencast
 	s.ScreencastEnabled = viper.GetBool("capture.screencast.enabled")

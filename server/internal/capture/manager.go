@@ -103,7 +103,7 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 					"! x264enc threads=4 bitrate=%d key-int-max=15 byte-stream=true tune=zerolatency speed-preset=%s "+
 					"! mux.", url, config.AudioDevice, config.BroadcastAudioBitrate*1000, config.Display, config.BroadcastVideoBitrate, config.BroadcastPreset,
 			), nil
-		}, config.BroadcastUrl),
+		}, config.BroadcastUrl, config.BroadcastAutostart),
 		screencast: screencastNew(config.ScreencastEnabled, func() string {
 			if config.ScreencastPipeline != "" {
 				// replace {display} with valid display
