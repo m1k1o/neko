@@ -72,37 +72,37 @@ func (Server) Init(cmd *cobra.Command) error {
 }
 
 func (Server) InitV2(cmd *cobra.Command) error {
-	cmd.PersistentFlags().String("bind", "", "address/port/socket to serve neko")
+	cmd.PersistentFlags().String("bind", "", "V2: address/port/socket to serve neko")
 	if err := viper.BindPFlag("bind", cmd.PersistentFlags().Lookup("bind")); err != nil {
 		return err
 	}
 
-	cmd.PersistentFlags().String("cert", "", "path to the SSL cert used to secure the neko server")
+	cmd.PersistentFlags().String("cert", "", "V2: path to the SSL cert used to secure the neko server")
 	if err := viper.BindPFlag("cert", cmd.PersistentFlags().Lookup("cert")); err != nil {
 		return err
 	}
 
-	cmd.PersistentFlags().String("key", "", "path to the SSL key used to secure the neko server")
+	cmd.PersistentFlags().String("key", "", "V2: path to the SSL key used to secure the neko server")
 	if err := viper.BindPFlag("key", cmd.PersistentFlags().Lookup("key")); err != nil {
 		return err
 	}
 
-	cmd.PersistentFlags().Bool("proxy", false, "enable reverse proxy mode")
+	cmd.PersistentFlags().Bool("proxy", false, "V2: enable reverse proxy mode")
 	if err := viper.BindPFlag("proxy", cmd.PersistentFlags().Lookup("proxy")); err != nil {
 		return err
 	}
 
-	cmd.PersistentFlags().String("static", "", "path to neko client files to serve")
+	cmd.PersistentFlags().String("static", "", "V2: path to neko client files to serve")
 	if err := viper.BindPFlag("static", cmd.PersistentFlags().Lookup("static")); err != nil {
 		return err
 	}
 
-	cmd.PersistentFlags().String("path_prefix", "", "path prefix for HTTP requests")
+	cmd.PersistentFlags().String("path_prefix", "", "V2: path prefix for HTTP requests")
 	if err := viper.BindPFlag("path_prefix", cmd.PersistentFlags().Lookup("path_prefix")); err != nil {
 		return err
 	}
 
-	cmd.PersistentFlags().StringSlice("cors", []string{}, "list of allowed origins for CORS")
+	cmd.PersistentFlags().StringSlice("cors", []string{}, "V2: list of allowed origins for CORS")
 	if err := viper.BindPFlag("cors", cmd.PersistentFlags().Lookup("cors")); err != nil {
 		return err
 	}

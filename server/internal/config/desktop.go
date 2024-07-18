@@ -65,7 +65,7 @@ func (Desktop) Init(cmd *cobra.Command) error {
 }
 
 func (Desktop) InitV2(cmd *cobra.Command) error {
-	cmd.PersistentFlags().String("screen", "", "default screen resolution and framerate")
+	cmd.PersistentFlags().String("screen", "", "V2: default screen resolution and framerate")
 	if err := viper.BindPFlag("screen", cmd.PersistentFlags().Lookup("screen")); err != nil {
 		return err
 	}

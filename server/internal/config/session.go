@@ -97,17 +97,17 @@ func (Session) Init(cmd *cobra.Command) error {
 }
 
 func (Session) InitV2(cmd *cobra.Command) error {
-	cmd.PersistentFlags().StringSlice("locks", []string{}, "resources, that will be locked when starting (control, login)")
+	cmd.PersistentFlags().StringSlice("locks", []string{}, "V2: resources, that will be locked when starting (control, login)")
 	if err := viper.BindPFlag("locks", cmd.PersistentFlags().Lookup("locks")); err != nil {
 		return err
 	}
 
-	cmd.PersistentFlags().Bool("control_protection", false, "control protection means, users can gain control only if at least one admin is in the room")
+	cmd.PersistentFlags().Bool("control_protection", false, "V2: control protection means, users can gain control only if at least one admin is in the room")
 	if err := viper.BindPFlag("control_protection", cmd.PersistentFlags().Lookup("control_protection")); err != nil {
 		return err
 	}
 
-	cmd.PersistentFlags().Bool("implicit_control", false, "if enabled members can gain control implicitly")
+	cmd.PersistentFlags().Bool("implicit_control", false, "V2: if enabled members can gain control implicitly")
 	if err := viper.BindPFlag("implicit_control", cmd.PersistentFlags().Lookup("implicit_control")); err != nil {
 		return err
 	}

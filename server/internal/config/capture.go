@@ -186,12 +186,12 @@ func (Capture) Init(cmd *cobra.Command) error {
 }
 
 func (Capture) InitV2(cmd *cobra.Command) error {
-	cmd.PersistentFlags().String("display", "", "XDisplay to capture")
+	cmd.PersistentFlags().String("display", "", "V2: XDisplay to capture")
 	if err := viper.BindPFlag("display", cmd.PersistentFlags().Lookup("display")); err != nil {
 		return err
 	}
 
-	cmd.PersistentFlags().String("video_codec", "", "video codec to be used")
+	cmd.PersistentFlags().String("video_codec", "", "V2: video codec to be used")
 	if err := viper.BindPFlag("video_codec", cmd.PersistentFlags().Lookup("video_codec")); err != nil {
 		return err
 	}
@@ -220,22 +220,22 @@ func (Capture) InitV2(cmd *cobra.Command) error {
 		return err
 	}
 
-	cmd.PersistentFlags().String("hwenc", "", "use hardware accelerated encoding")
+	cmd.PersistentFlags().String("hwenc", "", "V2: use hardware accelerated encoding")
 	if err := viper.BindPFlag("hwenc", cmd.PersistentFlags().Lookup("hwenc")); err != nil {
 		return err
 	}
 
-	cmd.PersistentFlags().Int("video_bitrate", 0, "video bitrate in kbit/s")
+	cmd.PersistentFlags().Int("video_bitrate", 0, "V2: video bitrate in kbit/s")
 	if err := viper.BindPFlag("video_bitrate", cmd.PersistentFlags().Lookup("video_bitrate")); err != nil {
 		return err
 	}
 
-	cmd.PersistentFlags().Int("max_fps", 0, "maximum fps delivered via WebRTC, 0 is for no maximum")
+	cmd.PersistentFlags().Int("max_fps", 0, "V2: maximum fps delivered via WebRTC, 0 is for no maximum")
 	if err := viper.BindPFlag("max_fps", cmd.PersistentFlags().Lookup("max_fps")); err != nil {
 		return err
 	}
 
-	cmd.PersistentFlags().String("video", "", "video codec parameters to use for streaming")
+	cmd.PersistentFlags().String("video", "", "V2: video codec parameters to use for streaming")
 	if err := viper.BindPFlag("video", cmd.PersistentFlags().Lookup("video")); err != nil {
 		return err
 	}
@@ -244,12 +244,12 @@ func (Capture) InitV2(cmd *cobra.Command) error {
 	// audio
 	//
 
-	cmd.PersistentFlags().String("device", "", "audio device to capture")
+	cmd.PersistentFlags().String("device", "", "V2: audio device to capture")
 	if err := viper.BindPFlag("device", cmd.PersistentFlags().Lookup("device")); err != nil {
 		return err
 	}
 
-	cmd.PersistentFlags().String("audio_codec", "", "audio codec to be used")
+	cmd.PersistentFlags().String("audio_codec", "", "V2: audio codec to be used")
 	if err := viper.BindPFlag("audio_codec", cmd.PersistentFlags().Lookup("audio_codec")); err != nil {
 		return err
 	}
@@ -279,12 +279,12 @@ func (Capture) InitV2(cmd *cobra.Command) error {
 	}
 	// audio codecs
 
-	cmd.PersistentFlags().Int("audio_bitrate", 0, "audio bitrate in kbit/s")
+	cmd.PersistentFlags().Int("audio_bitrate", 0, "V2: audio bitrate in kbit/s")
 	if err := viper.BindPFlag("audio_bitrate", cmd.PersistentFlags().Lookup("audio_bitrate")); err != nil {
 		return err
 	}
 
-	cmd.PersistentFlags().String("audio", "", "audio codec parameters to use for streaming")
+	cmd.PersistentFlags().String("audio", "", "V2: audio codec parameters to use for streaming")
 	if err := viper.BindPFlag("audio", cmd.PersistentFlags().Lookup("audio")); err != nil {
 		return err
 	}
@@ -293,17 +293,17 @@ func (Capture) InitV2(cmd *cobra.Command) error {
 	// broadcast
 	//
 
-	cmd.PersistentFlags().String("broadcast_pipeline", "", "custom gst pipeline used for broadcasting, strings {url} {device} {display} will be replaced")
+	cmd.PersistentFlags().String("broadcast_pipeline", "", "V2: custom gst pipeline used for broadcasting, strings {url} {device} {display} will be replaced")
 	if err := viper.BindPFlag("broadcast_pipeline", cmd.PersistentFlags().Lookup("broadcast_pipeline")); err != nil {
 		return err
 	}
 
-	cmd.PersistentFlags().String("broadcast_url", "", "a default default URL for broadcast streams, can be disabled/changed later by admins in the GUI")
+	cmd.PersistentFlags().String("broadcast_url", "", "V2: a default default URL for broadcast streams, can be disabled/changed later by admins in the GUI")
 	if err := viper.BindPFlag("broadcast_url", cmd.PersistentFlags().Lookup("broadcast_url")); err != nil {
 		return err
 	}
 
-	cmd.PersistentFlags().Bool("broadcast_autostart", false, "automatically start broadcasting when neko starts and broadcast_url is set")
+	cmd.PersistentFlags().Bool("broadcast_autostart", false, "V2: automatically start broadcasting when neko starts and broadcast_url is set")
 	if err := viper.BindPFlag("broadcast_autostart", cmd.PersistentFlags().Lookup("broadcast_autostart")); err != nil {
 		return err
 	}

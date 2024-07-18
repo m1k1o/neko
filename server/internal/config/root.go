@@ -62,7 +62,7 @@ func (Root) Init(cmd *cobra.Command) error {
 }
 
 func (Root) InitV2(cmd *cobra.Command) error {
-	cmd.PersistentFlags().BoolP("logs", "l", false, "save logs to file")
+	cmd.PersistentFlags().BoolP("logs", "l", false, "V2: save logs to file")
 	if err := viper.BindPFlag("logs", cmd.PersistentFlags().Lookup("logs")); err != nil {
 		return err
 	}

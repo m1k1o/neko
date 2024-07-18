@@ -69,12 +69,12 @@ func (Member) Init(cmd *cobra.Command) error {
 }
 
 func (Member) InitV2(cmd *cobra.Command) error {
-	cmd.PersistentFlags().String("password", "", "password for connecting to stream")
+	cmd.PersistentFlags().String("password", "", "V2: password for connecting to stream")
 	if err := viper.BindPFlag("password", cmd.PersistentFlags().Lookup("password")); err != nil {
 		return err
 	}
 
-	cmd.PersistentFlags().String("password_admin", "", "admin password for connecting to stream")
+	cmd.PersistentFlags().String("password_admin", "", "V2: admin password for connecting to stream")
 	if err := viper.BindPFlag("password_admin", cmd.PersistentFlags().Lookup("password_admin")); err != nil {
 		return err
 	}

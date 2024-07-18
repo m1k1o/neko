@@ -168,42 +168,42 @@ func (WebRTC) Init(cmd *cobra.Command) error {
 }
 
 func (WebRTC) InitV2(cmd *cobra.Command) error {
-	cmd.PersistentFlags().String("epr", "", "limits the pool of ephemeral ports that ICE UDP connections can allocate from")
+	cmd.PersistentFlags().String("epr", "", "V2: limits the pool of ephemeral ports that ICE UDP connections can allocate from")
 	if err := viper.BindPFlag("epr", cmd.PersistentFlags().Lookup("epr")); err != nil {
 		return err
 	}
 
-	cmd.PersistentFlags().StringSlice("nat1to1", []string{}, "sets a list of external IP addresses of 1:1 (D)NAT and a candidate type for which the external IP address is used")
+	cmd.PersistentFlags().StringSlice("nat1to1", []string{}, "V2: sets a list of external IP addresses of 1:1 (D)NAT and a candidate type for which the external IP address is used")
 	if err := viper.BindPFlag("nat1to1", cmd.PersistentFlags().Lookup("nat1to1")); err != nil {
 		return err
 	}
 
-	cmd.PersistentFlags().Int("tcpmux", 0, "single TCP mux port for all peers")
+	cmd.PersistentFlags().Int("tcpmux", 0, "V2: single TCP mux port for all peers")
 	if err := viper.BindPFlag("tcpmux", cmd.PersistentFlags().Lookup("tcpmux")); err != nil {
 		return err
 	}
 
-	cmd.PersistentFlags().Int("udpmux", 0, "single UDP mux port for all peers")
+	cmd.PersistentFlags().Int("udpmux", 0, "V2: single UDP mux port for all peers")
 	if err := viper.BindPFlag("udpmux", cmd.PersistentFlags().Lookup("udpmux")); err != nil {
 		return err
 	}
 
-	cmd.PersistentFlags().String("ipfetch", "", "automatically fetch IP address from given URL when nat1to1 is not present")
+	cmd.PersistentFlags().String("ipfetch", "", "V2: automatically fetch IP address from given URL when nat1to1 is not present")
 	if err := viper.BindPFlag("ipfetch", cmd.PersistentFlags().Lookup("ipfetch")); err != nil {
 		return err
 	}
 
-	cmd.PersistentFlags().Bool("icelite", false, "configures whether or not the ice agent should be a lite agent")
+	cmd.PersistentFlags().Bool("icelite", false, "V2: configures whether or not the ice agent should be a lite agent")
 	if err := viper.BindPFlag("icelite", cmd.PersistentFlags().Lookup("icelite")); err != nil {
 		return err
 	}
 
-	cmd.PersistentFlags().StringSlice("iceserver", []string{}, "describes a single STUN and TURN server that can be used by the ICEAgent to establish a connection with a peer")
+	cmd.PersistentFlags().StringSlice("iceserver", []string{}, "V2: describes a single STUN and TURN server that can be used by the ICEAgent to establish a connection with a peer")
 	if err := viper.BindPFlag("iceserver", cmd.PersistentFlags().Lookup("iceserver")); err != nil {
 		return err
 	}
 
-	cmd.PersistentFlags().String("iceservers", "", "describes a single STUN and TURN server that can be used by the ICEAgent to establish a connection with a peer")
+	cmd.PersistentFlags().String("iceservers", "", "V2: describes a single STUN and TURN server that can be used by the ICEAgent to establish a connection with a peer")
 	if err := viper.BindPFlag("iceservers", cmd.PersistentFlags().Lookup("iceservers")); err != nil {
 		return err
 	}
