@@ -22,7 +22,7 @@ func (h *RoomHandler) broadcastStatus(w http.ResponseWriter, r *http.Request) er
 	})
 }
 
-func (h *RoomHandler) boradcastStart(w http.ResponseWriter, r *http.Request) error {
+func (h *RoomHandler) broadcastStart(w http.ResponseWriter, r *http.Request) error {
 	data := &BroadcastStatusPayload{}
 	if err := utils.HttpJsonRequest(w, r, data); err != nil {
 		return err
@@ -42,7 +42,7 @@ func (h *RoomHandler) boradcastStart(w http.ResponseWriter, r *http.Request) err
 	}
 
 	h.sessions.AdminBroadcast(
-		event.BORADCAST_STATUS,
+		event.BROADCAST_STATUS,
 		message.BroadcastStatus{
 			IsActive: broadcast.Started(),
 			URL:      broadcast.Url(),
@@ -51,7 +51,7 @@ func (h *RoomHandler) boradcastStart(w http.ResponseWriter, r *http.Request) err
 	return utils.HttpSuccess(w)
 }
 
-func (h *RoomHandler) boradcastStop(w http.ResponseWriter, r *http.Request) error {
+func (h *RoomHandler) broadcastStop(w http.ResponseWriter, r *http.Request) error {
 	broadcast := h.capture.Broadcast()
 	if !broadcast.Started() {
 		return utils.HttpUnprocessableEntity("server is not broadcasting")
@@ -60,7 +60,7 @@ func (h *RoomHandler) boradcastStop(w http.ResponseWriter, r *http.Request) erro
 	broadcast.Stop()
 
 	h.sessions.AdminBroadcast(
-		event.BORADCAST_STATUS,
+		event.BROADCAST_STATUS,
 		message.BroadcastStatus{
 			IsActive: broadcast.Started(),
 			URL:      broadcast.Url(),

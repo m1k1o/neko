@@ -70,7 +70,7 @@ const (
 )
 
 const (
-	BORADCAST_STATUS = "broadcast/status"
+	BROADCAST_STATUS = "broadcast/status"
 )
 
 const (

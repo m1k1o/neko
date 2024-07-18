@@ -265,7 +265,7 @@ paths:
       tags:
         - room
       summary: start broadcast
-      operationId: boradcastStart
+      operationId: broadcastStart
       responses:
         '204':
           description: OK
@@ -302,7 +302,7 @@ paths:
       tags:
         - room
       summary: stop broadcast
-      operationId: boradcastStop
+      operationId: broadcastStop
       responses:
         '204':
           description: OK
