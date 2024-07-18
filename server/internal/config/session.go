@@ -3,6 +3,7 @@ package config
 import (
 	"time"
 
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -95,6 +96,25 @@ func (Session) Init(cmd *cobra.Command) error {
 	return nil
 }
 
+func (Session) InitV2(cmd *cobra.Command) error {
+	cmd.PersistentFlags().StringSlice("locks", []string{}, "resources, that will be locked when starting (control, login)")
+	if err := viper.BindPFlag("locks", cmd.PersistentFlags().Lookup("locks")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().Bool("control_protection", false, "control protection means, users can gain control only if at least one admin is in the room")
+	if err := viper.BindPFlag("control_protection", cmd.PersistentFlags().Lookup("control_protection")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().Bool("implicit_control", false, "if enabled members can gain control implicitly")
+	if err := viper.BindPFlag("implicit_control", cmd.PersistentFlags().Lookup("implicit_control")); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (s *Session) Set() {
 	s.File = viper.GetString("session.file")
 
@@ -111,4 +131,29 @@ func (s *Session) Set() {
 	s.CookieName = viper.GetString("session.cookie.name")
 	s.CookieExpiration = time.Duration(viper.GetInt("session.cookie.expiration")) * time.Hour
 	s.CookieSecure = viper.GetBool("session.cookie.secure")
+}
+
+func (s *Session) SetV2() {
+	if viper.IsSet("locks") {
+		locks := viper.GetStringSlice("locks")
+		for _, lock := range locks {
+			switch lock {
+			// TODO: file_transfer
+			case "control":
+				s.LockedControls = true
+			case "login":
+				s.LockedLogins = true
+			}
+		}
+		log.Warn().Msg("you are using v2 configuration 'NEKO_LOCKS' which is deprecated, please use 'NEKO_SESSION_LOCKED_CONTROLS' and 'NEKO_SESSION_LOCKED_LOGINS' instead")
+	}
+
+	if viper.IsSet("implicit_control") {
+		s.ImplicitHosting = viper.GetBool("implicit_control")
+		log.Warn().Msg("you are using v2 configuration 'NEKO_IMPLICIT_CONTROL' which is deprecated, please use 'NEKO_SESSION_IMPLICIT_HOSTING' instead")
+	}
+	if viper.IsSet("control_protection") {
+		s.ControlProtection = viper.GetBool("control_protection")
+		log.Warn().Msg("you are using v2 configuration 'NEKO_CONTROL_PROTECTION' which is deprecated, please use 'NEKO_SESSION_CONTROL_PROTECTION' instead")
+	}
 }

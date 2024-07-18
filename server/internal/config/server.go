@@ -3,6 +3,7 @@ package config
 import (
 	"path"
 
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -70,6 +71,45 @@ func (Server) Init(cmd *cobra.Command) error {
 	return nil
 }
 
+func (Server) InitV2(cmd *cobra.Command) error {
+	cmd.PersistentFlags().String("bind", "", "address/port/socket to serve neko")
+	if err := viper.BindPFlag("bind", cmd.PersistentFlags().Lookup("bind")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().String("cert", "", "path to the SSL cert used to secure the neko server")
+	if err := viper.BindPFlag("cert", cmd.PersistentFlags().Lookup("cert")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().String("key", "", "path to the SSL key used to secure the neko server")
+	if err := viper.BindPFlag("key", cmd.PersistentFlags().Lookup("key")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().Bool("proxy", false, "enable reverse proxy mode")
+	if err := viper.BindPFlag("proxy", cmd.PersistentFlags().Lookup("proxy")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().String("static", "", "path to neko client files to serve")
+	if err := viper.BindPFlag("static", cmd.PersistentFlags().Lookup("static")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().String("path_prefix", "", "path prefix for HTTP requests")
+	if err := viper.BindPFlag("path_prefix", cmd.PersistentFlags().Lookup("path_prefix")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().StringSlice("cors", []string{}, "list of allowed origins for CORS")
+	if err := viper.BindPFlag("cors", cmd.PersistentFlags().Lookup("cors")); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (s *Server) Set() {
 	s.Cert = viper.GetString("server.cert")
 	s.Key = viper.GetString("server.key")
@@ -84,6 +124,41 @@ func (s *Server) Set() {
 	in, _ := utils.ArrayIn("*", s.CORS)
 	if len(s.CORS) == 0 || in {
 		s.CORS = []string{"*"}
+	}
+}
+
+func (s *Server) SetV2() {
+	if viper.IsSet("cert") {
+		s.Cert = viper.GetString("cert")
+		log.Warn().Msg("you are using v2 configuration 'NEKO_CERT' which is deprecated, please use 'NEKO_SERVER_CERT' instead")
+	}
+	if viper.IsSet("key") {
+		s.Key = viper.GetString("key")
+		log.Warn().Msg("you are using v2 configuration 'NEKO_KEY' which is deprecated, please use 'NEKO_SERVER_KEY' instead")
+	}
+	if viper.IsSet("bind") {
+		s.Bind = viper.GetString("bind")
+		log.Warn().Msg("you are using v2 configuration 'NEKO_BIND' which is deprecated, please use 'NEKO_SERVER_BIND' instead")
+	}
+	if viper.IsSet("proxy") {
+		s.Proxy = viper.GetBool("proxy")
+		log.Warn().Msg("you are using v2 configuration 'NEKO_PROXY' which is deprecated, please use 'NEKO_SERVER_PROXY' instead")
+	}
+	if viper.IsSet("static") {
+		s.Static = viper.GetString("static")
+		log.Warn().Msg("you are using v2 configuration 'NEKO_STATIC' which is deprecated, please use 'NEKO_SERVER_STATIC' instead")
+	}
+	if viper.IsSet("path_prefix") {
+		s.PathPrefix = path.Join("/", path.Clean(viper.GetString("path_prefix")))
+		log.Warn().Msg("you are using v2 configuration 'NEKO_PATH_PREFIX' which is deprecated, please use 'NEKO_SERVER_PATH_PREFIX' instead")
+	}
+	if viper.IsSet("cors") {
+		s.CORS = viper.GetStringSlice("cors")
+		in, _ := utils.ArrayIn("*", s.CORS)
+		if len(s.CORS) == 0 || in {
+			s.CORS = []string{"*"}
+		}
+		log.Warn().Msg("you are using v2 configuration 'NEKO_CORS' which is deprecated, please use 'NEKO_SERVER_CORS' instead")
 	}
 }
 

@@ -1,6 +1,7 @@
 package config
 
 import (
+	"encoding/json"
 	"strconv"
 	"strings"
 	"time"
@@ -166,6 +167,50 @@ func (WebRTC) Init(cmd *cobra.Command) error {
 	return nil
 }
 
+func (WebRTC) InitV2(cmd *cobra.Command) error {
+	cmd.PersistentFlags().String("epr", "", "limits the pool of ephemeral ports that ICE UDP connections can allocate from")
+	if err := viper.BindPFlag("epr", cmd.PersistentFlags().Lookup("epr")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().StringSlice("nat1to1", []string{}, "sets a list of external IP addresses of 1:1 (D)NAT and a candidate type for which the external IP address is used")
+	if err := viper.BindPFlag("nat1to1", cmd.PersistentFlags().Lookup("nat1to1")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().Int("tcpmux", 0, "single TCP mux port for all peers")
+	if err := viper.BindPFlag("tcpmux", cmd.PersistentFlags().Lookup("tcpmux")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().Int("udpmux", 0, "single UDP mux port for all peers")
+	if err := viper.BindPFlag("udpmux", cmd.PersistentFlags().Lookup("udpmux")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().String("ipfetch", "", "automatically fetch IP address from given URL when nat1to1 is not present")
+	if err := viper.BindPFlag("ipfetch", cmd.PersistentFlags().Lookup("ipfetch")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().Bool("icelite", false, "configures whether or not the ice agent should be a lite agent")
+	if err := viper.BindPFlag("icelite", cmd.PersistentFlags().Lookup("icelite")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().StringSlice("iceserver", []string{}, "describes a single STUN and TURN server that can be used by the ICEAgent to establish a connection with a peer")
+	if err := viper.BindPFlag("iceserver", cmd.PersistentFlags().Lookup("iceserver")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().String("iceservers", "", "describes a single STUN and TURN server that can be used by the ICEAgent to establish a connection with a peer")
+	if err := viper.BindPFlag("iceservers", cmd.PersistentFlags().Lookup("iceservers")); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (s *WebRTC) Set() {
 	s.ICELite = viper.GetBool("webrtc.icelite")
 	s.ICETrickle = viper.GetBool("webrtc.icetrickle")
@@ -270,4 +315,85 @@ func (s *WebRTC) Set() {
 	s.Estimator.DowngradeBackoff = viper.GetDuration("webrtc.estimator.downgrade_backoff")
 	s.Estimator.UpgradeBackoff = viper.GetDuration("webrtc.estimator.upgrade_backoff")
 	s.Estimator.DiffThreshold = viper.GetFloat64("webrtc.estimator.diff_threshold")
+}
+
+func (s *WebRTC) SetV2() {
+	if viper.IsSet("nat1to1") {
+		s.NAT1To1IPs = viper.GetStringSlice("nat1to1")
+		log.Warn().Msg("you are using v2 configuration 'NEKO_NAT1TO1' which is deprecated, please use 'NEKO_WEBRTC_NAT1TO1' instead")
+	}
+	if viper.IsSet("tcpmux") {
+		s.TCPMux = viper.GetInt("tcpmux")
+		log.Warn().Msg("you are using v2 configuration 'NEKO_TCPMUX' which is deprecated, please use 'NEKO_WEBRTC_TCPMUX' instead")
+	}
+	if viper.IsSet("udpmux") {
+		s.UDPMux = viper.GetInt("udpmux")
+		log.Warn().Msg("you are using v2 configuration 'NEKO_UDPMUX' which is deprecated, please use 'NEKO_WEBRTC_UDPMUX' instead")
+	}
+	if viper.IsSet("icelite") {
+		s.ICELite = viper.GetBool("icelite")
+		log.Warn().Msg("you are using v2 configuration 'NEKO_ICELITE' which is deprecated, please use 'NEKO_WEBRTC_ICELITE' instead")
+	}
+
+	if viper.IsSet("iceservers") {
+		iceServers := []types.ICEServer{}
+		iceServersJson := viper.GetString("iceservers")
+		if iceServersJson != "" {
+			err := json.Unmarshal([]byte(iceServersJson), &iceServers)
+			if err != nil {
+				log.Panic().Err(err).Msg("failed to process iceservers")
+			}
+		}
+		s.ICEServersFrontend = iceServers
+		s.ICEServersBackend = iceServers
+		log.Warn().Msg("you are using v2 configuration 'NEKO_ICESERVERS' which is deprecated, please use 'NEKO_WEBRTC_ICESERVERS_FRONTEND' and/or 'NEKO_WEBRTC_ICESERVERS_BACKEND' instead")
+	}
+
+	if viper.IsSet("iceserver") {
+		iceServerSlice := viper.GetStringSlice("iceserver")
+		if len(iceServerSlice) > 0 {
+			s.ICEServersFrontend = append(s.ICEServersFrontend, types.ICEServer{URLs: iceServerSlice})
+			s.ICEServersBackend = append(s.ICEServersBackend, types.ICEServer{URLs: iceServerSlice})
+		}
+		log.Warn().Msg("you are using v2 configuration 'NEKO_ICESERVER' which is deprecated, please use 'NEKO_WEBRTC_ICESERVERS_FRONTEND' and/or 'NEKO_WEBRTC_ICESERVERS_BACKEND' instead")
+	}
+
+	if viper.IsSet("ipfetch") {
+		if len(s.NAT1To1IPs) == 0 {
+			ipfetch := viper.GetString("ipfetch")
+			ip, err := utils.HttpRequestGET(ipfetch)
+			if err != nil {
+				log.Panic().Err(err).Str("ipfetch", ipfetch).Msg("failed to fetch ip address")
+			}
+			s.NAT1To1IPs = append(s.NAT1To1IPs, ip)
+		}
+		log.Warn().Msg("you are using v2 configuration 'NEKO_IPFETCH' which is deprecated, please use 'NEKO_WEBRTC_IP_RETRIEVAL_URL' instead")
+	}
+
+	if viper.IsSet("epr") {
+		min := uint16(59000)
+		max := uint16(59100)
+		epr := viper.GetString("epr")
+		ports := strings.SplitN(epr, "-", -1)
+		if len(ports) > 1 {
+			start, err := strconv.ParseUint(ports[0], 10, 16)
+			if err == nil {
+				min = uint16(start)
+			}
+
+			end, err := strconv.ParseUint(ports[1], 10, 16)
+			if err == nil {
+				max = uint16(end)
+			}
+		}
+
+		if min > max {
+			s.EphemeralMin = max
+			s.EphemeralMax = min
+		} else {
+			s.EphemeralMin = min
+			s.EphemeralMax = max
+		}
+		log.Warn().Msg("you are using v2 configuration 'NEKO_EPR' which is deprecated, please use 'NEKO_WEBRTC_EPR' instead")
+	}
 }

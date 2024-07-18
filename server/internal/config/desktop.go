@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"strconv"
 
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -58,6 +59,15 @@ func (Desktop) Init(cmd *cobra.Command) error {
 	return nil
 }
 
+func (Desktop) InitV2(cmd *cobra.Command) error {
+	cmd.PersistentFlags().String("screen", "", "default screen resolution and framerate")
+	if err := viper.BindPFlag("screen", cmd.PersistentFlags().Lookup("screen")); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (s *Desktop) Set() {
 	// Display is provided by env variable
 	s.Display = os.Getenv("DISPLAY")
@@ -88,4 +98,24 @@ func (s *Desktop) Set() {
 	s.Unminimize = viper.GetBool("desktop.unminimize")
 	s.UploadDrop = viper.GetBool("desktop.upload_drop")
 	s.FileChooserDialog = viper.GetBool("desktop.file_chooser_dialog")
+}
+
+func (s *Desktop) SetV2() {
+	if viper.IsSet("screen") {
+		r := regexp.MustCompile(`([0-9]{1,4})x([0-9]{1,4})@([0-9]{1,3})`)
+		res := r.FindStringSubmatch(viper.GetString("screen"))
+
+		if len(res) > 0 {
+			width, err1 := strconv.ParseInt(res[1], 10, 64)
+			height, err2 := strconv.ParseInt(res[2], 10, 64)
+			rate, err3 := strconv.ParseInt(res[3], 10, 64)
+
+			if err1 == nil && err2 == nil && err3 == nil {
+				s.ScreenSize.Width = int(width)
+				s.ScreenSize.Height = int(height)
+				s.ScreenSize.Rate = int16(rate)
+			}
+		}
+		log.Warn().Msg("you are using v2 configuration 'NEKO_SCREEN' which is deprecated, please use 'NEKO_DESKTOP_SCREEN' instead")
+	}
 }

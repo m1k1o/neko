@@ -2,6 +2,8 @@ package config
 
 import (
 	"os"
+	"path/filepath"
+	"runtime"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -59,6 +61,15 @@ func (Root) Init(cmd *cobra.Command) error {
 	return nil
 }
 
+func (Root) InitV2(cmd *cobra.Command) error {
+	cmd.PersistentFlags().BoolP("logs", "l", false, "save logs to file")
+	if err := viper.BindPFlag("logs", cmd.PersistentFlags().Lookup("logs")); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (s *Root) Set() {
 	s.Config = viper.GetString("config")
 
@@ -93,5 +104,20 @@ func (s *Root) Set() {
 	// support for NO_COLOR env variable: https://no-color.org/
 	if os.Getenv("NO_COLOR") != "" {
 		s.LogNocolor = true
+	}
+}
+
+func (s *Root) SetV2() {
+	if viper.IsSet("logs") {
+		if viper.GetBool("logs") {
+			logs := filepath.Join(".", "logs")
+			if runtime.GOOS == "linux" {
+				logs = "/var/log/neko"
+			}
+			s.LogDir = logs
+		} else {
+			s.LogDir = ""
+		}
+		log.Warn().Msg("you are using v2 configuration 'NEKO_LOGS' which is deprecated, please use 'NEKO_LOG_DIR=/path/to/logs' instead")
 	}
 }
