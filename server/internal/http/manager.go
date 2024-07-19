@@ -10,6 +10,7 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"github.com/demodesk/neko/internal/config"
+	"github.com/demodesk/neko/internal/http/legacy"
 	"github.com/demodesk/neko/pkg/types"
 )
 
@@ -53,6 +54,9 @@ func New(WebSocketManager types.WebSocketManager, ApiManager types.ApiManager, c
 	router.Get("/api/ws", WebSocketManager.Upgrade(func(r *http.Request) bool {
 		return config.AllowOrigin(r.Header.Get("Origin"))
 	}))
+
+	// Legacy handler
+	legacy.New().Route(router)
 
 	batch := batchHandler{
 		Router:     router,
