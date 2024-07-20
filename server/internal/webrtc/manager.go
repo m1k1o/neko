@@ -470,6 +470,21 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session) (*webrtc.Sess
 
 	connection.OnDataChannel(func(dc *webrtc.DataChannel) {
 		logger.Info().Interface("data_channel", dc).Msg("got remote data channel")
+
+		//
+		// old implementation created a new data channel on client side
+		// new implementation creates a new data channel on server side
+		//
+
+		// handle legacy data channel
+		dc.OnMessage(func(message webrtc.DataChannelMessage) {
+			if err := manager.handleLegacy(logger, message.Data, session); err != nil {
+				logger.Err(err).Msg("data handle failed")
+			}
+		})
+
+		// handle legacy data channel
+		peer.dataChannel = dc
 	})
 
 	var once sync.Once

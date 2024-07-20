@@ -57,6 +57,7 @@ type Session interface {
 	Profile() MemberProfile
 	State() SessionState
 	IsHost() bool
+	LegacyIsHost() bool
 	SetAsHost()
 	SetAsHostBy(session Session)
 	ClearHost()
