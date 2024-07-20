@@ -38,14 +38,24 @@ func sessionDataToMember(id string, session message.SessionData) (*oldTypes.Memb
 }
 
 func (s *session) sendControlHost(request message.ControlHost, send func(payload any) error) error {
+	lastHostID := s.lastHostID
+
 	if request.HasHost {
 		s.lastHostID = request.ID
 
 		if request.ID == request.HostID {
-			return send(&oldMessage.Control{
-				Event: oldEvent.CONTROL_LOCKED,
-				ID:    request.HostID,
-			})
+			if request.ID == lastHostID || lastHostID == "" {
+				return send(&oldMessage.Control{
+					Event: oldEvent.CONTROL_LOCKED,
+					ID:    request.HostID,
+				})
+			} else {
+				return send(&oldMessage.AdminTarget{
+					Event:  oldEvent.ADMIN_CONTROL,
+					ID:     request.ID,
+					Target: lastHostID,
+				})
+			}
 		} else {
 			return send(&oldMessage.ControlTarget{
 				Event:  oldEvent.CONTROL_GIVE,
@@ -56,7 +66,9 @@ func (s *session) sendControlHost(request message.ControlHost, send func(payload
 	}
 
 	if request.ID != "" {
-		if request.ID == s.lastHostID {
+		s.lastHostID = ""
+
+		if request.ID == lastHostID {
 			return send(&oldMessage.Control{
 				Event: oldEvent.CONTROL_RELEASE,
 				ID:    request.ID,
@@ -532,27 +544,15 @@ func (s *session) wsToClient(msg []byte, sendMsg func([]byte) error) error {
 			// Admin Events
 			case:
 				send(&oldMessage.AdminLock{
-					Event: oldEvent.ADMIN_UNLOCK,
-				})
-			case:
-				send(&oldMessage.AdminLock{
 					Event: oldEvent.ADMIN_LOCK,
 				})
 			case:
-				send(&oldMessage.AdminTarget{
-					Event: oldEvent.ADMIN_CONTROL,
-				} // )oldMessage.Admin
-			case:
-				send(&oldMessage.AdminTarget{
-					Event: oldEvent.ADMIN_RELEASE,
-				} // )oldMessage.Admin
-			case:
-				send(&oldMessage.AdminTarget{
-					Event: oldEvent.ADMIN_MUTE,
+				send(&oldMessage.AdminLock{
+					Event: oldEvent.ADMIN_UNLOCK,
 				})
 			case:
 				send(&oldMessage.AdminTarget{
-					Event: oldEvent.ADMIN_UNMUTE,
+					Event: oldEvent.ADMIN_BAN,
 				})
 			case:
 				send(&oldMessage.AdminTarget{
@@ -560,7 +560,11 @@ func (s *session) wsToClient(msg []byte, sendMsg func([]byte) error) error {
 				})
 			case:
 				send(&oldMessage.AdminTarget{
-					Event: oldEvent.ADMIN_BAN,
+					Event: oldEvent.ADMIN_MUTE,
+				})
+			case:
+				send(&oldMessage.AdminTarget{
+					Event: oldEvent.ADMIN_UNMUTE,
 				})
 		*/
 
