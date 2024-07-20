@@ -4,158 +4,293 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/demodesk/neko/internal/http/legacy/event"
-	"github.com/demodesk/neko/internal/http/legacy/message"
+	oldEvent "github.com/demodesk/neko/internal/http/legacy/event"
+	oldMessage "github.com/demodesk/neko/internal/http/legacy/message"
+	"github.com/pion/webrtc/v3"
+
+	"github.com/demodesk/neko/pkg/types"
+	"github.com/demodesk/neko/pkg/types/event"
+	"github.com/demodesk/neko/pkg/types/message"
+
+	chat "github.com/demodesk/neko/internal/plugins/chat"
+	filetransfer "github.com/demodesk/neko/internal/plugins/filetransfer"
 )
 
-func (h *LegacyHandler) wsToBackend(msg []byte) ([]byte, error) {
-	header := message.Message{}
+func (s *session) wsToBackend(msg []byte, sendMsg func([]byte) error) error {
+	header := oldMessage.Message{}
 	err := json.Unmarshal(msg, &header)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	var response any
+	send := func(event string, payload any) error {
+		rawPayload, err := json.Marshal(payload)
+		if err != nil {
+			return err
+		}
+
+		msg, err := json.Marshal(&types.WebSocketMessage{
+			Event:   event,
+			Payload: rawPayload,
+		})
+		if err != nil {
+			return err
+		}
+
+		return sendMsg(msg)
+	}
+
 	switch header.Event {
 	// Signal Events
-	case event.SIGNAL_OFFER:
-		request := &message.SignalOffer{}
+	case oldEvent.SIGNAL_OFFER:
+		request := &oldMessage.SignalOffer{}
 		err := json.Unmarshal(msg, request)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
-	case event.SIGNAL_ANSWER:
-		request := &message.SignalAnswer{}
+		return send(event.SIGNAL_OFFER, &message.SignalDescription{
+			SDP: request.SDP,
+		})
+
+	case oldEvent.SIGNAL_ANSWER:
+		request := &oldMessage.SignalAnswer{}
 		err := json.Unmarshal(msg, request)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
-	case event.SIGNAL_CANDIDATE:
-		request := &message.SignalCandidate{}
+		// TODO: Set Display Name here.
+
+		return send(event.SIGNAL_ANSWER, &message.SignalDescription{
+			SDP: request.SDP,
+		})
+
+	case oldEvent.SIGNAL_CANDIDATE:
+		request := &oldMessage.SignalCandidate{}
 		err := json.Unmarshal(msg, request)
 		if err != nil {
-			return nil, err
+			return err
 		}
+
+		var candidate webrtc.ICECandidateInit
+		err = json.Unmarshal([]byte(request.Data), &candidate)
+		if err != nil {
+			return err
+		}
+
+		return send(event.SIGNAL_CANDIDATE, &message.SignalCandidate{
+			ICECandidateInit: candidate,
+		})
 
 	// Control Events
-	case event.CONTROL_RELEASE:
-	case event.CONTROL_REQUEST:
-	case event.CONTROL_GIVE:
-		request := &message.Control{}
+	case oldEvent.CONTROL_RELEASE:
+		return send(event.CONTROL_RELEASE, nil)
+
+	case oldEvent.CONTROL_REQUEST:
+		return send(event.CONTROL_REQUEST, nil)
+
+	case oldEvent.CONTROL_GIVE:
+		request := &oldMessage.Control{}
 		err := json.Unmarshal(msg, request)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
-	case event.CONTROL_CLIPBOARD:
-		request := &message.Clipboard{}
+		// TODO: No WS equivalent, call HTTP API.
+		return fmt.Errorf("event not implemented: %s", header.Event)
+
+	case oldEvent.CONTROL_CLIPBOARD:
+		request := &oldMessage.Clipboard{}
 		err := json.Unmarshal(msg, request)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
-	case event.CONTROL_KEYBOARD:
-		request := &message.Keyboard{}
+		return send(event.CLIPBOARD_SET, &message.ClipboardData{
+			Text: request.Text,
+		})
+
+	case oldEvent.CONTROL_KEYBOARD:
+		request := &oldMessage.Keyboard{}
 		err := json.Unmarshal(msg, request)
 		if err != nil {
-			return nil, err
+			return err
 		}
+
+		if request.Layout != nil {
+			err = send(event.KEYBOARD_MAP, &message.KeyboardMap{
+				KeyboardMap: types.KeyboardMap{
+					Layout: *request.Layout,
+				},
+			})
+
+			if err != nil {
+				return err
+			}
+		}
+
+		if request.CapsLock != nil || request.NumLock != nil || request.ScrollLock != nil {
+			err = send(event.KEYBOARD_MODIFIERS, &message.KeyboardModifiers{
+				KeyboardModifiers: types.KeyboardModifiers{
+					CapsLock: request.CapsLock,
+					NumLock:  request.NumLock,
+					// ScrollLock: request.ScrollLock, // ScrollLock is deprecated.
+				},
+			})
+
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
 
 	// Chat Events
-	case event.CHAT_MESSAGE:
-		request := &message.ChatReceive{}
+	case oldEvent.CHAT_MESSAGE:
+		request := &oldMessage.ChatReceive{}
 		err := json.Unmarshal(msg, request)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
-	case event.CHAT_EMOTE:
-		request := &message.EmoteReceive{}
+		return send(chat.CHAT_MESSAGE, &chat.Content{
+			Text: request.Content,
+		})
+
+	case oldEvent.CHAT_EMOTE:
+		request := &oldMessage.EmoteReceive{}
 		err := json.Unmarshal(msg, request)
 		if err != nil {
-			return nil, err
+			return err
 		}
+
+		// TODO: Emote plugin not implemented.
+		return fmt.Errorf("event not implemented: %s", header.Event)
 
 	// File Transfer Events
-	case event.FILETRANSFER_REFRESH:
+	case oldEvent.FILETRANSFER_REFRESH:
+		return send(filetransfer.FILETRANSFER_UPDATE, nil)
 
 	// Screen Events
-	case event.SCREEN_RESOLUTION:
-	case event.SCREEN_CONFIGURATIONS:
-	case event.SCREEN_SET:
-		request := &message.ScreenResolution{}
+	case oldEvent.SCREEN_RESOLUTION:
+		// No WS equivalent, call HTTP API and return screen resolution.
+		return fmt.Errorf("event not implemented: %s", header.Event)
+
+	case oldEvent.SCREEN_CONFIGURATIONS:
+		// No WS equivalent, call HTTP API and return screen configurations.
+		return fmt.Errorf("event not implemented: %s", header.Event)
+
+	case oldEvent.SCREEN_SET:
+		request := &oldMessage.ScreenResolution{}
 		err := json.Unmarshal(msg, request)
 		if err != nil {
-			return nil, err
+			return err
 		}
+
+		return send(event.SCREEN_SET, &message.ScreenSize{
+			ScreenSize: types.ScreenSize{
+				Width:  request.Width,
+				Height: request.Height,
+				Rate:   request.Rate,
+			},
+		})
 
 	// Broadcast Events
-	case event.BROADCAST_CREATE:
-		request := &message.BroadcastCreate{}
+	case oldEvent.BROADCAST_CREATE:
+		request := &oldMessage.BroadcastCreate{}
 		err := json.Unmarshal(msg, request)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
-	case event.BROADCAST_DESTROY:
+		// TODO: No WS equivalent, call HTTP API.
+		return fmt.Errorf("event not implemented: %s", header.Event)
+
+	case oldEvent.BROADCAST_DESTROY:
+		// TODO: No WS equivalent, call HTTP API.
+		return fmt.Errorf("event not implemented: %s", header.Event)
 
 	// Admin Events
-	case event.ADMIN_LOCK:
-		request := &message.AdminLock{}
+	case oldEvent.ADMIN_LOCK:
+		request := &oldMessage.AdminLock{}
 		err := json.Unmarshal(msg, request)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
-	case event.ADMIN_UNLOCK:
-		request := &message.AdminLock{}
+		// TODO: No WS equivalent, call HTTP API.
+		return fmt.Errorf("event not implemented: %s", header.Event)
+
+	case oldEvent.ADMIN_UNLOCK:
+		request := &oldMessage.AdminLock{}
 		err := json.Unmarshal(msg, request)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
-	case event.ADMIN_CONTROL:
-	case event.ADMIN_RELEASE:
-	case event.ADMIN_GIVE:
-		request := &message.Admin{}
+		// TODO: No WS equivalent, call HTTP API.
+		return fmt.Errorf("event not implemented: %s", header.Event)
+
+	case oldEvent.ADMIN_CONTROL:
+		// TODO: No WS equivalent, call HTTP API.
+		return fmt.Errorf("event not implemented: %s", header.Event)
+
+	case oldEvent.ADMIN_RELEASE:
+		// TODO: No WS equivalent, call HTTP API.
+		return fmt.Errorf("event not implemented: %s", header.Event)
+
+	case oldEvent.ADMIN_GIVE:
+		request := &oldMessage.Admin{}
 		err := json.Unmarshal(msg, request)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
-	case event.ADMIN_BAN:
-		request := &message.Admin{}
+		// TODO: No WS equivalent, call HTTP API.
+		return fmt.Errorf("event not implemented: %s", header.Event)
+
+	case oldEvent.ADMIN_BAN:
+		request := &oldMessage.Admin{}
 		err := json.Unmarshal(msg, request)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
-	case event.ADMIN_KICK:
-		request := &message.Admin{}
+		// TODO: No WS equivalent, call HTTP API.
+		return fmt.Errorf("event not implemented: %s", header.Event)
+
+	case oldEvent.ADMIN_KICK:
+		request := &oldMessage.Admin{}
 		err := json.Unmarshal(msg, request)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
-	case event.ADMIN_MUTE:
-		request := &message.Admin{}
+		// TODO: No WS equivalent, call HTTP API.
+		return fmt.Errorf("event not implemented: %s", header.Event)
+
+	case oldEvent.ADMIN_MUTE:
+		request := &oldMessage.Admin{}
 		err := json.Unmarshal(msg, request)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
-	case event.ADMIN_UNMUTE:
-		request := &message.Admin{}
+		// TODO: No WS equivalent, call HTTP API.
+		return fmt.Errorf("event not implemented: %s", header.Event)
+
+	case oldEvent.ADMIN_UNMUTE:
+		request := &oldMessage.Admin{}
 		err := json.Unmarshal(msg, request)
 		if err != nil {
-			return nil, err
+			return err
 		}
+
+		// TODO: No WS equivalent, call HTTP API.
+		return fmt.Errorf("event not implemented: %s", header.Event)
 
 	default:
-		return nil, fmt.Errorf("unknown event type: %s", header.Event)
+		return fmt.Errorf("unknown event type: %s", header.Event)
 	}
-
-	return json.Marshal(request)
 }

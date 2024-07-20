@@ -38,14 +38,9 @@ func (h *LegacyHandler) Route(r types.Router) {
 	log.Println("legacy handler route")
 
 	r.Get("/ws", func(w http.ResponseWriter, r *http.Request) error {
-		connBackend, _, err := DefaultDialer.Dial("ws://127.0.0.1:8080/api/ws?token="+r.URL.Query().Get("token"), nil)
-		if err != nil {
-			return utils.HttpError(http.StatusServiceUnavailable).
-				WithInternalErr(err).
-				Msg("couldn't dial to remote backend url")
-		}
-		defer connBackend.Close()
+		s := newSession("http://127.0.0.1:8080")
 
+		// create a new websocket connection
 		connClient, err := DefaultUpgrader.Upgrade(w, r, nil)
 		if err != nil {
 			return utils.HttpError(http.StatusInternalServerError).
@@ -53,10 +48,36 @@ func (h *LegacyHandler) Route(r types.Router) {
 				Msg("couldn't upgrade connection to websocket")
 		}
 		defer connClient.Close()
+		s.connClient = connClient
 
+		// create a new session
+		password := r.URL.Query().Get("password")
+		token, err := s.create(password)
+		if err != nil {
+			log.Printf("couldn't create a new session: %v", err)
+			return nil
+		}
+		defer s.destroy()
+
+		// dial to the remote backend
+		connBackend, _, err := DefaultDialer.Dial("ws://127.0.0.1:8080/api/ws?token="+token, nil)
+		if err != nil {
+			log.Printf("couldn't dial to the remote backend: %v", err)
+			return nil
+		}
+		defer connBackend.Close()
+		s.connBackend = connBackend
+
+		// request signal
+		if err = connBackend.WriteMessage(websocket.TextMessage, []byte(`{"event":"signal/request", "payload":{}}`)); err != nil {
+			log.Printf("couldn't request signal: %v", err)
+			return nil
+		}
+
+		// copy messages between the client and the backend
 		errClient := make(chan error, 1)
 		errBackend := make(chan error, 1)
-		replicateWebsocketConn := func(dst, src *websocket.Conn, errc chan error, rewriteTextMessage func([]byte) ([]byte, error)) {
+		replicateWebsocketConn := func(dst, src *websocket.Conn, errc chan error, rewriteTextMessage func([]byte, func([]byte) error) error) {
 			for {
 				msgType, msg, err := src.ReadMessage()
 				if err != nil {
@@ -71,25 +92,33 @@ func (h *LegacyHandler) Route(r types.Router) {
 					break
 				}
 				if msgType == websocket.TextMessage {
-					msg, err = rewriteTextMessage(msg)
+					doBreak := false
+					err = rewriteTextMessage(msg, func(msg []byte) error {
+						err := dst.WriteMessage(msgType, msg)
+						if err != nil {
+							doBreak = true
+						}
+						return err
+					})
+
+					if doBreak {
+						errc <- err
+						break
+					}
+
 					if err != nil {
 						log.Printf("websocketproxy: Error when rewriting message: %v", err)
 						continue
 					}
 				}
-				err = dst.WriteMessage(msgType, msg)
-				if err != nil {
-					errc <- err
-					break
-				}
 			}
 		}
 
-		// client -> backend
-		go replicateWebsocketConn(connClient, connBackend, errClient, h.wsToBackend)
-
 		// backend -> client
-		go replicateWebsocketConn(connBackend, connClient, errBackend, h.wsToClient)
+		go replicateWebsocketConn(connClient, connBackend, errClient, s.wsToClient)
+
+		// client -> backend
+		go replicateWebsocketConn(connBackend, connClient, errBackend, s.wsToBackend)
 
 		var message string
 		select {
@@ -97,7 +126,6 @@ func (h *LegacyHandler) Route(r types.Router) {
 			message = "websocketproxy: Error when copying from backend to client: %v"
 		case err = <-errBackend:
 			message = "websocketproxy: Error when copying from client to backend: %v"
-
 		}
 
 		if e, ok := err.(*websocket.CloseError); !ok || e.Code == websocket.CloseAbnormalClosure {
