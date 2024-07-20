@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/gorilla/websocket"
 	"github.com/pion/webrtc/v3"
 
 	oldEvent "github.com/demodesk/neko/internal/http/legacy/event"
@@ -167,8 +168,28 @@ func (s *session) wsToBackend(msg []byte, sendMsg func([]byte) error) error {
 			return err
 		}
 
-		// TODO: Emote plugin not implemented.
-		return fmt.Errorf("event not implemented: %s", header.Event)
+		// loopback emote
+		msg, err := json.Marshal(&oldMessage.EmoteSend{
+			Event: oldEvent.CHAT_EMOTE,
+			ID:    s.id,
+			Emote: request.Emote,
+		})
+		if err != nil {
+			return err
+		}
+
+		// loopback emote
+		err = s.connClient.WriteMessage(websocket.TextMessage, msg)
+		if err != nil {
+			return err
+		}
+
+		// broadcast emote to other users
+		return send(event.SEND_BROADCAST, &message.SendBroadcast{
+			Sender:  s.id,
+			Subject: "emote",
+			Body:    request.Emote,
+		})
 
 	// File Transfer Events
 	case oldEvent.FILETRANSFER_REFRESH:

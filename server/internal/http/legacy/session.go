@@ -22,7 +22,8 @@ type session struct {
 	profile types.MemberProfile
 	client  *http.Client
 
-	sessions map[string]*oldTypes.Member
+	lastHostID string
+	sessions   map[string]*oldTypes.Member
 
 	connClient  *websocket.Conn
 	connBackend *websocket.Conn

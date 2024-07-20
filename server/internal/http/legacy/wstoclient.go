@@ -37,27 +37,36 @@ func sessionDataToMember(id string, session message.SessionData) (*oldTypes.Memb
 	}, nil
 }
 
-func sendControlHost(request message.ControlHost, send func(payload any) error) error {
+func (s *session) sendControlHost(request message.ControlHost, send func(payload any) error) error {
 	if request.HasHost {
+		s.lastHostID = request.ID
+
 		if request.ID == request.HostID {
 			return send(&oldMessage.Control{
 				Event: oldEvent.CONTROL_LOCKED,
 				ID:    request.HostID,
 			})
+		} else {
+			return send(&oldMessage.ControlTarget{
+				Event:  oldEvent.CONTROL_GIVE,
+				ID:     request.HostID,
+				Target: request.ID,
+			})
 		}
-
-		return send(&oldMessage.ControlTarget{
-			Event:  oldEvent.CONTROL_GIVE,
-			ID:     request.HostID,
-			Target: request.ID,
-		})
 	}
 
 	if request.ID != "" {
-		return send(&oldMessage.Control{
-			Event: oldEvent.CONTROL_RELEASE,
-			ID:    request.ID,
-		})
+		if request.ID == s.lastHostID {
+			return send(&oldMessage.Control{
+				Event: oldEvent.CONTROL_RELEASE,
+				ID:    request.ID,
+			})
+		} else {
+			return send(&oldMessage.Control{
+				Event: oldEvent.ADMIN_RELEASE,
+				ID:    request.ID,
+			})
+		}
 	}
 
 	return nil
@@ -151,7 +160,7 @@ func (s *session) wsToClient(msg []byte, sendMsg func([]byte) error) error {
 		// ControlHost
 		//
 
-		err = sendControlHost(request.ControlHost, send)
+		err = s.sendControlHost(request.ControlHost, send)
 		if err != nil {
 			return err
 		}
@@ -405,7 +414,7 @@ func (s *session) wsToClient(msg []byte, sendMsg func([]byte) error) error {
 			return err
 		}
 
-		return sendControlHost(*request, send)
+		return s.sendControlHost(*request, send)
 
 	case event.CONTROL_REQUEST:
 		request := &message.SessionID{}
@@ -442,11 +451,22 @@ func (s *session) wsToClient(msg []byte, sendMsg func([]byte) error) error {
 			Content: request.Content.Text,
 		})
 
-	// TODO: emotes.
-	//case:
-	//	send(&oldMessage.EmoteSend{
-	//		Event: oldEvent.CHAT_EMOTE,
-	//	})
+	case event.SEND_BROADCAST:
+		request := &message.SendBroadcast{}
+		err := json.Unmarshal(data.Payload, request)
+		if err != nil {
+			return err
+		}
+
+		if request.Subject == "emote" {
+			return send(&oldMessage.EmoteSend{
+				Event: oldEvent.CHAT_EMOTE,
+				ID:    request.Sender,
+				Emote: request.Body.(string),
+			})
+		}
+
+		return nil
 
 	// File Transfer Events
 	case filetransfer.FILETRANSFER_UPDATE:
