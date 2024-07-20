@@ -175,7 +175,7 @@ func (h *MessageHandler) adminGive(id string, session types.Session, payload *me
 			ID:     id,
 			Target: payload.ID,
 		}, nil); err != nil {
-		h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.CONTROL_LOCKED)
+		h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.CONTROL_GIVE)
 		return err
 	}
 
@@ -207,7 +207,7 @@ func (h *MessageHandler) adminMute(id string, session types.Session, payload *me
 			Target: target.ID(),
 			ID:     id,
 		}, nil); err != nil {
-		h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.ADMIN_UNMUTE)
+		h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.ADMIN_MUTE)
 		return err
 	}
 

@@ -78,7 +78,7 @@ func (h *MessageHandler) SessionConnected(id string, session types.Session) erro
 			Event:  event.MEMBER_CONNECTED,
 			Member: session.Member(),
 		}, nil); err != nil {
-		h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.CONTROL_RELEASE)
+		h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.MEMBER_CONNECTED)
 		return err
 	}
 
