@@ -5,13 +5,14 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/pion/webrtc/v3"
+
 	oldEvent "github.com/demodesk/neko/internal/http/legacy/event"
 	oldMessage "github.com/demodesk/neko/internal/http/legacy/message"
 	oldTypes "github.com/demodesk/neko/internal/http/legacy/types"
-	"github.com/pion/webrtc/v3"
 
-	chat "github.com/demodesk/neko/internal/plugins/chat"
-	filetransfer "github.com/demodesk/neko/internal/plugins/filetransfer"
+	"github.com/demodesk/neko/internal/plugins/chat"
+	"github.com/demodesk/neko/internal/plugins/filetransfer"
 	"github.com/demodesk/neko/pkg/types"
 	"github.com/demodesk/neko/pkg/types/event"
 	"github.com/demodesk/neko/pkg/types/message"
@@ -41,14 +42,14 @@ func sendControlHost(request message.ControlHost, send func(payload any) error) 
 		if request.ID == request.HostID {
 			return send(&oldMessage.Control{
 				Event: oldEvent.CONTROL_LOCKED,
-				ID:    request.ID,
+				ID:    request.HostID,
 			})
 		}
 
 		return send(&oldMessage.ControlTarget{
 			Event:  oldEvent.CONTROL_GIVE,
-			ID:     request.ID,
-			Target: request.HostID,
+			ID:     request.HostID,
+			Target: request.ID,
 		})
 	}
 

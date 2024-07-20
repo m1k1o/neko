@@ -3,17 +3,19 @@ package legacy
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+
+	"github.com/pion/webrtc/v3"
 
 	oldEvent "github.com/demodesk/neko/internal/http/legacy/event"
 	oldMessage "github.com/demodesk/neko/internal/http/legacy/message"
-	"github.com/pion/webrtc/v3"
 
+	"github.com/demodesk/neko/internal/api/room"
+	"github.com/demodesk/neko/internal/plugins/chat"
+	"github.com/demodesk/neko/internal/plugins/filetransfer"
 	"github.com/demodesk/neko/pkg/types"
 	"github.com/demodesk/neko/pkg/types/event"
 	"github.com/demodesk/neko/pkg/types/message"
-
-	chat "github.com/demodesk/neko/internal/plugins/chat"
-	filetransfer "github.com/demodesk/neko/internal/plugins/filetransfer"
 )
 
 func (s *session) wsToBackend(msg []byte, sendMsg func([]byte) error) error {
@@ -97,8 +99,8 @@ func (s *session) wsToBackend(msg []byte, sendMsg func([]byte) error) error {
 			return err
 		}
 
-		// TODO: No WS equivalent, call HTTP API.
-		return fmt.Errorf("event not implemented: %s", header.Event)
+		// TODO: Not implemented for user - only for admins.
+		return s.apiReq(http.MethodPost, "/api/room/control/give/"+request.ID, nil, nil)
 
 	case oldEvent.CONTROL_CLIPBOARD:
 		request := &oldMessage.Clipboard{}
@@ -204,12 +206,13 @@ func (s *session) wsToBackend(msg []byte, sendMsg func([]byte) error) error {
 			return err
 		}
 
-		// TODO: No WS equivalent, call HTTP API.
-		return fmt.Errorf("event not implemented: %s", header.Event)
+		return s.apiReq(http.MethodPost, "/api/room/broadcast/start", room.BroadcastStatusPayload{
+			URL:      request.URL,
+			IsActive: true,
+		}, nil)
 
 	case oldEvent.BROADCAST_DESTROY:
-		// TODO: No WS equivalent, call HTTP API.
-		return fmt.Errorf("event not implemented: %s", header.Event)
+		return s.apiReq(http.MethodPost, "/api/room/broadcast/stop", nil, nil)
 
 	// Admin Events
 	case oldEvent.ADMIN_LOCK:
@@ -233,12 +236,10 @@ func (s *session) wsToBackend(msg []byte, sendMsg func([]byte) error) error {
 		return fmt.Errorf("event not implemented: %s", header.Event)
 
 	case oldEvent.ADMIN_CONTROL:
-		// TODO: No WS equivalent, call HTTP API.
-		return fmt.Errorf("event not implemented: %s", header.Event)
+		return s.apiReq(http.MethodPost, "/api/room/control/take", nil, nil)
 
 	case oldEvent.ADMIN_RELEASE:
-		// TODO: No WS equivalent, call HTTP API.
-		return fmt.Errorf("event not implemented: %s", header.Event)
+		return s.apiReq(http.MethodPost, "/api/room/control/reset", nil, nil)
 
 	case oldEvent.ADMIN_GIVE:
 		request := &oldMessage.Admin{}
@@ -246,9 +247,7 @@ func (s *session) wsToBackend(msg []byte, sendMsg func([]byte) error) error {
 		if err != nil {
 			return err
 		}
-
-		// TODO: No WS equivalent, call HTTP API.
-		return fmt.Errorf("event not implemented: %s", header.Event)
+		return s.apiReq(http.MethodPost, "/api/room/control/give/"+request.ID, nil, nil)
 
 	case oldEvent.ADMIN_BAN:
 		request := &oldMessage.Admin{}
