@@ -8,6 +8,8 @@ import (
 	"log"
 	"net/http"
 
+	oldTypes "github.com/demodesk/neko/internal/http/legacy/types"
+
 	"github.com/demodesk/neko/internal/api"
 	"github.com/demodesk/neko/pkg/types"
 	"github.com/gorilla/websocket"
@@ -20,14 +22,17 @@ type session struct {
 	profile types.MemberProfile
 	client  *http.Client
 
+	sessions map[string]*oldTypes.Member
+
 	connClient  *websocket.Conn
 	connBackend *websocket.Conn
 }
 
 func newSession(url string) *session {
 	return &session{
-		url:    url,
-		client: http.DefaultClient,
+		url:      url,
+		client:   http.DefaultClient,
+		sessions: make(map[string]*oldTypes.Member),
 	}
 }
 

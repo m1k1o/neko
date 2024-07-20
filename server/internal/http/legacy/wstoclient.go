@@ -109,12 +109,17 @@ func (s *session) wsToClient(msg []byte, sendMsg func([]byte) error) error {
 		//
 
 		membersList := []*oldTypes.Member{}
+		s.sessions = map[string]*oldTypes.Member{}
 		for id, session := range request.Sessions {
+			if !session.State.IsConnected {
+				continue
+			}
 			member, err := sessionDataToMember(id, session)
 			if err != nil {
 				return err
 			}
 			membersList = append(membersList, member)
+			s.sessions[id] = member
 		}
 
 		err = send(&oldMessage.MembersList{
@@ -242,7 +247,6 @@ func (s *session) wsToClient(msg []byte, sendMsg func([]byte) error) error {
 
 	// Member Events
 
-	// TODO: This is on Created but old API wants OnConnected.
 	case event.SESSION_CREATED:
 		request := &message.SessionData{}
 		err := json.Unmarshal(data.Payload, request)
@@ -255,12 +259,11 @@ func (s *session) wsToClient(msg []byte, sendMsg func([]byte) error) error {
 			return err
 		}
 
-		return send(&oldMessage.Member{
-			Event:  oldEvent.MEMBER_CONNECTED,
-			Member: member,
-		})
+		// only save session - will be notified on connect
+		s.sessions[request.ID] = member
 
-	// TODO: This is on Deleted but old API wants OnDisconnected.
+		return nil
+
 	case event.SESSION_DELETED:
 		request := &message.SessionID{}
 		err := json.Unmarshal(data.Payload, request)
@@ -268,23 +271,51 @@ func (s *session) wsToClient(msg []byte, sendMsg func([]byte) error) error {
 			return err
 		}
 
+		// only continue if session is in the list - should have been already removed
+		if _, ok := s.sessions[request.ID]; !ok {
+			return nil
+		}
+
+		delete(s.sessions, request.ID)
+
 		return send(&oldMessage.MemberDisconnected{
 			Event: oldEvent.MEMBER_DISCONNECTED,
 			ID:    request.ID,
 		})
 
-	// TODO: This would need some context to know it message has been sent already/to get session data on connect.
-	//case event.SESSION_STATE:
-	//	request := &message.SessionState{}
-	//	err := json.Unmarshal(data.Payload, request)
-	//	if err != nil {
-	//		return err
-	//	}
-	//	if request.IsConnected {
-	//		// oldEvent.MEMBER_CONNECTED if not sent already
-	//	} else {
-	//		// oldEvent.MEMBER_DISCONNECTED if nor sent already
-	//	}
+	case event.SESSION_STATE:
+		request := &message.SessionState{}
+		err := json.Unmarshal(data.Payload, request)
+		if err != nil {
+			return err
+		}
+
+		member, ok := s.sessions[request.ID]
+		if !ok {
+			return nil
+		}
+
+		if request.IsConnected && member != nil {
+			s.sessions[request.ID] = nil
+
+			// oldEvent.MEMBER_CONNECTED if not sent already
+			return send(&oldMessage.Member{
+				Event:  oldEvent.MEMBER_CONNECTED,
+				Member: member,
+			})
+		}
+
+		if !request.IsConnected {
+			delete(s.sessions, request.ID)
+
+			// oldEvent.MEMBER_DISCONNECTED if nor sent already
+			return send(&oldMessage.MemberDisconnected{
+				Event: oldEvent.MEMBER_DISCONNECTED,
+				ID:    request.ID,
+			})
+		}
+
+		return nil
 
 	// Signal Events
 	case event.SIGNAL_OFFER:
