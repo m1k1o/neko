@@ -75,6 +75,7 @@ func (p PluginSettings) Unmarshal(name string, def any) error {
 	if p == nil {
 		return fmt.Errorf("%w: %s", ErrPluginSettingsNotFound, name)
 	}
+
 	// loop through the plugin settings and take only the one that starts with the name
 	// because the settings are stored in a map["plugin_name.setting_name"] = value
 	newMap := make(map[string]any)
@@ -83,9 +84,10 @@ func (p PluginSettings) Unmarshal(name string, def any) error {
 			newMap[strings.TrimPrefix(k, name+".")] = v
 		}
 	}
-	fmt.Printf("newMap: %+v\n", newMap)
+
 	if len(newMap) == 0 {
 		return fmt.Errorf("%w: %s", ErrPluginSettingsNotFound, name)
 	}
+
 	return utils.Decode(newMap, def)
 }
