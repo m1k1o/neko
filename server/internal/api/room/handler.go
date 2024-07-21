@@ -95,7 +95,7 @@ func (h *RoomHandler) Route(r types.Router) {
 		r.Post("/release", h.controlRelease)
 
 		r.With(auth.AdminsOnly).Post("/take", h.controlTake)
-		r.With(auth.AdminsOnly).Post("/give/{sessionId}", h.controlGive)
+		r.With(auth.HostsOrAdminsOnly).Post("/give/{sessionId}", h.controlGive)
 		r.With(auth.AdminsOnly).Post("/reset", h.controlReset)
 	})
 

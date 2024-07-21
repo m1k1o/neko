@@ -100,7 +100,6 @@ func (s *session) wsToBackend(msg []byte, sendMsg func([]byte) error) error {
 			return err
 		}
 
-		// TODO: Not implemented for user - only for admins.
 		return s.apiReq(http.MethodPost, "/api/room/control/give/"+request.ID, nil, nil)
 
 	case oldEvent.CONTROL_CLIPBOARD:

@@ -40,6 +40,15 @@ func HostsOnly(w http.ResponseWriter, r *http.Request) (context.Context, error) 
 	return nil, nil
 }
 
+func HostsOrAdminsOnly(w http.ResponseWriter, r *http.Request) (context.Context, error) {
+	session, ok := GetSession(r)
+	if !ok || (!session.IsHost() && !session.Profile().IsAdmin) {
+		return nil, utils.HttpForbidden("session is not host or admin")
+	}
+
+	return nil, nil
+}
+
 func CanWatchOnly(w http.ResponseWriter, r *http.Request) (context.Context, error) {
 	session, ok := GetSession(r)
 	if !ok || !session.Profile().CanWatch {
