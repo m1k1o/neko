@@ -22,8 +22,11 @@ type session struct {
 	profile types.MemberProfile
 	client  *http.Client
 
-	lastHostID string
-	sessions   map[string]*oldTypes.Member
+	lastHostID         string
+	lockedControls     bool
+	lockedLogins       bool
+	lockedFileTransfer bool
+	sessions           map[string]*oldTypes.Member
 
 	connClient  *websocket.Conn
 	connBackend *websocket.Conn
@@ -60,9 +63,13 @@ func (s *session) apiReq(method, path string, request, response any) error {
 	}
 	defer res.Body.Close()
 
-	if res.StatusCode != http.StatusOK {
+	if res.StatusCode < 200 || res.StatusCode >= 300 {
 		body, _ := io.ReadAll(res.Body)
 		return fmt.Errorf("unexpected status code: %d, body: %s", res.StatusCode, body)
+	}
+
+	if res.Body == nil {
+		return nil
 	}
 
 	return json.NewDecoder(res.Body).Decode(response)

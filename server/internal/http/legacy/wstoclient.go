@@ -196,12 +196,15 @@ func (s *session) wsToClient(msg []byte, sendMsg func([]byte) error) error {
 		locks := map[string]string{}
 		if request.Settings.LockedLogins {
 			locks["login"] = "" // TODO: We don't know who locked the login.
+			s.lockedLogins = true
 		}
 		if request.Settings.LockedControls {
 			locks["control"] = "" // TODO: We don't know who locked the control.
+			s.lockedControls = true
 		}
 		if !filetransferSettings.Enabled {
-			locks["filetransfer"] = "" // TODO: We don't know who locked the file transfer.
+			locks["file_transfer"] = "" // TODO: We don't know who locked the file transfer.
+			s.lockedFileTransfer = true
 		}
 
 		return send(&oldMessage.SystemInit{
@@ -540,16 +543,90 @@ func (s *session) wsToClient(msg []byte, sendMsg func([]byte) error) error {
 			IsActive: request.IsActive,
 		})
 
+	// Admin Events
+	case event.SYSTEM_SETTINGS:
+		request := &message.SystemSettingsUpdate{}
+		err := json.Unmarshal(data.Payload, request)
+		if err != nil {
+			return err
+		}
+
+		if s.lockedControls != request.LockedControls {
+			s.lockedControls = request.LockedControls
+
+			if request.LockedControls {
+				err = send(&oldMessage.AdminLock{
+					Event:    oldEvent.ADMIN_LOCK,
+					Resource: "control",
+				})
+			} else {
+				err = send(&oldMessage.AdminLock{
+					Event:    oldEvent.ADMIN_UNLOCK,
+					Resource: "control",
+				})
+			}
+
+			if err != nil {
+				return err
+			}
+		}
+
+		if s.lockedLogins != request.LockedLogins {
+			s.lockedLogins = request.LockedLogins
+
+			if request.LockedLogins {
+				err = send(&oldMessage.AdminLock{
+					Event:    oldEvent.ADMIN_LOCK,
+					Resource: "login",
+				})
+			} else {
+				err = send(&oldMessage.AdminLock{
+					Event:    oldEvent.ADMIN_UNLOCK,
+					Resource: "login",
+				})
+			}
+
+			if err != nil {
+				return err
+			}
+		}
+
+		//
+		// FileTransfer
+		//
+
+		filetransferSettings := filetransfer.Settings{
+			Enabled: true, // defaults to true
+		}
+
+		err = request.Settings.Plugins.Unmarshal(filetransfer.PluginName, &filetransferSettings)
+		if err != nil && !errors.Is(err, types.ErrPluginSettingsNotFound) {
+			return fmt.Errorf("unable to unmarshal %s plugin settings from global settings: %w", filetransfer.PluginName, err)
+		}
+
+		if s.lockedFileTransfer != !filetransferSettings.Enabled {
+			s.lockedFileTransfer = !filetransferSettings.Enabled
+
+			if !filetransferSettings.Enabled {
+				err = send(&oldMessage.AdminLock{
+					Event:    oldEvent.ADMIN_LOCK,
+					Resource: "file_transfer",
+				})
+			} else {
+				err = send(&oldMessage.AdminLock{
+					Event:    oldEvent.ADMIN_UNLOCK,
+					Resource: "file_transfer",
+				})
+			}
+
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
+
 		/*
-			// Admin Events
-			case:
-				send(&oldMessage.AdminLock{
-					Event: oldEvent.ADMIN_LOCK,
-				})
-			case:
-				send(&oldMessage.AdminLock{
-					Event: oldEvent.ADMIN_UNLOCK,
-				})
 			case:
 				send(&oldMessage.AdminTarget{
 					Event: oldEvent.ADMIN_BAN,

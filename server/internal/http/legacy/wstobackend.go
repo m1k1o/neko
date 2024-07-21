@@ -242,8 +242,22 @@ func (s *session) wsToBackend(msg []byte, sendMsg func([]byte) error) error {
 			return err
 		}
 
-		// TODO: No WS equivalent, call HTTP API.
-		return fmt.Errorf("event not implemented: %s", header.Event)
+		data := map[string]any{}
+
+		switch request.Resource {
+		case "login":
+			data["locked_logins"] = true
+		case "control":
+			data["locked_controls"] = true
+		case "file_transfer":
+			data["plugins"] = map[string]any{
+				"filetransfer.enabled": false,
+			}
+		default:
+			return fmt.Errorf("unknown resource: %s", request.Resource)
+		}
+
+		return s.apiReq(http.MethodPost, "/api/room/settings", data, nil)
 
 	case oldEvent.ADMIN_UNLOCK:
 		request := &oldMessage.AdminLock{}
@@ -252,8 +266,22 @@ func (s *session) wsToBackend(msg []byte, sendMsg func([]byte) error) error {
 			return err
 		}
 
-		// TODO: No WS equivalent, call HTTP API.
-		return fmt.Errorf("event not implemented: %s", header.Event)
+		data := map[string]any{}
+
+		switch request.Resource {
+		case "login":
+			data["locked_logins"] = false
+		case "control":
+			data["locked_controls"] = false
+		case "file_transfer":
+			data["plugins"] = map[string]any{
+				"filetransfer.enabled": true,
+			}
+		default:
+			return fmt.Errorf("unknown resource: %s", request.Resource)
+		}
+
+		return s.apiReq(http.MethodPost, "/api/room/settings", data, nil)
 
 	case oldEvent.ADMIN_CONTROL:
 		return s.apiReq(http.MethodPost, "/api/room/control/take", nil, nil)
