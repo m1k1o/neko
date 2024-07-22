@@ -19,28 +19,11 @@ import (
 	"github.com/demodesk/neko/pkg/types/message"
 )
 
-func (s *session) wsToBackend(msg []byte, sendMsg func([]byte) error) error {
+func (s *session) wsToBackend(msg []byte) error {
 	header := oldMessage.Message{}
 	err := json.Unmarshal(msg, &header)
 	if err != nil {
 		return err
-	}
-
-	send := func(event string, payload any) error {
-		rawPayload, err := json.Marshal(payload)
-		if err != nil {
-			return err
-		}
-
-		msg, err := json.Marshal(&types.WebSocketMessage{
-			Event:   event,
-			Payload: rawPayload,
-		})
-		if err != nil {
-			return err
-		}
-
-		return sendMsg(msg)
 	}
 
 	switch header.Event {
@@ -52,7 +35,7 @@ func (s *session) wsToBackend(msg []byte, sendMsg func([]byte) error) error {
 			return err
 		}
 
-		return send(event.SIGNAL_OFFER, &message.SignalDescription{
+		return s.toBackend(event.SIGNAL_OFFER, &message.SignalDescription{
 			SDP: request.SDP,
 		})
 
@@ -65,7 +48,7 @@ func (s *session) wsToBackend(msg []byte, sendMsg func([]byte) error) error {
 
 		// TODO: Set Display Name here.
 
-		return send(event.SIGNAL_ANSWER, &message.SignalDescription{
+		return s.toBackend(event.SIGNAL_ANSWER, &message.SignalDescription{
 			SDP: request.SDP,
 		})
 
@@ -82,16 +65,16 @@ func (s *session) wsToBackend(msg []byte, sendMsg func([]byte) error) error {
 			return err
 		}
 
-		return send(event.SIGNAL_CANDIDATE, &message.SignalCandidate{
+		return s.toBackend(event.SIGNAL_CANDIDATE, &message.SignalCandidate{
 			ICECandidateInit: candidate,
 		})
 
 	// Control Events
 	case oldEvent.CONTROL_RELEASE:
-		return send(event.CONTROL_RELEASE, nil)
+		return s.toBackend(event.CONTROL_RELEASE, nil)
 
 	case oldEvent.CONTROL_REQUEST:
-		return send(event.CONTROL_REQUEST, nil)
+		return s.toBackend(event.CONTROL_REQUEST, nil)
 
 	case oldEvent.CONTROL_GIVE:
 		request := &oldMessage.Control{}
@@ -109,7 +92,7 @@ func (s *session) wsToBackend(msg []byte, sendMsg func([]byte) error) error {
 			return err
 		}
 
-		return send(event.CLIPBOARD_SET, &message.ClipboardData{
+		return s.toBackend(event.CLIPBOARD_SET, &message.ClipboardData{
 			Text: request.Text,
 		})
 
@@ -121,7 +104,7 @@ func (s *session) wsToBackend(msg []byte, sendMsg func([]byte) error) error {
 		}
 
 		if request.Layout != nil {
-			err = send(event.KEYBOARD_MAP, &message.KeyboardMap{
+			err = s.toBackend(event.KEYBOARD_MAP, &message.KeyboardMap{
 				KeyboardMap: types.KeyboardMap{
 					Layout: *request.Layout,
 				},
@@ -133,7 +116,7 @@ func (s *session) wsToBackend(msg []byte, sendMsg func([]byte) error) error {
 		}
 
 		if request.CapsLock != nil || request.NumLock != nil || request.ScrollLock != nil {
-			err = send(event.KEYBOARD_MODIFIERS, &message.KeyboardModifiers{
+			err = s.toBackend(event.KEYBOARD_MODIFIERS, &message.KeyboardModifiers{
 				KeyboardModifiers: types.KeyboardModifiers{
 					CapsLock: request.CapsLock,
 					NumLock:  request.NumLock,
@@ -156,7 +139,7 @@ func (s *session) wsToBackend(msg []byte, sendMsg func([]byte) error) error {
 			return err
 		}
 
-		return send(chat.CHAT_MESSAGE, &chat.Content{
+		return s.toBackend(chat.CHAT_MESSAGE, &chat.Content{
 			Text: request.Content,
 		})
 
@@ -184,7 +167,7 @@ func (s *session) wsToBackend(msg []byte, sendMsg func([]byte) error) error {
 		}
 
 		// broadcast emote to other users
-		return send(event.SEND_BROADCAST, &message.SendBroadcast{
+		return s.toBackend(event.SEND_BROADCAST, &message.SendBroadcast{
 			Sender:  s.id,
 			Subject: "emote",
 			Body:    request.Emote,
@@ -192,7 +175,7 @@ func (s *session) wsToBackend(msg []byte, sendMsg func([]byte) error) error {
 
 	// File Transfer Events
 	case oldEvent.FILETRANSFER_REFRESH:
-		return send(filetransfer.FILETRANSFER_UPDATE, nil)
+		return s.toBackend(filetransfer.FILETRANSFER_UPDATE, nil)
 
 	// Screen Events
 	case oldEvent.SCREEN_RESOLUTION:
@@ -210,7 +193,7 @@ func (s *session) wsToBackend(msg []byte, sendMsg func([]byte) error) error {
 			return err
 		}
 
-		return send(event.SCREEN_SET, &message.ScreenSize{
+		return s.toBackend(event.SCREEN_SET, &message.ScreenSize{
 			ScreenSize: types.ScreenSize{
 				Width:  request.Width,
 				Height: request.Height,

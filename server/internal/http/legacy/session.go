@@ -15,6 +15,11 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+var (
+	ErrWebsocketSend  = fmt.Errorf("failed to send message to websocket")
+	ErrBackendRespone = fmt.Errorf("error response from backend")
+)
+
 type session struct {
 	url     string
 	id      string
@@ -65,6 +70,14 @@ func (s *session) apiReq(method, path string, request, response any) error {
 
 	if res.StatusCode < 200 || res.StatusCode >= 300 {
 		body, _ := io.ReadAll(res.Body)
+		// try to unmarsal as json error message
+		var apiErr struct {
+			Message string `json:"message"`
+		}
+		if err := json.Unmarshal(body, &apiErr); err == nil {
+			return fmt.Errorf("%w: %s", ErrBackendRespone, apiErr.Message)
+		}
+		// return raw body if failed to unmarshal
 		return fmt.Errorf("unexpected status code: %d, body: %s", res.StatusCode, body)
 	}
 
@@ -73,6 +86,44 @@ func (s *session) apiReq(method, path string, request, response any) error {
 	}
 
 	return json.NewDecoder(res.Body).Decode(response)
+}
+
+// send message to client (in old format)
+func (s *session) toClient(payload any) error {
+	msg, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+
+	err = s.connClient.WriteMessage(websocket.TextMessage, msg)
+	if err != nil {
+		return fmt.Errorf("%w: %s", ErrWebsocketSend, err)
+	}
+
+	return nil
+}
+
+// send message to backend (in new format)
+func (s *session) toBackend(event string, payload any) error {
+	rawPayload, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+
+	msg, err := json.Marshal(&types.WebSocketMessage{
+		Event:   event,
+		Payload: rawPayload,
+	})
+	if err != nil {
+		return err
+	}
+
+	err = s.connBackend.WriteMessage(websocket.TextMessage, msg)
+	if err != nil {
+		return fmt.Errorf("%w: %s", ErrWebsocketSend, err)
+	}
+
+	return nil
 }
 
 func (s *session) create(password string) (string, error) {

@@ -37,7 +37,7 @@ func sessionDataToMember(id string, session message.SessionData) (*oldTypes.Memb
 	}, nil
 }
 
-func (s *session) sendControlHost(request message.ControlHost, send func(payload any) error) error {
+func (s *session) sendControlHost(request message.ControlHost) error {
 	lastHostID := s.lastHostID
 
 	if request.HasHost {
@@ -45,19 +45,19 @@ func (s *session) sendControlHost(request message.ControlHost, send func(payload
 
 		if request.ID == request.HostID {
 			if request.ID == lastHostID || lastHostID == "" {
-				return send(&oldMessage.Control{
+				return s.toClient(&oldMessage.Control{
 					Event: oldEvent.CONTROL_LOCKED,
 					ID:    request.HostID,
 				})
 			} else {
-				return send(&oldMessage.AdminTarget{
+				return s.toClient(&oldMessage.AdminTarget{
 					Event:  oldEvent.ADMIN_CONTROL,
 					ID:     request.ID,
 					Target: lastHostID,
 				})
 			}
 		} else {
-			return send(&oldMessage.ControlTarget{
+			return s.toClient(&oldMessage.ControlTarget{
 				Event:  oldEvent.CONTROL_GIVE,
 				ID:     request.HostID,
 				Target: request.ID,
@@ -69,12 +69,12 @@ func (s *session) sendControlHost(request message.ControlHost, send func(payload
 		s.lastHostID = ""
 
 		if request.ID == lastHostID {
-			return send(&oldMessage.Control{
+			return s.toClient(&oldMessage.Control{
 				Event: oldEvent.CONTROL_RELEASE,
 				ID:    request.ID,
 			})
 		} else {
-			return send(&oldMessage.Control{
+			return s.toClient(&oldMessage.Control{
 				Event: oldEvent.ADMIN_RELEASE,
 				ID:    request.ID,
 			})
@@ -84,20 +84,11 @@ func (s *session) sendControlHost(request message.ControlHost, send func(payload
 	return nil
 }
 
-func (s *session) wsToClient(msg []byte, sendMsg func([]byte) error) error {
+func (s *session) wsToClient(msg []byte) error {
 	data := types.WebSocketMessage{}
 	err := json.Unmarshal(msg, &data)
 	if err != nil {
 		return err
-	}
-
-	send := func(payload any) error {
-		msg, err := json.Marshal(payload)
-		if err != nil {
-			return err
-		}
-
-		return sendMsg(msg)
 	}
 
 	switch data.Event {
@@ -109,15 +100,11 @@ func (s *session) wsToClient(msg []byte, sendMsg func([]byte) error) error {
 			return err
 		}
 
-		return send(&oldMessage.SystemMessage{
+		return s.toClient(&oldMessage.SystemMessage{
 			Event:   oldEvent.SYSTEM_DISCONNECT,
 			Message: request.Message,
 		})
 
-	// case:
-	// 	send(&oldMessage.SystemMessage{
-	// 		Event: oldEvent.SYSTEM_ERROR,
-	// 	})
 	case event.SYSTEM_INIT:
 		request := &message.SystemInit{}
 		err := json.Unmarshal(data.Payload, request)
@@ -143,7 +130,7 @@ func (s *session) wsToClient(msg []byte, sendMsg func([]byte) error) error {
 			s.sessions[id] = member
 		}
 
-		err = send(&oldMessage.MembersList{
+		err = s.toClient(&oldMessage.MembersList{
 			Event:   oldEvent.MEMBER_LIST,
 			Members: membersList,
 		})
@@ -155,7 +142,7 @@ func (s *session) wsToClient(msg []byte, sendMsg func([]byte) error) error {
 		// ScreenSize
 		//
 
-		err = send(&oldMessage.ScreenResolution{
+		err = s.toClient(&oldMessage.ScreenResolution{
 			Event:  oldEvent.SCREEN_RESOLUTION,
 			Width:  request.ScreenSize.Width,
 			Height: request.ScreenSize.Height,
@@ -172,7 +159,7 @@ func (s *session) wsToClient(msg []byte, sendMsg func([]byte) error) error {
 		// ControlHost
 		//
 
-		err = s.sendControlHost(request.ControlHost, send)
+		err = s.sendControlHost(request.ControlHost)
 		if err != nil {
 			return err
 		}
@@ -207,7 +194,7 @@ func (s *session) wsToClient(msg []byte, sendMsg func([]byte) error) error {
 			s.lockedFileTransfer = true
 		}
 
-		return send(&oldMessage.SystemInit{
+		return s.toClient(&oldMessage.SystemInit{
 			Event:           oldEvent.SYSTEM_INIT,
 			ImplicitHosting: request.Settings.ImplicitHosting,
 			Locks:           locks,
@@ -251,7 +238,7 @@ func (s *session) wsToClient(msg []byte, sendMsg func([]byte) error) error {
 			}
 		}
 
-		err = send(&oldMessage.ScreenConfigurations{
+		err = s.toClient(&oldMessage.ScreenConfigurations{
 			Event:          oldEvent.SCREEN_CONFIGURATIONS,
 			Configurations: screenSizesList,
 		})
@@ -263,7 +250,7 @@ func (s *session) wsToClient(msg []byte, sendMsg func([]byte) error) error {
 		// BroadcastStatus
 		//
 
-		return send(&oldMessage.BroadcastStatus{
+		return s.toClient(&oldMessage.BroadcastStatus{
 			Event:    oldEvent.BROADCAST_STATUS,
 			URL:      request.BroadcastStatus.URL,
 			IsActive: request.BroadcastStatus.IsActive,
@@ -302,7 +289,7 @@ func (s *session) wsToClient(msg []byte, sendMsg func([]byte) error) error {
 
 		delete(s.sessions, request.ID)
 
-		return send(&oldMessage.MemberDisconnected{
+		return s.toClient(&oldMessage.MemberDisconnected{
 			Event: oldEvent.MEMBER_DISCONNECTED,
 			ID:    request.ID,
 		})
@@ -323,7 +310,7 @@ func (s *session) wsToClient(msg []byte, sendMsg func([]byte) error) error {
 			s.sessions[request.ID] = nil
 
 			// oldEvent.MEMBER_CONNECTED if not sent already
-			return send(&oldMessage.Member{
+			return s.toClient(&oldMessage.Member{
 				Event:  oldEvent.MEMBER_CONNECTED,
 				Member: member,
 			})
@@ -333,7 +320,7 @@ func (s *session) wsToClient(msg []byte, sendMsg func([]byte) error) error {
 			delete(s.sessions, request.ID)
 
 			// oldEvent.MEMBER_DISCONNECTED if nor sent already
-			return send(&oldMessage.MemberDisconnected{
+			return s.toClient(&oldMessage.MemberDisconnected{
 				Event: oldEvent.MEMBER_DISCONNECTED,
 				ID:    request.ID,
 			})
@@ -349,7 +336,7 @@ func (s *session) wsToClient(msg []byte, sendMsg func([]byte) error) error {
 			return err
 		}
 
-		return send(&oldMessage.SignalOffer{
+		return s.toClient(&oldMessage.SignalOffer{
 			Event: oldEvent.SIGNAL_OFFER,
 			SDP:   request.SDP,
 		})
@@ -361,7 +348,7 @@ func (s *session) wsToClient(msg []byte, sendMsg func([]byte) error) error {
 			return err
 		}
 
-		return send(&oldMessage.SignalAnswer{
+		return s.toClient(&oldMessage.SignalAnswer{
 			Event:       oldEvent.SIGNAL_ANSWER,
 			DisplayName: s.profile.Name, // DisplayName
 			SDP:         request.SDP,
@@ -379,7 +366,7 @@ func (s *session) wsToClient(msg []byte, sendMsg func([]byte) error) error {
 			return err
 		}
 
-		return send(&oldMessage.SignalCandidate{
+		return s.toClient(&oldMessage.SignalCandidate{
 			Event: oldEvent.SIGNAL_CANDIDATE,
 			Data:  string(json),
 		})
@@ -401,7 +388,7 @@ func (s *session) wsToClient(msg []byte, sendMsg func([]byte) error) error {
 			})
 		}
 
-		return send(&oldMessage.SignalProvide{
+		return s.toClient(&oldMessage.SignalProvide{
 			Event: oldEvent.SIGNAL_PROVIDE,
 			ID:    s.id, // SessionId
 			SDP:   request.SDP,
@@ -417,7 +404,7 @@ func (s *session) wsToClient(msg []byte, sendMsg func([]byte) error) error {
 			return err
 		}
 
-		return send(&oldMessage.Clipboard{
+		return s.toClient(&oldMessage.Clipboard{
 			Event: oldEvent.CONTROL_CLIPBOARD,
 			Text:  request.Text,
 		})
@@ -429,7 +416,7 @@ func (s *session) wsToClient(msg []byte, sendMsg func([]byte) error) error {
 			return err
 		}
 
-		return s.sendControlHost(*request, send)
+		return s.sendControlHost(*request)
 
 	case event.CONTROL_REQUEST:
 		request := &message.SessionID{}
@@ -440,13 +427,13 @@ func (s *session) wsToClient(msg []byte, sendMsg func([]byte) error) error {
 
 		if s.id == request.ID {
 			// if i am the one that is requesting, send CONTROL_REQUEST to me
-			return send(&oldMessage.Control{
+			return s.toClient(&oldMessage.Control{
 				Event: oldEvent.CONTROL_REQUEST,
 				ID:    request.ID,
 			})
 		} else {
 			// if not, let me know someone else is requesting
-			return send(&oldMessage.Control{
+			return s.toClient(&oldMessage.Control{
 				Event: oldEvent.CONTROL_REQUESTING,
 				ID:    request.ID,
 			})
@@ -460,7 +447,7 @@ func (s *session) wsToClient(msg []byte, sendMsg func([]byte) error) error {
 			return err
 		}
 
-		return send(&oldMessage.ChatSend{
+		return s.toClient(&oldMessage.ChatSend{
 			Event:   oldEvent.CHAT_MESSAGE,
 			ID:      request.ID,
 			Content: request.Content.Text,
@@ -474,7 +461,7 @@ func (s *session) wsToClient(msg []byte, sendMsg func([]byte) error) error {
 		}
 
 		if request.Subject == "emote" {
-			return send(&oldMessage.EmoteSend{
+			return s.toClient(&oldMessage.EmoteSend{
 				Event: oldEvent.CHAT_EMOTE,
 				ID:    request.Sender,
 				Emote: request.Body.(string),
@@ -507,7 +494,7 @@ func (s *session) wsToClient(msg []byte, sendMsg func([]byte) error) error {
 			})
 		}
 
-		return send(&oldMessage.FileTransferList{
+		return s.toClient(&oldMessage.FileTransferList{
 			Event: oldEvent.FILETRANSFER_LIST,
 			Cwd:   request.RootDir,
 			Files: files,
@@ -521,7 +508,7 @@ func (s *session) wsToClient(msg []byte, sendMsg func([]byte) error) error {
 			return err
 		}
 
-		return send(&oldMessage.ScreenResolution{
+		return s.toClient(&oldMessage.ScreenResolution{
 			Event:  oldEvent.SCREEN_RESOLUTION,
 			ID:     request.ID,
 			Width:  request.ScreenSize.Width,
@@ -537,7 +524,7 @@ func (s *session) wsToClient(msg []byte, sendMsg func([]byte) error) error {
 			return err
 		}
 
-		return send(&oldMessage.BroadcastStatus{
+		return s.toClient(&oldMessage.BroadcastStatus{
 			Event:    oldEvent.BROADCAST_STATUS,
 			URL:      request.URL,
 			IsActive: request.IsActive,
@@ -555,12 +542,12 @@ func (s *session) wsToClient(msg []byte, sendMsg func([]byte) error) error {
 			s.lockedControls = request.LockedControls
 
 			if request.LockedControls {
-				err = send(&oldMessage.AdminLock{
+				err = s.toClient(&oldMessage.AdminLock{
 					Event:    oldEvent.ADMIN_LOCK,
 					Resource: "control",
 				})
 			} else {
-				err = send(&oldMessage.AdminLock{
+				err = s.toClient(&oldMessage.AdminLock{
 					Event:    oldEvent.ADMIN_UNLOCK,
 					Resource: "control",
 				})
@@ -575,12 +562,12 @@ func (s *session) wsToClient(msg []byte, sendMsg func([]byte) error) error {
 			s.lockedLogins = request.LockedLogins
 
 			if request.LockedLogins {
-				err = send(&oldMessage.AdminLock{
+				err = s.toClient(&oldMessage.AdminLock{
 					Event:    oldEvent.ADMIN_LOCK,
 					Resource: "login",
 				})
 			} else {
-				err = send(&oldMessage.AdminLock{
+				err = s.toClient(&oldMessage.AdminLock{
 					Event:    oldEvent.ADMIN_UNLOCK,
 					Resource: "login",
 				})
@@ -608,12 +595,12 @@ func (s *session) wsToClient(msg []byte, sendMsg func([]byte) error) error {
 			s.lockedFileTransfer = !filetransferSettings.Enabled
 
 			if !filetransferSettings.Enabled {
-				err = send(&oldMessage.AdminLock{
+				err = s.toClient(&oldMessage.AdminLock{
 					Event:    oldEvent.ADMIN_LOCK,
 					Resource: "file_transfer",
 				})
 			} else {
-				err = send(&oldMessage.AdminLock{
+				err = s.toClient(&oldMessage.AdminLock{
 					Event:    oldEvent.ADMIN_UNLOCK,
 					Resource: "file_transfer",
 				})
@@ -628,19 +615,19 @@ func (s *session) wsToClient(msg []byte, sendMsg func([]byte) error) error {
 
 		/*
 			case:
-				send(&oldMessage.AdminTarget{
+				s.toClient(&oldMessage.AdminTarget{
 					Event: oldEvent.ADMIN_BAN,
 				})
 			case:
-				send(&oldMessage.AdminTarget{
+				s.toClient(&oldMessage.AdminTarget{
 					Event: oldEvent.ADMIN_KICK,
 				})
 			case:
-				send(&oldMessage.AdminTarget{
+				s.toClient(&oldMessage.AdminTarget{
 					Event: oldEvent.ADMIN_MUTE,
 				})
 			case:
-				send(&oldMessage.AdminTarget{
+				s.toClient(&oldMessage.AdminTarget{
 					Event: oldEvent.ADMIN_UNMUTE,
 				})
 		*/

@@ -1,11 +1,17 @@
 package legacy
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
 
+	oldEvent "github.com/demodesk/neko/internal/http/legacy/event"
+	oldMessage "github.com/demodesk/neko/internal/http/legacy/message"
+
 	"github.com/demodesk/neko/pkg/types"
+	"github.com/demodesk/neko/pkg/types/event"
+	"github.com/demodesk/neko/pkg/types/message"
 	"github.com/demodesk/neko/pkg/utils"
 	"github.com/gorilla/websocket"
 )
@@ -55,6 +61,11 @@ func (h *LegacyHandler) Route(r types.Router) {
 		token, err := s.create(password)
 		if err != nil {
 			log.Printf("couldn't create a new session: %v", err)
+			s.toClient(&oldMessage.SystemMessage{
+				Event:   oldEvent.SYSTEM_DISCONNECT,
+				Title:   "couldn't create a new session",
+				Message: err.Error(),
+			})
 			return nil
 		}
 		defer s.destroy()
@@ -63,21 +74,31 @@ func (h *LegacyHandler) Route(r types.Router) {
 		connBackend, _, err := DefaultDialer.Dial("ws://127.0.0.1:8080/api/ws?token="+token, nil)
 		if err != nil {
 			log.Printf("couldn't dial to the remote backend: %v", err)
+			s.toClient(&oldMessage.SystemMessage{
+				Event:   oldEvent.SYSTEM_DISCONNECT,
+				Title:   "couldn't dial to the remote backend",
+				Message: err.Error(),
+			})
 			return nil
 		}
 		defer connBackend.Close()
 		s.connBackend = connBackend
 
 		// request signal
-		if err = connBackend.WriteMessage(websocket.TextMessage, []byte(`{"event":"signal/request", "payload":{}}`)); err != nil {
+		if err = s.toBackend(event.SIGNAL_REQUEST, message.SignalRequest{}); err != nil {
 			log.Printf("couldn't request signal: %v", err)
+			s.toClient(&oldMessage.SystemMessage{
+				Event:   oldEvent.SYSTEM_DISCONNECT,
+				Title:   "couldn't request signal",
+				Message: err.Error(),
+			})
 			return nil
 		}
 
 		// copy messages between the client and the backend
 		errClient := make(chan error, 1)
 		errBackend := make(chan error, 1)
-		replicateWebsocketConn := func(dst, src *websocket.Conn, errc chan error, rewriteTextMessage func([]byte, func([]byte) error) error) {
+		replicateWebsocketConn := func(dst, src *websocket.Conn, errc chan error, rewriteTextMessage func([]byte) error) {
 			for {
 				msgType, msg, err := src.ReadMessage()
 				if err != nil {
@@ -92,23 +113,24 @@ func (h *LegacyHandler) Route(r types.Router) {
 					break
 				}
 				if msgType == websocket.TextMessage {
-					doBreak := false
-					err = rewriteTextMessage(msg, func(msg []byte) error {
-						err := dst.WriteMessage(msgType, msg)
-						if err != nil {
-							doBreak = true
-						}
-						return err
-					})
+					err = rewriteTextMessage(msg)
 
-					if doBreak {
-						errc <- err
-						break
+					if err == nil {
+						continue
 					}
 
-					if err != nil {
-						log.Printf("websocketproxy: Error when rewriting message: %v", err)
+					if errors.Is(err, ErrBackendRespone) {
+						s.toClient(&oldMessage.SystemMessage{
+							Event:   oldEvent.SYSTEM_ERROR,
+							Title:   "backend response error",
+							Message: err.Error(),
+						})
 						continue
+					} else if errors.Is(err, ErrWebsocketSend) {
+						errc <- err
+						break
+					} else {
+						log.Printf("websocketproxy: %v", err)
 					}
 				}
 			}
