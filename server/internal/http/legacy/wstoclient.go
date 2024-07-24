@@ -567,11 +567,13 @@ func (s *session) wsToClient(msg []byte) error {
 				err = s.toClient(&oldMessage.AdminLock{
 					Event:    oldEvent.ADMIN_LOCK,
 					Resource: "control",
+					ID:       request.ID,
 				})
 			} else {
 				err = s.toClient(&oldMessage.AdminLock{
 					Event:    oldEvent.ADMIN_UNLOCK,
 					Resource: "control",
+					ID:       request.ID,
 				})
 			}
 
@@ -587,11 +589,13 @@ func (s *session) wsToClient(msg []byte) error {
 				err = s.toClient(&oldMessage.AdminLock{
 					Event:    oldEvent.ADMIN_LOCK,
 					Resource: "login",
+					ID:       request.ID,
 				})
 			} else {
 				err = s.toClient(&oldMessage.AdminLock{
 					Event:    oldEvent.ADMIN_UNLOCK,
 					Resource: "login",
+					ID:       request.ID,
 				})
 			}
 
@@ -620,11 +624,13 @@ func (s *session) wsToClient(msg []byte) error {
 				err = s.toClient(&oldMessage.AdminLock{
 					Event:    oldEvent.ADMIN_LOCK,
 					Resource: "file_transfer",
+					ID:       request.ID,
 				})
 			} else {
 				err = s.toClient(&oldMessage.AdminLock{
 					Event:    oldEvent.ADMIN_UNLOCK,
 					Resource: "file_transfer",
+					ID:       request.ID,
 				})
 			}
 
