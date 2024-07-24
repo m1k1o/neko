@@ -45,8 +45,15 @@ func (s *session) wsToBackend(msg []byte) error {
 		if err != nil {
 			return err
 		}
+´
+		if request.DisplayName != "" {
+			s.profile.Name = request.DisplayName
 
-		// TODO: Set Display Name here.
+			err = s.apiReq(http.MethodPost, "/api/profile", s.profile, nil)
+			if err != nil {
+				return err
+			}
+		}
 
 		return s.toBackend(event.SIGNAL_ANSWER, &message.SignalDescription{
 			SDP: request.SDP,

@@ -18,21 +18,21 @@ import (
 	"github.com/demodesk/neko/pkg/types/message"
 )
 
-func sessionDataToMember(id string, session message.SessionData) (*oldTypes.Member, error) {
+func profileToMember(id string, profile types.MemberProfile) (*oldTypes.Member, error) {
 	settings := chat.Settings{
 		CanSend:    true, // defaults to true
 		CanReceive: true, // defaults to true
 	}
 
-	err := session.Profile.Plugins.Unmarshal(chat.PluginName, &settings)
+	err := profile.Plugins.Unmarshal(chat.PluginName, &settings)
 	if err != nil && !errors.Is(err, types.ErrPluginSettingsNotFound) {
 		return nil, fmt.Errorf("unable to unmarshal %s plugin settings from global settings: %w", chat.PluginName, err)
 	}
 
 	return &oldTypes.Member{
 		ID:    id,
-		Name:  session.Profile.Name,
-		Admin: session.Profile.IsAdmin,
+		Name:  profile.Name,
+		Admin: profile.IsAdmin,
 		Muted: !settings.CanSend,
 	}, nil
 }
@@ -122,7 +122,7 @@ func (s *session) wsToClient(msg []byte) error {
 			if !session.State.IsConnected {
 				continue
 			}
-			member, err := sessionDataToMember(id, session)
+			member, err := profileToMember(id, session.Profile)
 			if err != nil {
 				return err
 			}
@@ -265,7 +265,7 @@ func (s *session) wsToClient(msg []byte) error {
 			return err
 		}
 
-		member, err := sessionDataToMember(request.ID, *request)
+		member, err := profileToMember(request.ID, request.Profile)
 		if err != nil {
 			return err
 		}
@@ -294,6 +294,28 @@ func (s *session) wsToClient(msg []byte) error {
 			ID:    request.ID,
 		})
 
+	case event.SESSION_PROFILE:
+		request := &message.MemberProfile{}
+		err := json.Unmarshal(data.Payload, request)
+		if err != nil {
+			return err
+		}
+
+		// session profile is expected to change when updating a name after connecting
+		member, ok := s.sessions[request.ID]
+		if !ok && member != nil {
+			return nil
+		}
+
+		// we only expect the name to be updated, other fields can't be changed
+		member.Name = request.Name
+
+		// oldEvent.MEMBER_CONNECTED if not sent already
+		return s.toClient(&oldMessage.Member{
+			Event:  oldEvent.MEMBER_CONNECTED,
+			Member: member,
+		})
+
 	case event.SESSION_STATE:
 		request := &message.SessionState{}
 		err := json.Unmarshal(data.Payload, request)
@@ -306,7 +328,7 @@ func (s *session) wsToClient(msg []byte) error {
 			return nil
 		}
 
-		if request.IsConnected && member != nil {
+		if request.IsConnected && member != nil && member.Name != "" {
 			s.sessions[request.ID] = nil
 
 			// oldEvent.MEMBER_CONNECTED if not sent already

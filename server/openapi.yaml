@@ -110,6 +110,21 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+  /api/profile:
+    post:
+      summary: update current profile without syncing it with member profile (experimental)
+      operationId: profile
+      responses:
+        '204':
+          description: OK
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemberProfile'
+        required: true
 
   #
   # sessions
