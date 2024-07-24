@@ -3,7 +3,6 @@ package legacy
 import (
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 
 	oldEvent "github.com/demodesk/neko/internal/http/legacy/event"
@@ -14,6 +13,8 @@ import (
 	"github.com/demodesk/neko/pkg/types/message"
 	"github.com/demodesk/neko/pkg/utils"
 	"github.com/gorilla/websocket"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 )
 
 var (
@@ -32,19 +33,22 @@ var (
 )
 
 type LegacyHandler struct {
+	logger     zerolog.Logger
+	serverAddr string
 }
 
 func New() *LegacyHandler {
 	// Init
 
-	return &LegacyHandler{}
+	return &LegacyHandler{
+		logger:     log.With().Str("module", "legacy").Logger(),
+		serverAddr: "127.0.0.1:8080",
+	}
 }
 
 func (h *LegacyHandler) Route(r types.Router) {
-	log.Println("legacy handler route")
-
 	r.Get("/ws", func(w http.ResponseWriter, r *http.Request) error {
-		s := newSession("http://127.0.0.1:8080")
+		s := newSession(h.logger, h.serverAddr)
 
 		// create a new websocket connection
 		connClient, err := DefaultUpgrader.Upgrade(w, r, nil)
@@ -57,28 +61,35 @@ func (h *LegacyHandler) Route(r types.Router) {
 		s.connClient = connClient
 
 		// create a new session
+		username := r.URL.Query().Get("username")
 		password := r.URL.Query().Get("password")
-		token, err := s.create(password)
+		token, err := s.create(username, password)
 		if err != nil {
-			log.Printf("couldn't create a new session: %v", err)
+			h.logger.Error().Err(err).Msg("couldn't create a new session")
+
 			s.toClient(&oldMessage.SystemMessage{
 				Event:   oldEvent.SYSTEM_DISCONNECT,
 				Title:   "couldn't create a new session",
 				Message: err.Error(),
 			})
+
+			// we can't return HTTP error here because the connection is already upgraded
 			return nil
 		}
 		defer s.destroy()
 
 		// dial to the remote backend
-		connBackend, _, err := DefaultDialer.Dial("ws://127.0.0.1:8080/api/ws?token="+token, nil)
+		connBackend, _, err := DefaultDialer.Dial("ws://"+h.serverAddr+"/api/ws?token="+token, nil)
 		if err != nil {
-			log.Printf("couldn't dial to the remote backend: %v", err)
+			h.logger.Error().Err(err).Msg("couldn't dial to the remote backend")
+
 			s.toClient(&oldMessage.SystemMessage{
 				Event:   oldEvent.SYSTEM_DISCONNECT,
 				Title:   "couldn't dial to the remote backend",
 				Message: err.Error(),
 			})
+
+			// we can't return HTTP error here because the connection is already upgraded
 			return nil
 		}
 		defer connBackend.Close()
@@ -86,12 +97,15 @@ func (h *LegacyHandler) Route(r types.Router) {
 
 		// request signal
 		if err = s.toBackend(event.SIGNAL_REQUEST, message.SignalRequest{}); err != nil {
-			log.Printf("couldn't request signal: %v", err)
+			h.logger.Error().Err(err).Msg("couldn't request signal")
+
 			s.toClient(&oldMessage.SystemMessage{
 				Event:   oldEvent.SYSTEM_DISCONNECT,
 				Title:   "couldn't request signal",
 				Message: err.Error(),
 			})
+
+			// we can't return HTTP error here because the connection is already upgraded
 			return nil
 		}
 
@@ -120,6 +134,8 @@ func (h *LegacyHandler) Route(r types.Router) {
 					}
 
 					if errors.Is(err, ErrBackendRespone) {
+						h.logger.Error().Err(err).Msg("backend response error")
+
 						s.toClient(&oldMessage.SystemMessage{
 							Event:   oldEvent.SYSTEM_ERROR,
 							Title:   "backend response error",
@@ -130,7 +146,7 @@ func (h *LegacyHandler) Route(r types.Router) {
 						errc <- err
 						break
 					} else {
-						log.Printf("websocketproxy: %v", err)
+						h.logger.Error().Err(err).Msg("couldn't rewrite text message")
 					}
 				}
 			}
@@ -151,7 +167,7 @@ func (h *LegacyHandler) Route(r types.Router) {
 		}
 
 		if e, ok := err.(*websocket.CloseError); !ok || e.Code == websocket.CloseAbnormalClosure {
-			log.Printf(message, err)
+			h.logger.Error().Err(err).Msg(message)
 		}
 
 		return nil

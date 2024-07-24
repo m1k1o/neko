@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 
 	oldTypes "github.com/demodesk/neko/internal/http/legacy/types"
@@ -13,6 +12,7 @@ import (
 	"github.com/demodesk/neko/internal/api"
 	"github.com/demodesk/neko/pkg/types"
 	"github.com/gorilla/websocket"
+	"github.com/rs/zerolog"
 )
 
 var (
@@ -21,7 +21,9 @@ var (
 )
 
 type session struct {
-	url     string
+	logger     zerolog.Logger
+	serverAddr string
+
 	id      string
 	token   string
 	profile types.MemberProfile
@@ -37,11 +39,12 @@ type session struct {
 	connBackend *websocket.Conn
 }
 
-func newSession(url string) *session {
+func newSession(logger zerolog.Logger, serverAddr string) *session {
 	return &session{
-		url:      url,
-		client:   http.DefaultClient,
-		sessions: make(map[string]*oldTypes.Member),
+		logger:     logger,
+		serverAddr: serverAddr,
+		client:     http.DefaultClient,
+		sessions:   make(map[string]*oldTypes.Member),
 	}
 }
 
@@ -51,7 +54,7 @@ func (s *session) apiReq(method, path string, request, response any) error {
 		return err
 	}
 
-	req, err := http.NewRequest(method, s.url+path, bytes.NewReader(body))
+	req, err := http.NewRequest(method, "http://"+s.serverAddr+path, bytes.NewReader(body))
 	if err != nil {
 		return err
 	}
@@ -82,6 +85,11 @@ func (s *session) apiReq(method, path string, request, response any) error {
 	}
 
 	if res.Body == nil {
+		return nil
+	}
+
+	if response == nil {
+		io.Copy(io.Discard, res.Body)
 		return nil
 	}
 
@@ -126,12 +134,11 @@ func (s *session) toBackend(event string, payload any) error {
 	return nil
 }
 
-func (s *session) create(password string) (string, error) {
+func (s *session) create(username, password string) (string, error) {
 	data := api.SessionDataPayload{}
 
-	// pefrom login with arbitrary username that will be changed later
 	err := s.apiReq(http.MethodPost, "/api/login", api.SessionLoginPayload{
-		Username: "admin",
+		Username: username,
 		Password: password,
 	}, &data)
 	if err != nil {
@@ -142,8 +149,9 @@ func (s *session) create(password string) (string, error) {
 	s.token = data.Token
 	s.profile = data.Profile
 
+	// if Cookie auth, the token will be empty
 	if s.token == "" {
-		return "", fmt.Errorf("token not found")
+		return "", fmt.Errorf("token not found - make sure you are not using Cookie auth on the server")
 	}
 
 	return data.Token, nil
@@ -155,6 +163,6 @@ func (s *session) destroy() {
 	// logout session
 	err := s.apiReq(http.MethodPost, "/api/logout", nil, nil)
 	if err != nil {
-		log.Println("failed to logout session:", err)
+		s.logger.Error().Err(err).Msg("failed to logout")
 	}
 }
