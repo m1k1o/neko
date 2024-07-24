@@ -45,7 +45,7 @@ func (s *session) wsToBackend(msg []byte) error {
 		if err != nil {
 			return err
 		}
-´
+
 		if request.DisplayName != "" {
 			s.profile.Name = request.DisplayName
 
