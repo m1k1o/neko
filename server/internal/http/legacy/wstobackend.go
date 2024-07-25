@@ -47,9 +47,11 @@ func (s *session) wsToBackend(msg []byte) error {
 		}
 
 		if request.DisplayName != "" {
-			s.profile.Name = request.DisplayName
+			s.name = request.DisplayName
 
-			err = s.apiReq(http.MethodPost, "/api/profile", s.profile, nil)
+			err = s.apiReq(http.MethodPost, "/api/profile", map[string]any{
+				"name": request.DisplayName,
+			}, nil)
 			if err != nil {
 				return err
 			}

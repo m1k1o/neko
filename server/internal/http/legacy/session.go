@@ -31,10 +31,10 @@ type session struct {
 	logger     zerolog.Logger
 	serverAddr string
 
-	id      string
-	token   string
-	profile types.MemberProfile
-	client  *http.Client
+	id     string
+	token  string
+	name   string
+	client *http.Client
 
 	lastHostID         string
 	lockedControls     bool
@@ -154,7 +154,7 @@ func (s *session) create(username, password string) (string, error) {
 
 	s.id = data.ID
 	s.token = data.Token
-	s.profile = data.Profile
+	s.name = data.Profile.Name
 
 	// if Cookie auth, the token will be empty
 	if s.token == "" {

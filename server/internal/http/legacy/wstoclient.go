@@ -422,7 +422,7 @@ func (s *session) wsToClient(msg []byte) error {
 
 		return s.toClient(&oldMessage.SignalAnswer{
 			Event:       oldEvent.SIGNAL_ANSWER,
-			DisplayName: s.profile.Name, // DisplayName
+			DisplayName: s.name,
 			SDP:         request.SDP,
 		})
 
