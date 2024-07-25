@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 
 	oldTypes "github.com/demodesk/neko/internal/http/legacy/types"
 
@@ -20,6 +21,12 @@ var (
 	ErrBackendRespone = fmt.Errorf("error response from backend")
 )
 
+type memberStruct struct {
+	member    *oldTypes.Member
+	connected bool
+	sent      bool
+}
+
 type session struct {
 	logger     zerolog.Logger
 	serverAddr string
@@ -33,7 +40,7 @@ type session struct {
 	lockedControls     bool
 	lockedLogins       bool
 	lockedFileTransfer bool
-	sessions           map[string]*oldTypes.Member
+	sessions           map[string]*memberStruct
 
 	connClient  *websocket.Conn
 	connBackend *websocket.Conn
@@ -44,7 +51,7 @@ func newSession(logger zerolog.Logger, serverAddr string) *session {
 		logger:     logger,
 		serverAddr: serverAddr,
 		client:     http.DefaultClient,
-		sessions:   make(map[string]*oldTypes.Member),
+		sessions:   make(map[string]*memberStruct),
 	}
 }
 
@@ -81,7 +88,7 @@ func (s *session) apiReq(method, path string, request, response any) error {
 			return fmt.Errorf("%w: %s", ErrBackendRespone, apiErr.Message)
 		}
 		// return raw body if failed to unmarshal
-		return fmt.Errorf("unexpected status code: %d, body: %s", res.StatusCode, body)
+		return fmt.Errorf("unexpected status code: %d, body: %s", res.StatusCode, strings.TrimSpace(string(body)))
 	}
 
 	if res.Body == nil {

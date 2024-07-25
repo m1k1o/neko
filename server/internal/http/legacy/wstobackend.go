@@ -314,8 +314,11 @@ func (s *session) wsToBackend(msg []byte) error {
 			return err
 		}
 
-		// TODO: No WS equivalent, call HTTP API.
-		return fmt.Errorf("event not implemented: %s", header.Event)
+		return s.apiReq(http.MethodPost, "/api/members/"+request.ID, map[string]any{
+			"plugins": map[string]any{
+				"chat.can_send": false,
+			},
+		}, nil)
 
 	case oldEvent.ADMIN_UNMUTE:
 		request := &oldMessage.Admin{}
@@ -324,8 +327,11 @@ func (s *session) wsToBackend(msg []byte) error {
 			return err
 		}
 
-		// TODO: No WS equivalent, call HTTP API.
-		return fmt.Errorf("event not implemented: %s", header.Event)
+		return s.apiReq(http.MethodPost, "/api/members/"+request.ID, map[string]any{
+			"plugins": map[string]any{
+				"chat.can_send": true,
+			},
+		}, nil)
 
 	default:
 		return fmt.Errorf("unknown event type: %s", header.Event)

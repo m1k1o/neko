@@ -117,7 +117,7 @@ func (s *session) wsToClient(msg []byte) error {
 		//
 
 		membersList := []*oldTypes.Member{}
-		s.sessions = map[string]*oldTypes.Member{}
+		s.sessions = map[string]*memberStruct{}
 		for id, session := range request.Sessions {
 			if !session.State.IsConnected {
 				continue
@@ -127,7 +127,11 @@ func (s *session) wsToClient(msg []byte) error {
 				return err
 			}
 			membersList = append(membersList, member)
-			s.sessions[id] = member
+			s.sessions[id] = &memberStruct{
+				sent:      member.Name != "",
+				connected: true,
+				member:    member,
+			}
 		}
 
 		err = s.toClient(&oldMessage.MembersList{
@@ -271,7 +275,9 @@ func (s *session) wsToClient(msg []byte) error {
 		}
 
 		// only save session - will be notified on connect
-		s.sessions[request.ID] = member
+		s.sessions[request.ID] = &memberStruct{
+			member: member,
+		}
 
 		return nil
 
@@ -302,19 +308,48 @@ func (s *session) wsToClient(msg []byte) error {
 		}
 
 		// session profile is expected to change when updating a name after connecting
-		member, ok := s.sessions[request.ID]
-		if !ok && member != nil {
+		m, ok := s.sessions[request.ID]
+		if !ok || m == nil {
 			return nil
 		}
 
-		// we only expect the name to be updated, other fields can't be changed
-		member.Name = request.Name
+		// update member profile
+		member, err := profileToMember(request.ID, request.MemberProfile)
+		if err != nil {
+			return err
+		}
 
-		// oldEvent.MEMBER_CONNECTED if not sent already
-		return s.toClient(&oldMessage.Member{
-			Event:  oldEvent.MEMBER_CONNECTED,
-			Member: member,
-		})
+		mutedChanged := m.member.Muted != member.Muted
+		m.member = member
+
+		if m.connected && !m.sent && member.Name != "" {
+			m.sent = true
+
+			// oldEvent.MEMBER_CONNECTED if not sent already
+			err = s.toClient(&oldMessage.Member{
+				Event:  oldEvent.MEMBER_CONNECTED,
+				Member: member,
+			})
+			if err != nil {
+				return err
+			}
+		}
+
+		if mutedChanged && member.Muted {
+			return s.toClient(&oldMessage.AdminTarget{
+				Event:  oldEvent.ADMIN_MUTE,
+				ID:     "", // TODO: We don't know who (un)muted the user.
+				Target: request.ID,
+			})
+		} else if mutedChanged && !member.Muted {
+			return s.toClient(&oldMessage.AdminTarget{
+				Event:  oldEvent.ADMIN_UNMUTE,
+				ID:     "", // TODO: We don't know who (un)muted the user.
+				Target: request.ID,
+			})
+		}
+
+		return nil
 
 	case event.SESSION_STATE:
 		request := &message.SessionState{}
@@ -323,19 +358,34 @@ func (s *session) wsToClient(msg []byte) error {
 			return err
 		}
 
-		member, ok := s.sessions[request.ID]
+		m, ok := s.sessions[request.ID]
 		if !ok {
 			return nil
 		}
 
-		if request.IsConnected && member != nil && member.Name != "" {
-			s.sessions[request.ID] = nil
+		if request.IsConnected {
+			m.connected = true
 
-			// oldEvent.MEMBER_CONNECTED if not sent already
-			return s.toClient(&oldMessage.Member{
-				Event:  oldEvent.MEMBER_CONNECTED,
-				Member: member,
-			})
+			if m.member.Muted {
+				err = s.toClient(&oldMessage.AdminTarget{
+					Event:  oldEvent.ADMIN_MUTE,
+					ID:     "", // TODO: We don't know who (un)muted the user.
+					Target: request.ID,
+				})
+				if err != nil {
+					return err
+				}
+			}
+
+			if !m.sent && m.member.Name != "" {
+				m.sent = true
+
+				// oldEvent.MEMBER_CONNECTED if not sent already
+				return s.toClient(&oldMessage.Member{
+					Event:  oldEvent.MEMBER_CONNECTED,
+					Member: m.member,
+				})
+			}
 		}
 
 		if !request.IsConnected {
