@@ -13,7 +13,7 @@
 If you want to compile Golang code locally, you must install additional dependencies in order for it to compile.
 
 ```shell
-apt-get install -y --no-install-recommends libx11-dev libxrandr-dev libxtst-dev libgstreamer1.0-dev
+apt-get install -y --no-install-recommends libx11-dev libxrandr-dev libxtst-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev
 ```
 
 Libclipboard files can be retrieved from `neko_dev_server` container:
