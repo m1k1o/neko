@@ -192,7 +192,7 @@ func (manager *SessionManager) Clear() error {
 	return nil
 }
 
-func (manager *SessionManager) Broadcast(v interface{}, exclude interface{}) error {
+func (manager *SessionManager) Broadcast(v interface{}, exclude []string) error {
 	manager.mu.Lock()
 	defer manager.mu.Unlock()
 
@@ -201,10 +201,8 @@ func (manager *SessionManager) Broadcast(v interface{}, exclude interface{}) err
 			continue
 		}
 
-		if exclude != nil {
-			if in, _ := utils.ArrayIn(id, exclude); in {
-				continue
-			}
+		if in, _ := utils.ArrayIn(id, exclude); in {
+			continue
 		}
 
 		if err := session.Send(v); err != nil {
@@ -215,7 +213,7 @@ func (manager *SessionManager) Broadcast(v interface{}, exclude interface{}) err
 	return nil
 }
 
-func (manager *SessionManager) AdminBroadcast(v interface{}, exclude interface{}) error {
+func (manager *SessionManager) AdminBroadcast(v interface{}, exclude []string) error {
 	manager.mu.Lock()
 	defer manager.mu.Unlock()
 
@@ -224,10 +222,8 @@ func (manager *SessionManager) AdminBroadcast(v interface{}, exclude interface{}
 			continue
 		}
 
-		if exclude != nil {
-			if in, _ := utils.ArrayIn(id, exclude); in {
-				continue
-			}
+		if in, _ := utils.ArrayIn(id, exclude); in {
+			continue
 		}
 
 		if err := session.Send(v); err != nil {
@@ -241,3 +237,5 @@ func (manager *SessionManager) AdminBroadcast(v interface{}, exclude interface{}
 func (manager *SessionManager) GetEventsChannel() chan types.SessionEvent {
 	return manager.eventsChannel
 }
+
+var _ types.SessionManager = (*SessionManager)(nil)

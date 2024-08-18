@@ -61,7 +61,7 @@ type SessionManager interface {
 	Admins() []*Member
 	Destroy(id string)
 	Clear() error
-	Broadcast(v interface{}, exclude interface{}) error
-	AdminBroadcast(v interface{}, exclude interface{}) error
+	Broadcast(v interface{}, exclude []string) error
+	AdminBroadcast(v interface{}, exclude []string) error
 	GetEventsChannel() chan SessionEvent
 }
