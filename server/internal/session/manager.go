@@ -202,8 +202,10 @@ func (manager *SessionManager) Broadcast(v interface{}, exclude interface{}) err
 		}
 
 		if exclude != nil {
-			if in, _ := utils.ArrayIn(id, exclude); in {
-				continue
+			if array, ok := exclude.([]string); ok {
+				if in, _ := utils.ArrayIn(id, array); in {
+					continue
+				}
 			}
 		}
 
@@ -225,8 +227,10 @@ func (manager *SessionManager) AdminBroadcast(v interface{}, exclude interface{}
 		}
 
 		if exclude != nil {
-			if in, _ := utils.ArrayIn(id, exclude); in {
-				continue
+			if array, ok := exclude.([]string); ok {
+				if in, _ := utils.ArrayIn(id, array); in {
+					continue
+				}
 			}
 		}
 
