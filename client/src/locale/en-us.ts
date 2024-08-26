@@ -19,6 +19,7 @@ export const connect = {
   connect: 'Connect',
   error: 'Login error',
   empty_displayname: 'Display Name cannot be empty.',
+  connecting_error: 'Failed to connect to the room. Please try again later.',
 }
 
 export const context = {

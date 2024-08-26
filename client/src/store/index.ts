@@ -21,6 +21,9 @@ export const state = () => ({
   connecting: false,
   connected: false,
   locked: {} as Record<string, boolean>,
+  connectingAttempts: 0,
+  maxConnectingAttempts: 3,
+  connectingRetryTimeout: 2000,
 })
 
 export const mutations = mutationTree(state, {
@@ -54,6 +57,16 @@ export const mutations = mutationTree(state, {
       set('password', state.password)
     }
   },
+
+  setConnectingAttempts(state, value: number) {
+    state.connectingAttempts = value;
+  },
+  incrementConnectingAttempts(state) {
+    state.connectingAttempts++;
+  },
+  resetConnectingAttempts(state) {
+    state.connectingAttempts = 0;
+  },      
 })
 
 export const getters = getterTree(state, {
