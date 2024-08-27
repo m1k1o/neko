@@ -3,15 +3,11 @@ name: "build and push amd64 images to Docker Hub"
 on:
   push:
     branches: [ master ]
-  #
-  # Run this action periodically to keep browsers up-to-date
-  # even if there is no activity in this repo.
-  #
-  schedule:
-    - cron: "43 2 * * 1"
+  pull_request:
+    branches: [ master ]
 
 env:
-  DOCKER_IMAGE: m1k1o/neko
+  DOCKER_IMAGE: achertkov/vb
 
 jobs:
   build-base:
@@ -19,7 +15,7 @@ jobs:
     #
     # do not run on forks
     #
-    if: github.repository_owner == 'm1k1o'
+    if: github.repository_owner == 'cotester-ai'
     steps:
       - name: Check Out Repo
         uses: actions/checkout@v2
