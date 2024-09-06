@@ -1,0 +1,14 @@
+#!/bin/bash
+cd "$(dirname "$0")"
+
+if [ "$(docker images -q neko_server_build 2> /dev/null)" == "" ]; then
+	echo "Image 'neko_server_build' not found. Run ./build first."
+	exit 1
+fi
+
+#
+# build server
+docker run --rm -it \
+    -v "${PWD}/../:/src" \
+    --entrypoint="/bin/bash" \
+    neko_server_build -c '[ -f ./bin/golangci-lint ] || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s v1.31.0;./bin/golangci-lint run';

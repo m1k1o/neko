@@ -1,1 +1,14 @@
-{}
+{
+  "go.formatTool": "goformat",
+  "go.inferGopath": false,
+  "go.autocompleteUnimportedPackages": true,
+  "go.delveConfig": {
+    "useApiV1": false
+  },
+  "[go]": {
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "explicit"
+    }
+  }
+}

@@ -1,0 +1,87 @@
+#!/bin/bash
+
+#
+# aborting if any command returns a non-zero value
+set -e
+
+#
+# do not build plugins when passing "core" as first argument
+if [ "$1" = "core" ];
+then
+    skip_plugins="true"
+fi
+
+#
+# set git build variables if git exists
+if git status > /dev/null 2>&1 && [ -z $GIT_COMMIT ] && [ -z $GIT_BRANCH ] && [ -z $GIT_TAG ];
+then
+    GIT_COMMIT=`git rev-parse --short HEAD`
+    GIT_BRANCH=`git rev-parse --symbolic-full-name --abbrev-ref HEAD`
+    GIT_TAG=`git tag --points-at $GIT_COMMIT | head -n 1`
+fi
+
+#
+# load server dependencies
+go get -v -t -d .
+
+#
+# build server
+go build \
+    -o bin/neko \
+    -ldflags "
+        -s -w
+        -X 'github.com/demodesk/neko.buildDate=`date -u +'%Y-%m-%dT%H:%M:%SZ'`'
+        -X 'github.com/demodesk/neko.gitCommit=${GIT_COMMIT}'
+        -X 'github.com/demodesk/neko.gitBranch=${GIT_BRANCH}'
+        -X 'github.com/demodesk/neko.gitTag=${GIT_TAG}'
+    " \
+    cmd/neko/main.go;
+
+#
+# ensure plugins folder exists
+mkdir -p bin/plugins
+
+#
+# if plugins are ignored
+if [ "$skip_plugins" = "true" ];
+then
+    echo "Not building plugins..."
+    exit 0
+fi
+
+#
+# if plugins directory does not exist
+if [ ! -d "./plugins" ];
+then
+    echo "No plugins directory found, skipping..."
+    exit 0
+fi
+
+#
+# remove old plugins
+rm -f bin/plugins/*
+
+#
+# build plugins
+for plugPath in ./plugins/*; do
+    if [ ! -d $plugPath ];
+    then
+        continue
+    fi
+
+    pushd $plugPath
+
+    echo "Building plugin: $plugPath"
+
+    if [ ! -f "go.plug.mod" ];
+    then
+        echo "go.plug.mod not found, skipping..."
+        popd
+        continue
+    fi
+
+    # build plugin
+    go build -modfile=go.plug.mod -buildmode=plugin -buildvcs=false -o "../../bin/plugins/${plugPath##*/}.so"
+
+    popd
+done
