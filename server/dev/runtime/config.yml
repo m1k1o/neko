@@ -63,42 +63,42 @@ desktop:
   screen: "1920x1080@60"
 
 member:
-  provider: "object"
-  object:
-    users:
-      - username: "admin"
-        password: "admin"
-        profile:
-          name: "Administrator"
-          is_admin: true
-          can_login: true
-          can_connect: true
-          can_watch: true
-          can_host: true
-          can_share_media: true
-          can_access_clipboard: true
-          sends_inactive_cursor: true
-          can_see_inactive_cursors: true
-      - username: "user"
-        password: "neko"
-        profile:
-          name: "User"
-          is_admin: false
-          can_login: true
-          can_connect: true
-          can_watch: true
-          can_host: true
-          can_share_media: true
-          can_access_clipboard: true
-          sends_inactive_cursor: true
-          can_see_inactive_cursors: false
+  # provider: "object"
+  # object:
+  #   users:
+  #     - username: "admin"
+  #       password: "admin"
+  #       profile:
+  #         name: "Administrator"
+  #         is_admin: true
+  #         can_login: true
+  #         can_connect: true
+  #         can_watch: true
+  #         can_host: true
+  #         can_share_media: true
+  #         can_access_clipboard: true
+  #         sends_inactive_cursor: true
+  #         can_see_inactive_cursors: true
+  #     - username: "user"
+  #       password: "neko"
+  #       profile:
+  #         name: "User"
+  #         is_admin: false
+  #         can_login: true
+  #         can_connect: true
+  #         can_watch: true
+  #         can_host: true
+  #         can_share_media: true
+  #         can_access_clipboard: true
+  #         sends_inactive_cursor: true
+  #         can_see_inactive_cursors: false
   # provider: "file"
   # file:
   #   path: "/home/neko/members.json"
-  # provider: "multiuser"
-  # multiuser:
-  #  admin_password: "admin"
-  #  user_password: "neko"
+  provider: "multiuser"
+  multiuser:
+   admin_password: "admin"
+   user_password: "neko"
   #  admin_profile: # optional
   #  user_profile: # optional
   # provider: "noauth"
@@ -110,6 +110,7 @@ session:
   # Show inactive cursors on the screen. Can lead to multiple
   # data sent via WebSockets and additonal rendering cost on
   # the clients.
+  implicit_hosting: false
   inactive_cursors: true
   api_token: "neko123"
   cookie:
