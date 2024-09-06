@@ -32,10 +32,11 @@ type session struct {
 	logger     zerolog.Logger
 	serverAddr string
 
-	id     string
-	token  string
-	name   string
-	client *http.Client
+	id      string
+	token   string
+	name    string
+	isAdmin bool
+	client  *http.Client
 
 	lastHostID         string
 	lockedControls     bool
@@ -142,7 +143,7 @@ func (s *session) toBackend(event string, payload any) error {
 	return nil
 }
 
-func (s *session) create(username, password string) (string, error) {
+func (s *session) create(username, password string) error {
 	data := api.SessionDataPayload{}
 
 	err := s.apiReq(http.MethodPost, "/api/login", api.SessionLoginPayload{
@@ -150,19 +151,20 @@ func (s *session) create(username, password string) (string, error) {
 		Password: password,
 	}, &data)
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	s.id = data.ID
 	s.token = data.Token
 	s.name = data.Profile.Name
+	s.isAdmin = data.Profile.IsAdmin
 
 	// if Cookie auth, the token will be empty
 	if s.token == "" {
-		return "", fmt.Errorf("token not found - make sure you are not using Cookie auth on the server")
+		return fmt.Errorf("token not found - make sure you are not using Cookie auth on the server")
 	}
 
-	return data.Token, nil
+	return nil
 }
 
 func (s *session) destroy() {
