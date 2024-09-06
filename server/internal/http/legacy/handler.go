@@ -1,12 +1,17 @@
 package legacy
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
+	"time"
 
+	"m1k1o/neko/internal/api"
+	"m1k1o/neko/internal/api/room"
 	oldEvent "m1k1o/neko/internal/http/legacy/event"
 	oldMessage "m1k1o/neko/internal/http/legacy/message"
+	oldTypes "m1k1o/neko/internal/http/legacy/types"
 
 	"m1k1o/neko/pkg/types"
 	"m1k1o/neko/pkg/types/event"
@@ -36,6 +41,7 @@ var (
 type LegacyHandler struct {
 	logger     zerolog.Logger
 	serverAddr string
+	startedAt  time.Time
 }
 
 func New() *LegacyHandler {
@@ -44,6 +50,7 @@ func New() *LegacyHandler {
 	return &LegacyHandler{
 		logger:     log.With().Str("module", "legacy").Logger(),
 		serverAddr: "127.0.0.1:8080",
+		startedAt:  time.Now(),
 	}
 }
 
@@ -64,7 +71,7 @@ func (h *LegacyHandler) Route(r types.Router) {
 		// create a new session
 		username := r.URL.Query().Get("username")
 		password := r.URL.Query().Get("password")
-		token, err := s.create(username, password)
+		err = s.create(username, password)
 		if err != nil {
 			h.logger.Error().Err(err).Msg("couldn't create a new session")
 
@@ -80,7 +87,7 @@ func (h *LegacyHandler) Route(r types.Router) {
 		defer s.destroy()
 
 		// dial to the remote backend
-		connBackend, _, err := DefaultDialer.Dial("ws://"+h.serverAddr+"/api/ws?token="+token, nil)
+		connBackend, _, err := DefaultDialer.Dial("ws://"+h.serverAddr+"/api/ws?token="+s.token, nil)
 		if err != nil {
 			h.logger.Error().Err(err).Msg("couldn't dial to the remote backend")
 
@@ -174,24 +181,90 @@ func (h *LegacyHandler) Route(r types.Router) {
 		return nil
 	})
 
+	r.Get("/stats", func(w http.ResponseWriter, r *http.Request) error {
+		s := newSession(h.logger, h.serverAddr)
+
+		// create a new session
+		username := r.URL.Query().Get("usr")
+		password := r.URL.Query().Get("pwd")
+		err := s.create(username, password)
+		if err != nil {
+			return utils.HttpForbidden(err.Error())
+		}
+		defer s.destroy()
+
+		if !s.isAdmin {
+			return utils.HttpUnauthorized().Msg("bad authorization")
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+
+		// get all sessions
+		sessions := []api.SessionDataPayload{}
+		err = s.apiReq(http.MethodGet, "/api/sessions", nil, &sessions)
+		if err != nil {
+			return utils.HttpInternalServerError().WithInternalErr(err)
+		}
+
+		// get current control status
+		control := room.ControlStatusPayload{}
+		err = s.apiReq(http.MethodGet, "/api/room/control", nil, &control)
+		if err != nil {
+			return utils.HttpInternalServerError().WithInternalErr(err)
+		}
+
+		// get settings
+		settings := types.Settings{}
+		err = s.apiReq(http.MethodGet, "/api/room/settings", nil, &settings)
+		if err != nil {
+			return utils.HttpInternalServerError().WithInternalErr(err)
+		}
+
+		var stats oldTypes.Stats
+
+		// create empty array so that it's not null in json
+		stats.Members = []*oldTypes.Member{}
+
+		for _, session := range sessions {
+			if session.State.IsConnected {
+				stats.Connections++
+				member, err := profileToMember(session.ID, session.Profile)
+				if err != nil {
+					return utils.HttpInternalServerError().WithInternalErr(err)
+				}
+				// append members
+				stats.Members = append(stats.Members, member)
+			} else if session.State.NotConnectedSince != nil {
+				//
+				// TODO: This wont work if the user is removed after the session is closed
+				//
+				// populate last admin left time
+				if session.Profile.IsAdmin && (stats.LastAdminLeftAt == nil || (*session.State.NotConnectedSince).After(*stats.LastAdminLeftAt)) {
+					stats.LastAdminLeftAt = session.State.NotConnectedSince
+				}
+				// populate last user left time
+				if !session.Profile.IsAdmin && (stats.LastUserLeftAt == nil || (*session.State.NotConnectedSince).After(*stats.LastUserLeftAt)) {
+					stats.LastUserLeftAt = session.State.NotConnectedSince
+				}
+			}
+		}
+
+		locks, err := s.settingsToLocks(settings)
+		if err != nil {
+			return err
+		}
+
+		stats.Host = control.HostId
+		// TODO: stats.Banned, not implemented yet
+		stats.Locked = locks
+		stats.ServerStartedAt = h.startedAt
+		stats.ControlProtection = settings.ControlProtection
+		stats.ImplicitControl = settings.ImplicitHosting
+
+		return json.NewEncoder(w).Encode(stats)
+	})
+
 	/*
-		r.Get("/stats", func(w http.ResponseWriter, r *http.Request) error {
-			password := r.URL.Query().Get("pwd")
-			isAdmin, err := webSocketHandler.IsAdmin(password)
-			if err != nil {
-				return utils.HttpForbidden(err)
-			}
-
-			if !isAdmin {
-				return utils.HttpUnauthorized().Msg("bad authorization")
-			}
-
-			w.Header().Set("Content-Type", "application/json")
-
-			stats := webSocketHandler.Stats()
-			return json.NewEncoder(w).Encode(stats)
-		})
-
 		r.Get("/screenshot.jpg", func(w http.ResponseWriter, r *http.Request) error {
 			password := r.URL.Query().Get("pwd")
 			isAdmin, err := webSocketHandler.IsAdmin(password)

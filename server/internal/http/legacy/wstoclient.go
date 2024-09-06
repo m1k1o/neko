@@ -67,6 +67,41 @@ func screenConfigurations(screenSizes []types.ScreenSize) map[int]oldTypes.Scree
 	return screenSizesList
 }
 
+func (s *session) settingsToLocks(settings types.Settings) (map[string]string, error) {
+	//
+	// FileTransfer
+	//
+
+	filetransferSettings := filetransfer.Settings{
+		Enabled: true, // defaults to true
+	}
+
+	err := settings.Plugins.Unmarshal(filetransfer.PluginName, &filetransferSettings)
+	if err != nil && !errors.Is(err, types.ErrPluginSettingsNotFound) {
+		return nil, fmt.Errorf("unable to unmarshal %s plugin settings from global settings: %w", filetransfer.PluginName, err)
+	}
+
+	//
+	// Locks
+	//
+
+	locks := map[string]string{}
+	if settings.LockedLogins {
+		locks["login"] = "" // TODO: We don't know who locked the login.
+		s.lockedLogins = true
+	}
+	if settings.LockedControls {
+		locks["control"] = "" // TODO: We don't know who locked the control.
+		s.lockedControls = true
+	}
+	if !filetransferSettings.Enabled {
+		locks["file_transfer"] = "" // TODO: We don't know who locked the file transfer.
+		s.lockedFileTransfer = true
+	}
+
+	return locks, nil
+}
+
 func (s *session) sendControlHost(request message.ControlHost) error {
 	lastHostID := s.lastHostID
 
@@ -198,34 +233,9 @@ func (s *session) wsToClient(msg []byte) error {
 			return err
 		}
 
-		//
-		// FileTransfer
-		//
-
-		filetransferSettings := filetransfer.Settings{
-			Enabled: true, // defaults to true
-		}
-
-		err = request.Settings.Plugins.Unmarshal(filetransfer.PluginName, &filetransferSettings)
-		if err != nil && !errors.Is(err, types.ErrPluginSettingsNotFound) {
-			return fmt.Errorf("unable to unmarshal %s plugin settings from global settings: %w", filetransfer.PluginName, err)
-		}
-
-		//
-		// Locks
-		//
-		locks := map[string]string{}
-		if request.Settings.LockedLogins {
-			locks["login"] = "" // TODO: We don't know who locked the login.
-			s.lockedLogins = true
-		}
-		if request.Settings.LockedControls {
-			locks["control"] = "" // TODO: We don't know who locked the control.
-			s.lockedControls = true
-		}
-		if !filetransferSettings.Enabled {
-			locks["file_transfer"] = "" // TODO: We don't know who locked the file transfer.
-			s.lockedFileTransfer = true
+		locks, err := s.settingsToLocks(request.Settings)
+		if err != nil {
+			return err
 		}
 
 		return s.toClient(&oldMessage.SystemInit{
