@@ -188,12 +188,30 @@ func (s *session) wsToBackend(msg []byte) error {
 
 	// Screen Events
 	case oldEvent.SCREEN_RESOLUTION:
-		// No WS equivalent, call HTTP API and return screen resolution.
-		return fmt.Errorf("event not implemented: %s", header.Event)
+		response := &types.ScreenSize{}
+		err := s.apiReq(http.MethodGet, "/api/room/screen", nil, response)
+		if err != nil {
+			return err
+		}
+
+		return s.toClient(&oldMessage.ScreenResolution{
+			Event:  oldEvent.SCREEN_RESOLUTION,
+			Width:  response.Width,
+			Height: response.Height,
+			Rate:   response.Rate,
+		})
 
 	case oldEvent.SCREEN_CONFIGURATIONS:
-		// No WS equivalent, call HTTP API and return screen configurations.
-		return fmt.Errorf("event not implemented: %s", header.Event)
+		response := &[]types.ScreenSize{}
+		err := s.apiReq(http.MethodGet, "/api/room/screen/configurations", nil, response)
+		if err != nil {
+			return err
+		}
+
+		return s.toClient(&oldMessage.ScreenConfigurations{
+			Event:          oldEvent.SCREEN_CONFIGURATIONS,
+			Configurations: screenConfigurations(*response),
+		})
 
 	case oldEvent.SCREEN_SET:
 		request := &oldMessage.ScreenResolution{}
