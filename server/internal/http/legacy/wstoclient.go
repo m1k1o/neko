@@ -37,6 +37,36 @@ func profileToMember(id string, profile types.MemberProfile) (*oldTypes.Member, 
 	}, nil
 }
 
+func screenConfigurations(screenSizes []types.ScreenSize) map[int]oldTypes.ScreenConfiguration {
+	rates := map[string][]int16{}
+	for _, size := range screenSizes {
+		key := fmt.Sprintf("%dx%d", size.Width, size.Height)
+		rates[key] = append(rates[key], size.Rate)
+	}
+
+	usedScreenSizes := map[string]struct{}{}
+	screenSizesList := map[int]oldTypes.ScreenConfiguration{}
+	for i, size := range screenSizes {
+		key := fmt.Sprintf("%dx%d", size.Width, size.Height)
+		if _, ok := usedScreenSizes[key]; ok {
+			continue
+		}
+
+		ratesMap := map[int]int16{}
+		for i, rate := range rates[key] {
+			ratesMap[i] = rate
+		}
+
+		screenSizesList[i] = oldTypes.ScreenConfiguration{
+			Width:  size.Width,
+			Height: size.Height,
+			Rates:  ratesMap,
+		}
+	}
+
+	return screenSizesList
+}
+
 func (s *session) sendControlHost(request message.ControlHost) error {
 	lastHostID := s.lastHostID
 
@@ -216,35 +246,9 @@ func (s *session) wsToClient(msg []byte) error {
 		// ScreenSizesList
 		//
 
-		rates := map[string][]int16{}
-		for _, size := range request.ScreenSizesList {
-			key := fmt.Sprintf("%dx%d", size.Width, size.Height)
-			rates[key] = append(rates[key], size.Rate)
-		}
-
-		usedScreenSizes := map[string]struct{}{}
-		screenSizesList := map[int]oldTypes.ScreenConfiguration{}
-		for i, size := range request.ScreenSizesList {
-			key := fmt.Sprintf("%dx%d", size.Width, size.Height)
-			if _, ok := usedScreenSizes[key]; ok {
-				continue
-			}
-
-			ratesMap := map[int]int16{}
-			for i, rate := range rates[key] {
-				ratesMap[i] = rate
-			}
-
-			screenSizesList[i] = oldTypes.ScreenConfiguration{
-				Width:  size.Width,
-				Height: size.Height,
-				Rates:  ratesMap,
-			}
-		}
-
 		err = s.toClient(&oldMessage.ScreenConfigurations{
 			Event:          oldEvent.SCREEN_CONFIGURATIONS,
-			Configurations: screenSizesList,
+			Configurations: screenConfigurations(request.ScreenSizesList),
 		})
 		if err != nil {
 			return err
