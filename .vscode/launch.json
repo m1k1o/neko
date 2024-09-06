@@ -14,7 +14,10 @@
             "output": "${workspaceFolder}/server/bin/debug/neko",
             "cwd": "${workspaceFolder}/server/",
             "args": ["serve", "-d", "-c", "dev/runtime/config.yml"],
-            "envFile": "${workspaceFolder}/server/.env.development"
+            "env": {
+                "DISPLAY": ":99.0",
+                "PION_LOG_TRACE": "all",
+            }
         }
     ]
 }
