@@ -703,6 +703,13 @@ paths:
         - room
       summary: get screenshot image
       operationId: screenShotImage
+      parameters:
+        - in: query
+          name: quality
+          description: image quality (0-100)
+          required: false
+          schema:
+            type: integer
       responses:
         '200':
           description: OK

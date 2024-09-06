@@ -57,15 +57,15 @@ func newSession(logger zerolog.Logger, serverAddr string) *session {
 	}
 }
 
-func (s *session) apiReq(method, path string, request, response any) error {
+func (s *session) req(method, path string, request any) (io.ReadCloser, error) {
 	body, err := json.Marshal(request)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	req, err := http.NewRequest(method, "http://"+s.serverAddr+path, bytes.NewReader(body))
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	req.Header.Set("Content-Type", "application/json")
@@ -76,33 +76,44 @@ func (s *session) apiReq(method, path string, request, response any) error {
 
 	res, err := s.client.Do(req)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	defer res.Body.Close()
 
 	if res.StatusCode < 200 || res.StatusCode >= 300 {
+		defer res.Body.Close()
+
 		body, _ := io.ReadAll(res.Body)
 		// try to unmarsal as json error message
 		var apiErr struct {
 			Message string `json:"message"`
 		}
 		if err := json.Unmarshal(body, &apiErr); err == nil {
-			return fmt.Errorf("%w: %s", ErrBackendRespone, apiErr.Message)
+			return nil, fmt.Errorf("%w: %s", ErrBackendRespone, apiErr.Message)
 		}
 		// return raw body if failed to unmarshal
-		return fmt.Errorf("unexpected status code: %d, body: %s", res.StatusCode, strings.TrimSpace(string(body)))
+		return nil, fmt.Errorf("unexpected status code: %d, body: %s", res.StatusCode, strings.TrimSpace(string(body)))
 	}
 
-	if res.Body == nil {
+	return res.Body, nil
+}
+
+func (s *session) apiReq(method, path string, request, response any) error {
+	body, err := s.req(method, path, request)
+	if err != nil {
+		return err
+	}
+	defer body.Close()
+
+	if body == nil {
 		return nil
 	}
 
 	if response == nil {
-		io.Copy(io.Discard, res.Body)
+		io.Copy(io.Discard, body)
 		return nil
 	}
 
-	return json.NewDecoder(res.Body).Decode(response)
+	return json.NewDecoder(body).Decode(response)
 }
 
 // send message to client (in old format)
