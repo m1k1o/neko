@@ -3,7 +3,7 @@ package desktop
 import (
 	"time"
 
-	"github.com/demodesk/neko/pkg/drop"
+	"m1k1o/neko/pkg/drop"
 )
 
 // repeat move event multiple times

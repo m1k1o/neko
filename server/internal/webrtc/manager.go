@@ -17,14 +17,14 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"github.com/demodesk/neko/internal/config"
-	"github.com/demodesk/neko/internal/webrtc/cursor"
-	"github.com/demodesk/neko/internal/webrtc/pionlog"
-	"github.com/demodesk/neko/pkg/types"
-	"github.com/demodesk/neko/pkg/types/codec"
-	"github.com/demodesk/neko/pkg/types/event"
-	"github.com/demodesk/neko/pkg/types/message"
-	"github.com/demodesk/neko/pkg/utils"
+	"m1k1o/neko/internal/config"
+	"m1k1o/neko/internal/webrtc/cursor"
+	"m1k1o/neko/internal/webrtc/pionlog"
+	"m1k1o/neko/pkg/types"
+	"m1k1o/neko/pkg/types/codec"
+	"m1k1o/neko/pkg/types/event"
+	"m1k1o/neko/pkg/types/message"
+	"m1k1o/neko/pkg/utils"
 )
 
 const (

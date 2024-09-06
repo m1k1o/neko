@@ -1,9 +1,9 @@
 package handler
 
 import (
-	"github.com/demodesk/neko/pkg/types"
-	"github.com/demodesk/neko/pkg/types/event"
-	"github.com/demodesk/neko/pkg/types/message"
+	"m1k1o/neko/pkg/types"
+	"m1k1o/neko/pkg/types/event"
+	"m1k1o/neko/pkg/types/message"
 )
 
 func (h *MessageHandlerCtx) SessionCreated(session types.Session) error {

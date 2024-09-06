@@ -7,15 +7,15 @@ import (
 
 	"github.com/pion/webrtc/v3"
 
-	oldEvent "github.com/demodesk/neko/internal/http/legacy/event"
-	oldMessage "github.com/demodesk/neko/internal/http/legacy/message"
-	oldTypes "github.com/demodesk/neko/internal/http/legacy/types"
+	oldEvent "m1k1o/neko/internal/http/legacy/event"
+	oldMessage "m1k1o/neko/internal/http/legacy/message"
+	oldTypes "m1k1o/neko/internal/http/legacy/types"
 
-	"github.com/demodesk/neko/internal/plugins/chat"
-	"github.com/demodesk/neko/internal/plugins/filetransfer"
-	"github.com/demodesk/neko/pkg/types"
-	"github.com/demodesk/neko/pkg/types/event"
-	"github.com/demodesk/neko/pkg/types/message"
+	"m1k1o/neko/internal/plugins/chat"
+	"m1k1o/neko/internal/plugins/filetransfer"
+	"m1k1o/neko/pkg/types"
+	"m1k1o/neko/pkg/types/event"
+	"m1k1o/neko/pkg/types/message"
 )
 
 func profileToMember(id string, profile types.MemberProfile) (*oldTypes.Member, error) {

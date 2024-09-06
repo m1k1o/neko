@@ -8,10 +8,11 @@ import (
 	"net/http"
 	"strings"
 
-	oldTypes "github.com/demodesk/neko/internal/http/legacy/types"
+	oldTypes "m1k1o/neko/internal/http/legacy/types"
 
-	"github.com/demodesk/neko/internal/api"
-	"github.com/demodesk/neko/pkg/types"
+	"m1k1o/neko/internal/api"
+	"m1k1o/neko/pkg/types"
+
 	"github.com/gorilla/websocket"
 	"github.com/rs/zerolog"
 )

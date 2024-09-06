@@ -11,11 +11,11 @@ import (
 	"github.com/pion/webrtc/v3"
 	"github.com/rs/zerolog"
 
-	"github.com/demodesk/neko/internal/config"
-	"github.com/demodesk/neko/internal/webrtc/payload"
-	"github.com/demodesk/neko/pkg/types"
-	"github.com/demodesk/neko/pkg/types/event"
-	"github.com/demodesk/neko/pkg/utils"
+	"m1k1o/neko/internal/config"
+	"m1k1o/neko/internal/webrtc/payload"
+	"m1k1o/neko/pkg/types"
+	"m1k1o/neko/pkg/types/event"
+	"m1k1o/neko/pkg/utils"
 )
 
 type WebRTCPeerCtx struct {

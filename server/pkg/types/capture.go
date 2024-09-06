@@ -8,8 +8,9 @@ import (
 	"strings"
 	"time"
 
+	"m1k1o/neko/pkg/types/codec"
+
 	"github.com/PaesslerAG/gval"
-	"github.com/demodesk/neko/pkg/types/codec"
 )
 
 var (

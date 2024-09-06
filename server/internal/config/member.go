@@ -5,11 +5,11 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/demodesk/neko/internal/member/file"
-	"github.com/demodesk/neko/internal/member/multiuser"
-	"github.com/demodesk/neko/internal/member/object"
-	"github.com/demodesk/neko/pkg/types"
-	"github.com/demodesk/neko/pkg/utils"
+	"m1k1o/neko/internal/member/file"
+	"m1k1o/neko/internal/member/multiuser"
+	"m1k1o/neko/internal/member/object"
+	"m1k1o/neko/pkg/types"
+	"m1k1o/neko/pkg/utils"
 )
 
 type Member struct {

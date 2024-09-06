@@ -5,7 +5,7 @@ import (
 	"errors"
 	"os"
 
-	"github.com/demodesk/neko/pkg/types"
+	"m1k1o/neko/pkg/types"
 )
 
 func (manager *SessionManagerCtx) save() {
