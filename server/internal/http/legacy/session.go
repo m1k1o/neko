@@ -57,18 +57,15 @@ func newSession(logger zerolog.Logger, serverAddr string) *session {
 	}
 }
 
-func (s *session) req(method, path string, request any) (io.ReadCloser, error) {
-	body, err := json.Marshal(request)
+func (s *session) req(method, path string, headers http.Header, request io.Reader) (io.ReadCloser, http.Header, error) {
+	req, err := http.NewRequest(method, "http://"+s.serverAddr+path, request)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	req, err := http.NewRequest(method, "http://"+s.serverAddr+path, bytes.NewReader(body))
-	if err != nil {
-		return nil, err
+	for k, v := range headers {
+		req.Header[k] = v
 	}
-
-	req.Header.Set("Content-Type", "application/json")
 
 	if s.token != "" {
 		req.Header.Set("Authorization", "Bearer "+s.token)
@@ -76,7 +73,7 @@ func (s *session) req(method, path string, request any) (io.ReadCloser, error) {
 
 	res, err := s.client.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	if res.StatusCode < 200 || res.StatusCode >= 300 {
@@ -88,32 +85,41 @@ func (s *session) req(method, path string, request any) (io.ReadCloser, error) {
 			Message string `json:"message"`
 		}
 		if err := json.Unmarshal(body, &apiErr); err == nil {
-			return nil, fmt.Errorf("%w: %s", ErrBackendRespone, apiErr.Message)
+			return nil, nil, fmt.Errorf("%w: %s", ErrBackendRespone, apiErr.Message)
 		}
 		// return raw body if failed to unmarshal
-		return nil, fmt.Errorf("unexpected status code: %d, body: %s", res.StatusCode, strings.TrimSpace(string(body)))
+		return nil, nil, fmt.Errorf("unexpected status code: %d, body: %s", res.StatusCode, strings.TrimSpace(string(body)))
 	}
 
-	return res.Body, nil
+	return res.Body, res.Header, nil
 }
 
 func (s *session) apiReq(method, path string, request, response any) error {
-	body, err := s.req(method, path, request)
+	reqBody, err := json.Marshal(request)
 	if err != nil {
 		return err
 	}
-	defer body.Close()
 
-	if body == nil {
+	headers := http.Header{
+		"Content-Type": []string{"application/json"},
+	}
+
+	resBody, _, err := s.req(method, path, headers, bytes.NewReader(reqBody))
+	if err != nil {
+		return err
+	}
+	defer resBody.Close()
+
+	if resBody == nil {
 		return nil
 	}
 
 	if response == nil {
-		io.Copy(io.Discard, body)
+		io.Copy(io.Discard, resBody)
 		return nil
 	}
 
-	return json.NewDecoder(body).Decode(response)
+	return json.NewDecoder(resBody).Decode(response)
 }
 
 // send message to client (in old format)

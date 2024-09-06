@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"strconv"
+	"net/url"
 	"time"
 
 	"m1k1o/neko/internal/api"
@@ -89,7 +89,7 @@ func (h *LegacyHandler) Route(r types.Router) {
 		defer s.destroy()
 
 		// dial to the remote backend
-		connBackend, _, err := DefaultDialer.Dial("ws://"+h.serverAddr+"/api/ws?token="+s.token, nil)
+		connBackend, _, err := DefaultDialer.Dial("ws://"+h.serverAddr+"/api/ws?token="+url.QueryEscape(s.token), nil)
 		if err != nil {
 			h.logger.Error().Err(err).Msg("couldn't dial to the remote backend")
 
@@ -282,16 +282,65 @@ func (h *LegacyHandler) Route(r types.Router) {
 			return utils.HttpUnauthorized().Msg("bad authorization")
 		}
 
-		quality, err := strconv.Atoi(r.URL.Query().Get("quality"))
-		if err != nil {
-			quality = 90
-		}
-
-		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
-		w.Header().Set("Content-Type", "image/jpeg")
+		quality := r.URL.Query().Get("quality")
 
 		// get the screenshot
-		body, err := s.req(http.MethodGet, "/api/room/screen/shot.jpg?quality="+strconv.Itoa(quality), nil)
+		body, headers, err := s.req(http.MethodGet, "/api/room/screen/shot.jpg?quality="+url.QueryEscape(quality), nil, nil)
+		if err != nil {
+			return utils.HttpInternalServerError().WithInternalErr(err)
+		}
+
+		// copy headers
+		w.Header().Set("Content-Length", headers.Get("Content-Length"))
+		w.Header().Set("Content-Type", headers.Get("Content-Type"))
+
+		// copy the body to the response writer
+		_, err = io.Copy(w, body)
+		return err
+	})
+
+	// allow downloading and uploading files
+	r.Get("/file", func(w http.ResponseWriter, r *http.Request) error {
+		s := newSession(h.logger, h.serverAddr)
+
+		// create a new session
+		username := r.URL.Query().Get("usr")
+		password := r.URL.Query().Get("pwd")
+		err := s.create(username, password)
+		if err != nil {
+			return utils.HttpForbidden(err.Error())
+		}
+		defer s.destroy()
+
+		filename := r.URL.Query().Get("filename")
+
+		body, headers, err := s.req(http.MethodGet, "/api/filetransfer?filename="+url.QueryEscape(filename), r.Header, nil)
+		if err != nil {
+			return utils.HttpInternalServerError().WithInternalErr(err)
+		}
+
+		// copy headers
+		w.Header().Set("Content-Length", headers.Get("Content-Length"))
+		w.Header().Set("Content-Type", headers.Get("Content-Type"))
+
+		// copy the body to the response writer
+		_, err = io.Copy(w, body)
+		return err
+	})
+
+	r.Post("/file", func(w http.ResponseWriter, r *http.Request) error {
+		s := newSession(h.logger, h.serverAddr)
+
+		// create a new session
+		username := r.URL.Query().Get("usr")
+		password := r.URL.Query().Get("pwd")
+		err := s.create(username, password)
+		if err != nil {
+			return utils.HttpForbidden(err.Error())
+		}
+		defer s.destroy()
+
+		body, _, err := s.req(http.MethodPost, "/api/filetransfer", r.Header, r.Body)
 		if err != nil {
 			return utils.HttpInternalServerError().WithInternalErr(err)
 		}
@@ -300,19 +349,6 @@ func (h *LegacyHandler) Route(r types.Router) {
 		_, err = io.Copy(w, body)
 		return err
 	})
-
-	/*
-		// allow downloading and uploading files
-		if webSocketHandler.FileTransferEnabled() {
-			r.Get("/file", func(w http.ResponseWriter, r *http.Request) error {
-				return nil
-			})
-
-			r.Post("/file", func(w http.ResponseWriter, r *http.Request) error {
-				return nil
-			})
-		}
-	*/
 
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) error {
 		_, err := w.Write([]byte("true"))
