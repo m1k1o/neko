@@ -1,5 +1,5 @@
 # neko
-This app uses WebRTC to stream a desktop inside of a docker container. Client can be found here: [demodesk/neko-client](https://github.com/demodesk/neko-client).
+This app uses WebRTC to stream a desktop inside of a docker container. Client can be found here: [demodesk/neko-client](https://m1k1o/neko-client).
 
 For **community edition** neko with GUI and _plug & play_ deployment visit [m1k1o/neko](https://github.com/m1k1o/neko).
 

@@ -5,7 +5,8 @@ import (
 	"encoding/binary"
 	"strconv"
 
-	"github.com/demodesk/neko/pkg/types"
+	"m1k1o/neko/pkg/types"
+
 	"github.com/rs/zerolog"
 )
 

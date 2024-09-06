@@ -8,9 +8,9 @@ import (
 	"github.com/go-chi/cors"
 	"github.com/rs/zerolog"
 
-	"github.com/demodesk/neko/pkg/auth"
-	"github.com/demodesk/neko/pkg/types"
-	"github.com/demodesk/neko/pkg/utils"
+	"m1k1o/neko/pkg/auth"
+	"m1k1o/neko/pkg/types"
+	"m1k1o/neko/pkg/utils"
 )
 
 type RouterOption func(*router)

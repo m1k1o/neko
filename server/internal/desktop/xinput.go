@@ -1,6 +1,6 @@
 package desktop
 
-import "github.com/demodesk/neko/pkg/xinput"
+import "m1k1o/neko/pkg/xinput"
 
 func (manager *DesktopManagerCtx) inputRelToAbs(x, y int) (int, int) {
 	return (x * xinput.AbsX) / manager.screenSize.Width, (y * xinput.AbsY) / manager.screenSize.Height

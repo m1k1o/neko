@@ -5,9 +5,9 @@ import (
 
 	"github.com/rs/zerolog/log"
 
-	"github.com/demodesk/neko"
-	"github.com/demodesk/neko/cmd"
-	"github.com/demodesk/neko/pkg/utils"
+	"m1k1o/neko"
+	"m1k1o/neko/cmd"
+	"m1k1o/neko/pkg/utils"
 )
 
 func main() {

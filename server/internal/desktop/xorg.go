@@ -6,8 +6,8 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/demodesk/neko/pkg/types"
-	"github.com/demodesk/neko/pkg/xorg"
+	"m1k1o/neko/pkg/types"
+	"m1k1o/neko/pkg/xorg"
 )
 
 func (manager *DesktopManagerCtx) Move(x, y int) {

@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/demodesk/neko/pkg/types"
+	"m1k1o/neko/pkg/types"
 )
 
 func Test_deps_addPlugin(t *testing.T) {

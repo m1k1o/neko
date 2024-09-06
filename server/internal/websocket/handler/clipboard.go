@@ -3,8 +3,8 @@ package handler
 import (
 	"errors"
 
-	"github.com/demodesk/neko/pkg/types"
-	"github.com/demodesk/neko/pkg/types/message"
+	"m1k1o/neko/pkg/types"
+	"m1k1o/neko/pkg/types/message"
 )
 
 func (h *MessageHandlerCtx) clipboardSet(session types.Session, payload *message.ClipboardData) error {

@@ -1,4 +1,4 @@
-module github.com/demodesk/neko
+module m1k1o/neko
 
 go 1.21
 

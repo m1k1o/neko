@@ -8,8 +8,8 @@ import (
 	"github.com/go-chi/chi/middleware"
 	"github.com/rs/zerolog"
 
-	"github.com/demodesk/neko/pkg/types"
-	"github.com/demodesk/neko/pkg/utils"
+	"m1k1o/neko/pkg/types"
+	"m1k1o/neko/pkg/utils"
 )
 
 type logFormatter struct {

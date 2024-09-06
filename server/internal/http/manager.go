@@ -9,9 +9,9 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"github.com/demodesk/neko/internal/config"
-	"github.com/demodesk/neko/internal/http/legacy"
-	"github.com/demodesk/neko/pkg/types"
+	"m1k1o/neko/internal/config"
+	"m1k1o/neko/internal/http/legacy"
+	"m1k1o/neko/pkg/types"
 )
 
 type HttpManagerCtx struct {

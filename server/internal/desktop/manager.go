@@ -8,11 +8,11 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"github.com/demodesk/neko/internal/config"
-	"github.com/demodesk/neko/pkg/types"
-	"github.com/demodesk/neko/pkg/xevent"
-	"github.com/demodesk/neko/pkg/xinput"
-	"github.com/demodesk/neko/pkg/xorg"
+	"m1k1o/neko/internal/config"
+	"m1k1o/neko/pkg/types"
+	"m1k1o/neko/pkg/xevent"
+	"m1k1o/neko/pkg/xinput"
+	"m1k1o/neko/pkg/xorg"
 )
 
 var mu = sync.Mutex{}

@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"net/http"
 
-	oldEvent "github.com/demodesk/neko/internal/http/legacy/event"
-	oldMessage "github.com/demodesk/neko/internal/http/legacy/message"
+	oldEvent "m1k1o/neko/internal/http/legacy/event"
+	oldMessage "m1k1o/neko/internal/http/legacy/message"
 
-	"github.com/demodesk/neko/pkg/types"
-	"github.com/demodesk/neko/pkg/types/event"
-	"github.com/demodesk/neko/pkg/types/message"
-	"github.com/demodesk/neko/pkg/utils"
+	"m1k1o/neko/pkg/types"
+	"m1k1o/neko/pkg/types/event"
+	"m1k1o/neko/pkg/types/message"
+	"m1k1o/neko/pkg/utils"
+
 	"github.com/gorilla/websocket"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"

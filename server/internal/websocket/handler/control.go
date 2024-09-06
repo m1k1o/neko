@@ -3,10 +3,10 @@ package handler
 import (
 	"errors"
 
-	"github.com/demodesk/neko/pkg/types"
-	"github.com/demodesk/neko/pkg/types/event"
-	"github.com/demodesk/neko/pkg/types/message"
-	"github.com/demodesk/neko/pkg/xorg"
+	"m1k1o/neko/pkg/types"
+	"m1k1o/neko/pkg/types/event"
+	"m1k1o/neko/pkg/types/message"
+	"m1k1o/neko/pkg/xorg"
 )
 
 var (

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"os/exec"
 
-	"github.com/demodesk/neko/pkg/xorg"
+	"m1k1o/neko/pkg/xorg"
 )
 
 // name of the window that is being controlled
