@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
+	"strconv"
 	"time"
 
 	"m1k1o/neko/internal/api"
@@ -264,38 +266,42 @@ func (h *LegacyHandler) Route(r types.Router) {
 		return json.NewEncoder(w).Encode(stats)
 	})
 
+	r.Get("/screenshot.jpg", func(w http.ResponseWriter, r *http.Request) error {
+		s := newSession(h.logger, h.serverAddr)
+
+		// create a new session
+		username := r.URL.Query().Get("usr")
+		password := r.URL.Query().Get("pwd")
+		err := s.create(username, password)
+		if err != nil {
+			return utils.HttpForbidden(err.Error())
+		}
+		defer s.destroy()
+
+		if !s.isAdmin {
+			return utils.HttpUnauthorized().Msg("bad authorization")
+		}
+
+		quality, err := strconv.Atoi(r.URL.Query().Get("quality"))
+		if err != nil {
+			quality = 90
+		}
+
+		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+		w.Header().Set("Content-Type", "image/jpeg")
+
+		// get the screenshot
+		body, err := s.req(http.MethodGet, "/api/room/screen/shot.jpg?quality="+strconv.Itoa(quality), nil)
+		if err != nil {
+			return utils.HttpInternalServerError().WithInternalErr(err)
+		}
+
+		// copy the body to the response writer
+		_, err = io.Copy(w, body)
+		return err
+	})
+
 	/*
-		r.Get("/screenshot.jpg", func(w http.ResponseWriter, r *http.Request) error {
-			password := r.URL.Query().Get("pwd")
-			isAdmin, err := webSocketHandler.IsAdmin(password)
-			if err != nil {
-				return utils.HttpForbidden(err)
-			}
-
-			if !isAdmin {
-				return utils.HttpUnauthorized().Msg("bad authorization")
-			}
-
-			if webSocketHandler.IsLocked("login") {
-				return utils.HttpError(http.StatusLocked).Msg("room is locked")
-			}
-
-			quality, err := strconv.Atoi(r.URL.Query().Get("quality"))
-			if err != nil {
-				quality = 90
-			}
-
-			w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
-			w.Header().Set("Content-Type", "image/jpeg")
-
-			img := desktop.GetScreenshotImage()
-			if err := jpeg.Encode(w, img, &jpeg.Options{Quality: quality}); err != nil {
-				return utils.HttpInternalServerError().WithInternalErr(err)
-			}
-
-			return nil
-		})
-
 		// allow downloading and uploading files
 		if webSocketHandler.FileTransferEnabled() {
 			r.Get("/file", func(w http.ResponseWriter, r *http.Request) error {
