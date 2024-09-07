@@ -47,17 +47,17 @@ func (s *session) wsToBackend(msg []byte) error {
 		}
 
 		if request.DisplayName != "" {
-			// Update display name if it's different
-			if s.name == "" || s.name != request.DisplayName {
+			// Update display name if it is not set
+			if s.name == "" {
 				err = s.apiReq(http.MethodPost, "/api/profile", map[string]any{
 					"name": request.DisplayName,
 				}, nil)
 				if err != nil {
 					return err
 				}
-			}
 
-			s.name = request.DisplayName
+				s.name = request.DisplayName
+			}
 		}
 
 		// try to set legacy video stream, if it fails, it will be ignored
