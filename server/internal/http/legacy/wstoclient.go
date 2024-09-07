@@ -165,6 +165,11 @@ func (s *session) wsToClient(msg []byte) error {
 			return err
 		}
 
+		// if profile change is the reason for disconnect, it's a kick event
+		if request.Message == "profile changed" {
+			request.Message = "kicked"
+		}
+
 		return s.toClient(&oldMessage.SystemMessage{
 			Event:   oldEvent.SYSTEM_DISCONNECT,
 			Message: request.Message,
