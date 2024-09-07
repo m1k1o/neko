@@ -29,10 +29,13 @@ type memberStruct struct {
 }
 
 type session struct {
+	r *http.Request
+	h *LegacyHandler
+
 	logger     zerolog.Logger
 	serverAddr string
 
-	id      string
+	id, ip  string
 	token   string
 	name    string
 	isAdmin bool
@@ -48,10 +51,12 @@ type session struct {
 	connBackend *websocket.Conn
 }
 
-func newSession(logger zerolog.Logger, serverAddr string) *session {
+func (h *LegacyHandler) newSession(r *http.Request) *session {
 	return &session{
-		logger:     logger,
-		serverAddr: serverAddr,
+		r:          r,
+		h:          h,
+		logger:     h.logger,
+		serverAddr: h.serverAddr,
 		client:     http.DefaultClient,
 		sessions:   make(map[string]*memberStruct),
 	}
@@ -171,7 +176,8 @@ func (s *session) create(username, password string) error {
 		return err
 	}
 
-	s.id = data.ID
+	s.id, s.ip = data.ID, getIp(s.r)
+	s.h.sessionIPs[s.id] = s.ip // save session ip by id
 	s.token = data.Token
 	s.name = data.Profile.Name
 	s.isAdmin = data.Profile.IsAdmin
@@ -192,4 +198,7 @@ func (s *session) destroy() {
 	if err != nil {
 		s.logger.Error().Err(err).Msg("failed to logout")
 	}
+
+	// remove session id from ip map
+	delete(s.h.sessionIPs, s.id)
 }

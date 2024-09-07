@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 
@@ -41,6 +42,8 @@ var (
 type LegacyHandler struct {
 	logger     zerolog.Logger
 	serverAddr string
+	bannedIPs  map[string]struct{}
+	sessionIPs map[string]string
 }
 
 func New() *LegacyHandler {
@@ -49,12 +52,14 @@ func New() *LegacyHandler {
 	return &LegacyHandler{
 		logger:     log.With().Str("module", "legacy").Logger(),
 		serverAddr: "127.0.0.1:8080",
+		bannedIPs:  make(map[string]struct{}),
+		sessionIPs: make(map[string]string),
 	}
 }
 
 func (h *LegacyHandler) Route(r types.Router) {
 	r.Get("/ws", func(w http.ResponseWriter, r *http.Request) error {
-		s := newSession(h.logger, h.serverAddr)
+		s := h.newSession(r)
 
 		// create a new websocket connection
 		connClient, err := DefaultUpgrader.Upgrade(w, r, nil)
@@ -65,6 +70,14 @@ func (h *LegacyHandler) Route(r types.Router) {
 		}
 		defer connClient.Close()
 		s.connClient = connClient
+
+		if h.isBanned(r) {
+			s.toClient(&oldMessage.SystemMessage{
+				Event:   oldEvent.SYSTEM_DISCONNECT,
+				Title:   "banned ip",
+				Message: "you are banned",
+			})
+		}
 
 		// create a new session
 		username := r.URL.Query().Get("username")
@@ -180,7 +193,11 @@ func (h *LegacyHandler) Route(r types.Router) {
 	})
 
 	r.Get("/stats", func(w http.ResponseWriter, r *http.Request) error {
-		s := newSession(h.logger, h.serverAddr)
+		if h.isBanned(r) {
+			return utils.HttpForbidden("banned ip")
+		}
+
+		s := h.newSession(r)
 
 		// create a new session
 		username := r.URL.Query().Get("usr")
@@ -253,7 +270,11 @@ func (h *LegacyHandler) Route(r types.Router) {
 	})
 
 	r.Get("/screenshot.jpg", func(w http.ResponseWriter, r *http.Request) error {
-		s := newSession(h.logger, h.serverAddr)
+		if h.isBanned(r) {
+			return utils.HttpForbidden("banned ip")
+		}
+
+		s := h.newSession(r)
 
 		// create a new session
 		username := r.URL.Query().Get("usr")
@@ -287,7 +308,11 @@ func (h *LegacyHandler) Route(r types.Router) {
 
 	// allow downloading and uploading files
 	r.Get("/file", func(w http.ResponseWriter, r *http.Request) error {
-		s := newSession(h.logger, h.serverAddr)
+		if h.isBanned(r) {
+			return utils.HttpForbidden("banned ip")
+		}
+
+		s := h.newSession(r)
 
 		// create a new session
 		username := r.URL.Query().Get("usr")
@@ -315,7 +340,11 @@ func (h *LegacyHandler) Route(r types.Router) {
 	})
 
 	r.Post("/file", func(w http.ResponseWriter, r *http.Request) error {
-		s := newSession(h.logger, h.serverAddr)
+		if h.isBanned(r) {
+			return utils.HttpForbidden("banned ip")
+		}
+
+		s := h.newSession(r)
 
 		// create a new session
 		username := r.URL.Query().Get("usr")
@@ -340,4 +369,37 @@ func (h *LegacyHandler) Route(r types.Router) {
 		_, err := w.Write([]byte("true"))
 		return err
 	})
+}
+
+func (h *LegacyHandler) ban(sessionId string) error {
+	// find session by id
+	ip, ok := h.sessionIPs[sessionId]
+	if !ok {
+		return fmt.Errorf("session not found")
+	}
+
+	h.bannedIPs[ip] = struct{}{}
+	return nil
+}
+
+func (h *LegacyHandler) isBanned(r *http.Request) bool {
+	ipPort := r.RemoteAddr
+	ip, _, err := net.SplitHostPort(ipPort)
+	if err != nil {
+		h.logger.Error().Err(err).Msg("couldn't split host and port")
+		return false
+	}
+
+	_, ok := h.bannedIPs[ip]
+	return ok
+}
+
+func getIp(r *http.Request) string {
+	ipPort := r.RemoteAddr
+	ip, _, err := net.SplitHostPort(ipPort)
+	if err != nil {
+		return ""
+	}
+
+	return ip
 }
