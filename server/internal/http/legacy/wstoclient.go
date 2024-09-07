@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/pion/webrtc/v3"
+	"github.com/spf13/viper"
 
 	oldEvent "m1k1o/neko/internal/http/legacy/event"
 	oldMessage "m1k1o/neko/internal/http/legacy/message"
@@ -252,7 +253,8 @@ func (s *session) wsToClient(msg []byte) error {
 			Event:           oldEvent.SYSTEM_INIT,
 			ImplicitHosting: request.Settings.ImplicitHosting,
 			Locks:           locks,
-			FileTransfer:    true, // TODO: We don't know if file transfer is enabled, we would need to check the global config somehow.
+			// TODO: hack - we don't know if file transfer is enabled, we would need to check the global config.
+			FileTransfer: viper.GetBool("filetransfer.enabled") || (viper.GetBool("legacy") && viper.GetBool("file_transfer_enabled")),
 		})
 
 	case event.SYSTEM_ADMIN:
