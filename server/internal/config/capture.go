@@ -359,9 +359,17 @@ func (s *Capture) Set() {
 					"min-quantizer":       "4",
 					"max-quantizer":       "20",
 				},
+				ShowPointer: viper.GetBool("legacy"),
 			},
 		}
 		s.VideoIDs = []string{"main"}
+
+		if viper.GetBool("legacy") {
+			legacyPipeline := s.VideoPipelines["main"]
+			legacyPipeline.ShowPointer = true
+			s.VideoPipelines["legacy"] = legacyPipeline
+			// we do not add legacy to VideoIDs so that its ignored by bandwidth estimator
+		}
 	}
 
 	// audio
@@ -463,7 +471,13 @@ func (s *Capture) SetV2() {
 				"main": {
 					GstPipeline: pipeline,
 				},
+				"legacy": {
+					GstPipeline: pipeline,
+					ShowPointer: true,
+				},
 			}
+			// we do not add legacy to VideoIDs so that its ignored by bandwidth estimator
+			s.VideoIDs = []string{"main"}
 			// TODO: add deprecated warning and proper alternative
 		}
 	}

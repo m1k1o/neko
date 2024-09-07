@@ -158,6 +158,7 @@ type VideoConfig struct {
 	GstParams   map[string]string `mapstructure:"gst_params"`   // map of expressions
 	GstSuffix   string            `mapstructure:"gst_suffix"`   // pipeline suffix, starts with !
 	GstPipeline string            `mapstructure:"gst_pipeline"` // whole pipeline as a string
+	ShowPointer bool              `mapstructure:"show_pointer"` // show pointer in the video
 }
 
 func (config *VideoConfig) GetPipeline(screen ScreenSize) (string, error) {

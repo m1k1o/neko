@@ -49,8 +49,8 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 			}
 
 			return fmt.Sprintf(
-				"ximagesrc display-name=%s show-pointer=false use-damage=false "+
-					"%s ! appsink name=appsink", config.Display, pipeline,
+				"ximagesrc display-name=%s show-pointer=%v use-damage=false "+
+					"%s ! appsink name=appsink", config.Display, pipelineConf.ShowPointer, pipeline,
 			), nil
 		}
 

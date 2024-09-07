@@ -1,8 +1,27 @@
 capture:
   video:
     codec: vp8
+    # legacy format is not added to the list of ids so that its ignored by bandwidth estimator
     ids: [ hq, lq ]
     pipelines:
+      # legacy format is the same as hq, but with show_pointer enabled
+      legacy:
+        fps: 25
+        gst_encoder: vp8enc
+        gst_params:
+          target-bitrate: round(3072 * 650)
+          cpu-used: 4
+          end-usage: cbr
+          threads: 4
+          deadline: 1
+          undershoot: 95
+          buffer-size: (3072 * 4)
+          buffer-initial-size: (3072 * 2)
+          buffer-optimal-size: (3072 * 3)
+          keyframe-max-dist: 25
+          min-quantizer: 4
+          max-quantizer: 20
+        show_pointer: true
       hq:
         fps: 25
         gst_encoder: vp8enc

@@ -60,6 +60,18 @@ func (s *session) wsToBackend(msg []byte) error {
 			s.name = request.DisplayName
 		}
 
+		// try to set legacy video stream, if it fails, it will be ignored
+		if err := s.toBackend(event.SIGNAL_VIDEO, &message.SignalVideo{
+			PeerVideoRequest: types.PeerVideoRequest{
+				Selector: &types.StreamSelector{
+					Type: types.StreamSelectorTypeExact,
+					ID:   "legacy",
+				},
+			},
+		}); err != nil {
+			return err
+		}
+
 		return s.toBackend(event.SIGNAL_ANSWER, &message.SignalDescription{
 			SDP: request.SDP,
 		})
