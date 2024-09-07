@@ -7,6 +7,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"m1k1o/neko/internal/api"
 	"m1k1o/neko/internal/capture"
@@ -88,24 +89,25 @@ func (c *serve) Init(cmd *cobra.Command) error {
 	}
 
 	// V2 configuration
-
-	if err := c.configs.Desktop.InitV2(cmd); err != nil {
-		return err
-	}
-	if err := c.configs.Capture.InitV2(cmd); err != nil {
-		return err
-	}
-	if err := c.configs.WebRTC.InitV2(cmd); err != nil {
-		return err
-	}
-	if err := c.configs.Member.InitV2(cmd); err != nil {
-		return err
-	}
-	if err := c.configs.Session.InitV2(cmd); err != nil {
-		return err
-	}
-	if err := c.configs.Server.InitV2(cmd); err != nil {
-		return err
+	if viper.GetBool("legacy") {
+		if err := c.configs.Desktop.InitV2(cmd); err != nil {
+			return err
+		}
+		if err := c.configs.Capture.InitV2(cmd); err != nil {
+			return err
+		}
+		if err := c.configs.WebRTC.InitV2(cmd); err != nil {
+			return err
+		}
+		if err := c.configs.Member.InitV2(cmd); err != nil {
+			return err
+		}
+		if err := c.configs.Session.InitV2(cmd); err != nil {
+			return err
+		}
+		if err := c.configs.Server.InitV2(cmd); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -122,12 +124,14 @@ func (c *serve) PreRun(cmd *cobra.Command, args []string) {
 	c.configs.Plugins.Set()
 	c.configs.Server.Set()
 
-	c.configs.Desktop.SetV2()
-	c.configs.Capture.SetV2()
-	c.configs.WebRTC.SetV2()
-	c.configs.Member.SetV2()
-	c.configs.Session.SetV2()
-	c.configs.Server.SetV2()
+	if viper.GetBool("legacy") {
+		c.configs.Desktop.SetV2()
+		c.configs.Capture.SetV2()
+		c.configs.WebRTC.SetV2()
+		c.configs.Member.SetV2()
+		c.configs.Session.SetV2()
+		c.configs.Server.SetV2()
+	}
 }
 
 func (c *serve) Start(cmd *cobra.Command) {

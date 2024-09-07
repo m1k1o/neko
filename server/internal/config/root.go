@@ -13,6 +13,7 @@ import (
 
 type Root struct {
 	Config string
+	Legacy bool
 
 	LogLevel   zerolog.Level
 	LogTime    string
@@ -30,6 +31,12 @@ func (Root) Init(cmd *cobra.Command) error {
 	// just a shortcut
 	cmd.PersistentFlags().BoolP("debug", "d", false, "enable debug mode")
 	if err := viper.BindPFlag("debug", cmd.PersistentFlags().Lookup("debug")); err != nil {
+		return err
+	}
+
+	// whether legacy configs/api should be enabled (default: true, until v3.1)
+	cmd.PersistentFlags().BoolP("legacy", "l", true, "enable legacy mode")
+	if err := viper.BindPFlag("legacy", cmd.PersistentFlags().Lookup("legacy")); err != nil {
 		return err
 	}
 
@@ -72,6 +79,7 @@ func (Root) InitV2(cmd *cobra.Command) error {
 
 func (s *Root) Set() {
 	s.Config = viper.GetString("config")
+	s.Legacy = viper.GetBool("legacy")
 
 	logLevel := viper.GetString("log.level")
 	level, err := zerolog.ParseLevel(logLevel)

@@ -8,6 +8,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/viper"
 
 	"m1k1o/neko/internal/config"
 	"m1k1o/neko/internal/http/legacy"
@@ -56,7 +57,9 @@ func New(WebSocketManager types.WebSocketManager, ApiManager types.ApiManager, c
 	}))
 
 	// Legacy handler
-	legacy.New().Route(router)
+	if viper.GetBool("legacy") {
+		legacy.New().Route(router)
+	}
 
 	batch := batchHandler{
 		Router:     router,
