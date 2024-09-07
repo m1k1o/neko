@@ -121,6 +121,11 @@ func (s *session) sendControlHost(request message.ControlHost) error {
 					Target: lastHostID,
 				})
 			}
+		} else if request.ID == "" {
+			return s.toClient(&oldMessage.Control{
+				Event: oldEvent.CONTROL_LOCKED,
+				ID:    request.HostID,
+			})
 		} else {
 			return s.toClient(&oldMessage.ControlTarget{
 				Event:  oldEvent.CONTROL_GIVE,
