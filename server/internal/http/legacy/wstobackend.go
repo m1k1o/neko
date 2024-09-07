@@ -47,8 +47,6 @@ func (s *session) wsToBackend(msg []byte) error {
 		}
 
 		if request.DisplayName != "" {
-			s.name = request.DisplayName
-
 			// Update display name if it's different
 			if s.name == "" || s.name != request.DisplayName {
 				err = s.apiReq(http.MethodPost, "/api/profile", map[string]any{
@@ -58,6 +56,8 @@ func (s *session) wsToBackend(msg []byte) error {
 					return err
 				}
 			}
+
+			s.name = request.DisplayName
 		}
 
 		return s.toBackend(event.SIGNAL_ANSWER, &message.SignalDescription{
