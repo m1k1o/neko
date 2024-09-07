@@ -52,6 +52,16 @@ type Settings struct {
 	Plugins PluginSettings `json:"plugins"`
 }
 
+type Stats struct {
+	HasHost         bool       `json:"has_host"`
+	HostId          string     `json:"host_id,omitempty"`
+	ServerStartedAt time.Time  `json:"server_started_at"`
+	TotalUsers      int        `json:"total_users"`
+	LastUserLeftAt  *time.Time `json:"last_user_left_at,omitempty"`
+	TotalAdmins     int        `json:"total_admins"`
+	LastAdminLeftAt *time.Time `json:"last_admin_left_at,omitempty"`
+}
+
 type Session interface {
 	ID() string
 	Profile() MemberProfile
@@ -109,6 +119,8 @@ type SessionManager interface {
 	UpdateSettingsFunc(session Session, f func(settings *Settings) bool)
 	Settings() Settings
 	CookieEnabled() bool
+
+	Stats() Stats
 
 	CookieSetToken(w http.ResponseWriter, token string)
 	CookieClearToken(w http.ResponseWriter, r *http.Request)

@@ -125,6 +125,21 @@ paths:
             schema:
               $ref: '#/components/schemas/MemberProfile'
         required: true
+  /api/stats:
+    get:
+      summary: stats
+      operationId: stats
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Stats'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
   #
   # sessions
@@ -1144,6 +1159,30 @@ components:
           type: boolean
         is_watching:
           type: boolean
+
+    Stats:
+      type: object
+      properties:
+        has_host:
+          type: boolean
+        host_id:
+          type: string
+          optional: true
+        server_started_at:
+          type: string
+          format: date-time
+        total_users:
+          type: integer
+        last_user_left_at:
+          type: string
+          format: date-time
+          optional: true
+        total_admins:
+          type: integer
+        last_admin_left_at:
+          type: string
+          format: date-time
+          optional: true
 
     #
     # room

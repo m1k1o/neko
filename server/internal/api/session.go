@@ -103,3 +103,8 @@ func (api *ApiManagerCtx) UpdateProfile(w http.ResponseWriter, r *http.Request) 
 
 	return utils.HttpSuccess(w, true)
 }
+
+func (api *ApiManagerCtx) Stats(w http.ResponseWriter, r *http.Request) error {
+	stats := api.sessions.Stats()
+	return utils.HttpSuccess(w, stats)
+}

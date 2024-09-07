@@ -121,6 +121,14 @@ func (session *SessionCtx) ConnectWebSocketPeer(websocketPeer types.WebSocketPee
 	session.state.ConnectedSince = &now
 	session.state.NotConnectedSince = nil
 
+	if session.profile.IsAdmin {
+		session.manager.totalAdmins.Add(1)
+		session.manager.lastAdminLeftAt.Store((*time.Time)(nil))
+	} else {
+		session.manager.totalUsers.Add(1)
+		session.manager.lastUserLeftAt.Store((*time.Time)(nil))
+	}
+
 	session.manager.emmiter.Emit("connected", session)
 
 	// if there is a previous peer, destroy it
@@ -179,6 +187,16 @@ func (session *SessionCtx) DisconnectWebSocketPeer(websocketPeer types.WebSocket
 	session.state.IsConnected = false
 	session.state.ConnectedSince = nil
 	session.state.NotConnectedSince = &now
+
+	if session.profile.IsAdmin {
+		if session.manager.totalAdmins.Add(-1) == 0 {
+			session.manager.lastAdminLeftAt.Store(&now)
+		}
+	} else {
+		if session.manager.totalUsers.Add(-1) == 0 {
+			session.manager.lastUserLeftAt.Store(&now)
+		}
+	}
 
 	session.manager.emmiter.Emit("disconnected", session)
 

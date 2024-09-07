@@ -7,10 +7,8 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"time"
 
 	"m1k1o/neko/internal/api"
-	"m1k1o/neko/internal/api/room"
 	oldEvent "m1k1o/neko/internal/http/legacy/event"
 	oldMessage "m1k1o/neko/internal/http/legacy/message"
 	oldTypes "m1k1o/neko/internal/http/legacy/types"
@@ -43,7 +41,6 @@ var (
 type LegacyHandler struct {
 	logger     zerolog.Logger
 	serverAddr string
-	startedAt  time.Time
 }
 
 func New() *LegacyHandler {
@@ -52,7 +49,6 @@ func New() *LegacyHandler {
 	return &LegacyHandler{
 		logger:     log.With().Str("module", "legacy").Logger(),
 		serverAddr: "127.0.0.1:8080",
-		startedAt:  time.Now(),
 	}
 }
 
@@ -208,9 +204,9 @@ func (h *LegacyHandler) Route(r types.Router) {
 			return utils.HttpInternalServerError().WithInternalErr(err)
 		}
 
-		// get current control status
-		control := room.ControlStatusPayload{}
-		err = s.apiReq(http.MethodGet, "/api/room/control", nil, &control)
+		// get stats
+		newStats := types.Stats{}
+		err = s.apiReq(http.MethodGet, "/api/stats", nil, &newStats)
 		if err != nil {
 			return utils.HttpInternalServerError().WithInternalErr(err)
 		}
@@ -236,18 +232,6 @@ func (h *LegacyHandler) Route(r types.Router) {
 				}
 				// append members
 				stats.Members = append(stats.Members, member)
-			} else if session.State.NotConnectedSince != nil {
-				//
-				// TODO: This wont work if the user is removed after the session is closed
-				//
-				// populate last admin left time
-				if session.Profile.IsAdmin && (stats.LastAdminLeftAt == nil || (*session.State.NotConnectedSince).After(*stats.LastAdminLeftAt)) {
-					stats.LastAdminLeftAt = session.State.NotConnectedSince
-				}
-				// populate last user left time
-				if !session.Profile.IsAdmin && (stats.LastUserLeftAt == nil || (*session.State.NotConnectedSince).After(*stats.LastUserLeftAt)) {
-					stats.LastUserLeftAt = session.State.NotConnectedSince
-				}
 			}
 		}
 
@@ -256,10 +240,12 @@ func (h *LegacyHandler) Route(r types.Router) {
 			return err
 		}
 
-		stats.Host = control.HostId
+		stats.Host = newStats.HostId
 		// TODO: stats.Banned, not implemented yet
 		stats.Locked = locks
-		stats.ServerStartedAt = h.startedAt
+		stats.ServerStartedAt = newStats.ServerStartedAt
+		stats.LastAdminLeftAt = newStats.LastAdminLeftAt
+		stats.LastUserLeftAt = newStats.LastUserLeftAt
 		stats.ControlProtection = settings.ControlProtection
 		stats.ImplicitControl = settings.ImplicitHosting
 

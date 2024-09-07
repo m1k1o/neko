@@ -4,6 +4,7 @@ import (
 	"errors"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/kataras/go-events"
 	"github.com/rs/zerolog"
@@ -31,6 +32,8 @@ func New(config *config.Session) *SessionManagerCtx {
 		sessions: make(map[string]*SessionCtx),
 		cursors:  make(map[types.Session][]types.Cursor),
 		emmiter:  events.New(),
+
+		serverStartedAt: time.Now(),
 	}
 
 	// create API session
@@ -76,6 +79,12 @@ type SessionManagerCtx struct {
 
 	emmiter    events.EventEmmiter
 	apiSession *SessionCtx
+
+	serverStartedAt time.Time
+	totalAdmins     atomic.Int32
+	lastAdminLeftAt atomic.Value
+	totalUsers      atomic.Int32
+	lastUserLeftAt  atomic.Value
 }
 
 func (manager *SessionManagerCtx) Create(id string, profile types.MemberProfile) (types.Session, string, error) {
@@ -467,4 +476,37 @@ func (manager *SessionManagerCtx) Settings() types.Settings {
 
 func (manager *SessionManagerCtx) CookieEnabled() bool {
 	return manager.config.CookieEnabled
+}
+
+// ---
+// stats
+// ---
+
+func (manager *SessionManagerCtx) Stats() types.Stats {
+	hostId := ""
+
+	host, hasHost := manager.GetHost()
+	if hasHost {
+		hostId = host.ID()
+	}
+
+	var lastUserLeftAt *time.Time
+	if t, ok := manager.lastUserLeftAt.Load().(*time.Time); ok {
+		lastUserLeftAt = t
+	}
+
+	var lastAdminLeftAt *time.Time
+	if t, ok := manager.lastAdminLeftAt.Load().(*time.Time); ok {
+		lastAdminLeftAt = t
+	}
+
+	return types.Stats{
+		HasHost:         hasHost,
+		HostId:          hostId,
+		ServerStartedAt: manager.serverStartedAt,
+		TotalUsers:      int(manager.totalUsers.Load()),
+		LastUserLeftAt:  lastUserLeftAt,
+		TotalAdmins:     int(manager.totalAdmins.Load()),
+		LastAdminLeftAt: lastAdminLeftAt,
+	}
 }
