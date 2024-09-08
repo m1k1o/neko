@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"m1k1o/neko/internal/api"
 	oldEvent "m1k1o/neko/internal/http/legacy/event"
@@ -158,7 +159,7 @@ func (h *LegacyHandler) Route(r types.Router) {
 						s.toClient(&oldMessage.SystemMessage{
 							Event:   oldEvent.SYSTEM_ERROR,
 							Title:   "backend response error",
-							Message: err.Error(),
+							Message: strings.ReplaceAll(err.Error(), ErrBackendRespone.Error()+": ", ""),
 						})
 						continue
 					} else if errors.Is(err, ErrWebsocketSend) {
