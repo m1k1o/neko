@@ -116,7 +116,12 @@ RUN set -eux; \
     chown $USERNAME /tmp/.X11-unix/; \
     #
     # make directories for neko
-    mkdir -p /etc/neko /var/www; \
+    mkdir -p /etc/neko /var/www /var/log/neko \
+        /tmp/runtime-$USERNAME \
+        /home/$USERNAME/.config/pulse  \
+        /home/$USERNAME/.local/share/xorg; \
+    chmod 1777 /var/log/neko; \
+    chown $USERNAME /var/log/neko/ /tmp/runtime-$USERNAME; \
     chown -R $USERNAME:$USERNAME /home/$USERNAME; \
     #
     # install fonts
@@ -125,10 +130,13 @@ RUN set -eux; \
         fonts-noto-color-emoji \
         # Chinese fonts
         fonts-arphic-ukai fonts-arphic-uming \
+        fonts-wqy-zenhei xfonts-intl-chinese xfonts-wqy \
         # Japanese fonts
         fonts-ipafont-mincho fonts-ipafont-gothic \
+        fonts-takao-mincho \
         # Korean fonts
         fonts-unfonts-core \
+        fonts-wqy-microhei \
         # Indian fonts
         fonts-indic; \
     #
@@ -160,6 +168,7 @@ COPY runtime/fonts /usr/local/share/fonts
 ENV USER=$USERNAME
 ENV DISPLAY=:99.0
 ENV PULSE_SERVER=unix:/tmp/pulseaudio.socket
+ENV XDG_RUNTIME_DIR=/tmp/runtime-$USERNAME
 ENV NEKO_SERVER_BIND=:8080
 ENV NEKO_PLUGINS_ENABLED=true
 ENV NEKO_PLUGINS_DIR=/etc/neko/plugins/
@@ -179,4 +188,4 @@ HEALTHCHECK --interval=10s --timeout=5s --retries=8 \
 
 #
 # run neko
-CMD ["/usr/bin/supervisord", "-s", "-c", "/etc/neko/supervisord.conf"]
+CMD ["/usr/bin/supervisord", "-c", "/etc/neko/supervisord.conf"]
