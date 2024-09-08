@@ -39,10 +39,13 @@ func profileToMember(id string, profile types.MemberProfile) (*oldTypes.Member, 
 }
 
 func screenConfigurations(screenSizes []types.ScreenSize) map[int]oldTypes.ScreenConfiguration {
-	rates := map[string][]int16{}
+	rates := map[string]map[int16]struct{}{}
 	for _, size := range screenSizes {
 		key := fmt.Sprintf("%dx%d", size.Width, size.Height)
-		rates[key] = append(rates[key], size.Rate)
+		if _, ok := rates[key]; !ok {
+			rates[key] = map[int16]struct{}{}
+		}
+		rates[key][size.Rate] = struct{}{}
 	}
 
 	usedScreenSizes := map[string]struct{}{}
@@ -52,10 +55,12 @@ func screenConfigurations(screenSizes []types.ScreenSize) map[int]oldTypes.Scree
 		if _, ok := usedScreenSizes[key]; ok {
 			continue
 		}
+		usedScreenSizes[key] = struct{}{}
 
-		ratesMap := map[int]int16{}
-		for i, rate := range rates[key] {
-			ratesMap[i] = rate
+		c, ratesMap := 0, map[int]int16{}
+		for rate := range rates[key] {
+			ratesMap[c] = rate
+			c++
 		}
 
 		screenSizesList[i] = oldTypes.ScreenConfiguration{
