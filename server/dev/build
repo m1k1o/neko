@@ -12,6 +12,9 @@ GIT_BRANCH=`git rev-parse --symbolic-full-name --abbrev-ref HEAD`
 if [ "$1" = "nvidia" ]; then
     echo "Building nvidia docker image"
     DOCKERFILE="Dockerfile.nvidia"
+elif [ "$1" = "intel" ]; then
+    echo "Building intel docker image"
+    DOCKERFILE="Dockerfile.intel"
 else
     echo "Building default docker image"
     DOCKERFILE="Dockerfile"
