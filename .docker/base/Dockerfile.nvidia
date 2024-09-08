@@ -255,11 +255,12 @@ RUN set -eux; \
 
 #
 # copy config files
-COPY .docker/base/dbus /usr/bin/dbus
-COPY .docker/base/default.pa /etc/pulse/default.pa
-COPY .docker/base/supervisord.conf /etc/neko/supervisord.conf
-COPY .docker/base/xorg.conf /etc/neko/xorg.conf
-COPY .docker/base/nvidia/entrypoint.sh /bin/entrypoint.sh
+COPY server/runtime/dbus /usr/bin/dbus
+COPY server/runtime/default.pa /etc/pulse/default.pa
+COPY server/runtime/supervisord.conf /etc/neko/supervisord.conf
+COPY server/runtime/supervisord.dbus.conf /etc/neko/supervisord.dbus.conf
+COPY server/runtime/xorg.conf /etc/neko/xorg.conf
+COPY server/runtime/nvidia/entrypoint.sh /bin/entrypoint.sh
 
 #
 # set default envs

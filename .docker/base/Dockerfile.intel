@@ -119,11 +119,13 @@ RUN set -eux; \
 
 #
 # copy config files
-COPY .docker/base/dbus /usr/bin/dbus
-COPY .docker/base/default.pa /etc/pulse/default.pa
-COPY .docker/base/intel/supervisord.conf /etc/neko/supervisord.conf
-COPY .docker/base/xorg.conf /etc/neko/xorg.conf
-COPY .docker/base/intel/add-render-group.sh /usr/bin/add-render-group.sh
+COPY server/runtime/dbus /usr/bin/dbus
+COPY server/runtime/default.pa /etc/pulse/default.pa
+COPY server/runtime/supervisord.conf /etc/neko/supervisord.conf
+COPY server/runtime/supervisord.dbus.conf /etc/neko/supervisord.dbus.conf
+COPY server/runtime/xorg.conf /etc/neko/xorg.conf
+COPY server/runtime/intel/add-render-group.sh /usr/bin/add-render-group.sh
+COPY server/runtime/intel/supervisord.rendergroup.conf /etc/neko/supervisord/supervisord.rendergroup.conf
 
 #
 # set default envs
