@@ -130,8 +130,8 @@ func (s *session) sendControlHost(request message.ControlHost) error {
 		} else {
 			return s.toClient(&oldMessage.ControlTarget{
 				Event:  oldEvent.CONTROL_GIVE,
-				ID:     request.HostID,
-				Target: request.ID,
+				ID:     request.ID,
+				Target: request.HostID,
 			})
 		}
 	}

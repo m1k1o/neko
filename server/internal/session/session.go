@@ -83,8 +83,8 @@ func (session *SessionCtx) SetAsHost() {
 	session.manager.setHost(session, session)
 }
 
-func (session *SessionCtx) SetAsHostBy(host types.Session) {
-	session.manager.setHost(session, host)
+func (session *SessionCtx) SetAsHostBy(bySession types.Session) {
+	session.manager.setHost(bySession, session)
 }
 
 func (session *SessionCtx) ClearHost() {
