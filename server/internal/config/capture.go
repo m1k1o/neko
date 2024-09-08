@@ -359,7 +359,6 @@ func (s *Capture) Set() {
 					"min-quantizer":       "4",
 					"max-quantizer":       "20",
 				},
-				ShowPointer: viper.GetBool("legacy"),
 			},
 		}
 		s.VideoIDs = []string{"main"}
@@ -469,11 +468,11 @@ func (s *Capture) SetV2() {
 		} else {
 			s.VideoPipelines = map[string]types.VideoConfig{
 				"main": {
-					GstPipeline: pipeline,
+					// Hacky way to disable pointer.
+					GstPipeline: strings.Replace(pipeline, "show-pointer=true", "show-pointer=false", 1),
 				},
 				"legacy": {
 					GstPipeline: pipeline,
-					ShowPointer: true,
 				},
 			}
 			// we do not add legacy to VideoIDs so that its ignored by bandwidth estimator

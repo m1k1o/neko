@@ -54,7 +54,7 @@ func NewBroadcastPipeline(device string, display string, pipelineSrc string, url
 }
 
 func NewVideoPipeline(rtpCodec codec.RTPCodec, display string, pipelineSrc string, fps int16, bitrate uint, hwenc HwEnc) (string, error) {
-	pipelineStr := " ! appsink name=appsinkvideo"
+	pipelineStr := " ! appsink name=appsink"
 
 	// if using custom pipeline
 	if pipelineSrc != "" {
@@ -182,7 +182,7 @@ func NewVideoPipeline(rtpCodec codec.RTPCodec, display string, pipelineSrc strin
 }
 
 func NewAudioPipeline(rtpCodec codec.RTPCodec, device string, pipelineSrc string, bitrate uint) (string, error) {
-	pipelineStr := " ! appsink name=appsinkaudio"
+	pipelineStr := " ! appsink name=appsink"
 
 	// if using custom pipeline
 	if pipelineSrc != "" {
