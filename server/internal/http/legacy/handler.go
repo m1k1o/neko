@@ -383,21 +383,17 @@ func (h *LegacyHandler) ban(sessionId string) error {
 }
 
 func (h *LegacyHandler) isBanned(r *http.Request) bool {
-	ipPort := r.RemoteAddr
-	ip, _, err := net.SplitHostPort(ipPort)
-	if err != nil {
-		h.logger.Error().Err(err).Msg("couldn't split host and port")
-		return false
-	}
-
+	ip := getIp(r)
 	_, ok := h.bannedIPs[ip]
 	return ok
 }
 
 func getIp(r *http.Request) string {
-	ipPort := r.RemoteAddr
-	ip, _, err := net.SplitHostPort(ipPort)
+	ip, _, err := net.SplitHostPort(r.RemoteAddr)
 	if err != nil {
+		if e, ok := err.(*net.AddrError); ok && e.Err == "missing port in address" {
+			return r.RemoteAddr
+		}
 		return ""
 	}
 
