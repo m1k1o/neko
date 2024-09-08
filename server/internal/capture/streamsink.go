@@ -4,7 +4,6 @@ import (
 	"errors"
 	"reflect"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -26,7 +25,7 @@ type StreamSinkManagerCtx struct {
 	// wait for a keyframe before sending samples
 	waitForKf bool
 
-	bitrate   uint64 // atomic
+	bitrate   uint64
 	brBuckets map[int]float64
 
 	logger zerolog.Logger
@@ -144,7 +143,7 @@ func (manager *StreamSinkManagerCtx) ID() string {
 }
 
 func (manager *StreamSinkManagerCtx) Bitrate() uint64 {
-	return atomic.LoadUint64(&manager.bitrate)
+	return manager.bitrate
 }
 
 func (manager *StreamSinkManagerCtx) Codec() codec.RTPCodec {
@@ -361,8 +360,8 @@ func (manager *StreamSinkManagerCtx) saveSampleBitrate(timestamp time.Time, delt
 	next := int((sec + 1) % 3)
 
 	if manager.brBuckets[next] != 0 {
-		// atomic update bitrate
-		atomic.StoreUint64(&manager.bitrate, uint64(manager.brBuckets[last]))
+		// update bitrate, TODO: atomic?
+		manager.bitrate = uint64(manager.brBuckets[last])
 		// empty next bucket
 		manager.brBuckets[next] = 0
 	}
@@ -410,5 +409,5 @@ func (manager *StreamSinkManagerCtx) DestroyPipeline() {
 	manager.pipelinesActive.Set(0)
 
 	manager.brBuckets = make(map[int]float64)
-	atomic.StoreUint64(&manager.bitrate, 0)
+	manager.bitrate = 0
 }

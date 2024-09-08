@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"image"
 	"image/color"
+	"strconv"
 	"sync"
 	"time"
 	"unsafe"
@@ -279,13 +280,14 @@ func GetCursorImage() *types.CursorImage {
 	width := int(cur.width)
 	height := int(cur.height)
 
-	// Xlib stores 32-bit data in longs, even if longs are 64-bits long.
-	pixels := C.GoBytes(unsafe.Pointer(cur.pixels), C.int(width*height*8))
+	// Xlib stores 32-bit data in longs, even if longs are 64-bits on 64-bit systems.
+	ptrSize := strconv.IntSize / 8
+	pixels := C.GoBytes(unsafe.Pointer(cur.pixels), C.int(width*height*ptrSize))
 
 	img := image.NewRGBA(image.Rect(0, 0, width, height))
 	for y := 0; y < height; y++ {
 		for x := 0; x < width; x++ {
-			pos := ((y * width) + x) * 8
+			pos := ((y * width) + x) * ptrSize
 
 			img.SetRGBA(x, y, color.RGBA{
 				A: pixels[pos+3],
