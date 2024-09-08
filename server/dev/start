@@ -36,6 +36,11 @@ if [ "$1" = "nvidia" ]; then
     echo "Starting nvidia docker image"
     EXTRAOPTS="--gpus all"
     CONFIG="config.nvidia.yml"
+elif [ "$1" = "intel" ]; then
+    echo "Starting intel docker image"
+    EXTRAOPTS="--device /dev/dri"
+    # TODO: add intel config
+    # CONFIG="config.intel.yml"
 else
     echo "Starting default docker image"
     EXTRAOPTS=""

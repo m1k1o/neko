@@ -1,0 +1,10 @@
+#!/bin/sh
+cd "$(dirname "$0")"
+
+# npm
+docker run --rm -it \
+    --user "$(id -u):$(id -g)" \
+    --volume "${PWD}/../:/app" \
+    --entrypoint="npm" \
+    --workdir="/app" \
+    node:18-bullseye-slim "$@"

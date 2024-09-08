@@ -27,10 +27,9 @@ then
   unset ENV_BUILD_IMAGE
 fi
 
-if [ -z "${1}" ] && [ ! -z "${SERVER_TAG}" ]
+if [ -z "${1}" ]
 then
   ./build base
-  ./build ${SERVER_TAG}
   exit 0
 fi
 
