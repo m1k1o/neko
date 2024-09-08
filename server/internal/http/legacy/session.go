@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"sync"
 
 	oldTypes "m1k1o/neko/internal/http/legacy/types"
 
@@ -47,7 +48,9 @@ type session struct {
 	lockedFileTransfer bool
 	sessions           map[string]*memberStruct
 
+	muClient    sync.Mutex
 	connClient  *websocket.Conn
+	muBackend   sync.Mutex
 	connBackend *websocket.Conn
 }
 
@@ -129,12 +132,10 @@ func (s *session) apiReq(method, path string, request, response any) error {
 
 // send message to client (in old format)
 func (s *session) toClient(payload any) error {
-	msg, err := json.Marshal(payload)
-	if err != nil {
-		return err
-	}
+	s.muClient.Lock()
+	defer s.muClient.Unlock()
 
-	err = s.connClient.WriteMessage(websocket.TextMessage, msg)
+	err := s.connClient.WriteJSON(payload)
 	if err != nil {
 		return fmt.Errorf("%w: %s", ErrWebsocketSend, err)
 	}
@@ -144,20 +145,18 @@ func (s *session) toClient(payload any) error {
 
 // send message to backend (in new format)
 func (s *session) toBackend(event string, payload any) error {
+	s.muBackend.Lock()
+	defer s.muBackend.Unlock()
+
 	rawPayload, err := json.Marshal(payload)
 	if err != nil {
 		return err
 	}
 
-	msg, err := json.Marshal(&types.WebSocketMessage{
+	err = s.connBackend.WriteJSON(types.WebSocketMessage{
 		Event:   event,
 		Payload: rawPayload,
 	})
-	if err != nil {
-		return err
-	}
-
-	err = s.connBackend.WriteMessage(websocket.TextMessage, msg)
 	if err != nil {
 		return fmt.Errorf("%w: %s", ErrWebsocketSend, err)
 	}

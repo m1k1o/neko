@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/gorilla/websocket"
 	"github.com/pion/webrtc/v3"
 
 	oldEvent "m1k1o/neko/internal/http/legacy/event"
@@ -175,17 +174,11 @@ func (s *session) wsToBackend(msg []byte) error {
 		}
 
 		// loopback emote
-		msg, err := json.Marshal(&oldMessage.EmoteSend{
+		err = s.toClient(&oldMessage.EmoteSend{
 			Event: oldEvent.CHAT_EMOTE,
 			ID:    s.id,
 			Emote: request.Emote,
 		})
-		if err != nil {
-			return err
-		}
-
-		// loopback emote
-		err = s.connClient.WriteMessage(websocket.TextMessage, msg)
 		if err != nil {
 			return err
 		}
