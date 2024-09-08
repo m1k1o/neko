@@ -1,0 +1,72 @@
+#!/bin/bash
+cd "$(dirname "$0")"
+
+# if build image is not specified, use default
+if [ -z "$BUILD_IMAGE" ]; then
+  BUILD_IMAGE="m1k1o/neko"
+fi
+
+echo "Using build image: $BUILD_IMAGE"
+echo "Using flavour: $FLAVOUR"
+
+RUNTIME_IMAGE="neko-runtime"
+# if flavour is specified, append it to the image name and Dockerfile
+if [ "$FLAVOUR" != "" ]; then
+  RUNTIME_IMAGE="$RUNTIME_IMAGE-$FLAVOUR"
+  BASE_IMAGE="$BUILD_IMAGE:$FLAVOUR-base"
+else
+  BASE_IMAGE="$BUILD_IMAGE:base"
+fi
+
+# if -f is passed, force rebuild
+if [ "$1" == "-f" ]; then
+  echo "Forcing rebuild, removing existing images"
+  docker rmi neko-xorg-deps neko-server neko-client neko-runtime $BASE_IMAGE
+fi
+
+function docker_image_exists() {
+  [ "$(docker images -q $1 2> /dev/null)" != "" ]
+}
+
+if ! docker_image_exists neko-xorg-deps; then
+  echo "Building neko-xorg-deps image"
+  docker build -t neko-xorg-deps runtime/xorg-deps/
+else
+  echo "neko-xorg-deps image already exists"
+fi
+
+if ! docker_image_exists neko-server; then
+  echo "Building neko-server image"
+  docker build -t neko-server server/
+else
+  echo "neko-server image already exists"
+fi
+
+if ! docker_image_exists neko-client; then
+  echo "Building neko-client image"
+  docker build -t neko-client client/
+else
+  echo "neko-client image already exists"
+fi
+
+if ! docker_image_exists $RUNTIME_IMAGE; then
+  echo "Building $RUNTIME_IMAGE image"
+  docker build -t $RUNTIME_IMAGE -f runtime/Dockerfile.$FLAVOUR runtime/
+else
+  echo "$RUNTIME_IMAGE image already exists"
+fi
+
+docker build -t $BASE_IMAGE -f - . <<EOF
+	FROM neko-xorg-deps AS xorg-deps
+	FROM neko-server AS server
+	FROM neko-client AS client
+	FROM $RUNTIME_IMAGE AS runtime
+
+	COPY --from=xorg-deps /usr/local/lib/xorg/modules/drivers/dummy_drv.so /usr/lib/xorg/modules/drivers/dummy_drv.so
+	COPY --from=xorg-deps /usr/local/lib/xorg/modules/input/neko_drv.so /usr/lib/xorg/modules/input/neko_drv.so
+	COPY --from=server /src/bin/plugins/ /etc/neko/plugins/
+	COPY --from=server /src/bin/neko /usr/bin/neko
+	COPY --from=client /src/dist/ /var/www
+  
+  COPY config.yml /etc/neko/neko.yaml
+EOF

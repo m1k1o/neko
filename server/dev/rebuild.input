@@ -1,6 +1,6 @@
 #!/bin/bash
 cd "$(dirname "$0")"
-cd ../xorg/xf86-input-neko
+cd ../../runtime/xorg-deps/xf86-input-neko
 
 #
 # aborting if any command returns a non-zero value

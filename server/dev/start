@@ -1,8 +1,8 @@
 #!/bin/bash
 cd "$(dirname "$0")"
 
-if [ -z "$(docker images -q neko_server_app 2> /dev/null)" ]; then
-    echo "Image 'neko_server_app' not found. Running ./build first."
+if [ -z "$(docker images -q neko_server:app 2> /dev/null)" ]; then
+    echo "Image 'neko_server:app' not found. Running ./build first."
     ./build
 fi
 
@@ -66,4 +66,4 @@ docker run --rm -it \
     --shm-size=2G \
     --security-opt seccomp=unconfined \
     $EXTRAOPTS \
-    neko_server_app:latest;
+    neko_server:app;

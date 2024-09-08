@@ -1,10 +1,10 @@
-ARG UBUNTU_RELEASE=20.04
-ARG CUDA_VERSION=11.4.3
+ARG UBUNTU_RELEASE=22.04
+ARG CUDA_VERSION=12.2.0
 ARG VIRTUALGL_VERSION=3.1
-ARG GSTREAMER_VERSION=1.20
+ARG GSTREAMER_VERSION=1.22
 
 #
-# Stage 0: Build gstreamer with nvidia plugins.
+# Stage 1: Build gstreamer with nvidia plugins.
 #
 FROM ubuntu:${UBUNTU_RELEASE} AS gstreamer
 ARG GSTREAMER_VERSION
@@ -54,75 +54,9 @@ RUN set -eux; \
     meson install -C build;
 
 #
-# Stage 0: Build xorg dependencies.
-#
-FROM debian:bullseye-slim as xorg-deps
-
-ENV DEBIAN_FRONTEND=noninteractive
-
-RUN set -eux; \
-    apt-get update; \
-    apt-get install -y \
-        git gcc pkgconf autoconf automake libtool make xorg-dev xutils-dev \
-    && rm -rf /var/lib/apt/lists/*;
-
-WORKDIR /xorg
-
-COPY xorg/ /xorg/
-
-# build xf86-video-dummy v0.3.8 with RandR support
-RUN set -eux; \
-    cd xf86-video-dummy/v0.3.8; \
-    patch -p1 < ../01_v0.3.8_xdummy-randr.patch; \
-    autoreconf -v --install; \
-    ./configure; \
-    make -j$(nproc); \
-    make install;
-
-# build custom input driver
-RUN set -eux; \
-    cd xf86-input-neko; \
-    ./autogen.sh --prefix=/usr; \
-    ./configure; \
-    make -j$(nproc); \
-    make install;
-
-#
-# Stage 1: Build.
-#
-FROM golang:1.21-bullseye as build
-WORKDIR /src
-
-#
-# install dependencies
-ENV DEBIAN_FRONTEND=noninteractive
-RUN set -eux; \
-    apt-get update; \
-    apt-get install -y --no-install-recommends \
-        libx11-dev libxrandr-dev libxtst-dev libgtk-3-dev \
-        libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev; \
-    # install libxcvt-dev (not available in debian:bullseye)
-    wget http://ftp.de.debian.org/debian/pool/main/libx/libxcvt/libxcvt-dev_0.1.2-1_amd64.deb; \
-    wget http://ftp.de.debian.org/debian/pool/main/libx/libxcvt/libxcvt0_0.1.2-1_amd64.deb; \
-    apt-get install  --no-install-recommends ./libxcvt0_0.1.2-1_amd64.deb ./libxcvt-dev_0.1.2-1_amd64.deb; \
-    #
-    # clean up
-    apt-get clean -y; \
-    rm -rf /var/lib/apt/lists/* /var/cache/apt/*
-
-ARG GIT_COMMIT
-ARG GIT_BRANCH
-ARG GIT_TAG
-
-#
-# build server
-COPY . .
-RUN ./build
-
-#
 # Stage 2: Runtime.
 #
-FROM nvidia/cuda:${CUDA_VERSION}-runtime-ubuntu${UBUNTU_RELEASE} as runtime
+FROM nvidia/cuda:${CUDA_VERSION}-runtime-ubuntu${UBUNTU_RELEASE} AS runtime
 ARG UBUNTU_RELEASE
 ARG VIRTUALGL_VERSION
 
@@ -192,8 +126,8 @@ RUN set -eux; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
         wget ca-certificates supervisor \
-        pulseaudio dbus-x11 xserver-xorg-video-dummy \
-        libcairo2 libxcb1 libxrandr2 libxv1 libopus0 libvpx6 libx264-155 libvo-aacenc0 librtmp1 \
+        pulseaudio xserver-xorg-video-dummy \
+        libcairo2 libxcb1 libxrandr2 libxv1 libopus0 libvpx7 libx264-163 libvo-aacenc0 librtmp1 libxcvt0 \
         libgtk-3-bin software-properties-common cabextract aptitude vim curl \
         #
         # needed for profile upload preStop hook
@@ -201,10 +135,6 @@ RUN set -eux; \
         #
         # file chooser handler, clipboard, drop
         xdotool xclip libgtk-3-0; \
-    # install libxcvt0 (not available in debian:bullseye)
-    wget http://ftp.de.debian.org/debian/pool/main/libx/libxcvt/libxcvt0_0.1.2-1_amd64.deb; \
-    apt-get install  --no-install-recommends ./libxcvt0_0.1.2-1_amd64.deb; \
-    rm ./libxcvt0_0.1.2-1_amd64.deb; \
     #
     # create a non-root user
     groupadd --gid $USER_GID $USERNAME; \
@@ -246,10 +176,6 @@ RUN set -eux; \
     # clean up
     apt-get clean -y; \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/*
-
-# copy dependencies from previous stage
-COPY --from=xorg-deps /usr/local/lib/xorg/modules/drivers/dummy_drv.so /usr/lib/xorg/modules/drivers/dummy_drv.so
-COPY --from=xorg-deps /usr/local/lib/xorg/modules/input/neko_drv.so /usr/lib/xorg/modules/input/neko_drv.so
 
 #
 # configure EGL and Vulkan manually
@@ -293,18 +219,16 @@ RUN set -eux; \
 
 #
 # copy runtime configs
-COPY --chown=neko:neko runtime/.Xresources /home/$USERNAME/.Xresources
-COPY runtime/dbus /usr/bin/dbus
-COPY runtime/default.pa /etc/pulse/default.pa
-COPY runtime/supervisord.conf /etc/neko/supervisord.conf
-COPY runtime/supervisord.dbus.conf /etc/neko/supervisord.dbus.conf
-COPY runtime/xorg.conf /etc/neko/xorg.conf
+COPY --chown=neko:neko .Xresources /home/$USERNAME/.Xresources
+COPY default.pa /etc/pulse/default.pa
+COPY supervisord.conf /etc/neko/supervisord.conf
+COPY xorg.conf /etc/neko/xorg.conf
 
 #
 # copy runtime folders
-COPY --chown=neko:neko runtime/icon-theme /home/$USERNAME/.icons/default
-COPY runtime/fontconfig/* /etc/fonts/conf.d/
-COPY runtime/fonts /usr/local/share/fonts
+COPY --chown=neko:neko icon-theme /home/$USERNAME/.icons/default
+COPY fontconfig/* /etc/fonts/conf.d/
+COPY fonts /usr/local/share/fonts
 
 #
 # set default envs
@@ -322,17 +246,10 @@ ENV PATH="/usr/share/gstreamer/bin:${PATH}"
 ENV LD_LIBRARY_PATH="/usr/share/gstreamer/lib/x86_64-linux-gnu${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
 ENV PKG_CONFIG_PATH="/usr/share/gstreamer/lib/x86_64-linux-gnu/pkgconfig${PKG_CONFIG_PATH:+:${PKG_CONFIG_PATH}}"
 
+
 #
-# copy gstreamer from previous stage
+# copy artifacts from previous stages
 COPY --from=gstreamer /usr/share/gstreamer /usr/share/gstreamer
-
-#
-# copy plugins from previous stage
-COPY --from=build /src/bin/plugins/ $NEKO_PLUGINS_DIR
-
-#
-# copy executable from previous stage
-COPY --from=build /src/bin/neko /usr/bin/neko
 
 #
 # add healthcheck

@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=neko_server_runtime:latest
+ARG BASE_IMAGE=neko_server:base
 FROM $BASE_IMAGE
 
 ARG SRC_URL="https://download.mozilla.org/?product=firefox-latest&os=linux64&lang=en-US"

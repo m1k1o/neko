@@ -1,76 +1,5 @@
 ARG BASE_IMAGE=debian:bullseye-slim
-ARG BUILD_IMAGE=golang:1.21-bullseye
-
-#
-# Stage 0: Build xorg dependencies.
-#
-FROM $BASE_IMAGE as xorg-deps
-
-ENV DEBIAN_FRONTEND=noninteractive
-
-RUN set -eux; \
-    apt-get update; \
-    apt-get install -y \
-        git gcc pkgconf autoconf automake libtool make xorg-dev xutils-dev \
-    && rm -rf /var/lib/apt/lists/*;
-
-WORKDIR /xorg
-
-COPY xorg/ /xorg/
-
-# build xf86-video-dummy v0.3.8 with RandR support
-RUN set -eux; \
-    cd xf86-video-dummy/v0.3.8; \
-    patch -p1 < ../01_v0.3.8_xdummy-randr.patch; \
-    autoreconf -v --install; \
-    ./configure; \
-    make -j$(nproc); \
-    make install;
-
-# build custom input driver
-RUN set -eux; \
-    cd xf86-input-neko; \
-    ./autogen.sh --prefix=/usr; \
-    ./configure; \
-    make -j$(nproc); \
-    make install;
-
-#
-# Stage 1: Build.
-#
-FROM $BUILD_IMAGE as build
-WORKDIR /src
-
-#
-# install dependencies
-ENV DEBIAN_FRONTEND=noninteractive
-RUN set -eux; \
-    apt-get update; \
-    apt-get install -y --no-install-recommends \
-        libx11-dev libxrandr-dev libxtst-dev libgtk-3-dev \
-        libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev; \
-    # install libxcvt-dev (not available in debian:bullseye)
-    wget http://ftp.de.debian.org/debian/pool/main/libx/libxcvt/libxcvt-dev_0.1.2-1_amd64.deb; \
-    wget http://ftp.de.debian.org/debian/pool/main/libx/libxcvt/libxcvt0_0.1.2-1_amd64.deb; \
-    apt-get install  --no-install-recommends ./libxcvt0_0.1.2-1_amd64.deb ./libxcvt-dev_0.1.2-1_amd64.deb; \
-    #
-    # clean up
-    apt-get clean -y; \
-    rm -rf /var/lib/apt/lists/* /var/cache/apt/*
-
-ARG GIT_COMMIT
-ARG GIT_BRANCH
-ARG GIT_TAG
-
-#
-# build server
-COPY . .
-RUN ./build
-
-#
-# Stage 2: Runtime.
-#
-FROM $BASE_IMAGE as runtime
+FROM $BASE_IMAGE AS runtime
 
 #
 # set custom user
@@ -152,26 +81,22 @@ RUN set -eux; \
     apt-get clean -y; \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/*
 
-# copy dependencies from previous stage
-COPY --from=xorg-deps /usr/local/lib/xorg/modules/drivers/dummy_drv.so /usr/lib/xorg/modules/drivers/dummy_drv.so
-COPY --from=xorg-deps /usr/local/lib/xorg/modules/input/neko_drv.so /usr/lib/xorg/modules/input/neko_drv.so
-
 #
 # copy runtime configs
-COPY --chown=neko:neko runtime/.Xresources /home/$USERNAME/.Xresources
-COPY runtime/dbus /usr/bin/dbus
-COPY runtime/default.pa /etc/pulse/default.pa
-COPY runtime/supervisord.conf /etc/neko/supervisord.conf
-COPY runtime/supervisord.dbus.conf /etc/neko/supervisord.dbus.conf
-COPY runtime/xorg.conf /etc/neko/xorg.conf
-COPY runtime/intel/add-render-group.sh /usr/bin/add-render-group.sh
-COPY runtime/intel/supervisord.rendergroup.conf /etc/neko/supervisord/supervisord.rendergroup.conf
+COPY --chown=neko:neko .Xresources /home/$USERNAME/.Xresources
+COPY dbus /usr/bin/dbus
+COPY default.pa /etc/pulse/default.pa
+COPY supervisord.conf /etc/neko/supervisord.conf
+COPY supervisord.dbus.conf /etc/neko/supervisord.dbus.conf
+COPY xorg.conf /etc/neko/xorg.conf
+COPY intel/add-render-group.sh /usr/bin/add-render-group.sh
+COPY intel/supervisord.rendergroup.conf /etc/neko/supervisord/supervisord.rendergroup.conf
 
 #
 # copy runtime folders
-COPY --chown=neko:neko runtime/icon-theme /home/$USERNAME/.icons/default
-COPY runtime/fontconfig/* /etc/fonts/conf.d/
-COPY runtime/fonts /usr/local/share/fonts
+COPY --chown=neko:neko icon-theme /home/$USERNAME/.icons/default
+COPY fontconfig/* /etc/fonts/conf.d/
+COPY fonts /usr/local/share/fonts
 
 #
 # set default envs
@@ -184,14 +109,6 @@ ENV NEKO_PLUGINS_ENABLED=true
 ENV NEKO_PLUGINS_DIR=/etc/neko/plugins/
 ENV NEKO_HWENC=VAAPI
 ENV RENDER_GID=
-
-#
-# copy plugins from previous stage
-COPY --from=build /src/bin/plugins/ $NEKO_PLUGINS_DIR
-
-#
-# copy executable from previous stage
-COPY --from=build /src/bin/neko /usr/bin/neko
 
 #
 # add healthcheck

@@ -1,8 +1,8 @@
 #!/bin/bash
 cd "$(dirname "$0")"
 
-if [ "$(docker images -q neko_server_build 2> /dev/null)" == "" ]; then
-    echo "Image 'neko_server_build' not found. Run ./build first."
+if [ "$(docker images -q neko_server 2> /dev/null)" == "" ]; then
+    echo "Image 'neko_server' not found. Run ./build first."
     exit 1
 fi
 
@@ -10,7 +10,7 @@ docker run -it \
     --name "neko_server_go" \
     --entrypoint="go" \
     -v "${PWD}/../:/src" \
-    neko_server_build "$@";
+    neko_server "$@";
 #
 # copy package files
 docker cp neko_server_go:/src/go.mod "../go.mod"
@@ -18,7 +18,7 @@ docker cp neko_server_go:/src/go.sum "../go.sum"
 
 #
 # commit changes to image
-docker commit "neko_server_go" "neko_server_build"
+docker commit "neko_server_go" "neko_server"
 
 #
 # remove contianer
