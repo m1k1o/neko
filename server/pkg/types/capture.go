@@ -18,14 +18,15 @@ var (
 )
 
 type Sample struct {
-	// buffer with encoded media
-	Data   []byte
-	Length int
 	// timing information
 	Timestamp time.Time
 	Duration  time.Duration
 	// metadata
 	DeltaUnit bool // this unit cannot be decoded independently.
+	// buffer length
+	Length int
+	// buffer with encoded media
+	Data []byte
 }
 
 type SampleListener interface {
