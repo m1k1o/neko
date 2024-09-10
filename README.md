@@ -104,14 +104,6 @@ Compared to clientless remote desktop gateway (e.g. [Apache Guacamole](https://g
   ... others in <a href="https://github.com/m1k1o/neko-apps">m1k1o/neko-apps</a>
 </div>
 
-## Self-Hosting Options
-
-### Elestio
-
-You can deploy neko on Elestio using one-click deployment.
-
-[![Deploy on Elestio](https://elest.io/images/logos/deploy-to-elestio-btn.png)](https://elest.io/open-source/neko-rooms)
-
 ### Features
 
   * Text Chat (With basic markdown support, discord flavor)
@@ -136,6 +128,14 @@ With `NEKO_FILE_TRANSFER_ENABLED=true`:
 I like cats 🐱 (`Neko` is the Japanese word for cat), I'm a weeb/nerd.
 
 ***But why the cat butt?*** Because cats are *assholes*, but you love them anyways.
+
+## Self-Hosting Options
+
+### Elestio
+
+You can deploy neko on Elestio using one-click deployment.
+
+[![Deploy on Elestio](https://elest.io/images/logos/deploy-to-elestio-btn.png)](https://elest.io/open-source/neko-rooms)
 
 ## Multiple rooms
 
