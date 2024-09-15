@@ -1,0 +1,27 @@
+#!/bin/bash
+cd "$(dirname "$0")"
+
+if [ -z $VUE_APP_SERVER_PORT ]; then
+    VUE_APP_SERVER_PORT="3000"
+fi
+
+echo "Using VUE_APP_SERVER_PORT: ${VUE_APP_SERVER_PORT}"
+
+# use -i to install
+if [ ! -d "${PWD}/../node_modules" ] || [ "$1" == "-i" ]; then
+  docker run --rm -it \
+    --volume "${PWD}/../:/app" \
+    --workdir="/app" \
+    --entrypoint="npm" \
+    node:18-bullseye-slim install
+fi
+
+# npm run serve
+docker run --rm -it \
+    -p 3001:3001 \
+    -e "VUE_APP_SERVER_PORT=$VUE_APP_SERVER_PORT" \
+    --user "$(id -u):$(id -g)" \
+    --volume "${PWD}/../:/app" \
+    --entrypoint="npm" \
+    --workdir="/app" \
+    node:18-bullseye-slim run serve -- --port 3001
