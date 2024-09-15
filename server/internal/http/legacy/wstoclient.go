@@ -432,6 +432,10 @@ func (s *session) wsToClient(msg []byte) error {
 		return nil
 
 	// Signal Events
+	case event.SIGNAL_VIDEO, event.SIGNAL_AUDIO:
+		// ignore video and audio signals, because they are not part of the legacy protocol
+		return nil
+
 	case event.SIGNAL_OFFER:
 		request := &message.SignalDescription{}
 		err := json.Unmarshal(data.Payload, request)
@@ -543,6 +547,10 @@ func (s *session) wsToClient(msg []byte) error {
 		}
 
 	// Chat Events
+	case chat.CHAT_INIT:
+		// ignore chat init, because it is not part of the legacy protocol
+		return nil
+
 	case chat.CHAT_MESSAGE:
 		request := &chat.Message{}
 		err := json.Unmarshal(data.Payload, request)
