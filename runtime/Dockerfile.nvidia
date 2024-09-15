@@ -229,6 +229,7 @@ COPY default.pa /etc/pulse/default.pa
 COPY supervisord.conf /etc/neko/supervisord.conf
 COPY supervisord.dbus.conf /etc/neko/supervisord.dbus.conf
 COPY xorg.conf /etc/neko/xorg.conf
+COPY nvidia/entrypoint.sh /bin/entrypoint.sh
 
 #
 # copy runtime folders

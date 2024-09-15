@@ -223,6 +223,7 @@ COPY --chown=neko:neko .Xresources /home/$USERNAME/.Xresources
 COPY default.pa /etc/pulse/default.pa
 COPY supervisord.conf /etc/neko/supervisord.conf
 COPY xorg.conf /etc/neko/xorg.conf
+COPY nvidia/entrypoint.sh /bin/entrypoint.sh
 
 #
 # copy runtime folders
@@ -245,7 +246,6 @@ ENV NEKO_PLUGINS_DIR=/etc/neko/plugins/
 ENV PATH="/usr/share/gstreamer/bin:${PATH}"
 ENV LD_LIBRARY_PATH="/usr/share/gstreamer/lib/x86_64-linux-gnu${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
 ENV PKG_CONFIG_PATH="/usr/share/gstreamer/lib/x86_64-linux-gnu/pkgconfig${PKG_CONFIG_PATH:+:${PKG_CONFIG_PATH}}"
-
 
 #
 # copy artifacts from previous stages
