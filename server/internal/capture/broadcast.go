@@ -46,12 +46,13 @@ func (manager *BroacastManagerCtx) Start(url string) error {
 	manager.mu.Lock()
 	defer manager.mu.Unlock()
 
+	manager.url = url
+
 	err := manager.createPipeline()
 	if err != nil {
 		return err
 	}
 
-	manager.url = url
 	manager.started = true
 	return nil
 }
