@@ -1,0 +1,23 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "launch",
+            "type": "go",
+            "debugAdapter": "dlv-dap",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceFolder}/server/cmd/neko",
+            "output": "${workspaceFolder}/server/bin/debug/neko",
+            "cwd": "${workspaceFolder}/server/",
+            "args": ["serve", "-d", "-c", "dev/runtime/config.yml"],
+            "env": {
+                "DISPLAY": ":99.0",
+                "PION_LOG_TRACE": "all",
+            }
+        }
+    ]
+}

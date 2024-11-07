@@ -33,3 +33,13 @@ bin
 
 # Environment files
 *.env
+
+bin/
+.idea
+.env.development
+
+runtime/fonts/*
+!runtime/fonts/.gitkeep
+
+runtime/icon-theme/*
+!runtime/icon-theme/.gitkeep

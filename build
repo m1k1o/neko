@@ -1,0 +1,50 @@
+#!/bin/bash
+cd "$(dirname "$0")"
+
+# if build image is not specified, use default
+if [ -z "$BUILD_IMAGE" ]; then
+  BUILD_IMAGE="m1k1o/neko"
+fi
+
+echo "Using build image: $BUILD_IMAGE"
+echo "Using flavour: $FLAVOUR"
+
+RUNTIME_IMAGE="neko-runtime"
+# if flavour is specified, append it to the image name and Dockerfile
+if [ "$FLAVOUR" != "" ]; then
+  RUNTIME_IMAGE="$RUNTIME_IMAGE-$FLAVOUR"
+  BASE_IMAGE="$BUILD_IMAGE:$FLAVOUR-base"
+else
+  BASE_IMAGE="$BUILD_IMAGE:base"
+fi
+
+echo "Building neko-xorg-deps image"
+docker build -t neko-xorg-deps runtime/xorg-deps/
+
+echo "Building neko-server image"
+docker build -t neko-server server/
+
+echo "Building neko-client image"
+docker build -t neko-client client/
+
+echo "Building $RUNTIME_IMAGE image"
+if [ "$FLAVOUR" != "" ]; then
+  docker build -t $RUNTIME_IMAGE -f runtime/Dockerfile.$FLAVOUR runtime/
+else
+  docker build -t $RUNTIME_IMAGE runtime/
+fi
+
+docker build -t $BASE_IMAGE -f - . <<EOF
+	FROM neko-xorg-deps AS xorg-deps
+	FROM neko-server AS server
+	FROM neko-client AS client
+	FROM $RUNTIME_IMAGE AS runtime
+
+	COPY --from=xorg-deps /usr/local/lib/xorg/modules/drivers/dummy_drv.so /usr/lib/xorg/modules/drivers/dummy_drv.so
+	COPY --from=xorg-deps /usr/local/lib/xorg/modules/input/neko_drv.so /usr/lib/xorg/modules/input/neko_drv.so
+	COPY --from=server /src/bin/plugins/ /etc/neko/plugins/
+	COPY --from=server /src/bin/neko /usr/bin/neko
+	COPY --from=client /src/dist/ /var/www
+  
+  COPY config.yml /etc/neko/neko.yaml
+EOF
