@@ -122,6 +122,8 @@ func (manager *BroacastManagerCtx) createPipeline() error {
 
 	manager.pipeline.Play()
 
+	manager.logger.Info().Msgf("Pipeline started")
+
 	return nil
 }
 
