@@ -46,9 +46,9 @@ const (
 )
 
 const (
-	BORADCAST_STATUS  = "broadcast/status"
-	BORADCAST_CREATE  = "broadcast/create"
-	BORADCAST_DESTROY = "broadcast/destroy"
+	BROADCAST_STATUS  = "broadcast/status"
+	BROADCAST_CREATE  = "broadcast/create"
+	BROADCAST_DESTROY = "broadcast/destroy"
 )
 
 const (

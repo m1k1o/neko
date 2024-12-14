@@ -2,7 +2,7 @@ package utils
 
 import (
 	"bytes"
-	"io/ioutil"
+	"io"
 	"net"
 	"net/http"
 	"time"
@@ -31,21 +31,10 @@ func GetIP(serverUrl string) (string, error) {
 	}
 	defer rsp.Body.Close()
 
-	buf, err := ioutil.ReadAll(rsp.Body)
+	buf, err := io.ReadAll(rsp.Body)
 	if err != nil {
 		return "", err
 	}
 
 	return string(bytes.TrimSpace(buf)), nil
-}
-
-func GetHttpRequestIP(r *http.Request, proxy bool) string {
-	IPAddress := r.Header.Get("X-Real-Ip")
-	if IPAddress == "" {
-		IPAddress = r.Header.Get("X-Forwarded-For")
-	}
-	if IPAddress == "" || !proxy {
-		IPAddress = r.RemoteAddr
-	}
-	return IPAddress
 }

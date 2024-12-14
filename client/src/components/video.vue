@@ -13,6 +13,7 @@
           class="overlay"
           tabindex="0"
           data-gramm="false"
+          :style="{ pointerEvents: hosting ? 'auto' : 'none' }"
           @click.stop.prevent
           @contextmenu.stop.prevent
           @wheel.stop.prevent="onWheel"
@@ -36,7 +37,7 @@
       <ul v-if="!fullscreen && !hideControls" class="video-menu top">
         <li><i @click.stop.prevent="requestFullscreen" class="fas fa-expand"></i></li>
         <li v-if="admin"><i @click.stop.prevent="openResolution" class="fas fa-desktop"></i></li>
-        <li v-if="!implicitHosting" :class="extraControls || 'extra-control'">
+        <li v-if="!controlLocked && !implicitHosting" :class="extraControls || 'extra-control'">
           <i
             :class="[hosted && !hosting ? 'disabled' : '', !hosted && !hosting ? 'faded' : '', 'fas', 'fa-keyboard']"
             @click.stop.prevent="toggleControl"
@@ -312,7 +313,15 @@
     }
 
     get clipboard_read_available() {
-      return 'clipboard' in navigator && typeof navigator.clipboard.readText === 'function'
+      return (
+        'clipboard' in navigator &&
+        typeof navigator.clipboard.readText === 'function' &&
+        // Firefox 122+ incorrectly reports that it can read the clipboard but it can't
+        // instead it hangs when reading clipboard, until user clicks on the page
+        // and the click itself is not handled by the page at all, also the clipboard
+        // reads always fail with "Clipboard read operation is not allowed."
+        navigator.userAgent.indexOf('Firefox') == -1
+      )
     }
 
     get clipboard_write_available() {
@@ -629,7 +638,7 @@
     }
 
     async syncClipboard() {
-      if (this.clipboard_read_available) {
+      if (this.clipboard_read_available && window.document.hasFocus()) {
         try {
           const text = await navigator.clipboard.readText()
           if (this.clipboard !== text) {

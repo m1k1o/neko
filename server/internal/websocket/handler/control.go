@@ -115,7 +115,7 @@ func (h *MessageHandler) controlGive(id string, session types.Session, payload *
 			ID:     id,
 			Target: payload.ID,
 		}, nil); err != nil {
-		h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.CONTROL_LOCKED)
+		h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.CONTROL_GIVE)
 		return err
 	}
 

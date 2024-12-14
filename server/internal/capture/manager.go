@@ -6,6 +6,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
+	"m1k1o/neko/internal/capture/gst"
 	"m1k1o/neko/internal/config"
 	"m1k1o/neko/internal/types"
 )
@@ -30,7 +31,7 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 		// sinks
 		broadcast: broadcastNew(func(url string) (string, error) {
 			return NewBroadcastPipeline(config.AudioDevice, config.Display, config.BroadcastPipeline, url)
-		}, config.BroadcastUrl),
+		}, config.BroadcastUrl, config.BroadcastAutostart),
 		audio: streamSinkNew(config.AudioCodec, func() (string, error) {
 			return NewAudioPipeline(config.AudioCodec, config.AudioDevice, config.AudioPipeline, config.AudioBitrate)
 		}, "audio"),
@@ -57,6 +58,7 @@ func (manager *CaptureManagerCtx) Start() {
 		}
 	}
 
+	go gst.RunMainLoop()
 	go func() {
 		for {
 			_, ok := <-manager.broadcast.GetRestart()
@@ -142,6 +144,8 @@ func (manager *CaptureManagerCtx) Shutdown() error {
 
 	manager.audio.shutdown()
 	manager.video.shutdown()
+
+	gst.QuitMainLoop()
 
 	return nil
 }

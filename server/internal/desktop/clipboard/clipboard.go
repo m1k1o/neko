@@ -12,7 +12,7 @@ import (
 	"unsafe"
 )
 
-var mu = sync.Mutex{}
+var mu sync.Mutex
 
 func Read() string {
 	mu.Lock()

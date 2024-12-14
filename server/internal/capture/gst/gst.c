@@ -3,8 +3,8 @@
 static void gstreamer_pipeline_log(GstPipelineCtx *ctx, char* level, const char* format, ...) {
   va_list argptr;
   va_start(argptr, format);
-  char buffer[100];
-  vsprintf(buffer, format, argptr);
+  char buffer[4096];
+  vsnprintf(buffer, sizeof(buffer), format, argptr);
   va_end(argptr);
   goPipelineLog(level, buffer, ctx->pipelineId);
 }

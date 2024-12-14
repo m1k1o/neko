@@ -31,10 +31,27 @@ var pSerial int32
 var pipelines = make(map[int]*Pipeline)
 var pipelinesLock sync.Mutex
 var registry *C.GstRegistry
+var gMainLoop *C.GMainLoop
 
 func init() {
 	C.gst_init(nil, nil)
 	registry = C.gst_registry_get()
+}
+
+func RunMainLoop() {
+	if gMainLoop != nil {
+		return
+	}
+	gMainLoop = C.g_main_loop_new(nil, C.int(0))
+	C.g_main_loop_run(gMainLoop)
+}
+
+func QuitMainLoop() {
+	if gMainLoop == nil {
+		return
+	}
+	C.g_main_loop_quit(gMainLoop)
+	gMainLoop = nil
 }
 
 func CreatePipeline(pipelineStr string) (*Pipeline, error) {

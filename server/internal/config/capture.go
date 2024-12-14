@@ -34,8 +34,9 @@ type Capture struct {
 	AudioPipeline string
 
 	// broadcast
-	BroadcastPipeline string
-	BroadcastUrl      string
+	BroadcastPipeline  string
+	BroadcastUrl       string
+	BroadcastAutostart bool
 }
 
 func (Capture) Init(cmd *cobra.Command) error {
@@ -155,8 +156,13 @@ func (Capture) Init(cmd *cobra.Command) error {
 		return err
 	}
 
-	cmd.PersistentFlags().String("broadcast_url", "", "URL for broadcasting, setting this value will automatically enable broadcasting")
+	cmd.PersistentFlags().String("broadcast_url", "", "a default default URL for broadcast streams, can be disabled/changed later by admins in the GUI")
 	if err := viper.BindPFlag("broadcast_url", cmd.PersistentFlags().Lookup("broadcast_url")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().Bool("broadcast_autostart", true, "automatically start broadcasting when neko starts and broadcast_url is set")
+	if err := viper.BindPFlag("broadcast_autostart", cmd.PersistentFlags().Lookup("broadcast_autostart")); err != nil {
 		return err
 	}
 
@@ -247,4 +253,5 @@ func (s *Capture) Set() {
 
 	s.BroadcastPipeline = viper.GetString("broadcast_pipeline")
 	s.BroadcastUrl = viper.GetString("broadcast_url")
+	s.BroadcastAutostart = viper.GetBool("broadcast_autostart")
 }

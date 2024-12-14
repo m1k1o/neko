@@ -11,8 +11,8 @@ import (
 	"regexp"
 	"strconv"
 
-	"github.com/go-chi/chi"
-	"github.com/go-chi/chi/middleware"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -35,6 +35,9 @@ func New(conf *config.Server, webSocketHandler types.WebSocketHandler, desktop t
 
 	router := chi.NewRouter()
 	router.Use(middleware.RequestID) // Create a request ID for each request
+	if conf.Proxy {
+		router.Use(middleware.RealIP)
+	}
 	router.Use(middleware.RequestLogger(&logformatter{logger}))
 	router.Use(middleware.Recoverer) // Recover from panics without crashing server
 	router.Use(middleware.Compress(5, "application/octet-stream"))
@@ -163,7 +166,13 @@ func New(conf *config.Server, webSocketHandler types.WebSocketHandler, desktop t
 				return
 			}
 
-			r.ParseMultipartForm(32 << 20)
+			err = r.ParseMultipartForm(32 << 20)
+			if err != nil || r.MultipartForm == nil {
+				logger.Warn().Err(err).Msg("failed to parse multipart form")
+				http.Error(w, "error parsing form", http.StatusBadRequest)
+				return
+			}
+
 			for _, formheader := range r.MultipartForm.File["files"] {
 				filePath := webSocketHandler.FileTransferPath(formheader.Filename)
 
@@ -183,6 +192,11 @@ func New(conf *config.Server, webSocketHandler types.WebSocketHandler, desktop t
 				defer f.Close()
 
 				io.Copy(f, formfile)
+			}
+
+			err = r.MultipartForm.RemoveAll()
+			if err != nil {
+				logger.Warn().Err(err).Msg("failed to remove multipart form")
 			}
 		})
 	}

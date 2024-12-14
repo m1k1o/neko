@@ -6,7 +6,7 @@ import (
 	"m1k1o/neko/internal/types/message"
 )
 
-func (h *MessageHandler) boradcastCreate(session types.Session, payload *message.BroadcastCreate) error {
+func (h *MessageHandler) broadcastCreate(session types.Session, payload *message.BroadcastCreate) error {
 	broadcast := h.capture.Broadcast()
 
 	if !session.Admin() {
@@ -44,14 +44,14 @@ func (h *MessageHandler) boradcastCreate(session types.Session, payload *message
 		}
 	}
 
-	if err := h.boradcastStatus(nil); err != nil {
+	if err := h.broadcastStatus(nil); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (h *MessageHandler) boradcastDestroy(session types.Session) error {
+func (h *MessageHandler) broadcastDestroy(session types.Session) error {
 	broadcast := h.capture.Broadcast()
 
 	if !session.Admin() {
@@ -70,18 +70,18 @@ func (h *MessageHandler) boradcastDestroy(session types.Session) error {
 
 	broadcast.Stop()
 
-	if err := h.boradcastStatus(nil); err != nil {
+	if err := h.broadcastStatus(nil); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (h *MessageHandler) boradcastStatus(session types.Session) error {
+func (h *MessageHandler) broadcastStatus(session types.Session) error {
 	broadcast := h.capture.Broadcast()
 
 	msg := message.BroadcastStatus{
-		Event:    event.BORADCAST_STATUS,
+		Event:    event.BROADCAST_STATUS,
 		IsActive: broadcast.Started(),
 		URL:      broadcast.Url(),
 	}
@@ -89,7 +89,7 @@ func (h *MessageHandler) boradcastStatus(session types.Session) error {
 	// if no session, broadcast change
 	if session == nil {
 		if err := h.sessions.AdminBroadcast(msg, nil); err != nil {
-			h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.BORADCAST_STATUS)
+			h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.BROADCAST_STATUS)
 			return err
 		}
 
@@ -102,7 +102,7 @@ func (h *MessageHandler) boradcastStatus(session types.Session) error {
 	}
 
 	if err := session.Send(msg); err != nil {
-		h.logger.Warn().Err(err).Msgf("sending event %s has failed", event.BORADCAST_STATUS)
+		h.logger.Warn().Err(err).Msgf("sending event %s has failed", event.BROADCAST_STATUS)
 		return err
 	}
 

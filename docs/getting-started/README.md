@@ -50,7 +50,7 @@ All images are also available on [GitHub Container Registry](https://github.com/
 - `ghcr.io/m1k1o/neko/xfce:latest`
 - `ghcr.io/m1k1o/neko/kde:latest`
 
-For ARM-based images (like Raspberry Pi - with GPU hardware acceleration, Oracle Cloud ARM tier). Currently, not all images are available for ARM, because not all applications are available for ARM.
+For ARM-based images (like Raspberry Pi - with GPU hardware acceleration, Oracle Cloud ARM tier). Currently, not all images are available for ARM, because not all applications are available for ARM. Please note, that `m1k1o/neko:arm-*` images from dockerhub are currently not maintained and they can contain outdated software. Please use images below:
 
 - `ghcr.io/m1k1o/neko/arm-firefox:latest`
 - `ghcr.io/m1k1o/neko/arm-chromium:latest`
@@ -74,8 +74,9 @@ For images with VAAPI GPU hardware acceleration using intel drivers use:
 - `ghcr.io/m1k1o/neko/intel-xfce:latest`
 - `ghcr.io/m1k1o/neko/intel-kde:latest`
 
-For images with Nvidia GPU hardware acceleration using EGL (see example below) use:
+For images with Nvidia GPU hardware acceleration using EGL (see example below) use (please note, there is a known issue with EGL and Chromium-based browsers, see [here](https://github.com/m1k1o/neko/issues/279)):
 
+- `ghcr.io/m1k1o/neko/nvidia-firefox:latest`
 - `ghcr.io/m1k1o/neko/nvidia-chromium:latest`
 - `ghcr.io/m1k1o/neko/nvidia-google-chrome:latest`
 - `ghcr.io/m1k1o/neko/nvidia-microsoft-edge:latest`
@@ -86,7 +87,48 @@ GHCR images are built using GitHub actions for every tag.
 ### Networking:
 - If you want to use n.eko in **external** network, you can omit `NEKO_NAT1TO1`. It will automatically get your Public IP.
 - If you want to use n.eko in **internal** network, set `NEKO_NAT1TO1` to your local IP address (e.g. `NEKO_NAT1TO1: 192.168.1.20`)-
-- Currently, it is not supported to supply multiple NAT addresses (see https://github.com/m1k1o/neko/issues/47).
+
+Currently, it is not supported to supply multiple NAT addresses directly to neko  (see https://github.com/m1k1o/neko/issues/47).
+
+But it can be acheived by deploying own turn server alongside neko that is accessible from your LAN:
+
+```yaml
+version: "3.4"
+services:
+  neko:
+    image: "m1k1o/neko:firefox"
+    restart: "unless-stopped"
+    shm_size: "2gb"
+    ports:
+      - "8080:8080"
+      - "52000-52100:52000-52100/udp"
+    environment:
+      NEKO_SCREEN: 1920x1080@30
+      NEKO_PASSWORD: neko
+      NEKO_PASSWORD_ADMIN: admin
+      NEKO_EPR: 52000-52100
+      NEKO_ICESERVERS: '[{ "urls": [ "turn:192.168.1.60:3478" ], "username":"neko", "credential":"neko" }, { "urls": [ "stun:stun.nextcloud.com:3478" ] }]'
+  coturn:
+    image: 'coturn/coturn:latest'
+    network_mode: "host"
+    command: |
+      -n
+      --realm=localhost
+      --fingerprint
+      --listening-ip=0.0.0.0
+      --external-ip=192.168.1.60
+      --listening-port=3478
+      --min-port=49160
+      --max-port=49200
+      --log-file=stdout
+      --user=neko:neko
+      --lt-cred-mech
+```
+
+- Replace `192.168.1.60` with your LAN IP address, and allow ports `49160-49200/udp` and `3478/tcp` in your LAN.
+- Make sure you don't use `NEKO_ICELITE: true` because ICE LITE does not support TURN servers.
+
+This setup adds local turn server to neko. It won't be reachable by your remote clients and your own IP won't be reachable from your lan. So it effectively just adds local candidate and allows connections from LAN.
 
 ### Why so many ports?
 - WebRTC needs UDP ports in order to transfer Audio/Video towards user and Mouse/Keyboard events to the server in real time.
@@ -175,7 +217,7 @@ NEKO_ICESERVERS: '[{"urls": ["turn:<MY-COTURN-SERVER>:443?transport=udp", "turn:
 
 ### Nvidia GPU acceleration
 
-You need to have [nvidia-docker](https://github.com/NVIDIA/nvidia-docker) installed, start the container with `--gpus all` flag and use images built for nvidia (see above).
+You need to have [NVIDIA Container Toolkit](https://github.com/NVIDIA/nvidia-container-toolkit) installed, start the container with `--gpus all` flag and use images built for nvidia (see above).
 
 ```bash
 docker run -d --gpus all \
@@ -256,6 +298,8 @@ NEKO_BROADCAST_PIPELINE: "flvmux name=mux ! rtmpsink location={url} pulsesrc dev
   - Adding `?embed=1` will hide most additional components and show only video.
   - Adding `?volume=<0-1>` will set volume to given value.
   - Adding `?lang=<language>` will set language to given value.
+  - Adding `?show_side=1` will show the sidebar on startup.
+  - Adding `?mute_chat=1` will mute the chat on startup.
   - e.g. `http(s)://<URL:Port>/?pwd=neko&usr=guest&cast=1`
 
 ### Screen size
