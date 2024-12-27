@@ -74,6 +74,11 @@ func (h *MessageHandler) Message(id string, raw []byte) error {
 	}
 
 	switch header.Event {
+	// Client Events
+	case event.CLIENT_HEARTBEAT:
+		// do nothing
+		return nil
+
 	// Signal Events
 	case event.SIGNAL_OFFER:
 		payload := &message.SignalOffer{}
