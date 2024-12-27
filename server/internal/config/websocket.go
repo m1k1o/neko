@@ -14,6 +14,8 @@ type WebSocket struct {
 
 	ControlProtection bool
 
+	HeartbeatInterval int
+
 	FileTransferEnabled bool
 	FileTransferPath    string
 }
@@ -39,6 +41,11 @@ func (WebSocket) Init(cmd *cobra.Command) error {
 		return err
 	}
 
+	cmd.PersistentFlags().Int("heartbeat_interval", 120, "heartbeat interval in seconds")
+	if err := viper.BindPFlag("heartbeat_interval", cmd.PersistentFlags().Lookup("heartbeat_interval")); err != nil {
+		return err
+	}
+
 	// File transfer
 
 	cmd.PersistentFlags().Bool("file_transfer_enabled", false, "enable file transfer feature")
@@ -60,6 +67,8 @@ func (s *WebSocket) Set() {
 	s.Locks = viper.GetStringSlice("locks")
 
 	s.ControlProtection = viper.GetBool("control_protection")
+
+	s.HeartbeatInterval = viper.GetInt("heartbeat_interval")
 
 	s.FileTransferEnabled = viper.GetBool("file_transfer_enabled")
 	s.FileTransferPath = viper.GetString("file_transfer_path")
