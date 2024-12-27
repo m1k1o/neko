@@ -6,7 +6,7 @@ import (
 	"m1k1o/neko/internal/types/message"
 )
 
-func (h *MessageHandler) SessionCreated(id string, session types.Session) error {
+func (h *MessageHandler) SessionCreated(id string, heartbeatInterval int, session types.Session) error {
 	// send sdp and id over to client
 	if err := h.signalProvide(id, session); err != nil {
 		return err
@@ -14,10 +14,11 @@ func (h *MessageHandler) SessionCreated(id string, session types.Session) error 
 
 	// send initialization information
 	if err := session.Send(message.SystemInit{
-		Event:           event.SYSTEM_INIT,
-		ImplicitHosting: h.webrtc.ImplicitControl(),
-		Locks:           h.state.AllLocked(),
-		FileTransfer:    h.state.FileTransferEnabled(),
+		Event:             event.SYSTEM_INIT,
+		ImplicitHosting:   h.webrtc.ImplicitControl(),
+		Locks:             h.state.AllLocked(),
+		FileTransfer:      h.state.FileTransferEnabled(),
+		HeartbeatInterval: heartbeatInterval,
 	}); err != nil {
 		h.logger.Warn().Str("id", id).Err(err).Msgf("sending event %s has failed", event.SYSTEM_INIT)
 		return err
