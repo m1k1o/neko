@@ -31,8 +31,9 @@ const maxPayloadLogLength = 10_000
 var nologEvents = []string{
 	// don't log twice
 	event.SYSTEM_LOGS,
-	// don't log heartbeat
+	// don't log heartbeats
 	event.SYSTEM_HEARTBEAT,
+	event.CLIENT_HEARTBEAT,
 	// don't log every cursor update
 	event.SESSION_CURSORS,
 }

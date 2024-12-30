@@ -14,6 +14,9 @@ export const EVENT = {
     DISCONNECT: 'system/disconnect',
     ERROR: 'system/error',
   },
+  CLIENT: {
+    HEARTBEAT: 'client/heartbeat'
+  },
   SIGNAL: {
     OFFER: 'signal/offer',
     ANSWER: 'signal/answer',
@@ -69,6 +72,7 @@ export type Events = typeof EVENT
 
 export type WebSocketEvents =
   | SystemEvents
+  | ClientEvents
   | ControlEvents
   | MemberEvents
   | SignalEvents
@@ -87,6 +91,7 @@ export type ControlEvents =
   | typeof EVENT.CONTROL.KEYBOARD
 
 export type SystemEvents = typeof EVENT.SYSTEM.DISCONNECT
+export type ClientEvents = typeof EVENT.CLIENT.HEARTBEAT
 export type MemberEvents = typeof EVENT.MEMBER.LIST | typeof EVENT.MEMBER.CONNECTED | typeof EVENT.MEMBER.DISCONNECTED
 
 export type SignalEvents =

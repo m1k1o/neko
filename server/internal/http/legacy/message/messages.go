@@ -11,10 +11,11 @@ type Message struct {
 }
 
 type SystemInit struct {
-	Event           string            `json:"event"`
-	Locks           map[string]string `json:"locks"`
-	ImplicitHosting bool              `json:"implicit_hosting"`
-	FileTransfer    bool              `json:"file_transfer"`
+	Event             string            `json:"event"`
+	Locks             map[string]string `json:"locks"`
+	ImplicitHosting   bool              `json:"implicit_hosting"`
+	FileTransfer      bool              `json:"file_transfer"`
+	HeartbeatInterval int               `json:"heartbeat_interval"`
 }
 
 type SystemMessage struct {

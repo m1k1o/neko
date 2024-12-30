@@ -47,6 +47,7 @@ type Settings struct {
 	ImplicitHosting   bool `json:"implicit_hosting"`
 	InactiveCursors   bool `json:"inactive_cursors"`
 	MercifulReconnect bool `json:"merciful_reconnect"`
+	HeartbeatInterval int  `json:"heartbeat_interval"`
 
 	// plugin scope
 	Plugins PluginSettings `json:"plugins"`

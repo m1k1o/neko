@@ -10,6 +10,10 @@ const (
 )
 
 const (
+	CLIENT_HEARTBEAT = "client/heartbeat"
+)
+
+const (
 	SIGNAL_REQUEST   = "signal/request"
 	SIGNAL_RESTART   = "signal/restart"
 	SIGNAL_OFFER     = "signal/offer"

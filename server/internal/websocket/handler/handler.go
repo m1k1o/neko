@@ -36,6 +36,10 @@ type MessageHandlerCtx struct {
 func (h *MessageHandlerCtx) Message(session types.Session, data types.WebSocketMessage) bool {
 	var err error
 	switch data.Event {
+	// Client Events
+	case event.CLIENT_HEARTBEAT:
+		// do nothing
+
 	// System Events
 	case event.SYSTEM_LOGS:
 		payload := &message.SystemLogs{}

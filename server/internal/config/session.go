@@ -18,6 +18,7 @@ type Session struct {
 	ImplicitHosting   bool
 	InactiveCursors   bool
 	MercifulReconnect bool
+	HeartbeatInterval int
 	APIToken          string
 
 	CookieEnabled    bool
@@ -67,6 +68,11 @@ func (Session) Init(cmd *cobra.Command) error {
 		return err
 	}
 
+	cmd.PersistentFlags().Int("session.heartbeat_interval", 120, "interval in seconds for sending heartbeat messages")
+	if err := viper.BindPFlag("session.heartbeat_interval", cmd.PersistentFlags().Lookup("session.heartbeat_interval")); err != nil {
+		return err
+	}
+
 	cmd.PersistentFlags().String("session.api_token", "", "API token for interacting with external services")
 	if err := viper.BindPFlag("session.api_token", cmd.PersistentFlags().Lookup("session.api_token")); err != nil {
 		return err
@@ -112,6 +118,11 @@ func (Session) InitV2(cmd *cobra.Command) error {
 		return err
 	}
 
+	cmd.PersistentFlags().Int("heartbeat_interval", 120, "heartbeat interval in seconds")
+	if err := viper.BindPFlag("heartbeat_interval", cmd.PersistentFlags().Lookup("heartbeat_interval")); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -125,6 +136,7 @@ func (s *Session) Set() {
 	s.ImplicitHosting = viper.GetBool("session.implicit_hosting")
 	s.InactiveCursors = viper.GetBool("session.inactive_cursors")
 	s.MercifulReconnect = viper.GetBool("session.merciful_reconnect")
+	s.HeartbeatInterval = viper.GetInt("session.heartbeat_interval")
 	s.APIToken = viper.GetString("session.api_token")
 
 	s.CookieEnabled = viper.GetBool("session.cookie.enabled")
@@ -155,5 +167,9 @@ func (s *Session) SetV2() {
 	if viper.IsSet("control_protection") {
 		s.ControlProtection = viper.GetBool("control_protection")
 		log.Warn().Msg("you are using v2 configuration 'NEKO_CONTROL_PROTECTION' which is deprecated, please use 'NEKO_SESSION_CONTROL_PROTECTION' instead")
+	}
+	if viper.IsSet("heartbeat_interval") {
+		s.HeartbeatInterval = viper.GetInt("heartbeat_interval")
+		log.Warn().Msg("you are using v2 configuration 'NEKO_HEARTBEAT_INTERVAL' which is deprecated, please use 'NEKO_SESSION_HEARTBEAT_INTERVAL' instead")
 	}
 }

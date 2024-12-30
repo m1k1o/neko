@@ -26,6 +26,11 @@ func (s *session) wsToBackend(msg []byte) error {
 	}
 
 	switch header.Event {
+	// Client Events
+	case oldEvent.CLIENT_HEARTBEAT:
+		// do nothing
+		return nil
+
 	// Signal Events
 	case oldEvent.SIGNAL_OFFER:
 		request := &oldMessage.SignalOffer{}

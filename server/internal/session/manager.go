@@ -27,6 +27,7 @@ func New(config *config.Session) *SessionManagerCtx {
 			ImplicitHosting:   config.ImplicitHosting,
 			InactiveCursors:   config.InactiveCursors,
 			MercifulReconnect: config.MercifulReconnect,
+			HeartbeatInterval: config.HeartbeatInterval,
 		},
 		tokens:   make(map[string]string),
 		sessions: make(map[string]*SessionCtx),
