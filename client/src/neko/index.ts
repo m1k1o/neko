@@ -134,7 +134,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   /////////////////////////////
   // System Events
   /////////////////////////////
-  protected [EVENT.SYSTEM.INIT]({ implicit_hosting, locks, file_transfer }: SystemInitPayload) {
+  protected [EVENT.SYSTEM.INIT]({ implicit_hosting, locks, file_transfer, heartbeat_interval }: SystemInitPayload) {
     this.$accessor.remote.setImplicitHosting(implicit_hosting)
     this.$accessor.remote.setFileTransfer(file_transfer)
 
@@ -144,6 +144,11 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
         resource: resource as AdminLockResource,
         id: locks[resource],
       })
+    }
+
+    if (heartbeat_interval > 0) {
+      if (this._ws_heartbeat) clearInterval(this._ws_heartbeat)
+      this._ws_heartbeat = window.setInterval(() => this.sendMessage(EVENT.CLIENT.HEARTBEAT), heartbeat_interval * 1000)
     }
   }
 

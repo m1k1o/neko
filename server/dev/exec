@@ -1,0 +1,3 @@
+#!/bin/bash
+
+docker exec -it neko_server_dev /bin/bash

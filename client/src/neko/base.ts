@@ -20,6 +20,7 @@ export interface BaseEvents {
 
 export abstract class BaseClient extends EventEmitter<BaseEvents> {
   protected _ws?: WebSocket
+  protected _ws_heartbeat?: number
   protected _peer?: RTCPeerConnection
   protected _channel?: RTCDataChannel
   protected _timeout?: number
@@ -63,7 +64,9 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
     this[EVENT.CONNECTING]()
 
     try {
-      this._ws = new WebSocket(`${url}?password=${encodeURIComponent(password)}`)
+      this._ws = new WebSocket(
+        `${url}?password=${encodeURIComponent(password)}&username=${encodeURIComponent(displayname)}`,
+      )
       this.emit('debug', `connecting to ${this._ws.url}`)
       this._ws.onmessage = this.onMessage.bind(this)
       this._ws.onerror = () => this.onError.bind(this)
@@ -78,6 +81,11 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
     if (this._timeout) {
       clearTimeout(this._timeout)
       this._timeout = undefined
+    }
+
+    if (this._ws_heartbeat) {
+      clearInterval(this._ws_heartbeat)
+      this._ws_heartbeat = undefined
     }
 
     if (this._ws) {

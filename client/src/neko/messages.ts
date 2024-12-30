@@ -61,6 +61,7 @@ export interface SystemInitPayload {
   implicit_hosting: boolean
   locks: Record<string, string>
   file_transfer: boolean
+  heartbeat_interval: number
 }
 
 // system/disconnect

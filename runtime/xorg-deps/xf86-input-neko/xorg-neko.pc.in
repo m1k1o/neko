@@ -1,0 +1,5 @@
+Name: xorg-neko
+Description: X.Org neko input driver.
+Version: @PACKAGE_VERSION@
+Libs: -L${libdir}
+Cflags: -I${includedir}
