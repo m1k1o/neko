@@ -111,7 +111,7 @@ func (ws *WebSocketHandler) Start() {
 
 			switch e.Type {
 			case types.SESSION_CREATED:
-				if err := ws.handler.SessionCreated(e.Id, e.Session); err != nil {
+				if err := ws.handler.SessionCreated(e.Id, ws.conf.HeartbeatInterval, e.Session); err != nil {
 					ws.logger.Warn().Str("id", e.Id).Err(err).Msg("session created with and error")
 				} else {
 					ws.logger.Debug().Str("id", e.Id).Msg("session created")
