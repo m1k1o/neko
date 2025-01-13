@@ -12,6 +12,8 @@ services:
     ports:
       - "8080:8080"
       - "52000-52100:52000-52100/udp"
+    volumes:
+      - <your-host-path>:/home/neko/.mozilla/firefox # persist firexfox settings
     environment:
       NEKO_SCREEN: '1920x1080@30'
       NEKO_PASSWORD: neko
