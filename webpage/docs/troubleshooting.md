@@ -1,3 +1,7 @@
+---
+sidebar_position: 10
+---
+
 # Troubleshooting
 
 Neko UI loads, but you don't see the screen, and it gives you `connection timeout` or `disconnected` error?
@@ -23,22 +27,25 @@ Check that your ephemeral port range `NEKO_EPR` is correctly exposed as `/udp` p
 
 In following example, specified range `52000-52100` must be also exposed using docker.
 
-```diff
-version: "3.4"
+```yaml title="docker-compose.yml"
 services:
   neko:
     image: "m1k1o/neko:firefox"
     restart: "unless-stopped"
     shm_size: "2gb"
     ports:
-      - "8080:8080"
-+      - "52000-52100:52000-52100/udp"
+    - "8080:8080"
+    # highlight-start
+    - "52000-52100:52000-52100/udp"
+    # highlight-end
     environment:
-     NEKO_SCREEN: 1920x1080@30
-     NEKO_PASSWORD: neko
-     NEKO_PASSWORD_ADMIN: admin
-+     NEKO_EPR: 52000-52100
-     NEKO_ICELITE: 1
+      NEKO_SCREEN: 1920x1080@30
+      NEKO_PASSWORD: neko
+      NEKO_PASSWORD_ADMIN: admin
+      # highlight-start
+      NEKO_EPR: 52000-52100
+      # highlight-end
+      NEKO_ICELITE: 1
 ```
 
 ### Validate UDP ports reachability
@@ -58,7 +65,7 @@ nc -u [server ip] 52101
 ```
 Then try to type on one end, you should see characters on the other side.
 
-![nc command example](udp-ports-nc.png)
+![nc command example](./udp-ports-nc.png)
 
 If it does not work for you, then most likely your port forwarding is not working correctly. Or your ISP is blocking traffic.
 
@@ -87,44 +94,46 @@ You should see this:
 
 If your IP is not correct, you can specify own IP resolver using `NEKO_IPFETCH`. It needs to return IP address that will be used.
 
-```diff
-version: "3.4"
+```yaml title="docker-compose.yml"
 services:
   neko:
     image: "m1k1o/neko:firefox"
     restart: "unless-stopped"
     shm_size: "2gb"
     ports:
-      - "8080:8080"
-      - "52000-52100:52000-52100/udp"
+    - "8080:8080"
+    - "52000-52100:52000-52100/udp"
     environment:
-     NEKO_SCREEN: 1920x1080@30
-     NEKO_PASSWORD: neko
-     NEKO_PASSWORD_ADMIN: admin
-     NEKO_EPR: 52000-52100
-     NEKO_ICELITE: 1
-+     NEKO_IPFETCH: https://ifconfig.co/ip
+      NEKO_SCREEN: 1920x1080@30
+      NEKO_PASSWORD: neko
+      NEKO_PASSWORD_ADMIN: admin
+      NEKO_EPR: 52000-52100
+      NEKO_ICELITE: 1
+      # highlight-start
+      NEKO_IPFETCH: https://ifconfig.co/ip
+      # highlight-end
 ```
 
 Or you can specify your IP address manually using `NEKO_NAT1TO1`: (It's read as NAT 1 to 1, so it's capital letter 'O', not zero '0', in NAT1`TO`1)
 
-```diff
-version: "3.4"
+```yaml title="docker-compose.yml"
 services:
   neko:
     image: "m1k1o/neko:firefox"
     restart: "unless-stopped"
     shm_size: "2gb"
     ports:
-      - "8080:8080"
-      - "52000-52100:52000-52100/udp"
+    - "8080:8080"
+    - "52000-52100:52000-52100/udp"
     environment:
-     NEKO_SCREEN: 1920x1080@30
-     NEKO_PASSWORD: neko
-     NEKO_PASSWORD_ADMIN: admin
-     NEKO_EPR: 52000-52100
-     NEKO_ICELITE: 1
-+     NEKO_NAT1TO1: <your-IP>
+      NEKO_SCREEN: 1920x1080@30
+      NEKO_PASSWORD: neko
+      NEKO_PASSWORD_ADMIN: admin
+      NEKO_EPR: 52000-52100
+      NEKO_ICELITE: 1
+      # highlight-start
+      NEKO_NAT1TO1: <your-IP>
+      # highlight-end
 ```
 
 If you want to use n.eko only locally, you must put here your local IP address, otherwise public address will be used.
@@ -134,14 +143,14 @@ If you want to use n.eko only locally, you must put here your local IP address, 
 You are probably missing NAT Loopback (NAT Hairpinning) setting on your router.
 
 Example for pfsense with truecharts docker container:
-- First, port forward the relevant ports 8080 and 52000-52100/udp for the container.
+- First, port forward the relevant ports `8080` and `52000-52100/udp` for the container.
 - Then turn on `Pure NAT` pfsense (under system > advanced > firewall and nat).
   - Make sure to check the two boxes so it works.
 - Make sure `NEKO_NAT1TO1` is blank and `NEKO_IPFETCH` address is working correctly (if unset default value is chosen).
 - Test externally to confirm it works.
 - Internally you have to access it using `<your-public-ip>:port`
 
-If your router does not support NAT Loopback (NAT Hairpinning), you can use turn servers to overcome this issue. See [more details here](https://neko.m1k1o.net/#/getting-started/?id=networking) on how to setup local coturn instance.
+If your router does not support NAT Loopback (NAT Hairpinning), you can use turn servers to overcome this issue. See [more details here](/docs/networking) on how to setup local coturn instance.
 
 ### Neko works locally, but not externally
 
@@ -153,23 +162,23 @@ If you put local ip as `NEKO_NAT1TO1`, external clients try to connect to that i
 
 To see verbose information from n.eko server, you can enable debug mode using `NEKO_DEBUG`.
 
-```diff
-version: "3.4"
+```yaml title="docker-compose.yml"
 services:
   neko:
     image: "m1k1o/neko:firefox"
     restart: "unless-stopped"
     shm_size: "2gb"
     ports:
-      - "8080:8080"
-      - "52000-52100:52000-52100/udp"
+    - "8080:8080"
+    - "52000-52100:52000-52100/udp"
     environment:
-     NEKO_SCREEN: 1920x1080@30
-     NEKO_PASSWORD: neko
-     NEKO_PASSWORD_ADMIN: admin
-     NEKO_EPR: 52000-52100
-     NEKO_ICELITE: 1
-+     NEKO_DEBUG: 1
+      NEKO_SCREEN: 1920x1080@30
+      NEKO_PASSWORD: neko
+      NEKO_PASSWORD_ADMIN: admin
+      NEKO_EPR: 52000-52100
+      # highlight-start
+      NEKO_DEBUG: 1
+      # highlight-end
 ```
 
 Ensure, that you have enabled debug mode in javascript console too, in order to see verbose information from client.

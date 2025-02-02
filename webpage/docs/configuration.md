@@ -1,3 +1,7 @@
+---
+sidebar_position: 8
+---
+
 # Configuration
 
 Config values can be set using three methods, sorted on this page by priority.

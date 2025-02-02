@@ -67,7 +67,22 @@ const config: Config = {
           type: 'docSidebar',
           sidebarId: 'tutorialSidebar',
           position: 'left',
-          label: 'Tutorial',
+          label: 'Docs',
+        },
+        {
+          to: 'contributing',
+          label: 'Contributing',
+          position: 'left',
+        },
+        {
+          to: 'non-goals',
+          label: 'Non-Goals',
+          position: 'left',
+        },
+        {
+          to: 'changelog',
+          label: 'Changelog',
+          position: 'left',
         },
         {
           href: 'https://github.com/m1k1o/neko',
@@ -80,11 +95,19 @@ const config: Config = {
       style: 'dark',
       links: [
         {
-          title: 'Docs',
+          title: 'Other Projects',
           items: [
             {
-              label: 'Tutorial',
-              to: '/docs/intro',
+              label: 'Neko Rooms',
+              href: 'https://github.com/m1k1o/neko-rooms',
+            },
+            {
+              label: 'Neko Apps',
+              href: 'https://github.com/m1k1o/neko-apps',
+            },
+            {
+              label: 'Neko VPN',
+              href: 'https://github.com/m1k1o/neko-vpn',
             },
           ],
         },

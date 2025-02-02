@@ -1,44 +1,63 @@
+---
+sidebar_position: 9
+---
+
 # Frequently Asked Questions
 
 ## How to enable debug mode?
 
 To see verbose information from n.eko server, you can enable debug mode using `NEKO_DEBUG`.
 
-```diff
-version: "3.4"
+```yaml title="docker-compose.yml"
 services:
   neko:
     image: "m1k1o/neko:firefox"
     restart: "unless-stopped"
     shm_size: "2gb"
     ports:
-      - "8080:8080"
-      - "52000-52100:52000-52100/udp"
+    - "8080:8080"
+    - "52000-52100:52000-52100/udp"
     environment:
-     NEKO_SCREEN: 1920x1080@30
-     NEKO_PASSWORD: neko
-     NEKO_PASSWORD_ADMIN: admin
-     NEKO_EPR: 52000-52100
-     NEKO_ICELITE: 1
-+     NEKO_DEBUG: 1
+      NEKO_SCREEN: 1920x1080@30
+      NEKO_PASSWORD: neko
+      NEKO_PASSWORD_ADMIN: admin
+      NEKO_EPR: 52000-52100
+      # highlight-start
+      NEKO_DEBUG: 1
+      # highlight-end
 ```
 
 Ensure, that you have enabled debug mode in javascript console too, in order to see verbose information from client.
 
 ## Chinese input method is not working
 
-There exists an extension for Chrome that allows you to use Chinese input method. You can install it from [here](https://chrome.google.com/webstore/detail/mclkkofklkfljcocdinagocijmpgbhab). Alternatively, you can use Google Input Tools from [here](https://www.google.com/inputtools/chrome/).
+There exists an extension [Google Input Tools](https://chrome.google.com/webstore/detail/mclkkofklkfljcocdinagocijmpgbhab) for Chrome that allows you to use Chinese input method.
 
 ## Only black screen is displayed but remote cursor is moving for Chromium-based browsers (Chrome, Edge, etc.)
 
 Check if you did not forget to add cap_add to your docker-compose file.
 
-```yaml
+```yaml title="docker-compose.yml"
+services:
+  neko:
+    image: "m1k1o/neko:chromium"
+    # highlight-start
     cap_add:
-      - SYS_ADMIN
+    - SYS_ADMIN
+    # highlight-end
+    restart: "unless-stopped"
+    shm_size: "2gb"
+    ports:
+    - "8080:8080"
+    - "52000-52100:52000-52100/udp"
+    environment:
+      NEKO_SCREEN: '1920x1080@30'
+      NEKO_PASSWORD: neko
+      NEKO_PASSWORD_ADMIN: admin
+      NEKO_EPR: 52000-52100
 ```
 
-## How can I embed the Neko desktop into web page without login prompt coming up for viewers?
+## How can I embed the Neko desktop into web page without login prompt coming up for viewers?
 
 You can use the following URL to embed the Neko desktop into a web page without login prompt coming up for viewers:
 
