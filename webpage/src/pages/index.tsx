@@ -1,3 +1,19 @@
+// This is handler for old links that were used in v2.
+// They were used only as hash links, so we need to redirect them to the new links.
+if (typeof window !== 'undefined' && window.location.hash) {
+  let hash = window.location.hash.substring(1);
+  hash = hash.replace('?id=', '#');
+  if (/^[a-z0-9\-#\/]+$/.test(hash)) {
+    // if id starts with known path
+    if (hash.startsWith('/getting-started')) {
+      // remove /getting-started
+      hash = hash.replace('/getting-started', '');
+      // add /docs/v2
+      window.location.href = '/docs/v2' + hash;
+    }
+  }
+}
+
 import type {ReactNode} from 'react';
 import clsx from 'clsx';
 import Link from '@docusaurus/Link';

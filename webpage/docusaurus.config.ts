@@ -34,6 +34,13 @@ const config: Config = {
         docs: {
           sidebarPath: './sidebars.ts',
           editUrl: 'https://github.com/m1k1o/neko/tree/main/docs/',
+          lastVersion: 'current',
+          versions: {
+            current: {
+              label: 'v3',
+              path: 'v3',
+            },
+          },
         },
         //blog: {
         //  showReadingTime: true,
@@ -83,6 +90,20 @@ const config: Config = {
           to: 'changelog',
           label: 'Changelog',
           position: 'left',
+        },
+        {
+          href: 'https://github.com/sponsors/m1k1o',
+          label: 'Donate',
+          position: 'left',
+        },
+        {
+          type: 'docsVersionDropdown',
+          position: 'right',
+        },
+        {
+          href: 'https://discord.gg/3U6hWpC',
+          label: 'Discord',
+          position: 'right',
         },
         {
           href: 'https://github.com/m1k1o/neko',
