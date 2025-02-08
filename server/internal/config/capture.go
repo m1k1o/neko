@@ -197,25 +197,25 @@ func (Capture) InitV2(cmd *cobra.Command) error {
 	}
 
 	// DEPRECATED: video codec
-	cmd.PersistentFlags().Bool("vp8", false, "DEPRECATED: use video_codec")
+	cmd.PersistentFlags().Bool("vp8", false, "V2 DEPRECATED: use video_codec")
 	if err := viper.BindPFlag("vp8", cmd.PersistentFlags().Lookup("vp8")); err != nil {
 		return err
 	}
 
 	// DEPRECATED: video codec
-	cmd.PersistentFlags().Bool("vp9", false, "DEPRECATED: use video_codec")
+	cmd.PersistentFlags().Bool("vp9", false, "V2 DEPRECATED: use video_codec")
 	if err := viper.BindPFlag("vp9", cmd.PersistentFlags().Lookup("vp9")); err != nil {
 		return err
 	}
 
 	// DEPRECATED: video codec
-	cmd.PersistentFlags().Bool("av1", false, "DEPRECATED: use video_codec")
+	cmd.PersistentFlags().Bool("av1", false, "V2 DEPRECATED: use video_codec")
 	if err := viper.BindPFlag("av1", cmd.PersistentFlags().Lookup("av1")); err != nil {
 		return err
 	}
 
 	// DEPRECATED: video codec
-	cmd.PersistentFlags().Bool("h264", false, "DEPRECATED: use video_codec")
+	cmd.PersistentFlags().Bool("h264", false, "V2 DEPRECATED: use video_codec")
 	if err := viper.BindPFlag("h264", cmd.PersistentFlags().Lookup("h264")); err != nil {
 		return err
 	}
@@ -255,25 +255,25 @@ func (Capture) InitV2(cmd *cobra.Command) error {
 	}
 
 	// DEPRECATED: audio codec
-	cmd.PersistentFlags().Bool("opus", false, "DEPRECATED: use audio_codec")
+	cmd.PersistentFlags().Bool("opus", false, "V2 DEPRECATED: use audio_codec")
 	if err := viper.BindPFlag("opus", cmd.PersistentFlags().Lookup("opus")); err != nil {
 		return err
 	}
 
 	// DEPRECATED: audio codec
-	cmd.PersistentFlags().Bool("g722", false, "DEPRECATED: use audio_codec")
+	cmd.PersistentFlags().Bool("g722", false, "V2 DEPRECATED: use audio_codec")
 	if err := viper.BindPFlag("g722", cmd.PersistentFlags().Lookup("g722")); err != nil {
 		return err
 	}
 
 	// DEPRECATED: audio codec
-	cmd.PersistentFlags().Bool("pcmu", false, "DEPRECATED: use audio_codec")
+	cmd.PersistentFlags().Bool("pcmu", false, "V2 DEPRECATED: use audio_codec")
 	if err := viper.BindPFlag("pcmu", cmd.PersistentFlags().Lookup("pcmu")); err != nil {
 		return err
 	}
 
 	// DEPRECATED: audio codec
-	cmd.PersistentFlags().Bool("pcma", false, "DEPRECATED: use audio_codec")
+	cmd.PersistentFlags().Bool("pcma", false, "V2 DEPRECATED: use audio_codec")
 	if err := viper.BindPFlag("pcma", cmd.PersistentFlags().Lookup("pcma")); err != nil {
 		return err
 	}

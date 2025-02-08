@@ -118,7 +118,7 @@ func (Session) InitV2(cmd *cobra.Command) error {
 		return err
 	}
 
-	cmd.PersistentFlags().Int("heartbeat_interval", 120, "heartbeat interval in seconds")
+	cmd.PersistentFlags().Int("heartbeat_interval", 120, "V2: heartbeat interval in seconds")
 	if err := viper.BindPFlag("heartbeat_interval", cmd.PersistentFlags().Lookup("heartbeat_interval")); err != nil {
 		return err
 	}
