@@ -1,8 +1,8 @@
 ---
-sidebar_position: 2
+sidebar_position: 1
 ---
 
-# Docker Images
+# Docker Setup
 
 <div align="center">
   <img src="/img/icons/firefox.svg" title="m1k1o/neko:firefox" width="60" height="auto"/>
@@ -18,7 +18,6 @@ sidebar_position: 2
   <img src="/img/icons/xfce.svg" title="m1k1o/neko:xfce" width="60" height="auto"/>
   <img src="/img/icons/kde.svg" title="m1k1o/neko:kde" width="60" height="auto"/>
 </div>
-
 
 Use the following docker images from [Docker Hub](https://hub.docker.com/r/m1k1o/neko) for x86_64:
 - `m1k1o/neko:latest` or `m1k1o/neko:firefox` - for Firefox.
@@ -55,13 +54,7 @@ All images are also available on [GitHub Container Registry](https://github.com/
 - `ghcr.io/m1k1o/neko/xfce:latest`
 - `ghcr.io/m1k1o/neko/kde:latest`
 
-For ARM-based images (like Raspberry Pi - with GPU hardware acceleration, Oracle Cloud ARM tier). Currently, not all images are available for ARM, because not all applications are available for ARM.
-
-:::danger IMPORTANT
-`m1k1o/neko:arm-*` images from dockerhub are currently not maintained and they can contain outdated software.
-:::
-
-Please use images below:
+For ARM-based images (like Raspberry Pi - with GPU hardware acceleration, Oracle Cloud ARM tier). Currently, not all images are available for ARM, because not all applications are available for ARM. Please note, that `m1k1o/neko:arm-*` images from dockerhub are currently not maintained and they can contain outdated software. Please use images below:
 
 - `ghcr.io/m1k1o/neko/arm-firefox:latest`
 - `ghcr.io/m1k1o/neko/arm-chromium:latest`
@@ -85,7 +78,7 @@ For images with VAAPI GPU hardware acceleration using intel drivers use:
 - `ghcr.io/m1k1o/neko/intel-xfce:latest`
 - `ghcr.io/m1k1o/neko/intel-kde:latest`
 
-For images with Nvidia GPU hardware acceleration using EGL (more info [here](/docs/gpu-acceleration/nvidia)) use:
+For images with Nvidia GPU hardware acceleration using EGL (see example below) use (please note, there is a known issue with EGL and Chromium-based browsers, see [here](https://github.com/m1k1o/neko/issues/279)):
 
 - `ghcr.io/m1k1o/neko/nvidia-firefox:latest`
 - `ghcr.io/m1k1o/neko/nvidia-chromium:latest`
@@ -95,6 +88,57 @@ For images with Nvidia GPU hardware acceleration using EGL (more info [here](/do
 
 GHCR images are built using GitHub actions for every tag.
 
-:::tip
-For more applications, check out [m1k1o/neko-apps](https://github.com/m1k1o/neko-apps).
-:::
+## Running Neko with Docker
+
+To start a basic Neko container, use the following command:
+
+```sh
+docker run -d --rm \
+  -p 8080:8080 \
+  -p 56000-56100:56000-56100/udp \
+  -e NEKO_EPR=56000-56100 \
+  -e NEKO_PASSWORD=neko \
+  -e NEKO_PASSWORD_ADMIN=admin \
+  -e NEKO_NAT1TO1=<your-ip> \
+  --shm-size=2g \
+  m1k1o/neko:latest
+```
+
+### Explanation
+
+- `-d` - Run the container in the background.
+- `--rm` - Automatically remove the container when it exits.
+- `-p 8080:8080` - Map the host's port `8080` to the container's port `8080`.
+- `-p 56000-56100:56000-56100/udp` - Map the host's ports `56000-56100` to the container's ports `56000-56100` using UDP.
+- `-e NEKO_EPR=56000-56100` - Set the range of ports for the WebRTC connection, it must match the port range mapped above.
+- `-e NEKO_PASSWORD=neko` and `-e NEKO_PASSWORD_ADMIN=admin` - Set passwords for the user and admin user.
+- `-e NEKO_NAT1TO1=<your-ip>` - Set the public or local IP address for the NAT1:1 connection.
+- `--shm-size=2g` - Set the shared memory size to 2GB, otherwise, the browser may crash.
+- `m1k1o/neko:latest` - The name of the image to run, change it to the desired image.
+
+Now, open your browser and go to: `http://localhost:8080`. You should see the Neko interface.
+
+## Using Docker Compose
+
+You can also use Docker Compose to run Neko. Create a `docker-compose.yml` file with the following content:
+
+```yaml title="docker-compose.yml"
+services:
+  neko:
+    image: m1k1o/neko:latest
+    shm_size: 2g
+    ports:
+      - "8080:8080"
+      - "56000-56100:56000-56100/udp"
+    environment:
+      NEKO_EPR: 56000-56100
+      NEKO_PASSWORD: neko
+      NEKO_PASSWORD_ADMIN: admin
+      NEKO_NAT1TO1: <your-ip>
+```
+
+Then, run the following command:
+
+```sh
+docker compose up -d
+```

@@ -1,12 +1,12 @@
 ---
-sidebar_position: 1
+sidebar_position: 2
 ---
 
-# Quick Start
+# Quick Start Guide
 
 Neko is easy to use and requires no technical expertise to get started. All you need to do is download the Docker image and you're ready to go:
 
-1. Deploy a server or VPS.
+1. Deploy a server or VPS with public IP address.
 
     **Recommended Specs:**
     
@@ -44,6 +44,10 @@ Neko is easy to use and requires no technical expertise to get started. All you 
     wget https://raw.githubusercontent.com/m1k1o/neko/master/docker-compose.yaml
     sudo docker compose up -d
     ```
+
+    :::note
+    If you want to run Neko on your local network, you have to add `NEKO_NAT1TO1=<your-local-ip>` to the `docker-compose.yaml` file.
+    :::
 
 6. Visit the IP address server in your browser and login, the default password is `neko`.
 
