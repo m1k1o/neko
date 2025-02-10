@@ -1,0 +1,69 @@
+#!/bin/bash
+cd "$(dirname "$0")"
+
+if [ -z "$(docker images -q neko_server:app 2> /dev/null)" ]; then
+    echo "Image 'neko_server:app' not found. Running ./build first."
+    ./build
+fi
+
+if [ -z $NEKO_PORT ]; then
+    NEKO_PORT="3000"
+fi
+
+if [ -z $NEKO_MUX ]; then
+    NEKO_MUX="52100"
+fi
+
+if [ -z $NEKO_NAT1TO1 ]; then
+    for i in $(ifconfig -l 2>/dev/null); do
+        NEKO_NAT1TO1=$(ipconfig getifaddr $i)
+        if [ ! -z $NEKO_NAT1TO1 ]; then
+            break
+        fi
+    done
+
+    if [ -z $NEKO_NAT1TO1 ]; then
+        NEKO_NAT1TO1=$(hostname -I 2>/dev/null | awk '{print $1}')
+    fi
+
+    if [ -z $NEKO_NAT1TO1 ]; then
+        NEKO_NAT1TO1=$(hostname -i 2>/dev/null)
+    fi
+fi
+
+# if first argument is nvidia, start with nvidia runtime
+if [ "$1" = "nvidia" ]; then
+    echo "Starting nvidia docker image"
+    EXTRAOPTS="--gpus all"
+    CONFIG="config.nvidia.yml"
+elif [ "$1" = "intel" ]; then
+    echo "Starting intel docker image"
+    EXTRAOPTS="--device /dev/dri"
+    # TODO: add intel config
+    # CONFIG="config.intel.yml"
+else
+    echo "Starting default docker image"
+    EXTRAOPTS=""
+    CONFIG="config.yml"
+fi
+
+echo "Using app port: ${NEKO_PORT}"
+echo "Using mux port: ${NEKO_MUX}"
+echo "Using IP address: ${NEKO_NAT1TO1}"
+
+# start server
+docker run --rm -it \
+    --name "neko_server_dev" \
+    -p "${NEKO_PORT}:8080" \
+    -p "${NEKO_MUX}:${NEKO_MUX}/tcp" \
+    -p "${NEKO_MUX}:${NEKO_MUX}/udp" \
+    -e "NEKO_WEBRTC_UDPMUX=${NEKO_MUX}" \
+    -e "NEKO_WEBRTC_TCPMUX=${NEKO_MUX}" \
+    -e "NEKO_WEBRTC_NAT1TO1=${NEKO_NAT1TO1}" \
+    -e "NEKO_SESSION_FILE=/home/neko/sessions.txt" \
+    -v "${PWD}/runtime/$CONFIG:/etc/neko/neko.yml" \
+    -e "NEKO_DEBUG=1" \
+    --shm-size=2G \
+    --security-opt seccomp=unconfined \
+    $EXTRAOPTS \
+    neko_server:app;
