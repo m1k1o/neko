@@ -153,7 +153,7 @@ type VideoConfig struct {
 	Width       string            `mapstructure:"width"`        // expression
 	Height      string            `mapstructure:"height"`       // expression
 	Fps         string            `mapstructure:"fps"`          // expression
-	Bitrate     int               `mapstructure:"bitrate"`      // pipeline bitrate
+	Bitrate     int               `mapstructure:"bitrate"`      // pipeline bitrate (not used currently)
 	GstPrefix   string            `mapstructure:"gst_prefix"`   // pipeline prefix, starts with !
 	GstEncoder  string            `mapstructure:"gst_encoder"`  // gst encoder name
 	GstParams   map[string]string `mapstructure:"gst_params"`   // map of expressions
