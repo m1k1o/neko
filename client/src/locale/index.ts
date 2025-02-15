@@ -10,6 +10,7 @@ import * as fi from './fi-fi'
 import * as ru from './ru-ru'
 import * as cn from './zh-cn'
 import * as tw from './zh-tw'
+import * as ja from './ja-jp'
 
 export const messages = {
   en,
@@ -24,4 +25,5 @@ export const messages = {
   ru,
   cn,
   tw,
+  ja,
 }
