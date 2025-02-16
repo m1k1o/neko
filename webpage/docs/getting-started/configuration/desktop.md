@@ -1,5 +1,6 @@
 ---
 sidebar_position: 3
+description: Configuration related to the Desktop Environment in Neko.
 ---
 
 # Desktop Environment

@@ -1,5 +1,6 @@
 ---
 sidebar_position: 1
+description: Configuration related to the Authentication and Sessions in Neko.
 ---
 
 # Authentication

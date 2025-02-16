@@ -1,5 +1,6 @@
 ---
 sidebar_position: 2
+description: Configuration related to Gstreamer capture in Neko.
 ---
 
 import Tabs from '@theme/Tabs';

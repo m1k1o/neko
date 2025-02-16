@@ -1,5 +1,6 @@
 ---
 sidebar_position: 4
+description: Configuration related to the WebRTC and Networking in Neko.
 ---
 
 # WebRTC Configuration
