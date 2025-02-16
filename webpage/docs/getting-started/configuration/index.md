@@ -1,8 +1,3 @@
----
-sidebar_position: 5
-title: Configuration
----
-
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
