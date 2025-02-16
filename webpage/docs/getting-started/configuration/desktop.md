@@ -2,7 +2,7 @@
 sidebar_position: 3
 ---
 
-# Desktop environment
+# Desktop Environment
 
 This section describes how to configure the desktop environment inside neko.
 
@@ -21,7 +21,7 @@ desktop:
 You can specify the screen resolution using the environment variable `NEKO_DESKTOP_SCREEN`.
 :::
 
-## Input devices
+## Input Devices
 
 Neko uses the [XTEST Extension Library](https://www.x.org/releases/X11R7.7/doc/libXtst/xtestlib.html) to simulate keyboard and mouse events. However, for more advanced input devices like touchscreens, we need to use a custom driver that can be loaded as a plugin to the X server and then neko can connect to it.
 

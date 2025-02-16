@@ -53,10 +53,24 @@ export default () => {
           code += buildYaml(value, prefix + '  ');
         } else {
           let val = '';
-          if (value.defaultValue) {
-            val = `"${value.defaultValue}"`;
-          } else if (value.type) {
-            val = `<${value.type}>`;
+          switch (value.type) {
+            case 'boolean':
+              val = `${value.defaultValue || false}`;
+              break;
+            case 'int':
+            case 'float':
+              val = `${value.defaultValue || 0}`;
+              break;
+            case 'strings':
+              val = `[ ${value.defaultValue ? value.defaultValue.map(v => `"${v}"`).join(', ') : '<string>'} ]`;
+              break;
+            case 'duration':
+            case 'string':
+              val = `${value.defaultValue ? `"${value.defaultValue}"` : '<string>'}`;
+              break;
+            default:
+              val = `<${value.type}>`;
+              break;
           }
           code += prefix+`# ${value.description || ''}\n`;
           code += prefix+`${key}: ${val}\n`;

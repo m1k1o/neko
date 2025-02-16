@@ -5,9 +5,17 @@ const path = require('path');
 const parseConfigOptions = (text) => {
   const lines = text.split('\n');
   return lines.map(line => {
-    const match = line.match(/--([\w.]+)(?:\s(\w+))?\s+(.*?)(?:\s+\(default\s+"?([\w\/.@]+)"?\))?$/);
+    const match = line.match(/--([\w.]+)(?:\s(\w+))?\s+(.*?)(?:\s+\(default\s+"?([^"]+)"?\))?$/);
     if (match) {
-      const [, key, type, description, defaultValue] = match;
+      let [, key, type, description, defaultValue] = match;
+      // if the type is not specified, it is a boolean
+      if (!type) {
+        type = 'boolean';
+        // if the default value is not specified, it is false
+        if (defaultValue !== 'false') {
+          defaultValue = 'true';
+        }
+      }
       return { key: key.split('.'), type, defaultValue: defaultValue || undefined, description };
     }
     return null;

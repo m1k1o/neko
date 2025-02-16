@@ -44,6 +44,7 @@
       "broadcast",
       "autostart"
     ],
+    "type": "boolean",
     "defaultValue": "true",
     "description": "automatically start broadcasting when neko starts and broadcast_url is set"
   },
@@ -101,6 +102,7 @@
       "microphone",
       "enabled"
     ],
+    "type": "boolean",
     "defaultValue": "true",
     "description": "enable microphone stream"
   },
@@ -110,6 +112,8 @@
       "screencast",
       "enabled"
     ],
+    "type": "boolean",
+    "defaultValue": "true",
     "description": "enable screencast"
   },
   {
@@ -176,7 +180,8 @@
       "pipelines"
     ],
     "type": "string",
-    "description": "pipelines config in JSON used for video streaming (default \"[]\")"
+    "defaultValue": "[]",
+    "description": "pipelines config in JSON used for video streaming"
   },
   {
     "key": [
@@ -194,6 +199,8 @@
       "webcam",
       "enabled"
     ],
+    "type": "boolean",
+    "defaultValue": "true",
     "description": "enable webcam stream"
   },
   {
@@ -229,6 +236,8 @@
       "desktop",
       "file_chooser_dialog"
     ],
+    "type": "boolean",
+    "defaultValue": "true",
     "description": "whether to handle file chooser dialog externally"
   },
   {
@@ -237,6 +246,7 @@
       "input",
       "enabled"
     ],
+    "type": "boolean",
     "defaultValue": "true",
     "description": "whether custom xf86 input driver should be used to handle touchscreen"
   },
@@ -247,7 +257,8 @@
       "socket"
     ],
     "type": "string",
-    "description": "socket path for custom xf86 input driver connection (default \"/tmp/xf86-input-neko.sock\")"
+    "defaultValue": "/tmp/xf86-input-neko.sock",
+    "description": "socket path for custom xf86 input driver connection"
   },
   {
     "key": [
@@ -263,6 +274,7 @@
       "desktop",
       "unminimize"
     ],
+    "type": "boolean",
     "defaultValue": "true",
     "description": "automatically unminimize window when it is minimized"
   },
@@ -271,6 +283,7 @@
       "desktop",
       "upload_drop"
     ],
+    "type": "boolean",
     "defaultValue": "true",
     "description": "whether drop upload is enabled"
   },
@@ -280,6 +293,7 @@
       "file",
       "hash"
     ],
+    "type": "boolean",
     "defaultValue": "true",
     "description": "member file provider: whether to hash passwords using sha256 (recommended)"
   },
@@ -309,7 +323,8 @@
       "admin_profile"
     ],
     "type": "string",
-    "description": "member multiuser provider: admin profile in JSON format (default \"{}\")"
+    "defaultValue": "{}",
+    "description": "member multiuser provider: admin profile in JSON format"
   },
   {
     "key": [
@@ -328,7 +343,8 @@
       "user_profile"
     ],
     "type": "string",
-    "description": "member multiuser provider: user profile in JSON format (default \"{}\")"
+    "defaultValue": "{}",
+    "description": "member multiuser provider: user profile in JSON format"
   },
   {
     "key": [
@@ -337,7 +353,8 @@
       "users"
     ],
     "type": "string",
-    "description": "member object provider: users in JSON format (default \"[]\")"
+    "defaultValue": "[]",
+    "description": "member object provider: users in JSON format"
   },
   {
     "key": [
@@ -362,6 +379,8 @@
       "plugins",
       "enabled"
     ],
+    "type": "boolean",
+    "defaultValue": "true",
     "description": "load plugins in runtime"
   },
   {
@@ -369,6 +388,8 @@
       "plugins",
       "required"
     ],
+    "type": "boolean",
+    "defaultValue": "true",
     "description": "if true, neko will exit if there is an error when loading a plugin"
   },
   {
@@ -377,7 +398,8 @@
       "bind"
     ],
     "type": "string",
-    "description": "address/port/socket to serve neko (default \"127.0.0.1:8080\")"
+    "defaultValue": "127.0.0.1:8080",
+    "description": "address/port/socket to serve neko"
   },
   {
     "key": [
@@ -408,6 +430,7 @@
       "server",
       "metrics"
     ],
+    "type": "boolean",
     "defaultValue": "true",
     "description": "enable prometheus metrics available at /metrics"
   },
@@ -425,6 +448,8 @@
       "server",
       "pprof"
     ],
+    "type": "boolean",
+    "defaultValue": "true",
     "description": "enable pprof endpoint available at /debug/pprof"
   },
   {
@@ -432,6 +457,8 @@
       "server",
       "proxy"
     ],
+    "type": "boolean",
+    "defaultValue": "true",
     "description": "trust reverse proxy headers"
   },
   {
@@ -455,6 +482,8 @@
       "session",
       "control_protection"
     ],
+    "type": "boolean",
+    "defaultValue": "true",
     "description": "users can gain control only if at least one admin is in the room"
   },
   {
@@ -463,6 +492,7 @@
       "cookie",
       "enabled"
     ],
+    "type": "boolean",
     "defaultValue": "true",
     "description": "whether cookies authentication should be enabled"
   },
@@ -492,6 +522,7 @@
       "cookie",
       "secure"
     ],
+    "type": "boolean",
     "defaultValue": "true",
     "description": "use secure cookies"
   },
@@ -517,6 +548,7 @@
       "session",
       "implicit_hosting"
     ],
+    "type": "boolean",
     "defaultValue": "true",
     "description": "allow implicit control switching"
   },
@@ -525,6 +557,8 @@
       "session",
       "inactive_cursors"
     ],
+    "type": "boolean",
+    "defaultValue": "true",
     "description": "show inactive cursors on the screen"
   },
   {
@@ -532,6 +566,8 @@
       "session",
       "locked_controls"
     ],
+    "type": "boolean",
+    "defaultValue": "true",
     "description": "whether controls should be locked for users initially"
   },
   {
@@ -539,6 +575,8 @@
       "session",
       "locked_logins"
     ],
+    "type": "boolean",
+    "defaultValue": "true",
     "description": "whether logins should be locked for users initially"
   },
   {
@@ -546,6 +584,7 @@
       "session",
       "merciful_reconnect"
     ],
+    "type": "boolean",
     "defaultValue": "true",
     "description": "allow reconnecting to websocket even if previous connection was not closed"
   },
@@ -554,6 +593,8 @@
       "session",
       "private_mode"
     ],
+    "type": "boolean",
+    "defaultValue": "true",
     "description": "whether private mode should be enabled initially"
   },
   {
@@ -570,6 +611,8 @@
       "estimator",
       "debug"
     ],
+    "type": "boolean",
+    "defaultValue": "true",
     "description": "enables debug logging for the bandwidth estimator"
   },
   {
@@ -598,6 +641,8 @@
       "estimator",
       "enabled"
     ],
+    "type": "boolean",
+    "defaultValue": "true",
     "description": "enables the bandwidth estimator"
   },
   {
@@ -616,6 +661,8 @@
       "estimator",
       "passive"
     ],
+    "type": "boolean",
+    "defaultValue": "true",
     "description": "passive estimator mode, when it does not switch pipelines, only estimates"
   },
   {
@@ -673,6 +720,8 @@
       "webrtc",
       "icelite"
     ],
+    "type": "boolean",
+    "defaultValue": "true",
     "description": "configures whether or not the ICE agent should be a lite agent"
   },
   {
@@ -682,7 +731,8 @@
       "backend"
     ],
     "type": "urls",
-    "description": "Backend only STUN and TURN servers in JSON format with urls, `username` and `credential` keys (default \"[]\")"
+    "defaultValue": "[]",
+    "description": "Backend only STUN and TURN servers in JSON format with urls, `username` and `credential` keys"
   },
   {
     "key": [
@@ -691,13 +741,15 @@
       "frontend"
     ],
     "type": "urls",
-    "description": "Frontend only STUN and TURN servers in JSON format with urls, `username` and `credential` keys (default \"[]\")"
+    "defaultValue": "[]",
+    "description": "Frontend only STUN and TURN servers in JSON format with urls, `username` and `credential` keys"
   },
   {
     "key": [
       "webrtc",
       "icetrickle"
     ],
+    "type": "boolean",
     "defaultValue": "true",
     "description": "configures whether cadidates should be sent asynchronously using Trickle ICE"
   },
@@ -707,7 +759,8 @@
       "ip_retrieval_url"
     ],
     "type": "string",
-    "description": "URL address used for retrieval of the external IP address (default \"https://checkip.amazonaws.com\")"
+    "defaultValue": "https://checkip.amazonaws.com",
+    "description": "URL address used for retrieval of the external IP address"
   },
   {
     "key": [
@@ -744,6 +797,8 @@
     "key": [
       "debug"
     ],
+    "type": "boolean",
+    "defaultValue": "true",
     "description": "enable debug mode"
   },
   {
@@ -759,6 +814,8 @@
       "log",
       "json"
     ],
+    "type": "boolean",
+    "defaultValue": "true",
     "description": "logs in JSON format"
   },
   {
@@ -775,6 +832,8 @@
       "log",
       "nocolor"
     ],
+    "type": "boolean",
+    "defaultValue": "true",
     "description": "no ANSI colors in non-JSON output"
   },
   {

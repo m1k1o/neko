@@ -2,7 +2,7 @@
 sidebar_position: 4
 ---
 
-# WebRTC configuration
+# WebRTC Configuration
 
 This page describes how to configure WebRTC settings inside neko.
 

@@ -11,6 +11,6 @@ If a configuration file is present, it will be read in and merged with the defau
 
 Highest priority is given to the Environment Variables, followed by CLI arguments, and then the configuration file.
 
-import Configuration from './configuration.tsx'
+import Configuration from './help.tsx'
 
 <Configuration />
