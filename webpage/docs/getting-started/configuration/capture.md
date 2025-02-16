@@ -3,9 +3,6 @@ sidebar_position: 2
 description: Configuration related to Gstreamer capture in Neko.
 ---
 
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
-
 # Audio & Video Capture
 
 This guide will show you how to configure the audio and video capture settings in neko.
@@ -75,6 +72,9 @@ capture:
 
 <details>
   <summary>Example pipeline configuration</summary>
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 
 <Tabs>
   <TabItem value="vp8" label="VP8 configuration">

@@ -1,6 +1,3 @@
-import Tabs from '@theme/Tabs';
-import TabItem from '@theme/TabItem';
-
 # Configuration
 
 Neko uses the [Viper](https://github.com/spf13/viper) library to manage configuration. The configuration file is optional and is not required for Neko to run. If a configuration file is present, it will be read in and merged with the default configuration values.
@@ -46,9 +43,11 @@ You have multiple ways to specify the configuration file for the neko server:
 
 The configuration file can be specified in YAML, JSON, TOML, HCL, envfile, and Java properties format. Throughout the documentation, we will use the YAML format.
 
-
 <details>
   <summary>Example configuration files</summary>
+
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 
 <Tabs>
   <TabItem value="yaml" label="YAML">

@@ -20,6 +20,8 @@ desktop:
 
 :::tip
 You can specify the screen resolution using the environment variable `NEKO_DESKTOP_SCREEN`.
+
+Admin can change the resolution in the GUI.
 :::
 
 ## Input Devices
