@@ -44,7 +44,7 @@ You can also use Docker Compose to run Neko. It is preferred to use Docker Compo
 
 Create a `docker-compose.yml` file with the following content:
 
-```yaml title="docker-compose.yml"
+```yaml title="docker-compose.yaml"
 services:
   neko:
     image: ghcr.io/m1k1o/neko/firefox:latest

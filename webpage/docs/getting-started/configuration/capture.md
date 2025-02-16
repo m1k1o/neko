@@ -453,7 +453,7 @@ sudo modprobe v4l2loopback exclusive_caps=1
 
 This is needed even if neko is running inside a Docker container. In that case, the v4l2loopback module must be loaded on the host machine and the device must be mounted inside the container.
 
-```yaml title="docker-compose.yml"
+```yaml title="docker-compose.yaml"
 services:
   neko:
     ...

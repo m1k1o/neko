@@ -149,7 +149,7 @@ member:
 :::tip
 For easier configuration, you can specify only passwords using environment variables:
 
-```yaml title="docker-compose.yml"
+```yaml title="docker-compose.yaml"
 environment:
   NEKO_MEMBER_MULTIUSER_USER_PASSWORD: "neko"
   NEKO_MEMBER_MULTIUSER_ADMIN_PASSWORD: "admin"

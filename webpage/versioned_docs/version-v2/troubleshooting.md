@@ -27,7 +27,7 @@ Check that your ephemeral port range `NEKO_EPR` is correctly exposed as `/udp` p
 
 In following example, specified range `52000-52100` must be also exposed using docker.
 
-```yaml title="docker-compose.yml"
+```yaml title="docker-compose.yaml"
 version: "3.4"
 services:
   neko:
@@ -95,7 +95,7 @@ You should see this:
 
 If your IP is not correct, you can specify own IP resolver using `NEKO_IPFETCH`. It needs to return IP address that will be used.
 
-```yaml title="docker-compose.yml"
+```yaml title="docker-compose.yaml"
 version: "3.4"
 services:
   neko:
@@ -118,7 +118,7 @@ services:
 
 Or you can specify your IP address manually using `NEKO_NAT1TO1`: (It's read as NAT 1 to 1, so it's capital letter 'O', not zero '0', in NAT1`TO`1)
 
-```yaml title="docker-compose.yml"
+```yaml title="docker-compose.yaml"
 version: "3.4"
 services:
   neko:
@@ -165,7 +165,7 @@ If you put local ip as `NEKO_NAT1TO1`, external clients try to connect to that i
 
 To see verbose information from n.eko server, you can enable debug mode using `NEKO_DEBUG`.
 
-```yaml title="docker-compose.yml"
+```yaml title="docker-compose.yaml"
 version: "3.4"
 services:
   neko:

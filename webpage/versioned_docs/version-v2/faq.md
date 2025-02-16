@@ -8,7 +8,7 @@ sidebar_position: 7
 
 To see verbose information from n.eko server, you can enable debug mode using `NEKO_DEBUG`.
 
-```yaml title="docker-compose.yml"
+```yaml title="docker-compose.yaml"
 version: "3.4"
 services:
   neko:
@@ -38,7 +38,7 @@ There exists an extension [Google Input Tools](https://chrome.google.com/webstor
 
 Check if you did not forget to add cap_add to your docker-compose file.
 
-```yaml title="docker-compose.yml"
+```yaml title="docker-compose.yaml"
 version: "3.4"
 services:
   neko:

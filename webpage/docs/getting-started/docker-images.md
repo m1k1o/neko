@@ -66,7 +66,7 @@ import TabItem from '@theme/TabItem';
 
   <TabItem value="docker-compose" label="Docker Compose configuration">
 
-    ```yaml title="docker-compose.yml"
+    ```yaml title="docker-compose.yaml"
     cap_add:
     - SYS_ADMIN
     shm_size: 2g
@@ -79,7 +79,7 @@ import TabItem from '@theme/TabItem';
 | ---- | ---- | ------------ |
 | <img src="/img/icons/chromium.svg" width="60" height="60" /> | [Chromium](https://www.chromium.org/chromium-projects/) <br /> The open-source project behind Google Chrome. | [`ghcr.io/m1k1o/neko/chromium`](https://ghcr.io/m1k1o/neko/chromium) |
 | <img src="/img/icons/google-chrome.svg" width="60" height="60" /> | [Google Chrome](https://www.google.com/chrome/) <br /> The most popular browser in the world. | [`ghcr.io/m1k1o/neko/google-chrome`](https://ghcr.io/m1k1o/neko/google-chrome) |
-| <img src="/img/icons/chromium.svg" width="60" height="60" /> | [Ungoogled Chromium](https://github.com/Eloston/ungoogled-chromium) <br /> A fork of Chromium without Google integration. | [`ghcr.io/m1k1o/neko/ungoogled-chromium`](https://ghcr.io/m1k1o/neko/ungoogled-chromium) |
+| <img src="/img/icons/ungoogled-chromium.svg" width="60" height="60" /> | [Ungoogled Chromium](https://ungoogled-software.github.io/) <br /> A fork of Chromium without Google integration. | [`ghcr.io/m1k1o/neko/ungoogled-chromium`](https://ghcr.io/m1k1o/neko/ungoogled-chromium) |
 | <img src="/img/icons/microsoft-edge.svg" width="60" height="60" /> | [Microsoft Edge](https://www.microsoft.com/edge) <br/> The new Microsoft Edge is based on Chromium. | [`ghcr.io/m1k1o/neko/microsoft-edge`](https://ghcr.io/m1k1o/neko/microsoft-edge) |
 | <img src="/img/icons/brave.svg" width="60" height="60" /> | [Brave](https://brave.com/) <br /> A privacy-focused browser. | [`ghcr.io/m1k1o/neko/brave`](https://ghcr.io/m1k1o/neko/brave) |
 | <img src="/img/icons/vivaldi.svg" width="60" height="60" /> | [Vivaldi](https://vivaldi.com/) <br /> A highly customizable browser. | [`ghcr.io/m1k1o/neko/vivaldi`](https://ghcr.io/m1k1o/neko/vivaldi) |

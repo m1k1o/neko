@@ -1,5 +1,5 @@
 ---
-sidebar_position: 7
+sidebar_position: 6
 ---
 
 # Troubleshooting
@@ -27,7 +27,7 @@ Check that your ephemeral port range `NEKO_WEBRTC_EPR` is correctly exposed as a
 
 In the following example, the specified range `52000-52100` must also be exposed using Docker. You can't map it to a different range, e.g. `52000-52100:53000-53100/udp`. If you want to use a different range, you must change the range in `NEKO_WEBRTC_EPR` too.
 
-```yaml title="docker-compose.yml"
+```yaml title="docker-compose.yaml"
 services:
   neko:
     image: "ghcr.io/m1k1o/neko/firefox:latest"
@@ -95,7 +95,7 @@ You should see this:
 
 If your IP is not correct, you can specify your own IP resolver using `NEKO_WEBRTC_IP_RETRIEVAL_URL`. It needs to return the IP address that will be used.
 
-```yaml title="docker-compose.yml"
+```yaml title="docker-compose.yaml"
 services:
   neko:
     image: "ghcr.io/m1k1o/neko/firefox:latest"
@@ -117,7 +117,7 @@ services:
 
 Or you can specify your IP address manually using `NEKO_WEBRTC_NAT1TO1`:
 
-```yaml title="docker-compose.yml"
+```yaml title="docker-compose.yaml"
 services:
   neko:
     image: "ghcr.io/m1k1o/neko/firefox:latest"
@@ -167,7 +167,7 @@ If you put a local IP as `NEKO_WEBRTC_NAT1TO1`, external clients try to connect 
 
 To see verbose information from the n.eko server, you can enable debug mode using `NEKO_DEBUG`.
 
-```yaml title="docker-compose.yml"
+```yaml title="docker-compose.yaml"
 services:
   neko:
     image: "ghcr.io/m1k1o/neko/firefox:latest"
