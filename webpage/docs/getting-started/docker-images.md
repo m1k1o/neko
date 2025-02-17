@@ -41,7 +41,8 @@ In comparison to Chromium-based browsers, Firefox-based browsers do not require 
 | Icon | Name | Docker Image |
 | ---- | ---- | ------------ |
 | <img src="/img/icons/firefox.svg" width="60" height="60" /> | [Firefox](https://www.mozilla.org/firefox/) <br /> The open-source browser from Mozilla. | [`ghcr.io/m1k1o/neko/firefox`](https://ghcr.io/m1k1o/neko/firefox) |
-| <img src="/img/icons/tor-browser.svg" width="60" height="60" /> | [Tor Browser](https://www.torproject.org/) <br /> The privacy-focused browser from the Tor Project. | [`ghcr.io/m1k1o/neko/tor-browser`](https://ghcr.io/m1k1o/neko/tor-browser) |
+| <img src="/img/icons/tor-browser.svg" width="60" height="60" /> | [Tor Browser](https://www.torproject.org/) <br /> A browser designed to access the Tor network for enhanced privacy. | [`ghcr.io/m1k1o/neko/tor-browser`](https://ghcr.io/m1k1o/neko/tor-browser) |
+| <img src="/img/icons/waterfox.svg" width="60" height="60" /> | [Waterfox](https://www.waterfox.net/) <br /> A privacy-focused browser based on Firefox. | [`ghcr.io/m1k1o/neko/waterfox`](https://ghcr.io/m1k1o/neko/waterfox) |
 
 ### Chromium-based browsers
 

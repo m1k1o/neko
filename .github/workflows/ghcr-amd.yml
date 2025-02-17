@@ -70,6 +70,7 @@ jobs:
       matrix:
         include:
           - tag: firefox
+          - tag: waterfox
           - tag: chromium
           - tag: google-chrome
           - tag: ungoogled-chromium
