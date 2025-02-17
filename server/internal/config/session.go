@@ -8,6 +8,16 @@ import (
 	"github.com/spf13/viper"
 )
 
+type SessionCookie struct {
+	Enabled    bool
+	Name       string
+	Expiration time.Duration
+	Secure     bool
+	HTTPOnly   bool
+	Domain     string
+	Path       string
+}
+
 type Session struct {
 	File string
 
@@ -21,10 +31,7 @@ type Session struct {
 	HeartbeatInterval int
 	APIToken          string
 
-	CookieEnabled    bool
-	CookieName       string
-	CookieExpiration time.Duration
-	CookieSecure     bool
+	Cookie SessionCookie
 }
 
 func (Session) Init(cmd *cobra.Command) error {
@@ -89,13 +96,28 @@ func (Session) Init(cmd *cobra.Command) error {
 		return err
 	}
 
-	cmd.PersistentFlags().Int("session.cookie.expiration", 365*24, "expiration of the cookie in hours")
+	cmd.PersistentFlags().Duration("session.cookie.expiration", 24*time.Hour, "expiration of the cookie")
 	if err := viper.BindPFlag("session.cookie.expiration", cmd.PersistentFlags().Lookup("session.cookie.expiration")); err != nil {
 		return err
 	}
 
 	cmd.PersistentFlags().Bool("session.cookie.secure", true, "use secure cookies")
 	if err := viper.BindPFlag("session.cookie.secure", cmd.PersistentFlags().Lookup("session.cookie.secure")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().Bool("session.cookie.http_only", true, "use http only cookies")
+	if err := viper.BindPFlag("session.cookie.http_only", cmd.PersistentFlags().Lookup("session.cookie.http_only")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().String("session.cookie.domain", "", "domain of the cookie")
+	if err := viper.BindPFlag("session.cookie.domain", cmd.PersistentFlags().Lookup("session.cookie.domain")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().String("session.cookie.path", "", "path of the cookie")
+	if err := viper.BindPFlag("session.cookie.path", cmd.PersistentFlags().Lookup("session.cookie.path")); err != nil {
 		return err
 	}
 
@@ -139,10 +161,13 @@ func (s *Session) Set() {
 	s.HeartbeatInterval = viper.GetInt("session.heartbeat_interval")
 	s.APIToken = viper.GetString("session.api_token")
 
-	s.CookieEnabled = viper.GetBool("session.cookie.enabled")
-	s.CookieName = viper.GetString("session.cookie.name")
-	s.CookieExpiration = time.Duration(viper.GetInt("session.cookie.expiration")) * time.Hour
-	s.CookieSecure = viper.GetBool("session.cookie.secure")
+	s.Cookie.Enabled = viper.GetBool("session.cookie.enabled")
+	s.Cookie.Name = viper.GetString("session.cookie.name")
+	s.Cookie.Expiration = viper.GetDuration("session.cookie.expiration")
+	s.Cookie.Secure = viper.GetBool("session.cookie.secure")
+	s.Cookie.HTTPOnly = viper.GetBool("session.cookie.http_only")
+	s.Cookie.Domain = viper.GetString("session.cookie.domain")
+	s.Cookie.Path = viper.GetString("session.cookie.path")
 }
 
 func (s *Session) SetV2() {

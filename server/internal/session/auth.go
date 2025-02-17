@@ -11,22 +11,24 @@ import (
 
 func (manager *SessionManagerCtx) CookieSetToken(w http.ResponseWriter, token string) {
 	sameSite := http.SameSiteDefaultMode
-	if manager.config.CookieSecure {
+	if manager.config.Cookie.Secure {
 		sameSite = http.SameSiteNoneMode
 	}
 
 	http.SetCookie(w, &http.Cookie{
-		Name:     manager.config.CookieName,
+		Name:     manager.config.Cookie.Name,
 		Value:    token,
-		Expires:  time.Now().Add(manager.config.CookieExpiration),
-		Secure:   manager.config.CookieSecure,
+		Expires:  time.Now().Add(manager.config.Cookie.Expiration),
+		Secure:   manager.config.Cookie.Secure,
 		SameSite: sameSite,
-		HttpOnly: true,
+		HttpOnly: manager.config.Cookie.HTTPOnly,
+		Domain:   manager.config.Cookie.Domain,
+		Path:     manager.config.Cookie.Path,
 	})
 }
 
 func (manager *SessionManagerCtx) CookieClearToken(w http.ResponseWriter, r *http.Request) {
-	cookie, err := r.Cookie(manager.config.CookieName)
+	cookie, err := r.Cookie(manager.config.Cookie.Name)
 	if err != nil {
 		return
 	}
@@ -57,7 +59,7 @@ func (manager *SessionManagerCtx) Authenticate(r *http.Request) (types.Session, 
 func (manager *SessionManagerCtx) getToken(r *http.Request) (string, bool) {
 	if manager.CookieEnabled() {
 		// get from Cookie
-		cookie, err := r.Cookie(manager.config.CookieName)
+		cookie, err := r.Cookie(manager.config.Cookie.Name)
 		if err == nil {
 			return cookie.Value, true
 		}

@@ -476,7 +476,7 @@ func (manager *SessionManagerCtx) Settings() types.Settings {
 }
 
 func (manager *SessionManagerCtx) CookieEnabled() bool {
-	return manager.config.CookieEnabled
+	return manager.config.Cookie.Enabled
 }
 
 // ---

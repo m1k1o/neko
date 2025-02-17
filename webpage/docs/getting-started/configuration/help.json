@@ -490,6 +490,15 @@
     "key": [
       "session",
       "cookie",
+      "domain"
+    ],
+    "type": "string",
+    "description": "domain of the cookie"
+  },
+  {
+    "key": [
+      "session",
+      "cookie",
       "enabled"
     ],
     "type": "boolean",
@@ -502,9 +511,19 @@
       "cookie",
       "expiration"
     ],
-    "type": "int",
-    "defaultValue": "8760",
-    "description": "expiration of the cookie in hours"
+    "type": "duration",
+    "defaultValue": "24h0m0s",
+    "description": "expiration of the cookie"
+  },
+  {
+    "key": [
+      "session",
+      "cookie",
+      "http_only"
+    ],
+    "type": "boolean",
+    "defaultValue": "true",
+    "description": "use http only cookies"
   },
   {
     "key": [
@@ -515,6 +534,15 @@
     "type": "string",
     "defaultValue": "NEKO_SESSION",
     "description": "name of the cookie that holds token"
+  },
+  {
+    "key": [
+      "session",
+      "cookie",
+      "path"
+    ],
+    "type": "string",
+    "description": "path of the cookie"
   },
   {
     "key": [

@@ -349,16 +349,21 @@ If you disable the cookies, the token will be sent to the client in the login re
 ```yaml title="config.yaml"
 session:
   cookie:
-    # Whether the cookies are enabled or not.
     enabled: true
-    # Name of the cookie used to store the session.
     name: "NEKO_SESSION"
-    # Expiration time of the cookie in seconds.
-    expiration: 86400
-    # Whether the cookie is secure (HTTPS only) or not.
+    expiration: "24h"
     secure: true
+    http_only: true
+    domain: ""
+    path: ""
 ```
 
+- `enabled` - Whether the cookies are enabled or not.
+- `name` - Name of the cookie used to store the session.
+- `expiration` - Expiration time of the cookie, use [go duration format](https://pkg.go.dev/time#ParseDuration) (e.g., `24h`, `1h30m`, `60m`).
+- `secure` and `http_only` - Ensures that the cookie is only sent over HTTPS and cannot be accessed by JavaScript, see [MDN Web Docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies#block_access_to_your_cookies) for more information.
+- `domain` and `path` - Define where the cookie is valid, see [MDN Web Docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies#define_where_cookies_are_sent) for more information.
+
 :::info
-The `session.cookie.secure` is set to `true` by default, which means that the cookie is only sent over HTTPS. If you are using HTTP, you should really consider using HTTPS. Only for testing and development purposes should you consider setting it to `false`.
+The `secure` and `http_only` are set to `true` by default, which means that the cookie is only sent over HTTPS. If you are using HTTP, you should really consider using HTTPS. Only for testing and development purposes should you consider setting it to `false`.
 :::

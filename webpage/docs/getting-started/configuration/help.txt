@@ -50,9 +50,12 @@
       --server.static string                          path to neko client files to serve
       --session.api_token string                      API token for interacting with external services
       --session.control_protection                    users can gain control only if at least one admin is in the room
+      --session.cookie.domain string                  domain of the cookie
       --session.cookie.enabled                        whether cookies authentication should be enabled (default true)
-      --session.cookie.expiration int                 expiration of the cookie in hours (default 8760)
+      --session.cookie.expiration duration            expiration of the cookie (default 24h0m0s)
+      --session.cookie.http_only                      use http only cookies (default true)
       --session.cookie.name string                    name of the cookie that holds token (default "NEKO_SESSION")
+      --session.cookie.path string                    path of the cookie
       --session.cookie.secure                         use secure cookies (default true)
       --session.file string                           if sessions should be stored in a file, otherwise they will be stored only in memory
       --session.heartbeat_interval int                interval in seconds for sending heartbeat messages (default 120)
