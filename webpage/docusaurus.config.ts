@@ -80,6 +80,12 @@ const config: Config = {
           label: 'Docs',
         },
         {
+          type: 'docSidebar',
+          sidebarId: 'apiSidebar',
+          position: 'left',
+          label: 'API',
+        },
+        {
           to: 'contributing',
           label: 'Contributing',
           position: 'left',
@@ -182,6 +188,7 @@ const config: Config = {
             specPath: "../server/openapi.yaml",
             outputDir: "docs/api",
             downloadUrl: "https://raw.githubusercontent.com/m1k1o/neko/refs/heads/master/server/openapi.yaml",
+            baseUrl: "/docs/v3/api",
             sidebarOptions: {
               groupPathsBy: "tag",
               categoryLinkSource: "tag",
