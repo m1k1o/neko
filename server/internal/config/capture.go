@@ -95,6 +95,11 @@ func (Capture) Init(cmd *cobra.Command) error {
 		return err
 	}
 
+	cmd.PersistentFlags().String("capture.video.pipeline", "", "gstreamer pipeline used for video streaming; shortcut for having only a single video pipeline instead of multiple, ignored if capture.video.pipelines is set")
+	if err := viper.BindPFlag("capture.video.pipeline", cmd.PersistentFlags().Lookup("capture.video.pipeline")); err != nil {
+		return err
+	}
+
 	// broadcast
 	cmd.PersistentFlags().Int("capture.broadcast.audio_bitrate", 128, "broadcast audio bitrate in KB/s")
 	if err := viper.BindPFlag("capture.broadcast.audio_bitrate", cmd.PersistentFlags().Lookup("capture.broadcast.audio_bitrate")); err != nil {
@@ -336,39 +341,63 @@ func (s *Capture) Set() {
 		log.Warn().Err(err).Msgf("unable to parse video pipelines")
 	}
 
-	// default video
+	videoPipeline := viper.GetString("capture.video.pipeline")
+
+	// if no video pipelines are set
 	if len(s.VideoPipelines) == 0 {
-		log.Warn().Msgf("no video pipelines specified, using defaults")
+		// maybe single video pipeline is set
+		if videoPipeline != "" {
+			log.Info().Str("pipeline", videoPipeline).Msg("using single video pipeline")
 
-		s.VideoCodec = codec.VP8()
-		s.VideoPipelines = map[string]types.VideoConfig{
-			"main": {
-				Fps:        "25",
-				GstEncoder: "vp8enc",
-				GstParams: map[string]string{
-					"target-bitrate":      "round(3072 * 650)",
-					"cpu-used":            "4",
-					"end-usage":           "cbr",
-					"threads":             "4",
-					"deadline":            "1",
-					"undershoot":          "95",
-					"buffer-size":         "(3072 * 4)",
-					"buffer-initial-size": "(3072 * 2)",
-					"buffer-optimal-size": "(3072 * 3)",
-					"keyframe-max-dist":   "25",
-					"min-quantizer":       "4",
-					"max-quantizer":       "20",
+			s.VideoPipelines = map[string]types.VideoConfig{
+				"main": {
+					GstPipeline: videoPipeline,
 				},
-			},
-		}
-		s.VideoIDs = []string{"main"}
+			}
+			s.VideoIDs = []string{"main"}
 
-		if viper.GetBool("legacy") {
-			legacyPipeline := s.VideoPipelines["main"]
-			legacyPipeline.ShowPointer = true
-			s.VideoPipelines["legacy"] = legacyPipeline
-			// we do not add legacy to VideoIDs so that its ignored by bandwidth estimator
+			if viper.GetBool("legacy") {
+				legacyPipeline := s.VideoPipelines["main"]
+				// Hacky way to enable pointer for legacy pipeline.
+				legacyPipeline.GstPipeline = strings.Replace(legacyPipeline.GstPipeline, "show-pointer=false", "show-pointer=true", 1)
+				s.VideoPipelines["legacy"] = legacyPipeline
+				// we do not add legacy to VideoIDs so that its ignored by bandwidth estimator
+			}
+		} else {
+			log.Warn().Msgf("no video pipelines specified, using default")
+
+			s.VideoCodec = codec.VP8()
+			s.VideoPipelines = map[string]types.VideoConfig{
+				"main": {
+					Fps:        "25",
+					GstEncoder: "vp8enc",
+					GstParams: map[string]string{
+						"target-bitrate":      "round(3072 * 650)",
+						"cpu-used":            "4",
+						"end-usage":           "cbr",
+						"threads":             "4",
+						"deadline":            "1",
+						"undershoot":          "95",
+						"buffer-size":         "(3072 * 4)",
+						"buffer-initial-size": "(3072 * 2)",
+						"buffer-optimal-size": "(3072 * 3)",
+						"keyframe-max-dist":   "25",
+						"min-quantizer":       "4",
+						"max-quantizer":       "20",
+					},
+				},
+			}
+			s.VideoIDs = []string{"main"}
+
+			if viper.GetBool("legacy") {
+				legacyPipeline := s.VideoPipelines["main"]
+				legacyPipeline.ShowPointer = true
+				s.VideoPipelines["legacy"] = legacyPipeline
+				// we do not add legacy to VideoIDs so that its ignored by bandwidth estimator
+			}
 		}
+	} else if videoPipeline != "" {
+		log.Warn().Msg("you are setting both single video pipeline and multiple video pipelines, ignoring single video pipeline")
 	}
 
 	// audio
@@ -477,8 +506,13 @@ func (s *Capture) SetV2() {
 			}
 			// we do not add legacy to VideoIDs so that its ignored by bandwidth estimator
 			s.VideoIDs = []string{"main"}
-			// TODO: add deprecated warning and proper alternative
 		}
+
+		if videoPipeline != "" {
+			log.Warn().Msg("you are using deprecated config setting 'NEKO_VIDEO' which is deprecated, please use 'NEKO_CAPTURE_VIDEO_PIPELINE' instead")
+		}
+
+		// TODO: add deprecated warning and proper alternative for HW enc, bitrate and max fps
 	}
 
 	//
@@ -524,7 +558,12 @@ func (s *Capture) SetV2() {
 		} else {
 			s.AudioPipeline = pipeline
 		}
-		// TODO: add deprecated warning and proper alternative
+
+		if audioPipeline != "" {
+			log.Warn().Msg("you are using deprecated config setting 'NEKO_AUDIO' which is deprecated, please use 'NEKO_CAPTURE_AUDIO_PIPELINE' instead")
+		}
+
+		// TODO: add deprecated warning and proper alternative for audio bitrate
 	}
 
 	//

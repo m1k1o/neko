@@ -366,9 +366,10 @@ Shortcut environment variable to enable DEBUG mode: `NEKO_DEBUG=true`
 
 Here is a full configuration with default values as shown in the help command. Please refer to the sub-sections for more details.
 
-import Configuration from './help.tsx'
+import Configuration from '@site/src/components/Configuration';
+import configOptions from './help.json';
 
-<Configuration />
+<Configuration configOptions={configOptions} />
 
 ## Next Steps
 

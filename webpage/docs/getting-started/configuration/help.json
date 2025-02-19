@@ -113,7 +113,7 @@
       "enabled"
     ],
     "type": "boolean",
-    "defaultValue": "true",
+    "defaultValue": "false",
     "description": "enable screencast"
   },
   {
@@ -200,7 +200,7 @@
       "enabled"
     ],
     "type": "boolean",
-    "defaultValue": "true",
+    "defaultValue": "false",
     "description": "enable webcam stream"
   },
   {
@@ -237,7 +237,7 @@
       "file_chooser_dialog"
     ],
     "type": "boolean",
-    "defaultValue": "true",
+    "defaultValue": "false",
     "description": "whether to handle file chooser dialog externally"
   },
   {
@@ -380,7 +380,7 @@
       "enabled"
     ],
     "type": "boolean",
-    "defaultValue": "true",
+    "defaultValue": "false",
     "description": "load plugins in runtime"
   },
   {
@@ -389,7 +389,7 @@
       "required"
     ],
     "type": "boolean",
-    "defaultValue": "true",
+    "defaultValue": "false",
     "description": "if true, neko will exit if there is an error when loading a plugin"
   },
   {
@@ -449,7 +449,7 @@
       "pprof"
     ],
     "type": "boolean",
-    "defaultValue": "true",
+    "defaultValue": "false",
     "description": "enable pprof endpoint available at /debug/pprof"
   },
   {
@@ -458,7 +458,7 @@
       "proxy"
     ],
     "type": "boolean",
-    "defaultValue": "true",
+    "defaultValue": "false",
     "description": "trust reverse proxy headers"
   },
   {
@@ -483,7 +483,7 @@
       "control_protection"
     ],
     "type": "boolean",
-    "defaultValue": "true",
+    "defaultValue": "false",
     "description": "users can gain control only if at least one admin is in the room"
   },
   {
@@ -586,7 +586,7 @@
       "inactive_cursors"
     ],
     "type": "boolean",
-    "defaultValue": "true",
+    "defaultValue": "false",
     "description": "show inactive cursors on the screen"
   },
   {
@@ -595,7 +595,7 @@
       "locked_controls"
     ],
     "type": "boolean",
-    "defaultValue": "true",
+    "defaultValue": "false",
     "description": "whether controls should be locked for users initially"
   },
   {
@@ -604,7 +604,7 @@
       "locked_logins"
     ],
     "type": "boolean",
-    "defaultValue": "true",
+    "defaultValue": "false",
     "description": "whether logins should be locked for users initially"
   },
   {
@@ -622,7 +622,7 @@
       "private_mode"
     ],
     "type": "boolean",
-    "defaultValue": "true",
+    "defaultValue": "false",
     "description": "whether private mode should be enabled initially"
   },
   {
@@ -640,7 +640,7 @@
       "debug"
     ],
     "type": "boolean",
-    "defaultValue": "true",
+    "defaultValue": "false",
     "description": "enables debug logging for the bandwidth estimator"
   },
   {
@@ -670,7 +670,7 @@
       "enabled"
     ],
     "type": "boolean",
-    "defaultValue": "true",
+    "defaultValue": "false",
     "description": "enables the bandwidth estimator"
   },
   {
@@ -690,7 +690,7 @@
       "passive"
     ],
     "type": "boolean",
-    "defaultValue": "true",
+    "defaultValue": "false",
     "description": "passive estimator mode, when it does not switch pipelines, only estimates"
   },
   {
@@ -749,7 +749,7 @@
       "icelite"
     ],
     "type": "boolean",
-    "defaultValue": "true",
+    "defaultValue": "false",
     "description": "configures whether or not the ICE agent should be a lite agent"
   },
   {
@@ -826,7 +826,7 @@
       "debug"
     ],
     "type": "boolean",
-    "defaultValue": "true",
+    "defaultValue": "false",
     "description": "enable debug mode"
   },
   {
@@ -843,7 +843,7 @@
       "json"
     ],
     "type": "boolean",
-    "defaultValue": "true",
+    "defaultValue": "false",
     "description": "logs in JSON format"
   },
   {
@@ -861,7 +861,7 @@
       "nocolor"
     ],
     "type": "boolean",
-    "defaultValue": "true",
+    "defaultValue": "false",
     "description": "no ANSI colors in non-JSON output"
   },
   {

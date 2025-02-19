@@ -2,9 +2,19 @@ import React from 'react';
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 import CodeBlock from '@theme/CodeBlock';
-import configOptions from './help.json';
 
-export default () => {
+interface ConfigOption {
+  key: string[];
+  description: string;
+  defaultValue?: string;
+  type?: string;
+}
+
+interface ConfigurationTabProps {
+  configOptions: ConfigOption[];
+}
+
+const ConfigurationTab: React.FC<ConfigurationTabProps> = ({ configOptions }) => {
   const environmentVariables = () => {
     let code = '';
     configOptions.forEach(option => {
@@ -27,7 +37,7 @@ export default () => {
   const cmdArguments = () => {
     let code = '';
     configOptions.forEach(option => {
-      code += `# ${option.description}\ \n`;
+      code += `# ${option.description}\n`;
       code += `--${option.key.join('.')}`;
       if (option.type) {
         code += ` <${option.type}>`;
@@ -118,3 +128,5 @@ export default () => {
     </div>
   );
 };
+
+export default ConfigurationTab;
