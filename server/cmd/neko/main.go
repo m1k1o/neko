@@ -7,11 +7,11 @@ import (
 
 	"m1k1o/neko"
 	"m1k1o/neko/cmd"
-	"m1k1o/neko/internal/utils"
+	"m1k1o/neko/pkg/utils"
 )
 
 func main() {
-	fmt.Print(utils.Colorf(neko.Header, "server", neko.Service.Version))
+	fmt.Print(utils.Colorf(neko.Header, "server", neko.Version))
 	if err := cmd.Execute(); err != nil {
 		log.Panic().Err(err).Msg("failed to execute command")
 	}

@@ -1,0 +1,122 @@
+capture:
+  video:
+    codec: h264
+    ids:
+      - nvh264enc
+      - x264enc
+    pipelines:
+      nvh264enc:
+        fps: 25
+        bitrate: 2
+        #gst_prefix: "! cudaupload ! cudaconvert ! video/x-raw(memory:CUDAMemory),format=NV12"
+        gst_prefix: "! video/x-raw,format=NV12"
+        gst_encoder: "nvh264enc"
+        gst_params:
+          bitrate: 3000
+          rc-mode: 5 # Low-Delay CBR, High Quality
+          preset: 5 # Low Latency, High Performance
+          zerolatency: true
+          gop-size: 25
+        gst_suffix: "! h264parse config-interval=-1 ! video/x-h264,stream-format=byte-stream,profile=constrained-baseline"
+      x264enc:
+        fps: 25
+        bitrate: 1
+        gst_prefix: "! video/x-raw,format=I420"
+        gst_encoder: "x264enc"
+        gst_params:
+          threads: 4
+          bitrate: 4096
+          key-int-max: 25
+          byte-stream: true
+          tune: zerolatency
+          speed-preset: veryfast
+        gst_suffix: "! video/x-h264,stream-format=byte-stream,profile=constrained-baseline"
+  screencast:
+    enabled: true
+
+server:
+  pprof: true
+
+desktop:
+  screen: "1920x1080@60"
+
+member:
+  # provider: "object"
+  # object:
+  #   users:
+  #     - username: "admin"
+  #       password: "admin"
+  #       profile:
+  #         name: "Administrator"
+  #         is_admin: true
+  #         can_login: true
+  #         can_connect: true
+  #         can_watch: true
+  #         can_host: true
+  #         can_share_media: true
+  #         can_access_clipboard: true
+  #         sends_inactive_cursor: true
+  #         can_see_inactive_cursors: true
+  #     - username: "user"
+  #       password: "neko"
+  #       profile:
+  #         name: "User"
+  #         is_admin: false
+  #         can_login: true
+  #         can_connect: true
+  #         can_watch: true
+  #         can_host: true
+  #         can_share_media: true
+  #         can_access_clipboard: true
+  #         sends_inactive_cursor: true
+  #         can_see_inactive_cursors: false
+  # provider: "file"
+  # file:
+  #   path: "/home/neko/members.json"
+  provider: "multiuser"
+  multiuser:
+   admin_password: "admin"
+   user_password: "neko"
+  #  admin_profile: # optional
+  #  user_profile: # optional
+  # provider: "noauth"
+
+session:
+  # Allows reconnecting the websocket even if the previous
+  # connection was not closed. Can lead to session hijacking.
+  merciful_reconnect: true
+  # Show inactive cursors on the screen. Can lead to multiple
+  # data sent via WebSockets and additonal rendering cost on
+  # the clients.
+  implicit_hosting: false
+  inactive_cursors: true
+  api_token: "neko123"
+  cookie:
+    # Disabling cookies will result to use Bearer Authentication.
+    # This is less secure, because access token will be sent to
+    # client in playload and accessible via JS app.
+    enabled: false
+    secure: false
+
+webrtc:
+  icelite: true
+  iceservers:
+    # Backend servers are ignored if icelite is true.
+    backend:
+      - urls: [ stun:stun.l.google.com:19302 ]
+    frontend:
+      - urls: [ stun:stun.l.google.com:19305 ]
+        #username: foo
+        #credential: bar
+  # estimator:
+  #   enabled: true
+  #   passive: false
+  #   debug: true
+  #   initial_bitrate: 1000000
+  #   read_interval: 1s
+  #   stable_duration: 10s
+  #   unstable_duration: 5s
+  #   stalled_duration: 20s
+  #   downgrade_backoff: 10s
+  #   upgrade_backoff: 30s
+  #   diff_threshold: 0.5

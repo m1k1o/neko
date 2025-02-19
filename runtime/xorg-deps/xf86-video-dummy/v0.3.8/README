@@ -1,0 +1,20 @@
+xf86-video-dummy - virtual/offscreen frame buffer driver for the Xorg X server
+
+Please submit bugs & patches to the Xorg bugzilla:
+
+        https://bugs.freedesktop.org/enter_bug.cgi?product=xorg
+
+All questions regarding this software should be directed at the
+Xorg mailing list:
+
+        http://lists.freedesktop.org/mailman/listinfo/xorg
+
+The master development code repository can be found at:
+
+        git://anongit.freedesktop.org/git/xorg/driver/xf86-video-dummy
+
+        http://cgit.freedesktop.org/xorg/driver/xf86-video-dummy
+
+For more information on the git code manager, see:
+
+        http://wiki.x.org/wiki/GitPage
