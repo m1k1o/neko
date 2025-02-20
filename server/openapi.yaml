@@ -157,7 +157,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/SessionData'
+                $ref: '#/components/schemas/SessionLoginResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -166,7 +166,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SessionLogin'
+              $ref: '#/components/schemas/SessionLoginRequest'
         required: true
   /api/logout:
     post:
@@ -1283,7 +1283,7 @@ components:
     # sessions
     #
 
-    SessionLogin:
+    SessionLoginRequest:
       type: object
       properties:
         username:
@@ -1293,15 +1293,21 @@ components:
           type: string
           description: The password of the user.
 
+    SessionLoginResponse:
+      allOf:
+      - $ref: '#/components/schemas/SessionData'
+      - type: object
+        properties:
+          token:
+            type: string
+            description: The session token, only if cookie authentication is disabled.
+
     SessionData:
       type: object
       properties:
         id:
           type: string
           description: The unique identifier of the session.
-        token:
-          type: string
-          description: The session token, only if cookie authentication is disabled.
         profile:
           $ref: '#/components/schemas/MemberProfile'
           description: The profile information of the user.
