@@ -1,6 +1,22 @@
 [
   {
     "key": [
+      "legacy"
+    ],
+    "type": "boolean",
+    "defaultValue": "true",
+    "description": "enable legacy mode"
+  },
+  {
+    "key": [
+      "logs"
+    ],
+    "type": "boolean",
+    "defaultValue": "false",
+    "description": "save logs to file"
+  },
+  {
+    "key": [
       "display"
     ],
     "type": "string",

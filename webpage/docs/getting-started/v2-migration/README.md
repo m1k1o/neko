@@ -4,6 +4,18 @@ sidebar_position: 8
 
 # V2 Migration Guide
 
+Currently, Neko is in compatibility mode, meaning that as soon as a single V2 configuration option is set, the legacy mode is enabled. This approach allows for a smooth transition from V2 to V3, where it does not expose the V2 API for new users but still allows existing users who use the old configuration to continue using it as before.
+
+The legacy mode can be explicitly enabled or disabled by setting the `NEKO_LEGACY` environment variable to `true` or `false`.
+
+:::tip
+You can migrate to a new configuration even if you are using a V2 client. Just make sure to set the `NEKO_LEGACY` environment variable to `true`.
+:::
+
+:::info Built-in Client
+When using Neko in a container with a built-in client, the client will always be compatible with the server regardless of what configuration is used.
+:::
+
 ## Configuration
 
 V3 is compatible with V2 configuration options when legacy support is enabled. You should be able to run V3 with the V2 configuration without any issues.
@@ -14,7 +26,7 @@ In order to migrate from V2 to V3, you need to update the configuration to the n
 
 | **V2 Configuration**                  | **V3 Configuration**                                      |
 |---------------------------------------|-----------------------------------------------------------|
-| `NEKO_LOGS` *removed*                 | `NEKO_LOG_DIR=/path/to/logs`                              |
+| `NEKO_LOGS=true`                      | `NEKO_LOG_DIR=/var/log/neko`, V3 allows specifying the log directory |
 | `NEKO_CERT`                           | `NEKO_SERVER_CERT`                                        |
 | `NEKO_KEY`                            | `NEKO_SERVER_KEY`                                         |
 | `NEKO_BIND`                           | `NEKO_SERVER_BIND`                                        |

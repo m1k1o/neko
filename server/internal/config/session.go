@@ -171,6 +171,8 @@ func (s *Session) Set() {
 }
 
 func (s *Session) SetV2() {
+	enableLegacy := false
+
 	if viper.IsSet("locks") {
 		locks := viper.GetStringSlice("locks")
 		for _, lock := range locks {
@@ -183,18 +185,28 @@ func (s *Session) SetV2() {
 			}
 		}
 		log.Warn().Msg("you are using v2 configuration 'NEKO_LOCKS' which is deprecated, please use 'NEKO_SESSION_LOCKED_CONTROLS' and 'NEKO_SESSION_LOCKED_LOGINS' instead")
+		enableLegacy = true
 	}
 
 	if viper.IsSet("implicit_control") {
 		s.ImplicitHosting = viper.GetBool("implicit_control")
 		log.Warn().Msg("you are using v2 configuration 'NEKO_IMPLICIT_CONTROL' which is deprecated, please use 'NEKO_SESSION_IMPLICIT_HOSTING' instead")
+		enableLegacy = true
 	}
 	if viper.IsSet("control_protection") {
 		s.ControlProtection = viper.GetBool("control_protection")
 		log.Warn().Msg("you are using v2 configuration 'NEKO_CONTROL_PROTECTION' which is deprecated, please use 'NEKO_SESSION_CONTROL_PROTECTION' instead")
+		enableLegacy = true
 	}
 	if viper.IsSet("heartbeat_interval") {
 		s.HeartbeatInterval = viper.GetInt("heartbeat_interval")
 		log.Warn().Msg("you are using v2 configuration 'NEKO_HEARTBEAT_INTERVAL' which is deprecated, please use 'NEKO_SESSION_HEARTBEAT_INTERVAL' instead")
+		enableLegacy = true
+	}
+
+	// set legacy flag if any V2 configuration was used
+	if !viper.IsSet("legacy") && enableLegacy {
+		log.Warn().Msg("legacy configuration is enabled because at least one V2 configuration was used, please migrate to V3 configuration, or set 'NEKO_LEGACY=true' to acknowledge this message")
+		viper.Set("legacy", true)
 	}
 }

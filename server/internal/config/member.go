@@ -142,6 +142,8 @@ func (s *Member) Set() {
 }
 
 func (s *Member) SetV2() {
+	enableLegacy := false
+
 	if viper.IsSet("password") || viper.IsSet("password_admin") {
 		s.Provider = "multiuser"
 		if userPassword := viper.GetString("password"); userPassword != "" {
@@ -155,5 +157,12 @@ func (s *Member) SetV2() {
 			s.Multiuser.AdminPassword = "admin"
 		}
 		log.Warn().Msg("you are using v2 configuration 'NEKO_PASSWORD' and 'NEKO_PASSWORD_ADMIN' which are deprecated, please use 'NEKO_MEMBER_MULTIUSER_USER_PASSWORD' and 'NEKO_MEMBER_MULTIUSER_ADMIN_PASSWORD' with 'NEKO_MEMBER_PROVIDER=multiuser' instead")
+		enableLegacy = true
+	}
+
+	// set legacy flag if any V2 configuration was used
+	if !viper.IsSet("legacy") && enableLegacy {
+		log.Warn().Msg("legacy configuration is enabled because at least one V2 configuration was used, please migrate to V3 configuration, or set 'NEKO_LEGACY=true' to acknowledge this message")
+		viper.Set("legacy", true)
 	}
 }

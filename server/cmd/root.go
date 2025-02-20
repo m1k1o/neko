@@ -81,6 +81,11 @@ func init() {
 		// set root config values
 		rootConfig.Set()
 
+		// legacy if explicitly enabled or if unspecified and legacy config is found
+		if viper.GetBool("legacy") || !viper.IsSet("legacy") {
+			rootConfig.SetV2()
+		}
+
 		//////
 		// logs
 		//////
@@ -159,6 +164,13 @@ func init() {
 
 	if err := rootConfig.Init(root); err != nil {
 		log.Panic().Err(err).Msg("unable to run root command")
+	}
+
+	// legacy if explicitly enabled or if unspecified and legacy config is found
+	if viper.GetBool("legacy") || !viper.IsSet("legacy") {
+		if err := rootConfig.InitV2(root); err != nil {
+			log.Panic().Err(err).Msg("unable to run root command")
+		}
 	}
 
 	root.SetVersionTemplate(neko.Version.Details())

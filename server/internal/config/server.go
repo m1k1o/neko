@@ -128,29 +128,37 @@ func (s *Server) Set() {
 }
 
 func (s *Server) SetV2() {
+	enableLegacy := false
+
 	if viper.IsSet("cert") {
 		s.Cert = viper.GetString("cert")
 		log.Warn().Msg("you are using v2 configuration 'NEKO_CERT' which is deprecated, please use 'NEKO_SERVER_CERT' instead")
+		enableLegacy = true
 	}
 	if viper.IsSet("key") {
 		s.Key = viper.GetString("key")
 		log.Warn().Msg("you are using v2 configuration 'NEKO_KEY' which is deprecated, please use 'NEKO_SERVER_KEY' instead")
+		enableLegacy = true
 	}
 	if viper.IsSet("bind") {
 		s.Bind = viper.GetString("bind")
 		log.Warn().Msg("you are using v2 configuration 'NEKO_BIND' which is deprecated, please use 'NEKO_SERVER_BIND' instead")
+		enableLegacy = true
 	}
 	if viper.IsSet("proxy") {
 		s.Proxy = viper.GetBool("proxy")
 		log.Warn().Msg("you are using v2 configuration 'NEKO_PROXY' which is deprecated, please use 'NEKO_SERVER_PROXY' instead")
+		enableLegacy = true
 	}
 	if viper.IsSet("static") {
 		s.Static = viper.GetString("static")
 		log.Warn().Msg("you are using v2 configuration 'NEKO_STATIC' which is deprecated, please use 'NEKO_SERVER_STATIC' instead")
+		enableLegacy = true
 	}
 	if viper.IsSet("path_prefix") {
 		s.PathPrefix = path.Join("/", path.Clean(viper.GetString("path_prefix")))
 		log.Warn().Msg("you are using v2 configuration 'NEKO_PATH_PREFIX' which is deprecated, please use 'NEKO_SERVER_PATH_PREFIX' instead")
+		enableLegacy = true
 	}
 	if viper.IsSet("cors") {
 		s.CORS = viper.GetStringSlice("cors")
@@ -159,6 +167,13 @@ func (s *Server) SetV2() {
 			s.CORS = []string{"*"}
 		}
 		log.Warn().Msg("you are using v2 configuration 'NEKO_CORS' which is deprecated, please use 'NEKO_SERVER_CORS' instead")
+		enableLegacy = true
+	}
+
+	// set legacy flag if any V2 configuration was used
+	if !viper.IsSet("legacy") && enableLegacy {
+		log.Warn().Msg("legacy configuration is enabled because at least one V2 configuration was used, please migrate to V3 configuration, or set 'NEKO_LEGACY=true' to acknowledge this message")
+		viper.Set("legacy", true)
 	}
 }
 

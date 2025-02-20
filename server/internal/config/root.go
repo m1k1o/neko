@@ -34,8 +34,10 @@ func (Root) Init(cmd *cobra.Command) error {
 		return err
 	}
 
-	// whether legacy configs/api should be enabled (default: true, until v3.1)
-	cmd.PersistentFlags().BoolP("legacy", "l", true, "enable legacy mode")
+	// whether legacy configs and api should be enabled.
+	// - if not specified, it will be automatically enabled if at least one legacy config entry is found.
+	// - if it is specified, it will be enabled/disabled regardless of the presence of legacy config entries.
+	cmd.PersistentFlags().Bool("legacy", true, "enable legacy mode")
 	if err := viper.BindPFlag("legacy", cmd.PersistentFlags().Lookup("legacy")); err != nil {
 		return err
 	}
@@ -80,6 +82,9 @@ func (Root) InitV2(cmd *cobra.Command) error {
 func (s *Root) Set() {
 	s.Config = viper.GetString("config")
 	s.Legacy = viper.GetBool("legacy")
+	if s.Legacy {
+		log.Info().Msg("legacy configuration is enabled")
+	}
 
 	logLevel := viper.GetString("log.level")
 	level, err := zerolog.ParseLevel(logLevel)
@@ -116,6 +121,8 @@ func (s *Root) Set() {
 }
 
 func (s *Root) SetV2() {
+	enableLegacy := false
+
 	if viper.IsSet("logs") {
 		if viper.GetBool("logs") {
 			logs := filepath.Join(".", "logs")
@@ -127,5 +134,12 @@ func (s *Root) SetV2() {
 			s.LogDir = ""
 		}
 		log.Warn().Msg("you are using v2 configuration 'NEKO_LOGS' which is deprecated, please use 'NEKO_LOG_DIR=/path/to/logs' instead")
+		enableLegacy = true
+	}
+
+	// set legacy flag if any V2 configuration was used
+	if !viper.IsSet("legacy") && enableLegacy {
+		log.Warn().Msg("legacy configuration is enabled because at least one V2 configuration was used, please migrate to V3 configuration, or set 'NEKO_LEGACY=true' to acknowledge this message")
+		viper.Set("legacy", true)
 	}
 }

@@ -88,8 +88,8 @@ func (c *serve) Init(cmd *cobra.Command) error {
 		return err
 	}
 
-	// V2 configuration
-	if viper.GetBool("legacy") {
+	// legacy if explicitly enabled or if unspecified and legacy config is found
+	if viper.GetBool("legacy") || !viper.IsSet("legacy") {
 		if err := c.configs.Desktop.InitV2(cmd); err != nil {
 			return err
 		}
@@ -124,7 +124,8 @@ func (c *serve) PreRun(cmd *cobra.Command, args []string) {
 	c.configs.Plugins.Set()
 	c.configs.Server.Set()
 
-	if viper.GetBool("legacy") {
+	// legacy if explicitly enabled or if unspecified and legacy config is found
+	if viper.GetBool("legacy") || !viper.IsSet("legacy") {
 		c.configs.Desktop.SetV2()
 		c.configs.Capture.SetV2()
 		c.configs.WebRTC.SetV2()
