@@ -123,3 +123,86 @@ import configOptions from './help.json';
 <Configuration configOptions={configOptions} />
 
 See the full [V3 configuration reference](/docs/v3/getting-started/configuration/#full-configuration-reference) for more details.
+
+## API
+
+V3 is compatible with the V2 API when legacy support is enabled. There was specifically created a compatibility layer (legacy API) that allows V2 clients to connect to V3. The legacy API is enabled by default, but it can be disabled if needed. In later versions, the legacy API will be removed.
+
+### Authentication
+
+In V2 there was only one authentication provider available, as in V3 called the `multiuser` provider. The API knew based on the provided password (as `?pwd=` query string) if the user is an admin or not.
+
+Since V3 handles authentication differently (see [API documentation](/docs/v3/api/neko-api#authentication)), there has been added `?usr=` query string to the API to specify the username. The password is still provided as `?pwd=` query string. The `?usr=` query string is still optional, if not provided, the API will generate a random username.
+
+For every request in the legacy API, a new user session is created based on the `?usr=&pwd=` query string. The session is destroyed after the API request is completed. So for HTTP API requests, the sessions are short-lived but for WebSocket API requests, the session is kept alive until the WebSocket connection is closed.
+
+Only the `multiuser` provider (or the `noauth` provider) is supported without specifying the `?usr=` query string.
+
+### WebSocket Messages
+
+Since WebSocket messages are not user-facing API, there exists no migration guide for them. When the legacy API is enabled, the user connects to the `/ws` endpoint and is handled by the compatibility layer V2 API. The V3 API is available at the `/api/ws` endpoint.
+
+### WebRTC API
+
+Since the WebRTC API is not user-facing API, there exists no migration guide for it. It has been changed to Big Endian format (previously Little Endian) to allow easier manipulation on the client side. 
+V2 created a new data channel on the client side, V3 creates a new data channel on the server side. That means, the server just listens for a new data channel from the client and accepts it with the legacy API handler. It overwrites the existing V3 data channel with the legacy one.
+
+### HTTP API
+
+The V2 version had a very limited HTTP API, the V3 API is much more powerful and flexible. See the [API documentation](/docs/v3/api/neko-api) for more details.
+
+#### GET `/health`
+
+Migrated to the [Health](/docs/v3/api/healthcheck) endpoint for server health checks.
+
+Returns `200 OK` if the server is running.
+
+#### GET `/stats`
+
+Migrated to the [Stats](/docs/v3/api/stats) endpoint for server statistics and the [List Sessions](/docs/v3/api/sessions-get) endpoint for the session list.
+
+Returns a JSON object with the following structure:
+
+```json
+{
+  // How many connections are currently active
+  "connections": 0,
+  // Who is currently having a session (empty if no one)
+  "host": "<session_id>",
+  // List of currently connected users
+  "members": [
+    {
+      "session_id": "<session_id>",
+      "displayname": "Name",
+      "admin": true,
+      "muted": false,
+    }
+  ],
+  // List of banned IPs and who banned them as a session_id
+  "banned": {
+    "<ip>": "<session_id>"
+  },
+  // List of locked resources and who locked them as a session_id
+  "locked": {
+    "<resource>": "<session_id>"
+  },
+  // Server uptime
+  "server_started_at": "2021-01-01T00:00:00Z",
+  // When was the last admin or user left the session
+  "last_admin_left_at": "2021-01-01T00:00:00Z",
+  "last_user_left_at": "2021-01-01T00:00:00Z",
+  // Whether the control protection or implicit control is enabled
+  "control_protection": false,
+  "implicit_control": false,
+}
+```
+
+#### GET `/screenshot.jpg`
+
+Migrated to the [Screenshot](/docs/v3/api/screen-shot-image) endpoint for taking screenshots.
+
+Returns a screenshot of the desktop as a JPEG image.
+
+#### GET `/file`
+
+The whole functionality of file transfer has been moved to a [File Transfer Plugin](/docs/v3/getting-started/configuration/plugins#file-transfer-plugin).
