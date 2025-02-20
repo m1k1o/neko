@@ -16,6 +16,7 @@ import (
 	"github.com/pion/webrtc/v3"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"github.com/spf13/viper"
 
 	"m1k1o/neko/internal/config"
 	"m1k1o/neko/internal/webrtc/cursor"
@@ -476,15 +477,17 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session) (*webrtc.Sess
 		// new implementation creates a new data channel on server side
 		//
 
-		// handle legacy data channel
-		dc.OnMessage(func(message webrtc.DataChannelMessage) {
-			if err := manager.handleLegacy(logger, message.Data, session); err != nil {
-				logger.Err(err).Msg("data handle failed")
-			}
-		})
+		if viper.GetBool("legacy") {
+			// handle legacy data channel
+			dc.OnMessage(func(message webrtc.DataChannelMessage) {
+				if err := manager.handleLegacy(logger, message.Data, session); err != nil {
+					logger.Err(err).Msg("data handle failed")
+				}
+			})
 
-		// handle legacy data channel
-		peer.dataChannel = dc
+			// handle legacy data channel
+			peer.dataChannel = dc
+		}
 	})
 
 	var once sync.Once
