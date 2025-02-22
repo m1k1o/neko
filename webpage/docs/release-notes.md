@@ -1,7 +1,3 @@
----
-sidebar_position: 1
----
-
 # Release Notes
 
 ## [n.eko v2.9.0](https://github.com/m1k1o/neko/releases/tag/v2.9.0)
