@@ -8,7 +8,7 @@ import type * as OpenApiPlugin from "docusaurus-plugin-openapi-docs";
 
 const config: Config = {
   title: 'n.eko',
-  tagline: 'A self hosted virtual browser that runs in docker',
+  tagline: 'A self hosted virtual browser that runs in docker and uses WebRTC.',
   favicon: 'img/favicon.ico',
 
   // Set the production url of your site here
@@ -73,6 +73,11 @@ const config: Config = {
         src: 'img/logo.png',
       },
       items: [
+        {
+          href: '/#features',
+          label: 'Features',
+          position: 'left',
+        },
         {
           type: 'docSidebar',
           sidebarId: 'docsSidebar',

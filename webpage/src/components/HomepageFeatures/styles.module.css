@@ -5,7 +5,18 @@
   width: 100%;
 }
 
+.featureRow {
+  display: flex;
+  margin: 2rem 0;
+  align-items: center;
+  text-align: left;
+}
+
+.featureRowReverse {
+  flex-direction: row-reverse;
+}
+
 .featureSvg {
-  height: 200px;
-  width: 200px;
+  height: 300px;
+  width: 300px;
 }
