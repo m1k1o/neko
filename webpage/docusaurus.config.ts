@@ -96,8 +96,8 @@ const config: Config = {
           position: 'left',
         },
         {
-          to: 'changelog',
-          label: 'Changelog',
+          to: 'contact',
+          label: 'Contact',
           position: 'left',
         },
         {
