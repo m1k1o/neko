@@ -4,6 +4,8 @@ on:
   pull_request:
     branches:
       - master
+    paths:
+      - server/**
 
 jobs:
   server_build:
@@ -23,6 +25,7 @@ jobs:
           dockerfile: Dockerfile
         - name: bookworm
           dockerfile: Dockerfile.bookworm
+      fail-fast: false
     
     env:
       ARTIFACT_NAME: ${{ matrix.arch.name }}-${{ matrix.variant.name }}-server
@@ -48,7 +51,6 @@ jobs:
           tags: ${{ env.ARTIFACT_NAME }}
           platforms: ${{ matrix.arch.platform }}
           load: true
-          outputs: type=docker
 
       - name: Copy artifacts
         run: |
