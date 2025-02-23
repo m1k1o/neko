@@ -1,0 +1,23 @@
+name: Test Server Build
+
+on:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  server_test:
+    name: Test Server Build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./server

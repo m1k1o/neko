@@ -5,15 +5,11 @@ on:
     branches:
       - master
 
-defaults:
-  run:
-    shell: bash
-    working-directory: ./website
-
 jobs:
-  website_build:
+  webpage_build:
     name: Build Docusaurus
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
         with:
@@ -22,20 +18,24 @@ jobs:
         with:
           node-version: 18
           cache: npm
+          cache-dependency-path: webpage/package-lock.json
 
       - name: Install dependencies
+        working-directory: ./webpage
         run: npm ci
-      - name: Build website
+      - name: Build webpage
+        working-directory: ./webpage
         run: npm run build
 
       - name: Upload Build Artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: build
+          artifact-name: github-pages
+          path: ./webpage/build
 
-  website_deploy:
+  webpage_deploy:
     name: Deploy to GitHub Pages
-    needs: website_build
+    needs: webpage_build
 
     # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
     permissions:

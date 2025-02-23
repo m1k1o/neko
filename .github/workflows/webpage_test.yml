@@ -1,19 +1,15 @@
-name: Test Website Build
+name: Test Webpage Build
 
 on:
   pull_request:
     branches:
       - master
 
-defaults:
-  run:
-    shell: bash
-    working-directory: ./website
-
 jobs:
-  website_test:
-    name: Test Website Build
+  webpage_test:
+    name: Test Webpage Build
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
         with:
@@ -22,8 +18,11 @@ jobs:
         with:
           node-version: 18
           cache: npm
+          cache-dependency-path: webpage/package-lock.json
 
       - name: Install dependencies
+        working-directory: ./webpage
         run: npm ci
-      - name: Build website
+      - name: Build webpage
+        working-directory: ./webpage
         run: npm run build
