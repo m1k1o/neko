@@ -20,6 +20,7 @@ const config: Config = {
   // GitHub pages deployment config.
   organizationName: 'm1k1o',
   projectName: 'neko',
+  trailingSlash: false,
 
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
@@ -73,11 +74,6 @@ const config: Config = {
         src: 'img/logo.png',
       },
       items: [
-        {
-          href: '/#features',
-          label: 'Features',
-          position: 'left',
-        },
         {
           type: 'docSidebar',
           sidebarId: 'docsSidebar',

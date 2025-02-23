@@ -121,8 +121,8 @@ function Feature({title, Svg, description, isEven}: FeatureItem) {
 export default function HomepageFeatures(): ReactNode {
   return (
     <section className={styles.features}>
-      <div className="container">
-        <h1 id="features">Features</h1>
+      <div id="features" className="container">
+        <h1 className={"text--center"}>Features</h1>
         {FeatureList.map((props, idx) => (
           <Feature key={idx} {...props} />
         ))}
