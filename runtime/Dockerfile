@@ -13,7 +13,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN set -eux; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
-        wget ca-certificates supervisor \
+        wget ca-certificates python2 supervisor \
         pulseaudio dbus-x11 xserver-xorg-video-dummy \
         libcairo2 libxcb1 libxrandr2 libxv1 libopus0 libvpx6 \
         #
@@ -26,11 +26,13 @@ RUN set -eux; \
         # gst
         gstreamer1.0-plugins-base gstreamer1.0-plugins-good \
         gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly \
-        gstreamer1.0-pulseaudio; \
+        gstreamer1.0-pulseaudio gstreamer1.0-omx; \
+    #
     # install libxcvt0 (not available in debian:bullseye)
-    wget http://ftp.de.debian.org/debian/pool/main/libx/libxcvt/libxcvt0_0.1.2-1_amd64.deb; \
-    apt-get install  --no-install-recommends ./libxcvt0_0.1.2-1_amd64.deb; \
-    rm ./libxcvt0_0.1.2-1_amd64.deb; \
+    ARCH=$(dpkg --print-architecture); \
+    wget http://ftp.de.debian.org/debian/pool/main/libx/libxcvt/libxcvt0_0.1.2-1_${ARCH}.deb; \
+    apt-get install --no-install-recommends ./libxcvt0_0.1.2-1_${ARCH}.deb; \
+    rm ./libxcvt0_0.1.2-1_${ARCH}.deb; \
     #
     # create a non-root user
     groupadd --gid $USER_GID $USERNAME; \

@@ -1,44 +1,64 @@
-name: Create and publish a Docker image
+name: Build and Publish Server Artifacts
 
-on: workflow_dispatch
-#  push:
-#    branches:
-#      - 'master'
-#    tags:
-#      - 'v*'
-
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+on:
+  pull_request:
+    branches:
+      - master
 
 jobs:
-  build-and-push-image:
+  server_build:
+    name: Build and Publish Server Artifacts
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
+    strategy:
+      matrix:
+        arch:
+        - name: amd64
+          platform: linux/amd64
+        - name: arm64
+          platform: linux/arm64
+        - name: armv7
+          platform: linux/arm/v7
+        variant:
+        - name: bullseye
+          dockerfile: Dockerfile
+        - name: bookworm
+          dockerfile: Dockerfile.bookworm
+    
+    env:
+      ARTIFACT_NAME: ${{ matrix.arch.name }}-${{ matrix.variant.name }}-server
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
-
-      - name: Log in to the Container registry
-        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+        uses: actions/checkout@v4
         with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
 
-      - name: Extract metadata (tags, labels) for Docker
-        id: meta
-        uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
 
-      - name: Build and push Docker image
-        uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        id: build
+        uses: docker/build-push-action@v6
         with:
           context: ./server/
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          file: ./server/${{ matrix.variant.dockerfile }}
+          tags: ${{ env.ARTIFACT_NAME }}
+          platforms: ${{ matrix.arch.platform }}
+          load: true
+          outputs: type=docker
+
+      - name: Copy artifacts
+        run: |
+          container_id=$(docker create ${{ env.ARTIFACT_NAME }})
+          mkdir -p artifacts/${{ matrix.arch.name }}-${{ matrix.variant.name }}
+          docker cp $container_id:/src/bin/. artifacts/${{ matrix.arch.name }}-${{ matrix.variant.name }}/
+          docker rm $container_id
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: artifacts/${{ matrix.arch.name }}-${{ matrix.variant.name }}
