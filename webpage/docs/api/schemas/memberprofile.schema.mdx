@@ -1,0 +1,33 @@
+---
+id: memberprofile
+title: "MemberProfile"
+description: ""
+sidebar_label: "MemberProfile"
+hide_title: true
+hide_table_of_contents: true
+schema: true
+sample: {"name":"string","is_admin":true,"can_login":true,"can_connect":true,"can_watch":true,"can_host":true,"can_share_media":true,"can_access_clipboard":true,"sends_inactive_cursor":true,"can_see_inactive_cursors":true,"plugins":{}}
+custom_edit_url: null
+---
+
+import Schema from "@theme/Schema";
+import Heading from "@theme/Heading";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"MemberProfile"}
+>
+</Heading>
+
+
+
+
+
+<Schema
+  schema={{"x-tags":["members"],"type":"object","properties":{"name":{"type":"string","description":"The name of the member."},"is_admin":{"type":"boolean","description":"Indicates if the member is an admin."},"can_login":{"type":"boolean","description":"Indicates if the member can log in."},"can_connect":{"type":"boolean","description":"Indicates if the member can connect."},"can_watch":{"type":"boolean","description":"Indicates if the member can watch."},"can_host":{"type":"boolean","description":"Indicates if the member can host."},"can_share_media":{"type":"boolean","description":"Indicates if the member can share media."},"can_access_clipboard":{"type":"boolean","description":"Indicates if the member can access the clipboard."},"sends_inactive_cursor":{"type":"boolean","description":"Indicates if the member sends inactive cursor."},"can_see_inactive_cursors":{"type":"boolean","description":"Indicates if the member can see inactive cursors."},"plugins":{"type":"object","additionalProperties":true,"description":"Additional plugin settings."}},"title":"MemberProfile"}}
+  schemaType={"response"}
+>
+  
+</Schema>
+            

@@ -1,0 +1,96 @@
+      --capture.audio.codec string                    audio codec to be used (default "opus")
+      --capture.audio.device string                   pulseaudio device to capture (default "audio_output.monitor")
+      --capture.audio.pipeline string                 gstreamer pipeline used for audio streaming
+      --capture.broadcast.audio_bitrate int           broadcast audio bitrate in KB/s (default 128)
+      --capture.broadcast.autostart                   automatically start broadcasting when neko starts and broadcast_url is set (default true)
+      --capture.broadcast.pipeline string             gstreamer pipeline used for broadcasting
+      --capture.broadcast.preset string               broadcast speed preset for h264 encoding (default "veryfast")
+      --capture.broadcast.url string                  initial URL for broadcasting, setting this value will automatically start broadcasting
+      --capture.broadcast.video_bitrate int           broadcast video bitrate in KB/s (default 4096)
+      --capture.microphone.device string              pulseaudio device used for microphone (default "audio_input")
+      --capture.microphone.enabled                    enable microphone stream (default true)
+      --capture.screencast.enabled                    enable screencast
+      --capture.screencast.pipeline string            gstreamer pipeline used for screencasting
+      --capture.screencast.quality string             screencast JPEG quality (default "60")
+      --capture.screencast.rate string                screencast frame rate (default "10/1")
+      --capture.video.codec string                    video codec to be used (default "vp8")
+      --capture.video.display string                  X display to capture
+      --capture.video.ids strings                     ordered list of video ids
+      --capture.video.pipelines string                pipelines config in JSON used for video streaming (default "[]")
+      --capture.webcam.device string                  v4l2sink device used for webcam (default "/dev/video0")
+      --capture.webcam.enabled                        enable webcam stream
+      --capture.webcam.height int                     webcam stream height (default 720)
+      --capture.webcam.width int                      webcam stream width (default 1280)
+      --desktop.display string                        X display to use for desktop sharing
+      --desktop.file_chooser_dialog                   whether to handle file chooser dialog externally
+      --desktop.input.enabled                         whether custom xf86 input driver should be used to handle touchscreen (default true)
+      --desktop.input.socket string                   socket path for custom xf86 input driver connection (default "/tmp/xf86-input-neko.sock")
+      --desktop.screen string                         default screen size and framerate (default "1280x720@30")
+      --desktop.unminimize                            automatically unminimize window when it is minimized (default true)
+      --desktop.upload_drop                           whether drop upload is enabled (default true)
+      --member.file.hash                              member file provider: whether to hash passwords using sha256 (recommended) (default true)
+      --member.file.path string                       member file provider: storage path
+      --member.multiuser.admin_password string        member multiuser provider: admin password (default "admin")
+      --member.multiuser.admin_profile string         member multiuser provider: admin profile in JSON format (default "{}")
+      --member.multiuser.user_password string         member multiuser provider: user password (default "neko")
+      --member.multiuser.user_profile string          member multiuser provider: user profile in JSON format (default "{}")
+      --member.object.users string                    member object provider: users in JSON format (default "[]")
+      --member.provider string                        choose member provider (default "multiuser")
+      --plugins.dir string                            path to neko plugins to load (default "./bin/plugins")
+      --plugins.enabled                               load plugins in runtime
+      --plugins.required                              if true, neko will exit if there is an error when loading a plugin
+      --server.bind string                            address/port/socket to serve neko (default "127.0.0.1:8080")
+      --server.cert string                            path to the SSL cert used to secure the neko server
+      --server.cors strings                           list of allowed origins for CORS, if empty CORS is disabled, if '*' is present all origins are allowed
+      --server.key string                             path to the SSL key used to secure the neko server
+      --server.metrics                                enable prometheus metrics available at /metrics (default true)
+      --server.path_prefix string                     path prefix for HTTP requests (default "/")
+      --server.pprof                                  enable pprof endpoint available at /debug/pprof
+      --server.proxy                                  trust reverse proxy headers
+      --server.static string                          path to neko client files to serve
+      --session.api_token string                      API token for interacting with external services
+      --session.control_protection                    users can gain control only if at least one admin is in the room
+      --session.cookie.domain string                  domain of the cookie
+      --session.cookie.enabled                        whether cookies authentication should be enabled (default true)
+      --session.cookie.expiration duration            expiration of the cookie (default 24h0m0s)
+      --session.cookie.http_only                      use http only cookies (default true)
+      --session.cookie.name string                    name of the cookie that holds token (default "NEKO_SESSION")
+      --session.cookie.path string                    path of the cookie
+      --session.cookie.secure                         use secure cookies (default true)
+      --session.file string                           if sessions should be stored in a file, otherwise they will be stored only in memory
+      --session.heartbeat_interval int                interval in seconds for sending heartbeat messages (default 120)
+      --session.implicit_hosting                      allow implicit control switching (default true)
+      --session.inactive_cursors                      show inactive cursors on the screen
+      --session.locked_controls                       whether controls should be locked for users initially
+      --session.locked_logins                         whether logins should be locked for users initially
+      --session.merciful_reconnect                    allow reconnecting to websocket even if previous connection was not closed (default true)
+      --session.private_mode                          whether private mode should be enabled initially
+      --webrtc.epr string                             limits the pool of ephemeral ports that ICE UDP connections can allocate from
+      --webrtc.estimator.debug                        enables debug logging for the bandwidth estimator
+      --webrtc.estimator.diff_threshold float         how bigger the difference between estimated and stream bitrate must be to trigger upgrade/downgrade (default 0.15)
+      --webrtc.estimator.downgrade_backoff duration   how long to wait before downgrading again after previous downgrade (default 10s)
+      --webrtc.estimator.enabled                      enables the bandwidth estimator
+      --webrtc.estimator.initial_bitrate int          initial bitrate for the bandwidth estimator (default 1000000)
+      --webrtc.estimator.passive                      passive estimator mode, when it does not switch pipelines, only estimates
+      --webrtc.estimator.read_interval duration       how often to read and process bandwidth estimation reports (default 2s)
+      --webrtc.estimator.stable_duration duration     how long to wait for stable connection (upward or neutral trend) before upgrading (default 12s)
+      --webrtc.estimator.stalled_duration duration    how long to wait for stalled bandwidth estimation before downgrading (default 24s)
+      --webrtc.estimator.unstable_duration duration   how long to wait for stalled connection (neutral trend with low bandwidth) before downgrading (default 6s)
+      --webrtc.estimator.upgrade_backoff duration     how long to wait before upgrading again after previous upgrade (default 5s)
+      --webrtc.icelite                                configures whether or not the ICE agent should be a lite agent
+      --webrtc.iceservers.backend urls                Backend only STUN and TURN servers in JSON format with urls, `username` and `credential` keys (default "[]")
+      --webrtc.iceservers.frontend urls               Frontend only STUN and TURN servers in JSON format with urls, `username` and `credential` keys (default "[]")
+      --webrtc.icetrickle                             configures whether cadidates should be sent asynchronously using Trickle ICE (default true)
+      --webrtc.ip_retrieval_url string                URL address used for retrieval of the external IP address (default "https://checkip.amazonaws.com")
+      --webrtc.nat1to1 strings                        sets a list of external IP addresses of 1:1 (D)NAT and a candidate type for which the external IP address is used
+      --webrtc.tcpmux int                             single TCP mux port for all peers
+      --webrtc.udpmux int                             single UDP mux port for all peers, replaces EPR
+
+Global Flags:
+  -c, --config string      configuration file path
+  -d, --debug              enable debug mode
+      --log.dir string     logging directory to store logs
+      --log.json           logs in JSON format
+      --log.level string   set log level (trace, debug, info, warn, error, fatal, panic, disabled) (default "info")
+      --log.nocolor        no ANSI colors in non-JSON output
+      --log.time string    time format used in logs (unix, unixms, unixmicro) (default "unix")
