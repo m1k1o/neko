@@ -11,6 +11,7 @@
         <textarea
           ref="overlay"
           class="overlay"
+          spellcheck="false"
           tabindex="0"
           data-gramm="false"
           :style="{ pointerEvents: hosting ? 'auto' : 'none' }"
