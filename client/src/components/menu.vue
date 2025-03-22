@@ -60,7 +60,7 @@
 </style>
 
 <script lang="ts">
-  import { Component, Vue } from 'vue-property-decorator'
+  import { Component, Vue, Watch } from 'vue-property-decorator'
   import { messages } from '~/locale'
 
   @Component({ name: 'neko-menu' })
@@ -77,7 +77,17 @@
       this.$accessor.client.toggleAbout()
     }
 
+    @Watch('$i18n.locale')
+    onLanguageChange(newLang: string) {
+      localStorage.setItem('neko_language', newLang)
+    }
+
     mounted() {
+      const savedLang = localStorage.getItem('neko_language')
+      if (savedLang && this.langs.includes(savedLang)) {
+        this.$i18n.locale = savedLang
+      }
+
       const default_lang = new URL(location.href).searchParams.get('lang')
       if (default_lang && this.langs.includes(default_lang)) {
         this.$i18n.locale = default_lang
