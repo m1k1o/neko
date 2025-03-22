@@ -1,7 +1,7 @@
 openapi: 3.0.0
 
 info:
-  title: Neko API
+  title: Neko API Reference
   version: "3.0.0"
   description: |
     Neko uses WebRTC and WebSocket besides REST API to provide real-time video streaming, interactive collaboration, and remote desktop functionality.

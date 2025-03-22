@@ -29,7 +29,10 @@
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
 }
 
-/* Sidebar Method labels */
+/*
+ * Custom CSS for OpenAPI documentation
+ */
+
 .api-method>.menu__link {
   align-items: center;
   justify-content: start;
