@@ -62,6 +62,7 @@
 <script lang="ts">
   import { Component, Vue, Watch } from 'vue-property-decorator'
   import { messages } from '~/locale'
+  import { set } from '~/utils/localstorage'
 
   @Component({ name: 'neko-menu' })
   export default class extends Vue {
@@ -79,15 +80,10 @@
 
     @Watch('$i18n.locale')
     onLanguageChange(newLang: string) {
-      localStorage.setItem('neko_language', newLang)
+      set('lang', newLang)
     }
 
     mounted() {
-      const savedLang = localStorage.getItem('neko_language')
-      if (savedLang && this.langs.includes(savedLang)) {
-        this.$i18n.locale = savedLang
-      }
-
       const default_lang = new URL(location.href).searchParams.get('lang')
       if (default_lang && this.langs.includes(default_lang)) {
         this.$i18n.locale = default_lang

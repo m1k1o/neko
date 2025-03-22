@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import VueI18n from 'vue-i18n'
 import { messages } from '~/locale'
+import { get } from '~/utils/localstorage'
 
 Vue.use(VueI18n)
 
@@ -22,11 +23,8 @@ function detectBrowserLanguage(): string {
   return 'en'
 }
 
-const storedLang = localStorage.getItem('neko_language')
-const defaultLang = storedLang ?? detectBrowserLanguage()
-
 export const i18n = new VueI18n({
-  locale: defaultLang,
+  locale: get<string>('lang', detectBrowserLanguage()),
   fallbackLocale: 'en',
   messages,
 })
