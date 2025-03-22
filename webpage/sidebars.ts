@@ -58,6 +58,7 @@ const sidebars: SidebarsConfig = {
       collapsible: false,
       items: [
         'faq',
+        'troubleshooting',
         'release-notes',
         'roadmap',
       ]

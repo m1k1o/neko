@@ -1,7 +1,3 @@
----
-sidebar_position: 4
----
-
 # Troubleshooting
 
 Neko UI loads, but you don't see the screen, and it gives you a `connection timeout` or `disconnected` error?
