@@ -5,11 +5,12 @@ import { get } from '~/utils/localstorage'
 
 Vue.use(VueI18n)
 
+const fallbackLocale = 'en'
+
 function detectBrowserLanguage(): string {
   const browserLang = navigator.language.toLowerCase()
 
   const supportedLangs = Object.keys(messages)
-  console.log(supportedLangs)
   if (supportedLangs.includes(browserLang)) {
     return browserLang
   }
@@ -20,11 +21,11 @@ function detectBrowserLanguage(): string {
     return matchingLang
   }
 
-  return 'en'
+  return fallbackLocale
 }
 
 export const i18n = new VueI18n({
   locale: get<string>('lang', detectBrowserLanguage()),
-  fallbackLocale: 'en',
+  fallbackLocale,
   messages,
 })
