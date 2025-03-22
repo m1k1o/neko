@@ -59,7 +59,7 @@ See the V3 configuration options for the [WebRTC Video](/docs/v3/getting-started
 | `NEKO_MAX_FPS`                        | **removed**, use custom pipeline instead                  |
 
 
-:::warning
+:::warning Limitation
 V2 did not have client-side cursor support, the cursor was always part of the video stream. In V3, the cursor is sent separately from the video stream. Therefore, when using legacy configuration, there will be two video streams created, one with the cursor (for V2 clients) and one without the cursor (for V3 clients). Please consider using new configuration options if this is not the desired behavior.
 :::
 
@@ -107,7 +107,7 @@ See the V3 configuration options for the [Authentication](/docs/v3/getting-start
 
 In order for the legacy authentication to work, you need to set [Multi-user](http://localhost:3000/docs/v3/getting-started/configuration/authentication#multi-user-provider).
 
-:::warning
+:::warning Limitation
 V2 clients might not be compatible with any other authentication provider than the `multiuser`.
 :::
 
@@ -146,7 +146,9 @@ In V2 there was only one authentication provider available, as in V3 called the 
 
 Since V3 handles authentication differently (see [API documentation](/docs/v3/api/neko-api#authentication)), there has been added `?usr=` query string to the API to specify the username. The password is still provided as `?pwd=` query string. The `?usr=` query string is still optional, if not provided, the API will generate a random username.
 
+:::warning Limitation
 For every request in the legacy API, a new user session is created based on the `?usr=&pwd=` query string. The session is destroyed after the API request is completed. So for HTTP API requests, the sessions are short-lived but for WebSocket API requests, the session is kept alive until the WebSocket connection is closed.
+:::
 
 Only the `multiuser` provider (or the `noauth` provider) is supported without specifying the `?usr=` query string.
 
@@ -218,3 +220,9 @@ Returns a screenshot of the desktop as a JPEG image.
 #### GET `/file`
 
 The whole functionality of file transfer has been moved to a [File Transfer Plugin](/docs/v3/getting-started/configuration/plugins#file-transfer-plugin).
+
+## Limitations
+
+In v2, locks and muted users were managed using a simple map that tracked who set the lock and what was locked. In v3, locks are now implemented as setting options and no longer store the `session_id` of the user who applied the lock. As a result, if a client refreshes the page or reconnects, the lock information is lost, and the user who set the lock is displayed as `Somebody`.
+
+Additionally, when using the legacy API with a v2 client, API calls occur in a different order than expected. The client first retrieves the session list before registering the user, meaning the current `session_id` is not known when the session list is fetched. That means, the current user appears as `Somebody` in the session list.
