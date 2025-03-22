@@ -158,6 +158,11 @@ See [neko-apps](https://github.com/m1k1o/neko-apps) repository for more applicat
 
 ## Available Flavors
 
+:::danger Keep in Mind
+Currently the focus is on AMD64 & CPU image (wihout any flavor). So the flavor images might not work as expected.
+:::
+
+
 The following flavors are available for Neko Docker images:
 
 - `arm` - ARM64 and ARMv7 architecture support.
