@@ -1,5 +1,5 @@
 ---
-sidebar_position: 8
+sidebar_position: 3
 ---
 
 # V2 Migration Guide
@@ -43,7 +43,7 @@ See the V3 [configuration options](/docs/v3/getting-started/configuration).
 
 ### WebRTC Video
 
-See the V3 configuration options for the [WebRTC Video](/docs/v3/getting-started/configuration/capture#webrtc-video).
+See the V3 configuration options for the [WebRTC Video](/docs/v3/reference/configuration/capture#webrtc-video).
 
 | **V2 Configuration**                  | **V3 Configuration**                                      |
 |---------------------------------------|-----------------------------------------------------------|
@@ -65,7 +65,7 @@ V2 did not have client-side cursor support, the cursor was always part of the vi
 
 ### WebRTC Audio
 
-See the V3 configuration options for the [WebRTC Audio](/docs/v3/getting-started/configuration/capture#webrtc-audio).
+See the V3 configuration options for the [WebRTC Audio](/docs/v3/reference/configuration/capture#webrtc-audio).
 
 | **V2 Configuration**                  | **V3 Configuration**                                      |
 |---------------------------------------|-----------------------------------------------------------|
@@ -80,7 +80,7 @@ See the V3 configuration options for the [WebRTC Audio](/docs/v3/getting-started
 
 ### Broadcast
 
-See the V3 configuration options for the [Broadcast](/docs/v3/getting-started/configuration/capture#broadcast).
+See the V3 configuration options for the [Broadcast](/docs/v3/reference/configuration/capture#broadcast).
 
 | **V2 Configuration**                  | **V3 Configuration**                                      |
 |---------------------------------------|-----------------------------------------------------------|
@@ -90,7 +90,7 @@ See the V3 configuration options for the [Broadcast](/docs/v3/getting-started/co
 
 ### Desktop
 
-See the V3 configuration options for the [Desktop](/docs/v3/getting-started/configuration/desktop).
+See the V3 configuration options for the [Desktop](/docs/v3/reference/configuration/desktop).
 
 | **V2 Configuration**                  | **V3 Configuration**                                      |
 |---------------------------------------|-----------------------------------------------------------|
@@ -98,14 +98,14 @@ See the V3 configuration options for the [Desktop](/docs/v3/getting-started/conf
 
 ### Authentication
 
-See the V3 configuration options for the [Authentication](/docs/v3/getting-started/configuration/authentication).
+See the V3 configuration options for the [Authentication](/docs/v3/reference/configuration/authentication).
 
 | **V2 Configuration**                  | **V3 Configuration**                                      |
 |---------------------------------------|-----------------------------------------------------------|
 | `NEKO_PASSWORD`                       | `NEKO_MEMBER_MULTIUSER_USER_PASSWORD` with `NEKO_MEMBER_PROVIDER=multiuser` |
 | `NEKO_PASSWORD_ADMIN`                 | `NEKO_MEMBER_MULTIUSER_ADMIN_PASSWORD` with `NEKO_MEMBER_PROVIDER=multiuser` |
 
-In order for the legacy authentication to work, you need to set [Multi-user](http://localhost:3000/docs/v3/getting-started/configuration/authentication#multi-user-provider).
+In order for the legacy authentication to work, you need to set [Multi-user](http://localhost:3000/docs/v3/reference/configuration/authentication#multi-user-provider).
 
 :::warning Limitation
 V2 clients might not be compatible with any other authentication provider than the `multiuser`.
@@ -113,7 +113,7 @@ V2 clients might not be compatible with any other authentication provider than t
 
 ### WebRTC
 
-See the V3 configuration options for the [WebRTC](/docs/v3/getting-started/configuration/webrtc).
+See the V3 configuration options for the [WebRTC](/docs/v3/reference/configuration/webrtc).
 
 | **V2 Configuration**                  | **V3 Configuration**                                      |
 |---------------------------------------|-----------------------------------------------------------|
@@ -134,7 +134,7 @@ import configOptions from './help.json';
 
 <Configuration configOptions={configOptions} />
 
-See the full [V3 configuration reference](/docs/v3/getting-started/configuration/#full-configuration-reference) for more details.
+See the full [V3 configuration reference](/docs/v3/reference/configuration/#full-configuration-reference) for more details.
 
 ## API
 
@@ -144,7 +144,7 @@ V3 is compatible with the V2 API when legacy support is enabled. There was speci
 
 In V2 there was only one authentication provider available, as in V3 called the `multiuser` provider. The API knew based on the provided password (as `?pwd=` query string) if the user is an admin or not.
 
-Since V3 handles authentication differently (see [API documentation](/docs/v3/api/neko-api#authentication)), there has been added `?usr=` query string to the API to specify the username. The password is still provided as `?pwd=` query string. The `?usr=` query string is still optional, if not provided, the API will generate a random username.
+Since V3 handles authentication differently (see [API documentation](/docs/v3/api#authentication)), there has been added `?usr=` query string to the API to specify the username. The password is still provided as `?pwd=` query string. The `?usr=` query string is still optional, if not provided, the API will generate a random username.
 
 :::warning Limitation
 For every request in the legacy API, a new user session is created based on the `?usr=&pwd=` query string. The session is destroyed after the API request is completed. So for HTTP API requests, the sessions are short-lived but for WebSocket API requests, the session is kept alive until the WebSocket connection is closed.
@@ -163,7 +163,7 @@ V2 created a new data channel on the client side, V3 creates a new data channel 
 
 ### HTTP API
 
-The V2 version had a very limited HTTP API, the V3 API is much more powerful and flexible. See the [API documentation](/docs/v3/api/neko-api) for more details.
+The V2 version had a very limited HTTP API, the V3 API is much more powerful and flexible. See the [API documentation](/docs/v3/api) for more details.
 
 #### GET `/health`
 
@@ -219,7 +219,7 @@ Returns a screenshot of the desktop as a JPEG image.
 
 #### GET `/file`
 
-The whole functionality of file transfer has been moved to a [File Transfer Plugin](/docs/v3/getting-started/configuration/plugins#file-transfer-plugin).
+The whole functionality of file transfer has been moved to a [File Transfer Plugin](/docs/v3/reference/configuration/plugins#file-transfer-plugin).
 
 ## Limitations
 

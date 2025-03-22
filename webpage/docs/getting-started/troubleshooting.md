@@ -1,5 +1,5 @@
 ---
-sidebar_position: 6
+sidebar_position: 4
 ---
 
 # Troubleshooting
@@ -155,7 +155,7 @@ Example for pfsense with truecharts docker container:
 - Test externally to confirm it works.
 - Internally you have to access it using `<your-public-ip>:port`
 
-If your router does not support NAT Loopback (NAT Hairpinning), you can use turn servers to overcome this issue. See [more details here](/docs/v3/getting-started/configuration/webrtc#ice-servers) on how to set up a local coturn instance.
+If your router does not support NAT Loopback (NAT Hairpinning), you can use turn servers to overcome this issue. See [more details here](/docs/v3/reference/configuration/webrtc#ice-servers) on how to set up a local coturn instance.
 
 ### Neko works locally, but not externally
 
@@ -163,16 +163,24 @@ Make sure that you are exposing your ports correctly.
 
 If you put a local IP as `NEKO_WEBRTC_NAT1TO1`, external clients try to connect to that IP. But it is unreachable for them because it is your local IP. You must use your public IP address with port forwarding.
 
-## Debug mode
+## Frequently Encountered Errors
 
-To see verbose information from the n.eko server, you can enable debug mode using `NEKO_DEBUG`.
+### Getting a black screen with a cursor, but no browser for Chromium-based browsers
+
+Check if you did not forget to add `cap_add` to your `docker-compose.yaml` file. Make sure that the `shm_size` is set to `2gb` or higher.
 
 ```yaml title="docker-compose.yaml"
 services:
   neko:
-    image: "ghcr.io/m1k1o/neko/firefox:latest"
+    image: "ghcr.io/m1k1o/neko/chromium:latest"
+    # highlight-start
+    cap_add:
+    - SYS_ADMIN
+    # highlight-end
     restart: "unless-stopped"
+    # highlight-start
     shm_size: "2gb"
+    # highlight-end
     ports:
     - "8080:8080"
     - "52000-52100:52000-52100/udp"
@@ -181,14 +189,7 @@ services:
       NEKO_MEMBER_MULTIUSER_USER_PASSWORD: neko
       NEKO_MEMBER_MULTIUSER_ADMIN_PASSWORD: admin
       NEKO_WEBRTC_EPR: 52000-52100
-      # highlight-start
-      NEKO_DEBUG: 1
-      # highlight-end
 ```
-
-Ensure that you have enabled debug mode in the JavaScript console too, in order to see verbose information from the client.
-
-## Frequently Encountered Errors
 
 ### Common server errors
 
@@ -225,10 +226,10 @@ Check if your TCP port is exposed correctly and your reverse proxy is correctly 
 ---
 
 ```
-Getting a black screen with a cursor, but no browser.
+NotAllowedError: play() failed because the user didn't interact with the document first
 ```
 
-Most likely you forgot to add `-cap-add=SYS_ADMIN` when using chromium-based browsers.
+This error occurs when the browser blocks the video from playing because the user has not interacted with the document. You just need to manually click on the play button to start the video.
 
 ### Unrelated server errors
 
@@ -237,6 +238,20 @@ Most likely you forgot to add `-cap-add=SYS_ADMIN` when using chromium-based bro
 ```
 
 This error originates from the browser, that it could not connect to dbus. This does not affect us and can be ignored.
+
+---
+
+```
+I: [pulseaudio] client.c: Created 0 "Native client (UNIX socket client)"
+I: [pulseaudio] protocol-native.c: Client authenticated anonymously.
+I: [pulseaudio] source-output.c: Trying to change sample spec
+I: [pulseaudio] sink.c: Reconfigured successfully
+I: [pulseaudio] source.c: Reconfigured successfully
+I: [pulseaudio] client.c: Freed 0 "neko"
+I: [pulseaudio] protocol-native.c: Connection died.
+```
+
+These are just logs from pulseaudio. Unless you have audio issues, you can ignore them.
 
 ### Broadcast pipeline not working with some ingest servers
 

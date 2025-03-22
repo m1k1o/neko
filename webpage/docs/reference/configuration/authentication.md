@@ -26,7 +26,7 @@ A member profile is a structure that describes the user and what the user is all
 | `can_access_clipboard`     | Whether the user can read and write to the room's clipboard. | boolean |
 | `sends_inactive_cursor`    | Whether the user sends the cursor position even when the user is not hosting the room, this is used to show the cursor of the user to other users. | boolean |
 | `can_see_inactive_cursors` | Whether the user can see the cursor of other users even when they are not hosting the room. | boolean |
-| `plugins`                  | A map of plugin names and their configuration, plugins can use this to store user-specific settings, see the [Plugins Configuration](/docs/v3/getting-started/configuration/plugins) for more information. | object |
+| `plugins`                  | A map of plugin names and their configuration, plugins can use this to store user-specific settings, see the [Plugins Configuration](/docs/v3/reference/configuration/plugins) for more information. | object |
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';

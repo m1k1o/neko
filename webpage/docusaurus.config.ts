@@ -37,7 +37,7 @@ const config: Config = {
         docs: {
           sidebarPath: './sidebars.ts',
           docItemComponent: "@theme/ApiItem", // Derived from docusaurus-theme-openapi
-          editUrl: 'https://github.com/m1k1o/neko/tree/main/docs/',
+          editUrl: 'https://github.com/m1k1o/neko/tree/main/webpage/',
           lastVersion: 'current',
           versions: {
             current: {
@@ -79,12 +79,6 @@ const config: Config = {
           sidebarId: 'docsSidebar',
           position: 'left',
           label: 'Docs',
-        },
-        {
-          type: 'docSidebar',
-          sidebarId: 'apiSidebar',
-          position: 'left',
-          label: 'API',
         },
         {
           to: 'contributing',

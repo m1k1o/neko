@@ -1,9 +1,8 @@
 ---
-title: Overview of Neko
 sidebar_position: 1
 ---
 
-# Overview of Neko
+# Overview
 
 Neko is an open-source self-hosted virtual browser solution that allows multiple users to share a single web browser instance remotely. It is designed for use cases such as collaborative browsing, remote access to web-based applications, and private cloud-based browsing.
 
@@ -31,3 +30,11 @@ Neko runs on various platforms, including:
 - **Raspberry Pi & ARM Devices** – Optimized versions for embedded and low-power hardware.
 
 Explore the documentation to learn how to deploy, configure, and optimize Neko for your use case.
+
+## Next Steps
+
+import DocCardList from '@theme/DocCardList';
+import {useCurrentSidebarCategory} from '@docusaurus/theme-common';
+
+<DocCardList items={useCurrentSidebarCategory().items.filter((item) => item.docId !== 'getting-started/README')} />
+

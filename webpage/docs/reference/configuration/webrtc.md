@@ -155,7 +155,7 @@ WebRTC does not use the HTTP protocol, therefore it is not possible to use nginx
 There exist two types of connections:
 
 - [Ephemeral UDP port range](#ephemeral-udp-port-range): The range of UDP ports that the server uses to establish a connection with the client. Every time a new connection is established, a new port from this range is used. This range should be open on the server's firewall.
-- [UDP/TCP multiplexing](#udptcp-multiplexing): The server can use a single port for multiple connections. This port should be open on the server's firewall.
+- [UDP/TCP multiplexing](#udp-tcp-multiplexing): The server can use a single port for multiple connections. This port should be open on the server's firewall.
 
 ### Ephemeral UDP port range
 
@@ -181,7 +181,7 @@ ports:
 It is important to expose the same ports to the host machine, without any remapping e.g. `49000-49100:59000-59100/udp` instead of `59000-59100:59000-59100/udp`.
 :::
 
-### UDP/TCP multiplexing
+### UDP/TCP multiplexing {#udp-tcp-multiplexing}
 
 The UDP/TCP multiplexing port can be configured using the following configuration:
 
