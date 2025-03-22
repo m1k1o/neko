@@ -19,7 +19,7 @@ const FeatureList: FeatureItem[] = [
     Svg: require('@site/static/img/undraw_low_latency.svg').default,
     description: (
       <>
-        Near real-time streaming with less than 300ms latency thanks to WebRTC. <br />
+        Near real-time streaming with less than 300ms latency thanks to <a href="https://webrtc.org/">WebRTC</a>. <br />
         Smooth video playback and synchronized audio for a seamless experience.
       </>
     ),
@@ -41,9 +41,9 @@ const FeatureList: FeatureItem[] = [
     Svg: require('@site/static/img/undraw_online_media.svg').default,
     description: (
       <>
-        Stream room content live via RTMP to platforms like Twitch, YouTube, and more. <br />
-        The host can manage the RTMP URL and stream key, enabling or disabling the broadcast as needed. <br />
-        Broadcasting can continue even without active participants, allowing for 24/7 streaming.
+        Stream your room's content live to platforms like Twitch, YouTube, and more via RTMP. As the host, you have full
+        control over the stream; set the RTMP URL and stream key, start or stop the broadcast at any time. Even if no
+        participants are online, the stream keeps running, making 24/7 broadcasting effortless.
       </>
     ),
   },
@@ -53,13 +53,9 @@ const FeatureList: FeatureItem[] = [
     Svg: require('@site/static/img/undraw_safe.svg').default,
     description: (
       <>
-        Keep your browser session running even after you close the tab or browser.
-        Resume your session at any time from any device.
-        Ideal for long-running tasks like downloads, uploads, and monitoring. <br /><br />
-        Own a browser with persistent cookies available anywhere.
-        No state is left on the host browser after terminating the connection.
-        Sensitive data like cookies are not transferred - only video is shared.
-        For your ISP, it looks like you are watching a video or having a video call.
+        Keep your browser session alive, no matter where you are. Resume your work from any device without losing your progress.
+        Ideal for long-running tasks like downloads, uploads, and monitoring. No local data is stored; cookies and session data
+        stay protected. For your ISP, it just looks like you're watching a video or on a call, keeping your activity private.
       </>
     ),
   },
@@ -69,11 +65,10 @@ const FeatureList: FeatureItem[] = [
     Svg: require('@site/static/img/undraw_throw_away.svg').default,
     description: (
       <>
-        Use a disposable browser to access websites without leaving any trace.
-        The browser is destroyed after the session ends, leaving no history, cookies, or cache.
-        Ideal for accessing sensitive information or testing websites without affecting your local environment. <br /><br />
-        Mitigates the risk of OS fingerprinting and browser vulnerabilities by running in a container.
-        Use Tor Browser and VPN for additional anonymity.
+        Access websites without leaving a trace. Every session runs in an isolated environment and is destroyed afterward;
+        no history, cookies, or cache left behind. Perfect for handling sensitive information or testing websites without
+        affecting your local machine. Minimize OS fingerprinting and browser exploits by running in a secure container.
+        Need extra privacy? Use Tor Browser and VPN for added anonymity.
       </>
     ),
   },
