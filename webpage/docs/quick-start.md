@@ -1,8 +1,8 @@
 ---
-sidebar_position: 2
+description: A quick guide to get you started with Neko.
 ---
 
-# Quick Start Guide
+# Quick Start
 
 Neko is easy to use and requires no technical expertise to get started. All you need to do is download the Docker image and you're ready to go:
 
@@ -55,7 +55,8 @@ Neko is easy to use and requires no technical expertise to get started. All you 
 Run `nano docker-compose.yaml` to edit the settings, then press `ctrl+x` to exit and save the file.
 :::
 
-## Well-known cloud providers
+## Well-known cloud providers {#providers}
+
 * [Hetzner Cloud](https://www.hetzner.com/cloud)
 * [Digital Ocean](https://www.digitalocean.com/)
 * [Contabo](https://contabo.com/)

@@ -1,8 +1,4 @@
----
-sidebar_position: 4
----
-
-# V2 Migration Guide
+# Migration from V2
 
 Currently, Neko is in compatibility mode, meaning that as soon as a single V2 configuration option is set, the legacy mode is enabled. This approach allows for a smooth transition from V2 to V3, where it does not expose the V2 API for new users but still allows existing users who use the old configuration to continue using it as before.
 
@@ -16,7 +12,7 @@ You can migrate to a new configuration even if you are using a V2 client. Just m
 When using Neko in a container with a built-in client, the client will always be compatible with the server regardless of what configuration is used.
 :::
 
-## Configuration
+## Configuration {#config}
 
 V3 is compatible with V2 configuration options when legacy support is enabled. You should be able to run V3 with the V2 configuration without any issues.
 
@@ -39,11 +35,11 @@ In order to migrate from V2 to V3, you need to update the configuration to the n
 | `NEKO_CONTROL_PROTECTION`             | `NEKO_SESSION_CONTROL_PROTECTION`                         |
 | `NEKO_HEARTBEAT_INTERVAL`             | `NEKO_SESSION_HEARTBEAT_INTERVAL`                         |
 
-See the V3 [configuration options](/docs/v3/getting-started/configuration).
+See the V3 [configuration options](/docs/v3/configuration).
 
-### WebRTC Video
+### WebRTC Video {#config.video}
 
-See the V3 configuration options for the [WebRTC Video](/docs/v3/reference/configuration/capture#webrtc-video).
+See the V3 configuration options for the [WebRTC Video](/docs/v3/configuration/capture#video).
 
 | **V2 Configuration**                  | **V3 Configuration**                                      |
 |---------------------------------------|-----------------------------------------------------------|
@@ -63,9 +59,9 @@ See the V3 configuration options for the [WebRTC Video](/docs/v3/reference/confi
 V2 did not have client-side cursor support, the cursor was always part of the video stream. In V3, the cursor is sent separately from the video stream. Therefore, when using legacy configuration, there will be two video streams created, one with the cursor (for V2 clients) and one without the cursor (for V3 clients). Please consider using new configuration options if this is not the desired behavior.
 :::
 
-### WebRTC Audio
+### WebRTC Audio {#config.audio}
 
-See the V3 configuration options for the [WebRTC Audio](/docs/v3/reference/configuration/capture#webrtc-audio).
+See the V3 configuration options for the [WebRTC Audio](/docs/v3/configuration/capture#audio).
 
 | **V2 Configuration**                  | **V3 Configuration**                                      |
 |---------------------------------------|-----------------------------------------------------------|
@@ -78,9 +74,9 @@ See the V3 configuration options for the [WebRTC Audio](/docs/v3/reference/confi
 | `NEKO_AUDIO`                          | `NEKO_CAPTURE_AUDIO_PIPELINE`                             |
 | `NEKO_AUDIO_BITRATE`                  | **removed**, use custom pipeline instead                  |
 
-### Broadcast
+### Broadcast {#config.broadcast}
 
-See the V3 configuration options for the [Broadcast](/docs/v3/reference/configuration/capture#broadcast).
+See the V3 configuration options for the [Broadcast](/docs/v3/configuration/capture#broadcast).
 
 | **V2 Configuration**                  | **V3 Configuration**                                      |
 |---------------------------------------|-----------------------------------------------------------|
@@ -88,32 +84,32 @@ See the V3 configuration options for the [Broadcast](/docs/v3/reference/configur
 | `NEKO_BROADCAST_URL`                  | `NEKO_CAPTURE_BROADCAST_URL`                              |
 | `NEKO_BROADCAST_AUTOSTART`            | `NEKO_CAPTURE_BROADCAST_AUTOSTART`                        |
 
-### Desktop
+### Desktop {#config.desktop}
 
-See the V3 configuration options for the [Desktop](/docs/v3/reference/configuration/desktop).
+See the V3 configuration options for the [Desktop](/docs/v3/configuration/desktop).
 
 | **V2 Configuration**                  | **V3 Configuration**                                      |
 |---------------------------------------|-----------------------------------------------------------|
 | `NEKO_SCREEN`                         | `NEKO_DESKTOP_SCREEN`                                     |
 
-### Authentication
+### Authentication {#config.auth}
 
-See the V3 configuration options for the [Authentication](/docs/v3/reference/configuration/authentication).
+See the V3 configuration options for the [Authentication](/docs/v3/configuration/authentication).
 
 | **V2 Configuration**                  | **V3 Configuration**                                      |
 |---------------------------------------|-----------------------------------------------------------|
 | `NEKO_PASSWORD`                       | `NEKO_MEMBER_MULTIUSER_USER_PASSWORD` with `NEKO_MEMBER_PROVIDER=multiuser` |
 | `NEKO_PASSWORD_ADMIN`                 | `NEKO_MEMBER_MULTIUSER_ADMIN_PASSWORD` with `NEKO_MEMBER_PROVIDER=multiuser` |
 
-In order for the legacy authentication to work, you need to set [Multi-user](http://localhost:3000/docs/v3/reference/configuration/authentication#multi-user-provider).
+In order for the legacy authentication to work, you need to set [Multi-user](http://localhost:3000/docs/v3/configuration/authentication#member.multiuser).
 
 :::warning Limitation
 V2 clients might not be compatible with any other authentication provider than the `multiuser`.
 :::
 
-### WebRTC
+### WebRTC {#config.webrtc}
 
-See the V3 configuration options for the [WebRTC](/docs/v3/reference/configuration/webrtc).
+See the V3 configuration options for the [WebRTC](/docs/v3/configuration/webrtc).
 
 | **V2 Configuration**                  | **V3 Configuration**                                      |
 |---------------------------------------|-----------------------------------------------------------|
@@ -125,7 +121,7 @@ See the V3 configuration options for the [WebRTC](/docs/v3/reference/configurati
 | `NEKO_IPFETCH`                        | `NEKO_WEBRTC_IP_RETRIEVAL_URL`                            |
 | `NEKO_EPR`                            | `NEKO_WEBRTC_EPR`                                         |
 
-### Full V2 Configuration Reference
+### Full V2 Configuration Reference {#config.full}
 
 Here is a full list of all the configuration options available in Neko V2 that are still available in Neko V3 with legacy support enabled.
 
@@ -134,13 +130,13 @@ import configOptions from './help.json';
 
 <Configuration configOptions={configOptions} />
 
-See the full [V3 configuration reference](/docs/v3/reference/configuration/#full-configuration-reference) for more details.
+See the full [V3 configuration reference](/docs/v3/configuration/#full) for more details.
 
-## API
+## API {#api}
 
 V3 is compatible with the V2 API when legacy support is enabled. There was specifically created a compatibility layer (legacy API) that allows V2 clients to connect to V3. The legacy API is enabled by default, but it can be disabled if needed. In later versions, the legacy API will be removed.
 
-### Authentication
+### Authentication {#api.auth}
 
 In V2 there was only one authentication provider available, as in V3 called the `multiuser` provider. The API knew based on the provided password (as `?pwd=` query string) if the user is an admin or not.
 
@@ -152,26 +148,26 @@ For every request in the legacy API, a new user session is created based on the 
 
 Only the `multiuser` provider (or the `noauth` provider) is supported without specifying the `?usr=` query string.
 
-### WebSocket Messages
+### WebSocket Messages {#api.ws}
 
 Since WebSocket messages are not user-facing API, there exists no migration guide for them. When the legacy API is enabled, the user connects to the `/ws` endpoint and is handled by the compatibility layer V2 API. The V3 API is available at the `/api/ws` endpoint.
 
-### WebRTC API
+### WebRTC API {#api.webrtc}
 
 Since the WebRTC API is not user-facing API, there exists no migration guide for it. It has been changed to Big Endian format (previously Little Endian) to allow easier manipulation on the client side. 
 V2 created a new data channel on the client side, V3 creates a new data channel on the server side. That means, the server just listens for a new data channel from the client and accepts it with the legacy API handler. It overwrites the existing V3 data channel with the legacy one.
 
-### HTTP API
+### HTTP API {#api.http}
 
 The V2 version had a very limited HTTP API, the V3 API is much more powerful and flexible. See the [API documentation](/docs/v3/api) for more details.
 
-#### GET `/health`
+#### GET `/health` {#api.http.health}
 
 Migrated to the [Health](/docs/v3/api/healthcheck) endpoint for server health checks.
 
 Returns `200 OK` if the server is running.
 
-#### GET `/stats`
+#### GET `/stats` {#api.http.stats}
 
 Migrated to the [Stats](/docs/v3/api/stats) endpoint for server statistics and the [List Sessions](/docs/v3/api/sessions-get) endpoint for the session list.
 
@@ -211,17 +207,17 @@ Returns a JSON object with the following structure:
 }
 ```
 
-#### GET `/screenshot.jpg`
+#### GET `/screenshot.jpg` {#api.http.screenshot}
 
 Migrated to the [Screenshot](/docs/v3/api/screen-shot-image) endpoint for taking screenshots.
 
 Returns a screenshot of the desktop as a JPEG image.
 
-#### GET `/file`
+#### GET `/file` {#api.http.file}
 
-The whole functionality of file transfer has been moved to a [File Transfer Plugin](/docs/v3/reference/configuration/plugins#file-transfer-plugin).
+The whole functionality of file transfer has been moved to a [File Transfer Plugin](/docs/v3/configuration/plugins#filetransfer).
 
-## Limitations
+## Limitations {#limitations}
 
 In v2, locks and muted users were managed using a simple map that tracked who set the lock and what was locked. In v3, locks are now implemented as setting options and no longer store the `session_id` of the user who applied the lock. As a result, if a client refreshes the page or reconnects, the lock information is lost, and the user who set the lock is displayed as `Somebody`.
 

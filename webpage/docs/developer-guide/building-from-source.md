@@ -6,7 +6,7 @@ sidebar_position: 2
 
 This guide walks you through the process of setting up Neko on your local machine or server.
 
-## Prerequisites
+## Prerequisites {#prerequisites}
 
 Before proceeding, ensure that you have the following installed on your system:
 
@@ -32,7 +32,7 @@ Before proceeding, ensure that you have the following installed on your system:
   sudo apt-get install xdotool xclip libgtk-3-0 libgtk-3-dev libopus0 libvpx6;
   ```
 
-## Step 1: Clone the Repository
+## Step 1: Clone the Repository {#step-1}
 
 Start by cloning the Neko Git repository to your machine:
 
@@ -41,7 +41,7 @@ git clone https://github.com/m1k1o/neko.git
 cd neko
 ```
 
-## Step 2: Build the Frontend
+## Step 2: Build the Frontend {#step-2}
 
 Navigate to the `client` directory and install the dependencies:
 
@@ -51,7 +51,7 @@ npm install;
 npm run build;
 ```
 
-## Step 3: Build the Server
+## Step 3: Build the Server {#step-3}
 
 Navigate to the `server` directory and build the server:
 
@@ -60,7 +60,7 @@ cd server;
 go build;
 ```
 
-## Step 4: Run the Server
+## Step 4: Run the Server {#step-4}
 
 Finally, run the server:
 

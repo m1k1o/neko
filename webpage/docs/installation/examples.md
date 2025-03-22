@@ -1,12 +1,12 @@
 ---
-sidebar_position: 2
+description: Example Docker Compose configurations for Neko.
 ---
 
 # Examples
 
 Here are some examples to get you started with Neko. You can use these examples as a reference to create your own configurations.
 
-## Firefox
+## Firefox {#firefox}
 
 ```yaml title="docker-compose.yaml"
 services:
@@ -28,7 +28,7 @@ services:
       NEKO_WEBRTC_NAT1TO1: <your-IP>
 ```
 
-## Chromium
+## Chromium {#chromium}
 
 ```yaml title="docker-compose.yaml"
 services:
@@ -52,7 +52,7 @@ services:
       NEKO_WEBRTC_NAT1TO1: <your-IP>
 ```
 
-## VLC
+## VLC {#vlc}
 
 ```yaml title="docker-compose.yaml"
 services:
@@ -76,7 +76,7 @@ services:
       NEKO_WEBRTC_NAT1TO1: <your-IP>
 ```
 
-## Raspberry Pi
+## Raspberry Pi {#raspberry-pi}
 
 ```yaml title="config.yaml"
 capture:

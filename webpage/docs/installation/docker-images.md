@@ -1,5 +1,5 @@
 ---
-sidebar_position: 1
+description: List of available Neko Docker images and their flavors.
 ---
 
 # Docker Images
@@ -8,7 +8,7 @@ Neko as a standalone streaming server is available as a Docker image. But that i
 
 The base image is available at [`ghcr.io/m1k1o/neko/base`](https://ghcr.io/m1k1o/neko/base).
 
-## Naming Convention
+## Naming Convention {#naming}
 
 Neko Docker images are available on [GitHub Container Registry (GHCR)](https://github.com/m1k1o?tab=packages&repo_name=neko). The naming convention for Neko Docker images is as follows:
 
@@ -16,8 +16,8 @@ Neko Docker images are available on [GitHub Container Registry (GHCR)](https://g
 ghcr.io/m1k1o/neko/[<flavor>-]<application>:<version>
 ```
 
-- `<flavor>` is the optional flavor of the image, see [Available Flavors](#available-flavors) for more information.
-- `<application>` is the application name or base image, see [Available Applications](#available-applications) for more information.
+- `<flavor>` is the optional flavor of the image, see [Available Flavors](#flavors) for more information.
+- `<application>` is the application name or base image, see [Available Applications](#apps) for more information.
 - `<version>` is the [semantic version](https://semver.org/) of the image from the [GitHub tags](https://github.com/m1k1o/neko/tags). There is always a `latest` tag available.
 
 An alternative registry is also available on [Docker Hub](https://hub.docker.com/r/m1k1o/neko), however, only images without flavor and with the latest version are available there.
@@ -30,11 +30,11 @@ m1k1o/neko:<application>
 You should always prefer the GHCR registry with the ability to use flavors and specific versions.
 :::
 
-## Available Applications
+## Available Applications {#apps}
 
 The following applications are available as Neko Docker images:
 
-### Firefox-based browsers
+### Firefox-based browsers {#firefox}
 
 In comparison to Chromium-based browsers, Firefox-based browsers do not require additional capabilities or a bigger shared memory size to not crash.
 
@@ -44,7 +44,7 @@ In comparison to Chromium-based browsers, Firefox-based browsers do not require 
 | <img src="/img/icons/tor-browser.svg" width="60" height="60" /> | [Tor Browser](https://www.torproject.org/) <br /> A browser designed to access the Tor network for enhanced privacy. | [`ghcr.io/m1k1o/neko/tor-browser`](https://ghcr.io/m1k1o/neko/tor-browser) |
 | <img src="/img/icons/waterfox.svg" width="60" height="60" /> | [Waterfox](https://www.waterfox.net/) <br /> A privacy-focused browser based on Firefox. | [`ghcr.io/m1k1o/neko/waterfox`](https://ghcr.io/m1k1o/neko/waterfox) |
 
-### Chromium-based browsers
+### Chromium-based browsers {#chromium}
 
 There are multiple flavors of Chromium-based browsers available as Neko Docker images.
 
@@ -88,7 +88,7 @@ import TabItem from '@theme/TabItem';
 
 \* requires extra steps to enable DRM, see instructions [here](https://www.reddit.com/r/operabrowser/wiki/opera/linux_widevine_config/). `libffmpeg` is already configured.
 
-### Desktop Environments
+### Desktop Environments {#desktop}
 
 These images feature a full desktop environment where you can install and run multiple applications, use window management, and more. This is useful for people who want to run multiple applications in a single container.
 
@@ -97,7 +97,7 @@ These images feature a full desktop environment where you can install and run mu
 | <img src="/img/icons/xfce.svg" width="60" height="60" /> | [Xfce](https://xfce.org/) <br /> A lightweight desktop environment. | [`ghcr.io/m1k1o/neko/xfce`](https://ghcr.io/m1k1o/neko/xfce) |
 | <img src="/img/icons/kde.svg" width="60" height="60" /> | [KDE Plasma](https://kde.org/plasma-desktop) <br /> A feature-rich desktop environment. | [`ghcr.io/m1k1o/neko/kde`](https://ghcr.io/m1k1o/neko/kde) |
 
-### Other Applications
+### Other Applications {#other}
 
 As it would be impossible to include all possible applications in the repository, a couple of the most popular ones that work well with Neko have been chosen. Custom images can be created by using the base image and installing the desired application.
 
@@ -106,7 +106,7 @@ As it would be impossible to include all possible applications in the repository
 | <img src="/img/icons/remmina.svg" width="60" height="60" /> | [Remmina](https://remmina.org/) <br /> A remote desktop client. | [`ghcr.io/m1k1o/neko/remmina`](https://ghcr.io/m1k1o/neko/remmina) |
 | <img src="/img/icons/vlc.svg" width="60" height="60" /> | [VLC](https://www.videolan.org/vlc/) <br /> A media player. | [`ghcr.io/m1k1o/neko/vlc`](https://ghcr.io/m1k1o/neko/vlc) |
 
-#### Remmina Configuration
+#### Remmina Configuration {#remmina}
 
 To use Remmina with Neko, you can either pass the `REMMINA_URL=<proto>://[<username>[:<password>]@]server[:port]` environment variable (proto being `vnc`, `rdp` or `spice`):
 
@@ -133,7 +133,7 @@ docker run \
   ghcr.io/m1k1o/neko/remmina
 ```
 
-#### VLC Configuration
+#### VLC Configuration {#vlc}
 
 To use VLC with Neko, you can either pass the `VLC_MEDIA=<url>` environment variable:
 
@@ -156,7 +156,7 @@ docker run \
 See [neko-apps](https://github.com/m1k1o/neko-apps) repository for more applications.
 :::
 
-## Available Flavors
+## Available Flavors {#flavors}
 
 :::danger Keep in Mind
 Currently the focus is on AMD64 & CPU image (wihout any flavor). So the flavor images might not work as expected.
@@ -173,7 +173,7 @@ The following flavors are available for Neko Docker images:
 Not all flavors are available for all applications. Since not all applications support ARM architecture or GPU acceleration, the flavors are only available where they make sense.
 :::
 
-### ARM
+### ARM {#arm}
 
 For ARM-based images (like Raspberry Pi - with GPU hardware acceleration, [Oracle Cloud ARM free tier](https://www.oracle.com/cloud/free/)). Currently, not all images are available for ARM, because not all applications are available for ARM. Please use the images below:
 
@@ -185,7 +185,7 @@ For ARM-based images (like Raspberry Pi - with GPU hardware acceleration, [Oracl
 
 The base image is available at [`ghcr.io/m1k1o/neko/arm-base`](https://ghcr.io/m1k1o/neko/arm-base).
 
-### Intel
+### Intel {#intel}
 
 For images with VAAPI GPU hardware acceleration using Intel drivers use:
 
@@ -205,7 +205,7 @@ For images with VAAPI GPU hardware acceleration using Intel drivers use:
 
 The base image is available at [`ghcr.io/m1k1o/neko/intel-base`](https://ghcr.io/m1k1o/neko/intel-base).
 
-### Nvidia
+### Nvidia {#nvidia}
 
 For images with Nvidia GPU hardware acceleration using EGL use:
 

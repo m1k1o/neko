@@ -2,24 +2,24 @@
 
 The roadmap outlines the future development plans for Neko. It is divided into three phases, each focusing on a different aspect of the project.
 
-## Phase 1 - Server migration to V3
+## Phase 1 - Server migration to V3 {#phase-1}
 
 This phase was successfully completed with the release of Neko V3.0.0. The [m1k1o/neko](https://github.com/m1k1o/neko) server was merged with the archived [demodesk/neko](https://github.com/demodesk/neko) server, and the new server was released as V3.0.0. A compatibility layer was added to support V2 clients.
 
-## Phase 2 - Client rewrite to V3
+## Phase 2 - Client rewrite to V3 {#phase-2}
 
 The client rewrite is the next big step in the development of Neko. The V2 client uses Vue2, which reached [end of life](https://v2.vuejs.org/eol/) a long time ago. The new client will be based on Vue3 and will be more modular and easier to maintain.
 
 While the V2 client focused on the user interface, the V3 client will focus on extensibility in the form of components. This means that the client will be able to be loaded seamlessly in any existing application, and the components will be able to be used in any other Vue3 application. For traditional users, the client will still be available as a standalone application with all the known features.
 
-## Phase 3 - Modularization
+## Phase 3 - Modularization {#phase-3}
 
 The V3 client and server will be modularized to allow for easier maintenance and extensibility.
 
 - The client should be split into a library TypeScript component **that does not use Vue.js** or any library and can be imported by any project. It should be as easy to integrate into a custom project as embedding a video player. Similar to how [demodesk/neko-client](https://github.com/demodesk/neko-client) is built, but without Vue.js.
 - The **connection**, **media streaming**, and **control** should be extracted as an interface so that it can be implemented by various protocols, not just WebSockets+WebRTC. That would elevate this project from just a shared virtual environment to basically a video streaming server with built-in tools for feedback and out-of-band communication (such as natively binding to RDP/VNC protocols, controlling drones/robots/PTZ cameras/industrial devices remotely). Since the controlling layer could be just a plugin, it does not need to rely on only keyboard and mouse but would allow plugging in gamepads, joysticks, or even Virtual Reality glasses (anything).
 
-### Connection
+### Connection {#phase-3-connection}
 
 Neko can connect to the backend using multiple channels. Therefore API users should not be exposed to WebSocket internals.
 
@@ -36,7 +36,7 @@ And about connection type:
 - `websocket` - server sends updates to the client using WebSockets.
 - ... others (e.g. MQTT...)
 
-### Media streaming
+### Media streaming {#phase-3-media-streaming}
 
 For media streaming, we implement a similar approach with the following streaming backends:
 - `none` - no media streaming is currently streamed.
@@ -49,7 +49,7 @@ Various media streaming backends can have various features. For example, WebRTC 
 They can be selected based on the user's device capabilities, network conditions, and server capabilities.
 There must be a single interface that all streaming backends must satisfy and it is their only communication channel with the rest of the system.
 
-### Control (Human interface device)
+### Control (Human interface device) {#phase-3-control}
 
 The user can control the target system using various human interface devices. The user can use a keyboard, mouse, gamepad, touch screen, or any other device that can be used to control the system. Custom or virtual devices can be used as well.
 

@@ -43,7 +43,7 @@ function HomepageHeader() {
         <div className={styles.buttons}>
           <Link
             className="button button--secondary button--lg"
-            to="/docs/v3/getting-started/quick-start-guide">
+            to="/docs/v3/quick-start">
             Get started
           </Link>
           <span className={styles.indexCtasGitHubButtonWrapper}>

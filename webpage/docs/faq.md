@@ -1,6 +1,6 @@
 # Frequently Asked Questions
 
-### How to enable debug mode?
+### How to enable debug mode? {#debug-mode}
 
 To see verbose information from the n.eko server, you can enable debug mode using `NEKO_DEBUG`.
 
@@ -27,13 +27,13 @@ And then view the logs using `docker logs -f neko`.
 
 To see verbose information from the n.eko client, you need to visit the developer console in your browser. You can do this by pressing `F12` and then navigating to the `Console` tab.
 
-### How to enable support for Chinese/Japanese/Korean input method?
+### How to enable support for Chinese/Japanese/Korean input method? {#input-method}
 
 There exists an extension [Google Input Tools](https://chrome.google.com/webstore/detail/mclkkofklkfljcocdinagocijmpgbhab) for Chrome that allows you to use Chinese input method.
 
-### How can I embed the Neko desktop into web page without login prompt coming up for viewers?
+### How can I embed the Neko into web page without login prompt coming up for viewers? {#embed}
 
-You can use the following URL to embed the Neko desktop into a web page without login prompt coming up for viewers:
+You can use the following URL to embed the Neko into a web page without login prompt coming up for viewers:
 
 ```
 http://<your-neko-server-ip>:8080/?usr=neko&pwd=neko
@@ -43,17 +43,17 @@ https://stackoverflow.com/questions/15276929/how-to-make-a-video-fullscreen-when
 
 Your iframe needs an attribute: `allowfullscreen="true" webkitallowfullscreen="true" mozallowfullscreen="true"` or more modern `allow="fullscreen *"`. For the second you can remove the star if your iframe has the same origin or replace it with your iframe origin.
 
-### Can I use neko without docker?
+### Can I use neko without docker? {#without-docker}
 
 Yes, you can, but it is not recommended. Neko is based on Debian and uses Xorg and Pulseaudio. Just follow the steps in the Dockerfile to install all dependencies.
 
 However, it is recommend to start with existing system that has GUI with desktop manager, is based on Xorg and uses Pulseaudio (e.g. Ubuntu Desktop 24.04). For that matter you only need to install gstreamer dependencies, configure pulseaudio properly and run neko binary (you don't need to build it from scratch, you can copy it from docker image).
 
-### Why does the clipboard button does not show up?
+### Why does the clipboard button does not show up? {#clipboard-button}
 
 When you are using HTTPS connection and a compatible host browser (currently only Chromium-based browsers) which supports the Clipboard API, the clipboard button will not show up. Instead, you can use the native clipboard functionality of your host browser.
 
-### Why am I unable to install extensions in the Neko browser?
+### Why am I unable to install extensions in the Neko browser? {#extensions}
 
 The browser in Neko uses policies to restrict the installation of extensions. You can either add extensions to the policy file or disable the policy.
 

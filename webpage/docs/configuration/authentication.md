@@ -1,32 +1,33 @@
 ---
-sidebar_position: 1
 description: Configuration related to the Authentication and Sessions in Neko.
 ---
+
+import { Def, Opt } from '@site/src/components/Anchor';
 
 # Authentication
 
 Authentication is split into two modules:
 
-- **[Member Provider](#member-providers)** - handles authentication and authorization of users, can be used to authenticate users against a database, LDAP, or any other system.
-- **[Session Provider](#session-provider)** - handles session management, after the module authenticates the user, it creates a session and handles the session lifecycle.
+- **[Member Provider](#member)** - handles authentication and authorization of users, can be used to authenticate users against a database, LDAP, or any other system.
+- **[Session Provider](#session)** - handles session management, after the module authenticates the user, it creates a session and handles the session lifecycle.
 
-## Member Profile
+## Member Profile {#profile}
 
 A member profile is a structure that describes the user and what the user is allowed to do in the system.
 
 | Field                      | Description | Type |
 |----------------------------|-------------|------|
-| `name`                     | User's name as shown in the UI, must not be unique within the system (not used as an identifier). | string |
-| `is_admin`                 | Whether the user can perform administrative tasks that include managing users, sessions, and settings. | boolean |
-| `can_login`                | Whether the user can log in to the system and use the HTTP API. | boolean |
-| `can_connect`              | Whether the user can connect to the room using the WebSocket API (needs `can_login` to be enabled). | boolean |
-| `can_watch`                | Whether the user can connect to the WebRTC stream and watch the room's audio and video (needs `can_connect` to be enabled). | boolean |
-| `can_host`                 | Whether the user can grab control of the room and control the mouse and keyboard. | boolean |
-| `can_share_media`          | Whether the user can share their webcam and microphone with the room. | boolean |
-| `can_access_clipboard`     | Whether the user can read and write to the room's clipboard. | boolean |
-| `sends_inactive_cursor`    | Whether the user sends the cursor position even when the user is not hosting the room, this is used to show the cursor of the user to other users. | boolean |
-| `can_see_inactive_cursors` | Whether the user can see the cursor of other users even when they are not hosting the room. | boolean |
-| `plugins`                  | A map of plugin names and their configuration, plugins can use this to store user-specific settings, see the [Plugins Configuration](/docs/v3/reference/configuration/plugins) for more information. | object |
+| <Def id="profile.name" />                     | User's name as shown in the UI, must not be unique within the system (not used as an identifier). | string |
+| <Def id="profile.is_admin" />                 | Whether the user can perform administrative tasks that include managing users, sessions, and settings. | boolean |
+| <Def id="profile.can_login" />                | Whether the user can log in to the system and use the HTTP API. | boolean |
+| <Def id="profile.can_connect" />              | Whether the user can connect to the room using the WebSocket API (needs <Opt id="profile.can_login" /> to be enabled). | boolean |
+| <Def id="profile.can_watch" />                | Whether the user can connect to the WebRTC stream and watch the room's audio and video (needs <Opt id="profile.can_connect" /> to be enabled). | boolean |
+| <Def id="profile.can_host" />                 | Whether the user can grab control of the room and control the mouse and keyboard. | boolean |
+| <Def id="profile.can_share_media" />          | Whether the user can share their webcam and microphone with the room. | boolean |
+| <Def id="profile.can_access_clipboard" />     | Whether the user can read and write to the room's clipboard. | boolean |
+| <Def id="profile.sends_inactive_cursor" />    | Whether the user sends the cursor position even when the user is not hosting the room, this is used to show the cursor of the user to other users. | boolean |
+| <Def id="profile.can_see_inactive_cursors" /> | Whether the user can see the cursor of other users even when they are not hosting the room. | boolean |
+| <Def id="profile.plugins" />                  | A map of plugin names and their configuration, plugins can use this to store user-specific settings, see the [Plugins Configuration](/docs/v3/configuration/plugins) for more information. | object |
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -73,11 +74,11 @@ import TabItem from '@theme/TabItem';
   </TabItem>
 </Tabs>
 
-## Member Providers
+## Member Providers {#member}
 
 Member providers are responsible for deciding whether given credentials are valid or not. This validation can either be done against a local database or an external system.
 
-### Multi-User Provider
+### Multi-User Provider {#member.multiuser}
 
 This is the **default provider** that works exactly like the authentication used to work in v2 of neko.
 
@@ -156,7 +157,7 @@ environment:
 ```
 :::
 
-### File Provider
+### File Provider {#member.file}
 
 This provider reads the user's credentials from a file. It is useful for small deployments where you don't want to set up a database or LDAP server and still want to have persistent users.
 
@@ -234,7 +235,7 @@ You can leave the file empty and add users later using the HTTP API.
   ```  
 </details>
 
-### Object Provider
+### Object Provider {#member.object}
 
 This provider is the same as the file provider, but it saves the users only in memory. That means that the users are lost when the server is restarted. However, the default users can be set in the configuration file. The difference from the multi-user provider is that the users are not generated on demand and we define exactly which users with their passwords and profiles are allowed to log in. They cannot be logged in twice with the same username.
 
@@ -291,7 +292,7 @@ member:
 
 </details>
 
-### No-Auth Provider
+### No-Auth Provider {#member.noauth}
 
 This provider allows any user to log in without any authentication. It is useful for testing and development purposes.
 
@@ -304,7 +305,7 @@ member:
 Do not use this provider in production environments unless you know exactly what you are doing. It allows anyone to log in and control neko as an admin.
 :::
 
-## Session Provider
+## Session Provider {#session}
 
 Currently, there are only two providers available for sessions: **memory** and **file**.
 
@@ -319,7 +320,7 @@ session:
 In the future, we plan to add more session providers, such as Redis, PostgreSQL, etc. So the Configuration Options may change.
 :::
 
-## API User
+## API User {#api_token}
 
 The API User is a special user that is used to authenticate the HTTP API requests. It cannot connect to the room, but it can perform administrative tasks. The API User does not have a password but only a token that is used to authenticate the requests. If the token is not set, the API User is disabled.
 
@@ -338,9 +339,9 @@ openssl rand -hex 32
 ```
 :::
 
-## Cookies
+## Cookies {#session.cookie}
 
-The authentication between the client and the server can be done using cookies or the `Authorization` header. The cookies are used by default, but you can disable them by setting the `session.cookie.enabled` to `false`.
+The authentication between the client and the server can be done using cookies or the `Authorization` header. The cookies are used by default, but you can disable them by setting the <Opt id="session.cookie.enabled" /> to `false`.
 
 :::warning
 If you disable the cookies, the token will be sent to the client in the login response and saved in local storage. This is less secure than using cookies, as the token **can be stolen using XSS attacks**. Therefore, it is recommended to use cookies.
@@ -358,12 +359,12 @@ session:
     path: ""
 ```
 
-- `enabled` - Whether the cookies are enabled or not.
-- `name` - Name of the cookie used to store the session.
-- `expiration` - Expiration time of the cookie, use [go duration format](https://pkg.go.dev/time#ParseDuration) (e.g., `24h`, `1h30m`, `60m`).
-- `secure` and `http_only` - Ensures that the cookie is only sent over HTTPS and cannot be accessed by JavaScript, see [MDN Web Docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies#block_access_to_your_cookies) for more information.
-- `domain` and `path` - Define where the cookie is valid, see [MDN Web Docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies#define_where_cookies_are_sent) for more information.
+- <Def id="session.cookie.enabled" /> - Whether the cookies are enabled or not.
+- <Def id="session.cookie.name" /> - Name of the cookie used to store the session.
+- <Def id="session.cookie.expiration" /> - Expiration time of the cookie, use [go duration format](https://pkg.go.dev/time#ParseDuration) (e.g., `24h`, `1h30m`, `60m`).
+- <Def id="session.cookie.secure" /> and <Def id="session.cookie.http_only" /> - Ensures that the cookie is only sent over HTTPS and cannot be accessed by JavaScript, see [MDN Web Docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies#block_access_to_your_cookies) for more information.
+- <Def id="session.cookie.domain" /> and <Def id="session.cookie.path" /> - Define where the cookie is valid, see [MDN Web Docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies#define_where_cookies_are_sent) for more information.
 
 :::info
-The `secure` and `http_only` are set to `true` by default, which means that the cookie is only sent over HTTPS. If you are using HTTP, you should really consider using HTTPS. Only for testing and development purposes should you consider setting it to `false`.
+The <Opt id="session.cookie.secure" /> and <Opt id="session.cookie.http_only" /> are set to `true` by default, which means that the cookie is only sent over HTTPS. If you are using HTTP, you should really consider using HTTPS. Only for testing and development purposes should you consider setting it to `false`.
 :::

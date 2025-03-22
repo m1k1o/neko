@@ -1,7 +1,8 @@
 ---
-sidebar_position: 2
 description: Configuration related to Gstreamer capture in Neko.
 ---
+
+import { Def, Opt } from '@site/src/components/Anchor';
 
 # Audio & Video Capture
 
@@ -9,19 +10,19 @@ This guide will show you how to configure the audio and video capture settings i
 
 Neko uses [Gstreamer](https://gstreamer.freedesktop.org/) to capture and encode audio and video in the following scenarios:
 
-- WebRTC clients use the [Video](#webrtc-video) and [Audio](#webrtc-audio) pipelines to receive the audio and video streams from the server.
+- WebRTC clients use the [Video](#video) and [Audio](#audio) pipelines to receive the audio and video streams from the server.
 - The [Broadcast](#broadcast) feature allows you to broadcast the audio and video to a third-party service using RTMP.
 - The WebRTC Fallback mechanism allows you to capture the display in the form of JPEG images and serve them over HTTP using [Screencast](#screencast).
 - Clients can share their [Webcam](#webcam) and [Microphone](#microphone) with the server using WebRTC.
 
-## WebRTC Video
+## WebRTC Video {#video}
 
 Neko allows you to capture the display and encode it in real-time using Gstreamer. The encoded video is then sent to the client using WebRTC. This allows you to share the display with the client in real-time.
 
 There can exist multiple video pipelines in neko that are referenced by their unique pipeline id. Each video pipeline can have its own configuration settings and clients can either choose which pipeline they want to use or let neko choose the best pipeline for them.
 
 :::info Limitation
-All video pipelines must use the same video codec (defined in the `capture.video.codec` setting).
+All video pipelines must use the same video codec (defined in the <Opt id="video.codec" /> setting).
 :::
 
 The Gstreamer pipeline is started when the first client requests the video stream and is stopped after the last client disconnects.
@@ -38,14 +39,14 @@ capture:
       ...
 ```
 
-- `display` is the name of the [X display](https://www.x.org/wiki/) that you want to capture. If not specified, the environment variable `DISPLAY` will be used.
-- `codec` available codecs are `vp8`, `vp9`, `av1`, `h264`. [Supported video codecs](https://developer.mozilla.org/en-US/docs/Web/Media/Guides/Formats/WebRTC_codecs#supported_video_codecs) are dependent on the WebRTC implementation used by the client, `vp8` and `h264` are supported by all WebRTC implementations.
-- `ids` is a list of pipeline ids that are defined in the `pipelines` section. The first pipeline in the list will be the default pipeline.
-- `pipelines` is a dictionary of pipeline configurations. Each pipeline configuration is defined by a unique pipeline id. They can be defined in two ways: either by building the pipeline dynamically using [Expression-Driven Configuration](#expression-driven-configuration) or by defining the pipeline using a [Gstreamer Pipeline Description](#gstreamer-pipeline-description).
+- <Def id="video.display" /> is the name of the [X display](https://www.x.org/wiki/) that you want to capture. If not specified, the environment variable `DISPLAY` will be used.
+- <Def id="video.codec" /> available codecs are `vp8`, `vp9`, `av1`, `h264`. [Supported video codecs](https://developer.mozilla.org/en-US/docs/Web/Media/Guides/Formats/WebRTC_codecs#supported_video_codecs) are dependent on the WebRTC implementation used by the client, `vp8` and `h264` are supported by all WebRTC implementations.
+- <Def id="video.ids" /> is a list of pipeline ids that are defined in the <Opt id="video.pipelines" /> section. The first pipeline in the list will be the default pipeline.
+- <Def id="video.pipelines" /> is a dictionary of pipeline configurations. Each pipeline configuration is defined by a unique pipeline id. They can be defined in two ways: either by building the pipeline dynamically using [Expression-Driven Configuration](#video.expression) or by defining the pipeline using a [Gstreamer Pipeline Description](#video.pipeline).
 
-### Expression-Driven Configuration
+### Expression-Driven Configuration {#video.expression}
 
-Expression allows you to build the pipeline dynamically based on the current resolution and framerate of the display. Expressions are evaluated using the [gval](https://github.com/PaesslerAG/gval) library. Available variables are `width`, `height`, and `fps` of the display at the time of capture.
+Expression allows you to build the pipeline dynamically based on the current resolution and framerate of the display. Expressions are evaluated using the [gval](https://github.com/PaesslerAG/gval) library. Available variables are <Opt id="video.pipelines.width" />, <Opt id="video.pipelines.height" />, and <Opt id="video.pipelines.fps" /> of the display at the time of capture.
 
 ```yaml title="config.yaml"
 capture:
@@ -64,11 +65,11 @@ capture:
         show_pointer: true
 ```
 
-- `width`, `height`, and `fps` are the expressions that are evaluated to get the stream resolution and framerate. They can be different from the display resolution and framerate if downscaling or upscaling is desired.
-- `gst_prefix` and `gst_suffix` allow you to add custom Gstreamer elements before and after the encoder. Both parameters need to start with `!` and then be followed by the Gstreamer elements.
-- `gst_encoder` is the name of the Gstreamer encoder element, such as `vp8enc` or `x264enc`.
-- `gst_params` are the parameters that are passed to the encoder element specified in `gst_encoder`.
-- `show_pointer` is a boolean value that determines whether the mouse pointer should be captured or not.
+- <Def id="video.pipelines.width" />, <Def id="video.pipelines.height" />, and <Def id="video.pipelines.fps" /> are the expressions that are evaluated to get the stream resolution and framerate. They can be different from the display resolution and framerate if downscaling or upscaling is desired.
+- <Def id="video.pipelines.gst_prefix" /> and <Def id="video.pipelines.gst_suffix" /> allow you to add custom Gstreamer elements before and after the encoder. Both parameters need to start with `!` and then be followed by the Gstreamer elements.
+- <Def id="video.pipelines.gst_encoder" /> is the name of the Gstreamer encoder element, such as `vp8enc` or `x264enc`.
+- <Def id="video.pipelines.gst_params" /> are the parameters that are passed to the encoder element specified in <Opt id="video.pipelines.gst_encoder" />.
+- <Def id="video.pipelines.show_pointer" /> is a boolean value that determines whether the mouse pointer should be captured or not.
 
 <details>
   <summary>Example pipeline configuration</summary>
@@ -150,9 +151,9 @@ import TabItem from '@theme/TabItem';
 
 </details>
 
-### Gstreamer Pipeline Description
+### Gstreamer Pipeline Description {#video.pipeline}
 
-If you want to define the pipeline using a [Gstreamer pipeline description](https://gstreamer.freedesktop.org/documentation/tools/gst-launch.html?gi-language=c#pipeline-description), you can do so by setting the `gst_pipeline` parameter.
+If you want to define the pipeline using a [Gstreamer pipeline description](https://gstreamer.freedesktop.org/documentation/tools/gst-launch.html?gi-language=c#pipeline-description), you can do so by setting the <Def id="video.pipelines.gst_pipeline" /> parameter.
 
 ```yaml title="config.yaml"
 capture:
@@ -251,7 +252,7 @@ See documentation for [ximagesrc](https://gstreamer.freedesktop.org/documentatio
 
 </details>
 
-## WebRTC Audio
+## WebRTC Audio {#audio}
 
 Only one audio pipeline can be defined in neko. The audio pipeline is used to capture and encode audio, similar to the video pipeline. The encoded audio is then sent to the client using WebRTC.
 
@@ -265,9 +266,9 @@ capture:
     pipeline: "<gstreamer_pipeline>"
 ```
 
-- `device` is the name of the [pulseaudio device](https://wiki.archlinux.org/title/PulseAudio/Examples) that you want to capture. If not specified, the default audio device will be used.
-- `codec` available codecs are `opus`, `g722`, `pcmu`, `pcma`. [Supported audio codecs](https://developer.mozilla.org/en-US/docs/Web/Media/Guides/Formats/WebRTC_codecs#supported_audio_codecs) are dependent on the WebRTC implementation used by the client, `opus` is supported by all WebRTC implementations.
-- `pipeline` is the Gstreamer pipeline description that is used to capture and encode audio. You can use `{device}` as a placeholder for the audio device name that will be replaced by the actual device name at runtime.
+- <Def id="audio.device" /> is the name of the [pulseaudio device](https://wiki.archlinux.org/title/PulseAudio/Examples) that you want to capture. If not specified, the default audio device will be used.
+- <Def id="audio.codec" /> available codecs are `opus`, `g722`, `pcmu`, `pcma`. [Supported audio codecs](https://developer.mozilla.org/en-US/docs/Web/Media/Guides/Formats/WebRTC_codecs#supported_audio_codecs) are dependent on the WebRTC implementation used by the client, `opus` is supported by all WebRTC implementations.
+- <Def id="audio.pipeline" /> is the Gstreamer pipeline description that is used to capture and encode audio. You can use `{device}` as a placeholder for the audio device name that will be replaced by the actual device name at runtime.
 
 <details>
   <summary>Example pipeline configuration</summary>
@@ -286,7 +287,7 @@ capture:
 
 </details>
 
-## Broadcast
+## Broadcast {#broadcast}
 
 Neko allows you to broadcast out-of-the-box the display and audio capture to a third-party service. This can be used to broadcast the display and audio to a streaming service like [Twitch](https://www.twitch.tv/) or [YouTube](https://www.youtube.com/), or to a custom RTMP server like [OBS](https://obsproject.com/), [Nginx RTMP module](https://github.com/arut/nginx-rtmp-module), or [MediaMTX](https://github.com/bluenviron/mediamtx).
 
@@ -303,13 +304,13 @@ capture:
     autostart: true
 ```
 
-The default encoder uses `h264` for video and `aac` for audio, muxed in the `flv` container and sent over the `rtmp` protocol. You can change the encoder settings by setting a custom Gstreamer pipeline description in the `pipeline` parameter.
+The default encoder uses `h264` for video and `aac` for audio, muxed in the `flv` container and sent over the `rtmp` protocol. You can change the encoder settings by setting a custom Gstreamer pipeline description in the <Opt id="broadcast.pipeline" /> parameter.
 
-- `audio_bitrate` and `video_bitrate` are the bitrate settings for the default audio and video encoders expressed in kilobits per second.
-- `preset` is the encoding speed preset for the default video encoder. See available presets [here](https://gstreamer.freedesktop.org/documentation/x264/index.html?gi-language=c#GstX264EncPreset).
-- `pipeline` when set, encoder settings above are ignored and the custom Gstreamer pipeline description is used. In the pipeline, you can use `{display}`, `{device}` and `{url}` as placeholders for the X display name, pulseaudio audio device name, and broadcast URL respectively.
-- `url` is the URL of the RTMP server where the broadcast will be sent. This can be set later using the API if the URL is not known at the time of configuration or is expected to change.
-- `autostart` is a boolean value that determines whether the broadcast should start automatically when neko starts, works only if the URL is set.
+- <Def id="broadcast.audio_bitrate" /> and <Def id="broadcast.video_bitrate" /> are the bitrate settings for the default audio and video encoders expressed in kilobits per second.
+- <Def id="broadcast.preset" /> is the encoding speed preset for the default video encoder. See available presets [here](https://gstreamer.freedesktop.org/documentation/x264/index.html?gi-language=c#GstX264EncPreset).
+- <Def id="broadcast.pipeline" /> when set, encoder settings above are ignored and the custom Gstreamer pipeline description is used. In the pipeline, you can use `{display}`, `{device}` and `{url}` as placeholders for the X display name, pulseaudio audio device name, and broadcast URL respectively.
+- <Def id="broadcast.url" /> is the URL of the RTMP server where the broadcast will be sent. This can be set later using the API if the URL is not known at the time of configuration or is expected to change.
+- <Def id="broadcast.autostart" /> is a boolean value that determines whether the broadcast should start automatically when neko starts, works only if the URL is set.
 
 <details>
   <summary>Example pipeline configuration</summary>
@@ -375,7 +376,7 @@ The default encoder uses `h264` for video and `aac` for audio, muxed in the `flv
 
 </details>
 
-## Screencast
+## Screencast {#screencast}
 
 As a fallback mechanism, neko can capture the display in the form of JPEG images and the client can request these images over HTTP. This is useful when the client does not support WebRTC or when the client is not able to establish a WebRTC connection, or there is a temporary issue with the WebRTC connection and the client should not miss the content being shared.
 
@@ -394,10 +395,10 @@ capture:
     pipeline: "<gstreamer_pipeline>"
 ```
 
-- `enabled` is a boolean value that determines whether the screencast is enabled or not.
-- `rate` is the framerate of the screencast. It is expressed as a fraction of frames per second, for example, `10/1` means 10 frames per second.
-- `quality` is the quality of the JPEG images. It is expressed as a percentage, for example, `60` means 60% quality.
-- `pipeline` when set, the default pipeline settings above are ignored and the custom Gstreamer pipeline description is used. In the pipeline, you can use `{display}` as a placeholder for the X display name.
+- <Def id="screencast.enabled" /> is a boolean value that determines whether the screencast is enabled or not.
+- <Def id="screencast.rate" /> is the framerate of the screencast. It is expressed as a fraction of frames per second, for example, `10/1` means 10 frames per second.
+- <Def id="screencast.quality" /> is the quality of the JPEG images. It is expressed as a percentage, for example, `60` means 60% quality.
+- <Def id="screencast.pipeline" /> when set, the default pipeline settings above are ignored and the custom Gstreamer pipeline description is used. In the pipeline, you can use `{display}` as a placeholder for the X display name.
 
 <details>
   <summary>Example pipeline configuration</summary>
@@ -419,7 +420,7 @@ capture:
 
 </details>
 
-## Webcam
+## Webcam {#webcam}
 
 :::danger
 This feature is experimental and may not work on all platforms.
@@ -438,9 +439,9 @@ capture:
     height: 480
 ```
 
-- `enabled` is a boolean value that determines whether the webcam capture is enabled or not.
-- `device` is the name of the [video4linux device](https://www.kernel.org/doc/html/v4.12/media/v4l-drivers/index.html) that will be used as a virtual webcam.
-- `width` and `height` are the resolution of the virtual webcam feed.
+- <Def id="webcam.enabled" /> is a boolean value that determines whether the webcam capture is enabled or not.
+- <Def id="webcam.device" /> is the name of the [video4linux device](https://www.kernel.org/doc/html/v4.12/media/v4l-drivers/index.html) that will be used as a virtual webcam.
+- <Def id="webcam.width" /> and <Def id="webcam.height" /> are the resolution of the virtual webcam feed.
 
 In order to use the webcam feature, the server must have the [v4l2loopback](https://github.com/v4l2loopback/v4l2loopback) kernel module installed and loaded. The module can be loaded using the following command:
 
@@ -464,7 +465,7 @@ services:
     ...
 ```
 
-## Microphone
+## Microphone {#microphone}
 
 Neko allows you to capture the microphone on the client machine and send it to the server using WebRTC. This can be used to share the microphone feed with the server.
 
@@ -477,5 +478,5 @@ capture:
     device: "audio_input"
 ```
 
-- `enabled` is a boolean value that determines whether the microphone capture is enabled or not.
-- `device` is the name of the [pulseaudio device](https://wiki.archlinux.org/title/PulseAudio/Examples) that will be used as a virtual microphone.
+- <Def id="microphone.enabled" /> is a boolean value that determines whether the microphone capture is enabled or not.
+- <Def id="microphone.device" /> is the name of the [pulseaudio device](https://wiki.archlinux.org/title/PulseAudio/Examples) that will be used as a virtual microphone.

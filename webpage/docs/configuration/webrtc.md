@@ -1,7 +1,8 @@
 ---
-sidebar_position: 4
 description: Configuration related to the WebRTC and Networking in Neko.
 ---
+
+import { Def, Opt } from '@site/src/components/Anchor';
 
 # WebRTC Configuration
 
@@ -9,11 +10,11 @@ This page describes how to configure WebRTC settings inside neko.
 
 Neko uses WebRTC with the [Pion](https://github.com/pion/webrtc) library to establish a peer-to-peer connection between the client and the server. This connection is used to stream audio, video, and data bidirectionally between the client and the server.
 
-## ICE Setup
+## ICE Setup {#ice}
 
 ICE, which stands for Interactive Connectivity Establishment, is a protocol used to find the best path to connect peers, such as a client and a server. It helps discover the public IP addresses and ports of both parties to establish a direct connection. ICE candidates, which contain this information, are exchanged through a signaling server to facilitate the connection process.
 
-### ICE Trickle
+### ICE Trickle {#icetrickle}
 
 ICE Trickle is a feature that allows ICE candidates to be sent as they are discovered, rather than waiting for all candidates to be discovered before sending them. It means that the ICE connection can be established faster as the server can start connecting to the client as soon as it has a few ICE candidates and doesn't have to wait for all of them to be discovered.
 
@@ -22,7 +23,7 @@ webrtc:
   icetrickle: false
 ```
 
-### ICE Lite
+### ICE Lite {#icelite}
 
 ICE Lite is a minimal implementation of the ICE protocol intended for servers running on a public IP address. It is not enabled by default to allow more complex ICE configurations out of the box.
 
@@ -35,7 +36,7 @@ webrtc:
 When using ICE Servers, ICE Lite must be disabled.
 :::
 
-### ICE Servers
+### ICE Servers {#iceservers}
 
 ICE servers are used to establish a connection between the client and the server. There are two types of ICE servers:
 
@@ -44,11 +45,11 @@ ICE servers are used to establish a connection between the client and the server
 
 The configuration of a single [ICE server](https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/RTCPeerConnection#iceservers) is defined by the following fields:
 
-| Field                      | Description | Type |
-|----------------------------|-------------|------|
-| `urls`                     | List of URLs of the ICE server, if the same server is available on multiple URLs with the same credentials, they can be listed here. | `string[]` |
-| `username`                 | Username used to authenticate with the ICE server, if the server requires authentication. | `string` |
-| `credential`               | Credential used to authenticate with the ICE server, if the server requires authentication. | `string` |
+| Field                               | Description | Type |
+|-------------------------------------|-------------|------|
+| <Def id="iceservers.urls" />       | List of URLs of the ICE server, if the same server is available on multiple URLs with the same credentials, they can be listed here. | `string[]` |
+| <Def id="iceservers.username" />   | Username used to authenticate with the ICE server, if the server requires authentication. | `string` |
+| <Def id="iceservers.credential" /> | Credential used to authenticate with the ICE server, if the server requires authentication. | `string` |
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -99,9 +100,6 @@ import TabItem from '@theme/TabItem';
 
 The ICE servers are divided into two groups:
 
-- `frontend`: ICE servers that are sent to the client and used to establish a connection between the client and the server.
-- `backend`: ICE servers that are used by the server to gather ICE candidates. They might contain private IP addresses or other sensitive information that should not be sent to the client.
-
 ```yaml title="config.yaml"
 webrtc:
   iceservers:
@@ -112,6 +110,9 @@ webrtc:
     # List of ICE Server configurations as described above
     - urls: "stun:stun.l.google.com:19302"
 ```
+
+- <Def id="iceservers.frontend" /> - ICE servers that are sent to the client and used to establish a connection between the client and the server.
+- <Def id="iceservers.backend" /> - ICE servers that are used by the server to gather ICE candidates. They might contain private IP addresses or other sensitive information that should not be sent to the client.
 
 <details>
 <summary>Example with Coturn server in Docker Compose</summary>
@@ -139,12 +140,12 @@ Replace `<MY-COTURN-SERVER>` with your LAN or Public IP address, and allow ports
 
 </details>
 
-## Network Setup
+## Network Setup {#network}
 
 Since WebRTC is a peer-to-peer protocol that requires a direct connection between the client and the server. This can be achieved by:
 
 - Using a public IP address for the server (or at least reachable from the client if deployed on a private network).
-- Using a [TURN server](#ice-servers) to relay data between the client and the server if a direct connection cannot be established.
+- Using a [TURN server](#iceservers) to relay data between the client and the server if a direct connection cannot be established.
 
 All specified ports along with the server's IP address will be sent to the client in ICE candidates to establish a connection. Therefore, it is important to ensure that the specified ports are open on the server's firewall, are not remapped to different ports, and are reachable from the client.
 
@@ -154,10 +155,10 @@ WebRTC does not use the HTTP protocol, therefore it is not possible to use nginx
 
 There exist two types of connections:
 
-- [Ephemeral UDP port range](#ephemeral-udp-port-range): The range of UDP ports that the server uses to establish a connection with the client. Every time a new connection is established, a new port from this range is used. This range should be open on the server's firewall.
-- [UDP/TCP multiplexing](#udp-tcp-multiplexing): The server can use a single port for multiple connections. This port should be open on the server's firewall.
+- [Ephemeral UDP port range](#epr): The range of UDP ports that the server uses to establish a connection with the client. Every time a new connection is established, a new port from this range is used. This range should be open on the server's firewall.
+- [UDP/TCP multiplexing](#mux): The server can use a single port for multiple connections. This port should be open on the server's firewall.
 
-### Ephemeral UDP port range
+### Ephemeral UDP port range {#epr}
 
 The ephemeral UDP port range can be configured using the following configuration:
 
@@ -181,7 +182,7 @@ ports:
 It is important to expose the same ports to the host machine, without any remapping e.g. `49000-49100:59000-59100/udp` instead of `59000-59100:59000-59100/udp`.
 :::
 
-### UDP/TCP multiplexing {#udp-tcp-multiplexing}
+### UDP/TCP multiplexing {#mux}
 
 The UDP/TCP multiplexing port can be configured using the following configuration:
 
@@ -190,6 +191,9 @@ webrtc:
   udpmux: 59000
   tcpmux: 59000
 ```
+
+- <Def id="udpmux" /> - The port used for UDP connections.
+- <Def id="tcpmux" /> - The port used for TCP connections.
 
 The server uses only port `59000` for both UDP and TCP connections. This port should be open on the server's firewall. You can specify a different port if needed, or specify only one of the two protocols. UDP is generally better for latency, but some networks block UDP so it is good to have TCP available as a fallback.
 
@@ -208,11 +212,11 @@ ports:
 It is important to expose the same ports to the host machine, without any remapping e.g. `49000:59000/udp` instead of `59000:59000/udp`.
 :::
 
-### Server IP Address
+### Server IP Address {#ip}
 
 The server IP address is sent to the client in ICE candidates so that the client can establish a connection with the server. By default, the server IP address is automatically resolved by the server to the public IP address of the server. If the server is behind a NAT, you want to specify a different IP address or use neko only in a local network, you can specify the server IP address manually.
 
-#### NAT 1-to-1
+#### NAT 1-to-1 {#nat1to1}
 
 ```yaml title="config.yaml"
 webrtc:
@@ -241,7 +245,7 @@ environment:
 ```
 :::
 
-#### IP Retrieval URL
+#### IP Retrieval URL {#ip_retrieval_url}
 
 If you do not specify the server IP address, the server will try to resolve the public IP address of the server automatically.
 
@@ -251,7 +255,7 @@ webrtc:
 ```
 The server will send an HTTP GET request to the specified URL to retrieve the public IP address of the server.
 
-## Bandwidth Estimator
+## Bandwidth Estimator {#estimator}
 
 :::danger
 The bandwidth estimator is an experimental feature and might not work as expected.

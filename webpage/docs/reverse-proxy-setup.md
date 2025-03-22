@@ -1,7 +1,3 @@
----
-sidebar_position: 3
----
-
 # Reverse Proxy Setup
 
 If you want to run Neko behind a reverse proxy, you can use the following examples to configure your server.
@@ -10,7 +6,7 @@ If you want to run Neko behind a reverse proxy, you can use the following exampl
 Do not forget to enable `server.proxy=true` in your `config.yml` file to allow the server to trust the proxy headers.
 :::
 
-## Traefik v2
+## Traefik v2 {#traefik-v2}
 
 See the example below for a `docker-compose.yml` file.
 
@@ -25,7 +21,7 @@ labels:
 
 For more information, check out the [official Traefik documentation](https://doc.traefik.io/traefik/v2.0/routing/routers/). For SSL, see the [official Traefik SSL documentation](https://doc.traefik.io/traefik/v2.0/https/acme/).
 
-## Nginx
+## Nginx {#nginx}
 
 See the example below for an Nginx configuration file.
 
@@ -48,7 +44,7 @@ server {
 
 For more information, check out the [official Nginx documentation](https://nginx.org/en/docs/beginners_guide.html). For SSL, see the [official Nginx SSL documentation](https://nginx.org/en/docs/http/configuring_https_servers.html) or use [certbot](https://certbot.eff.org/instructions?ws=nginx&os=ubuntufocal).
 
-## Apache
+## Apache {#apache}
 
 To do this, you need to have a running Apache server. Navigate to the `/etc/apache2/sites-available` folder and create a new configuration file, for example, `neko.conf`.  
 After creating the new configuration file, you can use the example below and paste it in. Some things may vary on your machine, so read through and modify it if needed.  
@@ -103,7 +99,7 @@ After creating your new configuration file, just use `sudo a2ensite neko.conf` a
 
 See the [official Apache documentation](https://httpd.apache.org/docs/2.4/vhosts/examples.html) for more information. For SSL, see the [official Apache SSL documentation](https://httpd.apache.org/docs/2.4/ssl/ssl_howto.html) or use [certbot](https://certbot.eff.org/instructions?ws=apache&os=snap).
 
-## Caddy
+## Caddy {#caddy}
 
 See the example below for a Caddyfile.
 
@@ -115,7 +111,7 @@ https://example.com {
 
 For more information, check out the [official Caddy documentation](https://caddyserver.com/docs/caddyfile). For SSL, see the [official Caddy automatic HTTPS documentation](https://caddyserver.com/docs/automatic-https).
 
-## HAProxy
+## HAProxy {#haproxy}
 
 Using your frontend section *(mine is called http-in)*, add the ACL to redirect correctly to your Neko instance.
 

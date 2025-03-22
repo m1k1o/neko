@@ -2,7 +2,7 @@
 
 Neko UI loads, but you don't see the screen, and it gives you a `connection timeout` or `disconnected` error?
 
-## Test your client
+## Test your client {#client}
 
 Some browsers may block WebRTC access by default. You can check if it is enabled by going to `about:webrtc` or `chrome://webrtc-internals` in your browser.
 
@@ -13,11 +13,11 @@ Check if your extensions are not blocking WebRTC access. The following extension
 
 Test whether your client [supports](https://www.webrtc-experiment.com/DetectRTC/) and can [connect to WebRTC](https://www.webcasts.com/webrtc/).
 
-## Networking
+## Networking {#networking}
 
 If you are absolutely sure that your client is working correctly, then most likely your networking is not set up correctly.
 
-### Check if your ports are correctly exposed in Docker
+### Check if your ports are correctly exposed in Docker {#exposed-ports}
 
 Check that your ephemeral port range `NEKO_WEBRTC_EPR` is correctly exposed as a `/udp` port range.
 
@@ -44,7 +44,7 @@ services:
       NEKO_WEBRTC_ICELITE: 1
 ```
 
-### Validate UDP ports reachability
+### Validate UDP ports reachability {#reachable-ports}
 
 Ensure that your ports are reachable through your external IP.
 
@@ -71,7 +71,7 @@ sudo apt-get install netcat
 ```
 :::
 
-### Check if your external IP was determined correctly
+### Check if your external IP was determined correctly {#external-ip}
 
 One of the first logs, when the server starts, writes down your external IP that will be sent to your clients to connect to.
 
@@ -139,7 +139,7 @@ It's read as `NAT One to One`, so it's a capital letter `O`, not zero `0`, in `N
 
 If you want to use n.eko only locally, you must put your local IP address here, otherwise, the public address will be used.
 
-### Neko works externally, but not locally
+### Neko works externally, but not locally {#works-externally-but-not-locally}
 
 You are probably missing the NAT Loopback (NAT Hairpinning) setting on your router.
 
@@ -151,17 +151,17 @@ Example for pfsense with truecharts docker container:
 - Test externally to confirm it works.
 - Internally you have to access it using `<your-public-ip>:port`
 
-If your router does not support NAT Loopback (NAT Hairpinning), you can use turn servers to overcome this issue. See [more details here](/docs/v3/reference/configuration/webrtc#ice-servers) on how to set up a local coturn instance.
+If your router does not support NAT Loopback (NAT Hairpinning), you can use turn servers to overcome this issue. See [more details here](/docs/v3/configuration/webrtc#iceservers) on how to set up a local coturn instance.
 
-### Neko works locally, but not externally
+### Neko works locally, but not externally {#works-locally-but-not-externally}
 
 Make sure that you are exposing your ports correctly.
 
 If you put a local IP as `NEKO_WEBRTC_NAT1TO1`, external clients try to connect to that IP. But it is unreachable for them because it is your local IP. You must use your public IP address with port forwarding.
 
-## Frequently Encountered Errors
+## Frequently Encountered Errors {#frequently-encountered-errors}
 
-### Getting a black screen with a cursor, but no browser for Chromium-based browsers
+### Getting a black screen with a cursor, but no browser for Chromium-based browsers {#black-screen-with-cursor}
 
 Check if you did not forget to add `cap_add` to your `docker-compose.yaml` file. Make sure that the `shm_size` is set to `2gb` or higher.
 
@@ -187,7 +187,7 @@ services:
       NEKO_WEBRTC_EPR: 52000-52100
 ```
 
-### Common server errors
+### Common server errors {#common-server-errors}
 
 ```
 WRN session created with an error error="invalid 1:1 NAT IP mapping"
@@ -211,7 +211,7 @@ WRN undeclaredMediaProcessor failed to open SrtcpSession: the DTLS transport has
 
 Check if your UDP ports are exposed correctly and reachable.
 
-### Common client errors
+### Common client errors {#common-client-errors}
 
 ```
 Firefox can’t establish a connection to the server at ws://<your-IP>/ws?password=neko.
@@ -227,7 +227,7 @@ NotAllowedError: play() failed because the user didn't interact with the documen
 
 This error occurs when the browser blocks the video from playing because the user has not interacted with the document. You just need to manually click on the play button to start the video.
 
-### Unrelated server errors
+### Unrelated server errors {#unrelated-server-errors}
 
 ```
 [ERROR:bus.cc(393)] Failed to connect to the bus: Could not parse server address: Unknown address type (examples of valid types are "tcp" and on UNIX "unix")
@@ -249,7 +249,7 @@ I: [pulseaudio] protocol-native.c: Connection died.
 
 These are just logs from pulseaudio. Unless you have audio issues, you can ignore them.
 
-### Broadcast pipeline not working with some ingest servers
+### Broadcast pipeline not working with some ingest servers {#broadcast-pipeline-not-working}
 
 See [related issue](https://github.com/m1k1o/neko/issues/276).
 
