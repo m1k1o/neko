@@ -6,6 +6,7 @@ on:
       - master
     paths:
       - server/**
+      - .github/workflows/server_test.yml
 
 jobs:
   server_test:

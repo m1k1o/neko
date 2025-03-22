@@ -1,11 +1,12 @@
 name: Build and Publish Server Artifacts
 
 on:
-  pull_request:
+  pull_request: # Change to push when ready to deploy
     branches:
       - master
     paths:
       - server/**
+      - .github/workflows/server_build.yml
 
 jobs:
   server_build:
@@ -13,22 +14,14 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        arch:
-        - name: amd64
-          platform: linux/amd64
-        - name: arm64
-          platform: linux/arm64
-        - name: armv7
-          platform: linux/arm/v7
         variant:
-        - name: bullseye
+        - name: server-amd64
+          platform: linux/amd64
           dockerfile: Dockerfile
-        - name: bookworm
+        - name: server-arm64
+          platform: linux/arm64
           dockerfile: Dockerfile.bookworm
       fail-fast: false
-    
-    env:
-      ARTIFACT_NAME: ${{ matrix.arch.name }}-${{ matrix.variant.name }}-server
 
     steps:
       - name: Checkout repository
@@ -53,19 +46,19 @@ jobs:
         with:
           context: ./server/
           file: ./server/${{ matrix.variant.dockerfile }}
-          tags: ${{ env.ARTIFACT_NAME }}
-          platforms: ${{ matrix.arch.platform }}
+          tags: ${{ matrix.variant.name }}
+          platforms: ${{ matrix.variant.platform }}
           load: true
 
       - name: Copy artifacts
         run: |
-          container_id=$(docker create ${{ env.ARTIFACT_NAME }})
-          mkdir -p artifacts/${{ matrix.arch.name }}-${{ matrix.variant.name }}
-          docker cp $container_id:/src/bin/. artifacts/${{ matrix.arch.name }}-${{ matrix.variant.name }}/
+          container_id=$(docker create ${{ matrix.variant.name }})
+          mkdir -p artifacts/${{ matrix.variant.name }}
+          docker cp $container_id:/src/bin/. artifacts/${{ matrix.variant.name }}/
           docker rm $container_id
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.ARTIFACT_NAME }}
-          path: artifacts/${{ matrix.arch.name }}-${{ matrix.variant.name }}
+          name: ${{ matrix.variant.name }}
+          path: artifacts/${{ matrix.variant.name }}

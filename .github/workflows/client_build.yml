@@ -1,16 +1,16 @@
-name: Test Client Build
+name: Build and Publish Client Artifacts
 
 on:
-  pull_request:
+  pull_request: # Change to push when ready to deploy
     branches:
       - master
     paths:
       - client/**
-      - .github/workflows/client_test.yml
+      - .github/workflows/client_build.yml
 
 jobs:
-  client_test:
-    name: Test Client Build
+  client_build:
+    name: Build and Publish Client Artifacts
     runs-on: ubuntu-latest
 
     steps:
@@ -31,3 +31,9 @@ jobs:
       - name: Build client
         working-directory: ./client
         run: npm run build
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: client
+          path: client/dist
