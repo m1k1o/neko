@@ -2,6 +2,8 @@ package config
 
 import (
 	"encoding/json"
+	"fmt"
+	"net"
 	"strconv"
 	"strings"
 
@@ -77,6 +79,53 @@ func (WebRTC) Init(cmd *cobra.Command) error {
 }
 
 func (s *WebRTC) Set() {
+	nat1to1Values := viper.GetStringSlice("nat1to1")
+	log.Info().
+		Strs("start convert nat1to1", nat1to1Values)
+	log.Debug().Strs("nat1to1_input", nat1to1Values).Msg("processing NAT1To1 values")
+
+	resolvedIPs := make([]string, 0, len(nat1to1Values))
+
+	for _, value := range nat1to1Values {
+		// Check if the value is already an IP
+		if net.ParseIP(value) != nil {
+			log.Debug().Str("value", value).Msg("NAT1To1 value is already an IP address")
+			resolvedIPs = append(resolvedIPs, value)
+			continue
+		}
+
+		// Try to resolve domain to IP
+		log.Debug().Str("domain", value).Msg("attempting to resolve domain to IP")
+		ips, err := net.LookupIP(value)
+		if err != nil {
+			log.Warn().
+				Str("domain", value).
+				Err(err).
+				Msg("failed to resolve NAT1To1 domain to IP")
+			continue
+		}
+
+		// Add all resolved IPs (both IPv4 and IPv6)
+		for _, ip := range ips {
+			resolvedIPs = append(resolvedIPs, ip.String())
+			log.Debug().
+				Str("domain", value).
+				Str("resolved_ip", ip.String()).
+				Msg("successfully resolved domain to IP")
+		}
+	}
+	fmt.Print("finished ")
+	fmt.Print("resolvedIPs")
+
+	fmt.Print(resolvedIPs)
+	fmt.Print("nat1to1Values")
+	fmt.Print(nat1to1Values)
+
+	log.Info().
+		Strs("original_values", nat1to1Values).
+		Strs("resolved_ips", resolvedIPs).
+		Msg("NAT1To1 resolution completed")
+
 	s.NAT1To1IPs = viper.GetStringSlice("nat1to1")
 	s.TCPMUX = viper.GetInt("tcpmux")
 	s.UDPMUX = viper.GetInt("udpmux")
