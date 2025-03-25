@@ -8,6 +8,10 @@
     "initialized": true,
     "list": [
       {
+        "title": "Google",
+        "url": "https://www.google.com/"
+      },
+      {
         "title": "YouTube",
         "url": "https://www.youtube.com/"
       },
@@ -21,7 +25,11 @@
       },
       {
         "title": "9Anime",
-        "url": "https://9anime.to/"
+        "url": "https://9anime.pl/"
+      },
+      {
+        "title": "AniMixPlay",
+        "url": "https://animixplay.to/"
       },
       {
         "title": "Crunchy Roll",
@@ -52,8 +60,8 @@
         "url": "https://www.twitch.tv/"
       },
       {
-        "title": "Mixer",
-        "url": "https://mixer.com/"
+        "title": "Facebook Gaming",
+        "url": "https://www.facebook.com/gaming/"
       }
     ]
   },

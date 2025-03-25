@@ -33,6 +33,7 @@ RUN set -eux; apt-get update; \
     EXTENSIONS=( \
       cjpalhdlnbpafiamejdnhcphjbkeiagm \
       mnjggcdmjocbbbhaepdhchncahnbgone \
+      fihnjjcciajhdojfnbdddfaoknhalnja \
     ); \
     mkdir -p "${EXTENSIONS_DIR}"; \
     for EXT_ID in "${EXTENSIONS[@]}"; \

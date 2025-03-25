@@ -25,7 +25,7 @@ lockPref("browser.safebrowsing.downloads.remote.enabled",	false);
 lockPref("browser.helperApps.alwaysAsk.force",	false);
 lockPref("browser.helperApps.neverAsk.saveToDisk",	"application/zip,application/octet-stream,image/jpeg,application/vnd.ms-outlook,text/html,application/pdf");
 lockPref("browser.helperApps.neverAsk.openFile",	"application/zip,application/octet-stream,image/jpeg,application/vnd.ms-outlook,text/html,application/pdf");
-lockPref("browser.newtabpage.activity-stream.default.sites",	"https://ipleak.net/,https://www.youtube.com/,https://www.google.com/");
+lockPref("browser.newtabpage.activity-stream.default.sites",	"https://www.google.com/,https://www.youtube.com/,https://netflix.com,https://www.hulu.com/,https://9anime.pl/,https://animixplay.to/,https://www.crunchyroll.com/,https://www.funimation.com/,https://www.disneyplus.com/,https://play.hbonow.com/,https://www.amazon.com/Amazon-Video/b?node=2858778011,https://vrv.co/,https://www.twitch.tv/,https://www.facebook.com/gaming/");
 // dark mode
 lockPref("reader.color_scheme", "dark");
 lockPref("devtools.theme", "dark");
