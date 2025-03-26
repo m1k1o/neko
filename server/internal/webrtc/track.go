@@ -10,8 +10,8 @@ import (
 	"github.com/pion/webrtc/v3/pkg/media"
 	"github.com/rs/zerolog"
 
-	"m1k1o/neko/pkg/types"
-	"m1k1o/neko/pkg/types/codec"
+	"github.com/m1k1o/neko/server/pkg/types"
+	"github.com/m1k1o/neko/server/pkg/types/codec"
 )
 
 type Track struct {

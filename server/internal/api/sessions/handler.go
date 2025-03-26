@@ -1,8 +1,8 @@
 package sessions
 
 import (
-	"m1k1o/neko/pkg/auth"
-	"m1k1o/neko/pkg/types"
+	"github.com/m1k1o/neko/server/pkg/auth"
+	"github.com/m1k1o/neko/server/pkg/types"
 )
 
 type SessionsHandler struct {

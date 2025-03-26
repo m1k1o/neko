@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 
-	"m1k1o/neko/pkg/types"
-	"m1k1o/neko/pkg/utils"
+	"github.com/m1k1o/neko/server/pkg/types"
+	"github.com/m1k1o/neko/server/pkg/utils"
 )
 
 func New() types.MemberProvider {

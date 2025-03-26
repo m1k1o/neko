@@ -1,4 +1,4 @@
-module m1k1o/neko
+module github.com/m1k1o/neko/server
 
 go 1.21
 

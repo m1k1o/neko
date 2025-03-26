@@ -1,7 +1,7 @@
 package message
 
 import (
-	"m1k1o/neko/internal/http/legacy/types"
+	"github.com/m1k1o/neko/server/internal/http/legacy/types"
 
 	"github.com/pion/webrtc/v3"
 )

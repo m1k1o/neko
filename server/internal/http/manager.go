@@ -10,9 +10,9 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 
-	"m1k1o/neko/internal/config"
-	"m1k1o/neko/internal/http/legacy"
-	"m1k1o/neko/pkg/types"
+	"github.com/m1k1o/neko/server/internal/config"
+	"github.com/m1k1o/neko/server/internal/http/legacy"
+	"github.com/m1k1o/neko/server/pkg/types"
 )
 
 type HttpManagerCtx struct {

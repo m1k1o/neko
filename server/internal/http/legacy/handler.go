@@ -10,15 +10,15 @@ import (
 	"net/url"
 	"strings"
 
-	"m1k1o/neko/internal/api"
-	oldEvent "m1k1o/neko/internal/http/legacy/event"
-	oldMessage "m1k1o/neko/internal/http/legacy/message"
-	oldTypes "m1k1o/neko/internal/http/legacy/types"
+	"github.com/m1k1o/neko/server/internal/api"
+	oldEvent "github.com/m1k1o/neko/server/internal/http/legacy/event"
+	oldMessage "github.com/m1k1o/neko/server/internal/http/legacy/message"
+	oldTypes "github.com/m1k1o/neko/server/internal/http/legacy/types"
 
-	"m1k1o/neko/pkg/types"
-	"m1k1o/neko/pkg/types/event"
-	"m1k1o/neko/pkg/types/message"
-	"m1k1o/neko/pkg/utils"
+	"github.com/m1k1o/neko/server/pkg/types"
+	"github.com/m1k1o/neko/server/pkg/types/event"
+	"github.com/m1k1o/neko/server/pkg/types/message"
+	"github.com/m1k1o/neko/server/pkg/utils"
 
 	"github.com/gorilla/websocket"
 	"github.com/rs/zerolog"

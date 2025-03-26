@@ -1,7 +1,7 @@
 package object
 
 import (
-	"m1k1o/neko/pkg/types"
+	"github.com/m1k1o/neko/server/pkg/types"
 )
 
 func New(config Config) types.MemberProvider {

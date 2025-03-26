@@ -10,8 +10,8 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"m1k1o/neko/pkg/types"
-	"m1k1o/neko/pkg/utils"
+	"github.com/m1k1o/neko/server/pkg/types"
+	"github.com/m1k1o/neko/server/pkg/utils"
 )
 
 // default stun server

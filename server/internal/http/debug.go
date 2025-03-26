@@ -6,7 +6,7 @@ import (
 
 	"github.com/go-chi/chi"
 
-	"m1k1o/neko/pkg/types"
+	"github.com/m1k1o/neko/server/pkg/types"
 )
 
 func pprofHandler(r types.Router) {

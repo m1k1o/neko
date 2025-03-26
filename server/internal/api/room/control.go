@@ -5,10 +5,10 @@ import (
 
 	"github.com/go-chi/chi"
 
-	"m1k1o/neko/pkg/auth"
-	"m1k1o/neko/pkg/types/event"
-	"m1k1o/neko/pkg/types/message"
-	"m1k1o/neko/pkg/utils"
+	"github.com/m1k1o/neko/server/pkg/auth"
+	"github.com/m1k1o/neko/server/pkg/types/event"
+	"github.com/m1k1o/neko/server/pkg/types/message"
+	"github.com/m1k1o/neko/server/pkg/utils"
 )
 
 type ControlStatusPayload struct {

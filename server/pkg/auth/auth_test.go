@@ -6,9 +6,9 @@ import (
 	"reflect"
 	"testing"
 
-	"m1k1o/neko/internal/config"
-	"m1k1o/neko/internal/session"
-	"m1k1o/neko/pkg/types"
+	"github.com/m1k1o/neko/server/internal/config"
+	"github.com/m1k1o/neko/server/internal/session"
+	"github.com/m1k1o/neko/server/pkg/types"
 )
 
 var i = 0

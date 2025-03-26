@@ -18,14 +18,14 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/viper"
 
-	"m1k1o/neko/internal/config"
-	"m1k1o/neko/internal/webrtc/cursor"
-	"m1k1o/neko/internal/webrtc/pionlog"
-	"m1k1o/neko/pkg/types"
-	"m1k1o/neko/pkg/types/codec"
-	"m1k1o/neko/pkg/types/event"
-	"m1k1o/neko/pkg/types/message"
-	"m1k1o/neko/pkg/utils"
+	"github.com/m1k1o/neko/server/internal/config"
+	"github.com/m1k1o/neko/server/internal/webrtc/cursor"
+	"github.com/m1k1o/neko/server/internal/webrtc/pionlog"
+	"github.com/m1k1o/neko/server/pkg/types"
+	"github.com/m1k1o/neko/server/pkg/types/codec"
+	"github.com/m1k1o/neko/server/pkg/types/event"
+	"github.com/m1k1o/neko/server/pkg/types/message"
+	"github.com/m1k1o/neko/server/pkg/utils"
 )
 
 const (

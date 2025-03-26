@@ -4,7 +4,7 @@ import (
 	"sync"
 	"time"
 
-	"m1k1o/neko/pkg/types"
+	"github.com/m1k1o/neko/server/pkg/types"
 
 	"github.com/pion/rtcp"
 	"github.com/pion/webrtc/v3"

@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"m1k1o/neko/pkg/utils"
+	"github.com/m1k1o/neko/server/pkg/utils"
 )
 
 type Server struct {

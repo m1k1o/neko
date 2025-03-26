@@ -4,11 +4,11 @@ import (
 	"net/http"
 	"strconv"
 
-	"m1k1o/neko/pkg/auth"
-	"m1k1o/neko/pkg/types"
-	"m1k1o/neko/pkg/types/event"
-	"m1k1o/neko/pkg/types/message"
-	"m1k1o/neko/pkg/utils"
+	"github.com/m1k1o/neko/server/pkg/auth"
+	"github.com/m1k1o/neko/server/pkg/types"
+	"github.com/m1k1o/neko/server/pkg/types/event"
+	"github.com/m1k1o/neko/server/pkg/types/message"
+	"github.com/m1k1o/neko/server/pkg/utils"
 )
 
 func (h *RoomHandler) screenConfiguration(w http.ResponseWriter, r *http.Request) error {

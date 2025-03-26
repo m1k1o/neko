@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	"m1k1o/neko/pkg/gst"
-	"m1k1o/neko/pkg/types/codec"
+	"github.com/m1k1o/neko/server/pkg/gst"
+	"github.com/m1k1o/neko/server/pkg/types/codec"
 )
 
 /*

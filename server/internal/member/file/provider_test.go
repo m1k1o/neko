@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"m1k1o/neko/pkg/utils"
+	"github.com/m1k1o/neko/server/pkg/utils"
 )
 
 // Ensure that hashes are the same after encoding and decoding using json

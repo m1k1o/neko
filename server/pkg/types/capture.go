@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"m1k1o/neko/pkg/types/codec"
+	"github.com/m1k1o/neko/server/pkg/types/codec"
 
 	"github.com/PaesslerAG/gval"
 )

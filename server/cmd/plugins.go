@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"os"
 
-	"m1k1o/neko/internal/config"
-	"m1k1o/neko/internal/plugins"
+	"github.com/m1k1o/neko/server/internal/config"
+	"github.com/m1k1o/neko/server/internal/plugins"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"

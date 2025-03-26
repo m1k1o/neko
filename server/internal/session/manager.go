@@ -10,9 +10,9 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"m1k1o/neko/internal/config"
-	"m1k1o/neko/pkg/types"
-	"m1k1o/neko/pkg/utils"
+	"github.com/m1k1o/neko/server/internal/config"
+	"github.com/m1k1o/neko/server/pkg/types"
+	"github.com/m1k1o/neko/server/pkg/utils"
 )
 
 func New(config *config.Session) *SessionManagerCtx {

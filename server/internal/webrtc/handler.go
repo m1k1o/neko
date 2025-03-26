@@ -6,8 +6,8 @@ import (
 	"math"
 	"time"
 
-	"m1k1o/neko/internal/webrtc/payload"
-	"m1k1o/neko/pkg/types"
+	"github.com/m1k1o/neko/server/internal/webrtc/payload"
+	"github.com/m1k1o/neko/server/pkg/types"
 
 	"github.com/pion/webrtc/v3"
 	"github.com/rs/zerolog"

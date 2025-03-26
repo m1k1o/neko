@@ -9,16 +9,16 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"m1k1o/neko/internal/api"
-	"m1k1o/neko/internal/capture"
-	"m1k1o/neko/internal/config"
-	"m1k1o/neko/internal/desktop"
-	"m1k1o/neko/internal/http"
-	"m1k1o/neko/internal/member"
-	"m1k1o/neko/internal/plugins"
-	"m1k1o/neko/internal/session"
-	"m1k1o/neko/internal/webrtc"
-	"m1k1o/neko/internal/websocket"
+	"github.com/m1k1o/neko/server/internal/api"
+	"github.com/m1k1o/neko/server/internal/capture"
+	"github.com/m1k1o/neko/server/internal/config"
+	"github.com/m1k1o/neko/server/internal/desktop"
+	"github.com/m1k1o/neko/server/internal/http"
+	"github.com/m1k1o/neko/server/internal/member"
+	"github.com/m1k1o/neko/server/internal/plugins"
+	"github.com/m1k1o/neko/server/internal/session"
+	"github.com/m1k1o/neko/server/internal/webrtc"
+	"github.com/m1k1o/neko/server/internal/websocket"
 )
 
 func init() {

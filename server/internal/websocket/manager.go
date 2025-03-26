@@ -11,11 +11,11 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"m1k1o/neko/internal/websocket/handler"
-	"m1k1o/neko/pkg/types"
-	"m1k1o/neko/pkg/types/event"
-	"m1k1o/neko/pkg/types/message"
-	"m1k1o/neko/pkg/utils"
+	"github.com/m1k1o/neko/server/internal/websocket/handler"
+	"github.com/m1k1o/neko/server/pkg/types"
+	"github.com/m1k1o/neko/server/pkg/types/event"
+	"github.com/m1k1o/neko/server/pkg/types/message"
+	"github.com/m1k1o/neko/server/pkg/utils"
 )
 
 // send pings to peer with this period - must be less than pongWait
