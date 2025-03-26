@@ -321,9 +321,6 @@ The default encoder uses `h264` for video and `aac` for audio, muxed in the `flv
     ```yaml title="config.yaml"
     capture:
       broadcast:
-        audio_bitrate: 128
-        video_bitrate: 4096
-        preset: veryfast
         pipeline: |
           flvmux name=mux
             ! rtmpsink location={url}
@@ -343,14 +340,9 @@ The default encoder uses `h264` for video and `aac` for audio, muxed in the `flv
   </TabItem>
   <TabItem value="nvh264enc" label="NVENC H264 configuration">
 
-    This configuration requires [Nvidia GPU](https://developer.nvidia.com/cuda-gpus) with [NVENC](https://developer.nvidia.com/nvidia-video-codec-sdk) support.
-
     ```yaml title="config.yaml"
     capture:
       broadcast:
-        audio_bitrate: 128
-        video_bitrate: 4096
-        preset: veryfast
         pipeline: |
           flvmux name=mux
             ! rtmpsink location={url}
@@ -370,6 +362,8 @@ The default encoder uses `h264` for video and `aac` for audio, muxed in the `flv
             ! h264parse
             ! mux.
     ```
+
+    This configuration requires [Nvidia GPU](https://developer.nvidia.com/cuda-gpus) with [NVENC](https://developer.nvidia.com/nvidia-video-codec-sdk) support and [Nvidia docker image](/docs/v3/installation/docker-images#nvidia) of neko.
 
   </TabItem>
 </Tabs>
@@ -407,8 +401,6 @@ capture:
 capture:
   screencast:
     enabled: true
-    rate: "10/1"
-    quality: 60
     pipeline: |
       ximagesrc display-name={display} show-pointer=true use-damage=false
         ! video/x-raw,framerate=10/1
@@ -452,7 +444,7 @@ sudo apt install v4l2loopback-dkms v4l2loopback-utils linux-headers-`uname -r` l
 sudo modprobe v4l2loopback exclusive_caps=1
 ```
 
-This is needed even if neko is running inside a Docker container. In that case, the v4l2loopback module must be loaded on the host machine and the device must be mounted inside the container.
+This is needed even if neko is running inside a Docker container. In that case, the `v4l2loopback` module must be loaded on the host machine and the device must be mounted inside the container.
 
 ```yaml title="docker-compose.yaml"
 services:

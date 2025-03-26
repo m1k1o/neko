@@ -101,7 +101,7 @@ See the V3 configuration options for the [Authentication](/docs/v3/configuration
 | `NEKO_PASSWORD`                       | `NEKO_MEMBER_MULTIUSER_USER_PASSWORD` with `NEKO_MEMBER_PROVIDER=multiuser` |
 | `NEKO_PASSWORD_ADMIN`                 | `NEKO_MEMBER_MULTIUSER_ADMIN_PASSWORD` with `NEKO_MEMBER_PROVIDER=multiuser` |
 
-In order for the legacy authentication to work, you need to set [Multi-user](http://localhost:3000/docs/v3/configuration/authentication#member.multiuser).
+In order for the legacy authentication to work, you need to set [Multi-user](/docs/v3/configuration/authentication#member.multiuser).
 
 :::warning Limitation
 V2 clients might not be compatible with any other authentication provider than the `multiuser`.
@@ -138,7 +138,7 @@ V3 is compatible with the V2 API when legacy support is enabled. There was speci
 
 ### Authentication {#api.auth}
 
-In V2 there was only one authentication provider available, as in V3 called the `multiuser` provider. The API knew based on the provided password (as `?pwd=` query string) if the user is an admin or not.
+In V2 there was only one authentication provider available, as in V3 called the [`multiuser`](/docs/v3/configuration/authentication#member.multiuser) provider. The API knew based on the provided password (as `?pwd=` query string) if the user is an admin or not.
 
 Since V3 handles authentication differently (see [API documentation](/docs/v3/api#authentication)), there has been added `?usr=` query string to the API to specify the username. The password is still provided as `?pwd=` query string. The `?usr=` query string is still optional, if not provided, the API will generate a random username.
 
@@ -146,7 +146,7 @@ Since V3 handles authentication differently (see [API documentation](/docs/v3/ap
 For every request in the legacy API, a new user session is created based on the `?usr=&pwd=` query string. The session is destroyed after the API request is completed. So for HTTP API requests, the sessions are short-lived but for WebSocket API requests, the session is kept alive until the WebSocket connection is closed.
 :::
 
-Only the `multiuser` provider (or the `noauth` provider) is supported without specifying the `?usr=` query string.
+Only the [`multiuser`](/docs/v3/configuration/authentication#member.multiuser) provider (or the [`noauth`](/docs/v3/configuration/authentication#member.noauth) provider) is supported without specifying the `?usr=` query string.
 
 ### WebSocket Messages {#api.ws}
 
@@ -222,3 +222,5 @@ The whole functionality of file transfer has been moved to a [File Transfer Plug
 In v2, locks and muted users were managed using a simple map that tracked who set the lock and what was locked. In v3, locks are now implemented as setting options and no longer store the `session_id` of the user who applied the lock. As a result, if a client refreshes the page or reconnects, the lock information is lost, and the user who set the lock is displayed as `Somebody`.
 
 Additionally, when using the legacy API with a v2 client, API calls occur in a different order than expected. The client first retrieves the session list before registering the user, meaning the current `session_id` is not known when the session list is fetched. That means, the current user appears as `Somebody` in the session list.
+
+Currently, the v3 has no native support for pipeline generation, meaning that the user has to manually specify the pipeline for video and audio if he wants to customize it. The v2 had a simple built-in support for setting the video bitrate, fps, audio bitrate, and hardware encoding. Since the introduction of multiple video pipelines in v3, this feature has been removed.

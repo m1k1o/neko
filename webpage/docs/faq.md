@@ -2,7 +2,11 @@
 
 ### How to enable debug mode? {#debug-mode}
 
-To see verbose information from the n.eko server, you can enable debug mode using `NEKO_DEBUG`.
+To see verbose information from the neko server, you can enable debug mode using [`log.level=debug`](/docs/v3/configuration#log.level) or set the environment variable `NEKO_DEBUG=1`.
+
+If you have issue with encoding, you can view the GStreamer debug information by setting the environment variable `GST_DEBUG=3`. Learn more about it on the [Gstreamer documentation](https://gstreamer.freedesktop.org/documentation/tutorials/basic/debugging-tools.html?gi-language=c#the-debug-log).
+
+If you want to debug [Pion WebRTC](https://github.com/pion/webrtc), you can set the environment variable `PION_LOG_DEBUG=all`, available options are writen in the [Pion WebRTC codebase](https://github.com/pion/logging/blob/2d5402f6579f2579cc51a5bd9c1fac127a781abb/logging_test.go#L190-L194).
 
 ```yaml title="docker-compose.yaml"
 services:
@@ -25,7 +29,7 @@ services:
 
 And then view the logs using `docker logs -f neko`.
 
-To see verbose information from the n.eko client, you need to visit the developer console in your browser. You can do this by pressing `F12` and then navigating to the `Console` tab.
+To see verbose information from the neko client, you need to visit the developer console in your browser. You can do this by pressing `F12` and then navigating to the `Console` tab.
 
 ### How to enable support for Chinese/Japanese/Korean input method? {#input-method}
 

@@ -3,7 +3,7 @@
 If you want to run Neko behind a reverse proxy, you can use the following examples to configure your server.
 
 :::tip
-Do not forget to enable `server.proxy=true` in your `config.yml` file to allow the server to trust the proxy headers.
+Do not forget to enable [`server.proxy=true`](/docs/v3/configuration#server.proxy) in your `config.yml` file to allow the server to trust the proxy headers.
 :::
 
 ## Traefik v2 {#traefik-v2}
@@ -46,8 +46,10 @@ For more information, check out the [official Nginx documentation](https://nginx
 
 ## Apache {#apache}
 
-To do this, you need to have a running Apache server. Navigate to the `/etc/apache2/sites-available` folder and create a new configuration file, for example, `neko.conf`.  
-After creating the new configuration file, you can use the example below and paste it in. Some things may vary on your machine, so read through and modify it if needed.  
+To do this, you need to have a running Apache server. Navigate to the `/etc/apache2/sites-available` folder and create a new configuration file, for example, `neko.conf`.
+
+After creating the new configuration file, you can use the example below and paste it in. Some things may vary on your machine, so read through and modify it if needed.
+
 Bear in mind that your Neko server does not have to run on the same computer as Apache. They just need to be on the same network, and then you replace `localhost` with the correct internal IP.
 
 ```xml title="/etc/apache2/sites-available/neko.conf"

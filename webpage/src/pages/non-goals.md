@@ -2,13 +2,13 @@
 
 The following are not within the scope of this project:
 
-**Turning n.eko into a service that serves multiple rooms and browsers/desktops.**
+**Turning neko into a service that serves multiple rooms and browsers/desktops.**
 * If you need software for managing multiple rooms, please use [neko-rooms](https://github.com/m1k1o/neko-rooms).
 
 **Supporting multiple platforms.**
 * This project is focused on a specific set of platforms and does not aim to support all possible platforms.
 * Only Linux is officially supported.
-* If you want to run n.eko on a different platform, you are welcome to try, but we cannot guarantee that it will work.
+* If you want to run neko on a different platform, you are welcome to try, but we cannot guarantee that it will work.
 
 **Voice/Video chat integration.**
 * For voice chat capabilities, consider using [Discord](https://discordapp.com/) or [Jitsi](https://meet.jit.si/).

@@ -19,9 +19,9 @@ If you are absolutely sure that your client is working correctly, then most like
 
 ### Check if your ports are correctly exposed in Docker {#exposed-ports}
 
-Check that your ephemeral port range `NEKO_WEBRTC_EPR` is correctly exposed as a `/udp` port range.
+Check that your ephemeral port range [`NEKO_WEBRTC_EPR`](/docs/v3/configuration/webrtc#epr) is correctly exposed as a `/udp` port range.
 
-In the following example, the specified range `52000-52100` must also be exposed using Docker. You can't map it to a different range, e.g. `52000-52100:53000-53100/udp`. If you want to use a different range, you must change the range in `NEKO_WEBRTC_EPR` too.
+In the following example, the specified range `52000-52100` must also be exposed using Docker. You can't map it to a different range, e.g. `52000-52100:53000-53100/udp`. If you want to use a different range, you must change the range in [`NEKO_WEBRTC_EPR`](/docs/v3/configuration/webrtc#epr) too.
 
 ```yaml title="docker-compose.yaml"
 services:
@@ -89,7 +89,7 @@ You should see this:
 11:11AM INF webrtc starting ephemeral_port_range=52000-52100 ice_lite=true ice_servers="[{URLs:[stun:stun.l.google.com:19302] Username: Credential:<nil> CredentialType:password}]" module=webrtc nat_ips=<your-IP>
 ```
 
-If your IP is not correct, you can specify your own IP resolver using `NEKO_WEBRTC_IP_RETRIEVAL_URL`. It needs to return the IP address that will be used.
+If your IP is not correct, you can specify your own IP resolver using [`NEKO_WEBRTC_IP_RETRIEVAL_URL`](/docs/v3/configuration/webrtc#ip_retrieval_url). It needs to return the IP address that will be used.
 
 ```yaml title="docker-compose.yaml"
 services:
@@ -111,7 +111,7 @@ services:
       # highlight-end
 ```
 
-Or you can specify your IP address manually using `NEKO_WEBRTC_NAT1TO1`:
+Or you can specify your IP address manually using [`NEKO_WEBRTC_NAT1TO1`](/docs/v3/configuration/webrtc#nat1to1):
 
 ```yaml title="docker-compose.yaml"
 services:
@@ -137,7 +137,7 @@ services:
 It's read as `NAT One to One`, so it's a capital letter `O`, not zero `0`, in `NAT1TO1`.
 :::
 
-If you want to use n.eko only locally, you must put your local IP address here, otherwise, the public address will be used.
+If you want to use neko only locally, you must put your local IP address here, otherwise, the public address will be used.
 
 ### Neko works externally, but not locally {#works-externally-but-not-locally}
 
@@ -147,7 +147,7 @@ Example for pfsense with truecharts docker container:
 - First, port forward the relevant ports `8080` and `52000-52100/udp` for the container.
 - Then turn on `Pure NAT` in pfsense (under system > advanced > firewall and nat).
   - Make sure to check the two boxes so it works.
-- Make sure `NEKO_WEBRTC_NAT1TO1` is blank and the `NEKO_WEBRTC_IP_RETRIEVAL_URL` address is working correctly (if unset, the default value is chosen).
+- Make sure [`NEKO_WEBRTC_NAT1TO1`](/docs/v3/configuration/webrtc#nat1to1) is blank and the [`NEKO_WEBRTC_IP_RETRIEVAL_URL`](/docs/v3/configuration/webrtc#ip_retrieval_url) address is working correctly (if unset, the default value is chosen).
 - Test externally to confirm it works.
 - Internally you have to access it using `<your-public-ip>:port`
 
@@ -193,7 +193,7 @@ services:
 WRN session created with an error error="invalid 1:1 NAT IP mapping"
 ```
 
-Check your `NEKO_WEBRTC_NAT1TO1` or ensure that `NEKO_WEBRTC_IP_RETRIEVAL_URL` returns the correct IP.
+Check your [`NEKO_WEBRTC_NAT1TO1`](/docs/v3/configuration/webrtc#nat1to1) or ensure that [`NEKO_WEBRTC_IP_RETRIEVAL_URL`](/docs/v3/configuration/webrtc#ip_retrieval_url) returns the correct IP.
 
 ---
 
@@ -257,8 +257,10 @@ See [related issue](https://github.com/m1k1o/neko/issues/276).
 Could not connect to RTMP stream "'rtmp://<ingest-url>/live/<stream-key-removed> live=1'" for writing
 ```
 
-Some ingest servers require the `live=1` parameter in the URL (e.g. nginx-rtmp-module). Some do not and do not accept apostrophes (e.g. owncast). You can try to change the pipeline to:
+Some ingest servers require the `live=1` parameter in the URL (e.g. `nginx-rtmp-module`). Some do not and do not accept apostrophes (e.g. `owncast`). You can try to change the pipeline to:
 
 ```yaml
 NEKO_CAPTURE_BROADCAST_PIPELINE: "flvmux name=mux ! rtmpsink location={url} pulsesrc device={device} ! audio/x-raw,channels=2 ! audioconvert ! voaacenc ! mux. ximagesrc display-name={display} show-pointer=false use-damage=false ! video/x-raw,framerate=28/1 ! videoconvert ! queue ! x264enc bframes=0 key-int-max=0 byte-stream=true tune=zerolatency speed-preset=veryfast ! mux."
 ```
+
+See more details in broadcast pipeline [documentation](/docs/v3/configuration/capture#broadcast.pipeline).
