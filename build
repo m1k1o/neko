@@ -2,12 +2,13 @@
 set -e
 cd "$(dirname "$0")"
 
+# disable buildx because of https://github.com/docker/buildx/issues/847
+USE_BUILDX=0
+
 # check if docker buildx is available, its not docker-buildx command but rather subcommand of docker
-if [ -x "$(command -v docker)" ]; then
+if [ -z "$USE_BUILDX" ] && [ -x "$(command -v docker)" ]; then
   if docker buildx version >/dev/null 2>&1; then
-    if [ -z "$USE_BUILDX" ]; then
-      USE_BUILDX=1
-    fi
+    USE_BUILDX=1
   fi
 fi
 
@@ -140,7 +141,7 @@ function build_image() {
     done
   fi
 
-  if [ -z "$USE_BUILDX" ] && [ "$USE_BUILDX" != "1" ]; then
+  if [ -z "$USE_BUILDX" ] || [ "$USE_BUILDX" != "1" ]; then
     # if buildx is not available, use docker build
     docker build \
       --platform $PLATFORM \
@@ -187,7 +188,7 @@ function build_image() {
 
 # --------------------------------------------------------------------
 
-if [ -z "$USE_BUILDX" ] && [ "$USE_BUILDX" != "1" ]; then
+if [ -z "$USE_BUILDX" ] || [ "$USE_BUILDX" != "1" ]; then
   log "Using docker build"
 else
   log "Using docker buildx"
