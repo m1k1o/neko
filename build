@@ -3,7 +3,9 @@ set -e
 cd "$(dirname "$0")"
 
 # disable buildx because of https://github.com/docker/buildx/issues/847
-USE_BUILDX=0
+if [ -z "$USE_BUILDX" ]; then
+  USE_BUILDX=0
+fi
 
 # check if docker buildx is available, its not docker-buildx command but rather subcommand of docker
 if [ -z "$USE_BUILDX" ] && [ -x "$(command -v docker)" ]; then
@@ -281,39 +283,17 @@ fi
 
 prompt "Are you sure you want to build $BASE_IMAGE?"
 
-log "Building base image: $BASE_IMAGE"
-
-log "[STAGE 1]: Building local/neko-xorg-deps image"
-build_image local/neko-xorg-deps runtime/xorg-deps/
-
-log "[STAGE 2]: Building local/neko-server image"
-build_image local/neko-server server/
-
-log "[STAGE 3]: Building local/neko-client image"
-build_image local/neko-client client/
-
 if [ -z "$FLAVOR" ]; then
-  RUNTIME_IMAGE="local/neko-runtime"
-  log "[STAGE 4]: Building $RUNTIME_IMAGE image"
-  build_image $RUNTIME_IMAGE runtime/
+  export RUNTIME_DOCKERFILE="Dockerfile"
 else
-  RUNTIME_IMAGE="local/neko-$FLAVOR-runtime"
-  log "[STAGE 4]: Building $RUNTIME_IMAGE image"
-  build_image $RUNTIME_IMAGE -f runtime/Dockerfile.$FLAVOR runtime/
+  export RUNTIME_DOCKERFILE="Dockerfile.$FLAVOR"
 fi
 
-log "[STAGE 5]: Building $BASE_IMAGE image"
-build_image $BASE_IMAGE -f - . <<EOF
-  FROM local/neko-xorg-deps AS xorg-deps
-  FROM local/neko-server AS server
-  FROM local/neko-client AS client
-  FROM $RUNTIME_IMAGE AS runtime
-
-  COPY --from=xorg-deps /usr/local/lib/xorg/modules/drivers/dummy_drv.so /usr/lib/xorg/modules/drivers/dummy_drv.so
-  COPY --from=xorg-deps /usr/local/lib/xorg/modules/input/neko_drv.so /usr/lib/xorg/modules/input/neko_drv.so
-  COPY --from=server /src/bin/plugins/ /etc/neko/plugins/
-  COPY --from=server /src/bin/neko /usr/bin/neko
-  COPY --from=client /src/dist/ /var/www
-  
-  COPY config.yml /etc/neko/neko.yaml
-EOF
+log "Building base image: $BASE_IMAGE"
+docker run --rm -it \
+  -v ./:/src \
+  --workdir /src \
+  --entrypoint go \
+  golang:1.24-bullseye \
+  run ./docker/main.go \
+  -i Dockerfile.tmpl | build_image $BASE_IMAGE -f - .
