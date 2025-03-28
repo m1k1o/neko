@@ -1,50 +1,222 @@
 #!/bin/bash
+set -e
 cd "$(dirname "$0")"
 
-# if build image is not specified, use default
-if [ -z "$BUILD_IMAGE" ]; then
-  BUILD_IMAGE="m1k1o/neko"
+#
+# This script builds the neko base image and all the applications
+#
+
+function log() {
+  echo "$(date +'%Y-%m-%d %H:%M:%S') - [NEKO] - $1" > /dev/stderr
+}
+
+function help() {
+  echo "Usage: $0"
+  echo "  -p, --platform : The platform (default: linux/amd64)"
+  echo "  -i, --image    : The image name prefix (default: ghcr.io/m1k1o/neko)"
+  echo "  -v, --version  : The version (default: latest)"
+  echo "  -f, --flavor   : The flavor, if not specified, builds without flavor"
+  echo "  -b, --base     : The base image name (default: ghcr.io/m1k1o/neko/[<flavor>-]base:<version>)"
+  echo "  -a, --app      : The app to build, if not specified, builds the base image"
+  echo "  -y, --yes      : Skip confirmation prompts"
+  echo "      --no-cache : Build without docker cache"
+  echo "  -h, --help     : Show this help message"
+}
+
+FULL_IMAGE=""
+while [[ "$#" -gt 0 ]]; do
+  case $1 in
+    --platform|-p) PLATFORM="$2"; shift ;;
+    --image|-i) IMAGE="$2"; shift ;;
+    --version|-v) VERSION="$2"; shift ;;
+    --flavor|-f) FLAVOR="$2"; shift ;;
+    --base|-b) BASE_IMAGE="$2"; shift ;;
+    --app|-a) APPLICATION="$2"; shift ;;
+    --yes|-y) YES=1 ;;
+    --no-cache) NO_CACHE="--no-cache" log "Building without cache" ;;
+    --help|-h) help; exit 0 ;;
+    -*) log "Unknown parameter passed: $1"; help; exit 1 ;;
+    *) 
+      if [ -z "$FULL_IMAGE" ]; then
+        FULL_IMAGE="$1"
+
+        # extracts image, flavor, app and version from the full image name
+        # example:
+        #  ghcr.io/m1k1o/neko/nvidia-firefox:latest
+        # will be split into:
+        #   IMAGE=ghcr.io/m1k1o/neko
+        #   FLAVOR=nvidia
+        #   APPLICATION=firefox
+        #   VERSION=latest
+        
+        # remove the tag from the image name
+        if [[ "$FULL_IMAGE" == *":"* ]]; then
+          # removes everything before the last :
+          VERSION="${FULL_IMAGE##*:}" # will be latest
+          # removes everything after the last :
+          FULL_IMAGE="${FULL_IMAGE%:*}" # will be ghcr.io/m1k1o/neko/nvidia-firefox
+        fi
+        # extract the image name and save the rest to IMAGE
+        if [[ "$FULL_IMAGE" == *"/"* ]]; then
+          # removes everything after the last /
+          IMAGE="${FULL_IMAGE%/*}" # will be ghcr.io/m1k1o/neko
+          # removes everything before the last /
+          FULL_IMAGE="${FULL_IMAGE##*/}" # will be nvidia-firefox
+        fi
+        # extract the flavor and application name
+        if [[ "$FULL_IMAGE" == *"-"* ]]; then
+          # removes everything after the last -
+          FLAVOR="${FULL_IMAGE%-*}" # will be nvidia
+          # removes everything before the last -
+          APPLICATION="${FULL_IMAGE#*-}" # will be firefox
+        else
+          # no flavor specified so use the full image name as application name
+          APPLICATION="$FULL_IMAGE" # will be firefox
+        fi
+        # if application name is base, set it to empty
+        if [ "$APPLICATION" == "base" ]; then
+          APPLICATION=""
+        fi
+      else
+        log "Unknown positional argument: $1"
+        help
+        exit 1
+      fi
+    ;;
+  esac
+  shift
+done
+
+function prompt() {
+  if [ ! -z "$YES" ]; then
+    return 0
+  fi
+
+  local OK=""
+  while [ -z "$OK" ]; do
+    read -p "$1 (yes/no) " REPLY
+    case "$REPLY" in
+      yes|YES|y|Y)
+        OK=1
+        ;;
+      no|NO|n|N)
+        log "Aborting build."
+        exit 1
+        ;;
+      *)
+        log "Please answer 'yes' or 'no'."
+        ;;
+    esac
+  done
+}
+
+function build_image() {
+  docker build --platform $PLATFORM $NO_CACHE $@
+}
+
+# --------------------------------------------------------------------
+
+if [ -z "$PLATFORM" ]; then
+  PLATFORM="linux/amd64"
 fi
+log "Using platform: $PLATFORM"
 
-echo "Using build image: $BUILD_IMAGE"
-echo "Using flavour: $FLAVOUR"
+if [ -z "$IMAGE" ]; then
+  IMAGE="ghcr.io/m1k1o/neko"
+fi
+log "Using image: $IMAGE"
 
-RUNTIME_IMAGE="neko-runtime"
-# if flavour is specified, append it to the image name and Dockerfile
-if [ "$FLAVOUR" != "" ]; then
-  RUNTIME_IMAGE="$RUNTIME_IMAGE-$FLAVOUR"
-  BASE_IMAGE="$BUILD_IMAGE:$FLAVOUR-base"
+if [ -z "$VERSION" ]; then
+  VERSION="latest"
+fi
+log "Using version: $VERSION"
+
+if [ -z "$FLAVOR" ]; then
+  log "No flavor specified, building without flavor"
 else
-  BASE_IMAGE="$BUILD_IMAGE:base"
+  log "Using flavor: $FLAVOR"
 fi
 
-echo "Building neko-xorg-deps image"
-docker build -t neko-xorg-deps runtime/xorg-deps/
+if [ -z "$BASE_IMAGE" ]; then
+  if [ -z "$FLAVOR" ]; then
+    BASE_IMAGE="$IMAGE/base:$VERSION"
+  else
+    BASE_IMAGE="$IMAGE/$FLAVOR-base:$VERSION"
+  fi
+fi
 
-echo "Building neko-server image"
-docker build -t neko-server server/
+# --------------------------------------------------------------------
 
-echo "Building neko-client image"
-docker build -t neko-client client/
+if [ ! -z "$APPLICATION" ]; then
+  log "Building application: $APPLICATION"
+  log "Using base image: $BASE_IMAGE"
 
-echo "Building $RUNTIME_IMAGE image"
-if [ "$FLAVOUR" != "" ]; then
-  docker build -t $RUNTIME_IMAGE -f runtime/Dockerfile.$FLAVOUR runtime/
+  # check if application directory exists
+  APPLICATION_DIR="apps/$APPLICATION"
+  if [ ! -d "$APPLICATION_DIR" ]; then
+    log "Application directory $APPLICATION_DIR does not exist."
+    exit 1
+  fi
+
+  # flavor is specified, append it to the image name and Dockerfile
+  APPLICATION_IMAGE="$IMAGE/$APPLICATION:$VERSION"
+  APPLICATION_DOCKERFILE="apps/$APPLICATION/Dockerfile"
+  if [ ! -z "$FLAVOR" ]; then
+    APPLICATION_IMAGE="$IMAGE/$FLAVOR-$APPLICATION"
+    # if application flavor is specified and Dockerfile exists, use it
+    if [ -f "$APPLICATION_DIR/Dockerfile.$FLAVOR" ]; then
+      APPLICATION_DOCKERFILE="$APPLICATION_DIR/Dockerfile.$FLAVOR"
+    fi
+  fi
+
+  prompt "Are you sure you want to build $APPLICATION_IMAGE from $APPLICATION_DOCKERFILE?"
+
+  log "Building $APPLICATION_IMAGE image from $APPLICATION_DOCKERFILE"
+  build_image \
+    --build-arg="BASE_IMAGE=$BASE_IMAGE" \
+    -t $APPLICATION_IMAGE \
+    -f $APPLICATION_DOCKERFILE \
+    $APPLICATION_DIR
+  exit 0
+fi
+
+# --------------------------------------------------------------------
+
+prompt "Are you sure you want to build $BASE_IMAGE?"
+
+log "Building base image: $BASE_IMAGE"
+
+log "[STAGE 1]: Building neko-xorg-deps image"
+build_image -t neko-xorg-deps runtime/xorg-deps/
+
+log "[STAGE 2]: Building neko-server image"
+build_image -t neko-server server/
+
+log "[STAGE 3]: Building neko-client image"
+build_image -t neko-client client/
+
+if [ -z "$FLAVOR" ]; then
+  RUNTIME_IMAGE="neko-runtime"
+  log "[STAGE 4]: Building $RUNTIME_IMAGE image"
+  build_image -t $RUNTIME_IMAGE runtime/
 else
-  docker build -t $RUNTIME_IMAGE runtime/
+  RUNTIME_IMAGE="neko-$FLAVOR-runtime"
+  log "[STAGE 4]: Building $RUNTIME_IMAGE image"
+  build_image -t $RUNTIME_IMAGE -f runtime/Dockerfile.$FLAVOR runtime/
 fi
 
-docker build -t $BASE_IMAGE -f - . <<EOF
-	FROM neko-xorg-deps AS xorg-deps
-	FROM neko-server AS server
-	FROM neko-client AS client
-	FROM $RUNTIME_IMAGE AS runtime
+log "[STAGE 5]: Building $BASE_IMAGE image"
+build_image -t $BASE_IMAGE -f - . <<EOF
+  FROM neko-xorg-deps AS xorg-deps
+  FROM neko-server AS server
+  FROM neko-client AS client
+  FROM $RUNTIME_IMAGE AS runtime
 
-	COPY --from=xorg-deps /usr/local/lib/xorg/modules/drivers/dummy_drv.so /usr/lib/xorg/modules/drivers/dummy_drv.so
-	COPY --from=xorg-deps /usr/local/lib/xorg/modules/input/neko_drv.so /usr/lib/xorg/modules/input/neko_drv.so
-	COPY --from=server /src/bin/plugins/ /etc/neko/plugins/
-	COPY --from=server /src/bin/neko /usr/bin/neko
-	COPY --from=client /src/dist/ /var/www
+  COPY --from=xorg-deps /usr/local/lib/xorg/modules/drivers/dummy_drv.so /usr/lib/xorg/modules/drivers/dummy_drv.so
+  COPY --from=xorg-deps /usr/local/lib/xorg/modules/input/neko_drv.so /usr/lib/xorg/modules/input/neko_drv.so
+  COPY --from=server /src/bin/plugins/ /etc/neko/plugins/
+  COPY --from=server /src/bin/neko /usr/bin/neko
+  COPY --from=client /src/dist/ /var/www
   
   COPY config.yml /etc/neko/neko.yaml
 EOF
