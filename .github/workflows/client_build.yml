@@ -1,12 +1,14 @@
 name: Build and Publish Client Artifacts
 
-on:
-  pull_request: # Change to push when ready to deploy
-    branches:
-      - master
-    paths:
-      - client/**
-      - .github/workflows/client_build.yml
+on: {} # Temporarily disable the trigger to avoid unnecessary builds
+
+#on:
+#  pull_request: # Change to push when ready to deploy
+#    branches:
+#      - master
+#    paths:
+#      - client/**
+#      - .github/workflows/client_build.yml
 
 jobs:
   client_build:

@@ -1,12 +1,14 @@
 name: Build and Publish Server Artifacts
 
-on:
-  pull_request: # Change to push when ready to deploy
-    branches:
-      - master
-    paths:
-      - server/**
-      - .github/workflows/server_build.yml
+on: {} # Temporarily disable the trigger to avoid unnecessary builds
+
+#on:
+#  pull_request: # Change to push when ready to deploy
+#    branches:
+#      - master
+#    paths:
+#      - server/**
+#      - .github/workflows/server_build.yml
 
 jobs:
   server_build:
