@@ -2,6 +2,15 @@
 set -e
 cd "$(dirname "$0")"
 
+# check if docker buildx is available, its not docker-buildx command but rather subcommand of docker
+if [ -x "$(command -v docker)" ]; then
+  if docker buildx version >/dev/null 2>&1; then
+    if [ -z "$USE_BUILDX" ]; then
+      USE_BUILDX=1
+    fi
+  fi
+fi
+
 #
 # This script builds the neko base image and all the applications
 #
@@ -12,30 +21,25 @@ function log() {
 
 function help() {
   echo "Usage: $0"
-  echo "  -p, --platform : The platform (default: linux/amd64)"
-  echo "  -i, --image    : The image name prefix (default: ghcr.io/m1k1o/neko)"
-  echo "  -t, --tag      : The image tag, comma separated list, if not specified"
-  echo "                   uses 'latest' and if available, current git semver tag (v*.*.*)"
-  echo "  -f, --flavor   : The flavor, if not specified, builds without flavor"
-  echo "  -b, --base     : The base image name (default: ghcr.io/m1k1o/neko/[<flavor>-]base:<tag>)"
-  echo "  -a, --app      : The app to build, if not specified, builds the base image"
-  echo "  -y, --yes      : Skip confirmation prompts"
-  echo "      --no-cache : Build without docker cache"
-  echo "      --push     : Push the image to the registry after building"
-  echo "  -h, --help     : Show this help message"
+  echo "  -p, --platform   : The platform (default: linux/amd64)"
+  echo "  -r, --repository : The repository prefix (default: ghcr.io/m1k1o/neko)"
+  echo "  -t, --tag        : The image tag, can be specified multiple times, if not specified"
+  echo "                     uses 'latest' and if available, current git semver tag (v*.*.*)"
+  echo "  -f, --flavor     : The flavor, if not specified, builds without flavor"
+  echo "  -b, --base       : The base image name (default: <repository>[<flavor>-]base:<tag>)"
+  echo "  -a, --app        : The app to build, if not specified, builds the base image"
+  echo "  -y, --yes        : Skip confirmation prompts"
+  echo "      --no-cache   : Build without docker cache"
+  echo "      --push       : Push the image to the registry after building"
+  echo "  -h, --help       : Show this help message"
 }
 
 FULL_IMAGE=""
 while [[ "$#" -gt 0 ]]; do
   case $1 in
     --platform|-p) PLATFORM="$2"; shift ;;
-    --image|-i) IMAGE="$2"; shift ;;
-    --tag|-t)
-      # comma separated list of TAGS
-      IFS=',' read -r -a TAGS <<< "$2"
-      # default tag is the first one
-      TAG="${TAGS[0]}"
-      shift ;;
+    --repository|-r) REPOSITORY="$2"; shift ;;
+    --tag|-t) TAGS+=("$2"); TAG="$2"; shift ;;
     --flavor|-f) FLAVOR="$2"; shift ;;
     --base|-b) BASE_IMAGE="$2"; shift ;;
     --app|-a) APPLICATION="$2"; shift ;;
@@ -52,7 +56,7 @@ while [[ "$#" -gt 0 ]]; do
         # example:
         #  ghcr.io/m1k1o/neko/nvidia-firefox:latest
         # will be split into:
-        #   IMAGE=ghcr.io/m1k1o/neko
+        #   REPOSITORY=ghcr.io/m1k1o/neko
         #   FLAVOR=nvidia
         #   APPLICATION=firefox
         #   TAG=latest
@@ -61,13 +65,14 @@ while [[ "$#" -gt 0 ]]; do
         if [[ "$FULL_IMAGE" == *":"* ]]; then
           # removes everything before the last :
           TAG="${FULL_IMAGE##*:}" # will be latest
+          TAGS+=("$TAG")
           # removes everything after the last :
           FULL_IMAGE="${FULL_IMAGE%:*}" # will be ghcr.io/m1k1o/neko/nvidia-firefox
         fi
-        # extract the image name and save the rest to IMAGE
+        # extract the image name and save the rest to REPOSITORY
         if [[ "$FULL_IMAGE" == *"/"* ]]; then
           # removes everything after the last /
-          IMAGE="${FULL_IMAGE%/*}" # will be ghcr.io/m1k1o/neko
+          REPOSITORY="${FULL_IMAGE%/*}" # will be ghcr.io/m1k1o/neko
           # removes everything before the last /
           FULL_IMAGE="${FULL_IMAGE##*/}" # will be nvidia-firefox
         fi
@@ -119,50 +124,84 @@ function prompt() {
 }
 
 function build_image() {
-  docker build --platform $PLATFORM $NO_CACHE $@
-}
+  # first argument is the image name, rest are the build args
+  local APPLICATION_IMAGE="$1"
+  shift
 
-function tag_image() {
-  local IMAGE="$1"
-  local IMAGE_NO_TAG="${IMAGE%:*}"
-  local IMAGE_TAG="${IMAGE##*:}"
-
-  for T in "${TAGS[@]}"; do
-    # skip if the tag is the same as the image tag
-    if [ "$T" == "$IMAGE_TAG" ]; then
-      continue
-    fi
-
-    log "Tagging $IMAGE with tag $TAG"
-    docker tag $IMAGE $IMAGE_NO_TAG:$TAG
-  done
-}
-
-function push_image() {
-  if [ -z "$PUSH" ]; then
-    return 0
+  local FULL_TAGS=()
+  # if the image name starts with local/, just use the tag as is
+  if [[ "$APPLICATION_IMAGE" == *"local/"* ]]; then
+    FULL_TAGS=("$APPLICATION_IMAGE")
+  else
+    # get list of tags in full format: <image>:<tag>
+    local IMAGE_NO_TAG="${APPLICATION_IMAGE%:*}"
+    for T in "${TAGS[@]}"; do
+      FULL_TAGS+=("$IMAGE_NO_TAG:$T")
+    done
   fi
 
-  local IMAGE="$1"
-  local IMAGE_NO_TAG="${IMAGE%:*}"
+  if [ -z "$USE_BUILDX" ] && [ "$USE_BUILDX" != "1" ]; then
+    # if buildx is not available, use docker build
+    docker build \
+      --platform $PLATFORM \
+      $NO_CACHE \
+      -t $APPLICATION_IMAGE \
+      $@
 
-  for T in "${TAGS[@]}"; do
-    log "Pushing $IMAGE_NO_TAG:$T to registry"
-    docker push $IMAGE_NO_TAG:$T
-  done
+    # tag and push the image to the registry
+    for T in $FULL_TAGS; do
+      # do not tag if the tag is the same as the image tag
+      if [ "$T" != "$APPLICATION_IMAGE" ]; then
+        log "Tagging $APPLICATION_IMAGE as $T"
+        docker tag "$APPLICATION_IMAGE" "$T"
+      fi
+
+      # if push is enabled, push the image to the registry
+      if [ ! -z "$PUSH" ]; then
+        log "Pushing $T to registry"
+        docker push "$T"
+      fi
+    done
+  else
+    # create cmd for buildx, repeat --tag for each tag
+    local CMD=""
+    for T in $FULL_TAGS; do
+      CMD+="--tag $T "
+    done
+    # if push is enabled, add --push
+    if [ ! -z "$PUSH" ]; then
+      CMD+="--push "
+    fi
+    # if no cache is enabled, add --no-cache
+    if [ ! -z "$NO_CACHE" ]; then
+      CMD+="--no-cache "
+    fi
+  
+    # buildx build command
+    docker buildx build \
+      --platform $PLATFORM \
+      --load --pull $CMD \
+      $@
+  fi
 }
 
 # --------------------------------------------------------------------
+
+if [ -z "$USE_BUILDX" ] && [ "$USE_BUILDX" != "1" ]; then
+  log "Using docker build"
+else
+  log "Using docker buildx"
+fi
 
 if [ -z "$PLATFORM" ]; then
   PLATFORM="linux/amd64"
 fi
 log "Using platform: $PLATFORM"
 
-if [ -z "$IMAGE" ]; then
-  IMAGE="ghcr.io/m1k1o/neko"
+if [ -z "$REPOSITORY" ]; then
+  REPOSITORY="ghcr.io/m1k1o/neko"
 fi
-log "Using image: $IMAGE"
+log "Using repository: $REPOSITORY"
 
 if [ -z "$TAG" ]; then
   # if git is available, use the latest tag from git
@@ -196,9 +235,9 @@ fi
 
 if [ -z "$BASE_IMAGE" ]; then
   if [ -z "$FLAVOR" ]; then
-    BASE_IMAGE="$IMAGE/base:$TAG"
+    BASE_IMAGE="$REPOSITORY/base:$TAG"
   else
-    BASE_IMAGE="$IMAGE/$FLAVOR-base:$TAG"
+    BASE_IMAGE="$REPOSITORY/$FLAVOR-base:$TAG"
   fi
 fi
 
@@ -216,10 +255,10 @@ if [ ! -z "$APPLICATION" ]; then
   fi
 
   # flavor is specified, append it to the image name and Dockerfile
-  APPLICATION_IMAGE="$IMAGE/$APPLICATION:$TAG"
+  APPLICATION_IMAGE="$REPOSITORY/$APPLICATION:$TAG"
   APPLICATION_DOCKERFILE="apps/$APPLICATION/Dockerfile"
   if [ ! -z "$FLAVOR" ]; then
-    APPLICATION_IMAGE="$IMAGE/$FLAVOR-$APPLICATION"
+    APPLICATION_IMAGE="$REPOSITORY/$FLAVOR-$APPLICATION"
     # if application flavor is specified and Dockerfile exists, use it
     if [ -f "$APPLICATION_DIR/Dockerfile.$FLAVOR" ]; then
       APPLICATION_DOCKERFILE="$APPLICATION_DIR/Dockerfile.$FLAVOR"
@@ -229,14 +268,10 @@ if [ ! -z "$APPLICATION" ]; then
   prompt "Are you sure you want to build $APPLICATION_IMAGE from $APPLICATION_DOCKERFILE?"
 
   log "Building $APPLICATION_IMAGE image from $APPLICATION_DOCKERFILE"
-  build_image \
+  build_image $APPLICATION_IMAGE \
     --build-arg="BASE_IMAGE=$BASE_IMAGE" \
-    -t $APPLICATION_IMAGE \
     -f $APPLICATION_DOCKERFILE \
     $APPLICATION_DIR
-
-  tag_image $APPLICATION_IMAGE
-  push_image $APPLICATION_IMAGE
 
   exit 0
 fi
@@ -247,30 +282,30 @@ prompt "Are you sure you want to build $BASE_IMAGE?"
 
 log "Building base image: $BASE_IMAGE"
 
-log "[STAGE 1]: Building neko-xorg-deps image"
-build_image -t neko-xorg-deps runtime/xorg-deps/
+log "[STAGE 1]: Building local/neko-xorg-deps image"
+build_image local/neko-xorg-deps runtime/xorg-deps/
 
-log "[STAGE 2]: Building neko-server image"
-build_image -t neko-server server/
+log "[STAGE 2]: Building local/neko-server image"
+build_image local/neko-server server/
 
-log "[STAGE 3]: Building neko-client image"
-build_image -t neko-client client/
+log "[STAGE 3]: Building local/neko-client image"
+build_image local/neko-client client/
 
 if [ -z "$FLAVOR" ]; then
-  RUNTIME_IMAGE="neko-runtime"
+  RUNTIME_IMAGE="local/neko-runtime"
   log "[STAGE 4]: Building $RUNTIME_IMAGE image"
-  build_image -t $RUNTIME_IMAGE runtime/
+  build_image $RUNTIME_IMAGE runtime/
 else
-  RUNTIME_IMAGE="neko-$FLAVOR-runtime"
+  RUNTIME_IMAGE="local/neko-$FLAVOR-runtime"
   log "[STAGE 4]: Building $RUNTIME_IMAGE image"
-  build_image -t $RUNTIME_IMAGE -f runtime/Dockerfile.$FLAVOR runtime/
+  build_image $RUNTIME_IMAGE -f runtime/Dockerfile.$FLAVOR runtime/
 fi
 
 log "[STAGE 5]: Building $BASE_IMAGE image"
-build_image -t $BASE_IMAGE -f - . <<EOF
-  FROM neko-xorg-deps AS xorg-deps
-  FROM neko-server AS server
-  FROM neko-client AS client
+build_image $BASE_IMAGE -f - . <<EOF
+  FROM local/neko-xorg-deps AS xorg-deps
+  FROM local/neko-server AS server
+  FROM local/neko-client AS client
   FROM $RUNTIME_IMAGE AS runtime
 
   COPY --from=xorg-deps /usr/local/lib/xorg/modules/drivers/dummy_drv.so /usr/lib/xorg/modules/drivers/dummy_drv.so
@@ -281,6 +316,3 @@ build_image -t $BASE_IMAGE -f - . <<EOF
   
   COPY config.yml /etc/neko/neko.yaml
 EOF
-
-tag_image $BASE_IMAGE
-push_image $BASE_IMAGE
