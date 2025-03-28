@@ -14,7 +14,8 @@ function help() {
   echo "Usage: $0"
   echo "  -p, --platform : The platform (default: linux/amd64)"
   echo "  -i, --image    : The image name prefix (default: ghcr.io/m1k1o/neko)"
-  echo "  -t, --tag      : The image tag (default: latest)"
+  echo "  -t, --tag      : The image tag, comma separated list, if not specified"
+  echo "                   uses 'latest' and if available, current git semver tag (v*.*.*)"
   echo "  -f, --flavor   : The flavor, if not specified, builds without flavor"
   echo "  -b, --base     : The base image name (default: ghcr.io/m1k1o/neko/[<flavor>-]base:<tag>)"
   echo "  -a, --app      : The app to build, if not specified, builds the base image"
@@ -126,9 +127,9 @@ function tag_image() {
   local IMAGE_NO_TAG="${IMAGE%:*}"
   local IMAGE_TAG="${IMAGE##*:}"
 
-  for TAG in "${TAGS[@]}"; do
+  for T in "${TAGS[@]}"; do
     # skip if the tag is the same as the image tag
-    if [ "$TAG" == "$IMAGE_TAG" ]; then
+    if [ "$T" == "$IMAGE_TAG" ]; then
       continue
     fi
 
@@ -145,9 +146,9 @@ function push_image() {
   local IMAGE="$1"
   local IMAGE_NO_TAG="${IMAGE%:*}"
 
-  for TAG in "${TAGS[@]}"; do
-    log "Pushing $IMAGE_NO_TAG:$TAG to registry"
-    docker push $IMAGE_NO_TAG:$TAG
+  for T in "${TAGS[@]}"; do
+    log "Pushing $IMAGE_NO_TAG:$T to registry"
+    docker push $IMAGE_NO_TAG:$T
   done
 }
 
@@ -164,12 +165,27 @@ fi
 log "Using image: $IMAGE"
 
 if [ -z "$TAG" ]; then
+  # if git is available, use the latest tag from git
+  if [ -d ".git" ] && [ -x "$(command -v git)" ]; then
+    # get the latest version tag from git (v*.*.*)
+    GIT_VER=$(git describe --tags --exact-match --match "v*.*.*" 2>/dev/null || true)
+    if [ ! -z "$GIT_VER" ]; then
+      # split to major, minor and patch
+      IFS='.' read -r MAJOR MINOR PATCH <<< "${GIT_VER#v}"
+      # append MAJOR.MINOR.PATCH, MAJOR.MINOR and MAJOR to the tags
+      TAGS=("$MAJOR.$MINOR.$PATCH" "$MAJOR.$MINOR" "$MAJOR")
+    #else
+    #  # if no version tag is found, use the latest commit hash
+    #  GIT_VER=$(git rev-parse HEAD 
+    #  TAGS=("sha-$GIT_VER")
+    fi
+  fi
   TAG="latest"
-  TAGS=($TAG)
+  TAGS=("$TAG" "${TAGS[@]}")
 fi
 
-for TAG in "${TAGS[@]}"; do
-  log "Using tag: $TAG"
+for T in "${TAGS[@]}"; do
+  log "Using tag: $T"
 done
 
 if [ -z "$FLAVOR" ]; then
