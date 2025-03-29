@@ -290,8 +290,9 @@ else
 fi
 
 log "Building base image: $BASE_IMAGE"
-docker run --rm -it \
+docker run --rm -i \
   -v ./:/src \
+  -e "RUNTIME_DOCKERFILE=$RUNTIME_DOCKERFILE" \
   --workdir /src \
   --entrypoint go \
   golang:1.24-bullseye \
