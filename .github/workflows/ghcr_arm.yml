@@ -1,4 +1,4 @@
-name: "arm64v8 and arm32v7 images"
+name: "arm64v8 images"
 
 on:
   push:
@@ -11,7 +11,7 @@ env:
   # Will be used in the Dockerfile generation script.
   RUNTIME_DOCKERFILE: Dockerfile.arm
   # The platforms to build for.
-  PLATFORMS: linux/arm64,linux/arm/v7
+  PLATFORMS: linux/arm64
 
 jobs:
   build-client:
