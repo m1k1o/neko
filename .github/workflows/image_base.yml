@@ -20,7 +20,7 @@ on:
         description: "The platforms to build for."
 
 env:
-  FLAVOR_PREFIX: ${{ inputs.flavor && inputs.flavor + '-' || '' }}
+  FLAVOR_PREFIX: ${{ inputs.flavor && format('{0}-', inputs.flavor) || '' }}
 
 jobs:
   build-client:
