@@ -1,0 +1,130 @@
+name: "amd64 images"
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+env:
+  # Prefix for the image name.
+  FLAVOR_PREFIX: ""
+  # Will be used in the Dockerfile generation script.
+  RUNTIME_DOCKERFILE: Dockerfile
+  # The platforms to build for.
+  PLATFORMS: linux/amd64
+
+jobs:
+  build-base:
+    name: Build base image
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Extract metadata (tags, labels) for Docker
+        uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: ghcr.io/${{ github.repository }}/${{ env.FLAVOR_PREFIX }}base
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=sha,format=long
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate base Dockerfile
+        run: ./docker/main.go -i Dockerfile.tmpl -o Dockerfile
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: ./
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          platforms: ${{ env.PLATFORMS }}
+
+  build-apps:
+    name: Build application images
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+    needs: [ build-base ]
+    strategy:
+      # Will build all images even if some fail.
+      matrix:
+        include:
+          - name: firefox
+          - name: waterfox
+          - name: chromium
+          - name: google-chrome
+          - name: ungoogled-chromium
+          - name: microsoft-edge
+          - name: brave
+          - name: vivaldi
+          - name: opera
+          - name: tor-browser
+          - name: remmina
+          - name: vlc
+          - name: xfce
+          - name: kde
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Extract metadata (tags, labels) for Docker
+        uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: ghcr.io/${{ github.repository }}/${{ env.FLAVOR_PREFIX }}${{ matrix.name }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=sha,format=long
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: apps/${{ matrix.name }}
+          file: apps/${{ matrix.name }}/${ matrix.dockerfile || 'Dockerfile' }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            BASE_IMAGE=ghcr.io/${{ github.repository }}/${{ env.FLAVOR_PREFIX }}base:sha-${{ github.sha }}
+          platforms: ${{ env.PLATFORMS }}

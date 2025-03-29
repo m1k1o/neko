@@ -6,6 +6,8 @@ it pastes the content of the referenced Dockerfile into the current Dockerfile w
   - It takes the ARG variables defined before the FROM command and prepends them with the alias of the
     FROM command. It also replaces any occurrences of the ARG variables in the Dockerfile with the new prefixed
     variables. Then it writes them to the beginning of the new Dockerfile.
+  - It allows user to specify -client flag to just include already built client directory in the Dockerfile.
+    If no client path is specified, it will build the client from the Dockerfile.
 
 It allows to split large multi-stage Dockerfiles into own directories where they can be built independently. It also
 allows to dynamically join these Dockerfiles into a single Dockerfile based on various conditions.
@@ -26,6 +28,7 @@ import (
 func main() {
 	inputPath := flag.String("i", "", "Path to the input Dockerfile")
 	outputPath := flag.String("o", "", "Path to the output Dockerfile")
+	clientPath := flag.String("client", "", "Path to the client directory, if not set, the client will be built")
 	flag.Parse()
 
 	if *inputPath == "" {
@@ -39,7 +42,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	err = processDockerfile(buildcontext, *outputPath)
+	err = processDockerfile(buildcontext, *outputPath, *clientPath)
 	if err != nil {
 		log.Printf("Error: %v\n", err)
 		os.Exit(1)
@@ -112,28 +115,17 @@ func relativeDockerFile(buf *bytes.Buffer, ctx BuildContext, newContextPath, ali
 
 		// modify COPY and ADD lines
 		if strings.HasPrefix(line, "COPY") || strings.HasPrefix(line, "ADD") {
-			parts := strings.Fields(line)
-
-			containsFrom := false
-			localPathIndex := 0
-			for i, part := range parts {
-				if strings.HasPrefix(part, "--from=") {
-					containsFrom = true
-					continue
-				}
-				if strings.HasPrefix(part, "--") {
-					continue
-				}
-				if localPathIndex == 0 && i > 0 {
-					localPathIndex = i
-				}
+			// parse the COPY/ADD command
+			cmd, err := ParseCopyAddCommand(line)
+			if err != nil {
+				return nil, fmt.Errorf("failed to parse COPY/ADD command: %w", err)
 			}
 
-			if !containsFrom {
+			// only replace if not using --from
+			if _, ok := cmd.Args["from"]; !ok {
 				// replace the local part with the new context path
-				parts[localPathIndex] = filepath.Join(newContextPath, parts[localPathIndex])
-				newLine := strings.Join(parts, " ")
-				buf.WriteString(newLine + "\n")
+				cmd.From = filepath.Join(newContextPath, cmd.From)
+				buf.WriteString(cmd.String() + "\n")
 				continue
 			}
 		}
@@ -153,7 +145,7 @@ func relativeDockerFile(buf *bytes.Buffer, ctx BuildContext, newContextPath, ali
 }
 
 // processDockerfile processes the Dockerfile and resolves sub-Dockerfiles in it
-func processDockerfile(ctx BuildContext, outputPath string) error {
+func processDockerfile(ctx BuildContext, outputPath, clientPath string) error {
 	// read the Dockerfile
 	file, err := os.Open(ctx.DockerfilePath())
 	if err != nil {
@@ -177,6 +169,11 @@ func processDockerfile(ctx BuildContext, outputPath string) error {
 				return fmt.Errorf("failed to parse FROM command: %w", err)
 			}
 
+			// if we are not building the client, skip this line
+			if clientPath != "" && cmd.Alias == "client" {
+				continue
+			}
+
 			// resolve environment variables in the image name
 			cmd.Image = os.ExpandEnv(cmd.Image)
 
@@ -196,6 +193,25 @@ func processDockerfile(ctx BuildContext, outputPath string) error {
 			continue
 		}
 
+		// modify COPY and ADD lines
+		if strings.HasPrefix(line, "COPY") || strings.HasPrefix(line, "ADD") {
+			// parse the COPY/ADD command
+			cmd, err := ParseCopyAddCommand(line)
+			if err != nil {
+				return fmt.Errorf("failed to parse COPY/ADD command: %w", err)
+			}
+
+			fmt.Fprintln(os.Stderr, "COPY/ADD command:", cmd)
+
+			// if we are not building the client, take if from the client path
+			if clientPath != "" && cmd.Args["from"] == "client" {
+				delete(cmd.Args, "from")
+				cmd.From = clientPath
+				newDockerfile.WriteString(cmd.String() + "\n")
+				continue
+			}
+		}
+
 		// copy all other lines as is
 		newDockerfile.WriteString(line + "\n")
 	}
@@ -206,7 +222,8 @@ func processDockerfile(ctx BuildContext, outputPath string) error {
 	}
 
 	// add the global ARGs to the beginning of the new Dockerfile
-	outBytes := append([]byte(globalArgs.MultiLineString()), newDockerfile.Bytes()...)
+	prefix := "# THIS FILE IS GENERATED, DO NOT EDIT\n"
+	outBytes := append([]byte(prefix+globalArgs.MultiLineString()), newDockerfile.Bytes()...)
 
 	if outputPath != "" {
 		// write the new Dockerfile to the output path
@@ -353,4 +370,64 @@ func (ac ArgCommand) ReplaceArgPrefix(prefix string, val string) string {
 		val = strings.ReplaceAll(val, "$"+arg.Key, "$"+prefix+arg.Key)
 	}
 	return val
+}
+
+// CopyAddCommand represents the COPY and ADD commands in a Dockerfile
+type CopyAddCommand struct {
+	Command string
+	Args    map[string]string
+	From    string
+	To      string
+}
+
+func ParseCopyAddCommand(line string) (ca CopyAddCommand, err error) {
+	parts := strings.Fields(line)
+	if len(parts) < 2 || (strings.ToLower(parts[0]) != "copy" && strings.ToLower(parts[0]) != "add") {
+		err = fmt.Errorf("invalid COPY/ADD line: %s", line)
+		return
+	}
+
+	ca.Command = parts[0]
+
+	ca.Args = make(map[string]string)
+	for i := 1; i < len(parts); i++ {
+		if strings.HasPrefix(parts[i], "--") {
+			kv := strings.SplitN(parts[i][2:], "=", 2)
+			if len(kv) == 2 {
+				ca.Args[kv[0]] = kv[1]
+			} else {
+				ca.Args[kv[0]] = ""
+			}
+			continue
+		}
+		if ca.From == "" {
+			ca.From = parts[i]
+			continue
+		}
+		if ca.To == "" {
+			ca.To = parts[i]
+			continue
+		}
+	}
+
+	return
+}
+
+func (ca *CopyAddCommand) String() string {
+	var sb strings.Builder
+	sb.WriteString(ca.Command + " ")
+	for k, v := range ca.Args {
+		sb.WriteString("--" + k)
+		if v != "" {
+			sb.WriteString("=" + v)
+		}
+		sb.WriteString(" ")
+	}
+	if ca.From != "" {
+		sb.WriteString(ca.From + " ")
+	}
+	if ca.To != "" {
+		sb.WriteString(ca.To)
+	}
+	return sb.String()
 }
