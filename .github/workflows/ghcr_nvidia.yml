@@ -51,7 +51,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Generate base Dockerfile
-        run: ./docker/main.go -i Dockerfile.tmpl -o Dockerfile
+        run: go run docker/main.go -i Dockerfile.tmpl -o Dockerfile
 
       - name: Build and push
         uses: docker/build-push-action@v6

@@ -15,36 +15,12 @@ env:
 
 jobs:
   build-client:
-    name: Build client artifacts
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 18
-          cache: npm
-          cache-dependency-path: client/package-lock.json
-
-      - name: Install dependencies
-        working-directory: ./client
-        run: npm ci
-
-      - name: Build client
-        working-directory: ./client
-        run: npm run build
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: client
-          path: client/dist
+    uses: ./.github/workflows/client_build.yml
 
   build-base:
     name: Build base image
     runs-on: ubuntu-latest
+    needs: [ build-client ]
     permissions:
       packages: write
       contents: read
@@ -85,7 +61,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Generate base Dockerfile
-        run: ./docker/main.go -i Dockerfile.tmpl -o Dockerfile -client client/dist
+        run: go run docker/main.go -i Dockerfile.tmpl -o Dockerfile -client client/dist
 
       - name: Build and push
         uses: docker/build-push-action@v6
