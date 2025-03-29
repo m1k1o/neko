@@ -286,7 +286,11 @@ prompt "Are you sure you want to build $BASE_IMAGE?"
 if [ -z "$FLAVOR" ]; then
   export RUNTIME_DOCKERFILE="Dockerfile"
 else
-  export RUNTIME_DOCKERFILE="Dockerfile.$FLAVOR"
+  if [ -f "runtime/Dockerfile.$FLAVOR" ]; then
+    export RUNTIME_DOCKERFILE="Dockerfile.$FLAVOR"
+  else
+    export RUNTIME_DOCKERFILE="Dockerfile"
+  fi
 fi
 
 log "Building base image: $BASE_IMAGE"

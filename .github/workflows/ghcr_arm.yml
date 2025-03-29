@@ -11,7 +11,7 @@ jobs:
     with:
       flavor: arm
       platforms: linux/arm64
-      dockerfile: Dockerfile.arm
+      dockerfile: Dockerfile
 
   build-apps:
     uses: ./.github/workflows/image_app.yml
