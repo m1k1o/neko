@@ -42,38 +42,62 @@ func main() {
 		os.Exit(1)
 	}
 
-	err = processDockerfile(buildcontext, *outputPath, *clientPath)
+	err = ProcessDockerfile(buildcontext, *outputPath, *clientPath)
 	if err != nil {
 		log.Printf("Error: %v\n", err)
 		os.Exit(1)
 	}
 }
 
-// relativeDockerFile reads the Dockerfile, modifies it to point to the new context path, and returns the global ARGs
-func relativeDockerFile(buf *bytes.Buffer, ctx BuildContext, newContextPath, alias string) (ArgCommand, error) {
+type Dockerfile struct {
+	ctx  BuildContext // build context for the current Dockerfile
+	args ArgCommand   // global args defined in the Dockerfile
+
+	w *bytes.Buffer
+}
+
+// Include reads the requested Dockerfile, modifies it to point to the new context path, and includes it in the
+// current Dockerfile. It also replaces the ARG variables with the new prefixed variables.
+func (d *Dockerfile) Include(ctx BuildContext, alias string) error {
 	// read the Dockerfile
-	file, err := os.Open(ctx.DockerfilePath())
+	raw, err := os.ReadFile(ctx.String())
 	if err != nil {
-		return nil, fmt.Errorf("failed to open Dockerfile: %w", err)
+		return fmt.Errorf("failed to read Dockerfile: %w", err)
 	}
-	defer file.Close()
+
+	// count how many FROM lines are in the Dockerfile, we need to know which one is the last one
+	// to replace it with our alias
+	fromCount := 0
+	scanner := bufio.NewScanner(bytes.NewReader(raw))
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.HasPrefix(line, "FROM") {
+			fromCount++
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		return fmt.Errorf("failed to read Dockerfile: %w", err)
+	}
 
 	// new context path relative to the current context path
-	newContextPath, err = filepath.Rel(newContextPath, ctx.ContextPath)
+	newContextPath, err := filepath.Rel(d.ctx.ContextPath, ctx.ContextPath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get relative path: %w", err)
+		return fmt.Errorf("failed to get relative path: %w", err)
 	}
 
 	// use argPrefix to prepend the alias to the ARG variables
 	argPrefix := strings.ToUpper(alias) + "_"
 	// replace - with _ in the alias
 	argPrefix = strings.ReplaceAll(argPrefix, "-", "_")
+	// use aliasPrefix to prepend the alias to the ARG variables
+	aliasPrefix := alias + "-"
 
 	beforeFrom := true
 	globalArgs := ArgCommand{}
 
 	// read the Dockerfile line by line and modify it
-	scanner := bufio.NewScanner(file)
+	scanner = bufio.NewScanner(bytes.NewReader(raw))
+	nthFrom := 0
 	for scanner.Scan() {
 		line := scanner.Text()
 
@@ -83,33 +107,58 @@ func relativeDockerFile(buf *bytes.Buffer, ctx BuildContext, newContextPath, ali
 		}
 
 		// we need to move the ARG lines before the FROM line
-		if strings.HasPrefix(line, "ARG") && beforeFrom {
+		if strings.HasPrefix(line, "ARG") {
 			args, err := ParseArgCommand(line)
 			if err != nil {
-				return nil, fmt.Errorf("failed to parse ARG command: %w", err)
+				return fmt.Errorf("failed to parse ARG command: %w", err)
 			}
-			globalArgs = append(globalArgs, args...)
+			if beforeFrom {
+				globalArgs = append(globalArgs, args...)
+				log.Printf("[%s] Found global %q before FROM, moving it to the beginning.\n", ctx, args)
+			} else {
+				// if we are not before FROM and it matches one of the global args, we need to add prefix to it
+				// because they may be redefined in the Dockerfile
+				argKeys := make(map[string]struct{})
+				for _, arg := range globalArgs {
+					argKeys[arg.Key] = struct{}{}
+				}
+				for i := range args {
+					if _, ok := argKeys[args[i].Key]; ok {
+						log.Printf("[%s] Found global ARG %q after FROM, adding %q prefix.\n", ctx, args[i].Key, argPrefix)
+						args[i].Key = argPrefix + args[i].Key
+					}
+				}
+				d.w.WriteString(args.String() + "\n")
+			}
 			continue
 		}
 
 		// modify FROM lines
 		if strings.HasPrefix(line, "FROM") {
+			nthFrom++
+
 			// parse the FROM command
 			cmd, err := ParseFromCommand(line)
 			if err != nil {
-				return nil, fmt.Errorf("failed to parse FROM command: %w", err)
+				return fmt.Errorf("failed to parse FROM command: %w", err)
 			}
 
 			// handle the case where ARGs are defined before FROM
 			cmd.Image = globalArgs.ReplaceArgPrefix(argPrefix, cmd.Image)
 
-			// add new alias if it is not already present
-			if alias != "" {
+			if nthFrom == fromCount && cmd.Alias != alias {
+				log.Printf("[%s] Replacing alias in %q with %q.\n", ctx, cmd, cmd.Alias)
+				// if this is the last FROM line, we need to replace with our alias
 				cmd.Alias = alias
+			}
+			if nthFrom != fromCount && alias != "" {
+				log.Printf("[%s] Adding alias prefix %q to %q.\n", ctx, aliasPrefix, cmd)
+				// this is not the last FROM line, add prefix to the alias
+				cmd.Alias = aliasPrefix + cmd.Alias
 			}
 
 			beforeFrom = false
-			buf.WriteString(cmd.String() + "\n")
+			d.w.WriteString(cmd.String() + "\n")
 			continue
 		}
 
@@ -118,46 +167,53 @@ func relativeDockerFile(buf *bytes.Buffer, ctx BuildContext, newContextPath, ali
 			// parse the COPY/ADD command
 			cmd, err := ParseCopyAddCommand(line)
 			if err != nil {
-				return nil, fmt.Errorf("failed to parse COPY/ADD command: %w", err)
+				return fmt.Errorf("failed to parse COPY/ADD command: %w", err)
 			}
 
-			// only replace if not using --from
 			if _, ok := cmd.Args["from"]; !ok {
-				// replace the local part with the new context path
-				cmd.From = filepath.Join(newContextPath, cmd.From)
-				buf.WriteString(cmd.String() + "\n")
-				continue
+				// replace the from part with the new context path
+				newFrom := filepath.Join(newContextPath, cmd.From)
+				log.Printf("[%s] Path replace: %s -> %s\n", ctx, cmd.From, newFrom)
+				cmd.From = newFrom
+			} else {
+				// add alias prefix to the --from argument
+				log.Printf("[%s] Found COPY/ADD with --from=%s, adding %q alias prefix.\n", ctx, cmd.Args["from"], aliasPrefix)
+				cmd.Args["from"] = aliasPrefix + cmd.Args["from"]
 			}
+
+			d.w.WriteString(cmd.String() + "\n")
+			continue
 		}
 
 		// write the line as is
-		buf.WriteString(line + "\n")
+		d.w.WriteString(line + "\n")
 	}
 
 	// add prefix to global ARGs
-	for i := range globalArgs {
-		if globalArgs[i].Key != "" {
-			globalArgs[i].Key = argPrefix + globalArgs[i].Key
-		}
-	}
+	globalArgs.WithPrefix(argPrefix)
 
-	return globalArgs, scanner.Err()
+	// add the global ARGs to the beginning of the new Dockerfile
+	d.args = append(d.args, globalArgs...)
+
+	return scanner.Err()
 }
 
-// processDockerfile processes the Dockerfile and resolves sub-Dockerfiles in it
-func processDockerfile(ctx BuildContext, outputPath, clientPath string) error {
-	// read the Dockerfile
-	file, err := os.Open(ctx.DockerfilePath())
-	if err != nil {
-		return fmt.Errorf("failed to open Dockerfile: %w", err)
+// Process processes the Dockerfile and resolves sub-Dockerfiles in it
+func ProcessDockerfile(ctx BuildContext, outputPath, clientPath string) error {
+	d := &Dockerfile{
+		ctx:  ctx,
+		args: make(ArgCommand, 0),
+		w:    bytes.NewBuffer(nil),
 	}
-	defer file.Close()
 
-	globalArgs := ArgCommand{}
+	// read the Dockerfile
+	raw, err := os.ReadFile(ctx.String())
+	if err != nil {
+		return fmt.Errorf("failed to read Dockerfile: %w", err)
+	}
 
 	// read the Dockerfile line by line and modify it
-	newDockerfile := bytes.NewBuffer(nil)
-	scanner := bufio.NewScanner(file)
+	scanner := bufio.NewScanner(bytes.NewReader(raw))
 	for scanner.Scan() {
 		line := scanner.Text()
 
@@ -171,6 +227,7 @@ func processDockerfile(ctx BuildContext, outputPath, clientPath string) error {
 
 			// if we are not building the client, skip this line
 			if clientPath != "" && cmd.Alias == "client" {
+				log.Printf("[%s] Skipping FROM client line.\n", ctx)
 				continue
 			}
 
@@ -184,11 +241,10 @@ func processDockerfile(ctx BuildContext, outputPath, clientPath string) error {
 			}
 
 			// resolve the dockerfile content
-			args, err := relativeDockerFile(newDockerfile, newBuildcontext, ctx.ContextPath, cmd.Alias)
+			err = d.Include(newBuildcontext, cmd.Alias)
 			if err != nil {
 				return fmt.Errorf("failed to get relative Dockerfile: %w", err)
 			}
-			globalArgs = append(globalArgs, args...)
 
 			continue
 		}
@@ -201,19 +257,18 @@ func processDockerfile(ctx BuildContext, outputPath, clientPath string) error {
 				return fmt.Errorf("failed to parse COPY/ADD command: %w", err)
 			}
 
-			fmt.Fprintln(os.Stderr, "COPY/ADD command:", cmd)
-
 			// if we are not building the client, take if from the client path
 			if clientPath != "" && cmd.Args["from"] == "client" {
+				log.Printf("[%s] Replacing COPY/ADD --from=client with %q.\n", ctx, clientPath)
 				delete(cmd.Args, "from")
 				cmd.From = clientPath
-				newDockerfile.WriteString(cmd.String() + "\n")
+				d.w.WriteString(cmd.String() + "\n")
 				continue
 			}
 		}
 
 		// copy all other lines as is
-		newDockerfile.WriteString(line + "\n")
+		d.w.WriteString(line + "\n")
 	}
 
 	// check for errors while reading the Dockerfile
@@ -223,7 +278,7 @@ func processDockerfile(ctx BuildContext, outputPath, clientPath string) error {
 
 	// add the global ARGs to the beginning of the new Dockerfile
 	prefix := "# THIS FILE IS GENERATED, DO NOT EDIT\n"
-	outBytes := append([]byte(prefix+globalArgs.MultiLineString()), newDockerfile.Bytes()...)
+	outBytes := append([]byte(prefix+d.args.MultiLineString()), d.w.Bytes()...)
 
 	if outputPath != "" {
 		// write the new Dockerfile to the output path
@@ -262,7 +317,7 @@ func ButidContextFromPath(path string) (BuildContext, error) {
 	}, nil
 }
 
-func (bc *BuildContext) DockerfilePath() string {
+func (bc BuildContext) String() string {
 	if bc.Dockerfile != "" {
 		return filepath.Join(bc.ContextPath, bc.Dockerfile)
 	}
@@ -295,7 +350,7 @@ func ParseFromCommand(line string) (fc FromCommand, err error) {
 	return
 }
 
-func (fc *FromCommand) String() string {
+func (fc FromCommand) String() string {
 	var sb strings.Builder
 	sb.WriteString("FROM ")
 	if fc.Platform != "" {
@@ -365,9 +420,18 @@ func (ac ArgCommand) MultiLineString() string {
 	return sb.String()
 }
 
+func (ac ArgCommand) WithPrefix(prefix string) {
+	for i := range ac {
+		if ac[i].Key != "" {
+			ac[i].Key = prefix + ac[i].Key
+		}
+	}
+}
+
 func (ac ArgCommand) ReplaceArgPrefix(prefix string, val string) string {
 	for _, arg := range ac {
 		val = strings.ReplaceAll(val, "$"+arg.Key, "$"+prefix+arg.Key)
+		val = strings.ReplaceAll(val, "${"+arg.Key+"}", "${"+prefix+arg.Key+"}")
 	}
 	return val
 }
@@ -413,7 +477,7 @@ func ParseCopyAddCommand(line string) (ca CopyAddCommand, err error) {
 	return
 }
 
-func (ca *CopyAddCommand) String() string {
+func (ca CopyAddCommand) String() string {
 	var sb strings.Builder
 	sb.WriteString(ca.Command + " ")
 	for k, v := range ca.Args {
