@@ -1,0 +1,63 @@
+---
+id: control-reset
+title: "Reset Control"
+description: "Reset the control status of the room."
+sidebar_label: "Reset Control"
+hide_title: true
+hide_table_of_contents: true
+api: eJzVVktv2zgQ/isDFih2BVlOk558y7peNGibLmJ3e0iCxVgaS6wlUuVQTr2G//tiSMl23BbodU+WyXl883FeO+WxZDW5V87aZpRb452t1WOqCuLc6dZra9RE3RGTB18R9CLAHn3HYFfhVLQzlSrbkkPRuSnURPWyQVmlyhG31jCxmuzU5cVr+XnuZtobd8Edd3lOzKuurreZ2qfq9cWr73UW4p6+dsQ+/GpHDB2TA+x8RcbrPCASeAKIjBcj2LZ1fzP+wmJppzivqEH58tuW1ETZ5RfKBXrrJDKvI/aGmLGkE0H2TptSndP2hjzqmgog56yDXi9T+32qvPa1qM7k6kNvcb/fhzivfhwnk9uQg84U5NhbW0TyY/QpLDuhYNUxMXgb4rdO/0ug/f8m+n2qGvKVlfxpLQf36Cs1UWNs9VgSbdzn1dj1iRVpkTQ+J+29zbHuaVOp6lytJqryvp2Mx7XcVZb95Ori4kLtH8VQ3jntt8HSH4SO3HUnzu8f9+lOTa1dazo9Wdg1mcPBiYW5kBn5OtU6UIatfkdblSptQqGIiEqVwUZub2fvPv4zn83nNx9vv6P1+llaQ8falIDAxCz/o61QL6cRHDxL9MJZAKgmahmEftVLNAle4g4+Thj4SXBfO3LbY2xB9VfdBWFokZkKQAaEYA1adNiQJxezSZuVDf77rLqltYXrv25UqiQxoour7CK7+M5xEA0V85mWd4spoCnkc27zNXlYEuuCGO5m84VYlLpqnd3oQuoO65HXDYH8tcDeETbalClo48lh7vVGOmZd49LGvpgG+44a6wkK4rW3Law6k8sl1tpvswfzYF68eAFT6wgWlFfG1rbUxHIxgiT5O3ibD97ASk+I6JPkwQCMIERV04YclsSQJMM1rKw7Ak+htk+jGj2ZfJtCpctq9LULMPqYBC12hT6JLosu3tF2adEVQaSxHRPQhoxnQEfgHRputPdURHzSqBgbGmjOrTEUog6QmLCpifnInDXZEPCd4F0I0XNdCkuSG6aAqW2azgw5M9AQX25gIoQ+HIEOo6GILo/GtBlg/UZZmaWHYiL2uKw1Vw0Zn8LNdAY5mkIX6AnoW16hKen3DCA6ex/eu0J/tNC1Isvx3dc9Z+PI1wrreon5OjBWoSnqga0D5iMHQwIK9NmG3NZXAn1WMx1jPSujlzDvYXxAgyVJFEkCI5hLm6IfjcmAcwAfMMmTDwEmyZ21TZD5JLpnZqeO0IcCaGyhV9vwKcJ9xw5kR6dhtEs1SUfnEwdv+qLodwEOhq+LLx2LZeDcEUmXMytddrGoOIVGgMj9+mdpmQ0O5lv21MBbwtpX8BI+kHc6j37u5Js2wVEUq6JYXlG+5mD0sONgDdqwLisf8ceyfWuf4MbDdV3DZ+vWDAtbkq/IicCr7LQW45MzNFRoPBZYeOIkOWsvaV+HAqFAj0mSPZjL7CzByXAnCxBCkrTS+tiHzF3qQjvqu0ySnJffSRs4rcAY11V2kn9JMvQ/aSsrbWhUOtSGDo+cJDGHT96573qSOs8eLmT3n7IbSK8rwr7AqewwYcaEpiHrX0j8wuadZNqgqVJV65wMh1Wkny7XLeYVwWXo9M/G/dPTU4bhNrOuHPeqPH5/M53dzmejy+wiq3xTh4Eim0eD5sRw3ID7pDyfIrvjbvXLq3I/Kz198+O2Rm1kmgbEu37juZdBKnuztU2/vkXfce95TJVsLyK32y2R6ZOr93s5jhN3cv+Yqg06jUsZirKwqIqwIBfWmzVtha88p1Z2qA3WXZzdZ5uhbDWHjeyvj/OF2u//A3NlO/I=
+sidebar_class_name: "post api-method"
+info_path: docs/v3/api
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Reset Control"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"post"}
+  path={"/api/room/control/reset"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Reset the control status of the room.
+
+<ParamsDetails
+  parameters={undefined}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  title={"Body"}
+  body={undefined}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  id={undefined}
+  label={undefined}
+  responses={{"204":{"description":"Control reset successfully."},"401":{"description":"The request requires user authentication.","content":{"application/json":{"schema":{"type":"object","properties":{"message":{"type":"string","description":"Detailed error message."}},"title":"ErrorMessage"}}}},"403":{"description":"The server understood the request, but refuses to authorize it.","content":{"application/json":{"schema":{"type":"object","properties":{"message":{"type":"string","description":"Detailed error message."}},"title":"ErrorMessage"}}}}}}
+>
+  
+</StatusCodes>
+
+
+      

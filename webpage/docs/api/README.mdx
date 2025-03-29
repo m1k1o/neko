@@ -1,0 +1,169 @@
+---
+id: neko-api
+title: "Neko API Reference"
+description: "Neko uses WebRTC and WebSocket besides REST API to provide real-time video streaming, interactive collaboration, and remote desktop functionality."
+sidebar_label: Introduction
+sidebar_position: 0
+hide_title: true
+custom_edit_url: null
+---
+
+import ApiLogo from "@theme/ApiLogo";
+import Heading from "@theme/Heading";
+import SchemaTabs from "@theme/SchemaTabs";
+import TabItem from "@theme/TabItem";
+import Export from "@theme/ApiExplorer/Export";
+
+
+<Export
+  url={"https://raw.githubusercontent.com/m1k1o/neko/refs/heads/master/server/openapi.yaml"}
+  proxy={undefined}
+>
+  
+</Export>
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Neko API Reference"}
+>
+</Heading>
+
+
+
+Neko uses WebRTC and WebSocket besides REST API to provide real-time video streaming, interactive collaboration, and remote desktop functionality.
+
+### Core Technologies
+
+- **Video Streaming over WebRTC**
+  - Neko leverages **WebRTC** for real-time, low-latency, high-quality video and audio streaming.
+  - Keyboard and mouse events are transmitted over the same WebRTC connection for seamless interaction.
+
+- **Real-Time Signaling and Communication over WebSocket**
+  - **WebSocket** is used for sSignaling in WebRTC (e.g., session establishment, ICE candidate exchange).  
+  - Live chat, session updates, and keyboard/mouse fallback are handled over WebSocket.
+
+- **REST API for Everything Else**
+  - **Authentication & Session Management** - Secure user authentication and session handling.  
+  - **Room and User Management** - Creating, modifying, and controlling user access to rooms.  
+  - **Desktop Controls** - Adjusting screen configurations, managing keyboard and mouse events.
+  - **System Health & Metrics** - Retrieving system health checks and operational insights.  
+
+### How It All Works Together
+
+1. **WebRTC** handles media streaming for **real-time video, audio and data**.
+2. **WebSocket** ensures a **persistent, bidirectional** connection for low-latency interactions.  
+3. **REST API** provides **fine-grained control** over user access, and room configuration.
+
+For more details, refer to the full API documentation.
+
+
+<div
+  style={{"marginBottom":"2rem"}}
+>
+  <Heading
+    id={"authentication"}
+    as={"h2"}
+    className={"openapi-tabs__heading"}
+    children={"Authentication"}
+  >
+  </Heading><SchemaTabs
+    className={"openapi-tabs__security-schemes"}
+  >
+    <TabItem
+      label={"API Key: CookieAuth"}
+      value={"CookieAuth"}
+    >
+      
+      
+      Authentication using a session cookie.
+      
+      <div>
+        <table>
+          <tbody>
+            <tr>
+              <th>
+                Security Scheme Type:
+              </th><td>
+                apiKey
+              </td>
+            </tr><tr>
+              <th>
+                Header parameter name:
+              </th><td>
+                NEKO_SESSION
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </TabItem><TabItem
+      label={"HTTP: Bearer Auth"}
+      value={"BearerAuth"}
+    >
+      
+      
+      Authentication using a Bearer token.
+      
+      <div>
+        <table>
+          <tbody>
+            <tr>
+              <th>
+                Security Scheme Type:
+              </th><td>
+                http
+              </td>
+            </tr><tr>
+              <th>
+                HTTP Authorization Scheme:
+              </th><td>
+                bearer
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </TabItem><TabItem
+      label={"API Key: TokenAuth"}
+      value={"TokenAuth"}
+    >
+      
+      
+      Authentication using a token passed as a query parameter.
+      
+      <div>
+        <table>
+          <tbody>
+            <tr>
+              <th>
+                Security Scheme Type:
+              </th><td>
+                apiKey
+              </td>
+            </tr><tr>
+              <th>
+                Header parameter name:
+              </th><td>
+                token
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </TabItem>
+  </SchemaTabs>
+</div><div
+  style={{"marginBottom":"var(--ifm-paragraph-margin-bottom)"}}
+>
+  <h3
+    style={{"marginBottom":"0.25rem"}}
+  >
+    License
+  </h3><a
+    href={"http://www.apache.org/licenses/LICENSE-2.0.html"}
+  >
+    Apache 2.0
+  </a>
+</div>
+      

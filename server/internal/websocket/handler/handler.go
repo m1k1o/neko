@@ -1,216 +1,207 @@
 package handler
 
 import (
-	"encoding/json"
-
-	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"m1k1o/neko/internal/types"
-	"m1k1o/neko/internal/types/event"
-	"m1k1o/neko/internal/types/message"
-	"m1k1o/neko/internal/utils"
-	"m1k1o/neko/internal/websocket/state"
+	"github.com/m1k1o/neko/server/pkg/types"
+	"github.com/m1k1o/neko/server/pkg/types/event"
+	"github.com/m1k1o/neko/server/pkg/types/message"
+	"github.com/m1k1o/neko/server/pkg/utils"
 )
-
-type MessageHandler struct {
-	logger   zerolog.Logger
-	sessions types.SessionManager
-	desktop  types.DesktopManager
-	capture  types.CaptureManager
-	webrtc   types.WebRTCManager
-	state    *state.State
-}
 
 func New(
 	sessions types.SessionManager,
 	desktop types.DesktopManager,
 	capture types.CaptureManager,
 	webrtc types.WebRTCManager,
-	state *state.State,
-) *MessageHandler {
-	return &MessageHandler{
+) *MessageHandlerCtx {
+	return &MessageHandlerCtx{
 		logger:   log.With().Str("module", "websocket").Str("submodule", "handler").Logger(),
 		sessions: sessions,
 		desktop:  desktop,
 		capture:  capture,
 		webrtc:   webrtc,
-		state:    state,
 	}
 }
 
-func (h *MessageHandler) Connected(admin bool, address string) (bool, string) {
-	if address == "" {
-		h.logger.Debug().Msg("no remote address")
-	} else {
-		if h.state.IsBanned(address) {
-			h.logger.Debug().Str("address", address).Msg("banned")
-			return false, "banned"
-		}
-	}
-
-	if h.state.IsLocked("login") && !admin {
-		h.logger.Debug().Msg("server locked")
-		return false, "locked"
-	}
-
-	return true, ""
+type MessageHandlerCtx struct {
+	logger   zerolog.Logger
+	sessions types.SessionManager
+	webrtc   types.WebRTCManager
+	desktop  types.DesktopManager
+	capture  types.CaptureManager
 }
 
-func (h *MessageHandler) Disconnected(id string) {
-	h.sessions.Destroy(id)
-}
-
-func (h *MessageHandler) Message(id string, raw []byte) error {
-	header := message.Message{}
-	if err := json.Unmarshal(raw, &header); err != nil {
-		return err
-	}
-
-	session, ok := h.sessions.Get(id)
-	if !ok {
-		return errors.Errorf("unknown session id %s", id)
-	}
-
-	switch header.Event {
+func (h *MessageHandlerCtx) Message(session types.Session, data types.WebSocketMessage) bool {
+	var err error
+	switch data.Event {
 	// Client Events
 	case event.CLIENT_HEARTBEAT:
 		// do nothing
-		return nil
+
+	// System Events
+	case event.SYSTEM_LOGS:
+		payload := &message.SystemLogs{}
+		err = utils.Unmarshal(payload, data.Payload, func() error {
+			return h.systemLogs(session, payload)
+		})
 
 	// Signal Events
+	case event.SIGNAL_REQUEST:
+		payload := &message.SignalRequest{}
+		err = utils.Unmarshal(payload, data.Payload, func() error {
+			return h.signalRequest(session, payload)
+		})
+	case event.SIGNAL_RESTART:
+		err = h.signalRestart(session)
 	case event.SIGNAL_OFFER:
-		payload := &message.SignalOffer{}
-		return errors.Wrapf(
-			utils.Unmarshal(payload, raw, func() error {
-				return h.signalRemoteOffer(id, session, payload)
-			}), "%s failed", header.Event)
+		payload := &message.SignalDescription{}
+		err = utils.Unmarshal(payload, data.Payload, func() error {
+			return h.signalOffer(session, payload)
+		})
 	case event.SIGNAL_ANSWER:
-		payload := &message.SignalAnswer{}
-		return errors.Wrapf(
-			utils.Unmarshal(payload, raw, func() error {
-				return h.signalRemoteAnswer(id, session, payload)
-			}), "%s failed", header.Event)
+		payload := &message.SignalDescription{}
+		err = utils.Unmarshal(payload, data.Payload, func() error {
+			return h.signalAnswer(session, payload)
+		})
 	case event.SIGNAL_CANDIDATE:
 		payload := &message.SignalCandidate{}
-		return errors.Wrapf(
-			utils.Unmarshal(payload, raw, func() error {
-				return h.signalRemoteCandidate(id, session, payload)
-			}), "%s failed", header.Event)
+		err = utils.Unmarshal(payload, data.Payload, func() error {
+			return h.signalCandidate(session, payload)
+		})
+	case event.SIGNAL_VIDEO:
+		payload := &message.SignalVideo{}
+		err = utils.Unmarshal(payload, data.Payload, func() error {
+			return h.signalVideo(session, payload)
+		})
+	case event.SIGNAL_AUDIO:
+		payload := &message.SignalAudio{}
+		err = utils.Unmarshal(payload, data.Payload, func() error {
+			return h.signalAudio(session, payload)
+		})
 
 	// Control Events
 	case event.CONTROL_RELEASE:
-		return errors.Wrapf(h.controlRelease(id, session), "%s failed", header.Event)
+		err = h.controlRelease(session)
 	case event.CONTROL_REQUEST:
-		return errors.Wrapf(h.controlRequest(id, session), "%s failed", header.Event)
-	case event.CONTROL_GIVE:
-		payload := &message.Control{}
-		return errors.Wrapf(
-			utils.Unmarshal(payload, raw, func() error {
-				return h.controlGive(id, session, payload)
-			}), "%s failed", header.Event)
-	case event.CONTROL_CLIPBOARD:
-		payload := &message.Clipboard{}
-		return errors.Wrapf(
-			utils.Unmarshal(payload, raw, func() error {
-				return h.controlClipboard(id, session, payload)
-			}), "%s failed", header.Event)
-	case event.CONTROL_KEYBOARD:
-		payload := &message.Keyboard{}
-		return errors.Wrapf(
-			utils.Unmarshal(payload, raw, func() error {
-				return h.controlKeyboard(id, session, payload)
-			}), "%s failed", header.Event)
-
-	// Chat Events
-	case event.CHAT_MESSAGE:
-		payload := &message.ChatReceive{}
-		return errors.Wrapf(
-			utils.Unmarshal(payload, raw, func() error {
-				return h.chat(id, session, payload)
-			}), "%s failed", header.Event)
-	case event.CHAT_EMOTE:
-		payload := &message.EmoteReceive{}
-		return errors.Wrapf(
-			utils.Unmarshal(payload, raw, func() error {
-				return h.chatEmote(id, session, payload)
-			}), "%s failed", header.Event)
-
-	// File Transfer Events
-	case event.FILETRANSFER_REFRESH:
-		return errors.Wrapf(h.FileTransferRefresh(session), "%s failed", header.Event)
+		err = h.controlRequest(session)
+	case event.CONTROL_MOVE:
+		payload := &message.ControlPos{}
+		err = utils.Unmarshal(payload, data.Payload, func() error {
+			return h.controlMove(session, payload)
+		})
+	case event.CONTROL_SCROLL:
+		payload := &message.ControlScroll{}
+		err = utils.Unmarshal(payload, data.Payload, func() error {
+			return h.controlScroll(session, payload)
+		})
+	case event.CONTROL_BUTTONPRESS:
+		payload := &message.ControlButton{}
+		err = utils.Unmarshal(payload, data.Payload, func() error {
+			return h.controlButtonPress(session, payload)
+		})
+	case event.CONTROL_BUTTONDOWN:
+		payload := &message.ControlButton{}
+		err = utils.Unmarshal(payload, data.Payload, func() error {
+			return h.controlButtonDown(session, payload)
+		})
+	case event.CONTROL_BUTTONUP:
+		payload := &message.ControlButton{}
+		err = utils.Unmarshal(payload, data.Payload, func() error {
+			return h.controlButtonUp(session, payload)
+		})
+	case event.CONTROL_KEYPRESS:
+		payload := &message.ControlKey{}
+		err = utils.Unmarshal(payload, data.Payload, func() error {
+			return h.controlKeyPress(session, payload)
+		})
+	case event.CONTROL_KEYDOWN:
+		payload := &message.ControlKey{}
+		err = utils.Unmarshal(payload, data.Payload, func() error {
+			return h.controlKeyDown(session, payload)
+		})
+	case event.CONTROL_KEYUP:
+		payload := &message.ControlKey{}
+		err = utils.Unmarshal(payload, data.Payload, func() error {
+			return h.controlKeyUp(session, payload)
+		})
+	// touch
+	case event.CONTROL_TOUCHBEGIN:
+		payload := &message.ControlTouch{}
+		err = utils.Unmarshal(payload, data.Payload, func() error {
+			return h.controlTouchBegin(session, payload)
+		})
+	case event.CONTROL_TOUCHUPDATE:
+		payload := &message.ControlTouch{}
+		err = utils.Unmarshal(payload, data.Payload, func() error {
+			return h.controlTouchUpdate(session, payload)
+		})
+	case event.CONTROL_TOUCHEND:
+		payload := &message.ControlTouch{}
+		err = utils.Unmarshal(payload, data.Payload, func() error {
+			return h.controlTouchEnd(session, payload)
+		})
+	// actions
+	case event.CONTROL_CUT:
+		err = h.controlCut(session)
+	case event.CONTROL_COPY:
+		err = h.controlCopy(session)
+	case event.CONTROL_PASTE:
+		payload := &message.ClipboardData{}
+		err = utils.Unmarshal(payload, data.Payload, func() error {
+			return h.controlPaste(session, payload)
+		})
+	case event.CONTROL_SELECT_ALL:
+		err = h.controlSelectAll(session)
 
 	// Screen Events
-	case event.SCREEN_RESOLUTION:
-		return errors.Wrapf(h.screenResolution(id, session), "%s failed", header.Event)
-	case event.SCREEN_CONFIGURATIONS:
-		return errors.Wrapf(h.screenConfigurations(id, session), "%s failed", header.Event)
 	case event.SCREEN_SET:
-		payload := &message.ScreenResolution{}
-		return errors.Wrapf(
-			utils.Unmarshal(payload, raw, func() error {
-				return h.screenSet(id, session, payload)
-			}), "%s failed", header.Event)
+		payload := &message.ScreenSize{}
+		err = utils.Unmarshal(payload, data.Payload, func() error {
+			return h.screenSet(session, payload)
+		})
 
-	// Broadcast Events
-	case event.BROADCAST_CREATE:
-		payload := &message.BroadcastCreate{}
-		return errors.Wrapf(
-			utils.Unmarshal(payload, raw, func() error {
-				return h.broadcastCreate(session, payload)
-			}), "%s failed", header.Event)
-	case event.BROADCAST_DESTROY:
-		return errors.Wrapf(h.broadcastDestroy(session), "%s failed", header.Event)
+	// Clipboard Events
+	case event.CLIPBOARD_SET:
+		payload := &message.ClipboardData{}
+		err = utils.Unmarshal(payload, data.Payload, func() error {
+			return h.clipboardSet(session, payload)
+		})
 
-	// Admin Events
-	case event.ADMIN_LOCK:
-		payload := &message.AdminLock{}
-		return errors.Wrapf(
-			utils.Unmarshal(payload, raw, func() error {
-				return h.adminLock(id, session, payload)
-			}), "%s failed", header.Event)
-	case event.ADMIN_UNLOCK:
-		payload := &message.AdminLock{}
-		return errors.Wrapf(
-			utils.Unmarshal(payload, raw, func() error {
-				return h.adminUnlock(id, session, payload)
-			}), "%s failed", header.Event)
-	case event.ADMIN_CONTROL:
-		return errors.Wrapf(h.adminControl(id, session), "%s failed", header.Event)
-	case event.ADMIN_RELEASE:
-		return errors.Wrapf(h.AdminRelease(id, session), "%s failed", header.Event)
-	case event.ADMIN_GIVE:
-		payload := &message.Admin{}
-		return errors.Wrapf(
-			utils.Unmarshal(payload, raw, func() error {
-				return h.adminGive(id, session, payload)
-			}), "%s failed", header.Event)
-	case event.ADMIN_BAN:
-		payload := &message.Admin{}
-		return errors.Wrapf(
-			utils.Unmarshal(payload, raw, func() error {
-				return h.adminBan(id, session, payload)
-			}), "%s failed", header.Event)
-	case event.ADMIN_KICK:
-		payload := &message.Admin{}
-		return errors.Wrapf(
-			utils.Unmarshal(payload, raw, func() error {
-				return h.adminKick(id, session, payload)
-			}), "%s failed", header.Event)
-	case event.ADMIN_MUTE:
-		payload := &message.Admin{}
-		return errors.Wrapf(
-			utils.Unmarshal(payload, raw, func() error {
-				return h.adminMute(id, session, payload)
-			}), "%s failed", header.Event)
-	case event.ADMIN_UNMUTE:
-		payload := &message.Admin{}
-		return errors.Wrapf(
-			utils.Unmarshal(payload, raw, func() error {
-				return h.adminUnmute(id, session, payload)
-			}), "%s failed", header.Event)
+	// Keyboard Events
+	case event.KEYBOARD_MAP:
+		payload := &message.KeyboardMap{}
+		err = utils.Unmarshal(payload, data.Payload, func() error {
+			return h.keyboardMap(session, payload)
+		})
+	case event.KEYBOARD_MODIFIERS:
+		payload := &message.KeyboardModifiers{}
+		err = utils.Unmarshal(payload, data.Payload, func() error {
+			return h.keyboardModifiers(session, payload)
+		})
+
+	// Send Events
+	case event.SEND_UNICAST:
+		payload := &message.SendUnicast{}
+		err = utils.Unmarshal(payload, data.Payload, func() error {
+			return h.sendUnicast(session, payload)
+		})
+	case event.SEND_BROADCAST:
+		payload := &message.SendBroadcast{}
+		err = utils.Unmarshal(payload, data.Payload, func() error {
+			return h.sendBroadcast(session, payload)
+		})
 	default:
-		return errors.Errorf("unknown message event %s", header.Event)
+		return false
 	}
+
+	if err != nil {
+		h.logger.Warn().Err(err).
+			Str("event", data.Event).
+			Str("session_id", session.ID()).
+			Msg("message handler has failed")
+	}
+
+	return true
 }

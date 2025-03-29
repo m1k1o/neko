@@ -1,0 +1,1542 @@
+openapi: 3.0.0
+
+info:
+  title: Neko API Reference
+  version: "3.0.0"
+  description: |
+    Neko uses WebRTC and WebSocket besides REST API to provide real-time video streaming, interactive collaboration, and remote desktop functionality.
+
+    ### Core Technologies
+
+    - **Video Streaming over WebRTC**
+      - Neko leverages **WebRTC** for real-time, low-latency, high-quality video and audio streaming.
+      - Keyboard and mouse events are transmitted over the same WebRTC connection for seamless interaction.
+
+    - **Real-Time Signaling and Communication over WebSocket**
+      - **WebSocket** is used for sSignaling in WebRTC (e.g., session establishment, ICE candidate exchange).  
+      - Live chat, session updates, and keyboard/mouse fallback are handled over WebSocket.
+
+    - **REST API for Everything Else**
+      - **Authentication & Session Management** - Secure user authentication and session handling.  
+      - **Room and User Management** - Creating, modifying, and controlling user access to rooms.  
+      - **Desktop Controls** - Adjusting screen configurations, managing keyboard and mouse events.
+      - **System Health & Metrics** - Retrieving system health checks and operational insights.  
+
+    ### How It All Works Together
+
+    1. **WebRTC** handles media streaming for **real-time video, audio and data**.
+    2. **WebSocket** ensures a **persistent, bidirectional** connection for low-latency interactions.  
+    3. **REST API** provides **fine-grained control** over user access, and room configuration.
+
+    For more details, refer to the full API documentation.
+  license:
+    name: Apache 2.0
+    url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+
+servers:
+  - description: Local server
+    url: http://localhost:3000
+
+tags:
+  - name: general
+    description: General endpoints for the API.
+    x-displayName: General
+  - name: current-session
+    description: Endpoints for managing the current user session.
+    x-displayName: Current Session
+  - name: sessions
+    description: Endpoints for managing user sessions.
+    x-displayName: Sessions
+  - name: members
+    description: Endpoints for managing members.
+    x-displayName: Members
+  - name: room-settings
+    description: Endpoints for managing room settings.
+    x-displayName: Room Settings
+  - name: room-broadcast
+    description: Endpoints for managing room broadcasts.
+    x-displayName: Room Broadcast
+  - name: room-clipboard
+    description: Endpoints for managing the room clipboard.
+    x-displayName: Room Clipboard
+  - name: room-keyboard
+    description: Endpoints for managing the room keyboard.
+    x-displayName: Room Keyboard
+  - name: room-control
+    description: Endpoints for managing room control.
+    x-displayName: Room Control
+  - name: room-screen
+    description: Endpoints for managing room screen configurations.
+    x-displayName: Room Screen
+  - name: room-upload
+    description: Endpoints for uploading files to the room.
+    x-displayName: Room Upload
+
+paths:
+  /health:
+    get:
+      tags:
+        - general
+      summary: Health Check
+      description: Check the health status of the API.
+      operationId: healthcheck
+      security: []
+      responses:
+        '200':
+          description: The API is healthy.
+  /metrics:
+    get:
+      tags:
+        - general
+      summary: Metrics
+      description: Retrieve metrics for the API.
+      operationId: metrics
+      security: []
+      responses:
+        '200':
+          description: Metrics retrieved successfully.
+
+  /api/batch:
+    post:
+      tags:
+        - general
+      summary: Batch Request
+      description: Execute multiple API requests in a single call.
+      operationId: batch
+      responses:
+        '200':
+          description: Batch request executed successfully.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BatchResponse'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/BatchRequest'
+        required: true
+  /api/stats:
+    get:
+      tags:
+        - general
+      summary: Get Stats
+      description: Retrieve statistics about the server and user sessions.
+      operationId: stats
+      responses:
+        '200':
+          description: Statistics retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Stats'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  #
+  # current session
+  #
+
+  /api/login:
+    post:
+      tags:
+        - current-session
+      summary: User Login
+      description: Authenticate a user and start a new session.
+      operationId: login
+      security: []
+      responses:
+        '200':
+          description: User authenticated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionLoginResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SessionLoginRequest'
+        required: true
+  /api/logout:
+    post:
+      tags:
+        - current-session
+      summary: User Logout
+      description: Terminate the current user session.
+      operationId: logout
+      responses:
+        '200':
+          description: User logged out successfully.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /api/whoami:
+    get:
+      tags:
+        - current-session
+      summary: Get Current User
+      description: Retrieve information about the current user session.
+      operationId: whoami
+      responses:
+        '200':
+          description: Current user information retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionData'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/profile:
+    post:
+      tags:
+        - current-session
+      summary: Update Profile
+      description: Update the current user's profile without syncing it with the member profile (experimental).
+      operationId: profile
+      responses:
+        '204':
+          description: Profile updated successfully.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemberProfile'
+        required: true
+
+  #
+  # sessions
+  #
+
+  /api/sessions:
+    get:
+      tags:
+        - sessions
+      summary: List Sessions
+      description: Retrieve a list of all active sessions.
+      operationId: sessionsGet
+      responses:
+        '200':
+          description: Sessions retrieved successfully.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SessionData'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/sessions/{sessionId}:
+    get:
+      tags:
+        - sessions
+      summary: Get Session
+      description: Retrieve information about a specific session.
+      operationId: sessionGet
+      parameters:
+        - in: path
+          name: sessionId
+          description: The identifier of the session.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Session retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionData'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags:
+        - sessions
+      summary: Remove Session
+      description: Terminate a specific session.
+      operationId: sessionRemove
+      parameters:
+        - in: path
+          name: sessionId
+          description: The identifier of the session.
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Session removed successfully.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/sessions/{sessionId}/disconnect:
+    post:
+      tags:
+        - sessions
+      summary: Disconnect Session
+      description: Forcefully disconnect a specific session.
+      operationId: sessionDisconnect
+      parameters:
+        - in: path
+          name: sessionId
+          description: The identifier of the session.
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Session disconnected successfully.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  #
+  # room
+  #
+
+  /api/room/settings:
+    get:
+      tags:
+        - room-settings
+      summary: Get Room Settings
+      description: Retrieve the current settings of the room.
+      operationId: settingsGet
+      responses:
+        '200':
+          description: Room settings retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Settings'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags:
+        - room-settings
+      summary: Update Room Settings
+      description: Update the settings of the room.
+      operationId: settingsSet
+      responses:
+        '204':
+          description: Room settings updated successfully.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Settings'
+        required: true
+
+  /api/room/broadcast:
+    get:
+      tags:
+        - room-broadcast
+      summary: Get Broadcast Status
+      description: Retrieve the current broadcast status of the room.
+      operationId: broadcastStatus
+      responses:
+        '200':
+          description: Broadcast status retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BroadcastStatus'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/room/broadcast/start:
+    post:
+      tags:
+        - room-broadcast
+      summary: Start Broadcast
+      description: Start broadcasting the room's content.
+      operationId: broadcastStart
+      responses:
+        '204':
+          description: Broadcast started successfully.
+        '400':
+          description: Missing broadcast URL.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          description: Server is already broadcasting.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '500':
+          description: Unable to start broadcast.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BroadcastStatus'
+        required: true
+  /api/room/broadcast/stop:
+    post:
+      tags:
+        - room-broadcast
+      summary: Stop Broadcast
+      description: Stop broadcasting the room's content.
+      operationId: broadcastStop
+      responses:
+        '204':
+          description: Broadcast stopped successfully.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          description: Server is not broadcasting.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+
+  /api/room/clipboard:
+    get:
+      tags:
+        - room-clipboard
+      summary: Get Clipboard Content
+      description: Retrieve the current content of the clipboard (rich-text or plain-text).
+      operationId: clipboardGetText
+      responses:
+        '200':
+          description: Clipboard content retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClipboardText'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          description: Unable to get clipboard content.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+    post:
+      tags:
+        - room-clipboard
+      summary: Set Clipboard Content
+      description: Update the content of the clipboard (rich-text or plain-text).
+      operationId: clipboardSetText
+      responses:
+        '204':
+          description: Clipboard content updated successfully.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          description: Unable to set clipboard content.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClipboardText'
+        required: true
+  /api/room/clipboard/image.png:
+    get:
+      tags:
+        - room-clipboard
+      summary: Get Clipboard Image
+      description: Retrieve the current image content of the clipboard.
+      operationId: clipboardGetImage
+      responses:
+        '200':
+          description: Clipboard image retrieved successfully.
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          description: Unable to get clipboard content.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+
+  /api/room/keyboard/map:
+    get:
+      tags:
+        - room-keyboard
+      summary: Get Keyboard Map
+      description: Retrieve the current keyboard map configuration.
+      operationId: keyboardMapGet
+      responses:
+        '200':
+          description: Keyboard map retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KeyboardMap'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          description: Unable to get keyboard map.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+    post:
+      tags:
+        - room-keyboard
+      summary: Set Keyboard Map
+      description: Update the keyboard map configuration.
+      operationId: keyboardMapSet
+      responses:
+        '204':
+          description: Keyboard map updated successfully.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          description: Unable to change keyboard map.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/KeyboardMap'
+        required: true
+  /api/room/keyboard/modifiers:
+    get:
+      tags:
+        - room-keyboard
+      summary: Get Keyboard Modifiers
+      description: Retrieve the current keyboard modifiers status.
+      operationId: keyboardModifiersGet
+      responses:
+        '200':
+          description: Keyboard modifiers retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KeyboardModifiers'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags:
+        - room-keyboard
+      summary: Set Keyboard Modifiers
+      description: Update the keyboard modifiers status.
+      operationId: keyboardModifiersSet
+      responses:
+        '204':
+          description: Keyboard modifiers updated successfully.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/KeyboardModifiers'
+        required: true
+
+  /api/room/control:
+    get:
+      tags:
+        - room-control
+      summary: Get Control Status
+      description: Retrieve the current control status of the room.
+      operationId: controlStatus
+      responses:
+        '200':
+          description: Control status retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ControlStatus'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/room/control/request:
+    post:
+      tags:
+        - room-control
+      summary: Request Control
+      description: Request control of the room.
+      operationId: controlRequest
+      responses:
+        '204':
+          description: Control requested successfully.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          description: There is already a host.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  /api/room/control/release:
+    post:
+      tags:
+        - room-control
+      summary: Release Control
+      description: Release control of the room.
+      operationId: controlRelease
+      responses:
+        '204':
+          description: Control released successfully.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          description: There is already a host.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  /api/room/control/take:
+    post:
+      tags:
+        - room-control
+      summary: Take Control
+      description: Take control of the room.
+      operationId: controlTake
+      responses:
+        '204':
+          description: Control taken successfully.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/room/control/give/{sessionId}:
+    post:
+      tags:
+        - room-control
+      summary: Give Control
+      description: Give control of the room to a specific session.
+      operationId: controlGive
+      parameters:
+        - in: path
+          name: sessionId
+          description: The identifier of the session.
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Control given successfully.
+        '400':
+          description: Target session is not allowed to host.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/room/control/reset:
+    post:
+      tags:
+        - room-control
+      summary: Reset Control
+      description: Reset the control status of the room.
+      operationId: controlReset
+      responses:
+        '204':
+          description: Control reset successfully.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/room/screen:
+    get:
+      tags:
+        - room-screen
+      summary: Get Screen Configuration
+      description: Retrieve the current screen configuration of the room.
+      operationId: screenConfiguration
+      responses:
+        '200':
+          description: Screen configuration retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScreenConfiguration'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          description: Unable to get screen configuration.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+    post:
+      tags:
+        - room-screen
+      summary: Change Screen Configuration
+      description: Update the screen configuration of the room.
+      operationId: screenConfigurationChange
+      responses:
+        '200':
+          description: Screen configuration updated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScreenConfiguration'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          description: Invalid screen configuration.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScreenConfiguration'
+        required: true
+  /api/room/screen/configurations:
+    get:
+      tags:
+        - room-screen
+      summary: Get List of Screen Configurations
+      description: Retrieve a list of all available screen configurations.
+      operationId: screenConfigurationsList
+      responses:
+        '200':
+          description: List of screen configurations retrieved successfully.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ScreenConfiguration'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/room/screen/cast.jpg:
+    get:
+      tags:
+        - room-screen
+      summary: Get Screencast Image
+      description: Retrieve the current screencast image.
+      operationId: screenCastImage
+      responses:
+        '200':
+          description: Screencast image retrieved successfully.
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: Screencast is not enabled.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          description: Unable to fetch image.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  /api/room/screen/shot.jpg:
+    get:
+      tags:
+        - room-screen
+      summary: Get Screenshot Image
+      description: Retrieve the current screenshot image.
+      operationId: screenShotImage
+      parameters:
+        - in: query
+          name: quality
+          description: Image quality (0-100).
+          required: false
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Screenshot image retrieved successfully.
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          description: Unable to create image.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+
+  /api/room/upload/drop:
+    post:
+      tags:
+        - room-upload
+      summary: Upload and Drop File
+      description: Upload a file and drop it at a specified location.
+      operationId: uploadDrop
+      responses:
+        '204':
+          description: File uploaded and dropped successfully.
+        '400':
+          description: Unable to upload file.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          description: Unable to process uploaded file.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                x:
+                  type: number
+                  description: X coordinate of drop.
+                y:
+                  type: number
+                  description: Y coordinate of drop.
+                files:
+                  type: array
+                  description: Files to be uploaded.
+                  items:
+                    type: string
+                    format: binary
+        required: true
+  /api/room/upload/dialog:
+    post:
+      tags:
+        - room-upload
+      summary: Upload File to Dialog
+      description: Upload a file to a dialog.
+      operationId: uploadDialog
+      responses:
+        '204':
+          description: File uploaded to dialog successfully.
+        '400':
+          description: Unable to upload file.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          description: No upload dialog prompt active.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '500':
+          description: Unable to process uploaded file.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                files:
+                  type: array
+                  description: Files to be uploaded.
+                  items:
+                    type: string
+                    format: binary
+        required: true
+    delete:
+      tags:
+        - room-upload
+      summary: Close File Chooser Dialog
+      description: Close the file chooser dialog.
+      operationId: uploadDialogClose
+      responses:
+        '204':
+          description: File chooser dialog closed successfully.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          description: No upload dialog prompt active.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+
+  #
+  # members
+  #
+
+  /api/members:
+    get:
+      tags:
+        - members
+      summary: List Members
+      description: Retrieve a list of all members.
+      operationId: membersList
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: number
+        - in: query
+          name: offset
+          schema:
+            type: number
+      responses:
+        '200':
+          description: Members retrieved successfully.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MemberData'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags:
+        - members
+      summary: Create Member
+      description: Create a new member.
+      operationId: membersCreate
+      responses:
+        '200':
+          description: Member created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberData'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          description: Member with chosen ID already exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemberCreate'
+        required: true
+  /api/members/{memberId}:
+    get:
+      tags:
+        - members
+      summary: Get Member Profile
+      description: Retrieve the profile of a specific member.
+      operationId: membersGetProfile
+      parameters:
+        - in: path
+          name: memberId
+          description: The identifier of the member.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Member profile retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberProfile'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags:
+        - members
+      summary: Update Member Profile
+      description: Update the profile of a specific member.
+      operationId: membersUpdateProfile
+      parameters:
+        - in: path
+          name: memberId
+          description: The identifier of the member.
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Member profile updated successfully.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemberProfile'
+        required: true
+    delete:
+      tags:
+        - members
+      summary: Remove Member
+      description: Remove a specific member.
+      operationId: membersRemove
+      parameters:
+        - in: path
+          name: memberId
+          description: The identifier of the member.
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Member removed successfully.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/members/{memberId}/password:
+    post:
+      tags:
+        - members
+      summary: Update Member Password
+      description: Update the password of a specific member.
+      operationId: membersUpdatePassword
+      parameters:
+        - in: path
+          name: memberId
+          description: The identifier of the member.
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Member password updated successfully.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemberPassword'
+        required: true
+  /api/members_bulk/update:
+    post:
+      tags:
+        - members
+      summary: Bulk Update Members
+      description: Update the profiles of multiple members in bulk.
+      operationId: membersBulkUpdate
+      responses:
+        '204':
+          description: Members updated successfully.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemberBulkUpdate'
+        required: true
+  /api/members_bulk/delete:
+    post:
+      tags:
+        - members
+      summary: Bulk Delete Members
+      description: Remove multiple members in bulk.
+      operationId: membersBulkDelete
+      responses:
+        '204':
+          description: Members removed successfully.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemberBulkDelete'
+        required: true
+
+components:
+  securitySchemes:
+    CookieAuth:
+      type: apiKey
+      in: cookie
+      name: NEKO_SESSION
+      description: Authentication using a session cookie.
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: Authentication using a Bearer token.
+    TokenAuth:
+      type: apiKey
+      in: query
+      name: token
+      description: Authentication using a token passed as a query parameter.
+
+  responses:
+    NotFound:
+      description: The specified resource was not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorMessage'
+    Unauthorized:
+      description: The request requires user authentication.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorMessage'
+    Forbidden:
+      description: The server understood the request, but refuses to authorize it.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorMessage'
+
+  schemas:
+    ErrorMessage:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Detailed error message.
+
+    BatchRequest:
+      type: object
+      properties:
+        path:
+          type: string
+          description: The API endpoint path.
+        method:
+          type: string
+          enum:
+            - GET
+            - POST
+            - DELETE
+          description: The HTTP method to be used.
+        body:
+          description: The request body for the API call.
+
+    BatchResponse:
+      type: object
+      properties:
+        path:
+          type: string
+          description: The API endpoint path.
+        method:
+          type: string
+          enum:
+            - GET
+            - POST
+            - DELETE
+          description: The HTTP method used.
+        body:
+          description: The response body from the API call.
+        status:
+          type: integer
+          description: The HTTP status code of the response.
+
+    Stats:
+      type: object
+      properties:
+        has_host:
+          type: boolean
+          description: Indicates if there is a host currently.
+        host_id:
+          type: string
+          description: The ID of the current host, if any.
+        server_started_at:
+          type: string
+          format: date-time
+          description: The timestamp when the server started.
+        total_users:
+          type: integer
+          description: The total number of users connected.
+        last_user_left_at:
+          type: string
+          format: date-time
+          description: The timestamp when the last user left, if any.
+        total_admins:
+          type: integer
+          description: The total number of admins connected.
+        last_admin_left_at:
+          type: string
+          format: date-time
+          description: The timestamp when the last admin left, if any.
+
+    #
+    # sessions
+    #
+
+    SessionLoginRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          description: The username of the user.
+        password:
+          type: string
+          description: The password of the user.
+
+    SessionLoginResponse:
+      allOf:
+      - $ref: '#/components/schemas/SessionData'
+      - type: object
+        properties:
+          token:
+            type: string
+            description: The session token, only if cookie authentication is disabled.
+
+    SessionData:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the session.
+        profile:
+          $ref: '#/components/schemas/MemberProfile'
+          description: The profile information of the user.
+        state:
+          $ref: '#/components/schemas/SessionState'
+          description: The current state of the session.
+
+    SessionState:
+      type: object
+      properties:
+        is_connected:
+          type: boolean
+          description: Indicates if the user is connected.
+        is_watching:
+          type: boolean
+          description: Indicates if the user is watching.
+
+    #
+    # room
+    #
+
+    Settings:
+      type: object
+      properties:
+        private_mode:
+          type: boolean
+          description: Indicates if the room is in private mode.
+        locked_controls:
+          type: boolean
+          description: Indicates if the room controls are locked.
+        implicit_hosting:
+          type: boolean
+          description: Indicates if implicit hosting is enabled.
+        inactive_cursors:
+          type: boolean
+          description: Indicates if inactive cursors are shown.
+        merciful_reconnect:
+          type: boolean
+          description: Indicates if merciful reconnect is enabled.
+        plugins:
+          type: object
+          additionalProperties: true
+          description: Additional plugin settings.
+
+    BroadcastStatus:
+      type: object
+      properties:
+        url:
+          type: string
+          example: rtmp://localhost/live
+          description: The URL of the broadcast.
+        is_active:
+          type: boolean
+          description: Indicates if the broadcast is active.
+
+    ClipboardText:
+      type: object
+      properties:
+        text:
+          type: string
+          example: Copied Content 123
+          description: The plain text content of the clipboard.
+        html:
+          type: string
+          example: <b>Copied Content 123</b>
+          description: The HTML content of the clipboard.
+
+    KeyboardMap:
+      type: object
+      properties:
+        layout:
+          type: string
+          example: sk
+          description: The keyboard layout.
+        variant:
+          type: string
+          example: qwerty
+          description: The keyboard variant.
+
+    KeyboardModifiers:
+      type: object
+      properties:
+        shift:
+          type: boolean
+          description: Indicates if the shift key is pressed.
+        capslock:
+          type: boolean
+          description: Indicates if the caps lock key is active.
+        control:
+          type: boolean
+          description: Indicates if the control key is pressed.
+        alt:
+          type: boolean
+          description: Indicates if the alt key is pressed.
+        numlock:
+          type: boolean
+          description: Indicates if the num lock key is active.
+        meta:
+          type: boolean
+          description: Indicates if the meta key is pressed.
+        super:
+          type: boolean
+          description: Indicates if the super key is pressed.
+        altgr:
+          type: boolean
+          description: Indicates if the altgr key is pressed.
+
+    ControlStatus:
+      type: object
+      properties:
+        has_host:
+          type: boolean
+          description: Indicates if there is a host currently.
+        host_id:
+          type: string
+          description: The ID of the current host, if any.
+
+    ScreenConfiguration:
+      type: object
+      properties:
+        width:
+          type: integer
+          example: 1280
+          description: The width of the screen.
+        height:
+          type: integer
+          example: 720
+          description: The height of the screen.
+        rate:
+          type: integer
+          example: 30
+          description: The refresh rate of the screen.
+
+    #
+    # members
+    #
+
+    MemberProfile:
+      x-tags:
+        - members
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the member.
+        is_admin:
+          type: boolean
+          description: Indicates if the member is an admin.
+        can_login:
+          type: boolean
+          description: Indicates if the member can log in.
+        can_connect:
+          type: boolean
+          description: Indicates if the member can connect.
+        can_watch:
+          type: boolean
+          description: Indicates if the member can watch.
+        can_host:
+          type: boolean
+          description: Indicates if the member can host.
+        can_share_media:
+          type: boolean
+          description: Indicates if the member can share media.
+        can_access_clipboard:
+          type: boolean
+          description: Indicates if the member can access the clipboard.
+        sends_inactive_cursor:
+          type: boolean
+          description: Indicates if the member sends inactive cursor.
+        can_see_inactive_cursors:
+          type: boolean
+          description: Indicates if the member can see inactive cursors.
+        plugins:
+          type: object
+          additionalProperties: true
+          description: Additional plugin settings.
+
+    MemberData:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the member.
+        profile:
+          $ref: '#/components/schemas/MemberProfile'
+          description: The profile information of the member.
+
+    MemberCreate:
+      type: object
+      properties:
+        username:
+          type: string
+          description: The username of the new member.
+        password:
+          type: string
+          description: The password of the new member.
+        profile:
+          $ref: '#/components/schemas/MemberProfile'
+          description: The profile information of the new member.
+
+    MemberPassword:
+      type: object
+      properties:
+        password:
+          type: string
+          description: The new password for the member.
+
+    MemberBulkUpdate:
+      type: object
+      properties:
+        ids:
+          type: array
+          items:
+            type: string
+          description: The list of member IDs to be updated.
+        profile:
+          $ref: '#/components/schemas/MemberProfile'
+          description: The new profile information for the members.
+
+    MemberBulkDelete:
+      type: object
+      properties:
+        ids:
+          type: array
+          items:
+            type: string
+          description: The list of member IDs to be deleted.
+
+security:
+  - BearerAuth: []
+  - CookieAuth: []
+  - TokenAuth: []

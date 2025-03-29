@@ -1,190 +1,312 @@
 package session
 
 import (
-	"m1k1o/neko/internal/types"
-	"m1k1o/neko/internal/types/event"
-	"m1k1o/neko/internal/types/message"
+	"sync"
+	"time"
 
 	"github.com/rs/zerolog"
+
+	"github.com/m1k1o/neko/server/pkg/types"
+	"github.com/m1k1o/neko/server/pkg/types/event"
 )
 
-type Session struct {
-	logger    zerolog.Logger
-	id        string
-	name      string
-	admin     bool
-	muted     bool
-	connected bool
-	manager   *SessionManager
-	socket    types.WebSocket
-	peer      types.Peer
+// client is expected to reconnect within 5 second
+// if some unexpected websocket disconnect happens
+const WS_DELAYED_DURATION = 5 * time.Second
+
+type SessionCtx struct {
+	id      string
+	token   string
+	logger  zerolog.Logger
+	manager *SessionManagerCtx
+	profile types.MemberProfile
+	state   types.SessionState
+
+	websocketPeer types.WebSocketPeer
+	websocketMu   sync.Mutex
+
+	// websocket delayed set connected events
+	wsDelayedMu    sync.Mutex
+	wsDelayedTimer *time.Timer
+
+	webrtcPeer types.WebRTCPeer
+	webrtcMu   sync.Mutex
 }
 
-func (session *Session) ID() string {
+func (session *SessionCtx) ID() string {
 	return session.id
 }
 
-func (session *Session) Name() string {
-	return session.name
+func (session *SessionCtx) Profile() types.MemberProfile {
+	return session.profile
 }
 
-func (session *Session) Admin() bool {
-	return session.admin
-}
-
-func (session *Session) Muted() bool {
-	return session.muted
-}
-
-func (session *Session) Connected() bool {
-	return session.connected
-}
-
-func (session *Session) Address() string {
-	if session.socket == nil {
-		return ""
+func (session *SessionCtx) profileChanged() {
+	if !session.profile.CanHost && session.IsHost() {
+		session.ClearHost()
 	}
-	return session.socket.Address()
-}
 
-func (session *Session) Member() *types.Member {
-	return &types.Member{
-		ID:    session.id,
-		Name:  session.name,
-		Admin: session.admin,
-		Muted: session.muted,
+	if (!session.profile.CanConnect || !session.profile.CanLogin || !session.profile.CanWatch) && session.state.IsWatching {
+		// TODO: Needed for legacy implementation. Websocket must die before webrtc and deliver signal close message
+		// otherwise webrtc destroy would trigger websocket reconnect. In case of kick event, webrtc destroy is called
+		// before websocket destroy that delivers the information about the kick.
+		time.AfterFunc(time.Second, func() {
+			session.GetWebRTCPeer().Destroy()
+		})
+	}
+
+	if (!session.profile.CanConnect || !session.profile.CanLogin) && session.state.IsConnected {
+		session.DestroyWebSocketPeer("profile changed")
+	}
+
+	// update webrtc paused state
+	if webrtcPeer := session.GetWebRTCPeer(); webrtcPeer != nil {
+		webrtcPeer.SetPaused(session.PrivateModeEnabled())
 	}
 }
 
-func (session *Session) SetMuted(muted bool) {
-	session.muted = muted
+func (session *SessionCtx) State() types.SessionState {
+	return session.state
 }
 
-func (session *Session) SetName(name string) error {
-	session.name = name
-	return nil
+func (session *SessionCtx) IsHost() bool {
+	return session.manager.isHost(session)
 }
 
-func (session *Session) SetSocket(socket types.WebSocket) error {
-	session.socket = socket
-	return nil
+// only needed for legacy webrtc handler
+func (session *SessionCtx) LegacyIsHost() bool {
+	implicitHosting := session.manager.Settings().ImplicitHosting
+	return !(!implicitHosting && !session.manager.isHost(session)) || (implicitHosting && !session.profile.CanHost)
 }
 
-func (session *Session) SetPeer(peer types.Peer) error {
-	session.peer = peer
-	return nil
+func (session *SessionCtx) SetAsHost() {
+	session.manager.setHost(session, session)
 }
 
-func (session *Session) SetConnected(connected bool) error {
-	session.connected = connected
+func (session *SessionCtx) SetAsHostBy(bySession types.Session) {
+	session.manager.setHost(bySession, session)
+}
+
+func (session *SessionCtx) ClearHost() {
+	session.manager.setHost(session, nil)
+}
+
+func (session *SessionCtx) PrivateModeEnabled() bool {
+	return session.manager.Settings().PrivateMode && !session.profile.IsAdmin
+}
+
+func (session *SessionCtx) SetCursor(cursor types.Cursor) {
+	if session.manager.Settings().InactiveCursors && session.profile.SendsInactiveCursor {
+		session.manager.SetCursor(cursor, session)
+	}
+}
+
+// ---
+// websocket
+// ---
+
+// Connect WebSocket peer sets current peer and emits connected event. It also destroys the
+// previous peer, if there was one. If the peer is already set, it will be ignored.
+func (session *SessionCtx) ConnectWebSocketPeer(websocketPeer types.WebSocketPeer) {
+	session.websocketMu.Lock()
+	isCurrentPeer := websocketPeer == session.websocketPeer
+	session.websocketPeer, websocketPeer = websocketPeer, session.websocketPeer
+	session.websocketMu.Unlock()
+
+	// ignore if already set
+	if isCurrentPeer {
+		return
+	}
+
+	session.logger.Info().Msg("set websocket connected")
+
+	// update state
+	now := time.Now()
+	session.state.IsConnected = true
+	session.state.ConnectedSince = &now
+	session.state.NotConnectedSince = nil
+
+	if session.profile.IsAdmin {
+		session.manager.totalAdmins.Add(1)
+		session.manager.lastAdminLeftAt.Store((*time.Time)(nil))
+	} else {
+		session.manager.totalUsers.Add(1)
+		session.manager.lastUserLeftAt.Store((*time.Time)(nil))
+	}
+
+	session.manager.emmiter.Emit("connected", session)
+
+	// if there is a previous peer, destroy it
+	if websocketPeer != nil {
+		websocketPeer.Destroy("connection replaced")
+	}
+}
+
+// Disconnect WebSocket peer sets current peer to nil and emits disconnected event. It also
+// allows for a delayed disconnect. That means, the peer will not be disconnected immediately,
+// but after a delay. If the peer is connected again before the delay, the disconnect will be
+// cancelled.
+//
+// If the peer is not the current peer or the peer is nil, it will be ignored.
+func (session *SessionCtx) DisconnectWebSocketPeer(websocketPeer types.WebSocketPeer, delayed bool) {
+	session.websocketMu.Lock()
+	isCurrentPeer := websocketPeer == session.websocketPeer && websocketPeer != nil
+	session.websocketMu.Unlock()
+
+	// ignore if not current peer
+	if !isCurrentPeer {
+		return
+	}
+
+	//
+	// ws delayed
+	//
+
+	var wsDelayedTimer *time.Timer
+
+	if delayed {
+		wsDelayedTimer = time.AfterFunc(WS_DELAYED_DURATION, func() {
+			session.DisconnectWebSocketPeer(websocketPeer, false)
+		})
+	}
+
+	session.wsDelayedMu.Lock()
+	if session.wsDelayedTimer != nil {
+		session.wsDelayedTimer.Stop()
+	}
+	session.wsDelayedTimer = wsDelayedTimer
+	session.wsDelayedMu.Unlock()
+
+	if delayed {
+		session.logger.Info().Msg("delayed websocket disconnected")
+		return
+	}
+
+	//
+	// not delayed
+	//
+
+	session.logger.Info().Msg("set websocket disconnected")
+
+	now := time.Now()
+	session.state.IsConnected = false
+	session.state.ConnectedSince = nil
+	session.state.NotConnectedSince = &now
+
+	if session.profile.IsAdmin {
+		if session.manager.totalAdmins.Add(-1) == 0 {
+			session.manager.lastAdminLeftAt.Store(&now)
+		}
+	} else {
+		if session.manager.totalUsers.Add(-1) == 0 {
+			session.manager.lastUserLeftAt.Store(&now)
+		}
+	}
+
+	session.manager.emmiter.Emit("disconnected", session)
+
+	session.websocketMu.Lock()
+	if websocketPeer == session.websocketPeer {
+		session.websocketPeer = nil
+	}
+	session.websocketMu.Unlock()
+}
+
+// Destroy WebSocket peer disconnects the peer and destroys it. It ensures that the peer is
+// disconnected immediately even though normal flow would be to disconnect it delayed.
+func (session *SessionCtx) DestroyWebSocketPeer(reason string) {
+	session.websocketMu.Lock()
+	peer := session.websocketPeer
+	session.websocketMu.Unlock()
+
+	if peer == nil {
+		return
+	}
+
+	// disconnect peer first, so that it is not used anymore
+	session.DisconnectWebSocketPeer(peer, false)
+
+	// destroy it afterwards
+	peer.Destroy(reason)
+}
+
+// Send event to websocket peer.
+func (session *SessionCtx) Send(event string, payload any) {
+	session.websocketMu.Lock()
+	peer := session.websocketPeer
+	session.websocketMu.Unlock()
+
+	if peer != nil {
+		peer.Send(event, payload)
+	}
+}
+
+// ---
+// webrtc
+// ---
+
+// Set webrtc peer and destroy the old one, if there is old one.
+func (session *SessionCtx) SetWebRTCPeer(webrtcPeer types.WebRTCPeer) {
+	session.webrtcMu.Lock()
+	session.webrtcPeer, webrtcPeer = webrtcPeer, session.webrtcPeer
+	session.webrtcMu.Unlock()
+
+	if webrtcPeer != nil && webrtcPeer != session.webrtcPeer {
+		webrtcPeer.Destroy()
+	}
+}
+
+// Set if current webrtc peer is connected or not. Since there might be lefover calls from
+// webrtc peer, that are not used anymore, we need to check if the webrtc peer is still the
+// same as the one we are setting the connected state for.
+//
+// If webrtc peer is disconnected, we don't expect it to be reconnected, so we set it to nil
+// and send a signal close to the client. New connection is expected to use a new webrtc peer.
+func (session *SessionCtx) SetWebRTCConnected(webrtcPeer types.WebRTCPeer, connected bool) {
+	session.webrtcMu.Lock()
+	isCurrentPeer := webrtcPeer == session.webrtcPeer
+	session.webrtcMu.Unlock()
+
+	if !isCurrentPeer {
+		return
+	}
+
+	session.logger.Info().
+		Bool("connected", connected).
+		Msg("set webrtc connected")
+
+	// update state
+	session.state.IsWatching = connected
+	if now := time.Now(); connected {
+		session.state.WatchingSince = &now
+		session.state.NotWatchingSince = nil
+	} else {
+		session.state.WatchingSince = nil
+		session.state.NotWatchingSince = &now
+	}
+
+	session.manager.emmiter.Emit("state_changed", session)
+
 	if connected {
-		session.manager.eventsChannel <- types.SessionEvent{
-			Type:    types.SESSION_CONNECTED,
-			Id:      session.id,
-			Session: session,
-		}
+		return
 	}
-	return nil
+
+	session.webrtcMu.Lock()
+	isCurrentPeer = webrtcPeer == session.webrtcPeer
+	if isCurrentPeer {
+		session.webrtcPeer = nil
+	}
+	session.webrtcMu.Unlock()
+
+	if isCurrentPeer {
+		session.Send(event.SIGNAL_CLOSE, nil)
+	}
 }
 
-func (session *Session) Kick(reason string) error {
-	if session.socket == nil {
-		return nil
-	}
-	if err := session.socket.Send(&message.SystemMessage{
-		Event:   event.SYSTEM_DISCONNECT,
-		Message: reason,
-	}); err != nil {
-		return err
-	}
+// Get current WebRTC peer. Nil if not connected.
+func (session *SessionCtx) GetWebRTCPeer() types.WebRTCPeer {
+	session.webrtcMu.Lock()
+	defer session.webrtcMu.Unlock()
 
-	return session.destroy()
-}
-
-func (session *Session) Send(v interface{}) error {
-	if session.socket == nil {
-		return nil
-	}
-	return session.socket.Send(v)
-}
-
-func (session *Session) SignalLocalOffer(sdp string) error {
-	if session.peer == nil {
-		return nil
-	}
-	session.logger.Info().Msg("signal update - LocalOffer")
-	return session.socket.Send(&message.SignalOffer{
-		Event: event.SIGNAL_OFFER,
-		SDP:   sdp,
-	})
-}
-
-func (session *Session) SignalLocalAnswer(sdp string) error {
-	if session.peer == nil {
-		return nil
-	}
-
-	session.logger.Info().Msg("signal update - LocalAnswer")
-	return session.socket.Send(&message.SignalAnswer{
-		Event: event.SIGNAL_ANSWER,
-		SDP:   sdp,
-	})
-}
-
-func (session *Session) SignalLocalCandidate(data string) error {
-	if session.socket == nil {
-		return nil
-	}
-	session.logger.Info().Msg("signal update - LocalCandidate")
-	return session.socket.Send(&message.SignalCandidate{
-		Event: event.SIGNAL_CANDIDATE,
-		Data:  data,
-	})
-}
-
-func (session *Session) SignalRemoteOffer(sdp string) error {
-	if session.peer == nil {
-		return nil
-	}
-	if err := session.peer.SetOffer(sdp); err != nil {
-		return err
-	}
-	sdp, err := session.peer.CreateAnswer()
-	if err != nil {
-		return err
-	}
-	session.logger.Info().Msg("signal update - RemoteOffer")
-	return session.SignalLocalAnswer(sdp)
-}
-
-func (session *Session) SignalRemoteAnswer(sdp string) error {
-	if session.peer == nil {
-		return nil
-	}
-	session.logger.Info().Msg("signal update - RemoteAnswer")
-	return session.peer.SetAnswer(sdp)
-}
-
-func (session *Session) SignalRemoteCandidate(data string) error {
-	if session.socket == nil {
-		return nil
-	}
-	session.logger.Info().Msg("signal update - RemoteCandidate")
-	return session.peer.SetCandidate(data)
-}
-
-func (session *Session) destroy() error {
-	if session.socket != nil {
-		if err := session.socket.Destroy(); err != nil {
-			return err
-		}
-	}
-
-	if session.peer != nil {
-		if err := session.peer.Destroy(); err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return session.webrtcPeer
 }

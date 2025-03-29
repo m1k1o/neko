@@ -1,51 +1,163 @@
 package handler
 
 import (
-	"m1k1o/neko/internal/types"
-	"m1k1o/neko/internal/types/event"
-	"m1k1o/neko/internal/types/message"
+	"errors"
+
+	"github.com/m1k1o/neko/server/pkg/types"
+	"github.com/m1k1o/neko/server/pkg/types/event"
+	"github.com/m1k1o/neko/server/pkg/types/message"
+
+	"github.com/pion/webrtc/v3"
 )
 
-func (h *MessageHandler) signalProvide(id string, session types.Session) error {
-	peer, err := h.webrtc.CreatePeer(id, session)
+func (h *MessageHandlerCtx) signalRequest(session types.Session, payload *message.SignalRequest) error {
+	if !session.Profile().CanWatch {
+		return errors.New("not allowed to watch")
+	}
+
+	offer, peer, err := h.webrtc.CreatePeer(session)
 	if err != nil {
 		return err
 	}
 
-	sdp, err := peer.CreateOffer()
+	// set webrtc as paused if session has private mode enabled
+	if session.PrivateModeEnabled() {
+		peer.SetPaused(true)
+	}
+
+	video := payload.Video
+
+	// use default first video, if not provided
+	if video.Selector == nil {
+		videos := h.capture.Video().IDs()
+		video.Selector = &types.StreamSelector{
+			ID:   videos[0],
+			Type: types.StreamSelectorTypeExact,
+		}
+	}
+
+	// TODO: Remove, used for compatibility with old clients.
+	if video.Auto == nil {
+		video.Auto = &payload.Auto
+	}
+
+	// set video stream
+	err = peer.SetVideo(video)
 	if err != nil {
 		return err
 	}
 
-	if err := session.Send(message.SignalProvide{
-		Event: event.SIGNAL_PROVIDE,
-		ID:    id,
-		SDP:   sdp,
-		Lite:  h.webrtc.ICELite(),
-		ICE:   h.webrtc.ICEServers(),
-	}); err != nil {
+	audio := payload.Audio
+
+	// enable by default if not requested otherwise
+	if audio.Disabled == nil {
+		disabled := false
+		audio.Disabled = &disabled
+	}
+
+	// set audio stream
+	err = peer.SetAudio(audio)
+	if err != nil {
 		return err
 	}
+
+	session.Send(
+		event.SIGNAL_PROVIDE,
+		message.SignalProvide{
+			SDP:        offer.SDP,
+			ICEServers: h.webrtc.ICEServers(),
+
+			Video: peer.Video(),
+			Audio: peer.Audio(),
+		})
 
 	return nil
 }
 
-func (h *MessageHandler) signalRemoteOffer(id string, session types.Session, payload *message.SignalOffer) error {
-	return session.SignalRemoteOffer(payload.SDP)
-}
+func (h *MessageHandlerCtx) signalRestart(session types.Session) error {
+	peer := session.GetWebRTCPeer()
+	if peer == nil {
+		return errors.New("webRTC peer does not exist")
+	}
 
-func (h *MessageHandler) signalRemoteAnswer(id string, session types.Session, payload *message.SignalAnswer) error {
-	if err := session.SetName(payload.DisplayName); err != nil {
+	offer, err := peer.CreateOffer(true)
+	if err != nil {
 		return err
 	}
 
-	if err := session.SignalRemoteAnswer(payload.SDP); err != nil {
-		return err
-	}
+	// TODO: Use offer event instead.
+	session.Send(
+		event.SIGNAL_RESTART,
+		message.SignalDescription{
+			SDP: offer.SDP,
+		})
 
 	return nil
 }
 
-func (h *MessageHandler) signalRemoteCandidate(id string, session types.Session, payload *message.SignalCandidate) error {
-	return session.SignalRemoteCandidate(payload.Data)
+func (h *MessageHandlerCtx) signalOffer(session types.Session, payload *message.SignalDescription) error {
+	peer := session.GetWebRTCPeer()
+	if peer == nil {
+		return errors.New("webRTC peer does not exist")
+	}
+
+	err := peer.SetRemoteDescription(webrtc.SessionDescription{
+		SDP:  payload.SDP,
+		Type: webrtc.SDPTypeOffer,
+	})
+	if err != nil {
+		return err
+	}
+
+	answer, err := peer.CreateAnswer()
+	if err != nil {
+		return err
+	}
+
+	session.Send(
+		event.SIGNAL_ANSWER,
+		message.SignalDescription{
+			SDP: answer.SDP,
+		})
+
+	return nil
+}
+
+func (h *MessageHandlerCtx) signalAnswer(session types.Session, payload *message.SignalDescription) error {
+	peer := session.GetWebRTCPeer()
+	if peer == nil {
+		return errors.New("webRTC peer does not exist")
+	}
+
+	return peer.SetRemoteDescription(webrtc.SessionDescription{
+		SDP:  payload.SDP,
+		Type: webrtc.SDPTypeAnswer,
+	})
+}
+
+func (h *MessageHandlerCtx) signalCandidate(session types.Session, payload *message.SignalCandidate) error {
+	peer := session.GetWebRTCPeer()
+	if peer == nil {
+		return errors.New("webRTC peer does not exist")
+	}
+
+	return peer.SetCandidate(payload.ICECandidateInit)
+}
+
+func (h *MessageHandlerCtx) signalVideo(session types.Session, payload *message.SignalVideo) error {
+	peer := session.GetWebRTCPeer()
+	if peer == nil {
+		return errors.New("webRTC peer does not exist")
+	}
+
+	return peer.SetVideo(payload.PeerVideoRequest)
+}
+
+func (h *MessageHandlerCtx) signalAudio(session types.Session, payload *message.SignalAudio) error {
+	peer := session.GetWebRTCPeer()
+	if peer == nil {
+		return errors.New("webRTC peer does not exist")
+	}
+
+	return peer.SetAudio(payload.PeerAudioRequest)
 }

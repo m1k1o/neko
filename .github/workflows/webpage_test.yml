@@ -1,0 +1,31 @@
+name: Test Webpage Build
+
+on:
+  pull_request:
+    branches:
+      - master
+    paths:
+      - webpage/**
+      - .github/workflows/webpage_test.yml
+
+jobs:
+  webpage_test:
+    name: Test Webpage Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+          cache-dependency-path: webpage/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./webpage
+        run: npm ci
+      - name: Build webpage
+        working-directory: ./webpage
+        run: npm run build

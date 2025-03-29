@@ -1,0 +1,63 @@
+---
+id: control-take
+title: "Take Control"
+description: "Take control of the room."
+sidebar_label: "Take Control"
+hide_title: true
+hide_table_of_contents: true
+api: eJzVVk1v2zgQ/SsDFih2BVlO0558y7peNGibFrG7PSTBYiyNJdYSqXIop17D/30xpGQ7brvodU/+4HDmzeN8vJ3yWLKa3ClnbTPKrfHO1uohVQVx7nTrtTVqoha4JuhPwa7AVwRyI1Opsi05FLvrQk1UbyQXVKoccWsNE6vJTl1evJKPp56nvVOPazLAXZ4T86qr622m9ql6dfHi+zsLiU5fO2IfPrUjho7JAXa+IuN1HgAJOsFDxosTbNu6Pxl/YfG0U5xX1KB889uW1ETZ5RfKvUpV6yQxryP2hpixpBND9k6bUp0z9Zo86poKIOesg/5epvb7VHnta7k6k6P3vcf9fh/yfPnjPJnchhx0piDH3toich+zT2HZCQWrjonB25C/dfofAu3/N9nvU9WQr6yUT2s5hEdfqYkaY6vHUmfjvqzGPtZVZEUK95yzdzbHumdNpapztZqoyvt2Mh7XclZZ9pOXFxcXav8gjvLOab8Nnv4gdOSuOol997BPd2pq7VrT6T8LuyZz+OPEw1y4jHSd3jowhq1+S1uVKm1Cm4iJSpXBRk5vZm8//D2fzefXH26+Y/XqSVVDx9qUgMDELL+jr9AupxkcIkv2wlkAqCZqGYx+NUp0CV7yDjFOGPhJcl87cttjbuHqr4YLxtAiMxWADAjBG7TosCFPLhaTNisb4vdFdUNrC1cfr1WqpDBiiJfZRXbxXeBgGhrmMy1vF1NAU8jXuc3X5GFJrAtiuJ3NF+JR2qp1dqMLaTusR143BPLTAntH2GhTpqCNJ4e51xsZlHWNSxunYhr8O2qsJyiI1962sOpMLodYa7/N7s29efbsGUytI1hQXhlb21ITy8EIkuSvEG0+RAMrIyGiT5J7AzCCkFVNG3JYEkOSDMewsu4IPIXaPo5q9GTybQqVLqvR1y7A6HMStNgV+iS7LIZ4S9ulRVcEk8Z2TEAbMp4BHYF3aLjR3lMR8cmcYmxooDm3xlDIOkBiwqYm5iNz1mRDwreCdyFEz3UpLEltmAKmtmk6M9TMQEN8uYGJkPrwF+iwGYoY8uhMmwHWb5SVWXpoJmKPy1pz1ZDxKVxPZ5CjKXSBnoC+5RWakn7PAGKwd+G9K/RHD10rthzffd1zNo58rbCul5ivA2MVmqIe2DpgPnIwFKBAn23IbX0l0Gc10zHXszZ6DvMexns0WJJkkSQwgrmMKfrRlgw4B/ABkzz5kGCS3FrbBJtPcvfM7dQR+tAAjS30ahu+inE/sAPZMWjY7NJNMtD5JMDrvil6KcDB8VXxpWPxDJw7IplyZqXLLjYVp9AIEDlf/6wssyHAfMueGnhDWPsKnsN78k7nMc6tfKdNCBTNqmiWV5SvOTg9KBysQRvWZeUj/ti2b+wjXHu4qmv4bN2aYWFL8hU5MXiRnfZifHKGhgqNxwYLT5wkZ+Ml7ftQIBToMUmye3OZnRU4Ge5E/yAkSSujj32o3KUutKN+yiTJefudjIHTDox5vcxO6i9JhvknY2WlDY1Kh9rQ4ZGTJNbwyTv3U09K58nDher+U6SBzLoiyAVORcKEHROGhqi/UPiFzTuptOGmSlWtczIclEi/Xa5azCuCyzDpn6z7x8fHDMNpZl057q/y+N31dHYzn40us4us8k0dFooIjwbNieOgefuaPF8iu6Oy+k9t3K9HT9/8uK1RG1mgAeSu1zh3sjtFKVvb9IItxgtK5yFVolfEbLdbItMnV+/38nfcsZO7h1Rt0GlcyhoUiaIqwoJcEDRr2gpDeU6tqKoN1l3c1mdSUHTMQYJ9/DBfqP3+XyLTMKQ=
+sidebar_class_name: "post api-method"
+info_path: docs/v3/api
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Take Control"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"post"}
+  path={"/api/room/control/take"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Take control of the room.
+
+<ParamsDetails
+  parameters={undefined}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  title={"Body"}
+  body={undefined}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  id={undefined}
+  label={undefined}
+  responses={{"204":{"description":"Control taken successfully."},"401":{"description":"The request requires user authentication.","content":{"application/json":{"schema":{"type":"object","properties":{"message":{"type":"string","description":"Detailed error message."}},"title":"ErrorMessage"}}}},"403":{"description":"The server understood the request, but refuses to authorize it.","content":{"application/json":{"schema":{"type":"object","properties":{"message":{"type":"string","description":"Detailed error message."}},"title":"ErrorMessage"}}}}}}
+>
+  
+</StatusCodes>
+
+
+      

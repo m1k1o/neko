@@ -1,0 +1,129 @@
+{
+  "policies": {
+    "BlockAboutAddons": false,
+    "BlockAboutConfig": true,
+    "BlockAboutProfiles": true,
+    "BlockAboutSupport": true,
+    "Bookmarks": [
+      {
+        "Title": "IPLeak",
+        "URL": "https://ipleak.net/",
+        "Favicon": "https://ipleak.net/favicon.ico",
+        "Folder": "Pages",
+        "Placement": "toolbar"
+      },
+      {
+        "Title": "YouTube",
+        "URL": "https://www.youtube.com/",
+        "Favicon": "https://www.youtube.com/favicon.ico",
+        "Folder": "Pages",
+        "Placement": "toolbar"
+      },
+      {
+        "Title": "Google",
+        "URL": "https://www.google.com/",
+        "Favicon": "https://www.google.com/favicon.ico",
+        "Folder": "Pages",
+        "Placement": "toolbar"
+      }
+    ],
+    "CaptivePortal": false,
+    "DisableAppUpdate": true,
+    "DisableBuiltinPDFViewer": true,
+    "DisableDeveloperTools": false,
+    "DisableFeedbackCommands": true,
+    "DisableFirefoxAccounts": true,
+    "DisableFirefoxScreenshots": true,
+    "DisableFirefoxStudies": true,
+    "DisableForgetButton": true,
+    "DisableMasterPasswordCreation": true,
+    "DisablePocket": true,
+    "DisablePrivateBrowsing": true,
+    "DisableProfileImport": true,
+    "DisableProfileRefresh": true,
+    "DisableSafeMode": true,
+    "DisableSetDesktopBackground": true,
+    "DisableSystemAddonUpdate": true,
+    "DisableTelemetry": true,
+    "DisplayBookmarksToolbar": false,
+    "DontCheckDefaultBrowser": true,
+    "EnableTrackingProtection": {
+      "Cryptomining": true,
+      "Fingerprinting": true,
+      "Value": true
+    },
+    "ExtensionSettings": {
+      "*": {
+        "installation_mode": "blocked"
+      },
+      "sponsorBlocker@ajay.app": {
+        "install_url": "https://addons.mozilla.org/firefox/downloads/latest/sponsorblock/latest.xpi",
+        "installation_mode": "force_installed"
+      },
+      "uBlock0@raymondhill.net": {
+        "install_url": "https://addons.mozilla.org/firefox/downloads/latest/ublock-origin/latest.xpi",
+        "installation_mode": "force_installed"
+      }
+    },
+    "ExtensionUpdate": false,
+    "FirefoxHome": {
+      "Highlights": false,
+      "Pocket": false,
+      "Search": true,
+      "Snippets": false,
+      "TopSites": true
+    },
+    "FlashPlugin": {},
+    "HardwareAcceleration": false,
+    "Homepage": {
+      "Additional": [],
+      "StartPage": "home"
+    },
+    "NewTabPage": true,
+    "NoDefaultBookmarks": true,
+    "OfferToSaveLogins": false,
+    "OfferToSaveLoginsDefault": false,
+    "OverrideFirstRunPage": "",
+    "OverridePostUpdatePage": "",
+    "PasswordManagerEnabled": false,
+    "Permissions": {
+      "Camera": {
+        "BlockNewRequests": true
+      },
+      "Location": {
+        "BlockNewRequests": true
+      },
+      "Microphone": {
+        "BlockNewRequests": true
+      },
+      "Notifications": {
+        "BlockNewRequests": true
+      }
+    },
+    "Preferences": {
+      "browser.tabs.warnOnClose": false,
+      "browser.urlbar.suggest.bookmark": false,
+      "browser.urlbar.suggest.history": false,
+      "browser.urlbar.suggest.openpage": false,
+      "datareporting.policy.dataSubmissionPolicyBypassNotification": true,
+      "dom.disable_window_flip": true,
+      "dom.disable_window_move_resize": true,
+      "dom.event.contextmenu.enabled": true,
+      "extensions.getAddons.showPane": false,
+      "places.history.enabled": false,
+      "privacy.file_unique_origin": true,
+      "ui.key.menuAccessKeyFocuses": false
+    },
+    "PromptForDownloadLocation": false,
+    "SanitizeOnShutdown": {
+      "Cache": true,
+      "Cookies": true,
+      "Downloads": true,
+      "FormData": true,
+      "History": true,
+      "OfflineApps": true,
+      "Sessions": true,
+      "SiteSettings": true
+    }
+  }
+}

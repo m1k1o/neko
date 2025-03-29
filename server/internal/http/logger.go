@@ -5,16 +5,24 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/chi/middleware"
 	"github.com/rs/zerolog"
+
+	"github.com/m1k1o/neko/server/pkg/types"
+	"github.com/m1k1o/neko/server/pkg/utils"
 )
 
-type logformatter struct {
+type logFormatter struct {
 	logger zerolog.Logger
 }
 
-func (l *logformatter) NewLogEntry(r *http.Request) middleware.LogEntry {
-	req := map[string]interface{}{}
+func (l *logFormatter) NewLogEntry(r *http.Request) middleware.LogEntry {
+	// exclude health & metrics from logs
+	if r.RequestURI == "/health" || r.RequestURI == "/metrics" {
+		return &nulllog{}
+	}
+
+	req := map[string]any{}
 
 	if reqID := middleware.GetReqID(r.Context()); reqID != "" {
 		req["id"] = reqID
@@ -32,43 +40,96 @@ func (l *logformatter) NewLogEntry(r *http.Request) middleware.LogEntry {
 	req["agent"] = r.UserAgent()
 	req["uri"] = fmt.Sprintf("%s://%s%s", scheme, r.Host, r.RequestURI)
 
-	fields := map[string]interface{}{}
-	fields["req"] = req
-
-	return &logentry{
-		fields: fields,
-		logger: l.logger,
+	return &logEntry{
+		logger: l.logger.With().Interface("req", req).Logger(),
 	}
 }
 
-type logentry struct {
-	logger zerolog.Logger
-	fields map[string]interface{}
-	errors []map[string]interface{}
+type logEntry struct {
+	logger  zerolog.Logger
+	err     error
+	panic   *logPanic
+	session types.Session
 }
 
-func (e *logentry) Write(status, bytes int, header http.Header, elapsed time.Duration, extra interface{}) {
-	res := map[string]interface{}{}
+type logPanic struct {
+	message string
+	stack   string
+}
+
+func (e *logEntry) Panic(v any, stack []byte) {
+	e.panic = &logPanic{
+		message: fmt.Sprintf("%+v", v),
+		stack:   string(stack),
+	}
+}
+
+func (e *logEntry) Error(err error) {
+	e.err = err
+}
+
+func (e *logEntry) SetSession(session types.Session) {
+	e.session = session
+}
+
+func (e *logEntry) Write(status, bytes int, header http.Header, elapsed time.Duration, extra any) {
+	res := map[string]any{}
 	res["time"] = time.Now().UTC().Format(time.RFC1123)
 	res["status"] = status
 	res["bytes"] = bytes
 	res["elapsed"] = float64(elapsed.Nanoseconds()) / 1000000.0
 
-	e.fields["res"] = res
-	e.fields["module"] = "http"
+	logger := e.logger.With().Interface("res", res).Logger()
 
-	if len(e.errors) > 0 {
-		e.fields["errors"] = e.errors
-		e.logger.Error().Fields(e.fields).Msgf("request failed (%d)", status)
-	} else {
-		e.logger.Debug().Fields(e.fields).Msgf("request complete (%d)", status)
+	// add session ID to logs (if exists)
+	if e.session != nil {
+		logger = logger.With().Str("session_id", e.session.ID()).Logger()
 	}
+
+	// handle panic error message
+	if e.panic != nil {
+		logger.WithLevel(zerolog.PanicLevel).
+			Err(e.err).
+			Str("stack", e.panic.stack).
+			Msgf("request failed (%d): %s", status, e.panic.message)
+		return
+	}
+
+	// handle panic error message
+	if e.err != nil {
+		httpErr, ok := e.err.(*utils.HTTPError)
+		if !ok {
+			logger.Err(e.err).Msgf("request failed (%d)", status)
+			return
+		}
+
+		if httpErr.Message == "" {
+			httpErr.Message = http.StatusText(httpErr.Code)
+		}
+
+		var logLevel zerolog.Level
+		if httpErr.Code < 500 {
+			logLevel = zerolog.WarnLevel
+		} else {
+			logLevel = zerolog.ErrorLevel
+		}
+
+		message := httpErr.Message
+		if httpErr.InternalMsg != "" {
+			message = httpErr.InternalMsg
+		}
+
+		logger.WithLevel(logLevel).Err(httpErr.InternalErr).Msgf("request failed (%d): %s", status, message)
+		return
+	}
+
+	logger.Debug().Msgf("request complete (%d)", status)
 }
 
-func (e *logentry) Panic(v interface{}, stack []byte) {
-	err := map[string]interface{}{}
-	err["message"] = fmt.Sprintf("%+v", v)
-	err["stack"] = string(stack)
+type nulllog struct{}
 
-	e.errors = append(e.errors, err)
+func (e *nulllog) Panic(v any, stack []byte)        {}
+func (e *nulllog) Error(err error)                  {}
+func (e *nulllog) SetSession(session types.Session) {}
+func (e *nulllog) Write(status, bytes int, header http.Header, elapsed time.Duration, extra any) {
 }

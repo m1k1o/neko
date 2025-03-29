@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"time"
 
 	"github.com/rs/zerolog"
@@ -14,10 +15,19 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"m1k1o/neko"
+	neko "github.com/m1k1o/neko/server"
+	"github.com/m1k1o/neko/server/internal/config"
 )
 
 func Execute() error {
+	// properly log unhandled panics
+	defer func() {
+		panicVal := recover()
+		if panicVal != nil {
+			log.Panic().Msgf("%v", panicVal)
+		}
+	}()
+
 	return root.Execute()
 }
 
@@ -25,58 +35,24 @@ var root = &cobra.Command{
 	Use:     "neko",
 	Short:   "neko streaming server",
 	Long:    `neko streaming server`,
-	Version: neko.Service.Version.String(),
+	Version: neko.Version.String(),
 }
 
 func init() {
+	rootConfig := config.Root{}
+
 	cobra.OnInitialize(func() {
-		//////
-		// logs
-		//////
-		zerolog.TimeFieldFormat = ""
-		zerolog.SetGlobalLevel(zerolog.InfoLevel)
-
-		console := zerolog.ConsoleWriter{Out: os.Stdout}
-
-		if !viper.GetBool("logs") {
-			log.Logger = log.Output(console)
-		} else {
-			logs := filepath.Join(".", "logs")
-			if runtime.GOOS == "linux" {
-				logs = "/var/log/neko"
-			}
-
-			if _, err := os.Stat(logs); os.IsNotExist(err) {
-				_ = os.Mkdir(logs, os.ModePerm)
-			}
-
-			latest := filepath.Join(logs, "neko-latest.log")
-			_, err := os.Stat(latest)
-			if err == nil {
-				err = os.Rename(latest, filepath.Join(logs, "neko."+time.Now().Format("2006-01-02T15-04-05Z07-00")+".log"))
-				if err != nil {
-					log.Panic().Err(err).Msg("failed to rotate log file")
-				}
-			}
-
-			logf, err := os.OpenFile(latest, os.O_RDWR|os.O_CREATE, 0666)
-			if err != nil {
-				log.Panic().Err(err).Msg("failed to create log file")
-			}
-
-			logger := diode.NewWriter(logf, 1000, 10*time.Millisecond, func(missed int) {
-				fmt.Printf("logger dropped %d messages", missed)
-			})
-
-			log.Logger = log.Output(io.MultiWriter(console, logger))
-		}
-
 		//////
 		// configs
 		//////
-		config := viper.GetString("config")
+
+		config := viper.GetString("config") // Use config file from the flag.
+		if config == "" {
+			config = os.Getenv("NEKO_CONFIG") // Use config file from the environment variable.
+		}
+
 		if config != "" {
-			viper.SetConfigFile(config) // Use config file from the flag.
+			viper.SetConfigFile(config)
 		} else {
 			if runtime.GOOS == "linux" {
 				viper.AddConfigPath("/etc/neko/")
@@ -87,41 +63,115 @@ func init() {
 		}
 
 		viper.SetEnvPrefix("NEKO")
+		viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 		viper.AutomaticEnv() // read in environment variables that match
 
-		if err := viper.ReadInConfig(); err != nil {
-			if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
-				log.Error().Err(err)
-			}
-			if config != "" {
-				log.Error().Err(err)
+		// read config values
+		err := viper.ReadInConfig()
+		if err != nil {
+			_, notFound := err.(viper.ConfigFileNotFoundError)
+			if !notFound {
+				log.Fatal().Err(err).Msg("unable to read config file")
 			}
 		}
 
-		debug := viper.GetBool("debug")
-		if debug {
-			zerolog.SetGlobalLevel(zerolog.DebugLevel)
+		// get full config file path
+		config = viper.ConfigFileUsed()
+
+		// set root config values
+		rootConfig.Set()
+
+		// legacy if explicitly enabled or if unspecified and legacy config is found
+		if viper.GetBool("legacy") || !viper.IsSet("legacy") {
+			rootConfig.SetV2()
 		}
 
-		file := viper.ConfigFileUsed()
+		//////
+		// logs
+		//////
+		var logWriter io.Writer
+
+		// log to a directory instead of stderr
+		if rootConfig.LogDir != "" {
+			if _, err := os.Stat(rootConfig.LogDir); os.IsNotExist(err) {
+				_ = os.Mkdir(rootConfig.LogDir, os.ModePerm)
+			}
+
+			latest := filepath.Join(rootConfig.LogDir, "neko-latest.log")
+			if _, err := os.Stat(latest); err == nil {
+				err = os.Rename(latest, filepath.Join(rootConfig.LogDir, "neko."+time.Now().Format("2006-01-02T15-04-05Z07-00")+".log"))
+				if err != nil {
+					log.Fatal().Err(err).Msg("failed to rotate log file")
+				}
+			}
+
+			logf, err := os.OpenFile(latest, os.O_RDWR|os.O_CREATE, 0666)
+			if err != nil {
+				log.Fatal().Err(err).Msg("failed to open log file")
+			}
+
+			logWriter = diode.NewWriter(logf, 1000, 10*time.Millisecond, func(missed int) {
+				fmt.Printf("logger dropped %d messages", missed)
+			})
+		} else {
+			logWriter = os.Stderr
+		}
+
+		// log console output instead of json
+		if !rootConfig.LogJson {
+			logWriter = zerolog.ConsoleWriter{
+				Out:     logWriter,
+				NoColor: rootConfig.LogNocolor,
+			}
+		}
+
+		// save new logger output
+		log.Logger = log.Output(logWriter)
+
+		// set custom log level
+		if rootConfig.LogLevel != zerolog.NoLevel {
+			zerolog.SetGlobalLevel(rootConfig.LogLevel)
+		}
+
+		// set custom log tiem format
+		if rootConfig.LogTime != "" {
+			zerolog.TimeFieldFormat = rootConfig.LogTime
+		}
+
+		timeFormat := rootConfig.LogTime
+		if rootConfig.LogTime == zerolog.TimeFormatUnix {
+			timeFormat = "UNIX"
+		}
+
 		logger := log.With().
-			Bool("debug", debug).
-			Str("logging", viper.GetString("logs")).
-			Str("config", file).
+			Str("config", config).
+			Str("log-level", zerolog.GlobalLevel().String()).
+			Bool("log-json", rootConfig.LogJson).
+			Str("log-time", timeFormat).
+			Str("log-dir", rootConfig.LogDir).
 			Logger()
 
-		if file == "" {
+		if config == "" {
 			logger.Warn().Msg("preflight complete without config file")
 		} else {
-			logger.Info().Msg("preflight complete")
+			if _, err := os.Stat(config); os.IsNotExist(err) {
+				logger.Err(err).Msg("preflight complete with nonexistent config file")
+			} else {
+				logger.Info().Msg("preflight complete with config file")
+			}
 		}
-
-		neko.Service.Root.Set()
 	})
 
-	if err := neko.Service.Root.Init(root); err != nil {
+	if err := rootConfig.Init(root); err != nil {
 		log.Panic().Err(err).Msg("unable to run root command")
 	}
 
-	root.SetVersionTemplate(neko.Service.Version.Details())
+	// legacy if explicitly enabled or if unspecified and legacy config is found
+	if viper.GetBool("legacy") || !viper.IsSet("legacy") {
+		if err := rootConfig.InitV2(root); err != nil {
+			log.Panic().Err(err).Msg("unable to run root command")
+		}
+	}
+
+	root.SetVersionTemplate(neko.Version.Details())
 }
