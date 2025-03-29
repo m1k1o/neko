@@ -9,7 +9,7 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: m1k1o/neko
   TAG_PREFIX: ""
-  BASE_DOCKERFILE: Dockerfile
+  RUNTIME_DOCKERFILE: Dockerfile
   PLATFORMS: linux/amd64
 
 jobs:
@@ -48,11 +48,13 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_ACCESS_TOKEN }}
       - 
+        name: Generate base Dockerfile
+        run: RUNTIME_DOCKERFILE=${{ env.RUNTIME_DOCKERFILE }} ./docker/main.go -i Dockerfile.tmpl -o Dockerfile
+      - 
         name: Build and push
         uses: docker/build-push-action@v2
         with:
           context: ./
-          file: .docker/base/${{ env.BASE_DOCKERFILE }}
           platforms: ${{ env.PLATFORMS }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
@@ -117,7 +119,7 @@ jobs:
         name: Build and push
         uses: docker/build-push-action@v2
         with:
-          context: .docker/${{ env.TAG_NAME }}
+          context: apps/${{ env.TAG_NAME }}
           platforms: ${{ env.PLATFORMS }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
