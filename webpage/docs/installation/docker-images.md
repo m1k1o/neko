@@ -156,6 +156,42 @@ docker run \
 See [neko-apps](https://github.com/m1k1o/neko-apps) repository for more applications.
 :::
 
+
+## Supported Architectures {#arch}
+
+Neko Docker images are built with docker buildx and are available for multiple architectures. The following architectures are supported by the base image:
+
+- `linux/amd64` - 64-bit Intel/AMD architecture (most common).
+- `linux/arm64` - 64-bit ARM architecture (e.g., Raspberry Pi 4, Apple M1/M2).
+- `linux/arm/v7` - 32-bit ARM architecture (e.g., Raspberry Pi 3, Raspberry Pi Zero).
+
+### Availability Matrix {#availability}
+
+The availability of applications for ARM architecture is limited due to the lack of support for some applications. The following table shows the availability of each application for each architecture. The `✅` symbol indicates that the application is available for that architecture, while the `❌` symbol indicates that it is not available.
+
+| Application       | AMD64 | ARM64 | ARMv7 | Reference |
+| ----------------- | ----- | ----- | ----- | --------- |
+| Firefox           | ✅    | ✅    | ✅    | - |
+| Waterfox          | ✅    | ❌    | ❌    | [Github Issue](https://github.com/BrowserWorks/Waterfox/issues/1506), [Reddit](https://www.reddit.com/r/waterfox/comments/jpqsds/are_there_any_builds_for_arm64/) |
+| Chromium          | ✅    | ✅ *  | ✅ *  | - |
+| Google Chrome     | ✅    | ❌    | ❌    | [Ask Ubuntu](https://askubuntu.com/a/1383791) |
+| Ungoogled Chromium| ✅    | ❌    | ❌    | [Downloads Page](https://ungoogled-software.github.io/ungoogled-chromium-binaries/) |
+| Microsoft Edge    | ✅    | ❌    | ❌    | [Community Post](https://techcommunity.microsoft.com/discussions/edgeinsiderdiscussions/edge-for-linuxarm64/1532272) |
+| Brave             | ✅    | ✅    | ❌    | [Requirements Page](https://support.brave.com/hc/en-us/articles/360021357112-What-are-the-system-requirements-to-install-Brave) |
+| Vivaldi           | ✅    | ✅    | ✅    | - |
+| Opera             | ✅    | ❌    | ❌    | [Forum Post](https://forums.opera.com/topic/52811/opera-do-not-support-arm64-on-linux) |
+| Tor Browser       | ✅    | ❌    | ❌    | [Forum Post](https://forum.torproject.org/t/tor-browser-for-arm-linux/5240) |
+| Remmina           | ✅    | ✅    | ✅    | - |
+| VLC               | ✅    | ✅    | ✅    | - |
+| Xfce              | ✅    | ✅    | ✅    | - |
+| KDE               | ✅    | ✅    | ✅    | - |
+
+\* No DRM support.
+
+:::tip
+[Oracle Cloud ARM free tier](https://www.oracle.com/cloud/free/) is a great way to test Neko on ARM architecture for free. You can use the `ghcr.io/m1k1o/neko/xfce` image to run a full desktop environment with Xfce and test the applications.
+:::
+
 ## Available Flavors {#flavors}
 
 :::danger Keep in Mind
@@ -165,25 +201,12 @@ Currently the focus is on AMD64 & CPU image (wihout any flavor). So the flavor i
 
 The following flavors are available for Neko Docker images:
 
-- `arm` - ARM64 and ARMv7 architecture support.
 - `nvidia` - NVIDIA GPU support.
 - `intel` - Intel GPU support.
 
 :::note
 Not all flavors are available for all applications. Since not all applications support ARM architecture or GPU acceleration, the flavors are only available where they make sense.
 :::
-
-### ARM {#arm}
-
-For ARM-based images (like Raspberry Pi - with GPU hardware acceleration, [Oracle Cloud ARM free tier](https://www.oracle.com/cloud/free/)). Currently, not all images are available for ARM, because not all applications are available for ARM. Please use the images below:
-
-- [`ghcr.io/m1k1o/neko/arm-firefox`](https://ghcr.io/m1k1o/neko/arm-firefox)
-- [`ghcr.io/m1k1o/neko/arm-chromium`](https://ghcr.io/m1k1o/neko/arm-chromium)
-- [`ghcr.io/m1k1o/neko/arm-ungoogled-chromium`](https://ghcr.io/m1k1o/neko/arm-ungoogled-chromium)
-- [`ghcr.io/m1k1o/neko/arm-vlc`](https://ghcr.io/m1k1o/neko/arm-vlc)
-- [`ghcr.io/m1k1o/neko/arm-xfce`](https://ghcr.io/m1k1o/neko/arm-xfce)
-
-The base image is available at [`ghcr.io/m1k1o/neko/arm-base`](https://ghcr.io/m1k1o/neko/arm-base).
 
 ### Intel {#intel}
 
