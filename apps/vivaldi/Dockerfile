@@ -1,16 +1,13 @@
 ARG BASE_IMAGE=m1k1o/neko:base
 FROM $BASE_IMAGE
 
-ARG VIVALDI_VERSION="7.3.3635.4-1"
-
 #
 # install vivaldi
 SHELL ["/bin/bash", "-c"]
 RUN set -eux; apt-get update; \
     ARCH=$(dpkg --print-architecture); \
-    wget -O /tmp/vivaldi.deb "https://downloads.vivaldi.com/stable/vivaldi-stable_${VIVALDI_VERSION}_${ARCH}.deb"; \
+    wget -O /tmp/vivaldi.deb "https://downloads.vivaldi.com/stable/vivaldi-stable_${ARCH}.deb"; \
     apt-get install -y --no-install-recommends wget unzip xz-utils jq openbox /tmp/vivaldi.deb; \
-    /opt/vivaldi/update-ffmpeg; \
     #
     # install latest version of uBlock Origin and SponsorBlock for YouTube
     EXTENSIONS_DIR="/usr/share/chromium/extensions"; \
