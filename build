@@ -2,39 +2,57 @@
 set -e
 cd "$(dirname "$0")"
 
+#
+# This script builds the neko base image and all the applications
+#
+
 # disable buildx because of https://github.com/docker/buildx/issues/847
+# if you want to use buildx, set USE_BUILDX=1
 if [ -z "$USE_BUILDX" ]; then
   USE_BUILDX=0
 fi
 
 # check if docker buildx is available, its not docker-buildx command but rather subcommand of docker
-if [ -z "$USE_BUILDX" ] && [ -x "$(command -v docker)" ]; then
-  if docker buildx version >/dev/null 2>&1; then
-    USE_BUILDX=1
-  fi
-fi
-
-#
-# This script builds the neko base image and all the applications
-#
+#if [ -z "$USE_BUILDX" ] && [ -x "$(command -v docker)" ]; then
+#  if docker buildx version >/dev/null 2>&1; then
+#    USE_BUILDX=1
+#  fi
+#fi
 
 function log() {
   echo "$(date +'%Y-%m-%d %H:%M:%S') - [NEKO] - $1" > /dev/stderr
 }
 
 function help() {
-  echo "Usage: $0"
-  echo "  -p, --platform   : The platform (default: linux/amd64)"
-  echo "  -r, --repository : The repository prefix (default: ghcr.io/m1k1o/neko)"
-  echo "  -t, --tag        : The image tag, can be specified multiple times, if not specified"
-  echo "                     uses 'latest' and if available, current git semver tag (v*.*.*)"
-  echo "  -f, --flavor     : The flavor, if not specified, builds without flavor"
-  echo "  -b, --base       : The base image name (default: <repository>[<flavor>-]base:<tag>)"
-  echo "  -a, --app        : The app to build, if not specified, builds the base image"
-  echo "  -y, --yes        : Skip confirmation prompts"
-  echo "      --no-cache   : Build without docker cache"
-  echo "      --push       : Push the image to the registry after building"
-  echo "  -h, --help       : Show this help message"
+  echo "Usage: $0 [options] [image]"
+  echo
+  echo "Options:"
+  echo "  -p, --platform    : The platform (default: system architecture)"
+  echo "  -r, --repository  : The repository prefix (default: ghcr.io/m1k1o/neko)"
+  echo "  -t, --tag         : The image tag, can be specified multiple times, if not specified"
+  echo "                      uses 'latest' and if available, current git semver tag (v*.*.*)"
+  echo "  -f, --flavor      : The flavor, if not specified, builds without flavor"
+  echo "  -b, --base_image  : The base image name (default: <repository>[<flavor>-]base:<tag>)"
+  echo "  -a, --application : The app to build, if not specified, builds the base image"
+  echo "  -y, --yes         : Skip confirmation prompts"
+  echo "      --no-cache    : Build without docker cache"
+  echo "      --push        : Push the image to the registry after building"
+  echo "  -h, --help        : Show this help message"
+  echo
+  echo "Positional arguments:"
+  echo "  <image>           : The image name, if not specified, uses the full image name"
+  echo "                      in the format <repository>/<flavor>-<application>:<tag>"
+  echo "                      Example: ghcr.io/m1k1o/neko/nvidia-firefox:latest"
+  echo "                      You can override any of the above options by specifying them"
+  echo "                      after the image name."
+  echo
+  echo "Environment variables:"
+  echo "  USE_BUILDX        : Set to 1 to use docker buildx instead of docker build"
+  echo "                      (default: 0)"
+  echo "  CLIENT_DIST       : The client dist file to use, if not specified, builds them"
+  echo "                      from the source code."
+  echo "  (options)         : Options can be specified as environment variables, for example:"
+  echo "                      PLATFORM=linux/arm64 $0 --repository ghcr.io/m1k1o/neko"
 }
 
 FULL_IMAGE=""
@@ -44,8 +62,8 @@ while [[ "$#" -gt 0 ]]; do
     --repository|-r) REPOSITORY="$2"; shift ;;
     --tag|-t) TAGS+=("$2"); TAG="$2"; shift ;;
     --flavor|-f) FLAVOR="$2"; shift ;;
-    --base|-b) BASE_IMAGE="$2"; shift ;;
-    --app|-a) APPLICATION="$2"; shift ;;
+    --base_image|-b) BASE_IMAGE="$2"; shift ;;
+    --application|-a) APPLICATION="$2"; shift ;;
     --yes|-y) YES=1 ;;
     --no-cache) NO_CACHE="--no-cache" log "Building without cache" ;;
     --push) PUSH=1 ;;
@@ -131,17 +149,12 @@ function build_image() {
   local APPLICATION_IMAGE="$1"
   shift
 
+  # get list of tags in full format: <image>:<tag>
+  local IMAGE_NO_TAG="${APPLICATION_IMAGE%:*}"
   local FULL_TAGS=()
-  # if the image name starts with local/, just use the tag as is
-  if [[ "$APPLICATION_IMAGE" == *"local/"* ]]; then
-    FULL_TAGS=("$APPLICATION_IMAGE")
-  else
-    # get list of tags in full format: <image>:<tag>
-    local IMAGE_NO_TAG="${APPLICATION_IMAGE%:*}"
-    for T in "${TAGS[@]}"; do
-      FULL_TAGS+=("$IMAGE_NO_TAG:$T")
-    done
-  fi
+  for T in "${TAGS[@]}"; do
+    FULL_TAGS+=("$IMAGE_NO_TAG:$T")
+  done
 
   if [ -z "$USE_BUILDX" ] || [ "$USE_BUILDX" != "1" ]; then
     # if buildx is not available, use docker build
@@ -197,7 +210,17 @@ else
 fi
 
 if [ -z "$PLATFORM" ]; then
-  PLATFORM="linux/amd64"
+  # use system architecture if not specified
+  if [ "$(uname -m)" == "x86_64" ]; then
+    PLATFORM="linux/amd64"
+  elif [ "$(uname -m)" == "aarch64" ]; then
+    PLATFORM="linux/arm64"
+  elif [ "$(uname -m)" == "armv7l" ]; then
+    PLATFORM="linux/arm/v7"
+  else
+    log "Unknown architecture: $(uname -m)"
+    exit 1
+  fi
 fi
 log "Using platform: $PLATFORM"
 
