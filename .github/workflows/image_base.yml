@@ -72,7 +72,7 @@ jobs:
 
       - name: Generate base Dockerfile
         env:
-          RUNTIME_DOCKERFILE: ${{ inputs.dockerfile }}
+          RUNTIME_DOCKERFILE: ${{ inputs.dockerfile || 'Dockerfile' }}
         run: go run docker/main.go -i Dockerfile.tmpl -o Dockerfile -client client/dist
 
       - name: Build and push
