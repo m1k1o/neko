@@ -20,6 +20,7 @@ jobs:
     needs: [ build-base ]
     strategy:
       # Will build all images even if some fail.
+      fail-fast: false
       matrix:
         include:
           - name: firefox

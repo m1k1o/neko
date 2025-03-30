@@ -20,14 +20,12 @@ jobs:
     needs: [ build-base ]
     strategy:
       # Will build all images even if some fail.
+      fail-fast: false
       matrix:
         include:
           - name: firefox
             dockerfile: Dockerfile.arm
           - name: chromium
-            dockerfile: Dockerfile.arm
-          - name: ungoogled-chromium
-          - name: tor-browser
           - name: vlc
           - name: xfce
     with:

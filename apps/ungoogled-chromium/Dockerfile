@@ -43,6 +43,7 @@ RUN set -eux; apt-get update; \
       EXT_VERSION="$(unzip -p "${EXT_PATH}" manifest.json 2>/dev/null | jq -r ".version")"; \
       echo -e "{\n  \"external_crx\": \"${EXT_PATH}\",\n  \"external_version\": \"${EXT_VERSION}\"\n}" > "${EXTENSIONS_DIR}"/"${EXT_ID}".json; \
     done; \
+    #
     # clean up
     apt-get --purge autoremove -y xz-utils jq; \
     apt-get clean -y; \
