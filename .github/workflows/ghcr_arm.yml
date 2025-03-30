@@ -24,7 +24,6 @@ jobs:
       matrix:
         include:
           - name: firefox
-            dockerfile: Dockerfile.arm
           - name: chromium
           - name: vlc
           - name: xfce
