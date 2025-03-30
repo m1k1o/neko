@@ -10,14 +10,14 @@ on:
       - .github/workflows/webpage_deploy.yml
 
 jobs:
-  webpage-build:
-    name: Build Webpage Artifacts
+  build-webpage:
+    name: Build Webpage
     uses: ./.github/workflows/webpage_build.yml
     secrets: inherit
 
-  webpage-deploy:
+  deploy-webpage:
     name: Deploy to GitHub Pages
-    needs: webpage-build
+    needs: build-webpage
 
     # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
     permissions:

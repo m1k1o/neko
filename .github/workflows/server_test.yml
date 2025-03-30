@@ -1,4 +1,4 @@
-name: Test Server Build
+name: Test Server
 
 on:
   pull_request:
@@ -9,8 +9,8 @@ on:
       - .github/workflows/server_test.yml
 
 jobs:
-  server-test-amd64:
-    name: Test Server Build AMD64
+  build-amd64:
+    name: Build amd64
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -26,8 +26,8 @@ jobs:
           context: ./server
           platforms: linux/amd64
 
-  server-test-arm64:
-    name: Test Server Build ARM64
+  build-arm64:
+    name: Build arm64
     runs-on: ubuntu-24.04-arm
     permissions:
       contents: read

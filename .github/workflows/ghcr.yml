@@ -7,14 +7,14 @@ on:
 
 jobs:
   build-base:
-    name: Build Base Image
+    name: Base Image
     uses: ./.github/workflows/image_base.yml
     with:
       platforms: linux/amd64,linux/arm64,linux/arm/v7
     secrets: inherit
 
-  build-apps:
-    name: Build Apps Image
+  build-app:
+    name: App Image
     uses: ./.github/workflows/image_app.yml
     needs: build-base
     strategy:

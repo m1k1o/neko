@@ -1,4 +1,4 @@
-name: Test Client Build
+name: Test Client
 
 on:
   pull_request:
@@ -10,8 +10,8 @@ on:
       - .github/workflows/client_test.yml
 
 jobs:
-  client_test:
-    name: Test Client Build
+  test-client:
+    name: Build Artifacts
     uses: ./.github/workflows/client_build.yml
     with:
       # Do not upload artifacts for test builds

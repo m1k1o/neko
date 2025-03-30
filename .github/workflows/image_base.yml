@@ -1,4 +1,4 @@
-name: Build and Publish Base Image
+name: Build Base Image
 
 on:
   workflow_call:
@@ -24,10 +24,11 @@ env:
 
 jobs:
   build-client:
+    name: Build Client Artifacts
     uses: ./.github/workflows/client_build.yml
 
   build-base:
-    name: Build and Publish Base Image
+    name: Build Base Image
     runs-on: ubuntu-latest
     needs: build-client
     steps:

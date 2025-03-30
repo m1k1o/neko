@@ -1,4 +1,4 @@
-name: Build and Publish Webpage Artifacts
+name: Build Webpage
 
 on:
   workflow_call:
@@ -14,8 +14,8 @@ on:
           the artifacts.
 
 jobs:
-  webpage-build:
-    name: Build and Publish Webpage Artifacts
+  build-webpage:
+    name: Build Webpage
     runs-on: ubuntu-latest
 
     steps:

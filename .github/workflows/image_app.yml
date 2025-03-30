@@ -1,4 +1,4 @@
-name: Build and Publish Application Image
+name: Build App Image
 
 on:
   workflow_call:
@@ -6,7 +6,7 @@ on:
       name:
         required: true
         type: string
-        description: "The name of the application to build."
+        description: "The name of the app to build."
       flavor:
         required: false
         type: string
@@ -28,7 +28,7 @@ env:
 
 jobs:
   build-app:
-    name: Build and Publish Application Image
+    name: Build App Image
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

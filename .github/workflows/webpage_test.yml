@@ -1,4 +1,4 @@
-name: Test Webpage Build
+name: Test Webpage
 
 on:
   pull_request:
@@ -10,8 +10,8 @@ on:
       - .github/workflows/webpage_test.yml
 
 jobs:
-  webpage-test:
-    name: Test Webpage Build
+  test-webpage:
+    name: Test Webpage
     uses: ./.github/workflows/webpage_build.yml
     with:
       # Do not upload artifacts for test builds
