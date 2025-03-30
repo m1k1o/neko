@@ -12,8 +12,8 @@ on:
 jobs:
   webpage-test:
     name: Test Webpage Build
-    uses: .github/workflows/webpage_build.yml
+    uses: ./.github/workflows/webpage_build.yml
     with:
+      # Do not upload artifacts for test builds
       with-artifact: false
     secrets: inherit
-      

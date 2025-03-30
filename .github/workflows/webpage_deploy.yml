@@ -12,7 +12,7 @@ on:
 jobs:
   webpage-build:
     name: Build Webpage Artifacts
-    uses: .github/workflows/webpage_build.yml
+    uses: ./.github/workflows/webpage_build.yml
     secrets: inherit
 
   webpage-deploy:

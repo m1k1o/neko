@@ -15,4 +15,5 @@ jobs:
     uses: ./.github/workflows/client_build.yml
     with:
       # Do not upload artifacts for test builds
-      with-arifact: false
+      with-artifact: false
+    secrets: inherit
