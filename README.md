@@ -1,6 +1,6 @@
 <div align="center">
   <a href="https://github.com/m1k1o/neko" title="Neko's Github repository.">
-    <img src="https://raw.githubusercontent.com/m1k1o/neko/master/docs/_media/logo.png" width="400" height="auto"/>
+    <img src="https://neko.m1k1o.net/img/logo.png" width="400" height="auto"/>
   </a>
   <p align="center">
     <a href="https://github.com/m1k1o/neko/releases">
@@ -22,10 +22,10 @@
       <img src="https://discordapp.com/api/guilds/665851821906067466/widget.png" alt="Chat on discord">
     </a>
     <a href="https://github.com/m1k1o/neko/actions">
-      <img src="https://github.com/m1k1o/neko/actions/workflows/ghcr-amd.yml/badge.svg" alt="build">
+      <img src="https://github.com/m1k1o/neko/actions/workflows/ghcr.yml/badge.svg" alt="build">
     </a>
   </p>
-  <img src="https://raw.githubusercontent.com/m1k1o/neko/master/docs/_media/intro.gif" width="650" height="auto"/>
+  <img src="https://neko.m1k1o.net/img/intro.gif" width="650" height="auto"/>
 </div>
 
 # n.eko
@@ -83,47 +83,60 @@ Compared to clientless remote desktop gateway (e.g. [Apache Guacamole](https://g
 ### Supported browsers
 
 <div align="center">
-  <img src="https://raw.githubusercontent.com/m1k1o/neko/master/docs/_media/icons/firefox.svg" title="m1k1o/neko:firefox" width="60" height="auto"/>
-  <img src="https://raw.githubusercontent.com/m1k1o/neko/master/docs/_media/icons/google-chrome.svg" title="m1k1o/neko:google-chrome" width="60" height="auto"/>
-  <img src="https://raw.githubusercontent.com/m1k1o/neko/master/docs/_media/icons/chromium.svg" title="m1k1o/neko:chromium" width="60" height="auto"/>
-  <img src="https://raw.githubusercontent.com/m1k1o/neko/master/docs/_media/icons/microsoft-edge.svg" title="m1k1o/neko:microsoft-edge" width="60" height="auto"/>
-  <img src="https://raw.githubusercontent.com/m1k1o/neko/master/docs/_media/icons/brave.svg" title="m1k1o/neko:brave" width="60" height="auto"/>
-  <img src="https://raw.githubusercontent.com/m1k1o/neko/master/docs/_media/icons/vivaldi.svg" title="m1k1o/neko:vivaldi" width="60" height="auto"/>
-  <img src="https://raw.githubusercontent.com/m1k1o/neko/master/docs/_media/icons/opera.svg" title="m1k1o/neko:opera" width="60" height="auto"/>
-  <img src="https://raw.githubusercontent.com/m1k1o/neko/master/docs/_media/icons/tor-browser.svg" title="m1k1o/neko:tor-browser" width="60" height="auto"/>
+  <a href="https://neko.m1k1o.net/docs/v3/installation/docker-images#firefox">
+    <img src="https://neko.m1k1o.net/img/icons/firefox.svg" title="ghcr.io/m1k1o/neko/firefox" width="60" height="auto"/>
+  </a>
+  <a href="https://neko.m1k1o.net/docs/v3/installation/docker-images#tor-browser">
+    <img src="https://neko.m1k1o.net/img/icons/tor-browser.svg" title="ghcr.io/m1k1o/neko/tor-browser" width="60" height="auto"/>
+  </a>
+  <a href="https://neko.m1k1o.net/docs/v3/installation/docker-images#waterfox">
+    <img src="https://neko.m1k1o.net/img/icons/waterfox.svg" title="ghcr.io/m1k1o/neko/waterfox" width="60" height="auto"/>
+  </a>
+  <a href="https://neko.m1k1o.net/docs/v3/installation/docker-images#chromium">
+    <img src="https://neko.m1k1o.net/img/icons/chromium.svg" title="ghcr.io/m1k1o/neko/chromium" width="60" height="auto"/>
+  </a>
+  <a href="https://neko.m1k1o.net/docs/v3/installation/docker-images#google-chrome">
+    <img src="https://neko.m1k1o.net/img/icons/google-chrome.svg" title="ghcr.io/m1k1o/neko/google-chrome" width="60" height="auto"/>
+  </a>
+  <a href="https://neko.m1k1o.net/docs/v3/installation/docker-images#ungoogled-chromium">
+    <img src="https://neko.m1k1o.net/img/icons/ungoogled-chromium.svg" title="ghcr.io/m1k1o/neko/google-chrome" width="60" height="auto"/>
+  </a>
+  <a href="https://neko.m1k1o.net/docs/v3/installation/docker-images#microsoft-edge">
+    <img src="https://neko.m1k1o.net/img/icons/microsoft-edge.svg" title="ghcr.io/m1k1o/neko/microsoft-edge" width="60" height="auto"/>
+  </a>
+  <a href="https://neko.m1k1o.net/docs/v3/installation/docker-images#brave">
+    <img src="https://neko.m1k1o.net/img/icons/brave.svg" title="ghcr.io/m1k1o/neko/brave" width="60" height="auto"/>
+  </a>
+  <a href="https://neko.m1k1o.net/docs/v3/installation/docker-images#vivaldi">
+    <img src="https://neko.m1k1o.net/img/icons/vivaldi.svg" title="ghcr.io/m1k1o/neko/vivaldi" width="60" height="auto"/>
+  </a>
+  <a href="https://neko.m1k1o.net/docs/v3/installation/docker-images#opera">
+    <img src="https://neko.m1k1o.net/img/icons/opera.svg" title="ghcr.io/m1k1o/neko/opera" width="60" height="auto"/>
+  </a>
+
+  ... see [all available images](https://neko.m1k1o.net/docs/v3/installation/docker-images)
 </div>
 
-### Other programs
+### Other applications
 
 <div align="center">
-  <img src="https://raw.githubusercontent.com/m1k1o/neko/master/docs/_media/icons/remmina.png" title="m1k1o/neko:remmina" width="60" height="auto"/>
-  <img src="https://raw.githubusercontent.com/m1k1o/neko/master/docs/_media/icons/vlc.svg" title="m1k1o/neko:vlc" width="60" height="auto"/>
-  <img src="https://raw.githubusercontent.com/m1k1o/neko/master/docs/_media/icons/xfce.svg" title="m1k1o/neko:xfce" width="60" height="auto"/>
-  <img src="https://raw.githubusercontent.com/m1k1o/neko/master/docs/_media/icons/kde.svg" title="m1k1o/neko:kde" width="60" height="auto"/>
+  <a href="https://neko.m1k1o.net/docs/v3/installation/docker-images#xfce">
+    <img src="https://neko.m1k1o.net/img/icons/xfce.svg" title="ghcr.io/m1k1o/neko/xfce" width="60" height="auto"/>
+  </a>
+  <a href="https://neko.m1k1o.net/docs/v3/installation/docker-images#kde">
+    <img src="https://neko.m1k1o.net/img/icons/kde.svg" title="ghcr.io/m1k1o/neko/kde" width="60" height="auto"/>
+  </a>
+  <a href="https://neko.m1k1o.net/docs/v3/installation/docker-images#remmina">
+    <img src="https://neko.m1k1o.net/img/icons/remmina.svg" title="ghcr.io/m1k1o/neko/remmina" width="60" height="auto"/>
+  </a>
+  <a href="https://neko.m1k1o.net/docs/v3/installation/docker-images#vlc">
+    <img src="https://neko.m1k1o.net/img/icons/vlc.svg" title="ghcr.io/m1k1o/neko/vlc" width="60" height="auto"/>
+  </a>
 
   ... others in <a href="https://github.com/m1k1o/neko-apps">m1k1o/neko-apps</a>
 </div>
 
-### Features
-
-  * Text Chat (With basic markdown support, discord flavor)
-  * Admin users (Kick, Ban & Force Give/Release Controls, Lock room)
-  * Clipboard synchronization (on [supported browsers](https://developer.mozilla.org/en-US/docs/Web/API/Clipboard/readText))
-  * Emote overlay
-  * Ignore user (chat and emotes)
-  * Persistent settings
-  * Automatic Login with custom url args. (add `?usr=<your-user-name>&pwd=<room-pass>` to the url.)
-  * Broadcasting room content using RTMP (to e.g. twitch or youtube...)
-  * Bidirectional file transfer (if enabled)
-
-<div align="center">
-
-With `NEKO_FILE_TRANSFER_ENABLED=true`:
-
-<img src="https://raw.githubusercontent.com/m1k1o/neko/master/docs/_media/file-transfer.gif" width="650" height="auto"/>
-</div>
-
-### Why n.eko?
+### Why neko?
 
 I like cats 🐱 (`Neko` is the Japanese word for cat), I'm a weeb/nerd.
 
@@ -131,28 +144,26 @@ I like cats 🐱 (`Neko` is the Japanese word for cat), I'm a weeb/nerd.
 
 ## Multiple rooms
 
-For n.eko room management software, visit [neko-rooms](https://github.com/m1k1o/neko-rooms).
+For neko room management software, visit [neko-rooms](https://github.com/m1k1o/neko-rooms).
 
-It also offers zero-knowledge [installation script (with HTTPS and Traefik)](https://github.com/m1k1o/neko-rooms/#zero-knowledge-installation-with-https-and-traefik).
+It also offers [Zero-knowledge installation (with HTTPS)](https://github.com/m1k1o/neko-rooms/?tab=readme-ov-file#zero-knowledge-installation-with-https).
 
 ## Documentation
 
-* [Getting Started](https://neko.m1k1o.net/#/getting-started/)
-  * [Quick Start](https://neko.m1k1o.net/#/getting-started/quick-start)
-  * [Examples](https://neko.m1k1o.net/#/getting-started/examples)
-  * [Reverse Proxy](https://neko.m1k1o.net/#/getting-started/reverse-proxy)
-  * [Configuration](https://neko.m1k1o.net/#/getting-started/configuration)
-  * [Troubleshooting](https://neko.m1k1o.net/#/getting-started/troubleshooting)
-* [Mobile Support](https://neko.m1k1o.net/#/mobile-support)
-* [Contributing](https://neko.m1k1o.net/#/contributing)
-  * [Non Goals](https://neko.m1k1o.net/#/non-goals)
-  * [Technologies](https://neko.m1k1o.net/#/technologies)
-* [Changelog](https://neko.m1k1o.net/#/changelog)
+Full documentation is available at [neko.m1k1o.net](https://neko.m1k1o.net/). Key sections include:
 
-## How to contribute? How to build?
+- [Migration from V2](https://neko.m1k1o.net/docs/v3/migration-from-v2)
+- [Getting Started](https://neko.m1k1o.net/docs/v3/quick-start)
+- [Installation](https://neko.m1k1o.net/docs/v3/installation)
+- [Examples](https://neko.m1k1o.net/v3/installation/examples)
+- [Configuration](https://neko.m1k1o.net/docs/v3/configuration)
+- [Frequently Asked Questions](https://neko.m1k1o.net/docs/v3/faq)
+- [Troubleshooting](https://neko.m1k1o.net/docs/v3/troubleshooting)
 
-Navigate to [.docker](.docker) folder for further information.
+## How to Contribute
+
+Contributions are welcome! Check the [Contributing Guide](https://neko.m1k1o.net/contributing) for details.
 
 ## Support
 
-If you want to support this project, you can do it [here](https://github.com/sponsors/m1k1o).
+If you find Neko useful, consider supporting the project via [GitHub Sponsors](https://github.com/sponsors/m1k1o).
