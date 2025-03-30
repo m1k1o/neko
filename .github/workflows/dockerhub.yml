@@ -43,7 +43,7 @@ jobs:
     # do not run on forks
     #
     if: github.repository_owner == 'm1k1o'
-    needs: [ build-base ]
+    needs: build-base
     strategy:
       # Will build all images even if some fail.
       fail-fast: false

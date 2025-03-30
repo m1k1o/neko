@@ -11,12 +11,11 @@ jobs:
     with:
       platforms: linux/amd64
       dockerfile: Dockerfile
-    secrets:
-      GHCR_ACCESS_TOKEN: ${{ secrets.GHCR_ACCESS_TOKEN }}
+    secrets: inherit
 
   build-apps:
     uses: ./.github/workflows/image_app.yml
-    needs: [ build-base ]
+    needs: build-base
     strategy:
       # Will build all images even if some fail.
       fail-fast: false
@@ -40,5 +39,4 @@ jobs:
       name: ${{ matrix.name }}
       dockerfile: ${{ matrix.dockerfile }}
       platforms: linux/amd64
-    secrets:
-      GHCR_ACCESS_TOKEN: ${{ secrets.GHCR_ACCESS_TOKEN }}
+    secrets: inherit

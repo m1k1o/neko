@@ -12,12 +12,11 @@ jobs:
       flavor: nvidia
       platforms: linux/amd64
       dockerfile: Dockerfile.nvidia
-    secrets:
-      GHCR_ACCESS_TOKEN: ${{ secrets.GHCR_ACCESS_TOKEN }}
+    secrets: inherit
 
   build-apps:
     uses: ./.github/workflows/image_app.yml
-    needs: [ build-base ]
+    needs: build-base
     strategy:
       # Will build all images even if some fail.
       fail-fast: false
@@ -38,5 +37,4 @@ jobs:
       dockerfile: ${{ matrix.dockerfile }}
       flavor: nvidia
       platforms: linux/amd64
-    secrets:
-      GHCR_ACCESS_TOKEN: ${{ secrets.GHCR_ACCESS_TOKEN }}
+    secrets: inherit

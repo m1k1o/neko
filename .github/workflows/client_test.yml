@@ -11,23 +11,7 @@ on:
 jobs:
   client_test:
     name: Test Client Build
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 18
-          cache: npm
-          cache-dependency-path: client/package-lock.json
-
-      - name: Install dependencies
-        working-directory: ./client
-        run: npm ci
-
-      - name: Build client
-        working-directory: ./client
-        run: npm run build
+    uses: ./.github/workflows/client_build.yml
+    with:
+      # Do not upload artifacts for test builds
+      with-arifact: false

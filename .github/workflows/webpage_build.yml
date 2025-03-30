@@ -1,4 +1,4 @@
-name: Build and Publish Client Artifacts
+name: Build and Publish Webpage Artifacts
 
 on:
   workflow_call:
@@ -14,8 +14,8 @@ on:
           the artifacts.
 
 jobs:
-  client_build:
-    name: Build and Publish Client Artifacts
+  webpage-build:
+    name: Build and Publish Webpage Artifacts
     runs-on: ubuntu-latest
 
     steps:
@@ -27,19 +27,19 @@ jobs:
         with:
           node-version: 18
           cache: npm
-          cache-dependency-path: client/package-lock.json
+          cache-dependency-path: webpage/package-lock.json
 
       - name: Install dependencies
-        working-directory: ./client
+        working-directory: ./webpage
         run: npm ci
 
-      - name: Build client
-        working-directory: ./client
+      - name: Build webpage
+        working-directory: ./webpage
         run: npm run build
 
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        if: ${{ inputs.with-artifact }}
+      - if: ${{ inputs.with-artifact }}
+        name: Upload artifacts
+        uses: actions/upload-pages-artifact@v3
         with:
-          name: client
-          path: client/dist
+          artifact-name: github-pages
+          path: ./webpage/build

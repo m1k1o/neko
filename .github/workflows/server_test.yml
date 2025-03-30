@@ -9,7 +9,7 @@ on:
       - .github/workflows/server_test.yml
 
 jobs:
-  server_test:
+  server-test-amd64:
     name: Test Server Build
     runs-on: ubuntu-latest
     permissions:
@@ -24,3 +24,21 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: ./server
+          platforms: linux/amd64
+
+  server-test-arm64:
+    name: Test Server Build
+    runs-on: ubuntu-24.04-arm
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./server
+          platforms: linux/arm64

@@ -9,37 +9,14 @@ on:
       - .github/workflows/webpage_deploy.yml
 
 jobs:
-  webpage_build:
-    name: Build and Deploy Webpage to GitHub Pages
-    runs-on: ubuntu-latest
+  webpage-build:
+    name: Build Webpage Artifacts
+    uses: .github/workflows/webpage_build.yml
+    secrets: inherit
 
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 18
-          cache: npm
-          cache-dependency-path: webpage/package-lock.json
-
-      - name: Install dependencies
-        working-directory: ./webpage
-        run: npm ci
-
-      - name: Build webpage
-        working-directory: ./webpage
-        run: npm run build
-
-      - name: Upload Build Artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          artifact-name: github-pages
-          path: ./webpage/build
-
-  webpage_deploy:
+  webpage-deploy:
     name: Deploy to GitHub Pages
-    needs: webpage_build
+    needs: webpage-build
 
     # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
     permissions:

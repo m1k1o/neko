@@ -10,7 +10,7 @@ RUN set -eux; apt-get update; \
         #
         # install firefox-esr for armhf
         apt-get install -y --no-install-recommends firefox-esr; \
-        ln -s /usr/bin/firefox-esr /usr/bin/firefox; \
+        ln -s /usr/lib/firefox-esr /usr/lib/firefox; \
         #
         # install extensions
         mkdir -p /usr/lib/firefox-esr/distribution/extensions; \
