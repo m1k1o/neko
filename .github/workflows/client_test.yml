@@ -11,7 +11,7 @@ on:
 
 jobs:
   test-client:
-    name: Build Artifacts
+    name: Test Client
     uses: ./.github/workflows/client_build.yml
     with:
       # Do not upload artifacts for test builds

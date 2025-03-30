@@ -1,4 +1,4 @@
-name: Build Client Artifacts
+name: Build Client
 
 on:
   workflow_call:
@@ -15,7 +15,7 @@ on:
 
 jobs:
   build-client:
-    name: Build Client Artifacts
+    name: Build Client
     runs-on: ubuntu-latest
 
     steps:
