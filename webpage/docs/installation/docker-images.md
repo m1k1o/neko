@@ -195,24 +195,22 @@ The availability of applications for ARM architecture is limited due to the lack
 ## Available Flavors {#flavors}
 
 :::danger Keep in Mind
-Currently the focus is on AMD64 & CPU image (wihout any flavor). So the flavor images might not work as expected.
+Currently the focus is on CPU images (wihout any flavor). So the GPU support might not work as expected.
 :::
-
 
 The following flavors are available for Neko Docker images:
 
 - `nvidia` - NVIDIA GPU support.
 - `intel` - Intel GPU support.
 
-:::note
-Not all flavors are available for all applications. Since not all applications support ARM architecture or GPU acceleration, the flavors are only available where they make sense.
-:::
+### Intel (VAAPI GPU hardware acceleration) {#intel}
 
-### Intel {#intel}
+Only for architecture `linux/amd64`.
 
 For images with VAAPI GPU hardware acceleration using Intel drivers use:
 
 - [`ghcr.io/m1k1o/neko/intel-firefox`](https://ghcr.io/m1k1o/neko/intel-firefox)
+- [`ghcr.io/m1k1o/neko/intel-waterfox`](https://ghcr.io/m1k1o/neko/intel-waterfox)
 - [`ghcr.io/m1k1o/neko/intel-chromium`](https://ghcr.io/m1k1o/neko/intel-chromium)
 - [`ghcr.io/m1k1o/neko/intel-google-chrome`](https://ghcr.io/m1k1o/neko/intel-google-chrome)
 - [`ghcr.io/m1k1o/neko/intel-ungoogled-chromium`](https://ghcr.io/m1k1o/neko/intel-ungoogled-chromium)
@@ -228,7 +226,9 @@ For images with VAAPI GPU hardware acceleration using Intel drivers use:
 
 The base image is available at [`ghcr.io/m1k1o/neko/intel-base`](https://ghcr.io/m1k1o/neko/intel-base).
 
-### Nvidia {#nvidia}
+### Nvidia (CUDA GPU hardware acceleration) {#nvidia}
+
+Only for architecture `linux/amd64`.
 
 For images with Nvidia GPU hardware acceleration using EGL use:
 
