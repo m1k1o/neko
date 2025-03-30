@@ -2,6 +2,8 @@
 description: List of available Neko Docker images and their flavors.
 ---
 
+import { AppIcon } from '@site/src/components/AppIcon';
+
 # Docker Images
 
 Neko as a standalone streaming server is available as a Docker image. But that is rarely interesting for general use. The real power of Neko is in its ability to accommodate custom applications in the virtual desktop environment. This is where the various flavors of Neko Docker images come in.
@@ -34,17 +36,17 @@ You should always prefer the GHCR registry with the ability to use flavors and s
 
 The following applications are available as Neko Docker images:
 
-### Firefox-based browsers {#firefox}
+### Firefox-based browsers {#firefox-based}
 
 In comparison to Chromium-based browsers, Firefox-based browsers do not require additional capabilities or a bigger shared memory size to not crash.
 
 | Icon | Name | Docker Image |
 | ---- | ---- | ------------ |
-| <img src="/img/icons/firefox.svg" width="60" height="60" /> | [Firefox](https://www.mozilla.org/firefox/) <br /> The open-source browser from Mozilla. | [`ghcr.io/m1k1o/neko/firefox`](https://ghcr.io/m1k1o/neko/firefox) |
-| <img src="/img/icons/tor-browser.svg" width="60" height="60" /> | [Tor Browser](https://www.torproject.org/) <br /> A browser designed to access the Tor network for enhanced privacy. | [`ghcr.io/m1k1o/neko/tor-browser`](https://ghcr.io/m1k1o/neko/tor-browser) |
-| <img src="/img/icons/waterfox.svg" width="60" height="60" /> | [Waterfox](https://www.waterfox.net/) <br /> A privacy-focused browser based on Firefox. | [`ghcr.io/m1k1o/neko/waterfox`](https://ghcr.io/m1k1o/neko/waterfox) |
+| <AppIcon id="firefox" /> | [Firefox](https://www.mozilla.org/firefox/) <br /> The open-source browser from Mozilla. | [`ghcr.io/m1k1o/neko/firefox`](https://ghcr.io/m1k1o/neko/firefox) |
+| <AppIcon id="tor-browser" /> | [Tor Browser](https://www.torproject.org/) <br /> A browser designed to access the Tor network for enhanced privacy. | [`ghcr.io/m1k1o/neko/tor-browser`](https://ghcr.io/m1k1o/neko/tor-browser) |
+| <AppIcon id="waterfox" /> | [Waterfox](https://www.waterfox.net/) <br /> A privacy-focused browser based on Firefox. | [`ghcr.io/m1k1o/neko/waterfox`](https://ghcr.io/m1k1o/neko/waterfox) |
 
-### Chromium-based browsers {#chromium}
+### Chromium-based browsers {#chromium-based}
 
 There are multiple flavors of Chromium-based browsers available as Neko Docker images.
 
@@ -78,13 +80,13 @@ import TabItem from '@theme/TabItem';
 
 | Icon | Name | Docker Image |
 | ---- | ---- | ------------ |
-| <img src="/img/icons/chromium.svg" width="60" height="60" /> | [Chromium](https://www.chromium.org/chromium-projects/) <br /> The open-source project behind Google Chrome. | [`ghcr.io/m1k1o/neko/chromium`](https://ghcr.io/m1k1o/neko/chromium) |
-| <img src="/img/icons/google-chrome.svg" width="60" height="60" /> | [Google Chrome](https://www.google.com/chrome/) <br /> The most popular browser in the world. | [`ghcr.io/m1k1o/neko/google-chrome`](https://ghcr.io/m1k1o/neko/google-chrome) |
-| <img src="/img/icons/ungoogled-chromium.svg" width="60" height="60" /> | [Ungoogled Chromium](https://ungoogled-software.github.io/) <br /> A fork of Chromium without Google integration. | [`ghcr.io/m1k1o/neko/ungoogled-chromium`](https://ghcr.io/m1k1o/neko/ungoogled-chromium) |
-| <img src="/img/icons/microsoft-edge.svg" width="60" height="60" /> | [Microsoft Edge](https://www.microsoft.com/edge) <br/> The new Microsoft Edge is based on Chromium. | [`ghcr.io/m1k1o/neko/microsoft-edge`](https://ghcr.io/m1k1o/neko/microsoft-edge) |
-| <img src="/img/icons/brave.svg" width="60" height="60" /> | [Brave](https://brave.com/) <br /> A privacy-focused browser. | [`ghcr.io/m1k1o/neko/brave`](https://ghcr.io/m1k1o/neko/brave) |
-| <img src="/img/icons/vivaldi.svg" width="60" height="60" /> | [Vivaldi](https://vivaldi.com/) <br /> A highly customizable browser. | [`ghcr.io/m1k1o/neko/vivaldi`](https://ghcr.io/m1k1o/neko/vivaldi) |
-| <img src="/img/icons/opera.svg" width="60" height="60" /> | [Opera](https://www.opera.com/)* <br /> A fast and secure browser. | [`ghcr.io/m1k1o/neko/opera`](https://ghcr.io/m1k1o/neko/opera) |
+| <AppIcon id="chromium" /> | [Chromium](https://www.chromium.org/chromium-projects/) <br /> The open-source project behind Google Chrome. | [`ghcr.io/m1k1o/neko/chromium`](https://ghcr.io/m1k1o/neko/chromium) |
+| <AppIcon id="google-chrome" /> | [Google Chrome](https://www.google.com/chrome/) <br /> The most popular browser in the world. | [`ghcr.io/m1k1o/neko/google-chrome`](https://ghcr.io/m1k1o/neko/google-chrome) |
+| <AppIcon id="ungoogled-chromium" /> | [Ungoogled Chromium](https://ungoogled-software.github.io/) <br /> A fork of Chromium without Google integration. | [`ghcr.io/m1k1o/neko/ungoogled-chromium`](https://ghcr.io/m1k1o/neko/ungoogled-chromium) |
+| <AppIcon id="microsoft-edge" /> | [Microsoft Edge](https://www.microsoft.com/edge) <br/> The new Microsoft Edge is based on Chromium. | [`ghcr.io/m1k1o/neko/microsoft-edge`](https://ghcr.io/m1k1o/neko/microsoft-edge) |
+| <AppIcon id="brave" /> | [Brave](https://brave.com/) <br /> A privacy-focused browser. | [`ghcr.io/m1k1o/neko/brave`](https://ghcr.io/m1k1o/neko/brave) |
+| <AppIcon id="vivaldi" /> | [Vivaldi](https://vivaldi.com/) <br /> A highly customizable browser. | [`ghcr.io/m1k1o/neko/vivaldi`](https://ghcr.io/m1k1o/neko/vivaldi) |
+| <AppIcon id="opera" /> | [Opera](https://www.opera.com/)* <br /> A fast and secure browser. | [`ghcr.io/m1k1o/neko/opera`](https://ghcr.io/m1k1o/neko/opera) |
 
 \* requires extra steps to enable DRM, see instructions [here](https://www.reddit.com/r/operabrowser/wiki/opera/linux_widevine_config/). `libffmpeg` is already configured.
 
@@ -94,8 +96,8 @@ These images feature a full desktop environment where you can install and run mu
 
 | Icon | Name | Docker Image |
 | ---- | ---- | ------------ |
-| <img src="/img/icons/xfce.svg" width="60" height="60" /> | [Xfce](https://xfce.org/) <br /> A lightweight desktop environment. | [`ghcr.io/m1k1o/neko/xfce`](https://ghcr.io/m1k1o/neko/xfce) |
-| <img src="/img/icons/kde.svg" width="60" height="60" /> | [KDE Plasma](https://kde.org/plasma-desktop) <br /> A feature-rich desktop environment. | [`ghcr.io/m1k1o/neko/kde`](https://ghcr.io/m1k1o/neko/kde) |
+| <AppIcon id="xfce" /> | [Xfce](https://xfce.org/) <br /> A lightweight desktop environment. | [`ghcr.io/m1k1o/neko/xfce`](https://ghcr.io/m1k1o/neko/xfce) |
+| <AppIcon id="kde" /> | [KDE Plasma](https://kde.org/plasma-desktop) <br /> A feature-rich desktop environment. | [`ghcr.io/m1k1o/neko/kde`](https://ghcr.io/m1k1o/neko/kde) |
 
 ### Other Applications {#other}
 
@@ -103,8 +105,8 @@ As it would be impossible to include all possible applications in the repository
 
 | Icon | Name | Docker Image |
 | ---- | ---- | ------------ |
-| <img src="/img/icons/remmina.svg" width="60" height="60" /> | [Remmina](https://remmina.org/) <br /> A remote desktop client. | [`ghcr.io/m1k1o/neko/remmina`](https://ghcr.io/m1k1o/neko/remmina) |
-| <img src="/img/icons/vlc.svg" width="60" height="60" /> | [VLC](https://www.videolan.org/vlc/) <br /> A media player. | [`ghcr.io/m1k1o/neko/vlc`](https://ghcr.io/m1k1o/neko/vlc) |
+| <AppIcon id="remmina" /> | [Remmina](https://remmina.org/) <br /> A remote desktop client. | [`ghcr.io/m1k1o/neko/remmina`](https://ghcr.io/m1k1o/neko/remmina) |
+| <AppIcon id="vlc" /> | [VLC](https://www.videolan.org/vlc/) <br /> A media player. | [`ghcr.io/m1k1o/neko/vlc`](https://ghcr.io/m1k1o/neko/vlc) |
 
 #### Remmina Configuration {#remmina}
 

@@ -29,6 +29,10 @@
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
 }
 
+.anchorOffset {
+  scroll-margin-top: calc(var(--ifm-navbar-height) + 0.5rem)
+}
+
 /*
  * Custom CSS for OpenAPI documentation
  */
