@@ -296,4 +296,4 @@ docker run --rm -i \
   --entrypoint go \
   golang:1.24-bullseye \
   run ./docker/main.go \
-  -i Dockerfile.tmpl -client $CLIENT_DIST | build_image $BASE_IMAGE -f - .
+  -i Dockerfile.tmpl -client "$CLIENT_DIST" | build_image $BASE_IMAGE -f - .
