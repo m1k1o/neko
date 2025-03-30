@@ -80,3 +80,5 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           platforms: ${{ inputs.platforms || 'linux/amd64' }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

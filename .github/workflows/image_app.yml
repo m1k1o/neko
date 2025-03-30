@@ -71,3 +71,5 @@ jobs:
           build-args: |
             BASE_IMAGE=ghcr.io/${{ github.repository }}/${{ env.FLAVOR_PREFIX }}base:sha-${{ github.sha }}
           platforms: ${{ inputs.platforms || 'linux/amd64' }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

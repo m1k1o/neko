@@ -41,6 +41,6 @@ jobs:
     with:
       name: ${{ matrix.name }}
       flavor: intel
-      platforms: linux/amd64
+      platforms: ${{ matrix.platforms }}
       dockerfile: ${{ matrix.dockerfile }}
     secrets: inherit

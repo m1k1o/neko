@@ -37,6 +37,6 @@ jobs:
     with:
       name: ${{ matrix.name }}
       flavor: nvidia
-      platforms: linux/amd64
+      platforms: ${{ matrix.platforms }}
       dockerfile: ${{ matrix.dockerfile }}
     secrets: inherit
