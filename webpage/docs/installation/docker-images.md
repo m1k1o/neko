@@ -6,7 +6,7 @@ description: List of available Neko Docker images and their flavors.
 
 Neko as a standalone streaming server is available as a Docker image. But that is rarely interesting for general use. The real power of Neko is in its ability to accommodate custom applications in the virtual desktop environment. This is where the various flavors of Neko Docker images come in.
 
-The base image is available at [`ghcr.io/m1k1o/neko/base`](https://ghcr.io/m1k1o/neko/base).
+The base image is available as multi-arch image at [`ghcr.io/m1k1o/neko/base`](https://ghcr.io/m1k1o/neko/base). See [Supported Architectures](#arch) for more information.
 
 ## Naming Convention {#naming}
 

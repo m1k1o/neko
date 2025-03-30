@@ -100,7 +100,7 @@ capture:
 services:
   neko:
     # see docs for more variants
-    image: "ghcr.io/m1k1o/neko/arm-chromium:latest"
+    image: "ghcr.io/m1k1o/neko/chromium:latest"
     restart: "unless-stopped"
     # increase on rpi's with more then 1gb ram.
     shm_size: "520mb"
