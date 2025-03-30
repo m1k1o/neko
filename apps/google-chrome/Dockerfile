@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=m1k1o/neko:base
+ARG BASE_IMAGE=ghcr.io/m1k1o/neko/base:latest
 FROM $BASE_IMAGE
 
 ARG SRC_URL="https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb"
