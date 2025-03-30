@@ -5,8 +5,9 @@ RUN set -eux; apt-get update; \
     apt-get install -y --no-install-recommends apt-transport-https curl openbox; \
     #
     # install brave browser
+    ARCH=$(dpkg --print-architecture); \
     curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg; \
-    echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg arch=amd64] https://brave-browser-apt-release.s3.brave.com/ stable main" \
+    echo "deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg arch=${ARCH}] https://brave-browser-apt-release.s3.brave.com/ stable main" \
         | tee /etc/apt/sources.list.d/brave-browser-release.list; \
     apt-get update; \
     apt-get install -y --no-install-recommends brave-browser; \
