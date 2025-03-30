@@ -30,9 +30,6 @@ jobs:
     name: Build and Publish Base Image
     runs-on: ubuntu-latest
     needs: [ build-client ]
-    permissions:
-      packages: write
-      contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -67,7 +64,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.GHCR_ACCESS_TOKEN }}
 
       - name: Generate base Dockerfile
         env:
