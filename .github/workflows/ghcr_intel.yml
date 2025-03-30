@@ -1,4 +1,4 @@
-name: "intel gpu supported images"
+name: Build and Push to GHCR for Intel
 
 on:
   push:
@@ -7,6 +7,7 @@ on:
 
 jobs:
   build-base:
+    name: Build Base Image
     uses: ./.github/workflows/image_base.yml
     with:
       flavor: intel
@@ -15,6 +16,7 @@ jobs:
     secrets: inherit
 
   build-apps:
+    name: Build Apps Image
     uses: ./.github/workflows/image_app.yml
     needs: build-base
     strategy:
@@ -38,7 +40,7 @@ jobs:
           - name: kde
     with:
       name: ${{ matrix.name }}
-      dockerfile: ${{ matrix.dockerfile }}
       flavor: intel
       platforms: linux/amd64
+      dockerfile: ${{ matrix.dockerfile }}
     secrets: inherit
