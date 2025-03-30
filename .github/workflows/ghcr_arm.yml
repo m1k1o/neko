@@ -1,4 +1,4 @@
-name: "arm64v8 images"
+name: "arm64v8 and arm32v7 images"
 
 on:
   push:
@@ -10,7 +10,7 @@ jobs:
     uses: ./.github/workflows/image_base.yml
     with:
       flavor: arm
-      platforms: linux/arm64
+      platforms: linux/arm64,linux/arm/v7
       dockerfile: Dockerfile
     secrets:
       GHCR_ACCESS_TOKEN: ${{ secrets.GHCR_ACCESS_TOKEN }}
@@ -34,6 +34,6 @@ jobs:
       name: ${{ matrix.name }}
       dockerfile: ${{ matrix.dockerfile }}
       flavor: arm
-      platforms: linux/arm64
+      platforms: linux/arm64,linux/arm/v7
     secrets:
       GHCR_ACCESS_TOKEN: ${{ secrets.GHCR_ACCESS_TOKEN }}
