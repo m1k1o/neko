@@ -9,7 +9,7 @@ RUN set -eux; apt-get update; \
     if [ "${ARCH}" = "armhf" ]; then \
         #
         # install firefox-esr for armhf
-        apt-get install -y --no-install-recommends openbox firefox-esr; \
+        apt-get install -y --no-install-recommends firefox-esr; \
         ln -s /usr/bin/firefox-esr /usr/bin/firefox; \
         #
         # install extensions
@@ -18,11 +18,11 @@ RUN set -eux; apt-get update; \
         wget -O '/usr/lib/firefox-esr/distribution/extensions/sponsorBlocker@ajay.app.xpi' https://addons.mozilla.org/firefox/downloads/latest/sponsorblock/latest.xpi; \
     else \
         #
-        # fetch latest release (for x86_64 and arm64)
-        if [ "${ARCH}" = "x86_64" ]; then \
+        # fetch latest release (for amd64 and arm64)
+        if [ "${ARCH}" = "amd64" ]; then \
             SRC_URL="https://download.mozilla.org/?product=firefox-latest&os=linux64&lang=en-US"; \
         elif [ "${ARCH}" = "arm64" ]; then \
-            SRC_URL="https://download.mozilla.org/?product=firefox-latest&os=linux-aarch64&lang=en-US"; \
+            SRC_URL="https://download.mozilla.org/?product=firefox-latest&os=linux64-aarch64&lang=en-US"; \
         fi; \
         if [ ! -z "${SRC_URL}" ]; then \
             apt-get install -y --no-install-recommends xz-utils libgtk-3-0 libdbus-glib-1-2; \

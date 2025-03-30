@@ -8,10 +8,10 @@ RUN set -eux; \
     apt-get update; \
     apt-get install -y --no-install-recommends chromium chromium-common chromium-sandbox openbox; \
     #
-    # install widevine module (only for x86_64)
+    # install widevine module (only for amd64)
     CHROMIUM_DIR="/usr/lib/chromium"; \
     ARCH=$(dpkg --print-architecture); \
-    if [ "${ARCH}" = "x86_64" ]; then \
+    if [ "${ARCH}" = "amd64" ]; then \
         # https://commondatastorage.googleapis.com/chromeos-localmirror/distfiles/chromeos-lacros-arm64-squash-zstd-120.0.6098.0
         apt-get install -y --no-install-recommends unzip; \
         WIDEVINE_ARCH="x64"; \

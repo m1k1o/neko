@@ -283,14 +283,9 @@ fi
 
 prompt "Are you sure you want to build $BASE_IMAGE?"
 
-if [ -z "$FLAVOR" ]; then
-  export RUNTIME_DOCKERFILE="Dockerfile"
-else
-  if [ -f "runtime/Dockerfile.$FLAVOR" ]; then
-    export RUNTIME_DOCKERFILE="Dockerfile.$FLAVOR"
-  else
-    export RUNTIME_DOCKERFILE="Dockerfile"
-  fi
+RUNTIME_DOCKERFILE="Dockerfile"
+if [ ! -z "$FLAVOR" ] && [ -f "runtime/Dockerfile.$FLAVOR" ]; then
+  RUNTIME_DOCKERFILE="Dockerfile.$FLAVOR"
 fi
 
 log "Building base image: $BASE_IMAGE"
@@ -301,4 +296,4 @@ docker run --rm -i \
   --entrypoint go \
   golang:1.24-bullseye \
   run ./docker/main.go \
-  -i Dockerfile.tmpl | build_image $BASE_IMAGE -f - .
+  -i Dockerfile.tmpl -client $CLIENT_DIST | build_image $BASE_IMAGE -f - .
