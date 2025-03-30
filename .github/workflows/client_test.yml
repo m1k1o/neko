@@ -6,6 +6,7 @@ on:
       - master
     paths:
       - client/**
+      - .github/workflows/client_build.yml
       - .github/workflows/client_test.yml
 
 jobs:

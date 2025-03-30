@@ -6,6 +6,7 @@ on:
       - master
     paths:
       - webpage/**
+      - .github/workflows/webpage_build.yml
       - .github/workflows/webpage_test.yml
 
 jobs:

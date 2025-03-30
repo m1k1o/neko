@@ -10,7 +10,7 @@ on:
 
 jobs:
   server-test-amd64:
-    name: Test Server Build
+    name: Test Server Build AMD64
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -27,7 +27,7 @@ jobs:
           platforms: linux/amd64
 
   server-test-arm64:
-    name: Test Server Build
+    name: Test Server Build ARM64
     runs-on: ubuntu-24.04-arm
     permissions:
       contents: read
