@@ -18,6 +18,10 @@ on:
         type: string
         default: "linux/amd64"
         description: "The platforms to build for."
+    secrets:
+      GHCR_ACCESS_TOKEN:
+        required: true
+        description: "GitHub Container Registry access token."
 
 env:
   FLAVOR_PREFIX: ${{ inputs.flavor && format('{0}-', inputs.flavor) || '' }}

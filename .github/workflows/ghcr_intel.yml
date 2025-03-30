@@ -12,6 +12,8 @@ jobs:
       flavor: intel
       platforms: linux/amd64
       dockerfile: Dockerfile.intel
+    secrets:
+      GHCR_ACCESS_TOKEN: ${{ secrets.GHCR_ACCESS_TOKEN }}
 
   build-apps:
     uses: ./.github/workflows/image_app.yml
@@ -39,3 +41,5 @@ jobs:
       dockerfile: ${{ matrix.dockerfile }}
       flavor: intel
       platforms: linux/amd64
+    secrets:
+      GHCR_ACCESS_TOKEN: ${{ secrets.GHCR_ACCESS_TOKEN }}

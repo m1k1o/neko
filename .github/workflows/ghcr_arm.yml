@@ -12,6 +12,8 @@ jobs:
       flavor: arm
       platforms: linux/arm64
       dockerfile: Dockerfile
+    secrets:
+      GHCR_ACCESS_TOKEN: ${{ secrets.GHCR_ACCESS_TOKEN }}
 
   build-apps:
     uses: ./.github/workflows/image_app.yml
@@ -33,3 +35,5 @@ jobs:
       dockerfile: ${{ matrix.dockerfile }}
       flavor: arm
       platforms: linux/arm64
+    secrets:
+      GHCR_ACCESS_TOKEN: ${{ secrets.GHCR_ACCESS_TOKEN }}

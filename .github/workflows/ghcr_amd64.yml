@@ -11,6 +11,8 @@ jobs:
     with:
       platforms: linux/amd64
       dockerfile: Dockerfile
+    secrets:
+      GHCR_ACCESS_TOKEN: ${{ secrets.GHCR_ACCESS_TOKEN }}
 
   build-apps:
     uses: ./.github/workflows/image_app.yml
@@ -37,3 +39,5 @@ jobs:
       name: ${{ matrix.name }}
       dockerfile: ${{ matrix.dockerfile }}
       platforms: linux/amd64
+    secrets:
+      GHCR_ACCESS_TOKEN: ${{ secrets.GHCR_ACCESS_TOKEN }}
