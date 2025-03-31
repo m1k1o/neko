@@ -244,6 +244,28 @@ To fix this, you can either remove the conflicting Docker network or change the 
 }
 ```
 
+### Browser is not starting with persistent profile {#browser-profile-not-starting}
+
+If you are using a persistent profile like `google-chrome` shown below, and the browser is not starting (you see a black screen), it may be because the profile is corrupted or not mounted correctly.
+
+```yaml title="docker-compose.yaml"
+volumes:
+# For google-chrome
+- /data:/home/neko/.config/google-chrome
+```
+
+Possible reasons are:
+- The profile is corrupted, which can happen if the container is not stopped properly. Browsers should be able to recover from this, but it may not work in some cases.
+- The profile is not mounted to the correct path. Make sure that you are mounting the profile to the correct path in your `docker-compose.yaml` file.
+- The profile is not owned by the correct user. Make sure that the profile is owned by the `neko` user in the container. You can check this by running the following command:
+
+```bash
+# Check the owner of the profile
+docker exec -it <container-id> ls -la /home/neko/.config/google-chrome
+# To change the owner
+docker exec -it <container-id> chown -R neko:neko /home/neko/.config/google-chrome
+```
+
 ### Common server errors {#common-server-errors}
 
 ```
