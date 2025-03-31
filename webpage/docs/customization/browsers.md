@@ -1,5 +1,6 @@
 ---
 sidebar_label: "Browsers"
+description: "Customize your browser settings and configurations in Neko."
 ---
 
 import { AppIcon } from '@site/src/components/AppIcon';
