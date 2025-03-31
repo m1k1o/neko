@@ -40,3 +40,22 @@ services:
       NEKO_WEBRTC_EPR: 52000-52100
       NEKO_WEBRTC_ICELITE: 1
 ```
+
+## Query parameters {#query-parameters}
+
+You can use query parameters to customize the Neko web interface. These parameters can be added to the URL when accessing the Neko web interface. The following table lists the available query parameters:
+
+| Query Parameter    | Description                                                |
+|--------------------|------------------------------------------------------------|
+| `?usr=<username>`  | Prefills the username field.                               |
+| `?pwd=<password>`  | Prefills the password field.                               |
+| `?cast=1`          | Hides all controls and shows only the video.               |
+| `?embed=1`         | Hides most additional components and shows only the video. |
+| `?volume=<0-1>`    | Sets the volume to the given value (between 0 and 1).      |
+| `?lang=<language>` | Sets the language to the given value.                      |
+| `?show_side=1`     | Shows the sidebar on startup.                              |
+| `?mute_chat=1`     | Mutes the chat on startup.                                 |
+
+You can combine multiple query parameters in the URL. For example, to set the username to `guest`, the password to `neko`, and enable casting mode, you can use the following URL:
+
+Example: `http(s)://<URL:Port>/?pwd=neko&usr=guest&cast=1`
