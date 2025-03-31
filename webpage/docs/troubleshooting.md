@@ -187,6 +187,63 @@ services:
       NEKO_WEBRTC_EPR: 52000-52100
 ```
 
+### No internet in the remote browser {#no-internet}
+
+Try visiting `https://1.1.1.1` in the browser. If it works, then your internet is functioning, but DNS is not resolving.
+
+You can specify a custom DNS server in the Docker file using the `--dns` flag or in your `docker-compose.yaml` file.
+
+```yaml title="docker-compose.yaml"
+services:
+  neko:
+    image: "ghcr.io/m1k1o/neko/chromium:latest"
+    # highlight-start
+    dns:
+    - 1.1.1.1
+    - 8.8.8.8
+    # highlight-end
+    cap_add:
+    - SYS_ADMIN
+    restart: "unless-stopped"
+    shm_size: "2gb"
+    # ...
+```
+
+If it still doesn't work, the issue is likely in the Docker/networking configuration. Check if your Docker network is not conflicting with your host network.
+
+List all Docker networks:
+
+```bash
+$ for n in `docker network ls --format '{{ .ID }}'`; do docker network inspect --format '{{ .IPAM.Config }} {{ .Name }}' $n; done
+[{172.16.0.0/24  172.16.0.1 map[]}] bridge
+[] host
+[{172.17.0.0/24  172.17.0.1 map[]}] neko1-net
+[] none
+[{172.18.0.0/24  172.18.0.1 map[]}] neko2-net
+```
+
+You can check your host network using:
+
+```bash
+$ ip route | grep default
+default via 172.18.0.1 dev eth0 proto dhcp src 172.18.0.2 metric 100
+```
+
+In this case, the host subnet is the same as `neko2-net`, meaning that the internet stops working as soon as a second Docker network is created.
+
+To fix this, you can either remove the conflicting Docker network or change the subnet of the Docker network by modifying the `daemon.json` file:
+
+```json title="/etc/docker/daemon.json"
+{
+  "default-address-pools": [
+    {
+      "base" : "10.10.0.0/16",
+      "size" : 24
+    }
+  ]
+}
+```
+
 ### Common server errors {#common-server-errors}
 
 ```
