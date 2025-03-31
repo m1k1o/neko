@@ -1,14 +1,10 @@
----
-sidebar_position: 2
----
+# Developer Guide
 
-# Building from Source
+:::info
+This guide is Work in Progress. It is not complete and will be updated over time.
+:::
 
-This guide walks you through the process of setting up Neko on your local machine or server.
-
-## Prerequisites {#prerequisites}
-
-Before proceeding, ensure that you have the following installed on your system:
+## Dependencies
 
 - [node.js](https://nodejs.org/) and [npm](https://www.npmjs.com/) (for building the frontend).
 - [go](https://golang.org/) (for building the server).
@@ -32,38 +28,9 @@ Before proceeding, ensure that you have the following installed on your system:
   sudo apt-get install xdotool xclip libgtk-3-0 libgtk-3-dev libopus0 libvpx6;
   ```
 
-## Step 1: Clone the Repository {#step-1}
+## Next Steps
 
-Start by cloning the Neko Git repository to your machine:
+import DocCardList from '@theme/DocCardList';
+import {useCurrentSidebarCategory} from '@docusaurus/theme-common';
 
-```bash
-git clone https://github.com/m1k1o/neko.git
-cd neko
-```
-
-## Step 2: Build the Frontend {#step-2}
-
-Navigate to the `client` directory and install the dependencies:
-
-```shell
-cd client;
-npm install;
-npm run build;
-```
-
-## Step 3: Build the Server {#step-3}
-
-Navigate to the `server` directory and build the server:
-
-```shell
-cd server;
-go build;
-```
-
-## Step 4: Run the Server {#step-4}
-
-Finally, run the server:
-
-```shell
-./server/server;
-```
+<DocCardList items={useCurrentSidebarCategory().items}/>
