@@ -22,7 +22,7 @@ fi
 
 #
 # load server dependencies
-go get -v -t -d .
+go get -v -t .
 
 #
 # build server
