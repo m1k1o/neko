@@ -70,7 +70,7 @@ jobs:
       - name: Generate base Dockerfile
         env:
           RUNTIME_DOCKERFILE: ${{ inputs.dockerfile || 'Dockerfile' }}
-        run: go run docker/main.go -i Dockerfile.tmpl -o Dockerfile -client client/dist
+        run: go run utils/docker/main.go -i Dockerfile.tmpl -o Dockerfile -client client/dist
 
       - name: Build and push
         uses: docker/build-push-action@v6

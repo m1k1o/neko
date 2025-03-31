@@ -43,7 +43,7 @@ jobs:
           password: ${{ secrets.DOCKER_TOKEN }}
 
       - name: Generate base Dockerfile
-        run: go run docker/main.go -i Dockerfile.tmpl -o Dockerfile
+        run: go run utils/docker/main.go -i Dockerfile.tmpl -o Dockerfile
 
       - name: Build and push
         uses: docker/build-push-action@v6
