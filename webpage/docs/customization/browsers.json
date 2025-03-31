@@ -1,0 +1,61 @@
+[
+    {
+        "tag": "firefox",
+        "flavor": "firefox-based",
+        "profileDir": "/home/neko/.mozilla/firefox/profile.default",
+        "policiesFile": "/usr/lib/firefox/distribution/policies.json"
+    },
+    {
+        "tag": "tor-browser",
+        "flavor": "firefox-based",
+        "profileDir": "/opt/tor-browser_en-US/Browser/TorBrowser/Data/Browser/profile.default",
+        "policiesFile": "/opt/tor-browser_en-US/Browser/distribution/policies.json"
+    },
+    {
+        "tag": "waterfox",
+        "flavor": "firefox-based",
+        "profileDir": "/home/neko/.waterfox/profile.default",
+        "policiesFile": "/usr/lib/waterfox/distribution/policies.json"
+    },
+    {
+        "tag": "chromium",
+        "flavor": "chromium-based",
+        "profileDir": "/home/neko/.config/chromium",
+        "policiesFile": "/etc/chromium/policies/managed/policies.json"
+    },
+    {
+        "tag": "google-chrome",
+        "flavor": "chromium-based",
+        "profileDir": "/home/neko/.config/google-chrome",
+        "policiesFile": "/etc/opt/chrome/policies/managed/policies.json"
+    },
+    {
+        "tag": "ungoogled-chromium",
+        "flavor": "chromium-based",
+        "profileDir": "/home/neko/.config/chromium",
+        "policiesFile": "/etc/chromium/policies/managed/policies.json"
+    },
+    {
+        "tag": "microsoft-edge",
+        "flavor": "chromium-based",
+        "profileDir": "/home/neko/.config/microsoft-edge",
+        "policiesFile": "/etc/opt/edge/policies/managed/policies.json"
+    },
+    {
+        "tag": "brave",
+        "flavor": "chromium-based",
+        "profileDir": "/home/neko/.config/brave",
+        "policiesFile": "/etc/brave/policies/managed/policies.json"
+    },
+    {
+        "tag": "vivaldi",
+        "flavor": "chromium-based",
+        "profileDir": "/home/neko/.config/vivaldi",
+        "policiesFile": "/etc/opt/vivaldi/policies/managed/policies.json"
+    },
+    {
+        "tag": "opera",
+        "flavor": "chromium-based",
+        "profileDir": "/home/neko/.config/opera"
+    }
+]

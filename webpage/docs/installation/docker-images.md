@@ -36,7 +36,7 @@ You should always prefer the GHCR registry with the ability to use flavors and s
 
 The following applications are available as Neko Docker images:
 
-### Firefox-based browsers {#firefox-based}
+### Firefox-based browsers {#firefox-based-browsers}
 
 In comparison to Chromium-based browsers, Firefox-based browsers do not require additional capabilities or a bigger shared memory size to not crash.
 
@@ -46,7 +46,9 @@ In comparison to Chromium-based browsers, Firefox-based browsers do not require 
 | <AppIcon id="tor-browser" /> | [Tor Browser](https://www.torproject.org/) <br /> A browser designed to access the Tor network for enhanced privacy. | [`ghcr.io/m1k1o/neko/tor-browser`](https://ghcr.io/m1k1o/neko/tor-browser) |
 | <AppIcon id="waterfox" /> | [Waterfox](https://www.waterfox.net/) <br /> A privacy-focused browser based on Firefox. | [`ghcr.io/m1k1o/neko/waterfox`](https://ghcr.io/m1k1o/neko/waterfox) |
 
-### Chromium-based browsers {#chromium-based}
+Check the [Firefox-based browsers customization guide](/docs/v3/customization/browsers#firefox-based) for more information on how to customize Firefox-based browsers (configuring profile, installing extensions, etc.).
+
+### Chromium-based browsers {#chromium-based-browsers}
 
 There are multiple flavors of Chromium-based browsers available as Neko Docker images.
 
@@ -89,6 +91,8 @@ import TabItem from '@theme/TabItem';
 | <AppIcon id="opera" /> | [Opera](https://www.opera.com/)* <br /> A fast and secure browser. | [`ghcr.io/m1k1o/neko/opera`](https://ghcr.io/m1k1o/neko/opera) |
 
 \* requires extra steps to enable DRM, see instructions [here](https://www.reddit.com/r/operabrowser/wiki/opera/linux_widevine_config/). `libffmpeg` is already configured.
+
+Check the [Chromium-based browsers customization guide](/docs/v3/customization/browsers#chromium-based) for more information on how to customize Chromium-based browsers (configuring profile, installing extensions, etc.).
 
 ### Desktop Environments {#desktop}
 
