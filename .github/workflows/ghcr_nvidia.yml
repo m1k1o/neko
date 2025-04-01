@@ -1,0 +1,42 @@
+name: Build and Push to GHCR for Nvidia
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-base:
+    name: Base Image
+    uses: ./.github/workflows/image_base.yml
+    with:
+      flavor: nvidia
+      platforms: linux/amd64
+      dockerfile: Dockerfile.nvidia
+    secrets: inherit
+
+  build-app:
+    name: App Image
+    uses: ./.github/workflows/image_app.yml
+    needs: build-base
+    strategy:
+      # Will build all images even if some fail.
+      fail-fast: false
+      matrix:
+        include:
+          - name: firefox
+            dockerfile: Dockerfile.nvidia
+          - name: brave
+            dockerfile: Dockerfile.nvidia
+          - name: chromium
+            dockerfile: Dockerfile.nvidia
+          - name: google-chrome
+            dockerfile: Dockerfile.nvidia
+          - name: microsoft-edge
+            dockerfile: Dockerfile.nvidia
+    with:
+      name: ${{ matrix.name }}
+      flavor: nvidia
+      platforms: ${{ matrix.platforms }}
+      dockerfile: ${{ matrix.dockerfile }}
+    secrets: inherit

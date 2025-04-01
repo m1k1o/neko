@@ -1,0 +1,22 @@
+.features {
+  display: flex;
+  align-items: center;
+  padding: 2rem 0;
+  width: 100%;
+}
+
+.featureRow {
+  display: flex;
+  margin: 2rem 0;
+  align-items: center;
+  text-align: left;
+}
+
+.featureRowReverse {
+  flex-direction: row-reverse;
+}
+
+.featureSvg {
+  height: 300px;
+  width: 300px;
+}

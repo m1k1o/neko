@@ -1,241 +1,513 @@
 package session
 
 import (
-	"fmt"
+	"errors"
 	"sync"
+	"sync/atomic"
+	"time"
 
+	"github.com/kataras/go-events"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"m1k1o/neko/internal/types"
-	"m1k1o/neko/internal/utils"
+	"github.com/m1k1o/neko/server/internal/config"
+	"github.com/m1k1o/neko/server/pkg/types"
+	"github.com/m1k1o/neko/server/pkg/utils"
 )
 
-func New(capture types.CaptureManager) *SessionManager {
-	return &SessionManager{
-		logger:        log.With().Str("module", "session").Logger(),
-		host:          "",
-		capture:       capture,
-		eventsChannel: make(chan types.SessionEvent, 10),
-		members:       make(map[string]*Session),
-	}
-}
+func New(config *config.Session) *SessionManagerCtx {
+	manager := &SessionManagerCtx{
+		logger: log.With().Str("module", "session").Logger(),
+		config: config,
+		settings: types.Settings{
+			PrivateMode:       config.PrivateMode,
+			LockedLogins:      config.LockedLogins,
+			LockedControls:    config.LockedControls || config.ControlProtection,
+			ControlProtection: config.ControlProtection,
+			ImplicitHosting:   config.ImplicitHosting,
+			InactiveCursors:   config.InactiveCursors,
+			MercifulReconnect: config.MercifulReconnect,
+			HeartbeatInterval: config.HeartbeatInterval,
+		},
+		tokens:   make(map[string]string),
+		sessions: make(map[string]*SessionCtx),
+		cursors:  make(map[types.Session][]types.Cursor),
+		emmiter:  events.New(),
 
-type SessionManager struct {
-	mu            sync.Mutex
-	logger        zerolog.Logger
-	host          string
-	capture       types.CaptureManager
-	members       map[string]*Session
-	eventsChannel chan types.SessionEvent
-	// TODO: Handle locks in sessions as flags.
-	controlLocked bool
-}
-
-func (manager *SessionManager) New(id string, admin bool, socket types.WebSocket) types.Session {
-	session := &Session{
-		id:        id,
-		admin:     admin,
-		manager:   manager,
-		socket:    socket,
-		logger:    manager.logger.With().Str("id", id).Logger(),
-		connected: false,
+		serverStartedAt: time.Now(),
 	}
 
-	manager.mu.Lock()
-	manager.members[id] = session
-	manager.capture.Audio().AddListener()
-	manager.capture.Video().AddListener()
-	manager.mu.Unlock()
-
-	manager.eventsChannel <- types.SessionEvent{
-		Type:    types.SESSION_CREATED,
-		Id:      id,
-		Session: session,
-	}
-
-	return session
-}
-
-func (manager *SessionManager) HasHost() bool {
-	return manager.host != ""
-}
-
-func (manager *SessionManager) IsHost(id string) bool {
-	return manager.host == id
-}
-
-func (manager *SessionManager) SetHost(id string) error {
-	manager.mu.Lock()
-	_, ok := manager.members[id]
-	manager.mu.Unlock()
-
-	if ok {
-		manager.host = id
-
-		manager.eventsChannel <- types.SessionEvent{
-			Type: types.SESSION_HOST_SET,
-			Id:   id,
+	// create API session
+	if config.APIToken != "" {
+		manager.apiSession = &SessionCtx{
+			id:      "API",
+			token:   config.APIToken,
+			manager: manager,
+			logger:  manager.logger.With().Str("session_id", "API").Logger(),
+			profile: types.MemberProfile{
+				Name:               "API Session",
+				IsAdmin:            true,
+				CanLogin:           true,
+				CanConnect:         false,
+				CanWatch:           true,
+				CanHost:            true,
+				CanAccessClipboard: true,
+			},
 		}
-
-		return nil
 	}
 
-	return fmt.Errorf("invalid session id %s", id)
+	// try to load sessions from file
+	manager.load()
+
+	return manager
 }
 
-func (manager *SessionManager) GetHost() (types.Session, bool) {
-	manager.mu.Lock()
-	defer manager.mu.Unlock()
+type SessionManagerCtx struct {
+	logger zerolog.Logger
+	config *config.Session
 
-	host, ok := manager.members[manager.host]
-	return host, ok
+	settings   types.Settings
+	settingsMu sync.Mutex
+
+	tokens     map[string]string
+	sessions   map[string]*SessionCtx
+	sessionsMu sync.Mutex
+
+	hostId atomic.Value
+
+	cursors   map[types.Session][]types.Cursor
+	cursorsMu sync.Mutex
+
+	emmiter    events.EventEmmiter
+	apiSession *SessionCtx
+
+	serverStartedAt time.Time
+	totalAdmins     atomic.Int32
+	lastAdminLeftAt atomic.Value
+	totalUsers      atomic.Int32
+	lastUserLeftAt  atomic.Value
 }
 
-func (manager *SessionManager) ClearHost() {
-	id := manager.host
-	manager.host = ""
-
-	manager.eventsChannel <- types.SessionEvent{
-		Type: types.SESSION_HOST_CLEARED,
-		Id:   id,
+func (manager *SessionManagerCtx) Create(id string, profile types.MemberProfile) (types.Session, string, error) {
+	token, err := utils.NewUID(64)
+	if err != nil {
+		return nil, "", err
 	}
+
+	manager.sessionsMu.Lock()
+	if _, ok := manager.sessions[id]; ok {
+		manager.sessionsMu.Unlock()
+		return nil, "", types.ErrSessionAlreadyExists
+	}
+
+	if _, ok := manager.tokens[token]; ok {
+		manager.sessionsMu.Unlock()
+		return nil, "", errors.New("session token already exists")
+	}
+
+	session := &SessionCtx{
+		id:      id,
+		token:   token,
+		manager: manager,
+		logger:  manager.logger.With().Str("session_id", id).Logger(),
+		profile: profile,
+	}
+
+	manager.tokens[token] = id
+	manager.sessions[id] = session
+	manager.sessionsMu.Unlock()
+
+	manager.emmiter.Emit("created", session)
+	manager.save()
+
+	return session, token, nil
 }
 
-func (manager *SessionManager) Has(id string) bool {
-	manager.mu.Lock()
-	defer manager.mu.Unlock()
+func (manager *SessionManagerCtx) Update(id string, profile types.MemberProfile) error {
+	manager.sessionsMu.Lock()
 
-	_, ok := manager.members[id]
-	return ok
+	session, ok := manager.sessions[id]
+	if !ok {
+		manager.sessionsMu.Unlock()
+		return types.ErrSessionNotFound
+	}
+
+	old := session.profile
+	session.profile = profile
+	manager.sessionsMu.Unlock()
+
+	manager.emmiter.Emit("profile_changed", session, profile, old)
+	manager.save()
+
+	session.profileChanged()
+	return nil
 }
 
-func (manager *SessionManager) Get(id string) (types.Session, bool) {
-	manager.mu.Lock()
-	defer manager.mu.Unlock()
+func (manager *SessionManagerCtx) Delete(id string) error {
+	manager.sessionsMu.Lock()
+	session, ok := manager.sessions[id]
+	if !ok {
+		manager.sessionsMu.Unlock()
+		return types.ErrSessionNotFound
+	}
 
-	session, ok := manager.members[id]
+	delete(manager.tokens, session.token)
+	delete(manager.sessions, id)
+	manager.sessionsMu.Unlock()
+
+	if session.State().IsConnected {
+		session.DestroyWebSocketPeer("session deleted")
+	}
+
+	if session.State().IsWatching {
+		session.GetWebRTCPeer().Destroy()
+	}
+
+	manager.emmiter.Emit("deleted", session)
+	manager.save()
+
+	return nil
+}
+
+func (manager *SessionManagerCtx) Disconnect(id string) error {
+	manager.sessionsMu.Lock()
+	session, ok := manager.sessions[id]
+	if !ok {
+		manager.sessionsMu.Unlock()
+		return types.ErrSessionNotFound
+	}
+	manager.sessionsMu.Unlock()
+
+	if session.State().IsConnected {
+		session.DestroyWebSocketPeer("session disconnected")
+	}
+
+	if session.State().IsWatching {
+		session.GetWebRTCPeer().Destroy()
+	}
+
+	return nil
+}
+
+func (manager *SessionManagerCtx) Get(id string) (types.Session, bool) {
+	manager.sessionsMu.Lock()
+	defer manager.sessionsMu.Unlock()
+
+	session, ok := manager.sessions[id]
 	return session, ok
 }
 
-// TODO: Handle locks in sessions as flags.
-func (manager *SessionManager) SetControlLocked(locked bool) {
-	manager.controlLocked = locked
-}
+func (manager *SessionManagerCtx) GetByToken(token string) (types.Session, bool) {
+	manager.sessionsMu.Lock()
+	id, ok := manager.tokens[token]
+	manager.sessionsMu.Unlock()
 
-func (manager *SessionManager) CanControl(id string) bool {
-	session, ok := manager.Get(id)
-	return ok && (!manager.controlLocked || session.Admin())
-}
-
-func (manager *SessionManager) Admins() []*types.Member {
-	manager.mu.Lock()
-	defer manager.mu.Unlock()
-
-	members := []*types.Member{}
-	for _, session := range manager.members {
-		if !session.connected || !session.admin {
-			continue
-		}
-
-		member := session.Member()
-		if member != nil {
-			members = append(members, member)
-		}
-	}
-
-	return members
-}
-
-func (manager *SessionManager) Members() []*types.Member {
-	manager.mu.Lock()
-	defer manager.mu.Unlock()
-
-	members := []*types.Member{}
-	for _, session := range manager.members {
-		if !session.connected {
-			continue
-		}
-
-		member := session.Member()
-		if member != nil {
-			members = append(members, member)
-		}
-	}
-	return members
-}
-
-func (manager *SessionManager) Destroy(id string) {
-	manager.mu.Lock()
-	session, ok := manager.members[id]
 	if ok {
-		err := session.destroy()
-		delete(manager.members, id)
+		return manager.Get(id)
+	}
 
-		manager.capture.Audio().RemoveListener()
-		manager.capture.Video().RemoveListener()
-		manager.mu.Unlock()
+	// is API session
+	if manager.apiSession != nil && manager.apiSession.token == token {
+		return manager.apiSession, true
+	}
 
-		manager.eventsChannel <- types.SessionEvent{
-			Type:    types.SESSION_DESTROYED,
-			Id:      id,
-			Session: session,
+	return nil, false
+}
+
+func (manager *SessionManagerCtx) List() []types.Session {
+	manager.sessionsMu.Lock()
+	defer manager.sessionsMu.Unlock()
+
+	var sessions []types.Session
+	for _, session := range manager.sessions {
+		sessions = append(sessions, session)
+	}
+
+	return sessions
+}
+
+func (manager *SessionManagerCtx) Range(f func(session types.Session) bool) {
+	manager.sessionsMu.Lock()
+	defer manager.sessionsMu.Unlock()
+
+	for _, session := range manager.sessions {
+		if !f(session) {
+			return
 		}
-		manager.logger.Err(err).Str("session_id", id).Msg("destroying session")
+	}
+}
+
+// ---
+// host
+// ---
+
+func (manager *SessionManagerCtx) setHost(session, host types.Session) {
+	var hostId string
+	if host != nil {
+		hostId = host.ID()
+	}
+
+	manager.hostId.Store(hostId)
+	manager.emmiter.Emit("host_changed", session, host)
+}
+
+func (manager *SessionManagerCtx) GetHost() (types.Session, bool) {
+	hostId, ok := manager.hostId.Load().(string)
+	if !ok || hostId == "" {
+		return nil, false
+	}
+
+	return manager.Get(hostId)
+}
+
+func (manager *SessionManagerCtx) isHost(host types.Session) bool {
+	hostId, ok := manager.hostId.Load().(string)
+	return ok && hostId == host.ID()
+}
+
+// ---
+// cursors
+// ---
+
+func (manager *SessionManagerCtx) SetCursor(cursor types.Cursor, session types.Session) {
+	manager.cursorsMu.Lock()
+	defer manager.cursorsMu.Unlock()
+
+	list, ok := manager.cursors[session]
+	if !ok {
+		list = []types.Cursor{}
+	}
+
+	list = append(list, cursor)
+	manager.cursors[session] = list
+}
+
+func (manager *SessionManagerCtx) PopCursors() map[types.Session][]types.Cursor {
+	manager.cursorsMu.Lock()
+	defer manager.cursorsMu.Unlock()
+
+	cursors := manager.cursors
+	manager.cursors = make(map[types.Session][]types.Cursor)
+
+	return cursors
+}
+
+// ---
+// broadcasts
+// ---
+
+func (manager *SessionManagerCtx) Broadcast(event string, payload any, exclude ...string) {
+	for _, session := range manager.List() {
+		if !session.State().IsConnected {
+			continue
+		}
+
+		if len(exclude) > 0 {
+			if in, _ := utils.ArrayIn(session.ID(), exclude); in {
+				continue
+			}
+		}
+
+		session.Send(event, payload)
+	}
+}
+
+func (manager *SessionManagerCtx) AdminBroadcast(event string, payload any, exclude ...string) {
+	for _, session := range manager.List() {
+		if !session.State().IsConnected || !session.Profile().IsAdmin {
+			continue
+		}
+
+		if len(exclude) > 0 {
+			if in, _ := utils.ArrayIn(session.ID(), exclude); in {
+				continue
+			}
+		}
+
+		session.Send(event, payload)
+	}
+}
+
+func (manager *SessionManagerCtx) InactiveCursorsBroadcast(event string, payload any, exclude ...string) {
+	for _, session := range manager.List() {
+		if !session.State().IsConnected || !session.Profile().CanSeeInactiveCursors {
+			continue
+		}
+
+		if len(exclude) > 0 {
+			if in, _ := utils.ArrayIn(session.ID(), exclude); in {
+				continue
+			}
+		}
+
+		session.Send(event, payload)
+	}
+}
+
+// ---
+// events
+// ---
+
+func (manager *SessionManagerCtx) OnCreated(listener func(session types.Session)) {
+	manager.emmiter.On("created", func(payload ...any) {
+		listener(payload[0].(*SessionCtx))
+	})
+}
+
+func (manager *SessionManagerCtx) OnDeleted(listener func(session types.Session)) {
+	manager.emmiter.On("deleted", func(payload ...any) {
+		listener(payload[0].(*SessionCtx))
+	})
+}
+
+func (manager *SessionManagerCtx) OnConnected(listener func(session types.Session)) {
+	manager.emmiter.On("connected", func(payload ...any) {
+		listener(payload[0].(*SessionCtx))
+	})
+}
+
+func (manager *SessionManagerCtx) OnDisconnected(listener func(session types.Session)) {
+	manager.emmiter.On("disconnected", func(payload ...any) {
+		listener(payload[0].(*SessionCtx))
+	})
+}
+
+func (manager *SessionManagerCtx) OnProfileChanged(listener func(session types.Session, new, old types.MemberProfile)) {
+	manager.emmiter.On("profile_changed", func(payload ...any) {
+		listener(payload[0].(*SessionCtx), payload[1].(types.MemberProfile), payload[2].(types.MemberProfile))
+	})
+}
+
+func (manager *SessionManagerCtx) OnStateChanged(listener func(session types.Session)) {
+	manager.emmiter.On("state_changed", func(payload ...any) {
+		listener(payload[0].(*SessionCtx))
+	})
+}
+
+func (manager *SessionManagerCtx) OnHostChanged(listener func(session, host types.Session)) {
+	manager.emmiter.On("host_changed", func(payload ...any) {
+		if payload[1] == nil {
+			listener(payload[0].(*SessionCtx), nil)
+		} else {
+			listener(payload[0].(*SessionCtx), payload[1].(*SessionCtx))
+		}
+	})
+}
+
+func (manager *SessionManagerCtx) OnSettingsChanged(listener func(session types.Session, new, old types.Settings)) {
+	manager.emmiter.On("settings_changed", func(payload ...any) {
+		listener(payload[0].(types.Session), payload[1].(types.Settings), payload[2].(types.Settings))
+	})
+}
+
+// ---
+// settings
+// ---
+
+func (manager *SessionManagerCtx) UpdateSettingsFunc(session types.Session, f func(settings *types.Settings) bool) {
+	manager.settingsMu.Lock()
+	new := manager.settings
+	if f(&new) {
+		old := manager.settings
+		manager.settings = new
+		manager.settingsMu.Unlock()
+		manager.updateSettings(session, new, old)
 		return
 	}
-
-	manager.mu.Unlock()
+	manager.settingsMu.Unlock()
 }
 
-func (manager *SessionManager) Clear() error {
-	return nil
-}
+func (manager *SessionManagerCtx) updateSettings(session types.Session, new, old types.Settings) {
+	// if private mode changed
+	if old.PrivateMode != new.PrivateMode {
+		// update webrtc paused state for all sessions
+		for _, s := range manager.List() {
+			enabled := s.PrivateModeEnabled()
 
-func (manager *SessionManager) Broadcast(v interface{}, exclude []string) error {
-	manager.mu.Lock()
-	defer manager.mu.Unlock()
+			// if session had control, it must release it
+			if enabled && s.IsHost() {
+				session.ClearHost()
+			}
 
-	for id, session := range manager.members {
-		if !session.connected {
-			continue
-		}
-
-		if in, _ := utils.ArrayIn(id, exclude); in {
-			continue
-		}
-
-		if err := session.Send(v); err != nil {
-			return err
+			// its webrtc connection will be paused or unpaused
+			if webrtcPeer := s.GetWebRTCPeer(); webrtcPeer != nil {
+				webrtcPeer.SetPaused(enabled)
+			}
 		}
 	}
 
-	return nil
-}
+	// if control protection changed and controls are not locked
+	if old.ControlProtection != new.ControlProtection && new.ControlProtection && !new.LockedControls {
+		// if there is no admin, lock controls
+		hasAdmin := false
+		manager.Range(func(session types.Session) bool {
+			if session.Profile().IsAdmin && session.State().IsConnected {
+				hasAdmin = true
+				return false
+			}
+			return true
+		})
 
-func (manager *SessionManager) AdminBroadcast(v interface{}, exclude []string) error {
-	manager.mu.Lock()
-	defer manager.mu.Unlock()
-
-	for id, session := range manager.members {
-		if !session.connected || !session.admin {
-			continue
-		}
-
-		if in, _ := utils.ArrayIn(id, exclude); in {
-			continue
-		}
-
-		if err := session.Send(v); err != nil {
-			return err
+		if !hasAdmin {
+			manager.settingsMu.Lock()
+			manager.settings.LockedControls = true
+			new.LockedControls = true
+			manager.settingsMu.Unlock()
 		}
 	}
 
-	return nil
+	// if contols have been locked
+	if old.LockedControls != new.LockedControls && new.LockedControls {
+		// if the host is not admin, it must release controls
+		host, hasHost := manager.GetHost()
+		if hasHost && !host.Profile().IsAdmin {
+			session.ClearHost()
+		}
+	}
+
+	manager.emmiter.Emit("settings_changed", session, new, old)
 }
 
-func (manager *SessionManager) GetEventsChannel() chan types.SessionEvent {
-	return manager.eventsChannel
+func (manager *SessionManagerCtx) Settings() types.Settings {
+	manager.settingsMu.Lock()
+	defer manager.settingsMu.Unlock()
+
+	return manager.settings
 }
 
-var _ types.SessionManager = (*SessionManager)(nil)
+func (manager *SessionManagerCtx) CookieEnabled() bool {
+	return manager.config.Cookie.Enabled
+}
+
+// ---
+// stats
+// ---
+
+func (manager *SessionManagerCtx) Stats() types.Stats {
+	hostId := ""
+
+	host, hasHost := manager.GetHost()
+	if hasHost {
+		hostId = host.ID()
+	}
+
+	var lastUserLeftAt *time.Time
+	if t, ok := manager.lastUserLeftAt.Load().(*time.Time); ok {
+		lastUserLeftAt = t
+	}
+
+	var lastAdminLeftAt *time.Time
+	if t, ok := manager.lastAdminLeftAt.Load().(*time.Time); ok {
+		lastAdminLeftAt = t
+	}
+
+	return types.Stats{
+		HasHost:         hasHost,
+		HostId:          hostId,
+		ServerStartedAt: manager.serverStartedAt,
+		TotalUsers:      int(manager.totalUsers.Load()),
+		LastUserLeftAt:  lastUserLeftAt,
+		TotalAdmins:     int(manager.totalAdmins.Load()),
+		LastAdminLeftAt: lastAdminLeftAt,
+	}
+}

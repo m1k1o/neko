@@ -1,8 +1,9 @@
-name: "build and push amd64 images to Docker Hub"
+name: Build and Push to Docker Hub
 
 on:
   push:
-    branches: [ master ]
+    branches:
+      - master
   #
   # Run this action periodically to keep browsers up-to-date
   # even if there is no activity in this repo.
@@ -15,64 +16,101 @@ env:
 
 jobs:
   build-base:
+    name: Base Image
     runs-on: ubuntu-latest
     #
     # do not run on forks
     #
     if: github.repository_owner == 'm1k1o'
     steps:
-      - name: Check Out Repo
-        uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract metadata (tags, labels) for Docker
+        uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: ${{ env.DOCKER_IMAGE }}
+          tags: |
+            type=raw,value=base
 
       - name: Login to Docker Hub
-        run: |
-          docker login --username "${DOCKER_USERNAME}" --password-stdin "${DOCKER_REGISTRY}" <<< "${DOCKER_TOKEN}"
-        env:
-          DOCKER_REGISTRY: ${{ secrets.DOCKER_REGISTRY }}
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-          DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
 
-      - name: Build base
-        run: |
-          BUILD_IMAGE=${DOCKER_IMAGE} .docker/build ${DOCKER_TAG}
-          docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
-        env:
-          DOCKER_TAG: base
+      - name: Generate base Dockerfile
+        run: go run utils/docker/main.go -i Dockerfile.tmpl -o Dockerfile
 
-  build:
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: ./
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  build-app:
+    name: App Image
     runs-on: ubuntu-latest
     #
     # do not run on forks
     #
     if: github.repository_owner == 'm1k1o'
-    needs: [ build-base ]
+    needs: build-base
     strategy:
       # Will build all images even if some fail.
       fail-fast: false
       matrix:
-        tags: [ firefox, chromium, google-chrome, ungoogled-chromium, microsoft-edge, brave, vivaldi, opera, tor-browser, remmina, vlc, xfce, kde ]
-    env:
-      DOCKER_TAG: ${{ matrix.tags }}
+        tag: 
+          - firefox
+          - waterfox
+          - chromium
+          - google-chrome
+          - ungoogled-chromium
+          - microsoft-edge
+          - brave
+          - vivaldi
+          - opera
+          - tor-browser
+          - remmina
+          - vlc
+          - xfce
+          - kde
     steps:
-      - name: Check Out Repo
-        uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract metadata (tags, labels) for Docker
+        uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: ${{ env.DOCKER_IMAGE }}
+          tags: |
+            type=raw,value=latest,enable=${{ matrix.tag == 'firefox' }}
+            type=raw,value=${{ matrix.tag }}
 
       - name: Login to Docker Hub
-        run: |
-          docker login --username "${DOCKER_USERNAME}" --password-stdin "${DOCKER_REGISTRY}" <<< "${DOCKER_TOKEN}"
-        env:
-          DOCKER_REGISTRY: ${{ secrets.DOCKER_REGISTRY }}
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-          DOCKER_TOKEN: ${{ secrets.DOCKER_TOKEN }}
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
 
-      - name: Build container
-        run: |
-          BUILD_IMAGE=${DOCKER_IMAGE} .docker/build ${DOCKER_TAG}
-          docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
-
-      - name: Push latest tag
-        if: ${{ matrix.tags == 'firefox' }}
-        run: |
-          docker pull ${DOCKER_IMAGE}:${DOCKER_TAG}
-          docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest
-          docker push ${DOCKER_IMAGE}:latest
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: apps/${{ matrix.tag }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            BASE_IMAGE=${{ env.DOCKER_IMAGE }}:base
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

@@ -1,0 +1,17 @@
+#!/bin/bash
+cd "$(dirname "$0")"
+
+#
+# aborting if any command returns a non-zero value
+set -e
+
+GIT_COMMIT=`git rev-parse --short HEAD`
+GIT_BRANCH=`git rev-parse --symbolic-full-name --abbrev-ref HEAD`
+
+echo "Building server image"
+docker build -t neko_server --build-arg "GIT_COMMIT=$GIT_COMMIT" --build-arg "GIT_BRANCH=$GIT_BRANCH" -f ../Dockerfile ..
+
+BUILD_IMAGE=neko_server FLAVOUR=$1 ../../build
+
+echo "Building app image"
+docker build -t neko_server:app --build-arg "BASE_IMAGE=neko_server:base" -f ./runtime/Dockerfile ./runtime

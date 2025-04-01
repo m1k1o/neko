@@ -1,0 +1,63 @@
+---
+id: control-request
+title: "Request Control"
+description: "Request control of the room."
+sidebar_label: "Request Control"
+hide_title: true
+hide_table_of_contents: true
+api: eJzVV99v00gQ/ldGi4TuLMcphae89UJOVEA5NeF4aKvTxJ7YS9a7Zmedkovyv59mbSdpAB2vPMXxzs583/z2TgUsWU3ulHeuHuXOBu+MekhVQZx73QTtrJqoW/rSEgfoBcCtIFQEcilTqXINeRTR60JNVC/U31Gp8sSNs0ysJjt1efFKfp7qn/Z6fXeHCuA2z4l51RqzzdQ+Va8uXnx7byEgemzyqz0xtEwesA0V2aDziEtACiyyQZRg05j+ZPyZRdNOcV5RjfIUtg2piXLLz5QL/MYLv6A7/DUxY0knghy8tqU699lrCqgNFUDeOw/9vUzt96kKOhi5OpOj973G/X4feb78Pk8mvyEPrS3Ic3Cu6ELQsU9h2YoLVi0TQ3CRv/P6XwIdfiX2l5ffZe8JNAMaT1hsAaFy/OvQ2qeqplA5KY7GxZJoMFRqosbY6LFU0bgvmrE/VE0XbynOc3+8czmaPh9Uqlpv1ERVITST8djImXhn8vLi4kLtH0RR3nodtlHTH4Se/FUr5u8e9ulOTZ1bazp9s3BrsocXJxrm4s7OY6e3Dk7DRr+lrUqVtrEPiIhKlcVaTm9mbz/8M5/N59cfbr5x7NWTeoWWtS0BgYlZ/ne6YiM4ZXCwLOzFZxGgmqhlFPpZK51KCMI72jjxwA/IfWnJb4/c4tWfNReFoUFmKgAZEKI2aNBjTYF8l0/arly03+fVDa0dXP11rVIlidGZeJldZBffGI6isRV8ouXtYgpoC3mcu3xNAZbEuiCG29l8IRqlYTTebXQhDQXNKOiaQP464OAJa23LFLQN5DEPekOQO2Nw6bq2n0b9nmoXCAridXANrFqbyyEaHbbZvb23z549g6nzBAvKK+uMKzWxHIwgSf6O1uaDNXDS7Dr0SXJvAUYQWRnakMeSGJJkOIaV80fgKRj3ODIYyObbFCpdVqMvbYTRcxK02Bb6hF3WmXhL26VDX0SR2rVMQBuygQE9QfBoudZBBlTEJx2YsabBzbmzliLrCIkJa0PMR885mw2EbwXvQhw916V4SXLDFjB1dd3aIWcGN3SRGzwRqQ+vpDO2kkrR5FGZtgOs3ygrs/RQTMQBl0ZzVZMNKVxPZ5CjLXSBgYC+5hXakn7PADpj72K8KwxHDW0jstzFfd37bNz5a4XGLDFfR49VaAszeOuA+eiDIQEF+mxDfhsqgT4zTEeuZ2X0HOY9jPdosSRhkSQwgrm0Kfre/I84B/ARk4R8IJgkt87VUeaj3D1TO/WEIRZA7Qq92sZHEe57dnR2ZzTuLFJN0tP5xMDrvij6RYej4qvic8uiGTj3RNLl7EqXbVdUnEItQOR8/aO0zAYD8y0HquENoQkVPIf3FLzOOzu38kybaKgTqzqxvKJ8zVHpYYVDA9qyLqvQ4e/K9o17hOsAV8bAJ+fXDAtXUqjIi8CL7LQWu5Az1FRoPBZYDHGSnLWXtK9DgVBgwCTJ7u1ldpbgZLmVzQ4hSRppfRxi5i51oT31XSZJzsvvpA2cVmDH62V2kn9JMvQ/aSsrbWlUetSWDkFOki6HT+Lcdz1JnSeBi9n9p2wH0uuKuDFwKstZnDGxacheGxO/cHkrmTbcVKkyOifLcRnpp8tVg3lFcBk7/ZNx//j4mGE8zZwvx/1VHr+7ns5u5rPRZXaRVaE2caDI7lGjPVE87PV9Wp7Pkd1xv/q/T4B+SAb6GsaNQW1ljEaou37ZuZMJKl8DztX95taZHFaeh1TJ4iKSu90SmT56s9/L627YTu4eUrVBr3Ep81B2FVURFuTjZrOmrbgqz6mR9WmDpu3G9tlaKAvNYR3768N8ofb7/wAuOoW/
+sidebar_class_name: "post api-method"
+info_path: docs/v3/api
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Request Control"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"post"}
+  path={"/api/room/control/request"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Request control of the room.
+
+<ParamsDetails
+  parameters={undefined}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  title={"Body"}
+  body={undefined}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  id={undefined}
+  label={undefined}
+  responses={{"204":{"description":"Control requested successfully."},"401":{"description":"The request requires user authentication.","content":{"application/json":{"schema":{"type":"object","properties":{"message":{"type":"string","description":"Detailed error message."}},"title":"ErrorMessage"}}}},"403":{"description":"The server understood the request, but refuses to authorize it.","content":{"application/json":{"schema":{"type":"object","properties":{"message":{"type":"string","description":"Detailed error message."}},"title":"ErrorMessage"}}}},"422":{"description":"There is already a host.","content":{"application/json":{"schema":{"type":"object","properties":{"message":{"type":"string","description":"Detailed error message."}},"title":"ErrorMessage"}}}}}}
+>
+  
+</StatusCodes>
+
+
+      

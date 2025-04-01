@@ -1,0 +1,45 @@
+name: Build Client
+
+on:
+  workflow_call:
+    inputs:
+      with-artifact:
+        required: false
+        type: boolean
+        default: true
+        description: |
+          If true, the build artifacts will be uploaded as a GitHub Actions artifact.
+          This is useful for debugging and testing purposes. If false, the artifacts
+          will not be uploaded. This is useful for test builds where you don't need
+          the artifacts.
+
+jobs:
+  build-client:
+    name: Build Client
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./client
+        run: npm ci
+
+      - name: Build client
+        working-directory: ./client
+        run: npm run build
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        if: ${{ inputs.with-artifact }}
+        with:
+          name: client
+          path: client/dist

@@ -1,0 +1,36 @@
+name: Build and Deploy Webpage to GitHub Pages
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - webpage/**
+      - .github/workflows/webpage_build.yml
+      - .github/workflows/webpage_deploy.yml
+
+jobs:
+  build-webpage:
+    name: Build Webpage
+    uses: ./.github/workflows/webpage_build.yml
+    secrets: inherit
+
+  deploy-webpage:
+    name: Deploy to GitHub Pages
+    needs: build-webpage
+
+    # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
+    permissions:
+      pages: write # to deploy to Pages
+      id-token: write # to verify the deployment originates from an appropriate source
+
+    # Deploy to the github-pages environment
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

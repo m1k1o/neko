@@ -1,0 +1,19 @@
+name: Test Webpage
+
+on:
+  pull_request:
+    branches:
+      - master
+    paths:
+      - webpage/**
+      - .github/workflows/webpage_build.yml
+      - .github/workflows/webpage_test.yml
+
+jobs:
+  test-webpage:
+    name: Test Webpage
+    uses: ./.github/workflows/webpage_build.yml
+    with:
+      # Do not upload artifacts for test builds
+      with-artifact: false
+    secrets: inherit

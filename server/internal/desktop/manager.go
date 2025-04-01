@@ -1,36 +1,47 @@
 package desktop
 
 import (
-	"fmt"
 	"sync"
 	"time"
 
-	"m1k1o/neko/internal/config"
-	"m1k1o/neko/internal/desktop/xevent"
-	"m1k1o/neko/internal/desktop/xorg"
-
+	"github.com/kataras/go-events"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+
+	"github.com/m1k1o/neko/server/internal/config"
+	"github.com/m1k1o/neko/server/pkg/types"
+	"github.com/m1k1o/neko/server/pkg/xevent"
+	"github.com/m1k1o/neko/server/pkg/xinput"
+	"github.com/m1k1o/neko/server/pkg/xorg"
 )
 
 var mu = sync.Mutex{}
 
 type DesktopManagerCtx struct {
-	logger   zerolog.Logger
-	wg       sync.WaitGroup
-	shutdown chan struct{}
-	config   *config.Desktop
-
-	screenSizeChangeChannel chan bool
+	logger     zerolog.Logger
+	wg         sync.WaitGroup
+	shutdown   chan struct{}
+	emmiter    events.EventEmmiter
+	config     *config.Desktop
+	screenSize types.ScreenSize // cached screen size
+	input      xinput.Driver
 }
 
 func New(config *config.Desktop) *DesktopManagerCtx {
-	return &DesktopManagerCtx{
-		logger:   log.With().Str("module", "desktop").Logger(),
-		shutdown: make(chan struct{}),
-		config:   config,
+	var input xinput.Driver
+	if config.UseInputDriver {
+		input = xinput.NewDriver(config.InputSocket)
+	} else {
+		input = xinput.NewDummy()
+	}
 
-		screenSizeChangeChannel: make(chan bool),
+	return &DesktopManagerCtx{
+		logger:     log.With().Str("module", "desktop").Logger(),
+		shutdown:   make(chan struct{}),
+		emmiter:    events.New(),
+		config:     config,
+		screenSize: config.ScreenSize,
+		input:      input,
 	}
 }
 
@@ -39,31 +50,48 @@ func (manager *DesktopManagerCtx) Start() {
 		manager.logger.Panic().Str("display", manager.config.Display).Msg("unable to open display")
 	}
 
+	// X11 can throw errors below, and the default error handler exits
+	xevent.SetupErrorHandler()
+
 	xorg.GetScreenConfigurations()
 
-	err := xorg.ChangeScreenSize(manager.config.ScreenWidth, manager.config.ScreenHeight, manager.config.ScreenRate)
-	manager.logger.Err(err).
-		Str("screen_size", fmt.Sprintf("%dx%d@%d", manager.config.ScreenWidth, manager.config.ScreenHeight, manager.config.ScreenRate)).
-		Msgf("setting initial screen size")
+	screenSize, err := xorg.ChangeScreenSize(manager.config.ScreenSize)
+	if err != nil {
+		manager.logger.Err(err).
+			Str("screen_size", screenSize.String()).
+			Msgf("unable to set initial screen size")
+	} else {
+		// cache screen size
+		manager.screenSize = screenSize
+		manager.logger.Info().
+			Str("screen_size", screenSize.String()).
+			Msgf("setting initial screen size")
+	}
 
+	err = manager.input.Connect()
+	if err != nil {
+		// TODO: fail silently to dummy driver?
+		manager.logger.Panic().Err(err).Msg("unable to connect to input driver")
+	}
+
+	// set up event listeners
+	xevent.Unminimize = manager.config.Unminimize
+	xevent.FileChooserDialog = manager.config.FileChooserDialog
 	go xevent.EventLoop(manager.config.Display)
 
-	go func() {
-		for {
-			msg, ok := <-xevent.EventErrorChannel
-			if !ok {
-				manager.logger.Info().Msg("xevent error channel was closed")
-				return
-			}
+	// in case it was opened
+	if manager.config.FileChooserDialog {
+		go manager.CloseFileChooserDialog()
+	}
 
-			manager.logger.Warn().
-				Uint8("error_code", msg.Error_code).
-				Str("message", msg.Message).
-				Uint8("request_code", msg.Request_code).
-				Uint8("minor_code", msg.Minor_code).
-				Msg("X event error occurred")
-		}
-	}()
+	manager.OnEventError(func(error_code uint8, message string, request_code uint8, minor_code uint8) {
+		manager.logger.Warn().
+			Uint8("error_code", error_code).
+			Str("message", message).
+			Uint8("request_code", request_code).
+			Uint8("minor_code", minor_code).
+			Msg("X event error occured")
+	})
 
 	manager.wg.Add(1)
 
@@ -73,26 +101,36 @@ func (manager *DesktopManagerCtx) Start() {
 		ticker := time.NewTicker(1 * time.Second)
 		defer ticker.Stop()
 
+		const debounceDuration = 10 * time.Second
+
 		for {
 			select {
 			case <-manager.shutdown:
 				return
 			case <-ticker.C:
-				xorg.CheckKeys(time.Second * 10)
+				xorg.CheckKeys(debounceDuration)
+				manager.input.Debounce(debounceDuration)
 			}
 		}
 	}()
 }
 
-func (manager *DesktopManagerCtx) GetScreenSizeChangeChannel() chan bool {
-	return manager.screenSizeChangeChannel
+func (manager *DesktopManagerCtx) OnBeforeScreenSizeChange(listener func()) {
+	manager.emmiter.On("before_screen_size_change", func(payload ...any) {
+		listener()
+	})
+}
+
+func (manager *DesktopManagerCtx) OnAfterScreenSizeChange(listener func()) {
+	manager.emmiter.On("after_screen_size_change", func(payload ...any) {
+		listener()
+	})
 }
 
 func (manager *DesktopManagerCtx) Shutdown() error {
-	manager.logger.Info().Msgf("desktop shutting down")
+	manager.logger.Info().Msgf("shutdown")
 
 	close(manager.shutdown)
-	close(manager.screenSizeChangeChannel)
 	manager.wg.Wait()
 
 	xorg.DisplayClose()

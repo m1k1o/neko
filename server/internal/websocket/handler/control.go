@@ -1,157 +1,228 @@
 package handler
 
 import (
-	"m1k1o/neko/internal/types"
-	"m1k1o/neko/internal/types/event"
-	"m1k1o/neko/internal/types/message"
+	"errors"
+
+	"github.com/m1k1o/neko/server/pkg/types"
+	"github.com/m1k1o/neko/server/pkg/types/event"
+	"github.com/m1k1o/neko/server/pkg/types/message"
+	"github.com/m1k1o/neko/server/pkg/xorg"
 )
 
-func (h *MessageHandler) controlRelease(id string, session types.Session) error {
-	// check if session is host
-	if !h.sessions.IsHost(id) {
-		h.logger.Debug().Str("id", id).Msg("is not the host")
-		return nil
+var (
+	ErrIsNotAllowedToHost = errors.New("is not allowed to host")
+	ErrIsNotTheHost       = errors.New("is not the host")
+	ErrIsAlreadyTheHost   = errors.New("is already the host")
+	ErrIsAlreadyHosted    = errors.New("is already hosted")
+)
+
+func (h *MessageHandlerCtx) controlRelease(session types.Session) error {
+	if !session.Profile().CanHost || session.PrivateModeEnabled() {
+		return ErrIsNotAllowedToHost
 	}
 
-	// release host
-	h.logger.Debug().Str("id", id).Msgf("host called %s", event.CONTROL_RELEASE)
-	h.sessions.ClearHost()
-
-	// tell everyone
-	if err := h.sessions.Broadcast(
-		message.Control{
-			Event: event.CONTROL_RELEASE,
-			ID:    id,
-		}, nil); err != nil {
-		h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.CONTROL_RELEASE)
-		return err
+	if !session.IsHost() {
+		return ErrIsNotTheHost
 	}
+
+	h.desktop.ResetKeys()
+	session.ClearHost()
 
 	return nil
 }
 
-func (h *MessageHandler) controlRequest(id string, session types.Session) error {
-	// check for host
-	if !h.sessions.HasHost() {
-		// check if control is locked or user is admin
-		if h.state.IsLocked("control") && !session.Admin() {
-			h.logger.Debug().Msg("control is locked")
-			return nil
-		}
+func (h *MessageHandlerCtx) controlRequest(session types.Session) error {
+	if !session.Profile().CanHost || session.PrivateModeEnabled() {
+		return ErrIsNotAllowedToHost
+	}
 
-		// set host
-		err := h.sessions.SetHost(id)
-		if err != nil {
-			return err
-		}
+	if session.IsHost() {
+		return ErrIsAlreadyTheHost
+	}
 
-		// let everyone know
-		if err := h.sessions.Broadcast(
-			message.Control{
-				Event: event.CONTROL_LOCKED,
-				ID:    id,
-			}, nil); err != nil {
-			h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.CONTROL_LOCKED)
-			return err
-		}
+	if h.sessions.Settings().LockedControls && !session.Profile().IsAdmin {
+		return ErrIsNotAllowedToHost
+	}
 
+	// if implicit hosting is enabled, set session as host without asking
+	if h.sessions.Settings().ImplicitHosting {
+		session.SetAsHost()
 		return nil
 	}
 
-	// get host
-	host, ok := h.sessions.GetHost()
-	if ok {
-
-		// tell session there is a host
-		if err := session.Send(message.Control{
-			Event: event.CONTROL_REQUEST,
-			ID:    host.ID(),
-		}); err != nil {
-			h.logger.Warn().Err(err).Str("id", id).Msgf("sending event %s has failed", event.CONTROL_REQUEST)
-			return err
-		}
-
-		// tell host session wants to be host
-		if err := host.Send(message.Control{
-			Event: event.CONTROL_REQUESTING,
-			ID:    id,
-		}); err != nil {
-			h.logger.Warn().Err(err).Str("id", host.ID()).Msgf("sending event %s has failed", event.CONTROL_REQUESTING)
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (h *MessageHandler) controlGive(id string, session types.Session, payload *message.Control) error {
-	// check if session is host
-	if !h.sessions.IsHost(id) {
-		h.logger.Debug().Str("id", id).Msg("is not the host")
+	// if there is no host, set session as host
+	host, hasHost := h.sessions.GetHost()
+	if !hasHost {
+		session.SetAsHost()
 		return nil
 	}
 
-	if !h.sessions.Has(payload.ID) {
-		h.logger.Debug().Str("id", payload.ID).Msg("user does not exist")
-		return nil
-	}
+	// TODO: Some throttling mechanism to prevent spamming.
 
-	// check if control is locked or giver is admin
-	if h.state.IsLocked("control") && !session.Admin() {
-		h.logger.Debug().Msg("control is locked")
-		return nil
-	}
-
-	// set host
-	err := h.sessions.SetHost(payload.ID)
-	if err != nil {
-		return err
-	}
-
-	// let everyone know
-	if err := h.sessions.Broadcast(
-		message.ControlTarget{
-			Event:  event.CONTROL_GIVE,
-			ID:     id,
-			Target: payload.ID,
-		}, nil); err != nil {
-		h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.CONTROL_GIVE)
-		return err
-	}
-
-	return nil
-}
-
-func (h *MessageHandler) controlClipboard(id string, session types.Session, payload *message.Clipboard) error {
-	// check if session can access clipboard
-	if (!h.webrtc.ImplicitControl() && !h.sessions.IsHost(id)) || (h.webrtc.ImplicitControl() && !h.sessions.CanControl(id)) {
-		h.logger.Debug().Str("id", id).Msg("cannot access clipboard")
-		return nil
-	}
-
-	h.desktop.WriteClipboard(payload.Text)
-	return nil
-}
-
-func (h *MessageHandler) controlKeyboard(id string, session types.Session, payload *message.Keyboard) error {
-	// check if session can control keyboard
-	if (!h.webrtc.ImplicitControl() && !h.sessions.IsHost(id)) || (h.webrtc.ImplicitControl() && !h.sessions.CanControl(id)) {
-		h.logger.Debug().Str("id", id).Msg("cannot control keyboard")
-		return nil
-	}
-
-	h.desktop.SetKeyboardModifiers(types.KeyboardModifiers{
-		NumLock:  payload.NumLock,
-		CapsLock: payload.CapsLock,
-		// TODO: ScrollLock is deprecated.
-	})
-
-	// change layout
-	if payload.Layout != nil {
-		return h.desktop.SetKeyboardMap(types.KeyboardMap{
-			Layout: *payload.Layout,
+	// let host know that someone wants to take control
+	host.Send(
+		event.CONTROL_REQUEST,
+		message.SessionID{
+			ID: session.ID(),
 		})
+
+	return ErrIsAlreadyHosted
+}
+
+func (h *MessageHandlerCtx) controlMove(session types.Session, payload *message.ControlPos) error {
+	if err := h.controlRequest(session); err != nil && !errors.Is(err, ErrIsAlreadyTheHost) {
+		return err
 	}
 
+	// handle active cursor movement
+	h.desktop.Move(payload.X, payload.Y)
+	h.webrtc.SetCursorPosition(payload.X, payload.Y)
 	return nil
+}
+
+func (h *MessageHandlerCtx) controlScroll(session types.Session, payload *message.ControlScroll) error {
+	if err := h.controlRequest(session); err != nil && !errors.Is(err, ErrIsAlreadyTheHost) {
+		return err
+	}
+
+	// TOOD: remove this once the client is fixed
+	if payload.DeltaX == 0 && payload.DeltaY == 0 {
+		payload.DeltaX = payload.X
+		payload.DeltaY = payload.Y
+	}
+
+	h.desktop.Scroll(payload.DeltaX, payload.DeltaY, payload.ControlKey)
+	return nil
+}
+
+func (h *MessageHandlerCtx) controlButtonPress(session types.Session, payload *message.ControlButton) error {
+	if payload.ControlPos != nil {
+		if err := h.controlMove(session, payload.ControlPos); err != nil {
+			return err
+		}
+	} else if err := h.controlRequest(session); err != nil && !errors.Is(err, ErrIsAlreadyTheHost) {
+		return err
+	}
+
+	return h.desktop.ButtonPress(payload.Code)
+}
+
+func (h *MessageHandlerCtx) controlButtonDown(session types.Session, payload *message.ControlButton) error {
+	if payload.ControlPos != nil {
+		if err := h.controlMove(session, payload.ControlPos); err != nil {
+			return err
+		}
+	} else if err := h.controlRequest(session); err != nil && !errors.Is(err, ErrIsAlreadyTheHost) {
+		return err
+	}
+
+	return h.desktop.ButtonDown(payload.Code)
+}
+
+func (h *MessageHandlerCtx) controlButtonUp(session types.Session, payload *message.ControlButton) error {
+	if payload.ControlPos != nil {
+		if err := h.controlMove(session, payload.ControlPos); err != nil {
+			return err
+		}
+	} else if err := h.controlRequest(session); err != nil && !errors.Is(err, ErrIsAlreadyTheHost) {
+		return err
+	}
+
+	return h.desktop.ButtonUp(payload.Code)
+}
+
+func (h *MessageHandlerCtx) controlKeyPress(session types.Session, payload *message.ControlKey) error {
+	if payload.ControlPos != nil {
+		if err := h.controlMove(session, payload.ControlPos); err != nil {
+			return err
+		}
+	} else if err := h.controlRequest(session); err != nil && !errors.Is(err, ErrIsAlreadyTheHost) {
+		return err
+	}
+
+	return h.desktop.KeyPress(payload.Keysym)
+}
+
+func (h *MessageHandlerCtx) controlKeyDown(session types.Session, payload *message.ControlKey) error {
+	if payload.ControlPos != nil {
+		if err := h.controlMove(session, payload.ControlPos); err != nil {
+			return err
+		}
+	} else if err := h.controlRequest(session); err != nil && !errors.Is(err, ErrIsAlreadyTheHost) {
+		return err
+	}
+
+	return h.desktop.KeyDown(payload.Keysym)
+}
+
+func (h *MessageHandlerCtx) controlKeyUp(session types.Session, payload *message.ControlKey) error {
+	if payload.ControlPos != nil {
+		if err := h.controlMove(session, payload.ControlPos); err != nil {
+			return err
+		}
+	} else if err := h.controlRequest(session); err != nil && !errors.Is(err, ErrIsAlreadyTheHost) {
+		return err
+	}
+
+	return h.desktop.KeyUp(payload.Keysym)
+}
+
+func (h *MessageHandlerCtx) controlTouchBegin(session types.Session, payload *message.ControlTouch) error {
+	if err := h.controlRequest(session); err != nil && !errors.Is(err, ErrIsAlreadyTheHost) {
+		return err
+	}
+	return h.desktop.TouchBegin(payload.TouchId, payload.X, payload.Y, payload.Pressure)
+}
+
+func (h *MessageHandlerCtx) controlTouchUpdate(session types.Session, payload *message.ControlTouch) error {
+	if err := h.controlRequest(session); err != nil && !errors.Is(err, ErrIsAlreadyTheHost) {
+		return err
+	}
+	return h.desktop.TouchUpdate(payload.TouchId, payload.X, payload.Y, payload.Pressure)
+}
+
+func (h *MessageHandlerCtx) controlTouchEnd(session types.Session, payload *message.ControlTouch) error {
+	if err := h.controlRequest(session); err != nil && !errors.Is(err, ErrIsAlreadyTheHost) {
+		return err
+	}
+	return h.desktop.TouchEnd(payload.TouchId, payload.X, payload.Y, payload.Pressure)
+}
+
+func (h *MessageHandlerCtx) controlCut(session types.Session) error {
+	if err := h.controlRequest(session); err != nil && !errors.Is(err, ErrIsAlreadyTheHost) {
+		return err
+	}
+
+	return h.desktop.KeyPress(xorg.XK_Control_L, xorg.XK_x)
+}
+
+func (h *MessageHandlerCtx) controlCopy(session types.Session) error {
+	if err := h.controlRequest(session); err != nil && !errors.Is(err, ErrIsAlreadyTheHost) {
+		return err
+	}
+
+	return h.desktop.KeyPress(xorg.XK_Control_L, xorg.XK_c)
+}
+
+func (h *MessageHandlerCtx) controlPaste(session types.Session, payload *message.ClipboardData) error {
+	if err := h.controlRequest(session); err != nil && !errors.Is(err, ErrIsAlreadyTheHost) {
+		return err
+	}
+
+	// if there have been set clipboard data, set them first
+	if payload != nil && payload.Text != "" {
+		if err := h.clipboardSet(session, payload); err != nil {
+			return err
+		}
+	}
+
+	return h.desktop.KeyPress(xorg.XK_Control_L, xorg.XK_v)
+}
+
+func (h *MessageHandlerCtx) controlSelectAll(session types.Session) error {
+	if err := h.controlRequest(session); err != nil && !errors.Is(err, ErrIsAlreadyTheHost) {
+		return err
+	}
+
+	return h.desktop.KeyPress(xorg.XK_Control_L, xorg.XK_a)
 }

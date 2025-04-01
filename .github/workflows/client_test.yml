@@ -1,0 +1,19 @@
+name: Test Client
+
+on:
+  pull_request:
+    branches:
+      - master
+    paths:
+      - client/**
+      - .github/workflows/client_build.yml
+      - .github/workflows/client_test.yml
+
+jobs:
+  test-client:
+    name: Test Client
+    uses: ./.github/workflows/client_build.yml
+    with:
+      # Do not upload artifacts for test builds
+      with-artifact: false
+    secrets: inherit

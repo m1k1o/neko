@@ -1,0 +1,56 @@
+name: Build and Push to GHCR
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-base:
+    name: Base Image
+    uses: ./.github/workflows/image_base.yml
+    with:
+      platforms: linux/amd64,linux/arm64,linux/arm/v7
+    secrets: inherit
+
+  build-app:
+    name: App Image
+    uses: ./.github/workflows/image_app.yml
+    needs: build-base
+    strategy:
+      # Will build all images even if some fail.
+      fail-fast: false
+      matrix:
+        include:
+          - name: firefox
+            platforms: linux/amd64,linux/arm64,linux/arm/v7
+          - name: waterfox
+            platforms: linux/amd64
+          - name: chromium
+            platforms: linux/amd64,linux/arm64,linux/arm/v7
+          - name: google-chrome
+            platforms: linux/amd64
+          - name: ungoogled-chromium
+            platforms: linux/amd64
+          - name: microsoft-edge
+            platforms: linux/amd64
+          - name: brave
+            platforms: linux/amd64,linux/arm64
+          - name: vivaldi
+            platforms: linux/amd64,linux/arm64,linux/arm/v7
+          - name: opera
+            platforms: linux/amd64
+          - name: tor-browser
+            platforms: linux/amd64
+          - name: remmina
+            platforms: linux/amd64,linux/arm64,linux/arm/v7
+          - name: vlc
+            platforms: linux/amd64,linux/arm64,linux/arm/v7
+          - name: xfce
+            platforms: linux/amd64,linux/arm64,linux/arm/v7
+          - name: kde
+            platforms: linux/amd64,linux/arm64,linux/arm/v7
+    with:
+      name: ${{ matrix.name }}
+      platforms: ${{ matrix.platforms }}
+    secrets: inherit

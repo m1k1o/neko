@@ -1,112 +1,106 @@
 package handler
 
 import (
-	"m1k1o/neko/internal/types"
-	"m1k1o/neko/internal/types/event"
-	"m1k1o/neko/internal/types/message"
+	"github.com/m1k1o/neko/server/pkg/types"
+	"github.com/m1k1o/neko/server/pkg/types/event"
+	"github.com/m1k1o/neko/server/pkg/types/message"
 )
 
-func (h *MessageHandler) SessionCreated(id string, heartbeatInterval int, session types.Session) error {
-	// send sdp and id over to client
-	if err := h.signalProvide(id, session); err != nil {
-		return err
-	}
-
-	// send initialization information
-	if err := session.Send(message.SystemInit{
-		Event:             event.SYSTEM_INIT,
-		ImplicitHosting:   h.webrtc.ImplicitControl(),
-		Locks:             h.state.AllLocked(),
-		FileTransfer:      h.state.FileTransferEnabled(),
-		HeartbeatInterval: heartbeatInterval,
-	}); err != nil {
-		h.logger.Warn().Str("id", id).Err(err).Msgf("sending event %s has failed", event.SYSTEM_INIT)
-		return err
-	}
-
-	if session.Admin() {
-		// send screen configurations if admin
-		if err := h.screenConfigurations(id, session); err != nil {
-			return err
-		}
-
-		// send broadcast status if admin
-		if err := h.broadcastStatus(session); err != nil {
-			return err
-		}
-	}
-
-	// send file list if file transfer is enabled
-	if h.state.FileTransferEnabled() && (session.Admin() || !h.state.IsLocked("file_transfer")) {
-		if err := h.FileTransferRefresh(session); err != nil {
-			return err
-		}
-	}
+func (h *MessageHandlerCtx) SessionCreated(session types.Session) error {
+	h.sessions.Broadcast(
+		event.SESSION_CREATED,
+		message.SessionData{
+			ID:      session.ID(),
+			Profile: session.Profile(),
+			State:   session.State(),
+		})
 
 	return nil
 }
 
-func (h *MessageHandler) SessionConnected(id string, session types.Session) error {
-	// send list of members to session
-	if err := session.Send(message.MembersList{
-		Event:   event.MEMBER_LIST,
-		Members: h.sessions.Members(),
-	}); err != nil {
-		h.logger.Warn().Str("id", id).Err(err).Msgf("sending event %s has failed", event.MEMBER_LIST)
-		return err
-	}
-
-	// send screen current resolution
-	if err := h.screenResolution(id, session); err != nil {
-		return err
-	}
-
-	// tell session there is a host
-	host, ok := h.sessions.GetHost()
-	if ok {
-		if err := session.Send(message.Control{
-			Event: event.CONTROL_LOCKED,
-			ID:    host.ID(),
-		}); err != nil {
-			h.logger.Warn().Str("id", id).Err(err).Msgf("sending event %s has failed", event.CONTROL_LOCKED)
-			return err
-		}
-	}
-
-	// let everyone know there is a new session
-	if err := h.sessions.Broadcast(
-		message.Member{
-			Event:  event.MEMBER_CONNECTED,
-			Member: session.Member(),
-		}, nil); err != nil {
-		h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.MEMBER_CONNECTED)
-		return err
-	}
+func (h *MessageHandlerCtx) SessionDeleted(session types.Session) error {
+	h.sessions.Broadcast(
+		event.SESSION_DELETED,
+		message.SessionID{
+			ID: session.ID(),
+		})
 
 	return nil
 }
 
-func (h *MessageHandler) SessionDestroyed(id string) error {
+func (h *MessageHandlerCtx) SessionConnected(session types.Session) error {
+	if err := h.systemInit(session); err != nil {
+		return err
+	}
+
+	if session.Profile().IsAdmin {
+		if err := h.systemAdmin(session); err != nil {
+			return err
+		}
+
+		// update settings in atomic way
+		h.sessions.UpdateSettingsFunc(session, func(settings *types.Settings) bool {
+			// if control protection & locked controls: unlock controls
+			if settings.LockedControls && settings.ControlProtection {
+				settings.LockedControls = false
+				return true // update settings
+			}
+			return false // do not update settings
+		})
+	}
+
+	return h.SessionStateChanged(session)
+}
+
+func (h *MessageHandlerCtx) SessionDisconnected(session types.Session) error {
 	// clear host if exists
-	if h.sessions.IsHost(id) {
-		h.sessions.ClearHost()
-		if err := h.sessions.Broadcast(message.Control{
-			Event: event.CONTROL_RELEASE,
-			ID:    id,
-		}, nil); err != nil {
-			h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.CONTROL_RELEASE)
-		}
+	if session.IsHost() {
+		h.desktop.ResetKeys()
+		session.ClearHost()
 	}
 
-	// let everyone know session disconnected
-	if err := h.sessions.Broadcast(
-		message.MemberDisconnected{
-			Event: event.MEMBER_DISCONNECTED,
-			ID:    id,
-		}, nil); err != nil {
-		h.logger.Warn().Err(err).Msgf("broadcasting event %s has failed", event.MEMBER_DISCONNECTED)
-		return err
+	if session.Profile().IsAdmin {
+		hasAdmin := false
+		h.sessions.Range(func(s types.Session) bool {
+			if s.Profile().IsAdmin && s.ID() != session.ID() && s.State().IsConnected {
+				hasAdmin = true
+				return false
+			}
+			return true
+		})
+
+		// update settings in atomic way
+		h.sessions.UpdateSettingsFunc(session, func(settings *types.Settings) bool {
+			// if control protection & not locked controls & no admin: lock controls
+			if !settings.LockedControls && settings.ControlProtection && !hasAdmin {
+				settings.LockedControls = true
+				return true // update settings
+			}
+			return false // do not update settings
+		})
 	}
+
+	return h.SessionStateChanged(session)
+}
+
+func (h *MessageHandlerCtx) SessionProfileChanged(session types.Session, new, old types.MemberProfile) error {
+	h.sessions.Broadcast(
+		event.SESSION_PROFILE,
+		message.MemberProfile{
+			ID:            session.ID(),
+			MemberProfile: new,
+		})
+
+	return nil
+}
+
+func (h *MessageHandlerCtx) SessionStateChanged(session types.Session) error {
+	h.sessions.Broadcast(
+		event.SESSION_STATE,
+		message.SessionState{
+			ID:           session.ID(),
+			SessionState: session.State(),
+		})
 
 	return nil
 }

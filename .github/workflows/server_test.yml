@@ -1,0 +1,44 @@
+name: Test Server
+
+on:
+  pull_request:
+    branches:
+      - master
+    paths:
+      - server/**
+      - .github/workflows/server_test.yml
+
+jobs:
+  build-amd64:
+    name: Build amd64
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./server
+          platforms: linux/amd64
+
+  build-arm64:
+    name: Build arm64
+    runs-on: ubuntu-24.04-arm
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./server
+          platforms: linux/arm64

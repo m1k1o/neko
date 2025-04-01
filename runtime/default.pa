@@ -1,0 +1,16 @@
+#!/usr/bin/pulseaudio -nF
+
+### Create virtual output device sink
+load-module module-null-sink sink_name=audio_output sink_properties=device.description="Virtual_Audio_Output"
+
+### Create virtual input device sink
+load-module module-null-sink sink_name=audio_input sink_properties=device.description="Virtual_Audio_Input"
+
+### Create a virtual audio source linked up to the virtual input device
+load-module module-virtual-source source_name=microphone master=audio_input.monitor source_properties=device.description="Virtual_Microphone"
+
+### Allow pulse audio to be accessed via TCP (from localhost only), to allow other users to access the virtual devices
+load-module module-native-protocol-unix socket=/tmp/pulseaudio.socket auth-anonymous=1
+
+### Make sure we always have a sink around, even if it is a null sink.
+load-module module-always-sink

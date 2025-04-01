@@ -1,0 +1,45 @@
+name: Build Webpage
+
+on:
+  workflow_call:
+    inputs:
+      with-artifact:
+        required: false
+        type: boolean
+        default: true
+        description: |
+          If true, the build artifacts will be uploaded as a GitHub Actions artifact.
+          This is useful for debugging and testing purposes. If false, the artifacts
+          will not be uploaded. This is useful for test builds where you don't need
+          the artifacts.
+
+jobs:
+  build-webpage:
+    name: Build Webpage
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm
+          cache-dependency-path: webpage/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./webpage
+        run: npm ci
+
+      - name: Build webpage
+        working-directory: ./webpage
+        run: npm run build
+
+      - if: ${{ inputs.with-artifact }}
+        name: Upload artifacts
+        uses: actions/upload-pages-artifact@v3
+        with:
+          artifact-name: github-pages
+          path: ./webpage/build

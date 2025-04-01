@@ -3,26 +3,32 @@ package capture
 import (
 	"sync"
 
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"m1k1o/neko/internal/capture/gst"
-	"m1k1o/neko/internal/types"
+	"github.com/m1k1o/neko/server/pkg/gst"
+	"github.com/m1k1o/neko/server/pkg/types"
 )
 
 type BroacastManagerCtx struct {
 	logger zerolog.Logger
 	mu     sync.Mutex
 
-	pipeline   *gst.Pipeline
+	pipeline   gst.Pipeline
 	pipelineMu sync.Mutex
 	pipelineFn func(url string) (string, error)
 
 	url     string
 	started bool
+
+	// metrics
+	pipelinesCounter prometheus.Counter
+	pipelinesActive  prometheus.Gauge
 }
 
-func broadcastNew(pipelineFn func(url string) (string, error), url string, started bool) *BroacastManagerCtx {
+func broadcastNew(pipelineFn func(url string) (string, error), defaultUrl string, autostart bool) *BroacastManagerCtx {
 	logger := log.With().
 		Str("module", "capture").
 		Str("submodule", "broadcast").
@@ -31,8 +37,34 @@ func broadcastNew(pipelineFn func(url string) (string, error), url string, start
 	return &BroacastManagerCtx{
 		logger:     logger,
 		pipelineFn: pipelineFn,
-		url:        url,
-		started:    started && url != "",
+		url:        defaultUrl,
+		started:    defaultUrl != "" && autostart,
+
+		// metrics
+		pipelinesCounter: promauto.NewCounter(prometheus.CounterOpts{
+			Name:      "pipelines_total",
+			Namespace: "neko",
+			Subsystem: "capture",
+			Help:      "Total number of created pipelines.",
+			ConstLabels: map[string]string{
+				"submodule":  "broadcast",
+				"video_id":   "main",
+				"codec_name": "-",
+				"codec_type": "-",
+			},
+		}),
+		pipelinesActive: promauto.NewGauge(prometheus.GaugeOpts{
+			Name:      "pipelines_active",
+			Namespace: "neko",
+			Subsystem: "capture",
+			Help:      "Total number of active pipelines.",
+			ConstLabels: map[string]string{
+				"submodule":  "broadcast",
+				"video_id":   "main",
+				"codec_name": "-",
+				"codec_type": "-",
+			},
+		}),
 	}
 }
 
@@ -87,7 +119,6 @@ func (manager *BroacastManagerCtx) createPipeline() error {
 		return types.ErrCapturePipelineAlreadyExists
 	}
 
-	var err error
 	pipelineStr, err := manager.pipelineFn(manager.url)
 	if err != nil {
 		return err
@@ -104,6 +135,8 @@ func (manager *BroacastManagerCtx) createPipeline() error {
 	}
 
 	manager.pipeline.Play()
+	manager.pipelinesCounter.Inc()
+	manager.pipelinesActive.Set(1)
 
 	return nil
 }
@@ -119,4 +152,6 @@ func (manager *BroacastManagerCtx) destroyPipeline() {
 	manager.pipeline.Destroy()
 	manager.logger.Info().Msgf("destroying pipeline")
 	manager.pipeline = nil
+
+	manager.pipelinesActive.Set(0)
 }

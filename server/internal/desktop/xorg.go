@@ -6,8 +6,8 @@ import (
 	"regexp"
 	"time"
 
-	"m1k1o/neko/internal/desktop/xorg"
-	"m1k1o/neko/internal/types"
+	"github.com/m1k1o/neko/server/pkg/types"
+	"github.com/m1k1o/neko/server/pkg/xorg"
 )
 
 func (manager *DesktopManagerCtx) Move(x, y int) {
@@ -18,8 +18,8 @@ func (manager *DesktopManagerCtx) GetCursorPosition() (int, int) {
 	return xorg.GetCursorPosition()
 }
 
-func (manager *DesktopManagerCtx) Scroll(x, y int) {
-	xorg.Scroll(x, y)
+func (manager *DesktopManagerCtx) Scroll(deltaX, deltaY int, controlKey bool) {
+	xorg.Scroll(deltaX, deltaY, controlKey)
 }
 
 func (manager *DesktopManagerCtx) ButtonDown(code uint32) error {
@@ -66,23 +66,44 @@ func (manager *DesktopManagerCtx) ResetKeys() {
 	xorg.ResetKeys()
 }
 
-func (manager *DesktopManagerCtx) ScreenConfigurations() map[int]types.ScreenConfiguration {
-	return xorg.ScreenConfigurations
+func (manager *DesktopManagerCtx) ScreenConfigurations() []types.ScreenSize {
+	var configs []types.ScreenSize
+	for _, size := range xorg.ScreenConfigurations {
+		for _, fps := range size.Rates {
+			// filter out all irrelevant rates
+			if fps > 60 || (fps > 30 && fps%10 != 0) {
+				continue
+			}
+
+			configs = append(configs, types.ScreenSize{
+				Width:  size.Width,
+				Height: size.Height,
+				Rate:   fps,
+			})
+		}
+	}
+	return configs
 }
 
-func (manager *DesktopManagerCtx) SetScreenSize(size types.ScreenSize) error {
+func (manager *DesktopManagerCtx) SetScreenSize(screenSize types.ScreenSize) (types.ScreenSize, error) {
 	mu.Lock()
-	manager.GetScreenSizeChangeChannel() <- true
+	manager.emmiter.Emit("before_screen_size_change")
 
 	defer func() {
-		manager.GetScreenSizeChangeChannel() <- false
+		manager.emmiter.Emit("after_screen_size_change")
 		mu.Unlock()
 	}()
 
-	return xorg.ChangeScreenSize(size.Width, size.Height, size.Rate)
+	screenSize, err := xorg.ChangeScreenSize(screenSize)
+	if err == nil {
+		// cache the new screen size
+		manager.screenSize = screenSize
+	}
+
+	return screenSize, err
 }
 
-func (manager *DesktopManagerCtx) GetScreenSize() *types.ScreenSize {
+func (manager *DesktopManagerCtx) GetScreenSize() types.ScreenSize {
 	return xorg.GetScreenSize()
 }
 
@@ -119,24 +140,56 @@ func (manager *DesktopManagerCtx) GetKeyboardMap() (*types.KeyboardMap, error) {
 }
 
 func (manager *DesktopManagerCtx) SetKeyboardModifiers(mod types.KeyboardModifiers) {
-	if mod.NumLock != nil {
-		xorg.SetKeyboardModifier(xorg.KbdModNumLock, *mod.NumLock)
+	if mod.Shift != nil {
+		xorg.SetKeyboardModifier(xorg.KbdModShift, *mod.Shift)
 	}
 
 	if mod.CapsLock != nil {
 		xorg.SetKeyboardModifier(xorg.KbdModCapsLock, *mod.CapsLock)
+	}
+
+	if mod.Control != nil {
+		xorg.SetKeyboardModifier(xorg.KbdModControl, *mod.Control)
+	}
+
+	if mod.Alt != nil {
+		xorg.SetKeyboardModifier(xorg.KbdModAlt, *mod.Alt)
+	}
+
+	if mod.NumLock != nil {
+		xorg.SetKeyboardModifier(xorg.KbdModNumLock, *mod.NumLock)
+	}
+
+	if mod.Meta != nil {
+		xorg.SetKeyboardModifier(xorg.KbdModMeta, *mod.Meta)
+	}
+
+	if mod.Super != nil {
+		xorg.SetKeyboardModifier(xorg.KbdModSuper, *mod.Super)
+	}
+
+	if mod.AltGr != nil {
+		xorg.SetKeyboardModifier(xorg.KbdModAltGr, *mod.AltGr)
 	}
 }
 
 func (manager *DesktopManagerCtx) GetKeyboardModifiers() types.KeyboardModifiers {
 	modifiers := xorg.GetKeyboardModifiers()
 
-	NumLock := (modifiers & xorg.KbdModNumLock) != 0
-	CapsLock := (modifiers & xorg.KbdModCapsLock) != 0
+	isset := func(mod xorg.KbdMod) *bool {
+		x := modifiers&mod != 0
+		return &x
+	}
 
 	return types.KeyboardModifiers{
-		NumLock:  &NumLock,
-		CapsLock: &CapsLock,
+		Shift:    isset(xorg.KbdModShift),
+		CapsLock: isset(xorg.KbdModCapsLock),
+		Control:  isset(xorg.KbdModControl),
+		Alt:      isset(xorg.KbdModAlt),
+		NumLock:  isset(xorg.KbdModNumLock),
+		Meta:     isset(xorg.KbdModMeta),
+		Super:    isset(xorg.KbdModSuper),
+		AltGr:    isset(xorg.KbdModAltGr),
 	}
 }
 

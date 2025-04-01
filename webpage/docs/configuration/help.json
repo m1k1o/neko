@@ -1,0 +1,876 @@
+[
+  {
+    "key": [
+      "capture",
+      "audio",
+      "codec"
+    ],
+    "type": "string",
+    "defaultValue": "opus",
+    "description": "audio codec to be used"
+  },
+  {
+    "key": [
+      "capture",
+      "audio",
+      "device"
+    ],
+    "type": "string",
+    "defaultValue": "audio_output.monitor",
+    "description": "pulseaudio device to capture"
+  },
+  {
+    "key": [
+      "capture",
+      "audio",
+      "pipeline"
+    ],
+    "type": "string",
+    "description": "gstreamer pipeline used for audio streaming"
+  },
+  {
+    "key": [
+      "capture",
+      "broadcast",
+      "audio_bitrate"
+    ],
+    "type": "int",
+    "defaultValue": "128",
+    "description": "broadcast audio bitrate in KB/s"
+  },
+  {
+    "key": [
+      "capture",
+      "broadcast",
+      "autostart"
+    ],
+    "type": "boolean",
+    "defaultValue": "true",
+    "description": "automatically start broadcasting when neko starts and broadcast_url is set"
+  },
+  {
+    "key": [
+      "capture",
+      "broadcast",
+      "pipeline"
+    ],
+    "type": "string",
+    "description": "gstreamer pipeline used for broadcasting"
+  },
+  {
+    "key": [
+      "capture",
+      "broadcast",
+      "preset"
+    ],
+    "type": "string",
+    "defaultValue": "veryfast",
+    "description": "broadcast speed preset for h264 encoding"
+  },
+  {
+    "key": [
+      "capture",
+      "broadcast",
+      "url"
+    ],
+    "type": "string",
+    "description": "initial URL for broadcasting, setting this value will automatically start broadcasting"
+  },
+  {
+    "key": [
+      "capture",
+      "broadcast",
+      "video_bitrate"
+    ],
+    "type": "int",
+    "defaultValue": "4096",
+    "description": "broadcast video bitrate in KB/s"
+  },
+  {
+    "key": [
+      "capture",
+      "microphone",
+      "device"
+    ],
+    "type": "string",
+    "defaultValue": "audio_input",
+    "description": "pulseaudio device used for microphone"
+  },
+  {
+    "key": [
+      "capture",
+      "microphone",
+      "enabled"
+    ],
+    "type": "boolean",
+    "defaultValue": "true",
+    "description": "enable microphone stream"
+  },
+  {
+    "key": [
+      "capture",
+      "screencast",
+      "enabled"
+    ],
+    "type": "boolean",
+    "defaultValue": "false",
+    "description": "enable screencast"
+  },
+  {
+    "key": [
+      "capture",
+      "screencast",
+      "pipeline"
+    ],
+    "type": "string",
+    "description": "gstreamer pipeline used for screencasting"
+  },
+  {
+    "key": [
+      "capture",
+      "screencast",
+      "quality"
+    ],
+    "type": "string",
+    "defaultValue": "60",
+    "description": "screencast JPEG quality"
+  },
+  {
+    "key": [
+      "capture",
+      "screencast",
+      "rate"
+    ],
+    "type": "string",
+    "defaultValue": "10/1",
+    "description": "screencast frame rate"
+  },
+  {
+    "key": [
+      "capture",
+      "video",
+      "codec"
+    ],
+    "type": "string",
+    "defaultValue": "vp8",
+    "description": "video codec to be used"
+  },
+  {
+    "key": [
+      "capture",
+      "video",
+      "display"
+    ],
+    "type": "string",
+    "description": "X display to capture"
+  },
+  {
+    "key": [
+      "capture",
+      "video",
+      "ids"
+    ],
+    "type": "strings",
+    "description": "ordered list of video ids"
+  },
+  {
+    "key": [
+      "capture",
+      "video",
+      "pipelines"
+    ],
+    "type": "string",
+    "defaultValue": "[]",
+    "description": "pipelines config in JSON used for video streaming"
+  },
+  {
+    "key": [
+      "capture",
+      "webcam",
+      "device"
+    ],
+    "type": "string",
+    "defaultValue": "/dev/video0",
+    "description": "v4l2sink device used for webcam"
+  },
+  {
+    "key": [
+      "capture",
+      "webcam",
+      "enabled"
+    ],
+    "type": "boolean",
+    "defaultValue": "false",
+    "description": "enable webcam stream"
+  },
+  {
+    "key": [
+      "capture",
+      "webcam",
+      "height"
+    ],
+    "type": "int",
+    "defaultValue": "720",
+    "description": "webcam stream height"
+  },
+  {
+    "key": [
+      "capture",
+      "webcam",
+      "width"
+    ],
+    "type": "int",
+    "defaultValue": "1280",
+    "description": "webcam stream width"
+  },
+  {
+    "key": [
+      "desktop",
+      "display"
+    ],
+    "type": "string",
+    "description": "X display to use for desktop sharing"
+  },
+  {
+    "key": [
+      "desktop",
+      "file_chooser_dialog"
+    ],
+    "type": "boolean",
+    "defaultValue": "false",
+    "description": "whether to handle file chooser dialog externally"
+  },
+  {
+    "key": [
+      "desktop",
+      "input",
+      "enabled"
+    ],
+    "type": "boolean",
+    "defaultValue": "true",
+    "description": "whether custom xf86 input driver should be used to handle touchscreen"
+  },
+  {
+    "key": [
+      "desktop",
+      "input",
+      "socket"
+    ],
+    "type": "string",
+    "defaultValue": "/tmp/xf86-input-neko.sock",
+    "description": "socket path for custom xf86 input driver connection"
+  },
+  {
+    "key": [
+      "desktop",
+      "screen"
+    ],
+    "type": "string",
+    "defaultValue": "1280x720@30",
+    "description": "default screen size and framerate"
+  },
+  {
+    "key": [
+      "desktop",
+      "unminimize"
+    ],
+    "type": "boolean",
+    "defaultValue": "true",
+    "description": "automatically unminimize window when it is minimized"
+  },
+  {
+    "key": [
+      "desktop",
+      "upload_drop"
+    ],
+    "type": "boolean",
+    "defaultValue": "true",
+    "description": "whether drop upload is enabled"
+  },
+  {
+    "key": [
+      "member",
+      "file",
+      "hash"
+    ],
+    "type": "boolean",
+    "defaultValue": "true",
+    "description": "member file provider: whether to hash passwords using sha256 (recommended)"
+  },
+  {
+    "key": [
+      "member",
+      "file",
+      "path"
+    ],
+    "type": "string",
+    "description": "member file provider: storage path"
+  },
+  {
+    "key": [
+      "member",
+      "multiuser",
+      "admin_password"
+    ],
+    "type": "string",
+    "defaultValue": "admin",
+    "description": "member multiuser provider: admin password"
+  },
+  {
+    "key": [
+      "member",
+      "multiuser",
+      "admin_profile"
+    ],
+    "type": "string",
+    "defaultValue": "{}",
+    "description": "member multiuser provider: admin profile in JSON format"
+  },
+  {
+    "key": [
+      "member",
+      "multiuser",
+      "user_password"
+    ],
+    "type": "string",
+    "defaultValue": "neko",
+    "description": "member multiuser provider: user password"
+  },
+  {
+    "key": [
+      "member",
+      "multiuser",
+      "user_profile"
+    ],
+    "type": "string",
+    "defaultValue": "{}",
+    "description": "member multiuser provider: user profile in JSON format"
+  },
+  {
+    "key": [
+      "member",
+      "object",
+      "users"
+    ],
+    "type": "string",
+    "defaultValue": "[]",
+    "description": "member object provider: users in JSON format"
+  },
+  {
+    "key": [
+      "member",
+      "provider"
+    ],
+    "type": "string",
+    "defaultValue": "multiuser",
+    "description": "choose member provider"
+  },
+  {
+    "key": [
+      "plugins",
+      "dir"
+    ],
+    "type": "string",
+    "defaultValue": "./bin/plugins",
+    "description": "path to neko plugins to load"
+  },
+  {
+    "key": [
+      "plugins",
+      "enabled"
+    ],
+    "type": "boolean",
+    "defaultValue": "false",
+    "description": "load plugins in runtime"
+  },
+  {
+    "key": [
+      "plugins",
+      "required"
+    ],
+    "type": "boolean",
+    "defaultValue": "false",
+    "description": "if true, neko will exit if there is an error when loading a plugin"
+  },
+  {
+    "key": [
+      "server",
+      "bind"
+    ],
+    "type": "string",
+    "defaultValue": "127.0.0.1:8080",
+    "description": "address/port/socket to serve neko"
+  },
+  {
+    "key": [
+      "server",
+      "cert"
+    ],
+    "type": "string",
+    "description": "path to the SSL cert used to secure the neko server"
+  },
+  {
+    "key": [
+      "server",
+      "cors"
+    ],
+    "type": "strings",
+    "description": "list of allowed origins for CORS, if empty CORS is disabled, if '*' is present all origins are allowed"
+  },
+  {
+    "key": [
+      "server",
+      "key"
+    ],
+    "type": "string",
+    "description": "path to the SSL key used to secure the neko server"
+  },
+  {
+    "key": [
+      "server",
+      "metrics"
+    ],
+    "type": "boolean",
+    "defaultValue": "true",
+    "description": "enable prometheus metrics available at /metrics"
+  },
+  {
+    "key": [
+      "server",
+      "path_prefix"
+    ],
+    "type": "string",
+    "defaultValue": "/",
+    "description": "path prefix for HTTP requests"
+  },
+  {
+    "key": [
+      "server",
+      "pprof"
+    ],
+    "type": "boolean",
+    "defaultValue": "false",
+    "description": "enable pprof endpoint available at /debug/pprof"
+  },
+  {
+    "key": [
+      "server",
+      "proxy"
+    ],
+    "type": "boolean",
+    "defaultValue": "false",
+    "description": "trust reverse proxy headers"
+  },
+  {
+    "key": [
+      "server",
+      "static"
+    ],
+    "type": "string",
+    "description": "path to neko client files to serve"
+  },
+  {
+    "key": [
+      "session",
+      "api_token"
+    ],
+    "type": "string",
+    "description": "API token for interacting with external services"
+  },
+  {
+    "key": [
+      "session",
+      "control_protection"
+    ],
+    "type": "boolean",
+    "defaultValue": "false",
+    "description": "users can gain control only if at least one admin is in the room"
+  },
+  {
+    "key": [
+      "session",
+      "cookie",
+      "domain"
+    ],
+    "type": "string",
+    "description": "domain of the cookie"
+  },
+  {
+    "key": [
+      "session",
+      "cookie",
+      "enabled"
+    ],
+    "type": "boolean",
+    "defaultValue": "true",
+    "description": "whether cookies authentication should be enabled"
+  },
+  {
+    "key": [
+      "session",
+      "cookie",
+      "expiration"
+    ],
+    "type": "duration",
+    "defaultValue": "24h0m0s",
+    "description": "expiration of the cookie"
+  },
+  {
+    "key": [
+      "session",
+      "cookie",
+      "http_only"
+    ],
+    "type": "boolean",
+    "defaultValue": "true",
+    "description": "use http only cookies"
+  },
+  {
+    "key": [
+      "session",
+      "cookie",
+      "name"
+    ],
+    "type": "string",
+    "defaultValue": "NEKO_SESSION",
+    "description": "name of the cookie that holds token"
+  },
+  {
+    "key": [
+      "session",
+      "cookie",
+      "path"
+    ],
+    "type": "string",
+    "description": "path of the cookie"
+  },
+  {
+    "key": [
+      "session",
+      "cookie",
+      "secure"
+    ],
+    "type": "boolean",
+    "defaultValue": "true",
+    "description": "use secure cookies"
+  },
+  {
+    "key": [
+      "session",
+      "file"
+    ],
+    "type": "string",
+    "description": "if sessions should be stored in a file, otherwise they will be stored only in memory"
+  },
+  {
+    "key": [
+      "session",
+      "heartbeat_interval"
+    ],
+    "type": "int",
+    "defaultValue": "120",
+    "description": "interval in seconds for sending heartbeat messages"
+  },
+  {
+    "key": [
+      "session",
+      "implicit_hosting"
+    ],
+    "type": "boolean",
+    "defaultValue": "true",
+    "description": "allow implicit control switching"
+  },
+  {
+    "key": [
+      "session",
+      "inactive_cursors"
+    ],
+    "type": "boolean",
+    "defaultValue": "false",
+    "description": "show inactive cursors on the screen"
+  },
+  {
+    "key": [
+      "session",
+      "locked_controls"
+    ],
+    "type": "boolean",
+    "defaultValue": "false",
+    "description": "whether controls should be locked for users initially"
+  },
+  {
+    "key": [
+      "session",
+      "locked_logins"
+    ],
+    "type": "boolean",
+    "defaultValue": "false",
+    "description": "whether logins should be locked for users initially"
+  },
+  {
+    "key": [
+      "session",
+      "merciful_reconnect"
+    ],
+    "type": "boolean",
+    "defaultValue": "true",
+    "description": "allow reconnecting to websocket even if previous connection was not closed"
+  },
+  {
+    "key": [
+      "session",
+      "private_mode"
+    ],
+    "type": "boolean",
+    "defaultValue": "false",
+    "description": "whether private mode should be enabled initially"
+  },
+  {
+    "key": [
+      "webrtc",
+      "epr"
+    ],
+    "type": "string",
+    "description": "limits the pool of ephemeral ports that ICE UDP connections can allocate from"
+  },
+  {
+    "key": [
+      "webrtc",
+      "estimator",
+      "debug"
+    ],
+    "type": "boolean",
+    "defaultValue": "false",
+    "description": "enables debug logging for the bandwidth estimator"
+  },
+  {
+    "key": [
+      "webrtc",
+      "estimator",
+      "diff_threshold"
+    ],
+    "type": "float",
+    "defaultValue": "0.15",
+    "description": "how bigger the difference between estimated and stream bitrate must be to trigger upgrade/downgrade"
+  },
+  {
+    "key": [
+      "webrtc",
+      "estimator",
+      "downgrade_backoff"
+    ],
+    "type": "duration",
+    "defaultValue": "10s",
+    "description": "how long to wait before downgrading again after previous downgrade"
+  },
+  {
+    "key": [
+      "webrtc",
+      "estimator",
+      "enabled"
+    ],
+    "type": "boolean",
+    "defaultValue": "false",
+    "description": "enables the bandwidth estimator"
+  },
+  {
+    "key": [
+      "webrtc",
+      "estimator",
+      "initial_bitrate"
+    ],
+    "type": "int",
+    "defaultValue": "1000000",
+    "description": "initial bitrate for the bandwidth estimator"
+  },
+  {
+    "key": [
+      "webrtc",
+      "estimator",
+      "passive"
+    ],
+    "type": "boolean",
+    "defaultValue": "false",
+    "description": "passive estimator mode, when it does not switch pipelines, only estimates"
+  },
+  {
+    "key": [
+      "webrtc",
+      "estimator",
+      "read_interval"
+    ],
+    "type": "duration",
+    "defaultValue": "2s",
+    "description": "how often to read and process bandwidth estimation reports"
+  },
+  {
+    "key": [
+      "webrtc",
+      "estimator",
+      "stable_duration"
+    ],
+    "type": "duration",
+    "defaultValue": "12s",
+    "description": "how long to wait for stable connection (upward or neutral trend) before upgrading"
+  },
+  {
+    "key": [
+      "webrtc",
+      "estimator",
+      "stalled_duration"
+    ],
+    "type": "duration",
+    "defaultValue": "24s",
+    "description": "how long to wait for stalled bandwidth estimation before downgrading"
+  },
+  {
+    "key": [
+      "webrtc",
+      "estimator",
+      "unstable_duration"
+    ],
+    "type": "duration",
+    "defaultValue": "6s",
+    "description": "how long to wait for stalled connection (neutral trend with low bandwidth) before downgrading"
+  },
+  {
+    "key": [
+      "webrtc",
+      "estimator",
+      "upgrade_backoff"
+    ],
+    "type": "duration",
+    "defaultValue": "5s",
+    "description": "how long to wait before upgrading again after previous upgrade"
+  },
+  {
+    "key": [
+      "webrtc",
+      "icelite"
+    ],
+    "type": "boolean",
+    "defaultValue": "false",
+    "description": "configures whether or not the ICE agent should be a lite agent"
+  },
+  {
+    "key": [
+      "webrtc",
+      "iceservers",
+      "backend"
+    ],
+    "type": "urls",
+    "defaultValue": "[]",
+    "description": "Backend only STUN and TURN servers in JSON format with urls, `username` and `credential` keys"
+  },
+  {
+    "key": [
+      "webrtc",
+      "iceservers",
+      "frontend"
+    ],
+    "type": "urls",
+    "defaultValue": "[]",
+    "description": "Frontend only STUN and TURN servers in JSON format with urls, `username` and `credential` keys"
+  },
+  {
+    "key": [
+      "webrtc",
+      "icetrickle"
+    ],
+    "type": "boolean",
+    "defaultValue": "true",
+    "description": "configures whether cadidates should be sent asynchronously using Trickle ICE"
+  },
+  {
+    "key": [
+      "webrtc",
+      "ip_retrieval_url"
+    ],
+    "type": "string",
+    "defaultValue": "https://checkip.amazonaws.com",
+    "description": "URL address used for retrieval of the external IP address"
+  },
+  {
+    "key": [
+      "webrtc",
+      "nat1to1"
+    ],
+    "type": "strings",
+    "description": "sets a list of external IP addresses of 1:1 (D)NAT and a candidate type for which the external IP address is used"
+  },
+  {
+    "key": [
+      "webrtc",
+      "tcpmux"
+    ],
+    "type": "int",
+    "description": "single TCP mux port for all peers"
+  },
+  {
+    "key": [
+      "webrtc",
+      "udpmux"
+    ],
+    "type": "int",
+    "description": "single UDP mux port for all peers, replaces EPR"
+  },
+  {
+    "key": [
+      "config"
+    ],
+    "type": "string",
+    "description": "configuration file path"
+  },
+  {
+    "key": [
+      "debug"
+    ],
+    "type": "boolean",
+    "defaultValue": "false",
+    "description": "enable debug mode"
+  },
+  {
+    "key": [
+      "log",
+      "dir"
+    ],
+    "type": "string",
+    "description": "logging directory to store logs"
+  },
+  {
+    "key": [
+      "log",
+      "json"
+    ],
+    "type": "boolean",
+    "defaultValue": "false",
+    "description": "logs in JSON format"
+  },
+  {
+    "key": [
+      "log",
+      "level"
+    ],
+    "type": "string",
+    "defaultValue": "info",
+    "description": "set log level (trace, debug, info, warn, error, fatal, panic, disabled)"
+  },
+  {
+    "key": [
+      "log",
+      "nocolor"
+    ],
+    "type": "boolean",
+    "defaultValue": "false",
+    "description": "no ANSI colors in non-JSON output"
+  },
+  {
+    "key": [
+      "log",
+      "time"
+    ],
+    "type": "string",
+    "defaultValue": "unix",
+    "description": "time format used in logs (unix, unixms, unixmicro)"
+  }
+]

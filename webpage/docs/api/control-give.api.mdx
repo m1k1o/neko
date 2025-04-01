@@ -1,0 +1,71 @@
+---
+id: control-give
+title: "Give Control"
+description: "Give control of the room to a specific session."
+sidebar_label: "Give Control"
+hide_title: true
+hide_table_of_contents: true
+api: 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
+sidebar_class_name: "post api-method"
+info_path: docs/v3/api
+custom_edit_url: null
+---
+
+import MethodEndpoint from "@theme/ApiExplorer/MethodEndpoint";
+import ParamsDetails from "@theme/ParamsDetails";
+import RequestSchema from "@theme/RequestSchema";
+import StatusCodes from "@theme/StatusCodes";
+import OperationTabs from "@theme/OperationTabs";
+import TabItem from "@theme/TabItem";
+import Heading from "@theme/Heading";
+
+<Heading
+  as={"h1"}
+  className={"openapi__heading"}
+  children={"Give Control"}
+>
+</Heading>
+
+<MethodEndpoint
+  method={"post"}
+  path={"/api/room/control/give/{sessionId}"}
+  context={"endpoint"}
+>
+  
+</MethodEndpoint>
+
+
+
+Give control of the room to a specific session.
+
+<Heading
+  id={"request"}
+  as={"h2"}
+  className={"openapi-tabs__heading"}
+  children={"Request"}
+>
+</Heading>
+
+<ParamsDetails
+  parameters={[{"in":"path","name":"sessionId","description":"The identifier of the session.","required":true,"schema":{"type":"string"}}]}
+>
+  
+</ParamsDetails>
+
+<RequestSchema
+  title={"Body"}
+  body={undefined}
+>
+  
+</RequestSchema>
+
+<StatusCodes
+  id={undefined}
+  label={undefined}
+  responses={{"204":{"description":"Control given successfully."},"400":{"description":"Target session is not allowed to host.","content":{"application/json":{"schema":{"type":"object","properties":{"message":{"type":"string","description":"Detailed error message."}},"title":"ErrorMessage"}}}},"401":{"description":"The request requires user authentication.","content":{"application/json":{"schema":{"type":"object","properties":{"message":{"type":"string","description":"Detailed error message."}},"title":"ErrorMessage"}}}},"403":{"description":"The server understood the request, but refuses to authorize it.","content":{"application/json":{"schema":{"type":"object","properties":{"message":{"type":"string","description":"Detailed error message."}},"title":"ErrorMessage"}}}},"404":{"description":"The specified resource was not found.","content":{"application/json":{"schema":{"type":"object","properties":{"message":{"type":"string","description":"Detailed error message."}},"title":"ErrorMessage"}}}}}}
+>
+  
+</StatusCodes>
+
+
+      

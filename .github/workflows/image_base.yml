@@ -1,0 +1,85 @@
+name: Build Base Image
+
+on:
+  workflow_call:
+    inputs:
+      flavor:
+        required: false
+        type: string
+        default: ""
+        description: "The flavor of the image to build. This is used to determine the base image and the Dockerfile to use."
+      platforms:
+        required: false
+        type: string
+        default: "linux/amd64"
+        description: "The platforms to build for."
+      dockerfile:
+        required: false
+        type: string
+        default: "Dockerfile"
+        description: "The Dockerfile to use for building the image."
+
+env:
+  FLAVOR_PREFIX: ${{ inputs.flavor && format('{0}-', inputs.flavor) || '' }}
+
+jobs:
+  build-client:
+    name: Build Client Artifacts
+    uses: ./.github/workflows/client_build.yml
+
+  build-base:
+    name: Build Base Image
+    runs-on: ubuntu-latest
+    needs: build-client
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download client dist
+        uses: actions/download-artifact@v4
+        with:
+          name: client
+          path: client/dist
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Extract metadata (tags, labels) for Docker
+        uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: ghcr.io/${{ github.repository }}/${{ env.FLAVOR_PREFIX }}base
+          tags: |
+            type=edge,branch=master
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=sha,format=long
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_ACCESS_TOKEN }}
+
+      - name: Generate base Dockerfile
+        env:
+          RUNTIME_DOCKERFILE: ${{ inputs.dockerfile || 'Dockerfile' }}
+        run: go run utils/docker/main.go -i Dockerfile.tmpl -o Dockerfile -client client/dist
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: ./
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          platforms: ${{ inputs.platforms || 'linux/amd64' }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

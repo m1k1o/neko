@@ -33,6 +33,16 @@ bin
 
 # Environment files
 *.env
+.env.development
 
 # Code Editors
 .idea
+
+runtime/fonts/*
+!runtime/fonts/.gitkeep
+
+runtime/icon-theme/*
+!runtime/icon-theme/.gitkeep
+
+# root Dockerfile is generated from the Dockerfile.tmpl
+/Dockerfile
