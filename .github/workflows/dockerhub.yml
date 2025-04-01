@@ -28,6 +28,9 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Extract metadata (tags, labels) for Docker
         uses: docker/metadata-action@v5
         id: meta
@@ -87,6 +90,9 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Extract metadata (tags, labels) for Docker
         uses: docker/metadata-action@v5
