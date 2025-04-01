@@ -15,7 +15,7 @@ export const EVENT = {
     ERROR: 'system/error',
   },
   CLIENT: {
-    HEARTBEAT: 'client/heartbeat',
+    HEARTBEAT: 'client/heartbeat'
   },
   SIGNAL: {
     OFFER: 'signal/offer',

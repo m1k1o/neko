@@ -37,3 +37,8 @@ dummy_drv_la_SOURCES = \
          dummy_cursor.c \
          dummy_driver.c \
          dummy.h
+
+if DGA
+dummy_drv_la_SOURCES +=	\
+         dummy_dga.c
+endif

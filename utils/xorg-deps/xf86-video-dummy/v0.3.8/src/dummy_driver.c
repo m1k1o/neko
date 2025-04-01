@@ -29,7 +29,10 @@
 
 #include "picturestr.h"
 
-#include "xf86Crtc.h"
+#ifdef XvExtension
+#include "xf86xv.h"
+#include <X11/extensions/Xv.h>
+#endif
 
 /*
  * Driver data structures.
@@ -41,6 +44,10 @@
 #include <X11/Xproto.h>
 #include "scrnintstr.h"
 #include "servermd.h"
+#ifdef USE_DGA
+#define _XF86DGA_SERVER_
+#include <X11/extensions/xf86dgaproto.h>
+#endif
 
 /* Mandatory functions */
 static const OptionInfoRec *	DUMMYAvailableOptions(int chipid, int busid);
@@ -82,10 +89,6 @@ static Bool	dummyDriverFunc(ScrnInfoPtr pScrn, xorgDriverFuncOp op,
  */
 static int pix24bpp = 0;
 
-Atom width_mm_atom = 0;
-#define WIDTH_MM_NAME  "WIDTH_MM"
-Atom height_mm_atom = 0;
-#define HEIGHT_MM_NAME "HEIGHT_MM"
 
 /*
  * This contains the functions needed by the server after loading the driver
@@ -138,271 +141,6 @@ static XF86ModuleVersionInfo dummyVersRec =
 	{0,0,0,0}
 };
 
-
-/************************
- * XRANDR support begin *
- ************************/
-
-static Bool dummy_config_resize(ScrnInfoPtr pScrn, int cw, int ch);
-static Bool DUMMYAdjustScreenPixmap(ScrnInfoPtr pScrn, int width, int height);
-
-static const xf86CrtcConfigFuncsRec DUMMYCrtcConfigFuncs = {
-    .resize = dummy_config_resize
-};
-
-
-static void
-dummy_crtc_dpms(xf86CrtcPtr crtc, int mode)
-{
-}
-
-static Bool
-dummy_crtc_lock (xf86CrtcPtr crtc)
-{
-    return FALSE;
-}
-
-static Bool
-dummy_crtc_mode_fixup (xf86CrtcPtr crtc, DisplayModePtr mode,
-                              DisplayModePtr adjusted_mode)
-{
-    return TRUE;
-}
-
-static void
-dummy_crtc_stub (xf86CrtcPtr crtc)
-{
-}
-
-static void
-dummy_crtc_gamma_set (xf86CrtcPtr crtc, CARD16 *red,
-                             CARD16 *green, CARD16 *blue, int size)
-{
-}
-
-static void *
-dummy_crtc_shadow_allocate (xf86CrtcPtr crtc, int width, int height)
-{
-    return NULL;
-}
-
-static void
-dummy_crtc_mode_set (xf86CrtcPtr crtc, DisplayModePtr mode,
-                            DisplayModePtr adjusted_mode, int x, int y)
-{
-}
-
-static const xf86CrtcFuncsRec DUMMYCrtcFuncs = {
-    .dpms = dummy_crtc_dpms,
-    .save = NULL, /* These two are never called by the server. */
-    .restore = NULL,
-    .lock = dummy_crtc_lock,
-    .unlock = NULL, /* This will not be invoked if lock returns FALSE. */
-    .mode_fixup = dummy_crtc_mode_fixup,
-    .prepare = dummy_crtc_stub,
-    .mode_set = dummy_crtc_mode_set,
-    .commit = dummy_crtc_stub,
-    .gamma_set = dummy_crtc_gamma_set,
-    .shadow_allocate = dummy_crtc_shadow_allocate,
-    .shadow_create = NULL, /* These two should not be invoked if allocate
-                              returns NULL. */
-    .shadow_destroy = NULL,
-    .set_cursor_colors = NULL,
-    .set_cursor_position = NULL,
-    .show_cursor = NULL,
-    .hide_cursor = NULL,
-    .load_cursor_argb = NULL,
-    .destroy = dummy_crtc_stub
-};
-
-static void
-dummy_output_stub (xf86OutputPtr output)
-{
-}
-
-static void
-dummy_output_dpms (xf86OutputPtr output, int mode)
-{
-}
-
-static int
-dummy_output_mode_valid (xf86OutputPtr output, DisplayModePtr mode)
-{
-    return MODE_OK;
-}
-
-static Bool
-dummy_output_mode_fixup (xf86OutputPtr output, DisplayModePtr mode,
-        DisplayModePtr adjusted_mode)
-{
-    return TRUE;
-}
-
-static void
-dummy_output_mode_set (xf86OutputPtr output, DisplayModePtr mode,
-        DisplayModePtr adjusted_mode)
-{
-    DUMMYPtr dPtr = DUMMYPTR(output->scrn);
-    int index = (int64_t)output->driver_private;
-
-    /* set to connected at first mode set */
-    dPtr->connected_outputs |= 1 << index;
-}
-
-/* The first virtual monitor is always connected. Others only after setting its
- * mode */
-static xf86OutputStatus
-dummy_output_detect (xf86OutputPtr output)
-{
-    DUMMYPtr dPtr = DUMMYPTR(output->scrn);
-    int index = (int64_t)output->driver_private;
-
-    if (dPtr->connected_outputs & (1 << index))
-        return XF86OutputStatusConnected;
-    else
-        return XF86OutputStatusDisconnected;
-}
-
-static DisplayModePtr
-dummy_output_get_modes (xf86OutputPtr output)
-{
-    DisplayModePtr pModes = NULL, pMode, pModeSrc;
-
-    /* copy modes from config */
-    for (pModeSrc = output->scrn->modes; pModeSrc; pModeSrc = pModeSrc->next)
-    {
-            pMode = xnfcalloc(1, sizeof(DisplayModeRec));
-            memcpy(pMode, pModeSrc, sizeof(DisplayModeRec));
-            pMode->next = NULL;
-            pMode->prev = NULL;
-            pMode->name = strdup(pModeSrc->name);
-            pModes = xf86ModesAdd(pModes, pMode);
-            if (pModeSrc->next == output->scrn->modes)
-                break;
-    }
-    return pModes;
-}
-
-void dummy_output_register_prop(xf86OutputPtr output, Atom prop, uint64_t value)
-{
-    INT32 dims_range[2] = { 0, 65535 };
-    int err;
-
-    err = RRConfigureOutputProperty(output->randr_output, prop, FALSE,
-            TRUE, FALSE, 2, dims_range);
-    if (err != 0)
-        xf86DrvMsg(output->scrn->scrnIndex, X_ERROR,
-                                       "RRConfigureOutputProperty error, %d\n", err);
-
-    err = RRChangeOutputProperty(output->randr_output, prop, XA_INTEGER,
-            32, PropModeReplace, 1, &value, FALSE, FALSE);
-    if (err != 0)
-        xf86DrvMsg(output->scrn->scrnIndex, X_ERROR,
-                "RRChangeOutputProperty error, %d\n", err);
-}
-
-void dummy_output_create_resources(xf86OutputPtr output)
-{
-    if (!ValidAtom(width_mm_atom))
-        width_mm_atom = MakeAtom(WIDTH_MM_NAME, strlen(WIDTH_MM_NAME), 1);
-    if (!ValidAtom(height_mm_atom))
-        height_mm_atom = MakeAtom(HEIGHT_MM_NAME, strlen(HEIGHT_MM_NAME), 1);
-
-    dummy_output_register_prop(output, width_mm_atom, 0);
-    dummy_output_register_prop(output, height_mm_atom, 0);
-}
-
-static Bool dummy_output_set_property(xf86OutputPtr output, Atom property,
-        RRPropertyValuePtr value)
-{
-
-    if (property == width_mm_atom || property == height_mm_atom) {
-        INT32 val;
-
-        if (value->type != XA_INTEGER || value->format != 32 ||
-                value->size != 1)
-        {
-            return FALSE;
-        }
-
-        val = *(INT32 *)value->data;
-        if (property == width_mm_atom)
-            output->mm_width = val;
-        else if (property == height_mm_atom)
-            output->mm_height = val;
-        return TRUE;
-    }
-    return TRUE;
-}
-
-
-static const xf86OutputFuncsRec DUMMYOutputFuncs = {
-    .create_resources = dummy_output_create_resources,
-    .dpms = dummy_output_dpms,
-    .save = NULL, /* These two are never called by the server. */
-    .restore = NULL,
-    .mode_valid = dummy_output_mode_valid,
-    .mode_fixup = dummy_output_mode_fixup,
-    .prepare = dummy_output_stub,
-    .commit = dummy_output_stub,
-    .mode_set = dummy_output_mode_set,
-    .detect = dummy_output_detect,
-    .get_modes = dummy_output_get_modes,
-#ifdef RANDR_12_INTERFACE
-    .set_property = dummy_output_set_property,
-#endif
-    .destroy = dummy_output_stub
-};
-
-static Bool
-dummy_config_resize(ScrnInfoPtr pScrn, int cw, int ch)
-{
-    if (!pScrn->vtSema) {
-        xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-                "We do not own the active VT, exiting.\n");
-        return TRUE;
-    }
-    return DUMMYAdjustScreenPixmap(pScrn, cw, ch);
-}
-
-Bool DUMMYAdjustScreenPixmap(ScrnInfoPtr pScrn, int width, int height)
-{
-    ScreenPtr pScreen = pScrn->pScreen;
-    PixmapPtr pPixmap = pScreen->GetScreenPixmap(pScreen);
-    DUMMYPtr dPtr = DUMMYPTR(pScrn);
-    uint64_t cbLine = (width * xf86GetBppFromDepth(pScrn, pScrn->depth) / 8 + 3) & ~3;
-    int displayWidth = cbLine * 8 / xf86GetBppFromDepth(pScrn, pScrn->depth);
-
-    if (   width == pScrn->virtualX
-            && height == pScrn->virtualY
-            && displayWidth == pScrn->displayWidth)
-        return TRUE;
-    if (!pPixmap) {
-        xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-                "Failed to get the screen pixmap.\n");
-        return FALSE;
-    }
-    if (cbLine > UINT32_MAX || cbLine * height >= pScrn->videoRam * 1024)
-    {
-        xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-                "Unable to set up a virtual screen size of %dx%d with %d Kb of video memory available.  Please increase the video memory size.\n",
-                width, height, pScrn->videoRam);
-        return FALSE;
-    }
-    pScreen->ModifyPixmapHeader(pPixmap, width, height,
-            pScrn->depth, xf86GetBppFromDepth(pScrn, pScrn->depth), cbLine,
-            pPixmap->devPrivate.ptr);
-    pScrn->virtualX = width;
-    pScrn->virtualY = height;
-    pScrn->displayWidth = displayWidth;
-
-    return TRUE;
-}
-
-/**********************
- * XRANDR support end *
- **********************/
-
 /*
  * This is the module init data.
  * Its name has to be the driver name followed by ModuleData
@@ -451,7 +189,7 @@ DUMMYGetRec(ScrnInfoPtr pScrn)
 
     if (pScrn->driverPrivate == NULL)
 	return FALSE;
-    return TRUE;
+        return TRUE;
 }
 
 static void
@@ -525,9 +263,6 @@ DUMMYProbe(DriverPtr drv, int flags)
 	    }
 	}
     }    
-
-    free(devSections);
-
     return foundScreen;
 }
 
@@ -572,7 +307,6 @@ DUMMYPreInit(ScrnInfoPtr pScrn, int flags)
 	case 15:
 	case 16:
 	case 24:
-	case 30:
 	    break;
 	default:
 	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
@@ -776,8 +510,7 @@ DUMMYScreenInit(SCREEN_INIT_ARGS_DECL)
     DUMMYPtr dPtr;
     int ret;
     VisualPtr visual;
-    void *pixels;
-
+    
     /*
      * we need to get the ScrnInfoRec for this screen, so let's allocate
      * one first thing
@@ -787,7 +520,7 @@ DUMMYScreenInit(SCREEN_INIT_ARGS_DECL)
     DUMMYScrn = pScrn;
 
 
-    if (!(pixels = malloc(pScrn->videoRam * 1024)))
+    if (!(dPtr->FBBase = malloc(pScrn->videoRam * 1024)))
 	return FALSE;
 
     /*
@@ -798,22 +531,17 @@ DUMMYScreenInit(SCREEN_INIT_ARGS_DECL)
     /* Setup the visuals we support. */
     
     if (!miSetVisualTypes(pScrn->depth,
-                          miGetDefaultVisualMask(pScrn->depth),
-                          pScrn->rgbBits, pScrn->defaultVisual)) {
-        free(pixels);
-        return FALSE;
-    }
+      		      miGetDefaultVisualMask(pScrn->depth),
+		      pScrn->rgbBits, pScrn->defaultVisual))
+         return FALSE;
 
-    if (!miSetPixmapDepths ()) {
-        free(pixels);
-        return FALSE;
-    }
+    if (!miSetPixmapDepths ()) return FALSE;
 
     /*
      * Call the framebuffer layer's ScreenInit function, and fill in other
      * pScreen fields.
      */
-    ret = fbScreenInit(pScreen, pixels,
+    ret = fbScreenInit(pScreen, dPtr->FBBase,
 			    pScrn->virtualX, pScrn->virtualY,
 			    pScrn->xDpi, pScrn->yDpi,
 			    pScrn->displayWidth, pScrn->bitsPerPixel);
@@ -840,56 +568,10 @@ DUMMYScreenInit(SCREEN_INIT_ARGS_DECL)
 
     xf86SetBlackWhitePixels(pScreen);
 
-    /* initialize XRANDR */
-    xf86CrtcConfigInit(pScrn, &DUMMYCrtcConfigFuncs);
-    /* FIXME */
-    dPtr->num_screens = DUMMY_MAX_SCREENS;
-
-    for (int i=0; i < dPtr->num_screens; i++) {
-        char szOutput[256];
-
-        dPtr->paCrtcs[i] = xf86CrtcCreate(pScrn, &DUMMYCrtcFuncs);
-        dPtr->paCrtcs[i]->driver_private = (void *)(uintptr_t)i;
-
-        /* Set up our virtual outputs. */
-        snprintf(szOutput, sizeof(szOutput), "DUMMY%u", i);
-        dPtr->paOutputs[i] = xf86OutputCreate(pScrn, &DUMMYOutputFuncs,
-                szOutput);
-
-
-        xf86OutputUseScreenMonitor(dPtr->paOutputs[i], FALSE);
-        dPtr->paOutputs[i]->possible_crtcs = 1 << i;
-        dPtr->paOutputs[i]->possible_clones = 0;
-        dPtr->paOutputs[i]->driver_private = (void *)(uintptr_t)i;
-        xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Created crtc (%p) and output %s (%p)\n",
-                (void *)dPtr->paCrtcs[i], szOutput,
-                (void *)dPtr->paOutputs[i]);
-
-    }
-
-    /* bitmask */
-    dPtr->connected_outputs = 1;
-
-    xf86CrtcSetSizeRange(pScrn, 64, 64, DUMMY_MAX_WIDTH, DUMMY_MAX_HEIGHT);
-
-
-    /* Now create our initial CRTC/output configuration. */
-    if (!xf86InitialConfiguration(pScrn, TRUE)) {
-        xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "Initial CRTC configuration failed!\n");
-        return (FALSE);
-    }
-
-    /* Initialise randr 1.2 mode-setting functions and set first mode.
-     * Note that the mode won't be usable until the server has resized the
-     * framebuffer to something reasonable. */
-    if (!xf86CrtcScreenInit(pScreen)) {
-        return FALSE;
-    }
-    if (!xf86SetDesiredModes(pScrn)) {
-        return FALSE;
-    }
-
-    /* XRANDR initialization end */
+#ifdef USE_DGA
+    DUMMYDGAInit(pScreen);
+#endif
+    
     if (dPtr->swCursor)
 	xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, "Using Software Cursor.\n");
 
@@ -930,11 +612,13 @@ DUMMYScreenInit(SCREEN_INIT_ARGS_DECL)
     if(!miCreateDefColormap(pScreen))
 	return FALSE;
 
-    if (!xf86HandleColormaps(pScreen, 1024, pScrn->rgbBits,
+    if (!xf86HandleColormaps(pScreen, 256, pScrn->rgbBits,
                          DUMMYLoadPalette, NULL, 
                          CMAP_PALETTED_TRUECOLOR 
 			     | CMAP_RELOAD_ON_MODE_SWITCH))
 	return FALSE;
+
+/*     DUMMYInitVideo(pScreen); */
 
     pScreen->SaveScreen = DUMMYSaveScreen;
 
@@ -975,7 +659,9 @@ DUMMYCloseScreen(CLOSE_SCREEN_ARGS_DECL)
     ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     DUMMYPtr dPtr = DUMMYPTR(pScrn);
 
-    free(pScreen->GetScreenPixmap(pScreen)->devPrivate.ptr);
+    if(pScrn->vtSema){
+	free(dPtr->FBBase);
+    }
 
     if (dPtr->CursorInfo)
 	xf86DestroyCursorInfoRec(dPtr->CursorInfo);
@@ -996,6 +682,15 @@ DUMMYFreeScreen(FREE_SCREEN_ARGS_DECL)
 static Bool
 DUMMYSaveScreen(ScreenPtr pScreen, int mode)
 {
+    ScrnInfoPtr pScrn = NULL;
+    DUMMYPtr dPtr;
+
+    if (pScreen != NULL) {
+	pScrn = xf86ScreenToScrn(pScreen);
+	dPtr = DUMMYPTR(pScrn);
+
+	dPtr->screenSaver = xf86IsUnblank(mode);
+    } 
     return TRUE;
 }
 

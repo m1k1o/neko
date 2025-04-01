@@ -13,8 +13,6 @@
 
 #include "compat-api.h"
 
-#define DUMMY_MAX_SCREENS 16
-
 /* Supported chipsets */
 typedef enum {
     DUMMY_CHIP
@@ -30,6 +28,12 @@ extern Bool DUMMYCursorInit(ScreenPtr pScrn);
 extern void DUMMYShowCursor(ScrnInfoPtr pScrn);
 extern void DUMMYHideCursor(ScrnInfoPtr pScrn);
 
+/* in dummy_dga.c */
+Bool DUMMYDGAInit(ScreenPtr pScreen);
+
+/* in dummy_video.c */
+extern void DUMMYInitVideo(ScreenPtr pScreen);
+
 /* globals */
 typedef struct _color
 {
@@ -40,6 +44,10 @@ typedef struct _color
 
 typedef struct dummyRec 
 {
+    DGAModePtr		DGAModes;
+    int			numDGAModes;
+    Bool		DGAactive;
+    int			DGAViewportStatus;
     /* options */
     OptionInfoPtr Options;
     Bool swCursor;
@@ -51,15 +59,19 @@ typedef struct dummyRec
     int cursorX, cursorY;
     int cursorFG, cursorBG;
 
-    dummy_colors colors[1024];
-    Bool        (*CreateWindow)(WindowPtr) ;     /* wrapped CreateWindow */
+    Bool screenSaver;
+    Bool video;
+#ifdef XvExtension
+    XF86VideoAdaptorPtr overlayAdaptor;
+#endif
+    int overlay;
+    int overlay_offset;
+    int videoKey;
+    int interlace;
+    dummy_colors colors[256];
+    pointer* FBBase;
+    Bool        (*CreateWindow)() ;     /* wrapped CreateWindow */
     Bool prop;
-    /* XRANDR support begin */
-    int num_screens;
-    struct _xf86Crtc *paCrtcs[DUMMY_MAX_SCREENS];
-    struct _xf86Output *paOutputs[DUMMY_MAX_SCREENS];
-    int connected_outputs;
-    /* XRANDR support end */
 } DUMMYRec, *DUMMYPtr;
 
 /* The privates of the DUMMY driver */
