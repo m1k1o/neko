@@ -1,5 +1,60 @@
 # Release Notes
 
+## [n.eko v3.0.0](https://github.com/m1k1o/neko/releases/tag/v3.0.0) {#v3.0.0}
+
+### Repository Changes {#v3.0.0-repo}
+- The default registry is now `ghcr.io/m1k1o/neko` instead of `docker.io/m1k1o/neko`.
+- Multiarch builds for `linux/amd64`, `linux/arm64`, and `linux/arm/v7` are now available instead of `arm-`based images.
+- App folders from `.docker/` have been moved to `apps/`.
+- Dev scripts from `.docker/` are now available in `client/dev/` and `server/dev/`.
+- The `docs/` folder is now available at `webpage/docs/` with a completely new structure.
+- The base `Dockerfile` has been split into `client/Dockerfile`, `server/Dockerfile`, and `runtime/Dockerfile`.
+- The build process has been moved from `.docker/build` to `build/`, supporting more options. See `--help` for more information.
+- Brave, Vivaldi, Remmina, and KDE are now also available as ARM-based images.
+- Waterfox is now available as a new browser.
+
+### Server Changes {#v3.0.0-server}
+- A REST API with OpenAPI 3.0 documentation is now available.
+- Prometheus metrics are now available.
+- The server name is now `github.com/m1k1o/neko/server` and can be used as a library.
+- Reusable components and types are available in the `server/pkg/` folder, such as `gst`, `xevent`, and `xorg`.
+- A new authentication system with support for multiple authentication methods has been added.
+- A new user management system with support for granular feature access control has been implemented.
+- The structure for configuration options has been updated, with options now separated into modules.
+- Compatibility with V2 configuration options is still available but deprecated.
+- **Capture**: Added a screencast feature as a fallback for WebRTC.
+- **Capture**: Added experimental webcam and microphone passthrough support.
+- **Capture**: Added video simulcast support and a stream selector.
+- **Capture**: When joining a pipeline, a keyframe is requested on demand and sent to the client.
+- **Desktop**: Clipboard now uses `xclip` instead of `libclipboard`, allowing multiple targets.
+- **Desktop**: Added drag-and-drop file upload support.
+- **Desktop**: Added a file chooser dialog to prompt users for file uploads (experimental).
+- **Desktop**: Added an unminimize feature to ensure that the window is not minimized when the user is trying to control it.
+- **Desktop**: Created a custom input X11 driver to support touchscreen devices.
+- **Desktop**: Added support for `xrandr` to set the virtual monitor resolution to any resolution, not just predefined ones.
+- **Desktop**: Added a function to send events when the cursor changes, along with the cursor image.
+- **HTTP**: Added batch mode to allow multiple requests in a single connection.
+- **HTTP**: Added `pprof` support to enable server profiling.
+- **HTTP**: Created a legacy driver to support the current neko client.
+- **HTTP**: Refactored HTTP logging.
+- **Plugins**: Added support for Go plugins to enable custom features to be added to the server.
+- **Plugins**: Chat has been implemented as a plugin that can be disabled globally or per user (mute feature).
+- **Plugins**: File upload has been implemented as a plugin that can be disabled globally or per user.
+- **Session**: Added support to save session tokens as cookies to allow persistent login.
+- **Session**: Added the ability to serialize and deserialize sessions to a file to survive restarts.
+- **Session**: Added support for dynamic permissions with granular feature access control.
+- **WebRTC**: Forwarded desktop cursor changes to the client.
+- **WebRTC**: Forwarded cursor position to other clients that have enabled the inactive cursors option.
+- **WebRTC**: Switched from LittleEndian to BigEndian for the video stream to improve browser compatibility.
+- **WebRTC**: Created a legacy driver to support the current neko client.
+- **WebRTC**: Added WebRTC ping to check if the connection is still alive and to determine latency.
+- **WebRTC**: Added the ability to switch video pipelines on the fly.
+- **WebRTC**: Implemented bandwidth estimation and adaptive quality (experimental).
+- **WebSocket**: Added support for controlling the desktop using WebSockets as a fallback for WebRTC.
+- **WebSocket**: Added support for sending unicast and broadcast messages to all clients.
+
+Please note that in this version, only the server has been updated. The client is still in the old version; therefore, new features may not yet be available in the client.
+
 ## [n.eko v2.9.0](https://github.com/m1k1o/neko/releases/tag/v2.9.0) {#v2.9.0}
 
 ### New Features {#v2.9.0-feats}
