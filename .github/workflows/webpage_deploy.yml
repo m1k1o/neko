@@ -1,6 +1,7 @@
 name: Build and Deploy Webpage to GitHub Pages
 
 on:
+  # Runs on pushes targeting the default branch
   push:
     branches:
       - master
@@ -8,6 +9,21 @@ on:
       - webpage/**
       - .github/workflows/webpage_build.yml
       - .github/workflows/webpage_deploy.yml
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
 
 jobs:
   build-webpage:
@@ -18,11 +34,6 @@ jobs:
   deploy-webpage:
     name: Deploy to GitHub Pages
     needs: build-webpage
-
-    # Grant GITHUB_TOKEN the permissions required to make a Pages deployment
-    permissions:
-      pages: write # to deploy to Pages
-      id-token: write # to verify the deployment originates from an appropriate source
 
     # Deploy to the github-pages environment
     environment:
