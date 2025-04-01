@@ -39,8 +39,6 @@ dummySetCursorPosition(ScrnInfoPtr pScrn, int x, int y)
 {
     DUMMYPtr dPtr = DUMMYPTR(pScrn);
 
-/*     unsigned char *_dest = ((unsigned char *)dPtr->FBBase + */
-/* 			    pScrn->videoRam * 1024 - 1024); */
     dPtr->cursorX = x;
     dPtr->cursorY = y;
 }
