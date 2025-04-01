@@ -55,6 +55,7 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository }}/${{ env.FLAVOR_PREFIX }}base
           tags: |
+            type=edge,branch=master
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
