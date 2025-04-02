@@ -119,23 +119,43 @@
     }
   }
 
-  @media only screen and (max-width: 600px) {
-    #neko.expanded {
-      .neko-main {
-        transform: translateX(calc(-100% + 65px));
+  @media only screen and (max-width: 1024px) {
+    html,
+    body {
+      overflow-y: auto !important;
+      width: auto !important;
+      height: auto !important;
+    }
 
-        video {
-          display: none;
-        }
+    body > p {
+      display: none;
+    }
+
+    #neko {
+      position: relative;
+      flex-direction: column;
+      max-height: initial !important;
+
+      .neko-main {
+        height: 100vh;
       }
 
       .neko-menu {
-        position: absolute;
-        top: 0;
-        right: 0;
-        bottom: 0;
-        left: 65px;
-        width: calc(100% - 65px);
+        height: 100vh;
+        width: 100% !important;
+      }
+    }
+  }
+
+  @media only screen and (max-width: 1024px) and (orientation: portrait) {
+    #neko {
+      &.expanded .neko-main {
+        height: 40vh;
+      }
+
+      &.expanded .neko-menu {
+        height: 60vh;
+        width: 100% !important;
       }
     }
   }
@@ -214,6 +234,20 @@
       if (enabled) {
         this.$accessor.video.setMuted(false)
         this.$accessor.settings.setSound(false)
+      }
+    }
+
+    @Watch('side')
+    onSide(side: boolean) {
+      if (side) {
+        console.log('side enabled')
+        // scroll to the side
+        this.$nextTick(() => {
+          const side = document.querySelector('aside')
+          if (side) {
+            side.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          }
+        })
       }
     }
 
