@@ -136,12 +136,25 @@
       flex-direction: column;
       max-height: initial !important;
 
-      .neko-main .video-container {
+      .neko-main {
         height: 100vh;
       }
 
       .neko-menu {
         height: 100vh;
+        width: 100% !important;
+      }
+    }
+  }
+
+  @media only screen and (max-width: 1024px) and (orientation: portrait) {
+    #neko {
+      &.expanded .neko-main {
+        height: 40vh;
+      }
+
+      &.expanded .neko-menu {
+        height: 60vh;
         width: 100% !important;
       }
     }
@@ -221,6 +234,20 @@
       if (enabled) {
         this.$accessor.video.setMuted(false)
         this.$accessor.settings.setSound(false)
+      }
+    }
+
+    @Watch('side')
+    onSide(side: boolean) {
+      if (side) {
+        console.log('side enabled')
+        // scroll to the side
+        this.$nextTick(() => {
+          const side = document.querySelector('aside')
+          if (side) {
+            side.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          }
+        })
       }
     }
 
