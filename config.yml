@@ -15,6 +15,3 @@ session:
   cookie:
     # needed for legacy API
     enabled: false
-
-webrtc:
-  icelite: true
