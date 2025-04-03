@@ -10,7 +10,7 @@ set -e
 docker run --rm -it \
     -v "${PWD}/../:/src" \
     --entrypoint="/bin/bash" \
-    neko_server "./build" "$@";
+    neko_server:src "./build" "$@";
 
 #
 # remove old plugins
