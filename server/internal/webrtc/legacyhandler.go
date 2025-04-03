@@ -78,7 +78,7 @@ func (manager *WebRTCManagerCtx) handleLegacy(
 		}
 
 		logger.
-			Debug().
+			Trace().
 			Str("x", strconv.Itoa(int(payload.X))).
 			Str("y", strconv.Itoa(int(payload.Y))).
 			Msg("scroll")
@@ -97,7 +97,7 @@ func (manager *WebRTCManagerCtx) handleLegacy(
 				return nil
 			}
 
-			logger.Debug().Msgf("button down %d", payload.Key)
+			logger.Trace().Msgf("button down %d", payload.Key)
 		} else {
 			err := manager.desktop.KeyDown(uint32(payload.Key))
 			if err != nil {
@@ -105,7 +105,7 @@ func (manager *WebRTCManagerCtx) handleLegacy(
 				return nil
 			}
 
-			logger.Debug().Msgf("key down %d", payload.Key)
+			logger.Trace().Msgf("key down %d", payload.Key)
 		}
 	case OP_KEY_UP:
 		payload := &PayloadKey{}
@@ -121,7 +121,7 @@ func (manager *WebRTCManagerCtx) handleLegacy(
 				return nil
 			}
 
-			logger.Debug().Msgf("button up %d", payload.Key)
+			logger.Trace().Msgf("button up %d", payload.Key)
 		} else {
 			err := manager.desktop.KeyUp(uint32(payload.Key))
 			if err != nil {
@@ -129,7 +129,7 @@ func (manager *WebRTCManagerCtx) handleLegacy(
 				return nil
 			}
 
-			logger.Debug().Msgf("key up %d", payload.Key)
+			logger.Trace().Msgf("key up %d", payload.Key)
 		}
 	case OP_KEY_CLK:
 		// unused
