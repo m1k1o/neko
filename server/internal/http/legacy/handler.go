@@ -47,12 +47,12 @@ type LegacyHandler struct {
 	sessionIPs map[string]string
 }
 
-func New() *LegacyHandler {
+func New(serverAddr string) *LegacyHandler {
 	// Init
 
 	return &LegacyHandler{
 		logger:     log.With().Str("module", "legacy").Logger(),
-		serverAddr: "127.0.0.1:8080",
+		serverAddr: serverAddr,
 		bannedIPs:  make(map[string]struct{}),
 		sessionIPs: make(map[string]string),
 	}

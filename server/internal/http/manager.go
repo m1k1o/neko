@@ -58,7 +58,7 @@ func New(WebSocketManager types.WebSocketManager, ApiManager types.ApiManager, c
 
 	// Legacy handler
 	if viper.GetBool("legacy") {
-		legacy.New().Route(router)
+		legacy.New(config.Bind).Route(router)
 	}
 
 	batch := batchHandler{
