@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - master
+    paths-ignore:
+      - 'webpage/**'
   #
   # Run this action periodically to keep browsers up-to-date
   # even if there is no activity in this repo.
