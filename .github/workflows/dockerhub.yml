@@ -13,6 +13,12 @@ on:
   schedule:
     - cron: "43 2 * * 1"
 
+# allow only one workflow to run at a time
+# and cancel in-progress jobs if a new one is triggered
+concurrency:
+  group: "dockerhub"
+  cancel-in-progress: true
+
 env:
   DOCKER_IMAGE: m1k1o/neko
 
