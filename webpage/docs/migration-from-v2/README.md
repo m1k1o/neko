@@ -40,8 +40,10 @@ In order to migrate from V2 to V3, you need to update the configuration to the n
 | `NEKO_IMPLICIT_CONTROL`               | `NEKO_SESSION_IMPLICIT_HOSTING`                           |
 | `NEKO_CONTROL_PROTECTION`             | `NEKO_SESSION_CONTROL_PROTECTION`                         |
 | `NEKO_HEARTBEAT_INTERVAL`             | `NEKO_SESSION_HEARTBEAT_INTERVAL`                         |
+| `NEKO_FILE_TRANSFER_ENABLED`          | `NEKO_FILETRANSFER_ENABLED`                               |
+| `NEKO_FILE_TRANSFER_PATH`             | `NEKO_FILETRANSFER_DIR`                                   |
 
-See the V3 [configuration options](/docs/v3/configuration).
+See the V3 [configuration options](/docs/v3/configuration). For file transfer, see the [File Transfer Plugin](/docs/v3/configuration/plugins#filetransfer).
 
 ### WebRTC Video {#config.video}
 
