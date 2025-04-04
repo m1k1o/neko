@@ -12,24 +12,53 @@ The base image is available as multi-arch image at [`ghcr.io/m1k1o/neko/base`](h
 
 ## Naming Convention {#naming}
 
-Neko Docker images are available on [GitHub Container Registry (GHCR)](https://github.com/m1k1o?tab=packages&repo_name=neko). The naming convention for Neko Docker images is as follows:
+Neko images are available on two public registries. The [GitHub Container Registry (GHCR)](#ghcr.io) hosts stable releases with all flavors and architectures. The latest development version of the Neko image for the AMD64 architecture is available on [Docker Hub](#docker.io).
+
+:::info
+You should always prefer the GHCR registry, as it supports flavors and specific versions, unless you want to test the latest development version.
+:::
+
+### GitHub Container Registry (GHCR) {#ghcr.io}
+
+Neko Docker images are available on the [GitHub Container Registry (GHCR)](https://github.com/m1k1o?tab=packages&repo_name=neko). The naming convention for Neko Docker images is as follows:
 
 ```
 ghcr.io/m1k1o/neko/[<flavor>-]<application>:<version>
 ```
 
-- `<flavor>` is the optional flavor of the image, see [Available Flavors](#flavors) for more information.
-- `<application>` is the application name or base image, see [Available Applications](#apps) for more information.
-- `<version>` is the [semantic version](https://semver.org/) of the image from the [GitHub tags](https://github.com/m1k1o/neko/tags). There is always a `latest` tag available.
+- `<flavor>` is the optional flavor of the image. See [Available Flavors](#flavors) for more information.
+- `<application>` is the application name or base image. See [Available Applications](#apps) for more information.
+- `<version>` is the version of the image. See [Versioning](#ghcr.io-versioning) for more information.
 
-An alternative registry is also available on [Docker Hub](https://hub.docker.com/r/m1k1o/neko), however, only images without flavor and with the latest version are available there.
+#### Versioning scheme {#ghcr.io-versioning}
+
+The versioning scheme follows the [Semantic Versioning 2.0.0](https://semver.org/) specification. The following tags are available for each image:
+
+- `latest` - Points to the most recent stable release.
+- `MAJOR` - Tracks the latest release within the specified major version.
+- `MAJOR.MINOR` - Tracks the latest release within the specified major and minor version.
+- `MAJOR.MINOR.PATCH` - Refers to a specific release.
+
+For example:
+- `ghcr.io/m1k1o/neko/firefox:latest` - Latest stable version.
+- `ghcr.io/m1k1o/neko/firefox:3` - Latest release in the 3.x.x series.
+- `ghcr.io/m1k1o/neko/firefox:3.0` - Latest release in the 3.0.x series.
+- `ghcr.io/m1k1o/neko/firefox:3.0.0` - Specific version 3.0.0.
+
+A full list of published versions can be found in the [GitHub tags](https://github.com/m1k1o/neko/tags).
+
+### Docker Hub {#docker.io}
+
+An alternative registry is available on [Docker Hub](https://hub.docker.com/r/m1k1o/neko). This registry hosts images built from the latest code in the [master branch](https://github.com/m1k1o/neko/tree/master). However, it only includes images without flavors and supports the AMD64 architecture. The naming convention for these images is as follows:
 
 ```
 m1k1o/neko:<application>
 ```
 
+- `<application>` is the application name or base image. See [Available Applications](#apps) for more information.
+
 :::info
-You should always prefer the GHCR registry with the ability to use flavors and specific versions.
+`m1k1o/neko:latest` is an alias for `m1k1o/neko:firefox` due to historical reasons. It is recommended to use the `ghcr.io/m1k1o/neko/firefox:latest` image instead.
 :::
 
 ## Available Applications {#apps}
@@ -162,42 +191,6 @@ docker run \
 See [neko-apps](https://github.com/m1k1o/neko-apps) repository for more applications.
 :::
 
-
-## Supported Architectures {#arch}
-
-Neko Docker images are built with docker buildx and are available for multiple architectures. The following architectures are supported by the base image:
-
-- `linux/amd64` - 64-bit Intel/AMD architecture (most common).
-- `linux/arm64` - 64-bit ARM architecture (e.g., Raspberry Pi 4, Apple M1/M2).
-- `linux/arm/v7` - 32-bit ARM architecture (e.g., Raspberry Pi 3, Raspberry Pi Zero).
-
-### Availability Matrix {#availability}
-
-The availability of applications for ARM architecture is limited due to the lack of support for some applications. The following table shows the availability of each application for each architecture. The `✅` symbol indicates that the application is available for that architecture, while the `❌` symbol indicates that it is not available.
-
-| Application       | AMD64 | ARM64 | ARMv7 | Reference |
-| ----------------- | ----- | ----- | ----- | --------- |
-| Firefox           | ✅    | ✅ \* | ✅ \* | - |
-| Waterfox          | ✅    | ❌    | ❌    | [Github Issue](https://github.com/BrowserWorks/Waterfox/issues/1506), [Reddit](https://www.reddit.com/r/waterfox/comments/jpqsds/are_there_any_builds_for_arm64/) |
-| Chromium          | ✅    | ✅ \* | ✅ \* | - |
-| Google Chrome     | ✅    | ❌    | ❌    | [Community Post](https://askubuntu.com/a/1383791) |
-| Ungoogled Chromium| ✅    | ❌    | ❌    | [Downloads Page](https://ungoogled-software.github.io/ungoogled-chromium-binaries/) |
-| Microsoft Edge    | ✅    | ❌    | ❌    | [Community Post](https://techcommunity.microsoft.com/discussions/edgeinsiderdiscussions/edge-for-linuxarm64/1532272) |
-| Brave             | ✅    | ✅ \* | ❌    | [Requirements Page](https://support.brave.com/hc/en-us/articles/360021357112-What-are-the-system-requirements-to-install-Brave) |
-| Vivaldi           | ✅    | ✅ \* | ✅ \* | - |
-| Opera             | ✅    | ❌    | ❌    | [Forum Post](https://forums.opera.com/topic/52811/opera-do-not-support-arm64-on-linux) |
-| Tor Browser       | ✅    | ❌    | ❌    | [Forum Post](https://forum.torproject.org/t/tor-browser-for-arm-linux/5240) |
-| Remmina           | ✅    | ✅    | ✅    | - |
-| VLC               | ✅    | ✅    | ✅    | - |
-| Xfce              | ✅    | ✅    | ✅    | - |
-| KDE               | ✅    | ✅    | ✅    | - |
-
-\* No DRM support.
-
-:::tip
-[Oracle Cloud ARM free tier](https://www.oracle.com/cloud/free/) is a great way to test Neko on ARM architecture for free. You can use the `ghcr.io/m1k1o/neko/xfce` image to run a full desktop environment with Xfce and test the applications.
-:::
-
 ## Available Flavors {#flavors}
 
 :::danger Keep in Mind
@@ -250,3 +243,37 @@ The base image is available at [`ghcr.io/m1k1o/neko/nvidia-base`](https://ghcr.i
 There is a known issue with EGL and Chromium-based browsers, see [m1k1o/neko #279](https://github.com/m1k1o/neko/issues/279).
 :::
 
+## Supported Architectures {#arch}
+
+Neko Docker images are built with docker buildx and are available for multiple architectures. The following architectures are supported by the base image:
+
+- `linux/amd64` - 64-bit Intel/AMD architecture (most common).
+- `linux/arm64` - 64-bit ARM architecture (e.g., Raspberry Pi 4, Apple M1/M2).
+- `linux/arm/v7` - 32-bit ARM architecture (e.g., Raspberry Pi 3, Raspberry Pi Zero).
+
+### Availability Matrix {#availability}
+
+The availability of applications for ARM architecture is limited due to the lack of support for some applications. The following table shows the availability of each application for each architecture. The `✅` symbol indicates that the application is available for that architecture, while the `❌` symbol indicates that it is not available.
+
+| Application       | AMD64 | ARM64 | ARMv7 | Reference |
+| ----------------- | ----- | ----- | ----- | --------- |
+| Firefox           | ✅    | ✅ \* | ✅ \* | - |
+| Waterfox          | ✅    | ❌    | ❌    | [Github Issue](https://github.com/BrowserWorks/Waterfox/issues/1506), [Reddit](https://www.reddit.com/r/waterfox/comments/jpqsds/are_there_any_builds_for_arm64/) |
+| Chromium          | ✅    | ✅ \* | ✅ \* | - |
+| Google Chrome     | ✅    | ❌    | ❌    | [Community Post](https://askubuntu.com/a/1383791) |
+| Ungoogled Chromium| ✅    | ❌    | ❌    | [Downloads Page](https://ungoogled-software.github.io/ungoogled-chromium-binaries/) |
+| Microsoft Edge    | ✅    | ❌    | ❌    | [Community Post](https://techcommunity.microsoft.com/discussions/edgeinsiderdiscussions/edge-for-linuxarm64/1532272) |
+| Brave             | ✅    | ✅ \* | ❌    | [Requirements Page](https://support.brave.com/hc/en-us/articles/360021357112-What-are-the-system-requirements-to-install-Brave) |
+| Vivaldi           | ✅    | ✅ \* | ✅ \* | - |
+| Opera             | ✅    | ❌    | ❌    | [Forum Post](https://forums.opera.com/topic/52811/opera-do-not-support-arm64-on-linux) |
+| Tor Browser       | ✅    | ❌    | ❌    | [Forum Post](https://forum.torproject.org/t/tor-browser-for-arm-linux/5240) |
+| Remmina           | ✅    | ✅    | ✅    | - |
+| VLC               | ✅    | ✅    | ✅    | - |
+| Xfce              | ✅    | ✅    | ✅    | - |
+| KDE               | ✅    | ✅    | ✅    | - |
+
+\* No DRM support.
+
+:::tip
+[Oracle Cloud ARM free tier](https://www.oracle.com/cloud/free/) is a great way to test Neko on ARM architecture for free. You can use the `ghcr.io/m1k1o/neko/xfce` image to run a full desktop environment with Xfce and test the applications.
+:::
