@@ -255,22 +255,22 @@ Neko Docker images are built with docker buildx and are available for multiple a
 
 The availability of applications for ARM architecture is limited due to the lack of support for some applications. The following table shows the availability of each application for each architecture. The `✅` symbol indicates that the application is available for that architecture, while the `❌` symbol indicates that it is not available.
 
-| Application       | AMD64 | ARM64 | ARMv7 | Reference |
-| ----------------- | ----- | ----- | ----- | --------- |
-| Firefox           | ✅    | ✅ \* | ✅ \* | - |
-| Waterfox          | ✅    | ❌    | ❌    | [Github Issue](https://github.com/BrowserWorks/Waterfox/issues/1506), [Reddit](https://www.reddit.com/r/waterfox/comments/jpqsds/are_there_any_builds_for_arm64/) |
-| Chromium          | ✅    | ✅ \* | ✅ \* | - |
-| Google Chrome     | ✅    | ❌    | ❌    | [Community Post](https://askubuntu.com/a/1383791) |
-| Ungoogled Chromium| ✅    | ❌    | ❌    | [Downloads Page](https://ungoogled-software.github.io/ungoogled-chromium-binaries/) |
-| Microsoft Edge    | ✅    | ❌    | ❌    | [Community Post](https://techcommunity.microsoft.com/discussions/edgeinsiderdiscussions/edge-for-linuxarm64/1532272) |
-| Brave             | ✅    | ✅ \* | ❌    | [Requirements Page](https://support.brave.com/hc/en-us/articles/360021357112-What-are-the-system-requirements-to-install-Brave) |
-| Vivaldi           | ✅    | ✅ \* | ✅ \* | - |
-| Opera             | ✅    | ❌    | ❌    | [Forum Post](https://forums.opera.com/topic/52811/opera-do-not-support-arm64-on-linux) |
-| Tor Browser       | ✅    | ❌    | ❌    | [Forum Post](https://forum.torproject.org/t/tor-browser-for-arm-linux/5240) |
-| Remmina           | ✅    | ✅    | ✅    | - |
-| VLC               | ✅    | ✅    | ✅    | - |
-| Xfce              | ✅    | ✅    | ✅    | - |
-| KDE               | ✅    | ✅    | ✅    | - |
+| Application                               | AMD64 | ARM64 | ARMv7 | Reference |
+| ----------------------------------------- | ----- | ----- | ----- | --------- |
+| [Firefox](#firefox)                       | ✅    | ✅ \* | ✅ \* | - |
+| [Tor Browser](#tor-browser)               | ✅    | ❌    | ❌    | [Forum Post](https://forum.torproject.org/t/tor-browser-for-arm-linux/5240) |
+| [Waterfox](#waterfox)                     | ✅    | ❌    | ❌    | [Github Issue](https://github.com/BrowserWorks/Waterfox/issues/1506), [Reddit](https://www.reddit.com/r/waterfox/comments/jpqsds/are_there_any_builds_for_arm64/) |
+| [Chromium](#chromium)                     | ✅    | ✅ \* | ✅ \* | - |
+| [Google Chrome](#google-chrome)           | ✅    | ❌    | ❌    | [Community Post](https://askubuntu.com/a/1383791) |
+| [Ungoogled Chromium](#ungoogled-chromium) | ✅    | ❌    | ❌    | [Downloads Page](https://ungoogled-software.github.io/ungoogled-chromium-binaries/) |
+| [Microsoft Edge](#microsoft-edge)         | ✅    | ❌    | ❌    | [Community Post](https://techcommunity.microsoft.com/discussions/edgeinsiderdiscussions/edge-for-linuxarm64/1532272) |
+| [Brave](#brave)                           | ✅    | ✅ \* | ❌    | [Requirements Page](https://support.brave.com/hc/en-us/articles/360021357112-What-are-the-system-requirements-to-install-Brave) |
+| [Vivaldi](#vivaldi)                       | ✅    | ✅ \* | ✅ \* | - |
+| [Opera](#opera)                           | ✅    | ❌    | ❌    | [Forum Post](https://forums.opera.com/topic/52811/opera-do-not-support-arm64-on-linux) |
+| [Xfce](#xfce)                             | ✅    | ✅    | ✅    | - |
+| [KDE](#kde)                               | ✅    | ✅    | ✅    | - |
+| [Remmina](#remmina)                       | ✅    | ✅    | ✅    | - |
+| [VLC](#vlc)                               | ✅    | ✅    | ✅    | - |
 
 \* No DRM support.
 
