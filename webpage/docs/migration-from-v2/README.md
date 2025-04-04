@@ -4,13 +4,11 @@ Currently, Neko is in compatibility mode, meaning that as soon as a single V2 co
 
 The legacy mode can be explicitly enabled or disabled by setting the `NEKO_LEGACY` environment variable to `true` or `false`.
 
-:::tip
-You can migrate to a new configuration even if you are using a V2 client. Just make sure to set the `NEKO_LEGACY` environment variable to `true`.
+:::warning
+The legacy mode is **sill used by the client**. Feel free to migrate to the new configuration options, but do not disable the legacy mode unless you are using a new client that is compatible with V3 (e.g. [demodesk/neko-client](https://github.com/demodesk/neko-client)). When the new client will be released, the legacy mode will be automatically removed from the server.
 :::
 
-:::info Built-in Client
-When using Neko in a container with a built-in client, the client will always be compatible with the server regardless of what configuration is used.
-:::
+If you set both V3 and V2 configuration options, the V2 configuration options will take precedence over the V3 configuration options. This is to ensure that the legacy mode works as expected and does not break existing configurations.
 
 ## Docker Images {#docker}
 
@@ -58,9 +56,9 @@ See the V3 configuration options for the [WebRTC Video](/docs/v3/configuration/c
 | `NEKO_VP8=true` *deprecated*          | `NEKO_CAPTURE_VIDEO_CODEC=vp8`                            |
 | `NEKO_VP9=true` *deprecated*          | `NEKO_CAPTURE_VIDEO_CODEC=vp9`                            |
 | `NEKO_VIDEO`                          | `NEKO_CAPTURE_VIDEO_PIPELINE`, V3 allows multiple video pipelines |
-| `NEKO_VIDEO_BITRATE`                  | **removed**, use custom pipeline instead                  |
-| `NEKO_HWENC`                          | **removed**, use custom pipeline instead                  |
-| `NEKO_MAX_FPS`                        | **removed**, use custom pipeline instead                  |
+| `NEKO_VIDEO_BITRATE`                  | **removed**, use [custom pipeline](/docs/v3/configuration/capture#video.pipeline) instead |
+| `NEKO_HWENC`                          | **removed**, use [custom pipeline](/docs/v3/configuration/capture#video.pipeline) instead |
+| `NEKO_MAX_FPS`                        | **removed**, use [custom pipeline](/docs/v3/configuration/capture#video.pipeline) instead |
 
 
 :::warning Limitation
