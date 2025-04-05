@@ -307,8 +307,8 @@ session:
 - <Def id="session.locked_logins" /> whether logins are locked for users, admins can still login.
 - <Def id="session.locked_controls" /> whether controls are locked for users, admins can still control.
 - <Def id="session.control_protection" /> users can gain control only if at least one admin is in the room.
-- <Def id="session.implicit_hosting" /> allows switching control implicitly without the need for explicit control request before
-- <Def id="session.inactive_cursors" /> whether to show inactive cursors server-wide (only for users that have it enabled in their profile)
+- <Def id="session.implicit_hosting" /> automatically grants control to a user when they click on the screen, unless an admin has locked the controls.
+- <Def id="session.inactive_cursors" /> whether to show inactive cursors server-wide (only for users that have it enabled in their profile).
 - <Def id="session.merciful_reconnect" /> whether to allow reconnecting to the websocket even if the previous connection was not closed. This means that a new login can kick out the previous one.
 - <Def id="session.heartbeat_interval" /> interval in seconds for sending a heartbeat message to the server. This is used to keep the connection alive and to detect when the connection is lost.
 
