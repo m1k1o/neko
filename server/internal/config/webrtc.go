@@ -67,17 +67,17 @@ func (WebRTC) Init(cmd *cobra.Command) error {
 	}
 
 	// Looks like this is conflicting with the frontend and backend ICE servers since latest versions
-	//cmd.PersistentFlags().String("webrtc.iceservers", "[]", "Global STUN and TURN servers in JSON format with `urls`, `username` and `credential` keys")
+	//cmd.PersistentFlags().String("webrtc.iceservers", "[]", "STUN and TURN servers used by the ICE agent")
 	//if err := viper.BindPFlag("webrtc.iceservers", cmd.PersistentFlags().Lookup("webrtc.iceservers")); err != nil {
 	//	return err
 	//}
 
-	cmd.PersistentFlags().String("webrtc.iceservers.frontend", "[]", "Frontend only STUN and TURN servers in JSON format with `urls`, `username` and `credential` keys")
+	cmd.PersistentFlags().String("webrtc.iceservers.frontend", "[]", "STUN and TURN servers used by the frontend")
 	if err := viper.BindPFlag("webrtc.iceservers.frontend", cmd.PersistentFlags().Lookup("webrtc.iceservers.frontend")); err != nil {
 		return err
 	}
 
-	cmd.PersistentFlags().String("webrtc.iceservers.backend", "[]", "Backend only STUN and TURN servers in JSON format with `urls`, `username` and `credential` keys")
+	cmd.PersistentFlags().String("webrtc.iceservers.backend", "[]", "STUN and TURN servers used by the backend")
 	if err := viper.BindPFlag("webrtc.iceservers.backend", cmd.PersistentFlags().Lookup("webrtc.iceservers.backend")); err != nil {
 		return err
 	}
@@ -217,14 +217,14 @@ func (s *WebRTC) Set() {
 
 	// parse frontend ice servers
 	if err := viper.UnmarshalKey("webrtc.iceservers.frontend", &s.ICEServersFrontend, viper.DecodeHook(
-		utils.JsonStringAutoDecode([]types.ICEServer{}),
+		utils.JsonStringAutoDecode(s.ICEServersFrontend),
 	)); err != nil {
 		log.Warn().Err(err).Msgf("unable to parse frontend ICE servers")
 	}
 
 	// parse backend ice servers
 	if err := viper.UnmarshalKey("webrtc.iceservers.backend", &s.ICEServersBackend, viper.DecodeHook(
-		utils.JsonStringAutoDecode([]types.ICEServer{}),
+		utils.JsonStringAutoDecode(s.ICEServersBackend),
 	)); err != nil {
 		log.Warn().Err(err).Msgf("unable to parse backend ICE servers")
 	}
@@ -238,7 +238,7 @@ func (s *WebRTC) Set() {
 		// parse global ice servers
 		var iceServers []types.ICEServer
 		if err := viper.UnmarshalKey("webrtc.iceservers", &iceServers, viper.DecodeHook(
-			utils.JsonStringAutoDecode([]types.ICEServer{}),
+			utils.JsonStringAutoDecode(iceServers),
 		)); err != nil {
 			log.Warn().Err(err).Msgf("unable to parse global ICE servers")
 		}

@@ -90,12 +90,12 @@ func (Capture) Init(cmd *cobra.Command) error {
 		return err
 	}
 
-	cmd.PersistentFlags().String("capture.video.pipelines", "[]", "pipelines config in JSON used for video streaming")
+	cmd.PersistentFlags().String("capture.video.pipelines", "{}", "pipelines config used for video streaming")
 	if err := viper.BindPFlag("capture.video.pipelines", cmd.PersistentFlags().Lookup("capture.video.pipelines")); err != nil {
 		return err
 	}
 
-	cmd.PersistentFlags().String("capture.video.pipeline", "", "gstreamer pipeline used for video streaming; shortcut for having only a single video pipeline instead of multiple, ignored if capture.video.pipelines is set")
+	cmd.PersistentFlags().String("capture.video.pipeline", "", "shortcut for configuring only a single gstreamer pipeline, ignored if pipelines is set")
 	if err := viper.BindPFlag("capture.video.pipeline", cmd.PersistentFlags().Lookup("capture.video.pipeline")); err != nil {
 		return err
 	}

@@ -22,45 +22,45 @@ type Member struct {
 }
 
 func (Member) Init(cmd *cobra.Command) error {
-	cmd.PersistentFlags().String("member.provider", "multiuser", "choose member provider")
+	cmd.PersistentFlags().String("member.provider", "multiuser", "selected member provider")
 	if err := viper.BindPFlag("member.provider", cmd.PersistentFlags().Lookup("member.provider")); err != nil {
 		return err
 	}
 
 	// file provider
-	cmd.PersistentFlags().String("member.file.path", "", "member file provider: storage path")
+	cmd.PersistentFlags().String("member.file.path", "", "member file provider: path to the file containing the users and their passwords")
 	if err := viper.BindPFlag("member.file.path", cmd.PersistentFlags().Lookup("member.file.path")); err != nil {
 		return err
 	}
 
-	cmd.PersistentFlags().Bool("member.file.hash", true, "member file provider: whether to hash passwords using sha256 (recommended)")
+	cmd.PersistentFlags().Bool("member.file.hash", true, "member file provider: whether the passwords are hashed using sha256 or not (recommended)")
 	if err := viper.BindPFlag("member.file.hash", cmd.PersistentFlags().Lookup("member.file.hash")); err != nil {
 		return err
 	}
 
 	// object provider
-	cmd.PersistentFlags().String("member.object.users", "[]", "member object provider: users in JSON format")
+	cmd.PersistentFlags().String("member.object.users", "[]", "member object provider: list of users with their passwords and profiles")
 	if err := viper.BindPFlag("member.object.users", cmd.PersistentFlags().Lookup("member.object.users")); err != nil {
 		return err
 	}
 
 	// multiuser provider
-	cmd.PersistentFlags().String("member.multiuser.user_password", "neko", "member multiuser provider: user password")
+	cmd.PersistentFlags().String("member.multiuser.user_password", "neko", "member multiuser provider: password for regular users")
 	if err := viper.BindPFlag("member.multiuser.user_password", cmd.PersistentFlags().Lookup("member.multiuser.user_password")); err != nil {
 		return err
 	}
 
-	cmd.PersistentFlags().String("member.multiuser.admin_password", "admin", "member multiuser provider: admin password")
+	cmd.PersistentFlags().String("member.multiuser.admin_password", "admin", "member multiuser provider: password for admin users")
 	if err := viper.BindPFlag("member.multiuser.admin_password", cmd.PersistentFlags().Lookup("member.multiuser.admin_password")); err != nil {
 		return err
 	}
 
-	cmd.PersistentFlags().String("member.multiuser.user_profile", "{}", "member multiuser provider: user profile in JSON format")
+	cmd.PersistentFlags().String("member.multiuser.user_profile", "{}", "member multiuser provider: profile template for regular users")
 	if err := viper.BindPFlag("member.multiuser.user_profile", cmd.PersistentFlags().Lookup("member.multiuser.user_profile")); err != nil {
 		return err
 	}
 
-	cmd.PersistentFlags().String("member.multiuser.admin_profile", "{}", "member multiuser provider: admin profile in JSON format")
+	cmd.PersistentFlags().String("member.multiuser.admin_profile", "{}", "member multiuser provider: profile template for admin users")
 	if err := viper.BindPFlag("member.multiuser.admin_profile", cmd.PersistentFlags().Lookup("member.multiuser.admin_profile")); err != nil {
 		return err
 	}

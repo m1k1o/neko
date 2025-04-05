@@ -16,7 +16,8 @@
       --capture.video.codec string                    video codec to be used (default "vp8")
       --capture.video.display string                  X display to capture
       --capture.video.ids strings                     ordered list of video ids
-      --capture.video.pipelines string                pipelines config in JSON used for video streaming (default "[]")
+      --capture.video.pipeline string                 shortcut for configuring only a single gstreamer pipeline, ignored if pipelines is set
+      --capture.video.pipelines string                pipelines config used for video streaming (default "{}")
       --capture.webcam.device string                  v4l2sink device used for webcam (default "/dev/video0")
       --capture.webcam.enabled                        enable webcam stream
       --capture.webcam.height int                     webcam stream height (default 720)
@@ -28,14 +29,14 @@
       --desktop.screen string                         default screen size and framerate (default "1280x720@30")
       --desktop.unminimize                            automatically unminimize window when it is minimized (default true)
       --desktop.upload_drop                           whether drop upload is enabled (default true)
-      --member.file.hash                              member file provider: whether to hash passwords using sha256 (recommended) (default true)
-      --member.file.path string                       member file provider: storage path
-      --member.multiuser.admin_password string        member multiuser provider: admin password (default "admin")
-      --member.multiuser.admin_profile string         member multiuser provider: admin profile in JSON format (default "{}")
-      --member.multiuser.user_password string         member multiuser provider: user password (default "neko")
-      --member.multiuser.user_profile string          member multiuser provider: user profile in JSON format (default "{}")
-      --member.object.users string                    member object provider: users in JSON format (default "[]")
-      --member.provider string                        choose member provider (default "multiuser")
+      --member.file.hash                              member file provider: whether the passwords are hashed using sha256 or not (recommended) (default true)
+      --member.file.path string                       member file provider: path to the file containing the users and their passwords
+      --member.multiuser.admin_password string        member multiuser provider: password for admin users (default "admin")
+      --member.multiuser.admin_profile string         member multiuser provider: profile template for admin users (default "{}")
+      --member.multiuser.user_password string         member multiuser provider: password for regular users (default "neko")
+      --member.multiuser.user_profile string          member multiuser provider: profile template for regular users (default "{}")
+      --member.object.users string                    member object provider: list of users with their passwords and profiles (default "[]")
+      --member.provider string                        selected member provider (default "multiuser")
       --plugins.dir string                            path to neko plugins to load (default "./bin/plugins")
       --plugins.enabled                               load plugins in runtime
       --plugins.required                              if true, neko will exit if there is an error when loading a plugin
@@ -78,8 +79,8 @@
       --webrtc.estimator.unstable_duration duration   how long to wait for stalled connection (neutral trend with low bandwidth) before downgrading (default 6s)
       --webrtc.estimator.upgrade_backoff duration     how long to wait before upgrading again after previous upgrade (default 5s)
       --webrtc.icelite                                configures whether or not the ICE agent should be a lite agent
-      --webrtc.iceservers.backend urls                Backend only STUN and TURN servers in JSON format with urls, `username` and `credential` keys (default "[]")
-      --webrtc.iceservers.frontend urls               Frontend only STUN and TURN servers in JSON format with urls, `username` and `credential` keys (default "[]")
+      --webrtc.iceservers.backend string              STUN and TURN servers used by the backend (default "[]")
+      --webrtc.iceservers.frontend string             STUN and TURN servers used by the frontend (default "[]")
       --webrtc.icetrickle                             configures whether cadidates should be sent asynchronously using Trickle ICE (default true)
       --webrtc.ip_retrieval_url string                URL address used for retrieval of the external IP address (default "https://checkip.amazonaws.com")
       --webrtc.nat1to1 strings                        sets a list of external IP addresses of 1:1 (D)NAT and a candidate type for which the external IP address is used
