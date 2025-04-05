@@ -3,6 +3,8 @@ description: Configuration related to the Authentication and Sessions in Neko.
 ---
 
 import { Def, Opt } from '@site/src/components/Anchor';
+import { ConfigurationTab } from '@site/src/components/Configuration';
+import configOptions from './help.json';
 
 # Authentication
 
@@ -86,21 +88,25 @@ This provider allows you to define two types of users: **regular** users and **a
 
 Profiles for regular users and admins are optional, if not provided, the default profiles are used (see below in the example configuration).
 
-```yaml title="config.yaml"
-member:
-  provider: multiuser
-  multiuser:
-    # Password for admins, in plain text.
-    admin_password: "adminPassword"
-    # Profile fields as described above
-    admin_profile:
-      ...
-    # Password for regular users, in plain text.
-    user_password: "userPassword"
-    # Profile fields as described above
-    user_profile:
-      ...
-```
+<ConfigurationTab options={{
+  "member.provider": 'multiuser',
+  "member.multiuser.admin_password": {
+    defaultValue: "admin",
+    description: "Password for admins, in plain text.",
+  },
+  "member.multiuser.admin_profile": {
+    defaultValue: {},
+    description: "Profile fields as described above",
+  },
+  "member.multiuser.user_password": {
+    defaultValue: "neko",
+    description: "Password for regular users, in plain text.",
+  },
+  "member.multiuser.user_profile": {
+    defaultValue: {},
+    description: "Profile fields as described above",
+  },
+}} />
 
 <details>
   <summary>See example configuration</summary>
@@ -152,8 +158,8 @@ For easier configuration, you can specify only passwords using environment varia
 
 ```yaml title="docker-compose.yaml"
 environment:
-  NEKO_MEMBER_MULTIUSER_USER_PASSWORD: "neko"
   NEKO_MEMBER_MULTIUSER_ADMIN_PASSWORD: "admin"
+  NEKO_MEMBER_MULTIUSER_USER_PASSWORD: "neko"
 ```
 :::
 
@@ -161,15 +167,17 @@ environment:
 
 This provider reads the user's credentials from a file. It is useful for small deployments where you don't want to set up a database or LDAP server and still want to have persistent users.
 
-```yaml title="config.yaml"
-member:
-  provider: file
-  file:
-    # Absolute path to the file containing the users and their passwords.
-    path: /opt/neko/members.json
-    # Whether the passwords are hashed using sha256 or not.
-    hash: true
-```
+<ConfigurationTab options={{
+  "member.provider": 'file',
+  "member.file.path": {
+    defaultValue: "/opt/neko/members.json",
+    description: "Absolute path to the file containing the users and their passwords.",
+  },
+  "member.file.hash": {
+    defaultValue: false,
+    description: "Whether the passwords are hashed using sha256 or not.",
+  },
+}} />
 
 It allows you to store the user's credentials in a JSON file. The JSON structure maps user logins to their passwords and profiles.
 
@@ -239,18 +247,13 @@ You can leave the file empty and add users later using the HTTP API.
 
 This provider is the same as the file provider, but it saves the users only in memory. That means that the users are lost when the server is restarted. However, the default users can be set in the configuration file. The difference from the multi-user provider is that the users are not generated on demand and we define exactly which users with their passwords and profiles are allowed to log in. They cannot be logged in twice with the same username.
 
-```yaml title="config.yaml"
-member:
-  provider: object
-  object:
-  # List of users with their passwords and profiles
-  - username: "admin"
-    # Password in plain text
-    password: "admin"
-    # Profile fields as described above
-    profile:
-      ...
-```
+<ConfigurationTab options={{
+  "member.provider": 'object',
+  "member.object.users": {
+    defaultValue: [],
+    description: "List of users with their passwords and profiles.",
+  },
+}} />
 
 <details>
   <summary>See example configuration</summary>
@@ -296,10 +299,9 @@ member:
 
 This provider allows any user to log in without any authentication. It is useful for testing and development purposes.
 
-```yaml title="config.yaml"
-member:
-  provider: noauth
-```
+<ConfigurationTab options={configOptions} filter={{
+  "member.provider": 'noauth',
+}} comments={false} />
 
 :::danger
 Do not use this provider in production environments unless you know exactly what you are doing. It allows anyone to log in and control neko as an admin.
@@ -311,10 +313,9 @@ Currently, there are only two providers available for sessions: **memory** and *
 
 Simply by specifying the `session.file` to a file path, the session provider will store the sessions in a file. Otherwise, the sessions are stored in memory and are lost when the server is restarted.
 
-```yaml title="config.yaml"
-session:
-  file: /opt/neko/sessions.json
-```
+<ConfigurationTab options={configOptions} filter={{
+  "session.file": '/opt/neko/sessions.json',
+}} comments={false} />
 
 :::info
 In the future, we plan to add more session providers, such as Redis, PostgreSQL, etc. So the Configuration Options may change.
@@ -324,10 +325,9 @@ In the future, we plan to add more session providers, such as Redis, PostgreSQL,
 
 The API User is a special user that is used to authenticate the HTTP API requests. It cannot connect to the room, but it can perform administrative tasks. The API User does not have a password but only a token that is used to authenticate the requests. If the token is not set, the API User is disabled.
 
-```yaml title="config.yaml"
-session:
-  api_token: "apiToken"
-```
+<ConfigurationTab options={configOptions} filter={{
+  "session.api_token": '<secret_token>',
+}} comments={false} />
 
 :::tip
 This user is useful in some situations when the rooms are generated by the server and the token is guaranteed to be random every time a short-lived room is run. It is not a good idea to define this token for long-lived rooms, as it can be stolen and used to perform administrative tasks.
@@ -347,17 +347,15 @@ The authentication between the client and the server can be done using cookies o
 If you disable the cookies, the token will be sent to the client in the login response and saved in local storage. This is less secure than using cookies, as the token **can be stolen using XSS attacks**. Therefore, it is recommended to use cookies.
 :::
 
-```yaml title="config.yaml"
-session:
-  cookie:
-    enabled: true
-    name: "NEKO_SESSION"
-    expiration: "24h"
-    secure: true
-    http_only: true
-    domain: ""
-    path: ""
-```
+<ConfigurationTab options={configOptions} filter={[
+  'session.cookie.enabled',
+  'session.cookie.name',
+  'session.cookie.expiration',
+  'session.cookie.secure',
+  'session.cookie.http_only',
+  'session.cookie.domain',
+  'session.cookie.path'
+]} comments={false} />
 
 - <Def id="session.cookie.enabled" /> - Whether the cookies are enabled or not.
 - <Def id="session.cookie.name" /> - Name of the cookie used to store the session.

@@ -3,6 +3,8 @@ description: Configuration related to the WebRTC and Networking in Neko.
 ---
 
 import { Def, Opt } from '@site/src/components/Anchor';
+import { ConfigurationTab } from '@site/src/components/Configuration';
+import configOptions from './help.json';
 
 # WebRTC Configuration
 
@@ -18,19 +20,17 @@ ICE, which stands for Interactive Connectivity Establishment, is a protocol used
 
 ICE Trickle is a feature that allows ICE candidates to be sent as they are discovered, rather than waiting for all candidates to be discovered before sending them. It means that the ICE connection can be established faster as the server can start connecting to the client as soon as it has a few ICE candidates and doesn't have to wait for all of them to be discovered.
 
-```yaml title="config.yaml"
-webrtc:
-  icetrickle: false
-```
+<ConfigurationTab options={configOptions} filter={[
+  'webrtc.icetrickle'
+]} comments={false} />
 
 ### ICE Lite {#icelite}
 
 ICE Lite is a minimal implementation of the ICE protocol intended for servers running on a public IP address. It is not enabled by default to allow more complex ICE configurations out of the box.
 
-```yaml title="config.yaml"
-webrtc:
-  icelite: false
-```
+<ConfigurationTab options={configOptions} filter={[
+  'webrtc.icelite'
+]} comments={false} />
 
 :::info
 When using ICE Servers, ICE Lite must be disabled.
@@ -100,16 +100,10 @@ import TabItem from '@theme/TabItem';
 
 The ICE servers are divided into two groups:
 
-```yaml title="config.yaml"
-webrtc:
-  iceservers:
-    frontend:
-    # List of ICE Server configurations as described above
-    - urls: "stun:stun.l.google.com:19302"
-    backend:
-    # List of ICE Server configurations as described above
-    - urls: "stun:stun.l.google.com:19302"
-```
+<ConfigurationTab options={configOptions} filter={[
+  'webrtc.iceservers.frontend',
+  'webrtc.iceservers.backend'
+]} />
 
 - <Def id="iceservers.frontend" /> - ICE servers that are sent to the client and used to establish a connection between the client and the server.
 - <Def id="iceservers.backend" /> - ICE servers that are used by the server to gather ICE candidates. They might contain private IP addresses or other sensitive information that should not be sent to the client.
@@ -162,15 +156,14 @@ There exist two types of connections:
 
 The ephemeral UDP port range can be configured using the following configuration:
 
-```yaml title="config.yaml"
-webrtc:
-  epr: "59000-59100"
-```
+<ConfigurationTab options={configOptions} filter={{
+  'webrtc.epr': "59000-59100"
+}} comments={false} />
 
 The range `59000-59100` contains 101 ports, which should be open on the server's firewall. The server uses these ports to establish a connection with the client. You can specify a different range of ports if needed, with fewer or more ports, depending on the number of simultaneous connections you expect.
 
-:::tip
-You can specify the ephemeral UDP port range as an environment variable in the `docker-compose.yaml` file using the `NEKO_WEBRTC_EPR` environment variable. When using docker, make sure to expose the ports in the `docker-compose.yaml`.
+:::tip Make sure
+When specifying the ephemeral UDP port range in `docker-compose.yaml`, make sure to use the same range for ports **as UDP**.
 
 ```yaml title="docker-compose.yaml"
 environment:
@@ -186,19 +179,18 @@ It is important to expose the same ports to the host machine, without any remapp
 
 The UDP/TCP multiplexing port can be configured using the following configuration:
 
-```yaml title="config.yaml"
-webrtc:
-  udpmux: 59000
-  tcpmux: 59000
-```
+<ConfigurationTab options={configOptions} filter={{
+  'webrtc.udpmux': 59000,
+  'webrtc.tcpmux': 59000
+}} comments={false} />
 
 - <Def id="udpmux" /> - The port used for UDP connections.
 - <Def id="tcpmux" /> - The port used for TCP connections.
 
 The server uses only port `59000` for both UDP and TCP connections. This port should be open on the server's firewall. You can specify a different port if needed, or specify only one of the two protocols. UDP is generally better for latency, but some networks block UDP so it is good to have TCP available as a fallback.
 
-:::tip
-You can specify the UDP/TCP multiplexing port as an environment variable in the `docker-compose.yaml` file using the `NEKO_WEBRTC_TCPMUX` and `NEKO_WEBRTC_UDPMUX` environment variables. When using docker, make sure to expose the ports in the `docker-compose.yaml`.
+:::tip Make sure
+When specifying the UDP/TCP multiplexing port in `docker-compose.yaml`, make sure to correctly specify the protocol in the ports section.
 
 ```yaml title="docker-compose.yaml"
 environment:
@@ -217,42 +209,20 @@ It is important to expose the same ports to the host machine, without any remapp
 The server IP address is sent to the client in ICE candidates so that the client can establish a connection with the server. By default, the server IP address is automatically resolved by the server to the public IP address of the server. If the server is behind a NAT, you want to specify a different IP address or use neko only in a local network, you can specify the server IP address manually.
 
 #### NAT 1-to-1 {#nat1to1}
+<ConfigurationTab options={configOptions} filter={{
+  'webrtc.nat1to1': '10.10.0.5'
+}} comments={false} />
 
-```yaml title="config.yaml"
-webrtc:
-  nat1to1:
-  # IPv4 address of the server
-  - 10.10.0.5
-  # IPv6 address of the server
-  - 2001:db8:85a3::8a2e:370:7334
-```
-
-Currently, only one IPv4 and one IPv6 address can be specified. Therefore if you want to access your instance from both local and public networks, your router must support [NAT loopback (hairpinning)](https://en.wikipedia.org/wiki/Network_address_translation#NAT_hairpinning).
-
-:::tip
-You can specify the server IP address as an environment variable in the `docker-compose.yaml` file using the `NEKO_WEBRTC_NAT1TO1` environment variable.
-
-```yaml title="docker-compose.yaml"
-environment:
-  NEKO_WEBRTC_NAT1TO1: "10.10.0.5"
-```
-
-If you want to specify also an IPv6 address, use whitespace to separate the addresses.
-
-```yaml title="docker-compose.yaml"
-environment:
-  NEKO_WEBRTC_NAT1TO1: "10.10.0.5 2001:db8:85a3::8a2e:370:7334"
-```
-:::
+Currently, only one address can be specified. Therefore if you want to access your instance from both local and public networks, your router must support [NAT loopback (hairpinning)](https://en.wikipedia.org/wiki/Network_address_translation#NAT_hairpinning).
 
 #### IP Retrieval URL {#ip_retrieval_url}
 
 If you do not specify the server IP address, the server will try to resolve the public IP address of the server automatically.
 
-```yaml title="config.yaml"
-webrtc:
-  ip_retrieval_url: "https://checkip.amazonaws.com"
-```
+<ConfigurationTab options={configOptions} filter={[
+  'webrtc.ip_retrieval_url'
+]} comments={false} />
+
 The server will send an HTTP GET request to the specified URL to retrieve the public IP address of the server.
 
 ## Bandwidth Estimator {#estimator}
@@ -263,29 +233,6 @@ The bandwidth estimator is an experimental feature and might not work as expecte
 
 The bandwidth estimator is a feature that allows the server to estimate the available bandwidth between the client and the server. It is used to switch between different video qualities based on the available bandwidth. The bandwidth estimator is disabled by default.
 
-```yaml title="config.yaml"
-webrtc:
-  estimator:
-    # Whether to enable the bandwidth estimator
-    enabled: false
-    # Whether the bandwidth estimator is passive - only used for logging and not for actual decisions
-    passive: false
-    # Enable debug logging for the bandwidth estimator (will print the current state and decisions)
-    debug: false
-    # Initial bitrate for the bandwidth estimator to start with (in bps)
-    initial_bitrate: 1000000
-    # How often to read and process bandwidth estimation reports
-    read_interval: "2s"
-    # How long to wait for a stable connection (upward or neutral trend) before upgrading
-    stable_duration: "12s"
-    # How long to wait for a stalled connection (neutral trend with low bandwidth) before downgrading
-    unstable_duration: "6s"
-    # How long to wait for stalled bandwidth estimation before downgrading
-    stalled_duration: "24s"
-    # How long to wait before downgrading again after the previous downgrade
-    downgrade_backoff: "10s"
-    # How long to wait before upgrading again after the previous upgrade
-    upgrade_backoff: "5s"
-    # How much bigger the difference between estimated and stream bitrate must be to trigger a change
-    diff_threshold: 0.15
-```
+<ConfigurationTab options={configOptions} filter={[
+  'webrtc.estimator'
+]} comments={true} />

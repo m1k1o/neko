@@ -58,9 +58,9 @@ See the V3 configuration options for the [WebRTC Video](/docs/v3/configuration/c
 | `NEKO_VP8=true` *deprecated*          | `NEKO_CAPTURE_VIDEO_CODEC=vp8`                            |
 | `NEKO_VP9=true` *deprecated*          | `NEKO_CAPTURE_VIDEO_CODEC=vp9`                            |
 | `NEKO_VIDEO`                          | `NEKO_CAPTURE_VIDEO_PIPELINE`, V3 allows multiple video pipelines |
-| `NEKO_VIDEO_BITRATE`                  | **removed**, use [custom pipeline](/docs/v3/configuration/capture#video.pipeline) instead |
-| `NEKO_HWENC`                          | **removed**, use [custom pipeline](/docs/v3/configuration/capture#video.pipeline) instead |
-| `NEKO_MAX_FPS`                        | **removed**, use [custom pipeline](/docs/v3/configuration/capture#video.pipeline) instead |
+| `NEKO_VIDEO_BITRATE`                  | **removed**, use [custom pipeline](/docs/v3/configuration/capture#video.gst_pipeline) instead |
+| `NEKO_HWENC`                          | **removed**, use [custom pipeline](/docs/v3/configuration/capture#video.gst_pipeline) instead |
+| `NEKO_MAX_FPS`                        | **removed**, use [custom pipeline](/docs/v3/configuration/capture#video.gst_pipeline) instead |
 
 
 :::warning Limitation
@@ -133,10 +133,10 @@ See the V3 configuration options for the [WebRTC](/docs/v3/configuration/webrtc)
 
 Here is a full list of all the configuration options available in Neko V2 that are still available in Neko V3 with legacy support enabled.
 
-import Configuration from '@site/src/components/Configuration';
+import { ConfigurationTab } from '@site/src/components/Configuration';
 import configOptions from './help.json';
 
-<Configuration configOptions={configOptions} />
+<ConfigurationTab options={configOptions} heading={true} />
 
 See the full [V3 configuration reference](/docs/v3/configuration/#full) for more details.
 
