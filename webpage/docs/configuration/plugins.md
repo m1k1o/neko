@@ -3,17 +3,18 @@ description: Configuration related to the Neko plugins.
 ---
 
 import { Def, Opt } from '@site/src/components/Anchor';
+import { ConfigurationTab } from '@site/src/components/Configuration';
+import configOptions from './help.json';
 
 # Plugins Configuration
 
 Neko allows you to extend its functionality by using [plugins](https://pkg.go.dev/plugin). Go plugins come with a lot of benefits as well as some limitations. The main advantage is that you can extend the functionality of the application without recompiling the main application. But the main limitation is that you need to use the same Go version and all dependencies with the same version as the main application.
 
-```yaml title="config.yaml"
-plugins:
-  enabled: true
-  required: true
-  dir: "./bin/plugins"
-```
+<ConfigurationTab options={configOptions} filter={[
+  'plugins.enabled',
+  'plugins.required',
+  'plugins.dir',
+]} comments={false} />
 
 - <Def id="enabled" /> enables the plugin support. If set to `false`, the plugins are not loaded.
 - <Def id="required" /> makes the plugin loading mandatory, meaning that if a plugin fails to load, the application will not start.
@@ -29,10 +30,9 @@ There exist a few pre-loaded internal plugins that are shipped with Neko:
 
 The chat plugin is a simple pre-loaded internal plugin that allows you to chat with other users in the same session. The chat messages are sent to the server and then broadcasted to all users in the same session.
 
-```yaml title="config.yaml"
-chat:
-  enabled: true
-```
+<ConfigurationTab options={{
+  'chat.enabled': true
+}} />
 
 - <Def id="chat.enabled" /> enables the chat support. If set to `false`, the chat is disabled.
 
@@ -51,12 +51,15 @@ plugins:
 
 The file transfer plugin is a simple pre-loaded internal plugin that allows you to transfer files between the client and the server. The files are uploaded to the server and then downloaded by the client.
 
-```yaml title="config.yaml"
-filetransfer:
-  enabled: true
-  dir: "./uploads"
-  refresh_interval: 30s
-```
+
+<ConfigurationTab options={{
+  'filetransfer.enabled': true,
+  'filetransfer.dir': './uploads',
+  'filetransfer.refresh_interval': {
+    type: 'duration',
+    defaultValue: '30s',
+  },
+}} />
 
 - <Def id="filetransfer.enabled" /> enables the file transfer support. If set to `false`, the file transfer is disabled.
 - <Def id="filetransfer.dir" /> refers to the directory where the files are stored.
@@ -70,4 +73,3 @@ plugins:
 ```
 
 - `filetransfer.enabled` in the room settings context controls whether the file transfer is enabled for any user in the room, and in the user's profile context controls whether the user can transfer files.
-

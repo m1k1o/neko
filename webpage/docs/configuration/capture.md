@@ -3,6 +3,8 @@ description: Configuration related to Gstreamer capture in Neko.
 ---
 
 import { Def, Opt } from '@site/src/components/Anchor';
+import { ConfigurationTab } from '@site/src/components/Configuration';
+import configOptions from './help.json';
 
 # Audio & Video Capture
 
@@ -27,22 +29,19 @@ All video pipelines must use the same video codec (defined in the <Opt id="video
 
 The Gstreamer pipeline is started when the first client requests the video stream and is stopped after the last client disconnects.
 
-```yaml title="config.yaml"
-capture:
-  video:
-    display: "<display_name>"
-    codec: "vp8" # default video codec
-    ids: [ <pipeline_id1>, <pipeline_id2>, ... ]
-    pipelines:
-      <pipeline_id1>: <pipeline_config>
-      <pipeline_id2>: <pipeline_config>
-      ...
-```
+<ConfigurationTab options={configOptions} filter={[
+  "capture.video.display",
+  "capture.video.codec",
+  "capture.video.ids",
+  "capture.video.pipeline",
+  "capture.video.pipelines",
+]} comments={false} />
 
 - <Def id="video.display" /> is the name of the [X display](https://www.x.org/wiki/) that you want to capture. If not specified, the environment variable `DISPLAY` will be used.
 - <Def id="video.codec" /> available codecs are `vp8`, `vp9`, `av1`, `h264`. [Supported video codecs](https://developer.mozilla.org/en-US/docs/Web/Media/Guides/Formats/WebRTC_codecs#supported_video_codecs) are dependent on the WebRTC implementation used by the client, `vp8` and `h264` are supported by all WebRTC implementations.
 - <Def id="video.ids" /> is a list of pipeline ids that are defined in the <Opt id="video.pipelines" /> section. The first pipeline in the list will be the default pipeline.
-- <Def id="video.pipelines" /> is a dictionary of pipeline configurations. Each pipeline configuration is defined by a unique pipeline id. They can be defined in two ways: either by building the pipeline dynamically using [Expression-Driven Configuration](#video.expression) or by defining the pipeline using a [Gstreamer Pipeline Description](#video.pipeline).
+- <Def id="video.pipeline" /> is a shorthand for defining [Gstreamer pipeline description](#video.gst_pipeline) for a single pipeline. This is option is ignored if <Opt id="video.pipelines" /> is defined.
+- <Def id="video.pipelines" /> is a dictionary of pipeline configurations. Each pipeline configuration is defined by a unique pipeline id. They can be defined in two ways: either by building the pipeline dynamically using [Expression-Driven Configuration](#video.expression) or by defining the pipeline using a [Gstreamer Pipeline Description](#video.gst_pipeline).
 
 ### Expression-Driven Configuration {#video.expression}
 
@@ -151,7 +150,7 @@ import TabItem from '@theme/TabItem';
 
 </details>
 
-### Gstreamer Pipeline Description {#video.pipeline}
+### Gstreamer Pipeline Description {#video.gst_pipeline}
 
 If you want to define the pipeline using a [Gstreamer pipeline description](https://gstreamer.freedesktop.org/documentation/tools/gst-launch.html?gi-language=c#pipeline-description), you can do so by setting the <Def id="video.pipelines.gst_pipeline" /> parameter.
 
@@ -169,7 +168,7 @@ Since now you have to define the whole pipeline, you need to specify the src ele
 Your typical pipeline string would look like this:
 
 ```
-ximagesrc display-name={display} show-pointer=true use-damage=false ! <your_elements> ! appsink name=appsink"
+ximagesrc display-name={display} show-pointer=true use-damage=false ! <your_elements> ! appsink name=appsink
 ```
 
 See documentation for [ximagesrc](https://gstreamer.freedesktop.org/documentation/ximagesrc/index.html) and [appsink](https://gstreamer.freedesktop.org/documentation/app/appsink.html) for more information.
@@ -189,8 +188,9 @@ See documentation for [ximagesrc](https://gstreamer.freedesktop.org/documentatio
           hq:
             gst_pipeline: |
               ximagesrc display-name={display} show-pointer=true use-damage=false
-              ! videoconvert
+              ! videoconvert ! queue
               ! vp8enc
+                name=encoder
                 target-bitrate=3072000
                 cpu-used=4
                 end-usage=cbr
@@ -207,8 +207,9 @@ See documentation for [ximagesrc](https://gstreamer.freedesktop.org/documentatio
           lq:
             gst_pipeline: |
               ximagesrc display-name={display} show-pointer=true use-damage=false
-              ! videoconvert
+              ! videoconvert ! queue
               ! vp8enc
+                name=encoder
                 target-bitrate=1024000
                 cpu-used=4
                 end-usage=cbr
@@ -236,8 +237,9 @@ See documentation for [ximagesrc](https://gstreamer.freedesktop.org/documentatio
           main:
             gst_pipeline: |
               ximagesrc display-name={display} show-pointer=true use-damage=false
-              ! videoconvert
+              ! videoconvert ! queue
               ! x264enc
+                name=encoder
                 threads=4
                 bitrate=4096
                 key-int-max=15
@@ -248,9 +250,50 @@ See documentation for [ximagesrc](https://gstreamer.freedesktop.org/documentatio
               ! appsink name=appsink
     ```
   </TabItem>
+  <TabItem value="nvh264enc" label="NVENC H264 configuration">
+
+    ```yaml title="config.yaml"
+    capture:
+      video:
+        codec: h264
+        ids: [ main ]
+        pipelines:
+          main:
+            gst_pipeline: |
+              ximagesrc display-name={display} show-pointer=true use-damage=false
+              ! videoconvert ! queue
+              ! video/x-raw,format=NV12
+              ! nvh264enc
+                name=encoder
+                preset=2
+                gop-size=25
+                spatial-aq=true
+                temporal-aq=true
+                bitrate=4096
+                vbv-buffer-size=4096
+                rc-mode=6
+              ! h264parse config-interval=-1
+              ! video/x-h264,stream-format=byte-stream
+              ! appsink name=appsink
+    ```
+
+    This configuration requires [Nvidia GPU](https://developer.nvidia.com/cuda-gpus) with [NVENC](https://developer.nvidia.com/nvidia-video-codec-sdk) support.
+
+  </TabItem>
 </Tabs>
 
 </details>
+
+Overview of available encoders for each codec is shown in the table below. The encoder name is used in the <Opt id="video.pipelines.gst_encoder" /> parameter. The parameters for each encoder are different and you can find the documentation for each encoder in the links below.
+
+| codec | encoder | vaapi encoder | nvenc encoder |
+| ----- | ------- | ------------- | ------------- |
+| VP8   | [vp8enc](https://gstreamer.freedesktop.org/documentation/vpx/vp8enc.html?gi-language=c) | [vaapivp8enc](https://github.com/GStreamer/gstreamer-vaapi/blob/master/gst/vaapi/gstvaapiencode_vp8.c) | ? |
+| VP9   | [vp9enc](https://gstreamer.freedesktop.org/documentation/vpx/vp9enc.html?gi-language=c) | [vaapivp9enc](https://github.com/GStreamer/gstreamer-vaapi/blob/master/gst/vaapi/gstvaapiencode_vp9.c) | ? |
+| AV1   | [av1enc](https://gstreamer.freedesktop.org/documentation/aom/av1enc.html?gi-language=c) | ? | [nvav1enc](https://gstreamer.freedesktop.org/documentation/nvcodec/nvav1enc.html?gi-language=c) |
+| H264  | [x264enc](https://gstreamer.freedesktop.org/documentation/x264/index.html?gi-language=c) | [vaapih264enc](https://gstreamer.freedesktop.org/documentation/vaapi/vaapih264enc.html?gi-language=c) | [nvh264enc](https://gstreamer.freedesktop.org/documentation/nvcodec/nvh264enc.html?gi-language=c) |
+| H265  | [x265enc](https://gstreamer.freedesktop.org/documentation/x265/index.html?gi-language=c) | [vaapih265enc](https://gstreamer.freedesktop.org/documentation/vaapi/vaapih265enc.html?gi-language=c) | [nvh265enc](https://gstreamer.freedesktop.org/documentation/nvcodec/nvh265enc.html?gi-language=c) |
+
 
 ## WebRTC Audio {#audio}
 
@@ -258,13 +301,11 @@ Only one audio pipeline can be defined in neko. The audio pipeline is used to ca
 
 The Gstreamer pipeline is started when the first client requests the video stream and is stopped after the last client disconnects.
 
-```yaml title="config.yaml"
-capture:
-  audio:
-    device: "audio_output.monitor" # default audio device
-    codec: "opus" # default audio codec
-    pipeline: "<gstreamer_pipeline>"
-```
+<ConfigurationTab options={configOptions} filter={[
+  "capture.audio.device",
+  "capture.audio.codec",
+  "capture.audio.pipeline",
+]} comments={false} />
 
 - <Def id="audio.device" /> is the name of the [pulseaudio device](https://wiki.archlinux.org/title/PulseAudio/Examples) that you want to capture. If not specified, the default audio device will be used.
 - <Def id="audio.codec" /> available codecs are `opus`, `g722`, `pcmu`, `pcma`. [Supported audio codecs](https://developer.mozilla.org/en-US/docs/Web/Media/Guides/Formats/WebRTC_codecs#supported_audio_codecs) are dependent on the WebRTC implementation used by the client, `opus` is supported by all WebRTC implementations.
@@ -293,23 +334,21 @@ Neko allows you to broadcast out-of-the-box the display and audio capture to a t
 
 The Gstreamer pipeline is started when the broadcast is started and is stopped when the broadcast is stopped regardless of the clients connected.
 
-```yaml title="config.yaml"
-capture:
-  broadcast:
-    audio_bitrate: 128 # in KB/s
-    video_bitrate: 4096 # in KB/s
-    preset: "veryfast"
-    pipeline: "<gstreamer_pipeline>"
-    url: "rtmp://<server>/<application>/<stream_key>"
-    autostart: true
-```
+<ConfigurationTab options={configOptions} filter={[
+  "capture.broadcast.audio_bitrate",
+  "capture.broadcast.video_bitrate",
+  "capture.broadcast.preset",
+  "capture.broadcast.pipeline",
+  "capture.broadcast.url",
+  "capture.broadcast.autostart",
+]} comments={false} />
 
 The default encoder uses `h264` for video and `aac` for audio, muxed in the `flv` container and sent over the `rtmp` protocol. You can change the encoder settings by setting a custom Gstreamer pipeline description in the <Opt id="broadcast.pipeline" /> parameter.
 
 - <Def id="broadcast.audio_bitrate" /> and <Def id="broadcast.video_bitrate" /> are the bitrate settings for the default audio and video encoders expressed in kilobits per second.
 - <Def id="broadcast.preset" /> is the encoding speed preset for the default video encoder. See available presets [here](https://gstreamer.freedesktop.org/documentation/x264/index.html?gi-language=c#GstX264EncPreset).
 - <Def id="broadcast.pipeline" /> when set, encoder settings above are ignored and the custom Gstreamer pipeline description is used. In the pipeline, you can use `{display}`, `{device}` and `{url}` as placeholders for the X display name, pulseaudio audio device name, and broadcast URL respectively.
-- <Def id="broadcast.url" /> is the URL of the RTMP server where the broadcast will be sent. This can be set later using the API if the URL is not known at the time of configuration or is expected to change.
+- <Def id="broadcast.url" /> is the URL of the RTMP server where the broadcast will be sent e.g. `rtmp://<server>/<application>/<stream_key>`. This can be set later using the API if the URL is not known at the time of configuration or is expected to change.
 - <Def id="broadcast.autostart" /> is a boolean value that determines whether the broadcast should start automatically when neko starts, works only if the URL is set.
 
 <details>
@@ -380,14 +419,12 @@ This is a fallback mechanism and should not be used as a primary video stream be
 
 The Gstreamer pipeline is started in the background when the first client requests the screencast and is stopped after a period of inactivity.
 
-```yaml title="config.yaml"
-capture:
-  screencast:
-    enabled: true
-    rate: "10/1"
-    quality: 60
-    pipeline: "<gstreamer_pipeline>"
-```
+<ConfigurationTab options={configOptions} filter={[
+  "capture.screencast.enabled",
+  "capture.screencast.rate",
+  "capture.screencast.quality",
+  "capture.screencast.pipeline",
+]} comments={false} />
 
 - <Def id="screencast.enabled" /> is a boolean value that determines whether the screencast is enabled or not.
 - <Def id="screencast.rate" /> is the framerate of the screencast. It is expressed as a fraction of frames per second, for example, `10/1` means 10 frames per second.
@@ -422,14 +459,12 @@ Neko allows you to capture the webcam on the client machine and send it to the s
 
 The Gstreamer pipeline is started when the client shares their webcam and is stopped when the client stops sharing the webcam. Maximum one webcam pipeline can be active at a time.
 
-```yaml title="config.yaml"
-capture:
-  webcam:
-    enabled: true
-    device: "/dev/video0" # default webcam device
-    width: 640
-    height: 480
-```
+<ConfigurationTab options={configOptions} filter={[
+  "capture.webcam.enabled",
+  "capture.webcam.device",
+  "capture.webcam.width",
+  "capture.webcam.height",
+]} comments={false} />
 
 - <Def id="webcam.enabled" /> is a boolean value that determines whether the webcam capture is enabled or not.
 - <Def id="webcam.device" /> is the name of the [video4linux device](https://www.kernel.org/doc/html/v4.12/media/v4l-drivers/index.html) that will be used as a virtual webcam.
@@ -463,12 +498,10 @@ Neko allows you to capture the microphone on the client machine and send it to t
 
 The Gstreamer pipeline is started when the client shares their microphone and is stopped when the client stops sharing the microphone. Maximum one microphone pipeline can be active at a time.
 
-```yaml title="config.yaml"
-capture:
-  microphone:
-    enabled: true
-    device: "audio_input"
-```
+<ConfigurationTab options={configOptions} filter={[
+  "capture.microphone.enabled",
+  "capture.microphone.device",
+]} comments={false} />
 
 - <Def id="microphone.enabled" /> is a boolean value that determines whether the microphone capture is enabled or not.
 - <Def id="microphone.device" /> is the name of the [pulseaudio device](https://wiki.archlinux.org/title/PulseAudio/Examples) that will be used as a virtual microphone.

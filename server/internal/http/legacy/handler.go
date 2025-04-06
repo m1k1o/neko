@@ -142,7 +142,7 @@ func (h *LegacyHandler) Route(r types.Router) {
 							m = websocket.FormatCloseMessage(e.Code, e.Text)
 						}
 					}
-					errc <- err
+					errc <- fmt.Errorf("src read message error: %w", err)
 					dst.WriteMessage(websocket.CloseMessage, m)
 					break
 				}
@@ -163,10 +163,18 @@ func (h *LegacyHandler) Route(r types.Router) {
 						})
 						continue
 					} else if errors.Is(err, ErrWebsocketSend) {
-						errc <- err
+						errc <- fmt.Errorf("dst write message error: %w", err)
 						break
 					} else {
 						h.logger.Error().Err(err).Msg("couldn't rewrite text message")
+					}
+				}
+				// forward ping messages
+				if msgType == websocket.PingMessage {
+					err = dst.WriteMessage(websocket.PingMessage, nil)
+					if err != nil {
+						errc <- err
+						break
 					}
 				}
 			}
@@ -181,9 +189,9 @@ func (h *LegacyHandler) Route(r types.Router) {
 		var message string
 		select {
 		case err = <-errClient:
-			message = "websocketproxy: Error when copying from backend to client: %v"
+			message = "websocketproxy: Error when copying from backend to client"
 		case err = <-errBackend:
-			message = "websocketproxy: Error when copying from client to backend: %v"
+			message = "websocketproxy: Error when copying from client to backend"
 		}
 
 		if e, ok := err.(*websocket.CloseError); !ok || e.Code == websocket.CloseAbnormalClosure {

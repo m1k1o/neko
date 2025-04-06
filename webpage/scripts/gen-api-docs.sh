@@ -1,4 +1,5 @@
 #!/bin/bash
+cd "$(dirname "$0")/.."
 
 # Clean the API docs
 docusaurus clean-api-docs all

@@ -17,6 +17,16 @@ const parseConfigOptions = (text) => {
           defaultValue = 'true';
         }
       }
+      // this is an opaque object
+      if (type === 'string' && defaultValue === '{}') {
+        type = 'object';
+        defaultValue = {};
+      }
+      // this is an opaque array
+      if (type === 'string' && defaultValue === '[]') {
+        type = 'array';
+        defaultValue = [];
+      }
       return { key: key.split('.'), type, defaultValue: defaultValue || undefined, description };
     }
     return null;

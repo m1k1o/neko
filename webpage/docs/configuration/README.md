@@ -1,4 +1,6 @@
 import { Def, Opt } from '@site/src/components/Anchor';
+import { ConfigurationTab } from '@site/src/components/Configuration';
+import configOptions from './help.json';
 
 # Configuration
 
@@ -291,24 +293,23 @@ import TabItem from '@theme/TabItem';
 
 This is the initial configuration of the room that can be modified by an admin in real-time.
 
-```yaml title="config.yaml"
-session:
-  private_mode: false
-  locked_logins: false
-  locked_controls: false
-  control_protection: false
-  implicit_hosting: true
-  inactive_cursors: false
-  merciful_reconnect: true
-  heartbeat_interval: 120
-```
+<ConfigurationTab options={configOptions} filter={[
+  'session.private_mode',
+  'session.locked_logins',
+  'session.locked_controls',
+  'session.control_protection',
+  'session.implicit_hosting',
+  'session.inactive_cursors',
+  'session.merciful_reconnect',
+  'session.heartbeat_interval',
+]} comments={false} />
 
 - <Def id="session.private_mode" /> whether private mode is enabled, users do not receive the room video or audio.
 - <Def id="session.locked_logins" /> whether logins are locked for users, admins can still login.
 - <Def id="session.locked_controls" /> whether controls are locked for users, admins can still control.
 - <Def id="session.control_protection" /> users can gain control only if at least one admin is in the room.
-- <Def id="session.implicit_hosting" /> allows switching control implicitly without the need for explicit control request before
-- <Def id="session.inactive_cursors" /> whether to show inactive cursors server-wide (only for users that have it enabled in their profile)
+- <Def id="session.implicit_hosting" /> automatically grants control to a user when they click on the screen, unless an admin has locked the controls.
+- <Def id="session.inactive_cursors" /> whether to show inactive cursors server-wide (only for users that have it enabled in their profile).
 - <Def id="session.merciful_reconnect" /> whether to allow reconnecting to the websocket even if the previous connection was not closed. This means that a new login can kick out the previous one.
 - <Def id="session.heartbeat_interval" /> interval in seconds for sending a heartbeat message to the server. This is used to keep the connection alive and to detect when the connection is lost.
 
@@ -316,18 +317,17 @@ session:
 
 This is the configuration of the neko server.
 
-```yaml title="config.yaml"
-server:
-  bind: "127.0.0.1:8080"
-  cert: "/path/to/cert.pem"
-  key: "/path/to/key.pem"
-  cors: [ "*" ]
-  metrics: true
-  path_prefix: "/neko"
-  pprof: true
-  proxy: true
-  static: "/var/www/neko"
-```
+<ConfigurationTab options={configOptions} filter={[
+  'server.bind',
+  'server.cert',
+  'server.key',
+  'server.cors',
+  'server.metrics',
+  'server.path_prefix',
+  'server.pprof',
+  'server.proxy',
+  'server.static',
+]} comments={false} />
 
 - <Def id="server.bind" /> address/port/socket to serve neko. For docker you might want to bind to `0.0.0.0` to allow connections from outside the container.
 - <Def id="server.cert" /> and <Def id="server.key" /> paths to the SSL cert and key used to secure the neko server. If both are empty, the server will run in plain HTTP.
@@ -345,14 +345,13 @@ server:
 
 This is the configuration of the logging system.
 
-```yaml title="config.yaml"
-log:
-  dir: <string>
-  json: true
-  level: "info"
-  nocolor: true
-  time: "unix"
-```
+<ConfigurationTab options={configOptions} filter={[
+  'log.dir',
+  'log.json',
+  'log.level',
+  'log.nocolor',
+  'log.time',
+]} comments={false} />
 
 - <Def id="log.dir" /> directory to store logs. If empty, logs are written to stdout. This is useful when running neko in a container.
 - <Def id="log.json" /> when true, logs are written in JSON format.
@@ -368,10 +367,7 @@ Shortcut environment variable to enable DEBUG mode: `NEKO_DEBUG=true`
 
 Here is a full configuration with default values as shown in the help command. Please refer to the sub-sections for more details.
 
-import Configuration from '@site/src/components/Configuration';
-import configOptions from './help.json';
-
-<Configuration configOptions={configOptions} />
+<ConfigurationTab options={configOptions} heading={true} />
 
 ## Next Steps {#next}
 

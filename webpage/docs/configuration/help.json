@@ -177,11 +177,20 @@
     "key": [
       "capture",
       "video",
-      "pipelines"
+      "pipeline"
     ],
     "type": "string",
-    "defaultValue": "[]",
-    "description": "pipelines config in JSON used for video streaming"
+    "description": "shortcut for configuring only a single gstreamer pipeline, ignored if pipelines is set"
+  },
+  {
+    "key": [
+      "capture",
+      "video",
+      "pipelines"
+    ],
+    "type": "object",
+    "defaultValue": {},
+    "description": "pipelines config used for video streaming"
   },
   {
     "key": [
@@ -295,7 +304,7 @@
     ],
     "type": "boolean",
     "defaultValue": "true",
-    "description": "member file provider: whether to hash passwords using sha256 (recommended)"
+    "description": "member file provider: whether the passwords are hashed using sha256 or not (recommended)"
   },
   {
     "key": [
@@ -304,7 +313,7 @@
       "path"
     ],
     "type": "string",
-    "description": "member file provider: storage path"
+    "description": "member file provider: path to the file containing the users and their passwords"
   },
   {
     "key": [
@@ -314,7 +323,7 @@
     ],
     "type": "string",
     "defaultValue": "admin",
-    "description": "member multiuser provider: admin password"
+    "description": "member multiuser provider: password for admin users"
   },
   {
     "key": [
@@ -322,9 +331,9 @@
       "multiuser",
       "admin_profile"
     ],
-    "type": "string",
-    "defaultValue": "{}",
-    "description": "member multiuser provider: admin profile in JSON format"
+    "type": "object",
+    "defaultValue": {},
+    "description": "member multiuser provider: profile template for admin users"
   },
   {
     "key": [
@@ -334,7 +343,7 @@
     ],
     "type": "string",
     "defaultValue": "neko",
-    "description": "member multiuser provider: user password"
+    "description": "member multiuser provider: password for regular users"
   },
   {
     "key": [
@@ -342,9 +351,9 @@
       "multiuser",
       "user_profile"
     ],
-    "type": "string",
-    "defaultValue": "{}",
-    "description": "member multiuser provider: user profile in JSON format"
+    "type": "object",
+    "defaultValue": {},
+    "description": "member multiuser provider: profile template for regular users"
   },
   {
     "key": [
@@ -352,9 +361,9 @@
       "object",
       "users"
     ],
-    "type": "string",
-    "defaultValue": "[]",
-    "description": "member object provider: users in JSON format"
+    "type": "array",
+    "defaultValue": [],
+    "description": "member object provider: list of users with their passwords and profiles"
   },
   {
     "key": [
@@ -363,7 +372,7 @@
     ],
     "type": "string",
     "defaultValue": "multiuser",
-    "description": "choose member provider"
+    "description": "selected member provider"
   },
   {
     "key": [
@@ -758,9 +767,9 @@
       "iceservers",
       "backend"
     ],
-    "type": "urls",
-    "defaultValue": "[]",
-    "description": "Backend only STUN and TURN servers in JSON format with urls, `username` and `credential` keys"
+    "type": "array",
+    "defaultValue": [],
+    "description": "STUN and TURN servers used by the backend"
   },
   {
     "key": [
@@ -768,9 +777,9 @@
       "iceservers",
       "frontend"
     ],
-    "type": "urls",
-    "defaultValue": "[]",
-    "description": "Frontend only STUN and TURN servers in JSON format with urls, `username` and `credential` keys"
+    "type": "array",
+    "defaultValue": [],
+    "description": "STUN and TURN servers used by the frontend"
   },
   {
     "key": [

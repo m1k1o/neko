@@ -90,12 +90,12 @@ func (Capture) Init(cmd *cobra.Command) error {
 		return err
 	}
 
-	cmd.PersistentFlags().String("capture.video.pipelines", "[]", "pipelines config in JSON used for video streaming")
+	cmd.PersistentFlags().String("capture.video.pipelines", "{}", "pipelines config used for video streaming")
 	if err := viper.BindPFlag("capture.video.pipelines", cmd.PersistentFlags().Lookup("capture.video.pipelines")); err != nil {
 		return err
 	}
 
-	cmd.PersistentFlags().String("capture.video.pipeline", "", "gstreamer pipeline used for video streaming; shortcut for having only a single video pipeline instead of multiple, ignored if capture.video.pipelines is set")
+	cmd.PersistentFlags().String("capture.video.pipeline", "", "shortcut for configuring only a single gstreamer pipeline, ignored if pipelines is set")
 	if err := viper.BindPFlag("capture.video.pipeline", cmd.PersistentFlags().Lookup("capture.video.pipeline")); err != nil {
 		return err
 	}
@@ -616,7 +616,7 @@ func (s *Capture) SetV2() {
 
 	// set legacy flag if any V2 configuration was used
 	if !viper.IsSet("legacy") && enableLegacy {
-		log.Warn().Msg("legacy configuration is enabled because at least one V2 configuration was used, please migrate to V3 configuration, or set 'NEKO_LEGACY=true' to acknowledge this message")
+		log.Warn().Msg("legacy configuration is enabled because at least one V2 configuration was used, please migrate to V3 configuration, visit https://neko.m1k1o.net/docs/v3/migration-from-v2 for more details")
 		viper.Set("legacy", true)
 	}
 }

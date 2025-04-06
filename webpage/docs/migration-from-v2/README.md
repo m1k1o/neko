@@ -2,10 +2,10 @@
 
 Currently, Neko is in compatibility mode, meaning that as soon as a single V2 configuration option is set, the legacy mode is enabled. This approach allows for a smooth transition from V2 to V3, where it does not expose the V2 API for new users but still allows existing users who use the old configuration to continue using it as before.
 
-The legacy mode can be explicitly enabled or disabled by setting the `NEKO_LEGACY` environment variable to `true` or `false`.
+The legacy mode includes a compatibility layer that allows V2 clients to connect to V3. Currently, the **client is not compatible with V3**, so the legacy mode is enabled by default. It can be explicitly enabled or disabled by setting the `NEKO_LEGACY` environment variable to `true` or `false`.
 
 :::warning
-The legacy mode is **sill used by the client**. Feel free to migrate to the new configuration options, but do not disable the legacy mode unless you are using a new client that is compatible with V3 (e.g. [demodesk/neko-client](https://github.com/demodesk/neko-client)). When the new client will be released, the legacy mode will be automatically removed from the server.
+The legacy mode is **still used by the client**. It is recommended to migrate to the new configuration options, but do not disable the legacy mode unless you are using a new client that is compatible with V3 (e.g., [demodesk/neko-client](https://github.com/demodesk/neko-client)). Once the new client is released, the legacy mode will be automatically removed from the server.
 :::
 
 If you set both V3 and V2 configuration options, the V2 configuration options will take precedence over the V3 configuration options. This is to ensure that the legacy mode works as expected and does not break existing configurations.
@@ -58,9 +58,9 @@ See the V3 configuration options for the [WebRTC Video](/docs/v3/configuration/c
 | `NEKO_VP8=true` *deprecated*          | `NEKO_CAPTURE_VIDEO_CODEC=vp8`                            |
 | `NEKO_VP9=true` *deprecated*          | `NEKO_CAPTURE_VIDEO_CODEC=vp9`                            |
 | `NEKO_VIDEO`                          | `NEKO_CAPTURE_VIDEO_PIPELINE`, V3 allows multiple video pipelines |
-| `NEKO_VIDEO_BITRATE`                  | **removed**, use [custom pipeline](/docs/v3/configuration/capture#video.pipeline) instead |
-| `NEKO_HWENC`                          | **removed**, use [custom pipeline](/docs/v3/configuration/capture#video.pipeline) instead |
-| `NEKO_MAX_FPS`                        | **removed**, use [custom pipeline](/docs/v3/configuration/capture#video.pipeline) instead |
+| `NEKO_VIDEO_BITRATE`                  | **removed**, use [custom pipeline](/docs/v3/configuration/capture#video.gst_pipeline) instead |
+| `NEKO_HWENC`                          | **removed**, use [custom pipeline](/docs/v3/configuration/capture#video.gst_pipeline) instead |
+| `NEKO_MAX_FPS`                        | **removed**, use [custom pipeline](/docs/v3/configuration/capture#video.gst_pipeline) instead |
 
 
 :::warning Limitation
@@ -133,10 +133,10 @@ See the V3 configuration options for the [WebRTC](/docs/v3/configuration/webrtc)
 
 Here is a full list of all the configuration options available in Neko V2 that are still available in Neko V3 with legacy support enabled.
 
-import Configuration from '@site/src/components/Configuration';
+import { ConfigurationTab } from '@site/src/components/Configuration';
 import configOptions from './help.json';
 
-<Configuration configOptions={configOptions} />
+<ConfigurationTab options={configOptions} heading={true} />
 
 See the full [V3 configuration reference](/docs/v3/configuration/#full) for more details.
 
@@ -159,6 +159,8 @@ Only the [`multiuser`](/docs/v3/configuration/authentication#member.multiuser) p
 ### WebSocket Messages {#api.ws}
 
 Since WebSocket messages are not user-facing API, there exists no migration guide for them. When the legacy API is enabled, the user connects to the `/ws` endpoint and is handled by the compatibility layer V2 API. The V3 API is available at the `/api/ws` endpoint.
+
+V2 used to send WebSocket ping messages every 60 seconds, whereas V3 sends them every 10 seconds and additionally uses a heartbeat mechanism to verify if the connection is still active.
 
 ### WebRTC API {#api.webrtc}
 

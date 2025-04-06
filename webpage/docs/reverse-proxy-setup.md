@@ -6,6 +6,8 @@ If you want to run Neko behind a reverse proxy, you can use the following exampl
 Do not forget to enable [`server.proxy=true`](/docs/v3/configuration#server.proxy) in your `config.yml` file to allow the server to trust the proxy headers.
 :::
 
+Neko pings websocket client every 10 seconds, and client is scheduled to send [heartbeat](/docs/v3/configuration#session.heartbeat_interval) to the server every 120 seconds. Make sure, that your timeout settings in the reverse proxy are set accordingly.
+
 ## Traefik v2 {#traefik-v2}
 
 See the example below for a `docker-compose.yml` file.
