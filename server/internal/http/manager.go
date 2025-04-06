@@ -2,6 +2,7 @@ package http
 
 import (
 	"context"
+	"net"
 	"net/http"
 	"os"
 
@@ -55,11 +56,6 @@ func New(WebSocketManager types.WebSocketManager, ApiManager types.ApiManager, c
 	router.Get("/api/ws", WebSocketManager.Upgrade(func(r *http.Request) bool {
 		return config.AllowOrigin(r.Header.Get("Origin"))
 	}))
-
-	// Legacy handler
-	if viper.GetBool("legacy") {
-		legacy.New(config.Bind).Route(router)
-	}
 
 	batch := batchHandler{
 		Router:     router,
@@ -122,6 +118,24 @@ func (manager *HttpManagerCtx) Start() {
 			}
 		}()
 		manager.logger.Info().Msgf("https listening on %s", manager.http.Addr)
+
+		// if we have legacy mode, we need to start local http server too
+		if viper.GetBool("legacy") {
+			// create a listener for the API server with a random port
+			listener, err := net.Listen("tcp", "127.0.0.1:0")
+			if err != nil {
+				manager.logger.Panic().Err(err).Msg("unable to start legacy http proxy")
+			}
+
+			go func() {
+				if err := http.Serve(listener, manager.router); err != http.ErrServerClosed {
+					manager.logger.Panic().Err(err).Msg("unable to start http server")
+				}
+			}()
+			manager.logger.Info().Msgf("legacy proxy listening on %s", listener.Addr().String())
+
+			legacy.New(listener.Addr().String()).Route(manager.router)
+		}
 	} else {
 		go func() {
 			if err := manager.http.ListenAndServe(); err != http.ErrServerClosed {
@@ -129,6 +143,11 @@ func (manager *HttpManagerCtx) Start() {
 			}
 		}()
 		manager.logger.Info().Msgf("http listening on %s", manager.http.Addr)
+
+		// start legacy proxy if enabled
+		if viper.GetBool("legacy") {
+			legacy.New(manager.http.Addr).Route(manager.router)
+		}
 	}
 }
 
