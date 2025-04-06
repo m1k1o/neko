@@ -15,6 +15,8 @@ export const state = () => ({
   implicitHosting: true,
   fileTransfer: true,
   keyboardModifierState: -1,
+  streamingMode: 'webrtc' as 'webrtc' | 'websocket',
+  isWsStreamingActive: false,
 })
 
 export const getters = getterTree(state, {
@@ -42,7 +44,7 @@ export const mutations = mutationTree(state, {
     state.clipboard = clipboard
   },
 
-  setKeyboardModifierState(state, { capsLock, numLock, scrollLock }) {
+  setKeyboardModifierState(state, { capsLock, numLock, scrollLock }: { capsLock: boolean; numLock: boolean; scrollLock: boolean }) {
     state.keyboardModifierState = keyboardModifierState(capsLock, numLock, scrollLock)
   },
 
@@ -62,6 +64,14 @@ export const mutations = mutationTree(state, {
     state.id = ''
     state.clipboard = ''
     state.locked = false
+  },
+
+  setStreamingMode(state, mode: 'webrtc' | 'websocket') {
+    state.streamingMode = mode;
+  },
+
+  setWsStreamingActive(state, active: boolean) {
+    state.isWsStreamingActive = active;
   },
 })
 

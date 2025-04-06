@@ -16,6 +16,7 @@ export interface BaseEvents {
   warn: (...message: any[]) => void
   debug: (...message: any[]) => void
   error: (error: Error) => void
+  binary_data: (data: ArrayBuffer | Blob) => void
 }
 
 export abstract class BaseClient extends EventEmitter<BaseEvents> {
@@ -28,6 +29,7 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
   protected _state: RTCIceConnectionState = 'disconnected'
   protected _id = ''
   protected _candidates: RTCIceCandidate[] = []
+  protected _streamingMode: 'webrtc' | 'websocket' = 'webrtc'
 
   get id() {
     return this._id
@@ -49,7 +51,7 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
     return this.peerConnected && this.socketOpen
   }
 
-  public connect(url: string, password: string, displayname: string) {
+  public connect(url: string, password: string, displayname: string, mode: 'webrtc' | 'websocket' = 'webrtc') {
     if (this.socketOpen) {
       this.emit('warn', `attempting to create websocket while connection open`)
       return
@@ -62,12 +64,22 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
 
     this._displayname = displayname
     this[EVENT.CONNECTING]()
+    this._streamingMode = mode
 
     try {
       this._ws = new WebSocket(`${url}?password=${encodeURIComponent(password)}`)
-      this.emit('debug', `connecting to ${this._ws.url}`)
+      this.emit('debug', `connecting to ${this._ws.url} in ${this._streamingMode} mode`)
+
+      this._ws.onopen = () => {
+        this.emit('debug', 'WebSocket connection opened')
+        if (this._streamingMode === 'websocket') {
+          this.sendMessage(EVENT.STREAM_REQUEST_WS as any, {})
+          this.emit('debug', 'Requested WebSocket stream')
+        }
+      }
+
       this._ws.onmessage = this.onMessage.bind(this)
-      this._ws.onerror = () => this.onError.bind(this)
+      this._ws.onerror = (e) => this.onError.bind(this, e)
       this._ws.onclose = () => this.onDisconnected.bind(this, new Error('websocket closed'))
       this._timeout = window.setTimeout(this.onTimeout.bind(this), 15000)
     } catch (err: any) {
@@ -290,7 +302,7 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
     }
 
     this._channel = this._peer.createDataChannel('data')
-    this._channel.onerror = this.onError.bind(this)
+    this._channel.onerror = (e) => this.onError.bind(this, e)
     this._channel.onmessage = this.onData.bind(this)
     this._channel.onclose = this.onDisconnected.bind(this, new Error('peer data channel closed'))
   }
@@ -338,47 +350,62 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
   }
 
   private async onMessage(e: MessageEvent) {
-    const { event, ...payload } = JSON.parse(e.data) as WebSocketMessages
-
-    this.emit('debug', `received websocket event ${event} ${payload ? `with payload: ` : ''}`, payload)
-
-    if (event === EVENT.SIGNAL.PROVIDE) {
-      const { sdp, lite, ice, id } = payload as SignalProvidePayload
-      this._id = id
-      await this.createPeer(lite, ice)
-      await this.setRemoteOffer(sdp)
+    if ((e.data instanceof ArrayBuffer || e.data instanceof Blob) && this._streamingMode === 'websocket') {
+      this.emit('binary_data', e.data)
       return
     }
 
-    if (event === EVENT.SIGNAL.OFFER) {
-      const { sdp } = payload as SignalOfferPayload
-      await this.setRemoteOffer(sdp)
-      return
-    }
+    try {
+      const { event, ...payload } = JSON.parse(e.data) as WebSocketMessages
 
-    if (event === EVENT.SIGNAL.ANSWER) {
-      const { sdp } = payload as SignalAnswerMessage
-      await this.setRemoteAnswer(sdp)
-      return
-    }
+      this.emit('debug', `received websocket event ${event} ${payload ? `with payload: ` : ''}`, payload)
 
-    if (event === EVENT.SIGNAL.CANDIDATE) {
-      const { data } = payload as SignalCandidatePayload
-      const candidate: RTCIceCandidate = JSON.parse(data)
-      if (this._peer) {
-        this._peer.addIceCandidate(candidate)
-      } else {
-        this._candidates.push(candidate)
+      if (event === EVENT.SIGNAL.PROVIDE) {
+        const { sdp, lite, ice, id } = payload as SignalProvidePayload
+        this._id = id
+        await this.createPeer(lite, ice)
+        await this.setRemoteOffer(sdp)
+        return
       }
-      return
-    }
 
-    // @ts-ignore
-    if (typeof this[event] === 'function') {
+      if (event === EVENT.SIGNAL.OFFER) {
+        const { sdp } = payload as SignalOfferPayload
+        await this.setRemoteOffer(sdp)
+        return
+      }
+
+      if (event === EVENT.SIGNAL.ANSWER) {
+        const { sdp } = payload as SignalAnswerMessage
+        await this.setRemoteAnswer(sdp)
+        return
+      }
+
+      if (event === EVENT.SIGNAL.CANDIDATE) {
+        const { data } = payload as SignalCandidatePayload
+        const candidate: RTCIceCandidate = JSON.parse(data)
+        if (this._peer) {
+          this._peer.addIceCandidate(candidate)
+        } else {
+          this._candidates.push(candidate)
+        }
+        return
+      }
+
+      if (this._streamingMode === 'websocket') {
+        this.sendMessage(EVENT.STREAM_REQUEST_WS as any, {})
+        this.emit('debug', 'Requested WebSocket stream')
+        return
+      }
+
       // @ts-ignore
-      this[event](payload)
-    } else {
-      this[EVENT.MESSAGE](event, payload)
+      if (typeof this[event] === 'function') {
+        // @ts-ignore
+        this[event](payload)
+      } else {
+        this[EVENT.MESSAGE](event, payload)
+      }
+    } catch (err: any) {
+      this.emit('error', err)
     }
   }
 
@@ -397,7 +424,13 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
   }
 
   private onError(event: Event) {
-    this.emit('error', (event as ErrorEvent).error)
+    if (event instanceof ErrorEvent && event.error) {
+      this.emit('error', event.error)
+    } else if (event instanceof RTCErrorEvent && event.error) {
+      this.emit('error', event.error)
+    } else {
+      this.emit('error', new Error(`WebSocket or PeerConnection error: ${event.type}`))
+    }
   }
 
   private onConnected() {

@@ -1,7 +1,7 @@
 #
 # STAGE 1: SERVER
 #
-FROM golang:1.20-bullseye as server
+FROM golang:1.23-bookworm as server
 WORKDIR /src
 
 #
@@ -32,7 +32,7 @@ RUN ./build
 #
 # STAGE 2: CLIENT
 #
-FROM node:18-bullseye-slim as client
+FROM node:18-bookworm-slim as client
 WORKDIR /src
 
 #
@@ -48,7 +48,7 @@ RUN npm run build
 #
 # STAGE 3: RUNTIME
 #
-FROM debian:bullseye-slim
+FROM debian:bookworm-slim
 
 #
 # avoid warnings by switching to noninteractive
@@ -131,7 +131,7 @@ COPY --from=server /src/bin/neko /usr/bin/neko
 COPY --from=client /src/dist/ /var/www
 
 HEALTHCHECK --interval=10s --timeout=5s --retries=8 \
-    CMD wget -O - http://localhost:${NEKO_BIND#*:}/health || exit 1
+    CMD wget -O - http://localhost:$(echo $NEKO_BIND | awk -F':' '{print $2}')/health || exit 1
 
 #
 # run neko

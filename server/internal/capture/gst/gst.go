@@ -17,6 +17,10 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"m1k1o/neko/internal/types"
+
+	"github.com/go-gst/go-glib/glib"
+	"github.com/go-gst/go-gst/gst"
+	"github.com/go-gst/go-gst/gst/app"
 )
 
 type Pipeline struct {
@@ -34,7 +38,7 @@ var registry *C.GstRegistry
 var gMainLoop *C.GMainLoop
 
 func init() {
-	C.gst_init(nil, nil)
+	gst.InitCheck()
 	registry = C.gst_registry_get()
 }
 
@@ -103,7 +107,17 @@ func (p *Pipeline) AttachAppsrc(srcName string) {
 }
 
 func (p *Pipeline) Play() {
+	p.logger.Info().Msg("starting pipeline")
 	C.gstreamer_pipeline_play(p.Ctx)
+}
+
+func (p *Pipeline) Stop() {
+	p.logger.Info().Msg("stopping and destroying pipeline")
+	C.gstreamer_pipeline_destory(p.Ctx)
+
+	pipelinesLock.Lock()
+	delete(pipelines, p.id)
+	pipelinesLock.Unlock()
 }
 
 func (p *Pipeline) Pause() {
@@ -111,14 +125,17 @@ func (p *Pipeline) Pause() {
 }
 
 func (p *Pipeline) Destroy() {
+	p.logger.Info().Msg("destroying pipeline resources")
 	C.gstreamer_pipeline_destory(p.Ctx)
 
 	pipelinesLock.Lock()
 	delete(pipelines, p.id)
 	pipelinesLock.Unlock()
 
-	C.free(unsafe.Pointer(p.Ctx))
-	p = nil
+	if p.Ctx != nil {
+		C.free(unsafe.Pointer(p.Ctx))
+		p.Ctx = nil
+	}
 }
 
 func (p *Pipeline) Push(buffer []byte) {
@@ -218,4 +235,35 @@ func goPipelineLog(levelUnsafe *C.char, msgUnsafe *C.char, pipelineID C.int) {
 		Str("submodule", "gstreamer").
 		Int("pipeline_id", int(pipelineID)).
 		Msg(msg)
+}
+
+// GetAppSink retrieves the appsink element stored in the C context.
+// Returns nil if the appsink was not found/stored or casting fails.
+func (p *Pipeline) GetAppSink() *app.Sink {
+	element := p.Ctx.appsink
+	if element == nil {
+		p.logger.Warn().Msg("GetAppSink: C context appsink field is nil")
+		return nil
+	}
+
+	gstElement := gst.WrapElement(unsafe.Pointer(element))
+	if gstElement == nil {
+		p.logger.Error().Msg("GetAppSink: failed to wrap GstElement from C context")
+		return nil
+	}
+
+	appSink, ok := gstElement.Cast().(*app.Sink)
+	if !ok || appSink == nil {
+		p.logger.Warn().Msg("GetAppSink: element from C context is not an app.Sink")
+		if bin, okBin := gstElement.Instance().(*gst.Bin); okBin {
+			if appSinkBin, okAppSink := bin.Cast().(*app.Sink); okAppSink {
+				p.logger.Debug().Msg("GetAppSink: Cast via Bin successful")
+				return appSinkBin
+			}
+		}
+		p.logger.Error().Msg("GetAppSink: Failed to cast element to app.Sink even via Bin")
+		return nil
+	}
+
+	return appSink
 }

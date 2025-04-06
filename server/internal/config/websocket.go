@@ -18,6 +18,14 @@ type WebSocket struct {
 
 	FileTransferEnabled bool
 	FileTransferPath    string
+
+	// WebSocket Streaming Config
+	StreamingEnabled bool
+	VideoCodec       string // Preferred video codec (e.g., "h264")
+	AudioCodec       string // Preferred audio codec (e.g., "aac")
+	VideoBitrate     uint   // Video bitrate in kbps for WebSocket streaming
+	AudioBitrate     uint   // Audio bitrate in kbps for WebSocket streaming
+	FragmentDuration uint   // fMP4 fragment duration in ms
 }
 
 func (WebSocket) Init(cmd *cobra.Command) error {
@@ -58,6 +66,37 @@ func (WebSocket) Init(cmd *cobra.Command) error {
 		return err
 	}
 
+	// WebSocket Streaming Flags
+	cmd.PersistentFlags().Bool("ws_streaming", false, "enable video/audio streaming over WebSocket (fallback)")
+	if err := viper.BindPFlag("ws_streaming", cmd.PersistentFlags().Lookup("ws_streaming")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().String("ws_video_codec", "h264", "video codec for WebSocket streaming (h264)")
+	if err := viper.BindPFlag("ws_video_codec", cmd.PersistentFlags().Lookup("ws_video_codec")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().String("ws_audio_codec", "aac", "audio codec for WebSocket streaming (aac)")
+	if err := viper.BindPFlag("ws_audio_codec", cmd.PersistentFlags().Lookup("ws_audio_codec")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().Uint("ws_video_bitrate", 2048, "video bitrate in kbps for WebSocket streaming")
+	if err := viper.BindPFlag("ws_video_bitrate", cmd.PersistentFlags().Lookup("ws_video_bitrate")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().Uint("ws_audio_bitrate", 128, "audio bitrate in kbps for WebSocket streaming")
+	if err := viper.BindPFlag("ws_audio_bitrate", cmd.PersistentFlags().Lookup("ws_audio_bitrate")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().Uint("ws_fragment_duration", 100, "fMP4 fragment duration in milliseconds for WebSocket streaming")
+	if err := viper.BindPFlag("ws_fragment_duration", cmd.PersistentFlags().Lookup("ws_fragment_duration")); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -73,4 +112,12 @@ func (s *WebSocket) Set() {
 	s.FileTransferEnabled = viper.GetBool("file_transfer_enabled")
 	s.FileTransferPath = viper.GetString("file_transfer_path")
 	s.FileTransferPath = filepath.Clean(s.FileTransferPath)
+
+	// WebSocket Streaming Config
+	s.StreamingEnabled = viper.GetBool("ws_streaming")
+	s.VideoCodec = viper.GetString("ws_video_codec")
+	s.AudioCodec = viper.GetString("ws_audio_codec")
+	s.VideoBitrate = viper.GetUint("ws_video_bitrate")
+	s.AudioBitrate = viper.GetUint("ws_audio_bitrate")
+	s.FragmentDuration = viper.GetUint("ws_fragment_duration")
 }

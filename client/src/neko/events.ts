@@ -13,9 +13,11 @@ export const EVENT = {
     INIT: 'system/init',
     DISCONNECT: 'system/disconnect',
     ERROR: 'system/error',
+    INFO: 'system/info',
+    WARN: 'system/warn',
   },
   CLIENT: {
-    HEARTBEAT: 'client/heartbeat'
+    HEARTBEAT: 'client/heartbeat',
   },
   SIGNAL: {
     OFFER: 'signal/offer',
@@ -66,6 +68,8 @@ export const EVENT = {
     RELEASE: 'admin/release',
     GIVE: 'admin/give',
   },
+  // Add the new event for requesting WebSocket stream
+  STREAM_REQUEST_WS: 'stream/request_ws',
 } as const
 
 export type Events = typeof EVENT

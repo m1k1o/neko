@@ -233,3 +233,91 @@ func NewAudioPipeline(rtpCodec codec.RTPCodec, device string, pipelineSrc string
 
 	return pipelineStr, nil
 }
+
+func NewWebSocketPipeline(videoCodec string, audioCodec string, display string, device string, pipelineSrc string, fps int16, videoBitrate uint, audioBitrate uint, hwenc config.HwEnc, fragmentDuration uint) (string, error) {
+	// Define the appsink for the combined fMP4 stream
+	appSink := fmt.Sprintf("appsink name=appsinkws emit-signals=true max-buffers=10 drop=true sync=false")
+
+	// --- Use custom pipeline if provided --- (Note: Needs careful construction by user)
+	if pipelineSrc != "" {
+		// Replace placeholders in the custom pipeline
+		pipelineStr := strings.Replace(pipelineSrc, "{display}", display, -1)
+		pipelineStr = strings.Replace(pipelineStr, "{device}", device, -1)
+		pipelineStr = strings.Replace(pipelineStr, "{appsink}", appSink, -1)
+		// TODO: Add checks for essential elements if possible, or rely on user correctness
+		return pipelineStr, nil
+	}
+
+	// --- Default Pipeline Construction ---
+
+	// use default fps if not set
+	if fps == 0 {
+		fps = 25
+	}
+
+	// --- Check Core Plugins ---
+	if err := gst.CheckPlugins([]string{"ximagesrc", "pulseaudio", "mp4mux", "h264parse", "aacparse", "voaacenc"}); err != nil {
+		return "", fmt.Errorf("missing core plugins for WebSocket streaming: %w", err)
+	}
+
+	// --- Video Source and Encoding --- (H.264 only for fMP4/MSE compatibility)
+	if videoCodec != "h264" {
+		return "", fmt.Errorf("unsupported video codec for WebSocket streaming: %s. Only H.264 is supported", videoCodec)
+	}
+
+	videoSrcSegment := fmt.Sprintf(videoSrc, display, fps)
+	var videoEncSegment string
+
+	vbvbuf := uint(1000) // vbv-buf-capacity for x264enc
+	if videoBitrate > 1000 {
+		vbvbuf = videoBitrate
+	}
+
+	switch hwenc {
+	case config.HwEncVAAPI:
+		if err := gst.CheckPlugins([]string{"vaapi"}); err != nil {
+			return "", fmt.Errorf("VAAPI requested but plugin not found: %w", err)
+		}
+		// vaapih264enc: rate-control=cbr might be better for streaming
+		videoEncSegment = fmt.Sprintf("video/x-raw,format=NV12 ! vaapih264enc rate-control=cbr bitrate=%d keyframe-period=%d quality-level=7 ! video/x-h264,stream-format=byte-stream,profile=constrained-baseline", videoBitrate, fps*2) // keyframe every 2s
+	case config.HwEncNVENC:
+		if err := gst.CheckPlugins([]string{"nvcodec"}); err != nil {
+			return "", fmt.Errorf("NVENC requested but plugin not found: %w", err)
+		}
+		videoEncSegment = fmt.Sprintf("video/x-raw,format=NV12 ! nvh264enc name=encoder preset=llhq gop-size=%d spatial-aq=true temporal-aq=true bitrate=%d vbv-buffer-size=%d rc-mode=cbr ! h264parse config-interval=-1 ! video/x-h264,stream-format=byte-stream,profile=constrained-baseline", fps*2, videoBitrate, vbvbuf)
+	case config.HwEncNone: // Fallback to software encoding
+		if err := gst.CheckPlugins([]string{"openh264"}); err == nil {
+			videoEncSegment = fmt.Sprintf("openh264enc multi-thread=4 complexity=realtime bitrate=%d max-bitrate=%d ! video/x-h264,stream-format=byte-stream,profile=constrained-baseline", videoBitrate*1000, (videoBitrate+1024)*1000)
+		} else if err := gst.CheckPlugins([]string{"x264"}); err == nil {
+			videoEncSegment = fmt.Sprintf("video/x-raw,format=NV12 ! x264enc threads=4 bitrate=%d key-int-max=%d vbv-buf-capacity=%d byte-stream=true tune=zerolatency speed-preset=veryfast ! video/x-h264,stream-format=byte-stream,profile=constrained-baseline", videoBitrate, fps*2, vbvbuf)
+		} else {
+			return "", fmt.Errorf("no suitable software H.264 encoder found (tried openh264, x264)")
+		}
+	default:
+		return "", fmt.Errorf("unknown hardware acceleration config: %s", hwenc)
+	}
+
+	// --- Audio Source and Encoding --- (AAC only for fMP4/MSE compatibility)
+	if audioCodec != "aac" {
+		return "", fmt.Errorf("unsupported audio codec for WebSocket streaming: %s. Only AAC is supported", audioCodec)
+	}
+	// Using voaacenc as it's often available and used in broadcast pipeline
+	audioSrcSegment := fmt.Sprintf(audioSrc, device)
+	audioEncSegment := fmt.Sprintf("voaacenc bitrate=%d", audioBitrate*1000)
+
+	// --- Muxing --- 
+	// mp4mux name=mux fragment-duration=100 streamable=true presentation-time=true
+	muxerSegment := fmt.Sprintf("mp4mux name=mux fragment-duration=%d streamable=true presentation-time=true ! %s", fragmentDuration, appSink)
+
+	// --- Assemble the pipeline --- 
+	pipelineStr := fmt.Sprintf(
+		"%s %s ! h264parse config-interval=-1 ! mux.  %s %s ! aacparse ! mux.  %s",
+		videoSrcSegment, // ximagesrc ! videoconvert ! queue
+		videoEncSegment, // encoder ! caps
+		audioSrcSegment, // pulsesrc ! audioconvert
+		audioEncSegment, // voaacenc
+		muxerSegment,    // mp4mux ! appsink
+	)
+
+	return pipelineStr, nil
+}

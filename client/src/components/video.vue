@@ -198,8 +198,10 @@
 
 <script lang="ts">
   import { Component, Ref, Watch, Vue, Prop } from 'vue-property-decorator'
+  import { mapState, mapMutations } from 'vuex' // Import Vuex helpers
   import ResizeObserver from 'resize-observer-polyfill'
   import { elementRequestFullscreen, onFullscreenChange, isFullscreen, lockKeyboard, unlockKeyboard } from '~/utils'
+  import { BaseClient } from '~/neko/base' // Import BaseClient type
 
   import Emote from './emote.vue'
   import Resolution from './resolution.vue'
@@ -238,6 +240,13 @@
     private focused = false
     private fullscreen = false
     private mutedOverlay = true
+
+    // MSE related properties
+    private mediaSource: MediaSource | null = null
+    private sourceBuffer: SourceBuffer | null = null
+    private wsBufferQueue: ArrayBuffer[] = []
+    private isInitSegmentReceived = false
+    private neko: BaseClient | null = null // To hold the Neko instance
 
     get admin() {
       return this.$accessor.user.admin
@@ -353,6 +362,15 @@
       return this.$accessor.video.horizontal
     }
 
+    // Map Vuex state for streaming mode
+    get streamingMode() {
+      return this.$accessor.remote.streamingMode;
+    }
+
+    get isWsStreamingActive() {
+      return this.$accessor.remote.isWsStreamingActive;
+    }
+
     @Watch('width')
     onWidthChanged() {
       this.onResize()
@@ -385,6 +403,9 @@
 
     @Watch('stream')
     onStreamChanged(stream?: MediaStream) {
+      // Only handle stream if in WebRTC mode
+      if (this.streamingMode !== 'webrtc') return;
+
       if (!this._video || !stream) {
         return
       }
@@ -440,7 +461,29 @@
       }
     }
 
+    @Watch('streamingMode')
+    onStreamingModeChanged(newMode: string, oldMode: string) {
+      this.$log.info(`Streaming mode changed from ${oldMode} to ${newMode}`);
+      if (newMode === 'websocket' && oldMode !== 'websocket') {
+        this.resetWebRTC(); // Make sure WebRTC resources are cleared
+        this.setupWebSocketStreaming();
+      } else if (newMode === 'webrtc' && oldMode !== 'webrtc') {
+        this.resetWebSocketStreaming(); // Clean up MSE resources
+        // WebRTC setup is likely handled elsewhere when stream is received
+      }
+    }
+
     mounted() {
+      // Get the Neko client instance (assuming it's available as $client)
+      this.neko = this.$client as BaseClient;
+      if (!this.neko) {
+        this.$log.error("Neko client instance ($client) not found in video component!");
+        return;
+      }
+
+      // Listen for binary data from the Neko client
+      this.neko.on('binary_data', this.handleWebSocketData);
+
       this._container.addEventListener('resize', this.onResize)
       this.onVolumeChanged(this.volume)
       this.onMutedChanged(this.muted)
@@ -453,6 +496,17 @@
         this.fullscreen = isFullscreen()
         this.fullscreen ? lockKeyboard() : unlockKeyboard()
         this.onResize()
+        this.$accessor.video.setPlayable(true)
+        if (this.autoplay) {
+          this.$nextTick(() => {
+            this.$accessor.video.play()
+          })
+        }
+
+        // Initial setup based on current mode
+        if (this.streamingMode === 'websocket') {
+          this.setupWebSocketStreaming();
+        }
       })
 
       this._video.addEventListener('canplaythrough', () => {
@@ -508,6 +562,10 @@
     beforeDestroy() {
       this.observer.disconnect()
       this.$accessor.video.setPlayable(false)
+      // Remove listener
+      this.neko?.off('binary_data', this.handleWebSocketData);
+      // Clean up MSE resources
+      this.resetWebSocketStreaming();
       /* Guacamole Keyboard does not provide destroy functions */
     }
 
@@ -804,5 +862,214 @@
         this._overlay.focus()
       }
     }
+
+    // --- WebSocket Streaming (MSE) Methods ---
+    setupWebSocketStreaming() {
+      if (!('MediaSource' in window)) {
+        this.$log.error('Media Source Extensions (MSE) not supported by this browser.');
+        // Handle error - maybe show a message to the user
+        return;
+      }
+      if (this.isWsStreamingActive) return; // Already set up
+
+      this.$log.info('Setting up WebSocket streaming (MSE)');
+      this.$accessor.remote.setWsStreamingActive(true);
+      this.isInitSegmentReceived = false;
+      this.wsBufferQueue = [];
+
+      // Reset video source if it was previously used by WebRTC
+      if (this._video.srcObject) {
+        this._video.srcObject = null;
+      }
+      if (this._video.src) {
+        URL.revokeObjectURL(this._video.src);
+        this._video.src = '';
+      }
+      this._video.load(); // Reset video element
+
+      this.mediaSource = new MediaSource();
+      this._video.src = URL.createObjectURL(this.mediaSource);
+
+      this.mediaSource.addEventListener('sourceopen', this.handleSourceOpen);
+      this.mediaSource.addEventListener('sourceended', () => this.$log.info('MediaSource sourceended'));
+      this.mediaSource.addEventListener('sourceclose', () => this.$log.info('MediaSource sourceclose'));
+
+      // Start playback attempt for MSE
+      this.$accessor.video.setPlayable(true); // Assume playable once setup starts
+      if (this.autoplay) {
+        this.$nextTick(() => {
+          this.$accessor.video.play();
+        });
+      }
+    }
+
+    handleSourceOpen() {
+      if (!this.mediaSource) return;
+      this.$log.info('MediaSource sourceopen event');
+
+      // CRITICAL: Determine the correct MIME type
+      const mimeCodec = 'video/mp4; codecs="avc1.42E01E, mp4a.40.2"'; // Adjust based on server!
+      if (MediaSource.isTypeSupported(mimeCodec)) {
+          try {
+            this.sourceBuffer = this.mediaSource.addSourceBuffer(mimeCodec);
+            this.$log.info('SourceBuffer created');
+
+            this.sourceBuffer.addEventListener('updateend', () => {
+                this.appendNextFromQueue(); // Process next queued segment
+            });
+            this.sourceBuffer.addEventListener('error', (e) => {
+                this.$log.error('SourceBuffer error:', e);
+            });
+            this.sourceBuffer.addEventListener('abort', () => this.$log.warn('SourceBuffer abort event'));
+
+            // Process any segments that arrived before the source buffer was ready
+            this.appendNextFromQueue();
+
+          } catch (e: any) {
+            this.$log.error('Error creating SourceBuffer:', e);
+            this.resetWebSocketStreaming();
+          }
+      } else {
+        this.$log.error(`Unsupported MIME type or codec for MSE: ${mimeCodec}`);
+        this.resetWebSocketStreaming();
+      }
+    }
+
+    handleWebSocketData(data: ArrayBuffer /* ArrayBuffer */) {
+        if (!this.isWsStreamingActive || !data || !this.mediaSource || this.mediaSource.readyState !== 'open') {
+          //this.$log.debug('Ignoring WS data: streaming not active or MediaSource not open');
+          return;
+        }
+
+        if (!this.sourceBuffer || this.sourceBuffer.updating) {
+            // If buffer not ready or busy, queue the data
+            this.wsBufferQueue.push(data);
+            //this.$log.debug(`Queued segment (${this.wsBufferQueue.length})`);
+            return;
+        }
+
+        this.appendBuffer(data);
+    }
+
+    appendBuffer(data: ArrayBuffer) {
+        if (!this.sourceBuffer || this.sourceBuffer.updating || !this.isWsStreamingActive) {
+          this.$log.warn('Attempted to append buffer while sourceBuffer not ready or not active.');
+          this.wsBufferQueue.push(data); // Re-queue if possible
+          return;
+        }
+        try {
+            //this.$log.debug(`Appending buffer: ${data.byteLength} bytes. Init received: ${this.isInitSegmentReceived}`);
+            this.sourceBuffer.appendBuffer(data);
+            if (!this.isInitSegmentReceived) {
+                // The first segment appended is the initialization segment
+                this.isInitSegmentReceived = true;
+                this.$log.info("Initialization segment appended.");
+            }
+        } catch (e: any) {
+            this.$log.error('Error appending buffer:', e);
+            if (e.name === 'QuotaExceededError') {
+              this.$log.warn('QuotaExceededError: Buffer full? Attempting to clean...');
+              // Basic cleanup: remove some time range from the beginning
+              if (this.sourceBuffer && !this.sourceBuffer.updating && this._video.buffered.length > 0) {
+                const removeEnd = this._video.buffered.start(0) + 5; // Remove first 5 seconds
+                const removeStart = this._video.buffered.start(0);
+                if (removeEnd > removeStart) {
+                  try {
+                    this.$log.info(`Attempting to remove buffer range: ${removeStart} - ${removeEnd}`);
+                    this.sourceBuffer.remove(removeStart, removeEnd);
+                    // Re-queue the failed segment after attempting removal
+                    this.wsBufferQueue.unshift(data);
+                  } catch (removeError: any) {
+                    this.$log.error('Error removing buffer range:', removeError);
+                    this.resetWebSocketStreaming(); // Fatal error if remove fails
+                  }
+                } else {
+                   this.resetWebSocketStreaming(); // Cannot cleanup
+                }
+              } else {
+                this.resetWebSocketStreaming(); // Cannot cleanup
+              }
+            } else {
+              // Attempt to recover or reset for other errors
+              this.resetWebSocketStreaming();
+              // You might want to notify the user or attempt reconnection
+            }
+        }
+    }
+
+    appendNextFromQueue() {
+        // Ensure sourceBuffer exists and is not updating
+        if (this.wsBufferQueue.length > 0 && this.sourceBuffer && !this.sourceBuffer.updating) {
+            const dataToAppend = this.wsBufferQueue.shift()!;
+            //this.$log.debug(`Appending next from queue (${this.wsBufferQueue.length} left)`);
+            this.appendBuffer(dataToAppend);
+        }
+    }
+
+    resetWebSocketStreaming() {
+      if (!this.isWsStreamingActive && !this.mediaSource) return; // Nothing to reset
+      this.$log.info('Resetting WebSocket streaming (MSE)');
+      this.$accessor.remote.setWsStreamingActive(false);
+      this.isInitSegmentReceived = false;
+      this.wsBufferQueue = [];
+
+      if (this.sourceBuffer) {
+        // Remove listeners before aborting or removing
+          try {
+            // Unregister listeners cleanly if possible (depends on how they were added)
+            // Example: this.sourceBuffer.removeEventListener(...) 
+
+            if (this.mediaSource && this.mediaSource.readyState === 'open') {
+                if (!this.sourceBuffer.updating) {
+                    this.sourceBuffer.abort(); // Abort current operation
+                }
+                this.mediaSource.removeSourceBuffer(this.sourceBuffer);
+                this.$log.debug('SourceBuffer removed.');
+            }
+          } catch (e: any) {
+            this.$log.warn("Error removing source buffer:", e);
+          }
+          this.sourceBuffer = null;
+      }
+      if (this.mediaSource) {
+        if (this.mediaSource.readyState === 'open') {
+          try {
+            this.mediaSource.endOfStream();
+            this.$log.debug('MediaSource endOfStream called.');
+          } catch (e: any) {
+              this.$log.warn('Error calling endOfStream:', e);
+          }
+        }
+          // Unregister listeners cleanly
+          this.mediaSource.removeEventListener('sourceopen', this.handleSourceOpen);
+          // this.mediaSource.removeEventListener('sourceended', ...);
+          // this.mediaSource.removeEventListener('sourceclose', ...);
+          this.mediaSource = null;
+      }
+      // Clear video element source
+      if (this._video && this._video.src) {
+        URL.revokeObjectURL(this._video.src);
+        this._video.removeAttribute('src');
+        this._video.load(); // Reset video element state
+        this.$log.debug('Video source cleared.');
+      }
+      this.$accessor.video.setPlayable(false); // Mark as not playable
+    }
+
+    // Helper to reset WebRTC related things if needed when switching to WS
+    resetWebRTC() {
+       this.$log.info('Resetting WebRTC stream/video source');
+       if (this._video.srcObject) {
+          (this._video.srcObject as MediaStream).getTracks().forEach(track => track.stop());
+          this._video.srcObject = null;
+       }
+       // You might need to call a method in the Vuex store or Neko client
+       // to properly close the PeerConnection if it's still active.
+       // e.g., this.$client?.disconnectPeer(); // If such a method exists
+       this.$accessor.video.setStream(undefined); // Clear WebRTC stream from store
+       this.$accessor.video.setPlayable(false);
+    }
+
+    // --- End WebSocket Methods ---
   }
 </script>
