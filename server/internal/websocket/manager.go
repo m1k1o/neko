@@ -276,7 +276,9 @@ func (manager *WebSocketManagerCtx) connect(connection *websocket.Conn, r *http.
 
 	e, ok := err.(*websocket.CloseError)
 	if !ok {
-		err = errors.Unwrap(err) // unwrap if possible
+		if e := errors.Unwrap(err); e != nil {
+			err = e // unwrap if possible
+		}
 		logger.Warn().Err(err).Msg("read message error")
 		// client is expected to reconnect soon
 		delayedDisconnect = true

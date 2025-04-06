@@ -43,7 +43,9 @@ func (peer *WebSocketPeerCtx) Send(event string, payload any) {
 	})
 
 	if err != nil {
-		err = errors.Unwrap(err) // unwrap if possible
+		if e := errors.Unwrap(err); e != nil {
+			err = e // unwrap if possible
+		}
 		peer.logger.Warn().Err(err).Str("event", event).Msg("send message error")
 		return
 	}
