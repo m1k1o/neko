@@ -181,9 +181,9 @@ func (h *LegacyHandler) Route(r types.Router) {
 		var message string
 		select {
 		case err = <-errClient:
-			message = "websocketproxy: Error when copying from backend to client: %v"
+			message = "websocketproxy: Error when copying from backend to client"
 		case err = <-errBackend:
-			message = "websocketproxy: Error when copying from client to backend: %v"
+			message = "websocketproxy: Error when copying from client to backend"
 		}
 
 		if e, ok := err.(*websocket.CloseError); !ok || e.Code == websocket.CloseAbnormalClosure {
