@@ -142,7 +142,7 @@ func (h *LegacyHandler) Route(r types.Router) {
 							m = websocket.FormatCloseMessage(e.Code, e.Text)
 						}
 					}
-					errc <- err
+					errc <- fmt.Errorf("src read message error: %w", err)
 					dst.WriteMessage(websocket.CloseMessage, m)
 					break
 				}
@@ -163,10 +163,18 @@ func (h *LegacyHandler) Route(r types.Router) {
 						})
 						continue
 					} else if errors.Is(err, ErrWebsocketSend) {
-						errc <- err
+						errc <- fmt.Errorf("dst write message error: %w", err)
 						break
 					} else {
 						h.logger.Error().Err(err).Msg("couldn't rewrite text message")
+					}
+				}
+				// forward ping messages
+				if msgType == websocket.PingMessage {
+					err = dst.WriteMessage(websocket.PingMessage, nil)
+					if err != nil {
+						errc <- err
+						break
 					}
 				}
 			}
