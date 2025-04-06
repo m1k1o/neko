@@ -103,8 +103,8 @@ ENV NEKO_PLUGINS_DIR=/etc/neko/plugins/
 #
 # add healthcheck
 HEALTHCHECK --interval=10s --timeout=5s --retries=8 \
-    CMD wget -O - http://localhost:${NEKO_BIND#*:}/health || \
-        wget --no-check-certificate -O - https://localhost:${NEKO_BIND#*:}/health || \
+    CMD wget -O - http://localhost:${NEKO_SERVER_BIND#*:}/health || \
+        wget --no-check-certificate -O - https://localhost:${NEKO_SERVER_BIND#*:}/health || \
         exit 1
 
 #
