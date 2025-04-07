@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/m1k1o/neko/server/internal/api"
 	oldEvent "github.com/m1k1o/neko/server/internal/http/legacy/event"
@@ -35,9 +36,6 @@ var (
 			return true
 		},
 	}
-
-	// DefaultDialer is a dialer with all fields set to the default zero values.
-	DefaultDialer = websocket.DefaultDialer
 )
 
 type LegacyHandler struct {
@@ -45,6 +43,7 @@ type LegacyHandler struct {
 	serverAddr string
 	bannedIPs  map[string]struct{}
 	sessionIPs map[string]string
+	wsDialer   *websocket.Dialer
 }
 
 func New(serverAddr string) *LegacyHandler {
@@ -55,6 +54,10 @@ func New(serverAddr string) *LegacyHandler {
 		serverAddr: serverAddr,
 		bannedIPs:  make(map[string]struct{}),
 		sessionIPs: make(map[string]string),
+		wsDialer: &websocket.Dialer{
+			Proxy:            nil, // disable proxy for local requests
+			HandshakeTimeout: 45 * time.Second,
+		},
 	}
 }
 
@@ -99,7 +102,7 @@ func (h *LegacyHandler) Route(r types.Router) {
 		defer s.destroy()
 
 		// dial to the remote backend
-		connBackend, _, err := DefaultDialer.Dial("ws://"+h.serverAddr+"/api/ws?token="+url.QueryEscape(s.token), nil)
+		connBackend, _, err := h.wsDialer.Dial("ws://"+h.serverAddr+"/api/ws?token="+url.QueryEscape(s.token), nil)
 		if err != nil {
 			h.logger.Error().Err(err).Msg("couldn't dial to the remote backend")
 

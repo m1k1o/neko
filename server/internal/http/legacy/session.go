@@ -55,13 +55,18 @@ type session struct {
 }
 
 func (h *LegacyHandler) newSession(r *http.Request) *session {
+	transport := http.DefaultTransport.(*http.Transport).Clone()
+	transport.Proxy = nil // disable proxy for local requests
+
 	return &session{
 		r:          r,
 		h:          h,
 		logger:     h.logger,
 		serverAddr: h.serverAddr,
-		client:     http.DefaultClient,
-		sessions:   make(map[string]*memberStruct),
+		client: &http.Client{
+			Transport: transport,
+		},
+		sessions: make(map[string]*memberStruct),
 	}
 }
 
