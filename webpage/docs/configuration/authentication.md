@@ -80,6 +80,10 @@ import TabItem from '@theme/TabItem';
 
 Member providers are responsible for deciding whether given credentials are valid or not. This validation can either be done against a local database or an external system.
 
+:::info
+Currently, Neko supports configuring only one authentication provider at a time. This means you must choose a single provider that best fits your deployment needs.
+:::
+
 ### Multi-User Provider {#member.multiuser}
 
 This is the **default provider** that works exactly like the authentication used to work in v2 of neko.
