@@ -10,7 +10,7 @@ RUN set -eux; apt-get update; \
     xz-utils bzip2 libgtk-3-0 libdbus-glib-1-2; \
     #
     # fetch latest release
-    wget -O /tmp/waterfox-setup.tar.bz2 "${SRC_URL}"; \
+    wget --user-agent="Mozilla/5.0" -O /tmp/waterfox-setup.tar.bz2 "${SRC_URL}"; \
     mkdir /usr/lib/waterfox; \
     tar -xjf /tmp/waterfox-setup.tar.bz2 -C /usr/lib; \
     rm -f /tmp/waterfox-setup.tar.bz2; \
