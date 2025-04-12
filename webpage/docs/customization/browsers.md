@@ -158,6 +158,20 @@ By default, the browsers in Neko do not allow installing extensions except for t
 }
 ```
 
+<details>
+  <summary>How to find the extension ID?</summary>
+
+  Extension IDs for Firefox are not available in the URL like in Chrome. You can find the extension ID by navigating to the `about:debugging#/runtime/this-firefox` page and clicking on the extension you want to install. The extension ID will be displayed in the URL.
+
+  Another way is to find the extension on the [Official Add-ons Webpage](https://addons.mozilla.org/en-US/firefox/), then open DevTools (<code>F12</code>) and go to the `Console` tab. Enter the following command:
+
+  ```javascript
+  Object.keys(JSON.parse(document.getElementById('redux-store-state').textContent).addons.byGUID)[0]
+  ```
+
+  This will return the ID of the first extension on the page.
+</details>
+
 ### Chromium-based Browsers {#chromium-based}
 
 The full configuration options for the Chromium-based policy JSON file can be found in the [Chrome Enterprise](https://chromeenterprise.google/policies) documentation.
