@@ -158,7 +158,7 @@ Full documentation is available at [neko.m1k1o.net](https://neko.m1k1o.net/). Ke
 - [Migration from V2](https://neko.m1k1o.net/docs/v3/migration-from-v2)
 - [Getting Started](https://neko.m1k1o.net/docs/v3/quick-start)
 - [Installation](https://neko.m1k1o.net/docs/v3/installation)
-- [Examples](https://neko.m1k1o.net/v3/installation/examples)
+- [Examples](https://neko.m1k1o.net/docs/v3/installation/examples)
 - [Configuration](https://neko.m1k1o.net/docs/v3/configuration)
 - [Frequently Asked Questions](https://neko.m1k1o.net/docs/v3/faq)
 - [Troubleshooting](https://neko.m1k1o.net/docs/v3/troubleshooting)
