@@ -10,14 +10,19 @@ import (
 	"github.com/m1k1o/neko/server/pkg/xevent"
 )
 
+const (
+	ClipboardTextPlainTarget = "UTF8_STRING"
+	ClipboardTextHtmlTarget  = "text/html"
+)
+
 func (manager *DesktopManagerCtx) ClipboardGetText() (*types.ClipboardText, error) {
-	text, err := manager.ClipboardGetBinary("STRING")
+	text, err := manager.ClipboardGetBinary(ClipboardTextPlainTarget)
 	if err != nil {
 		return nil, err
 	}
 
 	// Rich text must not always be available, can fail silently.
-	html, _ := manager.ClipboardGetBinary("text/html")
+	html, _ := manager.ClipboardGetBinary(ClipboardTextHtmlTarget)
 
 	return &types.ClipboardText{
 		Text: string(text),
@@ -31,10 +36,10 @@ func (manager *DesktopManagerCtx) ClipboardSetText(data types.ClipboardText) err
 	// is set, if available. Otherwise plain text.
 
 	if data.HTML != "" {
-		return manager.ClipboardSetBinary("text/html", []byte(data.HTML))
+		return manager.ClipboardSetBinary(ClipboardTextHtmlTarget, []byte(data.HTML))
 	}
 
-	return manager.ClipboardSetBinary("STRING", []byte(data.Text))
+	return manager.ClipboardSetBinary(ClipboardTextPlainTarget, []byte(data.Text))
 }
 
 func (manager *DesktopManagerCtx) ClipboardGetBinary(mime string) ([]byte, error) {
