@@ -25,7 +25,8 @@ jobs:
       matrix:
         include:
           - name: firefox
-          - name: waterfox
+          # Temporarily disabled due to Cloudflare blocked download link
+          #- name: waterfox
           - name: chromium
           - name: google-chrome
           - name: ungoogled-chromium

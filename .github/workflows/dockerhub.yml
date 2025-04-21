@@ -80,7 +80,8 @@ jobs:
       matrix:
         tag: 
           - firefox
-          - waterfox
+          # Temporarily disabled due to Cloudflare blocked download link
+          #- waterfox
           - chromium
           - google-chrome
           - ungoogled-chromium
