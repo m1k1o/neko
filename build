@@ -211,14 +211,15 @@ fi
 
 if [ -z "$PLATFORM" ]; then
   # use system architecture if not specified
-  if [ "$(uname -m)" == "x86_64" ]; then
+  UNAME="$(uname -m)"
+  if [ "$UNAME" == "x86_64" ]; then
     PLATFORM="linux/amd64"
-  elif [ "$(uname -m)" == "aarch64" ]; then
+  elif [ "$UNAME" == "aarch64" ] || [ "$UNAME" == "arm64" ]; then
     PLATFORM="linux/arm64"
-  elif [ "$(uname -m)" == "armv7l" ]; then
+  elif [ "$UNAME" == "armv7l" ]; then
     PLATFORM="linux/arm/v7"
   else
-    log "Unknown architecture: $(uname -m)"
+    log "Unknown architecture: $UNAME"
     exit 1
   fi
 fi
