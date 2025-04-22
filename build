@@ -313,7 +313,7 @@ fi
 
 log "Building base image: $BASE_IMAGE"
 docker run --rm -i \
-  -v ./:/src \
+  -v "$(pwd)":/src \
   -e "RUNTIME_DOCKERFILE=$RUNTIME_DOCKERFILE" \
   --workdir /src \
   --entrypoint go \
