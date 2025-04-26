@@ -65,7 +65,7 @@
         <li
           v-if="hosting && is_touch_device"
           :class="extraControls || 'extra-control'"
-          @click.stop.prevent="toggleMobileKeyboard"
+          @click.stop.prevent="openMobileKeyboard"
         >
           <i class="fas fa-keyboard" />
         </li>
@@ -367,12 +367,11 @@
 
     get is_touch_device() {
       return (
-        // check if the device has a touch screen
+        // detect if the device has touch support
         ('ontouchstart' in window || navigator.maxTouchPoints > 0) &&
-        // we also check if the device has a pointer
-        !window.matchMedia('(pointer:fine)').matches &&
-        // and is capable of hover, then it probably has a mouse
-        !window.matchMedia('(hover:hover)').matches
+        // the primary input mechanism includes a pointing device of
+        // limited accuracy, such as a finger on a touchscreen.
+        window.matchMedia('(pointer: coarse)').matches
       )
     }
 
@@ -822,64 +821,20 @@
     @Watch('hosting')
     @Watch('locked')
     onFocus() {
+      // focus opens the keyboard on mobile
+      if (!this.is_touch_device) {
+        return
+      }
+
       // in order to capture key events, overlay must be focused
       if (this.focused && this.hosting && !this.locked) {
         this._overlay.focus()
       }
     }
 
-    //
-    // mobile keyboard
-    //
-
-    kbdShow = false
-    kbdOpen = false
-
-    showMobileKeyboard() {
-      // skip if not a touch device
-      if (!this.is_touch_device) return
-
-      this.kbdShow = true
-      this.kbdOpen = false
-
-      const overlay = this.$refs.overlay as HTMLTextAreaElement
-      overlay.focus()
-      window.visualViewport?.addEventListener('resize', this.onVisualViewportResize)
-    }
-
-    hideMobileKeyboard() {
-      // skip if not a touch device
-      if (!this.is_touch_device) return
-
-      this.kbdShow = false
-      this.kbdOpen = false
-
-      const overlay = this.$refs.overlay as HTMLTextAreaElement
-      window.visualViewport?.removeEventListener('resize', this.onVisualViewportResize)
-      overlay.blur()
-    }
-
-    toggleMobileKeyboard() {
-      // skip if not a touch device
-      if (!this.is_touch_device) return
-
-      if (this.kbdShow) {
-        this.hideMobileKeyboard()
-      } else {
-        this.showMobileKeyboard()
-      }
-    }
-
-    // visual viewport resize event is fired when keyboard is opened or closed
-    // android does not blur textarea when keyboard is closed, so we need to do it manually
-    onVisualViewportResize() {
-      if (!this.kbdShow) return
-
-      if (!this.kbdOpen) {
-        this.kbdOpen = true
-      } else {
-        this.hideMobileKeyboard()
-      }
+    openMobileKeyboard() {
+      // focus opens the keyboard on mobile
+      this._overlay.focus()
     }
   }
 </script>
