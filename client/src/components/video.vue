@@ -367,12 +367,11 @@
 
     get is_touch_device() {
       return (
-        // check if the device has a touch screen
+        // detect if the device has touch support
         ('ontouchstart' in window || navigator.maxTouchPoints > 0) &&
-        // we also check if the device has a pointer
-        !window.matchMedia('(pointer:fine)').matches &&
-        // and is capable of hover, then it probably has a mouse
-        !window.matchMedia('(hover:hover)').matches
+        // the primary input mechanism includes a pointing device of
+        // limited accuracy, such as a finger on a touchscreen.
+        window.matchMedia('(pointer: coarse)').matches
       )
     }
 
