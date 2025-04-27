@@ -822,7 +822,7 @@
     @Watch('locked')
     onFocus() {
       // focus opens the keyboard on mobile
-      if (!this.is_touch_device) {
+      if (this.is_touch_device) {
         return
       }
 
