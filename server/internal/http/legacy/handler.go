@@ -149,6 +149,8 @@ func (h *LegacyHandler) Route(r types.Router) {
 					dst.WriteMessage(websocket.CloseMessage, m)
 					break
 				}
+
+				// handle text messages
 				if msgType == websocket.TextMessage {
 					err = rewriteTextMessage(msg)
 
@@ -165,20 +167,26 @@ func (h *LegacyHandler) Route(r types.Router) {
 							Message: strings.ReplaceAll(err.Error(), ErrBackendRespone.Error()+": ", ""),
 						})
 						continue
-					} else if errors.Is(err, ErrWebsocketSend) {
+					}
+
+					if errors.Is(err, ErrWebsocketSend) {
 						errc <- fmt.Errorf("dst write message error: %w", err)
 						break
-					} else {
-						h.logger.Error().Err(err).Msg("couldn't rewrite text message")
 					}
+
+					h.logger.Error().Err(err).Msg("couldn't rewrite text message")
+					continue
 				}
-				// forward ping messages
-				if msgType == websocket.PingMessage {
-					err = dst.WriteMessage(websocket.PingMessage, nil)
+
+				// forward ping pong messages
+				if msgType == websocket.PingMessage ||
+					msgType == websocket.PongMessage {
+					err = dst.WriteMessage(msgType, msg)
 					if err != nil {
 						errc <- err
 						break
 					}
+					continue
 				}
 			}
 		}
