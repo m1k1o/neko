@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=ghcr.io/m1k1o/neko/base:latest
+ARG BASE_IMAGE=ghcr.io/dawe35/neko/base:latest
 FROM $BASE_IMAGE
 
 #

@@ -16,7 +16,7 @@ on:
       dockerfile:
         required: false
         type: string
-        default: "Dockerfile"
+        default: "Dockerfile.bookworm-full"
         description: "The Dockerfile to use for building the image."
 
 env:
