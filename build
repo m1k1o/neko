@@ -318,6 +318,6 @@ docker run --rm -i \
   -e "RUNTIME_DOCKERFILE=$RUNTIME_DOCKERFILE" \
   --workdir /src \
   --entrypoint go \
-  golang:1.24-bullseye \
+  golang:1.24-bookworm \
   run utils/docker/main.go \
   -i Dockerfile.tmpl -client "$CLIENT_DIST" | build_image $BASE_IMAGE -f - .
