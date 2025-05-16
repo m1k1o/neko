@@ -46,7 +46,7 @@ Neko is easy to use and requires no technical expertise to get started. All you 
     ```
 
     :::note
-    If you want to run Neko on your local network, you have to add `NEKO_NAT1TO1=<your-local-ip>` to the `docker-compose.yaml` file.
+    If you want to run Neko on your local network, you have to add `NEKO_NAT1TO1: <your-local-ip>` to the `docker-compose.yaml` file.
     :::
 
 6. Visit the server's IP address in your browser and log in, the default password is `neko`.
