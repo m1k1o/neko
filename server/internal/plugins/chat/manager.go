@@ -22,16 +22,18 @@ func NewManager(
 	logger := log.With().Str("module", "chat").Logger()
 
 	return &Manager{
-		logger:   logger,
-		config:   config,
-		sessions: sessions,
+		logger:         logger,
+		config:         config,
+		sessions:       sessions,
+		messageHistory: make([]Message, 0),
 	}
 }
 
 type Manager struct {
-	logger   zerolog.Logger
-	config   *Config
-	sessions types.SessionManager
+	logger         zerolog.Logger
+	config         *Config
+	sessions       types.SessionManager
+	messageHistory []Message
 }
 
 type Settings struct {
@@ -66,7 +68,13 @@ func (m *Manager) settingsForSession(session types.Session) (Settings, error) {
 }
 
 func (m *Manager) sendMessage(session types.Session, content Content) {
-	now := time.Now()
+	// Create the message
+	message := Message{
+		ID:      session.ID(),
+		Created: time.Now(),
+		Content: content,
+	}
+	m.addMessageToHistory(message)
 
 	// get all sessions that have chat enabled
 	var sessions []types.Session
@@ -80,19 +88,34 @@ func (m *Manager) sendMessage(session types.Session, content Content) {
 
 	// send content to all sessions
 	for _, s := range sessions {
-		s.Send(CHAT_MESSAGE, Message{
-			ID:      session.ID(),
-			Created: now,
-			Content: content,
-		})
+		s.Send(CHAT_MESSAGE, message)
+	}
+}
+
+func (m *Manager) addMessageToHistory(message Message) {
+	// Add message to history
+	m.messageHistory = append(m.messageHistory, message)
+
+	// Keep only the last 100 messages
+	if len(m.messageHistory) > 100 {
+		m.messageHistory = m.messageHistory[len(m.messageHistory)-100:]
 	}
 }
 
 func (m *Manager) Start() error {
 	// send init message once a user connects
 	m.sessions.OnConnected(func(session types.Session) {
+		messageHistory := m.messageHistory
+		// Check if user can receive messages and reset the message history if he can't
+		settings, err := m.settingsForSession(session)
+		if err != nil || !settings.CanReceive {
+			messageHistory = make([]Message, 0)
+		}
+
+		// Send init message with message history
 		session.Send(CHAT_INIT, Init{
 			Enabled: m.config.Enabled,
+			History: messageHistory,
 		})
 	})
 
