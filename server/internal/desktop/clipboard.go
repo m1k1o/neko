@@ -114,7 +114,10 @@ func (manager *DesktopManagerCtx) ClipboardSetBinary(mime string, data []byte) e
 	case <-wait:
 	}
 
+	manager.wg.Add(1)
 	go func() {
+		defer manager.wg.Done()
+
 		if err := cmd.Wait(); err != nil {
 			msg := strings.TrimSpace(stderr.String())
 			manager.logger.Err(err).Msgf("clipboard command finished with error: %s", msg)

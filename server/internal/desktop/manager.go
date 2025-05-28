@@ -138,9 +138,9 @@ func (manager *DesktopManagerCtx) Shutdown() error {
 	manager.logger.Info().Msgf("shutdown")
 
 	close(manager.shutdown)
-	manager.wg.Wait()
 
 	manager.replaceClipboardCommand(nil)
+	manager.wg.Wait()
 
 	xorg.DisplayClose()
 	return nil
