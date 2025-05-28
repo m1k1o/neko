@@ -7,7 +7,8 @@ SHELL ["/bin/bash", "-c"]
 RUN set -eux; apt-get update; \
     ARCH=$(dpkg --print-architecture); \
     wget -O /tmp/vivaldi.deb "https://downloads.vivaldi.com/stable/vivaldi-stable_${ARCH}.deb"; \
-    apt-get install -y --no-install-recommends wget unzip xz-utils jq openbox /tmp/vivaldi.deb; \
+    apt-get install -y --no-install-recommends wget unzip xz-utils jq openbox; \
+    apt install -y --no-install-recommends /tmp/vivaldi.deb; \
     #
     # install latest version of uBlock Origin and SponsorBlock for YouTube
     EXTENSIONS_DIR="/usr/share/chromium/extensions"; \
