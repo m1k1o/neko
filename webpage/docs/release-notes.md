@@ -8,6 +8,7 @@
 
 ### Fixes {#master-fixes}
 - Fixed various bugs related to the legacy client and migration.
+- Fixed long standing issue [#279](https://github.com/m1k1o/neko/pull/279) where Google Chrome GPU acceleration did not work with Nvidia GPUs, thanks to [@TobyColeman](https://github.com/TobyColeman), [@alexbakerdev](https://github.com/alexbakerdev) and [@samstefan](https://github.com/samstefan) from [@wearewildcards](https://github.com/wearewildcards).
 
 ### Misc {#master-misc}
 - Added an https condition to the healthcheck ([#503](https://github.com/m1k1o/neko/pull/503), by @Garrulousbrevity).
