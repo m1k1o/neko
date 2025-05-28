@@ -61,13 +61,13 @@ ARG UBUNTU_RELEASE
 ARG VIRTUALGL_VERSION
 
 # Make all NVIDIA GPUs visible by default
-ENV NVIDIA_VISIBLE_DEVICES all
+ENV NVIDIA_VISIBLE_DEVICES=all
 # All NVIDIA driver capabilities should preferably be used, check `NVIDIA_DRIVER_CAPABILITIES` inside the container if things do not work
-ENV NVIDIA_DRIVER_CAPABILITIES all
+ENV NVIDIA_DRIVER_CAPABILITIES=all
 
 #
 # set vgl-display to headless 3d gpu card/// correct values are egl[n] or /dev/dri/card0:if this is passed into container
-ENV VGL_DISPLAY egl
+ENV VGL_DISPLAY=egl
 
 #
 # set custom user
