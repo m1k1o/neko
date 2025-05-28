@@ -67,7 +67,7 @@ func (manager *DesktopManagerCtx) replaceClipboardCommand(newCmd *exec.Cmd) {
 		return
 	}
 
-	// If there is a previous command running and it was not stopped yet, we need to stop it and wait for it to finish.
+	// If there is a previous command running and it was not stopped yet, we need to kill it.
 	if err := oldCmd.Process.Kill(); err != nil {
 		manager.logger.Err(err).Msg("failed to kill previous clipboard command")
 	} else {
