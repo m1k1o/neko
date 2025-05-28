@@ -243,10 +243,6 @@ For images with Nvidia GPU hardware acceleration using EGL use:
 
 The base image is available at [`ghcr.io/m1k1o/neko/nvidia-base`](https://ghcr.io/m1k1o/neko/nvidia-base).
 
-:::danger
-There is a known issue with EGL and Chromium-based browsers, see [m1k1o/neko #279](https://github.com/m1k1o/neko/issues/279).
-:::
-
 ## Supported Architectures {#arch}
 
 Neko Docker images are built with docker buildx and are available for multiple architectures. The following architectures are supported by the base image:
