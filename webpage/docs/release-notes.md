@@ -1,5 +1,17 @@
 # Release Notes
 
+## master {#master}
+
+### New Features {#master-feats}
+- Scroll to chat on mobile ([#496](https://github.com/m1k1o/neko/pull/496))
+- Added mobile keyboard icon to open the keyboard on mobile devices ([#497](https://github.com/m1k1o/neko/pull/497))
+
+### Fixes {#master-fixes}
+- Fixed various bugs related to the legacy client and migration.
+
+### Misc {#master-misc}
+- Added an https condition to the healthcheck ([#503](https://github.com/m1k1o/neko/pull/503), by @Garrulousbrevity).
+
 ## [n.eko v3.0.0](https://github.com/m1k1o/neko/releases/tag/v3.0.0) {#v3.0.0}
 
 ### Repository Changes {#v3.0.0-repo}
