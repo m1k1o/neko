@@ -1,6 +1,6 @@
 ARG UBUNTU_RELEASE=20.04
 ARG CUDA_VERSION=11.4.3
-ARG VIRTUALGL_VERSION=3.1
+ARG VIRTUALGL_VERSION=3.1.3-20250409
 ARG GSTREAMER_VERSION=1.20
 
 #
@@ -61,13 +61,13 @@ ARG UBUNTU_RELEASE
 ARG VIRTUALGL_VERSION
 
 # Make all NVIDIA GPUs visible by default
-ENV NVIDIA_VISIBLE_DEVICES all
+ENV NVIDIA_VISIBLE_DEVICES=all
 # All NVIDIA driver capabilities should preferably be used, check `NVIDIA_DRIVER_CAPABILITIES` inside the container if things do not work
-ENV NVIDIA_DRIVER_CAPABILITIES all
+ENV NVIDIA_DRIVER_CAPABILITIES=all
 
 #
 # set vgl-display to headless 3d gpu card/// correct values are egl[n] or /dev/dri/card0:if this is passed into container
-ENV VGL_DISPLAY egl
+ENV VGL_DISPLAY=egl
 
 #
 # set custom user
@@ -205,23 +205,22 @@ RUN VULKAN_API_VERSION=$(dpkg -s libvulkan1 | grep -oP 'Version: [0-9|\.]+' | gr
 }" > /etc/vulkan/icd.d/nvidia_icd.json
 
 #
-# install VirtualGL and make libraries available for preload
-RUN set -eux; \
+# install an up-to-date version of VirtualGL
+RUN apt-get update; \
+    apt-get install -y --no-install-recommends wget gpg ca-certificates; \
+    # Add VirtualGL GPG key
+    wget -q -O- https://packagecloud.io/dcommander/virtualgl/gpgkey | \
+    gpg --dearmor >/etc/apt/trusted.gpg.d/VirtualGL.gpg; \
+    # Download the official VirtualGL.list file
+    wget -q -O /etc/apt/sources.list.d/VirtualGL.list \
+        https://raw.githubusercontent.com/VirtualGL/repo/main/VirtualGL.list; \
+    # Install packages
     apt-get update; \
-    wget "https://sourceforge.net/projects/virtualgl/files/virtualgl_${VIRTUALGL_VERSION}_amd64.deb"; \
-    wget "https://sourceforge.net/projects/virtualgl/files/virtualgl32_${VIRTUALGL_VERSION}_amd64.deb"; \
-    apt-get install -y --no-install-recommends ./virtualgl_${VIRTUALGL_VERSION}_amd64.deb ./virtualgl32_${VIRTUALGL_VERSION}_amd64.deb; \
-    rm -f "virtualgl_${VIRTUALGL_VERSION}_amd64.deb" "virtualgl32_${VIRTUALGL_VERSION}_amd64.deb"; \
-    chmod u+s /usr/lib/libvglfaker.so; \
-    chmod u+s /usr/lib/libdlfaker.so; \
-    chmod u+s /usr/lib32/libvglfaker.so; \
-    chmod u+s /usr/lib32/libdlfaker.so; \
-    chmod u+s /usr/lib/i386-linux-gnu/libvglfaker.so; \
-    chmod u+s /usr/lib/i386-linux-gnu/libdlfaker.so; \
+    apt-get install -y --no-install-recommends virtualgl=${VIRTUALGL_VERSION}; \
     #
     # clean up
     apt-get clean -y; \
-    rm -rf /var/lib/apt/lists/* /var/cache/apt/*;
+    rm -rf /var/lib/apt/lists/* /var/cache/apt/*
 
 #
 # copy runtime configs
