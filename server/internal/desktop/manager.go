@@ -1,7 +1,9 @@
 package desktop
 
 import (
+	"os/exec"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/kataras/go-events"
@@ -25,6 +27,11 @@ type DesktopManagerCtx struct {
 	config     *config.Desktop
 	screenSize types.ScreenSize // cached screen size
 	input      xinput.Driver
+
+	// Clipboard process holding the most recent clipboard data.
+	// It must remain running to allow pasting clipboard data.
+	// The last command is kept running until it is replaced or shutdown.
+	clipboardCommand atomic.Pointer[exec.Cmd]
 }
 
 func New(config *config.Desktop) *DesktopManagerCtx {
@@ -132,6 +139,8 @@ func (manager *DesktopManagerCtx) Shutdown() error {
 
 	close(manager.shutdown)
 	manager.wg.Wait()
+
+	manager.replaceClipboardCommand(nil)
 
 	xorg.DisplayClose()
 	return nil
