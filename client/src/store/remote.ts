@@ -18,6 +18,9 @@ export const state = () => ({
 })
 
 export const getters = getterTree(state, {
+  controlling: (state, getters, root) => {
+    return root.user.id === state.id
+  },
   hosting: (state, getters, root) => {
     return root.user.id === state.id || state.implicitHosting
   },
@@ -89,7 +92,7 @@ export const actions = actionTree(
     },
 
     request({ getters }) {
-      if (!accessor.connected || getters.hosting) {
+      if (!accessor.connected || getters.controlling) {
         return
       }
 
