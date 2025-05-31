@@ -263,6 +263,10 @@
       return this.$accessor.connecting
     }
 
+    get controlling() {
+      return this.$accessor.remote.controlling
+    }
+
     get hosting() {
       return this.$accessor.remote.hosting
     }
@@ -752,12 +756,17 @@
       first.target.dispatchEvent(simulatedEvent)
     }
 
+    isMouseDown = false
+
     onMouseDown(e: MouseEvent) {
-      if (!this.hosting) {
-        this.$emit('control-attempt', e)
+      this.isMouseDown = true
+
+      if (this.locked) {
+        return
       }
 
-      if (!this.hosting || this.locked) {
+      if (!this.controlling) {
+        this.implicitHostingRequest(e)
         return
       }
 
@@ -766,12 +775,55 @@
     }
 
     onMouseUp(e: MouseEvent) {
-      if (!this.hosting || this.locked) {
+      // only if we are the one who started the mouse down
+      if (!this.isMouseDown) return
+      this.isMouseDown = false
+
+      if (this.locked) {
+        return
+      }
+
+      if (!this.controlling) {
+        this.implicitHostingRequest(e)
         return
       }
 
       this.sendMousePos(e)
       this.$client.sendData('mouseup', { key: e.button + 1 })
+    }
+
+    private reqMouseDown: MouseEvent | null = null
+    private reqMouseUp: MouseEvent | null = null
+
+    @Watch('controlling')
+    onControlChange(controlling: boolean) {
+      if (controlling && this.reqMouseDown) {
+        this.onMouseDown(this.reqMouseDown)
+      }
+
+      if (controlling && this.reqMouseUp) {
+        this.onMouseUp(this.reqMouseUp)
+      }
+
+      this.reqMouseDown = null
+      this.reqMouseUp = null
+    }
+
+    implicitHostingRequest(e: MouseEvent) {
+      if (this.implicitHosting) {
+        if (e.type === 'mousedown') {
+          this.reqMouseDown = e
+          this.reqMouseUp = null
+          this.$accessor.remote.request()
+        } else if (e.type === 'mouseup') {
+          this.reqMouseUp = e
+        }
+        return
+      }
+
+      if (e.type === 'mousedown') {
+        this.$emit('control-attempt', e)
+      }
     }
 
     onMouseMove(e: MouseEvent) {
