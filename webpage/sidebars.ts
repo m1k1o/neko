@@ -60,6 +60,7 @@ const sidebars: SidebarsConfig = {
           collapsed: false,
           link: { type: "doc", id: "customization/README" },
           items: [
+            'customization/networking',
             'customization/browsers',
             'customization/ui',
           ]
