@@ -240,10 +240,10 @@ You can leave the file empty and add users later using the HTTP API.
   }
   ```
 
-  If you want to hash the passwords, you can use the following command to generate a sha256 hash:
+  If you want to hash the passwords, you can use the following command to generate a sha256 base64-encoded hash of the password:
 
   ```bash
-  echo -n "password" | sha256sum
+  echo -n "password" | openssl sha256 -binary | base64 -
   ```  
 </details>
 
