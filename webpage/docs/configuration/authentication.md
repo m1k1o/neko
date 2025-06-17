@@ -201,7 +201,7 @@ You can leave the file empty and add users later using the HTTP API.
 
   We have two users, `admin` and `user` with their passwords and profiles. `admin` is a regular user, while `user` is an admin.
 
-  Please note that the passwords are stored in plain text. To store them securely, set the `hash` field to `true` in the configuration. After that, the passwords are expected to be hashed using the bcrypt algorithm.
+  Please note that the passwords are stored in plain text. To store them securely, set the `hash` field to `true` in the configuration. After that, the passwords are expected to be hashed using sha256 and base64-encoded. The file will look like this:
 
   ```json title="members.json"
   {
