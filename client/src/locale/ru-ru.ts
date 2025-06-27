@@ -71,15 +71,14 @@ export const locks = {
     notif_locked: 'комната закрыта',
     notif_unlocked: 'комната открыта',
   },
-  // TODO
-  //file_transfer: {
-  //  lock: 'Lock File Transfer (for users)',
-  //  unlock: 'Unlock File Transfer (for users)',
-  //  locked: 'File Transfer Locked (for users)',
-  //  unlocked: 'File Transfer Unlocked (for users)',
-  //  notif_locked: 'locked file transfer',
-  //  notif_unlocked: 'unlocked file transfer',
-  //},
+  file_transfer: {
+    lock: 'Заблокировать передачу файлов (для пользователей)',
+    unlock: 'Разблокировать передачу файлов (для пользователей)',
+    locked: 'Передача файлов заблокирована (для пользователей)',
+    unlocked: 'Передача файлов разблокирована (для пользователей)',
+    notif_locked: 'заблокирована передача файлов',
+    notif_unlocked: 'разблокирована передача файлов',
+  },
 }
 
 export const setting = {
