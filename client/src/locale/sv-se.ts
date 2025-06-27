@@ -2,8 +2,7 @@ export const logout = 'logga ut'
 export const unsupported = 'denna webbläsare har inte stöd för webrtc'
 export const admin_loggedin = 'Du är inloggad som en administratör'
 export const you = 'Du'
-// TODO
-//export const somebody = 'Somebody'
+export const somebody = 'Någon' // TODO: kontrollera översättning
 export const send_a_message = 'Skicka ett meddelande'
 
 export const side = {
@@ -19,8 +18,7 @@ export const connect = {
   password: 'Lösenord',
   connect: 'Anslut',
   error: 'Inloggningsfel',
-  // TODO
-  //empty_displayname: 'Display Name cannot be empty.',
+  empty_displayname: 'Visningsnamn kan inte vara tomt.', // TODO: kontrollera översättning
 }
 
 export const context = {
@@ -52,21 +50,19 @@ export const controls = {
   request: 'Fråga om kontroll',
   lock: 'Lås kontrollen',
   unlock: 'Lås upp kontrollen',
-  // TODO
-  //has: 'You have control',
-  //hasnot: 'You do not have control',
+  has: 'Du har kontrollen', // TODO: kontrollera översättning
+  hasnot: 'Du har inte kontrollen', // TODO: kontrollera översättning
 }
 
 export const locks = {
-  // TODO
-  //control: {
-  //  lock: 'Lock Controls (for users)',
-  //  unlock: 'Unlock Controls (for users)',
-  //  locked: 'Controls Locked (for users)',
-  //  unlocked: 'Controls Unlocked (for users)',
-  //  notif_locked: 'locked controls for users',
-  //  notif_unlocked: 'unlocked controls for users',
-  //},
+  control: {
+    lock: 'Lås kontroller (för användare)',
+    unlock: 'Lås upp kontroller (för användare)',
+    locked: 'Kontroller låsta (för användare)',
+    unlocked: 'Kontroller upplåsta (för användare)',
+    notif_locked: 'låste kontroller för användare',
+    notif_unlocked: 'låste upp kontroller för användare',
+  },
   login: {
     lock: 'Lås rum (för användare)',
     unlock: 'Lås upp rummet (för användare)',
@@ -75,37 +71,33 @@ export const locks = {
     notif_locked: 'låste rummet',
     notif_unlocked: 'låste upp rummet',
   },
-  // TODO
-  //file_transfer: {
-  //  lock: 'Lock File Transfer (for users)',
-  //  unlock: 'Unlock File Transfer (for users)',
-  //  locked: 'File Transfer Locked (for users)',
-  //  unlocked: 'File Transfer Unlocked (for users)',
-  //  notif_locked: 'locked file transfer',
-  //  notif_unlocked: 'unlocked file transfer',
-  //},
+  file_transfer: {
+    lock: 'Lås filöverföring (för användare)',
+    unlock: 'Lås upp filöverföring (för användare)',
+    locked: 'Filöverföring låst (för användare)',
+    unlocked: 'Filöverföring upplåst (för användare)',
+    notif_locked: 'låste filöverföring',
+    notif_unlocked: 'låste upp filöverföring',
+  },
 }
 
 export const setting = {
   scroll: 'Scrollkänslighet',
-  scroll_invert: 'Vänd Scrollen',
-  autoplay: 'Automatisk uppspelning av Video',
-  ignore_emotes: 'Ignorera Emotes',
-  chat_sound: 'Spela Chatt Ljud',
+  scroll_invert: 'Vänd scrollen',
+  autoplay: 'Automatisk uppspelning av video',
+  ignore_emotes: 'Ignorera emojis',
+  chat_sound: 'Spela chattljud',
   keyboard_layout: 'Tangentbordslayout',
-  // TODO
-  //broadcast_title: 'Live Broadcast',
+  broadcast_title: 'Livesändning',
 }
 
 export const connection = {
-  logged_out: 'Du har blivit utloggad!',
-  // TODO
-  //reconnecting: 'Reconnecting',
-  connected: 'Du har loggats in',
-  disconnected: 'Du har blivit frånkopplad',
-  // TODO
-  //kicked: 'You have been removed from this room.',
-  button_confirm: 'Ok',
+  logged_out: 'Du har blivit utloggad.',
+  reconnecting: 'Återansluter...',
+  connected: 'Ansluten',
+  disconnected: 'Frånkopplad',
+  kicked: 'Du har blivit borttagen från detta rum.',
+  button_confirm: 'OK',
 }
 
 export const notifications = {
