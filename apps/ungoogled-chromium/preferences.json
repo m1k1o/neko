@@ -1,8 +1,8 @@
 {
-  "homepage": "http://www.google.com",
+  "homepage": "https://duckduckgo.com/",
   "homepage_is_newtabpage": false,
   "first_run_tabs": [
-    "https://www.google.com/_/chrome/newtab?ie=UTF-8"
+    "https://duckduckgo.com/"
   ],
   "custom_links": {
     "initialized": true,
