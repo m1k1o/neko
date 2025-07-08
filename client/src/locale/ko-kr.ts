@@ -50,6 +50,8 @@ export const controls = {
   request: '조작 권한 요청',
   lock: '조작 잠그기',
   unlock: '조작 잠금 해제하기',
+  has: '당신은 제어권을 가지고 있습니다', // TODO: 번역 확인
+  hasnot: '당신은 제어권이 없습니다', // TODO: 번역 확인
 }
 
 export const locks = {
@@ -69,15 +71,14 @@ export const locks = {
     notif_locked: '방이 잠겼습니다',
     notif_unlocked: '방 잠금이 해제됐습니다',
   },
-  // TODO
-  //file_transfer: {
-  //  lock: 'Lock File Transfer (for users)',
-  //  unlock: 'Unlock File Transfer (for users)',
-  //  locked: 'File Transfer Locked (for users)',
-  //  unlocked: 'File Transfer Unlocked (for users)',
-  //  notif_locked: 'locked file transfer',
-  //  notif_unlocked: 'unlocked file transfer',
-  //},
+  file_transfer: {
+    lock: '파일 전송 잠그기 (사용자)',
+    unlock: '파일 전송 잠금 해제하기 (사용자)',
+    locked: '파일 전송이 잠겼습니다 (사용자)',
+    unlocked: '파일 전송 잠금이 해제됐습니다 (사용자)',
+    notif_locked: '파일 전송이 잠겼습니다',
+    notif_unlocked: '파일 전송 잠금이 해제됐습니다',
+  },
 }
 
 export const setting = {
@@ -122,5 +123,5 @@ export const notifications = {
 export const files = {
   downloads: '다운로드',
   uploads: '업로드',
-  upload_here: '업로드할 파일을 여기로 클릭하거나 드래그하세요.',
+  upload_here: '업로드할 파일을 여기로 클릭하거나 드래그하세요',
 }

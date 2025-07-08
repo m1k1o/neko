@@ -2,8 +2,7 @@ export const logout = 'logg ut'
 export const unsupported = 'Denne nettleseren støtter ikke WebRTC'
 export const admin_loggedin = 'Du er innlogget som administrator'
 export const you = 'Deg'
-// TODO
-//export const somebody = 'Somebody'
+export const somebody = 'Noen'
 export const send_a_message = 'Send en melding'
 
 export const side = {
@@ -19,8 +18,7 @@ export const connect = {
   password: 'Passord',
   connect: 'Koble til',
   error: 'Innloggingsfeil',
-  // TODO
-  //empty_displayname: 'Display Name cannot be empty.',
+  empty_displayname: 'Visningsnavn kan ikke være tomt.',
 }
 
 export const context = {
@@ -38,9 +36,9 @@ export const context = {
     kick_text: 'Vil du kaste ut {name}?',
     ban_title: 'Bannlys {name}?',
     ban_text: 'Vil du bannlyse {name}? Du vil måtte starte tjeneren på ny for å omgjøre dette.',
-    mute_title: 'Mute {name}?',
+    mute_title: 'Forstum {name}?',
     mute_text: 'Vil du forstumme {name}?',
-    unmute_title: 'Unmute {name}?',
+    unmute_title: 'Opphev forstummelse {name}?',
     unmute_text: 'Vil du oppheve forstummelsen av {name}?',
     button_yes: 'Ja',
     button_cancel: 'Avbryt',
@@ -52,38 +50,35 @@ export const controls = {
   request: 'Forespør kontroll',
   lock: 'Lås kontrollen',
   unlock: 'Lås opp kontrollen',
-  // TODO
-  //has: 'You have control',
-  //hasnot: 'You do not have control',
+  has: 'Du har kontrollen',
+  hasnot: 'Du har ikke kontrollen',
 }
 
 export const locks = {
-  // TODO
-  //control: {
-  //  lock: 'Lock Controls (for users)',
-  //  unlock: 'Unlock Controls (for users)',
-  //  locked: 'Controls Locked (for users)',
-  //  unlocked: 'Controls Unlocked (for users)',
-  //  notif_locked: 'locked controls for users',
-  //  notif_unlocked: 'unlocked controls for users',
-  //},
+  control: {
+    lock: 'Lås kontroller (for brukere)',
+    unlock: 'Lås opp kontroller (for brukere)',
+    locked: 'Kontroller låst (for brukere)',
+    unlocked: 'Kontroller opplåst (for brukere)',
+    notif_locked: 'låste kontroller for brukere',
+    notif_unlocked: 'låste opp kontroller for brukere',
+  },
   login: {
-    lock: 'Lås rommet (for brukere)',
+    lock: 'Lås rom (for brukere)',
     unlock: 'Lås opp rommet (for brukere)',
     locked: 'Rom låst (for brukere)',
     unlocked: 'Rom opplåst (for brukere)',
     notif_locked: 'låste rommet',
     notif_unlocked: 'låste opp rommet',
   },
-  // TODO
-  //file_transfer: {
-  //  lock: 'Lock File Transfer (for users)',
-  //  unlock: 'Unlock File Transfer (for users)',
-  //  locked: 'File Transfer Locked (for users)',
-  //  unlocked: 'File Transfer Unlocked (for users)',
-  //  notif_locked: 'locked file transfer',
-  //  notif_unlocked: 'unlocked file transfer',
-  //},
+  file_transfer: {
+    lock: 'Lås filoverføring (for brukere)',
+    unlock: 'Lås opp filoverføring (for brukere)',
+    locked: 'Filoverføring låst (for brukere)',
+    unlocked: 'Filoverføring opplåst (for brukere)',
+    notif_locked: 'låste filoverføring',
+    notif_unlocked: 'låste opp filoverføring',
+  },
 }
 
 export const setting = {
@@ -93,18 +88,15 @@ export const setting = {
   ignore_emotes: 'Ignorer smilefjes',
   chat_sound: 'Sludringslyd',
   keyboard_layout: 'Tastaturoppsett',
-  // TODO
-  //broadcast_title: 'Live Broadcast',
+  broadcast_title: 'Direktesending',
 }
 
 export const connection = {
   logged_out: 'Du har blitt utlogget.',
-  // TODO
-  //reconnecting: 'Reconnecting',
+  reconnecting: 'Kobler til igjen...',
   connected: 'Tilkoblet',
   disconnected: 'Frakoblet',
-  // TODO
-  //kicked: 'You have been removed from this room.',
+  kicked: 'Du har blitt fjernet fra dette rommet.',
   button_confirm: 'OK',
 }
 
@@ -129,7 +121,7 @@ export const notifications = {
 }
 
 export const files = {
-  downloads: 'Overførsler',
-  uploads: 'Overfør',
-  upload_here: 'Klik eller træk filer her for at uploade',
+  downloads: 'Nedlastinger',
+  uploads: 'Opplastinger',
+  upload_here: 'Klikk eller dra filer hit for å laste opp',
 }
