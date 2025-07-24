@@ -9,7 +9,7 @@
     <a href="https://github.com/m1k1o/neko/blob/master/LICENSE">
       <img src="https://img.shields.io/github/license/m1k1o/neko" alt="license">
     </a>
-    <a href="https://hub.docker.com/u/m1k1o/neko">
+    <a href="https://hub.docker.com/r/m1k1o/neko">
       <img src="https://img.shields.io/docker/pulls/m1k1o/neko" alt="pulls">
     </a>
     <a href="https://github.com/m1k1o/neko/issues">
