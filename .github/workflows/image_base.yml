@@ -61,7 +61,7 @@ jobs:
             type=semver,pattern={{major}}
             type=sha,format=long
 
-      - name: Log in to the Container registry
+      - name: Log in to the Container registry # needs GHCR_ACCESS_TOKEN in repo
         uses: docker/login-action@v3
         with:
           registry: ghcr.io

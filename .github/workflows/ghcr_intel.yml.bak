@@ -1,4 +1,4 @@
-name: Build and Push to GHCR for Nvidia
+name: Build and Push to GHCR for Intel
 
 on:
   push:
@@ -10,9 +10,9 @@ jobs:
     name: Base Image
     uses: ./.github/workflows/image_base.yml
     with:
-      flavor: nvidia
+      flavor: intel
       platforms: linux/amd64
-      dockerfile: Dockerfile.nvidia
+      dockerfile: Dockerfile.intel
     secrets: inherit
 
   build-app:
@@ -24,19 +24,24 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: firefox
-            dockerfile: Dockerfile.nvidia
-          - name: brave
-            dockerfile: Dockerfile.nvidia
+          #- name: firefox
+          # Temporarily disabled due to Cloudflare blocked download link
+          #- name: waterfox
           - name: chromium
-            dockerfile: Dockerfile.nvidia
-          - name: google-chrome
-            dockerfile: Dockerfile.nvidia
-          - name: microsoft-edge
-            dockerfile: Dockerfile.nvidia
+          #- name: google-chrome
+          #- name: ungoogled-chromium
+          #- name: microsoft-edge
+          #- name: brave
+          #- name: vivaldi
+          #- name: opera
+          #- name: tor-browser
+          #- name: remmina
+          #- name: vlc
+          #- name: xfce
+          #- name: kde
     with:
       name: ${{ matrix.name }}
-      flavor: nvidia
+      flavor: intel
       platforms: ${{ matrix.platforms }}
       dockerfile: ${{ matrix.dockerfile }}
     secrets: inherit

@@ -61,9 +61,9 @@ func (h *RoomHandler) controlRequest(w http.ResponseWriter, r *http.Request) err
 
 func (h *RoomHandler) controlRelease(w http.ResponseWriter, r *http.Request) error {
 	session, _ := auth.GetSession(r)
-	if !session.IsHost() {
-		return utils.HttpUnprocessableEntity("session is not the host")
-	}
+	// if !session.IsHost() {
+	// 	return utils.HttpUnprocessableEntity("session is not the host")
+	// }
 
 	h.desktop.ResetKeys()
 	session.ClearHost()

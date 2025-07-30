@@ -17,13 +17,15 @@ var (
 )
 
 func (h *MessageHandlerCtx) controlRelease(session types.Session) error {
-	if !session.Profile().CanHost || session.PrivateModeEnabled() {
-		return ErrIsNotAllowedToHost
-	}
+	// Disabled: profile check
+	// if !session.Profile().CanHost || session.PrivateModeEnabled() {
+	// 	return ErrIsNotAllowedToHost
+	// }
 
-	if !session.IsHost() {
-		return ErrIsNotTheHost
-	}
+	// Disabled: is host check
+	// if !session.IsHost() {
+	// 	return ErrIsNotTheHost
+	// }
 
 	h.desktop.ResetKeys()
 	session.ClearHost()
