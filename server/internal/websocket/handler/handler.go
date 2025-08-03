@@ -39,7 +39,7 @@ func (h *MessageHandlerCtx) Message(session types.Session, data types.WebSocketM
 	switch data.Event {
 	// Client Events
 	case event.CLIENT_HEARTBEAT:
-		err = session.Send("system/heartbeat", map[string]any{
+		session.Send("system/heartbeat", map[string]any{
 			"timestamp": time.Now(),
 		})
 
