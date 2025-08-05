@@ -47,6 +47,11 @@ type SystemSettingsUpdate struct {
 	types.Settings
 }
 
+// SystemPong is sent by the server as a direct response to CLIENT_HEARTBEAT
+type SystemPong struct {
+	Timestamp int64 `json:"timestamp"` // Unix ms
+}
+
 /////////////////////////////
 // Signal
 /////////////////////////////

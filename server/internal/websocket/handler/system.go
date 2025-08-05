@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"time"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
@@ -92,5 +93,15 @@ func (h *MessageHandlerCtx) systemLogs(session types.Session, payload *message.S
 			Msg(msg.Message)
 	}
 
+	return nil
+}
+
+func (h *MessageHandlerCtx) systemPong(session types.Session) error {
+	session.Send(
+		event.SYSTEM_PONG,
+		message.SystemPong{
+			Timestamp: time.Now().UnixMilli(),
+		},
+	)
 	return nil
 }

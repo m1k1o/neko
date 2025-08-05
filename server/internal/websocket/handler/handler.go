@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"time"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
@@ -39,9 +38,7 @@ func (h *MessageHandlerCtx) Message(session types.Session, data types.WebSocketM
 	switch data.Event {
 	// Client Events
 	case event.CLIENT_HEARTBEAT:
-		session.Send("system/heartbeat", map[string]any{
-			"timestamp": time.Now(),
-		})
+		err = h.systemPong(session)
 
 	// System Events
 	case event.SYSTEM_LOGS:
@@ -196,6 +193,7 @@ func (h *MessageHandlerCtx) Message(session types.Session, data types.WebSocketM
 			return h.sendBroadcast(session, payload)
 		})
 	default:
+		err = h.systemPong(session)
 		return false
 	}
 

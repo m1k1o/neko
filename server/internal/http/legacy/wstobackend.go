@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-
+	"strconv"
+	"time"
+	
 	"github.com/pion/webrtc/v3"
 
 	oldEvent "github.com/m1k1o/neko/server/internal/http/legacy/event"
@@ -28,8 +30,10 @@ func (s *session) wsToBackend(msg []byte) error {
 	switch header.Event {
 	// Client Events
 	case oldEvent.CLIENT_HEARTBEAT:
-		// do nothing
-		return nil
+		return s.toClient(&oldMessage.SystemPong{
+			Event:     oldEvent.SYSTEM_PONG,
+			Timestamp: strconv.FormatInt(time.Now().UnixMilli(), 10),
+		})
 
 	// Signal Events
 	case oldEvent.SIGNAL_OFFER:
