@@ -32,8 +32,8 @@ var nologEvents = []string{
 	// don't log twice
 	event.SYSTEM_LOGS,
 	// don't log heartbeats
-	event.SYSTEM_HEARTBEAT,
-	event.CLIENT_HEARTBEAT,
+	// event.CLIENT_HEARTBEAT,
+	// event.SYSTEM_PONG,
 	// don't log every cursor update
 	event.SESSION_CURSORS,
 }

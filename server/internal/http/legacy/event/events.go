@@ -4,6 +4,8 @@ const (
 	SYSTEM_INIT       = "system/init"
 	SYSTEM_DISCONNECT = "system/disconnect"
 	SYSTEM_ERROR      = "system/error"
+	SYSTEM_HEARTBEAT  = "system/heartbeat"
+	SYSTEM_PONG       = "system/pong"
 )
 
 const (

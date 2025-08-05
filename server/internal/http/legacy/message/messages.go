@@ -24,6 +24,11 @@ type SystemMessage struct {
 	Message string `json:"message"`
 }
 
+type SystemPong struct {
+	Event     string `json:"event"`
+	Timestamp string `json:"timestamp"`
+}
+
 type SignalProvide struct {
 	Event string             `json:"event"`
 	ID    string             `json:"id"`
