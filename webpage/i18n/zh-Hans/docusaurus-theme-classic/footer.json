@@ -1,0 +1,46 @@
+{
+  "link.title.Other Projects": {
+    "message": "Other Projects",
+    "description": "The title of the footer links column with title=Other Projects in the footer"
+  },
+  "link.title.Community": {
+    "message": "Community",
+    "description": "The title of the footer links column with title=Community in the footer"
+  },
+  "link.title.More": {
+    "message": "More",
+    "description": "The title of the footer links column with title=More in the footer"
+  },
+  "link.item.label.Neko Rooms": {
+    "message": "Neko Rooms",
+    "description": "The label of footer link with label=Neko Rooms linking to https://github.com/m1k1o/neko-rooms"
+  },
+  "link.item.label.Neko Apps": {
+    "message": "Neko Apps",
+    "description": "The label of footer link with label=Neko Apps linking to https://github.com/m1k1o/neko-apps"
+  },
+  "link.item.label.Neko VPN": {
+    "message": "Neko VPN",
+    "description": "The label of footer link with label=Neko VPN linking to https://github.com/m1k1o/neko-vpn"
+  },
+  "link.item.label.Discord": {
+    "message": "Discord",
+    "description": "The label of footer link with label=Discord linking to https://discord.gg/3U6hWpC"
+  },
+  "link.item.label.Issues": {
+    "message": "Issues",
+    "description": "The label of footer link with label=Issues linking to https://github.com/m1k1o/neko/issues"
+  },
+  "link.item.label.GitHub": {
+    "message": "GitHub",
+    "description": "The label of footer link with label=GitHub linking to https://github.com/m1k1o/neko"
+  },
+  "link.item.label.Sponsors": {
+    "message": "Sponsors",
+    "description": "The label of footer link with label=Sponsors linking to https://github.com/sponsors/m1k1o"
+  },
+  "copyright": {
+    "message": "Copyright © 2025 <a href=\"https://github.com/m1k1o\">m1k1o</a>. Built with Docusaurus.",
+    "description": "The footer copyright"
+  }
+}

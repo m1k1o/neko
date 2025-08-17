@@ -62,6 +62,7 @@ const sidebars: SidebarsConfig = {
           items: [
             'customization/networking',
             'customization/browsers',
+            'customization/browser-addons',
             'customization/ui',
           ]
         },
@@ -73,6 +74,7 @@ const sidebars: SidebarsConfig = {
           items: [
             'developer-guide/repository-structure',
             'developer-guide/build',
+            'developer-guide/build-script',
             {
               type: 'link',
               label: 'API Reference',

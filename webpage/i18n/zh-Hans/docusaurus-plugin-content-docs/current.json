@@ -1,0 +1,270 @@
+{
+  "version.label": {
+    "message": "v3",
+    "description": "The label for version current"
+  },
+  "sidebar.docsSidebar.category.Getting Started": {
+    "message": "Getting Started",
+    "description": "The label for category Getting Started in sidebar docsSidebar"
+  },
+  "sidebar.docsSidebar.category.Installation": {
+    "message": "Installation",
+    "description": "The label for category Installation in sidebar docsSidebar"
+  },
+  "sidebar.docsSidebar.category.Reference": {
+    "message": "Reference",
+    "description": "The label for category Reference in sidebar docsSidebar"
+  },
+  "sidebar.docsSidebar.category.Configuration": {
+    "message": "Configuration",
+    "description": "The label for category Configuration in sidebar docsSidebar"
+  },
+  "sidebar.docsSidebar.category.Customization": {
+    "message": "Customization",
+    "description": "The label for category Customization in sidebar docsSidebar"
+  },
+  "sidebar.docsSidebar.category.Developer Guide": {
+    "message": "Developer Guide",
+    "description": "The label for category Developer Guide in sidebar docsSidebar"
+  },
+  "sidebar.docsSidebar.category.Help & Support": {
+    "message": "Help & Support",
+    "description": "The label for category Help & Support in sidebar docsSidebar"
+  },
+  "sidebar.docsSidebar.link.API Reference": {
+    "message": "API Reference",
+    "description": "The label for link API Reference in sidebar docsSidebar, linking to /docs/v3/api"
+  },
+  "sidebar.apiSidebar.category.General": {
+    "message": "General",
+    "description": "The label for category General in sidebar apiSidebar"
+  },
+  "sidebar.apiSidebar.category.Current Session": {
+    "message": "Current Session",
+    "description": "The label for category Current Session in sidebar apiSidebar"
+  },
+  "sidebar.apiSidebar.category.Sessions": {
+    "message": "Sessions",
+    "description": "The label for category Sessions in sidebar apiSidebar"
+  },
+  "sidebar.apiSidebar.category.Members": {
+    "message": "Members",
+    "description": "The label for category Members in sidebar apiSidebar"
+  },
+  "sidebar.apiSidebar.category.Room Settings": {
+    "message": "Room Settings",
+    "description": "The label for category Room Settings in sidebar apiSidebar"
+  },
+  "sidebar.apiSidebar.category.Room Broadcast": {
+    "message": "Room Broadcast",
+    "description": "The label for category Room Broadcast in sidebar apiSidebar"
+  },
+  "sidebar.apiSidebar.category.Room Clipboard": {
+    "message": "Room Clipboard",
+    "description": "The label for category Room Clipboard in sidebar apiSidebar"
+  },
+  "sidebar.apiSidebar.category.Room Keyboard": {
+    "message": "Room Keyboard",
+    "description": "The label for category Room Keyboard in sidebar apiSidebar"
+  },
+  "sidebar.apiSidebar.category.Room Control": {
+    "message": "Room Control",
+    "description": "The label for category Room Control in sidebar apiSidebar"
+  },
+  "sidebar.apiSidebar.category.Room Screen": {
+    "message": "Room Screen",
+    "description": "The label for category Room Screen in sidebar apiSidebar"
+  },
+  "sidebar.apiSidebar.category.Room Upload": {
+    "message": "Room Upload",
+    "description": "The label for category Room Upload in sidebar apiSidebar"
+  },
+  "sidebar.apiSidebar.doc.Health Check": {
+    "message": "Health Check",
+    "description": "The label for the doc item Health Check in sidebar apiSidebar, linking to the doc api/healthcheck"
+  },
+  "sidebar.apiSidebar.doc.Metrics": {
+    "message": "Metrics",
+    "description": "The label for the doc item Metrics in sidebar apiSidebar, linking to the doc api/metrics"
+  },
+  "sidebar.apiSidebar.doc.Batch Request": {
+    "message": "Batch Request",
+    "description": "The label for the doc item Batch Request in sidebar apiSidebar, linking to the doc api/batch"
+  },
+  "sidebar.apiSidebar.doc.Get Stats": {
+    "message": "Get Stats",
+    "description": "The label for the doc item Get Stats in sidebar apiSidebar, linking to the doc api/stats"
+  },
+  "sidebar.apiSidebar.doc.User Login": {
+    "message": "User Login",
+    "description": "The label for the doc item User Login in sidebar apiSidebar, linking to the doc api/login"
+  },
+  "sidebar.apiSidebar.doc.User Logout": {
+    "message": "User Logout",
+    "description": "The label for the doc item User Logout in sidebar apiSidebar, linking to the doc api/logout"
+  },
+  "sidebar.apiSidebar.doc.Get Current User": {
+    "message": "Get Current User",
+    "description": "The label for the doc item Get Current User in sidebar apiSidebar, linking to the doc api/whoami"
+  },
+  "sidebar.apiSidebar.doc.Update Profile": {
+    "message": "Update Profile",
+    "description": "The label for the doc item Update Profile in sidebar apiSidebar, linking to the doc api/profile"
+  },
+  "sidebar.apiSidebar.doc.List Sessions": {
+    "message": "List Sessions",
+    "description": "The label for the doc item List Sessions in sidebar apiSidebar, linking to the doc api/sessions-get"
+  },
+  "sidebar.apiSidebar.doc.Get Session": {
+    "message": "Get Session",
+    "description": "The label for the doc item Get Session in sidebar apiSidebar, linking to the doc api/session-get"
+  },
+  "sidebar.apiSidebar.doc.Remove Session": {
+    "message": "Remove Session",
+    "description": "The label for the doc item Remove Session in sidebar apiSidebar, linking to the doc api/session-remove"
+  },
+  "sidebar.apiSidebar.doc.Disconnect Session": {
+    "message": "Disconnect Session",
+    "description": "The label for the doc item Disconnect Session in sidebar apiSidebar, linking to the doc api/session-disconnect"
+  },
+  "sidebar.apiSidebar.doc.MemberProfile": {
+    "message": "MemberProfile",
+    "description": "The label for the doc item MemberProfile in sidebar apiSidebar, linking to the doc api/schemas/memberprofile"
+  },
+  "sidebar.apiSidebar.doc.List Members": {
+    "message": "List Members",
+    "description": "The label for the doc item List Members in sidebar apiSidebar, linking to the doc api/members-list"
+  },
+  "sidebar.apiSidebar.doc.Create Member": {
+    "message": "Create Member",
+    "description": "The label for the doc item Create Member in sidebar apiSidebar, linking to the doc api/members-create"
+  },
+  "sidebar.apiSidebar.doc.Get Member Profile": {
+    "message": "Get Member Profile",
+    "description": "The label for the doc item Get Member Profile in sidebar apiSidebar, linking to the doc api/members-get-profile"
+  },
+  "sidebar.apiSidebar.doc.Update Member Profile": {
+    "message": "Update Member Profile",
+    "description": "The label for the doc item Update Member Profile in sidebar apiSidebar, linking to the doc api/members-update-profile"
+  },
+  "sidebar.apiSidebar.doc.Remove Member": {
+    "message": "Remove Member",
+    "description": "The label for the doc item Remove Member in sidebar apiSidebar, linking to the doc api/members-remove"
+  },
+  "sidebar.apiSidebar.doc.Update Member Password": {
+    "message": "Update Member Password",
+    "description": "The label for the doc item Update Member Password in sidebar apiSidebar, linking to the doc api/members-update-password"
+  },
+  "sidebar.apiSidebar.doc.Bulk Update Members": {
+    "message": "Bulk Update Members",
+    "description": "The label for the doc item Bulk Update Members in sidebar apiSidebar, linking to the doc api/members-bulk-update"
+  },
+  "sidebar.apiSidebar.doc.Bulk Delete Members": {
+    "message": "Bulk Delete Members",
+    "description": "The label for the doc item Bulk Delete Members in sidebar apiSidebar, linking to the doc api/members-bulk-delete"
+  },
+  "sidebar.apiSidebar.doc.Get Room Settings": {
+    "message": "Get Room Settings",
+    "description": "The label for the doc item Get Room Settings in sidebar apiSidebar, linking to the doc api/settings-get"
+  },
+  "sidebar.apiSidebar.doc.Update Room Settings": {
+    "message": "Update Room Settings",
+    "description": "The label for the doc item Update Room Settings in sidebar apiSidebar, linking to the doc api/settings-set"
+  },
+  "sidebar.apiSidebar.doc.Get Broadcast Status": {
+    "message": "Get Broadcast Status",
+    "description": "The label for the doc item Get Broadcast Status in sidebar apiSidebar, linking to the doc api/broadcast-status"
+  },
+  "sidebar.apiSidebar.doc.Start Broadcast": {
+    "message": "Start Broadcast",
+    "description": "The label for the doc item Start Broadcast in sidebar apiSidebar, linking to the doc api/broadcast-start"
+  },
+  "sidebar.apiSidebar.doc.Stop Broadcast": {
+    "message": "Stop Broadcast",
+    "description": "The label for the doc item Stop Broadcast in sidebar apiSidebar, linking to the doc api/broadcast-stop"
+  },
+  "sidebar.apiSidebar.doc.Get Clipboard Content": {
+    "message": "Get Clipboard Content",
+    "description": "The label for the doc item Get Clipboard Content in sidebar apiSidebar, linking to the doc api/clipboard-get-text"
+  },
+  "sidebar.apiSidebar.doc.Set Clipboard Content": {
+    "message": "Set Clipboard Content",
+    "description": "The label for the doc item Set Clipboard Content in sidebar apiSidebar, linking to the doc api/clipboard-set-text"
+  },
+  "sidebar.apiSidebar.doc.Get Clipboard Image": {
+    "message": "Get Clipboard Image",
+    "description": "The label for the doc item Get Clipboard Image in sidebar apiSidebar, linking to the doc api/clipboard-get-image"
+  },
+  "sidebar.apiSidebar.doc.Get Keyboard Map": {
+    "message": "Get Keyboard Map",
+    "description": "The label for the doc item Get Keyboard Map in sidebar apiSidebar, linking to the doc api/keyboard-map-get"
+  },
+  "sidebar.apiSidebar.doc.Set Keyboard Map": {
+    "message": "Set Keyboard Map",
+    "description": "The label for the doc item Set Keyboard Map in sidebar apiSidebar, linking to the doc api/keyboard-map-set"
+  },
+  "sidebar.apiSidebar.doc.Get Keyboard Modifiers": {
+    "message": "Get Keyboard Modifiers",
+    "description": "The label for the doc item Get Keyboard Modifiers in sidebar apiSidebar, linking to the doc api/keyboard-modifiers-get"
+  },
+  "sidebar.apiSidebar.doc.Set Keyboard Modifiers": {
+    "message": "Set Keyboard Modifiers",
+    "description": "The label for the doc item Set Keyboard Modifiers in sidebar apiSidebar, linking to the doc api/keyboard-modifiers-set"
+  },
+  "sidebar.apiSidebar.doc.Get Control Status": {
+    "message": "Get Control Status",
+    "description": "The label for the doc item Get Control Status in sidebar apiSidebar, linking to the doc api/control-status"
+  },
+  "sidebar.apiSidebar.doc.Request Control": {
+    "message": "Request Control",
+    "description": "The label for the doc item Request Control in sidebar apiSidebar, linking to the doc api/control-request"
+  },
+  "sidebar.apiSidebar.doc.Release Control": {
+    "message": "Release Control",
+    "description": "The label for the doc item Release Control in sidebar apiSidebar, linking to the doc api/control-release"
+  },
+  "sidebar.apiSidebar.doc.Take Control": {
+    "message": "Take Control",
+    "description": "The label for the doc item Take Control in sidebar apiSidebar, linking to the doc api/control-take"
+  },
+  "sidebar.apiSidebar.doc.Give Control": {
+    "message": "Give Control",
+    "description": "The label for the doc item Give Control in sidebar apiSidebar, linking to the doc api/control-give"
+  },
+  "sidebar.apiSidebar.doc.Reset Control": {
+    "message": "Reset Control",
+    "description": "The label for the doc item Reset Control in sidebar apiSidebar, linking to the doc api/control-reset"
+  },
+  "sidebar.apiSidebar.doc.Get Screen Configuration": {
+    "message": "Get Screen Configuration",
+    "description": "The label for the doc item Get Screen Configuration in sidebar apiSidebar, linking to the doc api/screen-configuration"
+  },
+  "sidebar.apiSidebar.doc.Change Screen Configuration": {
+    "message": "Change Screen Configuration",
+    "description": "The label for the doc item Change Screen Configuration in sidebar apiSidebar, linking to the doc api/screen-configuration-change"
+  },
+  "sidebar.apiSidebar.doc.Get List of Screen Configurations": {
+    "message": "Get List of Screen Configurations",
+    "description": "The label for the doc item Get List of Screen Configurations in sidebar apiSidebar, linking to the doc api/screen-configurations-list"
+  },
+  "sidebar.apiSidebar.doc.Get Screencast Image": {
+    "message": "Get Screencast Image",
+    "description": "The label for the doc item Get Screencast Image in sidebar apiSidebar, linking to the doc api/screen-cast-image"
+  },
+  "sidebar.apiSidebar.doc.Get Screenshot Image": {
+    "message": "Get Screenshot Image",
+    "description": "The label for the doc item Get Screenshot Image in sidebar apiSidebar, linking to the doc api/screen-shot-image"
+  },
+  "sidebar.apiSidebar.doc.Upload and Drop File": {
+    "message": "Upload and Drop File",
+    "description": "The label for the doc item Upload and Drop File in sidebar apiSidebar, linking to the doc api/upload-drop"
+  },
+  "sidebar.apiSidebar.doc.Upload File to Dialog": {
+    "message": "Upload File to Dialog",
+    "description": "The label for the doc item Upload File to Dialog in sidebar apiSidebar, linking to the doc api/upload-dialog"
+  },
+  "sidebar.apiSidebar.doc.Close File Chooser Dialog": {
+    "message": "Close File Chooser Dialog",
+    "description": "The label for the doc item Close File Chooser Dialog in sidebar apiSidebar, linking to the doc api/upload-dialog-close"
+  }
+}
