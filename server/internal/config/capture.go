@@ -298,7 +298,7 @@ func (Capture) InitV2(cmd *cobra.Command) error {
 	// broadcast
 	//
 
-	cmd.PersistentFlags().String("broadcast_pipeline", "", "V2: custom gst pipeline used for broadcasting, strings {url} {device} {display} will be replaced")
+	cmd.PersistentFlags().String("broadcast_pipeline", "", "V2: custom gst pipeline used for broadcasting, strings {hostname} {url} {device} {display} will be replaced")
 	if err := viper.BindPFlag("broadcast_pipeline", cmd.PersistentFlags().Lookup("broadcast_pipeline")); err != nil {
 		return err
 	}

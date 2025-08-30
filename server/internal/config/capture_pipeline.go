@@ -3,6 +3,7 @@ package config
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/m1k1o/neko/server/pkg/gst"
@@ -40,12 +41,17 @@ func NewBroadcastPipeline(device string, display string, pipelineSrc string, url
 
 	var pipelineStr string
 	if pipelineSrc != "" {
+		pipelineStr = pipelineSrc
+		// replace {hostname} with valid hostname
+		if hostname, err := os.Hostname(); err == nil {
+			pipelineStr = strings.ReplaceAll(pipelineStr, "{hostname}", hostname)
+		}
 		// replace RTMP url
-		pipelineStr = strings.Replace(pipelineSrc, "{url}", url, -1)
+		pipelineStr = strings.ReplaceAll(pipelineStr, "{url}", url)
 		// replace audio device
-		pipelineStr = strings.Replace(pipelineStr, "{device}", device, -1)
+		pipelineStr = strings.ReplaceAll(pipelineStr, "{device}", device)
 		// replace display
-		pipelineStr = strings.Replace(pipelineStr, "{display}", display, -1)
+		pipelineStr = strings.ReplaceAll(pipelineStr, "{display}", display)
 	} else {
 		pipelineStr = fmt.Sprintf("flvmux name=mux ! rtmpsink location='%s live=1' %s audio/x-raw,channels=2 ! audioconvert ! voaacenc ! mux. %s x264enc bframes=0 key-int-max=60 byte-stream=true tune=zerolatency speed-preset=veryfast ! mux.", url, audio, video)
 	}

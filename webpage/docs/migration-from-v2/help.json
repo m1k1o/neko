@@ -250,7 +250,7 @@
       "broadcast_pipeline"
     ],
     "type": "string",
-    "description": "custom gst pipeline used for broadcasting, strings {url} {device} {display} will be replaced"
+    "description": "custom gst pipeline used for broadcasting, strings {hostname} {url} {device} {display} will be replaced"
   },
   {
     "key": [
