@@ -3,6 +3,7 @@ package capture
 import (
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/rs/zerolog"
@@ -80,6 +81,10 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 		broadcast: broadcastNew(func(url string) (string, error) {
 			if config.BroadcastPipeline != "" {
 				var pipeline = config.BroadcastPipeline
+				if hostname, err := os.Hostname(); err == nil {
+					// replace {hostname} with valid hostname
+					pipeline = strings.Replace(pipeline, "{hostname}", hostname, 1)
+				}
 				// replace {display} with valid display
 				pipeline = strings.Replace(pipeline, "{display}", config.Display, 1)
 				// replace {device} with valid device

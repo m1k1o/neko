@@ -347,7 +347,7 @@ The default encoder uses `h264` for video and `aac` for audio, muxed in the `flv
 
 - <Def id="broadcast.audio_bitrate" /> and <Def id="broadcast.video_bitrate" /> are the bitrate settings for the default audio and video encoders expressed in kilobits per second.
 - <Def id="broadcast.preset" /> is the encoding speed preset for the default video encoder. See available presets [here](https://gstreamer.freedesktop.org/documentation/x264/index.html?gi-language=c#GstX264EncPreset).
-- <Def id="broadcast.pipeline" /> when set, encoder settings above are ignored and the custom Gstreamer pipeline description is used. In the pipeline, you can use `{display}`, `{device}` and `{url}` as placeholders for the X display name, pulseaudio audio device name, and broadcast URL respectively.
+- <Def id="broadcast.pipeline" /> when set, encoder settings above are ignored and the custom Gstreamer pipeline description is used. In the pipeline, you can use `{hostname}`, `{display}`, `{device}` and `{url}` as placeholders for the X display name, pulseaudio audio device name, and broadcast URL respectively.
 - <Def id="broadcast.url" /> is the URL of the RTMP server where the broadcast will be sent e.g. `rtmp://<server>/<application>/<stream_key>`. This can be set later using the API if the URL is not known at the time of configuration or is expected to change.
 - <Def id="broadcast.autostart" /> is a boolean value that determines whether the broadcast should start automatically when neko starts, works only if the URL is set.
 
