@@ -26,6 +26,8 @@
           @touchmove.stop.prevent="onTouchHandler"
           @touchstart.stop.prevent="onTouchHandler"
           @touchend.stop.prevent="onTouchHandler"
+          @compositionstart="onCompositionStartHandler"
+          @compositionend="onCompositionEndHandler"
         />
         <div v-if="!playing && playable" class="player-overlay" @click.stop.prevent="playAndUnmute">
           <i class="fas fa-play-circle" />
@@ -250,6 +252,7 @@
     private focused = false
     private fullscreen = false
     private mutedOverlay = true
+    private lastTextAreaValue = ''
 
     get admin() {
       return this.$accessor.user.admin
@@ -754,6 +757,14 @@
         clientY: first.clientY,
       })
       first.target.dispatchEvent(simulatedEvent)
+    }
+
+    onCompositionStartHandler() {
+      this.lastTextAreaValue = this._overlay.value
+    }
+
+    onCompositionEndHandler() {
+      this._overlay.value = this.lastTextAreaValue
     }
 
     isMouseDown = false
