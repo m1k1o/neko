@@ -40,4 +40,5 @@ tar -xzf "$ARTIFACT"
 
 # Unpack with go-crx3
 ./go-crx3 unpack widevinecdm.crx
-mv widevinecdm "$TARGET_DIR"
+mkdir -p "$TARGET_DIR"
+cp -ar widevinecdm/* "$TARGET_DIR"
