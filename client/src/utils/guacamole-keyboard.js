@@ -297,6 +297,10 @@ Guacamole.Keyboard = function Keyboard(element) {
         // Determine whether default action for Alt+combinations must be prevented
         var prevent_alt = !this.modifiers.ctrl && !quirks.altIsTypableOnly;
 
+        // If alt is typeable only, and this is actually an alt key event, treat as AltGr instead
+        if (quirks.altIsTypableOnly && (this.keysym === 0xFFE9 || this.keysym === 0xFFEA))
+            this.keysym = 0xFE03;
+
         // Determine whether default action for Ctrl+combinations must be prevented
         var prevent_ctrl = !this.modifiers.alt;
 
@@ -397,7 +401,7 @@ Guacamole.Keyboard = function Keyboard(element) {
         13:  [0xFF0D], // enter
         16:  [0xFFE1, 0xFFE1, 0xFFE2], // shift
         17:  [0xFFE3, 0xFFE3, 0xFFE4], // ctrl
-        18:  [0xFFE9, 0xFFE9, 0xFE03], // alt
+        18:  [0xFFE9, 0xFFE9, 0xFFEA], // alt
         19:  [0xFF13], // pause/break
         20:  [0xFFE5], // caps lock
         27:  [0xFF1B], // escape
@@ -458,7 +462,7 @@ Guacamole.Keyboard = function Keyboard(element) {
         "Again": [0xFF66],
         "AllCandidates": [0xFF3D],
         "Alphanumeric": [0xFF30],
-        "Alt": [0xFFE9, 0xFFE9, 0xFE03],
+        "Alt": [0xFFE9, 0xFFE9, 0xFFEA],
         "Attn": [0xFD0E],
         "AltGraph": [0xFE03],
         "ArrowDown": [0xFF54],
@@ -469,7 +473,7 @@ Guacamole.Keyboard = function Keyboard(element) {
         "CapsLock": [0xFFE5],
         "Cancel": [0xFF69],
         "Clear": [0xFF0B],
-        "Convert": [0xFF21],
+        "Convert": [0xFF23],
         "Copy": [0xFD15],
         "Crsel": [0xFD1C],
         "CrSel": [0xFD1C],
@@ -536,6 +540,7 @@ Guacamole.Keyboard = function Keyboard(element) {
         "Left": [0xFF51],
         "Meta": [0xFFE7, 0xFFE7, 0xFFE8],
         "ModeChange": [0xFF7E],
+        "NonConvert": [0xFF22],
         "NumLock": [0xFF7F],
         "PageDown": [0xFF56],
         "PageUp": [0xFF55],
@@ -545,6 +550,7 @@ Guacamole.Keyboard = function Keyboard(element) {
         "PrintScreen": [0xFF61],
         "Redo": [0xFF66],
         "Right": [0xFF53],
+        "Romaji": [0xFF24],
         "RomanCharacters": null,
         "Scroll": [0xFF14],
         "Select": [0xFF60],
@@ -1316,9 +1322,10 @@ Guacamole.Keyboard = function Keyboard(element) {
 
             var keydownEvent = new KeydownEvent(e);
 
-            // Ignore (but do not prevent) the "composition" keycode sent by some
-            // browsers when an IME is in use (see: http://lists.w3.org/Archives/Public/www-dom/2010JulSep/att-0182/keyCode-spec.html)
-            if (keydownEvent.keyCode === 229)
+            // Ignore (but do not prevent) the event if explicitly marked as composing,
+            // or when the "composition" keycode sent by some browsers when an IME is in use
+            // (see: http://lists.w3.org/Archives/Public/www-dom/2010JulSep/att-0182/keyCode-spec.html)
+            if (e.isComposing || keydownEvent.keyCode === 229)
                 return;
 
             // Log event
@@ -1365,7 +1372,70 @@ Guacamole.Keyboard = function Keyboard(element) {
 
         }, true);
 
-        // NEKO: Do not automatically type text entered into the wrapped field
+        /**
+         * Handles the given "input" event, typing the data within the input text.
+         *
+         * @private
+         * @param {!InputEvent} e
+         *     The "input" event to handle.
+         */
+        var handleInput = function handleInput(e) {
+
+            // Only intercept if handler set
+            if (!guac_keyboard.onkeydown && !guac_keyboard.onkeyup) return;
+
+            // Ignore events which have already been handled
+            if (!markEvent(e)) return;
+
+            // Type all content written
+            if (e.data && !e.isComposing)
+                guac_keyboard.type(e.data);
+
+        };
+
+        /**
+         * Handles the given "compositionstart" event, automatically removing
+         * the "input" event handler, as "input" events should only be handled
+         * if composition events are not provided by the browser.
+         *
+         * @private
+         * @param {!CompositionEvent} e
+         *     The "compositionstart" event to handle.
+         */
+        var handleCompositionStart = function handleCompositionStart(e) {
+
+            // Remove the "input" event handler now that the browser is known
+            // to send composition events
+            element.removeEventListener("input", handleInput, false);
+
+        };
+
+        /**
+         * Handles the given "compositionend" event, typing the data within the
+         * composed text.
+         *
+         * @private
+         * @param {!CompositionEvent} e
+         *     The "compositionend" event to handle.
+         */
+        var handleCompositionEnd = function handleCompositionEnd(e) {
+
+            // Only intercept if handler set
+            if (!guac_keyboard.onkeydown && !guac_keyboard.onkeyup) return;
+
+            // Ignore events which have already been handled
+            if (!markEvent(e)) return;
+
+            // Type all content written
+            if (e.data)
+                guac_keyboard.type(e.data);
+
+        };
+
+        // Automatically type text entered into the wrapped field
+        element.addEventListener("input", handleInput, false);
+        element.addEventListener("compositionend", handleCompositionEnd, false);
+        element.addEventListener("compositionstart", handleCompositionStart, false);
 
     };
 
