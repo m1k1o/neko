@@ -111,12 +111,12 @@ Guacamole.Keyboard = function Keyboard(element) {
         altIsTypableOnly: false,
 
         /**
-         * Whether we can rely on receiving a keyup event for the Caps Lock
-         * key.
+         * Whether we can rely on receiving a keyup or keydown event for the
+         * Caps Lock key.
          *
          * @type {!boolean}
          */
-        capsLockKeyupUnreliable: false
+        capsLockKeyEventUnreliable: false
 
     };
 
@@ -129,10 +129,11 @@ Guacamole.Keyboard = function Keyboard(element) {
             quirks.keyupUnreliable = true;
 
         // The Alt key on Mac is never used for keyboard shortcuts, and the
-        // Caps Lock key never dispatches keyup events
+        // Caps Lock key never dispatches keyup events in firefox, and it
+        // dispatches either keydown or keyup events in chrome, but never both
         else if (navigator.platform.match(/^mac/i)) {
             quirks.altIsTypableOnly = true;
-            quirks.capsLockKeyupUnreliable = true;
+            quirks.capsLockKeyEventUnreliable = true;
         }
 
     }
@@ -291,7 +292,7 @@ Guacamole.Keyboard = function Keyboard(element) {
             this.keyupReliable = false;
 
         // We cannot rely on receiving keyup for Caps Lock on certain platforms
-        else if (this.keysym === 0xFFE5 && quirks.capsLockKeyupUnreliable)
+        else if (this.keysym === 0xFFE5 && quirks.capsLockKeyEventUnreliable)
             this.keyupReliable = false;
 
         // Determine whether default action for Alt+combinations must be prevented
@@ -360,6 +361,14 @@ Guacamole.Keyboard = function Keyboard(element) {
 
         // We extend KeyEvent
         KeyEvent.call(this, orig);
+
+        // If unreliable caps lock was pressed and event was not marked, then
+        // we need to pretend that this is a keydown event because we obviously
+        // did not receive it (issue on macos with chrome)
+        if (this.keyCode == 20 && quirks.capsLockKeyEventUnreliable) {
+          eventLog.push(new KeydownEvent(this));
+          return;
+        }
 
         // If key is known from keyCode or DOM3 alone, use that (keyCode is
         // still more reliable for keyup when dead keys are in use)
