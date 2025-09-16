@@ -279,6 +279,33 @@ See documentation for [ximagesrc](https://gstreamer.freedesktop.org/documentatio
 
     This configuration requires [Nvidia GPU](https://developer.nvidia.com/cuda-gpus) with [NVENC](https://developer.nvidia.com/nvidia-video-codec-sdk) support.
 
+    ```yaml title="config.yaml"
+    capture:
+      video:
+        codec: h264
+        ids: [ main ]
+        pipelines:
+          main:
+            gst_pipeline: |
+              ximagesrc display-name={display} show-pointer=true use-damage=false
+              ! cudaupload ! cudaconvert ! queue
+              ! video/x-raw(memory:CUDAMemory),format=NV12
+              ! nvh264enc
+                name=encoder
+                preset=2
+                gop-size=25
+                spatial-aq=true
+                temporal-aq=true
+                bitrate=4096
+                vbv-buffer-size=4096
+                rc-mode=6
+              ! h264parse config-interval=-1
+              ! video/x-h264,stream-format=byte-stream
+              ! appsink name=appsink
+    ```
+
+    This configuration requires [Nvidia GPU](https://developer.nvidia.com/cuda-gpus) with [NVENC](https://developer.nvidia.com/nvidia-video-codec-sdk) support and [Cuda](https://developer.nvidia.com/cuda-zone) support.
+
   </TabItem>
 </Tabs>
 
