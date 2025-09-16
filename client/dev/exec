@@ -7,4 +7,4 @@ docker run --rm -it \
     --volume "${PWD}/../:/app" \
     --entrypoint="/bin/bash" \
     --workdir="/app" \
-    node:18-bullseye-slim
+    node:18-bookworm-slim

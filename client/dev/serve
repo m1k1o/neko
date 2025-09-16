@@ -13,7 +13,7 @@ if [ ! -d "${PWD}/../node_modules" ] || [ "$1" == "-i" ]; then
     --volume "${PWD}/../:/app" \
     --workdir="/app" \
     --entrypoint="npm" \
-    node:18-bullseye-slim install
+    node:18-bookworm-slim install
 fi
 
 # npm run serve
@@ -24,4 +24,4 @@ docker run --rm -it \
     --volume "${PWD}/../:/app" \
     --entrypoint="npm" \
     --workdir="/app" \
-    node:18-bullseye-slim run serve -- --port 3001
+    node:18-bookworm-slim run serve -- --port 3001
