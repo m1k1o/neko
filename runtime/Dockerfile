@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=debian:bullseye-slim
+ARG BASE_IMAGE=debian:trixie-slim
 FROM $BASE_IMAGE AS runtime
 
 #
@@ -13,9 +13,9 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN set -eux; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
-        wget ca-certificates python2 supervisor \
+        wget ca-certificates supervisor \
         pulseaudio dbus-x11 xserver-xorg-video-dummy \
-        libcairo2 libxcb1 libxrandr2 libxv1 libopus0 libvpx6 \
+        libcairo2 libxcb1 libxrandr2 libxv1 libopus0 libvpx9 libx264-164 libvo-aacenc0 librtmp1 libxcvt0 \
         #
         # needed for profile upload preStop hook
         zip curl \
@@ -26,13 +26,7 @@ RUN set -eux; \
         # gst
         gstreamer1.0-plugins-base gstreamer1.0-plugins-good \
         gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly \
-        gstreamer1.0-pulseaudio gstreamer1.0-omx; \
-    #
-    # install libxcvt0 (not available in debian:bullseye)
-    ARCH=$(dpkg --print-architecture); \
-    wget http://ftp.de.debian.org/debian/pool/main/libx/libxcvt/libxcvt0_0.1.2-1_${ARCH}.deb; \
-    apt-get install --no-install-recommends ./libxcvt0_0.1.2-1_${ARCH}.deb; \
-    rm ./libxcvt0_0.1.2-1_${ARCH}.deb; \
+        gstreamer1.0-pulseaudio; \
     #
     # create a non-root user
     groupadd --gid $USER_GID $USERNAME; \
@@ -52,6 +46,7 @@ RUN set -eux; \
         /home/$USERNAME/.config/pulse  \
         /home/$USERNAME/.local/share/xorg; \
     chmod 1777 /var/log/neko; \
+    chmod 0700 /tmp/runtime-$USERNAME; \
     chown $USERNAME /var/log/neko/ /tmp/runtime-$USERNAME; \
     chown -R $USERNAME:$USERNAME /home/$USERNAME; \
     #
