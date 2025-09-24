@@ -75,7 +75,7 @@ func (Session) Init(cmd *cobra.Command) error {
 		return err
 	}
 
-	cmd.PersistentFlags().Int("session.heartbeat_interval", 120, "interval in seconds for sending heartbeat messages")
+	cmd.PersistentFlags().Int("session.heartbeat_interval", 10, "interval in seconds for sending heartbeat messages")
 	if err := viper.BindPFlag("session.heartbeat_interval", cmd.PersistentFlags().Lookup("session.heartbeat_interval")); err != nil {
 		return err
 	}
