@@ -279,6 +279,33 @@ See documentation for [ximagesrc](https://gstreamer.freedesktop.org/documentatio
 
     This configuration requires [Nvidia GPU](https://developer.nvidia.com/cuda-gpus) with [NVENC](https://developer.nvidia.com/nvidia-video-codec-sdk) support.
 
+    ```yaml title="config.yaml"
+    capture:
+      video:
+        codec: h264
+        ids: [ main ]
+        pipelines:
+          main:
+            gst_pipeline: |
+              ximagesrc display-name={display} show-pointer=true use-damage=false
+              ! cudaupload ! cudaconvert ! queue
+              ! video/x-raw(memory:CUDAMemory),format=NV12
+              ! nvh264enc
+                name=encoder
+                preset=2
+                gop-size=25
+                spatial-aq=true
+                temporal-aq=true
+                bitrate=4096
+                vbv-buffer-size=4096
+                rc-mode=6
+              ! h264parse config-interval=-1
+              ! video/x-h264,stream-format=byte-stream
+              ! appsink name=appsink
+    ```
+
+    This configuration requires [Nvidia GPU](https://developer.nvidia.com/cuda-gpus) with [NVENC](https://developer.nvidia.com/nvidia-video-codec-sdk) support and [Cuda](https://developer.nvidia.com/cuda-zone) support.
+
   </TabItem>
 </Tabs>
 
@@ -347,7 +374,7 @@ The default encoder uses `h264` for video and `aac` for audio, muxed in the `flv
 
 - <Def id="broadcast.audio_bitrate" /> and <Def id="broadcast.video_bitrate" /> are the bitrate settings for the default audio and video encoders expressed in kilobits per second.
 - <Def id="broadcast.preset" /> is the encoding speed preset for the default video encoder. See available presets [here](https://gstreamer.freedesktop.org/documentation/x264/index.html?gi-language=c#GstX264EncPreset).
-- <Def id="broadcast.pipeline" /> when set, encoder settings above are ignored and the custom Gstreamer pipeline description is used. In the pipeline, you can use `{display}`, `{device}` and `{url}` as placeholders for the X display name, pulseaudio audio device name, and broadcast URL respectively.
+- <Def id="broadcast.pipeline" /> when set, encoder settings above are ignored and the custom Gstreamer pipeline description is used. In the pipeline, you can use `{hostname}`, `{display}`, `{device}` and `{url}` as placeholders for the X display name, pulseaudio audio device name, and broadcast URL respectively.
 - <Def id="broadcast.url" /> is the URL of the RTMP server where the broadcast will be sent e.g. `rtmp://<server>/<application>/<stream_key>`. This can be set later using the API if the URL is not known at the time of configuration or is expected to change.
 - <Def id="broadcast.autostart" /> is a boolean value that determines whether the broadcast should start automatically when neko starts, works only if the URL is set.
 
