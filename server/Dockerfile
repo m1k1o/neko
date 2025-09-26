@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=golang:1.24-bullseye
+ARG BASE_IMAGE=golang:1.25.0
 FROM $BASE_IMAGE AS server
 
 WORKDIR /src
