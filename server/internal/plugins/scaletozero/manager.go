@@ -48,6 +48,7 @@ func (m *Manager) Start() error {
 		}
 
 		m.pending++
+		m.logger.Info().Msgf("connection started, disabling scale-to-zero (pending: %d)", m.pending)
 		m.ctrl.Disable(context.Background())
 	})
 
@@ -57,7 +58,9 @@ func (m *Manager) Start() error {
 		if m.shutdown {
 			return
 		}
+
 		m.pending--
+		m.logger.Info().Msgf("connection started, disabling scale-to-zero (pending: %d)", m.pending)
 		m.ctrl.Enable(context.Background())
 	})
 
@@ -69,6 +72,7 @@ func (m *Manager) Shutdown() error {
 	defer m.mu.Unlock()
 	m.shutdown = true
 
+	m.logger.Info().Msgf("shutdown started, re-enabling scale-to-zero (pending: %d)", m.pending)
 	for i := 0; i < m.pending; i++ {
 		m.ctrl.Enable(context.Background())
 	}
