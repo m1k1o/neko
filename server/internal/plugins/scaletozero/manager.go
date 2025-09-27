@@ -61,7 +61,6 @@ func (m *Manager) Start() error {
 		m.ctrl.Enable(context.Background())
 	})
 
-	m.logger.Info().Msg("scale-to-zero hooks enabled")
 	return nil
 }
 
