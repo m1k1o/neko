@@ -1,8 +1,6 @@
 module github.com/m1k1o/neko/server
 
-go 1.24.0
-
-toolchain go1.24.5
+go 1.25.0
 
 require (
 	github.com/PaesslerAG/gval v1.2.4
@@ -12,6 +10,7 @@ require (
 	github.com/gorilla/websocket v1.5.3
 	github.com/kataras/go-events v0.0.3
 	github.com/mitchellh/mapstructure v1.5.0
+	github.com/onkernel/kernel-images/server v0.0.0-20250912023508-e0ca1d95b771
 	github.com/pion/ice/v2 v2.3.38
 	github.com/pion/interceptor v0.1.40
 	github.com/pion/logging v0.2.4

@@ -3,6 +3,7 @@ package cmd
 import (
 	"os"
 	"os/signal"
+	"syscall"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -236,7 +237,7 @@ func (c *serve) Run(cmd *cobra.Command, args []string) {
 	c.logger.Info().Msg("neko ready")
 
 	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, os.Interrupt)
+	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
 	sig := <-quit
 
 	c.logger.Warn().Msgf("received %s, attempting graceful shutdown", sig)
