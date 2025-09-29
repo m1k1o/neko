@@ -37,7 +37,7 @@
       --audio string                                  audio codec parameters to use for streaming
       --audio_bitrate int                             audio bitrate in kbit/s
 
-      --broadcast_pipeline string                     custom gst pipeline used for broadcasting, strings {url} {device} {display} will be replaced
+      --broadcast_pipeline string                     custom gst pipeline used for broadcasting, strings {hostname} {url} {device} {display} will be replaced
       --broadcast_url string                          a default default URL for broadcast streams, can be disabled/changed later by admins in the GUI
       --broadcast_autostart                           automatically start broadcasting when neko starts and broadcast_url is set
 

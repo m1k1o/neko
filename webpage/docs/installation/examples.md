@@ -113,9 +113,9 @@ services:
 
 ## Nvidia GPU Acceleration {#nvidia}
 
-Neko supports hardware acceleration using Nvidia GPUs. To use this feature, you need to have the Nvidia Container Toolkit installed on your system. You can find the installation instructions [here](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html).
+Neko supports hardware acceleration using Nvidia GPUs. To use this feature, you need to have the Nvidia Container Toolkit installed on your system. You can find the installation instructions [here](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html). Check if your GPU supports hardware encoding with [this list](https://developer.nvidia.com/video-encode-decode-gpu-support-matrix).
 
-This example shows how to accelerate video encoding and as well the browser rendering using the GPU. You can test if the GPU is used by running `nvidia-smi`, which should show the GPU usage of both the browser and neko. In the browser, you can run the [WebGL Aquarium Demo](https://webglsamples.org/aquarium/aquarium.html) to test the GPU usage.
+This example shows how to accelerate video encoding and as well the browser rendering using the GPU. You can test if the GPU is used by running `nvtop` or `nvidia-smi`, which should show the GPU usage of both the browser and neko. In the browser, you can run the [WebGL Aquarium Demo](https://webglsamples.org/aquarium/aquarium.html) to test the GPU usage.
 
 ```yaml title="docker-compose.yaml"
 services:
@@ -130,8 +130,8 @@ services:
       NEKO_CAPTURE_VIDEO_PIPELINE: |
         ximagesrc display-name={display} show-pointer=true use-damage=false
           ! video/x-raw,framerate=25/1
-          ! videoconvert ! queue
-          ! video/x-raw,format=NV12
+          ! cudaupload ! cudaconvert ! queue
+          ! video/x-raw(memory:CUDAMemory),format=NV12
           ! nvh264enc
             name=encoder
             preset=2
@@ -161,7 +161,11 @@ services:
 
 See available [Nvidia Docker Images](/docs/v3/installation/docker-images#nvidia).
 
-If you only want to accelerate the encoding, **not the browser rendering**, you can use the default image with additional environment variables:
+:::note
+If your Nvidia GPU does not support CUDA, you can use the pipeline below without `cudaupload` and `cudaconvert`. This should work with older GPUs, but the performance might be lower.
+:::
+
+If you only want to accelerate the encoding, **not the browser rendering**, and you do not need [Cuda library](https://gstreamer.freedesktop.org/documentation/cuda/index.html?gi-language=c), you can use the default image with additional environment variables:
 
 ```yaml title="docker-compose.yaml"
 services:
@@ -181,8 +185,10 @@ services:
       NEKO_CAPTURE_VIDEO_PIPELINE: |
         ximagesrc display-name={display} show-pointer=true use-damage=false
           ! video/x-raw,framerate=25/1
+      # highlight-start
           ! videoconvert ! queue
           ! video/x-raw,format=NV12
+      # highlight-end
           ! nvh264enc
             name=encoder
             preset=2

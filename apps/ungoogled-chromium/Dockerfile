@@ -3,6 +3,8 @@ FROM $BASE_IMAGE
 
 ARG API_URL="https://api.github.com/repos/macchrome/linchrome/releases/latest"
 
+COPY ./widevinecdm.sh /widevine.sh
+
 #
 # install custom chromium build from woolyss with support for hevc/x265
 SHELL ["/bin/bash", "-c"]
@@ -21,11 +23,9 @@ RUN set -eux; apt-get update; \
     chmod 4755 /usr/lib/chromium/chrome-sandbox; \
     #
     # install widevine module
-    WIDEVINE_VERSION=$(wget --quiet -O - https://dl.google.com/widevine-cdm/versions.txt | sort --version-sort | tail -n 1); \
-    wget -O /tmp/widevine.zip "https://dl.google.com/widevine-cdm/${WIDEVINE_VERSION}-linux-x64.zip"; \
-    unzip -p /tmp/widevine.zip libwidevinecdm.so > /usr/lib/chromium/libwidevinecdm.so; \
-    chmod 644 /usr/lib/chromium/libwidevinecdm.so; \
-    rm /tmp/widevine.zip; \
+    CHROMIUM_DIR="/usr/lib/chromium"; \
+    ./widevine.sh "${CHROMIUM_DIR}/WidevineCdm"; \
+    rm -f /widevine.sh; \
     #
     # install latest version of uBlock Origin and SponsorBlock for YouTube
     CHROMIUM_VERSION="$(wget -O - "${API_URL}" 2>/dev/null | jq -r ".tag_name" | sed -e 's/v//' -e 's/-.*//')"; \
