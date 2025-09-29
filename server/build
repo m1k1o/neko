@@ -1,87 +1,155 @@
 #!/bin/bash
 
-#
-# aborting if any command returns a non-zero value
+# abort if any command fails
 set -e
 
-#
 # do not build plugins when passing "core" as first argument
-if [ "$1" = "core" ];
-then
-    skip_plugins="true"
+if [ "$1" = "core" ]; then
+  skip_plugins="true"
+fi# ./build core#!/bin/bash
+
+# abort if any command fails
+set -e
+
+# do not build plugins when passing "core" as first argument
+if [ "$1" = "core" ]; then
+  skip_plugins="true"
+fi
+
+# set git build variables if git exists
+if git status > /dev/null 2>&1 && [ -z "$GIT_COMMIT" ] && [ -z "$GIT_BRANCH" ] && [ -z "$GIT_TAG" ]; then
+  GIT_COMMIT=$(git rev-parse --short HEAD)
+  GIT_BRANCH=$(git rev-parse --symbolic-full-name --abbrev-ref HEAD)
+  GIT_TAG=$(git tag --points-at "$GIT_COMMIT" | head -n 1)
+fi
+
+# load server dependencies
+go get -v -t .
+
+# build server
+go build \
+  -o bin/neko \
+  -ldflags "
+    -s -w
+    -X 'm1k1o/neko.buildDate=$(date -u +'%Y-%m-%dT%H:%M:%SZ')'
+    -X 'm1k1o/neko.gitCommit=${GIT_COMMIT}'
+    -X 'm1k1o/neko.gitBranch=${GIT_BRANCH}'
+    -X 'm1k1o/neko.gitTag=${GIT_TAG}'
+  " \
+  cmd/neko/main.go
+
+# ensure plugins folder exists
+mkdir -p bin/plugins
+
+# if plugins are ignored
+if [ "$skip_plugins" = "true" ]; then
+  echo "Not building plugins..."
+  exit 0
+fi
+
+# if plugins directory does not exist
+if [ ! -d "./plugins" ]; then
+  echo "No plugins directory found, skipping..."
+  exit 0
+fi
+
+# remove old plugins
+rm -f bin/plugins/*
+
+# build plugins
+for plugPath in ./plugins/*; do
+  if [ ! -d "$plugPath" ]; then
+    continue
+  fi
+
+  plugName=$(basename "$plugPath")
+  echo "Building plugin: $plugName"
+
+  pushd "$plugPath" > /dev/null
+
+  if [ ! -f "go.plug.mod" ]; then
+    echo "go.plug.mod not found, skipping..."
+    popd > /dev/null
+    continue
+  fi
+
+  go build \
+    -buildmode=plugin \
+    -o "../../bin/plugins/${plugName}.so" \
+    -ldflags "-s -w" \
+    -modfile=go.plug.mod \
+    .
+
+  popd > /dev/null
+donedo not build plugins when passing "core" as first argument
+if [ "$1" = "core" ]; then
+  skip_plugins="true"
 fi
 
 #
 # set git build variables if git exists
-if git status > /dev/null 2>&1 && [ -z $GIT_COMMIT ] && [ -z $GIT_BRANCH ] && [ -z $GIT_TAG ];
-then
-    GIT_COMMIT=`git rev-parse --short HEAD`
-    GIT_BRANCH=`git rev-parse --symbolic-full-name --abbrev-ref HEAD`
-    GIT_TAG=`git tag --points-at $GIT_COMMIT | head -n 1`
+if git status > /dev/null 2>&1 && [ -z "$GIT_COMMIT" ] && [ -z "$GIT_BRANCH" ] && [ -z "$GIT_TAG" ]; then
+  GIT_COMMIT=$(git rev-parse --short HEAD)
+  GIT_BRANCH=$(git rev-parse --symbolic-full-name --abbrev-ref HEAD)
+  GIT_TAG=$(git tag --points-at "$GIT_COMMIT" | head -n 1)
 fi
 
-#
 # load server dependencies
 go get -v -t .
 
-#
 # build server
 go build \
-    -o bin/neko \
-    -ldflags "
-        -s -w
-        -X 'm1k1o/neko.buildDate=`date -u +'%Y-%m-%dT%H:%M:%SZ'`'
-        -X 'm1k1o/neko.gitCommit=${GIT_COMMIT}'
-        -X 'm1k1o/neko.gitBranch=${GIT_BRANCH}'
-        -X 'm1k1o/neko.gitTag=${GIT_TAG}'
-    " \
-    cmd/neko/main.go;
+  -o bin/neko \
+  -ldflags "
+    -s -w
+    -X 'm1k1o/neko.buildDate=$(date -u +'%Y-%m-%dT%H:%M:%SZ')'
+    -X 'm1k1o/neko.gitCommit=${GIT_COMMIT}'
+    -X 'm1k1o/neko.gitBranch=${GIT_BRANCH}'
+    -X 'm1k1o/neko.gitTag=${GIT_TAG}'
+  " \
+  cmd/neko/main.go
 
-#
 # ensure plugins folder exists
 mkdir -p bin/plugins
 
-#
 # if plugins are ignored
-if [ "$skip_plugins" = "true" ];
-then
-    echo "Not building plugins..."
-    exit 0
+if [ "$skip_plugins" = "true" ]; then
+  echo "Not building plugins..."
+  exit 0
 fi
 
-#
 # if plugins directory does not exist
-if [ ! -d "./plugins" ];
-then
-    echo "No plugins directory found, skipping..."
-    exit 0
+if [ ! -d "./plugins" ]; then
+  echo "No plugins directory found, skipping..."
+  exit 0
 fi
 
-#
 # remove old plugins
 rm -f bin/plugins/*
 
-#
 # build plugins
 for plugPath in ./plugins/*; do
-    if [ ! -d $plugPath ];
-    then
-        continue
-    fi
+  if [ ! -d "$plugPath" ]; then
+    continue
+  fi
 
-    pushd $plugPath
+  plugName=$(basename "$plugPath")
+  echo "Building plugin: $plugName"
 
-    echo "Building plugin: $plugPath"
+  pushd "$plugPath" > /dev/null
 
-    if [ ! -f "go.plug.mod" ];
-    then
-        echo "go.plug.mod not found, skipping..."
-        popd
-        continue
-    fi
+  if [ ! -f "go.plug.mod" ]; then
+    echo "go.plug.mod not found, skipping..."
+    popd > /dev/null
+    continue
+  fi
 
-    # build plugin
-    go build -modfile=go.plug.mod -buildmode=plugin -buildvcs=false -o "../../bin/plugins/${plugPath##*/}.so"
+  go build \
+    -buildmode=plugin \
+    -o "../../bin/plugins/${plugName}.so" \
+    -ldflags "-s -w" \
+    -modfile=go.plug.mod \
+    .
 
-    popd
+  popd > /dev/null
 done
