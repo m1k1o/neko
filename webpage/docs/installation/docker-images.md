@@ -241,7 +241,7 @@ For images with Nvidia GPU hardware acceleration using EGL use:
 - [`ghcr.io/m1k1o/neko/nvidia-microsoft-edge`](https://ghcr.io/m1k1o/neko/nvidia-microsoft-edge)
 - [`ghcr.io/m1k1o/neko/nvidia-brave`](https://ghcr.io/m1k1o/neko/nvidia-brave)
 
-The base image is available at [`ghcr.io/m1k1o/neko/nvidia-base`](https://ghcr.io/m1k1o/neko/nvidia-base).
+The base image is available at [`ghcr.io/m1k1o/neko/nvidia-base`](https://ghcr.io/m1k1o/neko/nvidia-base). See [Examples](/docs/v3/installation/examples#nvidia) for more information and usage.
 
 ## Supported Architectures {#arch}
 
