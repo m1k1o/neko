@@ -40,3 +40,21 @@ After running the sync script:
 1. Resolve any merge conflicts
 2. Test the build to ensure compatibility
 3. Push the changes and create a PR for review
+
+## Releasing New Images
+
+We have github actions that will build and publish images to [ghcr](./.github/workflows/ghcr.yml)
+
+### Picking a tag
+
+Tags are structured as `v$UPSTREAM-v$INTERNAL` (e.g. `v3.0.6-v1.0.1`)
+
+- If you've sync'ed the upstream use the [latest upstream tag](https://github.com/m1k1o/neko/tags) and update the `upstream` tag. (using our example, `v3.0.7-v1.0.1`)
+- Otherwise use the latest [internal tag](https://github.com/onkernel/neko/tags) and bump the `internal` tag following semantic versioning (e.g. `v3.0.6-v1.2.0`)
+
+### Tag and push
+
+```bash
+git tag $TAG
+git push origin $TAG
+```
