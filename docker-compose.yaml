@@ -1,14 +1,21 @@
 services:
   neko:
-    image: "ghcr.io/m1k1o/neko/firefox:latest"
+    image: "ghcr.io/m1k1o/neko/chromium:latest"
     restart: "unless-stopped"
     shm_size: "2gb"
+    cap_add:
+      - SYS_ADMIN
+    volumes:
+      - ./apps/chromium/supervisord.conf:/etc/neko/supervisord/chromium.conf:ro
+      - ./apps/chromium/cdp-proxy.py:/etc/neko/cdp-proxy.py:ro
     ports:
       - "8080:8080"
+      - "9223:9223"
       - "52000-52100:52000-52100/udp"
     environment:
       NEKO_DESKTOP_SCREEN: 1920x1080@30
       NEKO_MEMBER_MULTIUSER_USER_PASSWORD: neko
       NEKO_MEMBER_MULTIUSER_ADMIN_PASSWORD: admin
       NEKO_WEBRTC_EPR: 52000-52100
-      NEKO_WEBRTC_ICELITE: 1
+      NEKO_WEBRTC_ICELITE: 1 
+      NEKO_WEBRTC_NAT1TO1: 10.42.2.94
