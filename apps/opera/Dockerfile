@@ -8,8 +8,20 @@ ARG LIBFFMPEG_API_URL="https://api.github.com/repos/nwjs-ffmpeg-prebuilt/nwjs-ff
 # install opera
 RUN set -eux; apt-get update; \
     #
-    # fetch latest release
-    VERSION="$(wget -O - "${API_URL}" 2>/dev/null | sed -n 's/.*href="\([^"/]*\).*/\1/p' | sort --version-sort | tail -1)"; \
+    # fetch latest available release with linux package
+    VERSIONS="$(wget -O - "${API_URL}" 2>/dev/null | sed -n 's/.*href="\([^"/]*\).*/\1/p' | sort --version-sort -r | head -n 10)"; \
+    VERSION=""; \
+    for v in $VERSIONS; do \
+        if wget --spider "${API_URL}${v}/linux/opera-stable_${v}_amd64.deb" 2>/dev/null; then \
+            VERSION="$v"; \
+            break; \
+        fi; \
+    done; \
+    if [ -z "$VERSION" ]; then \
+        echo "No Opera version with Linux package found"; \
+        exit 1; \
+    fi; \
+    echo "Using Opera version: $VERSION"; \
     wget -O /tmp/opera.deb "${API_URL}${VERSION}/linux/opera-stable_${VERSION}_amd64.deb"; \
     apt-get install -y --no-install-recommends openbox jq unzip /tmp/opera.deb; \
     #
