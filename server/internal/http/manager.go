@@ -134,7 +134,7 @@ func (manager *HttpManagerCtx) Start() {
 			}()
 			manager.logger.Info().Msgf("legacy proxy listening on %s", listener.Addr().String())
 
-			legacy.New(listener.Addr().String()).Route(manager.router)
+			legacy.New(listener.Addr().String(), manager.config.PathPrefix).Route(manager.router)
 		}
 	} else {
 		go func() {
@@ -146,7 +146,7 @@ func (manager *HttpManagerCtx) Start() {
 
 		// start legacy proxy if enabled
 		if viper.GetBool("legacy") {
-			legacy.New(manager.http.Addr).Route(manager.router)
+			legacy.New(manager.http.Addr, manager.config.PathPrefix).Route(manager.router)
 		}
 	}
 }
