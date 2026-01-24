@@ -200,7 +200,7 @@ func CheckPlugins(plugins []string) error {
 }
 
 //export goHandlePipelineBuffer
-func goHandlePipelineBuffer(pipelineID C.int, buf C.gpointer, bufLen C.int, duration C.guint64, deltaUnit C.gboolean) {
+func goHandlePipelineBuffer(pipelineID C.int, buf C.gpointer, bufLen C.int, pts C.guint64, duration C.guint64, deltaUnit C.gboolean) {
 	defer C.g_free(buf)
 
 	pipelinesLock.Lock()
@@ -208,10 +208,14 @@ func goHandlePipelineBuffer(pipelineID C.int, buf C.gpointer, bufLen C.int, dura
 	pipelinesLock.Unlock()
 
 	if ok {
+		// Convert GStreamer PTS (in nanoseconds since epoch) to Go time.Time
+		// GStreamer timestamps are in nanoseconds
+		timestamp := time.Unix(0, int64(pts))
+
 		pipeline.sample <- types.Sample{
 			Data:      C.GoBytes(unsafe.Pointer(buf), bufLen),
 			Length:    int(bufLen),
-			Timestamp: time.Now(),
+			Timestamp: timestamp,
 			Duration:  time.Duration(duration),
 			DeltaUnit: deltaUnit == C.TRUE,
 		}

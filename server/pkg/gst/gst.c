@@ -95,10 +95,31 @@ static GstFlowReturn gstreamer_send_new_sample_handler(GstElement *object, gpoin
     buffer = gst_sample_get_buffer(sample);
     if (buffer) {
       gst_buffer_extract_dup(buffer, 0, gst_buffer_get_size(buffer), &copy, &copy_size);
-      goHandlePipelineBuffer(ctx->pipelineId, copy, copy_size,
-        GST_BUFFER_DURATION(buffer),
-        GST_BUFFER_FLAG_IS_SET(buffer, GST_BUFFER_FLAG_DELTA_UNIT)
-      );
+      
+      // Get the buffer PTS (presentation timestamp)
+      GstClockTime pts = GST_BUFFER_PTS(buffer);
+      
+      // Convert PTS to wallclock time by adding base time and subtracting pipeline time
+      GstClock *clock = gst_pipeline_get_clock(GST_PIPELINE(ctx->pipeline));
+      if (clock) {
+        gst_object_ref(clock);
+        GstClockTime base_time = gst_element_get_base_time(ctx->pipeline);
+        GstClockTime wallclock_time = pts + base_time;
+        gst_object_unref(clock);
+        
+        goHandlePipelineBuffer(ctx->pipelineId, copy, copy_size,
+          wallclock_time,
+          GST_BUFFER_DURATION(buffer),
+          GST_BUFFER_FLAG_IS_SET(buffer, GST_BUFFER_FLAG_DELTA_UNIT)
+        );
+      } else {
+        // Fallback to just PTS if clock is not available
+        goHandlePipelineBuffer(ctx->pipelineId, copy, copy_size,
+          pts,
+          GST_BUFFER_DURATION(buffer),
+          GST_BUFFER_FLAG_IS_SET(buffer, GST_BUFFER_FLAG_DELTA_UNIT)
+        );
+      }
     }
     gst_sample_unref(sample);
   }
