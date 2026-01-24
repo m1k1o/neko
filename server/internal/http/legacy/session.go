@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"path"
 	"strings"
 	"sync"
 
@@ -35,6 +36,7 @@ type session struct {
 
 	logger     zerolog.Logger
 	serverAddr string
+	pathPrefix string
 
 	id, ip  string
 	token   string
@@ -63,6 +65,7 @@ func (h *LegacyHandler) newSession(r *http.Request) *session {
 		h:          h,
 		logger:     h.logger,
 		serverAddr: h.serverAddr,
+		pathPrefix: h.pathPrefix,
 		client: &http.Client{
 			Transport: transport,
 		},
@@ -70,8 +73,8 @@ func (h *LegacyHandler) newSession(r *http.Request) *session {
 	}
 }
 
-func (s *session) req(method, path string, headers http.Header, request io.Reader) (io.ReadCloser, http.Header, error) {
-	req, err := http.NewRequest(method, "http://"+s.serverAddr+path, request)
+func (s *session) req(method, reqPath string, headers http.Header, request io.Reader) (io.ReadCloser, http.Header, error) {
+	req, err := http.NewRequest(method, "http://"+s.serverAddr+path.Join(s.pathPrefix, reqPath), request)
 	if err != nil {
 		return nil, nil, err
 	}

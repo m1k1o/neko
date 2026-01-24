@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"path"
 	"strings"
 	"time"
 
@@ -41,17 +42,19 @@ var (
 type LegacyHandler struct {
 	logger     zerolog.Logger
 	serverAddr string
+	pathPrefix string
 	bannedIPs  map[string]struct{}
 	sessionIPs map[string]string
 	wsDialer   *websocket.Dialer
 }
 
-func New(serverAddr string) *LegacyHandler {
+func New(serverAddr, pathPrefix string) *LegacyHandler {
 	// Init
 
 	return &LegacyHandler{
 		logger:     log.With().Str("module", "legacy").Logger(),
 		serverAddr: serverAddr,
+		pathPrefix: pathPrefix,
 		bannedIPs:  make(map[string]struct{}),
 		sessionIPs: make(map[string]string),
 		wsDialer: &websocket.Dialer{
@@ -102,7 +105,7 @@ func (h *LegacyHandler) Route(r types.Router) {
 		defer s.destroy()
 
 		// dial to the remote backend
-		connBackend, _, err := h.wsDialer.Dial("ws://"+h.serverAddr+"/api/ws?token="+url.QueryEscape(s.token), nil)
+		connBackend, _, err := h.wsDialer.Dial("ws://"+h.serverAddr+path.Join(s.pathPrefix, "/api/ws")+"?token="+url.QueryEscape(s.token), nil)
 		if err != nil {
 			h.logger.Error().Err(err).Msg("couldn't dial to the remote backend")
 
