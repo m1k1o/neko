@@ -11,6 +11,11 @@ import configOptions from './help.json';
 Authentication is split into two modules:
 
 - **[Member Provider](#member)** - handles authentication and authorization of users, can be used to authenticate users against a database, LDAP, or any other system.
+  :::warning NOTE
+  LDAP, OIDC, and other subsystems are _not_ currently implemented. 
+  If you are interested in these features, please consider contributing or sponsoring their development.
+  :::
+
 - **[Session Provider](#session)** - handles session management, after the module authenticates the user, it creates a session and handles the session lifecycle.
 
 ## Member Profile {#profile}
