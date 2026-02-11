@@ -54,6 +54,24 @@
       />
     </li>
     <li>
+      <i
+        :class="[
+          { disabled: !playable },
+          microphoneActive ? 'fa-microphone' : 'fa-microphone-slash',
+          microphoneActive ? '' : 'faded',
+          'fas',
+        ]"
+        v-tooltip="{
+          content: microphoneActive ? $t('controls.mic_off') : $t('controls.mic_on'),
+          placement: 'top',
+          offset: 5,
+          boundariesElement: 'body',
+          delay: { show: 300, hide: 100 },
+        }"
+        @click.stop.prevent="toggleMicrophone"
+      />
+    </li>
+    <li>
       <div class="volume">
         <i
           :class="[volume === 0 || muted ? 'fa-volume-mute' : 'fa-volume-up', 'fas']"
@@ -318,6 +336,30 @@
 
     toggleMute() {
       this.$accessor.video.toggleMute()
+    }
+
+    microphoneActive = false
+
+    async toggleMicrophone() {
+      if (!this.playable) {
+        return
+      }
+
+      if (this.microphoneActive) {
+        this.$client.disableMicrophone()
+        this.microphoneActive = false
+      } else {
+        try {
+          await this.$client.enableMicrophone()
+          this.microphoneActive = true
+        } catch (err: any) {
+          this.$swal({
+            title: this.$t('controls.mic_error') as string,
+            text: err.message,
+            icon: 'error',
+          })
+        }
+      }
     }
   }
 </script>
