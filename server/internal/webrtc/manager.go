@@ -1,7 +1,9 @@
 package webrtc
 
 import (
+	"errors"
 	"fmt"
+	"io"
 	"net"
 	"strings"
 	"sync"
@@ -459,7 +461,10 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session) (*webrtc.Sess
 		for {
 			i, _, err := track.Read(buf)
 			if err != nil {
-				logger.Warn().Err(err).Msg("failed read from remote track")
+				// if the error is not io.EOF, log it. Otherwise, it's a normal closure of the track.
+				if !errors.Is(err, io.EOF) {
+					logger.Warn().Err(err).Msg("failed read from remote track")
+				}
 				break
 			}
 
