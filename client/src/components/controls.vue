@@ -53,7 +53,7 @@
         @click.stop.prevent="toggleMedia"
       />
     </li>
-    <li>
+    <li v-if="micAllowed">
       <i
         :class="[
           { disabled: !playable },
@@ -270,7 +270,7 @@
 </style>
 
 <script lang="ts">
-  import { Vue, Component, Prop } from 'vue-property-decorator'
+  import { Vue, Component, Prop, Watch } from 'vue-property-decorator'
 
   @Component({ name: 'neko-controls' })
   export default class extends Vue {
@@ -288,8 +288,21 @@
       return this.$accessor.remote.hosting
     }
 
+    get controlling() {
+      return this.$accessor.remote.controlling
+    }
+
     get implicitHosting() {
       return this.$accessor.remote.implicitHosting
+    }
+
+    // Microphone is allowed when the user is actively controlling (has host).
+    // With implicit hosting, the controlling getter is true only when the user
+    // has actually been assigned as host (clicked inside the video), not for
+    // everyone by default. This prevents multiple users from sharing their
+    // microphone simultaneously — only the person in control can.
+    get micAllowed() {
+      return this.controlling
     }
 
     get volume() {
@@ -340,8 +353,19 @@
 
     microphoneActive = false
 
+    // Auto-disable microphone when the user loses control (e.g. another user
+    // takes host, or admin releases control). This ensures the mic track is
+    // cleaned up and the server-side audio input is freed for the new host.
+    @Watch('controlling')
+    onControllingChanged(isControlling: boolean) {
+      if (!isControlling && this.microphoneActive) {
+        this.$client.disableMicrophone()
+        this.microphoneActive = false
+      }
+    }
+
     async toggleMicrophone() {
-      if (!this.playable) {
+      if (!this.playable || !this.micAllowed) {
         return
       }
 
