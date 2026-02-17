@@ -50,6 +50,8 @@ export const controls = {
   request: 'Steuerung anfordern',
   lock: 'Steuerung sperren',
   unlock: 'Steuerung entsperren',
+  has: 'Du hast die Kontrolle', // TODO: prüfen Übersetzung
+  hasnot: 'Du hast keine Kontrolle', // TODO: prüfen Übersetzung
 }
 
 export const locks = {

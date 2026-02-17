@@ -2,8 +2,7 @@ export const logout = 'Se déconnecter'
 export const unsupported = 'ce navigateur ne prend pas en charge WebRTC'
 export const admin_loggedin = "Vous êtes connecté en tant qu'admin"
 export const you = 'Vous'
-// TODO
-//export const somebody = 'Somebody'
+export const somebody = 'Quelqu\'un' // TODO: vérifier la traduction
 export const send_a_message = 'Envoyer un message'
 
 export const side = {
@@ -19,8 +18,7 @@ export const connect = {
   password: 'Mot de passe',
   connect: 'Connexion',
   error: 'Erreur de connexion',
-  // TODO
-  //empty_displayname: 'Display Name cannot be empty.',
+  empty_displayname: 'Le nom d\'affichage ne peut pas être vide.', // TODO: vérifier la traduction
 }
 
 export const context = {
@@ -52,21 +50,19 @@ export const controls = {
   request: 'Demander le contrôle',
   lock: 'Vérouiller le contrôle',
   unlock: 'Débloquer le contrôle',
-  // TODO
-  //  has: 'You have control',
-  //  hasnot: 'You do not have control',
+  has: 'Vous avez le contrôle', // TODO: vérifier la traduction
+  hasnot: 'Vous n\'avez pas le contrôle', // TODO: vérifier la traduction
 }
 
 export const locks = {
-  // TODO
-  //control: {
-  //  lock: 'Lock Controls (for users)',
-  //  unlock: 'Unlock Controls (for users)',
-  //  locked: 'Controls Locked (for users)',
-  //  unlocked: 'Controls Unlocked (for users)',
-  //  notif_locked: 'locked controls for users',
-  //  notif_unlocked: 'unlocked controls for users',
-  //},
+  control: {
+    lock: 'Verrouiller les contrôles (pour les utilisateurs)',
+    unlock: 'Déverrouiller les contrôles (pour les utilisateurs)',
+    locked: 'Contrôles verrouillés (pour les utilisateurs)',
+    unlocked: 'Contrôles déverrouillés (pour les utilisateurs)',
+    notif_locked: 'contrôles verrouillés pour les utilisateurs',
+    notif_unlocked: 'contrôles déverrouillés pour les utilisateurs',
+  },
   login: {
     lock: 'Vérouiller la salle (pour les utilisateurs)',
     unlock: 'Dévérouiller la salle (pour les utilisateurs)',
@@ -75,36 +71,32 @@ export const locks = {
     notif_locked: 'a vérouillé la salle',
     notif_unlocked: 'a dévérouillé la salle',
   },
-  // TODO
-  //file_transfer: {
-  //  lock: 'Lock File Transfer (for users)',
-  //  unlock: 'Unlock File Transfer (for users)',
-  //  locked: 'File Transfer Locked (for users)',
-  //  unlocked: 'File Transfer Unlocked (for users)',
-  //  notif_locked: 'locked file transfer',
-  //  notif_unlocked: 'unlocked file transfer',
-  //},
+  file_transfer: {
+    lock: 'Verrouiller le transfert de fichiers (pour les utilisateurs)',
+    unlock: 'Déverrouiller le transfert de fichiers (pour les utilisateurs)',
+    locked: 'Transfert de fichiers verrouillé (pour les utilisateurs)',
+    unlocked: 'Transfert de fichiers déverrouillé (pour les utilisateurs)',
+    notif_locked: 'transfert de fichiers verrouillé',
+    notif_unlocked: 'transfert de fichiers déverrouillé',
+  },
 }
 
 export const setting = {
-  scroll: 'Sensibilité de défilement (scroll)',
-  scroll_invert: 'Inverser le défilement (scroll)',
-  autoplay: 'Jouer automatiquement la vidéo',
-  ignore_emotes: 'Ignorer les Emotes',
-  chat_sound: 'Jouer le son du tchat',
-  keyboard_layout: 'Langue du clavier',
-  // TODO
-  //broadcast_title: 'Live Broadcast',
+  scroll: 'Sensibilité de défilement',
+  scroll_invert: 'Inverser le défilement',
+  autoplay: 'Lecture automatique de la vidéo',
+  ignore_emotes: 'Ignorer les émoticônes',
+  chat_sound: 'Son du chat',
+  keyboard_layout: 'Disposition du clavier',
+  broadcast_title: 'Diffusion en direct',
 }
 
 export const connection = {
   logged_out: 'Vous avez été déconnecté.',
-  // TODO
-  //reconnecting: 'Reconnecting',
+  reconnecting: 'Reconnexion...',
   connected: 'Connecté',
   disconnected: 'Déconnecté',
-  // TODO
-  //kicked: 'You have been removed from this room.',
+  kicked: 'Vous avez été expulsé de cette salle.',
   button_confirm: 'OK',
 }
 
@@ -130,6 +122,6 @@ export const notifications = {
 
 export const files = {
   downloads: 'Téléchargements',
-  uploads: 'Télécharger',
-  upload_here: 'Cliquez ou faites glisser les fichiers ici pour les télécharger',
+  uploads: 'Envois',
+  upload_here: 'Cliquez ou faites glisser les fichiers ici pour les envoyer',
 }

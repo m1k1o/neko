@@ -50,8 +50,8 @@ export const controls = {
   request: 'コントロールを要求',
   lock: 'コントロールをロック',
   unlock: 'コントロールのロックを解除',
-  has: 'あなたにコントロールがあります',
-  hasnot: 'あなたにはコントロールがありません',
+  has: 'あなたはコントロールを持っています', // TODO: 翻訳確認
+  hasnot: 'あなたはコントロールを持っていません', // TODO: 翻訳確認
 }
 
 export const locks = {

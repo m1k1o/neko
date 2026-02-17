@@ -2,7 +2,7 @@ export const logout = 'kirjaudu ulos'
 export const unsupported = 'Tämä nettiselain ei tue WebRTC:tä'
 export const admin_loggedin = 'Sinä olet kirjautunut valvojana'
 export const you = 'Sinä'
-export const somebody = 'Joku'
+export const somebody = 'Joku' // TODO: tarkista käännös
 export const send_a_message = 'Lähetä viesti'
 
 export const side = {
@@ -71,15 +71,14 @@ export const locks = {
     notif_locked: 'lukittu huone',
     notif_unlocked: 'vapautettu huone',
   },
-  // TODO
-  //file_transfer: {
-  //  lock: 'Lock File Transfer (for users)',
-  //  unlock: 'Unlock File Transfer (for users)',
-  //  locked: 'File Transfer Locked (for users)',
-  //  unlocked: 'File Transfer Unlocked (for users)',
-  //  notif_locked: 'locked file transfer',
-  //  notif_unlocked: 'unlocked file transfer',
-  //},
+  file_transfer: {
+    lock: 'Lukitse tiedostonsiirto (käyttäjiltä)',
+    unlock: 'Vapauta tiedostonsiirto (käyttäjiltä)',
+    locked: 'Tiedostonsiirto lukittu (käyttäjiltä)',
+    unlocked: 'Tiedostonsiirto vapautettu (käyttäjiltä)',
+    notif_locked: 'tiedostonsiirto lukittu',
+    notif_unlocked: 'tiedostonsiirto vapautettu',
+  },
 }
 
 export const setting = {

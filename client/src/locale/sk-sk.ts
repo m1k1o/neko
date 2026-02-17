@@ -2,6 +2,7 @@ export const logout = 'odhlásiť sa'
 export const unsupported = 'tento prehliadač nepodporuje webrtc'
 export const admin_loggedin = 'Ste prihlásení/á ako administrátor'
 // export const you = '' // Incorrect in some translations! Cannot be used!
+export const somebody = 'Niekto' // TODO: skontrolovať preklad
 // TODO
 //export const somebody = 'Somebody'
 export const send_a_message = 'Odoslať správu'
@@ -52,6 +53,8 @@ export const controls = {
   request: 'Požiadať o ovládanie',
   lock: 'Zamknúť ovládanie',
   unlock: 'Odomknúť ovládanie',
+  has: 'Máte ovládanie', // TODO: skontrolovať preklad
+  hasnot: 'Nemáte ovládanie', // TODO: skontrolovať preklad
   // TODO
   //has: 'You have control',
   //hasnot: 'You do not have control',
@@ -74,15 +77,14 @@ export const locks = {
     notif_locked: 'miestnosť bola zamknutá',
     notif_unlocked: 'miestnosť bola odomknutá',
   },
-  // TODO
-  //file_transfer: {
-  //  lock: 'Lock File Transfer (for users)',
-  //  unlock: 'Unlock File Transfer (for users)',
-  //  locked: 'File Transfer Locked (for users)',
-  //  unlocked: 'File Transfer Unlocked (for users)',
-  //  notif_locked: 'locked file transfer',
-  //  notif_unlocked: 'unlocked file transfer',
-  //},
+  file_transfer: {
+    lock: 'Zakázať prenos súborov (pre používateľov)',
+    unlock: 'Povoliť prenos súborov (pre používateľov)',
+    locked: 'Prenos súborov je zakázaný (pre používateľov)',
+    unlocked: 'Prenos súborov je povolený (pre používateľov)',
+    notif_locked: 'zakázal/a prenos súborov',
+    notif_unlocked: 'povolil/a prenos súborov',
+  },
 }
 
 export const setting = {
