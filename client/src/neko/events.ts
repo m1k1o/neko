@@ -38,6 +38,7 @@ export const EVENT = {
     KEYBOARD: 'control/keyboard',
   },
   CHAT: {
+    INIT: 'chat/init',
     MESSAGE: 'chat/message',
     EMOTE: 'chat/emote',
   },
@@ -100,7 +101,7 @@ export type SignalEvents =
   | typeof EVENT.SIGNAL.PROVIDE
   | typeof EVENT.SIGNAL.CANDIDATE
 
-export type ChatEvents = typeof EVENT.CHAT.MESSAGE | typeof EVENT.CHAT.EMOTE
+export type ChatEvents = typeof EVENT.CHAT.INIT | typeof EVENT.CHAT.MESSAGE | typeof EVENT.CHAT.EMOTE
 
 export type FileTransferEvents = typeof EVENT.FILETRANSFER.LIST | typeof EVENT.FILETRANSFER.REFRESH
 
