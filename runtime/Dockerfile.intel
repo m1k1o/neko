@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=debian:bullseye-slim
+ARG BASE_IMAGE=debian:trixie-slim
 FROM $BASE_IMAGE AS runtime
 
 #
@@ -13,14 +13,14 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN set -eux; \
     #
     # add non-free repo for intel drivers
-    echo deb http://deb.debian.org/debian bullseye main contrib non-free > /etc/apt/sources.list; \
-    echo deb http://deb.debian.org/debian-security/ bullseye-security main contrib non-free >> /etc/apt/sources.list; \
-    echo deb http://deb.debian.org/debian bullseye-updates main contrib non-free >> /etc/apt/sources.list; \
+    echo deb http://deb.debian.org/debian trixie main contrib non-free > /etc/apt/sources.list; \
+    echo deb http://deb.debian.org/debian-security/ trixie-security main contrib non-free >> /etc/apt/sources.list; \
+    echo deb http://deb.debian.org/debian trixie-updates main contrib non-free >> /etc/apt/sources.list; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
         wget ca-certificates supervisor \
         pulseaudio dbus-x11 xserver-xorg-video-dummy \
-        libcairo2 libxcb1 libxrandr2 libxv1 libopus0 libvpx6 \
+        libcairo2 libxcb1 libxrandr2 libxv1 libopus0 libvpx9 libx264-164 libvo-aacenc0 librtmp1 libxcvt0 \
         #
         # intel driver + vaapi
         intel-media-va-driver-non-free libva2 vainfo \
@@ -35,12 +35,6 @@ RUN set -eux; \
         gstreamer1.0-plugins-base gstreamer1.0-plugins-good \
         gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly \
         gstreamer1.0-pulseaudio gstreamer1.0-vaapi; \
-    #
-    # install libxcvt0 (not available in debian:bullseye)
-    ARCH=$(dpkg --print-architecture); \
-    wget http://ftp.de.debian.org/debian/pool/main/libx/libxcvt/libxcvt0_0.1.2-1_${ARCH}.deb; \
-    apt-get install --no-install-recommends ./libxcvt0_0.1.2-1_${ARCH}.deb; \
-    rm ./libxcvt0_0.1.2-1_${ARCH}.deb; \
     #
     # create a non-root user
     groupadd --gid $USER_GID $USERNAME; \
@@ -60,6 +54,7 @@ RUN set -eux; \
         /home/$USERNAME/.config/pulse  \
         /home/$USERNAME/.local/share/xorg; \
     chmod 1777 /var/log/neko; \
+    chmod 0700 /tmp/runtime-$USERNAME; \
     chown $USERNAME /var/log/neko/ /tmp/runtime-$USERNAME; \
     chown -R $USERNAME:$USERNAME /home/$USERNAME; \
     #
@@ -118,6 +113,7 @@ HEALTHCHECK --interval=10s --timeout=5s --retries=8 \
     CMD wget -O - http://localhost:${NEKO_SERVER_BIND#*:}/health || \
         wget --no-check-certificate -O - https://localhost:${NEKO_SERVER_BIND#*:}/health || \
         exit 1
+
 #
 # run neko
 CMD ["/usr/bin/supervisord", "-c", "/etc/neko/supervisord.conf"]
