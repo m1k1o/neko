@@ -28,6 +28,9 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
   protected _state: RTCIceConnectionState = 'disconnected'
   protected _id = ''
   protected _candidates: RTCIceCandidate[] = []
+  protected _micStream?: MediaStream
+  protected _micSender?: RTCRtpSender
+  protected _micActive = false
 
   get id() {
     return this._id
@@ -128,9 +131,57 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
       this._peer = undefined
     }
 
+    this.disableMicrophone()
+
     this._state = 'disconnected'
     this._displayname = undefined
     this._id = ''
+  }
+
+  get microphoneActive() {
+    return this._micActive
+  }
+
+  public async enableMicrophone(): Promise<void> {
+    if (!this._peer) {
+      this.emit('warn', 'attempting to enable microphone with no peer connection')
+      return
+    }
+
+    if (this._micActive) {
+      this.emit('debug', 'microphone already active')
+      return
+    }
+
+    try {
+      this._micStream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const audioTrack = this._micStream.getAudioTracks()[0]
+      this._micSender = this._peer.addTrack(audioTrack, this._micStream)
+      this._micActive = true
+      this.emit('info', `microphone enabled: ${audioTrack.label}`)
+    } catch (err: any) {
+      this.emit('error', err)
+      throw err
+    }
+  }
+
+  public disableMicrophone(): void {
+    if (this._micSender && this._peer) {
+      try {
+        this._peer.removeTrack(this._micSender)
+      } catch (err) {
+        this.emit('warn', 'failed to remove mic track from peer', err)
+      }
+      this._micSender = undefined
+    }
+
+    if (this._micStream) {
+      this._micStream.getTracks().forEach((t) => t.stop())
+      this._micStream = undefined
+    }
+
+    this._micActive = false
+    this.emit('info', 'microphone disabled')
   }
 
   public sendData(event: 'wheel' | 'mousemove', data: { x: number; y: number }): void

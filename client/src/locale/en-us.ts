@@ -52,6 +52,9 @@ export const controls = {
   unlock: 'Unlock Controls',
   has: 'You have control',
   hasnot: 'You do not have control',
+  mic_on: 'Enable Microphone',
+  mic_off: 'Disable Microphone',
+  mic_error: 'Microphone Error',
 }
 
 export const locks = {

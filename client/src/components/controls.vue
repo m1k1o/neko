@@ -53,6 +53,24 @@
         @click.stop.prevent="toggleMedia"
       />
     </li>
+    <li v-if="micAllowed">
+      <i
+        :class="[
+          { disabled: !playable },
+          microphoneActive ? 'fa-microphone' : 'fa-microphone-slash',
+          microphoneActive ? '' : 'faded',
+          'fas',
+        ]"
+        v-tooltip="{
+          content: microphoneActive ? $t('controls.mic_off') : $t('controls.mic_on'),
+          placement: 'top',
+          offset: 5,
+          boundariesElement: 'body',
+          delay: { show: 300, hide: 100 },
+        }"
+        @click.stop.prevent="toggleMicrophone"
+      />
+    </li>
     <li>
       <div class="volume">
         <i
@@ -252,7 +270,7 @@
 </style>
 
 <script lang="ts">
-  import { Vue, Component, Prop } from 'vue-property-decorator'
+  import { Vue, Component, Prop, Watch } from 'vue-property-decorator'
 
   @Component({ name: 'neko-controls' })
   export default class extends Vue {
@@ -270,8 +288,21 @@
       return this.$accessor.remote.hosting
     }
 
+    get controlling() {
+      return this.$accessor.remote.controlling
+    }
+
     get implicitHosting() {
       return this.$accessor.remote.implicitHosting
+    }
+
+    // Microphone is allowed when the user is actively controlling (has host).
+    // With implicit hosting, the controlling getter is true only when the user
+    // has actually been assigned as host (clicked inside the video), not for
+    // everyone by default. This prevents multiple users from sharing their
+    // microphone simultaneously — only the person in control can.
+    get micAllowed() {
+      return this.controlling
     }
 
     get volume() {
@@ -318,6 +349,41 @@
 
     toggleMute() {
       this.$accessor.video.toggleMute()
+    }
+
+    microphoneActive = false
+
+    // Auto-disable microphone when the user loses control (e.g. another user
+    // takes host, or admin releases control). This ensures the mic track is
+    // cleaned up and the server-side audio input is freed for the new host.
+    @Watch('controlling')
+    onControllingChanged(isControlling: boolean) {
+      if (!isControlling && this.microphoneActive) {
+        this.$client.disableMicrophone()
+        this.microphoneActive = false
+      }
+    }
+
+    async toggleMicrophone() {
+      if (!this.playable || !this.micAllowed) {
+        return
+      }
+
+      if (this.microphoneActive) {
+        this.$client.disableMicrophone()
+        this.microphoneActive = false
+      } else {
+        try {
+          await this.$client.enableMicrophone()
+          this.microphoneActive = true
+        } catch (err: any) {
+          this.$swal({
+            title: this.$t('controls.mic_error') as string,
+            text: err.message,
+            icon: 'error',
+          })
+        }
+      }
     }
   }
 </script>
