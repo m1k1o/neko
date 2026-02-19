@@ -1,0 +1,45 @@
+name: Build and Push to GHCR for AMD
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-base:
+    name: Base Image
+    uses: ./.github/workflows/image_base.yml
+    with:
+      flavor: amd
+      platforms: linux/amd64
+      dockerfile: Dockerfile.amd
+    secrets: inherit
+
+  build-app:
+    name: App Image
+    uses: ./.github/workflows/image_app.yml
+    needs: build-base
+    strategy:
+      # Will build all images even if some fail.
+      fail-fast: false
+      matrix:
+        include:
+          - name: firefox
+          - name: chromium
+          - name: google-chrome
+          - name: ungoogled-chromium
+          - name: microsoft-edge
+          - name: brave
+          - name: vivaldi
+          - name: opera
+          - name: tor-browser
+          - name: remmina
+          - name: vlc
+          - name: xfce
+          - name: kde
+    with:
+      name: ${{ matrix.name }}
+      flavor: amd
+      platforms: ${{ matrix.platforms }}
+      dockerfile: ${{ matrix.dockerfile }}
+    secrets: inherit
