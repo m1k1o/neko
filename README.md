@@ -18,7 +18,7 @@
     <a href="https://github.com/sponsors/m1k1o">
       <img src="https://img.shields.io/badge/-sponsor-red" alt="issues">
     </a>
-    <a href="https://discord.gg/3U6hWpC">
+    <a href="https://discord.gg/HXQJmqNJMz">
       <img src="https://discordapp.com/api/guilds/665851821906067466/widget.png" alt="Chat on discord">
     </a>
     <a href="https://hellogithub.com/repository/4536d4546af24196af3f08a023dfa007" target="_blank">

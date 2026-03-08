@@ -105,7 +105,7 @@ const config: Config = {
           position: 'right',
         },
         {
-          href: 'https://discord.gg/3U6hWpC',
+          href: 'https://discord.gg/HXQJmqNJMz',
           label: 'Discord',
           position: 'right',
         },
@@ -141,7 +141,7 @@ const config: Config = {
           items: [
             {
               label: 'Discord',
-              href: 'https://discord.gg/3U6hWpC',
+              href: 'https://discord.gg/HXQJmqNJMz',
             },
             {
               label: 'Issues',
