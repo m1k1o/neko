@@ -549,8 +549,27 @@ func (s *session) wsToClient(msg []byte) error {
 
 	// Chat Events
 	case chat.CHAT_INIT:
-		// ignore chat init, because it is not part of the legacy protocol
-		return nil
+		request := &chat.Init{}
+		err := json.Unmarshal(data.Payload, request)
+		if err != nil {
+			return err
+		}
+
+		history := []oldMessage.ChatSend{}
+		for _, msg := range request.History {
+			history = append(history, oldMessage.ChatSend{
+				Event:   oldEvent.CHAT_MESSAGE,
+				ID:      msg.ID,
+				Content: msg.Content.Text,
+				Created: msg.Created,
+			})
+		}
+
+		return s.toClient(&oldMessage.ChatInit{
+			Event:   oldEvent.CHAT_INIT,
+			Enabled: request.Enabled,
+			History: history,
+		})
 
 	case chat.CHAT_MESSAGE:
 		request := &chat.Message{}
@@ -563,6 +582,7 @@ func (s *session) wsToClient(msg []byte) error {
 			Event:   oldEvent.CHAT_MESSAGE,
 			ID:      request.ID,
 			Content: request.Content.Text,
+			Created: request.Created,
 		})
 
 	case event.SEND_BROADCAST:

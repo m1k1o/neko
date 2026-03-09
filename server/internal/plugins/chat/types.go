@@ -10,7 +10,8 @@ const (
 )
 
 type Init struct {
-	Enabled bool `json:"enabled"`
+	Enabled bool      `json:"enabled"`
+	History []Message `json:"history"`
 }
 
 type Content struct {
