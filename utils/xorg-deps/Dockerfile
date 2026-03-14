@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=debian:bullseye-slim
+ARG BASE_IMAGE=debian:trixie-slim
 FROM $BASE_IMAGE AS xorg-deps
 
 WORKDIR /xorg

@@ -5,8 +5,7 @@ FROM $BASE_IMAGE
 RUN set -eux; apt-get update; \
     apt-get install -y --no-install-recommends \
       remmina-plugin-rdp remmina-plugin-vnc \
-      # remmina-plugin-x2go # not in bullseye
-      remmina-plugin-spice remmina-plugin-nx; \
+      remmina-plugin-x2go remmina-plugin-www; \
     # clean up
     apt-get clean -y; \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/*
