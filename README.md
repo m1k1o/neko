@@ -62,6 +62,7 @@ Primary use case is connecting with multiple people, leveraging real time synchr
 - **Embed anything** - embed virtual browser in your web app - open source alternative to [hyperbeam API](https://hyperbeam.com/).
   - open any third-party website or application, synchronize audio and video flawlessly among multiple participants.
   - request rooms using API with [neko-rooms](https://github.com/m1k1o/neko-rooms).
+- [**Neko inside VR Chat**](https://github.com/jameskitt616/vrchat_streaming) - watch remote browser together with friends in VR.
 
 Other use cases that benefit from single-user:
 - **Personal workspace** - streaming containerized apps and desktops to end-users - similar to [kasm](https://www.kasmweb.com/).

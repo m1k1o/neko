@@ -63,6 +63,7 @@ const sidebars: SidebarsConfig = {
             'customization/networking',
             'customization/browsers',
             'customization/ui',
+            'customization/projects',
           ]
         },
         {
