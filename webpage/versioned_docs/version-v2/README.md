@@ -22,12 +22,12 @@ title: Getting started
 
 Use the following docker images from [Docker Hub](https://hub.docker.com/r/m1k1o/neko) for x86_64:
 - `m1k1o/neko:latest` or `m1k1o/neko:firefox` - for Firefox.
-- `m1k1o/neko:chromium` - for Chromium (needs `--cap-add=SYS_ADMIN`, see the [security implications](https://www.redhat.com/en/blog/container-tidbits-adding-capabilities-container)).
-- `m1k1o/neko:google-chrome` - for Google Chrome (needs `--cap-add=SYS_ADMIN`, see the [security implications](https://www.redhat.com/en/blog/container-tidbits-adding-capabilities-container)).
-- `m1k1o/neko:ungoogled-chromium` - for [Ungoogled Chromium](https://github.com/Eloston/ungoogled-chromium) (needs `--cap-add=SYS_ADMIN`, see the [security implications](https://www.redhat.com/en/blog/container-tidbits-adding-capabilities-container)) (by @whalehub).
-- `m1k1o/neko:microsoft-edge` - for Microsoft Edge (needs `--cap-add=SYS_ADMIN`, see the [security implications](https://www.redhat.com/en/blog/container-tidbits-adding-capabilities-container)).
-- `m1k1o/neko:brave` - for [Brave Browser](https://brave.com) (needs `--cap-add=SYS_ADMIN`, see the [security implications](https://www.redhat.com/en/blog/container-tidbits-adding-capabilities-container)).
-- `m1k1o/neko:vivaldi` - for [Vivaldi Browser](https://vivaldi.com) (needs `--cap-add=SYS_ADMIN`, see the [security implications](https://www.redhat.com/en/blog/container-tidbits-adding-capabilities-container)) (by @Xeddius).
+- `m1k1o/neko:chromium` - for Chromium.
+- `m1k1o/neko:google-chrome` - for Google Chrome.
+- `m1k1o/neko:ungoogled-chromium` - for [Ungoogled Chromium](https://github.com/Eloston/ungoogled-chromium) (by @whalehub).
+- `m1k1o/neko:microsoft-edge` - for Microsoft Edge.
+- `m1k1o/neko:brave` - for [Brave Browser](https://brave.com).
+- `m1k1o/neko:vivaldi` - for [Vivaldi Browser](https://vivaldi.com) (by @Xeddius).
 - `m1k1o/neko:opera` for [Opera Browser](https://opera.com) (requires extra steps to enable DRM, see instructions [here](https://www.reddit.com/r/operabrowser/wiki/opera/linux_widevine_config/). libffmpeg is already configured.) (by @prophetofxenu)
 - `m1k1o/neko:tor-browser` - for Tor Browser.
 - `m1k1o/neko:remmina` - for remote desktop connection (by @lowne).
@@ -267,7 +267,6 @@ docker run -d --gpus all \
   -e NEKO_VIDEO_CODEC=h264 \
   -e NEKO_HWENC=nvenc \
   --shm-size=2gb \
-  --cap-add=SYS_ADMIN \
   --name neko \
   ghcr.io/m1k1o/neko/nvidia-google-chrome:latest
 ```
@@ -284,8 +283,6 @@ services:
     ports:
     - "8080:8080"
     - "56000-56100:56000-56100/udp"
-    cap_add:
-    - SYS_ADMIN
     environment:
       NEKO_SCREEN: '1920x1080@30'
       NEKO_PASSWORD: neko

@@ -85,7 +85,9 @@ Check the [Firefox-based browsers customization guide](/docs/v3/customization/br
 
 There are multiple flavors of Chromium-based browsers available as Neko Docker images.
 
-They need `--cap-add=SYS_ADMIN` (see [security implications](https://www.redhat.com/en/blog/container-tidbits-adding-capabilities-container) for more information) and extended shared memory size (`--shm-size=2g`) to work properly.
+Chromium is running with `--no-sandbox` flag, which is required to run it in a container without additional configuration. You can read more about it in [Quick introduction](https://www.google.com/googlebooks/chrome/med_26.html) to Chrome's sandbox. More in-depth [design document](https://chromium.googlesource.com/chromium/src/+/refs/heads/main/docs/design/sandbox.md), with internal links to FAQ, etc.
+
+Additionally, chromium-based browsers require `--shm-size=2g` (or more) to work properly. This is because the default shared memory size for Docker containers is too small for Chromium-based browsers, which can lead to crashes and other issues. 
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -95,7 +97,6 @@ import TabItem from '@theme/TabItem';
 
     ```bash
     docker run \
-      --cap-add=SYS_ADMIN \
       --shm-size=2g \
       ghcr.io/m1k1o/neko/chromium
     ```
@@ -105,8 +106,6 @@ import TabItem from '@theme/TabItem';
   <TabItem value="docker-compose" label="Docker Compose configuration">
 
     ```yaml title="docker-compose.yaml"
-    cap_add:
-    - SYS_ADMIN
     shm_size: 2g
     ```
 
