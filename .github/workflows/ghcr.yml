@@ -10,7 +10,7 @@ jobs:
     name: Base Image
     uses: ./.github/workflows/image_base.yml
     with:
-      platforms: linux/amd64,linux/arm64,linux/arm/v7
+      platforms: linux/amd64,linux/arm64
     secrets: inherit
 
   build-app:
@@ -23,11 +23,11 @@ jobs:
       matrix:
         include:
           - name: firefox
-            platforms: linux/amd64,linux/arm64,linux/arm/v7
+            platforms: linux/amd64,linux/arm64
           - name: waterfox
             platforms: linux/amd64
           - name: chromium
-            platforms: linux/amd64,linux/arm64,linux/arm/v7
+            platforms: linux/amd64,linux/arm64
           - name: google-chrome
             platforms: linux/amd64
           - name: ungoogled-chromium
@@ -37,19 +37,19 @@ jobs:
           - name: brave
             platforms: linux/amd64,linux/arm64
           - name: vivaldi
-            platforms: linux/amd64,linux/arm64,linux/arm/v7
+            platforms: linux/amd64,linux/arm64
           - name: opera
             platforms: linux/amd64
           - name: tor-browser
             platforms: linux/amd64
           - name: remmina
-            platforms: linux/amd64,linux/arm64,linux/arm/v7
+            platforms: linux/amd64,linux/arm64
           - name: vlc
-            platforms: linux/amd64,linux/arm64,linux/arm/v7
+            platforms: linux/amd64,linux/arm64
           - name: xfce
-            platforms: linux/amd64,linux/arm64,linux/arm/v7
+            platforms: linux/amd64,linux/arm64
           - name: kde
-            platforms: linux/amd64,linux/arm64,linux/arm/v7
+            platforms: linux/amd64,linux/arm64
     with:
       name: ${{ matrix.name }}
       platforms: ${{ matrix.platforms }}

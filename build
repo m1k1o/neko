@@ -216,8 +216,6 @@ if [ -z "$PLATFORM" ]; then
     PLATFORM="linux/amd64"
   elif [ "$UNAME" == "aarch64" ] || [ "$UNAME" == "arm64" ]; then
     PLATFORM="linux/arm64"
-  elif [ "$UNAME" == "armv7l" ]; then
-    PLATFORM="linux/arm/v7"
   else
     log "Unknown architecture: $UNAME"
     exit 1
