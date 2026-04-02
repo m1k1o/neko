@@ -31,7 +31,7 @@ RUN set -eux; apt-get update; \
     CHROMIUM_VERSION="$(wget -O - "${API_URL}" 2>/dev/null | jq -r ".tag_name" | sed -e 's/v//' -e 's/-.*//')"; \
     EXTENSIONS_DIR="/usr/share/chromium/extensions"; \
     EXTENSIONS=( \
-      cjpalhdlnbpafiamejdnhcphjbkeiagm \
+      ddkjiahejlhfcafbddmgiahcphecmpfh \
       mnjggcdmjocbbbhaepdhchncahnbgone \
     ); \
     mkdir -p "${EXTENSIONS_DIR}"; \

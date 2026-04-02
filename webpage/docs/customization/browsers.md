@@ -213,16 +213,16 @@ By default, the browsers in Neko do not allow installing extensions except for t
 - `ExtensionInstallAllowlist`: These extensions can be installed by the user when needed; they are not pre-installed.
 - `ExtensionInstallBlocklist`: These extensions cannot be installed by the user, which is `*` (all extensions) by default.
 
-The ID of the extension can be found in the URL of the extension in the Chrome Web Store. For example, the ID of the [uBlock Origin](https://chromewebstore.google.com/detail/ublock-origin/cjpalhdlnbpafiamejdnhcphjbkeiagm) extension is `cjpalhdlnbpafiamejdnhcphjbkeiagm`.
+The ID of the extension can be found in the URL of the extension in the Chrome Web Store. For example, the ID of the [uBlock Origin Lite](https://chromewebstore.google.com/detail/ublock-origin-lite/ddkjiahejlhfcafbddmgiahcphecmpfh) extension is `ddkjiahejlhfcafbddmgiahcphecmpfh`.
 
 ```json title="policy.json"
 {
   "ExtensionInstallForcelist": [
-    "cjpalhdlnbpafiamejdnhcphjbkeiagm;https://clients2.google.com/service/update2/crx",
+    "ddkjiahejlhfcafbddmgiahcphecmpfh;https://clients2.google.com/service/update2/crx",
     "mnjggcdmjocbbbhaepdhchncahnbgone;https://clients2.google.com/service/update2/crx"
   ],
   "ExtensionInstallAllowlist": [
-    "cjpalhdlnbpafiamejdnhcphjbkeiagm",
+    "ddkjiahejlhfcafbddmgiahcphecmpfh",
     "mnjggcdmjocbbbhaepdhchncahnbgone"
   ],
   "ExtensionInstallBlocklist": [

@@ -10,7 +10,7 @@ RUN set -eux; \
     apt-get install -y --no-install-recommends software-properties-common; \
     # chromium-browser from default repo needs snap to be installed
     # and nvidia base is ubuntu not debian
-    add-apt-repository ppa:system76/pop; \
+    add-apt-repository ppa:xtradeb/apps; \
     apt-get update; \
     apt-get install -y --no-install-recommends xz-utils chromium openbox; \
     #

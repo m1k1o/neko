@@ -38,8 +38,6 @@ services:
     ports:
       - "8080:8080"
       - "52000-52100:52000-52100/udp"
-    cap_add:
-      - SYS_ADMIN
     environment:
       NEKO_SCREEN: '1920x1080@30'
       NEKO_PASSWORD: neko
@@ -62,8 +60,6 @@ services:
     ports:
       - "8080:8080"
       - "52000-52100:52000-52100/udp"
-    cap_add:
-      - SYS_ADMIN
     environment:
       NEKO_SCREEN: '1920x1080@30'
       NEKO_PASSWORD: neko

@@ -163,16 +163,12 @@ If you put a local IP as `NEKO_WEBRTC_NAT1TO1`, external clients try to connect 
 
 ### Getting a black screen with a cursor, but no browser for Chromium-based browsers {#black-screen-with-cursor}
 
-Check if you did not forget to add `cap_add` to your `docker-compose.yaml` file. Make sure that the `shm_size` is set to `2gb` or higher.
+Make sure that the `shm_size` is set to `2gb` or higher.
 
 ```yaml title="docker-compose.yaml"
 services:
   neko:
     image: "ghcr.io/m1k1o/neko/chromium:latest"
-    # highlight-start
-    cap_add:
-    - SYS_ADMIN
-    # highlight-end
     restart: "unless-stopped"
     # highlight-start
     shm_size: "2gb"
@@ -202,8 +198,6 @@ services:
     - 1.1.1.1
     - 8.8.8.8
     # highlight-end
-    cap_add:
-    - SYS_ADMIN
     restart: "unless-stopped"
     shm_size: "2gb"
     # ...

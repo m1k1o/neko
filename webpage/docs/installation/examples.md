@@ -36,8 +36,6 @@ services:
     image: "ghcr.io/m1k1o/neko/chromium:latest"
     restart: "unless-stopped"
     shm_size: "2gb"
-    cap_add:
-      - SYS_ADMIN
     ports:
       - "8080:8080"
       - "52000-52100:52000-52100/udp"
@@ -60,8 +58,6 @@ services:
     image: "ghcr.io/m1k1o/neko/vlc:latest"
     restart: "unless-stopped"
     shm_size: "2gb"
-    cap_add:
-      - SYS_ADMIN
     volumes:
       - "<your-video-folder>:/video" # mount your video folder
     ports:
