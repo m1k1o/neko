@@ -13,7 +13,7 @@ RUN set -eux; apt-get update; \
     # install latest version of uBlock Origin and SponsorBlock for YouTube
     EXTENSIONS_DIR="/usr/share/chromium/extensions"; \
     EXTENSIONS=( \
-      cjpalhdlnbpafiamejdnhcphjbkeiagm \
+      ddkjiahejlhfcafbddmgiahcphecmpfh \
       mnjggcdmjocbbbhaepdhchncahnbgone \
     ); \
     mkdir -p "${EXTENSIONS_DIR}"; \

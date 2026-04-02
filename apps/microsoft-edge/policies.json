@@ -26,11 +26,11 @@
       "edge://policy"
   ],
   "ExtensionInstallForcelist": [
-      "cjpalhdlnbpafiamejdnhcphjbkeiagm;https://clients2.google.com/service/update2/crx",
+      "ddkjiahejlhfcafbddmgiahcphecmpfh;https://clients2.google.com/service/update2/crx",
       "mnjggcdmjocbbbhaepdhchncahnbgone;https://clients2.google.com/service/update2/crx"
   ],
   "ExtensionInstallAllowlist": [
-      "cjpalhdlnbpafiamejdnhcphjbkeiagm",
+      "ddkjiahejlhfcafbddmgiahcphecmpfh",
       "mnjggcdmjocbbbhaepdhchncahnbgone"
   ],
   "ExtensionInstallBlocklist": [
