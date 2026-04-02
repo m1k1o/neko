@@ -24,9 +24,8 @@ jobs:
         include:
           - name: firefox
             platforms: linux/amd64,linux/arm64,linux/arm/v7
-          # Temporarily disabled due to Cloudflare blocked download link
-          #- name: waterfox
-          #  platforms: linux/amd64
+          - name: waterfox
+            platforms: linux/amd64
           - name: chromium
             platforms: linux/amd64,linux/arm64,linux/arm/v7
           - name: google-chrome
