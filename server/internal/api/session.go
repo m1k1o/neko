@@ -84,15 +84,25 @@ func (api *ApiManagerCtx) Whoami(w http.ResponseWriter, r *http.Request) error {
 	})
 }
 
+// TODO: Remove when legacy mode is removed as all sessions must be synced with their providers.
 func (api *ApiManagerCtx) UpdateProfile(w http.ResponseWriter, r *http.Request) error {
 	session, _ := auth.GetSession(r)
 
-	data := session.Profile()
-	if err := utils.HttpJsonRequest(w, r, &data); err != nil {
-		return err
+	profile := session.Profile()
+	if !profile.IsAdmin {
+		// Name is the only updatable field in the profile for non-admins
+		var payload types.MemberProfile
+		if err := utils.HttpJsonRequest(w, r, &payload); err != nil {
+			return err
+		}
+		profile.Name = payload.Name
+	} else {
+		if err := utils.HttpJsonRequest(w, r, &profile); err != nil {
+			return err
+		}
 	}
 
-	err := api.sessions.Update(session.ID(), data)
+	err := api.sessions.Update(session.ID(), profile)
 	if err != nil {
 		if errors.Is(err, types.ErrSessionNotFound) {
 			return utils.HttpBadRequest("session does not exist")
