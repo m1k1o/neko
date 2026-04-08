@@ -11,18 +11,21 @@ import (
 )
 
 const (
-	ClipboardTextPlainTarget = "UTF8_STRING"
-	ClipboardTextHtmlTarget  = "text/html"
+	// MIME type for plain text in clipboard
+	clipboardTextPlainTarget = "UTF8_STRING"
+
+	// MIME type for HTML in clipboard
+	clipboardTextHtmlTarget = "text/html"
 )
 
 func (manager *DesktopManagerCtx) ClipboardGetText() (*types.ClipboardText, error) {
-	text, err := manager.ClipboardGetBinary(ClipboardTextPlainTarget)
+	text, err := manager.ClipboardGetBinary(clipboardTextPlainTarget)
 	if err != nil {
 		return nil, err
 	}
 
 	// Rich text must not always be available, can fail silently.
-	html, _ := manager.ClipboardGetBinary(ClipboardTextHtmlTarget)
+	html, _ := manager.ClipboardGetBinary(clipboardTextHtmlTarget)
 
 	return &types.ClipboardText{
 		Text: string(text),
@@ -36,10 +39,10 @@ func (manager *DesktopManagerCtx) ClipboardSetText(data types.ClipboardText) err
 	// is set, if available. Otherwise plain text.
 
 	if data.HTML != "" {
-		return manager.ClipboardSetBinary(ClipboardTextHtmlTarget, []byte(data.HTML))
+		return manager.ClipboardSetBinary(clipboardTextHtmlTarget, []byte(data.HTML))
 	}
 
-	return manager.ClipboardSetBinary(ClipboardTextPlainTarget, []byte(data.Text))
+	return manager.ClipboardSetBinary(clipboardTextPlainTarget, []byte(data.Text))
 }
 
 func (manager *DesktopManagerCtx) ClipboardGetBinary(mime string) ([]byte, error) {
@@ -114,17 +117,14 @@ func (manager *DesktopManagerCtx) ClipboardSetBinary(mime string, data []byte) e
 	case <-wait:
 	}
 
-	manager.wg.Add(1)
-	go func() {
-		defer manager.wg.Done()
-
+	manager.wg.Go(func() {
 		if err := cmd.Wait(); err != nil {
 			msg := strings.TrimSpace(stderr.String())
 			manager.logger.Err(err).Msgf("clipboard command finished with error: %s", msg)
 		} else {
 			manager.logger.Debug().Msg("clipboard command finished successfully")
 		}
-	}()
+	})
 
 	return nil
 }

@@ -325,12 +325,9 @@ func (manager *StreamSinkManagerCtx) CreatePipeline() error {
 	manager.pipeline.AttachAppsink("appsink")
 	manager.pipeline.Play()
 
-	manager.wg.Add(1)
 	pipeline := manager.pipeline
-
-	go func() {
+	manager.wg.Go(func() {
 		manager.logger.Debug().Msg("started emitting samples")
-		defer manager.wg.Done()
 
 		for {
 			sample, ok := <-pipeline.Sample()
@@ -341,7 +338,7 @@ func (manager *StreamSinkManagerCtx) CreatePipeline() error {
 
 			manager.onSample(sample)
 		}
-	}()
+	})
 
 	manager.pipelinesCounter.Inc()
 	manager.pipelinesActive.Set(1)

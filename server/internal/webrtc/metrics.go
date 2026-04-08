@@ -284,9 +284,10 @@ func (met *metrics) NewICECandidate(candidate webrtc.ICECandidateStats) {
 	}
 
 	met.iceCandidates[candidate.ID] = struct{}{}
-	if candidate.Protocol == "udp" {
+	switch candidate.Protocol {
+	case "udp":
 		met.iceCandidatesUdpCount.Add(1)
-	} else if candidate.Protocol == "tcp" {
+	case "tcp":
 		met.iceCandidatesTcpCount.Add(1)
 	}
 }
@@ -294,9 +295,10 @@ func (met *metrics) NewICECandidate(candidate webrtc.ICECandidateStats) {
 func (met *metrics) SetICECandidatesUsed(candidates []webrtc.ICECandidateStats) {
 	udp, tcp := 0, 0
 	for _, candidate := range candidates {
-		if candidate.Protocol == "udp" {
+		switch candidate.Protocol {
+		case "udp":
 			udp++
-		} else if candidate.Protocol == "tcp" {
+		case "tcp":
 			tcp++
 		}
 	}

@@ -12,7 +12,7 @@ import (
 
 // client is expected to reconnect within 5 second
 // if some unexpected websocket disconnect happens
-const WS_DELAYED_DURATION = 5 * time.Second
+const wsDelayedDuration = 5 * time.Second
 
 type SessionCtx struct {
 	id      string
@@ -165,7 +165,7 @@ func (session *SessionCtx) DisconnectWebSocketPeer(websocketPeer types.WebSocket
 	var wsDelayedTimer *time.Timer
 
 	if delayed {
-		wsDelayedTimer = time.AfterFunc(WS_DELAYED_DURATION, func() {
+		wsDelayedTimer = time.AfterFunc(wsDelayedDuration, func() {
 			session.DisconnectWebSocketPeer(websocketPeer, false)
 		})
 	}

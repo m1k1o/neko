@@ -20,7 +20,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-const MULTIPART_FORM_MAX_MEMORY = 32 << 20
+const multipartFormMaxMemory = 32 << 20
 
 func NewManager(
 	sessions types.SessionManager,
@@ -285,7 +285,7 @@ func (m *Manager) uploadFileHandler(w http.ResponseWriter, r *http.Request) erro
 		return utils.HttpForbidden("file transfer is disabled")
 	}
 
-	err = r.ParseMultipartForm(MULTIPART_FORM_MAX_MEMORY)
+	err = r.ParseMultipartForm(multipartFormMaxMemory)
 	if err != nil || r.MultipartForm == nil {
 		return utils.HttpBadRequest().
 			WithInternalErr(err).

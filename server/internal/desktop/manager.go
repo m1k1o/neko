@@ -17,6 +17,14 @@ import (
 	"github.com/m1k1o/neko/server/pkg/xorg"
 )
 
+const (
+	// debounce frequency for key events
+	debounceFrequency = 1 * time.Second
+
+	// debounce duration for key events
+	debounceDuration = 10 * time.Second
+)
+
 var mu = sync.Mutex{}
 
 type DesktopManagerCtx struct {
@@ -100,15 +108,9 @@ func (manager *DesktopManagerCtx) Start() {
 			Msg("X event error occured")
 	})
 
-	manager.wg.Add(1)
-
-	go func() {
-		defer manager.wg.Done()
-
-		ticker := time.NewTicker(1 * time.Second)
+	manager.wg.Go(func() {
+		ticker := time.NewTicker(debounceFrequency)
 		defer ticker.Stop()
-
-		const debounceDuration = 10 * time.Second
 
 		for {
 			select {
@@ -119,7 +121,7 @@ func (manager *DesktopManagerCtx) Start() {
 				manager.input.Debounce(debounceDuration)
 			}
 		}
-	}()
+	})
 }
 
 func (manager *DesktopManagerCtx) OnBeforeScreenSizeChange(listener func()) {

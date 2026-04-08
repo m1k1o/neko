@@ -18,14 +18,16 @@ import (
 	"github.com/m1k1o/neko/server/pkg/utils"
 )
 
-// send pings to peer with this period - must be less than pongWait
-const pingPeriod = 10 * time.Second
+const (
+	// send pings to peer with this period - must be less than pongWait
+	pingPeriod = 10 * time.Second
 
-// period for sending inactive cursor messages
-const inactiveCursorsPeriod = 750 * time.Millisecond
+	// period for sending inactive cursor messages
+	inactiveCursorsPeriod = 750 * time.Millisecond
 
-// maximum payload length for logging
-const maxPayloadLogLength = 10_000
+	// maximum payload length for logging
+	maxPayloadLogLength = 10_000
+)
 
 // events that are not logged in debug mode
 var nologEvents = []string{
@@ -309,10 +311,7 @@ func (manager *WebSocketManagerCtx) handle(connection *websocket.Conn, peer type
 	ticker := time.NewTicker(pingPeriod)
 	defer ticker.Stop()
 
-	manager.wg.Add(1)
-	go func() {
-		defer manager.wg.Done()
-
+	manager.wg.Go(func() {
 		for {
 			_, raw, err := connection.ReadMessage()
 			if err != nil {
@@ -322,7 +321,7 @@ func (manager *WebSocketManagerCtx) handle(connection *websocket.Conn, peer type
 
 			bytes <- raw
 		}
-	}()
+	})
 
 	for {
 		select {
@@ -381,10 +380,7 @@ func (manager *WebSocketManagerCtx) startInactiveCursors() {
 	manager.logger.Info().Msg("starting inactive cursors handler")
 	manager.shutdownInactiveCursors = make(chan struct{})
 
-	manager.wg.Add(1)
-	go func() {
-		defer manager.wg.Done()
-
+	manager.wg.Go(func() {
 		ticker := time.NewTicker(inactiveCursorsPeriod)
 		defer ticker.Stop()
 
@@ -424,7 +420,7 @@ func (manager *WebSocketManagerCtx) startInactiveCursors() {
 				manager.sessions.InactiveCursorsBroadcast(event.SESSION_CURSORS, sessionCursors)
 			}
 		}
-	}()
+	})
 }
 
 func (manager *WebSocketManagerCtx) stopInactiveCursors() {

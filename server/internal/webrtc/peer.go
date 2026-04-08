@@ -401,10 +401,8 @@ func (peer *WebRTCPeerCtx) SetVideo(r types.PeerVideoRequest) error {
 
 	// send video signal if modified
 	if modified {
-		go func() {
-			// in goroutine because of mutex and we don't want to block
-			peer.session.Send(event.SIGNAL_VIDEO, peer.Video())
-		}()
+		// in goroutine because of mutex and we don't want to block
+		go peer.session.Send(event.SIGNAL_VIDEO, peer.Video())
 	}
 
 	return nil
@@ -455,10 +453,8 @@ func (peer *WebRTCPeerCtx) SetAudio(r types.PeerAudioRequest) error {
 
 	// send video signal if modified
 	if modified {
-		go func() {
-			// in goroutine because of mutex and we don't want to block
-			peer.session.Send(event.SIGNAL_AUDIO, peer.Audio())
-		}()
+		// in goroutine because of mutex and we don't want to block
+		go peer.session.Send(event.SIGNAL_AUDIO, peer.Audio())
 	}
 
 	return nil
