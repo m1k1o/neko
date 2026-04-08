@@ -22,6 +22,11 @@ on:
         type: string
         default: "Dockerfile"
         description: "The Dockerfile to use for building the image."
+      latest:
+        required: false
+        type: boolean
+        default: true
+        description: "Whether to update the major, minor, and latest tags (set to false for maintenance branches)."
 
 env:
   FLAVOR_PREFIX: ${{ inputs.flavor && format('{0}-', inputs.flavor) || '' }}
@@ -47,11 +52,13 @@ jobs:
         id: meta
         with:
           images: ghcr.io/${{ github.repository }}/${{ env.FLAVOR_PREFIX }}${{ inputs.name }}
+          flavor: |
+            latest=${{ inputs.latest && 'auto' || 'false' }}
           tags: |
             type=edge,branch=master
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
+            type=semver,pattern={{major}},enable=${{ inputs.latest }}
             type=sha,format=long
 
       - name: Log in to the Container registry

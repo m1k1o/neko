@@ -6,19 +6,42 @@ on:
       - 'v*'
 
 jobs:
+  check-latest:
+    name: Check if Latest Version
+    runs-on: ubuntu-latest
+    outputs:
+      is_latest: ${{ steps.check.outputs.is_latest }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check if this is the latest semver tag
+        id: check
+        run: |
+          LATEST=$(git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -1)
+          if [[ "$LATEST" == "$GITHUB_REF_NAME" ]]; then
+            echo "is_latest=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_latest=false" >> $GITHUB_OUTPUT
+          fi
+
   build-base:
     name: Base Image
+    needs: check-latest
     uses: ./.github/workflows/image_base.yml
     with:
       flavor: nvidia
       platforms: linux/amd64
       dockerfile: Dockerfile.nvidia
+      latest: ${{ needs.check-latest.outputs.is_latest == 'true' }}
     secrets: inherit
 
   build-app:
     name: App Image
     uses: ./.github/workflows/image_app.yml
-    needs: build-base
+    needs: [build-base, check-latest]
     strategy:
       # Will build all images even if some fail.
       fail-fast: false
@@ -39,4 +62,5 @@ jobs:
       flavor: nvidia
       platforms: ${{ matrix.platforms }}
       dockerfile: ${{ matrix.dockerfile }}
+      latest: ${{ needs.check-latest.outputs.is_latest == 'true' }}
     secrets: inherit
