@@ -26,7 +26,12 @@ on:
         required: false
         type: boolean
         default: true
-        description: "Whether to update the major, minor, and latest tags (set to false for maintenance branches)."
+        description: "Whether to update the latest tag (set to false for maintenance branches)."
+      latest_major:
+        required: false
+        type: boolean
+        default: true
+        description: "Whether to update the major tag (set to false if a newer patch exists in this major)."
 
 env:
   FLAVOR_PREFIX: ${{ inputs.flavor && format('{0}-', inputs.flavor) || '' }}
@@ -58,7 +63,7 @@ jobs:
             type=edge,branch=master
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}},enable=${{ inputs.latest }}
+            type=semver,pattern={{major}},enable=${{ inputs.latest_major }}
             type=sha,format=long
 
       - name: Log in to the Container registry
