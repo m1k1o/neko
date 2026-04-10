@@ -6,17 +6,24 @@ on:
       - 'v*'
 
 jobs:
+  check-latest:
+    name: Check if Latest Version
+    uses: ./.github/workflows/check_latest.yml
+
   build-base:
     name: Base Image
+    needs: check-latest
     uses: ./.github/workflows/image_base.yml
     with:
       platforms: linux/amd64,linux/arm64
+      latest: ${{ needs.check-latest.outputs.is_latest == 'true' }}
+      latest_major: ${{ needs.check-latest.outputs.is_latest_major == 'true' }}
     secrets: inherit
 
   build-app:
     name: App Image
     uses: ./.github/workflows/image_app.yml
-    needs: build-base
+    needs: [build-base, check-latest]
     strategy:
       # Will build all images even if some fail.
       fail-fast: false
@@ -53,4 +60,6 @@ jobs:
     with:
       name: ${{ matrix.name }}
       platforms: ${{ matrix.platforms }}
+      latest: ${{ needs.check-latest.outputs.is_latest == 'true' }}
+      latest_major: ${{ needs.check-latest.outputs.is_latest_major == 'true' }}
     secrets: inherit
