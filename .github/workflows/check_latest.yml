@@ -1,0 +1,42 @@
+name: Check if Latest Version
+
+on:
+  workflow_call:
+    outputs:
+      is_latest:
+        description: "True if the pushed tag is the highest semver release tag overall."
+        value: ${{ jobs.check.outputs.is_latest }}
+      is_latest_major:
+        description: "True if the pushed tag is the highest release tag within its major version."
+        value: ${{ jobs.check.outputs.is_latest_major }}
+
+jobs:
+  check:
+    name: Check if Latest Version
+    runs-on: ubuntu-latest
+    outputs:
+      is_latest: ${{ steps.check.outputs.is_latest }}
+      is_latest_major: ${{ steps.check.outputs.is_latest_major }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check if this is the latest semver tag
+        id: check
+        run: |
+          LATEST=$(git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -1)
+          if [[ "$LATEST" == "$GITHUB_REF_NAME" ]]; then
+            echo "is_latest=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_latest=false" >> $GITHUB_OUTPUT
+          fi
+
+          PUSHED_MAJOR=$(echo "$GITHUB_REF_NAME" | grep -oE '^v[0-9]+')
+          LATEST_FOR_MAJOR=$(git tag --sort=-version:refname | grep -E "^${PUSHED_MAJOR}\.[0-9]+\.[0-9]+$" | head -1)
+          if [[ "$LATEST_FOR_MAJOR" == "$GITHUB_REF_NAME" ]]; then
+            echo "is_latest_major=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_latest_major=false" >> $GITHUB_OUTPUT
+          fi
