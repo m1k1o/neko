@@ -70,6 +70,9 @@ export default function Home(): ReactNode {
       <main>
         <section className={styles.description}>
           <div className="container">
+            <div className="alert alert--danger margin-bottom--lg" role="alert">
+              <strong>⚠️ Scam Warning:</strong> There are fraudulent accounts claiming that Neko is launching cryptocurrency tokens. This is <strong>not affiliated with the official Neko project</strong> in any way. The Neko project <strong>does not have any X (Twitter) account</strong> and is <strong>not involved in any crypto tokens</strong>. Please do not fall for these scams.
+            </div>
             <p className="text--center">
               Welcome to Neko, a self-hosted virtual browser that runs in Docker and uses WebRTC technology. Neko allows you to <strong>run a fully-functional browser in a virtual environment</strong>, providing <strong>secure and private internet access</strong> from anywhere. It's perfect for developers, privacy-conscious users, and anyone needing a <strong>virtual browser</strong>.
             </p>
