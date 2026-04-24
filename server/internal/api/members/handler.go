@@ -5,7 +5,7 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/v5"
 
 	"github.com/m1k1o/neko/server/pkg/auth"
 	"github.com/m1k1o/neko/server/pkg/types"
