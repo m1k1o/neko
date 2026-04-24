@@ -7,9 +7,9 @@ require (
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/go-chi/chi v1.5.5
 	github.com/go-chi/cors v1.2.2
+	github.com/go-viper/mapstructure/v2 v2.5.0
 	github.com/gorilla/websocket v1.5.3
 	github.com/kataras/go-events v0.0.3
-	github.com/mitchellh/mapstructure v1.5.0
 	github.com/pion/ice/v4 v4.2.2
 	github.com/pion/interceptor v0.1.44
 	github.com/pion/logging v0.2.4
@@ -25,7 +25,6 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
-	github.com/go-viper/mapstructure/v2 v2.5.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
