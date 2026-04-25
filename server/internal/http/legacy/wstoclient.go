@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/pion/webrtc/v3"
+	"github.com/pion/webrtc/v4"
 	"github.com/spf13/viper"
 
 	oldEvent "github.com/m1k1o/neko/server/internal/http/legacy/event"

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/pion/webrtc/v3"
+	"github.com/pion/webrtc/v4"
 
 	oldEvent "github.com/m1k1o/neko/server/internal/http/legacy/event"
 	oldMessage "github.com/m1k1o/neko/server/internal/http/legacy/message"

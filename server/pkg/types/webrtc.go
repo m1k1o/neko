@@ -3,7 +3,7 @@ package types
 import (
 	"errors"
 
-	"github.com/pion/webrtc/v3"
+	"github.com/pion/webrtc/v4"
 )
 
 var (

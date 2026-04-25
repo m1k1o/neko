@@ -8,7 +8,7 @@ import (
 
 	"github.com/pion/interceptor/pkg/cc"
 	"github.com/pion/rtcp"
-	"github.com/pion/webrtc/v3"
+	"github.com/pion/webrtc/v4"
 	"github.com/rs/zerolog"
 
 	"github.com/m1k1o/neko/server/internal/config"

@@ -6,8 +6,8 @@ import (
 	"sync"
 
 	"github.com/pion/rtcp"
-	"github.com/pion/webrtc/v3"
-	"github.com/pion/webrtc/v3/pkg/media"
+	"github.com/pion/webrtc/v4"
+	"github.com/pion/webrtc/v4/pkg/media"
 	"github.com/rs/zerolog"
 
 	"github.com/m1k1o/neko/server/pkg/types"

@@ -7,7 +7,7 @@ import (
 	"github.com/m1k1o/neko/server/pkg/types/event"
 	"github.com/m1k1o/neko/server/pkg/types/message"
 
-	"github.com/pion/webrtc/v3"
+	"github.com/pion/webrtc/v4"
 )
 
 func (h *MessageHandlerCtx) signalRequest(session types.Session, payload *message.SignalRequest) error {
