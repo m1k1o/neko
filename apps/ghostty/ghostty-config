@@ -1,0 +1,7 @@
+window-decoration = false
+maximize = true
+gtk-single-instance = true
+font-family = JetBrains Mono
+font-size = 14
+theme = GruvboxDarkHard
+cursor-style = block
