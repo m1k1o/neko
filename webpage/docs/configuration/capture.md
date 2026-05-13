@@ -322,8 +322,8 @@ Overview of available encoders for each codec is shown in the table below. The e
 | VP8   | [vp8enc](https://gstreamer.freedesktop.org/documentation/vpx/vp8enc.html?gi-language=c) | [vaapivp8enc](https://github.com/GStreamer/gstreamer-vaapi/blob/master/gst/vaapi/gstvaapiencode_vp8.c) | ? |
 | VP9   | [vp9enc](https://gstreamer.freedesktop.org/documentation/vpx/vp9enc.html?gi-language=c) | [vaapivp9enc](https://github.com/GStreamer/gstreamer-vaapi/blob/master/gst/vaapi/gstvaapiencode_vp9.c) | ? |
 | AV1   | [av1enc](https://gstreamer.freedesktop.org/documentation/aom/av1enc.html?gi-language=c) | ? | [nvav1enc](https://gstreamer.freedesktop.org/documentation/nvcodec/nvav1enc.html?gi-language=c) |
-| H264  | [x264enc](https://gstreamer.freedesktop.org/documentation/x264/index.html?gi-language=c) | [vaapih264enc](https://gstreamer.freedesktop.org/documentation/va/vah264enc.html?gi-language=c) | [nvautogpuh264enc](https://gstreamer.freedesktop.org/documentation/nvcodec/nvautogpuh264enc.html?gi-language=c) / [nvh264enc](https://gstreamer.freedesktop.org/documentation/nvcodec/nvh264enc.html?gi-language=c) |
-| H265  | [x265enc](https://gstreamer.freedesktop.org/documentation/x265/index.html?gi-language=c) | [vaapih265enc](https://gstreamer.freedesktop.org/documentation/va/vah265enc.html?gi-language=c) | [nvh265enc](https://gstreamer.freedesktop.org/documentation/nvcodec/nvh265enc.html?gi-language=c) |
+| H264  | [x264enc](https://gstreamer.freedesktop.org/documentation/x264/index.html?gi-language=c) | [vah264enc](https://gstreamer.freedesktop.org/documentation/va/vah264enc.html?gi-language=c) | [nvautogpuh264enc](https://gstreamer.freedesktop.org/documentation/nvcodec/nvautogpuh264enc.html?gi-language=c) / [nvh264enc](https://gstreamer.freedesktop.org/documentation/nvcodec/nvh264enc.html?gi-language=c) |
+| H265  | [x265enc](https://gstreamer.freedesktop.org/documentation/x265/index.html?gi-language=c) | [vah265enc](https://gstreamer.freedesktop.org/documentation/va/vah265enc.html?gi-language=c) | [nvh265enc](https://gstreamer.freedesktop.org/documentation/nvcodec/nvh265enc.html?gi-language=c) |
 
 
 ## WebRTC Audio {#audio}

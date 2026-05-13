@@ -152,11 +152,11 @@ func NewVideoPipeline(rtpCodec codec.RTPCodec, display string, pipelineSrc strin
 
 		switch hwenc {
 		case HwEncVAAPI:
-			if err := gst.CheckPlugins([]string{"vaapi"}); err != nil {
+			if err := gst.CheckPlugins([]string{"va"}); err != nil {
 				return "", err
 			}
 
-			pipelineStr = fmt.Sprintf(videoSrc+"video/x-raw,format=NV12 ! vaapih264enc rate-control=vbr bitrate=%d keyframe-period=180 quality-level=7 ! video/x-h264,stream-format=byte-stream,profile=constrained-baseline"+pipelineStr, display, fps, bitrate)
+			pipelineStr = fmt.Sprintf(videoSrc+"video/x-raw,format=NV12 ! vah264enc rate-control=cbr bitrate=%d key-int-max=60 target-usage=7 ! h264parse config-interval=-1 ! video/x-h264,stream-format=byte-stream,profile=constrained-baseline"+pipelineStr, display, fps, bitrate)
 		case HwEncNVENC:
 			if err := gst.CheckPlugins([]string{"nvcodec"}); err != nil {
 				return "", err
