@@ -168,7 +168,7 @@ func NewVideoPipeline(rtpCodec codec.RTPCodec, display string, pipelineSrc strin
 				nvencElem = "nvautogpuh264enc"
 			}
 
-			pipelineStr = fmt.Sprintf(videoSrc+"video/x-raw,format=NV12 ! %s name=encoder preset=2 gop-size=25 spatial-aq=true temporal-aq=true bitrate=%d vbv-buffer-size=%d rc-mode=6 ! h264parse config-interval=-1 ! video/x-h264,stream-format=byte-stream,profile=constrained-baseline"+pipelineStr, display, fps, nvencElem, bitrate, vbvbuf)
+			pipelineStr = fmt.Sprintf(videoSrc+"video/x-raw,format=NV12 ! %s name=encoder preset=2 gop-size=60 spatial-aq=true temporal-aq=true bitrate=%d vbv-buffer-size=%d rc-mode=6 ! h264parse config-interval=-1 ! video/x-h264,stream-format=byte-stream,profile=constrained-baseline"+pipelineStr, display, fps, nvencElem, bitrate, vbvbuf)
 		default:
 			// https://gstreamer.freedesktop.org/documentation/openh264/openh264enc.html?gi-language=c#openh264enc
 			// gstreamer1.0-plugins-bad
@@ -204,13 +204,13 @@ func NewVideoPipeline(rtpCodec codec.RTPCodec, display string, pipelineSrc strin
 				return "", err
 			}
 
-			pipelineStr = fmt.Sprintf(videoSrc+"video/x-raw,format=NV12 ! vah265enc rate-control=cbr bitrate=%d key-int-max=60 target-usage=7 ! video/x-h265,stream-format=byte-stream,profile=main"+pipelineStr, display, fps, bitrate)
+			pipelineStr = fmt.Sprintf(videoSrc+"video/x-raw,format=NV12 ! vah265enc rate-control=cbr bitrate=%d key-int-max=60 target-usage=7 ! h265parse config-interval=-1 ! video/x-h265,stream-format=byte-stream,profile=main"+pipelineStr, display, fps, bitrate)
 		case HwEncNVENC:
 			if err := gst.CheckPlugins([]string{"nvcodec"}); err != nil {
 				return "", err
 			}
 
-			pipelineStr = fmt.Sprintf(videoSrc+"video/x-raw,format=NV12 ! nvh265enc name=encoder rc-mode=cbr preset=p2 tune=low-latency gop-size=25 bitrate=%d vbv-buffer-size=%d ! h265parse config-interval=-1 ! video/x-h265,stream-format=byte-stream,profile=main"+pipelineStr, display, fps, bitrate, vbvbuf)
+			pipelineStr = fmt.Sprintf(videoSrc+"video/x-raw,format=NV12 ! nvh265enc name=encoder rc-mode=cbr preset=p2 tune=low-latency gop-size=60 bitrate=%d vbv-buffer-size=%d ! h265parse config-interval=-1 ! video/x-h265,stream-format=byte-stream,profile=main"+pipelineStr, display, fps, bitrate, vbvbuf)
 		default:
 			// https://gstreamer.freedesktop.org/documentation/x265/index.html?gi-language=c
 			// gstreamer1.0-plugins-bad
