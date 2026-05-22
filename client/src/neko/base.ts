@@ -192,6 +192,11 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
       return
     }
 
+    if (!this._channel || this._channel.readyState !== 'open') {
+      this.emit('warn', `attempting to send data while data channel is not open`)
+      return
+    }
+
     let buffer: ArrayBuffer
     let payload: DataView
     switch (event) {
