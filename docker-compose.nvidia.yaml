@@ -1,0 +1,35 @@
+services:
+  neko:
+    image: neko-chrome-nvidia-dev
+    build:
+      context: .
+      dockerfile: Dockerfile.nvidia-dev
+    container_name: neko-chrome-nvidia-dev
+    restart: unless-stopped
+    shm_size: "2gb"
+    ports:
+      - "8080:8080"
+      - "52000-52100:52000-52100/udp"
+    environment:
+      - NEKO_DESKTOP_SCREEN=1920x1080@30
+      - NEKO_MEMBER_MULTIUSER_USER_PASSWORD=neko
+      - NEKO_MEMBER_MULTIUSER_ADMIN_PASSWORD=admin
+      - NEKO_WEBRTC_EPR=52000-52100
+      - NEKO_WEBRTC_ICELITE=1
+      - NEKO_NAT1TO1=192.168.110.51
+      - NEKO_FILETRANSFER_ENABLED=true
+      - NEKO_FILETRANSFER_DIR=/home/neko/Downloads
+      - NEKO_WEBRTC_VIDEO_CODEC=vp8
+      # CUDA / NVIDIA
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
+      - VGL_DISPLAY=egl
+    volumes:
+      - ./data/downloads:/home/neko/Downloads
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
