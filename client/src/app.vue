@@ -1,14 +1,13 @@
 <template>
-  <div id="neko" :class="[!videoOnly && side ? 'expanded' : '']">
+  <div id="neko" :class="[!videoOnly && side ? 'expanded' : '', webFullscreen ? 'web-fullscreen' : '']">
     <template v-if="!$client.supported">
       <neko-unsupported />
     </template>
     <template v-else>
       <main class="neko-main">
-        <div v-if="!videoOnly" class="header-container">
+        <div v-if="!videoOnly" class="header-container" v-show="!webFullscreen">
           <neko-header />
-        </div>
-        <div class="video-container">
+        </div>        <div class="video-container">
           <neko-video
             ref="video"
             :hideControls="hideControls"
@@ -16,9 +15,12 @@
             @control-attempt="controlAttempt"
           />
         </div>
-        <div v-if="!videoOnly" class="room-container">
+        <div v-if="!videoOnly" class="room-container" :class="{ collapsed: controlsCollapsed }" v-show="!webFullscreen">
+          <div class="room-collapse-btn" @click="controlsCollapsed = !controlsCollapsed">
+            <i class="fas" :class="controlsCollapsed ? 'fa-chevron-up' : 'fa-chevron-down'" />
+          </div>
           <neko-members />
-          <div class="room-menu">
+          <div class="room-menu" v-if="!controlsCollapsed">
             <div class="settings">
               <neko-menu />
             </div>
@@ -31,7 +33,7 @@
           </div>
         </div>
       </main>
-      <neko-side v-if="!videoOnly && side" />
+      <neko-side v-if="!videoOnly && side && !webFullscreen" />
       <neko-connect v-if="!connected" />
       <neko-about v-if="about" />
       <notifications
@@ -86,6 +88,34 @@
         flex-shrink: 0;
         flex-direction: column;
         display: flex;
+        position: relative;
+        transition: height 0.15s ease;
+
+        &.collapsed {
+          height: 16px;
+        }
+
+        .room-collapse-btn {
+          position: absolute;
+          top: -12px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 36px;
+          height: 14px;
+          background: $background-tertiary;
+          border-radius: 6px 6px 0 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          z-index: 10;
+          font-size: 9px;
+          color: rgba(255, 255, 255, 0.5);
+
+          &:hover {
+            color: rgba(255, 255, 255, 0.9);
+          }
+        }
 
         .room-menu {
           max-width: 100%;
@@ -116,6 +146,10 @@
           }
         }
       }
+    }
+
+    &.web-fullscreen .neko-main .video-container {
+      flex-grow: 1;
     }
   }
 
@@ -200,6 +234,7 @@
     @Ref('video') video!: Video
 
     shakeKbd = false
+    controlsCollapsed = false
 
     get volume() {
       const numberParam = parseFloat(new URL(location.href).searchParams.get('volume') || '1.0')
@@ -256,6 +291,10 @@
 
       this.shakeKbd = true
       window.setTimeout(() => (this.shakeKbd = false), 5000)
+    }
+
+    get webFullscreen() {
+      return this.$accessor.client.webFullscreen
     }
 
     get about() {

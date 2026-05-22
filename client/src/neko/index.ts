@@ -4,6 +4,7 @@ import { BaseClient, BaseEvents } from './base'
 import { Member } from './types'
 import { EVENT } from './events'
 import { accessor } from '~/store'
+import { get } from '~/utils/localstorage'
 
 import {
   SystemMessagePayload,
@@ -104,6 +105,16 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
       duration: 5000,
       speed: 1000,
     })
+
+    // Restore saved resolution for admins
+    if (this.$accessor.user.admin) {
+      const w = get<number>('screen_width', 0)
+      const h = get<number>('screen_height', 0)
+      const r = get<number>('screen_rate', 0)
+      if (w > 0 && h > 0 && r > 0) {
+        this.$accessor.video.screenSet({ width: w, height: h, rate: r })
+      }
+    }
   }
 
   protected [EVENT.DISCONNECTED](reason?: Error) {
