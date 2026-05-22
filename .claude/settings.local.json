@@ -11,7 +11,9 @@
       "Bash(curl -s http://localhost:8080/api/stats)",
       "Bash(docker exec *)",
       "Bash(ipconfig)",
-      "Bash(docker compose *)"
+      "Bash(docker compose *)",
+      "Bash(git add *)",
+      "Bash(git commit *)"
     ]
   }
 }
