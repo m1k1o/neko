@@ -14,6 +14,7 @@ import (
 	"github.com/m1k1o/neko/server/internal/plugins/chat"
 	"github.com/m1k1o/neko/server/internal/plugins/filetransfer"
 	"github.com/m1k1o/neko/server/internal/plugins/scaletozero"
+	"github.com/m1k1o/neko/server/internal/plugins/telemetry"
 	"github.com/m1k1o/neko/server/pkg/types"
 )
 
@@ -49,6 +50,7 @@ func New(config *config.Plugins) *ManagerCtx {
 	manager.plugins.addPlugin(filetransfer.NewPlugin())
 	manager.plugins.addPlugin(chat.NewPlugin())
 	manager.plugins.addPlugin(scaletozero.NewPlugin())
+	manager.plugins.addPlugin(telemetry.NewPlugin())
 
 	return manager
 }
