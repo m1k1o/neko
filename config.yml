@@ -1,5 +1,7 @@
 desktop:
   screen: "1920x1080@60"
+  upload_drop: true
+  file_chooser_dialog: true
 
 member:
   # needed for legacy API ad there is no user management
@@ -7,11 +9,19 @@ member:
   multiuser:
    admin_password: "admin"
    user_password: "neko"
+   user_profile: |
+     {
+       "can_login": true,
+       "can_connect": true,
+       "can_watch": true,
+       "can_host": true,
+       "can_share_media": true,
+       "can_access_clipboard": true
+     }
 
 session:
   merciful_reconnect: true
-  # default setting for legacy API
-  implicit_hosting: false
+  implicit_hosting: true
   cookie:
     # needed for legacy API
     enabled: false

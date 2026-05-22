@@ -1,0 +1,48 @@
+FROM ghcr.io/m1k1o/neko/google-chrome:latest AS builder
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Switch to USTC mirror for reliable package downloads
+RUN printf 'Types: deb\nURIs: https://mirrors.ustc.edu.cn/debian\nSuites: trixie trixie-updates\nComponents: main\nSigned-By: /usr/share/keyrings/debian-archive-keyring.pgp\n\nTypes: deb\nURIs: https://mirrors.ustc.edu.cn/debian-security\nSuites: trixie-security\nComponents: main\nSigned-By: /usr/share/keyrings/debian-archive-keyring.pgp\n' > /etc/apt/sources.list.d/debian.sources \
+    && apt-get update
+
+# Install C build dependencies
+RUN apt-get install -y --no-install-recommends \
+    curl ca-certificates git build-essential \
+    libx11-dev libxrandr-dev libxtst-dev libgtk-3-dev libxcvt-dev \
+    libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Node.js
+RUN apt-get update && apt-get install -y --no-install-recommends nodejs npm \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Go 1.25
+RUN curl -fsSL https://go.dev/dl/go1.25.0.linux-amd64.tar.gz -o /tmp/go.tar.gz \
+    && tar -C /usr/local -xzf /tmp/go.tar.gz \
+    && rm /tmp/go.tar.gz
+ENV PATH="/usr/local/go/bin:$PATH"
+
+# Build server
+WORKDIR /build/server
+COPY server/ .
+ENV CGO_ENABLED=1
+RUN sed -i 's/\r//' build && bash build
+
+# Build client
+WORKDIR /build/client
+COPY client/package*.json ./
+RUN npm install
+COPY client/ .
+RUN npm run build
+
+# Final stage: replace binaries in the existing image
+FROM ghcr.io/m1k1o/neko/google-chrome:latest
+COPY --from=builder /build/server/bin/plugins/ /etc/neko/plugins/
+COPY --from=builder /build/server/bin/neko /usr/bin/neko
+COPY --from=builder /build/client/dist/ /var/www
+# Override Chrome policies and supervisord config
+COPY apps/google-chrome/policies.json /etc/opt/chrome/policies/managed/policies.json
+COPY apps/google-chrome/supervisord.conf /etc/neko/supervisord/google-chrome.conf
+# Override neko config
+COPY config.yml /etc/neko/neko.yaml
