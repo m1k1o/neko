@@ -13,16 +13,11 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// Tunables; small enough that the worker can't block neko's session
-// goroutines, large enough that a brief api downtime doesn't lose events.
 const (
 	queueDepth         = 256
 	defaultHTTPTimeout = 5 * time.Second
 )
 
-// Manager subscribes to session connect/disconnect events and forwards them
-// to kernel-images-api as live_view_* telemetry events. All HTTP work runs
-// on a single background worker so neko's emitter callbacks stay non-blocking.
 type Manager struct {
 	logger     zerolog.Logger
 	config     *Config
@@ -37,8 +32,6 @@ type Manager struct {
 	wg       sync.WaitGroup
 }
 
-// NewManager builds a manager with sensible defaults; tests can override
-// httpClient via the exported field after construction.
 func NewManager(sessions types.SessionManager, config *Config) *Manager {
 	return &Manager{
 		logger:      log.With().Str("module", "telemetry").Logger(),
@@ -51,8 +44,6 @@ func NewManager(sessions types.SessionManager, config *Config) *Manager {
 	}
 }
 
-// Start subscribes to session events and launches the publish worker. No-op
-// when the plugin is disabled.
 func (m *Manager) Start() error {
 	if !m.config.Enabled {
 		return nil
@@ -72,7 +63,6 @@ func (m *Manager) Start() error {
 	return nil
 }
 
-// Shutdown signals the worker to drain and exit, blocking until it does.
 func (m *Manager) Shutdown() error {
 	if !m.config.Enabled {
 		return nil
@@ -88,8 +78,9 @@ func (m *Manager) handleConnect(id string) {
 	m.mu.Unlock()
 
 	m.enqueue(eventPayload{
-		Type: "live_view_connect",
-		Data: map[string]any{"session_id": id},
+		Type:        "live_view_connect",
+		SourceEvent: "neko.session.connected",
+		Data:        map[string]any{"session_id": id},
 	})
 }
 
@@ -105,8 +96,9 @@ func (m *Manager) handleDisconnect(id string) {
 	}
 
 	m.enqueue(eventPayload{
-		Type: "live_view_disconnect",
-		Data: map[string]any{"session_id": id, "duration_ms": durationMs},
+		Type:        "live_view_disconnect",
+		SourceEvent: "neko.session.disconnected",
+		Data:        map[string]any{"session_id": id, "duration_ms": durationMs},
 	})
 }
 
@@ -125,8 +117,8 @@ func (m *Manager) worker() {
 	for {
 		select {
 		case <-m.stopCh:
-			// Best-effort drain of remaining events on shutdown so we don't
-			// lose paired connect/disconnects when neko exits cleanly.
+			// Best-effort drain on shutdown so we don't lose paired
+			// connect/disconnects when neko exits cleanly.
 			for {
 				select {
 				case ev := <-m.eventsCh:
@@ -147,7 +139,7 @@ func (m *Manager) publish(ev eventPayload) {
 		Category: "system",
 		Source: publishSource{
 			Kind:  "local_process",
-			Event: "neko." + ev.Type,
+			Event: ev.SourceEvent,
 		},
 		Data: ev.Data,
 	}
@@ -176,13 +168,14 @@ func (m *Manager) publish(ev eventPayload) {
 }
 
 type eventPayload struct {
-	Type string
-	Data map[string]any
+	Type        string
+	SourceEvent string
+	Data        map[string]any
 }
 
 type publishSource struct {
 	Kind  string `json:"kind"`
-	Event string `json:"event,omitempty"`
+	Event string `json:"event"`
 }
 
 type publishBody struct {
