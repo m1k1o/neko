@@ -70,15 +70,7 @@ func (h *RoomHandler) Route(r types.Router) {
 		r.Get("/", h.clipboardGetText)
 		r.Post("/", h.clipboardSetText)
 		r.Get("/image.png", h.clipboardGetImage)
-
-		// TODO: Refactor. xclip is failing to set propper target type
-		// and this content is sent back to client as text in another
-		// clipboard update. Therefore endpoint is not usable!
-		//r.Post("/image", h.clipboardSetImage)
-
-		// TODO: Refactor. If there would be implemented custom target
-		// retrieval, this endpoint would be useful.
-		//r.Get("/targets", h.clipboardGetTargets)
+		r.Post("/image.png", h.clipboardSetImage)
 	})
 
 	r.With(auth.CanHostOnly).Route("/keyboard", func(r types.Router) {

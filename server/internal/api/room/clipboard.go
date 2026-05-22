@@ -1,11 +1,9 @@
 package room
 
 import (
-	// TODO: Unused now.
-	//"bytes"
-	//"strings"
-
+	"bytes"
 	"net/http"
+	"strings"
 
 	"github.com/m1k1o/neko/server/pkg/types"
 	"github.com/m1k1o/neko/server/pkg/utils"
@@ -59,7 +57,18 @@ func (h *RoomHandler) clipboardGetImage(w http.ResponseWriter, r *http.Request) 
 	return err
 }
 
-/* TODO: Unused now.
+/* TODO: Refactor. If there would be implemented custom target
+retrieval, this endpoint would be useful.
+func (h *RoomHandler) clipboardGetTargets(w http.ResponseWriter, r *http.Request) error {
+	targets, err := h.desktop.ClipboardGetTargets()
+	if err != nil {
+		return utils.HttpInternalServerError().WithInternalErr(err)
+	}
+
+	return utils.HttpSuccess(w, targets)
+}
+*/
+
 func (h *RoomHandler) clipboardSetImage(w http.ResponseWriter, r *http.Request) error {
 	err := r.ParseMultipartForm(multipartFormMaxMemory)
 	if err != nil {
@@ -94,14 +103,3 @@ func (h *RoomHandler) clipboardSetImage(w http.ResponseWriter, r *http.Request) 
 
 	return utils.HttpSuccess(w)
 }
-
-func (h *RoomHandler) clipboardGetTargets(w http.ResponseWriter, r *http.Request) error {
-	targets, err := h.desktop.ClipboardGetTargets()
-	if err != nil {
-		return utils.HttpInternalServerError().WithInternalErr(err)
-	}
-
-	return utils.HttpSuccess(w, targets)
-}
-
-*/
