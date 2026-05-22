@@ -388,6 +388,106 @@ func (h *LegacyHandler) Route(r types.Router) {
 		return err
 	})
 
+	r.Post("/clipboard/image", func(w http.ResponseWriter, r *http.Request) error {
+		if h.isBanned(r) {
+			return utils.HttpForbidden("banned ip")
+		}
+
+		s := h.newSession(r)
+
+		username := r.URL.Query().Get("usr")
+		password := r.URL.Query().Get("pwd")
+		err := s.create(username, password)
+		if err != nil {
+			return utils.HttpForbidden(err.Error())
+		}
+		defer s.destroy()
+
+		body, _, err := s.req(http.MethodPost, "/api/room/clipboard/image.png", r.Header, r.Body)
+		if err != nil {
+			return utils.HttpInternalServerError().WithInternalErr(err)
+		}
+
+		_, err = io.Copy(w, body)
+		return err
+	})
+
+	r.Post("/upload/drop", func(w http.ResponseWriter, r *http.Request) error {
+		if h.isBanned(r) {
+			return utils.HttpForbidden("banned ip")
+		}
+
+		s := h.newSession(r)
+
+		username := r.URL.Query().Get("usr")
+		password := r.URL.Query().Get("pwd")
+		err := s.create(username, password)
+		if err != nil {
+			return utils.HttpForbidden(err.Error())
+		}
+		defer s.destroy()
+
+		body, _, err := s.req(http.MethodPost, "/api/room/upload/drop", r.Header, r.Body)
+		if err != nil {
+			return utils.HttpInternalServerError().WithInternalErr(err)
+		}
+
+		_, err = io.Copy(w, body)
+		return err
+	})
+
+	r.Delete("/file", func(w http.ResponseWriter, r *http.Request) error {
+		if h.isBanned(r) {
+			return utils.HttpForbidden("banned ip")
+		}
+
+		s := h.newSession(r)
+
+		username := r.URL.Query().Get("usr")
+		password := r.URL.Query().Get("pwd")
+		err := s.create(username, password)
+		if err != nil {
+			return utils.HttpForbidden(err.Error())
+		}
+		defer s.destroy()
+
+		filename := r.URL.Query().Get("filename")
+
+		body, _, err := s.req(http.MethodDelete, "/api/filetransfer?filename="+url.QueryEscape(filename), r.Header, nil)
+		if err != nil {
+			return utils.HttpInternalServerError().WithInternalErr(err)
+		}
+
+		_, err = io.Copy(w, body)
+		return err
+	})
+
+	r.Patch("/file", func(w http.ResponseWriter, r *http.Request) error {
+		if h.isBanned(r) {
+			return utils.HttpForbidden("banned ip")
+		}
+
+		s := h.newSession(r)
+
+		username := r.URL.Query().Get("usr")
+		password := r.URL.Query().Get("pwd")
+		err := s.create(username, password)
+		if err != nil {
+			return utils.HttpForbidden(err.Error())
+		}
+		defer s.destroy()
+
+		filename := r.URL.Query().Get("filename")
+
+		body, _, err := s.req(http.MethodPatch, "/api/filetransfer?filename="+url.QueryEscape(filename), r.Header, r.Body)
+		if err != nil {
+			return utils.HttpInternalServerError().WithInternalErr(err)
+		}
+
+		_, err = io.Copy(w, body)
+		return err
+	})
+
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) error {
 		_, err := w.Write([]byte("true"))
 		return err

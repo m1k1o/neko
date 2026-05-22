@@ -210,6 +210,8 @@ func (m *Manager) Shutdown() error {
 func (m *Manager) Route(r types.Router) {
 	r.With(auth.AdminsOnly).Get("/", m.downloadFileHandler)
 	r.With(auth.AdminsOnly).Post("/", m.uploadFileHandler)
+	r.With(auth.AdminsOnly).Delete("/", m.deleteFileHandler)
+	r.With(auth.AdminsOnly).Patch("/", m.renameFileHandler)
 }
 
 func (m *Manager) WebSocketHandler(session types.Session, msg types.WebSocketMessage) bool {
@@ -330,4 +332,101 @@ func (m *Manager) uploadFileHandler(w http.ResponseWriter, r *http.Request) erro
 	}
 
 	return nil
+}
+
+func (m *Manager) deleteFileHandler(w http.ResponseWriter, r *http.Request) error {
+	session, ok := auth.GetSession(r)
+	if !ok {
+		return utils.HttpUnauthorized("session not found")
+	}
+
+	enabled, err := m.isEnabledForSession(session)
+	if err != nil {
+		return utils.HttpInternalServerError().
+			WithInternalErr(err).
+			Msg("error checking file transfer permissions")
+	}
+
+	if !enabled {
+		return utils.HttpForbidden("file transfer is disabled")
+	}
+
+	filename := r.URL.Query().Get("filename")
+	badChars, err := regexp.MatchString(`(?m)\.\.(?:\/|$)`, filename)
+	if filename == "" || badChars || err != nil {
+		return utils.HttpBadRequest().
+			WithInternalErr(err).
+			Msg("bad filename")
+	}
+
+	filename = filepath.Clean(filename)
+	filename = filepath.Base(filename)
+	filePath := filepath.Join(m.config.RootDir, filename)
+
+	if err := os.Remove(filePath); err != nil {
+		return utils.HttpInternalServerError().
+			WithInternalErr(err).
+			Msg("error deleting file")
+	}
+
+	return utils.HttpSuccess(w)
+}
+
+type RenamePayload struct {
+	NewName string `json:"new_name"`
+}
+
+func (m *Manager) renameFileHandler(w http.ResponseWriter, r *http.Request) error {
+	session, ok := auth.GetSession(r)
+	if !ok {
+		return utils.HttpUnauthorized("session not found")
+	}
+
+	enabled, err := m.isEnabledForSession(session)
+	if err != nil {
+		return utils.HttpInternalServerError().
+			WithInternalErr(err).
+			Msg("error checking file transfer permissions")
+	}
+
+	if !enabled {
+		return utils.HttpForbidden("file transfer is disabled")
+	}
+
+	filename := r.URL.Query().Get("filename")
+	badChars, err := regexp.MatchString(`(?m)\.\.(?:\/|$)`, filename)
+	if filename == "" || badChars || err != nil {
+		return utils.HttpBadRequest().
+			WithInternalErr(err).
+			Msg("bad filename")
+	}
+
+	filename = filepath.Clean(filename)
+	filename = filepath.Base(filename)
+
+	data := &RenamePayload{}
+	if err := utils.HttpJsonRequest(w, r, data); err != nil {
+		return err
+	}
+
+	badNewName, err := regexp.MatchString(`(?m)\.\.(?:\/|$)`, data.NewName)
+	if data.NewName == "" || badNewName || err != nil {
+		return utils.HttpBadRequest().
+			WithInternalErr(err).
+			Msg("bad new filename")
+	}
+
+	newName := filepath.Clean(data.NewName)
+	newName = filepath.Base(newName)
+
+	oldPath := filepath.Join(m.config.RootDir, filename)
+	newPath := filepath.Join(m.config.RootDir, newName)
+
+	if err := os.Rename(oldPath, newPath); err != nil {
+		return utils.HttpInternalServerError().
+			WithInternalErr(err).
+			Msg("error renaming file")
+	}
+
+	return utils.HttpSuccess(w)
 }
