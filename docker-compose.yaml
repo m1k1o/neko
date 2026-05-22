@@ -3,26 +3,27 @@ services:
     image: neko-chrome-dev
     container_name: neko-chrome-dev
     restart: unless-stopped
-    shm_size: "2gb"
+    shm_size: "${SHM_SIZE:-2gb}"
     ports:
-      - "8080:8080"
-      - "52000-52100:52000-52100/udp"
+      - "${HOST_PORT:-8080}:8080"
+      - "${NEKO_WEBRTC_EPR:-52000-52100}:${NEKO_WEBRTC_EPR:-52000-52100}/udp"
     environment:
-      - NEKO_DESKTOP_SCREEN=2560x1080@30
-      - NEKO_MEMBER_MULTIUSER_USER_PASSWORD=neko
-      - NEKO_MEMBER_MULTIUSER_ADMIN_PASSWORD=admin
-      - NEKO_WEBRTC_EPR=52000-52100
-      - NEKO_WEBRTC_ICELITE=1
-      - NEKO_NAT1TO1=192.168.110.51
+      - NEKO_DESKTOP_SCREEN=${NEKO_DESKTOP_SCREEN}
+      - NEKO_MEMBER_MULTIUSER_USER_PASSWORD=${NEKO_USER_PASSWORD}
+      - NEKO_MEMBER_MULTIUSER_ADMIN_PASSWORD=${NEKO_ADMIN_PASSWORD}
+      - NEKO_WEBRTC_EPR=${NEKO_WEBRTC_EPR}
+      - NEKO_WEBRTC_ICELITE=${NEKO_WEBRTC_ICELITE}
+      - NEKO_NAT1TO1=${NEKO_NAT1TO1}
       - NEKO_FILETRANSFER_ENABLED=true
       - NEKO_FILETRANSFER_DIR=/home/neko/Downloads
-      - NEKO_WEBRTC_VIDEO_CODEC=vp8
-      - NEKO_WEBRTC_VIDEO_BITRATE=3500
-      - NEKO_WEBRTC_MAX_FPS=120
-      - NEKO_WEBRTC_AUDIO_CODEC=opus
-      - NEKO_WEBRTC_AUDIO_BITRATE=196
-      # - HTTP_PROXY=http://172.16.168.96:10809
-      # - HTTPS_PROXY=http://172.16.168.96:10809
-      # - NO_PROXY=localhost,127.0.0.1
+      - NEKO_WEBRTC_VIDEO_CODEC=${NEKO_VIDEO_CODEC}
+      - NEKO_WEBRTC_VIDEO_BITRATE=${NEKO_VIDEO_BITRATE}
+      - NEKO_WEBRTC_MAX_FPS=${NEKO_MAX_FPS}
+      - NEKO_WEBRTC_AUDIO_CODEC=${NEKO_AUDIO_CODEC}
+      - NEKO_WEBRTC_AUDIO_BITRATE=${NEKO_AUDIO_BITRATE}
+      # HTTP Proxy
+      - HTTP_PROXY=${HTTP_PROXY:-""}
+      - HTTPS_PROXY=${HTTPS_PROXY:-""}
+      - NO_PROXY=${NO_PROXY:-""}
     volumes:
       - ./data/downloads:/home/neko/Downloads
