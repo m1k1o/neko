@@ -230,3 +230,50 @@ The ID of the extension can be found in the URL of the extension in the Chrome W
   ]
 }
 ```
+
+## DRM for ARM64 {#arm64-drm}
+
+To stream protected contents, Google’s content protection system, Widevine, is required. However, its support for AArch64 systems is limited and it does not come natively during browser installation. To workaround, a copy of Widevine for ARM64 is obtained and installed from ChromeOS. However, further configuration is needed to function properly.
+
+### Firefox {#firefox-arm64-drm}
+
+Add the following command in your `docker-compose.yml`:
+
+```yaml title="docker-compose.yaml"
+services:
+  neko:
+    ...
+    command: sh -c "MOZ_GMP_PATH=/var/lib/widevine/gmp-widevinecdm/system-installed exec /usr/bin/supervisord -c /etc/neko/supervisord.conf"
+```
+
+In your [policies.json](#policy-files), add the following:
+
+```json title="policies.json"
+{
+  "policies": {
+    ...
+    "Preferences": {
+      ...
+      "media.gmp-widevinecdm.enabled": true,
+      "media.gmp-widevinecdm.visible": true,
+      "media.gmp-widevinecdm.version": "system-installed",
+      "media.gmp-widevinecdm.abi": "aarch64-gcc3",
+      "media.gmp-widevinecdm.autoupdate": false,
+      "media.eme.enabled": true,
+      "media.eme.encrypted-media-encryption-scheme.enabled": true
+    },
+    ...
+  }
+}
+```
+
+For some streaming sites, you also need to use [a user agent switcher extension](https://addons.mozilla.org/firefox/addon/user-agent-string-switcher/) and set it to: `Mozilla/5.0 (X11; CrOS aarch64 15662.0.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.6098.0 Safari/537.36`
+
+### Chromium-based Browsers {#chromium-arm64-drm}
+
+:::note
+For Brave, you have to go to `brave://settings/extensions` and enable Widevine.
+For Vivaldi, exit the browser and let it restart.
+:::
+
+For some streaming sites, you also need to use [a user agent switcher extension](https://chromewebstore.google.com/detail/bhchdcejhohfmigjafbampogmaanbfkg) and set it to: `Mozilla/5.0 (X11; CrOS aarch64 15662.0.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.6098.0 Safari/537.36`
