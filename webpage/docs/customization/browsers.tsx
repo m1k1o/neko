@@ -53,3 +53,29 @@ export function PolicyFilePaths({flavors, ...props}: { flavors: string[] }) {
         </table>
     );
 }
+
+export function WidevineDirectoryPaths({flavors, ...props}: { flavors: string[] }) {
+    if (!flavors) {
+        flavors = [];
+    }
+    return (
+        <table {...props}>
+            <thead>
+                <tr>
+                    <th>Browser</th>
+                    <th>Widevine Directory Path</th>
+                </tr>
+            </thead>
+            <tbody>
+                {browsers.filter(({ flavor }) => flavors.length == 0 || flavors.includes(flavor)).map(({ tag, widevine }) => (
+                    <tr key={tag}>
+                        <td><Link to={`/docs/v3/installation/docker-images#${tag}`} ><strong>{tag}</strong></Link></td>
+                        <td>
+                            {widevine ? <code>{widevine}</code> : <i>Does not support ARM64.</i>}
+                        </td>
+                    </tr>
+                ))}
+            </tbody>
+        </table>
+    );
+}
