@@ -4,7 +4,7 @@ description: "Customize your browser settings and configurations in Neko."
 ---
 
 import { AppIcon } from '@site/src/components/AppIcon';
-import { ProfileDirectoryPaths, PolicyFilePaths } from './browsers'
+import { ProfileDirectoryPaths, PolicyFilePaths, WidevineDirectoryPaths } from './browsers'
 
 # Browsers Customization
 
@@ -230,3 +230,97 @@ The ID of the extension can be found in the URL of the extension in the Chrome W
   ]
 }
 ```
+
+## DRM for ARM64 {#arm64-drm}
+
+To stream protected contents, Google’s content protection system, Widevine, is required. However, its support for AArch64 systems is limited and it does not come natively during browser installation. To workaround, use [AsahiLinux's script](https://github.com/AsahiLinux/widevine-installer) to obtain a copy of Widevine for ARM64:
+
+```bash
+# Clone the repository and navigate into the directory
+git clone https://github.com/AsahiLinux/widevine-installer.git
+cd widevine-installer
+
+# The script must be run as root
+sudo ./widevine-installer
+```
+
+After you obtain a copy, follow browser-specific instructions to finish setup.
+
+### Firefox {#firefox-arm64-drm}
+
+Go to the directory where you place your `docker-compose.yml` and execute the following commands:
+
+```bash
+# Copy the folder with actual files not symlinks
+cp -RL /var/lib/widevine/gmp-widevinecdm/ ./
+
+# Set suitable permissions
+find ./gmp-widevinecdm -type d -exec chmod 755 {} + && find ./gmp-widevinecdm -type f -exec chmod 644 {} + 
+```
+
+Next, map the folder in your `docker-compose.yml` and pass MOZ_GMP_PATH:
+
+```yaml title="docker-compose.yaml"
+services:
+  neko:
+    ...
+    volumes:
+      - "./gmp-widevinecdm:/usr/lib/firefox/gmp-widevinecdm"
+    ...
+    command: sh -c "MOZ_GMP_PATH=/usr/lib/firefox/gmp-widevinecdm/system-installed exec /usr/bin/supervisord -c /etc/neko/supervisord.conf"
+```
+
+In your [policies.json](#policy-files), add the following:
+
+```json title="policies.json"
+{
+  "policies": {
+    ...
+    "Preferences": {
+      ...
+      "media.gmp-widevinecdm.enabled": true,
+      "media.gmp-widevinecdm.visible": true,
+      "media.gmp-widevinecdm.version": "system-installed",
+      "media.gmp-widevinecdm.abi": "aarch64-gcc3",
+      "media.gmp-widevinecdm.autoupdate": false,
+      "media.eme.enabled": true,
+      "media.eme.encrypted-media-encryption-scheme.enabled": true
+    },
+    ...
+  }
+}
+```
+
+For some streaming sites, you also need to use [a user agent switcher extension](https://addons.mozilla.org/firefox/addon/user-agent-string-switcher/) and set it to: `Mozilla/5.0 (X11; CrOS aarch64 15662.0.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.6098.0 Safari/537.36`
+
+### Chromium-based Browsers {#chromium-arm64-drm}
+
+Go to the directory where you place your `docker-compose.yml` and execute the following commands:
+
+```bash
+# Copy the folder with actual files not symlinks
+mkdir WidevineCdm
+shopt -s extglob
+cp -RL /var/lib/widevine/WidevineCdm/!(WidevineCdm) ./WidevineCdm/
+
+# Set suitable permissions
+find ./WidevineCdm -type d -exec chmod 755 {} + && find ./WidevineCdm -type f -exec chmod 644 {} + 
+```
+
+Next, map that folder in your `docker-compose.yml`:
+
+```yaml title="docker-compose.yaml"
+services:
+  neko:
+  ...
+    volumes:
+      - "./WidevineCdm:{Widevine directory path}"
+```
+
+<WidevineDirectoryPaths flavors={['chromium-based']} />
+
+:::note
+For Brave, you have to visit `brave://settings/extensions` and enable Widevine
+:::
+
+For some streaming sites, you also need to use [a user agent switcher extension](https://chromewebstore.google.com/detail/bhchdcejhohfmigjafbampogmaanbfkg) and set it to: `Mozilla/5.0 (X11; CrOS aarch64 15662.0.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.6098.0 Safari/537.36`
