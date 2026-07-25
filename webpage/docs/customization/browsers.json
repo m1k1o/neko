@@ -21,7 +21,8 @@
         "tag": "chromium",
         "flavor": "chromium-based",
         "profileDir": "/home/neko/.config/chromium",
-        "policiesFile": "/etc/chromium/policies/managed/policies.json"
+        "policiesFile": "/etc/chromium/policies/managed/policies.json",
+        "widevine": "/usr/lib/chromium/WidevineCdm"
     },
     {
         "tag": "google-chrome",
@@ -45,13 +46,15 @@
         "tag": "brave",
         "flavor": "chromium-based",
         "profileDir": "/home/neko/.config/brave",
-        "policiesFile": "/etc/brave/policies/managed/policies.json"
+        "policiesFile": "/etc/brave/policies/managed/policies.json",
+        "widevine": "/opt/brave.com/brave/WidevineCdm"
     },
     {
         "tag": "vivaldi",
         "flavor": "chromium-based",
         "profileDir": "/home/neko/.config/vivaldi",
-        "policiesFile": "/etc/opt/vivaldi/policies/managed/policies.json"
+        "policiesFile": "/etc/opt/vivaldi/policies/managed/policies.json",
+        "widevine": "/opt/vivaldi/WidevineCdm"
     },
     {
         "tag": "opera",
