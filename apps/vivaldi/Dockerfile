@@ -1,6 +1,8 @@
 ARG BASE_IMAGE=ghcr.io/m1k1o/neko/base:latest
 FROM $BASE_IMAGE
 
+COPY ./widevine-installer /widevine
+
 #
 # install vivaldi
 SHELL ["/bin/bash", "-c"]
@@ -25,6 +27,16 @@ RUN set -eux; apt-get update; \
       EXT_VERSION="$(unzip -p "${EXT_PATH}" manifest.json 2>/dev/null | jq -r ".version")"; \
       echo -e "{\n  \"external_crx\": \"${EXT_PATH}\",\n  \"external_version\": \"${EXT_VERSION}\"\n}" > "${EXTENSIONS_DIR}"/"${EXT_ID}".json; \
     done; \
+    #
+    # install widevine
+    if [ "${ARCH}" = "arm64" ]; then \
+        apt-get install -y --no-install-recommends squashfs-tools; \
+        printf "\n\n" | /widevine/widevine-installer; \
+        rm -rf /widevine; \
+        apt-get --purge autoremove -y squashfs-tools; \
+        mkdir -p /opt/vivaldi/WidevineCdm; \
+        find /var/lib/widevine/WidevineCdm/ ! -name "WidevineCdm" -exec cp -RL {} /opt/vivaldi/WidevineCdm/ \; ; \
+    fi; \
     #
     # clean up
     apt-get --purge autoremove -y xz-utils jq; \
