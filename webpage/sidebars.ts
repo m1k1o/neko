@@ -73,6 +73,7 @@ const sidebars: SidebarsConfig = {
           link: { type: "doc", id: "developer-guide/README" },
           items: [
             'developer-guide/repository-structure',
+            'developer-guide/development',
             'developer-guide/build',
             {
               type: 'link',
