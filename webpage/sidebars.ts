@@ -94,6 +94,15 @@ const sidebars: SidebarsConfig = {
     //},
     {
       type: 'category',
+      label: 'Advanced Topics',
+      className: 'menu__list-item-flat',
+      collapsible: false,
+      items: [
+        'advanced-topics/wine',
+      ]
+    },
+    {
+      type: 'category',
       label: 'Help & Support',
       className: 'menu__list-item-flat',
       collapsible: false,
