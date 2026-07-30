@@ -126,6 +126,18 @@ import TabItem from '@theme/TabItem';
 
 Check the [Chromium-based browsers customization guide](/docs/v3/customization/browsers#chromium-based) for more information on how to customize Chromium-based browsers (configuring profile, installing extensions, etc.).
 
+### Not available browsers {#not-available}
+
+Some browsers are intentionally absent from Neko - not because of technical limitations, but due to legal restrictions imposed by the vendor.
+
+#### Safari {#safari-not-available}
+
+:::danger Apple prohibits this
+Safari is **not available** and will never be officially supported. Apple's [macOS and Safari EULA](https://www.apple.com/legal/sla/) prohibits running Safari outside of Apple hardware and macOS. Distributing or using Safari on Linux (or any non-Apple platform) violates Apple's Terms of Service - so this repository cannot include it.
+
+Every other major browser vendor publishes Linux builds or open-source code that can run in a container. Apple does not. You can build it yourself if you wish, but this project will not ship it.
+:::
+
 ### Desktop Environments {#desktop}
 
 These images feature a full desktop environment where you can install and run multiple applications, use window management, and more. This is useful for people who want to run multiple applications in a single container.
