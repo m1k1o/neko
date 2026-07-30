@@ -18,6 +18,7 @@
   "PromptForDownloadLocation": false,
   "BookmarkBarEnabled": false,
   "PasswordManagerEnabled": false,
+  "CommandLineFlagSecurityWarningsEnabled": false,
   "URLAllowlist": [
     "file:///home/neko/Downloads"
   ],

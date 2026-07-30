@@ -19,6 +19,7 @@
   "BookmarkBarEnabled": false,
   "PasswordManagerEnabled": false,
   "BrowserLabsEnabled": false,
+  "CommandLineFlagSecurityWarningsEnabled": false,
   "URLAllowlist": [
     "file:///home/neko/Downloads"
   ],
