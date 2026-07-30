@@ -12,17 +12,18 @@
   "BrowserAddPersonEnabled": false,
   "BrowserGuestModeEnabled": false,
   "DefaultPopupsSetting": 2,
-  "DownloadRestrictions": 3,
+  "DownloadRestrictions": 0,
   "VideoCaptureAllowed": true,
-  "AllowFileSelectionDialogs": false,
+  "AllowFileSelectionDialogs": true,
   "PromptForDownloadLocation": false,
   "BookmarkBarEnabled": false,
   "PasswordManagerEnabled": false,
+  "DefaultClipboardSetting": 1,
+  "ClipboardAllowedForUrls": ["*"],
   "URLAllowlist": [
     "file:///home/neko/Downloads"
   ],
   "URLBlocklist": [
-      "file://*",
       "chrome://policy"
   ],
   "ExtensionInstallForcelist": [

@@ -124,4 +124,10 @@ export const files = {
   downloads: '下载',
   uploads: '上传',
   upload_here: '点击或拖动文件到此处上传',
+  download: '下载',
+  rename: '重命名',
+  delete: '删除',
+  preview: '预览',
+  no_files: '暂无文件',
+  preview_unsupported: '该文件类型不支持预览',
 }

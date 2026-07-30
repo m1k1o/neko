@@ -46,3 +46,5 @@ runtime/icon-theme/*
 
 # root Dockerfile is generated from the Dockerfile.tmpl
 /Dockerfile
+data/**
+.env

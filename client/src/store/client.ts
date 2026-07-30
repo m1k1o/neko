@@ -8,6 +8,7 @@ export const state = () => ({
   tab: get<string>('tab', 'chat'),
   about: false,
   about_page: '',
+  webFullscreen: false,
 })
 
 export const getters = getterTree(state, {})
@@ -30,6 +31,9 @@ export const mutations = mutationTree(state, {
   setSide(state, side: boolean) {
     state.side = side
     set('side', side)
+  },
+  setWebFullscreen(state, val: boolean) {
+    state.webFullscreen = val
   },
 })
 

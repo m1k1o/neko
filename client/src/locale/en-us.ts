@@ -127,4 +127,11 @@ export const files = {
   downloads: 'Downloads',
   uploads: 'Uploads',
   upload_here: 'Click or drag files here to upload',
+  download: 'Download',
+  rename: 'Rename',
+  delete: 'Delete',
+  preview: 'Preview',
+  no_files: 'No files',
+  preview_unsupported: 'Preview not supported for this file type',
+  transfers: 'Transfers',
 }

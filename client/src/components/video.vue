@@ -28,7 +28,14 @@
           @touchend.stop.prevent="onTouchHandler"
           @compositionstart="onCompositionStartHandler"
           @compositionend="onCompositionEndHandler"
+          @paste.stop.prevent="onPaste"
+          @dragover.stop.prevent="onDragOver"
+          @dragleave.stop.prevent="onDragLeave"
+          @drop.stop.prevent="onDrop"
         />
+        <div v-if="dropOverlay" class="drop-overlay">
+          <i class="fas fa-file-arrow-down" />
+        </div>
         <div v-if="!playing && playable" class="player-overlay" @click.stop.prevent="playAndUnmute">
           <i class="fas fa-play-circle" />
         </div>
@@ -37,8 +44,12 @@
         </div>
         <div ref="aspect" class="player-aspect" />
       </div>
-      <ul v-if="!fullscreen && !hideControls" class="video-menu top">
-        <li><i @click.stop.prevent="requestFullscreen" class="fas fa-expand"></i></li>
+      <ul v-if="!hideControls" class="video-menu top">
+        <li v-if="webFullscreen">
+          <i @click.stop.prevent="exitWebFullscreen" class="fas fa-compress"
+            v-tooltip="{ content: '退出全屏', placement: 'bottom', offset: 5, boundariesElement: 'body' }" />
+        </li>
+        <li v-else><i @click.stop.prevent="requestWebFullscreen" class="fas fa-expand"></i></li>
         <li v-if="admin"><i @click.stop.prevent="openResolution" class="fas fa-desktop"></i></li>
         <li v-if="!controlLocked && !implicitHosting" :class="extraControls || 'extra-control'">
           <i
@@ -52,7 +63,7 @@
           />
         </li>
       </ul>
-      <ul v-if="!fullscreen && !hideControls" class="video-menu bottom">
+      <ul v-if="!webFullscreen && !hideControls" class="video-menu bottom">
         <li v-if="hosting && (!clipboard_read_available || !clipboard_write_available)">
           <i @click.stop.prevent="openClipboard" class="fas fa-clipboard"></i>
         </li>
@@ -201,6 +212,25 @@
           resize: none;
         }
 
+        .drop-overlay {
+          position: absolute;
+          top: 0;
+          bottom: 0;
+          width: 100%;
+          height: 100%;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          background: rgba($color: #000, $alpha: 0.5);
+          pointer-events: none;
+
+          i::before {
+            font-size: 120px;
+            text-align: center;
+            color: rgba($color: #fff, $alpha: 0.8);
+          }
+        }
+
         .player-aspect {
           display: block;
           padding-bottom: 56.25%;
@@ -253,6 +283,12 @@
     private fullscreen = false
     private mutedOverlay = true
     private lastTextAreaValue = ''
+    public dropOverlay = false
+    private _ctrlHeld = false
+
+    get webFullscreen() {
+      return this.$accessor.client.webFullscreen
+    }
 
     get admin() {
       return this.$accessor.user.admin
@@ -459,7 +495,7 @@
 
     @Watch('clipboard')
     async onClipboardChanged(clipboard: string) {
-      if (this.clipboard_write_available) {
+      if (this.clipboard_write_available && window.document.hasFocus()) {
         try {
           await navigator.clipboard.writeText(clipboard)
           this.$accessor.remote.setClipboard(clipboard)
@@ -521,12 +557,29 @@
           return true
         }
 
+        // Track Ctrl key state
+        if (key === this.KeyTable.XK_Control_L || key === this.KeyTable.XK_Control_R) {
+          this._ctrlHeld = true
+        }
+
+        // Let Ctrl+V pass through so the paste event fires and we can
+        // intercept clipboard files/images in onPaste
+        if (key === 0x76 && this._ctrlHeld) {
+          this.$client.sendData('keydown', { key: this.keyMap(key) })
+          return true // don't preventDefault — allow paste event
+        }
+
         this.$client.sendData('keydown', { key: this.keyMap(key) })
         return false
       }
       this.keyboard.onkeyup = (key: number) => {
         if (!this.hosting || this.locked) {
           return
+        }
+
+        // Track Ctrl key state
+        if (key === this.KeyTable.XK_Control_L || key === this.KeyTable.XK_Control_R) {
+          this._ctrlHeld = false
         }
 
         this.$client.sendData('keyup', { key: this.keyMap(key) })
@@ -637,6 +690,16 @@
 
     requestControl() {
       this.$accessor.remote.request()
+    }
+
+    requestWebFullscreen() {
+      this.$accessor.client.setWebFullscreen(true)
+      this.onResize()
+    }
+
+    exitWebFullscreen() {
+      this.$accessor.client.setWebFullscreen(false)
+      this.onResize()
     }
 
     requestFullscreen() {
@@ -837,6 +900,135 @@
       }
     }
 
+    async onPaste(e: ClipboardEvent) {
+      if (!this.hosting || this.locked) return
+
+      const items = e.clipboardData?.items
+      if (!items) return
+
+      this.$log.info(`paste event: ${items.length} items`)
+      for (let i = 0; i < items.length; i++) {
+        this.$log.info(`  item[${i}]: kind=${items[i].kind} type=${items[i].type}`)
+      }
+
+      const files: File[] = []
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i]
+        if (item.kind === 'file') {
+          const file = item.getAsFile()
+          if (!file) continue
+
+          const now = new Date()
+          const ts = now.getFullYear().toString()
+            + String(now.getMonth() + 1).padStart(2, '0')
+            + String(now.getDate()).padStart(2, '0')
+            + String(now.getHours()).padStart(2, '0')
+            + String(now.getMinutes()).padStart(2, '0')
+            + String(now.getSeconds()).padStart(2, '0')
+
+          let name: string
+          if (item.type.startsWith('image/')) {
+            const ext = item.type.split('/')[1].replace('jpeg', 'jpg')
+            name = `img_${ts}.${ext}`
+          } else if (item.type.startsWith('video/')) {
+            const ext = item.type.split('/')[1]
+            name = `vid_${ts}.${ext}`
+          } else if (item.type.startsWith('audio/')) {
+            const ext = item.type.split('/')[1]
+            name = `aud_${ts}.${ext}`
+          } else {
+            // For documents and other files, keep original name but append timestamp before extension
+            const mimeToExt: Record<string, string> = {
+              'application/pdf': 'pdf',
+              'text/plain': 'txt',
+              'text/csv': 'csv',
+              'text/html': 'html',
+              'application/msword': 'doc',
+              'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
+              'application/vnd.ms-excel': 'xls',
+              'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xlsx',
+              'application/vnd.ms-powerpoint': 'ppt',
+              'application/vnd.openxmlformats-officedocument.presentationml.presentation': 'pptx',
+              'application/zip': 'zip',
+              'application/x-rar-compressed': 'rar',
+              'application/x-7z-compressed': '7z',
+              'application/json': 'json',
+              'application/xml': 'xml',
+              'text/xml': 'xml',
+            }
+            const knownExt = mimeToExt[item.type]
+            if (knownExt) {
+              name = `doc_${ts}.${knownExt}`
+            } else if (file.name && file.name.includes('.')) {
+              const ext = file.name.split('.').pop()
+              const base = file.name.replace(/\.[^.]+$/, '')
+              name = `${base}_${ts}.${ext}`
+            } else {
+              name = `file_${ts}.bin`
+            }
+          }
+
+          files.push(new File([file], name, { type: item.type }))
+        }
+      }
+
+      if (files.length === 0) return
+
+      const pwd = encodeURIComponent(this.$accessor.password)
+      for (const file of files) {
+        const formData = new FormData()
+        formData.append('files', file, file.name)
+        try {
+          await this.$http.post('/file?pwd=' + pwd, formData, { withCredentials: false })
+          this.$log.info(`uploaded ${file.name} to downloads`)
+        } catch (err: any) {
+          this.$log.error(err)
+        }
+      }
+    }
+
+    onDragOver(e: DragEvent) {
+      if (!this.hosting || this.locked) return
+      if (e.dataTransfer?.types.includes('Files')) {
+        e.dataTransfer.dropEffect = 'copy'
+        this.dropOverlay = true
+      }
+    }
+
+    onDragLeave() {
+      this.dropOverlay = false
+    }
+
+    async onDrop(e: DragEvent) {
+      this.dropOverlay = false
+      if (!this.hosting || this.locked) return
+
+      const files = e.dataTransfer?.files
+      if (!files || files.length === 0) return
+
+      const { w, h } = this.$accessor.video.resolution
+      const rect = this._overlay.getBoundingClientRect()
+      const x = Math.round((w / rect.width) * (e.clientX - rect.left))
+      const y = Math.round((h / rect.height) * (e.clientY - rect.top))
+
+      const formData = new FormData()
+      formData.append('x', String(x))
+      formData.append('y', String(y))
+      for (let i = 0; i < files.length; i++) {
+        formData.append('files', files[i], files[i].name)
+      }
+
+      try {
+        await this.$http.post(
+          '/upload/drop?pwd=' + encodeURIComponent(this.$accessor.password),
+          formData,
+          { withCredentials: false },
+        )
+      } catch (err: any) {
+        this.$log.error(err)
+      }
+    }
+
     onMouseMove(e: MouseEvent) {
       if (!this.hosting || this.locked) {
         return
@@ -873,7 +1065,7 @@
     }
 
     onResize() {
-      const { offsetWidth, offsetHeight } = !this.fullscreen ? this._component : document.body
+      const { offsetWidth, offsetHeight } = (this.fullscreen || this.webFullscreen) ? document.body : this._component
       this._player.style.width = `${offsetWidth}px`
       this._player.style.height = `${offsetHeight}px`
       this._container.style.maxWidth = `${(this.horizontal / this.vertical) * offsetHeight}px`
@@ -883,6 +1075,7 @@
     @Watch('focused')
     @Watch('hosting')
     @Watch('locked')
+    @Watch('webFullscreen')
     onFocus() {
       // focus opens the keyboard on mobile
       if (this.is_touch_device) {

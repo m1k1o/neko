@@ -1,0 +1,64 @@
+FROM ghcr.io/m1k1o/neko/nvidia-base:latest AS builder
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Switch to USTC mirror (Ubuntu 24.04 noble)
+RUN sed -i 's|http://archive.ubuntu.com/ubuntu|https://mirrors.ustc.edu.cn/ubuntu|g; s|http://security.ubuntu.com/ubuntu|https://mirrors.ustc.edu.cn/ubuntu|g' \
+    /etc/apt/sources.list.d/ubuntu.sources \
+    && apt-get update
+
+# Install build dependencies
+RUN apt-get install -y --no-install-recommends \
+    curl ca-certificates git build-essential \
+    libx11-dev libxrandr-dev libxtst-dev libgtk-3-dev libxcvt-dev \
+    libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Node.js
+RUN apt-get update && apt-get install -y --no-install-recommends nodejs npm \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Go 1.25
+RUN curl -fsSL https://go.dev/dl/go1.25.0.linux-amd64.tar.gz -o /tmp/go.tar.gz \
+    && tar -C /usr/local -xzf /tmp/go.tar.gz \
+    && rm /tmp/go.tar.gz
+ENV PATH="/usr/local/go/bin:$PATH"
+
+# Build server
+WORKDIR /build/server
+COPY server/ .
+ENV CGO_ENABLED=1
+RUN sed -i 's/\r//' build && bash build
+
+# Build client
+WORKDIR /build/client
+COPY client/package*.json ./
+RUN npm install
+COPY client/ .
+RUN npm run build
+
+# Final stage: nvidia-base image with our custom binaries
+FROM ghcr.io/m1k1o/neko/nvidia-base:latest
+
+# Switch to USTC mirror in final stage too
+RUN sed -i 's|http://archive.ubuntu.com/ubuntu|https://mirrors.ustc.edu.cn/ubuntu|g; s|http://security.ubuntu.com/ubuntu|https://mirrors.ustc.edu.cn/ubuntu|g' \
+    /etc/apt/sources.list.d/ubuntu.sources
+
+COPY --from=builder /build/server/bin/plugins/ /etc/neko/plugins/
+COPY --from=builder /build/server/bin/neko /usr/bin/neko
+COPY --from=builder /build/client/dist/ /var/www
+
+# Override Chrome app files
+COPY apps/google-chrome/policies.json /etc/opt/chrome/policies/managed/policies.json
+COPY apps/google-chrome/supervisord.nvidia.conf /etc/neko/supervisord/google-chrome.conf
+COPY apps/google-chrome/openbox.xml /etc/neko/openbox.xml
+COPY config.yml /etc/neko/neko.yaml
+
+# Install Google Chrome
+ARG SRC_URL="https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb"
+RUN set -eux; \
+    apt-get update; \
+    wget -O /tmp/google-chrome.deb "${SRC_URL}"; \
+    apt-get install -y --no-install-recommends openbox /tmp/google-chrome.deb; \
+    apt-get clean -y; \
+    rm -rf /var/lib/apt/lists/* /var/cache/apt/* /tmp/google-chrome.deb

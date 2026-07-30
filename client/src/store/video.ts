@@ -190,6 +190,10 @@ export const actions = actionTree(
         return
       }
 
+      set('screen_width', resolution.width)
+      set('screen_height', resolution.height)
+      set('screen_rate', resolution.rate)
+
       $client.sendMessage(EVENT.SCREEN.SET, resolution)
     },
   },

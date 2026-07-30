@@ -1,7 +1,10 @@
 services:
   neko:
-    image: neko-chrome-dev
-    container_name: neko-chrome-dev
+    image: neko-chrome-nvidia-dev
+    build:
+      context: .
+      dockerfile: Dockerfile.nvidia-dev
+    container_name: neko-chrome-nvidia-dev
     restart: unless-stopped
     shm_size: "${SHM_SIZE:-2gb}"
     ports:
@@ -25,5 +28,17 @@ services:
       - HTTP_PROXY=${HTTP_PROXY:-""}
       - HTTPS_PROXY=${HTTPS_PROXY:-""}
       - NO_PROXY=${NO_PROXY:-""}
+      # CUDA / NVIDIA
+      - NVIDIA_VISIBLE_DEVICES=${NVIDIA_VISIBLE_DEVICES:-all}
+      - NVIDIA_DRIVER_CAPABILITIES=${NVIDIA_DRIVER_CAPABILITIES:-all}
+      - VGL_DISPLAY=${VGL_DISPLAY:-egl}
+
     volumes:
       - ./data/downloads:/home/neko/Downloads
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]

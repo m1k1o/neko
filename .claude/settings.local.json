@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(update-config)",
+      "Skill(update-config:*)",
+      "WebSearch",
+      "Bash(docker pull *)",
+      "Bash(docker build *)",
+      "Bash(docker run *)",
+      "Bash(docker rm *)",
+      "Bash(curl -s http://localhost:8080/api/stats)",
+      "Bash(docker exec *)",
+      "Bash(ipconfig)",
+      "Bash(docker compose *)",
+      "Bash(git add *)",
+      "Bash(git commit *)"
+    ]
+  }
+}
