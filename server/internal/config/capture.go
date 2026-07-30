@@ -505,21 +505,26 @@ func (s *Capture) SetV2() {
 
 	// video pipeline
 	if modifiedVideoCodec || videoHWEnc != HwEncUnset || videoBitrate != 0 || videoMaxFPS != 0 || videoPipeline != "" {
-		pipeline, err := NewVideoPipeline(s.VideoCodec, s.Display, videoPipeline, videoMaxFPS, videoBitrate, videoHWEnc)
-		if err != nil {
-			log.Warn().Err(err).Msg("unable to create video pipeline, using default")
+		// Do not override pipelines already configured via V3 settings.
+		if viper.IsSet("capture.video.pipeline") || viper.IsSet("capture.video.pipelines") {
+			log.Warn().Msg("ignoring legacy video pipeline settings (NEKO_HWENC/NEKO_VIDEO_BITRATE/NEKO_MAX_FPS) because NEKO_CAPTURE_VIDEO_PIPELINE or NEKO_CAPTURE_VIDEO_PIPELINES is already set")
 		} else {
-			s.VideoPipelines = map[string]types.VideoConfig{
-				"main": {
-					// Hacky way to disable pointer.
-					GstPipeline: strings.Replace(pipeline, "show-pointer=true", "show-pointer=false", 1),
-				},
-				"legacy": {
-					GstPipeline: pipeline,
-				},
+			pipeline, err := NewVideoPipeline(s.VideoCodec, s.Display, videoPipeline, videoMaxFPS, videoBitrate, videoHWEnc)
+			if err != nil {
+				log.Warn().Err(err).Msg("unable to create video pipeline, using default")
+			} else {
+				s.VideoPipelines = map[string]types.VideoConfig{
+					"main": {
+						// Hacky way to disable pointer.
+						GstPipeline: strings.Replace(pipeline, "show-pointer=true", "show-pointer=false", 1),
+					},
+					"legacy": {
+						GstPipeline: pipeline,
+					},
+				}
+				// we do not add legacy to VideoIDs so that its ignored by bandwidth estimator
+				s.VideoIDs = []string{"main"}
 			}
-			// we do not add legacy to VideoIDs so that its ignored by bandwidth estimator
-			s.VideoIDs = []string{"main"}
 		}
 
 		if videoPipeline != "" {
