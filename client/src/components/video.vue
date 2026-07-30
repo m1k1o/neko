@@ -532,9 +532,11 @@
         this.$client.sendData('keyup', { key: this.keyMap(key) })
       }
       this.keyboard.listenTo(this._overlay)
+      window.addEventListener('focus', this._onWindowFocus)
     }
 
     beforeDestroy() {
+      window.removeEventListener('focus', this._onWindowFocus)
       this.observer.disconnect()
       this.$accessor.video.setPlayable(false)
       /* Guacamole Keyboard does not provide destroy functions */
@@ -843,6 +845,11 @@
       }
 
       this.sendMousePos(e)
+    }
+
+    // stable reference for add/removeEventListener
+    private _onWindowFocus = () => {
+      if (this.hosting) this.syncClipboard()
     }
 
     onMouseEnter(e: MouseEvent) {
