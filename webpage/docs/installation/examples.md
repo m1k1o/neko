@@ -128,7 +128,7 @@ services:
           ! video/x-raw,framerate=25/1
           ! cudaupload ! cudaconvert ! queue
           ! video/x-raw(memory:CUDAMemory),format=NV12
-          ! nvh264enc
+          ! nvautogpuh264enc
             name=encoder
             preset=2
             gop-size=25
@@ -156,6 +156,10 @@ services:
 ```
 
 See available [Nvidia Docker Images](/docs/v3/installation/docker-images#nvidia).
+
+:::tip
+`nvautogpuh264enc` (GStreamer 1.22+) is the recommended encoder for NVIDIA driver 590 and newer. It automatically selects the correct memory path (CUDA or system) and replaces `nvh264enc`. If you are on an older driver or GStreamer version, substitute `nvautogpuh264enc` with `nvh264enc`.
+:::
 
 :::note
 If your Nvidia GPU does not support CUDA, you can use the pipeline below without `cudaupload` and `cudaconvert`. This should work with older GPUs, but the performance might be lower.
@@ -185,7 +189,7 @@ services:
           ! videoconvert ! queue
           ! video/x-raw,format=NV12
       # highlight-end
-          ! nvh264enc
+          ! nvautogpuh264enc
             name=encoder
             preset=2
             gop-size=25
