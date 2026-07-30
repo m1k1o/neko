@@ -50,6 +50,18 @@ RUN set -eux; \
     chown $USERNAME /var/log/neko/ /tmp/runtime-$USERNAME; \
     chown -R $USERNAME:$USERNAME /home/$USERNAME; \
     #
+    #
+    # install widevine for arm64
+    ARCH=$(dpkg --print-architecture); \
+    if [ "${ARCH}" = "arm64" ]; then \
+        mkdir /widevine; \
+        wget -qO /widevine/widevine-installer https://raw.githubusercontent.com/m1k1o/neko/refs/heads/master/utils/widevine/widevine-installer; \
+        wget -qO /widevine/widevine_fixup.py https://raw.githubusercontent.com/m1k1o/neko/refs/heads/master/utils/widevine/widevine_fixup.py; \
+        apt-get install -y --no-install-recommends squashfs-tools; \
+        printf "\n\n" | /widevine/widevine-installer; \
+        rm -rf /widevine; \
+        apt-get --purge autoremove -y squashfs-tools; \
+    fi; \
     # install fonts
     apt-get install -y --no-install-recommends \
         # Emojis

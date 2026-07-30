@@ -1,8 +1,6 @@
 ARG BASE_IMAGE=ghcr.io/m1k1o/neko/base:latest
 FROM $BASE_IMAGE
 
-COPY ./widevine-installer /widevine
-
 #
 # install firefox
 RUN set -eux; apt-get update; \
@@ -43,14 +41,6 @@ RUN set -eux; apt-get update; \
     # create a profile directory
     mkdir -p /home/neko/.mozilla/firefox/profile.default/extensions; \
     chown -R neko:neko /home/neko/.mozilla/firefox/profile.default; \
-    #
-    # install widevine
-    if [ "${ARCH}" = "arm64" ]; then \
-        apt-get install -y --no-install-recommends squashfs-tools; \
-        printf "\n\n" | /widevine/widevine-installer; \
-        rm -rf /widevine; \
-        apt-get --purge autoremove -y squashfs-tools; \
-    fi; \
     #
     # clean up
     apt-get clean -y; \
