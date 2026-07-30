@@ -1,46 +1,44 @@
 ---
-description: Building Neko from source
+description: Building the Neko frontend and backend from source
 ---
 
-# Building From Source
+# Building from Source
 
-This guide walks you through the process of setting up Neko on your local machine or server.
+This page covers building the frontend and backend binaries from source. The Dockerfiles in the repository are the authoritative reference for required dependencies.
 
-Start by cloning the Neko Git repository to your machine:
+## Frontend
 
-```bash
-git clone https://github.com/m1k1o/neko.git
-cd neko
-```
-
-## Building the Frontend {#frontend}
-
-Prerequisites for building the frontend:
-- [node.js](https://nodejs.org/) and [npm](https://www.npmjs.com/)
-
-Navigate to the `client` directory and install the dependencies:
+**Requires:** [Node.js](https://nodejs.org/) 18+
 
 ```bash
-cd client;
-npm install;
-npm run build;
+cd client
+npm install
+npm run build
 ```
 
-The `npm run build` command will create a production build of the frontend in the `client/build` directory.
+The production build is written to `client/dist/`.
 
-## Building the Server {#server}
+## Backend
 
-Prerequisites for building the server:
-- [go](https://golang.org/) (version 1.18 or higher)
-- Dependencies for building the server:
-  ```bash
-  sudo apt-get install -y --no-install-recommends libx11-dev libxrandr-dev libxtst-dev libgtk-3-dev libxcvt-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev
-  ```
-Navigate to the `server` directory and build the server:
+**Requires:** [Go](https://golang.org/) 1.25+ and the following system libraries (Debian/Ubuntu):
 
 ```bash
-cd server;
-./build;
+apt-get install -y --no-install-recommends \
+    libx11-dev libxrandr-dev libxtst-dev libgtk-3-dev libxcvt-dev \
+    libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev
 ```
 
-This will create a binary file named `neko` in the `bin` directory along with `plugins` that were built with the server.
+Then build:
+
+```bash
+cd server
+./build
+```
+
+The binary is written to `server/bin/neko`, with any plugins in `server/bin/plugins/`.
+
+Pass `core` to skip building plugins:
+
+```bash
+./build core
+```
