@@ -113,6 +113,7 @@ func (t *Track) WriteSample(sample types.Sample) {
 	select {
 	case t.sample <- sample:
 	default:
+		t.logger.Trace().Msg("dropping sample: track channel full")
 	}
 }
 
