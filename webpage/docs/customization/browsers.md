@@ -272,8 +272,8 @@ For some streaming sites, you also need to use [a user agent switcher extension]
 ### Chromium-based Browsers {#chromium-arm64-drm}
 
 :::note
-For Brave, you have to go to `brave://settings/extensions` and enable Widevine.
-For Vivaldi, exit the browser and let it restart.
+- For Brave, you have to go to `brave://settings/extensions` and enable Widevine.
+- For Vivaldi, exit the browser and let it restart.
 :::
 
 For some streaming sites, you also need to use [a user agent switcher extension](https://chromewebstore.google.com/detail/bhchdcejhohfmigjafbampogmaanbfkg) and set it to: `Mozilla/5.0 (X11; CrOS aarch64 15662.0.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.6098.0 Safari/537.36`

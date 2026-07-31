@@ -24,6 +24,7 @@ This project uses a monorepo structure with the following directories:
   - `runtime/fonts/`: Empty directory placeholder to include custom fonts in the neko runtime.
   - `runtime/icon-theme/`: Empty directory placeholder to include a custom icon theme in the neko runtime.
   - `runtime/intel/` or `runtime/nvidia/`: Directories with files for flavor-specific releases of the neko runtime.
+  - `runtime/widevine-installer/`: Directories with installer scripts from [AsahiLinux/widevine-installer](https://github.com/AsahiLinux/widevine-installer)
 
 - `apps/`: Contains the applications that run in the neko, such as Firefox, Chrome, etc.
   - `apps/<app-name>/Dockerfile`: Dockerfile extending `BASE_IMAGE` for the application used by the build script.
