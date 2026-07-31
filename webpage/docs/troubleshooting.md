@@ -159,6 +159,14 @@ Make sure that you are exposing your ports correctly.
 
 If you put a local IP as `NEKO_WEBRTC_NAT1TO1`, external clients try to connect to that IP. But it is unreachable for them because it is your local IP. You must use your public IP address with port forwarding.
 
+:::danger Never use `127.0.0.1` as `NEKO_WEBRTC_NAT1TO1`
+Setting `NEKO_WEBRTC_NAT1TO1: 127.0.0.1` tells every client to connect to *their own* localhost, not your server. The connection will time out for all clients, and the browser will report:
+```
+Failed to ping without candidate pairs. Connection is not possible yet.
+```
+Use your actual public IP (or leave it unset to auto-detect) instead.
+:::
+
 ## Frequently Encountered Errors {#frequently-encountered-errors}
 
 ### Getting a black screen with a cursor, but no browser for Chromium-based browsers {#black-screen-with-cursor}
@@ -340,6 +348,18 @@ Firefox can’t establish a connection to the server at ws://<your-IP>/ws?passwo
 ```
 
 Check if your TCP port is exposed correctly and your reverse proxy is correctly proxying websocket connections. And if your browser has not disabled websocket connections.
+
+---
+
+```
+Failed to ping without candidate pairs. Connection is not possible yet.
+```
+
+This WebRTC error means the browser received ICE candidates (IP:port pairs) from the server but could not reach any of them. Common causes:
+
+- **`NEKO_WEBRTC_NAT1TO1` is set to `127.0.0.1`** — never use localhost here; set it to your real public IP or leave it unset for auto-detection.
+- **`NEKO_WEBRTC_NAT1TO1` is set to a private/LAN IP** — external clients cannot reach a private IP. Use your public IP with port forwarding.
+- **UDP ports are blocked** — verify the ephemeral port range is exposed and reachable (see [Validate UDP ports reachability](#reachable-ports)).
 
 ---
 
