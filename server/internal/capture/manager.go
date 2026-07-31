@@ -135,7 +135,7 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 				"pulsesrc device=%s "+
 					"! audio/x-raw,channels=2 "+
 					"! audioconvert "+
-					"! queue "+
+					"! queue max-size-buffers=5 leaky=downstream "+
 					"! %s "+
 					"! appsink name=appsink", config.AudioDevice, config.AudioCodec.Pipeline,
 			), nil

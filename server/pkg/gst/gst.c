@@ -108,7 +108,7 @@ static GstFlowReturn gstreamer_send_new_sample_handler(GstElement *object, gpoin
 
 void gstreamer_pipeline_attach_appsink(GstPipelineCtx *ctx, char *sinkName) {
   ctx->appsink = gst_bin_get_by_name(GST_BIN(ctx->pipeline), sinkName);
-  g_object_set(ctx->appsink, "emit-signals", TRUE, NULL);
+  g_object_set(ctx->appsink, "emit-signals", TRUE, "sync", FALSE, NULL);
   g_signal_connect(ctx->appsink, "new-sample", G_CALLBACK(gstreamer_send_new_sample_handler), ctx);
 }
 
