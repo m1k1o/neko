@@ -162,7 +162,13 @@ func NewVideoPipeline(rtpCodec codec.RTPCodec, display string, pipelineSrc strin
 				return "", err
 			}
 
-			pipelineStr = fmt.Sprintf(videoSrc+"video/x-raw,format=NV12 ! nvh264enc name=encoder preset=2 gop-size=25 spatial-aq=true temporal-aq=true bitrate=%d vbv-buffer-size=%d rc-mode=6 ! h264parse config-interval=-1 ! video/x-h264,stream-format=byte-stream,profile=constrained-baseline"+pipelineStr, display, fps, bitrate, vbvbuf)
+			// nvautogpuh264enc (GStreamer 1.22+) works better with NVIDIA drivers 590+; fall back to nvh264enc for older setups
+			nvencElem := "nvh264enc"
+			if err := gst.CheckElement("nvautogpuh264enc"); err == nil {
+				nvencElem = "nvautogpuh264enc"
+			}
+
+			pipelineStr = fmt.Sprintf(videoSrc+"video/x-raw,format=NV12 ! %s name=encoder preset=2 gop-size=25 spatial-aq=true temporal-aq=true bitrate=%d vbv-buffer-size=%d rc-mode=6 ! h264parse config-interval=-1 ! video/x-h264,stream-format=byte-stream,profile=constrained-baseline"+pipelineStr, display, fps, nvencElem, bitrate, vbvbuf)
 		default:
 			// https://gstreamer.freedesktop.org/documentation/openh264/openh264enc.html?gi-language=c#openh264enc
 			// gstreamer1.0-plugins-bad

@@ -199,6 +199,17 @@ func CheckPlugins(plugins []string) error {
 	return nil
 }
 
+func CheckElement(element string) error {
+	elementcstr := C.CString(element)
+	factory := C.gst_element_factory_find(elementcstr)
+	C.free(unsafe.Pointer(elementcstr))
+	if factory == nil {
+		return fmt.Errorf("required gstreamer element %s not found", element)
+	}
+	C.gst_object_unref(C.gpointer(factory))
+	return nil
+}
+
 //export goHandlePipelineBuffer
 func goHandlePipelineBuffer(pipelineID C.int, buf C.gpointer, bufLen C.int, duration C.guint64, deltaUnit C.gboolean) {
 	defer C.g_free(buf)
