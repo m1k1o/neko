@@ -51,6 +51,10 @@ The path inside the container will be `/home/neko/.mozilla/firefox/profile.defau
 
 <ProfileDirectoryPaths />
 
+:::warning
+Mounting a persistent profile volume alone is **not enough** to keep you logged in. By default, Neko's browser policy clears cookies and sessions on shutdown. You must also update the policy file to allow persistent data — see [Allow persistent data in policies](#firefox-based) below.
+:::
+
 ## Browser Policy Files {#policy-files}
 
 Browser policy files are JSON files that contain settings and configurations for the browser. These files are used to manage the browser settings programmatically and can be used to enforce certain policies, such as disabling extensions, setting the homepage, and more.
