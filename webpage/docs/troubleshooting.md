@@ -260,6 +260,55 @@ docker exec -it <container-id> ls -la /home/neko/.config/google-chrome
 docker exec -it <container-id> chown -R neko:neko /home/neko/.config/google-chrome
 ```
 
+#### Brave browser: singleton lock files preventing startup {#brave-singleton-lock}
+
+Brave (and other Chromium-based browsers) write singleton lock files (`SingletonLock`, `SingletonCookie`, `SingletonSocket`) to the profile directory when they start. If the container is stopped uncleanly, these files are left behind and the next container start fails because Brave thinks another instance is already running.
+
+**Fix 1: Remove lock files on container startup**
+
+Override the container's `command` to delete the stale lock files before launching supervisord:
+
+```yaml title="docker-compose.yaml"
+services:
+  neko:
+    image: "ghcr.io/m1k1o/neko/brave:latest"
+    restart: "unless-stopped"
+    shm_size: "2gb"
+    ports:
+      - "8080:8080"
+      - "52000-52100:52000-52100/udp"
+    volumes:
+      - /data:/home/neko/.config/brave
+    environment:
+      NEKO_DESKTOP_SCREEN: 1920x1080@30
+      NEKO_MEMBER_MULTIUSER_USER_PASSWORD: neko
+      NEKO_MEMBER_MULTIUSER_ADMIN_PASSWORD: admin
+      NEKO_WEBRTC_EPR: 52000-52100
+    # highlight-start
+    command: >
+      sh -c "rm -f /home/neko/.config/brave/SingletonLock
+             /home/neko/.config/brave/SingletonCookie
+             /home/neko/.config/brave/SingletonSocket &&
+             exec /usr/bin/supervisord -c /etc/neko/supervisord.conf"
+    # highlight-end
+```
+
+**Fix 2: Set a persistent container hostname**
+
+Chromium-based browsers also embed the hostname in the singleton lock. If the container hostname changes on every restart (which is Docker's default), the browser may refuse to reuse the profile. Setting a fixed hostname avoids this:
+
+```yaml title="docker-compose.yaml"
+services:
+  neko:
+    image: "ghcr.io/m1k1o/neko/brave:latest"
+    # highlight-start
+    hostname: neko
+    # highlight-end
+    volumes:
+      - /data:/home/neko/.config/brave
+    # ...
+```
+
 ### Common server errors {#common-server-errors}
 
 ```
