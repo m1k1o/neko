@@ -282,7 +282,7 @@ The availability of applications for ARM architecture is limited due to the lack
 | [Remmina](#remmina)                       | ✅    | ✅    | - |
 | [VLC](#vlc)                               | ✅    | ✅    | - |
 
-\* No DRM support.
+\* requires extra steps to enable DRM, see instructions [here](/docs/v3/customization/browsers#arm64-drm).
 
 :::tip
 [Oracle Cloud ARM free tier](https://www.oracle.com/cloud/free/) is a great way to test Neko on ARM architecture for free. You can use the `ghcr.io/m1k1o/neko/xfce` image to run a full desktop environment with Xfce and test the applications.

@@ -8,6 +8,10 @@ ARG USER_UID=1000
 ARG USER_GID=$USER_UID
 
 #
+# copy widevine installer
+COPY widevine-installer/ /widevine/
+
+#
 # install dependencies
 ENV DEBIAN_FRONTEND=noninteractive
 RUN set -eux; \
@@ -50,6 +54,14 @@ RUN set -eux; \
     chown $USERNAME /var/log/neko/ /tmp/runtime-$USERNAME; \
     chown -R $USERNAME:$USERNAME /home/$USERNAME; \
     #
+    # install widevine for arm64
+    ARCH=$(dpkg --print-architecture); \
+    if [ "${ARCH}" = "arm64" ]; then \
+        apt-get install -y --no-install-recommends squashfs-tools; \
+        chmod +x /widevine/widevine*; \
+        printf "\n\n" | /widevine/widevine-installer; \
+        apt-get --purge autoremove -y squashfs-tools; \
+    fi; \
     # install fonts
     apt-get install -y --no-install-recommends \
         # Emojis
@@ -68,7 +80,8 @@ RUN set -eux; \
     #
     # clean up
     apt-get clean -y; \
-    rm -rf /var/lib/apt/lists/* /var/cache/apt/*
+    rm -rf /var/lib/apt/lists/* /var/cache/apt/*; \
+    rm -rf /widevine
 
 #
 # copy runtime configs
