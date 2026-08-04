@@ -120,8 +120,9 @@ func (s *Server) Set() {
 	s.Metrics = viper.GetBool("server.metrics")
 
 	s.CORS = viper.GetStringSlice("server.cors")
-	if len(s.CORS) == 0 || slices.Contains(s.CORS, "*") {
+	if slices.Contains(s.CORS, "*") {
 		s.CORS = []string{"*"}
+		log.Warn().Msg("CORS is enabled for all origins, this is not recommended for production environments")
 	}
 }
 
@@ -160,8 +161,9 @@ func (s *Server) SetV2() {
 	}
 	if viper.IsSet("cors") {
 		s.CORS = viper.GetStringSlice("cors")
-		if len(s.CORS) == 0 || slices.Contains(s.CORS, "*") {
+		if slices.Contains(s.CORS, "*") {
 			s.CORS = []string{"*"}
+			log.Warn().Msg("CORS is enabled for all origins, this is not recommended for production environments")
 		}
 		log.Warn().Msg("you are using v2 configuration 'NEKO_CORS' which is deprecated, please use 'NEKO_SERVER_CORS' instead")
 		enableLegacy = true
