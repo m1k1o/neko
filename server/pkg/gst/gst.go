@@ -83,7 +83,7 @@ func CreatePipeline(pipelineStr string) (Pipeline, error) {
 			Int("pipeline_id", int(id)).Logger(),
 		src:    pipelineStr,
 		ctx:    ctx,
-		sample: make(chan types.Sample),
+		sample: make(chan types.Sample, 4),
 	}
 
 	pipelines[p.id] = p

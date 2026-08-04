@@ -45,7 +45,7 @@ func NewTrack(logger zerolog.Logger, codec codec.RTPCodec, connection *webrtc.Pe
 		logger: logger.With().Str("id", id).Logger(),
 		track:  track,
 		rtcpCh: nil,
-		sample: make(chan types.Sample),
+		sample: make(chan types.Sample, 2),
 	}
 
 	for _, opt := range opts {
@@ -110,7 +110,11 @@ func (t *Track) sampleReader() {
 }
 
 func (t *Track) WriteSample(sample types.Sample) {
-	t.sample <- sample
+	select {
+	case t.sample <- sample:
+	default:
+		t.logger.Trace().Msg("dropping sample: track channel full")
+	}
 }
 
 // --- stream ---

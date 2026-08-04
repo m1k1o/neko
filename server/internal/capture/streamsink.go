@@ -369,7 +369,6 @@ func (manager *StreamSinkManagerCtx) saveSampleBitrate(timestamp time.Time, delt
 
 func (manager *StreamSinkManagerCtx) onSample(sample types.Sample) {
 	manager.listenersMu.Lock()
-	defer manager.listenersMu.Unlock()
 
 	// save to metrics
 	length := float64(sample.Length)
@@ -386,7 +385,14 @@ func (manager *StreamSinkManagerCtx) onSample(sample types.Sample) {
 		manager.listenersKf = make(map[uintptr]types.SampleListener)
 	}
 
+	// copy listeners before releasing lock to avoid holding it during dispatch
+	listeners := make([]types.SampleListener, 0, len(manager.listeners))
 	for _, l := range manager.listeners {
+		listeners = append(listeners, l)
+	}
+	manager.listenersMu.Unlock()
+
+	for _, l := range listeners {
 		l.WriteSample(sample)
 	}
 }
