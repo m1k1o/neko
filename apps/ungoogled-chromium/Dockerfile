@@ -14,8 +14,8 @@ RUN set -eux; apt-get update; \
     #
     # fetch latest release
     SRC_URL="$(wget -O - "${API_URL}" 2>/dev/null | jq -r "[.assets[] | select(.browser_download_url | contains(\"tar.xz\"))][-1] | .browser_download_url")"; \
-    wget -O - /tmp/chromium.tar.xz "${SRC_URL}" | tar -xJf- -C /tmp; \
-    mv /tmp/ungoogled-chromium_* /usr/lib/chromium; \
+    mkdir -p /usr/lib/chromium; \
+    wget -O - "${SRC_URL}" | tar -xJf- --strip-components=1 -C /usr/lib/chromium; \
     #
     # make required changes for sandbox mode
     mv /usr/lib/chromium/chrome_sandbox /usr/lib/chromium/chrome-sandbox; \
