@@ -75,9 +75,14 @@ func (session *SessionCtx) IsHost() bool {
 
 // only needed for legacy webrtc handler
 func (session *SessionCtx) LegacyIsHost() bool {
-	implicitHosting := session.manager.Settings().ImplicitHosting
-	return !((!implicitHosting && !session.manager.isHost(session)) ||
-		(implicitHosting && !session.profile.CanHost))
+	settings := session.manager.Settings()
+	if !session.profile.CanHost || session.PrivateModeEnabled() {
+		return false
+	}
+	if settings.LockedControls && !session.profile.IsAdmin {
+		return false
+	}
+	return settings.ImplicitHosting || session.manager.isHost(session)
 }
 
 func (session *SessionCtx) SetAsHost() {
