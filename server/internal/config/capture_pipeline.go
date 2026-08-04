@@ -152,11 +152,11 @@ func NewVideoPipeline(rtpCodec codec.RTPCodec, display string, pipelineSrc strin
 
 		switch hwenc {
 		case HwEncVAAPI:
-			if err := gst.CheckPlugins([]string{"vaapi"}); err != nil {
+			if err := gst.CheckPlugins([]string{"va"}); err != nil {
 				return "", err
 			}
 
-			pipelineStr = fmt.Sprintf(videoSrc+"video/x-raw,format=NV12 ! vaapih264enc rate-control=vbr bitrate=%d keyframe-period=180 quality-level=7 ! video/x-h264,stream-format=byte-stream,profile=constrained-baseline"+pipelineStr, display, fps, bitrate)
+			pipelineStr = fmt.Sprintf(videoSrc+"video/x-raw,format=NV12 ! vah264enc rate-control=cbr bitrate=%d key-int-max=60 target-usage=7 ! h264parse config-interval=-1 ! video/x-h264,stream-format=byte-stream,profile=constrained-baseline"+pipelineStr, display, fps, bitrate)
 		case HwEncNVENC:
 			if err := gst.CheckPlugins([]string{"nvcodec"}); err != nil {
 				return "", err
@@ -168,7 +168,7 @@ func NewVideoPipeline(rtpCodec codec.RTPCodec, display string, pipelineSrc strin
 				nvencElem = "nvautogpuh264enc"
 			}
 
-			pipelineStr = fmt.Sprintf(videoSrc+"video/x-raw,format=NV12 ! %s name=encoder preset=2 gop-size=25 spatial-aq=true temporal-aq=true bitrate=%d vbv-buffer-size=%d rc-mode=6 ! h264parse config-interval=-1 ! video/x-h264,stream-format=byte-stream,profile=constrained-baseline"+pipelineStr, display, fps, nvencElem, bitrate, vbvbuf)
+			pipelineStr = fmt.Sprintf(videoSrc+"video/x-raw,format=NV12 ! %s name=encoder preset=2 gop-size=60 spatial-aq=true temporal-aq=true bitrate=%d vbv-buffer-size=%d rc-mode=6 ! h264parse config-interval=-1 ! video/x-h264,stream-format=byte-stream,profile=constrained-baseline"+pipelineStr, display, fps, nvencElem, bitrate, vbvbuf)
 		default:
 			// https://gstreamer.freedesktop.org/documentation/openh264/openh264enc.html?gi-language=c#openh264enc
 			// gstreamer1.0-plugins-bad
@@ -186,6 +186,39 @@ func NewVideoPipeline(rtpCodec codec.RTPCodec, display string, pipelineSrc strin
 			}
 
 			pipelineStr = fmt.Sprintf(videoSrc+"video/x-raw,format=NV12 ! x264enc threads=4 bitrate=%d key-int-max=60 vbv-buf-capacity=%d byte-stream=true tune=zerolatency speed-preset=veryfast ! video/x-h264,stream-format=byte-stream,profile=constrained-baseline"+pipelineStr, display, fps, bitrate, vbvbuf)
+		}
+
+	case codec.H265().Name:
+		if err := gst.CheckPlugins([]string{"ximagesrc"}); err != nil {
+			return "", err
+		}
+
+		vbvbuf := uint(1000)
+		if bitrate > 1000 {
+			vbvbuf = bitrate
+		}
+
+		switch hwenc {
+		case HwEncVAAPI:
+			if err := gst.CheckPlugins([]string{"va"}); err != nil {
+				return "", err
+			}
+
+			pipelineStr = fmt.Sprintf(videoSrc+"video/x-raw,format=NV12 ! vah265enc rate-control=cbr bitrate=%d key-int-max=60 target-usage=7 ! h265parse config-interval=-1 ! video/x-h265,stream-format=byte-stream,profile=main"+pipelineStr, display, fps, bitrate)
+		case HwEncNVENC:
+			if err := gst.CheckPlugins([]string{"nvcodec"}); err != nil {
+				return "", err
+			}
+
+			pipelineStr = fmt.Sprintf(videoSrc+"video/x-raw,format=NV12 ! nvh265enc name=encoder rc-mode=cbr preset=p2 tune=low-latency gop-size=60 bitrate=%d vbv-buffer-size=%d ! h265parse config-interval=-1 ! video/x-h265,stream-format=byte-stream,profile=main"+pipelineStr, display, fps, bitrate, vbvbuf)
+		default:
+			// https://gstreamer.freedesktop.org/documentation/x265/index.html?gi-language=c
+			// gstreamer1.0-plugins-bad
+			if err := gst.CheckPlugins([]string{"x265"}); err != nil {
+				return "", err
+			}
+
+			pipelineStr = fmt.Sprintf(videoSrc+"x265enc bitrate=%d key-int-max=60 tune=zerolatency speed-preset=veryfast option-string=\"vbv-maxrate=%d:vbv-bufsize=%d\" ! video/x-h265,stream-format=byte-stream,profile=main"+pipelineStr, display, fps, bitrate, bitrate, vbvbuf)
 		}
 	default:
 		return "", fmt.Errorf("unknown codec %s", rtpCodec.Name)
