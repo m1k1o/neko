@@ -6,6 +6,7 @@
 #include <X11/extensions/Xrandr.h>
 #include <X11/extensions/XTest.h>
 #include <X11/extensions/Xfixes.h>
+#include <X11/extensions/XInput.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
