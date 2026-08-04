@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"slices"
 	"strings"
 
 	"github.com/m1k1o/neko/server/pkg/types"
@@ -55,7 +56,7 @@ func (b *batchHandler) Handle(w http.ResponseWriter, r *http.Request) error {
 			continue
 		}
 
-		if exists, _ := utils.ArrayIn(request.Path, b.Excluded); exists {
+		if slices.Contains(b.Excluded, request.Path) {
 			res.Error(utils.HttpBadRequest("this path is excluded from batch requests"))
 			responses[i] = res
 			continue

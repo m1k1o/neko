@@ -2,12 +2,11 @@ package config
 
 import (
 	"path"
+	"slices"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-
-	"github.com/m1k1o/neko/server/pkg/utils"
 )
 
 type Server struct {
@@ -121,8 +120,7 @@ func (s *Server) Set() {
 	s.Metrics = viper.GetBool("server.metrics")
 
 	s.CORS = viper.GetStringSlice("server.cors")
-	in, _ := utils.ArrayIn("*", s.CORS)
-	if len(s.CORS) == 0 || in {
+	if len(s.CORS) == 0 || slices.Contains(s.CORS, "*") {
 		s.CORS = []string{"*"}
 	}
 }
@@ -162,8 +160,7 @@ func (s *Server) SetV2() {
 	}
 	if viper.IsSet("cors") {
 		s.CORS = viper.GetStringSlice("cors")
-		in, _ := utils.ArrayIn("*", s.CORS)
-		if len(s.CORS) == 0 || in {
+		if len(s.CORS) == 0 || slices.Contains(s.CORS, "*") {
 			s.CORS = []string{"*"}
 		}
 		log.Warn().Msg("you are using v2 configuration 'NEKO_CORS' which is deprecated, please use 'NEKO_SERVER_CORS' instead")
@@ -182,12 +179,12 @@ func (s *Server) HasCors() bool {
 }
 
 func (s *Server) AllowOrigin(origin string) bool {
-	// if CORS is disabled, allow all origins
-	if len(s.CORS) == 0 {
+	// if CORS is not configured, or a wildcard is present,
+	// allow WebSocket connections from any origin
+	if len(s.CORS) == 0 || s.CORS[0] == "*" {
 		return true
 	}
 
-	// if CORS is enabled, allow only origins in the list
-	in, _ := utils.ArrayIn(origin, s.CORS)
-	return in || s.CORS[0] == "*"
+	// allow only origins in the list
+	return slices.Contains(s.CORS, origin)
 }

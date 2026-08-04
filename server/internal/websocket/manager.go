@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"slices"
 	"sync"
 	"time"
 
@@ -333,7 +334,7 @@ func (manager *WebSocketManagerCtx) handle(connection *websocket.Conn, peer type
 			}
 
 			// log events if not ignored
-			if ok, _ := utils.ArrayIn(data.Event, nologEvents); !ok {
+			if !slices.Contains(nologEvents, data.Event) {
 				payload := data.Payload
 				if len(payload) > maxPayloadLogLength {
 					payload = []byte("<truncated>")
