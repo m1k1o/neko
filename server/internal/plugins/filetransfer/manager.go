@@ -251,6 +251,10 @@ func (m *Manager) downloadFileHandler(w http.ResponseWriter, r *http.Request) er
 		return utils.HttpForbidden("file transfer is disabled")
 	}
 
+	if !session.Profile().IsAdmin && !m.config.UserDownload {
+		return utils.HttpForbidden("file download is not allowed for non-admin users")
+	}
+
 	filename := r.URL.Query().Get("filename")
 	badChars, err := regexp.MatchString(`(?m)\.\.(?:\/|$)`, filename)
 	if filename == "" || badChars || err != nil {
@@ -283,6 +287,10 @@ func (m *Manager) uploadFileHandler(w http.ResponseWriter, r *http.Request) erro
 
 	if !enabled {
 		return utils.HttpForbidden("file transfer is disabled")
+	}
+
+	if !session.Profile().IsAdmin && !m.config.UserUpload {
+		return utils.HttpForbidden("file upload is not allowed for non-admin users")
 	}
 
 	err = r.ParseMultipartForm(multipartFormMaxMemory)
