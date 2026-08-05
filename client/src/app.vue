@@ -206,6 +206,11 @@
       return Math.max(0.0, Math.min(!isNaN(numberParam) ? numberParam * 100 : 100, 100))
     }
 
+    get scroll() {
+      const numberParam = parseInt(new URL(location.href).searchParams.get('scroll') || '', 10)
+      return Math.max(1, Math.min(!isNaN(numberParam) ? numberParam : 10, 100))
+    }
+
     get isCastMode() {
       return !!new URL(location.href).searchParams.get('cast')
     }
@@ -226,6 +231,13 @@
     onVolume(volume: number) {
       if (new URL(location.href).searchParams.has('volume')) {
         this.$accessor.video.setVolume(volume)
+      }
+    }
+
+    @Watch('scroll', { immediate: true })
+    onScroll(scroll: number) {
+      if (new URL(location.href).searchParams.has('scroll')) {
+        this.$accessor.settings.setScroll(scroll)
       }
     }
 

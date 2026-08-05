@@ -52,6 +52,7 @@ You can use query parameters to customize the Neko web interface. These paramete
 | `?cast=1`          | Hides all controls and shows only the video.               |
 | `?embed=1`         | Hides most additional components and shows only the video. |
 | `?volume=<0-1>`    | Sets the volume to the given value (between 0 and 1).      |
+| `?scroll=<1-100>`  | Sets the scroll sensitivity to the given value (1-100).    |
 | `?lang=<language>` | Sets the language to the given value.                      |
 | `?show_side=1`     | Shows the sidebar on startup.                              |
 | `?mute_chat=1`     | Mutes the chat on startup.                                 |
