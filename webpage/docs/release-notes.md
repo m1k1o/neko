@@ -2,16 +2,178 @@
 
 ## master {#master}
 
-### New Features {#master-feats}
-- Scroll to chat on mobile ([#496](https://github.com/m1k1o/neko/pull/496))
-- Added mobile keyboard icon to open the keyboard on mobile devices ([#497](https://github.com/m1k1o/neko/pull/497))
+No unreleased changes yet.
 
-### Fixes {#master-fixes}
-- Fixed various bugs related to the legacy client and migration.
-- Fixed long standing issue [#279](https://github.com/m1k1o/neko/pull/279) where Google Chrome GPU acceleration did not work with Nvidia GPUs, thanks to [@TobyColeman](https://github.com/TobyColeman), [@alexbakerdev](https://github.com/alexbakerdev) and [@samstefan](https://github.com/samstefan) from [@wearewildcards](https://github.com/wearewildcards).
+## [n.eko v3.1.5](https://github.com/m1k1o/neko/releases/tag/v3.1.5) {#v3.1.5}
 
-### Misc {#master-misc}
-- Added an https condition to the healthcheck ([#503](https://github.com/m1k1o/neko/pull/503), by @Garrulousbrevity).
+### New Features {#v3.1.5-feats}
+- Added H.265 (HEVC) video encoding support ([#648](https://github.com/m1k1o/neko/pull/648)).
+- Added keyboard input via `XTestFakeDeviceKeyEvent` for improved XInput device compatibility ([#642](https://github.com/m1k1o/neko/pull/642)).
+- Updated NVIDIA video encoding to use `nvautogpuh264enc` for NVIDIA driver 590+ ([#667](https://github.com/m1k1o/neko/pull/667)).
+- Clipboard is now synced automatically when the browser window gains focus ([#662](https://github.com/m1k1o/neko/pull/662)).
+- Display name input is now auto-focused when entering a room ([#654](https://github.com/m1k1o/neko/pull/654)).
+
+### Fixes {#v3.1.5-fixes}
+- Fixed incorrect `LegacyIsHost` boolean logic ([#675](https://github.com/m1k1o/neko/pull/675)).
+- Fixed CORS handling: wildcard usage now emits a warning and CORS is disabled by default ([#674](https://github.com/m1k1o/neko/pull/674)).
+- Fixed ungoogled-chromium Dockerfile to correctly fetch and extract the binary ([#676](https://github.com/m1k1o/neko/pull/676)).
+- Reduced audio jitter buffer latency ([#673](https://github.com/m1k1o/neko/pull/673)).
+- Fixed video pipelines being incorrectly overridden when using legacy settings ([#666](https://github.com/m1k1o/neko/pull/666)).
+- Disabled `CommandLineFlagSecurityWarnings` in browser policies for Chromium-based browsers ([#668](https://github.com/m1k1o/neko/pull/668)).
+
+### Misc {#v3.1.5-misc}
+- Installed Widevine DRM support for ARM64 ([#660](https://github.com/m1k1o/neko/pull/660)).
+- Upgraded Go dependencies ([#644](https://github.com/m1k1o/neko/pull/644)).
+
+## [n.eko v3.1.4](https://github.com/m1k1o/neko/releases/tag/v3.1.4) {#v3.1.4}
+
+### Fixes {#v3.1.4-fixes}
+- Fixed regressions in GHCR workflow updates ([#639](https://github.com/m1k1o/neko/issues/639), [#638](https://github.com/m1k1o/neko/issues/638)).
+
+### Misc {#v3.1.4-misc}
+- Added latest-version check and automatic image update logic for GHCR workflows ([#637](https://github.com/m1k1o/neko/pull/637)).
+
+## [n.eko v3.1.3](https://github.com/m1k1o/neko/releases/tag/v3.1.3) {#v3.1.3}
+
+### Misc {#v3.1.3-misc}
+- Upgraded Go to version 1.25.
+- Updated Go module dependencies.
+- Standardized internal constant names and improved goroutine lifecycle handling.
+
+## [n.eko v3.1.2](https://github.com/m1k1o/neko/releases/tag/v3.1.2) {#v3.1.2}
+
+### Fixes {#v3.1.2-fixes}
+- Fixed profile API endpoint to only update the `name` field, preventing unintended changes to other profile attributes.
+
+## [n.eko v3.1.1](https://github.com/m1k1o/neko/releases/tag/v3.1.1) {#v3.1.1}
+
+### Misc {#v3.1.1-misc}
+- Removed support for the `linux/arm/v7` platform. Supported platforms are now `linux/amd64` and `linux/arm64`.
+
+## [n.eko v3.1.0](https://github.com/m1k1o/neko/releases/tag/v3.1.0) {#v3.1.0}
+
+### New Features {#v3.1.0-feats}
+- Upgraded base OS from Debian Bookworm (12) to Debian Trixie (13), bringing updated system packages and improved hardware support ([#581](https://github.com/m1k1o/neko/pull/581)).
+- Added microphone passthrough button to the controls toolbar ([#620](https://github.com/m1k1o/neko/pull/620)).
+
+### Fixes {#v3.1.0-fixes}
+- Completed and standardized all locale translations ([#549](https://github.com/m1k1o/neko/pull/549)).
+
+### Misc {#v3.1.0-misc}
+- Added `vlc-plugin-skins2` to the VLC image ([#623](https://github.com/m1k1o/neko/pull/623)).
+
+## [n.eko v3.0.11](https://github.com/m1k1o/neko/releases/tag/v3.0.11) {#v3.0.11}
+
+Maintenance release for the v3.0.x series, backporting the new features from v3.1.0 while keeping Debian Bookworm (12) as the base OS.
+
+### New Features {#v3.0.11-feats}
+- Added microphone passthrough button to the controls toolbar ([#620](https://github.com/m1k1o/neko/pull/620)).
+
+### Fixes {#v3.0.11-fixes}
+- Fixed profile API endpoint to only update the `name` field, preventing unintended changes to other profile attributes.
+- Completed and standardized all locale translations ([#549](https://github.com/m1k1o/neko/pull/549)).
+
+### Misc {#v3.0.11-misc}
+- Added `vlc-plugin-skins2` to the VLC image ([#623](https://github.com/m1k1o/neko/pull/623)).
+
+## [n.eko v3.0.10](https://github.com/m1k1o/neko/releases/tag/v3.0.10) {#v3.0.10}
+
+### Fixes {#v3.0.10-fixes}
+- Fixed legacy API calls to correctly include the configured path prefix ([#615](https://github.com/m1k1o/neko/issues/615), [#618](https://github.com/m1k1o/neko/pull/618)).
+- Fixed `--no-cache` flag in the build script.
+
+## [n.eko v3.0.9](https://github.com/m1k1o/neko/releases/tag/v3.0.9) {#v3.0.9}
+
+### Fixes {#v3.0.9-fixes}
+- Fixed Opera browser Docker image build.
+- Changed WebRTC heartbeat interval from 120 s to 10 s for more responsive disconnection detection ([#585](https://github.com/m1k1o/neko/issues/585)).
+- Updated all Debian Bookworm-based images to the latest packages ([#580](https://github.com/m1k1o/neko/pull/580)).
+
+### Misc {#v3.0.9-misc}
+- Added Polish (`pl`) translation ([#582](https://github.com/m1k1o/neko/pull/582)).
+- Removed additional Google telemetry from ungoogled-chromium.
+
+## [n.eko v3.0.8](https://github.com/m1k1o/neko/releases/tag/v3.0.8) {#v3.0.8}
+
+### New Features {#v3.0.8-feats}
+- Added support for entering text indirectly through the virtual keyboard ([#577](https://github.com/m1k1o/neko/pull/577)).
+- Hostname is now available as a broadcast template variable ([#576](https://github.com/m1k1o/neko/pull/576)).
+
+### Fixes {#v3.0.8-fixes}
+- Fixed WidevineCDM download for DRM-protected content ([#578](https://github.com/m1k1o/neko/pull/578)).
+- Fixed unreliable CapsLock behavior under macOS Chrome (upstream fix from GUACAMOLE-1823).
+
+## [n.eko v3.0.7](https://github.com/m1k1o/neko/releases/tag/v3.0.7) {#v3.0.7}
+
+### New Features {#v3.0.7-feats}
+- Implicit hosting: when a user interacts with the screen, control is automatically requested first ([#499](https://github.com/m1k1o/neko/issues/499), [#540](https://github.com/m1k1o/neko/pull/540)).
+
+### Misc {#v3.0.7-misc}
+- Added Indonesian (`id`) translation ([#552](https://github.com/m1k1o/neko/pull/552)).
+- Upgraded Go to version 1.24 and updated all dependencies ([#564](https://github.com/m1k1o/neko/pull/564)).
+
+## [n.eko v3.0.6](https://github.com/m1k1o/neko/releases/tag/v3.0.6) {#v3.0.6}
+
+### New Features {#v3.0.6-feats}
+- Added clipboard command replacement support on the desktop ([#539](https://github.com/m1k1o/neko/pull/539)).
+
+### Fixes {#v3.0.6-fixes}
+- Fixed Vivaldi browser installation in the Docker image.
+
+### Misc {#v3.0.6-misc}
+- Updated VirtualGL to a more recent version ([#538](https://github.com/m1k1o/neko/pull/538)).
+
+## [n.eko v3.0.5](https://github.com/m1k1o/neko/releases/tag/v3.0.5) {#v3.0.5}
+
+### Fixes {#v3.0.5-fixes}
+- Fixed mobile keyboard behavior ([#522](https://github.com/m1k1o/neko/pull/522), [#523](https://github.com/m1k1o/neko/issues/523)).
+- Fixed clipboard to use the `UTF8_STRING` target for better compatibility ([#517](https://github.com/m1k1o/neko/issues/517)).
+- Fixed WebRTC pong message forwarding ([#510](https://github.com/m1k1o/neko/issues/510)).
+- Fixed build script for Apple Silicon (macOS) ([#520](https://github.com/m1k1o/neko/pull/520)).
+- Fixed Docker volume mount error in the build script ([#519](https://github.com/m1k1o/neko/pull/519)).
+- Commented out Firefox `xpinstall` preferences that were causing extension issues ([#512](https://github.com/m1k1o/neko/issues/512)).
+
+### Misc {#v3.0.5-misc}
+- Added `SECURITY.md` with vulnerability reporting instructions.
+- Temporarily disabled Waterfox build while the upstream download link is unavailable.
+
+## [n.eko v3.0.4](https://github.com/m1k1o/neko/releases/tag/v3.0.4) {#v3.0.4}
+
+### Fixes {#v3.0.4-fixes}
+- Fixed HTTPS + legacy mode: a local HTTP server is now also started to handle both connection types ([#507](https://github.com/m1k1o/neko/pull/507)).
+- Disabled HTTP proxy for local requests to prevent unintended request forwarding ([#509](https://github.com/m1k1o/neko/issues/509)).
+- Updated Waterfox user agent to work around Cloudflare bot protection blocking downloads.
+
+### Misc {#v3.0.4-misc}
+- Added HTTPS condition to the Docker healthcheck ([#503](https://github.com/m1k1o/neko/pull/503), by [@Garrulousbrevity](https://github.com/Garrulousbrevity)).
+
+## [n.eko v3.0.3](https://github.com/m1k1o/neko/releases/tag/v3.0.3) {#v3.0.3}
+
+### Fixes {#v3.0.3-fixes}
+- Fixed legacy WebSocket mode to correctly forward ping messages ([#506](https://github.com/m1k1o/neko/issues/506)).
+- Fixed legacy handler logging and WebSocket error unwrapping.
+- Fixed legacy pipeline generation when a specific codec is configured.
+
+### Misc {#v3.0.3-misc}
+- Configuration option names updated and scripts moved to a dedicated `scripts/` folder.
+- Updated Docker image naming convention to include version information.
+- Documentation improvements: legacy mode explanation, V2 migration guide, available encoders overview, NVIDIA GPU examples ([#502](https://github.com/m1k1o/neko/issues/502)), filetransfer migration guide.
+
+## [n.eko v3.0.2](https://github.com/m1k1o/neko/releases/tag/v3.0.2) {#v3.0.2}
+
+### Misc {#v3.0.2-misc}
+- Added `net.m1k1o.neko.api-version` label to Docker images for easier API version detection.
+- Legacy handler key/button action events are now only logged at trace level, reducing log verbosity.
+
+## [n.eko v3.0.1](https://github.com/m1k1o/neko/releases/tag/v3.0.1) {#v3.0.1}
+
+### New Features {#v3.0.1-feats}
+- Added mobile keyboard icon for opening the on-screen keyboard on touch devices ([#497](https://github.com/m1k1o/neko/pull/497)).
+- Chat now auto-scrolls to the latest message on mobile ([#496](https://github.com/m1k1o/neko/pull/496)).
+
+### Fixes {#v3.0.1-fixes}
+- Fixed ICE Lite being incorrectly enabled by default (it should be disabled).
+- Fixed supervisord configuration to use the new `server.static` flag.
 
 ## [n.eko v3.0.0](https://github.com/m1k1o/neko/releases/tag/v3.0.0) {#v3.0.0}
 
