@@ -208,8 +208,8 @@ func (m *Manager) Shutdown() error {
 }
 
 func (m *Manager) Route(r types.Router) {
-	r.With(auth.AdminsOnly).Get("/", m.downloadFileHandler)
-	r.With(auth.AdminsOnly).Post("/", m.uploadFileHandler)
+	r.Get("/", m.downloadFileHandler)
+	r.Post("/", m.uploadFileHandler)
 }
 
 func (m *Manager) WebSocketHandler(session types.Session, msg types.WebSocketMessage) bool {
