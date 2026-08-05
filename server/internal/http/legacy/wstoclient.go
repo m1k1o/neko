@@ -607,9 +607,11 @@ func (s *session) wsToClient(msg []byte) error {
 		}
 
 		return s.toClient(&oldMessage.FileTransferList{
-			Event: oldEvent.FILETRANSFER_LIST,
-			Cwd:   request.RootDir,
-			Files: files,
+			Event:        oldEvent.FILETRANSFER_LIST,
+			Cwd:          request.RootDir,
+			UserDownload: request.UserDownload,
+			UserUpload:   request.UserUpload,
+			Files:        files,
 		})
 
 	// Screen Events

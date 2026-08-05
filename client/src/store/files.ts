@@ -7,6 +7,8 @@ export const state = () => ({
   cwd: '',
   files: [] as FileListItem[],
   transfers: [] as FileTransfer[],
+  userDownload: false,
+  userUpload: false,
 })
 
 export const getters = getterTree(state, {
@@ -20,6 +22,14 @@ export const mutations = mutationTree(state, {
 
   _setFileList(state, files: FileListItem[]) {
     state.files = files
+  },
+
+  _setUserDownload(state, val: boolean) {
+    state.userDownload = val
+  },
+
+  _setUserUpload(state, val: boolean) {
+    state.userUpload = val
   },
 
   _addTransfer(state, transfer: FileTransfer) {
@@ -40,6 +50,14 @@ export const actions = actionTree(
 
     setFileList(store, files: FileListItem[]) {
       accessor.files._setFileList(files)
+    },
+
+    setUserDownload(store, val: boolean) {
+      accessor.files._setUserDownload(val)
+    },
+
+    setUserUpload(store, val: boolean) {
+      accessor.files._setUserUpload(val)
     },
 
     addTransfer(store, transfer: FileTransfer) {

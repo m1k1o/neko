@@ -12,6 +12,8 @@ type Config struct {
 	Enabled         bool
 	RootDir         string
 	RefreshInterval time.Duration
+	UserDownload    bool
+	UserUpload      bool
 }
 
 func (Config) Init(cmd *cobra.Command) error {
@@ -27,6 +29,16 @@ func (Config) Init(cmd *cobra.Command) error {
 
 	cmd.PersistentFlags().Duration("filetransfer.refresh_interval", 30*time.Second, "interval to refresh file list")
 	if err := viper.BindPFlag("filetransfer.refresh_interval", cmd.PersistentFlags().Lookup("filetransfer.refresh_interval")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().Bool("filetransfer.user_download", false, "allow non-admin users to download files")
+	if err := viper.BindPFlag("filetransfer.user_download", cmd.PersistentFlags().Lookup("filetransfer.user_download")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().Bool("filetransfer.user_upload", false, "allow non-admin users to upload files")
+	if err := viper.BindPFlag("filetransfer.user_upload", cmd.PersistentFlags().Lookup("filetransfer.user_upload")); err != nil {
 		return err
 	}
 
@@ -50,6 +62,8 @@ func (s *Config) Set() {
 	rootDir := viper.GetString("filetransfer.dir")
 	s.RootDir = filepath.Clean(rootDir)
 	s.RefreshInterval = viper.GetDuration("filetransfer.refresh_interval")
+	s.UserDownload = viper.GetBool("filetransfer.user_download")
+	s.UserUpload = viper.GetBool("filetransfer.user_upload")
 
 	// v2 config
 

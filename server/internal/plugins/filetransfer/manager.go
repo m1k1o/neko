@@ -103,9 +103,11 @@ func (m *Manager) broadcastUpdate() {
 	m.mu.RUnlock()
 
 	m.sessions.Broadcast(FILETRANSFER_UPDATE, Message{
-		Enabled: m.config.Enabled,
-		RootDir: m.config.RootDir,
-		Files:   fileList,
+		Enabled:      m.config.Enabled,
+		RootDir:      m.config.RootDir,
+		UserDownload: m.config.UserDownload,
+		UserUpload:   m.config.UserUpload,
+		Files:        fileList,
 	})
 }
 
@@ -115,9 +117,11 @@ func (m *Manager) sendUpdate(session types.Session) {
 	m.mu.RUnlock()
 
 	session.Send(FILETRANSFER_UPDATE, Message{
-		Enabled: m.config.Enabled,
-		RootDir: m.config.RootDir,
-		Files:   fileList,
+		Enabled:      m.config.Enabled,
+		RootDir:      m.config.RootDir,
+		UserDownload: m.config.UserDownload,
+		UserUpload:   m.config.UserUpload,
+		Files:        fileList,
 	})
 }
 
@@ -208,8 +212,8 @@ func (m *Manager) Shutdown() error {
 }
 
 func (m *Manager) Route(r types.Router) {
-	r.With(auth.AdminsOnly).Get("/", m.downloadFileHandler)
-	r.With(auth.AdminsOnly).Post("/", m.uploadFileHandler)
+	r.Get("/", m.downloadFileHandler)
+	r.Post("/", m.uploadFileHandler)
 }
 
 func (m *Manager) WebSocketHandler(session types.Session, msg types.WebSocketMessage) bool {
@@ -251,6 +255,10 @@ func (m *Manager) downloadFileHandler(w http.ResponseWriter, r *http.Request) er
 		return utils.HttpForbidden("file transfer is disabled")
 	}
 
+	if !session.Profile().IsAdmin && !m.config.UserDownload {
+		return utils.HttpForbidden("file download is not allowed for non-admin users")
+	}
+
 	filename := r.URL.Query().Get("filename")
 	badChars, err := regexp.MatchString(`(?m)\.\.(?:\/|$)`, filename)
 	if filename == "" || badChars || err != nil {
@@ -283,6 +291,10 @@ func (m *Manager) uploadFileHandler(w http.ResponseWriter, r *http.Request) erro
 
 	if !enabled {
 		return utils.HttpForbidden("file transfer is disabled")
+	}
+
+	if !session.Profile().IsAdmin && !m.config.UserUpload {
+		return utils.HttpForbidden("file upload is not allowed for non-admin users")
 	}
 
 	err = r.ParseMultipartForm(multipartFormMaxMemory)
