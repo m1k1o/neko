@@ -204,6 +204,8 @@ export interface FileTransferListMessage extends WebSocketMessage, FileTransferL
 
 export interface FileTransferListPayload {
   cwd: string
+  user_download: boolean
+  user_upload: boolean
   files: FileListItem[]
 }
 

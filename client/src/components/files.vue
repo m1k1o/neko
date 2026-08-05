@@ -9,7 +9,7 @@
         <i :class="fileIcon(item)" />
         <p class="file-name" :title="item.name">{{ item.name }}</p>
         <p class="file-size">{{ fileSize(item.size) }}</p>
-        <i v-if="item.type !== 'dir'" class="fas fa-download download" @click="download(item)" />
+        <i v-if="item.type !== 'dir' && canDownload" class="fas fa-download download" @click="download(item)" />
       </div>
     </div>
     <div class="transfer-area">
@@ -73,6 +73,7 @@
         </div>
       </div>
       <div
+        v-if="canUpload"
         class="upload-area"
         :class="{ 'upload-area-drag': uploadAreaDrag }"
         @dragover.prevent="uploadAreaDrag = true"
@@ -280,6 +281,14 @@
   })
   export default class extends Vue {
     public uploadAreaDrag: boolean = false
+
+    get canDownload() {
+      return this.$accessor.user.admin || this.$accessor.files.userDownload
+    }
+
+    get canUpload() {
+      return this.$accessor.user.admin || this.$accessor.files.userUpload
+    }
 
     get cwd() {
       return this.$accessor.files.cwd

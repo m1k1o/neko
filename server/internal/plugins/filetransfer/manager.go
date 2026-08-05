@@ -103,9 +103,11 @@ func (m *Manager) broadcastUpdate() {
 	m.mu.RUnlock()
 
 	m.sessions.Broadcast(FILETRANSFER_UPDATE, Message{
-		Enabled: m.config.Enabled,
-		RootDir: m.config.RootDir,
-		Files:   fileList,
+		Enabled:      m.config.Enabled,
+		RootDir:      m.config.RootDir,
+		UserDownload: m.config.UserDownload,
+		UserUpload:   m.config.UserUpload,
+		Files:        fileList,
 	})
 }
 
@@ -115,9 +117,11 @@ func (m *Manager) sendUpdate(session types.Session) {
 	m.mu.RUnlock()
 
 	session.Send(FILETRANSFER_UPDATE, Message{
-		Enabled: m.config.Enabled,
-		RootDir: m.config.RootDir,
-		Files:   fileList,
+		Enabled:      m.config.Enabled,
+		RootDir:      m.config.RootDir,
+		UserDownload: m.config.UserDownload,
+		UserUpload:   m.config.UserUpload,
+		Files:        fileList,
 	})
 }
 
