@@ -343,7 +343,7 @@
 
 <script lang="ts">
   import { Component, Ref, Watch, Vue } from 'vue-property-decorator'
-  import { formatRelative } from 'date-fns'
+  import { formatRelative, parseISO } from 'date-fns'
 
   import { Member } from '~/neko/types'
 
@@ -404,11 +404,13 @@
     }
 
     member(id: string) {
-      return this.$accessor.user.members[id] || { id, displayname: this.$t('somebody') }
+      return this.$accessor.user.members[id] || { id, displayname: id }
     }
 
-    timestamp(time: Date) {
-      const str = formatRelative(time, new Date())
+    timestamp(time: Date | string) {
+      const dateObj = typeof time === 'string' ? parseISO(time) : time
+
+      const str = formatRelative(dateObj, new Date())
       return `${str.charAt(0).toUpperCase()}${str.slice(1)}`
     }
 
