@@ -466,6 +466,17 @@
     }
 
     async deleteFile(item: FileListItem) {
+      const { isConfirmed } = await this.$swal({
+        title: this.$t('files.delete_title', { name: item.name }) as string,
+        text: this.$t('files.delete_confirm', { name: item.name }) as string,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: this.$t('context.confirm.button_yes') as string,
+        cancelButtonText: this.$t('context.confirm.button_cancel') as string,
+      })
+      if (!isConfirmed) {
+        return
+      }
       const url =
         '/file?pwd=' + encodeURIComponent(this.$accessor.password) + '&filename=' + encodeURIComponent(item.name)
       try {

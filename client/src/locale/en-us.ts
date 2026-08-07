@@ -128,4 +128,6 @@ export const files = {
   uploads: 'Uploads',
   upload_here: 'Click or drag files here to upload',
   delete: 'Delete',
+  delete_title: 'Delete "{name}"?',
+  delete_confirm: 'Do you really want to remove this file?',
 }
