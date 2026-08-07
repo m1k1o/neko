@@ -18,7 +18,11 @@
               <span>{{ member(message.id).displayname }}</span>
               <span class="timestamp">{{ timestamp(message.created) }}</span>
             </div>
-            <neko-markdown class="content-body" :source="message.content" :open-in-app="$accessor.remote.hosting && $accessor.openinapp.enabled" />
+            <neko-markdown
+              class="content-body"
+              :source="message.content"
+              :open-in-app="$accessor.remote.hosting && $accessor.openinapp.enabled"
+            />
           </div>
         </li>
         <li :key="index" class="event" v-if="message.type === 'event'">
@@ -486,7 +490,6 @@
           event.preventDefault()
         }
       }
-
     }
 
     onKeyDown(event: KeyboardEvent) {

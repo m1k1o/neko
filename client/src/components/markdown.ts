@@ -143,11 +143,11 @@ const rules: MarkdownRules = {
         { href: md.sanitizeUrl(node.target) as string, target: '_blank' },
         state,
       )
-      if(!state.openInApp) return link
+      if (!state.openInApp) return link
       const inAppIcon = htmlTag(
-        'i', 
+        'i',
         '',
-        { class: 'open-in-app fas fa-arrow-up-right-from-square', 'data-href': href }, 
+        { class: 'open-in-app fas fa-arrow-up-right-from-square', 'data-href': href },
         state,
       )
       return link + inAppIcon
@@ -174,11 +174,11 @@ const rules: MarkdownRules = {
         { href: md.sanitizeUrl(node.target) as string, target: '_blank' },
         state,
       )
-      if(!state.openInApp) return link
+      if (!state.openInApp) return link
       const inAppIcon = htmlTag(
-        'i', 
+        'i',
         '',
-        { class: 'open-in-app fas fa-arrow-right-to-bracket', 'data-href': href }, 
+        { class: 'open-in-app fas fa-arrow-right-to-bracket', 'data-href': href },
         state,
       )
       return link + inAppIcon

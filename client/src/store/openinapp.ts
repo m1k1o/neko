@@ -15,15 +15,15 @@ export const getters = getterTree(state, {
 export const mutations = mutationTree(state, {
   setEnabled(state, enabled: boolean) {
     state.enabled = enabled
-  }
+  },
 })
 
 export const actions = actionTree(
   { state, getters, mutations },
   {
     sendOpenLink(store, url: string) {
-    if (!accessor.connected) return
-    $client.sendMessage(EVENT.OPENINAPP.OPENLINK, {text: url})
-    }
+      if (!accessor.connected) return
+      $client.sendMessage(EVENT.OPENINAPP.OPENLINK, { text: url })
+    },
   },
 )
