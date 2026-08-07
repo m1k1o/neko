@@ -206,7 +206,7 @@ export interface FileTransferListPayload {
   cwd: string
   user_download: boolean
   user_upload: boolean
-  user_delete?: boolean
+  user_delete: boolean
   files: FileListItem[]
 }
 

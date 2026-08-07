@@ -366,7 +366,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
     this.$accessor.files.setFileList(files)
     this.$accessor.files.setUserDownload(user_download)
     this.$accessor.files.setUserUpload(user_upload)
-    this.$accessor.files.setUserDelete(Boolean(user_delete))
+    this.$accessor.files.setUserDelete(user_delete)
   }
 
   /////////////////////////////
