@@ -2,7 +2,7 @@ export const logout = 'Se déconnecter'
 export const unsupported = 'ce navigateur ne prend pas en charge WebRTC'
 export const admin_loggedin = "Vous êtes connecté en tant qu'admin"
 export const you = 'Vous'
-export const somebody = 'Quelqu\'un' // TODO: vérifier la traduction
+export const somebody = "Quelqu'un" // TODO: vérifier la traduction
 export const send_a_message = 'Envoyer un message'
 
 export const side = {
@@ -18,7 +18,7 @@ export const connect = {
   password: 'Mot de passe',
   connect: 'Connexion',
   error: 'Erreur de connexion',
-  empty_displayname: 'Le nom d\'affichage ne peut pas être vide.', // TODO: vérifier la traduction
+  empty_displayname: "Le nom d'affichage ne peut pas être vide.", // TODO: vérifier la traduction
 }
 
 export const context = {
@@ -51,7 +51,7 @@ export const controls = {
   lock: 'Vérouiller le contrôle',
   unlock: 'Débloquer le contrôle',
   has: 'Vous avez le contrôle', // TODO: vérifier la traduction
-  hasnot: 'Vous n\'avez pas le contrôle', // TODO: vérifier la traduction
+  hasnot: "Vous n'avez pas le contrôle", // TODO: vérifier la traduction
 }
 
 export const locks = {
