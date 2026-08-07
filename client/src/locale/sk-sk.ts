@@ -130,4 +130,7 @@ export const files = {
   downloads: 'Stiahnutia',
   uploads: 'Nahrávanie',
   upload_here: 'Kliknutím alebo pretiahnutím súborov sem ich môžete nahrať',
+  delete: 'Odstrániť',
+  delete_title: 'Odstrániť "{name}"?',
+  delete_confirm: 'Naozaj chcete odstrániť tento súbor?',
 }

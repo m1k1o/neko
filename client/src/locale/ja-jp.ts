@@ -124,4 +124,7 @@ export const files = {
   downloads: 'ダウンロード',
   uploads: 'アップロード',
   upload_here: 'アップロードするにはここをクリックするかファイルをドラッグしてください',
+  delete: '削除',
+  delete_title: '"{name}" を削除しますか？',
+  delete_confirm: '本当にこのファイルを削除しますか？',
 }

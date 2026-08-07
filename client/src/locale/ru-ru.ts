@@ -124,4 +124,7 @@ export const files = {
   downloads: 'Загрузки',
   uploads: 'Загрузить',
   upload_here: 'Нажмите или перетащите сюда файлы для загрузки',
+  delete: 'Удалить',
+  delete_title: 'Удалить "{name}"?',
+  delete_confirm: 'Вы действительно хотите удалить этот файл?',
 }

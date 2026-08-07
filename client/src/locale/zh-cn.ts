@@ -124,4 +124,7 @@ export const files = {
   downloads: '下载',
   uploads: '上传',
   upload_here: '点击或拖动文件到此处上传',
+  delete: '删除',
+  delete_title: '删除"{name}"？',
+  delete_confirm: '确定要删除此文件吗？',
 }

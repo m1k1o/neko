@@ -124,4 +124,7 @@ export const files = {
   downloads: 'Téléchargements',
   uploads: 'Envois',
   upload_here: 'Cliquez ou faites glisser les fichiers ici pour les envoyer',
+  delete: 'Supprimer',
+  delete_title: 'Supprimer "{name}" ?',
+  delete_confirm: 'Voulez-vous vraiment supprimer ce fichier ?',
 }

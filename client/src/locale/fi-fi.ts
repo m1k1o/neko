@@ -124,4 +124,7 @@ export const files = {
   downloads: 'Lataukset',
   uploads: 'Lataa',
   upload_here: 'Klikkaa tai vedä tiedostoja tähän ladataksesi',
+  delete: 'Poista',
+  delete_title: 'Poistetaanko "{name}"?',
+  delete_confirm: 'Haluatko varmasti poistaa tämän tiedoston?',
 }
