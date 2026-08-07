@@ -120,17 +120,37 @@ The policy files are located in the following paths:
 
 **Allow persistent data in policies**
 
-By default, the browsers in Neko are set up to forget all cookies and browsing history when they are closed. If you want to allow persistent data, you can set the following policies in the JSON file:
+By default, Firefox-based browsers in Neko are set up to clear cookies, sessions, and other browsing data on shutdown. If you want persistent logins across container restarts, do not replace the policy with a minimal JSON file. Instead, copy the default policy file and only modify the `SanitizeOnShutdown` values you need.
+
+You can copy the default policy from the container (or from this repository), then set these values to `false`:
 
 ```json title="policy.json"
 {
   "policies": {
-    "SanitizeOnShutdown": false,
+    "SanitizeOnShutdown": {
+      "Cache": false,
+      "Cookies": false,
+      "Downloads": false,
+      "FormData": false,
+      "History": false,
+      "OfflineApps": false,
+      "Sessions": false,
+      "SiteSettings": false
+    },
     "Homepage": {
       "StartPage": "previous-session"
     }
   }
 }
+```
+
+Keep the rest of the default policy entries unchanged so you preserve Neko defaults (for example extension rules and other hardened settings). Then mount it back into the container:
+
+```yaml title="docker-compose.yaml"
+services:
+  neko:
+    volumes:
+      - "./policy.json:/usr/lib/firefox/distribution/policies.json:ro"
 ```
 
 **Manage extensions**
