@@ -124,4 +124,7 @@ export const files = {
   downloads: 'Herunterladen',
   uploads: 'Hochladen',
   upload_here: 'Klicken oder ziehen Sie Dateien zum Hochladen hierher',
+  delete: 'Löschen',
+  delete_title: '"{name}" löschen?',
+  delete_confirm: 'Möchten Sie diese Datei wirklich entfernen?',
 }

@@ -124,4 +124,7 @@ export const files = {
   downloads: 'Unduhan',
   uploads: 'Unggahan',
   upload_here: 'Klik atau seret berkas ke sini untuk mengunggah',
+  delete: 'Hapus',
+  delete_title: 'Hapus "{name}"?',
+  delete_confirm: 'Apakah Anda benar-benar ingin menghapus berkas ini?',
 }

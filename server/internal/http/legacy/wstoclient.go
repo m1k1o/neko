@@ -611,6 +611,7 @@ func (s *session) wsToClient(msg []byte) error {
 			Cwd:          request.RootDir,
 			UserDownload: request.UserDownload,
 			UserUpload:   request.UserUpload,
+			UserDelete:   request.UserDelete,
 			Files:        files,
 		})
 

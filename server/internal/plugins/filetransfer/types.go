@@ -15,6 +15,7 @@ type Message struct {
 	RootDir      string `json:"root_dir"`
 	UserDownload bool   `json:"user_download"`
 	UserUpload   bool   `json:"user_upload"`
+	UserDelete   bool   `json:"user_delete"`
 	Files        []Item `json:"files"`
 }
 

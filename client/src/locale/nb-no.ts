@@ -124,4 +124,7 @@ export const files = {
   downloads: 'Nedlastinger',
   uploads: 'Opplastinger',
   upload_here: 'Klikk eller dra filer hit for å laste opp',
+  delete: 'Slett',
+  delete_title: 'Slette "{name}"?',
+  delete_confirm: 'Er du sikker på at du vil slette denne filen?',
 }

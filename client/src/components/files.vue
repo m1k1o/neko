@@ -10,6 +10,12 @@
         <p class="file-name" :title="item.name">{{ item.name }}</p>
         <p class="file-size">{{ fileSize(item.size) }}</p>
         <i v-if="item.type !== 'dir' && canDownload" class="fas fa-download download" @click="download(item)" />
+        <i
+          v-if="item.type !== 'dir' && canDelete"
+          class="fas fa-trash delete"
+          :title="$t('files.delete')"
+          @click="deleteFile(item)"
+        />
       </div>
     </div>
     <div class="transfer-area">
@@ -181,8 +187,13 @@
 
     .refresh:hover,
     .download:hover,
+    .delete:hover,
     .remove-transfer:hover {
       cursor: pointer;
+    }
+
+    .delete {
+      margin-left: 0.5em;
     }
 
     .transfer-area {
@@ -284,6 +295,10 @@
 
     get canDownload() {
       return this.$accessor.user.admin || this.$accessor.files.userDownload
+    }
+
+    get canDelete() {
+      return this.$accessor.user.admin || this.$accessor.files.userDelete
     }
 
     get canUpload() {
@@ -448,6 +463,28 @@
         transfer.abortController?.abort()
       }
       this.$accessor.files.removeTransfer(transfer)
+    }
+
+    async deleteFile(item: FileListItem) {
+      const { isConfirmed } = await this.$swal({
+        title: this.$t('files.delete_title', { name: item.name }) as string,
+        text: this.$t('files.delete_confirm', { name: item.name }) as string,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: this.$t('context.confirm.button_yes') as string,
+        cancelButtonText: this.$t('context.confirm.button_cancel') as string,
+      })
+      if (!isConfirmed) {
+        return
+      }
+      const url =
+        '/file?pwd=' + encodeURIComponent(this.$accessor.password) + '&filename=' + encodeURIComponent(item.name)
+      try {
+        await this.$http.delete(url)
+        this.$accessor.files.refresh()
+      } catch (error: any) {
+        this.$log.error(error)
+      }
     }
 
     fileIcon(file: FileListItem) {

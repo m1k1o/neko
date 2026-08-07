@@ -72,12 +72,12 @@ export const locks = {
     notif_unlocked: '房间已解锁',
   },
   file_transfer: {
-   lock: '锁定文件传输（对用户）',
-   unlock: '解锁文件传输（对用户）',
-   locked: '文件传输已锁定（对用户）',
-   unlocked: '文件传输已解锁（对用户）',
-   notif_locked: '已锁定文件传输',
-   notif_unlocked: '已解锁文件传输',
+    lock: '锁定文件传输（对用户）',
+    unlock: '解锁文件传输（对用户）',
+    locked: '文件传输已锁定（对用户）',
+    unlocked: '文件传输已解锁（对用户）',
+    notif_locked: '已锁定文件传输',
+    notif_unlocked: '已解锁文件传输',
   },
 }
 
@@ -124,4 +124,7 @@ export const files = {
   downloads: '下载',
   uploads: '上传',
   upload_here: '点击或拖动文件到此处上传',
+  delete: '删除',
+  delete_title: '删除"{name}"？',
+  delete_confirm: '确定要删除此文件吗？',
 }
