@@ -10,7 +10,12 @@
         <p class="file-name" :title="item.name">{{ item.name }}</p>
         <p class="file-size">{{ fileSize(item.size) }}</p>
         <i v-if="item.type !== 'dir' && canDownload" class="fas fa-download download" @click="download(item)" />
-        <i v-if="item.type !== 'dir' && canDelete" class="fas fa-trash delete" :title="$t('files.delete')" @click="deleteFile(item)" />
+        <i
+          v-if="item.type !== 'dir' && canDelete"
+          class="fas fa-trash delete"
+          :title="$t('files.delete')"
+          @click="deleteFile(item)"
+        />
       </div>
     </div>
     <div class="transfer-area">

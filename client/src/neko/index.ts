@@ -361,7 +361,13 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   /////////////////////////////
   // File Transfer Events
   /////////////////////////////
-  protected [EVENT.FILETRANSFER.LIST]({ cwd, user_download, user_upload, user_delete, files }: FileTransferListPayload) {
+  protected [EVENT.FILETRANSFER.LIST]({
+    cwd,
+    user_download,
+    user_upload,
+    user_delete,
+    files,
+  }: FileTransferListPayload) {
     this.$accessor.files.setCwd(cwd)
     this.$accessor.files.setFileList(files)
     this.$accessor.files.setUserDownload(user_download)
