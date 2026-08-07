@@ -14,6 +14,7 @@ type Config struct {
 	RefreshInterval time.Duration
 	UserDownload    bool
 	UserUpload      bool
+	UserDelete      bool
 }
 
 func (Config) Init(cmd *cobra.Command) error {
@@ -42,6 +43,11 @@ func (Config) Init(cmd *cobra.Command) error {
 		return err
 	}
 
+	cmd.PersistentFlags().Bool("filetransfer.user_delete", false, "allow non-admin users to delete files")
+	if err := viper.BindPFlag("filetransfer.user_delete", cmd.PersistentFlags().Lookup("filetransfer.user_delete")); err != nil {
+		return err
+	}
+
 	// v2 config
 
 	cmd.PersistentFlags().Bool("file_transfer_enabled", false, "enable file transfer feature")
@@ -64,6 +70,7 @@ func (s *Config) Set() {
 	s.RefreshInterval = viper.GetDuration("filetransfer.refresh_interval")
 	s.UserDownload = viper.GetBool("filetransfer.user_download")
 	s.UserUpload = viper.GetBool("filetransfer.user_upload")
+	s.UserDelete = viper.GetBool("filetransfer.user_delete")
 
 	// v2 config
 

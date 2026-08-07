@@ -107,6 +107,7 @@ func (m *Manager) broadcastUpdate() {
 		RootDir:      m.config.RootDir,
 		UserDownload: m.config.UserDownload,
 		UserUpload:   m.config.UserUpload,
+		UserDelete:   m.config.UserDelete,
 		Files:        fileList,
 	})
 }
@@ -121,6 +122,7 @@ func (m *Manager) sendUpdate(session types.Session) {
 		RootDir:      m.config.RootDir,
 		UserDownload: m.config.UserDownload,
 		UserUpload:   m.config.UserUpload,
+		UserDelete:   m.config.UserDelete,
 		Files:        fileList,
 	})
 }
@@ -206,6 +208,59 @@ func (m *Manager) Start() error {
 	return nil
 }
 
+func (m *Manager) deleteFileHandler(w http.ResponseWriter, r *http.Request) error {
+	session, ok := auth.GetSession(r)
+	if !ok {
+		return utils.HttpUnauthorized("session not found")
+	}
+
+	enabled, err := m.isEnabledForSession(session)
+	if err != nil {
+		return utils.HttpInternalServerError().
+			WithInternalErr(err).
+			Msg("error checking file transfer permissions")
+	}
+
+	if !enabled {
+		return utils.HttpForbidden("file transfer is disabled")
+	}
+
+	if !session.Profile().IsAdmin && !m.config.UserDelete {
+		return utils.HttpForbidden("file delete is not allowed for non-admin users")
+	}
+
+	filename := r.URL.Query().Get("filename")
+	badChars, err := regexp.MatchString(`(?m)\.\.(?:\/|$)`, filename)
+	if filename == "" || badChars || err != nil {
+		return utils.HttpBadRequest().
+			WithInternalErr(err).
+			Msg("bad filename")
+	}
+
+	filename = filepath.Clean(filename)
+	filename = filepath.Base(filename)
+	filePath := filepath.Join(m.config.RootDir, filename)
+
+	if err := os.Remove(filePath); err != nil {
+		if os.IsNotExist(err) {
+			return utils.HttpNotFound("file not found")
+		}
+		return utils.HttpInternalServerError().
+			WithInternalErr(err).
+			Msg("error deleting file")
+	}
+
+	err, changed := m.refresh()
+	if err != nil {
+		m.logger.Err(err).Msg("unable to refresh file list after delete")
+	}
+	if changed {
+		m.broadcastUpdate()
+	}
+
+	return nil
+}
+
 func (m *Manager) Shutdown() error {
 	close(m.shutdown)
 	return nil
@@ -214,6 +269,7 @@ func (m *Manager) Shutdown() error {
 func (m *Manager) Route(r types.Router) {
 	r.Get("/", m.downloadFileHandler)
 	r.Post("/", m.uploadFileHandler)
+	r.Delete("/", m.deleteFileHandler)
 }
 
 func (m *Manager) WebSocketHandler(session types.Session, msg types.WebSocketMessage) bool {

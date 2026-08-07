@@ -61,6 +61,7 @@ The file transfer plugin is a simple pre-loaded internal plugin that allows you 
   },
   'filetransfer.user_download': false,
   'filetransfer.user_upload': false,
+  'filetransfer.user_delete': false,
 }} />
 
 - <Def id="filetransfer.enabled" /> enables the file transfer support. If set to `false`, the file transfer is disabled.
@@ -68,6 +69,7 @@ The file transfer plugin is a simple pre-loaded internal plugin that allows you 
 - <Def id="filetransfer.refresh_interval" /> refers to the interval at which the file list is refreshed.
 - <Def id="filetransfer.user_download" /> allows non-admin users to download files. If set to `false` (default), only admins can download files.
 - <Def id="filetransfer.user_upload" /> allows non-admin users to upload files. If set to `false` (default), only admins can upload files.
+- <Def id="filetransfer.user_delete" /> allows non-admin users to delete files. If set to `false` (default), only admins can delete files.
 
 The file transfer plugin extends user profile and room settings by adding the following fields:
 

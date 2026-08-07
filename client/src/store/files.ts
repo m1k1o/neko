@@ -9,6 +9,7 @@ export const state = () => ({
   transfers: [] as FileTransfer[],
   userDownload: false,
   userUpload: false,
+  userDelete: false,
 })
 
 export const getters = getterTree(state, {
@@ -30,6 +31,10 @@ export const mutations = mutationTree(state, {
 
   _setUserUpload(state, val: boolean) {
     state.userUpload = val
+  },
+
+  _setUserDelete(state, val: boolean) {
+    state.userDelete = val
   },
 
   _addTransfer(state, transfer: FileTransfer) {
@@ -58,6 +63,10 @@ export const actions = actionTree(
 
     setUserUpload(store, val: boolean) {
       accessor.files._setUserUpload(val)
+    },
+
+    setUserDelete(store, val: boolean) {
+      accessor.files._setUserDelete(val)
     },
 
     addTransfer(store, transfer: FileTransfer) {

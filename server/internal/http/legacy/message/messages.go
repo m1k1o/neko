@@ -113,6 +113,7 @@ type FileTransferList struct {
 	Cwd          string               `json:"cwd"`
 	UserDownload bool                 `json:"user_download"`
 	UserUpload   bool                 `json:"user_upload"`
+	UserDelete   bool                 `json:"user_delete"`
 	Files        []types.FileListItem `json:"files"`
 }
 
