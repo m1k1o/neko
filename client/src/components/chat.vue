@@ -18,7 +18,7 @@
               <span>{{ member(message.id).displayname }}</span>
               <span class="timestamp">{{ timestamp(message.created) }}</span>
             </div>
-            <neko-markdown class="content-body" :source="message.content" />
+            <neko-markdown class="content-body" :source="message.content" :open-in-app="$accessor.remote.hosting && $accessor.openinapp.enabled" />
           </div>
         </li>
         <li :key="index" class="event" v-if="message.type === 'event'">
@@ -224,6 +224,11 @@
                 code {
                   display: block;
                 }
+              }
+
+              .open-in-app {
+                margin-left: 0.3em;
+                cursor: pointer;
               }
             }
           }
@@ -460,6 +465,28 @@
         target.parentElement.classList.add('active')
         event.preventDefault()
       }
+
+      if (target.classList.contains('open-in-app')) {
+        const href = target.dataset.href
+        if (href) {
+          this.$accessor.openinapp.sendOpenLink(href)
+        }
+        event.preventDefault()
+      }
+
+      if (
+        this.$accessor.settings.links_in_app &&
+        this.$accessor.openinapp.enabled &&
+        this.$accessor.remote.hosting &&
+        target.tagName.toLowerCase() === 'a'
+      ) {
+        const href = target.getAttribute('href')
+        if (href) {
+          this.$accessor.openinapp.sendOpenLink(href)
+          event.preventDefault()
+        }
+      }
+
     }
 
     onKeyDown(event: KeyboardEvent) {

@@ -136,12 +136,21 @@ const rules: MarkdownRules = {
       }
     },
     html(node, output, state) {
-      return htmlTag(
+      const href = md.sanitizeUrl(node.target) as string
+      const link = htmlTag(
         'a',
         output(node.content, state),
         { href: md.sanitizeUrl(node.target) as string, target: '_blank' },
         state,
       )
+      if(!state.openInApp) return link
+      const inAppIcon = htmlTag(
+        'i', 
+        '',
+        { class: 'open-in-app fas fa-arrow-up-right-from-square', 'data-href': href }, 
+        state,
+      )
+      return link + inAppIcon
     },
   },
   url: {
@@ -158,12 +167,21 @@ const rules: MarkdownRules = {
       }
     },
     html(node, output, state) {
-      return htmlTag(
+      const href = md.sanitizeUrl(node.target) as string
+      const link = htmlTag(
         'a',
         output(node.content, state),
         { href: md.sanitizeUrl(node.target) as string, target: '_blank' },
         state,
       )
+      if(!state.openInApp) return link
+      const inAppIcon = htmlTag(
+        'i', 
+        '',
+        { class: 'open-in-app fas fa-arrow-right-to-bracket', 'data-href': href }, 
+        state,
+      )
+      return link + inAppIcon
     },
   },
   strike: {
@@ -257,12 +275,16 @@ export default class extends Vue {
   @Prop({ required: true })
   source!: string
 
+  @Prop({ default: false })
+  openInApp!: boolean
+
   render(h: any) {
     const state: MarkdownState = {
       inline: true,
       inQuote: false,
       escapeHTML: true,
       cssModuleNames: null,
+      openInApp: this.openInApp,
     }
     return h({ template: `<div>${htmlOutput(parser(this.source, state), state)}</div>` })
   }

@@ -13,4 +13,8 @@ services:
       NEKO_WEBRTC_EPR: 52000-52100
       NEKO_WEBRTC_ICELITE: 1
       # See: https://neko.m1k1o.net/docs/v3/configuration/webrtc#ip
-      # NEKO_NAT1TO1: <IP_ADDRESS>
+      # NEKO_NAT1TO1: <IP_ADDRESS> 
+      
+      # Open In App Plugin 
+      # NEKO_OPENINAPP_ENABLED: TRUE
+      # NEKO_OPENINAPP_OPEN_COMMAND: firefox -P default 
