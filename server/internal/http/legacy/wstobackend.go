@@ -13,6 +13,7 @@ import (
 	"github.com/m1k1o/neko/server/internal/api/room"
 	"github.com/m1k1o/neko/server/internal/plugins/chat"
 	"github.com/m1k1o/neko/server/internal/plugins/filetransfer"
+	"github.com/m1k1o/neko/server/internal/plugins/openinapp"
 	"github.com/m1k1o/neko/server/pkg/types"
 	"github.com/m1k1o/neko/server/pkg/types/event"
 	"github.com/m1k1o/neko/server/pkg/types/message"
@@ -198,6 +199,14 @@ func (s *session) wsToBackend(msg []byte) error {
 	// File Transfer Events
 	case oldEvent.FILETRANSFER_REFRESH:
 		return s.toBackend(filetransfer.FILETRANSFER_UPDATE, nil)
+
+	// Open In App Events
+	case openinapp.OPENINAPP_OPENLINK:
+		request := &openinapp.Url{}
+    if err := json.Unmarshal(msg, request); err != nil {
+			return err
+    }
+    return s.apiReq(http.MethodPost, "/api/openinapp/openlink", request, nil)
 
 	// Screen Events
 	case oldEvent.SCREEN_RESOLUTION:

@@ -8,6 +8,7 @@ import { get, set } from '~/utils/localstorage'
 import * as video from './video'
 import * as chat from './chat'
 import * as files from './files'
+import * as openinapp from './openinapp'
 import * as remote from './remote'
 import * as user from './user'
 import * as settings from './settings'
@@ -111,7 +112,7 @@ export const storePattern = {
   mutations,
   actions,
   getters,
-  modules: { video, chat, files, user, remote, settings, client, emoji },
+  modules: { video, chat, files, openinapp, user, remote, settings, client, emoji },
 }
 
 Vue.use(Vuex)

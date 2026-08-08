@@ -35,6 +35,13 @@
           <span />
         </label>
       </li>
+      <li v-if="$accessor.openinapp.enabled">
+        <span>Always open Links in App</span>
+        <label class="switch">
+          <input type="checkbox" v-model="links_in_app" />
+          <span />
+        </label>
+      </li>
       <li>
         <span>{{ $t('setting.keyboard_layout') }}</span>
         <label class="select">
@@ -356,6 +363,14 @@
 
     set chat_sound(value: boolean) {
       this.$accessor.settings.setSound(value)
+    }
+
+    get links_in_app() {
+      return this.$accessor.settings.links_in_app
+    }
+
+    set links_in_app(value: boolean) {
+      this.$accessor.settings.setLinksInApp(value)
     }
 
     get keyboard_layouts_list() {

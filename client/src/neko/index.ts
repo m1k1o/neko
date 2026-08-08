@@ -376,6 +376,13 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   }
 
   /////////////////////////////
+  // Open in App Events
+  /////////////////////////////
+  protected [EVENT.OPENINAPP.INIT]({ enabled }: { enabled: boolean }) {
+    this.$accessor.openinapp.setEnabled(enabled)
+  }
+
+  /////////////////////////////
   // Screen Events
   /////////////////////////////
   protected [EVENT.SCREEN.CONFIGURATIONS]({ configurations }: ScreenConfigurationsPayload) {

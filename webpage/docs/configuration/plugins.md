@@ -79,3 +79,19 @@ plugins:
 ```
 
 - `filetransfer.enabled` in the room settings context controls whether the file transfer is enabled for any user in the room, and in the user's profile context controls whether the user can transfer files.
+
+## Open In App Plugin {#openinapp}
+
+The open in app plugin allows users to open links directly from the chat inside the shared neko instance.
+
+<ConfigurationTab options={{
+  'openinapp.enabled': true,
+  'openinapp.open_command': 'xdg-open',
+}} />
+
+- <Def id="openinapp.enabled" /> enables the open in app support.
+  If set to `false`, the feature is hidden from all clients.
+- <Def id="openinapp.open_command" /> is the shell command used to open
+  URLs inside the neko instance. Defaults to `xdg-open`. Can be set to a
+  browser-specific command such as `firefox -P default` depending on
+  the app image in use.
