@@ -206,7 +206,7 @@ func (s *session) wsToBackend(msg []byte) error {
     if err := json.Unmarshal(msg, request); err != nil {
 			return err
     }
-    return s.toBackend(openinapp.OPENINAPP_OPENLINK, request)
+    return s.apiReq(http.MethodPost, "/api/openinapp/openlink", request, nil)
 
 	// Screen Events
 	case oldEvent.SCREEN_RESOLUTION:

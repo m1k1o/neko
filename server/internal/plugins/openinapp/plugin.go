@@ -26,7 +26,6 @@ func (p *Plugin) Config() types.PluginConfig {
 func (p *Plugin) Start(m types.PluginManagers) error {
 	p.manager = NewManager(m.SessionManager, p.config)
 	m.ApiManager.AddRouter("/openinapp", p.manager.Route)
-	m.WebSocketManager.AddHandler(p.manager.WebSocketHandler)
 	return p.manager.Start()
 }
 
