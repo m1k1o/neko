@@ -45,6 +45,10 @@ export const EVENT = {
     LIST: 'filetransfer/list',
     REFRESH: 'filetransfer/refresh',
   },
+  OPENINAPP: {
+    INIT: 'openinapp/init',
+    OPENLINK: 'openinapp/openlink',
+  },
   SCREEN: {
     CONFIGURATIONS: 'screen/configurations',
     RESOLUTION: 'screen/resolution',
@@ -78,6 +82,7 @@ export type WebSocketEvents =
   | SignalEvents
   | ChatEvents
   | FileTransferEvents
+  | OpenInAppEvents
   | ScreenEvents
   | BroadcastEvents
   | AdminEvents
@@ -103,6 +108,8 @@ export type SignalEvents =
 export type ChatEvents = typeof EVENT.CHAT.MESSAGE | typeof EVENT.CHAT.EMOTE
 
 export type FileTransferEvents = typeof EVENT.FILETRANSFER.LIST | typeof EVENT.FILETRANSFER.REFRESH
+
+export type OpenInAppEvents = typeof EVENT.OPENINAPP.INIT | typeof EVENT.OPENINAPP.OPENLINK
 
 export type ScreenEvents = typeof EVENT.SCREEN.CONFIGURATIONS | typeof EVENT.SCREEN.RESOLUTION | typeof EVENT.SCREEN.SET
 
