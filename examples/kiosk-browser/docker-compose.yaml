@@ -1,0 +1,34 @@
+# Neko - Kiosk Browser Example
+#
+# Runs Firefox in kiosk mode (no address bar, tabs or browser chrome) and
+# opens a fixed URL automatically on startup. Useful for turning a smart
+# display, thin client or dedicated terminal into an app-like experience.
+#
+# This works by overriding the Firefox supervisor command, see ./firefox.conf
+# and the Supervisord Configuration docs:
+# https://neko.m1k1o.net/docs/v3/customization#supervisord
+services:
+  neko:
+    image: "ghcr.io/m1k1o/neko/firefox:latest"
+    restart: "unless-stopped"
+    shm_size: "2gb"
+    ports:
+      - "8080:8080"
+      - "52000-52100:52000-52100/udp"
+    volumes:
+      - "./firefox.conf:/etc/neko/supervisord/firefox.conf:ro"
+
+      # NOTE: this setup is intentionally stateless - no profile is persisted,
+      # so cookies and logins are lost every time the container restarts. If
+      # you want the kiosk session to stay logged in across restarts, mount a
+      # persistent profile directory as well:
+      # See: https://neko.m1k1o.net/docs/v3/customization/browsers#persistent-profile
+      # - "./profile:/home/neko/.mozilla/firefox/profile.default"
+    environment:
+      NEKO_DESKTOP_SCREEN: '1280x720@30'
+      NEKO_MEMBER_MULTIUSER_USER_PASSWORD: neko
+      NEKO_MEMBER_MULTIUSER_ADMIN_PASSWORD: admin
+      NEKO_WEBRTC_EPR: 52000-52100
+      NEKO_WEBRTC_ICELITE: 1
+      # See: https://neko.m1k1o.net/docs/v3/configuration/webrtc#nat1to1
+      # NEKO_WEBRTC_NAT1TO1: <your-IP>
