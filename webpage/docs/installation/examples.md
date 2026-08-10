@@ -6,212 +6,92 @@ description: Example Docker Compose configurations for Neko.
 
 Here are some examples to get you started with Neko. You can use these examples as a reference to create your own configurations.
 
-## Firefox {#firefox}
+Every example below is also available as a self-contained, runnable folder in the [`examples/`](https://github.com/m1k1o/neko/tree/main/examples) directory of the repository, so you can browse, clone or download it directly. Each file is heavily commented, showing the available options and linking to the relevant documentation inline.
 
-```yaml title="docker-compose.yaml"
-services:
-  neko:
-    image: "ghcr.io/m1k1o/neko/firefox:latest"
-    restart: "unless-stopped"
-    shm_size: "2gb"
-    ports:
-      - "8080:8080"
-      - "52000-52100:52000-52100/udp"
-    volumes:
-      - <your-host-path>:/home/neko/.mozilla/firefox # persist firexfox settings
-    environment:
-      NEKO_DESKTOP_SCREEN: '1920x1080@30'
-      NEKO_MEMBER_MULTIUSER_USER_PASSWORD: neko
-      NEKO_MEMBER_MULTIUSER_ADMIN_PASSWORD: admin
-      NEKO_WEBRTC_EPR: 52000-52100
-      NEKO_WEBRTC_ICELITE: 1
-      NEKO_WEBRTC_NAT1TO1: <your-IP>
+## Simple Browser {#simple-browser}
+
+A basic Firefox setup. Includes commented volume mounts for persisting the browser profile or mounting your own pre-configured one, and a list of other browser images you can swap in.
+
+Browse: [`examples/simple-browser`](https://github.com/m1k1o/neko/tree/main/examples/simple-browser)
+
+```yaml title="docker-compose.yaml" file=<rootDir>/examples/simple-browser/docker-compose.yaml
 ```
 
-## Chromium {#chromium}
+See also: [Persistent Browser Profile](/docs/v3/customization/browsers#persistent-profile) and [Browser Policy Files](/docs/v3/customization/browsers#policy-files).
 
-```yaml title="docker-compose.yaml"
-services:
-  neko:
-    image: "ghcr.io/m1k1o/neko/chromium:latest"
-    restart: "unless-stopped"
-    shm_size: "2gb"
-    ports:
-      - "8080:8080"
-      - "52000-52100:52000-52100/udp"
-    volumes:
-      - <your-host-path>:/home/neko/.config/chromium # persist chromium settings
-    environment:
-      NEKO_DESKTOP_SCREEN: '1920x1080@30'
-      NEKO_MEMBER_MULTIUSER_USER_PASSWORD: neko
-      NEKO_MEMBER_MULTIUSER_ADMIN_PASSWORD: admin
-      NEKO_WEBRTC_EPR: 52000-52100
-      NEKO_WEBRTC_ICELITE: 1
-      NEKO_WEBRTC_NAT1TO1: <your-IP>
+## Kiosk Browser {#kiosk-browser}
+
+Runs Firefox in kiosk mode (no address bar, tabs or browser chrome) and opens a fixed URL automatically on startup. This is useful for app-like setups such as streaming services or dashboards, and works by mounting a persistent copy of the Firefox supervisor config and overriding the command directly.
+
+This setup is intentionally stateless - no browser profile is persisted, so logins are lost on every restart. See the comments in the example for how to add a persistent profile if you need to stay logged in.
+
+Browse: [`examples/kiosk-browser`](https://github.com/m1k1o/neko/tree/main/examples/kiosk-browser)
+
+```yaml title="docker-compose.yaml" file=<rootDir>/examples/kiosk-browser/docker-compose.yaml
 ```
 
-## VLC {#vlc}
-
-```yaml title="docker-compose.yaml"
-services:
-  neko:
-    image: "ghcr.io/m1k1o/neko/vlc:latest"
-    restart: "unless-stopped"
-    shm_size: "2gb"
-    volumes:
-      - "<your-video-folder>:/video" # mount your video folder
-    ports:
-      - "8080:8080"
-      - "52000-52100:52000-52100/udp"
-    environment:
-      NEKO_DESKTOP_SCREEN: '1920x1080@30'
-      NEKO_MEMBER_MULTIUSER_USER_PASSWORD: neko
-      NEKO_MEMBER_MULTIUSER_ADMIN_PASSWORD: admin
-      NEKO_WEBRTC_EPR: 52000-52100
-      NEKO_WEBRTC_ICELITE: 1
-      NEKO_WEBRTC_NAT1TO1: <your-IP>
+```ini title="firefox.conf" file=<rootDir>/examples/kiosk-browser/firefox.conf
 ```
 
-## Raspberry Pi GPU Acceleration {#raspberry-pi}
+For some workflows, passing the target URL directly to Firefox is more reliable than using homepage policies, because session restore can otherwise override the start page. See also: [Supervisord Configuration](/docs/v3/customization#supervisord).
 
-```yaml title="docker-compose.yaml"
-services:
-  neko:
-    image: "ghcr.io/m1k1o/neko/chromium:latest"
-    restart: "unless-stopped"
-    # increase on rpi's with more then 1gb ram.
-    shm_size: "520mb"
-    ports:
-      - "8088:8080"
-      - "52000-52100:52000-52100/udp"
-    # note: this is important since we need a GPU for hardware acceleration alternatively
-    #       mount the devices into the docker.
-    privileged: true
-    environment:
-      NEKO_CAPTURE_VIDEO_PIPELINE: |
-        ximagesrc display-name={display} show-pointer=true use-damage=false
-          ! video/x-raw,framerate=25/1
-          ! videoconvert ! queue
-          ! video/x-raw,format=NV12
-          ! v4l2h264enc
-            name=encoder
-            extra-controls="controls,h264_profile=1,video_bitrate=1250000;"
-          ! h264parse config-interval=-1
-          ! video/x-h264,stream-format=byte-stream
-          ! appsink name=appsink
-      NEKO_CAPTURE_VIDEO_CODEC: "h264"
-      NEKO_DESKTOP_SCREEN: '1280x720@30'
-      NEKO_MEMBER_MULTIUSER_USER_PASSWORD: neko
-      NEKO_MEMBER_MULTIUSER_ADMIN_PASSWORD: admin
-      NEKO_WEBRTC_EPR: 52000-52100
-      NEKO_WEBRTC_ICELITE: 1
-```
-
-## Nvidia GPU Acceleration {#nvidia}
+## Nvidia Browser {#nvidia-browser}
 
 Neko supports hardware acceleration using Nvidia GPUs. To use this feature, you need to have the Nvidia Container Toolkit installed on your system. You can find the installation instructions [here](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html). Check if your GPU supports hardware encoding with [this list](https://developer.nvidia.com/video-encode-decode-gpu-support-matrix).
 
-This example shows how to accelerate video encoding and as well the browser rendering using the GPU. You can test if the GPU is used by running `nvtop` or `nvidia-smi`, which should show the GPU usage of both the browser and neko. In the browser, you can run the [WebGL Aquarium Demo](https://webglsamples.org/aquarium/aquarium.html) to test the GPU usage.
+This example accelerates both video encoding and browser rendering using the GPU. You can test if the GPU is used by running `nvtop` or `nvidia-smi`, which should show the GPU usage of both the browser and neko. In the browser, you can run the [WebGL Aquarium Demo](https://webglsamples.org/aquarium/aquarium.html) to test the GPU usage.
 
-```yaml title="docker-compose.yaml"
-services:
-  neko:
-    image: "ghcr.io/m1k1o/neko/nvidia-firefox:latest"
-    restart: "unless-stopped"
-    shm_size: "2gb"
-    ports:
-      - "8080:8080"
-      - "52000-52100:52000-52100/udp"
-    environment:
-      NEKO_CAPTURE_VIDEO_PIPELINE: |
-        ximagesrc display-name={display} show-pointer=true use-damage=false
-          ! video/x-raw,framerate=25/1
-          ! cudaupload ! cudaconvert ! queue
-          ! video/x-raw(memory:CUDAMemory),format=NV12
-          ! nvautogpuh264enc
-            name=encoder
-            preset=2
-            gop-size=25
-            spatial-aq=true
-            temporal-aq=true
-            bitrate=4096
-            vbv-buffer-size=4096
-            rc-mode=6
-          ! h264parse config-interval=-1
-          ! video/x-h264,stream-format=byte-stream
-          ! appsink name=appsink
-      NEKO_CAPTURE_VIDEO_CODEC: "h264"
-      NEKO_DESKTOP_SCREEN: 1920x1080@30
-      NEKO_MEMBER_MULTIUSER_USER_PASSWORD: neko
-      NEKO_MEMBER_MULTIUSER_ADMIN_PASSWORD: admin
-      NEKO_WEBRTC_EPR: 52000-52100
-      NEKO_WEBRTC_ICELITE: 1
-    deploy:
-      resources:
-        reservations:
-          devices:
-          - driver: nvidia
-            count: 1
-            capabilities: [gpu]
+If you only want to accelerate the encoding, **not the browser rendering**, see the commented "ENCODE-ONLY OPTION" blocks in the example - they switch to the plain `firefox` image and a `videoconvert`-based pipeline instead of `nvidia-firefox` with `cudaupload`/`cudaconvert`.
+
+Browse: [`examples/nvidia-browser`](https://github.com/m1k1o/neko/tree/main/examples/nvidia-browser)
+
+```yaml title="docker-compose.yaml" file=<rootDir>/examples/nvidia-browser/docker-compose.yaml
 ```
 
 See available [Nvidia Docker Images](/docs/v3/installation/docker-images#nvidia).
 
-:::tip
-`nvautogpuh264enc` (GStreamer 1.22+) is the recommended encoder for NVIDIA driver 590 and newer. It automatically selects the correct memory path (CUDA or system) and replaces `nvh264enc`. If you are on an older driver or GStreamer version, substitute `nvautogpuh264enc` with `nvh264enc`.
-:::
+## Intel Browser {#intel-browser}
 
-:::note
-If your Nvidia GPU does not support CUDA, you can use the pipeline below without `cudaupload` and `cudaconvert`. This should work with older GPUs, but the performance might be lower.
-:::
+Neko supports hardware acceleration using Intel GPUs via VAAPI. This requires the host to expose `/dev/dri` and have the Intel graphics driver installed.
 
-If you only want to accelerate the encoding, **not the browser rendering**, and you do not need [Cuda library](https://gstreamer.freedesktop.org/documentation/cuda/index.html?gi-language=c), you can use the default image with additional environment variables:
+This example accelerates both video encoding and browser rendering using the `intel-firefox` image. If you only want to accelerate the encoding, **not the browser rendering**, see the commented "ENCODE-ONLY OPTION" in the example, which switches to the plain `firefox` image.
 
-```yaml title="docker-compose.yaml"
-services:
-  neko:
-    # highlight-next-line
-    image: "ghcr.io/m1k1o/neko/firefox:latest"
-    restart: "unless-stopped"
-    shm_size: "2gb"
-    ports:
-      - "8080:8080"
-      - "52000-52100:52000-52100/udp"
-    environment:
-      # highlight-start
-      NVIDIA_VISIBLE_DEVICES: all
-      NVIDIA_DRIVER_CAPABILITIES: all
-      # highlight-end
-      NEKO_CAPTURE_VIDEO_PIPELINE: |
-        ximagesrc display-name={display} show-pointer=true use-damage=false
-          ! video/x-raw,framerate=25/1
-      # highlight-start
-          ! videoconvert ! queue
-          ! video/x-raw,format=NV12
-      # highlight-end
-          ! nvautogpuh264enc
-            name=encoder
-            preset=2
-            gop-size=25
-            spatial-aq=true
-            temporal-aq=true
-            bitrate=4096
-            vbv-buffer-size=4096
-            rc-mode=6
-          ! h264parse config-interval=-1
-          ! video/x-h264,stream-format=byte-stream
-          ! appsink name=appsink
-      NEKO_CAPTURE_VIDEO_CODEC: "h264"
-      NEKO_DESKTOP_SCREEN: 1920x1080@30
-      NEKO_MEMBER_MULTIUSER_USER_PASSWORD: neko
-      NEKO_MEMBER_MULTIUSER_ADMIN_PASSWORD: admin
-      NEKO_WEBRTC_EPR: 52000-52100
-      NEKO_WEBRTC_ICELITE: 1
-    deploy:
-      resources:
-        reservations:
-          devices:
-          - driver: nvidia
-            count: 1
-            capabilities: [gpu]
+Browse: [`examples/intel-browser`](https://github.com/m1k1o/neko/tree/main/examples/intel-browser)
+
+```yaml title="docker-compose.yaml" file=<rootDir>/examples/intel-browser/docker-compose.yaml
 ```
+
+See available [Intel Docker Images](/docs/v3/installation/docker-images#intel).
+
+## Raspberry Pi Browser {#raspberry-pi-browser}
+
+Firefox tuned for a Raspberry Pi (or similar ARM SBC). Works out of the box with software rendering/encoding. See the commented "GPU ACCELERATION OPTION" in the example for enabling hardware-accelerated encoding via the Broadcom VideoCore V4L2 M2M encoder, available on Raspberry Pi 3/4 (not Pi 5).
+
+Browse: [`examples/raspberry-pi-browser`](https://github.com/m1k1o/neko/tree/main/examples/raspberry-pi-browser)
+
+```yaml title="docker-compose.yaml" file=<rootDir>/examples/raspberry-pi-browser/docker-compose.yaml
+```
+
+## ARM64 Browser {#arm64-browser}
+
+Firefox on a generic ARM64 host (e.g. Apple M1/M2 under virtualization, AWS Graviton, Oracle Cloud ARM free tier). The same multi-arch image used on amd64 works here - no special image tag is required.
+
+DRM (Widevine) support is limited on ARM64 and needs extra setup for protected streaming content, see [DRM for ARM64](/docs/v3/customization/browsers#arm64-drm). If your device exposes a V4L2 M2M hardware encoder, you can reuse the pipeline from the [Raspberry Pi Browser](#raspberry-pi-browser) example.
+
+Browse: [`examples/arm64-browser`](https://github.com/m1k1o/neko/tree/main/examples/arm64-browser)
+
+```yaml title="docker-compose.yaml" file=<rootDir>/examples/arm64-browser/docker-compose.yaml
+```
+
+See supported architectures and per-app availability in the [Availability Matrix](/docs/v3/installation/docker-images#availability).
+
+## TURN Server {#turn-server}
+
+WebRTC needs a direct connection between the client and the server. When that is not possible (e.g. both sides are behind restrictive NATs or firewalls), a [TURN server](/docs/v3/configuration/webrtc#iceservers) relays the traffic instead. This example runs a [Coturn](https://github.com/coturn/coturn) TURN server alongside Neko.
+
+Browse: [`examples/turn-server`](https://github.com/m1k1o/neko/tree/main/examples/turn-server)
+
+```yaml title="docker-compose.yaml" file=<rootDir>/examples/turn-server/docker-compose.yaml
+```
+
+Replace `<MY-COTURN-SERVER>` with your LAN or Public IP address, and allow ports `49160-49200/udp` and `3478/tcp`.

@@ -1,0 +1,86 @@
+# Neko - Nvidia Browser Example
+#
+# Runs Firefox with full Nvidia GPU acceleration (both browser rendering and
+# video encoding) using CUDA. Requires the Nvidia Container Toolkit:
+# https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html
+#
+# Check if your GPU supports hardware encoding:
+# https://developer.nvidia.com/video-encode-decode-gpu-support-matrix
+#
+# Other GPU-accelerated flavors are listed here:
+# https://neko.m1k1o.net/docs/v3/installation/docker-images#nvidia
+services:
+  neko:
+    image: "ghcr.io/m1k1o/neko/nvidia-firefox:latest"
+    # ENCODE-ONLY OPTION: if you only want to accelerate video encoding, not
+    # the browser rendering, use the plain firefox image instead - see the
+    # matching commented pipeline/env vars further down.
+    # image: "ghcr.io/m1k1o/neko/firefox:latest"
+    restart: "unless-stopped"
+    shm_size: "2gb"
+    ports:
+      - "8080:8080"
+      - "52000-52100:52000-52100/udp"
+    environment:
+      # ENCODE-ONLY OPTION: uncomment these two when using the plain firefox
+      # image above, so the container can still see the GPU for encoding.
+      # NVIDIA_VISIBLE_DEVICES: all
+      # NVIDIA_DRIVER_CAPABILITIES: all
+
+      # `nvautogpuh264enc` (GStreamer 1.22+) is recommended for NVIDIA driver
+      # 590+; it auto-selects CUDA or system memory. On older drivers or
+      # GStreamer versions, use `nvh264enc` instead. If your GPU does not
+      # support CUDA, drop `cudaupload`/`cudaconvert` below (see the
+      # ENCODE-ONLY pipeline further down for that variant).
+      NEKO_CAPTURE_VIDEO_PIPELINE: |
+        ximagesrc display-name={display} show-pointer=true use-damage=false
+          ! video/x-raw,framerate=25/1
+          ! cudaupload ! cudaconvert ! queue
+          ! video/x-raw(memory:CUDAMemory),format=NV12
+          ! nvautogpuh264enc
+            name=encoder
+            preset=2
+            gop-size=25
+            spatial-aq=true
+            temporal-aq=true
+            bitrate=4096
+            vbv-buffer-size=4096
+            rc-mode=6
+          ! h264parse config-interval=-1
+          ! video/x-h264,stream-format=byte-stream
+          ! appsink name=appsink
+      # ENCODE-ONLY OPTION: replace the active pipeline above with this one
+      # when using the plain "firefox" image - it swaps cudaupload/cudaconvert
+      # for a plain videoconvert, since the browser itself no longer needs CUDA:
+      # NEKO_CAPTURE_VIDEO_PIPELINE: |
+      #   ximagesrc display-name={display} show-pointer=true use-damage=false
+      #     ! video/x-raw,framerate=25/1
+      #     ! videoconvert ! queue
+      #     ! video/x-raw,format=NV12
+      #     ! nvautogpuh264enc
+      #       name=encoder
+      #       preset=2
+      #       gop-size=25
+      #       spatial-aq=true
+      #       temporal-aq=true
+      #       bitrate=4096
+      #       vbv-buffer-size=4096
+      #       rc-mode=6
+      #     ! h264parse config-interval=-1
+      #     ! video/x-h264,stream-format=byte-stream
+      #     ! appsink name=appsink
+      NEKO_CAPTURE_VIDEO_CODEC: "h264"
+      NEKO_DESKTOP_SCREEN: 1920x1080@30
+      NEKO_MEMBER_MULTIUSER_USER_PASSWORD: neko
+      NEKO_MEMBER_MULTIUSER_ADMIN_PASSWORD: admin
+      NEKO_WEBRTC_EPR: 52000-52100
+      NEKO_WEBRTC_ICELITE: 1
+      # See: https://neko.m1k1o.net/docs/v3/configuration/webrtc#nat1to1
+      # NEKO_WEBRTC_NAT1TO1: <your-IP>
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            count: 1
+            capabilities: [gpu]
