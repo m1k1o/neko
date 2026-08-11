@@ -9,7 +9,8 @@ var (
 )
 
 type MemberProfile struct {
-	Name string `json:"name"`
+	Name   string `json:"name"`
+	Avatar string `json:"avatar"`
 
 	// permissions
 	IsAdmin               bool `json:"is_admin"                 mapstructure:"is_admin"`
@@ -44,5 +45,7 @@ type MemberManager interface {
 	MemberProvider
 
 	Login(username string, password string) (Session, string, error)
+	LoginOAuth(subject, name, avatar, email string, isAdmin bool, extraData map[string]any) (Session, string, error)
+	OAuthExtraData(id string) map[string]any
 	Logout(id string) error
 }

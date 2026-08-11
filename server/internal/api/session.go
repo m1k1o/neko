@@ -15,10 +15,11 @@ type SessionLoginPayload struct {
 }
 
 type SessionDataPayload struct {
-	ID      string              `json:"id"`
-	Token   string              `json:"token,omitempty"`
-	Profile types.MemberProfile `json:"profile"`
-	State   types.SessionState  `json:"state"`
+	ID        string              `json:"id"`
+	Token     string              `json:"token,omitempty"`
+	Profile   types.MemberProfile `json:"profile"`
+	State     types.SessionState  `json:"state"`
+	ExtraData map[string]any      `json:"extra_data,omitempty"`
 }
 
 func (api *ApiManagerCtx) Login(w http.ResponseWriter, r *http.Request) error {
@@ -78,9 +79,10 @@ func (api *ApiManagerCtx) Whoami(w http.ResponseWriter, r *http.Request) error {
 	session, _ := auth.GetSession(r)
 
 	return utils.HttpSuccess(w, SessionDataPayload{
-		ID:      session.ID(),
-		Profile: session.Profile(),
-		State:   session.State(),
+		ID:        session.ID(),
+		Profile:   session.Profile(),
+		State:     session.State(),
+		ExtraData: api.members.OAuthExtraData(session.ID()),
 	})
 }
 

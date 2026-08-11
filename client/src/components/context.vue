@@ -3,7 +3,12 @@
     <template slot-scope="child" v-if="child.data">
       <li class="header">
         <div class="user">
-          <neko-avatar class="avatar" :seed="child.data.member.displayname" :size="25" />
+          <neko-avatar
+            class="avatar"
+            :seed="child.data.member.displayname"
+            :avatar="child.data.member.avatar"
+            :size="25"
+          />
           <strong>{{ child.data.member.displayname }}</strong>
         </div>
       </li>

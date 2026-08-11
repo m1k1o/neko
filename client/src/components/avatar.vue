@@ -12,7 +12,8 @@
       backgroundColor: Background(seed),
     }"
   >
-    {{ seed.substring(0, 2).toUpperCase() }}
+    <img v-if="imageURL" :src="imageURL" :alt="seed" @error="imageFailed = true" />
+    <template v-else>{{ seed.substring(0, 2).toUpperCase() }}</template>
   </div>
 </template>
 
@@ -25,18 +26,46 @@
     display: inline-block;
     overflow: hidden;
     border-radius: 50%;
+
+    img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+    }
   }
 </style>
 
 <script lang="ts">
-  import { Vue, Component, Prop } from 'vue-property-decorator'
+  import { Vue, Component, Prop, Watch } from 'vue-property-decorator'
 
   @Component({
     name: 'neko-avatar',
   })
   export default class extends Vue {
     @Prop(String) readonly seed: string | undefined
+    @Prop(String) readonly avatar: string | undefined
     @Prop(Number) readonly size: number | undefined
+
+    private imageFailed: boolean = false
+
+    get imageURL(): string {
+      if (this.imageFailed || !this.avatar) {
+        return ''
+      }
+
+      try {
+        const avatar = new URL(this.avatar)
+        return avatar.protocol === 'http:' || avatar.protocol === 'https:' ? avatar.toString() : ''
+      } catch (_) {
+        return ''
+      }
+    }
+
+    @Watch('avatar')
+    onAvatarChanged() {
+      this.imageFailed = false
+    }
 
     Background(seed: string) {
       let a = 0,
