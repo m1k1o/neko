@@ -271,7 +271,7 @@ The availability of applications for ARM architecture is limited due to the lack
 | [Tor Browser](#tor-browser)               | ✅    | ❌    | [Forum Post](https://forum.torproject.org/t/tor-browser-for-arm-linux/5240) |
 | [Waterfox](#waterfox)                     | ✅    | ❌    | [Github Issue](https://github.com/BrowserWorks/Waterfox/issues/1506), [Reddit](https://www.reddit.com/r/waterfox/comments/jpqsds/are_there_any_builds_for_arm64/) |
 | [Chromium](#chromium)                     | ✅    | ✅ \* | - |
-| [Google Chrome](#google-chrome)           | ✅    | ❌    | [Community Post](https://askubuntu.com/a/1383791) |
+| [Google Chrome](#google-chrome)           | ✅    | ✅ \* | - |
 | [Ungoogled Chromium](#ungoogled-chromium) | ✅    | ❌    | [Downloads Page](https://ungoogled-software.github.io/ungoogled-chromium-binaries/) |
 | [Microsoft Edge](#microsoft-edge)         | ✅    | ❌    | [Community Post](https://techcommunity.microsoft.com/discussions/edgeinsiderdiscussions/edge-for-linuxarm64/1532272) |
 | [Brave](#brave)                           | ✅    | ✅ \* | - |
