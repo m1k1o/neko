@@ -1,13 +1,27 @@
 ARG BASE_IMAGE=ghcr.io/m1k1o/neko/base:latest
 FROM $BASE_IMAGE
 
-ARG SRC_URL="https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb"
+# Set this to a complete .deb URL to pin a specific Chrome version. By default,
+# download the package matching the image architecture.
+ARG SRC_URL=""
 
 #
 # install google chrome
-RUN set -eux; apt-get update; \
+RUN set -eux; \
+    ARCH="$(dpkg --print-architecture)"; \
+    case "${ARCH}" in \
+        amd64|arm64) ;; \
+        *) echo "Google Chrome is not available for ${ARCH}" >&2; exit 1 ;; \
+    esac; \
+    SRC_URL="${SRC_URL:-https://dl.google.com/linux/direct/google-chrome-stable_current_${ARCH}.deb}"; \
+    apt-get update; \
     wget -O /tmp/google-chrome.deb "${SRC_URL}"; \
     apt-get install -y --no-install-recommends openbox /tmp/google-chrome.deb; \
+    # Install the ARM64 CDM prepared by the runtime where Chrome discovers it.
+    if [ "${ARCH}" = "arm64" ]; then \
+        mkdir -p /opt/google/chrome/WidevineCdm; \
+        find /var/lib/widevine/WidevineCdm/ ! -name "WidevineCdm" -exec cp -RL {} /opt/google/chrome/WidevineCdm/ \; ; \
+    fi; \
     #
     # clean up
     apt-get clean -y; \
