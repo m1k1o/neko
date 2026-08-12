@@ -182,14 +182,13 @@ func (manager *MemberManagerCtx) LoginOAuth(subject, name, avatar, email string,
 	}
 
 	profile := manager.config.OAuth.UserProfile
+	if isOAuthAdministrator(email, isAdmin, manager.config.OAuth.AdminEmails) {
+		profile = manager.config.OAuth.AdminProfile
+	}
 	if name != "" {
 		profile.Name = name
 	}
 	profile.Avatar = avatar
-	if isOAuthAdministrator(email, isAdmin, manager.config.OAuth.AdminEmails) {
-		profile.IsAdmin = true
-		profile.CanSeeInactiveCursors = true
-	}
 
 	if !profile.IsAdmin && manager.sessions.Settings().LockedLogins {
 		return nil, "", types.ErrSessionLoginsLocked

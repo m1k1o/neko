@@ -64,7 +64,13 @@ func TestOAuthLoginSynchronizesProfile(t *testing.T) {
 			AdminEmails:      []string{"admin@example.test"},
 			SuccessRedirect:  "/room",
 			UserProfile: types.MemberProfile{
-				CanLogin: true,
+				CanLogin:           true,
+				CanAccessClipboard: true,
+			},
+			AdminProfile: types.MemberProfile{
+				IsAdmin:               true,
+				CanLogin:              true,
+				CanSeeInactiveCursors: true,
 			},
 		},
 	}
@@ -113,7 +119,7 @@ func TestOAuthLoginSynchronizesProfile(t *testing.T) {
 		t.Fatal("OAuth session was not created")
 	}
 	profile := userSession.Profile()
-	if profile.Name != "Ada Lovelace" || profile.Avatar != "https://example.test/ada.png" || !profile.IsAdmin {
+	if profile.Name != "Ada Lovelace" || profile.Avatar != "https://example.test/ada.png" || !profile.IsAdmin || profile.CanAccessClipboard {
 		t.Fatalf("profile = %#v", profile)
 	}
 	if extraData := members.OAuthExtraData(userSession.ID()); extraData["displayName"] != "Ada Lovelace" || extraData["isAdmin"] != "true" {

@@ -203,10 +203,8 @@ func (s *session) create(username, password string) error {
 
 	s.setSessionData(data)
 
-	// Cookie-based authentication is supported when the browser presents an
-	// existing session above. Password login still requires an API token.
 	if s.token == "" {
-		return fmt.Errorf("token not found - make sure you are not using Cookie auth on the server")
+		return fmt.Errorf("token not found")
 	}
 
 	return nil

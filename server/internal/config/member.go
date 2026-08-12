@@ -1,8 +1,6 @@
 package config
 
 import (
-	"strings"
-
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -43,6 +41,7 @@ type OAuth struct {
 	UsernameField    string
 	AvatarField      string
 	SuccessRedirect  string
+	AdminProfile     types.MemberProfile
 	UserProfile      types.MemberProfile
 }
 
@@ -106,8 +105,8 @@ func (Member) Init(cmd *cobra.Command) error {
 		return err
 	}
 
-	cmd.PersistentFlags().String("member.oauth.admin_email", "", "comma-separated OAuth user-info email addresses granted administrator access")
-	if err := viper.BindPFlag("member.oauth.admin_email", cmd.PersistentFlags().Lookup("member.oauth.admin_email")); err != nil {
+	cmd.PersistentFlags().StringSlice("member.oauth.admin_emails", []string{}, "OAuth user-info email addresses granted administrator access")
+	if err := viper.BindPFlag("member.oauth.admin_emails", cmd.PersistentFlags().Lookup("member.oauth.admin_emails")); err != nil {
 		return err
 	}
 
@@ -176,6 +175,11 @@ func (Member) Init(cmd *cobra.Command) error {
 		return err
 	}
 
+	cmd.PersistentFlags().String("member.oauth.admin_profile", "{}", "OAuth administrator permission profile")
+	if err := viper.BindPFlag("member.oauth.admin_profile", cmd.PersistentFlags().Lookup("member.oauth.admin_profile")); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -215,7 +219,7 @@ func (s *Member) Set() {
 	s.OAuth.Enabled = viper.GetBool("member.oauth.enabled")
 	s.OAuth.AutoRedirect = viper.GetBool("member.oauth.auto_redirect")
 	s.OAuth.Name = viper.GetString("member.oauth.name")
-	s.OAuth.AdminEmails = commaSeparatedValues(viper.GetString("member.oauth.admin_email"))
+	s.OAuth.AdminEmails = viper.GetStringSlice("member.oauth.admin_emails")
 	s.OAuth.ClientID = viper.GetString("member.oauth.client_id")
 	s.OAuth.ClientSecret = viper.GetString("member.oauth.client_secret")
 	s.OAuth.IssuerURL = viper.GetString("member.oauth.issuer_url")
@@ -274,17 +278,12 @@ func (s *Member) Set() {
 	)); err != nil {
 		log.Warn().Err(err).Msgf("unable to parse member multiuser admin profile")
 	}
-}
-
-func commaSeparatedValues(value string) []string {
-	values := strings.Split(value, ",")
-	result := make([]string, 0, len(values))
-	for _, value := range values {
-		if value = strings.TrimSpace(value); value != "" {
-			result = append(result, value)
-		}
+	s.OAuth.AdminProfile = s.Multiuser.AdminProfile
+	if err := viper.UnmarshalKey("member.oauth.admin_profile", &s.OAuth.AdminProfile, viper.DecodeHook(
+		utils.JsonStringAutoDecode(s.OAuth.AdminProfile),
+	)); err != nil {
+		log.Warn().Err(err).Msgf("unable to parse member OAuth admin profile")
 	}
-	return result
 }
 
 func (s *Member) SetV2() {

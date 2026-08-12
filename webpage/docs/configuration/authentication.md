@@ -191,7 +191,7 @@ member:
     # When true, visiting the Neko root page immediately starts OAuth login.
     auto_redirect: true
     name: "Example SSO"
-    admin_email: "platform-admin@example.com,security@example.com"
+    admin_emails: ["platform-admin@example.com", "security@example.com"]
     client_id: "<client-id>"
     client_secret: "<client-secret>"
     issuer_url: "https://id.example.com"
@@ -211,11 +211,21 @@ member:
       can_access_clipboard: true
       sends_inactive_cursor: true
       can_see_inactive_cursors: false
+    admin_profile:
+      is_admin: true
+      can_login: true
+      can_connect: true
+      can_watch: true
+      can_host: true
+      can_share_media: true
+      can_access_clipboard: true
+      sends_inactive_cursor: true
+      can_see_inactive_cursors: true
 ```
 
 The sign-in endpoint is `GET /api/oauth/login`; the callback endpoint is `GET /api/oauth/callback`. OAuth login requires `session.cookie.enabled: true`, which is the default. Set `member.provider: oauth` to make OAuth the only member provider.
 
-`admin_email` is a comma-separated list matched against the standard `email` field, case-insensitively. An OAuth user is an administrator when either their email matches that list or their user-info/ID-token claims include `isAdmin: true`. The configured name and avatar fields are read from userinfo first, then fall back to the ID token when userinfo omits them. Avatar URLs are rendered by clients that support member avatars.
+`admin_emails` is a list matched against the standard `email` field, case-insensitively. An OAuth user is an administrator when either their email matches that list or their user-info/ID-token claims include `isAdmin: true`; their permissions then use `admin_profile`. The configured name and avatar fields are read from userinfo first, then fall back to the ID token when userinfo omits them. Avatar URLs are rendered by clients that support member avatars.
 
 For OAuth sessions, `GET /api/whoami` includes `extra_data`: the merged userinfo and ID-token claims, with userinfo values taking precedence. It is returned only to the authenticated session owner and is intended for profile-field troubleshooting. Do not place secrets in provider profile claims.
 
