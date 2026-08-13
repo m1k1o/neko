@@ -24,3 +24,11 @@ type Config struct {
 	AdminProfile     types.MemberProfile
 	UserProfile      types.MemberProfile
 }
+
+func (c *Config) IsConfigured() bool {
+	return c.Enabled && c.ClientID != "" &&
+		c.ClientSecret != "" &&
+		c.AuthorizationURL != "" &&
+		c.TokenURL != "" &&
+		c.UserInfoURL != ""
+}
