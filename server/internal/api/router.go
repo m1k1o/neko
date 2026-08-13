@@ -43,7 +43,12 @@ func New(
 		desktop:  desktop,
 		capture:  capture,
 		routers:  make(map[string]func(types.Router)),
-		oauth:    newOAuthHandler(oauth.NewService(memberConfig.OAuth, sessions), pathPrefix, serverConfig != nil && serverConfig.Proxy, memberConfig.Provider == "oauth"),
+		oauth: newOAuthHandler(
+			oauth.NewService(memberConfig.OAuth, sessions),
+			pathPrefix,
+			serverConfig != nil && serverConfig.Proxy,
+			memberConfig.Provider == "oauth",
+		),
 	}
 }
 
