@@ -11,6 +11,7 @@ import (
 
 	"github.com/m1k1o/neko/server/internal/config"
 	"github.com/m1k1o/neko/server/internal/member"
+	"github.com/m1k1o/neko/server/internal/member/oauth"
 	"github.com/m1k1o/neko/server/internal/session"
 	"github.com/m1k1o/neko/server/pkg/types"
 )
@@ -49,7 +50,7 @@ func TestOAuthLoginSynchronizesProfile(t *testing.T) {
 
 	memberConfig := &config.Member{
 		Provider: "oauth",
-		OAuth: config.OAuth{
+		OAuth: oauth.Config{
 			Enabled:          true,
 			ClientID:         "client-id",
 			ClientSecret:     "client-secret",
@@ -122,7 +123,7 @@ func TestOAuthLoginSynchronizesProfile(t *testing.T) {
 	if profile.Name != "Ada Lovelace" || profile.Avatar != "https://example.test/ada.png" || !profile.IsAdmin || profile.CanAccessClipboard {
 		t.Fatalf("profile = %#v", profile)
 	}
-	if extraData := members.OAuthExtraData(userSession.ID()); extraData["displayName"] != "Ada Lovelace" || extraData["isAdmin"] != "true" {
+	if extraData := api.oauth.service.ExtraData(userSession.ID()); extraData["displayName"] != "Ada Lovelace" || extraData["isAdmin"] != "true" {
 		t.Fatalf("extra data = %#v", extraData)
 	}
 }
@@ -166,7 +167,7 @@ func TestOAuthIssuerDiscoveryTakesPrecedence(t *testing.T) {
 	issuerURL = issuer.URL
 	memberConfig := &config.Member{
 		Provider: "oauth",
-		OAuth: config.OAuth{
+		OAuth: oauth.Config{
 			Enabled:          true,
 			ClientID:         "client-id",
 			ClientSecret:     "client-secret",
@@ -224,7 +225,7 @@ func TestOAuthIssuerDiscoveryTakesPrecedence(t *testing.T) {
 func TestOAuthConfigUsesProviderAndName(t *testing.T) {
 	memberConfig := &config.Member{
 		Provider: "oauth",
-		OAuth: config.OAuth{
+		OAuth: oauth.Config{
 			Enabled: true,
 			Name:    "Team SSO",
 		},

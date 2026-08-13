@@ -10,6 +10,7 @@ import (
 	"github.com/m1k1o/neko/server/internal/api"
 	"github.com/m1k1o/neko/server/internal/config"
 	"github.com/m1k1o/neko/server/internal/member"
+	"github.com/m1k1o/neko/server/internal/member/oauth"
 	"github.com/m1k1o/neko/server/internal/session"
 	"github.com/m1k1o/neko/server/pkg/types"
 )
@@ -35,7 +36,7 @@ func TestOAuthAutoRedirectSkipsAuthenticatedSessions(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	memberConfig := &config.Member{Provider: "oauth", OAuth: config.OAuth{Enabled: true, AutoRedirect: true}}
+	memberConfig := &config.Member{Provider: "oauth", OAuth: oauth.Config{Enabled: true, AutoRedirect: true}}
 	sessionManager := session.New(&config.Session{
 		Cookie: config.SessionCookie{Enabled: true, Name: "NEKO_SESSION", Expiration: time.Hour},
 	})

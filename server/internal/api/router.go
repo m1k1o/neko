@@ -9,6 +9,7 @@ import (
 	"github.com/m1k1o/neko/server/internal/api/room"
 	"github.com/m1k1o/neko/server/internal/api/sessions"
 	"github.com/m1k1o/neko/server/internal/config"
+	"github.com/m1k1o/neko/server/internal/member/oauth"
 	"github.com/m1k1o/neko/server/pkg/auth"
 	"github.com/m1k1o/neko/server/pkg/types"
 	"github.com/m1k1o/neko/server/pkg/utils"
@@ -42,7 +43,7 @@ func New(
 		desktop:  desktop,
 		capture:  capture,
 		routers:  make(map[string]func(types.Router)),
-		oauth:    newOAuthHandler(memberConfig.OAuth, pathPrefix, serverConfig != nil && serverConfig.Proxy, memberConfig.Provider == "oauth"),
+		oauth:    newOAuthHandler(oauth.NewService(memberConfig.OAuth, sessions), pathPrefix, serverConfig != nil && serverConfig.Proxy, memberConfig.Provider == "oauth"),
 	}
 }
 
