@@ -4,14 +4,56 @@
       <p>{{ cwd }}</p>
       <i class="fas fa-rotate-right refresh" @click="refresh" />
     </div>
+    <div class="files-actions" v-if="files.filter((f) => f.type !== 'dir').length > 2">
+      <div class="left-controls">
+        <span v-if="!selectionMode" class="action-btn select-toggle" @click="toggleSelectionMode">
+          {{ tWithFallback('files.select', 'Select') }}
+        </span>
+        <span v-else class="action-btn select-all" @click="toggleSelectAll">
+          {{
+            isAllSelected
+              ? tWithFallback('files.unselect_all', 'Unselect All')
+              : tWithFallback('files.select_all', 'Select All')
+          }}
+        </span>
+      </div>
+      <div v-if="selectionMode" class="right-controls">
+        <span class="action-btn delete-selected" v-if="selectedFiles.length > 0" @click="deleteSelectedFiles">
+          <i class="fas fa-trash"></i> {{ tWithFallback('files.delete', 'Delete') }} ({{ selectedFiles.length }})
+        </span>
+        <span class="action-btn select-toggle cancel-btn" @click="toggleSelectionMode">
+          {{ tWithFallback('files.cancel', 'Cancel') }}
+        </span>
+      </div>
+    </div>
     <div class="files-list">
-      <div v-for="item in files" :key="item.name" class="files-list-item">
+      <div
+        v-for="item in files"
+        :key="item.name"
+        class="files-list-item"
+        :class="{
+          'selectable-item': selectionMode && item.type !== 'dir',
+          'selected-item': selectionMode && isSelected(item.name),
+        }"
+        @click="onItemClick(item)"
+      >
+        <input
+          v-if="selectionMode && item.type !== 'dir'"
+          type="checkbox"
+          class="file-checkbox"
+          :checked="isSelected(item.name)"
+          @change.stop="toggleSelectFile(item.name)"
+        />
         <i :class="fileIcon(item)" />
         <p class="file-name" :title="item.name">{{ item.name }}</p>
         <p class="file-size">{{ fileSize(item.size) }}</p>
-        <i v-if="item.type !== 'dir' && canDownload" class="fas fa-download download" @click="download(item)" />
         <i
-          v-if="item.type !== 'dir' && canDelete"
+          v-if="!selectionMode && item.type !== 'dir' && canDownload"
+          class="fas fa-download download"
+          @click="download(item)"
+        />
+        <i
+          v-if="!selectionMode && item.type !== 'dir' && canDelete"
           class="fas fa-trash delete"
           :title="$t('files.delete')"
           @click="deleteFile(item)"
@@ -111,6 +153,48 @@
       border-radius: 5px;
     }
 
+    .files-actions {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+      margin: 10px 10px 0px 10px;
+      padding: 0.5em;
+      background-color: rgba($color: #fff, $alpha: 0.05);
+      border-radius: 5px;
+      font-size: 0.9em;
+
+      .left-controls {
+        display: flex;
+        align-items: center;
+      }
+
+      .right-controls {
+        display: flex;
+        gap: 1.2em;
+        align-items: center;
+      }
+
+      .action-btn {
+        cursor: pointer;
+        font-weight: 600;
+        color: rgba($color: #fff, $alpha: 0.6);
+        transition: color 0.2s ease;
+
+        &:hover {
+          color: #fff;
+        }
+
+        &.delete-selected {
+          color: $style-error;
+
+          &:hover {
+            color: lighten($style-error, 10%);
+          }
+        }
+      }
+    }
+
     .files-list {
       margin: 10px 10px 10px 10px;
       background-color: rgba($color: #fff, $alpha: 0.05);
@@ -144,6 +228,25 @@
       display: flex;
       flex-direction: row;
       line-height: 1.2;
+    }
+
+    .file-checkbox {
+      margin-right: 0.8em;
+      cursor: pointer;
+      accent-color: $style-primary;
+    }
+
+    .selectable-item {
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+
+      &:hover {
+        background-color: rgba($color: #fff, $alpha: 0.08);
+      }
+
+      &.selected-item {
+        background-color: rgba($color: #fff, $alpha: 0.12);
+      }
     }
 
     .transfers-list-header {
@@ -292,6 +395,99 @@
   })
   export default class extends Vue {
     public uploadAreaDrag: boolean = false
+    public selectionMode: boolean = false
+    public selectedFiles: string[] = []
+
+    toggleSelectionMode() {
+      this.selectionMode = !this.selectionMode
+      if (!this.selectionMode) {
+        this.selectedFiles = []
+      }
+    }
+
+    isSelected(name: string) {
+      return this.selectedFiles.includes(name)
+    }
+
+    toggleSelectFile(name: string) {
+      const index = this.selectedFiles.indexOf(name)
+      if (index > -1) {
+        this.selectedFiles.splice(index, 1)
+      } else {
+        this.selectedFiles.push(name)
+      }
+    }
+
+    onItemClick(item: FileListItem) {
+      if (this.selectionMode && item.type !== 'dir') {
+        this.toggleSelectFile(item.name)
+      }
+    }
+
+    get isAllSelected() {
+      const nonDirFiles = this.files.filter((f) => f.type !== 'dir')
+      if (nonDirFiles.length === 0) return false
+      return nonDirFiles.every((f) => this.isSelected(f.name))
+    }
+
+    toggleSelectAll() {
+      const nonDirFiles = this.files.filter((f) => f.type !== 'dir')
+      if (this.isAllSelected) {
+        this.selectedFiles = []
+      } else {
+        this.selectedFiles = nonDirFiles.map((f) => f.name)
+      }
+    }
+
+    tWithFallback(key: string, fallback: string, formatData?: any) {
+      const translated = this.$t(key, formatData)
+      if (translated === key) {
+        if (formatData) {
+          let str = fallback
+          for (const k of Object.keys(formatData)) {
+            str = str.replace(`{${k}}`, formatData[k])
+          }
+          return str
+        }
+        return fallback
+      }
+      return translated as string
+    }
+
+    async deleteSelectedFiles() {
+      if (this.selectedFiles.length === 0) return
+
+      const count = this.selectedFiles.length
+      const { isConfirmed } = await this.$swal({
+        title: this.tWithFallback('files.delete_selected_title', 'Delete selected files?'),
+        text: this.tWithFallback(
+          'files.delete_selected_confirm',
+          'Do you really want to remove the {count} selected files?',
+          { count },
+        ),
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: this.$t('context.confirm.button_yes') as string,
+        cancelButtonText: this.$t('context.confirm.button_cancel') as string,
+      })
+      if (!isConfirmed) {
+        return
+      }
+
+      const filesToRemove = [...this.selectedFiles]
+      this.selectionMode = false
+      this.selectedFiles = []
+
+      for (const name of filesToRemove) {
+        const url = '/file?pwd=' + encodeURIComponent(this.$accessor.password) + '&filename=' + encodeURIComponent(name)
+        try {
+          await this.$http.delete(url)
+        } catch (error: any) {
+          this.$log.error(new Error(`Failed to delete ${name}: ${error.message || error}`))
+        }
+      }
+      this.$accessor.files.refresh()
+    }
 
     get canDownload() {
       return this.$accessor.user.admin || this.$accessor.files.userDownload
