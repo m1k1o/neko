@@ -511,7 +511,7 @@
       "enabled"
     ],
     "type": "boolean",
-    "defaultValue": "true",
+    "defaultValue": "false",
     "description": "whether cookies authentication should be enabled"
   },
   {
@@ -577,7 +577,7 @@
       "heartbeat_interval"
     ],
     "type": "int",
-    "defaultValue": "120",
+    "defaultValue": "10",
     "description": "interval in seconds for sending heartbeat messages"
   },
   {
@@ -586,7 +586,7 @@
       "implicit_hosting"
     ],
     "type": "boolean",
-    "defaultValue": "true",
+    "defaultValue": "false",
     "description": "allow implicit control switching"
   },
   {

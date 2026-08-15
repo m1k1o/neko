@@ -52,15 +52,15 @@
       --session.api_token string                      API token for interacting with external services
       --session.control_protection                    users can gain control only if at least one admin is in the room
       --session.cookie.domain string                  domain of the cookie
-      --session.cookie.enabled                        whether cookies authentication should be enabled (default true)
+      --session.cookie.enabled                        whether cookies authentication should be enabled
       --session.cookie.expiration duration            expiration of the cookie (default 24h0m0s)
       --session.cookie.http_only                      use http only cookies (default true)
       --session.cookie.name string                    name of the cookie that holds token (default "NEKO_SESSION")
       --session.cookie.path string                    path of the cookie
       --session.cookie.secure                         use secure cookies (default true)
       --session.file string                           if sessions should be stored in a file, otherwise they will be stored only in memory
-      --session.heartbeat_interval int                interval in seconds for sending heartbeat messages (default 120)
-      --session.implicit_hosting                      allow implicit control switching (default true)
+      --session.heartbeat_interval int                interval in seconds for sending heartbeat messages (default 10)
+      --session.implicit_hosting                      allow implicit control switching
       --session.inactive_cursors                      show inactive cursors on the screen
       --session.locked_controls                       whether controls should be locked for users initially
       --session.locked_logins                         whether logins should be locked for users initially
