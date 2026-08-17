@@ -19,10 +19,11 @@ type Stats struct {
 }
 
 type Member struct {
-	ID    string `json:"id"`
-	Name  string `json:"displayname"`
-	Admin bool   `json:"admin"`
-	Muted bool   `json:"muted"`
+	ID     string `json:"id"`
+	Name   string `json:"displayname"`
+	Avatar string `json:"avatar,omitempty"`
+	Admin  bool   `json:"admin"`
+	Muted  bool   `json:"muted"`
 }
 
 type FileListItem struct {
