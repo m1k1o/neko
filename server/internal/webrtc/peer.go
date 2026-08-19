@@ -28,8 +28,8 @@ type WebRTCPeerCtx struct {
 	estimator     cc.BandwidthEstimator
 	estimateTrend *utils.TrendDetector
 	// stream selectors
-	video types.StreamSelectorManager
-	audio types.StreamSinkManager
+	video types.EncodedStreamSelector
+	audio types.EncodedStream
 	// tracks & channels
 	audioTrack  *Track
 	videoTrack  *Track

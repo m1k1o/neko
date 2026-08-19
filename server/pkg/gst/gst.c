@@ -96,6 +96,8 @@ static GstFlowReturn gstreamer_send_new_sample_handler(GstElement *object, gpoin
     if (buffer) {
       gst_buffer_extract_dup(buffer, 0, gst_buffer_get_size(buffer), &copy, &copy_size);
       goHandlePipelineBuffer(ctx->pipelineId, copy, copy_size,
+        GST_BUFFER_PTS(buffer),
+        GST_BUFFER_DTS(buffer),
         GST_BUFFER_DURATION(buffer),
         GST_BUFFER_FLAG_IS_SET(buffer, GST_BUFFER_FLAG_DELTA_UNIT)
       );

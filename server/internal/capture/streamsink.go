@@ -2,7 +2,6 @@ package capture
 
 import (
 	"errors"
-	"reflect"
 	"sync"
 	"time"
 
@@ -17,7 +16,15 @@ import (
 	"github.com/m1k1o/neko/server/pkg/types/codec"
 )
 
-var moveSinkListenerMu = sync.Mutex{}
+var moveSinkSubscriptionMu sync.Mutex
+
+type sinkPipeline interface {
+	Sample() chan types.Sample
+	AttachAppsink(string)
+	Play()
+	Destroy()
+	EmitVideoKeyframe() bool
+}
 
 type StreamSinkManagerCtx struct {
 	id string
@@ -32,13 +39,14 @@ type StreamSinkManagerCtx struct {
 	mu     sync.Mutex
 	wg     sync.WaitGroup
 
-	codec      codec.RTPCodec
-	pipeline   gst.Pipeline
-	pipelineMu sync.Mutex
-	pipelineFn func() (string, error)
+	codec           codec.RTPCodec
+	pipeline        sinkPipeline
+	pipelineMu      sync.Mutex
+	pipelineFn      func() (string, error)
+	pipelineFactory func(string) (sinkPipeline, error)
 
-	listeners   map[uintptr]types.SampleListener
-	listenersKf map[uintptr]types.SampleListener // keyframe lobby
+	listeners   map[*streamSubscription]types.SampleConsumer
+	listenersKf map[*streamSubscription]types.SampleConsumer // keyframe lobby
 	listenersMu sync.Mutex
 
 	// metrics
@@ -66,9 +74,12 @@ func streamSinkNew(codec codec.RTPCodec, pipelineFn func() (string, error), id s
 		logger:     logger,
 		codec:      codec,
 		pipelineFn: pipelineFn,
+		pipelineFactory: func(src string) (sinkPipeline, error) {
+			return gst.CreatePipeline(src)
+		},
 
-		listeners:   map[uintptr]types.SampleListener{},
-		listenersKf: map[uintptr]types.SampleListener{},
+		listeners:   map[*streamSubscription]types.SampleConsumer{},
+		listenersKf: map[*streamSubscription]types.SampleConsumer{},
 
 		// metrics
 		currentListeners: promauto.NewGauge(prometheus.GaugeOpts{
@@ -134,7 +145,7 @@ func (manager *StreamSinkManagerCtx) shutdown() {
 	}
 	manager.listenersMu.Unlock()
 
-	manager.DestroyPipeline()
+	manager.destroyPipeline()
 	manager.wg.Wait()
 }
 
@@ -150,9 +161,75 @@ func (manager *StreamSinkManagerCtx) Codec() codec.RTPCodec {
 	return manager.codec
 }
 
+type streamSubscription struct {
+	mu       sync.Mutex
+	stream   *StreamSinkManagerCtx
+	consumer types.SampleConsumer
+	closed   bool
+}
+
+func (subscription *streamSubscription) Stream() types.EncodedStream {
+	subscription.mu.Lock()
+	defer subscription.mu.Unlock()
+
+	if subscription.closed {
+		return nil
+	}
+	return subscription.stream
+}
+
+func (subscription *streamSubscription) Switch(stream types.EncodedStream) error {
+	subscription.mu.Lock()
+	defer subscription.mu.Unlock()
+
+	if subscription.closed {
+		return errors.New("stream subscription is closed")
+	}
+
+	target, ok := stream.(*StreamSinkManagerCtx)
+	if !ok || target == nil {
+		return errors.New("target stream is incompatible with this subscription")
+	}
+	if target == subscription.stream {
+		return nil
+	}
+
+	if err := subscription.stream.moveSubscriptionTo(subscription, target); err != nil {
+		return err
+	}
+	subscription.stream = target
+	return nil
+}
+
+func (subscription *streamSubscription) Close() error {
+	subscription.mu.Lock()
+	defer subscription.mu.Unlock()
+
+	if subscription.closed {
+		return nil
+	}
+
+	subscription.stream.removeSubscription(subscription)
+	subscription.closed = true
+	subscription.stream = nil
+	return nil
+}
+
+func (manager *StreamSinkManagerCtx) Subscribe(consumer types.SampleConsumer) (types.StreamSubscription, error) {
+	if consumer == nil {
+		return nil, errors.New("sample consumer cannot be nil")
+	}
+
+	subscription := &streamSubscription{stream: manager, consumer: consumer}
+	if err := manager.addSubscription(subscription); err != nil {
+		return nil, err
+	}
+	return subscription, nil
+}
+
 func (manager *StreamSinkManagerCtx) start() error {
 	if len(manager.listeners)+len(manager.listenersKf) == 0 {
-		err := manager.CreatePipeline()
+		err := manager.createPipeline()
 		if err != nil && !errors.Is(err, types.ErrCapturePipelineAlreadyExists) {
 			return err
 		}
@@ -165,13 +242,12 @@ func (manager *StreamSinkManagerCtx) start() error {
 
 func (manager *StreamSinkManagerCtx) stop() {
 	if len(manager.listeners)+len(manager.listenersKf) == 0 {
-		manager.DestroyPipeline()
+		manager.destroyPipeline()
 		manager.logger.Info().Msgf("last listener, stopping")
 	}
 }
 
-func (manager *StreamSinkManagerCtx) addListener(listener types.SampleListener) {
-	ptr := reflect.ValueOf(listener).Pointer()
+func (manager *StreamSinkManagerCtx) addSubscriptionToMaps(subscription *streamSubscription) {
 	emitKeyframe := false
 
 	manager.listenersMu.Lock()
@@ -179,15 +255,15 @@ func (manager *StreamSinkManagerCtx) addListener(listener types.SampleListener) 
 		// if this is the first listener, we need to emit a keyframe
 		emitKeyframe = len(manager.listenersKf) == 0
 		// if we're waiting for a keyframe, add it to the keyframe lobby
-		manager.listenersKf[ptr] = listener
+		manager.listenersKf[subscription] = subscription.consumer
 	} else {
 		// otherwise, add it as a regular listener
-		manager.listeners[ptr] = listener
+		manager.listeners[subscription] = subscription.consumer
 	}
 	manager.listenersMu.Unlock()
 
-	manager.logger.Debug().Interface("ptr", ptr).Msgf("adding listener")
-	manager.currentListeners.Set(float64(manager.ListenersCount()))
+	manager.logger.Debug().Interface("subscription", subscription).Msg("adding subscription")
+	manager.currentListeners.Set(float64(manager.subscriptionsCount()))
 
 	// if we will be waiting for a keyframe, emit one now
 	if manager.pipeline != nil && emitKeyframe {
@@ -195,25 +271,19 @@ func (manager *StreamSinkManagerCtx) addListener(listener types.SampleListener) 
 	}
 }
 
-func (manager *StreamSinkManagerCtx) removeListener(listener types.SampleListener) {
-	ptr := reflect.ValueOf(listener).Pointer()
-
+func (manager *StreamSinkManagerCtx) removeSubscriptionFromMaps(subscription *streamSubscription) {
 	manager.listenersMu.Lock()
-	delete(manager.listeners, ptr)
-	delete(manager.listenersKf, ptr) //	if it's a keyframe listener, remove it too
+	delete(manager.listeners, subscription)
+	delete(manager.listenersKf, subscription)
 	manager.listenersMu.Unlock()
 
-	manager.logger.Debug().Interface("ptr", ptr).Msgf("removing listener")
-	manager.currentListeners.Set(float64(manager.ListenersCount()))
+	manager.logger.Debug().Interface("subscription", subscription).Msg("removing subscription")
+	manager.currentListeners.Set(float64(manager.subscriptionsCount()))
 }
 
-func (manager *StreamSinkManagerCtx) AddListener(listener types.SampleListener) error {
+func (manager *StreamSinkManagerCtx) addSubscription(subscription *streamSubscription) error {
 	manager.mu.Lock()
 	defer manager.mu.Unlock()
-
-	if listener == nil {
-		return errors.New("listener cannot be nil")
-	}
 
 	// start if stopped
 	if err := manager.start(); err != nil {
@@ -221,46 +291,30 @@ func (manager *StreamSinkManagerCtx) AddListener(listener types.SampleListener) 
 	}
 
 	// add listener
-	manager.addListener(listener)
+	manager.addSubscriptionToMaps(subscription)
 
 	return nil
 }
 
-func (manager *StreamSinkManagerCtx) RemoveListener(listener types.SampleListener) error {
+func (manager *StreamSinkManagerCtx) removeSubscription(subscription *streamSubscription) {
 	manager.mu.Lock()
 	defer manager.mu.Unlock()
 
-	if listener == nil {
-		return errors.New("listener cannot be nil")
-	}
-
-	// remove listener
-	manager.removeListener(listener)
+	manager.removeSubscriptionFromMaps(subscription)
 
 	// stop if started
 	manager.stop()
 
-	return nil
 }
 
-// moving listeners between streams ensures, that target pipeline is running
-// before listener is added, and stops source pipeline if there are 0 listeners
-func (manager *StreamSinkManagerCtx) MoveListenerTo(listener types.SampleListener, stream types.StreamSinkManager) error {
-	if listener == nil {
-		return errors.New("listener cannot be nil")
-	}
-
-	targetStream, ok := stream.(*StreamSinkManagerCtx)
-	if !ok {
-		return errors.New("target stream manager does not support moving listeners")
-	}
-
+// moveSubscriptionTo starts the target before moving delivery and stopping the source.
+func (manager *StreamSinkManagerCtx) moveSubscriptionTo(subscription *streamSubscription, targetStream *StreamSinkManagerCtx) error {
 	// we need to acquire both mutextes, from source stream and from target stream
 	// in order to do that safely (without possibility of deadlock) we need third
 	// global mutex, that ensures atomic locking
 
 	// lock global mutex
-	moveSinkListenerMu.Lock()
+	moveSinkSubscriptionMu.Lock()
 
 	// lock source stream
 	manager.mu.Lock()
@@ -271,7 +325,7 @@ func (manager *StreamSinkManagerCtx) MoveListenerTo(listener types.SampleListene
 	defer targetStream.mu.Unlock()
 
 	// unlock global mutex
-	moveSinkListenerMu.Unlock()
+	moveSinkSubscriptionMu.Unlock()
 
 	// start if stopped
 	if err := targetStream.start(); err != nil {
@@ -279,8 +333,8 @@ func (manager *StreamSinkManagerCtx) MoveListenerTo(listener types.SampleListene
 	}
 
 	// swap listeners
-	manager.removeListener(listener)
-	targetStream.addListener(listener)
+	manager.removeSubscriptionFromMaps(subscription)
+	targetStream.addSubscriptionToMaps(subscription)
 
 	// stop if started
 	manager.stop()
@@ -288,18 +342,18 @@ func (manager *StreamSinkManagerCtx) MoveListenerTo(listener types.SampleListene
 	return nil
 }
 
-func (manager *StreamSinkManagerCtx) ListenersCount() int {
+func (manager *StreamSinkManagerCtx) subscriptionsCount() int {
 	manager.listenersMu.Lock()
 	defer manager.listenersMu.Unlock()
 
 	return len(manager.listeners) + len(manager.listenersKf)
 }
 
-func (manager *StreamSinkManagerCtx) Started() bool {
-	return manager.ListenersCount() > 0
+func (manager *StreamSinkManagerCtx) started() bool {
+	return manager.subscriptionsCount() > 0
 }
 
-func (manager *StreamSinkManagerCtx) CreatePipeline() error {
+func (manager *StreamSinkManagerCtx) createPipeline() error {
 	manager.pipelineMu.Lock()
 	defer manager.pipelineMu.Unlock()
 
@@ -317,7 +371,7 @@ func (manager *StreamSinkManagerCtx) CreatePipeline() error {
 		Str("src", pipelineStr).
 		Msgf("creating pipeline")
 
-	manager.pipeline, err = gst.CreatePipeline(pipelineStr)
+	manager.pipeline, err = manager.pipelineFactory(pipelineStr)
 	if err != nil {
 		return err
 	}
@@ -382,11 +436,11 @@ func (manager *StreamSinkManagerCtx) onSample(sample types.Sample) {
 		for k, v := range manager.listenersKf {
 			manager.listeners[k] = v
 		}
-		manager.listenersKf = make(map[uintptr]types.SampleListener)
+		manager.listenersKf = make(map[*streamSubscription]types.SampleConsumer)
 	}
 
 	// copy listeners before releasing lock to avoid holding it during dispatch
-	listeners := make([]types.SampleListener, 0, len(manager.listeners))
+	listeners := make([]types.SampleConsumer, 0, len(manager.listeners))
 	for _, l := range manager.listeners {
 		listeners = append(listeners, l)
 	}
@@ -397,7 +451,7 @@ func (manager *StreamSinkManagerCtx) onSample(sample types.Sample) {
 	}
 }
 
-func (manager *StreamSinkManagerCtx) DestroyPipeline() {
+func (manager *StreamSinkManagerCtx) destroyPipeline() {
 	manager.pipelineMu.Lock()
 	defer manager.pipelineMu.Unlock()
 
