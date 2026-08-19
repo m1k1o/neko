@@ -3,6 +3,7 @@ package capture
 import (
 	"errors"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -45,9 +46,10 @@ type StreamSinkManagerCtx struct {
 	pipelineFn      func() (string, error)
 	pipelineFactory func(string) (sinkPipeline, error)
 
-	listeners   map[*streamSubscription]types.SampleConsumer
-	listenersKf map[*streamSubscription]types.SampleConsumer // keyframe lobby
-	listenersMu sync.Mutex
+	listeners         map[*streamSubscription]types.SampleConsumer
+	listenersKf       map[*streamSubscription]types.SampleConsumer // keyframe lobby
+	listenersMu       sync.Mutex
+	listenersSnapshot atomic.Value
 
 	// metrics
 	currentListeners prometheus.Gauge
@@ -129,6 +131,7 @@ func streamSinkNew(codec codec.RTPCodec, pipelineFn func() (string, error), id s
 			},
 		}),
 	}
+	manager.listenersSnapshot.Store([]types.SampleConsumer(nil))
 
 	return manager
 }
@@ -143,6 +146,7 @@ func (manager *StreamSinkManagerCtx) shutdown() {
 	for key := range manager.listenersKf {
 		delete(manager.listenersKf, key)
 	}
+	manager.updateListenersSnapshotLocked()
 	manager.listenersMu.Unlock()
 
 	manager.destroyPipeline()
@@ -259,6 +263,7 @@ func (manager *StreamSinkManagerCtx) addSubscriptionToMaps(subscription *streamS
 	} else {
 		// otherwise, add it as a regular listener
 		manager.listeners[subscription] = subscription.consumer
+		manager.updateListenersSnapshotLocked()
 	}
 	manager.listenersMu.Unlock()
 
@@ -275,6 +280,7 @@ func (manager *StreamSinkManagerCtx) removeSubscriptionFromMaps(subscription *st
 	manager.listenersMu.Lock()
 	delete(manager.listeners, subscription)
 	delete(manager.listenersKf, subscription)
+	manager.updateListenersSnapshotLocked()
 	manager.listenersMu.Unlock()
 
 	manager.logger.Debug().Interface("subscription", subscription).Msg("removing subscription")
@@ -422,33 +428,38 @@ func (manager *StreamSinkManagerCtx) saveSampleBitrate(timestamp time.Time, delt
 }
 
 func (manager *StreamSinkManagerCtx) onSample(sample types.Sample) {
-	manager.listenersMu.Lock()
-
 	// save to metrics
 	length := float64(sample.Length)
 	manager.totalBytes.Add(length)
 	manager.saveSampleBitrate(sample.Timestamp, length)
 
 	// if is not delta unit -> it can be decoded independently -> it is a keyframe
-	if manager.waitForKf && !sample.DeltaUnit && len(manager.listenersKf) > 0 {
+	if manager.waitForKf && !sample.DeltaUnit {
+		manager.listenersMu.Lock()
 		// if current sample is a keyframe, move listeners from
 		// keyframe lobby to actual listeners map and clear lobby
 		for k, v := range manager.listenersKf {
 			manager.listeners[k] = v
 		}
-		manager.listenersKf = make(map[*streamSubscription]types.SampleConsumer)
+		if len(manager.listenersKf) > 0 {
+			manager.listenersKf = make(map[*streamSubscription]types.SampleConsumer)
+			manager.updateListenersSnapshotLocked()
+		}
+		manager.listenersMu.Unlock()
 	}
 
-	// copy listeners before releasing lock to avoid holding it during dispatch
-	listeners := make([]types.SampleConsumer, 0, len(manager.listeners))
-	for _, l := range manager.listeners {
-		listeners = append(listeners, l)
-	}
-	manager.listenersMu.Unlock()
-
+	listeners := manager.listenersSnapshot.Load().([]types.SampleConsumer)
 	for _, l := range listeners {
 		l.WriteSample(sample)
 	}
+}
+
+func (manager *StreamSinkManagerCtx) updateListenersSnapshotLocked() {
+	listeners := make([]types.SampleConsumer, 0, len(manager.listeners))
+	for _, listener := range manager.listeners {
+		listeners = append(listeners, listener)
+	}
+	manager.listenersSnapshot.Store(listeners)
 }
 
 func (manager *StreamSinkManagerCtx) destroyPipeline() {

@@ -7,6 +7,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/m1k1o/neko/server/pkg/types"
 	"github.com/m1k1o/neko/server/pkg/types/codec"
@@ -45,6 +46,10 @@ type sampleRecorder struct {
 	mu      sync.Mutex
 	samples []types.Sample
 }
+
+type sampleDiscarder struct{}
+
+func (sampleDiscarder) WriteSample(types.Sample) {}
 
 func (recorder *sampleRecorder) WriteSample(sample types.Sample) {
 	recorder.mu.Lock()
@@ -174,6 +179,21 @@ func TestAudioSubscriptionDoesNotWaitForKeyframe(t *testing.T) {
 	stream.onSample(types.Sample{DeltaUnit: true})
 	if recorder.count() != 1 {
 		t.Fatalf("audio consumer received %d samples, want 1", recorder.count())
+	}
+}
+
+func TestSampleDispatchDoesNotAllocate(t *testing.T) {
+	stream := newTestStream(t, codec.Opus(), successfulPipelineFactory(new(int), new(int)))
+	subscription, err := stream.Subscribe(sampleDiscarder{})
+	if err != nil {
+		t.Fatalf("Subscribe() error = %v", err)
+	}
+	defer subscription.Close()
+
+	sample := types.Sample{Timestamp: time.Unix(0, 0)}
+	stream.onSample(sample)
+	if allocations := testing.AllocsPerRun(100, func() { stream.onSample(sample) }); allocations != 0 {
+		t.Fatalf("allocations per dispatch = %f", allocations)
 	}
 }
 

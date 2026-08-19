@@ -214,8 +214,6 @@ func CheckElement(element string) error {
 
 //export goHandlePipelineBuffer
 func goHandlePipelineBuffer(pipelineID C.int, buf C.gpointer, bufLen C.int, pts C.guint64, dts C.guint64, duration C.guint64, deltaUnit C.gboolean) {
-	defer C.g_free(buf)
-
 	pipelinesLock.Lock()
 	pipeline, ok := pipelines[int(pipelineID)]
 	pipelinesLock.Unlock()
