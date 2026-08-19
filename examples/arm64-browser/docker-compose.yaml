@@ -1,0 +1,33 @@
+# Neko - ARM64 Browser Example
+#
+# Runs Firefox on a generic ARM64 host (e.g. Apple M1/M2 under virtualization,
+# AWS Graviton, Oracle Cloud ARM free tier). The same multi-arch image used
+# on amd64 works here - no special image tag is required.
+#
+# See supported architectures and per-app availability:
+# https://neko.m1k1o.net/docs/v3/installation/docker-images#availability
+services:
+  neko:
+    image: "ghcr.io/m1k1o/neko/firefox:latest"
+    restart: "unless-stopped"
+    shm_size: "2gb"
+    ports:
+      - "8080:8080"
+      - "52000-52100:52000-52100/udp"
+    environment:
+      NEKO_DESKTOP_SCREEN: '1920x1080@30'
+      NEKO_MEMBER_MULTIUSER_USER_PASSWORD: neko
+      NEKO_MEMBER_MULTIUSER_ADMIN_PASSWORD: admin
+      NEKO_WEBRTC_EPR: 52000-52100
+      NEKO_WEBRTC_ICELITE: 1
+      # See: https://neko.m1k1o.net/docs/v3/configuration/webrtc#nat1to1
+      # NEKO_WEBRTC_NAT1TO1: <your-IP>
+
+      # DRM (Widevine) support is limited on ARM64 and needs extra setup for
+      # protected streaming content:
+      # See: https://neko.m1k1o.net/docs/v3/customization/browsers#arm64-drm
+
+      # GPU ACCELERATION OPTION: if your ARM64 device exposes a V4L2 M2M
+      # hardware encoder (common on SBCs like Raspberry Pi), reuse the same
+      # pipeline as in the Raspberry Pi example:
+      # https://github.com/m1k1o/neko/tree/main/examples/raspberry-pi-browser
