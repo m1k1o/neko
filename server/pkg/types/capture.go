@@ -18,17 +18,18 @@ var (
 )
 
 type Sample struct {
-	// Data contains one copied encoded access unit and can outlive the capture callback.
-	Data []byte
-
-	// Timestamp is wall-clock time. PTS, DTS, and Duration use -1 for GST_CLOCK_TIME_NONE.
+	// timing information
 	Timestamp time.Time
-	PTS       time.Duration
-	DTS       time.Duration
-	Duration  time.Duration
-
+	// PTS, DTS, and Duration use -1 for GST_CLOCK_TIME_NONE.
+	PTS      time.Duration
+	DTS      time.Duration
+	Duration time.Duration
+	// metadata
 	DeltaUnit bool // this unit cannot be decoded independently.
-	Length    int
+	// buffer length
+	Length int
+	// buffer with encoded media
+	Data []byte
 }
 
 type SampleConsumer interface {
