@@ -28,7 +28,8 @@ type Sample struct {
 	DeltaUnit bool // this unit cannot be decoded independently.
 	// buffer length
 	Length int
-	// buffer with encoded media
+	// Data is immutable and remains valid while referenced. Consumers may retain
+	// it after WriteSample returns.
 	Data []byte
 }
 
