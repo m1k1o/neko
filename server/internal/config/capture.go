@@ -100,6 +100,11 @@ func (Capture) Init(cmd *cobra.Command) error {
 		return err
 	}
 
+	cmd.PersistentFlags().Bool("capture.video.show_pointer", true, "show mouse pointer in captured video, overrides show_pointer of all video pipelines")
+	if err := viper.BindPFlag("capture.video.show_pointer", cmd.PersistentFlags().Lookup("capture.video.show_pointer")); err != nil {
+		return err
+	}
+
 	// broadcast
 	cmd.PersistentFlags().Int("capture.broadcast.audio_bitrate", 128, "broadcast audio bitrate in KB/s")
 	if err := viper.BindPFlag("capture.broadcast.audio_bitrate", cmd.PersistentFlags().Lookup("capture.broadcast.audio_bitrate")); err != nil {
@@ -369,8 +374,9 @@ func (s *Capture) Set() {
 			s.VideoCodec = codec.VP8()
 			s.VideoPipelines = map[string]types.VideoConfig{
 				"main": {
-					Fps:        "25",
-					GstEncoder: "vp8enc",
+					Fps:         "25",
+					GstEncoder:  "vp8enc",
+					ShowPointer: true,
 					GstParams: map[string]string{
 						"target-bitrate":      "round(3072 * 650)",
 						"cpu-used":            "4",
@@ -398,6 +404,14 @@ func (s *Capture) Set() {
 		}
 	} else if videoPipeline != "" {
 		log.Warn().Msg("you are setting both single video pipeline and multiple video pipelines, ignoring single video pipeline")
+	}
+
+	if viper.IsSet("capture.video.show_pointer") {
+		showPointer := viper.GetBool("capture.video.show_pointer")
+		for k, p := range s.VideoPipelines {
+			p.ShowPointer = showPointer
+			s.VideoPipelines[k] = p
+		}
 	}
 
 	// audio

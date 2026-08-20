@@ -34,3 +34,4 @@ services:
       # Specifying reachable IP by clients is required when running Neko.
       # See: https://neko.m1k1o.net/docs/v3/configuration/webrtc#nat1to1
       NEKO_WEBRTC_NAT1TO1: <your-IP>
+      # NEKO_CAPTURE_VIDEO_SHOW_POINTER: false
