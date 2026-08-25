@@ -60,7 +60,7 @@ func (Session) Init(cmd *cobra.Command) error {
 		return err
 	}
 
-	cmd.PersistentFlags().Bool("session.implicit_hosting", true, "allow implicit control switching")
+	cmd.PersistentFlags().Bool("session.implicit_hosting", false, "allow implicit control switching")
 	if err := viper.BindPFlag("session.implicit_hosting", cmd.PersistentFlags().Lookup("session.implicit_hosting")); err != nil {
 		return err
 	}
@@ -86,7 +86,7 @@ func (Session) Init(cmd *cobra.Command) error {
 	}
 
 	// cookie
-	cmd.PersistentFlags().Bool("session.cookie.enabled", true, "whether cookies authentication should be enabled")
+	cmd.PersistentFlags().Bool("session.cookie.enabled", false, "whether cookies authentication should be enabled")
 	if err := viper.BindPFlag("session.cookie.enabled", cmd.PersistentFlags().Lookup("session.cookie.enabled")); err != nil {
 		return err
 	}

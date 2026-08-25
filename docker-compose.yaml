@@ -1,16 +1,36 @@
 services:
   neko:
+    # Runs Firefox in Neko. Firefox is the default, most tested image, but Neko
+    # supports many other browsers and applications - see the full list here:
+    # https://neko.m1k1o.net/docs/v3/installation/docker-images#apps
     image: "ghcr.io/m1k1o/neko/firefox:latest"
     restart: "unless-stopped"
     shm_size: "2gb"
     ports:
       - "8080:8080"
       - "52000-52100:52000-52100/udp"
+    # volumes:
+      # Persist Firefox settings, bookmarks, extensions and history across
+      # container restarts by mounting the profile directory.
+      # See: https://neko.m1k1o.net/docs/v3/customization/browsers#persistent-profile
+      # - "./profile:/home/neko/.mozilla/firefox/profile.default"
+
+      # Or mount your own pre-configured Firefox profile instead of an empty one.
+      # See: https://neko.m1k1o.net/docs/v3/customization/browsers#persistent-profile
+      # - "./my-custom-profile:/home/neko/.mozilla/firefox/profile.default"
     environment:
+      # You can configure either EPR or MUX ports for WebRTC.
+      # See: https://neko.m1k1o.net/docs/v3/configuration/webrtc#network
+      NEKO_WEBRTC_EPR: 52000-52100
+      # Specify the screen resolution and refresh rate for the virtual desktop. The
+      # default is 1920x1080@30, but you can change it to any other resolution.
+      # See: https://neko.m1k1o.net/docs/v3/configuration/desktop#screen
       NEKO_DESKTOP_SCREEN: 1920x1080@30
+      # You can configure a password for the default user and admin accounts. The
+      # default user account is "neko" and the default admin account is "admin".
+      # See: https://neko.m1k1o.net/docs/v3/configuration/authentication#member.multiuser
       NEKO_MEMBER_MULTIUSER_USER_PASSWORD: neko
       NEKO_MEMBER_MULTIUSER_ADMIN_PASSWORD: admin
-      NEKO_WEBRTC_EPR: 52000-52100
-      NEKO_WEBRTC_ICELITE: 1
-      # See: https://neko.m1k1o.net/docs/v3/configuration/webrtc#ip
-      # NEKO_NAT1TO1: <IP_ADDRESS>
+      # Specifying reachable IP by clients is required when running Neko.
+      # See: https://neko.m1k1o.net/docs/v3/configuration/webrtc#nat1to1
+      NEKO_WEBRTC_NAT1TO1: <your-IP>
