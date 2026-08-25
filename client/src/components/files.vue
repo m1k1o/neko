@@ -35,13 +35,14 @@
           'selectable-item': selectionMode && item.type !== 'dir',
           'selected-item': selectionMode && isSelected(item.name),
         }"
-        @click="onItemClick(item)"
+        @click="onItemClick(item, $event)"
       >
         <input
           v-if="selectionMode && item.type !== 'dir'"
           type="checkbox"
           class="file-checkbox"
           :checked="isSelected(item.name)"
+          @click.stop
           @change.stop="toggleSelectFile(item.name)"
         />
         <i :class="fileIcon(item)" />
@@ -418,8 +419,20 @@
       }
     }
 
-    onItemClick(item: FileListItem) {
-      if (this.selectionMode && item.type !== 'dir') {
+    onItemClick(item: FileListItem, event: MouseEvent) {
+      if (item.type === 'dir') {
+        return
+      }
+
+      if (event.ctrlKey || event.metaKey) {
+        if (!this.selectionMode) {
+          this.selectionMode = true
+        }
+        this.toggleSelectFile(item.name)
+        return
+      }
+
+      if (this.selectionMode) {
         this.toggleSelectFile(item.name)
       }
     }
