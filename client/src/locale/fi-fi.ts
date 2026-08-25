@@ -127,4 +127,10 @@ export const files = {
   delete: 'Poista',
   delete_title: 'Poistetaanko "{name}"?',
   delete_confirm: 'Haluatko varmasti poistaa tämän tiedoston?',
+  select: 'Valitse',
+  select_all: 'Valitse kaikki',
+  unselect_all: 'Poista kaikki valinnat',
+  cancel: 'Peruuta',
+  delete_selected_title: 'Poistetaanko valitut tiedostot?',
+  delete_selected_confirm: 'Haluatko varmasti poistaa {count} valittua tiedostoa?',
 }

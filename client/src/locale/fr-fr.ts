@@ -127,4 +127,10 @@ export const files = {
   delete: 'Supprimer',
   delete_title: 'Supprimer "{name}" ?',
   delete_confirm: 'Voulez-vous vraiment supprimer ce fichier ?',
+  select: 'Sélectionner',
+  select_all: 'Tout sélectionner',
+  unselect_all: 'Tout désélectionner',
+  cancel: 'Annuler',
+  delete_selected_title: 'Supprimer les fichiers sélectionnés ?',
+  delete_selected_confirm: 'Voulez-vous vraiment supprimer les {count} fichiers sélectionnés ?',
 }

@@ -127,4 +127,10 @@ export const files = {
   delete: '刪除',
   delete_title: '刪除「{name}」？',
   delete_confirm: '確定要刪除此檔案嗎？',
+  select: '選擇',
+  select_all: '全選',
+  unselect_all: '取消全選',
+  cancel: '取消',
+  delete_selected_title: '刪除選取的檔案？',
+  delete_selected_confirm: '確定要刪除選取的 {count} 個檔案嗎？',
 }

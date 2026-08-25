@@ -127,4 +127,10 @@ export const files = {
   delete: 'Slett',
   delete_title: 'Slette "{name}"?',
   delete_confirm: 'Er du sikker på at du vil slette denne filen?',
+  select: 'Velg',
+  select_all: 'Velg alle',
+  unselect_all: 'Fjern alle valg',
+  cancel: 'Avbryt',
+  delete_selected_title: 'Slette valgte filer?',
+  delete_selected_confirm: 'Er du sikker på at du vil slette de {count} valgte filene?',
 }

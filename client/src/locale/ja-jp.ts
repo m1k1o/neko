@@ -127,4 +127,10 @@ export const files = {
   delete: '削除',
   delete_title: '"{name}" を削除しますか？',
   delete_confirm: '本当にこのファイルを削除しますか？',
+  select: '選択',
+  select_all: 'すべて選択',
+  unselect_all: 'すべて選択解除',
+  cancel: 'キャンセル',
+  delete_selected_title: '選択したファイルを削除しますか？',
+  delete_selected_confirm: '選択した{count}個のファイルを本当に削除しますか？',
 }

@@ -127,4 +127,10 @@ export const files = {
   delete: 'Ta bort',
   delete_title: 'Ta bort "{name}"?',
   delete_confirm: 'Vill du verkligen ta bort den här filen?',
+  select: 'Markera',
+  select_all: 'Markera alla',
+  unselect_all: 'Avmarkera alla',
+  cancel: 'Avbryt',
+  delete_selected_title: 'Ta bort markerade filer?',
+  delete_selected_confirm: 'Vill du verkligen ta bort de {count} markerade filerna?',
 }

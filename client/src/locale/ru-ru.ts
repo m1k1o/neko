@@ -127,4 +127,10 @@ export const files = {
   delete: 'Удалить',
   delete_title: 'Удалить "{name}"?',
   delete_confirm: 'Вы действительно хотите удалить этот файл?',
+  select: 'Выбрать',
+  select_all: 'Выбрать все',
+  unselect_all: 'Снять выделение',
+  cancel: 'Отмена',
+  delete_selected_title: 'Удалить выбранные файлы?',
+  delete_selected_confirm: 'Вы действительно хотите удалить {count} выбранных файлов?',
 }

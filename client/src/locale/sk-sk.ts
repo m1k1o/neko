@@ -133,4 +133,10 @@ export const files = {
   delete: 'Odstrániť',
   delete_title: 'Odstrániť "{name}"?',
   delete_confirm: 'Naozaj chcete odstrániť tento súbor?',
+  select: 'Vybrať',
+  select_all: 'Vybrať všetko',
+  unselect_all: 'Zrušiť výber',
+  cancel: 'Zrušiť',
+  delete_selected_title: 'Odstrániť vybrané súbory?',
+  delete_selected_confirm: 'Naozaj chcete odstrániť {count} vybraných súborov?',
 }
