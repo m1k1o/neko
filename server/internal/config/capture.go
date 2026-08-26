@@ -28,9 +28,10 @@ const (
 type Capture struct {
 	Display string
 
-	VideoCodec     codec.RTPCodec
-	VideoIDs       []string
-	VideoPipelines map[string]types.VideoConfig
+	VideoCodec       codec.RTPCodec
+	VideoIDs         []string
+	VideoPipelines   map[string]types.VideoConfig
+	VideoShowPointer bool
 
 	AudioDevice   string
 	AudioCodec    codec.RTPCodec
@@ -406,10 +407,10 @@ func (s *Capture) Set() {
 		log.Warn().Msg("you are setting both single video pipeline and multiple video pipelines, ignoring single video pipeline")
 	}
 
+	s.VideoShowPointer = viper.GetBool("capture.video.show_pointer")
 	if viper.IsSet("capture.video.show_pointer") {
-		showPointer := viper.GetBool("capture.video.show_pointer")
 		for k, p := range s.VideoPipelines {
-			p.ShowPointer = showPointer
+			p.ShowPointer = s.VideoShowPointer
 			s.VideoPipelines[k] = p
 		}
 	}

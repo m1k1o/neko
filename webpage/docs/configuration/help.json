@@ -195,6 +195,16 @@
   {
     "key": [
       "capture",
+      "video",
+      "show_pointer"
+    ],
+    "type": "boolean",
+    "defaultValue": "true",
+    "description": "show mouse pointer in captured video, overrides show_pointer of all video pipelines"
+  },
+  {
+    "key": [
+      "capture",
       "webcam",
       "device"
     ],

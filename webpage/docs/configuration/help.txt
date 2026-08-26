@@ -18,6 +18,7 @@
       --capture.video.ids strings                     ordered list of video ids
       --capture.video.pipeline string                 shortcut for configuring only a single gstreamer pipeline, ignored if pipelines is set
       --capture.video.pipelines string                pipelines config used for video streaming (default "{}")
+      --capture.video.show_pointer                    show mouse pointer in captured video, overrides show_pointer of all video pipelines (default true)
       --capture.webcam.device string                  v4l2sink device used for webcam (default "/dev/video0")
       --capture.webcam.enabled                        enable webcam stream
       --capture.webcam.height int                     webcam stream height (default 720)

@@ -101,12 +101,12 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 					"! queue "+
 					"! voaacenc bitrate=%d "+
 					"! mux. "+
-					"ximagesrc display-name=%s show-pointer=true use-damage=false "+
+					"ximagesrc display-name=%s show-pointer=%v use-damage=false "+
 					"! video/x-raw "+
 					"! videoconvert "+
 					"! queue "+
 					"! x264enc threads=4 bitrate=%d key-int-max=15 byte-stream=true tune=zerolatency speed-preset=%s "+
-					"! mux.", url, config.AudioDevice, config.BroadcastAudioBitrate*1000, config.Display, config.BroadcastVideoBitrate, config.BroadcastPreset,
+					"! mux.", url, config.AudioDevice, config.BroadcastAudioBitrate*1000, config.Display, config.VideoShowPointer, config.BroadcastVideoBitrate, config.BroadcastPreset,
 			), nil
 		}, config.BroadcastUrl, config.BroadcastAutostart),
 		screencast: screencastNew(config.ScreencastEnabled, func() string {
@@ -116,12 +116,12 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 			}
 
 			return fmt.Sprintf(
-				"ximagesrc display-name=%s show-pointer=true use-damage=false "+
+				"ximagesrc display-name=%s show-pointer=%v use-damage=false "+
 					"! video/x-raw,framerate=%s "+
 					"! videoconvert "+
 					"! queue "+
 					"! jpegenc quality=%s "+
-					"! appsink name=appsink", config.Display, config.ScreencastRate, config.ScreencastQuality,
+					"! appsink name=appsink", config.Display, config.VideoShowPointer, config.ScreencastRate, config.ScreencastQuality,
 			)
 		}()),
 

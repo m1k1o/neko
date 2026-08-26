@@ -35,6 +35,7 @@ The Gstreamer pipeline is started when the first client requests the video strea
   "capture.video.ids",
   "capture.video.pipeline",
   "capture.video.pipelines",
+  "capture.video.show_pointer",
 ]} comments={false} />
 
 - <Def id="video.display" /> is the name of the [X display](https://www.x.org/wiki/) that you want to capture. If not specified, the environment variable `DISPLAY` will be used.
@@ -42,6 +43,7 @@ The Gstreamer pipeline is started when the first client requests the video strea
 - <Def id="video.ids" /> is a list of pipeline ids that are defined in the <Opt id="video.pipelines" /> section. The first pipeline in the list will be the default pipeline.
 - <Def id="video.pipeline" /> is a shorthand for defining [Gstreamer pipeline description](#video.gst_pipeline) for a single pipeline. This is option is ignored if <Opt id="video.pipelines" /> is defined.
 - <Def id="video.pipelines" /> is a dictionary of pipeline configurations. Each pipeline configuration is defined by a unique pipeline id. They can be defined in two ways: either by building the pipeline dynamically using [Expression-Driven Configuration](#video.expression) or by defining the pipeline using a [Gstreamer Pipeline Description](#video.gst_pipeline).
+- <Def id="video.show_pointer" /> overrides <Opt id="video.pipelines.show_pointer" /> for every video pipeline, only if explicitly set (per-pipeline `show_pointer` in `config.yaml` is left untouched when this flag is unset). It also controls the mouse pointer for the [Broadcast](#broadcast) and [Screencast](#screencast) pipelines, which do not have a per-pipeline setting of their own.
 
 ### Expression-Driven Configuration {#video.expression}
 
