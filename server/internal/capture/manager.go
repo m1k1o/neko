@@ -33,10 +33,15 @@ type CaptureManagerCtx struct {
 func replaceCapturePlaceholders(pipeline string, captureConfig *config.Capture) (string, error) {
 	pipeline = strings.ReplaceAll(pipeline, "{display}", captureConfig.Display)
 	if captureConfig.WindowWidth > 0 && captureConfig.WindowHeight > 0 {
-		for _, placeholder := range []string{"{window_x}", "{window_y}", "{window_width}", "{window_height}"} {
+		for _, placeholder := range []string{"{window_x}", "{window_y}"} {
 			if !strings.Contains(pipeline, placeholder) {
 				return "", fmt.Errorf("custom capture pipeline must contain %s while targeting an X11 window region", placeholder)
 			}
+		}
+		hasDimensions := strings.Contains(pipeline, "{window_width}") && strings.Contains(pipeline, "{window_height}")
+		hasEnds := strings.Contains(pipeline, "{window_end_x}") && strings.Contains(pipeline, "{window_end_y}")
+		if !hasDimensions && !hasEnds {
+			return "", fmt.Errorf("custom capture pipeline must contain window width/height or end-coordinate placeholders while targeting an X11 window region")
 		}
 	}
 	if captureConfig.WindowID != 0 && captureConfig.WindowWidth == 0 && !strings.Contains(pipeline, "{window_id}") {
@@ -48,6 +53,8 @@ func replaceCapturePlaceholders(pipeline string, captureConfig *config.Capture) 
 		"{window_y}":      fmt.Sprintf("%d", captureConfig.WindowY),
 		"{window_width}":  fmt.Sprintf("%d", captureConfig.WindowWidth),
 		"{window_height}": fmt.Sprintf("%d", captureConfig.WindowHeight),
+		"{window_end_x}":  fmt.Sprintf("%d", captureConfig.WindowX+captureConfig.WindowWidth-1),
+		"{window_end_y}":  fmt.Sprintf("%d", captureConfig.WindowY+captureConfig.WindowHeight-1),
 	}
 	for placeholder, value := range replacements {
 		pipeline = strings.ReplaceAll(pipeline, placeholder, value)

@@ -1,7 +1,7 @@
 ARG BASE_IMAGE=debian:trixie-slim
 FROM $BASE_IMAGE AS runtime
 
-LABEL net.m1k1o.neko.window-rooms="1"
+LABEL net.m1k1o.neko.window-rooms-runtime="1"
 
 #
 # set custom user
@@ -27,7 +27,7 @@ RUN set -eux; \
         zip curl \
         #
         # file chooser handler, clipboard, drop
-        xdotool wmctrl xclip libgtk-3-0 \
+        xdotool wmctrl xclip libgtk-3-0 x11-xserver-utils xcvt \
         #
         # gst
         gstreamer1.0-plugins-base gstreamer1.0-plugins-good \
@@ -109,6 +109,8 @@ ENV XDG_RUNTIME_DIR=/tmp/runtime-$USERNAME
 ENV NEKO_RUNTIME_XSERVER_ENABLED=true
 ENV NEKO_RUNTIME_PULSEAUDIO_ENABLED=true
 ENV NEKO_RUNTIME_APP_ENABLED=true
+ENV NEKO_RUNTIME_SERVER_ENABLED=true
+ENV NEKO_OPENBOX_CONFIG=/etc/neko/openbox.xml
 ENV NEKO_SERVER_BIND=:8080
 ENV NEKO_PLUGINS_ENABLED=true
 ENV NEKO_PLUGINS_DIR=/etc/neko/plugins/

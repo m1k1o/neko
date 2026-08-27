@@ -5,8 +5,6 @@ ARG VIRTUALGL_VERSION=3.1.3-20250409
 FROM nvidia/cuda:${CUDA_VERSION}-runtime-ubuntu${UBUNTU_RELEASE} AS runtime
 ARG VIRTUALGL_VERSION
 
-LABEL net.m1k1o.neko.window-rooms="1"
-
 # Make all NVIDIA GPUs visible by default
 ENV NVIDIA_VISIBLE_DEVICES=all
 # All NVIDIA driver capabilities should preferably be used, check `NVIDIA_DRIVER_CAPABILITIES` inside the container if things do not work
@@ -178,6 +176,8 @@ ENV XDG_RUNTIME_DIR=/tmp/runtime-$USERNAME
 ENV NEKO_RUNTIME_XSERVER_ENABLED=true
 ENV NEKO_RUNTIME_PULSEAUDIO_ENABLED=true
 ENV NEKO_RUNTIME_APP_ENABLED=true
+ENV NEKO_RUNTIME_SERVER_ENABLED=true
+ENV NEKO_OPENBOX_CONFIG=/etc/neko/openbox.xml
 ENV NEKO_SERVER_BIND=:8080
 ENV NEKO_PLUGINS_ENABLED=true
 ENV NEKO_PLUGINS_DIR=/etc/neko/plugins/

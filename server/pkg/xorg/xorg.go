@@ -117,12 +117,12 @@ func Scroll(deltaX, deltaY int, controlKey bool) {
 	mu.Lock()
 	defer mu.Unlock()
 
+	control := C.int(0)
 	if controlKey {
-		C.XSetKeyboardModifier(C.uchar(C.ControlMask), 1)
-		defer C.XSetKeyboardModifier(C.uchar(C.ControlMask), 0)
+		control = 1
 	}
 
-	C.XScroll(C.int(deltaX), C.int(deltaY))
+	C.XScroll(C.int(deltaX), C.int(deltaY), control)
 }
 
 func ButtonDown(code uint32) error {

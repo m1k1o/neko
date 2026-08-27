@@ -113,6 +113,9 @@ func (manager *DesktopManagerCtx) SetScreenSize(screenSize types.ScreenSize) (ty
 }
 
 func (manager *DesktopManagerCtx) GetScreenSize() types.ScreenSize {
+	if manager.config.WindowID != 0 || (manager.config.WindowWidth > 0 && manager.config.WindowHeight > 0) {
+		return manager.screenSize
+	}
 	return xorg.GetScreenSize()
 }
 

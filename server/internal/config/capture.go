@@ -545,6 +545,21 @@ func (s *Capture) SetV2() {
 			if err != nil {
 				log.Warn().Err(err).Msg("unable to create video pipeline, using default")
 			} else {
+				// Generated legacy pipelines still need to honor a per-room X11 target.
+				// User-provided pipelines remain subject to the explicit placeholder
+				// validation performed by the capture manager.
+				if videoPipeline == "" {
+					if s.WindowWidth > 0 && s.WindowHeight > 0 {
+						pipeline = strings.Replace(
+							pipeline,
+							"ximagesrc ",
+							"ximagesrc startx={window_x} starty={window_y} endx={window_end_x} endy={window_end_y} ",
+							1,
+						)
+					} else if s.WindowID != 0 {
+						pipeline = strings.Replace(pipeline, "ximagesrc ", "ximagesrc xid={window_id} ", 1)
+					}
+				}
 				s.VideoPipelines = map[string]types.VideoConfig{
 					"main": {
 						// Hacky way to disable pointer.
