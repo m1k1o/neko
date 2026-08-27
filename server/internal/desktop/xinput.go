@@ -7,6 +7,10 @@ func (manager *DesktopManagerCtx) inputRelToAbs(x, y int) (int, int) {
 }
 
 func (manager *DesktopManagerCtx) HasTouchSupport() bool {
+	if manager.config.WindowID != 0 || (manager.config.WindowWidth > 0 && manager.config.WindowHeight > 0) {
+		return false
+	}
+
 	// we assume now, that if the input driver is enabled, we have touch support
 	return manager.config.UseInputDriver
 }

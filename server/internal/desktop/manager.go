@@ -64,26 +64,60 @@ func (manager *DesktopManagerCtx) Start() {
 	if xorg.DisplayOpen(manager.config.Display) {
 		manager.logger.Panic().Str("display", manager.config.Display).Msg("unable to open display")
 	}
+	if (manager.config.WindowWidth > 0) != (manager.config.WindowHeight > 0) ||
+		manager.config.WindowX < 0 || manager.config.WindowY < 0 ||
+		(manager.config.WindowID != 0 && manager.config.WindowWidth > 0) {
+		manager.logger.Panic().Msg("invalid X11 window target configuration")
+	}
 
 	// X11 can throw errors below, and the default error handler exits
 	xevent.SetupErrorHandler()
 
-	xorg.GetScreenConfigurations()
-
-	screenSize, err := xorg.ChangeScreenSize(manager.config.ScreenSize)
-	if err != nil {
-		manager.logger.Err(err).
-			Str("screen_size", screenSize.String()).
-			Msgf("unable to set initial screen size")
-	} else {
-		// cache screen size
+	if manager.config.WindowWidth > 0 && manager.config.WindowHeight > 0 {
+		screenSize := xorg.SetTargetRegion(
+			manager.config.WindowX,
+			manager.config.WindowY,
+			manager.config.WindowWidth,
+			manager.config.WindowHeight,
+		)
+		screenSize.Rate = manager.config.ScreenSize.Rate
 		manager.screenSize = screenSize
 		manager.logger.Info().
+			Int("window_x", manager.config.WindowX).
+			Int("window_y", manager.config.WindowY).
 			Str("screen_size", screenSize.String()).
-			Msgf("setting initial screen size")
+			Msg("targeting X11 window region")
+	} else if manager.config.WindowID != 0 {
+		screenSize, err := xorg.SetTargetWindow(manager.config.WindowID)
+		if err != nil {
+			manager.logger.Panic().Err(err).
+				Uint64("window_id", manager.config.WindowID).
+				Msg("unable to target X11 window")
+		}
+		screenSize.Rate = manager.config.ScreenSize.Rate
+		manager.screenSize = screenSize
+		manager.logger.Info().
+			Uint64("window_id", manager.config.WindowID).
+			Str("screen_size", screenSize.String()).
+			Msg("targeting X11 window")
+	} else {
+		xorg.GetScreenConfigurations()
+
+		screenSize, err := xorg.ChangeScreenSize(manager.config.ScreenSize)
+		if err != nil {
+			manager.logger.Err(err).
+				Str("screen_size", screenSize.String()).
+				Msgf("unable to set initial screen size")
+		} else {
+			// cache screen size
+			manager.screenSize = screenSize
+			manager.logger.Info().
+				Str("screen_size", screenSize.String()).
+				Msgf("setting initial screen size")
+		}
 	}
 
-	err = manager.input.Connect()
+	err := manager.input.Connect()
 	if err != nil {
 		// TODO: fail silently to dummy driver?
 		manager.logger.Panic().Err(err).Msg("unable to connect to input driver")

@@ -7,6 +7,7 @@ FROM ./runtime/$RUNTIME_DOCKERFILE AS runtime
 
 # tells neko-rooms which version of the API to use
 LABEL net.m1k1o.neko.api-version=3
+LABEL net.m1k1o.neko.window-rooms=1
 
 COPY --from=server /src/bin/plugins/ /etc/neko/plugins/
 COPY --from=server /src/bin/neko /usr/bin/neko

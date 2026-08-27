@@ -30,8 +30,54 @@ type CaptureManagerCtx struct {
 	microphone *StreamSrcManagerCtx
 }
 
+func replaceCapturePlaceholders(pipeline string, captureConfig *config.Capture) (string, error) {
+	pipeline = strings.ReplaceAll(pipeline, "{display}", captureConfig.Display)
+	if captureConfig.WindowWidth > 0 && captureConfig.WindowHeight > 0 {
+		for _, placeholder := range []string{"{window_x}", "{window_y}", "{window_width}", "{window_height}"} {
+			if !strings.Contains(pipeline, placeholder) {
+				return "", fmt.Errorf("custom capture pipeline must contain %s while targeting an X11 window region", placeholder)
+			}
+		}
+	}
+	if captureConfig.WindowID != 0 && captureConfig.WindowWidth == 0 && !strings.Contains(pipeline, "{window_id}") {
+		return "", fmt.Errorf("custom capture pipeline must contain {window_id} while targeting an X11 window")
+	}
+	replacements := map[string]string{
+		"{window_id}":     fmt.Sprintf("%d", captureConfig.WindowID),
+		"{window_x}":      fmt.Sprintf("%d", captureConfig.WindowX),
+		"{window_y}":      fmt.Sprintf("%d", captureConfig.WindowY),
+		"{window_width}":  fmt.Sprintf("%d", captureConfig.WindowWidth),
+		"{window_height}": fmt.Sprintf("%d", captureConfig.WindowHeight),
+	}
+	for placeholder, value := range replacements {
+		pipeline = strings.ReplaceAll(pipeline, placeholder, value)
+	}
+	return pipeline, nil
+}
+
+func xImageSource(captureConfig *config.Capture, showPointer bool) string {
+	source := fmt.Sprintf("ximagesrc display-name=%s", captureConfig.Display)
+	if captureConfig.WindowWidth > 0 && captureConfig.WindowHeight > 0 {
+		source += fmt.Sprintf(
+			" startx=%d starty=%d endx=%d endy=%d",
+			captureConfig.WindowX,
+			captureConfig.WindowY,
+			captureConfig.WindowX+captureConfig.WindowWidth-1,
+			captureConfig.WindowY+captureConfig.WindowHeight-1,
+		)
+	} else if captureConfig.WindowID != 0 {
+		source += fmt.Sprintf(" xid=%d", captureConfig.WindowID)
+	}
+	return fmt.Sprintf("%s show-pointer=%v use-damage=false", source, showPointer)
+}
+
 func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCtx {
 	logger := log.With().Str("module", "capture").Logger()
+	if (config.WindowWidth > 0) != (config.WindowHeight > 0) ||
+		config.WindowX < 0 || config.WindowY < 0 ||
+		(config.WindowID != 0 && config.WindowWidth > 0) {
+		logger.Panic().Msg("invalid X11 window capture configuration")
+	}
 
 	videos := map[string]types.StreamSinkManager{}
 	for video_id, cnf := range config.VideoPipelines {
@@ -39,8 +85,7 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 
 		createPipeline := func() (string, error) {
 			if pipelineConf.GstPipeline != "" {
-				// replace {display} with valid display
-				return strings.Replace(pipelineConf.GstPipeline, "{display}", config.Display, 1), nil
+				return replaceCapturePlaceholders(pipelineConf.GstPipeline, config)
 			}
 
 			screen := desktop.GetScreenSize()
@@ -50,8 +95,8 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 			}
 
 			return fmt.Sprintf(
-				"ximagesrc display-name=%s show-pointer=%v use-damage=false "+
-					"%s ! appsink name=appsink", config.Display, pipelineConf.ShowPointer, pipeline,
+				xImageSource(config, pipelineConf.ShowPointer)+" "+
+					"%s ! appsink name=appsink", pipeline,
 			), nil
 		}
 
@@ -85,8 +130,12 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 					// replace {hostname} with valid hostname
 					pipeline = strings.Replace(pipeline, "{hostname}", hostname, 1)
 				}
-				// replace {display} with valid display
-				pipeline = strings.Replace(pipeline, "{display}", config.Display, 1)
+				// replace capture source placeholders
+				var err error
+				pipeline, err = replaceCapturePlaceholders(pipeline, config)
+				if err != nil {
+					return "", err
+				}
 				// replace {device} with valid device
 				pipeline = strings.Replace(pipeline, "{device}", config.AudioDevice, 1)
 				// replace {url} with valid URL
@@ -101,27 +150,30 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 					"! queue "+
 					"! voaacenc bitrate=%d "+
 					"! mux. "+
-					"ximagesrc display-name=%s show-pointer=true use-damage=false "+
+					xImageSource(config, true)+" "+
 					"! video/x-raw "+
 					"! videoconvert "+
 					"! queue "+
 					"! x264enc threads=4 bitrate=%d key-int-max=15 byte-stream=true tune=zerolatency speed-preset=%s "+
-					"! mux.", url, config.AudioDevice, config.BroadcastAudioBitrate*1000, config.Display, config.BroadcastVideoBitrate, config.BroadcastPreset,
+					"! mux.", url, config.AudioDevice, config.BroadcastAudioBitrate*1000, config.BroadcastVideoBitrate, config.BroadcastPreset,
 			), nil
 		}, config.BroadcastUrl, config.BroadcastAutostart),
 		screencast: screencastNew(config.ScreencastEnabled, func() string {
 			if config.ScreencastPipeline != "" {
-				// replace {display} with valid display
-				return strings.Replace(config.ScreencastPipeline, "{display}", config.Display, 1)
+				pipeline, err := replaceCapturePlaceholders(config.ScreencastPipeline, config)
+				if err != nil {
+					logger.Panic().Err(err).Msg("invalid screencast pipeline")
+				}
+				return pipeline
 			}
 
 			return fmt.Sprintf(
-				"ximagesrc display-name=%s show-pointer=true use-damage=false "+
+				xImageSource(config, true)+" "+
 					"! video/x-raw,framerate=%s "+
 					"! videoconvert "+
 					"! queue "+
 					"! jpegenc quality=%s "+
-					"! appsink name=appsink", config.Display, config.ScreencastRate, config.ScreencastQuality,
+					"! appsink name=appsink", config.ScreencastRate, config.ScreencastQuality,
 			)
 		}()),
 

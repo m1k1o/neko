@@ -71,6 +71,30 @@ func DisplayClose() {
 	C.XDisplayClose()
 }
 
+func SetTargetWindow(windowID uint64) (types.ScreenSize, error) {
+	mu.Lock()
+	defer mu.Unlock()
+
+	var width C.int
+	var height C.int
+	if C.XSetTargetWindow(C.ulong(windowID), &width, &height) != 0 {
+		return types.ScreenSize{}, fmt.Errorf("X11 window %d does not exist", windowID)
+	}
+
+	return types.ScreenSize{
+		Width:  int(width),
+		Height: int(height),
+	}, nil
+}
+
+func SetTargetRegion(x, y, width, height int) types.ScreenSize {
+	mu.Lock()
+	defer mu.Unlock()
+
+	C.XSetTargetRegion(C.int(x), C.int(y), C.int(width), C.int(height))
+	return types.ScreenSize{Width: width, Height: height}
+}
+
 func Move(x, y int) {
 	mu.Lock()
 	defer mu.Unlock()

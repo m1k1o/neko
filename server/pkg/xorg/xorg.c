@@ -1,6 +1,20 @@
 #include "xorg.h"
+#include <X11/Xatom.h>
+#include <fcntl.h>
+#include <sys/file.h>
+#include <unistd.h>
 
 static Display *DISPLAY = NULL;
+static Window TARGET_WINDOW = None;
+static int TARGET_REGION_ENABLED = 0;
+static int TARGET_REGION_X = 0;
+static int TARGET_REGION_Y = 0;
+static int TARGET_REGION_WIDTH = 0;
+static int TARGET_REGION_HEIGHT = 0;
+static int INPUT_LOCK_FD = -1;
+static int TARGET_POINTER_VALID = 0;
+static int TARGET_POINTER_X = 0;
+static int TARGET_POINTER_Y = 0;
 // XTEST virtual keyboard XInput1 device handle — cached so XKey() can dispatch
 // via XTestFakeDeviceKeyEvent (XI-aware) instead of XTestFakeKeyEvent (core-only).
 // GDK3 selects XI2 for the seat keyboard at startup and ignores core-protocol
@@ -56,13 +70,138 @@ void XDisplayClose(void) {
     XCloseDevice(DISPLAY, XTEST_KEYBOARD);
     XTEST_KEYBOARD = NULL;
   }
+  if (INPUT_LOCK_FD >= 0) {
+    close(INPUT_LOCK_FD);
+    INPUT_LOCK_FD = -1;
+  }
   XCloseDisplay(DISPLAY);
+}
+
+static void XInputLock(void) {
+  if (INPUT_LOCK_FD < 0)
+    INPUT_LOCK_FD = open("/tmp/neko-runtime/input.lock", O_CREAT | O_RDWR, 0666);
+  if (INPUT_LOCK_FD >= 0)
+    flock(INPUT_LOCK_FD, LOCK_EX);
+}
+
+static void XInputUnlock(void) {
+  if (INPUT_LOCK_FD >= 0)
+    flock(INPUT_LOCK_FD, LOCK_UN);
+}
+
+int XSetTargetWindow(unsigned long window, int *width, int *height) {
+  Display *display = getXDisplay();
+  XWindowAttributes attributes;
+  if (window == 0 || !XGetWindowAttributes(display, (Window) window, &attributes))
+    return 1;
+
+  TARGET_WINDOW = (Window) window;
+  TARGET_REGION_ENABLED = 0;
+  *width = attributes.width;
+  *height = attributes.height;
+  return 0;
+}
+
+void XSetTargetRegion(int x, int y, int width, int height) {
+  TARGET_WINDOW = None;
+  TARGET_REGION_ENABLED = 1;
+  TARGET_REGION_X = x;
+  TARGET_REGION_Y = y;
+  TARGET_REGION_WIDTH = width;
+  TARGET_REGION_HEIGHT = height;
+}
+
+static int XWindowContainsTargetRegion(Display *display, Window window) {
+  XWindowAttributes attributes;
+  if (!XGetWindowAttributes(display, window, &attributes) || attributes.map_state != IsViewable)
+    return 0;
+
+  Window child;
+  int root_x = 0;
+  int root_y = 0;
+  if (!XTranslateCoordinates(display, window, DefaultRootWindow(display), 0, 0, &root_x, &root_y, &child))
+    return 0;
+
+  int center_x = TARGET_REGION_X + TARGET_REGION_WIDTH / 2;
+  int center_y = TARGET_REGION_Y + TARGET_REGION_HEIGHT / 2;
+  return center_x >= root_x && center_x < root_x + attributes.width &&
+         center_y >= root_y && center_y < root_y + attributes.height;
+}
+
+static Window XTargetWindow(Display *display) {
+  if (!TARGET_REGION_ENABLED)
+    return TARGET_WINDOW;
+
+  Window root = DefaultRootWindow(display);
+  Atom client_list = XInternAtom(display, "_NET_CLIENT_LIST_STACKING", True);
+  if (client_list == None)
+    client_list = XInternAtom(display, "_NET_CLIENT_LIST", True);
+  if (client_list == None)
+    return None;
+
+  Atom actual_type;
+  int actual_format;
+  unsigned long item_count = 0;
+  unsigned long bytes_after = 0;
+  unsigned char *data = NULL;
+  int result = XGetWindowProperty(display, root, client_list, 0, ~0L, False, XA_WINDOW,
+                                  &actual_type, &actual_format, &item_count, &bytes_after, &data);
+  if (result != Success || actual_type != XA_WINDOW || actual_format != 32 || data == NULL) {
+    if (data != NULL)
+      XFree(data);
+    return None;
+  }
+
+  Window target = None;
+  Window *windows = (Window *)data;
+  for (unsigned long i = item_count; i > 0; i--) {
+    if (XWindowContainsTargetRegion(display, windows[i - 1])) {
+      target = windows[i - 1];
+      break;
+    }
+  }
+  XFree(data);
+  return target;
+}
+
+static void XFocusTargetWindow(Display *display) {
+  Window target = XTargetWindow(display);
+  if (target == None)
+    return;
+
+  XRaiseWindow(display, target);
+  XSetInputFocus(display, target, RevertToParent, CurrentTime);
+  XSync(display, 0);
+}
+
+static void XTargetWindowOffset(Display *display, int *x, int *y) {
+  if (TARGET_REGION_ENABLED) {
+    *x += TARGET_REGION_X;
+    *y += TARGET_REGION_Y;
+    return;
+  }
+  if (TARGET_WINDOW == None)
+    return;
+
+  Window child;
+  int root_x = 0;
+  int root_y = 0;
+  XTranslateCoordinates(display, TARGET_WINDOW, DefaultRootWindow(display), 0, 0, &root_x, &root_y, &child);
+  *x += root_x;
+  *y += root_y;
 }
 
 void XMove(int x, int y) {
   Display *display = getXDisplay();
+  XInputLock();
+  XFocusTargetWindow(display);
+  XTargetWindowOffset(display, &x, &y);
+  TARGET_POINTER_X = x;
+  TARGET_POINTER_Y = y;
+  TARGET_POINTER_VALID = 1;
   XWarpPointer(display, None, DefaultRootWindow(display), 0, 0, 0, 0, x, y);
   XSync(display, 0);
+  XInputUnlock();
 }
 
 void XCursorPosition(int *x, int *y) {
@@ -72,10 +211,24 @@ void XCursorPosition(int *x, int *y) {
   int i;
   unsigned mask;
   XQueryPointer(display, root, &root, &window, x, y, &i, &i, &mask);
+  if (TARGET_REGION_ENABLED) {
+    *x -= TARGET_REGION_X;
+    *y -= TARGET_REGION_Y;
+  } else if (TARGET_WINDOW != None) {
+    int offset_x = 0;
+    int offset_y = 0;
+    XTargetWindowOffset(display, &offset_x, &offset_y);
+    *x -= offset_x;
+    *y -= offset_y;
+  }
 }
 
 void XScroll(int deltaX, int deltaY) {
   Display *display = getXDisplay();
+  XInputLock();
+  XFocusTargetWindow(display);
+  if (TARGET_POINTER_VALID)
+    XWarpPointer(display, None, DefaultRootWindow(display), 0, 0, 0, 0, TARGET_POINTER_X, TARGET_POINTER_Y);
 
   int ydir;
   if (deltaY > 0) {
@@ -102,6 +255,7 @@ void XScroll(int deltaX, int deltaY) {
   }
 
   XSync(display, 0);
+  XInputUnlock();
 }
 
 void XButton(unsigned int button, int down) {
@@ -109,8 +263,13 @@ void XButton(unsigned int button, int down) {
     return;
 
   Display *display = getXDisplay();
+  XInputLock();
+  XFocusTargetWindow(display);
+  if (TARGET_POINTER_VALID)
+    XWarpPointer(display, None, DefaultRootWindow(display), 0, 0, 0, 0, TARGET_POINTER_X, TARGET_POINTER_Y);
   XTestFakeButtonEvent(display, button, down, CurrentTime);
   XSync(display, 0);
+  XInputUnlock();
 }
 
 static xkeyentry_t *xKeysHead = NULL;
@@ -253,6 +412,8 @@ void XKey(KeySym keysym, int down) {
     return;
 
   Display *display = getXDisplay();
+  XInputLock();
+  XFocusTargetWindow(display);
   KeyCode keycode = 0;
 
   if (!down)
@@ -279,6 +440,7 @@ void XKey(KeySym keysym, int down) {
     XTestFakeKeyEvent(display, keycode, down, CurrentTime);
   }
   XSync(display, 0);
+  XInputUnlock();
 }
 
 Status XSetScreenConfiguration(int width, int height, short rate) {
