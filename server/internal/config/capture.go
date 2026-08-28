@@ -26,7 +26,12 @@ const (
 )
 
 type Capture struct {
-	Display string
+	Display      string
+	WindowID     uint64
+	WindowX      int
+	WindowY      int
+	WindowWidth  int
+	WindowHeight int
 
 	VideoCodec     codec.RTPCodec
 	VideoIDs       []string
@@ -77,6 +82,28 @@ func (Capture) Init(cmd *cobra.Command) error {
 	// videos
 	cmd.PersistentFlags().String("capture.video.display", "", "X display to capture")
 	if err := viper.BindPFlag("capture.video.display", cmd.PersistentFlags().Lookup("capture.video.display")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().Uint64("capture.video.window_id", 0, "X11 window ID to capture instead of the complete desktop")
+	if err := viper.BindPFlag("capture.video.window_id", cmd.PersistentFlags().Lookup("capture.video.window_id")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().Int("capture.video.window_x", 0, "X coordinate of the window capture region")
+	if err := viper.BindPFlag("capture.video.window_x", cmd.PersistentFlags().Lookup("capture.video.window_x")); err != nil {
+		return err
+	}
+	cmd.PersistentFlags().Int("capture.video.window_y", 0, "Y coordinate of the window capture region")
+	if err := viper.BindPFlag("capture.video.window_y", cmd.PersistentFlags().Lookup("capture.video.window_y")); err != nil {
+		return err
+	}
+	cmd.PersistentFlags().Int("capture.video.window_width", 0, "width of the window capture region")
+	if err := viper.BindPFlag("capture.video.window_width", cmd.PersistentFlags().Lookup("capture.video.window_width")); err != nil {
+		return err
+	}
+	cmd.PersistentFlags().Int("capture.video.window_height", 0, "height of the window capture region")
+	if err := viper.BindPFlag("capture.video.window_height", cmd.PersistentFlags().Lookup("capture.video.window_height")); err != nil {
 		return err
 	}
 
@@ -325,6 +352,11 @@ func (s *Capture) Set() {
 	if s.Display == "" {
 		s.Display = os.Getenv("DISPLAY")
 	}
+	s.WindowID = viper.GetUint64("capture.video.window_id")
+	s.WindowX = viper.GetInt("capture.video.window_x")
+	s.WindowY = viper.GetInt("capture.video.window_y")
+	s.WindowWidth = viper.GetInt("capture.video.window_width")
+	s.WindowHeight = viper.GetInt("capture.video.window_height")
 
 	// video
 	videoCodec := viper.GetString("capture.video.codec")
@@ -513,6 +545,21 @@ func (s *Capture) SetV2() {
 			if err != nil {
 				log.Warn().Err(err).Msg("unable to create video pipeline, using default")
 			} else {
+				// Generated legacy pipelines still need to honor a per-room X11 target.
+				// User-provided pipelines remain subject to the explicit placeholder
+				// validation performed by the capture manager.
+				if videoPipeline == "" {
+					if s.WindowWidth > 0 && s.WindowHeight > 0 {
+						pipeline = strings.Replace(
+							pipeline,
+							"ximagesrc ",
+							"ximagesrc startx={window_x} starty={window_y} endx={window_end_x} endy={window_end_y} ",
+							1,
+						)
+					} else if s.WindowID != 0 {
+						pipeline = strings.Replace(pipeline, "ximagesrc ", "ximagesrc xid={window_id} ", 1)
+					}
+				}
 				s.VideoPipelines = map[string]types.VideoConfig{
 					"main": {
 						// Hacky way to disable pointer.

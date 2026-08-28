@@ -20,10 +20,12 @@ extern void goSetScreenRates(int index, int rate_index, short rate);
 Display *getXDisplay(void);
 int XDisplayOpen(char *input);
 void XDisplayClose(void);
+int XSetTargetWindow(unsigned long window, int *width, int *height);
+void XSetTargetRegion(int x, int y, int width, int height);
 
 void XMove(int x, int y);
 void XCursorPosition(int *x, int *y);
-void XScroll(int deltaX, int deltaY);
+void XScroll(int deltaX, int deltaY, int control);
 void XButton(unsigned int button, int down);
 
 typedef struct xkeyentry_t {

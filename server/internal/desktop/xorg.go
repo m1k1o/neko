@@ -1,6 +1,7 @@
 package desktop
 
 import (
+	"fmt"
 	"image"
 	"os/exec"
 	"regexp"
@@ -67,6 +68,10 @@ func (manager *DesktopManagerCtx) ResetKeys() {
 }
 
 func (manager *DesktopManagerCtx) ScreenConfigurations() []types.ScreenSize {
+	if manager.config.WindowID != 0 || (manager.config.WindowWidth > 0 && manager.config.WindowHeight > 0) {
+		return []types.ScreenSize{manager.screenSize}
+	}
+
 	var configs []types.ScreenSize
 	for _, size := range xorg.ScreenConfigurations {
 		for _, fps := range size.Rates {
@@ -86,6 +91,10 @@ func (manager *DesktopManagerCtx) ScreenConfigurations() []types.ScreenSize {
 }
 
 func (manager *DesktopManagerCtx) SetScreenSize(screenSize types.ScreenSize) (types.ScreenSize, error) {
+	if manager.config.WindowID != 0 || (manager.config.WindowWidth > 0 && manager.config.WindowHeight > 0) {
+		return manager.screenSize, fmt.Errorf("screen size cannot be changed while targeting an X11 window")
+	}
+
 	mu.Lock()
 	manager.emmiter.Emit("before_screen_size_change")
 
@@ -104,6 +113,9 @@ func (manager *DesktopManagerCtx) SetScreenSize(screenSize types.ScreenSize) (ty
 }
 
 func (manager *DesktopManagerCtx) GetScreenSize() types.ScreenSize {
+	if manager.config.WindowID != 0 || (manager.config.WindowWidth > 0 && manager.config.WindowHeight > 0) {
+		return manager.screenSize
+	}
 	return xorg.GetScreenSize()
 }
 

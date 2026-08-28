@@ -72,8 +72,8 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
       )
       this.emit('debug', `connecting to ${this._ws.url}`)
       this._ws.onmessage = this.onMessage.bind(this)
-      this._ws.onerror = () => this.onError.bind(this)
-      this._ws.onclose = () => this.onDisconnected.bind(this, new Error('websocket closed'))
+      this._ws.onerror = this.onError.bind(this)
+      this._ws.onclose = this.onDisconnected.bind(this, new Error('websocket closed'))
       this._timeout = window.setTimeout(this.onTimeout.bind(this), 15000)
     } catch (err: any) {
       this.onDisconnected(err)

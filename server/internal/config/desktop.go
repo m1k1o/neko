@@ -13,7 +13,12 @@ import (
 )
 
 type Desktop struct {
-	Display string
+	Display      string
+	WindowID     uint64
+	WindowX      int
+	WindowY      int
+	WindowWidth  int
+	WindowHeight int
 
 	ScreenSize types.ScreenSize
 
@@ -28,6 +33,27 @@ type Desktop struct {
 func (Desktop) Init(cmd *cobra.Command) error {
 	cmd.PersistentFlags().String("desktop.display", "", "X display to use for desktop sharing")
 	if err := viper.BindPFlag("desktop.display", cmd.PersistentFlags().Lookup("desktop.display")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().Uint64("desktop.window_id", 0, "X11 window ID to expose instead of the complete desktop")
+	if err := viper.BindPFlag("desktop.window_id", cmd.PersistentFlags().Lookup("desktop.window_id")); err != nil {
+		return err
+	}
+	cmd.PersistentFlags().Int("desktop.window_x", 0, "X coordinate of the desktop window region")
+	if err := viper.BindPFlag("desktop.window_x", cmd.PersistentFlags().Lookup("desktop.window_x")); err != nil {
+		return err
+	}
+	cmd.PersistentFlags().Int("desktop.window_y", 0, "Y coordinate of the desktop window region")
+	if err := viper.BindPFlag("desktop.window_y", cmd.PersistentFlags().Lookup("desktop.window_y")); err != nil {
+		return err
+	}
+	cmd.PersistentFlags().Int("desktop.window_width", 0, "width of the desktop window region")
+	if err := viper.BindPFlag("desktop.window_width", cmd.PersistentFlags().Lookup("desktop.window_width")); err != nil {
+		return err
+	}
+	cmd.PersistentFlags().Int("desktop.window_height", 0, "height of the desktop window region")
+	if err := viper.BindPFlag("desktop.window_height", cmd.PersistentFlags().Lookup("desktop.window_height")); err != nil {
 		return err
 	}
 
@@ -80,6 +106,11 @@ func (s *Desktop) Set() {
 	if s.Display == "" {
 		s.Display = os.Getenv("DISPLAY")
 	}
+	s.WindowID = viper.GetUint64("desktop.window_id")
+	s.WindowX = viper.GetInt("desktop.window_x")
+	s.WindowY = viper.GetInt("desktop.window_y")
+	s.WindowWidth = viper.GetInt("desktop.window_width")
+	s.WindowHeight = viper.GetInt("desktop.window_height")
 
 	s.ScreenSize = types.ScreenSize{
 		Width:  1280,
