@@ -122,9 +122,13 @@ func (h *LegacyHandler) Route(r types.Router) {
 		s.connBackend = connBackend
 
 		// request signal
-		if err = s.toBackend(event.SIGNAL_REQUEST, message.SignalRequest{}); err != nil {
+		videoAuto := true
+		if err = s.toBackend(event.SIGNAL_REQUEST, message.SignalRequest{
+			Video: types.PeerVideoRequest{
+				Auto: &videoAuto,
+			},
+		}); err != nil {
 			h.logger.Error().Err(err).Msg("couldn't request signal")
-
 			s.toClient(&oldMessage.SystemMessage{
 				Event:   oldEvent.SYSTEM_DISCONNECT,
 				Title:   "couldn't request signal",
