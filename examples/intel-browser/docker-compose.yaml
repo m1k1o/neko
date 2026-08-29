@@ -1,0 +1,35 @@
+# Neko - Intel Browser Example
+#
+# Runs Firefox with Intel GPU hardware acceleration (VAAPI) for both browser
+# rendering and video encoding. Requires the host to expose /dev/dri and have
+# the Intel graphics driver installed.
+#
+# Other GPU-accelerated flavors are listed here:
+# https://neko.m1k1o.net/docs/v3/installation/docker-images#intel
+services:
+  neko:
+    image: "ghcr.io/m1k1o/neko/intel-firefox:latest"
+    # ENCODE-ONLY OPTION: if you only want to accelerate video encoding, not
+    # the browser rendering, use the plain firefox image instead:
+    # image: "ghcr.io/m1k1o/neko/firefox:latest"
+    restart: "unless-stopped"
+    shm_size: "2gb"
+    ports:
+      - "8080:8080"
+      - "52000-52100:52000-52100/udp"
+    devices:
+      # Required for VAAPI hardware acceleration - gives the container access
+      # to the GPU's render node. The render group is detected automatically.
+      - "/dev/dri:/dev/dri"
+    environment:
+      # The intel-firefox image already sets NEKO_HWENC=vaapi by default.
+      # Uncomment to be explicit, or when using the plain firefox image above
+      # for encode-only acceleration:
+      # NEKO_HWENC: "vaapi"
+      NEKO_DESKTOP_SCREEN: '1920x1080@30'
+      NEKO_MEMBER_MULTIUSER_USER_PASSWORD: neko
+      NEKO_MEMBER_MULTIUSER_ADMIN_PASSWORD: admin
+      NEKO_WEBRTC_EPR: 52000-52100
+      NEKO_WEBRTC_ICELITE: 1
+      # See: https://neko.m1k1o.net/docs/v3/configuration/webrtc#nat1to1
+      # NEKO_WEBRTC_NAT1TO1: <your-IP>
