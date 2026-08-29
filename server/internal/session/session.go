@@ -51,7 +51,11 @@ func (session *SessionCtx) profileChanged() {
 		// otherwise webrtc destroy would trigger websocket reconnect. In case of kick event, webrtc destroy is called
 		// before websocket destroy that delivers the information about the kick.
 		time.AfterFunc(time.Second, func() {
-			session.GetWebRTCPeer().Destroy()
+			// The peer may have been removed if the user disconnected while
+			// waiting for the delayed teardown.
+			if webrtcPeer := session.GetWebRTCPeer(); webrtcPeer != nil {
+				webrtcPeer.Destroy()
+			}
 		})
 	}
 
