@@ -105,7 +105,7 @@ For more applications, check out [m1k1o/neko-apps](https://github.com/m1k1o/neko
 
 Currently, it is not supported to supply multiple NAT addresses directly to neko  (see https://github.com/m1k1o/neko/issues/47).
 
-But it can be acheived by deploying own turn server alongside neko that is accessible from your LAN:
+But it can be achieved by deploying own turn server alongside neko that is accessible from your LAN:
 
 ```yaml
 version: "3.4"
