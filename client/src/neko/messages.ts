@@ -24,6 +24,7 @@ export type WebSocketMessages =
   | ControlMessage
   | ScreenResolutionMessage
   | ScreenConfigurationsMessage
+  | ChatInitMessage
   | ChatMessage
 
 export type WebSocketPayloads =
@@ -36,6 +37,7 @@ export type WebSocketPayloads =
   | ControlPayload
   | ControlClipboardPayload
   | ControlKeyboardPayload
+  | ChatInitPayload
   | ChatPayload
   | ChatSendPayload
   | EmojiSendPayload
@@ -168,6 +170,16 @@ export interface ControlKeyboardPayload {
 /*
   CHAT PAYLOADS
 */
+// chat/init
+export interface ChatInitMessage extends WebSocketMessage, ChatInitPayload {
+  event: typeof EVENT.CHAT.INIT
+}
+
+export interface ChatInitPayload {
+  enabled: boolean
+  history: ChatPayload[]
+}
+
 // chat/message
 export interface ChatMessage extends WebSocketMessage, ChatPayload {
   event: typeof EVENT.CHAT.MESSAGE
@@ -179,6 +191,7 @@ export interface ChatSendPayload {
 export interface ChatPayload {
   id: string
   content: string
+  created: string | Date
 }
 
 // chat/emoji
