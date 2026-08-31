@@ -443,16 +443,25 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session) (*webrtc.Sess
 		ticker := time.NewTicker(rtcpPLIInterval)
 		defer ticker.Stop()
 
-		go func() {
-			for range ticker.C {
-				err := connection.WriteRTCP([]rtcp.Packet{
-					&rtcp.PictureLossIndication{
-						MediaSSRC: uint32(track.SSRC()),
-					},
-				})
+		//ticker.Stop() does not close channel,so the channel,so the goroutine below needs
+		//its own singal to exit, otherwise it would block on the ticker channel forever and leak memory
+		done := make(chan struct{})
+		defer close(done)
 
-				if err != nil {
-					logger.Err(err).Msg("remote track rtcp send err")
+		go func() {
+			for {
+				select {
+				case <-done:
+					return
+				case <-ticker.C:
+					err := connection.WriteRTCP([]rtcp.Packet{
+						&rtcp.PictureLossIndication{
+							MediaSSRC: uint32(track.SSRC()),
+						},
+					})
+					if err != nil {
+						logger.Err(err).Msg("remote track rtcp send err")
+					}
 				}
 			}
 		}()
