@@ -202,21 +202,23 @@ server/internal/
 - `a096b0c3`：新增 `webrtc.connectivity.mode=frp` 启动前预检；FRP 模式要求显式唯一 NAT IP、同端口 MUX，且拒绝 EPR 混用。
 - `6ce2169c`：新增认证出站代理配置模型，支持 HTTP CONNECT Basic 与 SOCKS5 用户名/密码，拒绝 URL 内嵌凭据并提供脱敏诊断地址。
 - `13e2928d`：Chromium 镜像改用本地代理 Agent 启动包装器；仅允许 loopback Agent 地址，保留 NVIDIA 初始化入口。
-- 当前工作区：实现独立 `neko-proxy` Agent，完成 HTTP CONNECT Basic 与 SOCKS5 用户名/密码认证转发；密码从 Secret 文件读取，并接入 Chromium Supervisor 生命周期。
-- 当前工作区：新增显式目标的代理认证预检、周期健康检查和回环 `/healthz` 脱敏诊断；首次检查失败会阻止 Chromium 启动。
-- 当前工作区：新增真实 Squid Basic 与 microsocks 用户名/密码代理的 Docker Compose 集成测试，并接入 PR CI。
+- `86e9be01`：实现独立 `neko-proxy` Agent，完成 HTTP CONNECT Basic 与 SOCKS5 用户名/密码认证转发；密码从 Secret 文件读取，并接入 Chromium Supervisor 生命周期。
+- `bfe2928f`：新增显式目标的代理认证预检、周期健康检查和回环 `/healthz` 脱敏诊断；首次检查失败会阻止 Chromium 启动。
+- `47e7b8ac`：新增真实 Squid Basic 与 microsocks 用户名/密码代理的 Docker Compose 集成测试，并接入 PR 默认 CI。
 
 ### 已验证
 
 - `go test ./internal/connectivity ./internal/proxy` 通过。
 - `apps/chromium/neko-chromium_test.sh` 通过。
-- 新增并通过本地 HTTP CONNECT 与 SOCKS5 认证代理集成测试。
+- 内存测试服务组成的 HTTP CONNECT 与 SOCKS5 认证代理集成测试通过。
+- `go test -race ./internal/proxy` 通过。
 - `go build -o /tmp/neko-proxy ./cmd/neko-proxy` 通过。
-- 每个提交前均执行 `git diff --check`。
+- Chromium 启动脚本、Shell 语法、Compose/GitHub Actions YAML 解析和 `git diff --check` 通过。
 
 ### 当前限制与下一步
 
-- 完整服务端构建仍需要本机安装项目 Dockerfile 所列的 X11、GTK 与 GStreamer 开发库；当前环境的 sudo 需要交互式密码，因此尚未完成该环境准备。
+- 真实 Squid/microsocks Docker Compose 套件已提交，但当前开发环境没有 Docker，需由新增的 PR CI 或具备 Docker Compose v2 的环境执行。
+- 当前 Ubuntu 20.04 软件源缺少完整服务端构建需要的 `libxcvt-dev`；代理子模块及独立二进制不受影响。
 - 下一项实现：媒体背压观测与有界队列指标。
 - 随后实现：编码/质量 profile，以及 FRP、TURN 网络路径的集成测试模板。
 
