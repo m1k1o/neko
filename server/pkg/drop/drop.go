@@ -8,6 +8,8 @@ package drop
 import "C"
 
 import (
+	"unsafe"
+
 	"sync"
 
 	"github.com/kataras/go-events"
@@ -29,7 +31,9 @@ func OpenWindow(files []string) {
 	defer C.dragUrisFree(urisUnsafe, size)
 
 	for i, file := range files {
-		C.dragUrisSetFile(urisUnsafe, C.CString(file), C.int(i))
+		cFile := C.CString(file)
+		C.dragUrisSetFile(urisUnsafe, cFile, C.int(i))
+		C.free(unsafe.Pointer(cFile))
 	}
 
 	C.dragWindowOpen(urisUnsafe)
