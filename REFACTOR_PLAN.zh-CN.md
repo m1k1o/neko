@@ -203,6 +203,8 @@ server/internal/
 - `6ce2169c`：新增认证出站代理配置模型，支持 HTTP CONNECT Basic 与 SOCKS5 用户名/密码，拒绝 URL 内嵌凭据并提供脱敏诊断地址。
 - `13e2928d`：Chromium 镜像改用本地代理 Agent 启动包装器；仅允许 loopback Agent 地址，保留 NVIDIA 初始化入口。
 - 当前工作区：实现独立 `neko-proxy` Agent，完成 HTTP CONNECT Basic 与 SOCKS5 用户名/密码认证转发；密码从 Secret 文件读取，并接入 Chromium Supervisor 生命周期。
+- 当前工作区：新增显式目标的代理认证预检、周期健康检查和回环 `/healthz` 脱敏诊断；首次检查失败会阻止 Chromium 启动。
+- 当前工作区：新增真实 Squid Basic 与 microsocks 用户名/密码代理的 Docker Compose 集成测试，并接入 PR CI。
 
 ### 已验证
 
@@ -215,8 +217,8 @@ server/internal/
 ### 当前限制与下一步
 
 - 完整服务端构建仍需要本机安装项目 Dockerfile 所列的 X11、GTK 与 GStreamer 开发库；当前环境的 sudo 需要交互式密码，因此尚未完成该环境准备。
-- 下一项实现：代理认证健康检查与可脱敏诊断，并建立真实代理容器的集成测试模板。
-- 随后实现：媒体背压观测、编码/质量 profile，以及 FRP、TURN 网络路径的集成测试模板。
+- 下一项实现：媒体背压观测与有界队列指标。
+- 随后实现：编码/质量 profile，以及 FRP、TURN 网络路径的集成测试模板。
 
 ## 9. 里程碑与成功标准
 

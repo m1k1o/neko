@@ -1,0 +1,12 @@
+FROM golang:1.25-bookworm AS build
+
+WORKDIR /src
+COPY go.mod go.sum ./
+RUN go mod download
+COPY . .
+RUN CGO_ENABLED=0 go build -o /out/neko-proxy ./cmd/neko-proxy
+
+FROM alpine:3.22
+RUN apk add --no-cache ca-certificates curl
+COPY --from=build /out/neko-proxy /usr/local/bin/neko-proxy
+ENTRYPOINT ["/usr/local/bin/neko-proxy"]

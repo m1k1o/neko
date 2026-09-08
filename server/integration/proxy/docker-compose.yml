@@ -1,0 +1,77 @@
+services:
+  origin:
+    image: python:3.13-alpine
+    command: ["python", "-m", "http.server", "8080"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/')"]
+      interval: 1s
+      timeout: 2s
+      retries: 20
+
+  squid:
+    build:
+      context: .
+      dockerfile: Dockerfile.squid
+    healthcheck:
+      test: ["CMD", "nc", "-z", "127.0.0.1", "3128"]
+      interval: 1s
+      timeout: 2s
+      retries: 20
+
+  socks:
+    build:
+      context: .
+      dockerfile: Dockerfile.socks
+    healthcheck:
+      test: ["CMD", "nc", "-z", "127.0.0.1", "1080"]
+      interval: 1s
+      timeout: 2s
+      retries: 20
+
+  http-agent:
+    build:
+      context: ../..
+      dockerfile: integration/proxy/Dockerfile.agent
+    environment:
+      NEKO_CHROMIUM_PROXY_SERVER: http://squid:3128
+      NEKO_CHROMIUM_PROXY_USERNAME: proxy-user
+      NEKO_CHROMIUM_PROXY_PASSWORD_FILE: /run/secrets/proxy_password
+      NEKO_CHROMIUM_PROXY_HEALTHCHECK_TARGET: origin:8080
+    secrets:
+      - proxy_password
+    depends_on:
+      origin:
+        condition: service_healthy
+      squid:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:18081/healthz"]
+      interval: 1s
+      timeout: 2s
+      retries: 20
+
+  socks-agent:
+    build:
+      context: ../..
+      dockerfile: integration/proxy/Dockerfile.agent
+    environment:
+      NEKO_CHROMIUM_PROXY_SERVER: socks5://socks:1080
+      NEKO_CHROMIUM_PROXY_USERNAME: proxy-user
+      NEKO_CHROMIUM_PROXY_PASSWORD_FILE: /run/secrets/proxy_password
+      NEKO_CHROMIUM_PROXY_HEALTHCHECK_TARGET: origin:8080
+    secrets:
+      - proxy_password
+    depends_on:
+      origin:
+        condition: service_healthy
+      socks:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:18081/healthz"]
+      interval: 1s
+      timeout: 2s
+      retries: 20
+
+secrets:
+  proxy_password:
+    file: ./proxy-password.txt

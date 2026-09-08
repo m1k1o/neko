@@ -1,0 +1,28 @@
+name: Test Chromium Proxy Integration
+
+on:
+  pull_request:
+    branches:
+      - master
+    paths:
+      - server/cmd/neko-proxy/**
+      - server/internal/proxy/**
+      - server/integration/proxy/**
+      - server/go.mod
+      - server/go.sum
+      - server/build
+      - apps/chromium/**
+      - Dockerfile.tmpl
+      - .github/workflows/proxy_integration_test.yml
+  workflow_dispatch:
+
+jobs:
+  proxy-integration:
+    name: Authenticated proxy integration
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run HTTP CONNECT and SOCKS5 integration tests
+        run: server/integration/proxy/run.sh
