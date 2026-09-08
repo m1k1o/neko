@@ -20,3 +20,14 @@ if NEKO_CHROMIUM_BIN=/bin/true NEKO_CHROMIUM_PROXY_AGENT=proxy.example.test:8080
   echo "non-loopback agent address unexpectedly succeeded" >&2
   exit 1
 fi
+
+output="$(NEKO_CHROMIUM_BIN=/bin/echo NEKO_CHROMIUM_PROXY_AGENT=localhost:18080 "${launcher_dir}/neko-chromium" --incognito)"
+if [[ "${output}" != '--incognito --proxy-server=http://localhost:18080' ]]; then
+  echo "explicit local agent was not passed to Chromium: ${output}" >&2
+  exit 1
+fi
+
+if NEKO_CHROMIUM_BIN=/bin/true NEKO_CHROMIUM_PROXY_AGENT=localhost:18080 NEKO_CHROMIUM_PROXY_BYPASS_LIST='localhost,example.test' "${launcher_dir}/neko-chromium"; then
+  echo "comma-separated bypass list unexpectedly succeeded" >&2
+  exit 1
+fi

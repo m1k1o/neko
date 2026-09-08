@@ -204,6 +204,35 @@ The policy files are located in the following paths:
 
 <PolicyFilePaths flavors={['chromium-based']} />
 
+**Use an authenticated outbound proxy (Chromium image only)**
+
+The official Chromium image can route browser traffic through an HTTP CONNECT
+or SOCKS5 proxy while keeping the upstream password out of Chromium's command
+line and profile. Mount the password as a Docker secret and configure the
+credential-hiding agent:
+
+```yaml title="docker-compose.yaml"
+services:
+  neko:
+    image: ghcr.io/m1k1o/neko/chromium:latest
+    environment:
+      NEKO_CHROMIUM_PROXY_SERVER: "http://proxy.example.com:8080" # or socks5://...
+      NEKO_CHROMIUM_PROXY_USERNAME: "proxy-user"
+      NEKO_CHROMIUM_PROXY_PASSWORD_FILE: "/run/secrets/chromium_proxy_password"
+      NEKO_CHROMIUM_PROXY_BYPASS_LIST: "localhost;127.0.0.1;[::1];*.internal"
+    secrets:
+      - chromium_proxy_password
+
+secrets:
+  chromium_proxy_password:
+    file: ./chromium-proxy-password.txt
+```
+
+The local agent listens on `127.0.0.1:18080` by default. You can change this
+with `NEKO_CHROMIUM_PROXY_AGENT`, but only loopback addresses are accepted. Do
+not use the container-wide `HTTP_PROXY` or `HTTPS_PROXY` variables for this
+purpose because they can also redirect Neko signaling and WebRTC services.
+
 **Allow file uploading & downloading**
 
 By default, the browsers in Neko do not allow local file access. If you want to allow file uploading and downloading, you can set the following policies in the JSON file:

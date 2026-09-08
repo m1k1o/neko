@@ -38,6 +38,12 @@ go build \
     cmd/neko/main.go;
 
 #
+# build the credential-hiding Chromium proxy agent
+CGO_ENABLED=0 go build \
+    -o bin/neko-proxy \
+    ./cmd/neko-proxy;
+
+#
 # ensure plugins folder exists
 mkdir -p bin/plugins
 

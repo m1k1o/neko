@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"net/url"
+	"strconv"
 	"strings"
 )
 
@@ -64,16 +65,22 @@ func (c Config) Parse() (Endpoint, error) {
 	if u.Hostname() == "" || u.Port() == "" {
 		return Endpoint{}, fmt.Errorf("proxy server must include a host and port")
 	}
-	if _, err := net.LookupPort("tcp", u.Port()); err != nil {
-		return Endpoint{}, fmt.Errorf("invalid proxy port %q: %w", u.Port(), err)
+	if err := validateProxyPort(u.Port()); err != nil {
+		return Endpoint{}, err
 	}
 
 	endpoint := Endpoint{Host: u.Hostname(), Port: u.Port()}
 	switch Protocol(strings.ToLower(u.Scheme)) {
 	case ProtocolHTTPConnect:
 		endpoint.Protocol = ProtocolHTTPConnect
+		if strings.Contains(c.Username, ":") {
+			return Endpoint{}, fmt.Errorf("HTTP proxy username must not contain a colon")
+		}
 	case ProtocolSOCKS5:
 		endpoint.Protocol = ProtocolSOCKS5
+		if len(c.Username) > 255 || len(c.Password) > 255 {
+			return Endpoint{}, fmt.Errorf("SOCKS5 username and password must not exceed 255 bytes")
+		}
 	default:
 		return Endpoint{}, fmt.Errorf("unsupported proxy protocol %q", u.Scheme)
 	}
@@ -85,6 +92,14 @@ func (c Config) Parse() (Endpoint, error) {
 	}
 
 	return endpoint, nil
+}
+
+func validateProxyPort(port string) error {
+	value, err := strconv.Atoi(port)
+	if err != nil || value < 1 || value > 65535 {
+		return fmt.Errorf("invalid proxy port %q", port)
+	}
+	return nil
 }
 
 // RedactedServer returns a safe value for logs and diagnostics.
@@ -104,8 +119,8 @@ func (c Config) ChromiumArguments(localAgent string) ([]string, error) {
 	if _, err := c.Parse(); err != nil {
 		return nil, err
 	}
-	if _, _, err := net.SplitHostPort(localAgent); err != nil {
-		return nil, fmt.Errorf("invalid local proxy agent address %q: %w", localAgent, err)
+	if _, err := ListenAddress(localAgent); err != nil {
+		return nil, err
 	}
 
 	args := []string{"--proxy-server=http://" + localAgent}

@@ -29,7 +29,9 @@ func TestConfigParse(t *testing.T) {
 		{name: "partial credentials", config: Config{Server: "http://proxy.example.test:8080", Username: "user"}, wantErr: true},
 		{name: "credentials in URL", config: Config{Server: "http://user:secret@proxy.example.test:8080"}, wantErr: true},
 		{name: "missing port", config: Config{Server: "http://proxy.example.test"}, wantErr: true},
+		{name: "zero port", config: Config{Server: "http://proxy.example.test:0"}, wantErr: true},
 		{name: "unsupported protocol", config: Config{Server: "https://proxy.example.test:443"}, wantErr: true},
+		{name: "invalid basic username", config: Config{Server: "http://proxy.example.test:8080", Username: "user:name", Password: "secret"}, wantErr: true},
 		{name: "invalid bypass", config: Config{Server: "http://proxy.example.test:8080", Bypass: []string{"localhost,example.test"}}, wantErr: true},
 	}
 
