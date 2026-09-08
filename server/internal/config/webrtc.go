@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -10,6 +11,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"github.com/m1k1o/neko/server/internal/connectivity"
 	"github.com/m1k1o/neko/server/pkg/types"
 	"github.com/m1k1o/neko/server/pkg/utils"
 )
@@ -51,6 +53,7 @@ type WebRTC struct {
 
 	NAT1To1IPs     []string
 	IpRetrievalUrl string
+	Connectivity   connectivity.Mode
 
 	Estimator WebRTCEstimator
 }
@@ -104,6 +107,11 @@ func (WebRTC) Init(cmd *cobra.Command) error {
 
 	cmd.PersistentFlags().String("webrtc.ip_retrieval_url", "https://checkip.amazonaws.com", "URL address used for retrieval of the external IP address")
 	if err := viper.BindPFlag("webrtc.ip_retrieval_url", cmd.PersistentFlags().Lookup("webrtc.ip_retrieval_url")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().String("webrtc.connectivity.mode", "", "optional connectivity mode (direct or frp)")
+	if err := viper.BindPFlag("webrtc.connectivity.mode", cmd.PersistentFlags().Lookup("webrtc.connectivity.mode")); err != nil {
 		return err
 	}
 
@@ -302,6 +310,11 @@ func (s *WebRTC) Set() {
 		}
 	}
 
+	s.Connectivity = connectivity.Mode(viper.GetString("webrtc.connectivity.mode"))
+	if err := s.validateConnectivity(epr); err != nil {
+		log.Panic().Err(err).Msg("invalid WebRTC connectivity configuration")
+	}
+
 	// bandwidth estimator
 
 	s.Estimator.Enabled = viper.GetBool("webrtc.estimator.enabled")
@@ -315,6 +328,51 @@ func (s *WebRTC) Set() {
 	s.Estimator.DowngradeBackoff = viper.GetDuration("webrtc.estimator.downgrade_backoff")
 	s.Estimator.UpgradeBackoff = viper.GetDuration("webrtc.estimator.upgrade_backoff")
 	s.Estimator.DiffThreshold = viper.GetFloat64("webrtc.estimator.diff_threshold")
+}
+
+func (s WebRTC) validateConnectivity(epr string) error {
+	if s.Connectivity == "" {
+		return nil
+	}
+
+	if s.Connectivity == connectivity.ModeFRP {
+		if epr != "" {
+			return fmt.Errorf("frp connectivity mode cannot be combined with webrtc.epr")
+		}
+		if !viper.IsSet("webrtc.nat1to1") {
+			return fmt.Errorf("frp connectivity mode requires an explicit webrtc.nat1to1 IP")
+		}
+		if len(s.NAT1To1IPs) != 1 {
+			return fmt.Errorf("frp connectivity mode requires exactly one webrtc.nat1to1 IP")
+		}
+
+		return connectivity.MediaPortPlan{
+			Mode:       s.Connectivity,
+			UDPMuxPort: s.UDPMux,
+			TCPMuxPort: s.TCPMux,
+			NAT1To1IP:  s.NAT1To1IPs[0],
+		}.Validate()
+	}
+
+	if s.Connectivity == connectivity.ModeDirect {
+		// Existing direct deployments can use EPR without a MUX port. Preserve
+		// that configuration while validating explicit MUX plans when present.
+		if s.UDPMux == 0 && s.TCPMux == 0 {
+			return nil
+		}
+
+		plan := connectivity.MediaPortPlan{
+			Mode:       s.Connectivity,
+			UDPMuxPort: s.UDPMux,
+			TCPMuxPort: s.TCPMux,
+		}
+		if len(s.NAT1To1IPs) == 1 {
+			plan.NAT1To1IP = s.NAT1To1IPs[0]
+		}
+		return plan.Validate()
+	}
+
+	return fmt.Errorf("unsupported connectivity mode %q", s.Connectivity)
 }
 
 func (s *WebRTC) SetV2() {
