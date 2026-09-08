@@ -193,7 +193,29 @@ server/internal/
 | 全局代理劫持控制面 | Chromium 采用显式代理参数；服务端和 WebRTC 端点采用明确 bypass，禁止将全局代理变量透传给所有子进程。 |
 | 前端大迁移长期分叉 | 先提取 SDK 与共享协议，UI 逐页迁移，禁止并行维护两套媒体实现。 |
 
-## 8. 里程碑与成功标准
+## 8. 当前实施状态（2026-09-08）
+
+### 已完成
+
+- `747c26a1`：固化 M1 的 Chromium、性能、FRP、认证代理和平台范围。
+- `38887ae6`：新增纯 Go 媒体端口计划，校验直连 MUX 与 FRP 的同端口 TCP/UDP 约束。
+- `a096b0c3`：新增 `webrtc.connectivity.mode=frp` 启动前预检；FRP 模式要求显式唯一 NAT IP、同端口 MUX，且拒绝 EPR 混用。
+- `6ce2169c`：新增认证出站代理配置模型，支持 HTTP CONNECT Basic 与 SOCKS5 用户名/密码，拒绝 URL 内嵌凭据并提供脱敏诊断地址。
+- `13e2928d`：Chromium 镜像改用本地代理 Agent 启动包装器；仅允许 loopback Agent 地址，保留 NVIDIA 初始化入口。
+
+### 已验证
+
+- `go test ./internal/connectivity ./internal/proxy` 通过。
+- `apps/chromium/neko-chromium_test.sh` 通过。
+- 每个提交前均执行 `git diff --check`。
+
+### 当前限制与下一步
+
+- 完整服务端构建仍需要本机安装项目 Dockerfile 所列的 X11、GTK 与 GStreamer 开发库；当前环境的 sudo 需要交互式密码，因此尚未完成该环境准备。
+- 下一项实现：本地代理 Agent 的 HTTP CONNECT / SOCKS5 实际转发与认证，并将其接入 Chromium 容器生命周期。
+- 随后实现：媒体背压观测、编码/质量 profile，以及 FRP、TURN、代理三种网络路径的集成测试模板。
+
+## 9. 里程碑与成功标准
 
 1. **M1：Chromium 性能、认证代理与单端口连通性**：仅支持 Chromium；支持 Linux x86_64 和 Windows x86_64 Docker Desktop/WSL2；默认 UDP MUX、TCP/TURN/FRP 回退、启动预检、带认证的 HTTP CONNECT/SOCKS5 出站代理、媒体背压和质量策略完成，并通过性能门槛。
 2. **M2：可测试的契约与领域核心**：状态机、协议 schema、双端类型生成和基础 CI 完成。
