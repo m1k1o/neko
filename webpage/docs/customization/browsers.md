@@ -220,6 +220,7 @@ services:
       NEKO_CHROMIUM_PROXY_USERNAME: "proxy-user"
       NEKO_CHROMIUM_PROXY_PASSWORD_FILE: "/run/secrets/chromium_proxy_password"
       NEKO_CHROMIUM_PROXY_BYPASS_LIST: "localhost;127.0.0.1;[::1];*.internal"
+      NEKO_CHROMIUM_PROXY_HEALTHCHECK_TARGET: "connectivity-check.example.com:443"
     secrets:
       - chromium_proxy_password
 
@@ -232,6 +233,13 @@ The local agent listens on `127.0.0.1:18080` by default. You can change this
 with `NEKO_CHROMIUM_PROXY_AGENT`, but only loopback addresses are accepted. Do
 not use the container-wide `HTTP_PROXY` or `HTTPS_PROXY` variables for this
 purpose because they can also redirect Neko signaling and WebRTC services.
+
+The health-check target is required when an upstream proxy is configured. At
+startup the agent verifies that it can authenticate to the upstream and open a
+connection to this target. Three failed checks prevent Chromium from starting.
+After startup the check repeats every 30 seconds. Its credential-free status is
+available inside the container at `http://127.0.0.1:18081/healthz`; change the
+loopback listener with `NEKO_CHROMIUM_PROXY_HEALTH_LISTEN` if necessary.
 
 **Allow file uploading & downloading**
 

@@ -159,7 +159,7 @@ func (a *Agent) serveTunnel(w http.ResponseWriter, r *http.Request) {
 func dialHTTPConnect(ctx context.Context, endpoint Endpoint, username, password, target string) (net.Conn, error) {
 	conn, err := (&net.Dialer{Timeout: dialTimeout, KeepAlive: 30 * time.Second}).DialContext(ctx, "tcp", net.JoinHostPort(endpoint.Host, endpoint.Port))
 	if err != nil {
-		return nil, err
+		return nil, &CheckError{Reason: HealthUpstreamUnreachable, Err: err}
 	}
 
 	request := &http.Request{
@@ -173,21 +173,25 @@ func dialHTTPConnect(ctx context.Context, endpoint Endpoint, username, password,
 	}
 	if err := request.Write(conn); err != nil {
 		conn.Close()
-		return nil, err
+		return nil, &CheckError{Reason: HealthCheckFailed, Err: err}
 	}
 
 	reader := bufio.NewReader(conn)
 	response, err := http.ReadResponse(reader, request)
 	if err != nil {
 		conn.Close()
-		return nil, err
+		return nil, &CheckError{Reason: HealthCheckFailed, Err: err}
 	}
 	if response.StatusCode != http.StatusOK {
 		if response.Body != nil {
 			response.Body.Close()
 		}
 		conn.Close()
-		return nil, fmt.Errorf("upstream HTTP proxy returned %s", response.Status)
+		reason := HealthTargetRejected
+		if response.StatusCode == http.StatusProxyAuthRequired {
+			reason = HealthAuthenticationFailed
+		}
+		return nil, &CheckError{Reason: reason, Err: fmt.Errorf("upstream HTTP proxy returned %s", response.Status)}
 	}
 	return &bufferedConn{Conn: conn, reader: reader}, nil
 }
@@ -206,10 +210,18 @@ func validateTarget(target string) error {
 	if err != nil || host == "" || port == "" {
 		return errors.New("target must contain a host and port")
 	}
-	if _, err := net.LookupPort("tcp", port); err != nil {
+	if err := validateProxyPort(port); err != nil {
 		return errors.New("target contains an invalid port")
 	}
 	return nil
+}
+
+// TargetAddress validates an explicit proxy health-check destination.
+func TargetAddress(target string) (string, error) {
+	if err := validateTarget(target); err != nil {
+		return "", fmt.Errorf("invalid proxy health-check target %q: %w", target, err)
+	}
+	return target, nil
 }
 
 func removeHopHeaders(header http.Header) {
