@@ -2,8 +2,10 @@ package config
 
 import (
 	"os"
+	"reflect"
 	"strings"
 
+	"github.com/go-viper/mapstructure/v2"
 	"github.com/pion/webrtc/v4"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -322,6 +324,17 @@ func (Capture) InitV2(cmd *cobra.Command) error {
 	return nil
 }
 
+// videoPipelineShorthandHook accepts a bare pipeline string in place of a full
+// video pipeline config, mirroring the capture.video.pipeline shorthand.
+func videoPipelineShorthandHook() mapstructure.DecodeHookFunc {
+	return func(from reflect.Type, to reflect.Type, data any) (any, error) {
+		if from.Kind() == reflect.String && to == reflect.TypeOf(types.VideoConfig{}) {
+			return types.VideoConfig{GstPipeline: data.(string)}, nil
+		}
+		return data, nil
+	}
+}
+
 func (s *Capture) Set() {
 	var ok bool
 
@@ -342,7 +355,10 @@ func (s *Capture) Set() {
 
 	s.VideoIDs = viper.GetStringSlice("capture.video.ids")
 	if err := viper.UnmarshalKey("capture.video.pipelines", &s.VideoPipelines, viper.DecodeHook(
-		utils.JsonStringAutoDecode(s.VideoPipelines),
+		mapstructure.ComposeDecodeHookFunc(
+			utils.JsonStringAutoDecode(s.VideoPipelines),
+			videoPipelineShorthandHook(),
+		),
 	)); err != nil {
 		log.Warn().Err(err).Msgf("unable to parse video pipelines")
 	}
