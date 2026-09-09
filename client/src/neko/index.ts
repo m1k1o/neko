@@ -132,8 +132,8 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   protected [EVENT.CONNECTED]() {
     this.$accessor.user.setMember(this.id)
     this.$accessor.connection.setConnected(true)
-    set('displayname', this.$accessor.displayname)
-    set('password', this.$accessor.password)
+    set('displayname', this.$accessor.session.displayname)
+    set('password', this.$accessor.session.password)
     this.startNetworkMonitor()
 
     this.$vue.$notify({
@@ -240,9 +240,9 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
 
   private setLockState(resource: 'login' | 'control' | 'file_transfer', locked: boolean) {
     if (locked) {
-      this.$accessor.setLocked(resource)
+      this.$accessor.session.setLocked(resource)
     } else {
-      this.$accessor.setUnlocked(resource)
+      this.$accessor.session.setUnlocked(resource)
     }
   }
 
@@ -252,7 +252,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
 
   protected [EVENT.SYSTEM.DISCONNECT]({ message }: SystemMessagePayload) {
     if (message == 'kicked') {
-      this.$accessor.logout()
+      this.$accessor.session.logout()
       message = this.$vue.$t('connection.kicked') as string
     }
 

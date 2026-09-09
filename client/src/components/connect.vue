@@ -346,22 +346,22 @@
 
     mounted() {
       // auto-password fill
-      let password = this.$accessor.password
+      let password = this.$accessor.session.password
       if (this.autoPassword !== null) {
         this.removeUrlParam('pwd')
         password = this.autoPassword
       }
 
       // auto-user fill
-      let displayname = this.$accessor.displayname
+      let displayname = this.$accessor.session.displayname
       const usr = new URL(location.href).searchParams.get('usr')
       if (usr) {
         this.removeUrlParam('usr')
-        displayname = this.$accessor.displayname || usr
+        displayname = this.$accessor.session.displayname || usr
       }
 
       if (displayname !== '' && password !== '') {
-        this.$accessor.login({ displayname, password })
+        this.$accessor.session.login({ displayname, password })
         this.autoPassword = null
       }
     }
@@ -403,7 +403,7 @@
       }
 
       this.loginError = ''
-      this.$accessor.login({ displayname: this.displayname, password })
+      this.$accessor.session.login({ displayname: this.displayname, password })
       this.autoPassword = null
     }
 

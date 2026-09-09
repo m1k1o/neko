@@ -427,7 +427,7 @@
     }
 
     get locked() {
-      return this.$accessor.locked
+      return this.$accessor.session.locked
     }
 
     get side() {
@@ -447,11 +447,11 @@
     }
 
     toggleLock(resource: AdminLockResource) {
-      this.$accessor.toggleLock(resource)
+      this.$accessor.session.toggleLock(resource)
     }
 
     isLocked(resource: AdminLockResource): boolean {
-      return this.$accessor.isLocked(resource)
+      return this.$accessor.session.isLocked(resource)
     }
 
     readTexts: number = 0

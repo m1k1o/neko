@@ -469,7 +469,7 @@
     }
 
     logout() {
-      this.$accessor.logout()
+      this.$accessor.session.logout()
     }
   }
 </script>

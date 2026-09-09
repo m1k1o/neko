@@ -193,7 +193,7 @@
     get filetransferAllowed() {
       return (
         this.$accessor.remote.fileTransfer &&
-        (this.$accessor.user.admin || !this.$accessor.isLocked('file_transfer')) &&
+        (this.$accessor.user.admin || !this.$accessor.session.isLocked('file_transfer')) &&
         (this.canDownload || this.canUpload)
       )
     }

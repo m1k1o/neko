@@ -339,7 +339,11 @@
     @Prop(Boolean) readonly shakeKbd!: boolean
 
     get controlLocked() {
-      return 'control' in this.$accessor.locked && this.$accessor.locked['control'] && !this.$accessor.user.admin
+      return (
+        'control' in this.$accessor.session.locked &&
+        this.$accessor.session.locked['control'] &&
+        !this.$accessor.user.admin
+      )
     }
 
     get disabeld() {
