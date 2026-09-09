@@ -1,7 +1,6 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import { useAccessor, mutationTree, getterTree, actionTree } from 'typed-vuex'
-import { EVENT } from '~/neko/events'
 import { AdminLockResource } from '~/neko/messages'
 import { get, set } from '~/utils/localstorage'
 
@@ -46,6 +45,15 @@ export const getters = getterTree(state, {
   isLocked: (state) => (resource: AdminLockResource) => resource in state.locked && state.locked[resource],
 })
 
+async function setFileTransferEnabled(enabled: boolean) {
+  const response = await $http.get<{ plugins?: Record<string, unknown> }>('/api/room/settings')
+  const plugins = {
+    ...(response.data.plugins || {}),
+    'filetransfer.enabled': enabled,
+  }
+  await $http.post('/api/room/settings', { plugins })
+}
+
 export const actions = actionTree(
   { state, getters, mutations },
   {
@@ -54,20 +62,32 @@ export const actions = actionTree(
       accessor.settings.initialise()
     },
 
-    lock(_, resource: AdminLockResource) {
+    async lock(_, resource: AdminLockResource) {
       if (!accessor.connection.connected || !accessor.user.admin) {
         return
       }
 
-      $client.sendMessage(EVENT.ADMIN.LOCK, { resource })
+      const setting = resource === 'login' ? 'locked_logins' : resource === 'control' ? 'locked_controls' : null
+      if (setting) {
+        await $http.post('/api/room/settings', { [setting]: true })
+      } else {
+        await setFileTransferEnabled(false)
+      }
+      accessor.setLocked(resource)
     },
 
-    unlock(_, resource: AdminLockResource) {
+    async unlock(_, resource: AdminLockResource) {
       if (!accessor.connection.connected || !accessor.user.admin) {
         return
       }
 
-      $client.sendMessage(EVENT.ADMIN.UNLOCK, { resource })
+      const setting = resource === 'login' ? 'locked_logins' : resource === 'control' ? 'locked_controls' : null
+      if (setting) {
+        await $http.post('/api/room/settings', { [setting]: false })
+      } else {
+        await setFileTransferEnabled(true)
+      }
+      accessor.setUnlocked(resource)
     },
 
     toggleLock(_, resource: AdminLockResource) {

@@ -2,9 +2,8 @@ export type SignalingState = 'idle' | 'connecting' | 'open' | 'closing' | 'close
 
 export interface SignalingMessage {
   event: string
-  /** Canonical server envelope. Flat messages remain accepted on receive. */
+  /** Canonical server envelope: every payload is nested under `payload`. */
   payload?: unknown
-  [key: string]: unknown
 }
 
 export interface SignalingTransportOptions {
@@ -154,6 +153,14 @@ export class SignalingTransport {
     if (value === null || typeof value !== 'object' || typeof (value as { event?: unknown }).event !== 'string') {
       this.options.onError?.(new Error('signaling message is missing an event'))
       return
+    }
+
+    if ('payload' in value && (value as { payload?: unknown }).payload !== undefined) {
+      const payload = (value as { payload?: unknown }).payload
+      if (payload === null || typeof payload !== 'object') {
+        this.options.onError?.(new Error('signaling payload must be an object'))
+        return
+      }
     }
 
     try {

@@ -1,7 +1,6 @@
 import Vue from 'vue'
 import EventEmitter from 'eventemitter3'
 import { BaseClient, BaseEvents } from './base'
-import { Member } from './types'
 import { EVENT } from './events'
 import { accessor } from '~/store'
 import { NetworkQuality } from '~/store/connection'
@@ -9,22 +8,18 @@ import { set } from '~/utils/localstorage'
 
 import {
   SystemMessagePayload,
-  MemberListPayload,
-  MemberDisconnectPayload,
-  MemberPayload,
-  ControlPayload,
-  ControlTargetPayload,
   ChatPayload,
   EmotePayload,
-  ControlClipboardPayload,
-  ScreenConfigurationsPayload,
   ScreenResolutionPayload,
   BroadcastStatusPayload,
-  AdminTargetPayload,
-  AdminLockMessage,
   SystemInitPayload,
-  AdminLockResource,
-  FileTransferListPayload,
+  SystemAdminPayload,
+  SystemSettingsPayload,
+  SessionDataPayload,
+  SessionIdPayload,
+  SessionProfilePayload,
+  SessionStatePayload,
+  FileTransferUpdatePayload,
 } from './messages'
 
 interface NekoEvents extends BaseEvents {}
@@ -33,14 +28,20 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   private $vue!: Vue
   private $accessor!: typeof accessor
   private url!: string
+  private apiURL = ''
+  private token = ''
   private networkMonitor?: number
   private previousNetworkCounters?: { packetsReceived: number; packetsLost: number }
 
   init(vue: Vue) {
     const url =
       process.env.NODE_ENV === 'development'
-        ? `ws://${location.host.split(':')[0]}:${process.env.VUE_APP_SERVER_PORT}/ws`
-        : location.protocol.replace(/^http/, 'ws') + '//' + location.host + location.pathname.replace(/\/$/, '') + '/ws'
+        ? `ws://${location.host.split(':')[0]}:${process.env.VUE_APP_SERVER_PORT}/api/ws`
+        : location.protocol.replace(/^http/, 'ws') +
+          '//' +
+          location.host +
+          location.pathname.replace(/\/$/, '') +
+          '/api/ws'
 
     this.initWithURL(vue, url)
   }
@@ -49,8 +50,11 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
     this.$vue = vue
     this.$accessor = vue.$accessor
     this.url = url
-    // convert ws url to http url
-    this.$vue.$http.defaults.baseURL = url.replace(/^ws/, 'http').replace(/\/ws$/, '')
+    const httpURL = url.replace(/^ws/, 'http')
+    this.apiURL = httpURL.replace(/\/api\/ws$/, '/api')
+    // Keep static assets (emoji, keyboard layouts) on the application root.
+    this.$vue.$http.defaults.baseURL = httpURL.replace(/\/api\/ws$/, '')
+    this.$vue.$http.defaults.withCredentials = true
   }
 
   private cleanup() {
@@ -62,18 +66,65 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
     this.$accessor.chat.reset()
   }
 
-  login(password: string, displayname: string) {
-    this.connect(this.url, password, displayname)
+  async login(password: string, displayname: string) {
+    if (this.$accessor.connection.connecting) {
+      return
+    }
+
+    this.$accessor.connection.setConnecting()
+    try {
+      const response = await this.$vue.$http.post<{ token?: string }>(`${this.apiURL}/login`, {
+        username: displayname,
+        password,
+      })
+      this.token = response.data.token || ''
+      this.setAuthToken()
+      this.connect(this.url, this.token)
+    } catch (error) {
+      const reason = this.toError(error)
+      this.token = ''
+      this.setAuthToken()
+      this.$accessor.connection.setConnected(false)
+      this.$accessor.connection.setError(reason.message)
+    }
   }
 
-  logout() {
+  async logout() {
     this.disconnect()
     this.cleanup()
+    try {
+      await this.$vue.$http.post(`${this.apiURL}/logout`)
+    } catch (error) {
+      // A closed session is already safe to discard locally.
+    }
+    this.token = ''
+    this.setAuthToken()
     this.$vue.$swal({
       title: this.$vue.$t('connection.logged_out'),
       icon: 'info',
       confirmButtonText: this.$vue.$t('connection.button_confirm') as string,
     })
+  }
+
+  private setAuthToken() {
+    const headers = this.$vue.$http.defaults.headers.common
+    if (this.token) {
+      headers.Authorization = `Bearer ${this.token}`
+    } else {
+      delete headers.Authorization
+    }
+  }
+
+  private toError(error: unknown): Error {
+    const response = (error as { response?: { data?: { message?: string } } })?.response
+    const message = response?.data?.message
+    if (message) {
+      return new Error(message)
+    }
+    if (error instanceof Error) {
+      return error
+    }
+    return new Error('login request failed')
   }
 
   /////////////////////////////
@@ -218,22 +269,58 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   /////////////////////////////
   // System Events
   /////////////////////////////
-  protected [EVENT.SYSTEM.INIT]({ implicit_hosting, locks, file_transfer, heartbeat_interval }: SystemInitPayload) {
-    this.$accessor.remote.setImplicitHosting(implicit_hosting)
-    this.$accessor.remote.setFileTransfer(file_transfer)
+  protected [EVENT.SYSTEM.INIT]({ session_id, control_host, sessions, settings }: SystemInitPayload) {
+    this._id = session_id
+    this.$accessor.remote.setHost(control_host.has_host ? control_host.host_id || '' : '')
+    this.$accessor.remote.setImplicitHosting(settings.implicit_hosting)
+    this.$accessor.remote.setLocked(settings.locked_controls)
+    this.setLockState('login', settings.locked_logins)
+    this.setLockState('control', settings.locked_controls)
+    this.setLockState('file_transfer', settings.plugins?.['filetransfer.enabled'] === false)
+    this.$accessor.user.setMembers(
+      Object.values(sessions).map((session) => ({
+        id: session.id,
+        displayname: session.profile.name,
+        admin: session.profile.is_admin,
+        muted: false,
+        connected: session.state.is_connected,
+      })),
+    )
 
-    for (const resource in locks) {
-      this[EVENT.ADMIN.LOCK]({
-        event: EVENT.ADMIN.LOCK,
-        resource: resource as AdminLockResource,
-        id: locks[resource],
-      })
-    }
-
-    if (heartbeat_interval > 0) {
+    if (settings.heartbeat_interval > 0) {
       if (this._ws_heartbeat) clearInterval(this._ws_heartbeat)
-      this._ws_heartbeat = window.setInterval(() => this.sendMessage(EVENT.CLIENT.HEARTBEAT), heartbeat_interval * 1000)
+      this._ws_heartbeat = window.setInterval(
+        () => this.sendMessage(EVENT.CLIENT.HEARTBEAT),
+        settings.heartbeat_interval * 1000,
+      )
     }
+  }
+
+  protected [EVENT.SYSTEM.ADMIN]({ broadcast_status }: SystemAdminPayload) {
+    this.$accessor.settings.broadcastStatus({
+      url: broadcast_status.url,
+      isActive: broadcast_status.is_active,
+    })
+  }
+
+  protected [EVENT.SYSTEM.SETTINGS](settings: SystemSettingsPayload) {
+    this.$accessor.remote.setImplicitHosting(settings.implicit_hosting)
+    this.$accessor.remote.setLocked(settings.locked_controls)
+    this.setLockState('login', settings.locked_logins)
+    this.setLockState('control', settings.locked_controls)
+    this.setLockState('file_transfer', settings.plugins?.['filetransfer.enabled'] === false)
+  }
+
+  private setLockState(resource: 'login' | 'control' | 'file_transfer', locked: boolean) {
+    if (locked) {
+      this.$accessor.setLocked(resource)
+    } else {
+      this.$accessor.setUnlocked(resource)
+    }
+  }
+
+  protected [EVENT.CONTROL.HOST]({ has_host, host_id }: { has_host: boolean; host_id?: string }) {
+    this.$accessor.remote.setHost(has_host ? host_id || '' : '')
   }
 
   protected [EVENT.SYSTEM.DISCONNECT]({ message }: SystemMessagePayload) {
@@ -270,107 +357,48 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   }
 
   /////////////////////////////
-  // Member Events
+  // Session Events
   /////////////////////////////
-  protected [EVENT.MEMBER.LIST]({ members }: MemberListPayload) {
-    this.$accessor.user.setMembers(members)
-    this.$accessor.chat.newMessage({
-      id: this.id,
-      content: this.$vue.$t('notifications.connected', { name: '' }) as string,
-      type: 'event',
-      created: new Date(),
+  protected [EVENT.SESSION.CREATED](session: SessionDataPayload) {
+    this.$accessor.user.addMember({
+      id: session.id,
+      displayname: session.profile.name,
+      admin: session.profile.is_admin,
+      muted: false,
+      connected: session.state.is_connected,
     })
   }
 
-  protected [EVENT.MEMBER.CONNECTED](member: MemberPayload) {
-    this.$accessor.user.addMember(member)
-
-    if (member.id !== this.id) {
-      this.$accessor.chat.newMessage({
-        id: member.id,
-        content: this.$vue.$t('notifications.connected', { name: '' }) as string,
-        type: 'event',
-        created: new Date(),
-      })
-    }
-  }
-
-  protected [EVENT.MEMBER.DISCONNECTED]({ id }: MemberDisconnectPayload) {
-    const member = this.member(id)
-    if (!member) {
-      return
-    }
-
-    this.$accessor.chat.newMessage({
-      id: member.id,
-      content: this.$vue.$t('notifications.disconnected', { name: '' }) as string,
-      type: 'event',
-      created: new Date(),
-    })
-
+  protected [EVENT.SESSION.DELETED]({ id }: SessionIdPayload) {
     this.$accessor.user.delMember(id)
   }
+
+  protected [EVENT.SESSION.PROFILE]({ id, name, is_admin }: SessionProfilePayload) {
+    const member = this.member(id)
+    if (!member) return
+    this.$accessor.user.addMember({ ...member, displayname: name, admin: is_admin })
+  }
+
+  protected [EVENT.SESSION.STATE]({ id, is_connected }: SessionStatePayload) {
+    const member = this.member(id)
+    if (!member) return
+    if (is_connected) {
+      this.$accessor.user.addMember({ ...member, connected: true })
+    } else {
+      this.$accessor.user.delMember(id)
+    }
+  }
+
+  protected [EVENT.SESSION.CURSORS]() {}
 
   /////////////////////////////
   // Control Events
   /////////////////////////////
-  protected [EVENT.CONTROL.LOCKED]({ id }: ControlPayload) {
-    this.$accessor.remote.setHost(id)
-    this.$accessor.remote.changeKeyboard()
-
-    const member = this.member(id)
-    if (!member) {
-      return
-    }
-
-    if (this.id === id) {
-      this.$vue.$notify({
-        group: 'neko',
-        type: 'info',
-        title: this.$vue.$t('notifications.controls_taken', {
-          name: member.id == this.id && this.$vue.$te('you') ? this.$vue.$t('you') : member.displayname,
-        }) as string,
-        duration: 5000,
-        speed: 1000,
-      })
-    }
-
-    this.$accessor.chat.newMessage({
-      id: member.id,
-      content: this.$vue.$t('notifications.controls_taken', { name: '' }) as string,
-      type: 'event',
-      created: new Date(),
-    })
+  protected [EVENT.CONTROL.RELEASE]({ id }: SessionIdPayload) {
+    if (id === this.id) this.$accessor.remote.reset()
   }
 
-  protected [EVENT.CONTROL.RELEASE]({ id }: ControlPayload) {
-    this.$accessor.remote.reset()
-    const member = this.member(id)
-    if (!member) {
-      return
-    }
-
-    if (this.id === id) {
-      this.$vue.$notify({
-        group: 'neko',
-        type: 'info',
-        title: this.$vue.$t('notifications.controls_released', {
-          name: member.id == this.id && this.$vue.$te('you') ? this.$vue.$t('you') : member.displayname,
-        }) as string,
-        duration: 5000,
-        speed: 1000,
-      })
-    }
-
-    this.$accessor.chat.newMessage({
-      id: member.id,
-      content: this.$vue.$t('notifications.controls_released', { name: '' }) as string,
-      type: 'event',
-      created: new Date(),
-    })
-  }
-
-  protected [EVENT.CONTROL.REQUEST]({ id }: ControlPayload) {
+  protected [EVENT.CONTROL.REQUEST]({ id }: SessionIdPayload) {
     const member = this.member(id)
     if (!member) {
       return
@@ -386,41 +414,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
     })
   }
 
-  protected [EVENT.CONTROL.REQUESTING]({ id }: ControlPayload) {
-    const member = this.member(id)
-    if (!member || member.ignored) {
-      return
-    }
-
-    this.$vue.$notify({
-      group: 'neko',
-      type: 'info',
-      title: this.$vue.$t('notifications.controls_requesting', { name: member.displayname }) as string,
-      duration: 5000,
-      speed: 1000,
-    })
-  }
-
-  protected [EVENT.CONTROL.GIVE]({ id, target }: ControlTargetPayload) {
-    const member = this.member(target)
-    if (!member) {
-      return
-    }
-
-    this.$accessor.remote.setHost(member)
-    this.$accessor.remote.changeKeyboard()
-
-    this.$accessor.chat.newMessage({
-      id,
-      content: this.$vue.$t('notifications.controls_given', {
-        name: member.id == this.id && this.$vue.$te('you') ? this.$vue.$t('you') : member.displayname,
-      }) as string,
-      type: 'event',
-      created: new Date(),
-    })
-  }
-
-  protected [EVENT.CONTROL.CLIPBOARD]({ text }: ControlClipboardPayload) {
+  protected [EVENT.CLIPBOARD.UPDATED]({ text }: { text: string }) {
     this.$accessor.remote.setClipboard(text)
   }
 
@@ -453,19 +447,21 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   /////////////////////////////
   // File Transfer Events
   /////////////////////////////
-  protected [EVENT.FILETRANSFER.LIST]({
-    cwd,
+  protected [EVENT.FILETRANSFER.UPDATE]({
+    root_dir,
+    enabled,
     user_download,
     user_upload,
     user_delete,
     files,
-  }: FileTransferListPayload) {
-    this.$accessor.files.setCwd(cwd)
+  }: FileTransferUpdatePayload) {
+    this.$accessor.files.setCwd(root_dir)
     this.$accessor.files.setLoading(false)
     this.$accessor.files.setFileList(files)
     this.$accessor.files.setUserDownload(user_download)
     this.$accessor.files.setUserUpload(user_upload)
     this.$accessor.files.setUserDelete(user_delete)
+    this.$accessor.remote.setFileTransfer(enabled)
   }
 
   /////////////////////////////
@@ -478,11 +474,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   /////////////////////////////
   // Screen Events
   /////////////////////////////
-  protected [EVENT.SCREEN.CONFIGURATIONS]({ configurations }: ScreenConfigurationsPayload) {
-    this.$accessor.video.setConfigurations(configurations)
-  }
-
-  protected [EVENT.SCREEN.RESOLUTION]({ id, width, height, rate }: ScreenResolutionPayload) {
+  protected [EVENT.SCREEN.UPDATED]({ id, width, height, rate }: ScreenResolutionPayload) {
     this.$accessor.video.setResolution({ width, height, rate })
 
     if (!id) {
@@ -510,199 +502,11 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   // Broadcast Events
   /////////////////////////////
   protected [EVENT.BROADCAST.STATUS](payload: BroadcastStatusPayload) {
-    this.$accessor.settings.broadcastStatus(payload)
-  }
-
-  /////////////////////////////
-  // Admin Events
-  /////////////////////////////
-  protected [EVENT.ADMIN.BAN]({ id, target }: AdminTargetPayload) {
-    if (!target) {
-      return
-    }
-
-    const member = this.member(target)
-    if (!member) {
-      return
-    }
-
-    this.$accessor.chat.newMessage({
-      id,
-      content: this.$vue.$t('notifications.banned', {
-        name: member.id == this.id && this.$vue.$te('you') ? this.$vue.$t('you') : member.displayname,
-      }) as string,
-      type: 'event',
-      created: new Date(),
-    })
-  }
-
-  protected [EVENT.ADMIN.KICK]({ id, target }: AdminTargetPayload) {
-    if (!target) {
-      return
-    }
-
-    const member = this.member(target)
-    if (!member) {
-      return
-    }
-
-    this.$accessor.chat.newMessage({
-      id,
-      content: this.$vue.$t('notifications.kicked', {
-        name: member.id == this.id && this.$vue.$te('you') ? this.$vue.$t('you') : member.displayname,
-      }) as string,
-      type: 'event',
-      created: new Date(),
-    })
-  }
-
-  protected [EVENT.ADMIN.MUTE]({ id, target }: AdminTargetPayload) {
-    if (!target) {
-      return
-    }
-
-    this.$accessor.user.setMuted({ id: target, muted: true })
-
-    const member = this.member(target)
-    if (!member) {
-      return
-    }
-
-    this.$accessor.chat.newMessage({
-      id,
-      content: this.$vue.$t('notifications.muted', {
-        name: member.id == this.id && this.$vue.$te('you') ? this.$vue.$t('you') : member.displayname,
-      }) as string,
-      type: 'event',
-      created: new Date(),
-    })
-  }
-
-  protected [EVENT.ADMIN.UNMUTE]({ id, target }: AdminTargetPayload) {
-    if (!target) {
-      return
-    }
-
-    this.$accessor.user.setMuted({ id: target, muted: false })
-
-    const member = this.member(target)
-    if (!member) {
-      return
-    }
-
-    this.$accessor.chat.newMessage({
-      id,
-      content: this.$vue.$t('notifications.unmuted', {
-        name: member.id == this.id && this.$vue.$te('you') ? this.$vue.$t('you') : member.displayname,
-      }) as string,
-      type: 'event',
-      created: new Date(),
-    })
-  }
-
-  protected [EVENT.ADMIN.LOCK]({ id, resource }: AdminLockMessage) {
-    this.$accessor.setLocked(resource)
-
-    this.$accessor.chat.newMessage({
-      id,
-      content: this.$vue.$t(`locks.${resource}.notif_locked`) as string,
-      type: 'event',
-      created: new Date(),
-    })
-  }
-
-  protected [EVENT.ADMIN.UNLOCK]({ id, resource }: AdminLockMessage) {
-    this.$accessor.setUnlocked(resource)
-
-    this.$accessor.chat.newMessage({
-      id,
-      content: this.$vue.$t(`locks.${resource}.notif_unlocked`) as string,
-      type: 'event',
-      created: new Date(),
-    })
-  }
-
-  protected [EVENT.ADMIN.CONTROL]({ id, target }: AdminTargetPayload) {
-    this.$accessor.remote.setHost(id)
-    this.$accessor.remote.changeKeyboard()
-
-    if (!target) {
-      this.$accessor.chat.newMessage({
-        id,
-        content: this.$vue.$t('notifications.controls_taken_force') as string,
-        type: 'event',
-        created: new Date(),
-      })
-      return
-    }
-
-    const member = this.member(target)
-    if (!member) {
-      return
-    }
-
-    this.$accessor.chat.newMessage({
-      id,
-      content: this.$vue.$t('notifications.controls_taken_steal', {
-        name: member.id == this.id && this.$vue.$te('you') ? this.$vue.$t('you') : member.displayname,
-      }) as string,
-      type: 'event',
-      created: new Date(),
-    })
-  }
-
-  protected [EVENT.ADMIN.RELEASE]({ id, target }: AdminTargetPayload) {
-    this.$accessor.remote.reset()
-    if (!target) {
-      this.$accessor.chat.newMessage({
-        id,
-        content: this.$vue.$t('notifications.controls_released_force') as string,
-        type: 'event',
-        created: new Date(),
-      })
-      return
-    }
-
-    const member = this.member(target)
-    if (!member) {
-      return
-    }
-
-    this.$accessor.chat.newMessage({
-      id,
-      content: this.$vue.$t('notifications.controls_released_steal', {
-        name: member.id == this.id && this.$vue.$te('you') ? this.$vue.$t('you') : member.displayname,
-      }) as string,
-      type: 'event',
-      created: new Date(),
-    })
-  }
-
-  protected [EVENT.ADMIN.GIVE]({ id, target }: AdminTargetPayload) {
-    if (!target) {
-      return
-    }
-
-    const member = this.member(target)
-    if (!member) {
-      return
-    }
-
-    this.$accessor.remote.setHost(member)
-    this.$accessor.remote.changeKeyboard()
-
-    this.$accessor.chat.newMessage({
-      id,
-      content: this.$vue.$t('notifications.controls_given', {
-        name: member.id == this.id && this.$vue.$te('you') ? this.$vue.$t('you') : member.displayname,
-      }) as string,
-      type: 'event',
-      created: new Date(),
-    })
+    this.$accessor.settings.broadcastStatus({ url: payload.url, isActive: payload.is_active })
   }
 
   // Utilities
-  protected member(id: string): Member | undefined {
+  protected member(id: string) {
     return this.$accessor.user.members[id]
   }
 }

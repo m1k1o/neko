@@ -11,6 +11,9 @@ export const EVENT = {
   // Websocket Events
   SYSTEM: {
     INIT: 'system/init',
+    ADMIN: 'system/admin',
+    SETTINGS: 'system/settings',
+    HEARTBEAT: 'system/heartbeat',
     DISCONNECT: 'system/disconnect',
     ERROR: 'system/error',
   },
@@ -24,53 +27,45 @@ export const EVENT = {
     ANSWER: 'signal/answer',
     PROVIDE: 'signal/provide',
     CANDIDATE: 'signal/candidate',
+    CLOSE: 'signal/close',
   },
-  MEMBER: {
-    LIST: 'member/list',
-    CONNECTED: 'member/connected',
-    DISCONNECTED: 'member/disconnected',
+  SESSION: {
+    CREATED: 'session/created',
+    DELETED: 'session/deleted',
+    PROFILE: 'session/profile',
+    STATE: 'session/state',
+    CURSORS: 'session/cursors',
   },
   CONTROL: {
-    LOCKED: 'control/locked',
+    HOST: 'control/host',
     RELEASE: 'control/release',
     REQUEST: 'control/request',
-    REQUESTING: 'control/requesting',
-    CLIPBOARD: 'control/clipboard',
-    GIVE: 'control/give',
-    KEYBOARD: 'control/keyboard',
   },
   CHAT: {
     MESSAGE: 'chat/message',
     EMOTE: 'chat/emote',
   },
   FILETRANSFER: {
-    LIST: 'filetransfer/list',
-    REFRESH: 'filetransfer/refresh',
+    UPDATE: 'filetransfer/update',
   },
   OPENINAPP: {
     INIT: 'openinapp/init',
     OPENLINK: 'openinapp/openlink',
   },
   SCREEN: {
-    CONFIGURATIONS: 'screen/configurations',
-    RESOLUTION: 'screen/resolution',
+    UPDATED: 'screen/updated',
     SET: 'screen/set',
+  },
+  CLIPBOARD: {
+    UPDATED: 'clipboard/updated',
+    SET: 'clipboard/set',
   },
   BROADCAST: {
     STATUS: 'broadcast/status',
-    CREATE: 'broadcast/create',
-    DESTROY: 'broadcast/destroy',
   },
-  ADMIN: {
-    BAN: 'admin/ban',
-    KICK: 'admin/kick',
-    LOCK: 'admin/lock',
-    UNLOCK: 'admin/unlock',
-    MUTE: 'admin/mute',
-    UNMUTE: 'admin/unmute',
-    CONTROL: 'admin/control',
-    RELEASE: 'admin/release',
-    GIVE: 'admin/give',
+  KEYBOARD: {
+    MAP: 'keyboard/map',
+    MODIFIERS: 'keyboard/modifiers',
   },
 } as const
 
@@ -80,26 +75,33 @@ export type WebSocketEvents =
   | SystemEvents
   | ClientEvents
   | ControlEvents
-  | MemberEvents
+  | SessionEvents
   | SignalEvents
   | ChatEvents
   | FileTransferEvents
   | OpenInAppEvents
   | ScreenEvents
+  | ClipboardEvents
+  | KeyboardEvents
   | BroadcastEvents
-  | AdminEvents
 
-export type ControlEvents =
-  | typeof EVENT.CONTROL.LOCKED
-  | typeof EVENT.CONTROL.RELEASE
-  | typeof EVENT.CONTROL.REQUEST
-  | typeof EVENT.CONTROL.GIVE
-  | typeof EVENT.CONTROL.CLIPBOARD
-  | typeof EVENT.CONTROL.KEYBOARD
+export type ControlEvents = typeof EVENT.CONTROL.HOST | typeof EVENT.CONTROL.RELEASE | typeof EVENT.CONTROL.REQUEST
 
-export type SystemEvents = typeof EVENT.SYSTEM.DISCONNECT
+export type SystemEvents =
+  | typeof EVENT.SYSTEM.INIT
+  | typeof EVENT.SYSTEM.ADMIN
+  | typeof EVENT.SYSTEM.SETTINGS
+  | typeof EVENT.SYSTEM.HEARTBEAT
+  | typeof EVENT.SYSTEM.DISCONNECT
+  | typeof EVENT.SYSTEM.ERROR
 export type ClientEvents = typeof EVENT.CLIENT.HEARTBEAT
-export type MemberEvents = typeof EVENT.MEMBER.LIST | typeof EVENT.MEMBER.CONNECTED | typeof EVENT.MEMBER.DISCONNECTED
+
+export type SessionEvents =
+  | typeof EVENT.SESSION.CREATED
+  | typeof EVENT.SESSION.DELETED
+  | typeof EVENT.SESSION.PROFILE
+  | typeof EVENT.SESSION.STATE
+  | typeof EVENT.SESSION.CURSORS
 
 export type SignalEvents =
   | typeof EVENT.SIGNAL.REQUEST
@@ -108,27 +110,18 @@ export type SignalEvents =
   | typeof EVENT.SIGNAL.ANSWER
   | typeof EVENT.SIGNAL.PROVIDE
   | typeof EVENT.SIGNAL.CANDIDATE
+  | typeof EVENT.SIGNAL.CLOSE
 
 export type ChatEvents = typeof EVENT.CHAT.MESSAGE | typeof EVENT.CHAT.EMOTE
 
-export type FileTransferEvents = typeof EVENT.FILETRANSFER.LIST | typeof EVENT.FILETRANSFER.REFRESH
+export type FileTransferEvents = typeof EVENT.FILETRANSFER.UPDATE
 
 export type OpenInAppEvents = typeof EVENT.OPENINAPP.INIT | typeof EVENT.OPENINAPP.OPENLINK
 
-export type ScreenEvents = typeof EVENT.SCREEN.CONFIGURATIONS | typeof EVENT.SCREEN.RESOLUTION | typeof EVENT.SCREEN.SET
+export type ScreenEvents = typeof EVENT.SCREEN.UPDATED | typeof EVENT.SCREEN.SET
 
-export type BroadcastEvents =
-  | typeof EVENT.BROADCAST.STATUS
-  | typeof EVENT.BROADCAST.CREATE
-  | typeof EVENT.BROADCAST.DESTROY
+export type ClipboardEvents = typeof EVENT.CLIPBOARD.UPDATED | typeof EVENT.CLIPBOARD.SET
 
-export type AdminEvents =
-  | typeof EVENT.ADMIN.BAN
-  | typeof EVENT.ADMIN.KICK
-  | typeof EVENT.ADMIN.LOCK
-  | typeof EVENT.ADMIN.UNLOCK
-  | typeof EVENT.ADMIN.MUTE
-  | typeof EVENT.ADMIN.UNMUTE
-  | typeof EVENT.ADMIN.CONTROL
-  | typeof EVENT.ADMIN.RELEASE
-  | typeof EVENT.ADMIN.GIVE
+export type KeyboardEvents = typeof EVENT.KEYBOARD.MAP | typeof EVENT.KEYBOARD.MODIFIERS
+
+export type BroadcastEvents = typeof EVENT.BROADCAST.STATUS

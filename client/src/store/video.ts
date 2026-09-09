@@ -1,6 +1,5 @@
 import { getterTree, mutationTree, actionTree } from 'typed-vuex'
 import { get, set } from '~/utils/localstorage'
-import { EVENT } from '~/neko/events'
 import { ScreenConfigurations, ScreenResolution } from '~/neko/types'
 import { accessor } from '~/store'
 
@@ -169,28 +168,30 @@ export const mutations = mutationTree(state, {
 export const actions = actionTree(
   { state, getters, mutations },
   {
-    screenConfiguations() {
+    async screenConfiguations() {
       if (!accessor.connection.connected || !accessor.user.admin) {
         return
       }
 
-      $client.sendMessage(EVENT.SCREEN.CONFIGURATIONS)
+      const response = await $http.get<ScreenConfigurations>('/api/room/screen/configurations')
+      accessor.video.setConfigurations(response.data)
     },
 
-    screenGet() {
+    async screenGet() {
       if (!accessor.connection.connected) {
         return
       }
 
-      $client.sendMessage(EVENT.SCREEN.RESOLUTION)
+      const response = await $http.get<ScreenResolution>('/api/room/screen')
+      accessor.video.setResolution(response.data)
     },
 
-    screenSet(store, resolution: ScreenResolution) {
+    async screenSet(store, resolution: ScreenResolution) {
       if (!accessor.connection.connected || !accessor.user.admin) {
         return
       }
 
-      $client.sendMessage(EVENT.SCREEN.SET, resolution)
+      await $http.post('/api/room/screen', resolution)
     },
   },
 )

@@ -104,7 +104,7 @@ export const actions = actionTree(
         return
       }
       accessor.files.setLoading(true)
-      $client.sendMessage(EVENT.FILETRANSFER.REFRESH)
+      $client.sendMessage(EVENT.FILETRANSFER.UPDATE)
     },
   },
 )

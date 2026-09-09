@@ -5,12 +5,10 @@ import { encodeMediaInput, MediaInput } from '~/sdk/media-protocol'
 import { SignalingMessage, SignalingTransport } from '~/sdk/signaling'
 
 import {
-  WebSocketMessages,
   WebSocketPayloads,
   SignalProvidePayload,
   SignalCandidatePayload,
   SignalOfferPayload,
-  SignalAnswerMessage,
   SignalRequestPayload,
 } from './messages'
 
@@ -27,10 +25,9 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
   protected _peer?: RTCPeerConnection
   protected _channel?: RTCDataChannel
   protected _timeout?: number
-  protected _displayname?: string
   protected _state: RTCIceConnectionState = 'disconnected'
   protected _id = ''
-  protected _candidates: RTCIceCandidate[] = []
+  protected _candidates: RTCIceCandidateInit[] = []
   protected _micStream?: MediaStream
   protected _micSender?: RTCRtpSender
   protected _micActive = false
@@ -68,7 +65,7 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
     return this.peerConnected && this.socketOpen
   }
 
-  public connect(url: string, password: string, displayname: string) {
+  public connect(url: string, token: string) {
     if (this.socketOpen) {
       this.emit('warn', `attempting to create websocket while connection open`)
       return
@@ -79,11 +76,13 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
       return
     }
 
-    this._displayname = displayname
     this.transitionConnection('connect')
-    const signalingURL = `${url}?password=${encodeURIComponent(password)}&username=${encodeURIComponent(displayname)}`
-    this.emit('debug', `connecting to ${signalingURL}`)
-    this.signaling.connect(signalingURL)
+    const signalingURL = new URL(url, window.location.href)
+    if (token) {
+      signalingURL.searchParams.set('token', token)
+    }
+    this.emit('debug', `connecting to ${signalingURL.origin}${signalingURL.pathname}`)
+    this.signaling.connect(signalingURL.toString())
     this._timeout = window.setTimeout(this.onTimeout.bind(this), 15000)
   }
 
@@ -132,7 +131,6 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
 
     this.connectionMachine.reset()
     this._state = 'disconnected'
-    this._displayname = undefined
     this._id = ''
   }
 
@@ -306,11 +304,6 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
     this._peer.onnegotiationneeded = () => {
       this.queueNegotiation()
     }
-
-    // Keep a client-created channel as a compatibility fallback for legacy
-    // servers. Modern servers negotiate their data channel in the offer and
-    // replace this channel through ondatachannel above.
-    this.attachDataChannel(this._peer.createDataChannel('data'))
   }
 
   private attachDataChannel(channel: RTCDataChannel) {
@@ -323,7 +316,7 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
       try {
         previous.close()
       } catch (error) {
-        this.emit('debug', 'failed to close compatibility data channel', error)
+        this.emit('debug', 'failed to close previous data channel', error)
       }
     }
 
@@ -393,10 +386,7 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
       if (
         !this.signaling.send({
           event: EVENT.SIGNAL.ANSWER,
-          payload: {
-            sdp: this._peer.localDescription.sdp,
-            displayname: this._displayname,
-          },
+          payload: { sdp: this._peer.localDescription.sdp },
         })
       ) {
         throw new Error('unable to send SDP answer while signaling socket is not open')
@@ -421,45 +411,31 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
   }
 
   private async onMessage(message: SignalingMessage) {
-    const {
-      event,
-      payload: envelopePayload,
-      ...flatPayload
-    } = message as WebSocketMessages & {
-      payload?: unknown
-    }
-    // The current backend uses {event, payload}; accepting flat messages here
-    // keeps the SDK compatible with the legacy websocket bridge during rollout.
-    const payload = envelopePayload === undefined ? flatPayload : envelopePayload
+    const { event, payload = {} } = message
 
     this.emit('debug', `received websocket event ${event} ${payload ? `with payload: ` : ''}`, payload)
 
     if (event === EVENT.SIGNAL.PROVIDE) {
-      const { sdp, lite, ice, iceservers, id } = payload as unknown as SignalProvidePayload
-      this._id = id || this._id
-      const servers = ice || iceservers || []
-      await this.createPeer(lite === undefined ? servers.length === 0 : lite, servers)
+      const { sdp, iceservers } = payload as SignalProvidePayload
+      await this.createPeer(iceservers.length === 0, iceservers)
       await this.setRemoteOffer(sdp)
       return
     }
 
-    if (event === EVENT.SIGNAL.OFFER) {
-      const { sdp } = payload as unknown as SignalOfferPayload
+    if (event === EVENT.SIGNAL.OFFER || event === EVENT.SIGNAL.RESTART) {
+      const { sdp } = payload as SignalOfferPayload
       await this.setRemoteOffer(sdp)
       return
     }
 
     if (event === EVENT.SIGNAL.ANSWER) {
-      const { sdp } = payload as unknown as SignalAnswerMessage
+      const { sdp } = payload as SignalOfferPayload
       await this.setRemoteAnswer(sdp)
       return
     }
 
     if (event === EVENT.SIGNAL.CANDIDATE) {
-      const candidatePayload = payload as unknown as SignalCandidatePayload
-      const candidate: RTCIceCandidate = candidatePayload.data
-        ? JSON.parse(candidatePayload.data)
-        : (candidatePayload as RTCIceCandidate)
+      const candidate = payload as SignalCandidatePayload
       if (this._peer) {
         try {
           await this._peer.addIceCandidate(candidate)
@@ -469,6 +445,11 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
       } else {
         this._candidates.push(candidate)
       }
+      return
+    }
+
+    if (event === EVENT.SIGNAL.CLOSE) {
+      this.onDisconnected(new Error('media peer closed by server'))
       return
     }
 

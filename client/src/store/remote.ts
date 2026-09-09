@@ -76,7 +76,7 @@ export const actions = actionTree(
         return
       }
 
-      $client.sendMessage(EVENT.CONTROL.CLIPBOARD, { text: clipboard })
+      $client.sendMessage(EVENT.CLIPBOARD.SET, { text: clipboard })
     },
 
     toggle({ getters }) {
@@ -107,7 +107,7 @@ export const actions = actionTree(
       $client.sendMessage(EVENT.CONTROL.RELEASE)
     },
 
-    give({ getters }, member: string | Member) {
+    async give({ getters }, member: string | Member) {
       if (!accessor.connection.connected || !getters.hosting) {
         return
       }
@@ -120,7 +120,7 @@ export const actions = actionTree(
         return
       }
 
-      $client.sendMessage(EVENT.CONTROL.GIVE, { id: member.id })
+      await $http.post(`/api/room/control/give/${encodeURIComponent(member.id)}`)
     },
 
     adminControl() {
@@ -128,7 +128,7 @@ export const actions = actionTree(
         return
       }
 
-      $client.sendMessage(EVENT.ADMIN.CONTROL)
+      $http.post('/api/room/control/take')
     },
 
     adminRelease() {
@@ -136,7 +136,7 @@ export const actions = actionTree(
         return
       }
 
-      $client.sendMessage(EVENT.ADMIN.RELEASE)
+      $http.post('/api/room/control/reset')
     },
 
     adminGive(store, member: string | Member) {
@@ -152,7 +152,7 @@ export const actions = actionTree(
         return
       }
 
-      $client.sendMessage(EVENT.ADMIN.GIVE, { id: member.id })
+      $http.post(`/api/room/control/give/${encodeURIComponent(member.id)}`)
     },
 
     changeKeyboard({ getters }) {
@@ -160,7 +160,7 @@ export const actions = actionTree(
         return
       }
 
-      $client.sendMessage(EVENT.CONTROL.KEYBOARD, { layout: accessor.settings.keyboard_layout })
+      $client.sendMessage(EVENT.KEYBOARD.MAP, { layout: accessor.settings.keyboard_layout })
     },
 
     syncKeyboardModifierState({ state }, { capsLock, numLock, scrollLock }) {
@@ -169,7 +169,10 @@ export const actions = actionTree(
       }
 
       accessor.remote.setKeyboardModifierState({ capsLock, numLock, scrollLock })
-      $client.sendMessage(EVENT.CONTROL.KEYBOARD, { capsLock, numLock, scrollLock })
+      $client.sendMessage(EVENT.KEYBOARD.MODIFIERS, {
+        capslock: capsLock,
+        numlock: numLock,
+      })
     },
   },
 )
