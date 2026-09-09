@@ -11,6 +11,7 @@ const (
 )
 
 const (
+	SIGNAL_REQUEST   = "signal/request"
 	SIGNAL_OFFER     = "signal/offer"
 	SIGNAL_ANSWER    = "signal/answer"
 	SIGNAL_PROVIDE   = "signal/provide"

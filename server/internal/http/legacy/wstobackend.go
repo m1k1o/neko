@@ -39,6 +39,12 @@ func (s *session) wsToBackend(msg []byte) error {
 		return nil
 
 	// Signal Events
+	case oldEvent.SIGNAL_REQUEST:
+		// The legacy bridge requests a peer while creating the session. The
+		// canonical SDK also sends this on socket open, so ignore the duplicate
+		// instead of creating a second WebRTC peer.
+		return nil
+
 	case oldEvent.SIGNAL_OFFER:
 		request := &oldMessage.SignalOffer{}
 		err := json.Unmarshal(msg, request)
