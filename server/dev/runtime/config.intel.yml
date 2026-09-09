@@ -1,0 +1,25 @@
+capture:
+  video:
+    codec: h264
+    profile: balanced
+    encoder: vaapi
+
+server:
+  pprof: true
+
+desktop:
+  screen: "1920x1080@60"
+
+member:
+  provider: "multiuser"
+  multiuser:
+    admin_password: "admin"
+    user_password: "neko"
+
+session:
+  merciful_reconnect: true
+  implicit_hosting: false
+  inactive_cursors: true
+  api_token: "neko123"
+  cookie:
+    enabled: false
