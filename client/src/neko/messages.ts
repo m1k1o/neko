@@ -81,6 +81,8 @@ export interface SignalProvidePayload {
 }
 
 export interface SignalRequestPayload {
+  /** Browser decoder capabilities, ordered by browser preference. */
+  video_codecs?: string[]
   video?: {
     auto?: boolean
     disabled?: boolean

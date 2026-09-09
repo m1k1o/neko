@@ -213,12 +213,35 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
   private onSignalingOpen() {
     this.emit('debug', 'signaling socket open; requesting media peer')
     const payload: SignalRequestPayload = {
+      video_codecs: this.getSupportedVideoCodecs(),
       video: { auto: true },
       audio: {},
     }
     if (!this.signaling.send({ event: EVENT.SIGNAL.REQUEST, payload })) {
       this.emit('warn', 'unable to request media peer while signaling socket is not open')
     }
+  }
+
+  private getSupportedVideoCodecs(): string[] | undefined {
+    if (typeof RTCRtpReceiver === 'undefined' || typeof RTCRtpReceiver.getCapabilities !== 'function') {
+      return undefined
+    }
+
+    const capabilities = RTCRtpReceiver.getCapabilities('video')
+    if (!capabilities?.codecs) {
+      return undefined
+    }
+
+    const supported = new Set<string>()
+    for (const codec of capabilities.codecs) {
+      const [, name] = codec.mimeType.split('/')
+      const normalized = name?.toLowerCase()
+      if (normalized && ['av1', 'h264', 'h265', 'vp8', 'vp9'].includes(normalized)) {
+        supported.add(normalized)
+      }
+    }
+
+    return supported.size > 0 ? Array.from(supported) : undefined
   }
 
   public async createPeer(lite: boolean, servers: RTCIceServer[]) {

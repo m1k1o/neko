@@ -2,6 +2,7 @@ package handler
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/m1k1o/neko/server/pkg/types"
 	"github.com/m1k1o/neko/server/pkg/types/event"
@@ -15,7 +16,17 @@ func (h *MessageHandlerCtx) signalRequest(session types.Session, payload *messag
 		return errors.New("not allowed to watch")
 	}
 
-	offer, peer, err := h.webrtc.CreatePeer(session)
+	videoCodec, ok := h.capture.SelectVideoCodec(payload.VideoCodecs)
+	if !ok {
+		return fmt.Errorf("none of the browser video codecs are available on the server")
+	}
+	h.logger.Info().
+		Str("session_id", session.ID()).
+		Str("video_codec", videoCodec.Name).
+		Strs("browser_video_codecs", payload.VideoCodecs).
+		Msg("selected video codec for browser capabilities")
+
+	offer, peer, err := h.webrtc.CreatePeer(session, videoCodec)
 	if err != nil {
 		return err
 	}
@@ -29,7 +40,14 @@ func (h *MessageHandlerCtx) signalRequest(session types.Session, payload *messag
 
 	// use default first video, if not provided
 	if video.Selector == nil {
-		videos := h.capture.Video().IDs()
+		videoManager, ok := h.capture.VideoForCodec(videoCodec)
+		if !ok {
+			return fmt.Errorf("video codec %q is not available on the server", videoCodec.Name)
+		}
+		videos := videoManager.IDs()
+		if len(videos) == 0 {
+			return errors.New("no video streams are configured")
+		}
 		video.Selector = &types.StreamSelector{
 			ID:   videos[0],
 			Type: types.StreamSelectorTypeExact,

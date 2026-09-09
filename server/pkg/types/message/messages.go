@@ -51,8 +51,9 @@ type SystemSettingsUpdate struct {
 /////////////////////////////
 
 type SignalRequest struct {
-	Video types.PeerVideoRequest `json:"video"`
-	Audio types.PeerAudioRequest `json:"audio"`
+	Video       types.PeerVideoRequest `json:"video"`
+	Audio       types.PeerAudioRequest `json:"audio"`
+	VideoCodecs []string               `json:"video_codecs,omitempty"`
 }
 
 type SignalProvide struct {

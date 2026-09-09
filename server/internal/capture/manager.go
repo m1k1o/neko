@@ -9,7 +9,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"github.com/m1k1o/neko/server/internal/config"
+	cfg "github.com/m1k1o/neko/server/internal/config"
 	"github.com/m1k1o/neko/server/pkg/types"
 	"github.com/m1k1o/neko/server/pkg/types/codec"
 )
@@ -17,78 +17,108 @@ import (
 type CaptureManagerCtx struct {
 	logger  zerolog.Logger
 	desktop types.DesktopManager
-	config  *config.Capture
+	config  *cfg.Capture
 
 	// sinks
-	broadcast  *BroacastManagerCtx
-	screencast *ScreencastManagerCtx
-	audio      *StreamSinkManagerCtx
-	video      *StreamSelectorManagerCtx
+	broadcast     *BroacastManagerCtx
+	screencast    *ScreencastManagerCtx
+	audio         *StreamSinkManagerCtx
+	video         *StreamSelectorManagerCtx
+	videoVariants map[string]*StreamSelectorManagerCtx
 
 	// sources
 	webcam     *StreamSrcManagerCtx
 	microphone *StreamSrcManagerCtx
 }
 
-func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCtx {
+func New(desktop types.DesktopManager, config *cfg.Capture) *CaptureManagerCtx {
 	logger := log.With().Str("module", "capture").Logger()
 
-	videos := map[string]types.StreamSinkManager{}
-	for video_id, cnf := range config.VideoPipelines {
-		pipelineConf := cnf
-		pipelineFallbacks := append([]types.VideoConfig(nil), config.VideoPipelineFallbacks[video_id]...)
+	createVideoSelector := func(variant cfg.VideoVariant) *StreamSelectorManagerCtx {
+		videos := map[string]types.StreamSinkManager{}
+		for video_id, cnf := range variant.Pipelines {
+			pipelineConf := cnf
+			pipelineFallbacks := append([]types.VideoConfig(nil), variant.PipelineFallbacks[video_id]...)
 
-		createPipelineFor := func(videoConfig types.VideoConfig) (string, error) {
-			if videoConfig.GstPipeline != "" {
-				// replace {display} with valid display
-				return strings.Replace(videoConfig.GstPipeline, "{display}", config.Display, 1), nil
-			}
-
-			screen := desktop.GetScreenSize()
-			pipeline, err := videoConfig.GetPipeline(screen)
-			if err != nil {
-				return "", err
-			}
-
-			return fmt.Sprintf(
-				"ximagesrc display-name=%s show-pointer=%v use-damage=false %s ! appsink name=appsink",
-				config.Display, videoConfig.ShowPointer, pipeline,
-			), nil
-		}
-		createPipeline := func() (string, error) {
-			return createPipelineFor(pipelineConf)
-		}
-		createPipelineCandidates := func() ([]string, error) {
-			candidates := make([]string, 0, 1+len(pipelineFallbacks))
-			for _, candidate := range append([]types.VideoConfig{pipelineConf}, pipelineFallbacks...) {
-				pipeline, err := createPipelineFor(candidate)
-				if err != nil {
-					return nil, err
+			createPipelineFor := func(videoConfig types.VideoConfig) (string, error) {
+				if videoConfig.GstPipeline != "" {
+					// replace {display} with valid display
+					return strings.Replace(videoConfig.GstPipeline, "{display}", config.Display, 1), nil
 				}
-				candidates = append(candidates, pipeline)
+
+				screen := desktop.GetScreenSize()
+				pipeline, err := videoConfig.GetPipeline(screen)
+				if err != nil {
+					return "", err
+				}
+
+				return fmt.Sprintf(
+					"ximagesrc display-name=%s show-pointer=%v use-damage=false %s ! appsink name=appsink",
+					config.Display, videoConfig.ShowPointer, pipeline,
+				), nil
 			}
-			return candidates, nil
-		}
+			createPipeline := func() (string, error) {
+				return createPipelineFor(pipelineConf)
+			}
+			createPipelineCandidates := func() ([]string, error) {
+				candidates := make([]string, 0, 1+len(pipelineFallbacks))
+				for _, candidate := range append([]types.VideoConfig{pipelineConf}, pipelineFallbacks...) {
+					pipeline, err := createPipelineFor(candidate)
+					if err != nil {
+						return nil, err
+					}
+					candidates = append(candidates, pipeline)
+				}
+				return candidates, nil
+			}
 
-		// trigger function to catch evaluation errors at startup
-		pipeline, err := createPipeline()
-		if err != nil {
-			logger.Panic().Err(err).
+			// trigger function to catch evaluation errors at startup
+			pipeline, err := createPipeline()
+			if err != nil {
+				logger.Panic().Err(err).
+					Str("video_id", video_id).
+					Str("codec", variant.Codec.Name).
+					Msg("failed to create video pipeline")
+			}
+
+			logger.Info().
 				Str("video_id", video_id).
-				Msg("failed to create video pipeline")
-		}
+				Str("codec", variant.Codec.Name).
+				Str("pipeline", pipeline).
+				Msg("syntax check for video stream pipeline passed")
 
-		logger.Info().
-			Str("video_id", video_id).
-			Str("pipeline", pipeline).
-			Msg("syntax check for video stream pipeline passed")
-
-		// append to videos
-		if len(pipelineFallbacks) > 0 {
-			videos[video_id] = streamSinkNewWithFallback(config.VideoCodec, createPipeline, createPipelineCandidates, video_id)
-		} else {
-			videos[video_id] = streamSinkNew(config.VideoCodec, createPipeline, video_id)
+			// append to videos
+			if len(pipelineFallbacks) > 0 {
+				videos[video_id] = streamSinkNewWithFallback(variant.Codec, createPipeline, createPipelineCandidates, video_id)
+			} else {
+				videos[video_id] = streamSinkNew(variant.Codec, createPipeline, video_id)
+			}
 		}
+		return streamSelectorNew(variant.Codec, videos, variant.IDs)
+	}
+
+	variants := config.VideoVariants
+	if len(variants) == 0 {
+		variants = map[string]cfg.VideoVariant{
+			config.VideoCodec.Name: {
+				Codec:             config.VideoCodec,
+				IDs:               config.VideoIDs,
+				Pipelines:         config.VideoPipelines,
+				PipelineFallbacks: config.VideoPipelineFallbacks,
+			},
+		}
+	}
+
+	videoVariants := make(map[string]*StreamSelectorManagerCtx, len(variants))
+	for name, variant := range variants {
+		videoVariants[name] = createVideoSelector(variant)
+	}
+	video := videoVariants[config.VideoCodec.Name]
+	if video == nil {
+		// Profile resolution should always include the primary variant. Keep a
+		// deterministic fallback for hand-built test/config instances.
+		video = createVideoSelector(config.VideoVariants[config.VideoCodec.Name])
+		videoVariants[config.VideoCodec.Name] = video
 	}
 
 	return &CaptureManagerCtx{
@@ -159,7 +189,8 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 					"! appsink name=appsink", config.AudioDevice, config.AudioCodec.Pipeline,
 			), nil
 		}, "audio"),
-		video: streamSelectorNew(config.VideoCodec, videos, config.VideoIDs),
+		video:         video,
+		videoVariants: videoVariants,
 
 		// sources
 		webcam: streamSrcNew(config.WebcamEnabled, map[string]string{
@@ -220,7 +251,9 @@ func (manager *CaptureManagerCtx) Start() {
 	}
 
 	manager.desktop.OnBeforeScreenSizeChange(func() {
-		manager.video.destroyPipelines()
+		manager.forEachVideo(func(video *StreamSelectorManagerCtx) {
+			video.destroyPipelines()
+		})
 
 		if manager.broadcast.Started() {
 			manager.broadcast.destroyPipeline()
@@ -232,9 +265,14 @@ func (manager *CaptureManagerCtx) Start() {
 	})
 
 	manager.desktop.OnAfterScreenSizeChange(func() {
-		err := manager.video.recreatePipelines()
-		if err != nil {
-			manager.logger.Panic().Err(err).Msg("unable to recreate video pipelines")
+		var videoErr error
+		manager.forEachVideo(func(video *StreamSelectorManagerCtx) {
+			if videoErr == nil {
+				videoErr = video.recreatePipelines()
+			}
+		})
+		if videoErr != nil {
+			manager.logger.Panic().Err(videoErr).Msg("unable to recreate video pipelines")
 		}
 
 		if manager.broadcast.Started() {
@@ -260,7 +298,9 @@ func (manager *CaptureManagerCtx) Shutdown() error {
 	manager.screencast.shutdown()
 
 	manager.audio.shutdown()
-	manager.video.shutdown()
+	manager.forEachVideo(func(video *StreamSelectorManagerCtx) {
+		video.shutdown()
+	})
 
 	manager.webcam.shutdown()
 	manager.microphone.shutdown()
@@ -282,6 +322,54 @@ func (manager *CaptureManagerCtx) Audio() types.StreamSinkManager {
 
 func (manager *CaptureManagerCtx) Video() types.StreamSelectorManager {
 	return manager.video
+}
+
+func (manager *CaptureManagerCtx) VideoForCodec(videoCodec codec.RTPCodec) (types.StreamSelectorManager, bool) {
+	video, ok := manager.videoVariants[videoCodec.Name]
+	if !ok {
+		return nil, false
+	}
+	return video, true
+}
+
+func (manager *CaptureManagerCtx) SelectVideoCodec(supported []string) (codec.RTPCodec, bool) {
+	if len(supported) == 0 {
+		return manager.video.Codec(), true
+	}
+
+	available := make(map[string]struct{}, len(supported))
+	for _, name := range supported {
+		parsed, ok := codec.ParseStr(strings.TrimSpace(name))
+		if ok && parsed.IsVideo() {
+			available[parsed.Name] = struct{}{}
+		}
+	}
+
+	// Keep the configured codec as the first choice, then use the codecs in
+	// descending Chromium interoperability order.
+	order := []string{manager.video.Codec().Name, codec.H264().Name, codec.VP8().Name, codec.AV1().Name, codec.H265().Name}
+	seen := make(map[string]struct{}, len(order))
+	for _, name := range order {
+		if _, duplicate := seen[name]; duplicate {
+			continue
+		}
+		seen[name] = struct{}{}
+		if _, ok := available[name]; !ok {
+			continue
+		}
+		if _, ok := manager.videoVariants[name]; ok {
+			selected, _ := codec.ParseStr(name)
+			return selected, true
+		}
+	}
+
+	return codec.RTPCodec{}, false
+}
+
+func (manager *CaptureManagerCtx) forEachVideo(fn func(*StreamSelectorManagerCtx)) {
+	for _, video := range manager.videoVariants {
+		fn(video)
+	}
 }
 
 func (manager *CaptureManagerCtx) Webcam() types.StreamSrcManager {

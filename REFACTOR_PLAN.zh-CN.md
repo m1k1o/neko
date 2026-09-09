@@ -219,6 +219,7 @@ server/internal/
 - `5ff71fa4`：为编码矩阵增加 `software`、`vaapi`、`nvenc` 族筛选，支持硬件发布作业按 GPU 类型严格执行。
 - `08dfc2ef`：补齐 VAAPI 低功耗 H.264 配置生成并增加回归覆盖。
 - `231b6d3c`：将 H.265 SDP 能力提升到 Main Level 4.0（`level-id=120`），覆盖 `high` 档位 1080p30，并加入能力断言测试。
+- 动态编码回退：Chromium 客户端在 `signal/request.payload.video_codecs` 上报接收能力；服务端按配置 codec、H.264、VP8 的顺序选择可用编码，并为 M1 profile 建立惰性 codec 采集变体，避免浏览器不支持 H.265/AV1 时在 SDP answer 阶段失败重连。
 
 ### 已验证
 
@@ -238,6 +239,7 @@ server/internal/
 - 当前工作区 `go test ./...` 通过；新增 AV1/H.265 配置、编码器选择、运行时回退和矩阵覆盖测试通过。当前环境没有可用 GStreamer CLI 或 GPU 设备，因此真实硬件行需在映射 `/dev/dri` 或 `--gpus all` 的目标运行时执行 `server/integration/encoding/matrix.sh`。
 - `go test -race ./internal/quality ./internal/config ./pkg/gst ./pkg/types/codec`、`go vet ./...`、编码矩阵脚本 Shell 语法和软件/VAAPI 族筛选模拟执行通过；真实 GPU 行仍需在目标运行时归档 TSV 结果。
 - `StreamSink` 增加首帧耗时、实际样本率、实际码率、样本总数和管线回退计数指标；码率状态改为读写锁保护，避免多观看者并发访问竞态。
+- 动态回退通过配置单元测试、Go 全量测试、TypeScript lint/build 验证；在 H.265 1080p30 演示容器中，模拟仅支持 H.264/VP8 的浏览器信令请求已选择 H.264 管线并生成 H.264 SDP offer。
 - 带宽估计器接入视频 Track 队列占用、RTCP jitter 和累计丢包；压力持续超过滞回时降档，压力存在时禁止升档，并将切换原因写入日志。
 - `83341b33`：将队列压力、RTCP jitter 和新增丢包接入 WebRTC 自适应升降档；网络压力持续超过不稳定时长才降档，且压力期间禁止升档。
 - 新增 `demo/compose.frp.example.yaml`、`demo/frpc.toml.example` 和 `demo/compose.turn.example.yaml`，覆盖 SakuraFrp/FRP 同号 TCP+UDP 媒体隧道及 Coturn relay 端口模板，凭据均使用占位符。

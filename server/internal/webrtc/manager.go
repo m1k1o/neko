@@ -271,7 +271,7 @@ func (manager *WebRTCManagerCtx) newPeerConnection(logger zerolog.Logger, codecs
 	return connection, <-estimatorChan, err
 }
 
-func (manager *WebRTCManagerCtx) CreatePeer(session types.Session) (*webrtc.SessionDescription, types.WebRTCPeer, error) {
+func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, requestedVideoCodec codec.RTPCodec) (*webrtc.SessionDescription, types.WebRTCPeer, error) {
 	id := atomic.AddInt32(&manager.peerId, 1)
 
 	// get metrics for session
@@ -286,8 +286,12 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session) (*webrtc.Sess
 	audio := manager.capture.Audio()
 	audioCodec := audio.Codec()
 
-	// all videos must have the same codec
-	video := manager.capture.Video()
+	// Select the codec-specific capture variant chosen during signaling. Each
+	// variant is lazy, so unsupported browser codecs do not start an encoder.
+	video, ok := manager.capture.VideoForCodec(requestedVideoCodec)
+	if !ok {
+		return nil, nil, fmt.Errorf("video codec %q is not available", requestedVideoCodec.Name)
+	}
 	videoCodec := video.Codec()
 
 	connection, estimator, err := manager.newPeerConnection(

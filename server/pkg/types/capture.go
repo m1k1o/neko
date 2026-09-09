@@ -144,6 +144,14 @@ type CaptureManager interface {
 	Screencast() ScreencastManager
 	Audio() StreamSinkManager
 	Video() StreamSelectorManager
+	// VideoForCodec returns the lazily-created video selector for a negotiated
+	// codec. The default selector is always available; additional selectors are
+	// populated by the Chromium M1 profile fallback ladder.
+	VideoForCodec(codec codec.RTPCodec) (StreamSelectorManager, bool)
+	// SelectVideoCodec chooses the server-preferred codec that is present in the
+	// browser capability list. An empty list means that the client did not send
+	// capabilities and keeps the configured codec for signaling compatibility.
+	SelectVideoCodec(supported []string) (codec.RTPCodec, bool)
 
 	Webcam() StreamSrcManager
 	Microphone() StreamSrcManager

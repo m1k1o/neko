@@ -4,6 +4,8 @@ import (
 	"errors"
 
 	"github.com/pion/webrtc/v4"
+
+	"github.com/m1k1o/neko/server/pkg/types/codec"
 )
 
 var (
@@ -64,6 +66,6 @@ type WebRTCManager interface {
 
 	ICEServers() []ICEServer
 
-	CreatePeer(session Session) (*webrtc.SessionDescription, WebRTCPeer, error)
+	CreatePeer(session Session, videoCodec codec.RTPCodec) (*webrtc.SessionDescription, WebRTCPeer, error)
 	SetCursorPosition(x, y int)
 }

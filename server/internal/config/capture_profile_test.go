@@ -111,6 +111,29 @@ func TestApplyVideoProfileSupportsH265Software(t *testing.T) {
 	}
 }
 
+func TestApplyVideoProfileBuildsBrowserCodecFallbackVariants(t *testing.T) {
+	viper.Reset()
+	defer viper.Reset()
+	viper.Set("capture.video.profile", "high")
+	viper.Set("capture.video.codec", "h265")
+	viper.Set("capture.video.encoder", "software")
+
+	config := Capture{VideoCodec: codec.H265()}
+	if err := config.applyVideoProfile(availableElements("x265enc", "h265parse", "x264enc", "h264parse", "vp8enc")); err != nil {
+		t.Fatal(err)
+	}
+
+	for _, name := range []string{codec.H265().Name, codec.H264().Name, codec.VP8().Name} {
+		variant, ok := config.VideoVariants[name]
+		if !ok {
+			t.Fatalf("missing browser fallback variant %q: %+v", name, config.VideoVariants)
+		}
+		if variant.Codec.Name != name || variant.Pipelines["main"].Width != "1920" {
+			t.Fatalf("unexpected %s variant: %+v", name, variant)
+		}
+	}
+}
+
 func TestApplyVideoProfileAddsNewCodecHardwareFallback(t *testing.T) {
 	tests := []struct {
 		name       string

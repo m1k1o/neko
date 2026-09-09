@@ -28,7 +28,12 @@ type Capture struct {
 	// VideoPipelineFallbacks contains same-codec candidates for profile
 	// pipelines that may fail when a hardware device is initialized at runtime.
 	VideoPipelineFallbacks map[string][]types.VideoConfig
-	VideoShowPointer       bool
+	// VideoVariants contains lazily-created codec variants used by WebRTC
+	// capability negotiation. The primary variant is mirrored by the legacy
+	// Video* fields above; additional variants are software compatibility
+	// encoders generated for the selected Chromium M1 profile.
+	VideoVariants    map[string]VideoVariant
+	VideoShowPointer bool
 
 	AudioDevice   string
 	AudioCodec    codec.RTPCodec
@@ -53,6 +58,13 @@ type Capture struct {
 
 	MicrophoneEnabled bool
 	MicrophoneDevice  string
+}
+
+type VideoVariant struct {
+	Codec             codec.RTPCodec
+	IDs               []string
+	Pipelines         map[string]types.VideoConfig
+	PipelineFallbacks map[string][]types.VideoConfig
 }
 
 func (Capture) Init(cmd *cobra.Command) error {
@@ -412,22 +424,38 @@ func (s *Capture) applyVideoProfileWithRuntime(probe quality.ElementProbe, runti
 			}
 		}
 	}
-	s.VideoIDs = ids
-	s.VideoPipelines = make(map[string]types.VideoConfig, len(profiles))
-	s.VideoPipelineFallbacks = make(map[string][]types.VideoConfig, len(profiles))
-	for index, tier := range profiles {
-		videoConfig, configErr := tier.VideoConfig(selection.Codec, selection.Encoder, selection.Element, s.VideoShowPointer)
-		if configErr != nil {
-			return configErr
+	variant, err := buildVideoVariant(profiles, ids, selection, sameCodecFallback, s.VideoShowPointer)
+	if err != nil {
+		return err
+	}
+	s.VideoIDs = variant.IDs
+	s.VideoPipelines = variant.Pipelines
+	s.VideoPipelineFallbacks = variant.PipelineFallbacks
+	s.VideoVariants = map[string]VideoVariant{variant.Codec.Name: variant}
+
+	// H.264 and VP8 are the compatibility floor for Chromium receivers. Build
+	// them as independent lazy pipelines so a H.265/AV1-capable server can
+	// select a decoder-compatible stream before SDP negotiation starts.
+	for _, fallbackCodec := range []codec.RTPCodec{codec.H264(), codec.VP8()} {
+		if fallbackCodec.Name == selection.Codec.Name {
+			continue
 		}
-		id := ids[index]
-		s.VideoPipelines[id] = videoConfig
-		if sameCodecFallback != nil {
-			softwareConfig, fallbackErr := tier.VideoConfig(sameCodecFallback.Codec, sameCodecFallback.Encoder, sameCodecFallback.Element, s.VideoShowPointer)
-			if fallbackErr == nil {
-				s.VideoPipelineFallbacks[id] = []types.VideoConfig{softwareConfig}
-			}
+
+		fallbackSelection, fallbackErr := quality.ResolveEncoder(fallbackCodec, quality.EncoderSoftware, probe)
+		if fallbackErr != nil || fallbackSelection.Codec.Name != fallbackCodec.Name {
+			log.Warn().
+				Str("codec", fallbackCodec.Name).
+				Err(fallbackErr).
+				Msg("video capability fallback variant unavailable")
+			continue
 		}
+
+		fallbackVariant, variantErr := buildVideoVariant(profiles, ids, fallbackSelection, nil, s.VideoShowPointer)
+		if variantErr != nil {
+			log.Warn().Err(variantErr).Str("codec", fallbackCodec.Name).Msg("video capability fallback variant unavailable")
+			continue
+		}
+		s.VideoVariants[fallbackVariant.Codec.Name] = fallbackVariant
 	}
 	if len(selection.Unavailable) > 0 {
 		log.Warn().
@@ -449,4 +477,30 @@ func (s *Capture) applyVideoProfileWithRuntime(probe quality.ElementProbe, runti
 		Int("bitrate_kbps", profile.BitrateKbps).
 		Msg("using explicit video quality profile")
 	return nil
+}
+
+func buildVideoVariant(profiles []quality.Profile, ids []string, selection quality.EncoderSelection, sameCodecFallback *quality.EncoderSelection, showPointer bool) (VideoVariant, error) {
+	variant := VideoVariant{
+		Codec:             selection.Codec,
+		IDs:               append([]string(nil), ids...),
+		Pipelines:         make(map[string]types.VideoConfig, len(profiles)),
+		PipelineFallbacks: make(map[string][]types.VideoConfig, len(profiles)),
+	}
+
+	for index, tier := range profiles {
+		videoConfig, configErr := tier.VideoConfig(selection.Codec, selection.Encoder, selection.Element, showPointer)
+		if configErr != nil {
+			return VideoVariant{}, configErr
+		}
+		id := ids[index]
+		variant.Pipelines[id] = videoConfig
+		if sameCodecFallback != nil {
+			softwareConfig, fallbackErr := tier.VideoConfig(sameCodecFallback.Codec, sameCodecFallback.Encoder, sameCodecFallback.Element, showPointer)
+			if fallbackErr == nil {
+				variant.PipelineFallbacks[id] = []types.VideoConfig{softwareConfig}
+			}
+		}
+	}
+
+	return variant, nil
 }
