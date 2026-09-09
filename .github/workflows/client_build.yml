@@ -37,6 +37,10 @@ jobs:
         working-directory: ./client
         run: npm run build
 
+      - name: Test SDK contracts
+        working-directory: ./client
+        run: npm run test:sdk
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         if: ${{ inputs.with-artifact }}
