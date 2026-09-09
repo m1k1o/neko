@@ -21,7 +21,6 @@ type ICEServer struct {
 type PeerVideo struct {
 	Disabled bool   `json:"disabled"`
 	ID       string `json:"id"`
-	Video    string `json:"video"` // TODO: Remove this, used for compatibility with old clients.
 	Auto     bool   `json:"auto"`
 }
 

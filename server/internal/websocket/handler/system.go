@@ -51,22 +51,10 @@ func (h *MessageHandlerCtx) systemInit(session types.Session) error {
 }
 
 func (h *MessageHandlerCtx) systemAdmin(session types.Session) error {
-	configurations := h.desktop.ScreenConfigurations()
-
-	list := make([]types.ScreenSize, 0, len(configurations))
-	for _, conf := range configurations {
-		list = append(list, types.ScreenSize{
-			Width:  conf.Width,
-			Height: conf.Height,
-			Rate:   conf.Rate,
-		})
-	}
-
 	broadcast := h.capture.Broadcast()
 	session.Send(
 		event.SYSTEM_ADMIN,
 		message.SystemAdmin{
-			ScreenSizesList: list, // TODO: remove
 			BroadcastStatus: message.BroadcastStatus{
 				IsActive: broadcast.Started(),
 				URL:      broadcast.Url(),

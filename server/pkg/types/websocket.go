@@ -3,6 +3,7 @@ package types
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"net/http"
 )
 
@@ -11,43 +12,34 @@ type WebSocketMessage struct {
 	Payload json.RawMessage `json:"payload,omitempty"`
 }
 
-// UnmarshalJSON normalizes the legacy flat websocket shape into the canonical
-// {event, payload} envelope. This lets old clients coexist with the typed SDK
-// while keeping all handlers on one payload contract.
-func (message *WebSocketMessage) UnmarshalJSON(data []byte) error {
-	type wireMessage struct {
-		Event   string          `json:"event"`
-		Payload json.RawMessage `json:"payload"`
-	}
-
-	var wire wireMessage
-	if err := json.Unmarshal(data, &wire); err != nil {
+// UnmarshalJSON accepts only the canonical {event, payload} envelope. Keeping
+// validation here prevents deprecated flat messages from being silently
+// interpreted as empty payloads by individual handlers.
+func (m *WebSocketMessage) UnmarshalJSON(data []byte) error {
+	var fields map[string]json.RawMessage
+	if err := json.Unmarshal(data, &fields); err != nil {
 		return err
 	}
 
-	message.Event = wire.Event
-	message.Payload = wire.Payload
-	trimmed := bytes.TrimSpace(message.Payload)
-	if len(trimmed) > 0 && !bytes.Equal(trimmed, []byte("null")) {
-		return nil
+	for key := range fields {
+		if key != "event" && key != "payload" {
+			return errors.New("websocket message contains unsupported top-level fields")
+		}
 	}
 
-	var flat map[string]json.RawMessage
-	if err := json.Unmarshal(data, &flat); err != nil {
+	type envelope WebSocketMessage
+	var value envelope
+	if err := json.Unmarshal(data, &value); err != nil {
 		return err
 	}
-	delete(flat, "event")
-	delete(flat, "payload")
-	if len(flat) == 0 {
-		message.Payload = nil
-		return nil
+	if value.Event == "" {
+		return errors.New("websocket message event is required")
+	}
+	if payload, ok := fields["payload"]; ok && bytes.Equal(bytes.TrimSpace(payload), []byte("null")) {
+		return errors.New("websocket message payload must be omitted when empty")
 	}
 
-	payload, err := json.Marshal(flat)
-	if err != nil {
-		return err
-	}
-	message.Payload = payload
+	*m = WebSocketMessage(value)
 	return nil
 }
 

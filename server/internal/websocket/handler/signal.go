@@ -36,11 +36,6 @@ func (h *MessageHandlerCtx) signalRequest(session types.Session, payload *messag
 		}
 	}
 
-	// TODO: Remove, used for compatibility with old clients.
-	if video.Auto == nil {
-		video.Auto = &payload.Auto
-	}
-
 	// set video stream
 	err = peer.SetVideo(video)
 	if err != nil {

@@ -31,13 +31,17 @@ func (peer *WebSocketPeerCtx) Send(event string, payload any) {
 	peer.mu.Lock()
 	defer peer.mu.Unlock()
 
-	raw, err := json.Marshal(payload)
-	if err != nil {
-		peer.logger.Err(err).Str("event", event).Msg("message marshalling has failed")
-		return
+	var raw json.RawMessage
+	if payload != nil {
+		encoded, err := json.Marshal(payload)
+		if err != nil {
+			peer.logger.Err(err).Str("event", event).Msg("message marshalling has failed")
+			return
+		}
+		raw = encoded
 	}
 
-	err = peer.connection.WriteJSON(types.WebSocketMessage{
+	err := peer.connection.WriteJSON(types.WebSocketMessage{
 		Event:   event,
 		Payload: raw,
 	})

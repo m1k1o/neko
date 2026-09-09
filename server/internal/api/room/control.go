@@ -16,10 +16,6 @@ type ControlStatusPayload struct {
 	HostId  string `json:"host_id,omitempty"`
 }
 
-type ControlTargetPayload struct {
-	ID string `json:"id"`
-}
-
 func (h *RoomHandler) controlStatus(w http.ResponseWriter, r *http.Request) error {
 	host, hasHost := h.sessions.GetHost()
 

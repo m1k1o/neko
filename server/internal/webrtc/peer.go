@@ -474,7 +474,6 @@ func (peer *WebRTCPeerCtx) Video() types.PeerVideo {
 	return types.PeerVideo{
 		Disabled: peer.videoDisabled,
 		ID:       ID,
-		Video:    ID, // TODO: Remove, used for backward compatibility
 		Auto:     peer.videoAuto,
 	}
 }

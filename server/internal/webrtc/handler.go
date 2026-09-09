@@ -105,31 +105,17 @@ func (manager *WebRTCManagerCtx) handle(
 
 	switch header.Event {
 	case payload.OP_SCROLL:
-		// TODO: remove this once the client is fixed
-		if header.Length == 4 {
-			payload := &payload.Scroll_Old{}
-			if err := binary.Read(buffer, binary.BigEndian, payload); err != nil {
-				return err
-			}
-
-			manager.desktop.Scroll(int(payload.X), int(payload.Y), false)
-			logger.Trace().
-				Int16("x", payload.X).
-				Int16("y", payload.Y).
-				Msg("scroll")
-		} else {
-			payload := &payload.Scroll{}
-			if err := binary.Read(buffer, binary.BigEndian, payload); err != nil {
-				return err
-			}
-
-			manager.desktop.Scroll(int(payload.DeltaX), int(payload.DeltaY), payload.ControlKey)
-			logger.Trace().
-				Int16("deltaX", payload.DeltaX).
-				Int16("deltaY", payload.DeltaY).
-				Bool("controlKey", payload.ControlKey).
-				Msg("scroll")
+		payload := &payload.Scroll{}
+		if err := binary.Read(buffer, binary.BigEndian, payload); err != nil {
+			return err
 		}
+
+		manager.desktop.Scroll(int(payload.DeltaX), int(payload.DeltaY), payload.ControlKey)
+		logger.Trace().
+			Int16("deltaX", payload.DeltaX).
+			Int16("deltaY", payload.DeltaY).
+			Bool("controlKey", payload.ControlKey).
+			Msg("scroll")
 	case payload.OP_KEY_DOWN:
 		payload := &payload.Key{}
 		if err := binary.Read(buffer, binary.BigEndian, payload); err != nil {

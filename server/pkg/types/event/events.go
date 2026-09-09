@@ -20,9 +20,9 @@ const (
 	SIGNAL_ANSWER    = "signal/answer"
 	SIGNAL_PROVIDE   = "signal/provide"
 	SIGNAL_CANDIDATE = "signal/candidate"
+	SIGNAL_CLOSE     = "signal/close"
 	SIGNAL_VIDEO     = "signal/video"
 	SIGNAL_AUDIO     = "signal/audio"
-	SIGNAL_CLOSE     = "signal/close"
 )
 
 const (

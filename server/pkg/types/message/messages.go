@@ -26,8 +26,7 @@ type SystemInit struct {
 }
 
 type SystemAdmin struct {
-	ScreenSizesList []types.ScreenSize `json:"screen_sizes_list"`
-	BroadcastStatus BroadcastStatus    `json:"broadcast_status"`
+	BroadcastStatus BroadcastStatus `json:"broadcast_status"`
 }
 
 type SystemLogs = []SystemLog
@@ -54,8 +53,6 @@ type SystemSettingsUpdate struct {
 type SignalRequest struct {
 	Video types.PeerVideoRequest `json:"video"`
 	Audio types.PeerAudioRequest `json:"audio"`
-
-	Auto bool `json:"auto"` // TODO: Remove this
 }
 
 type SignalProvide struct {
@@ -122,10 +119,6 @@ type ControlHost struct {
 }
 
 type ControlScroll struct {
-	// TOOD: remove this once the client is fixed
-	X int `json:"x"`
-	Y int `json:"y"`
-
 	DeltaX     int  `json:"delta_x"`
 	DeltaY     int  `json:"delta_y"`
 	ControlKey bool `json:"control_key"`

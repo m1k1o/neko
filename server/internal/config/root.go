@@ -2,8 +2,6 @@ package config
 
 import (
 	"os"
-	"path/filepath"
-	"runtime"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -13,7 +11,6 @@ import (
 
 type Root struct {
 	Config string
-	Legacy bool
 
 	LogLevel   zerolog.Level
 	LogTime    string
@@ -31,14 +28,6 @@ func (Root) Init(cmd *cobra.Command) error {
 	// just a shortcut
 	cmd.PersistentFlags().BoolP("debug", "d", false, "enable debug mode")
 	if err := viper.BindPFlag("debug", cmd.PersistentFlags().Lookup("debug")); err != nil {
-		return err
-	}
-
-	// whether legacy configs and api should be enabled.
-	// - if not specified, it will be automatically enabled if at least one legacy config entry is found.
-	// - if it is specified, it will be enabled/disabled regardless of the presence of legacy config entries.
-	cmd.PersistentFlags().Bool("legacy", true, "enable legacy mode")
-	if err := viper.BindPFlag("legacy", cmd.PersistentFlags().Lookup("legacy")); err != nil {
 		return err
 	}
 
@@ -70,21 +59,8 @@ func (Root) Init(cmd *cobra.Command) error {
 	return nil
 }
 
-func (Root) InitV2(cmd *cobra.Command) error {
-	cmd.PersistentFlags().BoolP("logs", "l", false, "V2: save logs to file")
-	if err := viper.BindPFlag("logs", cmd.PersistentFlags().Lookup("logs")); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (s *Root) Set() {
 	s.Config = viper.GetString("config")
-	s.Legacy = viper.GetBool("legacy")
-	if s.Legacy {
-		log.Info().Msg("legacy configuration is enabled")
-	}
 
 	logLevel := viper.GetString("log.level")
 	level, err := zerolog.ParseLevel(logLevel)
@@ -117,29 +93,5 @@ func (s *Root) Set() {
 	// support for NO_COLOR env variable: https://no-color.org/
 	if os.Getenv("NO_COLOR") != "" {
 		s.LogNocolor = true
-	}
-}
-
-func (s *Root) SetV2() {
-	enableLegacy := false
-
-	if viper.IsSet("logs") {
-		if viper.GetBool("logs") {
-			logs := filepath.Join(".", "logs")
-			if runtime.GOOS == "linux" {
-				logs = "/var/log/neko"
-			}
-			s.LogDir = logs
-		} else {
-			s.LogDir = ""
-		}
-		log.Warn().Msg("you are using v2 configuration 'NEKO_LOGS' which is deprecated, please use 'NEKO_LOG_DIR=/path/to/logs' instead")
-		enableLegacy = true
-	}
-
-	// set legacy flag if any V2 configuration was used
-	if !viper.IsSet("legacy") && enableLegacy {
-		log.Warn().Msg("legacy configuration is enabled because at least one V2 configuration was used, please migrate to V3 configuration, visit https://neko.m1k1o.net/docs/v3/migration-from-v2 for more details")
-		viper.Set("legacy", true)
 	}
 }

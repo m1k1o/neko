@@ -21,12 +21,6 @@ type Move struct {
 	Y uint16
 }
 
-// TODO: remove this once the client is fixed
-type Scroll_Old struct {
-	X int16
-	Y int16
-}
-
 type Scroll struct {
 	DeltaX     int16
 	DeltaY     int16

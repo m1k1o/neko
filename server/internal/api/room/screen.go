@@ -43,7 +43,6 @@ func (h *RoomHandler) screenConfigurationChange(w http.ResponseWriter, r *http.R
 	return utils.HttpSuccess(w, data)
 }
 
-// TODO: remove.
 func (h *RoomHandler) screenConfigurationsList(w http.ResponseWriter, r *http.Request) error {
 	configurations := h.desktop.ScreenConfigurations()
 

@@ -2,18 +2,14 @@ package http
 
 import (
 	"context"
-	"net"
 	"net/http"
 	"os"
 
+	"github.com/m1k1o/neko/server/internal/config"
+	"github.com/m1k1o/neko/server/pkg/types"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"github.com/spf13/viper"
-
-	"github.com/m1k1o/neko/server/internal/config"
-	"github.com/m1k1o/neko/server/internal/http/legacy"
-	"github.com/m1k1o/neko/server/pkg/types"
 )
 
 type HttpManagerCtx struct {
@@ -119,23 +115,6 @@ func (manager *HttpManagerCtx) Start() {
 		}()
 		manager.logger.Info().Msgf("https listening on %s", manager.http.Addr)
 
-		// if we have legacy mode, we need to start local http server too
-		if viper.GetBool("legacy") {
-			// create a listener for the API server with a random port
-			listener, err := net.Listen("tcp", "127.0.0.1:0")
-			if err != nil {
-				manager.logger.Panic().Err(err).Msg("unable to start legacy http proxy")
-			}
-
-			go func() {
-				if err := http.Serve(listener, manager.router); err != http.ErrServerClosed {
-					manager.logger.Panic().Err(err).Msg("unable to start http server")
-				}
-			}()
-			manager.logger.Info().Msgf("legacy proxy listening on %s", listener.Addr().String())
-
-			legacy.New(listener.Addr().String(), manager.config.PathPrefix).Route(manager.router)
-		}
 	} else {
 		go func() {
 			if err := manager.http.ListenAndServe(); err != http.ErrServerClosed {
@@ -144,10 +123,6 @@ func (manager *HttpManagerCtx) Start() {
 		}()
 		manager.logger.Info().Msgf("http listening on %s", manager.http.Addr)
 
-		// start legacy proxy if enabled
-		if viper.GetBool("legacy") {
-			legacy.New(manager.http.Addr, manager.config.PathPrefix).Route(manager.router)
-		}
 	}
 }
 

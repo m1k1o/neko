@@ -85,12 +85,6 @@ func (h *MessageHandlerCtx) controlScroll(session types.Session, payload *messag
 		return err
 	}
 
-	// TOOD: remove this once the client is fixed
-	if payload.DeltaX == 0 && payload.DeltaY == 0 {
-		payload.DeltaX = payload.X
-		payload.DeltaY = payload.Y
-	}
-
 	h.desktop.Scroll(payload.DeltaX, payload.DeltaY, payload.ControlKey)
 	return nil
 }

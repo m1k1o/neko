@@ -18,9 +18,7 @@ func ValidateLength(event uint8, length uint16) error {
 	case OP_MOVE:
 		valid = length == 4
 	case OP_SCROLL:
-		// Four-byte packets are accepted for old clients; five-byte packets
-		// carry the ControlKey modifier introduced by the v3 protocol.
-		valid = length == 4 || length == 5
+		valid = length == 5
 	case OP_KEY_DOWN, OP_KEY_UP, OP_BTN_DOWN, OP_BTN_UP:
 		valid = length == 4
 	case OP_PING:

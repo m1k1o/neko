@@ -68,20 +68,6 @@ func (Member) Init(cmd *cobra.Command) error {
 	return nil
 }
 
-func (Member) InitV2(cmd *cobra.Command) error {
-	cmd.PersistentFlags().String("password", "", "V2: password for connecting to stream")
-	if err := viper.BindPFlag("password", cmd.PersistentFlags().Lookup("password")); err != nil {
-		return err
-	}
-
-	cmd.PersistentFlags().String("password_admin", "", "V2: admin password for connecting to stream")
-	if err := viper.BindPFlag("password_admin", cmd.PersistentFlags().Lookup("password_admin")); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (s *Member) Set() {
 	s.Provider = viper.GetString("member.provider")
 
@@ -138,31 +124,5 @@ func (s *Member) Set() {
 		utils.JsonStringAutoDecode(s.Multiuser.AdminProfile),
 	)); err != nil {
 		log.Warn().Err(err).Msgf("unable to parse member multiuser admin profile")
-	}
-}
-
-func (s *Member) SetV2() {
-	enableLegacy := false
-
-	if viper.IsSet("password") || viper.IsSet("password_admin") {
-		s.Provider = "multiuser"
-		if userPassword := viper.GetString("password"); userPassword != "" {
-			s.Multiuser.UserPassword = userPassword
-		} else {
-			s.Multiuser.UserPassword = "neko"
-		}
-		if adminPassword := viper.GetString("password_admin"); adminPassword != "" {
-			s.Multiuser.AdminPassword = adminPassword
-		} else {
-			s.Multiuser.AdminPassword = "admin"
-		}
-		log.Warn().Msg("you are using v2 configuration 'NEKO_PASSWORD' and 'NEKO_PASSWORD_ADMIN' which are deprecated, please use 'NEKO_MEMBER_MULTIUSER_USER_PASSWORD' and 'NEKO_MEMBER_MULTIUSER_ADMIN_PASSWORD' with 'NEKO_MEMBER_PROVIDER=multiuser' instead")
-		enableLegacy = true
-	}
-
-	// set legacy flag if any V2 configuration was used
-	if !viper.IsSet("legacy") && enableLegacy {
-		log.Warn().Msg("legacy configuration is enabled because at least one V2 configuration was used, please migrate to V3 configuration, visit https://neko.m1k1o.net/docs/v3/migration-from-v2 for more details")
-		viper.Set("legacy", true)
 	}
 }
