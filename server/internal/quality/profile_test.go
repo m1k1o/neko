@@ -39,7 +39,7 @@ func TestParseRejectsUnknownProfile(t *testing.T) {
 
 func TestVideoConfigForVP8(t *testing.T) {
 	profile, _ := Parse("balanced")
-	config, err := profile.VideoConfig(codec.VP8(), true)
+	config, err := profile.VideoConfig(codec.VP8(), EncoderSoftware, "vp8enc", true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -57,7 +57,7 @@ func TestVideoConfigForVP8(t *testing.T) {
 
 func TestVideoConfigForH264(t *testing.T) {
 	profile, _ := Parse("low")
-	config, err := profile.VideoConfig(codec.H264(), false)
+	config, err := profile.VideoConfig(codec.H264(), EncoderSoftware, "x264enc", false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -66,9 +66,33 @@ func TestVideoConfigForH264(t *testing.T) {
 	}
 }
 
+func TestVideoConfigForH264HardwareEncoders(t *testing.T) {
+	profile, _ := Parse("high")
+	for _, test := range []struct {
+		encoder Encoder
+		element string
+	}{
+		{EncoderVAAPI, "vah264enc"},
+		{EncoderNVENC, "nvh264enc"},
+		{EncoderNVENC, "nvautogpuh264enc"},
+	} {
+		config, err := profile.VideoConfig(codec.H264(), test.encoder, test.element, false)
+		if err != nil {
+			t.Fatalf("%s/%s: %v", test.encoder, test.element, err)
+		}
+		pipeline, err := config.GetPipeline(types.ScreenSize{Width: 1920, Height: 1080, Rate: 30})
+		if err != nil {
+			t.Fatalf("%s/%s pipeline: %v", test.encoder, test.element, err)
+		}
+		if !strings.Contains(pipeline, "! "+test.element+" name=encoder") || !strings.Contains(pipeline, "! h264parse") {
+			t.Fatalf("unexpected %s pipeline: %s", test.encoder, pipeline)
+		}
+	}
+}
+
 func TestVideoConfigRejectsUnsupportedCodec(t *testing.T) {
 	profile, _ := Parse("balanced")
-	if _, err := profile.VideoConfig(codec.VP9(), true); err == nil {
+	if _, err := profile.VideoConfig(codec.VP9(), EncoderSoftware, "vp9enc", true); err == nil {
 		t.Fatal("VideoConfig accepted unsupported codec")
 	}
 }

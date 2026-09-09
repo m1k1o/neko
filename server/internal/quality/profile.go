@@ -40,10 +40,9 @@ func Parse(value string) (Profile, error) {
 	}
 }
 
-// VideoConfig generates the standard software-encoding pipeline description
-// for a profile. Hardware encoder selection is handled by the next M1
-// capability-discovery increment.
-func (p Profile) VideoConfig(rtpCodec codec.RTPCodec, showPointer bool) (types.VideoConfig, error) {
+// VideoConfig generates the standard pipeline description for an encoder
+// selection that has already passed capability discovery.
+func (p Profile) VideoConfig(rtpCodec codec.RTPCodec, encoder Encoder, element string, showPointer bool) (types.VideoConfig, error) {
 	config := types.VideoConfig{
 		Width:       strconv.Itoa(p.Width),
 		Height:      strconv.Itoa(p.Height),
@@ -54,7 +53,10 @@ func (p Profile) VideoConfig(rtpCodec codec.RTPCodec, showPointer bool) (types.V
 
 	switch rtpCodec.Name {
 	case codec.VP8().Name:
-		config.GstEncoder = "vp8enc"
+		if encoder != EncoderSoftware || element != "vp8enc" {
+			return types.VideoConfig{}, fmt.Errorf("invalid vp8 encoder selection %s/%s", encoder, element)
+		}
+		config.GstEncoder = element
 		config.GstParams = map[string]string{
 			// round keeps gval's result integral. A bare numeric literal is
 			// evaluated as float64 and may be rendered in scientific notation,
@@ -67,18 +69,50 @@ func (p Profile) VideoConfig(rtpCodec codec.RTPCodec, showPointer bool) (types.V
 			"keyframe-max-dist": strconv.Itoa(p.FPS),
 		}
 	case codec.H264().Name:
-		config.GstPrefix = "! video/x-raw,format=I420"
-		config.GstEncoder = "x264enc"
-		config.GstParams = map[string]string{
-			"threads":      "4",
-			"bitrate":      strconv.Itoa(p.BitrateKbps),
-			"key-int-max":  strconv.Itoa(p.FPS),
-			"byte-stream":  "true",
-			"tune":         "zerolatency",
-			"speed-preset": "veryfast",
-			"bframes":      "0",
+		config.GstPrefix = "! video/x-raw,format=NV12"
+		config.GstEncoder = element
+		config.GstSuffix = "! h264parse config-interval=-1 ! video/x-h264,stream-format=byte-stream,profile=constrained-baseline"
+		switch encoder {
+		case EncoderSoftware:
+			if element != "x264enc" {
+				return types.VideoConfig{}, fmt.Errorf("invalid software h264 encoder %s", element)
+			}
+			config.GstPrefix = "! video/x-raw,format=I420"
+			config.GstParams = map[string]string{
+				"threads":      "4",
+				"bitrate":      strconv.Itoa(p.BitrateKbps),
+				"key-int-max":  strconv.Itoa(p.FPS),
+				"byte-stream":  "true",
+				"tune":         "zerolatency",
+				"speed-preset": "veryfast",
+				"bframes":      "0",
+			}
+		case EncoderVAAPI:
+			if element != "vah264enc" {
+				return types.VideoConfig{}, fmt.Errorf("invalid VAAPI h264 encoder %s", element)
+			}
+			config.GstParams = map[string]string{
+				"rate-control": "cbr",
+				"bitrate":      strconv.Itoa(p.BitrateKbps),
+				"key-int-max":  strconv.Itoa(p.FPS),
+				"target-usage": "7",
+			}
+		case EncoderNVENC:
+			if element != "nvautogpuh264enc" && element != "nvh264enc" {
+				return types.VideoConfig{}, fmt.Errorf("invalid NVENC h264 encoder %s", element)
+			}
+			config.GstParams = map[string]string{
+				"preset":          "2",
+				"gop-size":        strconv.Itoa(p.FPS),
+				"spatial-aq":      "true",
+				"temporal-aq":     "true",
+				"bitrate":         strconv.Itoa(p.BitrateKbps),
+				"vbv-buffer-size": strconv.Itoa(p.BitrateKbps),
+				"rc-mode":         "6",
+			}
+		default:
+			return types.VideoConfig{}, fmt.Errorf("invalid h264 encoder selection %s", encoder)
 		}
-		config.GstSuffix = "! video/x-h264,stream-format=byte-stream,profile=constrained-baseline"
 	default:
 		return types.VideoConfig{}, fmt.Errorf("quality profiles support only vp8 or h264, got %s", rtpCodec.Name)
 	}

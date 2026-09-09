@@ -11,6 +11,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/m1k1o/neko/server/internal/quality"
+	"github.com/m1k1o/neko/server/pkg/gst"
 	"github.com/m1k1o/neko/server/pkg/types"
 	"github.com/m1k1o/neko/server/pkg/types/codec"
 	"github.com/m1k1o/neko/server/pkg/utils"
@@ -32,6 +33,7 @@ type Capture struct {
 
 	VideoCodec       codec.RTPCodec
 	VideoProfile     quality.Name
+	VideoEncoder     quality.Encoder
 	VideoIDs         []string
 	VideoPipelines   map[string]types.VideoConfig
 	VideoShowPointer bool
@@ -91,6 +93,10 @@ func (Capture) Init(cmd *cobra.Command) error {
 
 	cmd.PersistentFlags().String("capture.video.profile", "", "optional Chromium M1 quality profile (low, balanced, high)")
 	if err := viper.BindPFlag("capture.video.profile", cmd.PersistentFlags().Lookup("capture.video.profile")); err != nil {
+		return err
+	}
+	cmd.PersistentFlags().String("capture.video.encoder", "auto", "Chromium M1 profile encoder (auto, software, vaapi, nvenc)")
+	if err := viper.BindPFlag("capture.video.encoder", cmd.PersistentFlags().Lookup("capture.video.encoder")); err != nil {
 		return err
 	}
 
@@ -653,8 +659,15 @@ func (s *Capture) SetV2() {
 // profile after legacy compatibility settings have been processed. Existing
 // defaults and custom pipelines remain untouched when no profile is selected.
 func (s *Capture) ApplyVideoProfile() error {
+	return s.applyVideoProfile(gst.CheckElement)
+}
+
+func (s *Capture) applyVideoProfile(probe quality.ElementProbe) error {
 	value := strings.ToLower(strings.TrimSpace(viper.GetString("capture.video.profile")))
 	if value == "" {
+		if viper.IsSet("capture.video.encoder") {
+			return fmt.Errorf("capture.video.encoder requires capture.video.profile")
+		}
 		return nil
 	}
 
@@ -682,17 +695,37 @@ func (s *Capture) ApplyVideoProfile() error {
 	if err != nil {
 		return err
 	}
-	videoConfig, err := profile.VideoConfig(s.VideoCodec, s.VideoShowPointer)
+	requestedEncoder, err := quality.ParseEncoder(viper.GetString("capture.video.encoder"))
+	if err != nil {
+		return err
+	}
+	selection, err := quality.ResolveEncoder(s.VideoCodec, requestedEncoder, probe)
+	if err != nil {
+		return err
+	}
+	videoConfig, err := profile.VideoConfig(selection.Codec, selection.Encoder, selection.Element, s.VideoShowPointer)
 	if err != nil {
 		return err
 	}
 
 	s.VideoProfile = profile.Name
+	s.VideoEncoder = selection.Encoder
+	s.VideoCodec = selection.Codec
 	s.VideoIDs = []string{"main"}
 	s.VideoPipelines = map[string]types.VideoConfig{"main": videoConfig}
+	if len(selection.Unavailable) > 0 {
+		log.Warn().
+			Str("requested", string(selection.Requested)).
+			Str("selected", string(selection.Encoder)).
+			Str("codec", selection.Codec.Name).
+			Strs("unavailable_elements", selection.Unavailable).
+			Msg("video encoder capability fallback applied")
+	}
 	log.Info().
 		Str("profile", string(profile.Name)).
-		Str("codec", s.VideoCodec.Name).
+		Str("codec", selection.Codec.Name).
+		Str("encoder", string(selection.Encoder)).
+		Str("element", selection.Element).
 		Int("width", profile.Width).
 		Int("height", profile.Height).
 		Int("fps", profile.FPS).
