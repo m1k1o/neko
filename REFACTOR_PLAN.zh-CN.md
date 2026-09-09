@@ -237,6 +237,7 @@ server/internal/
 - `0a5d2adf`：清理文件传输 UI 遗留的 `/file?pwd=...` 路径；上传、下载和删除统一使用带现有会话认证的 `/api/filetransfer`，不再把密码放入 URL。
 - `9f36fde0`：E2E 基线入口增加可选 Prometheus `/metrics` 快照，并在并发基线中按观看者保存 JSON 与指标文件，便于将浏览器首帧数据和服务端队列/码率/ICE 指标对齐。
 - `03dbcd7f`：客户端 `SignalingTransport` 与 Go `WebSocketMessage` 共享严格 envelope 规则；拒绝空/空白事件、`payload:null` 和额外顶层字段，同时保留合法数组 payload，避免重新引入已删除的扁平信令。
+- `32fcf57e`：将前端 WebRTC `getStats`、RTT/丢包采样和网络质量分类提取为可复用的 `NetworkQualityMonitor` SDK；`NekoClient` 只负责把采样结果映射到状态模块，并导出给嵌入式客户端使用。
 
 ### 当前限制与下一步
 
