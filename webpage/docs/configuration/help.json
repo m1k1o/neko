@@ -162,7 +162,7 @@
       "profile"
     ],
     "type": "string",
-    "description": "optional Chromium M1 quality profile (low, balanced, high)"
+    "description": "optional Chromium M1 quality profile (low, balanced, high; VP8/H.264/H.265/AV1)"
   },
   {
     "key": [

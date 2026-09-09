@@ -211,6 +211,7 @@ server/internal/
 - `e9143cf6`：捕获层支持同 codec 的运行时管线候选；硬件 H.264 管线创建或进入播放状态失败时重试 x264，不在 WebRTC 协商后切换 codec。
 - `b25ef523`：GStreamer 播放启动等待状态转换完成；硬件设备初始化失败会在首个观看者创建管线时返回错误，从而触发同 codec 回退。
 - `70a0706b`：配置阶段对 VAAPI/NVENC 执行无显示依赖的短 GStreamer 运行时探测；设备或驱动初始化失败时在选择编码器前记录原因并尝试同 codec 软件回退，同时保留硬件元素的备选探测顺序。
+- 当前批次：标准 Chromium M1 质量管线扩展为 VP8/H.264/H.265/AV1；新增 AV1/H.265 的软件、VAAPI 和 NVENC 编码候选，统一设备探测与同 codec 软件回退，并新增可在目标运行时执行的编码器能力矩阵脚本。
 
 ### 已验证
 
@@ -226,7 +227,8 @@ server/internal/
 - 显式 `balanced` 档位通过 `go test ./...`、目标包竞态检测和实际 Chromium 容器验证；最终 VP8 管线稳定输出整数码率 `2500000`，容器健康且无重启。
 - 编码器选择与回退通过单元/竞态测试；默认 VP8 演示通过真实 GStreamer registry 探测与管线语法检查，仍保持同端口 `52000/TCP+UDP`。registry 探测只代表元素可见，GPU 设备及驱动初始化仍需下一小步验证。
 - 硬件编码运行时探测通过 `videotestsrc -> encoder -> h264parse -> fakesink` 短管线验证；无可用设备或驱动时会在配置阶段回退软件编码，并通过配置/质量单元测试覆盖失败诊断。
-- 运行时管线候选已接入 `StreamSink`；同 codec 的硬件失败可重试软件 H.264，所有候选失败会返回明确错误并保留现有会话生命周期。
+- 运行时管线候选已接入 `StreamSink`；同 codec 的硬件失败可重试软件编码，所有候选失败会返回明确错误并保留现有会话生命周期。
+- 当前工作区 `go test ./...` 通过；新增 AV1/H.265 配置、编码器选择、运行时回退和矩阵覆盖测试通过。当前环境没有可用 GStreamer CLI 或 GPU 设备，因此真实硬件行需在映射 `/dev/dri` 或 `--gpus all` 的目标运行时执行 `server/integration/encoding/matrix.sh`。
 - `StreamSink` 增加首帧耗时、实际样本率、实际码率、样本总数和管线回退计数指标；码率状态改为读写锁保护，避免多观看者并发访问竞态。
 - 带宽估计器接入视频 Track 队列占用、RTCP jitter 和累计丢包；压力持续超过滞回时降档，压力存在时禁止升档，并将切换原因写入日志。
 - `83341b33`：将队列压力、RTCP jitter 和新增丢包接入 WebRTC 自适应升降档；网络压力持续超过不稳定时长才降档，且压力期间禁止升档。
@@ -267,7 +269,7 @@ server/internal/
 - `02d2eaef`：客户端只保留 `/api` 认证、`/api/ws` 信令和现代事件/消息类型，删除客户端创建 data channel、扁平消息解析及废弃事件。
 - `08536a32`：服务端删除 legacy HTTP、legacy WebRTC handler、V2 配置迁移入口、旧滚动编码和旧消息兼容字段。
 - `2d871384`：同步迁移文档、Roadmap、配置生成脚本和开发要求，明确升级时不保留旧运行时分支。
-- 验证：`vue-cli-service lint --no-fix` 与 `vue-cli-service build` 成功（仅有既有 Browserslist、bundle 体积提示）；容器化 Go 测试中 `pkg/types`、`internal/connectivity`、`internal/webrtc/payload`、`internal/quality`、`internal/plugins/filetransfer`、`internal/websocket` 通过。完整 config/session/capture 包仍受本机缺少 GStreamer/CGo 构建依赖限制，需在带 GStreamer 的 Linux 构建环境补测。
+- 验证：`vue-cli-service lint --no-fix` 与 `vue-cli-service build` 成功（仅有既有 Browserslist、bundle 体积提示）；WSL2 Go 工具链下 `go test ./...` 通过，覆盖完整 config/session/capture 与新增 AV1/H.265 选择逻辑。真实硬件管线仍需在映射 `/dev/dri` 或 `--gpus all` 的目标运行时执行矩阵脚本。
 
 本批次没有改变公网端口号或 MUX 配置语义；服务端重连宽限/去抖已完成。下一批补充生成式契约测试和迁移错误码，不再引入第二套信令 envelope。
 
@@ -279,7 +281,7 @@ M1 的 UI 工作拆为两层：当前先交付不触及媒体链路的视觉与�
 | --- | --- | --- | --- |
 | 1 | UI 视觉与交互基础（第一批已完成） | 深色蓝灰设计令牌、视频舞台、登录卡片、连接/网络质量反馈、移动端侧栏抽屉、国际化、空/加载状态、设置分组和可访问性基础；保持旧状态与协议接口 | 变更可通过提交回滚；不改变信令/媒体协议；lint/build 通过，Chromium 基础交互回归通过 |
 | 2 | 显式质量 Profile（已完成） | `low`、`balanced`、`high`；仅显式启用；拒绝与自定义 GStreamer 管线混用 | 配置和管线生成单测通过；历史默认配置不变 |
-| 3 | 编码器能力与回退（实现完成，硬件矩阵待补） | H.264 软件、VAAPI、NVENC 和 VP8 回退；配置阶段探测硬件运行时能力，首个媒体管线继续保留同 codec 回退 | 缺失 GPU/插件时可诊断并回退；真实 VAAPI/NVENC 设备需补充 Linux/WSL2 矩阵 |
+| 3 | 编码器能力与回退（AV1/H.265 已接入，真实硬件矩阵待执行） | VP8、H.264、H.265、AV1 的软件/VAAPI/NVENC 候选；配置阶段探测硬件运行时能力，首个媒体管线保留同 codec 回退；矩阵脚本覆盖软件、VAAPI、NVENC 编码器元素 | 缺失 GPU/插件时可诊断并回退；需在真实 VAAPI/NVENC GPU 主机和 Windows/WSL2 透传环境执行矩阵并归档结果 |
 | 4 | 自适应质量策略 | 显式 profile 生成质量梯度，复用带宽估计器；后续加入队列压力、RTT/jitter/丢包输入 | 压力下降档、恢复升档，切换原因可观测 |
 | 5 | 性能指标闭环 | 编码耗时、首帧、实际帧率/码率、路径标签和资源指标 | `/metrics` 覆盖基线指标且不含高风险凭据标签 |
 | 6 | FRP 与 TURN 集成（本地套件完成，公网矩阵待补） | SakuraFrp 同端口 TCP/UDP 模板、Coturn 回退模板、relay 范围校验和故障诊断套件 | 本地两条路径可重复部署并通过连通性测试；真实公网/UDP 受阻/Neko 媒体链路需补充 |
