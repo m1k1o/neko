@@ -235,6 +235,7 @@ server/internal/
 - 浏览器 E2E 入口的 Shell/JavaScript 语法、Git 差异和客户端 lint 已通过；完整 Playwright 镜像首次下载及真实媒体回归需在具备镜像缓存和运行中 Chromium demo 的 Linux/WSL2 环境执行。
 - `ad9b2032`：新增固定 Playwright Chromium 的真实浏览器 E2E 入口；覆盖账号密码登录、`{event,payload}` 信令 envelope、`system/init`、连接状态、远端视频首帧和废弃事件检测，并提供 1/2/5 观看者并发基线脚本及 JSON 结果归档。
 - `0a5d2adf`：清理文件传输 UI 遗留的 `/file?pwd=...` 路径；上传、下载和删除统一使用带现有会话认证的 `/api/filetransfer`，不再把密码放入 URL。
+- `9f36fde0`：E2E 基线入口增加可选 Prometheus `/metrics` 快照，并在并发基线中按观看者保存 JSON 与指标文件，便于将浏览器首帧数据和服务端队列/码率/ICE 指标对齐。
 
 ### 当前限制与下一步
 
