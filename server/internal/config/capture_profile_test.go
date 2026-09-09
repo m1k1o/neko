@@ -94,6 +94,26 @@ func TestApplyVideoProfileAddsSameCodecRuntimeFallback(t *testing.T) {
 	}
 }
 
+func TestApplyVideoProfileBuildsAdaptiveLadderUpToProfile(t *testing.T) {
+	viper.Reset()
+	defer viper.Reset()
+	viper.Set("capture.video.profile", "high")
+	viper.Set("capture.video.adaptive", true)
+
+	config := Capture{VideoCodec: codec.VP8()}
+	if err := config.applyVideoProfile(availableElements("vp8enc")); err != nil {
+		t.Fatal(err)
+	}
+	if !config.VideoAdaptive || strings.Join(config.VideoIDs, ",") != "low,balanced,high" {
+		t.Fatalf("unexpected adaptive video IDs: %+v", config.VideoIDs)
+	}
+	for _, id := range config.VideoIDs {
+		if _, ok := config.VideoPipelines[id]; !ok {
+			t.Fatalf("missing adaptive pipeline %q", id)
+		}
+	}
+}
+
 func TestApplyVideoEncoderRequiresProfile(t *testing.T) {
 	viper.Reset()
 	defer viper.Reset()

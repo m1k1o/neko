@@ -34,6 +34,7 @@ type Capture struct {
 	VideoCodec     codec.RTPCodec
 	VideoProfile   quality.Name
 	VideoEncoder   quality.Encoder
+	VideoAdaptive  bool
 	VideoIDs       []string
 	VideoPipelines map[string]types.VideoConfig
 	// VideoPipelineFallbacks contains same-codec candidates for profile
@@ -100,6 +101,10 @@ func (Capture) Init(cmd *cobra.Command) error {
 	}
 	cmd.PersistentFlags().String("capture.video.encoder", "auto", "Chromium M1 profile encoder (auto, software, vaapi, nvenc)")
 	if err := viper.BindPFlag("capture.video.encoder", cmd.PersistentFlags().Lookup("capture.video.encoder")); err != nil {
+		return err
+	}
+	cmd.PersistentFlags().Bool("capture.video.adaptive", false, "build a Chromium M1 quality ladder for bandwidth adaptation")
+	if err := viper.BindPFlag("capture.video.adaptive", cmd.PersistentFlags().Lookup("capture.video.adaptive")); err != nil {
 		return err
 	}
 
@@ -425,6 +430,7 @@ func (s *Capture) Set() {
 	}
 
 	s.VideoShowPointer = viper.GetBool("capture.video.show_pointer")
+	s.VideoAdaptive = viper.GetBool("capture.video.adaptive")
 	if viper.IsSet("capture.video.show_pointer") {
 		for k, p := range s.VideoPipelines {
 			p.ShowPointer = s.VideoShowPointer
@@ -706,22 +712,43 @@ func (s *Capture) applyVideoProfile(probe quality.ElementProbe) error {
 	if err != nil {
 		return err
 	}
-	videoConfig, err := profile.VideoConfig(selection.Codec, selection.Encoder, selection.Element, s.VideoShowPointer)
-	if err != nil {
-		return err
-	}
-
 	s.VideoProfile = profile.Name
 	s.VideoEncoder = selection.Encoder
 	s.VideoCodec = selection.Codec
+	s.VideoAdaptive = viper.GetBool("capture.video.adaptive")
 	s.VideoIDs = []string{"main"}
-	s.VideoPipelines = map[string]types.VideoConfig{"main": videoConfig}
 	s.VideoPipelineFallbacks = make(map[string][]types.VideoConfig)
-	if selection.Codec.Name == codec.H264().Name && selection.Element != "x264enc" {
-		if probe("x264enc") == nil && probe("h264parse") == nil {
-			softwareConfig, configErr := profile.VideoConfig(codec.H264(), quality.EncoderSoftware, "x264enc", s.VideoShowPointer)
-			if configErr == nil {
-				s.VideoPipelineFallbacks["main"] = []types.VideoConfig{softwareConfig}
+	profiles := []quality.Profile{profile}
+	ids := []string{"main"}
+	if s.VideoAdaptive {
+		profiles = profiles[:0]
+		ids = ids[:0]
+		for _, name := range []quality.Name{quality.Low, quality.Balanced, quality.High} {
+			tier, parseErr := quality.Parse(string(name))
+			if parseErr != nil {
+				return parseErr
+			}
+			profiles = append(profiles, tier)
+			ids = append(ids, string(name))
+			if name == profile.Name {
+				break
+			}
+		}
+	}
+	s.VideoIDs = ids
+	s.VideoPipelines = make(map[string]types.VideoConfig, len(profiles))
+	s.VideoPipelineFallbacks = make(map[string][]types.VideoConfig, len(profiles))
+	for index, tier := range profiles {
+		videoConfig, configErr := tier.VideoConfig(selection.Codec, selection.Encoder, selection.Element, s.VideoShowPointer)
+		if configErr != nil {
+			return configErr
+		}
+		id := ids[index]
+		s.VideoPipelines[id] = videoConfig
+		if selection.Codec.Name == codec.H264().Name && selection.Element != "x264enc" && probe("x264enc") == nil && probe("h264parse") == nil {
+			softwareConfig, fallbackErr := tier.VideoConfig(codec.H264(), quality.EncoderSoftware, "x264enc", s.VideoShowPointer)
+			if fallbackErr == nil {
+				s.VideoPipelineFallbacks[id] = []types.VideoConfig{softwareConfig}
 			}
 		}
 	}
@@ -738,6 +765,7 @@ func (s *Capture) applyVideoProfile(probe quality.ElementProbe) error {
 		Str("codec", selection.Codec.Name).
 		Str("encoder", string(selection.Encoder)).
 		Str("element", selection.Element).
+		Bool("adaptive", s.VideoAdaptive).
 		Int("width", profile.Width).
 		Int("height", profile.Height).
 		Int("fps", profile.FPS).

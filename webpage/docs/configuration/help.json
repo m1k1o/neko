@@ -178,6 +178,16 @@
     "key": [
       "capture",
       "video",
+      "adaptive"
+    ],
+    "type": "boolean",
+    "defaultValue": false,
+    "description": "build a Chromium M1 quality ladder for bandwidth adaptation"
+  },
+  {
+    "key": [
+      "capture",
+      "video",
       "display"
     ],
     "type": "string",
