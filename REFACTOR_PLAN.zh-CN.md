@@ -241,6 +241,7 @@ server/internal/
 - `df63951e`：增加无额外测试依赖的 TypeScript SDK 合约测试，覆盖网络质量阈值、严格信令 envelope 和合法数组 payload，并纳入客户端 CI 构建工作流。
 - `792d4f79`：将登录、登出和 Bearer token 注入提取为独立 `AuthClient`；`NekoClient` 不再直接管理认证 REST 细节，SDK 合约测试覆盖 token 注入与登出清理。
 - `40f8dd1f`：删除客户端根状态中从未被读取的 `active/setActive` 字段，避免保留无效会话状态。
+- `ad25e67c`：将显示名、认证密码、管理员锁和登录/登出动作迁入 namespaced `session` Vuex 模块；组件与 `NekoClient` 不再读取或写入根状态，完成一批会话/UI 状态边界拆分。
 
 ### 当前限制与下一步
 
