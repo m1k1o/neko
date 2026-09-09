@@ -42,6 +42,13 @@ For TURN fallback, copy `demo/compose.turn.example.yaml` to
 credentials. Open TCP/UDP `3478` plus the complete relay range in the TURN
 server firewall. Do not commit the copied files containing credentials.
 
+To run the local FRP and Coturn connectivity checks (including same-port
+TCP/UDP forwarding, authenticated allocation, and relay-range validation):
+
+```bash
+server/integration/connectivity/run.sh
+```
+
 Open <http://127.0.0.1:8080>. Stop it with:
 
 ```bash

@@ -1,0 +1,20 @@
+serverAddr = "frps"
+serverPort = 7000
+
+[auth]
+method = "token"
+token = "connectivity-test-token"
+
+[[proxies]]
+name = "connectivity-tcp"
+type = "tcp"
+localIP = "echo"
+localPort = 52000
+remotePort = 52000
+
+[[proxies]]
+name = "connectivity-udp"
+type = "udp"
+localIP = "echo"
+localPort = 52000
+remotePort = 52000

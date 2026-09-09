@@ -1,0 +1,25 @@
+name: Test FRP and TURN Connectivity
+
+on:
+  pull_request:
+    branches:
+      - master
+    paths:
+      - server/internal/connectivity/**
+      - server/integration/connectivity/**
+      - demo/compose.frp.example.yaml
+      - demo/frpc.toml.example
+      - demo/compose.turn.example.yaml
+      - .github/workflows/connectivity_integration_test.yml
+  workflow_dispatch:
+
+jobs:
+  connectivity-integration:
+    name: FRP and Coturn transport paths
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run FRP and TURN connectivity suites
+        run: server/integration/connectivity/run.sh

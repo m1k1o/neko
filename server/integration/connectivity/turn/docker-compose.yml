@@ -1,0 +1,28 @@
+services:
+  coturn:
+    image: coturn/coturn:4.6.3
+    command:
+      - "-n"
+      - "--log-file=stdout"
+      - "--realm=neko.test"
+      - "--lt-cred-mech"
+      - "--user=turn-user:turn-password"
+      - "--listening-ip=0.0.0.0"
+      - "--relay-ip=0.0.0.0"
+      - "--min-port=49160"
+      - "--max-port=49170"
+      - "--no-tls"
+    expose:
+      - "3478/tcp"
+      - "3478/udp"
+
+  probe:
+    image: coturn/coturn:4.6.3
+    entrypoint: ["/opt/probe.sh"]
+    environment:
+      TURN_TRANSPORT: ${TURN_TRANSPORT:-udp}
+    volumes:
+      - ./probe.sh:/opt/probe.sh:ro
+    depends_on:
+      coturn:
+        condition: service_started
