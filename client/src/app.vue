@@ -120,21 +120,35 @@
         background: rgba($background-tertiary, 0.92);
         border-top: 1px solid rgba($text-normal, 0.08);
         height: $controls-height;
+        min-height: $controls-height;
         max-width: 100%;
         flex-shrink: 0;
         flex-direction: column;
         display: flex;
         padding: 8px 16px 12px;
+        overflow: visible;
+
+        > .members {
+          flex: 0 0 64px;
+          height: 64px;
+          min-height: 64px;
+          position: relative;
+          z-index: 1;
+        }
 
         .room-menu {
           max-width: 100%;
-          flex: 1;
+          flex: 1 1 auto;
+          min-height: 56px;
           display: flex;
           gap: 12px;
+          position: relative;
+          z-index: 2;
 
           .settings {
             margin-left: 0;
             flex: 1;
+            min-width: 0;
             justify-content: flex-start;
             align-items: center;
             display: flex;
@@ -143,6 +157,7 @@
           .controls {
             flex: 1;
             min-width: 220px;
+            min-height: 56px;
             padding: 0 12px;
             border: 1px solid rgba($text-normal, 0.08);
             border-radius: 14px;
@@ -150,11 +165,21 @@
             justify-content: center;
             align-items: center;
             display: flex;
+            overflow-x: auto;
+            overflow-y: hidden;
+
+            > ul {
+              display: flex;
+              flex: 0 0 auto;
+              min-width: max-content;
+              justify-content: center;
+            }
           }
 
           .emotes {
             margin-right: 0;
             flex: 1;
+            min-width: 0;
             justify-content: flex-end;
             align-items: center;
             display: flex;
