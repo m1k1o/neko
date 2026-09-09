@@ -29,6 +29,7 @@ docker run --rm --gpus all \
 ```
 
 Missing optional elements are reported as `unavailable` and do not fail the
-default run. Set `NEKO_ENCODER_MATRIX_STRICT=1` to require every row, which is
-appropriate for a hardware-specific release job. Set
+default run. Set `NEKO_ENCODER_MATRIX_FAMILY=vaapi` or `nvenc` together with
+`NEKO_ENCODER_MATRIX_STRICT=1` to require every row for a specific hardware
+family. Set
 `NEKO_ENCODER_MATRIX_OUTPUT=/path/result.tsv` to archive the result.

@@ -6,6 +6,16 @@ gst_inspect="${GST_INSPECT:-gst-inspect-1.0}"
 gst_launch="${GST_LAUNCH:-gst-launch-1.0}"
 output="${NEKO_ENCODER_MATRIX_OUTPUT:-}"
 strict="${NEKO_ENCODER_MATRIX_STRICT:-0}"
+family="${NEKO_ENCODER_MATRIX_FAMILY:-all}"
+
+case "$family" in
+	all|software|vaapi|nvenc)
+		;;
+	*)
+		echo "NEKO_ENCODER_MATRIX_FAMILY must be all, software, vaapi, or nvenc" >&2
+		exit 2
+		;;
+esac
 
 if ! command -v "$gst_inspect" >/dev/null 2>&1 || ! command -v "$gst_launch" >/dev/null 2>&1; then
 	echo "GStreamer tools are required: $gst_inspect and $gst_launch" >&2
@@ -45,6 +55,9 @@ trap 'rm -f "$matrix_log"' EXIT
 
 for row in "${matrix[@]}"; do
 	IFS='|' read -r codec encoder element parser <<< "$row"
+	if [[ "$family" != "all" && "$encoder" != "$family" ]]; then
+		continue
+	fi
 
 	if ! "$gst_inspect" "$element" >/dev/null 2>&1; then
 		printf '%s\t%s\t%s\tunavailable\tencoder element not installed\n' "$codec" "$encoder" "$element"
