@@ -218,6 +218,7 @@ server/internal/
 - `ecc1dff6`：在运行时镜像中提供 GStreamer CLI 工具，并补齐 Intel VAAPI 开发配置。
 - `5ff71fa4`：为编码矩阵增加 `software`、`vaapi`、`nvenc` 族筛选，支持硬件发布作业按 GPU 类型严格执行。
 - `08dfc2ef`：补齐 VAAPI 低功耗 H.264 配置生成并增加回归覆盖。
+- `231b6d3c`：将 H.265 SDP 能力提升到 Main Level 4.0（`level-id=120`），覆盖 `high` 档位 1080p30，并加入能力断言测试。
 
 ### 已验证
 
