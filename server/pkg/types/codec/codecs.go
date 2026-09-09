@@ -144,10 +144,12 @@ func H265() RTPCodec {
 		PayloadType: 116,
 		Type:        webrtc.RTPCodecTypeVideo,
 		Capability: webrtc.RTPCodecCapability{
-			MimeType:     webrtc.MimeTypeH265,
-			ClockRate:    90000,
-			Channels:     0,
-			SDPFmtpLine:  "profile-id=1;level-id=93;tier-flag=0;tx-mode=SRST",
+			MimeType:  webrtc.MimeTypeH265,
+			ClockRate: 90000,
+			Channels:  0,
+			// Level 4.0 (120) covers the 1920x1080@30 high profile while
+			// remaining within the Main profile used by every H.265 pipeline.
+			SDPFmtpLine:  "profile-id=1;level-id=120;tier-flag=0;tx-mode=SRST",
 			RTCPFeedback: RTCPFeedback,
 		},
 		// https://gstreamer.freedesktop.org/documentation/x265/index.html

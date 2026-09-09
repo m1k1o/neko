@@ -25,3 +25,9 @@ func TestModernVideoCodecsRegisterWithPion(t *testing.T) {
 		})
 	}
 }
+
+func TestH265CapabilityCoversHighProfile(t *testing.T) {
+	if got := H265().Capability.SDPFmtpLine; got != "profile-id=1;level-id=120;tier-flag=0;tx-mode=SRST" {
+		t.Fatalf("unexpected H265 capability: %s", got)
+	}
+}
