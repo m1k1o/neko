@@ -39,6 +39,13 @@ export { encodeMediaInput, MEDIA_OPCODE } from './sdk/media-protocol'
 export type { MediaInput, MediaInputEvent } from './sdk/media-protocol'
 export { SignalingTransport } from './sdk/signaling'
 export type { SignalingMessage, SignalingState, SignalingTransportOptions } from './sdk/signaling'
+export { NetworkQualityMonitor, classifyNetworkQuality } from './sdk/network-monitor'
+export type {
+  NetworkQuality,
+  NetworkQualitySample,
+  NetworkStatsPeer,
+  NetworkQualityMonitorOptions,
+} from './sdk/network-monitor'
 
 Vue.use(ToolTip)
 

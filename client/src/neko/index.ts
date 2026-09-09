@@ -3,7 +3,7 @@ import EventEmitter from 'eventemitter3'
 import { BaseClient, BaseEvents } from './base'
 import { EVENT } from './events'
 import { accessor } from '~/store'
-import { NetworkQuality } from '~/store/connection'
+import { NetworkQualityMonitor } from '~/sdk/network-monitor'
 import { set } from '~/utils/localstorage'
 
 import {
@@ -30,8 +30,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   private url!: string
   private apiURL = ''
   private token = ''
-  private networkMonitor?: number
-  private previousNetworkCounters?: { packetsReceived: number; packetsLost: number }
+  private networkMonitor?: NetworkQualityMonitor
 
   init(vue: Vue) {
     const url =
@@ -184,74 +183,17 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
 
   private startNetworkMonitor() {
     this.stopNetworkMonitor()
-    this.previousNetworkCounters = undefined
-    this.updateNetworkQuality()
-    this.networkMonitor = window.setInterval(() => this.updateNetworkQuality(), 5000)
+    this.networkMonitor = new NetworkQualityMonitor({
+      onSample: ({ quality, rtt }) => this.$accessor.connection.setNetworkQuality({ quality, rtt }),
+    })
+    if (this._peer) {
+      this.networkMonitor.start(this._peer)
+    }
   }
 
   private stopNetworkMonitor() {
-    if (this.networkMonitor) {
-      window.clearInterval(this.networkMonitor)
-      this.networkMonitor = undefined
-    }
-    this.previousNetworkCounters = undefined
-  }
-
-  private async updateNetworkQuality() {
-    if (!this._peer || !this.$accessor.connection.connected) {
-      return
-    }
-
-    try {
-      const stats = await this._peer.getStats()
-      let packetsReceived = 0
-      let packetsLost = 0
-      let rtt: number | null = null
-
-      stats.forEach((stat: any) => {
-        if (stat.type === 'inbound-rtp' && (stat.kind === 'video' || stat.mediaType === 'video')) {
-          packetsReceived += Number(stat.packetsReceived || 0)
-          packetsLost += Number(stat.packetsLost || 0)
-        }
-
-        if (
-          stat.type === 'candidate-pair' &&
-          (stat.state === 'succeeded' || stat.nominated === true) &&
-          typeof stat.currentRoundTripTime === 'number'
-        ) {
-          rtt = stat.currentRoundTripTime * 1000
-        }
-      })
-
-      const previous = this.previousNetworkCounters
-      this.previousNetworkCounters = { packetsReceived, packetsLost }
-
-      const receivedDelta = previous ? Math.max(0, packetsReceived - previous.packetsReceived) : packetsReceived
-      const lostDelta = previous ? Math.max(0, packetsLost - previous.packetsLost) : packetsLost
-      const totalPackets = receivedDelta + lostDelta
-      const packetLoss = totalPackets > 0 ? lostDelta / totalPackets : 0
-      const quality = this.classifyNetworkQuality(rtt, packetLoss, totalPackets > 0 || rtt !== null)
-
-      this.$accessor.connection.setNetworkQuality({ quality, rtt: rtt === null ? null : Math.round(rtt) })
-    } catch (error) {
-      // getStats is best effort; a temporary failure must not affect the media session.
-    }
-  }
-
-  private classifyNetworkQuality(rtt: number | null, packetLoss: number, hasStats: boolean): NetworkQuality {
-    if (!hasStats) {
-      return 'unknown'
-    }
-
-    if ((rtt !== null && rtt > 350) || packetLoss > 0.08) {
-      return 'poor'
-    }
-
-    if ((rtt !== null && rtt > 180) || packetLoss > 0.03) {
-      return 'fair'
-    }
-
-    return 'good'
+    this.networkMonitor?.stop()
+    this.networkMonitor = undefined
   }
 
   protected [EVENT.TRACK](event: RTCTrackEvent) {
