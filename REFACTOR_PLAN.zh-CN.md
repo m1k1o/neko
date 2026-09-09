@@ -234,6 +234,7 @@ server/internal/
 - `45e5c91c`：新增本地 FRP/Coturn 连通性集成套件；FRP 验证无公网主机模型下同号 `52000/TCP+UDP` 转发，Coturn 通过真实认证 Allocate 验证 UDP/TCP `3478` 和 `49160-49170` relay 范围，并在失败时输出端口、认证或 relay 范围诊断。
 - 浏览器 E2E 入口的 Shell/JavaScript 语法、Git 差异和客户端 lint 已通过；完整 Playwright 镜像首次下载及真实媒体回归需在具备镜像缓存和运行中 Chromium demo 的 Linux/WSL2 环境执行。
 - `ad9b2032`：新增固定 Playwright Chromium 的真实浏览器 E2E 入口；覆盖账号密码登录、`{event,payload}` 信令 envelope、`system/init`、连接状态、远端视频首帧和废弃事件检测，并提供 1/2/5 观看者并发基线脚本及 JSON 结果归档。
+- `0a5d2adf`：清理文件传输 UI 遗留的 `/file?pwd=...` 路径；上传、下载和删除统一使用带现有会话认证的 `/api/filetransfer`，不再把密码放入 URL。
 
 ### 当前限制与下一步
 
