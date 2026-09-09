@@ -1,7 +1,7 @@
 <template>
   <ul class="menu-actions">
     <li>
-      <button type="button" class="action-button" aria-label="About n.eko" @click.stop.prevent="about">
+      <button type="button" class="action-button" :aria-label="$t('ui.about')" @click.stop.prevent="about">
         <i class="fas fa-question-circle" aria-hidden="true" />
       </button>
     </li>
@@ -19,7 +19,7 @@
     </li>
     <li class="locale-picker">
       <label>
-        <span class="sr-only">Language</span>
+        <span class="sr-only">{{ $t('ui.language') }}</span>
         <select v-model="$i18n.locale">
           <option v-for="(lang, i) in langs" :key="`Lang${i}`" :value="lang">
             {{ lang }}

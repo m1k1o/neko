@@ -2,10 +2,10 @@
   <div class="connect">
     <div class="window" role="dialog" aria-modal="true" aria-labelledby="connect-title">
       <div class="window-topline">
-        <span class="eyebrow">N.EKO ROOM</span>
-        <span class="secure-badge"><i class="fas fa-shield-halved" aria-hidden="true" /> Secure</span>
+        <span class="eyebrow">{{ $t('ui.room_eyebrow') }}</span>
+        <span class="secure-badge"><i class="fas fa-shield-halved" aria-hidden="true" /> {{ $t('ui.secure') }}</span>
       </div>
-      <div class="logo" title="About n.eko" @click.stop.prevent="about">
+      <div class="logo" :title="$t('ui.about')" @click.stop.prevent="about">
         <span class="logo-mark"><img src="@/assets/images/logo.svg" alt="" /></span>
         <span class="brand-name"><b>n</b>.eko</span>
       </div>
@@ -19,23 +19,40 @@
             v-model="displayname"
             autocomplete="nickname"
             autofocus
-            required
+            :aria-invalid="loginError ? 'true' : 'false'"
+            :class="{ invalid: loginError }"
+            @input="loginError = ''"
           />
         </label>
         <label class="field" v-if="!autoPassword">
           <span>{{ $t('connect.password') }}</span>
-          <input
-            type="password"
-            :placeholder="$t('connect.password')"
-            v-model="password"
-            autocomplete="current-password"
-          />
+          <div class="password-field">
+            <input
+              :type="showPassword ? 'text' : 'password'"
+              :placeholder="$t('connect.password')"
+              v-model="password"
+              autocomplete="current-password"
+              @input="loginError = ''"
+            />
+            <button
+              type="button"
+              class="password-toggle"
+              :aria-label="$t(showPassword ? 'connect.hide_password' : 'connect.show_password')"
+              @click.stop.prevent="showPassword = !showPassword"
+            >
+              <i :class="[showPassword ? 'fa-eye-slash' : 'fa-eye', 'fas']" aria-hidden="true" />
+            </button>
+          </div>
         </label>
+        <p v-if="loginError" class="field-error" role="alert">
+          <i class="fas fa-circle-exclamation" aria-hidden="true" />
+          {{ loginError }}
+        </p>
         <button class="primary-button" type="submit">
           <span>{{ $t('connect.connect') }}</span>
           <i class="fas fa-arrow-right" aria-hidden="true" />
         </button>
-        <button class="about-link" type="button" @click.stop.prevent="about">About n.eko</button>
+        <button class="about-link" type="button" @click.stop.prevent="about">{{ $t('ui.about') }}</button>
       </form>
       <div class="loader" v-if="connecting" role="status" aria-live="polite">
         <div class="spinner" />
@@ -184,7 +201,52 @@
             &::placeholder {
               color: $text-muted;
             }
+
+            &.invalid {
+              border-color: $style-error;
+              box-shadow: 0 0 0 3px rgba($style-error, 0.12);
+            }
           }
+
+          .password-field {
+            position: relative;
+
+            input {
+              padding-right: 42px;
+            }
+
+            .password-toggle {
+              position: absolute;
+              top: 50%;
+              right: 8px;
+              width: 30px;
+              height: 30px;
+              display: grid;
+              place-items: center;
+              transform: translateY(-50%);
+              border: 0;
+              border-radius: 7px;
+              color: $text-muted;
+              background: transparent;
+              cursor: pointer;
+
+              &:hover,
+              &:focus-visible {
+                color: $interactive-hover;
+                background: $background-modifier-hover;
+              }
+            }
+          }
+        }
+
+        .field-error {
+          display: flex;
+          align-items: center;
+          gap: 7px;
+          margin: -2px 0 6px;
+          color: $style-error;
+          font-size: 12px;
+          line-height: 18px;
         }
 
         .primary-button {
@@ -264,6 +326,8 @@
 
     private displayname: string = ''
     private password: string = ''
+    private loginError: string = ''
+    private showPassword: boolean = false
 
     mounted() {
       // auto-password fill
@@ -319,14 +383,11 @@
       }
 
       if (this.displayname == '') {
-        this.$swal({
-          title: this.$t('connect.error') as string,
-          text: this.$t('connect.empty_displayname') as string,
-          icon: 'error',
-        })
+        this.loginError = this.$t('connect.empty_displayname') as string
         return
       }
 
+      this.loginError = ''
       this.$accessor.login({ displayname: this.displayname, password })
       this.autoPassword = null
     }

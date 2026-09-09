@@ -42,7 +42,7 @@
           <button
             type="button"
             class="video-action"
-            aria-label="Enter fullscreen"
+            :aria-label="$t('ui.enter_fullscreen')"
             @click.stop.prevent="requestFullscreen"
           >
             <i class="fas fa-expand" aria-hidden="true" />
@@ -52,7 +52,7 @@
           <button
             type="button"
             class="video-action"
-            aria-label="Change resolution"
+            :aria-label="$t('ui.change_resolution')"
             @click.stop.prevent="openResolution"
           >
             <i class="fas fa-desktop" aria-hidden="true" />
@@ -63,7 +63,7 @@
             type="button"
             class="video-action"
             :class="[hosted && !hosting ? 'disabled' : '', !hosted && !hosting ? 'faded' : '']"
-            aria-label="Request or release control"
+            :aria-label="$t('ui.request_or_release_control')"
             @click.stop.prevent="toggleControl"
           >
             <i class="fas fa-computer-mouse" aria-hidden="true" />
@@ -72,7 +72,12 @@
       </ul>
       <ul v-if="!fullscreen && !hideControls" class="video-menu bottom">
         <li v-if="hosting && (!clipboard_read_available || !clipboard_write_available)">
-          <button type="button" class="video-action" aria-label="Open clipboard" @click.stop.prevent="openClipboard">
+          <button
+            type="button"
+            class="video-action"
+            :aria-label="$t('ui.open_clipboard')"
+            @click.stop.prevent="openClipboard"
+          >
             <i class="fas fa-clipboard" aria-hidden="true" />
           </button>
         </li>
@@ -82,8 +87,13 @@
             class="video-action"
             v-if="pip_available"
             @click.stop.prevent="requestPictureInPicture"
-            v-tooltip="{ content: 'Picture-in-Picture', placement: 'left', offset: 5, boundariesElement: 'body' }"
-            aria-label="Picture-in-Picture"
+            v-tooltip="{
+              content: $t('ui.picture_in_picture'),
+              placement: 'left',
+              offset: 5,
+              boundariesElement: 'body',
+            }"
+            :aria-label="$t('ui.picture_in_picture')"
           >
             <i class="fas fa-external-link-alt" aria-hidden="true" />
           </button>
@@ -92,7 +102,7 @@
           <button
             type="button"
             class="video-action"
-            aria-label="Open keyboard"
+            :aria-label="$t('ui.open_keyboard')"
             @click.stop.prevent="openMobileKeyboard"
           >
             <i class="fas fa-keyboard" aria-hidden="true" />

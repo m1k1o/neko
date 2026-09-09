@@ -54,7 +54,7 @@
       <button
         type="button"
         :class="[{ disabled: !playable }, 'play']"
-        :aria-label="playing ? 'Pause' : 'Play'"
+        :aria-label="$t(playing ? 'ui.pause' : 'ui.play')"
         @click.stop.prevent="toggleMedia"
       >
         <i :class="[playing ? 'fa-pause-circle' : 'fa-play-circle', 'fas']" aria-hidden="true" />
@@ -82,12 +82,12 @@
         <button
           type="button"
           class="volume-button"
-          :aria-label="muted ? 'Unmute' : 'Mute'"
+          :aria-label="$t(muted ? 'ui.unmute' : 'ui.mute')"
           @click.stop.prevent="toggleMute"
         >
           <i :class="[volume === 0 || muted ? 'fa-volume-mute' : 'fa-volume-up', 'fas']" aria-hidden="true" />
         </button>
-        <input type="range" min="0" max="100" v-model="volume" :aria-label="'Volume'" />
+        <input type="range" min="0" max="100" v-model="volume" :aria-label="$t('ui.volume')" />
       </div>
     </li>
   </ul>

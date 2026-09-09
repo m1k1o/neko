@@ -6,7 +6,7 @@
         <span class="brand-name"><b>n</b>.eko</span>
       </div>
       <div class="message">
-        <span class="eyebrow">BROWSER CHECK</span>
+        <span class="eyebrow">{{ $t('ui.browser_check') }}</span>
         <span>{{ $t('unsupported') }}</span>
       </div>
     </div>

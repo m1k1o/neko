@@ -1,6 +1,10 @@
 <template>
   <div class="chat">
-    <ul class="chat-history" ref="history" @click="onClick">
+    <div v-if="history.length === 0" class="empty-state">
+      <i class="fas fa-comments" aria-hidden="true" />
+      <p>{{ $t('chat.empty') }}</p>
+    </div>
+    <ul class="chat-history" :class="{ 'is-empty': history.length === 0 }" ref="history" @click="onClick">
       <template v-for="(message, index) in history">
         <li
           :key="index"
@@ -63,12 +67,38 @@
     max-width: 100%;
     overflow-x: hidden;
 
+    .empty-state {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      padding: 24px;
+      color: $text-muted;
+      text-align: center;
+
+      i {
+        color: rgba($style-primary, 0.7);
+        font-size: 28px;
+      }
+
+      p {
+        max-width: 220px;
+        line-height: 20px;
+      }
+    }
+
     .chat-history {
       flex: 1;
       overflow-y: scroll;
       overflow-x: hidden;
       max-width: 100%;
       padding: 4px 2px 8px;
+
+      &.is-empty {
+        display: none;
+      }
       scrollbar-width: thin;
       scrollbar-color: $background-tertiary transparent;
 
