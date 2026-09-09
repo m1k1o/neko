@@ -3,7 +3,9 @@ import EventEmitter from 'eventemitter3'
 import { BaseClient, BaseEvents } from './base'
 import { Member } from './types'
 import { EVENT } from './events'
-import { accessor, NetworkQuality } from '~/store'
+import { accessor } from '~/store'
+import { NetworkQuality } from '~/store/connection'
+import { set } from '~/utils/localstorage'
 
 import {
   SystemMessagePayload,
@@ -53,7 +55,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
 
   private cleanup() {
     this.stopNetworkMonitor()
-    this.$accessor.setConnected(false)
+    this.$accessor.connection.setConnected(false)
     this.$accessor.remote.reset()
     this.$accessor.user.reset()
     this.$accessor.video.reset()
@@ -78,7 +80,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   // Internal Events
   /////////////////////////////
   protected [EVENT.RECONNECTING]() {
-    this.$accessor.setConnectionState('reconnecting')
+    this.$accessor.connection.setState('reconnecting')
     this.$vue.$notify({
       group: 'neko',
       type: 'warning',
@@ -89,12 +91,14 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   }
 
   protected [EVENT.CONNECTING]() {
-    this.$accessor.setConnnecting()
+    this.$accessor.connection.setConnecting()
   }
 
   protected [EVENT.CONNECTED]() {
     this.$accessor.user.setMember(this.id)
-    this.$accessor.setConnected(true)
+    this.$accessor.connection.setConnected(true)
+    set('displayname', this.$accessor.displayname)
+    set('password', this.$accessor.password)
     this.startNetworkMonitor()
 
     this.$vue.$notify({
@@ -112,8 +116,8 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   }
 
   protected [EVENT.DISCONNECTED](reason?: Error) {
-    if (!this.$accessor.connected && reason) {
-      this.$accessor.setConnectionError(reason.message)
+    if (!this.$accessor.connection.connected && reason) {
+      this.$accessor.connection.setError(reason.message)
     }
     this.cleanup()
 
@@ -143,7 +147,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   }
 
   private async updateNetworkQuality() {
-    if (!this._peer || !this.$accessor.connected) {
+    if (!this._peer || !this.$accessor.connection.connected) {
       return
     }
 
@@ -177,7 +181,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
       const packetLoss = totalPackets > 0 ? lostDelta / totalPackets : 0
       const quality = this.classifyNetworkQuality(rtt, packetLoss, totalPackets > 0 || rtt !== null)
 
-      this.$accessor.setNetworkQuality({ quality, rtt: rtt === null ? null : Math.round(rtt) })
+      this.$accessor.connection.setNetworkQuality({ quality, rtt: rtt === null ? null : Math.round(rtt) })
     } catch (error) {
       // getStats is best effort; a temporary failure must not affect the media session.
     }
@@ -238,8 +242,8 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
       message = this.$vue.$t('connection.kicked') as string
     }
 
-    if (!this.$accessor.connected && message) {
-      this.$accessor.setConnectionError(message)
+    if (!this.$accessor.connection.connected && message) {
+      this.$accessor.connection.setError(message)
     }
 
     this.onDisconnected(new Error(message))
@@ -253,8 +257,8 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   }
 
   protected [EVENT.SYSTEM.ERROR]({ title, message }: SystemMessagePayload) {
-    if (!this.$accessor.connected && message) {
-      this.$accessor.setConnectionError(message)
+    if (!this.$accessor.connection.connected && message) {
+      this.$accessor.connection.setError(message)
     }
 
     this.$vue.$swal({

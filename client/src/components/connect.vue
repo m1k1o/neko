@@ -330,7 +330,7 @@
     private showPassword: boolean = false
 
     get connectionError() {
-      return this.$accessor.connectionError
+      return this.$accessor.connection.error
     }
 
     @Watch('connectionError', { immediate: true })
@@ -363,7 +363,7 @@
     }
 
     get connecting() {
-      return this.$accessor.connecting
+      return this.$accessor.connection.connecting
     }
 
     removeUrlParam(param: string) {

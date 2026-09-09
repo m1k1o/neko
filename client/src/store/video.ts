@@ -170,7 +170,7 @@ export const actions = actionTree(
   { state, getters, mutations },
   {
     screenConfiguations() {
-      if (!accessor.connected || !accessor.user.admin) {
+      if (!accessor.connection.connected || !accessor.user.admin) {
         return
       }
 
@@ -178,7 +178,7 @@ export const actions = actionTree(
     },
 
     screenGet() {
-      if (!accessor.connected) {
+      if (!accessor.connection.connected) {
         return
       }
 
@@ -186,7 +186,7 @@ export const actions = actionTree(
     },
 
     screenSet(store, resolution: ScreenResolution) {
-      if (!accessor.connected || !accessor.user.admin) {
+      if (!accessor.connection.connected || !accessor.user.admin) {
         return
       }
 

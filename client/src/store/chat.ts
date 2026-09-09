@@ -81,14 +81,14 @@ export const actions = actionTree(
     },
 
     sendMessage(store, content: string) {
-      if (!accessor.connected || accessor.user.muted) {
+      if (!accessor.connection.connected || accessor.user.muted) {
         return
       }
       $client.sendMessage(EVENT.CHAT.MESSAGE, { content })
     },
 
     sendEmote(store, emote: string) {
-      if (!accessor.connected || accessor.user.muted) {
+      if (!accessor.connection.connected || accessor.user.muted) {
         return
       }
       $client.sendMessage(EVENT.CHAT.EMOTE, { emote })

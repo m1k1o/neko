@@ -14,20 +14,12 @@ import * as user from './user'
 import * as settings from './settings'
 import * as client from './client'
 import * as emoji from './emoji'
-
-export type ConnectionState = 'disconnected' | 'connecting' | 'reconnecting' | 'connected'
-export type NetworkQuality = 'unknown' | 'good' | 'fair' | 'poor'
+import * as connection from './connection'
 
 export const state = () => ({
   displayname: get<string>('displayname', ''),
   password: get<string>('password', ''),
   active: false,
-  connecting: false,
-  connected: false,
-  connectionState: 'disconnected' as ConnectionState,
-  connectionError: '',
-  networkQuality: 'unknown' as NetworkQuality,
-  networkRtt: null as number | null,
   locked: {} as Record<string, boolean>,
 })
 
@@ -48,43 +40,6 @@ export const mutations = mutationTree(state, {
   setUnlocked(state, resource: string) {
     Vue.set(state.locked, resource, false)
   },
-
-  setConnnecting(state) {
-    state.connected = false
-    state.connecting = true
-    state.connectionState = 'connecting'
-    state.connectionError = ''
-    state.networkQuality = 'unknown'
-    state.networkRtt = null
-  },
-
-  setConnected(state, connected: boolean) {
-    state.connected = connected
-    state.connecting = false
-    state.connectionState = connected ? 'connected' : 'disconnected'
-    if (!connected) {
-      state.networkQuality = 'unknown'
-      state.networkRtt = null
-    }
-    if (connected) {
-      set('displayname', state.displayname)
-      set('password', state.password)
-    }
-  },
-
-  setConnectionError(state, message: string) {
-    state.connectionError = message
-  },
-
-  setConnectionState(state, connectionState: ConnectionState) {
-    state.connectionState = connectionState
-    state.connecting = connectionState === 'connecting' || connectionState === 'reconnecting'
-  },
-
-  setNetworkQuality(state, { quality, rtt }: { quality: NetworkQuality; rtt: number | null }) {
-    state.networkQuality = quality
-    state.networkRtt = rtt
-  },
 })
 
 export const getters = getterTree(state, {
@@ -100,7 +55,7 @@ export const actions = actionTree(
     },
 
     lock(_, resource: AdminLockResource) {
-      if (!accessor.connected || !accessor.user.admin) {
+      if (!accessor.connection.connected || !accessor.user.admin) {
         return
       }
 
@@ -108,7 +63,7 @@ export const actions = actionTree(
     },
 
     unlock(_, resource: AdminLockResource) {
-      if (!accessor.connected || !accessor.user.admin) {
+      if (!accessor.connection.connected || !accessor.user.admin) {
         return
       }
 
@@ -130,7 +85,7 @@ export const actions = actionTree(
 
     logout() {
       accessor.setLogin({ displayname: '', password: '' })
-      accessor.setConnectionError('')
+      accessor.connection.setError('')
       set('displayname', '')
       set('password', '')
       $client.logout()
@@ -143,7 +98,7 @@ export const storePattern = {
   mutations,
   actions,
   getters,
-  modules: { video, chat, files, openinapp, user, remote, settings, client, emoji },
+  modules: { connection, video, chat, files, openinapp, user, remote, settings, client, emoji },
 }
 
 Vue.use(Vuex)

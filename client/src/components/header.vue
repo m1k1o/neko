@@ -382,19 +382,19 @@
   @Component({ name: 'neko-header' })
   export default class extends Vue {
     get connectionState() {
-      return this.$accessor.connectionState
+      return this.$accessor.connection.state
     }
 
     get networkQuality() {
-      return this.$accessor.networkQuality
+      return this.$accessor.connection.quality
     }
 
     get networkRtt() {
-      return this.$accessor.networkRtt
+      return this.$accessor.connection.rtt
     }
 
     get connected() {
-      return this.$accessor.connected
+      return this.$accessor.connection.connected
     }
 
     get connectionLabel() {

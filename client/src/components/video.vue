@@ -332,11 +332,11 @@
     }
 
     get connected() {
-      return this.$accessor.connected
+      return this.$accessor.connection.connected
     }
 
     get connecting() {
-      return this.$accessor.connecting
+      return this.$accessor.connection.connecting
     }
 
     get controlling() {
@@ -797,7 +797,7 @@
 
       if (!this.wheelThrottle) {
         this.wheelThrottle = true
-        this.$client.sendData('wheel', { x, y })
+        this.$client.sendData('wheel', { x, y, controlKey: e.ctrlKey })
 
         window.setTimeout(() => {
           this.wheelThrottle = false

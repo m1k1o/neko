@@ -100,7 +100,7 @@ export const actions = actionTree(
     },
 
     refresh() {
-      if (!accessor.connected) {
+      if (!accessor.connection.connected) {
         return
       }
       accessor.files.setLoading(true)

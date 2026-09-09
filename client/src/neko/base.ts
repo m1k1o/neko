@@ -1,6 +1,8 @@
 import EventEmitter from 'eventemitter3'
-import { OPCODE } from './data'
 import { EVENT, WebSocketEvents } from './events'
+import { ConnectionStateMachine } from '~/sdk/connection-state'
+import { encodeMediaInput, MediaInput } from '~/sdk/media-protocol'
+import { SignalingMessage, SignalingTransport } from '~/sdk/signaling'
 
 import {
   WebSocketMessages,
@@ -19,7 +21,7 @@ export interface BaseEvents {
 }
 
 export abstract class BaseClient extends EventEmitter<BaseEvents> {
-  protected _ws?: WebSocket
+  protected readonly signaling: SignalingTransport
   protected _ws_heartbeat?: number
   protected _peer?: RTCPeerConnection
   protected _channel?: RTCDataChannel
@@ -31,6 +33,18 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
   protected _micStream?: MediaStream
   protected _micSender?: RTCRtpSender
   protected _micActive = false
+  private readonly connectionMachine = new ConnectionStateMachine()
+  private negotiationQueue: Promise<void> = Promise.resolve()
+  private remoteDescriptionSet = false
+
+  constructor() {
+    super()
+    this.signaling = new SignalingTransport({
+      onMessage: (message) => this.onMessage(message),
+      onError: (error) => this.onError(error),
+      onClose: () => this.onDisconnected(new Error('websocket closed')),
+    })
+  }
 
   get id() {
     return this._id
@@ -41,7 +55,7 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
   }
 
   get socketOpen() {
-    return typeof this._ws !== 'undefined' && this._ws.readyState === WebSocket.OPEN
+    return this.signaling.open
   }
 
   get peerConnected() {
@@ -64,20 +78,11 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
     }
 
     this._displayname = displayname
-    this[EVENT.CONNECTING]()
-
-    try {
-      this._ws = new WebSocket(
-        `${url}?password=${encodeURIComponent(password)}&username=${encodeURIComponent(displayname)}`,
-      )
-      this.emit('debug', `connecting to ${this._ws.url}`)
-      this._ws.onmessage = this.onMessage.bind(this)
-      this._ws.onerror = () => this.onError.bind(this)
-      this._ws.onclose = () => this.onDisconnected.bind(this, new Error('websocket closed'))
-      this._timeout = window.setTimeout(this.onTimeout.bind(this), 15000)
-    } catch (err: any) {
-      this.onDisconnected(err)
-    }
+    this.transitionConnection('connect')
+    const signalingURL = `${url}?password=${encodeURIComponent(password)}&username=${encodeURIComponent(displayname)}`
+    this.emit('debug', `connecting to ${signalingURL}`)
+    this.signaling.connect(signalingURL)
+    this._timeout = window.setTimeout(this.onTimeout.bind(this), 15000)
   }
 
   protected disconnect() {
@@ -91,18 +96,8 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
       this._ws_heartbeat = undefined
     }
 
-    if (this._ws) {
-      // reset all events
-      this._ws.onmessage = () => {}
-      this._ws.onerror = () => {}
-      this._ws.onclose = () => {}
-
-      try {
-        this._ws.close()
-      } catch (err) {}
-
-      this._ws = undefined
-    }
+    this.signaling.close()
+    this.remoteDescriptionSet = false
 
     if (this._channel) {
       // reset all events
@@ -184,56 +179,21 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
     this.emit('info', 'microphone disabled')
   }
 
-  public sendData(event: 'wheel' | 'mousemove', data: { x: number; y: number }): void
-  public sendData(event: 'mousedown' | 'mouseup' | 'keydown' | 'keyup', data: { key: number }): void
-  public sendData(event: string, data: any) {
+  public sendData(event: MediaInput['event'], data: Omit<MediaInput, 'event'>) {
     if (!this.connected) {
       this.emit('warn', `attempting to send data while disconnected`)
       return
     }
 
-    let buffer: ArrayBuffer
-    let payload: DataView
-    switch (event) {
-      case 'mousemove':
-        buffer = new ArrayBuffer(7)
-        payload = new DataView(buffer)
-        payload.setUint8(0, OPCODE.MOVE)
-        payload.setUint16(1, 4, true)
-        payload.setUint16(3, data.x, true)
-        payload.setUint16(5, data.y, true)
-        break
-      case 'wheel':
-        buffer = new ArrayBuffer(7)
-        payload = new DataView(buffer)
-        payload.setUint8(0, OPCODE.SCROLL)
-        payload.setUint16(1, 4, true)
-        payload.setInt16(3, data.x, true)
-        payload.setInt16(5, data.y, true)
-        break
-      case 'keydown':
-      case 'mousedown':
-        buffer = new ArrayBuffer(11)
-        payload = new DataView(buffer)
-        payload.setUint8(0, OPCODE.KEY_DOWN)
-        payload.setUint16(1, 8, true)
-        payload.setBigUint64(3, BigInt(data.key), true)
-        break
-      case 'keyup':
-      case 'mouseup':
-        buffer = new ArrayBuffer(11)
-        payload = new DataView(buffer)
-        payload.setUint8(0, OPCODE.KEY_UP)
-        payload.setUint16(1, 8, true)
-        payload.setBigUint64(3, BigInt(data.key), true)
-        break
-      default:
-        this.emit('warn', `unknown data event: ${event}`)
+    if (!this._channel || this._channel.readyState !== 'open') {
+      this.emit('warn', `attempting to send data while data channel is not open`)
+      return
     }
 
-    // @ts-ignore
-    if (typeof buffer !== 'undefined') {
-      this._channel!.send(buffer)
+    try {
+      this._channel.send(encodeMediaInput({ event, ...data } as MediaInput))
+    } catch (error: any) {
+      this.emit('error', error instanceof Error ? error : new Error(String(error)))
     }
   }
 
@@ -243,17 +203,15 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
       return
     }
     this.emit('debug', `sending event '${event}' ${payload ? `with payload: ` : ''}`, payload)
-    this._ws!.send(JSON.stringify({ event, ...payload }))
+    if (!this.signaling.send({ event, ...payload } as SignalingMessage)) {
+      this.emit('warn', `unable to send websocket event '${event}' while signaling socket is not open`)
+    }
   }
 
   public async createPeer(lite: boolean, servers: RTCIceServer[]) {
     this.emit('debug', `creating peer`)
     if (!this.socketOpen) {
-      this.emit(
-        'warn',
-        `attempting to create peer with no websocket: `,
-        this._ws ? `state: ${this._ws.readyState}` : 'no socket',
-      )
+      this.emit('warn', `attempting to create peer with no websocket: `, `state: ${this.signaling.state}`)
       return
     }
 
@@ -294,7 +252,7 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
           this.onConnected()
           break
         case 'disconnected':
-          this[EVENT.RECONNECTING]()
+          this.transitionConnection('reconnect')
           break
         // https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API/Signaling_and_video_calling#ice_connection_state
         // We don't watch the disconnected signaling state here as it can indicate temporary issues and may
@@ -320,32 +278,76 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
       const init = event.candidate.toJSON()
       this.emit('debug', `sending local ICE candidate`, init)
 
-      this._ws!.send(
-        JSON.stringify({
-          event: EVENT.SIGNAL.CANDIDATE,
-          data: JSON.stringify(init),
-        }),
-      )
+      if (!this.signaling.send({ event: EVENT.SIGNAL.CANDIDATE, data: JSON.stringify(init) })) {
+        this.emit('warn', 'unable to send local ICE candidate while signaling socket is not open')
+      }
     }
 
-    this._peer.onnegotiationneeded = async () => {
-      this.emit('warn', `negotiation is needed`)
-
-      const d = await this._peer!.createOffer()
-      await this._peer!.setLocalDescription(d)
-
-      this._ws!.send(
-        JSON.stringify({
-          event: EVENT.SIGNAL.OFFER,
-          sdp: d.sdp,
-        }),
-      )
+    this._peer.ondatachannel = (event: RTCDataChannelEvent) => {
+      this.emit('debug', `received data channel '${event.channel.label}'`)
+      this.attachDataChannel(event.channel)
     }
 
-    this._channel = this._peer.createDataChannel('data')
-    this._channel.onerror = this.onError.bind(this)
-    this._channel.onmessage = this.onData.bind(this)
-    this._channel.onclose = this.onDisconnected.bind(this, new Error('peer data channel closed'))
+    this._peer.onnegotiationneeded = () => {
+      this.queueNegotiation()
+    }
+
+    // Keep a client-created channel as a compatibility fallback for legacy
+    // servers. Modern servers negotiate their data channel in the offer and
+    // replace this channel through ondatachannel above.
+    this.attachDataChannel(this._peer.createDataChannel('data'))
+  }
+
+  private attachDataChannel(channel: RTCDataChannel) {
+    if (this._channel && this._channel !== channel) {
+      const previous = this._channel
+      previous.onopen = null
+      previous.onmessage = null
+      previous.onerror = null
+      previous.onclose = null
+      try {
+        previous.close()
+      } catch (error) {
+        this.emit('debug', 'failed to close compatibility data channel', error)
+      }
+    }
+
+    this._channel = channel
+    channel.binaryType = 'arraybuffer'
+    channel.onerror = this.onError.bind(this)
+    channel.onmessage = this.onData.bind(this)
+    channel.onclose = () => {
+      if (this._channel === channel) {
+        this.onDisconnected(new Error('peer data channel closed'))
+      }
+    }
+  }
+
+  private queueNegotiation() {
+    this.negotiationQueue = this.negotiationQueue
+      .then(async () => {
+        if (
+          !this._peer ||
+          !this.remoteDescriptionSet ||
+          !this.signaling.open ||
+          this._peer.signalingState !== 'stable'
+        ) {
+          return
+        }
+
+        this.emit('debug', 'creating renegotiation offer')
+        const offer = await this._peer.createOffer()
+        await this._peer.setLocalDescription(offer)
+        const description = this._peer.localDescription
+        if (!description?.sdp) {
+          throw new Error('renegotiation produced an empty SDP offer')
+        }
+
+        if (!this.signaling.send({ event: EVENT.SIGNAL.OFFER, sdp: description.sdp })) {
+          throw new Error('unable to send renegotiation offer while signaling socket is not open')
+        }
+      })
+      .catch((error) => this.onError(error instanceof Error ? error : new Error(String(error))))
   }
 
   public async setRemoteOffer(sdp: string) {
@@ -354,30 +356,36 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
       return
     }
 
-    await this._peer.setRemoteDescription({ type: 'offer', sdp })
-
-    for (const candidate of this._candidates) {
-      await this._peer.addIceCandidate(candidate)
-    }
-    this._candidates = []
-
     try {
+      await this._peer.setRemoteDescription({ type: 'offer', sdp })
+      this.remoteDescriptionSet = true
+
+      for (const candidate of this._candidates) {
+        await this._peer.addIceCandidate(candidate)
+      }
+      this._candidates = []
+
       const d = await this._peer.createAnswer()
 
       // add stereo=1 to answer sdp to enable stereo audio for chromium
       d.sdp = d.sdp?.replace(/(stereo=1;)?useinbandfec=1/, 'useinbandfec=1;stereo=1')
 
-      this._peer!.setLocalDescription(d)
+      await this._peer.setLocalDescription(d)
+      if (!this._peer.localDescription?.sdp) {
+        throw new Error('remote offer produced an empty SDP answer')
+      }
 
-      this._ws!.send(
-        JSON.stringify({
+      if (
+        !this.signaling.send({
           event: EVENT.SIGNAL.ANSWER,
-          sdp: d.sdp,
+          sdp: this._peer.localDescription.sdp,
           displayname: this._displayname,
-        }),
-      )
+        })
+      ) {
+        throw new Error('unable to send SDP answer while signaling socket is not open')
+      }
     } catch (err: any) {
-      this.emit('error', err)
+      this.onError(err)
     }
   }
 
@@ -387,11 +395,16 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
       return
     }
 
-    await this._peer.setRemoteDescription({ type: 'answer', sdp })
+    try {
+      await this._peer.setRemoteDescription({ type: 'answer', sdp })
+      this.remoteDescriptionSet = true
+    } catch (error: any) {
+      this.onError(error)
+    }
   }
 
-  private async onMessage(e: MessageEvent) {
-    const { event, ...payload } = JSON.parse(e.data) as WebSocketMessages
+  private async onMessage(message: SignalingMessage) {
+    const { event, ...payload } = message as WebSocketMessages
 
     this.emit('debug', `received websocket event ${event} ${payload ? `with payload: ` : ''}`, payload)
 
@@ -419,7 +432,11 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
       const { data } = payload as SignalCandidatePayload
       const candidate: RTCIceCandidate = JSON.parse(data)
       if (this._peer) {
-        this._peer.addIceCandidate(candidate)
+        try {
+          await this._peer.addIceCandidate(candidate)
+        } catch (error: any) {
+          this.onError(error)
+        }
       } else {
         this._candidates.push(candidate)
       }
@@ -449,8 +466,14 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
     this[EVENT.TRACK](event)
   }
 
-  private onError(event: Event) {
-    this.emit('error', (event as ErrorEvent).error)
+  private onError(error: Error | Event) {
+    if (error instanceof Error) {
+      this.emit('error', error)
+      return
+    }
+
+    const eventError = (error as ErrorEvent).error
+    this.emit('error', eventError instanceof Error ? eventError : new Error('WebRTC or signaling error'))
   }
 
   private onConnected() {
@@ -461,6 +484,11 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
 
     if (!this.connected) {
       this.emit('warn', `onConnected called while being disconnected`)
+      return
+    }
+
+    const transition = this.connectionMachine.transition('connected')
+    if (!transition.changed) {
       return
     }
 
@@ -478,9 +506,23 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
   }
 
   protected onDisconnected(reason?: Error) {
+    const transition = this.connectionMachine.transition('disconnect')
     this.disconnect()
     this.emit('debug', `disconnected:`, reason)
-    this[EVENT.DISCONNECTED](reason)
+    if (transition.changed) {
+      this[EVENT.DISCONNECTED](reason)
+    }
+  }
+
+  private transitionConnection(event: 'connect' | 'reconnect') {
+    const transition = this.connectionMachine.transition(event)
+    if (!transition.changed) return
+
+    if (event === 'connect') {
+      this[EVENT.CONNECTING]()
+    } else {
+      this[EVENT.RECONNECTING]()
+    }
   }
 
   protected [EVENT.MESSAGE](event: string, payload: any) {

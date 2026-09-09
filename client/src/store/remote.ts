@@ -72,7 +72,7 @@ export const actions = actionTree(
   { state, getters, mutations },
   {
     sendClipboard({ getters }, clipboard: string) {
-      if (!accessor.connected || !getters.hosting) {
+      if (!accessor.connection.connected || !getters.hosting) {
         return
       }
 
@@ -80,7 +80,7 @@ export const actions = actionTree(
     },
 
     toggle({ getters }) {
-      if (!accessor.connected) {
+      if (!accessor.connection.connected) {
         return
       }
 
@@ -92,7 +92,7 @@ export const actions = actionTree(
     },
 
     request({ getters }) {
-      if (!accessor.connected || getters.controlling) {
+      if (!accessor.connection.connected || getters.controlling) {
         return
       }
 
@@ -100,7 +100,7 @@ export const actions = actionTree(
     },
 
     release({ getters }) {
-      if (!accessor.connected || !getters.hosting) {
+      if (!accessor.connection.connected || !getters.hosting) {
         return
       }
 
@@ -108,7 +108,7 @@ export const actions = actionTree(
     },
 
     give({ getters }, member: string | Member) {
-      if (!accessor.connected || !getters.hosting) {
+      if (!accessor.connection.connected || !getters.hosting) {
         return
       }
 
@@ -124,7 +124,7 @@ export const actions = actionTree(
     },
 
     adminControl() {
-      if (!accessor.connected || !accessor.user.admin) {
+      if (!accessor.connection.connected || !accessor.user.admin) {
         return
       }
 
@@ -132,7 +132,7 @@ export const actions = actionTree(
     },
 
     adminRelease() {
-      if (!accessor.connected || !accessor.user.admin) {
+      if (!accessor.connection.connected || !accessor.user.admin) {
         return
       }
 
@@ -140,7 +140,7 @@ export const actions = actionTree(
     },
 
     adminGive(store, member: string | Member) {
-      if (!accessor.connected) {
+      if (!accessor.connection.connected) {
         return
       }
 
@@ -156,7 +156,7 @@ export const actions = actionTree(
     },
 
     changeKeyboard({ getters }) {
-      if (!accessor.connected || !getters.hosting) {
+      if (!accessor.connection.connected || !getters.hosting) {
         return
       }
 

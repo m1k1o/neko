@@ -354,7 +354,7 @@
     }
 
     get connected() {
-      return this.$accessor.connected
+      return this.$accessor.connection.connected
     }
 
     closeSide() {
