@@ -3,7 +3,7 @@ set -e
 cd "$(dirname "$0")"
 
 #
-# This script builds the neko base image and all the applications
+# This script builds the Neko base image and the supported Chromium image.
 #
 
 # disable buildx because of https://github.com/docker/buildx/issues/847
@@ -42,7 +42,7 @@ function help() {
   echo "Positional arguments:"
   echo "  <image>           : The image name, if not specified, uses the full image name"
   echo "                      in the format <repository>/<flavor>-<application>:<tag>"
-  echo "                      Example: ghcr.io/m1k1o/neko/nvidia-firefox:latest"
+  echo "                      Example: ghcr.io/m1k1o/neko/nvidia-chromium:latest"
   echo "                      You can override any of the above options by specifying them"
   echo "                      after the image name."
   echo
@@ -75,11 +75,11 @@ while [[ "$#" -gt 0 ]]; do
 
         # extracts image, flavor, app and tag from the full image name
         # example:
-        #  ghcr.io/m1k1o/neko/nvidia-firefox:latest
+        #  ghcr.io/m1k1o/neko/nvidia-chromium:latest
         # will be split into:
         #   REPOSITORY=ghcr.io/m1k1o/neko
         #   FLAVOR=nvidia
-        #   APPLICATION=firefox
+        #   APPLICATION=chromium
         #   TAG=latest
         
         # remove the tag from the image name
@@ -88,24 +88,24 @@ while [[ "$#" -gt 0 ]]; do
           TAG="${FULL_IMAGE##*:}" # will be latest
           TAGS+=("$TAG")
           # removes everything after the last :
-          FULL_IMAGE="${FULL_IMAGE%:*}" # will be ghcr.io/m1k1o/neko/nvidia-firefox
+          FULL_IMAGE="${FULL_IMAGE%:*}" # will be ghcr.io/m1k1o/neko/nvidia-chromium
         fi
         # extract the image name and save the rest to REPOSITORY
         if [[ "$FULL_IMAGE" == *"/"* ]]; then
           # removes everything after the last /
           REPOSITORY="${FULL_IMAGE%/*}" # will be ghcr.io/m1k1o/neko
           # removes everything before the last /
-          FULL_IMAGE="${FULL_IMAGE##*/}" # will be nvidia-firefox
+          FULL_IMAGE="${FULL_IMAGE##*/}" # will be nvidia-chromium
         fi
         # extract the flavor and application name
         if [[ "$FULL_IMAGE" == *"-"* ]]; then
           # removes everything after the last -
           FLAVOR="${FULL_IMAGE%-*}" # will be nvidia
           # removes everything before the last -
-          APPLICATION="${FULL_IMAGE#*-}" # will be firefox
+          APPLICATION="${FULL_IMAGE#*-}" # will be chromium
         else
           # no flavor specified so use the full image name as application name
-          APPLICATION="$FULL_IMAGE" # will be firefox
+          APPLICATION="$FULL_IMAGE" # will be chromium
         fi
         # if application name is base, set it to empty
         if [ "$APPLICATION" == "base" ]; then
@@ -276,6 +276,10 @@ fi
 # --------------------------------------------------------------------
 
 if [ ! -z "$APPLICATION" ]; then
+  if [ "$APPLICATION" != "chromium" ]; then
+    log "Only the Chromium application is supported by M1."
+    exit 1
+  fi
   log "Building application: $APPLICATION"
   log "Using base image: $BASE_IMAGE"
 

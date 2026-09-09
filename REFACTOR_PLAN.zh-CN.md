@@ -197,6 +197,7 @@ server/internal/
 
 ### 已完成
 
+- M1 范围清理：删除 Firefox、其他 Chromium 衍生浏览器及桌面应用的镜像资产、旧运行时开发配置、对应静态图标、多应用发布矩阵和失效的 v2 文档归档；默认 Compose、构建入口与当前版本文档统一为 Chromium 和单端口 UDP/TCP MUX。
 - `747c26a1`：固化 M1 的 Chromium、性能、FRP、认证代理和平台范围。
 - `38887ae6`：新增纯 Go 媒体端口计划，校验直连 MUX 与 FRP 的同端口 TCP/UDP 约束。
 - `a096b0c3`：新增 `webrtc.connectivity.mode=frp` 启动前预检；FRP 模式要求显式唯一 NAT IP、同端口 MUX，且拒绝 EPR 混用。

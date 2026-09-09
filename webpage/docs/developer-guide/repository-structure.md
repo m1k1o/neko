@@ -26,10 +26,9 @@ This project uses a monorepo structure with the following directories:
   - `runtime/intel/` or `runtime/nvidia/`: Directories with files for flavor-specific releases of the neko runtime.
   - `runtime/widevine-installer/`: Directories with installer scripts from [AsahiLinux/widevine-installer](https://github.com/AsahiLinux/widevine-installer)
 
-- `apps/`: Contains the applications that run in the neko, such as Firefox, Chrome, etc.
-  - `apps/<app-name>/Dockerfile`: Dockerfile extending `BASE_IMAGE` for the application used by the build script.
-  - `apps/<app-name>/Dockerfile.<flavor>`: Dockerfile for the application with flavor-specific optimizations.
-  - Supervisord configuration is expected at `/etc/neko/supervisord/<app-name>.conf` in the application image.
+- `apps/chromium/`: The sole M1 application runtime.
+  - `Dockerfile` and flavor-specific Dockerfiles extend `BASE_IMAGE`.
+  - Its Supervisord configuration starts Chromium and the optional local proxy agent.
 
 - `utils/`: Utility scripts, tools, and dependencies.
   - `utils/docker/`: Dockerfile generator that builds the base image by concatenating multiple Dockerfiles.

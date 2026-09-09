@@ -31,15 +31,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: firefox
-            dockerfile: Dockerfile.nvidia
-          - name: brave
-            dockerfile: Dockerfile.nvidia
           - name: chromium
-            dockerfile: Dockerfile.nvidia
-          - name: google-chrome
-            dockerfile: Dockerfile.nvidia
-          - name: microsoft-edge
             dockerfile: Dockerfile.nvidia
     with:
       name: ${{ matrix.name }}

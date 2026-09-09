@@ -1,27 +1,26 @@
 services:
   neko:
-    # Runs Firefox in Neko. Firefox is the default, most tested image, but Neko
-    # supports many other browsers and applications - see the full list here:
-    # https://neko.m1k1o.net/docs/v3/installation/docker-images#apps
-    image: "ghcr.io/m1k1o/neko/firefox:latest"
+    image: "ghcr.io/m1k1o/neko/chromium:latest"
     restart: "unless-stopped"
     shm_size: "2gb"
     ports:
       - "8080:8080"
-      - "52000-52100:52000-52100/udp"
+      - "52000:52000/udp"
+      - "52000:52000/tcp"
     # volumes:
-      # Persist Firefox settings, bookmarks, extensions and history across
+      # Persist Chromium settings, bookmarks, extensions and history across
       # container restarts by mounting the profile directory.
       # See: https://neko.m1k1o.net/docs/v3/customization/browsers#persistent-profile
-      # - "./profile:/home/neko/.mozilla/firefox/profile.default"
+      # - "./profile:/home/neko/.config/chromium"
 
-      # Or mount your own pre-configured Firefox profile instead of an empty one.
+      # Or mount your own pre-configured Chromium profile instead of an empty one.
       # See: https://neko.m1k1o.net/docs/v3/customization/browsers#persistent-profile
-      # - "./my-custom-profile:/home/neko/.mozilla/firefox/profile.default"
+      # - "./my-custom-profile:/home/neko/.config/chromium"
     environment:
-      # You can configure either EPR or MUX ports for WebRTC.
+      # Use one MUX port for WebRTC UDP plus TCP fallback.
       # See: https://neko.m1k1o.net/docs/v3/configuration/webrtc#network
-      NEKO_WEBRTC_EPR: 52000-52100
+      NEKO_WEBRTC_UDPMUX: 52000
+      NEKO_WEBRTC_TCPMUX: 52000
       # Specify the screen resolution and refresh rate for the virtual desktop. The
       # default is 1920x1080@30, but you can change it to any other resolution.
       # See: https://neko.m1k1o.net/docs/v3/configuration/desktop#screen

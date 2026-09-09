@@ -29,33 +29,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: firefox
-            platforms: linux/amd64,linux/arm64
-          - name: waterfox
-            platforms: linux/amd64
           - name: chromium
-            platforms: linux/amd64,linux/arm64
-          - name: google-chrome
-            platforms: linux/amd64,linux/arm64
-          - name: ungoogled-chromium
-            platforms: linux/amd64
-          - name: microsoft-edge
-            platforms: linux/amd64
-          - name: brave
-            platforms: linux/amd64,linux/arm64
-          - name: vivaldi
-            platforms: linux/amd64,linux/arm64
-          - name: opera
-            platforms: linux/amd64
-          - name: tor-browser
-            platforms: linux/amd64
-          - name: remmina
-            platforms: linux/amd64,linux/arm64
-          - name: vlc
-            platforms: linux/amd64,linux/arm64
-          - name: xfce
-            platforms: linux/amd64,linux/arm64
-          - name: kde
             platforms: linux/amd64,linux/arm64
     with:
       name: ${{ matrix.name }}

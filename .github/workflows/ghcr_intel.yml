@@ -31,20 +31,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: firefox
-          - name: waterfox
           - name: chromium
-          - name: google-chrome
-          - name: ungoogled-chromium
-          - name: microsoft-edge
-          - name: brave
-          - name: vivaldi
-          - name: opera
-          - name: tor-browser
-          - name: remmina
-          - name: vlc
-          - name: xfce
-          - name: kde
     with:
       name: ${{ matrix.name }}
       flavor: intel

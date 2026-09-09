@@ -6,23 +6,10 @@ on:
       app:
         description: 'App to build'
         required: true
-        default: 'firefox'
+        default: 'chromium'
         type: choice
         options:
-          - firefox
-          - waterfox
           - chromium
-          - google-chrome
-          - ungoogled-chromium
-          - microsoft-edge
-          - brave
-          - vivaldi
-          - opera
-          - tor-browser
-          - remmina
-          - vlc
-          - xfce
-          - kde
 
 permissions:
   contents: read
