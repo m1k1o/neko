@@ -14,6 +14,30 @@ export interface SignalingTransportOptions {
   webSocketFactory?: (url: string) => WebSocket
 }
 
+/** Validate the one WebSocket envelope shared by the client and server. */
+export function validateSignalingMessage(value: unknown): SignalingMessage {
+  if (value === null || typeof value !== 'object' || typeof (value as { event?: unknown }).event !== 'string') {
+    throw new Error('signaling message is missing an event')
+  }
+
+  const message = value as Record<string, unknown>
+  const event = message.event as string
+  if (event.trim() === '') {
+    throw new Error('signaling message event is required')
+  }
+  if (Object.keys(message).some((key) => key !== 'event' && key !== 'payload')) {
+    throw new Error('signaling message contains unsupported top-level fields')
+  }
+
+  if ('payload' in message && message.payload !== undefined) {
+    if (message.payload === null || typeof message.payload !== 'object') {
+      throw new Error('signaling payload must be an object or array')
+    }
+  }
+
+  return message as unknown as SignalingMessage
+}
+
 function toError(value: unknown, fallback: string): Error {
   if (value instanceof Error) {
     return value
@@ -150,21 +174,8 @@ export class SignalingTransport {
       return
     }
 
-    if (value === null || typeof value !== 'object' || typeof (value as { event?: unknown }).event !== 'string') {
-      this.options.onError?.(new Error('signaling message is missing an event'))
-      return
-    }
-
-    if ('payload' in value && (value as { payload?: unknown }).payload !== undefined) {
-      const payload = (value as { payload?: unknown }).payload
-      if (payload === null || typeof payload !== 'object') {
-        this.options.onError?.(new Error('signaling payload must be an object'))
-        return
-      }
-    }
-
     try {
-      const result = this.options.onMessage(value as SignalingMessage)
+      const result = this.options.onMessage(validateSignalingMessage(value))
       if (result instanceof Promise) {
         result.catch((error) => this.options.onError?.(toError(error, 'signaling message handler failed')))
       }

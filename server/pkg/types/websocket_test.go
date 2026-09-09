@@ -43,3 +43,17 @@ func TestWebSocketMessageRejectsNullPayload(t *testing.T) {
 		t.Fatal("expected null payload to be rejected")
 	}
 }
+
+func TestWebSocketMessageRejectsWhitespaceEvent(t *testing.T) {
+	var message WebSocketMessage
+	if err := json.Unmarshal([]byte(`{"event":"   "}`), &message); err == nil {
+		t.Fatal("expected whitespace websocket event to be rejected")
+	}
+}
+
+func TestWebSocketMessageAllowsArrayPayload(t *testing.T) {
+	var message WebSocketMessage
+	if err := json.Unmarshal([]byte(`{"event":"session/cursors","payload":[]}`), &message); err != nil {
+		t.Fatalf("expected array payload to be accepted: %v", err)
+	}
+}

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strings"
 )
 
 type WebSocketMessage struct {
@@ -32,7 +33,7 @@ func (m *WebSocketMessage) UnmarshalJSON(data []byte) error {
 	if err := json.Unmarshal(data, &value); err != nil {
 		return err
 	}
-	if value.Event == "" {
+	if strings.TrimSpace(value.Event) == "" {
 		return errors.New("websocket message event is required")
 	}
 	if payload, ok := fields["payload"]; ok && bytes.Equal(bytes.TrimSpace(payload), []byte("null")) {
