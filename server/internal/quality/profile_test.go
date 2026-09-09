@@ -90,6 +90,60 @@ func TestVideoConfigForH264HardwareEncoders(t *testing.T) {
 	}
 }
 
+func TestVideoConfigForH265Encoders(t *testing.T) {
+	profile, _ := Parse("balanced")
+	tests := []struct {
+		encoder Encoder
+		element string
+	}{
+		{EncoderSoftware, "x265enc"},
+		{EncoderVAAPI, "vah265enc"},
+		{EncoderVAAPI, "vah265lpenc"},
+		{EncoderNVENC, "nvh265enc"},
+		{EncoderNVENC, "nvautogpuh265enc"},
+	}
+	for _, test := range tests {
+		config, err := profile.VideoConfig(codec.H265(), test.encoder, test.element, false)
+		if err != nil {
+			t.Fatalf("%s/%s: %v", test.encoder, test.element, err)
+		}
+		pipeline, err := config.GetPipeline(types.ScreenSize{Width: 1280, Height: 720, Rate: 30})
+		if err != nil {
+			t.Fatalf("%s/%s pipeline: %v", test.encoder, test.element, err)
+		}
+		if !strings.Contains(pipeline, "! "+test.element+" name=encoder") || !strings.Contains(pipeline, "! h265parse") {
+			t.Fatalf("unexpected %s pipeline: %s", test.encoder, pipeline)
+		}
+	}
+}
+
+func TestVideoConfigForAV1Encoders(t *testing.T) {
+	profile, _ := Parse("high")
+	tests := []struct {
+		encoder Encoder
+		element string
+	}{
+		{EncoderSoftware, "av1enc"},
+		{EncoderSoftware, "svtav1enc"},
+		{EncoderVAAPI, "vaav1enc"},
+		{EncoderNVENC, "nvav1enc"},
+		{EncoderNVENC, "nvautogpuav1enc"},
+	}
+	for _, test := range tests {
+		config, err := profile.VideoConfig(codec.AV1(), test.encoder, test.element, false)
+		if err != nil {
+			t.Fatalf("%s/%s: %v", test.encoder, test.element, err)
+		}
+		pipeline, err := config.GetPipeline(types.ScreenSize{Width: 1920, Height: 1080, Rate: 30})
+		if err != nil {
+			t.Fatalf("%s/%s pipeline: %v", test.encoder, test.element, err)
+		}
+		if !strings.Contains(pipeline, "! "+test.element+" name=encoder") || !strings.Contains(pipeline, "video/x-av1,stream-format=obu-stream") {
+			t.Fatalf("unexpected %s pipeline: %s", test.encoder, pipeline)
+		}
+	}
+}
+
 func TestVideoConfigRejectsUnsupportedCodec(t *testing.T) {
 	profile, _ := Parse("balanced")
 	if _, err := profile.VideoConfig(codec.VP9(), EncoderSoftware, "vp9enc", true); err == nil {

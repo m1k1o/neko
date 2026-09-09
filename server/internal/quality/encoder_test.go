@@ -54,7 +54,7 @@ func TestResolveEncoderFallsBackWhenHardwareDeviceFails(t *testing.T) {
 		codec.H264(),
 		EncoderAuto,
 		elementProbe("nvautogpuh264enc", "h264parse", "vah264enc", "x264enc", "vp8enc"),
-		func(encoder Encoder, element string) error {
+		func(_ codec.RTPCodec, encoder Encoder, element string) error {
 			if encoder == EncoderNVENC && element == "nvautogpuh264enc" {
 				return fmt.Errorf("CUDA device unavailable")
 			}
@@ -90,7 +90,7 @@ func TestResolveEncoderRuntimeProbeOnlyChecksHardware(t *testing.T) {
 		codec.H264(),
 		EncoderSoftware,
 		elementProbe("x264enc", "h264parse", "vp8enc"),
-		func(encoder Encoder, element string) error {
+		func(_ codec.RTPCodec, encoder Encoder, element string) error {
 			called++
 			return fmt.Errorf("unexpected runtime probe for %s/%s", encoder, element)
 		},
@@ -108,7 +108,7 @@ func TestResolveEncoderTriesHardwareAlternativeAfterRuntimeFailure(t *testing.T)
 		codec.H264(),
 		EncoderNVENC,
 		elementProbe("nvautogpuh264enc", "nvh264enc", "h264parse"),
-		func(_ Encoder, element string) error {
+		func(_ codec.RTPCodec, _ Encoder, element string) error {
 			if element == "nvautogpuh264enc" {
 				return fmt.Errorf("CUDA device unavailable")
 			}
@@ -145,5 +145,61 @@ func TestResolveEncoderRejectsHardwareVP8(t *testing.T) {
 func TestResolveEncoderFailsWithoutFallback(t *testing.T) {
 	if _, err := ResolveEncoder(codec.H264(), EncoderAuto, elementProbe()); err == nil {
 		t.Fatal("resolved encoder without any available element")
+	}
+}
+
+func TestResolveEncoderAutoSupportsAV1HardwareMatrix(t *testing.T) {
+	tests := []struct {
+		name    string
+		element string
+	}{
+		{"nvidia-auto", "nvautogpuav1enc"},
+		{"nvidia-cuda", "nvav1enc"},
+		{"vaapi", "vaav1enc"},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			selection, err := ResolveEncoder(codec.AV1(), EncoderAuto, elementProbe(test.element))
+			if err != nil {
+				t.Fatal(err)
+			}
+			if selection.Codec.Name != codec.AV1().Name || selection.Element != test.element || selection.Encoder == EncoderSoftware {
+				t.Fatalf("unexpected AV1 selection: %+v", selection)
+			}
+		})
+	}
+}
+
+func TestResolveEncoderAutoSupportsH265HardwareMatrix(t *testing.T) {
+	tests := []struct {
+		name    string
+		element string
+	}{
+		{"nvidia-auto", "nvautogpuh265enc"},
+		{"nvidia-cuda", "nvh265enc"},
+		{"vaapi", "vah265enc"},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			selection, err := ResolveEncoder(codec.H265(), EncoderAuto, elementProbe(test.element, "h265parse"))
+			if err != nil {
+				t.Fatal(err)
+			}
+			if selection.Codec.Name != codec.H265().Name || selection.Element != test.element || selection.Encoder == EncoderSoftware {
+				t.Fatalf("unexpected H265 selection: %+v", selection)
+			}
+		})
+	}
+}
+
+func TestResolveEncoderNewCodecFallsBackToH264(t *testing.T) {
+	for _, videoCodec := range []codec.RTPCodec{codec.AV1(), codec.H265()} {
+		selection, err := ResolveEncoder(videoCodec, EncoderSoftware, elementProbe("x264enc", "h264parse"))
+		if err != nil {
+			t.Fatalf("%s: %v", videoCodec.Name, err)
+		}
+		if selection.Codec.Name != codec.H264().Name || selection.Element != "x264enc" {
+			t.Fatalf("%s did not fall back to H264: %+v", videoCodec.Name, selection)
+		}
 	}
 }

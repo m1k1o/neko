@@ -79,6 +79,71 @@ func TestApplyVideoProfileFallsBackFromH264ToVP8(t *testing.T) {
 	}
 }
 
+func TestApplyVideoProfileSupportsAV1Software(t *testing.T) {
+	viper.Reset()
+	defer viper.Reset()
+	viper.Set("capture.video.profile", "balanced")
+	viper.Set("capture.video.codec", "av1")
+	viper.Set("capture.video.encoder", "software")
+
+	config := Capture{VideoCodec: codec.AV1()}
+	if err := config.applyVideoProfile(availableElements("av1enc")); err != nil {
+		t.Fatal(err)
+	}
+	if config.VideoCodec.Name != codec.AV1().Name || config.VideoPipelines["main"].GstEncoder != "av1enc" {
+		t.Fatalf("unexpected AV1 profile config: %+v", config)
+	}
+}
+
+func TestApplyVideoProfileSupportsH265Software(t *testing.T) {
+	viper.Reset()
+	defer viper.Reset()
+	viper.Set("capture.video.profile", "balanced")
+	viper.Set("capture.video.codec", "h265")
+	viper.Set("capture.video.encoder", "software")
+
+	config := Capture{VideoCodec: codec.H265()}
+	if err := config.applyVideoProfile(availableElements("x265enc", "h265parse")); err != nil {
+		t.Fatal(err)
+	}
+	if config.VideoCodec.Name != codec.H265().Name || config.VideoPipelines["main"].GstEncoder != "x265enc" {
+		t.Fatalf("unexpected H265 profile config: %+v", config)
+	}
+}
+
+func TestApplyVideoProfileAddsNewCodecHardwareFallback(t *testing.T) {
+	tests := []struct {
+		name       string
+		videoCodec codec.RTPCodec
+		hardware   string
+		software   string
+		parser     string
+	}{
+		{"av1", codec.AV1(), "nvav1enc", "av1enc", ""},
+		{"h265", codec.H265(), "nvh265enc", "x265enc", "h265parse"},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			viper.Reset()
+			defer viper.Reset()
+			viper.Set("capture.video.profile", "balanced")
+			viper.Set("capture.video.encoder", "auto")
+
+			available := []string{test.hardware, test.software}
+			if test.parser != "" {
+				available = append(available, test.parser)
+			}
+			config := Capture{VideoCodec: test.videoCodec}
+			if err := config.applyVideoProfile(availableElements(available...)); err != nil {
+				t.Fatal(err)
+			}
+			if config.VideoPipelines["main"].GstEncoder != test.hardware || len(config.VideoPipelineFallbacks["main"]) != 1 || config.VideoPipelineFallbacks["main"][0].GstEncoder != test.software {
+				t.Fatalf("unexpected %s fallback: %+v", test.name, config)
+			}
+		})
+	}
+}
+
 func TestApplyVideoProfileAddsSameCodecRuntimeFallback(t *testing.T) {
 	viper.Reset()
 	defer viper.Reset()
@@ -101,7 +166,7 @@ func TestApplyVideoProfileFallsBackWhenHardwareDeviceFails(t *testing.T) {
 	viper.Set("capture.video.encoder", "auto")
 
 	config := Capture{VideoCodec: codec.H264()}
-	runtimeProbe := func(encoder quality.Encoder, element string) error {
+	runtimeProbe := func(_ codec.RTPCodec, encoder quality.Encoder, element string) error {
 		if encoder == quality.EncoderNVENC && element == "nvautogpuh264enc" {
 			return fmt.Errorf("CUDA device unavailable")
 		}
