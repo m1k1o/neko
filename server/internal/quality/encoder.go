@@ -18,6 +18,12 @@ const (
 
 type ElementProbe func(element string) error
 
+// RuntimeProbe validates that an encoder can initialize its runtime device
+// and driver. Element discovery alone is insufficient for hardware encoders:
+// a GStreamer factory can be registered while VAAPI or NVENC cannot open a
+// usable device inside the container.
+type RuntimeProbe func(encoder Encoder, element string) error
+
 type EncoderSelection struct {
 	Requested   Encoder
 	Encoder     Encoder
@@ -44,6 +50,14 @@ func ParseEncoder(value string) (Encoder, error) {
 // VP8 so a missing device or plugin is diagnosed at startup instead of
 // producing an unusable video stream.
 func ResolveEncoder(preferred codec.RTPCodec, requested Encoder, probe ElementProbe) (EncoderSelection, error) {
+	return ResolveEncoderWithRuntime(preferred, requested, probe, nil)
+}
+
+// ResolveEncoderWithRuntime selects an encoder after checking both the
+// GStreamer factories and, for hardware candidates, their runtime device.
+// Failed hardware probes are treated as unavailable so the next same-codec
+// software candidate can be selected without waiting for a viewer to join.
+func ResolveEncoderWithRuntime(preferred codec.RTPCodec, requested Encoder, probe ElementProbe, runtimeProbe RuntimeProbe) (EncoderSelection, error) {
 	if probe == nil {
 		return EncoderSelection{}, fmt.Errorf("video encoder element probe is required")
 	}
@@ -52,7 +66,7 @@ func ResolveEncoder(preferred codec.RTPCodec, requested Encoder, probe ElementPr
 		if requested != EncoderAuto && requested != EncoderSoftware {
 			return EncoderSelection{}, fmt.Errorf("%s cannot encode vp8 in the Chromium M1 quality profiles", requested)
 		}
-		return resolveCandidates(requested, probe, []encoderCandidate{vp8Candidate()})
+		return resolveCandidates(requested, probe, runtimeProbe, []encoderCandidate{vp8Candidate()})
 	}
 	if preferred.Name != codec.H264().Name {
 		return EncoderSelection{}, fmt.Errorf("encoder selection supports only vp8 or h264, got %s", preferred.Name)
@@ -72,7 +86,7 @@ func ResolveEncoder(preferred codec.RTPCodec, requested Encoder, probe ElementPr
 		return EncoderSelection{}, fmt.Errorf("unsupported video encoder %q", requested)
 	}
 
-	return resolveCandidates(requested, probe, candidates)
+	return resolveCandidates(requested, probe, runtimeProbe, candidates)
 }
 
 type encoderCandidate struct {
@@ -80,6 +94,7 @@ type encoderCandidate struct {
 	codec        codec.RTPCodec
 	alternatives []string
 	required     []string
+	hardware     bool
 }
 
 func nvencCandidate() encoderCandidate {
@@ -88,6 +103,7 @@ func nvencCandidate() encoderCandidate {
 		codec:        codec.H264(),
 		alternatives: []string{"nvautogpuh264enc", "nvh264enc"},
 		required:     []string{"h264parse"},
+		hardware:     true,
 	}
 }
 
@@ -97,6 +113,7 @@ func vaapiCandidate() encoderCandidate {
 		codec:        codec.H264(),
 		alternatives: []string{"vah264enc"},
 		required:     []string{"h264parse"},
+		hardware:     true,
 	}
 }
 
@@ -117,41 +134,42 @@ func vp8Candidate() encoderCandidate {
 	}
 }
 
-func resolveCandidates(requested Encoder, probe ElementProbe, candidates []encoderCandidate) (EncoderSelection, error) {
+func resolveCandidates(requested Encoder, probe ElementProbe, runtimeProbe RuntimeProbe, candidates []encoderCandidate) (EncoderSelection, error) {
 	unavailable := make([]string, 0)
 	for _, candidate := range candidates {
-		element := ""
 		for _, alternative := range candidate.alternatives {
 			if err := probe(alternative); err != nil {
 				unavailable = append(unavailable, alternative)
 				continue
 			}
-			element = alternative
-			break
-		}
-		if element == "" {
-			continue
-		}
 
-		complete := true
-		for _, required := range candidate.required {
-			if err := probe(required); err != nil {
-				unavailable = append(unavailable, required)
-				complete = false
-				break
+			complete := true
+			for _, required := range candidate.required {
+				if err := probe(required); err != nil {
+					unavailable = append(unavailable, required)
+					complete = false
+					break
+				}
 			}
-		}
-		if !complete {
-			continue
-		}
+			if !complete {
+				continue
+			}
 
-		return EncoderSelection{
-			Requested:   requested,
-			Encoder:     candidate.encoder,
-			Codec:       candidate.codec,
-			Element:     element,
-			Unavailable: unavailable,
-		}, nil
+			if candidate.hardware && runtimeProbe != nil {
+				if err := runtimeProbe(candidate.encoder, alternative); err != nil {
+					unavailable = append(unavailable, fmt.Sprintf("%s (%v)", alternative, err))
+					continue
+				}
+			}
+
+			return EncoderSelection{
+				Requested:   requested,
+				Encoder:     candidate.encoder,
+				Codec:       candidate.codec,
+				Element:     alternative,
+				Unavailable: unavailable,
+			}, nil
+		}
 	}
 
 	return EncoderSelection{}, fmt.Errorf("no usable Chromium M1 video encoder found (missing: %s)", strings.Join(unavailable, ", "))

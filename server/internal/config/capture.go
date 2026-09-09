@@ -327,10 +327,16 @@ func (s *Capture) Set() {
 // profile after explicit configuration has been processed. Existing
 // defaults and custom pipelines remain untouched when no profile is selected.
 func (s *Capture) ApplyVideoProfile() error {
-	return s.applyVideoProfile(gst.CheckElement)
+	return s.applyVideoProfileWithRuntime(gst.CheckElement, func(_ quality.Encoder, element string) error {
+		return gst.ProbeEncoder(element)
+	})
 }
 
 func (s *Capture) applyVideoProfile(probe quality.ElementProbe) error {
+	return s.applyVideoProfileWithRuntime(probe, nil)
+}
+
+func (s *Capture) applyVideoProfileWithRuntime(probe quality.ElementProbe, runtimeProbe quality.RuntimeProbe) error {
 	value := strings.ToLower(strings.TrimSpace(viper.GetString("capture.video.profile")))
 	if value == "" {
 		if viper.IsSet("capture.video.encoder") {
@@ -367,7 +373,7 @@ func (s *Capture) applyVideoProfile(probe quality.ElementProbe) error {
 	if err != nil {
 		return err
 	}
-	selection, err := quality.ResolveEncoder(s.VideoCodec, requestedEncoder, probe)
+	selection, err := quality.ResolveEncoderWithRuntime(s.VideoCodec, requestedEncoder, probe, runtimeProbe)
 	if err != nil {
 		return err
 	}

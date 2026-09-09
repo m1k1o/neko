@@ -94,6 +94,33 @@ func TestApplyVideoProfileAddsSameCodecRuntimeFallback(t *testing.T) {
 	}
 }
 
+func TestApplyVideoProfileFallsBackWhenHardwareDeviceFails(t *testing.T) {
+	viper.Reset()
+	defer viper.Reset()
+	viper.Set("capture.video.profile", "balanced")
+	viper.Set("capture.video.encoder", "auto")
+
+	config := Capture{VideoCodec: codec.H264()}
+	runtimeProbe := func(encoder quality.Encoder, element string) error {
+		if encoder == quality.EncoderNVENC && element == "nvautogpuh264enc" {
+			return fmt.Errorf("CUDA device unavailable")
+		}
+		if encoder == quality.EncoderVAAPI {
+			return fmt.Errorf("VAAPI driver unavailable")
+		}
+		return nil
+	}
+	if err := config.applyVideoProfileWithRuntime(
+		availableElements("nvautogpuh264enc", "h264parse", "vah264enc", "x264enc", "vp8enc"),
+		runtimeProbe,
+	); err != nil {
+		t.Fatal(err)
+	}
+	if config.VideoEncoder != quality.EncoderSoftware || config.VideoPipelines["main"].GstEncoder != "x264enc" {
+		t.Fatalf("hardware runtime failure did not select software fallback: %+v", config)
+	}
+}
+
 func TestApplyVideoProfileBuildsAdaptiveLadderUpToProfile(t *testing.T) {
 	viper.Reset()
 	defer viper.Reset()

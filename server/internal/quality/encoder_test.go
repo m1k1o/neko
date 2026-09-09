@@ -3,6 +3,7 @@ package quality
 import (
 	"fmt"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/m1k1o/neko/server/pkg/types/codec"
@@ -45,6 +46,83 @@ func TestResolveEncoderNVENCFallsBackToX264(t *testing.T) {
 	}
 	if selection.Encoder != EncoderSoftware || selection.Element != "x264enc" || !reflect.DeepEqual(selection.Unavailable, []string{"nvautogpuh264enc", "nvh264enc"}) {
 		t.Fatalf("unexpected selection: %+v", selection)
+	}
+}
+
+func TestResolveEncoderFallsBackWhenHardwareDeviceFails(t *testing.T) {
+	selection, err := ResolveEncoderWithRuntime(
+		codec.H264(),
+		EncoderAuto,
+		elementProbe("nvautogpuh264enc", "h264parse", "vah264enc", "x264enc", "vp8enc"),
+		func(encoder Encoder, element string) error {
+			if encoder == EncoderNVENC && element == "nvautogpuh264enc" {
+				return fmt.Errorf("CUDA device unavailable")
+			}
+			if encoder == EncoderVAAPI {
+				return fmt.Errorf("VAAPI driver unavailable")
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if selection.Encoder != EncoderSoftware || selection.Element != "x264enc" {
+		t.Fatalf("hardware runtime failure did not fall back to software: %+v", selection)
+	}
+	if !containsDiagnostic(selection.Unavailable, "CUDA device unavailable") || !containsDiagnostic(selection.Unavailable, "VAAPI driver unavailable") {
+		t.Fatalf("runtime failure diagnostics were not retained: %+v", selection.Unavailable)
+	}
+}
+
+func containsDiagnostic(diagnostics []string, value string) bool {
+	for _, diagnostic := range diagnostics {
+		if strings.Contains(diagnostic, value) {
+			return true
+		}
+	}
+	return false
+}
+
+func TestResolveEncoderRuntimeProbeOnlyChecksHardware(t *testing.T) {
+	called := 0
+	selection, err := ResolveEncoderWithRuntime(
+		codec.H264(),
+		EncoderSoftware,
+		elementProbe("x264enc", "h264parse", "vp8enc"),
+		func(encoder Encoder, element string) error {
+			called++
+			return fmt.Errorf("unexpected runtime probe for %s/%s", encoder, element)
+		},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if selection.Encoder != EncoderSoftware || selection.Element != "x264enc" || called != 0 {
+		t.Fatalf("software selection unexpectedly used runtime probe: %+v calls=%d", selection, called)
+	}
+}
+
+func TestResolveEncoderTriesHardwareAlternativeAfterRuntimeFailure(t *testing.T) {
+	selection, err := ResolveEncoderWithRuntime(
+		codec.H264(),
+		EncoderNVENC,
+		elementProbe("nvautogpuh264enc", "nvh264enc", "h264parse"),
+		func(_ Encoder, element string) error {
+			if element == "nvautogpuh264enc" {
+				return fmt.Errorf("CUDA device unavailable")
+			}
+			return nil
+		},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if selection.Encoder != EncoderNVENC || selection.Element != "nvh264enc" {
+		t.Fatalf("did not try the second hardware element: %+v", selection)
+	}
+	if !containsDiagnostic(selection.Unavailable, "CUDA device unavailable") {
+		t.Fatalf("missing first hardware diagnostic: %+v", selection.Unavailable)
 	}
 }
 
