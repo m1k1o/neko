@@ -299,6 +299,22 @@ M1 的 UI 工作拆为两层：当前先交付不触及媒体链路的视觉与�
 | 7 | 基线与发布验收（入口已完成） | 固定 Playwright Chromium 的登录/信令/首帧 E2E、1/2/5 观看者并发脚本、JSON 结果；执行 720p/1080p 与 Linux/WSL2 矩阵 | 首帧/连接/分辨率数据可比较；运行中 demo、GPU/公网和 UDP 受阻矩阵逐项关闭 |
 | 8 | UI 深层 SDK/状态拆分（第一批已完成，持续迭代） | 已提取 TypeScript 信令传输、连接状态机、媒体输入编码器，并把连接状态迁入 namespaced 模块；下一批继续拆分房间/媒体/UI 状态，完成切换后删除旧页面和适配层 | 当前批次完成 lint/build、纯 Go 单测；后续通过 Chromium、认证代理、FRP/TURN、端口和性能回归，并检查无废弃运行时路径 |
 
+### 去冗余与解耦执行计划
+
+当前 M1 已删除非 Chromium 应用资产，但运行时代码仍存在协议双轨、全局状态与集中式管理器耦合。以下工作必须遵守“完成迁移即删除旧路径”的原则；不保留旧协议或旧配置的运行时兼容层。
+
+| 顺序 | 增量 | 删除/收敛边界 | 验收条件 |
+| --- | --- | --- | --- |
+| 1 | 统一实时输入通道 | 删除 WebSocket 的 `control/move`、滚动、鼠标、键盘和触摸命令及其服务端 handler；实时输入只使用 WebRTC `data` DataChannel。控制权申请、释放和管理员操作继续使用信令/REST。 | Go/TypeScript 输入 opcode 由同一 schema 生成；左/右键、滚轮、键盘、触摸和非控制者光标的浏览器 E2E 均通过；服务端不再注册旧控制事件。 |
+| 2 | 控制权领域服务 | 从 `SessionManager`、WebSocket handler 和 WebRTC handler 中抽出 `ControlLeaseService`，拥有 holder、epoch、过期时间、FIFO 请求队列、节流和管理员策略。 | 每个输入命令携带并验证 epoch；并发申请仅产生一个有效 holder；释放、断线、超时和管理员接管均重置按键并有单元/竞态测试。 |
+| 3 | 收敛客户端连接状态 | `ConnectionStateMachine` 成为连接生命周期的唯一事实来源；Vuex 仅订阅可序列化快照，`BaseClient` 不再另行维护可与其冲突的连接状态。 | 连接、ICE 断开宽限、失败、重连、登出各有状态转换测试；UI 不会因短暂网络波动销毁仍可恢复的媒体会话。 |
+| 4 | SDK 脱离 Vue | 拆分 `NekoClient` 为 `AuthClient`、`SignalingTransport`、`MediaSession`、`RoomClient` 和 UI adapter；移除 SDK 对 `Vue`、`$http`、`$notify`、`$swal`、全局 `$accessor` 的依赖。 | SDK 可在无 Vue 的 TypeScript 测试中完成登录、信令、协商、输入编码与断线恢复；Vue 层只负责呈现和用户意图。 |
+| 5 | 状态与组件边界 | 状态模块只经 action/selector 对外；删除组件直接调用 `$accessor` 和 `$client` 的跨层写入。将 `video.vue` 拆为媒体舞台、坐标映射、输入控制器和工具栏。 | 分辨率、缩放、全屏和控制权变化的坐标映射有单元/E2E 覆盖；各组件可在 mock SDK 下独立渲染和测试。 |
+| 6 | 服务端应用层拆分 | 将集中式 WebSocket switch 拆为信令、房间、控制、聊天/文件等适配器；handler 只负责 schema 校验和调用应用服务，禁止直接编排 desktop/capture/webrtc/session。 | 领域服务不依赖 HTTP、WebSocket、Pion 或 Xorg；每个实时命令有一致的错误码与契约测试。 |
+| 7 | 配置与协议收口 | 删除 EPR、历史全局 ICE server 回退和不再支持的配置分支；保留 M1 的 direct MUX、FRP 和 TURN 配置。以 schema 生成 Go 与 TypeScript 的信令/输入类型。 | 配置迁移后仅接受 M1 网络模型；无效配置启动失败且报出操作性错误；Go/TypeScript 契约测试从同一 schema 生成。 |
+
+推荐实施顺序为 1 → 2 → 3 → 4 → 5 → 6 → 7。第 1、2 项优先解决当前输入协议漂移和多人控制争夺问题；第 3 至 5 项解决前端状态与 UI 耦合；第 6、7 项完成服务端与配置面的长期收敛。
+
 ## 9. 里程碑与成功标准
 
 1. **M1：Chromium 性能、认证代理与单端口连通性**：仅支持 Chromium；支持 Linux x86_64 和 Windows x86_64 Docker Desktop/WSL2；默认 UDP MUX、TCP/TURN/FRP 回退、启动预检、带认证的 HTTP CONNECT/SOCKS5 出站代理、媒体背压和质量策略完成，并通过性能门槛；UI 视觉基础可先行，基础能力收敛后再于 M1 后段执行深层 UI SDK/状态拆分，不改媒体协议。
