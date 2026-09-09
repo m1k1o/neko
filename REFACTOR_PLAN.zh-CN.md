@@ -246,7 +246,8 @@ server/internal/
 
 - `6ce487ba`：提取 `SignalingTransport`、`ConnectionStateMachine` 和媒体输入编码器；WebSocket 生命周期具备代际校验、JSON envelope 校验、发送结果反馈和异步错误归一化；PeerConnection 的 ICE、DataChannel、重协商和连接回调不再直接依赖页面组件。
 - `015a2622`：媒体二进制协议统一为网络字节序并增加服务端长度校验；严格校验 EPR 端口范围，并拒绝 EPR 与 TCP/UDP MUX 的冲突组合。
-- 当前增量：信令统一使用 `{ event, payload }` envelope；服务端通过 `WebSocketMessage.UnmarshalJSON` 兼容旧扁平消息，客户端接收端同时兼容两种形态；WebSocket 打开后主动发送 `signal/request`，并兼容服务端的 `iceservers` 字段和原生 ICE candidate。连接状态模块将 `connected` 会话存活语义与 `reconnecting` 生命周期标签分离，避免短暂断网时 UI 销毁媒体会话。
+- `26cd89e9`、`7c0fed2a`、`04725c07`：信令统一使用 `{ event, payload }` envelope；服务端和 legacy bridge 兼容旧扁平消息，客户端接收端同时兼容两种形态；WebSocket 打开后主动发送 `signal/request`，并兼容服务端的 `iceservers` 字段和原生 ICE candidate。连接状态模块将 `connected` 会话存活语义与 `reconnecting` 生命周期标签分离，避免短暂断网时 UI 销毁媒体会话。
+- 当前增量：WebRTC 服务端在 ICE `disconnected` 后增加 5 秒代际保护窗口，恢复连接会取消销毁计时器，只有持续断开或进入 `failed` 才释放 Peer，避免网络切换期间被立即清理。
 - 验证：`npm run lint -- --fix` 无错误（仅保留既有未使用类型 warning），`npm run build` 成功；容器化 Go 测试中 `pkg/types`、`internal/connectivity`、`internal/webrtc/payload` 通过。完整 config 包仍受本机缺少 GStreamer/CGo 构建依赖限制，需在带 GStreamer 的 Linux 构建环境补测。
 
 本批次没有改变公网端口号或 MUX 配置语义；服务端重连宽限/去抖、版本化 `{ version, type, requestId, roomId, payload }` 信令 envelope 和生成式契约测试列入下一批，完成后再切换默认协议版本。
