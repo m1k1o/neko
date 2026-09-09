@@ -12,7 +12,7 @@ Neko 是一个在容器内运行浏览器或 Linux 桌面、通过 WebRTC 向多
 - M1 支持 Chromium 的受控出站代理，包括 HTTP CONNECT Basic 认证与 SOCKS5 用户名/密码认证；
 - M1 支持 Linux x86_64 Docker Engine，以及 Windows x86_64 上 Docker Desktop/WSL2 的 Linux 容器部署；不提供 Windows 原生媒体 Worker；
 - 将房间、成员、会话、权限和控制权变成明确、可测试的领域模型；
-- 形成版本化的 REST 与实时信令契约；
+- 形成单一、明确且可校验的 REST 与实时信令契约；
 - 为 OIDC/LDAP、持久化、多房间调度和可观测性建立扩展点；
 - 渐进升级前端，使媒体连接逻辑不再耦合到页面组件。
 
@@ -121,12 +121,12 @@ server/internal/
 ### 阶段 2：协议契约与领域抽取（2–4 周）
 
 1. 保留现有 OpenAPI，并以 OpenAPI generator 生成 TypeScript API client。
-2. 为 WebSocket 信令建立版本化 envelope：`{ version, type, requestId, roomId, payload }`。
+2. 为 WebSocket 信令固定唯一 envelope：`{ event, payload }`；废弃的扁平消息和兼容桥不进入运行时。
 3. 使用 JSON Schema 或 Protobuf 定义实时事件；在 Go 和 TypeScript 中生成类型及运行时校验。
 4. 抽取 `Room`、`Member`、`Session`、`Permission`、`ControlLease`，禁止 handler 直接修改共享 map。
 5. 所有命令返回规范错误码，例如 `ROOM_NOT_READY`、`CONTROL_CONFLICT`、`STALE_EPOCH`、`ICE_FAILED`。
 
-验收：新旧客户端可在一个发布周期内共存；协议不兼容时返回明确错误；领域层不依赖 HTTP、WebSocket、Pion、Docker。
+验收：协议不兼容时返回明确错误；领域层不依赖 HTTP、WebSocket、Pion、Docker；发布前删除已废弃的协议分支、类型和测试夹具。
 
 ### 阶段 3：模块化服务端与持久化（3–6 周）
 
@@ -143,10 +143,10 @@ server/internal/
 1. 提取 `@neko/protocol`、`@neko/sdk`、`@neko/ui` 三个包。
 2. `@neko/sdk` 统一管理认证、REST、WebSocket、PeerConnection、重连和设备权限；组件只订阅状态和发起命令。
 3. 把 Vuex 状态拆分为房间、连接、媒体、UI 四个状态机；避免媒体对象放入响应式全局状态。
-4. 在兼容层稳定后，从 Vue 2/Vue CLI 迁移至 Vue 3、Vite、Pinia；每次只替换一个页面或功能域。
+4. 从 Vue 2/Vue CLI 迁移至 Vue 3、Vite、Pinia；每次只替换一个页面或功能域，完成切换后立即删除旧实现。
 5. 为 SDK 提供嵌入式 API，支持第三方产品以受控方式创建/加入房间。
 
-验收：UI 框架升级不改变 WebRTC 信令；SDK 能被独立测试；现有嵌入场景维持兼容或具备清晰迁移指南。
+验收：UI 框架升级不改变 WebRTC 信令；SDK 能被独立测试；已弃用的页面和适配层不再保留。
 
 ### 阶段 5：Worker 调度与多房间（按需求，4–8 周）
 
@@ -169,7 +169,7 @@ server/internal/
 | 故障测试 | UDP 阻断、错误 NAT IP、端口耗尽、TURN/FRP 不可达、代理认证失败、错误 bypass 规则、Worker 崩溃、Windows 主机防火墙拦截。 |
 | 性能测试 | Chromium 720p/1080p、多参与者、不同编码器、直连/FRP/TURN、无代理/有代理；记录采集到发送的队列深度、CPU/GPU、出口带宽、P95 首帧与端到端延迟。 |
 
-采用语义化版本、迁移文档和特性开关。每次仅发布一个可回滚的架构变化；数据库迁移遵循 expand → migrate → contract，协议至少保留一个次版本兼容窗口。
+采用语义化版本和迁移文档。每次仅发布一个可回滚的架构变化；数据库迁移遵循 expand → migrate → contract，协议变更通过明确的迁移步骤完成，不长期保留旧分支。
 
 ## 6. 可观测性与安全基线
 
@@ -186,7 +186,7 @@ server/internal/
 | --- | --- |
 | 重构影响媒体稳定性 | 不重写 Pion/GStreamer；先通过接口包裹，保留旧路径与回滚开关。 |
 | 微服务化增加时延和运维成本 | 前三阶段保持模块化单体；只在多节点需求明确时拆出 Worker。 |
-| 新协议破坏旧客户端 | 版本化 envelope、兼容窗口、契约 CI。 |
+| 新协议破坏旧客户端 | 发布前完成客户端升级和迁移检查；服务端对不支持的协议返回明确错误，不保留旧协议运行时分支。 |
 | 数据库引入破坏轻量部署 | 存储接口与内存默认实现并存；PostgreSQL/Redis 均为可选。 |
 | TURN 成本不可控 | 直连优先；将 TURN 作为策略可控回退，并按房间统计 relay 流量。 |
 | FRP 节点 IP/端口变化 | 将 FRP 公网端点设为显式配置；启动时校验 Neko 的 NAT 候选端口与 FRP 同端口 TCP/UDP 隧道一致。 |
@@ -246,11 +246,12 @@ server/internal/
 
 - `6ce487ba`：提取 `SignalingTransport`、`ConnectionStateMachine` 和媒体输入编码器；WebSocket 生命周期具备代际校验、JSON envelope 校验、发送结果反馈和异步错误归一化；PeerConnection 的 ICE、DataChannel、重协商和连接回调不再直接依赖页面组件。
 - `015a2622`：媒体二进制协议统一为网络字节序并增加服务端长度校验；严格校验 EPR 端口范围，并拒绝 EPR 与 TCP/UDP MUX 的冲突组合。
-- `26cd89e9`、`7c0fed2a`、`04725c07`：信令统一使用 `{ event, payload }` envelope；服务端和 legacy bridge 兼容旧扁平消息，客户端接收端同时兼容两种形态；WebSocket 打开后主动发送 `signal/request`，并兼容服务端的 `iceservers` 字段和原生 ICE candidate。连接状态模块将 `connected` 会话存活语义与 `reconnecting` 生命周期标签分离，避免短暂断网时 UI 销毁媒体会话。
+- `26cd89e9`、`7c0fed2a`、`04725c07`：信令统一使用唯一的 `{ event, payload }` envelope；WebSocket 打开后主动发送 `signal/request`，使用标准 `iceservers` 字段和原生 ICE candidate。随后已删除扁平消息解析、legacy bridge 及其旧类型，避免运行时长期维护两套协议。连接状态模块将 `connected` 会话存活语义与 `reconnecting` 生命周期标签分离，避免短暂断网时 UI 销毁媒体会话。
 - 当前增量：WebRTC 服务端在 ICE `disconnected` 后增加 5 秒代际保护窗口，恢复连接会取消销毁计时器，只有持续断开或进入 `failed` 才释放 Peer，避免网络切换期间被立即清理。
-- 验证：`npm run lint -- --fix` 无错误（仅保留既有未使用类型 warning），`npm run build` 成功；容器化 Go 测试中 `pkg/types`、`internal/connectivity`、`internal/webrtc/payload` 通过。完整 config 包仍受本机缺少 GStreamer/CGo 构建依赖限制，需在带 GStreamer 的 Linux 构建环境补测。
+- 当前清理：删除旧 HTTP/WebSocket legacy 包、旧版 WebRTC data-channel handler、V2 配置迁移入口、旧媒体滚动编码和未使用的旧消息类型；服务端只创建 `data` channel，严格拒绝扁平/空 `payload` envelope，并对无 payload 事件统一省略 `payload` 字段。文件传输锁通过 `/api/room/settings` 更新插件设置，不再保留无效的 UI 操作。
+- 验证：`vue-cli-service lint --no-fix` 与 `vue-cli-service build` 成功（仅有既有 Browserslist、bundle 体积提示）；容器化 Go 测试中 `pkg/types`、`internal/connectivity`、`internal/webrtc/payload`、`internal/quality`、`internal/plugins/filetransfer`、`internal/websocket` 通过。完整 config/session/capture 包仍受本机缺少 GStreamer/CGo 构建依赖限制，需在带 GStreamer 的 Linux 构建环境补测。
 
-本批次没有改变公网端口号或 MUX 配置语义；服务端重连宽限/去抖、版本化 `{ version, type, requestId, roomId, payload }` 信令 envelope 和生成式契约测试列入下一批，完成后再切换默认协议版本。
+本批次没有改变公网端口号或 MUX 配置语义；服务端重连宽限/去抖已完成。下一批补充生成式契约测试和迁移错误码，不再引入第二套信令 envelope。
 
 ### M1 后续开发执行计划
 
@@ -265,7 +266,7 @@ M1 的 UI 工作拆为两层：当前先交付不触及媒体链路的视觉与�
 | 5 | 性能指标闭环 | 编码耗时、首帧、实际帧率/码率、路径标签和资源指标 | `/metrics` 覆盖基线指标且不含高风险凭据标签 |
 | 6 | FRP 与 TURN 集成 | SakuraFrp 同端口 TCP/UDP 模板、Coturn 回退模板和故障诊断 | 两条路径均可重复部署并通过连通性测试 |
 | 7 | 基线与发布验收 | 720p/1080p、1/2/5 观看者、Linux/WSL2 回归和文档 | 性能数据可比较，M1 发布门槛逐项关闭 |
-| 8 | UI 深层 SDK/状态拆分（第一批已完成，持续迭代） | 已提取 TypeScript 信令传输、连接状态机、媒体输入编码器，并把连接状态迁入 namespaced 模块；下一批继续拆分房间/媒体/UI 状态，保留旧页面作为回退路径 | 当前批次完成 lint/build、协议兼容和纯 Go 单测；后续要求新旧 UI 可独立切换和回滚，并通过 Chromium、认证代理、FRP/TURN、端口和性能回归 |
+| 8 | UI 深层 SDK/状态拆分（第一批已完成，持续迭代） | 已提取 TypeScript 信令传输、连接状态机、媒体输入编码器，并把连接状态迁入 namespaced 模块；下一批继续拆分房间/媒体/UI 状态，完成切换后删除旧页面和适配层 | 当前批次完成 lint/build、纯 Go 单测；后续通过 Chromium、认证代理、FRP/TURN、端口和性能回归，并检查无废弃运行时路径 |
 
 ## 9. 里程碑与成功标准
 

@@ -4,13 +4,13 @@ The roadmap outlines the future development plans for Neko. It is divided into t
 
 ## Phase 1 - Server migration to V3 {#phase-1}
 
-This phase was successfully completed with the release of Neko V3.0.0. The [m1k1o/neko](https://github.com/m1k1o/neko) server was merged with the archived [demodesk/neko](https://github.com/demodesk/neko) server, and the new server was released as V3.0.0. A compatibility layer was added to support V2 clients.
+This phase was successfully completed with the release of Neko V3.0.0. The [m1k1o/neko](https://github.com/m1k1o/neko) server was merged with the archived [demodesk/neko](https://github.com/demodesk/neko) server, and the new server was released as V3.0.0. The M1 refactor now uses the V3 server and client contract as its only runtime path; the temporary V2 compatibility layer has been removed.
 
 ## Phase 2 - Client rewrite to V3 {#phase-2}
 
-The client rewrite is the next big step in the development of Neko. The V2 client uses Vue2, which reached [end of life](https://v2.vuejs.org/eol/) a long time ago. The new client will be based on Vue3 and will be more modular and easier to maintain.
+The client rewrite is the next big step in the development of Neko. The current M1 client is being split into protocol, SDK, state, and UI layers; the final UI migration will move to Vue3, which is more modular and easier to maintain than Vue2.
 
-While the V2 client focused on the user interface, the V3 client will focus on extensibility in the form of components. This means that the client will be able to be loaded seamlessly in any existing application, and the components will be able to be used in any other Vue3 application. For traditional users, the client will still be available as a standalone application with all the known features.
+The client focuses on extensibility in the form of components. It will be loadable in custom applications, while a standalone client remains available for traditional deployments. Completed migrations remove the replaced implementation instead of maintaining parallel UI and media paths.
 
 ## Phase 3 - Modularization {#phase-3}
 

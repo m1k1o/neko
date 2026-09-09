@@ -156,7 +156,7 @@ It also offers [Zero-knowledge installation (with HTTPS)](https://github.com/m1k
 
 Full documentation is available at [neko.m1k1o.net](https://neko.m1k1o.net/). Key sections include:
 
-- [Migration from V2](https://neko.m1k1o.net/docs/v3/migration-from-v2)
+- [M1 migration](https://neko.m1k1o.net/docs/v3/migration-from-v2)
 - [Getting Started](https://neko.m1k1o.net/docs/v3/quick-start)
 - [Installation](https://neko.m1k1o.net/docs/v3/installation)
 - [Examples](https://neko.m1k1o.net/docs/v3/installation/examples)
