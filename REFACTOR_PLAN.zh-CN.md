@@ -216,10 +216,11 @@ server/internal/
 - `go build -o /tmp/neko-proxy ./cmd/neko-proxy` 通过。
 - 安装本机构建依赖后，`go test ./...`、`go test -race ./pkg/mediaqueue ./internal/webrtc` 均通过。
 - Chromium 启动脚本、Shell 语法、Compose/GitHub Actions YAML 解析和 `git diff --check` 通过。
+- Windows x86_64 + WSL2 Docker 环境的 Chromium 演示通过：账号密码登录、`1280x720@30` 画面及同端口 `52000/TCP+UDP` WebRTC 链路可正常运行。
+- 真实 Squid Basic 与 microsocks 用户名/密码 Docker Compose 套件通过，覆盖健康检查、HTTP 转发、CONNECT 隧道、错误凭据和诊断脱敏。
 
 ### 当前限制与下一步
 
-- 真实 Squid/microsocks Docker Compose 套件仍需由 PR CI 或具备 Docker Compose v2 的环境执行。
 - 下一项实现：编码/质量 profile。
 - 随后实现：FRP、TURN 网络路径的集成测试模板。
 
