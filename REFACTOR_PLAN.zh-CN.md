@@ -242,6 +242,15 @@ server/internal/
 - 本批次只调整展示层、交互语义和布局，不改变 WebRTC 信令、媒体协议、连接状态机或端口契约；深层 SDK/状态拆分仍放在 M1 后段。
 - `44ee598c`：完成 UI 基础层；`ee321149`、`5b123cfb`、`4193bbad`、`b172f693`、`aa23ebc3`：完成本轮状态反馈、移动端抽屉、设置分组、国际化、登录反馈和空/加载状态；`npm run lint -- --no-fix` 无错误，`npm run build` 构建成功，Docker 演示容器健康检查通过。构建仅提示既有未使用类型和 bundle 体积 warning，未阻断交付。
 
+### 深层 SDK、信令与状态拆分（第一批已完成）
+
+- `6ce487ba`：提取 `SignalingTransport`、`ConnectionStateMachine` 和媒体输入编码器；WebSocket 生命周期具备代际校验、JSON envelope 校验、发送结果反馈和异步错误归一化；PeerConnection 的 ICE、DataChannel、重协商和连接回调不再直接依赖页面组件。
+- `015a2622`：媒体二进制协议统一为网络字节序并增加服务端长度校验；严格校验 EPR 端口范围，并拒绝 EPR 与 TCP/UDP MUX 的冲突组合。
+- 当前增量：信令统一使用 `{ event, payload }` envelope；服务端通过 `WebSocketMessage.UnmarshalJSON` 兼容旧扁平消息，客户端接收端同时兼容两种形态；WebSocket 打开后主动发送 `signal/request`，并兼容服务端的 `iceservers` 字段和原生 ICE candidate。连接状态模块将 `connected` 会话存活语义与 `reconnecting` 生命周期标签分离，避免短暂断网时 UI 销毁媒体会话。
+- 验证：`npm run lint -- --fix` 无错误（仅保留既有未使用类型 warning），`npm run build` 成功；容器化 Go 测试中 `pkg/types`、`internal/connectivity`、`internal/webrtc/payload` 通过。完整 config 包仍受本机缺少 GStreamer/CGo 构建依赖限制，需在带 GStreamer 的 Linux 构建环境补测。
+
+本批次没有改变公网端口号或 MUX 配置语义；服务端重连宽限/去抖、版本化 `{ version, type, requestId, roomId, payload }` 信令 envelope 和生成式契约测试列入下一批，完成后再切换默认协议版本。
+
 ### M1 后续开发执行计划
 
 M1 的 UI 工作拆为两层：当前先交付不触及媒体链路的视觉与交互基础；媒体性能、网络基础设施和发布基线收敛后，再进行深层 SDK/状态拆分。后者采用可回滚的渐进式迁移，不改变信令、媒体协议和服务端端口契约。
@@ -255,7 +264,7 @@ M1 的 UI 工作拆为两层：当前先交付不触及媒体链路的视觉与�
 | 5 | 性能指标闭环 | 编码耗时、首帧、实际帧率/码率、路径标签和资源指标 | `/metrics` 覆盖基线指标且不含高风险凭据标签 |
 | 6 | FRP 与 TURN 集成 | SakuraFrp 同端口 TCP/UDP 模板、Coturn 回退模板和故障诊断 | 两条路径均可重复部署并通过连通性测试 |
 | 7 | 基线与发布验收 | 720p/1080p、1/2/5 观看者、Linux/WSL2 回归和文档 | 性能数据可比较，M1 发布门槛逐项关闭 |
-| 8 | UI 深层 SDK/状态拆分（M1 后段） | 在媒体、网络和发布基线稳定后，提取 TypeScript WebRTC/连接 SDK，再逐页拆分房间、连接、媒体和 UI 状态；保留旧页面作为回退路径 | 不改变信令/媒体协议；新旧 UI 可独立切换和回滚；Chromium、认证代理、FRP/TURN、端口和性能回归通过 |
+| 8 | UI 深层 SDK/状态拆分（第一批已完成，持续迭代） | 已提取 TypeScript 信令传输、连接状态机、媒体输入编码器，并把连接状态迁入 namespaced 模块；下一批继续拆分房间/媒体/UI 状态，保留旧页面作为回退路径 | 当前批次完成 lint/build、协议兼容和纯 Go 单测；后续要求新旧 UI 可独立切换和回滚，并通过 Chromium、认证代理、FRP/TURN、端口和性能回归 |
 
 ## 9. 里程碑与成功标准
 
