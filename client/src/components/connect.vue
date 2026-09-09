@@ -318,7 +318,7 @@
 </style>
 
 <script lang="ts">
-  import { Component, Vue } from 'vue-property-decorator'
+  import { Component, Vue, Watch } from 'vue-property-decorator'
 
   @Component({ name: 'neko-connect' })
   export default class extends Vue {
@@ -328,6 +328,17 @@
     private password: string = ''
     private loginError: string = ''
     private showPassword: boolean = false
+
+    get connectionError() {
+      return this.$accessor.connectionError
+    }
+
+    @Watch('connectionError', { immediate: true })
+    onConnectionError(message: string) {
+      if (message) {
+        this.loginError = message
+      }
+    }
 
     mounted() {
       // auto-password fill

@@ -112,6 +112,9 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   }
 
   protected [EVENT.DISCONNECTED](reason?: Error) {
+    if (!this.$accessor.connected && reason) {
+      this.$accessor.setConnectionError(reason.message)
+    }
     this.cleanup()
 
     this.$vue.$notify({
@@ -235,6 +238,10 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
       message = this.$vue.$t('connection.kicked') as string
     }
 
+    if (!this.$accessor.connected && message) {
+      this.$accessor.setConnectionError(message)
+    }
+
     this.onDisconnected(new Error(message))
 
     this.$vue.$swal({
@@ -246,6 +253,10 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   }
 
   protected [EVENT.SYSTEM.ERROR]({ title, message }: SystemMessagePayload) {
+    if (!this.$accessor.connected && message) {
+      this.$accessor.setConnectionError(message)
+    }
+
     this.$vue.$swal({
       title,
       text: message,

@@ -25,6 +25,7 @@ export const state = () => ({
   connecting: false,
   connected: false,
   connectionState: 'disconnected' as ConnectionState,
+  connectionError: '',
   networkQuality: 'unknown' as NetworkQuality,
   networkRtt: null as number | null,
   locked: {} as Record<string, boolean>,
@@ -52,6 +53,7 @@ export const mutations = mutationTree(state, {
     state.connected = false
     state.connecting = true
     state.connectionState = 'connecting'
+    state.connectionError = ''
     state.networkQuality = 'unknown'
     state.networkRtt = null
   },
@@ -68,6 +70,10 @@ export const mutations = mutationTree(state, {
       set('displayname', state.displayname)
       set('password', state.password)
     }
+  },
+
+  setConnectionError(state, message: string) {
+    state.connectionError = message
   },
 
   setConnectionState(state, connectionState: ConnectionState) {
@@ -124,6 +130,7 @@ export const actions = actionTree(
 
     logout() {
       accessor.setLogin({ displayname: '', password: '' })
+      accessor.setConnectionError('')
       set('displayname', '')
       set('password', '')
       $client.logout()
