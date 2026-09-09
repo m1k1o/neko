@@ -232,12 +232,15 @@ server/internal/
 - `83341b33`：将队列压力、RTCP jitter 和新增丢包接入 WebRTC 自适应升降档；网络压力持续超过不稳定时长才降档，且压力期间禁止升档。
 - 新增 `demo/compose.frp.example.yaml`、`demo/frpc.toml.example` 和 `demo/compose.turn.example.yaml`，覆盖 SakuraFrp/FRP 同号 TCP+UDP 媒体隧道及 Coturn relay 端口模板，凭据均使用占位符。
 - `45e5c91c`：新增本地 FRP/Coturn 连通性集成套件；FRP 验证无公网主机模型下同号 `52000/TCP+UDP` 转发，Coturn 通过真实认证 Allocate 验证 UDP/TCP `3478` 和 `49160-49170` relay 范围，并在失败时输出端口、认证或 relay 范围诊断。
+- 浏览器 E2E 入口的 Shell/JavaScript 语法、Git 差异和客户端 lint 已通过；完整 Playwright 镜像首次下载及真实媒体回归需在具备镜像缓存和运行中 Chromium demo 的 Linux/WSL2 环境执行。
+- `ad9b2032`：新增固定 Playwright Chromium 的真实浏览器 E2E 入口；覆盖账号密码登录、`{event,payload}` 信令 envelope、`system/init`、连接状态、远端视频首帧和废弃事件检测，并提供 1/2/5 观看者并发基线脚本及 JSON 结果归档。
 
 ### 当前限制与下一步
 
 - 已实现：为 H.264 VAAPI/NVENC 增加 GPU 设备及驱动初始化探测，并在实际管线无法进入可用状态时回退；仍需在真实 VAAPI/NVENC GPU 主机上完成硬件能力矩阵验证。
 - 已实现：为 FRP/TURN 模板增加本地可重复的无公网 IP、relay 端口和故障诊断自动化测试；仍需在真实公网 FRP 节点、UDP 受阻网络和实际 Neko 媒体端点上补充跨网络验证。
-- 下一项实现：补充真实浏览器 WebRTC 端到端回归和 720p/1080p 性能基线。
+- 已实现：真实浏览器 WebRTC 回归和性能基线采集入口；仍需在 Linux x86_64 与 Windows x86_64/WSL2 的运行中 demo 上执行 720p/1080p、1/2/5 观看者矩阵，并将结果与 `/metrics` 资源数据关联。
+- 下一项实现：执行并固化 720p/1080p 多观看者性能基线，随后补充公网 FRP、UDP 受阻和 TURN 媒体端到端场景。
 
 ### UI 重构进行中
 
@@ -272,7 +275,7 @@ M1 的 UI 工作拆为两层：当前先交付不触及媒体链路的视觉与�
 | 4 | 自适应质量策略 | 显式 profile 生成质量梯度，复用带宽估计器；后续加入队列压力、RTT/jitter/丢包输入 | 压力下降档、恢复升档，切换原因可观测 |
 | 5 | 性能指标闭环 | 编码耗时、首帧、实际帧率/码率、路径标签和资源指标 | `/metrics` 覆盖基线指标且不含高风险凭据标签 |
 | 6 | FRP 与 TURN 集成（本地套件完成，公网矩阵待补） | SakuraFrp 同端口 TCP/UDP 模板、Coturn 回退模板、relay 范围校验和故障诊断套件 | 本地两条路径可重复部署并通过连通性测试；真实公网/UDP 受阻/Neko 媒体链路需补充 |
-| 7 | 基线与发布验收 | 720p/1080p、1/2/5 观看者、Linux/WSL2 回归和文档 | 性能数据可比较，M1 发布门槛逐项关闭 |
+| 7 | 基线与发布验收（入口已完成） | 固定 Playwright Chromium 的登录/信令/首帧 E2E、1/2/5 观看者并发脚本、JSON 结果；执行 720p/1080p 与 Linux/WSL2 矩阵 | 首帧/连接/分辨率数据可比较；运行中 demo、GPU/公网和 UDP 受阻矩阵逐项关闭 |
 | 8 | UI 深层 SDK/状态拆分（第一批已完成，持续迭代） | 已提取 TypeScript 信令传输、连接状态机、媒体输入编码器，并把连接状态迁入 namespaced 模块；下一批继续拆分房间/媒体/UI 状态，完成切换后删除旧页面和适配层 | 当前批次完成 lint/build、纯 Go 单测；后续通过 Chromium、认证代理、FRP/TURN、端口和性能回归，并检查无废弃运行时路径 |
 
 ## 9. 里程碑与成功标准
