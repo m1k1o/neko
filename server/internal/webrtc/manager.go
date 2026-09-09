@@ -48,6 +48,10 @@ const (
 
 	// send a PLI on an interval so that the publisher is pushing a keyframe every rtcpPLIInterval
 	rtcpPLIInterval = 3 * time.Second
+
+	// ICE can briefly become disconnected during a network handover. Keep the
+	// peer alive long enough for Pion to recover before destroying the session.
+	webrtcDisconnectGracePeriod = 5 * time.Second
 )
 
 func New(desktop types.DesktopManager, capture types.CaptureManager, config *config.WebRTC) *WebRTCManagerCtx {
@@ -509,14 +513,56 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session) (*webrtc.Sess
 	})
 
 	var once sync.Once
+	var disconnectMu sync.Mutex
+	var disconnectTimer *time.Timer
+	var disconnectGeneration uint64
+	cancelDisconnect := func() {
+		disconnectMu.Lock()
+		defer disconnectMu.Unlock()
+
+		disconnectGeneration++
+		if disconnectTimer != nil {
+			disconnectTimer.Stop()
+			disconnectTimer = nil
+		}
+	}
+	scheduleDisconnect := func() {
+		disconnectMu.Lock()
+		defer disconnectMu.Unlock()
+
+		disconnectGeneration++
+		generation := disconnectGeneration
+		if disconnectTimer != nil {
+			disconnectTimer.Stop()
+		}
+		disconnectTimer = time.AfterFunc(webrtcDisconnectGracePeriod, func() {
+			disconnectMu.Lock()
+			if generation != disconnectGeneration {
+				disconnectMu.Unlock()
+				return
+			}
+			disconnectTimer = nil
+			disconnectMu.Unlock()
+
+			if connection.ConnectionState() == webrtc.PeerConnectionStateDisconnected {
+				logger.Warn().Msg("webrtc peer remained disconnected after grace period")
+				peer.Destroy()
+			}
+		})
+	}
+
 	connection.OnConnectionStateChange(func(state webrtc.PeerConnectionState) {
 		switch state {
 		case webrtc.PeerConnectionStateConnected:
+			cancelDisconnect()
 			session.SetWebRTCConnected(peer, true)
-		case webrtc.PeerConnectionStateDisconnected,
-			webrtc.PeerConnectionStateFailed:
+		case webrtc.PeerConnectionStateDisconnected:
+			scheduleDisconnect()
+		case webrtc.PeerConnectionStateFailed:
+			cancelDisconnect()
 			peer.Destroy()
 		case webrtc.PeerConnectionStateClosed:
+			cancelDisconnect()
 			// ensure we only run this once
 			once.Do(func() {
 				session.SetWebRTCConnected(peer, false)
