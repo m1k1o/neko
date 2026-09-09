@@ -20,8 +20,14 @@ import (
 )
 
 func (s *session) wsToBackend(msg []byte) error {
+	var err error
+	msg, err = normalizeClientMessage(msg)
+	if err != nil {
+		return err
+	}
+
 	header := oldMessage.Message{}
-	err := json.Unmarshal(msg, &header)
+	err = json.Unmarshal(msg, &header)
 	if err != nil {
 		return err
 	}
@@ -203,10 +209,10 @@ func (s *session) wsToBackend(msg []byte) error {
 	// Open In App Events
 	case openinapp.OPENINAPP_OPENLINK:
 		request := &openinapp.Url{}
-    if err := json.Unmarshal(msg, request); err != nil {
+		if err := json.Unmarshal(msg, request); err != nil {
 			return err
-    }
-    return s.apiReq(http.MethodPost, "/api/openinapp/openlink", request, nil)
+		}
+		return s.apiReq(http.MethodPost, "/api/openinapp/openlink", request, nil)
 
 	// Screen Events
 	case oldEvent.SCREEN_RESOLUTION:
@@ -383,4 +389,30 @@ func (s *session) wsToBackend(msg []byte) error {
 	default:
 		return fmt.Errorf("unknown event type: %s", header.Event)
 	}
+}
+
+// normalizeClientMessage converts the canonical {event, payload} envelope to
+// the flat wire shape consumed by the legacy browser bridge. The shared
+// WebSocketMessage decoder also accepts already-flat messages, so old clients
+// remain unchanged during the protocol migration.
+func normalizeClientMessage(raw []byte) ([]byte, error) {
+	envelope := types.WebSocketMessage{}
+	if err := json.Unmarshal(raw, &envelope); err != nil {
+		return nil, err
+	}
+
+	if len(envelope.Payload) == 0 {
+		return raw, nil
+	}
+
+	flat := map[string]json.RawMessage{}
+	if err := json.Unmarshal(envelope.Payload, &flat); err != nil {
+		return nil, err
+	}
+	event, err := json.Marshal(envelope.Event)
+	if err != nil {
+		return nil, err
+	}
+	flat["event"] = event
+	return json.Marshal(flat)
 }
