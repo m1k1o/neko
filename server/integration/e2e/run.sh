@@ -7,7 +7,7 @@ base_url="${NEKO_E2E_BASE_URL:-http://127.0.0.1:8080}"
 
 : "${NEKO_E2E_PASSWORD:?set NEKO_E2E_PASSWORD}"
 
-if ! docker image inspect "${image}" >/dev/null 2>&1; then
+if [[ "${NEKO_E2E_SKIP_BUILD:-0}" != "1" ]] && ! docker image inspect "${image}" >/dev/null 2>&1; then
   echo "==> building browser E2E image ${image}"
   docker build --tag "${image}" "${integration_dir}"
 fi

@@ -14,23 +14,32 @@ if (!password) {
 }
 
 const events = []
+let malformedFrames = 0
 const startedAt = performance.now()
 let browser
 let page
 
 function parseFrame(data) {
   if (typeof data !== 'string') {
+    malformedFrames += 1
     return
   }
 
   try {
     const message = JSON.parse(data)
-    if (message && typeof message.event === 'string') {
-      events.push(message.event)
+    const keys = message && typeof message === 'object' ? Object.keys(message) : []
+    if (
+      !message ||
+      typeof message !== 'object' ||
+      typeof message.event !== 'string' ||
+      keys.some((key) => key !== 'event' && key !== 'payload')
+    ) {
+      malformedFrames += 1
+      return
     }
+    events.push(message.event)
   } catch {
-    // WebRTC signaling should be JSON, but a malformed frame is reported by
-    // the final assertion instead of hiding the browser diagnostics.
+    malformedFrames += 1
   }
 }
 
@@ -63,6 +72,7 @@ try {
   page.setDefaultTimeout(timeout)
   page.on('websocket', (socket) => {
     socket.on('framereceived', parseFrame)
+    socket.on('framesent', parseFrame)
   })
 
   const loginResponse = page.waitForResponse(
@@ -113,6 +123,9 @@ try {
   if (!events.includes('system/init')) {
     throw new Error('signaling did not deliver system/init')
   }
+  if (malformedFrames > 0) {
+    throw new Error(`signaling delivered ${malformedFrames} malformed envelope(s)`)
+  }
   if (events.includes('screen_sizes_list')) {
     throw new Error('deprecated screen_sizes_list event was observed')
   }
@@ -124,6 +137,7 @@ try {
     firstFrameMs,
     video: frame,
     signalingEvents: [...new Set(events)],
+    malformedFrames,
     browser: (await browser.version()).trim(),
     profile: process.env.NEKO_E2E_PROFILE || 'unspecified',
   }
@@ -136,6 +150,7 @@ try {
     username,
     error: message,
     signalingEvents: [...new Set(events)],
+    malformedFrames,
   })
   process.exitCode = 1
 } finally {

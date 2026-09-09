@@ -5,15 +5,23 @@ integration_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 output_dir="${NEKO_E2E_OUTPUT_DIR:-${integration_dir}/results}"
 viewers="${NEKO_E2E_VIEWERS:-1}"
 user_prefix="${NEKO_E2E_USERNAME_PREFIX:-e2e-viewer}"
+image="${NEKO_E2E_IMAGE:-neko-m1-e2e:local}"
 
 : "${NEKO_E2E_PASSWORD:?set NEKO_E2E_PASSWORD}"
 mkdir -p "${output_dir}"
+
+if ! docker image inspect "${image}" >/dev/null 2>&1; then
+  echo "==> building browser E2E image ${image}"
+  docker build --tag "${image}" "${integration_dir}"
+fi
 
 echo "==> browser baseline: ${viewers} viewer(s), profile=${NEKO_E2E_PROFILE:-unspecified}"
 pids=()
 for viewer in $(seq 1 "${viewers}"); do
   output="${output_dir}/viewer-${viewer}.json"
   NEKO_E2E_USERNAME="${user_prefix}-${viewer}" \
+    NEKO_E2E_IMAGE="${image}" \
+    NEKO_E2E_SKIP_BUILD=1 \
     NEKO_E2E_OUTPUT="${output}" \
     NEKO_E2E_ARTIFACT_DIR="${output_dir}/viewer-${viewer}-artifacts" \
     "${integration_dir}/run.sh" >"${output_dir}/viewer-${viewer}.log" 2>&1 &
