@@ -541,7 +541,7 @@
       this.selectedFiles = []
 
       for (const name of filesToRemove) {
-        const url = '/file?pwd=' + encodeURIComponent(this.$accessor.password) + '&filename=' + encodeURIComponent(name)
+        const url = '/api/filetransfer?filename=' + encodeURIComponent(name)
         try {
           await this.$http.delete(url)
         } catch (error: any) {
@@ -596,8 +596,7 @@
         return
       }
 
-      const url =
-        '/file?pwd=' + encodeURIComponent(this.$accessor.password) + '&filename=' + encodeURIComponent(item.name)
+      const url = '/api/filetransfer?filename=' + encodeURIComponent(item.name)
       const abortController = new AbortController()
 
       let transfer: FileTransfer = {
@@ -653,7 +652,7 @@
     }
 
     upload(dt: DataTransfer) {
-      const url = '/file?pwd=' + encodeURIComponent(this.$accessor.password)
+      const url = '/api/filetransfer'
       this.uploadAreaDrag = false
 
       for (const file of dt.files) {
@@ -739,8 +738,7 @@
       if (!isConfirmed) {
         return
       }
-      const url =
-        '/file?pwd=' + encodeURIComponent(this.$accessor.password) + '&filename=' + encodeURIComponent(item.name)
+      const url = '/api/filetransfer?filename=' + encodeURIComponent(item.name)
       try {
         await this.$http.delete(url)
         this.$accessor.files.refresh()
