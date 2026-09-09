@@ -249,6 +249,9 @@ server/internal/
 - `26cd89e9`、`7c0fed2a`、`04725c07`：信令统一使用唯一的 `{ event, payload }` envelope；WebSocket 打开后主动发送 `signal/request`，使用标准 `iceservers` 字段和原生 ICE candidate。随后已删除扁平消息解析、legacy bridge 及其旧类型，避免运行时长期维护两套协议。连接状态模块将 `connected` 会话存活语义与 `reconnecting` 生命周期标签分离，避免短暂断网时 UI 销毁媒体会话。
 - 当前增量：WebRTC 服务端在 ICE `disconnected` 后增加 5 秒代际保护窗口，恢复连接会取消销毁计时器，只有持续断开或进入 `failed` 才释放 Peer，避免网络切换期间被立即清理。
 - 当前清理：删除旧 HTTP/WebSocket legacy 包、旧版 WebRTC data-channel handler、V2 配置迁移入口、旧媒体滚动编码和未使用的旧消息类型；服务端只创建 `data` channel，严格拒绝扁平/空 `payload` envelope，并对无 payload 事件统一省略 `payload` 字段。文件传输锁通过 `/api/room/settings` 更新插件设置，不再保留无效的 UI 操作。
+- `02d2eaef`：客户端只保留 `/api` 认证、`/api/ws` 信令和现代事件/消息类型，删除客户端创建 data channel、扁平消息解析及废弃事件。
+- `08536a32`：服务端删除 legacy HTTP、legacy WebRTC handler、V2 配置迁移入口、旧滚动编码和旧消息兼容字段。
+- `2d871384`：同步迁移文档、Roadmap、配置生成脚本和开发要求，明确升级时不保留旧运行时分支。
 - 验证：`vue-cli-service lint --no-fix` 与 `vue-cli-service build` 成功（仅有既有 Browserslist、bundle 体积提示）；容器化 Go 测试中 `pkg/types`、`internal/connectivity`、`internal/webrtc/payload`、`internal/quality`、`internal/plugins/filetransfer`、`internal/websocket` 通过。完整 config/session/capture 包仍受本机缺少 GStreamer/CGo 构建依赖限制，需在带 GStreamer 的 Linux 构建环境补测。
 
 本批次没有改变公网端口号或 MUX 配置语义；服务端重连宽限/去抖已完成。下一批补充生成式契约测试和迁移错误码，不再引入第二套信令 envelope。
