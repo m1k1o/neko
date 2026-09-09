@@ -132,6 +132,17 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   protected [EVENT.CONNECTED]() {
     this.$accessor.user.setMember(this.id)
     this.$accessor.connection.setConnected(true)
+    // Screen metadata moved from the deprecated websocket events to the REST
+    // room API. Load it after the session is authenticated so pointer mapping
+    // is based on the actual desktop size instead of the 1280x720 defaults.
+    void this.$accessor.video.screenGet().catch((error: unknown) => {
+      this.$vue.$log.warn('failed to load the current screen size', error)
+    })
+    if (this.$accessor.user.admin) {
+      void this.$accessor.video.screenConfigurations().catch((error: unknown) => {
+        this.$vue.$log.warn('failed to load screen configurations', error)
+      })
+    }
     set('displayname', this.$accessor.session.displayname)
     set('password', this.$accessor.session.password)
     this.startNetworkMonitor()
@@ -196,8 +207,9 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   /////////////////////////////
   // System Events
   /////////////////////////////
-  protected [EVENT.SYSTEM.INIT]({ session_id, control_host, sessions, settings }: SystemInitPayload) {
+  protected [EVENT.SYSTEM.INIT]({ session_id, control_host, screen_size, sessions, settings }: SystemInitPayload) {
     this._id = session_id
+    this.$accessor.video.setResolution(screen_size)
     this.$accessor.remote.setHost(control_host.has_host ? control_host.host_id || '' : '')
     this.$accessor.remote.setImplicitHosting(settings.implicit_hosting)
     this.$accessor.remote.setLocked(settings.locked_controls)

@@ -1,6 +1,7 @@
 import { getterTree, mutationTree, actionTree } from 'typed-vuex'
 import { get, set } from '~/utils/localstorage'
 import { ScreenConfigurations, ScreenResolution } from '~/neko/types'
+import { normalizeScreenConfigurations } from '~/neko/screen'
 import { accessor } from '~/store'
 
 export const namespaced = true
@@ -103,23 +104,7 @@ export const mutations = mutationTree(state, {
   },
 
   setConfigurations(state, configurations: ScreenConfigurations) {
-    const data: ScreenResolution[] = []
-
-    for (const i of Object.keys(configurations)) {
-      const { width, height, rates } = configurations[i]
-      if (width >= 600 && height >= 300) {
-        for (const j of Object.keys(rates)) {
-          const rate = rates[j]
-          if (rate === 30 || rate === 60) {
-            data.push({
-              width,
-              height,
-              rate,
-            })
-          }
-        }
-      }
-    }
+    const data = normalizeScreenConfigurations(configurations)
 
     state.configurations = data.sort((a, b) => {
       if (b.width === a.width && b.height == a.height) {
@@ -168,7 +153,7 @@ export const mutations = mutationTree(state, {
 export const actions = actionTree(
   { state, getters, mutations },
   {
-    async screenConfiguations() {
+    async screenConfigurations() {
       if (!accessor.connection.connected || !accessor.user.admin) {
         return
       }
@@ -192,6 +177,10 @@ export const actions = actionTree(
       }
 
       await $http.post('/api/room/screen', resolution)
+      // The server broadcasts the authoritative size over WebSocket, but
+      // refresh it here as well so the initiating client cannot use stale
+      // coordinates if the broadcast races with the media/layout update.
+      await accessor.video.screenGet()
     },
   },
 )

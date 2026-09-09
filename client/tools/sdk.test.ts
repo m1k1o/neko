@@ -2,6 +2,7 @@ import * as assert from 'node:assert/strict'
 import { AuthClient } from '../src/sdk/auth'
 import { classifyNetworkQuality } from '../src/sdk/network-monitor'
 import { validateSignalingMessage } from '../src/sdk/signaling'
+import { mapPointerToScreen, normalizeScreenConfigurations } from '../src/neko/screen'
 
 async function testAuthClient() {
   const requests: Array<{ url: string; data: unknown }> = []
@@ -38,6 +39,41 @@ assert.throws(
 )
 assert.throws(() => validateSignalingMessage({ event: '   ' }), /event is required/)
 assert.throws(() => validateSignalingMessage({ event: 'system/init', payload: null }), /payload must be an object/)
+
+assert.deepEqual(
+  normalizeScreenConfigurations([
+    { width: 1280, height: 720, rate: 30 },
+    { width: 640, height: 480, rate: 25 },
+    { width: 1920, height: 1080, rate: 60 },
+  ]),
+  [
+    { width: 1920, height: 1080, rate: 60 },
+    { width: 1280, height: 720, rate: 30 },
+  ],
+)
+
+assert.deepEqual(
+  mapPointerToScreen(
+    250,
+    125,
+    { left: 50, top: 25, width: 400, height: 200 },
+    { width: 1920, height: 1080 },
+  ),
+  { x: 960, y: 540 },
+)
+assert.deepEqual(
+  mapPointerToScreen(
+    0,
+    0,
+    { left: 50, top: 25, width: 400, height: 200 },
+    { width: 1920, height: 1080 },
+  ),
+  { x: 0, y: 0 },
+)
+assert.equal(
+  mapPointerToScreen(50, 25, { left: 50, top: 25, width: 0, height: 200 }, { width: 1920, height: 1080 }),
+  undefined,
+)
 
 void testAuthClient()
   .then(() => console.log('SDK contract tests passed'))

@@ -7,15 +7,8 @@ export interface Member {
   ignored?: boolean
 }
 
-export interface ScreenConfigurations {
-  [index: string]: ScreenConfiguration
-}
-
-export interface ScreenConfiguration {
-  width: number
-  height: number
-  rates: { [index: string]: number }
-}
+/** Screen modes returned by GET /api/room/screen/configurations. */
+export type ScreenConfigurations = ScreenResolution[]
 
 export interface ScreenResolution {
   width: number

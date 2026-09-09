@@ -287,6 +287,7 @@
   import { Component, Ref, Watch, Vue, Prop } from 'vue-property-decorator'
   import ResizeObserver from 'resize-observer-polyfill'
   import { elementRequestFullscreen, onFullscreenChange, isFullscreen, lockKeyboard, unlockKeyboard } from '~/utils'
+  import { mapPointerToScreen } from '~/neko/screen'
 
   import Emote from './emote.vue'
   import Resolution from './resolution.vue'
@@ -326,6 +327,7 @@
     private fullscreen = false
     private mutedOverlay = true
     private lastTextAreaValue = ''
+    private resizeFrame?: number
 
     get admin() {
       return this.$accessor.user.admin
@@ -461,12 +463,12 @@
 
     @Watch('width')
     onWidthChanged() {
-      this.onResize()
+      this.scheduleResize()
     }
 
     @Watch('height')
     onHeightChanged() {
-      this.onResize()
+      this.scheduleResize()
     }
 
     @Watch('volume')
@@ -558,7 +560,7 @@
       onFullscreenChange(this._player, () => {
         this.fullscreen = isFullscreen()
         this.fullscreen ? lockKeyboard() : unlockKeyboard()
-        this.onResize()
+        this.scheduleResize()
       })
 
       this._video.addEventListener('canplaythrough', () => {
@@ -588,6 +590,8 @@
         this.$accessor.video.play()
       })
 
+      this._video.addEventListener('resize', this.scheduleResize)
+
       this._video.addEventListener('pause', () => {
         this.$accessor.video.pause()
       })
@@ -614,7 +618,12 @@
 
     beforeDestroy() {
       window.removeEventListener('focus', this._onWindowFocus)
+      this._video.removeEventListener('resize', this.scheduleResize)
       this.observer.disconnect()
+      if (this.resizeFrame !== undefined) {
+        window.cancelAnimationFrame(this.resizeFrame)
+        this.resizeFrame = undefined
+      }
       this.$accessor.video.setPlayable(false)
       /* Guacamole Keyboard does not provide destroy functions */
     }
@@ -671,7 +680,7 @@
 
       try {
         await this._video.play()
-        this.onResize()
+        this.scheduleResize()
       } catch (err: any) {
         this.$log.error(err)
       }
@@ -764,9 +773,14 @@
       const { w, h } = this.$accessor.video.resolution
       const rect = this._overlay.getBoundingClientRect()
 
+      const point = mapPointerToScreen(e.clientX, e.clientY, rect, { width: w, height: h })
+      if (!point) {
+        return
+      }
+
       this.$client.sendData('mousemove', {
-        x: Math.round((w / rect.width) * (e.clientX - rect.left)),
-        y: Math.round((h / rect.height) * (e.clientY - rect.top)),
+        x: point.x,
+        y: point.y,
       })
     }
 
@@ -958,10 +972,31 @@
 
     onResize() {
       const { offsetWidth, offsetHeight } = !this.fullscreen ? this._component : document.body
+      if (offsetWidth <= 0 || offsetHeight <= 0) {
+        return
+      }
+
       this._player.style.width = `${offsetWidth}px`
       this._player.style.height = `${offsetHeight}px`
-      this._container.style.maxWidth = `${(this.horizontal / this.vertical) * offsetHeight}px`
+
+      const aspectRatio = this.horizontal / this.vertical
+      const contentWidth = Math.min(offsetWidth, aspectRatio * offsetHeight)
+      this._container.style.maxWidth = `${contentWidth}px`
       this._aspect.style.paddingBottom = `${(this.vertical / this.horizontal) * 100}%`
+    }
+
+    private scheduleResize = () => {
+      if (this.resizeFrame !== undefined) {
+        window.cancelAnimationFrame(this.resizeFrame)
+      }
+
+      this.resizeFrame = window.requestAnimationFrame(() => {
+        this.resizeFrame = undefined
+        if (!this._component || !this._player || !this._container || !this._aspect) {
+          return
+        }
+        this.onResize()
+      })
     }
 
     @Watch('focused')
