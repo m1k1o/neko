@@ -130,6 +130,7 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
 
     this.disableMicrophone()
 
+    this.connectionMachine.reset()
     this._state = 'disconnected'
     this._displayname = undefined
     this._id = ''
