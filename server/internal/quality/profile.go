@@ -88,7 +88,7 @@ func (p Profile) VideoConfig(rtpCodec codec.RTPCodec, encoder Encoder, element s
 				"bframes":      "0",
 			}
 		case EncoderVAAPI:
-			if element != "vah264enc" {
+			if element != "vah264enc" && element != "vah264lpenc" {
 				return types.VideoConfig{}, fmt.Errorf("invalid VAAPI h264 encoder %s", element)
 			}
 			config.GstParams = map[string]string{

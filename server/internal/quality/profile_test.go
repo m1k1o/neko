@@ -73,6 +73,7 @@ func TestVideoConfigForH264HardwareEncoders(t *testing.T) {
 		element string
 	}{
 		{EncoderVAAPI, "vah264enc"},
+		{EncoderVAAPI, "vah264lpenc"},
 		{EncoderNVENC, "nvh264enc"},
 		{EncoderNVENC, "nvautogpuh264enc"},
 	} {
