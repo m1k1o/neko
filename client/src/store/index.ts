@@ -18,15 +18,10 @@ import * as connection from './connection'
 export const state = () => ({
   displayname: get<string>('displayname', ''),
   password: get<string>('password', ''),
-  active: false,
   locked: {} as Record<string, boolean>,
 })
 
 export const mutations = mutationTree(state, {
-  setActive(state) {
-    state.active = true
-  },
-
   setLogin(state, { displayname, password }: { displayname: string; password: string }) {
     state.displayname = displayname
     state.password = password
