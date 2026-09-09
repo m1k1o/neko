@@ -14,7 +14,7 @@
           spellcheck="false"
           tabindex="0"
           data-gramm="false"
-          :style="{ pointerEvents: hosting ? 'auto' : 'none' }"
+          :style="{ pointerEvents: connected ? 'auto' : 'none' }"
           @click.stop.prevent
           @contextmenu.stop.prevent
           @wheel.stop.prevent="onWheel"
