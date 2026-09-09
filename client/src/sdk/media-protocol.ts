@@ -3,6 +3,8 @@ export const MEDIA_OPCODE = {
   SCROLL: 0x02,
   KEY_DOWN: 0x03,
   KEY_UP: 0x04,
+  BUTTON_DOWN: 0x05,
+  BUTTON_UP: 0x06,
 } as const
 
 export type MediaInputEvent = 'mousemove' | 'wheel' | 'mousedown' | 'mouseup' | 'keydown' | 'keyup'
@@ -49,13 +51,18 @@ export function encodeMediaInput(input: MediaInput): ArrayBuffer {
       view.setUint8(7, input.controlKey ? 1 : 0)
       return buffer
     }
-    case 'mousedown':
-    case 'mouseup':
     case 'keydown':
     case 'keyup': {
       assertInteger('key', input.key, 0, 0xffffffff)
-      const opcode =
-        input.event === 'mousedown' || input.event === 'keydown' ? MEDIA_OPCODE.KEY_DOWN : MEDIA_OPCODE.KEY_UP
+      const opcode = input.event === 'keydown' ? MEDIA_OPCODE.KEY_DOWN : MEDIA_OPCODE.KEY_UP
+      const { buffer, view } = createPacket(opcode, 4)
+      view.setUint32(3, input.key, false)
+      return buffer
+    }
+    case 'mousedown':
+    case 'mouseup': {
+      assertInteger('key', input.key, 0, 0xffffffff)
+      const opcode = input.event === 'mousedown' ? MEDIA_OPCODE.BUTTON_DOWN : MEDIA_OPCODE.BUTTON_UP
       const { buffer, view } = createPacket(opcode, 4)
       view.setUint32(3, input.key, false)
       return buffer

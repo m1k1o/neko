@@ -1,5 +1,6 @@
 import * as assert from 'node:assert/strict'
 import { AuthClient } from '../src/sdk/auth'
+import { encodeMediaInput, MEDIA_OPCODE } from '../src/sdk/media-protocol'
 import { classifyNetworkQuality } from '../src/sdk/network-monitor'
 import { validateSignalingMessage } from '../src/sdk/signaling'
 import { mapPointerToScreen, normalizeScreenConfigurations } from '../src/neko/screen'
@@ -74,6 +75,16 @@ assert.equal(
   mapPointerToScreen(50, 25, { left: 50, top: 25, width: 0, height: 200 }, { width: 1920, height: 1080 }),
   undefined,
 )
+
+const mouseDown = new DataView(encodeMediaInput({ event: 'mousedown', key: 1 }))
+assert.equal(mouseDown.getUint8(0), MEDIA_OPCODE.BUTTON_DOWN)
+assert.equal(mouseDown.getUint16(1, false), 4)
+assert.equal(mouseDown.getUint32(3, false), 1)
+
+const mouseUp = new DataView(encodeMediaInput({ event: 'mouseup', key: 3 }))
+assert.equal(mouseUp.getUint8(0), MEDIA_OPCODE.BUTTON_UP)
+assert.equal(mouseUp.getUint16(1, false), 4)
+assert.equal(mouseUp.getUint32(3, false), 3)
 
 void testAuthClient()
   .then(() => console.log('SDK contract tests passed'))
