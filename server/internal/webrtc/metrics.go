@@ -2,6 +2,7 @@ package webrtc
 
 import (
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/m1k1o/neko/server/pkg/types"
@@ -277,6 +278,8 @@ type metrics struct {
 	receiverReportDelay     prometheus.Gauge
 	receiverReportJitter    prometheus.Gauge
 	receiverReportTotalLost prometheus.Gauge
+	receiverJitterValue     atomic.Uint32
+	receiverTotalLostValue  atomic.Uint32
 
 	transportLayerNacks prometheus.Counter
 
@@ -305,6 +308,9 @@ func (met *metrics) reset() {
 
 	met.receiverReportDelay.Set(0)
 	met.receiverReportJitter.Set(0)
+	met.receiverReportTotalLost.Set(0)
+	met.receiverJitterValue.Store(0)
+	met.receiverTotalLostValue.Store(0)
 	met.audioSampleQueueDepth.Set(0)
 	met.videoSampleQueueDepth.Set(0)
 }
@@ -412,6 +418,12 @@ func (met *metrics) SetReceiverReport(report rtcp.ReceptionReport) {
 	met.receiverReportDelay.Set(float64(report.Delay))
 	met.receiverReportJitter.Set(float64(report.Jitter))
 	met.receiverReportTotalLost.Set(float64(report.TotalLost))
+	met.receiverJitterValue.Store(report.Jitter)
+	met.receiverTotalLostValue.Store(report.TotalLost)
+}
+
+func (met *metrics) ReceiverNetworkStats() (jitter, totalLost uint32) {
+	return met.receiverJitterValue.Load(), met.receiverTotalLostValue.Load()
 }
 
 func (met *metrics) SetIceTransportStats(data webrtc.TransportStats) {

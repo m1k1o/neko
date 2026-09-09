@@ -201,6 +201,17 @@ func (t *Track) Stream() (types.StreamSinkManager, bool) {
 	return t.stream, t.stream != nil
 }
 
+// QueuePressure reports the fraction of the track's bounded sample queue that
+// is currently occupied. It is used by the bandwidth estimator as an early
+// congestion signal before the WebRTC target bitrate reacts.
+func (t *Track) QueuePressure() float64 {
+	stats := t.sample.Stats()
+	if stats.Capacity <= 0 {
+		return 0
+	}
+	return float64(stats.Depth) / float64(stats.Capacity)
+}
+
 // --- paused ---
 
 func (t *Track) SetPaused(paused bool) {
