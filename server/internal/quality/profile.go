@@ -113,8 +113,103 @@ func (p Profile) VideoConfig(rtpCodec codec.RTPCodec, encoder Encoder, element s
 		default:
 			return types.VideoConfig{}, fmt.Errorf("invalid h264 encoder selection %s", encoder)
 		}
+	case codec.H265().Name:
+		config.GstPrefix = "! video/x-raw,format=NV12"
+		config.GstEncoder = element
+		config.GstSuffix = "! h265parse config-interval=-1 ! video/x-h265,stream-format=byte-stream,alignment=au,profile=main"
+		switch encoder {
+		case EncoderSoftware:
+			if element != "x265enc" {
+				return types.VideoConfig{}, fmt.Errorf("invalid software h265 encoder %s", element)
+			}
+			config.GstPrefix = "! video/x-raw,format=I420"
+			config.GstParams = map[string]string{
+				"bitrate":      strconv.Itoa(p.BitrateKbps),
+				"key-int-max":  strconv.Itoa(p.FPS),
+				"tune":         "zerolatency",
+				"speed-preset": "veryfast",
+			}
+		case EncoderVAAPI:
+			if element != "vah265enc" && element != "vah265lpenc" {
+				return types.VideoConfig{}, fmt.Errorf("invalid VAAPI h265 encoder %s", element)
+			}
+			config.GstParams = map[string]string{
+				"rate-control": "cbr",
+				"bitrate":      strconv.Itoa(p.BitrateKbps),
+				"key-int-max":  strconv.Itoa(p.FPS),
+				"target-usage": "7",
+			}
+		case EncoderNVENC:
+			if element != "nvautogpuh265enc" && element != "nvh265enc" {
+				return types.VideoConfig{}, fmt.Errorf("invalid NVENC h265 encoder %s", element)
+			}
+			config.GstParams = map[string]string{
+				"preset":          "2",
+				"gop-size":        strconv.Itoa(p.FPS),
+				"spatial-aq":      "true",
+				"temporal-aq":     "true",
+				"bitrate":         strconv.Itoa(p.BitrateKbps),
+				"vbv-buffer-size": strconv.Itoa(p.BitrateKbps),
+				"rc-mode":         "6",
+			}
+		default:
+			return types.VideoConfig{}, fmt.Errorf("invalid h265 encoder selection %s", encoder)
+		}
+	case codec.AV1().Name:
+		config.GstPrefix = "! video/x-raw,format=NV12"
+		config.GstEncoder = element
+		config.GstSuffix = "! video/x-av1,stream-format=obu-stream,alignment=tu"
+		switch encoder {
+		case EncoderSoftware:
+			config.GstPrefix = "! video/x-raw,format=I420"
+			switch element {
+			case "av1enc":
+				config.GstParams = map[string]string{
+					"target-bitrate":    strconv.Itoa(p.BitrateKbps),
+					"cpu-used":          "8",
+					"end-usage":         "cbr",
+					"usage-profile":     "realtime",
+					"threads":           "4",
+					"lag-in-frames":     "0",
+					"keyframe-max-dist": strconv.Itoa(p.FPS),
+				}
+			case "svtav1enc":
+				config.GstParams = map[string]string{
+					"target-bitrate":      strconv.Itoa(p.BitrateKbps),
+					"preset":              "10",
+					"intra-period-length": strconv.Itoa(p.FPS),
+				}
+			default:
+				return types.VideoConfig{}, fmt.Errorf("invalid software av1 encoder %s", element)
+			}
+		case EncoderVAAPI:
+			if element != "vaav1enc" {
+				return types.VideoConfig{}, fmt.Errorf("invalid VAAPI av1 encoder %s", element)
+			}
+			config.GstParams = map[string]string{
+				"rate-control": "cbr",
+				"bitrate":      strconv.Itoa(p.BitrateKbps),
+				"key-int-max":  strconv.Itoa(p.FPS),
+				"target-usage": "7",
+			}
+		case EncoderNVENC:
+			if element != "nvautogpuav1enc" && element != "nvav1enc" {
+				return types.VideoConfig{}, fmt.Errorf("invalid NVENC av1 encoder %s", element)
+			}
+			config.GstParams = map[string]string{
+				"preset":          "2",
+				"gop-size":        strconv.Itoa(p.FPS),
+				"spatial-aq":      "true",
+				"temporal-aq":     "true",
+				"bitrate":         strconv.Itoa(p.BitrateKbps),
+				"vbv-buffer-size": strconv.Itoa(p.BitrateKbps),
+				"rc-mode":         "6",
+			}
+		default:
+			return types.VideoConfig{}, fmt.Errorf("invalid av1 encoder selection %s", encoder)
+		}
 	default:
-		return types.VideoConfig{}, fmt.Errorf("quality profiles support only vp8 or h264, got %s", rtpCodec.Name)
+		return types.VideoConfig{}, fmt.Errorf("quality profiles support only vp8, av1, h264, or h265, got %s", rtpCodec.Name)
 	}
 
 	return config, nil

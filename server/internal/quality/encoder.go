@@ -22,7 +22,7 @@ type ElementProbe func(element string) error
 // and driver. Element discovery alone is insufficient for hardware encoders:
 // a GStreamer factory can be registered while VAAPI or NVENC cannot open a
 // usable device inside the container.
-type RuntimeProbe func(encoder Encoder, element string) error
+type RuntimeProbe func(codec codec.RTPCodec, encoder Encoder, element string) error
 
 type EncoderSelection struct {
 	Requested   Encoder
@@ -46,9 +46,9 @@ func ParseEncoder(value string) (Encoder, error) {
 }
 
 // ResolveEncoder selects an encoder whose complete GStreamer element chain is
-// available. Hardware requests deliberately fall back to software and then
-// VP8 so a missing device or plugin is diagnosed at startup instead of
-// producing an unusable video stream.
+// available. Hardware requests deliberately fall back to software and then a
+// broadly supported codec so a missing device or plugin is diagnosed at
+// startup instead of producing an unusable video stream.
 func ResolveEncoder(preferred codec.RTPCodec, requested Encoder, probe ElementProbe) (EncoderSelection, error) {
 	return ResolveEncoderWithRuntime(preferred, requested, probe, nil)
 }
@@ -57,35 +57,18 @@ func ResolveEncoder(preferred codec.RTPCodec, requested Encoder, probe ElementPr
 // GStreamer factories and, for hardware candidates, their runtime device.
 // Failed hardware probes are treated as unavailable so the next same-codec
 // software candidate can be selected without waiting for a viewer to join.
+// AV1, H.264, and H.265 are tried in their requested codec first; if that
+// codec cannot be produced, the resolver falls back to software H.264 and
+// finally VP8 for Chromium interoperability.
 func ResolveEncoderWithRuntime(preferred codec.RTPCodec, requested Encoder, probe ElementProbe, runtimeProbe RuntimeProbe) (EncoderSelection, error) {
 	if probe == nil {
 		return EncoderSelection{}, fmt.Errorf("video encoder element probe is required")
 	}
 
-	if preferred.Name == codec.VP8().Name {
-		if requested != EncoderAuto && requested != EncoderSoftware {
-			return EncoderSelection{}, fmt.Errorf("%s cannot encode vp8 in the Chromium M1 quality profiles", requested)
-		}
-		return resolveCandidates(requested, probe, runtimeProbe, []encoderCandidate{vp8Candidate()})
+	candidates, err := candidatesFor(preferred, requested)
+	if err != nil {
+		return EncoderSelection{}, err
 	}
-	if preferred.Name != codec.H264().Name {
-		return EncoderSelection{}, fmt.Errorf("encoder selection supports only vp8 or h264, got %s", preferred.Name)
-	}
-
-	var candidates []encoderCandidate
-	switch requested {
-	case EncoderAuto:
-		candidates = []encoderCandidate{nvencCandidate(), vaapiCandidate(), x264Candidate(), vp8Candidate()}
-	case EncoderNVENC:
-		candidates = []encoderCandidate{nvencCandidate(), x264Candidate(), vp8Candidate()}
-	case EncoderVAAPI:
-		candidates = []encoderCandidate{vaapiCandidate(), x264Candidate(), vp8Candidate()}
-	case EncoderSoftware:
-		candidates = []encoderCandidate{x264Candidate(), vp8Candidate()}
-	default:
-		return EncoderSelection{}, fmt.Errorf("unsupported video encoder %q", requested)
-	}
-
 	return resolveCandidates(requested, probe, runtimeProbe, candidates)
 }
 
@@ -97,32 +80,114 @@ type encoderCandidate struct {
 	hardware     bool
 }
 
-func nvencCandidate() encoderCandidate {
+func candidatesFor(preferred codec.RTPCodec, requested Encoder) ([]encoderCandidate, error) {
+	if preferred.Name == codec.VP8().Name {
+		if requested != EncoderAuto && requested != EncoderSoftware {
+			return nil, fmt.Errorf("%s cannot encode vp8 in the Chromium M1 quality profiles", requested)
+		}
+		return []encoderCandidate{vp8Candidate()}, nil
+	}
+
+	if preferred.Name != codec.AV1().Name && preferred.Name != codec.H264().Name && preferred.Name != codec.H265().Name {
+		return nil, fmt.Errorf("encoder selection supports only vp8, av1, h264, or h265, got %s", preferred.Name)
+	}
+
+	var candidates []encoderCandidate
+	switch requested {
+	case EncoderAuto:
+		candidates = append(candidates, nvencCandidate(preferred), vaapiCandidate(preferred))
+		candidates = append(candidates, softwareCandidates(preferred)...)
+	case EncoderNVENC:
+		candidates = append(candidates, nvencCandidate(preferred))
+		candidates = append(candidates, softwareCandidates(preferred)...)
+	case EncoderVAAPI:
+		candidates = append(candidates, vaapiCandidate(preferred))
+		candidates = append(candidates, softwareCandidates(preferred)...)
+	case EncoderSoftware:
+		candidates = append(candidates, softwareCandidates(preferred)...)
+	default:
+		return nil, fmt.Errorf("unsupported video encoder %q", requested)
+	}
+
+	// H.264 is the compatibility bridge for codecs that are newer or less
+	// consistently exposed by WebRTC implementations. Keep this fallback
+	// software-only so a requested hardware family never silently switches
+	// to a different GPU API.
+	if preferred.Name != codec.H264().Name {
+		candidates = append(candidates, softwareCandidates(codec.H264())...)
+	}
+	if preferred.Name != codec.VP8().Name {
+		candidates = append(candidates, vp8Candidate())
+	}
+	return candidates, nil
+}
+
+func nvencCandidate(videoCodec codec.RTPCodec) encoderCandidate {
+	var alternatives []string
+	switch videoCodec.Name {
+	case codec.AV1().Name:
+		alternatives = []string{"nvautogpuav1enc", "nvav1enc"}
+	case codec.H264().Name:
+		alternatives = []string{"nvautogpuh264enc", "nvh264enc"}
+	case codec.H265().Name:
+		alternatives = []string{"nvautogpuh265enc", "nvh265enc"}
+	default:
+		return encoderCandidate{}
+	}
 	return encoderCandidate{
 		encoder:      EncoderNVENC,
-		codec:        codec.H264(),
-		alternatives: []string{"nvautogpuh264enc", "nvh264enc"},
-		required:     []string{"h264parse"},
+		codec:        videoCodec,
+		alternatives: alternatives,
+		required:     requiredElements(videoCodec),
 		hardware:     true,
 	}
 }
 
-func vaapiCandidate() encoderCandidate {
+func vaapiCandidate(videoCodec codec.RTPCodec) encoderCandidate {
+	var alternatives []string
+	switch videoCodec.Name {
+	case codec.AV1().Name:
+		alternatives = []string{"vaav1enc"}
+	case codec.H264().Name:
+		alternatives = []string{"vah264enc", "vah264lpenc"}
+	case codec.H265().Name:
+		alternatives = []string{"vah265enc", "vah265lpenc"}
+	default:
+		return encoderCandidate{}
+	}
 	return encoderCandidate{
 		encoder:      EncoderVAAPI,
-		codec:        codec.H264(),
-		alternatives: []string{"vah264enc"},
-		required:     []string{"h264parse"},
+		codec:        videoCodec,
+		alternatives: alternatives,
+		required:     requiredElements(videoCodec),
 		hardware:     true,
 	}
 }
 
-func x264Candidate() encoderCandidate {
-	return encoderCandidate{
-		encoder:      EncoderSoftware,
-		codec:        codec.H264(),
-		alternatives: []string{"x264enc"},
-		required:     []string{"h264parse"},
+func softwareCandidates(videoCodec codec.RTPCodec) []encoderCandidate {
+	switch videoCodec.Name {
+	case codec.AV1().Name:
+		return []encoderCandidate{{
+			encoder:      EncoderSoftware,
+			codec:        videoCodec,
+			alternatives: []string{"av1enc", "svtav1enc"},
+		}}
+	case codec.H264().Name:
+		return []encoderCandidate{{
+			encoder:      EncoderSoftware,
+			codec:        videoCodec,
+			alternatives: []string{"x264enc"},
+			required:     requiredElements(videoCodec),
+		}}
+	case codec.H265().Name:
+		return []encoderCandidate{{
+			encoder:      EncoderSoftware,
+			codec:        videoCodec,
+			alternatives: []string{"x265enc"},
+			required:     requiredElements(videoCodec),
+		}}
+	default:
+		return nil
 	}
 }
 
@@ -131,6 +196,20 @@ func vp8Candidate() encoderCandidate {
 		encoder:      EncoderSoftware,
 		codec:        codec.VP8(),
 		alternatives: []string{"vp8enc"},
+	}
+}
+
+func requiredElements(videoCodec codec.RTPCodec) []string {
+	switch videoCodec.Name {
+	case codec.H264().Name:
+		return []string{"h264parse"}
+	case codec.H265().Name:
+		return []string{"h265parse"}
+	default:
+		// AV1 encoders already produce the OBU stream consumed by the RTP
+		// packetizer; a parser is optional and is therefore not required for
+		// capability selection.
+		return nil
 	}
 }
 
@@ -156,7 +235,7 @@ func resolveCandidates(requested Encoder, probe ElementProbe, runtimeProbe Runti
 			}
 
 			if candidate.hardware && runtimeProbe != nil {
-				if err := runtimeProbe(candidate.encoder, alternative); err != nil {
+				if err := runtimeProbe(candidate.codec, candidate.encoder, alternative); err != nil {
 					unavailable = append(unavailable, fmt.Sprintf("%s (%v)", alternative, err))
 					continue
 				}

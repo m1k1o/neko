@@ -83,7 +83,7 @@ func (Capture) Init(cmd *cobra.Command) error {
 		return err
 	}
 
-	cmd.PersistentFlags().String("capture.video.profile", "", "optional Chromium M1 quality profile (low, balanced, high)")
+	cmd.PersistentFlags().String("capture.video.profile", "", "optional Chromium M1 quality profile (low, balanced, high; VP8/H.264/H.265/AV1)")
 	if err := viper.BindPFlag("capture.video.profile", cmd.PersistentFlags().Lookup("capture.video.profile")); err != nil {
 		return err
 	}
@@ -327,8 +327,8 @@ func (s *Capture) Set() {
 // profile after explicit configuration has been processed. Existing
 // defaults and custom pipelines remain untouched when no profile is selected.
 func (s *Capture) ApplyVideoProfile() error {
-	return s.applyVideoProfileWithRuntime(gst.CheckElement, func(_ quality.Encoder, element string) error {
-		return gst.ProbeEncoder(element)
+	return s.applyVideoProfileWithRuntime(gst.CheckElement, func(videoCodec codec.RTPCodec, _ quality.Encoder, element string) error {
+		return gst.ProbeEncoder(videoCodec, element)
 	})
 }
 
@@ -377,6 +377,18 @@ func (s *Capture) applyVideoProfileWithRuntime(probe quality.ElementProbe, runti
 	if err != nil {
 		return err
 	}
+
+	// Keep a same-codec software candidate for a hardware pipeline that
+	// passes discovery but fails when the real desktop pipeline is started.
+	// Resolve it through the same codec matrix so AV1/H.265 do not inherit a
+	// hard-coded H.264 fallback.
+	var sameCodecFallback *quality.EncoderSelection
+	if selection.Encoder != quality.EncoderSoftware {
+		fallback, fallbackErr := quality.ResolveEncoder(selection.Codec, quality.EncoderSoftware, probe)
+		if fallbackErr == nil && fallback.Codec.Name == selection.Codec.Name && fallback.Encoder == quality.EncoderSoftware {
+			sameCodecFallback = &fallback
+		}
+	}
 	s.VideoProfile = profile.Name
 	s.VideoEncoder = selection.Encoder
 	s.VideoCodec = selection.Codec
@@ -410,8 +422,8 @@ func (s *Capture) applyVideoProfileWithRuntime(probe quality.ElementProbe, runti
 		}
 		id := ids[index]
 		s.VideoPipelines[id] = videoConfig
-		if selection.Codec.Name == codec.H264().Name && selection.Element != "x264enc" && probe("x264enc") == nil && probe("h264parse") == nil {
-			softwareConfig, fallbackErr := tier.VideoConfig(codec.H264(), quality.EncoderSoftware, "x264enc", s.VideoShowPointer)
+		if sameCodecFallback != nil {
+			softwareConfig, fallbackErr := tier.VideoConfig(sameCodecFallback.Codec, sameCodecFallback.Encoder, sameCodecFallback.Element, s.VideoShowPointer)
 			if fallbackErr == nil {
 				s.VideoPipelineFallbacks[id] = []types.VideoConfig{softwareConfig}
 			}
