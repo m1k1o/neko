@@ -267,25 +267,12 @@ func (s *WebRTC) Set() {
 
 	epr := viper.GetString("webrtc.epr")
 	if epr != "" {
-		ports := strings.SplitN(epr, "-", -1)
-		if len(ports) > 1 {
-			min, err := strconv.ParseUint(ports[0], 10, 16)
-			if err != nil {
-				log.Panic().Err(err).Msgf("unable to parse ephemeral min port")
-			}
-
-			max, err := strconv.ParseUint(ports[1], 10, 16)
-			if err != nil {
-				log.Panic().Err(err).Msgf("unable to parse ephemeral max port")
-			}
-
-			s.EphemeralMin = uint16(min)
-			s.EphemeralMax = uint16(max)
+		min, max, err := parseEphemeralPortRange(epr)
+		if err != nil {
+			log.Panic().Err(err).Msg("unable to parse ephemeral port range")
 		}
-
-		if s.EphemeralMin > s.EphemeralMax {
-			log.Panic().Msgf("ephemeral min port cannot be bigger than max")
-		}
+		s.EphemeralMin = min
+		s.EphemeralMax = max
 	}
 
 	if epr == "" && s.TCPMux == 0 && s.UDPMux == 0 {
@@ -331,6 +318,10 @@ func (s *WebRTC) Set() {
 }
 
 func (s WebRTC) validateConnectivity(epr string) error {
+	if epr != "" && (s.TCPMux != 0 || s.UDPMux != 0) {
+		return fmt.Errorf("webrtc.epr cannot be combined with TCP or UDP mux ports")
+	}
+
 	if s.Connectivity == "" {
 		return nil
 	}
@@ -373,6 +364,29 @@ func (s WebRTC) validateConnectivity(epr string) error {
 	}
 
 	return fmt.Errorf("unsupported connectivity mode %q", s.Connectivity)
+}
+
+func parseEphemeralPortRange(value string) (uint16, uint16, error) {
+	parts := strings.Split(value, "-")
+	if len(parts) != 2 || strings.TrimSpace(parts[0]) == "" || strings.TrimSpace(parts[1]) == "" {
+		return 0, 0, fmt.Errorf("expected <min>-<max>, got %q", value)
+	}
+
+	min, err := strconv.ParseUint(strings.TrimSpace(parts[0]), 10, 32)
+	if err != nil || min == 0 || min > 65535 {
+		return 0, 0, fmt.Errorf("invalid ephemeral minimum port %q", parts[0])
+	}
+
+	max, err := strconv.ParseUint(strings.TrimSpace(parts[1]), 10, 32)
+	if err != nil || max == 0 || max > 65535 {
+		return 0, 0, fmt.Errorf("invalid ephemeral maximum port %q", parts[1])
+	}
+
+	if min > max {
+		return 0, 0, fmt.Errorf("ephemeral min port cannot be bigger than max")
+	}
+
+	return uint16(min), uint16(max), nil
 }
 
 func (s *WebRTC) SetV2() {

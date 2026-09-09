@@ -3,6 +3,7 @@ package webrtc
 import (
 	"bytes"
 	"encoding/binary"
+	"fmt"
 	"math"
 	"time"
 
@@ -29,6 +30,12 @@ func (manager *WebRTCManagerCtx) handle(
 	header := &payload.Header{}
 	if err := binary.Read(buffer, binary.BigEndian, header); err != nil {
 		return err
+	}
+	if err := payload.ValidateLength(header.Event, header.Length); err != nil {
+		return err
+	}
+	if int(header.Length) != buffer.Len() {
+		return fmt.Errorf("invalid payload size %d, header declares %d", buffer.Len(), header.Length)
 	}
 
 	//
