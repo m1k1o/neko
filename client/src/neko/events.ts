@@ -18,6 +18,8 @@ export const EVENT = {
     HEARTBEAT: 'client/heartbeat',
   },
   SIGNAL: {
+    REQUEST: 'signal/request',
+    RESTART: 'signal/restart',
     OFFER: 'signal/offer',
     ANSWER: 'signal/answer',
     PROVIDE: 'signal/provide',
@@ -100,6 +102,8 @@ export type ClientEvents = typeof EVENT.CLIENT.HEARTBEAT
 export type MemberEvents = typeof EVENT.MEMBER.LIST | typeof EVENT.MEMBER.CONNECTED | typeof EVENT.MEMBER.DISCONNECTED
 
 export type SignalEvents =
+  | typeof EVENT.SIGNAL.REQUEST
+  | typeof EVENT.SIGNAL.RESTART
   | typeof EVENT.SIGNAL.OFFER
   | typeof EVENT.SIGNAL.ANSWER
   | typeof EVENT.SIGNAL.PROVIDE

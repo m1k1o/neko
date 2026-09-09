@@ -7,19 +7,24 @@ export type NetworkQuality = 'unknown' | 'good' | 'fair' | 'poor'
 
 export const state = () => ({
   state: 'disconnected' as ConnectionState,
+  // A reconnecting ICE transport still owns a live session. Keep this
+  // separate from the lifecycle label so the UI does not tear down the
+  // session during a transient network interruption.
+  connected: false,
   error: '',
   quality: 'unknown' as NetworkQuality,
   rtt: null as number | null,
 })
 
 export const getters = getterTree(state, {
-  connected: (state) => state.state === 'connected',
+  connected: (state) => state.connected,
   connecting: (state) => state.state === 'connecting' || state.state === 'reconnecting',
 })
 
 export const mutations = mutationTree(state, {
   setConnecting(state) {
     state.state = 'connecting'
+    state.connected = false
     state.error = ''
     state.quality = 'unknown'
     state.rtt = null
@@ -27,6 +32,7 @@ export const mutations = mutationTree(state, {
 
   setConnected(state, connected: boolean) {
     state.state = connected ? 'connected' : 'disconnected'
+    state.connected = connected
     if (!connected) {
       state.quality = 'unknown'
       state.rtt = null
@@ -35,6 +41,11 @@ export const mutations = mutationTree(state, {
 
   setState(state, connectionState: ConnectionState) {
     state.state = connectionState
+    if (connectionState === 'connected') {
+      state.connected = true
+    } else if (connectionState === 'connecting' || connectionState === 'disconnected') {
+      state.connected = false
+    }
     if (connectionState === 'disconnected') {
       state.quality = 'unknown'
       state.rtt = null

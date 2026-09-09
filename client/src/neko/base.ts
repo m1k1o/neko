@@ -11,6 +11,7 @@ import {
   SignalCandidatePayload,
   SignalOfferPayload,
   SignalAnswerMessage,
+  SignalRequestPayload,
 } from './messages'
 
 export interface BaseEvents {
@@ -41,6 +42,7 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
     super()
     this.signaling = new SignalingTransport({
       onMessage: (message) => this.onMessage(message),
+      onOpen: () => this.onSignalingOpen(),
       onError: (error) => this.onError(error),
       onClose: () => this.onDisconnected(new Error('websocket closed')),
     })
@@ -203,8 +205,20 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
       return
     }
     this.emit('debug', `sending event '${event}' ${payload ? `with payload: ` : ''}`, payload)
-    if (!this.signaling.send({ event, ...payload } as SignalingMessage)) {
+    const message: SignalingMessage = payload ? { event, payload: payload as Record<string, unknown> } : { event }
+    if (!this.signaling.send(message)) {
       this.emit('warn', `unable to send websocket event '${event}' while signaling socket is not open`)
+    }
+  }
+
+  private onSignalingOpen() {
+    this.emit('debug', 'signaling socket open; requesting media peer')
+    const payload: SignalRequestPayload = {
+      video: { auto: true },
+      audio: {},
+    }
+    if (!this.signaling.send({ event: EVENT.SIGNAL.REQUEST, payload: payload as Record<string, unknown> })) {
+      this.emit('warn', 'unable to request media peer while signaling socket is not open')
     }
   }
 
@@ -278,7 +292,7 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
       const init = event.candidate.toJSON()
       this.emit('debug', `sending local ICE candidate`, init)
 
-      if (!this.signaling.send({ event: EVENT.SIGNAL.CANDIDATE, data: JSON.stringify(init) })) {
+      if (!this.signaling.send({ event: EVENT.SIGNAL.CANDIDATE, payload: init as Record<string, unknown> })) {
         this.emit('warn', 'unable to send local ICE candidate while signaling socket is not open')
       }
     }
@@ -343,7 +357,7 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
           throw new Error('renegotiation produced an empty SDP offer')
         }
 
-        if (!this.signaling.send({ event: EVENT.SIGNAL.OFFER, sdp: description.sdp })) {
+        if (!this.signaling.send({ event: EVENT.SIGNAL.OFFER, payload: { sdp: description.sdp } })) {
           throw new Error('unable to send renegotiation offer while signaling socket is not open')
         }
       })
@@ -378,8 +392,10 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
       if (
         !this.signaling.send({
           event: EVENT.SIGNAL.ANSWER,
-          sdp: this._peer.localDescription.sdp,
-          displayname: this._displayname,
+          payload: {
+            sdp: this._peer.localDescription.sdp,
+            displayname: this._displayname,
+          },
         })
       ) {
         throw new Error('unable to send SDP answer while signaling socket is not open')
@@ -404,33 +420,45 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
   }
 
   private async onMessage(message: SignalingMessage) {
-    const { event, ...payload } = message as WebSocketMessages
+    const {
+      event,
+      payload: envelopePayload,
+      ...flatPayload
+    } = message as WebSocketMessages & {
+      payload?: Record<string, unknown>
+    }
+    // The current backend uses {event, payload}; accepting flat messages here
+    // keeps the SDK compatible with the legacy websocket bridge during rollout.
+    const payload = envelopePayload && typeof envelopePayload === 'object' ? envelopePayload : flatPayload
 
     this.emit('debug', `received websocket event ${event} ${payload ? `with payload: ` : ''}`, payload)
 
     if (event === EVENT.SIGNAL.PROVIDE) {
-      const { sdp, lite, ice, id } = payload as SignalProvidePayload
-      this._id = id
-      await this.createPeer(lite, ice)
+      const { sdp, lite, ice, iceservers, id } = payload as unknown as SignalProvidePayload
+      this._id = id || this._id
+      const servers = ice || iceservers || []
+      await this.createPeer(lite === undefined ? servers.length === 0 : lite, servers)
       await this.setRemoteOffer(sdp)
       return
     }
 
     if (event === EVENT.SIGNAL.OFFER) {
-      const { sdp } = payload as SignalOfferPayload
+      const { sdp } = payload as unknown as SignalOfferPayload
       await this.setRemoteOffer(sdp)
       return
     }
 
     if (event === EVENT.SIGNAL.ANSWER) {
-      const { sdp } = payload as SignalAnswerMessage
+      const { sdp } = payload as unknown as SignalAnswerMessage
       await this.setRemoteAnswer(sdp)
       return
     }
 
     if (event === EVENT.SIGNAL.CANDIDATE) {
-      const { data } = payload as SignalCandidatePayload
-      const candidate: RTCIceCandidate = JSON.parse(data)
+      const candidatePayload = payload as unknown as SignalCandidatePayload
+      const candidate: RTCIceCandidate = candidatePayload.data
+        ? JSON.parse(candidatePayload.data)
+        : (candidatePayload as RTCIceCandidate)
       if (this._peer) {
         try {
           await this._peer.addIceCandidate(candidate)

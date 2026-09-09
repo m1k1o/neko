@@ -31,6 +31,15 @@ import Avatar from '~/components/avatar.vue'
 import Vue from 'vue'
 import ToolTip from 'v-tooltip'
 
+// Stable SDK primitives are exported separately from the Vue components so
+// embedders can own signaling, lifecycle, or input serialization themselves.
+export { ConnectionStateMachine } from './sdk/connection-state'
+export type { ConnectionEvent, ConnectionPhase, ConnectionTransition } from './sdk/connection-state'
+export { encodeMediaInput, MEDIA_OPCODE } from './sdk/media-protocol'
+export type { MediaInput, MediaInputEvent } from './sdk/media-protocol'
+export { SignalingTransport } from './sdk/signaling'
+export type { SignalingMessage, SignalingState, SignalingTransportOptions } from './sdk/signaling'
+
 Vue.use(ToolTip)
 
 const exportMixin = {

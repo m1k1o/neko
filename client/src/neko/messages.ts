@@ -31,6 +31,7 @@ export type WebSocketPayloads =
   | SignalOfferPayload
   | SignalAnswerPayload
   | SignalCandidatePayload
+  | SignalRequestPayload
   | MemberListPayload
   | Member
   | ControlPayload
@@ -82,10 +83,22 @@ export interface SignalProvideMessage extends WebSocketMessage, SignalProvidePay
   event: typeof EVENT.SIGNAL.PROVIDE
 }
 export interface SignalProvidePayload {
-  id: string
-  lite: boolean
-  ice: RTCIceServer[]
+  id?: string
+  lite?: boolean
+  ice?: RTCIceServer[]
+  iceservers?: RTCIceServer[]
   sdp: string
+}
+
+export interface SignalRequestPayload {
+  video?: {
+    auto?: boolean
+    disabled?: boolean
+    selector?: Record<string, unknown>
+  }
+  audio?: {
+    disabled?: boolean
+  }
 }
 
 // signal/offer
@@ -102,7 +115,7 @@ export interface SignalAnswerMessage extends WebSocketMessage, SignalAnswerPaylo
 }
 export interface SignalAnswerPayload {
   sdp: string
-  displayname: string
+  displayname?: string
 }
 
 // signal/candidate
@@ -110,7 +123,12 @@ export interface SignalCandidateMessage extends WebSocketMessage, SignalCandidat
   event: typeof EVENT.SIGNAL.CANDIDATE
 }
 export interface SignalCandidatePayload {
-  data: string
+  /** Legacy clients wrap the ICECandidateInit as a JSON string. */
+  data?: string
+  candidate?: string
+  sdpMid?: string | null
+  sdpMLineIndex?: number | null
+  usernameFragment?: string | null
 }
 
 /*
