@@ -2,6 +2,8 @@
 
 This demo overlays locally built M1 binaries and Chromium integration files on
 the published Neko Chromium runtime. It does not store passwords in Git.
+It uses the explicit `balanced` profile (`1280x720@30`, 2500 kbit/s) so the
+standard M1 quality pipeline is exercised on every demo start.
 
 Build the current branch binaries:
 

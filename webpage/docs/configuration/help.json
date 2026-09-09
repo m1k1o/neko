@@ -159,6 +159,15 @@
     "key": [
       "capture",
       "video",
+      "profile"
+    ],
+    "type": "string",
+    "description": "optional Chromium M1 quality profile (low, balanced, high)"
+  },
+  {
+    "key": [
+      "capture",
+      "video",
       "display"
     ],
     "type": "string",

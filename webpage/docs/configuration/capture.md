@@ -32,6 +32,7 @@ The Gstreamer pipeline is started when the first client requests the video strea
 <ConfigurationTab options={configOptions} filter={[
   "capture.video.display",
   "capture.video.codec",
+  "capture.video.profile",
   "capture.video.ids",
   "capture.video.pipeline",
   "capture.video.pipelines",
@@ -40,6 +41,7 @@ The Gstreamer pipeline is started when the first client requests the video strea
 
 - <Def id="video.display" /> is the name of the [X display](https://www.x.org/wiki/) that you want to capture. If not specified, the environment variable `DISPLAY` will be used.
 - <Def id="video.codec" /> available codecs are `vp8`, `vp9`, `av1`, `h264`, `h265`. [Supported video codecs](https://developer.mozilla.org/en-US/docs/Web/Media/Guides/Formats/WebRTC_codecs#supported_video_codecs) are dependent on the WebRTC implementation used by the client, `vp8` and `h264` are supported by all WebRTC implementations.
+- <Def id="video.profile" /> optionally selects the Chromium M1 `low` (`854x480@20`, 1000 kbit/s), `balanced` (`1280x720@30`, 2500 kbit/s), or `high` (`1920x1080@30`, 4500 kbit/s) standard pipeline. It currently supports VP8 and software H.264. Profiles are explicit and cannot be combined with <Opt id="video.ids" />, <Opt id="video.pipeline" />, <Opt id="video.pipelines" />, or legacy video pipeline settings. Leaving it empty preserves the existing default behavior.
 - <Def id="video.ids" /> is a list of pipeline ids that are defined in the <Opt id="video.pipelines" /> section. The first pipeline in the list will be the default pipeline.
 - <Def id="video.pipeline" /> is a shorthand for defining [Gstreamer pipeline description](#video.gst_pipeline) for a single pipeline. This is option is ignored if <Opt id="video.pipelines" /> is defined.
 - <Def id="video.pipelines" /> is a dictionary of pipeline configurations. Each pipeline configuration is defined by a unique pipeline id. They can be defined in two ways: either by building the pipeline dynamically using [Expression-Driven Configuration](#video.expression) or by defining the pipeline using a [Gstreamer Pipeline Description](#video.gst_pipeline).

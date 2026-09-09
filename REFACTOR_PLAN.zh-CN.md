@@ -206,6 +206,7 @@ server/internal/
 - `bfe2928f`：新增显式目标的代理认证预检、周期健康检查和回环 `/healthz` 脱敏诊断；首次检查失败会阻止 Chromium 启动。
 - `47e7b8ac`：新增真实 Squid Basic 与 microsocks 用户名/密码代理的 Docker Compose 集成测试，并接入 PR 默认 CI。
 - `f155a767`：捕获和 WebRTC Track 改用有界的“最新帧优先”队列；队列满载时淘汰旧帧而非阻塞编码或保留过时画面，并公开捕获侧及按会话音/视频 Track 划分的队列深度、淘汰计数指标。
+- `b8987638`：新增显式 `low`、`balanced`、`high` Chromium 画质档位；生成 VP8/软件 H.264 标准管线，并在启动时拒绝与自定义或旧版视频管线参数混用。
 
 ### 已验证
 
@@ -218,11 +219,23 @@ server/internal/
 - Chromium 启动脚本、Shell 语法、Compose/GitHub Actions YAML 解析和 `git diff --check` 通过。
 - Windows x86_64 + WSL2 Docker 环境的 Chromium 演示通过：账号密码登录、`1280x720@30` 画面及同端口 `52000/TCP+UDP` WebRTC 链路可正常运行。
 - 真实 Squid Basic 与 microsocks 用户名/密码 Docker Compose 套件通过，覆盖健康检查、HTTP 转发、CONNECT 隧道、错误凭据和诊断脱敏。
+- 显式 `balanced` 档位通过 `go test ./...`、目标包竞态检测和实际 Chromium 容器验证；最终 VP8 管线稳定输出整数码率 `2500000`，容器健康且无重启。
 
 ### 当前限制与下一步
 
-- 下一项实现：编码/质量 profile。
-- 随后实现：FRP、TURN 网络路径的集成测试模板。
+- 下一项实现：H.264 软件、VAAPI、NVENC 编码器能力探测和可诊断回退。
+- 随后实现：基于现有有界队列压力与 WebRTC 统计的自适应质量策略。
+
+### M1 后续开发执行计划
+
+| 顺序 | 增量 | 主要交付 | 验收与提交边界 |
+| --- | --- | --- | --- |
+| 1 | 显式质量 Profile（已完成） | `low`、`balanced`、`high`；仅显式启用；拒绝与自定义 GStreamer 管线混用 | 配置和管线生成单测通过；历史默认配置不变 |
+| 2 | 编码器能力与回退 | H.264 软件、VAAPI、NVENC 和 VP8 回退；启动时探测能力 | 缺失 GPU/插件时可诊断并回退，不产生黑屏 |
+| 3 | 自适应质量策略 | 以队列压力、带宽估计、RTT/jitter/丢包为输入，带滞回和冷却时间 | 压力下降档、恢复升档，切换原因可观测 |
+| 4 | 性能指标闭环 | 编码耗时、首帧、实际帧率/码率、路径标签和资源指标 | `/metrics` 覆盖基线指标且不含高风险凭据标签 |
+| 5 | FRP 与 TURN 集成 | SakuraFrp 同端口 TCP/UDP 模板、Coturn 回退模板和故障诊断 | 两条路径均可重复部署并通过连通性测试 |
+| 6 | 基线与发布验收 | 720p/1080p、1/2/5 观看者、Linux/WSL2 回归和文档 | 性能数据可比较，M1 发布门槛逐项关闭 |
 
 ## 9. 里程碑与成功标准
 
