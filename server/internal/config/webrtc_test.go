@@ -4,11 +4,11 @@ import "testing"
 
 func TestParseEphemeralPortRange(t *testing.T) {
 	tests := []struct {
-		name       string
-		value      string
-		wantMin    uint16
-		wantMax    uint16
-		wantErr    bool
+		name    string
+		value   string
+		wantMin uint16
+		wantMax uint16
+		wantErr bool
 	}{
 		{name: "range", value: "52000-52100", wantMin: 52000, wantMax: 52100},
 		{name: "spaces", value: " 52000 - 52100 ", wantMin: 52000, wantMax: 52100},
