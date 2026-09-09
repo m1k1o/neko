@@ -79,21 +79,29 @@
   .settings {
     flex: 1;
     display: flex;
+    min-width: 0;
 
     ul {
       flex: 1;
       display: flex;
       flex-direction: column;
-      padding: 5px 20px;
+      gap: 2px;
+      padding: 4px 6px;
 
       li {
         display: flex;
         flex-direction: row;
         align-content: center;
         justify-content: center;
-        border-bottom: 1px solid $background-secondary;
-        padding: 5px 0;
+        border-bottom: 1px solid rgba($text-normal, 0.08);
+        padding: 10px 8px;
         white-space: nowrap;
+        border-radius: 8px;
+        transition: background 0.18s ease;
+
+        &:hover {
+          background: $background-modifier-hover;
+        }
 
         &:last-child {
           border-bottom: none;
@@ -103,22 +111,29 @@
           margin-right: auto;
           height: 24px;
           line-height: 24px;
+          color: $interactive-normal;
         }
 
         button {
           cursor: pointer;
-          border-radius: 5px;
+          border-radius: 9px;
           padding: 4px;
           background: $style-primary;
-          color: $text-normal;
+          color: $background-tertiary;
           text-align: center;
           text-transform: uppercase;
           font-weight: bold;
-          line-height: 30px;
-          margin: 5px 0;
+          line-height: 28px;
+          margin: 4px 0;
           border: none;
           display: block;
           width: 100%;
+          transition: background 0.18s ease, transform 0.18s ease;
+
+          &:hover {
+            background: lighten($style-primary, 5%);
+            transform: translateY(-1px);
+          }
         }
 
         .switch {
@@ -140,7 +155,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background-color: $background-tertiary;
+            background-color: rgba($background-tertiary, 0.86);
             transition: 0.2s;
             border-radius: 34px;
 

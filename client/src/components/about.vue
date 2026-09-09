@@ -24,19 +24,25 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba($color: $background-floating, $alpha: 0.8);
+    z-index: 25;
+    padding: 20px;
+    background: rgba($color: $background-tertiary, $alpha: 0.76);
+    backdrop-filter: blur(16px);
 
     display: flex;
     justify-content: center;
     align-items: center;
 
     .window {
+      width: min(900px, 100%);
       max-width: 70vw;
-      background: $background-secondary;
-      border-radius: 5px;
-      max-height: 70vh;
+      background: linear-gradient(155deg, rgba($background-secondary, 0.98), rgba($background-primary, 0.98));
+      border: 1px solid rgba($text-normal, 0.12);
+      border-radius: 18px;
+      max-height: 78vh;
       overflow-y: auto;
       overflow-x: hidden;
+      box-shadow: $elevation-high;
 
       &::-webkit-scrollbar {
         width: 8px;
@@ -67,15 +73,15 @@
           flex-direction: row;
           justify-content: center;
           align-items: center;
-          margin: 40px 80px 0 80px;
+          margin: 32px 48px 0;
 
           img {
-            height: 90px;
+            height: 64px;
             margin-right: 10px;
           }
 
           span {
-            font-size: 30px;
+            font-size: 26px;
             line-height: 56px;
 
             b {
@@ -113,7 +119,17 @@
       }
 
       .markdown-body {
-        margin: 50px 200px;
+        margin: 36px 56px 48px;
+      }
+    }
+  }
+
+  @media only screen and (max-width: 768px) {
+    .about .window {
+      max-width: 100%;
+
+      .markdown-body {
+        margin: 28px 22px 32px;
       }
     }
   }

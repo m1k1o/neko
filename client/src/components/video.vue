@@ -38,38 +38,65 @@
         <div ref="aspect" class="player-aspect" />
       </div>
       <ul v-if="!fullscreen && !hideControls" class="video-menu top">
-        <li><i @click.stop.prevent="requestFullscreen" class="fas fa-expand"></i></li>
-        <li v-if="admin"><i @click.stop.prevent="openResolution" class="fas fa-desktop"></i></li>
+        <li>
+          <button
+            type="button"
+            class="video-action"
+            aria-label="Enter fullscreen"
+            @click.stop.prevent="requestFullscreen"
+          >
+            <i class="fas fa-expand" aria-hidden="true" />
+          </button>
+        </li>
+        <li v-if="admin">
+          <button
+            type="button"
+            class="video-action"
+            aria-label="Change resolution"
+            @click.stop.prevent="openResolution"
+          >
+            <i class="fas fa-desktop" aria-hidden="true" />
+          </button>
+        </li>
         <li v-if="!controlLocked && !implicitHosting" :class="extraControls || 'extra-control'">
-          <i
-            :class="[
-              hosted && !hosting ? 'disabled' : '',
-              !hosted && !hosting ? 'faded' : '',
-              'fas',
-              'fa-computer-mouse',
-            ]"
+          <button
+            type="button"
+            class="video-action"
+            :class="[hosted && !hosting ? 'disabled' : '', !hosted && !hosting ? 'faded' : '']"
+            aria-label="Request or release control"
             @click.stop.prevent="toggleControl"
-          />
+          >
+            <i class="fas fa-computer-mouse" aria-hidden="true" />
+          </button>
         </li>
       </ul>
       <ul v-if="!fullscreen && !hideControls" class="video-menu bottom">
         <li v-if="hosting && (!clipboard_read_available || !clipboard_write_available)">
-          <i @click.stop.prevent="openClipboard" class="fas fa-clipboard"></i>
+          <button type="button" class="video-action" aria-label="Open clipboard" @click.stop.prevent="openClipboard">
+            <i class="fas fa-clipboard" aria-hidden="true" />
+          </button>
         </li>
         <li>
-          <i
+          <button
+            type="button"
+            class="video-action"
             v-if="pip_available"
             @click.stop.prevent="requestPictureInPicture"
             v-tooltip="{ content: 'Picture-in-Picture', placement: 'left', offset: 5, boundariesElement: 'body' }"
-            class="fas fa-external-link-alt"
-          />
+            aria-label="Picture-in-Picture"
+          >
+            <i class="fas fa-external-link-alt" aria-hidden="true" />
+          </button>
         </li>
-        <li
-          v-if="hosting && is_touch_device"
-          :class="extraControls || 'extra-control'"
-          @click.stop.prevent="openMobileKeyboard"
-        >
-          <i class="fas fa-keyboard" />
+        <li v-if="hosting && is_touch_device" :class="extraControls || 'extra-control'">
+          <button
+            type="button"
+            class="video-action"
+            aria-label="Open keyboard"
+            @click.stop.prevent="openMobileKeyboard"
+          >
+            <i class="fas fa-keyboard" aria-hidden="true" />
+          </button>
         </li>
       </ul>
       <neko-resolution ref="resolution" v-if="admin" />
@@ -82,8 +109,14 @@
   .video {
     width: 100%;
     height: 100%;
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+    position: relative;
 
     .player {
+      top: 0;
+      left: 0;
       position: absolute;
       display: flex;
       justify-content: center;
@@ -105,22 +138,36 @@
         li {
           margin: 0 0 10px 0;
 
-          i {
+          .video-action {
+            display: grid;
+            place-items: center;
             width: 30px;
             height: 30px;
-            background: rgba($color: #fff, $alpha: 0.2);
-            border-radius: 5px;
-            line-height: 30px;
-            font-size: 16px;
+            padding: 0;
+            border: 1px solid rgba(#fff, 0.12);
+            background: rgba(#fff, 0.12);
+            border-radius: 9px;
+            font-size: 14px;
             text-align: center;
             color: rgba($color: #fff, $alpha: 0.6);
             cursor: pointer;
+            transition: color 0.18s ease, background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
 
-            &.faded {
+            &:hover,
+            &:focus-visible {
+              color: #fff;
+              background: rgba(#fff, 0.22);
+              border-color: rgba(#fff, 0.28);
+              transform: translateY(-1px);
+            }
+
+            &.faded,
+            &.faded i {
               color: rgba($color: $text-normal, $alpha: 0.4);
             }
 
-            &.disabled {
+            &.disabled,
+            &.disabled i {
               color: rgba($color: $style-error, $alpha: 0.4);
             }
           }
@@ -177,9 +224,25 @@
           align-items: center;
           cursor: pointer;
 
-          i::before {
-            font-size: 120px;
-            text-align: center;
+          i {
+            width: 76px;
+            height: 76px;
+            display: grid;
+            place-items: center;
+            border: 1px solid rgba(#fff, 0.25);
+            border-radius: 50%;
+            background: rgba(#fff, 0.12);
+            color: #fff;
+            transition: transform 0.2s ease, background 0.2s ease;
+
+            &::before {
+              font-size: 30px;
+            }
+          }
+
+          &:hover i {
+            background: rgba($style-primary, 0.22);
+            transform: scale(1.06);
           }
 
           &.hidden {

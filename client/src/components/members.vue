@@ -32,7 +32,7 @@
     flex: 1;
     overflow-x: scroll;
     overflow-y: hidden;
-    padding-bottom: 14px;
+    padding: 0 0 6px;
     scrollbar-width: thin;
     scrollbar-color: $background-secondary $background-tertiary;
     min-height: 60px;
@@ -58,7 +58,7 @@
     .members-container {
       display: block;
       clear: both;
-      padding: 0 20px;
+      padding: 0 8px;
       margin: 0 auto;
 
       .members-list {
@@ -73,7 +73,16 @@
             display: block;
             width: 50px;
             height: 50px;
-            margin: 10px 5px 0 5px;
+            margin: 8px 5px 0 5px;
+            border: 2px solid transparent;
+            border-radius: 16px;
+            transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+
+            &:hover {
+              transform: translateY(-2px);
+              border-color: rgba($style-primary, 0.44);
+              background: rgba($style-primary, 0.1);
+            }
 
             &.self {
               &::before {
@@ -134,6 +143,7 @@
               border-radius: 50%;
               overflow: hidden;
               width: 100%;
+              border: 2px solid rgba($background-tertiary, 0.9);
             }
           }
 

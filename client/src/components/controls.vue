@@ -1,13 +1,12 @@
 <template>
   <ul>
     <li v-if="!implicitHosting && (!controlLocked || hosting)">
-      <i
+      <button
+        type="button"
         :class="[
           !disabeld && shakeKbd ? 'shake' : '',
           disabeld && !hosting ? 'disabled' : '',
           !disabeld && !hosting ? 'faded' : '',
-          'fas',
-          'fa-keyboard',
           'request',
         ]"
         v-tooltip="{
@@ -17,11 +16,15 @@
           boundariesElement: 'body',
           delay: { show: 300, hide: 100 },
         }"
+        :aria-label="!disabeld || hosting ? (hosting ? $t('controls.release') : $t('controls.request')) : ''"
         @click.stop.prevent="toggleControl"
-      />
+      >
+        <i class="fas fa-keyboard" aria-hidden="true" />
+      </button>
     </li>
     <li class="no-pointer" v-if="implicitHosting">
-      <i
+      <span
+        class="control-state"
         :class="[controlLocked ? 'disabled' : '', 'fas', 'fa-mouse-pointer']"
         v-tooltip="{
           content: controlLocked ? $t('controls.hasnot') : $t('controls.has'),
@@ -48,19 +51,19 @@
       </label>
     </li>
     <li>
-      <i
-        :class="[{ disabled: !playable }, playing ? 'fa-pause-circle' : 'fa-play-circle', 'fas', 'play']"
+      <button
+        type="button"
+        :class="[{ disabled: !playable }, 'play']"
+        :aria-label="playing ? 'Pause' : 'Play'"
         @click.stop.prevent="toggleMedia"
-      />
+      >
+        <i :class="[playing ? 'fa-pause-circle' : 'fa-play-circle', 'fas']" aria-hidden="true" />
+      </button>
     </li>
     <li v-if="micAllowed">
-      <i
-        :class="[
-          { disabled: !playable },
-          microphoneActive ? 'fa-microphone' : 'fa-microphone-slash',
-          microphoneActive ? '' : 'faded',
-          'fas',
-        ]"
+      <button
+        type="button"
+        :class="[{ disabled: !playable }, microphoneActive ? '' : 'faded']"
         v-tooltip="{
           content: microphoneActive ? $t('controls.mic_off') : $t('controls.mic_on'),
           placement: 'top',
@@ -68,16 +71,23 @@
           boundariesElement: 'body',
           delay: { show: 300, hide: 100 },
         }"
+        :aria-label="microphoneActive ? $t('controls.mic_off') : $t('controls.mic_on')"
         @click.stop.prevent="toggleMicrophone"
-      />
+      >
+        <i :class="[microphoneActive ? 'fa-microphone' : 'fa-microphone-slash', 'fas']" aria-hidden="true" />
+      </button>
     </li>
     <li>
       <div class="volume">
-        <i
-          :class="[volume === 0 || muted ? 'fa-volume-mute' : 'fa-volume-up', 'fas']"
+        <button
+          type="button"
+          class="volume-button"
+          :aria-label="muted ? 'Unmute' : 'Mute'"
           @click.stop.prevent="toggleMute"
-        />
-        <input type="range" min="0" max="100" v-model="volume" />
+        >
+          <i :class="[volume === 0 || muted ? 'fa-volume-mute' : 'fa-volume-up', 'fas']" aria-hidden="true" />
+        </button>
+        <input type="range" min="0" max="100" v-model="volume" :aria-label="'Volume'" />
       </div>
     </li>
   </ul>
@@ -139,15 +149,46 @@
         cursor: default;
       }
 
-      i {
-        padding: 0 5px;
+      > button {
+        width: 42px;
+        height: 42px;
+        display: grid;
+        place-items: center;
+        padding: 0;
+        border: 1px solid transparent;
+        border-radius: 12px;
+        color: $interactive-normal;
+        background: transparent;
+        cursor: pointer;
+        transition: color 0.18s ease, background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+
+        &:hover:not(.disabled),
+        &:focus-visible:not(.disabled) {
+          color: $interactive-hover;
+          background: $background-modifier-hover;
+          border-color: rgba($text-normal, 0.12);
+          transform: translateY(-1px);
+        }
 
         &.faded {
-          color: rgba($color: $text-normal, $alpha: 0.4);
+          color: rgba($text-normal, 0.42);
         }
 
         &.disabled {
-          color: rgba($color: $style-error, $alpha: 0.4);
+          color: rgba($style-error, 0.5);
+          cursor: default;
+        }
+
+        i {
+          padding: 0;
+        }
+      }
+
+      > .control-state {
+        padding: 0 5px;
+
+        &.disabled {
+          color: rgba($style-error, 0.5);
         }
       }
 
@@ -159,6 +200,27 @@
         justify-content: center;
         align-items: center;
         list-style: none;
+
+        .volume-button {
+          width: 38px;
+          height: 38px;
+          padding: 0;
+          border: 0;
+          display: grid;
+          place-items: center;
+          color: $interactive-normal;
+          background: transparent;
+          cursor: pointer;
+
+          &:hover,
+          &:focus-visible {
+            color: $interactive-hover;
+          }
+
+          i {
+            padding: 0;
+          }
+        }
 
         input[type='range'] {
           width: 100%;

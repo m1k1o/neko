@@ -68,6 +68,7 @@
       overflow-y: scroll;
       overflow-x: hidden;
       max-width: 100%;
+      padding: 4px 2px 8px;
       scrollbar-width: thin;
       scrollbar-color: $background-tertiary transparent;
 
@@ -95,8 +96,7 @@
 
       li {
         flex: 1;
-        border-top: 1px solid var(--border-color);
-        padding: 10px 5px 0px 10px;
+        padding: 8px 10px 0;
         display: flex;
         flex-direction: row;
         flex-wrap: nowrap;
@@ -105,8 +105,18 @@
         word-wrap: break-word;
 
         &.message {
-          padding-top: 15px;
+          padding: 10px;
+          margin: 6px 8px 0;
+          border: 1px solid rgba($text-normal, 0.07);
+          border-radius: 12px;
+          background: rgba($background-secondary, 0.62);
           font-size: 16px;
+          transition: background 0.18s ease, border-color 0.18s ease;
+
+          &:hover {
+            background: rgba($background-secondary, 0.88);
+            border-color: rgba($text-normal, 0.12);
+          }
 
           .author {
             flex-grow: 0;
@@ -238,7 +248,8 @@
           }
 
           &.bulk {
-            padding-top: 0px;
+            padding-top: 4px;
+            margin-top: 2px;
 
             .author {
               visibility: hidden;
@@ -278,34 +289,41 @@
 
     .chat-send {
       flex-shrink: 0;
-      height: 80px;
-      max-height: 80px;
-      padding: 0 10px 10px 10px;
+      height: 72px;
+      max-height: 72px;
+      padding: 0 8px 8px;
       flex-direction: column;
       display: flex;
 
       .accent {
         width: 100%;
-        height: 1px;
-        background: rgba($color: #fff, $alpha: 0.05);
-        margin: 5px 0 10px 0;
+        height: 0;
+        margin: 0 0 8px;
       }
 
       .text-container {
         flex: 1;
         width: 100%;
         height: 100%;
-        background-color: rgba($color: #fff, $alpha: 0.05);
-        border-radius: 5px;
+        background-color: rgba($background-tertiary, 0.76);
+        border: 1px solid rgba($text-normal, 0.1);
+        border-radius: 11px;
         position: relative;
         display: flex;
 
         .emoji-menu {
-          width: 20px;
-          height: 20px;
+          width: 34px;
+          height: 34px;
           font-size: 20px;
-          margin: 8px 5px 0 0;
+          margin: 5px 3px 0 0;
+          display: grid;
+          place-items: center;
+          color: $text-muted;
           cursor: pointer;
+
+          &:hover {
+            color: $style-primary;
+          }
         }
 
         textarea {

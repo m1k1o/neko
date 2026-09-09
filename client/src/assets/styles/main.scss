@@ -17,12 +17,41 @@
 
 html, body {
   -webkit-font-smoothing: subpixel-antialiased;
-  background-color: $background-tertiary;
+  background: $background-tertiary;
   font-family: $text-family;
   font-size: $text-size;
-  color:  $text-normal;
+  color: $text-normal;
   overflow: hidden;
   width: 100vw;
   height: 100vh;
   min-width: 320px;
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid $style-primary;
+  outline-offset: 2px;
+}
+
+::selection {
+  color: $background-tertiary;
+  background: $style-primary;
 }

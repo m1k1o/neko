@@ -1,22 +1,45 @@
 <template>
   <div class="connect">
-    <div class="window">
-      <div class="logo" title="About n.eko" @click.stop.prevent="about">
-        <img src="@/assets/images/logo.svg" alt="n.eko" />
-        <span><b>n</b>.eko</span>
+    <div class="window" role="dialog" aria-modal="true" aria-labelledby="connect-title">
+      <div class="window-topline">
+        <span class="eyebrow">N.EKO ROOM</span>
+        <span class="secure-badge"><i class="fas fa-shield-halved" aria-hidden="true" /> Secure</span>
       </div>
-      <form class="message" v-if="!connecting" @submit.stop.prevent="connect">
-        <span v-if="!autoPassword">{{ $t('connect.login_title') }}</span>
-        <span v-else>{{ $t('connect.invitation_title') }}</span>
-        <input type="text" :placeholder="$t('connect.displayname')" v-model="displayname" autofocus />
-        <input type="password" :placeholder="$t('connect.password')" v-model="password" v-if="!autoPassword" />
-        <button type="submit" @click.stop.prevent="login">
-          {{ $t('connect.connect') }}
+      <div class="logo" title="About n.eko" @click.stop.prevent="about">
+        <span class="logo-mark"><img src="@/assets/images/logo.svg" alt="" /></span>
+        <span class="brand-name"><b>n</b>.eko</span>
+      </div>
+      <form class="message" v-if="!connecting" @submit.stop.prevent="login">
+        <h1 id="connect-title">{{ autoPassword ? $t('connect.invitation_title') : $t('connect.login_title') }}</h1>
+        <label class="field">
+          <span>{{ $t('connect.displayname') }}</span>
+          <input
+            type="text"
+            :placeholder="$t('connect.displayname')"
+            v-model="displayname"
+            autocomplete="nickname"
+            autofocus
+            required
+          />
+        </label>
+        <label class="field" v-if="!autoPassword">
+          <span>{{ $t('connect.password') }}</span>
+          <input
+            type="password"
+            :placeholder="$t('connect.password')"
+            v-model="password"
+            autocomplete="current-password"
+          />
+        </label>
+        <button class="primary-button" type="submit">
+          <span>{{ $t('connect.connect') }}</span>
+          <i class="fas fa-arrow-right" aria-hidden="true" />
         </button>
+        <button class="about-link" type="button" @click.stop.prevent="about">About n.eko</button>
       </form>
-      <div class="loader" v-if="connecting">
-        <div class="bounce1"></div>
-        <div class="bounce2"></div>
+      <div class="loader" v-if="connecting" role="status" aria-live="polite">
+        <div class="spinner" />
+        <span>{{ $t('connection.reconnecting') }}</span>
       </div>
     </div>
   </div>
@@ -29,37 +52,80 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba($color: $background-floating, $alpha: 0.8);
+    z-index: 20;
+    padding: 20px;
+    background: rgba($color: $background-tertiary, $alpha: 0.76);
+    backdrop-filter: blur(16px);
 
     display: flex;
     justify-content: center;
     align-items: center;
 
     .window {
-      width: 300px;
-      background: $background-secondary;
-      border-radius: 5px;
-      padding: 10px;
+      width: min(100%, 390px);
+      background: linear-gradient(155deg, rgba($background-secondary, 0.98), rgba($background-primary, 0.98));
+      border: 1px solid rgba($text-normal, 0.12);
+      border-radius: 20px;
+      padding: 28px;
+      box-shadow: $elevation-high;
+
+      .window-topline {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 28px;
+
+        .eyebrow {
+          color: $text-muted;
+          font-size: 10px;
+          font-weight: 700;
+          letter-spacing: 0.16em;
+        }
+
+        .secure-badge {
+          color: $style-primary;
+          font-size: 11px;
+          font-weight: 600;
+
+          i {
+            margin-right: 4px;
+          }
+        }
+      }
 
       .logo {
         width: 100%;
         display: flex;
         flex-direction: row;
-        justify-content: center;
+        justify-content: flex-start;
         align-items: center;
         cursor: pointer;
+        gap: 12px;
+        margin-bottom: 30px;
 
-        img {
-          height: 90px;
-          margin-right: 10px;
+        .logo-mark {
+          width: 48px;
+          height: 48px;
+          display: grid;
+          place-items: center;
+          border-radius: 14px;
+          background: rgba($style-primary, 0.14);
+          border: 1px solid rgba($style-primary, 0.3);
+
+          img {
+            height: 32px;
+          }
         }
 
-        span {
-          font-size: 30px;
-          line-height: 56px;
+        .brand-name {
+          color: $text-normal;
+          font-size: 28px;
+          font-weight: 600;
+          line-height: 32px;
 
           b {
-            font-weight: 900;
+            color: $style-primary;
+            font-weight: 800;
           }
         }
       }
@@ -68,79 +134,122 @@
         display: flex;
         flex-direction: column;
 
-        span {
-          display: block;
-          text-align: center;
-          text-transform: uppercase;
+        h1 {
+          color: $interactive-hover;
+          font-size: 24px;
+          font-weight: 600;
+          letter-spacing: -0.02em;
           line-height: 30px;
+          margin-bottom: 8px;
         }
 
-        input {
-          border: none;
-          padding: 6px 8px;
+        .subtitle {
+          color: $text-muted;
           line-height: 20px;
-          border-radius: 5px;
-          margin: 5px 0;
-          background: $background-tertiary;
-          color: $text-normal;
+          margin-bottom: 20px;
+        }
 
-          &::selection {
-            background: $text-link;
+        .field {
+          display: flex;
+          flex-direction: column;
+          gap: 7px;
+          margin-bottom: 14px;
+
+          span {
+            color: $interactive-normal;
+            font-size: 12px;
+            font-weight: 600;
+          }
+
+          input {
+            width: 100%;
+            border: 1px solid rgba($text-normal, 0.12);
+            padding: 11px 13px;
+            line-height: 20px;
+            border-radius: 10px;
+            background: rgba($background-tertiary, 0.75);
+            color: $text-normal;
+            transition: border-color 0.18s ease, box-shadow 0.18s ease;
+
+            &:hover {
+              border-color: rgba($text-normal, 0.24);
+            }
+
+            &:focus {
+              border-color: $style-primary;
+              box-shadow: 0 0 0 3px rgba($style-primary, 0.14);
+              outline: none;
+            }
+
+            &::placeholder {
+              color: $text-muted;
+            }
           }
         }
 
-        button {
+        .primary-button {
+          width: 100%;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          gap: 10px;
           cursor: pointer;
-          border-radius: 5px;
-          padding: 4px;
+          border-radius: 10px;
+          padding: 11px 14px;
           background: $style-primary;
-          color: $text-normal;
-          text-align: center;
-          text-transform: uppercase;
-          font-weight: bold;
-          line-height: 30px;
-          margin: 5px 0;
+          color: $background-tertiary;
+          font-size: 14px;
+          font-weight: 700;
+          line-height: 20px;
+          margin: 8px 0 12px;
           border: none;
+          transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+
+          &:hover {
+            background: lighten($style-primary, 5%);
+            box-shadow: 0 8px 20px rgba($style-primary, 0.18);
+            transform: translateY(-1px);
+          }
+        }
+
+        .about-link {
+          display: block;
+          margin: 0 auto;
+          border: 0;
+          color: $text-muted;
+          background: transparent;
+          cursor: pointer;
+          font-size: 12px;
+
+          &:hover {
+            color: $text-link;
+          }
         }
       }
 
       .loader {
-        width: 90px;
-        height: 90px;
-        position: relative;
-        margin: 0 auto;
+        min-height: 250px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 16px;
+        color: $text-muted;
 
-        .bounce1,
-        .bounce2 {
-          width: 100%;
-          height: 100%;
+        .spinner {
+          width: 44px;
+          height: 44px;
+          border: 3px solid rgba($style-primary, 0.2);
+          border-top-color: $style-primary;
           border-radius: 50%;
-          background-color: $style-primary;
-          opacity: 0.6;
-          position: absolute;
-          top: 0;
-          left: 0;
-
-          -webkit-animation: bounce 2s infinite ease-in-out;
-          animation: bounce 2s infinite ease-in-out;
-        }
-
-        .bounce2 {
-          -webkit-animation-delay: -1s;
-          animation-delay: -1s;
+          animation: spin 0.9s linear infinite;
         }
       }
     }
 
-    @keyframes bounce {
-      0%,
-      100% {
-        transform: scale(0);
-        -webkit-transform: scale(0);
-      }
-      50% {
-        transform: scale(1);
-        -webkit-transform: scale(1);
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
       }
     }
   }

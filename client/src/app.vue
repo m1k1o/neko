@@ -1,5 +1,5 @@
 <template>
-  <div id="neko" :class="[!videoOnly && side ? 'expanded' : '']">
+  <div id="neko" class="app-shell" :class="[!videoOnly && side ? 'expanded' : '']">
     <template v-if="!$client.supported">
       <neko-unsupported />
     </template>
@@ -8,13 +8,15 @@
         <div v-if="!videoOnly" class="header-container">
           <neko-header />
         </div>
-        <div class="video-container">
-          <neko-video
-            ref="video"
-            :hideControls="hideControls"
-            :extraControls="isEmbedMode"
-            @control-attempt="controlAttempt"
-          />
+        <div class="video-container" :class="{ 'video-only': videoOnly }">
+          <div class="video-surface">
+            <neko-video
+              ref="video"
+              :hideControls="hideControls"
+              :extraControls="isEmbedMode"
+              @control-attempt="controlAttempt"
+            />
+          </div>
         </div>
         <div v-if="!videoOnly" class="room-container">
           <neko-members />
@@ -56,44 +58,81 @@
     max-height: 100vh;
     flex-direction: row;
     display: flex;
+    background: radial-gradient(circle at 20% -10%, rgba($style-primary, 0.1), transparent 36%), $background-tertiary;
+    color: $text-normal;
 
     .neko-main {
       min-width: 360px;
       max-width: 100%;
       flex-grow: 1;
+      min-height: 0;
       flex-direction: column;
       display: flex;
-      overflow: auto;
+      overflow: hidden;
+      background: rgba($background-primary, 0.58);
 
       .header-container {
-        background: $background-tertiary;
+        background: rgba($background-tertiary, 0.86);
+        border-bottom: 1px solid rgba($text-normal, 0.08);
         height: $menu-height;
         flex-shrink: 0;
         display: flex;
+        position: relative;
+        z-index: 2;
       }
 
       .video-container {
-        background: rgba($color: #000, $alpha: 0.4);
+        background: linear-gradient(145deg, rgba($background-tertiary, 0.92), rgba($background-primary, 0.58));
         max-width: 100%;
         flex-grow: 1;
+        min-height: 0;
+        min-width: 0;
+        padding: 16px;
         display: flex;
+
+        .video-surface {
+          position: relative;
+          flex: 1;
+          min-width: 0;
+          min-height: 0;
+          display: flex;
+          overflow: hidden;
+          border: 1px solid rgba($text-normal, 0.1);
+          border-radius: 16px;
+          background: #050a12;
+          box-shadow: $elevation-high;
+        }
+
+        &.video-only {
+          padding: 0;
+          background: #000;
+
+          .video-surface {
+            border: 0;
+            border-radius: 0;
+            box-shadow: none;
+          }
+        }
       }
 
       .room-container {
-        background: $background-tertiary;
+        background: rgba($background-tertiary, 0.92);
+        border-top: 1px solid rgba($text-normal, 0.08);
         height: $controls-height;
         max-width: 100%;
         flex-shrink: 0;
         flex-direction: column;
         display: flex;
+        padding: 8px 16px 12px;
 
         .room-menu {
           max-width: 100%;
           flex: 1;
           display: flex;
+          gap: 12px;
 
           .settings {
-            margin-left: 10px;
+            margin-left: 0;
             flex: 1;
             justify-content: flex-start;
             align-items: center;
@@ -102,13 +141,18 @@
 
           .controls {
             flex: 1;
+            min-width: 220px;
+            padding: 0 12px;
+            border: 1px solid rgba($text-normal, 0.08);
+            border-radius: 14px;
+            background: rgba($background-primary, 0.64);
             justify-content: center;
             align-items: center;
             display: flex;
           }
 
           .emotes {
-            margin-right: 10px;
+            margin-right: 0;
             flex: 1;
             justify-content: flex-end;
             align-items: center;
@@ -140,6 +184,10 @@
         height: 100vh;
       }
 
+      .video-container {
+        padding: 10px;
+      }
+
       .neko-menu {
         height: 100vh;
         width: 100% !important;
@@ -163,6 +211,14 @@
   @media only screen and (max-width: 768px) {
     #neko .neko-main .room-container {
       display: none;
+    }
+
+    #neko .neko-main .video-container {
+      padding: 8px;
+    }
+
+    #neko .neko-main .video-container .video-surface {
+      border-radius: 12px;
     }
   }
 </style>
