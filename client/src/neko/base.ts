@@ -206,7 +206,7 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
       return
     }
     this.emit('debug', `sending event '${event}' ${payload ? `with payload: ` : ''}`, payload)
-    const message: SignalingMessage = payload ? { event, payload: payload as Record<string, unknown> } : { event }
+    const message: SignalingMessage = payload ? { event, payload } : { event }
     if (!this.signaling.send(message)) {
       this.emit('warn', `unable to send websocket event '${event}' while signaling socket is not open`)
     }
@@ -218,7 +218,7 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
       video: { auto: true },
       audio: {},
     }
-    if (!this.signaling.send({ event: EVENT.SIGNAL.REQUEST, payload: payload as Record<string, unknown> })) {
+    if (!this.signaling.send({ event: EVENT.SIGNAL.REQUEST, payload })) {
       this.emit('warn', 'unable to request media peer while signaling socket is not open')
     }
   }
@@ -293,7 +293,7 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
       const init = event.candidate.toJSON()
       this.emit('debug', `sending local ICE candidate`, init)
 
-      if (!this.signaling.send({ event: EVENT.SIGNAL.CANDIDATE, payload: init as Record<string, unknown> })) {
+      if (!this.signaling.send({ event: EVENT.SIGNAL.CANDIDATE, payload: init })) {
         this.emit('warn', 'unable to send local ICE candidate while signaling socket is not open')
       }
     }
@@ -426,11 +426,11 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
       payload: envelopePayload,
       ...flatPayload
     } = message as WebSocketMessages & {
-      payload?: Record<string, unknown>
+      payload?: unknown
     }
     // The current backend uses {event, payload}; accepting flat messages here
     // keeps the SDK compatible with the legacy websocket bridge during rollout.
-    const payload = envelopePayload && typeof envelopePayload === 'object' ? envelopePayload : flatPayload
+    const payload = envelopePayload === undefined ? flatPayload : envelopePayload
 
     this.emit('debug', `received websocket event ${event} ${payload ? `with payload: ` : ''}`, payload)
 
