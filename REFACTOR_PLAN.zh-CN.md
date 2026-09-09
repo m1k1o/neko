@@ -193,7 +193,7 @@ server/internal/
 | 全局代理劫持控制面 | Chromium 采用显式代理参数；服务端和 WebRTC 端点采用明确 bypass，禁止将全局代理变量透传给所有子进程。 |
 | 前端大迁移长期分叉 | 先提取 SDK 与共享协议，UI 逐页迁移，禁止并行维护两套媒体实现。 |
 
-## 8. 当前实施状态（2026-09-08）
+## 8. 当前实施状态（2026-09-09）
 
 ### 已完成
 
@@ -205,6 +205,7 @@ server/internal/
 - `86e9be01`：实现独立 `neko-proxy` Agent，完成 HTTP CONNECT Basic 与 SOCKS5 用户名/密码认证转发；密码从 Secret 文件读取，并接入 Chromium Supervisor 生命周期。
 - `bfe2928f`：新增显式目标的代理认证预检、周期健康检查和回环 `/healthz` 脱敏诊断；首次检查失败会阻止 Chromium 启动。
 - `47e7b8ac`：新增真实 Squid Basic 与 microsocks 用户名/密码代理的 Docker Compose 集成测试，并接入 PR 默认 CI。
+- `f155a767`：捕获和 WebRTC Track 改用有界的“最新帧优先”队列；队列满载时淘汰旧帧而非阻塞编码或保留过时画面，并公开捕获侧及按会话音/视频 Track 划分的队列深度、淘汰计数指标。
 
 ### 已验证
 
@@ -213,14 +214,14 @@ server/internal/
 - 内存测试服务组成的 HTTP CONNECT 与 SOCKS5 认证代理集成测试通过。
 - `go test -race ./internal/proxy` 通过。
 - `go build -o /tmp/neko-proxy ./cmd/neko-proxy` 通过。
+- 安装本机构建依赖后，`go test ./...`、`go test -race ./pkg/mediaqueue ./internal/webrtc` 均通过。
 - Chromium 启动脚本、Shell 语法、Compose/GitHub Actions YAML 解析和 `git diff --check` 通过。
 
 ### 当前限制与下一步
 
-- 真实 Squid/microsocks Docker Compose 套件已提交，但当前开发环境没有 Docker，需由新增的 PR CI 或具备 Docker Compose v2 的环境执行。
-- 当前 Ubuntu 20.04 软件源缺少完整服务端构建需要的 `libxcvt-dev`；代理子模块及独立二进制不受影响。
-- 下一项实现：媒体背压观测与有界队列指标。
-- 随后实现：编码/质量 profile，以及 FRP、TURN 网络路径的集成测试模板。
+- 真实 Squid/microsocks Docker Compose 套件仍需由 PR CI 或具备 Docker Compose v2 的环境执行。
+- 下一项实现：编码/质量 profile。
+- 随后实现：FRP、TURN 网络路径的集成测试模板。
 
 ## 9. 里程碑与成功标准
 
