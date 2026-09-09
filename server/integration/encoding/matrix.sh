@@ -40,6 +40,8 @@ matrix=(
 
 failed=0
 unavailable=0
+matrix_log="$(mktemp)"
+trap 'rm -f "$matrix_log"' EXIT
 
 for row in "${matrix[@]}"; do
 	IFS='|' read -r codec encoder element parser <<< "$row"
@@ -81,10 +83,10 @@ for row in "${matrix[@]}"; do
 	esac
 	pipeline+=( ! fakesink sync=false )
 
-	if "$gst_launch" -q -e "${pipeline[@]}" >/tmp/neko-encoder-matrix.log 2>&1; then
+	if "$gst_launch" -q -e "${pipeline[@]}" >"$matrix_log" 2>&1; then
 		printf '%s\t%s\t%s\tpass\truntime pipeline reached PLAYING\n' "$codec" "$encoder" "$element"
 	else
-		diagnostic="$(tail -n 1 /tmp/neko-encoder-matrix.log 2>/dev/null || true)"
+		diagnostic="$(tail -n 1 "$matrix_log" 2>/dev/null || true)"
 		printf '%s\t%s\t%s\tfail\t%s\n' "$codec" "$encoder" "$element" "${diagnostic:-runtime pipeline failed}"
 		failed=$((failed + 1))
 	fi
