@@ -25,11 +25,11 @@ func init() {
 	service := serve{}
 
 	command := &cobra.Command{
-		Use:    "serve",
-		Short:  "serve neko streaming server",
-		Long:   `serve neko streaming server`,
-		PreRun: service.PreRun,
-		Run:    service.Run,
+		Use:     "serve",
+		Short:   "serve neko streaming server",
+		Long:    `serve neko streaming server`,
+		PreRunE: service.PreRun,
+		Run:     service.Run,
 	}
 
 	if err := service.Init(command); err != nil {
@@ -113,7 +113,7 @@ func (c *serve) Init(cmd *cobra.Command) error {
 	return nil
 }
 
-func (c *serve) PreRun(cmd *cobra.Command, args []string) {
+func (c *serve) PreRun(cmd *cobra.Command, args []string) error {
 	c.logger = log.With().Str("service", "neko").Logger()
 
 	c.configs.Desktop.Set()
@@ -133,6 +133,8 @@ func (c *serve) PreRun(cmd *cobra.Command, args []string) {
 		c.configs.Session.SetV2()
 		c.configs.Server.SetV2()
 	}
+
+	return c.configs.Capture.ApplyVideoProfile()
 }
 
 func (c *serve) Start(cmd *cobra.Command) {

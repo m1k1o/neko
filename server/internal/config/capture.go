@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"strings"
 
@@ -9,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"github.com/m1k1o/neko/server/internal/quality"
 	"github.com/m1k1o/neko/server/pkg/types"
 	"github.com/m1k1o/neko/server/pkg/types/codec"
 	"github.com/m1k1o/neko/server/pkg/utils"
@@ -29,6 +31,7 @@ type Capture struct {
 	Display string
 
 	VideoCodec       codec.RTPCodec
+	VideoProfile     quality.Name
 	VideoIDs         []string
 	VideoPipelines   map[string]types.VideoConfig
 	VideoShowPointer bool
@@ -83,6 +86,11 @@ func (Capture) Init(cmd *cobra.Command) error {
 
 	cmd.PersistentFlags().String("capture.video.codec", "vp8", "video codec to be used")
 	if err := viper.BindPFlag("capture.video.codec", cmd.PersistentFlags().Lookup("capture.video.codec")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().String("capture.video.profile", "", "optional Chromium M1 quality profile (low, balanced, high)")
+	if err := viper.BindPFlag("capture.video.profile", cmd.PersistentFlags().Lookup("capture.video.profile")); err != nil {
 		return err
 	}
 
@@ -369,7 +377,7 @@ func (s *Capture) Set() {
 				s.VideoPipelines["legacy"] = legacyPipeline
 				// we do not add legacy to VideoIDs so that its ignored by bandwidth estimator
 			}
-		} else {
+		} else if strings.TrimSpace(viper.GetString("capture.video.profile")) == "" {
 			log.Warn().Msgf("no video pipelines specified, using default")
 
 			s.VideoCodec = codec.VP8()
@@ -639,4 +647,56 @@ func (s *Capture) SetV2() {
 		log.Warn().Msg("legacy configuration is enabled because at least one V2 configuration was used, please migrate to V3 configuration, visit https://neko.m1k1o.net/docs/v3/migration-from-v2 for more details")
 		viper.Set("legacy", true)
 	}
+}
+
+// ApplyVideoProfile applies an explicitly selected Chromium M1 quality
+// profile after legacy compatibility settings have been processed. Existing
+// defaults and custom pipelines remain untouched when no profile is selected.
+func (s *Capture) ApplyVideoProfile() error {
+	value := strings.ToLower(strings.TrimSpace(viper.GetString("capture.video.profile")))
+	if value == "" {
+		return nil
+	}
+
+	conflictingKeys := []string{
+		"capture.video.ids",
+		"capture.video.pipeline",
+		"capture.video.pipelines",
+		"video",
+		"video_bitrate",
+		"max_fps",
+		"hwenc",
+		"video_codec",
+		"vp8",
+		"vp9",
+		"h264",
+		"av1",
+	}
+	for _, key := range conflictingKeys {
+		if viper.IsSet(key) {
+			return fmt.Errorf("capture.video.profile cannot be combined with %s", key)
+		}
+	}
+
+	profile, err := quality.Parse(value)
+	if err != nil {
+		return err
+	}
+	videoConfig, err := profile.VideoConfig(s.VideoCodec, s.VideoShowPointer)
+	if err != nil {
+		return err
+	}
+
+	s.VideoProfile = profile.Name
+	s.VideoIDs = []string{"main"}
+	s.VideoPipelines = map[string]types.VideoConfig{"main": videoConfig}
+	log.Info().
+		Str("profile", string(profile.Name)).
+		Str("codec", s.VideoCodec.Name).
+		Int("width", profile.Width).
+		Int("height", profile.Height).
+		Int("fps", profile.FPS).
+		Int("bitrate_kbps", profile.BitrateKbps).
+		Msg("using explicit video quality profile")
+	return nil
 }
