@@ -310,7 +310,13 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session) (*webrtc.Sess
 	}
 
 	// audio track
-	audioTrack, err := NewTrack(logger, audioCodec, connection)
+	audioQueueDepth, audioQueueDrops := metrics.sampleQueueMetrics("audio")
+	audioTrack, err := NewTrack(
+		logger,
+		audioCodec,
+		connection,
+		WithSampleQueueMetrics(audioQueueDepth, audioQueueDrops),
+	)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -326,7 +332,14 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session) (*webrtc.Sess
 
 	// video track
 	videoRtcp := make(chan []rtcp.Packet, 1)
-	videoTrack, err := NewTrack(logger, videoCodec, connection, WithRtcpChan(videoRtcp))
+	videoQueueDepth, videoQueueDrops := metrics.sampleQueueMetrics("video")
+	videoTrack, err := NewTrack(
+		logger,
+		videoCodec,
+		connection,
+		WithRtcpChan(videoRtcp),
+		WithSampleQueueMetrics(videoQueueDepth, videoQueueDrops),
+	)
 	if err != nil {
 		return nil, nil, err
 	}

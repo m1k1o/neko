@@ -46,6 +46,10 @@ type StreamSinkManagerCtx struct {
 	totalBytes       prometheus.Counter
 	pipelinesCounter prometheus.Counter
 	pipelinesActive  prometheus.Gauge
+	sampleQueueDepth prometheus.Gauge
+	sampleQueueDrops prometheus.Counter
+	lastQueueDrops   uint64
+	queueMetricsMu   sync.Mutex
 }
 
 func streamSinkNew(codec codec.RTPCodec, pipelineFn func() (string, error), id string) *StreamSinkManagerCtx {
@@ -112,6 +116,28 @@ func streamSinkNew(codec codec.RTPCodec, pipelineFn func() (string, error), id s
 			Help:      "Total number of active pipelines.",
 			ConstLabels: map[string]string{
 				"submodule":  "streamsink",
+				"video_id":   id,
+				"codec_name": codec.Name,
+				"codec_type": codec.Type.String(),
+			},
+		}),
+		sampleQueueDepth: promauto.NewGauge(prometheus.GaugeOpts{
+			Name:      "sample_queue_depth",
+			Namespace: "neko",
+			Subsystem: "capture",
+			Help:      "Current encoded-media samples waiting to be dispatched.",
+			ConstLabels: map[string]string{
+				"video_id":   id,
+				"codec_name": codec.Name,
+				"codec_type": codec.Type.String(),
+			},
+		}),
+		sampleQueueDrops: promauto.NewCounter(prometheus.CounterOpts{
+			Name:      "sample_queue_dropped_total",
+			Namespace: "neko",
+			Subsystem: "capture",
+			Help:      "Encoded-media samples evicted because the dispatch queue was full.",
+			ConstLabels: map[string]string{
 				"video_id":   id,
 				"codec_name": codec.Name,
 				"codec_type": codec.Type.String(),
@@ -330,13 +356,14 @@ func (manager *StreamSinkManagerCtx) CreatePipeline() error {
 		manager.logger.Debug().Msg("started emitting samples")
 
 		for {
-			sample, ok := <-pipeline.Sample()
+			sample, ok := pipeline.NextSample()
 			if !ok {
 				manager.logger.Debug().Msg("stopped emitting samples")
 				return
 			}
 
 			manager.onSample(sample)
+			manager.observeSampleQueue(pipeline)
 		}
 	})
 
@@ -344,6 +371,17 @@ func (manager *StreamSinkManagerCtx) CreatePipeline() error {
 	manager.pipelinesActive.Set(1)
 
 	return nil
+}
+
+func (manager *StreamSinkManagerCtx) observeSampleQueue(pipeline gst.Pipeline) {
+	stats := pipeline.SampleQueueStats()
+	manager.sampleQueueDepth.Set(float64(stats.Depth))
+	manager.queueMetricsMu.Lock()
+	defer manager.queueMetricsMu.Unlock()
+	if stats.Dropped > manager.lastQueueDrops {
+		manager.sampleQueueDrops.Add(float64(stats.Dropped - manager.lastQueueDrops))
+		manager.lastQueueDrops = stats.Dropped
+	}
 }
 
 func (manager *StreamSinkManagerCtx) saveSampleBitrate(timestamp time.Time, delta float64) {
@@ -410,6 +448,10 @@ func (manager *StreamSinkManagerCtx) DestroyPipeline() {
 	manager.pipeline = nil
 
 	manager.pipelinesActive.Set(0)
+	manager.sampleQueueDepth.Set(0)
+	manager.queueMetricsMu.Lock()
+	manager.lastQueueDrops = 0
+	manager.queueMetricsMu.Unlock()
 
 	manager.brBuckets = make(map[int]float64)
 	manager.bitrate = 0

@@ -7,6 +7,7 @@ package gst
 */
 import "C"
 import (
+	"context"
 	"fmt"
 	"sync"
 	"sync/atomic"
@@ -16,8 +17,11 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
+	"github.com/m1k1o/neko/server/pkg/mediaqueue"
 	"github.com/m1k1o/neko/server/pkg/types"
 )
+
+const sampleQueueCapacity = 4
 
 var (
 	pSerial       int32
@@ -33,7 +37,9 @@ func init() {
 
 type Pipeline interface {
 	Src() string
-	Sample() chan types.Sample
+	NextSample() (types.Sample, bool)
+	NextSampleContext(ctx context.Context) (types.Sample, bool)
+	SampleQueueStats() mediaqueue.Stats
 	// attach sink or src to pipeline
 	AttachAppsink(sinkName string)
 	AttachAppsrc(srcName string)
@@ -55,7 +61,7 @@ type pipeline struct {
 	logger zerolog.Logger
 	src    string
 	ctx    *C.GstPipelineCtx
-	sample chan types.Sample
+	sample *mediaqueue.Queue[types.Sample]
 }
 
 func CreatePipeline(pipelineStr string) (Pipeline, error) {
@@ -83,7 +89,7 @@ func CreatePipeline(pipelineStr string) (Pipeline, error) {
 			Int("pipeline_id", int(id)).Logger(),
 		src:    pipelineStr,
 		ctx:    ctx,
-		sample: make(chan types.Sample, 4),
+		sample: mediaqueue.New[types.Sample](sampleQueueCapacity, nil),
 	}
 
 	pipelines[p.id] = p
@@ -94,8 +100,16 @@ func (p *pipeline) Src() string {
 	return p.src
 }
 
-func (p *pipeline) Sample() chan types.Sample {
-	return p.sample
+func (p *pipeline) NextSample() (types.Sample, bool) {
+	return p.sample.Pop()
+}
+
+func (p *pipeline) NextSampleContext(ctx context.Context) (types.Sample, bool) {
+	return p.sample.PopContext(ctx)
+}
+
+func (p *pipeline) SampleQueueStats() mediaqueue.Stats {
+	return p.sample.Stats()
 }
 
 func (p *pipeline) AttachAppsink(sinkName string) {
@@ -127,7 +141,7 @@ func (p *pipeline) Destroy() {
 	delete(pipelines, p.id)
 	pipelinesLock.Unlock()
 
-	close(p.sample)
+	p.sample.Close()
 	C.free(unsafe.Pointer(p.ctx))
 }
 
@@ -219,13 +233,13 @@ func goHandlePipelineBuffer(pipelineID C.int, buf C.gpointer, bufLen C.int, dura
 	pipelinesLock.Unlock()
 
 	if ok {
-		pipeline.sample <- types.Sample{
+		pipeline.sample.Push(types.Sample{
 			Data:      C.GoBytes(unsafe.Pointer(buf), bufLen),
 			Length:    int(bufLen),
 			Timestamp: time.Now(),
 			Duration:  time.Duration(duration),
 			DeltaUnit: deltaUnit == C.TRUE,
-		}
+		})
 	} else {
 		log.Warn().
 			Str("module", "capture").

@@ -1,6 +1,7 @@
 package capture
 
 import (
+	"context"
 	"errors"
 	"sync"
 	"sync/atomic"
@@ -197,23 +198,20 @@ func (manager *ScreencastManagerCtx) createPipeline() error {
 	manager.pipelinesActive.Set(1)
 
 	// get first image
-	select {
-	case image, ok := <-manager.pipeline.Sample():
-		if !ok {
-			return errors.New("unable to get first image")
-		} else {
-			manager.setImage(image)
-		}
-	case <-time.After(1 * time.Second):
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	image, ok := manager.pipeline.NextSampleContext(ctx)
+	if !ok {
 		return errors.New("timeouted while waiting for first image")
 	}
+	manager.setImage(image)
 
 	pipeline := manager.pipeline
 	manager.wg.Go(func() {
 		manager.logger.Debug().Msg("started receiving images")
 
 		for {
-			image, ok := <-pipeline.Sample()
+			image, ok := pipeline.NextSample()
 			if !ok {
 				manager.logger.Debug().Msg("stopped receiving images")
 				return
