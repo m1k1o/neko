@@ -207,6 +207,7 @@ server/internal/
 - `47e7b8ac`：新增真实 Squid Basic 与 microsocks 用户名/密码代理的 Docker Compose 集成测试，并接入 PR 默认 CI。
 - `f155a767`：捕获和 WebRTC Track 改用有界的“最新帧优先”队列；队列满载时淘汰旧帧而非阻塞编码或保留过时画面，并公开捕获侧及按会话音/视频 Track 划分的队列深度、淘汰计数指标。
 - `b8987638`：新增显式 `low`、`balanced`、`high` Chromium 画质档位；生成 VP8/软件 H.264 标准管线，并在启动时拒绝与自定义或旧版视频管线参数混用。
+- `fea72230`：新增 `auto`、`software`、`vaapi`、`nvenc` 编码器选择和进程内 GStreamer 元素探测；H.264 元素缺失时按确定顺序回退至 x264 或 VP8，并输出脱敏诊断。
 
 ### 已验证
 
@@ -220,10 +221,11 @@ server/internal/
 - Windows x86_64 + WSL2 Docker 环境的 Chromium 演示通过：账号密码登录、`1280x720@30` 画面及同端口 `52000/TCP+UDP` WebRTC 链路可正常运行。
 - 真实 Squid Basic 与 microsocks 用户名/密码 Docker Compose 套件通过，覆盖健康检查、HTTP 转发、CONNECT 隧道、错误凭据和诊断脱敏。
 - 显式 `balanced` 档位通过 `go test ./...`、目标包竞态检测和实际 Chromium 容器验证；最终 VP8 管线稳定输出整数码率 `2500000`，容器健康且无重启。
+- 编码器选择与回退通过单元/竞态测试；默认 VP8 演示通过真实 GStreamer registry 探测与管线语法检查，仍保持同端口 `52000/TCP+UDP`。registry 探测只代表元素可见，GPU 设备及驱动初始化仍需下一小步验证。
 
 ### 当前限制与下一步
 
-- 下一项实现：H.264 软件、VAAPI、NVENC 编码器能力探测和可诊断回退。
+- 下一项实现：为 H.264 VAAPI/NVENC 增加 GPU 设备及驱动初始化探测，并在实际管线无法进入可用状态时回退。
 - 随后实现：基于现有有界队列压力与 WebRTC 统计的自适应质量策略。
 
 ### M1 后续开发执行计划

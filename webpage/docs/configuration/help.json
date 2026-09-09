@@ -168,6 +168,16 @@
     "key": [
       "capture",
       "video",
+      "encoder"
+    ],
+    "type": "string",
+    "defaultValue": "auto",
+    "description": "Chromium M1 profile encoder (auto, software, vaapi, nvenc)"
+  },
+  {
+    "key": [
+      "capture",
+      "video",
       "display"
     ],
     "type": "string",
