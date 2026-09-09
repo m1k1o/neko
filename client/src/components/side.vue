@@ -1,6 +1,9 @@
 <template>
   <aside class="neko-menu">
-    <nav class="tabs-container" aria-label="Room panel">
+    <nav class="tabs-container" :aria-label="$t('ui.room_panel')">
+      <button type="button" class="panel-close" :aria-label="$t('ui.close_room_panel')" @click.stop.prevent="close">
+        <i class="fas fa-xmark" aria-hidden="true" />
+      </button>
       <ul>
         <li>
           <button
@@ -61,6 +64,7 @@
     flex-direction: column;
 
     .tabs-container {
+      position: relative;
       background: rgba($background-tertiary, 0.66);
       min-height: $menu-height;
       max-height: 100%;
@@ -113,6 +117,10 @@
           }
         }
       }
+
+      .panel-close {
+        display: none;
+      }
     }
 
     .page-container {
@@ -122,6 +130,38 @@
       overflow: auto;
       padding: 10px 12px 12px;
       min-height: 0;
+    }
+  }
+
+  @media only screen and (max-width: 1024px) {
+    .neko-menu {
+      .tabs-container {
+        .panel-close {
+          position: absolute;
+          top: 10px;
+          right: 12px;
+          z-index: 1;
+          width: 34px;
+          height: 34px;
+          display: grid;
+          place-items: center;
+          border: 1px solid rgba($text-normal, 0.12);
+          border-radius: 9px;
+          color: $interactive-normal;
+          background: rgba($background-primary, 0.54);
+          cursor: pointer;
+
+          &:hover,
+          &:focus-visible {
+            color: $interactive-hover;
+            background: $background-modifier-hover;
+          }
+        }
+
+        ul {
+          padding-right: 54px;
+        }
+      }
     }
   }
 </style>
@@ -180,6 +220,10 @@
 
     change(tab: string) {
       this.$accessor.client.setTab(tab)
+    }
+
+    close() {
+      this.$accessor.client.setSide(false)
     }
   }
 </script>

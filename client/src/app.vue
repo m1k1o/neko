@@ -33,6 +33,7 @@
           </div>
         </div>
       </main>
+      <div v-if="!videoOnly && side" class="panel-backdrop" @click.stop.prevent="closeSide" />
       <neko-side v-if="!videoOnly && side" />
       <neko-connect v-if="!connected" />
       <neko-about v-if="about" />
@@ -163,6 +164,10 @@
     }
   }
 
+  .panel-backdrop {
+    display: none;
+  }
+
   @media only screen and (max-width: 1024px) {
     html,
     body {
@@ -189,8 +194,22 @@
       }
 
       .neko-menu {
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 10;
         height: 100vh;
-        width: 100% !important;
+        width: min(100%, 420px) !important;
+      }
+
+      .panel-backdrop {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 9;
+        background: rgba($background-tertiary, 0.68);
+        backdrop-filter: blur(3px);
       }
     }
   }
@@ -198,12 +217,12 @@
   @media only screen and (max-width: 1024px) and (orientation: portrait) {
     #neko {
       &.expanded .neko-main {
-        height: 40vh;
+        height: 100vh;
       }
 
-      &.expanded .neko-menu {
-        height: 60vh;
-        width: 100% !important;
+      &.expanded > .neko-menu {
+        height: 100vh;
+        width: min(100%, 420px) !important;
       }
     }
   }
@@ -336,6 +355,10 @@
 
     get connected() {
       return this.$accessor.connected
+    }
+
+    closeSide() {
+      this.$accessor.client.setSide(false)
     }
   }
 </script>
