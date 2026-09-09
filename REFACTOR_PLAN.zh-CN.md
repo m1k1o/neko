@@ -239,6 +239,7 @@ server/internal/
 - `03dbcd7f`：客户端 `SignalingTransport` 与 Go `WebSocketMessage` 共享严格 envelope 规则；拒绝空/空白事件、`payload:null` 和额外顶层字段，同时保留合法数组 payload，避免重新引入已删除的扁平信令。
 - `32fcf57e`：将前端 WebRTC `getStats`、RTT/丢包采样和网络质量分类提取为可复用的 `NetworkQualityMonitor` SDK；`NekoClient` 只负责把采样结果映射到状态模块，并导出给嵌入式客户端使用。
 - `df63951e`：增加无额外测试依赖的 TypeScript SDK 合约测试，覆盖网络质量阈值、严格信令 envelope 和合法数组 payload，并纳入客户端 CI 构建工作流。
+- `792d4f79`：将登录、登出和 Bearer token 注入提取为独立 `AuthClient`；`NekoClient` 不再直接管理认证 REST 细节，SDK 合约测试覆盖 token 注入与登出清理。
 
 ### 当前限制与下一步
 
