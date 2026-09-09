@@ -5,10 +5,39 @@ export const you = 'You'
 export const somebody = 'Somebody'
 export const send_a_message = 'Send a message'
 
+export const ui = {
+  about: 'About n.eko',
+  secure: 'Secure',
+  github_repository: 'GitHub repository',
+  remote_browser: 'REMOTE BROWSER',
+  room_eyebrow: 'N.EKO ROOM',
+  browser_check: 'BROWSER CHECK',
+  room_controls: 'Room controls',
+  room_panel: 'Room panel',
+  toggle_room_panel: 'Toggle room panel',
+  close_room_panel: 'Close room panel',
+  language: 'Language',
+  enter_fullscreen: 'Enter fullscreen',
+  change_resolution: 'Change resolution',
+  request_or_release_control: 'Request or release control',
+  open_clipboard: 'Open clipboard',
+  picture_in_picture: 'Picture-in-Picture',
+  open_keyboard: 'Open keyboard',
+  pause: 'Pause',
+  play: 'Play',
+  mute: 'Mute',
+  unmute: 'Unmute',
+  volume: 'Volume',
+}
+
 export const side = {
   chat: 'Chat',
   files: 'Files',
   settings: 'Settings',
+}
+
+export const chat = {
+  empty: 'No messages yet. Say hello to the room.',
 }
 
 export const connect = {
@@ -19,6 +48,8 @@ export const connect = {
   connect: 'Connect',
   error: 'Login error',
   empty_displayname: 'Display Name cannot be empty.',
+  show_password: 'Show password',
+  hide_password: 'Hide password',
 }
 
 export const context = {
@@ -90,8 +121,15 @@ export const setting = {
   autoplay: 'Autoplay Video',
   ignore_emotes: 'Ignore Emotes',
   chat_sound: 'Play Chat Sound',
+  links_in_app: 'Always open links in app',
   keyboard_layout: 'Keyboard Layout',
   broadcast_title: 'Live Broadcast',
+  broadcast_placeholder: 'rtmp://a.rtmp.youtube.com/live2/<stream-key>',
+  group_playback: 'Playback',
+  group_chat: 'Chat and appearance',
+  group_input: 'Input',
+  group_admin: 'Administration',
+  group_session: 'Session',
 }
 
 export const connection = {
@@ -99,6 +137,10 @@ export const connection = {
   reconnecting: 'Reconnecting...',
   connected: 'Connected',
   disconnected: 'Disconnected',
+  network_unknown: 'Network quality is unavailable',
+  network_good: 'Good network quality',
+  network_fair: 'Fair network quality',
+  network_poor: 'Poor network quality',
   kicked: 'You have been removed from this room.',
   button_confirm: 'OK',
 }
@@ -124,6 +166,8 @@ export const notifications = {
 }
 
 export const files = {
+  loading: 'Loading files...',
+  empty: 'This folder is empty.',
   downloads: 'Downloads',
   uploads: 'Uploads',
   upload_here: 'Click or drag files here to upload',

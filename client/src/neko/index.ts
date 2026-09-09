@@ -3,7 +3,7 @@ import EventEmitter from 'eventemitter3'
 import { BaseClient, BaseEvents } from './base'
 import { Member } from './types'
 import { EVENT } from './events'
-import { accessor } from '~/store'
+import { accessor, NetworkQuality } from '~/store'
 
 import {
   SystemMessagePayload,
@@ -31,6 +31,8 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   private $vue!: Vue
   private $accessor!: typeof accessor
   private url!: string
+  private networkMonitor?: number
+  private previousNetworkCounters?: { packetsReceived: number; packetsLost: number }
 
   init(vue: Vue) {
     const url =
@@ -50,6 +52,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   }
 
   private cleanup() {
+    this.stopNetworkMonitor()
     this.$accessor.setConnected(false)
     this.$accessor.remote.reset()
     this.$accessor.user.reset()
@@ -75,6 +78,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   // Internal Events
   /////////////////////////////
   protected [EVENT.RECONNECTING]() {
+    this.$accessor.setConnectionState('reconnecting')
     this.$vue.$notify({
       group: 'neko',
       type: 'warning',
@@ -91,6 +95,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   protected [EVENT.CONNECTED]() {
     this.$accessor.user.setMember(this.id)
     this.$accessor.setConnected(true)
+    this.startNetworkMonitor()
 
     this.$vue.$notify({
       group: 'neko',
@@ -117,6 +122,78 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
       duration: 5000,
       speed: 1000,
     })
+  }
+
+  private startNetworkMonitor() {
+    this.stopNetworkMonitor()
+    this.previousNetworkCounters = undefined
+    this.updateNetworkQuality()
+    this.networkMonitor = window.setInterval(() => this.updateNetworkQuality(), 5000)
+  }
+
+  private stopNetworkMonitor() {
+    if (this.networkMonitor) {
+      window.clearInterval(this.networkMonitor)
+      this.networkMonitor = undefined
+    }
+    this.previousNetworkCounters = undefined
+  }
+
+  private async updateNetworkQuality() {
+    if (!this._peer || !this.$accessor.connected) {
+      return
+    }
+
+    try {
+      const stats = await this._peer.getStats()
+      let packetsReceived = 0
+      let packetsLost = 0
+      let rtt: number | null = null
+
+      stats.forEach((stat: any) => {
+        if (stat.type === 'inbound-rtp' && (stat.kind === 'video' || stat.mediaType === 'video')) {
+          packetsReceived += Number(stat.packetsReceived || 0)
+          packetsLost += Number(stat.packetsLost || 0)
+        }
+
+        if (
+          stat.type === 'candidate-pair' &&
+          (stat.state === 'succeeded' || stat.nominated === true) &&
+          typeof stat.currentRoundTripTime === 'number'
+        ) {
+          rtt = stat.currentRoundTripTime * 1000
+        }
+      })
+
+      const previous = this.previousNetworkCounters
+      this.previousNetworkCounters = { packetsReceived, packetsLost }
+
+      const receivedDelta = previous ? Math.max(0, packetsReceived - previous.packetsReceived) : packetsReceived
+      const lostDelta = previous ? Math.max(0, packetsLost - previous.packetsLost) : packetsLost
+      const totalPackets = receivedDelta + lostDelta
+      const packetLoss = totalPackets > 0 ? lostDelta / totalPackets : 0
+      const quality = this.classifyNetworkQuality(rtt, packetLoss, totalPackets > 0 || rtt !== null)
+
+      this.$accessor.setNetworkQuality({ quality, rtt: rtt === null ? null : Math.round(rtt) })
+    } catch (error) {
+      // getStats is best effort; a temporary failure must not affect the media session.
+    }
+  }
+
+  private classifyNetworkQuality(rtt: number | null, packetLoss: number, hasStats: boolean): NetworkQuality {
+    if (!hasStats) {
+      return 'unknown'
+    }
+
+    if ((rtt !== null && rtt > 350) || packetLoss > 0.08) {
+      return 'poor'
+    }
+
+    if ((rtt !== null && rtt > 180) || packetLoss > 0.03) {
+      return 'fair'
+    }
+
+    return 'good'
   }
 
   protected [EVENT.TRACK](event: RTCTrackEvent) {
@@ -369,6 +446,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
     files,
   }: FileTransferListPayload) {
     this.$accessor.files.setCwd(cwd)
+    this.$accessor.files.setLoading(false)
     this.$accessor.files.setFileList(files)
     this.$accessor.files.setUserDownload(user_download)
     this.$accessor.files.setUserUpload(user_upload)

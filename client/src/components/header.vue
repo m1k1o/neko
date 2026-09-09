@@ -2,7 +2,7 @@
   <div class="header">
     <a
       href="https://github.com/m1k1o/neko"
-      title="Github repository"
+      :title="$t('ui.github_repository')"
       target="_blank"
       rel="noopener noreferrer"
       class="neko"
@@ -10,10 +10,25 @@
       <span class="brand-mark"><img src="@/assets/images/logo.svg" alt="" /></span>
       <span class="brand-copy">
         <span class="brand-name"><b>n</b>.eko</span>
-        <span class="brand-caption">REMOTE BROWSER</span>
+        <span class="brand-caption">{{ $t('ui.remote_browser') }}</span>
       </span>
     </a>
-    <ul class="menu" role="toolbar" :aria-label="'Room controls'">
+    <div class="connection-indicator" :class="[connectionState, networkQuality]" role="status" :title="connectionTitle">
+      <span class="status-dot" aria-hidden="true" />
+      <span class="connection-copy">
+        <span class="connection-label">{{ connectionLabel }}</span>
+        <span v-if="networkRtt !== null" class="connection-rtt">{{ networkRtt }} ms</span>
+      </span>
+      <span
+        v-if="connected && networkQuality !== 'unknown'"
+        class="quality-bars"
+        :class="networkQuality"
+        aria-hidden="true"
+      >
+        <i v-for="bar in 3" :key="bar" />
+      </span>
+    </div>
+    <ul class="menu" role="toolbar" :aria-label="$t('ui.room_controls')">
       <li>
         <button
           type="button"
@@ -67,7 +82,7 @@
       </li>
       <li>
         <span v-if="showBadge" class="badge">&bull;</span>
-        <button type="button" class="icon-button toggle" aria-label="Toggle room panel" @click="toggleMenu">
+        <button type="button" class="icon-button toggle" :aria-label="$t('ui.toggle_room_panel')" @click="toggleMenu">
           <i class="fas fa-bars" aria-hidden="true" />
         </button>
       </li>
@@ -133,6 +148,105 @@
           font-weight: 700;
           letter-spacing: 0.14em;
           line-height: 10px;
+        }
+      }
+    }
+
+    .connection-indicator {
+      min-width: 118px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-right: 14px;
+      padding: 7px 10px;
+      border: 1px solid rgba($text-normal, 0.08);
+      border-radius: 10px;
+      background: rgba($background-primary, 0.52);
+
+      .status-dot {
+        width: 8px;
+        height: 8px;
+        flex: 0 0 auto;
+        border-radius: 50%;
+        background: $interactive-muted;
+        box-shadow: 0 0 0 3px rgba($interactive-muted, 0.12);
+      }
+
+      .connection-copy {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+
+        .connection-label {
+          overflow: hidden;
+          color: $interactive-normal;
+          font-size: 11px;
+          font-weight: 600;
+          line-height: 13px;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .connection-rtt {
+          color: $text-muted;
+          font-size: 9px;
+          line-height: 10px;
+        }
+      }
+
+      &.connected .status-dot {
+        background: $style-primary;
+        box-shadow: 0 0 0 3px rgba($style-primary, 0.14);
+      }
+
+      &.connecting .status-dot,
+      &.reconnecting .status-dot {
+        background: $style-warning;
+        box-shadow: 0 0 0 3px rgba($style-warning, 0.14);
+        animation: status-pulse 1.5s ease-in-out infinite;
+      }
+
+      &.poor .status-dot {
+        background: $style-error;
+        box-shadow: 0 0 0 3px rgba($style-error, 0.14);
+      }
+
+      .quality-bars {
+        height: 16px;
+        display: flex;
+        align-items: flex-end;
+        gap: 2px;
+        margin-left: auto;
+
+        i {
+          width: 3px;
+          border-radius: 2px;
+          background: $interactive-muted;
+
+          &:nth-child(1) {
+            height: 5px;
+          }
+
+          &:nth-child(2) {
+            height: 9px;
+          }
+
+          &:nth-child(3) {
+            height: 13px;
+          }
+        }
+
+        &.good i {
+          background: $style-primary;
+        }
+
+        &.fair i:nth-child(-n + 2) {
+          background: $style-warning;
+        }
+
+        &.poor i:nth-child(1) {
+          background: $style-error;
         }
       }
     }
@@ -221,6 +335,43 @@
         }
       }
     }
+
+    @keyframes status-pulse {
+      50% {
+        opacity: 0.35;
+      }
+    }
+  }
+
+  @media only screen and (max-width: 600px) {
+    .header {
+      padding: 0 10px;
+
+      .brand-caption {
+        display: none !important;
+      }
+
+      .connection-indicator {
+        min-width: 34px;
+        width: 34px;
+        height: 34px;
+        justify-content: center;
+        margin-right: 4px;
+        padding: 0;
+
+        .connection-copy {
+          display: none;
+        }
+
+        .quality-bars {
+          display: none;
+        }
+      }
+
+      .menu li {
+        margin-left: 2px;
+      }
+    }
   }
 </style>
 
@@ -230,6 +381,41 @@
 
   @Component({ name: 'neko-header' })
   export default class extends Vue {
+    get connectionState() {
+      return this.$accessor.connectionState
+    }
+
+    get networkQuality() {
+      return this.$accessor.networkQuality
+    }
+
+    get networkRtt() {
+      return this.$accessor.networkRtt
+    }
+
+    get connected() {
+      return this.$accessor.connected
+    }
+
+    get connectionLabel() {
+      if (this.connectionState === 'connected') {
+        return this.$t('connection.connected')
+      }
+      if (this.connectionState === 'connecting' || this.connectionState === 'reconnecting') {
+        return this.$t('connection.reconnecting')
+      }
+      return this.$t('connection.disconnected')
+    }
+
+    get connectionTitle() {
+      if (this.networkRtt !== null && this.networkQuality !== 'unknown') {
+        return `${this.connectionLabel} · ${this.networkRtt} ms · ${this.$t(
+          'connection.network_' + this.networkQuality,
+        )}`
+      }
+      return this.connectionLabel as string
+    }
+
     get admin() {
       return this.$accessor.user.admin
     }
