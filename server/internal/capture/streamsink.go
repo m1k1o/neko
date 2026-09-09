@@ -27,6 +27,7 @@ type StreamSinkManagerCtx struct {
 
 	bitrate   uint64
 	brBuckets map[int]float64
+	bitrateMu sync.RWMutex
 
 	logger zerolog.Logger
 	mu     sync.Mutex
@@ -43,14 +44,25 @@ type StreamSinkManagerCtx struct {
 	listenersMu sync.Mutex
 
 	// metrics
-	currentListeners prometheus.Gauge
-	totalBytes       prometheus.Counter
-	pipelinesCounter prometheus.Counter
-	pipelinesActive  prometheus.Gauge
-	sampleQueueDepth prometheus.Gauge
-	sampleQueueDrops prometheus.Counter
-	lastQueueDrops   uint64
-	queueMetricsMu   sync.Mutex
+	currentListeners      prometheus.Gauge
+	totalBytes            prometheus.Counter
+	pipelinesCounter      prometheus.Counter
+	pipelinesActive       prometheus.Gauge
+	sampleQueueDepth      prometheus.Gauge
+	sampleQueueDrops      prometheus.Counter
+	sampleFrames          prometheus.Counter
+	sampleRate            prometheus.Gauge
+	sampleBitrate         prometheus.Gauge
+	firstFrameSeconds     prometheus.Histogram
+	pipelineFallbacks     prometheus.Counter
+	lastQueueDrops        uint64
+	queueMetricsMu        sync.Mutex
+	pipelineStartedAt     time.Time
+	firstFrameObserved    bool
+	sampleWindowStartedAt time.Time
+	sampleWindowFrames    uint64
+	sampleWindowBytes     uint64
+	sampleStatsMu         sync.Mutex
 }
 
 func streamSinkNew(codec codec.RTPCodec, pipelineFn func() (string, error), id string) *StreamSinkManagerCtx {
@@ -149,6 +161,62 @@ func streamSinkNewWithFallback(codec codec.RTPCodec, pipelineFn func() (string, 
 				"codec_type": codec.Type.String(),
 			},
 		}),
+		sampleFrames: promauto.NewCounter(prometheus.CounterOpts{
+			Name:      "samples_total",
+			Namespace: "neko",
+			Subsystem: "capture",
+			Help:      "Total encoded media samples emitted by a pipeline.",
+			ConstLabels: map[string]string{
+				"video_id":   id,
+				"codec_name": codec.Name,
+				"codec_type": codec.Type.String(),
+			},
+		}),
+		sampleRate: promauto.NewGauge(prometheus.GaugeOpts{
+			Name:      "sample_rate",
+			Namespace: "neko",
+			Subsystem: "capture",
+			Help:      "Current encoded media sample rate in samples per second.",
+			ConstLabels: map[string]string{
+				"video_id":   id,
+				"codec_name": codec.Name,
+				"codec_type": codec.Type.String(),
+			},
+		}),
+		sampleBitrate: promauto.NewGauge(prometheus.GaugeOpts{
+			Name:      "sample_bitrate_bits_per_second",
+			Namespace: "neko",
+			Subsystem: "capture",
+			Help:      "Current encoded media bitrate in bits per second.",
+			ConstLabels: map[string]string{
+				"video_id":   id,
+				"codec_name": codec.Name,
+				"codec_type": codec.Type.String(),
+			},
+		}),
+		firstFrameSeconds: promauto.NewHistogram(prometheus.HistogramOpts{
+			Name:      "first_frame_seconds",
+			Namespace: "neko",
+			Subsystem: "capture",
+			Help:      "Time from pipeline creation until the first encoded media sample.",
+			Buckets:   prometheus.DefBuckets,
+			ConstLabels: map[string]string{
+				"video_id":   id,
+				"codec_name": codec.Name,
+				"codec_type": codec.Type.String(),
+			},
+		}),
+		pipelineFallbacks: promauto.NewCounter(prometheus.CounterOpts{
+			Name:      "pipeline_fallbacks_total",
+			Namespace: "neko",
+			Subsystem: "capture",
+			Help:      "Total pipeline candidates skipped after creation or startup failure.",
+			ConstLabels: map[string]string{
+				"video_id":   id,
+				"codec_name": codec.Name,
+				"codec_type": codec.Type.String(),
+			},
+		}),
 	}
 
 	return manager
@@ -175,6 +243,8 @@ func (manager *StreamSinkManagerCtx) ID() string {
 }
 
 func (manager *StreamSinkManagerCtx) Bitrate() uint64 {
+	manager.bitrateMu.RLock()
+	defer manager.bitrateMu.RUnlock()
 	return manager.bitrate
 }
 
@@ -367,6 +437,14 @@ func (manager *StreamSinkManagerCtx) CreatePipeline() error {
 
 		manager.pipeline, pipelineErr = gst.CreatePipeline(pipelineStr)
 		if pipelineErr == nil {
+			manager.sampleStatsMu.Lock()
+			manager.pipelineStartedAt = time.Now()
+			manager.firstFrameObserved = false
+			manager.sampleWindowStartedAt = manager.pipelineStartedAt
+			manager.sampleWindowFrames = 0
+			manager.sampleWindowBytes = 0
+			manager.sampleStatsMu.Unlock()
+
 			manager.pipeline.AttachAppsink("appsink")
 			if manager.pipeline.Play() {
 				break
@@ -375,6 +453,7 @@ func (manager *StreamSinkManagerCtx) CreatePipeline() error {
 			manager.pipeline.Destroy()
 			manager.pipeline = nil
 		}
+		manager.pipelineFallbacks.Inc()
 		manager.logger.Warn().
 			Err(pipelineErr).
 			Int("candidate", index).
@@ -418,6 +497,8 @@ func (manager *StreamSinkManagerCtx) observeSampleQueue(pipeline gst.Pipeline) {
 }
 
 func (manager *StreamSinkManagerCtx) saveSampleBitrate(timestamp time.Time, delta float64) {
+	manager.bitrateMu.Lock()
+	defer manager.bitrateMu.Unlock()
 	// get unix timestamp in seconds
 	sec := timestamp.Unix()
 	// last bucket is timestamp rounded to 3 seconds - 1 second
@@ -439,6 +520,7 @@ func (manager *StreamSinkManagerCtx) saveSampleBitrate(timestamp time.Time, delt
 }
 
 func (manager *StreamSinkManagerCtx) onSample(sample types.Sample) {
+	manager.observeSample(sample)
 	manager.listenersMu.Lock()
 
 	// save to metrics
@@ -468,6 +550,31 @@ func (manager *StreamSinkManagerCtx) onSample(sample types.Sample) {
 	}
 }
 
+func (manager *StreamSinkManagerCtx) observeSample(sample types.Sample) {
+	manager.sampleFrames.Inc()
+	manager.sampleStatsMu.Lock()
+	defer manager.sampleStatsMu.Unlock()
+
+	if !manager.firstFrameObserved && !manager.pipelineStartedAt.IsZero() {
+		manager.firstFrameSeconds.Observe(time.Since(manager.pipelineStartedAt).Seconds())
+		manager.firstFrameObserved = true
+	}
+	if manager.sampleWindowStartedAt.IsZero() {
+		manager.sampleWindowStartedAt = sample.Timestamp
+	}
+	manager.sampleWindowFrames++
+	manager.sampleWindowBytes += uint64(sample.Length)
+	elapsed := sample.Timestamp.Sub(manager.sampleWindowStartedAt).Seconds()
+	if elapsed < 1 {
+		return
+	}
+	manager.sampleRate.Set(float64(manager.sampleWindowFrames) / elapsed)
+	manager.sampleBitrate.Set(float64(manager.sampleWindowBytes*8) / elapsed)
+	manager.sampleWindowStartedAt = sample.Timestamp
+	manager.sampleWindowFrames = 0
+	manager.sampleWindowBytes = 0
+}
+
 func (manager *StreamSinkManagerCtx) DestroyPipeline() {
 	manager.pipelineMu.Lock()
 	defer manager.pipelineMu.Unlock()
@@ -486,6 +593,18 @@ func (manager *StreamSinkManagerCtx) DestroyPipeline() {
 	manager.lastQueueDrops = 0
 	manager.queueMetricsMu.Unlock()
 
+	manager.sampleStatsMu.Lock()
+	manager.pipelineStartedAt = time.Time{}
+	manager.firstFrameObserved = false
+	manager.sampleWindowStartedAt = time.Time{}
+	manager.sampleWindowFrames = 0
+	manager.sampleWindowBytes = 0
+	manager.sampleStatsMu.Unlock()
+	manager.sampleRate.Set(0)
+	manager.sampleBitrate.Set(0)
+
+	manager.bitrateMu.Lock()
 	manager.brBuckets = make(map[int]float64)
 	manager.bitrate = 0
+	manager.bitrateMu.Unlock()
 }
