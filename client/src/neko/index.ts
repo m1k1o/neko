@@ -3,6 +3,7 @@ import EventEmitter from 'eventemitter3'
 import { BaseClient, BaseEvents } from './base'
 import { EVENT } from './events'
 import { accessor } from '~/store'
+import { AuthClient } from '~/sdk/auth'
 import { NetworkQualityMonitor } from '~/sdk/network-monitor'
 import { set } from '~/utils/localstorage'
 
@@ -27,9 +28,9 @@ interface NekoEvents extends BaseEvents {}
 export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   private $vue!: Vue
   private $accessor!: typeof accessor
+  private auth!: AuthClient
   private url!: string
   private apiURL = ''
-  private token = ''
   private networkMonitor?: NetworkQualityMonitor
 
   init(vue: Vue) {
@@ -54,6 +55,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
     // Keep static assets (emoji, keyboard layouts) on the application root.
     this.$vue.$http.defaults.baseURL = httpURL.replace(/\/api\/ws$/, '')
     this.$vue.$http.defaults.withCredentials = true
+    this.auth = new AuthClient(this.$vue.$http, this.apiURL)
   }
 
   private cleanup() {
@@ -72,17 +74,11 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
 
     this.$accessor.connection.setConnecting()
     try {
-      const response = await this.$vue.$http.post<{ token?: string }>(`${this.apiURL}/login`, {
-        username: displayname,
-        password,
-      })
-      this.token = response.data.token || ''
-      this.setAuthToken()
-      this.connect(this.url, this.token)
+      const token = await this.auth.login(displayname, password)
+      this.connect(this.url, token)
     } catch (error) {
       const reason = this.toError(error)
-      this.token = ''
-      this.setAuthToken()
+      this.auth.clear()
       this.$accessor.connection.setConnected(false)
       this.$accessor.connection.setError(reason.message)
     }
@@ -92,26 +88,15 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
     this.disconnect()
     this.cleanup()
     try {
-      await this.$vue.$http.post(`${this.apiURL}/logout`)
+      await this.auth.logout()
     } catch (error) {
       // A closed session is already safe to discard locally.
     }
-    this.token = ''
-    this.setAuthToken()
     this.$vue.$swal({
       title: this.$vue.$t('connection.logged_out'),
       icon: 'info',
       confirmButtonText: this.$vue.$t('connection.button_confirm') as string,
     })
-  }
-
-  private setAuthToken() {
-    const headers = this.$vue.$http.defaults.headers.common
-    if (this.token) {
-      headers.Authorization = `Bearer ${this.token}`
-    } else {
-      delete headers.Authorization
-    }
   }
 
   private toError(error: unknown): Error {
