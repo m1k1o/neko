@@ -42,3 +42,11 @@ if [[ -n "${NEKO_E2E_ARTIFACT_DIR:-}" ]]; then
 fi
 
 docker run "${args[@]}" "${image}"
+
+if [[ "${NEKO_E2E_COLLECT_METRICS:-0}" == "1" ]]; then
+  metrics_url="${NEKO_E2E_METRICS_URL:-${base_url%/}/metrics}"
+  metrics_output="${NEKO_E2E_METRICS_OUTPUT:-/tmp/neko-e2e.prom}"
+  mkdir -p "$(dirname "${metrics_output}")"
+  curl --fail --silent --show-error "${metrics_url}" >"${metrics_output}"
+  echo "metrics snapshot: ${metrics_output}"
+fi

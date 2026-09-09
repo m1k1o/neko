@@ -27,6 +27,9 @@ signaling events, browser version, and the selected profile. It never writes
 the password to output or logs. Set `NEKO_E2E_ARTIFACT_DIR` to save a failure
 screenshot. `NEKO_E2E_BASE_URL` changes the target; the runner uses host
 networking so WebRTC's media port is exercised as well as HTTP/WebSocket.
+Set `NEKO_E2E_COLLECT_METRICS=1` to save a Prometheus snapshot next to the JSON
+result (or set `NEKO_E2E_METRICS_OUTPUT` explicitly). This keeps server-side
+queue, bitrate, frame and ICE metrics aligned with the browser sample.
 
 To run concurrent viewer samples (for example, 1, 2, and 5 viewers), set the
 count and repeat the command with the server's desired capture profile:

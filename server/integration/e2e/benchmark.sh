@@ -23,6 +23,8 @@ for viewer in $(seq 1 "${viewers}"); do
     NEKO_E2E_IMAGE="${image}" \
     NEKO_E2E_SKIP_BUILD=1 \
     NEKO_E2E_OUTPUT="${output}" \
+    NEKO_E2E_COLLECT_METRICS="${NEKO_E2E_COLLECT_METRICS:-0}" \
+    NEKO_E2E_METRICS_OUTPUT="${output_dir}/viewer-${viewer}.prom" \
     NEKO_E2E_ARTIFACT_DIR="${output_dir}/viewer-${viewer}-artifacts" \
     "${integration_dir}/run.sh" >"${output_dir}/viewer-${viewer}.log" 2>&1 &
   pids+=("$!")
