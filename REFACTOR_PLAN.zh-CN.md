@@ -216,6 +216,8 @@ server/internal/
 - `02b616c8`：增加 AV1/H.264/H.265 RTP codec 解析与 Pion 注册测试。
 - `d402b3df`：新增可在目标运行时执行的编码器能力矩阵脚本、矩阵说明和配置文档。
 - `ecc1dff6`：在运行时镜像中提供 GStreamer CLI 工具，并补齐 Intel VAAPI 开发配置。
+- `5ff71fa4`：为编码矩阵增加 `software`、`vaapi`、`nvenc` 族筛选，支持硬件发布作业按 GPU 类型严格执行。
+- `08dfc2ef`：补齐 VAAPI 低功耗 H.264 配置生成并增加回归覆盖。
 
 ### 已验证
 
@@ -233,6 +235,7 @@ server/internal/
 - 硬件编码运行时探测通过 `videotestsrc -> encoder -> h264parse -> fakesink` 短管线验证；无可用设备或驱动时会在配置阶段回退软件编码，并通过配置/质量单元测试覆盖失败诊断。
 - 运行时管线候选已接入 `StreamSink`；同 codec 的硬件失败可重试软件编码，所有候选失败会返回明确错误并保留现有会话生命周期。
 - 当前工作区 `go test ./...` 通过；新增 AV1/H.265 配置、编码器选择、运行时回退和矩阵覆盖测试通过。当前环境没有可用 GStreamer CLI 或 GPU 设备，因此真实硬件行需在映射 `/dev/dri` 或 `--gpus all` 的目标运行时执行 `server/integration/encoding/matrix.sh`。
+- `go test -race ./internal/quality ./internal/config ./pkg/gst ./pkg/types/codec`、`go vet ./...`、编码矩阵脚本 Shell 语法和软件/VAAPI 族筛选模拟执行通过；真实 GPU 行仍需在目标运行时归档 TSV 结果。
 - `StreamSink` 增加首帧耗时、实际样本率、实际码率、样本总数和管线回退计数指标；码率状态改为读写锁保护，避免多观看者并发访问竞态。
 - 带宽估计器接入视频 Track 队列占用、RTCP jitter 和累计丢包；压力持续超过滞回时降档，压力存在时禁止升档，并将切换原因写入日志。
 - `83341b33`：将队列压力、RTCP jitter 和新增丢包接入 WebRTC 自适应升降档；网络压力持续超过不稳定时长才降档，且压力期间禁止升档。
