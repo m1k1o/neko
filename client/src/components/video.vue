@@ -2,7 +2,7 @@
   <div ref="component" class="video">
     <div ref="player" class="player">
       <div ref="container" class="player-container">
-        <video ref="video" playsinline />
+        <video ref="video" data-testid="remote-video" playsinline />
         <div class="emotes">
           <template v-for="(emote, index) in emotes">
             <neko-emote :id="index" :key="index" />

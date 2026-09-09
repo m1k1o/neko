@@ -15,6 +15,8 @@
           <span>{{ $t('connect.displayname') }}</span>
           <input
             type="text"
+            name="displayname"
+            data-testid="displayname-input"
             :placeholder="$t('connect.displayname')"
             v-model="displayname"
             autocomplete="nickname"
@@ -29,6 +31,8 @@
           <div class="password-field">
             <input
               :type="showPassword ? 'text' : 'password'"
+              name="password"
+              data-testid="password-input"
               :placeholder="$t('connect.password')"
               v-model="password"
               autocomplete="current-password"
@@ -48,7 +52,7 @@
           <i class="fas fa-circle-exclamation" aria-hidden="true" />
           {{ loginError }}
         </p>
-        <button class="primary-button" type="submit">
+        <button class="primary-button" data-testid="connect-submit" type="submit">
           <span>{{ $t('connect.connect') }}</span>
           <i class="fas fa-arrow-right" aria-hidden="true" />
         </button>

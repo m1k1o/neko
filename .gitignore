@@ -51,3 +51,6 @@ runtime/icon-theme/*
 demo/compose.frp.yaml
 demo/compose.turn.yaml
 demo/frpc.toml
+
+# Browser E2E output is generated locally and can contain screenshots/metrics.
+/server/integration/e2e/results/

@@ -13,7 +13,13 @@
         <span class="brand-caption">{{ $t('ui.remote_browser') }}</span>
       </span>
     </a>
-    <div class="connection-indicator" :class="[connectionState, networkQuality]" role="status" :title="connectionTitle">
+    <div
+      data-testid="connection-indicator"
+      class="connection-indicator"
+      :class="[connectionState, networkQuality]"
+      role="status"
+      :title="connectionTitle"
+    >
       <span class="status-dot" aria-hidden="true" />
       <span class="connection-copy">
         <span class="connection-label">{{ connectionLabel }}</span>
