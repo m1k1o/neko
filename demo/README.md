@@ -31,6 +31,17 @@ Then build and start the demo:
 docker compose -f demo/compose.local.yaml up -d --build
 ```
 
+For a no-public-IP deployment, copy `demo/compose.frp.example.yaml` to
+`compose.frp.yaml`, copy `demo/frpc.toml.example` to `frpc.toml`, and replace
+the FRP/SakuraFrp placeholders. The FRP server must expose both TCP and UDP
+proxies on the same `${FRP_MEDIA_PORT}` (default `52000`); set
+`FRP_PUBLIC_IP` to the FRP node's public address, not the local host address.
+
+For TURN fallback, copy `demo/compose.turn.example.yaml` to
+`compose.turn.yaml` and set the TURN host, public IP, relay range, and
+credentials. Open TCP/UDP `3478` plus the complete relay range in the TURN
+server firewall. Do not commit the copied files containing credentials.
+
 Open <http://127.0.0.1:8080>. Stop it with:
 
 ```bash

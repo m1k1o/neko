@@ -227,11 +227,12 @@ server/internal/
 - `StreamSink` 增加首帧耗时、实际样本率、实际码率、样本总数和管线回退计数指标；码率状态改为读写锁保护，避免多观看者并发访问竞态。
 - 带宽估计器接入视频 Track 队列占用、RTCP jitter 和累计丢包；压力持续超过滞回时降档，压力存在时禁止升档，并将切换原因写入日志。
 - `83341b33`：将队列压力、RTCP jitter 和新增丢包接入 WebRTC 自适应升降档；网络压力持续超过不稳定时长才降档，且压力期间禁止升档。
+- 新增 `demo/compose.frp.example.yaml`、`demo/frpc.toml.example` 和 `demo/compose.turn.example.yaml`，覆盖 SakuraFrp/FRP 同号 TCP+UDP 媒体隧道及 Coturn relay 端口模板，凭据均使用占位符。
 
 ### 当前限制与下一步
 
 - 下一项实现：为 H.264 VAAPI/NVENC 增加 GPU 设备及驱动初始化探测，并在实际管线无法进入可用状态时回退。
-- 随后实现：将队列压力、RTT/jitter/丢包指标接入自适应质量决策，并补充编码耗时观测。
+- 随后实现：为 FRP/TURN 模板增加无公网 IP、relay 端口和故障诊断的自动化连通性测试。
 
 ### M1 后续开发执行计划
 

@@ -46,3 +46,8 @@ runtime/icon-theme/*
 
 # root Dockerfile is generated from the Dockerfile.tmpl
 /Dockerfile
+
+# Local tunnel configurations may contain provider tokens or TURN credentials
+demo/compose.frp.yaml
+demo/compose.turn.yaml
+demo/frpc.toml
