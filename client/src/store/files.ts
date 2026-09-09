@@ -6,6 +6,7 @@ import { accessor } from '~/store'
 export const state = () => ({
   cwd: '',
   files: [] as FileListItem[],
+  loading: false,
   transfers: [] as FileTransfer[],
   userDownload: false,
   userUpload: false,
@@ -23,6 +24,11 @@ export const mutations = mutationTree(state, {
 
   _setFileList(state, files: FileListItem[]) {
     state.files = files
+    state.loading = false
+  },
+
+  _setLoading(state, loading: boolean) {
+    state.loading = loading
   },
 
   _setUserDownload(state, val: boolean) {
@@ -55,6 +61,10 @@ export const actions = actionTree(
 
     setFileList(store, files: FileListItem[]) {
       accessor.files._setFileList(files)
+    },
+
+    setLoading(store, loading: boolean) {
+      accessor.files._setLoading(loading)
     },
 
     setUserDownload(store, val: boolean) {
@@ -93,6 +103,7 @@ export const actions = actionTree(
       if (!accessor.connected) {
         return
       }
+      accessor.files.setLoading(true)
       $client.sendMessage(EVENT.FILETRANSFER.REFRESH)
     },
   },
