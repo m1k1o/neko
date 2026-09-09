@@ -31,12 +31,15 @@ const (
 type Capture struct {
 	Display string
 
-	VideoCodec       codec.RTPCodec
-	VideoProfile     quality.Name
-	VideoEncoder     quality.Encoder
-	VideoIDs         []string
-	VideoPipelines   map[string]types.VideoConfig
-	VideoShowPointer bool
+	VideoCodec     codec.RTPCodec
+	VideoProfile   quality.Name
+	VideoEncoder   quality.Encoder
+	VideoIDs       []string
+	VideoPipelines map[string]types.VideoConfig
+	// VideoPipelineFallbacks contains same-codec candidates for profile
+	// pipelines that may fail when a hardware device is initialized at runtime.
+	VideoPipelineFallbacks map[string][]types.VideoConfig
+	VideoShowPointer       bool
 
 	AudioDevice   string
 	AudioCodec    codec.RTPCodec
@@ -713,6 +716,15 @@ func (s *Capture) applyVideoProfile(probe quality.ElementProbe) error {
 	s.VideoCodec = selection.Codec
 	s.VideoIDs = []string{"main"}
 	s.VideoPipelines = map[string]types.VideoConfig{"main": videoConfig}
+	s.VideoPipelineFallbacks = make(map[string][]types.VideoConfig)
+	if selection.Codec.Name == codec.H264().Name && selection.Element != "x264enc" {
+		if probe("x264enc") == nil && probe("h264parse") == nil {
+			softwareConfig, configErr := profile.VideoConfig(codec.H264(), quality.EncoderSoftware, "x264enc", s.VideoShowPointer)
+			if configErr == nil {
+				s.VideoPipelineFallbacks["main"] = []types.VideoConfig{softwareConfig}
+			}
+		}
+	}
 	if len(selection.Unavailable) > 0 {
 		log.Warn().
 			Str("requested", string(selection.Requested)).

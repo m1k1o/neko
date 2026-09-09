@@ -32,10 +32,11 @@ type StreamSinkManagerCtx struct {
 	mu     sync.Mutex
 	wg     sync.WaitGroup
 
-	codec      codec.RTPCodec
-	pipeline   gst.Pipeline
-	pipelineMu sync.Mutex
-	pipelineFn func() (string, error)
+	codec                codec.RTPCodec
+	pipeline             gst.Pipeline
+	pipelineMu           sync.Mutex
+	pipelineFn           func() (string, error)
+	pipelineCandidatesFn func() ([]string, error)
 
 	listeners   map[uintptr]types.SampleListener
 	listenersKf map[uintptr]types.SampleListener // keyframe lobby
@@ -53,6 +54,10 @@ type StreamSinkManagerCtx struct {
 }
 
 func streamSinkNew(codec codec.RTPCodec, pipelineFn func() (string, error), id string) *StreamSinkManagerCtx {
+	return streamSinkNewWithFallback(codec, pipelineFn, nil, id)
+}
+
+func streamSinkNewWithFallback(codec codec.RTPCodec, pipelineFn func() (string, error), pipelineCandidatesFn func() ([]string, error), id string) *StreamSinkManagerCtx {
 	logger := log.With().
 		Str("module", "capture").
 		Str("submodule", "stream-sink").
@@ -67,9 +72,10 @@ func streamSinkNew(codec codec.RTPCodec, pipelineFn func() (string, error), id s
 		bitrate:   0,
 		brBuckets: map[int]float64{},
 
-		logger:     logger,
-		codec:      codec,
-		pipelineFn: pipelineFn,
+		logger:               logger,
+		codec:                codec,
+		pipelineFn:           pipelineFn,
+		pipelineCandidatesFn: pipelineCandidatesFn,
 
 		listeners:   map[uintptr]types.SampleListener{},
 		listenersKf: map[uintptr]types.SampleListener{},
@@ -333,23 +339,50 @@ func (manager *StreamSinkManagerCtx) CreatePipeline() error {
 		return types.ErrCapturePipelineAlreadyExists
 	}
 
-	pipelineStr, err := manager.pipelineFn()
+	pipelineStrs := make([]string, 0, 1)
+	var err error
+	if manager.pipelineCandidatesFn != nil {
+		pipelineStrs, err = manager.pipelineCandidatesFn()
+	} else {
+		var pipelineStr string
+		pipelineStr, err = manager.pipelineFn()
+		if err == nil {
+			pipelineStrs = append(pipelineStrs, pipelineStr)
+		}
+	}
 	if err != nil {
 		return err
 	}
-
-	manager.logger.Info().
-		Str("codec", manager.codec.Name).
-		Str("src", pipelineStr).
-		Msgf("creating pipeline")
-
-	manager.pipeline, err = gst.CreatePipeline(pipelineStr)
-	if err != nil {
-		return err
+	if len(pipelineStrs) == 0 {
+		return errors.New("no capture pipeline candidates available")
 	}
 
-	manager.pipeline.AttachAppsink("appsink")
-	manager.pipeline.Play()
+	var pipelineErr error
+	for index, pipelineStr := range pipelineStrs {
+		manager.logger.Info().
+			Str("codec", manager.codec.Name).
+			Str("src", pipelineStr).
+			Int("candidate", index).
+			Msg("creating pipeline")
+
+		manager.pipeline, pipelineErr = gst.CreatePipeline(pipelineStr)
+		if pipelineErr == nil {
+			manager.pipeline.AttachAppsink("appsink")
+			if manager.pipeline.Play() {
+				break
+			}
+			pipelineErr = errors.New("pipeline failed to enter playing state")
+			manager.pipeline.Destroy()
+			manager.pipeline = nil
+		}
+		manager.logger.Warn().
+			Err(pipelineErr).
+			Int("candidate", index).
+			Msg("capture pipeline candidate failed")
+	}
+	if pipelineErr != nil {
+		return pipelineErr
+	}
 
 	pipeline := manager.pipeline
 	manager.wg.Go(func() {

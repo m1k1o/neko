@@ -116,8 +116,9 @@ void gstreamer_pipeline_attach_appsrc(GstPipelineCtx *ctx, char *srcName) {
   ctx->appsrc = gst_bin_get_by_name(GST_BIN(ctx->pipeline), srcName);
 }
 
-void gstreamer_pipeline_play(GstPipelineCtx *ctx) {
-  gst_element_set_state(GST_ELEMENT(ctx->pipeline), GST_STATE_PLAYING);
+gboolean gstreamer_pipeline_play(GstPipelineCtx *ctx) {
+  GstStateChangeReturn result = gst_element_set_state(GST_ELEMENT(ctx->pipeline), GST_STATE_PLAYING);
+  return result != GST_STATE_CHANGE_FAILURE;
 }
 
 void gstreamer_pipeline_pause(GstPipelineCtx *ctx) {

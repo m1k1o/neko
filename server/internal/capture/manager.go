@@ -36,23 +36,38 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 	videos := map[string]types.StreamSinkManager{}
 	for video_id, cnf := range config.VideoPipelines {
 		pipelineConf := cnf
+		pipelineFallbacks := append([]types.VideoConfig(nil), config.VideoPipelineFallbacks[video_id]...)
 
-		createPipeline := func() (string, error) {
-			if pipelineConf.GstPipeline != "" {
+		createPipelineFor := func(videoConfig types.VideoConfig) (string, error) {
+			if videoConfig.GstPipeline != "" {
 				// replace {display} with valid display
-				return strings.Replace(pipelineConf.GstPipeline, "{display}", config.Display, 1), nil
+				return strings.Replace(videoConfig.GstPipeline, "{display}", config.Display, 1), nil
 			}
 
 			screen := desktop.GetScreenSize()
-			pipeline, err := pipelineConf.GetPipeline(screen)
+			pipeline, err := videoConfig.GetPipeline(screen)
 			if err != nil {
 				return "", err
 			}
 
 			return fmt.Sprintf(
-				"ximagesrc display-name=%s show-pointer=%v use-damage=false "+
-					"%s ! appsink name=appsink", config.Display, pipelineConf.ShowPointer, pipeline,
+				"ximagesrc display-name=%s show-pointer=%v use-damage=false %s ! appsink name=appsink",
+				config.Display, videoConfig.ShowPointer, pipeline,
 			), nil
+		}
+		createPipeline := func() (string, error) {
+			return createPipelineFor(pipelineConf)
+		}
+		createPipelineCandidates := func() ([]string, error) {
+			candidates := make([]string, 0, 1+len(pipelineFallbacks))
+			for _, candidate := range append([]types.VideoConfig{pipelineConf}, pipelineFallbacks...) {
+				pipeline, err := createPipelineFor(candidate)
+				if err != nil {
+					return nil, err
+				}
+				candidates = append(candidates, pipeline)
+			}
+			return candidates, nil
 		}
 
 		// trigger function to catch evaluation errors at startup
@@ -69,7 +84,11 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 			Msg("syntax check for video stream pipeline passed")
 
 		// append to videos
-		videos[video_id] = streamSinkNew(config.VideoCodec, createPipeline, video_id)
+		if len(pipelineFallbacks) > 0 {
+			videos[video_id] = streamSinkNewWithFallback(config.VideoCodec, createPipeline, createPipelineCandidates, video_id)
+		} else {
+			videos[video_id] = streamSinkNew(config.VideoCodec, createPipeline, video_id)
+		}
 	}
 
 	return &CaptureManagerCtx{

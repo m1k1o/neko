@@ -44,7 +44,7 @@ type Pipeline interface {
 	AttachAppsink(sinkName string)
 	AttachAppsrc(srcName string)
 	// control pipeline lifecycle
-	Play()
+	Play() bool
 	Pause()
 	Destroy()
 	Push(buffer []byte)
@@ -126,8 +126,8 @@ func (p *pipeline) AttachAppsrc(srcName string) {
 	C.gstreamer_pipeline_attach_appsrc(p.ctx, srcNameUnsafe)
 }
 
-func (p *pipeline) Play() {
-	C.gstreamer_pipeline_play(p.ctx)
+func (p *pipeline) Play() bool {
+	return C.gstreamer_pipeline_play(p.ctx) == C.TRUE
 }
 
 func (p *pipeline) Pause() {

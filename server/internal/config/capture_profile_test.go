@@ -79,6 +79,21 @@ func TestApplyVideoProfileFallsBackFromH264ToVP8(t *testing.T) {
 	}
 }
 
+func TestApplyVideoProfileAddsSameCodecRuntimeFallback(t *testing.T) {
+	viper.Reset()
+	defer viper.Reset()
+	viper.Set("capture.video.profile", "balanced")
+	viper.Set("capture.video.codec", "h264")
+
+	config := Capture{VideoCodec: codec.H264()}
+	if err := config.applyVideoProfile(availableElements("nvautogpuh264enc", "h264parse", "x264enc", "vp8enc")); err != nil {
+		t.Fatal(err)
+	}
+	if config.VideoPipelines["main"].GstEncoder != "nvautogpuh264enc" || len(config.VideoPipelineFallbacks["main"]) != 1 || config.VideoPipelineFallbacks["main"][0].GstEncoder != "x264enc" {
+		t.Fatalf("unexpected runtime fallback candidates: %+v", config)
+	}
+}
+
 func TestApplyVideoEncoderRequiresProfile(t *testing.T) {
 	viper.Reset()
 	defer viper.Reset()
