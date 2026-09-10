@@ -165,6 +165,18 @@ capture:
         gst_pipeline: "<gstreamer_pipeline>"
 ```
 
+As a shorthand, a pipeline entry can also be a plain string instead of an object, which is equivalent to setting only <Opt id="video.pipelines.gst_pipeline" />:
+
+```yaml title="config.yaml"
+capture:
+  video:
+    ...
+    pipelines:
+      <pipeline_id>: "<gstreamer_pipeline>"
+```
+
+This shorthand also works when defining <Opt id="video.pipelines" /> via the `NEKO_CAPTURE_VIDEO_PIPELINES` environment variable as a JSON object, e.g. `NEKO_CAPTURE_VIDEO_PIPELINES='{"<pipeline_id>":"<gstreamer_pipeline>"}'`.
+
 Since now you have to define the whole pipeline, you need to specify the src element to get the video frames and the sink element to send the encoded video frames to neko. In your pipeline, you can use `{display}` as a placeholder for the display name that will be replaced by the actual display name at runtime. You need to set the `name` property of the sink element to `appsink` so that neko can capture the video frames.
 
 Your typical pipeline string would look like this:
