@@ -82,12 +82,13 @@ char **dragUrisMake(int size) {
 void dragUrisSetFile(char **uris, char *file, int n) {
   GFile *gfile = g_file_new_for_path(file);
   uris[n] = g_file_get_uri(gfile);
+  g_object_unref(gfile);
 }
 
 void dragUrisFree(char **uris, int size) {
   for (int i = 0; i < size; i++) {
-    free(uris[i]);
+    g_free(uris[i]);
   }
 
-  free(uris);
+  g_free(uris);
 }
