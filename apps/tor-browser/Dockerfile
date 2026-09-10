@@ -7,9 +7,9 @@ RUN set -eux; apt-get update; \
     apt-get install -y --no-install-recommends openbox curl xz-utils file libgtk-3-0 libdbus-glib-1-2; \
     #
     # download TOR browser
-    DOWNLOAD_URI="$(curl -s -N https://www.torproject.org/download/ | grep -Po -m 1 '(?=(dist/torbrowser)).*(?<=.tar.xz)')"; \
+    DOWNLOAD_URI="$(curl -s -N https://aus1.torproject.org/torbrowser/update_3/release/download-linux-x86_64.json | grep -Po '"binary"\s*:\s*"\K[^"]+')"; \
 	echo "Downloading $DOWNLOAD_URI"; \
-	curl -sSL -o /tmp/tor.tar.xz "https://www.torproject.org/$DOWNLOAD_URI"; \
+	curl -sSL -o /tmp/tor.tar.xz "$DOWNLOAD_URI"; \
     tar -xvJf /tmp/tor.tar.xz -C /opt; \
     mv /opt/tor-browser* /opt/tor-browser_en-US; \
     chown -R neko:neko /opt/tor-browser_en-US/; \
