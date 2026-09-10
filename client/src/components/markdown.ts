@@ -58,7 +58,9 @@ function htmlTag(
   let attributeString = ''
   for (const attr in attributes) {
     if (Object.prototype.hasOwnProperty.call(attributes, attr) && attributes[attr]) {
-      attributeString += ` ${attr}="${attributes[attr]}"` // md.sanitizeText(attr)
+      // attribute values must be escaped: they are attacker-controlled and are
+      // rendered as raw HTML (see render() below), never as a compiled template
+      attributeString += ` ${attr}="${md.sanitizeText(attributes[attr])}"`
     }
   }
 
@@ -226,13 +228,15 @@ const rules: MarkdownRules = {
       }
     },
     html(node, output, state) {
+      // rendered as inert HTML (see render() below), so use a plain title
+      // attribute for the tooltip instead of a Vue directive expression
       return htmlTag(
         'span',
         '',
         {
           class: `emoji`,
           'data-emoji': node.id,
-          'v-tooltip.top-center': `{ content:':${node.id}:', offset: 2, delay: { show: 1000, hide: 100 } }`,
+          title: `:${node.id}:`,
         },
         state,
       )
@@ -286,6 +290,13 @@ export default class extends Vue {
       cssModuleNames: null,
       openInApp: this.openInApp,
     }
-    return h({ template: `<div>${htmlOutput(parser(this.source, state), state)}</div>` })
+
+    // IMPORTANT: never compile the rendered markdown as a Vue template (e.g. via
+    // `h({ template: ... })`). Doing so would let attacker-controlled chat
+    // messages be parsed as Vue template syntax (e.g. `{{ constructor... }}`),
+    // resulting in arbitrary JavaScript execution in other users' browsers.
+    // Setting innerHTML directly renders the sanitized markup as inert HTML
+    // without ever running it through the Vue compiler.
+    return h('div', { domProps: { innerHTML: htmlOutput(parser(this.source, state), state) } })
   }
 }
