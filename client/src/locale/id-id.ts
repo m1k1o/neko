@@ -82,6 +82,14 @@ export const locks = {
 }
 
 export const setting = {
+  avatar: 'Avatar',
+  avatar_upload: 'Unggah',
+  avatar_remove: 'Hapus avatar',
+  avatar_too_large: 'Avatar terlalu besar',
+  avatar_size_limit: 'Pilih gambar yang lebih kecil dari 384 KB.',
+  avatar_upload_failed: 'Avatar gagal diunggah',
+  avatar_update_failed: 'Avatar gagal diperbarui',
+  avatar_try_again: 'Silakan coba lagi.',
   scroll: 'Sensitivitas Gulir',
   scroll_invert: 'Gulir Terbalik',
   autoplay: 'Putar Video Otomatis',
@@ -93,6 +101,7 @@ export const setting = {
 
 export const connection = {
   logged_out: 'Anda telah keluar.',
+  connecting: 'Menghubungkan...',
   reconnecting: 'Menyambungkan ulang...',
   connected: 'Tersambung',
   disconnected: 'Terputus',

@@ -22,9 +22,10 @@ html, body {
   font-size: $text-size;
   color: $text-normal;
   overflow: hidden;
-  width: 100vw;
-  height: 100vh;
-  min-width: 320px;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 100%;
   color-scheme: dark;
 }
 

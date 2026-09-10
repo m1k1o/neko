@@ -7,6 +7,8 @@ services:
     container_name: neko-m1-demo
     restart: unless-stopped
     shm_size: 2gb
+    volumes:
+      - "neko-m1-demo-data:/home/neko/.local/share/neko"
     ports:
       - "127.0.0.1:8080:8080"
       - "${NEKO_DEMO_MEDIA_BIND:-127.0.0.1}:52000:52000/tcp"
@@ -20,3 +22,6 @@ services:
       NEKO_WEBRTC_NAT1TO1: ${NEKO_DEMO_NAT_IP:-127.0.0.1}
       NEKO_WEBRTC_UDPMUX: 52000
       NEKO_WEBRTC_TCPMUX: 52000
+
+volumes:
+  neko-m1-demo-data:

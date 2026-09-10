@@ -48,6 +48,7 @@ RUN set -eux; \
     mkdir -p /etc/neko /var/www /var/log/neko \
         /tmp/runtime-$USERNAME \
         /home/$USERNAME/.config/pulse  \
+        /home/$USERNAME/.local/share/neko \
         /home/$USERNAME/.local/share/xorg; \
     chmod 1777 /var/log/neko; \
     chmod 0700 /tmp/runtime-$USERNAME; \

@@ -41,7 +41,15 @@ export { SignalingTransport } from './sdk/signaling'
 export type { SignalingMessage, SignalingState, SignalingTransportOptions } from './sdk/signaling'
 export { AuthClient } from './sdk/auth'
 export type { AuthHttpClient, LoginResponse } from './sdk/auth'
+export { RoomClient } from './sdk/room'
+export type { RoomHttpClient, ControlStatus } from './sdk/room'
 export { NetworkQualityMonitor, classifyNetworkQuality } from './sdk/network-monitor'
+export { ControlInputController } from './sdk/control-input'
+export type { ControlInputOptions, NormalizedWheel } from './sdk/control-input'
+export { MediaSession } from './sdk/media-session'
+export type { MediaInputData, MediaSessionOptions } from './sdk/media-session'
+export { NekoClient } from './neko'
+export type { NekoClientRuntime, NekoStatePort, NekoUIAdapter } from './neko/runtime'
 export type {
   NetworkQuality,
   NetworkQualitySample,

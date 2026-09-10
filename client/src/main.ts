@@ -9,6 +9,7 @@ import Client from './plugins/neko'
 import Axios from './plugins/axios'
 import Swal from './plugins/swal'
 import Anime from './plugins/anime'
+import { createVueNekoRuntime } from './neko/vue-adapter'
 
 import { i18n } from './plugins/i18n'
 import store from './store'
@@ -29,7 +30,7 @@ new Vue({
   store,
   render: (h) => h(app),
   created() {
-    this.$client.init(this)
+    this.$client.init(createVueNekoRuntime(this))
     this.$accessor.initialise()
   },
 }).$mount('#neko')

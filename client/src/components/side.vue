@@ -53,15 +53,24 @@
 
 <style lang="scss">
   .neko-menu {
-    width: $side-width;
+    position: fixed;
+    right: $party-gutter;
+    bottom: $party-gutter;
+    z-index: 12;
+    width: min($side-width, calc(100vw - 1.5rem));
+    min-width: 0;
+    height: $party-panel-height;
     background: linear-gradient(180deg, rgba($background-primary, 0.98), rgba($background-secondary, 0.98));
-    border-left: 1px solid rgba($text-normal, 0.08);
-    box-shadow: -16px 0 40px rgba(2, 8, 18, 0.18);
+    border: 1px solid rgba(#fff, 0.12);
+    border-radius: 18px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.42);
     flex-shrink: 0;
-    max-height: 100%;
+    max-height: calc(100dvh - 24px);
     max-width: 100%;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
+    animation: party-panel-in 0.22s ease-out;
 
     .tabs-container {
       position: relative;
@@ -128,13 +137,20 @@
       flex-grow: 1;
       display: flex;
       overflow: auto;
-      padding: 10px 12px 12px;
+      padding: 12px 14px 14px;
       min-height: 0;
     }
   }
 
-  @media only screen and (max-width: 1024px) {
+  @media only screen and (max-width: 1180px) {
     .neko-menu {
+      right: 0;
+      bottom: 0;
+      width: min(100%, 29rem) !important;
+      height: min(70dvh, 42rem);
+      max-height: 100dvh;
+      border-radius: 18px 18px 0 0;
+
       .tabs-container {
         .panel-close {
           position: absolute;
@@ -162,6 +178,17 @@
           padding-right: 54px;
         }
       }
+    }
+  }
+
+  @keyframes party-panel-in {
+    from {
+      opacity: 0;
+      transform: translateY(16px) scale(0.98);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
     }
   }
 </style>

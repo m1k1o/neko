@@ -117,33 +117,11 @@ type ControlHost struct {
 	ID      string `json:"id"`
 	HasHost bool   `json:"has_host"`
 	HostID  string `json:"host_id,omitempty"`
+	Epoch   uint64 `json:"epoch"`
 }
 
-type ControlScroll struct {
-	DeltaX     int  `json:"delta_x"`
-	DeltaY     int  `json:"delta_y"`
-	ControlKey bool `json:"control_key"`
-}
-
-type ControlPos struct {
-	X int `json:"x"`
-	Y int `json:"y"`
-}
-
-type ControlButton struct {
-	*ControlPos
-	Code uint32 `json:"code"`
-}
-
-type ControlKey struct {
-	*ControlPos
-	Keysym uint32 `json:"keysym"`
-}
-
-type ControlTouch struct {
-	*ControlPos
-	TouchId  uint32 `json:"touch_id"`
-	Pressure uint8  `json:"pressure"`
+type ControlEpoch struct {
+	Epoch uint64 `json:"epoch"`
 }
 
 /////////////////////////////

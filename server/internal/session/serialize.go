@@ -79,13 +79,14 @@ func (manager *SessionManagerCtx) load() {
 	// create sessions
 	manager.sessionsMu.Lock()
 	for _, session := range sessions {
+		profile := manager.withStoredAvatar(session.Profile, session.Id)
 		manager.tokens[session.Token] = session.Id
 		manager.sessions[session.Id] = &SessionCtx{
 			id:      session.Id,
 			token:   session.Token,
 			manager: manager,
 			logger:  manager.logger.With().Str("session_id", session.Id).Logger(),
-			profile: session.Profile,
+			profile: profile,
 		}
 	}
 	manager.sessionsMu.Unlock()

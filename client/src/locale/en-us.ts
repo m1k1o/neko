@@ -6,6 +6,7 @@ export const somebody = 'Somebody'
 export const send_a_message = 'Send a message'
 
 export const ui = {
+  live: 'LIVE',
   about: 'About n.eko',
   secure: 'Secure',
   github_repository: 'GitHub repository',
@@ -116,6 +117,14 @@ export const locks = {
 }
 
 export const setting = {
+  avatar: 'Avatar',
+  avatar_upload: 'Upload',
+  avatar_remove: 'Remove avatar',
+  avatar_too_large: 'Avatar is too large',
+  avatar_size_limit: 'Please choose an image smaller than 384 KB.',
+  avatar_upload_failed: 'Avatar upload failed',
+  avatar_update_failed: 'Avatar update failed',
+  avatar_try_again: 'Please try again.',
   scroll: 'Scroll Sensitivity',
   scroll_invert: 'Invert Scroll',
   autoplay: 'Autoplay Video',
@@ -134,6 +143,7 @@ export const setting = {
 
 export const connection = {
   logged_out: 'You have been logged out.',
+  connecting: 'Connecting...',
   reconnecting: 'Reconnecting...',
   connected: 'Connected',
   disconnected: 'Disconnected',

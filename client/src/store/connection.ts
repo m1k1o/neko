@@ -7,6 +7,9 @@ export type NetworkQuality = 'unknown' | 'good' | 'fair' | 'poor'
 
 export const state = () => ({
   state: 'disconnected' as ConnectionState,
+  // Authentication completes as soon as the authenticated websocket sends
+  // system/init. Media transport may still be negotiating at that point.
+  authenticated: false,
   // A reconnecting ICE transport still owns a live session. Keep this
   // separate from the lifecycle label so the UI does not tear down the
   // session during a transient network interruption.
@@ -18,12 +21,14 @@ export const state = () => ({
 
 export const getters = getterTree(state, {
   connected: (state) => state.connected,
+  authenticated: (state) => state.authenticated,
   connecting: (state) => state.state === 'connecting' || state.state === 'reconnecting',
 })
 
 export const mutations = mutationTree(state, {
   setConnecting(state) {
     state.state = 'connecting'
+    state.authenticated = false
     state.connected = false
     state.error = ''
     state.quality = 'unknown'
@@ -32,6 +37,7 @@ export const mutations = mutationTree(state, {
 
   setConnected(state, connected: boolean) {
     state.state = connected ? 'connected' : 'disconnected'
+    state.authenticated = connected
     state.connected = connected
     if (!connected) {
       state.quality = 'unknown'
@@ -49,6 +55,13 @@ export const mutations = mutationTree(state, {
     if (connectionState === 'disconnected') {
       state.quality = 'unknown'
       state.rtt = null
+    }
+  },
+
+  setAuthenticated(state, authenticated: boolean) {
+    state.authenticated = authenticated
+    if (!authenticated) {
+      state.connected = false
     }
   },
 

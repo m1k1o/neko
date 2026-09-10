@@ -6,6 +6,7 @@ export const somebody = '某人'
 export const send_a_message = '发送消息'
 
 export const ui = {
+  live: '直播中',
   about: '关于 n.eko',
   secure: '安全连接',
   github_repository: 'GitHub 仓库',
@@ -113,6 +114,14 @@ export const locks = {
 }
 
 export const setting = {
+  avatar: '头像',
+  avatar_upload: '上传头像',
+  avatar_remove: '删除头像',
+  avatar_too_large: '头像文件过大',
+  avatar_size_limit: '请选择小于 384 KB 的图片。',
+  avatar_upload_failed: '头像上传失败',
+  avatar_update_failed: '头像更新失败',
+  avatar_try_again: '请稍后重试。',
   scroll: '滚动灵敏度',
   scroll_invert: '反转滚动方向',
   autoplay: '自动播放视频',
@@ -131,6 +140,7 @@ export const setting = {
 
 export const connection = {
   logged_out: '你已登出',
+  connecting: '正在连接',
   reconnecting: '正在重新连接',
   connected: '已连接',
   disconnected: '已断开',

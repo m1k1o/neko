@@ -57,16 +57,18 @@
 </template>
 
 <style lang="scss" scoped>
-  $emoji-width: 300px;
+  $emoji-width: min(20rem, calc(100vw - 1rem));
 
   .neko-emoji {
     position: absolute;
     z-index: 10000;
     width: $emoji-width;
-    height: 350px;
+    max-width: calc(100vw - 1rem);
+    height: min(22rem, 60dvh);
+    max-height: calc(100dvh - 1rem);
     background: $background-secondary;
-    bottom: 75px;
-    right: 5px;
+    bottom: clamp(3.5rem, 10vh, 4.75rem);
+    right: clamp(0.25rem, 1vw, 0.75rem);
     display: flex;
     flex-direction: column;
     border-radius: 5px;

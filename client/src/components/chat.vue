@@ -15,11 +15,16 @@
           }"
         >
           <div class="author" @contextmenu.stop.prevent="onContext($event, { member: member(message.id) })">
-            <neko-avatar class="avatar" :seed="member(message.id).displayname" :size="40" />
+            <neko-avatar
+              class="avatar"
+              :seed="message.name || member(message.id).displayname"
+              :avatar="message.avatar || member(message.id).avatar"
+              :size="40"
+            />
           </div>
           <div class="content">
             <div class="content-head">
-              <span>{{ member(message.id).displayname }}</span>
+              <span>{{ message.name || member(message.id).displayname }}</span>
               <span class="timestamp">{{ timestamp(message.created) }}</span>
             </div>
             <neko-markdown
@@ -40,7 +45,7 @@
             }"
           >
             <strong v-if="message.id === id && $te('you')">{{ $t('you') }}</strong>
-            <strong v-else>{{ member(message.id).displayname }}</strong>
+            <strong v-else>{{ message.name || member(message.id).displayname }}</strong>
             {{ message.content }}
           </div>
         </li>

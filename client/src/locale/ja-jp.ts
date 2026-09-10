@@ -82,6 +82,14 @@ export const locks = {
 }
 
 export const setting = {
+  avatar: 'アバター',
+  avatar_upload: 'アップロード',
+  avatar_remove: 'アバターを削除',
+  avatar_too_large: 'アバターが大きすぎます',
+  avatar_size_limit: '384 KB 未満の画像を選択してください。',
+  avatar_upload_failed: 'アバターのアップロードに失敗しました',
+  avatar_update_failed: 'アバターの更新に失敗しました',
+  avatar_try_again: 'もう一度お試しください。',
   scroll: 'スクロールの感度',
   scroll_invert: 'スクロールを反転する',
   autoplay: '動画を自動再生する',
@@ -93,6 +101,7 @@ export const setting = {
 
 export const connection = {
   logged_out: 'ログアウトしました',
+  connecting: '接続中...',
   reconnecting: '再接続中...',
   connected: '接続しました',
   disconnected: '切断しました',

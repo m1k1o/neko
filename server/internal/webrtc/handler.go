@@ -3,6 +3,7 @@ package webrtc
 import (
 	"bytes"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"math"
 	"time"
@@ -12,6 +13,11 @@ import (
 
 	"github.com/pion/webrtc/v4"
 	"github.com/rs/zerolog"
+)
+
+var (
+	ErrControlEpochRequired = errors.New("control epoch is required")
+	ErrStaleControlEpoch    = errors.New("control epoch is stale")
 )
 
 func (manager *WebRTCManagerCtx) handle(
@@ -36,6 +42,22 @@ func (manager *WebRTCManagerCtx) handle(
 	}
 	if int(header.Length) != buffer.Len() {
 		return fmt.Errorf("invalid payload size %d, header declares %d", buffer.Len(), header.Length)
+	}
+
+	var epoch uint64
+	if header.Event != payload.OP_PING {
+		if err := binary.Read(buffer, binary.BigEndian, &epoch); err != nil {
+			return ErrControlEpochRequired
+		}
+		// A viewer may move its inactive cursor without owning the desktop. All
+		// active input renews the lease while validating the current epoch.
+		if header.Event != payload.OP_MOVE {
+			if !isHost || session.ValidateControlEpoch(epoch) != nil {
+				return ErrStaleControlEpoch
+			}
+		} else if isHost && session.ValidateControlEpoch(epoch) != nil {
+			return ErrStaleControlEpoch
+		}
 	}
 
 	//

@@ -82,6 +82,14 @@ export const locks = {
 }
 
 export const setting = {
+  avatar: '아바타',
+  avatar_upload: '업로드',
+  avatar_remove: '아바타 삭제',
+  avatar_too_large: '아바타가 너무 큽니다',
+  avatar_size_limit: '384 KB보다 작은 이미지를 선택하세요.',
+  avatar_upload_failed: '아바타 업로드 실패',
+  avatar_update_failed: '아바타 업데이트 실패',
+  avatar_try_again: '다시 시도해 주세요.',
   scroll: '스크롤 감도',
   scroll_invert: '스크롤 반전',
   autoplay: '동영상 자동 재생',
@@ -93,6 +101,7 @@ export const setting = {
 
 export const connection = {
   logged_out: '로그아웃 했습니다.',
+  connecting: '연결 중...',
   reconnecting: '다시 접속하는 중...',
   connected: '연결됨',
   disconnected: '연결 해제됨',

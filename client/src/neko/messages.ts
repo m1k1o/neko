@@ -7,12 +7,14 @@ export type WebSocketPayloads =
   | SignalCandidatePayload
   | SignalRequestPayload
   | ChatPayload
+  | ChatInitPayload
   | ChatSendPayload
   | EmojiSendPayload
   | ScreenResolutionPayload
   | KeyboardMapPayload
   | KeyboardModifiersPayload
   | ClipboardSetPayload
+  | ControlEpochPayload
   | BroadcastStatusPayload
 
 /*
@@ -35,6 +37,11 @@ export interface ControlHostPayload {
   id: string
   has_host: boolean
   host_id?: string
+  epoch: number
+}
+
+export interface ControlEpochPayload {
+  epoch: number
 }
 
 export interface SessionDataPayload {
@@ -42,6 +49,7 @@ export interface SessionDataPayload {
   profile: {
     name: string
     is_admin: boolean
+    avatar?: string
   }
   state: {
     is_connected: boolean
@@ -54,6 +62,7 @@ export interface SettingsPayload {
   locked_controls: boolean
   control_protection: boolean
   heartbeat_interval: number
+  control_lease_ttl: number
   plugins?: Record<string, unknown>
 }
 
@@ -114,6 +123,7 @@ export interface SessionProfilePayload {
   id: string
   name: string
   is_admin: boolean
+  avatar?: string
 }
 
 export interface SessionStatePayload {
@@ -151,11 +161,19 @@ export interface KeyboardModifiersPayload {
   CHAT PAYLOADS
 */
 export interface ChatSendPayload {
-  content: string
+  text: string
 }
 export interface ChatPayload {
   id: string
-  content: string
+  content: string | { text: string }
+  created?: string
+  name?: string
+  avatar?: string
+}
+
+export interface ChatInitPayload {
+  enabled: boolean
+  history?: ChatPayload[]
 }
 
 export interface EmotePayload {

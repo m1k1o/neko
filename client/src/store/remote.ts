@@ -10,6 +10,7 @@ export const namespaced = true
 
 export const state = () => ({
   id: '',
+  epoch: 0,
   clipboard: '',
   locked: false,
   implicitHosting: true,
@@ -41,6 +42,10 @@ export const mutations = mutationTree(state, {
     }
   },
 
+  setEpoch(state, epoch: number) {
+    state.epoch = epoch
+  },
+
   setClipboard(state, clipboard: string) {
     state.clipboard = clipboard
   },
@@ -63,6 +68,7 @@ export const mutations = mutationTree(state, {
 
   reset(state) {
     state.id = ''
+    state.epoch = 0
     state.clipboard = ''
     state.locked = false
   },
@@ -120,7 +126,7 @@ export const actions = actionTree(
         return
       }
 
-      await $http.post(`/api/room/control/give/${encodeURIComponent(member.id)}`)
+      await $client.room.giveControl(member.id)
     },
 
     adminControl() {
@@ -128,7 +134,7 @@ export const actions = actionTree(
         return
       }
 
-      $http.post('/api/room/control/take')
+      $client.room.takeControl()
     },
 
     adminRelease() {
@@ -136,7 +142,7 @@ export const actions = actionTree(
         return
       }
 
-      $http.post('/api/room/control/reset')
+      $client.room.resetControl()
     },
 
     adminGive(store, member: string | Member) {
@@ -152,7 +158,7 @@ export const actions = actionTree(
         return
       }
 
-      $http.post(`/api/room/control/give/${encodeURIComponent(member.id)}`)
+      $client.room.giveControl(member.id)
     },
 
     changeKeyboard({ getters }) {

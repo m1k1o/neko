@@ -13,6 +13,10 @@
         <span class="brand-caption">{{ $t('ui.remote_browser') }}</span>
       </span>
     </a>
+    <div class="live-pill" :aria-label="$t('ui.live')">
+      <span class="live-dot" aria-hidden="true" />
+      <span>{{ $t('ui.live') }}</span>
+    </div>
     <div
       data-testid="connection-indicator"
       class="connection-indicator"
@@ -257,6 +261,29 @@
       }
     }
 
+    .live-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-right: 10px;
+      padding: 6px 9px;
+      border: 1px solid rgba($style-primary, 0.22);
+      border-radius: 999px;
+      color: $style-primary;
+      background: rgba($style-primary, 0.1);
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+
+      .live-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: $style-primary;
+        box-shadow: 0 0 0 3px rgba($style-primary, 0.12);
+      }
+    }
+
     .menu {
       justify-self: flex-end;
       margin-right: 10px;
@@ -265,6 +292,7 @@
       li {
         display: inline-block;
         margin-left: 8px;
+        position: relative;
 
         .icon-button {
           display: grid;
@@ -308,6 +336,8 @@
 
         .badge {
           position: absolute;
+          top: -3px;
+          right: -3px;
           background: red;
           font-weight: bold;
           font-size: 1.25em;
@@ -374,8 +404,47 @@
         }
       }
 
+      .live-pill {
+        display: none;
+      }
+
       .menu li {
         margin-left: 2px;
+      }
+    }
+  }
+
+  @media only screen and (max-width: 640px) {
+    .header {
+      padding: 0 10px;
+
+      .neko {
+        gap: 7px;
+
+        .brand-mark {
+          width: 30px;
+          height: 30px;
+          border-radius: 9px;
+
+          img {
+            height: 20px;
+          }
+        }
+
+        .brand-copy .brand-caption {
+          display: none;
+        }
+      }
+
+      .connection-indicator {
+        min-width: 0;
+        margin-right: 6px;
+        padding: 6px 8px;
+
+        .connection-copy,
+        .quality-bars {
+          display: none;
+        }
       }
     }
   }
@@ -407,7 +476,10 @@
       if (this.connectionState === 'connected') {
         return this.$t('connection.connected')
       }
-      if (this.connectionState === 'connecting' || this.connectionState === 'reconnecting') {
+      if (this.connectionState === 'connecting') {
+        return this.$t('connection.connecting')
+      }
+      if (this.connectionState === 'reconnecting') {
         return this.$t('connection.reconnecting')
       }
       return this.$t('connection.disconnected')

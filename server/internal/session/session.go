@@ -86,6 +86,18 @@ func (session *SessionCtx) ClearHost() {
 	session.manager.setHost(session, nil)
 }
 
+func (session *SessionCtx) ControlEpoch() uint64 {
+	return session.manager.ControlEpoch()
+}
+
+func (session *SessionCtx) ValidateControlEpoch(epoch uint64) error {
+	return session.manager.ValidateControl(session, epoch)
+}
+
+func (session *SessionCtx) RenewControlEpoch(epoch uint64) error {
+	return session.manager.RenewControl(session, epoch)
+}
+
 func (session *SessionCtx) PrivateModeEnabled() bool {
 	return session.manager.Settings().PrivateMode && !session.profile.IsAdmin
 }
@@ -187,6 +199,7 @@ func (session *SessionCtx) DisconnectWebSocketPeer(websocketPeer types.WebSocket
 	session.state.IsConnected = false
 	session.state.ConnectedSince = nil
 	session.state.NotConnectedSince = &now
+	session.manager.disconnectControl(session)
 
 	if session.profile.IsAdmin {
 		if session.manager.totalAdmins.Add(-1) == 0 {

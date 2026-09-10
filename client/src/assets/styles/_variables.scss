@@ -27,5 +27,15 @@ $style-error: #ff7184;
 $style-warning: #f6c76b;
 
 $menu-height: 62px;
-$controls-height: 148px;
-$side-width: 368px;
+$controls-height: 132px;
+$side-width: clamp(18rem, 28vw, 26rem);
+
+// Responsive watch-party layout tokens. Components should use these instead
+// of locking the stage and panels to one viewport size.
+$party-gutter: clamp(0.5rem, 1.6vw, 1.5rem);
+$party-header-height: clamp(4.25rem, 8vh, 5.125rem);
+$party-rail-offset: clamp(7.25rem, 18vh, 9.25rem);
+$party-panel-height: min(62dvh, 35rem);
+$party-panel-width: min(28rem, calc(100vw - 1.5rem));
+$party-member-rail-height: clamp(4rem, 8vh, 4.25rem);
+$party-control-height: clamp(2.75rem, 6vh, 3rem);

@@ -6,13 +6,11 @@ import (
 
 	"github.com/m1k1o/neko/server/pkg/auth"
 	"github.com/m1k1o/neko/server/pkg/types"
-	"github.com/m1k1o/neko/server/pkg/types/event"
-	"github.com/m1k1o/neko/server/pkg/types/message"
 	"github.com/m1k1o/neko/server/pkg/utils"
 )
 
 func (h *RoomHandler) screenConfiguration(w http.ResponseWriter, r *http.Request) error {
-	screenSize := h.desktop.GetScreenSize()
+	screenSize := h.desktopApp.ScreenSize()
 
 	return utils.HttpSuccess(w, screenSize)
 }
@@ -25,7 +23,7 @@ func (h *RoomHandler) screenConfigurationChange(w http.ResponseWriter, r *http.R
 		return err
 	}
 
-	size, err := h.desktop.SetScreenSize(types.ScreenSize{
+	size, err := h.desktopApp.SetScreenSize(auth, types.ScreenSize{
 		Width:  data.Width,
 		Height: data.Height,
 		Rate:   data.Rate,
@@ -35,16 +33,11 @@ func (h *RoomHandler) screenConfigurationChange(w http.ResponseWriter, r *http.R
 		return utils.HttpUnprocessableEntity("cannot set screen size").WithInternalErr(err)
 	}
 
-	h.sessions.Broadcast(event.SCREEN_UPDATED, message.ScreenSizeUpdate{
-		ID:         auth.ID(),
-		ScreenSize: size,
-	})
-
-	return utils.HttpSuccess(w, data)
+	return utils.HttpSuccess(w, size)
 }
 
 func (h *RoomHandler) screenConfigurationsList(w http.ResponseWriter, r *http.Request) error {
-	configurations := h.desktop.ScreenConfigurations()
+	configurations := h.desktopApp.ScreenConfigurations()
 
 	return utils.HttpSuccess(w, configurations)
 }
@@ -55,8 +48,7 @@ func (h *RoomHandler) screenShotGet(w http.ResponseWriter, r *http.Request) erro
 		quality = 90
 	}
 
-	img := h.desktop.GetScreenshotImage()
-	bytes, err := utils.CreateJPGImage(img, quality)
+	bytes, err := h.desktopApp.Screenshot(quality)
 	if err != nil {
 		return utils.HttpInternalServerError().WithInternalErr(err)
 	}
@@ -82,12 +74,11 @@ func (h *RoomHandler) screenCastGet(w http.ResponseWriter, r *http.Request) erro
 		return utils.HttpBadRequest("private mode is enabled but no fallback image available")
 	}
 
-	screencast := h.capture.Screencast()
-	if !screencast.Enabled() {
+	if !h.desktopApp.ScreencastEnabled() {
 		return utils.HttpBadRequest("screencast pipeline is not enabled")
 	}
 
-	bytes, err := screencast.Image()
+	bytes, err := h.desktopApp.ScreencastImage()
 	if err != nil {
 		return utils.HttpInternalServerError().WithInternalErr(err)
 	}

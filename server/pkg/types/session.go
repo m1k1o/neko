@@ -48,6 +48,7 @@ type Settings struct {
 	InactiveCursors   bool `json:"inactive_cursors"`
 	MercifulReconnect bool `json:"merciful_reconnect"`
 	HeartbeatInterval int  `json:"heartbeat_interval"`
+	ControlLeaseTTL   int  `json:"control_lease_ttl"`
 
 	// plugin scope
 	Plugins PluginSettings `json:"plugins"`
@@ -71,6 +72,9 @@ type Session interface {
 	SetAsHost()
 	SetAsHostBy(session Session)
 	ClearHost()
+	ControlEpoch() uint64
+	ValidateControlEpoch(epoch uint64) error
+	RenewControlEpoch(epoch uint64) error
 	PrivateModeEnabled() bool
 
 	// cursor
@@ -99,6 +103,11 @@ type SessionManager interface {
 	Range(func(Session) bool)
 
 	GetHost() (Session, bool)
+	ControlEpoch() uint64
+	ValidateControl(session Session, epoch uint64) error
+	RenewControl(session Session, epoch uint64) error
+	RequestControl(session Session) (granted bool, queued bool)
+	ReleaseControl(session Session) error
 
 	SetCursor(cursor Cursor, session Session)
 	PopCursors() map[Session][]Cursor

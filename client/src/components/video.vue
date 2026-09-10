@@ -135,10 +135,11 @@
 
       .video-menu {
         position: absolute;
-        right: 20px;
+        z-index: 7;
+        right: $party-gutter;
 
         &.top {
-          top: 15px;
+          top: $party-gutter;
         }
 
         &.bottom {
@@ -179,16 +180,6 @@
             &.disabled,
             &.disabled i {
               color: rgba($color: $style-error, $alpha: 0.4);
-            }
-          }
-
-          /* usually extra controls are only shown on mobile */
-          &.extra-control {
-            display: none;
-          }
-          @media (max-width: 768px) {
-            &.extra-control {
-              display: block;
             }
           }
 
@@ -287,7 +278,7 @@
   import { Component, Ref, Watch, Vue, Prop } from 'vue-property-decorator'
   import ResizeObserver from 'resize-observer-polyfill'
   import { elementRequestFullscreen, onFullscreenChange, isFullscreen, lockKeyboard, unlockKeyboard } from '~/utils'
-  import { mapPointerToScreen } from '~/neko/screen'
+  import { ControlInputController } from '~/sdk/control-input'
 
   import Emote from './emote.vue'
   import Resolution from './resolution.vue'
@@ -322,6 +313,11 @@
     @Prop(Boolean) readonly extraControls!: boolean
 
     private keyboard = GuacamoleKeyboard()
+    private inputController = new ControlInputController({
+      scroll: 0,
+      invertScroll: false,
+      lineHeight: WHEEL_LINE_HEIGHT,
+    })
     private observer = new ResizeObserver(this.onResize.bind(this))
     private focused = false
     private fullscreen = false
@@ -404,6 +400,12 @@
 
     get scroll_invert() {
       return this.$accessor.settings.scroll_invert
+    }
+
+    @Watch('scroll')
+    @Watch('scroll_invert')
+    onInputOptionsChanged() {
+      this.inputController.update({ scroll: this.scroll, invertScroll: this.scroll_invert })
     }
 
     get pip_available() {
@@ -549,6 +551,7 @@
     }
 
     mounted() {
+      this.onInputOptionsChanged()
       this._container.addEventListener('resize', this.onResize)
       this.onVolumeChanged(this.volume)
       this.onMutedChanged(this.muted)
@@ -773,7 +776,7 @@
       const { w, h } = this.$accessor.video.resolution
       const rect = this._overlay.getBoundingClientRect()
 
-      const point = mapPointerToScreen(e.clientX, e.clientY, rect, { width: w, height: h })
+      const point = this.inputController.pointer(e, rect, { width: w, height: h })
       if (!point) {
         return
       }
@@ -790,32 +793,13 @@
         return
       }
 
-      let x = e.deltaX
-      let y = e.deltaY
-
-      // Pixel units unless it's non-zero.
-      // Note that if deltamode is line or page won't matter since we aren't
-      // sending the mouse wheel delta to the server anyway.
-      // The difference between pixel and line can be important however since
-      // we have a threshold that can be smaller than the line height.
-      if (e.deltaMode !== 0) {
-        x *= WHEEL_LINE_HEIGHT
-        y *= WHEEL_LINE_HEIGHT
-      }
-
-      if (this.scroll_invert) {
-        x = x * -1
-        y = y * -1
-      }
-
-      x = Math.min(Math.max(x, -this.scroll), this.scroll)
-      y = Math.min(Math.max(y, -this.scroll), this.scroll)
+      const { x, y, controlKey } = this.inputController.wheel(e)
 
       this.sendMousePos(e)
 
       if (!this.wheelThrottle) {
         this.wheelThrottle = true
-        this.$client.sendData('wheel', { x, y, controlKey: e.ctrlKey })
+        this.$client.sendData('wheel', { x, y, controlKey })
 
         window.setTimeout(() => {
           this.wheelThrottle = false

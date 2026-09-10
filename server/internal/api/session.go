@@ -1,8 +1,16 @@
 package api
 
 import (
+	"bytes"
+	"encoding/base64"
 	"errors"
+	"fmt"
+	"image"
+	_ "image/gif"
+	_ "image/jpeg"
+	_ "image/png"
 	"net/http"
+	"strings"
 
 	"github.com/m1k1o/neko/server/pkg/auth"
 	"github.com/m1k1o/neko/server/pkg/types"
@@ -20,6 +28,12 @@ type SessionDataPayload struct {
 	Profile types.MemberProfile `json:"profile"`
 	State   types.SessionState  `json:"state"`
 }
+
+type AvatarPayload struct {
+	Avatar string `json:"avatar"`
+}
+
+const maxAvatarDataURLLength = 512 * 1024
 
 func (api *ApiManagerCtx) Login(w http.ResponseWriter, r *http.Request) error {
 	data := &SessionLoginPayload{}
@@ -89,19 +103,24 @@ func (api *ApiManagerCtx) UpdateProfile(w http.ResponseWriter, r *http.Request) 
 
 	profile := session.Profile()
 	if !profile.IsAdmin {
-		// Name is the only updatable field in the profile for non-admins
+		// Non-admins may update their display name and avatar only.
 		var payload types.MemberProfile
 		if err := utils.HttpJsonRequest(w, r, &payload); err != nil {
 			return err
 		}
 		profile.Name = payload.Name
+		profile.Avatar = payload.Avatar
 	} else {
 		if err := utils.HttpJsonRequest(w, r, &profile); err != nil {
 			return err
 		}
 	}
 
-	err := api.sessions.Update(session.ID(), profile)
+	if err := validateAvatar(profile.Avatar); err != nil {
+		return utils.HttpBadRequest(err.Error())
+	}
+
+	err := api.members.UpdateProfile(session.ID(), profile)
 	if err != nil {
 		if errors.Is(err, types.ErrSessionNotFound) {
 			return utils.HttpBadRequest("session does not exist")
@@ -111,6 +130,62 @@ func (api *ApiManagerCtx) UpdateProfile(w http.ResponseWriter, r *http.Request) 
 	}
 
 	return utils.HttpSuccess(w, true)
+}
+
+func (api *ApiManagerCtx) UpdateAvatar(w http.ResponseWriter, r *http.Request) error {
+	session, _ := auth.GetSession(r)
+	payload := AvatarPayload{}
+	if err := utils.HttpJsonRequest(w, r, &payload); err != nil {
+		return err
+	}
+	if err := validateAvatar(payload.Avatar); err != nil {
+		return utils.HttpBadRequest(err.Error())
+	}
+
+	profile := session.Profile()
+	profile.Avatar = payload.Avatar
+	if err := api.members.UpdateProfile(session.ID(), profile); err != nil {
+		if errors.Is(err, types.ErrSessionNotFound) {
+			return utils.HttpBadRequest("session does not exist")
+		}
+		return utils.HttpInternalServerError().WithInternalErr(err)
+	}
+
+	return utils.HttpSuccess(w, true)
+}
+
+func validateAvatar(value string) error {
+	if value == "" {
+		return nil
+	}
+	if len(value) > maxAvatarDataURLLength {
+		return fmt.Errorf("avatar is too large; maximum size is %d bytes", maxAvatarDataURLLength)
+	}
+
+	parts := strings.SplitN(value, ",", 2)
+	if len(parts) != 2 || !strings.HasPrefix(parts[0], "data:image/") || !strings.HasSuffix(parts[0], ";base64") {
+		return errors.New("avatar must be a base64 image data URL")
+	}
+
+	mimeType := strings.TrimPrefix(parts[0], "data:")
+	switch mimeType {
+	case "image/gif;base64", "image/jpeg;base64", "image/png;base64":
+	default:
+		return errors.New("avatar format must be PNG, JPEG, or GIF")
+	}
+
+	raw, err := base64.StdEncoding.DecodeString(parts[1])
+	if err != nil {
+		return errors.New("avatar contains invalid base64 data")
+	}
+	if len(raw) == 0 || len(raw) > 384*1024 {
+		return errors.New("avatar image is empty or too large")
+	}
+	if _, _, err := image.DecodeConfig(bytes.NewReader(raw)); err != nil {
+		return errors.New("avatar is not a valid image")
+	}
+
+	return nil
 }
 
 func (api *ApiManagerCtx) Stats(w http.ResponseWriter, r *http.Request) error {

@@ -54,10 +54,7 @@ func (h *MessageHandlerCtx) SessionConnected(session types.Session) error {
 
 func (h *MessageHandlerCtx) SessionDisconnected(session types.Session) error {
 	// clear host if exists
-	if session.IsHost() {
-		h.desktop.ResetKeys()
-		session.ClearHost()
-	}
+	h.control.Disconnect(session)
 
 	if session.Profile().IsAdmin {
 		hasAdmin := false

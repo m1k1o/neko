@@ -3,6 +3,7 @@ package room
 import (
 	"net/http"
 
+	"github.com/m1k1o/neko/server/pkg/auth"
 	"github.com/m1k1o/neko/server/pkg/types"
 	"github.com/m1k1o/neko/server/pkg/utils"
 )
@@ -13,7 +14,8 @@ func (h *RoomHandler) keyboardMapSet(w http.ResponseWriter, r *http.Request) err
 		return err
 	}
 
-	err := h.desktop.SetKeyboardMap(keyboardMap)
+	session, _ := auth.GetSession(r)
+	err := h.desktopApp.SetKeyboardMap(session, keyboardMap)
 	if err != nil {
 		return utils.HttpInternalServerError().WithInternalErr(err)
 	}
@@ -22,7 +24,7 @@ func (h *RoomHandler) keyboardMapSet(w http.ResponseWriter, r *http.Request) err
 }
 
 func (h *RoomHandler) keyboardMapGet(w http.ResponseWriter, r *http.Request) error {
-	keyboardMap, err := h.desktop.GetKeyboardMap()
+	keyboardMap, err := h.desktopApp.GetKeyboardMap()
 	if err != nil {
 		return utils.HttpInternalServerError().WithInternalErr(err)
 	}
@@ -36,12 +38,15 @@ func (h *RoomHandler) keyboardModifiersSet(w http.ResponseWriter, r *http.Reques
 		return err
 	}
 
-	h.desktop.SetKeyboardModifiers(keyboardModifiers)
+	session, _ := auth.GetSession(r)
+	if err := h.desktopApp.SetKeyboardModifiers(session, keyboardModifiers); err != nil {
+		return utils.HttpUnprocessableEntity(err.Error())
+	}
 	return utils.HttpSuccess(w)
 }
 
 func (h *RoomHandler) keyboardModifiersGet(w http.ResponseWriter, r *http.Request) error {
-	keyboardModifiers := h.desktop.GetKeyboardModifiers()
+	keyboardModifiers := h.desktopApp.GetKeyboardModifiers()
 
 	return utils.HttpSuccess(w, keyboardModifiers)
 }

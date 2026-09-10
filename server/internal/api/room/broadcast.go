@@ -3,8 +3,6 @@ package room
 import (
 	"net/http"
 
-	"github.com/m1k1o/neko/server/pkg/types/event"
-	"github.com/m1k1o/neko/server/pkg/types/message"
 	"github.com/m1k1o/neko/server/pkg/utils"
 )
 
@@ -14,11 +12,11 @@ type BroadcastStatusPayload struct {
 }
 
 func (h *RoomHandler) broadcastStatus(w http.ResponseWriter, r *http.Request) error {
-	broadcast := h.capture.Broadcast()
+	active, url := h.desktopApp.BroadcastStatus()
 
 	return utils.HttpSuccess(w, BroadcastStatusPayload{
-		IsActive: broadcast.Started(),
-		URL:      broadcast.Url(),
+		IsActive: active,
+		URL:      url,
 	})
 }
 
@@ -32,39 +30,27 @@ func (h *RoomHandler) broadcastStart(w http.ResponseWriter, r *http.Request) err
 		return utils.HttpBadRequest("missing broadcast URL")
 	}
 
-	broadcast := h.capture.Broadcast()
-	if broadcast.Started() {
+	active, _ := h.desktopApp.BroadcastStatus()
+	if active {
 		return utils.HttpUnprocessableEntity("server is already broadcasting")
 	}
 
-	if err := broadcast.Start(data.URL); err != nil {
+	if err := h.desktopApp.StartBroadcast(data.URL); err != nil {
 		return utils.HttpInternalServerError().WithInternalErr(err)
 	}
-
-	h.sessions.AdminBroadcast(
-		event.BROADCAST_STATUS,
-		message.BroadcastStatus{
-			IsActive: broadcast.Started(),
-			URL:      broadcast.Url(),
-		})
+	h.desktopApp.BroadcastStatusChanged()
 
 	return utils.HttpSuccess(w)
 }
 
 func (h *RoomHandler) broadcastStop(w http.ResponseWriter, r *http.Request) error {
-	broadcast := h.capture.Broadcast()
-	if !broadcast.Started() {
+	active, _ := h.desktopApp.BroadcastStatus()
+	if !active {
 		return utils.HttpUnprocessableEntity("server is not broadcasting")
 	}
 
-	broadcast.Stop()
-
-	h.sessions.AdminBroadcast(
-		event.BROADCAST_STATUS,
-		message.BroadcastStatus{
-			IsActive: broadcast.Started(),
-			URL:      broadcast.Url(),
-		})
+	h.desktopApp.StopBroadcast()
+	h.desktopApp.BroadcastStatusChanged()
 
 	return utils.HttpSuccess(w)
 }

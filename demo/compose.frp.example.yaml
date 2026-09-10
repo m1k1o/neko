@@ -8,6 +8,8 @@ services:
     container_name: neko-m1-frp
     restart: unless-stopped
     shm_size: 2gb
+    volumes:
+      - "neko-m1-frp-data:/home/neko/.local/share/neko"
     expose:
       - "52000/tcp"
       - "52000/udp"
@@ -32,3 +34,6 @@ services:
       - ./frpc.toml:/etc/frp/frpc.toml:ro
     depends_on:
       - neko
+
+volumes:
+  neko-m1-frp-data:

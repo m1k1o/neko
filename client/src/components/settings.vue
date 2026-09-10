@@ -29,6 +29,27 @@
       <section class="settings-section">
         <h3>{{ $t('setting.group_chat') }}</h3>
         <ul>
+          <li class="avatar-setting">
+            <span>{{ $t('setting.avatar') }}</span>
+            <neko-avatar
+              class="avatar-preview"
+              :seed="$accessor.user.member ? $accessor.user.member.displayname : ''"
+              :avatar="$accessor.user.member ? $accessor.user.member.avatar : ''"
+              :size="32"
+            />
+            <label class="avatar-upload">
+              <input ref="avatarInput" type="file" accept="image/png,image/jpeg,image/gif" @change="onAvatarUpload" />
+              <i class="fas fa-upload" aria-hidden="true" />
+              <span>{{ $t('setting.avatar_upload') }}</span>
+            </label>
+            <button
+              v-if="$accessor.user.member && $accessor.user.member.avatar"
+              :aria-label="$t('setting.avatar_remove')"
+              @click.stop.prevent="removeAvatar"
+            >
+              <i class="fas fa-trash" aria-hidden="true" />
+            </button>
+          </li>
           <li>
             <span>{{ $t('setting.ignore_emotes') }}</span>
             <label class="switch">
@@ -158,6 +179,52 @@
 
           &:last-child {
             border-bottom: none;
+          }
+
+          &.avatar-setting {
+            gap: 8px;
+
+            > span:first-child {
+              margin-right: auto;
+            }
+
+            .avatar-preview {
+              flex: 0 0 auto;
+            }
+
+            .avatar-upload {
+              display: inline-flex;
+              align-items: center;
+              gap: 5px;
+              margin: 0;
+              padding: 0 8px;
+              border-radius: 7px;
+              background: $style-primary;
+              color: $background-tertiary;
+              cursor: pointer;
+              font-size: 11px;
+              font-weight: 700;
+              line-height: 28px;
+
+              input {
+                display: none;
+              }
+
+              span {
+                height: auto;
+                margin: 0;
+                color: inherit;
+                line-height: inherit;
+              }
+            }
+
+            button {
+              flex: 0 0 auto;
+              width: 28px;
+              padding: 0;
+              color: $text-normal;
+              background: $background-tertiary;
+            }
           }
 
           span {
@@ -380,10 +447,18 @@
 </style>
 
 <script lang="ts">
-  import { Component, Watch, Vue } from 'vue-property-decorator'
+  import { Component, Ref, Watch, Vue } from 'vue-property-decorator'
 
-  @Component({ name: 'neko-settings' })
+  import Avatar from './avatar.vue'
+
+  @Component({
+    name: 'neko-settings',
+    components: {
+      'neko-avatar': Avatar,
+    },
+  })
   export default class extends Vue {
+    @Ref('avatarInput') readonly _avatarInput!: HTMLInputElement
     private broadcast_url: string = ''
 
     get admin() {
@@ -440,6 +515,55 @@
 
     set links_in_app(value: boolean) {
       this.$accessor.settings.setLinksInApp(value)
+    }
+
+    async onAvatarUpload(event: Event) {
+      const input = event.target as HTMLInputElement
+      const file = input.files && input.files[0]
+      if (!file) return
+
+      if (file.size > 384 * 1024) {
+        this.$notify({
+          group: 'neko',
+          type: 'error',
+          title: String(this.$t('setting.avatar_too_large')),
+          text: String(this.$t('setting.avatar_size_limit')),
+        })
+        input.value = ''
+        return
+      }
+
+      try {
+        const avatar = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader()
+          reader.onload = () => resolve(String(reader.result || ''))
+          reader.onerror = () => reject(new Error('unable to read avatar'))
+          reader.readAsDataURL(file)
+        })
+        await this.$http.post('/api/profile/avatar', { avatar })
+      } catch (error) {
+        this.$notify({
+          group: 'neko',
+          type: 'error',
+          title: String(this.$t('setting.avatar_upload_failed')),
+          text: error instanceof Error ? error.message : String(this.$t('setting.avatar_try_again')),
+        })
+      } finally {
+        input.value = ''
+      }
+    }
+
+    async removeAvatar() {
+      try {
+        await this.$http.post('/api/profile/avatar', { avatar: '' })
+      } catch (error) {
+        this.$notify({
+          group: 'neko',
+          type: 'error',
+          title: String(this.$t('setting.avatar_update_failed')),
+          text: error instanceof Error ? error.message : String(this.$t('setting.avatar_try_again')),
+        })
+      }
     }
 
     get keyboard_layouts_list() {

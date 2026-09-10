@@ -60,7 +60,7 @@
       </form>
       <div class="loader" v-if="connecting" role="status" aria-live="polite">
         <div class="spinner" />
-        <span>{{ $t('connection.reconnecting') }}</span>
+        <span>{{ $t(connectionState === 'reconnecting' ? 'connection.reconnecting' : 'connection.connecting') }}</span>
       </div>
     </div>
   </div>
@@ -83,12 +83,13 @@
     align-items: center;
 
     .window {
-      width: min(100%, 390px);
+      width: min(100%, 420px);
       background: linear-gradient(155deg, rgba($background-secondary, 0.98), rgba($background-primary, 0.98));
       border: 1px solid rgba($text-normal, 0.12);
       border-radius: 20px;
       padding: 28px;
       box-shadow: $elevation-high;
+      animation: connect-enter 0.24s ease-out both;
 
       .window-topline {
         display: flex;
@@ -294,7 +295,7 @@
       }
 
       .loader {
-        min-height: 250px;
+        min-height: 224px;
         display: flex;
         flex-direction: column;
         justify-content: center;
@@ -316,6 +317,41 @@
     @keyframes spin {
       to {
         transform: rotate(360deg);
+      }
+    }
+
+    @keyframes connect-enter {
+      from {
+        opacity: 0;
+        transform: translateY(8px) scale(0.985);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    @media (max-width: 480px) {
+      padding: 14px;
+
+      .window {
+        border-radius: 16px;
+        padding: 22px;
+
+        .window-topline {
+          margin-bottom: 22px;
+        }
+
+        .logo {
+          margin-bottom: 24px;
+        }
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .window,
+      .loader .spinner {
+        animation: none;
       }
     }
   }
@@ -368,6 +404,10 @@
 
     get connecting() {
       return this.$accessor.connection.connecting
+    }
+
+    get connectionState() {
+      return this.$accessor.connection.state
     }
 
     removeUrlParam(param: string) {

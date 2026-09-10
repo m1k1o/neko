@@ -118,7 +118,7 @@ server/internal/
 
 验收：默认公网部署仅需 HTTP(S) 端口和一个 WebRTC MUX 端口；FRP 模式可在无公网 IP 的内网主机运行；Chromium 在无代理、HTTP CONNECT Basic、SOCKS5 用户名/密码三种配置下均能访问测试站点，代理凭据不会泄漏到日志或管理 API，且信令和 WebRTC 不被代理配置破坏；Linux x86_64 与 Windows x86_64 Docker Desktop/WSL2 均通过基础端到端场景；弱网和 CPU 压力下不发生无界延迟累积；满足第 1.1 节的基准性能门槛。
 
-### 阶段 2：协议契约与领域抽取（2–4 周）
+### 阶段 2：协议契约与领域抽取（部分完成，2–4 周）
 
 1. 保留现有 OpenAPI，并以 OpenAPI generator 生成 TypeScript API client。
 2. 为 WebSocket 信令固定唯一 envelope：`{ event, payload }`；废弃的扁平消息和兼容桥不进入运行时。
@@ -128,7 +128,7 @@ server/internal/
 
 验收：协议不兼容时返回明确错误；领域层不依赖 HTTP、WebSocket、Pion、Docker；发布前删除已废弃的协议分支、类型和测试夹具。
 
-### 阶段 3：模块化服务端与持久化（3–6 周）
+### 阶段 3：模块化服务端与持久化（尚未正式实施，3–6 周）
 
 1. 按目标目录逐步把现有实现迁入 application/ports/adapters。
 2. 实现内存、文件、PostgreSQL repository；先双写/影子读，再切换为主存储。
@@ -263,6 +263,18 @@ server/internal/
 - 已实现：真实浏览器 WebRTC 回归和性能基线采集入口；仍需在 Linux x86_64 与 Windows x86_64/WSL2 的运行中 demo 上执行 720p/1080p、1/2/5 观看者矩阵，并将结果与 `/metrics` 资源数据关联。
 - 下一项实现：执行并固化 720p/1080p 多观看者性能基线，随后补充公网 FRP、UDP 受阻和 TURN 媒体端到端场景。
 
+### M1/M2/M3 实际完成状态（2026-09-10）
+
+以下状态按当前仓库代码判断；只有代码已经具备且有对应验证入口的内容才计入“已实现”，真实硬件、公网网络和完整发布矩阵尚未执行的内容不计入完成。
+
+| 里程碑 | 当前代码已具备 | 尚未完成 | 总体状态 |
+| --- | --- | --- | --- |
+| M1：Chromium 性能、认证代理与少端口连通性 | Chromium 运行范围、UDP/TCP MUX、FRP/TURN 配置模板与预检、本地 FRP/Coturn 套件、媒体队列背压、质量 Profile、编码器探测与软件回退、认证 HTTP CONNECT/SOCKS5 代理、WebRTC/浏览器 E2E 入口、指标采集、UI 基础和第一批 SDK 拆分均已有实现 | 尚未完成 Linux/WSL2 的 720p/1080p × 1/2/5 完整基线、真实 VAAPI/NVENC 硬件矩阵、公网 FRP、UDP 受阻 TURN 媒体链路和最终发布验收；指标尚未形成跨运行对比报告/仪表盘 | **核心功能大部分已完成，发布验收未完成** |
+| M2：可测试的契约与领域核心 | WebSocket 已统一 `{event,payload}` envelope；已删除主要扁平信令路径；已有 `ControlLease`、`ControlService`、房间/信令/桌面/聊天/文件传输应用服务，以及客户端连接状态机和无 Vue 运行时边界 | 目前只有 `protocol/media-input.schema.json`，没有完整实时事件 schema 及 Go/TypeScript 自动生成；没有 OpenAPI Generator client、统一错误码和完整契约测试；部分应用/类型仍直接依赖 Pion 等底层类型，领域层尚未完全隔离 | **协议收口和第一批抽取已完成，M2 整体未完成** |
+| M3：模块化服务端与持久化 | 已新增 `internal/application`、`control`、`connectivity`、`proxy` 等前置模块；现有内存/文件及 multiuser/file/object/noauth 成员实现仍可运行；旧 legacy 运行时代码已删除 | 尚无完整 `ports/adapters` 边界、PostgreSQL repository、Redis lease/事件总线、OIDC/LDAP、特性开关、完整房间生命周期状态机和审计持久化 | **仅完成前置模块化基础，M3 尚未正式实施** |
+
+因此，当前版本不应将 M1 标记为“发布完成”，也不应将 M2/M3 标记为“全部完成”：M1 进入真实环境验收阶段，M2 进入生成式契约与领域隔离阶段，M3 仍处于架构落地前的准备阶段。
+
 ### UI 重构进行中
 
 - 当前批次先行推进 UI 的视觉与交互基础层：深色蓝灰设计令牌、视频舞台容器、现代化登录卡片、语义化工具栏、响应式侧栏标签，以及键盘可访问的播放/音量/控制操作。
@@ -284,6 +296,22 @@ server/internal/
 
 本批次没有改变公网端口号或 MUX 配置语义；服务端重连宽限/去抖已完成。下一批补充生成式契约测试和迁移错误码，不再引入第二套信令 envelope。
 
+本批次增量：实时输入收口已完成，删除 WebSocket 的鼠标、键盘、触摸和快捷键控制事件及对应消息类型，输入统一经 WebRTC DataChannel；控制权申请、释放和管理员操作仍保留在 WebSocket/REST。新增 `ControlService` 统一两类适配器的权限、排队通知、按键复位和管理员接管/转交/重置；DataChannel 输入对 epoch 执行原子校验并续租，过期或旧客户端输入会被拒绝。Go 全量测试、竞态测试、vet、TypeScript SDK 合约测试、类型检查、lint 和生产构建均通过。
+
+随后增量：新增无 Vue 依赖的 `ControlInputController`，统一桌面坐标映射、滚轮单位换算、反向滚动和边界裁剪；视频组件仅保留权限判断、事件生命周期和传输调用。控制器已纳入 SDK 合约测试，并通过客户端类型检查、lint 和生产构建。
+
+本轮增量：新增无 Vue 依赖的 `MediaSession`，集中管理 DataChannel、媒体输入编码、麦克风轨道和关闭清理；`BaseClient` 保留信令与 PeerConnection 协商，仅通过该媒体层访问输入和麦克风。新增 fake DataChannel 合约测试，覆盖 epoch 输入发送和资源关闭。
+
+功能增量：新增 `control/renew` WebSocket 控制权续租事件，客户端复用心跳周期发送当前 epoch，服务端只允许当前持有者续租，避免在线但暂时无输入的控制者因租约 TTL 到期失去控制。
+
+续租增强：将 `control_lease_ttl` 纳入系统设置并在客户端启动独立续租定时器，续租周期为 TTL 的三分之一，不再依赖普通 WebSocket 心跳是否开启或其周期配置。
+
+底层解耦增量：新增 `internal/application/room` 房间快照应用服务，统一生成加入房间所需的 session、控制权、屏幕、采集和视频能力快照；WebSocket `system/init` handler 仅负责将应用快照映射为协议消息。
+
+本次应用层拆分增量：新增 `signaling`、`desktop`、`chat` 和 `filetransfer` 应用服务。信令协商、屏幕/键盘/剪贴板/广播操作、聊天权限与分发、文件传输权限/路径安全/文件读写均已从 WebSocket/API/插件管理器中下沉；传输 handler 只负责认证、协议解析、错误映射和调用服务。文件传输目录监听与列表广播仍保留在插件适配层，作为文件系统事件适配职责。
+
+本轮 2–4 项增量：控制权状态查询统一经过 `ControlService`，房间快照、REST 和 WebSocket 使用同一控制边界；客户端连接生命周期统一由 `ConnectionStateMachine` 提供，媒体 ICE 状态与生命周期状态分离；`NekoClient` 改为依赖 HTTP、状态和 UI 运行时端口，Vue/Vuex、通知、弹窗和日志通过 `createVueNekoRuntime` 适配器注入，核心 SDK 不再直接导入 Vue 或 Vuex。
+
 ### M1 后续开发执行计划
 
 M1 的 UI 工作拆为两层：当前先交付不触及媒体链路的视觉与交互基础；媒体性能、网络基础设施和发布基线收敛后，再进行深层 SDK/状态拆分。后者采用可回滚的渐进式迁移，不改变信令、媒体协议和服务端端口契约。
@@ -293,22 +321,22 @@ M1 的 UI 工作拆为两层：当前先交付不触及媒体链路的视觉与�
 | 1 | UI 视觉与交互基础（第一批已完成） | 深色蓝灰设计令牌、视频舞台、登录卡片、连接/网络质量反馈、移动端侧栏抽屉、国际化、空/加载状态、设置分组和可访问性基础；保持旧状态与协议接口 | 变更可通过提交回滚；不改变信令/媒体协议；lint/build 通过，Chromium 基础交互回归通过 |
 | 2 | 显式质量 Profile（已完成） | `low`、`balanced`、`high`；仅显式启用；拒绝与自定义 GStreamer 管线混用 | 配置和管线生成单测通过；历史默认配置不变 |
 | 3 | 编码器能力与回退（AV1/H.265 已接入，真实硬件矩阵待执行） | VP8、H.264、H.265、AV1 的软件/VAAPI/NVENC 候选；配置阶段探测硬件运行时能力，首个媒体管线保留同 codec 回退；矩阵脚本覆盖软件、VAAPI、NVENC 编码器元素 | 缺失 GPU/插件时可诊断并回退；需在真实 VAAPI/NVENC GPU 主机和 Windows/WSL2 透传环境执行矩阵并归档结果 |
-| 4 | 自适应质量策略 | 显式 profile 生成质量梯度，复用带宽估计器；后续加入队列压力、RTT/jitter/丢包输入 | 压力下降档、恢复升档，切换原因可观测 |
-| 5 | 性能指标闭环 | 编码耗时、首帧、实际帧率/码率、路径标签和资源指标 | `/metrics` 覆盖基线指标且不含高风险凭据标签 |
+| 4 | 自适应质量策略（代码已接入，实网验收待完成） | 显式 profile 生成质量梯度，已接入队列压力、RTT/jitter/丢包输入，并具备升降档保护 | 仍需在弱网、CPU/GPU 压力和多观看者场景验证切换稳定性并归档切换原因 |
+| 5 | 性能指标闭环（指标已接入，报告待完成） | 编码耗时、首帧、实际帧率/码率、路径标签、队列和资源指标已接入 `/metrics` 与 E2E 快照入口 | 仍需完成 720p/1080p、1/2/5 观看者跨平台基线、对比报告和仪表盘；不含高风险凭据标签 |
 | 6 | FRP 与 TURN 集成（本地套件完成，公网矩阵待补） | SakuraFrp 同端口 TCP/UDP 模板、Coturn 回退模板、relay 范围校验和故障诊断套件 | 本地两条路径可重复部署并通过连通性测试；真实公网/UDP 受阻/Neko 媒体链路需补充 |
 | 7 | 基线与发布验收（入口已完成） | 固定 Playwright Chromium 的登录/信令/首帧 E2E、1/2/5 观看者并发脚本、JSON 结果；执行 720p/1080p 与 Linux/WSL2 矩阵 | 首帧/连接/分辨率数据可比较；运行中 demo、GPU/公网和 UDP 受阻矩阵逐项关闭 |
 | 8 | UI 深层 SDK/状态拆分（第一批已完成，持续迭代） | 已提取 TypeScript 信令传输、连接状态机、媒体输入编码器，并把连接状态迁入 namespaced 模块；下一批继续拆分房间/媒体/UI 状态，完成切换后删除旧页面和适配层 | 当前批次完成 lint/build、纯 Go 单测；后续通过 Chromium、认证代理、FRP/TURN、端口和性能回归，并检查无废弃运行时路径 |
 
 ### 去冗余与解耦执行计划
 
-当前 M1 已删除非 Chromium 应用资产，但运行时代码仍存在协议双轨、全局状态与集中式管理器耦合。以下工作必须遵守“完成迁移即删除旧路径”的原则；不保留旧协议或旧配置的运行时兼容层。
+当前 M1 已删除非 Chromium 应用资产，实时 WebSocket 已收敛为唯一 `{event,payload}` envelope，旧 legacy 运行时代码已删除，客户端核心也已完成第一批 Vue 解耦；但领域、状态与配置边界尚未全部收敛。以下工作必须遵守“完成迁移即删除旧路径”的原则；不保留旧协议或旧配置的运行时兼容层。
 
 | 顺序 | 增量 | 删除/收敛边界 | 验收条件 |
 | --- | --- | --- | --- |
 | 1 | 统一实时输入通道 | 删除 WebSocket 的 `control/move`、滚动、鼠标、键盘和触摸命令及其服务端 handler；实时输入只使用 WebRTC `data` DataChannel。控制权申请、释放和管理员操作继续使用信令/REST。 | Go/TypeScript 输入 opcode 由同一 schema 生成；左/右键、滚轮、键盘、触摸和非控制者光标的浏览器 E2E 均通过；服务端不再注册旧控制事件。 |
-| 2 | 控制权领域服务 | 从 `SessionManager`、WebSocket handler 和 WebRTC handler 中抽出 `ControlLeaseService`，拥有 holder、epoch、过期时间、FIFO 请求队列、节流和管理员策略。 | 每个输入命令携带并验证 epoch；并发申请仅产生一个有效 holder；释放、断线、超时和管理员接管均重置按键并有单元/竞态测试。 |
-| 3 | 收敛客户端连接状态 | `ConnectionStateMachine` 成为连接生命周期的唯一事实来源；Vuex 仅订阅可序列化快照，`BaseClient` 不再另行维护可与其冲突的连接状态。 | 连接、ICE 断开宽限、失败、重连、登出各有状态转换测试；UI 不会因短暂网络波动销毁仍可恢复的媒体会话。 |
-| 4 | SDK 脱离 Vue | 拆分 `NekoClient` 为 `AuthClient`、`SignalingTransport`、`MediaSession`、`RoomClient` 和 UI adapter；移除 SDK 对 `Vue`、`$http`、`$notify`、`$swal`、全局 `$accessor` 的依赖。 | SDK 可在无 Vue 的 TypeScript 测试中完成登录、信令、协商、输入编码与断线恢复；Vue 层只负责呈现和用户意图。 |
+| 2 | 控制权领域服务（实现完成） | 已抽出 `ControlLease`、`ControlService`；统一 holder、epoch、过期时间、FIFO 请求队列、续租、断线和管理员策略，REST、WebSocket、DataChannel 共用控制边界。 | 编译边界已收敛；按本轮要求暂不运行测试。 |
+| 3 | 收敛客户端连接状态（实现完成） | `ConnectionStateMachine` 作为连接生命周期来源；`BaseClient` 不再用 ICE 状态直接冒充生命周期状态，短暂 ICE disconnected 仍保持可恢复会话。 | Go/TypeScript 编译通过；按本轮要求暂不运行测试。 |
+| 4 | SDK 脱离 Vue（核心边界完成） | `NekoClient` 通过 `NekoClientRuntime` 依赖 HTTP、状态和 UI 端口；Vue/Vuex、通知、弹窗和日志集中在 `createVueNekoRuntime`，并导出无 Vue 的 SDK 入口。 | Go/TypeScript/前端构建通过；按本轮要求暂不运行测试。 |
 | 5 | 状态与组件边界 | 状态模块只经 action/selector 对外；删除组件直接调用 `$accessor` 和 `$client` 的跨层写入。将 `video.vue` 拆为媒体舞台、坐标映射、输入控制器和工具栏。 | 分辨率、缩放、全屏和控制权变化的坐标映射有单元/E2E 覆盖；各组件可在 mock SDK 下独立渲染和测试。 |
 | 6 | 服务端应用层拆分 | 将集中式 WebSocket switch 拆为信令、房间、控制、聊天/文件等适配器；handler 只负责 schema 校验和调用应用服务，禁止直接编排 desktop/capture/webrtc/session。 | 领域服务不依赖 HTTP、WebSocket、Pion 或 Xorg；每个实时命令有一致的错误码与契约测试。 |
 | 7 | 配置与协议收口 | 删除 EPR、历史全局 ICE server 回退和不再支持的配置分支；保留 M1 的 direct MUX、FRP 和 TURN 配置。以 schema 生成 Go 与 TypeScript 的信令/输入类型。 | 配置迁移后仅接受 M1 网络模型；无效配置启动失败且报出操作性错误；Go/TypeScript 契约测试从同一 schema 生成。 |
@@ -317,9 +345,9 @@ M1 的 UI 工作拆为两层：当前先交付不触及媒体链路的视觉与�
 
 ## 9. 里程碑与成功标准
 
-1. **M1：Chromium 性能、认证代理与单端口连通性**：仅支持 Chromium；支持 Linux x86_64 和 Windows x86_64 Docker Desktop/WSL2；默认 UDP MUX、TCP/TURN/FRP 回退、启动预检、带认证的 HTTP CONNECT/SOCKS5 出站代理、媒体背压和质量策略完成，并通过性能门槛；UI 视觉基础可先行，基础能力收敛后再于 M1 后段执行深层 UI SDK/状态拆分，不改媒体协议。
-2. **M2：可测试的契约与领域核心**：状态机、协议 schema、双端类型生成和基础 CI 完成。
-3. **M3：可持久化、可集成认证的模块化后端**：内存部署兼容；PostgreSQL/OIDC 为可选生产能力。
+1. **M1：Chromium 性能、认证代理与单端口连通性（核心实现已完成，验收未完成）**：仅支持 Chromium；默认 UDP MUX、TCP/TURN/FRP 回退、启动预检、带认证的 HTTP CONNECT/SOCKS5 出站代理、媒体背压、质量策略和第一批 UI/SDK 拆分已落地；仍需完成真实硬件、公网网络、跨平台性能矩阵并通过发布门槛。
+2. **M2：可测试的契约与领域核心（部分完成）**：唯一 WebSocket envelope、ControlLease、连接状态机和第一批应用服务已落地；完整协议 schema、双端自动生成类型、统一错误码、契约测试和无底层依赖领域核心尚未完成。
+3. **M3：可持久化、可集成认证的模块化后端（尚未正式实施）**：当前保留内存/文件兼容和现有成员认证实现；PostgreSQL、Redis、OIDC/LDAP、特性开关、审计和完整模块边界尚未落地。
 4. **M4：独立客户端 SDK**：在 M1 后段 UI 提取基础上完成跨框架、可独立发布的客户端 SDK；前端框架升级不触及媒体协议，嵌入式集成可复用 SDK。
 5. **M5：按需扩展的房间 Worker**：在多节点环境中安全调度、粘性路由和优雅排空。
 

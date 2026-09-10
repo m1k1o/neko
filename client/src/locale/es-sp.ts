@@ -82,6 +82,14 @@ export const locks = {
 }
 
 export const setting = {
+  avatar: 'Avatar',
+  avatar_upload: 'Subir',
+  avatar_remove: 'Eliminar avatar',
+  avatar_too_large: 'El avatar es demasiado grande',
+  avatar_size_limit: 'Elige una imagen menor de 384 KB.',
+  avatar_upload_failed: 'Error al subir el avatar',
+  avatar_update_failed: 'Error al actualizar el avatar',
+  avatar_try_again: 'Inténtalo de nuevo.',
   scroll: 'Sensibilidad del scroll',
   scroll_invert: 'Invertir scroll',
   autoplay: 'Reproducir video automáticamente',
@@ -93,6 +101,7 @@ export const setting = {
 
 export const connection = {
   logged_out: 'Has sido desconectado.',
+  connecting: 'Conectando...',
   reconnecting: 'Reconectando...',
   connected: 'Conectado',
   disconnected: 'Desconectado',

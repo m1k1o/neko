@@ -8,6 +8,8 @@ services:
     container_name: neko-m1-turn
     restart: unless-stopped
     shm_size: 2gb
+    volumes:
+      - "neko-m1-turn-data:/home/neko/.local/share/neko"
     ports:
       - "127.0.0.1:8080:8080"
     environment:
@@ -37,3 +39,6 @@ services:
       - "${TURN_BIND_IP:-0.0.0.0}:3478:3478/tcp"
       - "${TURN_BIND_IP:-0.0.0.0}:3478:3478/udp"
       - "${TURN_BIND_IP:-0.0.0.0}:${TURN_RELAY_MIN:-49160}-${TURN_RELAY_MAX:-49200}:${TURN_RELAY_MIN:-49160}-${TURN_RELAY_MAX:-49200}/udp"
+
+volumes:
+  neko-m1-turn-data:

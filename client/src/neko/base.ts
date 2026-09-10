@@ -1,7 +1,8 @@
 import EventEmitter from 'eventemitter3'
 import { EVENT, WebSocketEvents } from './events'
 import { ConnectionStateMachine } from '~/sdk/connection-state'
-import { encodeMediaInput, MediaInput } from '~/sdk/media-protocol'
+import { MediaInput } from '~/sdk/media-protocol'
+import { MediaSession } from '~/sdk/media-session'
 import { SignalingMessage, SignalingTransport } from '~/sdk/signaling'
 
 import {
@@ -21,22 +22,26 @@ export interface BaseEvents {
 
 export abstract class BaseClient extends EventEmitter<BaseEvents> {
   protected readonly signaling: SignalingTransport
+  private readonly mediaSession: MediaSession
   protected _ws_heartbeat?: number
+  protected _control_heartbeat?: number
   protected _peer?: RTCPeerConnection
-  protected _channel?: RTCDataChannel
   protected _timeout?: number
   protected _state: RTCIceConnectionState = 'disconnected'
   protected _id = ''
   protected _candidates: RTCIceCandidateInit[] = []
-  protected _micStream?: MediaStream
-  protected _micSender?: RTCRtpSender
-  protected _micActive = false
+  protected _controlEpoch = 0
   private readonly connectionMachine = new ConnectionStateMachine()
   private negotiationQueue: Promise<void> = Promise.resolve()
   private remoteDescriptionSet = false
 
   constructor() {
     super()
+    this.mediaSession = new MediaSession({
+      onData: (event) => this.onData(event),
+      onError: (error) => this.onError(error),
+      onDataChannelClosed: () => this.onDisconnected(new Error('peer data channel closed')),
+    })
     this.signaling = new SignalingTransport({
       onMessage: (message) => this.onMessage(message),
       onOpen: () => this.onSignalingOpen(),
@@ -61,8 +66,12 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
     return typeof this._peer !== 'undefined' && ['connected', 'checking', 'completed'].includes(this._state)
   }
 
+  get connectionState() {
+    return this.connectionMachine.state
+  }
+
   get connected() {
-    return this.peerConnected && this.socketOpen
+    return this.connectionMachine.state === 'connected'
   }
 
   public connect(url: string, token: string) {
@@ -96,22 +105,15 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
       clearInterval(this._ws_heartbeat)
       this._ws_heartbeat = undefined
     }
+    if (this._control_heartbeat) {
+      clearInterval(this._control_heartbeat)
+      this._control_heartbeat = undefined
+    }
 
     this.signaling.close()
     this.remoteDescriptionSet = false
 
-    if (this._channel) {
-      // reset all events
-      this._channel.onmessage = () => {}
-      this._channel.onerror = () => {}
-      this._channel.onclose = () => {}
-
-      try {
-        this._channel.close()
-      } catch (err) {}
-
-      this._channel = undefined
-    }
+    this.mediaSession.close()
 
     if (this._peer) {
       // reset all events
@@ -127,75 +129,62 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
       this._peer = undefined
     }
 
-    this.disableMicrophone()
-
     this.connectionMachine.reset()
     this._state = 'disconnected'
     this._id = ''
   }
 
   get microphoneActive() {
-    return this._micActive
+    return this.mediaSession.microphoneActive
   }
 
   public async enableMicrophone(): Promise<void> {
-    if (!this._peer) {
-      this.emit('warn', 'attempting to enable microphone with no peer connection')
-      return
-    }
-
-    if (this._micActive) {
+    if (this.mediaSession.microphoneActive) {
       this.emit('debug', 'microphone already active')
       return
     }
 
     try {
-      this._micStream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      const audioTrack = this._micStream.getAudioTracks()[0]
-      this._micSender = this._peer.addTrack(audioTrack, this._micStream)
-      this._micActive = true
-      this.emit('info', `microphone enabled: ${audioTrack.label}`)
-    } catch (err: any) {
-      this.emit('error', err)
-      throw err
+      await this.mediaSession.enableMicrophone()
+      this.emit('info', 'microphone enabled')
+    } catch (error) {
+      const reason = error instanceof Error ? error : new Error(String(error))
+      this.emit('error', reason)
+      throw reason
     }
   }
 
   public disableMicrophone(): void {
-    if (this._micSender && this._peer) {
-      try {
-        this._peer.removeTrack(this._micSender)
-      } catch (err) {
-        this.emit('warn', 'failed to remove mic track from peer', err)
-      }
-      this._micSender = undefined
-    }
-
-    if (this._micStream) {
-      this._micStream.getTracks().forEach((t) => t.stop())
-      this._micStream = undefined
-    }
-
-    this._micActive = false
+    this.mediaSession.disableMicrophone()
     this.emit('info', 'microphone disabled')
   }
 
-  public sendData(event: MediaInput['event'], data: Omit<MediaInput, 'event'>) {
+  public sendData(event: 'mousemove', data: { x: number; y: number; epoch?: number }): void
+  public sendData(event: 'wheel', data: { x: number; y: number; controlKey?: boolean; epoch?: number }): void
+  public sendData(event: 'mousedown' | 'mouseup' | 'keydown' | 'keyup', data: { key: number; epoch?: number }): void
+  public sendData(event: MediaInput['event'], data: Record<string, number | boolean | undefined>) {
     if (!this.connected) {
       this.emit('warn', `attempting to send data while disconnected`)
       return
     }
 
-    if (!this._channel || this._channel.readyState !== 'open') {
+    if (!this.mediaSession.dataChannelOpen) {
       this.emit('warn', `attempting to send data while data channel is not open`)
       return
     }
 
     try {
-      this._channel.send(encodeMediaInput({ event, ...data } as MediaInput))
-    } catch (error: any) {
+      this.mediaSession.sendData(event, { ...data, epoch: this._controlEpoch })
+    } catch (error) {
       this.emit('error', error instanceof Error ? error : new Error(String(error)))
     }
+  }
+
+  public setControlEpoch(epoch: number) {
+    if (!Number.isSafeInteger(epoch) || epoch < 0) {
+      throw new RangeError('control epoch must be a non-negative safe integer')
+    }
+    this._controlEpoch = epoch
   }
 
   public sendMessage(event: WebSocketEvents, payload?: WebSocketPayloads) {
@@ -256,13 +245,19 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
       return
     }
 
-    if (lite !== true) {
-      this._peer = new RTCPeerConnection({
-        iceServers: servers,
-      })
-    } else {
-      this._peer = new RTCPeerConnection()
+    // Start gathering a small candidate pool before the remote SDP arrives.
+    // BUNDLE and RTCP mux match the server offer and avoid negotiating
+    // unnecessary transports during the first connection.
+    const configuration: RTCConfiguration = {
+      bundlePolicy: 'max-bundle',
+      iceCandidatePoolSize: 1,
+      rtcpMuxPolicy: 'require',
     }
+    if (lite !== true) {
+      configuration.iceServers = servers
+    }
+    this._peer = new RTCPeerConnection(configuration)
+    this.mediaSession.attachPeer(this._peer)
 
     this._peer.onconnectionstatechange = () => {
       this.emit('debug', `peer connection state changed`, this._peer ? this._peer.connectionState : undefined)
@@ -330,28 +325,7 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
   }
 
   private attachDataChannel(channel: RTCDataChannel) {
-    if (this._channel && this._channel !== channel) {
-      const previous = this._channel
-      previous.onopen = null
-      previous.onmessage = null
-      previous.onerror = null
-      previous.onclose = null
-      try {
-        previous.close()
-      } catch (error) {
-        this.emit('debug', 'failed to close previous data channel', error)
-      }
-    }
-
-    this._channel = channel
-    channel.binaryType = 'arraybuffer'
-    channel.onerror = this.onError.bind(this)
-    channel.onmessage = this.onData.bind(this)
-    channel.onclose = () => {
-      if (this._channel === channel) {
-        this.onDisconnected(new Error('peer data channel closed'))
-      }
-    }
+    this.mediaSession.attachDataChannel(channel)
   }
 
   private queueNegotiation() {
@@ -390,11 +364,7 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
     try {
       await this._peer.setRemoteDescription({ type: 'offer', sdp })
       this.remoteDescriptionSet = true
-
-      for (const candidate of this._candidates) {
-        await this._peer.addIceCandidate(candidate)
-      }
-      this._candidates = []
+      await this.flushCandidates()
 
       const d = await this._peer.createAnswer()
 
@@ -428,6 +398,7 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
     try {
       await this._peer.setRemoteDescription({ type: 'answer', sdp })
       this.remoteDescriptionSet = true
+      await this.flushCandidates()
     } catch (error: any) {
       this.onError(error)
     }
@@ -459,7 +430,10 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
 
     if (event === EVENT.SIGNAL.CANDIDATE) {
       const candidate = payload as SignalCandidatePayload
-      if (this._peer) {
+      // Candidates can race the async SDP setter. Buffer them until the
+      // remote description is installed instead of triggering a failed
+      // addIceCandidate call and waiting for a reconnect.
+      if (this._peer && this.remoteDescriptionSet) {
         try {
           await this._peer.addIceCandidate(candidate)
         } catch (error: any) {
@@ -489,6 +463,15 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
     this[EVENT.DATA](e.data)
   }
 
+  private async flushCandidates() {
+    if (!this._peer || this._candidates.length === 0) {
+      return
+    }
+
+    const candidates = this._candidates.splice(0)
+    await Promise.all(candidates.map((candidate) => this._peer!.addIceCandidate(candidate)))
+  }
+
   private onTrack(event: RTCTrackEvent) {
     this.emit('debug', `received ${event.track.kind} track from peer: ${event.track.id}`, event)
     const stream = event.streams[0]
@@ -515,7 +498,7 @@ export abstract class BaseClient extends EventEmitter<BaseEvents> {
       this._timeout = undefined
     }
 
-    if (!this.connected) {
+    if (!this.peerConnected || !this.socketOpen) {
       this.emit('warn', `onConnected called while being disconnected`)
       return
     }

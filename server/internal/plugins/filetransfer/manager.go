@@ -3,11 +3,8 @@ package filetransfer
 import (
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"os"
-	"path/filepath"
-	"regexp"
 	"sync"
 	"time"
 
@@ -18,6 +15,8 @@ import (
 	"github.com/fsnotify/fsnotify"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+
+	appfile "github.com/m1k1o/neko/server/internal/application/filetransfer"
 )
 
 const multipartFormMaxMemory = 32 << 20
@@ -32,6 +31,13 @@ func NewManager(
 		logger:   logger,
 		config:   config,
 		sessions: sessions,
+		service: appfile.NewService(sessions, appfile.Config{
+			Enabled:      config.Enabled,
+			RootDir:      config.RootDir,
+			UserDownload: config.UserDownload,
+			UserUpload:   config.UserUpload,
+			UserDelete:   config.UserDelete,
+		}),
 		shutdown: make(chan struct{}),
 	}
 }
@@ -40,30 +46,14 @@ type Manager struct {
 	logger   zerolog.Logger
 	config   *Config
 	sessions types.SessionManager
+	service  *appfile.Service
 	shutdown chan struct{}
 	mu       sync.RWMutex
 	fileList []Item
 }
 
 func (m *Manager) isEnabledForSession(session types.Session) (bool, error) {
-	settings := Settings{
-		Enabled: true, // defaults to true
-	}
-	err := m.sessions.Settings().Plugins.Unmarshal(PluginName, &settings)
-	if err != nil && !errors.Is(err, types.ErrPluginSettingsNotFound) {
-		return false, fmt.Errorf("unable to unmarshal %s plugin settings from global settings: %w", PluginName, err)
-	}
-
-	profile := Settings{
-		Enabled: true, // defaults to true
-	}
-
-	err = session.Profile().Plugins.Unmarshal(PluginName, &profile)
-	if err != nil && !errors.Is(err, types.ErrPluginSettingsNotFound) {
-		return false, fmt.Errorf("unable to unmarshal %s plugin settings from profile: %w", PluginName, err)
-	}
-
-	return m.config.Enabled && (settings.Enabled || session.Profile().IsAdmin) && profile.Enabled, nil
+	return m.service.IsEnabledForSession(session)
 }
 
 func (m *Manager) refresh() (error, bool) {
@@ -225,25 +215,30 @@ func (m *Manager) deleteFileHandler(w http.ResponseWriter, r *http.Request) erro
 		return utils.HttpForbidden("file transfer is disabled")
 	}
 
-	if !session.Profile().IsAdmin && !m.config.UserDelete {
-		return utils.HttpForbidden("file delete is not allowed for non-admin users")
-	}
-
 	filename := r.URL.Query().Get("filename")
-	badChars, err := regexp.MatchString(`(?m)\.\.(?:\/|$)`, filename)
-	if filename == "" || badChars || err != nil {
+	if err := m.service.AuthorizeDelete(session); err != nil {
+		if errors.Is(err, appfile.ErrDisabled) || errors.Is(err, appfile.ErrPermission) {
+			return utils.HttpForbidden(err.Error())
+		}
+		return utils.HttpInternalServerError().
+			WithInternalErr(err).
+			Msg("error checking file delete permissions")
+	}
+	if _, err := m.service.Path(filename); errors.Is(err, appfile.ErrInvalidFilename) {
 		return utils.HttpBadRequest().
 			WithInternalErr(err).
 			Msg("bad filename")
 	}
 
-	filename = filepath.Clean(filename)
-	filename = filepath.Base(filename)
-	filePath := filepath.Join(m.config.RootDir, filename)
-
-	if err := os.Remove(filePath); err != nil {
+	if err := m.service.Delete(session, filename); err != nil {
 		if os.IsNotExist(err) {
 			return utils.HttpNotFound("file not found")
+		}
+		if errors.Is(err, appfile.ErrInvalidFilename) {
+			return utils.HttpBadRequest().WithInternalErr(err).Msg("bad filename")
+		}
+		if errors.Is(err, appfile.ErrDisabled) || errors.Is(err, appfile.ErrPermission) {
+			return utils.HttpForbidden(err.Error())
 		}
 		return utils.HttpInternalServerError().
 			WithInternalErr(err).
@@ -311,22 +306,26 @@ func (m *Manager) downloadFileHandler(w http.ResponseWriter, r *http.Request) er
 		return utils.HttpForbidden("file transfer is disabled")
 	}
 
-	if !session.Profile().IsAdmin && !m.config.UserDownload {
-		return utils.HttpForbidden("file download is not allowed for non-admin users")
-	}
-
 	filename := r.URL.Query().Get("filename")
-	badChars, err := regexp.MatchString(`(?m)\.\.(?:\/|$)`, filename)
-	if filename == "" || badChars || err != nil {
+	if err := m.service.AuthorizeDownload(session); err != nil {
+		if errors.Is(err, appfile.ErrDisabled) || errors.Is(err, appfile.ErrPermission) {
+			return utils.HttpForbidden(err.Error())
+		}
+		return utils.HttpInternalServerError().
+			WithInternalErr(err).
+			Msg("error checking file download permissions")
+	}
+	filePath, err := m.service.Path(filename)
+	if err != nil {
+		if errors.Is(err, appfile.ErrInvalidFilename) {
+			return utils.HttpBadRequest().
+				WithInternalErr(err).
+				Msg("bad filename")
+		}
 		return utils.HttpBadRequest().
 			WithInternalErr(err).
 			Msg("bad filename")
 	}
-
-	// ensure filename is clean and only contains the basename
-	filename = filepath.Clean(filename)
-	filename = filepath.Base(filename)
-	filePath := filepath.Join(m.config.RootDir, filename)
 
 	http.ServeFile(w, r, filePath)
 	return nil
@@ -349,8 +348,13 @@ func (m *Manager) uploadFileHandler(w http.ResponseWriter, r *http.Request) erro
 		return utils.HttpForbidden("file transfer is disabled")
 	}
 
-	if !session.Profile().IsAdmin && !m.config.UserUpload {
-		return utils.HttpForbidden("file upload is not allowed for non-admin users")
+	if err := m.service.AuthorizeUpload(session); err != nil {
+		if errors.Is(err, appfile.ErrDisabled) || errors.Is(err, appfile.ErrPermission) {
+			return utils.HttpForbidden(err.Error())
+		}
+		return utils.HttpInternalServerError().
+			WithInternalErr(err).
+			Msg("error checking file upload permissions")
 	}
 
 	err = r.ParseMultipartForm(multipartFormMaxMemory)
@@ -368,32 +372,29 @@ func (m *Manager) uploadFileHandler(w http.ResponseWriter, r *http.Request) erro
 	}()
 
 	for _, formheader := range r.MultipartForm.File["files"] {
-		// ensure filename is clean and only contains the basename
-		filename := filepath.Clean(formheader.Filename)
-		filename = filepath.Base(filename)
-		filePath := filepath.Join(m.config.RootDir, filename)
-
 		formfile, err := formheader.Open()
 		if err != nil {
 			return utils.HttpBadRequest().
 				WithInternalErr(err).
 				Msg("error opening formdata file")
 		}
-		defer formfile.Close()
-
-		f, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE, 0644)
+		err = m.service.UploadFiles(session, []appfile.Upload{{Name: formheader.Filename, Reader: formfile}})
+		closeErr := formfile.Close()
 		if err != nil {
-			return utils.HttpInternalServerError().
-				WithInternalErr(err).
-				Msg("error opening file for writing")
-		}
-		defer f.Close()
-
-		_, err = io.Copy(f, formfile)
-		if err != nil {
+			if errors.Is(err, appfile.ErrInvalidFilename) {
+				return utils.HttpBadRequest().WithInternalErr(err).Msg("bad filename")
+			}
+			if errors.Is(err, appfile.ErrDisabled) || errors.Is(err, appfile.ErrPermission) {
+				return utils.HttpForbidden(err.Error())
+			}
 			return utils.HttpInternalServerError().
 				WithInternalErr(err).
 				Msg("error writing file")
+		}
+		if closeErr != nil {
+			return utils.HttpInternalServerError().
+				WithInternalErr(closeErr).
+				Msg("error closing uploaded file")
 		}
 	}
 

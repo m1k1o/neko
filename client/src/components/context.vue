@@ -39,10 +39,10 @@
       <template v-if="admin && !child.data.member.admin">
         <li class="seperator" />
         <li>
-          <span @click="kick(child.data.member)" style="color: #f04747">{{ $t('context.kick') }}</span>
+          <span class="danger-action" @click="kick(child.data.member)">{{ $t('context.kick') }}</span>
         </li>
         <li>
-          <span @click="ban(child.data.member)" style="color: #f04747">{{ $t('context.ban') }}</span>
+          <span class="danger-action" @click="ban(child.data.member)">{{ $t('context.ban') }}</span>
         </li>
       </template>
     </template>
@@ -121,6 +121,10 @@
 
         &:focus {
           outline: 0;
+        }
+
+        &.danger-action {
+          color: $style-error;
         }
       }
     }

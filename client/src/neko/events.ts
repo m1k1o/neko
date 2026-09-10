@@ -40,8 +40,10 @@ export const EVENT = {
     HOST: 'control/host',
     RELEASE: 'control/release',
     REQUEST: 'control/request',
+    RENEW: 'control/renew',
   },
   CHAT: {
+    INIT: 'chat/init',
     MESSAGE: 'chat/message',
     EMOTE: 'chat/emote',
   },
@@ -85,7 +87,11 @@ export type WebSocketEvents =
   | KeyboardEvents
   | BroadcastEvents
 
-export type ControlEvents = typeof EVENT.CONTROL.HOST | typeof EVENT.CONTROL.RELEASE | typeof EVENT.CONTROL.REQUEST
+export type ControlEvents =
+  | typeof EVENT.CONTROL.HOST
+  | typeof EVENT.CONTROL.RELEASE
+  | typeof EVENT.CONTROL.REQUEST
+  | typeof EVENT.CONTROL.RENEW
 
 export type SystemEvents =
   | typeof EVENT.SYSTEM.INIT
@@ -112,7 +118,7 @@ export type SignalEvents =
   | typeof EVENT.SIGNAL.CANDIDATE
   | typeof EVENT.SIGNAL.CLOSE
 
-export type ChatEvents = typeof EVENT.CHAT.MESSAGE | typeof EVENT.CHAT.EMOTE
+export type ChatEvents = typeof EVENT.CHAT.INIT | typeof EVENT.CHAT.MESSAGE | typeof EVENT.CHAT.EMOTE
 
 export type FileTransferEvents = typeof EVENT.FILETRANSFER.UPDATE
 

@@ -82,6 +82,14 @@ export const locks = {
 }
 
 export const setting = {
+  avatar: 'Avatar',
+  avatar_upload: 'Last opp',
+  avatar_remove: 'Fjern avatar',
+  avatar_too_large: 'Avataren er for stor',
+  avatar_size_limit: 'Velg et bilde under 384 KB.',
+  avatar_upload_failed: 'Opplasting av avatar mislyktes',
+  avatar_update_failed: 'Oppdatering av avatar mislyktes',
+  avatar_try_again: 'Prøv igjen.',
   scroll: 'Rullingssensitivitet',
   scroll_invert: 'Inverter rulling',
   autoplay: 'Spill video automatisk',
@@ -93,6 +101,7 @@ export const setting = {
 
 export const connection = {
   logged_out: 'Du har blitt utlogget.',
+  connecting: 'Kobler til...',
   reconnecting: 'Kobler til igjen...',
   connected: 'Tilkoblet',
   disconnected: 'Frakoblet',

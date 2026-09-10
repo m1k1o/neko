@@ -225,7 +225,7 @@
         input[type='range'] {
           width: 100%;
           background: transparent;
-          width: 150px;
+          width: clamp(5rem, 12vw, 9.375rem);
           height: 20px;
           -webkit-appearance: none;
 

@@ -18,7 +18,8 @@ type SessionCookie struct {
 }
 
 type Session struct {
-	File string
+	File       string
+	AvatarFile string
 
 	PrivateMode       bool
 	LockedLogins      bool
@@ -28,6 +29,7 @@ type Session struct {
 	InactiveCursors   bool
 	MercifulReconnect bool
 	HeartbeatInterval int
+	ControlLeaseTTL   time.Duration
 	APIToken          string
 
 	Cookie SessionCookie
@@ -36,6 +38,11 @@ type Session struct {
 func (Session) Init(cmd *cobra.Command) error {
 	cmd.PersistentFlags().String("session.file", "", "if sessions should be stored in a file, otherwise they will be stored only in memory")
 	if err := viper.BindPFlag("session.file", cmd.PersistentFlags().Lookup("session.file")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().String("session.avatar_file", "/home/neko/.local/share/neko/avatars.json", "path to the persistent user avatar file")
+	if err := viper.BindPFlag("session.avatar_file", cmd.PersistentFlags().Lookup("session.avatar_file")); err != nil {
 		return err
 	}
 
@@ -76,6 +83,11 @@ func (Session) Init(cmd *cobra.Command) error {
 
 	cmd.PersistentFlags().Int("session.heartbeat_interval", 10, "interval in seconds for sending heartbeat messages")
 	if err := viper.BindPFlag("session.heartbeat_interval", cmd.PersistentFlags().Lookup("session.heartbeat_interval")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().Duration("session.control_lease_ttl", 30*time.Second, "idle duration before control ownership expires")
+	if err := viper.BindPFlag("session.control_lease_ttl", cmd.PersistentFlags().Lookup("session.control_lease_ttl")); err != nil {
 		return err
 	}
 
@@ -125,6 +137,7 @@ func (Session) Init(cmd *cobra.Command) error {
 
 func (s *Session) Set() {
 	s.File = viper.GetString("session.file")
+	s.AvatarFile = viper.GetString("session.avatar_file")
 
 	s.PrivateMode = viper.GetBool("session.private_mode")
 	s.LockedLogins = viper.GetBool("session.locked_logins")
@@ -134,6 +147,7 @@ func (s *Session) Set() {
 	s.InactiveCursors = viper.GetBool("session.inactive_cursors")
 	s.MercifulReconnect = viper.GetBool("session.merciful_reconnect")
 	s.HeartbeatInterval = viper.GetInt("session.heartbeat_interval")
+	s.ControlLeaseTTL = viper.GetDuration("session.control_lease_ttl")
 	s.APIToken = viper.GetString("session.api_token")
 
 	s.Cookie.Enabled = viper.GetBool("session.cookie.enabled")

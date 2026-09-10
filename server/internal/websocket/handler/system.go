@@ -10,40 +10,33 @@ import (
 )
 
 func (h *MessageHandlerCtx) systemInit(session types.Session) error {
-	host, hasHost := h.sessions.GetHost()
-
-	var hostID string
-	if hasHost {
-		hostID = host.ID()
-	}
-
-	controlHost := message.ControlHost{
-		HasHost: hasHost,
-		HostID:  hostID,
-	}
+	snapshot := h.room.Snapshot(session)
 
 	sessions := map[string]message.SessionData{}
-	for _, session := range h.sessions.List() {
-		sessionId := session.ID()
-		sessions[sessionId] = message.SessionData{
-			ID:      sessionId,
-			Profile: session.Profile(),
-			State:   session.State(),
+	for _, current := range snapshot.Sessions {
+		sessions[current.ID] = message.SessionData{
+			ID:      current.ID,
+			Profile: current.Profile,
+			State:   current.State,
 		}
 	}
 
 	session.Send(
 		event.SYSTEM_INIT,
 		message.SystemInit{
-			SessionId:         session.ID(),
-			ControlHost:       controlHost,
-			ScreenSize:        h.desktop.GetScreenSize(),
+			SessionId: snapshot.SessionID,
+			ControlHost: message.ControlHost{
+				HasHost: snapshot.HasHost,
+				HostID:  snapshot.HostID,
+				Epoch:   snapshot.ControlEpoch,
+			},
+			ScreenSize:        snapshot.ScreenSize,
 			Sessions:          sessions,
-			Settings:          h.sessions.Settings(),
-			TouchEvents:       h.desktop.HasTouchSupport(),
-			ScreencastEnabled: h.capture.Screencast().Enabled(),
+			Settings:          snapshot.Settings,
+			TouchEvents:       snapshot.TouchEvents,
+			ScreencastEnabled: snapshot.ScreencastEnabled,
 			WebRTC: message.SystemWebRTC{
-				Videos: h.capture.Video().IDs(),
+				Videos: snapshot.VideoIDs,
 			},
 		})
 
@@ -51,13 +44,13 @@ func (h *MessageHandlerCtx) systemInit(session types.Session) error {
 }
 
 func (h *MessageHandlerCtx) systemAdmin(session types.Session) error {
-	broadcast := h.capture.Broadcast()
+	active, url := h.desktopApp.BroadcastStatus()
 	session.Send(
 		event.SYSTEM_ADMIN,
 		message.SystemAdmin{
 			BroadcastStatus: message.BroadcastStatus{
-				IsActive: broadcast.Started(),
-				URL:      broadcast.Url(),
+				IsActive: active,
+				URL:      url,
 			},
 		})
 
