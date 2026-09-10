@@ -1,8 +1,6 @@
 ARG BASE_IMAGE=ghcr.io/m1k1o/neko/base:latest
 FROM $BASE_IMAGE
 
-ARG SRC_URL="https://cdn1.waterfox.net/waterfox/releases/latest/linux"
-
 #
 # install waterfox
 RUN set -eux; apt-get update; \
@@ -10,7 +8,8 @@ RUN set -eux; apt-get update; \
     xz-utils bzip2 libgtk-3-0 libdbus-glib-1-2; \
     #
     # fetch latest release
-    wget --user-agent="Mozilla/5.0" -O /tmp/waterfox-setup.tar.bz2 "${SRC_URL}"; \
+    LATEST=$(curl -s https://api.github.com/repos/BrowserWorks/Waterfox/releases/latest | grep -oP '"tag_name": "\K[^"]+'); \
+    wget -O /tmp/waterfox-setup.tar.bz2 "https://cdn.waterfox.com/waterfox/releases/${LATEST}/Linux_x86_64/waterfox-${LATEST}.tar.bz2"; \
     mkdir /usr/lib/waterfox; \
     tar -xjf /tmp/waterfox-setup.tar.bz2 -C /usr/lib; \
     rm -f /tmp/waterfox-setup.tar.bz2; \
