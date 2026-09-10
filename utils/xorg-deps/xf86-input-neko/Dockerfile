@@ -3,7 +3,10 @@ FROM debian:bullseye-slim
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN set -eux; \
-    apt-get update; \
+    #
+    # bullseye is EOL, its Release files (esp. bullseye-security) are frozen
+    # and expired, so skip the valid-until check
+    apt-get -o Acquire::Check-Valid-Until=false update; \
     apt-get install -y \
         gcc pkgconf autoconf automake libtool make xorg-dev xutils-dev \
     && rm -rf /var/lib/apt/lists/*;

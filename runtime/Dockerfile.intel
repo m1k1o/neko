@@ -16,7 +16,10 @@ RUN set -eux; \
     echo deb http://deb.debian.org/debian bullseye main contrib non-free > /etc/apt/sources.list; \
     echo deb http://deb.debian.org/debian-security/ bullseye-security main contrib non-free >> /etc/apt/sources.list; \
     echo deb http://deb.debian.org/debian bullseye-updates main contrib non-free >> /etc/apt/sources.list; \
-    apt-get update; \
+    #
+    # bullseye is EOL, its Release files (esp. bullseye-security) are frozen
+    # and expired, so skip the valid-until check
+    apt-get -o Acquire::Check-Valid-Until=false update; \
     apt-get install -y --no-install-recommends \
         wget ca-certificates supervisor \
         pulseaudio dbus-x11 xserver-xorg-video-dummy \

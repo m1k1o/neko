@@ -7,7 +7,10 @@ WORKDIR /src
 # install dependencies
 ENV DEBIAN_FRONTEND=noninteractive
 RUN set -eux; \
-    apt-get update; \
+    #
+    # bullseye is EOL, its Release files (esp. bullseye-security) are frozen
+    # and expired, so skip the valid-until check
+    apt-get -o Acquire::Check-Valid-Until=false update; \
     apt-get install -y --no-install-recommends \
         libx11-dev libxrandr-dev libxtst-dev libgtk-3-dev \
         libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev; \
