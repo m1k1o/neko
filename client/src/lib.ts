@@ -31,6 +31,32 @@ import Avatar from '~/components/avatar.vue'
 import Vue from 'vue'
 import ToolTip from 'v-tooltip'
 
+// Stable SDK primitives are exported separately from the Vue components so
+// embedders can own signaling, lifecycle, or input serialization themselves.
+export { ConnectionStateMachine } from './sdk/connection-state'
+export type { ConnectionEvent, ConnectionPhase, ConnectionTransition } from './sdk/connection-state'
+export { encodeMediaInput, MEDIA_OPCODE } from './sdk/media-protocol'
+export type { MediaInput, MediaInputEvent } from './sdk/media-protocol'
+export { SignalingTransport } from './sdk/signaling'
+export type { SignalingMessage, SignalingState, SignalingTransportOptions } from './sdk/signaling'
+export { AuthClient } from './sdk/auth'
+export type { AuthHttpClient, LoginResponse } from './sdk/auth'
+export { RoomClient } from './sdk/room'
+export type { RoomHttpClient, ControlStatus } from './sdk/room'
+export { NetworkQualityMonitor, classifyNetworkQuality } from './sdk/network-monitor'
+export { ControlInputController } from './sdk/control-input'
+export type { ControlInputOptions, NormalizedWheel } from './sdk/control-input'
+export { MediaSession } from './sdk/media-session'
+export type { MediaInputData, MediaSessionOptions } from './sdk/media-session'
+export { NekoClient } from './neko'
+export type { NekoClientRuntime, NekoStatePort, NekoUIAdapter } from './neko/runtime'
+export type {
+  NetworkQuality,
+  NetworkQualitySample,
+  NetworkStatsPeer,
+  NetworkQualityMonitorOptions,
+} from './sdk/network-monitor'
+
 Vue.use(ToolTip)
 
 const exportMixin = {

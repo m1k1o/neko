@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+chromium_bin="${NEKO_CHROMIUM_BIN:-/usr/bin/chromium}"
+proxy_agent="${NEKO_CHROMIUM_PROXY_AGENT:-}"
+proxy_server="${NEKO_CHROMIUM_PROXY_SERVER:-}"
+proxy_bypass="${NEKO_CHROMIUM_PROXY_BYPASS_LIST:-}"
+
+if [[ -n "${proxy_server}" && -z "${proxy_agent}" ]]; then
+  proxy_agent="127.0.0.1:18080"
+fi
+if [[ -n "${proxy_server}" && -z "${proxy_bypass}" ]]; then
+  proxy_bypass='localhost;127.0.0.1;[::1];<local>'
+fi
+
+if [[ -n "${proxy_agent}" ]]; then
+  proxy_host="${proxy_agent%:*}"
+  proxy_port="${proxy_agent##*:}"
+
+  case "${proxy_host}" in
+    127.0.0.1|localhost|'[::1]') ;;
+    *)
+      echo "NEKO_CHROMIUM_PROXY_AGENT must use a loopback address" >&2
+      exit 2
+      ;;
+  esac
+
+  if [[ ! "${proxy_port}" =~ ^[0-9]+$ ]] || ((proxy_port < 1 || proxy_port > 65535)); then
+    echo "NEKO_CHROMIUM_PROXY_AGENT must include a valid port" >&2
+    exit 2
+  fi
+
+  if [[ "${proxy_bypass}" == *','* || "${proxy_bypass}" == *$'\n'* || "${proxy_bypass}" == *$'\r'* ]]; then
+    echo "NEKO_CHROMIUM_PROXY_BYPASS_LIST must use semicolons and must not contain line breaks" >&2
+    exit 2
+  fi
+
+  if [[ -n "${proxy_server}" ]]; then
+    proxy_host="${proxy_host#[}"
+    proxy_host="${proxy_host%]}"
+    proxy_ready="false"
+    for _ in {1..50}; do
+      if (exec 3<>"/dev/tcp/${proxy_host}/${proxy_port}") 2>/dev/null; then
+        proxy_ready="true"
+        break
+      fi
+      sleep 0.1
+    done
+    if [[ "${proxy_ready}" != "true" ]]; then
+      echo "Chromium proxy agent is not reachable" >&2
+      exit 3
+    fi
+  fi
+
+  set -- "$@" "--proxy-server=http://${proxy_agent}"
+  if [[ -n "${proxy_bypass}" ]]; then
+    set -- "$@" "--proxy-bypass-list=${proxy_bypass}"
+  fi
+fi
+
+if [[ -n "${NEKO_CHROMIUM_LAUNCHER:-}" ]]; then
+  exec "${NEKO_CHROMIUM_LAUNCHER}" "${chromium_bin}" "$@"
+fi
+
+exec "${chromium_bin}" "$@"

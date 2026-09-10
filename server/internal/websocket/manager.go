@@ -120,6 +120,7 @@ func (manager *WebSocketManagerCtx) Start() {
 		payload := message.ControlHost{
 			ID:      session.ID(),
 			HasHost: host != nil,
+			Epoch:   manager.sessions.ControlEpoch(),
 		}
 
 		if payload.HasHost {

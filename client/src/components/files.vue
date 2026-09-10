@@ -27,6 +27,14 @@
       </div>
     </div>
     <div class="files-list">
+      <div v-if="loading" class="loading-state" role="status" aria-live="polite">
+        <div class="spinner" />
+        <p>{{ $t('files.loading') }}</p>
+      </div>
+      <div v-else-if="files.length === 0" class="empty-state">
+        <i class="fas fa-folder-open" aria-hidden="true" />
+        <p>{{ $t('files.empty') }}</p>
+      </div>
       <div
         v-for="item in files"
         :key="item.name"
@@ -221,6 +229,41 @@
       &::-webkit-scrollbar-thumb:hover {
         background-color: $background-floating;
       }
+
+      .empty-state {
+        min-height: 180px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        color: $text-muted;
+        text-align: center;
+
+        i {
+          color: rgba($style-primary, 0.7);
+          font-size: 28px;
+        }
+      }
+
+      .loading-state {
+        min-height: 180px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        color: $text-muted;
+
+        .spinner {
+          width: 24px;
+          height: 24px;
+          border: 2px solid rgba($style-primary, 0.2);
+          border-top-color: $style-primary;
+          border-radius: 50%;
+          animation: files-spin 0.8s linear infinite;
+        }
+      }
     }
 
     .files-list-item {
@@ -377,6 +420,12 @@
     .upload-area > p {
       margin: 0px 10px 10px 10px;
     }
+
+    @keyframes files-spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
   }
 </style>
 
@@ -492,7 +541,7 @@
       this.selectedFiles = []
 
       for (const name of filesToRemove) {
-        const url = '/file?pwd=' + encodeURIComponent(this.$accessor.password) + '&filename=' + encodeURIComponent(name)
+        const url = '/api/filetransfer?filename=' + encodeURIComponent(name)
         try {
           await this.$http.delete(url)
         } catch (error: any) {
@@ -522,6 +571,10 @@
       return this.$accessor.files.files
     }
 
+    get loading() {
+      return this.$accessor.files.loading
+    }
+
     get transfers() {
       return this.$accessor.files.transfers
     }
@@ -543,8 +596,7 @@
         return
       }
 
-      const url =
-        '/file?pwd=' + encodeURIComponent(this.$accessor.password) + '&filename=' + encodeURIComponent(item.name)
+      const url = '/api/filetransfer?filename=' + encodeURIComponent(item.name)
       const abortController = new AbortController()
 
       let transfer: FileTransfer = {
@@ -600,7 +652,7 @@
     }
 
     upload(dt: DataTransfer) {
-      const url = '/file?pwd=' + encodeURIComponent(this.$accessor.password)
+      const url = '/api/filetransfer'
       this.uploadAreaDrag = false
 
       for (const file of dt.files) {
@@ -686,8 +738,7 @@
       if (!isConfirmed) {
         return
       }
-      const url =
-        '/file?pwd=' + encodeURIComponent(this.$accessor.password) + '&filename=' + encodeURIComponent(item.name)
+      const url = '/api/filetransfer?filename=' + encodeURIComponent(item.name)
       try {
         await this.$http.delete(url)
         this.$accessor.files.refresh()

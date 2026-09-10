@@ -1,8 +1,12 @@
 package session
 
 import (
+	"encoding/json"
 	"errors"
+	"os"
+	"path/filepath"
 	"slices"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -12,6 +16,7 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"github.com/m1k1o/neko/server/internal/config"
+	"github.com/m1k1o/neko/server/internal/control"
 	"github.com/m1k1o/neko/server/pkg/types"
 	"github.com/m1k1o/neko/server/pkg/utils"
 )
@@ -29,13 +34,16 @@ func New(config *config.Session) *SessionManagerCtx {
 			InactiveCursors:   config.InactiveCursors,
 			MercifulReconnect: config.MercifulReconnect,
 			HeartbeatInterval: config.HeartbeatInterval,
+			ControlLeaseTTL:   int(config.ControlLeaseTTL / time.Second),
 		},
 		tokens:   make(map[string]string),
 		sessions: make(map[string]*SessionCtx),
+		avatars:  make(map[string]string),
 		cursors:  make(map[types.Session][]types.Cursor),
 		emmiter:  events.New(),
 
 		serverStartedAt: time.Now(),
+		controlLease:    control.New(config.ControlLeaseTTL),
 	}
 
 	// create API session
@@ -57,7 +65,8 @@ func New(config *config.Session) *SessionManagerCtx {
 		}
 	}
 
-	// try to load sessions from file
+	// try to load persistent user data
+	manager.loadAvatars()
 	manager.load()
 
 	return manager
@@ -73,8 +82,11 @@ type SessionManagerCtx struct {
 	tokens     map[string]string
 	sessions   map[string]*SessionCtx
 	sessionsMu sync.Mutex
+	avatars    map[string]string
+	avatarsMu  sync.Mutex
 
-	hostId atomic.Value
+	hostId       atomic.Value
+	controlLease *control.Lease
 
 	cursors   map[types.Session][]types.Cursor
 	cursorsMu sync.Mutex
@@ -90,6 +102,7 @@ type SessionManagerCtx struct {
 }
 
 func (manager *SessionManagerCtx) Create(id string, profile types.MemberProfile) (types.Session, string, error) {
+	profile = manager.withStoredAvatar(profile, id)
 	token, err := utils.NewUID(64)
 	if err != nil {
 		return nil, "", err
@@ -136,6 +149,7 @@ func (manager *SessionManagerCtx) Update(id string, profile types.MemberProfile)
 	old := session.profile
 	session.profile = profile
 	manager.sessionsMu.Unlock()
+	manager.storeAvatar(profile, session.ID())
 
 	manager.emmiter.Emit("profile_changed", session, profile, old)
 	manager.save()
@@ -246,6 +260,9 @@ func (manager *SessionManagerCtx) setHost(session, host types.Session) {
 	var hostId string
 	if host != nil {
 		hostId = host.ID()
+		manager.controlLease.Grant(hostId)
+	} else {
+		manager.controlLease.ForceRelease()
 	}
 
 	manager.hostId.Store(hostId)
@@ -253,17 +270,142 @@ func (manager *SessionManagerCtx) setHost(session, host types.Session) {
 }
 
 func (manager *SessionManagerCtx) GetHost() (types.Session, bool) {
-	hostId, ok := manager.hostId.Load().(string)
-	if !ok || hostId == "" {
+	state := manager.controlLease.Snapshot()
+	if state.Holder == "" {
+		manager.hostId.Store("")
 		return nil, false
 	}
 
-	return manager.Get(hostId)
+	manager.hostId.Store(state.Holder)
+	return manager.Get(state.Holder)
 }
 
 func (manager *SessionManagerCtx) isHost(host types.Session) bool {
-	hostId, ok := manager.hostId.Load().(string)
-	return ok && hostId == host.ID()
+	return manager.controlLease.Snapshot().Holder == host.ID()
+}
+
+func (manager *SessionManagerCtx) avatarKey(profile types.MemberProfile, id string) string {
+	if name := strings.TrimSpace(profile.Name); name != "" {
+		return name
+	}
+	return id
+}
+
+func (manager *SessionManagerCtx) withStoredAvatar(profile types.MemberProfile, id string) types.MemberProfile {
+	key := manager.avatarKey(profile, id)
+	manager.avatarsMu.Lock()
+	avatar, ok := manager.avatars[key]
+	manager.avatarsMu.Unlock()
+	if ok {
+		profile.Avatar = avatar
+	}
+	return profile
+}
+
+func (manager *SessionManagerCtx) storeAvatar(profile types.MemberProfile, id string) {
+	if manager.config.AvatarFile == "" {
+		return
+	}
+
+	key := manager.avatarKey(profile, id)
+	manager.avatarsMu.Lock()
+	manager.avatars[key] = profile.Avatar
+	avatars := make(map[string]string, len(manager.avatars))
+	for storedKey, avatar := range manager.avatars {
+		avatars[storedKey] = avatar
+	}
+	manager.avatarsMu.Unlock()
+
+	data, err := json.Marshal(avatars)
+	if err != nil {
+		manager.logger.Error().Err(err).Msg("failed to marshal avatars")
+		return
+	}
+	if err := os.MkdirAll(filepath.Dir(manager.config.AvatarFile), 0750); err != nil {
+		manager.logger.Error().Err(err).Msg("failed to create avatar directory")
+		return
+	}
+	temporary := manager.config.AvatarFile + ".tmp"
+	if err := os.WriteFile(temporary, data, 0600); err != nil {
+		manager.logger.Error().Err(err).Msg("failed to write avatars")
+		return
+	}
+	if err := os.Rename(temporary, manager.config.AvatarFile); err != nil {
+		manager.logger.Error().Err(err).Msg("failed to replace avatars")
+	}
+}
+
+func (manager *SessionManagerCtx) loadAvatars() {
+	if manager.config.AvatarFile == "" {
+		return
+	}
+	data, err := os.ReadFile(manager.config.AvatarFile)
+	if errors.Is(err, os.ErrNotExist) {
+		return
+	}
+	if err != nil {
+		manager.logger.Error().Err(err).Msg("failed to read avatars")
+		return
+	}
+
+	var avatars map[string]string
+	if err := json.Unmarshal(data, &avatars); err != nil {
+		manager.logger.Error().Err(err).Msg("failed to unmarshal avatars")
+		return
+	}
+	manager.avatarsMu.Lock()
+	manager.avatars = avatars
+	manager.avatarsMu.Unlock()
+}
+
+func (manager *SessionManagerCtx) ControlEpoch() uint64 {
+	return manager.controlLease.Snapshot().Epoch
+}
+
+func (manager *SessionManagerCtx) ValidateControl(session types.Session, epoch uint64) error {
+	return manager.controlLease.Validate(session.ID(), epoch)
+}
+
+func (manager *SessionManagerCtx) RenewControl(session types.Session, epoch uint64) error {
+	return manager.controlLease.Renew(session.ID(), epoch)
+}
+
+func (manager *SessionManagerCtx) RequestControl(session types.Session) (bool, bool) {
+	state, granted, err := manager.controlLease.Request(session.ID())
+	if !granted {
+		return false, err == control.ErrConflict
+	}
+
+	manager.hostId.Store(state.Holder)
+	manager.emmiter.Emit("host_changed", session, session)
+	return true, false
+}
+
+func (manager *SessionManagerCtx) ReleaseControl(session types.Session) error {
+	state, err := manager.controlLease.Release(session.ID(), manager.ControlEpoch())
+	if err != nil {
+		return err
+	}
+	manager.hostId.Store(state.Holder)
+	var next types.Session
+	if state.Holder != "" {
+		next, _ = manager.Get(state.Holder)
+	}
+	manager.emmiter.Emit("host_changed", session, next)
+	return nil
+}
+
+func (manager *SessionManagerCtx) disconnectControl(session *SessionCtx) {
+	wasHost := manager.controlLease.Snapshot().Holder == session.ID()
+	state := manager.controlLease.Disconnect(session.ID())
+	manager.hostId.Store(state.Holder)
+	if wasHost {
+		var next types.Session
+		if state.Holder != "" {
+			next, _ = manager.Get(state.Holder)
+		}
+		manager.emmiter.Emit("host_changed", session, next)
+	}
 }
 
 // ---

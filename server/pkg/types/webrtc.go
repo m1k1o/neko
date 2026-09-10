@@ -4,6 +4,8 @@ import (
 	"errors"
 
 	"github.com/pion/webrtc/v4"
+
+	"github.com/m1k1o/neko/server/pkg/types/codec"
 )
 
 var (
@@ -21,7 +23,6 @@ type ICEServer struct {
 type PeerVideo struct {
 	Disabled bool   `json:"disabled"`
 	ID       string `json:"id"`
-	Video    string `json:"video"` // TODO: Remove this, used for compatibility with old clients.
 	Auto     bool   `json:"auto"`
 }
 
@@ -65,6 +66,6 @@ type WebRTCManager interface {
 
 	ICEServers() []ICEServer
 
-	CreatePeer(session Session) (*webrtc.SessionDescription, WebRTCPeer, error)
+	CreatePeer(session Session, videoCodec codec.RTPCodec) (*webrtc.SessionDescription, WebRTCPeer, error)
 	SetCursorPosition(x, y int)
 }

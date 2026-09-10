@@ -1,6 +1,5 @@
 import { getterTree, mutationTree, actionTree } from 'typed-vuex'
 import { get, set } from '~/utils/localstorage'
-import { EVENT } from '~/neko/events'
 import { accessor } from '~/store'
 
 export const namespaced = true
@@ -89,10 +88,10 @@ export const actions = actionTree(
       accessor.settings.setBroadcastStatus({ url, isActive })
     },
     broadcastCreate(store, url: string) {
-      $client.sendMessage(EVENT.BROADCAST.CREATE, { url })
+      $http.post('/api/room/broadcast/start', { url })
     },
     broadcastDestroy() {
-      $client.sendMessage(EVENT.BROADCAST.DESTROY)
+      $http.post('/api/room/broadcast/stop')
     },
   },
 )

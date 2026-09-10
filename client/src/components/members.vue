@@ -4,20 +4,22 @@
       <ul class="members-list">
         <li v-if="member">
           <div :class="[{ host: member.id === host }, 'self', 'member']">
-            <neko-avatar class="avatar" :seed="member.displayname" :size="50" />
+            <neko-avatar class="avatar" :seed="member.displayname" :avatar="member.avatar" :size="50" />
+            <div v-if="bubble(member.id)" class="member-bubble">{{ bubble(member.id) }}</div>
           </div>
         </li>
         <template v-for="(member, index) in members">
           <li
             v-if="member.id !== id && member.connected"
             :key="index"
-            v-tooltip="{ content: member.displayname, placement: 'bottom', offset: -15, boundariesElement: 'body' }"
+            v-tooltip="{ content: member.displayname, placement: 'bottom', offset: 0, boundariesElement: 'body' }"
           >
             <div
               :class="[{ host: member.id === host, admin: member.admin }, 'member']"
               @contextmenu.stop.prevent="onContext($event, { member })"
             >
-              <neko-avatar class="avatar" :seed="member.displayname" :size="50" />
+              <neko-avatar class="avatar" :seed="member.displayname" :avatar="member.avatar" :size="50" />
+              <div v-if="bubble(member.id)" class="member-bubble">{{ bubble(member.id) }}</div>
             </div>
           </li>
         </template>
@@ -29,51 +31,46 @@
 
 <style lang="scss" scoped>
   .members {
-    flex: 1;
-    overflow-x: scroll;
-    overflow-y: hidden;
-    padding-bottom: 14px;
-    scrollbar-width: thin;
-    scrollbar-color: $background-secondary $background-tertiary;
-    min-height: 60px;
+    flex: 0 0 auto;
+    overflow: visible;
+    padding: 0 0 6px;
+    min-height: $party-member-rail-height;
     display: flex;
 
-    &::-webkit-scrollbar {
-      height: 4px;
-    }
-
-    &::-webkit-scrollbar-track {
-      background-color: $background-tertiary;
-    }
-
-    &::-webkit-scrollbar-thumb {
-      background-color: $background-secondary;
-      border-radius: 4px;
-    }
-
-    &::-webkit-scrollbar-thumb:hover {
-      background-color: $background-primary;
-    }
-
     .members-container {
-      display: block;
-      clear: both;
-      padding: 0 20px;
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+      padding: 0 8px;
       margin: 0 auto;
 
       .members-list {
-        white-space: nowrap;
-        clear: both;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+        gap: 2px 4px;
 
         li {
-          display: inline-block;
+          display: block;
+          flex: 0 0 auto;
 
           .member {
             position: relative;
-            display: block;
-            width: 50px;
-            height: 50px;
-            margin: 10px 5px 0 5px;
+            display: grid;
+            place-items: center;
+            width: 56px;
+            height: 56px;
+            margin: 4px 5px 0;
+            border: 2px solid transparent;
+            border-radius: 16px;
+            transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+
+            &:hover {
+              transform: translateY(-2px);
+              border-color: rgba($style-primary, 0.44);
+              background: rgba($style-primary, 0.1);
+            }
 
             &.self {
               &::before {
@@ -83,13 +80,13 @@
                 background: $background-floating;
                 color: $style-primary;
                 position: absolute;
+                top: -3px;
+                right: -3px;
                 width: 15px;
                 height: 15px;
                 line-height: 15px;
                 font-size: 20px;
                 text-align: center;
-                margin-top: -2px;
-                margin-left: 40px;
                 border-radius: 50%;
               }
             }
@@ -103,12 +100,12 @@
                 color: $style-primary;
                 background: transparent;
                 position: absolute;
+                top: -2px;
+                right: -2px;
                 width: 14px;
                 height: 14px;
                 font-size: 14px;
                 text-align: center;
-                margin-top: -2px;
-                margin-left: 44px;
               }
             }
 
@@ -120,13 +117,13 @@
               background: $style-primary;
               color: $background-floating;
               position: absolute;
+              left: -3px;
+              bottom: -3px;
               width: 20px;
               height: 20px;
               line-height: 20px;
               font-size: 10px;
               text-align: center;
-              margin-top: 42px;
-              margin-left: -18px;
               border-radius: 50%;
             }
 
@@ -134,6 +131,29 @@
               border-radius: 50%;
               overflow: hidden;
               width: 100%;
+              border: 2px solid rgba($background-tertiary, 0.9);
+            }
+
+            .member-bubble {
+              position: absolute;
+              z-index: 5;
+              left: 50%;
+              bottom: calc(100% + 8px);
+              width: max-content;
+              max-width: 180px;
+              padding: 7px 10px;
+              border: 1px solid rgba($text-normal, 0.14);
+              border-radius: 10px 10px 10px 3px;
+              background: $background-floating;
+              color: $text-normal;
+              box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+              font-size: 12px;
+              line-height: 16px;
+              white-space: normal;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              animation: avatar-message-in 0.2s ease-out forwards, avatar-message-out 1.1s ease-in 5.4s forwards;
+              pointer-events: none;
             }
           }
 
@@ -152,6 +172,26 @@
           }
         }
       }
+    }
+  }
+
+  @keyframes avatar-message-in {
+    from {
+      opacity: 0;
+      transform: translate(-50%, 5px) scale(0.96);
+    }
+    to {
+      opacity: 1;
+      transform: translate(-50%, 0) scale(1);
+    }
+  }
+
+  @keyframes avatar-message-out {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
     }
   }
 </style>
@@ -186,6 +226,10 @@
 
     get members() {
       return this.$accessor.user.members
+    }
+
+    bubble(id: string) {
+      return this.$accessor.chat.bubbles[id]
     }
 
     onContext(event: MouseEvent, data: any) {

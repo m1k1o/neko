@@ -302,6 +302,7 @@ This is the initial configuration of the room that can be modified by an admin i
   'session.inactive_cursors',
   'session.merciful_reconnect',
   'session.heartbeat_interval',
+  'session.control_lease_ttl',
 ]} comments={false} />
 
 - <Def id="session.private_mode" /> whether private mode is enabled, users do not receive the room video or audio.
@@ -312,6 +313,8 @@ This is the initial configuration of the room that can be modified by an admin i
 - <Def id="session.inactive_cursors" /> whether to show inactive cursors server-wide (only for users that have it enabled in their profile).
 - <Def id="session.merciful_reconnect" /> whether to allow reconnecting to the websocket even if the previous connection was not closed. This means that a new login can kick out the previous one.
 - <Def id="session.heartbeat_interval" /> interval in seconds for sending a heartbeat message to the server. This is used to keep the connection alive and to detect when the connection is lost.
+
+- <Def id="session.control_lease_ttl" /> idle duration before the current control owner expires, using Go duration syntax. The default is `30s`.
 
 ## Server Configuration {#server}
 

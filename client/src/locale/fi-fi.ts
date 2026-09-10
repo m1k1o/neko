@@ -82,6 +82,14 @@ export const locks = {
 }
 
 export const setting = {
+  avatar: 'Avatar',
+  avatar_upload: 'Upload',
+  avatar_remove: 'Remove avatar',
+  avatar_too_large: 'Avatar is too large',
+  avatar_size_limit: 'Please choose an image smaller than 384 KB.',
+  avatar_upload_failed: 'Avatar upload failed',
+  avatar_update_failed: 'Avatar update failed',
+  avatar_try_again: 'Please try again.',
   scroll: 'Scrollin herkkyys',
   scroll_invert: 'Käänteinen Scroll',
   autoplay: 'Automaattisesti toista video',
@@ -93,6 +101,7 @@ export const setting = {
 
 export const connection = {
   logged_out: 'Sinut on kirjattu ulos.',
+  connecting: 'Yhdistetään...',
   reconnecting: 'Yhteyttä yritetään palauttaa...',
   connected: 'Yhdistetty',
   disconnected: 'Katkaistu yhteys',

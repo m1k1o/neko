@@ -159,6 +159,35 @@
     "key": [
       "capture",
       "video",
+      "profile"
+    ],
+    "type": "string",
+    "description": "optional Chromium M1 quality profile (low, balanced, high; VP8/H.264/H.265/AV1)"
+  },
+  {
+    "key": [
+      "capture",
+      "video",
+      "encoder"
+    ],
+    "type": "string",
+    "defaultValue": "auto",
+    "description": "Chromium M1 profile encoder (auto, software, vaapi, nvenc)"
+  },
+  {
+    "key": [
+      "capture",
+      "video",
+      "adaptive"
+    ],
+    "type": "boolean",
+    "defaultValue": false,
+    "description": "build a Chromium M1 quality ladder for bandwidth adaptation"
+  },
+  {
+    "key": [
+      "capture",
+      "video",
       "display"
     ],
     "type": "string",

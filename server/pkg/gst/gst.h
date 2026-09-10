@@ -29,7 +29,7 @@ extern void goPipelineLog(int pipelineId, char *level, char *msg);
 GstPipelineCtx *gstreamer_pipeline_create(char *pipelineStr, int pipelineId, GError **error);
 void gstreamer_pipeline_attach_appsink(GstPipelineCtx *ctx, char *sinkName);
 void gstreamer_pipeline_attach_appsrc(GstPipelineCtx *ctx, char *srcName);
-void gstreamer_pipeline_play(GstPipelineCtx *ctx);
+gboolean gstreamer_pipeline_play(GstPipelineCtx *ctx);
 void gstreamer_pipeline_pause(GstPipelineCtx *ctx);
 void gstreamer_pipeline_destory(GstPipelineCtx *ctx);
 void gstreamer_pipeline_push(GstPipelineCtx *ctx, void *buffer, int bufferLen);

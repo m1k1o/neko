@@ -1,0 +1,39 @@
+name: neko-m1-frp
+
+# Copy this file to compose.frp.yaml and edit frpc.toml before starting.
+# The FRP server must reserve the same public TCP and UDP port number.
+services:
+  neko:
+    image: neko-m1-demo:local
+    container_name: neko-m1-frp
+    restart: unless-stopped
+    shm_size: 2gb
+    volumes:
+      - "neko-m1-frp-data:/home/neko/.local/share/neko"
+    expose:
+      - "52000/tcp"
+      - "52000/udp"
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      NEKO_DESKTOP_SCREEN: 1280x720@30
+      NEKO_CAPTURE_VIDEO_PROFILE: balanced
+      NEKO_MEMBER_MULTIUSER_USER_PASSWORD: ${NEKO_DEMO_USER_PASSWORD:?set NEKO_DEMO_USER_PASSWORD}
+      NEKO_MEMBER_MULTIUSER_ADMIN_PASSWORD: ${NEKO_DEMO_ADMIN_PASSWORD:?set NEKO_DEMO_ADMIN_PASSWORD}
+      NEKO_WEBRTC_CONNECTIVITY_MODE: frp
+      NEKO_WEBRTC_NAT1TO1: ${FRP_PUBLIC_IP:?set FRP_PUBLIC_IP}
+      NEKO_WEBRTC_UDPMUX: ${FRP_MEDIA_PORT:-52000}
+      NEKO_WEBRTC_TCPMUX: ${FRP_MEDIA_PORT:-52000}
+
+  frpc:
+    image: snowdreamtech/frpc:0.61.2
+    container_name: neko-m1-frpc
+    restart: unless-stopped
+    command: ["-c", "/etc/frp/frpc.toml"]
+    volumes:
+      - ./frpc.toml:/etc/frp/frpc.toml:ro
+    depends_on:
+      - neko
+
+volumes:
+  neko-m1-frp-data:

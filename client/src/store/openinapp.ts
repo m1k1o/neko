@@ -22,7 +22,7 @@ export const actions = actionTree(
   { state, getters, mutations },
   {
     sendOpenLink(store, url: string) {
-      if (!accessor.connected) return
+      if (!accessor.connection.connected) return
       $client.sendMessage(EVENT.OPENINAPP.OPENLINK, { text: url })
     },
   },

@@ -1,0 +1,22 @@
+# FRP client configuration for the Neko M1 media port.
+# Copy to frpc.toml and replace every placeholder.
+serverAddr = "frp.example.com"
+serverPort = 7000
+
+[auth]
+method = "token"
+token = "replace-with-frp-token"
+
+[[proxies]]
+name = "neko-media-tcp"
+type = "tcp"
+localIP = "neko"
+localPort = 52000
+remotePort = 52000
+
+[[proxies]]
+name = "neko-media-udp"
+type = "udp"
+localIP = "neko"
+localPort = 52000
+remotePort = 52000

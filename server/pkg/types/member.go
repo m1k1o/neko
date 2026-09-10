@@ -10,6 +10,10 @@ var (
 
 type MemberProfile struct {
 	Name string `json:"name"`
+	// Avatar is a data URL for the user's custom avatar. Keeping the image in
+	// the profile makes it available to every authenticated client without
+	// requiring an unauthenticated static file endpoint.
+	Avatar string `json:"avatar,omitempty" mapstructure:"avatar"`
 
 	// permissions
 	IsAdmin               bool `json:"is_admin"                 mapstructure:"is_admin"`

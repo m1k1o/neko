@@ -82,6 +82,14 @@ export const locks = {
 }
 
 export const setting = {
+  avatar: 'Аватар',
+  avatar_upload: 'Загрузить',
+  avatar_remove: 'Удалить аватар',
+  avatar_too_large: 'Аватар слишком большой',
+  avatar_size_limit: 'Выберите изображение меньше 384 КБ.',
+  avatar_upload_failed: 'Не удалось загрузить аватар',
+  avatar_update_failed: 'Не удалось обновить аватар',
+  avatar_try_again: 'Попробуйте ещё раз.',
   scroll: 'Чувствительность прокрутки',
   scroll_invert: 'Инвертировать прокрутку',
   autoplay: 'Автовоспроизведение видео',
@@ -93,6 +101,7 @@ export const setting = {
 
 export const connection = {
   logged_out: 'Вы вышли.',
+  connecting: 'Подключение...',
   reconnecting: 'Переподключение...',
   connected: 'Подключено',
   disconnected: 'Отключено',

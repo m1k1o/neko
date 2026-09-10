@@ -11,17 +11,19 @@ If you want to debug [Pion WebRTC](https://github.com/pion/webrtc), you can set 
 ```yaml title="docker-compose.yaml"
 services:
   neko:
-    image: "ghcr.io/m1k1o/neko/firefox:latest"
+    image: "ghcr.io/m1k1o/neko/chromium:latest"
     restart: "unless-stopped"
     shm_size: "2gb"
     ports:
     - "8080:8080"
-    - "52000-52100:52000-52100/udp"
+    - "52000:52000/udp"
+    - "52000:52000/tcp"
     environment:
       NEKO_DESKTOP_SCREEN: 1920x1080@30
       NEKO_MEMBER_MULTIUSER_USER_PASSWORD: neko
       NEKO_MEMBER_MULTIUSER_ADMIN_PASSWORD: admin
-      NEKO_WEBRTC_EPR: 52000-52100
+      NEKO_WEBRTC_UDPMUX: 52000
+      NEKO_WEBRTC_TCPMUX: 52000
       # highlight-start
       NEKO_DEBUG: 1
       # highlight-end
@@ -60,4 +62,3 @@ When you are using HTTPS connection and a compatible host browser (currently onl
 ### Why am I unable to install extensions in the Neko browser? {#extensions}
 
 The browser in Neko uses policies to restrict the installation of extensions. You can either add extensions to the policy file or disable the policy.
-

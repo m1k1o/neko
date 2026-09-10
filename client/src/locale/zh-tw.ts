@@ -82,6 +82,14 @@ export const locks = {
 }
 
 export const setting = {
+  avatar: '頭像',
+  avatar_upload: '上傳頭像',
+  avatar_remove: '刪除頭像',
+  avatar_too_large: '頭像檔案過大',
+  avatar_size_limit: '請選擇小於 384 KB 的圖片。',
+  avatar_upload_failed: '頭像上傳失敗',
+  avatar_update_failed: '頭像更新失敗',
+  avatar_try_again: '請稍後再試。',
   scroll: '滾動靈敏度',
   scroll_invert: '反向滾動',
   autoplay: '自動播放影片',
@@ -93,6 +101,7 @@ export const setting = {
 
 export const connection = {
   logged_out: '您已登出。',
+  connecting: '正在連線…',
   reconnecting: '正在重新連線…',
   connected: '已連線',
   disconnected: '已斷線',

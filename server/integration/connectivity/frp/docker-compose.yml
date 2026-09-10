@@ -1,0 +1,36 @@
+services:
+  echo:
+    image: python:3.13-alpine
+    command: ["python", "/opt/echo.py"]
+    volumes:
+      - ./echo.py:/opt/echo.py:ro
+
+  frps:
+    image: snowdreamtech/frps:0.61.2
+    command: ["-c", "/etc/frp/frps.toml"]
+    volumes:
+      - ./frps.toml:/etc/frp/frps.toml:ro
+    expose:
+      - "7000/tcp"
+      - "52000/tcp"
+      - "52000/udp"
+
+  frpc:
+    image: snowdreamtech/frpc:0.61.2
+    command: ["-c", "/etc/frp/frpc.toml"]
+    volumes:
+      - ./frpc.toml:/etc/frp/frpc.toml:ro
+    depends_on:
+      echo:
+        condition: service_started
+      frps:
+        condition: service_started
+
+  probe:
+    image: python:3.13-alpine
+    command: ["python", "/opt/probe.py", "frps", "52000"]
+    volumes:
+      - ./probe.py:/opt/probe.py:ro
+    depends_on:
+      frpc:
+        condition: service_started

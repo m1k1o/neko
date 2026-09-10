@@ -1,22 +1,66 @@
 <template>
   <div class="connect">
-    <div class="window">
-      <div class="logo" title="About n.eko" @click.stop.prevent="about">
-        <img src="@/assets/images/logo.svg" alt="n.eko" />
-        <span><b>n</b>.eko</span>
+    <div class="window" role="dialog" aria-modal="true" aria-labelledby="connect-title">
+      <div class="window-topline">
+        <span class="eyebrow">{{ $t('ui.room_eyebrow') }}</span>
+        <span class="secure-badge"><i class="fas fa-shield-halved" aria-hidden="true" /> {{ $t('ui.secure') }}</span>
       </div>
-      <form class="message" v-if="!connecting" @submit.stop.prevent="connect">
-        <span v-if="!autoPassword">{{ $t('connect.login_title') }}</span>
-        <span v-else>{{ $t('connect.invitation_title') }}</span>
-        <input type="text" :placeholder="$t('connect.displayname')" v-model="displayname" autofocus />
-        <input type="password" :placeholder="$t('connect.password')" v-model="password" v-if="!autoPassword" />
-        <button type="submit" @click.stop.prevent="login">
-          {{ $t('connect.connect') }}
+      <div class="logo" :title="$t('ui.about')" @click.stop.prevent="about">
+        <span class="logo-mark"><img src="@/assets/images/logo.svg" alt="" /></span>
+        <span class="brand-name"><b>n</b>.eko</span>
+      </div>
+      <form class="message" v-if="!connecting" @submit.stop.prevent="login">
+        <h1 id="connect-title">{{ autoPassword ? $t('connect.invitation_title') : $t('connect.login_title') }}</h1>
+        <label class="field">
+          <span>{{ $t('connect.displayname') }}</span>
+          <input
+            type="text"
+            name="displayname"
+            data-testid="displayname-input"
+            :placeholder="$t('connect.displayname')"
+            v-model="displayname"
+            autocomplete="nickname"
+            autofocus
+            :aria-invalid="loginError ? 'true' : 'false'"
+            :class="{ invalid: loginError }"
+            @input="loginError = ''"
+          />
+        </label>
+        <label class="field" v-if="!autoPassword">
+          <span>{{ $t('connect.password') }}</span>
+          <div class="password-field">
+            <input
+              :type="showPassword ? 'text' : 'password'"
+              name="password"
+              data-testid="password-input"
+              :placeholder="$t('connect.password')"
+              v-model="password"
+              autocomplete="current-password"
+              @input="loginError = ''"
+            />
+            <button
+              type="button"
+              class="password-toggle"
+              :aria-label="$t(showPassword ? 'connect.hide_password' : 'connect.show_password')"
+              @click.stop.prevent="showPassword = !showPassword"
+            >
+              <i :class="[showPassword ? 'fa-eye-slash' : 'fa-eye', 'fas']" aria-hidden="true" />
+            </button>
+          </div>
+        </label>
+        <p v-if="loginError" class="field-error" role="alert">
+          <i class="fas fa-circle-exclamation" aria-hidden="true" />
+          {{ loginError }}
+        </p>
+        <button class="primary-button" data-testid="connect-submit" type="submit">
+          <span>{{ $t('connect.connect') }}</span>
+          <i class="fas fa-arrow-right" aria-hidden="true" />
         </button>
+        <button class="about-link" type="button" @click.stop.prevent="about">{{ $t('ui.about') }}</button>
       </form>
-      <div class="loader" v-if="connecting">
-        <div class="bounce1"></div>
-        <div class="bounce2"></div>
+      <div class="loader" v-if="connecting" role="status" aria-live="polite">
+        <div class="spinner" />
+        <span>{{ $t(connectionState === 'reconnecting' ? 'connection.reconnecting' : 'connection.connecting') }}</span>
       </div>
     </div>
   </div>
@@ -29,37 +73,81 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba($color: $background-floating, $alpha: 0.8);
+    z-index: 20;
+    padding: 20px;
+    background: rgba($color: $background-tertiary, $alpha: 0.76);
+    backdrop-filter: blur(16px);
 
     display: flex;
     justify-content: center;
     align-items: center;
 
     .window {
-      width: 300px;
-      background: $background-secondary;
-      border-radius: 5px;
-      padding: 10px;
+      width: min(100%, 420px);
+      background: linear-gradient(155deg, rgba($background-secondary, 0.98), rgba($background-primary, 0.98));
+      border: 1px solid rgba($text-normal, 0.12);
+      border-radius: 20px;
+      padding: 28px;
+      box-shadow: $elevation-high;
+      animation: connect-enter 0.24s ease-out both;
+
+      .window-topline {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 28px;
+
+        .eyebrow {
+          color: $text-muted;
+          font-size: 10px;
+          font-weight: 700;
+          letter-spacing: 0.16em;
+        }
+
+        .secure-badge {
+          color: $style-primary;
+          font-size: 11px;
+          font-weight: 600;
+
+          i {
+            margin-right: 4px;
+          }
+        }
+      }
 
       .logo {
         width: 100%;
         display: flex;
         flex-direction: row;
-        justify-content: center;
+        justify-content: flex-start;
         align-items: center;
         cursor: pointer;
+        gap: 12px;
+        margin-bottom: 30px;
 
-        img {
-          height: 90px;
-          margin-right: 10px;
+        .logo-mark {
+          width: 48px;
+          height: 48px;
+          display: grid;
+          place-items: center;
+          border-radius: 14px;
+          background: rgba($style-primary, 0.14);
+          border: 1px solid rgba($style-primary, 0.3);
+
+          img {
+            height: 32px;
+          }
         }
 
-        span {
-          font-size: 30px;
-          line-height: 56px;
+        .brand-name {
+          color: $text-normal;
+          font-size: 28px;
+          font-weight: 600;
+          line-height: 32px;
 
           b {
-            font-weight: 900;
+            color: $style-primary;
+            font-weight: 800;
           }
         }
       }
@@ -68,86 +156,209 @@
         display: flex;
         flex-direction: column;
 
-        span {
-          display: block;
-          text-align: center;
-          text-transform: uppercase;
+        h1 {
+          color: $interactive-hover;
+          font-size: 24px;
+          font-weight: 600;
+          letter-spacing: -0.02em;
           line-height: 30px;
+          margin-bottom: 8px;
         }
 
-        input {
-          border: none;
-          padding: 6px 8px;
+        .subtitle {
+          color: $text-muted;
           line-height: 20px;
-          border-radius: 5px;
-          margin: 5px 0;
-          background: $background-tertiary;
-          color: $text-normal;
+          margin-bottom: 20px;
+        }
 
-          &::selection {
-            background: $text-link;
+        .field {
+          display: flex;
+          flex-direction: column;
+          gap: 7px;
+          margin-bottom: 14px;
+
+          span {
+            color: $interactive-normal;
+            font-size: 12px;
+            font-weight: 600;
+          }
+
+          input {
+            width: 100%;
+            border: 1px solid rgba($text-normal, 0.12);
+            padding: 11px 13px;
+            line-height: 20px;
+            border-radius: 10px;
+            background: rgba($background-tertiary, 0.75);
+            color: $text-normal;
+            transition: border-color 0.18s ease, box-shadow 0.18s ease;
+
+            &:hover {
+              border-color: rgba($text-normal, 0.24);
+            }
+
+            &:focus {
+              border-color: $style-primary;
+              box-shadow: 0 0 0 3px rgba($style-primary, 0.14);
+              outline: none;
+            }
+
+            &::placeholder {
+              color: $text-muted;
+            }
+
+            &.invalid {
+              border-color: $style-error;
+              box-shadow: 0 0 0 3px rgba($style-error, 0.12);
+            }
+          }
+
+          .password-field {
+            position: relative;
+
+            input {
+              padding-right: 42px;
+            }
+
+            .password-toggle {
+              position: absolute;
+              top: 50%;
+              right: 8px;
+              width: 30px;
+              height: 30px;
+              display: grid;
+              place-items: center;
+              transform: translateY(-50%);
+              border: 0;
+              border-radius: 7px;
+              color: $text-muted;
+              background: transparent;
+              cursor: pointer;
+
+              &:hover,
+              &:focus-visible {
+                color: $interactive-hover;
+                background: $background-modifier-hover;
+              }
+            }
           }
         }
 
-        button {
+        .field-error {
+          display: flex;
+          align-items: center;
+          gap: 7px;
+          margin: -2px 0 6px;
+          color: $style-error;
+          font-size: 12px;
+          line-height: 18px;
+        }
+
+        .primary-button {
+          width: 100%;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          gap: 10px;
           cursor: pointer;
-          border-radius: 5px;
-          padding: 4px;
+          border-radius: 10px;
+          padding: 11px 14px;
           background: $style-primary;
-          color: $text-normal;
-          text-align: center;
-          text-transform: uppercase;
-          font-weight: bold;
-          line-height: 30px;
-          margin: 5px 0;
+          color: $background-tertiary;
+          font-size: 14px;
+          font-weight: 700;
+          line-height: 20px;
+          margin: 8px 0 12px;
           border: none;
+          transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+
+          &:hover {
+            background: lighten($style-primary, 5%);
+            box-shadow: 0 8px 20px rgba($style-primary, 0.18);
+            transform: translateY(-1px);
+          }
+        }
+
+        .about-link {
+          display: block;
+          margin: 0 auto;
+          border: 0;
+          color: $text-muted;
+          background: transparent;
+          cursor: pointer;
+          font-size: 12px;
+
+          &:hover {
+            color: $text-link;
+          }
         }
       }
 
       .loader {
-        width: 90px;
-        height: 90px;
-        position: relative;
-        margin: 0 auto;
+        min-height: 224px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        gap: 16px;
+        color: $text-muted;
 
-        .bounce1,
-        .bounce2 {
-          width: 100%;
-          height: 100%;
+        .spinner {
+          width: 44px;
+          height: 44px;
+          border: 3px solid rgba($style-primary, 0.2);
+          border-top-color: $style-primary;
           border-radius: 50%;
-          background-color: $style-primary;
-          opacity: 0.6;
-          position: absolute;
-          top: 0;
-          left: 0;
-
-          -webkit-animation: bounce 2s infinite ease-in-out;
-          animation: bounce 2s infinite ease-in-out;
-        }
-
-        .bounce2 {
-          -webkit-animation-delay: -1s;
-          animation-delay: -1s;
+          animation: spin 0.9s linear infinite;
         }
       }
     }
 
-    @keyframes bounce {
-      0%,
-      100% {
-        transform: scale(0);
-        -webkit-transform: scale(0);
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
       }
-      50% {
-        transform: scale(1);
-        -webkit-transform: scale(1);
+    }
+
+    @keyframes connect-enter {
+      from {
+        opacity: 0;
+        transform: translateY(8px) scale(0.985);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    @media (max-width: 480px) {
+      padding: 14px;
+
+      .window {
+        border-radius: 16px;
+        padding: 22px;
+
+        .window-topline {
+          margin-bottom: 22px;
+        }
+
+        .logo {
+          margin-bottom: 24px;
+        }
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .window,
+      .loader .spinner {
+        animation: none;
       }
     }
   }
 </style>
 
 <script lang="ts">
-  import { Component, Vue } from 'vue-property-decorator'
+  import { Component, Vue, Watch } from 'vue-property-decorator'
 
   @Component({ name: 'neko-connect' })
   export default class extends Vue {
@@ -155,31 +366,48 @@
 
     private displayname: string = ''
     private password: string = ''
+    private loginError: string = ''
+    private showPassword: boolean = false
+
+    get connectionError() {
+      return this.$accessor.connection.error
+    }
+
+    @Watch('connectionError', { immediate: true })
+    onConnectionError(message: string) {
+      if (message) {
+        this.loginError = message
+      }
+    }
 
     mounted() {
       // auto-password fill
-      let password = this.$accessor.password
+      let password = this.$accessor.session.password
       if (this.autoPassword !== null) {
         this.removeUrlParam('pwd')
         password = this.autoPassword
       }
 
       // auto-user fill
-      let displayname = this.$accessor.displayname
+      let displayname = this.$accessor.session.displayname
       const usr = new URL(location.href).searchParams.get('usr')
       if (usr) {
         this.removeUrlParam('usr')
-        displayname = this.$accessor.displayname || usr
+        displayname = this.$accessor.session.displayname || usr
       }
 
       if (displayname !== '' && password !== '') {
-        this.$accessor.login({ displayname, password })
+        this.$accessor.session.login({ displayname, password })
         this.autoPassword = null
       }
     }
 
     get connecting() {
-      return this.$accessor.connecting
+      return this.$accessor.connection.connecting
+    }
+
+    get connectionState() {
+      return this.$accessor.connection.state
     }
 
     removeUrlParam(param: string) {
@@ -210,15 +438,12 @@
       }
 
       if (this.displayname == '') {
-        this.$swal({
-          title: this.$t('connect.error') as string,
-          text: this.$t('connect.empty_displayname') as string,
-          icon: 'error',
-        })
+        this.loginError = this.$t('connect.empty_displayname') as string
         return
       }
 
-      this.$accessor.login({ displayname: this.displayname, password })
+      this.loginError = ''
+      this.$accessor.session.login({ displayname: this.displayname, password })
       this.autoPassword = null
     }
 

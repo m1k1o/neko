@@ -1,6 +1,6 @@
 package chat
 
-import "time"
+import appchat "github.com/m1k1o/neko/server/internal/application/chat"
 
 const PluginName = "chat"
 
@@ -13,12 +13,5 @@ type Init struct {
 	Enabled bool `json:"enabled"`
 }
 
-type Content struct {
-	Text string `json:"text"`
-}
-
-type Message struct {
-	ID      string    `json:"id"`
-	Created time.Time `json:"created"`
-	Content Content   `json:"content"`
-}
+type Content = appchat.Content
+type Message = appchat.Message

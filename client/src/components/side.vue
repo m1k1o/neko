@@ -1,21 +1,48 @@
 <template>
   <aside class="neko-menu">
-    <div class="tabs-container">
+    <nav class="tabs-container" :aria-label="$t('ui.room_panel')">
+      <button type="button" class="panel-close" :aria-label="$t('ui.close_room_panel')" @click.stop.prevent="close">
+        <i class="fas fa-xmark" aria-hidden="true" />
+      </button>
       <ul>
-        <li :class="{ active: tab === 'chat' }" @click.stop.prevent="change('chat')">
-          <i class="fas fa-comment-alt" />
-          <span>{{ $t('side.chat') }}</span>
+        <li>
+          <button
+            type="button"
+            role="tab"
+            :aria-selected="tab === 'chat'"
+            :class="{ active: tab === 'chat' }"
+            @click.stop.prevent="change('chat')"
+          >
+            <i class="fas fa-comment-alt" aria-hidden="true" />
+            <span>{{ $t('side.chat') }}</span>
+          </button>
         </li>
-        <li v-if="filetransferAllowed" :class="{ active: tab === 'files' }" @click.stop.prevent="change('files')">
-          <i class="fas fa-file" />
-          <span>{{ $t('side.files') }}</span>
+        <li v-if="filetransferAllowed">
+          <button
+            type="button"
+            role="tab"
+            :aria-selected="tab === 'files'"
+            :class="{ active: tab === 'files' }"
+            @click.stop.prevent="change('files')"
+          >
+            <i class="fas fa-file" aria-hidden="true" />
+            <span>{{ $t('side.files') }}</span>
+          </button>
         </li>
-        <li :class="{ active: tab === 'settings' }" @click.stop.prevent="change('settings')">
-          <i class="fas fa-sliders-h" />
-          <span>{{ $t('side.settings') }}</span>
+        <li>
+          <button
+            type="button"
+            role="tab"
+            :aria-selected="tab === 'settings'"
+            :class="{ active: tab === 'settings' }"
+            @click.stop.prevent="change('settings')"
+          >
+            <i class="fas fa-sliders-h" aria-hidden="true" />
+            <span>{{ $t('side.settings') }}</span>
+          </button>
         </li>
       </ul>
-    </div>
+    </nav>
     <div class="page-container">
       <neko-chat v-if="tab === 'chat'" />
       <neko-files v-if="tab === 'files'" />
@@ -26,45 +53,82 @@
 
 <style lang="scss">
   .neko-menu {
-    width: $side-width;
-    background-color: $background-primary;
+    position: fixed;
+    right: $party-gutter;
+    bottom: $party-gutter;
+    z-index: 12;
+    width: min($side-width, calc(100vw - 1.5rem));
+    min-width: 0;
+    height: $party-panel-height;
+    background: linear-gradient(180deg, rgba($background-primary, 0.98), rgba($background-secondary, 0.98));
+    border: 1px solid rgba(#fff, 0.12);
+    border-radius: 18px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.42);
     flex-shrink: 0;
-    max-height: 100%;
+    max-height: calc(100dvh - 24px);
     max-width: 100%;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
+    animation: party-panel-in 0.22s ease-out;
 
     .tabs-container {
-      background: $background-tertiary;
-      height: $menu-height;
+      position: relative;
+      background: rgba($background-tertiary, 0.66);
+      min-height: $menu-height;
       max-height: 100%;
       max-width: 100%;
       display: flex;
       flex-shrink: 0;
 
       ul {
-        display: inline-block;
-        padding: 16px 0 0 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: stretch;
+        padding: 10px 12px;
+        gap: 6px;
 
         li {
-          background: $background-secondary;
-          border-radius: 3px 3px 0 0;
-          border-bottom: none;
-          display: inline-block;
-          padding: 5px 10px;
-          margin-right: 4px;
-          font-weight: 600;
-          cursor: pointer;
+          flex: 1;
 
-          i {
-            margin-right: 4px;
-            font-size: 10px;
-          }
+          button {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 7px;
+            border: 1px solid transparent;
+            border-radius: 9px;
+            padding: 8px 10px;
+            color: $text-muted;
+            background: transparent;
+            font-weight: 600;
+            cursor: pointer;
+            transition: color 0.18s ease, background 0.18s ease, border-color 0.18s ease;
 
-          &.active {
-            background: $background-primary;
+            i {
+              font-size: 12px;
+            }
+
+            &:hover,
+            &:focus-visible {
+              color: $interactive-hover;
+              background: $background-modifier-hover;
+            }
+
+            &.active {
+              color: $style-primary;
+              background: $background-modifier-selected;
+              border-color: rgba($style-primary, 0.2);
+            }
           }
         }
+      }
+
+      .panel-close {
+        display: none;
       }
     }
 
@@ -73,7 +137,58 @@
       flex-grow: 1;
       display: flex;
       overflow: auto;
-      padding-top: 5px;
+      padding: 12px 14px 14px;
+      min-height: 0;
+    }
+  }
+
+  @media only screen and (max-width: 1180px) {
+    .neko-menu {
+      right: 0;
+      bottom: 0;
+      width: min(100%, 29rem) !important;
+      height: min(70dvh, 42rem);
+      max-height: 100dvh;
+      border-radius: 18px 18px 0 0;
+
+      .tabs-container {
+        .panel-close {
+          position: absolute;
+          top: 10px;
+          right: 12px;
+          z-index: 1;
+          width: 34px;
+          height: 34px;
+          display: grid;
+          place-items: center;
+          border: 1px solid rgba($text-normal, 0.12);
+          border-radius: 9px;
+          color: $interactive-normal;
+          background: rgba($background-primary, 0.54);
+          cursor: pointer;
+
+          &:hover,
+          &:focus-visible {
+            color: $interactive-hover;
+            background: $background-modifier-hover;
+          }
+        }
+
+        ul {
+          padding-right: 54px;
+        }
+      }
+    }
+  }
+
+  @keyframes party-panel-in {
+    from {
+      opacity: 0;
+      transform: translateY(16px) scale(0.98);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
     }
   }
 </style>
@@ -86,7 +201,7 @@
   import Files from '~/components/files.vue'
 
   @Component({
-    name: 'neko',
+    name: 'neko-side',
     components: {
       'neko-settings': Settings,
       'neko-chat': Chat,
@@ -105,7 +220,7 @@
     get filetransferAllowed() {
       return (
         this.$accessor.remote.fileTransfer &&
-        (this.$accessor.user.admin || !this.$accessor.isLocked('file_transfer')) &&
+        (this.$accessor.user.admin || !this.$accessor.session.isLocked('file_transfer')) &&
         (this.canDownload || this.canUpload)
       )
     }
@@ -132,6 +247,10 @@
 
     change(tab: string) {
       this.$accessor.client.setTab(tab)
+    }
+
+    close() {
+      this.$accessor.client.setSide(false)
     }
   }
 </script>

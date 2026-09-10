@@ -203,7 +203,7 @@ paths:
       tags:
         - current-session
       summary: Update Profile
-      description: Update the current user's profile without syncing it with the member profile (experimental).
+      description: Update the current user's display name and avatar; administrators may update the complete profile.
       operationId: profile
       responses:
         '204':
@@ -216,6 +216,33 @@ paths:
             schema:
               $ref: '#/components/schemas/MemberProfile'
         required: true
+
+  /api/profile/avatar:
+    post:
+      tags:
+        - current-session
+      summary: Update Current User Avatar
+      description: Store a PNG, JPEG, or GIF avatar as a validated base64 data URL and broadcast the profile change to the room.
+      operationId: profileAvatar
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - avatar
+              properties:
+                avatar:
+                  type: string
+                  description: Base64 image data URL, or an empty string to remove the avatar.
+      responses:
+        '204':
+          description: Avatar updated successfully.
+        '400':
+          description: Invalid or oversized avatar.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
 
   #
   # sessions
@@ -1260,6 +1287,10 @@ components:
         host_id:
           type: string
           description: The ID of the current host, if any.
+        epoch:
+          type: integer
+          format: int64
+          description: Monotonically increasing control lease epoch used to reject stale input.
         server_started_at:
           type: string
           format: date-time
@@ -1347,6 +1378,9 @@ components:
         merciful_reconnect:
           type: boolean
           description: Indicates if merciful reconnect is enabled.
+        control_lease_ttl:
+          type: integer
+          description: Control ownership idle timeout in seconds.
         plugins:
           type: object
           additionalProperties: true
@@ -1453,6 +1487,9 @@ components:
         name:
           type: string
           description: The name of the member.
+        avatar:
+          type: string
+          description: Base64 image data URL for the member avatar.
         is_admin:
           type: boolean
           description: Indicates if the member is an admin.

@@ -32,6 +32,9 @@ The Gstreamer pipeline is started when the first client requests the video strea
 <ConfigurationTab options={configOptions} filter={[
   "capture.video.display",
   "capture.video.codec",
+  "capture.video.profile",
+  "capture.video.encoder",
+  "capture.video.adaptive",
   "capture.video.ids",
   "capture.video.pipeline",
   "capture.video.pipelines",
@@ -40,6 +43,9 @@ The Gstreamer pipeline is started when the first client requests the video strea
 
 - <Def id="video.display" /> is the name of the [X display](https://www.x.org/wiki/) that you want to capture. If not specified, the environment variable `DISPLAY` will be used.
 - <Def id="video.codec" /> available codecs are `vp8`, `vp9`, `av1`, `h264`, `h265`. [Supported video codecs](https://developer.mozilla.org/en-US/docs/Web/Media/Guides/Formats/WebRTC_codecs#supported_video_codecs) are dependent on the WebRTC implementation used by the client, `vp8` and `h264` are supported by all WebRTC implementations.
+- <Def id="video.profile" /> optionally selects the Chromium M1 `low` (`854x480@20`, 1000 kbit/s), `balanced` (`1280x720@30`, 2500 kbit/s), or `high` (`1920x1080@30`, 4500 kbit/s) standard pipeline. It supports VP8, H.264, H.265, and AV1. H.265 and AV1 still depend on client codec capability and should retain a fallback for heterogeneous browsers. Profiles are explicit and cannot be combined with <Opt id="video.ids" />, <Opt id="video.pipeline" />, or <Opt id="video.pipelines" />. Leaving it empty preserves the existing default behavior.
+- <Def id="video.encoder" /> selects `auto`, `software`, `vaapi`, or `nvenc` for an explicit profile. `auto` tries NVENC, VAAPI, and the software encoder for the requested codec. If that codec cannot be produced, it falls back to software H.264 and then VP8. An explicit hardware choice follows the same codec-first fallback order. Registry discovery verifies installed elements; GPU device and driver initialization are validated separately when the pipeline starts. The complete encoder matrix can be exercised with `server/integration/encoding/matrix.sh`.
+- <Def id="video.adaptive" /> enables a quality ladder from `low` up to the selected <Opt id="video.profile" /> (`low` only, `low`+`balanced`, or all three). The first stream is the lowest tier so the existing bandwidth estimator can move between tiers. With video auto mode enabled, sustained queue pressure, high RTCP jitter, or new packet loss triggers a downgrade; upgrades wait for stable bandwidth and cooldown. It is disabled by default.
 - <Def id="video.ids" /> is a list of pipeline ids that are defined in the <Opt id="video.pipelines" /> section. The first pipeline in the list will be the default pipeline.
 - <Def id="video.pipeline" /> is a shorthand for defining [Gstreamer pipeline description](#video.gst_pipeline) for a single pipeline. This is option is ignored if <Opt id="video.pipelines" /> is defined.
 - <Def id="video.pipelines" /> is a dictionary of pipeline configurations. Each pipeline configuration is defined by a unique pipeline id. They can be defined in two ways: either by building the pipeline dynamically using [Expression-Driven Configuration](#video.expression) or by defining the pipeline using a [Gstreamer Pipeline Description](#video.gst_pipeline).
@@ -323,9 +329,9 @@ Overview of available encoders for each codec is shown in the table below. The e
 | ----- | ------- | ------------- | ------------- |
 | VP8   | [vp8enc](https://gstreamer.freedesktop.org/documentation/vpx/vp8enc.html?gi-language=c) | [vaapivp8enc](https://github.com/GStreamer/gstreamer-vaapi/blob/master/gst/vaapi/gstvaapiencode_vp8.c) | ? |
 | VP9   | [vp9enc](https://gstreamer.freedesktop.org/documentation/vpx/vp9enc.html?gi-language=c) | [vaapivp9enc](https://github.com/GStreamer/gstreamer-vaapi/blob/master/gst/vaapi/gstvaapiencode_vp9.c) | ? |
-| AV1   | [av1enc](https://gstreamer.freedesktop.org/documentation/aom/av1enc.html?gi-language=c) | ? | [nvav1enc](https://gstreamer.freedesktop.org/documentation/nvcodec/nvav1enc.html?gi-language=c) |
+| AV1   | [av1enc](https://gstreamer.freedesktop.org/documentation/aom/av1enc.html?gi-language=c) / [svtav1enc](https://gstreamer.freedesktop.org/documentation/svtav1/index.html?gi-language=c) | [vaav1enc](https://gstreamer.freedesktop.org/documentation/va/vaav1enc.html?gi-language=c) | [nvautogpuav1enc](https://gstreamer.freedesktop.org/documentation/nvcodec/nvautogpuav1enc.html?gi-language=c) / [nvav1enc](https://gstreamer.freedesktop.org/documentation/nvcodec/nvav1enc.html?gi-language=c) |
 | H264  | [x264enc](https://gstreamer.freedesktop.org/documentation/x264/index.html?gi-language=c) | [vah264enc](https://gstreamer.freedesktop.org/documentation/va/vah264enc.html?gi-language=c) | [nvautogpuh264enc](https://gstreamer.freedesktop.org/documentation/nvcodec/nvautogpuh264enc.html?gi-language=c) / [nvh264enc](https://gstreamer.freedesktop.org/documentation/nvcodec/nvh264enc.html?gi-language=c) |
-| H265  | [x265enc](https://gstreamer.freedesktop.org/documentation/x265/index.html?gi-language=c) | [vah265enc](https://gstreamer.freedesktop.org/documentation/va/vah265enc.html?gi-language=c) | [nvh265enc](https://gstreamer.freedesktop.org/documentation/nvcodec/nvh265enc.html?gi-language=c) |
+| H265  | [x265enc](https://gstreamer.freedesktop.org/documentation/x265/index.html?gi-language=c) | [vah265enc](https://gstreamer.freedesktop.org/documentation/va/vah265enc.html?gi-language=c) / `vah265lpenc` | [nvautogpuh265enc](https://gstreamer.freedesktop.org/documentation/nvcodec/nvautogpuh265enc.html?gi-language=c) / [nvh265enc](https://gstreamer.freedesktop.org/documentation/nvcodec/nvh265enc.html?gi-language=c) |
 
 
 ## WebRTC Audio {#audio}

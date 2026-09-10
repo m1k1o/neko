@@ -30,7 +30,6 @@ const sidebars: SidebarsConfig = {
           link: { type: "doc", id: "installation/README" },
           items: [
             'installation/docker-images',
-            'installation/examples',
           ]
         },
       ]
@@ -101,7 +100,6 @@ const sidebars: SidebarsConfig = {
         'faq',
         'troubleshooting',
         'release-notes',
-        'roadmap',
       ]
     },
   ],

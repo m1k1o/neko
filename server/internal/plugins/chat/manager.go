@@ -2,14 +2,12 @@ package chat
 
 import (
 	"encoding/json"
-	"errors"
-	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
+	appchat "github.com/m1k1o/neko/server/internal/application/chat"
 	"github.com/m1k1o/neko/server/pkg/auth"
 	"github.com/m1k1o/neko/server/pkg/types"
 	"github.com/m1k1o/neko/server/pkg/utils"
@@ -25,6 +23,7 @@ func NewManager(
 		logger:   logger,
 		config:   config,
 		sessions: sessions,
+		service:  appchat.NewService(sessions, config.Enabled, config.HistoryFile, config.HistoryLimit),
 	}
 }
 
@@ -32,6 +31,7 @@ type Manager struct {
 	logger   zerolog.Logger
 	config   *Config
 	sessions types.SessionManager
+	service  *appchat.Service
 }
 
 type Settings struct {
@@ -40,60 +40,18 @@ type Settings struct {
 }
 
 func (m *Manager) settingsForSession(session types.Session) (Settings, error) {
-	settings := Settings{
-		CanSend:    true, // defaults to true
-		CanReceive: true, // defaults to true
-	}
-	err := m.sessions.Settings().Plugins.Unmarshal(PluginName, &settings)
-	if err != nil && !errors.Is(err, types.ErrPluginSettingsNotFound) {
-		return Settings{}, fmt.Errorf("unable to unmarshal %s plugin settings from global settings: %w", PluginName, err)
-	}
-
-	profile := Settings{
-		CanSend:    true, // defaults to true
-		CanReceive: true, // defaults to true
-	}
-
-	err = session.Profile().Plugins.Unmarshal(PluginName, &profile)
-	if err != nil && !errors.Is(err, types.ErrPluginSettingsNotFound) {
-		return Settings{}, fmt.Errorf("unable to unmarshal %s plugin settings from profile: %w", PluginName, err)
-	}
-
-	return Settings{
-		CanSend:    m.config.Enabled && (settings.CanSend || session.Profile().IsAdmin) && profile.CanSend,
-		CanReceive: m.config.Enabled && (settings.CanReceive || session.Profile().IsAdmin) && profile.CanReceive,
-	}, nil
+	settings, err := m.service.Settings(session)
+	return Settings{CanSend: settings.CanSend, CanReceive: settings.CanReceive}, err
 }
 
 func (m *Manager) sendMessage(session types.Session, content Content) {
-	now := time.Now()
-
-	// get all sessions that have chat enabled
-	var sessions []types.Session
-	m.sessions.Range(func(s types.Session) bool {
-		if settings, err := m.settingsForSession(s); err == nil && settings.CanReceive {
-			sessions = append(sessions, s)
-		}
-		// continue iteration over all sessions
-		return true
-	})
-
-	// send content to all sessions
-	for _, s := range sessions {
-		s.Send(CHAT_MESSAGE, Message{
-			ID:      session.ID(),
-			Created: now,
-			Content: content,
-		})
-	}
+	_ = m.service.Send(session, appchat.Content(content))
 }
 
 func (m *Manager) Start() error {
 	// send init message once a user connects
 	m.sessions.OnConnected(func(session types.Session) {
-		session.Send(CHAT_INIT, Init{
-			Enabled: m.config.Enabled,
-		})
+		m.service.Initialize(session)
 	})
 
 	return nil

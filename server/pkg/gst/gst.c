@@ -116,8 +116,18 @@ void gstreamer_pipeline_attach_appsrc(GstPipelineCtx *ctx, char *srcName) {
   ctx->appsrc = gst_bin_get_by_name(GST_BIN(ctx->pipeline), srcName);
 }
 
-void gstreamer_pipeline_play(GstPipelineCtx *ctx) {
-  gst_element_set_state(GST_ELEMENT(ctx->pipeline), GST_STATE_PLAYING);
+gboolean gstreamer_pipeline_play(GstPipelineCtx *ctx) {
+  GstStateChangeReturn result = gst_element_set_state(GST_ELEMENT(ctx->pipeline), GST_STATE_PLAYING);
+  if (result == GST_STATE_CHANGE_FAILURE) return FALSE;
+
+  // Hardware encoders can be present in the registry while their device or
+  // driver cannot initialize. Wait for the live pipeline to reach PLAYING so
+  // callers can try a same-codec software fallback before accepting listeners.
+  GstState state = GST_STATE_NULL;
+  result = gst_element_get_state(GST_ELEMENT(ctx->pipeline), &state, NULL, 2 * GST_SECOND);
+  if (result == GST_STATE_CHANGE_FAILURE) return FALSE;
+  if (state != GST_STATE_PLAYING) return FALSE;
+  return TRUE;
 }
 
 void gstreamer_pipeline_pause(GstPipelineCtx *ctx) {

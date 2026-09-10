@@ -18,7 +18,6 @@ import (
 	"github.com/pion/webrtc/v4"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"github.com/spf13/viper"
 
 	"github.com/m1k1o/neko/server/internal/config"
 	"github.com/m1k1o/neko/server/internal/webrtc/cursor"
@@ -48,6 +47,10 @@ const (
 
 	// send a PLI on an interval so that the publisher is pushing a keyframe every rtcpPLIInterval
 	rtcpPLIInterval = 3 * time.Second
+
+	// ICE can briefly become disconnected during a network handover. Keep the
+	// peer alive long enough for Pion to recover before destroying the session.
+	webrtcDisconnectGracePeriod = 5 * time.Second
 )
 
 func New(desktop types.DesktopManager, capture types.CaptureManager, config *config.WebRTC) *WebRTCManagerCtx {
@@ -268,7 +271,7 @@ func (manager *WebRTCManagerCtx) newPeerConnection(logger zerolog.Logger, codecs
 	return connection, <-estimatorChan, err
 }
 
-func (manager *WebRTCManagerCtx) CreatePeer(session types.Session) (*webrtc.SessionDescription, types.WebRTCPeer, error) {
+func (manager *WebRTCManagerCtx) CreatePeer(session types.Session, requestedVideoCodec codec.RTPCodec) (*webrtc.SessionDescription, types.WebRTCPeer, error) {
 	id := atomic.AddInt32(&manager.peerId, 1)
 
 	// get metrics for session
@@ -283,8 +286,12 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session) (*webrtc.Sess
 	audio := manager.capture.Audio()
 	audioCodec := audio.Codec()
 
-	// all videos must have the same codec
-	video := manager.capture.Video()
+	// Select the codec-specific capture variant chosen during signaling. Each
+	// variant is lazy, so unsupported browser codecs do not start an encoder.
+	video, ok := manager.capture.VideoForCodec(requestedVideoCodec)
+	if !ok {
+		return nil, nil, fmt.Errorf("video codec %q is not available", requestedVideoCodec.Name)
+	}
 	videoCodec := video.Codec()
 
 	connection, estimator, err := manager.newPeerConnection(
@@ -310,7 +317,13 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session) (*webrtc.Sess
 	}
 
 	// audio track
-	audioTrack, err := NewTrack(logger, audioCodec, connection)
+	audioQueueDepth, audioQueueDrops := metrics.sampleQueueMetrics("audio")
+	audioTrack, err := NewTrack(
+		logger,
+		audioCodec,
+		connection,
+		WithSampleQueueMetrics(audioQueueDepth, audioQueueDrops),
+	)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -326,7 +339,14 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session) (*webrtc.Sess
 
 	// video track
 	videoRtcp := make(chan []rtcp.Packet, 1)
-	videoTrack, err := NewTrack(logger, videoCodec, connection, WithRtcpChan(videoRtcp))
+	videoQueueDepth, videoQueueDrops := metrics.sampleQueueMetrics("video")
+	videoTrack, err := NewTrack(
+		logger,
+		videoCodec,
+		connection,
+		WithRtcpChan(videoRtcp),
+		WithSampleQueueMetrics(videoQueueDepth, videoQueueDrops),
+	)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -474,36 +494,57 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session) (*webrtc.Sess
 		logger.Info().Msg("remote track data finished")
 	})
 
-	connection.OnDataChannel(func(dc *webrtc.DataChannel) {
-		logger.Info().Interface("data_channel", dc).Msg("got remote data channel")
-
-		//
-		// old implementation created a new data channel on client side
-		// new implementation creates a new data channel on server side
-		//
-
-		if viper.GetBool("legacy") {
-			// handle legacy data channel
-			dc.OnMessage(func(message webrtc.DataChannelMessage) {
-				if err := manager.handleLegacy(logger, message.Data, session); err != nil {
-					logger.Err(err).Msg("data handle failed")
-				}
-			})
-
-			// handle legacy data channel
-			peer.dataChannel = dc
-		}
-	})
-
 	var once sync.Once
+	var disconnectMu sync.Mutex
+	var disconnectTimer *time.Timer
+	var disconnectGeneration uint64
+	cancelDisconnect := func() {
+		disconnectMu.Lock()
+		defer disconnectMu.Unlock()
+
+		disconnectGeneration++
+		if disconnectTimer != nil {
+			disconnectTimer.Stop()
+			disconnectTimer = nil
+		}
+	}
+	scheduleDisconnect := func() {
+		disconnectMu.Lock()
+		defer disconnectMu.Unlock()
+
+		disconnectGeneration++
+		generation := disconnectGeneration
+		if disconnectTimer != nil {
+			disconnectTimer.Stop()
+		}
+		disconnectTimer = time.AfterFunc(webrtcDisconnectGracePeriod, func() {
+			disconnectMu.Lock()
+			if generation != disconnectGeneration {
+				disconnectMu.Unlock()
+				return
+			}
+			disconnectTimer = nil
+			disconnectMu.Unlock()
+
+			if connection.ConnectionState() == webrtc.PeerConnectionStateDisconnected {
+				logger.Warn().Msg("webrtc peer remained disconnected after grace period")
+				peer.Destroy()
+			}
+		})
+	}
+
 	connection.OnConnectionStateChange(func(state webrtc.PeerConnectionState) {
 		switch state {
 		case webrtc.PeerConnectionStateConnected:
+			cancelDisconnect()
 			session.SetWebRTCConnected(peer, true)
-		case webrtc.PeerConnectionStateDisconnected,
-			webrtc.PeerConnectionStateFailed:
+		case webrtc.PeerConnectionStateDisconnected:
+			scheduleDisconnect()
+		case webrtc.PeerConnectionStateFailed:
+			cancelDisconnect()
 			peer.Destroy()
 		case webrtc.PeerConnectionStateClosed:
+			cancelDisconnect()
 			// ensure we only run this once
 			once.Do(func() {
 				session.SetWebRTCConnected(peer, false)

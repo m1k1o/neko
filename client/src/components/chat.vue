@@ -1,6 +1,10 @@
 <template>
   <div class="chat">
-    <ul class="chat-history" ref="history" @click="onClick">
+    <div v-if="history.length === 0" class="empty-state">
+      <i class="fas fa-comments" aria-hidden="true" />
+      <p>{{ $t('chat.empty') }}</p>
+    </div>
+    <ul class="chat-history" :class="{ 'is-empty': history.length === 0 }" ref="history" @click="onClick">
       <template v-for="(message, index) in history">
         <li
           :key="index"
@@ -11,11 +15,16 @@
           }"
         >
           <div class="author" @contextmenu.stop.prevent="onContext($event, { member: member(message.id) })">
-            <neko-avatar class="avatar" :seed="member(message.id).displayname" :size="40" />
+            <neko-avatar
+              class="avatar"
+              :seed="message.name || member(message.id).displayname"
+              :avatar="message.avatar || member(message.id).avatar"
+              :size="40"
+            />
           </div>
           <div class="content">
             <div class="content-head">
-              <span>{{ member(message.id).displayname }}</span>
+              <span>{{ message.name || member(message.id).displayname }}</span>
               <span class="timestamp">{{ timestamp(message.created) }}</span>
             </div>
             <neko-markdown
@@ -36,7 +45,7 @@
             }"
           >
             <strong v-if="message.id === id && $te('you')">{{ $t('you') }}</strong>
-            <strong v-else>{{ member(message.id).displayname }}</strong>
+            <strong v-else>{{ message.name || member(message.id).displayname }}</strong>
             {{ message.content }}
           </div>
         </li>
@@ -63,11 +72,38 @@
     max-width: 100%;
     overflow-x: hidden;
 
+    .empty-state {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      padding: 24px;
+      color: $text-muted;
+      text-align: center;
+
+      i {
+        color: rgba($style-primary, 0.7);
+        font-size: 28px;
+      }
+
+      p {
+        max-width: 220px;
+        line-height: 20px;
+      }
+    }
+
     .chat-history {
       flex: 1;
       overflow-y: scroll;
       overflow-x: hidden;
       max-width: 100%;
+      padding: 4px 2px 8px;
+
+      &.is-empty {
+        display: none;
+      }
       scrollbar-width: thin;
       scrollbar-color: $background-tertiary transparent;
 
@@ -95,8 +131,7 @@
 
       li {
         flex: 1;
-        border-top: 1px solid var(--border-color);
-        padding: 10px 5px 0px 10px;
+        padding: 8px 10px 0;
         display: flex;
         flex-direction: row;
         flex-wrap: nowrap;
@@ -105,8 +140,18 @@
         word-wrap: break-word;
 
         &.message {
-          padding-top: 15px;
+          padding: 10px;
+          margin: 6px 8px 0;
+          border: 1px solid rgba($text-normal, 0.07);
+          border-radius: 12px;
+          background: rgba($background-secondary, 0.62);
           font-size: 16px;
+          transition: background 0.18s ease, border-color 0.18s ease;
+
+          &:hover {
+            background: rgba($background-secondary, 0.88);
+            border-color: rgba($text-normal, 0.12);
+          }
 
           .author {
             flex-grow: 0;
@@ -238,7 +283,8 @@
           }
 
           &.bulk {
-            padding-top: 0px;
+            padding-top: 4px;
+            margin-top: 2px;
 
             .author {
               visibility: hidden;
@@ -278,34 +324,41 @@
 
     .chat-send {
       flex-shrink: 0;
-      height: 80px;
-      max-height: 80px;
-      padding: 0 10px 10px 10px;
+      height: 72px;
+      max-height: 72px;
+      padding: 0 8px 8px;
       flex-direction: column;
       display: flex;
 
       .accent {
         width: 100%;
-        height: 1px;
-        background: rgba($color: #fff, $alpha: 0.05);
-        margin: 5px 0 10px 0;
+        height: 0;
+        margin: 0 0 8px;
       }
 
       .text-container {
         flex: 1;
         width: 100%;
         height: 100%;
-        background-color: rgba($color: #fff, $alpha: 0.05);
-        border-radius: 5px;
+        background-color: rgba($background-tertiary, 0.76);
+        border: 1px solid rgba($text-normal, 0.1);
+        border-radius: 11px;
         position: relative;
         display: flex;
 
         .emoji-menu {
-          width: 20px;
-          height: 20px;
+          width: 34px;
+          height: 34px;
           font-size: 20px;
-          margin: 8px 5px 0 0;
+          margin: 5px 3px 0 0;
+          display: grid;
+          place-items: center;
+          color: $text-muted;
           cursor: pointer;
+
+          &:hover {
+            color: $style-primary;
+          }
         }
 
         textarea {

@@ -18,6 +18,12 @@ import (
 	"github.com/m1k1o/neko/server/pkg/utils"
 )
 
+const (
+	videoQueueHighWatermark  = 0.75
+	videoJitterHighWatermark = 9000 // approximately 100 ms at a 90 kHz video clock
+	videoLossIncrement       = 3
+)
+
 type WebRTCPeerCtx struct {
 	mu         sync.Mutex
 	logger     zerolog.Logger
@@ -151,6 +157,8 @@ func (peer *WebRTCPeerCtx) estimatorReader() {
 	// when was the last upgrade/downgrade
 	lastUpgradeTime := time.Time{}
 	lastDowngradeTime := time.Time{}
+	networkUnstableSince := time.Time{}
+	lossBaseline := uint32(0)
 
 	for range ticker.C {
 		targetBitrate := peer.estimator.GetTargetBitrate()
@@ -186,9 +194,30 @@ func (peer *WebRTCPeerCtx) estimatorReader() {
 
 		// check whats the difference between target and stream bitrate
 		diff := float64(targetBitrate) / float64(streamBitrate)
+		jitter, totalLost := peer.metrics.ReceiverNetworkStats()
+		queuePressure := peer.videoTrack.QueuePressure()
+		networkPressure := hasNetworkPressure(queuePressure, jitter, totalLost, lossBaseline)
+		jitterPressure := jitter >= videoJitterHighWatermark
+		lossPressure := totalLost >= lossBaseline+videoLossIncrement
+		queuePressureHigh := queuePressure >= videoQueueHighWatermark
+		if networkPressure {
+			if networkUnstableSince.IsZero() {
+				networkUnstableSince = time.Now()
+			}
+		} else {
+			networkUnstableSince = time.Time{}
+		}
+		networkPressureStable := networkPressure && time.Since(networkUnstableSince) >= conf.UnstableDuration
 
 		debugLogger.Info().
 			Float64("diff", diff).
+			Float64("queue_pressure", queuePressure).
+			Uint32("jitter", jitter).
+			Uint32("total_lost", totalLost).
+			Bool("jitter_pressure", jitterPressure).
+			Bool("loss_pressure", lossPressure).
+			Bool("queue_pressure_high", queuePressureHigh).
+			Bool("network_pressure", networkPressure).
 			Int("target_bitrate", targetBitrate).
 			Uint64("stream_bitrate", streamBitrate).
 			Str("direction", direction.String()).
@@ -209,7 +238,7 @@ func (peer *WebRTCPeerCtx) estimatorReader() {
 		}
 
 		// if we have an downward trend or are stalled, we might be congesting
-		if direction == utils.TrendDirectionDownward || stalled {
+		if direction == utils.TrendDirectionDownward || stalled || networkPressureStable {
 			// we reset the stable time because we are congesting
 			stableSince = time.Now()
 
@@ -230,7 +259,7 @@ func (peer *WebRTCPeerCtx) estimatorReader() {
 			}
 
 			// if we still have a big difference between target and stream bitrate, we wait for some more time
-			if conf.DiffThreshold >= 0 && diff > 1+conf.DiffThreshold {
+			if !networkPressureStable && conf.DiffThreshold >= 0 && diff > 1+conf.DiffThreshold {
 				debugLogger.Debug().
 					Float64("diff", diff).
 					Float64("threshold", conf.DiffThreshold).
@@ -239,6 +268,10 @@ func (peer *WebRTCPeerCtx) estimatorReader() {
 				continue
 			}
 
+			reason := "bandwidth"
+			if networkPressureStable {
+				reason = "network-pressure"
+			}
 			err := peer.SetVideo(types.PeerVideoRequest{
 				Selector: &types.StreamSelector{
 					ID:   streamId,
@@ -249,11 +282,20 @@ func (peer *WebRTCPeerCtx) estimatorReader() {
 				peer.logger.Warn().Err(err).Msg("failed to downgrade video stream")
 			}
 			lastDowngradeTime = time.Now()
+			if totalLost > lossBaseline {
+				lossBaseline = totalLost
+			}
 
 			if err == types.ErrWebRTCStreamNotFound {
 				debugLogger.Info().Msg("looks like we are already on the lowest stream")
 			} else {
 				debugLogger.Info().Msg("downgraded video stream")
+				peer.logger.Info().
+					Str("reason", reason).
+					Float64("queue_pressure", queuePressure).
+					Uint32("jitter", jitter).
+					Uint32("total_lost", totalLost).
+					Msg("downgraded video stream")
 			}
 			continue
 		}
@@ -283,7 +325,7 @@ func (peer *WebRTCPeerCtx) estimatorReader() {
 		}
 
 		// upgrade only if estimated bitrate passed the threshold
-		if conf.DiffThreshold >= 0 && diff < 1+conf.DiffThreshold {
+		if networkPressure || conf.DiffThreshold >= 0 && diff < 1+conf.DiffThreshold {
 			debugLogger.Debug().
 				Float64("diff", diff).
 				Float64("threshold", conf.DiffThreshold).
@@ -307,8 +349,15 @@ func (peer *WebRTCPeerCtx) estimatorReader() {
 			debugLogger.Info().Msg("looks like we are already on the highest stream")
 		} else {
 			debugLogger.Info().Msg("upgraded video stream")
+			peer.logger.Info().Str("reason", "bandwidth").Msg("upgraded video stream")
 		}
 	}
+}
+
+func hasNetworkPressure(queuePressure float64, jitter, totalLost, lossBaseline uint32) bool {
+	return queuePressure >= videoQueueHighWatermark ||
+		jitter >= videoJitterHighWatermark ||
+		totalLost >= lossBaseline+videoLossIncrement
 }
 
 func (peer *WebRTCPeerCtx) SetPaused(isPaused bool) error {
@@ -425,7 +474,6 @@ func (peer *WebRTCPeerCtx) Video() types.PeerVideo {
 	return types.PeerVideo{
 		Disabled: peer.videoDisabled,
 		ID:       ID,
-		Video:    ID, // TODO: Remove, used for backward compatibility
 		Auto:     peer.videoAuto,
 	}
 }

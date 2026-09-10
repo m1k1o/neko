@@ -2,7 +2,7 @@
   <div ref="component" class="video">
     <div ref="player" class="player">
       <div ref="container" class="player-container">
-        <video ref="video" playsinline />
+        <video ref="video" data-testid="remote-video" playsinline />
         <div class="emotes">
           <template v-for="(emote, index) in emotes">
             <neko-emote :id="index" :key="index" />
@@ -14,7 +14,7 @@
           spellcheck="false"
           tabindex="0"
           data-gramm="false"
-          :style="{ pointerEvents: hosting ? 'auto' : 'none' }"
+          :style="{ pointerEvents: connected ? 'auto' : 'none' }"
           @click.stop.prevent
           @contextmenu.stop.prevent
           @wheel.stop.prevent="onWheel"
@@ -38,38 +38,75 @@
         <div ref="aspect" class="player-aspect" />
       </div>
       <ul v-if="!fullscreen && !hideControls" class="video-menu top">
-        <li><i @click.stop.prevent="requestFullscreen" class="fas fa-expand"></i></li>
-        <li v-if="admin"><i @click.stop.prevent="openResolution" class="fas fa-desktop"></i></li>
+        <li>
+          <button
+            type="button"
+            class="video-action"
+            :aria-label="$t('ui.enter_fullscreen')"
+            @click.stop.prevent="requestFullscreen"
+          >
+            <i class="fas fa-expand" aria-hidden="true" />
+          </button>
+        </li>
+        <li v-if="admin">
+          <button
+            type="button"
+            class="video-action"
+            :aria-label="$t('ui.change_resolution')"
+            @click.stop.prevent="openResolution"
+          >
+            <i class="fas fa-desktop" aria-hidden="true" />
+          </button>
+        </li>
         <li v-if="!controlLocked && !implicitHosting" :class="extraControls || 'extra-control'">
-          <i
-            :class="[
-              hosted && !hosting ? 'disabled' : '',
-              !hosted && !hosting ? 'faded' : '',
-              'fas',
-              'fa-computer-mouse',
-            ]"
+          <button
+            type="button"
+            class="video-action"
+            :class="[hosted && !hosting ? 'disabled' : '', !hosted && !hosting ? 'faded' : '']"
+            :aria-label="$t('ui.request_or_release_control')"
             @click.stop.prevent="toggleControl"
-          />
+          >
+            <i class="fas fa-computer-mouse" aria-hidden="true" />
+          </button>
         </li>
       </ul>
       <ul v-if="!fullscreen && !hideControls" class="video-menu bottom">
         <li v-if="hosting && (!clipboard_read_available || !clipboard_write_available)">
-          <i @click.stop.prevent="openClipboard" class="fas fa-clipboard"></i>
+          <button
+            type="button"
+            class="video-action"
+            :aria-label="$t('ui.open_clipboard')"
+            @click.stop.prevent="openClipboard"
+          >
+            <i class="fas fa-clipboard" aria-hidden="true" />
+          </button>
         </li>
         <li>
-          <i
+          <button
+            type="button"
+            class="video-action"
             v-if="pip_available"
             @click.stop.prevent="requestPictureInPicture"
-            v-tooltip="{ content: 'Picture-in-Picture', placement: 'left', offset: 5, boundariesElement: 'body' }"
-            class="fas fa-external-link-alt"
-          />
+            v-tooltip="{
+              content: $t('ui.picture_in_picture'),
+              placement: 'left',
+              offset: 5,
+              boundariesElement: 'body',
+            }"
+            :aria-label="$t('ui.picture_in_picture')"
+          >
+            <i class="fas fa-external-link-alt" aria-hidden="true" />
+          </button>
         </li>
-        <li
-          v-if="hosting && is_touch_device"
-          :class="extraControls || 'extra-control'"
-          @click.stop.prevent="openMobileKeyboard"
-        >
-          <i class="fas fa-keyboard" />
+        <li v-if="hosting && is_touch_device" :class="extraControls || 'extra-control'">
+          <button
+            type="button"
+            class="video-action"
+            :aria-label="$t('ui.open_keyboard')"
+            @click.stop.prevent="openMobileKeyboard"
+          >
+            <i class="fas fa-keyboard" aria-hidden="true" />
+          </button>
         </li>
       </ul>
       <neko-resolution ref="resolution" v-if="admin" />
@@ -82,8 +119,14 @@
   .video {
     width: 100%;
     height: 100%;
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+    position: relative;
 
     .player {
+      top: 0;
+      left: 0;
       position: absolute;
       display: flex;
       justify-content: center;
@@ -92,10 +135,11 @@
 
       .video-menu {
         position: absolute;
-        right: 20px;
+        z-index: 7;
+        right: $party-gutter;
 
         &.top {
-          top: 15px;
+          top: $party-gutter;
         }
 
         &.bottom {
@@ -105,33 +149,37 @@
         li {
           margin: 0 0 10px 0;
 
-          i {
+          .video-action {
+            display: grid;
+            place-items: center;
             width: 30px;
             height: 30px;
-            background: rgba($color: #fff, $alpha: 0.2);
-            border-radius: 5px;
-            line-height: 30px;
-            font-size: 16px;
+            padding: 0;
+            border: 1px solid rgba(#fff, 0.12);
+            background: rgba(#fff, 0.12);
+            border-radius: 9px;
+            font-size: 14px;
             text-align: center;
             color: rgba($color: #fff, $alpha: 0.6);
             cursor: pointer;
+            transition: color 0.18s ease, background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
 
-            &.faded {
+            &:hover,
+            &:focus-visible {
+              color: #fff;
+              background: rgba(#fff, 0.22);
+              border-color: rgba(#fff, 0.28);
+              transform: translateY(-1px);
+            }
+
+            &.faded,
+            &.faded i {
               color: rgba($color: $text-normal, $alpha: 0.4);
             }
 
-            &.disabled {
+            &.disabled,
+            &.disabled i {
               color: rgba($color: $style-error, $alpha: 0.4);
-            }
-          }
-
-          /* usually extra controls are only shown on mobile */
-          &.extra-control {
-            display: none;
-          }
-          @media (max-width: 768px) {
-            &.extra-control {
-              display: block;
             }
           }
 
@@ -177,9 +225,25 @@
           align-items: center;
           cursor: pointer;
 
-          i::before {
-            font-size: 120px;
-            text-align: center;
+          i {
+            width: 76px;
+            height: 76px;
+            display: grid;
+            place-items: center;
+            border: 1px solid rgba(#fff, 0.25);
+            border-radius: 50%;
+            background: rgba(#fff, 0.12);
+            color: #fff;
+            transition: transform 0.2s ease, background 0.2s ease;
+
+            &::before {
+              font-size: 30px;
+            }
+          }
+
+          &:hover i {
+            background: rgba($style-primary, 0.22);
+            transform: scale(1.06);
           }
 
           &.hidden {
@@ -214,6 +278,7 @@
   import { Component, Ref, Watch, Vue, Prop } from 'vue-property-decorator'
   import ResizeObserver from 'resize-observer-polyfill'
   import { elementRequestFullscreen, onFullscreenChange, isFullscreen, lockKeyboard, unlockKeyboard } from '~/utils'
+  import { ControlInputController } from '~/sdk/control-input'
 
   import Emote from './emote.vue'
   import Resolution from './resolution.vue'
@@ -248,22 +313,28 @@
     @Prop(Boolean) readonly extraControls!: boolean
 
     private keyboard = GuacamoleKeyboard()
+    private inputController = new ControlInputController({
+      scroll: 0,
+      invertScroll: false,
+      lineHeight: WHEEL_LINE_HEIGHT,
+    })
     private observer = new ResizeObserver(this.onResize.bind(this))
     private focused = false
     private fullscreen = false
     private mutedOverlay = true
     private lastTextAreaValue = ''
+    private resizeFrame?: number
 
     get admin() {
       return this.$accessor.user.admin
     }
 
     get connected() {
-      return this.$accessor.connected
+      return this.$accessor.connection.connected
     }
 
     get connecting() {
-      return this.$accessor.connecting
+      return this.$accessor.connection.connecting
     }
 
     get controlling() {
@@ -312,7 +383,11 @@
 
     // server-side lock
     get controlLocked() {
-      return 'control' in this.$accessor.locked && this.$accessor.locked['control'] && !this.$accessor.user.admin
+      return (
+        'control' in this.$accessor.session.locked &&
+        this.$accessor.session.locked['control'] &&
+        !this.$accessor.user.admin
+      )
     }
 
     get locked() {
@@ -325,6 +400,12 @@
 
     get scroll_invert() {
       return this.$accessor.settings.scroll_invert
+    }
+
+    @Watch('scroll')
+    @Watch('scroll_invert')
+    onInputOptionsChanged() {
+      this.inputController.update({ scroll: this.scroll, invertScroll: this.scroll_invert })
     }
 
     get pip_available() {
@@ -384,12 +465,12 @@
 
     @Watch('width')
     onWidthChanged() {
-      this.onResize()
+      this.scheduleResize()
     }
 
     @Watch('height')
     onHeightChanged() {
-      this.onResize()
+      this.scheduleResize()
     }
 
     @Watch('volume')
@@ -470,6 +551,7 @@
     }
 
     mounted() {
+      this.onInputOptionsChanged()
       this._container.addEventListener('resize', this.onResize)
       this.onVolumeChanged(this.volume)
       this.onMutedChanged(this.muted)
@@ -481,7 +563,7 @@
       onFullscreenChange(this._player, () => {
         this.fullscreen = isFullscreen()
         this.fullscreen ? lockKeyboard() : unlockKeyboard()
-        this.onResize()
+        this.scheduleResize()
       })
 
       this._video.addEventListener('canplaythrough', () => {
@@ -511,6 +593,8 @@
         this.$accessor.video.play()
       })
 
+      this._video.addEventListener('resize', this.scheduleResize)
+
       this._video.addEventListener('pause', () => {
         this.$accessor.video.pause()
       })
@@ -537,7 +621,12 @@
 
     beforeDestroy() {
       window.removeEventListener('focus', this._onWindowFocus)
+      this._video.removeEventListener('resize', this.scheduleResize)
       this.observer.disconnect()
+      if (this.resizeFrame !== undefined) {
+        window.cancelAnimationFrame(this.resizeFrame)
+        this.resizeFrame = undefined
+      }
       this.$accessor.video.setPlayable(false)
       /* Guacamole Keyboard does not provide destroy functions */
     }
@@ -594,7 +683,7 @@
 
       try {
         await this._video.play()
-        this.onResize()
+        this.scheduleResize()
       } catch (err: any) {
         this.$log.error(err)
       }
@@ -687,9 +776,14 @@
       const { w, h } = this.$accessor.video.resolution
       const rect = this._overlay.getBoundingClientRect()
 
+      const point = this.inputController.pointer(e, rect, { width: w, height: h })
+      if (!point) {
+        return
+      }
+
       this.$client.sendData('mousemove', {
-        x: Math.round((w / rect.width) * (e.clientX - rect.left)),
-        y: Math.round((h / rect.height) * (e.clientY - rect.top)),
+        x: point.x,
+        y: point.y,
       })
     }
 
@@ -699,32 +793,13 @@
         return
       }
 
-      let x = e.deltaX
-      let y = e.deltaY
-
-      // Pixel units unless it's non-zero.
-      // Note that if deltamode is line or page won't matter since we aren't
-      // sending the mouse wheel delta to the server anyway.
-      // The difference between pixel and line can be important however since
-      // we have a threshold that can be smaller than the line height.
-      if (e.deltaMode !== 0) {
-        x *= WHEEL_LINE_HEIGHT
-        y *= WHEEL_LINE_HEIGHT
-      }
-
-      if (this.scroll_invert) {
-        x = x * -1
-        y = y * -1
-      }
-
-      x = Math.min(Math.max(x, -this.scroll), this.scroll)
-      y = Math.min(Math.max(y, -this.scroll), this.scroll)
+      const { x, y, controlKey } = this.inputController.wheel(e)
 
       this.sendMousePos(e)
 
       if (!this.wheelThrottle) {
         this.wheelThrottle = true
-        this.$client.sendData('wheel', { x, y })
+        this.$client.sendData('wheel', { x, y, controlKey })
 
         window.setTimeout(() => {
           this.wheelThrottle = false
@@ -881,10 +956,31 @@
 
     onResize() {
       const { offsetWidth, offsetHeight } = !this.fullscreen ? this._component : document.body
+      if (offsetWidth <= 0 || offsetHeight <= 0) {
+        return
+      }
+
       this._player.style.width = `${offsetWidth}px`
       this._player.style.height = `${offsetHeight}px`
-      this._container.style.maxWidth = `${(this.horizontal / this.vertical) * offsetHeight}px`
+
+      const aspectRatio = this.horizontal / this.vertical
+      const contentWidth = Math.min(offsetWidth, aspectRatio * offsetHeight)
+      this._container.style.maxWidth = `${contentWidth}px`
       this._aspect.style.paddingBottom = `${(this.vertical / this.horizontal) * 100}%`
+    }
+
+    private scheduleResize = () => {
+      if (this.resizeFrame !== undefined) {
+        window.cancelAnimationFrame(this.resizeFrame)
+      }
+
+      this.resizeFrame = window.requestAnimationFrame(() => {
+        this.resizeFrame = undefined
+        if (!this._component || !this._player || !this._container || !this._aspect) {
+          return
+        }
+        this.onResize()
+      })
     }
 
     @Watch('focused')

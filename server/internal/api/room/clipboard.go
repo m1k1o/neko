@@ -7,6 +7,7 @@ import (
 
 	"net/http"
 
+	"github.com/m1k1o/neko/server/pkg/auth"
 	"github.com/m1k1o/neko/server/pkg/types"
 	"github.com/m1k1o/neko/server/pkg/utils"
 )
@@ -17,7 +18,7 @@ type ClipboardPayload struct {
 }
 
 func (h *RoomHandler) clipboardGetText(w http.ResponseWriter, r *http.Request) error {
-	data, err := h.desktop.ClipboardGetText()
+	data, err := h.desktopApp.GetClipboard()
 	if err != nil {
 		return utils.HttpInternalServerError().WithInternalErr(err)
 	}
@@ -34,7 +35,8 @@ func (h *RoomHandler) clipboardSetText(w http.ResponseWriter, r *http.Request) e
 		return err
 	}
 
-	err := h.desktop.ClipboardSetText(types.ClipboardText{
+	session, _ := auth.GetSession(r)
+	err := h.desktopApp.SetClipboard(session, types.ClipboardText{
 		Text: data.Text,
 		HTML: data.HTML,
 	})
@@ -47,7 +49,7 @@ func (h *RoomHandler) clipboardSetText(w http.ResponseWriter, r *http.Request) e
 }
 
 func (h *RoomHandler) clipboardGetImage(w http.ResponseWriter, r *http.Request) error {
-	bytes, err := h.desktop.ClipboardGetBinary("image/png")
+	bytes, err := h.desktopApp.ClipboardImage()
 	if err != nil {
 		return utils.HttpInternalServerError().WithInternalErr(err)
 	}

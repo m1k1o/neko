@@ -79,21 +79,7 @@ jobs:
       fail-fast: false
       matrix:
         tag: 
-          - firefox
-          # Temporarily disabled due to Cloudflare blocked download link
-          #- waterfox
           - chromium
-          - google-chrome
-          - ungoogled-chromium
-          - microsoft-edge
-          - brave
-          - vivaldi
-          - opera
-          - tor-browser
-          - remmina
-          - vlc
-          - xfce
-          - kde
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -109,7 +95,7 @@ jobs:
         with:
           images: ${{ env.DOCKER_IMAGE }}
           tags: |
-            type=raw,value=latest,enable=${{ matrix.tag == 'firefox' }}
+            type=raw,value=latest,enable=${{ matrix.tag == 'chromium' }}
             type=raw,value=${{ matrix.tag }}
 
       - name: Login to Docker Hub

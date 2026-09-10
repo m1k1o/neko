@@ -4,6 +4,10 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
+	desktopapp "github.com/m1k1o/neko/server/internal/application/desktop"
+	roomapp "github.com/m1k1o/neko/server/internal/application/room"
+	signalingapp "github.com/m1k1o/neko/server/internal/application/signaling"
+	"github.com/m1k1o/neko/server/internal/control"
 	"github.com/m1k1o/neko/server/pkg/types"
 	"github.com/m1k1o/neko/server/pkg/types/event"
 	"github.com/m1k1o/neko/server/pkg/types/message"
@@ -16,21 +20,24 @@ func New(
 	capture types.CaptureManager,
 	webrtc types.WebRTCManager,
 ) *MessageHandlerCtx {
+	controlService := control.NewService(sessions, desktop)
 	return &MessageHandlerCtx{
-		logger:   log.With().Str("module", "websocket").Str("submodule", "handler").Logger(),
-		sessions: sessions,
-		desktop:  desktop,
-		capture:  capture,
-		webrtc:   webrtc,
+		logger:     log.With().Str("module", "websocket").Str("submodule", "handler").Logger(),
+		sessions:   sessions,
+		control:    controlService,
+		room:       roomapp.NewService(sessions, desktop, capture, controlService),
+		signaling:  signalingapp.NewService(capture, webrtc),
+		desktopApp: desktopapp.NewService(desktop, sessions, capture),
 	}
 }
 
 type MessageHandlerCtx struct {
-	logger   zerolog.Logger
-	sessions types.SessionManager
-	webrtc   types.WebRTCManager
-	desktop  types.DesktopManager
-	capture  types.CaptureManager
+	logger     zerolog.Logger
+	sessions   types.SessionManager
+	control    *control.Service
+	room       *roomapp.Service
+	signaling  *signalingapp.Service
+	desktopApp *desktopapp.Service
 }
 
 func (h *MessageHandlerCtx) Message(session types.Session, data types.WebSocketMessage) bool {
@@ -86,74 +93,11 @@ func (h *MessageHandlerCtx) Message(session types.Session, data types.WebSocketM
 		err = h.controlRelease(session)
 	case event.CONTROL_REQUEST:
 		err = h.controlRequest(session)
-	case event.CONTROL_MOVE:
-		payload := &message.ControlPos{}
+	case event.CONTROL_RENEW:
+		payload := &message.ControlEpoch{}
 		err = utils.Unmarshal(payload, data.Payload, func() error {
-			return h.controlMove(session, payload)
+			return h.controlRenew(session, payload)
 		})
-	case event.CONTROL_SCROLL:
-		payload := &message.ControlScroll{}
-		err = utils.Unmarshal(payload, data.Payload, func() error {
-			return h.controlScroll(session, payload)
-		})
-	case event.CONTROL_BUTTONPRESS:
-		payload := &message.ControlButton{}
-		err = utils.Unmarshal(payload, data.Payload, func() error {
-			return h.controlButtonPress(session, payload)
-		})
-	case event.CONTROL_BUTTONDOWN:
-		payload := &message.ControlButton{}
-		err = utils.Unmarshal(payload, data.Payload, func() error {
-			return h.controlButtonDown(session, payload)
-		})
-	case event.CONTROL_BUTTONUP:
-		payload := &message.ControlButton{}
-		err = utils.Unmarshal(payload, data.Payload, func() error {
-			return h.controlButtonUp(session, payload)
-		})
-	case event.CONTROL_KEYPRESS:
-		payload := &message.ControlKey{}
-		err = utils.Unmarshal(payload, data.Payload, func() error {
-			return h.controlKeyPress(session, payload)
-		})
-	case event.CONTROL_KEYDOWN:
-		payload := &message.ControlKey{}
-		err = utils.Unmarshal(payload, data.Payload, func() error {
-			return h.controlKeyDown(session, payload)
-		})
-	case event.CONTROL_KEYUP:
-		payload := &message.ControlKey{}
-		err = utils.Unmarshal(payload, data.Payload, func() error {
-			return h.controlKeyUp(session, payload)
-		})
-	// touch
-	case event.CONTROL_TOUCHBEGIN:
-		payload := &message.ControlTouch{}
-		err = utils.Unmarshal(payload, data.Payload, func() error {
-			return h.controlTouchBegin(session, payload)
-		})
-	case event.CONTROL_TOUCHUPDATE:
-		payload := &message.ControlTouch{}
-		err = utils.Unmarshal(payload, data.Payload, func() error {
-			return h.controlTouchUpdate(session, payload)
-		})
-	case event.CONTROL_TOUCHEND:
-		payload := &message.ControlTouch{}
-		err = utils.Unmarshal(payload, data.Payload, func() error {
-			return h.controlTouchEnd(session, payload)
-		})
-	// actions
-	case event.CONTROL_CUT:
-		err = h.controlCut(session)
-	case event.CONTROL_COPY:
-		err = h.controlCopy(session)
-	case event.CONTROL_PASTE:
-		payload := &message.ClipboardData{}
-		err = utils.Unmarshal(payload, data.Payload, func() error {
-			return h.controlPaste(session, payload)
-		})
-	case event.CONTROL_SELECT_ALL:
-		err = h.controlSelectAll(session)
 
 	// Screen Events
 	case event.SCREEN_SET:

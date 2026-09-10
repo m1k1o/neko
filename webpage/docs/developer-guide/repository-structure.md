@@ -8,13 +8,13 @@ This project uses a monorepo structure with the following directories:
 
 - `server/`: Backend code, written in [Go](https://go.dev/).
   - `server/cmd/`: Subcommands for the neko server, such as `serve` and `plugins`.
-  - `server/dev/`: Development scripts to run/build the neko server locally in Docker.
+  - `server/build`: Server and proxy build entrypoint.
   - `server/internal/`: Internal packages used by the neko server.
   - `server/pkg/`: Packages used by the neko server that can be used by other projects.
   - `server/plugins/`: Directory for plugins that will be built and used by the neko server.
 
 - `client/`: Frontend code, written in [TypeScript](https://www.typescriptlang.org/) and [Vue.js](https://vuejs.org/).
-  - `client/dev/`: Development scripts to run/build the neko client locally in Docker.
+  - `client/package.json`: Frontend build, development, lint and SDK check commands.
   - `client/public/`: Public files for the neko client, such as icons and images.
   - `client/src/`: Source code for the neko client, including components and pages.
   - `client/tools/`: Tools used for generating code for the neko client, such as emojis.
@@ -26,10 +26,9 @@ This project uses a monorepo structure with the following directories:
   - `runtime/intel/` or `runtime/nvidia/`: Directories with files for flavor-specific releases of the neko runtime.
   - `runtime/widevine-installer/`: Directories with installer scripts from [AsahiLinux/widevine-installer](https://github.com/AsahiLinux/widevine-installer)
 
-- `apps/`: Contains the applications that run in the neko, such as Firefox, Chrome, etc.
-  - `apps/<app-name>/Dockerfile`: Dockerfile extending `BASE_IMAGE` for the application used by the build script.
-  - `apps/<app-name>/Dockerfile.<flavor>`: Dockerfile for the application with flavor-specific optimizations.
-  - Supervisord configuration is expected at `/etc/neko/supervisord/<app-name>.conf` in the application image.
+- `apps/chromium/`: The sole M1 application runtime.
+  - `Dockerfile` and flavor-specific Dockerfiles extend `BASE_IMAGE`.
+  - Its Supervisord configuration starts Chromium and the optional local proxy agent.
 
 - `utils/`: Utility scripts, tools, and dependencies.
   - `utils/docker/`: Dockerfile generator that builds the base image by concatenating multiple Dockerfiles.

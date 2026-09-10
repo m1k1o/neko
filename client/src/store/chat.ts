@@ -18,12 +18,17 @@ interface Message {
   content: string
   created: Date
   type: 'text' | 'event'
+  name?: string
+  avatar?: string
 }
+
+const bubbleTimers: Record<string, number> = {}
 
 export const state = () => ({
   history: [] as Message[],
   emotes: {} as Emotes,
   texts: 0,
+  bubbles: {} as Record<string, string>,
 })
 
 export const getters = getterTree(state, {
@@ -37,6 +42,21 @@ export const mutations = mutationTree(state, {
     }
 
     state.history = state.history.concat([message])
+  },
+
+  setHistory(state, messages: Message[]) {
+    state.history = messages
+    state.texts = messages.filter((message) => message.type === 'text').length
+  },
+
+  setBubble(state, { id, content }: { id: string; content: string }) {
+    state.bubbles = { ...state.bubbles, [id]: content }
+  },
+
+  clearBubble(state, id: string) {
+    const bubbles = { ...state.bubbles }
+    delete bubbles[id]
+    state.bubbles = bubbles
   },
 
   addEmote(state, { id, emote }: { id: string; emote: Emote }) {
@@ -58,6 +78,11 @@ export const mutations = mutationTree(state, {
     state.emotes = {}
     state.history = []
     state.texts = 0
+    state.bubbles = {}
+    for (const id of Object.keys(bubbleTimers)) {
+      window.clearTimeout(bubbleTimers[id])
+      delete bubbleTimers[id]
+    }
   },
 })
 
@@ -78,17 +103,29 @@ export const actions = actionTree(
         new Audio('chat.mp3').play().catch(console.error)
       }
       accessor.chat.addMessage(message)
+      accessor.chat.setBubble({ id: message.id, content: message.content })
+      if (bubbleTimers[message.id]) {
+        window.clearTimeout(bubbleTimers[message.id])
+      }
+      bubbleTimers[message.id] = window.setTimeout(() => {
+        accessor.chat.clearBubble(message.id)
+        delete bubbleTimers[message.id]
+      }, 6500)
+    },
+
+    restoreHistory(store, messages: Message[]) {
+      accessor.chat.setHistory(messages)
     },
 
     sendMessage(store, content: string) {
-      if (!accessor.connected || accessor.user.muted) {
+      if (!accessor.connection.connected || accessor.user.muted) {
         return
       }
-      $client.sendMessage(EVENT.CHAT.MESSAGE, { content })
+      $client.sendMessage(EVENT.CHAT.MESSAGE, { text: content })
     },
 
     sendEmote(store, emote: string) {
-      if (!accessor.connected || accessor.user.muted) {
+      if (!accessor.connection.connected || accessor.user.muted) {
         return
       }
       $client.sendMessage(EVENT.CHAT.EMOTE, { emote })

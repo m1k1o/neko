@@ -20,9 +20,9 @@ const (
 	SIGNAL_ANSWER    = "signal/answer"
 	SIGNAL_PROVIDE   = "signal/provide"
 	SIGNAL_CANDIDATE = "signal/candidate"
+	SIGNAL_CLOSE     = "signal/close"
 	SIGNAL_VIDEO     = "signal/video"
 	SIGNAL_AUDIO     = "signal/audio"
-	SIGNAL_CLOSE     = "signal/close"
 )
 
 const (
@@ -37,25 +37,7 @@ const (
 	CONTROL_HOST    = "control/host"
 	CONTROL_RELEASE = "control/release"
 	CONTROL_REQUEST = "control/request"
-	// mouse
-	CONTROL_MOVE        = "control/move"
-	CONTROL_SCROLL      = "control/scroll"
-	CONTROL_BUTTONPRESS = "control/buttonpress"
-	CONTROL_BUTTONDOWN  = "control/buttondown"
-	CONTROL_BUTTONUP    = "control/buttonup"
-	// keyboard
-	CONTROL_KEYPRESS = "control/keypress"
-	CONTROL_KEYDOWN  = "control/keydown"
-	CONTROL_KEYUP    = "control/keyup"
-	// touch
-	CONTROL_TOUCHBEGIN  = "control/touchbegin"
-	CONTROL_TOUCHUPDATE = "control/touchupdate"
-	CONTROL_TOUCHEND    = "control/touchend"
-	// actions
-	CONTROL_CUT        = "control/cut"
-	CONTROL_COPY       = "control/copy"
-	CONTROL_PASTE      = "control/paste"
-	CONTROL_SELECT_ALL = "control/select_all"
+	CONTROL_RENEW   = "control/renew"
 )
 
 const (

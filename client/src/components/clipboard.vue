@@ -12,15 +12,15 @@
     padding: 5px;
 
     position: absolute;
-    bottom: 10px;
-    right: 10px;
+    bottom: clamp(0.5rem, 1.5vw, 1rem);
+    right: clamp(0.5rem, 1.5vw, 1rem);
 
     &,
     textarea {
-      max-width: 320px;
-      width: 100%;
-      max-height: 120px;
-      height: 100%;
+      width: min(20rem, calc(100vw - 1rem));
+      max-width: calc(100vw - 1rem);
+      height: min(8rem, 35dvh);
+      max-height: calc(100dvh - 1rem);
     }
 
     textarea {

@@ -7,7 +7,6 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	"github.com/m1k1o/neko/server/internal/api"
 	"github.com/m1k1o/neko/server/internal/capture"
@@ -25,11 +24,11 @@ func init() {
 	service := serve{}
 
 	command := &cobra.Command{
-		Use:    "serve",
-		Short:  "serve neko streaming server",
-		Long:   `serve neko streaming server`,
-		PreRun: service.PreRun,
-		Run:    service.Run,
+		Use:     "serve",
+		Short:   "serve neko streaming server",
+		Long:    `serve neko streaming server`,
+		PreRunE: service.PreRun,
+		Run:     service.Run,
 	}
 
 	if err := service.Init(command); err != nil {
@@ -88,32 +87,10 @@ func (c *serve) Init(cmd *cobra.Command) error {
 		return err
 	}
 
-	// legacy if explicitly enabled or if unspecified and legacy config is found
-	if viper.GetBool("legacy") || !viper.IsSet("legacy") {
-		if err := c.configs.Desktop.InitV2(cmd); err != nil {
-			return err
-		}
-		if err := c.configs.Capture.InitV2(cmd); err != nil {
-			return err
-		}
-		if err := c.configs.WebRTC.InitV2(cmd); err != nil {
-			return err
-		}
-		if err := c.configs.Member.InitV2(cmd); err != nil {
-			return err
-		}
-		if err := c.configs.Session.InitV2(cmd); err != nil {
-			return err
-		}
-		if err := c.configs.Server.InitV2(cmd); err != nil {
-			return err
-		}
-	}
-
 	return nil
 }
 
-func (c *serve) PreRun(cmd *cobra.Command, args []string) {
+func (c *serve) PreRun(cmd *cobra.Command, args []string) error {
 	c.logger = log.With().Str("service", "neko").Logger()
 
 	c.configs.Desktop.Set()
@@ -124,15 +101,7 @@ func (c *serve) PreRun(cmd *cobra.Command, args []string) {
 	c.configs.Plugins.Set()
 	c.configs.Server.Set()
 
-	// legacy if explicitly enabled or if unspecified and legacy config is found
-	if viper.GetBool("legacy") || !viper.IsSet("legacy") {
-		c.configs.Desktop.SetV2()
-		c.configs.Capture.SetV2()
-		c.configs.WebRTC.SetV2()
-		c.configs.Member.SetV2()
-		c.configs.Session.SetV2()
-		c.configs.Server.SetV2()
-	}
+	return c.configs.Capture.ApplyVideoProfile()
 }
 
 func (c *serve) Start(cmd *cobra.Command) {

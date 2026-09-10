@@ -2,6 +2,7 @@ ARG BASE_IMAGE=ghcr.io/m1k1o/neko/nvidia-base:latest
 FROM $BASE_IMAGE
 
 COPY ./widevinecdm.sh /widevine.sh
+COPY --chmod=755 ./neko-chromium /usr/local/bin/neko-chromium
 
 #
 # install neko chromium

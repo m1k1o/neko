@@ -26,8 +26,7 @@ type SystemInit struct {
 }
 
 type SystemAdmin struct {
-	ScreenSizesList []types.ScreenSize `json:"screen_sizes_list"`
-	BroadcastStatus BroadcastStatus    `json:"broadcast_status"`
+	BroadcastStatus BroadcastStatus `json:"broadcast_status"`
 }
 
 type SystemLogs = []SystemLog
@@ -52,10 +51,9 @@ type SystemSettingsUpdate struct {
 /////////////////////////////
 
 type SignalRequest struct {
-	Video types.PeerVideoRequest `json:"video"`
-	Audio types.PeerAudioRequest `json:"audio"`
-
-	Auto bool `json:"auto"` // TODO: Remove this
+	Video       types.PeerVideoRequest `json:"video"`
+	Audio       types.PeerAudioRequest `json:"audio"`
+	VideoCodecs []string               `json:"video_codecs,omitempty"`
 }
 
 type SignalProvide struct {
@@ -119,37 +117,11 @@ type ControlHost struct {
 	ID      string `json:"id"`
 	HasHost bool   `json:"has_host"`
 	HostID  string `json:"host_id,omitempty"`
+	Epoch   uint64 `json:"epoch"`
 }
 
-type ControlScroll struct {
-	// TOOD: remove this once the client is fixed
-	X int `json:"x"`
-	Y int `json:"y"`
-
-	DeltaX     int  `json:"delta_x"`
-	DeltaY     int  `json:"delta_y"`
-	ControlKey bool `json:"control_key"`
-}
-
-type ControlPos struct {
-	X int `json:"x"`
-	Y int `json:"y"`
-}
-
-type ControlButton struct {
-	*ControlPos
-	Code uint32 `json:"code"`
-}
-
-type ControlKey struct {
-	*ControlPos
-	Keysym uint32 `json:"keysym"`
-}
-
-type ControlTouch struct {
-	*ControlPos
-	TouchId  uint32 `json:"touch_id"`
-	Pressure uint8  `json:"pressure"`
+type ControlEpoch struct {
+	Epoch uint64 `json:"epoch"`
 }
 
 /////////////////////////////

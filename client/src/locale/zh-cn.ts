@@ -5,10 +5,40 @@ export const you = '你'
 export const somebody = '某人'
 export const send_a_message = '发送消息'
 
+export const ui = {
+  live: '直播中',
+  about: '关于 n.eko',
+  secure: '安全连接',
+  github_repository: 'GitHub 仓库',
+  remote_browser: '远程浏览器',
+  room_eyebrow: 'N.EKO 房间',
+  browser_check: '浏览器检查',
+  room_controls: '房间控制',
+  room_panel: '房间面板',
+  toggle_room_panel: '切换房间面板',
+  close_room_panel: '关闭房间面板',
+  language: '语言',
+  enter_fullscreen: '进入全屏',
+  change_resolution: '更改分辨率',
+  request_or_release_control: '请求或释放控制权',
+  open_clipboard: '打开剪贴板',
+  picture_in_picture: '画中画',
+  open_keyboard: '打开键盘',
+  pause: '暂停',
+  play: '播放',
+  mute: '静音',
+  unmute: '取消静音',
+  volume: '音量',
+}
+
 export const side = {
   chat: '聊天',
   files: '文件',
   settings: '设置',
+}
+
+export const chat = {
+  empty: '还没有消息，向房间打个招呼吧。',
 }
 
 export const connect = {
@@ -19,6 +49,8 @@ export const connect = {
   connect: '连接',
   error: '登录错误',
   empty_displayname: '显示名称不能为空',
+  show_password: '显示密码',
+  hide_password: '隐藏密码',
 }
 
 export const context = {
@@ -82,20 +114,40 @@ export const locks = {
 }
 
 export const setting = {
+  avatar: '头像',
+  avatar_upload: '上传头像',
+  avatar_remove: '删除头像',
+  avatar_too_large: '头像文件过大',
+  avatar_size_limit: '请选择小于 384 KB 的图片。',
+  avatar_upload_failed: '头像上传失败',
+  avatar_update_failed: '头像更新失败',
+  avatar_try_again: '请稍后重试。',
   scroll: '滚动灵敏度',
   scroll_invert: '反转滚动方向',
   autoplay: '自动播放视频',
   ignore_emotes: '忽略表情符号',
   chat_sound: '播放聊天提示音',
+  links_in_app: '始终在应用中打开链接',
   keyboard_layout: '键盘布局',
   broadcast_title: '直播流',
+  broadcast_placeholder: 'rtmp://a.rtmp.youtube.com/live2/<串流密钥>',
+  group_playback: '播放',
+  group_chat: '聊天与外观',
+  group_input: '输入',
+  group_admin: '管理',
+  group_session: '会话',
 }
 
 export const connection = {
   logged_out: '你已登出',
+  connecting: '正在连接',
   reconnecting: '正在重新连接',
   connected: '已连接',
   disconnected: '已断开',
+  network_unknown: '网络质量未知',
+  network_good: '网络质量良好',
+  network_fair: '网络质量一般',
+  network_poor: '网络质量较差',
   kicked: '你已被踢出',
   button_confirm: '确定',
 }
@@ -121,6 +173,8 @@ export const notifications = {
 }
 
 export const files = {
+  loading: '正在加载文件…',
+  empty: '此文件夹为空。',
   downloads: '下载',
   uploads: '上传',
   upload_here: '点击或拖动文件到此处上传',

@@ -2,6 +2,7 @@ package webrtc
 
 import (
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/m1k1o/neko/server/pkg/types"
@@ -216,10 +217,41 @@ func (m *metricsManager) getBySession(session types.Session) *metrics {
 				"transport":  "sctp",
 			},
 		}),
+
+		audioSampleQueueDepth: newSampleQueueDepthGauge(sessionId, "audio"),
+		audioSampleQueueDrops: newSampleQueueDropCounter(sessionId, "audio"),
+		videoSampleQueueDepth: newSampleQueueDepthGauge(sessionId, "video"),
+		videoSampleQueueDrops: newSampleQueueDropCounter(sessionId, "video"),
 	}
 
 	m.sessions[sessionId] = met
 	return met
+}
+
+func newSampleQueueDepthGauge(sessionID, mediaType string) prometheus.Gauge {
+	return promauto.NewGauge(prometheus.GaugeOpts{
+		Name:      "sample_queue_depth",
+		Namespace: "neko",
+		Subsystem: "webrtc",
+		Help:      "Current encoded-media samples waiting for a WebRTC track.",
+		ConstLabels: map[string]string{
+			"session_id": sessionID,
+			"media_type": mediaType,
+		},
+	})
+}
+
+func newSampleQueueDropCounter(sessionID, mediaType string) prometheus.Counter {
+	return promauto.NewCounter(prometheus.CounterOpts{
+		Name:      "sample_queue_dropped_total",
+		Namespace: "neko",
+		Subsystem: "webrtc",
+		Help:      "Encoded-media samples evicted because a WebRTC track queue was full.",
+		ConstLabels: map[string]string{
+			"session_id": sessionID,
+			"media_type": mediaType,
+		},
+	})
 }
 
 type metrics struct {
@@ -246,6 +278,8 @@ type metrics struct {
 	receiverReportDelay     prometheus.Gauge
 	receiverReportJitter    prometheus.Gauge
 	receiverReportTotalLost prometheus.Gauge
+	receiverJitterValue     atomic.Uint32
+	receiverTotalLostValue  atomic.Uint32
 
 	transportLayerNacks prometheus.Counter
 
@@ -253,6 +287,11 @@ type metrics struct {
 	iceBytesReceived  prometheus.Gauge
 	sctpBytesSent     prometheus.Gauge
 	sctpBytesReceived prometheus.Gauge
+
+	audioSampleQueueDepth prometheus.Gauge
+	audioSampleQueueDrops prometheus.Counter
+	videoSampleQueueDepth prometheus.Gauge
+	videoSampleQueueDrops prometheus.Counter
 }
 
 func (met *metrics) reset() {
@@ -269,6 +308,18 @@ func (met *metrics) reset() {
 
 	met.receiverReportDelay.Set(0)
 	met.receiverReportJitter.Set(0)
+	met.receiverReportTotalLost.Set(0)
+	met.receiverJitterValue.Store(0)
+	met.receiverTotalLostValue.Store(0)
+	met.audioSampleQueueDepth.Set(0)
+	met.videoSampleQueueDepth.Set(0)
+}
+
+func (met *metrics) sampleQueueMetrics(mediaType string) (prometheus.Gauge, prometheus.Counter) {
+	if mediaType == "audio" {
+		return met.audioSampleQueueDepth, met.audioSampleQueueDrops
+	}
+	return met.videoSampleQueueDepth, met.videoSampleQueueDrops
 }
 
 func (met *metrics) NewConnection() {
@@ -367,6 +418,12 @@ func (met *metrics) SetReceiverReport(report rtcp.ReceptionReport) {
 	met.receiverReportDelay.Set(float64(report.Delay))
 	met.receiverReportJitter.Set(float64(report.Jitter))
 	met.receiverReportTotalLost.Set(float64(report.TotalLost))
+	met.receiverJitterValue.Store(report.Jitter)
+	met.receiverTotalLostValue.Store(report.TotalLost)
+}
+
+func (met *metrics) ReceiverNetworkStats() (jitter, totalLost uint32) {
+	return met.receiverJitterValue.Load(), met.receiverTotalLostValue.Load()
 }
 
 func (met *metrics) SetIceTransportStats(data webrtc.TransportStats) {

@@ -10,6 +10,7 @@ export const namespaced = true
 
 export const state = () => ({
   id: '',
+  epoch: 0,
   clipboard: '',
   locked: false,
   implicitHosting: true,
@@ -41,6 +42,10 @@ export const mutations = mutationTree(state, {
     }
   },
 
+  setEpoch(state, epoch: number) {
+    state.epoch = epoch
+  },
+
   setClipboard(state, clipboard: string) {
     state.clipboard = clipboard
   },
@@ -63,6 +68,7 @@ export const mutations = mutationTree(state, {
 
   reset(state) {
     state.id = ''
+    state.epoch = 0
     state.clipboard = ''
     state.locked = false
   },
@@ -72,15 +78,15 @@ export const actions = actionTree(
   { state, getters, mutations },
   {
     sendClipboard({ getters }, clipboard: string) {
-      if (!accessor.connected || !getters.hosting) {
+      if (!accessor.connection.connected || !getters.hosting) {
         return
       }
 
-      $client.sendMessage(EVENT.CONTROL.CLIPBOARD, { text: clipboard })
+      $client.sendMessage(EVENT.CLIPBOARD.SET, { text: clipboard })
     },
 
     toggle({ getters }) {
-      if (!accessor.connected) {
+      if (!accessor.connection.connected) {
         return
       }
 
@@ -92,7 +98,7 @@ export const actions = actionTree(
     },
 
     request({ getters }) {
-      if (!accessor.connected || getters.controlling) {
+      if (!accessor.connection.connected || getters.controlling) {
         return
       }
 
@@ -100,15 +106,15 @@ export const actions = actionTree(
     },
 
     release({ getters }) {
-      if (!accessor.connected || !getters.hosting) {
+      if (!accessor.connection.connected || !getters.hosting) {
         return
       }
 
       $client.sendMessage(EVENT.CONTROL.RELEASE)
     },
 
-    give({ getters }, member: string | Member) {
-      if (!accessor.connected || !getters.hosting) {
+    async give({ getters }, member: string | Member) {
+      if (!accessor.connection.connected || !getters.hosting) {
         return
       }
 
@@ -120,27 +126,27 @@ export const actions = actionTree(
         return
       }
 
-      $client.sendMessage(EVENT.CONTROL.GIVE, { id: member.id })
+      await $client.room.giveControl(member.id)
     },
 
     adminControl() {
-      if (!accessor.connected || !accessor.user.admin) {
+      if (!accessor.connection.connected || !accessor.user.admin) {
         return
       }
 
-      $client.sendMessage(EVENT.ADMIN.CONTROL)
+      $client.room.takeControl()
     },
 
     adminRelease() {
-      if (!accessor.connected || !accessor.user.admin) {
+      if (!accessor.connection.connected || !accessor.user.admin) {
         return
       }
 
-      $client.sendMessage(EVENT.ADMIN.RELEASE)
+      $client.room.resetControl()
     },
 
     adminGive(store, member: string | Member) {
-      if (!accessor.connected) {
+      if (!accessor.connection.connected) {
         return
       }
 
@@ -152,15 +158,15 @@ export const actions = actionTree(
         return
       }
 
-      $client.sendMessage(EVENT.ADMIN.GIVE, { id: member.id })
+      $client.room.giveControl(member.id)
     },
 
     changeKeyboard({ getters }) {
-      if (!accessor.connected || !getters.hosting) {
+      if (!accessor.connection.connected || !getters.hosting) {
         return
       }
 
-      $client.sendMessage(EVENT.CONTROL.KEYBOARD, { layout: accessor.settings.keyboard_layout })
+      $client.sendMessage(EVENT.KEYBOARD.MAP, { layout: accessor.settings.keyboard_layout })
     },
 
     syncKeyboardModifierState({ state }, { capsLock, numLock, scrollLock }) {
@@ -169,7 +175,10 @@ export const actions = actionTree(
       }
 
       accessor.remote.setKeyboardModifierState({ capsLock, numLock, scrollLock })
-      $client.sendMessage(EVENT.CONTROL.KEYBOARD, { capsLock, numLock, scrollLock })
+      $client.sendMessage(EVENT.KEYBOARD.MODIFIERS, {
+        capslock: capsLock,
+        numlock: numLock,
+      })
     },
   },
 )

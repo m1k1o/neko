@@ -1,5 +1,5 @@
 <template>
-  <div id="neko" :class="[!videoOnly && side ? 'expanded' : '']">
+  <div id="neko" class="app-shell" :class="[!videoOnly && side ? 'expanded' : '']">
     <template v-if="!$client.supported">
       <neko-unsupported />
     </template>
@@ -8,13 +8,15 @@
         <div v-if="!videoOnly" class="header-container">
           <neko-header />
         </div>
-        <div class="video-container">
-          <neko-video
-            ref="video"
-            :hideControls="hideControls"
-            :extraControls="isEmbedMode"
-            @control-attempt="controlAttempt"
-          />
+        <div class="video-container" :class="{ 'video-only': videoOnly }">
+          <div class="video-surface">
+            <neko-video
+              ref="video"
+              :hideControls="hideControls"
+              :extraControls="isEmbedMode"
+              @control-attempt="controlAttempt"
+            />
+          </div>
         </div>
         <div v-if="!videoOnly" class="room-container">
           <neko-members />
@@ -31,14 +33,15 @@
           </div>
         </div>
       </main>
+      <div v-if="!videoOnly && side" class="panel-backdrop" @click.stop.prevent="closeSide" />
       <neko-side v-if="!videoOnly && side" />
-      <neko-connect v-if="!connected" />
+      <neko-connect v-if="!authenticated" />
       <neko-about v-if="about" />
       <notifications
         v-if="!videoOnly"
         group="neko"
         position="top left"
-        style="top: 50px; pointer-events: none"
+        class="app-notifications"
         :ignoreDuplicates="true"
       />
     </template>
@@ -53,63 +56,155 @@
     right: 0;
     bottom: 0;
     max-width: 100vw;
-    max-height: 100vh;
+    height: 100dvh;
+    max-height: 100dvh;
+    overflow: hidden;
     flex-direction: row;
     display: flex;
+    background: #05070c;
+    color: $text-normal;
 
     .neko-main {
-      min-width: 360px;
+      position: relative;
+      isolation: isolate;
+      width: 100%;
+      height: auto;
+      min-width: 0;
       max-width: 100%;
-      flex-grow: 1;
+      flex: 1 1 auto;
+      min-height: 0;
       flex-direction: column;
       display: flex;
-      overflow: auto;
+      overflow: hidden;
+      background: #05070c;
 
       .header-container {
-        background: $background-tertiary;
-        height: $menu-height;
-        flex-shrink: 0;
+        position: relative;
+        flex: 0 0 $party-header-height;
+        z-index: 6;
+        width: 100%;
+        min-width: 0;
+        height: auto;
         display: flex;
+        pointer-events: none;
+        background: linear-gradient(180deg, rgba(#05070c, 0.86), rgba(#05070c, 0));
+
+        > * {
+          pointer-events: auto;
+        }
       }
 
       .video-container {
-        background: rgba($color: #000, $alpha: 0.4);
-        max-width: 100%;
-        flex-grow: 1;
+        position: relative;
+        flex: 1 1 auto;
+        min-width: 0;
+        min-height: 0;
+        z-index: 0;
         display: flex;
+        padding: $party-gutter;
+        background: #05070c;
+
+        .video-surface {
+          position: relative;
+          flex: 1;
+          min-width: 0;
+          min-height: 0;
+          display: flex;
+          overflow: hidden;
+          border: 1px solid rgba($text-normal, 0.1);
+          border-radius: 20px;
+          background: #050a12;
+          box-shadow: $elevation-high;
+
+          .video-menu.bottom {
+            bottom: $party-gutter;
+          }
+        }
+
+        &.video-only {
+          padding: 0;
+          background: #000;
+
+          .video-surface {
+            border: 0;
+            border-radius: 0;
+            box-shadow: none;
+          }
+        }
       }
 
       .room-container {
-        background: $background-tertiary;
-        height: $controls-height;
-        max-width: 100%;
-        flex-shrink: 0;
+        position: relative;
+        flex: 0 0 auto;
+        z-index: 5;
+        margin: 0 $party-gutter $party-gutter;
+        min-height: 0;
+        max-width: none;
         flex-direction: column;
         display: flex;
+        padding: clamp(0.45rem, 1vw, 0.75rem) clamp(0.65rem, 1.3vw, 0.875rem);
+        overflow: visible;
+        border: 1px solid rgba(#fff, 0.12);
+        border-radius: 18px;
+        background: rgba($background-primary, 0.68);
+        box-shadow: 0 18px 50px rgba(0, 0, 0, 0.36);
+        backdrop-filter: blur(18px) saturate(130%);
+
+        > .members {
+          flex: 0 0 auto;
+          height: auto;
+          min-height: $party-member-rail-height;
+          position: relative;
+          z-index: 1;
+        }
 
         .room-menu {
           max-width: 100%;
-          flex: 1;
+          flex: 1 1 auto;
+          min-height: $party-control-height;
           display: flex;
+          align-items: center;
+          gap: clamp(0.35rem, 1vw, 0.75rem);
+          position: relative;
+          z-index: 2;
 
           .settings {
-            margin-left: 10px;
-            flex: 1;
+            margin-left: 0;
+            flex: 0 1 auto;
+            min-width: 0;
             justify-content: flex-start;
             align-items: center;
             display: flex;
           }
 
           .controls {
-            flex: 1;
+            flex: 1 1 auto;
+            min-width: 0;
+            min-height: $party-control-height;
+            padding: 0 8px;
+            border: 1px solid rgba(#fff, 0.08);
+            border-radius: 13px;
+            background: rgba(#000, 0.22);
             justify-content: center;
             align-items: center;
             display: flex;
+            overflow: visible;
+
+            > ul {
+              display: flex;
+              flex: 1 1 auto;
+              min-width: 0;
+              max-width: 100%;
+              flex-wrap: wrap;
+              row-gap: 2px;
+              justify-content: center;
+            }
           }
 
           .emotes {
-            margin-right: 10px;
-            flex: 1;
+            margin: 0;
+            flex: 0 1 auto;
+            min-width: 0;
             justify-content: flex-end;
             align-items: center;
             display: flex;
@@ -119,7 +214,21 @@
     }
   }
 
-  @media only screen and (max-width: 1024px) {
+  .panel-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 9;
+    display: block;
+    background: rgba(#02040a, 0.58);
+    backdrop-filter: blur(4px);
+  }
+
+  .app-notifications {
+    top: $party-header-height !important;
+    pointer-events: none;
+  }
+
+  @media only screen and (max-width: 1180px) {
     html,
     body {
       overflow-y: auto !important;
@@ -136,33 +245,96 @@
       flex-direction: column;
       max-height: initial !important;
 
-      .neko-main {
-        height: 100vh;
-      }
-
       .neko-menu {
-        height: 100vh;
-        width: 100% !important;
+        position: fixed;
+        top: auto;
+        right: 0;
+        bottom: 0;
+        z-index: 12;
+        height: min(70dvh, 42rem);
+        width: min(100%, 29rem) !important;
+        border-radius: 18px 18px 0 0;
       }
     }
   }
 
   @media only screen and (max-width: 1024px) and (orientation: portrait) {
     #neko {
-      &.expanded .neko-main {
-        height: 40vh;
-      }
-
-      &.expanded .neko-menu {
-        height: 60vh;
-        width: 100% !important;
+      &.expanded > .neko-menu {
+        height: min(72dvh, 42rem);
+        width: min(100%, 29rem) !important;
       }
     }
   }
 
   @media only screen and (max-width: 768px) {
-    #neko .neko-main .room-container {
-      display: none;
+    #neko {
+      .neko-main {
+        .header-container {
+          flex-basis: $party-header-height;
+        }
+
+        .video-container {
+          padding: $party-gutter;
+
+          .video-surface {
+            border-radius: 14px;
+
+            .video-menu.bottom {
+              bottom: $party-gutter;
+            }
+          }
+        }
+
+        .room-container {
+          margin: 0 $party-gutter $party-gutter;
+          padding: clamp(0.35rem, 1vw, 0.5rem) clamp(0.45rem, 1.2vw, 0.75rem);
+          border-radius: 15px;
+
+          > .members {
+            flex-basis: auto;
+            height: auto;
+            min-height: $party-member-rail-height;
+          }
+
+          .room-menu {
+            min-height: $party-control-height;
+
+            .controls {
+              min-height: $party-control-height;
+            }
+
+            .emotes {
+              flex: 0 1 auto;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  @media only screen and (max-width: 480px) {
+    #neko .neko-main .room-container .room-menu {
+      .settings {
+        .menu-actions {
+          gap: 2px;
+
+          .action-button {
+            width: 30px;
+            height: 30px;
+          }
+        }
+
+        .locale-picker select {
+          min-width: 48px;
+          padding: 0 18px 0 6px;
+          font-size: 10px;
+        }
+      }
+
+      .emotes {
+        display: none;
+      }
     }
   }
 </style>
@@ -278,8 +450,12 @@
       return this.$accessor.client.side
     }
 
-    get connected() {
-      return this.$accessor.connected
+    get authenticated() {
+      return this.$accessor.connection.authenticated
+    }
+
+    closeSide() {
+      this.$accessor.client.setSide(false)
     }
   }
 </script>

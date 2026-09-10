@@ -3,6 +3,8 @@ package webrtc
 import (
 	"bytes"
 	"encoding/binary"
+	"errors"
+	"fmt"
 	"math"
 	"time"
 
@@ -11,6 +13,11 @@ import (
 
 	"github.com/pion/webrtc/v4"
 	"github.com/rs/zerolog"
+)
+
+var (
+	ErrControlEpochRequired = errors.New("control epoch is required")
+	ErrStaleControlEpoch    = errors.New("control epoch is stale")
 )
 
 func (manager *WebRTCManagerCtx) handle(
@@ -29,6 +36,28 @@ func (manager *WebRTCManagerCtx) handle(
 	header := &payload.Header{}
 	if err := binary.Read(buffer, binary.BigEndian, header); err != nil {
 		return err
+	}
+	if err := payload.ValidateLength(header.Event, header.Length); err != nil {
+		return err
+	}
+	if int(header.Length) != buffer.Len() {
+		return fmt.Errorf("invalid payload size %d, header declares %d", buffer.Len(), header.Length)
+	}
+
+	var epoch uint64
+	if header.Event != payload.OP_PING {
+		if err := binary.Read(buffer, binary.BigEndian, &epoch); err != nil {
+			return ErrControlEpochRequired
+		}
+		// A viewer may move its inactive cursor without owning the desktop. All
+		// active input renews the lease while validating the current epoch.
+		if header.Event != payload.OP_MOVE {
+			if !isHost || session.ValidateControlEpoch(epoch) != nil {
+				return ErrStaleControlEpoch
+			}
+		} else if isHost && session.ValidateControlEpoch(epoch) != nil {
+			return ErrStaleControlEpoch
+		}
 	}
 
 	//
@@ -98,31 +127,17 @@ func (manager *WebRTCManagerCtx) handle(
 
 	switch header.Event {
 	case payload.OP_SCROLL:
-		// TODO: remove this once the client is fixed
-		if header.Length == 4 {
-			payload := &payload.Scroll_Old{}
-			if err := binary.Read(buffer, binary.BigEndian, payload); err != nil {
-				return err
-			}
-
-			manager.desktop.Scroll(int(payload.X), int(payload.Y), false)
-			logger.Trace().
-				Int16("x", payload.X).
-				Int16("y", payload.Y).
-				Msg("scroll")
-		} else {
-			payload := &payload.Scroll{}
-			if err := binary.Read(buffer, binary.BigEndian, payload); err != nil {
-				return err
-			}
-
-			manager.desktop.Scroll(int(payload.DeltaX), int(payload.DeltaY), payload.ControlKey)
-			logger.Trace().
-				Int16("deltaX", payload.DeltaX).
-				Int16("deltaY", payload.DeltaY).
-				Bool("controlKey", payload.ControlKey).
-				Msg("scroll")
+		payload := &payload.Scroll{}
+		if err := binary.Read(buffer, binary.BigEndian, payload); err != nil {
+			return err
 		}
+
+		manager.desktop.Scroll(int(payload.DeltaX), int(payload.DeltaY), payload.ControlKey)
+		logger.Trace().
+			Int16("deltaX", payload.DeltaX).
+			Int16("deltaY", payload.DeltaY).
+			Bool("controlKey", payload.ControlKey).
+			Msg("scroll")
 	case payload.OP_KEY_DOWN:
 		payload := &payload.Key{}
 		if err := binary.Read(buffer, binary.BigEndian, payload); err != nil {

@@ -1,7 +1,7 @@
 import { getterTree, mutationTree, actionTree } from 'typed-vuex'
 import { get, set } from '~/utils/localstorage'
-import { EVENT } from '~/neko/events'
 import { ScreenConfigurations, ScreenResolution } from '~/neko/types'
+import { normalizeScreenConfigurations } from '~/neko/screen'
 import { accessor } from '~/store'
 
 export const namespaced = true
@@ -104,23 +104,7 @@ export const mutations = mutationTree(state, {
   },
 
   setConfigurations(state, configurations: ScreenConfigurations) {
-    const data: ScreenResolution[] = []
-
-    for (const i of Object.keys(configurations)) {
-      const { width, height, rates } = configurations[i]
-      if (width >= 600 && height >= 300) {
-        for (const j of Object.keys(rates)) {
-          const rate = rates[j]
-          if (rate === 30 || rate === 60) {
-            data.push({
-              width,
-              height,
-              rate,
-            })
-          }
-        }
-      }
-    }
+    const data = normalizeScreenConfigurations(configurations)
 
     state.configurations = data.sort((a, b) => {
       if (b.width === a.width && b.height == a.height) {
@@ -169,28 +153,34 @@ export const mutations = mutationTree(state, {
 export const actions = actionTree(
   { state, getters, mutations },
   {
-    screenConfiguations() {
-      if (!accessor.connected || !accessor.user.admin) {
+    async screenConfigurations() {
+      if (!accessor.connection.connected || !accessor.user.admin) {
         return
       }
 
-      $client.sendMessage(EVENT.SCREEN.CONFIGURATIONS)
+      const response = await $http.get<ScreenConfigurations>('/api/room/screen/configurations')
+      accessor.video.setConfigurations(response.data)
     },
 
-    screenGet() {
-      if (!accessor.connected) {
+    async screenGet() {
+      if (!accessor.connection.connected) {
         return
       }
 
-      $client.sendMessage(EVENT.SCREEN.RESOLUTION)
+      const response = await $http.get<ScreenResolution>('/api/room/screen')
+      accessor.video.setResolution(response.data)
     },
 
-    screenSet(store, resolution: ScreenResolution) {
-      if (!accessor.connected || !accessor.user.admin) {
+    async screenSet(store, resolution: ScreenResolution) {
+      if (!accessor.connection.connected || !accessor.user.admin) {
         return
       }
 
-      $client.sendMessage(EVENT.SCREEN.SET, resolution)
+      await $http.post('/api/room/screen', resolution)
+      // The server broadcasts the authoritative size over WebSocket, but
+      // refresh it here as well so the initiating client cannot use stale
+      // coordinates if the broadcast races with the media/layout update.
+      await accessor.video.screenGet()
     },
   },
 )

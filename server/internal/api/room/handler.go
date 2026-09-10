@@ -6,15 +6,19 @@ import (
 
 	"github.com/rs/zerolog/log"
 
+	desktopapp "github.com/m1k1o/neko/server/internal/application/desktop"
+	"github.com/m1k1o/neko/server/internal/control"
 	"github.com/m1k1o/neko/server/pkg/auth"
 	"github.com/m1k1o/neko/server/pkg/types"
 	"github.com/m1k1o/neko/server/pkg/utils"
 )
 
 type RoomHandler struct {
-	sessions types.SessionManager
-	desktop  types.DesktopManager
-	capture  types.CaptureManager
+	sessions   types.SessionManager
+	desktop    types.DesktopManager
+	capture    types.CaptureManager
+	control    *control.Service
+	desktopApp *desktopapp.Service
 
 	privateModeImage []byte
 }
@@ -25,9 +29,11 @@ func New(
 	capture types.CaptureManager,
 ) *RoomHandler {
 	h := &RoomHandler{
-		sessions: sessions,
-		desktop:  desktop,
-		capture:  capture,
+		sessions:   sessions,
+		desktop:    desktop,
+		capture:    capture,
+		control:    control.NewService(sessions, desktop),
+		desktopApp: desktopapp.NewService(desktop, sessions, capture),
 	}
 
 	// generate fallback image for private mode when needed

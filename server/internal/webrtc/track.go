@@ -4,12 +4,15 @@ import (
 	"errors"
 	"io"
 	"sync"
+	"sync/atomic"
 
 	"github.com/pion/rtcp"
 	"github.com/pion/webrtc/v4"
 	"github.com/pion/webrtc/v4/pkg/media"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/rs/zerolog"
 
+	"github.com/m1k1o/neko/server/pkg/mediaqueue"
 	"github.com/m1k1o/neko/server/pkg/types"
 	"github.com/m1k1o/neko/server/pkg/types/codec"
 )
@@ -19,7 +22,11 @@ type Track struct {
 	track  *webrtc.TrackLocalStaticSample
 
 	rtcpCh chan []rtcp.Packet
-	sample chan types.Sample
+	sample *mediaqueue.Queue[types.Sample]
+
+	sampleQueueDepth prometheus.Gauge
+	sampleQueueDrops prometheus.Counter
+	droppedSamples   atomic.Uint64
 
 	paused   bool
 	stream   types.StreamSinkManager
@@ -34,6 +41,14 @@ func WithRtcpChan(rtcp chan []rtcp.Packet) trackOption {
 	}
 }
 
+// WithSampleQueueMetrics records bounded queue pressure for this track.
+func WithSampleQueueMetrics(depth prometheus.Gauge, drops prometheus.Counter) trackOption {
+	return func(t *Track) {
+		t.sampleQueueDepth = depth
+		t.sampleQueueDrops = drops
+	}
+}
+
 func NewTrack(logger zerolog.Logger, codec codec.RTPCodec, connection *webrtc.PeerConnection, opts ...trackOption) (*Track, error) {
 	id := codec.Type.String()
 	track, err := webrtc.NewTrackLocalStaticSample(codec.Capability, id, "stream")
@@ -45,12 +60,12 @@ func NewTrack(logger zerolog.Logger, codec codec.RTPCodec, connection *webrtc.Pe
 		logger: logger.With().Str("id", id).Logger(),
 		track:  track,
 		rtcpCh: nil,
-		sample: make(chan types.Sample, 2),
 	}
 
 	for _, opt := range opts {
 		opt(t)
 	}
+	t.sample = mediaqueue.New[types.Sample](2, t.observeSampleQueue)
 
 	sender, err := connection.AddTrack(t.track)
 	if err != nil {
@@ -65,7 +80,10 @@ func NewTrack(logger zerolog.Logger, codec codec.RTPCodec, connection *webrtc.Pe
 
 func (t *Track) Shutdown() {
 	t.RemoveStream()
-	close(t.sample)
+	t.sample.Close()
+	if t.sampleQueueDepth != nil {
+		t.sampleQueueDepth.Set(0)
+	}
 }
 
 func (t *Track) rtcpReader(sender *webrtc.RTPSender) {
@@ -91,7 +109,7 @@ func (t *Track) rtcpReader(sender *webrtc.RTPSender) {
 
 func (t *Track) sampleReader() {
 	for {
-		sample, ok := <-t.sample
+		sample, ok := t.sample.Pop()
 		if !ok {
 			t.logger.Debug().Msg("track sample reader closed")
 			return
@@ -110,10 +128,20 @@ func (t *Track) sampleReader() {
 }
 
 func (t *Track) WriteSample(sample types.Sample) {
-	select {
-	case t.sample <- sample:
-	default:
-		t.logger.Trace().Msg("dropping sample: track channel full")
+	t.sample.Push(sample)
+}
+
+func (t *Track) observeSampleQueue(stats mediaqueue.Stats) {
+	if t.sampleQueueDepth != nil {
+		t.sampleQueueDepth.Set(float64(stats.Depth))
+	}
+	if t.sampleQueueDrops == nil {
+		return
+	}
+
+	previous := t.droppedSamples.Swap(stats.Dropped)
+	if stats.Dropped > previous {
+		t.sampleQueueDrops.Add(float64(stats.Dropped - previous))
 	}
 }
 
@@ -171,6 +199,17 @@ func (t *Track) Stream() (types.StreamSinkManager, bool) {
 	defer t.streamMu.Unlock()
 
 	return t.stream, t.stream != nil
+}
+
+// QueuePressure reports the fraction of the track's bounded sample queue that
+// is currently occupied. It is used by the bandwidth estimator as an early
+// congestion signal before the WebRTC target bitrate reacts.
+func (t *Track) QueuePressure() float64 {
+	stats := t.sample.Stats()
+	if stats.Capacity <= 0 {
+		return 0
+	}
+	return float64(stats.Depth) / float64(stats.Capacity)
 }
 
 // --- paused ---

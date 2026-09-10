@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://neko.m1k1o.net/schema/media-input.json",
+  "title": "Neko WebRTC media input",
+  "description": "Logical contract for the binary WebRTC DataChannel input protocol.",
+  "type": "object",
+  "required": ["opcode", "epoch", "payload"],
+  "properties": {
+    "opcode": { "type": "integer", "minimum": 1, "maximum": 255 },
+    "epoch": { "type": "integer", "minimum": 0, "maximum": 18446744073709551615 },
+    "payload": { "type": "object" }
+  },
+  "additionalProperties": false
+}

@@ -18,14 +18,16 @@ If you want to access Neko over a VPN, you need to set NAT1TO1 to your server's 
 ```yaml title="docker-compose.yaml"
 services:
   neko:
-    image: "ghcr.io/m1k1o/neko/firefox:latest"
+    image: "ghcr.io/m1k1o/neko/chromium:latest"
     restart: "unless-stopped"
     shm_size: "2gb"
     ports:
       - "8080:8080"
-      - "52000-52100:52000-52100/udp"
+      - "52000:52000/udp"
+      - "52000:52000/tcp"
     environment:
-      NEKO_WEBRTC_EPR: 52000-52100
+      NEKO_WEBRTC_UDPMUX: 52000
+      NEKO_WEBRTC_TCPMUX: 52000
       NEKO_WEBRTC_ICELITE: 1
       NEKO_WEBRTC_NAT1TO1: <your-VPN-IP>
 ```
@@ -39,7 +41,7 @@ Start neko with TCP multiplexing enabled and NAT1to1 set to loopback address. Th
 ```yaml title="docker-compose.yaml"
 services:
   neko:
-    image: "ghcr.io/m1k1o/neko/nvidia-firefox:latest"
+    image: "ghcr.io/m1k1o/neko/nvidia-chromium:latest"
     restart: "unless-stopped"
     shm_size: "2gb"
     ports:

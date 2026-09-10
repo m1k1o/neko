@@ -1,11 +1,12 @@
 <template>
   <div class="unsupported">
-    <div class="window">
+    <div class="window" role="alert">
       <div class="logo">
-        <img src="@/assets/images/logo.svg" alt="n.eko" />
-        <span><b>n</b>.eko</span>
+        <span class="logo-mark"><img src="@/assets/images/logo.svg" alt="" /></span>
+        <span class="brand-name"><b>n</b>.eko</span>
       </div>
       <div class="message">
+        <span class="eyebrow">{{ $t('ui.browser_check') }}</span>
         <span>{{ $t('unsupported') }}</span>
       </div>
     </div>
@@ -25,29 +26,45 @@
     align-items: center;
 
     .window {
-      width: 300px;
-      background: $background-secondary;
-      border-radius: 5px;
-      padding: 10px;
+      width: min(100% - 40px, 390px);
+      background: linear-gradient(155deg, rgba($background-secondary, 0.98), rgba($background-primary, 0.98));
+      border: 1px solid rgba($text-normal, 0.12);
+      border-radius: 20px;
+      padding: 28px;
+      box-shadow: $elevation-high;
 
       .logo {
         width: 100%;
         display: flex;
         flex-direction: row;
-        justify-content: center;
+        justify-content: flex-start;
         align-items: center;
+        gap: 12px;
+        margin-bottom: 26px;
 
-        img {
-          height: 90px;
-          margin-right: 10px;
+        .logo-mark {
+          width: 48px;
+          height: 48px;
+          display: grid;
+          place-items: center;
+          border-radius: 14px;
+          background: rgba($style-primary, 0.14);
+          border: 1px solid rgba($style-primary, 0.3);
+
+          img {
+            height: 32px;
+          }
         }
 
-        span {
-          font-size: 30px;
-          line-height: 56px;
+        .brand-name {
+          color: $text-normal;
+          font-size: 28px;
+          font-weight: 600;
+          line-height: 32px;
 
           b {
-            font-weight: 900;
+            color: $style-primary;
+            font-weight: 800;
           }
         }
       }
@@ -56,11 +73,19 @@
         display: flex;
         flex-direction: column;
 
-        span {
+        .eyebrow {
+          color: $text-muted;
+          font-size: 10px;
+          font-weight: 700;
+          letter-spacing: 0.16em;
+          margin-bottom: 10px;
+        }
+
+        > span:last-child {
           display: block;
-          text-align: center;
-          text-transform: uppercase;
-          line-height: 30px;
+          color: $interactive-normal;
+          text-align: left;
+          line-height: 22px;
         }
       }
     }

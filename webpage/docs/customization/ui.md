@@ -23,12 +23,13 @@ You can mount your newly created UI files to the container to `/var/www` to over
 ```yaml title="docker-compose.yaml"
 services:
   neko:
-    image: "ghcr.io/m1k1o/neko/firefox:latest"
+    image: "ghcr.io/m1k1o/neko/chromium:latest"
     restart: "unless-stopped"
     shm_size: "2gb"
     ports:
       - "8080:8080"
-      - "52000-52100:52000-52100/udp"
+      - "52000:52000/udp"
+      - "52000:52000/tcp"
     # highlight-start
     volumes:
       - "./client/dist:/var/www"
@@ -37,7 +38,8 @@ services:
       NEKO_DESKTOP_SCREEN: 1920x1080@30
       NEKO_MEMBER_MULTIUSER_USER_PASSWORD: neko
       NEKO_MEMBER_MULTIUSER_ADMIN_PASSWORD: admin
-      NEKO_WEBRTC_EPR: 52000-52100
+      NEKO_WEBRTC_UDPMUX: 52000
+      NEKO_WEBRTC_TCPMUX: 52000
       NEKO_WEBRTC_ICELITE: 1
 ```
 

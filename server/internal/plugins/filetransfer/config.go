@@ -48,18 +48,6 @@ func (Config) Init(cmd *cobra.Command) error {
 		return err
 	}
 
-	// v2 config
-
-	cmd.PersistentFlags().Bool("file_transfer_enabled", false, "enable file transfer feature")
-	if err := viper.BindPFlag("file_transfer_enabled", cmd.PersistentFlags().Lookup("file_transfer_enabled")); err != nil {
-		return err
-	}
-
-	cmd.PersistentFlags().String("file_transfer_path", "", "path to use for file transfer")
-	if err := viper.BindPFlag("file_transfer_path", cmd.PersistentFlags().Lookup("file_transfer_path")); err != nil {
-		return err
-	}
-
 	return nil
 }
 
@@ -72,13 +60,4 @@ func (s *Config) Set() {
 	s.UserUpload = viper.GetBool("filetransfer.user_upload")
 	s.UserDelete = viper.GetBool("filetransfer.user_delete")
 
-	// v2 config
-
-	if viper.IsSet("file_transfer_enabled") {
-		s.Enabled = viper.GetBool("file_transfer_enabled")
-	}
-	if viper.IsSet("file_transfer_path") {
-		rootDir = viper.GetString("file_transfer_path")
-		s.RootDir = filepath.Clean(rootDir)
-	}
 }

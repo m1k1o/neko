@@ -4,6 +4,7 @@
   -->
   <div
     class="avatar"
+    :class="{ 'has-image': avatar && !imageFailed }"
     :style="{
       width: size + 'px',
       height: size + 'px',
@@ -12,7 +13,8 @@
       backgroundColor: Background(seed),
     }"
   >
-    {{ seed.substring(0, 2).toUpperCase() }}
+    <img v-if="avatar && !imageFailed" :src="avatar" alt="" @error="imageFailed = true" />
+    <span v-else>{{ initials }}</span>
   </div>
 </template>
 
@@ -25,18 +27,41 @@
     display: inline-block;
     overflow: hidden;
     border-radius: 50%;
+
+    img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    span {
+      display: block;
+    }
   }
 </style>
 
 <script lang="ts">
-  import { Vue, Component, Prop } from 'vue-property-decorator'
+  import { Vue, Component, Prop, Watch } from 'vue-property-decorator'
 
   @Component({
     name: 'neko-avatar',
   })
   export default class extends Vue {
-    @Prop(String) readonly seed: string | undefined
-    @Prop(Number) readonly size: number | undefined
+    @Prop({ type: String, default: '' }) readonly seed!: string
+    @Prop({ type: String, default: '' }) readonly avatar!: string
+    @Prop({ type: Number, default: 40 }) readonly size!: number
+
+    imageFailed = false
+
+    get initials() {
+      return this.seed.substring(0, 2).toUpperCase()
+    }
+
+    @Watch('avatar')
+    onAvatarChanged() {
+      this.imageFailed = false
+    }
 
     Background(seed: string) {
       let a = 0,

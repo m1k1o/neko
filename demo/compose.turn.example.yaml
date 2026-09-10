@@ -1,0 +1,44 @@
+name: neko-m1-turn
+
+# Copy this file to compose.turn.yaml and replace the placeholders.
+# TURN relay ports are intentionally explicit so firewall rules are auditable.
+services:
+  neko:
+    image: neko-m1-demo:local
+    container_name: neko-m1-turn
+    restart: unless-stopped
+    shm_size: 2gb
+    volumes:
+      - "neko-m1-turn-data:/home/neko/.local/share/neko"
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      NEKO_DESKTOP_SCREEN: 1280x720@30
+      NEKO_CAPTURE_VIDEO_PROFILE: balanced
+      NEKO_MEMBER_MULTIUSER_USER_PASSWORD: ${NEKO_DEMO_USER_PASSWORD:?set NEKO_DEMO_USER_PASSWORD}
+      NEKO_MEMBER_MULTIUSER_ADMIN_PASSWORD: ${NEKO_DEMO_ADMIN_PASSWORD:?set NEKO_DEMO_ADMIN_PASSWORD}
+      NEKO_WEBRTC_ICESERVERS_FRONTEND: >-
+        [{"urls":["turn:${TURN_PUBLIC_HOST:?set TURN_PUBLIC_HOST}:3478?transport=udp","turn:${TURN_PUBLIC_HOST}:3478?transport=tcp"],"username":"${TURN_USERNAME:?set TURN_USERNAME}","credential":"${TURN_PASSWORD:?set TURN_PASSWORD}"}]
+      NEKO_WEBRTC_ICESERVERS_BACKEND: >-
+        [{"urls":["turn:${TURN_PUBLIC_HOST}:3478?transport=udp","turn:${TURN_PUBLIC_HOST}:3478?transport=tcp"],"username":"${TURN_USERNAME}","credential":"${TURN_PASSWORD}"}]
+
+  coturn:
+    image: coturn/coturn:4.6.3
+    container_name: neko-m1-coturn
+    restart: unless-stopped
+    command:
+      - "-n"
+      - "--log-file=stdout"
+      - "--realm=${TURN_REALM:-neko.example}"
+      - "--lt-cred-mech"
+      - "--user=${TURN_USERNAME:?set TURN_USERNAME}:${TURN_PASSWORD:?set TURN_PASSWORD}"
+      - "--external-ip=${TURN_PUBLIC_IP:?set TURN_PUBLIC_IP}"
+      - "--min-port=${TURN_RELAY_MIN:-49160}"
+      - "--max-port=${TURN_RELAY_MAX:-49200}"
+    ports:
+      - "${TURN_BIND_IP:-0.0.0.0}:3478:3478/tcp"
+      - "${TURN_BIND_IP:-0.0.0.0}:3478:3478/udp"
+      - "${TURN_BIND_IP:-0.0.0.0}:${TURN_RELAY_MIN:-49160}-${TURN_RELAY_MAX:-49200}:${TURN_RELAY_MIN:-49160}-${TURN_RELAY_MAX:-49200}/udp"
+
+volumes:
+  neko-m1-turn-data:

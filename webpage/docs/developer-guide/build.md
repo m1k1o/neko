@@ -54,7 +54,7 @@ The repository uses a [Dockerfile template](https://github.com/m1k1o/neko/blob/m
 | `server` | `server/` | Go binary + plugins |
 | `client` | `client/` | Vue.js frontend |
 | `runtime` | `runtime/` | Xorg, PulseAudio, GStreamer base |
-| `application` | `apps/<name>/` | The browser / desktop app |
+| `application` | `apps/chromium/` | The supported Chromium runtime |
 
 ### Requirements
 
@@ -100,13 +100,11 @@ docker build --platform linux/arm64 -t local/neko -f Dockerfile .
 The `runtime/Dockerfile` is the authoritative reference for Xorg/PulseAudio/GStreamer dependencies. Setting up the runtime outside of Docker is non-trivial; using Docker is strongly recommended.
 :::
 
-### Choosing an Application
+### Building Chromium
 
-The generated `Dockerfile` includes the runtime base only. To add an application (browser, desktop, etc.), append the relevant `apps/<name>/Dockerfile` contents, or build a multi-stage image that adds the app on top of your `local/neko` base:
+The generated `Dockerfile` includes the runtime base only. M1 supports the
+Chromium application image; build it with the repository helper:
 
-```dockerfile
-FROM local/neko
-# Install your application here — follow the upstream docs for non-interactive installation.
-RUN apt-get update && apt-get install -y --no-install-recommends firefox-esr
-COPY apps/firefox/supervisord.conf /etc/supervisord.conf
+```bash
+./build --application chromium --yes
 ```

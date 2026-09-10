@@ -17,6 +17,7 @@
     "build": "vue-cli-service build",
     "build:lib": "vue-cli-service build --target lib --name neko-lib 'src/lib.ts'",
     "build:emoji": "ts-node --files --project tools/tsconfig.json tools/emoji.ts",
+    "test:sdk": "ts-node --project tools/tsconfig.json tools/sdk.test.ts",
     "lint": "vue-cli-service lint"
   },
   "dependencies": {

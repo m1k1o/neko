@@ -15,6 +15,8 @@ import (
 type BroacastManagerCtx struct {
 	logger zerolog.Logger
 	mu     sync.Mutex
+	// Serializes start/stop transitions without blocking status readers.
+	operationMu sync.Mutex
 
 	pipeline   gst.Pipeline
 	pipelineMu sync.Mutex
@@ -75,25 +77,36 @@ func (manager *BroacastManagerCtx) shutdown() {
 }
 
 func (manager *BroacastManagerCtx) Start(url string) error {
-	manager.mu.Lock()
-	defer manager.mu.Unlock()
+	manager.operationMu.Lock()
+	defer manager.operationMu.Unlock()
 
+	manager.mu.Lock()
 	manager.url = url
+	manager.mu.Unlock()
 
 	err := manager.createPipeline()
 	if err != nil {
 		return err
 	}
 
+	manager.mu.Lock()
 	manager.started = true
+	manager.mu.Unlock()
 	return nil
 }
 
 func (manager *BroacastManagerCtx) Stop() {
-	manager.mu.Lock()
-	defer manager.mu.Unlock()
+	manager.operationMu.Lock()
+	defer manager.operationMu.Unlock()
 
+	manager.mu.Lock()
 	manager.started = false
+	manager.mu.Unlock()
+
+	// Pipeline destruction can block while GStreamer tears down the external
+	// broadcast process. Do not hold the status lock during that operation: a
+	// new session queries the broadcast status while completing its websocket
+	// handshake, and should not wait for cleanup to finish.
 	manager.destroyPipeline()
 }
 

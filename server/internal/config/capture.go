@@ -1,36 +1,38 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"strings"
 
-	"github.com/pion/webrtc/v4"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"github.com/m1k1o/neko/server/internal/quality"
+	"github.com/m1k1o/neko/server/pkg/gst"
 	"github.com/m1k1o/neko/server/pkg/types"
 	"github.com/m1k1o/neko/server/pkg/types/codec"
 	"github.com/m1k1o/neko/server/pkg/utils"
 )
 
-// Legacy capture configuration
-type HwEnc int
-
-// Legacy capture configuration
-const (
-	HwEncUnset HwEnc = iota
-	HwEncNone
-	HwEncVAAPI
-	HwEncNVENC
-)
-
 type Capture struct {
 	Display string
 
-	VideoCodec       codec.RTPCodec
-	VideoIDs         []string
-	VideoPipelines   map[string]types.VideoConfig
+	VideoCodec     codec.RTPCodec
+	VideoProfile   quality.Name
+	VideoEncoder   quality.Encoder
+	VideoAdaptive  bool
+	VideoIDs       []string
+	VideoPipelines map[string]types.VideoConfig
+	// VideoPipelineFallbacks contains same-codec candidates for profile
+	// pipelines that may fail when a hardware device is initialized at runtime.
+	VideoPipelineFallbacks map[string][]types.VideoConfig
+	// VideoVariants contains lazily-created codec variants used by WebRTC
+	// capability negotiation. The primary variant is mirrored by the legacy
+	// Video* fields above; additional variants are software compatibility
+	// encoders generated for the selected Chromium M1 profile.
+	VideoVariants    map[string]VideoVariant
 	VideoShowPointer bool
 
 	AudioDevice   string
@@ -58,6 +60,13 @@ type Capture struct {
 	MicrophoneDevice  string
 }
 
+type VideoVariant struct {
+	Codec             codec.RTPCodec
+	IDs               []string
+	Pipelines         map[string]types.VideoConfig
+	PipelineFallbacks map[string][]types.VideoConfig
+}
+
 func (Capture) Init(cmd *cobra.Command) error {
 	// audio
 	cmd.PersistentFlags().String("capture.audio.device", "audio_output.monitor", "pulseaudio device to capture")
@@ -83,6 +92,19 @@ func (Capture) Init(cmd *cobra.Command) error {
 
 	cmd.PersistentFlags().String("capture.video.codec", "vp8", "video codec to be used")
 	if err := viper.BindPFlag("capture.video.codec", cmd.PersistentFlags().Lookup("capture.video.codec")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().String("capture.video.profile", "", "optional Chromium M1 quality profile (low, balanced, high; VP8/H.264/H.265/AV1)")
+	if err := viper.BindPFlag("capture.video.profile", cmd.PersistentFlags().Lookup("capture.video.profile")); err != nil {
+		return err
+	}
+	cmd.PersistentFlags().String("capture.video.encoder", "auto", "Chromium M1 profile encoder (auto, software, vaapi, nvenc)")
+	if err := viper.BindPFlag("capture.video.encoder", cmd.PersistentFlags().Lookup("capture.video.encoder")); err != nil {
+		return err
+	}
+	cmd.PersistentFlags().Bool("capture.video.adaptive", false, "build a Chromium M1 quality ladder for bandwidth adaptation")
+	if err := viper.BindPFlag("capture.video.adaptive", cmd.PersistentFlags().Lookup("capture.video.adaptive")); err != nil {
 		return err
 	}
 
@@ -196,132 +218,6 @@ func (Capture) Init(cmd *cobra.Command) error {
 	return nil
 }
 
-func (Capture) InitV2(cmd *cobra.Command) error {
-	cmd.PersistentFlags().String("display", "", "V2: XDisplay to capture")
-	if err := viper.BindPFlag("display", cmd.PersistentFlags().Lookup("display")); err != nil {
-		return err
-	}
-
-	cmd.PersistentFlags().String("video_codec", "", "V2: video codec to be used")
-	if err := viper.BindPFlag("video_codec", cmd.PersistentFlags().Lookup("video_codec")); err != nil {
-		return err
-	}
-
-	// DEPRECATED: video codec
-	cmd.PersistentFlags().Bool("vp8", false, "V2 DEPRECATED: use video_codec")
-	if err := viper.BindPFlag("vp8", cmd.PersistentFlags().Lookup("vp8")); err != nil {
-		return err
-	}
-
-	// DEPRECATED: video codec
-	cmd.PersistentFlags().Bool("vp9", false, "V2 DEPRECATED: use video_codec")
-	if err := viper.BindPFlag("vp9", cmd.PersistentFlags().Lookup("vp9")); err != nil {
-		return err
-	}
-
-	// DEPRECATED: video codec
-	cmd.PersistentFlags().Bool("av1", false, "V2 DEPRECATED: use video_codec")
-	if err := viper.BindPFlag("av1", cmd.PersistentFlags().Lookup("av1")); err != nil {
-		return err
-	}
-
-	// DEPRECATED: video codec
-	cmd.PersistentFlags().Bool("h264", false, "V2 DEPRECATED: use video_codec")
-	if err := viper.BindPFlag("h264", cmd.PersistentFlags().Lookup("h264")); err != nil {
-		return err
-	}
-
-	cmd.PersistentFlags().String("hwenc", "", "V2: use hardware accelerated encoding")
-	if err := viper.BindPFlag("hwenc", cmd.PersistentFlags().Lookup("hwenc")); err != nil {
-		return err
-	}
-
-	cmd.PersistentFlags().Int("video_bitrate", 0, "V2: video bitrate in kbit/s")
-	if err := viper.BindPFlag("video_bitrate", cmd.PersistentFlags().Lookup("video_bitrate")); err != nil {
-		return err
-	}
-
-	cmd.PersistentFlags().Int("max_fps", 0, "V2: maximum fps delivered via WebRTC, 0 is for no maximum")
-	if err := viper.BindPFlag("max_fps", cmd.PersistentFlags().Lookup("max_fps")); err != nil {
-		return err
-	}
-
-	cmd.PersistentFlags().String("video", "", "V2: video codec parameters to use for streaming")
-	if err := viper.BindPFlag("video", cmd.PersistentFlags().Lookup("video")); err != nil {
-		return err
-	}
-
-	//
-	// audio
-	//
-
-	cmd.PersistentFlags().String("device", "", "V2: audio device to capture")
-	if err := viper.BindPFlag("device", cmd.PersistentFlags().Lookup("device")); err != nil {
-		return err
-	}
-
-	cmd.PersistentFlags().String("audio_codec", "", "V2: audio codec to be used")
-	if err := viper.BindPFlag("audio_codec", cmd.PersistentFlags().Lookup("audio_codec")); err != nil {
-		return err
-	}
-
-	// DEPRECATED: audio codec
-	cmd.PersistentFlags().Bool("opus", false, "V2 DEPRECATED: use audio_codec")
-	if err := viper.BindPFlag("opus", cmd.PersistentFlags().Lookup("opus")); err != nil {
-		return err
-	}
-
-	// DEPRECATED: audio codec
-	cmd.PersistentFlags().Bool("g722", false, "V2 DEPRECATED: use audio_codec")
-	if err := viper.BindPFlag("g722", cmd.PersistentFlags().Lookup("g722")); err != nil {
-		return err
-	}
-
-	// DEPRECATED: audio codec
-	cmd.PersistentFlags().Bool("pcmu", false, "V2 DEPRECATED: use audio_codec")
-	if err := viper.BindPFlag("pcmu", cmd.PersistentFlags().Lookup("pcmu")); err != nil {
-		return err
-	}
-
-	// DEPRECATED: audio codec
-	cmd.PersistentFlags().Bool("pcma", false, "V2 DEPRECATED: use audio_codec")
-	if err := viper.BindPFlag("pcma", cmd.PersistentFlags().Lookup("pcma")); err != nil {
-		return err
-	}
-	// audio codecs
-
-	cmd.PersistentFlags().Int("audio_bitrate", 0, "V2: audio bitrate in kbit/s")
-	if err := viper.BindPFlag("audio_bitrate", cmd.PersistentFlags().Lookup("audio_bitrate")); err != nil {
-		return err
-	}
-
-	cmd.PersistentFlags().String("audio", "", "V2: audio codec parameters to use for streaming")
-	if err := viper.BindPFlag("audio", cmd.PersistentFlags().Lookup("audio")); err != nil {
-		return err
-	}
-
-	//
-	// broadcast
-	//
-
-	cmd.PersistentFlags().String("broadcast_pipeline", "", "V2: custom gst pipeline used for broadcasting, strings {hostname} {url} {device} {display} will be replaced")
-	if err := viper.BindPFlag("broadcast_pipeline", cmd.PersistentFlags().Lookup("broadcast_pipeline")); err != nil {
-		return err
-	}
-
-	cmd.PersistentFlags().String("broadcast_url", "", "V2: a default default URL for broadcast streams, can be disabled/changed later by admins in the GUI")
-	if err := viper.BindPFlag("broadcast_url", cmd.PersistentFlags().Lookup("broadcast_url")); err != nil {
-		return err
-	}
-
-	cmd.PersistentFlags().Bool("broadcast_autostart", false, "V2: automatically start broadcasting when neko starts and broadcast_url is set")
-	if err := viper.BindPFlag("broadcast_autostart", cmd.PersistentFlags().Lookup("broadcast_autostart")); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (s *Capture) Set() {
 	var ok bool
 
@@ -362,14 +258,7 @@ func (s *Capture) Set() {
 			}
 			s.VideoIDs = []string{"main"}
 
-			if viper.GetBool("legacy") {
-				legacyPipeline := s.VideoPipelines["main"]
-				// Hacky way to enable pointer for legacy pipeline.
-				legacyPipeline.GstPipeline = strings.Replace(legacyPipeline.GstPipeline, "show-pointer=false", "show-pointer=true", 1)
-				s.VideoPipelines["legacy"] = legacyPipeline
-				// we do not add legacy to VideoIDs so that its ignored by bandwidth estimator
-			}
-		} else {
+		} else if strings.TrimSpace(viper.GetString("capture.video.profile")) == "" {
 			log.Warn().Msgf("no video pipelines specified, using default")
 
 			s.VideoCodec = codec.VP8()
@@ -396,18 +285,13 @@ func (s *Capture) Set() {
 			}
 			s.VideoIDs = []string{"main"}
 
-			if viper.GetBool("legacy") {
-				legacyPipeline := s.VideoPipelines["main"]
-				legacyPipeline.ShowPointer = true
-				s.VideoPipelines["legacy"] = legacyPipeline
-				// we do not add legacy to VideoIDs so that its ignored by bandwidth estimator
-			}
 		}
 	} else if videoPipeline != "" {
 		log.Warn().Msg("you are setting both single video pipeline and multiple video pipelines, ignoring single video pipeline")
 	}
 
 	s.VideoShowPointer = viper.GetBool("capture.video.show_pointer")
+	s.VideoAdaptive = viper.GetBool("capture.video.adaptive")
 	if viper.IsSet("capture.video.show_pointer") {
 		for k, p := range s.VideoPipelines {
 			p.ShowPointer = s.VideoShowPointer
@@ -451,192 +335,172 @@ func (s *Capture) Set() {
 	s.MicrophoneDevice = viper.GetString("capture.microphone.device")
 }
 
-func (s *Capture) SetV2() {
-	enableLegacy := false
+// ApplyVideoProfile applies an explicitly selected Chromium M1 quality
+// profile after explicit configuration has been processed. Existing
+// defaults and custom pipelines remain untouched when no profile is selected.
+func (s *Capture) ApplyVideoProfile() error {
+	return s.applyVideoProfileWithRuntime(gst.CheckElement, func(videoCodec codec.RTPCodec, _ quality.Encoder, element string) error {
+		return gst.ProbeEncoder(videoCodec, element)
+	})
+}
 
-	var ok bool
+func (s *Capture) applyVideoProfile(probe quality.ElementProbe) error {
+	return s.applyVideoProfileWithRuntime(probe, nil)
+}
 
-	//
-	// video
-	//
-
-	if display := viper.GetString("display"); display != "" {
-		s.Display = display
-		log.Warn().Msg("you are using v2 configuration 'NEKO_DISPLAY' which is deprecated, please use 'NEKO_CAPTURE_VIDEO_DISPLAY' and/or 'NEKO_DESKTOP_DISPLAY' instead, also consider using 'DISPLAY' env variable if both should be the same")
-		enableLegacy = true
-	}
-
-	modifiedVideoCodec := false
-	if videoCodec := viper.GetString("video_codec"); videoCodec != "" {
-		s.VideoCodec, ok = codec.ParseStr(videoCodec)
-		if !ok || s.VideoCodec.Type != webrtc.RTPCodecTypeVideo {
-			log.Warn().Str("codec", videoCodec).Msgf("unknown video codec, using Vp8")
-			s.VideoCodec = codec.VP8()
+func (s *Capture) applyVideoProfileWithRuntime(probe quality.ElementProbe, runtimeProbe quality.RuntimeProbe) error {
+	value := strings.ToLower(strings.TrimSpace(viper.GetString("capture.video.profile")))
+	if value == "" {
+		if viper.IsSet("capture.video.encoder") {
+			return fmt.Errorf("capture.video.encoder requires capture.video.profile")
 		}
-		log.Warn().Msg("you are using v2 configuration 'NEKO_VIDEO_CODEC' which is deprecated, please use 'NEKO_CAPTURE_VIDEO_CODEC' instead")
-		enableLegacy = true
-		modifiedVideoCodec = true
+		return nil
 	}
 
-	if viper.GetBool("vp8") {
-		s.VideoCodec = codec.VP8()
-		log.Warn().Msg("you are using deprecated config setting 'NEKO_VP8=true', use 'NEKO_CAPTURE_VIDEO_CODEC=vp8' instead")
-		enableLegacy = true
-		modifiedVideoCodec = true
-	} else if viper.GetBool("vp9") {
-		s.VideoCodec = codec.VP9()
-		log.Warn().Msg("you are using deprecated config setting 'NEKO_VP9=true', use 'NEKO_CAPTURE_VIDEO_CODEC=vp9' instead")
-		enableLegacy = true
-		modifiedVideoCodec = true
-	} else if viper.GetBool("h264") {
-		s.VideoCodec = codec.H264()
-		log.Warn().Msg("you are using deprecated config setting 'NEKO_H264=true', use 'NEKO_CAPTURE_VIDEO_CODEC=h264' instead")
-		enableLegacy = true
-		modifiedVideoCodec = true
-	} else if viper.GetBool("av1") {
-		s.VideoCodec = codec.AV1()
-		log.Warn().Msg("you are using deprecated config setting 'NEKO_AV1=true', use 'NEKO_CAPTURE_VIDEO_CODEC=av1' instead")
-		enableLegacy = true
-		modifiedVideoCodec = true
+	conflictingKeys := []string{
+		"capture.video.ids",
+		"capture.video.pipeline",
+		"capture.video.pipelines",
+		"video",
+		"video_bitrate",
+		"max_fps",
+		"hwenc",
+		"video_codec",
+		"vp8",
+		"vp9",
+		"h264",
+		"av1",
 	}
-
-	videoHWEnc := HwEncUnset
-	if hwenc := strings.ToLower(viper.GetString("hwenc")); hwenc != "" {
-		switch hwenc {
-		case "none":
-			videoHWEnc = HwEncNone
-		case "vaapi":
-			videoHWEnc = HwEncVAAPI
-		case "nvenc":
-			videoHWEnc = HwEncNVENC
-		default:
-			log.Warn().Str("hwenc", hwenc).Msgf("unknown video hw encoder, using CPU")
+	for _, key := range conflictingKeys {
+		if viper.IsSet(key) {
+			return fmt.Errorf("capture.video.profile cannot be combined with %s", key)
 		}
 	}
 
-	videoBitrate := viper.GetUint("video_bitrate")
-	videoMaxFPS := int16(viper.GetInt("max_fps"))
-	videoPipeline := viper.GetString("video")
+	profile, err := quality.Parse(value)
+	if err != nil {
+		return err
+	}
+	requestedEncoder, err := quality.ParseEncoder(viper.GetString("capture.video.encoder"))
+	if err != nil {
+		return err
+	}
+	selection, err := quality.ResolveEncoderWithRuntime(s.VideoCodec, requestedEncoder, probe, runtimeProbe)
+	if err != nil {
+		return err
+	}
 
-	// video pipeline
-	if modifiedVideoCodec || videoHWEnc != HwEncUnset || videoBitrate != 0 || videoMaxFPS != 0 || videoPipeline != "" {
-		// Do not override pipelines already configured via V3 settings.
-		if viper.IsSet("capture.video.pipeline") || viper.IsSet("capture.video.pipelines") {
-			log.Warn().Msg("ignoring legacy video pipeline settings (NEKO_HWENC/NEKO_VIDEO_BITRATE/NEKO_MAX_FPS) because NEKO_CAPTURE_VIDEO_PIPELINE or NEKO_CAPTURE_VIDEO_PIPELINES is already set")
-		} else {
-			pipeline, err := NewVideoPipeline(s.VideoCodec, s.Display, videoPipeline, videoMaxFPS, videoBitrate, videoHWEnc)
-			if err != nil {
-				log.Warn().Err(err).Msg("unable to create video pipeline, using default")
-			} else {
-				s.VideoPipelines = map[string]types.VideoConfig{
-					"main": {
-						// Hacky way to disable pointer.
-						GstPipeline: strings.Replace(pipeline, "show-pointer=true", "show-pointer=false", 1),
-					},
-					"legacy": {
-						GstPipeline: pipeline,
-					},
-				}
-				// we do not add legacy to VideoIDs so that its ignored by bandwidth estimator
-				s.VideoIDs = []string{"main"}
+	// Keep a same-codec software candidate for a hardware pipeline that
+	// passes discovery but fails when the real desktop pipeline is started.
+	// Resolve it through the same codec matrix so AV1/H.265 do not inherit a
+	// hard-coded H.264 fallback.
+	var sameCodecFallback *quality.EncoderSelection
+	if selection.Encoder != quality.EncoderSoftware {
+		fallback, fallbackErr := quality.ResolveEncoder(selection.Codec, quality.EncoderSoftware, probe)
+		if fallbackErr == nil && fallback.Codec.Name == selection.Codec.Name && fallback.Encoder == quality.EncoderSoftware {
+			sameCodecFallback = &fallback
+		}
+	}
+	s.VideoProfile = profile.Name
+	s.VideoEncoder = selection.Encoder
+	s.VideoCodec = selection.Codec
+	s.VideoAdaptive = viper.GetBool("capture.video.adaptive")
+	s.VideoIDs = []string{"main"}
+	s.VideoPipelineFallbacks = make(map[string][]types.VideoConfig)
+	profiles := []quality.Profile{profile}
+	ids := []string{"main"}
+	if s.VideoAdaptive {
+		profiles = profiles[:0]
+		ids = ids[:0]
+		for _, name := range []quality.Name{quality.Low, quality.Balanced, quality.High} {
+			tier, parseErr := quality.Parse(string(name))
+			if parseErr != nil {
+				return parseErr
+			}
+			profiles = append(profiles, tier)
+			ids = append(ids, string(name))
+			if name == profile.Name {
+				break
 			}
 		}
+	}
+	variant, err := buildVideoVariant(profiles, ids, selection, sameCodecFallback, s.VideoShowPointer)
+	if err != nil {
+		return err
+	}
+	s.VideoIDs = variant.IDs
+	s.VideoPipelines = variant.Pipelines
+	s.VideoPipelineFallbacks = variant.PipelineFallbacks
+	s.VideoVariants = map[string]VideoVariant{variant.Codec.Name: variant}
 
-		if videoPipeline != "" {
-			log.Warn().Msg("you are using v2 configuration 'NEKO_VIDEO' which is deprecated, please use 'NEKO_CAPTURE_VIDEO_PIPELINE' instead")
+	// H.264 and VP8 are the compatibility floor for Chromium receivers. Build
+	// them as independent lazy pipelines so a H.265/AV1-capable server can
+	// select a decoder-compatible stream before SDP negotiation starts.
+	for _, fallbackCodec := range []codec.RTPCodec{codec.H264(), codec.VP8()} {
+		if fallbackCodec.Name == selection.Codec.Name {
+			continue
 		}
 
-		// TODO: add deprecated warning and proper alternative for HW enc, bitrate and max fps
-		enableLegacy = true
-	}
-
-	//
-	// audio
-	//
-
-	if audioDevice := viper.GetString("device"); audioDevice != "" {
-		s.AudioDevice = audioDevice
-		log.Warn().Msg("you are using v2 configuration 'NEKO_DEVICE' which is deprecated, please use 'NEKO_CAPTURE_AUDIO_DEVICE' instead")
-		enableLegacy = true
-	}
-
-	modifiedAudioCodec := false
-	if audioCodec := viper.GetString("audio_codec"); audioCodec != "" {
-		s.AudioCodec, ok = codec.ParseStr(audioCodec)
-		if !ok || s.AudioCodec.Type != webrtc.RTPCodecTypeAudio {
-			log.Warn().Str("codec", audioCodec).Msgf("unknown audio codec, using Opus")
-			s.AudioCodec = codec.Opus()
-		}
-		log.Warn().Msg("you are using v2 configuration 'NEKO_AUDIO_CODEC' which is deprecated, please use 'NEKO_CAPTURE_AUDIO_CODEC' instead")
-		enableLegacy = true
-		modifiedAudioCodec = true
-	}
-
-	if viper.GetBool("opus") {
-		s.AudioCodec = codec.Opus()
-		log.Warn().Msg("you are using deprecated config setting 'NEKO_OPUS=true', use 'NEKO_CAPTURE_AUDIO_CODEC=opus' instead")
-		enableLegacy = true
-		modifiedAudioCodec = true
-	} else if viper.GetBool("g722") {
-		s.AudioCodec = codec.G722()
-		log.Warn().Msg("you are using deprecated config setting 'NEKO_G722=true', use 'NEKO_CAPTURE_AUDIO_CODEC=g722' instead")
-		enableLegacy = true
-		modifiedAudioCodec = true
-	} else if viper.GetBool("pcmu") {
-		s.AudioCodec = codec.PCMU()
-		log.Warn().Msg("you are using deprecated config setting 'NEKO_PCMU=true', use 'NEKO_CAPTURE_AUDIO_CODEC=pcmu' instead")
-		enableLegacy = true
-		modifiedAudioCodec = true
-	} else if viper.GetBool("pcma") {
-		s.AudioCodec = codec.PCMA()
-		log.Warn().Msg("you are using deprecated config setting 'NEKO_PCMA=true', use 'NEKO_CAPTURE_AUDIO_CODEC=pcma' instead")
-		enableLegacy = true
-		modifiedAudioCodec = true
-	}
-
-	audioBitrate := viper.GetUint("audio_bitrate")
-	audioPipeline := viper.GetString("audio")
-
-	// audio pipeline
-	if modifiedAudioCodec || audioBitrate != 0 || audioPipeline != "" {
-		pipeline, err := NewAudioPipeline(s.AudioCodec, s.AudioDevice, audioPipeline, audioBitrate)
-		if err != nil {
-			log.Warn().Err(err).Msg("unable to create audio pipeline, using default")
-		} else {
-			s.AudioPipeline = pipeline
+		fallbackSelection, fallbackErr := quality.ResolveEncoder(fallbackCodec, quality.EncoderSoftware, probe)
+		if fallbackErr != nil || fallbackSelection.Codec.Name != fallbackCodec.Name {
+			log.Warn().
+				Str("codec", fallbackCodec.Name).
+				Err(fallbackErr).
+				Msg("video capability fallback variant unavailable")
+			continue
 		}
 
-		if audioPipeline != "" {
-			log.Warn().Msg("you are using v2 configuration 'NEKO_AUDIO' which is deprecated, please use 'NEKO_CAPTURE_AUDIO_PIPELINE' instead")
+		fallbackVariant, variantErr := buildVideoVariant(profiles, ids, fallbackSelection, nil, s.VideoShowPointer)
+		if variantErr != nil {
+			log.Warn().Err(variantErr).Str("codec", fallbackCodec.Name).Msg("video capability fallback variant unavailable")
+			continue
 		}
+		s.VideoVariants[fallbackVariant.Codec.Name] = fallbackVariant
+	}
+	if len(selection.Unavailable) > 0 {
+		log.Warn().
+			Str("requested", string(selection.Requested)).
+			Str("selected", string(selection.Encoder)).
+			Str("codec", selection.Codec.Name).
+			Strs("unavailable_elements", selection.Unavailable).
+			Msg("video encoder capability fallback applied")
+	}
+	log.Info().
+		Str("profile", string(profile.Name)).
+		Str("codec", selection.Codec.Name).
+		Str("encoder", string(selection.Encoder)).
+		Str("element", selection.Element).
+		Bool("adaptive", s.VideoAdaptive).
+		Int("width", profile.Width).
+		Int("height", profile.Height).
+		Int("fps", profile.FPS).
+		Int("bitrate_kbps", profile.BitrateKbps).
+		Msg("using explicit video quality profile")
+	return nil
+}
 
-		// TODO: add deprecated warning and proper alternative for audio bitrate
-		enableLegacy = true
+func buildVideoVariant(profiles []quality.Profile, ids []string, selection quality.EncoderSelection, sameCodecFallback *quality.EncoderSelection, showPointer bool) (VideoVariant, error) {
+	variant := VideoVariant{
+		Codec:             selection.Codec,
+		IDs:               append([]string(nil), ids...),
+		Pipelines:         make(map[string]types.VideoConfig, len(profiles)),
+		PipelineFallbacks: make(map[string][]types.VideoConfig, len(profiles)),
 	}
 
-	//
-	// broadcast
-	//
-
-	if viper.IsSet("broadcast_pipeline") {
-		s.BroadcastPipeline = viper.GetString("broadcast_pipeline")
-		log.Warn().Msg("you are using v2 configuration 'NEKO_BROADCAST_PIPELINE' which is deprecated, please use 'NEKO_CAPTURE_BROADCAST_PIPELINE' instead")
-		enableLegacy = true
-	}
-	if viper.IsSet("broadcast_url") {
-		s.BroadcastUrl = viper.GetString("broadcast_url")
-		log.Warn().Msg("you are using v2 configuration 'NEKO_BROADCAST_URL' which is deprecated, please use 'NEKO_CAPTURE_BROADCAST_URL' instead")
-		enableLegacy = true
-	}
-	if viper.IsSet("broadcast_autostart") {
-		s.BroadcastAutostart = viper.GetBool("broadcast_autostart")
-		log.Warn().Msg("you are using v2 configuration 'NEKO_BROADCAST_AUTOSTART' which is deprecated, please use 'NEKO_CAPTURE_BROADCAST_AUTOSTART' instead")
-		enableLegacy = true
+	for index, tier := range profiles {
+		videoConfig, configErr := tier.VideoConfig(selection.Codec, selection.Encoder, selection.Element, showPointer)
+		if configErr != nil {
+			return VideoVariant{}, configErr
+		}
+		id := ids[index]
+		variant.Pipelines[id] = videoConfig
+		if sameCodecFallback != nil {
+			softwareConfig, fallbackErr := tier.VideoConfig(sameCodecFallback.Codec, sameCodecFallback.Encoder, sameCodecFallback.Element, showPointer)
+			if fallbackErr == nil {
+				variant.PipelineFallbacks[id] = []types.VideoConfig{softwareConfig}
+			}
+		}
 	}
 
-	// set legacy flag if any V2 configuration was used
-	if !viper.IsSet("legacy") && enableLegacy {
-		log.Warn().Msg("legacy configuration is enabled because at least one V2 configuration was used, please migrate to V3 configuration, visit https://neko.m1k1o.net/docs/v3/migration-from-v2 for more details")
-		viper.Set("legacy", true)
-	}
+	return variant, nil
 }

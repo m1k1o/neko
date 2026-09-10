@@ -1,7 +1,7 @@
 package config
 
 import (
-	"encoding/json"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
+	"github.com/m1k1o/neko/server/internal/connectivity"
 	"github.com/m1k1o/neko/server/pkg/types"
 	"github.com/m1k1o/neko/server/pkg/utils"
 )
@@ -51,6 +52,7 @@ type WebRTC struct {
 
 	NAT1To1IPs     []string
 	IpRetrievalUrl string
+	Connectivity   connectivity.Mode
 
 	Estimator WebRTCEstimator
 }
@@ -104,6 +106,11 @@ func (WebRTC) Init(cmd *cobra.Command) error {
 
 	cmd.PersistentFlags().String("webrtc.ip_retrieval_url", "https://checkip.amazonaws.com", "URL address used for retrieval of the external IP address")
 	if err := viper.BindPFlag("webrtc.ip_retrieval_url", cmd.PersistentFlags().Lookup("webrtc.ip_retrieval_url")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().String("webrtc.connectivity.mode", "", "optional connectivity mode (direct or frp)")
+	if err := viper.BindPFlag("webrtc.connectivity.mode", cmd.PersistentFlags().Lookup("webrtc.connectivity.mode")); err != nil {
 		return err
 	}
 
@@ -167,50 +174,6 @@ func (WebRTC) Init(cmd *cobra.Command) error {
 	return nil
 }
 
-func (WebRTC) InitV2(cmd *cobra.Command) error {
-	cmd.PersistentFlags().String("epr", "", "V2: limits the pool of ephemeral ports that ICE UDP connections can allocate from")
-	if err := viper.BindPFlag("epr", cmd.PersistentFlags().Lookup("epr")); err != nil {
-		return err
-	}
-
-	cmd.PersistentFlags().StringSlice("nat1to1", []string{}, "V2: sets a list of external IP addresses of 1:1 (D)NAT and a candidate type for which the external IP address is used")
-	if err := viper.BindPFlag("nat1to1", cmd.PersistentFlags().Lookup("nat1to1")); err != nil {
-		return err
-	}
-
-	cmd.PersistentFlags().Int("tcpmux", 0, "V2: single TCP mux port for all peers")
-	if err := viper.BindPFlag("tcpmux", cmd.PersistentFlags().Lookup("tcpmux")); err != nil {
-		return err
-	}
-
-	cmd.PersistentFlags().Int("udpmux", 0, "V2: single UDP mux port for all peers")
-	if err := viper.BindPFlag("udpmux", cmd.PersistentFlags().Lookup("udpmux")); err != nil {
-		return err
-	}
-
-	cmd.PersistentFlags().String("ipfetch", "", "V2: automatically fetch IP address from given URL when nat1to1 is not present")
-	if err := viper.BindPFlag("ipfetch", cmd.PersistentFlags().Lookup("ipfetch")); err != nil {
-		return err
-	}
-
-	cmd.PersistentFlags().Bool("icelite", false, "V2: configures whether or not the ice agent should be a lite agent")
-	if err := viper.BindPFlag("icelite", cmd.PersistentFlags().Lookup("icelite")); err != nil {
-		return err
-	}
-
-	cmd.PersistentFlags().StringSlice("iceserver", []string{}, "V2: describes a single STUN and TURN server that can be used by the ICEAgent to establish a connection with a peer")
-	if err := viper.BindPFlag("iceserver", cmd.PersistentFlags().Lookup("iceserver")); err != nil {
-		return err
-	}
-
-	cmd.PersistentFlags().String("iceservers", "", "V2: describes a single STUN and TURN server that can be used by the ICEAgent to establish a connection with a peer")
-	if err := viper.BindPFlag("iceservers", cmd.PersistentFlags().Lookup("iceservers")); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (s *WebRTC) Set() {
 	s.ICELite = viper.GetBool("webrtc.icelite")
 	s.ICETrickle = viper.GetBool("webrtc.icetrickle")
@@ -259,25 +222,12 @@ func (s *WebRTC) Set() {
 
 	epr := viper.GetString("webrtc.epr")
 	if epr != "" {
-		ports := strings.SplitN(epr, "-", -1)
-		if len(ports) > 1 {
-			min, err := strconv.ParseUint(ports[0], 10, 16)
-			if err != nil {
-				log.Panic().Err(err).Msgf("unable to parse ephemeral min port")
-			}
-
-			max, err := strconv.ParseUint(ports[1], 10, 16)
-			if err != nil {
-				log.Panic().Err(err).Msgf("unable to parse ephemeral max port")
-			}
-
-			s.EphemeralMin = uint16(min)
-			s.EphemeralMax = uint16(max)
+		min, max, err := parseEphemeralPortRange(epr)
+		if err != nil {
+			log.Panic().Err(err).Msg("unable to parse ephemeral port range")
 		}
-
-		if s.EphemeralMin > s.EphemeralMax {
-			log.Panic().Msgf("ephemeral min port cannot be bigger than max")
-		}
+		s.EphemeralMin = min
+		s.EphemeralMax = max
 	}
 
 	if epr == "" && s.TCPMux == 0 && s.UDPMux == 0 {
@@ -302,6 +252,11 @@ func (s *WebRTC) Set() {
 		}
 	}
 
+	s.Connectivity = connectivity.Mode(viper.GetString("webrtc.connectivity.mode"))
+	if err := s.validateConnectivity(epr); err != nil {
+		log.Panic().Err(err).Msg("invalid WebRTC connectivity configuration")
+	}
+
 	// bandwidth estimator
 
 	s.Estimator.Enabled = viper.GetBool("webrtc.estimator.enabled")
@@ -317,99 +272,74 @@ func (s *WebRTC) Set() {
 	s.Estimator.DiffThreshold = viper.GetFloat64("webrtc.estimator.diff_threshold")
 }
 
-func (s *WebRTC) SetV2() {
-	enableLegacy := false
-
-	if viper.IsSet("nat1to1") {
-		s.NAT1To1IPs = viper.GetStringSlice("nat1to1")
-		log.Warn().Msg("you are using v2 configuration 'NEKO_NAT1TO1' which is deprecated, please use 'NEKO_WEBRTC_NAT1TO1' instead")
-		enableLegacy = true
-	}
-	if viper.IsSet("tcpmux") {
-		s.TCPMux = viper.GetInt("tcpmux")
-		log.Warn().Msg("you are using v2 configuration 'NEKO_TCPMUX' which is deprecated, please use 'NEKO_WEBRTC_TCPMUX' instead")
-		enableLegacy = true
-	}
-	if viper.IsSet("udpmux") {
-		s.UDPMux = viper.GetInt("udpmux")
-		log.Warn().Msg("you are using v2 configuration 'NEKO_UDPMUX' which is deprecated, please use 'NEKO_WEBRTC_UDPMUX' instead")
-		enableLegacy = true
-	}
-	if viper.IsSet("icelite") {
-		s.ICELite = viper.GetBool("icelite")
-		log.Warn().Msg("you are using v2 configuration 'NEKO_ICELITE' which is deprecated, please use 'NEKO_WEBRTC_ICELITE' instead")
-		enableLegacy = true
+func (s WebRTC) validateConnectivity(epr string) error {
+	if epr != "" && (s.TCPMux != 0 || s.UDPMux != 0) {
+		return fmt.Errorf("webrtc.epr cannot be combined with TCP or UDP mux ports")
 	}
 
-	if viper.IsSet("iceservers") {
-		iceServers := []types.ICEServer{}
-		iceServersJson := viper.GetString("iceservers")
-		if iceServersJson != "" {
-			err := json.Unmarshal([]byte(iceServersJson), &iceServers)
-			if err != nil {
-				log.Panic().Err(err).Msg("failed to process iceservers")
-			}
+	if s.Connectivity == "" {
+		return nil
+	}
+
+	if s.Connectivity == connectivity.ModeFRP {
+		if epr != "" {
+			return fmt.Errorf("frp connectivity mode cannot be combined with webrtc.epr")
 		}
-		s.ICEServersFrontend = iceServers
-		s.ICEServersBackend = iceServers
-		log.Warn().Msg("you are using v2 configuration 'NEKO_ICESERVERS' which is deprecated, please use 'NEKO_WEBRTC_ICESERVERS_FRONTEND' and/or 'NEKO_WEBRTC_ICESERVERS_BACKEND' instead")
-		enableLegacy = true
-	}
-
-	if viper.IsSet("iceserver") {
-		iceServerSlice := viper.GetStringSlice("iceserver")
-		if len(iceServerSlice) > 0 {
-			s.ICEServersFrontend = append(s.ICEServersFrontend, types.ICEServer{URLs: iceServerSlice})
-			s.ICEServersBackend = append(s.ICEServersBackend, types.ICEServer{URLs: iceServerSlice})
+		if !viper.IsSet("webrtc.nat1to1") {
+			return fmt.Errorf("frp connectivity mode requires an explicit webrtc.nat1to1 IP")
 		}
-		log.Warn().Msg("you are using v2 configuration 'NEKO_ICESERVER' which is deprecated, please use 'NEKO_WEBRTC_ICESERVERS_FRONTEND' and/or 'NEKO_WEBRTC_ICESERVERS_BACKEND' instead")
-		enableLegacy = true
-	}
-
-	if viper.IsSet("ipfetch") {
-		if len(s.NAT1To1IPs) == 0 {
-			ipfetch := viper.GetString("ipfetch")
-			ip, err := utils.HttpRequestGET(ipfetch)
-			if err != nil {
-				log.Panic().Err(err).Str("ipfetch", ipfetch).Msg("failed to fetch ip address")
-			}
-			s.NAT1To1IPs = append(s.NAT1To1IPs, ip)
-		}
-		log.Warn().Msg("you are using v2 configuration 'NEKO_IPFETCH' which is deprecated, please use 'NEKO_WEBRTC_IP_RETRIEVAL_URL' instead")
-		enableLegacy = true
-	}
-
-	if viper.IsSet("epr") {
-		min := uint16(59000)
-		max := uint16(59100)
-		epr := viper.GetString("epr")
-		ports := strings.SplitN(epr, "-", -1)
-		if len(ports) > 1 {
-			start, err := strconv.ParseUint(ports[0], 10, 16)
-			if err == nil {
-				min = uint16(start)
-			}
-
-			end, err := strconv.ParseUint(ports[1], 10, 16)
-			if err == nil {
-				max = uint16(end)
-			}
+		if len(s.NAT1To1IPs) != 1 {
+			return fmt.Errorf("frp connectivity mode requires exactly one webrtc.nat1to1 IP")
 		}
 
-		if min > max {
-			s.EphemeralMin = max
-			s.EphemeralMax = min
-		} else {
-			s.EphemeralMin = min
-			s.EphemeralMax = max
-		}
-		log.Warn().Msg("you are using v2 configuration 'NEKO_EPR' which is deprecated, please use 'NEKO_WEBRTC_EPR' instead")
-		enableLegacy = true
+		return connectivity.MediaPortPlan{
+			Mode:       s.Connectivity,
+			UDPMuxPort: s.UDPMux,
+			TCPMuxPort: s.TCPMux,
+			NAT1To1IP:  s.NAT1To1IPs[0],
+		}.Validate()
 	}
 
-	// set legacy flag if any V2 configuration was used
-	if !viper.IsSet("legacy") && enableLegacy {
-		log.Warn().Msg("legacy configuration is enabled because at least one V2 configuration was used, please migrate to V3 configuration, visit https://neko.m1k1o.net/docs/v3/migration-from-v2 for more details")
-		viper.Set("legacy", true)
+	if s.Connectivity == connectivity.ModeDirect {
+		// Existing direct deployments can use EPR without a MUX port. Preserve
+		// that configuration while validating explicit MUX plans when present.
+		if s.UDPMux == 0 && s.TCPMux == 0 {
+			return nil
+		}
+
+		plan := connectivity.MediaPortPlan{
+			Mode:       s.Connectivity,
+			UDPMuxPort: s.UDPMux,
+			TCPMuxPort: s.TCPMux,
+		}
+		if len(s.NAT1To1IPs) == 1 {
+			plan.NAT1To1IP = s.NAT1To1IPs[0]
+		}
+		return plan.Validate()
 	}
+
+	return fmt.Errorf("unsupported connectivity mode %q", s.Connectivity)
+}
+
+func parseEphemeralPortRange(value string) (uint16, uint16, error) {
+	parts := strings.Split(value, "-")
+	if len(parts) != 2 || strings.TrimSpace(parts[0]) == "" || strings.TrimSpace(parts[1]) == "" {
+		return 0, 0, fmt.Errorf("expected <min>-<max>, got %q", value)
+	}
+
+	min, err := strconv.ParseUint(strings.TrimSpace(parts[0]), 10, 32)
+	if err != nil || min == 0 || min > 65535 {
+		return 0, 0, fmt.Errorf("invalid ephemeral minimum port %q", parts[0])
+	}
+
+	max, err := strconv.ParseUint(strings.TrimSpace(parts[1]), 10, 32)
+	if err != nil || max == 0 || max > 65535 {
+		return 0, 0, fmt.Errorf("invalid ephemeral maximum port %q", parts[1])
+	}
+
+	if min > max {
+		return 0, 0, fmt.Errorf("ephemeral min port cannot be bigger than max")
+	}
+
+	return uint16(min), uint16(max), nil
 }

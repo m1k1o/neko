@@ -88,6 +88,14 @@ export const locks = {
 }
 
 export const setting = {
+  avatar: 'Avatar',
+  avatar_upload: 'Nahrať',
+  avatar_remove: 'Odstrániť avatar',
+  avatar_too_large: 'Avatar je príliš veľký',
+  avatar_size_limit: 'Vyberte obrázok menší ako 384 KB.',
+  avatar_upload_failed: 'Nahrávanie avatara zlyhalo',
+  avatar_update_failed: 'Aktualizácia avatara zlyhala',
+  avatar_try_again: 'Skúste to znova.',
   scroll: 'Citlivosť kolieska myši',
   scroll_invert: 'Invertovať koliesko myši',
   autoplay: 'Automatické prehrávanie videa',
@@ -99,6 +107,7 @@ export const setting = {
 
 export const connection = {
   logged_out: 'Boli ste odhlásený/á',
+  connecting: 'Pripájanie...',
   reconnecting: 'Obnova spojenia...',
   connected: 'Úspešne pripojený/á',
   disconnected: 'Boli ste odpojený/á',

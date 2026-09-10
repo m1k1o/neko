@@ -1,74 +1,81 @@
-import {
-  EVENT,
-  WebSocketEvents,
-  SystemEvents,
-  ControlEvents,
-  MemberEvents,
-  SignalEvents,
-  ChatEvents,
-  ScreenEvents,
-  AdminEvents,
-  FileTransferEvents,
-} from './events'
-import { FileListItem, Member, ScreenConfigurations, ScreenResolution } from './types'
-
-export type WebSocketMessages =
-  | WebSocketMessage
-  | SignalProvideMessage
-  | SignalOfferMessage
-  | SignalAnswerMessage
-  | SignalCandidateMessage
-  | MemberListMessage
-  | MemberConnectMessage
-  | MemberDisconnectMessage
-  | ControlMessage
-  | ScreenResolutionMessage
-  | ScreenConfigurationsMessage
-  | ChatMessage
+import { FileListItem, ScreenResolution } from './types'
 
 export type WebSocketPayloads =
   | SignalProvidePayload
   | SignalOfferPayload
   | SignalAnswerPayload
   | SignalCandidatePayload
-  | MemberListPayload
-  | Member
-  | ControlPayload
-  | ControlClipboardPayload
-  | ControlKeyboardPayload
+  | SignalRequestPayload
   | ChatPayload
+  | ChatInitPayload
   | ChatSendPayload
   | EmojiSendPayload
   | ScreenResolutionPayload
-  | ScreenConfigurationsPayload
-  | AdminPayload
-  | AdminLockPayload
+  | KeyboardMapPayload
+  | KeyboardModifiersPayload
+  | ClipboardSetPayload
+  | ControlEpochPayload
   | BroadcastStatusPayload
-  | BroadcastCreatePayload
-
-export interface WebSocketMessage {
-  event: WebSocketEvents | string
-}
 
 /*
   SYSTEM MESSAGES/PAYLOADS
 */
-// system/init
-export interface SystemInit extends WebSocketMessage, SystemInitPayload {
-  event: typeof EVENT.SYSTEM.INIT
-}
 export interface SystemInitPayload {
+  session_id: string
+  control_host: ControlHostPayload
+  screen_size: ScreenResolution
+  sessions: Record<string, SessionDataPayload>
+  settings: SettingsPayload
+  touch_events: boolean
+  screencast_enabled: boolean
+  webrtc: {
+    videos: string[]
+  }
+}
+
+export interface ControlHostPayload {
+  id: string
+  has_host: boolean
+  host_id?: string
+  epoch: number
+}
+
+export interface ControlEpochPayload {
+  epoch: number
+}
+
+export interface SessionDataPayload {
+  id: string
+  profile: {
+    name: string
+    is_admin: boolean
+    avatar?: string
+  }
+  state: {
+    is_connected: boolean
+  }
+}
+
+export interface SettingsPayload {
   implicit_hosting: boolean
-  locks: Record<string, string>
-  file_transfer: boolean
+  locked_logins: boolean
+  locked_controls: boolean
+  control_protection: boolean
   heartbeat_interval: number
+  control_lease_ttl: number
+  plugins?: Record<string, unknown>
+}
+
+export interface SystemAdminPayload {
+  broadcast_status: BroadcastStatusPayload
+}
+
+export interface SystemSettingsPayload extends SettingsPayload {
+  id: string
 }
 
 // system/disconnect
 // system/error
-export interface SystemMessage extends WebSocketMessage, SystemMessagePayload {
-  event: typeof EVENT.SYSTEM.DISCONNECT | typeof EVENT.SYSTEM.ERROR
-}
 export interface SystemMessagePayload {
   title: string
   message: string
@@ -77,113 +84,96 @@ export interface SystemMessagePayload {
 /*
   SIGNAL MESSAGES/PAYLOADS
 */
-// signal/provide
-export interface SignalProvideMessage extends WebSocketMessage, SignalProvidePayload {
-  event: typeof EVENT.SIGNAL.PROVIDE
-}
 export interface SignalProvidePayload {
-  id: string
-  lite: boolean
-  ice: RTCIceServer[]
   sdp: string
+  iceservers: RTCIceServer[]
 }
 
-// signal/offer
-export interface SignalOfferMessage extends WebSocketMessage, SignalOfferPayload {
-  event: typeof EVENT.SIGNAL.OFFER
+export interface SignalRequestPayload {
+  /** Browser decoder capabilities, ordered by browser preference. */
+  video_codecs?: string[]
+  video?: {
+    auto?: boolean
+    disabled?: boolean
+    selector?: Record<string, unknown>
+  }
+  audio?: {
+    disabled?: boolean
+  }
 }
+
 export interface SignalOfferPayload {
   sdp: string
 }
 
-// signal/answer
-export interface SignalAnswerMessage extends WebSocketMessage, SignalAnswerPayload {
-  event: typeof EVENT.SIGNAL.ANSWER
-}
 export interface SignalAnswerPayload {
   sdp: string
-  displayname: string
 }
 
-// signal/candidate
-export interface SignalCandidateMessage extends WebSocketMessage, SignalCandidatePayload {
-  event: typeof EVENT.SIGNAL.CANDIDATE
-}
-export interface SignalCandidatePayload {
-  data: string
-}
+export type SignalCandidatePayload = RTCIceCandidateInit
 
 /*
-  MEMBER MESSAGES/PAYLOADS
+  SESSION PAYLOADS
 */
-// member/list
-export interface MemberListMessage extends WebSocketMessage, MemberListPayload {
-  event: typeof EVENT.MEMBER.LIST
-}
-export interface MemberListPayload {
-  members: Member[]
-}
-
-// member/connected
-export interface MemberConnectMessage extends WebSocketMessage, MemberPayload {
-  event: typeof EVENT.MEMBER.CONNECTED
-}
-export type MemberPayload = Member
-
-// member/disconnected
-export interface MemberDisconnectMessage extends WebSocketMessage, MemberPayload {
-  event: typeof EVENT.MEMBER.DISCONNECTED
-}
-export interface MemberDisconnectPayload {
+export interface SessionIdPayload {
   id: string
 }
 
-/*
-  CONTROL MESSAGES/PAYLOADS
-*/
-// control/locked & control/release & control/request
-export interface ControlMessage extends WebSocketMessage, ControlPayload {
-  event: ControlEvents
-}
-export interface ControlPayload {
+export interface SessionProfilePayload {
   id: string
+  name: string
+  is_admin: boolean
+  avatar?: string
 }
 
-export interface ControlTargetPayload {
+export interface SessionStatePayload {
   id: string
-  target: string
+  is_connected: boolean
+  is_watching?: boolean
 }
 
-export interface ControlClipboardPayload {
+export interface SessionCursorsPayload {
+  id: string
+  cursors: Array<{ x: number; y: number }>
+}
+
+export interface ClipboardSetPayload {
   text: string
 }
 
-export interface ControlKeyboardPayload {
-  layout?: string
-  capsLock?: boolean
-  numLock?: boolean
-  scrollLock?: boolean
+export interface KeyboardMapPayload {
+  layout: string
+  variant?: string
+}
+
+export interface KeyboardModifiersPayload {
+  shift?: boolean
+  capslock?: boolean
+  control?: boolean
+  alt?: boolean
+  numlock?: boolean
+  meta?: boolean
+  super?: boolean
+  altgr?: boolean
 }
 
 /*
   CHAT PAYLOADS
 */
-// chat/message
-export interface ChatMessage extends WebSocketMessage, ChatPayload {
-  event: typeof EVENT.CHAT.MESSAGE
-}
-
 export interface ChatSendPayload {
-  content: string
+  text: string
 }
 export interface ChatPayload {
   id: string
-  content: string
+  content: string | { text: string }
+  created?: string
+  name?: string
+  avatar?: string
 }
 
-// chat/emoji
-export interface ChatEmoteMessage extends WebSocketMessage, EmotePayload {
-  event: typeof EVENT.CHAT.EMOTE
+export interface ChatInitPayload {
+  enabled: boolean
+  history?: ChatPayload[]
 }
 
 export interface EmotePayload {
@@ -198,12 +188,9 @@ export interface EmojiSendPayload {
 /*
   FILE TRANSFER PAYLOADS
 */
-export interface FileTransferListMessage extends WebSocketMessage, FileTransferListPayload {
-  event: FileTransferEvents
-}
-
-export interface FileTransferListPayload {
-  cwd: string
+export interface FileTransferUpdatePayload {
+  root_dir: string
+  enabled: boolean
   user_download: boolean
   user_upload: boolean
   user_delete: boolean
@@ -213,61 +200,16 @@ export interface FileTransferListPayload {
 /*
   SCREEN PAYLOADS
 */
-export interface ScreenResolutionMessage extends WebSocketMessage, ScreenResolutionPayload {
-  event: ScreenEvents
-}
-
 export interface ScreenResolutionPayload extends ScreenResolution {
   id?: string
-}
-
-export interface ScreenConfigurationsMessage extends WebSocketMessage, ScreenConfigurationsPayload {
-  event: ScreenEvents
-}
-
-export interface ScreenConfigurationsPayload {
-  configurations: ScreenConfigurations
 }
 
 /*
   BROADCAST PAYLOADS
 */
-export interface BroadcastCreatePayload {
-  url: string
-}
-
 export interface BroadcastStatusPayload {
   url: string
-  isActive: boolean
-}
-
-/*
-  ADMIN PAYLOADS
-*/
-export interface AdminMessage extends WebSocketMessage, AdminPayload {
-  event: AdminEvents
-}
-
-export interface AdminPayload {
-  id: string
-}
-
-export interface AdminTargetMessage extends WebSocketMessage, AdminTargetPayload {
-  event: AdminEvents
-}
-
-export interface AdminTargetPayload {
-  id: string
-  target?: string
-}
-
-export interface AdminLockMessage extends WebSocketMessage, AdminLockPayload {
-  event: AdminEvents
-  id: string
+  is_active: boolean
 }
 
 export type AdminLockResource = 'login' | 'control' | 'file_transfer'
-
-export interface AdminLockPayload {
-  resource: AdminLockResource
-}

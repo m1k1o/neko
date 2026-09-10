@@ -1,6 +1,5 @@
 import { getterTree, mutationTree, actionTree } from 'typed-vuex'
 import { Member } from '~/neko/types'
-import { EVENT } from '~/neko/events'
 
 import md from 'simple-markdown'
 import { accessor } from '~/store'
@@ -73,8 +72,8 @@ export const mutations = mutationTree(state, {
 export const actions = actionTree(
   { state, getters, mutations },
   {
-    ban({ state }, member: string | Member) {
-      if (!accessor.connected || !accessor.user.admin) {
+    async ban({ state }, member: string | Member) {
+      if (!accessor.connection.connected || !accessor.user.admin) {
         return
       }
 
@@ -86,11 +85,13 @@ export const actions = actionTree(
         return
       }
 
-      $client.sendMessage(EVENT.ADMIN.BAN, { id: member.id })
+      const endpoint = `/api/members/${encodeURIComponent(member.id)}`
+      const response = await $http.get(endpoint)
+      await $http.post(endpoint, { ...response.data, can_login: false })
     },
 
-    kick({ state }, member: string | Member) {
-      if (!accessor.connected || !accessor.user.admin) {
+    async kick({ state }, member: string | Member) {
+      if (!accessor.connection.connected || !accessor.user.admin) {
         return
       }
 
@@ -102,11 +103,11 @@ export const actions = actionTree(
         return
       }
 
-      $client.sendMessage(EVENT.ADMIN.KICK, { id: member.id })
+      await $http.post(`/api/sessions/${encodeURIComponent(member.id)}/disconnect`)
     },
 
     mute({ state }, member: string | Member) {
-      if (!accessor.connected || !accessor.user.admin) {
+      if (!accessor.connection.connected || !accessor.user.admin) {
         return
       }
 
@@ -118,11 +119,11 @@ export const actions = actionTree(
         return
       }
 
-      $client.sendMessage(EVENT.ADMIN.MUTE, { id: member.id })
+      accessor.user.setMuted({ id: member.id, muted: true })
     },
 
     unmute({ state }, member: string | Member) {
-      if (!accessor.connected || !accessor.user.admin) {
+      if (!accessor.connection.connected || !accessor.user.admin) {
         return
       }
 
@@ -134,7 +135,7 @@ export const actions = actionTree(
         return
       }
 
-      $client.sendMessage(EVENT.ADMIN.UNMUTE, { id: member.id })
+      accessor.user.setMuted({ id: member.id, muted: false })
     },
   },
 )

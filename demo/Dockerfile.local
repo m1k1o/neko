@@ -1,0 +1,10 @@
+FROM ghcr.io/m1k1o/neko/chromium:latest
+
+# Overlay the current branch on the published Chromium runtime. This keeps the
+# demo build small while exercising the locally refactored server and proxy.
+COPY --chmod=755 server/bin/neko /usr/bin/neko
+COPY --chmod=755 server/bin/neko-proxy /usr/bin/neko-proxy
+COPY --chmod=755 apps/chromium/neko-chromium /usr/local/bin/neko-chromium
+COPY apps/chromium/supervisord.conf /etc/neko/supervisord/chromium.conf
+# Overlay the locally built client so the demo exercises the current UI branch.
+COPY client/dist/ /var/www/
