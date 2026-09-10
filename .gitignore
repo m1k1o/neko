@@ -7,15 +7,29 @@
 ehthumbs.db
 Thumbs.db
 
-# Log/Temp files
+# Logs and temporary files
 .tmp/
 tmp/
 *.tmp
 .logs/
 logs/
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 core
 .build
+
+# Test and coverage output
+coverage/
+**/coverage/
+.nyc_output/
+**/.nyc_output/
+coverage.out
+*.coverprofile
+playwright-report/
+test-results/
 
 # Runtime data
 pids
@@ -26,14 +40,20 @@ pids
 # TypeScript incremental compilation cache
 *.tsbuildinfo
 
-# Node modules
-node_modules
-dist
-bin
+# Node.js dependencies, build output, and caches
+**/node_modules/
+**/dist/
+**/bin/
+**/build/
+**/.docusaurus/
+**/.cache/
+**/.cache-loader/
+.eslintcache
 
 # Environment files
-*.env
-.env.development
+**/.env
+**/.env.*
+!**/.env.example
 
 # Code Editors
 .idea

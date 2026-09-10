@@ -1,100 +1,109 @@
 ---
-description: Running Neko locally for development
+description: 在本地构建和运行 Neko
 slug: /developer-guide/development
 ---
 
-# Local Development
+# 本地开发
 
-The fastest way to contribute to Neko is to run the backend in Docker and the frontend locally with hot reload. No need to rebuild the whole Docker image on every change.
+当前仓库使用直接的 Go、npm 和 Docker Compose 构建流程，不再维护旧的
+`server/dev/`、`client/dev/` Docker 包装脚本。
 
-The only prerequisite is [Docker](https://docs.docker.com/get-docker/).
+## 环境要求
 
-Start by cloning the repository:
+- Docker Engine 和 Docker Compose；
+- Go 1.25 或更高版本；
+- Node.js 18 或更高版本；
+- npm。
 
-```bash
-git clone https://github.com/m1k1o/neko.git
-cd neko
-```
-
-## Backend {#backend}
-
-All backend dev scripts live in `server/dev/`.
-
-### First-time setup
-
-Build the required Docker images (only needed once, or after major dependency changes):
+## 构建服务端
 
 ```bash
-cd server/dev
-./build
+cd server
+go build -o bin/neko ./cmd/neko
+CGO_ENABLED=0 go build -o bin/neko-proxy ./cmd/neko-proxy
 ```
 
-### Starting the server
+仅检查服务端所有包是否能编译：
 
 ```bash
-cd server/dev
-./start
+go build ./...
 ```
 
-This starts the neko backend inside Docker and exposes it on port **3000**. The container is named `neko_server_dev` and is kept running in the foreground.
-
-You can pass `nvidia` or `intel` as an argument to enable GPU acceleration:
+## 构建前端
 
 ```bash
-./start nvidia
-./start intel
+cd client
+npm ci
+npm run build
 ```
 
-### Applying backend changes (live rebuild)
-
-After editing Go source files, rebuild and hot-swap the binary into the running container **without restarting Docker**:
+生产资源会生成到 `client/dist/`。如果只需要开发服务器：
 
 ```bash
-# in a new terminal
-cd server/dev
-./rebuild
+npm run serve -- --port 3001
 ```
 
-`./rebuild` compiles the server, copies the new binary (and any plugins) into the running `neko_server_dev` container, then tells supervisord to restart only the neko process - the full Docker image is never rebuilt.
-
-## Frontend {#frontend}
-
-All frontend dev scripts live in `client/dev/`.
-
-### Installing dependencies
-
-Dependencies are installed automatically the first time you run `./serve`. To install them manually (or to force a reinstall), run:
+开发服务器的 API 地址可通过 `VUE_APP_SERVER_PORT` 指定，例如：
 
 ```bash
-cd client/dev
-./serve -i
+VUE_APP_SERVER_PORT=8080 npm run serve -- --port 3001
 ```
 
-Alternatively, use the provided npm wrapper that runs inside Docker:
+## 启动本地 Demo
+
+Demo 会使用当前分支编译出的服务端、代理和前端资源构建 Chromium 镜像：
 
 ```bash
-cd client/dev
-./npm install
+export NEKO_DEMO_USER_PASSWORD='普通用户密码'
+export NEKO_DEMO_ADMIN_PASSWORD='管理员密码'
+export NEKO_DEMO_NAT_IP='127.0.0.1'
+export NEKO_DEMO_MEDIA_BIND='127.0.0.1'
+
+docker compose -f demo/compose.local.yaml up -d --build
 ```
 
-### Starting the dev server with hot reload
+访问 `http://127.0.0.1:8080`。修改 Go 或前端代码后，重新执行对应构建命令，
+再运行相同的 Compose 命令即可更新 Demo。
+
+停止 Demo：
 
 ```bash
-cd client/dev
-./serve
+docker compose -f demo/compose.local.yaml down
 ```
 
-This starts the Vue dev server on port **3001**, proxying API calls to the backend on port **3000**. Any change you save to a file under `client/src/` is reflected in the browser instantly - no page reload required.
+更多 FRP、Coturn 和连通性检查说明见 [demo/README.md](../../../demo/README.md)。
 
-| Service | URL |
-|---------|-----|
-| Backend (Docker) | `http://localhost:3000` |
-| Frontend (hot reload) | `http://localhost:3001` |
+## 生成完整镜像
 
-## Typical workflow
+构建客户端和服务端后，可以使用根目录构建入口生成 Chromium 镜像：
 
-1. **Terminal 1** - start the backend: `cd server/dev && ./start`
-2. **Terminal 2** - start the frontend: `cd client/dev && ./serve`
-3. Open `http://localhost:3001` in your browser.
-4. Edit frontend files → browser updates automatically.
-5. Edit backend files → run `cd server/dev && ./rebuild` in **Terminal 3** to apply changes.
+```bash
+./build --application chromium --yes
+```
+
+如需手动生成 Dockerfile：
+
+```bash
+go run utils/docker/main.go \
+  -i Dockerfile.tmpl \
+  -o Dockerfile \
+  -client client/dist
+docker build -t local/neko -f Dockerfile .
+```
+
+## 代码检查
+
+提交前至少执行：
+
+```bash
+git diff --check
+
+cd server
+go build ./...
+
+cd ../client
+npm run build
+```
+
+前端 SDK 合约检查使用 `npm run test:sdk`，完整文档站点检查在 `webpage/` 目录
+执行 `npm ci` 后使用 `npm run typecheck` 和 `npm run build`。

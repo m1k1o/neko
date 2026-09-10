@@ -8,13 +8,13 @@ This project uses a monorepo structure with the following directories:
 
 - `server/`: Backend code, written in [Go](https://go.dev/).
   - `server/cmd/`: Subcommands for the neko server, such as `serve` and `plugins`.
-  - `server/dev/`: Development scripts to run/build the neko server locally in Docker.
+  - `server/build`: Server and proxy build entrypoint.
   - `server/internal/`: Internal packages used by the neko server.
   - `server/pkg/`: Packages used by the neko server that can be used by other projects.
   - `server/plugins/`: Directory for plugins that will be built and used by the neko server.
 
 - `client/`: Frontend code, written in [TypeScript](https://www.typescriptlang.org/) and [Vue.js](https://vuejs.org/).
-  - `client/dev/`: Development scripts to run/build the neko client locally in Docker.
+  - `client/package.json`: Frontend build, development, lint and SDK check commands.
   - `client/public/`: Public files for the neko client, such as icons and images.
   - `client/src/`: Source code for the neko client, including components and pages.
   - `client/tools/`: Tools used for generating code for the neko client, such as emojis.

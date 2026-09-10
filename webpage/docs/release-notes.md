@@ -4,6 +4,24 @@
 
 No unreleased changes yet.
 
+## [n.eko v3.1.6](https://github.com/picronsin/neko/releases/tag/v3.1.6) {#v3.1.6}
+
+### New Features {#v3.1.6-feats}
+- Added Chromium-focused runtime support with adaptive video quality profiles and codec fallback paths.
+- Added persistent chat history and user avatar storage for local deployments.
+- Added responsive room layout improvements for narrow and wide screens.
+- Added connectivity integration coverage for direct, TURN, and FRP network modes.
+
+### Fixes {#v3.1.6-fixes}
+- Improved login startup by separating authentication state from transport connection state.
+- Reduced unnecessary reconnect behavior during initial login and startup.
+- Improved WebRTC signaling compatibility and transient disconnect handling.
+- Fixed input, screen mode, toolbar, and pointer layout issues in the responsive client UI.
+
+### Misc {#v3.1.6-misc}
+- Removed obsolete development wrappers, unsupported runtime assets, and stale documentation.
+- Updated the Chinese README and documented the current Chromium-only development workflow.
+
 ## [n.eko v3.1.5](https://github.com/m1k1o/neko/releases/tag/v3.1.5) {#v3.1.5}
 
 ### New Features {#v3.1.5-feats}
