@@ -78,7 +78,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_ACCESS_TOKEN }}
+          password: ${{ github.token }}
 
       - name: Generate base Dockerfile
         env:
