@@ -329,3 +329,52 @@ func TestPipelineRecreationWithNewSubscription(t *testing.T) {
 		t.Fatal("subscription did not receive samples from the existing pipeline")
 	}
 }
+
+func TestConcurrentBitrateUpdates(t *testing.T) {
+	stream := newTestStream(t, codec.Opus(), successfulPipelineFactory(new(int), new(int)))
+	stream.saveSampleBitrate(time.Unix(2, 0), 1)
+
+	// A replacement pipeline can emit while the old reader is still draining.
+	var wg sync.WaitGroup
+	for range 2 {
+		wg.Go(func() {
+			for range 1000 {
+				stream.saveSampleBitrate(time.Unix(3, 0), 1)
+			}
+		})
+	}
+	wg.Wait()
+
+	stream.saveSampleBitrate(time.Unix(4, 0), 0)
+	if got := stream.Bitrate(); got != 2000 {
+		t.Fatalf("bitrate = %d, want 2000", got)
+	}
+}
+
+func TestBitrateDuringPipelineRestart(t *testing.T) {
+	stream := newTestStream(t, codec.Opus(), successfulPipelineFactory(new(int), new(int)))
+	done := make(chan struct{})
+	var wg sync.WaitGroup
+	wg.Go(func() {
+		for sec := int64(0); ; sec++ {
+			select {
+			case <-done:
+				return
+			default:
+				stream.saveSampleBitrate(time.Unix(sec, 0), 1)
+			}
+		}
+	})
+	defer func() {
+		close(done)
+		wg.Wait()
+	}()
+
+	for range 20 {
+		if err := stream.createPipeline(); err != nil {
+			t.Fatalf("createPipeline() error = %v", err)
+		}
+		_ = stream.Bitrate()
+		stream.destroyPipeline()
+	}
+}

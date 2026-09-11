@@ -33,6 +33,7 @@ type StreamSinkManagerCtx struct {
 	// wait for a keyframe before sending samples
 	waitForKf bool
 
+	bitrateMu sync.Mutex
 	bitrate   uint64
 	brBuckets map[int]float64
 
@@ -158,6 +159,9 @@ func (manager *StreamSinkManagerCtx) ID() string {
 }
 
 func (manager *StreamSinkManagerCtx) Bitrate() uint64 {
+	manager.bitrateMu.Lock()
+	defer manager.bitrateMu.Unlock()
+
 	return manager.bitrate
 }
 
@@ -407,6 +411,9 @@ func (manager *StreamSinkManagerCtx) createPipeline() error {
 }
 
 func (manager *StreamSinkManagerCtx) saveSampleBitrate(timestamp time.Time, delta float64) {
+	manager.bitrateMu.Lock()
+	defer manager.bitrateMu.Unlock()
+
 	// get unix timestamp in seconds
 	sec := timestamp.Unix()
 	// last bucket is timestamp rounded to 3 seconds - 1 second
@@ -417,7 +424,7 @@ func (manager *StreamSinkManagerCtx) saveSampleBitrate(timestamp time.Time, delt
 	next := int((sec + 1) % 3)
 
 	if manager.brBuckets[next] != 0 {
-		// update bitrate, TODO: atomic?
+		// update bitrate
 		manager.bitrate = uint64(manager.brBuckets[last])
 		// empty next bucket
 		manager.brBuckets[next] = 0
@@ -476,6 +483,8 @@ func (manager *StreamSinkManagerCtx) destroyPipeline() {
 
 	manager.pipelinesActive.Set(0)
 
+	manager.bitrateMu.Lock()
 	manager.brBuckets = make(map[int]float64)
 	manager.bitrate = 0
+	manager.bitrateMu.Unlock()
 }
