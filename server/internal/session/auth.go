@@ -14,6 +14,7 @@ func (manager *SessionManagerCtx) CookieSetToken(w http.ResponseWriter, token st
 	if manager.config.Cookie.Secure {
 		sameSite = http.SameSiteNoneMode
 	}
+	path := manager.cookiePath()
 
 	http.SetCookie(w, &http.Cookie{
 		Name:     manager.config.Cookie.Name,
@@ -23,7 +24,7 @@ func (manager *SessionManagerCtx) CookieSetToken(w http.ResponseWriter, token st
 		SameSite: sameSite,
 		HttpOnly: manager.config.Cookie.HTTPOnly,
 		Domain:   manager.config.Cookie.Domain,
-		Path:     manager.config.Cookie.Path,
+		Path:     path,
 	})
 }
 
@@ -35,7 +36,15 @@ func (manager *SessionManagerCtx) CookieClearToken(w http.ResponseWriter, r *htt
 
 	cookie.Value = ""
 	cookie.Expires = time.Unix(0, 0)
+	cookie.Path = manager.cookiePath()
 	http.SetCookie(w, cookie)
+}
+
+func (manager *SessionManagerCtx) cookiePath() string {
+	if manager.config.Cookie.Path == "" {
+		return "/"
+	}
+	return manager.config.Cookie.Path
 }
 
 func (manager *SessionManagerCtx) Authenticate(r *http.Request) (types.Session, error) {

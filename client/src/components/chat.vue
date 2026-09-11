@@ -11,7 +11,12 @@
           }"
         >
           <div class="author" @contextmenu.stop.prevent="onContext($event, { member: member(message.id) })">
-            <neko-avatar class="avatar" :seed="member(message.id).displayname" :size="40" />
+            <neko-avatar
+              class="avatar"
+              :seed="member(message.id).displayname"
+              :avatar="member(message.id).avatar"
+              :size="40"
+            />
           </div>
           <div class="content">
             <div class="content-head">

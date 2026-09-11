@@ -180,6 +180,8 @@ func (c *serve) Start(cmd *cobra.Command) {
 		c.managers.member,
 		c.managers.desktop,
 		c.managers.capture,
+		&c.configs.Member,
+		&c.configs.Server,
 	)
 
 	c.managers.plugins = plugins.New(
@@ -201,6 +203,7 @@ func (c *serve) Start(cmd *cobra.Command) {
 		c.managers.webSocket,
 		c.managers.api,
 		&c.configs.Server,
+		&c.configs.Member,
 	)
 	c.managers.http.Start()
 }

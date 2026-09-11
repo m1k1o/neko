@@ -25,6 +25,7 @@ A member profile is a structure that describes the user and what the user is all
 | Field                      | Description | Type |
 |----------------------------|-------------|------|
 | <Def id="profile.name" />                     | User's name as shown in the UI, must not be unique within the system (not used as an identifier). | string |
+| `avatar`                   | Avatar URL shown in clients that support member avatars. OAuth logins synchronize this value from the configured user-info field. | string |
 | <Def id="profile.is_admin" />                 | Whether the user can perform administrative tasks that include managing users, sessions, and settings. | boolean |
 | <Def id="profile.can_login" />                | Whether the user can log in to the system and use the HTTP API. | boolean |
 | <Def id="profile.can_connect" />              | Whether the user can connect to the room using the WebSocket API (needs <Opt id="profile.can_login" /> to be enabled). | boolean |
@@ -44,6 +45,7 @@ import TabItem from '@theme/TabItem';
   
     ```yaml title="Example member profile in YAML"
     name: User Name
+    avatar: https://example.com/avatar.png
     is_admin: false
     can_login: true
     can_connect: true
@@ -63,6 +65,7 @@ import TabItem from '@theme/TabItem';
     ```json title="Example member profile in JSON"
     {
       "name": "User Name",
+      "avatar": "https://example.com/avatar.png",
       "is_admin": false,
       "can_login": true, 
       "can_connect": true, 
@@ -171,6 +174,62 @@ environment:
   NEKO_MEMBER_MULTIUSER_USER_PASSWORD: "neko"
 ```
 :::
+
+### OAuth 2.0 Provider {#member.oauth}
+
+Neko can use an OAuth 2.0 authorization-code provider. It exchanges the authorization code server-side and fetches the configured user-info endpoint. Provider access tokens, refresh tokens, and raw ID tokens are never persisted or returned to the browser.
+
+For OpenID Connect providers, set `issuer_url`. Neko retrieves `/.well-known/openid-configuration` from that issuer and uses its authorization, token, and user-info endpoints. Issuer discovery takes precedence over explicitly configured endpoints, so it can be introduced without removing older endpoint settings.
+
+When `redirect_url` is omitted, Neko derives the callback URL from the browser request as `https://<neko-host>/api/oauth/callback` (including `server.path_prefix`). Register that exact URL with the provider. Behind a TLS-terminating reverse proxy, set `server.proxy: true` so Neko trusts `X-Forwarded-Proto` and `X-Forwarded-Host`. The user-info endpoint must return JSON. `success_redirect` is relative to `server.path_prefix`.
+
+```yaml title="config.yaml"
+member:
+  provider: "oauth"
+  oauth:
+    enabled: true
+    # When true, visiting the Neko root page immediately starts OAuth login.
+    auto_redirect: true
+    name: "Example SSO"
+    admin_emails: ["platform-admin@example.com", "security@example.com"]
+    client_id: "<client-id>"
+    client_secret: "<client-secret>"
+    issuer_url: "https://id.example.com"
+    scopes: ["openid", "profile"]
+    # Configure these to match the JSON returned by userinfo_url.
+    subject_field: "sub"
+    username_field: "name"
+    avatar_field: "picture"
+    success_redirect: "/"
+    user_profile:
+      is_admin: false
+      can_login: true
+      can_connect: true
+      can_watch: true
+      can_host: true
+      can_share_media: true
+      can_access_clipboard: true
+      sends_inactive_cursor: true
+      can_see_inactive_cursors: false
+    admin_profile:
+      is_admin: true
+      can_login: true
+      can_connect: true
+      can_watch: true
+      can_host: true
+      can_share_media: true
+      can_access_clipboard: true
+      sends_inactive_cursor: true
+      can_see_inactive_cursors: true
+```
+
+The sign-in endpoint is `GET /api/oauth/login`; the callback endpoint is `GET /api/oauth/callback`. OAuth login requires `session.cookie.enabled: true`, which is the default. Set `member.provider: oauth` to make OAuth the only member provider.
+
+`admin_emails` is a list matched against the standard `email` field, case-insensitively. An OAuth user is an administrator when either their email matches that list or their user-info/ID-token claims include `isAdmin: true`; their permissions then use `admin_profile`. The configured name and avatar fields are read from userinfo first, then fall back to the ID token when userinfo omits them. Avatar URLs are rendered by clients that support member avatars.
+
+For OAuth sessions, `GET /api/whoami` includes `extra_data`: the merged userinfo and ID-token claims, with userinfo values taking precedence. It is returned only to the authenticated session owner and is intended for profile-field troubleshooting. Do not place secrets in provider profile claims.
+
+For non-OIDC providers, set `authorization_url`, `token_url`, `userinfo_url`, and optionally `redirect_url` directly. For GitHub, for example, use `read:user` as a scope and set `subject_field: id`, `username_field: login`, and `avatar_field: avatar_url`.
 
 ### File Provider {#member.file}
 
