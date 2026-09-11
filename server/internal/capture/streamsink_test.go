@@ -303,3 +303,29 @@ func TestPipelineRecreationPreservesSubscription(t *testing.T) {
 		t.Fatal("subscription did not receive samples after pipeline recreation")
 	}
 }
+
+func TestPipelineRecreationWithNewSubscription(t *testing.T) {
+	created, destroyed := 0, 0
+	stream := newTestStream(t, codec.VP8(), successfulPipelineFactory(&created, &destroyed))
+	selector := streamSelectorNew(codec.VP8(), map[string]*StreamSinkManagerCtx{stream.ID(): stream}, []string{stream.ID()})
+
+	selector.destroyPipelines()
+	// A new viewer can start a pipeline between the resize hooks.
+	recorder := &sampleRecorder{}
+	subscription, err := stream.Subscribe(recorder)
+	if err != nil {
+		t.Fatalf("Subscribe() error = %v", err)
+	}
+	defer subscription.Close()
+
+	if err := selector.recreatePipelines(); err != nil {
+		t.Fatalf("recreatePipelines() error = %v", err)
+	}
+	if created != 1 || destroyed != 0 {
+		t.Fatalf("pipeline lifecycle = (%d creates, %d destroys), want (1, 0)", created, destroyed)
+	}
+	stream.onSample(types.Sample{DeltaUnit: false})
+	if recorder.count() != 1 {
+		t.Fatal("subscription did not receive samples from the existing pipeline")
+	}
+}

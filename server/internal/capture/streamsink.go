@@ -234,7 +234,7 @@ func (manager *StreamSinkManagerCtx) Subscribe(consumer types.SampleConsumer) (t
 func (manager *StreamSinkManagerCtx) start() error {
 	if len(manager.listeners)+len(manager.listenersKf) == 0 {
 		err := manager.createPipeline()
-		if err != nil && !errors.Is(err, types.ErrCapturePipelineAlreadyExists) {
+		if err != nil {
 			return err
 		}
 
@@ -364,7 +364,7 @@ func (manager *StreamSinkManagerCtx) createPipeline() error {
 	defer manager.pipelineMu.Unlock()
 
 	if manager.pipeline != nil {
-		return types.ErrCapturePipelineAlreadyExists
+		return nil
 	}
 
 	pipelineStr, err := manager.pipelineFn()
