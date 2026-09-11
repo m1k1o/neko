@@ -1,0 +1,13 @@
+# Copy this file to terraform.tfvars and fill in your values
+#   cp terraform.tfvars.example terraform.tfvars
+
+environment_name = "neko"
+location         = "West US 2"
+
+# Leave empty for auto-generated names (ACR must be globally unique)
+resource_group_name = ""    # already exists: rg-neko-westus2
+acr_name            = ""    # will be auto-generated if empty
+container_app_name  = ""    # will be auto-generated if empty
+
+# Override image if building from your fork
+# neko_image = "your-registry.azurecr.io/neko:latest"

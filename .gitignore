@@ -46,3 +46,12 @@ runtime/icon-theme/*
 
 # root Dockerfile is generated from the Dockerfile.tmpl
 /Dockerfile
+
+# Terraform
+*.tfstate
+*.tfstate.backup
+*.tfstate.enc
+*.tfvars
+.terraform/
+.terraform.lock.hcl
+tfplan
