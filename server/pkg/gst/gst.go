@@ -26,8 +26,6 @@ var (
 	registry      *C.GstRegistry
 )
 
-const gstClockTimeNone = ^uint64(0)
-
 func init() {
 	C.gst_init(nil, nil)
 	registry = C.gst_registry_get()
@@ -219,14 +217,15 @@ func goHandlePipelineBuffer(pipelineID C.int, buf C.gpointer, bufLen C.int, pts 
 	pipelinesLock.Unlock()
 
 	if ok {
-		pipeline.sample <- sampleFromBuffer(
-			C.GoBytes(unsafe.Pointer(buf), bufLen),
-			time.Now(),
-			uint64(pts),
-			uint64(dts),
-			uint64(duration),
-			deltaUnit == C.TRUE,
-		)
+		pipeline.sample <- types.Sample{
+			Data:      C.GoBytes(unsafe.Pointer(buf), bufLen),
+			Length:    int(bufLen),
+			Timestamp: time.Now(),
+			PTS:       time.Duration(pts),
+			DTS:       time.Duration(dts),
+			Duration:  time.Duration(duration),
+			DeltaUnit: deltaUnit == C.TRUE,
+		}
 	} else {
 		log.Warn().
 			Str("module", "capture").
@@ -234,25 +233,6 @@ func goHandlePipelineBuffer(pipelineID C.int, buf C.gpointer, bufLen C.int, pts 
 			Int("pipeline_id", int(pipelineID)).
 			Msgf("discarding sample, pipeline not found")
 	}
-}
-
-func sampleFromBuffer(data []byte, timestamp time.Time, pts, dts, duration uint64, deltaUnit bool) types.Sample {
-	return types.Sample{
-		Data:      data,
-		Length:    len(data),
-		Timestamp: timestamp,
-		PTS:       clockTimeDuration(pts),
-		DTS:       clockTimeDuration(dts),
-		Duration:  clockTimeDuration(duration),
-		DeltaUnit: deltaUnit,
-	}
-}
-
-func clockTimeDuration(value uint64) time.Duration {
-	if value == gstClockTimeNone {
-		return -1
-	}
-	return time.Duration(value)
 }
 
 //export goPipelineLog

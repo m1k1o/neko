@@ -3,7 +3,6 @@ package capture
 import (
 	"errors"
 	"fmt"
-	"reflect"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -16,343 +15,199 @@ import (
 var testStreamID atomic.Uint64
 
 type fakeSinkPipeline struct {
-	samples     chan types.Sample
-	onDestroy   func()
-	keyframes   int
-	destroyOnce sync.Once
+	samples   chan types.Sample
+	onDestroy func()
 }
 
-func newFakeSinkPipeline(onDestroy func()) *fakeSinkPipeline {
-	return &fakeSinkPipeline{samples: make(chan types.Sample), onDestroy: onDestroy}
+func (p *fakeSinkPipeline) Sample() chan types.Sample { return p.samples }
+func (p *fakeSinkPipeline) AttachAppsink(string)      {}
+func (p *fakeSinkPipeline) Play()                     {}
+func (p *fakeSinkPipeline) EmitVideoKeyframe() bool   { return true }
+func (p *fakeSinkPipeline) Destroy() {
+	p.onDestroy()
+	close(p.samples)
 }
 
-func (pipeline *fakeSinkPipeline) Sample() chan types.Sample { return pipeline.samples }
-func (pipeline *fakeSinkPipeline) AttachAppsink(string)      {}
-func (pipeline *fakeSinkPipeline) Play()                     {}
-func (pipeline *fakeSinkPipeline) EmitVideoKeyframe() bool {
-	pipeline.keyframes++
-	return true
-}
-func (pipeline *fakeSinkPipeline) Destroy() {
-	pipeline.destroyOnce.Do(func() {
-		if pipeline.onDestroy != nil {
-			pipeline.onDestroy()
-		}
-		close(pipeline.samples)
-	})
+type testSink struct {
+	*StreamSinkManagerCtx
+	created, destroyed int
 }
 
-type sampleRecorder struct {
-	mu      sync.Mutex
-	samples []types.Sample
-}
-
-type sampleDiscarder struct{}
-
-func (sampleDiscarder) WriteSample(types.Sample) {}
-
-func (recorder *sampleRecorder) WriteSample(sample types.Sample) {
-	recorder.mu.Lock()
-	defer recorder.mu.Unlock()
-	recorder.samples = append(recorder.samples, sample)
-}
-
-func (recorder *sampleRecorder) count() int {
-	recorder.mu.Lock()
-	defer recorder.mu.Unlock()
-	return len(recorder.samples)
-}
-
-func newTestStream(t *testing.T, streamCodec codec.RTPCodec, factory func(string) (sinkPipeline, error)) *StreamSinkManagerCtx {
+func newTestSink(t *testing.T, c codec.RTPCodec) *testSink {
 	t.Helper()
-
 	id := fmt.Sprintf("test-%d", testStreamID.Add(1))
-	stream := streamSinkNew(streamCodec, func() (string, error) { return id, nil }, id)
-	stream.pipelineFactory = factory
-	t.Cleanup(stream.shutdown)
-	return stream
+	s := &testSink{StreamSinkManagerCtx: streamSinkNew(c, func() (string, error) { return id, nil }, id)}
+	s.pipelineFactory = func(string) (sinkPipeline, error) {
+		s.created++
+		return &fakeSinkPipeline{make(chan types.Sample), func() { s.destroyed++ }}, nil
+	}
+	t.Cleanup(s.shutdown)
+	return s
 }
 
-func successfulPipelineFactory(created, destroyed *int) func(string) (sinkPipeline, error) {
-	return func(string) (sinkPipeline, error) {
-		*created++
-		return newFakeSinkPipeline(func() { *destroyed++ }), nil
+func (s *testSink) check(t *testing.T, created, destroyed int, started bool) {
+	t.Helper()
+	if s.created != created || s.destroyed != destroyed || s.started() != started {
+		t.Fatalf("lifecycle = (%d, %d, %v), want (%d, %d, %v)", s.created, s.destroyed, s.started(), created, destroyed, started)
 	}
 }
 
-func TestSubscribeRejectsNilConsumer(t *testing.T) {
-	stream := newTestStream(t, codec.Opus(), successfulPipelineFactory(new(int), new(int)))
-
-	if _, err := stream.Subscribe(nil); err == nil {
-		t.Fatal("Subscribe(nil) returned no error")
-	}
-	if stream.started() {
-		t.Fatal("failed subscription started the stream")
+func checkError(t *testing.T, err error) {
+	t.Helper()
+	if err != nil {
+		t.Fatal(err)
 	}
 }
+
+func subscribe(t *testing.T, s types.EncodedStream, consumer types.SampleConsumer) types.StreamSubscription {
+	t.Helper()
+	sub, err := s.Subscribe(consumer)
+	checkError(t, err)
+	t.Cleanup(func() { checkError(t, sub.Close()) })
+	return sub
+}
+
+type sampleCounter struct{ atomic.Int64 }
+
+func (c *sampleCounter) WriteSample(types.Sample) { c.Add(1) }
 
 func TestSubscriptionLifecycle(t *testing.T) {
-	tests := []struct {
-		name                string
-		subscriptions       int
-		closeSubscriptions  int
-		repeatLastClose     bool
-		wantCreates         int
-		wantDestroys        int
-		wantStreamRemaining bool
-	}{
-		{name: "first subscription starts pipeline", subscriptions: 1, wantCreates: 1, wantStreamRemaining: true},
-		{name: "multiple subscriptions share pipeline", subscriptions: 2, wantCreates: 1, wantStreamRemaining: true},
-		{name: "closing one keeps pipeline active", subscriptions: 2, closeSubscriptions: 1, wantCreates: 1, wantStreamRemaining: true},
-		{name: "closing final stops pipeline", subscriptions: 2, closeSubscriptions: 2, wantCreates: 1, wantDestroys: 1},
-		{name: "repeated close is harmless", subscriptions: 1, closeSubscriptions: 1, repeatLastClose: true, wantCreates: 1, wantDestroys: 1},
+	s := newTestSink(t, codec.Opus())
+	if _, err := s.Subscribe(nil); err == nil {
+		t.Fatal("Subscribe(nil) succeeded")
 	}
+	s.check(t, 0, 0, false)
 
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			created, destroyed := 0, 0
-			stream := newTestStream(t, codec.Opus(), successfulPipelineFactory(&created, &destroyed))
-			subscriptions := make([]types.StreamSubscription, 0, test.subscriptions)
+	a := subscribe(t, s, &sampleCounter{})
+	s.check(t, 1, 0, true)
+	b := subscribe(t, s, &sampleCounter{})
+	s.check(t, 1, 0, true)
+	checkError(t, a.Close())
+	s.check(t, 1, 0, true)
+	checkError(t, b.Close())
+	s.check(t, 1, 1, false)
+	checkError(t, b.Close())
+	s.check(t, 1, 1, false)
+}
 
-			for range test.subscriptions {
-				subscription, err := stream.Subscribe(&sampleRecorder{})
-				if err != nil {
-					t.Fatalf("Subscribe() error = %v", err)
+func TestSampleDispatch(t *testing.T) {
+	for _, c := range []codec.RTPCodec{codec.Opus(), codec.VP8()} {
+		t.Run(c.Name, func(t *testing.T) {
+			s := newTestSink(t, c)
+			counter := &sampleCounter{}
+			subscribe(t, s, counter)
+			for i, delta := range []bool{true, false, true} {
+				s.onSample(types.Sample{DeltaUnit: delta})
+				want := int64(i + 1)
+				if c.IsVideo() {
+					want--
 				}
-				subscriptions = append(subscriptions, subscription)
-			}
-			for i := range test.closeSubscriptions {
-				if err := subscriptions[i].Close(); err != nil {
-					t.Fatalf("Close() error = %v", err)
+				if got := counter.Load(); got != want {
+					t.Fatalf("sample %d: deliveries = %d, want %d", i, got, want)
 				}
 			}
-			if test.repeatLastClose {
-				if err := subscriptions[test.closeSubscriptions-1].Close(); err != nil {
-					t.Fatalf("repeated Close() error = %v", err)
-				}
-			}
-
-			if created != test.wantCreates || destroyed != test.wantDestroys {
-				t.Fatalf("pipeline lifecycle = (%d creates, %d destroys), want (%d, %d)", created, destroyed, test.wantCreates, test.wantDestroys)
-			}
-			if stream.started() != test.wantStreamRemaining {
-				t.Fatalf("stream started = %v, want %v", stream.started(), test.wantStreamRemaining)
-			}
-
-			for _, subscription := range subscriptions {
-				_ = subscription.Close()
+			sample := types.Sample{Timestamp: time.Unix(0, 0), DeltaUnit: true}
+			if allocs := testing.AllocsPerRun(100, func() { s.onSample(sample) }); allocs != 0 {
+				t.Fatalf("allocations per dispatch = %f, want 0", allocs)
 			}
 		})
-	}
-}
-
-func TestVideoSubscriptionWaitsForKeyframe(t *testing.T) {
-	stream := newTestStream(t, codec.VP8(), successfulPipelineFactory(new(int), new(int)))
-	recorder := &sampleRecorder{}
-	subscription, err := stream.Subscribe(recorder)
-	if err != nil {
-		t.Fatalf("Subscribe() error = %v", err)
-	}
-	defer subscription.Close()
-
-	stream.onSample(types.Sample{DeltaUnit: true})
-	if recorder.count() != 0 {
-		t.Fatal("video consumer received a delta unit before a keyframe")
-	}
-
-	stream.onSample(types.Sample{DeltaUnit: false})
-	stream.onSample(types.Sample{DeltaUnit: true})
-	if recorder.count() != 2 {
-		t.Fatalf("video consumer received %d samples after keyframe, want 2", recorder.count())
-	}
-}
-
-func TestAudioSubscriptionDoesNotWaitForKeyframe(t *testing.T) {
-	stream := newTestStream(t, codec.Opus(), successfulPipelineFactory(new(int), new(int)))
-	recorder := &sampleRecorder{}
-	subscription, err := stream.Subscribe(recorder)
-	if err != nil {
-		t.Fatalf("Subscribe() error = %v", err)
-	}
-	defer subscription.Close()
-
-	stream.onSample(types.Sample{DeltaUnit: true})
-	if recorder.count() != 1 {
-		t.Fatalf("audio consumer received %d samples, want 1", recorder.count())
-	}
-}
-
-func TestSampleDispatchDoesNotAllocate(t *testing.T) {
-	stream := newTestStream(t, codec.Opus(), successfulPipelineFactory(new(int), new(int)))
-	subscription, err := stream.Subscribe(sampleDiscarder{})
-	if err != nil {
-		t.Fatalf("Subscribe() error = %v", err)
-	}
-	defer subscription.Close()
-
-	sample := types.Sample{Timestamp: time.Unix(0, 0)}
-	stream.onSample(sample)
-	if allocations := testing.AllocsPerRun(100, func() { stream.onSample(sample) }); allocations != 0 {
-		t.Fatalf("allocations per dispatch = %f", allocations)
 	}
 }
 
 func TestSubscriptionSwitch(t *testing.T) {
-	t.Run("starts target before stopping source and waits for keyframe", func(t *testing.T) {
-		var eventsMu sync.Mutex
-		events := []string{}
-		record := func(event string) {
-			eventsMu.Lock()
-			defer eventsMu.Unlock()
-			events = append(events, event)
-		}
-		factory := func(name string) func(string) (sinkPipeline, error) {
-			return func(string) (sinkPipeline, error) {
-				record("create-" + name)
-				return newFakeSinkPipeline(func() { record("destroy-" + name) }), nil
+	for _, fail := range []bool{false, true} {
+		t.Run(fmt.Sprintf("startup-fails=%v", fail), func(t *testing.T) {
+			source, target := newTestSink(t, codec.VP8()), newTestSink(t, codec.VP8())
+			factory := target.pipelineFactory
+			target.pipelineFactory = func(src string) (sinkPipeline, error) {
+				if source.destroyed != 0 {
+					t.Error("source stopped before target startup")
+				}
+				if fail {
+					return nil, errors.New("target startup failed")
+				}
+				return factory(src)
 			}
-		}
-
-		source := newTestStream(t, codec.VP8(), factory("source"))
-		target := newTestStream(t, codec.VP8(), factory("target"))
-		recorder := &sampleRecorder{}
-		subscription, err := source.Subscribe(recorder)
-		if err != nil {
-			t.Fatalf("Subscribe() error = %v", err)
-		}
-		defer subscription.Close()
-
-		eventsMu.Lock()
-		events = nil
-		eventsMu.Unlock()
-		if err := subscription.Switch(target); err != nil {
-			t.Fatalf("Switch() error = %v", err)
-		}
-
-		eventsMu.Lock()
-		gotEvents := append([]string(nil), events...)
-		eventsMu.Unlock()
-		wantEvents := []string{"create-target", "destroy-source"}
-		if !reflect.DeepEqual(gotEvents, wantEvents) {
-			t.Fatalf("switch events = %v, want %v", gotEvents, wantEvents)
-		}
-
-		target.onSample(types.Sample{DeltaUnit: true})
-		if recorder.count() != 0 {
-			t.Fatal("switched video consumer received a delta unit before a target keyframe")
-		}
-		target.onSample(types.Sample{DeltaUnit: false})
-		if recorder.count() != 1 {
-			t.Fatalf("switched video consumer received %d samples, want 1", recorder.count())
-		}
-	})
-
-	t.Run("failed target startup leaves source active", func(t *testing.T) {
-		source := newTestStream(t, codec.VP8(), successfulPipelineFactory(new(int), new(int)))
-		target := newTestStream(t, codec.VP8(), func(string) (sinkPipeline, error) {
-			return nil, errors.New("target startup failed")
+			counter := &sampleCounter{}
+			sub := subscribe(t, source, counter)
+			err := sub.Switch(target.StreamSinkManagerCtx)
+			if fail {
+				if err == nil || sub.Stream() != source.StreamSinkManagerCtx {
+					t.Fatal("failed switch did not preserve the source subscription")
+				}
+				source.check(t, 1, 0, true)
+				target.check(t, 0, 0, false)
+				source.onSample(types.Sample{})
+			} else {
+				checkError(t, err)
+				if sub.Stream() != target.StreamSinkManagerCtx {
+					t.Fatal("successful switch did not select the target")
+				}
+				source.check(t, 1, 1, false)
+				target.check(t, 1, 0, true)
+				target.onSample(types.Sample{DeltaUnit: true})
+				if counter.Load() != 0 {
+					t.Fatal("switched consumer received a delta before a keyframe")
+				}
+				target.onSample(types.Sample{})
+			}
+			if counter.Load() != 1 {
+				t.Fatal("consumer did not receive the keyframe")
+			}
 		})
-		recorder := &sampleRecorder{}
-		subscription, err := source.Subscribe(recorder)
-		if err != nil {
-			t.Fatalf("Subscribe() error = %v", err)
-		}
-		defer subscription.Close()
-
-		if err := subscription.Switch(target); err == nil {
-			t.Fatal("Switch() returned no error")
-		}
-		if subscription.Stream() != source {
-			t.Fatal("failed switch changed the subscription stream")
-		}
-		if !source.started() || target.started() {
-			t.Fatalf("started state after failed switch = (source %v, target %v)", source.started(), target.started())
-		}
-
-		source.onSample(types.Sample{DeltaUnit: false})
-		if recorder.count() != 1 {
-			t.Fatal("source stopped delivering after failed switch")
-		}
-	})
-}
-
-func TestPipelineRecreationPreservesSubscription(t *testing.T) {
-	created, destroyed := 0, 0
-	stream := newTestStream(t, codec.VP8(), successfulPipelineFactory(&created, &destroyed))
-	selector := streamSelectorNew(codec.VP8(), map[string]*StreamSinkManagerCtx{stream.ID(): stream}, []string{stream.ID()})
-	recorder := &sampleRecorder{}
-	subscription, err := stream.Subscribe(recorder)
-	if err != nil {
-		t.Fatalf("Subscribe() error = %v", err)
-	}
-	defer subscription.Close()
-
-	selector.destroyPipelines()
-	if subscription.Stream() != stream || !stream.started() {
-		t.Fatal("destroying pipelines removed the logical subscription")
-	}
-	if err := selector.recreatePipelines(); err != nil {
-		t.Fatalf("recreatePipelines() error = %v", err)
-	}
-	if created != 2 || destroyed != 1 {
-		t.Fatalf("pipeline lifecycle = (%d creates, %d destroys), want (2, 1)", created, destroyed)
-	}
-
-	stream.onSample(types.Sample{DeltaUnit: false})
-	if recorder.count() != 1 {
-		t.Fatal("subscription did not receive samples after pipeline recreation")
 	}
 }
 
-func TestPipelineRecreationWithNewSubscription(t *testing.T) {
-	created, destroyed := 0, 0
-	stream := newTestStream(t, codec.VP8(), successfulPipelineFactory(&created, &destroyed))
-	selector := streamSelectorNew(codec.VP8(), map[string]*StreamSinkManagerCtx{stream.ID(): stream}, []string{stream.ID()})
-
-	selector.destroyPipelines()
-	// A new viewer can start a pipeline between the resize hooks.
-	recorder := &sampleRecorder{}
-	subscription, err := stream.Subscribe(recorder)
-	if err != nil {
-		t.Fatalf("Subscribe() error = %v", err)
-	}
-	defer subscription.Close()
-
-	if err := selector.recreatePipelines(); err != nil {
-		t.Fatalf("recreatePipelines() error = %v", err)
-	}
-	if created != 1 || destroyed != 0 {
-		t.Fatalf("pipeline lifecycle = (%d creates, %d destroys), want (1, 0)", created, destroyed)
-	}
-	stream.onSample(types.Sample{DeltaUnit: false})
-	if recorder.count() != 1 {
-		t.Fatal("subscription did not receive samples from the existing pipeline")
+func TestPipelineRecreation(t *testing.T) {
+	for _, newViewer := range []bool{false, true} {
+		t.Run(fmt.Sprintf("new-viewer=%v", newViewer), func(t *testing.T) {
+			s := newTestSink(t, codec.VP8())
+			selector := streamSelectorNew(codec.VP8(), map[string]*StreamSinkManagerCtx{s.ID(): s.StreamSinkManagerCtx}, []string{s.ID()})
+			if newViewer {
+				selector.destroyPipelines()
+			}
+			counter := &sampleCounter{}
+			sub := subscribe(t, s, counter)
+			if !newViewer {
+				selector.destroyPipelines()
+			}
+			if sub.Stream() != s.StreamSinkManagerCtx || !s.started() {
+				t.Fatal("resize lost the logical subscription")
+			}
+			checkError(t, selector.recreatePipelines())
+			if newViewer {
+				s.check(t, 1, 0, true)
+			} else {
+				s.check(t, 2, 1, true)
+			}
+			s.onSample(types.Sample{})
+			if counter.Load() != 1 {
+				t.Fatal("subscription stopped delivering after recreation")
+			}
+		})
 	}
 }
 
 func TestConcurrentBitrateUpdates(t *testing.T) {
-	stream := newTestStream(t, codec.Opus(), successfulPipelineFactory(new(int), new(int)))
-	stream.saveSampleBitrate(time.Unix(2, 0), 1)
-
-	// A replacement pipeline can emit while the old reader is still draining.
+	s := newTestSink(t, codec.Opus())
+	s.saveSampleBitrate(time.Unix(2, 0), 1)
 	var wg sync.WaitGroup
 	for range 2 {
 		wg.Go(func() {
 			for range 1000 {
-				stream.saveSampleBitrate(time.Unix(3, 0), 1)
+				s.saveSampleBitrate(time.Unix(3, 0), 1)
 			}
 		})
 	}
 	wg.Wait()
-
-	stream.saveSampleBitrate(time.Unix(4, 0), 0)
-	if got := stream.Bitrate(); got != 2000 {
+	s.saveSampleBitrate(time.Unix(4, 0), 0)
+	if got := s.Bitrate(); got != 2000 {
 		t.Fatalf("bitrate = %d, want 2000", got)
 	}
 }
 
 func TestBitrateDuringPipelineRestart(t *testing.T) {
-	stream := newTestStream(t, codec.Opus(), successfulPipelineFactory(new(int), new(int)))
+	s := newTestSink(t, codec.Opus())
 	done := make(chan struct{})
 	var wg sync.WaitGroup
 	wg.Go(func() {
@@ -361,7 +216,7 @@ func TestBitrateDuringPipelineRestart(t *testing.T) {
 			case <-done:
 				return
 			default:
-				stream.saveSampleBitrate(time.Unix(sec, 0), 1)
+				s.saveSampleBitrate(time.Unix(sec, 0), 1)
 			}
 		}
 	})
@@ -369,12 +224,9 @@ func TestBitrateDuringPipelineRestart(t *testing.T) {
 		close(done)
 		wg.Wait()
 	}()
-
 	for range 20 {
-		if err := stream.createPipeline(); err != nil {
-			t.Fatalf("createPipeline() error = %v", err)
-		}
-		_ = stream.Bitrate()
-		stream.destroyPipeline()
+		checkError(t, s.createPipeline())
+		_ = s.Bitrate()
+		s.destroyPipeline()
 	}
 }
