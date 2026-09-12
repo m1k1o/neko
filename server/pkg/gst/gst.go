@@ -211,9 +211,7 @@ func CheckElement(element string) error {
 }
 
 //export goHandlePipelineBuffer
-func goHandlePipelineBuffer(pipelineID C.int, buf C.gpointer, bufLen C.int, duration C.guint64, deltaUnit C.gboolean) {
-	defer C.g_free(buf)
-
+func goHandlePipelineBuffer(pipelineID C.int, buf C.gpointer, bufLen C.int, pts C.guint64, dts C.guint64, duration C.guint64, deltaUnit C.gboolean) {
 	pipelinesLock.Lock()
 	pipeline, ok := pipelines[int(pipelineID)]
 	pipelinesLock.Unlock()
@@ -223,6 +221,8 @@ func goHandlePipelineBuffer(pipelineID C.int, buf C.gpointer, bufLen C.int, dura
 			Data:      C.GoBytes(unsafe.Pointer(buf), bufLen),
 			Length:    int(bufLen),
 			Timestamp: time.Now(),
+			PTS:       time.Duration(pts),
+			DTS:       time.Duration(dts),
 			Duration:  time.Duration(duration),
 			DeltaUnit: deltaUnit == C.TRUE,
 		}
