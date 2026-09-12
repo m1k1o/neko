@@ -28,29 +28,32 @@ type sinkPipeline interface {
 }
 
 type StreamSinkManagerCtx struct {
-	id string
-
-	// wait for a keyframe before sending samples
-	waitForKf bool
-
-	bitrateMu sync.Mutex
-	bitrate   uint64
-	brBuckets map[int]float64
-
-	logger zerolog.Logger
-	mu     sync.Mutex
-	wg     sync.WaitGroup
-
+	// Configuration set before use.
+	id              string
+	logger          zerolog.Logger
 	codec           codec.RTPCodec
-	pipeline        sinkPipeline
-	pipelineMu      sync.Mutex
+	waitForKf       bool // wait for a keyframe before sending samples
 	pipelineFn      func() (string, error)
 	pipelineFactory func(string) (sinkPipeline, error)
 
+	// Serializes subscription add, remove, and move operations.
+	mu sync.Mutex
+
+	// Serializes pipeline creation and destruction.
+	pipelineMu sync.Mutex
+	pipeline   sinkPipeline
+	wg         sync.WaitGroup // tracks pipeline sample readers
+
+	// Serializes listener map updates and snapshot publication.
+	listenersMu       sync.Mutex
 	listeners         map[*streamSubscription]types.SampleConsumer
 	listenersKf       map[*streamSubscription]types.SampleConsumer // keyframe lobby
-	listenersMu       sync.Mutex
-	listenersSnapshot atomic.Value
+	listenersSnapshot atomic.Value                                 // read without listenersMu
+
+	// Protects bitrate accounting, reads, and resets.
+	bitrateMu sync.Mutex
+	bitrate   uint64
+	brBuckets map[int]float64
 
 	// metrics
 	currentListeners prometheus.Gauge
