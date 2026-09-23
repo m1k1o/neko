@@ -1,0 +1,52 @@
+# Neko - TURN Server Example
+#
+# WebRTC needs a direct connection between the client and the server. When
+# that is not possible (e.g. both sides are behind restrictive NATs or
+# firewalls), a TURN server relays the traffic instead. This example runs a
+# Coturn TURN server alongside Neko.
+#
+# See: https://neko.m1k1o.net/docs/v3/configuration/webrtc#iceservers
+services:
+  neko:
+    image: "ghcr.io/m1k1o/neko/firefox:latest"
+    restart: "unless-stopped"
+    shm_size: "2gb"
+    ports:
+      - "8080:8080"
+      - "52000-52100:52000-52100/udp"
+    environment:
+      NEKO_DESKTOP_SCREEN: '1920x1080@30'
+      NEKO_MEMBER_MULTIUSER_USER_PASSWORD: neko
+      NEKO_MEMBER_MULTIUSER_ADMIN_PASSWORD: admin
+      NEKO_WEBRTC_EPR: 52000-52100
+      NEKO_WEBRTC_ICELITE: 1
+      # Tell the client to use the TURN server below as a fallback ICE
+      # server. Replace <MY-COTURN-SERVER> with the LAN or public IP address
+      # the TURN server is reachable at, matching the coturn service below.
+      # See: https://neko.m1k1o.net/docs/v3/configuration/webrtc#iceservers
+      NEKO_WEBRTC_ICESERVERS_FRONTEND: |
+        [{
+          "urls": [ "turn:<MY-COTURN-SERVER>:3478" ],
+          "username": "neko",
+          "credential": "neko"
+        }]
+
+  coturn:
+    image: "coturn/coturn:latest"
+    restart: "unless-stopped"
+    network_mode: "host"
+    command: |
+      -n
+      --realm=localhost
+      --fingerprint
+      --listening-ip=0.0.0.0
+      --external-ip=<MY-COTURN-SERVER>
+      --listening-port=3478
+      --min-port=49160
+      --max-port=49200
+      --log-file=stdout
+      --user=neko:neko
+      --lt-cred-mech
+    # Replace <MY-COTURN-SERVER> above with your LAN or Public IP address.
+    # Open ports 3478/tcp (control) and 49160-49200/udp (relay) on your
+    # firewall. More info: https://github.com/coturn/coturn
