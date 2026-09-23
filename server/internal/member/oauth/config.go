@@ -9,6 +9,7 @@ type Config struct {
 	AutoRedirect     bool
 	Name             string
 	AdminEmails      []string
+	UserEmails       []string
 	ClientID         string
 	ClientSecret     string
 	IssuerURL        string

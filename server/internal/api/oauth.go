@@ -101,6 +101,10 @@ func oauthServiceError(err error, start bool) error {
 		return utils.HttpForbidden("logins are locked").WithInternalErr(err)
 	}
 
+	if errors.Is(err, types.ErrSessionEmailNotAllowed) {
+		return utils.HttpForbidden("email address is not allowed to log in").WithInternalErr(err)
+	}
+
 	if start && strings.HasPrefix(err.Error(), "issuer discovery:") {
 		return utils.HttpError(http.StatusServiceUnavailable, "OAuth issuer discovery failed").WithInternalErr(err)
 	}

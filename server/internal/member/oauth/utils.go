@@ -74,6 +74,19 @@ func administrator(email string, isAdmin bool, emails []string) bool {
 	if isAdmin {
 		return true
 	}
+	return emailMatches(email, emails)
+}
+
+// emailAllowed reports whether email is permitted to log in given a user
+// allowlist. An empty allowlist permits every email.
+func emailAllowed(email string, emails []string) bool {
+	if len(emails) == 0 {
+		return true
+	}
+	return emailMatches(email, emails)
+}
+
+func emailMatches(email string, emails []string) bool {
 	for _, candidate := range emails {
 		if email != "" && strings.EqualFold(strings.TrimSpace(email), strings.TrimSpace(candidate)) {
 			return true
