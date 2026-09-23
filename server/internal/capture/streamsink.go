@@ -317,7 +317,6 @@ func (manager *StreamSinkManagerCtx) removeSubscription(subscription *streamSubs
 
 	// stop if started
 	manager.stop()
-
 }
 
 // moveSubscriptionTo starts the target before moving delivery and stopping the source.
