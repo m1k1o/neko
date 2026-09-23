@@ -67,6 +67,7 @@ func (api *ApiManagerCtx) Logout(w http.ResponseWriter, r *http.Request) error {
 			return utils.HttpInternalServerError().WithInternalErr(err)
 		}
 	}
+
 	if api.sessions.CookieEnabled() {
 		api.sessions.CookieClearToken(w, r)
 	}

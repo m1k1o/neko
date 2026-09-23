@@ -25,7 +25,7 @@ A member profile is a structure that describes the user and what the user is all
 | Field                      | Description | Type |
 |----------------------------|-------------|------|
 | <Def id="profile.name" />                     | User's name as shown in the UI, must not be unique within the system (not used as an identifier). | string |
-| `avatar`                   | Avatar URL shown in clients that support member avatars. OAuth logins synchronize this value from the configured user-info field. | string |
+| <Def id="profile.avatar" />                   | Avatar URL shown in clients that support member avatars. OAuth logins synchronize this value from the configured user-info field. | string |
 | <Def id="profile.is_admin" />                 | Whether the user can perform administrative tasks that include managing users, sessions, and settings. | boolean |
 | <Def id="profile.can_login" />                | Whether the user can log in to the system and use the HTTP API. | boolean |
 | <Def id="profile.can_connect" />              | Whether the user can connect to the room using the WebSocket API (needs <Opt id="profile.can_login" /> to be enabled). | boolean |
