@@ -168,6 +168,94 @@ paths:
             schema:
               $ref: '#/components/schemas/SessionLoginRequest'
         required: true
+  /api/oauth/config:
+    get:
+      tags:
+        - current-session
+      summary: Get OAuth Login Configuration
+      description: Retrieve the OAuth login option shown by the client. This endpoint does not expose OAuth client credentials.
+      operationId: oauthConfig
+      security: []
+      responses:
+        '200':
+          description: OAuth login configuration retrieved successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OAuthLoginConfig'
+  /api/oauth/login:
+    get:
+      tags:
+        - current-session
+      summary: Start OAuth Login
+      description: Start the OAuth authorization-code flow and redirect to the configured identity provider.
+      operationId: oauthLogin
+      security: []
+      responses:
+        '302':
+          description: Redirect to the identity provider authorization endpoint.
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          description: OAuth is not configured, issuer discovery failed, or session cookies are disabled.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  /api/oauth/callback:
+    get:
+      tags:
+        - current-session
+      summary: Complete OAuth Login
+      description: Complete the OAuth authorization-code flow, create a session cookie, and redirect to the configured success URL.
+      operationId: oauthCallback
+      security: []
+      parameters:
+        - in: query
+          name: state
+          description: State value returned by the identity provider.
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: code
+          description: Authorization code returned by the identity provider.
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: error
+          description: Authorization error returned by the identity provider.
+          required: false
+          schema:
+            type: string
+      responses:
+        '303':
+          description: OAuth login succeeded and the response sets the session cookie before redirecting.
+        '400':
+          description: OAuth callback parameters or state are invalid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '401':
+          description: OAuth authorization, token exchange, or user-info request failed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '422':
+          description: The OAuth user already has a connected session.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+        '503':
+          description: OAuth is not fully configured or issuer discovery failed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
   /api/logout:
     post:
       tags:
@@ -1301,6 +1389,22 @@ components:
           token:
             type: string
             description: The session token, only if cookie authentication is disabled.
+
+    OAuthLoginConfig:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+          description: Indicates whether OAuth login is enabled for the selected member provider.
+        name:
+          type: string
+          description: Display name for the OAuth login option.
+        login_url:
+          type: string
+          description: Relative URL that starts the OAuth login flow.
+        password_login_enabled:
+          type: boolean
+          description: Indicates whether password login remains available.
 
     SessionData:
       type: object

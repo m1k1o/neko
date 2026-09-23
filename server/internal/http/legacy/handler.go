@@ -105,7 +105,14 @@ func (h *LegacyHandler) Route(r types.Router) {
 		defer s.destroy()
 
 		// dial to the remote backend
-		connBackend, _, err := h.wsDialer.Dial("ws://"+h.serverAddr+path.Join(s.pathPrefix, "/api/ws")+"?token="+url.QueryEscape(s.token), nil)
+		backendURL := "ws://" + h.serverAddr + path.Join(s.pathPrefix, "/api/ws")
+		backendHeaders := make(http.Header)
+		if s.token != "" {
+			backendURL += "?token=" + url.QueryEscape(s.token)
+		} else {
+			backendHeaders.Set("Cookie", s.cookie)
+		}
+		connBackend, _, err := h.wsDialer.Dial(backendURL, backendHeaders)
 		if err != nil {
 			h.logger.Error().Err(err).Msg("couldn't dial to the remote backend")
 

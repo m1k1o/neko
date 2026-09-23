@@ -32,10 +32,11 @@ func profileToMember(id string, profile types.MemberProfile) (*oldTypes.Member, 
 	}
 
 	return &oldTypes.Member{
-		ID:    id,
-		Name:  profile.Name,
-		Admin: profile.IsAdmin,
-		Muted: !settings.CanSend,
+		ID:     id,
+		Name:   profile.Name,
+		Avatar: profile.Avatar,
+		Admin:  profile.IsAdmin,
+		Muted:  !settings.CanSend,
 	}, nil
 }
 
@@ -618,18 +619,17 @@ func (s *session) wsToClient(msg []byte) error {
 
 	// Open In App Events
 	case openinapp.OPENINAPP_INIT:
-    request := &openinapp.Init{}
-    if err := json.Unmarshal(data.Payload, request); err != nil {
+		request := &openinapp.Init{}
+		if err := json.Unmarshal(data.Payload, request); err != nil {
 			return err
-    }
-    return s.toClient(&struct {
+		}
+		return s.toClient(&struct {
 			Event   string `json:"event"`
 			Enabled bool   `json:"enabled"`
-    }{
+		}{
 			Event:   openinapp.OPENINAPP_INIT,
 			Enabled: request.Enabled,
-    })
-
+		})
 
 	// Screen Events
 	case event.SCREEN_UPDATED:

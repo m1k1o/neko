@@ -7,6 +7,7 @@ import (
 
 	"github.com/m1k1o/neko/server/internal/member/file"
 	"github.com/m1k1o/neko/server/internal/member/multiuser"
+	"github.com/m1k1o/neko/server/internal/member/oauth"
 	"github.com/m1k1o/neko/server/internal/member/object"
 	"github.com/m1k1o/neko/server/pkg/types"
 	"github.com/m1k1o/neko/server/pkg/utils"
@@ -19,6 +20,7 @@ type Member struct {
 	File      file.Config
 	Object    object.Config
 	Multiuser multiuser.Config
+	OAuth     oauth.Config
 }
 
 func (Member) Init(cmd *cobra.Command) error {
@@ -62,6 +64,10 @@ func (Member) Init(cmd *cobra.Command) error {
 
 	cmd.PersistentFlags().String("member.multiuser.admin_profile", "{}", "member multiuser provider: profile template for admin users")
 	if err := viper.BindPFlag("member.multiuser.admin_profile", cmd.PersistentFlags().Lookup("member.multiuser.admin_profile")); err != nil {
+		return err
+	}
+
+	if err := oauth.Init(cmd); err != nil {
 		return err
 	}
 
@@ -138,6 +144,9 @@ func (s *Member) Set() {
 		utils.JsonStringAutoDecode(s.Multiuser.AdminProfile),
 	)); err != nil {
 		log.Warn().Err(err).Msgf("unable to parse member multiuser admin profile")
+	}
+	if err := s.OAuth.Set(s.Multiuser.UserProfile, s.Multiuser.AdminProfile); err != nil {
+		log.Warn().Err(err).Msg("unable to configure member OAuth provider")
 	}
 }
 
