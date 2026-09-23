@@ -152,7 +152,7 @@ func (Member) Init(cmd *cobra.Command) error {
 		return err
 	}
 
-	cmd.PersistentFlags().StringSlice("member.oauth.scopes", []string{"openid", "profile"}, "OAuth 2.0 scopes")
+	cmd.PersistentFlags().StringSlice("member.oauth.scopes", []string{"openid", "profile", "email"}, "OAuth 2.0 scopes")
 	if err := viper.BindPFlag("member.oauth.scopes", cmd.PersistentFlags().Lookup("member.oauth.scopes")); err != nil {
 		return err
 	}
