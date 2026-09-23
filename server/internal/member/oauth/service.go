@@ -13,6 +13,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/rs/zerolog/log"
+
 	"github.com/m1k1o/neko/server/pkg/types"
 )
 
@@ -164,6 +166,10 @@ func (service *Service) Complete(ctx context.Context, stateToken, code string) (
 	email := claim(claims, "email")
 	if email == "" {
 		email = claim(idClaims, "email")
+	}
+
+	if email == "" && (len(config.AdminEmails) > 0 || len(config.UserEmails) > 0) {
+		log.Warn().Msg("OAuth admin_emails/user_emails are configured but the provider did not return an 'email' claim; request the 'email' scope")
 	}
 
 	isAdmin := boolClaim(claims, "isAdmin") || boolClaim(idClaims, "isAdmin")
