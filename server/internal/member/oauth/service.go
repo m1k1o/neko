@@ -167,9 +167,14 @@ func (service *Service) Complete(ctx context.Context, stateToken, code string) (
 	}
 
 	isAdmin := boolClaim(claims, "isAdmin") || boolClaim(idClaims, "isAdmin")
+	admin := administrator(email, isAdmin, config.AdminEmails)
+
+	if !admin && !emailAllowed(email, config.UserEmails) {
+		return nil, "", types.ErrSessionEmailNotAllowed
+	}
 
 	var profile types.MemberProfile
-	if administrator(email, isAdmin, config.AdminEmails) {
+	if admin {
 		profile = config.AdminProfile
 	} else {
 		profile = config.UserProfile

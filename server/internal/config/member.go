@@ -112,6 +112,11 @@ func (Member) Init(cmd *cobra.Command) error {
 		return err
 	}
 
+	cmd.PersistentFlags().StringSlice("member.oauth.user_emails", []string{}, "OAuth user-info email addresses allowed to log in, if empty all are allowed")
+	if err := viper.BindPFlag("member.oauth.user_emails", cmd.PersistentFlags().Lookup("member.oauth.user_emails")); err != nil {
+		return err
+	}
+
 	cmd.PersistentFlags().String("member.oauth.client_id", "", "OAuth 2.0 client ID")
 	if err := viper.BindPFlag("member.oauth.client_id", cmd.PersistentFlags().Lookup("member.oauth.client_id")); err != nil {
 		return err
@@ -231,6 +236,7 @@ func (s *Member) Set() {
 	s.OAuth.AutoRedirect = viper.GetBool("member.oauth.auto_redirect")
 	s.OAuth.Name = viper.GetString("member.oauth.name")
 	s.OAuth.AdminEmails = viper.GetStringSlice("member.oauth.admin_emails")
+	s.OAuth.UserEmails = viper.GetStringSlice("member.oauth.user_emails")
 	s.OAuth.ClientID = viper.GetString("member.oauth.client_id")
 	s.OAuth.ClientSecret = viper.GetString("member.oauth.client_secret")
 	s.OAuth.IssuerURL = viper.GetString("member.oauth.issuer_url")

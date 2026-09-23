@@ -192,6 +192,7 @@ member:
     auto_redirect: true
     name: "Example SSO"
     admin_emails: ["platform-admin@example.com", "security@example.com"]
+    user_emails: [] # if empty, any authenticated user is allowed to log in
     client_id: "<client-id>"
     client_secret: "<client-secret>"
     issuer_url: "https://id.example.com"
@@ -226,6 +227,8 @@ member:
 The sign-in endpoint is `GET /api/oauth/login`; the callback endpoint is `GET /api/oauth/callback`. OAuth login requires `session.cookie.enabled: true`, which is the default. Set `member.provider: oauth` to make OAuth the only member provider.
 
 `admin_emails` is a list matched against the standard `email` field, case-insensitively. An OAuth user is an administrator when either their email matches that list or their user-info/ID-token claims include `isAdmin: true`; their permissions then use `admin_profile`. The configured name and avatar fields are read from userinfo first, then fall back to the ID token when userinfo omits them. Avatar URLs are rendered by clients that support member avatars.
+
+`user_emails` restricts non-admin login to a list of allowed emails, matched the same way as `admin_emails`. If `user_emails` is empty (the default), any authenticated user is allowed to log in. Administrators (matched by `admin_emails` or `isAdmin: true`) can always log in regardless of `user_emails`. Users whose email is not allowed receive an HTTP 403 response and no session is created.
 
 For OAuth sessions, `GET /api/whoami` includes `extra_data`: the merged userinfo and ID-token claims, with userinfo values taking precedence. It is returned only to the authenticated session owner and is intended for profile-field troubleshooting. Do not place secrets in provider profile claims.
 
