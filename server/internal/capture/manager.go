@@ -33,7 +33,7 @@ type CaptureManagerCtx struct {
 func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCtx {
 	logger := log.With().Str("module", "capture").Logger()
 
-	videos := map[string]types.StreamSinkManager{}
+	videos := map[string]*StreamSinkManagerCtx{}
 	for video_id, cnf := range config.VideoPipelines {
 		pipelineConf := cnf
 
@@ -257,11 +257,11 @@ func (manager *CaptureManagerCtx) Screencast() types.ScreencastManager {
 	return manager.screencast
 }
 
-func (manager *CaptureManagerCtx) Audio() types.StreamSinkManager {
+func (manager *CaptureManagerCtx) Audio() types.EncodedStream {
 	return manager.audio
 }
 
-func (manager *CaptureManagerCtx) Video() types.StreamSelectorManager {
+func (manager *CaptureManagerCtx) Video() types.EncodedStreamSelector {
 	return manager.video
 }
 

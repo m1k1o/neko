@@ -20,17 +20,35 @@ var (
 type Sample struct {
 	// timing information
 	Timestamp time.Time
-	Duration  time.Duration
+	// PTS, DTS, and Duration use -1 for GST_CLOCK_TIME_NONE.
+	PTS      time.Duration
+	DTS      time.Duration
+	Duration time.Duration
 	// metadata
 	DeltaUnit bool // this unit cannot be decoded independently.
 	// buffer length
 	Length int
-	// buffer with encoded media
+	// Data is immutable and remains valid while referenced. Consumers may retain
+	// it after WriteSample returns.
 	Data []byte
 }
 
-type SampleListener interface {
+type SampleConsumer interface {
 	WriteSample(Sample)
+}
+
+type EncodedStream interface {
+	ID() string
+	Codec() codec.RTPCodec
+	Bitrate() uint64
+
+	Subscribe(SampleConsumer) (StreamSubscription, error)
+}
+
+type StreamSubscription interface {
+	Stream() EncodedStream
+	Switch(EncodedStream) error
+	Close() error
 }
 
 type BroadcastManager interface {
@@ -103,27 +121,16 @@ type StreamSelector struct {
 	Bitrate uint64 `json:"bitrate"`
 }
 
-type StreamSelectorManager interface {
+type EncodedStreamSelector interface {
 	IDs() []string
 	Codec() codec.RTPCodec
 
-	GetStream(selector StreamSelector) (StreamSinkManager, bool)
+	GetStream(selector StreamSelector) (EncodedStream, bool)
 }
 
-type StreamSinkManager interface {
-	ID() string
-	Codec() codec.RTPCodec
-	Bitrate() uint64
-
-	AddListener(listener SampleListener) error
-	RemoveListener(listener SampleListener) error
-	MoveListenerTo(listener SampleListener, targetStream StreamSinkManager) error
-
-	ListenersCount() int
-	Started() bool
-
-	CreatePipeline() error
-	DestroyPipeline()
+type EncodedMediaSource interface {
+	Audio() EncodedStream
+	Video() EncodedStreamSelector
 }
 
 type StreamSrcManager interface {
@@ -137,13 +144,13 @@ type StreamSrcManager interface {
 }
 
 type CaptureManager interface {
+	EncodedMediaSource
+
 	Start()
 	Shutdown() error
 
 	Broadcast() BroadcastManager
 	Screencast() ScreencastManager
-	Audio() StreamSinkManager
-	Video() StreamSelectorManager
 
 	Webcam() StreamSrcManager
 	Microphone() StreamSrcManager
