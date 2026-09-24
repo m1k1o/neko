@@ -162,7 +162,6 @@ func (t *Track) RemoveStream() {
 	defer t.streamMu.Unlock()
 
 	if t.stream == nil {
-		t.stream = nil
 		return
 	}
 
