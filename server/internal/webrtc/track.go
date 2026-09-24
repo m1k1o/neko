@@ -118,12 +118,6 @@ func (t *Track) sampleReader() {
 func (t *Track) WriteSample(sample types.Sample) {
 	select {
 	case <-t.done:
-		return
-	default:
-	}
-
-	select {
-	case <-t.done:
 	case t.sample <- sample:
 	default:
 		t.logger.Trace().Msg("dropping sample: track channel full")
