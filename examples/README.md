@@ -8,8 +8,8 @@ These are the same examples shown in the [documentation](https://neko.m1k1o.net/
 | --- | --- |
 | [simple-browser](./simple-browser) | Firefox with commented options for persistent/custom profiles and other available browser images. |
 | [kiosk-browser](./kiosk-browser) | Firefox in kiosk mode that opens a fixed URL on startup (e.g. a streaming service or dashboard). Stateless by default. |
-| [nvidia-browser](./nvidia-browser) | Firefox with Nvidia GPU acceleration, with a commented "encode-only" option. |
-| [intel-browser](./intel-browser) | Firefox with Intel (VAAPI) GPU acceleration, with a commented "encode-only" option. |
+| [gpu-nvidia-browser](./gpu-nvidia-browser) | Firefox with Nvidia GPU acceleration, with a commented "encode-only" option. |
+| [gpu-intel-browser](./gpu-intel-browser) | Firefox with Intel (VAAPI) GPU acceleration, with a commented "encode-only" option. |
 | [raspberry-pi-browser](./raspberry-pi-browser) | Firefox tuned for Raspberry Pi, with a commented hardware-encoding option. |
 | [arm64-browser](./arm64-browser) | Firefox on generic ARM64 hosts, with links to DRM setup and GPU acceleration options. |
 | [turn-server](./turn-server) | A Coturn TURN server running alongside Neko for WebRTC NAT traversal. |

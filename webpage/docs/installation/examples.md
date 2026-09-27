@@ -35,7 +35,7 @@ Browse: [`examples/kiosk-browser`](https://github.com/m1k1o/neko/tree/main/examp
 
 For some workflows, passing the target URL directly to Firefox is more reliable than using homepage policies, because session restore can otherwise override the start page. See also: [Supervisord Configuration](/docs/v3/customization#supervisord).
 
-## Nvidia Browser {#nvidia-browser}
+## Nvidia Browser {#gpu-nvidia-browser}
 
 Neko supports hardware acceleration using Nvidia GPUs. To use this feature, you need to have the Nvidia Container Toolkit installed on your system. You can find the installation instructions [here](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html). Check if your GPU supports hardware encoding with [this list](https://developer.nvidia.com/video-encode-decode-gpu-support-matrix).
 
@@ -43,22 +43,22 @@ This example accelerates both video encoding and browser rendering using the GPU
 
 If you only want to accelerate the encoding, **not the browser rendering**, see the commented "ENCODE-ONLY OPTION" blocks in the example - they switch to the plain `firefox` image and a `videoconvert`-based pipeline instead of `nvidia-firefox` with `cudaupload`/`cudaconvert`.
 
-Browse: [`examples/nvidia-browser`](https://github.com/m1k1o/neko/tree/main/examples/nvidia-browser)
+Browse: [`examples/gpu-nvidia-browser`](https://github.com/m1k1o/neko/tree/main/examples/gpu-nvidia-browser)
 
-```yaml title="docker-compose.yaml" file=<rootDir>/examples/nvidia-browser/docker-compose.yaml
+```yaml title="docker-compose.yaml" file=<rootDir>/examples/gpu-nvidia-browser/docker-compose.yaml
 ```
 
 See available [Nvidia Docker Images](/docs/v3/installation/docker-images#nvidia).
 
-## Intel Browser {#intel-browser}
+## Intel Browser {#gpu-intel-browser}
 
 Neko supports hardware acceleration using Intel GPUs via VAAPI. This requires the host to expose `/dev/dri` and have the Intel graphics driver installed.
 
 This example accelerates both video encoding and browser rendering using the `intel-firefox` image. If you only want to accelerate the encoding, **not the browser rendering**, see the commented "ENCODE-ONLY OPTION" in the example, which switches to the plain `firefox` image.
 
-Browse: [`examples/intel-browser`](https://github.com/m1k1o/neko/tree/main/examples/intel-browser)
+Browse: [`examples/gpu-intel-browser`](https://github.com/m1k1o/neko/tree/main/examples/gpu-intel-browser)
 
-```yaml title="docker-compose.yaml" file=<rootDir>/examples/intel-browser/docker-compose.yaml
+```yaml title="docker-compose.yaml" file=<rootDir>/examples/gpu-intel-browser/docker-compose.yaml
 ```
 
 See available [Intel Docker Images](/docs/v3/installation/docker-images#intel).
