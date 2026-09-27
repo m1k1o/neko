@@ -35,6 +35,19 @@ Browse: [`examples/kiosk-browser`](https://github.com/m1k1o/neko/tree/main/examp
 
 For some workflows, passing the target URL directly to Firefox is more reliable than using homepage policies, because session restore can otherwise override the start page. See also: [Supervisord Configuration](/docs/v3/customization#supervisord).
 
+## ARM64 Browser {#arm64-browser}
+
+Firefox on a generic ARM64 host (e.g. Apple M1/M2 under virtualization, AWS Graviton, Oracle Cloud ARM free tier). The same multi-arch image used on amd64 works here - no special image tag is required.
+
+DRM (Widevine) support is limited on ARM64 and needs extra setup for protected streaming content, see [DRM for ARM64](/docs/v3/customization/browsers#arm64-drm). If your device exposes a V4L2 M2M hardware encoder, you can reuse the pipeline from the [Raspberry Pi Browser](#gpu-raspberry-pi-browser) example.
+
+Browse: [`examples/arm64-browser`](https://github.com/m1k1o/neko/tree/main/examples/arm64-browser)
+
+```yaml title="docker-compose.yaml" file=<rootDir>/examples/arm64-browser/docker-compose.yaml
+```
+
+See supported architectures and per-app availability in the [Availability Matrix](/docs/v3/installation/docker-images#availability).
+
 ## Nvidia GPU Browser {#gpu-nvidia-browser}
 
 Neko supports hardware acceleration using Nvidia GPUs. To use this feature, you need to have the Nvidia Container Toolkit installed on your system. You can find the installation instructions [here](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html). Check if your GPU supports hardware encoding with [this list](https://developer.nvidia.com/video-encode-decode-gpu-support-matrix).
@@ -63,27 +76,14 @@ Browse: [`examples/gpu-intel-browser`](https://github.com/m1k1o/neko/tree/main/e
 
 See available [Intel Docker Images](/docs/v3/installation/docker-images#intel).
 
-## Raspberry Pi Browser {#raspberry-pi-browser}
+## Raspberry Pi GPU Browser {#gpu-raspberry-pi-browser}
 
 Firefox tuned for a Raspberry Pi (or similar ARM SBC). Works out of the box with software rendering/encoding. See the commented "GPU ACCELERATION OPTION" in the example for enabling hardware-accelerated encoding via the Broadcom VideoCore V4L2 M2M encoder, available on Raspberry Pi 3/4 (not Pi 5).
 
-Browse: [`examples/raspberry-pi-browser`](https://github.com/m1k1o/neko/tree/main/examples/raspberry-pi-browser)
+Browse: [`examples/gpu-raspberry-pi-browser`](https://github.com/m1k1o/neko/tree/main/examples/gpu-raspberry-pi-browser)
 
-```yaml title="docker-compose.yaml" file=<rootDir>/examples/raspberry-pi-browser/docker-compose.yaml
+```yaml title="docker-compose.yaml" file=<rootDir>/examples/gpu-raspberry-pi-browser/docker-compose.yaml
 ```
-
-## ARM64 Browser {#arm64-browser}
-
-Firefox on a generic ARM64 host (e.g. Apple M1/M2 under virtualization, AWS Graviton, Oracle Cloud ARM free tier). The same multi-arch image used on amd64 works here - no special image tag is required.
-
-DRM (Widevine) support is limited on ARM64 and needs extra setup for protected streaming content, see [DRM for ARM64](/docs/v3/customization/browsers#arm64-drm). If your device exposes a V4L2 M2M hardware encoder, you can reuse the pipeline from the [Raspberry Pi Browser](#raspberry-pi-browser) example.
-
-Browse: [`examples/arm64-browser`](https://github.com/m1k1o/neko/tree/main/examples/arm64-browser)
-
-```yaml title="docker-compose.yaml" file=<rootDir>/examples/arm64-browser/docker-compose.yaml
-```
-
-See supported architectures and per-app availability in the [Availability Matrix](/docs/v3/installation/docker-images#availability).
 
 ## OAuth {#oauth}
 

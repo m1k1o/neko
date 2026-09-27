@@ -30,4 +30,4 @@ services:
       # GPU ACCELERATION OPTION: if your ARM64 device exposes a V4L2 M2M
       # hardware encoder (common on SBCs like Raspberry Pi), reuse the same
       # pipeline as in the Raspberry Pi example:
-      # https://github.com/m1k1o/neko/tree/main/examples/raspberry-pi-browser
+      # https://github.com/m1k1o/neko/tree/main/examples/gpu-raspberry-pi-browser
