@@ -8,6 +8,7 @@ These are the same examples shown in the [documentation](https://neko.m1k1o.net/
 | --- | --- |
 | [simple-browser](./simple-browser) | Firefox with commented options for persistent/custom profiles and other available browser images. |
 | [kiosk-browser](./kiosk-browser) | Firefox in kiosk mode that opens a fixed URL on startup (e.g. a streaming service or dashboard). Stateless by default. |
+| [oauth-browser](./oauth-browser) | Firefox authenticating members through an external OAuth 2.0 / OpenID Connect provider, configured via a mounted config.yaml. |
 | [gpu-nvidia-browser](./gpu-nvidia-browser) | Firefox with Nvidia GPU acceleration, with a commented "encode-only" option. |
 | [gpu-intel-browser](./gpu-intel-browser) | Firefox with Intel (VAAPI) GPU acceleration, with a commented "encode-only" option. |
 | [raspberry-pi-browser](./raspberry-pi-browser) | Firefox tuned for Raspberry Pi, with a commented hardware-encoding option. |

@@ -35,7 +35,7 @@ Browse: [`examples/kiosk-browser`](https://github.com/m1k1o/neko/tree/main/examp
 
 For some workflows, passing the target URL directly to Firefox is more reliable than using homepage policies, because session restore can otherwise override the start page. See also: [Supervisord Configuration](/docs/v3/customization#supervisord).
 
-## Nvidia Browser {#gpu-nvidia-browser}
+## Nvidia GPU Browser {#gpu-nvidia-browser}
 
 Neko supports hardware acceleration using Nvidia GPUs. To use this feature, you need to have the Nvidia Container Toolkit installed on your system. You can find the installation instructions [here](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html). Check if your GPU supports hardware encoding with [this list](https://developer.nvidia.com/video-encode-decode-gpu-support-matrix).
 
@@ -50,7 +50,7 @@ Browse: [`examples/gpu-nvidia-browser`](https://github.com/m1k1o/neko/tree/main/
 
 See available [Nvidia Docker Images](/docs/v3/installation/docker-images#nvidia).
 
-## Intel Browser {#gpu-intel-browser}
+## Intel GPU Browser {#gpu-intel-browser}
 
 Neko supports hardware acceleration using Intel GPUs via VAAPI. This requires the host to expose `/dev/dri` and have the Intel graphics driver installed.
 
@@ -84,6 +84,20 @@ Browse: [`examples/arm64-browser`](https://github.com/m1k1o/neko/tree/main/examp
 ```
 
 See supported architectures and per-app availability in the [Availability Matrix](/docs/v3/installation/docker-images#availability).
+
+## OAuth {#oauth}
+
+Authenticates members through an external OAuth 2.0 / OpenID Connect provider instead of the built-in multiuser passwords. OAuth has many settings, so this example sets them via a mounted `config.yaml` instead of environment variables.
+
+Browse: [`examples/oauth`](https://github.com/m1k1o/neko/tree/main/examples/oauth)
+
+```yaml title="docker-compose.yaml" file=<rootDir>/examples/oauth/docker-compose.yaml
+```
+
+```yaml title="config.yaml" file=<rootDir>/examples/oauth/config.yaml
+```
+
+See [OAuth 2.0 Provider](/docs/v3/configuration/authentication#member.oauth) for all available options.
 
 ## TURN Server {#turn-server}
 
