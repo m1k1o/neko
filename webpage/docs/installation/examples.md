@@ -48,11 +48,15 @@ Browse: [`examples/arm64-browser`](https://github.com/m1k1o/neko/tree/main/examp
 
 See supported architectures and per-app availability in the [Availability Matrix](/docs/v3/installation/docker-images#availability).
 
-## Nvidia GPU Browser {#gpu-nvidia-browser}
+## GPU Browser Examples {#gpu-browser}
 
-Neko supports hardware acceleration using Nvidia GPUs. To use this feature, you need to have the Nvidia Container Toolkit installed on your system. You can find the installation instructions [here](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html). Check if your GPU supports hardware encoding with [this list](https://developer.nvidia.com/video-encode-decode-gpu-support-matrix).
+Neko supports hardware-accelerated video encoding and browser rendering on several GPU vendors. Each example below accelerates both video encoding and browser rendering; see the "ENCODE-ONLY OPTION" comments in the examples for accelerating just the encoding.
 
-This example accelerates both video encoding and browser rendering using the GPU. You can test if the GPU is used by running `nvtop` or `nvidia-smi`, which should show the GPU usage of both the browser and neko. In the browser, you can run the [WebGL Aquarium Demo](https://webglsamples.org/aquarium/aquarium.html) to test the GPU usage.
+### Nvidia {#gpu-nvidia-browser}
+
+To use this feature, you need to have the Nvidia Container Toolkit installed on your system. You can find the installation instructions [here](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html). Check if your GPU supports hardware encoding with [this list](https://developer.nvidia.com/video-encode-decode-gpu-support-matrix).
+
+You can test if the GPU is used by running `nvtop` or `nvidia-smi`, which should show the GPU usage of both the browser and neko. In the browser, you can run the [WebGL Aquarium Demo](https://webglsamples.org/aquarium/aquarium.html) to test the GPU usage.
 
 If you only want to accelerate the encoding, **not the browser rendering**, see the commented "ENCODE-ONLY OPTION" blocks in the example - they switch to the plain `firefox` image and a `videoconvert`-based pipeline instead of `nvidia-firefox` with `cudaupload`/`cudaconvert`.
 
@@ -63,9 +67,9 @@ Browse: [`examples/gpu-nvidia-browser`](https://github.com/m1k1o/neko/tree/main/
 
 See available [Nvidia Docker Images](/docs/v3/installation/docker-images#nvidia).
 
-## Intel GPU Browser {#gpu-intel-browser}
+### Intel {#gpu-intel-browser}
 
-Neko supports hardware acceleration using Intel GPUs via VAAPI. This requires the host to expose `/dev/dri` and have the Intel graphics driver installed.
+Uses hardware acceleration via VAAPI. This requires the host to expose `/dev/dri` and have the Intel graphics driver installed.
 
 This example accelerates both video encoding and browser rendering using the `intel-firefox` image. If you only want to accelerate the encoding, **not the browser rendering**, see the commented "ENCODE-ONLY OPTION" in the example, which switches to the plain `firefox` image.
 
@@ -76,7 +80,7 @@ Browse: [`examples/gpu-intel-browser`](https://github.com/m1k1o/neko/tree/main/e
 
 See available [Intel Docker Images](/docs/v3/installation/docker-images#intel).
 
-## Raspberry Pi GPU Browser {#gpu-raspberry-pi-browser}
+### Raspberry Pi {#gpu-raspberry-pi-browser}
 
 Firefox tuned for a Raspberry Pi (or similar ARM SBC). Works out of the box with software rendering/encoding. See the commented "GPU ACCELERATION OPTION" in the example for enabling hardware-accelerated encoding via the Broadcom VideoCore V4L2 M2M encoder, available on Raspberry Pi 3/4 (not Pi 5).
 
