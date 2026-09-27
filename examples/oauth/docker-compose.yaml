@@ -1,0 +1,23 @@
+# Neko - OAuth Example
+#
+# Authenticates users via an external OAuth 2.0 / OpenID Connect provider
+# instead of the built-in multiuser passwords. OAuth has many settings, so
+# they are set via a mounted config.yaml instead of environment variables.
+#
+# See: https://neko.m1k1o.net/docs/v3/configuration/authentication#member.oauth
+services:
+  neko:
+    image: "ghcr.io/m1k1o/neko/firefox:latest"
+    restart: "unless-stopped"
+    shm_size: "2gb"
+    ports:
+      - "8080:8080"
+      - "52000-52100:52000-52100/udp"
+    volumes:
+      - "./config.yaml:/etc/neko/neko.yaml"
+    environment:
+      NEKO_DESKTOP_SCREEN: '1920x1080@30'
+      NEKO_WEBRTC_EPR: 52000-52100
+      NEKO_WEBRTC_ICELITE: 1
+      # See: https://neko.m1k1o.net/docs/v3/configuration/webrtc#nat1to1
+      # NEKO_WEBRTC_NAT1TO1: <your-IP>
