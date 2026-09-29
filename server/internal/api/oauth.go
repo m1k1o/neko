@@ -1,16 +1,22 @@
 package api
 
 import (
+	"crypto/sha256"
+	"crypto/subtle"
+	"encoding/hex"
 	"errors"
 	"net/http"
 	"net/url"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/m1k1o/neko/server/internal/member/oauth"
 	"github.com/m1k1o/neko/server/pkg/types"
 	"github.com/m1k1o/neko/server/pkg/utils"
 )
+
+const oauthStateCookiePrefix = "NEKO_OAUTH_STATE_"
 
 type OAuthUIConfig struct {
 	Enabled              bool   `json:"enabled"`
@@ -68,6 +74,9 @@ func (api *ApiManagerCtx) OAuthLogin(w http.ResponseWriter, r *http.Request) err
 	if err != nil {
 		return oauthServiceError(err, true)
 	}
+	if err := api.oauth.setStateCookie(w, location, callbackURL); err != nil {
+		return utils.HttpInternalServerError("unable to initialize OAuth state").WithInternalErr(err)
+	}
 
 	http.Redirect(w, r, location, http.StatusFound)
 	return nil
@@ -78,11 +87,17 @@ func (api *ApiManagerCtx) OAuthCallback(w http.ResponseWriter, r *http.Request) 
 		return utils.HttpNotFound()
 	}
 
+	stateToken := r.URL.Query().Get("state")
+	if !api.oauth.stateCookieMatches(r, stateToken) {
+		return utils.HttpBadRequest("OAuth state is invalid or expired")
+	}
+	api.oauth.clearStateCookie(w, stateToken)
+
 	if providerError := r.URL.Query().Get("error"); providerError != "" {
 		return utils.HttpUnauthorized("OAuth authorization was declined").WithInternalMsg(providerError)
 	}
 
-	_, token, err := api.oauth.service.Complete(r.Context(), r.URL.Query().Get("state"), r.URL.Query().Get("code"))
+	_, token, err := api.oauth.service.Complete(r.Context(), stateToken, r.URL.Query().Get("code"))
 	if err != nil {
 		return oauthServiceError(err, false)
 	}
@@ -90,6 +105,86 @@ func (api *ApiManagerCtx) OAuthCallback(w http.ResponseWriter, r *http.Request) 
 
 	http.Redirect(w, r, api.oauth.successRedirect(), http.StatusSeeOther)
 	return nil
+}
+
+func (handler *oauthHandler) setStateCookie(w http.ResponseWriter, location, callbackURL string) error {
+	authorizationURL, err := url.Parse(location)
+	if err != nil {
+		return err
+	}
+
+	stateToken := authorizationURL.Query().Get("state")
+	redirectURL, err := url.Parse(authorizationURL.Query().Get("redirect_uri"))
+	if stateToken == "" || err != nil || !httpURL(redirectURL) {
+		return errors.New("OAuth authorization URL is missing a valid state or redirect_uri")
+	}
+
+	requestCallbackURL, err := url.Parse(callbackURL)
+	if err != nil || !sameOrigin(redirectURL, requestCallbackURL) {
+		return errors.New("OAuth redirect_uri origin does not match the login request origin")
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     oauthStateCookieName(stateToken),
+		Value:    stateToken,
+		Path:     "/",
+		MaxAge:   int(oauth.StateLifetime / time.Second),
+		Expires:  time.Now().Add(oauth.StateLifetime),
+		Secure:   redirectURL.Scheme == "https",
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+	})
+	return nil
+}
+
+func (handler *oauthHandler) stateCookieMatches(r *http.Request, stateToken string) bool {
+	if stateToken == "" {
+		return false
+	}
+
+	cookie, err := r.Cookie(oauthStateCookieName(stateToken))
+	if err != nil {
+		return false
+	}
+
+	return subtle.ConstantTimeCompare([]byte(cookie.Value), []byte(stateToken)) == 1
+}
+
+func (handler *oauthHandler) clearStateCookie(w http.ResponseWriter, stateToken string) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     oauthStateCookieName(stateToken),
+		Path:     "/",
+		MaxAge:   -1,
+		Expires:  time.Unix(1, 0),
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+	})
+}
+
+func oauthStateCookieName(stateToken string) string {
+	digest := sha256.Sum256([]byte(stateToken))
+	return oauthStateCookiePrefix + hex.EncodeToString(digest[:16])
+}
+
+func httpURL(value *url.URL) bool {
+	return value != nil && value.Host != "" && (value.Scheme == "http" || value.Scheme == "https")
+}
+
+func sameOrigin(left, right *url.URL) bool {
+	return httpURL(left) && httpURL(right) &&
+		strings.EqualFold(left.Scheme, right.Scheme) &&
+		strings.EqualFold(left.Hostname(), right.Hostname()) &&
+		originPort(left) == originPort(right)
+}
+
+func originPort(value *url.URL) string {
+	if port := value.Port(); port != "" {
+		return port
+	}
+	if value.Scheme == "https" {
+		return "443"
+	}
+	return "80"
 }
 
 func oauthServiceError(err error, start bool) error {
@@ -147,13 +242,17 @@ func (handler *oauthHandler) callbackURL(r *http.Request) (string, error) {
 	callback := (&url.URL{
 		Scheme: scheme,
 		Host:   host,
-		Path:   path.Join(handler.pathPrefix, "/api/oauth/callback"),
+		Path:   handler.callbackPath(),
 	}).String()
 	if parsed, err := url.Parse(callback); err != nil || parsed.Host == "" {
 		return "", errors.New("request has no valid public URL")
 	}
 
 	return callback, nil
+}
+
+func (handler *oauthHandler) callbackPath() string {
+	return path.Join(handler.pathPrefix, "/api/oauth/callback")
 }
 
 func (handler *oauthHandler) successRedirect() string {
