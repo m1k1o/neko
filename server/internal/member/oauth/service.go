@@ -18,7 +18,7 @@ import (
 	"github.com/m1k1o/neko/server/pkg/types"
 )
 
-const stateLifetime = 10 * time.Minute
+const StateLifetime = 10 * time.Minute
 
 type state struct {
 	verifier, redirectURL string
@@ -364,7 +364,7 @@ func (service *Service) storeState(value, verifier, redirectURL string) {
 		}
 	}
 
-	service.states[value] = state{verifier, redirectURL, now.Add(stateLifetime)}
+	service.states[value] = state{verifier, redirectURL, now.Add(StateLifetime)}
 }
 
 func (service *Service) popState(value string) (state, bool) {
