@@ -333,6 +333,10 @@
     }
 
     get clipboard_read_available() {
+      const ua = navigator.userAgent
+      // Chrome/Chromium-based UAs also contain "Safari", so only match real Safari.
+      const isSafari = ua.indexOf('Safari') !== -1 && ua.indexOf('Chrome') === -1 && ua.indexOf('Chromium') === -1
+
       return (
         'clipboard' in navigator &&
         typeof navigator.clipboard.readText === 'function' &&
@@ -340,7 +344,10 @@
         // instead it hangs when reading clipboard, until user clicks on the page
         // and the click itself is not handled by the page at all, also the clipboard
         // reads always fail with "Clipboard read operation is not allowed."
-        navigator.userAgent.indexOf('Firefox') == -1
+        ua.indexOf('Firefox') == -1 &&
+        // Safari's clipboard read support is unreliable (requires user gesture, often
+        // throws NotAllowedError), so always show the fallback button there too.
+        !isSafari
       )
     }
 
