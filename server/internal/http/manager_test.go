@@ -67,3 +67,45 @@ func TestOAuthAutoRedirectSkipsAuthenticatedSessions(t *testing.T) {
 		t.Fatalf("authenticated body = %q", body)
 	}
 }
+
+type originCapturingWebSocketManager struct {
+	checkOrigin types.CheckOrigin
+}
+
+func (*originCapturingWebSocketManager) Start() {}
+
+func (*originCapturingWebSocketManager) Shutdown() error { return nil }
+
+func (*originCapturingWebSocketManager) AddHandler(types.WebSocketHandler) {}
+
+func (manager *originCapturingWebSocketManager) Upgrade(checkOrigin types.CheckOrigin) types.RouterHandler {
+	manager.checkOrigin = checkOrigin
+	return func(w http.ResponseWriter, r *http.Request) error {
+		http.NotFound(w, r)
+		return nil
+	}
+}
+
+func TestWebSocketOriginAllowsInternalDialWithoutOrigin(t *testing.T) {
+	webSocketManager := &originCapturingWebSocketManager{}
+	serverConfig := &config.Server{CORS: []string{"https://neko.example.test"}}
+	memberConfig := &config.Member{}
+	sessionManager := session.New(&config.Session{})
+	apiManager := api.New(sessionManager, member.New(sessionManager, memberConfig), nil, nil, memberConfig, serverConfig)
+	New(webSocketManager, apiManager, serverConfig, memberConfig)
+
+	request := httptest.NewRequest(http.MethodGet, "/api/ws", nil)
+	if !webSocketManager.checkOrigin(request) {
+		t.Fatal("internal WebSocket dial without Origin was rejected")
+	}
+
+	request.Header.Set("Origin", "https://neko.example.test")
+	if !webSocketManager.checkOrigin(request) {
+		t.Fatal("configured public Origin was rejected")
+	}
+
+	request.Header.Set("Origin", "https://attacker.example")
+	if webSocketManager.checkOrigin(request) {
+		t.Fatal("unconfigured browser Origin was accepted")
+	}
+}

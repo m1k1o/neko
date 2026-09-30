@@ -55,7 +55,8 @@ func New(WebSocketManager types.WebSocketManager, ApiManager types.ApiManager, c
 	router.Route("/api", ApiManager.Route)
 
 	router.Get("/api/ws", WebSocketManager.Upgrade(func(r *http.Request) bool {
-		return config.AllowOrigin(r.Header.Get("Origin"))
+		origin := r.Header.Get("Origin")
+		return origin == "" || config.AllowOrigin(origin)
 	}))
 
 	batch := batchHandler{
