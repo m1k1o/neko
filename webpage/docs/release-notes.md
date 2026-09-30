@@ -4,6 +4,35 @@
 
 No unreleased changes yet.
 
+## [n.eko v3.1.6](https://github.com/m1k1o/neko/releases/tag/v3.1.6) {#v3.1.6}
+
+### New Features {#v3.1.6-feats}
+- Added a capture subscription API to support more transports ([#699](https://github.com/m1k1o/neko/pull/699)).
+- Added support for restricting OAuth login by user email, along with a new `email` OAuth scope.
+- Added OIDC-only member authentication ([#686](https://github.com/m1k1o/neko/pull/686)).
+- Enabled automatic video quality (bandwidth estimation) for legacy (v2) clients ([#693](https://github.com/m1k1o/neko/pull/693)).
+- Added a mouse pointer visibility toggle via `capture.video.show_pointer` ([#691](https://github.com/m1k1o/neko/pull/691)).
+- Added multi-file selection and bulk deletion to file transfer ([#687](https://github.com/m1k1o/neko/pull/687)).
+- Added file deletion support and a user delete config option to file transfer ([#683](https://github.com/m1k1o/neko/pull/683)).
+- Added a `?scroll` query param to set scroll sensitivity on load ([#681](https://github.com/m1k1o/neko/pull/681)).
+- Added an arm64 Google Chrome image ([#685](https://github.com/m1k1o/neko/pull/685)).
+- Added example Docker Compose configurations for simple browser, TURN server, GPU-accelerated browser, and OAuth setups ([#684](https://github.com/m1k1o/neko/pull/684)).
+- Added an "open in app" plugin to open chat links in a shared neko instance ([#682](https://github.com/m1k1o/neko/pull/682)).
+
+### Fixes {#v3.1.6-fixes}
+- Fixed missing clipboard fallback button in Safari ([#709](https://github.com/m1k1o/neko/pull/709)).
+- Fixed a XSS vulnerability by sanitizing attribute values and preventing Vue template compilation in rendered markdown.
+- Fixed video pipeline configuration to accept a bare pipeline string ([#701](https://github.com/m1k1o/neko/pull/701)).
+- Fixed a goroutine leak in the RTCP PLI ticker ([#697](https://github.com/m1k1o/neko/pull/697)).
+- Fixed a memory leak by freeing `CString` allocations and `GFile` references in drag URI handling ([#700](https://github.com/m1k1o/neko/pull/700)).
+- Fixed a nil pointer panic when destroying the WebRTC peer during a profile change ([#695](https://github.com/m1k1o/neko/pull/695)).
+- Fixed file transfer to allow non-admin uploads and downloads ([#679](https://github.com/m1k1o/neko/pull/679)).
+- Fixed the TOR browser image to fetch it from the latest download source.
+
+### Misc {#v3.1.6-misc}
+- Removed the default configuration file bundled with the image; defaults are now built into the server, preventing accidental overrides when providing a custom config.
+- Updated persistent data policies for Firefox-based browsers.
+
 ## [n.eko v3.1.5](https://github.com/m1k1o/neko/releases/tag/v3.1.5) {#v3.1.5}
 
 ### New Features {#v3.1.5-feats}
