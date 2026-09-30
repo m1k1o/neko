@@ -268,7 +268,53 @@ func TestOAuthCallbackRequiresStateCookie(t *testing.T) {
 	}
 }
 
-func TestOAuthStateCookieValidatesRedirectOrigin(t *testing.T) {
+func TestOAuthLoginUsesConfiguredRedirectBehindProxy(t *testing.T) {
+	memberConfig := &config.Member{
+		Provider: "oauth",
+		OAuth: oauth.Config{
+			Enabled:          true,
+			ClientID:         "client-id",
+			ClientSecret:     "client-secret",
+			AuthorizationURL: "https://auth.example.test/authorize",
+			TokenURL:         "https://auth.example.test/token",
+			UserInfoURL:      "https://auth.example.test/userinfo",
+			RedirectURL:      "https://neko.example.test/api/oauth/callback",
+			Scopes:           []string{"openid"},
+			SubjectField:     "sub",
+			UsernameField:    "name",
+			UserProfile:      types.MemberProfile{CanLogin: true},
+		},
+	}
+	sessionManager := session.New(&config.Session{
+		Cookie: config.SessionCookie{Enabled: true, Name: "NEKO_SESSION", Expiration: time.Hour},
+	})
+	members := member.New(sessionManager, memberConfig)
+	api := New(sessionManager, members, nil, nil, memberConfig, &config.Server{PathPrefix: "/"})
+
+	recorder := httptest.NewRecorder()
+	request := httptest.NewRequest(http.MethodGet, "http://neko.example.test/api/oauth/login", nil)
+	if err := api.OAuthLogin(recorder, request); err != nil {
+		t.Fatal(err)
+	}
+	if recorder.Code != http.StatusFound {
+		t.Fatalf("login status = %d", recorder.Code)
+	}
+
+	authorizationURL, err := url.Parse(recorder.Header().Get("Location"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := authorizationURL.Query().Get("redirect_uri"); got != memberConfig.OAuth.RedirectURL {
+		t.Fatalf("OAuth redirect_uri = %q", got)
+	}
+	state := authorizationURL.Query().Get("state")
+	cookie := requireOAuthStateCookie(t, recorder, state)
+	if !cookie.Secure {
+		t.Fatal("HTTPS OAuth callback requires a Secure state cookie")
+	}
+}
+
+func TestOAuthStateCookieValidatesRedirectHost(t *testing.T) {
 	handler := newOAuthHandler(nil, "/", false, true)
 	location := func(redirectURL string) string {
 		values := url.Values{"state": {"state-token"}, "redirect_uri": {redirectURL}}
@@ -281,10 +327,10 @@ func TestOAuthStateCookieValidatesRedirectOrigin(t *testing.T) {
 		location("https://other.example.test/api/oauth/callback"),
 		"https://neko.example.test/api/oauth/callback",
 	); err == nil {
-		t.Fatal("OAuth redirect origin mismatch was accepted")
+		t.Fatal("OAuth redirect host mismatch was accepted")
 	}
 	if len(mismatchRecorder.Result().Cookies()) != 0 {
-		t.Fatal("OAuth redirect origin mismatch set a state cookie")
+		t.Fatal("OAuth redirect host mismatch set a state cookie")
 	}
 
 	publicPathRecorder := httptest.NewRecorder()

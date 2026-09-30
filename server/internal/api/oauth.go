@@ -120,8 +120,8 @@ func (handler *oauthHandler) setStateCookie(w http.ResponseWriter, location, cal
 	}
 
 	requestCallbackURL, err := url.Parse(callbackURL)
-	if err != nil || !sameOrigin(redirectURL, requestCallbackURL) {
-		return errors.New("OAuth redirect_uri origin does not match the login request origin")
+	if err != nil || !sameCookieHost(redirectURL, requestCallbackURL) {
+		return errors.New("OAuth redirect_uri host does not match the login request host")
 	}
 
 	http.SetCookie(w, &http.Cookie{
@@ -170,21 +170,8 @@ func httpURL(value *url.URL) bool {
 	return value != nil && value.Host != "" && (value.Scheme == "http" || value.Scheme == "https")
 }
 
-func sameOrigin(left, right *url.URL) bool {
-	return httpURL(left) && httpURL(right) &&
-		strings.EqualFold(left.Scheme, right.Scheme) &&
-		strings.EqualFold(left.Hostname(), right.Hostname()) &&
-		originPort(left) == originPort(right)
-}
-
-func originPort(value *url.URL) string {
-	if port := value.Port(); port != "" {
-		return port
-	}
-	if value.Scheme == "https" {
-		return "443"
-	}
-	return "80"
+func sameCookieHost(left, right *url.URL) bool {
+	return httpURL(left) && httpURL(right) && strings.EqualFold(left.Hostname(), right.Hostname())
 }
 
 func oauthServiceError(err error, start bool) error {
