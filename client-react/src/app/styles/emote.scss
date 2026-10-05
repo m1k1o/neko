@@ -1,0 +1,17 @@
+.emote-container {
+  width: 25%;
+  height: 10%;
+  position: absolute;
+  bottom: 0;
+  right: 0;
+
+  .emote {
+    position: absolute;
+    width: 100px;
+    height: 100%;
+    color: #fff;
+    transform: scale(0.7);
+    text-align: center;
+    background-size: contain;
+  }
+}

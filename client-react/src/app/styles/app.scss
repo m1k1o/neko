@@ -1,0 +1,233 @@
+#neko {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-width: 100vw;
+  max-height: 100vh;
+  flex-direction: row;
+  display: flex;
+
+  .neko-main {
+    min-width: 360px;
+    max-width: 100%;
+    flex-grow: 1;
+    flex-direction: column;
+    display: flex;
+    overflow: auto;
+
+    .header-container {
+      background: $background-tertiary;
+      height: $menu-height;
+      flex-shrink: 0;
+      display: flex;
+    }
+
+    .video-container {
+      background: rgba($color: #000, $alpha: 0.4);
+      max-width: 100%;
+      flex-grow: 1;
+      display: flex;
+    }
+
+    .room-container {
+      background: $background-tertiary;
+      height: $controls-height;
+      max-width: 100%;
+      flex-shrink: 0;
+      flex-direction: column;
+      display: flex;
+
+      .room-menu {
+        max-width: 100%;
+        flex: 1;
+        display: flex;
+
+        .settings {
+          margin-left: 10px;
+          flex: 1;
+          justify-content: flex-start;
+          align-items: center;
+          display: flex;
+        }
+
+        .controls {
+          flex: 1;
+          justify-content: center;
+          align-items: center;
+          display: flex;
+        }
+
+        .emotes {
+          margin-right: 10px;
+          flex: 1;
+          justify-content: flex-end;
+          align-items: center;
+          display: flex;
+        }
+      }
+    }
+  }
+}
+
+@media only screen and (max-width: 1024px) {
+  html,
+  body {
+    overflow-y: auto !important;
+    width: auto !important;
+    height: auto !important;
+  }
+
+  body > p {
+    display: none;
+  }
+
+  #neko {
+    position: relative;
+    flex-direction: column;
+    max-height: initial !important;
+
+    .neko-main {
+      height: 100vh;
+    }
+
+    .neko-menu {
+      height: 100vh;
+      width: 100% !important;
+    }
+  }
+}
+
+@media only screen and (max-width: 1024px) and (orientation: portrait) {
+  #neko {
+    &.expanded .neko-main {
+      height: 40vh;
+    }
+
+    &.expanded .neko-menu {
+      height: 60vh;
+      width: 100% !important;
+    }
+  }
+}
+
+@media only screen and (max-width: 768px) {
+  #neko .neko-main .room-container {
+    display: none;
+  }
+}
+
+// toasts, look of the legacy vue-notification default theme
+.toasts {
+  position: fixed;
+  top: 50px;
+  left: 0;
+  width: 300px;
+  z-index: 5000;
+  pointer-events: none;
+
+  .toast {
+    margin: 0 5px 5px;
+    padding: 10px;
+    font-size: 12px;
+    color: #fff;
+    background: #44a4fc;
+    border-left: 5px solid #187fe7;
+
+    .toast-title {
+      font-weight: 600;
+    }
+  }
+}
+
+// modal dialogs, look of the legacy SweetAlert theme
+.neko-dialog {
+  width: 32em;
+  max-width: calc(100% - 2em);
+  padding: 1.25em;
+  border: 0;
+  border-radius: 0.3125em;
+  background: $background-secondary;
+  color: $interactive-hover;
+  text-align: center;
+
+  &::backdrop {
+    background: rgba(0, 0, 0, 0.4);
+  }
+
+  .icon {
+    display: block;
+    margin: 0.5em auto 0.8em;
+    font-size: 64px;
+
+    &.warning {
+      color: #f8bb86;
+    }
+
+    &.error {
+      color: #f27474;
+    }
+
+    &.info {
+      color: #3fc3ee;
+    }
+  }
+
+  h2 {
+    margin: 0 0 0.4em;
+    font-size: 1.875em;
+    font-weight: 600;
+  }
+
+  p {
+    font-size: 1.125em;
+    line-height: 1.4;
+  }
+
+  .actions {
+    display: flex;
+    justify-content: center;
+    gap: 0.6em;
+    margin-top: 1.25em;
+
+    button {
+      padding: 0.625em 2em;
+      border: 0;
+      border-radius: 0.25em;
+      color: #fff;
+      font-size: 1.0625em;
+      cursor: pointer;
+
+      &.confirm {
+        background: $background-tertiary;
+      }
+
+      &.cancel {
+        background: $background-floating;
+      }
+
+      &:focus-visible {
+        outline: 2px solid $style-primary;
+      }
+    }
+  }
+}
+
+// toast kinds, vue-notification default palette
+.toasts .toast {
+  &.success {
+    background: #68cd86;
+    border-left-color: #42a85f;
+  }
+
+  &.warning {
+    background: #ffb648;
+    border-left-color: #f48a06;
+  }
+
+  &.error {
+    background: #e54d42;
+    border-left-color: #b82e24;
+  }
+}

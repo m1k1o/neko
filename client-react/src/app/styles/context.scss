@@ -1,0 +1,79 @@
+.context {
+  background-color: $background-floating;
+  background-clip: padding-box;
+  border-radius: 0.25rem;
+  display: block;
+  margin: 0;
+  padding: 5px;
+  min-width: 150px;
+  z-index: 1500;
+  position: fixed;
+  list-style: none;
+  box-sizing: border-box;
+  max-height: calc(100% - 50px);
+  overflow-y: auto;
+  color: $interactive-normal;
+  user-select: none;
+  box-shadow: $elevation-high;
+
+  > li {
+    margin: 0;
+    position: relative;
+    align-content: center;
+
+    &.header {
+      .user {
+        display: flex;
+        flex-direction: row;
+        align-content: center;
+        padding: 5px 0;
+
+        .avatar {
+          width: 25px;
+          height: 25px;
+          border-radius: 50%;
+          margin-right: 5px;
+        }
+
+        strong {
+          line-height: 25px;
+          font-weight: 700;
+          max-width: 200px;
+          text-overflow: ellipsis;
+        }
+      }
+    }
+
+    &.seperator {
+      height: 1px;
+      background: $background-secondary;
+      margin: 3px 0;
+    }
+
+    > span {
+      cursor: pointer;
+      display: block;
+      padding: 5px;
+      font-weight: 400;
+      text-decoration: none;
+      white-space: nowrap;
+      background-color: transparent;
+      border-radius: 3px;
+
+      &:hover,
+      &:focus {
+        text-decoration: none;
+        background-color: $background-modifier-hover;
+        color: $interactive-hover;
+      }
+
+      &:focus {
+        outline: 0;
+      }
+    }
+  }
+
+  &:focus {
+    outline: 0;
+  }
+}

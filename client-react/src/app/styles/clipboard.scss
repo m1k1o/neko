@@ -1,0 +1,28 @@
+.clipboard {
+  background-color: $background-primary;
+  border-radius: 0.25rem;
+  display: block;
+  padding: 5px;
+
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+
+  &,
+  textarea {
+    max-width: 320px;
+    width: 100%;
+    max-height: 120px;
+    height: 100%;
+  }
+
+  textarea {
+    border: 0;
+    color: $text-normal;
+    background: none;
+
+    &::selection {
+      background: $text-normal;
+    }
+  }
+}

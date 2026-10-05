@@ -1,0 +1,65 @@
+.emotes-bar {
+  ul {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+
+    li {
+      font-size: 24px;
+      margin: 0 5px;
+
+      i,
+      div {
+        cursor: pointer;
+      }
+    }
+  }
+
+  .context {
+    background-color: $background-floating;
+    background-clip: padding-box;
+    border-radius: 0.25rem;
+    display: flex;
+    margin: 0;
+    padding: 5px;
+    width: 220px;
+    z-index: 1500;
+    position: fixed;
+    list-style: none;
+    box-sizing: border-box;
+    max-height: calc(100% - 50px);
+    color: $interactive-normal;
+    flex-wrap: wrap;
+    user-select: none;
+    box-shadow: $elevation-high;
+
+    > li {
+      margin: 0;
+      position: relative;
+      align-content: center;
+      padding: 5px;
+      border-radius: 3px;
+
+      .emote {
+        width: 24px;
+        height: 24px;
+      }
+
+      &:hover,
+      &:focus {
+        text-decoration: none;
+        background-color: $background-modifier-hover;
+        color: $interactive-hover;
+      }
+
+      &:focus {
+        outline: 0;
+      }
+    }
+
+    &:focus {
+      outline: 0;
+    }
+  }
+}
