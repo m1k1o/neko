@@ -12,13 +12,14 @@ import './styles/about.scss'
 import { version } from '../../package.json'
 
 const params = new URL(location.href).searchParams
-// ?pwd= invite (e.g. neko-rooms links): used for the first login only, like the legacy client
+// ?pwd= invite (e.g. neko-rooms links): used for the first login attempt only, like the legacy
+// client; after that the form asks for a password, so a stale invite is not a dead end
 let invite = params.get('pwd')
 const loginOnce = (user: string, password: string) =>
-  actions.login(user, password).then(
-    () => (invite = null),
-    (err) => tell(t('connect.error'), err.message),
-  )
+  actions
+    .login(user, password)
+    .catch((err) => tell(t('connect.error'), err.message))
+    .finally(() => (invite = null))
 const cast = !!params.get('cast')
 const videoOnly = cast || !!params.get('embed')
 

@@ -340,6 +340,27 @@ await step('network drop: bob notices the dead socket and reconnects', async () 
     { timeout: 20000 },
   )
 })
+await step('long outage: session kept, Connect button instead of the login form', async () => {
+  // the core gives up after RECONNECT_MAX attempts (about 80 s); the session is still valid
+  await B.context().setOffline(true)
+  try {
+    await B.waitForSelector('.connect form button[type=submit]', { timeout: 150000 })
+  } finally {
+    await B.context().setOffline(false)
+  }
+  if (await B.locator('.connect input[type=password]').count()) throw new Error('thrown back to the login form')
+  await B.click('.neko-dialog .confirm') // "Disconnected: connection lost"
+  await B.click('.connect form button[type=submit]')
+  await B.waitForSelector('.connect', { state: 'detached', timeout: 30000 })
+  await B.waitForFunction(
+    () => {
+      const v = document.querySelector('video')
+      return v && !v.paused && v.readyState >= 2
+    },
+    null,
+    { timeout: 20000 },
+  )
+})
 await step('alice takes control and types into KDE', async () => {
   await A.click('.neko-controls .fa-keyboard')
   await A.waitForSelector('.members-list .member.self.host', { timeout: 5000 })
@@ -374,6 +395,16 @@ await step('url params: ?usr&pwd&lang&show_side auto-login, url cleaned, logout'
   await C.waitForSelector('.connect', { state: 'detached', timeout: 20000 })
   await C.waitForSelector('aside.neko-menu >> text=Einstellungen', { timeout: 5000 })
   if (/pwd=/.test(C.url())) throw new Error('password left in url: ' + C.url())
+  // the same browser profile opens another invite link while its session is still valid:
+  // the new login must win on both the websocket and REST (no split identity)
+  await C.goto(URL + '?usr=carol2&pwd=' + USER + '&show_side=1')
+  await C.waitForSelector('.connect', { state: 'detached', timeout: 20000 })
+  await C.waitForTimeout(1500)
+  const connected = JSON.parse(await api(A, 'GET', '/sessions'))
+    .filter((s) => s.state.is_connected)
+    .map((s) => s.profile.name)
+  if (!connected.includes('carol2') || connected.includes('carol'))
+    throw new Error('connected sessions after the second invite: ' + JSON.stringify(connected))
   await C.click('.tabs-container >> text=Einstellungen')
   await C.click('.side-settings button >> nth=-1')
   await C.waitForSelector('.connect input[type=password]', { timeout: 8000 })

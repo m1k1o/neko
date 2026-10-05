@@ -104,6 +104,7 @@ export const connection = {
   connected: 'Connected',
   disconnected: 'Disconnected',
   kicked: 'You have been removed from this room.',
+  replaced: 'This session was opened in another tab or window.',
   button_confirm: 'OK',
 }
 

@@ -577,13 +577,18 @@ ev.on('message', (event, payload) => {
 ev.on('connection.closed', (error) => {
   initialized = false
   if (!error) return
-  // session gone server-side (kicked / logged out elsewhere): back to the login screen
+  const reason =
+    error.message === 'session deleted'
+      ? t('connection.kicked')
+      : error.message === 'connection replaced'
+        ? t('connection.replaced')
+        : error.message
+  // session gone server-side (kicked, logged out elsewhere, server restarted): back to the login
+  // screen. Any other failure, such as no network, keeps the session for the Connect button.
   client.api
     .req('GET', '/whoami')
-    .catch(() => actions.logout())
-    .finally(() =>
-      tell(t('connection.disconnected'), error.message === 'session deleted' ? t('connection.kicked') : error.message),
-    )
+    .catch((err) => (err.status === 401 ? actions.logout() : undefined))
+    .finally(() => tell(t('connection.disconnected'), reason))
 })
 
 // start: resume a saved session (autologin) and connect

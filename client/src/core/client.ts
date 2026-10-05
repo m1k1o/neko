@@ -183,6 +183,8 @@ export class NekoClient {
 
   async login(username: string, password: string) {
     const res = await this.api.req<Schemas['SessionLoginResponse']>('POST', '/login', { username, password })
+    // a session resumed meanwhile (autologin racing an invite link) must not keep its websocket
+    this.close()
     // token is only returned when the server does not use cookies
     if (res.token) this.setToken(res.token)
     this.state.authenticated = true
@@ -234,7 +236,9 @@ export class NekoClient {
     this.peerFailures = 0
     const ws = this.ws
     this.ws = null
-    ws?.close()
+    // a normal closure: without a status code the server assumes a reconnect is coming and
+    // keeps the session connected (and host) for another 5 s
+    ws?.close(1000)
     this.closePeer()
     this.clear()
     if (was) this.events.emit('connection.closed', error)
