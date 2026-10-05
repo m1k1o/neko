@@ -77,6 +77,8 @@ export class NekoClient {
   private wanted = false // user asked to be connected
   private attempts = 0
   private reconnectTimer = 0
+  private peerFailures = 0
+  private peerTimer = 0
   private staleTimer = 0
   private lastMessage = 0
 
@@ -224,7 +226,9 @@ export class NekoClient {
     const was = this.wanted
     this.wanted = false
     clearTimeout(this.reconnectTimer)
+    clearTimeout(this.peerTimer)
     clearInterval(this.staleTimer)
+    this.peerFailures = 0
     const ws = this.ws
     this.ws = null
     ws?.close()
@@ -324,13 +328,21 @@ export class NekoClient {
   private onPeerState(s: RTCPeerConnectionState) {
     if (s === 'connected') {
       this.attempts = 0
+      this.peerFailures = 0
       this.state.connection.status = 'connected'
     } else if (s === 'disconnected') {
       this.state.connection.status = 'connecting' // ICE may still recover
     } else if (s === 'failed') {
       this.state.connection.status = 'connecting'
       this.closePeer()
-      this.requestPeer()
+      // no media route (firewall, NAT1TO1, missing TURN): retry with backoff, then give up
+      // instead of asking the server for a new peer several times a second
+      if (++this.peerFailures > RECONNECT_MAX) return this.close(new Error('video connection failed (WebRTC)'))
+      clearTimeout(this.peerTimer)
+      this.peerTimer = window.setTimeout(
+        () => this.requestPeer(),
+        RECONNECT_BACKOFF_MS * Math.min(this.peerFailures, 4),
+      )
     }
   }
 
