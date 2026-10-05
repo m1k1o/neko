@@ -281,7 +281,9 @@ function event(id: string, content: string) {
   })
 }
 
-// REST call for user actions: failures become a toast, the result says whether it worked
+// REST call for user actions: failures become a toast, the result says whether it worked.
+// Session ids are built from the login name on some providers, so they go through encodeURIComponent
+// wherever they are part of a path: otherwise a name like `x/../../logout?` redirects the request.
 const api = (method: string, path: string, body?: unknown) =>
   client.api.req(method, path, body).then(
     () => true,
@@ -328,7 +330,7 @@ export const actions = {
 
   mute(id: string, muted: boolean) {
     mutedByMe.add(id)
-    return api('POST', `/members/${id}`, { plugins: { 'chat.can_send': !muted } })
+    return api('POST', `/members/${encodeURIComponent(id)}`, { plugins: { 'chat.can_send': !muted } })
   },
 
   // Kick & ban: assumed intent. The legacy client banned IP addresses inside the v2
@@ -348,20 +350,24 @@ export const actions = {
   // can reconnect). IP bans would need a server-side ban list checked on /api/login and /api/ws.
   async kick(id: string) {
     const who = name(id)
-    if (await api('DELETE', `/sessions/${id}`)) line(t('you'), t('notifications.kicked', { name: who }))
+    if (await api('DELETE', `/sessions/${encodeURIComponent(id)}`))
+      line(t('you'), t('notifications.kicked', { name: who }))
   },
   async ban(id: string) {
     const who = name(id)
-    if ((await api('POST', `/members/${id}`, { can_login: false })) && (await api('DELETE', `/sessions/${id}`)))
+    if (
+      (await api('POST', `/members/${encodeURIComponent(id)}`, { can_login: false })) &&
+      (await api('DELETE', `/sessions/${encodeURIComponent(id)}`))
+    )
       line(t('you'), t('notifications.banned', { name: who }))
   },
-  unban: (id: string) => api('POST', `/members/${id}`, { can_login: true }),
+  unban: (id: string) => api('POST', `/members/${encodeURIComponent(id)}`, { can_login: true }),
   // accounts stored by the auth provider (empty for multiuser / noauth / OAuth)
   members: () => client.api.req<Schemas['MemberData'][]>('GET', '/members').catch(() => [] as Schemas['MemberData'][]),
   async canBan(id: string) {
     return (await actions.members()).some((m) => m.id === id)
   },
-  give: (id: string) => api('POST', `/room/control/give/${id}`),
+  give: (id: string) => api('POST', `/room/control/give/${encodeURIComponent(id)}`),
   take: () => api('POST', '/room/control/take'),
   reset: () => api('POST', '/room/control/reset'),
 

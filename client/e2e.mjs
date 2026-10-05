@@ -227,6 +227,25 @@ await step('admin mutes bob: input gone, event line; then unmute', async () => {
   await A.click('.neko-dialog .confirm')
   await B.waitForSelector('.chat-send textarea', { timeout: 5000 })
 })
+await step("a display name with # and ? cannot redirect the admin's mute", async () => {
+  // multiuser session ids start with the login name; unencoded, this id would turn
+  // POST /api/members/<id> into a request for a different path
+  const E = await user('evil#?x', USER)
+  await E.click('.header .fa-bars.toggle')
+  await E.waitForSelector('.chat-send textarea', { timeout: 5000 })
+  await A.waitForFunction(() => document.querySelectorAll('.members-list .member').length === 3, null, {
+    timeout: 5000,
+  })
+  await A.click('.members-list .member[aria-label="evil#?x"]', { button: 'right' })
+  await A.click('.context >> text=Mute')
+  await A.click('.neko-dialog .confirm')
+  await E.waitForSelector('.chat-send textarea', { state: 'detached', timeout: 5000 })
+  if (await A.locator('.connect').count()) throw new Error('admin lost the session')
+  await E.context().close()
+  await A.waitForFunction(() => document.querySelectorAll('.members-list .member').length === 2, null, {
+    timeout: 5000,
+  })
+})
 await step('ban hidden on shared-password (multiuser) provider', async () => {
   await A.click('.members-list .member:not(.self)', { button: 'right' })
   await A.waitForSelector('.context >> text=Kick', { timeout: 3000 })
