@@ -322,6 +322,12 @@ export class NekoClient {
     await pc.setRemoteDescription({ type: 'offer', sdp })
     for (const c of this.candidates.splice(0)) pc.addIceCandidate(c).catch(() => {})
     await pc.setLocalDescription(await pc.createAnswer())
+    // no video codec in common (e.g. an H264 stream and a Firefox without the OpenH264 plugin):
+    // the browser rejects the video section, the server cannot start the track, retrying won't help
+    if (/^m=video 0 /m.test(pc.localDescription!.sdp)) {
+      const codec = sdp.match(/^m=video[\s\S]*?a=rtpmap:\d+ ([\w-]+)/m)?.[1] ?? 'the stream'
+      return this.close(new Error(`this browser cannot play ${codec} video`))
+    }
     this.send('signal/answer', { sdp: pc.localDescription!.sdp })
   }
 
