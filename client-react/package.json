@@ -14,7 +14,8 @@
     "test:store": "node src/core/store.check.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check": "tsc --noEmit && prettier --check . && node src/core/store.check.ts && node src/app/markdown.check.ts"
+    "check": "tsc --noEmit && prettier --check . && node src/core/store.check.ts && node src/app/markdown.check.ts",
+    "build:emoji": "node tools/emoji.ts && prettier --write src/assets/styles/vendor/_emoji.scss"
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^6.7.2",
