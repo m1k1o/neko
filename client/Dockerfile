@@ -1,12 +1,13 @@
-ARG BASE_IMAGE=node:18-bullseye-slim
+ARG BASE_IMAGE=node:24-bookworm-slim
 FROM $BASE_IMAGE AS client
 
 WORKDIR /src
 
 #
-# install dependencies
+# install dependencies (the e2e browser is not needed to build)
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 COPY package*.json ./
-RUN npm install
+RUN npm ci
 
 #
 # build client

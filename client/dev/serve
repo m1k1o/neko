@@ -1,27 +1,30 @@
 #!/bin/bash
 cd "$(dirname "$0")"
 
-if [ -z $VUE_APP_SERVER_PORT ]; then
-    VUE_APP_SERVER_PORT="3000"
+# backend started by server/dev/start; override with NEKO_URL=http://host:port
+if [ -z "$NEKO_URL" ]; then
+    NEKO_URL="http://host.docker.internal:3000"
 fi
 
-echo "Using VUE_APP_SERVER_PORT: ${VUE_APP_SERVER_PORT}"
+echo "Using NEKO_URL: ${NEKO_URL}"
 
 # use -i to install
 if [ ! -d "${PWD}/../node_modules" ] || [ "$1" == "-i" ]; then
   docker run --rm -it \
     --volume "${PWD}/../:/app" \
     --workdir="/app" \
+    --env PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 \
     --entrypoint="npm" \
-    node:18-bullseye-slim install
+    node:24-bookworm-slim install
 fi
 
-# npm run serve
+# vite dev server with hot reload, /api is proxied to NEKO_URL
 docker run --rm -it \
     -p 3001:3001 \
-    -e "VUE_APP_SERVER_PORT=$VUE_APP_SERVER_PORT" \
+    --add-host=host.docker.internal:host-gateway \
+    -e "NEKO_URL=$NEKO_URL" \
     --user "$(id -u):$(id -g)" \
     --volume "${PWD}/../:/app" \
     --entrypoint="npm" \
     --workdir="/app" \
-    node:18-bullseye-slim run serve -- --port 3001
+    node:24-bookworm-slim run dev -- --host 0.0.0.0 --port 3001

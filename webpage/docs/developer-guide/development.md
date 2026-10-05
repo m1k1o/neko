@@ -84,7 +84,7 @@ cd client/dev
 ./serve
 ```
 
-This starts the Vue dev server on port **3001**, proxying API calls to the backend on port **3000**. Any change you save to a file under `client/src/` is reflected in the browser instantly - no page reload required.
+This starts the Vite dev server on port **3001**, proxying API calls (`/api`, including the websocket) to the backend on port **3000** (override with `NEKO_URL=http://host:port ./serve`). Any change you save to a file under `client/src/` is reflected in the browser instantly - no page reload required.
 
 | Service | URL |
 |---------|-----|

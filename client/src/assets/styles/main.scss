@@ -1,28 +1,30 @@
 @charset "utf-8";
 
-// Import variables
-@import "variables";
+@import 'reset';
+@import 'vendor/font-whitney';
+@import 'vendor/emote';
+@import 'vendor/emoji';
 
-// Reset CSS
-@import "reset";
-
-// Import Vendor
-@import "vendor/font-awesome";
-@import "vendor/font-whitney";
-@import "vendor/swal";
-@import "vendor/tooltip";
-@import "vendor/github";
-@import "vendor/emoji";
-@import "vendor/emote";
-
-html, body {
+html,
+body {
   -webkit-font-smoothing: subpixel-antialiased;
   background-color: $background-tertiary;
   font-family: $text-family;
   font-size: $text-size;
-  color:  $text-normal;
+  color: $text-normal;
   overflow: hidden;
   width: 100vw;
   height: 100vh;
   min-width: 320px;
+}
+
+// keyboard focus for icon controls (see a11y() in app/neko.ts)
+[role='button'],
+[role='menuitem'],
+[role='tab'],
+.member[tabindex] {
+  &:focus-visible {
+    outline: 2px solid $style-primary;
+    outline-offset: 2px;
+  }
 }

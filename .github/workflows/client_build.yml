@@ -25,13 +25,19 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 24
           cache: npm
           cache-dependency-path: client/package-lock.json
 
       - name: Install dependencies
         working-directory: ./client
         run: npm ci
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
+
+      - name: Check (types, formatting, self-checks)
+        working-directory: ./client
+        run: npm run check
 
       - name: Build client
         working-directory: ./client

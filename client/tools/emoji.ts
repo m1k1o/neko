@@ -1,8 +1,11 @@
-import * as fs from 'fs'
-import { custom } from './emoji_custom'
+// Regenerates src/assets/styles/vendor/_emoji.scss and public/emoji.json: `npm run build:emoji`
+import * as fs from 'node:fs'
+import { createRequire } from 'node:module'
+import { custom } from './emoji_custom.ts'
 
+const require = createRequire(import.meta.url)
 const datasource = require('emoji-datasource/emoji.json') as EmojiDatasource[]
-const emojis = require('emojilib') 
+const emojis = require('emojilib')
 
 interface EmojiDatasource {
   name: string
@@ -57,11 +60,11 @@ for (const emoji of custom) {
   keywords[emoji.name] = emoji.keywords
 
   // prettier-ignore
-  css.push(`&[data-emoji='${emoji.name}'] { background-size: contain; background-image: url('../images/emoji/${emoji.file}'); }`)
+  css.push(`&[data-emoji='${emoji.name}'] { background-size: contain; background-image: url('../../images/emoji/${emoji.file}'); }`)
 }
 
 for (const source of datasource) {
-  const unified = source.unified.split('-').map(v => v.toLowerCase())
+  const unified = source.unified.split('-').map((v) => v.toLowerCase())
 
   if (!source.has_img_twitter) {
     console.log(source.short_name, 'not avalible for set twitter')
@@ -146,13 +149,13 @@ fs.writeFile(
 .emoji {
   display: inline-block;
   background-size: ${SHEET_COLUMNS * 100}%;
-  background-image: url('~emoji-datasource/img/twitter/sheets/32.png');
+  background-image: url('emoji-datasource/img/twitter/sheets/32.png');
   background-repeat: no-repeat;
   vertical-align: bottom;
   height: 22px;
   width: 22px;
 
-${css.map(v => `  ${v}`).join('\n')}
+${css.map((v) => `  ${v}`).join('\n')}
 }
 `,
   () => {
