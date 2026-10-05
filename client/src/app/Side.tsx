@@ -83,9 +83,10 @@ function Chat() {
   const input = useRef<HTMLTextAreaElement>(null)
 
   useEffect(loadEmoji, [])
+  const last = app.chat[app.chat.length - 1]?.seq
   useLayoutEffect(() => {
     history.current!.scrollTop = history.current!.scrollHeight
-  }, [app.chat.length])
+  }, [last])
 
   const onKeyDown = (e: React.KeyboardEvent) => {
     if (e.key !== 'Enter' || e.shiftKey || e.nativeEvent.isComposing) return
@@ -117,7 +118,7 @@ function Chat() {
         {lines.map((m, i) =>
           m.type === 'text' ? (
             <li
-              key={i}
+              key={m.seq}
               className={`message${i > 0 && lines[i - 1].id === m.id && lines[i - 1].type === 'text' ? ' bulk' : ''}`}
             >
               <div className="author" onContextMenu={(e) => openMenu(e, m.id)}>
@@ -132,7 +133,7 @@ function Chat() {
               </div>
             </li>
           ) : (
-            <li key={i} className="event">
+            <li key={m.seq} className="event">
               <div className="content" title={time(m.created)}>
                 <strong>{m.name}</strong> {m.content}
               </div>

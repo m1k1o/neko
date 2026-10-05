@@ -48,6 +48,9 @@ export class Store<T extends object> {
   }
 
   private wrap<O extends object>(obj: O): O {
+    // a value read from the store is already a proxy; wrapping it again would add a layer
+    // on every round trip (e.g. `list = list.filter(...)`), and the layers never go away
+    if (this.raw.has(obj)) return obj
     let p = this.proxies.get(obj)
     if (!p) {
       p = new Proxy(obj, {

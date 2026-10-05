@@ -75,6 +75,7 @@ function load(): ViewerSettings {
 /////////////////////////////
 
 export interface ChatLine {
+  seq: number // unique and increasing: the React key, and what scrolling follows
   id: string
   name: string
   type: 'text' | 'event'
@@ -264,11 +265,13 @@ export function toast(title: string, text?: string, kind: Toast['kind'] = 'info'
   setTimeout(() => (s.toasts = s.toasts.filter((x) => x.id !== id)), 5000)
 }
 
-// ponytail: chat keeps the last CHAT_LIMIT lines in memory; nothing is persisted
+// chat keeps the last CHAT_LIMIT lines in memory; nothing is persisted. Trimming in place keeps
+// the proxies the store handed out (see store.ts wrap) and the row keys stable.
 const CHAT_LIMIT = 1000
-function pushChat(line: ChatLine) {
-  s.chat.push(line)
-  if (s.chat.length > CHAT_LIMIT) s.chat = s.chat.slice(-CHAT_LIMIT)
+let chatSeq = 0
+function pushChat(line: Omit<ChatLine, 'seq'>) {
+  s.chat.push({ ...line, seq: ++chatSeq })
+  if (s.chat.length > CHAT_LIMIT) s.chat.splice(0, s.chat.length - CHAT_LIMIT)
 }
 
 function event(id: string, content: string) {

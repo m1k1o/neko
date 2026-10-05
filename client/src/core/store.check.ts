@@ -34,4 +34,12 @@ assert.equal(notified, 2)
 s.state.map.y = s.state.a as any
 assert.equal(s.state.map.y, s.state.a)
 
+// elements read from the store and put back (filter, slice, spread) are not wrapped again
+s.state.map.z = { n: 2 }
+const z = s.state.map.z
+s.state.map = { ...s.state.map }
+assert.equal(s.state.map.z, z)
+for (let i = 0; i < 3000; i++) s.state.map = { ...s.state.map }
+assert.equal(s.state.map.z.n, 2) // would overflow the stack with one proxy layer per round trip
+
 console.log('store ok')
