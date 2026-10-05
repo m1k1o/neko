@@ -14,7 +14,7 @@ import {
   a11y,
   type FileItem,
 } from './neko'
-import { parse, type Node as MdNode } from './markdown'
+import { parseSafe, type Node as MdNode } from './markdown'
 import { Avatar, openMenu } from './Room'
 import type { Schemas } from '../core/api'
 import './styles/side.scss'
@@ -181,7 +181,7 @@ function Spoiler({ children }: { children: React.ReactNode }) {
 
 function Markdown({ source }: { source: string }) {
   const { app } = useNeko() // re-render once emoji names are known
-  const nodes = useMemo(() => parse(source), [source])
+  const nodes = useMemo(() => parseSafe(source), [source])
   // open-in-app needs the plugin and control of the desktop
   const inApp = app.openInApp && client.controlling
   const open = (href: string) => (e: React.MouseEvent) => {

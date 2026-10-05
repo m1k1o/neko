@@ -24,11 +24,16 @@ export function safeUrl(href: string): string | null {
 
 const URL_RE = /^(https?:\/\/[^\s<]+[^<.,:;"')\]\s])/
 
-type Rule = (src: string, prev: string, inQuote: boolean) => { len: number; node: Node } | null
+// what a rule may look at: the text from here on, and two facts about what came before
+interface Before {
+  lineStart: boolean // only spaces since the start of the line
+  word: boolean // the previous character is a word character
+}
+type Rule = (src: string, before: Before, inQuote: boolean) => { len: number; node: Node } | null
 
 const wrap =
   (re: RegExp, t: 'strong' | 'em' | 'u' | 's' | 'spoiler'): Rule =>
-  (src, _prev, inQuote) => {
+  (src, _before, inQuote) => {
     const m = re.exec(src)
     return m ? { len: m[0].length, node: { t, c: parse(m[1], inQuote) } } : null
   }
@@ -39,14 +44,18 @@ const rules: Rule[] = [
     const m = /^\\([^0-9A-Za-z\s])/.exec(src)
     return m ? { len: 2, node: { t: 'text', v: m[1] } } : null
   },
-  // ```lang\ncode``` (language is ignored, like before)
+  // ```lang\ncode``` (language is ignored, like before). Found with indexOf: the regex this
+  // replaces backtracked for seconds on a fence followed by many newlines and no closing fence
   (src) => {
-    const m = /^```(?:[a-z0-9-]+?\n+)?\n*([^]+?)\n*```/i.exec(src)
-    return m ? { len: m[0].length, node: { t: 'pre', v: m[1] } } : null
+    if (!src.startsWith('```')) return null
+    const end = src.indexOf('```', 3)
+    if (end < 4) return null
+    const body = src.slice(3, end).replace(/^[a-z0-9-]+\n/i, '')
+    return { len: end + 3, node: { t: 'pre', v: body.replace(/^\n+|\n+$/g, '') } }
   },
   // quotes only start a line and do not nest; >>> quotes the rest of the message
-  (src, prev, inQuote) => {
-    if (inQuote || !/(^|\n *)$/.test(prev)) return null
+  (src, before, inQuote) => {
+    if (inQuote || !before.lineStart) return null
     const quote = (len: number, body: string) => ({ len, node: { t: 'quote', c: parse(body, true) } as Node })
     const block = /^ *>>> ?([\s\S]*)/.exec(src)
     if (block) return quote(block[0].length, block[1])
@@ -54,9 +63,20 @@ const rules: Rule[] = [
     return lines ? quote(lines[0].length, lines[0].replace(/^ *> ?/gm, '').replace(/\n$/, '')) : null
   },
   wrap(/^\|\|([\s\S]+?)\|\|/, 'spoiler'),
+  // `code`: closed by the next run of exactly as many backticks (the regex with a backreference
+  // this replaces was quadratic per position on long runs of backticks)
   (src) => {
-    const m = /^(`+)([\s\S]*?[^`])\1(?!`)/.exec(src)
-    return m ? { len: m[0].length, node: { t: 'code', v: m[2].trim() } } : null
+    if (src[0] !== '`') return null
+    let k = 1
+    while (src[k] === '`') k++
+    const ticks = src.slice(0, k)
+    for (let from = k; ; from = src.indexOf(ticks, from) + 1) {
+      const end = src.indexOf(ticks, from)
+      if (end < 0) return null
+      if (src[end - 1] === '`' || src[end + k] === '`') continue
+      const v = src.slice(k, end).trim()
+      return v ? { len: end + k, node: { t: 'code', v } } : null
+    }
   },
   // [text](url)
   (src, _prev, inQuote) => {
@@ -81,8 +101,8 @@ const rules: Rule[] = [
   wrap(/^~~([\s\S]+?)~~/, 's'),
   wrap(/^\*(?=\S)([\s\S]*?\S)\*(?!\*)/, 'em'),
   // _em_ only at word boundaries, so snake_case_words stay text
-  (src, prev, inQuote) => {
-    if (/\w$/.test(prev)) return null
+  (src, before, inQuote) => {
+    if (before.word) return null
     const m = /^_(?=\S)([\s\S]*?\S)_(?!\w)/.exec(src)
     return m ? { len: m[0].length, node: { t: 'em', c: parse(m[1], inQuote) } } : null
   },
@@ -101,9 +121,11 @@ export function parse(src: string, inQuote = false): Node[] {
   let i = 0
   while (i < src.length) {
     const rest = src.slice(i)
-    const prev = src.slice(0, i)
+    let j = i
+    while (j > 0 && src[j - 1] === ' ') j--
+    const before: Before = { lineStart: j === 0 || src[j - 1] === '\n', word: /\w/.test(src[i - 1] ?? '') }
     let hit = null
-    for (const rule of rules) if ((hit = rule(rest, prev, inQuote))) break
+    for (const rule of rules) if ((hit = rule(rest, before, inQuote))) break
     if (!hit) {
       const len = (TEXT_RE.exec(rest)?.[0] ?? rest[0]).length || 1
       hit = { len, node: { t: 'text', v: rest.slice(0, len) } as Node }
@@ -115,4 +137,17 @@ export function parse(src: string, inQuote = false): Node[] {
     i += hit.len
   }
   return out
+}
+
+// Messages come from other users. Above FORMAT_LIMIT characters they are shown as plain text
+// (formatting a message that long is not worth a stalled renderer), and a parser failure of
+// any kind, such as a stack overflow from pathological nesting, also falls back to plain text.
+export const FORMAT_LIMIT = 10_000
+export function parseSafe(src: string): Node[] {
+  if (src.length > FORMAT_LIMIT) return [{ t: 'text', v: src }]
+  try {
+    return parse(src)
+  } catch {
+    return [{ t: 'text', v: src }]
+  }
 }

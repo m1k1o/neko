@@ -1,6 +1,6 @@
 // Runnable self-check: `node src/app/markdown.check.ts`
 import assert from 'node:assert/strict'
-import { parse } from './markdown.ts'
+import { parse, parseSafe, FORMAT_LIMIT } from './markdown.ts'
 
 const j = (s: string) => JSON.stringify(parse(s))
 const eq = (src: string, expected: unknown) => assert.deepEqual(parse(src), expected, src)
@@ -45,5 +45,20 @@ eq('> quoted\nplain', [{ t: 'quote', c: [T('quoted')] }, T('plain')])
 eq('>>> all\nof it', [{ t: 'quote', c: [T('all'), { t: 'br' }, T('of it')] }])
 eq('a > b', [T('a > b')])
 eq('> > nested', [{ t: 'quote', c: [T('> nested')] }])
+
+// hostile input: a fence with no closing fence and hundreds of newlines fits the 512-character
+// chat box and used to take seconds; deep nesting used to overflow the stack
+const timed = (src: string) => {
+  const t0 = performance.now()
+  parseSafe(src)
+  return performance.now() - t0
+}
+assert.ok(timed('```a' + '\n'.repeat(508)) < 50, 'unclosed fence must parse in milliseconds')
+eq('```a' + '\n'.repeat(3), [T('```a'), { t: 'br' }, { t: 'br' }, { t: 'br' }])
+eq('```\ncode\n```', [{ t: 'pre', v: 'code' }])
+eq('``````', [T('``````')])
+assert.equal(parseSafe('*'.repeat(40_000)).length, 1) // falls back to text instead of throwing
+assert.deepEqual(parseSafe('x'.repeat(FORMAT_LIMIT + 1)), [T('x'.repeat(FORMAT_LIMIT + 1))])
+assert.ok(timed('\n '.repeat(16_000)) < 200, 'line-start detection must not rescan the whole prefix')
 
 console.log('markdown ok')
