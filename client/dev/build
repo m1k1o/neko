@@ -7,4 +7,4 @@ docker run --rm -it \
     --volume "${PWD}/../:/app" \
     --entrypoint="npm" \
     --workdir="/app" \
-    node:24-bookworm-slim run build
+    node:24-trixie-slim run build

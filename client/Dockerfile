@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=node:24-bookworm-slim
+ARG BASE_IMAGE=node:24-trixie-slim
 FROM $BASE_IMAGE AS client
 
 WORKDIR /src

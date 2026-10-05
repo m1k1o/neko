@@ -15,7 +15,7 @@ if [ ! -d "${PWD}/../node_modules" ] || [ "$1" == "-i" ]; then
     --workdir="/app" \
     --env PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 \
     --entrypoint="npm" \
-    node:24-bookworm-slim install
+    node:24-trixie-slim install
 fi
 
 # vite dev server with hot reload, /api is proxied to NEKO_URL
@@ -27,4 +27,4 @@ docker run --rm -it \
     --volume "${PWD}/../:/app" \
     --entrypoint="npm" \
     --workdir="/app" \
-    node:24-bookworm-slim run dev -- --host 0.0.0.0 --port 3001
+    node:24-trixie-slim run dev -- --host 0.0.0.0 --port 3001
