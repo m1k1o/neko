@@ -10,9 +10,10 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "gen:api": "openapi-typescript ../server/openapi.yaml -o src/core/api.gen.ts",
+    "test:e2e": "node e2e.mjs",
+    "test:store": "node src/core/store.check.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test:store": "node src/core/store.check.ts",
     "check": "tsc --noEmit && prettier --check . && node src/core/store.check.ts && node src/app/markdown.check.ts"
   },
   "dependencies": {
