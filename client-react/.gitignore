@@ -1,0 +1,6 @@
+node_modules
+dist
+e2e-out
+
+# the root .gitignore ignores "core" (core dumps); this directory is source
+!/src/core/

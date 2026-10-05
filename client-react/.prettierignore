@@ -1,0 +1,5 @@
+src/core/keyboard/guacamole.js
+src/core/api.gen.ts
+src/app/locale/
+public/
+dist/
