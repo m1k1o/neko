@@ -16,6 +16,7 @@
 - New metric `neko_capture_streamsink_frames`: video frames produced per pipeline; a rate below the configured fps means the encoder falls behind.
 - Session ids on the `multiuser` and `noauth` providers are built from a sanitised login name (the name itself is shown as typed); `POST /api/members` rejects usernames that would not be safe in a URL path.
 - Chat messages are limited to `chat.max_length` characters (default 512, the web client's input limit); longer ones are rejected over the API and dropped over the websocket.
+- The default video pipeline no longer draws the mouse pointer into the stream; the client draws it, so it was shown twice (once with the stream's delay). Set `capture.video.show_pointer` to `true` to get the old behaviour.
 - The client no longer uses the legacy (v2) API. IP bans, which only existed in the legacy layer, are not available.
 - Scroll sensitivity uses the v3 scale (-5 to 5); the `?scroll` query param is mapped onto it.
 - File downloads are streamed by the browser instead of being buffered in memory.
