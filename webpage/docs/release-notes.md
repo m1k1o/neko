@@ -2,7 +2,8 @@
 
 ## master {#master}
 
-No unreleased changes yet.
+### Changes {#master-changes}
+- Generated video pipelines keep at most one raw frame queued, so a slow encoder drops frames instead of adding latency.
 
 ## [n.eko v3.1.6](https://github.com/m1k1o/neko/releases/tag/v3.1.6) {#v3.1.6}
 
