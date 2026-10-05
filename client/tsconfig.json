@@ -11,7 +11,9 @@
     "skipLibCheck": true,
     "isolatedModules": true,
     "resolveJsonModule": true,
-    "verbatimModuleSyntax": false
+    "verbatimModuleSyntax": false,
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true
   },
   "include": ["src"],
   "exclude": ["src/**/*.check.ts"]

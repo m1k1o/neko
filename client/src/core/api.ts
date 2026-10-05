@@ -1,15 +1,14 @@
 // Thin fetch wrapper over the v3 REST API (server/openapi.yaml).
 // Types come from `npm run gen:api`; no runtime client is generated.
-import type { components } from './api.gen'
+import type { components } from './api.gen.ts'
 
 export type Schemas = components['schemas']
 
 export class ApiError extends Error {
-  constructor(
-    public readonly status: number,
-    message: string,
-  ) {
+  readonly status: number
+  constructor(status: number, message: string) {
     super(message)
+    this.status = status
   }
 }
 

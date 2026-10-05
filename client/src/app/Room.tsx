@@ -317,6 +317,7 @@ export function Controls() {
   const controlLocked = state.settings.locked_controls && !admin
   const locked = state.control.locked && hosting
   const { playable, playing, muted, volume } = state.video
+  const connected = state.connection.status === 'connected'
   const micAllowed = hosting && !!client.session?.profile.can_share_media
 
   // clicking the video without control shakes the keyboard icon as a hint
@@ -336,10 +337,11 @@ export function Controls() {
     mic.current = null
     setMicOn(false)
   }
-  // drop the mic when control is lost, so the next host gets the audio input
+  // drop the mic when control is lost (the next host gets the audio input) and whenever the
+  // connection is re-established: the track was attached to the old peer connection
   useEffect(() => {
-    if (!micAllowed) micOff()
-  }, [micAllowed])
+    if (!micAllowed || !connected) micOff()
+  }, [micAllowed, connected])
 
   const toggleMic = async () => {
     if (mic.current) return micOff()

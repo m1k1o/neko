@@ -2,10 +2,10 @@
 // /api/ws event protocol and WebRTC with a binary data channel for input.
 // Written against master's server/pkg/types. UIs subscribe via `client.store`
 // and read `client.state`; one-off happenings arrive on `client.events`.
-import { Store, Emitter } from './store'
-import { NekoApi, ApiError, type Schemas } from './api'
-import { Overlay } from './overlay'
-import { OP, type State, type Settings, type NekoEvents } from './types'
+import { Store, Emitter } from './store.ts'
+import { NekoApi, ApiError, type Schemas } from './api.ts'
+import { Overlay } from './overlay.ts'
+import { OP, type State, type Settings, type NekoEvents } from './types.ts'
 
 const RECONNECT_MAX = 10
 const RECONNECT_BACKOFF_MS = 1500
@@ -82,7 +82,10 @@ export class NekoClient {
   private staleTimer = 0
   private lastMessage = 0
 
-  constructor(private readonly opts: NekoClientOptions = {}) {
+  private readonly opts: NekoClientOptions
+
+  constructor(opts: NekoClientOptions = {}) {
+    this.opts = opts
     const { store, state } = this
     store.watch(
       () => this.controlling,
@@ -451,7 +454,9 @@ export class NekoClient {
         else this.candidates.push(p)
         break
       case 'signal/close':
-        this.closePeer()
+        // the server dropped its peer (it saw the media path fail first): ask for a new one,
+        // with the same backoff as a failure the browser noticed itself
+        if (this.pc) this.onPeerState('failed')
         break
       case 'signal/video':
       case 'signal/audio':
@@ -640,7 +645,8 @@ export class NekoClient {
   }
 
   removeTrack(sender: RTCRtpSender) {
-    this.pc?.removeTrack(sender)
+    // a sender from a previous peer connection is already gone; removing it from the current one throws
+    if (this.pc?.getSenders().includes(sender)) this.pc.removeTrack(sender)
   }
 
   /////////////////////////////

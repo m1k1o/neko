@@ -1,8 +1,8 @@
 // Input layer over the video: mouse, wheel, keyboard, touch, file drop, and
 // drawing the host's cursor for everyone who is not controlling.
-import GuacamoleKeyboard from './keyboard/guacamole'
-import type { NekoClient, Pos } from './client'
-import { OP, type CursorImage } from './types'
+import GuacamoleKeyboard from './keyboard/guacamole.js'
+import type { NekoClient, Pos } from './client.ts'
+import { OP, type CursorImage } from './types.ts'
 
 const WHEEL_STEP = 53 // px of wheel delta per scroll step
 const WHEEL_LINE_HEIGHT = 19 // px per line when the browser reports lines
@@ -63,10 +63,10 @@ export class Overlay {
   private ctrlDown = 0
   private readonly noKeyUp = new Set<number>()
 
-  constructor(
-    private readonly client: NekoClient,
-    parent: HTMLElement,
-  ) {
+  private readonly client: NekoClient
+
+  constructor(client: NekoClient, parent: HTMLElement) {
+    this.client = client
     this.canvas.style.cssText = LAYER
     // a transparent textarea receives keys, IME composition and the mobile keyboard
     this.input.style.cssText =
