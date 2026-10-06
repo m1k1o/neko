@@ -164,7 +164,7 @@ await step('alice sends emote, bob sees animation', async () => {
   await A.click('.context .emote.wave')
   await B.waitForSelector('.emotes .emote-container', { timeout: 3000 })
 })
-await step('files: alice uploads, list updates on bob', async () => {
+await step('files: alice uploads, the list shows the file', async () => {
   if (!(await A.locator('.tabs-container >> text=Files').count()))
     throw new Error('no Files tab: start the server with NEKO_FILETRANSFER_ENABLED=true')
   await A.click('.tabs-container >> text=Files')
@@ -294,6 +294,7 @@ await step('keyboard: Enter on focused icon toggles side panel', async () => {
 await step('admin changes resolution, bob sees event; revert', async () => {
   await A.click('.video-menu .fa-desktop')
   const current = (await A.locator('.context.resolution li.active').textContent()) ?? ''
+  const width = await A.evaluate(() => document.querySelector('video').videoWidth)
   await A.locator('.context.resolution li').filter({ hasNotText: current }).first().click()
   await B.waitForFunction(
     () =>
@@ -304,6 +305,7 @@ await step('admin changes resolution, bob sees event; revert', async () => {
   await A.click('.video-menu .fa-desktop')
   await A.locator('.context.resolution li', { hasText: current }).first().click()
   await A.mouse.click(5, 5)
+  await A.waitForFunction((w) => document.querySelector('video').videoWidth === w, width, { timeout: 15000 })
 })
 await step('settings: keyboard layouts loaded, about opens', async () => {
   await A.click('.tabs-container >> text=Settings')
@@ -495,7 +497,10 @@ if (process.env.NEKO_FILE_URL) {
     await FB.fill('input[placeholder="Enter your display name"]', 'bob')
     await FB.fill('input[type=password]', 'bob')
     await FB.click('button[type=submit]')
-    await FB.waitForSelector('.neko-dialog[open]', { timeout: 5000 }) // login error
+    await FB.waitForSelector('.neko-dialog[open]', { timeout: 5000 })
+    const text = await FB.locator('.neko-dialog[open]').textContent()
+    if (!/login/i.test(text ?? '') || !(await FB.locator('.connect input[type=password]').count()))
+      throw new Error('expected a login error, got ' + JSON.stringify(text))
     await FB.click('.neko-dialog .confirm')
   })
   await step('file provider: unban from Settings, bob logs in again', async () => {
@@ -512,4 +517,4 @@ console.log(
   errors.length ? '\n  ' + [...new Set(errors)].slice(0, 12).join('\n  ') : 'none',
 )
 await browser.close()
-process.exit(fails ? 1 : 0)
+process.exit(fails || errors.length ? 1 : 0)
