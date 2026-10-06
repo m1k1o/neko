@@ -180,9 +180,9 @@ function Connect() {
       for (const k of ['pwd', 'usr', 'token']) url.searchParams.delete(k)
       history.replaceState(null, '', url)
     }
-    if (invite && params.get('usr') && !client.state.authenticated) {
-      loginOnce(params.get('usr')!, invite)
-    }
+    // always, even if a saved session is being resumed at the same time: the link wins
+    // (login() drops the resumed websocket), and this must not depend on which answer is first
+    if (invite && params.get('usr')) loginOnce(params.get('usr')!, invite)
   }, [])
 
   const login = (e: FormEvent) => {
