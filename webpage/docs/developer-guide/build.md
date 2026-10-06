@@ -8,7 +8,7 @@ This page covers building the frontend and backend binaries from source, and bui
 
 ## Frontend
 
-**Requires:** [Node.js](https://nodejs.org/) 24 LTS (20.19+ works)
+**Requires:** [Node.js](https://nodejs.org/) 24 LTS (22.18 or newer works: `npm run check` runs TypeScript files with Node itself)
 
 ```bash
 cd client
@@ -59,7 +59,7 @@ The repository uses a [Dockerfile template](https://github.com/m1k1o/neko/blob/m
 ### Requirements
 
 - [Go](https://golang.org/) 1.25+ (for the template pre-processor)
-- [Node.js](https://nodejs.org/) 24 LTS (20.19+ works; for the frontend, unless you supply a pre-built `client/dist/`)
+- [Node.js](https://nodejs.org/) 24 LTS (22.18 or newer; for the frontend, unless you supply a pre-built `client/dist/`)
 - [Docker](https://www.docker.com/) with BuildKit enabled
 
 ### Steps

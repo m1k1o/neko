@@ -13,7 +13,6 @@ if [ ! -d "${PWD}/../node_modules" ] || [ "$1" == "-i" ]; then
   docker run --rm -it \
     --volume "${PWD}/../:/app" \
     --workdir="/app" \
-    --env PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 \
     --entrypoint="npm" \
     node:24-trixie-slim install
 fi

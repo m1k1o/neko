@@ -5,7 +5,8 @@
 ### New Features {#master-feats}
 - Rewrote the web client in React with a framework-free core library (`client/src/core`) that uses only the v3 API, so it works with `NEKO_LEGACY=false`. The look and features of the Vue 2 client are kept: chat with markdown, emoji and open-in-app links, emotes, file transfer, member admin actions, locks, broadcast, microphone, all translations and URL parameters.
 - Kick now removes the session (the user may log in again). Ban sets `can_login: false` and is offered when the authentication provider stores accounts (`file`, `object`), with a list to unban members in Settings.
-- The client reconnects by itself when its websocket goes silent (dropped networks often never close it).
+- The client reconnects by itself when its websocket goes silent (dropped networks often never close it), and asks for a new media stream when the server drops it.
+- Ctrl+V pastes what was copied most recently on either side: local clipboard text is sent to the remote first when it is newer than the remote's. Text entered through an IME or an on-screen keyboard is typed as key events.
 
 ### Fixes {#master-fixes}
 - Fixed video timestamps running slow when the encoder falls behind: frames captured late or dropped before the encoder made the stream's clock lag real time, so browsers buffered up to seconds of video and lost lip sync. RTP timestamps now follow the time between captured frames ([#712](https://github.com/m1k1o/neko/pull/712)).
@@ -18,6 +19,8 @@
 - The client no longer uses the legacy (v2) API. IP bans, which only existed in the legacy layer, are not available.
 - Scroll sensitivity uses the v3 scale (-5 to 5); the `?scroll` query param is mapped onto it.
 - File downloads are streamed by the browser instead of being buffered in memory.
+- The microphone switches itself off when the connection is re-established.
+- Opening the client in a second tab or window takes over the session; the first tab says so.
 
 ## [n.eko v3.1.6](https://github.com/m1k1o/neko/releases/tag/v3.1.6) {#v3.1.6}
 

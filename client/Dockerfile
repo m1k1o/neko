@@ -4,8 +4,7 @@ FROM $BASE_IMAGE AS client
 WORKDIR /src
 
 #
-# install dependencies (the e2e browser is not needed to build)
-ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+# install dependencies
 COPY package*.json ./
 RUN npm ci
 

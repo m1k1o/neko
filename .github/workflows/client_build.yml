@@ -32,8 +32,6 @@ jobs:
       - name: Install dependencies
         working-directory: ./client
         run: npm ci
-        env:
-          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
 
       - name: Check (types, formatting, self-checks)
         working-directory: ./client

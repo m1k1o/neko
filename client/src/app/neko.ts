@@ -263,7 +263,7 @@ const subscribe = (fn: () => void) => {
 }
 const snapshot = () => `${client.store.version}.${app.version}`
 
-// ponytail: every store change re-renders the subscribed tree; fine at this size,
+// every store change re-renders the subscribed tree; fine at this size,
 // split per-slice selectors if profiling ever shows render cost
 export function useNeko() {
   useSyncExternalStore(subscribe, snapshot)

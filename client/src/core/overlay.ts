@@ -278,7 +278,7 @@ export class Overlay {
 
   private onDrop(e: DragEvent) {
     if (!this.client.controlling && !this.client.implicitControl) return
-    // ponytail: dropped folders are skipped; walk webkitGetAsEntry() if anyone needs them
+    // dropped folders are skipped; walking webkitGetAsEntry() would be needed for them
     const files = [...(e.dataTransfer?.files ?? [])]
     if (files.length) this.client.uploadDrop({ ...this.pos(e), files })
   }
@@ -403,7 +403,7 @@ export class Overlay {
     this.input.style.cursor = this.client.controlling && c ? `url(${c.uri}) ${c.x} ${c.y}, default` : 'default'
   }
 
-  // ponytail: devicePixelRatio is read on resize only; listen to matchMedia(resolution) if
+  // devicePixelRatio is read on resize only; listen to matchMedia(resolution) if
   // cursors look blurry after dragging the window to another monitor
   resize() {
     const { width, height } = this.client.canvasSize
