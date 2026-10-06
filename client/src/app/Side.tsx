@@ -13,6 +13,7 @@ import {
   loadEmoji,
   pickedEmoji,
   a11y,
+  closeOn,
   type FileItem,
 } from './neko'
 import { parseSafe, type Node as MdNode } from './markdown'
@@ -250,11 +251,7 @@ function EmojiPicker({ onPick, onClose }: { onPick: (name: string) => void; onCl
   const scroll = useRef<HTMLDivElement>(null)
   const groupEls = useRef<(HTMLLIElement | null)[]>([])
 
-  useEffect(() => {
-    const away = (e: MouseEvent) => !ref.current?.contains(e.target as Node) && onClose()
-    document.addEventListener('click', away)
-    return () => document.removeEventListener('click', away)
-  }, [])
+  useEffect(() => closeOn(onClose), [])
 
   const groups = [{ id: 'recent', name: 'Recent', list: app.emojiRecent }, ...emoji.groups]
   const q = search.trim().toLowerCase()
@@ -272,6 +269,7 @@ function EmojiPicker({ onPick, onClose }: { onPick: (name: string) => void; onCl
         className="emoji"
         data-emoji={name}
         {...a11y(`:${name}:`)}
+        tabIndex={-1}
         onMouseEnter={() => setHovered(name)}
         onFocus={() => setHovered(name)}
         onClick={() => pick(name)}
@@ -295,6 +293,7 @@ function EmojiPicker({ onPick, onClose }: { onPick: (name: string) => void; onCl
             value={search}
             placeholder={hovered ? `:${hovered}:` : ''}
             onChange={(e) => setSearch(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && filtered[0] && pick(filtered[0])}
           />
         </div>
       </div>
@@ -532,7 +531,12 @@ function Settings() {
     <li>
       <span>{t(`setting.${label}`)}</span>
       <label className="switch">
-        <input type="checkbox" checked={s[key]} onChange={(e) => setSetting(key, e.target.checked)} />
+        <input
+          type="checkbox"
+          aria-label={t(`setting.${label}`)}
+          checked={s[key]}
+          onChange={(e) => setSetting(key, e.target.checked)}
+        />
         <span />
       </label>
     </li>
@@ -577,11 +581,11 @@ function Settings() {
             <div>
               <span>{t('setting.broadcast_title')}</span>
               {!app.broadcast.active ? (
-                <button onClick={() => actions.broadcastStart(url)}>
+                <button aria-label={t('setting.broadcast_title')} onClick={() => actions.broadcastStart(url)}>
                   <i className="fas fa-play"></i>
                 </button>
               ) : (
-                <button onClick={actions.broadcastStop} className="btn-red">
+                <button aria-label={t('setting.broadcast_title')} onClick={actions.broadcastStop} className="btn-red">
                   <i className="fas fa-stop"></i>
                 </button>
               )}

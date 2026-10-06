@@ -1,5 +1,17 @@
 import { Component, useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
-import { useNeko, actions, t, isLocked, setSetting, remember, client, tell, a11y, type LockResource } from './neko'
+import {
+  useNeko,
+  actions,
+  t,
+  isLocked,
+  setSetting,
+  remember,
+  client,
+  tell,
+  a11y,
+  closeOn,
+  type LockResource,
+} from './neko'
 import { Video } from './Video'
 import { Members, MemberMenu, RoomMenu, Controls, Emotes } from './Room'
 import { Side } from './Side'
@@ -295,6 +307,7 @@ function Dialog() {
 
 function About() {
   const { app } = useNeko()
+  useEffect(() => closeOn(() => (app.about = false)), [])
   return (
     <div className="about" onClick={(e) => e.target === e.currentTarget && (app.about = false)}>
       <div className="window" role="dialog" aria-label="About n.eko">

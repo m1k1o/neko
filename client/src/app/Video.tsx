@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNeko, client, app, actions, a11y, t } from './neko'
+import { useNeko, client, app, actions, a11y, closeOn, t } from './neko'
 import './styles/video.scss'
 import './styles/emote.scss'
 import './styles/resolution.scss'
@@ -46,12 +46,7 @@ export function Video({ hideControls, extraControls }: { hideControls: boolean; 
     }
   }, [])
 
-  useEffect(() => {
-    if (!menu) return
-    const close = () => setMenu(null)
-    document.addEventListener('click', close)
-    return () => document.removeEventListener('click', close)
-  }, [menu])
+  useEffect(() => (menu ? closeOn(() => setMenu(null)) : undefined), [menu])
 
   const admin = client.isAdmin
   const hosting = client.controlling

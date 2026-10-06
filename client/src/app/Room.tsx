@@ -1,5 +1,20 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNeko, actions, t, isMuted, client, app, name, ask, tell, langs, setLang, a11y, EMOTES } from './neko'
+import {
+  useNeko,
+  actions,
+  t,
+  isMuted,
+  client,
+  app,
+  name,
+  ask,
+  tell,
+  langs,
+  setLang,
+  a11y,
+  closeOn,
+  EMOTES,
+} from './neko'
 import './styles/members.scss'
 import './styles/menu.scss'
 import './styles/controls.scss'
@@ -100,11 +115,12 @@ const confirmThen = (title: string, text: string, fn: () => void) => ask(title, 
 export function MemberMenu() {
   const { app, state } = useNeko()
   const [bannable, setBannable] = useState(false)
+  useEffect(() => closeOn(() => (app.menu = null)), [])
+  // keyboard users land on the first item
+  const list = useRef<HTMLUListElement>(null)
   useEffect(() => {
-    const close = () => (app.menu = null)
-    document.addEventListener('click', close)
-    return () => document.removeEventListener('click', close)
-  }, [])
+    if (app.menu) list.current?.querySelector<HTMLElement>('[role=menuitem]')?.focus()
+  }, [app.menu])
 
   const id = app.menu?.id
   const m = id ? state.sessions[id] : undefined
@@ -126,7 +142,7 @@ export function MemberMenu() {
   const y = Math.min(app.menu.y, innerHeight - 250)
 
   return (
-    <ul className="context" role="menu" aria-label={n} style={{ left: x, top: y }}>
+    <ul ref={list} className="context" role="menu" aria-label={n} style={{ left: x, top: y }}>
       <li className="header">
         <div className="user">
           <Avatar seed={n} avatar={m.profile.avatar} size={25} />
@@ -336,6 +352,7 @@ export function Controls() {
           <label className="switch" title={hosting ? t(locked ? 'controls.unlock' : 'controls.lock') : ''}>
             <input
               type="checkbox"
+              aria-label={t(locked ? 'controls.unlock' : 'controls.lock')}
               checked={locked}
               disabled={!hosting || (implicit && controlLocked)}
               onChange={(e) => (e.target.checked ? client.lock() : client.unlock())}
@@ -393,12 +410,7 @@ export function Emotes() {
   const [picker, setPicker] = useState<{ x: number; y: number } | null>(null)
   const repeat = useRef(0)
 
-  useEffect(() => {
-    if (!picker) return
-    const close = () => setPicker(null)
-    document.addEventListener('click', close)
-    return () => document.removeEventListener('click', close)
-  }, [picker])
+  useEffect(() => (picker ? closeOn(() => setPicker(null)) : undefined), [picker])
 
   const pick = (emote: string) => {
     if (!recent.includes(emote)) {
@@ -437,7 +449,12 @@ export function Emotes() {
           <i
             className="fas fa-grin-beam"
             {...a11y('Emotes')}
-            onClick={(e) => (e.stopPropagation(), setPicker({ x: e.clientX, y: e.clientY }))}
+            onClick={(e) => {
+              e.stopPropagation()
+              // opened with the keyboard: there is no pointer position, use the icon's
+              const r = e.currentTarget.getBoundingClientRect()
+              setPicker(e.detail === 0 ? { x: r.left, y: r.top } : { x: e.clientX, y: e.clientY })
+            }}
           />
         </li>
       </ul>
