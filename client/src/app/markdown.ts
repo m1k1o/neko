@@ -22,6 +22,10 @@ export function safeUrl(href: string): string | null {
   }
 }
 
+// link text is not linked again: [https://a](https://b) would nest two anchors
+const unlink = (nodes: Node[]): Node[] =>
+  nodes.flatMap((n) => (n.t === 'link' ? unlink(n.c) : 'c' in n ? [{ ...n, c: unlink(n.c) }] : [n]))
+
 const URL_RE = /^(https?:\/\/[^\s<]+[^<.,:;"')\]\s])/
 
 // what a rule may look at: the text from here on, and two facts about what came before
@@ -83,7 +87,10 @@ const rules: Rule[] = [
     const m = /^\[([^\]\n]+)\]\(([^)\s]+)\)/.exec(src)
     if (!m) return null
     const href = safeUrl(m[2])
-    return { len: m[0].length, node: href ? { t: 'link', href, c: parse(m[1], inQuote) } : { t: 'text', v: m[0] } }
+    return {
+      len: m[0].length,
+      node: href ? { t: 'link', href, c: unlink(parse(m[1], inQuote)) } : { t: 'text', v: m[0] },
+    }
   },
   // <url>
   (src) => {

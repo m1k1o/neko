@@ -157,6 +157,7 @@ export const app = new Store({
   menu: null as null | { x: number; y: number; id: string },
   dialog: null as Dialog | null,
   about: false,
+  bans: 0, // bumped after a ban or unban, so lists that show them reload
 })
 const s = app.state
 
@@ -393,9 +394,10 @@ export const actions = {
       (await api('POST', `/members/${encodeURIComponent(id)}`, { can_login: false })) &&
       (await api('DELETE', `/sessions/${encodeURIComponent(id)}`))
     )
-      line(t('you'), t('notifications.banned', { name: who }))
+      (s.bans++, line(t('you'), t('notifications.banned', { name: who })))
   },
-  unban: (id: string) => api('POST', `/members/${encodeURIComponent(id)}`, { can_login: true }),
+  unban: (id: string) =>
+    api('POST', `/members/${encodeURIComponent(id)}`, { can_login: true }).then((ok) => (ok && s.bans++, ok)),
   // accounts stored by the auth provider (empty for multiuser / noauth / OAuth)
   members: () => client.api.req<Schemas['MemberData'][]>('GET', '/members').catch(() => [] as Schemas['MemberData'][]),
   async canBan(id: string) {
@@ -463,6 +465,56 @@ export function pickedEmoji(name: string) {
   s.emojiRecent = [...s.emojiRecent.slice(-30), name]
   set('emoji_recent', JSON.stringify(s.emojiRecent))
 }
+
+export const EMOTES = [
+  'anger',
+  'bomb',
+  'sleep',
+  'explode',
+  'sweat',
+  'poo',
+  'hundred',
+  'alert',
+  'punch',
+  'wave',
+  'okay',
+  'thumbs-up',
+  'clap',
+  'prey',
+  'celebrate',
+  'flame',
+  'goof',
+  'love',
+  'cool',
+  'smerk',
+  'worry',
+  'ouch',
+  'cry',
+  'surprised',
+  'quiet',
+  'rage',
+  'annoy',
+  'steamed',
+  'scared',
+  'terrified',
+  'sleepy',
+  'dead',
+  'happy',
+  'roll-eyes',
+  'thinking',
+  'clown',
+  'sick',
+  'rofl',
+  'drule',
+  'sniff',
+  'sus',
+  'party',
+  'odd',
+  'hot',
+  'cold',
+  'blush',
+  'sad',
+]
 
 export function showEmote(emote: string) {
   if (s.settings.ignore_emotes || document.visibilityState === 'hidden') return
@@ -580,7 +632,8 @@ ev.on('upload.drop.finished', (error) => error && toast(error.message, undefined
 ev.on('room.broadcast.status', (active, url) => (s.broadcast = { active, url: url || '' }))
 
 ev.on('receive.broadcast', (sender, subject, body) => {
-  if (subject === 'emote' && typeof body === 'string' && !s.ignored[sender]) showEmote(body)
+  // other clients may send anything; only known names become class names on screen
+  if (subject === 'emote' && EMOTES.includes(body) && !s.ignored[sender]) showEmote(body)
 })
 
 ev.on('message', (event, payload) => {

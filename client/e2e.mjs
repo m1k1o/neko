@@ -321,9 +321,9 @@ await step('a member who may not watch gets the room without video, not a spinne
 })
 await step('admin changes resolution, bob sees event; revert', async () => {
   await A.click('.video-menu .fa-desktop')
-  const current = (await A.locator('.context.resolution li.active').textContent()) ?? ''
+  const current = (await A.locator('.resolution li.active').textContent()) ?? ''
   const width = await A.evaluate(() => document.querySelector('video').videoWidth)
-  await A.locator('.context.resolution li').filter({ hasNotText: current }).first().click()
+  await A.locator('.resolution li').filter({ hasNotText: current }).first().click()
   await B.waitForFunction(
     () =>
       [...document.querySelectorAll('.chat-history .event')].some((e) => /changed the resolution/.test(e.textContent)),
@@ -331,7 +331,7 @@ await step('admin changes resolution, bob sees event; revert', async () => {
     { timeout: 8000 },
   )
   await A.click('.video-menu .fa-desktop')
-  await A.locator('.context.resolution li', { hasText: current }).first().click()
+  await A.locator('.resolution li', { hasText: current }).first().click()
   await A.mouse.click(5, 5)
   await A.waitForFunction((w) => document.querySelector('video').videoWidth === w, width, { timeout: 15000 })
 })

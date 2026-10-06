@@ -1,61 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNeko, actions, t, isMuted, client, app, name, ask, tell, langs, setLang, a11y } from './neko'
+import { useNeko, actions, t, isMuted, client, app, name, ask, tell, langs, setLang, a11y, EMOTES } from './neko'
 import './styles/members.scss'
 import './styles/menu.scss'
 import './styles/controls.scss'
 import './styles/emotes.scss'
 import './styles/context.scss'
 import './styles/avatar.scss'
-
-const EMOTES = [
-  'anger',
-  'bomb',
-  'sleep',
-  'explode',
-  'sweat',
-  'poo',
-  'hundred',
-  'alert',
-  'punch',
-  'wave',
-  'okay',
-  'thumbs-up',
-  'clap',
-  'prey',
-  'celebrate',
-  'flame',
-  'goof',
-  'love',
-  'cool',
-  'smerk',
-  'worry',
-  'ouch',
-  'cry',
-  'surprised',
-  'quiet',
-  'rage',
-  'annoy',
-  'steamed',
-  'scared',
-  'terrified',
-  'sleepy',
-  'dead',
-  'happy',
-  'roll-eyes',
-  'thinking',
-  'clown',
-  'sick',
-  'rofl',
-  'drule',
-  'sniff',
-  'sus',
-  'party',
-  'odd',
-  'hot',
-  'cold',
-  'blush',
-  'sad',
-]
 
 export function Avatar({ seed, avatar, size }: { seed: string; avatar?: string; size: number }) {
   const [failed, setFailed] = useState(false)
@@ -161,7 +111,9 @@ export function MemberMenu() {
   // ban only sticks where the auth provider stores accounts, see actions.ban
   useEffect(() => {
     setBannable(false)
-    if (id && client.isAdmin) actions.canBan(id).then(setBannable)
+    let current = true // a slow answer for the previous member must not land on this one
+    if (id && client.isAdmin) actions.canBan(id).then((v) => current && setBannable(v))
+    return () => void (current = false)
   }, [id])
   if (!app.menu || !m) return null
 

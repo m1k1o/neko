@@ -184,7 +184,7 @@ function Connect() {
   return (
     <div className="connect">
       <div className="window">
-        <div className="logo" title="About n.eko">
+        <div className="logo">
           <Logo />
         </div>
         {connecting ? (

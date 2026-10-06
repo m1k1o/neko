@@ -33,6 +33,7 @@ eq('see https://neko.m1k1o.net/docs.', [
   T('.'),
 ])
 eq('[docs](https://x.io/a)', [{ t: 'link', href: 'https://x.io/a', c: [T('docs')] }])
+eq('[https://a.io](https://b.io)', [{ t: 'link', href: 'https://b.io/', c: [T('https://a.io')] }])
 eq('<https://x.io>', [{ t: 'link', href: 'https://x.io/', c: [T('https://x.io')] }])
 eq('[click](javascript:alert(1))', [T('[click](javascript:alert(1))')])
 assert.ok(!j('[x](data:text/html,<script>)').includes('"link"'))

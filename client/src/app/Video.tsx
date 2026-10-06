@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNeko, client, app, a11y, t } from './neko'
+import { useNeko, client, app, actions, a11y, t } from './neko'
 import './styles/video.scss'
 import './styles/emote.scss'
 import './styles/resolution.scss'
@@ -67,7 +67,7 @@ export function Video({ hideControls, extraControls }: { hideControls: boolean; 
 
   const requestFullscreen = () => {
     // iOS only allows fullscreen on the video element itself
-    if (player.current?.requestFullscreen) player.current.requestFullscreen()
+    if (player.current?.requestFullscreen) player.current.requestFullscreen().catch(() => {})
     else (client.video as any)?.webkitEnterFullscreen?.()
   }
 
@@ -115,7 +115,7 @@ export function Video({ hideControls, extraControls }: { hideControls: boolean; 
                 <i
                   className={`${hosted && !hosting ? 'disabled ' : ''}${!hosted && !hosting ? 'faded ' : ''}fas fa-computer-mouse`}
                   {...a11y(hosting ? t('controls.release') : t('controls.request'))}
-                  onClick={() => playable && (hosting ? client.release() : client.request())}
+                  onClick={() => playable && actions.toggleControl()}
                 />
               </li>
             )}
@@ -132,7 +132,7 @@ export function Video({ hideControls, extraControls }: { hideControls: boolean; 
               <li>
                 <i
                   {...a11y('Picture-in-Picture')}
-                  onClick={() => client.video?.requestPictureInPicture()}
+                  onClick={() => client.video?.requestPictureInPicture().catch(() => {})}
                   className="fas fa-external-link-alt"
                 />
               </li>
@@ -155,7 +155,7 @@ function Resolution({ onPick }: { onPick: () => void }) {
   const { state } = useNeko()
   const { width, height, rate } = state.screen.size
   return (
-    <ul className="context resolution" role="menu" style={{ top: 50, right: 50 }} onClick={(e) => e.stopPropagation()}>
+    <ul className="resolution" role="menu" style={{ top: 50, right: 50 }} onClick={(e) => e.stopPropagation()}>
       {state.screen.configurations.map((c, i) => (
         <li
           key={i}
@@ -176,7 +176,9 @@ function Resolution({ onPick }: { onPick: () => void }) {
 
 function Clipboard() {
   const { state } = useNeko()
-  const [text, setText] = useState(state.control.clipboard?.text ?? '')
+  const remote = state.control.clipboard?.text ?? ''
+  const [text, setText] = useState(remote)
+  useEffect(() => setText(remote), [remote]) // follows what is copied on the remote while open
   const timer = useRef(0)
   return (
     <div className="clipboard" onClick={(e) => e.stopPropagation()}>

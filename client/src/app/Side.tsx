@@ -438,7 +438,7 @@ function Files() {
                   onChange={() => toggle(item.name)}
                 />
               )}
-              <i className={item.type === 'dir' ? 'fas fa-folder' : 'fas fa-file'} />
+              <i className={`file-icon fas ${item.type === 'dir' ? 'fa-folder' : 'fa-file'}`} />
               <p className="file-name" title={item.name}>
                 {item.name}
               </p>
@@ -507,7 +507,10 @@ function Files() {
               type="file"
               multiple
               hidden
-              onChange={(e) => e.target.files && actions.upload(e.target.files)}
+              onChange={(e) => {
+                if (e.target.files) actions.upload(e.target.files)
+                e.target.value = '' // so the same file can be chosen again
+              }}
             />
           </div>
         )}
@@ -604,8 +607,9 @@ function Settings() {
 // accounts with can_login=false (see actions.ban); empty unless the provider stores accounts
 function Banned() {
   const [banned, setBanned] = useState<Schemas['MemberData'][] | null>(null)
+  const { app } = useNeko()
   const load = () => actions.members().then((all) => setBanned(all.filter((m) => m.profile?.can_login === false)))
-  useEffect(() => void load(), [])
+  useEffect(() => void load(), [app.bans]) // reloads after a ban or unban from anywhere
 
   if (!banned?.length) return null
   return (
@@ -615,7 +619,7 @@ function Banned() {
         {banned.map((m) => (
           <li key={m.id}>
             <span>{m.profile?.name || m.id}</span>
-            <button onClick={() => actions.unban(m.id!).then(load)}>{t('context.unban')}</button>
+            <button onClick={() => actions.unban(m.id!)}>{t('context.unban')}</button>
           </li>
         ))}
       </ul>
