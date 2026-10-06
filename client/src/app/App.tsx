@@ -1,7 +1,7 @@
 import { Component, useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { useNeko, actions, t, isLocked, setSetting, client, tell, a11y, type LockResource } from './neko'
 import { Video } from './Video'
-import { Members, RoomMenu, Controls, Emotes } from './Room'
+import { Members, MemberMenu, RoomMenu, Controls, Emotes } from './Room'
 import { Side } from './Side'
 import logo from '../assets/images/logo.svg'
 import './styles/app.scss'
@@ -77,6 +77,7 @@ export function App() {
           </div>
         )}
       </main>
+      {!videoOnly && <MemberMenu />}
       {!videoOnly && app.side && <Side />}
       {!connected && <Connect />}
       {!videoOnly && <Toasts />}

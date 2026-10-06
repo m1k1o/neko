@@ -140,14 +140,14 @@ export function Members() {
             ))}
         </ul>
       </div>
-      <MemberMenu />
     </div>
   )
 }
 
 const confirmThen = (title: string, text: string, fn: () => void) => ask(title, text).then((ok) => ok && fn())
 
-function MemberMenu() {
+// rendered by App outside .room-container, which is hidden at narrow widths where the chat still works
+export function MemberMenu() {
   const { app, state } = useNeko()
   const [bannable, setBannable] = useState(false)
   useEffect(() => {
