@@ -43,7 +43,7 @@ NEKO_URL=http://localhost:3000 npm run dev
 | script                |                                                            |
 | --------------------- | ---------------------------------------------------------- |
 | `npm run build`       | type-check + production build into `dist/`                 |
-| `npm run check`       | types, formatting, and the `*.check.ts` self-checks        |
+| `npm run check`       | types, formatting, hook lint, and the `*.check.ts` checks  |
 | `npm run format`      | prettier                                                   |
 | `npm run build:emoji` | regenerate emoji data (`public/emoji.json`, `_emoji.scss`) |
 | `npm run test:e2e`    | two-user browser test against a running server, see below  |
@@ -64,8 +64,12 @@ npx playwright install chromium
 NEKO_URL=http://localhost:8080/ npm run test:e2e
 ```
 
-The typing step expects KRunner on Alt+F2 (KDE). Set `NEKO_FILE_URL` to a second server using the
-`file` member provider (members `alice`/`alice` admin, `bob`/`bob`) to also test ban/unban.
+The typing step expects a launcher on Alt+F2 (KRunner on KDE, the app finder on Xfce). Set
+`NEKO_FILE_URL` to a second server using the `file` member provider (members `alice`/`alice` admin,
+`bob`/`bob`) to also test ban/unban. To run the steps in a real Chromium-based browser instead of
+Playwright's, start it with `--headless --remote-debugging-port=9222 --user-data-dir=<empty dir>
+--autoplay-policy=no-user-gesture-required --use-fake-ui-for-media-stream
+--use-fake-device-for-media-stream` and set `NEKO_CDP=http://127.0.0.1:9222`.
 
 ## Behaviour notes
 

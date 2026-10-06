@@ -8,13 +8,17 @@ fs.mkdirSync(out, { recursive: true })
 const URL = process.env.NEKO_URL || 'http://localhost:8080/'
 const ADMIN = process.env.NEKO_ADMIN_PASSWORD || 'admin'
 const USER = process.env.NEKO_USER_PASSWORD || 'neko'
-const browser = await chromium.launch({
-  args: [
-    '--autoplay-policy=no-user-gesture-required',
-    '--use-fake-ui-for-media-stream',
-    '--use-fake-device-for-media-stream',
-  ],
-})
+// NEKO_CDP=http://127.0.0.1:9222 runs the same steps in a real Chromium-based browser (Brave, Chrome, Edge)
+// started with --remote-debugging-port and the three flags below
+const browser = process.env.NEKO_CDP
+  ? await chromium.connectOverCDP(process.env.NEKO_CDP)
+  : await chromium.launch({
+      args: [
+        '--autoplay-policy=no-user-gesture-required',
+        '--use-fake-ui-for-media-stream',
+        '--use-fake-device-for-media-stream',
+      ],
+    })
 const errors = []
 let A, B
 let fails = 0
@@ -53,7 +57,8 @@ async function user(name, password) {
     'console',
     (m) =>
       m.type() === 'error' &&
-      !/401|STUN|ERR_INTERNET_DISCONNECTED/.test(m.text()) &&
+      // the outage steps make the socket fail on purpose; Brave reports that without the ERR_ text
+      !/401|STUN|ERR_INTERNET_DISCONNECTED|WebSocket connection to .* failed/.test(m.text()) &&
       errors.push(`${name} console: ${m.text()}`),
   )
   await page.goto(URL)
