@@ -90,7 +90,6 @@ export const setting = {
 }
 
 export const connection = {
-  logged_out: 'Anda telah keluar.',
   reconnecting: 'Menyambungkan ulang...',
   connected: 'Tersambung',
   disconnected: 'Terputus',
@@ -119,7 +118,6 @@ export const notifications = {
 }
 
 export const files = {
-  downloads: 'Unduhan',
   uploads: 'Unggahan',
   upload_here: 'Klik atau seret berkas ke sini untuk mengunggah',
   delete: 'Hapus',

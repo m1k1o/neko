@@ -90,7 +90,6 @@ export const setting = {
 }
 
 export const connection = {
-  logged_out: 'Du har blivit utloggad.',
   reconnecting: 'Återansluter...',
   connected: 'Ansluten',
   disconnected: 'Frånkopplad',
@@ -119,7 +118,6 @@ export const notifications = {
 }
 
 export const files = {
-  downloads: 'Nedladdningar',
   uploads: 'Ladda upp',
   upload_here: 'Klicka eller dra filer hit för att ladda upp dem',
   delete: 'Ta bort',

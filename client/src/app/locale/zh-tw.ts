@@ -90,7 +90,6 @@ export const setting = {
 }
 
 export const connection = {
-  logged_out: '您已登出。',
   reconnecting: '正在重新連線…',
   connected: '已連線',
   disconnected: '已斷線',
@@ -119,7 +118,6 @@ export const notifications = {
 }
 
 export const files = {
-  downloads: '下載',
   uploads: '上傳',
   upload_here: '點選或拖曳檔案至此上傳',
   delete: '刪除',

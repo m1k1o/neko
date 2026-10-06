@@ -90,7 +90,6 @@ export const setting = {
 }
 
 export const connection = {
-  logged_out: '로그아웃 했습니다.',
   reconnecting: '다시 접속하는 중...',
   connected: '연결됨',
   disconnected: '연결 해제됨',
@@ -119,7 +118,6 @@ export const notifications = {
 }
 
 export const files = {
-  downloads: '다운로드',
   uploads: '업로드',
   upload_here: '업로드할 파일을 여기로 클릭하거나 드래그하세요',
   delete: '삭제',

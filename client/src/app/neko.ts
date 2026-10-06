@@ -3,8 +3,7 @@
 import { useSyncExternalStore } from 'react'
 import { NekoClient } from '../core/client'
 import { Store } from '../core/store'
-import type { Settings } from '../core/types'
-import type { Schemas } from '../core/api'
+import type { Settings, MemberData } from '../core/types'
 import { messages } from './locale'
 
 /////////////////////////////
@@ -276,7 +275,6 @@ export function useNeko() {
 /////////////////////////////
 
 export const name = (id?: string | null) => (id && client.state.sessions[id]?.profile.name) || t('somebody')
-export const isAdmin = () => client.isAdmin
 export const isMuted = (id = client.state.session_id) =>
   !!id && client.state.sessions[id]?.profile.plugins?.['chat.can_send'] === false
 export const hostId = () => client.state.control.host_id
@@ -414,7 +412,7 @@ export const actions = {
   unban: (id: string) =>
     api('POST', `/members/${encodeURIComponent(id)}`, { can_login: true }).then((ok) => (ok && s.bans++, ok)),
   // accounts stored by the auth provider (empty for multiuser / noauth / OAuth)
-  members: () => client.api.req<Schemas['MemberData'][]>('GET', '/members').catch(() => [] as Schemas['MemberData'][]),
+  members: () => client.api.req<MemberData[]>('GET', '/members').catch(() => [] as MemberData[]),
   async canBan(id: string) {
     return (await actions.members()).some((m) => m.id === id)
   },

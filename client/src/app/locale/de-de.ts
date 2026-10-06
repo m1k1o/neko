@@ -90,7 +90,6 @@ export const setting = {
 }
 
 export const connection = {
-  logged_out: 'Du wurdest ausgeloggt.',
   reconnecting: 'Erneut verbinden...',
   connected: 'Verbindet',
   disconnected: 'Getrennt',
@@ -119,7 +118,6 @@ export const notifications = {
 }
 
 export const files = {
-  downloads: 'Herunterladen',
   uploads: 'Hochladen',
   upload_here: 'Klicken oder ziehen Sie Dateien zum Hochladen hierher',
   delete: 'Löschen',

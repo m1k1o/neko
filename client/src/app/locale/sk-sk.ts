@@ -95,7 +95,6 @@ export const setting = {
 }
 
 export const connection = {
-  logged_out: 'Boli ste odhlásený/á',
   reconnecting: 'Obnova spojenia...',
   connected: 'Úspešne pripojený/á',
   disconnected: 'Boli ste odpojený/á',
@@ -124,7 +123,6 @@ export const notifications = {
 }
 
 export const files = {
-  downloads: 'Stiahnutia',
   uploads: 'Nahrávanie',
   upload_here: 'Kliknutím alebo pretiahnutím súborov sem ich môžete nahrať',
   delete: 'Odstrániť',

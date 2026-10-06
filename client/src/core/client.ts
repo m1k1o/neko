@@ -3,9 +3,9 @@
 // Written against master's server/pkg/types. UIs subscribe via `client.store`
 // and read `client.state`; one-off happenings arrive on `client.events`.
 import { Store, Emitter } from './store.ts'
-import { NekoApi, ApiError, type Schemas } from './api.ts'
+import { NekoApi, ApiError } from './api.ts'
 import { Overlay } from './overlay.ts'
-import { OP, type State, type Settings, type NekoEvents } from './types.ts'
+import { OP, type State, type Settings, type NekoEvents, type LoginResponse } from './types.ts'
 
 const RECONNECT_MAX = 10
 const RECONNECT_BACKOFF_MS = 1500
@@ -189,7 +189,7 @@ export class NekoClient {
   }
 
   async login(username: string, password: string) {
-    const res = await this.api.req<Schemas['SessionLoginResponse']>('POST', '/login', { username, password })
+    const res = await this.api.req<LoginResponse>('POST', '/login', { username, password })
     // a session resumed meanwhile (autologin racing an invite link) must not keep its websocket
     this.close()
     // token is only returned when the server does not use cookies

@@ -90,7 +90,6 @@ export const setting = {
 }
 
 export const connection = {
-  logged_out: 'ログアウトしました',
   reconnecting: '再接続中...',
   connected: '接続しました',
   disconnected: '切断しました',
@@ -119,7 +118,6 @@ export const notifications = {
 }
 
 export const files = {
-  downloads: 'ダウンロード',
   uploads: 'アップロード',
   upload_here: 'アップロードするにはここをクリックするかファイルをドラッグしてください',
   delete: '削除',

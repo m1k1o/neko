@@ -18,7 +18,7 @@ import {
 } from './neko'
 import { parseSafe, type Node as MdNode } from './markdown'
 import { Avatar, openMenu } from './Room'
-import type { Schemas } from '../core/api'
+import type { MemberData } from '../core/types'
 import './styles/side.scss'
 import './styles/chat.scss'
 import './styles/files.scss'
@@ -610,7 +610,7 @@ function Settings() {
 
 // accounts with can_login=false (see actions.ban); empty unless the provider stores accounts
 function Banned() {
-  const [banned, setBanned] = useState<Schemas['MemberData'][] | null>(null)
+  const [banned, setBanned] = useState<MemberData[] | null>(null)
   const { app } = useNeko()
   const load = () => actions.members().then((all) => setBanned(all.filter((m) => m.profile?.can_login === false)))
   useEffect(() => void load(), [app.bans]) // reloads after a ban or unban from anywhere

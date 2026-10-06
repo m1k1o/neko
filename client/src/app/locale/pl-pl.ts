@@ -90,7 +90,6 @@ export const setting = {
 }
 
 export const connection = {
-  logged_out: 'Zostałeś wylogowany.',
   reconnecting: 'Ponowne łączenie...',
   connected: 'Połączono',
   disconnected: 'Rozłączono',
@@ -119,7 +118,6 @@ export const notifications = {
 }
 
 export const files = {
-  downloads: 'Pobrane pliki',
   uploads: 'Wysyłane pliki',
   upload_here: 'Kliknij lub przeciągnij pliki tutaj, aby przesłać',
   delete: 'Usuń',

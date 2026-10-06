@@ -95,11 +95,9 @@ export const setting = {
   keyboard_layout: 'Keyboard Layout',
   broadcast_title: 'Live Broadcast',
   banned: 'Banned',
-  banned_none: 'Nobody is banned',
 }
 
 export const connection = {
-  logged_out: 'You have been logged out.',
   reconnecting: 'Reconnecting...',
   connected: 'Connected',
   disconnected: 'Disconnected',
@@ -129,7 +127,6 @@ export const notifications = {
 }
 
 export const files = {
-  downloads: 'Downloads',
   uploads: 'Uploads',
   upload_here: 'Click or drag files here to upload',
   delete: 'Delete',

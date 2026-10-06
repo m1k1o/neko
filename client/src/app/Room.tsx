@@ -1,20 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import {
-  useNeko,
-  actions,
-  t,
-  isMuted,
-  client,
-  app,
-  name,
-  ask,
-  tell,
-  langs,
-  setLang,
-  a11y,
-  closeOn,
-  EMOTES,
-} from './neko'
+import { useNeko, actions, t, isMuted, client, app, ask, tell, langs, setLang, a11y, closeOn, EMOTES } from './neko'
 import './styles/members.scss'
 import './styles/menu.scss'
 import './styles/controls.scss'
@@ -473,5 +458,3 @@ export function Emotes() {
     </div>
   )
 }
-
-export { name }

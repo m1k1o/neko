@@ -47,6 +47,16 @@ export interface Session {
   state: SessionState
 }
 
+// REST shapes the client reads (server/internal/api)
+export interface LoginResponse extends Session {
+  token?: string // only when the server does not use cookies
+}
+
+export interface MemberData {
+  id: string
+  profile: MemberProfile
+}
+
 export interface Settings {
   private_mode: boolean
   locked_logins: boolean

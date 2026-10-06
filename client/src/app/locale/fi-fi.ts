@@ -90,7 +90,6 @@ export const setting = {
 }
 
 export const connection = {
-  logged_out: 'Sinut on kirjattu ulos.',
   reconnecting: 'Yhteyttä yritetään palauttaa...',
   connected: 'Yhdistetty',
   disconnected: 'Katkaistu yhteys',
@@ -119,7 +118,6 @@ export const notifications = {
 }
 
 export const files = {
-  downloads: 'Lataukset',
   uploads: 'Lataa',
   upload_here: 'Klikkaa tai vedä tiedostoja tähän ladataksesi',
   delete: 'Poista',

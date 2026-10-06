@@ -19,7 +19,7 @@ src/
 - `overlay.ts`: input layer over the video (mouse, wheel, keyboard via the vendored Apache Guacamole
   keyboard, touch, file drop) and drawing the host's cursor for everyone else.
 - `store.ts`: tiny proxy store (`subscribe`, `watch`, `version`) + typed event emitter.
-- `api.ts` / `api.gen.ts`: fetch wrapper; types generated from `server/openapi.yaml` (`npm run gen:api`).
+- `api.ts`: fetch wrapper for the REST API.
 - `types.ts`: client state and wire types, mirroring `server/pkg/types`.
 
 ```ts
@@ -40,14 +40,13 @@ cd client/dev && ./serve        # http://localhost:3001, /api proxied to the bac
 NEKO_URL=http://localhost:3000 npm run dev
 ```
 
-| script                |                                                             |
-| --------------------- | ----------------------------------------------------------- |
-| `npm run build`       | type-check + production build into `dist/`                  |
-| `npm run check`       | types, formatting, and the `*.check.ts` self-checks         |
-| `npm run format`      | prettier                                                    |
-| `npm run gen:api`     | regenerate `src/core/api.gen.ts` from `server/openapi.yaml` |
-| `npm run build:emoji` | regenerate emoji data (`public/emoji.json`, `_emoji.scss`)  |
-| `npm run test:e2e`    | two-user browser test against a running server, see below   |
+| script                |                                                            |
+| --------------------- | ---------------------------------------------------------- |
+| `npm run build`       | type-check + production build into `dist/`                 |
+| `npm run check`       | types, formatting, and the `*.check.ts` self-checks        |
+| `npm run format`      | prettier                                                   |
+| `npm run build:emoji` | regenerate emoji data (`public/emoji.json`, `_emoji.scss`) |
+| `npm run test:e2e`    | two-user browser test against a running server, see below  |
 
 ### e2e
 
