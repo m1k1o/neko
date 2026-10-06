@@ -59,7 +59,7 @@ export class Overlay {
   private lastMove = 0
   private moveTimer = 0
   private mouseDown = false
-  private pendingPress: MouseEvent | null = null // implicit hosting: replayed once we are host
+  private pendingPress: { e: MouseEvent; at: number } | null = null // implicit hosting: replayed once we are host
   private ctrlDown = 0
   private readonly noKeyUp = new Set<number>()
 
@@ -222,7 +222,7 @@ export class Overlay {
 
     if (!this.client.controlling) {
       if (down && this.client.implicitControl) {
-        this.pendingPress = e
+        this.pendingPress = { e, at: performance.now() }
         this.client.request()
       }
       return
@@ -367,9 +367,12 @@ export class Overlay {
     this.updateCursorStyle()
     this.draw()
 
-    const e = this.pendingPress
+    const pending = this.pendingPress
     this.pendingPress = null
-    if (controlling && e) {
+    // only a press from just now: control that arrives minutes later by other means (an admin
+    // giving it) must not replay an old click
+    if (controlling && pending && performance.now() - pending.at < 2000) {
+      const e = pending.e
       this.move(this.pos(e))
       this.button(e.button + 1, true)
       if (!this.mouseDown) this.button(e.button + 1, false) // released while we waited

@@ -291,6 +291,27 @@ await step('keyboard: Enter on focused icon toggles side panel', async () => {
   await B.keyboard.press('Enter')
   await B.waitForSelector('aside.neko-menu', { timeout: 3000 })
 })
+await step('a member who may not watch gets the room without video, not a spinner', async () => {
+  const bobId = JSON.parse(await api(A, 'GET', '/sessions')).find(
+    (s) => s.profile.name === 'bob' && s.state.is_connected,
+  ).id
+  await api(A, 'POST', '/members/' + encodeURIComponent(bobId), { can_watch: false })
+  await B.reload()
+  await B.waitForSelector('.connect', { state: 'detached', timeout: 20000 }) // the offer timeout (8 s) ends the spinner
+  await B.click('.header .fa-bars.toggle')
+  await B.waitForSelector('.chat-send textarea', { timeout: 5000 })
+  await api(A, 'POST', '/members/' + encodeURIComponent(bobId), { can_watch: true })
+  await B.reload()
+  await B.waitForFunction(
+    () => {
+      const v = document.querySelector('video')
+      return v && !v.paused && v.readyState >= 2
+    },
+    null,
+    { timeout: 30000 },
+  )
+  await B.click('.header .fa-bars.toggle')
+})
 await step('admin changes resolution, bob sees event; revert', async () => {
   await A.click('.video-menu .fa-desktop')
   const current = (await A.locator('.context.resolution li.active').textContent()) ?? ''

@@ -23,8 +23,9 @@ export class NekoApi {
     return h
   }
 
-  async req<T = void>(method: string, path: string, body?: unknown): Promise<T> {
+  async req<T = void>(method: string, path: string, body?: unknown, init?: RequestInit): Promise<T> {
     const res = await fetch(this.url + '/api' + path, {
+      ...init,
       method,
       credentials: 'include',
       headers: this.headers(body !== undefined),
@@ -52,7 +53,14 @@ export class NekoApi {
       xhr.withCredentials = true
       for (const [k, v] of Object.entries(this.headers(false))) xhr.setRequestHeader(k, v)
       if (onProgress) xhr.upload.onprogress = (e) => onProgress({ loaded: e.loaded, total: e.total })
-      xhr.onload = () => (xhr.status < 300 ? resolve() : reject(new ApiError(xhr.status, xhr.statusText)))
+      xhr.onload = () => {
+        if (xhr.status < 300) return resolve()
+        let message = xhr.statusText // empty under HTTP/2
+        try {
+          message = JSON.parse(xhr.responseText).message || message
+        } catch {}
+        reject(new ApiError(xhr.status, message || 'upload failed'))
+      }
       xhr.onerror = () => reject(new ApiError(0, 'network error'))
       xhr.send(form)
     })

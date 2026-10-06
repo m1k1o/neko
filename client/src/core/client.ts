@@ -11,6 +11,9 @@ const RECONNECT_MAX = 10
 const RECONNECT_BACKOFF_MS = 1500
 // a socket that stays silent this long is dead (the server heartbeats every ~10s)
 const STALE_MS = 25_000
+// no offer within this long after asking for one: the server will not send media (e.g. can_watch
+// is off), so the room is shown without video instead of a spinner for ever
+const OFFER_TIMEOUT_MS = 8_000
 
 export interface NekoClientOptions {
   // remember the session token in localStorage
@@ -79,6 +82,8 @@ export class NekoClient {
   private reconnectTimer = 0
   private peerFailures = 0
   private peerTimer = 0
+  private offerTimer = 0
+  private reconnectGen = 0 // a close()+connect() while a reconnect was deciding must win
   private staleTimer = 0
   private lastMessage = 0
   private clipboardAt = 0 // when the remote clipboard last changed
@@ -94,7 +99,7 @@ export class NekoClient {
       () => this.sendKeyboardMap(),
     )
     store.watch(
-      () => state.control.keyboard,
+      () => state.control.keyboard.layout + '/' + state.control.keyboard.variant,
       () => this.sendKeyboardMap(),
     )
     store.watch(
@@ -235,6 +240,7 @@ export class NekoClient {
     clearTimeout(this.reconnectTimer)
     clearTimeout(this.peerTimer)
     clearInterval(this.staleTimer)
+    this.reconnectGen++
     this.peerFailures = 0
     const ws = this.ws
     this.ws = null
@@ -276,15 +282,17 @@ export class NekoClient {
     this.state.connection.status = 'connecting'
     if (++this.attempts > RECONNECT_MAX) return this.close(new Error('connection lost'))
 
-    // a deleted session never comes back; anything else is worth retrying
+    // a deleted session never comes back; anything else is worth retrying. The lookup is bounded:
+    // on a black-holed network a fetch can otherwise hang for minutes
+    const gen = this.reconnectGen
     this.api
-      .req('GET', '/whoami')
+      .req('GET', '/whoami', undefined, { signal: AbortSignal.timeout(5000) })
       .then(
         () => true,
         (err) => !(err instanceof ApiError && err.status === 401),
       )
       .then((retry) => {
-        if (!this.wanted) return
+        if (!this.wanted || gen !== this.reconnectGen) return
         if (!retry) return this.close(new Error('session expired'))
         this.reconnectTimer = window.setTimeout(
           () => this.openSocket(),
@@ -300,9 +308,15 @@ export class NekoClient {
   private requestPeer() {
     this.candidates = []
     this.send('signal/request', { video: {}, audio: {} })
+    clearTimeout(this.offerTimer)
+    this.offerTimer = window.setTimeout(() => {
+      if (this.wanted && !this.pc) this.state.connection.status = 'connected'
+    }, OFFER_TIMEOUT_MS)
   }
 
   private closePeer() {
+    clearTimeout(this.peerTimer)
+    clearTimeout(this.offerTimer)
     this.pc?.close()
     this.pc = null
     this.dc = null
@@ -446,6 +460,7 @@ export class NekoClient {
         break
 
       case 'signal/provide':
+        clearTimeout(this.offerTimer)
         this.onProvide(p).catch((err) => console.error('[neko] webrtc setup failed', err))
         break
       case 'signal/offer':
@@ -638,7 +653,7 @@ export class NekoClient {
     try {
       await video.play()
     } catch (err) {
-      if (video.muted) throw err
+      if (video.muted || (err as DOMException).name !== 'NotAllowedError') throw err
       // autoplay with sound is blocked until the user interacts: play muted,
       // unmute on the first click anywhere
       video.muted = true
