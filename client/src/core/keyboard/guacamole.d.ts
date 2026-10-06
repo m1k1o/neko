@@ -1,4 +1,4 @@
-// Vendored Apache Guacamole keyboard (guacamole.js), also shipped by the legacy client.
+// Apache Guacamole keyboard, the same file as upstream master's client/src/utils/guacamole-keyboard.js
 export default class GuacamoleKeyboard {
   constructor(element?: Element)
   // return true to let the browser handle the key, false to prevent default

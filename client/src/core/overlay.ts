@@ -133,8 +133,15 @@ export class Overlay {
       'drop',
       stop((e) => this.onDrop(e)),
     )
-    on(input, 'input', (e) => !e.isComposing && this.onText())
-    on(input, 'compositionend', () => this.onText())
+    // text that arrives as input or composition events (IME, on-screen keyboards) is typed as
+    // key events by the Guacamole keyboard; the textarea only has to be emptied afterwards
+    on(input, 'input', (e) => !e.isComposing && (this.input.value = ''))
+    on(input, 'compositionend', () => (this.input.value = ''))
+    on(
+      input,
+      'paste',
+      stop((e: ClipboardEvent) => this.onPaste(e.clipboardData?.getData('text/plain') ?? '')),
+    )
     on(input, 'blur', () => (client.state.mobile_keyboard_open = false))
 
     this.keyboard.onkeydown = (key) => this.onKeyDown(remap(key))
@@ -285,16 +292,15 @@ export class Overlay {
       this.noKeyUp.add(key)
       return true
     }
-    // Ctrl+V: let the browser paste the local clipboard into the textarea,
-    // onText() then types it remotely
+    // Ctrl+V: the keystroke stays with the browser, whose paste event hands over the local
+    // clipboard text (see onPaste). Ctrl itself was sent and stays held, so the next key has it.
     if (this.ctrlDown && key === XK.v) {
-      this.keyboard.release(this.ctrlDown)
       this.noKeyUp.add(key)
       return true
     }
     if (isCtrl(key)) this.ctrlDown = key
     this.client.sendData(OP.KEY_DOWN, [4, key])
-    return isCtrl(key) // ctrl must reach the browser for the paste trick above
+    return isCtrl(key) // ctrl must reach the browser for the paste shortcut above
   }
 
   private onKeyUp(key: number) {
@@ -303,17 +309,25 @@ export class Overlay {
     this.client.sendData(OP.KEY_UP, [4, key])
   }
 
-  private onText() {
-    const text = this.input.value
-    this.input.value = ''
-    if (text && this.active) this.client.paste(text)
+  // the remote gets its paste keystroke once the clipboard is settled. By then the user may have
+  // let go of Ctrl, so the chord is completed with our own Ctrl when needed
+  private async onPaste(text: string) {
+    if (!this.active) return
+    await this.client.preparePaste(text)
+    if (!this.active) return
+    const ctrl = this.ctrlDown
+    if (!ctrl) this.client.sendData(OP.KEY_DOWN, [4, XK.Control_L])
+    this.client.sendData(OP.KEY_DOWN, [4, XK.v])
+    this.client.sendData(OP.KEY_UP, [4, XK.v])
+    if (!ctrl) this.client.sendData(OP.KEY_UP, [4, XK.Control_L])
   }
 
   mobileKeyboardToggle() {
-    const s = this.client.state
-    if (s.mobile_keyboard_open) this.input.blur()
+    // the blur handler clears the flag before the next line runs, so decide from the element
+    const open = document.activeElement === this.input
+    if (open) this.input.blur()
     else this.input.focus()
-    s.mobile_keyboard_open = !s.mobile_keyboard_open
+    this.client.state.mobile_keyboard_open = !open
   }
 
   /////////////////////////////

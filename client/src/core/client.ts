@@ -81,6 +81,8 @@ export class NekoClient {
   private peerTimer = 0
   private staleTimer = 0
   private lastMessage = 0
+  private clipboardAt = 0 // when the remote clipboard last changed
+  private localSeen = { text: '', at: 0 } // the local clipboard text last handed over, and when
 
   private readonly opts: NekoClientOptions
 
@@ -507,6 +509,7 @@ export class NekoClient {
       }
       case 'clipboard/updated':
         state.control.clipboard = { text: p.text }
+        this.clipboardAt = Date.now()
         navigator.clipboard?.writeText(p.text).catch(() => {}) // only over https
         events.emit('room.clipboard.updated', p.text)
         break
@@ -558,9 +561,27 @@ export class NekoClient {
     this.state.control.locked = false
   }
 
-  // types text remotely via the server's clipboard (used for IME / mobile input)
+  // types text remotely via the server's clipboard
   paste(text: string) {
     this.send('control/paste', { text })
+  }
+
+  // Before a paste keystroke, with the text the browser's own paste event handed over: the side
+  // that copied most recently wins. The remote reports every change of its clipboard; the local
+  // clipboard can only be looked at when the browser hands it over, so if the remote changed since
+  // the local text was last seen, the remote is taken as fresher and nothing is sent (on https the
+  // remote text is also written to the local clipboard, so the two then match). Otherwise the
+  // local text becomes the remote clipboard, and this resolves once the server has confirmed it.
+  async preparePaste(text: string) {
+    const stale = this.localSeen.at < this.clipboardAt
+    const fresh = text !== '' && text !== this.state.control.clipboard?.text && !stale
+    this.localSeen = { text, at: Date.now() }
+    if (!fresh) return
+    this.send('clipboard/set', { text })
+    await new Promise<void>((done) => {
+      const off = this.events.on('room.clipboard.updated', () => (off(), done()))
+      setTimeout(() => (off(), done()), 500)
+    })
   }
 
   setScrollInverse(value = true) {

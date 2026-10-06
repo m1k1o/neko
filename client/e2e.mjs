@@ -403,6 +403,22 @@ await step('alice takes control and types into KDE', async () => {
   await A.waitForTimeout(1200)
   await A.screenshot({ path: out + '/e2e-alice.png' })
   await B.screenshot({ path: out + '/e2e-bob.png' })
+  // what arrived: select all and copy inside the remote, then read the remote clipboard
+  const copyAll = async () => {
+    await A.keyboard.press('Control+a')
+    await A.keyboard.press('Control+c')
+    await A.waitForTimeout(600)
+    return JSON.parse(await api(A, 'GET', '/room/clipboard')).text
+  }
+  const typed = await copyAll()
+  if (typed !== 'react gui works') throw new Error('remote received ' + JSON.stringify(typed))
+  // Ctrl+V inside the remote pastes what was copied there, with the real Ctrl held
+  await A.keyboard.press('End')
+  await A.keyboard.press('Control+v')
+  await A.waitForTimeout(800)
+  const pasted = await copyAll()
+  if (pasted !== 'react gui worksreact gui works')
+    throw new Error('after Ctrl+V the field has ' + JSON.stringify(pasted))
   await A.keyboard.press('Escape')
 })
 await step('alice kicks bob -> bob back at login', async () => {

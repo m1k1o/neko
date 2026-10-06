@@ -100,5 +100,27 @@ await settle()
 assert.equal(FakePeer.all.length, 2)
 client.removeTrack({} as RTCRtpSender)
 
+// before a paste keystroke: the side that copied most recently wins
+receive('clipboard/updated', { text: 'remote' })
+sent.length = 0
+await client.preparePaste('remote') // same text as the remote clipboard: nothing to do
+assert.deepEqual(sent, [])
+let settled = false
+client.preparePaste('local').then(() => (settled = true)) // newer than anything the remote reported
+await settle()
+assert.deepEqual([sent, settled], [['clipboard/set'], false])
+receive('clipboard/updated', { text: 'local' }) // resolves once the server confirms
+await settle()
+assert.equal(settled, true)
+await settle(5)
+receive('clipboard/updated', { text: 'remote2' }) // the remote copied since: local text is taken as older
+sent.length = 0
+await client.preparePaste('local')
+assert.deepEqual(sent, [])
+const t0 = Date.now()
+await client.preparePaste('other') // nothing changed remotely since that look: local wins again
+assert.deepEqual(sent, ['clipboard/set'])
+assert.ok(Date.now() - t0 >= 450, 'waits for the confirmation, or 500 ms')
+
 client.disconnect()
 console.log('client ok')
