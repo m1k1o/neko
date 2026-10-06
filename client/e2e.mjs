@@ -131,6 +131,17 @@ await step('chat: bob -> alice', async () => {
     { timeout: 5000 },
   )
 })
+await step('viewer typing in chat keeps the focus when the mouse crosses the video', async () => {
+  await B.click('.chat-send textarea')
+  await B.keyboard.type('hello ')
+  const box = await B.locator('.player-container').boundingBox()
+  await B.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+  await B.mouse.move(box.x + box.width / 2 + 5, box.y + box.height / 2 + 5)
+  await B.keyboard.type('world')
+  const v = await B.inputValue('.chat-send textarea')
+  if (v !== 'hello world') throw new Error('chat box has ' + JSON.stringify(v))
+  await B.fill('.chat-send textarea', '')
+})
 await step('bob takes control, alice sees host + event', async () => {
   await B.click('.neko-controls .fa-keyboard')
   await A.waitForFunction(() => document.querySelector('.members-list .member.host:not(.self)'), null, {

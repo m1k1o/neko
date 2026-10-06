@@ -118,7 +118,10 @@ export class Overlay {
     // mouseup anywhere: the button may be released outside the video
     on(window, 'mouseup', (e) => this.onButton(e, false), { capture: true })
     on(input, 'mouseenter', (e) => this.onEnter(e))
-    on(input, 'mouseleave', () => this.keyboard.reset())
+    on(input, 'mouseleave', () => {
+      this.hovering = false
+      this.keyboard.reset()
+    })
     for (const ev of Object.keys(TOUCH_OP)) on(input, ev, (e) => this.onTouch(e), { passive: false })
     on(
       input,
@@ -145,6 +148,10 @@ export class Overlay {
         (c) => this.onControl(c),
       ),
       client.store.watch(() => client.state.control.host_id, this.draw),
+      client.store.watch(
+        () => this.active,
+        () => this.focusIfActive(),
+      ),
     )
     this.resize()
   }
@@ -243,9 +250,17 @@ export class Overlay {
     if (dx || dy) this.client.sendData(OP.SCROLL, [-2, dx], [-2, dy], [1, e.ctrlKey ? 1 : 0])
   }
 
+  private hovering = false
+
+  // keys go to the hidden input only while it is useful: a viewer typing in the chat must not lose
+  // the focus by brushing the video (touch devices: focusing would pop up the on-screen keyboard)
+  private focusIfActive() {
+    if (this.hovering && this.active && !this.client.isTouchDevice) this.input.focus()
+  }
+
   private onEnter(e: MouseEvent) {
-    // focusing on touch devices would pop up the on-screen keyboard
-    if (!this.client.isTouchDevice) this.input.focus()
+    this.hovering = true
+    this.focusIfActive()
     if (this.client.controlling) {
       this.client.send('keyboard/modifiers', {
         capslock: e.getModifierState('CapsLock'),
