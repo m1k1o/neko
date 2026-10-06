@@ -309,9 +309,15 @@ export class NekoClient {
     this.candidates = []
     this.send('signal/request', { video: {}, audio: {} })
     clearTimeout(this.offerTimer)
-    this.offerTimer = window.setTimeout(() => {
-      if (this.wanted && !this.pc) this.state.connection.status = 'connected'
-    }, OFFER_TIMEOUT_MS)
+    const noOffer = () => {
+      if (!this.wanted || this.pc) return
+      // only while the server is talking (heartbeats): after a lost network the media fails
+      // first and the request goes into a dead socket, which is the stale check's business,
+      // not a reason to show a frozen picture as "connected"
+      if (Date.now() - this.lastMessage < OFFER_TIMEOUT_MS * 2) this.state.connection.status = 'connected'
+      else this.offerTimer = window.setTimeout(noOffer, OFFER_TIMEOUT_MS)
+    }
+    this.offerTimer = window.setTimeout(noOffer, OFFER_TIMEOUT_MS)
   }
 
   private closePeer() {

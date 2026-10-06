@@ -122,5 +122,30 @@ await client.preparePaste('other') // nothing changed remotely since that look: 
 assert.deepEqual(sent, ['clipboard/set'])
 assert.ok(Date.now() - t0 >= 450, 'waits for the confirmation, or 500 ms')
 
+// no offer after a request: the room is shown without video only while the server is talking.
+// After a lost network the media fails first and the request goes into a dead socket; that must
+// not become "connected" over a frozen picture (the stale check will reconnect)
+const realTimeout = setTimeout
+const timers: { fn: () => void; ms: number }[] = []
+g.setTimeout = (fn: () => void, ms: number) => timers.push({ fn, ms })
+const fire = (ms: number) =>
+  timers
+    .splice(
+      timers.findIndex((t) => t.ms === ms),
+      1,
+    )[0]
+    .fn()
+sent.length = 0
+receive('signal/close')
+fire(1500) // RECONNECT_BACKOFF_MS -> signal/request
+assert.deepEqual(sent, ['signal/request'])
+;(client as any).lastMessage = Date.now() - 30_000 // the server has been silent since
+fire(8000) // OFFER_TIMEOUT_MS
+assert.equal(client.state.connection.status, 'connecting', 'a silent server is not "connected" without video')
+receive('system/heartbeat') // alive after all
+fire(8000)
+assert.equal(client.state.connection.status, 'connected')
+g.setTimeout = realTimeout
+
 client.disconnect()
 console.log('client ok')
