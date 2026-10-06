@@ -387,7 +387,11 @@ await step('microphone: host enables and disables (fake device)', async () => {
   await A.waitForSelector('.neko-controls .fa-microphone-slash', { timeout: 5000 })
   await api(A, 'POST', '/room/control/release')
 })
+// offline emulation only freezes an open websocket in Chromium (WebKit and Firefox keep delivering
+// heartbeats to it, measured); elsewhere these two steps have nothing to notice and are skipped
+const offlineWorks = browser.browserType().name() === 'chromium'
 await step('network drop: bob notices the dead socket and reconnects', async () => {
+  if (!offlineWorks) return log('  skipped: offline emulation does not reach the websocket here')
   // offline emulation freezes the websocket but not WebRTC: only the stale check (~25s) notices
   await B.context().setOffline(true)
   try {
@@ -406,6 +410,7 @@ await step('network drop: bob notices the dead socket and reconnects', async () 
   )
 })
 await step('long outage: session kept, Connect button instead of the login form', async () => {
+  if (!offlineWorks) return log('  skipped: offline emulation does not reach the websocket here')
   // the core gives up after RECONNECT_MAX attempts (about 80 s); the session is still valid
   await B.context().setOffline(true)
   try {
@@ -480,10 +485,16 @@ await step('url params: ?usr&pwd&lang&show_side auto-login, url cleaned, logout'
   // the new login must win on both the websocket and REST (no split identity)
   await C.goto(URL + '?usr=carol2&pwd=' + USER + '&show_side=1')
   await C.waitForSelector('.connect', { state: 'detached', timeout: 20000 })
-  await C.waitForTimeout(1500)
-  const connected = JSON.parse(await api(A, 'GET', '/sessions'))
-    .filter((s) => s.state.is_connected)
-    .map((s) => s.profile.name)
+  // the browser closes the first page's socket on navigation; Firefox does so without a close
+  // code and the server then keeps that session for its 5 s reconnect grace
+  let connected
+  for (let i = 0; i < 16; i++) {
+    await C.waitForTimeout(500)
+    connected = JSON.parse(await api(A, 'GET', '/sessions'))
+      .filter((s) => s.state.is_connected)
+      .map((s) => s.profile.name)
+    if (connected.includes('carol2') && !connected.includes('carol')) break
+  }
   if (!connected.includes('carol2') || connected.includes('carol'))
     throw new Error('connected sessions after the second invite: ' + JSON.stringify(connected))
   await C.click('.tabs-container >> text=Einstellungen')
