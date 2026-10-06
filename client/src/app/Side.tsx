@@ -6,6 +6,7 @@ import {
   isLocked,
   isMuted,
   setSetting,
+  remember,
   client,
   ask,
   emoji,
@@ -51,7 +52,7 @@ export function Side() {
               className={tab === id ? 'active' : ''}
               {...a11y(t(`side.${id}`), 'tab')}
               aria-selected={tab === id}
-              onClick={() => (app.tab = id)}
+              onClick={() => ((app.tab = id), remember('tab', id))}
             >
               <i className={`fas ${icon}`} />
               <span>{t(`side.${id}`)}</span>

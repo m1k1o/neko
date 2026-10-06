@@ -1,5 +1,5 @@
 import { Component, useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
-import { useNeko, actions, t, isLocked, setSetting, client, tell, a11y, type LockResource } from './neko'
+import { useNeko, actions, t, isLocked, setSetting, remember, client, tell, a11y, type LockResource } from './neko'
 import { Video } from './Video'
 import { Members, MemberMenu, RoomMenu, Controls, Emotes } from './Room'
 import { Side } from './Side'
@@ -23,13 +23,6 @@ const loginOnce = (user: string, password: string) =>
 const cast = !!params.get('cast')
 const videoOnly = cast || !!params.get('embed')
 
-if (params.has('volume')) {
-  const v = parseFloat(params.get('volume') || '1')
-  client.store.watch(
-    () => client.state.video.playable,
-    (playable) => playable && client.setVolume(Math.max(0, Math.min(isNaN(v) ? 1 : v, 1))),
-  )
-}
 if (cast) setSetting('chat_sound', false)
 
 export function App() {
@@ -143,6 +136,7 @@ function Header() {
             aria-expanded={app.side}
             onClick={() => {
               app.side = !app.side
+              remember('side', app.side)
               setRead(app.texts)
             }}
           />
@@ -169,10 +163,9 @@ function Connect() {
       .then(setOauth)
       .catch(() => {})
     // ?usr=&pwd= (e.g. neko-rooms links) log in straight away, then leave the URL
-    if (invite !== null || params.has('usr')) {
+    if (invite !== null || params.has('usr') || params.has('token')) {
       const url = new URL(location.href)
-      url.searchParams.delete('pwd')
-      url.searchParams.delete('usr')
+      for (const k of ['pwd', 'usr', 'token']) url.searchParams.delete(k)
       history.replaceState(null, '', url)
     }
     if (invite && params.get('usr') && !state.authenticated) {

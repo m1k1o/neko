@@ -84,6 +84,10 @@ const api = (p, method, path, body) =>
     },
     [method, path, body],
   )
+const openSide = async (p) => {
+  if (!(await p.locator('aside.neko-menu').count())) await p.click('.header .fa-bars.toggle')
+  await p.waitForSelector('aside.neko-menu', { timeout: 3000 })
+}
 const playing = (p) =>
   p.evaluate(() => {
     const v = document.querySelector('video')
@@ -110,7 +114,7 @@ await step('alice sees 2 members, admin shield', async () => {
   await A.waitForSelector('.room-settings .fa-shield-alt', { timeout: 5000 })
 })
 await step('side panel: bob joined event line', async () => {
-  await A.click('.header .fa-bars.toggle')
+  await openSide(A)
   await A.waitForSelector('aside.neko-menu .chat', { timeout: 3000 })
   await A.waitForFunction(
     () => [...document.querySelectorAll('.chat-history .event')].some((e) => /bob\s+connected/.test(e.textContent)),
@@ -119,7 +123,7 @@ await step('side panel: bob joined event line', async () => {
   )
 })
 await step('chat: bob -> alice', async () => {
-  await B.click('.header .fa-bars.toggle')
+  await openSide(B)
   await B.fill('.chat-send textarea', 'hi from bob')
   await B.press('.chat-send textarea', 'Enter')
   await A.waitForFunction(
@@ -261,7 +265,7 @@ await step("a display name with # and ? cannot redirect the admin's mute", async
   // multiuser session ids start with the login name; unencoded, this id would turn
   // POST /api/members/<id> into a request for a different path
   const E = await user('evil#?x', USER)
-  await E.click('.header .fa-bars.toggle')
+  await openSide(E)
   await E.waitForSelector('.chat-send textarea', { timeout: 5000 })
   await A.waitForFunction(() => document.querySelectorAll('.members-list .member').length === 3, null, {
     timeout: 5000,
@@ -296,11 +300,14 @@ await step('a member who may not watch gets the room without video, not a spinne
     (s) => s.profile.name === 'bob' && s.state.is_connected,
   ).id
   await api(A, 'POST', '/members/' + encodeURIComponent(bobId), { can_watch: false })
-  await B.reload()
-  await B.waitForSelector('.connect', { state: 'detached', timeout: 20000 }) // the offer timeout (8 s) ends the spinner
-  await B.click('.header .fa-bars.toggle')
-  await B.waitForSelector('.chat-send textarea', { timeout: 5000 })
-  await api(A, 'POST', '/members/' + encodeURIComponent(bobId), { can_watch: true })
+  try {
+    await B.reload()
+    await B.waitForSelector('.connect', { state: 'detached', timeout: 20000 }) // the offer timeout (8 s) ends the spinner
+    await openSide(B)
+    await B.waitForSelector('.chat-send textarea', { timeout: 5000 })
+  } finally {
+    await api(A, 'POST', '/members/' + encodeURIComponent(bobId), { can_watch: true })
+  }
   await B.reload()
   await B.waitForFunction(
     () => {
@@ -310,7 +317,7 @@ await step('a member who may not watch gets the room without video, not a spinne
     null,
     { timeout: 30000 },
   )
-  await B.click('.header .fa-bars.toggle')
+  await openSide(B)
 })
 await step('admin changes resolution, bob sees event; revert', async () => {
   await A.click('.video-menu .fa-desktop')
@@ -525,7 +532,7 @@ if (process.env.NEKO_FILE_URL) {
     await FB.click('.neko-dialog .confirm')
   })
   await step('file provider: unban from Settings, bob logs in again', async () => {
-    await FA.click('.header .fa-bars.toggle')
+    await openSide(FA)
     await FA.click('.tabs-container >> text=Settings')
     await FA.click('.side-settings .banned button', { timeout: 5000 })
     await FA.waitForSelector('.side-settings .banned', { state: 'detached', timeout: 5000 })

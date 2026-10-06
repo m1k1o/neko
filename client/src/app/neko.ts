@@ -45,6 +45,7 @@ function get<T extends string | number | boolean>(key: string, def: T): T {
   }
 }
 
+export const remember = (key: string, val: string | number | boolean) => set(key, val)
 function set(key: string, val: string | number | boolean) {
   try {
     localStorage.setItem(key, typeof val === 'boolean' ? (val ? '1' : '0') : String(val))
@@ -124,14 +125,22 @@ export interface Toast {
 
 const params = new URL(location.href).searchParams
 const settings = load()
+for (const k of ['displayname', 'password']) localStorage.removeItem(k) // the Vue client's stored login
 
-export const client = new NekoClient({ autologin: true, autoconnect: true, autoplay: settings.autoplay })
+export const client = new NekoClient({
+  autologin: true,
+  autoconnect: true,
+  // read when a track arrives, so the setting applies without a reload
+  get autoplay() {
+    return s.settings.autoplay
+  },
+})
 
 export const app = new Store({
   lang: get<string>('lang', detectLang()) as Lang,
   settings,
-  side: params.get('show_side') === '1',
-  tab: 'chat' as 'chat' | 'files' | 'settings',
+  side: params.has('show_side') ? params.get('show_side') === '1' : get('side', false),
+  tab: get<'chat' | 'files' | 'settings'>('tab', 'chat'),
   chat: [] as ChatLine[],
   texts: 0,
   chatEnabled: true,
@@ -159,12 +168,13 @@ export function setSetting<K extends keyof ViewerSettings>(key: K, value: Viewer
   applySettings()
 }
 
+const htmlLang = (lang: Lang) => ({ cn: 'zh-CN', tw: 'zh-TW' })[lang as string] ?? lang
 export function setLang(lang: Lang) {
   s.lang = lang
   set('lang', lang)
-  document.documentElement.lang = lang
+  document.documentElement.lang = htmlLang(lang)
 }
-document.documentElement.lang = s.lang
+document.documentElement.lang = htmlLang(s.lang)
 const urlLang = params.get('lang') as Lang | null
 if (urlLang && langs.includes(urlLang)) setLang(urlLang)
 
@@ -181,6 +191,23 @@ function applySettings() {
   client.setKeyboard(s.settings.keyboard_layout)
 }
 applySettings()
+
+// volume survives a reload, as in the Vue client (same key and 0..100 scale); a ?volume= url
+// parameter overrides it for this visit
+const urlVolume = params.has('volume') ? parseFloat(params.get('volume') || '1') : NaN
+const startVolume = isNaN(urlVolume) ? get('volume', 100) / 100 : Math.max(0, Math.min(urlVolume, 1))
+const unwatchVolume = client.store.watch(
+  () => client.state.video.playable,
+  (playable) => {
+    if (!playable) return
+    client.setVolume(startVolume)
+    unwatchVolume()
+    client.store.watch(
+      () => client.state.video.volume,
+      (v) => set('volume', Math.round(v * 100)),
+    )
+  },
+)
 
 fetch('keyboard_layouts.json')
   .then((r) => r.json())
@@ -305,7 +332,10 @@ export const actions = {
     await client.login(username, password)
     client.connect()
   },
-  logout: () => client.logout().catch(() => {}),
+  logout: () => {
+    Object.assign(s, { chat: [], texts: 0, uploads: [], ignored: {}, broadcast: { active: false, url: '' } })
+    return client.logout().catch(() => {})
+  },
 
   toggleControl() {
     if (client.controlling) return client.release()
@@ -502,10 +532,14 @@ ev.on('room.control.host', (hasHost, hostID, by) => {
   const me = client.state.session_id
   if (hasHost && hostID) {
     if (by && by !== hostID) event(by, t('notifications.controls_given', { name: name(hostID) }))
+    else if (lastHost && lastHost !== hostID)
+      event(hostID, t('notifications.controls_taken_steal', { name: name(lastHost) }))
     else event(hostID, t('notifications.controls_taken', { name: '' }))
     if (hostID === me) toast(t('notifications.controls_taken', { name: t('you') }))
+    else if (lastHost === me) toast(t('notifications.controls_released', { name: t('you') }))
   } else if (lastHost) {
-    event(by || lastHost, t('notifications.controls_released', { name: '' }))
+    if (by && by !== lastHost) event(by, t('notifications.controls_released_steal', { name: name(lastHost) }))
+    else event(lastHost, t('notifications.controls_released', { name: '' }))
     if (lastHost === me) toast(t('notifications.controls_released', { name: t('you') }))
   }
   lastHost = hasHost ? (hostID ?? null) : null
