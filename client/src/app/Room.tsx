@@ -100,7 +100,7 @@ const confirmThen = (title: string, text: string, fn: () => void) => ask(title, 
 export function MemberMenu() {
   const { app, state } = useNeko()
   const [bannable, setBannable] = useState(false)
-  useEffect(() => closeOn(() => (app.menu = null)), [])
+  useEffect(() => closeOn(() => (app.menu = null)), [app])
   // keyboard users land on the first item
   const list = useRef<HTMLUListElement>(null)
   useEffect(() => {

@@ -210,7 +210,7 @@ function Emote({ id, type }: { id: string; type: string }) {
       ).finished
     })
     Promise.all(anims).then(() => delete app.state.emotes[id])
-  }, [])
+  }, [id])
   return (
     <div ref={ref} className="emote-container">
       {Array.from({ length: 7 }, (_, i) => (

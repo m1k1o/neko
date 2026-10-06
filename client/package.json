@@ -13,7 +13,7 @@
     "test:store": "node src/core/store.check.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check": "tsc --noEmit && prettier --check . && node src/core/store.check.ts && node src/core/client.check.ts && node src/app/markdown.check.ts",
+    "check": "tsc --noEmit && prettier --check . && eslint src && node src/core/store.check.ts && node src/core/client.check.ts && node src/app/markdown.check.ts",
     "build:emoji": "node tools/emoji.ts && prettier --write src/assets/styles/vendor/_emoji.scss"
   },
   "dependencies": {
@@ -27,10 +27,13 @@
     "@types/react-dom": "^19.1.0",
     "@vitejs/plugin-react": "^5.0.0",
     "emojilib": "3.0.8",
+    "eslint": "^10.12.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
     "playwright": "^1.63.0",
     "prettier": "^3.9.9",
     "sass": "^1.89.0",
     "typescript": "~5.8.0",
+    "typescript-eslint": "^8.71.1",
     "vite": "^7.0.0"
   }
 }

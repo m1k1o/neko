@@ -180,7 +180,7 @@ function Connect() {
       for (const k of ['pwd', 'usr', 'token']) url.searchParams.delete(k)
       history.replaceState(null, '', url)
     }
-    if (invite && params.get('usr') && !state.authenticated) {
+    if (invite && params.get('usr') && !client.state.authenticated) {
       loginOnce(params.get('usr')!, invite)
     }
   }, [])
@@ -307,7 +307,7 @@ function Dialog() {
 
 function About() {
   const { app } = useNeko()
-  useEffect(() => closeOn(() => (app.about = false)), [])
+  useEffect(() => closeOn(() => (app.about = false)), [app])
   return (
     <div className="about" onClick={(e) => e.target === e.currentTarget && (app.about = false)}>
       <div className="window" role="dialog" aria-label="About n.eko">

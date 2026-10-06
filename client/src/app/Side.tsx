@@ -251,7 +251,7 @@ function EmojiPicker({ onPick, onClose }: { onPick: (name: string) => void; onCl
   const scroll = useRef<HTMLDivElement>(null)
   const groupEls = useRef<(HTMLLIElement | null)[]>([])
 
-  useEffect(() => closeOn(onClose), [])
+  useEffect(() => closeOn(onClose), [onClose])
 
   const groups = [{ id: 'recent', name: 'Recent', list: app.emojiRecent }, ...emoji.groups]
   const q = search.trim().toLowerCase()
