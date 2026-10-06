@@ -77,6 +77,8 @@ export interface State {
     playing: boolean
     volume: number
     muted: boolean
+    // the browser refused to autoplay with sound, so playback started muted
+    mutedByAutoplay: boolean
   }
   control: {
     host_id: string | null

@@ -39,7 +39,7 @@ const defaultSettings = (): Settings => ({
 const initialState = (): State => ({
   authenticated: false,
   connection: { url: location.href, status: 'disconnected' },
-  video: { playable: false, playing: false, volume: 1, muted: false },
+  video: { playable: false, playing: false, volume: 1, muted: false, mutedByAutoplay: false },
   control: {
     host_id: null,
     locked: false,
@@ -621,6 +621,7 @@ export class NekoClient {
       // autoplay with sound is blocked until the user interacts: play muted,
       // unmute on the first click anywhere
       video.muted = true
+      this.state.video.mutedByAutoplay = true
       await video.play()
       document.addEventListener('click', () => this.unmute(), { once: true })
     }
@@ -636,6 +637,7 @@ export class NekoClient {
 
   unmute() {
     if (this.video) this.video.muted = false
+    this.state.video.mutedByAutoplay = false
   }
 
   setVolume(value: number) {

@@ -58,7 +58,7 @@ export function Video({ hideControls, extraControls }: { hideControls: boolean; 
   const hosted = state.control.host_id !== null
   const implicit = state.settings.implicit_hosting
   const controlLocked = state.settings.locked_controls && !admin
-  const { playing, playable, muted } = state.video
+  const { playing, playable, muted, mutedByAutoplay } = state.video
   const open = (m: 'resolution' | 'clipboard') => (e: React.MouseEvent) => (
     e.stopPropagation(),
     setMenu(menu === m ? null : m)
@@ -90,8 +90,10 @@ export function Video({ hideControls, extraControls }: { hideControls: boolean; 
               <i className="fas fa-play-circle" />
             </div>
           ) : (
+            // only for the mute that autoplay forced; a user who muted on purpose keeps the desktop
             playing &&
-            muted && (
+            muted &&
+            mutedByAutoplay && (
               <div className="player-overlay" {...a11y('Unmute')} onClick={() => client.unmute()}>
                 <i className="fas fa-volume-up" />
               </div>
