@@ -133,7 +133,12 @@ export function Video({ hideControls, extraControls }: { hideControls: boolean; 
               </li>
             )}
             {hosting && client.isTouchDevice && (
-              <li className={extra} {...a11y('Keyboard')} onClick={() => client.mobileKeyboardToggle()}>
+              <li
+                className={extra}
+                {...a11y('Keyboard')}
+                onMouseDown={(e) => e.preventDefault()} // tapping the button must not take the focus the keyboard needs
+                onClick={() => client.mobileKeyboardToggle()}
+              >
                 <i className="fas fa-keyboard" />
               </li>
             )}

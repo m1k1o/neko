@@ -323,11 +323,12 @@ export class Overlay {
   }
 
   mobileKeyboardToggle() {
-    // the blur handler clears the flag before the next line runs, so decide from the element
-    const open = document.activeElement === this.input
-    if (open) this.input.blur()
+    const s = this.client.state
+    const open = s.mobile_keyboard_open
+    if (open)
+      this.input.blur() // the blur handler clears the flag; set it from `open`, not from the flag
     else this.input.focus()
-    this.client.state.mobile_keyboard_open = !open
+    s.mobile_keyboard_open = !open
   }
 
   /////////////////////////////
