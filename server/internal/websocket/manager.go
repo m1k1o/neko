@@ -28,6 +28,11 @@ const (
 
 	// maximum payload length for logging
 	maxPayloadLogLength = 10_000
+
+	// largest frame a client may send; the biggest legitimate messages (an SDP answer, pasted
+	// clipboard text) are far below this, and without a limit a client can push arbitrarily
+	// large frames that are read and decoded before any handler can reject them
+	maxMessageSize = 1 << 20
 )
 
 // events that are not logged in debug mode
@@ -215,6 +220,7 @@ func (manager *WebSocketManagerCtx) Upgrade(checkOrigin types.CheckOrigin) types
 		if err != nil {
 			return utils.HttpBadRequest().WithInternalErr(err)
 		}
+		connection.SetReadLimit(maxMessageSize)
 
 		// Cannot write HTTP response after connection upgrade
 		manager.connect(connection, r)
