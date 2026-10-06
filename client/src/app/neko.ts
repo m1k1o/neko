@@ -320,6 +320,7 @@ export const actions = {
     client.send('chat/message', { text })
   },
   sendEmote(emote: string) {
+    if (isMuted()) return
     client.sendBroadcast('emote', emote)
     showEmote(emote) // server does not echo broadcasts to the sender
   },

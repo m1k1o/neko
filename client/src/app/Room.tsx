@@ -459,6 +459,7 @@ export function Emotes() {
     actions.sendEmote(emote)
   }
   const stop = () => clearInterval(repeat.current)
+  useEffect(() => stop, []) // the bar disappears when the member is muted, before any mouse-up
   // press and hold keeps sending, like the legacy client
   const start = (emote: string) => {
     actions.sendEmote(emote)
