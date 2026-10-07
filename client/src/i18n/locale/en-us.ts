@@ -3,11 +3,8 @@ export const unsupported = 'this web-browser does not support WebRTC'
 export const admin_loggedin = 'You are logged in as an admin'
 export const you = 'You'
 export const somebody = 'Somebody'
-export const send_a_message = 'Send a message'
 
 export const side = {
-  chat: 'Chat',
-  files: 'Files',
   settings: 'Settings',
 }
 
@@ -24,8 +21,6 @@ export const connect = {
 export const context = {
   ignore: 'Ignore',
   unignore: 'Unignore',
-  mute: 'Mute',
-  unmute: 'Unmute',
   release: 'Force Release Controls',
   take: 'Force Take Controls',
   give: 'Give Controls',
@@ -37,10 +32,6 @@ export const context = {
     kick_text: 'Are you sure you want to kick {name}?',
     ban_title: 'Ban {name}?',
     ban_text: 'Do you want to ban {name}? They cannot log in again until unbanned in Settings.',
-    mute_title: 'Mute {name}?',
-    mute_text: 'Are you sure you want to mute {name}?',
-    unmute_title: 'Unmute {name}?',
-    unmute_text: 'Do you want to unmute {name}?',
     button_yes: 'Yes',
     button_cancel: 'Cancel',
   },
@@ -74,14 +65,6 @@ export const locks = {
     unlocked: 'Room Unlocked (for users)',
     notif_locked: 'locked the room',
     notif_unlocked: 'unlocked the room',
-  },
-  file_transfer: {
-    lock: 'Lock File Transfer (for users)',
-    unlock: 'Unlock File Transfer (for users)',
-    locked: 'File Transfer Locked (for users)',
-    unlocked: 'File Transfer Unlocked (for users)',
-    notif_locked: 'locked file transfer',
-    notif_unlocked: 'unlocked file transfer',
   },
 }
 
@@ -122,20 +105,4 @@ export const notifications = {
   resolution: 'changed the resolution to {width}x{height}@{rate}',
   banned: 'banned {name}',
   kicked: 'kicked {name}',
-  muted: 'muted {name}',
-  unmuted: 'unmuted {name}',
-}
-
-export const files = {
-  uploads: 'Uploads',
-  upload_here: 'Click or drag files here to upload',
-  delete: 'Delete',
-  delete_title: 'Delete "{name}"?',
-  delete_confirm: 'Do you really want to remove this file?',
-  select: 'Select',
-  select_all: 'Select All',
-  unselect_all: 'Unselect All',
-  cancel: 'Cancel',
-  delete_selected_title: 'Delete selected files?',
-  delete_selected_confirm: 'Do you really want to remove the {count} selected files?',
 }

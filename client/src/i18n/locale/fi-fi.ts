@@ -3,11 +3,8 @@ export const unsupported = 'Tämä nettiselain ei tue WebRTC:tä'
 export const admin_loggedin = 'Sinä olet kirjautunut valvojana'
 export const you = 'Sinä'
 export const somebody = 'Joku' // TODO: tarkista käännös
-export const send_a_message = 'Lähetä viesti'
 
 export const side = {
-  chat: 'Chatti',
-  files: 'Tiedostot',
   settings: 'Asetukset',
 }
 
@@ -24,8 +21,6 @@ export const connect = {
 export const context = {
   ignore: 'Estä',
   unignore: 'Poista esto',
-  mute: 'Mykistä',
-  unmute: 'Poista mykistys',
   release: 'Pakko vapauta kontrollit',
   take: 'Pakko ota kontrollit',
   give: 'Anna kontrollit',
@@ -34,10 +29,6 @@ export const context = {
     kick_title: 'Haluatko heittää {name} ulos?',
     kick_text: 'Oletko varma että haluat heittää {name} ulos?',
     ban_title: 'Haluatko kieltää {name}?',
-    mute_title: 'Haluatko mykistää {name}?',
-    mute_text: 'Oletko varma että haluat mykistää {name}?',
-    unmute_title: 'Poista {name} mykistys?',
-    unmute_text: 'Oletko varma että haluat poistaa {name} mykistyksen?',
     button_yes: 'Kyllä',
     button_cancel: 'Peruuta',
   },
@@ -68,14 +59,6 @@ export const locks = {
     unlocked: 'Huone vapautettu (käyttäjiltä)',
     notif_locked: 'lukittu huone',
     notif_unlocked: 'vapautettu huone',
-  },
-  file_transfer: {
-    lock: 'Lukitse tiedostonsiirto (käyttäjiltä)',
-    unlock: 'Vapauta tiedostonsiirto (käyttäjiltä)',
-    locked: 'Tiedostonsiirto lukittu (käyttäjiltä)',
-    unlocked: 'Tiedostonsiirto vapautettu (käyttäjiltä)',
-    notif_locked: 'tiedostonsiirto lukittu',
-    notif_unlocked: 'tiedostonsiirto vapautettu',
   },
 }
 
@@ -113,20 +96,4 @@ export const notifications = {
   resolution: 'vaihdettu resoluutio {width}x{height}@{rate}',
   banned: 'kielletty {name}',
   kicked: 'heitetty {name} ulos',
-  muted: 'mykistetty {name}',
-  unmuted: 'poistettu mykistys {name}',
-}
-
-export const files = {
-  uploads: 'Lataa',
-  upload_here: 'Klikkaa tai vedä tiedostoja tähän ladataksesi',
-  delete: 'Poista',
-  delete_title: 'Poistetaanko "{name}"?',
-  delete_confirm: 'Haluatko varmasti poistaa tämän tiedoston?',
-  select: 'Valitse',
-  select_all: 'Valitse kaikki',
-  unselect_all: 'Poista kaikki valinnat',
-  cancel: 'Peruuta',
-  delete_selected_title: 'Poistetaanko valitut tiedostot?',
-  delete_selected_confirm: 'Haluatko varmasti poistaa {count} valittua tiedostoa?',
 }

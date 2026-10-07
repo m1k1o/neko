@@ -3,11 +3,8 @@ export const unsupported = 'этот браузер не поддерживае�
 export const admin_loggedin = 'Вы вошли как админ'
 export const you = 'Вы'
 export const somebody = 'Кто-то'
-export const send_a_message = 'Отправить сообщение'
 
 export const side = {
-  chat: 'Чат',
-  files: 'Файлы',
   settings: 'Настройки',
 }
 
@@ -24,8 +21,6 @@ export const connect = {
 export const context = {
   ignore: 'Игнорировать',
   unignore: 'Не игнорировать',
-  mute: 'Заглушить',
-  unmute: 'Перестать глушить',
   release: 'Принудительно освободить управление',
   take: 'Принудительно взять управление',
   give: 'Дать управление',
@@ -34,10 +29,6 @@ export const context = {
     kick_title: 'Выкинуть {name}?',
     kick_text: 'Вы уверены, что хотите выкинуть {name}?',
     ban_title: 'Забанить {name}?',
-    mute_title: 'Заглушить {name}?',
-    mute_text: 'Вы уверены, что хотите заглушить {name}?',
-    unmute_title: 'Перестать глушить {name}?',
-    unmute_text: 'Вы хотите перестать глушить {name}?',
     button_yes: 'Да',
     button_cancel: 'Отмена',
   },
@@ -68,14 +59,6 @@ export const locks = {
     unlocked: 'Комната открыта (для пользователей)',
     notif_locked: 'комната закрыта',
     notif_unlocked: 'комната открыта',
-  },
-  file_transfer: {
-    lock: 'Заблокировать передачу файлов (для пользователей)',
-    unlock: 'Разблокировать передачу файлов (для пользователей)',
-    locked: 'Передача файлов заблокирована (для пользователей)',
-    unlocked: 'Передача файлов разблокирована (для пользователей)',
-    notif_locked: 'заблокирована передача файлов',
-    notif_unlocked: 'разблокирована передача файлов',
   },
 }
 
@@ -113,20 +96,4 @@ export const notifications = {
   resolution: 'разрешение изменено на {width}x{height}@{rate}',
   banned: 'забанен {name}',
   kicked: 'выкинут {name}',
-  muted: 'заглушен {name}',
-  unmuted: 'не заглушен {name}',
-}
-
-export const files = {
-  uploads: 'Загрузить',
-  upload_here: 'Нажмите или перетащите сюда файлы для загрузки',
-  delete: 'Удалить',
-  delete_title: 'Удалить "{name}"?',
-  delete_confirm: 'Вы действительно хотите удалить этот файл?',
-  select: 'Выбрать',
-  select_all: 'Выбрать все',
-  unselect_all: 'Снять выделение',
-  cancel: 'Отмена',
-  delete_selected_title: 'Удалить выбранные файлы?',
-  delete_selected_confirm: 'Вы действительно хотите удалить {count} выбранных файлов?',
 }

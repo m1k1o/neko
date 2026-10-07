@@ -3,11 +3,8 @@ export const unsupported = '이 브라우저는 WebRTC 를 지원하지 않습�
 export const admin_loggedin = '관리자로 로그인했습니다'
 export const you = '당신'
 export const somebody = '누군가'
-export const send_a_message = '메세지 보내기'
 
 export const side = {
-  chat: '채팅',
-  files: '파일',
   settings: '설정',
 }
 
@@ -24,8 +21,6 @@ export const connect = {
 export const context = {
   ignore: '무시하기',
   unignore: '무시하기 해제',
-  mute: '뮤트',
-  unmute: '뮤트 해제',
   release: '강제로 조작 권한 풀기',
   take: '강제로 조작 권한 가져오기',
   give: '조작 권한 주기',
@@ -34,10 +29,6 @@ export const context = {
     kick_title: '{name}님을 추방할까요?',
     kick_text: '정말로 {name}님을 추방할까요?',
     ban_title: '{name}님을 차단할까요?',
-    mute_title: '{name}님을 뮤트할까요?',
-    mute_text: '정말로 {name}님을 뮤트할까요?',
-    unmute_title: '{name}님의 뮤트를 해제할까요?',
-    unmute_text: '정말로 {name}님의 뮤트를 해제할까요?',
     button_yes: '네',
     button_cancel: '아니요',
   },
@@ -68,14 +59,6 @@ export const locks = {
     unlocked: '방 잠금이 해제됐습니다 (사용자)',
     notif_locked: '방이 잠겼습니다',
     notif_unlocked: '방 잠금이 해제됐습니다',
-  },
-  file_transfer: {
-    lock: '파일 전송 잠그기 (사용자)',
-    unlock: '파일 전송 잠금 해제하기 (사용자)',
-    locked: '파일 전송이 잠겼습니다 (사용자)',
-    unlocked: '파일 전송 잠금이 해제됐습니다 (사용자)',
-    notif_locked: '파일 전송이 잠겼습니다',
-    notif_unlocked: '파일 전송 잠금이 해제됐습니다',
   },
 }
 
@@ -113,20 +96,4 @@ export const notifications = {
   resolution: '해상도로 {width}x{height}@{rate} 로 변경했습니다',
   banned: '{name} 님이 차단됐습니다',
   kicked: '{name} 님이 추방됐습니다',
-  muted: '{name} 님이 뮤트됐습니다',
-  unmuted: '{name} 님의 뮤트가 해제됐습니다',
-}
-
-export const files = {
-  uploads: '업로드',
-  upload_here: '업로드할 파일을 여기로 클릭하거나 드래그하세요',
-  delete: '삭제',
-  delete_title: '"{name}" 을(를) 삭제하시겠습니까?',
-  delete_confirm: '정말로 이 파일을 삭제하시겠습니까?',
-  select: '선택',
-  select_all: '모두 선택',
-  unselect_all: '모두 선택 해제',
-  cancel: '취소',
-  delete_selected_title: '선택한 파일을 삭제하시겠습니까?',
-  delete_selected_confirm: '선택한 {count}개의 파일을 정말로 삭제하시겠습니까?',
 }

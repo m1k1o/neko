@@ -1,18 +1,18 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNeko } from '@/state/hooks'
 import { actions } from '@/state/actions'
-import { client, isMuted } from '@/state/client'
+import { client } from '@/state/client'
 import { ask } from '@/state/dialogs'
-import { mute } from '@/state/chat'
 import { a11y, closeOn } from '@/components/a11y'
 import { Avatar } from '@/components/Avatar'
 import { ContextMenu } from '@/components/ContextMenu'
 import { t } from '@/i18n'
+import type { PluginMemberMenuItem } from '@/plugins/types'
 
 const confirmThen = (title: string, text: string, fn: () => void) => ask(title, text).then((ok) => ok && fn())
 
 // rendered by App outside .room-container, which is hidden at narrow widths where the chat still works
-export function MemberMenu() {
+export function MemberMenu({ items }: { items: PluginMemberMenuItem[] }) {
   const { app, state } = useNeko()
   const [bannable, setBannable] = useState(false)
   useEffect(() => closeOn(() => (app.menu = null)), [app])
@@ -37,7 +37,6 @@ export function MemberMenu() {
   const admin = client.isAdmin
   const implicit = state.settings.implicit_hosting
   const isHost = id === state.control.host_id
-  const muted = isMuted(id)
   const x = Math.min(app.menu.x, innerWidth - 170)
   const y = Math.min(app.menu.y, innerHeight - 250)
 
@@ -58,22 +57,17 @@ export function MemberMenu() {
           {t(app.ignored[id!] ? 'context.unignore' : 'context.ignore')}
         </span>
       </li>
-      {admin ? (
-        <>
-          <li>
-            <span
-              {...a11y(t(muted ? 'context.unmute' : 'context.mute'), 'menuitem')}
-              onClick={() =>
-                confirmThen(
-                  t(`context.confirm.${muted ? 'unmute' : 'mute'}_title`, { name: n }),
-                  t(`context.confirm.${muted ? 'unmute' : 'mute'}_text`, { name: n }),
-                  () => mute(id!, !muted),
-                )
-              }
-            >
-              {t(muted ? 'context.unmute' : 'context.mute')}
+      {items
+        .filter((item) => !item.visible || item.visible(m))
+        .map((item) => (
+          <li key={item.id}>
+            <span {...a11y(item.label(m), 'menuitem')} onClick={() => item.onClick(m)}>
+              {item.label(m)}
             </span>
           </li>
+        ))}
+      {admin ? (
+        <>
           {!implicit && isHost && (
             <>
               <li>

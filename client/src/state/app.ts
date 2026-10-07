@@ -1,10 +1,8 @@
-// The GUI's own state next to the core's `client.state`: viewer settings, the side panel, chat,
-// files, toasts, dialogs. Every component reads it through useNeko().
+// The GUI's own state next to the core's `client.state`: viewer settings, the side panel, toasts,
+// dialogs. Every component reads it through useNeko(). Plugins keep their own stores.
 import { createStore } from './stores'
 import { get } from './storage'
 import { detectLang, type Lang } from '@/i18n/locale'
-import type { ChatLine } from './chat'
-import type { FileTransfer, Upload } from './files'
 import type { Dialog, Toast } from './dialogs'
 
 export const defaults = {
@@ -32,16 +30,11 @@ export const app = createStore({
   lang: get<string>('lang', detectLang()) as Lang,
   settings: load(),
   side: params.has('show_side') ? params.get('show_side') === '1' : get('side', false),
-  tab: get<'chat' | 'files' | 'settings'>('tab', 'chat'),
-  chat: [] as ChatLine[],
-  texts: 0,
-  chatEnabled: true,
+  // id of the side panel's tab (a plugin's or 'settings')
+  tab: get<string>('tab', 'chat'),
+  // openinapp/init: links can be opened on the remote desktop
   openInApp: false,
-  emojiReady: false,
-  emojiRecent: [] as string[],
   emotes: {} as Record<string, string>,
-  files: null as FileTransfer | null,
-  uploads: [] as Upload[],
   toasts: [] as Toast[],
   ignored: {} as Record<string, boolean>,
   broadcast: { active: false, url: '' },

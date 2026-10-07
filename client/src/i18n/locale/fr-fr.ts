@@ -3,11 +3,8 @@ export const unsupported = 'ce navigateur ne prend pas en charge WebRTC'
 export const admin_loggedin = "Vous êtes connecté en tant qu'admin"
 export const you = 'Vous'
 export const somebody = "Quelqu'un" // TODO: vérifier la traduction
-export const send_a_message = 'Envoyer un message'
 
 export const side = {
-  chat: 'Chat',
-  files: 'Fichiers',
   settings: 'Paramètres',
 }
 
@@ -24,8 +21,6 @@ export const connect = {
 export const context = {
   ignore: 'Ignorer',
   unignore: 'Ne plus ignorer',
-  mute: 'Mute',
-  unmute: 'Démute',
   release: 'Forcer le relachement de contrôle',
   take: 'Forcer la prise de contrôle',
   give: 'Donner le contrôle',
@@ -34,10 +29,6 @@ export const context = {
     kick_title: 'Kicker {name}?',
     kick_text: 'Êtes vous sûr de kick {name}?',
     ban_title: 'Bannir {name}?',
-    mute_title: 'Muter {name}?',
-    mute_text: 'Êtes-vous sûr de muter {name}?',
-    unmute_title: 'Démute {name}?',
-    unmute_text: 'Voulez-vous démuter {name}?',
     button_yes: 'Oui',
     button_cancel: 'Annuler',
   },
@@ -68,14 +59,6 @@ export const locks = {
     unlocked: 'Salle dévérouillée (pour les utilisateurs)',
     notif_locked: 'a vérouillé la salle',
     notif_unlocked: 'a dévérouillé la salle',
-  },
-  file_transfer: {
-    lock: 'Verrouiller le transfert de fichiers (pour les utilisateurs)',
-    unlock: 'Déverrouiller le transfert de fichiers (pour les utilisateurs)',
-    locked: 'Transfert de fichiers verrouillé (pour les utilisateurs)',
-    unlocked: 'Transfert de fichiers déverrouillé (pour les utilisateurs)',
-    notif_locked: 'transfert de fichiers verrouillé',
-    notif_unlocked: 'transfert de fichiers déverrouillé',
   },
 }
 
@@ -113,20 +96,4 @@ export const notifications = {
   resolution: 'a changé la résolution pour du {width}x{height}@{rate}',
   banned: 'a banni {name}',
   kicked: 'a kick {name}',
-  muted: 'a mute {name}',
-  unmuted: 'a démute {name}',
-}
-
-export const files = {
-  uploads: 'Envois',
-  upload_here: 'Cliquez ou faites glisser les fichiers ici pour les envoyer',
-  delete: 'Supprimer',
-  delete_title: 'Supprimer "{name}" ?',
-  delete_confirm: 'Voulez-vous vraiment supprimer ce fichier ?',
-  select: 'Sélectionner',
-  select_all: 'Tout sélectionner',
-  unselect_all: 'Tout désélectionner',
-  cancel: 'Annuler',
-  delete_selected_title: 'Supprimer les fichiers sélectionnés ?',
-  delete_selected_confirm: 'Voulez-vous vraiment supprimer les {count} fichiers sélectionnés ?',
 }

@@ -3,11 +3,8 @@ export const unsupported = 'Dieser Webbrowser unterstützt kein Web-RTC.'
 export const admin_loggedin = 'Du bist eingeloggt als Admin.'
 export const you = 'Du'
 export const somebody = 'Jemand'
-export const send_a_message = 'Sende eine Nachricht'
 
 export const side = {
-  chat: 'Chat',
-  files: 'Dateien',
   settings: 'Einstellungen',
 }
 
@@ -24,8 +21,6 @@ export const connect = {
 export const context = {
   ignore: 'Ignorieren',
   unignore: 'Nicht Ignorieren',
-  mute: 'Stummschalten',
-  unmute: 'Nicht Stummschalten',
   release: 'Freigabesteuerung freigeben',
   take: 'Steuerung erzwingen',
   give: 'Steuerung geben',
@@ -34,10 +29,6 @@ export const context = {
     kick_title: 'Kick {name}?',
     kick_text: 'Bist du sicher das du {name} rauswerfen willst?',
     ban_title: '{name} Sperren?',
-    mute_title: '{name} stummschalten?',
-    mute_text: 'Bist du sicher das du {name} stummschalten willst?',
-    unmute_title: '{name} stummschaltung aufheben?',
-    unmute_text: 'Bist du sicher das du von {name} die stummschaltung aufheben willst?',
     button_yes: 'Ja',
     button_cancel: 'Abbrechen',
   },
@@ -68,14 +59,6 @@ export const locks = {
     unlocked: 'Raum entsperrt (für Nutzer)',
     notif_locked: 'Raum gesperrt',
     notif_unlocked: 'Raum entsperrt',
-  },
-  file_transfer: {
-    lock: 'Dateiübertragung sperren (für Nutzer)',
-    unlock: 'Dateiübertragung entsperren (für Nutzer)',
-    locked: 'Dateiübertragung gesperrt (für Nutzer)',
-    unlocked: 'Dateiübertragung entsperrt (für Nutzer)',
-    notif_locked: 'Dateiübertragung gesperrt',
-    notif_unlocked: 'Dateiübertragung entsperrt',
   },
 }
 
@@ -113,20 +96,4 @@ export const notifications = {
   resolution: 'die Auflösung geändert zu {width}x{height}@{rate}',
   banned: 'sperrte {name}',
   kicked: '{name} wurde rausgeworfen',
-  muted: '{name} stummgeschaltet',
-  unmuted: '{name} stummschaltung aufgehoben',
-}
-
-export const files = {
-  uploads: 'Hochladen',
-  upload_here: 'Klicken oder ziehen Sie Dateien zum Hochladen hierher',
-  delete: 'Löschen',
-  delete_title: '"{name}" löschen?',
-  delete_confirm: 'Möchten Sie diese Datei wirklich entfernen?',
-  select: 'Auswählen',
-  select_all: 'Alle auswählen',
-  unselect_all: 'Alle abwählen',
-  cancel: 'Abbrechen',
-  delete_selected_title: 'Ausgewählte Dateien löschen?',
-  delete_selected_confirm: 'Möchten Sie die {count} ausgewählten Dateien wirklich entfernen?',
 }

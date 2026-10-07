@@ -5,11 +5,8 @@ export const admin_loggedin = 'Ste prihlásení/á ako administrátor'
 export const somebody = 'Niekto' // TODO: skontrolovať preklad
 // TODO
 //export const somebody = 'Somebody'
-export const send_a_message = 'Odoslať správu'
 
 export const side = {
-  chat: 'Chat',
-  files: 'Súbory',
   settings: 'Nastavenia',
 }
 
@@ -26,8 +23,6 @@ export const connect = {
 export const context = {
   ignore: 'Ignorovať',
   unignore: 'Zrušiť ignorovanie',
-  mute: 'Zakázať chat',
-  unmute: 'Povoliť chat',
   release: 'Zrušiť ovládanie',
   take: 'Prevziať ovládanie',
   give: 'Ponúknuť ovládanie',
@@ -36,10 +31,6 @@ export const context = {
     kick_title: 'Kick {name}?',
     kick_text: 'Ste si istý/á, že chcete vykopnúť používateľa {name}?',
     ban_title: 'Ban {name}?',
-    mute_title: 'Zakázať chat pre používateľa {name}?',
-    mute_text: 'Ste si istý/á, že chcete zakázať chat pre používateľa {name}?',
-    unmute_title: 'Povoliť chat pre používateľa {name}?',
-    unmute_text: 'Ste si istý/á, že chcete povoliť chat pre používateľa {name}?',
     button_yes: 'Áno',
     button_cancel: 'Zrušiť',
   },
@@ -73,14 +64,6 @@ export const locks = {
     unlocked: 'Miestnosť odomknutá (pre používateľov)',
     notif_locked: 'miestnosť bola zamknutá',
     notif_unlocked: 'miestnosť bola odomknutá',
-  },
-  file_transfer: {
-    lock: 'Zakázať prenos súborov (pre používateľov)',
-    unlock: 'Povoliť prenos súborov (pre používateľov)',
-    locked: 'Prenos súborov je zakázaný (pre používateľov)',
-    unlocked: 'Prenos súborov je povolený (pre používateľov)',
-    notif_locked: 'zakázal/a prenos súborov',
-    notif_unlocked: 'povolil/a prenos súborov',
   },
 }
 
@@ -118,20 +101,4 @@ export const notifications = {
   resolution: 'zmenené rozlíšenie na {width}x{height}@{rate}',
   banned: '{name} dostal/a BAN',
   kicked: '{name} bol/a vykopnutý/a',
-  muted: 'zakázal chat používateľovi {name}',
-  unmuted: 'povolil chat používateľovi {name}',
-}
-
-export const files = {
-  uploads: 'Nahrávanie',
-  upload_here: 'Kliknutím alebo pretiahnutím súborov sem ich môžete nahrať',
-  delete: 'Odstrániť',
-  delete_title: 'Odstrániť "{name}"?',
-  delete_confirm: 'Naozaj chcete odstrániť tento súbor?',
-  select: 'Vybrať',
-  select_all: 'Vybrať všetko',
-  unselect_all: 'Zrušiť výber',
-  cancel: 'Zrušiť',
-  delete_selected_title: 'Odstrániť vybrané súbory?',
-  delete_selected_confirm: 'Naozaj chcete odstrániť {count} vybraných súborov?',
 }

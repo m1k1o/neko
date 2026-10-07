@@ -1,9 +1,10 @@
 import { Fragment, useMemo, useState } from 'react'
 import { useNeko } from '@/state/hooks'
 import { client } from '@/state/client'
-import { openInApp } from '@/state/chat'
-import { emoji } from '@/state/emoji'
 import { a11y } from '@/components/a11y'
+import { chat } from './store'
+import { openInApp } from './actions'
+import { emoji } from './emoji'
 import { parseSafe, type Node as MdNode } from './markdown'
 
 function Spoiler({ children }: { children: React.ReactNode }) {
@@ -47,7 +48,7 @@ export function Markdown({ source }: { source: string }) {
             </pre>
           )
         case 'emoji':
-          return app.emojiReady && emoji.names.has(n.v) ? (
+          return chat.state.emojiReady && emoji.names.has(n.v) ? (
             <span key={i} className="emoji" data-emoji={n.v} title={`:${n.v}:`} />
           ) : (
             `:${n.v}:`

@@ -3,11 +3,8 @@ export const unsupported = 'denna webbläsare har inte stöd för webrtc'
 export const admin_loggedin = 'Du är inloggad som en administratör'
 export const you = 'Du'
 export const somebody = 'Någon' // TODO: kontrollera översättning
-export const send_a_message = 'Skicka ett meddelande'
 
 export const side = {
-  chat: 'Chatt',
-  files: 'Filer',
   settings: 'Inställningar',
 }
 
@@ -24,8 +21,6 @@ export const connect = {
 export const context = {
   ignore: 'Ignorera',
   unignore: 'Inte ignorera',
-  mute: 'Tysta',
-  unmute: 'Ta bort tystning',
   release: 'Tvinga ta bort kontrollen',
   take: 'Tvinga ta kontrollen',
   give: 'Ge kontrollen',
@@ -34,10 +29,6 @@ export const context = {
     kick_title: 'Sparka {name}?',
     kick_text: 'Är du säker du vill sparka {name}?',
     ban_title: 'Bannlys {name}?',
-    mute_title: 'Tysta {name}?',
-    mute_text: 'Är du säker du vill tysta {name}?',
-    unmute_title: 'Ta bort tystningen {name}?',
-    unmute_text: 'Är du säker du vill ta bort tystningen {name}?',
     button_yes: 'Ja',
     button_cancel: 'Avbryt',
   },
@@ -68,14 +59,6 @@ export const locks = {
     unlocked: 'Rum upplåst (för användare)',
     notif_locked: 'låste rummet',
     notif_unlocked: 'låste upp rummet',
-  },
-  file_transfer: {
-    lock: 'Lås filöverföring (för användare)',
-    unlock: 'Lås upp filöverföring (för användare)',
-    locked: 'Filöverföring låst (för användare)',
-    unlocked: 'Filöverföring upplåst (för användare)',
-    notif_locked: 'låste filöverföring',
-    notif_unlocked: 'låste upp filöverföring',
   },
 }
 
@@ -113,20 +96,4 @@ export const notifications = {
   resolution: 'ändrade upplösningen till {width}x{height}@{rate}',
   banned: 'bannlyste {name}',
   kicked: 'sparkade {name}',
-  muted: 'tystade {name}',
-  unmuted: 'tog bort tystningen på {name}',
-}
-
-export const files = {
-  uploads: 'Ladda upp',
-  upload_here: 'Klicka eller dra filer hit för att ladda upp dem',
-  delete: 'Ta bort',
-  delete_title: 'Ta bort "{name}"?',
-  delete_confirm: 'Vill du verkligen ta bort den här filen?',
-  select: 'Markera',
-  select_all: 'Markera alla',
-  unselect_all: 'Avmarkera alla',
-  cancel: 'Avbryt',
-  delete_selected_title: 'Ta bort markerade filer?',
-  delete_selected_confirm: 'Vill du verkligen ta bort de {count} markerade filerna?',
 }

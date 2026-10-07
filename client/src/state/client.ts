@@ -14,13 +14,11 @@ export const client = new NekoClient({
 })
 
 export const name = (id?: string | null) => (id && client.state.sessions[id]?.profile.name) || t('somebody')
+// the server's chat plugin took this member's right to send (chat.can_send); emotes follow it too
 export const isMuted = (id = client.state.session_id) =>
   !!id && client.state.sessions[id]?.profile.plugins?.['chat.can_send'] === false
 export const hostId = () => client.state.control.host_id
 
-export type LockResource = 'login' | 'control' | 'file_transfer'
-export function isLocked(r: LockResource, settings: Settings = client.state.settings) {
-  if (r === 'login') return settings.locked_logins
-  if (r === 'control') return settings.locked_controls
-  return settings.plugins?.['filetransfer.enabled'] === false
-}
+export type LockResource = 'login' | 'control'
+export const isLocked = (r: LockResource, settings: Settings = client.state.settings) =>
+  r === 'login' ? settings.locked_logins : settings.locked_controls

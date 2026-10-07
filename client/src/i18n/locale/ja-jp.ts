@@ -3,11 +3,8 @@ export const unsupported = 'このウェブブラウザは WebRTC をサポー�
 export const admin_loggedin = '管理者としてログインしています'
 export const you = 'あなた'
 export const somebody = '誰か'
-export const send_a_message = 'メッセージを送信'
 
 export const side = {
-  chat: 'チャット',
-  files: 'ファイル',
   settings: '設定',
 }
 
@@ -24,8 +21,6 @@ export const connect = {
 export const context = {
   ignore: '無視する',
   unignore: '無視を解除',
-  mute: 'ミュート',
-  unmute: 'ミュート解除',
   release: '強制的にコントロールを解放する',
   take: '強制的にコントロールを得る',
   give: 'コントロールを譲渡する',
@@ -34,10 +29,6 @@ export const context = {
     kick_title: '{name} を追い出しますか?',
     kick_text: '本当に {name} を追い出しますか?',
     ban_title: '{name} を禁止にしますか?',
-    mute_title: '{name} をミュートしますか?',
-    mute_text: '本当に {name} をミュートしますか?',
-    unmute_title: '{name} のミュートを解除しますか?',
-    unmute_text: '{name} のミュートを解除しますか?',
     button_yes: 'はい',
     button_cancel: 'キャンセル',
   },
@@ -68,14 +59,6 @@ export const locks = {
     unlocked: 'ルームはロックされていません (ユーザに対して)',
     notif_locked: 'ルームをロックしました',
     notif_unlocked: 'ルームのロックを解除しました',
-  },
-  file_transfer: {
-    lock: 'ファイル転送をロック (ユーザに対して)',
-    unlock: 'ファイル転送のロックを解除 (ユーザに対して)',
-    locked: 'ファイル転送はロックされています (ユーザに対して)',
-    unlocked: 'ファイル転送はロックされていません (ユーザに対して)',
-    notif_locked: 'ファイル転送をロックしました',
-    notif_unlocked: 'ファイル転送のロックを解除しました',
   },
 }
 
@@ -113,20 +96,4 @@ export const notifications = {
   resolution: '解像度を {width}x{height}@{rate} に変更しました',
   banned: '{name} を禁止しました',
   kicked: '{name} を追い出しました',
-  muted: '{name} をミュートにしました',
-  unmuted: '{name} のミュートを解除しました',
-}
-
-export const files = {
-  uploads: 'アップロード',
-  upload_here: 'アップロードするにはここをクリックするかファイルをドラッグしてください',
-  delete: '削除',
-  delete_title: '"{name}" を削除しますか？',
-  delete_confirm: '本当にこのファイルを削除しますか？',
-  select: '選択',
-  select_all: 'すべて選択',
-  unselect_all: 'すべて選択解除',
-  cancel: 'キャンセル',
-  delete_selected_title: '選択したファイルを削除しますか？',
-  delete_selected_confirm: '選択した{count}個のファイルを本当に削除しますか？',
 }

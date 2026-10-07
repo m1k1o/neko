@@ -3,11 +3,8 @@ export const unsupported = 'Ta przeglądarka nie obsługuje WebRTC'
 export const admin_loggedin = 'Jesteś zalogowany jako administrator'
 export const you = 'Ty'
 export const somebody = 'Ktoś'
-export const send_a_message = 'Wyślij wiadomość'
 
 export const side = {
-  chat: 'Czat',
-  files: 'Pliki',
   settings: 'Ustawienia',
 }
 
@@ -24,8 +21,6 @@ export const connect = {
 export const context = {
   ignore: 'Ignoruj',
   unignore: 'Przestań ignorować',
-  mute: 'Wycisz',
-  unmute: 'Cofnij wyciszenie',
   release: 'Wymuś zwolnienie sterowania',
   take: 'Wymuś przejęcie sterowania',
   give: 'Przekaż sterowanie',
@@ -34,10 +29,6 @@ export const context = {
     kick_title: 'Wyrzucić {name}?',
     kick_text: 'Czy na pewno chcesz wyrzucić {name}?',
     ban_title: 'Zbanować {name}?',
-    mute_title: 'Wyciszyć {name}?',
-    mute_text: 'Czy na pewno chcesz wyciszyć {name}?',
-    unmute_title: 'Cofnąć wyciszenie {name}?',
-    unmute_text: 'Czy chcesz cofnąć wyciszenie {name}?',
     button_yes: 'Tak',
     button_cancel: 'Anuluj',
   },
@@ -68,14 +59,6 @@ export const locks = {
     unlocked: 'Pokój odblokowany (dla użytkowników)',
     notif_locked: 'zablokował pokój',
     notif_unlocked: 'odblokował pokój',
-  },
-  file_transfer: {
-    lock: 'Zablokuj transfer plików (dla użytkowników)',
-    unlock: 'Odblokuj transfer plików (dla użytkowników)',
-    locked: 'Transfer plików zablokowany (dla użytkowników)',
-    unlocked: 'Transfer plików odblokowany (dla użytkowników)',
-    notif_locked: 'zablokował transfer plików',
-    notif_unlocked: 'odblokował transfer plików',
   },
 }
 
@@ -113,20 +96,4 @@ export const notifications = {
   resolution: 'zmienił rozdzielczość na {width}x{height}@{rate}',
   banned: 'zbanował {name}',
   kicked: 'wyrzucił {name}',
-  muted: 'wyciszył {name}',
-  unmuted: 'cofnął wyciszenie {name}',
-}
-
-export const files = {
-  uploads: 'Wysyłane pliki',
-  upload_here: 'Kliknij lub przeciągnij pliki tutaj, aby przesłać',
-  delete: 'Usuń',
-  delete_title: 'Usunąć "{name}"?',
-  delete_confirm: 'Czy na pewno chcesz usunąć ten plik?',
-  select: 'Zaznacz',
-  select_all: 'Zaznacz wszystko',
-  unselect_all: 'Odznacz wszystko',
-  cancel: 'Anuluj',
-  delete_selected_title: 'Usunąć zaznaczone pliki?',
-  delete_selected_confirm: 'Czy na pewno chcesz usunąć {count} zaznaczonych plików?',
 }

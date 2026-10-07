@@ -3,11 +3,8 @@ export const unsupported = 'Denne nettleseren støtter ikke WebRTC'
 export const admin_loggedin = 'Du er innlogget som administrator'
 export const you = 'Deg'
 export const somebody = 'Noen'
-export const send_a_message = 'Send en melding'
 
 export const side = {
-  chat: 'Sludring',
-  files: 'Filer',
   settings: 'Innstillinger',
 }
 
@@ -24,8 +21,6 @@ export const connect = {
 export const context = {
   ignore: 'Ignorer',
   unignore: 'Opphev ignorering',
-  mute: 'Forstum',
-  unmute: 'Opphev forstummelse',
   release: 'Slipp kontrollen med tvang',
   take: 'Ta kontrollen med tvang',
   give: 'Gi vekk kontroll',
@@ -34,10 +29,6 @@ export const context = {
     kick_title: 'Kast ut {name}?',
     kick_text: 'Vil du kaste ut {name}?',
     ban_title: 'Bannlys {name}?',
-    mute_title: 'Forstum {name}?',
-    mute_text: 'Vil du forstumme {name}?',
-    unmute_title: 'Opphev forstummelse {name}?',
-    unmute_text: 'Vil du oppheve forstummelsen av {name}?',
     button_yes: 'Ja',
     button_cancel: 'Avbryt',
   },
@@ -68,14 +59,6 @@ export const locks = {
     unlocked: 'Rom opplåst (for brukere)',
     notif_locked: 'låste rommet',
     notif_unlocked: 'låste opp rommet',
-  },
-  file_transfer: {
-    lock: 'Lås filoverføring (for brukere)',
-    unlock: 'Lås opp filoverføring (for brukere)',
-    locked: 'Filoverføring låst (for brukere)',
-    unlocked: 'Filoverføring opplåst (for brukere)',
-    notif_locked: 'låste filoverføring',
-    notif_unlocked: 'låste opp filoverføring',
   },
 }
 
@@ -113,20 +96,4 @@ export const notifications = {
   resolution: 'endret oppløsningen til {width}x{height}@{rate}',
   banned: 'bannlyste {name}',
   kicked: 'kastet ut {name}',
-  muted: 'forstummet {name}',
-  unmuted: 'opphevet forstummingen av {name}',
-}
-
-export const files = {
-  uploads: 'Opplastinger',
-  upload_here: 'Klikk eller dra filer hit for å laste opp',
-  delete: 'Slett',
-  delete_title: 'Slette "{name}"?',
-  delete_confirm: 'Er du sikker på at du vil slette denne filen?',
-  select: 'Velg',
-  select_all: 'Velg alle',
-  unselect_all: 'Fjern alle valg',
-  cancel: 'Avbryt',
-  delete_selected_title: 'Slette valgte filer?',
-  delete_selected_confirm: 'Er du sikker på at du vil slette de {count} valgte filene?',
 }

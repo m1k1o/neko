@@ -1,36 +1,22 @@
-// file transfer: the shared folder and the viewer's uploads into it
-import { app } from './app'
-import { client } from './client'
-import { api } from './api'
-import { nextId } from './dialogs'
+import type { Settings } from '../../core/types'
+import { client } from '@/state/client'
+import { api } from '@/state/api'
+import { nextId } from '@/state/dialogs'
+import { store, type Upload } from './store'
 
-export interface FileItem {
-  name: string
-  type: 'file' | 'dir'
-  size?: number
+export const refresh = () => client.send('filetransfer/update')
+
+// the admin's lock: users may not transfer files while it is set
+export const locked = (settings: Settings = client.state.settings) =>
+  settings.plugins?.['filetransfer.enabled'] === false
+export const toggleLock = () => api('POST', '/room/settings', { plugins: { 'filetransfer.enabled': locked() } })
+
+// whether this viewer gets the Files tab
+export function allowed() {
+  const f = store.state.files
+  const admin = client.isAdmin
+  return !!f?.enabled && (admin || !locked()) && (admin || f.user_download || f.user_upload)
 }
-
-export interface FileTransfer {
-  enabled: boolean
-  root_dir: string
-  user_download: boolean
-  user_upload: boolean
-  user_delete: boolean
-  files: FileItem[]
-}
-
-export interface Upload {
-  id: number
-  name: string
-  size: number
-  progress: number
-  status: 'inprogress' | 'completed' | 'failed'
-  error?: string
-}
-
-const s = app.state
-
-export const filesRefresh = () => client.send('filetransfer/update')
 
 // plain link so the browser streams the download; the token only goes in the URL when the
 // server runs without cookies (otherwise the session cookie authenticates it)
@@ -41,6 +27,7 @@ export const fileUrl = (name: string) =>
 export const fileDelete = (name: string) => api('DELETE', `/filetransfer?filename=${encodeURIComponent(name)}`)
 
 export function upload(files: FileList | File[]) {
+  const s = store.state
   for (const file of files) {
     const u: Upload = { id: nextId(), name: file.name, size: file.size, progress: 0, status: 'inprogress' }
     s.uploads.push(u)

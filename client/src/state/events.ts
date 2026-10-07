@@ -1,11 +1,10 @@
-// event wiring: turn v3 events into the legacy chat log + toasts
+// event wiring: turn v3 events into event lines (shown by the chat) and toasts
 import type { Settings } from '../core/types'
 import { app } from './app'
 import { client, name, hostId, isLocked, type LockResource } from './client'
 import { actions } from './actions'
 import { toast, tell } from './dialogs'
-import { pushChat, event, line, mutedByMe } from './chat'
-import { filesRefresh } from './files'
+import { bus, event } from './bus'
 import { EMOTES, showEmote } from './emotes'
 import { t } from '@/i18n'
 
@@ -15,7 +14,7 @@ let initialized = false
 let lastHost: string | null = null
 let lastSettings: Settings | null = null
 // last seen state per session; names outlive session/deleted (core drops the session first)
-const known: Record<string, { connected: boolean; canSend: boolean; name: string }> = {}
+const known: Record<string, { connected: boolean; name: string }> = {}
 
 // session/created events during system/init are the existing member list, not joins
 client.store.watch(
@@ -26,13 +25,8 @@ client.store.watch(
     lastHost = hostId()
     lastSettings = { ...client.state.settings, plugins: { ...client.state.settings.plugins } }
     for (const [sid, sess] of Object.entries(client.state.sessions))
-      known[sid] = {
-        connected: sess.state.is_connected,
-        canSend: sess.profile.plugins?.['chat.can_send'] !== false,
-        name: sess.profile.name,
-      }
+      known[sid] = { connected: sess.state.is_connected, name: sess.profile.name }
     event(id, t('notifications.connected', { name: '' }))
-    filesRefresh()
   },
 )
 
@@ -43,25 +37,13 @@ function onSession(id: string) {
   if (now !== !!known[id]?.connected && id !== client.state.session_id) {
     event(id, t(now ? 'notifications.connected' : 'notifications.disconnected', { name: '' }))
   }
-  const canSend = sess?.profile.plugins?.['chat.can_send'] !== false
-  if (known[id] && known[id].canSend !== canSend) {
-    const by = mutedByMe.delete(id) ? t('you') : t('somebody')
-    line(by, t(canSend ? 'notifications.unmuted' : 'notifications.muted', { name: name(id) }))
-  }
-  known[id] = { connected: now, canSend, name: sess?.profile.name ?? known[id]?.name ?? '' }
+  known[id] = { connected: now, name: sess?.profile.name ?? known[id]?.name ?? '' }
 }
 ev.on('session.created', onSession)
 ev.on('session.updated', onSession)
 ev.on('session.deleted', (id) => {
   const k = known[id]
-  if (k?.connected)
-    pushChat({
-      id,
-      name: k.name || t('somebody'),
-      type: 'event',
-      content: t('notifications.disconnected', { name: '' }),
-      created: new Date(),
-    })
+  if (k?.connected) bus.emit('log', id, k.name || t('somebody'), t('notifications.disconnected', { name: '' }))
   delete known[id]
 })
 
@@ -104,7 +86,7 @@ ev.on('room.screen.updated', (width, height, rate, id) => {
 
 ev.on('room.settings.updated', (next, id) => {
   if (lastSettings && id) {
-    for (const r of ['control', 'login', 'file_transfer'] as LockResource[]) {
+    for (const r of ['control', 'login'] as LockResource[]) {
       const locked = isLocked(r, next)
       if (locked !== isLocked(r, lastSettings)) event(id, t(`locks.${r}.notif_${locked ? 'locked' : 'unlocked'}`))
     }
@@ -112,6 +94,7 @@ ev.on('room.settings.updated', (next, id) => {
   lastSettings = { ...next, plugins: { ...next.plugins } }
 })
 
+// files dropped on the video go to the remote desktop through the core (room/upload/drop)
 ev.on('upload.drop.finished', (error) => error && toast(error.message, undefined, 'error'))
 
 ev.on('room.broadcast.status', (active, url) => (s.broadcast = { active, url: url || '' }))
@@ -121,30 +104,9 @@ ev.on('receive.broadcast', (sender, subject, body) => {
   if (subject === 'emote' && EMOTES.includes(body) && !s.ignored[sender]) showEmote(body)
 })
 
+// plugin events (`chat/*`, ...) are dispatched by the plugin registry
 ev.on('message', (event, payload) => {
-  switch (event) {
-    case 'chat/init':
-      s.chatEnabled = payload.enabled
-      break
-    case 'chat/message':
-      if (s.ignored[payload.id]) return
-      pushChat({
-        id: payload.id,
-        name: name(payload.id),
-        type: 'text',
-        content: payload.content.text,
-        created: new Date(payload.created),
-      })
-      s.texts++
-      if (s.settings.chat_sound && payload.id !== client.state.session_id) new Audio('chat.mp3').play().catch(() => {})
-      break
-    case 'filetransfer/update':
-      s.files = payload
-      break
-    case 'openinapp/init':
-      s.openInApp = !!payload.enabled
-      break
-  }
+  if (event === 'openinapp/init') s.openInApp = !!payload.enabled
 })
 
 ev.on('connection.closed', (error) => {

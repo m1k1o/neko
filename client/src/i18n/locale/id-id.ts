@@ -3,11 +3,8 @@ export const unsupported = 'peramban web ini tidak mendukung WebRTC'
 export const admin_loggedin = 'Anda masuk sebagai admin'
 export const you = 'Anda'
 export const somebody = 'Seseorang'
-export const send_a_message = 'Kirim pesan'
 
 export const side = {
-  chat: 'Obrolan',
-  files: 'Berkas',
   settings: 'Pengaturan',
 }
 
@@ -24,8 +21,6 @@ export const connect = {
 export const context = {
   ignore: 'Abaikan',
   unignore: 'Jangan Abaikan',
-  mute: 'Senyapkan',
-  unmute: 'Bunyikan',
   release: 'Paksa Lepas Kendali',
   take: 'Paksa Ambil Kendali',
   give: 'Berikan Kendali',
@@ -34,10 +29,6 @@ export const context = {
     kick_title: 'Keluarkan {name}?',
     kick_text: 'Apakah Anda yakin ingin mengeluarkan {name}?',
     ban_title: 'Blokir {name}?',
-    mute_title: 'Senyapkan {name}?',
-    mute_text: 'Apakah Anda yakin ingin mematikan suara {name}?',
-    unmute_title: 'Bunyikan {name}?',
-    unmute_text: 'Apakah Anda yakin ingin menyalakan suara {name}?',
     button_yes: 'Ya',
     button_cancel: 'Batal',
   },
@@ -68,14 +59,6 @@ export const locks = {
     unlocked: 'Ruangan Terbuka (untuk pengguna)',
     notif_locked: 'mengunci ruangan',
     notif_unlocked: 'membuka ruangan',
-  },
-  file_transfer: {
-    lock: 'Kunci Transfer Berkas (untuk pengguna)',
-    unlock: 'Buka Kunci Transfer Berkas (untuk pengguna)',
-    locked: 'Transfer Berkas Terkunci (untuk pengguna)',
-    unlocked: 'Transfer Berkas Terbuka (untuk pengguna)',
-    notif_locked: 'mengunci transfer berkas',
-    notif_unlocked: 'membuka transfer berkas',
   },
 }
 
@@ -113,20 +96,4 @@ export const notifications = {
   resolution: 'mengubah resolusi menjadi {width}x{height}@{rate}',
   banned: 'memblokir {name}',
   kicked: 'mengeluarkan {name}',
-  muted: 'mensenyapkan suara {name}',
-  unmuted: 'membunyikan suara {name}',
-}
-
-export const files = {
-  uploads: 'Unggahan',
-  upload_here: 'Klik atau seret berkas ke sini untuk mengunggah',
-  delete: 'Hapus',
-  delete_title: 'Hapus "{name}"?',
-  delete_confirm: 'Apakah Anda benar-benar ingin menghapus berkas ini?',
-  select: 'Pilih',
-  select_all: 'Pilih Semua',
-  unselect_all: 'Batalkan Semua Pilihan',
-  cancel: 'Batal',
-  delete_selected_title: 'Hapus berkas yang dipilih?',
-  delete_selected_confirm: 'Apakah Anda benar-benar ingin menghapus {count} berkas yang dipilih?',
 }

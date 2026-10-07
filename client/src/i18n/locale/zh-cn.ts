@@ -3,11 +3,8 @@ export const unsupported = '你的浏览器不支持 WebRTC'
 export const admin_loggedin = '您以管理员身份登录'
 export const you = '你'
 export const somebody = '某人'
-export const send_a_message = '发送消息'
 
 export const side = {
-  chat: '聊天',
-  files: '文件',
   settings: '设置',
 }
 
@@ -24,8 +21,6 @@ export const connect = {
 export const context = {
   ignore: '忽略',
   unignore: '取消忽略',
-  mute: '静音',
-  unmute: '取消静音',
   release: '强制释放控制',
   take: '强制接管控制',
   give: '移交控制',
@@ -34,10 +29,6 @@ export const context = {
     kick_title: '踢出 {name}?',
     kick_text: '你确定要踢出 {name} 吗?',
     ban_title: '封禁 {name}?',
-    mute_title: '静音 {name}?',
-    mute_text: '你确定要将 {name} 静音吗?',
-    unmute_title: '取消静音 {name}?',
-    unmute_text: '你确定要取消 {name} 的静音吗?',
     button_yes: '是',
     button_cancel: '取消',
   },
@@ -68,14 +59,6 @@ export const locks = {
     unlocked: '房间已为所有用户解锁',
     notif_locked: '房间已锁定',
     notif_unlocked: '房间已解锁',
-  },
-  file_transfer: {
-    lock: '锁定文件传输（对用户）',
-    unlock: '解锁文件传输（对用户）',
-    locked: '文件传输已锁定（对用户）',
-    unlocked: '文件传输已解锁（对用户）',
-    notif_locked: '已锁定文件传输',
-    notif_unlocked: '已解锁文件传输',
   },
 }
 
@@ -113,20 +96,4 @@ export const notifications = {
   resolution: '分辨率已更改为 {width}x{height}@{rate}',
   banned: '{name} 已被封禁',
   kicked: '{name} 已被踢出',
-  muted: '{name} 已被静音',
-  unmuted: '{name} 已取消静音',
-}
-
-export const files = {
-  uploads: '上传',
-  upload_here: '点击或拖动文件到此处上传',
-  delete: '删除',
-  delete_title: '删除"{name}"？',
-  delete_confirm: '确定要删除此文件吗？',
-  select: '选择',
-  select_all: '全选',
-  unselect_all: '取消全选',
-  cancel: '取消',
-  delete_selected_title: '删除选中的文件？',
-  delete_selected_confirm: '确定要删除选中的 {count} 个文件吗？',
 }

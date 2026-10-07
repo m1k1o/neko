@@ -4,7 +4,7 @@ import { app } from './app'
 import { client, name, hostId, isLocked, type LockResource } from './client'
 import { api } from './api'
 import { toast } from './dialogs'
-import { line } from './chat'
+import { bus, line } from './bus'
 import { sendEmote } from './emotes'
 import { t } from '@/i18n'
 
@@ -23,7 +23,8 @@ export const actions = {
     client.connect()
   },
   logout: () => {
-    Object.assign(s, { chat: [], texts: 0, uploads: [], ignored: {}, broadcast: { active: false, url: '' } })
+    bus.emit('logout')
+    Object.assign(s, { ignored: {}, broadcast: { active: false, url: '' } })
     return client.logout().catch(() => {})
   },
 
@@ -41,8 +42,7 @@ export const actions = {
   toggleLock(r: LockResource) {
     const locked = !isLocked(r)
     if (r === 'login') return api('POST', '/room/settings', { locked_logins: locked })
-    if (r === 'control') return api('POST', '/room/settings', { locked_controls: locked })
-    return api('POST', '/room/settings', { plugins: { 'filetransfer.enabled': !locked } })
+    return api('POST', '/room/settings', { locked_controls: locked })
   },
 
   // Kick & ban: assumed intent. The legacy client banned IP addresses inside the v2

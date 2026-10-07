@@ -3,11 +3,8 @@ export const unsupported = 'este navegador no soporta webrtc'
 export const admin_loggedin = 'Registrado como admin'
 export const you = 'Tú'
 export const somebody = 'Alguien'
-export const send_a_message = 'Enviar un mensaje'
 
 export const side = {
-  chat: 'Chat',
-  files: 'Archivos',
   settings: 'Configuración',
 }
 
@@ -24,8 +21,6 @@ export const connect = {
 export const context = {
   ignore: 'Ignorar',
   unignore: 'No ignorar',
-  mute: 'Silenciar',
-  unmute: 'No silenciar',
   release: 'Forzar liberar los controles',
   take: 'Forzar obtener los controles',
   give: 'Dar los controles',
@@ -34,10 +29,6 @@ export const context = {
     kick_title: 'Echar a {name}?',
     kick_text: 'Seguro que quiere echar a {name}?',
     ban_title: 'Bloquear a {name}?',
-    mute_title: 'Silenciar a {name}?',
-    mute_text: 'Seguro que quieres silenciar a {name}?',
-    unmute_title: 'Dejar de silenciar a {name}?',
-    unmute_text: 'Seguro que quieres dejar de silenciar a {name}?',
     button_yes: 'Sí',
     button_cancel: 'Cancelar',
   },
@@ -68,14 +59,6 @@ export const locks = {
     unlocked: 'Sala desbloqueada (para usuarios)',
     notif_locked: 'bloqueó la sala',
     notif_unlocked: 'desbloqueó la sala',
-  },
-  file_transfer: {
-    lock: 'Bloquear transferencia de archivos (para usuarios)',
-    unlock: 'Desbloquear transferencia de archivos (para usuarios)',
-    locked: 'Transferencia de archivos bloqueada (para usuarios)',
-    unlocked: 'Transferencia de archivos desbloqueada (para usuarios)',
-    notif_locked: 'transferencia de archivos bloqueada',
-    notif_unlocked: 'transferencia de archivos desbloqueada',
   },
 }
 
@@ -113,20 +96,4 @@ export const notifications = {
   resolution: 'cambió la resolución a {width}x{height}@{rate}',
   banned: 'bloqueó a {name}',
   kicked: 'expulsó a {name}',
-  muted: 'silenció a {name}',
-  unmuted: 'quitó el silencio a {name}',
-}
-
-export const files = {
-  uploads: 'Subidas',
-  upload_here: 'Haz clic o arrastra archivos aquí para subirlos',
-  delete: 'Eliminar',
-  delete_title: '¿Eliminar "{name}"?',
-  delete_confirm: '¿Realmente deseas eliminar este archivo?',
-  select: 'Seleccionar',
-  select_all: 'Seleccionar todo',
-  unselect_all: 'Deseleccionar todo',
-  cancel: 'Cancelar',
-  delete_selected_title: '¿Eliminar los archivos seleccionados?',
-  delete_selected_confirm: '¿Realmente deseas eliminar los {count} archivos seleccionados?',
 }

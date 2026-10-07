@@ -2,9 +2,10 @@ import { useRef, useState } from 'react'
 import { useNeko } from '@/state/hooks'
 import { client } from '@/state/client'
 import { ask } from '@/state/dialogs'
-import { fileUrl, fileDelete, filesRefresh, upload, type FileItem } from '@/state/files'
 import { a11y } from '@/components/a11y'
 import { t } from '@/i18n'
+import { store, type FileItem } from './store'
+import { fileUrl, fileDelete, refresh, upload } from './actions'
 import './files.scss'
 
 const size = (bytes?: number) => {
@@ -15,13 +16,14 @@ const size = (bytes?: number) => {
 }
 
 export function Files() {
-  const { app } = useNeko()
+  useNeko()
+  const s = store.state
   const [drag, setDrag] = useState(false)
   const [selecting, setSelecting] = useState(false)
   const [selected, setSelected] = useState<string[]>([])
   const input = useRef<HTMLInputElement>(null)
 
-  const f = app.files!
+  const f = s.files!
   const admin = client.isAdmin
   const canDownload = admin || f.user_download
   const canUpload = admin || f.user_upload
@@ -53,7 +55,7 @@ export function Files() {
     <div className="files">
       <div className="files-cwd">
         <p>{f.root_dir}</p>
-        <i className="fas fa-rotate-right refresh" {...a11y('Refresh')} onClick={filesRefresh} />
+        <i className="fas fa-rotate-right refresh" {...a11y('Refresh')} onClick={refresh} />
       </div>
       {plain.length > 2 && canDelete && (
         <div className="files-actions">
@@ -128,17 +130,17 @@ export function Files() {
         })}
       </div>
       <div className="transfer-area">
-        {app.uploads.length > 0 && (
+        {s.uploads.length > 0 && (
           <div className="transfers">
             <p className="transfers-list-header">
               <span>{t('files.uploads')}</span>
               <i
                 className="fas fa-xmark remove-transfer"
                 {...a11y('Clear finished uploads')}
-                onClick={() => (app.uploads = app.uploads.filter((u) => u.status === 'inprogress'))}
+                onClick={() => (s.uploads = s.uploads.filter((u) => u.status === 'inprogress'))}
               />
             </p>
-            {app.uploads.map((u) => (
+            {s.uploads.map((u) => (
               <div key={u.id} className="transfers-list-item">
                 <div className="transfer-info">
                   <i

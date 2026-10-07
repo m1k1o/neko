@@ -1,9 +1,9 @@
 // i18n: legacy locale files, missing keys fall back to English
 import { app } from '@/state/app'
 import { set } from '@/state/storage'
-import { messages, langs, type Lang } from './locale'
+import { messages, langs, extendMessages, type Lang } from './locale'
 
-export { langs, type Lang }
+export { langs, extendMessages, type Lang }
 
 const lookup = (m: unknown, key: string) => key.split('.').reduce<any>((o, k) => o?.[k], m)
 

@@ -1,6 +1,6 @@
 // emoji (legacy emoji.json + twitter sprite sheet), loaded once when chat first needs it
-import { app } from './app'
-import { set } from './storage'
+import { set } from '@/state/storage'
+import { chat } from './store'
 
 export interface EmojiGroup {
   id: string
@@ -10,7 +10,7 @@ export interface EmojiGroup {
 export const emoji = { groups: [] as EmojiGroup[], keywords: {} as Record<string, string[]>, names: new Set<string>() }
 let emojiLoading = false
 
-const s = app.state
+const s = chat.state
 
 export function loadEmoji() {
   if (emojiLoading) return

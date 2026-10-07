@@ -1,27 +1,22 @@
 import { useEffect } from 'react'
 import { useNeko } from '@/state/hooks'
-import { client, isLocked } from '@/state/client'
 import { remember } from '@/state/storage'
 import { a11y } from '@/components/a11y'
 import { t } from '@/i18n'
 import { Settings } from '@/features/settings'
-import { Chat } from '@/plugins/chat'
-import { Files } from '@/plugins/filetransfer'
+import { tabs as pluginTabs } from '@/plugins'
+import type { PluginTab } from '@/plugins/types'
 import './side.scss'
 
-const TABS = [
-  ['chat', 'fa-comment-alt'],
-  ['files', 'fa-file'],
-  ['settings', 'fa-sliders-h'],
-] as const
+// the plugins' tabs, then settings
+const settingsTab: PluginTab = { id: 'settings', icon: 'fa-sliders-h', component: Settings }
 
 export function Side() {
   const { app } = useNeko()
-  const admin = client.isAdmin
-  const f = app.files
-  const filesAllowed =
-    !!f?.enabled && (admin || !isLocked('file_transfer')) && (admin || f.user_download || f.user_upload)
-  const tab = app.tab === 'files' && !filesAllowed ? 'chat' : app.tab
+  const tabs = [...pluginTabs(), settingsTab].filter((x) => !x.visible || x.visible())
+  // a remembered tab that is not available now falls back to the first one
+  const tab = tabs.some((x) => x.id === app.tab) ? app.tab : tabs[0].id
+  const Page = tabs.find((x) => x.id === tab)!.component
 
   useEffect(() => {
     document.querySelector('aside')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -31,7 +26,7 @@ export function Side() {
     <aside className="neko-menu">
       <div className="tabs-container">
         <ul>
-          {TABS.filter(([id]) => id !== 'files' || filesAllowed).map(([id, icon]) => (
+          {tabs.map(({ id, icon }) => (
             <li
               key={id}
               className={tab === id ? 'active' : ''}
@@ -46,9 +41,7 @@ export function Side() {
         </ul>
       </div>
       <div className="page-container">
-        {tab === 'chat' && <Chat />}
-        {tab === 'files' && <Files />}
-        {tab === 'settings' && <Settings />}
+        <Page />
       </div>
     </aside>
   )

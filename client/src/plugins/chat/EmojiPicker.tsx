@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNeko } from '@/state/hooks'
-import { emoji, pickedEmoji } from '@/state/emoji'
 import { a11y, closeOn } from '@/components/a11y'
+import { chat } from './store'
+import { emoji, pickedEmoji } from './emoji'
 import './emoji.scss'
 
 export function EmojiPicker({ onPick, onClose }: { onPick: (name: string) => void; onClose: () => void }) {
-  const { app } = useNeko()
+  useNeko()
   const [search, setSearch] = useState('')
   const [hovered, setHovered] = useState('')
   const [active, setActive] = useState(0)
@@ -15,7 +16,7 @@ export function EmojiPicker({ onPick, onClose }: { onPick: (name: string) => voi
 
   useEffect(() => closeOn(onClose), [onClose])
 
-  const groups = [{ id: 'recent', name: 'Recent', list: app.emojiRecent }, ...emoji.groups]
+  const groups = [{ id: 'recent', name: 'Recent', list: chat.state.emojiRecent }, ...emoji.groups]
   const q = search.trim().toLowerCase()
   const filtered = q
     ? [...emoji.names].filter((n) => n.includes(q) || emoji.keywords[n]?.some((k) => k.includes(q)))

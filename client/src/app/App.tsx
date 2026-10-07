@@ -2,6 +2,7 @@ import './boot'
 import { useNeko } from '@/state/hooks'
 import { setSetting } from '@/state/settings'
 import { t } from '@/i18n'
+import { memberMenu } from '@/plugins'
 import { Logo } from '@/components/Logo'
 import { Dialog } from '@/components/Dialog'
 import { Toasts } from '@/components/Toasts'
@@ -51,7 +52,7 @@ export function App() {
         </div>
         {!videoOnly && <RoomBar />}
       </main>
-      {!videoOnly && <MemberMenu />}
+      {!videoOnly && <MemberMenu items={memberMenu()} />}
       {!videoOnly && app.side && <Side />}
       {!connected && <Connect />}
       {!videoOnly && <Toasts />}

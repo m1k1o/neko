@@ -2,11 +2,12 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useNeko } from '@/state/hooks'
 import { openMenu } from '@/state/actions'
 import { isMuted } from '@/state/client'
-import { sendChat } from '@/state/chat'
-import { loadEmoji } from '@/state/emoji'
 import { a11y } from '@/components/a11y'
 import { Avatar } from '@/components/Avatar'
 import { t } from '@/i18n'
+import { chat } from './store'
+import { sendChat } from './actions'
+import { loadEmoji } from './emoji'
 import { Markdown } from './Markdown'
 import { EmojiPicker } from './EmojiPicker'
 import './emoji-sprites.scss'
@@ -20,14 +21,15 @@ const time = (d: Date) =>
 const MAX_MESSAGE = 512
 
 export function Chat() {
-  const { app, state } = useNeko()
+  const { state } = useNeko()
+  const c = chat.state
   const [text, setText] = useState('')
   const [picker, setPicker] = useState(false)
   const history = useRef<HTMLUListElement>(null)
   const input = useRef<HTMLTextAreaElement>(null)
 
   useEffect(loadEmoji, [])
-  const last = app.chat[app.chat.length - 1]?.seq
+  const last = c.lines[c.lines.length - 1]?.seq
   useLayoutEffect(() => {
     history.current!.scrollTop = history.current!.scrollHeight
   }, [last])
@@ -54,7 +56,7 @@ export function Chat() {
     })
   }
 
-  const lines = app.chat
+  const lines = c.lines
   const nameOf = (m: (typeof lines)[number]) => state.sessions[m.id]?.profile.name ?? m.name
   return (
     <div className="chat">
@@ -85,7 +87,7 @@ export function Chat() {
           ),
         )}
       </ul>
-      {app.chatEnabled && !isMuted() && (
+      {c.enabled && !isMuted() && (
         <div className="chat-send">
           <div className="accent" />
           <div className="text-container">
