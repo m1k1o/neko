@@ -1,0 +1,165 @@
+// event wiring: turn v3 events into the legacy chat log + toasts
+import type { Settings } from '../core/types'
+import { app } from './app'
+import { client, name, hostId, isLocked, type LockResource } from './client'
+import { actions } from './actions'
+import { toast, tell } from './dialogs'
+import { pushChat, event, line, mutedByMe } from './chat'
+import { filesRefresh } from './files'
+import { EMOTES, showEmote } from './emotes'
+import { t } from '@/i18n'
+
+const s = app.state
+const ev = client.events
+let initialized = false
+let lastHost: string | null = null
+let lastSettings: Settings | null = null
+// last seen state per session; names outlive session/deleted (core drops the session first)
+const known: Record<string, { connected: boolean; canSend: boolean; name: string }> = {}
+
+// session/created events during system/init are the existing member list, not joins
+client.store.watch(
+  () => client.state.session_id,
+  (id) => {
+    initialized = !!id
+    if (!id) return
+    lastHost = hostId()
+    lastSettings = { ...client.state.settings, plugins: { ...client.state.settings.plugins } }
+    for (const [sid, sess] of Object.entries(client.state.sessions))
+      known[sid] = {
+        connected: sess.state.is_connected,
+        canSend: sess.profile.plugins?.['chat.can_send'] !== false,
+        name: sess.profile.name,
+      }
+    event(id, t('notifications.connected', { name: '' }))
+    filesRefresh()
+  },
+)
+
+function onSession(id: string) {
+  if (!initialized) return
+  const sess = client.state.sessions[id]
+  const now = !!sess?.state.is_connected
+  if (now !== !!known[id]?.connected && id !== client.state.session_id) {
+    event(id, t(now ? 'notifications.connected' : 'notifications.disconnected', { name: '' }))
+  }
+  const canSend = sess?.profile.plugins?.['chat.can_send'] !== false
+  if (known[id] && known[id].canSend !== canSend) {
+    const by = mutedByMe.delete(id) ? t('you') : t('somebody')
+    line(by, t(canSend ? 'notifications.unmuted' : 'notifications.muted', { name: name(id) }))
+  }
+  known[id] = { connected: now, canSend, name: sess?.profile.name ?? known[id]?.name ?? '' }
+}
+ev.on('session.created', onSession)
+ev.on('session.updated', onSession)
+ev.on('session.deleted', (id) => {
+  const k = known[id]
+  if (k?.connected)
+    pushChat({
+      id,
+      name: k.name || t('somebody'),
+      type: 'event',
+      content: t('notifications.disconnected', { name: '' }),
+      created: new Date(),
+    })
+  delete known[id]
+})
+
+ev.on('room.control.host', (hasHost, hostID, by) => {
+  const me = client.state.session_id
+  if (hasHost && hostID) {
+    if (by && by !== hostID) event(by, t('notifications.controls_given', { name: name(hostID) }))
+    else if (lastHost && lastHost !== hostID)
+      event(hostID, t('notifications.controls_taken_steal', { name: name(lastHost) }))
+    else event(hostID, t('notifications.controls_taken', { name: '' }))
+    if (hostID === me) toast(t('notifications.controls_taken', { name: t('you') }))
+    else if (lastHost === me) toast(t('notifications.controls_released', { name: t('you') }))
+  } else if (lastHost) {
+    if (by && by !== lastHost) event(by, t('notifications.controls_released_steal', { name: name(lastHost) }))
+    else event(lastHost, t('notifications.controls_released', { name: '' }))
+    if (lastHost === me) toast(t('notifications.controls_released', { name: t('you') }))
+  }
+  lastHost = hasHost ? (hostID ?? null) : null
+})
+
+// connection toasts, as the legacy client showed them
+client.store.watch(
+  () => client.state.connection.status,
+  (status, old) => {
+    if (status === 'connecting' && old === 'connected') toast(t('connection.reconnecting'), undefined, 'warning')
+    if (status === 'connected') {
+      s.toasts = []
+      toast(t('connection.connected'), undefined, 'success')
+    }
+  },
+)
+
+ev.on('room.control.request', (id) => {
+  if (!s.ignored[id]) toast(t('notifications.controls_requesting', { name: name(id) }))
+})
+
+ev.on('room.screen.updated', (width, height, rate, id) => {
+  if (id) event(id, t('notifications.resolution', { width, height, rate }))
+})
+
+ev.on('room.settings.updated', (next, id) => {
+  if (lastSettings && id) {
+    for (const r of ['control', 'login', 'file_transfer'] as LockResource[]) {
+      const locked = isLocked(r, next)
+      if (locked !== isLocked(r, lastSettings)) event(id, t(`locks.${r}.notif_${locked ? 'locked' : 'unlocked'}`))
+    }
+  }
+  lastSettings = { ...next, plugins: { ...next.plugins } }
+})
+
+ev.on('upload.drop.finished', (error) => error && toast(error.message, undefined, 'error'))
+
+ev.on('room.broadcast.status', (active, url) => (s.broadcast = { active, url: url || '' }))
+
+ev.on('receive.broadcast', (sender, subject, body) => {
+  // other clients may send anything; only known names become class names on screen
+  if (subject === 'emote' && EMOTES.includes(body) && !s.ignored[sender]) showEmote(body)
+})
+
+ev.on('message', (event, payload) => {
+  switch (event) {
+    case 'chat/init':
+      s.chatEnabled = payload.enabled
+      break
+    case 'chat/message':
+      if (s.ignored[payload.id]) return
+      pushChat({
+        id: payload.id,
+        name: name(payload.id),
+        type: 'text',
+        content: payload.content.text,
+        created: new Date(payload.created),
+      })
+      s.texts++
+      if (s.settings.chat_sound && payload.id !== client.state.session_id) new Audio('chat.mp3').play().catch(() => {})
+      break
+    case 'filetransfer/update':
+      s.files = payload
+      break
+    case 'openinapp/init':
+      s.openInApp = !!payload.enabled
+      break
+  }
+})
+
+ev.on('connection.closed', (error) => {
+  initialized = false
+  if (!error) return
+  const reason =
+    error.message === 'session deleted'
+      ? t('connection.kicked')
+      : error.message === 'connection replaced'
+        ? t('connection.replaced')
+        : error.message
+  // session gone server-side (kicked, logged out elsewhere, server restarted): back to the login
+  // screen. Any other failure, such as no network, keeps the session for the Connect button.
+  client.api
+    .req('GET', '/whoami')
+    .catch((err) => (err.status === 401 ? actions.logout() : undefined))
+    .finally(() => tell(t('connection.disconnected'), reason))
+})

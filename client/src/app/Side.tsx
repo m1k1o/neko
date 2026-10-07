@@ -1,21 +1,15 @@
 import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import {
-  useNeko,
-  actions,
-  t,
-  isLocked,
-  isMuted,
-  setSetting,
-  remember,
-  client,
-  ask,
-  emoji,
-  loadEmoji,
-  pickedEmoji,
-  a11y,
-  closeOn,
-  type FileItem,
-} from './neko'
+import { useNeko } from '@/state/hooks'
+import { actions } from '@/state/actions'
+import { client, isLocked, isMuted } from '@/state/client'
+import { setSetting } from '@/state/settings'
+import { remember } from '@/state/storage'
+import { ask } from '@/state/dialogs'
+import { sendChat, openInApp } from '@/state/chat'
+import { emoji, loadEmoji, pickedEmoji } from '@/state/emoji'
+import { fileUrl, fileDelete, filesRefresh, upload, type FileItem } from '@/state/files'
+import { a11y, closeOn } from '@/components/a11y'
+import { t } from '@/i18n'
 import { parseSafe, type Node as MdNode } from './markdown'
 import { Avatar, openMenu } from './Room'
 import type { MemberData } from '../core/types'
@@ -94,7 +88,7 @@ function Chat() {
     if (e.key !== 'Enter' || e.shiftKey || e.nativeEvent.isComposing) return
     e.preventDefault()
     if (!text.trim()) return
-    actions.sendChat(text)
+    sendChat(text)
     setText('')
   }
 
@@ -189,7 +183,7 @@ function Markdown({ source }: { source: string }) {
   const open = (href: string) => (e: React.MouseEvent) => {
     if (!inApp || !app.settings.links_in_app) return
     e.preventDefault()
-    actions.openInApp(href)
+    openInApp(href)
   }
 
   const render = (list: MdNode[]): React.ReactNode[] =>
@@ -223,7 +217,7 @@ function Markdown({ source }: { source: string }) {
                 <i
                   className="open-in-app fas fa-arrow-up-right-from-square"
                   {...a11y('Open in app')}
-                  onClick={() => actions.openInApp(n.href)}
+                  onClick={() => openInApp(n.href)}
                 />
               )}
             </Fragment>
@@ -372,20 +366,20 @@ function Files() {
     } else if (selecting) toggle(item.name)
   }
   const deleteOne = (n: string) =>
-    ask(t('files.delete_title', { name: n }), t('files.delete_confirm')).then((ok) => ok && actions.fileDelete(n))
+    ask(t('files.delete_title', { name: n }), t('files.delete_confirm')).then((ok) => ok && fileDelete(n))
   const deleteSelected = async () => {
     if (!(await ask(t('files.delete_selected_title'), t('files.delete_selected_confirm', { count: selected.length }))))
       return
     const names = selected
     stopSelecting()
-    for (const n of names) await actions.fileDelete(n)
+    for (const n of names) await fileDelete(n)
   }
 
   return (
     <div className="files">
       <div className="files-cwd">
         <p>{f.root_dir}</p>
-        <i className="fas fa-rotate-right refresh" {...a11y('Refresh')} onClick={actions.filesRefresh} />
+        <i className="fas fa-rotate-right refresh" {...a11y('Refresh')} onClick={filesRefresh} />
       </div>
       {plain.length > 2 && canDelete && (
         <div className="files-actions">
@@ -444,7 +438,7 @@ function Files() {
               <p className="file-size">{size(item.size)}</p>
               {/* native download: the browser's download manager shows progress */}
               {!selecting && item.type !== 'dir' && canDownload && (
-                <a href={actions.fileUrl(item.name)} download={item.name}>
+                <a href={fileUrl(item.name)} download={item.name}>
                   <i className="fas fa-download download" aria-label={`Download ${item.name}`} />
                 </a>
               )}
@@ -495,7 +489,7 @@ function Files() {
             className={`upload-area${drag ? ' upload-area-drag' : ''}`}
             onDragOver={(e) => (e.preventDefault(), setDrag(true))}
             onDragLeave={(e) => (e.preventDefault(), setDrag(false))}
-            onDrop={(e) => (e.preventDefault(), setDrag(false), actions.upload(e.dataTransfer.files))}
+            onDrop={(e) => (e.preventDefault(), setDrag(false), upload(e.dataTransfer.files))}
             {...a11y(t('files.upload_here'))}
             onClick={() => input.current!.click()}
           >
@@ -507,7 +501,7 @@ function Files() {
               multiple
               hidden
               onChange={(e) => {
-                if (e.target.files) actions.upload(e.target.files)
+                if (e.target.files) upload(e.target.files)
                 e.target.value = '' // so the same file can be chosen again
               }}
             />

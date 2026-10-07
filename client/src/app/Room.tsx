@@ -1,5 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNeko, actions, t, isMuted, client, app, ask, tell, langs, setLang, a11y, closeOn, EMOTES } from './neko'
+import { useNeko } from '@/state/hooks'
+import { actions } from '@/state/actions'
+import { app } from '@/state/app'
+import { client, isMuted } from '@/state/client'
+import { ask, tell } from '@/state/dialogs'
+import { mute } from '@/state/chat'
+import { EMOTES } from '@/state/emotes'
+import { a11y, closeOn } from '@/components/a11y'
+import { t, langs, setLang } from '@/i18n'
 import './styles/members.scss'
 import './styles/menu.scss'
 import './styles/controls.scss'
@@ -152,7 +160,7 @@ export function MemberMenu() {
                 confirmThen(
                   t(`context.confirm.${muted ? 'unmute' : 'mute'}_title`, { name: n }),
                   t(`context.confirm.${muted ? 'unmute' : 'mute'}_text`, { name: n }),
-                  () => actions.mute(id!, !muted),
+                  () => mute(id!, !muted),
                 )
               }
             >

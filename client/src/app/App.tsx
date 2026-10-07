@@ -1,17 +1,13 @@
 import { Component, useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
-import {
-  useNeko,
-  actions,
-  t,
-  isLocked,
-  setSetting,
-  remember,
-  client,
-  tell,
-  a11y,
-  closeOn,
-  type LockResource,
-} from './neko'
+import './boot'
+import { useNeko } from '@/state/hooks'
+import { actions } from '@/state/actions'
+import { client, isLocked, type LockResource } from '@/state/client'
+import { setSetting } from '@/state/settings'
+import { remember } from '@/state/storage'
+import { tell } from '@/state/dialogs'
+import { a11y, closeOn } from '@/components/a11y'
+import { t } from '@/i18n'
 import { Video } from './Video'
 import { Members, MemberMenu, RoomMenu, Controls, Emotes } from './Room'
 import { Side } from './Side'

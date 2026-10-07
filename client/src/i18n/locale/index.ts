@@ -31,3 +31,12 @@ export const messages = {
   id,
   pl,
 }
+
+export type Lang = keyof typeof messages
+export const langs = Object.keys(messages) as Lang[]
+
+export function detectLang(): Lang {
+  const browser = navigator.language.toLowerCase()
+  const base = browser.split('-')[0]
+  return (langs.find((l) => l === browser) ?? langs.find((l) => l.startsWith(base)) ?? 'en') as Lang
+}

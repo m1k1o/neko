@@ -1,4 +1,4 @@
 src/core/keyboard/guacamole.js
-src/app/locale/
+src/i18n/locale/
 public/
 dist/
