@@ -31,10 +31,12 @@ There exist a few pre-loaded internal plugins that are shipped with Neko:
 The chat plugin is a simple pre-loaded internal plugin that allows you to chat with other users in the same session. The chat messages are sent to the server and then broadcasted to all users in the same session.
 
 <ConfigurationTab options={{
-  'chat.enabled': true
+  'chat.enabled': true,
+  'chat.max_length': 512,
 }} />
 
 - <Def id="chat.enabled" /> enables the chat support. If set to `false`, the chat is disabled.
+- <Def id="chat.max_length" /> is the longest accepted chat message, counted in characters (not bytes). Longer messages are rejected with `400` over the API and dropped over the websocket. Set to `0` to disable the limit.
 
 The chat plugin extends user profile and room settings by adding the following fields:
 

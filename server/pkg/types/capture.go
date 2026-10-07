@@ -182,8 +182,12 @@ func (config *VideoConfig) GetPipeline(screen ScreenSize) (string, error) {
 		}),
 	}
 
+	// queue holding at most the newest raw frame: when the encoder falls behind, older frames are
+	// dropped instead of piling up (a default queue buffers up to 1s, which becomes input lag)
+	const queue = "queue max-size-buffers=1 max-size-time=0 max-size-bytes=0 leaky=downstream"
+
 	// get fps pipeline
-	fpsPipeline := "! video/x-raw ! videoconvert ! queue"
+	fpsPipeline := "! video/x-raw ! videoconvert ! " + queue
 	if config.Fps != "" {
 		eval, err := gval.Full(language...).NewEvaluable(config.Fps)
 		if err != nil {
@@ -195,7 +199,7 @@ func (config *VideoConfig) GetPipeline(screen ScreenSize) (string, error) {
 			return "", err
 		}
 
-		fpsPipeline = fmt.Sprintf("! capsfilter caps=video/x-raw,framerate=%d/100 name=framerate ! videoconvert ! queue", int(val*100))
+		fpsPipeline = fmt.Sprintf("! capsfilter caps=video/x-raw,framerate=%d/100 name=framerate ! videoconvert ! %s", int(val*100), queue)
 	}
 
 	// get scale pipeline
@@ -222,7 +226,7 @@ func (config *VideoConfig) GetPipeline(screen ScreenSize) (string, error) {
 		}
 
 		// element videoscale parameter method to 0 meaning nearest neighbor
-		scalePipeline = fmt.Sprintf("! videoscale method=0 ! capsfilter caps=video/x-raw,width=%d,height=%d name=resolution ! queue", w, h)
+		scalePipeline = fmt.Sprintf("! videoscale method=0 ! capsfilter caps=video/x-raw,width=%d,height=%d name=resolution ! %s", w, h, queue)
 	}
 
 	// get encoder pipeline

@@ -77,6 +77,11 @@ func (h *MembersHandler) membersCreate(w http.ResponseWriter, r *http.Request) e
 		return utils.HttpBadRequest("username cannot be empty")
 	}
 
+	// file and object providers use the username as the member id, which ends up in URL paths
+	if data.Username != utils.SafeID(data.Username) {
+		return utils.HttpBadRequest("username may only contain letters, digits, '.', '_' and '-', at most 64 characters, and may not start or end with '.' or '-'")
+	}
+
 	if data.Password == "" {
 		return utils.HttpBadRequest("password cannot be empty")
 	}

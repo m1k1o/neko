@@ -2,7 +2,14 @@
 
 ## master {#master}
 
-No unreleased changes yet.
+### Fixes {#master-fixes}
+- Fixed video timestamps running slow when the encoder falls behind: frames captured late or dropped before the encoder made the stream's clock lag real time, so browsers buffered up to seconds of video and lost lip sync. RTP timestamps now follow the time between captured frames ([#712](https://github.com/m1k1o/neko/pull/712)).
+
+### Changes {#master-changes}
+- Generated video pipelines keep at most one raw frame queued, so a slow encoder drops frames instead of adding latency.
+- New metric `neko_capture_streamsink_frames`: video frames produced per pipeline; a rate below the configured fps means the encoder falls behind.
+- Session ids on the `multiuser` and `noauth` providers are built from a sanitised login name (the name itself is shown as typed); `POST /api/members` rejects usernames that would not be safe in a URL path.
+- Chat messages are limited to `chat.max_length` characters (default 512, the web client's input limit); longer ones are rejected over the API and dropped over the websocket.
 
 ## [n.eko v3.1.6](https://github.com/m1k1o/neko/releases/tag/v3.1.6) {#v3.1.6}
 
