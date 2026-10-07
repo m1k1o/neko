@@ -13,7 +13,11 @@
     "resolveJsonModule": true,
     "verbatimModuleSyntax": false,
     "allowImportingTsExtensions": true,
-    "erasableSyntaxOnly": true
+    "erasableSyntaxOnly": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   },
   "include": ["src"],
   "exclude": ["src/**/*.check.ts"]

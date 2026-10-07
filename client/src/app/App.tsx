@@ -15,7 +15,7 @@ import {
 import { Video } from './Video'
 import { Members, MemberMenu, RoomMenu, Controls, Emotes } from './Room'
 import { Side } from './Side'
-import logo from '../assets/images/logo.svg'
+import logo from '@/assets/images/logo.svg'
 import './styles/app.scss'
 import './styles/header.scss'
 import './styles/connect.scss'

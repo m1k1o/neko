@@ -1,9 +1,8 @@
 @charset "utf-8";
 
+// global styles: reset, fonts, the page itself and the keyboard focus ring for icon controls
 @import 'reset';
-@import 'vendor/font-whitney';
-@import 'vendor/emote';
-@import 'vendor/emoji';
+@import 'font-whitney';
 
 html,
 body {
@@ -18,7 +17,7 @@ body {
   min-width: 320px;
 }
 
-// keyboard focus for icon controls (see a11y() in app/neko.ts)
+// keyboard focus for icon controls (see a11y() in components/a11y.ts)
 [role='button'],
 [role='menuitem'],
 [role='tab'],

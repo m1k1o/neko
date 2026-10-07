@@ -13,7 +13,7 @@ export default defineConfig({
     preprocessorOptions: {
       scss: {
         // legacy styles rely on global variables and @import
-        additionalData: '@import "@/assets/styles/variables";\n',
+        additionalData: '@import "@/design/variables";\n',
         silenceDeprecations: ['import', 'global-builtin', 'color-functions'],
       },
     },
