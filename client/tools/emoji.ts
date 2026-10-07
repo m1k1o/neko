@@ -1,4 +1,4 @@
-// Regenerates src/assets/styles/vendor/_emoji.scss and public/emoji.json: `npm run build:emoji`
+// Regenerates src/plugins/chat/emoji-sprites.scss and public/emoji.json: `npm run build:emoji`
 import * as fs from 'node:fs'
 import { createRequire } from 'node:module'
 import { custom } from './emoji_custom.ts'
@@ -60,7 +60,7 @@ for (const emoji of custom) {
   keywords[emoji.name] = emoji.keywords
 
   // prettier-ignore
-  css.push(`&[data-emoji='${emoji.name}'] { background-size: contain; background-image: url('../../images/emoji/${emoji.file}'); }`)
+  css.push(`&[data-emoji='${emoji.name}'] { background-size: contain; background-image: url('../../assets/images/emoji/${emoji.file}'); }`)
 }
 
 for (const source of datasource) {
@@ -144,7 +144,7 @@ for (const source of datasource) {
 }
 
 fs.writeFile(
-  'src/assets/styles/vendor/_emoji.scss',
+  'src/plugins/chat/emoji-sprites.scss',
   `
 .emoji {
   display: inline-block;

@@ -1,4 +1,4 @@
-// Runnable self-check: `node src/app/markdown.check.ts`
+// Runnable self-check: `node src/plugins/chat/markdown.check.ts`
 import assert from 'node:assert/strict'
 import { parse, parseSafe, FORMAT_LIMIT } from './markdown.ts'
 

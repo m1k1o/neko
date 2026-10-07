@@ -10,6 +10,13 @@ import { t } from '@/i18n'
 
 const s = app.state
 
+// the member context menu, opened from the member list and from chat authors
+export const openMenu = (e: React.MouseEvent, id: string) => {
+  e.preventDefault()
+  e.stopPropagation()
+  if (id !== client.state.session_id) s.menu = { x: e.clientX, y: e.clientY, id }
+}
+
 export const actions = {
   login: async (username: string, password: string) => {
     await client.login(username, password)

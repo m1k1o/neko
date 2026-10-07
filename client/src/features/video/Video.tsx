@@ -1,14 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNeko } from '@/state/hooks'
 import { actions } from '@/state/actions'
-import { app } from '@/state/app'
 import { client } from '@/state/client'
 import { a11y, closeOn } from '@/components/a11y'
 import { t } from '@/i18n'
-import './styles/video.scss'
-import './styles/emote.scss'
-import './styles/resolution.scss'
-import './styles/clipboard.scss'
+import { Emote } from '@/features/emotes'
+import { Resolution } from './Resolution'
+import { Clipboard } from './Clipboard'
+import './video.scss'
 
 // Firefox reports readText but hangs; Safari needs a gesture per read -> use the textarea fallback there
 const ua = navigator.userAgent
@@ -152,80 +151,6 @@ export function Video({ hideControls, extraControls }: { hideControls: boolean; 
         {menu === 'resolution' && admin && <Resolution onPick={() => setMenu(null)} />}
         {menu === 'clipboard' && hosting && <Clipboard />}
       </div>
-    </div>
-  )
-}
-
-function Resolution({ onPick }: { onPick: () => void }) {
-  const { state } = useNeko()
-  const { width, height, rate } = state.screen.size
-  return (
-    <ul className="resolution" role="menu" style={{ top: 50, right: 50 }} onClick={(e) => e.stopPropagation()}>
-      {state.screen.configurations.map((c, i) => (
-        <li
-          key={i}
-          className={c.width === width && c.height === height && c.rate === rate ? 'active' : ''}
-          {...a11y(`${c.width}x${c.height}@${c.rate}`, 'menuitem')}
-          onClick={() => (client.setScreenSize(c.width, c.height, c.rate), onPick())}
-        >
-          <i className="fas fa-desktop"></i>
-          <span>
-            {c.width}x{c.height}
-          </span>
-          <small>{c.rate}</small>
-        </li>
-      ))}
-    </ul>
-  )
-}
-
-function Clipboard() {
-  const { state } = useNeko()
-  const remote = state.control.clipboard?.text ?? ''
-  const [text, setText] = useState(remote)
-  useEffect(() => setText(remote), [remote]) // follows what is copied on the remote while open
-  const timer = useRef(0)
-  return (
-    <div className="clipboard" onClick={(e) => e.stopPropagation()}>
-      <textarea
-        autoFocus
-        value={text}
-        onFocus={(e) => e.target.select()}
-        onChange={(e) => {
-          setText(e.target.value)
-          clearTimeout(timer.current)
-          timer.current = window.setTimeout(() => client.send('clipboard/set', { text: e.target.value }), 500)
-        }}
-      />
-    </div>
-  )
-}
-
-const rnd = (a: number, b: number) => a + Math.random() * (b - a)
-
-// seven copies float up and fade, like the legacy anime.js version
-function Emote({ id, type }: { id: string; type: string }) {
-  const ref = useRef<HTMLDivElement>(null)
-  useEffect(() => {
-    const anims = [...ref.current!.children].map((el, i) => {
-      const side = (odd: boolean) => (odd ? rnd(0, 50) : rnd(-50, 0)) + '%'
-      return (el as HTMLElement).animate(
-        [
-          { left: side(!!(i % 2)), top: '0%', opacity: 0, transform: 'rotate(0deg)' },
-          { left: side(!!(i % 2)), opacity: 1, offset: 0.33 },
-          { left: side(!(i % 2)), opacity: 0.5, offset: 0.66 },
-          { left: side(!!(i % 2)), top: rnd(-600, -200) + '%', opacity: 0, transform: `rotate(${rnd(-35, 35)}deg)` },
-        ],
-        { duration: rnd(1000, 2000), easing: 'ease-in-out', fill: 'forwards' },
-      ).finished
-    })
-    Promise.all(anims).then(() => delete app.state.emotes[id])
-  }, [id])
-  return (
-    <div ref={ref} className="emote-container">
-      {Array.from({ length: 7 }, (_, i) => (
-        <div key={i} className={`emote ${type}`} />
-      ))}
     </div>
   )
 }
