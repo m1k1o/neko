@@ -230,3 +230,26 @@ func TestBitrateDuringPipelineRestart(t *testing.T) {
 		s.destroyPipeline()
 	}
 }
+
+func TestSampleDuration(t *testing.T) {
+	const frame = 40 * time.Millisecond
+	tests := []struct {
+		name     string
+		lastPTS  time.Duration
+		pts      time.Duration
+		duration time.Duration
+		want     time.Duration
+	}{
+		{"first sample keeps its duration", -1, 0, frame, frame},
+		{"next frame", 0, frame, frame, frame},
+		{"late capture: ximagesrc's short duration is not the gap", 0, frame, 2 * time.Millisecond, frame},
+		{"two frames dropped before the encoder", 0, 3 * frame, frame, 3 * frame},
+		{"unknown pts", 0, -1, frame, frame},
+		{"timestamps going backwards", 2 * frame, frame, frame, frame},
+	}
+	for _, tt := range tests {
+		if got := sampleDuration(tt.lastPTS, types.Sample{PTS: tt.pts, Duration: tt.duration}); got != tt.want {
+			t.Errorf("%s: got %v, want %v", tt.name, got, tt.want)
+		}
+	}
+}
