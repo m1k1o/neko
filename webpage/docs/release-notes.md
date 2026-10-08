@@ -3,7 +3,7 @@
 ## master {#master}
 
 ### New Features {#master-feats}
-- Rewrote the web client in React with a framework-free core library (`client/src/core`) that uses only the v3 API, so it works with `NEKO_LEGACY=false`. The look and features of the Vue 2 client are kept: chat with markdown, emoji and open-in-app links, emotes, file transfer, member admin actions, locks, broadcast, microphone, all translations and URL parameters.
+- Rewrote the web client in React with a framework-free core library (`client/core`, published as the npm package `@m1k1o/neko`) that uses only the v3 API, so it works with `NEKO_LEGACY=false`. The look and features of the Vue 2 client are kept: chat with markdown, emoji and open-in-app links, emotes, file transfer, member admin actions, locks, broadcast, microphone, all translations and URL parameters.
 - Kick now removes the session (the user may log in again). Ban sets `can_login: false` and is offered when the authentication provider stores accounts (`file`, `object`), with a list to unban members in Settings.
 - The client reconnects by itself when its websocket goes silent (dropped networks often never close it), and asks for a new media stream when the server drops it.
 - Ctrl+V pastes what was copied most recently on either side: local clipboard text is sent to the remote first when it is newer than the remote's. Text entered through an IME or an on-screen keyboard is typed as key events.
