@@ -41,6 +41,10 @@ jobs:
         working-directory: ./client
         run: npm run build
 
+      - name: Build core package (@m1k1o/neko)
+        working-directory: ./client
+        run: npm run build:core
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         if: ${{ inputs.with-artifact }}
