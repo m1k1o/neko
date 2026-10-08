@@ -1,7 +1,7 @@
 import { client } from '@/state/client'
 import { bus, event } from '@/state/bus'
 import { t } from '@/i18n'
-import type { Plugin } from '../types'
+import type { Plugin } from '@/plugins/types'
 import { Files } from './Files'
 import { FileLock } from './FileLock'
 import { store } from './store'

@@ -3,7 +3,6 @@ import { useNeko } from '@/state/hooks'
 import { closeOn } from '@/components/a11y'
 import { Logo } from '@/components/Logo'
 import { t } from '@/i18n'
-import { version } from '../../../package.json'
 import './about.scss'
 
 export function About() {
@@ -25,7 +24,7 @@ export function About() {
               <i className="fas fa-book" /> Documentation
             </a>
           </p>
-          <p className="version">client {version}</p>
+          <p className="version">client {__APP_VERSION__}</p>
           <button onClick={() => (app.about = false)}>{t('connection.button_confirm')}</button>
         </div>
       </div>

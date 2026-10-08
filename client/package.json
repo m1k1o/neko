@@ -12,7 +12,7 @@
     "test:e2e": "node e2e.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check": "tsc --noEmit && prettier --check . && eslint src core/src && node core/src/store.check.ts && node core/src/client.check.ts && node src/plugins/chat/markdown.check.ts",
+    "check": "tsc --noEmit && prettier --check . && eslint src core/src && node tools/cycles.mjs && node core/src/store.check.ts && node core/src/client.check.ts && node src/plugins/chat/markdown.check.ts && npm run build:core && node core/dist.check.mjs",
     "build:emoji": "node tools/emoji.ts && prettier --write src/plugins/chat/emoji-sprites.scss",
     "build:core": "npm --prefix core run build"
   },
