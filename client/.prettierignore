@@ -1,4 +1,5 @@
-src/core/keyboard/guacamole.js
+core/src/keyboard/guacamole.js
+core/dist/
 src/i18n/locale/
 public/
 dist/

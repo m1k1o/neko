@@ -10,11 +10,11 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "test:e2e": "node e2e.mjs",
-    "test:store": "node src/core/store.check.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check": "tsc --noEmit && prettier --check . && eslint src && node src/core/store.check.ts && node src/core/client.check.ts && node src/plugins/chat/markdown.check.ts",
-    "build:emoji": "node tools/emoji.ts && prettier --write src/plugins/chat/emoji-sprites.scss"
+    "check": "tsc --noEmit && prettier --check . && eslint src core/src && node core/src/store.check.ts && node core/src/client.check.ts && node src/plugins/chat/markdown.check.ts",
+    "build:emoji": "node tools/emoji.ts && prettier --write src/plugins/chat/emoji-sprites.scss",
+    "build:core": "npm --prefix core run build"
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^6.7.2",

@@ -1,5 +1,5 @@
 import type { ComponentType } from 'react'
-import type { Session } from '../core/types'
+import type { Session } from '@m1k1o/neko'
 
 // What a plugin can contribute to the GUI. The registry (index.ts) wires it in: the side panel
 // shows its tab, the header its top-bar items, the member menu its items, and server events

@@ -1,3 +1,5 @@
 node_modules
 dist
 e2e-out
+core/node_modules
+core/dist

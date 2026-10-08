@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import type { MemberData } from '../../core/types'
+import type { MemberData } from '@m1k1o/neko'
 import { useNeko } from '@/state/hooks'
 import { actions } from '@/state/actions'
 import { t } from '@/i18n'

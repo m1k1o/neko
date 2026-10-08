@@ -1,4 +1,4 @@
-import { Emitter } from '../core/store'
+import { Emitter } from '@m1k1o/neko'
 import { client, name } from './client'
 import { t } from '@/i18n'
 

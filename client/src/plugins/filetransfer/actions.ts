@@ -1,4 +1,4 @@
-import type { Settings } from '../../core/types'
+import type { Settings } from '@m1k1o/neko'
 import { client } from '@/state/client'
 import { api } from '@/state/api'
 import { nextId } from '@/state/dialogs'

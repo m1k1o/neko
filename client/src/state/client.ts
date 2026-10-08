@@ -1,6 +1,6 @@
 // The one NekoClient of the GUI, and the small readers of its state that components share.
-import { NekoClient } from '../core/client'
-import type { Settings } from '../core/types'
+import { NekoClient } from '@m1k1o/neko'
+import type { Settings } from '@m1k1o/neko'
 import { app } from './app'
 import { t } from '@/i18n'
 

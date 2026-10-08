@@ -16,9 +16,10 @@
     "erasableSyntaxOnly": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@m1k1o/neko": ["./core/src/index.ts"]
     }
   },
-  "include": ["src"],
-  "exclude": ["src/**/*.check.ts"]
+  "include": ["src", "core/src"],
+  "exclude": ["**/*.check.ts"]
 }

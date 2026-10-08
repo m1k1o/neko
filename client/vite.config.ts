@@ -7,7 +7,11 @@ export default defineConfig({
   plugins: [react()],
   base: './',
   resolve: {
-    alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+      // the GUI consumes the core package from source; consumers get the built dist/ (core/package.json)
+      '@m1k1o/neko': fileURLToPath(new URL('./core/src/index.ts', import.meta.url)),
+    },
   },
   css: {
     preprocessorOptions: {

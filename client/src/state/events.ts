@@ -1,5 +1,5 @@
 // event wiring: turn v3 events into event lines (shown by the chat) and toasts
-import type { Settings } from '../core/types'
+import type { Settings } from '@m1k1o/neko'
 import { app } from './app'
 import { client, name, hostId, isLocked, type LockResource } from './client'
 import { actions } from './actions'

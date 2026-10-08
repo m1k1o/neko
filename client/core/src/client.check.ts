@@ -1,4 +1,4 @@
-// Runnable self-check of the connection state machine: `node src/core/client.check.ts`
+// Runnable self-check of the connection state machine: `node core/src/client.check.ts`
 import assert from 'node:assert/strict'
 
 // just enough of the browser for the core to load and connect

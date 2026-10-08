@@ -1,0 +1,35 @@
+{
+  "name": "@m1k1o/neko",
+  "version": "3.0.0",
+  "description": "Framework-free client library for the neko v3 API: REST, websocket events, WebRTC with the binary input channel, and the input overlay.",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/m1k1o/neko.git",
+    "directory": "client/core"
+  },
+  "homepage": "https://neko.m1k1o.net/",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json && node build.mjs",
+    "check": "npm run build && node src/store.check.ts && node src/client.check.ts && node dist.check.mjs"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "typescript": "~5.8.0"
+  }
+}

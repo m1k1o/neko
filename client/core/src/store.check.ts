@@ -1,4 +1,4 @@
-// Runnable self-check: `node src/core/store.check.ts`
+// Runnable self-check: `node core/src/store.check.ts`
 import assert from 'node:assert/strict'
 import { Store } from './store.ts'
 

@@ -1,5 +1,5 @@
 // what the GUI can do to the room
-import type { MemberData } from '../core/types'
+import type { MemberData } from '@m1k1o/neko'
 import { app } from './app'
 import { client, name, hostId, isLocked, type LockResource } from './client'
 import { api } from './api'
