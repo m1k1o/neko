@@ -186,11 +186,13 @@ map and the data channel opcodes `OP`.
 
 ```sh
 npm run build   # tsc -> dist/ (ESM + .d.ts), plus the vendored keyboard library
-npm run check   # build, then the self-checks: node src/store.check.ts, node src/client.check.ts
+npm test        # node --test src/*.test.ts: the connection state machine (handshake, reconnects, timeouts,
+                # events, clipboard, auth) and the store, against fake sockets, peers and a virtual clock
+npm run check   # build, then the self-checks: node src/store.check.ts, node src/client.check.ts, the tests
                 # and node dist.check.mjs against the built package: exports, Store, Emitter, setUrl, .d.ts specifiers
 ```
 
-The checks run under Node with a few browser globals stubbed, so the connection state machine and
-the store are tested without a browser. The GUI in `../src` consumes this package from source
+The checks and the tests run under Node with a few browser globals stubbed, so the connection state
+machine and the store are tested without a browser. The GUI in `../src` consumes this package from source
 through the `@m1k1o/neko` alias in `../tsconfig.json` and `../vite.config.ts`; consumers of the npm
 package get `dist/`.
