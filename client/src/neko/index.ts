@@ -23,6 +23,7 @@ import {
   SystemInitPayload,
   AdminLockResource,
   FileTransferListPayload,
+  ChatInitPayload,
 } from './messages'
 
 interface NekoEvents extends BaseEvents {}
@@ -335,7 +336,22 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   /////////////////////////////
   // Chat Events
   /////////////////////////////
-  protected [EVENT.CHAT.MESSAGE]({ id, content }: ChatPayload) {
+  protected [EVENT.CHAT.INIT]({ enabled, history }: ChatInitPayload) {
+    // Process message history if available
+    if (history && history.length > 0) {
+      // Process messages in chronological order
+      for (const message of history) {
+        this.$accessor.chat.newMessage({
+          id: message.id,
+          content: message.content,
+          type: 'text',
+          created: message.created,
+        })
+      }
+    }
+  }
+
+  protected [EVENT.CHAT.MESSAGE]({ id, content, created }: ChatPayload) {
     const member = this.member(id)
     if (!member || member.ignored) {
       return
@@ -345,7 +361,7 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
       id,
       content,
       type: 'text',
-      created: new Date(),
+      created: created,
     })
   }
 

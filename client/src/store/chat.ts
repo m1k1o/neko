@@ -16,7 +16,7 @@ interface Emotes {
 interface Message {
   id: string
   content: string
-  created: Date
+  created: Date | string
   type: 'text' | 'event'
 }
 
