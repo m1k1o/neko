@@ -17,7 +17,7 @@ export function useFullscreen(target: RefObject<HTMLElement | null>) {
   const request = () => {
     // iOS only allows fullscreen on the video element itself
     if (target.current?.requestFullscreen) target.current.requestFullscreen().catch(() => {})
-    else (client.video as any)?.webkitEnterFullscreen?.()
+    else (client.transport.element as any)?.webkitEnterFullscreen?.()
   }
   return { fullscreen, request }
 }

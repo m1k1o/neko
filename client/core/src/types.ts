@@ -75,6 +75,18 @@ export interface ScreenSize {
   rate: number
 }
 
+// the system/init payload (message.SystemInit)
+export interface InitPayload {
+  session_id: string
+  control_host: { has_host: boolean; host_id?: string }
+  screen_size: ScreenSize
+  sessions: Record<string, Session>
+  settings: Settings
+  touch_events: boolean
+  screencast_enabled?: boolean
+  webrtc?: { videos?: string[] }
+}
+
 export interface State {
   authenticated: boolean
   connection: {

@@ -1,19 +1,19 @@
-// Framework-free neko client for the v3 API: REST (server/openapi.yaml), the
-// /api/ws event protocol and WebRTC with a binary data channel for input.
-// Written against master's server/pkg/types. UIs subscribe via `client.store`
-// and read `client.state`; one-off happenings arrive on `client.events`.
+// Framework-free neko client for the v3 API: REST (server/openapi.yaml), the /api/ws event
+// protocol, and the stream through a StreamTransport (WebRTC by default, see transport.ts).
+// Written against master's server/pkg/types. UIs subscribe via `client.store` and read
+// `client.state`; one-off happenings arrive on `client.events`.
 import { Store, Emitter } from './store.ts'
 import { NekoApi, ApiError } from './api.ts'
 import { Overlay } from './overlay.ts'
-import { OP, type State, type Settings, type NekoEvents, type LoginResponse } from './types.ts'
+import { WebRTCTransport } from './transport/webrtc.ts'
+import { WebSocketInput } from './input/websocket.ts'
+import type { InputChannel, SessionInfo, StreamTransport, TransportState } from './transport.ts'
+import type { State, Settings, NekoEvents, LoginResponse } from './types.ts'
 
 const RECONNECT_MAX = 10
 const RECONNECT_BACKOFF_MS = 1500
 // a socket that stays silent this long is dead (the server heartbeats every ~10s)
 const STALE_MS = 25_000
-// no offer within this long after asking for one: the server will not send media (e.g. can_watch
-// is off), so the room is shown without video instead of a spinner for ever
-const OFFER_TIMEOUT_MS = 8_000
 
 export interface NekoClientOptions {
   // remember the session token in localStorage
@@ -22,6 +22,8 @@ export interface NekoClientOptions {
   autoconnect?: boolean
   autoplay?: boolean
   inputMode?: 'auto' | 'touch' | 'mouse'
+  // how the stream arrives; WebRTC unless given
+  transport?: StreamTransport | (() => StreamTransport)
 }
 
 export interface Pos {
@@ -63,8 +65,10 @@ export class NekoClient {
   readonly state = this.store.state
   readonly api = new NekoApi()
   readonly events = new Emitter<NekoEvents>()
+  readonly transport: StreamTransport
+  // where the overlay sends input: the transport's own channel, or the websocket
+  readonly input: InputChannel
 
-  video: HTMLVideoElement | null = null
   canvasSize = { width: 0, height: 0 }
 
   private el: HTMLElement | null = null
@@ -73,16 +77,11 @@ export class NekoClient {
   private observer = new ResizeObserver(() => this.onResize())
 
   private ws: WebSocket | null = null
-  private pc: RTCPeerConnection | null = null
-  private dc: RTCDataChannel | null = null
-  // the server trickles its candidates before signal/provide; hold them until the offer is applied
-  private candidates: RTCIceCandidateInit[] = []
+  // every websocket message, for the transport's signalling
+  private readonly messages = new Emitter<Record<string, (payload: any) => void>>()
   private wanted = false // user asked to be connected
   private attempts = 0
   private reconnectTimer = 0
-  private peerFailures = 0
-  private peerTimer = 0
-  private offerTimer = 0
   private reconnectGen = 0 // a close()+connect() while a reconnect was deciding must win
   private staleTimer = 0
   private lastMessage = 0
@@ -93,6 +92,14 @@ export class NekoClient {
 
   constructor(opts: NekoClientOptions = {}) {
     this.opts = opts
+    const t = opts.transport
+    this.transport = typeof t === 'function' ? t() : (t ?? new WebRTCTransport())
+    this.input = this.transport.input ?? new WebSocketInput(this)
+    this.transport.on('state', (s) => this.onTransportState(s))
+    this.transport.on('error', (err) => this.close(err))
+    this.transport.on('cursor.position', (p) => (p ? this.overlay?.onCursorPosition(p) : this.overlay?.clearCursor()))
+    this.transport.on('cursor.image', (img) => this.overlay?.onCursorImage(img))
+
     const { store, state } = this
     store.watch(
       () => this.controlling,
@@ -217,7 +224,7 @@ export class NekoClient {
   }
 
   /////////////////////////////
-  // connection: websocket + webrtc
+  // connection: websocket + transport
   /////////////////////////////
 
   connect() {
@@ -238,16 +245,14 @@ export class NekoClient {
     const was = this.wanted
     this.wanted = false
     clearTimeout(this.reconnectTimer)
-    clearTimeout(this.peerTimer)
     clearInterval(this.staleTimer)
     this.reconnectGen++
-    this.peerFailures = 0
     const ws = this.ws
     this.ws = null
     // a normal closure: without a status code the server assumes a reconnect is coming and
     // keeps the session connected (and host) for another 5 s
     ws?.close(1000)
-    this.closePeer()
+    this.transport.close()
     this.clear()
     if (was) this.events.emit('connection.closed', error)
   }
@@ -277,7 +282,7 @@ export class NekoClient {
 
   private onSocketLost() {
     this.ws = null
-    this.closePeer()
+    this.transport.suspend()
     if (!this.wanted) return
     this.state.connection.status = 'connecting'
     if (++this.attempts > RECONNECT_MAX) return this.close(new Error('connection lost'))
@@ -305,128 +310,30 @@ export class NekoClient {
     if (this.ws?.readyState === WebSocket.OPEN) this.ws.send(JSON.stringify({ event, payload }))
   }
 
-  private requestPeer() {
-    this.candidates = []
-    this.send('signal/request', { video: {}, audio: {} })
-    clearTimeout(this.offerTimer)
-    const noOffer = () => {
-      if (!this.wanted || this.pc) return
-      // only while the server is talking (heartbeats): after a lost network the media fails
-      // first and the request goes into a dead socket, which is the stale check's business,
-      // not a reason to show a frozen picture as "connected"
-      if (Date.now() - this.lastMessage < OFFER_TIMEOUT_MS * 2) this.state.connection.status = 'connected'
-      else this.offerTimer = window.setTimeout(noOffer, OFFER_TIMEOUT_MS)
+  // the stream: connected only once the transport is; its status while the socket is up
+  private onTransportState(s: TransportState) {
+    Object.assign(this.state.video, s.video)
+    if (!this.wanted) return
+    if (s.status === 'connected') this.attempts = 0
+    this.state.connection.status = s.status === 'connected' || s.status === 'unavailable' ? 'connected' : 'connecting'
+  }
+
+  // what the transport gets of this session, once the server has introduced it (system/init)
+  private sessionInfo(init: SessionInfo['init']): SessionInfo {
+    const self = this
+    return {
+      url: this.state.connection.url,
+      token: this.state.connection.token,
+      init,
+      send: (event, payload) => this.send(event, payload),
+      on: (event, cb) => this.messages.on(event, cb),
+      get lastMessage() {
+        return self.lastMessage
+      },
+      get autoplay() {
+        return !!self.opts.autoplay
+      },
     }
-    this.offerTimer = window.setTimeout(noOffer, OFFER_TIMEOUT_MS)
-  }
-
-  private closePeer() {
-    clearTimeout(this.peerTimer)
-    clearTimeout(this.offerTimer)
-    this.pc?.close()
-    this.pc = null
-    this.dc = null
-    this.overlay?.clearCursor()
-  }
-
-  private async onProvide({ sdp, iceservers }: { sdp: string; iceservers?: RTCIceServer[] }) {
-    this.closePeer()
-    const pc = (this.pc = new RTCPeerConnection({ iceServers: iceservers ?? [] }))
-    pc.onicecandidate = (e) => e.candidate && this.send('signal/candidate', e.candidate.toJSON())
-    pc.ontrack = (e) => this.onTrack(e)
-    pc.ondatachannel = (e) => this.bindDataChannel(e.channel)
-    pc.onconnectionstatechange = () => this.pc === pc && this.onPeerState(pc.connectionState)
-    // only fires after a local addTrack (microphone), the server offers everything else
-    pc.onnegotiationneeded = async () => {
-      if (pc.signalingState !== 'stable' || !pc.remoteDescription) return
-      await pc.setLocalDescription(await pc.createOffer())
-      this.send('signal/offer', { sdp: pc.localDescription!.sdp })
-    }
-    await this.onOffer(sdp)
-  }
-
-  private async onOffer(sdp: string) {
-    const pc = this.pc
-    if (!pc) return
-    await pc.setRemoteDescription({ type: 'offer', sdp })
-    for (const c of this.candidates.splice(0)) pc.addIceCandidate(c).catch(() => {})
-    await pc.setLocalDescription(await pc.createAnswer())
-    // no video codec in common (e.g. an H264 stream and a Firefox without the OpenH264 plugin):
-    // the browser rejects the video section, the server cannot start the track, retrying won't help
-    if (/^m=video 0 /m.test(pc.localDescription!.sdp)) {
-      const codec = sdp.match(/^m=video[\s\S]*?a=rtpmap:\d+ ([\w-]+)/m)?.[1] ?? 'the stream'
-      return this.close(new Error(`this browser cannot play ${codec} video`))
-    }
-    this.send('signal/answer', { sdp: pc.localDescription!.sdp })
-  }
-
-  private onPeerState(s: RTCPeerConnectionState) {
-    if (s === 'connected') {
-      this.attempts = 0
-      this.peerFailures = 0
-      this.state.connection.status = 'connected'
-    } else if (s === 'disconnected') {
-      this.state.connection.status = 'connecting' // ICE may still recover
-    } else if (s === 'failed') {
-      this.state.connection.status = 'connecting'
-      this.closePeer()
-      // no media route (firewall, NAT1TO1, missing TURN): retry with backoff, then give up
-      // instead of asking the server for a new peer several times a second
-      if (++this.peerFailures > RECONNECT_MAX) return this.close(new Error('video connection failed (WebRTC)'))
-      clearTimeout(this.peerTimer)
-      this.peerTimer = window.setTimeout(
-        () => this.requestPeer(),
-        RECONNECT_BACKOFF_MS * Math.min(this.peerFailures, 4),
-      )
-    }
-  }
-
-  private onTrack({ track, streams, receiver }: RTCTrackEvent) {
-    // ask the browser for the smallest jitter buffer: interactive desktop, not a movie
-    if ('jitterBufferTarget' in receiver) (receiver as any).jitterBufferTarget = 0
-    if (track.kind !== 'video' || !this.video) return
-    this.video.srcObject = streams[0]
-    if (this.opts.autoplay || this.state.video.playing) this.play().catch(() => {})
-  }
-
-  private bindDataChannel(dc: RTCDataChannel) {
-    dc.binaryType = 'arraybuffer'
-    dc.onmessage = (e) => {
-      const v = new DataView(e.data)
-      const op = v.getUint8(0)
-      if (op === OP.CURSOR_POSITION) {
-        this.overlay?.onCursorPosition({ x: v.getUint16(3), y: v.getUint16(5) })
-      } else if (op === OP.CURSOR_IMAGE) {
-        const uri = URL.createObjectURL(new Blob([e.data.slice(11)], { type: 'image/png' }))
-        this.overlay?.onCursorImage({
-          width: v.getUint16(3),
-          height: v.getUint16(5),
-          x: v.getUint16(7),
-          y: v.getUint16(9),
-          uri,
-        })
-      }
-    }
-    this.dc = dc
-  }
-
-  // binary input; fields are [bytes, value] pairs (2 = u16, 4 = u32, -2 = i16, -4 = i32, 1 = u8)
-  sendData(op: number, ...fields: [number, number][]) {
-    if (this.dc?.readyState !== 'open') return
-    const len = fields.reduce((n, [b]) => n + Math.abs(b), 0)
-    const v = new DataView(new ArrayBuffer(3 + len))
-    v.setUint8(0, op)
-    v.setUint16(1, len)
-    let o = 3
-    for (const [b, val] of fields) {
-      if (b === 1) v.setUint8(o, val)
-      else if (b === 2) v.setUint16(o, val)
-      else if (b === -2) v.setInt16(o, val)
-      else if (b === 4) v.setUint32(o, val)
-      else v.setInt32(o, val)
-      o += Math.abs(b)
-    }
-    this.dc.send(v.buffer)
   }
 
   /////////////////////////////
@@ -434,6 +341,8 @@ export class NekoClient {
   /////////////////////////////
 
   private onMessage(event: string, p: any) {
+    this.messages.emit(event, p)
+    if (event.startsWith('signal/')) return // the transport's signalling
     const { state, events } = this
     switch (event) {
       case 'system/init':
@@ -443,7 +352,7 @@ export class NekoClient {
         state.sessions = p.sessions ?? {}
         state.settings = p.settings
         state.control.host_id = p.control_host?.has_host ? p.control_host.host_id : null
-        this.requestPeer()
+        this.transport.connect(this.sessionInfo(p)).catch((err) => this.close(err))
         break
       case 'system/admin':
         state.screen.configurations = [...(p.screen_sizes_list ?? [])].sort(
@@ -463,30 +372,6 @@ export class NekoClient {
       case 'system/heartbeat':
         // lets proxies see client->server traffic; the server ignores the payload
         this.send('client/heartbeat')
-        break
-
-      case 'signal/provide':
-        clearTimeout(this.offerTimer)
-        this.onProvide(p).catch((err) => console.error('[neko] webrtc setup failed', err))
-        break
-      case 'signal/offer':
-      case 'signal/restart':
-        this.onOffer(p.sdp).catch((err) => console.error('[neko] webrtc renegotiation failed', err))
-        break
-      case 'signal/answer':
-        this.pc?.setRemoteDescription({ type: 'answer', sdp: p.sdp }).catch(() => {})
-        break
-      case 'signal/candidate':
-        if (this.pc?.remoteDescription) this.pc.addIceCandidate(p).catch(() => {})
-        else this.candidates.push(p)
-        break
-      case 'signal/close':
-        // the server dropped its peer (it saw the media path fail first): ask for a new one,
-        // with the same backoff as a failure the browser noticed itself
-        if (this.pc) this.onPeerState('failed')
-        break
-      case 'signal/video':
-      case 'signal/audio':
         break
 
       case 'session/created':
@@ -551,7 +436,6 @@ export class NekoClient {
 
   private clear() {
     const { state } = this
-    if (this.video) this.video.srcObject = null
     state.connection.status = 'disconnected'
     state.control.host_id = null
     state.control.clipboard = null
@@ -651,75 +535,52 @@ export class NekoClient {
   }
 
   /////////////////////////////
-  // media
+  // media (through the transport)
   /////////////////////////////
 
-  async play() {
-    const video = this.video!
-    try {
-      await video.play()
-    } catch (err) {
-      if (video.muted || (err as DOMException).name !== 'NotAllowedError') throw err
-      // autoplay with sound is blocked until the user interacts: play muted,
-      // unmute on the first click anywhere
-      video.muted = true
-      this.state.video.mutedByAutoplay = true
-      await video.play()
-      document.addEventListener('click', () => this.unmute(), { once: true })
-    }
+  // when the browser refuses sound, playback starts muted (video.mutedByAutoplay) and unmutes on
+  // the first click
+  play() {
+    return this.transport.setPlaying(true)
   }
 
   pause() {
-    this.video?.pause()
+    this.transport.setPlaying(false)
   }
 
   mute() {
-    if (this.video) this.video.muted = true
+    this.transport.setMuted(true)
   }
 
   unmute() {
-    if (this.video) this.video.muted = false
-    this.state.video.mutedByAutoplay = false
+    this.transport.setMuted(false)
   }
 
   setVolume(value: number) {
-    if (this.video) this.video.volume = Math.max(0, Math.min(1, value))
+    this.transport.setVolume(Math.max(0, Math.min(1, value)))
   }
 
-  // share local media (microphone); renegotiation happens via onnegotiationneeded
+  // share local media (microphone), on transports that can
   addTrack(track: MediaStreamTrack, ...streams: MediaStream[]): RTCRtpSender {
-    if (!this.pc) throw new Error('not connected')
-    return this.pc.addTrack(track, ...streams)
+    if (!this.transport.addTrack) throw new Error('transport cannot send media')
+    return this.transport.addTrack(track, ...streams)
   }
 
   removeTrack(sender: RTCRtpSender) {
-    // a sender from a previous peer connection is already gone; removing it from the current one throws
-    if (this.pc?.getSenders().includes(sender)) this.pc.removeTrack(sender)
+    this.transport.removeTrack?.(sender)
   }
 
   /////////////////////////////
   // DOM
   /////////////////////////////
 
+  // the stream and the input overlay fill `el`, letterboxed to the remote screen
   mount(el: HTMLElement) {
     if (this.el) throw new Error('client already mounted')
     this.el = el
     const container = (this.container = document.createElement('div'))
     container.style.position = 'relative'
-
-    const video = (this.video = document.createElement('video'))
-    video.playsInline = true
-    video.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;background:transparent'
-    const v = this.state.video
-    video.addEventListener('canplaythrough', () => (v.playable = true))
-    video.addEventListener('playing', () => (v.playing = true))
-    video.addEventListener('pause', () => (v.playing = false))
-    video.addEventListener('emptied', () => (v.playable = v.playing = false))
-    video.addEventListener('volumechange', () => ((v.muted = video.muted), (v.volume = video.volume)))
-    v.muted = video.muted
-    v.volume = video.volume
-
-    container.append(video)
+    this.transport.attach(container)
     el.append(container)
     this.overlay = new Overlay(this, container)
     this.syncOverlay()
@@ -730,8 +591,9 @@ export class NekoClient {
   unmount() {
     this.observer.disconnect()
     this.overlay?.destroy()
+    this.transport.detach()
     this.container?.remove()
-    this.el = this.container = this.video = this.overlay = null
+    this.el = this.container = this.overlay = null
   }
 
   private get overlayVisible() {

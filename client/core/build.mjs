@@ -2,11 +2,11 @@
 // rewrites them in the JavaScript output), and the vendored keyboard library is plain JS.
 import { readdirSync, readFileSync, writeFileSync, mkdirSync, copyFileSync } from 'node:fs'
 
-for (const f of readdirSync('dist').filter((f) => f.endsWith('.d.ts'))) {
+for (const f of readdirSync('dist', { recursive: true }).filter((f) => f.endsWith('.d.ts'))) {
   const src = readFileSync(`dist/${f}`, 'utf8')
   writeFileSync(
     `dist/${f}`,
-    src.replace(/(from '\.\/[^']+)\.ts'/g, "$1.js'").replace(/(import\("\.\/[^"]+)\.ts"\)/g, '$1.js")'),
+    src.replace(/(from '\.\.?\/[^']+)\.ts'/g, "$1.js'").replace(/(import\("\.\.?\/[^"]+)\.ts"\)/g, '$1.js")'),
   )
 }
 

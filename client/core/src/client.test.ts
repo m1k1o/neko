@@ -1,166 +1,31 @@
-// Unit tests of the connection state machine: `npm test` (vitest). The browser is faked just far
-// enough for the core to load and connect, and the clock is vitest's: `tick(ms)` fires the timers
-// that fall due, in order, so nothing waits.
+// Unit tests of the connection state machine (with the real WebRTC transport): `npm test` (vitest).
+// The browser is faked just far enough for the core to load and connect (test/browser.ts), and the
+// clock is vitest's: `tick(ms)` fires the timers that fall due, in order, so nothing waits.
 import { test, vi } from 'vitest'
 import assert from 'node:assert/strict'
-
-const g = globalThis as any
-g.window = g
-g.location = { href: 'http://neko.test/' }
-Object.defineProperty(g, 'navigator', {
-  value: { platform: 'Linux', userAgent: 'test', maxTouchPoints: 0 },
-  configurable: true,
-})
-const storage = new Map<string, string>()
-g.localStorage = {
-  getItem: (k: string) => storage.get(k) ?? null,
-  setItem: (k: string, v: string) => storage.set(k, v),
-  removeItem: (k: string) => storage.delete(k),
-}
-g.matchMedia = () => ({ matches: false })
-g.ResizeObserver = class {
-  observe() {}
-  disconnect() {}
-}
-
-// the clock: timers and Date are fake, setImmediate stays real so promise chains can be drained
-vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval', 'Date'] })
-// one macrotask turn drains every pending promise chain (the handshake, a fetch)
-const settle = () => new Promise<void>((r) => setImmediate(r))
-const tick = async (ms: number) => {
-  await settle() // whatever is in flight may still schedule a timer
-  await vi.advanceTimersByTimeAsync(ms) // fires the due timers in order, settling after each
-}
-
-// the network
-const sent: string[] = []
-const sockets: FakeSocket[] = []
-class FakeSocket {
-  static OPEN = 1
-  readyState = 1
-  url: string
-  closed = false
-  code?: number
-  onmessage?: (e: { data: string }) => void
-  onclose?: () => void
-  constructor(url: string) {
-    this.url = url
-    sockets.push(this)
-  }
-  send(data: string) {
-    sent.push(JSON.parse(data).event)
-  }
-  close(code?: number) {
-    this.closed = true
-    this.code = code
-  }
-}
-g.WebSocket = FakeSocket
-const OFFER = 'v=0\r\nm=audio 9 RTP/AVP 0\r\na=rtpmap:0 opus/48000\r\nm=video 9 RTP/AVP 96\r\na=rtpmap:96 VP8/90000\r\n'
-const ANSWER = 'v=0\r\nm=audio 9 RTP/AVP 0\r\nm=video 9 RTP/AVP 96\r\n'
-class FakePeer {
-  static all: FakePeer[] = []
-  static answerSdp = ANSWER
-  connectionState = 'new'
-  signalingState = 'stable'
-  remoteDescription: unknown = null
-  localDescription: { sdp: string } | null = null
-  candidates: unknown[] = []
-  closed = false
-  onconnectionstatechange?: () => void
-  constructor() {
-    FakePeer.all.push(this)
-  }
-  async setRemoteDescription(d: unknown) {
-    this.remoteDescription = d
-  }
-  async createAnswer() {
-    return { type: 'answer', sdp: FakePeer.answerSdp }
-  }
-  async setLocalDescription(d: { sdp: string }) {
-    this.localDescription = d
-  }
-  async addIceCandidate(c: unknown) {
-    this.candidates.push(c)
-  }
-  getSenders() {
-    return []
-  }
-  close() {
-    this.closed = true
-  }
-  // what the browser's ICE agent would report
-  transition(s: string) {
-    this.connectionState = s
-    this.onconnectionstatechange?.()
-  }
-}
-g.RTCPeerConnection = FakePeer
-const fetches: { url: string; init: RequestInit }[] = []
-let respond: (url: string, init: RequestInit) => { status: number; body?: unknown } = () => ({ status: 200 })
-g.fetch = async (url: string, init: RequestInit) => {
-  fetches.push({ url, init })
-  const { status, body } = respond(url, init)
-  const text = body === undefined ? '' : JSON.stringify(body)
-  return {
-    ok: status < 300,
-    status,
-    statusText: 'status ' + status,
-    json: async () => JSON.parse(text),
-    text: async () => text,
-  }
-}
-
+import {
+  tick,
+  settle,
+  reset,
+  sent,
+  sockets,
+  fetches,
+  net,
+  storage,
+  FakePeer,
+  OFFER,
+  profile,
+  session,
+  settings,
+  init,
+  receive,
+} from './test/browser.ts'
 const { NekoClient, ApiError } = await import('./index.ts')
 type Client = InstanceType<typeof NekoClient>
 type Options = ConstructorParameters<typeof NekoClient>[0]
 
-// server payloads
-const profile = (over = {}) => ({
-  name: 'Alice',
-  is_admin: false,
-  can_login: true,
-  can_connect: true,
-  can_watch: true,
-  can_host: true,
-  can_share_media: false,
-  can_access_clipboard: true,
-  sends_inactive_cursor: false,
-  can_see_inactive_cursors: false,
-  ...over,
-})
-const session = (id: string, over = {}) => ({
-  id,
-  profile: profile(over),
-  state: { is_connected: true, is_watching: false },
-})
-const settings = (over = {}) => ({
-  private_mode: false,
-  locked_logins: false,
-  locked_controls: false,
-  control_protection: false,
-  implicit_hosting: true,
-  inactive_cursors: false,
-  merciful_reconnect: true,
-  ...over,
-})
-const init = () => ({
-  session_id: 's1',
-  sessions: { s1: session('s1'), s2: session('s2', { name: 'Bob' }) },
-  settings: settings(),
-  screen_size: { width: 1920, height: 1080, rate: 60 },
-  control_host: { has_host: true, host_id: 's2' },
-  touch_events: true,
-})
-const receive = (event: string, payload?: unknown, ws = sockets.at(-1)!) =>
-  ws.onmessage!({ data: JSON.stringify({ event, payload }) })
-
 const setup = (opts?: Options) => {
-  sent.length = sockets.length = fetches.length = FakePeer.all.length = 0
-  vi.clearAllTimers()
-  storage.clear()
-  respond = () => ({ status: 200 })
-  FakePeer.answerSdp = ANSWER
+  reset()
   const client = new NekoClient(opts)
   const closed: (Error | undefined)[] = [] // every connection.closed, with its error
   client.events.on('connection.closed', (e) => closed.push(e))
@@ -341,13 +206,13 @@ test('socket closed: reconnects after the backoff once the session is confirmed'
   assert.equal(sockets.length, 2)
   await tick(1)
   assert.equal(sockets.length, 3)
-  respond = () => {
+  net.respond = () => {
     throw new TypeError('network') // a lookup that fails for any other reason is still worth a retry
   }
   sockets[2].onclose!()
   await tick(4500)
   assert.equal(sockets.length, 4)
-  respond = () => ({ status: 200 })
+  net.respond = () => ({ status: 200 })
   receive('system/init', init())
   receive('signal/provide', { sdp: OFFER })
   await settle()
@@ -360,7 +225,7 @@ test('socket closed: reconnects after the backoff once the session is confirmed'
 
 test('socket closed: a deleted session (401) is not retried', async () => {
   const { client, closed } = await connected()
-  respond = () => ({ status: 401, body: { message: 'session not found' } })
+  net.respond = () => ({ status: 401, body: { message: 'session not found' } })
   sockets[0].onclose!()
   await settle()
   assert.deepEqual(messages(closed), ['session expired'])
@@ -580,7 +445,7 @@ test('preparePaste: the side that copied most recently wins', async () => {
 test('login, authenticate, logout: the token and the session', async () => {
   const { client } = setup({ autologin: true })
   client.setUrl('http://neko.test/')
-  respond = (url, init) =>
+  net.respond = (url, init) =>
     url.endsWith('/api/login') && JSON.parse(init.body as string).password === 'pw'
       ? { status: 200, body: { ...session('s1'), token: 'tok' } }
       : { status: 401, body: { message: 'invalid password' } }
@@ -595,7 +460,7 @@ test('login, authenticate, logout: the token and the session', async () => {
   assert.equal(client.api.token, 'tok')
   assert.equal(storage.get('neko_session'), 'tok')
 
-  respond = () => ({ status: 200, body: session('s1') })
+  net.respond = () => ({ status: 200, body: session('s1') })
   await client.authenticate() // whoami carries the token
   assert.equal(fetches.at(-1)?.url, 'http://neko.test/api/whoami')
   assert.equal((fetches.at(-1)?.init.headers as Record<string, string>).Authorization, 'Bearer tok')
@@ -623,7 +488,7 @@ test('authenticate: resumes the saved session, or fails with the ApiError', asyn
 
   const expired = setup({ autologin: true }).client
   storage.set('neko_session', 'expired')
-  respond = () => ({ status: 401, body: { message: 'unauthorized' } })
+  net.respond = () => ({ status: 401, body: { message: 'unauthorized' } })
   await assert.rejects(expired.authenticate(), (e: unknown) => e instanceof ApiError && e.status === 401)
   assert.equal(expired.state.authenticated, false)
   assert.throws(() => expired.connect(), /not authenticated/)
@@ -643,22 +508,4 @@ test('send: dropped while the socket is not open', async () => {
   client.disconnect()
   client.send('chat/message', { text: 'x' })
   assert.deepEqual(sent, ['chat/message'])
-})
-
-test('sendData: big-endian input messages on the data channel, dropped while it is not open', async () => {
-  const { client } = await connected()
-  const frames: number[][] = []
-  const dc = { readyState: 'connecting', binaryType: '', send: (b: ArrayBuffer) => frames.push([...new Uint8Array(b)]) }
-  ;(FakePeer.all[0] as any).ondatachannel({ channel: dc })
-  client.sendData(1, [2, 100], [2, 200])
-  assert.deepEqual(frames, [])
-  dc.readyState = 'open'
-  client.sendData(1, [2, 100], [2, 200]) // MOVE x=100 y=200
-  client.sendData(2, [-2, -1], [-2, 1]) // SCROLL
-  client.sendData(3, [4, 0xffff], [1, 1]) // KEY_DOWN with a u32 keysym, u8 flag
-  assert.deepEqual(frames, [
-    [1, 0, 4, 0, 100, 0, 200],
-    [2, 0, 4, 255, 255, 0, 1],
-    [3, 0, 5, 0, 0, 255, 255, 1],
-  ])
 })

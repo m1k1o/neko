@@ -1,0 +1,91 @@
+// The seam between the session (NekoClient: auth, the main websocket, room state) and the media
+// stream. A transport owns its media element and its own connection; it talks to the server only
+// through the SessionInfo the client hands it. Modelled on guacamole-common-js, where Guacamole.Client
+// runs over a Guacamole.Tunnel that may be HTTP or WebSocket.
+import type { CursorImage, InitPayload } from './types.ts'
+
+export type TransportKind = 'webrtc' | 'webcodecs-ws' | 'webtransport' | 'ws-mse' | 'hls'
+
+export type TransportStatus =
+  | 'disconnected'
+  | 'connecting'
+  | 'connected'
+  // the server will not stream to this session (e.g. can_watch is off): the room works without video
+  | 'unavailable'
+
+export interface TransportState {
+  status: TransportStatus
+  // the stream's own size once a frame has arrived (letterboxing uses the server's screen size)
+  size: { width: number; height: number }
+  video: {
+    playable: boolean
+    playing: boolean
+    volume: number
+    muted: boolean
+    // the browser refused to autoplay with sound, so playback started muted
+    mutedByAutoplay: boolean
+  }
+}
+
+export interface TransportEvents {
+  state: (state: TransportState) => void
+  // bitrate, fps, rtt, ... (nothing emits it yet)
+  stats: (stats: Record<string, number>) => void
+  // the stream is lost for good; the client closes the connection with it
+  error: (error: Error) => void
+  // the host's cursor, for transports whose server feeds it back (the WebRTC data channel);
+  // null when the stream is dropped
+  'cursor.position': (pos: { x: number; y: number } | null) => void
+  'cursor.image': (image: CursorImage) => void
+}
+
+// what a transport gets from the client: where the server is, who we are, and the main websocket
+// for signalling
+export interface SessionInfo {
+  url: string // http(s) origin and path of the server
+  token?: string
+  init: InitPayload // the system/init payload
+  send(event: string, payload?: unknown): void
+  on(event: string, cb: (payload: any) => void): () => void
+  // when the server was last heard from (Date.now()); tells a dead socket from a server that
+  // will not send media
+  readonly lastMessage: number
+  // start playback as soon as media arrives
+  readonly autoplay: boolean
+}
+
+// input to the remote desktop; fields are [bytes, value] pairs (2 = u16, 4 = u32, -2 = i16,
+// -4 = i32, 1 = u8) as the data channel encodes them, opcodes in OP
+export interface InputChannel {
+  send(op: number, ...fields: [number, number][]): void
+}
+
+export interface StreamTransport {
+  readonly kind: TransportKind
+  // the media element created by attach(), for Picture-in-Picture and the like
+  readonly element: HTMLElement | null
+  // the transport's own input path, when it has one (the WebRTC data channel)
+  readonly input?: InputChannel
+
+  // start streaming for a session; called again after suspend() on every reconnect
+  connect(session: SessionInfo): Promise<void>
+  // the session's socket is gone and a reconnect follows (or close()): drop the media path but
+  // keep the picture and the retry counters
+  suspend(): void
+  // stop for good: the media path, timers and counters go, the element is emptied
+  close(): void
+
+  // create the media element inside the container; detach() removes it
+  attach(container: HTMLElement): void
+  detach(): void
+
+  setPlaying(on: boolean): Promise<void>
+  setVolume(volume: number): void
+  setMuted(on: boolean): void
+
+  // share a local track (microphone), where the transport can
+  addTrack?(track: MediaStreamTrack, ...streams: MediaStream[]): RTCRtpSender
+  removeTrack?(sender: RTCRtpSender): void
+
+  on<K extends keyof TransportEvents>(event: K, cb: TransportEvents[K]): () => void
+}

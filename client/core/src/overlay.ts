@@ -187,11 +187,11 @@ export class Overlay {
   }
 
   private move(p: Pos) {
-    this.client.sendData(OP.MOVE, [2, p.x], [2, p.y])
+    this.client.input.send(OP.MOVE, [2, p.x], [2, p.y])
   }
 
   private button(code: number, down: boolean) {
-    this.client.sendData(down ? OP.BTN_DOWN : OP.BTN_UP, [4, code])
+    this.client.input.send(down ? OP.BTN_DOWN : OP.BTN_UP, [4, code])
   }
 
   /////////////////////////////
@@ -254,7 +254,7 @@ export class Overlay {
     }
     const dx = axis('x')
     const dy = axis('y')
-    if (dx || dy) this.client.sendData(OP.SCROLL, [-2, dx], [-2, dy], [1, e.ctrlKey ? 1 : 0])
+    if (dx || dy) this.client.input.send(OP.SCROLL, [-2, dx], [-2, dy], [1, e.ctrlKey ? 1 : 0])
   }
 
   private hovering = false
@@ -299,14 +299,14 @@ export class Overlay {
       return true
     }
     if (isCtrl(key)) this.ctrlDown = key
-    this.client.sendData(OP.KEY_DOWN, [4, key])
+    this.client.input.send(OP.KEY_DOWN, [4, key])
     return isCtrl(key) // ctrl must reach the browser for the paste shortcut above
   }
 
   private onKeyUp(key: number) {
     if (this.noKeyUp.delete(key)) return
     if (isCtrl(key)) this.ctrlDown = 0
-    this.client.sendData(OP.KEY_UP, [4, key])
+    this.client.input.send(OP.KEY_UP, [4, key])
   }
 
   // the remote gets its paste keystroke once the clipboard is settled. By then the user may have
@@ -316,10 +316,10 @@ export class Overlay {
     await this.client.preparePaste(text)
     if (!this.active) return
     const ctrl = this.ctrlDown
-    if (!ctrl) this.client.sendData(OP.KEY_DOWN, [4, XK.Control_L])
-    this.client.sendData(OP.KEY_DOWN, [4, XK.v])
-    this.client.sendData(OP.KEY_UP, [4, XK.v])
-    if (!ctrl) this.client.sendData(OP.KEY_UP, [4, XK.Control_L])
+    if (!ctrl) this.client.input.send(OP.KEY_DOWN, [4, XK.Control_L])
+    this.client.input.send(OP.KEY_DOWN, [4, XK.v])
+    this.client.input.send(OP.KEY_UP, [4, XK.v])
+    if (!ctrl) this.client.input.send(OP.KEY_UP, [4, XK.Control_L])
   }
 
   mobileKeyboardToggle() {
@@ -347,7 +347,13 @@ export class Overlay {
     if (this.client.state.control.touch) {
       for (const t of e.changedTouches) {
         const p = this.pos(t)
-        this.client.sendData(TOUCH_OP[e.type], [4, t.identifier], [-4, p.x], [-4, p.y], [1, Math.round(t.force * 255)])
+        this.client.input.send(
+          TOUCH_OP[e.type],
+          [4, t.identifier],
+          [-4, p.x],
+          [-4, p.y],
+          [1, Math.round(t.force * 255)],
+        )
       }
       return
     }

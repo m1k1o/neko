@@ -3,6 +3,7 @@ import { useNeko } from '@/state/hooks'
 import { setSetting } from '@/state/settings'
 import { t } from '@/i18n'
 import { memberMenu } from '@/plugins'
+import { WebRTCTransport } from '@m1k1o/neko'
 import { Logo } from '@/components/Logo'
 import { Dialog } from '@/components/Dialog'
 import { Toasts } from '@/components/Toasts'
@@ -25,7 +26,7 @@ if (cast) setSetting('chat_sound', false)
 export function App() {
   const { state, app } = useNeko()
 
-  if (typeof RTCPeerConnection === 'undefined') {
+  if (!WebRTCTransport.supported()) {
     return (
       <div className="unsupported">
         <div className="window">
