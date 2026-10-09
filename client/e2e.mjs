@@ -452,8 +452,10 @@ await step('alice takes control and types into KDE', async () => {
   }
   const typed = await copyAll()
   if (typed !== 'react gui works') throw new Error('remote received ' + JSON.stringify(typed))
-  // Ctrl+V inside the remote pastes what was copied there, with the real Ctrl held
-  await A.keyboard.press('End')
+  // Ctrl+V inside the remote pastes what was copied there, with the real Ctrl held. Home collapses
+  // the selection to the start; End would not: with the caret already at the end, KRunner's results
+  // list takes it (milou ResultsView.qml navigationKeyHandler) and swallows the following Ctrl+V
+  await A.keyboard.press('Home')
   await A.keyboard.press('Control+v')
   await A.waitForTimeout(800)
   const pasted = await copyAll()
