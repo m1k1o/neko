@@ -2,7 +2,7 @@
 // drawing the host's cursor for everyone who is not controlling.
 import GuacamoleKeyboard from './keyboard/guacamole.js'
 import type { NekoClient, Pos } from './client.ts'
-import { OP, type CursorImage } from './types.ts'
+import type { CursorImage } from './types.ts'
 
 const WHEEL_STEP = 53 // px of wheel delta per scroll step
 const WHEEL_LINE_HEIGHT = 19 // px per line when the browser reports lines
@@ -35,11 +35,11 @@ const MAC_REMAP: Record<number, number> = {
 const remap = (key: number) => (isMac && MAC_REMAP[key]) || key
 const isCtrl = (key: number) => key === XK.Control_L || key === XK.Control_R
 
-const TOUCH_OP: Record<string, number> = {
-  touchstart: OP.TOUCH_BEGIN,
-  touchmove: OP.TOUCH_UPDATE,
-  touchend: OP.TOUCH_END,
-  touchcancel: OP.TOUCH_END,
+const TOUCH_PHASE: Record<string, 'begin' | 'update' | 'end'> = {
+  touchstart: 'begin',
+  touchmove: 'update',
+  touchend: 'end',
+  touchcancel: 'end',
 }
 
 export class Overlay {
@@ -122,7 +122,7 @@ export class Overlay {
       this.hovering = false
       this.keyboard.reset()
     })
-    for (const ev of Object.keys(TOUCH_OP)) on(input, ev, (e) => this.onTouch(e), { passive: false })
+    for (const ev of Object.keys(TOUCH_PHASE)) on(input, ev, (e) => this.onTouch(e), { passive: false })
     on(
       input,
       'dragover',
@@ -187,11 +187,11 @@ export class Overlay {
   }
 
   private move(p: Pos) {
-    this.client.input.send(OP.MOVE, [2, p.x], [2, p.y])
+    this.client.input.move(p.x, p.y)
   }
 
   private button(code: number, down: boolean) {
-    this.client.input.send(down ? OP.BTN_DOWN : OP.BTN_UP, [4, code])
+    this.client.input.button(code, down)
   }
 
   /////////////////////////////
@@ -254,7 +254,7 @@ export class Overlay {
     }
     const dx = axis('x')
     const dy = axis('y')
-    if (dx || dy) this.client.input.send(OP.SCROLL, [-2, dx], [-2, dy], [1, e.ctrlKey ? 1 : 0])
+    if (dx || dy) this.client.input.scroll(dx, dy, e.ctrlKey)
   }
 
   private hovering = false
@@ -299,14 +299,14 @@ export class Overlay {
       return true
     }
     if (isCtrl(key)) this.ctrlDown = key
-    this.client.input.send(OP.KEY_DOWN, [4, key])
+    this.client.input.key(key, true)
     return isCtrl(key) // ctrl must reach the browser for the paste shortcut above
   }
 
   private onKeyUp(key: number) {
     if (this.noKeyUp.delete(key)) return
     if (isCtrl(key)) this.ctrlDown = 0
-    this.client.input.send(OP.KEY_UP, [4, key])
+    this.client.input.key(key, false)
   }
 
   // the remote gets its paste keystroke once the clipboard is settled. By then the user may have
@@ -316,10 +316,10 @@ export class Overlay {
     await this.client.preparePaste(text)
     if (!this.active) return
     const ctrl = this.ctrlDown
-    if (!ctrl) this.client.input.send(OP.KEY_DOWN, [4, XK.Control_L])
-    this.client.input.send(OP.KEY_DOWN, [4, XK.v])
-    this.client.input.send(OP.KEY_UP, [4, XK.v])
-    if (!ctrl) this.client.input.send(OP.KEY_UP, [4, XK.Control_L])
+    if (!ctrl) this.client.input.key(XK.Control_L, true)
+    this.client.input.key(XK.v, true)
+    this.client.input.key(XK.v, false)
+    if (!ctrl) this.client.input.key(XK.Control_L, false)
   }
 
   mobileKeyboardToggle() {
@@ -347,13 +347,7 @@ export class Overlay {
     if (this.client.state.control.touch) {
       for (const t of e.changedTouches) {
         const p = this.pos(t)
-        this.client.input.send(
-          TOUCH_OP[e.type],
-          [4, t.identifier],
-          [-4, p.x],
-          [-4, p.y],
-          [1, Math.round(t.force * 255)],
-        )
+        this.client.input.touch(TOUCH_PHASE[e.type], t.identifier, p.x, p.y, Math.round(t.force * 255))
       }
       return
     }

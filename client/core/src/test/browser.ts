@@ -114,6 +114,11 @@ g.ResizeObserver = class {
   observe() {}
   disconnect() {}
 }
+// what the overlay needs to construct (client.mount)
+g.Image = class {}
+g.devicePixelRatio = 1
+g.requestAnimationFrame = (fn: () => void) => setTimeout(fn, 16)
+g.addEventListener = g.removeEventListener = () => {}
 export const documentListeners: Record<string, ((e: any) => void)[]> = {}
 g.document = {
   createElement: (tag: string) => new FakeElement(tag),

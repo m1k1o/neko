@@ -36,8 +36,7 @@ for (const name of [
 ])
   assert.equal(typeof pkg[name], 'function', name)
 assert.equal(WebRTCTransport.supported(), typeof RTCPeerConnection !== 'undefined')
-assert.equal(typeof pkg.OP, 'object')
-assert.equal(pkg.OP.MOVE, 1)
+assert.ok(!('OP' in pkg), 'the data channel opcodes are not part of the API')
 
 // Store: a nested write bumps the version and reaches a watcher one microtask later
 const s = new pkg.Store({ a: { b: 1 } })
@@ -74,10 +73,8 @@ const custom = {
   kind: 'hls',
   element: null,
   connect: async () => {},
-  suspend: noop,
   close: noop,
-  attach: noop,
-  detach: noop,
+  attach: () => noop,
   setPlaying: async () => {},
   setVolume: noop,
   setMuted: noop,
@@ -86,6 +83,8 @@ const custom = {
 const other = new pkg.NekoClient({ transport: custom })
 assert.equal(other.transport, custom)
 assert.ok(other.input instanceof pkg.WebSocketInput, 'no input channel on the transport: the websocket')
+for (const m of ['move', 'scroll', 'button', 'key', 'touch']) assert.equal(typeof other.input[m], 'function', m)
+assert.throws(() => other.shareMedia({}), /transport cannot send media/)
 
 // build.mjs rewrote the `.ts` specifiers the declarations inherit from the sources
 for (const f of readdirSync(dist, { recursive: true }).filter((f) => f.endsWith('.d.ts'))) {

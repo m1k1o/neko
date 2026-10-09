@@ -38,13 +38,13 @@ client.mount(document.getElementById('video')!)
 
 ### Options
 
-| option        | default  |                                                                             |
-| ------------- | -------- | --------------------------------------------------------------------------- |
-| `autologin`   | `false`  | remember the session token in `localStorage` (`neko_session`) and resume it |
-| `autoconnect` | `false`  | connect as soon as `setUrl()` finds a valid session                         |
-| `autoplay`    | `false`  | start playback when the track arrives (read each time, so a getter works)   |
-| `inputMode`   | `'auto'` | `'touch'` or `'mouse'` instead of detecting it (`isTouchDevice`)            |
-| `transport`   | WebRTC   | a `StreamTransport` (or a factory for one), see [Transports](#transports)   |
+| option        | default  |                                                                                     |
+| ------------- | -------- | ----------------------------------------------------------------------------------- |
+| `autologin`   | `false`  | remember the session token in `localStorage` (`neko_session`) and resume it         |
+| `autoconnect` | `false`  | connect as soon as `setUrl()` finds a valid session                                 |
+| `autoplay`    | `false`  | start playback when the stream becomes playable (read each time, so a getter works) |
+| `inputMode`   | `'auto'` | `'touch'` or `'mouse'` instead of detecting it (`isTouchDevice`)                    |
+| `transport`   | WebRTC   | a `StreamTransport` (or a factory for one), see [Transports](#transports)           |
 
 ### Authentication
 
@@ -137,15 +137,25 @@ the input overlay over it; the media calls below go through it.
 | `transport.element`                  | the transport's media element (a `<video>` for WebRTC), once mounted                                     |
 | `play()`, `pause()`                  | when the browser refuses sound, `play()` starts muted (`mutedByAutoplay`) and unmutes on the first click |
 | `mute()`, `unmute()`, `setVolume(v)` | `v` in 0..1                                                                                              |
-| `addTrack(track, ...streams)`        | send a local track (microphone) on a transport that can; returns the `RTCRtpSender` for `removeTrack()`  |
+| `shareMedia(stream)`                 | send local media (microphone) on a transport that can; returns the function that stops sharing it        |
 
 ### Control and input
 
-The overlay sends mouse, wheel, keyboard and touch input through `client.input`, an `InputChannel`
-(`send(op, ...fields)`, opcodes in `OP`): the transport's own channel when it has one (WebRTC: the
-data channel, `DataChannelInput`), otherwise `WebSocketInput`, which sends the same input as the
-server's `control/*` websocket events. Keyboard handling is Apache Guacamole's keyboard (vendored
-in `keyboard/`), so keysyms match the server's layouts.
+The overlay sends mouse, wheel, keyboard and touch input through `client.input`, an `InputChannel`:
+the transport's own channel when it has one (WebRTC: the data channel, `DataChannelInput`, binary
+frames), otherwise `WebSocketInput`, which sends the same input as the server's `control/*`
+websocket events. Keyboard handling is Apache Guacamole's keyboard (vendored in `keyboard/`), so
+keysyms match the server's layouts.
+
+```ts
+interface InputChannel {
+  move(x: number, y: number): void // remote screen coordinates
+  scroll(deltaX: number, deltaY: number, controlKey: boolean): void
+  button(code: number, down: boolean): void // X11 button code
+  key(keysym: number, down: boolean): void // X11 keysym
+  touch(phase: 'begin' | 'update' | 'end', id: number, x: number, y: number, pressure: number): void
+}
+```
 
 | method                                           |                                                                                            |
 | ------------------------------------------------ | ------------------------------------------------------------------------------------------ |
@@ -158,7 +168,7 @@ in `keyboard/`), so keysyms match the server's layouts.
 | `preparePaste(text)`                             | before a paste keystroke: the side that copied most recently wins (see the source comment) |
 | `uploadDrop({ x, y, files })`                    | drop files into the remote desktop at a position (the overlay does this on drop)           |
 | `mobileKeyboardToggle()`                         | open / close the on-screen keyboard on touch devices                                       |
-| `input.send(op, ...fields)`                      | a raw input message; fields are `[bytes, value]` pairs as the data channel encodes them    |
+| `input.move(x, y)`, `input.key(keysym, down)`, … | input straight to the remote desktop (the `InputChannel` above)                            |
 
 ### Messages
 
@@ -191,38 +201,36 @@ about. WebRTC is the one implemented (`WebRTCTransport`, `transport/webrtc.ts`);
 
 ```ts
 interface StreamTransport {
-  readonly kind: 'webrtc' | 'webcodecs-ws' | 'webtransport' | 'ws-mse' | 'hls'
+  readonly kind: 'webrtc' | 'webcodecs-ws' | 'ws-mse' | 'hls'
   readonly element: HTMLElement | null // its media element, created by attach()
   readonly input?: InputChannel // its own input path, if any (the data channel)
 
-  connect(session: SessionInfo): Promise<void> // start streaming; again after suspend() on a reconnect
-  suspend(): void // the session's socket is gone: drop the stream, keep the picture and retry counters
-  close(): void // stop for good; the element is emptied
+  connect(session: SessionInfo): Promise<void> // start streaming; again after close() on a reconnect
+  close(): void // drop the stream, timers and counters; the last picture stays on the element
 
-  attach(container: HTMLElement): void // create the media element inside the container
-  detach(): void
+  attach(container: HTMLElement): () => void // create the media element inside; returns what removes it
 
   setPlaying(on: boolean): Promise<void>
   setVolume(volume: number): void
   setMuted(on: boolean): void
-  addTrack?(track: MediaStreamTrack, ...streams: MediaStream[]): RTCRtpSender
-  removeTrack?(sender: RTCRtpSender): void
+  shareMedia?(stream: MediaStream): () => void // local media (microphone); returns what stops sharing it
 
   on(event: 'state' | 'stats' | 'error' | 'cursor.position' | 'cursor.image', cb): () => void
 }
 ```
 
 `SessionInfo` is what the client hands over on `system/init`: the server `url` and `token`, the
-`init` payload, `send(event, payload)` / `on(event, cb)` for the transport's own messages over the
-main socket (`signal/*` go to the transport, the client does not handle them), `lastMessage`
-(when the server was last heard from) and `autoplay`.
+`init` payload, and `send(event, payload)` / `on(event, cb)` for the transport's own messages over
+the main socket (`signal/*` go to the transport, the client does not handle them).
 
 A transport reports `'state'` (`{ status, size, video }`: its `status` — `'connecting'`,
 `'connected'`, `'unavailable'` when the server will not stream, `'disconnected'` — the stream's
 size and the media element's `playable`/`playing`/`volume`/`muted`/`mutedByAutoplay`, mirrored
 into `state.video`), `'error'` (the stream is lost for good; the client closes the connection
 with it), the host's `'cursor.position'`/`'cursor.image'` when its server feeds them back, and
-`'stats'` (reserved). A second transport needs: its own connection from the `SessionInfo`, an
+`'stats'` (reserved). A transport does not start playback by itself: the client calls
+`setPlaying(true)` when `playable` turns true and `autoplay` is on, and a transport keeps playing
+across its own reconnects. A second transport needs: its own connection from the `SessionInfo`, an
 element it draws into, play/volume/mute, and either an `input` channel or nothing (the client then
 sends input over the websocket). Pass it as `new NekoClient({ transport })`; the GUI checks
 `WebRTCTransport.supported()` before rendering.
@@ -238,10 +246,9 @@ pattern for their own state.
 ## Types
 
 The wire types mirror `server/pkg/types`: `Session`, `MemberProfile`, `SessionState`, `Settings`,
-`ScreenSize`, `InitPayload`, `LoginResponse`, `MemberData`, `CursorImage`, the client `State`, the
-`NekoEvents` map and the data channel opcodes `OP`; the transport seam is `StreamTransport`,
-`SessionInfo`, `InputChannel`, `TransportKind`, `TransportStatus`, `TransportState` and
-`TransportEvents`.
+`ScreenSize`, `InitPayload`, `LoginResponse`, `MemberData`, `CursorImage`, the client `State` and
+the `NekoEvents` map; the transport seam is `StreamTransport`, `SessionInfo`, `InputChannel`,
+`TransportKind`, `TransportStatus`, `TransportState` and `TransportEvents`.
 
 ## Development
 

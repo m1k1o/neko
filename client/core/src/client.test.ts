@@ -92,6 +92,7 @@ test('handshake: init -> signal/request -> provide -> signal/answer -> peer conn
 test('signal/close: the peer is dropped and a new one requested after the backoff', async () => {
   const { client } = await connected()
   const pc = FakePeer.all[0]
+  const stopMic = client.shareMedia({ getTracks: () => [{ kind: 'audio' }] } as unknown as MediaStream)
   receive('signal/close')
   assert.ok(pc.closed)
   assert.equal(client.state.connection.status, 'connecting')
@@ -104,7 +105,7 @@ test('signal/close: the peer is dropped and a new one requested after the backof
   await settle()
   assert.equal(FakePeer.all.length, 2)
   assert.deepEqual(sent, ['signal/request', 'signal/answer'])
-  assert.doesNotThrow(() => client.removeTrack({} as RTCRtpSender), 'a sender of the dropped peer is ignored')
+  assert.doesNotThrow(stopMic, 'the media shared on the dropped peer is gone with it')
   FakePeer.all[1].transition('connected')
   await settle()
   assert.equal(client.state.connection.status, 'connected')
@@ -154,18 +155,19 @@ test('peer connected: the failure count starts over', async () => {
   assert.deepEqual(sent, ['signal/request'])
 })
 
-test('no offer: shown without video only while the server keeps talking', async () => {
+test('no offer after OFFER_TIMEOUT_MS: shown without video; a dead socket is the stale check’s business', async () => {
   const { client } = await connected()
-  await tick(10_000) // silence since the offer (the stale check tolerates 25 s)
   FakePeer.all[0].transition('failed')
-  await tick(1500) // -> signal/request, 11.5 s into the silence
+  await tick(1500) // -> signal/request
   assert.deepEqual(sent, ['signal/request'])
-  await tick(8000) // OFFER_TIMEOUT_MS: 19.5 s of silence
-  assert.equal(client.state.connection.status, 'connecting', 'a silent server is not "connected" without video')
-  receive('system/heartbeat') // alive after all (can_watch is off)
-  await tick(8000)
+  await tick(7999)
+  assert.equal(client.state.connection.status, 'connecting')
+  await tick(1) // OFFER_TIMEOUT_MS: the server will not stream (can_watch is off)
   assert.equal(client.state.connection.status, 'connected')
   assert.equal(FakePeer.all.length, 1)
+  await tick(25_000) // and the silent socket is still replaced by the stale check
+  assert.equal(client.state.connection.status, 'connecting')
+  assert.ok(sockets[0].closed)
 })
 
 test('stale socket: silent for STALE_MS it is replaced; a message keeps it', async () => {

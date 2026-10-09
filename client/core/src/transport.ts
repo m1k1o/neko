@@ -4,7 +4,7 @@
 // runs over a Guacamole.Tunnel that may be HTTP or WebSocket.
 import type { CursorImage, InitPayload } from './types.ts'
 
-export type TransportKind = 'webrtc' | 'webcodecs-ws' | 'webtransport' | 'ws-mse' | 'hls'
+export type TransportKind = 'webrtc' | 'webcodecs-ws' | 'ws-mse' | 'hls'
 
 export type TransportStatus =
   | 'disconnected'
@@ -47,17 +47,16 @@ export interface SessionInfo {
   init: InitPayload // the system/init payload
   send(event: string, payload?: unknown): void
   on(event: string, cb: (payload: any) => void): () => void
-  // when the server was last heard from (Date.now()); tells a dead socket from a server that
-  // will not send media
-  readonly lastMessage: number
-  // start playback as soon as media arrives
-  readonly autoplay: boolean
 }
 
-// input to the remote desktop; fields are [bytes, value] pairs (2 = u16, 4 = u32, -2 = i16,
-// -4 = i32, 1 = u8) as the data channel encodes them, opcodes in OP
+// input to the remote desktop, in the server's terms (keysyms, button codes, touch ids); how it
+// travels is the channel's business
 export interface InputChannel {
-  send(op: number, ...fields: [number, number][]): void
+  move(x: number, y: number): void
+  scroll(deltaX: number, deltaY: number, controlKey: boolean): void
+  button(code: number, down: boolean): void
+  key(keysym: number, down: boolean): void
+  touch(phase: 'begin' | 'update' | 'end', id: number, x: number, y: number, pressure: number): void
 }
 
 export interface StreamTransport {
@@ -67,25 +66,21 @@ export interface StreamTransport {
   // the transport's own input path, when it has one (the WebRTC data channel)
   readonly input?: InputChannel
 
-  // start streaming for a session; called again after suspend() on every reconnect
+  // start streaming for a session; called again after close() on every reconnect
   connect(session: SessionInfo): Promise<void>
-  // the session's socket is gone and a reconnect follows (or close()): drop the media path but
-  // keep the picture and the retry counters
-  suspend(): void
-  // stop for good: the media path, timers and counters go, the element is emptied
+  // stop: the media path, timers and counters go; the last picture stays on the element until a
+  // new stream replaces it or the element is removed
   close(): void
 
-  // create the media element inside the container; detach() removes it
-  attach(container: HTMLElement): void
-  detach(): void
+  // create the media element inside the container; returns what removes it again
+  attach(container: HTMLElement): () => void
 
   setPlaying(on: boolean): Promise<void>
   setVolume(volume: number): void
   setMuted(on: boolean): void
 
-  // share a local track (microphone), where the transport can
-  addTrack?(track: MediaStreamTrack, ...streams: MediaStream[]): RTCRtpSender
-  removeTrack?(sender: RTCRtpSender): void
+  // share local media (microphone), where the transport can; returns what stops sharing it
+  shareMedia?(stream: MediaStream): () => void
 
   on<K extends keyof TransportEvents>(event: K, cb: TransportEvents[K]): () => void
 }

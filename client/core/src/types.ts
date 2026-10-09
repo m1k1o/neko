@@ -1,22 +1,5 @@
 // Client state + wire types, mirroring server/pkg/types (master).
 
-// data channel opcodes, big-endian (server/internal/webrtc/payload)
-export const OP = {
-  // client -> server
-  MOVE: 1,
-  SCROLL: 2,
-  KEY_DOWN: 3,
-  KEY_UP: 4,
-  BTN_DOWN: 5,
-  BTN_UP: 6,
-  TOUCH_BEGIN: 8,
-  TOUCH_UPDATE: 9,
-  TOUCH_END: 10,
-  // server -> client
-  CURSOR_POSITION: 1,
-  CURSOR_IMAGE: 2,
-}
-
 export interface MemberProfile {
   name: string
   avatar?: string

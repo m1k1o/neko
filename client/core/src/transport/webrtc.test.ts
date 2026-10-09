@@ -1,5 +1,5 @@
 // The WebRTC transport on its own: its element, the signalling it does over the SessionInfo, the
-// state it reports, and what close()/suspend() leave behind.
+// state it reports, and what close() leaves behind.
 import { test, vi } from 'vitest'
 import assert from 'node:assert/strict'
 import {
@@ -14,7 +14,7 @@ import {
   documentListeners,
 } from '../test/browser.ts'
 
-const { WebRTCTransport, DataChannelInput, Emitter, OP } = await import('../index.ts')
+const { WebRTCTransport, DataChannelInput, Emitter } = await import('../index.ts')
 type Transport = InstanceType<typeof WebRTCTransport>
 type State = Parameters<Parameters<Transport['on']>[1]>[0]
 
@@ -28,8 +28,6 @@ const sessionInfo = () => {
     init: init(),
     send: (event: string, payload?: unknown) => out.push({ event, payload }),
     on: (event: string, cb: (p: any) => void) => messages.on(event, cb),
-    lastMessage: Date.now(),
-    autoplay: false,
   }
   return { s, out, events: () => out.map((m) => m.event), receive: (e: string, p?: unknown) => messages.emit(e, p) }
 }
@@ -44,9 +42,9 @@ const setup = () => {
   t.on('cursor.position', (p) => cursors.push(p))
   t.on('cursor.image', (i) => cursors.push(i))
   const container = new FakeElement('div')
-  t.attach(container as any)
+  const detach = t.attach(container as any)
   const video = container.children[0]
-  return { t, states, errors, cursors, container, video, status: () => states.at(-1)?.status }
+  return { t, states, errors, cursors, container, video, detach, status: () => states.at(-1)?.status }
 }
 const connected = async () => {
   const r = setup()
@@ -58,6 +56,7 @@ const connected = async () => {
   si.out.length = 0
   return { ...r, ...si }
 }
+const micStream = () => ({ getTracks: () => [{ kind: 'audio' }] }) as unknown as MediaStream
 
 test('supported: a static check for RTCPeerConnection', () => {
   assert.equal(WebRTCTransport.supported(), true)
@@ -68,8 +67,8 @@ test('supported: a static check for RTCPeerConnection', () => {
   g.RTCPeerConnection = pc
 })
 
-test('attach: the <video> the client used to create, inside the container; detach removes it', () => {
-  const { t, container, video, states } = setup()
+test('attach: the <video> the client used to create, inside the container; the returned detach removes it', () => {
+  const { t, container, video, states, detach } = setup()
   assert.equal(t.kind, 'webrtc')
   assert.equal(container.children.length, 1)
   assert.equal(video.tag, 'video')
@@ -81,13 +80,16 @@ test('attach: the <video> the client used to create, inside the container; detac
     size: { width: 0, height: 0 },
     video: { playable: false, playing: false, volume: 1, muted: false, mutedByAutoplay: false },
   })
-  t.detach()
+  detach()
   assert.deepEqual(container.children, [])
   assert.equal(t.element, null)
   t.attach(container as any) // and again
   assert.equal(container.children.length, 1)
   t.attach(container as any) // a second attach replaces the element
   assert.equal(container.children.length, 1)
+  detach() // the first one's: long gone, and not the current element
+  assert.equal(container.children.length, 1)
+  assert.equal(t.element, container.children[0])
 })
 
 test('connect: signal/* over the session, the track on the element, state with status and size', async () => {
@@ -118,7 +120,7 @@ test('connect: signal/* over the session, the track on the element, state with s
   assert.equal(video.srcObject, stream)
   assert.equal(receiver.jitterBufferTarget, 0, 'the smallest jitter buffer')
   await settle()
-  assert.equal(video.paused, true, 'no autoplay unless the session asks')
+  assert.equal(video.paused, true, 'starting playback is the client’s call (setPlaying)')
 
   pc.transition('connected')
   assert.equal(status(), 'connected')
@@ -130,16 +132,17 @@ test('connect: signal/* over the session, the track on the element, state with s
   assert.equal(status(), 'connecting')
 })
 
-test('playback: autoplay from the session; a refused play starts muted and unmutes on the first click', async () => {
+test('playback: a refused play starts muted, reports mutedByAutoplay and unmutes on the first click', async () => {
   const { t, video, states } = setup()
   const { s, receive } = sessionInfo()
-  s.autoplay = true
   await t.connect(s)
   receive('signal/provide', { sdp: OFFER })
   await settle()
-  video.playError = Object.assign(new Error('blocked'), { name: 'NotAllowedError' })
   FakePeer.all[0].ontrack!({ track: { kind: 'video' }, streams: [{}], receiver: {} })
   await settle()
+  assert.equal(video.plays, 0)
+  video.playError = Object.assign(new Error('blocked'), { name: 'NotAllowedError' })
+  await t.setPlaying(true)
   assert.equal(video.paused, false)
   assert.equal(video.muted, true)
   assert.deepEqual(states.at(-1)!.video, {
@@ -167,17 +170,24 @@ test('playback: autoplay from the session; a refused play starts muted and unmut
   await assert.rejects(t.setPlaying(true), /blocked/, 'already muted: nothing more to try')
 })
 
-test('no offer: "unavailable" after OFFER_TIMEOUT_MS, but only while the server keeps talking', async () => {
+test('no offer within OFFER_TIMEOUT_MS: "unavailable", the room without video', async () => {
   const { t, status } = setup()
   const { s } = sessionInfo()
-  s.lastMessage = Date.now() - 20_000 // nothing heard for a while
   await t.connect(s)
-  await tick(8000)
-  assert.equal(status(), 'connecting', 'a silent server is not "unavailable", its socket is dead')
-  s.lastMessage = Date.now() // a heartbeat
-  await tick(8000)
-  assert.equal(status(), 'unavailable', 'the server is there and will not stream: the room without video')
+  await tick(7999)
+  assert.equal(status(), 'connecting')
+  await tick(1)
+  assert.equal(status(), 'unavailable', 'the server will not stream to this session')
   assert.equal(vi.getTimerCount(), 0)
+
+  const again = setup()
+  const si = sessionInfo()
+  await again.t.connect(si.s)
+  si.receive('signal/provide', { sdp: OFFER })
+  await settle()
+  assert.equal(vi.getTimerCount(), 0, 'an offer that arrived stops the clock')
+  await tick(8000)
+  assert.equal(again.status(), 'connecting')
 })
 
 test('a new track resumes playback that was running (reconnect), autoplay or not', async () => {
@@ -185,7 +195,7 @@ test('a new track resumes playback that was running (reconnect), autoplay or not
   const pc = FakePeer.all[0]
   pc.ontrack!({ track: { kind: 'video' }, streams: [{ id: 1 }], receiver: {} })
   await settle()
-  assert.equal(video.plays, 0, 'no autoplay')
+  assert.equal(video.plays, 0, 'the transport does not start playback by itself')
   await t.setPlaying(true)
   assert.equal(video.plays, 1)
   pc.ontrack!({ track: { kind: 'video' }, streams: [{ id: 2 }], receiver: {} }) // the peer was replaced
@@ -203,59 +213,57 @@ test('input: a DataChannelInput bound to the channel the peer opens; cursor fram
   const dc = new FakeChannel()
   FakePeer.all[0].ondatachannel!({ channel: dc })
   dc.readyState = 'open'
-  t.input.send(OP.MOVE, [2, 1], [2, 2])
+  t.input.move(1, 2)
   assert.deepEqual(dc.frames, [[1, 0, 4, 0, 1, 0, 2]])
-  dc.onmessage!({ data: new Uint8Array([OP.CURSOR_POSITION, 0, 4, 0, 7, 0, 9]).buffer })
+  dc.onmessage!({ data: new Uint8Array([1, 0, 4, 0, 7, 0, 9]).buffer }) // CURSOR_POSITION
   assert.deepEqual(cursors.at(-1), { x: 7, y: 9 })
-  dc.onmessage!({ data: new Uint8Array([OP.CURSOR_IMAGE, 0, 9, 0, 2, 0, 3, 0, 0, 0, 1, 0]).buffer })
+  dc.onmessage!({ data: new Uint8Array([2, 0, 9, 0, 2, 0, 3, 0, 0, 0, 1, 0]).buffer }) // CURSOR_IMAGE
   assert.deepEqual((cursors.at(-1) as { width: number }).width, 2)
-  t.suspend()
+  t.close()
   assert.equal(cursors.at(-1), null, 'the dropped peer takes the cursor with it')
-  t.input.send(OP.MOVE, [2, 1], [2, 2])
+  t.input.move(1, 2)
   assert.equal(dc.frames.length, 1, 'nothing is sent on the old channel')
 })
 
-test('close: peer, timers, failures and the picture go; suspend keeps the picture and the count', async () => {
+test('close: peer, timers, failure count and playback go; the picture stays for the reconnect', async () => {
   const old = await connected()
-  const { t, video, errors, status } = old
+  const { t, video, errors, states, status } = old
   const stream = { id: 'stream' }
   FakePeer.all[0].ontrack!({ track: { kind: 'video' }, streams: [stream], receiver: {} })
+  await t.setPlaying(true)
+  video.dispatch('canplaythrough')
+  assert.deepEqual([states.at(-1)!.video.playable, states.at(-1)!.video.playing], [true, true])
   FakePeer.all[0].transition('failed') // one failure, a retry is pending
   assert.equal(vi.getTimerCount(), 1)
-  t.suspend()
+  t.close()
   assert.ok(FakePeer.all[0].closed)
   assert.equal(vi.getTimerCount(), 0)
   assert.equal(status(), 'disconnected')
-  assert.equal(video.srcObject, stream, 'a reconnect keeps the last picture')
+  assert.equal(video.srcObject, stream, 'the last picture stays until a new stream replaces it')
+  assert.equal(video.paused, true, 'but nothing plays')
+  assert.deepEqual([states.at(-1)!.video.playable, states.at(-1)!.video.playing], [false, false])
   await tick(60_000)
-  assert.equal(FakePeer.all.length, 1, 'nothing is requested while suspended')
+  assert.equal(FakePeer.all.length, 1, 'nothing is requested while closed')
   old.receive('signal/provide', { sdp: OFFER }) // the old session's messages are not its business any more
   await settle()
   assert.equal(FakePeer.all.length, 1)
 
-  // the count carries over a suspend: the next failure waits the second step of the backoff
+  // a reconnect: the picture is still there, and the count started over (the first failure waits
+  // the first step of the backoff)
   const si = sessionInfo()
   await t.connect(si.s)
+  assert.equal(video.srcObject, stream)
   si.receive('signal/provide', { sdp: OFFER })
   await settle()
+  FakePeer.all[1].ontrack!({ track: { kind: 'video' }, streams: [{ id: 'new' }], receiver: {} })
+  await settle()
+  assert.equal(video.plays, 1, 'starting again is the client’s call (it remembers what was playing)')
   si.out.length = 0
   FakePeer.all[1].transition('failed')
-  await tick(1500)
-  assert.deepEqual(si.events(), [], 'second failure: 3000 ms')
-  await tick(1500)
+  await tick(1499)
+  assert.deepEqual(si.events(), [])
+  await tick(1)
   assert.deepEqual(si.events(), ['signal/request'])
-
-  t.close()
-  assert.equal(video.srcObject, null, 'closed for good: the element is emptied')
-  assert.equal(vi.getTimerCount(), 0)
-  const again = sessionInfo()
-  await t.connect(again.s)
-  again.receive('signal/provide', { sdp: OFFER })
-  await settle()
-  again.out.length = 0
-  FakePeer.all.at(-1)!.transition('failed')
-  await tick(1500)
-  assert.deepEqual(again.events(), ['signal/request'], 'close() reset the count: first failure waits 1500 ms')
   assert.deepEqual(errors, [])
 })
 
@@ -273,15 +281,17 @@ test('errors: a codec mismatch and the give-up are reported, the transport stays
   assert.equal(out.length, 1, 'no answer')
 })
 
-test('microphone: addTrack renegotiates through the session; removeTrack ignores an old sender', async () => {
+test('microphone: shareMedia adds the tracks and renegotiates through the session; stop removes them', async () => {
   const { t, out } = await connected()
-  assert.throws(() => new WebRTCTransport().addTrack({} as MediaStreamTrack), /not connected/)
+  assert.throws(() => new WebRTCTransport().shareMedia(micStream()), /not connected/)
   const pc = FakePeer.all[0]
-  const sender = t.addTrack({ kind: 'audio' } as MediaStreamTrack)
-  assert.deepEqual(pc.senders, [sender])
+  const stream = micStream()
+  const stop = t.shareMedia(stream)
+  assert.deepEqual(pc.senders, [{ track: stream.getTracks()[0] }])
   await pc.onnegotiationneeded!()
   assert.deepEqual(out, [{ event: 'signal/offer', payload: { sdp: 'local-offer' } }])
-  t.removeTrack({} as RTCRtpSender) // not this peer's: ignored, not thrown
-  t.removeTrack(sender)
+  stop()
+  assert.deepEqual(pc.senders, [])
+  stop() // already gone: ignored, not thrown (the fake peer throws for an unknown sender)
   assert.deepEqual(pc.senders, [])
 })

@@ -73,6 +73,7 @@ export class NekoClient {
 
   private el: HTMLElement | null = null
   private container: HTMLElement | null = null
+  private detach: (() => void) | null = null
   private overlay: Overlay | null = null
   private observer = new ResizeObserver(() => this.onResize())
 
@@ -85,6 +86,7 @@ export class NekoClient {
   private reconnectGen = 0 // a close()+connect() while a reconnect was deciding must win
   private staleTimer = 0
   private lastMessage = 0
+  private resume = false // playback was running when the socket was lost: pick it up on the new stream
   private clipboardAt = 0 // when the remote clipboard last changed
   private localSeen = { text: '', at: 0 } // the local clipboard text last handed over, and when
 
@@ -244,6 +246,7 @@ export class NekoClient {
   private close(error?: Error) {
     const was = this.wanted
     this.wanted = false
+    this.resume = false
     clearTimeout(this.reconnectTimer)
     clearInterval(this.staleTimer)
     this.reconnectGen++
@@ -282,7 +285,8 @@ export class NekoClient {
 
   private onSocketLost() {
     this.ws = null
-    this.transport.suspend()
+    this.resume ||= this.state.video.playing
+    this.transport.close()
     if (!this.wanted) return
     this.state.connection.status = 'connecting'
     if (++this.attempts > RECONNECT_MAX) return this.close(new Error('connection lost'))
@@ -312,7 +316,12 @@ export class NekoClient {
 
   // the stream: connected only once the transport is; its status while the socket is up
   private onTransportState(s: TransportState) {
+    const playable = s.video.playable && !this.state.video.playable // a stream arrived (or a new one)
     Object.assign(this.state.video, s.video)
+    if (playable) {
+      if (this.opts.autoplay || this.resume) this.transport.setPlaying(true).catch(() => {})
+      this.resume = false
+    }
     if (!this.wanted) return
     if (s.status === 'connected') this.attempts = 0
     this.state.connection.status = s.status === 'connected' || s.status === 'unavailable' ? 'connected' : 'connecting'
@@ -320,19 +329,12 @@ export class NekoClient {
 
   // what the transport gets of this session, once the server has introduced it (system/init)
   private sessionInfo(init: SessionInfo['init']): SessionInfo {
-    const self = this
     return {
       url: this.state.connection.url,
       token: this.state.connection.token,
       init,
       send: (event, payload) => this.send(event, payload),
       on: (event, cb) => this.messages.on(event, cb),
-      get lastMessage() {
-        return self.lastMessage
-      },
-      get autoplay() {
-        return !!self.opts.autoplay
-      },
     }
   }
 
@@ -560,14 +562,10 @@ export class NekoClient {
     this.transport.setVolume(Math.max(0, Math.min(1, value)))
   }
 
-  // share local media (microphone), on transports that can
-  addTrack(track: MediaStreamTrack, ...streams: MediaStream[]): RTCRtpSender {
-    if (!this.transport.addTrack) throw new Error('transport cannot send media')
-    return this.transport.addTrack(track, ...streams)
-  }
-
-  removeTrack(sender: RTCRtpSender) {
-    this.transport.removeTrack?.(sender)
+  // share local media (microphone), on transports that can; returns what stops sharing it
+  shareMedia(stream: MediaStream): () => void {
+    if (!this.transport.shareMedia) throw new Error('transport cannot send media')
+    return this.transport.shareMedia(stream)
   }
 
   /////////////////////////////
@@ -580,7 +578,7 @@ export class NekoClient {
     this.el = el
     const container = (this.container = document.createElement('div'))
     container.style.position = 'relative'
-    this.transport.attach(container)
+    this.detach = this.transport.attach(container)
     el.append(container)
     this.overlay = new Overlay(this, container)
     this.syncOverlay()
@@ -591,9 +589,9 @@ export class NekoClient {
   unmount() {
     this.observer.disconnect()
     this.overlay?.destroy()
-    this.transport.detach()
+    this.detach?.()
     this.container?.remove()
-    this.el = this.container = this.overlay = null
+    this.el = this.container = this.detach = this.overlay = null
   }
 
   private get overlayVisible() {

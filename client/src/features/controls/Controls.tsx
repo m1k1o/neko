@@ -10,7 +10,7 @@ import './controls.scss'
 export function Controls() {
   const { state } = useNeko()
   const [shake, setShake] = useState(false)
-  const mic = useRef<{ track: MediaStreamTrack; sender: RTCRtpSender } | null>(null)
+  const mic = useRef<{ track: MediaStreamTrack; stop: () => void } | null>(null)
   const [micOn, setMicOn] = useState(false)
 
   const admin = client.isAdmin
@@ -35,7 +35,7 @@ export function Controls() {
 
   const micOff = () => {
     if (!mic.current) return
-    client.removeTrack(mic.current.sender)
+    mic.current.stop()
     mic.current.track.stop()
     mic.current = null
     setMicOn(false)
@@ -51,7 +51,7 @@ export function Controls() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       const track = stream.getAudioTracks()[0]
-      mic.current = { track, sender: client.addTrack(track, stream) }
+      mic.current = { track, stop: client.shareMedia(stream) }
       setMicOn(true)
     } catch (err: any) {
       tell(t('controls.mic_error'), err.message)

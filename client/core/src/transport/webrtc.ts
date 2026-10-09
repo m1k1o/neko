@@ -7,7 +7,8 @@ import type { SessionInfo, StreamTransport, TransportEvents, TransportState, Tra
 const RECONNECT_MAX = 10
 const RECONNECT_BACKOFF_MS = 1500
 // no offer within this long after asking for one: the server will not send media (e.g. can_watch
-// is off), so the room is shown without video instead of a spinner for ever
+// is off), so the room is shown without video instead of a spinner for ever; a dead socket is the
+// client's stale check's business
 const OFFER_TIMEOUT_MS = 8_000
 
 export class WebRTCTransport implements StreamTransport {
@@ -55,10 +56,7 @@ export class WebRTCTransport implements StreamTransport {
     this.unsubscribe()
     this.session = session
     const on = (event: string, cb: (p: any) => void) => this.unsubs.push(session.on(event, cb))
-    on('signal/provide', (p) => {
-      clearTimeout(this.offerTimer)
-      this.onProvide(p).catch((err) => console.error('[neko] webrtc setup failed', err))
-    })
+    on('signal/provide', (p) => this.onProvide(p).catch((err) => console.error('[neko] webrtc setup failed', err)))
     const renegotiate = (p: { sdp: string }) =>
       this.onOffer(p.sdp).catch((err) => console.error('[neko] webrtc renegotiation failed', err))
     on('signal/offer', renegotiate)
@@ -75,17 +73,16 @@ export class WebRTCTransport implements StreamTransport {
     this.requestPeer()
   }
 
-  suspend() {
+  // the last picture stays on the element (a reconnect shows it until the new stream arrives), but
+  // nothing plays or can be played until then
+  close() {
     this.unsubscribe()
     this.session = null
     this.closePeer()
-    this.setStatus('disconnected')
-  }
-
-  close() {
-    this.suspend()
     this.failures = 0
-    if (this.video) this.video.srcObject = null
+    this.video?.pause()
+    this.state.video.playable = false
+    this.setStatus('disconnected')
   }
 
   private unsubscribe() {
@@ -96,15 +93,10 @@ export class WebRTCTransport implements StreamTransport {
     this.candidates = []
     this.session?.send('signal/request', { video: {}, audio: {} })
     clearTimeout(this.offerTimer)
-    const noOffer = () => {
-      if (!this.session || this.pc) return
-      // only while the server is talking (heartbeats): after a lost network the media fails
-      // first and the request goes into a dead socket, which is the stale check's business,
-      // not a reason to show a frozen picture as "connected"
-      if (Date.now() - this.session.lastMessage < OFFER_TIMEOUT_MS * 2) this.setStatus('unavailable')
-      else this.offerTimer = window.setTimeout(noOffer, OFFER_TIMEOUT_MS)
-    }
-    this.offerTimer = window.setTimeout(noOffer, OFFER_TIMEOUT_MS)
+    this.offerTimer = window.setTimeout(
+      () => this.session && !this.pc && this.setStatus('unavailable'),
+      OFFER_TIMEOUT_MS,
+    )
   }
 
   private closePeer() {
@@ -170,18 +162,19 @@ export class WebRTCTransport implements StreamTransport {
     if ('jitterBufferTarget' in receiver) (receiver as any).jitterBufferTarget = 0
     if (track.kind !== 'video' || !this.video) return
     this.video.srcObject = streams[0]
-    if (this.session?.autoplay || this.state.video.playing) this.play().catch(() => {})
+    // a replaced peer keeps playing; starting (autoplay, after a socket loss) is the client's call
+    if (this.state.video.playing) this.play().catch(() => {})
   }
 
   // share local media (microphone); renegotiation happens via onnegotiationneeded
-  addTrack(track: MediaStreamTrack, ...streams: MediaStream[]): RTCRtpSender {
-    if (!this.pc) throw new Error('not connected')
-    return this.pc.addTrack(track, ...streams)
-  }
-
-  removeTrack(sender: RTCRtpSender) {
-    // a sender from a previous peer connection is already gone; removing it from the current one throws
-    if (this.pc?.getSenders().includes(sender)) this.pc.removeTrack(sender)
+  shareMedia(stream: MediaStream) {
+    const pc = this.pc
+    if (!pc) throw new Error('not connected')
+    const senders = stream.getTracks().map((track) => pc.addTrack(track, stream))
+    return () => {
+      // senders of a previous peer connection are already gone; removing them from the current one throws
+      for (const s of senders) if (this.pc?.getSenders().includes(s)) this.pc.removeTrack(s)
+    }
   }
 
   /////////////////////////////
@@ -189,7 +182,7 @@ export class WebRTCTransport implements StreamTransport {
   /////////////////////////////
 
   attach(container: HTMLElement) {
-    this.detach()
+    this.video?.remove() // a second attach replaces the element
     const video = (this.video = document.createElement('video'))
     video.playsInline = true
     video.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;background:transparent'
@@ -208,11 +201,10 @@ export class WebRTCTransport implements StreamTransport {
     v.volume = video.volume
     container.append(video)
     this.emitState()
-  }
-
-  detach() {
-    this.video?.remove()
-    this.video = null
+    return () => {
+      video.remove()
+      if (this.video === video) this.video = null
+    }
   }
 
   setPlaying(on: boolean) {
