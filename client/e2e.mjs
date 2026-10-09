@@ -364,6 +364,9 @@ await step('implicit hosting: bob gets control by clicking', async () => {
 await step('clipboard: local clipboard reaches the remote when hovering', async () => {
   await A.click('.neko-controls .fa-keyboard')
   await A.waitForSelector('.members-list .member.self.host', { timeout: 5000 })
+  // give the X clipboard an owner first: reading it while nothing owns it is a server 500 (xclip
+  // exits) that the browser logs as an error, which is not what this step is about
+  await api(A, 'POST', '/room/clipboard', { text: 'seed' })
   const text = 'neko-clip-' + Date.now()
   await A.evaluate((t) => navigator.clipboard.writeText(t), text)
   await A.mouse.move(5, 5)
