@@ -20,10 +20,22 @@ g.ResizeObserver = class {
 
 const dist = join(import.meta.dirname, 'dist')
 const pkg = await import('./dist/index.js')
+const { WebRTCTransport } = pkg
 
 // the public surface
-for (const name of ['NekoClient', 'Overlay', 'Store', 'Emitter', 'NekoApi', 'ApiError'])
+for (const name of [
+  'NekoClient',
+  'Overlay',
+  'Store',
+  'Emitter',
+  'NekoApi',
+  'ApiError',
+  'WebRTCTransport',
+  'WebSocketInput',
+  'DataChannelInput',
+])
   assert.equal(typeof pkg[name], 'function', name)
+assert.equal(WebRTCTransport.supported(), typeof RTCPeerConnection !== 'undefined')
 assert.equal(typeof pkg.OP, 'object')
 assert.equal(pkg.OP.MOVE, 1)
 
@@ -48,14 +60,35 @@ off()
 e.emit('x', 2)
 assert.deepEqual(got, [1])
 
-// NekoClient: constructs without a connection, setUrl normalises the server URL
+// NekoClient: constructs without a connection, setUrl normalises the server URL, and the
+// transport seam: WebRTC by default (its data channel as the input), or the one given
 const client = new pkg.NekoClient({ autologin: false, autoconnect: false })
 assert.equal(client.state.connection.status, 'disconnected')
 client.setUrl('http://neko.test/some/path/')
 assert.equal(client.api.url, 'http://neko.test/some/path')
+assert.ok(client.transport instanceof pkg.WebRTCTransport)
+assert.equal(client.transport.kind, 'webrtc')
+assert.ok(client.input instanceof pkg.DataChannelInput)
+const noop = () => {}
+const custom = {
+  kind: 'hls',
+  element: null,
+  connect: async () => {},
+  suspend: noop,
+  close: noop,
+  attach: noop,
+  detach: noop,
+  setPlaying: async () => {},
+  setVolume: noop,
+  setMuted: noop,
+  on: () => noop,
+}
+const other = new pkg.NekoClient({ transport: custom })
+assert.equal(other.transport, custom)
+assert.ok(other.input instanceof pkg.WebSocketInput, 'no input channel on the transport: the websocket')
 
 // build.mjs rewrote the `.ts` specifiers the declarations inherit from the sources
-for (const f of readdirSync(dist).filter((f) => f.endsWith('.d.ts'))) {
+for (const f of readdirSync(dist, { recursive: true }).filter((f) => f.endsWith('.d.ts'))) {
   const src = readFileSync(join(dist, f), 'utf8')
   assert.ok(!/from '[^']*\.ts'/.test(src) && !/import\("[^"]*\.ts"\)/.test(src), `${f} still imports a .ts path`)
 }

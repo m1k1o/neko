@@ -1,9 +1,10 @@
 # @m1k1o/neko
 
 Framework-free client library for the [neko](https://github.com/m1k1o/neko) v3 API: REST, the
-`/api/ws` event protocol, WebRTC with the binary input channel, and the input overlay (mouse,
-wheel, keyboard, touch, file drop, the host's cursor). It is what the React GUI in `../src` is
-built on, and it can drive a neko server from any framework or from a plain page.
+`/api/ws` event protocol, the stream through a pluggable transport (WebRTC with its binary input
+channel, see [Transports](#transports)), and the input overlay (mouse, wheel, keyboard, touch, file
+drop, the host's cursor). It is what the React GUI in `../src` is built on, and it can drive a neko
+server from any framework or from a plain page.
 
 ESM, TypeScript declarations included, no runtime dependencies.
 
@@ -43,6 +44,7 @@ client.mount(document.getElementById('video')!)
 | `autoconnect` | `false`  | connect as soon as `setUrl()` finds a valid session                         |
 | `autoplay`    | `false`  | start playback when the track arrives (read each time, so a getter works)   |
 | `inputMode`   | `'auto'` | `'touch'` or `'mouse'` instead of detecting it (`isTouchDevice`)            |
+| `transport`   | WebRTC   | a `StreamTransport` (or a factory for one), see [Transports](#transports)   |
 
 ### Authentication
 
@@ -55,11 +57,17 @@ client.mount(document.getElementById('video')!)
 
 ### Connection
 
-`connect()` opens the websocket (`/api/ws`), asks for a WebRTC offer and answers it; the server's
-ICE candidates are buffered until the offer is applied. The connection is kept alive by itself: a
-socket that goes silent is replaced, a peer the server drops is requested again, and after
-repeated failures the client backs off and finally gives up (`connection.closed` with an error).
-`disconnect()` closes everything; the session stays valid.
+`connect()` opens the websocket (`/api/ws`) and, once the server has introduced the session
+(`system/init`), starts the transport, which brings up the stream (WebRTC: asks for an offer and
+answers it; the server's ICE candidates are buffered until the offer is applied). The connection
+is kept alive by itself: a socket that goes silent is replaced and the transport restarted on the
+new one, a peer the server drops is requested again, and after repeated failures the client backs
+off and finally gives up (`connection.closed` with an error). `disconnect()` closes everything;
+the session stays valid.
+
+`connection.status` follows both: `'connecting'` while the socket is being (re)opened or the
+transport has no stream yet, `'connected'` once the transport reports `'connected'` (or
+`'unavailable'`: the server will not stream to this session, the room is shown without video).
 
 | event / state                                        |                                                 |
 | ---------------------------------------------------- | ----------------------------------------------- |
@@ -67,6 +75,7 @@ repeated failures the client backs off and finally gives up (`connection.closed`
 | `events: 'connection.status'`                        | the status changed                              |
 | `events: 'connection.closed'`                        | closed; with an `Error` when not asked for      |
 | `connected`, `session`, `isAdmin`, `implicitControl` | computed from the state                         |
+| `transport`                                          | the `StreamTransport` in use                    |
 
 ### State
 
@@ -81,19 +90,19 @@ client.store.watch(
 client.store.version // increases on every change; what React's useSyncExternalStore compares
 ```
 
-| field                                      |                                                                                  |
-| ------------------------------------------ | -------------------------------------------------------------------------------- |
-| `authenticated`                            | a valid session is known                                                         |
-| `connection.{url, token, status}`          |                                                                                  |
-| `video.{playable, playing, volume, muted}` | plus `mutedByAutoplay` when the browser refused sound and playback started muted |
-| `control.host_id`                          | who has control (`controlling` compares it with `session_id`)                    |
-| `control.locked`                           | local lock: keep control, send no input                                          |
-| `control.clipboard`                        | the remote clipboard, as the server reports it                                   |
-| `control.{scroll, keyboard, touch}`        | input settings and whether the server takes native touch events                  |
-| `screen.{size, configurations}`            | the current and the available screen sizes                                       |
-| `session_id`, `sessions`                   | this session and all sessions (`Session`: `id`, `profile`, `state`)              |
-| `settings`                                 | room settings (`Settings`: locks, implicit hosting, `plugins`, ...)              |
-| `mobile_keyboard_open`                     | the on-screen keyboard is up (touch devices)                                     |
+| field                                      |                                                                                    |
+| ------------------------------------------ | ---------------------------------------------------------------------------------- |
+| `authenticated`                            | a valid session is known                                                           |
+| `connection.{url, token, status}`          |                                                                                    |
+| `video.{playable, playing, volume, muted}` | as the transport reports it; plus `mutedByAutoplay` when the browser refused sound |
+| `control.host_id`                          | who has control (`controlling` compares it with `session_id`)                      |
+| `control.locked`                           | local lock: keep control, send no input                                            |
+| `control.clipboard`                        | the remote clipboard, as the server reports it                                     |
+| `control.{scroll, keyboard, touch}`        | input settings and whether the server takes native touch events                    |
+| `screen.{size, configurations}`            | the current and the available screen sizes                                         |
+| `session_id`, `sessions`                   | this session and all sessions (`Session`: `id`, `profile`, `state`)                |
+| `settings`                                 | room settings (`Settings`: locks, implicit hosting, `plugins`, ...)                |
+| `mobile_keyboard_open`                     | the on-screen keyboard is up (touch devices)                                       |
 
 ### Events
 
@@ -119,19 +128,24 @@ client.store.version // increases on every change; what React's useSyncExternalS
 
 ### Video and audio
 
+The stream is the transport's: `mount(el)` lets it create its media element inside `el` and puts
+the input overlay over it; the media calls below go through it.
+
 | method / field                       |                                                                                                          |
 | ------------------------------------ | -------------------------------------------------------------------------------------------------------- |
-| `mount(el)` / `unmount()`            | put the `<video>` and the input overlay into `el` (they fill it); `canvasSize` is their size             |
-| `video`                              | the `HTMLVideoElement`, once mounted                                                                     |
+| `mount(el)` / `unmount()`            | put the stream and the input overlay into `el` (they fill it); `canvasSize` is their size                |
+| `transport.element`                  | the transport's media element (a `<video>` for WebRTC), once mounted                                     |
 | `play()`, `pause()`                  | when the browser refuses sound, `play()` starts muted (`mutedByAutoplay`) and unmutes on the first click |
 | `mute()`, `unmute()`, `setVolume(v)` | `v` in 0..1                                                                                              |
-| `addTrack(track, ...streams)`        | send a local track (microphone); returns the `RTCRtpSender` for `removeTrack(sender)`                    |
+| `addTrack(track, ...streams)`        | send a local track (microphone) on a transport that can; returns the `RTCRtpSender` for `removeTrack()`  |
 
 ### Control and input
 
-The overlay sends mouse, wheel, keyboard and touch input over the data channel while this session
-has control. Keyboard handling is Apache Guacamole's keyboard (vendored in `keyboard/`), so
-keysyms match the server's layouts.
+The overlay sends mouse, wheel, keyboard and touch input through `client.input`, an `InputChannel`
+(`send(op, ...fields)`, opcodes in `OP`): the transport's own channel when it has one (WebRTC: the
+data channel, `DataChannelInput`), otherwise `WebSocketInput`, which sends the same input as the
+server's `control/*` websocket events. Keyboard handling is Apache Guacamole's keyboard (vendored
+in `keyboard/`), so keysyms match the server's layouts.
 
 | method                                           |                                                                                            |
 | ------------------------------------------------ | ------------------------------------------------------------------------------------------ |
@@ -144,7 +158,7 @@ keysyms match the server's layouts.
 | `preparePaste(text)`                             | before a paste keystroke: the side that copied most recently wins (see the source comment) |
 | `uploadDrop({ x, y, files })`                    | drop files into the remote desktop at a position (the overlay does this on drop)           |
 | `mobileKeyboardToggle()`                         | open / close the on-screen keyboard on touch devices                                       |
-| `sendData(op, ...fields)`                        | raw input message on the data channel; opcodes in `OP`                                     |
+| `input.send(op, ...fields)`                      | a raw input message; fields are `[bytes, value]` pairs as the data channel encodes them    |
 
 ### Messages
 
@@ -168,6 +182,51 @@ await client.api.upload('/filetransfer', formData, ({ loaded, total }) => {})
 Failures throw `ApiError` with `status` and the server's `message`. Session ids can come from
 login names on some member providers, so they go through `encodeURIComponent` in paths.
 
+## Transports
+
+`NekoClient` owns the session (auth, the websocket, the room state) and leaves the stream to a
+`StreamTransport` (`transport.ts`), the way Guacamole's client runs over a tunnel it does not care
+about. WebRTC is the one implemented (`WebRTCTransport`, `transport/webrtc.ts`); others
+(WebCodecs over a websocket, WebTransport, MSE, HLS) plug in the same way:
+
+```ts
+interface StreamTransport {
+  readonly kind: 'webrtc' | 'webcodecs-ws' | 'webtransport' | 'ws-mse' | 'hls'
+  readonly element: HTMLElement | null // its media element, created by attach()
+  readonly input?: InputChannel // its own input path, if any (the data channel)
+
+  connect(session: SessionInfo): Promise<void> // start streaming; again after suspend() on a reconnect
+  suspend(): void // the session's socket is gone: drop the stream, keep the picture and retry counters
+  close(): void // stop for good; the element is emptied
+
+  attach(container: HTMLElement): void // create the media element inside the container
+  detach(): void
+
+  setPlaying(on: boolean): Promise<void>
+  setVolume(volume: number): void
+  setMuted(on: boolean): void
+  addTrack?(track: MediaStreamTrack, ...streams: MediaStream[]): RTCRtpSender
+  removeTrack?(sender: RTCRtpSender): void
+
+  on(event: 'state' | 'stats' | 'error' | 'cursor.position' | 'cursor.image', cb): () => void
+}
+```
+
+`SessionInfo` is what the client hands over on `system/init`: the server `url` and `token`, the
+`init` payload, `send(event, payload)` / `on(event, cb)` for the transport's own messages over the
+main socket (`signal/*` go to the transport, the client does not handle them), `lastMessage`
+(when the server was last heard from) and `autoplay`.
+
+A transport reports `'state'` (`{ status, size, video }`: its `status` — `'connecting'`,
+`'connected'`, `'unavailable'` when the server will not stream, `'disconnected'` — the stream's
+size and the media element's `playable`/`playing`/`volume`/`muted`/`mutedByAutoplay`, mirrored
+into `state.video`), `'error'` (the stream is lost for good; the client closes the connection
+with it), the host's `'cursor.position'`/`'cursor.image'` when its server feeds them back, and
+`'stats'` (reserved). A second transport needs: its own connection from the `SessionInfo`, an
+element it draws into, play/volume/mute, and either an `input` channel or nothing (the client then
+sends input over the websocket). Pass it as `new NekoClient({ transport })`; the GUI checks
+`WebRTCTransport.supported()` before rendering.
+
 ## `Store` and `Emitter`
 
 `new Store(initial)` wraps a plain object in proxies: writes anywhere in the tree mark it dirty, and
@@ -179,16 +238,19 @@ pattern for their own state.
 ## Types
 
 The wire types mirror `server/pkg/types`: `Session`, `MemberProfile`, `SessionState`, `Settings`,
-`ScreenSize`, `LoginResponse`, `MemberData`, `CursorImage`, the client `State`, the `NekoEvents`
-map and the data channel opcodes `OP`.
+`ScreenSize`, `InitPayload`, `LoginResponse`, `MemberData`, `CursorImage`, the client `State`, the
+`NekoEvents` map and the data channel opcodes `OP`; the transport seam is `StreamTransport`,
+`SessionInfo`, `InputChannel`, `TransportKind`, `TransportStatus`, `TransportState` and
+`TransportEvents`.
 
 ## Development
 
 ```sh
 npm run build   # tsc -> dist/ (ESM + .d.ts), plus the vendored keyboard library
-npm test        # the unit tests in src/*.test.ts (vitest, run from ../ where it is installed): the connection
-                # state machine (handshake, reconnects, timeouts, events, clipboard, auth) and the store,
-                # against fake sockets, peers and fake timers
+npm test        # the unit tests in src/**/*.test.ts (vitest, run from ../ where it is installed): the connection
+                # state machine (handshake, reconnects, timeouts, events, clipboard, auth), the transport seam,
+                # the WebRTC transport, the input channels and the store, against the fake browser in
+                # src/test/browser.ts (sockets, peers, elements, fake timers)
 npm run check   # build, the tests, then node dist.check.mjs against the built package: exports, Store,
                 # Emitter, setUrl, .d.ts specifiers
 ```
