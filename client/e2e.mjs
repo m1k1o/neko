@@ -437,19 +437,27 @@ await step('alice takes control and types into KDE', async () => {
   const box = await A.locator('.player-container').boundingBox()
   await A.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
   await A.mouse.move(box.x + box.width / 2 + 3, box.y + box.height / 2 + 3)
+  // what arrived: select all and copy inside the remote, then read the remote clipboard
+  const copyAll = async (settle = 600) => {
+    await A.keyboard.press('Control+a')
+    await A.keyboard.press('Control+c')
+    await A.waitForTimeout(settle)
+    return JSON.parse(await api(A, 'GET', '/room/clipboard')).text
+  }
   await A.keyboard.press('Alt+F2')
-  await A.waitForTimeout(1200)
+  // KRunner is started by that shortcut and takes the keyboard focus only once it is up; a key
+  // that lands on the focus change is lost. So type a probe and read it back until KRunner
+  // demonstrably inserts keys, then type the text over the still selected probe
+  const deadline = Date.now() + 15000
+  for (;;) {
+    await A.keyboard.type('x')
+    if ((await copyAll(300).catch(() => '')) === 'x') break
+    if (Date.now() > deadline) throw new Error('KRunner did not take the keyboard')
+  }
   await A.keyboard.type('react gui works', { delay: 30 })
   await A.waitForTimeout(1200)
   await A.screenshot({ path: out + '/e2e-alice.png' })
   await B.screenshot({ path: out + '/e2e-bob.png' })
-  // what arrived: select all and copy inside the remote, then read the remote clipboard
-  const copyAll = async () => {
-    await A.keyboard.press('Control+a')
-    await A.keyboard.press('Control+c')
-    await A.waitForTimeout(600)
-    return JSON.parse(await api(A, 'GET', '/room/clipboard')).text
-  }
   const typed = await copyAll()
   if (typed !== 'react gui works') throw new Error('remote received ' + JSON.stringify(typed))
   // Ctrl+V inside the remote pastes what was copied there, with the real Ctrl held. Home collapses
