@@ -1,5 +1,7 @@
-// Input layer over the video: mouse, wheel, keyboard, touch, file drop, and
-// drawing the host's cursor for everyone who is not controlling.
+// The keyboard/mouse/touch control device: an input layer over the stream (mouse, wheel, keyboard,
+// touch, file drop) that sends through `client.input`, and the host's cursor drawn for everyone
+// who is not controlling. Attached by the consumer next to the transport's element (see attach);
+// the client itself knows nothing of it, so a stream-only consumer never loads it or the keyboard.
 import GuacamoleKeyboard from './keyboard/guacamole.js'
 import type { NekoClient, Pos } from './client.ts'
 import type { CursorImage } from './types.ts'
@@ -49,6 +51,8 @@ export class Overlay {
   private readonly input = document.createElement('textarea')
   private readonly keyboard = new GuacamoleKeyboard()
   private readonly cleanup: (() => void)[] = []
+  private box: HTMLElement | null = null
+  private size = { width: 0, height: 0 } // of the box, in CSS px
 
   private cursor: CursorImage | null = null
   private readonly cursorImg = new Image()
@@ -65,7 +69,7 @@ export class Overlay {
 
   private readonly client: NekoClient
 
-  constructor(client: NekoClient, parent: HTMLElement) {
+  constructor(client: NekoClient) {
     this.client = client
     this.canvas.style.cssText = LAYER
     // a transparent textarea receives keys, IME composition and the mobile keyboard
@@ -77,7 +81,23 @@ export class Overlay {
     this.input.setAttribute('autocomplete', 'off')
     this.input.setAttribute('data-gramm', 'false')
     this.wrap.append(this.canvas, this.input)
-    parent.append(this.wrap)
+
+    this.keyboard.onkeydown = (key) => this.onKeyDown(remap(key))
+    this.keyboard.onkeyup = (key) => this.onKeyUp(remap(key))
+    this.keyboard.listenTo(this.input)
+    this.cursorImg.onload = this.draw
+  }
+
+  // `box` is a positioned element that already holds the transport's element (so the stream is
+  // below): the overlay fills it, and keeps it letterboxed inside its parent to the remote screen's
+  // aspect ratio so that its canvas maps onto the picture (a stream alone needs no letterboxing, the
+  // <video> keeps the aspect ratio by itself). Returns what detaches it again; a second attach
+  // replaces the first.
+  attach(box: HTMLElement): () => void {
+    this.detach()
+    this.box = box
+    box.append(this.wrap)
+    const { client, input } = this
 
     const on = (el: EventTarget, ev: string, fn: (e: any) => void, opts?: AddEventListenerOptions) => {
       el.addEventListener(ev, fn, opts)
@@ -88,7 +108,6 @@ export class Overlay {
       e.stopPropagation()
       fn(e)
     }
-    const input = this.input
     on(
       input,
       'click',
@@ -144,12 +163,23 @@ export class Overlay {
     )
     on(input, 'blur', () => (client.state.mobile_keyboard_open = false))
 
-    this.keyboard.onkeydown = (key) => this.onKeyDown(remap(key))
-    this.keyboard.onkeyup = (key) => this.onKeyUp(remap(key))
-    this.keyboard.listenTo(input)
-
-    this.cursorImg.onload = this.draw
+    // the box follows its parent and the remote screen
+    const observer = new ResizeObserver(() => this.onResize())
+    if (box.parentElement) observer.observe(box.parentElement)
     this.cleanup.push(
+      () => observer.disconnect(),
+      client.store.watch(
+        () => client.state.screen.size,
+        () => this.onResize(),
+      ),
+      client.store.watch(
+        () => this.visible,
+        () => this.sync(),
+      ),
+      client.store.watch(
+        () => this.interactive,
+        () => this.sync(),
+      ),
       client.store.watch(
         () => client.controlling,
         (c) => this.onControl(c),
@@ -159,16 +189,54 @@ export class Overlay {
         () => this.active,
         () => this.focusIfActive(),
       ),
+      client.transport.on('cursor.position', (p) => (p ? this.onCursorPosition(p) : this.clearCursor())),
+      client.transport.on('cursor.image', (img) => this.onCursorImage(img)),
     )
-    this.resize()
+    this.sync()
+    this.onResize()
+    return () => this.detach()
   }
 
-  destroy() {
+  private detach() {
+    if (!this.box) return
     clearTimeout(this.moveTimer)
-    this.cleanup.forEach((fn) => fn())
+    this.cleanup.splice(0).forEach((fn) => fn())
     this.keyboard.reset()
-    if (this.cursor) URL.revokeObjectURL(this.cursor.uri)
     this.wrap.remove()
+    this.box = null
+  }
+
+  // shown unless the room is private (to non-admins) or there is no connection; takes the mouse
+  // only while this member may host and has not locked themselves out
+  private get visible() {
+    return !this.client.privateModeEnabled && this.client.state.connection.status !== 'disconnected'
+  }
+
+  private get interactive() {
+    return !this.client.state.control.locked && !!this.client.session?.profile.can_host
+  }
+
+  private sync() {
+    this.wrap.style.display = this.visible ? '' : 'none'
+    this.wrap.style.pointerEvents = this.interactive ? 'auto' : 'none'
+  }
+
+  // letterbox the box to the remote screen's aspect ratio inside its parent
+  private onResize() {
+    const area = this.box?.parentElement
+    if (!this.box || !area) return
+    const { width, height } = this.client.state.screen.size
+    const { offsetWidth: W, offsetHeight: H } = area
+    const w = Math.min(W, (H * width) / height)
+    const h = Math.min(H, (W * height) / width)
+    Object.assign(this.box.style, {
+      width: `${w}px`,
+      height: `${h}px`,
+      marginTop: `${(H - h) / 2}px`,
+      marginLeft: `${(W - w) / 2}px`,
+    })
+    this.size = { width: w, height: h }
+    this.resize()
   }
 
   // input only flows while we are host and have not locked ourselves out
@@ -380,7 +448,7 @@ export class Overlay {
     }
   }
 
-  onCursorImage(img: CursorImage) {
+  private onCursorImage(img: CursorImage) {
     const old = this.cursor
     this.cursor = img
     this.cursorImg.src = img.uri
@@ -388,12 +456,12 @@ export class Overlay {
     if (old) URL.revokeObjectURL(old.uri)
   }
 
-  onCursorPosition(p: Pos) {
+  private onCursorPosition(p: Pos) {
     this.cursorPos = p
     this.draw()
   }
 
-  clearCursor() {
+  private clearCursor() {
     this.cursorPos = null
     this.draw()
   }
@@ -406,8 +474,8 @@ export class Overlay {
 
   // devicePixelRatio is read on resize only; listen to matchMedia(resolution) if
   // cursors look blurry after dragging the window to another monitor
-  resize() {
-    const { width, height } = this.client.canvasSize
+  private resize() {
+    const { width, height } = this.size
     this.canvas.width = width * devicePixelRatio
     this.canvas.height = height * devicePixelRatio
     this.draw()
@@ -425,7 +493,7 @@ export class Overlay {
   // everyone but the host sees the host's cursor drawn here, tagged with their name
   private paint() {
     const { ctx, cursor, cursorPos } = this
-    const { width, height } = this.client.canvasSize
+    const { width, height } = this.size
     ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0)
     ctx.clearRect(0, 0, width, height)
     if (this.client.controlling || !cursor || !cursorPos || (cursor.width <= 1 && cursor.height <= 1)) return

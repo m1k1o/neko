@@ -1,10 +1,10 @@
 // Framework-free neko client for the v3 API: REST (server/openapi.yaml), the /api/ws event
 // protocol, and the stream through a StreamTransport (WebRTC by default, see transport.ts).
 // Written against master's server/pkg/types. UIs subscribe via `client.store` and read
-// `client.state`; one-off happenings arrive on `client.events`.
+// `client.state`; one-off happenings arrive on `client.events`. Input devices (the keyboard/mouse
+// Overlay, or anything else) are attached by the consumer and send through `client.input`.
 import { Store, Emitter } from './store.ts'
 import { NekoApi, ApiError } from './api.ts'
-import { Overlay } from './overlay.ts'
 import { WebRTCTransport } from './transport/webrtc.ts'
 import { WebSocketInput } from './input/websocket.ts'
 import type { InputChannel, SessionInfo, StreamTransport, TransportState } from './transport.ts'
@@ -66,18 +66,11 @@ export class NekoClient {
   readonly api = new NekoApi()
   readonly events = new Emitter<NekoEvents>()
   readonly transport: StreamTransport
-  // where the overlay sends input: the transport's own channel, or the websocket
+  // where input devices send: the transport's own channel, or the websocket
   readonly input: InputChannel
 
-  canvasSize = { width: 0, height: 0 }
-
-  private el: HTMLElement | null = null
-  private container: HTMLElement | null = null
-  private detach: (() => void) | null = null
-  private overlay: Overlay | null = null
-  private observer = new ResizeObserver(() => this.onResize())
-
   private ws: WebSocket | null = null
+  private introduced = false // system/init arrived on the current socket: the transport's reports count
   // every websocket message, for the transport's signalling
   private readonly messages = new Emitter<Record<string, (payload: any) => void>>()
   private wanted = false // user asked to be connected
@@ -99,8 +92,6 @@ export class NekoClient {
     this.input = this.transport.input ?? new WebSocketInput(this)
     this.transport.on('state', (s) => this.onTransportState(s))
     this.transport.on('error', (err) => this.close(err))
-    this.transport.on('cursor.position', (p) => (p ? this.overlay?.onCursorPosition(p) : this.overlay?.clearCursor()))
-    this.transport.on('cursor.image', (img) => this.overlay?.onCursorImage(img))
 
     const { store, state } = this
     store.watch(
@@ -112,20 +103,8 @@ export class NekoClient {
       () => this.sendKeyboardMap(),
     )
     store.watch(
-      () => state.screen.size,
-      () => this.onResize(),
-    )
-    store.watch(
       () => state.connection.status,
       (s) => this.events.emit('connection.status', s),
-    )
-    store.watch(
-      () => this.overlayVisible,
-      () => this.syncOverlay(),
-    )
-    store.watch(
-      () => this.overlayInteractive,
-      () => this.syncOverlay(),
     )
   }
 
@@ -242,10 +221,11 @@ export class NekoClient {
     this.close()
   }
 
-  // stop everything; emits connection.closed if we were connected or connecting
+  // stop everything, the stream included; emits connection.closed if we were connected or connecting
   private close(error?: Error) {
     const was = this.wanted
     this.wanted = false
+    this.introduced = false
     this.resume = false
     clearTimeout(this.reconnectTimer)
     clearInterval(this.staleTimer)
@@ -283,10 +263,14 @@ export class NekoClient {
     }, 5000)
   }
 
+  // the transport is left alone: its stream may well outlive the socket (the last picture stays
+  // while the socket reconnects, and a peer that fails meanwhile re-requests itself through
+  // session.send, which drops until the socket is back); the reconnect's system/init then
+  // starts it over with transport.connect()
   private onSocketLost() {
     this.ws = null
+    this.introduced = false
     this.resume ||= this.state.video.playing
-    this.transport.close()
     if (!this.wanted) return
     this.state.connection.status = 'connecting'
     if (++this.attempts > RECONNECT_MAX) return this.close(new Error('connection lost'))
@@ -314,7 +298,7 @@ export class NekoClient {
     if (this.ws?.readyState === WebSocket.OPEN) this.ws.send(JSON.stringify({ event, payload }))
   }
 
-  // the stream: connected only once the transport is; its status while the socket is up
+  // the stream: connected only once the transport is; its status counts while the socket is up
   private onTransportState(s: TransportState) {
     const playable = s.video.playable && !this.state.video.playable // a stream arrived (or a new one)
     Object.assign(this.state.video, s.video)
@@ -322,7 +306,7 @@ export class NekoClient {
       if (this.opts.autoplay || this.resume) this.transport.setPlaying(true).catch(() => {})
       this.resume = false
     }
-    if (!this.wanted) return
+    if (!this.wanted || !this.introduced) return
     if (s.status === 'connected') this.attempts = 0
     this.state.connection.status = s.status === 'connected' || s.status === 'unavailable' ? 'connected' : 'connecting'
   }
@@ -342,9 +326,9 @@ export class NekoClient {
   // websocket events -> state
   /////////////////////////////
 
+  // every message goes to the transport's subscribers first (signal/*); the rest is the room
   private onMessage(event: string, p: any) {
     this.messages.emit(event, p)
-    if (event.startsWith('signal/')) return // the transport's signalling
     const { state, events } = this
     switch (event) {
       case 'system/init':
@@ -354,6 +338,7 @@ export class NekoClient {
         state.sessions = p.sessions ?? {}
         state.settings = p.settings
         state.control.host_id = p.control_host?.has_host ? p.control_host.host_id : null
+        this.introduced = true
         this.transport.connect(this.sessionInfo(p)).catch((err) => this.close(err))
         break
       case 'system/admin':
@@ -532,10 +517,6 @@ export class NekoClient {
     }
   }
 
-  mobileKeyboardToggle() {
-    this.overlay?.mobileKeyboardToggle()
-  }
-
   /////////////////////////////
   // media (through the transport)
   /////////////////////////////
@@ -566,62 +547,5 @@ export class NekoClient {
   shareMedia(stream: MediaStream): () => void {
     if (!this.transport.shareMedia) throw new Error('transport cannot send media')
     return this.transport.shareMedia(stream)
-  }
-
-  /////////////////////////////
-  // DOM
-  /////////////////////////////
-
-  // the stream and the input overlay fill `el`, letterboxed to the remote screen
-  mount(el: HTMLElement) {
-    if (this.el) throw new Error('client already mounted')
-    this.el = el
-    const container = (this.container = document.createElement('div'))
-    container.style.position = 'relative'
-    this.detach = this.transport.attach(container)
-    el.append(container)
-    this.overlay = new Overlay(this, container)
-    this.syncOverlay()
-    this.observer.observe(el)
-    this.onResize()
-  }
-
-  unmount() {
-    this.observer.disconnect()
-    this.overlay?.destroy()
-    this.detach?.()
-    this.container?.remove()
-    this.el = this.container = this.detach = this.overlay = null
-  }
-
-  private get overlayVisible() {
-    return !this.privateModeEnabled && this.state.connection.status !== 'disconnected'
-  }
-
-  private get overlayInteractive() {
-    return !this.state.control.locked && !!this.session?.profile.can_host
-  }
-
-  private syncOverlay() {
-    if (!this.overlay) return
-    this.overlay.wrap.style.display = this.overlayVisible ? '' : 'none'
-    this.overlay.wrap.style.pointerEvents = this.overlayInteractive ? 'auto' : 'none'
-  }
-
-  // letterbox the video area to the remote screen's aspect ratio
-  private onResize() {
-    if (!this.el || !this.container) return
-    const { width, height } = this.state.screen.size
-    const { offsetWidth: W, offsetHeight: H } = this.el
-    const w = Math.min(W, (H * width) / height)
-    const h = Math.min(H, (W * height) / width)
-    Object.assign(this.container.style, {
-      width: `${w}px`,
-      height: `${h}px`,
-      marginTop: `${(H - h) / 2}px`,
-      marginLeft: `${(W - w) / 2}px`,
-    })
-    this.canvasSize = { width: w, height: h }
-    this.overlay?.resize()
   }
 }

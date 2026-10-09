@@ -13,10 +13,6 @@ Object.defineProperty(g, 'navigator', {
 })
 g.localStorage = { getItem: () => null, setItem() {}, removeItem() {} }
 g.matchMedia = () => ({ matches: false })
-g.ResizeObserver = class {
-  observe() {}
-  disconnect() {}
-}
 
 const dist = join(import.meta.dirname, 'dist')
 const pkg = await import('./dist/index.js')
@@ -26,6 +22,7 @@ const { WebRTCTransport } = pkg
 for (const name of [
   'NekoClient',
   'Overlay',
+  'mount',
   'Store',
   'Emitter',
   'NekoApi',
@@ -35,6 +32,25 @@ for (const name of [
   'DataChannelInput',
 ])
   assert.equal(typeof pkg[name], 'function', name)
+
+// the client is free of the keyboard/mouse overlay and the Guacamole keyboard: a stream-only
+// consumer that imports NekoClient (and tree-shakes the rest, sideEffects: false) never loads them
+const imports = (file, seen = new Set()) => {
+  if (seen.has(file)) return seen
+  seen.add(file)
+  for (const [, spec] of readFileSync(join(dist, file), 'utf8').matchAll(/(?:from|import) ["'](\.[^"']+)["']/g))
+    imports(join(file, '..', spec), seen)
+  return seen
+}
+const clientGraph = [...imports('client.js')]
+assert.ok(
+  !clientGraph.some((f) => /overlay|keyboard/.test(f)),
+  'client.js must not reach the overlay or the keyboard: ' + clientGraph.join(', '),
+)
+assert.ok(
+  [...imports('overlay.js')].some((f) => f.startsWith('keyboard/')),
+  'the keyboard is still used by the overlay',
+)
 assert.equal(WebRTCTransport.supported(), typeof RTCPeerConnection !== 'undefined')
 assert.ok(!('OP' in pkg), 'the data channel opcodes are not part of the API')
 
@@ -85,6 +101,16 @@ assert.equal(other.transport, custom)
 assert.ok(other.input instanceof pkg.WebSocketInput, 'no input channel on the transport: the websocket')
 for (const m of ['move', 'scroll', 'button', 'key', 'touch']) assert.equal(typeof other.input[m], 'function', m)
 assert.throws(() => other.shareMedia({}), /transport cannot send media/)
+
+// a stream-only consumer: the transport's element in a box, no overlay (no input, no cursor), and
+// input from a device of its own straight through client.input
+const box = { children: [], append: (el) => box.children.push(el) }
+custom.attach = (el) => (el.append('media'), () => el.children.pop())
+const detach = other.transport.attach(box)
+assert.deepEqual(box.children, ['media'])
+detach()
+assert.deepEqual(box.children, [])
+other.input.key(0xff0d, true) // a gamepad mapped to Return, say; dropped here: no socket
 
 // build.mjs rewrote the `.ts` specifiers the declarations inherit from the sources
 for (const f of readdirSync(dist, { recursive: true }).filter((f) => f.endsWith('.d.ts'))) {

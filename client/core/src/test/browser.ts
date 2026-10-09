@@ -20,6 +20,14 @@ export class FakeElement {
   plays = 0 // how often play() was called
   videoWidth = 0
   videoHeight = 0
+  offsetWidth = 0
+  offsetHeight = 0
+  rect = { left: 0, top: 0, width: 0, height: 0 } // what getBoundingClientRect reports
+  focused = false
+  // a <canvas> context that records what is drawn
+  readonly ctx = new Proxy({ calls: [] as unknown[][] } as Record<string, any>, {
+    get: (t, k: string) => (k in t ? t[k] : (...a: unknown[]) => t.calls.push([k, ...a])),
+  })
   private listeners = new Map<string, Set<(e: any) => void>>()
   private _muted = false
   private _volume = 1
@@ -57,8 +65,13 @@ export class FakeElement {
   removeEventListener(ev: string, fn: (e: any) => void) {
     this.listeners.get(ev)?.delete(fn)
   }
+  // one event object for every listener, as the DOM does; a test's fields override the defaults
   dispatch(ev: string, e: any = {}) {
-    for (const fn of [...(this.listeners.get(ev) ?? [])]) fn(e)
+    const event = { type: ev, preventDefault() {}, stopPropagation() {}, ...e }
+    for (const fn of [...(this.listeners.get(ev) ?? [])]) fn(event)
+  }
+  get parentElement() {
+    return this.parent
   }
   append(...els: FakeElement[]) {
     for (const el of els) {
@@ -88,13 +101,17 @@ export class FakeElement {
     this.dispatch('pause')
   }
   getContext() {
-    return {}
+    return this.ctx
   }
   getBoundingClientRect() {
-    return { left: 0, top: 0, width: 0, height: 0 }
+    return this.rect
   }
-  focus() {}
-  blur() {}
+  focus() {
+    this.focused = true
+  }
+  blur() {
+    this.focused = false
+  }
 }
 
 g.window = g
@@ -110,15 +127,26 @@ g.localStorage = {
   removeItem: (k: string) => storage.delete(k),
 }
 g.matchMedia = () => ({ matches: false })
+// what the overlay needs: observers and window listeners are recorded so tests can fire and count them
+export const resizeObservers: { cb: () => void; observed: FakeElement | null; disconnected: boolean }[] = []
 g.ResizeObserver = class {
-  observe() {}
-  disconnect() {}
+  private readonly rec: (typeof resizeObservers)[number]
+  constructor(cb: () => void) {
+    resizeObservers.push((this.rec = { cb, observed: null, disconnected: false }))
+  }
+  observe(el: FakeElement) {
+    this.rec.observed = el
+  }
+  disconnect() {
+    this.rec.disconnected = true
+  }
 }
-// what the overlay needs to construct (client.mount)
 g.Image = class {}
 g.devicePixelRatio = 1
 g.requestAnimationFrame = (fn: () => void) => setTimeout(fn, 16)
-g.addEventListener = g.removeEventListener = () => {}
+export const windowListeners: Record<string, Set<(e: any) => void>> = {}
+g.addEventListener = (ev: string, fn: (e: any) => void) => (windowListeners[ev] ??= new Set()).add(fn)
+g.removeEventListener = (ev: string, fn: (e: any) => void) => windowListeners[ev]?.delete(fn)
 export const documentListeners: Record<string, ((e: any) => void)[]> = {}
 g.document = {
   createElement: (tag: string) => new FakeElement(tag),
@@ -297,7 +325,9 @@ export const receive = (event: string, payload?: unknown, ws = sockets.at(-1)!) 
 // a clean slate for a test
 export const reset = () => {
   sent.length = sentPayloads.length = sockets.length = fetches.length = FakePeer.all.length = 0
+  resizeObservers.length = 0
   for (const k of Object.keys(documentListeners)) delete documentListeners[k]
+  for (const k of Object.keys(windowListeners)) delete windowListeners[k]
   vi.clearAllTimers()
   storage.clear()
   net.respond = () => ({ status: 200 })

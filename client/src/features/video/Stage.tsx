@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNeko } from '@/state/hooks'
 import { actions } from '@/state/actions'
-import { client } from '@/state/client'
+import { client, overlay } from '@/state/client'
 import { a11y, closeOn } from '@/components/a11y'
 import { t } from '@/i18n'
 import { Emote } from '@/features/emotes'
@@ -39,7 +39,7 @@ export function Stage({ hideControls, extraControls }: { hideControls: boolean; 
     <div className="video">
       <div ref={player} className="player">
         <div className="player-container" onMouseEnter={syncClipboard}>
-          <Player />
+          <Player transport={client.transport} />
           <div className="emotes">
             {Object.entries(a.emotes).map(([id, type]) => (
               <Emote key={id} id={id} type={type} />
@@ -102,7 +102,7 @@ export function Stage({ hideControls, extraControls }: { hideControls: boolean; 
                 className={extra}
                 {...a11y('Keyboard')}
                 onMouseDown={(e) => e.preventDefault()} // tapping the button must not take the focus the keyboard needs
-                onClick={() => client.mobileKeyboardToggle()}
+                onClick={() => overlay.mobileKeyboardToggle()}
               >
                 <i className="fas fa-keyboard" />
               </li>

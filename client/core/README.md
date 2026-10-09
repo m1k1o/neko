@@ -2,9 +2,10 @@
 
 Framework-free client library for the [neko](https://github.com/m1k1o/neko) v3 API: REST, the
 `/api/ws` event protocol, the stream through a pluggable transport (WebRTC with its binary input
-channel, see [Transports](#transports)), and the input overlay (mouse, wheel, keyboard, touch, file
-drop, the host's cursor). It is what the React GUI in `../src` is built on, and it can drive a neko
-server from any framework or from a plain page.
+channel, see [Transports](#transports)), and a pluggable control device, with the keyboard/mouse/touch
+overlay (wheel, file drop, the host's cursor) included (see [Control and input](#control-and-input)).
+It is what the React GUI in `../src` is built on, and it can drive a neko server from any framework
+or from a plain page.
 
 ESM, TypeScript declarations included, no runtime dependencies.
 
@@ -15,7 +16,7 @@ npm install @m1k1o/neko
 ## Quick start
 
 ```ts
-import { NekoClient } from '@m1k1o/neko'
+import { NekoClient, mount } from '@m1k1o/neko'
 
 const client = new NekoClient({ autologin: true, autoconnect: true, autoplay: true })
 
@@ -30,8 +31,19 @@ client.setUrl('https://neko.example.com/')
 await client.login('name', 'password')
 client.connect()
 
-// the video, with the input overlay on top
-client.mount(document.getElementById('video')!)
+// the video, with the keyboard/mouse overlay on top (mount() does the two attaches below)
+const unmount = mount(client, document.getElementById('video')!)
+```
+
+The two pieces separately — the stream alone, or with the overlay as a second step:
+
+```ts
+import { Overlay } from '@m1k1o/neko'
+
+const box = document.getElementById('box')! // position: relative, inside the area the video fills
+const detach = client.transport.attach(box) // the stream: a <video> that fills the box
+const overlay = new Overlay(client)
+const detachOverlay = overlay.attach(box) // keyboard, mouse, touch and the host's cursor over it
 ```
 
 ## `NekoClient`
@@ -60,10 +72,12 @@ client.mount(document.getElementById('video')!)
 `connect()` opens the websocket (`/api/ws`) and, once the server has introduced the session
 (`system/init`), starts the transport, which brings up the stream (WebRTC: asks for an offer and
 answers it; the server's ICE candidates are buffered until the offer is applied). The connection
-is kept alive by itself: a socket that goes silent is replaced and the transport restarted on the
+is kept alive by itself: a socket that goes silent is replaced and the transport started over on the
 new one, a peer the server drops is requested again, and after repeated failures the client backs
-off and finally gives up (`connection.closed` with an error). `disconnect()` closes everything;
-the session stays valid.
+off and finally gives up (`connection.closed` with an error). While the socket is away the stream is
+left alone, so the last picture stays (and keeps streaming while it can) until the reconnect
+replaces it. `disconnect()` closes everything, the stream included (the element goes black); the
+session stays valid.
 
 `connection.status` follows both: `'connecting'` while the socket is being (re)opened or the
 transport has no stream yet, `'connected'` once the transport reports `'connected'` (or
@@ -128,24 +142,27 @@ client.store.version // increases on every change; what React's useSyncExternalS
 
 ### Video and audio
 
-The stream is the transport's: `mount(el)` lets it create its media element inside `el` and puts
-the input overlay over it; the media calls below go through it.
+The stream is the transport's: `transport.attach(box)` creates its media element inside `box` (a
+`<video>` filling it, keeping the aspect ratio by itself) and returns what removes it again; the
+media calls below go through the transport. `mount(client, el)` (a plain function, not a method)
+attaches the transport and an `Overlay` into a box it letterboxes inside `el`, and returns the
+function that takes them out again.
 
 | method / field                       |                                                                                                          |
 | ------------------------------------ | -------------------------------------------------------------------------------------------------------- |
-| `mount(el)` / `unmount()`            | put the stream and the input overlay into `el` (they fill it); `canvasSize` is their size                |
-| `transport.element`                  | the transport's media element (a `<video>` for WebRTC), once mounted                                     |
+| `transport.attach(box)`              | the media element into `box`; returns the detach function                                                |
+| `transport.element`                  | the transport's media element (a `<video>` for WebRTC), once attached                                    |
 | `play()`, `pause()`                  | when the browser refuses sound, `play()` starts muted (`mutedByAutoplay`) and unmutes on the first click |
 | `mute()`, `unmute()`, `setVolume(v)` | `v` in 0..1                                                                                              |
 | `shareMedia(stream)`                 | send local media (microphone) on a transport that can; returns the function that stops sharing it        |
 
 ### Control and input
 
-The overlay sends mouse, wheel, keyboard and touch input through `client.input`, an `InputChannel`:
+Input reaches the remote desktop through `client.input`, an `InputChannel` in the server's terms:
 the transport's own channel when it has one (WebRTC: the data channel, `DataChannelInput`, binary
 frames), otherwise `WebSocketInput`, which sends the same input as the server's `control/*`
-websocket events. Keyboard handling is Apache Guacamole's keyboard (vendored in `keyboard/`), so
-keysyms match the server's layouts.
+websocket events. The client does not care what produces the input: a control device is anything
+that calls these methods, and the one included is the `Overlay`.
 
 ```ts
 interface InputChannel {
@@ -155,6 +172,31 @@ interface InputChannel {
   key(keysym: number, down: boolean): void // X11 keysym
   touch(phase: 'begin' | 'update' | 'end', id: number, x: number, y: number, pressure: number): void
 }
+```
+
+`Overlay` is the keyboard/mouse/touch device: a transparent layer over the stream that turns DOM
+mouse, wheel, keyboard (Apache Guacamole's keyboard, vendored in `keyboard/`, so keysyms match the
+server's layouts), touch, drop and paste events into `client.input` calls while this member is host
+and not locked, asks for control on a click under implicit hosting, and draws the host's cursor for
+everyone else from the transport's `cursor.*` events. `new Overlay(client)` builds it (it reads the
+client's state and talks to it); `overlay.attach(box)` puts it into the box that already holds the
+transport's element (so the stream is below) and keeps that box letterboxed inside its parent to the
+remote screen's aspect ratio, so that its canvas maps onto the picture; the returned function
+detaches it (a second attach replaces the first). `overlay.mobileKeyboardToggle()` opens / closes
+the on-screen keyboard on touch devices. A stream without input is just `transport.attach(box)`: the
+client never loads the overlay or the keyboard unless they are imported.
+
+Another device (a gamepad, a VR controller, a test driver) does what the overlay does: watch
+`client.controlling` / `client.state.control.locked` to know when input is accepted, call
+`client.request()` to become host, and send through `client.input`:
+
+```ts
+const off = client.store.watch(
+  () => client.controlling && !client.state.control.locked,
+  (on) => (on ? gamepad.start() : gamepad.stop()),
+)
+gamepad.onStick = (x, y) => client.input.move(x, y) // in remote screen pixels
+gamepad.onButton = (n, down) => client.input.button(n + 1, down)
 ```
 
 | method                                           |                                                                                            |
@@ -167,7 +209,6 @@ interface InputChannel {
 | `paste(text)`                                    | type text remotely through the server's clipboard                                          |
 | `preparePaste(text)`                             | before a paste keystroke: the side that copied most recently wins (see the source comment) |
 | `uploadDrop({ x, y, files })`                    | drop files into the remote desktop at a position (the overlay does this on drop)           |
-| `mobileKeyboardToggle()`                         | open / close the on-screen keyboard on touch devices                                       |
 | `input.move(x, y)`, `input.key(keysym, down)`, … | input straight to the remote desktop (the `InputChannel` above)                            |
 
 ### Messages
@@ -205,8 +246,8 @@ interface StreamTransport {
   readonly element: HTMLElement | null // its media element, created by attach()
   readonly input?: InputChannel // its own input path, if any (the data channel)
 
-  connect(session: SessionInfo): Promise<void> // start streaming; again after close() on a reconnect
-  close(): void // drop the stream, timers and counters; the last picture stays on the element
+  connect(session: SessionInfo): Promise<void> // start streaming; again on every reconnect, replacing what runs
+  close(): void // the stream is over: peer, timers, counters and the picture on the element go
 
   attach(container: HTMLElement): () => void // create the media element inside; returns what removes it
 
@@ -221,19 +262,24 @@ interface StreamTransport {
 
 `SessionInfo` is what the client hands over on `system/init`: the server `url` and `token`, the
 `init` payload, and `send(event, payload)` / `on(event, cb)` for the transport's own messages over
-the main socket (`signal/*` go to the transport, the client does not handle them).
+the main socket (every message reaches these subscribers; `signal/*` mean nothing to the client
+itself, which passes them on as `message` events like any event it does not handle). A socket loss
+does not touch the transport: `send` drops until the socket is back, and the reconnect's
+`system/init` calls `connect()` again, which replaces whatever the previous session left (its peer,
+retries and failure count) while the last picture stays until the new stream shows; `close()` is
+called only when the connection ends for good (`disconnect()`, a kick, giving up) and empties the element.
 
 A transport reports `'state'` (`{ status, size, video }`: its `status` — `'connecting'`,
 `'connected'`, `'unavailable'` when the server will not stream, `'disconnected'` — the stream's
 size and the media element's `playable`/`playing`/`volume`/`muted`/`mutedByAutoplay`, mirrored
-into `state.video`), `'error'` (the stream is lost for good; the client closes the connection
-with it), the host's `'cursor.position'`/`'cursor.image'` when its server feeds them back, and
-`'stats'` (reserved). A transport does not start playback by itself: the client calls
-`setPlaying(true)` when `playable` turns true and `autoplay` is on, and a transport keeps playing
-across its own reconnects. A second transport needs: its own connection from the `SessionInfo`, an
-element it draws into, play/volume/mute, and either an `input` channel or nothing (the client then
-sends input over the websocket). Pass it as `new NekoClient({ transport })`; the GUI checks
-`WebRTCTransport.supported()` before rendering.
+into `state.video`; its status counts only while the socket is up), `'error'` (the stream is lost
+for good; the client closes the connection with it), the host's `'cursor.position'`/`'cursor.image'`
+when its server feeds them back (the `Overlay` draws them), and `'stats'` (reserved). A transport
+does not start playback by itself: the client calls `setPlaying(true)` when `playable` turns true
+and `autoplay` is on, and a transport keeps playing across its own reconnects. A second transport
+needs: its own connection from the `SessionInfo`, an element it draws into, play/volume/mute, and
+either an `input` channel or nothing (the client then sends input over the websocket). Pass it as
+`new NekoClient({ transport })`; the GUI checks `WebRTCTransport.supported()` before rendering.
 
 ## `Store` and `Emitter`
 
@@ -256,10 +302,10 @@ the `NekoEvents` map; the transport seam is `StreamTransport`, `SessionInfo`, `I
 npm run build   # tsc -> dist/ (ESM + .d.ts), plus the vendored keyboard library
 npm test        # the unit tests in src/**/*.test.ts (vitest, run from ../ where it is installed): the connection
                 # state machine (handshake, reconnects, timeouts, events, clipboard, auth), the transport seam,
-                # the WebRTC transport, the input channels and the store, against the fake browser in
-                # src/test/browser.ts (sockets, peers, elements, fake timers)
+                # the WebRTC transport, the input channels, the overlay and the store, against the fake browser
+                # in src/test/browser.ts (sockets, peers, elements, fake timers)
 npm run check   # build, the tests, then node dist.check.mjs against the built package: exports, Store,
-                # Emitter, setUrl, .d.ts specifiers
+                # Emitter, setUrl, .d.ts specifiers, and that client.js never imports the overlay or the keyboard
 ```
 
 The tests and dist.check.mjs run under Node with a few browser globals stubbed, so the connection state

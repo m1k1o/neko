@@ -52,8 +52,12 @@ export class WebRTCTransport implements StreamTransport {
   // signalling + peer
   /////////////////////////////
 
+  // again on every reconnect: whatever a previous session left (its peer, retries, the count)
+  // goes, and its last picture stays on the element until the new stream replaces it
   async connect(session: SessionInfo) {
     this.unsubscribe()
+    this.closePeer()
+    this.failures = 0
     this.session = session
     const on = (event: string, cb: (p: any) => void) => this.unsubs.push(session.on(event, cb))
     on('signal/provide', (p) => this.onProvide(p).catch((err) => console.error('[neko] webrtc setup failed', err)))
@@ -73,14 +77,17 @@ export class WebRTCTransport implements StreamTransport {
     this.requestPeer()
   }
 
-  // the last picture stays on the element (a reconnect shows it until the new stream arrives), but
-  // nothing plays or can be played until then
+  // the stream is over: the peer, timers, counters and the picture go (a reconnect does not come
+  // through here but through connect(), which keeps the picture)
   close() {
     this.unsubscribe()
     this.session = null
     this.closePeer()
     this.failures = 0
-    this.video?.pause()
+    if (this.video) {
+      this.video.pause()
+      this.video.srcObject = null
+    }
     this.state.video.playable = false
     this.setStatus('disconnected')
   }

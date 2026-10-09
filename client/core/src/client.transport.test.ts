@@ -4,7 +4,7 @@ import { test } from 'vitest'
 import assert from 'node:assert/strict'
 import { tick, settle, reset, sent, sentPayloads, sockets, init, receive, FakeElement } from './test/browser.ts'
 
-const { NekoClient, Emitter, WebSocketInput } = await import('./index.ts')
+const { NekoClient, Emitter, WebSocketInput, mount } = await import('./index.ts')
 type Options = ConstructorParameters<typeof NekoClient>[0]
 type Transport = NonNullable<Exclude<NonNullable<Options>['transport'], () => unknown>>
 type SessionInfo = Parameters<Transport['connect']>[0]
@@ -28,9 +28,14 @@ class FakeTransport implements Transport {
   close() {
     this.calls.push('close')
   }
-  attach() {
+  attach(box: HTMLElement) {
     this.calls.push('attach')
-    return () => this.calls.push('detach')
+    const video = new FakeElement('video')
+    ;(box as unknown as FakeElement).append(video)
+    return () => {
+      this.calls.push('detach')
+      video.remove()
+    }
   }
   async setPlaying(on: boolean) {
     this.calls.push(`setPlaying ${on}`)
@@ -84,12 +89,14 @@ test('connect: the transport gets the session (url, token, init, send, on) and n
   const messages: string[] = []
   client.events.on('message', (e) => messages.push(e))
   const off = s.on('signal/provide', (p) => got.push(p))
+  const before = JSON.stringify(client.state)
   receive('signal/provide', { sdp: 'x' })
   receive('signal/video', { video: 'hd' })
   assert.deepEqual(got, [{ sdp: 'x' }])
-  assert.deepEqual(messages, [], 'signal/* is the transport’s, not a client message')
+  assert.equal(JSON.stringify(client.state), before, 'signal/* is the transport’s: the client does not act on it')
+  assert.deepEqual(messages, ['signal/provide', 'signal/video'], 'but passes it on like any event it does not handle')
   receive('chat/message', { text: 'hi' })
-  assert.deepEqual(messages, ['chat/message'])
+  assert.deepEqual(messages, ['signal/provide', 'signal/video', 'chat/message'])
   off()
   receive('signal/provide', { sdp: 'y' })
   assert.equal(got.length, 1)
@@ -113,13 +120,15 @@ test('status: connected only when the socket and the transport are; a transport 
   await settle()
 
   sockets[0].onclose!()
-  assert.deepEqual(t.calls, ['connect', 'close'], 'the lost socket closes the transport')
+  assert.deepEqual(t.calls, ['connect'], 'the lost socket leaves the transport alone')
+  assert.equal(client.state.connection.status, 'connecting')
+  t.state('connected') // whatever it reports until the socket is back counts for nothing
   assert.equal(client.state.connection.status, 'connecting')
   t.state('disconnected')
   assert.equal(client.state.connection.status, 'connecting')
   await tick(1500)
   receive('system/init', init(), sockets[1])
-  assert.deepEqual(t.calls, ['connect', 'close', 'connect'], 'the new socket reconnects the transport')
+  assert.deepEqual(t.calls, ['connect', 'connect'], 'the new socket starts the transport over')
   t.state('connected')
   await settle()
   // connect() and the first 'connected' fell into one store flush
@@ -277,12 +286,12 @@ test('socket lost: playback that was running resumes on the new stream, autoplay
   receive('system/init', init())
   t.state('connected', video)
   sockets[0].onclose!()
-  t.state('disconnected', loading) // close(): the picture stays, nothing plays
+  t.state('disconnected', loading) // the stream died during the outage (the server dropped the peer)
   await tick(1500)
   receive('system/init', init(), sockets[1])
   t.state('connected', loading)
   t.state('connected', { ...video, playing: false })
-  assert.deepEqual(t.calls, ['connect', 'close', 'connect', 'setPlaying true'])
+  assert.deepEqual(t.calls, ['connect', 'connect', 'setPlaying true'])
   t.state('connected', video)
 
   sockets[1].onclose!() // and again
@@ -291,10 +300,10 @@ test('socket lost: playback that was running resumes on the new stream, autoplay
   receive('system/init', init(), sockets[2])
   t.state('connected', loading)
   t.state('connected', { ...video, playing: false })
-  assert.deepEqual(t.calls.slice(4), ['close', 'connect', 'setPlaying true'], 'the first stream after the loss')
+  assert.deepEqual(t.calls.slice(3), ['connect', 'setPlaying true'], 'the first stream after the loss')
   t.state('connected', loading) // a replaced peer brings another stream: the transport's business
   t.state('connected', { ...video, playing: false })
-  assert.deepEqual(t.calls.slice(7), [], 'a later stream does not')
+  assert.deepEqual(t.calls.slice(5), [], 'a later stream does not')
 
   t.state('connected', video)
   sockets[2].onclose!() // lost while playing...
@@ -304,20 +313,23 @@ test('socket lost: playback that was running resumes on the new stream, autoplay
   receive('system/init', init(), sockets[3])
   t.state('connected', loading)
   t.state('connected', { ...video, playing: false })
-  assert.deepEqual(t.calls.slice(7), ['close', 'close', 'connect'])
+  assert.deepEqual(t.calls.slice(5), ['close', 'connect'], 'the one close is the final one')
 })
 
-test('mount: the transport draws into the client’s container; unmount removes it again', () => {
+test('mount(client, el): attaches the transport, then the overlay, into a box in el; the returned function detaches both', () => {
   const { t, client } = setup()
   const el = new FakeElement('div')
-  client.mount(el as any)
+  const unmount = mount(client, el as any)
   assert.deepEqual(t.calls, ['attach'])
-  assert.equal(el.children.length, 1, 'the letterboxed container')
-  assert.throws(() => client.mount(el as any), /already mounted/)
-  client.unmount()
+  assert.equal(el.children.length, 1, 'the letterboxed box')
+  assert.deepEqual(
+    el.children[0].children.map((c) => c.tag),
+    ['video', 'div'],
+    'the stream first, the overlay over it',
+  )
+  unmount()
   assert.deepEqual(t.calls, ['attach', 'detach'])
   assert.deepEqual(el.children, [])
-  client.mount(el as any) // and again
+  mount(client, el as any) // and again
   assert.deepEqual(t.calls, ['attach', 'detach', 'attach'])
-  client.unmount()
 })

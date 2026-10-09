@@ -66,10 +66,10 @@ export interface StreamTransport {
   // the transport's own input path, when it has one (the WebRTC data channel)
   readonly input?: InputChannel
 
-  // start streaming for a session; called again after close() on every reconnect
+  // start streaming for a session; called again on every reconnect, also while the previous
+  // session's stream is still up: it is replaced (its last picture stays until the new one shows)
   connect(session: SessionInfo): Promise<void>
-  // stop: the media path, timers and counters go; the last picture stays on the element until a
-  // new stream replaces it or the element is removed
+  // stop for good: the media path, timers, counters and the picture on the element go
   close(): void
 
   // create the media element inside the container; returns what removes it again

@@ -13,6 +13,7 @@ import {
   net,
   storage,
   FakePeer,
+  FakeElement,
   OFFER,
   profile,
   session,
@@ -180,13 +181,14 @@ test('stale socket: silent for STALE_MS it is replaced; a message keeps it', asy
   await tick(10_000) // 30 s since
   const old = sockets[0]
   assert.ok(old.closed)
-  assert.ok(FakePeer.all[0].closed)
+  assert.equal(FakePeer.all[0].closed, false, 'the stream outlives the socket')
   assert.equal(client.state.connection.status, 'connecting')
   assert.equal(fetches.at(-1)?.url, 'http://neko.test/api/whoami')
   await tick(1500)
   assert.equal(sockets.length, 2)
-  receive('system/init', init()) // the handshake starts over on the new socket
+  receive('system/init', init()) // the handshake starts over on the new socket, with a new peer
   assert.deepEqual(sent, ['client/heartbeat', 'signal/request'])
+  assert.ok(FakePeer.all[0].closed)
   old.onclose!() // the browser reports the closure of the replaced socket: not a second loss
   await tick(20_000)
   assert.deepEqual([sockets.length, fetches.length], [2, 1])
@@ -196,7 +198,7 @@ test('socket closed: reconnects after the backoff once the session is confirmed'
   const { client } = await connected()
   sockets[0].onclose!()
   assert.equal(client.state.connection.status, 'connecting')
-  assert.ok(FakePeer.all[0].closed)
+  assert.equal(FakePeer.all[0].closed, false)
   await settle()
   assert.equal(fetches.at(-1)?.url, 'http://neko.test/api/whoami')
   await tick(1499)
@@ -223,6 +225,71 @@ test('socket closed: reconnects after the backoff once the session is confirmed'
   sockets[3].onclose!()
   await tick(1500)
   assert.equal(sockets.length, 5)
+})
+
+test('socket lost: the stream outlives the socket; the reconnect replaces its peer; a final close empties the element', async () => {
+  const { client, closed } = await connected()
+  const box = new FakeElement('div')
+  client.transport.attach(box as any)
+  const video = box.children[0]
+  const stream = { id: 'stream' }
+  FakePeer.all[0].ontrack!({ track: { kind: 'video' }, streams: [stream], receiver: {} })
+  await client.play()
+  video.dispatch('canplaythrough')
+  assert.deepEqual([client.state.video.playable, client.state.video.playing], [true, true])
+
+  sockets[0].onclose!()
+  assert.equal(client.state.connection.status, 'connecting')
+  assert.equal(FakePeer.all[0].closed, false, 'the peer keeps streaming while the socket reconnects')
+  assert.deepEqual([video.srcObject, video.paused], [stream, false], 'the picture stays')
+  FakePeer.all[0].transition('connected') // a report from the stream while the socket is down counts for nothing
+  await settle()
+  assert.equal(client.state.connection.status, 'connecting')
+
+  await tick(1500)
+  receive('system/init', init(), sockets[1])
+  assert.ok(FakePeer.all[0].closed, 'the reconnect starts the transport over: the old peer goes')
+  assert.deepEqual(sent, ['signal/request'])
+  assert.equal(video.srcObject, stream, 'the last picture until the new stream shows')
+  receive('signal/provide', { sdp: OFFER })
+  await settle()
+  assert.equal(FakePeer.all.filter((p) => !p.closed).length, 1, 'exactly one live peer')
+  FakePeer.all[1].ontrack!({ track: { kind: 'video' }, streams: [{ id: 'new' }], receiver: {} })
+  await settle()
+  assert.deepEqual([video.srcObject, video.plays], [{ id: 'new' }, 2], 'kept playing')
+  FakePeer.all[1].transition('connected')
+  await settle()
+  assert.equal(client.state.connection.status, 'connected')
+
+  receive('system/disconnect', { message: 'kicked' }) // a final close: black behind the Connect screen
+  assert.deepEqual(messages(closed), ['kicked'])
+  assert.ok(FakePeer.all[1].closed)
+  assert.deepEqual([video.srcObject, video.paused, client.state.video.playable], [null, true, false])
+})
+
+test('socket lost while the peer fails: it asks again by itself, which waits for the socket; neither that nor its verdict moves the status', async () => {
+  const { client } = await connected()
+  sockets[0].onclose!()
+  FakePeer.all[0].transition('failed')
+  await tick(1500) // the transport's own retry: signal/request goes to session.send, which has no socket
+  assert.deepEqual(sent, [])
+  assert.equal(sockets.length, 2, 'the socket reconnect is on its own clock')
+  await tick(8000) // no offer: the transport calls it unavailable, which would otherwise read as connected
+  assert.equal(client.state.connection.status, 'connecting')
+  receive('system/init', init(), sockets[1])
+  assert.deepEqual(sent, ['signal/request'], 'one request, from the new session')
+  receive('signal/provide', { sdp: OFFER })
+  await settle()
+  assert.equal(FakePeer.all.length, 2)
+  FakePeer.all[1].transition('connected')
+  await settle()
+  assert.equal(client.state.connection.status, 'connected')
+  sent.length = 0
+  FakePeer.all[1].transition('failed') // the count started over with the new session
+  await tick(1499)
+  assert.deepEqual(sent, [])
+  await tick(1)
+  assert.deepEqual(sent, ['signal/request'])
 })
 
 test('socket closed: a deleted session (401) is not retried', async () => {

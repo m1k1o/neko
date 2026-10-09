@@ -1,5 +1,6 @@
-// The one NekoClient of the GUI, and the small readers of its state that components share.
-import { NekoClient } from '@m1k1o/neko'
+// The one NekoClient of the GUI with its keyboard/mouse/touch device, and the small readers of
+// its state that components share.
+import { NekoClient, Overlay } from '@m1k1o/neko'
 import type { Settings } from '@m1k1o/neko'
 import { app } from './app'
 import { t } from '@/i18n'
@@ -12,6 +13,7 @@ export const client = new NekoClient({
     return app.state.settings.autoplay
   },
 })
+export const overlay = new Overlay(client)
 
 export const name = (id?: string | null) => (id && client.state.sessions[id]?.profile.name) || t('somebody')
 // the server's chat plugin took this member's right to send (chat.can_send); emotes follow it too

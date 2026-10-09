@@ -225,7 +225,7 @@ test('input: a DataChannelInput bound to the channel the peer opens; cursor fram
   assert.equal(dc.frames.length, 1, 'nothing is sent on the old channel')
 })
 
-test('close: peer, timers, failure count and playback go; the picture stays for the reconnect', async () => {
+test('close: peer, timers, failure count, playback and the picture go; it can be connected again', async () => {
   const old = await connected()
   const { t, video, errors, states, status } = old
   const stream = { id: 'stream' }
@@ -239,8 +239,8 @@ test('close: peer, timers, failure count and playback go; the picture stays for 
   assert.ok(FakePeer.all[0].closed)
   assert.equal(vi.getTimerCount(), 0)
   assert.equal(status(), 'disconnected')
-  assert.equal(video.srcObject, stream, 'the last picture stays until a new stream replaces it')
-  assert.equal(video.paused, true, 'but nothing plays')
+  assert.equal(video.srcObject, null, 'the element is emptied: black')
+  assert.equal(video.paused, true)
   assert.deepEqual([states.at(-1)!.video.playable, states.at(-1)!.video.playing], [false, false])
   await tick(60_000)
   assert.equal(FakePeer.all.length, 1, 'nothing is requested while closed')
@@ -248,15 +248,14 @@ test('close: peer, timers, failure count and playback go; the picture stays for 
   await settle()
   assert.equal(FakePeer.all.length, 1)
 
-  // a reconnect: the picture is still there, and the count started over (the first failure waits
-  // the first step of the backoff)
+  // connected again: the count started over (the first failure waits the first step of the backoff)
   const si = sessionInfo()
   await t.connect(si.s)
-  assert.equal(video.srcObject, stream)
   si.receive('signal/provide', { sdp: OFFER })
   await settle()
   FakePeer.all[1].ontrack!({ track: { kind: 'video' }, streams: [{ id: 'new' }], receiver: {} })
   await settle()
+  assert.deepEqual(video.srcObject, { id: 'new' })
   assert.equal(video.plays, 1, 'starting again is the client’s call (it remembers what was playing)')
   si.out.length = 0
   FakePeer.all[1].transition('failed')
@@ -265,6 +264,59 @@ test('close: peer, timers, failure count and playback go; the picture stays for 
   await tick(1)
   assert.deepEqual(si.events(), ['signal/request'])
   assert.deepEqual(errors, [])
+})
+
+test('connect while a stream is up (the socket reconnected): the old peer, its retry and count go, the picture stays until the new stream', async () => {
+  const old = await connected()
+  const { t, video, status } = old
+  const stream = { id: 'stream' }
+  FakePeer.all[0].ontrack!({ track: { kind: 'video' }, streams: [stream], receiver: {} })
+  await t.setPlaying(true)
+  video.dispatch('canplaythrough')
+  for (const backoff of [1500, 3000]) {
+    // two failures: the third would wait 4500 ms
+    FakePeer.all.at(-1)!.transition('failed')
+    await tick(backoff)
+    old.receive('signal/provide', { sdp: OFFER })
+    await settle()
+  }
+  FakePeer.all.at(-1)!.transition('failed') // and a retry pending
+  assert.equal(vi.getTimerCount(), 1)
+
+  const si = sessionInfo()
+  await t.connect(si.s)
+  assert.ok(
+    FakePeer.all.every((p) => p.closed),
+    'no peer of the old session survives',
+  )
+  assert.equal(vi.getTimerCount(), 1, 'its retry is gone; only the new offer timeout runs')
+  assert.deepEqual(si.events(), ['signal/request'])
+  assert.deepEqual([video.srcObject, video.paused], [stream, false], 'the last picture stays, still playing')
+  assert.equal(status(), 'connecting')
+  old.receive('signal/provide', { sdp: OFFER }) // the old session's provide: ignored
+  await settle()
+  assert.equal(FakePeer.all.length, 3)
+  si.receive('signal/provide', { sdp: OFFER })
+  await settle()
+  assert.equal(FakePeer.all.filter((p) => !p.closed).length, 1, 'exactly one live peer')
+  si.out.length = 0
+  FakePeer.all.at(-1)!.transition('failed') // the count started over: the first step of the backoff, not the fourth
+  await tick(1499)
+  assert.deepEqual(si.events(), [])
+  await tick(1)
+  assert.deepEqual(si.events(), ['signal/request'])
+  si.receive('signal/provide', { sdp: OFFER })
+  await settle()
+  const pc = FakePeer.all.at(-1)!
+  pc.ontrack!({ track: { kind: 'video' }, streams: [{ id: 'new' }], receiver: {} })
+  await settle()
+  assert.deepEqual(
+    [video.srcObject, video.plays],
+    [{ id: 'new' }, 2],
+    'the new stream replaces the picture and keeps playing',
+  )
+  pc.transition('connected')
+  assert.equal(status(), 'connected')
 })
 
 test('errors: a codec mismatch and the give-up are reported, the transport stays usable', async () => {
