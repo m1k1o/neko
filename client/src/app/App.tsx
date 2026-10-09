@@ -9,7 +9,7 @@ import { Toasts } from '@/components/Toasts'
 import { Header } from '@/layout/Header'
 import { Side } from '@/layout/Side'
 import { RoomBar } from '@/layout/RoomBar'
-import { Video } from '@/features/video'
+import { Stage } from '@/features/video'
 import { MemberMenu } from '@/features/members'
 import { Connect } from '@/features/connect'
 import { About } from '@/features/about'
@@ -48,7 +48,7 @@ export function App() {
           </div>
         )}
         <div className="video-container">
-          <Video hideControls={cast} extraControls={videoOnly} />
+          <Stage hideControls={cast} extraControls={videoOnly} />
         </div>
         {!videoOnly && <RoomBar />}
       </main>

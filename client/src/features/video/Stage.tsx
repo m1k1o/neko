@@ -7,48 +7,19 @@ import { t } from '@/i18n'
 import { Emote } from '@/features/emotes'
 import { Resolution } from './Resolution'
 import { Clipboard } from './Clipboard'
+import { Player } from './Player'
+import { useFullscreen } from './useFullscreen'
+import { useClipboardSync, canReadClipboard } from './useClipboardSync'
+import { usePip } from './usePip'
 import './video.scss'
 
-// Firefox reports readText but hangs; Safari needs a gesture per read -> use the textarea fallback there
-const ua = navigator.userAgent
-const canReadClipboard =
-  typeof navigator.clipboard?.readText === 'function' &&
-  !ua.includes('Firefox') &&
-  !(ua.includes('Safari') && !ua.includes('Chrome') && !ua.includes('Chromium'))
-const canPip = typeof document.createElement('video').requestPictureInPicture === 'function'
-
-async function syncClipboard() {
-  if (!canReadClipboard || !client.controlling || !document.hasFocus()) return
-  try {
-    const text = await navigator.clipboard.readText()
-    if (text !== client.state.control.clipboard?.text) client.send('clipboard/set', { text })
-  } catch {}
-}
-
-export function Video({ hideControls, extraControls }: { hideControls: boolean; extraControls: boolean }) {
+export function Stage({ hideControls, extraControls }: { hideControls: boolean; extraControls: boolean }) {
   const { state, app: a } = useNeko()
-  const mount = useRef<HTMLDivElement>(null)
   const player = useRef<HTMLDivElement>(null)
-  const [fullscreen, setFullscreen] = useState(false)
   const [menu, setMenu] = useState<null | 'resolution' | 'clipboard'>(null)
-
-  useEffect(() => {
-    client.mount(mount.current!)
-    const onFs = () => {
-      const fs = !!document.fullscreenElement
-      setFullscreen(fs)
-      // keyboard lock lets Esc/Alt+Tab etc. reach the remote while fullscreen
-      const kb = (navigator as any).keyboard
-      fs ? kb?.lock?.().catch(() => {}) : kb?.unlock?.()
-    }
-    document.addEventListener('fullscreenchange', onFs)
-    window.addEventListener('focus', syncClipboard)
-    return () => {
-      client.unmount()
-      document.removeEventListener('fullscreenchange', onFs)
-      window.removeEventListener('focus', syncClipboard)
-    }
-  }, [])
+  const { fullscreen, request: requestFullscreen } = useFullscreen(player)
+  const syncClipboard = useClipboardSync()
+  const pip = usePip()
 
   useEffect(() => (menu ? closeOn(() => setMenu(null)) : undefined), [menu])
 
@@ -64,17 +35,11 @@ export function Video({ hideControls, extraControls }: { hideControls: boolean; 
   )
   const extra = extraControls ? '' : 'extra-control'
 
-  const requestFullscreen = () => {
-    // iOS only allows fullscreen on the video element itself
-    if (player.current?.requestFullscreen) player.current.requestFullscreen().catch(() => {})
-    else (client.video as any)?.webkitEnterFullscreen?.()
-  }
-
   return (
     <div className="video">
       <div ref={player} className="player">
         <div className="player-container" onMouseEnter={syncClipboard}>
-          <div ref={mount} className="neko-mount" />
+          <Player />
           <div className="emotes">
             {Object.entries(a.emotes).map(([id, type]) => (
               <Emote key={id} id={id} type={type} />
@@ -127,13 +92,9 @@ export function Video({ hideControls, extraControls }: { hideControls: boolean; 
                 <i {...a11y('Clipboard')} onClick={open('clipboard')} className="fas fa-clipboard" />
               </li>
             )}
-            {canPip && (
+            {pip.canPip && (
               <li>
-                <i
-                  {...a11y('Picture-in-Picture')}
-                  onClick={() => client.video?.requestPictureInPicture().catch(() => {})}
-                  className="fas fa-external-link-alt"
-                />
+                <i {...a11y('Picture-in-Picture')} onClick={pip.request} className="fas fa-external-link-alt" />
               </li>
             )}
             {hosting && client.isTouchDevice && (
