@@ -24,8 +24,8 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json && node build.mjs",
-    "test": "node --test src/*.test.ts",
-    "check": "npm run build && node src/store.check.ts && node src/client.check.ts && npm test && node dist.check.mjs"
+    "test": "npm --prefix .. test -- core/src",
+    "check": "npm run build && npm test && node dist.check.mjs"
   },
   "publishConfig": {
     "access": "public"

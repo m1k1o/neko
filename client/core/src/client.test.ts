@@ -1,7 +1,7 @@
-// Unit tests of the connection state machine: `npm test` (node --test core/src/*.test.ts).
-// The browser is faked just far enough for the core to load and connect (as in client.check.ts),
-// and the clock is virtual: `tick(ms)` fires the timers that fall due, in order, so nothing waits.
-import { test } from 'node:test'
+// Unit tests of the connection state machine: `npm test` (vitest). The browser is faked just far
+// enough for the core to load and connect, and the clock is vitest's: `tick(ms)` fires the timers
+// that fall due, in order, so nothing waits.
+import { test, vi } from 'vitest'
 import assert from 'node:assert/strict'
 
 const g = globalThis as any
@@ -23,33 +23,13 @@ g.ResizeObserver = class {
   disconnect() {}
 }
 
-// the clock
-let now = 1_000_000
-type Timer = { id: number; at: number; every?: number; fn: () => void }
-let timers: Timer[] = []
-let nextTimer = 1
-const schedule = (fn: () => void, ms = 0, every?: number) => {
-  timers.push({ id: nextTimer, at: now + ms, every, fn })
-  return nextTimer++
-}
-g.setTimeout = (fn: () => void, ms?: number) => schedule(fn, ms)
-g.setInterval = (fn: () => void, ms: number) => schedule(fn, ms, ms)
-g.clearTimeout = g.clearInterval = (id: number) => (timers = timers.filter((t) => t.id !== id))
-Date.now = () => now
+// the clock: timers and Date are fake, setImmediate stays real so promise chains can be drained
+vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'setInterval', 'clearInterval', 'Date'] })
 // one macrotask turn drains every pending promise chain (the handshake, a fetch)
 const settle = () => new Promise<void>((r) => setImmediate(r))
 const tick = async (ms: number) => {
-  const end = now + ms
-  for (;;) {
-    await settle() // whatever is in flight may still schedule a timer
-    const next = timers.filter((t) => t.at <= end).sort((a, b) => a.at - b.at)[0]
-    if (!next) break
-    now = next.at
-    if (next.every) next.at += next.every
-    else timers = timers.filter((t) => t !== next)
-    next.fn()
-  }
-  now = end
+  await settle() // whatever is in flight may still schedule a timer
+  await vi.advanceTimersByTimeAsync(ms) // fires the due timers in order, settling after each
 }
 
 // the network
@@ -177,7 +157,7 @@ const receive = (event: string, payload?: unknown, ws = sockets.at(-1)!) =>
 
 const setup = (opts?: Options) => {
   sent.length = sockets.length = fetches.length = FakePeer.all.length = 0
-  timers = []
+  vi.clearAllTimers()
   storage.clear()
   respond = () => ({ status: 200 })
   FakePeer.answerSdp = ANSWER
@@ -259,6 +239,7 @@ test('signal/close: the peer is dropped and a new one requested after the backof
   await settle()
   assert.equal(FakePeer.all.length, 2)
   assert.deepEqual(sent, ['signal/request', 'signal/answer'])
+  assert.doesNotThrow(() => client.removeTrack({} as RTCRtpSender), 'a sender of the dropped peer is ignored')
   FakePeer.all[1].transition('connected')
   await settle()
   assert.equal(client.state.connection.status, 'connected')
@@ -412,7 +393,7 @@ test('disconnect: closes socket and peer, clears the room state, cancels every t
   assert.deepEqual(client.state.sessions, {})
   assert.equal(client.state.control.host_id, null)
   assert.deepEqual(closed, [undefined])
-  assert.deepEqual(timers, [])
+  assert.equal(vi.getTimerCount(), 0)
   sockets[0].onclose!() // the server's side of the closure
   await tick(60_000)
   assert.deepEqual([sockets.length, fetches.length], [1, 0])

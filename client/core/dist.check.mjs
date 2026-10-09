@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
-// just enough of the browser for the core to load and construct (as in src/client.check.ts)
+// just enough of the browser for the core to load and construct (as in src/client.test.ts)
 const g = globalThis
 g.window = g
 g.location = { href: 'http://neko.test/' }

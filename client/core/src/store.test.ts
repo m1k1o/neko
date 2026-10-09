@@ -1,5 +1,5 @@
-// Unit tests of the store and the emitter: `npm test` (node --test core/src/*.test.ts)
-import { test } from 'node:test'
+// Unit tests of the store and the emitter: `npm test` (vitest)
+import { test } from 'vitest'
 import assert from 'node:assert/strict'
 import { Store, Emitter } from './store.ts'
 

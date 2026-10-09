@@ -8,7 +8,7 @@ const walk = (d) => {
   for (const f of readdirSync(d)) {
     const p = join(d, f)
     if (statSync(p).isDirectory()) walk(p)
-    else if (/\.tsx?$/.test(f) && !f.endsWith('.check.ts')) files.push(p)
+    else if (/\.tsx?$/.test(f) && !f.endsWith('.test.ts')) files.push(p)
   }
 }
 walk(root)

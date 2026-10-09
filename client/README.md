@@ -95,15 +95,15 @@ cd client/dev && ./serve        # http://localhost:3001, /api proxied to the bac
 NEKO_URL=http://localhost:3000 npm run dev
 ```
 
-| script                |                                                                                                     |
-| --------------------- | --------------------------------------------------------------------------------------------------- |
-| `npm run build`       | type-check + production build into `dist/`                                                          |
-| `npm run build:core`  | build the `@m1k1o/neko` package into `core/dist/`                                                   |
-| `npm run check`       | types, formatting, lint (hooks, layering), import cycles, the `*.check.ts`, the built core package  |
-| `npm test`            | unit tests of the core (`node:test`): the connection state machine and the store, without a browser |
-| `npm run format`      | prettier                                                                                            |
-| `npm run build:emoji` | regenerate emoji data (`public/emoji.json`, the chat's sprite sheet)                                |
-| `npm run test:e2e`    | two-user browser test against a running server, see below                                           |
+| script                |                                                                                                                   |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `npm run build`       | type-check + production build into `dist/`                                                                        |
+| `npm run build:core`  | build the `@m1k1o/neko` package into `core/dist/`                                                                 |
+| `npm run check`       | types, formatting, lint (hooks, layering), import cycles, the tests, the built core package                       |
+| `npm test`            | unit tests (vitest): the core's connection state machine and store, the chat's markdown parser, without a browser |
+| `npm run format`      | prettier                                                                                                          |
+| `npm run build:emoji` | regenerate emoji data (`public/emoji.json`, the chat's sprite sheet)                                              |
+| `npm run test:e2e`    | two-user browser test against a running server, see below                                                         |
 
 ### e2e
 
