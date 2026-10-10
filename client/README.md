@@ -45,6 +45,49 @@ and `lib` below everything but `design`. In practice:
 `npm run check` enforces this: `eslint.config.js` holds one `no-restricted-imports` rule set per
 layer, and `tools/cycles.mjs` fails on an import cycle (type-only imports excepted).
 
+## Design
+
+Styling is Tailwind v4 (`tailwindcss`, `@tailwindcss/vite`): the classes are in the markup, there is no
+stylesheet per component. `src/index.css` is the whole of the CSS:
+
+- **Tokens**: an `@theme` block with the values of the previous SCSS variables under the same names, so
+  `$background-primary` is `--color-background-primary` and the utility `bg-background-primary`;
+  `$text-normal` is `text-text-normal`, `$style-primary` is `bg-style-primary` / `text-style-primary`,
+  `$elevation-high` is `shadow-elevation-high`, `$side-width` / `$menu-height` / `$controls-height` are
+  `w-side` / `h-menu` / `h-controls`, `$text-size` is `text-ui`. The font is Tailwind's system stack
+  (`--font-sans`). Sizes are written in px where the legacy layout had px (`p-[5px]`, `h-7.5`).
+- **Global rules** the preflight does not have: the page's size and overflow, 14px text with line-height 1
+  on `body` (so `rem`, the base of Tailwind's spacing scale, stays 16px), no native video controls.
+- **Breakpoints** as variants: `tablet:` (up to 1024px: the page scrolls and the side panel goes under the
+  video, with Tailwind's `portrait:` / `landscape:` for the split), `phone:` (up to 768px: no room bar).
+- The animations (`animate-shake`, `animate-loader`, `animate-badge`) and the `slider` utility (the range
+  inputs).
+
+`cn()` (`src/lib/utils.ts`, `clsx` + `tailwind-merge`) joins class names and lets the last Tailwind class
+win, so a caller's `className` overrides a component's; `class-variance-authority` gives the variants.
+
+The component kit under `src/components/ui/` is shadcn/ui on Radix, restyled with the tokens: `dialog.tsx`
+(`@radix-ui/react-dialog`, the overlay and the content composed by the caller), `dropdown-menu.tsx` (a
+menu from a button: the resolution list, the emote picker), `popover.tsx` (the clipboard textarea, the
+emoji picker), `tabs.tsx` (the side panel), `context-menu.tsx` (the member menu: a menu opened at a
+point, on `@radix-ui/react-menu`, since it is opened from the member list, a chat author and Shift+F10),
+`button.tsx` (the text buttons: `primary`, `outline`, `confirm`, `cancel`) and `sonner.tsx` (the toasts,
+`toast()` in `src/state/dialogs.ts`). They bring focus trapping, roving focus, Escape, outside click and
+ARIA. `components.json` configures `npx shadcn add <component>` (the radix base); a component added
+that way comes with shadcn's theme classes and is rewritten with the tokens, like the ones here.
+
+Every icon control is `IconButton` (`src/components/IconButton.tsx`): a `<button type="button">` named
+by its `label` (the accessible name and the tooltip), with the icon as its child and the variants `plain`
+(the room bar, the chat, the files), `header` (a 30px box) and `video` (the translucent box over the
+video). Icons are `lucide-react` components, tree-shaken: `import { Mouse } from 'lucide-react'` and
+`<Mouse className="size-4" />` (`size-3.5` next to 14px text, `size-6` in the room bar); a plugin tab's
+`icon` is one. A brand icon lucide lacks (GitHub, in About) is an inline `<svg>`. Emoji are text: the
+character of each name from `public/emoji.json` (`src/plugins/chat/Emoji.tsx`).
+
+To add a component: Tailwind classes and the tokens in the markup, repeated class strings as constants
+next to the component, `Button` / `IconButton` for buttons, the kit for a dialog, a menu or a popover. To
+add an icon: import it from `lucide-react`.
+
 ## Plugins
 
 A plugin is a folder under `src/plugins/` with its components, styles, store and actions, described
