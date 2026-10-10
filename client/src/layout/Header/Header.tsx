@@ -28,7 +28,9 @@ export function Header() {
     const tip = admin
       ? t(`locks.${r}.${locked ? 'unlock' : 'lock'}`)
       : t(`locks.${r}.${locked ? 'locked' : 'unlocked'}`)
-    return <LockButton icon={icon} locked={locked} admin={admin} tip={tip} onToggle={() => actions.toggleLock(r)} />
+    return (
+      <LockButton id={r} icon={icon} locked={locked} admin={admin} tip={tip} onToggle={() => actions.toggleLock(r)} />
+    )
   }
 
   return (
@@ -65,6 +67,7 @@ function Toggle({ side, unread }: { side: boolean; unread: number }) {
       {!side && read !== unread && <span className="badge">&bull;</span>}
       <i
         className="fas fa-bars toggle"
+        data-testid="side-toggle"
         {...a11y('Toggle side panel')}
         aria-expanded={side}
         onClick={() => {

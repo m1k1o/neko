@@ -12,7 +12,7 @@ export function About() {
   useEffect(() => closeOn(close), [])
   return (
     <div className="about" onClick={(e) => e.target === e.currentTarget && close()}>
-      <div className="window" role="dialog" aria-label="About n.eko">
+      <div className="window" role="dialog" aria-label="About n.eko" data-testid="about">
         <div className="about-content">
           <div className="logo">
             <Logo />
@@ -27,7 +27,9 @@ export function About() {
             </a>
           </p>
           <p className="version">client {__APP_VERSION__}</p>
-          <button onClick={close}>{t('connection.button_confirm')}</button>
+          <button data-testid="about-close" onClick={close}>
+            {t('connection.button_confirm')}
+          </button>
         </div>
       </div>
     </div>

@@ -36,8 +36,8 @@ function Panel({ tabs }: { tabs: PluginTab[] }) {
   const Page = tabs.find((x) => x.id === tab)!.component
 
   return (
-    <aside className="neko-menu">
-      <div className="tabs-container">
+    <aside className="neko-menu" data-testid="side">
+      <div className="tabs-container" data-testid="tabs">
         <ul>
           {tabs.map(({ id, icon, label }) => (
             <li

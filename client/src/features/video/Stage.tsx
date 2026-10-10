@@ -49,7 +49,7 @@ export function Stage({ hideControls, extraControls }: { hideControls: boolean; 
   return (
     <div className="video">
       <div ref={player} className="player">
-        <div className="player-container" onMouseEnter={syncClipboard}>
+        <div className="player-container" data-testid="player" onMouseEnter={syncClipboard}>
           <Player transport={client.transport} />
           <div className="emotes">
             {Object.entries(emotes).map(([id, type]) => (
@@ -59,6 +59,7 @@ export function Stage({ hideControls, extraControls }: { hideControls: boolean; 
           {!playing && playable ? (
             <div
               className="player-overlay"
+              data-testid="player-overlay"
               {...a11y('Play')}
               onClick={() => (client.unmute(), client.play().catch(() => {}))}
             >
@@ -69,7 +70,12 @@ export function Stage({ hideControls, extraControls }: { hideControls: boolean; 
             playing &&
             muted &&
             mutedByAutoplay && (
-              <div className="player-overlay" {...a11y('Unmute')} onClick={() => client.unmute()}>
+              <div
+                className="player-overlay"
+                data-testid="player-overlay"
+                {...a11y('Unmute')}
+                onClick={() => client.unmute()}
+              >
                 <i className="fas fa-volume-up" />
               </div>
             )
@@ -82,7 +88,12 @@ export function Stage({ hideControls, extraControls }: { hideControls: boolean; 
             </li>
             {admin && (
               <li>
-                <i {...a11y('Screen resolution')} onClick={open('resolution')} className="fas fa-desktop" />
+                <i
+                  {...a11y('Screen resolution')}
+                  data-testid="resolution-open"
+                  onClick={open('resolution')}
+                  className="fas fa-desktop"
+                />
               </li>
             )}
             {!controlLocked && !implicit && (
@@ -100,7 +111,12 @@ export function Stage({ hideControls, extraControls }: { hideControls: boolean; 
           <ul className="video-menu bottom">
             {hosting && !canReadClipboard && (
               <li>
-                <i {...a11y('Clipboard')} onClick={open('clipboard')} className="fas fa-clipboard" />
+                <i
+                  {...a11y('Clipboard')}
+                  data-testid="clipboard-open"
+                  onClick={open('clipboard')}
+                  className="fas fa-clipboard"
+                />
               </li>
             )}
             {pip.canPip && (
@@ -111,6 +127,7 @@ export function Stage({ hideControls, extraControls }: { hideControls: boolean; 
             {hosting && client.isTouchDevice && (
               <li
                 className={extra}
+                data-testid="keyboard-toggle"
                 {...a11y('Keyboard')}
                 onMouseDown={(e) => e.preventDefault()} // tapping the button must not take the focus the keyboard needs
                 onClick={() => overlay.mobileKeyboardToggle()}

@@ -32,7 +32,12 @@ export function Members() {
         <ul className="members-list">
           {me && (
             <li>
-              <div className={`member self${me.id === host ? ' host' : ''}`}>
+              <div
+                className={`member self${me.id === host ? ' host' : ''}`}
+                data-testid="member"
+                data-self
+                data-host={me.id === host || undefined}
+              >
                 <Avatar seed={me.profile.name} avatar={me.profile.avatar} size={50} />
               </div>
             </li>
@@ -43,6 +48,8 @@ export function Members() {
               <li key={m.id} title={m.profile.name}>
                 <div
                   className={`member${m.id === host ? ' host' : ''}${m.profile.is_admin ? ' admin' : ''}`}
+                  data-testid="member"
+                  data-host={m.id === host || undefined}
                   tabIndex={0}
                   aria-label={m.profile.name}
                   aria-haspopup="menu"

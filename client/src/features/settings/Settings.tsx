@@ -49,7 +49,7 @@ export function Settings() {
   )
 
   return (
-    <div className="side-settings">
+    <div className="side-settings" data-testid="settings">
       <ul>
         <li>
           <span>{t('setting.scroll')}</span>
@@ -107,7 +107,9 @@ export function Settings() {
         )}
         {admin && <Banned />}
         <li>
-          <button onClick={actions.logout}>{t('logout')}</button>
+          <button data-testid="logout" onClick={actions.logout}>
+            {t('logout')}
+          </button>
         </li>
       </ul>
     </div>

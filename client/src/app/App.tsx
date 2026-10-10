@@ -51,7 +51,7 @@ export function App() {
     <div id="neko" className={!videoOnly && side ? 'expanded' : ''}>
       <main className="neko-main">
         {!videoOnly && (
-          <div className="header-container">
+          <div className="header-container" data-testid="header">
             <Header />
           </div>
         )}

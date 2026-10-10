@@ -24,7 +24,7 @@ export function Emote({ id, type }: { id: string; type: string }) {
     Promise.all(anims).then(() => hideEmote(id))
   }, [id])
   return (
-    <div ref={ref} className="emote-container">
+    <div ref={ref} className="emote-container" data-testid="emote-animation">
       {Array.from({ length: 7 }, (_, i) => (
         <div key={i} className={`emote ${type}`} />
       ))}

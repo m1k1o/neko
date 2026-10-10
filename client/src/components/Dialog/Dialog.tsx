@@ -24,14 +24,14 @@ export function Dialog() {
   }
 
   return (
-    <dialog ref={ref} className="neko-dialog" onCancel={(e) => (e.preventDefault(), done(false))}>
+    <dialog ref={ref} className="neko-dialog" data-testid="dialog" onCancel={(e) => (e.preventDefault(), done(false))}>
       {d && (
         <>
           <i className={`icon ${d.icon} fas ${DIALOG_ICON[d.icon]}`} aria-hidden="true" />
           <h2>{d.title}</h2>
           {d.text && <p>{d.text}</p>}
           <div className="actions">
-            <button className="confirm" autoFocus onClick={() => done(true)}>
+            <button className="confirm" data-testid="dialog-confirm" autoFocus onClick={() => done(true)}>
               {d.cancel ? t('context.confirm.button_yes') : t('connection.button_confirm')}
             </button>
             {d.cancel && (

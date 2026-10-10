@@ -16,5 +16,5 @@ export function FileLock() {
   const tip = admin
     ? t(`files:locks.${isLocked ? 'unlock' : 'lock'}`)
     : t(`files:locks.${isLocked ? 'locked' : 'unlocked'}`)
-  return <LockButton icon="fa-file" locked={isLocked} admin={admin} tip={tip} onToggle={toggleLock} />
+  return <LockButton id="files" icon="fa-file" locked={isLocked} admin={admin} tip={tip} onToggle={toggleLock} />
 }

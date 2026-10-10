@@ -7,7 +7,7 @@ export function Toasts() {
   return (
     <div className="toasts">
       {toasts.map((n) => (
-        <div key={n.id} className={`toast ${n.kind}`} role="status">
+        <div key={n.id} className={`toast ${n.kind}`} data-testid="toast" role="status">
           <div className="toast-title">{n.title}</div>
           {n.text && <div className="toast-text">{n.text}</div>}
         </div>

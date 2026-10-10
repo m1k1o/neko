@@ -51,11 +51,12 @@ export function EmojiPicker({ onPick, onClose }: { onPick: (name: string) => voi
   }
 
   return (
-    <div className="neko-emoji" ref={ref} onClick={(e) => e.stopPropagation()}>
+    <div className="neko-emoji" data-testid="emoji-picker" ref={ref} onClick={(e) => e.stopPropagation()}>
       <div className="search">
         <div className="search-contianer">
           <input
             type="text"
+            data-testid="emoji-search"
             autoFocus
             value={search}
             placeholder={hovered ? `:${hovered}:` : ''}
@@ -64,7 +65,7 @@ export function EmojiPicker({ onPick, onClose }: { onPick: (name: string) => voi
           />
         </div>
       </div>
-      <div className="list" ref={scroll} onScroll={onScroll}>
+      <div className="list" data-testid="emoji-list" ref={scroll} onScroll={onScroll}>
         {q ? (
           <ul className="emoji-container" style={{ display: 'flex' }}>
             {filtered.map((n) => item(n, n))}

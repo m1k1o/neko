@@ -68,7 +68,7 @@ export function MemberMenu({ items }: { items: readonly PluginMemberMenuItem[] }
   const y = Math.min(menu.y, innerHeight - 250)
 
   return (
-    <ContextMenu ref={list} role="menu" aria-label={n} style={{ left: x, top: y }}>
+    <ContextMenu ref={list} role="menu" aria-label={n} data-testid="member-menu" style={{ left: x, top: y }}>
       <li className="header">
         <div className="user">
           <Avatar seed={n} avatar={m.profile.avatar} size={25} />

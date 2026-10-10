@@ -100,6 +100,7 @@ export function Files() {
             <div
               key={item.name}
               className={`files-list-item${sel ? ' selectable-item' : ''}${sel && selected.includes(item.name) ? ' selected-item' : ''}`}
+              data-testid="file"
               onClick={(e) => onItemClick(item, e)}
             >
               {sel && (
@@ -112,7 +113,7 @@ export function Files() {
                 />
               )}
               <i className={`file-icon fas ${item.type === 'dir' ? 'fa-folder' : 'fa-file'}`} />
-              <p className="file-name" title={item.name}>
+              <p className="file-name" data-testid="file-name" title={item.name}>
                 {item.name}
               </p>
               <p className="file-size">{size(item.size)}</p>
@@ -125,6 +126,7 @@ export function Files() {
               {!selecting && item.type !== 'dir' && canDelete && (
                 <i
                   className="fas fa-trash delete"
+                  data-testid="file-delete"
                   {...a11y(`${t('files:delete')} ${item.name}`)}
                   onClick={() => deleteOne(item.name)}
                 />
@@ -145,7 +147,7 @@ export function Files() {
               />
             </p>
             {uploads.map((u) => (
-              <div key={u.id} className="transfers-list-item">
+              <div key={u.id} className="transfers-list-item" data-testid="transfer" data-status={u.status}>
                 <div className="transfer-info">
                   <i
                     className={`fas transfer-status ${u.status === 'inprogress' ? 'fa-arrows-rotate' : u.status === 'completed' ? 'fa-check' : 'fa-warning'}`}
@@ -167,6 +169,7 @@ export function Files() {
         {canUpload && (
           <div
             className={`upload-area${drag ? ' upload-area-drag' : ''}`}
+            data-testid="upload"
             onDragOver={(e) => (e.preventDefault(), setDrag(true))}
             onDragLeave={(e) => (e.preventDefault(), setDrag(false))}
             onDrop={(e) => (e.preventDefault(), setDrag(false), upload(e.dataTransfer.files))}

@@ -15,13 +15,15 @@ export function Banned() {
 
   if (!banned?.length) return null
   return (
-    <li className="banned">
+    <li className="banned" data-testid="banned">
       <span>{t('setting.banned')}</span>
       <ul>
         {banned.map((m) => (
           <li key={m.id}>
             <span>{m.profile?.name || m.id}</span>
-            <button onClick={() => actions.unban(m.id!)}>{t('context.unban')}</button>
+            <button data-testid="unban" onClick={() => actions.unban(m.id!)}>
+              {t('context.unban')}
+            </button>
           </li>
         ))}
       </ul>

@@ -14,11 +14,21 @@ export function RoomMenu() {
   return (
     <ul className="room-settings">
       <li>
-        <i className="fas fa-question-circle" {...a11y('About n.eko')} onClick={() => app.setState({ about: true })} />
+        <i
+          className="fas fa-question-circle"
+          data-testid="about-open"
+          {...a11y('About n.eko')}
+          onClick={() => app.setState({ about: true })}
+        />
       </li>
-      <li>{admin && <i className="fas fa-shield-alt" title={t('admin_loggedin')} />}</li>
+      <li>{admin && <i className="fas fa-shield-alt" data-testid="admin-badge" title={t('admin_loggedin')} />}</li>
       <li>
-        <select value={i18n.language} onChange={(e) => setLang(e.target.value as Lang)} aria-label="Language">
+        <select
+          data-testid="lang"
+          value={i18n.language}
+          onChange={(e) => setLang(e.target.value as Lang)}
+          aria-label="Language"
+        >
           {langs.map((l) => (
             <option key={l} value={l}>
               {l}

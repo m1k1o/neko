@@ -80,6 +80,7 @@ export function Controls() {
               shake && !hosting ? 'shake' : '',
               'fas fa-keyboard request',
             ].join(' ')}
+            data-testid="control-request"
             {...a11y(hosting ? t('controls.release') : t('controls.request'))}
             onClick={() => playable && actions.toggleControl()}
           />
@@ -89,6 +90,7 @@ export function Controls() {
         <li className="no-pointer">
           <i
             className={`${controlLocked ? 'disabled ' : ''}fas fa-mouse-pointer`}
+            data-testid="control-implicit"
             title={t(controlLocked ? 'controls.hasnot' : 'controls.has')}
           />
         </li>
@@ -118,6 +120,8 @@ export function Controls() {
         <li>
           <i
             className={`fas ${micOn ? 'fa-microphone' : 'fa-microphone-slash faded'}`}
+            data-testid="mic"
+            data-on={micOn || undefined}
             {...a11y(t(micOn ? 'controls.mic_off' : 'controls.mic_on'))}
             onClick={toggleMic}
           />
@@ -127,6 +131,7 @@ export function Controls() {
         <div className="volume">
           <i
             className={`fas ${volume === 0 || muted ? 'fa-volume-mute' : 'fa-volume-up'}`}
+            data-testid="mute"
             {...a11y(muted ? 'Unmute' : 'Mute')}
             onClick={() => (muted ? client.unmute() : client.mute())}
           />

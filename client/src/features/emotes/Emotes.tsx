@@ -59,6 +59,7 @@ export function Emotes() {
         <li>
           <i
             className="fas fa-grin-beam"
+            data-testid="emotes-open"
             {...a11y('Emotes')}
             onClick={(e) => {
               e.stopPropagation()
@@ -70,10 +71,13 @@ export function Emotes() {
         </li>
       </ul>
       {picker && (
-        <ContextMenu style={{ left: Math.min(picker.x, innerWidth - 260), top: Math.max(picker.y - 260, 10) }}>
+        <ContextMenu
+          data-testid="emotes-menu"
+          style={{ left: Math.min(picker.x, innerWidth - 260), top: Math.max(picker.y - 260, 10) }}
+        >
           {EMOTES.filter((e) => !recent.includes(e)).map((e) => (
             <li key={e}>
-              <div className={`emote ${e}`} {...a11y(e, 'menuitem')} onClick={() => pick(e)} />
+              <div className={`emote ${e}`} data-emote={e} {...a11y(e, 'menuitem')} onClick={() => pick(e)} />
             </li>
           ))}
         </ContextMenu>

@@ -15,6 +15,8 @@ function Spoiler({ children }: { children: React.ReactNode }) {
   return (
     <span
       className={`spoiler${shown ? ' active' : ''}`}
+      data-testid="spoiler"
+      data-shown={shown || undefined}
       {...(shown ? {} : a11y('Spoiler'))}
       onClick={() => setShown(true)}
     >
@@ -87,5 +89,9 @@ export function Markdown({ source }: { source: string }) {
       }
     })
 
-  return <div className="content-body">{render(nodes)}</div>
+  return (
+    <div className="content-body" data-testid="chat-body">
+      {render(nodes)}
+    </div>
+  )
 }

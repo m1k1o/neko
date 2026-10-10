@@ -64,27 +64,30 @@ export function Chat() {
 
   const nameOf = (m: (typeof lines)[number]) => sessions[m.id]?.profile.name ?? m.name
   return (
-    <div className="chat">
+    <div className="chat" data-testid="chat">
       <ul className="chat-history" ref={history}>
         {lines.map((m, i) =>
           m.type === 'text' ? (
             <li
               key={m.seq}
               className={`message${i > 0 && lines[i - 1].id === m.id && lines[i - 1].type === 'text' ? ' bulk' : ''}`}
+              data-testid="chat-message"
             >
-              <div className="author" onContextMenu={(e) => openMenu(e, m.id)}>
+              <div className="author" data-testid="chat-author" onContextMenu={(e) => openMenu(e, m.id)}>
                 <Avatar seed={nameOf(m)} avatar={sessions[m.id]?.profile.avatar} size={40} />
               </div>
               <div className="content">
                 <div className="content-head">
                   <span>{nameOf(m)}</span>
-                  <span className="timestamp">{time(m.created)}</span>
+                  <span className="timestamp" data-testid="chat-time">
+                    {time(m.created)}
+                  </span>
                 </div>
                 <Markdown source={m.content} />
               </div>
             </li>
           ) : (
-            <li key={m.seq} className="event">
+            <li key={m.seq} className="event" data-testid="chat-event">
               <div className="content" title={time(m.created)}>
                 <strong>{m.name}</strong> {m.content}
               </div>
@@ -98,6 +101,7 @@ export function Chat() {
           <div className="text-container">
             <textarea
               ref={input}
+              data-testid="chat-input"
               placeholder={t('chat:send_a_message')}
               maxLength={MAX_MESSAGE}
               value={text}
@@ -107,6 +111,7 @@ export function Chat() {
             {picker && <EmojiPicker onPick={onEmoji} onClose={() => setPicker(false)} />}
             <i
               className="emoji-menu fas fa-laugh"
+              data-testid="emoji-open"
               {...a11y('Emoji')}
               onClick={(e) => (e.stopPropagation(), setPicker(!picker))}
             />

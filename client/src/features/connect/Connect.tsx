@@ -62,7 +62,7 @@ export function Connect() {
   const connecting = status === 'connecting'
   const passwordLogin = oauth.password_login_enabled !== false
   return (
-    <div className="connect">
+    <div className="connect" data-testid="connect">
       <div className="window">
         <div className="logo">
           <Logo />

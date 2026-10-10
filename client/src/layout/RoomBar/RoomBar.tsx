@@ -6,7 +6,7 @@ import { Emotes } from '@/features/emotes'
 // the bar under the video: members, room menu, controls and emotes (layout in app/app.scss)
 export function RoomBar() {
   return (
-    <div className="room-container">
+    <div className="room-container" data-testid="room-bar">
       <Members />
       <div className="room-menu">
         <div className="settings">
