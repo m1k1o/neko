@@ -3,11 +3,23 @@ import { useStore } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
 import { selectControlling, selectIsAdmin, selectSession } from '@m1k1o/neko'
 import { useTranslation } from 'react-i18next'
+import {
+  CirclePause,
+  CirclePlay,
+  Keyboard,
+  Lock,
+  LockOpen,
+  Mic,
+  MicOff,
+  MousePointer,
+  Volume2,
+  VolumeX,
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { actions } from '@/state/actions'
 import { client } from '@/state/client'
 import { tell } from '@/state/dialogs'
-import { a11y } from '@/components/a11y'
+import { IconButton } from '@/components/IconButton'
 
 export function Controls() {
   const { t } = useTranslation()
@@ -71,36 +83,38 @@ export function Controls() {
   }
 
   return (
-    <ul className="flex items-center justify-center self-center text-[24px]">
+    <ul className="flex items-center justify-center self-center">
       {!implicit && (!controlLocked || hosting) && (
-        <li className="cursor-pointer">
-          <i
+        <li>
+          <IconButton
+            label={hosting ? t('controls.release') : t('controls.request')}
             className={cn(
-              'fas fa-keyboard px-[5px]',
+              'px-[5px]',
               hosted && !hosting && 'text-style-error/40',
               !hosted && !hosting && 'text-text-normal/40',
               shake && !hosting && 'animate-shake',
             )}
             data-testid="control-request"
-            {...a11y(hosting ? t('controls.release') : t('controls.request'))}
             onClick={() => playable && actions.toggleControl()}
-          />
+          >
+            <Keyboard className="size-6" />
+          </IconButton>
         </li>
       )}
       {implicit && (
-        <li>
-          <i
-            className={cn('fas fa-mouse-pointer px-[5px]', controlLocked && 'text-style-error/40')}
-            data-testid="control-implicit"
-            title={t(controlLocked ? 'controls.hasnot' : 'controls.has')}
-          />
+        <li
+          className="px-[5px]"
+          data-testid="control-implicit"
+          title={t(controlLocked ? 'controls.hasnot' : 'controls.has')}
+        >
+          <MousePointer className={cn('size-6', controlLocked && 'text-style-error/40')} />
         </li>
       )}
       {(implicit || !controlLocked || hosting) && (
-        <li className="cursor-pointer">
+        <li>
           {/* the lock switch: the input, its track and its knob (a lock icon when it can be used) */}
           <label
-            className="relative mx-[5px] block h-6 w-[42px]"
+            className="relative mx-[5px] block h-6 w-[42px] cursor-pointer"
             title={hosting ? t(locked ? 'controls.unlock' : 'controls.lock') : ''}
           >
             <input
@@ -111,45 +125,50 @@ export function Controls() {
               disabled={lockDisabled}
               onChange={(e) => (e.target.checked ? client.lock() : client.unlock())}
             />
-            <span className="absolute inset-0 cursor-pointer rounded-[34px] bg-background-secondary transition-all duration-200 peer-checked:bg-style-primary" />
-            <i
+            <span className="absolute inset-0 rounded-[34px] bg-background-secondary transition-all duration-200 peer-checked:bg-style-primary peer-focus-visible:outline-2 peer-focus-visible:outline-style-primary" />
+            <span
               className={cn(
-                'absolute bottom-[3px] left-[3px] h-[18px] w-[18px] cursor-pointer rounded-full text-center text-[8px] leading-[18px] text-background-tertiary shadow-[0_2px_4px_rgba(0,0,0,0.3)] transition-all duration-300 peer-checked:translate-x-[18px]',
-                lockDisabled ? 'bg-text-normal/40' : `fas bg-white ${locked ? 'fa-lock' : 'fa-lock-open'}`,
+                'absolute bottom-[3px] left-[3px] flex h-[18px] w-[18px] items-center justify-center rounded-full text-background-tertiary shadow-[0_2px_4px_rgba(0,0,0,0.3)] transition-all duration-300 peer-checked:translate-x-[18px]',
+                lockDisabled ? 'bg-text-normal/40' : 'bg-white',
               )}
-            />
+            >
+              {!lockDisabled && (locked ? <Lock className="size-2" /> : <LockOpen className="size-2" />)}
+            </span>
           </label>
         </li>
       )}
-      <li className="cursor-pointer">
-        <i
-          className={cn(
-            `fas ${playing ? 'fa-pause-circle' : 'fa-play-circle'} px-[5px]`,
-            !playable && 'text-style-error/40',
-          )}
-          {...a11y(playing ? 'Pause' : 'Play')}
+      <li>
+        <IconButton
+          label={playing ? 'Pause' : 'Play'}
+          className={cn('px-[5px]', !playable && 'text-style-error/40')}
           onClick={() => playable && (playing ? client.pause() : client.play().catch(() => {}))}
-        />
+        >
+          {playing ? <CirclePause className="size-6" /> : <CirclePlay className="size-6" />}
+        </IconButton>
       </li>
       {micAllowed && (
-        <li className="cursor-pointer">
-          <i
-            className={cn('fas px-[5px]', micOn ? 'fa-microphone' : 'fa-microphone-slash text-text-normal/40')}
+        <li>
+          <IconButton
+            label={t(micOn ? 'controls.mic_off' : 'controls.mic_on')}
+            className={cn('px-[5px]', !micOn && 'text-text-normal/40')}
             data-testid="mic"
             data-on={micOn || undefined}
-            {...a11y(t(micOn ? 'controls.mic_off' : 'controls.mic_on'))}
             onClick={toggleMic}
-          />
+          >
+            {micOn ? <Mic className="size-6" /> : <MicOff className="size-6" />}
+          </IconButton>
         </li>
       )}
-      <li className="cursor-pointer">
+      <li>
         <div className="flex items-center justify-center whitespace-nowrap">
-          <i
-            className={`fas ${volume === 0 || muted ? 'fa-volume-mute' : 'fa-volume-up'} px-[5px]`}
+          <IconButton
+            label={muted ? 'Unmute' : 'Mute'}
+            className="px-[5px]"
             data-testid="mute"
-            {...a11y(muted ? 'Unmute' : 'Mute')}
             onClick={() => (muted ? client.unmute() : client.mute())}
-          />
+          >
+            {volume === 0 || muted ? <VolumeX className="size-6" /> : <Volume2 className="size-6" />}
+          </IconButton>
           <input
             type="range"
             className="slider h-5 w-[150px]"

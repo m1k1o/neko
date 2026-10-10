@@ -3,13 +3,15 @@ import { useStore } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
 import { selectIsAdmin } from '@m1k1o/neko'
 import { useTranslation } from 'react-i18next'
+import { Play, Square } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { actions } from '@/state/actions'
 import { app } from '@/state/app'
 import { client } from '@/state/client'
 import { setSetting } from '@/state/settings'
+import { Button } from '@/components/ui/button'
 import { Banned } from './Banned'
-import { row, label, button } from './classes'
+import { row, label } from './classes'
 
 const field =
   'block h-8 rounded-[5px] border border-transparent bg-background-tertiary leading-7.5 font-light text-ellipsis text-white'
@@ -101,21 +103,21 @@ export function Settings() {
             <div className="mb-2.5 flex justify-between">
               <span className={label}>{t('setting.broadcast_title')}</span>
               {!broadcast.active ? (
-                <button
-                  className={cn(button, 'm-0 w-auto shrink px-2.5 py-0')}
+                <Button
+                  className="h-7.5 shrink px-2.5 py-0"
                   aria-label={t('setting.broadcast_title')}
                   onClick={() => actions.broadcastStart(url)}
                 >
-                  <i className="fas fa-play"></i>
-                </button>
+                  <Play className="size-3.5" />
+                </Button>
               ) : (
-                <button
-                  className={cn(button, 'm-0 w-auto shrink bg-[#a62626] px-2.5 py-0')}
+                <Button
+                  className="h-7.5 shrink bg-[#a62626] px-2.5 py-0"
                   aria-label={t('setting.broadcast_title')}
                   onClick={actions.broadcastStop}
                 >
-                  <i className="fas fa-stop"></i>
-                </button>
+                  <Square className="size-3.5" />
+                </Button>
               )}
             </div>
             <input
@@ -132,9 +134,9 @@ export function Settings() {
         )}
         {admin && <Banned />}
         <li className={row}>
-          <button className={button} data-testid="logout" onClick={actions.logout}>
+          <Button className="my-[5px] w-full" data-testid="logout" onClick={actions.logout}>
             {t('logout')}
-          </button>
+          </Button>
         </li>
       </ul>
     </div>

@@ -5,8 +5,9 @@ import { selectIsAdmin } from '@m1k1o/neko'
 import { useTranslation } from 'react-i18next'
 import { client } from '@/state/client'
 import { ask } from '@/state/dialogs'
+import { Check, Download, File, FileUp, Folder, RefreshCw, RotateCw, Trash2, TriangleAlert, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { a11y } from '@/components/a11y'
+import { IconButton } from '@/components/IconButton'
 import { store, type FileItem } from './store'
 import { fileUrl, fileDelete, refresh, upload } from './actions'
 
@@ -65,41 +66,41 @@ export function Files() {
     <div className="flex max-w-full flex-1 flex-col">
       <div className={cn(box, 'mx-2.5 mt-2.5 flex flex-row p-2 font-semibold')}>
         <p>{f.root_dir}</p>
-        <i className="fas fa-rotate-right ml-auto cursor-pointer" {...a11y('Refresh')} onClick={refresh} />
+        <IconButton label="Refresh" className="ml-auto" onClick={refresh}>
+          <RotateCw className="size-3.5" />
+        </IconButton>
       </div>
       {plain.length > 2 && canDelete && (
         <div className={cn(box, 'mx-2.5 mt-2.5 flex flex-row items-center justify-between p-2 text-[0.9em]')}>
           <div className="flex items-center">
             {!selecting ? (
-              <span className={action} role="button" tabIndex={0} onClick={() => setSelecting(true)}>
+              <button type="button" className={action} onClick={() => setSelecting(true)}>
                 {t('files:select')}
-              </span>
+              </button>
             ) : (
-              <span
+              <button
+                type="button"
                 className={action}
-                role="button"
-                tabIndex={0}
                 onClick={() => setSelected(allSelected ? [] : plain.map((x) => x.name))}
               >
                 {t(allSelected ? 'files:unselect_all' : 'files:select_all')}
-              </span>
+              </button>
             )}
           </div>
           {selecting && (
             <div className="flex items-center gap-[1.2em]">
               {selected.length > 0 && (
-                <span
+                <button
+                  type="button"
                   className={cn(action, 'text-style-error hover:text-[#dc5959]')}
-                  role="button"
-                  tabIndex={0}
                   onClick={deleteSelected}
                 >
-                  <i className="fas fa-trash"></i> {t('files:delete')} ({selected.length})
-                </span>
+                  <Trash2 className="inline size-3.5 align-[-0.125em]" /> {t('files:delete')} ({selected.length})
+                </button>
               )}
-              <span className={action} role="button" tabIndex={0} onClick={stopSelecting}>
+              <button type="button" className={action} onClick={stopSelecting}>
                 {t('files:cancel')}
-              </span>
+              </button>
             </div>
           )}
         </div>
@@ -127,24 +128,35 @@ export function Files() {
                   onChange={() => toggle(item.name)}
                 />
               )}
-              <i className={`fas ${item.type === 'dir' ? 'fa-folder' : 'fa-file'} mr-2 w-3.5`} />
+              {item.type === 'dir' ? (
+                <Folder className="mr-2 size-3.5 shrink-0" />
+              ) : (
+                <File className="mr-2 size-3.5 shrink-0" />
+              )}
               <p className={name} data-testid="file-name" title={item.name}>
                 {item.name}
               </p>
               <p className="mr-2 ml-auto whitespace-nowrap text-white/40">{size(item.size)}</p>
               {/* native download: the browser's download manager shows progress */}
               {!selecting && item.type !== 'dir' && canDownload && (
-                <a href={fileUrl(item.name)} download={item.name}>
-                  <i className="fas fa-download cursor-pointer" aria-label={`Download ${item.name}`} />
+                <a
+                  href={fileUrl(item.name)}
+                  download={item.name}
+                  aria-label={`Download ${item.name}`}
+                  title={`Download ${item.name}`}
+                >
+                  <Download className="size-3.5" />
                 </a>
               )}
               {!selecting && item.type !== 'dir' && canDelete && (
-                <i
-                  className="fas fa-trash ml-2 cursor-pointer"
+                <IconButton
+                  label={`${t('files:delete')} ${item.name}`}
+                  className="ml-2"
                   data-testid="file-delete"
-                  {...a11y(`${t('files:delete')} ${item.name}`)}
                   onClick={() => deleteOne(item.name)}
-                />
+                >
+                  <Trash2 className="size-3.5" />
+                </IconButton>
               )}
             </div>
           )
@@ -155,18 +167,23 @@ export function Files() {
           <div className={cn(box, 'm-2.5 max-h-[50vh] overflow-x-hidden overflow-y-scroll', scroll)}>
             <p className="flex justify-between border-b-2 border-white/10 p-2.5 font-semibold">
               <span>{t('files:uploads')}</span>
-              <i
-                className="fas fa-xmark cursor-pointer"
-                {...a11y('Clear finished uploads')}
+              <IconButton
+                label="Clear finished uploads"
                 onClick={() => store.setState((s) => ({ uploads: s.uploads.filter((u) => u.status === 'inprogress') }))}
-              />
+              >
+                <X className="size-3.5" />
+              </IconButton>
             </p>
             {uploads.map((u) => (
               <div key={u.id} data-testid="transfer" data-status={u.status}>
                 <div className="flex max-w-full flex-row p-2.5">
-                  <i
-                    className={`fas ${u.status === 'inprogress' ? 'fa-arrows-rotate' : u.status === 'completed' ? 'fa-check' : 'fa-warning'} mr-2 w-3.5`}
-                  />
+                  {u.status === 'inprogress' ? (
+                    <RefreshCw className="mr-2 size-3.5 shrink-0" />
+                  ) : u.status === 'completed' ? (
+                    <Check className="mr-2 size-3.5 shrink-0" />
+                  ) : (
+                    <TriangleAlert className="mr-2 size-3.5 shrink-0" />
+                  )}
                   <p className={name} title={u.name}>
                     {u.name}
                   </p>
@@ -188,32 +205,36 @@ export function Files() {
           </div>
         )}
         {canUpload && (
-          <div
-            className={cn(
-              box,
-              'm-2.5 flex cursor-pointer flex-col justify-center text-center hover:bg-white/10',
-              drag && 'bg-white/10',
-            )}
-            data-testid="upload"
-            onDragOver={(e) => (e.preventDefault(), setDrag(true))}
-            onDragLeave={(e) => (e.preventDefault(), setDrag(false))}
-            onDrop={(e) => (e.preventDefault(), setDrag(false), upload(e.dataTransfer.files))}
-            {...a11y(t('files:upload_here'))}
-            onClick={() => input.current!.click()}
-          >
-            <i className="fas fa-file-arrow-up m-2.5 text-[4em]" />
-            <p className="mx-2.5 mb-2.5">{t('files:upload_here')}</p>
+          <>
+            <button
+              type="button"
+              className={cn(
+                box,
+                'm-2.5 flex w-[calc(100%-20px)] cursor-pointer flex-col justify-center text-center hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-style-primary',
+                drag && 'bg-white/10',
+              )}
+              data-testid="upload"
+              onDragOver={(e) => (e.preventDefault(), setDrag(true))}
+              onDragLeave={(e) => (e.preventDefault(), setDrag(false))}
+              onDrop={(e) => (e.preventDefault(), setDrag(false), upload(e.dataTransfer.files))}
+              onClick={() => input.current!.click()}
+            >
+              <FileUp className="m-2.5 size-14 self-center" />
+              <span className="mx-2.5 mb-2.5">{t('files:upload_here')}</span>
+            </button>
             <input
               ref={input}
               type="file"
               multiple
               hidden
+              data-testid="upload-input"
+              aria-label={t('files:upload_here')}
               onChange={(e) => {
                 if (e.target.files) upload(e.target.files)
                 e.target.value = '' // so the same file can be chosen again
               }}
             />
-          </div>
+          </>
         )}
       </div>
     </div>

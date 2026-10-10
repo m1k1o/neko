@@ -1,4 +1,5 @@
 import { Component, type ReactNode } from 'react'
+import { Button } from '@/components/ui/button'
 import logo from '@/assets/images/logo.svg'
 
 // a render bug should not leave a blank page
@@ -24,12 +25,9 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, { error?: 
             <span className="block text-center leading-7.5 uppercase">
               Something went wrong: {this.state.error.message}
             </span>
-            <button
-              className="my-[5px] cursor-pointer rounded-[5px] bg-style-primary p-1 text-center leading-7.5 font-bold text-text-normal uppercase"
-              onClick={() => location.reload()}
-            >
+            <Button className="my-[5px]" onClick={() => location.reload()}>
               Reload
-            </button>
+            </Button>
           </div>
         </div>
       </div>

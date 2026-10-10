@@ -3,11 +3,21 @@ import { useStore } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
 import { selectControlling, selectIsAdmin } from '@m1k1o/neko'
 import { useTranslation } from 'react-i18next'
+import {
+  CirclePlay,
+  Clipboard as ClipboardIcon,
+  Expand,
+  Keyboard,
+  Monitor,
+  Mouse,
+  PictureInPicture2,
+  Volume2,
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { actions } from '@/state/actions'
 import { app } from '@/state/app'
 import { client, overlay } from '@/state/client'
-import { a11y } from '@/components/a11y'
+import { IconButton } from '@/components/IconButton'
 import { DropdownMenu, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Popover, PopoverTrigger } from '@/components/ui/popover'
 import { Emote } from '@/features/emotes'
@@ -18,10 +28,9 @@ import { useFullscreen } from './useFullscreen'
 import { useClipboardSync, canReadClipboard } from './useClipboardSync'
 import { usePip } from './usePip'
 
-// an icon of the menus over the video
-const icon = 'h-7.5 w-7.5 cursor-pointer rounded-[5px] bg-white/20 text-center text-[16px] leading-7.5 text-white/60'
+// the play / unmute button covering the video
 const overlayClasses =
-  'absolute inset-0 flex cursor-pointer items-center justify-center overflow-hidden bg-black/20 text-[120px]'
+  'absolute inset-0 flex cursor-pointer items-center justify-center overflow-hidden rounded-none bg-black/20'
 
 export function Stage({ hideControls, extraControls }: { hideControls: boolean; extraControls: boolean }) {
   const { t } = useTranslation()
@@ -58,44 +67,44 @@ export function Stage({ hideControls, extraControls }: { hideControls: boolean; 
             ))}
           </div>
           {!playing && playable ? (
-            <div
+            <IconButton
+              label="Play"
               className={overlayClasses}
               data-testid="player-overlay"
-              {...a11y('Play')}
               onClick={() => (client.unmute(), client.play().catch(() => {}))}
             >
-              <i className="fas fa-play-circle" />
-            </div>
+              <CirclePlay className="size-[120px]" />
+            </IconButton>
           ) : (
             // only for the mute that autoplay forced; a user who muted on purpose keeps the desktop
             playing &&
             muted &&
             mutedByAutoplay && (
-              <div
+              <IconButton
+                label="Unmute"
                 className={overlayClasses}
                 data-testid="player-overlay"
-                {...a11y('Unmute')}
                 onClick={() => client.unmute()}
               >
-                <i className="fas fa-volume-up" />
-              </div>
+                <Volume2 className="size-[120px]" />
+              </IconButton>
             )
           )}
         </div>
         {!fullscreen && !hideControls && (
           <ul className="absolute top-[15px] right-5">
             <li className="mb-2.5 last:mb-0">
-              <i {...a11y('Fullscreen')} onClick={requestFullscreen} className={`fas fa-expand ${icon}`} />
+              <IconButton variant="video" label="Fullscreen" onClick={requestFullscreen}>
+                <Expand className="size-4" />
+              </IconButton>
             </li>
             {admin && (
               <li className="mb-2.5 last:mb-0">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <i
-                      {...a11y('Screen resolution')}
-                      data-testid="resolution-open"
-                      className={`fas fa-desktop ${icon}`}
-                    />
+                    <IconButton variant="video" label="Screen resolution" data-testid="resolution-open">
+                      <Monitor className="size-4" />
+                    </IconButton>
                   </DropdownMenuTrigger>
                   <Resolution />
                 </DropdownMenu>
@@ -103,15 +112,17 @@ export function Stage({ hideControls, extraControls }: { hideControls: boolean; 
             )}
             {!controlLocked && !implicit && (
               <li className={cn('mb-2.5 last:mb-0', extra)}>
-                <i
+                <IconButton
+                  variant="video"
+                  label={hosting ? t('controls.release') : t('controls.request')}
                   className={cn(
-                    `fas fa-computer-mouse ${icon}`,
                     hosted && !hosting && 'text-style-error/40',
                     !hosted && !hosting && 'text-text-normal/40',
                   )}
-                  {...a11y(hosting ? t('controls.release') : t('controls.request'))}
                   onClick={() => playable && actions.toggleControl()}
-                />
+                >
+                  <Mouse className="size-4" />
+                </IconButton>
               </li>
             )}
           </ul>
@@ -122,7 +133,9 @@ export function Stage({ hideControls, extraControls }: { hideControls: boolean; 
               <li className="mb-2.5 last:mb-0">
                 <Popover>
                   <PopoverTrigger asChild>
-                    <i {...a11y('Clipboard')} data-testid="clipboard-open" className={`fas fa-clipboard ${icon}`} />
+                    <IconButton variant="video" label="Clipboard" data-testid="clipboard-open">
+                      <ClipboardIcon className="size-4" />
+                    </IconButton>
                   </PopoverTrigger>
                   <Clipboard />
                 </Popover>
@@ -130,22 +143,22 @@ export function Stage({ hideControls, extraControls }: { hideControls: boolean; 
             )}
             {pip.canPip && (
               <li className="mb-2.5 last:mb-0">
-                <i
-                  {...a11y('Picture-in-Picture')}
-                  onClick={pip.request}
-                  className={`fas fa-external-link-alt ${icon}`}
-                />
+                <IconButton variant="video" label="Picture-in-Picture" onClick={pip.request}>
+                  <PictureInPicture2 className="size-4" />
+                </IconButton>
               </li>
             )}
             {hosting && client.isTouchDevice && (
-              <li
-                className={cn('mb-2.5 last:mb-0', extra)}
-                data-testid="keyboard-toggle"
-                {...a11y('Keyboard')}
-                onMouseDown={(e) => e.preventDefault()} // tapping the button must not take the focus the keyboard needs
-                onClick={() => overlay.mobileKeyboardToggle()}
-              >
-                <i className={`fas fa-keyboard ${icon}`} />
+              <li className={cn('mb-2.5 last:mb-0', extra)}>
+                <IconButton
+                  variant="video"
+                  label="Keyboard"
+                  data-testid="keyboard-toggle"
+                  onMouseDown={(e) => e.preventDefault()} // tapping the button must not take the focus the keyboard needs
+                  onClick={() => overlay.mobileKeyboardToggle()}
+                >
+                  <Keyboard className="size-4" />
+                </IconButton>
               </li>
             )}
           </ul>

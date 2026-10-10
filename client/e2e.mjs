@@ -178,7 +178,7 @@ await step('files: alice uploads, the list shows the file', async () => {
   if (!(await A.locator('[data-testid=tabs] >> text=Files').count()))
     throw new Error('no Files tab: start the server with NEKO_FILETRANSFER_ENABLED=true')
   await A.click('[data-testid=tabs] >> text=Files')
-  await A.setInputFiles('[data-testid=upload] input[type=file]', {
+  await A.setInputFiles('[data-testid=upload-input]', {
     name: 'react-e2e.txt',
     mimeType: 'text/plain',
     buffer: Buffer.from('hello'),

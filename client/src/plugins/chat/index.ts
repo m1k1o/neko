@@ -1,5 +1,6 @@
 import { useStore } from 'zustand'
 import { selectIsAdmin } from '@m1k1o/neko'
+import { MessageSquare } from 'lucide-react'
 import { app } from '@/state/app'
 import { client, name, isMuted } from '@/state/client'
 import { ask } from '@/state/dialogs'
@@ -15,7 +16,7 @@ export const chat: Plugin = {
   ns: 'chat',
   tab: {
     id: 'chat',
-    icon: 'fa-comment-alt',
+    icon: MessageSquare,
     label: 'chat:tab',
     component: Chat,
     useBadge: () => useStore(store, (s) => s.texts),

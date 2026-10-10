@@ -4,7 +4,8 @@ import { useStore } from 'zustand'
 import { useTranslation } from 'react-i18next'
 import { actions } from '@/state/actions'
 import { app } from '@/state/app'
-import { row, label, button } from './classes'
+import { Button } from '@/components/ui/button'
+import { row, label } from './classes'
 
 // accounts with can_login=false (see actions.ban); empty unless the provider stores accounts
 export function Banned() {
@@ -22,9 +23,9 @@ export function Banned() {
         {banned.map((m) => (
           <li key={m.id} className={row}>
             <span className={label}>{m.profile?.name || m.id}</span>
-            <button className={button} data-testid="unban" onClick={() => actions.unban(m.id!)}>
+            <Button className="my-[5px] w-full" data-testid="unban" onClick={() => actions.unban(m.id!)}>
               {t('context.unban')}
-            </button>
+            </Button>
           </li>
         ))}
       </ul>

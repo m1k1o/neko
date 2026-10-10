@@ -1,3 +1,4 @@
+import { File } from 'lucide-react'
 import { client } from '@/state/client'
 import { bus, event } from '@/state/bus'
 import { t } from '@/i18n'
@@ -10,7 +11,7 @@ import { useAllowed, locked, refresh } from './actions'
 export const filetransfer: Plugin = {
   id: 'filetransfer',
   ns: 'files',
-  tab: { id: 'files', icon: 'fa-file', label: 'files:tab', component: Files, useVisible: useAllowed },
+  tab: { id: 'files', icon: File, label: 'files:tab', component: Files, useVisible: useAllowed },
   topBar: [{ id: 'filetransfer-lock', component: FileLock }],
   onEvent(...[event, payload]) {
     if (event === 'filetransfer/update') store.setState({ files: payload })

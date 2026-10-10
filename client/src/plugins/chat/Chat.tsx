@@ -4,8 +4,9 @@ import { useShallow } from 'zustand/react/shallow'
 import { useTranslation } from 'react-i18next'
 import { openMenu } from '@/state/actions'
 import { client, selectMuted } from '@/state/client'
+import { Laugh } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { a11y } from '@/components/a11y'
+import { IconButton } from '@/components/IconButton'
 import { Avatar } from '@/components/Avatar'
 import { Popover, PopoverTrigger } from '@/components/ui/popover'
 import { chat } from './store'
@@ -127,11 +128,9 @@ export function Chat() {
             />
             <Popover open={picker} onOpenChange={setPicker}>
               <PopoverTrigger asChild>
-                <i
-                  className="fas fa-laugh mt-2 mr-[5px] h-5 w-5 cursor-pointer text-[20px]"
-                  data-testid="emoji-open"
-                  {...a11y('Emoji')}
-                />
+                <IconButton label="Emoji" className="mt-2 mr-[5px] h-5 w-5" data-testid="emoji-open">
+                  <Laugh className="size-5" />
+                </IconButton>
               </PopoverTrigger>
               {picker && <EmojiPicker onPick={onEmoji} />}
             </Popover>

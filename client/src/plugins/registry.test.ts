@@ -1,6 +1,7 @@
 // Unit tests of the plugin registry: `npm test` (vitest). Slots and server event dispatch follow
 // the plugins array; the registry needs only `client.events.on('message')` and the manifests.
 import { test, vi } from 'vitest'
+import { Circle } from 'lucide-react'
 import assert from 'node:assert/strict'
 import type { Plugin, PluginEventArgs } from './types.ts'
 
@@ -14,7 +15,7 @@ const Nothing = () => null
 const manifest = (id: string, ns: string): Plugin => ({
   id,
   ns,
-  tab: { id, icon: 'fa-x', label: `${ns}:tab`, component: Nothing },
+  tab: { id, icon: Circle, label: `${ns}:tab`, component: Nothing },
   topBar: [{ id: `${id}-top`, component: Nothing }],
   memberMenu: [{ id: `${id}-menu`, label: () => id, onClick() {} }],
   onEvent: (...args) => (received[id] ??= []).push(args),

@@ -4,8 +4,9 @@ import { useShallow } from 'zustand/react/shallow'
 import { selectControlling } from '@m1k1o/neko'
 import { app } from '@/state/app'
 import { client } from '@/state/client'
+import { SquareArrowOutUpRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { a11y } from '@/components/a11y'
+import { IconButton } from '@/components/IconButton'
 import { chat } from './store'
 import { openInApp } from './actions'
 import { emoji } from './emoji'
@@ -17,21 +18,23 @@ const code =
 
 function Spoiler({ children }: { children: React.ReactNode }) {
   const [shown, setShown] = useState(false)
+  if (shown)
+    return (
+      <span className="rounded bg-background-secondary px-0.5" data-testid="spoiler" data-shown>
+        {children}
+      </span>
+    )
   return (
-    <span
-      className={cn(
-        'rounded px-0.5',
-        shown
-          ? 'cursor-default bg-background-secondary [&>span]:opacity-100'
-          : 'cursor-pointer bg-background-tertiary [&>span]:opacity-0',
-      )}
+    <button
+      type="button"
+      className="cursor-pointer rounded bg-background-tertiary px-0.5 [&>span]:opacity-0"
+      aria-label="Spoiler"
+      title="Spoiler"
       data-testid="spoiler"
-      data-shown={shown || undefined}
-      {...(shown ? {} : a11y('Spoiler'))}
       onClick={() => setShown(true)}
     >
       <span>{children}</span>
-    </span>
+    </button>
   )
 }
 
@@ -93,11 +96,9 @@ export function Markdown({ source }: { source: string }) {
                 {render(n.c)}
               </a>
               {inApp && (
-                <i
-                  className="fas fa-arrow-up-right-from-square ml-[0.3em] cursor-pointer"
-                  {...a11y('Open in app')}
-                  onClick={() => openInApp(n.href)}
-                />
+                <IconButton label="Open in app" className="ml-[0.3em] align-middle" onClick={() => openInApp(n.href)}>
+                  <SquareArrowOutUpRight className="size-3.5" />
+                </IconButton>
               )}
             </Fragment>
           )

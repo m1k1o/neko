@@ -1,13 +1,14 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { useStore } from 'zustand'
 import { selectIsAdmin } from '@m1k1o/neko'
 import { useTranslation } from 'react-i18next'
+import { Lock, LockOpen, Menu, Mouse } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { actions } from '@/state/actions'
 import { app } from '@/state/app'
 import { client, isLocked, type LockResource } from '@/state/client'
 import { remember } from '@/state/storage'
-import { a11y } from '@/components/a11y'
-import { LockButton } from '@/components/LockButton'
+import { IconButton } from '@/components/IconButton'
 import { useSlot } from '@/plugins'
 import { EachHook } from '@/components/EachHook'
 import logo from '@/assets/images/logo.svg'
@@ -22,13 +23,26 @@ export function Header() {
   const items = useSlot('header.item')
   const tabs = useSlot('side.tab')
 
-  const lock = (r: LockResource, icon: string) => {
+  // a lock: admins toggle it, users only see its state
+  const lock = (r: LockResource, icon: ReactNode) => {
     const locked = isLocked(r, settings)
     const tip = admin
       ? t(`locks.${r}.${locked ? 'unlock' : 'lock'}`)
       : t(`locks.${r}.${locked ? 'locked' : 'unlocked'}`)
     return (
-      <LockButton id={r} icon={icon} locked={locked} admin={admin} tip={tip} onToggle={() => actions.toggleLock(r)} />
+      <li className="mr-2.5 inline-block">
+        <IconButton
+          variant="header"
+          label={tip}
+          className={cn(locked && 'text-style-error/50')}
+          data-testid={`lock-${r}`}
+          data-locked={locked || undefined}
+          aria-disabled={!admin}
+          onClick={() => admin && actions.toggleLock(r)}
+        >
+          {icon}
+        </IconButton>
+      </li>
     )
   }
 
@@ -47,8 +61,8 @@ export function Header() {
         </span>
       </a>
       <ul className="mr-2.5 whitespace-nowrap">
-        {lock('control', 'fa-mouse')}
-        {lock('login', isLocked('login', settings) ? 'fa-lock' : 'fa-lock-open')}
+        {lock('control', <Mouse className="size-4" />)}
+        {lock('login', isLocked('login', settings) ? <Lock className="size-4" /> : <LockOpen className="size-4" />)}
         {items.map(({ id, component: Item }) => (
           <Item key={id} />
         ))}
@@ -71,17 +85,20 @@ function Toggle({ side, unread }: { side: boolean; unread: number }) {
           &bull;
         </span>
       )}
-      <i
-        className="fas fa-bars block h-7.5 w-7.5 cursor-pointer rounded-[3px] bg-background-primary text-center leading-8"
+      <IconButton
+        variant="header"
+        label="Toggle side panel"
+        className="bg-background-primary"
         data-testid="side-toggle"
-        {...a11y('Toggle side panel')}
         aria-expanded={side}
         onClick={() => {
           app.setState({ side: !side })
           remember('side', !side)
           setRead(unread)
         }}
-      />
+      >
+        <Menu className="size-4" />
+      </IconButton>
     </li>
   )
 }

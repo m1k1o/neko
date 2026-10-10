@@ -1,4 +1,5 @@
 import type { ComponentType } from 'react'
+import type { LucideIcon } from 'lucide-react'
 import type { Session } from '@m1k1o/neko'
 
 // What a plugin can contribute to the GUI. The registry (index.ts) wires it in: its tab, header
@@ -50,8 +51,8 @@ export interface Slots {
 export interface PluginTab {
   // the stored `tab` value
   id: string
-  // Font Awesome class of the tab icon
-  icon: string
+  // the tab's icon, a lucide-react component
+  icon: LucideIcon
   // the i18n key of its label (`chat:tab`)
   label: string
   component: ComponentType

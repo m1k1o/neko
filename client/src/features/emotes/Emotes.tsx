@@ -3,7 +3,8 @@ import { useStore } from 'zustand'
 import { actions } from '@/state/actions'
 import { client, selectMuted } from '@/state/client'
 import { EMOTES } from '@/state/emotes'
-import { a11y } from '@/components/a11y'
+import { SmilePlus } from 'lucide-react'
+import { IconButton } from '@/components/IconButton'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import './sprites.css'
 
@@ -44,9 +45,9 @@ export function Emotes() {
       <ul className="flex items-center justify-center">
         {recent.map((e) => (
           <li key={e} className="mx-[5px] text-[24px]">
-            <div
-              className={`emote ${e} cursor-pointer`}
-              {...a11y(e)}
+            <IconButton
+              label={e}
+              className={`emote ${e}`}
               onClick={(ev) => ev.detail === 0 && actions.sendEmote(e)}
               onMouseDown={(ev) => (ev.preventDefault(), start(e))}
             />
@@ -55,7 +56,9 @@ export function Emotes() {
         <li className="mx-[5px] text-[24px]">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <i className="fas fa-grin-beam cursor-pointer" data-testid="emotes-open" {...a11y('Emotes')} />
+              <IconButton label="Emotes" data-testid="emotes-open">
+                <SmilePlus className="size-6" />
+              </IconButton>
             </DropdownMenuTrigger>
             <DropdownMenuContent
               className="flex w-[220px] flex-wrap items-center justify-center"

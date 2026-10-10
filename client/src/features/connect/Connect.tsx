@@ -2,17 +2,15 @@ import { useEffect, useReducer, useState, type FormEvent } from 'react'
 import { useStore } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
 import { useTranslation } from 'react-i18next'
-import { cn } from '@/lib/utils'
 import { actions } from '@/state/actions'
 import { client } from '@/state/client'
 import { tell } from '@/state/dialogs'
 import { i18n } from '@/i18n'
+import { Button } from '@/components/ui/button'
 import logo from '@/assets/images/logo.svg'
 
 const input =
   'my-[5px] rounded-[5px] border-0 bg-background-tertiary px-2 py-1.5 leading-5 text-text-normal selection:bg-text-link placeholder:text-[#757575]'
-const button =
-  'my-[5px] cursor-pointer rounded-[5px] border-0 bg-style-primary p-1 text-center leading-7.5 font-bold text-text-normal uppercase'
 
 const params = new URL(location.href).searchParams
 // ?pwd= invite (e.g. neko-rooms links): used for the first login attempt only, like the legacy
@@ -84,12 +82,12 @@ export function Connect() {
           // logged in but disconnected (network drop, server restart)
           <form className="flex flex-col" onSubmit={(e) => (e.preventDefault(), client.connect())}>
             <span className="block text-center leading-7.5 uppercase">{t('connection.disconnected')}</span>
-            <button className={button} type="submit">
+            <Button className="my-[5px]" type="submit">
               {t('connect.connect')}
-            </button>
-            <button className={button} type="button" onClick={actions.logout}>
+            </Button>
+            <Button className="my-[5px]" type="button" onClick={actions.logout}>
               {t('logout')}
-            </button>
+            </Button>
           </form>
         ) : (
           <form className="flex flex-col" onSubmit={login}>
@@ -116,18 +114,19 @@ export function Connect() {
               />
             )}
             {passwordLogin && (
-              <button className={button} type="submit">
+              <Button className="my-[5px]" type="submit">
                 {t('connect.connect')}
-              </button>
+              </Button>
             )}
             {oauth.enabled && invite === null && (
-              <button
-                className={cn(button, 'border border-style-primary bg-background-tertiary')}
+              <Button
+                variant="outline"
+                className="my-[5px]"
                 type="button"
                 onClick={() => oauth.login_url && location.assign(oauth.login_url)}
               >
                 {oauth.name || 'OAuth'} Login
-              </button>
+              </Button>
             )}
           </form>
         )}

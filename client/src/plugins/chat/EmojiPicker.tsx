@@ -1,25 +1,40 @@
 import { useRef, useState } from 'react'
 import { useStore } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
+import {
+  Apple,
+  Car,
+  Cat,
+  Clock,
+  Flag,
+  Lightbulb,
+  PawPrint,
+  Search,
+  Shapes,
+  Smile,
+  Users,
+  Volleyball,
+  type LucideIcon,
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { a11y } from '@/components/a11y'
+import { IconButton } from '@/components/IconButton'
 import { PopoverContent } from '@/components/ui/popover'
 import { chat } from './store'
 import { emoji, pickedEmoji } from './emoji'
 
 // the icon of each group's tab at the bottom of the picker
-const GROUP_ICON: Record<string, string> = {
-  recent: 'fa-clock',
-  neko: 'fa-cat',
-  emotion: 'fa-smile',
-  people: 'fa-users',
-  nature: 'fa-paw',
-  food: 'fa-apple-alt',
-  activity: 'fa-futbol',
-  travel: 'fa-car',
-  objects: 'fa-lightbulb',
-  symbols: 'fa-icons',
-  flags: 'fa-flag',
+const GROUP_ICON: Record<string, LucideIcon> = {
+  recent: Clock,
+  neko: Cat,
+  emotion: Smile,
+  people: Users,
+  nature: PawPrint,
+  food: Apple,
+  activity: Volleyball,
+  travel: Car,
+  objects: Lightbulb,
+  symbols: Shapes,
+  flags: Flag,
 }
 
 export function EmojiPicker({ onPick }: { onPick: (name: string) => void }) {
@@ -45,10 +60,10 @@ export function EmojiPicker({ onPick }: { onPick: (name: string) => void }) {
   }
   const item = (name: string, key: string) => (
     <li key={key} className={cn('cursor-pointer rounded-[3px] p-0.5', hovered === name && 'bg-background-floating')}>
-      <span
+      <IconButton
+        label={`:${name}:`}
         className="emoji"
         data-emoji={name}
-        {...a11y(`:${name}:`)}
         tabIndex={-1}
         onMouseEnter={() => setHovered(name)}
         onFocus={() => setHovered(name)}
@@ -73,7 +88,7 @@ export function EmojiPicker({ onPick }: { onPick: (name: string) => void }) {
     >
       <div className="shrink-0 border-b border-background-tertiary p-2.5">
         <div className="relative flex flex-col overflow-hidden rounded-[5px] text-interactive-normal">
-          <i className="fas fa-search absolute top-1.5 right-1.5 h-[15px] w-[15px] opacity-50" />
+          <Search className="absolute top-1.5 right-1.5 size-[15px] opacity-50" />
           <input
             className="border-0 bg-background-floating p-[5px] leading-4 font-medium text-interactive-normal placeholder:font-medium placeholder:text-text-muted"
             type="text"
@@ -116,19 +131,24 @@ export function EmojiPicker({ onPick }: { onPick: (name: string) => void }) {
       </div>
       <div className="h-7.5 shrink-0 bg-background-floating px-[5px]">
         <ul className="flex flex-row flex-wrap">
-          {groups.map((g, gi) => (
-            <li
-              key={g.id}
-              className={cn(
-                'box-content flex h-[27px] grow cursor-pointer flex-col justify-center',
-                active === gi && !q && 'border-b-[3px] border-style-primary',
-              )}
-              {...a11y(g.name, 'tab')}
-              onClick={() => (scroll.current!.scrollTop = gi === 0 ? 0 : (groupEls.current[gi]?.offsetTop ?? 0))}
-            >
-              <i className={`fas ${GROUP_ICON[g.id]} mx-auto h-5 w-5 text-center text-[16px] leading-5`} />
-            </li>
-          ))}
+          {groups.map((g, gi) => {
+            const Icon = GROUP_ICON[g.id]
+            return (
+              <li key={g.id} className="flex grow">
+                <IconButton
+                  label={g.name}
+                  className={cn(
+                    'box-content h-[27px] w-full',
+                    active === gi && !q && 'border-b-[3px] border-style-primary',
+                  )}
+                  aria-current={active === gi && !q ? 'true' : undefined}
+                  onClick={() => (scroll.current!.scrollTop = gi === 0 ? 0 : (groupEls.current[gi]?.offsetTop ?? 0))}
+                >
+                  <Icon className="size-4" />
+                </IconButton>
+              </li>
+            )
+          })}
         </ul>
       </div>
     </PopoverContent>

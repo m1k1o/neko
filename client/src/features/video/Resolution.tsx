@@ -1,4 +1,5 @@
 import { useStore } from 'zustand'
+import { Monitor } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { client } from '@/state/client'
 import { DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu'
@@ -25,7 +26,7 @@ export function Resolution() {
             data-active={active || undefined}
             onSelect={() => client.setScreenSize(c.width, c.height, c.rate)}
           >
-            <i className="fas fa-desktop mr-2.5"></i>
+            <Monitor className="mr-2.5 size-3.5" />
             <span className="grow">
               {c.width}x{c.height}
             </span>

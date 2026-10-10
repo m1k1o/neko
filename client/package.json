@@ -18,16 +18,17 @@
     "build:core": "npm --prefix core run build"
   },
   "dependencies": {
-    "@fortawesome/fontawesome-free": "^6.7.2",
     "@radix-ui/react-dialog": "^1.2.0",
     "@radix-ui/react-dropdown-menu": "^2.1.25",
     "@radix-ui/react-menu": "^2.1.25",
     "@radix-ui/react-popover": "^1.2.0",
+    "@radix-ui/react-tabs": "^1.1.22",
     "@tailwindcss/vite": "^4.3.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "emoji-datasource": "6.1.1",
     "i18next": "^26.4.2",
+    "lucide-react": "^1.54.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-i18next": "^17.0.16",
