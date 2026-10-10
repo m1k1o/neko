@@ -3,11 +3,11 @@ import { useStore } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
 import { selectControlling, selectIsAdmin, selectSession } from '@m1k1o/neko'
 import { useTranslation } from 'react-i18next'
+import { cn } from '@/lib/utils'
 import { actions } from '@/state/actions'
 import { client } from '@/state/client'
 import { tell } from '@/state/dialogs'
 import { a11y } from '@/components/a11y'
-import './controls.scss'
 
 export function Controls() {
   const { t } = useTranslation()
@@ -33,6 +33,7 @@ export function Controls() {
   const locked = localLock && hosting
   const { playable, playing, muted, volume } = video
   const micAllowed = hosting && canShareMedia
+  const lockDisabled = !hosting || (implicit && controlLocked)
 
   // clicking the video without control shakes the keyboard icon as a hint
   useEffect(() => {
@@ -70,16 +71,16 @@ export function Controls() {
   }
 
   return (
-    <ul className="neko-controls flex items-center justify-center">
+    <ul className="flex items-center justify-center self-center text-[24px]">
       {!implicit && (!controlLocked || hosting) && (
-        <li>
+        <li className="cursor-pointer">
           <i
-            className={[
-              !hosted || hosting ? '' : 'disabled',
-              !hosted && !hosting ? 'faded' : '',
-              shake && !hosting ? 'shake' : '',
-              'fas fa-keyboard request',
-            ].join(' ')}
+            className={cn(
+              'fas fa-keyboard px-[5px]',
+              hosted && !hosting && 'text-style-error/40',
+              !hosted && !hosting && 'text-text-normal/40',
+              shake && !hosting && 'animate-shake',
+            )}
             data-testid="control-request"
             {...a11y(hosting ? t('controls.release') : t('controls.request'))}
             onClick={() => playable && actions.toggleControl()}
@@ -87,39 +88,53 @@ export function Controls() {
         </li>
       )}
       {implicit && (
-        <li className="no-pointer">
+        <li>
           <i
-            className={`${controlLocked ? 'disabled ' : ''}fas fa-mouse-pointer`}
+            className={cn('fas fa-mouse-pointer px-[5px]', controlLocked && 'text-style-error/40')}
             data-testid="control-implicit"
             title={t(controlLocked ? 'controls.hasnot' : 'controls.has')}
           />
         </li>
       )}
       {(implicit || !controlLocked || hosting) && (
-        <li>
-          <label className="switch" title={hosting ? t(locked ? 'controls.unlock' : 'controls.lock') : ''}>
+        <li className="cursor-pointer">
+          {/* the lock switch: the input, its track and its knob (a lock icon when it can be used) */}
+          <label
+            className="relative mx-[5px] block h-6 w-[42px]"
+            title={hosting ? t(locked ? 'controls.unlock' : 'controls.lock') : ''}
+          >
             <input
               type="checkbox"
+              className="peer h-0 w-0 opacity-0"
               aria-label={t(locked ? 'controls.unlock' : 'controls.lock')}
               checked={locked}
-              disabled={!hosting || (implicit && controlLocked)}
+              disabled={lockDisabled}
               onChange={(e) => (e.target.checked ? client.lock() : client.unlock())}
             />
-            <span />
+            <span className="absolute inset-0 cursor-pointer rounded-[34px] bg-background-secondary transition-all duration-200 peer-checked:bg-style-primary" />
+            <i
+              className={cn(
+                'absolute bottom-[3px] left-[3px] h-[18px] w-[18px] cursor-pointer rounded-full text-center text-[8px] leading-[18px] text-background-tertiary shadow-[0_2px_4px_rgba(0,0,0,0.3)] transition-all duration-300 peer-checked:translate-x-[18px]',
+                lockDisabled ? 'bg-text-normal/40' : `fas bg-white ${locked ? 'fa-lock' : 'fa-lock-open'}`,
+              )}
+            />
           </label>
         </li>
       )}
-      <li>
+      <li className="cursor-pointer">
         <i
-          className={`${playable ? '' : 'disabled '}fas ${playing ? 'fa-pause-circle' : 'fa-play-circle'} play`}
+          className={cn(
+            `fas ${playing ? 'fa-pause-circle' : 'fa-play-circle'} px-[5px]`,
+            !playable && 'text-style-error/40',
+          )}
           {...a11y(playing ? 'Pause' : 'Play')}
           onClick={() => playable && (playing ? client.pause() : client.play().catch(() => {}))}
         />
       </li>
       {micAllowed && (
-        <li>
+        <li className="cursor-pointer">
           <i
-            className={`fas ${micOn ? 'fa-microphone' : 'fa-microphone-slash faded'}`}
+            className={cn('fas px-[5px]', micOn ? 'fa-microphone' : 'fa-microphone-slash text-text-normal/40')}
             data-testid="mic"
             data-on={micOn || undefined}
             {...a11y(t(micOn ? 'controls.mic_off' : 'controls.mic_on'))}
@@ -127,16 +142,17 @@ export function Controls() {
           />
         </li>
       )}
-      <li>
-        <div className="volume">
+      <li className="cursor-pointer">
+        <div className="flex items-center justify-center whitespace-nowrap">
           <i
-            className={`fas ${volume === 0 || muted ? 'fa-volume-mute' : 'fa-volume-up'}`}
+            className={`fas ${volume === 0 || muted ? 'fa-volume-mute' : 'fa-volume-up'} px-[5px]`}
             data-testid="mute"
             {...a11y(muted ? 'Unmute' : 'Mute')}
             onClick={() => (muted ? client.unmute() : client.mute())}
           />
           <input
             type="range"
+            className="slider h-5 w-[150px]"
             min="0"
             max="100"
             aria-label="Volume"

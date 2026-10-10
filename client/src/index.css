@@ -1,6 +1,9 @@
 /* Tailwind v4 and the design tokens (README, "Design"): preflight, theme, utilities, the global
    rules of the page and the responsive variants of the layout */
+/* Font Awesome below Tailwind's layers, so the utilities win over its line-height (gone with lucide) */
+@layer fa;
 @import 'tailwindcss';
+@import '@fortawesome/fontawesome-free/css/all.min.css' layer(fa);
 
 @theme {
   /* the tokens of src/design/_variables.scss, same values: text-text-normal, bg-background-primary, ... */
@@ -35,6 +38,54 @@
   --spacing-controls: 125px;
   --spacing-side: 400px;
 
+  /* the keyboard icon shaking when the video is clicked without control (controls) */
+  --animate-shake: shake 1.25s cubic-bezier(0, 0, 0, 1);
+  @keyframes shake {
+    0% {
+      transform: scale(1) translate(0px, 0) rotate(0);
+    }
+    10% {
+      transform: scale(1.25) translate(-2px, -2px) rotate(-20deg);
+    }
+    20% {
+      transform: scale(1.5) translate(4px, -4px) rotate(20deg);
+    }
+    30% {
+      transform: scale(1.75) translate(-4px, -6px) rotate(-20deg);
+    }
+    40% {
+      transform: scale(2) translate(6px, -8px) rotate(20deg);
+    }
+    50% {
+      transform: scale(2.25) translate(-6px, -10px) rotate(-20deg);
+    }
+    60% {
+      transform: scale(2) translate(6px, -8px) rotate(20deg);
+    }
+    70% {
+      transform: scale(1.75) translate(-4px, -6px) rotate(-20deg);
+    }
+    80% {
+      transform: scale(1.5) translate(4px, -4px) rotate(20deg);
+    }
+    90% {
+      transform: scale(1.25) translate(-2px, -2px) rotate(-20deg);
+    }
+    100% {
+      transform: scale(1) translate(0px, 0) rotate(0);
+    }
+  }
+  /* the two bouncing discs of the connect screen */
+  --animate-loader: loader 2s infinite ease-in-out;
+  @keyframes loader {
+    0%,
+    100% {
+      transform: scale(0);
+    }
+    50% {
+      transform: scale(1);
+    }
+  }
   /* the unread badge on the side panel toggle */
   --animate-badge: badge 2s infinite;
   @keyframes badge {
@@ -66,6 +117,40 @@
   }
 }
 
+/* the volume and scroll sliders: a 4px track in the primary colour with a round white thumb */
+@utility slider {
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+  &::-webkit-slider-thumb {
+    appearance: none;
+    height: 12px;
+    width: 12px;
+    margin-top: -4px;
+    border-radius: 12px;
+    background: #fff;
+  }
+  &::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--color-style-primary);
+  }
+  &::-moz-range-thumb {
+    height: 12px;
+    width: 12px;
+    border: 0;
+    border-radius: 12px;
+    background: #fff;
+  }
+  &::-moz-range-track {
+    width: 100%;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--color-style-primary);
+  }
+}
+
 @layer base {
   html,
   body {
@@ -90,11 +175,15 @@
       height: auto;
     }
   }
+  /* the stream's video element is the core's: no native controls */
+  video::-webkit-media-controls {
+    display: none !important;
+  }
   /* keyboard focus for the icon controls (components/a11y.ts) */
   [role='button']:focus-visible,
   [role='menuitem']:focus-visible,
   [role='tab']:focus-visible,
-  .member[tabindex]:focus-visible {
+  [data-testid='member']:focus-visible {
     outline: 2px solid var(--color-style-primary);
     outline-offset: 2px;
   }

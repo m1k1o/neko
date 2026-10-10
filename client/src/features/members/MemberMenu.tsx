@@ -12,18 +12,22 @@ import { Avatar } from '@/components/Avatar'
 import { ContextMenu } from '@/components/ContextMenu'
 import type { PluginMemberMenuItem } from '@/plugins/types'
 
+const item =
+  'block cursor-pointer rounded-[3px] p-[5px] font-normal whitespace-nowrap hover:bg-background-modifier-hover hover:text-interactive-hover focus:bg-background-modifier-hover focus:text-interactive-hover focus:outline-0'
+const separator = 'my-[3px] h-px bg-background-secondary'
+
 const confirmThen = (title: string, text: string, fn: () => void) => ask(title, text).then((ok) => ok && fn())
 const always = () => true
 
 // a plugin's entry, when its hook shows it for this member
-function Item({ item, member }: { item: PluginMemberMenuItem; member: Session }) {
-  const useVisible = item.useVisible ?? always
+function Item({ entry, member }: { entry: PluginMemberMenuItem; member: Session }) {
+  const useVisible = entry.useVisible ?? always
   const visible = useVisible(member)
   if (!visible) return null
   return (
-    <li>
-      <span {...a11y(item.label(member), 'menuitem')} onClick={() => item.onClick(member)}>
-        {item.label(member)}
+    <li className="relative">
+      <span className={item} {...a11y(entry.label(member), 'menuitem')} onClick={() => entry.onClick(member)}>
+        {entry.label(member)}
       </span>
     </li>
   )
@@ -69,15 +73,16 @@ export function MemberMenu({ items }: { items: readonly PluginMemberMenuItem[] }
 
   return (
     <ContextMenu ref={list} role="menu" aria-label={n} data-testid="member-menu" style={{ left: x, top: y }}>
-      <li className="header">
-        <div className="user">
+      <li className="relative">
+        <div className="flex flex-row gap-[5px] py-[5px]">
           <Avatar seed={n} avatar={m.profile.avatar} size={25} />
-          <strong>{n}</strong>
+          <strong className="max-w-[200px] leading-[25px] font-bold text-ellipsis">{n}</strong>
         </div>
       </li>
-      <li className="seperator" />
-      <li>
+      <li className={separator} />
+      <li className="relative">
         <span
+          className={item}
           {...a11y(t(ignored ? 'context.unignore' : 'context.ignore'), 'menuitem')}
           onClick={() => app.setState((s) => ({ ignored: { ...s.ignored, [id!]: !s.ignored[id!] } }))}
         >
@@ -85,27 +90,27 @@ export function MemberMenu({ items }: { items: readonly PluginMemberMenuItem[] }
         </span>
       </li>
       {items.map((item) => (
-        <Item key={item.id} item={item} member={m} />
+        <Item key={item.id} entry={item} member={m} />
       ))}
       {admin ? (
         <>
           {!implicit && isHost && (
             <>
-              <li>
-                <span {...a11y(t('context.release'), 'menuitem')} onClick={actions.reset}>
+              <li className="relative">
+                <span className={item} {...a11y(t('context.release'), 'menuitem')} onClick={actions.reset}>
                   {t('context.release')}
                 </span>
               </li>
-              <li>
-                <span {...a11y(t('context.take'), 'menuitem')} onClick={actions.take}>
+              <li className="relative">
+                <span className={item} {...a11y(t('context.take'), 'menuitem')} onClick={actions.take}>
                   {t('context.take')}
                 </span>
               </li>
             </>
           )}
           {!implicit && !isHost && (
-            <li>
-              <span {...a11y(t('context.give'), 'menuitem')} onClick={() => actions.give(id!)}>
+            <li className="relative">
+              <span className={item} {...a11y(t('context.give'), 'menuitem')} onClick={() => actions.give(id!)}>
                 {t('context.give')}
               </span>
             </li>
@@ -114,8 +119,8 @@ export function MemberMenu({ items }: { items: readonly PluginMemberMenuItem[] }
       ) : (
         hosting &&
         !implicit && (
-          <li>
-            <span {...a11y(t('context.give'), 'menuitem')} onClick={() => actions.give(id!)}>
+          <li className="relative">
+            <span className={item} {...a11y(t('context.give'), 'menuitem')} onClick={() => actions.give(id!)}>
               {t('context.give')}
             </span>
           </li>
@@ -123,9 +128,10 @@ export function MemberMenu({ items }: { items: readonly PluginMemberMenuItem[] }
       )}
       {admin && !m.profile.is_admin && (
         <>
-          <li className="seperator" />
-          <li>
+          <li className={separator} />
+          <li className="relative">
             <span
+              className={item}
               style={{ color: '#f04747' }}
               {...a11y(t('context.kick'), 'menuitem')}
               onClick={() =>
@@ -140,8 +146,9 @@ export function MemberMenu({ items }: { items: readonly PluginMemberMenuItem[] }
             </span>
           </li>
           {bannable && (
-            <li>
+            <li className="relative">
               <span
+                className={item}
                 style={{ color: '#f04747' }}
                 {...a11y(t('context.ban'), 'menuitem')}
                 onClick={() =>

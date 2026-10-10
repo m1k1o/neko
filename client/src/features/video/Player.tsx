@@ -15,7 +15,7 @@ export function Player({ transport }: { transport: StreamTransport }) {
     }
   }, [transport])
   return (
-    <div className="neko-mount">
+    <div className="absolute inset-0 overflow-hidden">
       <div ref={box} style={{ position: 'relative' }} />
     </div>
   )

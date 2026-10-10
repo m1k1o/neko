@@ -5,8 +5,7 @@ import { client, selectMuted } from '@/state/client'
 import { EMOTES } from '@/state/emotes'
 import { a11y, closeOn } from '@/components/a11y'
 import { ContextMenu } from '@/components/ContextMenu'
-import './sprites.scss'
-import './emotes.scss'
+import './sprites.css'
 
 // the emote bar in the room menu: recently used emotes and the picker
 export function Emotes() {
@@ -44,21 +43,21 @@ export function Emotes() {
 
   if (muted) return null
   return (
-    <div className="emotes-bar mr-2.5 flex items-center justify-end" onMouseLeave={stop} onMouseUp={stop}>
-      <ul>
+    <div className="mr-2.5 self-center justify-self-end" onMouseLeave={stop} onMouseUp={stop}>
+      <ul className="flex items-center justify-center">
         {recent.map((e) => (
-          <li key={e}>
+          <li key={e} className="mx-[5px] text-[24px]">
             <div
-              className={`emote ${e}`}
+              className={`emote ${e} cursor-pointer`}
               {...a11y(e)}
               onClick={(ev) => ev.detail === 0 && actions.sendEmote(e)}
               onMouseDown={(ev) => (ev.preventDefault(), start(e))}
             />
           </li>
         ))}
-        <li>
+        <li className="mx-[5px] text-[24px]">
           <i
-            className="fas fa-grin-beam"
+            className="fas fa-grin-beam cursor-pointer"
             data-testid="emotes-open"
             {...a11y('Emotes')}
             onClick={(e) => {
@@ -72,12 +71,21 @@ export function Emotes() {
       </ul>
       {picker && (
         <ContextMenu
+          className="flex w-[220px] flex-wrap"
           data-testid="emotes-menu"
           style={{ left: Math.min(picker.x, innerWidth - 260), top: Math.max(picker.y - 260, 10) }}
         >
           {EMOTES.filter((e) => !recent.includes(e)).map((e) => (
-            <li key={e}>
-              <div className={`emote ${e}`} data-emote={e} {...a11y(e, 'menuitem')} onClick={() => pick(e)} />
+            <li
+              key={e}
+              className="relative rounded-[3px] p-[5px] hover:bg-background-modifier-hover hover:text-interactive-hover focus:bg-background-modifier-hover focus:outline-0"
+            >
+              <div
+                className={`emote ${e} cursor-pointer`}
+                data-emote={e}
+                {...a11y(e, 'menuitem')}
+                onClick={() => pick(e)}
+              />
             </li>
           ))}
         </ContextMenu>

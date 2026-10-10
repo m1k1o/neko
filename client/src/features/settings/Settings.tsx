@@ -3,12 +3,16 @@ import { useStore } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
 import { selectIsAdmin } from '@m1k1o/neko'
 import { useTranslation } from 'react-i18next'
+import { cn } from '@/lib/utils'
 import { actions } from '@/state/actions'
 import { app } from '@/state/app'
 import { client } from '@/state/client'
 import { setSetting } from '@/state/settings'
 import { Banned } from './Banned'
-import './settings.scss'
+import { row, label, button } from './classes'
+
+const field =
+  'block h-8 rounded-[5px] border border-transparent bg-background-tertiary leading-7.5 font-light text-ellipsis text-white'
 
 export function Settings() {
   const { t } = useTranslation()
@@ -32,30 +36,34 @@ export function Settings() {
 
   const toggle = (
     key: 'scroll_invert' | 'autoplay' | 'ignore_emotes' | 'chat_sound' | 'links_in_app',
-    label: string,
+    name: string,
   ) => (
-    <li>
-      <span>{t(`setting.${label}`)}</span>
-      <label className="switch">
+    <li className={row}>
+      <span className={label}>{t(`setting.${name}`)}</span>
+      {/* the switch: the input, its track and its knob */}
+      <label className="relative h-6 w-[42px]">
         <input
           type="checkbox"
-          aria-label={t(`setting.${label}`)}
+          className="peer h-0 w-0 opacity-0"
+          aria-label={t(`setting.${name}`)}
           checked={s[key]}
           onChange={(e) => setSetting(key, e.target.checked)}
         />
-        <span />
+        <span className="absolute inset-0 cursor-pointer rounded-[34px] bg-background-tertiary transition-all duration-200 peer-checked:bg-style-primary" />
+        <span className="absolute bottom-[3px] left-[3px] h-[18px] w-[18px] cursor-pointer rounded-full bg-white shadow-[0_2px_4px_rgba(0,0,0,0.3)] transition-all duration-300 peer-checked:translate-x-[18px]" />
       </label>
     </li>
   )
 
   return (
-    <div className="side-settings" data-testid="settings">
-      <ul>
-        <li>
-          <span>{t('setting.scroll')}</span>
-          <label className="slider">
+    <div className="flex flex-1" data-testid="settings">
+      <ul className="flex flex-1 flex-col px-5 py-[5px]">
+        <li className={row}>
+          <span className={label}>{t('setting.scroll')}</span>
+          <label className="max-w-[120px] whitespace-nowrap">
             <input
               type="range"
+              className="slider inline-block h-6 max-w-[120px]"
               min="-5"
               max="5"
               step="1"
@@ -69,45 +77,62 @@ export function Settings() {
         {toggle('ignore_emotes', 'ignore_emotes')}
         {toggle('chat_sound', 'chat_sound')}
         {openInApp && toggle('links_in_app', 'links_in_app')}
-        <li>
-          <span>{t('setting.keyboard_layout')}</span>
-          <label className="select">
-            <select value={s.keyboard_layout} onChange={(e) => setSetting('keyboard_layout', e.target.value)}>
+        <li className={row}>
+          <span className={label}>{t('setting.keyboard_layout')}</span>
+          <label className="max-w-[120px] text-right">
+            <select
+              className={cn(
+                field,
+                'w-full max-w-full cursor-pointer appearance-none pr-[5px] pl-2.5 text-right text-xs hover:border-background-secondary [&_option]:bg-background-tertiary [&_option]:font-normal [&_option]:text-text-normal',
+              )}
+              value={s.keyboard_layout}
+              onChange={(e) => setSetting('keyboard_layout', e.target.value)}
+            >
               {Object.entries(keyboardLayouts).map(([code, name]) => (
                 <option key={code} value={code}>
                   {name}
                 </option>
               ))}
             </select>
-            <span />
           </label>
         </li>
         {admin && (
-          <li className="broadcast">
-            <div>
-              <span>{t('setting.broadcast_title')}</span>
+          <li className={cn(row, 'flex-col')}>
+            <div className="mb-2.5 flex justify-between">
+              <span className={label}>{t('setting.broadcast_title')}</span>
               {!broadcast.active ? (
-                <button aria-label={t('setting.broadcast_title')} onClick={() => actions.broadcastStart(url)}>
+                <button
+                  className={cn(button, 'm-0 w-auto shrink px-2.5 py-0')}
+                  aria-label={t('setting.broadcast_title')}
+                  onClick={() => actions.broadcastStart(url)}
+                >
                   <i className="fas fa-play"></i>
                 </button>
               ) : (
-                <button aria-label={t('setting.broadcast_title')} onClick={actions.broadcastStop} className="btn-red">
+                <button
+                  className={cn(button, 'm-0 w-auto shrink bg-[#a62626] px-2.5 py-0')}
+                  aria-label={t('setting.broadcast_title')}
+                  onClick={actions.broadcastStop}
+                >
                   <i className="fas fa-stop"></i>
                 </button>
               )}
             </div>
             <input
+              className={cn(
+                field,
+                'px-2.5 text-left select-auto selection:bg-text-normal placeholder:text-[#757575] disabled:bg-transparent',
+              )}
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               disabled={broadcast.active}
-              className="input"
               placeholder="rtmp://a.rtmp.youtube.com/live2/<stream-key>"
             />
           </li>
         )}
         {admin && <Banned />}
-        <li>
-          <button data-testid="logout" onClick={actions.logout}>
+        <li className={row}>
+          <button className={button} data-testid="logout" onClick={actions.logout}>
             {t('logout')}
           </button>
         </li>

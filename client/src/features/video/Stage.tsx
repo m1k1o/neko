@@ -3,6 +3,7 @@ import { useStore } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
 import { selectControlling, selectIsAdmin } from '@m1k1o/neko'
 import { useTranslation } from 'react-i18next'
+import { cn } from '@/lib/utils'
 import { actions } from '@/state/actions'
 import { app } from '@/state/app'
 import { client, overlay } from '@/state/client'
@@ -14,7 +15,11 @@ import { Player } from './Player'
 import { useFullscreen } from './useFullscreen'
 import { useClipboardSync, canReadClipboard } from './useClipboardSync'
 import { usePip } from './usePip'
-import './video.scss'
+
+// an icon of the menus over the video
+const icon = 'h-7.5 w-7.5 cursor-pointer rounded-[5px] bg-white/20 text-center text-[16px] leading-7.5 text-white/60'
+const overlayClasses =
+  'absolute inset-0 flex cursor-pointer items-center justify-center overflow-hidden bg-black/20 text-[120px]'
 
 export function Stage({ hideControls, extraControls }: { hideControls: boolean; extraControls: boolean }) {
   const { t } = useTranslation()
@@ -44,21 +49,22 @@ export function Stage({ hideControls, extraControls }: { hideControls: boolean; 
     e.stopPropagation(),
     setMenu(menu === m ? null : m)
   )
-  const extra = extraControls ? '' : 'extra-control'
+  // usually the extra controls are only shown on a phone
+  const extra = extraControls ? '' : 'phone:block hidden'
 
   return (
-    <div className="video">
-      <div ref={player} className="player">
-        <div className="player-container" data-testid="player" onMouseEnter={syncClipboard}>
+    <div className="relative h-full w-full">
+      <div ref={player} className="absolute inset-0 flex items-center justify-center bg-black">
+        <div className="absolute inset-0" data-testid="player" onMouseEnter={syncClipboard}>
           <Player transport={client.transport} />
-          <div className="emotes">
+          <div className="pointer-events-none absolute inset-0 overflow-hidden">
             {Object.entries(emotes).map(([id, type]) => (
               <Emote key={id} id={id} type={type} />
             ))}
           </div>
           {!playing && playable ? (
             <div
-              className="player-overlay"
+              className={overlayClasses}
               data-testid="player-overlay"
               {...a11y('Play')}
               onClick={() => (client.unmute(), client.play().catch(() => {}))}
@@ -71,7 +77,7 @@ export function Stage({ hideControls, extraControls }: { hideControls: boolean; 
             muted &&
             mutedByAutoplay && (
               <div
-                className="player-overlay"
+                className={overlayClasses}
                 data-testid="player-overlay"
                 {...a11y('Unmute')}
                 onClick={() => client.unmute()}
@@ -82,24 +88,28 @@ export function Stage({ hideControls, extraControls }: { hideControls: boolean; 
           )}
         </div>
         {!fullscreen && !hideControls && (
-          <ul className="video-menu top">
-            <li>
-              <i {...a11y('Fullscreen')} onClick={requestFullscreen} className="fas fa-expand" />
+          <ul className="absolute top-[15px] right-5">
+            <li className="mb-2.5 last:mb-0">
+              <i {...a11y('Fullscreen')} onClick={requestFullscreen} className={`fas fa-expand ${icon}`} />
             </li>
             {admin && (
-              <li>
+              <li className="mb-2.5 last:mb-0">
                 <i
                   {...a11y('Screen resolution')}
                   data-testid="resolution-open"
                   onClick={open('resolution')}
-                  className="fas fa-desktop"
+                  className={`fas fa-desktop ${icon}`}
                 />
               </li>
             )}
             {!controlLocked && !implicit && (
-              <li className={extra}>
+              <li className={cn('mb-2.5 last:mb-0', extra)}>
                 <i
-                  className={`${hosted && !hosting ? 'disabled ' : ''}${!hosted && !hosting ? 'faded ' : ''}fas fa-computer-mouse`}
+                  className={cn(
+                    `fas fa-computer-mouse ${icon}`,
+                    hosted && !hosting && 'text-style-error/40',
+                    !hosted && !hosting && 'text-text-normal/40',
+                  )}
                   {...a11y(hosting ? t('controls.release') : t('controls.request'))}
                   onClick={() => playable && actions.toggleControl()}
                 />
@@ -108,31 +118,35 @@ export function Stage({ hideControls, extraControls }: { hideControls: boolean; 
           </ul>
         )}
         {!fullscreen && !hideControls && (
-          <ul className="video-menu bottom">
+          <ul className="absolute right-5 bottom-[15px]">
             {hosting && !canReadClipboard && (
-              <li>
+              <li className="mb-2.5 last:mb-0">
                 <i
                   {...a11y('Clipboard')}
                   data-testid="clipboard-open"
                   onClick={open('clipboard')}
-                  className="fas fa-clipboard"
+                  className={`fas fa-clipboard ${icon}`}
                 />
               </li>
             )}
             {pip.canPip && (
-              <li>
-                <i {...a11y('Picture-in-Picture')} onClick={pip.request} className="fas fa-external-link-alt" />
+              <li className="mb-2.5 last:mb-0">
+                <i
+                  {...a11y('Picture-in-Picture')}
+                  onClick={pip.request}
+                  className={`fas fa-external-link-alt ${icon}`}
+                />
               </li>
             )}
             {hosting && client.isTouchDevice && (
               <li
-                className={extra}
+                className={cn('mb-2.5 last:mb-0', extra)}
                 data-testid="keyboard-toggle"
                 {...a11y('Keyboard')}
                 onMouseDown={(e) => e.preventDefault()} // tapping the button must not take the focus the keyboard needs
                 onClick={() => overlay.mobileKeyboardToggle()}
               >
-                <i className="fas fa-keyboard" />
+                <i className={`fas fa-keyboard ${icon}`} />
               </li>
             )}
           </ul>

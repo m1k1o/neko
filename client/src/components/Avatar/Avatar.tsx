@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import './avatar.scss'
 
 export function Avatar({ seed, avatar, size }: { seed: string; avatar?: string; size: number }) {
   const [failed, setFailed] = useState(false)
@@ -24,11 +23,11 @@ export function Avatar({ seed, avatar, size }: { seed: string; avatar?: string; 
 
   return (
     <div
-      className="avatar"
+      className="inline-block overflow-hidden rounded-full bg-white text-center text-black select-none"
       style={{ width: size, height: size, lineHeight: size + 'px', fontSize: size / 2, backgroundColor: bg }}
     >
       {url && !failed ? (
-        <img src={url} alt={seed} onError={() => setFailed(true)} />
+        <img src={url} alt={seed} className="block h-full w-full object-cover" onError={() => setFailed(true)} />
       ) : (
         seed.substring(0, 2).toUpperCase()
       )}

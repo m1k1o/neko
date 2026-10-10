@@ -2,12 +2,17 @@ import { useEffect, useReducer, useState, type FormEvent } from 'react'
 import { useStore } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
 import { useTranslation } from 'react-i18next'
+import { cn } from '@/lib/utils'
 import { actions } from '@/state/actions'
 import { client } from '@/state/client'
 import { tell } from '@/state/dialogs'
-import { Logo } from '@/components/Logo'
 import { i18n } from '@/i18n'
-import './connect.scss'
+import logo from '@/assets/images/logo.svg'
+
+const input =
+  'my-[5px] rounded-[5px] border-0 bg-background-tertiary px-2 py-1.5 leading-5 text-text-normal selection:bg-text-link placeholder:text-[#757575]'
+const button =
+  'my-[5px] cursor-pointer rounded-[5px] border-0 bg-style-primary p-1 text-center leading-7.5 font-bold text-text-normal uppercase'
 
 const params = new URL(location.href).searchParams
 // ?pwd= invite (e.g. neko-rooms links): used for the first login attempt only, like the legacy
@@ -62,30 +67,38 @@ export function Connect() {
   const connecting = status === 'connecting'
   const passwordLogin = oauth.password_login_enabled !== false
   return (
-    <div className="connect" data-testid="connect">
-      <div className="window">
-        <div className="logo">
-          <Logo />
+    <div className="fixed inset-0 flex items-center justify-center bg-background-floating/80" data-testid="connect">
+      <div className="w-[320px] rounded-[5px] bg-background-secondary p-2.5">
+        <div className="flex w-full cursor-pointer items-center justify-center">
+          <img src={logo} alt="n.eko" className="mr-2.5 h-[90px]" />
+          <span className="text-[30px] leading-14">
+            <b className="font-black">n</b>.eko
+          </span>
         </div>
         {connecting ? (
-          <div className="loader">
-            <div className="bounce1"></div>
-            <div className="bounce2"></div>
+          <div className="relative mx-auto h-[90px] w-[90px]">
+            <div className="absolute top-0 left-0 h-full w-full animate-loader rounded-full bg-style-primary opacity-60"></div>
+            <div className="absolute top-0 left-0 h-full w-full animate-loader rounded-full bg-style-primary opacity-60 [animation-delay:-1s]"></div>
           </div>
         ) : authenticated ? (
           // logged in but disconnected (network drop, server restart)
-          <form className="message" onSubmit={(e) => (e.preventDefault(), client.connect())}>
-            <span>{t('connection.disconnected')}</span>
-            <button type="submit">{t('connect.connect')}</button>
-            <button type="button" onClick={actions.logout}>
+          <form className="flex flex-col" onSubmit={(e) => (e.preventDefault(), client.connect())}>
+            <span className="block text-center leading-7.5 uppercase">{t('connection.disconnected')}</span>
+            <button className={button} type="submit">
+              {t('connect.connect')}
+            </button>
+            <button className={button} type="button" onClick={actions.logout}>
               {t('logout')}
             </button>
           </form>
         ) : (
-          <form className="message" onSubmit={login}>
-            <span>{invite === null ? t('connect.login_title') : t('connect.invitation_title')}</span>
+          <form className="flex flex-col" onSubmit={login}>
+            <span className="block text-center leading-7.5 uppercase">
+              {invite === null ? t('connect.login_title') : t('connect.invitation_title')}
+            </span>
             {passwordLogin && (
               <input
+                className={input}
                 type="text"
                 placeholder={t('connect.displayname')}
                 value={displayname}
@@ -95,17 +108,22 @@ export function Connect() {
             )}
             {passwordLogin && invite === null && (
               <input
+                className={input}
                 type="password"
                 placeholder={t('connect.password')}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
             )}
-            {passwordLogin && <button type="submit">{t('connect.connect')}</button>}
+            {passwordLogin && (
+              <button className={button} type="submit">
+                {t('connect.connect')}
+              </button>
+            )}
             {oauth.enabled && invite === null && (
               <button
+                className={cn(button, 'border border-style-primary bg-background-tertiary')}
                 type="button"
-                className="oauth-login"
                 onClick={() => oauth.login_url && location.assign(oauth.login_url)}
               >
                 {oauth.name || 'OAuth'} Login

@@ -1,150 +1,152 @@
-.emote {
-  width: 24px;
-  height: 24px;
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center center;
-
-  &.anger {
+/* the 47 emotes by name: a 24px box with the emoji as its background, used by the bar, the picker
+   and the flying copies (a flying copy sizes itself with utilities, which win over this layer) */
+@layer components {
+  .emote {
+    width: 24px;
+    height: 24px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center center;
+  }
+  .emote.anger {
     background-image: url('../../assets/images/emote/1f4a2.svg');
   }
-  &.bomb {
+  .emote.bomb {
     background-image: url('../../assets/images/emote/1f4a3.svg');
   }
-  &.sleep {
+  .emote.sleep {
     background-image: url('../../assets/images/emote/1f4a4.svg');
   }
-  &.explode {
+  .emote.explode {
     background-image: url('../../assets/images/emote/1f4a5.svg');
   }
-  &.sweat {
+  .emote.sweat {
     background-image: url('../../assets/images/emote/1f4a6.svg');
   }
-  &.poo {
+  .emote.poo {
     background-image: url('../../assets/images/emote/1f4a9.svg');
   }
-  &.hundred {
+  .emote.hundred {
     background-image: url('../../assets/images/emote/1f4af.svg');
   }
-  &.alert {
+  .emote.alert {
     background-image: url('../../assets/images/emote/1f6a8.svg');
   }
-  &.punch {
+  .emote.punch {
     background-image: url('../../assets/images/emote/1f44a.svg');
   }
-  &.wave {
+  .emote.wave {
     background-image: url('../../assets/images/emote/1f44b.svg');
   }
-  &.okay {
+  .emote.okay {
     background-image: url('../../assets/images/emote/1f44c.svg');
   }
-  &.thumbs-up {
+  .emote.thumbs-up {
     background-image: url('../../assets/images/emote/1f44d.svg');
   }
-  &.clap {
+  .emote.clap {
     background-image: url('../../assets/images/emote/1f44f.svg');
   }
-  &.prey {
+  .emote.prey {
     background-image: url('../../assets/images/emote/1f64f.svg');
   }
-  &.celebrate {
+  .emote.celebrate {
     background-image: url('../../assets/images/emote/1f389.svg');
   }
-  &.flame {
+  .emote.flame {
     background-image: url('../../assets/images/emote/1f525.svg');
   }
-
-  &.goof {
+  .emote.goof {
     background-image: url('../../assets/images/emote/1f60b.svg');
   }
-  &.love {
+  .emote.love {
     background-image: url('../../assets/images/emote/1f60d.svg');
   }
-  &.cool {
+  .emote.cool {
     background-image: url('../../assets/images/emote/1f60e.svg');
   }
-  &.smerk {
+  .emote.smerk {
     background-image: url('../../assets/images/emote/1f60f.svg');
   }
-  &.worry {
+  .emote.worry {
     background-image: url('../../assets/images/emote/1f61f.svg');
   }
-  &.ouch {
+  .emote.ouch {
     background-image: url('../../assets/images/emote/1f62c.svg');
   }
-  &.cry {
+  .emote.cry {
     background-image: url('../../assets/images/emote/1f62d.svg');
   }
-  &.surprised {
+  .emote.surprised {
     background-image: url('../../assets/images/emote/1f62e.svg');
   }
-  &.quiet {
+  .emote.quiet {
     background-image: url('../../assets/images/emote/1f92b.svg');
   }
-  &.rage {
+  .emote.rage {
     background-image: url('../../assets/images/emote/1f92c.svg');
   }
-  &.annoy {
+  .emote.annoy {
     background-image: url('../../assets/images/emote/1f611.svg');
   }
-  &.steamed {
+  .emote.steamed {
     background-image: url('../../assets/images/emote/1f624.svg');
   }
-  &.scared {
+  .emote.scared {
     background-image: url('../../assets/images/emote/1f628.svg');
   }
-  &.terrified {
+  .emote.terrified {
     background-image: url('../../assets/images/emote/1f631.svg');
   }
-  &.sleepy {
+  .emote.sleepy {
     background-image: url('../../assets/images/emote/1f634.svg');
   }
-  &.dead {
+  .emote.dead {
     background-image: url('../../assets/images/emote/1f635.svg');
   }
-  &.happy {
+  .emote.happy {
     background-image: url('../../assets/images/emote/1f642.svg');
   }
-  &.roll-eyes {
+  .emote.roll-eyes {
     background-image: url('../../assets/images/emote/1f644.svg');
   }
-  &.thinking {
+  .emote.thinking {
     background-image: url('../../assets/images/emote/1f914.svg');
   }
-  &.clown {
+  .emote.clown {
     background-image: url('../../assets/images/emote/1f921.svg');
   }
-  &.sick {
+  .emote.sick {
     background-image: url('../../assets/images/emote/1f922.svg');
   }
-  &.rofl {
+  .emote.rofl {
     background-image: url('../../assets/images/emote/1f923.svg');
   }
-  &.drule {
+  .emote.drule {
     background-image: url('../../assets/images/emote/1f924.svg');
   }
-  &.sniff {
+  .emote.sniff {
     background-image: url('../../assets/images/emote/1f927.svg');
   }
-  &.sus {
+  .emote.sus {
     background-image: url('../../assets/images/emote/1f928.svg');
   }
-  &.party {
+  .emote.party {
     background-image: url('../../assets/images/emote/1f973.svg');
   }
-  &.odd {
+  .emote.odd {
     background-image: url('../../assets/images/emote/1f974.svg');
   }
-  &.hot {
+  .emote.hot {
     background-image: url('../../assets/images/emote/1f975.svg');
   }
-  &.cold {
+  .emote.cold {
     background-image: url('../../assets/images/emote/1f976.svg');
   }
-  &.blush {
+  .emote.blush {
     background-image: url('../../assets/images/emote/263a.svg');
   }
-  &.sad {
+  .emote.sad {
     background-image: url('../../assets/images/emote/2639.svg');
   }
 }

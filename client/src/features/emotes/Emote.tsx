@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { hideEmote } from '@/state/emotes'
-import './sprites.scss'
-import './emote.scss'
+import './sprites.css'
 
 const rnd = (a: number, b: number) => a + Math.random() * (b - a)
 
@@ -24,9 +23,12 @@ export function Emote({ id, type }: { id: string; type: string }) {
     Promise.all(anims).then(() => hideEmote(id))
   }, [id])
   return (
-    <div ref={ref} className="emote-container" data-testid="emote-animation">
+    <div ref={ref} className="absolute right-0 bottom-0 h-[10%] w-1/4" data-testid="emote-animation">
       {Array.from({ length: 7 }, (_, i) => (
-        <div key={i} className={`emote ${type}`} />
+        <div
+          key={i}
+          className={`emote ${type} absolute h-full w-[100px] scale-[0.7] bg-contain text-center text-white`}
+        />
       ))}
     </div>
   )
