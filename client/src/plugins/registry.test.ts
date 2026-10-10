@@ -1,13 +1,14 @@
 // Unit tests of the plugin registry: `npm test` (vitest). Slots and server event dispatch follow
-// the plugins array; the registry needs only `client.events.on('message')` and the manifests.
+// the plugins array; the registry needs only `client.events.on('message')` of the instance and the manifests.
 import { test, vi } from 'vitest'
 import { Circle } from 'lucide-react'
 import assert from 'node:assert/strict'
+import type { NekoApp } from '@/state/app'
 import type { Plugin, PluginEventArgs } from './types.ts'
 
 type Listener = (event: string, payload: unknown) => void
 const listeners: Listener[] = []
-vi.mock('@/state/client', () => ({ client: { events: { on: (_: string, fn: Listener) => listeners.push(fn) } } }))
+const neko = { client: { events: { on: (_: string, fn: Listener) => listeners.push(fn) } } } as unknown as NekoApp
 
 const received: Record<string, PluginEventArgs[]> = {}
 const inits: string[] = []
@@ -18,7 +19,7 @@ const manifest = (id: string, ns: string): Plugin => ({
   tab: { id, icon: Circle, label: `${ns}:tab`, component: Nothing },
   topBar: [{ id: `${id}-top`, component: Nothing }],
   memberMenu: [{ id: `${id}-menu`, label: () => id, onClick() {} }],
-  onEvent: (...args) => (received[id] ??= []).push(args),
+  onEvent: (_neko, ...args) => (received[id] ??= []).push(args),
   init: () => inits.push(id),
 })
 vi.mock('./chat', () => ({ chat: manifest('chat', 'chat') }))
@@ -45,7 +46,7 @@ test('initPlugins fills the slots in registry order and runs each init', async (
     ],
   )
   assert.deepEqual(useSlot('side.tab'), [])
-  initPlugins()
+  initPlugins(neko)
   assert.deepEqual(
     useSlot('side.tab').map((x) => x.label),
     ['chat:tab', 'files:tab'],
@@ -63,7 +64,7 @@ test('initPlugins fills the slots in registry order and runs each init', async (
 
 test('a server event reaches the plugin of its prefix only; an unknown prefix reaches nobody', async () => {
   const { initPlugins } = await fresh()
-  initPlugins()
+  initPlugins(neko)
   assert.equal(listeners.length, 1)
   emit('chat/message', message)
   emit('chat/init', { enabled: false })
@@ -81,7 +82,7 @@ test('a server event reaches the plugin of its prefix only; an unknown prefix re
 
 test('the dispatch map is built once, at initPlugins: a plugin added afterwards gets nothing', async () => {
   const { plugins, initPlugins } = await fresh()
-  initPlugins()
+  initPlugins(neko)
   plugins.push(manifest('late', 'late'))
   emit('late/x', {})
   assert.deepEqual(received, {})
@@ -93,7 +94,7 @@ test('removing a plugin from the array removes its slot entries and its event ha
     plugins.findIndex((p) => p.id === 'chat'),
     1,
   )
-  initPlugins()
+  initPlugins(neko)
   assert.deepEqual(
     useSlot('side.tab').map((x) => x.label),
     ['files:tab'],
@@ -114,7 +115,7 @@ test('removing a plugin from the array removes its slot entries and its event ha
 
 test('registerSlot: a contribution registered by hand goes after the manifests', async () => {
   const { initPlugins, registerSlot, useSlot } = await fresh()
-  initPlugins()
+  initPlugins(neko)
   registerSlot('header.item', { id: 'extra', component: Nothing })
   assert.deepEqual(
     useSlot('header.item').map((x) => x.id),

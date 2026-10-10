@@ -16,13 +16,15 @@ import {
   VolumeX,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { actions } from '@/state/actions'
-import { client } from '@/state/client'
+import { useActions } from '@/state/actions'
 import { tell } from '@/state/dialogs'
+import { useNeko } from '@/state/provider'
 import { IconButton } from '@/components/IconButton'
 
 export function Controls() {
   const { t } = useTranslation()
+  const { client, app } = useNeko()
+  const actions = useActions()
   const { admin, hosting, hosted, implicit, lockedControls, localLock, video, connected, canShareMedia } = useStore(
     client.store,
     useShallow((s) => ({
@@ -55,7 +57,7 @@ export function Controls() {
       setTimeout(() => setShake(false), 5000)
     }
     return client.events.on('overlay.click', hint)
-  }, [])
+  }, [client])
 
   const micOff = () => {
     if (!mic.current) return
@@ -78,7 +80,7 @@ export function Controls() {
       mic.current = { track, stop: client.shareMedia(stream) }
       setMicOn(true)
     } catch (err: any) {
-      tell(t('controls.mic_error'), err.message)
+      tell(app, t('controls.mic_error'), err.message)
     }
   }
 

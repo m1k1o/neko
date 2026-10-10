@@ -14,9 +14,8 @@ import {
   Volume2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { actions } from '@/state/actions'
-import { app } from '@/state/app'
-import { client, overlay } from '@/state/client'
+import { useActions } from '@/state/actions'
+import { useNeko } from '@/state/provider'
 import { IconButton } from '@/components/IconButton'
 import { DropdownMenu, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import { Popover, PopoverTrigger } from '@/components/ui/popover'
@@ -34,6 +33,8 @@ const overlayClasses =
 
 export function Stage({ hideControls, extraControls }: { hideControls: boolean; extraControls: boolean }) {
   const { t } = useTranslation()
+  const { client, overlay, app } = useNeko()
+  const actions = useActions()
   const { admin, hosting, hosted, implicit, lockedControls, video } = useStore(
     client.store,
     useShallow((s) => ({

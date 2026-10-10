@@ -2,8 +2,7 @@ import { Fragment, useMemo, useState } from 'react'
 import { useStore } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
 import { selectControlling } from '@m1k1o/neko'
-import { app } from '@/state/app'
-import { client } from '@/state/client'
+import { useNeko } from '@/state/provider'
 import { SquareArrowOutUpRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { IconButton } from '@/components/IconButton'
@@ -41,19 +40,21 @@ function Spoiler({ children }: { children: React.ReactNode }) {
 
 // a chat message: the parser's nodes as React elements (no HTML strings)
 export function Markdown({ source }: { source: string }) {
+  const neko = useNeko()
+  const { client, app } = neko
   const { canOpenInApp, linksInApp } = useStore(
     app,
     useShallow((s) => ({ canOpenInApp: s.openInApp, linksInApp: s.settings.links_in_app })),
   )
   const hosting = useStore(client.store, selectControlling)
-  const emojiReady = useStore(chat, (s) => s.emojiReady) // re-render once emoji names are known
+  const emojiReady = useStore(chat(neko), (s) => s.emojiReady) // re-render once emoji names are known
   const nodes = useMemo(() => parseSafe(source), [source])
   // open-in-app needs the plugin and control of the desktop
   const inApp = canOpenInApp && hosting
   const open = (href: string) => (e: React.MouseEvent) => {
     if (!inApp || !linksInApp) return
     e.preventDefault()
-    openInApp(href)
+    openInApp(neko, href)
   }
 
   const render = (list: MdNode[]): React.ReactNode[] =>
@@ -93,7 +94,11 @@ export function Markdown({ source }: { source: string }) {
                 {render(n.c)}
               </a>
               {inApp && (
-                <IconButton label="Open in app" className="ml-[0.3em] align-middle" onClick={() => openInApp(n.href)}>
+                <IconButton
+                  label="Open in app"
+                  className="ml-[0.3em] align-middle"
+                  onClick={() => openInApp(neko, n.href)}
+                >
                   <SquareArrowOutUpRight className="size-3.5" />
                 </IconButton>
               )}

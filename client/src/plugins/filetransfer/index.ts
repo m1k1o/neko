@@ -1,6 +1,5 @@
 import { File } from 'lucide-react'
-import { client } from '@/state/client'
-import { bus, event } from '@/state/bus'
+import { event } from '@/state/bus'
 import { t } from '@/i18n'
 import type { Plugin } from '@/plugins/types'
 import { Files } from './Files'
@@ -13,25 +12,26 @@ export const filetransfer: Plugin = {
   ns: 'files',
   tab: { id: 'files', icon: File, label: 'files:tab', component: Files, useVisible: useAllowed },
   topBar: [{ id: 'filetransfer-lock', component: FileLock }],
-  onEvent(...[event, payload]) {
-    if (event === 'filetransfer/update') store.setState({ files: payload })
+  onEvent(neko, ...[event, payload]) {
+    if (event === 'filetransfer/update') store(neko).setState({ files: payload })
   },
-  init() {
+  init(neko) {
+    const { client, bus } = neko
     // the list is requested once the session is known; a lock change becomes an event line
     let last: boolean | null = null
     client.store.subscribe(
       (s) => s.session_id,
       (id) => {
         if (!id) return
-        last = locked()
-        refresh()
+        last = locked(client.state.settings)
+        refresh(neko)
       },
     )
     client.events.on('room.settings.updated', (next, id) => {
       const now = locked(next)
-      if (last !== null && id && now !== last) event(id, t(`files:locks.notif_${now ? 'locked' : 'unlocked'}`))
+      if (last !== null && id && now !== last) event(neko, id, t(`files:locks.notif_${now ? 'locked' : 'unlocked'}`))
       last = now
     })
-    bus.on('logout', () => store.setState({ uploads: [] }))
+    bus.on('logout', () => store(neko).setState({ uploads: [] }))
   },
 }

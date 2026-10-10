@@ -19,6 +19,7 @@ import {
 import { cn } from '@/lib/utils'
 import { IconButton } from '@/components/IconButton'
 import { PopoverContent } from '@/components/ui/popover'
+import { useNeko } from '@/state/provider'
 import { chat } from './store'
 import { emoji, pickedEmoji } from './emoji'
 import { Emoji } from './Emoji'
@@ -39,8 +40,9 @@ const GROUP_ICON: Record<string, LucideIcon> = {
 }
 
 export function EmojiPicker({ onPick }: { onPick: (name: string) => void }) {
+  const store = chat(useNeko())
   const { recent, ready } = useStore(
-    chat,
+    store,
     useShallow((s) => ({ recent: s.emojiRecent, ready: s.emojiReady })),
   )
   const [search, setSearch] = useState('')
@@ -56,7 +58,7 @@ export function EmojiPicker({ onPick }: { onPick: (name: string) => void }) {
     : []
 
   const pick = (name: string) => {
-    pickedEmoji(name)
+    pickedEmoji(store, name)
     onPick(name)
   }
   const item = (name: string, key: string) => (

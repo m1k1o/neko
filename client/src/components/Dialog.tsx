@@ -1,7 +1,7 @@
 import { useStore } from 'zustand'
 import { useTranslation } from 'react-i18next'
 import { CircleX, Info, TriangleAlert } from 'lucide-react'
-import { app } from '@/state/app'
+import { useApp } from '@/state/provider'
 import { Button } from '@/components/ui/button'
 import {
   Dialog as Root,
@@ -19,6 +19,7 @@ const ICON_COLOR = { warning: 'text-[#f8bb86]', error: 'text-[#f27474]', info: '
 // SweetAlert theme. Escape and a click outside dismiss it (false for ask)
 export function Dialog() {
   const { t } = useTranslation()
+  const app = useApp()
   const d = useStore(app, (s) => s.dialog)
 
   const done = (ok: boolean) => {

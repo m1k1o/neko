@@ -3,10 +3,10 @@ import { useStore } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
 import { selectControlling, selectIsAdmin, type Session } from '@m1k1o/neko'
 import { useTranslation } from 'react-i18next'
-import { actions } from '@/state/actions'
-import { app } from '@/state/app'
-import { client } from '@/state/client'
+import { useActions } from '@/state/actions'
+import type { AppStore } from '@/state/app'
 import { ask } from '@/state/dialogs'
+import { useNeko } from '@/state/provider'
 import { Avatar } from '@/components/Avatar'
 import {
   ContextMenu,
@@ -17,21 +17,25 @@ import {
 } from '@/components/ui/context-menu'
 import type { PluginMemberMenuItem } from '@/plugins/types'
 
-const confirmThen = (title: string, text: string, fn: () => void) => ask(title, text).then((ok) => ok && fn())
+const confirmThen = (app: AppStore, title: string, text: string, fn: () => void) =>
+  ask(app, title, text).then((ok) => ok && fn())
 const always = () => true
 
 // a plugin's entry, when its hook shows it for this member
 function Item({ entry, member }: { entry: PluginMemberMenuItem; member: Session }) {
+  const neko = useNeko()
   const useVisible = entry.useVisible ?? always
   const visible = useVisible(member)
   if (!visible) return null
-  return <ContextMenuItem onSelect={() => entry.onClick(member)}>{entry.label(member)}</ContextMenuItem>
+  return <ContextMenuItem onSelect={() => entry.onClick(neko, member)}>{entry.label(neko, member)}</ContextMenuItem>
 }
 
 // rendered by App outside the room bar, which is hidden at narrow widths where the chat still works;
 // opened at the point of a right-click (members, chat authors) or under a focused member (Shift+F10)
 export function MemberMenu({ items }: { items: readonly PluginMemberMenuItem[] }) {
   const { t } = useTranslation()
+  const { client, app } = useNeko()
+  const actions = useActions()
   const menu = useStore(app, (s) => s.menu)
   const [bannable, setBannable] = useState(false)
 
@@ -53,7 +57,7 @@ export function MemberMenu({ items }: { items: readonly PluginMemberMenuItem[] }
     let current = true // a slow answer for the previous member must not land on this one
     if (id && client.isAdmin) actions.canBan(id).then((v) => current && setBannable(v))
     return () => void (current = false)
-  }, [id])
+  }, [id, client, actions])
   const open = !!menu && !!m
   const n = m?.profile.name ?? ''
   const isHost = id === hostId
@@ -99,6 +103,7 @@ export function MemberMenu({ items }: { items: readonly PluginMemberMenuItem[] }
                 className={danger}
                 onSelect={() =>
                   confirmThen(
+                    app,
                     t('context.confirm.kick_title', { name: n }),
                     t('context.confirm.kick_text', { name: n }),
                     () => actions.kick(id!),
@@ -112,6 +117,7 @@ export function MemberMenu({ items }: { items: readonly PluginMemberMenuItem[] }
                   className={danger}
                   onSelect={() =>
                     confirmThen(
+                      app,
                       t('context.confirm.ban_title', { name: n }),
                       t('context.confirm.ban_text', { name: n }),
                       () => actions.ban(id!),

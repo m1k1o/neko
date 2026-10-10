@@ -2,8 +2,9 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useStore } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
 import { useTranslation } from 'react-i18next'
-import { openMenu } from '@/state/actions'
-import { client, selectMuted } from '@/state/client'
+import { useActions } from '@/state/actions'
+import { selectMuted } from '@/state/app'
+import { useNeko } from '@/state/provider'
 import { Laugh } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { IconButton } from '@/components/IconButton'
@@ -26,10 +27,14 @@ const line = 'flex flex-1 flex-row flex-nowrap overflow-hidden pt-2.5 pr-[5px] p
 
 export function Chat() {
   const { t } = useTranslation()
+  const neko = useNeko()
+  const { client } = neko
+  const actions = useActions()
   const sessions = useStore(client.store, (s) => s.sessions)
   const muted = useStore(client.store, selectMuted)
+  const store = chat(neko)
   const { lines, enabled } = useStore(
-    chat,
+    store,
     useShallow((s) => ({ lines: s.lines, enabled: s.enabled })),
   )
   const [text, setText] = useState('')
@@ -37,7 +42,7 @@ export function Chat() {
   const history = useRef<HTMLUListElement>(null)
   const input = useRef<HTMLTextAreaElement>(null)
 
-  useEffect(loadEmoji, [])
+  useEffect(() => loadEmoji(store), [store])
   const last = lines[lines.length - 1]?.seq
   useLayoutEffect(() => {
     history.current!.scrollTop = history.current!.scrollHeight
@@ -47,7 +52,7 @@ export function Chat() {
     if (e.key !== 'Enter' || e.shiftKey || e.nativeEvent.isComposing) return
     e.preventDefault()
     if (!text.trim()) return
-    sendChat(text)
+    sendChat(neko, text)
     setText('')
   }
 
@@ -82,7 +87,7 @@ export function Chat() {
                   bulk && 'invisible h-0',
                 )}
                 data-testid="chat-author"
-                onContextMenu={(e) => openMenu(e, m.id)}
+                onContextMenu={(e) => actions.openMenu(e, m.id)}
               >
                 <Avatar seed={nameOf(m)} avatar={sessions[m.id]?.profile.avatar} size={40} />
               </div>

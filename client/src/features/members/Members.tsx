@@ -3,13 +3,13 @@ import { useShallow } from 'zustand/react/shallow'
 import { selectSession } from '@m1k1o/neko'
 import { CircleUser, Crown, Shield } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { openMenu } from '@/state/actions'
-import { app } from '@/state/app'
-import { client } from '@/state/client'
+import { useActions } from '@/state/actions'
+import type { NekoApp } from '@/state/app'
+import { useNeko } from '@/state/provider'
 import { Avatar } from '@/components/Avatar'
 
 // keyboard equivalent of right-click: the Menu key or Shift+F10 on a focused member
-const menuKey = (e: React.KeyboardEvent, id: string) => {
+const menuKey = ({ client, app }: NekoApp, e: React.KeyboardEvent, id: string) => {
   if (e.key !== 'ContextMenu' && !(e.shiftKey && e.key === 'F10')) return
   e.preventDefault()
   e.stopPropagation()
@@ -28,6 +28,9 @@ const others =
   'ml-5 before:absolute before:mt-[13px] before:ml-[-9px] before:h-[45px] before:w-0.5 before:bg-background-secondary before:content-[" "]'
 
 export function Members() {
+  const neko = useNeko()
+  const { client } = neko
+  const actions = useActions()
   const { me, hostId, sessions, sessionId } = useStore(
     client.store,
     useShallow((s) => ({
@@ -61,8 +64,8 @@ export function Members() {
                   tabIndex={0}
                   aria-label={m.profile.name}
                   aria-haspopup="menu"
-                  onContextMenu={(e) => openMenu(e, m.id)}
-                  onKeyDown={(e) => menuKey(e, m.id)}
+                  onContextMenu={(e) => actions.openMenu(e, m.id)}
+                  onKeyDown={(e) => menuKey(neko, e, m.id)}
                 >
                   {m.profile.is_admin && <Shield className={admin} />}
                   <Avatar seed={m.profile.name} avatar={m.profile.avatar} size={50} />

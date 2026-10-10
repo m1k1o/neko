@@ -1,11 +1,9 @@
 import { useTranslation } from 'react-i18next'
 import { Book } from 'lucide-react'
-import { app } from '@/state/app'
+import { useApp } from '@/state/provider'
 import { Dialog, DialogPortal, DialogOverlay, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import logo from '@/assets/images/logo.svg'
-
-const close = () => app.setState({ about: false })
 
 // the GitHub mark (a brand icon, not in lucide): the octicon mark-github, MIT
 const GitHub = () => (
@@ -16,6 +14,8 @@ const GitHub = () => (
 
 export function About() {
   const { t } = useTranslation()
+  const app = useApp()
+  const close = () => app.setState({ about: false })
   return (
     <Dialog open onOpenChange={(open) => !open && close()}>
       <DialogPortal>

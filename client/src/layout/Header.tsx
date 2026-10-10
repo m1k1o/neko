@@ -4,9 +4,9 @@ import { selectIsAdmin } from '@m1k1o/neko'
 import { useTranslation } from 'react-i18next'
 import { Lock, LockOpen, Menu, Mouse } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { actions } from '@/state/actions'
-import { app } from '@/state/app'
-import { client, isLocked, type LockResource } from '@/state/client'
+import { useActions } from '@/state/actions'
+import { isLocked, type LockResource } from '@/state/app'
+import { useApp, useNeko } from '@/state/provider'
 import { remember } from '@/state/storage'
 import { IconButton } from '@/components/IconButton'
 import { useSlot } from '@/plugins'
@@ -17,6 +17,8 @@ const zero = () => 0
 
 export function Header() {
   const { t } = useTranslation()
+  const { client, app } = useNeko()
+  const actions = useActions()
   const admin = useStore(client.store, selectIsAdmin)
   const settings = useStore(client.store, (s) => s.settings)
   const side = useStore(app, (s) => s.side)
@@ -77,6 +79,7 @@ export function Header() {
 
 // the side panel's toggle, with a badge when the unread count changed while the panel was closed
 function Toggle({ side, unread }: { side: boolean; unread: number }) {
+  const app = useApp()
   const [read, setRead] = useState(unread)
   return (
     <li className="mr-2.5 inline-block">

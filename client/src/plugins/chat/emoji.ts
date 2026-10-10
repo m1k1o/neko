@@ -2,7 +2,7 @@
 // their Unicode characters, the groups and keywords of the picker; the custom ones are images
 import { set } from '@/state/storage'
 import neko from '@/assets/images/emoji/neko.png'
-import { chat } from './store'
+import type { ChatStore } from './store'
 
 export interface EmojiGroup {
   id: string
@@ -17,15 +17,16 @@ export const emoji = {
 }
 // the emoji that are images, by name (tools/emoji_custom.ts lists them for the generator)
 export const custom: Record<string, string> = { neko }
-let emojiLoading = false
+// the one download, shared by the instances on the page; dropped on failure so the next chat retries
+let loading: Promise<void> | null = null
 
-export function loadEmoji() {
-  if (emojiLoading) return
-  emojiLoading = true
+// the recent list of this chat from storage, and the data once it is there
+export function loadEmoji(chat: ChatStore) {
+  if (chat.getState().emojiReady) return
   try {
     chat.setState({ emojiRecent: JSON.parse(localStorage.getItem('emoji_recent') || '[]') })
   } catch {}
-  fetch('emoji.json')
+  loading ??= fetch('emoji.json')
     .then((r) => r.json())
     .then(
       (d: {
@@ -35,13 +36,16 @@ export function loadEmoji() {
         chars: Record<string, string>
       }) => {
         Object.assign(emoji, { groups: d.groups, keywords: d.keywords, names: new Set(d.list), chars: d.chars })
-        chat.setState({ emojiReady: true })
       },
     )
-    .catch(() => (emojiLoading = false))
+    .catch((err) => {
+      loading = null
+      throw err
+    })
+  loading.then(() => chat.setState({ emojiReady: true })).catch(() => {})
 }
 
-export function pickedEmoji(name: string) {
+export function pickedEmoji(chat: ChatStore, name: string) {
   const recent = chat.getState().emojiRecent
   if (recent.includes(name)) return
   const next = [...recent.slice(-30), name]

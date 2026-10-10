@@ -3,8 +3,9 @@ import { useStore } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
 import { useTranslation } from 'react-i18next'
 import { actions } from '@/state/actions'
-import { client } from '@/state/client'
+import type { NekoApp } from '@/state/app'
 import { tell } from '@/state/dialogs'
+import { useNeko } from '@/state/provider'
 import { i18n } from '@/i18n'
 import { Button } from '@/components/ui/button'
 import logo from '@/assets/images/logo.svg'
@@ -16,15 +17,17 @@ const params = new URL(location.href).searchParams
 // ?pwd= invite (e.g. neko-rooms links): used for the first login attempt only, like the legacy
 // client; after that the form asks for a password, so a stale invite is not a dead end
 let invite = params.get('pwd')
-const loginOnce = (user: string, password: string) =>
-  actions
+const loginOnce = (neko: NekoApp, user: string, password: string) =>
+  actions(neko)
     .login(user, password)
-    .catch((err) => tell(i18n.t('connect.error'), err.message))
+    .catch((err) => tell(neko.app, i18n.t('connect.error'), err.message))
     .finally(() => (invite = null))
 
 // the login screen, and the "Connect" screen of a logged-in viewer without a connection
 export function Connect() {
   const { t } = useTranslation()
+  const neko = useNeko()
+  const { client, app } = neko
   const { status, authenticated } = useStore(
     client.store,
     useShallow((s) => ({ status: s.connection.status, authenticated: s.authenticated })),
@@ -53,13 +56,13 @@ export function Connect() {
     }
     // always, even if a saved session is being resumed at the same time: the link wins
     // (login() drops the resumed websocket), and this must not depend on which answer is first
-    if (invite && params.get('usr')) loginOnce(params.get('usr')!, invite).finally(settled)
-  }, [])
+    if (invite && params.get('usr')) loginOnce(neko, params.get('usr')!, invite).finally(settled)
+  }, [neko, client])
 
   const login = (e: FormEvent) => {
     e.preventDefault()
-    if (!displayname) return tell(t('connect.error'), t('connect.empty_displayname'))
-    loginOnce(displayname, invite ?? password).finally(settled)
+    if (!displayname) return tell(app, t('connect.error'), t('connect.empty_displayname'))
+    loginOnce(neko, displayname, invite ?? password).finally(settled)
   }
 
   const connecting = status === 'connecting'
@@ -85,7 +88,7 @@ export function Connect() {
             <Button className="my-[5px]" type="submit">
               {t('connect.connect')}
             </Button>
-            <Button className="my-[5px]" type="button" onClick={actions.logout}>
+            <Button className="my-[5px]" type="button" onClick={actions(neko).logout}>
               {t('logout')}
             </Button>
           </form>

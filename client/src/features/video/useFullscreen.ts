@@ -1,8 +1,9 @@
 import { useEffect, useState, type RefObject } from 'react'
-import { client } from '@/state/client'
+import { useClient } from '@/state/provider'
 
 // fullscreen on `target`; while fullscreen the keyboard lock lets Esc/Alt+Tab etc. reach the remote
 export function useFullscreen(target: RefObject<HTMLElement | null>) {
+  const client = useClient()
   const [fullscreen, setFullscreen] = useState(false)
   useEffect(() => {
     const onFs = () => {

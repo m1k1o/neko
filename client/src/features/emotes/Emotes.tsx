@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { useStore } from 'zustand'
-import { actions } from '@/state/actions'
-import { client, selectMuted } from '@/state/client'
+import { useActions } from '@/state/actions'
+import { selectMuted } from '@/state/app'
 import { EMOTES } from '@/state/emotes'
+import { useClient } from '@/state/provider'
 import { SmilePlus } from 'lucide-react'
 import { IconButton } from '@/components/IconButton'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
@@ -10,6 +11,8 @@ import './sprites.css'
 
 // the emote bar in the room menu: recently used emotes and the picker
 export function Emotes() {
+  const client = useClient()
+  const actions = useActions()
   const muted = useStore(client.store, selectMuted)
   const [recent, setRecent] = useState<string[]>(() => {
     try {

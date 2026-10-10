@@ -1,4 +1,5 @@
 import { createStore } from 'zustand/vanilla'
+import { scoped } from '@/state/app'
 
 export interface ChatLine {
   seq: number // unique and increasing: the React key, and what scrolling follows
@@ -9,19 +10,23 @@ export interface ChatLine {
   created: Date
 }
 
-export const chat = createStore(() => ({
-  lines: [] as ChatLine[],
-  // messages received, for the unread badge
-  texts: 0,
-  // chat/init: the server's chat plugin is on
-  enabled: true,
-  emojiReady: false,
-  emojiRecent: [] as string[],
-}))
+export const createChatStore = () =>
+  createStore(() => ({
+    lines: [] as ChatLine[],
+    // messages received, for the unread badge
+    texts: 0,
+    // chat/init: the server's chat plugin is on
+    enabled: true,
+    emojiReady: false,
+    emojiRecent: [] as string[],
+  }))
+export type ChatStore = ReturnType<typeof createChatStore>
+// the store of an instance (`chat(neko)`, `chat(useNeko())`)
+export const chat = scoped(createChatStore)
 
 // chat keeps the last CHAT_LIMIT lines in memory; nothing is persisted
 const CHAT_LIMIT = 1000
 let seq = 0
-export function push(line: Omit<ChatLine, 'seq'>) {
-  chat.setState((s) => ({ lines: [...s.lines, { ...line, seq: ++seq }].slice(-CHAT_LIMIT) }))
+export function push(store: ChatStore, line: Omit<ChatLine, 'seq'>) {
+  store.setState((s) => ({ lines: [...s.lines, { ...line, seq: ++seq }].slice(-CHAT_LIMIT) }))
 }

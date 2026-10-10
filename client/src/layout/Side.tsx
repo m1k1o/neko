@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { useStore } from 'zustand'
 import { useTranslation } from 'react-i18next'
 import { SlidersHorizontal } from 'lucide-react'
-import { app } from '@/state/app'
+import { useApp } from '@/state/provider'
 import { remember } from '@/state/storage'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Settings } from '@/features/settings/Settings'
@@ -30,6 +30,7 @@ export function Side() {
 // the tabs available now
 function Panel({ tabs }: { tabs: PluginTab[] }) {
   const { t } = useTranslation()
+  const app = useApp()
   const wanted = useStore(app, (s) => s.tab)
   // a remembered tab that is not available now falls back to the first one
   const tab = tabs.some((x) => x.id === wanted) ? wanted : tabs[0].id

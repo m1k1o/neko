@@ -1,11 +1,16 @@
 import type { ComponentType } from 'react'
 import type { LucideIcon } from 'lucide-react'
 import type { Session } from '@m1k1o/neko'
+import type { NekoApp } from '@/state/app'
 
 // What a plugin can contribute to the GUI. The registry (index.ts) wires it in: its tab, header
 // items and member-menu entries go into the slots the layout renders (`side.tab`, `header.item`,
 // `member.menu`), server events starting with `${id}/` reach onEvent, and its strings are the
 // namespace `ns`. Adding a plugin is a folder and one line in the registry.
+//
+// The instance (`NekoApp`: the client, the GUI store, the bus) comes first to every callback;
+// hooks and components read it from the context (`useNeko()`, `useClient()`). A plugin keeps its
+// own store per instance with `scoped()` (chat/store.ts).
 export interface Plugin {
   // also the prefix of its server events (`chat/*`, `filetransfer/*`)
   id: string
@@ -15,10 +20,10 @@ export interface Plugin {
   topBar?: PluginTopBarItem[]
   memberMenu?: PluginMemberMenuItem[]
   // its server events, typed by PluginEvents; the rest parameter narrows the payload on the event:
-  // `onEvent(...[event, payload]) { if (event === 'chat/init') store.setState({ enabled: payload.enabled }) }`
-  onEvent?: (...args: PluginEventArgs) => void
-  // called once at start-up, before the connection: subscribe to client events here
-  init?: () => void
+  // `onEvent(neko, ...[event, payload]) { if (event === 'chat/init') store.setState({ enabled: payload.enabled }) }`
+  onEvent?: (neko: NekoApp, ...args: PluginEventArgs) => void
+  // called once per instance at start-up, before the connection: subscribe to client events here
+  init?: (neko: NekoApp) => void
 }
 
 // the server's plugin events (server/internal/plugins/*/types.go) and their payloads
@@ -73,6 +78,6 @@ export interface PluginMemberMenuItem {
   id: string
   // a hook; default: always
   useVisible?: (member: Session) => boolean
-  label: (member: Session) => string
-  onClick: (member: Session) => void
+  label: (neko: NekoApp, member: Session) => string
+  onClick: (neko: NekoApp, member: Session) => void
 }

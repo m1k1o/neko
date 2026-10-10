@@ -1,6 +1,5 @@
 // emotes: the names the sprite sheet knows, showing one, sending one
-import { app } from './app'
-import { client, isMuted } from './client'
+import { isMuted, type AppStore, type NekoApp } from './app'
 
 export const EMOTES = [
   'anger',
@@ -52,13 +51,13 @@ export const EMOTES = [
   'sad',
 ]
 
-export function showEmote(emote: string) {
+export function showEmote(app: AppStore, emote: string) {
   if (app.getState().settings.ignore_emotes || document.visibilityState === 'hidden') return
   app.setState((s) => ({ emotes: { ...s.emotes, [Math.random().toString(36).slice(2)]: emote } }))
 }
 
 // the emote's animation is over
-export function hideEmote(id: string) {
+export function hideEmote(app: AppStore, id: string) {
   app.setState((s) => {
     const emotes = { ...s.emotes }
     delete emotes[id]
@@ -66,8 +65,8 @@ export function hideEmote(id: string) {
   })
 }
 
-export function sendEmote(emote: string) {
-  if (isMuted()) return
+export function sendEmote({ client, app }: NekoApp, emote: string) {
+  if (isMuted(client)) return
   client.sendBroadcast('emote', emote)
-  showEmote(emote) // server does not echo broadcasts to the sender
+  showEmote(app, emote) // server does not echo broadcasts to the sender
 }

@@ -1,11 +1,13 @@
 import { useEffect, useRef } from 'react'
 import { hideEmote } from '@/state/emotes'
+import { useApp } from '@/state/provider'
 import './sprites.css'
 
 const rnd = (a: number, b: number) => a + Math.random() * (b - a)
 
 // one emote flying over the video: seven copies float up and fade, like the legacy anime.js version
 export function Emote({ id, type }: { id: string; type: string }) {
+  const app = useApp()
   const ref = useRef<HTMLDivElement>(null)
   useEffect(() => {
     const anims = [...ref.current!.children].map((el, i) => {
@@ -20,8 +22,8 @@ export function Emote({ id, type }: { id: string; type: string }) {
         { duration: rnd(1000, 2000), easing: 'ease-in-out', fill: 'forwards' },
       ).finished
     })
-    Promise.all(anims).then(() => hideEmote(id))
-  }, [id])
+    Promise.all(anims).then(() => hideEmote(app, id))
+  }, [app, id])
   return (
     <div ref={ref} className="absolute right-0 bottom-0 h-[10%] w-1/4" data-testid="emote-animation">
       {Array.from({ length: 7 }, (_, i) => (

@@ -5,9 +5,8 @@ import { selectIsAdmin } from '@m1k1o/neko'
 import { useTranslation } from 'react-i18next'
 import { Play, Square } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { actions } from '@/state/actions'
-import { app } from '@/state/app'
-import { client } from '@/state/client'
+import { useActions } from '@/state/actions'
+import { useNeko } from '@/state/provider'
 import { setSetting } from '@/state/settings'
 import { Button } from '@/components/ui/button'
 import { Banned } from './Banned'
@@ -18,6 +17,9 @@ const field =
 
 export function Settings() {
   const { t } = useTranslation()
+  const neko = useNeko()
+  const { client, app } = neko
+  const actions = useActions()
   const {
     settings: s,
     broadcast,
@@ -49,7 +51,7 @@ export function Settings() {
           className="peer h-0 w-0 opacity-0"
           aria-label={t(`setting.${name}`)}
           checked={s[key]}
-          onChange={(e) => setSetting(key, e.target.checked)}
+          onChange={(e) => setSetting(neko, key, e.target.checked)}
         />
         <span className="absolute inset-0 cursor-pointer rounded-[34px] bg-background-tertiary transition-all duration-200 peer-checked:bg-style-primary" />
         <span className="absolute bottom-[3px] left-[3px] h-[18px] w-[18px] cursor-pointer rounded-full bg-white shadow-[0_2px_4px_rgba(0,0,0,0.3)] transition-all duration-300 peer-checked:translate-x-[18px]" />
@@ -70,7 +72,7 @@ export function Settings() {
               max="5"
               step="1"
               value={s.scroll_sensitivity}
-              onChange={(e) => setSetting('scroll_sensitivity', Number(e.target.value))}
+              onChange={(e) => setSetting(neko, 'scroll_sensitivity', Number(e.target.value))}
             />
           </label>
         </li>
@@ -88,7 +90,7 @@ export function Settings() {
                 'w-full max-w-full cursor-pointer appearance-none pr-[5px] pl-2.5 text-right text-[12px] hover:border-background-secondary [&_option]:bg-background-tertiary [&_option]:font-normal [&_option]:text-text-normal',
               )}
               value={s.keyboard_layout}
-              onChange={(e) => setSetting('keyboard_layout', e.target.value)}
+              onChange={(e) => setSetting(neko, 'keyboard_layout', e.target.value)}
             >
               {Object.entries(keyboardLayouts).map(([code, name]) => (
                 <option key={code} value={code}>

@@ -1,11 +1,12 @@
 import { useStore } from 'zustand'
 import { Monitor } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { client } from '@/state/client'
+import { useClient } from '@/state/provider'
 import { DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu'
 
 // the screen sizes the server offers, a menu left of the icon that opens it
 export function Resolution() {
+  const client = useClient()
   const { size, configurations } = useStore(client.store, (s) => s.screen)
   const { width, height, rate } = size
   return (

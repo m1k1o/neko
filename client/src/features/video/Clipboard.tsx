@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { useStore } from 'zustand'
-import { client } from '@/state/client'
+import { useClient } from '@/state/provider'
 import { PopoverContent } from '@/components/ui/popover'
 
 // textarea fallback for browsers that cannot read the local clipboard (see Stage.tsx), a popover
 // left of the icon that opens it
 export function Clipboard() {
+  const client = useClient()
   const remote = useStore(client.store, (s) => s.control.clipboard?.text ?? '')
   const [text, setText] = useState(remote)
   useEffect(() => setText(remote), [remote]) // follows what is copied on the remote while open

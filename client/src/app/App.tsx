@@ -1,9 +1,7 @@
 import { useStore } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
 import { useTranslation } from 'react-i18next'
-import { app } from '@/state/app'
-import { client } from '@/state/client'
-import { setSetting } from '@/state/settings'
+import { useNeko } from '@/state/provider'
 import { useSlot } from '@/plugins'
 import { WebRTCTransport } from '@m1k1o/neko'
 import { cn } from '@/lib/utils'
@@ -22,10 +20,9 @@ const params = new URL(location.href).searchParams
 const cast = !!params.get('cast')
 const videoOnly = cast || !!params.get('embed')
 
-if (cast) setSetting('chat_sound', false)
-
 export function App() {
   const { t } = useTranslation()
+  const { client, app } = useNeko()
   const connected = useStore(client.store, (s) => s.connection.status === 'connected')
   const { side, about } = useStore(
     app,

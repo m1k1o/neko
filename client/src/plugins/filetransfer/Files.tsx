@@ -3,8 +3,8 @@ import { useStore } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
 import { selectIsAdmin } from '@m1k1o/neko'
 import { useTranslation } from 'react-i18next'
-import { client } from '@/state/client'
 import { ask } from '@/state/dialogs'
+import { useNeko } from '@/state/provider'
 import { Check, Download, File, FileUp, Folder, RefreshCw, RotateCw, Trash2, TriangleAlert, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { IconButton } from '@/components/IconButton'
@@ -26,8 +26,11 @@ const size = (bytes?: number) => {
 
 export function Files() {
   const { t } = useTranslation()
+  const neko = useNeko()
+  const { client, app } = neko
+  const uploadsStore = store(neko)
   const { files: f, uploads } = useStore(
-    store,
+    uploadsStore,
     useShallow((s) => ({ files: s.files!, uploads: s.uploads })),
   )
   const admin = useStore(client.store, selectIsAdmin)
@@ -53,20 +56,26 @@ export function Files() {
     } else if (selecting) toggle(item.name)
   }
   const deleteOne = (n: string) =>
-    ask(t('files:delete_title', { name: n }), t('files:delete_confirm')).then((ok) => ok && fileDelete(n))
+    ask(app, t('files:delete_title', { name: n }), t('files:delete_confirm')).then((ok) => ok && fileDelete(neko, n))
   const deleteSelected = async () => {
-    if (!(await ask(t('files:delete_selected_title'), t('files:delete_selected_confirm', { count: selected.length }))))
+    if (
+      !(await ask(
+        app,
+        t('files:delete_selected_title'),
+        t('files:delete_selected_confirm', { count: selected.length }),
+      ))
+    )
       return
     const names = selected
     stopSelecting()
-    for (const n of names) await fileDelete(n)
+    for (const n of names) await fileDelete(neko, n)
   }
 
   return (
     <div className="flex max-w-full flex-1 flex-col">
       <div className={cn(box, 'mx-2.5 mt-2.5 flex flex-row p-2 font-semibold')}>
         <p>{f.root_dir}</p>
-        <IconButton label="Refresh" className="ml-auto" onClick={refresh}>
+        <IconButton label="Refresh" className="ml-auto" onClick={() => refresh(neko)}>
           <RotateCw className="size-3.5" />
         </IconButton>
       </div>
@@ -140,7 +149,7 @@ export function Files() {
               {/* native download: the browser's download manager shows progress */}
               {!selecting && item.type !== 'dir' && canDownload && (
                 <a
-                  href={fileUrl(item.name)}
+                  href={fileUrl(neko, item.name)}
                   download={item.name}
                   aria-label={`Download ${item.name}`}
                   title={`Download ${item.name}`}
@@ -169,7 +178,9 @@ export function Files() {
               <span>{t('files:uploads')}</span>
               <IconButton
                 label="Clear finished uploads"
-                onClick={() => store.setState((s) => ({ uploads: s.uploads.filter((u) => u.status === 'inprogress') }))}
+                onClick={() =>
+                  uploadsStore.setState((s) => ({ uploads: s.uploads.filter((u) => u.status === 'inprogress') }))
+                }
               >
                 <X className="size-3.5" />
               </IconButton>
@@ -216,7 +227,7 @@ export function Files() {
               data-testid="upload"
               onDragOver={(e) => (e.preventDefault(), setDrag(true))}
               onDragLeave={(e) => (e.preventDefault(), setDrag(false))}
-              onDrop={(e) => (e.preventDefault(), setDrag(false), upload(e.dataTransfer.files))}
+              onDrop={(e) => (e.preventDefault(), setDrag(false), upload(neko, e.dataTransfer.files))}
               onClick={() => input.current!.click()}
             >
               <FileUp className="m-2.5 size-14 self-center" />
@@ -230,7 +241,7 @@ export function Files() {
               data-testid="upload-input"
               aria-label={t('files:upload_here')}
               onChange={(e) => {
-                if (e.target.files) upload(e.target.files)
+                if (e.target.files) upload(neko, e.target.files)
                 e.target.value = '' // so the same file can be chosen again
               }}
             />

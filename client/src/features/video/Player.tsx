@@ -1,10 +1,11 @@
 import { useEffect, useRef } from 'react'
 import type { StreamTransport } from '@m1k1o/neko'
-import { overlay } from '@/state/client'
+import { useNeko } from '@/state/provider'
 
 // the stream, with the input overlay on top: the transport draws into the box first, then the
 // overlay, which keeps the box letterboxed to the remote screen
 export function Player({ transport }: { transport: StreamTransport }) {
+  const { overlay } = useNeko()
   const box = useRef<HTMLDivElement>(null)
   useEffect(() => {
     const detach = transport.attach(box.current!)
@@ -13,7 +14,7 @@ export function Player({ transport }: { transport: StreamTransport }) {
       detachOverlay()
       detach()
     }
-  }, [transport])
+  }, [transport, overlay])
   return (
     <div className="absolute inset-0 overflow-hidden">
       <div ref={box} style={{ position: 'relative' }} />

@@ -1,25 +1,24 @@
 // viewer settings: writing one, pushing them into the core, and the URL parameters that set them
-import { app, type ViewerSettings } from './app'
-import { client } from './client'
+import type { NekoApp, ViewerSettings } from './app'
 import { get, set } from './storage'
 
-const params = new URL(location.href).searchParams
-
-export function setSetting<K extends keyof ViewerSettings>(key: K, value: ViewerSettings[K]) {
-  app.setState((s) => ({ settings: { ...s.settings, [key]: value } }))
+export function setSetting<K extends keyof ViewerSettings>(neko: NekoApp, key: K, value: ViewerSettings[K]) {
+  neko.app.setState((s) => ({ settings: { ...s.settings, [key]: value } }))
   set(key, value)
-  applySettings()
+  applySettings(neko)
 }
 
-export function applySettings() {
+export function applySettings({ client, app }: NekoApp) {
   const { settings } = app.getState()
   client.setScrollSensitivity(settings.scroll_sensitivity)
   client.setScrollInverse(settings.scroll_invert)
   client.setKeyboard(settings.keyboard_layout)
 }
 
-// start-up: what the URL and the stored settings say, applied once before the connection
-export function initSettings() {
+// start-up (createNekoApp): what the URL and the stored settings say, applied once before the connection
+export function initSettings(neko: NekoApp) {
+  const { client, app } = neko
+  const params = new URL(location.href).searchParams
   for (const k of ['displayname', 'password']) localStorage.removeItem(k) // the Vue client's stored login
 
   if (params.get('mute_chat') !== null)
@@ -29,10 +28,10 @@ export function initSettings() {
   if (params.has('scroll')) {
     const px = parseInt(params.get('scroll') || '', 10)
     if (!isNaN(px))
-      setSetting('scroll_sensitivity', Math.max(-5, Math.min(5, Math.round(2 * Math.log2(Math.max(1, px) / 10)))))
+      setSetting(neko, 'scroll_sensitivity', Math.max(-5, Math.min(5, Math.round(2 * Math.log2(Math.max(1, px) / 10)))))
   }
 
-  applySettings()
+  applySettings(neko)
 
   // volume survives a reload, as in the Vue client (same key and 0..100 scale); a ?volume= url
   // parameter overrides it for this visit
@@ -55,4 +54,7 @@ export function initSettings() {
     .then((r) => r.json())
     .then((l) => app.setState({ keyboardLayouts: l }))
     .catch(() => {})
+
+  // ?cast= (video only, for a stream) is silent
+  if (params.get('cast')) setSetting(neko, 'chat_sound', false)
 }

@@ -3,7 +3,7 @@ import { selectIsAdmin } from '@m1k1o/neko'
 import { useTranslation } from 'react-i18next'
 import { File } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { client } from '@/state/client'
+import { useNeko } from '@/state/provider'
 import { IconButton } from '@/components/IconButton'
 import { store } from './store'
 import { locked, toggleLock } from './actions'
@@ -12,7 +12,9 @@ import { locked, toggleLock } from './actions'
 // users only see its state
 export function FileLock() {
   const { t } = useTranslation()
-  const enabled = useStore(store, (s) => !!s.files?.enabled)
+  const neko = useNeko()
+  const { client } = neko
+  const enabled = useStore(store(neko), (s) => !!s.files?.enabled)
   const admin = useStore(client.store, selectIsAdmin)
   const isLocked = useStore(client.store, (s) => locked(s.settings))
   if (!enabled) return null
@@ -28,7 +30,7 @@ export function FileLock() {
         data-testid="lock-files"
         data-locked={isLocked || undefined}
         aria-disabled={!admin}
-        onClick={() => admin && toggleLock()}
+        onClick={() => admin && toggleLock(neko)}
       >
         <File className="size-4" />
       </IconButton>

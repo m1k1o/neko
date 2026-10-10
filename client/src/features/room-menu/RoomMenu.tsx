@@ -2,14 +2,14 @@ import { useStore } from 'zustand'
 import { selectIsAdmin } from '@m1k1o/neko'
 import { useTranslation } from 'react-i18next'
 import { CircleHelp, Shield } from 'lucide-react'
-import { app } from '@/state/app'
-import { client } from '@/state/client'
+import { useNeko } from '@/state/provider'
 import { IconButton } from '@/components/IconButton'
 import { langs, setLang, type Lang } from '@/i18n'
 
 // about, the admin badge and the language picker, left of the controls
 export function RoomMenu() {
   const { t, i18n } = useTranslation()
+  const { client, app } = useNeko()
   const admin = useStore(client.store, selectIsAdmin)
   return (
     <ul className="ml-2.5 self-center">

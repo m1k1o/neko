@@ -10,14 +10,15 @@ vi.mock('sonner', () => ({
   toast: { info: vi.fn(), success: vi.fn(), warning: vi.fn(), error: vi.fn(), dismiss: vi.fn() },
 }))
 const { toast: sonner } = await import('sonner')
-const { app } = await import('./app')
+const { createAppStore } = await import('./app')
+const app = createAppStore()
 const { ask, tell, toast, dismissToasts } = await import('./dialogs')
 
 describe('ask() and tell()', () => {
   beforeEach(() => app.setState({ dialog: null }))
 
   it('ask() puts a cancellable warning in the store and resolves with the answer', async () => {
-    const p = ask('Kick bob?', 'Really?')
+    const p = ask(app, 'Kick bob?', 'Really?')
     const d = app.getState().dialog!
     expect(d).toMatchObject({ title: 'Kick bob?', text: 'Really?', icon: 'warning', cancel: true })
     d.resolve(true)
@@ -25,7 +26,7 @@ describe('ask() and tell()', () => {
   })
 
   it('tell() is an error without cancel by default, with the icon given', async () => {
-    const p = tell('Oops', undefined, 'info')
+    const p = tell(app, 'Oops', undefined, 'info')
     const d = app.getState().dialog!
     expect(d).toMatchObject({ title: 'Oops', icon: 'info', cancel: false })
     expect(d.text).toBeUndefined()
@@ -34,8 +35,8 @@ describe('ask() and tell()', () => {
   })
 
   it('a new dialog resolves the one still open with false', async () => {
-    const first = ask('one')
-    const second = tell('two')
+    const first = ask(app, 'one')
+    const second = tell(app, 'two')
     await expect(first).resolves.toBe(false)
     expect(app.getState().dialog!.title).toBe('two')
     app.getState().dialog!.resolve(true)

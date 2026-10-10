@@ -7,12 +7,13 @@ It speaks only the v3 API (`/api/ws` + REST), so it works with `NEKO_LEGACY=fals
 client/
   core/          @m1k1o/neko: the framework-free client library, its own npm package (core/README.md)
   src/
-    app/         the shell: App, ErrorBoundary, boot.ts (start-up order), the #neko grid
+    main.tsx     start-up: the strings, the instance (createNekoApp), the plugins, the connection, the render under <NekoProvider>
+    app/         the shell: App, ErrorBoundary, the #neko grid
     layout/      Header, Side (the tab bar), RoomBar (members, room menu, controls, emotes)
     features/    one folder per feature: video, members, controls, room-menu, emotes, settings, connect, about
     plugins/     the registry (index.ts: the list, the slots, event dispatch), the contract (types.ts), chat/, filetransfer/
     components/  shared pieces: IconButton, Avatar, Dialog, EachHook; ui/ holds the shadcn/ui kit (dialog, menus, popover, tabs, button, sonner)
-    state/       the app store, the NekoClient instance, actions, settings, dialogs, event wiring
+    state/       the instance (neko.ts: createNekoApp, app.ts: the GUI store and NekoApp), the provider and hooks, actions, settings, dialogs, event wiring
     i18n/        i18next: initI18n(), setLang(), the loader of the locale files
     lib/         cn(): class names with Tailwind conflicts resolved (clsx + tailwind-merge)
     locales/     the strings, one folder per language: common.json, chat.json, files.json
@@ -34,9 +35,11 @@ and `lib` below everything but `design`. In practice:
   the contract in `@/plugins/types`).
 - The core is imported only from its entry point, `@m1k1o/neko`, never from a path into `core/`.
 - State is zustand: the core's `client.store`, the GUI's `app` store (`state/app.ts`) and each plugin's
-  `store.ts`. A component selects what it renders, `useStore(client.store, (s) => s.video.playing)`
-  (`useShallow` for several fields; the core's `selectControlling`, `selectIsAdmin`, `selectSession` for
-  the computed values), and re-renders only when that value changes. Everything outside React reads
+  `store.ts`, all per instance (see Composition). A component gets the instance from the context
+  (`useClient()`, `useApp()`, `useNeko()`), selects what it renders,
+  `useStore(useClient().store, (s) => s.video.playing)` (`useShallow` for several fields; the core's
+  `selectControlling`, `selectIsAdmin`, `selectSession` for the computed values), and re-renders only
+  when that value changes. Everything outside React takes the instance as its first argument, reads
   `store.getState()` and writes `store.setState()` with a new object, never in place.
 - Where two layers must talk without importing each other, there is a store or a signal in `state/`:
   the room's event lines ("bob took the controls") are emitted on `state/bus.ts` and shown by the chat
@@ -44,6 +47,57 @@ and `lib` below everything but `design`. In practice:
 
 `npm run check` enforces this: `eslint.config.js` holds one `no-restricted-imports` rule set per
 layer, and `tools/cycles.mjs` fails on an import cycle (type-only imports excepted).
+
+## Composition
+
+There is no global client. `createNekoApp()` (`src/state/neko.ts`) makes one instance of the GUI, a
+`NekoApp` (`src/state/app.ts`): the `NekoClient` (WebRTC transport, `autologin`, `autoconnect`,
+`autoplay` from the viewer settings), its input `Overlay`, the GUI store `app` and the `bus`, with the
+event wiring (server events to event lines and toasts, `state/events.ts`) and the settings (stored
+and from the URL, `state/settings.ts`) applied. `main.tsx` composes the page in the order the pieces
+need:
+
+```tsx
+const ready = initI18n(plugins.map((p) => p.ns)) // the strings of the active language
+const neko = createNekoApp() // the client, its wiring, the settings
+initPlugins(neko) // the slots, the event dispatch, each plugin's init
+ready.then(() => {
+  neko.client.setUrl(location.href) // the connection: resume a saved session and connect
+  createRoot(root).render(
+    <NekoProvider neko={neko}>
+      <App />
+    </NekoProvider>,
+  )
+})
+```
+
+`<NekoProvider>` (`src/state/provider.tsx`) puts the instance in a React context; a component reads it
+with `useNeko()` (the whole `NekoApp`), `useClient()`, `useApp()` (the GUI store) and `useActions()`
+(`state/actions.ts`, the room actions bound to the instance), and the rest, `setSetting(neko, ...)`,
+`ask(app, ...)`, `api(neko, ...)`, a plugin's `store(neko)`, takes it as the first argument. Two
+instances on one page share nothing but the page (the strings, the URL parameters, `localStorage`).
+
+To embed the GUI in another React app, compose the same pieces and render `<App />` under a provider
+(`?embed=1` and `?cast=1` on the page's URL still give the video-only layouts, for an iframe or a kiosk):
+
+```tsx
+import { initI18n } from '@/i18n'
+import { plugins, initPlugins } from '@/plugins'
+import { createNekoApp } from '@/state/neko'
+import { NekoProvider } from '@/state/provider'
+import { App } from '@/app/App'
+
+await initI18n(plugins.map((p) => p.ns))
+const neko = createNekoApp()
+initPlugins(neko)
+neko.client.setUrl('https://neko.example.com/')
+
+export const Room = () => (
+  <NekoProvider neko={neko}>
+    <App />
+  </NekoProvider>
+)
+```
 
 ## Design
 
@@ -93,30 +147,37 @@ add an icon: import it from `lucide-react`.
 A plugin is a folder under `src/plugins/` with its components, styles, store and actions, described
 by one object (`src/plugins/types.ts`); its strings are a namespace of their own under `src/locales/`:
 
-| field        |                                                                                                                                                                                     |
-| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`         | the prefix of its server events: `message` events named `<id>/...` reach `onEvent`                                                                                                  |
-| `ns`         | the namespace of its strings, `src/locales/<lang>/<ns>.json` in every language, used as `t('<ns>:key')`                                                                             |
-| `tab`        | a side-panel tab: `id` (the remembered tab), `icon`, `label` (the key of its name, `chat:tab`), `component`, the hooks `useVisible()` and `useBadge()` (unread count)               |
-| `topBar`     | items for the header menu; each renders its own `<li>` or nothing                                                                                                                   |
-| `memberMenu` | entries of another member's context menu: the hook `useVisible(member)`, `label(member)`, `onClick(member)`                                                                         |
-| `onEvent`    | `(...[event, payload])` for its server events, typed by `PluginEvents` (event name to payload, `src/plugins/types.ts`): `if (event === 'chat/init')` narrows `payload` to its shape |
-| `init`       | called once at start-up, before the connection: subscribe to `client.events`, the bus, ...                                                                                          |
+| field        |                                                                                                                                                                                           |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`         | the prefix of its server events: `message` events named `<id>/...` reach `onEvent`                                                                                                        |
+| `ns`         | the namespace of its strings, `src/locales/<lang>/<ns>.json` in every language, used as `t('<ns>:key')`                                                                                   |
+| `tab`        | a side-panel tab: `id` (the remembered tab), `icon`, `label` (the key of its name, `chat:tab`), `component`, the hooks `useVisible()` and `useBadge()` (unread count)                     |
+| `topBar`     | items for the header menu; each renders its own `<li>` or nothing                                                                                                                         |
+| `memberMenu` | entries of another member's context menu: the hook `useVisible(member)`, `label(member)`, `onClick(member)`                                                                               |
+| `onEvent`    | `(neko, ...[event, payload])` for its server events, typed by `PluginEvents` (event name to payload, `src/plugins/types.ts`): `if (event === 'chat/init')` narrows `payload` to its shape |
+| `init`       | `(neko)`, called once per instance at start-up, before the connection: subscribe to `neko.client.events`, `neko.bus`, ...                                                                 |
 
-`src/plugins/index.ts` lists the plugins of the build in side-panel order, and `initPlugins()`
-(called from `app/boot.ts`) wires them in that order: it puts each `tab`, `topBar` item and
-`memberMenu` entry into its slot (`registerSlot('side.tab' | 'header.item' | 'member.menu', item)`),
-builds the event dispatch (a map from the `id` prefix to the plugin, one lookup per message) and runs
-each `init`. The side panel, the header and the app shell read the slots with `useSlot(name)`
+Every callback gets the instance (`neko: NekoApp`, see Composition) as its first argument, the member
+menu's `label(neko, member)` and `onClick(neko, member)` included; the hooks (`useVisible`, `useBadge`)
+and the components read it from the context (`useNeko()`, `useClient()`). A plugin's store is one per
+instance: `export const store = scoped(() => createStore(...))` (`scoped`, `src/state/app.ts`) and
+`store(neko)` is the instance's.
+
+`src/plugins/index.ts` lists the plugins of the build in side-panel order, and `initPlugins(neko)`
+(called from `main.tsx`) wires them in that order: it puts each `tab`, `topBar` item and
+`memberMenu` entry into its slot (`registerSlot('side.tab' | 'header.item' | 'member.menu', item)`,
+once: the slots are the build's, not the instance's), builds the event dispatch (a map from the `id`
+prefix to the plugin, one lookup per message) on the instance's `client.events` and runs each
+`init(neko)`. The side panel, the header and the app shell read the slots with `useSlot(name)`
 (`useVisible` and `useBadge` are hooks over the plugin's store, so each runs in a small component of
 its own and re-renders only that).
 
 To add a plugin:
 
 1. Create `src/plugins/<name>/` with an `index.ts` exporting the plugin object, its components (Tailwind
-   classes, the tokens of `src/index.css`), and a `store.ts` made with zustand's `createStore()` (components
-   select from it with `useStore(store, (s) => s.field)`, the rest reads `store.getState()` and writes
-   `store.setState()`).
+   classes, the tokens of `src/index.css`), and a `store.ts` made with `scoped(() => createStore(...))`
+   (components select from it with `useStore(store(useNeko()), (s) => s.field)`, the rest reads
+   `store(neko).getState()` and writes `store(neko).setState()`).
 2. Add its strings as `src/locales/<lang>/<ns>.json` in every language (see i18n).
 3. Add the import and the entry to `src/plugins/index.ts`.
 
@@ -173,15 +234,15 @@ cd client/dev && ./serve        # http://localhost:3001, /api proxied to the bac
 NEKO_URL=http://localhost:3000 npm run dev
 ```
 
-| script                |                                                                                                                                                                    |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `npm run build`       | type-check + production build into `dist/`, then `tools/dist.check.mjs` (no language in the main chunk)                                                            |
-| `npm run build:core`  | build the `@m1k1o/neko` package into `core/dist/`                                                                                                                  |
-| `npm run check`       | types, formatting, lint (hooks, layering), import cycles, the tests, the built core package                                                                        |
-| `npm test`            | unit tests (vitest): the core's connection state machine and store, the chat's markdown parser, the i18n runtime and locale files, the plugin registry; no browser |
-| `npm run format`      | prettier                                                                                                                                                           |
-| `npm run build:emoji` | regenerate the emoji data `public/emoji.json` (names, characters, groups, keywords; `tools/emoji.ts`)                                                              |
-| `npm run test:e2e`    | two-user browser test against a running server, see below                                                                                                          |
+| script                |                                                                                                                                                                                                               |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run build`       | type-check + production build into `dist/`, then `tools/dist.check.mjs` (no language in the main chunk)                                                                                                       |
+| `npm run build:core`  | build the `@m1k1o/neko` package into `core/dist/`                                                                                                                                                             |
+| `npm run check`       | types, formatting, lint (hooks, layering), import cycles, the tests, the built core package                                                                                                                   |
+| `npm test`            | unit tests (vitest): the core's connection state machine and store, the chat's markdown parser, the i18n runtime and locale files, the plugin registry, an instance and two of them, the provider; no browser |
+| `npm run format`      | prettier                                                                                                                                                                                                      |
+| `npm run build:emoji` | regenerate the emoji data `public/emoji.json` (names, characters, groups, keywords; `tools/emoji.ts`)                                                                                                         |
+| `npm run test:e2e`    | two-user browser test against a running server, see below                                                                                                                                                     |
 
 ### e2e
 
