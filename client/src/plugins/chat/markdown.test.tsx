@@ -152,6 +152,7 @@ test('hostile input: renders in milliseconds or falls back to the text, never th
     '*'.repeat(FORMAT_LIMIT),
     '* '.repeat(FORMAT_LIMIT / 2),
     '> '.repeat(FORMAT_LIMIT / 2),
+    '>'.repeat(FORMAT_LIMIT), // nested quotes: micromark's cost grows with depth²
     '- '.repeat(FORMAT_LIMIT / 2),
     '['.repeat(FORMAT_LIMIT),
     '<'.repeat(FORMAT_LIMIT),

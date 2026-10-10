@@ -281,7 +281,7 @@ Playwright's, start it with `--headless --remote-debugging-port=9222 --user-data
   http(s)/mailto, images and raw HTML shown as the text they were typed as (nothing in a message loads
   anything). Compared with the hand-written parser before: the Discord `>>>` block quote is gone
   (`> ` quotes stay, and continue until a blank line), and CommonMark's headings, lists, nested
-  quotes and tables are in. Messages over 10,000 characters, or one the renderer fails on, are shown
+  quotes and tables are in. Messages over 512 characters (the server's default `chat.max_length`), or one the renderer fails on, are shown
   as plain text.
 - Short-lived list items (uploads, emote animations) are keyed by 64 random bits from `crypto.getRandomValues()`, which
   every origin has (`crypto.randomUUID()` needs a secure context, and plain http on a LAN is not one).

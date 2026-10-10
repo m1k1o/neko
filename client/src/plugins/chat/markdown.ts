@@ -9,9 +9,11 @@ import remarkBreaks from 'remark-breaks'
 import remarkGfm from 'remark-gfm'
 import { emoji } from './emoji'
 
-// Above FORMAT_LIMIT characters a message is shown as plain text (formatting a message that long
-// is not worth a stalled renderer); so is one the renderer fails on (Markdown.tsx)
-export const FORMAT_LIMIT = 10_000
+// Above FORMAT_LIMIT characters a message is shown as plain text; so is one the renderer fails on
+// (Markdown.tsx). The limit is the server's default chat.max_length, so only a server configured
+// for longer messages ever hits it, and a hostile message stays cheap (nested quotes cost micromark
+// about depth²: 2000 bare `>` took 130 ms, 5000 `> ` 420 ms)
+export const FORMAT_LIMIT = 512
 
 // only these schemes become links; everything else stays text (javascript:, data:, relative, ...)
 export function safeUrl(href: string): string | null {
