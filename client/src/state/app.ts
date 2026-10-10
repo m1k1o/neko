@@ -1,9 +1,9 @@
-// The GUI's own state next to the core's `client.state`: viewer settings, the side panel, toasts,
-// dialogs. A zustand store: components select from it (`useStore(app, (s) => s.side)`), everything
+// The GUI's own state next to the core's `client.state`: viewer settings, the side panel, the
+// dialog. A zustand store: components select from it (`useStore(app, (s) => s.side)`), everything
 // else reads `app.getState()` and writes with `app.setState()`. Plugins keep their own stores.
 import { createStore } from 'zustand/vanilla'
 import { get } from './storage'
-import type { Dialog, Toast } from './dialogs'
+import type { Dialog } from './dialogs'
 
 export const defaults = {
   // v3 scroll steps -5..5; new key because the legacy `scroll` (1..100 px clamp) meant something else
@@ -34,7 +34,6 @@ export const app = createStore(() => ({
   // openinapp/init: links can be opened on the remote desktop
   openInApp: false,
   emotes: {} as Record<string, string>,
-  toasts: [] as Toast[],
   ignored: {} as Record<string, boolean>,
   broadcast: { active: false, url: '' },
   keyboardLayouts: {} as Record<string, string>,

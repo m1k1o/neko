@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef } from 'react'
 import { useStore } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
 import { selectControlling, selectIsAdmin } from '@m1k1o/neko'
@@ -7,7 +7,9 @@ import { cn } from '@/lib/utils'
 import { actions } from '@/state/actions'
 import { app } from '@/state/app'
 import { client, overlay } from '@/state/client'
-import { a11y, closeOn } from '@/components/a11y'
+import { a11y } from '@/components/a11y'
+import { DropdownMenu, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { Popover, PopoverTrigger } from '@/components/ui/popover'
 import { Emote } from '@/features/emotes'
 import { Resolution } from './Resolution'
 import { Clipboard } from './Clipboard'
@@ -36,19 +38,12 @@ export function Stage({ hideControls, extraControls }: { hideControls: boolean; 
   )
   const emotes = useStore(app, (s) => s.emotes)
   const player = useRef<HTMLDivElement>(null)
-  const [menu, setMenu] = useState<null | 'resolution' | 'clipboard'>(null)
   const { fullscreen, request: requestFullscreen } = useFullscreen(player)
   const syncClipboard = useClipboardSync()
   const pip = usePip()
 
-  useEffect(() => (menu ? closeOn(() => setMenu(null)) : undefined), [menu])
-
   const controlLocked = lockedControls && !admin
   const { playing, playable, muted, mutedByAutoplay } = video
-  const open = (m: 'resolution' | 'clipboard') => (e: React.MouseEvent) => (
-    e.stopPropagation(),
-    setMenu(menu === m ? null : m)
-  )
   // usually the extra controls are only shown on a phone
   const extra = extraControls ? '' : 'phone:block hidden'
 
@@ -94,12 +89,16 @@ export function Stage({ hideControls, extraControls }: { hideControls: boolean; 
             </li>
             {admin && (
               <li className="mb-2.5 last:mb-0">
-                <i
-                  {...a11y('Screen resolution')}
-                  data-testid="resolution-open"
-                  onClick={open('resolution')}
-                  className={`fas fa-desktop ${icon}`}
-                />
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <i
+                      {...a11y('Screen resolution')}
+                      data-testid="resolution-open"
+                      className={`fas fa-desktop ${icon}`}
+                    />
+                  </DropdownMenuTrigger>
+                  <Resolution />
+                </DropdownMenu>
               </li>
             )}
             {!controlLocked && !implicit && (
@@ -121,12 +120,12 @@ export function Stage({ hideControls, extraControls }: { hideControls: boolean; 
           <ul className="absolute right-5 bottom-[15px]">
             {hosting && !canReadClipboard && (
               <li className="mb-2.5 last:mb-0">
-                <i
-                  {...a11y('Clipboard')}
-                  data-testid="clipboard-open"
-                  onClick={open('clipboard')}
-                  className={`fas fa-clipboard ${icon}`}
-                />
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <i {...a11y('Clipboard')} data-testid="clipboard-open" className={`fas fa-clipboard ${icon}`} />
+                  </PopoverTrigger>
+                  <Clipboard />
+                </Popover>
               </li>
             )}
             {pip.canPip && (
@@ -151,8 +150,6 @@ export function Stage({ hideControls, extraControls }: { hideControls: boolean; 
             )}
           </ul>
         )}
-        {menu === 'resolution' && admin && <Resolution onPick={() => setMenu(null)} />}
-        {menu === 'clipboard' && hosting && <Clipboard />}
       </div>
     </div>
   )

@@ -9,7 +9,7 @@ import { WebRTCTransport } from '@m1k1o/neko'
 import { cn } from '@/lib/utils'
 import logo from '@/assets/images/logo.svg'
 import { Dialog } from '@/components/Dialog'
-import { Toasts } from '@/components/Toasts'
+import { Toaster } from '@/components/ui/sonner'
 import { Header } from '@/layout/Header'
 import { Side } from '@/layout/Side'
 import { RoomBar } from '@/layout/RoomBar'
@@ -77,7 +77,7 @@ export function App() {
       {!videoOnly && <MemberMenu items={memberMenu} />}
       {expanded && <Side />}
       {!connected && <Connect />}
-      {!videoOnly && <Toasts />}
+      {!videoOnly && <Toaster />}
       {about && <About />}
       <Dialog />
     </div>

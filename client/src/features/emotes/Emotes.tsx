@@ -3,8 +3,8 @@ import { useStore } from 'zustand'
 import { actions } from '@/state/actions'
 import { client, selectMuted } from '@/state/client'
 import { EMOTES } from '@/state/emotes'
-import { a11y, closeOn } from '@/components/a11y'
-import { ContextMenu } from '@/components/ContextMenu'
+import { a11y } from '@/components/a11y'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import './sprites.css'
 
 // the emote bar in the room menu: recently used emotes and the picker
@@ -17,10 +17,7 @@ export function Emotes() {
       return []
     }
   })
-  const [picker, setPicker] = useState<{ x: number; y: number } | null>(null)
   const repeat = useRef(0)
-
-  useEffect(() => (picker ? closeOn(() => setPicker(null)) : undefined), [picker])
 
   const pick = (emote: string) => {
     if (!recent.includes(emote)) {
@@ -56,40 +53,25 @@ export function Emotes() {
           </li>
         ))}
         <li className="mx-[5px] text-[24px]">
-          <i
-            className="fas fa-grin-beam cursor-pointer"
-            data-testid="emotes-open"
-            {...a11y('Emotes')}
-            onClick={(e) => {
-              e.stopPropagation()
-              // opened with the keyboard: there is no pointer position, use the icon's
-              const r = e.currentTarget.getBoundingClientRect()
-              setPicker(e.detail === 0 ? { x: r.left, y: r.top } : { x: e.clientX, y: e.clientY })
-            }}
-          />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <i className="fas fa-grin-beam cursor-pointer" data-testid="emotes-open" {...a11y('Emotes')} />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              className="flex w-[220px] flex-wrap items-center justify-center"
+              side="top"
+              align="end"
+              data-testid="emotes-menu"
+            >
+              {EMOTES.filter((e) => !recent.includes(e)).map((e) => (
+                <DropdownMenuItem key={e} className="p-[5px]" aria-label={e} title={e} onSelect={() => pick(e)}>
+                  <div className={`emote ${e}`} data-emote={e} />
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </li>
       </ul>
-      {picker && (
-        <ContextMenu
-          className="flex w-[220px] flex-wrap items-center justify-center"
-          data-testid="emotes-menu"
-          style={{ left: Math.min(picker.x, innerWidth - 260), top: Math.max(picker.y - 260, 10) }}
-        >
-          {EMOTES.filter((e) => !recent.includes(e)).map((e) => (
-            <li
-              key={e}
-              className="relative rounded-[3px] p-[5px] hover:bg-background-modifier-hover hover:text-interactive-hover focus:bg-background-modifier-hover focus:outline-0"
-            >
-              <div
-                className={`emote ${e} cursor-pointer`}
-                data-emote={e}
-                {...a11y(e, 'menuitem')}
-                onClick={() => pick(e)}
-              />
-            </li>
-          ))}
-        </ContextMenu>
-      )}
     </div>
   )
 }

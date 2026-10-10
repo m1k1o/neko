@@ -7,6 +7,7 @@ import { client, selectMuted } from '@/state/client'
 import { cn } from '@/lib/utils'
 import { a11y } from '@/components/a11y'
 import { Avatar } from '@/components/Avatar'
+import { Popover, PopoverTrigger } from '@/components/ui/popover'
 import { chat } from './store'
 import { sendChat } from './actions'
 import { loadEmoji } from './emoji'
@@ -124,13 +125,16 @@ export function Chat() {
               onChange={(e) => setText(e.target.value)}
               onKeyDown={onKeyDown}
             />
-            {picker && <EmojiPicker onPick={onEmoji} onClose={() => setPicker(false)} />}
-            <i
-              className="fas fa-laugh mt-2 mr-[5px] h-5 w-5 cursor-pointer text-[20px]"
-              data-testid="emoji-open"
-              {...a11y('Emoji')}
-              onClick={(e) => (e.stopPropagation(), setPicker(!picker))}
-            />
+            <Popover open={picker} onOpenChange={setPicker}>
+              <PopoverTrigger asChild>
+                <i
+                  className="fas fa-laugh mt-2 mr-[5px] h-5 w-5 cursor-pointer text-[20px]"
+                  data-testid="emoji-open"
+                  {...a11y('Emoji')}
+                />
+              </PopoverTrigger>
+              {picker && <EmojiPicker onPick={onEmoji} />}
+            </Popover>
           </div>
         </div>
       )}

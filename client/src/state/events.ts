@@ -3,7 +3,7 @@ import type { Settings } from '@m1k1o/neko'
 import { app } from './app'
 import { client, name, hostId, isLocked, type LockResource } from './client'
 import { actions } from './actions'
-import { toast, tell } from './dialogs'
+import { toast, tell, dismissToasts } from './dialogs'
 import { bus, event } from './bus'
 import { EMOTES, showEmote } from './emotes'
 import { t } from '@/i18n'
@@ -69,7 +69,7 @@ client.store.subscribe(
   (status, old) => {
     if (status === 'connecting' && old === 'connected') toast(t('connection.reconnecting'), undefined, 'warning')
     if (status === 'connected') {
-      app.setState({ toasts: [] })
+      dismissToasts()
       toast(t('connection.connected'), undefined, 'success')
     }
   },

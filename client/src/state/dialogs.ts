@@ -1,4 +1,5 @@
-// modal dialogs (legacy SweetAlert look) and toasts (legacy vue-notification look)
+// modal dialogs (legacy SweetAlert look, components/Dialog) and toasts (sonner, components/ui/sonner)
+import { toast as sonner } from 'sonner'
 import { app } from './app'
 
 export interface Dialog {
@@ -7,13 +8,6 @@ export interface Dialog {
   icon: 'warning' | 'error' | 'info'
   cancel: boolean
   resolve: (ok: boolean) => void
-}
-
-export interface Toast {
-  id: number
-  kind: 'info' | 'success' | 'warning' | 'error'
-  title: string
-  text?: string
 }
 
 // ask() resolves true on confirm, tell() when dismissed
@@ -26,11 +20,12 @@ export const tell = (title: string, text?: string, icon: Dialog['icon'] = 'error
   dialog({ title, text, icon, cancel: false })
 
 let idSeq = 0
-// unique ids for toasts and other short-lived list items
+// unique ids for short-lived list items (uploads)
 export const nextId = () => ++idSeq
 
-export function toast(title: string, text?: string, kind: Toast['kind'] = 'info') {
-  const id = nextId()
-  app.setState((s) => ({ toasts: [...s.toasts, { id, kind, title, text }] }))
-  setTimeout(() => app.setState((s) => ({ toasts: s.toasts.filter((x) => x.id !== id) })), 5000)
+export type ToastKind = 'info' | 'success' | 'warning' | 'error'
+// a toast of a kind for 5 s, like the legacy client's
+export function toast(title: string, text?: string, kind: ToastKind = 'info') {
+  sonner[kind](title, { description: text, duration: 5000 })
 }
+export const dismissToasts = () => sonner.dismiss()

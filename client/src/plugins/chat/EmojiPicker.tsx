@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { useStore } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
 import { cn } from '@/lib/utils'
-import { a11y, closeOn } from '@/components/a11y'
+import { a11y } from '@/components/a11y'
+import { PopoverContent } from '@/components/ui/popover'
 import { chat } from './store'
 import { emoji, pickedEmoji } from './emoji'
 
@@ -21,7 +22,7 @@ const GROUP_ICON: Record<string, string> = {
   flags: 'fa-flag',
 }
 
-export function EmojiPicker({ onPick, onClose }: { onPick: (name: string) => void; onClose: () => void }) {
+export function EmojiPicker({ onPick }: { onPick: (name: string) => void }) {
   const { recent, ready } = useStore(
     chat,
     useShallow((s) => ({ recent: s.emojiRecent, ready: s.emojiReady })),
@@ -29,11 +30,8 @@ export function EmojiPicker({ onPick, onClose }: { onPick: (name: string) => voi
   const [search, setSearch] = useState('')
   const [hovered, setHovered] = useState('')
   const [active, setActive] = useState(0)
-  const ref = useRef<HTMLDivElement>(null)
   const scroll = useRef<HTMLDivElement>(null)
   const groupEls = useRef<(HTMLLIElement | null)[]>([])
-
-  useEffect(() => closeOn(onClose), [onClose])
 
   const groups = [{ id: 'recent', name: 'Recent', list: recent }, ...(ready ? emoji.groups : [])]
   const q = search.trim().toLowerCase()
@@ -66,11 +64,12 @@ export function EmojiPicker({ onPick, onClose }: { onPick: (name: string) => voi
   }
 
   return (
-    <div
-      className="absolute right-[5px] bottom-[75px] z-[10000] flex h-[350px] w-[300px] flex-col overflow-hidden rounded-[5px] bg-background-secondary shadow-elevation-high"
+    <PopoverContent
+      side="top"
+      align="end"
+      sideOffset={8}
+      className="flex h-[350px] w-[300px] flex-col overflow-hidden rounded-[5px] bg-background-secondary shadow-elevation-high"
       data-testid="emoji-picker"
-      ref={ref}
-      onClick={(e) => e.stopPropagation()}
     >
       <div className="shrink-0 border-b border-background-tertiary p-2.5">
         <div className="relative flex flex-col overflow-hidden rounded-[5px] text-interactive-normal">
@@ -79,7 +78,6 @@ export function EmojiPicker({ onPick, onClose }: { onPick: (name: string) => voi
             className="border-0 bg-background-floating p-[5px] leading-4 font-medium text-interactive-normal placeholder:font-medium placeholder:text-text-muted"
             type="text"
             data-testid="emoji-search"
-            autoFocus
             value={search}
             placeholder={hovered ? `:${hovered}:` : ''}
             onChange={(e) => setSearch(e.target.value)}
@@ -133,6 +131,6 @@ export function EmojiPicker({ onPick, onClose }: { onPick: (name: string) => voi
           ))}
         </ul>
       </div>
-    </div>
+    </PopoverContent>
   )
 }
