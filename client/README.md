@@ -275,5 +275,7 @@ Playwright's, start it with `--headless --remote-debugging-port=9222 --user-data
 - Settings use the same `localStorage` keys and format as the previous client, so preferences carry
   over. Scroll sensitivity now uses v3 steps (-5..5, key `scroll_sensitivity`); `?scroll=` is mapped.
 - Chat markdown is parsed to React elements (no HTML strings); links are limited to http(s)/mailto.
+- Short-lived list items (uploads, emote animations) are keyed by `crypto.randomUUID()` (a secure
+  context: https or localhost).
 - File downloads are plain links so the browser streams them; the session token is added to the
   URL only when the server runs without cookies.

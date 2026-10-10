@@ -20,10 +20,6 @@ export const ask = (app: AppStore, title: string, text?: string) =>
 export const tell = (app: AppStore, title: string, text?: string, icon: Dialog['icon'] = 'error') =>
   dialog(app, { title, text, icon, cancel: false })
 
-let idSeq = 0
-// unique ids for short-lived list items (uploads)
-export const nextId = () => ++idSeq
-
 export type ToastKind = 'info' | 'success' | 'warning' | 'error'
 // a toast of a kind for 5 s, like the legacy client's
 export function toast(title: string, text?: string, kind: ToastKind = 'info') {

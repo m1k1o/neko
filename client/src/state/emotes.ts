@@ -53,7 +53,7 @@ export const EMOTES = [
 
 export function showEmote(app: AppStore, emote: string) {
   if (app.getState().settings.ignore_emotes || document.visibilityState === 'hidden') return
-  app.setState((s) => ({ emotes: { ...s.emotes, [Math.random().toString(36).slice(2)]: emote } }))
+  app.setState((s) => ({ emotes: { ...s.emotes, [crypto.randomUUID()]: emote } }))
 }
 
 // the emote's animation is over
