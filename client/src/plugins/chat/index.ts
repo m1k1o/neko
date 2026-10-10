@@ -9,23 +9,28 @@ import type { Plugin } from '@/plugins/types'
 import { Chat } from './Chat'
 import { chat as store, push } from './store'
 import { mute, mutedByMe } from './actions'
-import { locale } from './locale'
 
 export const chat: Plugin = {
   id: 'chat',
-  locale,
-  tab: { id: 'chat', icon: 'fa-comment-alt', component: Chat, useBadge: () => useStore(store, (s) => s.texts) },
+  ns: 'chat',
+  tab: {
+    id: 'chat',
+    icon: 'fa-comment-alt',
+    label: 'chat:tab',
+    component: Chat,
+    useBadge: () => useStore(store, (s) => s.texts),
+  },
   memberMenu: [
     {
       id: 'chat-mute',
       useVisible: () => useStore(client.store, selectIsAdmin),
-      label: (m) => t(isMuted(m.id) ? 'context.unmute' : 'context.mute'),
+      label: (m) => t(isMuted(m.id) ? 'chat:unmute' : 'chat:mute'),
       onClick(m) {
         const muted = isMuted(m.id)
         const which = muted ? 'unmute' : 'mute'
         ask(
-          t(`context.confirm.${which}_title`, { name: m.profile.name }),
-          t(`context.confirm.${which}_text`, { name: m.profile.name }),
+          t(`chat:confirm.${which}_title`, { name: m.profile.name }),
+          t(`chat:confirm.${which}_text`, { name: m.profile.name }),
         ).then((ok) => ok && mute(m.id, !muted))
       },
     },
@@ -73,7 +78,7 @@ export const chat: Plugin = {
           id: '',
           name: by,
           type: 'event',
-          content: t(now ? 'notifications.unmuted' : 'notifications.muted', { name: name(id) }),
+          content: t(now ? 'chat:unmuted' : 'chat:muted', { name: name(id) }),
           created: new Date(),
         })
       }

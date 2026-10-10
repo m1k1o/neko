@@ -1,0 +1,22 @@
+{
+  "tab": "Pliki",
+  "locks": {
+    "lock": "Zablokuj transfer plików (dla użytkowników)",
+    "unlock": "Odblokuj transfer plików (dla użytkowników)",
+    "locked": "Transfer plików zablokowany (dla użytkowników)",
+    "unlocked": "Transfer plików odblokowany (dla użytkowników)",
+    "notif_locked": "zablokował transfer plików",
+    "notif_unlocked": "odblokował transfer plików"
+  },
+  "uploads": "Wysyłane pliki",
+  "upload_here": "Kliknij lub przeciągnij pliki tutaj, aby przesłać",
+  "delete": "Usuń",
+  "delete_title": "Usunąć \"{{name}}\"?",
+  "delete_confirm": "Czy na pewno chcesz usunąć ten plik?",
+  "select": "Zaznacz",
+  "select_all": "Zaznacz wszystko",
+  "unselect_all": "Odznacz wszystko",
+  "cancel": "Anuluj",
+  "delete_selected_title": "Usunąć zaznaczone pliki?",
+  "delete_selected_confirm": "Czy na pewno chcesz usunąć {{count}} zaznaczonych plików?"
+}

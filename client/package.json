@@ -7,7 +7,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && vite build",
+    "build": "tsc --noEmit && vite build && node tools/dist.check.mjs",
     "preview": "vite preview",
     "test": "vitest run",
     "test:e2e": "node e2e.mjs",
@@ -20,8 +20,10 @@
   "dependencies": {
     "@fortawesome/fontawesome-free": "^6.7.2",
     "emoji-datasource": "6.1.1",
+    "i18next": "^26.4.2",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "react-i18next": "^17.0.16",
     "zustand": "^5.0.15"
   },
   "devDependencies": {

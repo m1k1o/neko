@@ -3,7 +3,6 @@
 // else reads `app.getState()` and writes with `app.setState()`. Plugins keep their own stores.
 import { createStore } from 'zustand/vanilla'
 import { get } from './storage'
-import { detectLang, type Lang } from '@/i18n/locale'
 import type { Dialog, Toast } from './dialogs'
 
 export const defaults = {
@@ -28,7 +27,6 @@ function load(): ViewerSettings {
 const params = new URL(location.href).searchParams
 
 export const app = createStore(() => ({
-  lang: get<string>('lang', detectLang()) as Lang,
   settings: load(),
   side: params.has('show_side') ? params.get('show_side') === '1' : get('side', false),
   // id of the side panel's tab (a plugin's or 'settings')

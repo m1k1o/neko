@@ -2,13 +2,14 @@ import type { ComponentType } from 'react'
 import type { Session } from '@m1k1o/neko'
 
 // What a plugin can contribute to the GUI. The registry (index.ts) wires it in: the side panel
-// shows its tab, the header its top-bar items, the member menu its items, and server events
-// starting with `${id}/` reach onEvent. Adding a plugin is a folder and one line in the registry.
+// shows its tab, the header its top-bar items, the member menu its items, server events starting
+// with `${id}/` reach onEvent, and its strings are the namespace `ns`. Adding a plugin is a folder
+// and one line in the registry.
 export interface Plugin {
   // also the prefix of its server events (`chat/*`, `filetransfer/*`)
   id: string
-  // strings per language (`{ en: { side: { chat: 'Chat' } }, de: ... }`), merged into the i18n table
-  locale?: Record<string, object>
+  // the namespace of its strings, src/locales/<lang>/<ns>.json, used as `<ns>:key`
+  ns: string
   tab?: PluginTab
   topBar?: PluginTopBarItem[]
   memberMenu?: PluginMemberMenuItem[]
@@ -20,10 +21,12 @@ export interface Plugin {
 // `useVisible` and `useBadge` are hooks (they select from the plugin's store with useStore), so
 // what they return re-renders only what reads it; the GUI runs each in a component of its own
 export interface PluginTab {
-  // the stored `tab` value and the `side.<id>` label
+  // the stored `tab` value
   id: string
   // Font Awesome class of the tab icon
   icon: string
+  // the i18n key of its label (`chat:tab`)
+  label: string
   component: ComponentType
   // default: always
   useVisible?: () => boolean

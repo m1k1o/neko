@@ -2,7 +2,6 @@
 import { app, type ViewerSettings } from './app'
 import { client } from './client'
 import { get, set } from './storage'
-import { langs, setLang, htmlLang, type Lang } from '@/i18n'
 
 const params = new URL(location.href).searchParams
 
@@ -25,10 +24,6 @@ export function initSettings() {
 
   if (params.get('mute_chat') !== null)
     app.setState((s) => ({ settings: { ...s.settings, chat_sound: params.get('mute_chat') !== '1' } }))
-
-  document.documentElement.lang = htmlLang(app.getState().lang)
-  const urlLang = params.get('lang') as Lang | null
-  if (urlLang && langs.includes(urlLang)) setLang(urlLang)
 
   // legacy ?scroll= was a 1..100 px clamp (default 10); map it onto v3 steps around the same default
   if (params.has('scroll')) {

@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
 import type { MemberData } from '@m1k1o/neko'
 import { useStore } from 'zustand'
+import { useTranslation } from 'react-i18next'
 import { actions } from '@/state/actions'
 import { app } from '@/state/app'
-import { t } from '@/i18n'
 
 // accounts with can_login=false (see actions.ban); empty unless the provider stores accounts
 export function Banned() {
+  const { t } = useTranslation()
   const [banned, setBanned] = useState<MemberData[] | null>(null)
   const bans = useStore(app, (s) => s.bans)
   const load = () => actions.members().then((all) => setBanned(all.filter((m) => m.profile?.can_login === false)))

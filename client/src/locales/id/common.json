@@ -1,0 +1,93 @@
+{
+  "logout": "keluar",
+  "unsupported": "peramban web ini tidak mendukung WebRTC",
+  "admin_loggedin": "Anda masuk sebagai admin",
+  "you": "Anda",
+  "somebody": "Seseorang",
+  "side": {
+    "settings": "Pengaturan"
+  },
+  "connect": {
+    "login_title": "Silakan Masuk",
+    "invitation_title": "Anda telah diundang ke ruangan ini",
+    "displayname": "Masukkan nama tampilan Anda",
+    "password": "Kata Sandi",
+    "connect": "Sambungkan",
+    "error": "Gagal Masuk",
+    "empty_displayname": "Nama tampilan tidak boleh kosong."
+  },
+  "context": {
+    "ignore": "Abaikan",
+    "unignore": "Jangan Abaikan",
+    "release": "Paksa Lepas Kendali",
+    "take": "Paksa Ambil Kendali",
+    "give": "Berikan Kendali",
+    "kick": "Keluarkan",
+    "confirm": {
+      "kick_title": "Keluarkan {{name}}?",
+      "kick_text": "Apakah Anda yakin ingin mengeluarkan {{name}}?",
+      "ban_title": "Blokir {{name}}?",
+      "button_yes": "Ya",
+      "button_cancel": "Batal"
+    }
+  },
+  "controls": {
+    "release": "Lepaskan Kendali",
+    "request": "Minta Kendali",
+    "lock": "Kunci Kendali",
+    "unlock": "Buka Kunci Kendali",
+    "has": "Anda memiliki kendali",
+    "hasnot": "Anda tidak memiliki kendali"
+  },
+  "locks": {
+    "control": {
+      "lock": "Kunci Kendali (untuk pengguna)",
+      "unlock": "Buka Kunci Kendali (untuk pengguna)",
+      "locked": "Kendali Terkunci (untuk pengguna)",
+      "unlocked": "Kendali Terbuka (untuk pengguna)",
+      "notif_locked": "mengunci kendali untuk pengguna",
+      "notif_unlocked": "membuka kendali untuk pengguna"
+    },
+    "login": {
+      "lock": "Kunci Ruangan (untuk pengguna)",
+      "unlock": "Buka Kunci Ruangan (untuk pengguna)",
+      "locked": "Ruangan Terkunci (untuk pengguna)",
+      "unlocked": "Ruangan Terbuka (untuk pengguna)",
+      "notif_locked": "mengunci ruangan",
+      "notif_unlocked": "membuka ruangan"
+    }
+  },
+  "setting": {
+    "scroll": "Sensitivitas Gulir",
+    "scroll_invert": "Gulir Terbalik",
+    "autoplay": "Putar Video Otomatis",
+    "ignore_emotes": "Abaikan Emoticon",
+    "chat_sound": "Nyalakan Bunyi Obrolan",
+    "keyboard_layout": "Tata Letak Papan Tik",
+    "broadcast_title": "Siaran Langsung"
+  },
+  "connection": {
+    "reconnecting": "Menyambungkan ulang...",
+    "connected": "Tersambung",
+    "disconnected": "Terputus",
+    "kicked": "Anda telah dikeluarkan dari ruangan ini.",
+    "button_confirm": "Oke"
+  },
+  "notifications": {
+    "connected": "{{name}} tersambung",
+    "disconnected": "{{name}} terputus",
+    "controls_taken": "{{name}} mengambil kendali",
+    "controls_taken_force": "mengambil kendali secara paksa",
+    "controls_taken_steal": "mengambil kendali dari {{name}}",
+    "controls_released": "{{name}} melepaskan kendali",
+    "controls_released_force": "melepaskan kendali secara paksa",
+    "controls_released_steal": "melepaskan kendali dari {{name}}",
+    "controls_given": "memberikan kendali kepada {{name}}",
+    "controls_has": "{{name}} memiliki kendali",
+    "controls_has_alt": "Tapi saya sudah memberitahu orang itu bahwa Anda menginginkannya",
+    "controls_requesting": "{{name}} meminta kendali",
+    "resolution": "mengubah resolusi menjadi {{width}}x{{height}}@{{rate}}",
+    "banned": "memblokir {{name}}",
+    "kicked": "mengeluarkan {{name}}"
+  }
+}

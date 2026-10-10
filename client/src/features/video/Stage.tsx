@@ -2,11 +2,11 @@ import { useEffect, useRef, useState } from 'react'
 import { useStore } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
 import { selectControlling, selectIsAdmin } from '@m1k1o/neko'
+import { useTranslation } from 'react-i18next'
 import { actions } from '@/state/actions'
 import { app } from '@/state/app'
 import { client, overlay } from '@/state/client'
 import { a11y, closeOn } from '@/components/a11y'
-import { t } from '@/i18n'
 import { Emote } from '@/features/emotes'
 import { Resolution } from './Resolution'
 import { Clipboard } from './Clipboard'
@@ -17,6 +17,7 @@ import { usePip } from './usePip'
 import './video.scss'
 
 export function Stage({ hideControls, extraControls }: { hideControls: boolean; extraControls: boolean }) {
+  const { t } = useTranslation()
   const { admin, hosting, hosted, implicit, lockedControls, video } = useStore(
     client.store,
     useShallow((s) => ({

@@ -1,13 +1,14 @@
 import { useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { app } from '@/state/app'
 import { closeOn } from '@/components/a11y'
 import { Logo } from '@/components/Logo'
-import { t } from '@/i18n'
 import './about.scss'
 
 const close = () => app.setState({ about: false })
 
 export function About() {
+  const { t } = useTranslation()
   useEffect(() => closeOn(close), [])
   return (
     <div className="about" onClick={(e) => e.target === e.currentTarget && close()}>

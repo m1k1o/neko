@@ -1,0 +1,14 @@
+{
+  "tab": "채팅",
+  "mute": "뮤트",
+  "unmute": "뮤트 해제",
+  "confirm": {
+    "mute_title": "{{name}}님을 뮤트할까요?",
+    "mute_text": "정말로 {{name}}님을 뮤트할까요?",
+    "unmute_title": "{{name}}님의 뮤트를 해제할까요?",
+    "unmute_text": "정말로 {{name}}님의 뮤트를 해제할까요?"
+  },
+  "muted": "{{name}} 님이 뮤트됐습니다",
+  "unmuted": "{{name}} 님의 뮤트가 해제됐습니다",
+  "send_a_message": "메세지 보내기"
+}

@@ -1,13 +1,14 @@
 import { useEffect, useRef } from 'react'
 import { useStore } from 'zustand'
+import { useTranslation } from 'react-i18next'
 import { app } from '@/state/app'
-import { t } from '@/i18n'
 import './dialog.scss'
 
 const DIALOG_ICON = { warning: 'fa-exclamation-triangle', error: 'fa-times-circle', info: 'fa-info-circle' }
 
 // the one modal dialog, shown for ask() and tell() (state/dialogs.ts)
 export function Dialog() {
+  const { t } = useTranslation()
   const d = useStore(app, (s) => s.dialog)
   const ref = useRef<HTMLDialogElement>(null)
 

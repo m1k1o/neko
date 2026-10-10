@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useStore } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
 import { selectControlling, selectIsAdmin, type Session } from '@m1k1o/neko'
+import { useTranslation } from 'react-i18next'
 import { actions } from '@/state/actions'
 import { app } from '@/state/app'
 import { client } from '@/state/client'
@@ -9,7 +10,6 @@ import { ask } from '@/state/dialogs'
 import { a11y, closeOn } from '@/components/a11y'
 import { Avatar } from '@/components/Avatar'
 import { ContextMenu } from '@/components/ContextMenu'
-import { t } from '@/i18n'
 import type { PluginMemberMenuItem } from '@/plugins/types'
 
 const confirmThen = (title: string, text: string, fn: () => void) => ask(title, text).then((ok) => ok && fn())
@@ -31,6 +31,7 @@ function Item({ item, member }: { item: PluginMemberMenuItem; member: Session })
 
 // rendered by App outside .room-container, which is hidden at narrow widths where the chat still works
 export function MemberMenu({ items }: { items: PluginMemberMenuItem[] }) {
+  const { t } = useTranslation()
   const menu = useStore(app, (s) => s.menu)
   const [bannable, setBannable] = useState(false)
   useEffect(() => closeOn(() => app.setState({ menu: null })), [])

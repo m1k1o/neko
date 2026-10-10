@@ -2,10 +2,10 @@ import { useRef, useState } from 'react'
 import { useStore } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
 import { selectIsAdmin } from '@m1k1o/neko'
+import { useTranslation } from 'react-i18next'
 import { client } from '@/state/client'
 import { ask } from '@/state/dialogs'
 import { a11y } from '@/components/a11y'
-import { t } from '@/i18n'
 import { store, type FileItem } from './store'
 import { fileUrl, fileDelete, refresh, upload } from './actions'
 import './files.scss'
@@ -18,6 +18,7 @@ const size = (bytes?: number) => {
 }
 
 export function Files() {
+  const { t } = useTranslation()
   const { files: f, uploads } = useStore(
     store,
     useShallow((s) => ({ files: s.files!, uploads: s.uploads })),
@@ -45,9 +46,9 @@ export function Files() {
     } else if (selecting) toggle(item.name)
   }
   const deleteOne = (n: string) =>
-    ask(t('files.delete_title', { name: n }), t('files.delete_confirm')).then((ok) => ok && fileDelete(n))
+    ask(t('files:delete_title', { name: n }), t('files:delete_confirm')).then((ok) => ok && fileDelete(n))
   const deleteSelected = async () => {
-    if (!(await ask(t('files.delete_selected_title'), t('files.delete_selected_confirm', { count: selected.length }))))
+    if (!(await ask(t('files:delete_selected_title'), t('files:delete_selected_confirm', { count: selected.length }))))
       return
     const names = selected
     stopSelecting()
@@ -65,7 +66,7 @@ export function Files() {
           <div className="left-controls">
             {!selecting ? (
               <span className="action-btn select-toggle" role="button" tabIndex={0} onClick={() => setSelecting(true)}>
-                {t('files.select')}
+                {t('files:select')}
               </span>
             ) : (
               <span
@@ -74,7 +75,7 @@ export function Files() {
                 tabIndex={0}
                 onClick={() => setSelected(allSelected ? [] : plain.map((x) => x.name))}
               >
-                {t(allSelected ? 'files.unselect_all' : 'files.select_all')}
+                {t(allSelected ? 'files:unselect_all' : 'files:select_all')}
               </span>
             )}
           </div>
@@ -82,11 +83,11 @@ export function Files() {
             <div className="right-controls">
               {selected.length > 0 && (
                 <span className="action-btn delete-selected" role="button" tabIndex={0} onClick={deleteSelected}>
-                  <i className="fas fa-trash"></i> {t('files.delete')} ({selected.length})
+                  <i className="fas fa-trash"></i> {t('files:delete')} ({selected.length})
                 </span>
               )}
               <span className="action-btn select-toggle cancel-btn" role="button" tabIndex={0} onClick={stopSelecting}>
-                {t('files.cancel')}
+                {t('files:cancel')}
               </span>
             </div>
           )}
@@ -124,7 +125,7 @@ export function Files() {
               {!selecting && item.type !== 'dir' && canDelete && (
                 <i
                   className="fas fa-trash delete"
-                  {...a11y(`${t('files.delete')} ${item.name}`)}
+                  {...a11y(`${t('files:delete')} ${item.name}`)}
                   onClick={() => deleteOne(item.name)}
                 />
               )}
@@ -136,7 +137,7 @@ export function Files() {
         {uploads.length > 0 && (
           <div className="transfers">
             <p className="transfers-list-header">
-              <span>{t('files.uploads')}</span>
+              <span>{t('files:uploads')}</span>
               <i
                 className="fas fa-xmark remove-transfer"
                 {...a11y('Clear finished uploads')}
@@ -169,11 +170,11 @@ export function Files() {
             onDragOver={(e) => (e.preventDefault(), setDrag(true))}
             onDragLeave={(e) => (e.preventDefault(), setDrag(false))}
             onDrop={(e) => (e.preventDefault(), setDrag(false), upload(e.dataTransfer.files))}
-            {...a11y(t('files.upload_here'))}
+            {...a11y(t('files:upload_here'))}
             onClick={() => input.current!.click()}
           >
             <i className="fas fa-file-arrow-up" />
-            <p>{t('files.upload_here')}</p>
+            <p>{t('files:upload_here')}</p>
             <input
               ref={input}
               type="file"

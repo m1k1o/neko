@@ -13,7 +13,8 @@ client/
     plugins/     the registry (index.ts), the plugin contract (types.ts), chat/, filetransfer/
     components/  shared pieces: Avatar, Dialog, Toasts, Logo, ContextMenu, LockButton, a11y
     state/       the app store, the NekoClient instance, actions, settings, dialogs, event wiring
-    i18n/        t(), setLang(), the locale table (locale/*.ts)
+    i18n/        i18next: initI18n(), setLang(), the loader of the locale files
+    locales/     the strings, one folder per language: common.json, chat.json, files.json
     design/      SCSS tokens (_variables), reset, fonts, global styles
     assets/      images
 ```
@@ -46,34 +47,57 @@ layer, and `tools/cycles.mjs` fails on an import cycle (type-only imports except
 
 ## Plugins
 
-A plugin is a folder under `src/plugins/` with its components, styles, store, actions and locale
-strings, described by one object (`src/plugins/types.ts`):
+A plugin is a folder under `src/plugins/` with its components, styles, store and actions, described
+by one object (`src/plugins/types.ts`); its strings are a namespace of their own under `src/locales/`:
 
-| field        |                                                                                                                                                      |
-| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`         | the prefix of its server events: `message` events named `<id>/...` reach `onEvent`                                                                   |
-| `locale`     | strings per language, merged into the i18n table at start-up (`{ en: { side: { chat: 'Chat' } } }`)                                                  |
-| `tab`        | a side-panel tab: `id` (the `side.<id>` label and the remembered tab), `icon`, `component`, the hooks `useVisible()` and `useBadge()` (unread count) |
-| `topBar`     | items for the header menu; each renders its own `<li>` or nothing                                                                                    |
-| `memberMenu` | entries of another member's context menu: the hook `useVisible(member)`, `label(member)`, `onClick(member)`                                          |
-| `onEvent`    | `(event, payload)` for its server events                                                                                                             |
-| `init`       | called once at start-up, before the connection: subscribe to `client.events`, the bus, ...                                                           |
+| field        |                                                                                                                                                                       |
+| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`         | the prefix of its server events: `message` events named `<id>/...` reach `onEvent`                                                                                    |
+| `ns`         | the namespace of its strings, `src/locales/<lang>/<ns>.json` in every language, used as `t('<ns>:key')`                                                               |
+| `tab`        | a side-panel tab: `id` (the remembered tab), `icon`, `label` (the key of its name, `chat:tab`), `component`, the hooks `useVisible()` and `useBadge()` (unread count) |
+| `topBar`     | items for the header menu; each renders its own `<li>` or nothing                                                                                                     |
+| `memberMenu` | entries of another member's context menu: the hook `useVisible(member)`, `label(member)`, `onClick(member)`                                                           |
+| `onEvent`    | `(event, payload)` for its server events                                                                                                                              |
+| `init`       | called once at start-up, before the connection: subscribe to `client.events`, the bus, ...                                                                            |
 
 `src/plugins/index.ts` lists the plugins of the build in side-panel order. The side panel, the
 header and the member menu render what the registry returns (`useVisible` and `useBadge` are hooks
 over the plugin's store, so each runs in a small component of its own and re-renders only that), and
-`initPlugins()` (called from `app/boot.ts`) merges the strings, installs the event dispatch and runs
-each `init`.
+`initPlugins()` (called from `app/boot.ts`) installs the event dispatch and runs each `init`; the
+plugins' namespaces are loaded with the language by `initI18n`.
 
 To add a plugin:
 
 1. Create `src/plugins/<name>/` with an `index.ts` exporting the plugin object, its components with
-   their `.scss`, a `store.ts` made with zustand's `createStore()` (components select from it with
-   `useStore(store, (s) => s.field)`, the rest reads `store.getState()` and writes `store.setState()`),
-   and a `locale.ts`.
-2. Add the import and the entry to `src/plugins/index.ts`.
+   their `.scss`, and a `store.ts` made with zustand's `createStore()` (components select from it with
+   `useStore(store, (s) => s.field)`, the rest reads `store.getState()` and writes `store.setState()`).
+2. Add its strings as `src/locales/<lang>/<ns>.json` in every language (see i18n).
+3. Add the import and the entry to `src/plugins/index.ts`.
 
-Removing the entry removes the tab, the header items and the event handling; nothing else changes.
+Removing the entry removes the tab, the header items, the menu entries and the event handling;
+nothing else changes (its locale files are then unused).
+
+## i18n
+
+Strings live in `src/locales/<lang>/<ns>.json`: one folder per language, one file per namespace,
+`common.json` (the GUI), `chat.json` and `files.json` (the plugins). The runtime is `i18next` with
+`react-i18next` (`src/i18n/index.ts`): components call `useTranslation()` and render
+`t('side.settings')` or `t('chat:tab')` (`common` is the default namespace, a plugin's is prefixed);
+code outside components imports `t` from `@/i18n`. Values interpolate with `{{name}}`.
+
+Only the active language is downloaded: the files are lazy chunks (`import.meta.glob`), and the
+loader hands i18next the `<lang>/<ns>` it asks for at start-up (`initI18n`, before the first render)
+and on a pick in the room menu (`setLang`, i18next's `changeLanguage`). `en` is the fallback for a
+key a language lacks, so it is loaded next to the active language; the other languages never are
+(`tools/dist.check.mjs`, run by `npm run build`, checks the main chunk carries none). The language is
+kept in `localStorage` (`lang`, the short code) and set by `?lang=`; `<html lang>` gets the BCP 47
+tag (`cn` is `zh-CN`). In development, a key no language has is logged (`i18n: missing ...`).
+
+- Adding a key: add it to `en` and to the other fourteen files. `src/i18n/i18n.test.ts` lists the
+  keys each language lacks today and fails on a new one.
+- Adding a language: a folder with the three files, and its code in `langs` (`src/i18n/index.ts`,
+  the picker order).
+- Not yet: plural forms (`key_one`, `key_other`); the strings with a count keep one form, as before.
 
 ## core
 
@@ -103,15 +127,15 @@ cd client/dev && ./serve        # http://localhost:3001, /api proxied to the bac
 NEKO_URL=http://localhost:3000 npm run dev
 ```
 
-| script                |                                                                                                                   |
-| --------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `npm run build`       | type-check + production build into `dist/`                                                                        |
-| `npm run build:core`  | build the `@m1k1o/neko` package into `core/dist/`                                                                 |
-| `npm run check`       | types, formatting, lint (hooks, layering), import cycles, the tests, the built core package                       |
-| `npm test`            | unit tests (vitest): the core's connection state machine and store, the chat's markdown parser, without a browser |
-| `npm run format`      | prettier                                                                                                          |
-| `npm run build:emoji` | regenerate emoji data (`public/emoji.json`, the chat's sprite sheet)                                              |
-| `npm run test:e2e`    | two-user browser test against a running server, see below                                                         |
+| script                |                                                                                                                                                                    |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `npm run build`       | type-check + production build into `dist/`, then `tools/dist.check.mjs` (no language in the main chunk)                                                            |
+| `npm run build:core`  | build the `@m1k1o/neko` package into `core/dist/`                                                                                                                  |
+| `npm run check`       | types, formatting, lint (hooks, layering), import cycles, the tests, the built core package                                                                        |
+| `npm test`            | unit tests (vitest): the core's connection state machine and store, the chat's markdown parser, the i18n runtime and locale files, the plugin registry; no browser |
+| `npm run format`      | prettier                                                                                                                                                           |
+| `npm run build:emoji` | regenerate emoji data (`public/emoji.json`, the chat's sprite sheet)                                                                                               |
+| `npm run test:e2e`    | two-user browser test against a running server, see below                                                                                                          |
 
 ### e2e
 

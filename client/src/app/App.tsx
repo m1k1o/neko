@@ -1,10 +1,9 @@
-import './boot'
 import { useStore } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
+import { useTranslation } from 'react-i18next'
 import { app } from '@/state/app'
 import { client } from '@/state/client'
 import { setSetting } from '@/state/settings'
-import { t } from '@/i18n'
 import { memberMenu } from '@/plugins'
 import { WebRTCTransport } from '@m1k1o/neko'
 import { Logo } from '@/components/Logo'
@@ -27,14 +26,12 @@ const videoOnly = cast || !!params.get('embed')
 if (cast) setSetting('chat_sound', false)
 
 export function App() {
+  const { t } = useTranslation()
   const connected = useStore(client.store, (s) => s.connection.status === 'connected')
   const { side, about } = useStore(
     app,
     useShallow((s) => ({ side: s.side, about: s.about })),
   )
-  // every component renders strings through t(), which reads the language: a change of it (rare)
-  // re-renders the whole tree from here, so no component selects the language on its own
-  useStore(app, (s) => s.lang)
 
   if (!WebRTCTransport.supported()) {
     return (

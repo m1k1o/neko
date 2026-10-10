@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useStore } from 'zustand'
 import { selectIsAdmin } from '@m1k1o/neko'
+import { useTranslation } from 'react-i18next'
 import { actions } from '@/state/actions'
 import { app } from '@/state/app'
 import { client, isLocked, type LockResource } from '@/state/client'
@@ -8,7 +9,6 @@ import { remember } from '@/state/storage'
 import { a11y } from '@/components/a11y'
 import { Logo } from '@/components/Logo'
 import { LockButton } from '@/components/LockButton'
-import { t } from '@/i18n'
 import { tabs, topBar } from '@/plugins'
 import { EachHook } from '@/components/EachHook'
 import './header.scss'
@@ -16,6 +16,7 @@ import './header.scss'
 const zero = () => 0
 
 export function Header() {
+  const { t } = useTranslation()
   const admin = useStore(client.store, selectIsAdmin)
   const settings = useStore(client.store, (s) => s.settings)
   const side = useStore(app, (s) => s.side)

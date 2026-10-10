@@ -1,11 +1,11 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useStore } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
+import { useTranslation } from 'react-i18next'
 import { openMenu } from '@/state/actions'
 import { client, selectMuted } from '@/state/client'
 import { a11y } from '@/components/a11y'
 import { Avatar } from '@/components/Avatar'
-import { t } from '@/i18n'
 import { chat } from './store'
 import { sendChat } from './actions'
 import { loadEmoji } from './emoji'
@@ -22,6 +22,7 @@ const time = (d: Date) =>
 const MAX_MESSAGE = 512
 
 export function Chat() {
+  const { t } = useTranslation()
   const sessions = useStore(client.store, (s) => s.sessions)
   const muted = useStore(client.store, selectMuted)
   const { lines, enabled } = useStore(
@@ -97,7 +98,7 @@ export function Chat() {
           <div className="text-container">
             <textarea
               ref={input}
-              placeholder={t('send_a_message')}
+              placeholder={t('chat:send_a_message')}
               maxLength={MAX_MESSAGE}
               value={text}
               onChange={(e) => setText(e.target.value)}

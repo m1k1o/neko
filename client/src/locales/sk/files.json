@@ -1,0 +1,22 @@
+{
+  "tab": "Súbory",
+  "locks": {
+    "lock": "Zakázať prenos súborov (pre používateľov)",
+    "unlock": "Povoliť prenos súborov (pre používateľov)",
+    "locked": "Prenos súborov je zakázaný (pre používateľov)",
+    "unlocked": "Prenos súborov je povolený (pre používateľov)",
+    "notif_locked": "zakázal/a prenos súborov",
+    "notif_unlocked": "povolil/a prenos súborov"
+  },
+  "uploads": "Nahrávanie",
+  "upload_here": "Kliknutím alebo pretiahnutím súborov sem ich môžete nahrať",
+  "delete": "Odstrániť",
+  "delete_title": "Odstrániť \"{{name}}\"?",
+  "delete_confirm": "Naozaj chcete odstrániť tento súbor?",
+  "select": "Vybrať",
+  "select_all": "Vybrať všetko",
+  "unselect_all": "Zrušiť výber",
+  "cancel": "Zrušiť",
+  "delete_selected_title": "Odstrániť vybrané súbory?",
+  "delete_selected_confirm": "Naozaj chcete odstrániť {{count}} vybraných súborov?"
+}

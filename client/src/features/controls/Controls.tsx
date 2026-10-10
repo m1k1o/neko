@@ -2,14 +2,15 @@ import { useEffect, useRef, useState } from 'react'
 import { useStore } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
 import { selectControlling, selectIsAdmin, selectSession } from '@m1k1o/neko'
+import { useTranslation } from 'react-i18next'
 import { actions } from '@/state/actions'
 import { client } from '@/state/client'
 import { tell } from '@/state/dialogs'
 import { a11y } from '@/components/a11y'
-import { t } from '@/i18n'
 import './controls.scss'
 
 export function Controls() {
+  const { t } = useTranslation()
   const { admin, hosting, hosted, implicit, lockedControls, localLock, video, connected, canShareMedia } = useStore(
     client.store,
     useShallow((s) => ({

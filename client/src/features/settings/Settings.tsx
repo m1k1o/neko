@@ -2,15 +2,16 @@ import { useEffect, useState } from 'react'
 import { useStore } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
 import { selectIsAdmin } from '@m1k1o/neko'
+import { useTranslation } from 'react-i18next'
 import { actions } from '@/state/actions'
 import { app } from '@/state/app'
 import { client } from '@/state/client'
 import { setSetting } from '@/state/settings'
-import { t } from '@/i18n'
 import { Banned } from './Banned'
 import './settings.scss'
 
 export function Settings() {
+  const { t } = useTranslation()
   const {
     settings: s,
     broadcast,

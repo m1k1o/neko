@@ -1,11 +1,12 @@
 import { useEffect, useReducer, useState, type FormEvent } from 'react'
 import { useStore } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
+import { useTranslation } from 'react-i18next'
 import { actions } from '@/state/actions'
 import { client } from '@/state/client'
 import { tell } from '@/state/dialogs'
 import { Logo } from '@/components/Logo'
-import { t } from '@/i18n'
+import { i18n } from '@/i18n'
 import './connect.scss'
 
 const params = new URL(location.href).searchParams
@@ -15,11 +16,12 @@ let invite = params.get('pwd')
 const loginOnce = (user: string, password: string) =>
   actions
     .login(user, password)
-    .catch((err) => tell(t('connect.error'), err.message))
+    .catch((err) => tell(i18n.t('connect.error'), err.message))
     .finally(() => (invite = null))
 
 // the login screen, and the "Connect" screen of a logged-in viewer without a connection
 export function Connect() {
+  const { t } = useTranslation()
   const { status, authenticated } = useStore(
     client.store,
     useShallow((s) => ({ status: s.connection.status, authenticated: s.authenticated })),

@@ -6,12 +6,11 @@ import { Files } from './Files'
 import { FileLock } from './FileLock'
 import { store } from './store'
 import { useAllowed, locked, refresh } from './actions'
-import { locale } from './locale'
 
 export const filetransfer: Plugin = {
   id: 'filetransfer',
-  locale,
-  tab: { id: 'files', icon: 'fa-file', component: Files, useVisible: useAllowed },
+  ns: 'files',
+  tab: { id: 'files', icon: 'fa-file', label: 'files:tab', component: Files, useVisible: useAllowed },
   topBar: [{ id: 'filetransfer-lock', component: FileLock }],
   onEvent(event, payload) {
     if (event === 'filetransfer/update') store.setState({ files: payload })
@@ -29,7 +28,7 @@ export const filetransfer: Plugin = {
     )
     client.events.on('room.settings.updated', (next, id) => {
       const now = locked(next)
-      if (last !== null && id && now !== last) event(id, t(`locks.file_transfer.notif_${now ? 'locked' : 'unlocked'}`))
+      if (last !== null && id && now !== last) event(id, t(`files:locks.notif_${now ? 'locked' : 'unlocked'}`))
       last = now
     })
     bus.on('logout', () => store.setState({ uploads: [] }))
