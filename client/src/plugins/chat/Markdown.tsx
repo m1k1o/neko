@@ -4,17 +4,27 @@ import { useShallow } from 'zustand/react/shallow'
 import { selectControlling } from '@m1k1o/neko'
 import { app } from '@/state/app'
 import { client } from '@/state/client'
+import { cn } from '@/lib/utils'
 import { a11y } from '@/components/a11y'
 import { chat } from './store'
 import { openInApp } from './actions'
 import { emoji } from './emoji'
 import { parseSafe, type Node as MdNode } from './markdown'
 
+// the legacy 0.875rem / 1.125rem at a 14px root
+const code =
+  'rounded-[3px] bg-background-secondary px-[3px] indent-0 font-mono text-[12.25px] leading-[15.75px] whitespace-pre-wrap'
+
 function Spoiler({ children }: { children: React.ReactNode }) {
   const [shown, setShown] = useState(false)
   return (
     <span
-      className={`spoiler${shown ? ' active' : ''}`}
+      className={cn(
+        'rounded px-0.5',
+        shown
+          ? 'cursor-default bg-background-secondary [&>span]:opacity-100'
+          : 'cursor-pointer bg-background-tertiary [&>span]:opacity-0',
+      )}
       data-testid="spoiler"
       data-shown={shown || undefined}
       {...(shown ? {} : a11y('Spoiler'))}
@@ -50,11 +60,18 @@ export function Markdown({ source }: { source: string }) {
         case 'br':
           return <br key={i} />
         case 'code':
-          return <code key={i}>{n.v}</code>
+          return (
+            <code key={i} className={code}>
+              {n.v}
+            </code>
+          )
         case 'pre':
           return (
-            <pre key={i}>
-              <code>{n.v}</code>
+            <pre
+              key={i}
+              className="my-1 block flex-1 rounded border border-background-tertiary bg-background-secondary px-1.5 py-2 text-interactive-normal"
+            >
+              <code className={cn(code, 'block')}>{n.v}</code>
             </pre>
           )
         case 'emoji':
@@ -66,12 +83,18 @@ export function Markdown({ source }: { source: string }) {
         case 'link':
           return (
             <Fragment key={i}>
-              <a href={n.href} target="_blank" rel="noopener noreferrer" onClick={open(n.href)}>
+              <a
+                className="text-text-link underline"
+                href={n.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={open(n.href)}
+              >
                 {render(n.c)}
               </a>
               {inApp && (
                 <i
-                  className="open-in-app fas fa-arrow-up-right-from-square"
+                  className="fas fa-arrow-up-right-from-square ml-[0.3em] cursor-pointer"
                   {...a11y('Open in app')}
                   onClick={() => openInApp(n.href)}
                 />
@@ -81,16 +104,24 @@ export function Markdown({ source }: { source: string }) {
         case 'spoiler':
           return <Spoiler key={i}>{render(n.c)}</Spoiler>
         case 'quote':
-          return <blockquote key={i}>{render(n.c)}</blockquote>
+          return (
+            <blockquote key={i} className="border-l-[3px] border-background-accent pl-[3px]">
+              {render(n.c)}
+            </blockquote>
+          )
         default: {
           const Tag = n.t // strong, em, u, s
-          return <Tag key={i}>{render(n.c)}</Tag>
+          return (
+            <Tag key={i} className={n.t === 'strong' ? 'font-extrabold' : n.t === 'em' ? 'italic' : undefined}>
+              {render(n.c)}
+            </Tag>
+          )
         }
       }
     })
 
   return (
-    <div className="content-body" data-testid="chat-body">
+    <div className="leading-[22px] text-text-normal wrap-break-word" data-testid="chat-body">
       {render(nodes)}
     </div>
   )

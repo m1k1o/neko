@@ -1,10 +1,25 @@
 import { useEffect, useRef, useState } from 'react'
 import { useStore } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
+import { cn } from '@/lib/utils'
 import { a11y, closeOn } from '@/components/a11y'
 import { chat } from './store'
 import { emoji, pickedEmoji } from './emoji'
-import './emoji.scss'
+
+// the icon of each group's tab at the bottom of the picker
+const GROUP_ICON: Record<string, string> = {
+  recent: 'fa-clock',
+  neko: 'fa-cat',
+  emotion: 'fa-smile',
+  people: 'fa-users',
+  nature: 'fa-paw',
+  food: 'fa-apple-alt',
+  activity: 'fa-futbol',
+  travel: 'fa-car',
+  objects: 'fa-lightbulb',
+  symbols: 'fa-icons',
+  flags: 'fa-flag',
+}
 
 export function EmojiPicker({ onPick, onClose }: { onPick: (name: string) => void; onClose: () => void }) {
   const { recent, ready } = useStore(
@@ -31,7 +46,7 @@ export function EmojiPicker({ onPick, onClose }: { onPick: (name: string) => voi
     onPick(name)
   }
   const item = (name: string, key: string) => (
-    <li key={key} className={`emoji-container${hovered === name ? ' active' : ''}`}>
+    <li key={key} className={cn('cursor-pointer rounded-[3px] p-0.5', hovered === name && 'bg-background-floating')}>
       <span
         className="emoji"
         data-emoji={name}
@@ -51,10 +66,17 @@ export function EmojiPicker({ onPick, onClose }: { onPick: (name: string) => voi
   }
 
   return (
-    <div className="neko-emoji" data-testid="emoji-picker" ref={ref} onClick={(e) => e.stopPropagation()}>
-      <div className="search">
-        <div className="search-contianer">
+    <div
+      className="absolute right-[5px] bottom-[75px] z-[10000] flex h-[350px] w-[300px] flex-col overflow-hidden rounded-[5px] bg-background-secondary shadow-elevation-high"
+      data-testid="emoji-picker"
+      ref={ref}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="shrink-0 border-b border-background-tertiary p-2.5">
+        <div className="relative flex flex-col overflow-hidden rounded-[5px] text-interactive-normal">
+          <i className="fas fa-search absolute top-1.5 right-1.5 h-[15px] w-[15px] opacity-50" />
           <input
+            className="border-0 bg-background-floating p-[5px] leading-4 font-medium text-interactive-normal placeholder:font-medium placeholder:text-text-muted"
             type="text"
             data-testid="emoji-search"
             autoFocus
@@ -65,40 +87,48 @@ export function EmojiPicker({ onPick, onClose }: { onPick: (name: string) => voi
           />
         </div>
       </div>
-      <div className="list" data-testid="emoji-list" ref={scroll} onScroll={onScroll}>
+      <div
+        className="relative grow scroll-smooth overflow-x-hidden overflow-y-scroll p-[5px] [scrollbar-color:var(--color-background-tertiary)_transparent] [scrollbar-width:thin]"
+        data-testid="emoji-list"
+        ref={scroll}
+        onScroll={onScroll}
+      >
         {q ? (
-          <ul className="emoji-container" style={{ display: 'flex' }}>
-            {filtered.map((n) => item(n, n))}
-          </ul>
+          <ul className="flex">{filtered.map((n) => item(n, n))}</ul>
         ) : (
-          <ul className="group-list">
+          <ul className="flex w-[300px] flex-col">
             {groups.map((g, gi) => (
-              <li key={g.id} className="group" ref={(el) => void (groupEls.current[gi] = el)}>
-                <span className="label">{g.name}</span>
-                <ul className="emoji-list">{g.list.map((n) => item(n, `${g.id}-${n}`))}</ul>
+              <li key={g.id} ref={(el) => void (groupEls.current[gi] = el)}>
+                <span className="sticky top-[-5px] z-2 block w-full bg-background-secondary/90 py-2 text-xs font-medium uppercase">
+                  {g.name}
+                </span>
+                <ul className="flex flex-row flex-wrap">{g.list.map((n) => item(n, `${g.id}-${n}`))}</ul>
               </li>
             ))}
           </ul>
         )}
       </div>
-      <div className="details">
+      <div className="flex h-9 shrink-0 flex-col justify-center bg-background-tertiary">
         {hovered && (
-          <div className="details-container">
-            <span className="emoji" data-emoji={hovered} />
-            <span className="emoji-id">:{hovered}:</span>
+          <div className="flex h-5 flex-row">
+            <span className="emoji mr-[5px] ml-2.5 cursor-default" data-emoji={hovered} />
+            <span className="cursor-default text-[16px] leading-5 font-medium">:{hovered}:</span>
           </div>
         )}
       </div>
-      <div className="groups">
-        <ul>
+      <div className="h-7.5 shrink-0 bg-background-floating px-[5px]">
+        <ul className="flex flex-row flex-wrap">
           {groups.map((g, gi) => (
             <li
               key={g.id}
-              className={`${g.id}${active === gi && !q ? ' active' : ''}`}
+              className={cn(
+                'flex h-[27px] grow cursor-pointer flex-col justify-center',
+                active === gi && !q && 'border-b-[3px] border-style-primary',
+              )}
               {...a11y(g.name, 'tab')}
               onClick={() => (scroll.current!.scrollTop = gi === 0 ? 0 : (groupEls.current[gi]?.offsetTop ?? 0))}
             >
-              <span className={`group-${g.id} fas`} />
+              <i className={`fas ${GROUP_ICON[g.id]} mx-auto h-5 w-5 text-center text-[16px] leading-5`} />
             </li>
           ))}
         </ul>

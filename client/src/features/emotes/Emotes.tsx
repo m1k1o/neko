@@ -71,7 +71,7 @@ export function Emotes() {
       </ul>
       {picker && (
         <ContextMenu
-          className="flex w-[220px] flex-wrap"
+          className="flex w-[220px] flex-wrap items-center justify-center"
           data-testid="emotes-menu"
           style={{ left: Math.min(picker.x, innerWidth - 260), top: Math.max(picker.y - 260, 10) }}
         >

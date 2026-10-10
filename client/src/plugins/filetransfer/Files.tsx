@@ -5,10 +5,16 @@ import { selectIsAdmin } from '@m1k1o/neko'
 import { useTranslation } from 'react-i18next'
 import { client } from '@/state/client'
 import { ask } from '@/state/dialogs'
+import { cn } from '@/lib/utils'
 import { a11y } from '@/components/a11y'
 import { store, type FileItem } from './store'
 import { fileUrl, fileDelete, refresh, upload } from './actions'
-import './files.scss'
+
+const box = 'rounded-[5px] bg-white/5'
+const action = 'cursor-pointer font-semibold text-white/60 transition-colors duration-200 hover:text-white'
+const name = 'overflow-hidden text-ellipsis whitespace-nowrap'
+// the file and transfer lists scroll with a thin bar
+const scroll = '[scrollbar-color:var(--color-background-tertiary)_transparent] [scrollbar-width:thin]'
 
 const size = (bytes?: number) => {
   if (bytes === undefined) return ''
@@ -56,21 +62,21 @@ export function Files() {
   }
 
   return (
-    <div className="files">
-      <div className="files-cwd">
+    <div className="flex max-w-full flex-1 flex-col">
+      <div className={cn(box, 'mx-2.5 mt-2.5 flex flex-row p-2 font-semibold')}>
         <p>{f.root_dir}</p>
-        <i className="fas fa-rotate-right refresh" {...a11y('Refresh')} onClick={refresh} />
+        <i className="fas fa-rotate-right ml-auto cursor-pointer" {...a11y('Refresh')} onClick={refresh} />
       </div>
       {plain.length > 2 && canDelete && (
-        <div className="files-actions">
-          <div className="left-controls">
+        <div className={cn(box, 'mx-2.5 mt-2.5 flex flex-row items-center justify-between p-2 text-[0.9em]')}>
+          <div className="flex items-center">
             {!selecting ? (
-              <span className="action-btn select-toggle" role="button" tabIndex={0} onClick={() => setSelecting(true)}>
+              <span className={action} role="button" tabIndex={0} onClick={() => setSelecting(true)}>
                 {t('files:select')}
               </span>
             ) : (
               <span
-                className="action-btn select-all"
+                className={action}
                 role="button"
                 tabIndex={0}
                 onClick={() => setSelected(allSelected ? [] : plain.map((x) => x.name))}
@@ -80,52 +86,61 @@ export function Files() {
             )}
           </div>
           {selecting && (
-            <div className="right-controls">
+            <div className="flex items-center gap-[1.2em]">
               {selected.length > 0 && (
-                <span className="action-btn delete-selected" role="button" tabIndex={0} onClick={deleteSelected}>
+                <span
+                  className={cn(action, 'text-style-error hover:text-[#dc5959]')}
+                  role="button"
+                  tabIndex={0}
+                  onClick={deleteSelected}
+                >
                   <i className="fas fa-trash"></i> {t('files:delete')} ({selected.length})
                 </span>
               )}
-              <span className="action-btn select-toggle cancel-btn" role="button" tabIndex={0} onClick={stopSelecting}>
+              <span className={action} role="button" tabIndex={0} onClick={stopSelecting}>
                 {t('files:cancel')}
               </span>
             </div>
           )}
         </div>
       )}
-      <div className="files-list">
+      <div className={cn(box, 'm-2.5 overflow-y-scroll', scroll)}>
         {files.map((item) => {
           const sel = selecting && item.type !== 'dir'
           return (
             <div
               key={item.name}
-              className={`files-list-item${sel ? ' selectable-item' : ''}${sel && selected.includes(item.name) ? ' selected-item' : ''}`}
+              className={cn(
+                'flex flex-row border-b-2 border-white/10 p-2 leading-[1.2] last:border-b-0',
+                sel && 'cursor-pointer transition-colors duration-200 hover:bg-white/8',
+                sel && selected.includes(item.name) && 'bg-white/12',
+              )}
               data-testid="file"
               onClick={(e) => onItemClick(item, e)}
             >
               {sel && (
                 <input
                   type="checkbox"
-                  className="file-checkbox"
+                  className="mr-[0.8em] cursor-pointer accent-style-primary"
                   checked={selected.includes(item.name)}
                   onClick={(e) => e.stopPropagation()}
                   onChange={() => toggle(item.name)}
                 />
               )}
-              <i className={`file-icon fas ${item.type === 'dir' ? 'fa-folder' : 'fa-file'}`} />
-              <p className="file-name" data-testid="file-name" title={item.name}>
+              <i className={`fas ${item.type === 'dir' ? 'fa-folder' : 'fa-file'} mr-2 w-3.5`} />
+              <p className={name} data-testid="file-name" title={item.name}>
                 {item.name}
               </p>
-              <p className="file-size">{size(item.size)}</p>
+              <p className="mr-2 ml-auto whitespace-nowrap text-white/40">{size(item.size)}</p>
               {/* native download: the browser's download manager shows progress */}
               {!selecting && item.type !== 'dir' && canDownload && (
                 <a href={fileUrl(item.name)} download={item.name}>
-                  <i className="fas fa-download download" aria-label={`Download ${item.name}`} />
+                  <i className="fas fa-download cursor-pointer" aria-label={`Download ${item.name}`} />
                 </a>
               )}
               {!selecting && item.type !== 'dir' && canDelete && (
                 <i
-                  className="fas fa-trash delete"
+                  className="fas fa-trash ml-2 cursor-pointer"
                   data-testid="file-delete"
                   {...a11y(`${t('files:delete')} ${item.name}`)}
                   onClick={() => deleteOne(item.name)}
@@ -135,32 +150,38 @@ export function Files() {
           )
         })}
       </div>
-      <div className="transfer-area">
+      <div className="mt-auto">
         {uploads.length > 0 && (
-          <div className="transfers">
-            <p className="transfers-list-header">
+          <div className={cn(box, 'm-2.5 max-h-[50vh] overflow-x-hidden overflow-y-scroll', scroll)}>
+            <p className="flex justify-between border-b-2 border-white/10 p-2.5 font-semibold">
               <span>{t('files:uploads')}</span>
               <i
-                className="fas fa-xmark remove-transfer"
+                className="fas fa-xmark cursor-pointer"
                 {...a11y('Clear finished uploads')}
                 onClick={() => store.setState((s) => ({ uploads: s.uploads.filter((u) => u.status === 'inprogress') }))}
               />
             </p>
             {uploads.map((u) => (
-              <div key={u.id} className="transfers-list-item" data-testid="transfer" data-status={u.status}>
-                <div className="transfer-info">
+              <div key={u.id} data-testid="transfer" data-status={u.status}>
+                <div className="flex max-w-full flex-row p-2.5">
                   <i
-                    className={`fas transfer-status ${u.status === 'inprogress' ? 'fa-arrows-rotate' : u.status === 'completed' ? 'fa-check' : 'fa-warning'}`}
+                    className={`fas ${u.status === 'inprogress' ? 'fa-arrows-rotate' : u.status === 'completed' ? 'fa-check' : 'fa-warning'} mr-2 w-3.5`}
                   />
-                  <p className="file-name" title={u.name}>
+                  <p className={name} title={u.name}>
                     {u.name}
                   </p>
-                  <p className="file-size">{Math.min(100, Math.round((u.progress / (u.size || 1)) * 100))}%</p>
+                  <p className="mr-2 ml-auto whitespace-nowrap text-white/40">
+                    {Math.min(100, Math.round((u.progress / (u.size || 1)) * 100))}%
+                  </p>
                 </div>
                 {u.status === 'failed' ? (
-                  <div className="transfer-error">{u.error}</div>
+                  <div className="rounded-[5px] border border-style-error p-2.5">{u.error}</div>
                 ) : (
-                  <progress className="transfer-progress" value={u.progress} max={u.size} />
+                  <progress
+                    className="mx-2.5 mb-2.5 h-3.5 w-[95%] appearance-none overflow-hidden rounded-full [&::-moz-progress-bar]:bg-style-primary [&::-webkit-progress-bar]:bg-background-tertiary [&::-webkit-progress-value]:bg-style-primary"
+                    value={u.progress}
+                    max={u.size}
+                  />
                 )}
               </div>
             ))}
@@ -168,7 +189,11 @@ export function Files() {
         )}
         {canUpload && (
           <div
-            className={`upload-area${drag ? ' upload-area-drag' : ''}`}
+            className={cn(
+              box,
+              'm-2.5 flex cursor-pointer flex-col justify-center text-center hover:bg-white/10',
+              drag && 'bg-white/10',
+            )}
             data-testid="upload"
             onDragOver={(e) => (e.preventDefault(), setDrag(true))}
             onDragLeave={(e) => (e.preventDefault(), setDrag(false))}
@@ -176,8 +201,8 @@ export function Files() {
             {...a11y(t('files:upload_here'))}
             onClick={() => input.current!.click()}
           >
-            <i className="fas fa-file-arrow-up" />
-            <p>{t('files:upload_here')}</p>
+            <i className="fas fa-file-arrow-up m-2.5 text-[4em]" />
+            <p className="mx-2.5 mb-2.5">{t('files:upload_here')}</p>
             <input
               ref={input}
               type="file"
