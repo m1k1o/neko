@@ -121,11 +121,12 @@ export function wireEvents(neko: NekoApp) {
         : error.message === 'connection replaced'
           ? t('connection.replaced')
           : error.message
-    // session gone server-side (kicked, logged out elsewhere, server restarted): back to the login
-    // screen. Any other failure, such as no network, keeps the session for the Connect button.
+    // session gone server-side (kicked, logged out elsewhere, server restarted: 401) or its login
+    // disabled (banned: 403): back to the login screen. Any other failure, such as no network,
+    // keeps the session for the Connect button.
     client.api
       .req('GET', '/whoami')
-      .catch((err) => (err.status === 401 ? actions(neko).logout() : undefined))
+      .catch((err) => (err.status === 401 || err.status === 403 ? actions(neko).logout() : undefined))
       .finally(() => tell(app, t('connection.disconnected'), reason))
   })
 }

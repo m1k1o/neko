@@ -144,3 +144,18 @@ test('start-up: the URL parameters and the stored settings of the page, read whe
   assert.equal(stored.get('chat_sound'), '0')
   stored = fakeBrowser()
 })
+
+test('a closed connection goes back to the login screen when the server no longer takes the session: whoami 401 (gone) or 403 (login disabled, banned); other failures keep it for Connect', async () => {
+  const out: number[] = []
+  for (const status of [401, 403, 500, 200]) {
+    const neko = make()
+    let logouts = 0
+    neko.bus.on('logout', () => logouts++)
+    vi.stubGlobal('fetch', async () => new Response(JSON.stringify({ message: 'x' }), { status }))
+    neko.client.events.emit('connection.closed', new Error('profile changed'))
+    await new Promise((r) => setTimeout(r, 0))
+    out.push(logouts)
+  }
+  vi.unstubAllGlobals()
+  assert.deepEqual(out, [1, 1, 0, 0])
+})

@@ -46,7 +46,7 @@ export function Controls() {
   const controlLocked = lockedControls && !admin
   const locked = localLock && hosting
   const { playable, playing, muted, volume } = video
-  const micAllowed = hosting && canShareMedia
+  const micAllowed = hosting && canShareMedia && !!navigator.mediaDevices // none on plain http
   const lockDisabled = !hosting || (implicit && controlLocked)
 
   // clicking the video without control shakes the keyboard icon as a hint
