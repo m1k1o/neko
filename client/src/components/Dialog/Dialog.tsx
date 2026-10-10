@@ -24,7 +24,12 @@ export function Dialog() {
   }
 
   return (
-    <dialog ref={ref} className="neko-dialog" data-testid="dialog" onCancel={(e) => (e.preventDefault(), done(false))}>
+    <dialog
+      ref={ref}
+      className="neko-dialog m-auto"
+      data-testid="dialog"
+      onCancel={(e) => (e.preventDefault(), done(false))}
+    >
       {d && (
         <>
           <i className={`icon ${d.icon} fas ${DIALOG_ICON[d.icon]}`} aria-hidden="true" />

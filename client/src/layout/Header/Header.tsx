@@ -7,11 +7,10 @@ import { app } from '@/state/app'
 import { client, isLocked, type LockResource } from '@/state/client'
 import { remember } from '@/state/storage'
 import { a11y } from '@/components/a11y'
-import { Logo } from '@/components/Logo'
 import { LockButton } from '@/components/LockButton'
 import { useSlot } from '@/plugins'
 import { EachHook } from '@/components/EachHook'
-import './header.scss'
+import logo from '@/assets/images/logo.svg'
 
 const zero = () => 0
 
@@ -34,17 +33,20 @@ export function Header() {
   }
 
   return (
-    <div className="header">
+    <div className="flex flex-1 flex-row items-center">
       <a
         href="https://github.com/m1k1o/neko"
         title="Github repository"
         target="_blank"
         rel="noreferrer"
-        className="neko"
+        className="ml-5 flex w-[150px] flex-1 items-center justify-start"
       >
-        <Logo />
+        <img src={logo} alt="n.eko" className="mr-2.5 block h-7.5" />
+        <span className="text-[30px] leading-7.5">
+          <b className="font-black">n</b>.eko
+        </span>
       </a>
-      <ul className="menu">
+      <ul className="mr-2.5 whitespace-nowrap">
         {lock('control', 'fa-mouse')}
         {lock('login', isLocked('login', settings) ? 'fa-lock' : 'fa-lock-open')}
         {items.map(({ id, component: Item }) => (
@@ -63,10 +65,14 @@ export function Header() {
 function Toggle({ side, unread }: { side: boolean; unread: number }) {
   const [read, setRead] = useState(unread)
   return (
-    <li>
-      {!side && read !== unread && <span className="badge">&bull;</span>}
+    <li className="mr-2.5 inline-block">
+      {!side && read !== unread && (
+        <span className="pointer-events-none absolute h-5 w-5 animate-badge rounded-full bg-[red] text-center text-[1.25em] leading-5 font-bold">
+          &bull;
+        </span>
+      )}
       <i
-        className="fas fa-bars toggle"
+        className="fas fa-bars block h-7.5 w-7.5 cursor-pointer rounded-[3px] bg-background-primary text-center leading-8"
         data-testid="side-toggle"
         {...a11y('Toggle side panel')}
         aria-expanded={side}

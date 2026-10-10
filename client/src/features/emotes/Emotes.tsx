@@ -44,7 +44,7 @@ export function Emotes() {
 
   if (muted) return null
   return (
-    <div className="emotes-bar" onMouseLeave={stop} onMouseUp={stop}>
+    <div className="emotes-bar mr-2.5 flex items-center justify-end" onMouseLeave={stop} onMouseUp={stop}>
       <ul>
         {recent.map((e) => (
           <li key={e}>

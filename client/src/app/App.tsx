@@ -6,7 +6,8 @@ import { client } from '@/state/client'
 import { setSetting } from '@/state/settings'
 import { useSlot } from '@/plugins'
 import { WebRTCTransport } from '@m1k1o/neko'
-import { Logo } from '@/components/Logo'
+import { cn } from '@/lib/utils'
+import logo from '@/assets/images/logo.svg'
 import { Dialog } from '@/components/Dialog'
 import { Toasts } from '@/components/Toasts'
 import { Header } from '@/layout/Header'
@@ -16,8 +17,6 @@ import { Stage } from '@/features/video'
 import { MemberMenu } from '@/features/members'
 import { Connect } from '@/features/connect'
 import { About } from '@/features/about'
-import './app.scss'
-import './unsupported.scss'
 
 const params = new URL(location.href).searchParams
 const cast = !!params.get('cast')
@@ -36,32 +35,47 @@ export function App() {
 
   if (!WebRTCTransport.supported()) {
     return (
-      <div className="unsupported">
-        <div className="window">
-          <Logo />
-          <div className="message">
-            <span>{t('unsupported')}</span>
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className="w-[320px] rounded-[5px] bg-background-secondary p-2.5">
+          <div className="flex w-full items-center justify-center">
+            <img src={logo} alt="n.eko" className="mr-2.5 h-[90px]" />
+            <span className="text-[30px] leading-14">
+              <b className="font-black">n</b>.eko
+            </span>
+          </div>
+          <div className="flex flex-col">
+            <span className="block text-center leading-7.5 uppercase">{t('unsupported')}</span>
           </div>
         </div>
       </div>
     )
   }
 
+  const expanded = !videoOnly && side
   return (
-    <div id="neko" className={!videoOnly && side ? 'expanded' : ''}>
-      <main className="neko-main">
+    <div
+      id="neko"
+      className="tablet:relative tablet:max-h-none tablet:flex-col absolute inset-0 flex max-h-[100vh] max-w-[100vw]"
+    >
+      <main
+        className={cn(
+          'flex min-w-[360px] max-w-full grow flex-col overflow-auto',
+          expanded ? 'tablet:portrait:h-[40vh] tablet:landscape:h-screen' : 'tablet:h-screen',
+        )}
+      >
         {!videoOnly && (
-          <div className="header-container" data-testid="header">
+          <div className="flex h-menu shrink-0 bg-background-tertiary" data-testid="header">
             <Header />
           </div>
         )}
-        <div className="video-container">
+        {/* .video-container: index.html sizes it before the app renders (iOS) */}
+        <div className="video-container flex max-w-full grow bg-black/40">
           <Stage hideControls={cast} extraControls={videoOnly} />
         </div>
         {!videoOnly && <RoomBar />}
       </main>
       {!videoOnly && <MemberMenu items={memberMenu} />}
-      {!videoOnly && side && <Side />}
+      {expanded && <Side />}
       {!connected && <Connect />}
       {!videoOnly && <Toasts />}
       {about && <About />}

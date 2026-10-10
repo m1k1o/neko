@@ -1,7 +1,6 @@
-/* Tailwind v4 and the design tokens (README, "Design"): the theme and the utilities; the preflight
-   comes with the component migration */
-@import 'tailwindcss/theme' layer(theme);
-@import 'tailwindcss/utilities' layer(utilities);
+/* Tailwind v4 and the design tokens (README, "Design"): preflight, theme, utilities, the global
+   rules of the page and the responsive variants of the layout */
+@import 'tailwindcss';
 
 @theme {
   /* the tokens of src/design/_variables.scss, same values: text-text-normal, bg-background-primary, ... */
@@ -35,4 +34,68 @@
   --spacing-menu: 40px;
   --spacing-controls: 125px;
   --spacing-side: 400px;
+
+  /* the unread badge on the side panel toggle */
+  --animate-badge: badge 2s infinite;
+  @keyframes badge {
+    0% {
+      transform: translate(-50%, -25%) scale(0.85);
+      box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.7);
+    }
+    70% {
+      transform: translate(-50%, -25%) scale(1);
+      box-shadow: 0 0 0 10px rgba(0, 0, 0, 0);
+    }
+    100% {
+      transform: translate(-50%, -25%) scale(0.85);
+      box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+    }
+  }
+}
+
+/* the layout's two breakpoints: under 1024px the page scrolls and the side panel goes under the
+   video (with Tailwind's portrait: and landscape: for the split), under 768px the room bar is hidden */
+@custom-variant tablet {
+  @media only screen and (max-width: 1024px) {
+    @slot;
+  }
+}
+@custom-variant phone {
+  @media only screen and (max-width: 768px) {
+    @slot;
+  }
+}
+
+@layer base {
+  html,
+  body {
+    -webkit-font-smoothing: subpixel-antialiased;
+    background-color: var(--color-background-tertiary);
+    color: var(--color-text-normal);
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+    min-width: 320px;
+  }
+  /* on the body, not html: rem (Tailwind's spacing scale) stays 16px */
+  body {
+    font-size: var(--text-ui);
+    line-height: 1;
+  }
+  @media only screen and (max-width: 1024px) {
+    html,
+    body {
+      overflow-y: auto;
+      width: auto;
+      height: auto;
+    }
+  }
+  /* keyboard focus for the icon controls (components/a11y.ts) */
+  [role='button']:focus-visible,
+  [role='menuitem']:focus-visible,
+  [role='tab']:focus-visible,
+  .member[tabindex]:focus-visible {
+    outline: 2px solid var(--color-style-primary);
+    outline-offset: 2px;
+  }
 }

@@ -70,7 +70,7 @@ export function Controls() {
   }
 
   return (
-    <ul className="neko-controls">
+    <ul className="neko-controls flex items-center justify-center">
       {!implicit && (!controlLocked || hosting) && (
         <li>
           <i

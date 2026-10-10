@@ -12,7 +12,7 @@ export function RoomMenu() {
   const { t, i18n } = useTranslation()
   const admin = useStore(client.store, selectIsAdmin)
   return (
-    <ul className="room-settings">
+    <ul className="room-settings ml-2.5 flex items-center justify-start">
       <li>
         <i
           className="fas fa-question-circle"
