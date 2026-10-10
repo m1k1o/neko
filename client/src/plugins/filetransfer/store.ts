@@ -7,7 +7,7 @@ export type FileTransfer = PluginEvents['filetransfer/update']
 export type FileItem = FileTransfer['files'][number]
 
 export interface Upload {
-  id: string // crypto.randomUUID()
+  id: string // uid()
   name: string
   size: number
   progress: number

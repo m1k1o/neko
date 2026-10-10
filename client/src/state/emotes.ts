@@ -1,5 +1,6 @@
 // emotes: the names the sprite sheet knows, showing one, sending one
 import { isMuted, type AppStore, type NekoApp } from './app'
+import { uid } from '@/lib/utils'
 
 export const EMOTES = [
   'anger',
@@ -53,7 +54,7 @@ export const EMOTES = [
 
 export function showEmote(app: AppStore, emote: string) {
   if (app.getState().settings.ignore_emotes || document.visibilityState === 'hidden') return
-  app.setState((s) => ({ emotes: { ...s.emotes, [crypto.randomUUID()]: emote } }))
+  app.setState((s) => ({ emotes: { ...s.emotes, [uid()]: emote } }))
 }
 
 // the emote's animation is over

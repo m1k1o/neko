@@ -283,7 +283,7 @@ Playwright's, start it with `--headless --remote-debugging-port=9222 --user-data
   (`> ` quotes stay, and continue until a blank line), and CommonMark's headings, lists, nested
   quotes and tables are in. Messages over 10,000 characters, or one the renderer fails on, are shown
   as plain text.
-- Short-lived list items (uploads, emote animations) are keyed by `crypto.randomUUID()` (a secure
-  context: https or localhost).
+- Short-lived list items (uploads, emote animations) are keyed by 64 random bits from `crypto.getRandomValues()`, which
+  every origin has (`crypto.randomUUID()` needs a secure context, and plain http on a LAN is not one).
 - File downloads are plain links so the browser streams them; the session token is added to the
   URL only when the server runs without cookies.

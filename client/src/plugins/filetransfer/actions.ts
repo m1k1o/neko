@@ -4,6 +4,7 @@ import type { NekoApp } from '@/state/app'
 import { api } from '@/state/api'
 import { useNeko } from '@/state/provider'
 import { store, type Upload } from './store'
+import { uid } from '@/lib/utils'
 
 export const refresh = ({ client }: NekoApp) => client.send('filetransfer/update')
 
@@ -33,7 +34,7 @@ export const fileDelete = (neko: NekoApp, name: string) =>
 export function upload(neko: NekoApp, files: FileList | File[]) {
   const uploads = store(neko)
   for (const file of files) {
-    const u: Upload = { id: crypto.randomUUID(), name: file.name, size: file.size, progress: 0, status: 'inprogress' }
+    const u: Upload = { id: uid(), name: file.name, size: file.size, progress: 0, status: 'inprogress' }
     uploads.setState((s) => ({ uploads: [...s.uploads, u] }))
     const update = (part: Partial<Upload>) =>
       uploads.setState((s) => ({ uploads: s.uploads.map((x) => (x.id === u.id ? { ...x, ...part } : x)) }))

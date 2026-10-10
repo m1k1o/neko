@@ -10,9 +10,9 @@ const { createNekoApp } = await import('@/state/neko')
 const { upload } = await import('./actions.ts')
 const { store } = await import('./store.ts')
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
+const UID = /^[0-9a-f]{16}$/
 
-test('each upload gets an id of its own, a UUID string (crypto.randomUUID), and its progress is tracked by it', () => {
+test('each upload gets an id of its own, a 64-bit hex key (crypto.getRandomValues), and its progress is tracked by it', () => {
   const neko = createNekoApp({ transport: fakeTransport() })
   const progress: ((p: { loaded: number; total: number }) => void)[] = []
   vi.spyOn(neko.client.api, 'upload').mockImplementation((_path, _form, onProgress) => {
@@ -25,7 +25,7 @@ test('each upload gets an id of its own, a UUID string (crypto.randomUUID), and 
     ['a.txt', 1, 'inprogress'],
     ['b.txt', 2, 'inprogress'],
   ])
-  for (const u of uploads) expect(u.id).toMatch(UUID)
+  for (const u of uploads) expect(u.id).toMatch(UID)
   expect(uploads[0].id).not.toBe(uploads[1].id)
   progress[1]({ loaded: 1, total: 2 })
   expect(
