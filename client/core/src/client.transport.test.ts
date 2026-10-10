@@ -66,8 +66,7 @@ const setup = (opts: Options = {}) => {
   client.events.on('connection.closed', (e) => closed.push(e))
   const statuses: string[] = []
   client.events.on('connection.status', (s) => statuses.push(s))
-  client.state.authenticated = true
-  client.state.connection.token = 'tok'
+  client.store.setState({ authenticated: true, connection: { ...client.state.connection, token: 'tok' } })
   return { t, client, closed, statuses }
 }
 
@@ -131,8 +130,8 @@ test('status: connected only when the socket and the transport are; a transport 
   assert.deepEqual(t.calls, ['connect', 'connect'], 'the new socket starts the transport over')
   t.state('connected')
   await settle()
-  // connect() and the first 'connected' fell into one store flush
-  assert.deepEqual(statuses, ['connected', 'connecting', 'connected', 'connecting', 'connected'])
+  // every change, as it happens (the proxy store used to merge connect() and the first 'connected')
+  assert.deepEqual(statuses, ['connecting', 'connected', 'connecting', 'connected', 'connecting', 'connected'])
 
   t.fail(new Error('video connection failed (WebRTC)'))
   assert.deepEqual(

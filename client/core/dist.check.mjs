@@ -23,8 +23,10 @@ for (const name of [
   'NekoClient',
   'Overlay',
   'mount',
-  'Store',
   'Emitter',
+  'selectSession',
+  'selectControlling',
+  'selectIsAdmin',
   'NekoApi',
   'ApiError',
   'WebRTCTransport',
@@ -54,17 +56,29 @@ assert.ok(
 assert.equal(WebRTCTransport.supported(), typeof RTCPeerConnection !== 'undefined')
 assert.ok(!('OP' in pkg), 'the data channel opcodes are not part of the API')
 
-// Store: a nested write bumps the version and reaches a watcher one microtask later
-const s = new pkg.Store({ a: { b: 1 } })
+// the store: zustand, the one runtime dependency, resolvable from the built package (client.js keeps
+// the bare specifiers); a selector subscription fires on its value only, updates are immutable, and
+// the proxy store's API (Store, watch, version) is gone
+assert.ok(!('Store' in pkg), 'the proxy Store is gone')
+await import('zustand/vanilla')
+assert.ok(readFileSync(join(dist, 'client.js'), 'utf8').includes("from 'zustand/vanilla'"))
+const probe = new pkg.NekoClient({ autologin: false, autoconnect: false })
+assert.equal(probe.state, probe.store.getState())
+assert.ok(!('watch' in probe.store) && !('version' in probe.store))
 const seen = []
-s.watch(
-  () => s.state.a.b,
+probe.store.subscribe(
+  (s) => s.control.host_id,
   (v, old) => seen.push([v, old]),
 )
-s.state.a.b = 2
-await Promise.resolve()
-assert.equal(s.version, 1)
-assert.deepEqual(seen, [[2, 1]])
+probe.store.setState({ mobile_keyboard_open: true })
+assert.deepEqual(seen, [])
+const before = probe.state
+probe.store.setState({ session_id: 'h', control: { ...before.control, host_id: 'h' } })
+assert.deepEqual(seen, [['h', null]])
+assert.notEqual(probe.state, before)
+assert.equal(probe.state.video, before.video, 'untouched slices keep their identity')
+assert.equal(pkg.selectControlling(probe.state), true)
+assert.equal(probe.controlling, true)
 
 // Emitter: on() returns the unsubscribe
 const e = new pkg.Emitter()

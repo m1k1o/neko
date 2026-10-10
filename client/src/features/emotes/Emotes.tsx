@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNeko } from '@/state/hooks'
+import { useStore } from 'zustand'
 import { actions } from '@/state/actions'
-import { isMuted } from '@/state/client'
+import { client, selectMuted } from '@/state/client'
 import { EMOTES } from '@/state/emotes'
 import { a11y, closeOn } from '@/components/a11y'
 import { ContextMenu } from '@/components/ContextMenu'
@@ -10,7 +10,7 @@ import './emotes.scss'
 
 // the emote bar in the room menu: recently used emotes and the picker
 export function Emotes() {
-  useNeko()
+  const muted = useStore(client.store, selectMuted)
   const [recent, setRecent] = useState<string[]>(() => {
     try {
       return JSON.parse(localStorage.getItem('emote_recent') || '[]')
@@ -42,7 +42,7 @@ export function Emotes() {
     repeat.current = window.setInterval(() => actions.sendEmote(emote), 350)
   }
 
-  if (isMuted()) return null
+  if (muted) return null
   return (
     <div className="emotes-bar" onMouseLeave={stop} onMouseUp={stop}>
       <ul>

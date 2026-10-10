@@ -4,28 +4,29 @@ import { client } from './client'
 import { get, set } from './storage'
 import { langs, setLang, htmlLang, type Lang } from '@/i18n'
 
-const s = app.state
 const params = new URL(location.href).searchParams
 
 export function setSetting<K extends keyof ViewerSettings>(key: K, value: ViewerSettings[K]) {
-  s.settings[key] = value
+  app.setState((s) => ({ settings: { ...s.settings, [key]: value } }))
   set(key, value)
   applySettings()
 }
 
 export function applySettings() {
-  client.setScrollSensitivity(s.settings.scroll_sensitivity)
-  client.setScrollInverse(s.settings.scroll_invert)
-  client.setKeyboard(s.settings.keyboard_layout)
+  const { settings } = app.getState()
+  client.setScrollSensitivity(settings.scroll_sensitivity)
+  client.setScrollInverse(settings.scroll_invert)
+  client.setKeyboard(settings.keyboard_layout)
 }
 
 // start-up: what the URL and the stored settings say, applied once before the connection
 export function initSettings() {
   for (const k of ['displayname', 'password']) localStorage.removeItem(k) // the Vue client's stored login
 
-  if (params.get('mute_chat') !== null) s.settings.chat_sound = params.get('mute_chat') !== '1'
+  if (params.get('mute_chat') !== null)
+    app.setState((s) => ({ settings: { ...s.settings, chat_sound: params.get('mute_chat') !== '1' } }))
 
-  document.documentElement.lang = htmlLang(s.lang)
+  document.documentElement.lang = htmlLang(app.getState().lang)
   const urlLang = params.get('lang') as Lang | null
   if (urlLang && langs.includes(urlLang)) setLang(urlLang)
 
@@ -42,14 +43,14 @@ export function initSettings() {
   // parameter overrides it for this visit
   const urlVolume = params.has('volume') ? parseFloat(params.get('volume') || '1') : NaN
   const startVolume = isNaN(urlVolume) ? get('volume', 100) / 100 : Math.max(0, Math.min(urlVolume, 1))
-  const unwatchVolume = client.store.watch(
-    () => client.state.video.playable,
+  const unwatchVolume = client.store.subscribe(
+    (s) => s.video.playable,
     (playable) => {
       if (!playable) return
       client.setVolume(startVolume)
       unwatchVolume()
-      client.store.watch(
-        () => client.state.video.volume,
+      client.store.subscribe(
+        (s) => s.video.volume,
         (v) => set('volume', Math.round(v * 100)),
       )
     },
@@ -57,6 +58,6 @@ export function initSettings() {
 
   fetch('keyboard_layouts.json')
     .then((r) => r.json())
-    .then((l) => (s.keyboardLayouts = l))
+    .then((l) => app.setState({ keyboardLayouts: l }))
     .catch(() => {})
 }

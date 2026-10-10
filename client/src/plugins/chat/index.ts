@@ -1,3 +1,5 @@
+import { useStore } from 'zustand'
+import { selectIsAdmin } from '@m1k1o/neko'
 import { app } from '@/state/app'
 import { client, name, isMuted } from '@/state/client'
 import { ask } from '@/state/dialogs'
@@ -12,11 +14,11 @@ import { locale } from './locale'
 export const chat: Plugin = {
   id: 'chat',
   locale,
-  tab: { id: 'chat', icon: 'fa-comment-alt', component: Chat, badge: () => store.state.texts },
+  tab: { id: 'chat', icon: 'fa-comment-alt', component: Chat, useBadge: () => useStore(store, (s) => s.texts) },
   memberMenu: [
     {
       id: 'chat-mute',
-      visible: () => client.isAdmin,
+      useVisible: () => useStore(client.store, selectIsAdmin),
       label: (m) => t(isMuted(m.id) ? 'context.unmute' : 'context.mute'),
       onClick(m) {
         const muted = isMuted(m.id)
@@ -29,9 +31,9 @@ export const chat: Plugin = {
     },
   ],
   onEvent(event, payload) {
-    if (event === 'chat/init') store.state.enabled = payload.enabled
+    if (event === 'chat/init') store.setState({ enabled: payload.enabled })
     if (event === 'chat/message') {
-      if (app.state.ignored[payload.id]) return
+      if (app.getState().ignored[payload.id]) return
       push({
         id: payload.id,
         name: name(payload.id),
@@ -39,23 +41,23 @@ export const chat: Plugin = {
         content: payload.content.text,
         created: new Date(payload.created),
       })
-      store.state.texts++
-      if (app.state.settings.chat_sound && payload.id !== client.state.session_id)
+      store.setState((s) => ({ texts: s.texts + 1 }))
+      if (app.getState().settings.chat_sound && payload.id !== client.state.session_id)
         new Audio('chat.mp3').play().catch(() => {})
     }
   },
   init() {
     // the room's event lines ("bob took the controls") are shown in the chat
     bus.on('log', (id, name, content) => push({ id, name, type: 'event', content, created: new Date() }))
-    bus.on('logout', () => Object.assign(store.state, { lines: [], texts: 0 }))
+    bus.on('logout', () => store.setState({ lines: [], texts: 0 }))
 
     // muted / unmuted lines: who may send, per session; a change after the member list is known
     // is someone's mute (ours when mutedByMe says so, the server does not say)
     let initialized = false
     const canSend: Record<string, boolean> = {}
     const can = (id: string) => client.state.sessions[id]?.profile.plugins?.['chat.can_send'] !== false
-    client.store.watch(
-      () => client.state.session_id,
+    client.store.subscribe(
+      (s) => s.session_id,
       (id) => {
         initialized = !!id
         if (!id) return

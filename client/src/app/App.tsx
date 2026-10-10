@@ -1,5 +1,8 @@
 import './boot'
-import { useNeko } from '@/state/hooks'
+import { useStore } from 'zustand'
+import { useShallow } from 'zustand/react/shallow'
+import { app } from '@/state/app'
+import { client } from '@/state/client'
 import { setSetting } from '@/state/settings'
 import { t } from '@/i18n'
 import { memberMenu } from '@/plugins'
@@ -24,7 +27,14 @@ const videoOnly = cast || !!params.get('embed')
 if (cast) setSetting('chat_sound', false)
 
 export function App() {
-  const { state, app } = useNeko()
+  const connected = useStore(client.store, (s) => s.connection.status === 'connected')
+  const { side, about } = useStore(
+    app,
+    useShallow((s) => ({ side: s.side, about: s.about })),
+  )
+  // every component renders strings through t(), which reads the language: a change of it (rare)
+  // re-renders the whole tree from here, so no component selects the language on its own
+  useStore(app, (s) => s.lang)
 
   if (!WebRTCTransport.supported()) {
     return (
@@ -39,9 +49,8 @@ export function App() {
     )
   }
 
-  const connected = state.connection.status === 'connected'
   return (
-    <div id="neko" className={!videoOnly && app.side ? 'expanded' : ''}>
+    <div id="neko" className={!videoOnly && side ? 'expanded' : ''}>
       <main className="neko-main">
         {!videoOnly && (
           <div className="header-container">
@@ -54,10 +63,10 @@ export function App() {
         {!videoOnly && <RoomBar />}
       </main>
       {!videoOnly && <MemberMenu items={memberMenu()} />}
-      {!videoOnly && app.side && <Side />}
+      {!videoOnly && side && <Side />}
       {!connected && <Connect />}
       {!videoOnly && <Toasts />}
-      {app.about && <About />}
+      {about && <About />}
       <Dialog />
     </div>
   )

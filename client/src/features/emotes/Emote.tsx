@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { app } from '@/state/app'
+import { hideEmote } from '@/state/emotes'
 import './sprites.scss'
 import './emote.scss'
 
@@ -21,7 +21,7 @@ export function Emote({ id, type }: { id: string; type: string }) {
         { duration: rnd(1000, 2000), easing: 'ease-in-out', fill: 'forwards' },
       ).finished
     })
-    Promise.all(anims).then(() => delete app.state.emotes[id])
+    Promise.all(anims).then(() => hideEmote(id))
   }, [id])
   return (
     <div ref={ref} className="emote-container">

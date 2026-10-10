@@ -52,11 +52,18 @@ export const EMOTES = [
   'sad',
 ]
 
-const s = app.state
-
 export function showEmote(emote: string) {
-  if (s.settings.ignore_emotes || document.visibilityState === 'hidden') return
-  s.emotes[Math.random().toString(36).slice(2)] = emote
+  if (app.getState().settings.ignore_emotes || document.visibilityState === 'hidden') return
+  app.setState((s) => ({ emotes: { ...s.emotes, [Math.random().toString(36).slice(2)]: emote } }))
+}
+
+// the emote's animation is over
+export function hideEmote(id: string) {
+  app.setState((s) => {
+    const emotes = { ...s.emotes }
+    delete emotes[id]
+    return { emotes }
+  })
 }
 
 export function sendEmote(emote: string) {

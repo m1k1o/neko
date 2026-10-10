@@ -1,15 +1,16 @@
 import { useEffect, useState } from 'react'
 import type { MemberData } from '@m1k1o/neko'
-import { useNeko } from '@/state/hooks'
+import { useStore } from 'zustand'
 import { actions } from '@/state/actions'
+import { app } from '@/state/app'
 import { t } from '@/i18n'
 
 // accounts with can_login=false (see actions.ban); empty unless the provider stores accounts
 export function Banned() {
   const [banned, setBanned] = useState<MemberData[] | null>(null)
-  const { app } = useNeko()
+  const bans = useStore(app, (s) => s.bans)
   const load = () => actions.members().then((all) => setBanned(all.filter((m) => m.profile?.can_login === false)))
-  useEffect(() => void load(), [app.bans]) // reloads after a ban or unban from anywhere
+  useEffect(() => void load(), [bans]) // reloads after a ban or unban from anywhere
 
   if (!banned?.length) return null
   return (

@@ -8,7 +8,7 @@ export { langs, extendMessages, type Lang }
 const lookup = (m: unknown, key: string) => key.split('.').reduce<any>((o, k) => o?.[k], m)
 
 export function t(key: string, vars: Record<string, string | number> = {}): string {
-  let msg = lookup(messages[app.state.lang], key)
+  let msg = lookup(messages[app.getState().lang], key)
   if (typeof msg !== 'string') msg = lookup(messages.en, key)
   if (typeof msg !== 'string') return key
   return msg.replace(/\{(\w+)\}/g, (_: string, k: string) => String(vars[k] ?? ''))
@@ -17,7 +17,7 @@ export function t(key: string, vars: Record<string, string | number> = {}): stri
 export const htmlLang = (lang: Lang) => ({ cn: 'zh-CN', tw: 'zh-TW' })[lang as string] ?? lang
 
 export function setLang(lang: Lang) {
-  app.state.lang = lang
+  app.setState({ lang })
   set('lang', lang)
   document.documentElement.lang = htmlLang(lang)
 }

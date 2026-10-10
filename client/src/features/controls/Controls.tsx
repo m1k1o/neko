@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNeko } from '@/state/hooks'
+import { useStore } from 'zustand'
+import { useShallow } from 'zustand/react/shallow'
+import { selectControlling, selectIsAdmin, selectSession } from '@m1k1o/neko'
 import { actions } from '@/state/actions'
 import { client } from '@/state/client'
 import { tell } from '@/state/dialogs'
@@ -8,20 +10,28 @@ import { t } from '@/i18n'
 import './controls.scss'
 
 export function Controls() {
-  const { state } = useNeko()
+  const { admin, hosting, hosted, implicit, lockedControls, localLock, video, connected, canShareMedia } = useStore(
+    client.store,
+    useShallow((s) => ({
+      admin: selectIsAdmin(s),
+      hosting: selectControlling(s),
+      hosted: s.control.host_id !== null,
+      implicit: s.settings.implicit_hosting,
+      lockedControls: s.settings.locked_controls,
+      localLock: s.control.locked,
+      video: s.video,
+      connected: s.connection.status === 'connected',
+      canShareMedia: !!selectSession(s)?.profile.can_share_media,
+    })),
+  )
   const [shake, setShake] = useState(false)
   const mic = useRef<{ track: MediaStreamTrack; stop: () => void } | null>(null)
   const [micOn, setMicOn] = useState(false)
 
-  const admin = client.isAdmin
-  const hosting = client.controlling
-  const hosted = state.control.host_id !== null
-  const implicit = state.settings.implicit_hosting
-  const controlLocked = state.settings.locked_controls && !admin
-  const locked = state.control.locked && hosting
-  const { playable, playing, muted, volume } = state.video
-  const connected = state.connection.status === 'connected'
-  const micAllowed = hosting && !!client.session?.profile.can_share_media
+  const controlLocked = lockedControls && !admin
+  const locked = localLock && hosting
+  const { playable, playing, muted, volume } = video
+  const micAllowed = hosting && canShareMedia
 
   // clicking the video without control shakes the keyboard icon as a hint
   useEffect(() => {

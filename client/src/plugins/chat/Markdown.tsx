@@ -1,5 +1,8 @@
 import { Fragment, useMemo, useState } from 'react'
-import { useNeko } from '@/state/hooks'
+import { useStore } from 'zustand'
+import { useShallow } from 'zustand/react/shallow'
+import { selectControlling } from '@m1k1o/neko'
+import { app } from '@/state/app'
 import { client } from '@/state/client'
 import { a11y } from '@/components/a11y'
 import { chat } from './store'
@@ -22,12 +25,17 @@ function Spoiler({ children }: { children: React.ReactNode }) {
 
 // a chat message: the parser's nodes as React elements (no HTML strings)
 export function Markdown({ source }: { source: string }) {
-  const { app } = useNeko() // re-render once emoji names are known
+  const { canOpenInApp, linksInApp } = useStore(
+    app,
+    useShallow((s) => ({ canOpenInApp: s.openInApp, linksInApp: s.settings.links_in_app })),
+  )
+  const hosting = useStore(client.store, selectControlling)
+  const emojiReady = useStore(chat, (s) => s.emojiReady) // re-render once emoji names are known
   const nodes = useMemo(() => parseSafe(source), [source])
   // open-in-app needs the plugin and control of the desktop
-  const inApp = app.openInApp && client.controlling
+  const inApp = canOpenInApp && hosting
   const open = (href: string) => (e: React.MouseEvent) => {
-    if (!inApp || !app.settings.links_in_app) return
+    if (!inApp || !linksInApp) return
     e.preventDefault()
     openInApp(href)
   }
@@ -48,7 +56,7 @@ export function Markdown({ source }: { source: string }) {
             </pre>
           )
         case 'emoji':
-          return chat.state.emojiReady && emoji.names.has(n.v) ? (
+          return emojiReady && emoji.names.has(n.v) ? (
             <span key={i} className="emoji" data-emoji={n.v} title={`:${n.v}:`} />
           ) : (
             `:${n.v}:`

@@ -10,25 +10,25 @@ export interface EmojiGroup {
 export const emoji = { groups: [] as EmojiGroup[], keywords: {} as Record<string, string[]>, names: new Set<string>() }
 let emojiLoading = false
 
-const s = chat.state
-
 export function loadEmoji() {
   if (emojiLoading) return
   emojiLoading = true
   try {
-    s.emojiRecent = JSON.parse(localStorage.getItem('emoji_recent') || '[]')
+    chat.setState({ emojiRecent: JSON.parse(localStorage.getItem('emoji_recent') || '[]') })
   } catch {}
   fetch('emoji.json')
     .then((r) => r.json())
     .then((d: { groups: EmojiGroup[]; keywords: Record<string, string[]>; list: string[] }) => {
       Object.assign(emoji, { groups: d.groups, keywords: d.keywords, names: new Set(d.list) })
-      s.emojiReady = true
+      chat.setState({ emojiReady: true })
     })
     .catch(() => (emojiLoading = false))
 }
 
 export function pickedEmoji(name: string) {
-  if (s.emojiRecent.includes(name)) return
-  s.emojiRecent = [...s.emojiRecent.slice(-30), name]
-  set('emoji_recent', JSON.stringify(s.emojiRecent))
+  const recent = chat.getState().emojiRecent
+  if (recent.includes(name)) return
+  const next = [...recent.slice(-30), name]
+  chat.setState({ emojiRecent: next })
+  set('emoji_recent', JSON.stringify(next))
 }

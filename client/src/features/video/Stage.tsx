@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNeko } from '@/state/hooks'
+import { useStore } from 'zustand'
+import { useShallow } from 'zustand/react/shallow'
+import { selectControlling, selectIsAdmin } from '@m1k1o/neko'
 import { actions } from '@/state/actions'
+import { app } from '@/state/app'
 import { client, overlay } from '@/state/client'
 import { a11y, closeOn } from '@/components/a11y'
 import { t } from '@/i18n'
@@ -14,7 +17,18 @@ import { usePip } from './usePip'
 import './video.scss'
 
 export function Stage({ hideControls, extraControls }: { hideControls: boolean; extraControls: boolean }) {
-  const { state, app: a } = useNeko()
+  const { admin, hosting, hosted, implicit, lockedControls, video } = useStore(
+    client.store,
+    useShallow((s) => ({
+      admin: selectIsAdmin(s),
+      hosting: selectControlling(s),
+      hosted: s.control.host_id !== null,
+      implicit: s.settings.implicit_hosting,
+      lockedControls: s.settings.locked_controls,
+      video: s.video,
+    })),
+  )
+  const emotes = useStore(app, (s) => s.emotes)
   const player = useRef<HTMLDivElement>(null)
   const [menu, setMenu] = useState<null | 'resolution' | 'clipboard'>(null)
   const { fullscreen, request: requestFullscreen } = useFullscreen(player)
@@ -23,12 +37,8 @@ export function Stage({ hideControls, extraControls }: { hideControls: boolean; 
 
   useEffect(() => (menu ? closeOn(() => setMenu(null)) : undefined), [menu])
 
-  const admin = client.isAdmin
-  const hosting = client.controlling
-  const hosted = state.control.host_id !== null
-  const implicit = state.settings.implicit_hosting
-  const controlLocked = state.settings.locked_controls && !admin
-  const { playing, playable, muted, mutedByAutoplay } = state.video
+  const controlLocked = lockedControls && !admin
+  const { playing, playable, muted, mutedByAutoplay } = video
   const open = (m: 'resolution' | 'clipboard') => (e: React.MouseEvent) => (
     e.stopPropagation(),
     setMenu(menu === m ? null : m)
@@ -41,7 +51,7 @@ export function Stage({ hideControls, extraControls }: { hideControls: boolean; 
         <div className="player-container" onMouseEnter={syncClipboard}>
           <Player transport={client.transport} />
           <div className="emotes">
-            {Object.entries(a.emotes).map(([id, type]) => (
+            {Object.entries(emotes).map(([id, type]) => (
               <Emote key={id} id={id} type={type} />
             ))}
           </div>

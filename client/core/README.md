@@ -7,7 +7,8 @@ overlay (wheel, file drop, the host's cursor) included (see [Control and input](
 It is what the React GUI in `../src` is built on, and it can drive a neko server from any framework
 or from a plain page.
 
-ESM, TypeScript declarations included, no runtime dependencies.
+ESM, TypeScript declarations included; the one runtime dependency is [zustand](https://github.com/pmndrs/zustand)
+(its vanilla store, ~1 KB), which holds the state.
 
 ```sh
 npm install @m1k1o/neko
@@ -20,8 +21,11 @@ import { NekoClient, mount } from '@m1k1o/neko'
 
 const client = new NekoClient({ autologin: true, autoconnect: true, autoplay: true })
 
-// state: connection, video, control, screen, sessions, settings
-client.store.subscribe(() => render(client.state))
+// state: connection, video, control, screen, sessions, settings (a zustand store: select what you need)
+client.store.subscribe(
+  (s) => s.connection.status,
+  (status) => render(client.state),
+)
 // one-off happenings, including plugin events (chat/*, filetransfer/*, ...)
 client.events.on('message', (event, payload) => console.log(event, payload))
 
@@ -88,21 +92,29 @@ transport has no stream yet, `'connected'` once the transport reports `'connecte
 | `state.connection.status`                            | `'disconnected'`, `'connecting'`, `'connected'` |
 | `events: 'connection.status'`                        | the status changed                              |
 | `events: 'connection.closed'`                        | closed; with an `Error` when not asked for      |
-| `connected`, `session`, `isAdmin`, `implicitControl` | computed from the state                         |
+| `connected`, `session`, `isAdmin`, `implicitControl` | computed from the state (see [State](#state))   |
 | `transport`                                          | the `StreamTransport` in use                    |
 
 ### State
 
-`client.state` is a deep-observable object (`Store`); read it anywhere, subscribe for changes:
+`client.store` is a [zustand](https://github.com/pmndrs/zustand) vanilla store (`createStore` with
+`subscribeWithSelector`), and `client.state` is its current state, `client.store.getState()`: a plain
+object that is replaced, never mutated, on every change (the changed slice is a new object, the rest
+keeps its identity). Read it anywhere; subscribe with a selector to be called when that value changes:
 
 ```ts
-const off = client.store.subscribe(() => {}) // after any change, once per tick
-client.store.watch(
-  () => client.state.control.host_id,
+const off = client.store.subscribe(
+  (s) => s.control.host_id,
   (hostId, before) => {},
-) // when a value changes
-client.store.version // increases on every change; what React's useSyncExternalStore compares
+) // when the selected value changes (Object.is; options: { equalityFn, fireImmediately })
+client.store.subscribe((state, before) => {}) // after every change
+useStore(client.store, (s) => s.video.playing) // React: zustand's hook, re-renders on that value only
 ```
+
+`selectSession`, `selectControlling` and `selectIsAdmin` compute what the getters `session`,
+`controlling` and `isAdmin` report, from a state: `client.store.subscribe(selectControlling, (on) => {})`,
+`useStore(client.store, selectIsAdmin)`. The client owns the state: `client.store.setState()` exists
+(zustand, and the tests use it) but nothing a consumer writes is sent to the server.
 
 | field                                      |                                                                                    |
 | ------------------------------------------ | ---------------------------------------------------------------------------------- |
@@ -191,8 +203,8 @@ Another device (a gamepad, a VR controller, a test driver) does what the overlay
 `client.request()` to become host, and send through `client.input`:
 
 ```ts
-const off = client.store.watch(
-  () => client.controlling && !client.state.control.locked,
+const off = client.store.subscribe(
+  (s) => selectControlling(s) && !s.control.locked,
   (on) => (on ? gamepad.start() : gamepad.stop()),
 )
 gamepad.onStick = (x, y) => client.input.move(x, y) // in remote screen pixels
@@ -281,13 +293,14 @@ needs: its own connection from the `SessionInfo`, an element it draws into, play
 either an `input` channel or nothing (the client then sends input over the websocket). Pass it as
 `new NekoClient({ transport })`; the GUI checks `WebRTCTransport.supported()` before rendering.
 
-## `Store` and `Emitter`
+## The store and `Emitter`
 
-`new Store(initial)` wraps a plain object in proxies: writes anywhere in the tree mark it dirty, and
-one microtask later `watch` callbacks run and `subscribe` listeners are called. Arrays and objects
-read from the store are proxies too, so in-place mutation (`push`, `splice`, assignment) is seen.
-`Emitter<Events>` is a small typed event emitter. Both are exported for GUIs that want the same
-pattern for their own state.
+The state is a zustand store (`createStore` from `zustand/vanilla` with `subscribeWithSelector`
+from `zustand/middleware`; zustand is the package's one runtime dependency): every change is one
+immutable `setState`, listeners run synchronously in it, and a selector subscription fires only when
+its value changes (see [State](#state)). A GUI makes its own stores the same way and selects from all
+of them with one hook (`useStore` from `zustand`). `Emitter<Events>` is a small typed event emitter
+(`on` returns the unsubscribe, `once`, `off`, `emit`), exported for the same reason.
 
 ## Types
 
@@ -304,8 +317,9 @@ npm test        # the unit tests in src/**/*.test.ts (vitest, run from ../ where
                 # state machine (handshake, reconnects, timeouts, events, clipboard, auth), the transport seam,
                 # the WebRTC transport, the input channels, the overlay and the store, against the fake browser
                 # in src/test/browser.ts (sockets, peers, elements, fake timers)
-npm run check   # build, the tests, then node dist.check.mjs against the built package: exports, Store,
-                # Emitter, setUrl, .d.ts specifiers, and that client.js never imports the overlay or the keyboard
+npm run check   # build, the tests, then node dist.check.mjs against the built package: exports, the store
+                # (selector subscriptions, immutable updates, zustand resolvable), Emitter, setUrl, .d.ts
+                # specifiers, and that client.js never imports the overlay or the keyboard
 ```
 
 The tests and dist.check.mjs run under Node with a few browser globals stubbed, so the connection state

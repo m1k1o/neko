@@ -1,4 +1,4 @@
-import { createStore } from '@/state/stores'
+import { createStore } from 'zustand/vanilla'
 
 export interface FileItem {
   name: string
@@ -25,7 +25,7 @@ export interface Upload {
   error?: string
 }
 
-export const store = createStore({
+export const store = createStore(() => ({
   files: null as FileTransfer | null,
   uploads: [] as Upload[],
-})
+}))

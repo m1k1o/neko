@@ -1,5 +1,6 @@
-import { useEffect, useState, type FormEvent } from 'react'
-import { useNeko } from '@/state/hooks'
+import { useEffect, useReducer, useState, type FormEvent } from 'react'
+import { useStore } from 'zustand'
+import { useShallow } from 'zustand/react/shallow'
 import { actions } from '@/state/actions'
 import { client } from '@/state/client'
 import { tell } from '@/state/dialogs'
@@ -19,7 +20,10 @@ const loginOnce = (user: string, password: string) =>
 
 // the login screen, and the "Connect" screen of a logged-in viewer without a connection
 export function Connect() {
-  const { state } = useNeko()
+  const { status, authenticated } = useStore(
+    client.store,
+    useShallow((s) => ({ status: s.connection.status, authenticated: s.authenticated })),
+  )
   const [oauth, setOauth] = useState<{
     enabled?: boolean
     name?: string
@@ -28,6 +32,8 @@ export function Connect() {
   }>({})
   const [displayname, setDisplayname] = useState(params.get('usr') || '')
   const [password, setPassword] = useState('')
+  // a login attempt that is over has used up the invite: show the form with the password field
+  const [, settled] = useReducer((n: number) => n + 1, 0)
 
   useEffect(() => {
     client.api
@@ -42,16 +48,16 @@ export function Connect() {
     }
     // always, even if a saved session is being resumed at the same time: the link wins
     // (login() drops the resumed websocket), and this must not depend on which answer is first
-    if (invite && params.get('usr')) loginOnce(params.get('usr')!, invite)
+    if (invite && params.get('usr')) loginOnce(params.get('usr')!, invite).finally(settled)
   }, [])
 
   const login = (e: FormEvent) => {
     e.preventDefault()
     if (!displayname) return tell(t('connect.error'), t('connect.empty_displayname'))
-    loginOnce(displayname, invite ?? password)
+    loginOnce(displayname, invite ?? password).finally(settled)
   }
 
-  const connecting = state.connection.status === 'connecting'
+  const connecting = status === 'connecting'
   const passwordLogin = oauth.password_login_enabled !== false
   return (
     <div className="connect">
@@ -64,7 +70,7 @@ export function Connect() {
             <div className="bounce1"></div>
             <div className="bounce2"></div>
           </div>
-        ) : state.authenticated ? (
+        ) : authenticated ? (
           // logged in but disconnected (network drop, server restart)
           <form className="message" onSubmit={(e) => (e.preventDefault(), client.connect())}>
             <span>{t('connection.disconnected')}</span>

@@ -1,25 +1,27 @@
 import { useState } from 'react'
-import { useNeko } from '@/state/hooks'
+import { useStore } from 'zustand'
+import { selectIsAdmin } from '@m1k1o/neko'
 import { actions } from '@/state/actions'
-import { isLocked, type LockResource } from '@/state/client'
+import { app } from '@/state/app'
+import { client, isLocked, type LockResource } from '@/state/client'
 import { remember } from '@/state/storage'
 import { a11y } from '@/components/a11y'
 import { Logo } from '@/components/Logo'
 import { LockButton } from '@/components/LockButton'
 import { t } from '@/i18n'
 import { tabs, topBar } from '@/plugins'
+import { EachHook } from '@/components/EachHook'
 import './header.scss'
 
-// what the side panel has to show, for the badge on its toggle
-const unread = () => tabs().reduce((n, tab) => n + (tab.badge?.() ?? 0), 0)
+const zero = () => 0
 
 export function Header() {
-  const { client, app } = useNeko()
-  const admin = client.isAdmin
-  const [read, setRead] = useState(unread)
+  const admin = useStore(client.store, selectIsAdmin)
+  const settings = useStore(client.store, (s) => s.settings)
+  const side = useStore(app, (s) => s.side)
 
   const lock = (r: LockResource, icon: string) => {
-    const locked = isLocked(r)
+    const locked = isLocked(r, settings)
     const tip = admin
       ? t(`locks.${r}.${locked ? 'unlock' : 'lock'}`)
       : t(`locks.${r}.${locked ? 'locked' : 'unlocked'}`)
@@ -39,24 +41,35 @@ export function Header() {
       </a>
       <ul className="menu">
         {lock('control', 'fa-mouse')}
-        {lock('login', isLocked('login') ? 'fa-lock' : 'fa-lock-open')}
+        {lock('login', isLocked('login', settings) ? 'fa-lock' : 'fa-lock-open')}
         {topBar().map(({ id, component: Item }) => (
           <Item key={id} />
         ))}
-        <li>
-          {!app.side && read !== unread() && <span className="badge">&bull;</span>}
-          <i
-            className="fas fa-bars toggle"
-            {...a11y('Toggle side panel')}
-            aria-expanded={app.side}
-            onClick={() => {
-              app.side = !app.side
-              remember('side', app.side)
-              setRead(unread())
-            }}
-          />
-        </li>
+        {/* what the side panel has to show, for the badge on its toggle */}
+        <EachHook items={tabs()} use={(tab) => tab.useBadge ?? zero}>
+          {(counts) => <Toggle side={side} unread={counts.reduce((n, c) => n + c, 0)} />}
+        </EachHook>
       </ul>
     </div>
+  )
+}
+
+// the side panel's toggle, with a badge when the unread count changed while the panel was closed
+function Toggle({ side, unread }: { side: boolean; unread: number }) {
+  const [read, setRead] = useState(unread)
+  return (
+    <li>
+      {!side && read !== unread && <span className="badge">&bull;</span>}
+      <i
+        className="fas fa-bars toggle"
+        {...a11y('Toggle side panel')}
+        aria-expanded={side}
+        onClick={() => {
+          app.setState({ side: !side })
+          remember('side', !side)
+          setRead(unread)
+        }}
+      />
+    </li>
   )
 }

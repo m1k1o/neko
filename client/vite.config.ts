@@ -10,6 +10,8 @@ export default defineConfig({
   // shown in the About dialog
   define: { __APP_VERSION__: JSON.stringify(version) },
   resolve: {
+    // the core is consumed from source (alias below), so its zustand must be this app's copy, not core/node_modules'
+    dedupe: ['zustand'],
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
       // the GUI consumes the core package from source; consumers get the built dist/ (core/package.json)

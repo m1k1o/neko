@@ -1,12 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNeko } from '@/state/hooks'
+import { useStore } from 'zustand'
 import { client } from '@/state/client'
 import './clipboard.scss'
 
 // textarea fallback for browsers that cannot read the local clipboard (see Video.tsx)
 export function Clipboard() {
-  const { state } = useNeko()
-  const remote = state.control.clipboard?.text ?? ''
+  const remote = useStore(client.store, (s) => s.control.clipboard?.text ?? '')
   const [text, setText] = useState(remote)
   useEffect(() => setText(remote), [remote]) // follows what is copied on the remote while open
   const timer = useRef(0)

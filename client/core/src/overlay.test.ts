@@ -3,7 +3,7 @@
 // and the mount() helper around it.
 import { test } from 'vitest'
 import assert from 'node:assert/strict'
-import { tick, settle, reset, init, FakeElement, resizeObservers, windowListeners } from './test/browser.ts'
+import { tick, settle, reset, init, patch, FakeElement, resizeObservers, windowListeners } from './test/browser.ts'
 
 const { NekoClient, Overlay, mount } = await import('./index.ts')
 type Options = ConstructorParameters<typeof NekoClient>[0]
@@ -57,13 +57,15 @@ const setup = () => {
   const { t, calls, emit, subscribers } = fakeTransport()
   const client = new NekoClient({ transport: t })
   const p = init()
-  client.state.session_id = p.session_id
-  client.state.sessions = p.sessions
-  client.state.settings = p.settings
-  client.state.screen.size = p.screen_size
-  client.state.control.host_id = 's2'
-  client.state.control.touch = true
-  client.state.connection.status = 'connected'
+  const s = client.state
+  client.store.setState({
+    session_id: p.session_id,
+    sessions: p.sessions,
+    settings: p.settings,
+    screen: { ...s.screen, size: p.screen_size },
+    control: { ...s.control, host_id: 's2', touch: true },
+    connection: { ...s.connection, status: 'connected' },
+  })
   const area = new FakeElement('div')
   area.offsetWidth = 1000
   area.offsetHeight = 500
@@ -77,7 +79,7 @@ const setup = () => {
   return { client, calls, emit, subscribers, area, box, overlay, wrap, canvas, textarea }
 }
 const host = async (client: InstanceType<typeof NekoClient>) => {
-  client.state.control.host_id = 's1'
+  patch(client, 'control', { host_id: 's1' })
   await settle()
   assert.equal(client.controlling, true)
 }
@@ -115,7 +117,7 @@ test('attach: cursor canvas and textarea after the transport’s element, as the
   assert.deepEqual(box.style, { width: `${w}px`, height: '500px', marginTop: '0px', marginLeft: `${(1000 - w) / 2}px` })
   assert.deepEqual([(canvas() as any).width, (canvas() as any).height], [w, 500], 'the canvas backing store follows')
   assert.equal(resizeObservers.at(-1)?.observed, box.parent, 'the area is observed')
-  client.state.screen.size = { width: 1000, height: 1000, rate: 30 } // a square screen: 500x500 in the middle
+  patch(client, 'screen', { size: { width: 1000, height: 1000, rate: 30 } }) // a square screen: 500x500 in the middle
   await settle()
   assert.deepEqual(box.style, { width: '500px', height: '500px', marginTop: '0px', marginLeft: '250px' })
   box.parent!.offsetWidth = 400 // the area shrinks: the observer reports it
@@ -123,14 +125,14 @@ test('attach: cursor canvas and textarea after the transport’s element, as the
   assert.deepEqual(box.style, { width: '400px', height: '400px', marginTop: '50px', marginLeft: '0px' })
 
   // private mode hides it from users, a local lock or no can_host takes the mouse away
-  client.state.settings.private_mode = true
+  patch(client, 'settings', { private_mode: true })
   await settle()
   assert.equal(wrap().style.display, 'none')
-  client.state.settings.private_mode = false
-  client.state.control.locked = true
+  patch(client, 'settings', { private_mode: false })
+  patch(client, 'control', { locked: true })
   await settle()
   assert.deepEqual([wrap().style.display, wrap().style.pointerEvents], ['', 'none'])
-  client.state.control.locked = false
+  patch(client, 'control', { locked: false })
   await settle()
 
   assert.equal(windowListeners.mouseup?.size, 1)
@@ -144,8 +146,8 @@ test('attach: cursor canvas and textarea after the transport’s element, as the
   assert.equal(windowListeners.mouseup?.size, 0)
   assert.deepEqual([subscribers('cursor.position'), subscribers('cursor.image')], [0, 0])
   assert.ok(resizeObservers.at(-1)!.disconnected)
-  client.state.control.locked = true // the store watches are gone too
-  client.state.screen.size = { width: 1920, height: 1080, rate: 60 }
+  patch(client, 'control', { locked: true }) // the store subscriptions are gone too
+  patch(client, 'screen', { size: { width: 1920, height: 1080, rate: 60 } })
   await settle()
   assert.equal(w1.style.pointerEvents, 'auto')
   assert.equal(box.style.width, '400px')
@@ -237,7 +239,7 @@ test('touch: a touchstart reaches client.input.touch with the id, position and p
     changedTouches: [{ identifier: 7, clientX: 10 + 96, clientY: 20 + 54, force: 0.5 }],
   })
   assert.deepEqual(calls, [['touch', 'begin', 7, 192, 108, 128]])
-  client.state.control.touch = false // a server without touch events: the first finger is the left button
+  patch(client, 'control', { touch: false }) // a server without touch events: the first finger is the left button
   textarea().dispatch('touchend', { changedTouches: [{ identifier: 7, clientX: 10 + 96, clientY: 20 + 54, force: 0 }] })
   assert.deepEqual(calls.slice(1), [
     ['move', 192, 108],
@@ -286,7 +288,7 @@ test('mobileKeyboardToggle: focuses the textarea to open the on-screen keyboard,
   overlay.mobileKeyboardToggle()
   assert.deepEqual([textarea().focused, client.state.mobile_keyboard_open], [false, false])
   textarea().focused = true
-  client.state.mobile_keyboard_open = true
+  client.store.setState({ mobile_keyboard_open: true })
   textarea().dispatch('blur') // the keyboard was dismissed by the user
   assert.equal(client.state.mobile_keyboard_open, false)
 })
@@ -312,4 +314,56 @@ test('mount(client, el): the stream and the overlay in a letterboxed box inside 
   assert.deepEqual(area.children, [])
   assert.deepEqual(mounted.children, [], 'the transport’s element and the overlay are detached, not just the box')
   assert.equal(windowListeners.mouseup.size, 0)
+})
+
+test('store subscriptions: resize on the screen size, sync on visibility and interactivity, control and focus on hosting, a redraw on the host; once per change, not for the rest, and one update with several fields once', async () => {
+  const { client, box, overlay } = setup()
+  const calls = { resize: 0, sync: 0, control: [] as boolean[], focus: 0, draw: 0 }
+  const o = overlay as any
+  o.onResize = () => calls.resize++
+  o.sync = () => calls.sync++
+  o.onControl = (c: boolean) => calls.control.push(c)
+  o.focusIfActive = () => calls.focus++
+  o.draw = () => calls.draw++ // before attach: the host subscription takes the function itself
+  overlay.attach(box as any)
+  Object.assign(calls, { resize: 0, sync: 0, draw: 0 }) // attach syncs and sizes once by itself
+
+  patch(client, 'control', { clipboard: { text: 'x' } }) // not watched
+  client.store.setState({ mobile_keyboard_open: true, authenticated: true })
+  patch(client, 'settings', { locked_logins: true })
+  assert.deepEqual(calls, { resize: 0, sync: 0, control: [], focus: 0, draw: 0 })
+
+  patch(client, 'screen', { size: { width: 800, height: 600, rate: 30 } })
+  assert.deepEqual(calls, { resize: 1, sync: 0, control: [], focus: 0, draw: 0 })
+  patch(client, 'settings', { private_mode: true }) // hidden from a user
+  assert.deepEqual(calls, { resize: 1, sync: 1, control: [], focus: 0, draw: 0 })
+  patch(client, 'control', { host_id: 's1' }) // we are host: control, focus, and the drawn cursor goes
+  assert.deepEqual(calls, { resize: 1, sync: 1, control: [true], focus: 1, draw: 1 })
+  client.lock() // interactive and active flip, controlling does not
+  assert.deepEqual(calls, { resize: 1, sync: 2, control: [true], focus: 2, draw: 1 })
+  client.unlock()
+  patch(client, 'control', { host_id: 's2' })
+  assert.deepEqual(calls, { resize: 1, sync: 3, control: [true, false], focus: 4, draw: 2 })
+
+  // system/init changes the screen size, the sessions (we become admin), the settings (private
+  // mode on) and the host in one update: every subscriber runs once, on the final state. Visible
+  // stays true (an admin sees through private mode), so sync does not run at all; applied field
+  // by field, settings before sessions, it would flip to false and back.
+  patch(client, 'settings', { private_mode: false }) // visible again
+  const before = JSON.parse(JSON.stringify(calls))
+  client.connect()
+  const p = init()
+  p.sessions.s1.profile.is_admin = true
+  p.settings.private_mode = true
+  p.control_host = { has_host: true, host_id: 's1' }
+  p.screen_size = { width: 640, height: 480, rate: 30 }
+  ;(client as any).onMessage('system/init', p)
+  assert.deepEqual(calls, {
+    resize: before.resize + 1,
+    sync: before.sync,
+    control: [...before.control, true],
+    focus: before.focus + 1,
+    draw: before.draw + 1,
+  })
+  assert.deepEqual([o.visible, o.interactive, o.active], [true, true, true])
 })

@@ -16,12 +16,10 @@ export interface Toast {
   text?: string
 }
 
-const s = app.state
-
 // ask() resolves true on confirm, tell() when dismissed
 function dialog(d: Omit<Dialog, 'resolve'>) {
-  s.dialog?.resolve(false)
-  return new Promise<boolean>((resolve) => (s.dialog = { ...d, resolve }))
+  app.getState().dialog?.resolve(false)
+  return new Promise<boolean>((resolve) => app.setState({ dialog: { ...d, resolve } }))
 }
 export const ask = (title: string, text?: string) => dialog({ title, text, icon: 'warning', cancel: true })
 export const tell = (title: string, text?: string, icon: Dialog['icon'] = 'error') =>
@@ -33,6 +31,6 @@ export const nextId = () => ++idSeq
 
 export function toast(title: string, text?: string, kind: Toast['kind'] = 'info') {
   const id = nextId()
-  s.toasts.push({ id, kind, title, text })
-  setTimeout(() => (s.toasts = s.toasts.filter((x) => x.id !== id)), 5000)
+  app.setState((s) => ({ toasts: [...s.toasts, { id, kind, title, text }] }))
+  setTimeout(() => app.setState((s) => ({ toasts: s.toasts.filter((x) => x.id !== id) })), 5000)
 }

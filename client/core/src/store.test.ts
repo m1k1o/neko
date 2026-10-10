@@ -1,57 +1,86 @@
-// Unit tests of the store and the emitter: `npm test` (vitest)
+// Unit tests of the client's store (zustand, immutable updates, selector subscriptions) and the
+// emitter: `npm test` (vitest)
 import { test } from 'vitest'
 import assert from 'node:assert/strict'
-import { Store, Emitter } from './store.ts'
+import { reset, patch, session } from './test/browser.ts'
+import { Emitter } from './emitter.ts'
+const { NekoClient, selectControlling, selectSession, selectIsAdmin } = await import('./index.ts')
 
 const fresh = () => {
-  const s = new Store({ a: { b: 1 }, list: [] as number[], map: {} as Record<string, { n: number }> })
-  let notified = 0
-  s.subscribe(() => notified++)
-  return { s, notified: () => notified }
+  reset()
+  return new NekoClient({ autologin: false, autoconnect: false })
 }
 
-test('writes anywhere in the tree are batched into one flush; watchers get new and old', async () => {
-  const { s, notified } = fresh()
+test('a selector subscription fires only when the selected value changes, with the value before', () => {
+  const client = fresh()
   const seen: unknown[] = []
-  const unwatch = s.watch(
-    () => s.state.a.b,
+  const off = client.store.subscribe(
+    (s) => s.video.playing,
     (v, old) => seen.push([v, old]),
   )
-  s.state.a.b = 2
-  s.state.list.push(1)
-  s.state.map.x = { n: 1 }
-  assert.equal(notified(), 0)
-  await Promise.resolve()
-  assert.deepEqual([notified(), s.version, seen], [1, 1, [[2, 1]]])
-  unwatch()
-  s.state.a.b = 3
-  await Promise.resolve()
-  assert.deepEqual([notified(), seen.length], [2, 1])
+  // writes elsewhere in the state: not seen (the cursor never enters the store at all, it is a
+  // transport event the overlay draws)
+  patch(client, 'control', { clipboard: { text: 'x' } })
+  client.store.setState({ mobile_keyboard_open: true })
+  patch(client, 'video', { volume: 0.5 }) // the same slice, another field: a new object, the same value
+  assert.deepEqual(seen, [])
+  patch(client, 'video', { playing: true })
+  assert.deepEqual(seen, [[true, false]])
+  patch(client, 'video', { playing: true }) // no change
+  assert.deepEqual(seen, [[true, false]])
+  off()
+  patch(client, 'video', { playing: false })
+  assert.equal(seen.length, 1, 'unsubscribed')
 })
 
-test('child proxies are stable, deletes notify, no-op writes do not', async () => {
-  const { s, notified } = fresh()
-  assert.equal(s.state.a, s.state.a)
-  s.state.a.b = 1
-  await Promise.resolve()
-  assert.equal(notified(), 0)
-  s.state.map.x = { n: 1 }
-  await Promise.resolve()
-  delete s.state.map.x
-  await Promise.resolve()
-  assert.equal(notified(), 2)
+test('updates are immutable: the changed slice is a new object, untouched slices keep their identity', () => {
+  const client = fresh()
+  const before = client.state
+  client.lock()
+  const after = client.state
+  assert.notEqual(after, before)
+  assert.notEqual(after.control, before.control)
+  assert.equal(after.control.locked, true)
+  assert.equal(before.control.locked, false, 'the state before is not touched')
+  for (const k of ['connection', 'video', 'screen', 'sessions', 'settings'] as const)
+    assert.equal(after[k], before[k], `${k} keeps its identity`)
+  client.setScrollInverse(false)
+  assert.equal(
+    client.state.control.keyboard,
+    after.control.keyboard,
+    'the sibling of a nested write keeps its identity',
+  )
+  assert.notEqual(client.state.control.scroll, after.control.scroll)
 })
 
-test('values read from the store and put back are not wrapped again', () => {
-  const { s } = fresh()
-  s.state.map.y = s.state.a as any // re-assigning a proxy stores the raw object
-  assert.equal(s.state.map.y, s.state.a)
-  s.state.map.z = { n: 2 }
-  const z = s.state.map.z
-  s.state.map = { ...s.state.map }
-  assert.equal(s.state.map.z, z)
-  for (let i = 0; i < 3000; i++) s.state.map = { ...s.state.map }
-  assert.equal(s.state.map.z.n, 2) // would overflow the stack with one proxy layer per round trip
+test('client.state is the store’s current state; a plain listener sees every update', () => {
+  const client = fresh()
+  assert.equal(client.state, client.store.getState())
+  let runs = 0
+  const off = client.store.subscribe(() => runs++)
+  client.store.setState({ authenticated: true })
+  assert.equal(client.state, client.store.getState())
+  assert.deepEqual([client.state.authenticated, runs], [true, 1])
+  patch(client, 'video', { volume: 0.5 })
+  assert.equal(runs, 2)
+  off()
+  assert.ok(!('watch' in client.store) && !('version' in client.store), 'the proxy store’s API is gone')
+})
+
+test('selectors: session, controlling and isAdmin from the state, as the getters report them', () => {
+  const client = fresh()
+  const s1 = session('s1', { is_admin: true })
+  assert.deepEqual(
+    [selectSession(client.state), selectControlling(client.state), selectIsAdmin(client.state)],
+    [null, false, false],
+  )
+  client.store.setState({ session_id: 's1', sessions: { s1 } })
+  assert.deepEqual([selectSession(client.state), client.session], [s1, s1])
+  assert.deepEqual([selectIsAdmin(client.state), client.isAdmin], [true, true])
+  patch(client, 'control', { host_id: 's2' })
+  assert.deepEqual([selectControlling(client.state), client.controlling], [false, false])
+  patch(client, 'control', { host_id: 's1' })
+  assert.deepEqual([selectControlling(client.state), client.controlling], [true, true])
 })
 
 test('emitter: on returns the unsubscribe, once fires one time', () => {

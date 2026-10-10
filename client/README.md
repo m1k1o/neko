@@ -12,7 +12,7 @@ client/
     features/    one folder per feature: video, members, controls, room-menu, emotes, settings, connect, about
     plugins/     the registry (index.ts), the plugin contract (types.ts), chat/, filetransfer/
     components/  shared pieces: Avatar, Dialog, Toasts, Logo, ContextMenu, LockButton, a11y
-    state/       the stores, the NekoClient instance, actions, settings, dialogs, event wiring, useNeko()
+    state/       the app store, the NekoClient instance, actions, settings, dialogs, event wiring
     i18n/        t(), setLang(), the locale table (locale/*.ts)
     design/      SCSS tokens (_variables), reset, fonts, global styles
     assets/      images
@@ -32,6 +32,11 @@ Dependencies point one way: `app → layout → features → components → desi
   through the registry `@/plugins`, and features get plugin contributions passed in (they see only
   the contract in `@/plugins/types`).
 - The core is imported only from its entry point, `@m1k1o/neko`, never from a path into `core/`.
+- State is zustand: the core's `client.store`, the GUI's `app` store (`state/app.ts`) and each plugin's
+  `store.ts`. A component selects what it renders, `useStore(client.store, (s) => s.video.playing)`
+  (`useShallow` for several fields; the core's `selectControlling`, `selectIsAdmin`, `selectSession` for
+  the computed values), and re-renders only when that value changes. Everything outside React reads
+  `store.getState()` and writes `store.setState()` with a new object, never in place.
 - Where two layers must talk without importing each other, there is a store or a signal in `state/`:
   the room's event lines ("bob took the controls") are emitted on `state/bus.ts` and shown by the chat
   plugin; `logout` is a bus signal every store with per-session data listens to.
@@ -44,25 +49,28 @@ layer, and `tools/cycles.mjs` fails on an import cycle (type-only imports except
 A plugin is a folder under `src/plugins/` with its components, styles, store, actions and locale
 strings, described by one object (`src/plugins/types.ts`):
 
-| field        |                                                                                                                                               |
-| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`         | the prefix of its server events: `message` events named `<id>/...` reach `onEvent`                                                            |
-| `locale`     | strings per language, merged into the i18n table at start-up (`{ en: { side: { chat: 'Chat' } } }`)                                           |
-| `tab`        | a side-panel tab: `id` (the `side.<id>` label and the remembered tab), `icon`, `component`, optional `visible()` and `badge()` (unread count) |
-| `topBar`     | items for the header menu; each renders its own `<li>` or nothing                                                                             |
-| `memberMenu` | entries of another member's context menu: `visible(member)`, `label(member)`, `onClick(member)`                                               |
-| `onEvent`    | `(event, payload)` for its server events                                                                                                      |
-| `init`       | called once at start-up, before the connection: subscribe to `client.events`, the bus, ...                                                    |
+| field        |                                                                                                                                                      |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`         | the prefix of its server events: `message` events named `<id>/...` reach `onEvent`                                                                   |
+| `locale`     | strings per language, merged into the i18n table at start-up (`{ en: { side: { chat: 'Chat' } } }`)                                                  |
+| `tab`        | a side-panel tab: `id` (the `side.<id>` label and the remembered tab), `icon`, `component`, the hooks `useVisible()` and `useBadge()` (unread count) |
+| `topBar`     | items for the header menu; each renders its own `<li>` or nothing                                                                                    |
+| `memberMenu` | entries of another member's context menu: the hook `useVisible(member)`, `label(member)`, `onClick(member)`                                          |
+| `onEvent`    | `(event, payload)` for its server events                                                                                                             |
+| `init`       | called once at start-up, before the connection: subscribe to `client.events`, the bus, ...                                                           |
 
 `src/plugins/index.ts` lists the plugins of the build in side-panel order. The side panel, the
-header and the member menu render what the registry returns, and `initPlugins()` (called from
-`app/boot.ts`) merges the strings, installs the event dispatch and runs each `init`.
+header and the member menu render what the registry returns (`useVisible` and `useBadge` are hooks
+over the plugin's store, so each runs in a small component of its own and re-renders only that), and
+`initPlugins()` (called from `app/boot.ts`) merges the strings, installs the event dispatch and runs
+each `init`.
 
 To add a plugin:
 
 1. Create `src/plugins/<name>/` with an `index.ts` exporting the plugin object, its components with
-   their `.scss`, a `store.ts` made with `createStore()` from `@/state/stores` (so `useNeko()` re-renders
-   on its changes), and a `locale.ts`.
+   their `.scss`, a `store.ts` made with zustand's `createStore()` (components select from it with
+   `useStore(store, (s) => s.field)`, the rest reads `store.getState()` and writes `store.setState()`),
+   and a `locale.ts`.
 2. Add the import and the entry to `src/plugins/index.ts`.
 
 Removing the entry removes the tab, the header items and the event handling; nothing else changes.
@@ -70,8 +78,8 @@ Removing the entry removes the tab, the header items and the event handling; not
 ## core
 
 `core/` is `@m1k1o/neko`: `NekoClient` (auth, websocket with reconnect and stale detection, WebRTC,
-the binary input channel, control, clipboard, broadcast), the input `Overlay`, `Store`/`Emitter`,
-`NekoApi` and the wire types. The GUI consumes it from source through the `@m1k1o/neko` alias in
+the binary input channel, control, clipboard, broadcast), the input `Overlay`, the zustand store with
+its selectors, `Emitter`, `NekoApi` and the wire types. The GUI consumes it from source through the `@m1k1o/neko` alias in
 `tsconfig.json` and `vite.config.ts`; `npm run build:core` builds the package (`core/dist/`). The API
 reference is `core/README.md`.
 
@@ -79,7 +87,7 @@ reference is `core/README.md`.
 import { NekoClient } from '@m1k1o/neko'
 
 const client = new NekoClient({ autologin: true, autoconnect: true, autoplay: true })
-client.store.subscribe(() => render(client.state)) // state: connection, sessions, control, screen, ...
+client.store.subscribe((s) => s.sessions, render) // state: connection, sessions, control, screen, ...
 client.events.on('message', (event, payload) => {}) // plugin events (chat/*, filetransfer/*, ...)
 client.setUrl('https://neko.example.com/')
 client.mount(document.getElementById('video')!)

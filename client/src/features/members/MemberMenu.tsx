@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNeko } from '@/state/hooks'
+import { useStore } from 'zustand'
+import { useShallow } from 'zustand/react/shallow'
+import { selectControlling, selectIsAdmin, type Session } from '@m1k1o/neko'
 import { actions } from '@/state/actions'
+import { app } from '@/state/app'
 import { client } from '@/state/client'
 import { ask } from '@/state/dialogs'
 import { a11y, closeOn } from '@/components/a11y'
@@ -10,20 +13,45 @@ import { t } from '@/i18n'
 import type { PluginMemberMenuItem } from '@/plugins/types'
 
 const confirmThen = (title: string, text: string, fn: () => void) => ask(title, text).then((ok) => ok && fn())
+const always = () => true
+
+// a plugin's entry, when its hook shows it for this member
+function Item({ item, member }: { item: PluginMemberMenuItem; member: Session }) {
+  const useVisible = item.useVisible ?? always
+  const visible = useVisible(member)
+  if (!visible) return null
+  return (
+    <li>
+      <span {...a11y(item.label(member), 'menuitem')} onClick={() => item.onClick(member)}>
+        {item.label(member)}
+      </span>
+    </li>
+  )
+}
 
 // rendered by App outside .room-container, which is hidden at narrow widths where the chat still works
 export function MemberMenu({ items }: { items: PluginMemberMenuItem[] }) {
-  const { app, state } = useNeko()
+  const menu = useStore(app, (s) => s.menu)
   const [bannable, setBannable] = useState(false)
-  useEffect(() => closeOn(() => (app.menu = null)), [app])
+  useEffect(() => closeOn(() => app.setState({ menu: null })), [])
   // keyboard users land on the first item
   const list = useRef<HTMLUListElement>(null)
   useEffect(() => {
-    if (app.menu) list.current?.querySelector<HTMLElement>('[role=menuitem]')?.focus()
-  }, [app.menu])
+    if (menu) list.current?.querySelector<HTMLElement>('[role=menuitem]')?.focus()
+  }, [menu])
 
-  const id = app.menu?.id
-  const m = id ? state.sessions[id] : undefined
+  const id = menu?.id
+  const { m, admin, implicit, hostId, hosting } = useStore(
+    client.store,
+    useShallow((s) => ({
+      m: id ? s.sessions[id] : undefined,
+      admin: selectIsAdmin(s),
+      implicit: s.settings.implicit_hosting,
+      hostId: s.control.host_id,
+      hosting: selectControlling(s),
+    })),
+  )
+  const ignored = useStore(app, (s) => !!id && !!s.ignored[id])
   // ban only sticks where the auth provider stores accounts, see actions.ban
   useEffect(() => {
     setBannable(false)
@@ -31,14 +59,12 @@ export function MemberMenu({ items }: { items: PluginMemberMenuItem[] }) {
     if (id && client.isAdmin) actions.canBan(id).then((v) => current && setBannable(v))
     return () => void (current = false)
   }, [id])
-  if (!app.menu || !m) return null
+  if (!menu || !m) return null
 
   const n = m.profile.name
-  const admin = client.isAdmin
-  const implicit = state.settings.implicit_hosting
-  const isHost = id === state.control.host_id
-  const x = Math.min(app.menu.x, innerWidth - 170)
-  const y = Math.min(app.menu.y, innerHeight - 250)
+  const isHost = id === hostId
+  const x = Math.min(menu.x, innerWidth - 170)
+  const y = Math.min(menu.y, innerHeight - 250)
 
   return (
     <ContextMenu ref={list} role="menu" aria-label={n} style={{ left: x, top: y }}>
@@ -51,21 +77,15 @@ export function MemberMenu({ items }: { items: PluginMemberMenuItem[] }) {
       <li className="seperator" />
       <li>
         <span
-          {...a11y(t(app.ignored[id!] ? 'context.unignore' : 'context.ignore'), 'menuitem')}
-          onClick={() => (app.ignored[id!] = !app.ignored[id!])}
+          {...a11y(t(ignored ? 'context.unignore' : 'context.ignore'), 'menuitem')}
+          onClick={() => app.setState((s) => ({ ignored: { ...s.ignored, [id!]: !s.ignored[id!] } }))}
         >
-          {t(app.ignored[id!] ? 'context.unignore' : 'context.ignore')}
+          {t(ignored ? 'context.unignore' : 'context.ignore')}
         </span>
       </li>
-      {items
-        .filter((item) => !item.visible || item.visible(m))
-        .map((item) => (
-          <li key={item.id}>
-            <span {...a11y(item.label(m), 'menuitem')} onClick={() => item.onClick(m)}>
-              {item.label(m)}
-            </span>
-          </li>
-        ))}
+      {items.map((item) => (
+        <Item key={item.id} item={item} member={m} />
+      ))}
       {admin ? (
         <>
           {!implicit && isHost && (
@@ -91,7 +111,7 @@ export function MemberMenu({ items }: { items: PluginMemberMenuItem[] }) {
           )}
         </>
       ) : (
-        client.controlling &&
+        hosting &&
         !implicit && (
           <li>
             <span {...a11y(t('context.give'), 'menuitem')} onClick={() => actions.give(id!)}>

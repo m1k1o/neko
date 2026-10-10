@@ -1,6 +1,7 @@
 // The GUI's own state next to the core's `client.state`: viewer settings, the side panel, toasts,
-// dialogs. Every component reads it through useNeko(). Plugins keep their own stores.
-import { createStore } from './stores'
+// dialogs. A zustand store: components select from it (`useStore(app, (s) => s.side)`), everything
+// else reads `app.getState()` and writes with `app.setState()`. Plugins keep their own stores.
+import { createStore } from 'zustand/vanilla'
 import { get } from './storage'
 import { detectLang, type Lang } from '@/i18n/locale'
 import type { Dialog, Toast } from './dialogs'
@@ -26,7 +27,7 @@ function load(): ViewerSettings {
 
 const params = new URL(location.href).searchParams
 
-export const app = createStore({
+export const app = createStore(() => ({
   lang: get<string>('lang', detectLang()) as Lang,
   settings: load(),
   side: params.has('show_side') ? params.get('show_side') === '1' : get('side', false),
@@ -43,4 +44,4 @@ export const app = createStore({
   dialog: null as Dialog | null,
   about: false,
   bans: 0, // bumped after a ban or unban, so lists that show them reload
-})
+}))

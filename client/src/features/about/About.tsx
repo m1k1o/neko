@@ -1,15 +1,16 @@
 import { useEffect } from 'react'
-import { useNeko } from '@/state/hooks'
+import { app } from '@/state/app'
 import { closeOn } from '@/components/a11y'
 import { Logo } from '@/components/Logo'
 import { t } from '@/i18n'
 import './about.scss'
 
+const close = () => app.setState({ about: false })
+
 export function About() {
-  const { app } = useNeko()
-  useEffect(() => closeOn(() => (app.about = false)), [app])
+  useEffect(() => closeOn(close), [])
   return (
-    <div className="about" onClick={(e) => e.target === e.currentTarget && (app.about = false)}>
+    <div className="about" onClick={(e) => e.target === e.currentTarget && close()}>
       <div className="window" role="dialog" aria-label="About n.eko">
         <div className="about-content">
           <div className="logo">
@@ -25,7 +26,7 @@ export function About() {
             </a>
           </p>
           <p className="version">client {__APP_VERSION__}</p>
-          <button onClick={() => (app.about = false)}>{t('connection.button_confirm')}</button>
+          <button onClick={close}>{t('connection.button_confirm')}</button>
         </div>
       </div>
     </div>

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
-import { useNeko } from '@/state/hooks'
+import { useStore } from 'zustand'
+import { app } from '@/state/app'
 import { t } from '@/i18n'
 import './dialog.scss'
 
@@ -7,9 +8,8 @@ const DIALOG_ICON = { warning: 'fa-exclamation-triangle', error: 'fa-times-circl
 
 // the one modal dialog, shown for ask() and tell() (state/dialogs.ts)
 export function Dialog() {
-  const { app } = useNeko()
+  const d = useStore(app, (s) => s.dialog)
   const ref = useRef<HTMLDialogElement>(null)
-  const d = app.dialog
 
   useEffect(() => {
     if (d && !ref.current!.open) ref.current!.showModal()
@@ -17,8 +17,8 @@ export function Dialog() {
   }, [d])
 
   const done = (ok: boolean) => {
-    const resolve = app.dialog?.resolve
-    app.dialog = null
+    const resolve = app.getState().dialog?.resolve
+    app.setState({ dialog: null })
     resolve?.(ok)
   }
 

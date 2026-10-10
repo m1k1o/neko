@@ -82,7 +82,7 @@ test('nothing reaches the server while the socket is not open', async () => {
   const client = new NekoClient({ transport })
   assert.ok(client.input instanceof WebSocketInput, 'no input channel on the transport: the websocket')
   client.input.key(1, true) // no socket at all
-  client.state.authenticated = true
+  client.store.setState({ authenticated: true })
   client.connect()
   sockets[0].readyState = 0 // still connecting
   client.input.key(1, true)

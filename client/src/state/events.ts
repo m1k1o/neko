@@ -8,7 +8,6 @@ import { bus, event } from './bus'
 import { EMOTES, showEmote } from './emotes'
 import { t } from '@/i18n'
 
-const s = app.state
 const ev = client.events
 let initialized = false
 let lastHost: string | null = null
@@ -17,8 +16,8 @@ let lastSettings: Settings | null = null
 const known: Record<string, { connected: boolean; name: string }> = {}
 
 // session/created events during system/init are the existing member list, not joins
-client.store.watch(
-  () => client.state.session_id,
+client.store.subscribe(
+  (s) => s.session_id,
   (id) => {
     initialized = !!id
     if (!id) return
@@ -65,19 +64,19 @@ ev.on('room.control.host', (hasHost, hostID, by) => {
 })
 
 // connection toasts, as the legacy client showed them
-client.store.watch(
-  () => client.state.connection.status,
+client.store.subscribe(
+  (s) => s.connection.status,
   (status, old) => {
     if (status === 'connecting' && old === 'connected') toast(t('connection.reconnecting'), undefined, 'warning')
     if (status === 'connected') {
-      s.toasts = []
+      app.setState({ toasts: [] })
       toast(t('connection.connected'), undefined, 'success')
     }
   },
 )
 
 ev.on('room.control.request', (id) => {
-  if (!s.ignored[id]) toast(t('notifications.controls_requesting', { name: name(id) }))
+  if (!app.getState().ignored[id]) toast(t('notifications.controls_requesting', { name: name(id) }))
 })
 
 ev.on('room.screen.updated', (width, height, rate, id) => {
@@ -97,16 +96,16 @@ ev.on('room.settings.updated', (next, id) => {
 // files dropped on the video go to the remote desktop through the core (room/upload/drop)
 ev.on('upload.drop.finished', (error) => error && toast(error.message, undefined, 'error'))
 
-ev.on('room.broadcast.status', (active, url) => (s.broadcast = { active, url: url || '' }))
+ev.on('room.broadcast.status', (active, url) => app.setState({ broadcast: { active, url: url || '' } }))
 
 ev.on('receive.broadcast', (sender, subject, body) => {
   // other clients may send anything; only known names become class names on screen
-  if (subject === 'emote' && EMOTES.includes(body) && !s.ignored[sender]) showEmote(body)
+  if (subject === 'emote' && EMOTES.includes(body) && !app.getState().ignored[sender]) showEmote(body)
 })
 
 // plugin events (`chat/*`, ...) are dispatched by the plugin registry
 ev.on('message', (event, payload) => {
-  if (event === 'openinapp/init') s.openInApp = !!payload.enabled
+  if (event === 'openinapp/init') app.setState({ openInApp: !!payload.enabled })
 })
 
 ev.on('connection.closed', (error) => {

@@ -32,5 +32,8 @@
   },
   "devDependencies": {
     "typescript": "~5.8.0"
+  },
+  "dependencies": {
+    "zustand": "^5.0.15"
   }
 }

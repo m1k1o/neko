@@ -1,7 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { useNeko } from '@/state/hooks'
+import { useStore } from 'zustand'
+import { useShallow } from 'zustand/react/shallow'
 import { openMenu } from '@/state/actions'
-import { isMuted } from '@/state/client'
+import { client, selectMuted } from '@/state/client'
 import { a11y } from '@/components/a11y'
 import { Avatar } from '@/components/Avatar'
 import { t } from '@/i18n'
@@ -21,15 +22,19 @@ const time = (d: Date) =>
 const MAX_MESSAGE = 512
 
 export function Chat() {
-  const { state } = useNeko()
-  const c = chat.state
+  const sessions = useStore(client.store, (s) => s.sessions)
+  const muted = useStore(client.store, selectMuted)
+  const { lines, enabled } = useStore(
+    chat,
+    useShallow((s) => ({ lines: s.lines, enabled: s.enabled })),
+  )
   const [text, setText] = useState('')
   const [picker, setPicker] = useState(false)
   const history = useRef<HTMLUListElement>(null)
   const input = useRef<HTMLTextAreaElement>(null)
 
   useEffect(loadEmoji, [])
-  const last = c.lines[c.lines.length - 1]?.seq
+  const last = lines[lines.length - 1]?.seq
   useLayoutEffect(() => {
     history.current!.scrollTop = history.current!.scrollHeight
   }, [last])
@@ -56,8 +61,7 @@ export function Chat() {
     })
   }
 
-  const lines = c.lines
-  const nameOf = (m: (typeof lines)[number]) => state.sessions[m.id]?.profile.name ?? m.name
+  const nameOf = (m: (typeof lines)[number]) => sessions[m.id]?.profile.name ?? m.name
   return (
     <div className="chat">
       <ul className="chat-history" ref={history}>
@@ -68,7 +72,7 @@ export function Chat() {
               className={`message${i > 0 && lines[i - 1].id === m.id && lines[i - 1].type === 'text' ? ' bulk' : ''}`}
             >
               <div className="author" onContextMenu={(e) => openMenu(e, m.id)}>
-                <Avatar seed={nameOf(m)} avatar={state.sessions[m.id]?.profile.avatar} size={40} />
+                <Avatar seed={nameOf(m)} avatar={sessions[m.id]?.profile.avatar} size={40} />
               </div>
               <div className="content">
                 <div className="content-head">
@@ -87,7 +91,7 @@ export function Chat() {
           ),
         )}
       </ul>
-      {c.enabled && !isMuted() && (
+      {enabled && !muted && (
         <div className="chat-send">
           <div className="accent" />
           <div className="text-container">

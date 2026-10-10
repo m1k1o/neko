@@ -1,14 +1,17 @@
 // Framework-free neko client for the v3 API: REST (server/openapi.yaml), the /api/ws event
 // protocol, and the stream through a StreamTransport (WebRTC by default, see transport.ts).
-// Written against master's server/pkg/types. UIs subscribe via `client.store` and read
-// `client.state`; one-off happenings arrive on `client.events`. Input devices (the keyboard/mouse
-// Overlay, or anything else) are attached by the consumer and send through `client.input`.
-import { Store, Emitter } from './store.ts'
+// Written against master's server/pkg/types. The state lives in a zustand store (`client.store`,
+// immutable updates, subscribe with a selector) and is read as `client.state`; one-off happenings
+// arrive on `client.events`. Input devices (the keyboard/mouse Overlay, or anything else) are
+// attached by the consumer and send through `client.input`.
+import { createStore } from 'zustand/vanilla'
+import { subscribeWithSelector } from 'zustand/middleware'
+import { Emitter } from './emitter.ts'
 import { NekoApi, ApiError } from './api.ts'
 import { WebRTCTransport } from './transport/webrtc.ts'
 import { WebSocketInput } from './input/websocket.ts'
 import type { InputChannel, SessionInfo, StreamTransport, TransportState } from './transport.ts'
-import type { State, Settings, NekoEvents, LoginResponse } from './types.ts'
+import type { State, Settings, ScreenSize, NekoEvents, LoginResponse } from './types.ts'
 
 const RECONNECT_MAX = 10
 const RECONNECT_BACKOFF_MS = 1500
@@ -60,9 +63,17 @@ const initialState = (): State => ({
   mobile_keyboard_open: false,
 })
 
+// the top-level slices that are objects, for patch()
+type Slice = 'connection' | 'video' | 'control' | 'screen'
+
+// selectors over the state: what the client's getters compute, usable with store.subscribe and
+// a UI's selector hook (`useStore(client.store, selectControlling)`)
+export const selectSession = (s: State) => (s.session_id ? (s.sessions[s.session_id] ?? null) : null)
+export const selectControlling = (s: State) => s.control.host_id !== null && s.control.host_id === s.session_id
+export const selectIsAdmin = (s: State) => !!selectSession(s)?.profile.is_admin
+
 export class NekoClient {
-  readonly store = new Store<State>(initialState())
-  readonly state = this.store.state
+  readonly store = createStore<State>()(subscribeWithSelector(initialState))
   readonly api = new NekoApi()
   readonly events = new Emitter<NekoEvents>()
   readonly transport: StreamTransport
@@ -93,40 +104,46 @@ export class NekoClient {
     this.transport.on('state', (s) => this.onTransportState(s))
     this.transport.on('error', (err) => this.close(err))
 
-    const { store, state } = this
-    store.watch(
-      () => this.controlling,
+    const { store } = this
+    store.subscribe(selectControlling, () => this.sendKeyboardMap())
+    store.subscribe(
+      (s) => s.control.keyboard.layout + '/' + s.control.keyboard.variant,
       () => this.sendKeyboardMap(),
     )
-    store.watch(
-      () => state.control.keyboard.layout + '/' + state.control.keyboard.variant,
-      () => this.sendKeyboardMap(),
-    )
-    store.watch(
-      () => state.connection.status,
+    store.subscribe(
+      (s) => s.connection.status,
       (s) => this.events.emit('connection.status', s),
     )
   }
 
   /////////////////////////////
-  // computed
+  // state
   /////////////////////////////
+
+  // the current state; a new object after every change, never mutated
+  get state() {
+    return this.store.getState()
+  }
+
+  // an immutable update of one slice: patch('control', { locked: true })
+  private patch<K extends Slice>(key: K, part: Partial<State[K]>) {
+    this.store.setState((s) => ({ ...s, [key]: { ...s[key], ...part } }))
+  }
 
   get connected() {
     return this.state.connection.status === 'connected'
   }
 
   get controlling() {
-    return this.state.control.host_id !== null && this.state.control.host_id === this.state.session_id
+    return selectControlling(this.state)
   }
 
   get session() {
-    const id = this.state.session_id
-    return id ? (this.state.sessions[id] ?? null) : null
+    return selectSession(this.state)
   }
 
   get isAdmin() {
-    return !!this.session?.profile.is_admin
+    return selectIsAdmin(this.state)
   }
 
   get privateModeEnabled() {
@@ -158,9 +175,7 @@ export class NekoClient {
 
     this.close()
     this.api.url = http
-    this.state.connection.url = http
-    this.state.authenticated = false
-    this.state.connection.token = token
+    this.store.setState({ connection: { ...this.state.connection, url: http, token }, authenticated: false })
 
     if (this.opts.autoconnect) {
       this.authenticate()
@@ -173,7 +188,7 @@ export class NekoClient {
     if (!token && this.opts.autologin) token = localStorage.getItem('neko_session') ?? undefined
     if (token) this.setToken(token)
     await this.api.req('GET', '/whoami')
-    this.state.authenticated = true
+    this.store.setState({ authenticated: true })
   }
 
   async login(username: string, password: string) {
@@ -182,7 +197,7 @@ export class NekoClient {
     this.close()
     // token is only returned when the server does not use cookies
     if (res.token) this.setToken(res.token)
-    this.state.authenticated = true
+    this.store.setState({ authenticated: true })
   }
 
   async logout() {
@@ -191,13 +206,13 @@ export class NekoClient {
       await this.api.req('POST', '/logout')
     } finally {
       this.setToken('')
-      this.state.authenticated = false
+      this.store.setState({ authenticated: false })
     }
   }
 
   private setToken(token: string) {
     this.api.token = token
-    this.state.connection.token = token || undefined
+    this.patch('connection', { token: token || undefined })
     if (!this.opts.autologin) return
     try {
       token ? localStorage.setItem('neko_session', token) : localStorage.removeItem('neko_session')
@@ -213,7 +228,7 @@ export class NekoClient {
     if (this.wanted) return
     this.wanted = true
     this.attempts = 0
-    this.state.connection.status = 'connecting'
+    this.patch('connection', { status: 'connecting' })
     this.openSocket()
   }
 
@@ -272,7 +287,7 @@ export class NekoClient {
     this.introduced = false
     this.resume ||= this.state.video.playing
     if (!this.wanted) return
-    this.state.connection.status = 'connecting'
+    this.patch('connection', { status: 'connecting' })
     if (++this.attempts > RECONNECT_MAX) return this.close(new Error('connection lost'))
 
     // a deleted session never comes back; anything else is worth retrying. The lookup is bounded:
@@ -301,14 +316,16 @@ export class NekoClient {
   // the stream: connected only once the transport is; its status counts while the socket is up
   private onTransportState(s: TransportState) {
     const playable = s.video.playable && !this.state.video.playable // a stream arrived (or a new one)
-    Object.assign(this.state.video, s.video)
+    this.patch('video', s.video)
     if (playable) {
       if (this.opts.autoplay || this.resume) this.transport.setPlaying(true).catch(() => {})
       this.resume = false
     }
     if (!this.wanted || !this.introduced) return
     if (s.status === 'connected') this.attempts = 0
-    this.state.connection.status = s.status === 'connected' || s.status === 'unavailable' ? 'connected' : 'connecting'
+    this.patch('connection', {
+      status: s.status === 'connected' || s.status === 'unavailable' ? 'connected' : 'connecting',
+    })
   }
 
   // what the transport gets of this session, once the server has introduced it (system/init)
@@ -326,30 +343,38 @@ export class NekoClient {
   // websocket events -> state
   /////////////////////////////
 
-  // every message goes to the transport's subscribers first (signal/*); the rest is the room
+  // every message goes to the transport's subscribers first (signal/*); the rest is the room.
+  // What one message changes is one setState, so subscribers never see it half-applied.
   private onMessage(event: string, p: any) {
     this.messages.emit(event, p)
-    const { state, events } = this
+    const { state, store, events } = this
     switch (event) {
       case 'system/init':
-        state.session_id = p.session_id
-        state.control.touch = !!p.touch_events
-        state.screen.size = p.screen_size
-        state.sessions = p.sessions ?? {}
-        state.settings = p.settings
-        state.control.host_id = p.control_host?.has_host ? p.control_host.host_id : null
+        store.setState({
+          session_id: p.session_id,
+          control: {
+            ...state.control,
+            touch: !!p.touch_events,
+            host_id: p.control_host?.has_host ? p.control_host.host_id : null,
+          },
+          screen: { ...state.screen, size: p.screen_size },
+          sessions: p.sessions ?? {},
+          settings: p.settings,
+        })
         this.introduced = true
         this.transport.connect(this.sessionInfo(p)).catch((err) => this.close(err))
         break
       case 'system/admin':
-        state.screen.configurations = [...(p.screen_sizes_list ?? [])].sort(
-          (a, b) => b.width - a.width || b.height - a.height || b.rate - a.rate,
-        )
+        this.patch('screen', {
+          configurations: [...(p.screen_sizes_list ?? [])].sort(
+            (a: ScreenSize, b: ScreenSize) => b.width - a.width || b.height - a.height || b.rate - a.rate,
+          ),
+        })
         events.emit('room.broadcast.status', p.broadcast_status?.is_active, p.broadcast_status?.url)
         break
       case 'system/settings': {
         const { id, ...settings } = p
-        state.settings = settings
+        store.setState({ settings })
         events.emit('room.settings.updated', settings, id)
         break
       }
@@ -362,24 +387,27 @@ export class NekoClient {
         break
 
       case 'session/created':
-        state.sessions[p.id] = p
+        store.setState({ sessions: { ...state.sessions, [p.id]: p } })
         events.emit('session.created', p.id)
         break
-      case 'session/deleted':
-        delete state.sessions[p.id]
+      case 'session/deleted': {
+        const sessions = { ...state.sessions }
+        delete sessions[p.id]
+        store.setState({ sessions })
         events.emit('session.deleted', p.id)
         break
+      }
       case 'session/profile': {
         const { id, ...profile } = p
         if (!state.sessions[id]) return
-        state.sessions[id].profile = profile
+        store.setState({ sessions: { ...state.sessions, [id]: { ...state.sessions[id], profile } } })
         events.emit('session.updated', id)
         break
       }
       case 'session/state': {
         const { id, ...st } = p
         if (!state.sessions[id]) return
-        state.sessions[id].state = st
+        store.setState({ sessions: { ...state.sessions, [id]: { ...state.sessions[id], state: st } } })
         events.emit('session.updated', id)
         break
       }
@@ -387,7 +415,7 @@ export class NekoClient {
         break // inactive cursors: not shown by this client
 
       case 'control/host':
-        state.control.host_id = p.has_host ? p.host_id : null
+        this.patch('control', { host_id: p.has_host ? p.host_id : null })
         events.emit('room.control.host', p.has_host, p.host_id, p.id)
         break
       case 'control/request':
@@ -396,12 +424,12 @@ export class NekoClient {
 
       case 'screen/updated': {
         const { id, ...size } = p
-        state.screen.size = size
+        this.patch('screen', { size })
         events.emit('room.screen.updated', size.width, size.height, size.rate, id)
         break
       }
       case 'clipboard/updated':
-        state.control.clipboard = { text: p.text }
+        this.patch('control', { clipboard: { text: p.text } })
         this.clipboardAt = Date.now()
         navigator.clipboard?.writeText(p.text).catch(() => {}) // only over https
         events.emit('room.clipboard.updated', p.text)
@@ -423,13 +451,14 @@ export class NekoClient {
 
   private clear() {
     const { state } = this
-    state.connection.status = 'disconnected'
-    state.control.host_id = null
-    state.control.clipboard = null
-    state.screen.configurations = []
-    state.session_id = null
-    state.sessions = {}
-    state.settings = defaultSettings()
+    this.store.setState({
+      connection: { ...state.connection, status: 'disconnected' },
+      control: { ...state.control, host_id: null, clipboard: null },
+      screen: { ...state.screen, configurations: [] },
+      session_id: null,
+      sessions: {},
+      settings: defaultSettings(),
+    })
   }
 
   /////////////////////////////
@@ -446,11 +475,11 @@ export class NekoClient {
 
   // local lock: keep control but stop sending input
   lock() {
-    this.state.control.locked = true
+    this.patch('control', { locked: true })
   }
 
   unlock() {
-    this.state.control.locked = false
+    this.patch('control', { locked: false })
   }
 
   // types text remotely via the server's clipboard
@@ -477,15 +506,15 @@ export class NekoClient {
   }
 
   setScrollInverse(value = true) {
-    this.state.control.scroll.inverse = value
+    this.patch('control', { scroll: { ...this.state.control.scroll, inverse: value } })
   }
 
   setScrollSensitivity(value: number) {
-    this.state.control.scroll.sensitivity = value
+    this.patch('control', { scroll: { ...this.state.control.scroll, sensitivity: value } })
   }
 
   setKeyboard(layout: string, variant = '') {
-    this.state.control.keyboard = { layout, variant }
+    this.patch('control', { keyboard: { layout, variant } })
   }
 
   private sendKeyboardMap() {

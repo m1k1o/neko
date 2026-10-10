@@ -8,14 +8,13 @@ import { bus, line } from './bus'
 import { sendEmote } from './emotes'
 import { t } from '@/i18n'
 
-const s = app.state
-
 // the member context menu, opened from the member list and from chat authors
 export const openMenu = (e: React.MouseEvent, id: string) => {
   e.preventDefault()
   e.stopPropagation()
-  if (id !== client.state.session_id) s.menu = { x: e.clientX, y: e.clientY, id }
+  if (id !== client.state.session_id) app.setState({ menu: { x: e.clientX, y: e.clientY, id } })
 }
+const banned = () => app.setState((s) => ({ bans: s.bans + 1 }))
 
 export const actions = {
   login: async (username: string, password: string) => {
@@ -24,7 +23,7 @@ export const actions = {
   },
   logout: () => {
     bus.emit('logout')
-    Object.assign(s, { ignored: {}, broadcast: { active: false, url: '' } })
+    app.setState({ ignored: {}, broadcast: { active: false, url: '' } })
     return client.logout().catch(() => {})
   },
 
@@ -71,10 +70,10 @@ export const actions = {
       (await api('POST', `/members/${encodeURIComponent(id)}`, { can_login: false })) &&
       (await api('DELETE', `/sessions/${encodeURIComponent(id)}`))
     )
-      (s.bans++, line(t('you'), t('notifications.banned', { name: who })))
+      (banned(), line(t('you'), t('notifications.banned', { name: who })))
   },
   unban: (id: string) =>
-    api('POST', `/members/${encodeURIComponent(id)}`, { can_login: true }).then((ok) => (ok && s.bans++, ok)),
+    api('POST', `/members/${encodeURIComponent(id)}`, { can_login: true }).then((ok) => (ok && banned(), ok)),
   // accounts stored by the auth provider (empty for multiuser / noauth / OAuth)
   members: () => client.api.req<MemberData[]>('GET', '/members').catch(() => [] as MemberData[]),
   async canBan(id: string) {

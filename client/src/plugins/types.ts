@@ -17,6 +17,8 @@ export interface Plugin {
   init?: () => void
 }
 
+// `useVisible` and `useBadge` are hooks (they select from the plugin's store with useStore), so
+// what they return re-renders only what reads it; the GUI runs each in a component of its own
 export interface PluginTab {
   // the stored `tab` value and the `side.<id>` label
   id: string
@@ -24,9 +26,9 @@ export interface PluginTab {
   icon: string
   component: ComponentType
   // default: always
-  visible?: () => boolean
+  useVisible?: () => boolean
   // unread count; the side-panel toggle shows a badge when it changes while the panel is closed
-  badge?: () => number
+  useBadge?: () => number
 }
 
 // renders its own `<li>` in the header menu, or null
@@ -38,7 +40,8 @@ export interface PluginTopBarItem {
 // an entry of the context menu of another member
 export interface PluginMemberMenuItem {
   id: string
-  visible?: (member: Session) => boolean
+  // a hook; default: always
+  useVisible?: (member: Session) => boolean
   label: (member: Session) => string
   onClick: (member: Session) => void
 }

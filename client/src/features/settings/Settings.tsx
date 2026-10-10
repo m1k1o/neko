@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react'
-import { useNeko } from '@/state/hooks'
+import { useStore } from 'zustand'
+import { useShallow } from 'zustand/react/shallow'
+import { selectIsAdmin } from '@m1k1o/neko'
 import { actions } from '@/state/actions'
+import { app } from '@/state/app'
 import { client } from '@/state/client'
 import { setSetting } from '@/state/settings'
 import { t } from '@/i18n'
@@ -8,10 +11,23 @@ import { Banned } from './Banned'
 import './settings.scss'
 
 export function Settings() {
-  const { app } = useNeko()
-  const s = app.settings
-  const [url, setUrl] = useState(app.broadcast.url)
-  useEffect(() => setUrl(app.broadcast.url), [app.broadcast.url])
+  const {
+    settings: s,
+    broadcast,
+    openInApp,
+    keyboardLayouts,
+  } = useStore(
+    app,
+    useShallow((a) => ({
+      settings: a.settings,
+      broadcast: a.broadcast,
+      openInApp: a.openInApp,
+      keyboardLayouts: a.keyboardLayouts,
+    })),
+  )
+  const admin = useStore(client.store, selectIsAdmin)
+  const [url, setUrl] = useState(broadcast.url)
+  useEffect(() => setUrl(broadcast.url), [broadcast.url])
 
   const toggle = (
     key: 'scroll_invert' | 'autoplay' | 'ignore_emotes' | 'chat_sound' | 'links_in_app',
@@ -51,12 +67,12 @@ export function Settings() {
         {toggle('autoplay', 'autoplay')}
         {toggle('ignore_emotes', 'ignore_emotes')}
         {toggle('chat_sound', 'chat_sound')}
-        {app.openInApp && toggle('links_in_app', 'links_in_app')}
+        {openInApp && toggle('links_in_app', 'links_in_app')}
         <li>
           <span>{t('setting.keyboard_layout')}</span>
           <label className="select">
             <select value={s.keyboard_layout} onChange={(e) => setSetting('keyboard_layout', e.target.value)}>
-              {Object.entries(app.keyboardLayouts).map(([code, name]) => (
+              {Object.entries(keyboardLayouts).map(([code, name]) => (
                 <option key={code} value={code}>
                   {name}
                 </option>
@@ -65,11 +81,11 @@ export function Settings() {
             <span />
           </label>
         </li>
-        {client.isAdmin && (
+        {admin && (
           <li className="broadcast">
             <div>
               <span>{t('setting.broadcast_title')}</span>
-              {!app.broadcast.active ? (
+              {!broadcast.active ? (
                 <button aria-label={t('setting.broadcast_title')} onClick={() => actions.broadcastStart(url)}>
                   <i className="fas fa-play"></i>
                 </button>
@@ -82,13 +98,13 @@ export function Settings() {
             <input
               value={url}
               onChange={(e) => setUrl(e.target.value)}
-              disabled={app.broadcast.active}
+              disabled={broadcast.active}
               className="input"
               placeholder="rtmp://a.rtmp.youtube.com/live2/<stream-key>"
             />
           </li>
         )}
-        {client.isAdmin && <Banned />}
+        {admin && <Banned />}
         <li>
           <button onClick={actions.logout}>{t('logout')}</button>
         </li>

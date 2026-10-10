@@ -8,6 +8,7 @@ import {
   settle,
   reset,
   sent,
+  sentPayloads,
   sockets,
   fetches,
   net,
@@ -35,7 +36,7 @@ const setup = (opts?: Options) => {
 // a client through the handshake, with `sent` cleared
 const connected = async (opts?: Options) => {
   const r = setup(opts)
-  r.client.state.authenticated = true
+  r.client.store.setState({ authenticated: true })
   r.client.connect()
   receive('system/init', init())
   receive('signal/provide', { sdp: OFFER })
@@ -52,8 +53,7 @@ test('handshake: init -> signal/request -> provide -> signal/answer -> peer conn
   const { client } = setup()
   client.setUrl('http://neko.test/') // as the GUI does at boot
   assert.throws(() => client.connect(), /not authenticated/)
-  client.state.authenticated = true
-  client.state.connection.token = 'tok'
+  client.store.setState({ authenticated: true, connection: { ...client.state.connection, token: 'tok' } })
   const statuses: string[] = []
   client.events.on('connection.status', (s) => statuses.push(s))
   client.connect()
@@ -365,7 +365,7 @@ test('system/heartbeat is answered with client/heartbeat', async () => {
 
 test('codec mismatch: the offer is refused naming the codec, no retry', async () => {
   const { client, closed } = setup()
-  client.state.authenticated = true
+  client.store.setState({ authenticated: true })
   client.connect()
   receive('system/init', init())
   FakePeer.answerSdp = 'v=0\r\nm=audio 9 RTP/AVP 0\r\nm=video 0 RTP/AVP 96\r\n' // the browser rejected the video section
@@ -566,7 +566,7 @@ test('authenticate: resumes the saved session, or fails with the ApiError', asyn
 test('send: dropped while the socket is not open', async () => {
   const { client } = setup()
   client.send('chat/message', { text: 'x' }) // no socket at all
-  client.state.authenticated = true
+  client.store.setState({ authenticated: true })
   client.connect()
   sockets[0].readyState = 0 // still connecting
   client.send('chat/message', { text: 'x' })
@@ -577,4 +577,58 @@ test('send: dropped while the socket is not open', async () => {
   client.disconnect()
   client.send('chat/message', { text: 'x' })
   assert.deepEqual(sent, ['chat/message'])
+})
+
+test('subscriptions: the keyboard map goes out when control or the layout changes, once per change, never for the rest', async () => {
+  const { client } = await connected() // Bob (s2) is host
+  sentPayloads.length = 0
+  const statuses: string[] = []
+  client.events.on('connection.status', (s) => statuses.push(s))
+  client.setKeyboard('de')
+  assert.deepEqual(sent, [], 'not host: nothing')
+  receive('control/host', { id: 's1', has_host: true, host_id: 's1' })
+  assert.deepEqual(sent, ['keyboard/map'])
+  assert.deepEqual(sentPayloads.at(-1)?.payload, { layout: 'de', variant: '' })
+  client.setKeyboard('de') // the same layout again: not resent
+  receive('screen/updated', { id: 's2', width: 1280, height: 720, rate: 30 }) // unrelated changes
+  receive('clipboard/updated', { text: 'x' })
+  receive('session/profile', { id: 's1', ...profile({ name: 'Alicia' }) })
+  client.lock()
+  assert.deepEqual(sent, ['keyboard/map'])
+  client.setKeyboard('de', 'nodeadkeys')
+  assert.deepEqual(
+    sentPayloads.map((m) => m.payload),
+    [
+      { layout: 'de', variant: '' },
+      { layout: 'de', variant: 'nodeadkeys' },
+    ],
+  )
+  receive('control/host', { id: 's1', has_host: false })
+  assert.equal(sent.length, 2, 'losing control sends nothing')
+  assert.deepEqual(statuses, [], 'none of it is a status change')
+
+  // what a member list selects: the sessions object is replaced by a session event, by nothing else
+  let lists = 0
+  client.store.subscribe(
+    (s) => s.sessions,
+    () => lists++,
+  )
+  receive('session/created', session('s3', { name: 'Carol' }))
+  receive('session/profile', { id: 's3', ...profile({ name: 'Caroline' }) })
+  receive('session/state', { id: 's3', is_connected: false, is_watching: false })
+  receive('session/deleted', { id: 's3' })
+  assert.equal(lists, 4)
+  receive('control/host', { id: 's2', has_host: true, host_id: 's2' })
+  receive('screen/updated', { id: 's2', width: 1920, height: 1080, rate: 60 })
+  client.unlock()
+  assert.equal(lists, 4)
+
+  // one message that sets several fields at once (system/init on a reconnect that keeps us host:
+  // session_id and host_id together) is observed once, with the final state
+  sockets[0].onclose!()
+  await tick(1500)
+  sent.length = 0
+  receive('system/init', { ...init(), control_host: { has_host: true, host_id: 's1' } }, sockets[1])
+  assert.deepEqual(sent.sort(), ['keyboard/map', 'signal/request'])
+  assert.deepEqual(statuses, ['connecting'], 'the lost socket; init itself does not change the status')
 })

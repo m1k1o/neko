@@ -1,6 +1,6 @@
 // WebRTC: the server's offer arrives over the main socket (signal/*), media on an
 // RTCPeerConnection, input and the host's cursor on its data channel.
-import { Emitter } from '../store.ts'
+import { Emitter } from '../emitter.ts'
 import { DataChannelInput } from '../input/datachannel.ts'
 import type { SessionInfo, StreamTransport, TransportEvents, TransportState, TransportStatus } from '../transport.ts'
 

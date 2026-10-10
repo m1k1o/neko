@@ -2,6 +2,8 @@
 // elements, a websocket, a peer connection and fetch. Imported first; the core is then imported
 // dynamically, after the globals exist. The clock is vitest's (see tick/settle).
 import { vi } from 'vitest'
+import type { NekoClient } from '../client.ts'
+import type { State } from '../types.ts'
 
 const g = globalThis as any
 
@@ -333,3 +335,8 @@ export const reset = () => {
   net.respond = () => ({ status: 200 })
   FakePeer.answerSdp = ANSWER
 }
+
+// a nested write of the client state, one slice at a time (the store takes immutable updates)
+type Slice = 'connection' | 'video' | 'control' | 'screen' | 'settings'
+export const patch = <K extends Slice>(client: NekoClient, key: K, part: Partial<State[K]>) =>
+  client.store.setState((s) => ({ ...s, [key]: { ...s[key], ...part } }))

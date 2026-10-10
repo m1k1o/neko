@@ -1,5 +1,7 @@
 import { useRef, useState } from 'react'
-import { useNeko } from '@/state/hooks'
+import { useStore } from 'zustand'
+import { useShallow } from 'zustand/react/shallow'
+import { selectIsAdmin } from '@m1k1o/neko'
 import { client } from '@/state/client'
 import { ask } from '@/state/dialogs'
 import { a11y } from '@/components/a11y'
@@ -16,15 +18,16 @@ const size = (bytes?: number) => {
 }
 
 export function Files() {
-  useNeko()
-  const s = store.state
+  const { files: f, uploads } = useStore(
+    store,
+    useShallow((s) => ({ files: s.files!, uploads: s.uploads })),
+  )
+  const admin = useStore(client.store, selectIsAdmin)
   const [drag, setDrag] = useState(false)
   const [selecting, setSelecting] = useState(false)
   const [selected, setSelected] = useState<string[]>([])
   const input = useRef<HTMLInputElement>(null)
 
-  const f = s.files!
-  const admin = client.isAdmin
   const canDownload = admin || f.user_download
   const canUpload = admin || f.user_upload
   const canDelete = admin || f.user_delete
@@ -130,17 +133,17 @@ export function Files() {
         })}
       </div>
       <div className="transfer-area">
-        {s.uploads.length > 0 && (
+        {uploads.length > 0 && (
           <div className="transfers">
             <p className="transfers-list-header">
               <span>{t('files.uploads')}</span>
               <i
                 className="fas fa-xmark remove-transfer"
                 {...a11y('Clear finished uploads')}
-                onClick={() => (s.uploads = s.uploads.filter((u) => u.status === 'inprogress'))}
+                onClick={() => store.setState((s) => ({ uploads: s.uploads.filter((u) => u.status === 'inprogress') }))}
               />
             </p>
-            {s.uploads.map((u) => (
+            {uploads.map((u) => (
               <div key={u.id} className="transfers-list-item">
                 <div className="transfer-info">
                   <i

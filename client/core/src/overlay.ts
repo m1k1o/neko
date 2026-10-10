@@ -3,7 +3,7 @@
 // who is not controlling. Attached by the consumer next to the transport's element (see attach);
 // the client itself knows nothing of it, so a stream-only consumer never loads it or the keyboard.
 import GuacamoleKeyboard from './keyboard/guacamole.js'
-import type { NekoClient, Pos } from './client.ts'
+import { selectControlling, type NekoClient, type Pos } from './client.ts'
 import type { CursorImage } from './types.ts'
 
 const WHEEL_STEP = 53 // px of wheel delta per scroll step
@@ -161,31 +161,28 @@ export class Overlay {
       'paste',
       stop((e: ClipboardEvent) => this.onPaste(e.clipboardData?.getData('text/plain') ?? '')),
     )
-    on(input, 'blur', () => (client.state.mobile_keyboard_open = false))
+    on(input, 'blur', () => client.store.setState({ mobile_keyboard_open: false }))
 
     // the box follows its parent and the remote screen
     const observer = new ResizeObserver(() => this.onResize())
     if (box.parentElement) observer.observe(box.parentElement)
     this.cleanup.push(
       () => observer.disconnect(),
-      client.store.watch(
-        () => client.state.screen.size,
+      client.store.subscribe(
+        (s) => s.screen.size,
         () => this.onResize(),
       ),
-      client.store.watch(
+      client.store.subscribe(
         () => this.visible,
         () => this.sync(),
       ),
-      client.store.watch(
+      client.store.subscribe(
         () => this.interactive,
         () => this.sync(),
       ),
-      client.store.watch(
-        () => client.controlling,
-        (c) => this.onControl(c),
-      ),
-      client.store.watch(() => client.state.control.host_id, this.draw),
-      client.store.watch(
+      client.store.subscribe(selectControlling, (c) => this.onControl(c)),
+      client.store.subscribe((s) => s.control.host_id, this.draw),
+      client.store.subscribe(
         () => this.active,
         () => this.focusIfActive(),
       ),
@@ -391,12 +388,11 @@ export class Overlay {
   }
 
   mobileKeyboardToggle() {
-    const s = this.client.state
-    const open = s.mobile_keyboard_open
+    const open = this.client.state.mobile_keyboard_open
     if (open)
       this.input.blur() // the blur handler clears the flag; set it from `open`, not from the flag
     else this.input.focus()
-    s.mobile_keyboard_open = !open
+    this.client.store.setState({ mobile_keyboard_open: !open })
   }
 
   /////////////////////////////

@@ -1,4 +1,6 @@
-import { useNeko } from '@/state/hooks'
+import { useStore } from 'zustand'
+import { useShallow } from 'zustand/react/shallow'
+import { selectSession } from '@m1k1o/neko'
 import { openMenu } from '@/state/actions'
 import { app } from '@/state/app'
 import { client } from '@/state/client'
@@ -11,13 +13,19 @@ const menuKey = (e: React.KeyboardEvent, id: string) => {
   e.preventDefault()
   e.stopPropagation()
   const r = (e.currentTarget as HTMLElement).getBoundingClientRect()
-  if (id !== client.state.session_id) app.state.menu = { x: r.left, y: r.bottom, id }
+  if (id !== client.state.session_id) app.setState({ menu: { x: r.left, y: r.bottom, id } })
 }
 
 export function Members() {
-  const { state } = useNeko()
-  const me = client.session
-  const host = state.control.host_id
+  const { me, host, sessions, sessionId } = useStore(
+    client.store,
+    useShallow((s) => ({
+      me: selectSession(s),
+      host: s.control.host_id,
+      sessions: s.sessions,
+      sessionId: s.session_id,
+    })),
+  )
   return (
     <div className="members">
       <div className="members-container">
@@ -29,8 +37,8 @@ export function Members() {
               </div>
             </li>
           )}
-          {Object.values(state.sessions)
-            .filter((m) => m.id !== state.session_id && m.state.is_connected)
+          {Object.values(sessions)
+            .filter((m) => m.id !== sessionId && m.state.is_connected)
             .map((m) => (
               <li key={m.id} title={m.profile.name}>
                 <div
