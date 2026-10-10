@@ -1,0 +1,14 @@
+{
+  "tab": "Sludring",
+  "mute": "Forstum",
+  "unmute": "Opphev forstummelse",
+  "confirm": {
+    "mute_title": "Forstum {{name}}?",
+    "mute_text": "Vil du forstumme {{name}}?",
+    "unmute_title": "Opphev forstummelse {{name}}?",
+    "unmute_text": "Vil du oppheve forstummelsen av {{name}}?"
+  },
+  "muted": "forstummet {{name}}",
+  "unmuted": "opphevet forstummingen av {{name}}",
+  "send_a_message": "Send en melding"
+}

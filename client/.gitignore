@@ -1,0 +1,7 @@
+node_modules
+dist
+e2e-out
+
+# the root .gitignore ignores "core" (core dumps); this directory is the @m1k1o/neko package
+!/core/
+/core/dist

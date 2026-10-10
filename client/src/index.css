@@ -1,0 +1,180 @@
+/* Tailwind v4 and the design tokens (README, "Design"): preflight, theme, utilities, the global
+   rules of the page and the responsive variants of the layout. The font is the system stack
+   (Tailwind's --font-sans). */
+@import 'tailwindcss';
+
+@theme {
+  /* the tokens of src/design/_variables.scss, same values: text-text-normal, bg-background-primary, ... */
+  --color-text-normal: #dcddde;
+  --color-text-muted: #72767d;
+  --color-text-link: #00b0f4;
+
+  --color-interactive-normal: #b9bbbe;
+  --color-interactive-hover: #dcddde;
+  --color-interactive-muted: #4f545c;
+
+  --color-background-primary: #36393f;
+  --color-background-secondary: #2f3136;
+  --color-background-tertiary: #202225;
+  --color-background-accent: #4f545c;
+  --color-background-floating: #18191c;
+  --color-background-modifier-hover: rgba(79, 84, 92, 0.16);
+  --color-background-modifier-active: rgba(79, 84, 92, 0.24);
+  --color-background-modifier-selected: rgba(79, 84, 92, 0.32);
+  --color-background-modifier-accent: hsla(0, 0%, 100%, 0.06);
+
+  --shadow-elevation-low: 0 1px 0 rgba(4, 4, 5, 0.2), 0 1.5px 0 rgba(6, 6, 7, 0.05), 0 2px 0 rgba(4, 4, 5, 0.05);
+  --shadow-elevation-high: 0 8px 16px rgba(0, 0, 0, 0.24);
+
+  --color-style-primary: #19bd9c;
+  --color-style-error: #d32f2f;
+
+  /* $text-size: the size of the UI text (text-ui); $text-family became Tailwind's --font-sans */
+  --text-ui: 14px;
+  /* $menu-height, $controls-height, $side-width: h-menu, h-controls, w-side */
+  --spacing-menu: 40px;
+  --spacing-controls: 125px;
+  --spacing-side: 400px;
+
+  /* the keyboard icon shaking when the video is clicked without control (controls) */
+  --animate-shake: shake 1.25s cubic-bezier(0, 0, 0, 1);
+  @keyframes shake {
+    0% {
+      transform: scale(1) translate(0px, 0) rotate(0);
+    }
+    10% {
+      transform: scale(1.25) translate(-2px, -2px) rotate(-20deg);
+    }
+    20% {
+      transform: scale(1.5) translate(4px, -4px) rotate(20deg);
+    }
+    30% {
+      transform: scale(1.75) translate(-4px, -6px) rotate(-20deg);
+    }
+    40% {
+      transform: scale(2) translate(6px, -8px) rotate(20deg);
+    }
+    50% {
+      transform: scale(2.25) translate(-6px, -10px) rotate(-20deg);
+    }
+    60% {
+      transform: scale(2) translate(6px, -8px) rotate(20deg);
+    }
+    70% {
+      transform: scale(1.75) translate(-4px, -6px) rotate(-20deg);
+    }
+    80% {
+      transform: scale(1.5) translate(4px, -4px) rotate(20deg);
+    }
+    90% {
+      transform: scale(1.25) translate(-2px, -2px) rotate(-20deg);
+    }
+    100% {
+      transform: scale(1) translate(0px, 0) rotate(0);
+    }
+  }
+  /* the two bouncing discs of the connect screen */
+  --animate-loader: loader 2s infinite ease-in-out;
+  @keyframes loader {
+    0%,
+    100% {
+      transform: scale(0);
+    }
+    50% {
+      transform: scale(1);
+    }
+  }
+  /* the unread badge on the side panel toggle */
+  --animate-badge: badge 2s infinite;
+  @keyframes badge {
+    0% {
+      transform: translate(-50%, -25%) scale(0.85);
+      box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.7);
+    }
+    70% {
+      transform: translate(-50%, -25%) scale(1);
+      box-shadow: 0 0 0 10px rgba(0, 0, 0, 0);
+    }
+    100% {
+      transform: translate(-50%, -25%) scale(0.85);
+      box-shadow: 0 0 0 0 rgba(0, 0, 0, 0);
+    }
+  }
+}
+
+/* the layout's two breakpoints: under 1024px the page scrolls and the side panel goes under the
+   video (with Tailwind's portrait: and landscape: for the split), under 768px the room bar is hidden */
+@custom-variant tablet {
+  @media only screen and (max-width: 1024px) {
+    @slot;
+  }
+}
+@custom-variant phone {
+  @media only screen and (max-width: 768px) {
+    @slot;
+  }
+}
+
+/* the volume and scroll sliders: a 4px track in the primary colour with a round white thumb */
+@utility slider {
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+  &::-webkit-slider-thumb {
+    appearance: none;
+    height: 12px;
+    width: 12px;
+    margin-top: -4px;
+    border-radius: 12px;
+    background: #fff;
+  }
+  &::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--color-style-primary);
+  }
+  &::-moz-range-thumb {
+    height: 12px;
+    width: 12px;
+    border: 0;
+    border-radius: 12px;
+    background: #fff;
+  }
+  &::-moz-range-track {
+    width: 100%;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--color-style-primary);
+  }
+}
+
+@layer base {
+  html,
+  body {
+    -webkit-font-smoothing: subpixel-antialiased;
+    background-color: var(--color-background-tertiary);
+    color: var(--color-text-normal);
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+    min-width: 320px;
+  }
+  /* on the body, not html: rem (Tailwind's spacing scale) stays 16px */
+  body {
+    font-size: var(--text-ui);
+    line-height: 1;
+  }
+  @media only screen and (max-width: 1024px) {
+    html,
+    body {
+      overflow-y: auto;
+      width: auto;
+      height: auto;
+    }
+  }
+  /* the stream's video element is the core's: no native controls */
+  video::-webkit-media-controls {
+    display: none !important;
+  }
+}

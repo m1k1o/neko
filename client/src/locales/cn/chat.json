@@ -1,0 +1,14 @@
+{
+  "tab": "聊天",
+  "mute": "静音",
+  "unmute": "取消静音",
+  "confirm": {
+    "mute_title": "静音 {{name}}?",
+    "mute_text": "你确定要将 {{name}} 静音吗?",
+    "unmute_title": "取消静音 {{name}}?",
+    "unmute_text": "你确定要取消 {{name}} 的静音吗?"
+  },
+  "muted": "{{name}} 已被静音",
+  "unmuted": "{{name}} 已取消静音",
+  "send_a_message": "发送消息"
+}

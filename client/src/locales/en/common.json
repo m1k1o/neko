@@ -1,0 +1,102 @@
+{
+  "logout": "log out",
+  "unsupported": "this web-browser does not support WebRTC",
+  "admin_loggedin": "You are logged in as an admin",
+  "you": "You",
+  "somebody": "Somebody",
+  "side": {
+    "settings": "Settings"
+  },
+  "connect": {
+    "login_title": "Please Log In",
+    "invitation_title": "You have been invited to this room",
+    "displayname": "Enter your display name",
+    "password": "Password",
+    "connect": "Connect",
+    "error": "Login error",
+    "empty_displayname": "Display Name cannot be empty."
+  },
+  "context": {
+    "ignore": "Ignore",
+    "unignore": "Unignore",
+    "release": "Force Release Controls",
+    "take": "Force Take Controls",
+    "give": "Give Controls",
+    "kick": "Kick",
+    "ban": "Ban",
+    "unban": "Unban",
+    "confirm": {
+      "kick_title": "Kick {{name}}?",
+      "kick_text": "Are you sure you want to kick {{name}}?",
+      "ban_title": "Ban {{name}}?",
+      "ban_text": "Do you want to ban {{name}}? They cannot log in again until unbanned in Settings.",
+      "button_yes": "Yes",
+      "button_cancel": "Cancel"
+    }
+  },
+  "controls": {
+    "release": "Release Controls",
+    "request": "Request Controls",
+    "lock": "Lock Controls",
+    "unlock": "Unlock Controls",
+    "has": "You have control",
+    "hasnot": "You do not have control",
+    "mic_on": "Enable Microphone",
+    "mic_off": "Disable Microphone",
+    "mic_error": "Microphone Error"
+  },
+  "locks": {
+    "control": {
+      "lock": "Lock Controls (for users)",
+      "unlock": "Unlock Controls (for users)",
+      "locked": "Controls Locked (for users)",
+      "unlocked": "Controls Unlocked (for users)",
+      "notif_locked": "locked controls for users",
+      "notif_unlocked": "unlocked controls for users"
+    },
+    "login": {
+      "lock": "Lock Room (for users)",
+      "unlock": "Unlock Room (for users)",
+      "locked": "Room Locked (for users)",
+      "unlocked": "Room Unlocked (for users)",
+      "notif_locked": "locked the room",
+      "notif_unlocked": "unlocked the room"
+    }
+  },
+  "setting": {
+    "scroll": "Scroll Sensitivity",
+    "scroll_invert": "Invert Scroll",
+    "autoplay": "Autoplay Video",
+    "ignore_emotes": "Ignore Emotes",
+    "chat_sound": "Play Chat Sound",
+    "links_in_app": "Always open links in app",
+    "keyboard_layout": "Keyboard Layout",
+    "broadcast_title": "Live Broadcast",
+    "banned": "Banned"
+  },
+  "connection": {
+    "reconnecting": "Reconnecting...",
+    "connected": "Connected",
+    "disconnected": "Disconnected",
+    "kicked": "You have been removed from this room.",
+    "replaced": "This session was opened in another tab or window.",
+    "button_confirm": "OK"
+  },
+  "notifications": {
+    "connected": "{{name}} connected",
+    "disconnected": "{{name}} disconnected",
+    "controls_taken": "{{name}} took the controls",
+    "controls_taken_force": "took the controls forcibly",
+    "controls_taken_steal": "took the controls from {{name}}",
+    "controls_released": "{{name}} released the controls",
+    "controls_released_force": "released the controls forcibly",
+    "controls_released_steal": "released the controls from {{name}}",
+    "controls_given": "gave the controls to {{name}}",
+    "controls_has": "{{name}} has the controls",
+    "controls_has_alt": "But I let the person know you wanted it",
+    "controls_requesting": "{{name}} is requesting the controls",
+    "resolution": "changed the resolution to {{width}}x{{height}}@{{rate}}",
+    "banned": "banned {{name}}",
+    "kicked": "kicked {{name}}"
+  }
+}

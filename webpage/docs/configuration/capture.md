@@ -63,14 +63,14 @@ capture:
         gst_params:
           <param_name>: "<expression>"
         gst_suffix: "<gst_pipeline>"
-        show_pointer: true
+        show_pointer: false
 ```
 
 - <Def id="video.pipelines.width" />, <Def id="video.pipelines.height" />, and <Def id="video.pipelines.fps" /> are the expressions that are evaluated to get the stream resolution and framerate. They can be different from the display resolution and framerate if downscaling or upscaling is desired.
 - <Def id="video.pipelines.gst_prefix" /> and <Def id="video.pipelines.gst_suffix" /> allow you to add custom Gstreamer elements before and after the encoder. Both parameters need to start with `!` and then be followed by the Gstreamer elements.
 - <Def id="video.pipelines.gst_encoder" /> is the name of the Gstreamer encoder element, such as `vp8enc` or `x264enc`.
 - <Def id="video.pipelines.gst_params" /> are the parameters that are passed to the encoder element specified in <Opt id="video.pipelines.gst_encoder" />.
-- <Def id="video.pipelines.show_pointer" /> is a boolean value that determines whether the mouse pointer should be captured or not.
+- <Def id="video.pipelines.show_pointer" /> is a boolean value that determines whether the mouse pointer should be captured or not. The client draws the pointer itself (it receives the cursor image and position separately), so keep it `false` unless the stream is watched without the neko client, otherwise a second, delayed pointer is visible.
 
 <details>
   <summary>Example pipeline configuration</summary>
@@ -182,7 +182,7 @@ Since now you have to define the whole pipeline, you need to specify the src ele
 Your typical pipeline string would look like this:
 
 ```
-ximagesrc display-name={display} show-pointer=true use-damage=false ! <your_elements> ! appsink name=appsink
+ximagesrc display-name={display} show-pointer=false use-damage=false ! <your_elements> ! appsink name=appsink
 ```
 
 See documentation for [ximagesrc](https://gstreamer.freedesktop.org/documentation/ximagesrc/index.html) and [appsink](https://gstreamer.freedesktop.org/documentation/app/appsink.html) for more information.
@@ -201,7 +201,7 @@ See documentation for [ximagesrc](https://gstreamer.freedesktop.org/documentatio
         pipelines:
           hq:
             gst_pipeline: |
-              ximagesrc display-name={display} show-pointer=true use-damage=false
+              ximagesrc display-name={display} show-pointer=false use-damage=false
               ! videoconvert ! queue
               ! vp8enc
                 name=encoder
@@ -220,7 +220,7 @@ See documentation for [ximagesrc](https://gstreamer.freedesktop.org/documentatio
               ! appsink name=appsink
           lq:
             gst_pipeline: |
-              ximagesrc display-name={display} show-pointer=true use-damage=false
+              ximagesrc display-name={display} show-pointer=false use-damage=false
               ! videoconvert ! queue
               ! vp8enc
                 name=encoder
@@ -250,7 +250,7 @@ See documentation for [ximagesrc](https://gstreamer.freedesktop.org/documentatio
         pipelines:
           main:
             gst_pipeline: |
-              ximagesrc display-name={display} show-pointer=true use-damage=false
+              ximagesrc display-name={display} show-pointer=false use-damage=false
               ! videoconvert ! queue
               ! x264enc
                 name=encoder
@@ -274,7 +274,7 @@ See documentation for [ximagesrc](https://gstreamer.freedesktop.org/documentatio
         pipelines:
           main:
             gst_pipeline: |
-              ximagesrc display-name={display} show-pointer=true use-damage=false
+              ximagesrc display-name={display} show-pointer=false use-damage=false
               ! videoconvert ! queue
               ! video/x-raw,format=NV12
               ! nvautogpuh264enc
@@ -301,7 +301,7 @@ See documentation for [ximagesrc](https://gstreamer.freedesktop.org/documentatio
         pipelines:
           main:
             gst_pipeline: |
-              ximagesrc display-name={display} show-pointer=true use-damage=false
+              ximagesrc display-name={display} show-pointer=false use-damage=false
               ! cudaupload ! cudaconvert ! queue
               ! video/x-raw(memory:CUDAMemory),format=NV12
               ! nvautogpuh264enc

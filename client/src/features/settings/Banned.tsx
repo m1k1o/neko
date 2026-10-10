@@ -1,0 +1,38 @@
+import { useEffect, useState } from 'react'
+import type { MemberData } from '@m1k1o/neko'
+import { useStore } from 'zustand'
+import { useTranslation } from 'react-i18next'
+import { useActions } from '@/state/actions'
+import { useApp } from '@/state/provider'
+import { Button } from '@/components/ui/button'
+import { row, label } from './classes'
+
+// accounts with can_login=false (see actions.ban); empty unless the provider stores accounts
+export function Banned() {
+  const { t } = useTranslation()
+  const app = useApp()
+  const actions = useActions()
+  const [banned, setBanned] = useState<MemberData[] | null>(null)
+  const bans = useStore(app, (s) => s.bans)
+  useEffect(() => {
+    // reloads after a ban or unban from anywhere
+    actions.members().then((all) => setBanned(all.filter((m) => m.profile?.can_login === false)))
+  }, [actions, bans])
+
+  if (!banned?.length) return null
+  return (
+    <li className={row} data-testid="banned">
+      <span className={label}>{t('setting.banned')}</span>
+      <ul>
+        {banned.map((m) => (
+          <li key={m.id} className={row}>
+            <span className={label}>{m.profile?.name || m.id}</span>
+            <Button className="my-[5px] w-full" data-testid="unban" onClick={() => actions.unban(m.id!)}>
+              {t('context.unban')}
+            </Button>
+          </li>
+        ))}
+      </ul>
+    </li>
+  )
+}

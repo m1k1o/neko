@@ -25,7 +25,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 24
           cache: npm
           cache-dependency-path: client/package-lock.json
 
@@ -33,9 +33,17 @@ jobs:
         working-directory: ./client
         run: npm ci
 
+      - name: Check (types, formatting, self-checks)
+        working-directory: ./client
+        run: npm run check
+
       - name: Build client
         working-directory: ./client
         run: npm run build
+
+      - name: Build core package (@m1k1o/neko)
+        working-directory: ./client
+        run: npm run build:core
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4

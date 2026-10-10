@@ -2,6 +2,12 @@
 
 ## master {#master}
 
+### New Features {#master-feats}
+- Rewrote the web client in React with a framework-free core library (`client/core`, published as the npm package `@m1k1o/neko`) that uses only the v3 API, so it works with `NEKO_LEGACY=false`. The look and features of the Vue 2 client are kept: chat with markdown, emoji and open-in-app links, emotes, file transfer, member admin actions, locks, broadcast, microphone, all translations and URL parameters.
+- Kick now removes the session (the user may log in again). Ban sets `can_login: false` and is offered when the authentication provider stores accounts (`file`, `object`), with a list to unban members in Settings.
+- The client reconnects by itself when its websocket goes silent (dropped networks often never close it), and asks for a new media stream when the server drops it.
+- Ctrl+V pastes what was copied most recently on either side: local clipboard text is sent to the remote first when it is newer than the remote's. Text entered through an IME or an on-screen keyboard is typed as key events.
+
 ### Fixes {#master-fixes}
 - Fixed video timestamps running slow when the encoder falls behind: frames captured late or dropped before the encoder made the stream's clock lag real time, so browsers buffered up to seconds of video and lost lip sync. RTP timestamps now follow the time between captured frames ([#712](https://github.com/m1k1o/neko/pull/712)).
 
@@ -10,6 +16,12 @@
 - New metric `neko_capture_streamsink_frames`: video frames produced per pipeline; a rate below the configured fps means the encoder falls behind.
 - Session ids on the `multiuser` and `noauth` providers are built from a sanitised login name (the name itself is shown as typed); `POST /api/members` rejects usernames that would not be safe in a URL path.
 - Chat messages are limited to `chat.max_length` characters (default 512, the web client's input limit); longer ones are rejected over the API and dropped over the websocket.
+- The default video pipeline no longer draws the mouse pointer into the stream; the client draws it, so it was shown twice (once with the stream's delay). Set `capture.video.show_pointer` to `true` to get the old behaviour.
+- The client no longer uses the legacy (v2) API. IP bans, which only existed in the legacy layer, are not available.
+- Scroll sensitivity uses the v3 scale (-5 to 5); the `?scroll` query param is mapped onto it.
+- File downloads are streamed by the browser instead of being buffered in memory.
+- The microphone switches itself off when the connection is re-established.
+- Opening the client in a second tab or window takes over the session; the first tab says so.
 
 ## [n.eko v3.1.6](https://github.com/m1k1o/neko/releases/tag/v3.1.6) {#v3.1.6}
 

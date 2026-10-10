@@ -1,0 +1,22 @@
+{
+  "tab": "Tiedostot",
+  "locks": {
+    "lock": "Lukitse tiedostonsiirto (käyttäjiltä)",
+    "unlock": "Vapauta tiedostonsiirto (käyttäjiltä)",
+    "locked": "Tiedostonsiirto lukittu (käyttäjiltä)",
+    "unlocked": "Tiedostonsiirto vapautettu (käyttäjiltä)",
+    "notif_locked": "tiedostonsiirto lukittu",
+    "notif_unlocked": "tiedostonsiirto vapautettu"
+  },
+  "uploads": "Lataa",
+  "upload_here": "Klikkaa tai vedä tiedostoja tähän ladataksesi",
+  "delete": "Poista",
+  "delete_title": "Poistetaanko \"{{name}}\"?",
+  "delete_confirm": "Haluatko varmasti poistaa tämän tiedoston?",
+  "select": "Valitse",
+  "select_all": "Valitse kaikki",
+  "unselect_all": "Poista kaikki valinnat",
+  "cancel": "Peruuta",
+  "delete_selected_title": "Poistetaanko valitut tiedostot?",
+  "delete_selected_confirm": "Haluatko varmasti poistaa {{count}} valittua tiedostoa?"
+}

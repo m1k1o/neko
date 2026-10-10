@@ -1,0 +1,14 @@
+{
+  "tab": "Chat",
+  "mute": "Zakázať chat",
+  "unmute": "Povoliť chat",
+  "confirm": {
+    "mute_title": "Zakázať chat pre používateľa {{name}}?",
+    "mute_text": "Ste si istý/á, že chcete zakázať chat pre používateľa {{name}}?",
+    "unmute_title": "Povoliť chat pre používateľa {{name}}?",
+    "unmute_text": "Ste si istý/á, že chcete povoliť chat pre používateľa {{name}}?"
+  },
+  "muted": "zakázal chat používateľovi {{name}}",
+  "unmuted": "povolil chat používateľovi {{name}}",
+  "send_a_message": "Odoslať správu"
+}
