@@ -14,6 +14,7 @@ client/
     components/  shared pieces: Avatar, Dialog, Toasts, Logo, ContextMenu, LockButton, a11y
     state/       the app store, the NekoClient instance, actions, settings, dialogs, event wiring
     i18n/        i18next: initI18n(), setLang(), the loader of the locale files
+    lib/         cn(): class names with Tailwind conflicts resolved (clsx + tailwind-merge)
     locales/     the strings, one folder per language: common.json, chat.json, files.json
     design/      SCSS tokens (_variables), reset, fonts, global styles
     assets/      images
@@ -21,8 +22,8 @@ client/
 
 ## Layering
 
-Dependencies point one way: `app → layout → features → components → design`, with `state` and
-`i18n` below everything but `design`. In practice:
+Dependencies point one way: `app → layout → features → components → design`, with `state`, `i18n`
+and `lib` below everything but `design`. In practice:
 
 - A unit is a folder with its component(s) and its `.scss` next to them, imported by the component.
   Other folders import it through its `index.ts` with `@/` (`import { Video } from '@/features/video'`);

@@ -3,8 +3,8 @@
 import tseslint from 'typescript-eslint'
 import reactHooks from 'eslint-plugin-react-hooks'
 
-// Dependencies point one way: app -> layout -> features -> components -> design, with state and
-// i18n below everything but design. The app shell and the layout reach plugins only through the
+// Dependencies point one way: app -> layout -> features -> components -> design, with state, i18n
+// and lib below everything but design. The app shell and the layout reach plugins only through the
 // registry (`@/plugins`); features see only the contract (`@/plugins/types`) and get plugin
 // contributions passed in, and plugins import neither features nor each other.
 // Between folders only `@/` imports are used; a folder's own files are imported relatively.
@@ -33,7 +33,10 @@ export default [
     rules: { 'react-hooks/rules-of-hooks': 'error', 'react-hooks/exhaustive-deps': 'error' },
   },
   { files: ['src/components/**'], rules: only(not('app', 'layout', 'features', 'plugins')) },
-  { files: ['src/state/**', 'src/i18n/**'], rules: only(not('app', 'layout', 'features', 'plugins', 'components')) },
+  {
+    files: ['src/state/**', 'src/i18n/**', 'src/lib/**'],
+    rules: only(not('app', 'layout', 'features', 'plugins', 'components')),
+  },
   {
     files: ['src/features/**'],
     rules: only([

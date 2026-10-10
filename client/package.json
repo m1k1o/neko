@@ -19,11 +19,16 @@
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^6.7.2",
+    "@tailwindcss/vite": "^4.3.3",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "emoji-datasource": "6.1.1",
     "i18next": "^26.4.2",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-i18next": "^17.0.16",
+    "tailwind-merge": "^3.7.0",
+    "tailwindcss": "^4.3.3",
     "zustand": "^5.0.15"
   },
   "devDependencies": {

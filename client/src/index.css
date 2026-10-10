@@ -1,0 +1,38 @@
+/* Tailwind v4 and the design tokens (README, "Design"): the theme and the utilities; the preflight
+   comes with the component migration */
+@import 'tailwindcss/theme' layer(theme);
+@import 'tailwindcss/utilities' layer(utilities);
+
+@theme {
+  /* the tokens of src/design/_variables.scss, same values: text-text-normal, bg-background-primary, ... */
+  --color-text-normal: #dcddde;
+  --color-text-muted: #72767d;
+  --color-text-link: #00b0f4;
+
+  --color-interactive-normal: #b9bbbe;
+  --color-interactive-hover: #dcddde;
+  --color-interactive-muted: #4f545c;
+
+  --color-background-primary: #36393f;
+  --color-background-secondary: #2f3136;
+  --color-background-tertiary: #202225;
+  --color-background-accent: #4f545c;
+  --color-background-floating: #18191c;
+  --color-background-modifier-hover: rgba(79, 84, 92, 0.16);
+  --color-background-modifier-active: rgba(79, 84, 92, 0.24);
+  --color-background-modifier-selected: rgba(79, 84, 92, 0.32);
+  --color-background-modifier-accent: hsla(0, 0%, 100%, 0.06);
+
+  --shadow-elevation-low: 0 1px 0 rgba(4, 4, 5, 0.2), 0 1.5px 0 rgba(6, 6, 7, 0.05), 0 2px 0 rgba(4, 4, 5, 0.05);
+  --shadow-elevation-high: 0 8px 16px rgba(0, 0, 0, 0.24);
+
+  --color-style-primary: #19bd9c;
+  --color-style-error: #d32f2f;
+
+  /* $text-size: the size of the UI text (text-ui); $text-family is Tailwind's --font-sans */
+  --text-ui: 14px;
+  /* $menu-height, $controls-height, $side-width: h-menu, h-controls, w-side */
+  --spacing-menu: 40px;
+  --spacing-controls: 125px;
+  --spacing-side: 400px;
+}

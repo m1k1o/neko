@@ -1,11 +1,12 @@
 import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import tailwindcss from '@tailwindcss/vite'
 import { version } from './package.json'
 
 // dev: NEKO_URL=http://host:port npm run dev  (proxies /api incl. websocket)
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), tailwindcss()],
   base: './',
   // shown in the About dialog
   define: { __APP_VERSION__: JSON.stringify(version) },
