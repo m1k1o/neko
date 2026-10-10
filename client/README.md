@@ -234,15 +234,15 @@ cd client/dev && ./serve        # http://localhost:3001, /api proxied to the bac
 NEKO_URL=http://localhost:3000 npm run dev
 ```
 
-| script                |                                                                                                                                                                                                               |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `npm run build`       | type-check + production build into `dist/`, then `tools/dist.check.mjs` (no language in the main chunk)                                                                                                       |
-| `npm run build:core`  | build the `@m1k1o/neko` package into `core/dist/`                                                                                                                                                             |
-| `npm run check`       | types, formatting, lint (hooks, layering), import cycles, the tests, the built core package                                                                                                                   |
-| `npm test`            | unit tests (vitest): the core's connection state machine and store, the chat's markdown parser, the i18n runtime and locale files, the plugin registry, an instance and two of them, the provider; no browser |
-| `npm run format`      | prettier                                                                                                                                                                                                      |
-| `npm run build:emoji` | regenerate the emoji data `public/emoji.json` (names, characters, groups, keywords; `tools/emoji.ts`)                                                                                                         |
-| `npm run test:e2e`    | two-user browser test against a running server, see below                                                                                                                                                     |
+| script                |                                                                                                                                                                                                                                                      |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run build`       | type-check + production build into `dist/`, then `tools/dist.check.mjs` (no language in the main chunk)                                                                                                                                              |
+| `npm run build:core`  | build the `@m1k1o/neko` package into `core/dist/`                                                                                                                                                                                                    |
+| `npm run check`       | `check:types`, `check:format`, `check:lint` (hooks, layering), `check:cycles` and `test` in parallel (`npm-run-all2`, one label per script), then `build:core` and `check:dist` (the built core package); each `check:*` script also runs on its own |
+| `npm test`            | unit tests (vitest): the core's connection state machine and store, the chat's markdown parser, the i18n runtime and locale files, the plugin registry, an instance and two of them, the provider; no browser                                        |
+| `npm run format`      | prettier                                                                                                                                                                                                                                             |
+| `npm run build:emoji` | regenerate the emoji data `public/emoji.json` (names, characters, groups, keywords; `tools/emoji.ts`)                                                                                                                                                |
+| `npm run test:e2e`    | two-user browser test against a running server, see below                                                                                                                                                                                            |
 
 ### e2e
 
