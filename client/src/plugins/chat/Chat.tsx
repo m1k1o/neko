@@ -64,8 +64,9 @@ export function Chat() {
     const next = (text.slice(0, at) + code + text.slice(el.selectionEnd ?? at)).slice(0, MAX_MESSAGE)
     setText(next)
     setPicker(false)
+    // focus now, not after the popover's exit: a key typed right after the click must land here
+    el.focus()
     requestAnimationFrame(() => {
-      el.focus()
       el.selectionStart = el.selectionEnd = at + code.length
     })
   }
@@ -136,7 +137,7 @@ export function Chat() {
                   <Laugh className="size-5" />
                 </IconButton>
               </PopoverTrigger>
-              {picker && <EmojiPicker onPick={onEmoji} />}
+              {picker && <EmojiPicker onPick={onEmoji} onClose={() => input.current?.focus()} />}
             </Popover>
           </div>
         </div>

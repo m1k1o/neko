@@ -39,7 +39,7 @@ const GROUP_ICON: Record<string, LucideIcon> = {
   flags: Flag,
 }
 
-export function EmojiPicker({ onPick }: { onPick: (name: string) => void }) {
+export function EmojiPicker({ onPick, onClose }: { onPick: (name: string) => void; onClose: () => void }) {
   const store = chat(useNeko())
   const { recent, ready } = useStore(
     store,
@@ -86,6 +86,11 @@ export function EmojiPicker({ onPick }: { onPick: (name: string) => void }) {
       side="top"
       align="end"
       sideOffset={8}
+      // the keyboard goes back to the message box, not to the emoji button Radix would focus
+      onCloseAutoFocus={(e) => {
+        e.preventDefault()
+        onClose()
+      }}
       className="flex h-[350px] w-[300px] flex-col overflow-hidden rounded-[5px] bg-background-secondary shadow-elevation-high"
       data-testid="emoji-picker"
     >

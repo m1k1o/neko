@@ -232,6 +232,10 @@ await step('emoji picker inserts :name:', async () => {
   await A.click('[data-testid=emoji-list] [data-emoji] >> nth=0')
   const v = await A.inputValue('[data-testid=chat-input]')
   if (!/^:[^:]+:$/.test(v)) throw new Error('textarea is ' + JSON.stringify(v))
+  // the keyboard stays in the message box after a pick (the picker's close must not focus its button)
+  await A.keyboard.type('x')
+  const v2 = await A.inputValue('[data-testid=chat-input]')
+  if (!/^:[^:]+:x$/.test(v2)) throw new Error('after the pick the keyboard went elsewhere: ' + JSON.stringify(v2))
   await A.fill('[data-testid=chat-input]', '')
 })
 await step('language switch (de) and back', async () => {
