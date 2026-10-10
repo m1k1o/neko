@@ -239,7 +239,7 @@ NEKO_URL=http://localhost:3000 npm run dev
 | `npm run build`       | type-check + production build into `dist/`, then `tools/dist.check.mjs` (no language in the main chunk)                                                                                                                                              |
 | `npm run build:core`  | build the `@m1k1o/neko` package into `core/dist/`                                                                                                                                                                                                    |
 | `npm run check`       | `check:types`, `check:format`, `check:lint` (hooks, layering), `check:cycles` and `test` in parallel (`npm-run-all2`, one label per script), then `build:core` and `check:dist` (the built core package); each `check:*` script also runs on its own |
-| `npm test`            | unit tests (vitest): the core's connection state machine and store, the chat's markdown parser, the i18n runtime and locale files, the plugin registry, an instance and two of them, the provider; no browser                                        |
+| `npm test`            | unit tests (vitest): the core's connection state machine and store, the chat's markdown (rendered with react-dom/server), the i18n runtime and locale files, the plugin registry, an instance and two of them, the provider; no browser              |
 | `npm run format`      | prettier                                                                                                                                                                                                                                             |
 | `npm run build:emoji` | regenerate the emoji data `public/emoji.json` (names, characters, groups, keywords; `tools/emoji.ts`)                                                                                                                                                |
 | `npm run test:e2e`    | two-user browser test against a running server, see below                                                                                                                                                                                            |
@@ -274,7 +274,15 @@ Playwright's, start it with `--headless --remote-debugging-port=9222 --user-data
   `can_login: false` and is only offered when the auth provider stores accounts.
 - Settings use the same `localStorage` keys and format as the previous client, so preferences carry
   over. Scroll sensitivity now uses v3 steps (-5..5, key `scroll_sensitivity`); `?scroll=` is mapped.
-- Chat markdown is parsed to React elements (no HTML strings); links are limited to http(s)/mailto.
+- Chat markdown (`src/plugins/chat/markdown.ts`) is rendered by `react-markdown` with `remark-gfm`
+  (`~~strike~~`, tables, bare links) and `remark-breaks` (a newline is a line break) to React elements,
+  no HTML strings; four small rehype plugins of ours add the chat's dialect: `:name:` emoji, plain-text
+  `||spoiler||` (click to reveal; no formatting inside), `__underline__`, and links to anything but
+  http(s)/mailto, images and raw HTML shown as the text they were typed as (nothing in a message loads
+  anything). Compared with the hand-written parser before: the Discord `>>>` block quote is gone
+  (`> ` quotes stay, and continue until a blank line), and CommonMark's headings, lists, nested
+  quotes and tables are in. Messages over 10,000 characters, or one the renderer fails on, are shown
+  as plain text.
 - Short-lived list items (uploads, emote animations) are keyed by `crypto.randomUUID()` (a secure
   context: https or localhost).
 - File downloads are plain links so the browser streams them; the session token is added to the

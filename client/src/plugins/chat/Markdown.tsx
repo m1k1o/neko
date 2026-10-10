@@ -1,22 +1,21 @@
-import { Fragment, useMemo, useState } from 'react'
+import { memo, useState, type ReactNode } from 'react'
 import { useStore } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
 import { selectControlling } from '@m1k1o/neko'
+import ReactMarkdown, { type Components } from 'react-markdown'
 import { useNeko } from '@/state/provider'
 import { SquareArrowOutUpRight } from 'lucide-react'
-import { cn } from '@/lib/utils'
 import { IconButton } from '@/components/IconButton'
 import { chat } from './store'
 import { openInApp } from './actions'
-import { emoji } from './emoji'
 import { Emoji } from './Emoji'
-import { parseSafe, type Node as MdNode } from './markdown'
+import { FORMAT_LIMIT, disallowedElements, rehypePlugins, remarkPlugins, safeUrl } from './markdown'
 
 // the legacy 0.875rem / 1.125rem at a 14px root
 const code =
   'rounded-[3px] bg-background-secondary px-[3px] indent-0 font-mono text-[12.25px] leading-[15.75px] whitespace-pre-wrap'
 
-function Spoiler({ children }: { children: React.ReactNode }) {
+function Spoiler({ children }: { children: ReactNode }) {
   const [shown, setShown] = useState(false)
   if (shown)
     return (
@@ -38,8 +37,28 @@ function Spoiler({ children }: { children: React.ReactNode }) {
   )
 }
 
-// a chat message: the parser's nodes as React elements (no HTML strings)
-export function Markdown({ source }: { source: string }) {
+// react-markdown's Markdown is a plain function (no hooks), called here so that a renderer error
+// (pathological nesting, say) shows the text as it is instead of taking the chat down
+function render(source: string, components: Components): ReactNode {
+  if (source.length > FORMAT_LIMIT) return source
+  try {
+    return ReactMarkdown({
+      children: source,
+      remarkPlugins,
+      rehypePlugins,
+      components,
+      urlTransform: safeUrl,
+      disallowedElements,
+      unwrapDisallowed: true,
+    })
+  } catch {
+    return source
+  }
+}
+
+// a chat message: the markdown (markdown.ts) as React elements, no HTML strings. memo: a new line
+// in the chat does not parse the others again
+export const Markdown = memo(function Markdown({ source }: { source: string }) {
   const neko = useNeko()
   const { client, app } = neko
   const { canOpenInApp, linksInApp } = useStore(
@@ -47,8 +66,7 @@ export function Markdown({ source }: { source: string }) {
     useShallow((s) => ({ canOpenInApp: s.openInApp, linksInApp: s.settings.links_in_app })),
   )
   const hosting = useStore(client.store, selectControlling)
-  const emojiReady = useStore(chat(neko), (s) => s.emojiReady) // re-render once emoji names are known
-  const nodes = useMemo(() => parseSafe(source), [source])
+  useStore(chat(neko), (s) => s.emojiReady) // re-render once the emoji names are known (markdown.ts reads them)
   // open-in-app needs the plugin and control of the desktop
   const inApp = canOpenInApp && hosting
   const open = (href: string) => (e: React.MouseEvent) => {
@@ -57,75 +75,45 @@ export function Markdown({ source }: { source: string }) {
     openInApp(neko, href)
   }
 
-  const render = (list: MdNode[]): React.ReactNode[] =>
-    list.map((n, i) => {
-      switch (n.t) {
-        case 'text':
-          return n.v
-        case 'br':
-          return <br key={i} />
-        case 'code':
-          return (
-            <code key={i} className={code}>
-              {n.v}
-            </code>
-          )
-        case 'pre':
-          return (
-            <pre
-              key={i}
-              className="my-1 block flex-1 rounded border border-background-tertiary bg-background-secondary px-1.5 py-2 text-interactive-normal"
-            >
-              <code className={cn(code, 'block')}>{n.v}</code>
-            </pre>
-          )
-        case 'emoji':
-          return emojiReady && emoji.names.has(n.v) ? <Emoji key={i} name={n.v} /> : `:${n.v}:`
-        case 'link':
-          return (
-            <Fragment key={i}>
-              <a
-                className="text-text-link underline"
-                href={n.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={open(n.href)}
-              >
-                {render(n.c)}
-              </a>
-              {inApp && (
-                <IconButton
-                  label="Open in app"
-                  className="ml-[0.3em] align-middle"
-                  onClick={() => openInApp(neko, n.href)}
-                >
-                  <SquareArrowOutUpRight className="size-3.5" />
-                </IconButton>
-              )}
-            </Fragment>
-          )
-        case 'spoiler':
-          return <Spoiler key={i}>{render(n.c)}</Spoiler>
-        case 'quote':
-          return (
-            <blockquote key={i} className="border-l-[3px] border-background-accent pl-[3px]">
-              {render(n.c)}
-            </blockquote>
-          )
-        default: {
-          const Tag = n.t // strong, em, u, s
-          return (
-            <Tag key={i} className={n.t === 'strong' ? 'font-extrabold' : n.t === 'em' ? 'italic' : undefined}>
-              {render(n.c)}
-            </Tag>
-          )
-        }
-      }
-    })
-
+  const components: Components = {
+    a: ({ href = '', children }) => (
+      <>
+        <a
+          className="text-text-link underline"
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={open(href)}
+        >
+          {children}
+        </a>
+        {inApp && (
+          <IconButton label="Open in app" className="ml-[0.3em] align-middle" onClick={() => openInApp(neko, href)}>
+            <SquareArrowOutUpRight className="size-3.5" />
+          </IconButton>
+        )}
+      </>
+    ),
+    // the spans are the plugins' (markdown.ts): an emoji by name, or a spoiler
+    span: ({ node, children }) =>
+      node?.properties.dataEmoji === undefined ? (
+        <Spoiler>{children}</Spoiler>
+      ) : (
+        <Emoji name={String(node.properties.dataEmoji)} />
+      ),
+    code: ({ children }) => <code className={code}>{children}</code>,
+    pre: ({ children }) => (
+      <pre className="my-1 block flex-1 rounded border border-background-tertiary bg-background-secondary px-1.5 py-2 text-interactive-normal">
+        {children}
+      </pre>
+    ),
+  }
   return (
-    <div className="leading-[22px] text-text-normal wrap-break-word" data-testid="chat-body">
-      {render(nodes)}
+    <div
+      className="leading-[22px] text-text-normal wrap-break-word [&_blockquote]:border-l-[3px] [&_blockquote]:border-background-accent [&_blockquote]:pl-[3px] [&_em]:italic [&_:is(h1,h2,h3,h4,h5,h6)]:font-bold [&_ol]:list-decimal [&_p+p]:mt-[22px] [&_pre_code]:block [&_strong]:font-extrabold [&_:is(td,th)]:px-1 [&_ul]:list-disc [&_:is(ul,ol)]:pl-5"
+      data-testid="chat-body"
+    >
+      {render(source, components)}
     </div>
   )
-}
+})
