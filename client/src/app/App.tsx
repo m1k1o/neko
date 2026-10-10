@@ -13,10 +13,10 @@ import { Toaster } from '@/components/ui/sonner'
 import { Header } from '@/layout/Header'
 import { Side } from '@/layout/Side'
 import { RoomBar } from '@/layout/RoomBar'
-import { Stage } from '@/features/video'
-import { MemberMenu } from '@/features/members'
-import { Connect } from '@/features/connect'
-import { About } from '@/features/about'
+import { Stage } from '@/features/video/Stage'
+import { MemberMenu } from '@/features/members/MemberMenu'
+import { Connect } from '@/features/connect/Connect'
+import { About } from '@/features/about/About'
 
 const params = new URL(location.href).searchParams
 const cast = !!params.get('cast')

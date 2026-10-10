@@ -11,13 +11,13 @@ client/
     layout/      Header, Side (the tab bar), RoomBar (members, room menu, controls, emotes)
     features/    one folder per feature: video, members, controls, room-menu, emotes, settings, connect, about
     plugins/     the registry (index.ts: the list, the slots, event dispatch), the contract (types.ts), chat/, filetransfer/
-    components/  shared pieces: Avatar, Dialog, Toasts, Logo, ContextMenu, LockButton, a11y
+    components/  shared pieces: IconButton, Avatar, Dialog, EachHook; ui/ holds the shadcn/ui kit (dialog, menus, popover, tabs, button, sonner)
     state/       the app store, the NekoClient instance, actions, settings, dialogs, event wiring
     i18n/        i18next: initI18n(), setLang(), the loader of the locale files
     lib/         cn(): class names with Tailwind conflicts resolved (clsx + tailwind-merge)
     locales/     the strings, one folder per language: common.json, chat.json, files.json
-    design/      SCSS tokens (_variables), reset, fonts, global styles
     assets/      images
+    index.css    Tailwind v4: the design tokens (@theme), the global rules, the layout's breakpoint variants
 ```
 
 ## Layering
@@ -25,11 +25,10 @@ client/
 Dependencies point one way: `app → layout → features → components → design`, with `state`, `i18n`
 and `lib` below everything but `design`. In practice:
 
-- A unit is a folder with its component(s) and its `.scss` next to them, imported by the component.
-  Other folders import it through its `index.ts` with `@/` (`import { Video } from '@/features/video'`);
+- A feature is a folder with its component(s), styled with Tailwind classes in the markup. Other
+  folders import a feature by its main file with `@/` (`import { Stage } from '@/features/video/Stage'`);
   only a folder's own files are imported relatively.
-- Shared components know nothing about features or plugins. Features use each other only through
-  their `index.ts`. Nothing imports `app/`.
+- Shared components know nothing about features or plugins. Nothing imports `app/`.
 - Plugins import neither each other nor `features/`; the app shell and the layout reach plugins only
   through the registry `@/plugins`, and features get plugin contributions passed in (they see only
   the contract in `@/plugins/types`).
@@ -71,9 +70,10 @@ its own and re-renders only that).
 
 To add a plugin:
 
-1. Create `src/plugins/<name>/` with an `index.ts` exporting the plugin object, its components with
-   their `.scss`, and a `store.ts` made with zustand's `createStore()` (components select from it with
-   `useStore(store, (s) => s.field)`, the rest reads `store.getState()` and writes `store.setState()`).
+1. Create `src/plugins/<name>/` with an `index.ts` exporting the plugin object, its components (Tailwind
+   classes, the tokens of `src/index.css`), and a `store.ts` made with zustand's `createStore()` (components
+   select from it with `useStore(store, (s) => s.field)`, the rest reads `store.getState()` and writes
+   `store.setState()`).
 2. Add its strings as `src/locales/<lang>/<ns>.json` in every language (see i18n).
 3. Add the import and the entry to `src/plugins/index.ts`.
 
@@ -137,7 +137,7 @@ NEKO_URL=http://localhost:3000 npm run dev
 | `npm run check`       | types, formatting, lint (hooks, layering), import cycles, the tests, the built core package                                                                        |
 | `npm test`            | unit tests (vitest): the core's connection state machine and store, the chat's markdown parser, the i18n runtime and locale files, the plugin registry; no browser |
 | `npm run format`      | prettier                                                                                                                                                           |
-| `npm run build:emoji` | regenerate emoji data (`public/emoji.json`, the chat's sprite sheet)                                                                                               |
+| `npm run build:emoji` | regenerate the emoji data `public/emoji.json` (names, characters, groups, keywords; `tools/emoji.ts`)                                                              |
 | `npm run test:e2e`    | two-user browser test against a running server, see below                                                                                                          |
 
 ### e2e

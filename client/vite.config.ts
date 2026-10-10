@@ -19,15 +19,6 @@ export default defineConfig({
       '@m1k1o/neko': fileURLToPath(new URL('./core/src/index.ts', import.meta.url)),
     },
   },
-  css: {
-    preprocessorOptions: {
-      scss: {
-        // legacy styles rely on global variables and @import
-        additionalData: '@import "@/design/variables";\n',
-        silenceDeprecations: ['import', 'global-builtin', 'color-functions'],
-      },
-    },
-  },
   server: {
     port: 3001,
     proxy: process.env.NEKO_URL

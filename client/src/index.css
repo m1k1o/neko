@@ -1,5 +1,6 @@
 /* Tailwind v4 and the design tokens (README, "Design"): preflight, theme, utilities, the global
-   rules of the page and the responsive variants of the layout */
+   rules of the page and the responsive variants of the layout. The font is the system stack
+   (Tailwind's --font-sans). */
 @import 'tailwindcss';
 
 @theme {
@@ -28,7 +29,7 @@
   --color-style-primary: #19bd9c;
   --color-style-error: #d32f2f;
 
-  /* $text-size: the size of the UI text (text-ui); $text-family is Tailwind's --font-sans */
+  /* $text-size: the size of the UI text (text-ui); $text-family became Tailwind's --font-sans */
   --text-ui: 14px;
   /* $menu-height, $controls-height, $side-width: h-menu, h-controls, w-side */
   --spacing-menu: 40px;

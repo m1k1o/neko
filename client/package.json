@@ -46,7 +46,6 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "playwright": "^1.63.0",
     "prettier": "^3.9.9",
-    "sass": "^1.89.0",
     "typescript": "~5.8.0",
     "typescript-eslint": "^8.71.1",
     "vite": "^7.0.0",

@@ -1,9 +1,0 @@
-@charset "utf-8";
-
-// the Whitney font (the rest of the global styles is src/index.css)
-@import 'font-whitney';
-
-html,
-body {
-  font-family: $text-family;
-}

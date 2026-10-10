@@ -7,7 +7,8 @@ import reactHooks from 'eslint-plugin-react-hooks'
 // and lib below everything but design. The app shell and the layout reach plugins only through the
 // registry (`@/plugins`); features see only the contract (`@/plugins/types`) and get plugin
 // contributions passed in, and plugins import neither features nor each other.
-// Between folders only `@/` imports are used; a folder's own files are imported relatively.
+// Between folders only `@/` imports are used (a feature by its main file, `@/features/video/Stage`);
+// a folder's own files are imported relatively.
 const only = (allowed) => ({
   'no-restricted-imports': [
     'error',
@@ -15,7 +16,6 @@ const only = (allowed) => ({
       patterns: [
         { group: ['../*'], message: 'import other layers with @/ (relative imports stay inside the folder)' },
         { group: ['@m1k1o/neko/*', '@/core/*'], message: 'the core is imported from its entry point @m1k1o/neko' },
-        { group: ['@/features/*/*'], message: 'features are imported through their index.ts' },
         { group: ['@/plugins/*', '!@/plugins/types'], message: 'plugins are reached through the registry @/plugins' },
         ...allowed,
       ],
