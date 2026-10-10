@@ -30,7 +30,7 @@ function Item({ item, member }: { item: PluginMemberMenuItem; member: Session })
 }
 
 // rendered by App outside .room-container, which is hidden at narrow widths where the chat still works
-export function MemberMenu({ items }: { items: PluginMemberMenuItem[] }) {
+export function MemberMenu({ items }: { items: readonly PluginMemberMenuItem[] }) {
   const { t } = useTranslation()
   const menu = useStore(app, (s) => s.menu)
   const [bannable, setBannable] = useState(false)

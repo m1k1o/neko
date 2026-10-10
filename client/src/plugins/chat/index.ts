@@ -35,7 +35,7 @@ export const chat: Plugin = {
       },
     },
   ],
-  onEvent(event, payload) {
+  onEvent(...[event, payload]) {
     if (event === 'chat/init') store.setState({ enabled: payload.enabled })
     if (event === 'chat/message') {
       if (app.getState().ignored[payload.id]) return

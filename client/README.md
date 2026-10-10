@@ -10,7 +10,7 @@ client/
     app/         the shell: App, ErrorBoundary, boot.ts (start-up order), the #neko grid
     layout/      Header, Side (the tab bar), RoomBar (members, room menu, controls, emotes)
     features/    one folder per feature: video, members, controls, room-menu, emotes, settings, connect, about
-    plugins/     the registry (index.ts), the plugin contract (types.ts), chat/, filetransfer/
+    plugins/     the registry (index.ts: the list, the slots, event dispatch), the contract (types.ts), chat/, filetransfer/
     components/  shared pieces: Avatar, Dialog, Toasts, Logo, ContextMenu, LockButton, a11y
     state/       the app store, the NekoClient instance, actions, settings, dialogs, event wiring
     i18n/        i18next: initI18n(), setLang(), the loader of the locale files
@@ -50,21 +50,23 @@ layer, and `tools/cycles.mjs` fails on an import cycle (type-only imports except
 A plugin is a folder under `src/plugins/` with its components, styles, store and actions, described
 by one object (`src/plugins/types.ts`); its strings are a namespace of their own under `src/locales/`:
 
-| field        |                                                                                                                                                                       |
-| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`         | the prefix of its server events: `message` events named `<id>/...` reach `onEvent`                                                                                    |
-| `ns`         | the namespace of its strings, `src/locales/<lang>/<ns>.json` in every language, used as `t('<ns>:key')`                                                               |
-| `tab`        | a side-panel tab: `id` (the remembered tab), `icon`, `label` (the key of its name, `chat:tab`), `component`, the hooks `useVisible()` and `useBadge()` (unread count) |
-| `topBar`     | items for the header menu; each renders its own `<li>` or nothing                                                                                                     |
-| `memberMenu` | entries of another member's context menu: the hook `useVisible(member)`, `label(member)`, `onClick(member)`                                                           |
-| `onEvent`    | `(event, payload)` for its server events                                                                                                                              |
-| `init`       | called once at start-up, before the connection: subscribe to `client.events`, the bus, ...                                                                            |
+| field        |                                                                                                                                                                                     |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`         | the prefix of its server events: `message` events named `<id>/...` reach `onEvent`                                                                                                  |
+| `ns`         | the namespace of its strings, `src/locales/<lang>/<ns>.json` in every language, used as `t('<ns>:key')`                                                                             |
+| `tab`        | a side-panel tab: `id` (the remembered tab), `icon`, `label` (the key of its name, `chat:tab`), `component`, the hooks `useVisible()` and `useBadge()` (unread count)               |
+| `topBar`     | items for the header menu; each renders its own `<li>` or nothing                                                                                                                   |
+| `memberMenu` | entries of another member's context menu: the hook `useVisible(member)`, `label(member)`, `onClick(member)`                                                                         |
+| `onEvent`    | `(...[event, payload])` for its server events, typed by `PluginEvents` (event name to payload, `src/plugins/types.ts`): `if (event === 'chat/init')` narrows `payload` to its shape |
+| `init`       | called once at start-up, before the connection: subscribe to `client.events`, the bus, ...                                                                                          |
 
-`src/plugins/index.ts` lists the plugins of the build in side-panel order. The side panel, the
-header and the member menu render what the registry returns (`useVisible` and `useBadge` are hooks
-over the plugin's store, so each runs in a small component of its own and re-renders only that), and
-`initPlugins()` (called from `app/boot.ts`) installs the event dispatch and runs each `init`; the
-plugins' namespaces are loaded with the language by `initI18n`.
+`src/plugins/index.ts` lists the plugins of the build in side-panel order, and `initPlugins()`
+(called from `app/boot.ts`) wires them in that order: it puts each `tab`, `topBar` item and
+`memberMenu` entry into its slot (`registerSlot('side.tab' | 'header.item' | 'member.menu', item)`),
+builds the event dispatch (a map from the `id` prefix to the plugin, one lookup per message) and runs
+each `init`. The side panel, the header and the app shell read the slots with `useSlot(name)`
+(`useVisible` and `useBadge` are hooks over the plugin's store, so each runs in a small component of
+its own and re-renders only that).
 
 To add a plugin:
 

@@ -1,20 +1,9 @@
 import { createStore } from 'zustand/vanilla'
-
-export interface FileItem {
-  name: string
-  type: 'file' | 'dir'
-  size?: number
-}
+import type { PluginEvents } from '@/plugins/types'
 
 // filetransfer/update: the shared folder and what the viewer may do with it
-export interface FileTransfer {
-  enabled: boolean
-  root_dir: string
-  user_download: boolean
-  user_upload: boolean
-  user_delete: boolean
-  files: FileItem[]
-}
+export type FileTransfer = PluginEvents['filetransfer/update']
+export type FileItem = FileTransfer['files'][number]
 
 export interface Upload {
   id: number

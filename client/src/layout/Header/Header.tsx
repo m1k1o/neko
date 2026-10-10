@@ -9,7 +9,7 @@ import { remember } from '@/state/storage'
 import { a11y } from '@/components/a11y'
 import { Logo } from '@/components/Logo'
 import { LockButton } from '@/components/LockButton'
-import { tabs, topBar } from '@/plugins'
+import { useSlot } from '@/plugins'
 import { EachHook } from '@/components/EachHook'
 import './header.scss'
 
@@ -20,6 +20,8 @@ export function Header() {
   const admin = useStore(client.store, selectIsAdmin)
   const settings = useStore(client.store, (s) => s.settings)
   const side = useStore(app, (s) => s.side)
+  const items = useSlot('header.item')
+  const tabs = useSlot('side.tab')
 
   const lock = (r: LockResource, icon: string) => {
     const locked = isLocked(r, settings)
@@ -43,11 +45,11 @@ export function Header() {
       <ul className="menu">
         {lock('control', 'fa-mouse')}
         {lock('login', isLocked('login', settings) ? 'fa-lock' : 'fa-lock-open')}
-        {topBar().map(({ id, component: Item }) => (
+        {items.map(({ id, component: Item }) => (
           <Item key={id} />
         ))}
         {/* what the side panel has to show, for the badge on its toggle */}
-        <EachHook items={tabs()} use={(tab) => tab.useBadge ?? zero}>
+        <EachHook items={tabs} use={(tab) => tab.useBadge ?? zero}>
           {(counts) => <Toggle side={side} unread={counts.reduce((n, c) => n + c, 0)} />}
         </EachHook>
       </ul>

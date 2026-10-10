@@ -1,10 +1,10 @@
 import type { ComponentType } from 'react'
 import type { Session } from '@m1k1o/neko'
 
-// What a plugin can contribute to the GUI. The registry (index.ts) wires it in: the side panel
-// shows its tab, the header its top-bar items, the member menu its items, server events starting
-// with `${id}/` reach onEvent, and its strings are the namespace `ns`. Adding a plugin is a folder
-// and one line in the registry.
+// What a plugin can contribute to the GUI. The registry (index.ts) wires it in: its tab, header
+// items and member-menu entries go into the slots the layout renders (`side.tab`, `header.item`,
+// `member.menu`), server events starting with `${id}/` reach onEvent, and its strings are the
+// namespace `ns`. Adding a plugin is a folder and one line in the registry.
 export interface Plugin {
   // also the prefix of its server events (`chat/*`, `filetransfer/*`)
   id: string
@@ -13,9 +13,36 @@ export interface Plugin {
   tab?: PluginTab
   topBar?: PluginTopBarItem[]
   memberMenu?: PluginMemberMenuItem[]
-  onEvent?: (event: string, payload: any) => void
+  // its server events, typed by PluginEvents; the rest parameter narrows the payload on the event:
+  // `onEvent(...[event, payload]) { if (event === 'chat/init') store.setState({ enabled: payload.enabled }) }`
+  onEvent?: (...args: PluginEventArgs) => void
   // called once at start-up, before the connection: subscribe to client events here
   init?: () => void
+}
+
+// the server's plugin events (server/internal/plugins/*/types.go) and their payloads
+export interface PluginEvents {
+  'chat/init': { enabled: boolean }
+  'chat/message': { id: string; created: string; content: { text: string } }
+  'filetransfer/update': {
+    enabled: boolean
+    root_dir: string
+    user_download: boolean
+    user_upload: boolean
+    user_delete: boolean
+    files: { name: string; type: 'file' | 'dir'; size?: number }[]
+  }
+  // no GUI plugin of its own: state/events.ts turns it into app.openInApp
+  'openinapp/init': { enabled: boolean }
+}
+// `[event, payload]` of one PluginEvents entry
+export type PluginEventArgs = { [K in keyof PluginEvents]: [event: K, payload: PluginEvents[K]] }[keyof PluginEvents]
+
+// the places of the GUI a plugin contributes to, and what goes there (registry: registerSlot, useSlot)
+export interface Slots {
+  'side.tab': PluginTab
+  'header.item': PluginTopBarItem
+  'member.menu': PluginMemberMenuItem
 }
 
 // `useVisible` and `useBadge` are hooks (they select from the plugin's store with useStore), so

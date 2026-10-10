@@ -12,7 +12,7 @@ export const filetransfer: Plugin = {
   ns: 'files',
   tab: { id: 'files', icon: 'fa-file', label: 'files:tab', component: Files, useVisible: useAllowed },
   topBar: [{ id: 'filetransfer-lock', component: FileLock }],
-  onEvent(event, payload) {
+  onEvent(...[event, payload]) {
     if (event === 'filetransfer/update') store.setState({ files: payload })
   },
   init() {

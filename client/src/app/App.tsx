@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { app } from '@/state/app'
 import { client } from '@/state/client'
 import { setSetting } from '@/state/settings'
-import { memberMenu } from '@/plugins'
+import { useSlot } from '@/plugins'
 import { WebRTCTransport } from '@m1k1o/neko'
 import { Logo } from '@/components/Logo'
 import { Dialog } from '@/components/Dialog'
@@ -32,6 +32,7 @@ export function App() {
     app,
     useShallow((s) => ({ side: s.side, about: s.about })),
   )
+  const memberMenu = useSlot('member.menu')
 
   if (!WebRTCTransport.supported()) {
     return (
@@ -59,7 +60,7 @@ export function App() {
         </div>
         {!videoOnly && <RoomBar />}
       </main>
-      {!videoOnly && <MemberMenu items={memberMenu()} />}
+      {!videoOnly && <MemberMenu items={memberMenu} />}
       {!videoOnly && side && <Side />}
       {!connected && <Connect />}
       {!videoOnly && <Toasts />}

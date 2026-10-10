@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 
 interface Props<I, T> {
-  items: I[]
+  items: readonly I[]
   // picks an item's hook (a plugin tab's `useVisible`, `useBadge`), with the default for items without one
   use: (item: I) => () => T
   children: (values: T[]) => ReactNode
