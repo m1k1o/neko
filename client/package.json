@@ -23,7 +23,6 @@
     "@radix-ui/react-menu": "^2.1.25",
     "@radix-ui/react-popover": "^1.2.0",
     "@radix-ui/react-tabs": "^1.1.22",
-    "@tailwindcss/vite": "^4.3.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "i18next": "^26.4.2",
@@ -33,10 +32,10 @@
     "react-i18next": "^17.0.16",
     "sonner": "^2.0.8",
     "tailwind-merge": "^3.7.0",
-    "tailwindcss": "^4.3.3",
     "zustand": "^5.0.15"
   },
   "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
     "@vitejs/plugin-react": "^5.0.0",
@@ -46,6 +45,7 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "playwright": "^1.63.0",
     "prettier": "^3.9.9",
+    "tailwindcss": "^4.3.3",
     "typescript": "~5.8.0",
     "typescript-eslint": "^8.71.1",
     "vite": "^7.0.0",
