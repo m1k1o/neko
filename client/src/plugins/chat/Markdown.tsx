@@ -10,6 +10,7 @@ import { IconButton } from '@/components/IconButton'
 import { chat } from './store'
 import { openInApp } from './actions'
 import { emoji } from './emoji'
+import { Emoji } from './Emoji'
 import { parseSafe, type Node as MdNode } from './markdown'
 
 // the legacy 0.875rem / 1.125rem at a 14px root
@@ -78,11 +79,7 @@ export function Markdown({ source }: { source: string }) {
             </pre>
           )
         case 'emoji':
-          return emojiReady && emoji.names.has(n.v) ? (
-            <span key={i} className="emoji" data-emoji={n.v} title={`:${n.v}:`} />
-          ) : (
-            `:${n.v}:`
-          )
+          return emojiReady && emoji.names.has(n.v) ? <Emoji key={i} name={n.v} /> : `:${n.v}:`
         case 'link':
           return (
             <Fragment key={i}>

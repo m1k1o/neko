@@ -21,6 +21,7 @@ import { IconButton } from '@/components/IconButton'
 import { PopoverContent } from '@/components/ui/popover'
 import { chat } from './store'
 import { emoji, pickedEmoji } from './emoji'
+import { Emoji } from './Emoji'
 
 // the icon of each group's tab at the bottom of the picker
 const GROUP_ICON: Record<string, LucideIcon> = {
@@ -62,13 +63,13 @@ export function EmojiPicker({ onPick }: { onPick: (name: string) => void }) {
     <li key={key} className={cn('cursor-pointer rounded-[3px] p-0.5', hovered === name && 'bg-background-floating')}>
       <IconButton
         label={`:${name}:`}
-        className="emoji"
-        data-emoji={name}
         tabIndex={-1}
         onMouseEnter={() => setHovered(name)}
         onFocus={() => setHovered(name)}
         onClick={() => pick(name)}
-      />
+      >
+        <Emoji name={name} />
+      </IconButton>
     </li>
   )
   const onScroll = () => {
@@ -124,7 +125,9 @@ export function EmojiPicker({ onPick }: { onPick: (name: string) => void }) {
       <div className="flex h-9 shrink-0 flex-col justify-center bg-background-tertiary">
         {hovered && (
           <div className="flex h-5 flex-row">
-            <span className="emoji mr-[5px] ml-2.5 cursor-default" data-emoji={hovered} />
+            <span className="mr-[5px] ml-2.5 cursor-default">
+              <Emoji name={hovered} />
+            </span>
             <span className="cursor-default text-[16px] leading-5 font-medium">:{hovered}:</span>
           </div>
         )}

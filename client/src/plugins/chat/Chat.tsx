@@ -14,7 +14,6 @@ import { sendChat } from './actions'
 import { loadEmoji } from './emoji'
 import { Markdown } from './Markdown'
 import { EmojiPicker } from './EmojiPicker'
-import './emoji-sprites.scss'
 
 const time = (d: Date) =>
   d.toDateString() === new Date().toDateString()

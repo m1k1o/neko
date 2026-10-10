@@ -1,5 +1,7 @@
-// emoji (legacy emoji.json + twitter sprite sheet), loaded once when chat first needs it
+// emoji (public/emoji.json, see tools/emoji.ts), loaded once when chat first needs it: the names,
+// their Unicode characters, the groups and keywords of the picker; the custom ones are images
 import { set } from '@/state/storage'
+import neko from '@/assets/images/emoji/neko.png'
 import { chat } from './store'
 
 export interface EmojiGroup {
@@ -7,7 +9,14 @@ export interface EmojiGroup {
   name: string
   list: string[]
 }
-export const emoji = { groups: [] as EmojiGroup[], keywords: {} as Record<string, string[]>, names: new Set<string>() }
+export const emoji = {
+  groups: [] as EmojiGroup[],
+  keywords: {} as Record<string, string[]>,
+  names: new Set<string>(),
+  chars: {} as Record<string, string>,
+}
+// the emoji that are images, by name (tools/emoji_custom.ts lists them for the generator)
+export const custom: Record<string, string> = { neko }
 let emojiLoading = false
 
 export function loadEmoji() {
@@ -18,10 +27,17 @@ export function loadEmoji() {
   } catch {}
   fetch('emoji.json')
     .then((r) => r.json())
-    .then((d: { groups: EmojiGroup[]; keywords: Record<string, string[]>; list: string[] }) => {
-      Object.assign(emoji, { groups: d.groups, keywords: d.keywords, names: new Set(d.list) })
-      chat.setState({ emojiReady: true })
-    })
+    .then(
+      (d: {
+        groups: EmojiGroup[]
+        keywords: Record<string, string[]>
+        list: string[]
+        chars: Record<string, string>
+      }) => {
+        Object.assign(emoji, { groups: d.groups, keywords: d.keywords, names: new Set(d.list), chars: d.chars })
+        chat.setState({ emojiReady: true })
+      },
+    )
     .catch(() => (emojiLoading = false))
 }
 

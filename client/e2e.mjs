@@ -203,7 +203,7 @@ await step('markdown: bob -> alice renders safely', async () => {
   await last.locator('strong >> text=bold').waitFor({ timeout: 5000 })
   await last.locator('[data-testid=spoiler]:not([data-shown])').click()
   await last.locator('[data-testid=spoiler][data-shown]').waitFor({ timeout: 2000 })
-  await last.locator('.emoji[data-emoji="smile"]').waitFor({ timeout: 5000 })
+  await last.locator('[data-emoji="smile"]').waitFor({ timeout: 5000 })
   if ((await last.locator('a').count()) !== 1) throw new Error('expected exactly one (safe) link')
   if ((await last.locator('a').getAttribute('href')) !== 'https://example.com/') throw new Error('bad href')
 })
