@@ -83,7 +83,7 @@ export function Settings() {
             <select
               className={cn(
                 field,
-                'w-full max-w-full cursor-pointer appearance-none pr-[5px] pl-2.5 text-right text-xs hover:border-background-secondary [&_option]:bg-background-tertiary [&_option]:font-normal [&_option]:text-text-normal',
+                'w-full max-w-full cursor-pointer appearance-none pr-[5px] pl-2.5 text-right text-[12px] hover:border-background-secondary [&_option]:bg-background-tertiary [&_option]:font-normal [&_option]:text-text-normal',
               )}
               value={s.keyboard_layout}
               onChange={(e) => setSetting('keyboard_layout', e.target.value)}

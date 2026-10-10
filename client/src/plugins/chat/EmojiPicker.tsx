@@ -99,7 +99,7 @@ export function EmojiPicker({ onPick, onClose }: { onPick: (name: string) => voi
           <ul className="flex w-[300px] flex-col">
             {groups.map((g, gi) => (
               <li key={g.id} ref={(el) => void (groupEls.current[gi] = el)}>
-                <span className="sticky top-[-5px] z-2 block w-full bg-background-secondary/90 py-2 text-xs font-medium uppercase">
+                <span className="sticky top-[-5px] z-2 block w-full bg-background-secondary/90 py-2 text-[12px] font-medium uppercase">
                   {g.name}
                 </span>
                 <ul className="flex flex-row flex-wrap">{g.list.map((n) => item(n, `${g.id}-${n}`))}</ul>
@@ -122,7 +122,7 @@ export function EmojiPicker({ onPick, onClose }: { onPick: (name: string) => voi
             <li
               key={g.id}
               className={cn(
-                'flex h-[27px] grow cursor-pointer flex-col justify-center',
+                'box-content flex h-[27px] grow cursor-pointer flex-col justify-center',
                 active === gi && !q && 'border-b-[3px] border-style-primary',
               )}
               {...a11y(g.name, 'tab')}

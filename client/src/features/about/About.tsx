@@ -46,7 +46,7 @@ export function About() {
               <i className="fas fa-book" /> Documentation
             </a>
           </p>
-          <p className="mb-[15px] text-xs text-text-muted">client {__APP_VERSION__}</p>
+          <p className="mb-[15px] text-[12px] text-text-muted">client {__APP_VERSION__}</p>
           <button
             className="cursor-pointer rounded-[5px] border-0 bg-style-primary px-6 py-2 text-white"
             data-testid="about-close"
