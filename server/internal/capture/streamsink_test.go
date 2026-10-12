@@ -192,44 +192,6 @@ func TestPipelineRecreation(t *testing.T) {
 	}
 }
 
-// Keyframe requests are rate limited so an overloaded consumer recovering from
-// drops cannot drive the encoder on every sample.
-func TestRequestKeyframeIsThrottled(t *testing.T) {
-	s := newTestSink(t, codec.VP8())
-	subscribe(t, s, &sampleCounter{})
-	pipeline := s.pipeline.(*fakeSinkPipeline)
-	// Subscribing already requests the initial keyframe for the lobby.
-	before := pipeline.keyframes.Load()
-
-	for range 10 {
-		s.RequestKeyframe()
-	}
-	if got := pipeline.keyframes.Load() - before; got != 1 {
-		t.Fatalf("keyframe requests = %d, want 1", got)
-	}
-
-	s.keyframeMu.Lock()
-	s.lastKeyframeReq = time.Now().Add(-2 * keyframeRequestInterval)
-	s.keyframeMu.Unlock()
-
-	s.RequestKeyframe()
-	if got := pipeline.keyframes.Load() - before; got != 2 {
-		t.Fatalf("keyframe requests after the interval = %d, want 2", got)
-	}
-}
-
-// Audio has no keyframes, so requesting one must not touch the pipeline.
-func TestRequestKeyframeIgnoredForAudio(t *testing.T) {
-	s := newTestSink(t, codec.Opus())
-	subscribe(t, s, &sampleCounter{})
-	pipeline := s.pipeline.(*fakeSinkPipeline)
-
-	s.RequestKeyframe()
-	if got := pipeline.keyframes.Load(); got != 0 {
-		t.Fatalf("audio keyframe requests = %d, want 0", got)
-	}
-}
-
 func TestConcurrentBitrateUpdates(t *testing.T) {
 	s := newTestSink(t, codec.Opus())
 	s.saveSampleBitrate(time.Unix(2, 0), 1)
@@ -270,5 +232,66 @@ func TestBitrateDuringPipelineRestart(t *testing.T) {
 		checkError(t, s.createPipeline())
 		_ = s.Bitrate()
 		s.destroyPipeline()
+	}
+}
+
+func TestSampleDuration(t *testing.T) {
+	const frame = 40 * time.Millisecond
+	tests := []struct {
+		name     string
+		lastPTS  time.Duration
+		pts      time.Duration
+		duration time.Duration
+		want     time.Duration
+	}{
+		{"first sample keeps its duration", -1, 0, frame, frame},
+		{"next frame", 0, frame, frame, frame},
+		{"late capture: ximagesrc's short duration is not the gap", 0, frame, 2 * time.Millisecond, frame},
+		{"two frames dropped before the encoder", 0, 3 * frame, frame, 3 * frame},
+		{"unknown pts", 0, -1, frame, frame},
+		{"timestamps going backwards", 2 * frame, frame, frame, frame},
+	}
+	for _, tt := range tests {
+		if got := sampleDuration(tt.lastPTS, types.Sample{PTS: tt.pts, Duration: tt.duration}); got != tt.want {
+			t.Errorf("%s: got %v, want %v", tt.name, got, tt.want)
+		}
+	}
+}
+
+// Keyframe requests are rate limited so an overloaded consumer recovering from
+// drops cannot drive the encoder on every sample.
+func TestRequestKeyframeIsThrottled(t *testing.T) {
+	s := newTestSink(t, codec.VP8())
+	subscribe(t, s, &sampleCounter{})
+	pipeline := s.pipeline.(*fakeSinkPipeline)
+	// Subscribing already requests the initial keyframe for the lobby.
+	before := pipeline.keyframes.Load()
+
+	for range 10 {
+		s.RequestKeyframe()
+	}
+	if got := pipeline.keyframes.Load() - before; got != 1 {
+		t.Fatalf("keyframe requests = %d, want 1", got)
+	}
+
+	s.keyframeMu.Lock()
+	s.lastKeyframeReq = time.Now().Add(-2 * keyframeRequestInterval)
+	s.keyframeMu.Unlock()
+
+	s.RequestKeyframe()
+	if got := pipeline.keyframes.Load() - before; got != 2 {
+		t.Fatalf("keyframe requests after the interval = %d, want 2", got)
+	}
+}
+
+// Audio has no keyframes, so requesting one must not touch the pipeline.
+func TestRequestKeyframeIgnoredForAudio(t *testing.T) {
+	s := newTestSink(t, codec.Opus())
+	subscribe(t, s, &sampleCounter{})
+	pipeline := s.pipeline.(*fakeSinkPipeline)
+
+	s.RequestKeyframe()
+	if got := pipeline.keyframes.Load(); got != 0 {
+		t.Fatalf("audio keyframe requests = %d, want 0", got)
 	}
 }

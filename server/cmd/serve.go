@@ -184,6 +184,8 @@ func (c *serve) Start(cmd *cobra.Command) {
 		c.managers.member,
 		c.managers.desktop,
 		c.managers.capture,
+		&c.configs.Member,
+		&c.configs.Server,
 	)
 
 	c.managers.media = media.New(
@@ -213,6 +215,7 @@ func (c *serve) Start(cmd *cobra.Command) {
 		c.managers.mediaWebSocket,
 		c.managers.api,
 		&c.configs.Server,
+		&c.configs.Member,
 	)
 	c.managers.http.Start()
 }

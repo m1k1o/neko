@@ -3,6 +3,7 @@ package config
 import (
 	"os"
 	"reflect"
+	"sort"
 	"strings"
 
 	"github.com/go-viper/mapstructure/v2"
@@ -421,6 +422,20 @@ func (s *Capture) Set() {
 		}
 	} else if videoPipeline != "" {
 		log.Warn().Msg("you are setting both single video pipeline and multiple video pipelines, ignoring single video pipeline")
+	}
+
+	// If no video ids were configured explicitly, derive them from the configured
+	// pipelines so the capture manager always has at least one stream to select.
+	// Without this, NEKO_CAPTURE_VIDEO_PIPELINES alone left VideoIDs empty and the
+	// first WebRTC signal request panicked on videos[0].
+	if len(s.VideoIDs) == 0 && len(s.VideoPipelines) > 0 {
+		ids := make([]string, 0, len(s.VideoPipelines))
+		for id := range s.VideoPipelines {
+			ids = append(ids, id)
+		}
+		sort.Strings(ids)
+		s.VideoIDs = ids
+		log.Warn().Strs("video_ids", ids).Msg("no capture.video.ids configured, using all video pipelines sorted by id")
 	}
 
 	s.VideoShowPointer = viper.GetBool("capture.video.show_pointer")

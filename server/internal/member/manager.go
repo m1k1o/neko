@@ -11,6 +11,7 @@ import (
 	"github.com/m1k1o/neko/server/internal/member/file"
 	"github.com/m1k1o/neko/server/internal/member/multiuser"
 	"github.com/m1k1o/neko/server/internal/member/noauth"
+	"github.com/m1k1o/neko/server/internal/member/oauth"
 	"github.com/m1k1o/neko/server/internal/member/object"
 	"github.com/m1k1o/neko/server/pkg/types"
 )
@@ -29,6 +30,8 @@ func New(sessions types.SessionManager, config *config.Member) *MemberManagerCtx
 		manager.provider = object.New(config.Object)
 	case "multiuser":
 		manager.provider = multiuser.New(config.Multiuser)
+	case "oauth":
+		manager.provider = oauth.New()
 	case "noauth":
 		fallthrough
 	default:
@@ -164,5 +167,6 @@ func (manager *MemberManagerCtx) Logout(id string) error {
 	manager.loginMu.Lock()
 	defer manager.loginMu.Unlock()
 
-	return manager.sessions.Delete(id)
+	err := manager.sessions.Delete(id)
+	return err
 }

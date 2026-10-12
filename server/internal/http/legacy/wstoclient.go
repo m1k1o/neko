@@ -34,10 +34,11 @@ func profileToMember(id string, profile types.MemberProfile) (*oldTypes.Member, 
 	}
 
 	return &oldTypes.Member{
-		ID:    id,
-		Name:  profile.Name,
-		Admin: profile.IsAdmin,
-		Muted: !settings.CanSend,
+		ID:     id,
+		Name:   profile.Name,
+		Avatar: profile.Avatar,
+		Admin:  profile.IsAdmin,
+		Muted:  !settings.CanSend,
 	}, nil
 }
 

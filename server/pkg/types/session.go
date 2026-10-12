@@ -12,6 +12,7 @@ var (
 	ErrSessionAlreadyConnected = errors.New("session is already connected")
 	ErrSessionLoginDisabled    = errors.New("session login disabled")
 	ErrSessionLoginsLocked     = errors.New("session logins locked")
+	ErrSessionEmailNotAllowed  = errors.New("email address is not allowed to log in")
 )
 
 type Cursor struct {
