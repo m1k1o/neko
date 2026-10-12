@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/url"
+	"path"
 
 	"github.com/pion/webrtc/v4"
 	"github.com/spf13/viper"
@@ -256,13 +258,38 @@ func (s *session) wsToClient(msg []byte) error {
 			return err
 		}
 
+		var media *oldMessage.Media
+		if s.media == mediaModeWebCodecsWS {
+			var ticket struct {
+				Ticket   string                `json:"ticket"`
+				Protocol string                `json:"protocol"`
+				Video    oldMessage.MediaCodec `json:"video"`
+				Audio    oldMessage.MediaCodec `json:"audio"`
+			}
+			err = s.apiReq("POST", "/api/media/ticket", struct {
+				VideoID string `json:"video_id"`
+			}{VideoID: "legacy"}, &ticket)
+			if err != nil {
+				s.logger.Debug().Err(err).Msg("WebCodecs media transport is unavailable")
+			} else {
+				media = &oldMessage.Media{
+					URL:      path.Join(s.pathPrefix, "/media/ws") + "?ticket=" + url.QueryEscape(ticket.Ticket),
+					Protocol: ticket.Protocol,
+					Video:    ticket.Video,
+					Audio:    ticket.Audio,
+				}
+			}
+		}
+
 		return s.toClient(&oldMessage.SystemInit{
 			Event:           oldEvent.SYSTEM_INIT,
+			ID:              s.id,
 			ImplicitHosting: request.Settings.ImplicitHosting,
 			Locks:           locks,
 			// TODO: hack - we don't know if file transfer is enabled, we would need to check the global config.
 			FileTransfer:      viper.GetBool("filetransfer.enabled") || (viper.GetBool("legacy") && viper.GetBool("file_transfer_enabled")),
 			HeartbeatInterval: request.Settings.HeartbeatInterval,
+			Media:             media,
 		})
 
 	case event.SYSTEM_ADMIN:

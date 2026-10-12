@@ -3,6 +3,7 @@ import { get, set } from '~/utils/localstorage'
 import { EVENT } from '~/neko/events'
 import { ScreenConfigurations, ScreenResolution } from '~/neko/types'
 import { accessor } from '~/store'
+import { MediaConfiguration } from '~/neko/messages'
 
 export const namespaced = true
 
@@ -20,6 +21,7 @@ export const state = () => ({
   muted: get<boolean>('muted', false),
   playing: false,
   playable: false,
+  media: null as MediaConfiguration | null,
 })
 
 export const getters = getterTree(state, {
@@ -62,6 +64,10 @@ export const mutations = mutationTree(state, {
       state.playing = false
     }
     state.playable = playable
+  },
+
+  setMedia(state, media: MediaConfiguration | null) {
+    state.media = media
   },
 
   setResolution(state, { width, height, rate }: { width: number; height: number; rate: number }) {
@@ -163,6 +169,7 @@ export const mutations = mutationTree(state, {
     state.vertical = 9
     state.playing = false
     state.playable = false
+    state.media = null
   },
 })
 

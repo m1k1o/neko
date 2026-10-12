@@ -43,6 +43,17 @@ type EncodedStream interface {
 	Bitrate() uint64
 
 	Subscribe(SampleConsumer) (StreamSubscription, error)
+
+	// RequestKeyframe asks the encoder to emit a keyframe as soon as possible. It
+	// is a no-op for audio streams and may be rate limited, so callers must treat
+	// it as a hint and keep discarding samples until a keyframe actually arrives.
+	//
+	// The stream is shared, so the resulting keyframe is delivered to every
+	// subscriber, not only the caller. This is the same mechanism used when a new
+	// viewer subscribes, and other transports already tolerate unsolicited
+	// keyframes, but it does mean one slow consumer causes a brief bitrate bump
+	// for all of them.
+	RequestKeyframe()
 }
 
 type StreamSubscription interface {

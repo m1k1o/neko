@@ -12,10 +12,25 @@ type Message struct {
 
 type SystemInit struct {
 	Event             string            `json:"event"`
+	ID                string            `json:"id"`
 	Locks             map[string]string `json:"locks"`
 	ImplicitHosting   bool              `json:"implicit_hosting"`
 	FileTransfer      bool              `json:"file_transfer"`
 	HeartbeatInterval int               `json:"heartbeat_interval"`
+	Media             *Media            `json:"media,omitempty"`
+}
+
+type Media struct {
+	URL      string     `json:"url"`
+	Protocol string     `json:"protocol"`
+	Video    MediaCodec `json:"video"`
+	Audio    MediaCodec `json:"audio"`
+}
+
+type MediaCodec struct {
+	Codec            string `json:"codec"`
+	SampleRate       uint32 `json:"sample_rate,omitempty"`
+	NumberOfChannels uint16 `json:"number_of_channels,omitempty"`
 }
 
 type SystemMessage struct {

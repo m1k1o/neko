@@ -17,12 +17,16 @@ var testStreamID atomic.Uint64
 type fakeSinkPipeline struct {
 	samples   chan types.Sample
 	onDestroy func()
+	keyframes atomic.Int64
 }
 
 func (p *fakeSinkPipeline) Sample() chan types.Sample { return p.samples }
 func (p *fakeSinkPipeline) AttachAppsink(string)      {}
 func (p *fakeSinkPipeline) Play()                     {}
-func (p *fakeSinkPipeline) EmitVideoKeyframe() bool   { return true }
+func (p *fakeSinkPipeline) EmitVideoKeyframe() bool {
+	p.keyframes.Add(1)
+	return true
+}
 func (p *fakeSinkPipeline) Destroy() {
 	p.onDestroy()
 	close(p.samples)
@@ -39,7 +43,7 @@ func newTestSink(t *testing.T, c codec.RTPCodec) *testSink {
 	s := &testSink{StreamSinkManagerCtx: streamSinkNew(c, func() (string, error) { return id, nil }, id)}
 	s.pipelineFactory = func(string) (sinkPipeline, error) {
 		s.created++
-		return &fakeSinkPipeline{make(chan types.Sample), func() { s.destroyed++ }}, nil
+		return &fakeSinkPipeline{samples: make(chan types.Sample), onDestroy: func() { s.destroyed++ }}, nil
 	}
 	t.Cleanup(s.shutdown)
 	return s
@@ -251,5 +255,43 @@ func TestSampleDuration(t *testing.T) {
 		if got := sampleDuration(tt.lastPTS, types.Sample{PTS: tt.pts, Duration: tt.duration}); got != tt.want {
 			t.Errorf("%s: got %v, want %v", tt.name, got, tt.want)
 		}
+	}
+}
+
+// Keyframe requests are rate limited so an overloaded consumer recovering from
+// drops cannot drive the encoder on every sample.
+func TestRequestKeyframeIsThrottled(t *testing.T) {
+	s := newTestSink(t, codec.VP8())
+	subscribe(t, s, &sampleCounter{})
+	pipeline := s.pipeline.(*fakeSinkPipeline)
+	// Subscribing already requests the initial keyframe for the lobby.
+	before := pipeline.keyframes.Load()
+
+	for range 10 {
+		s.RequestKeyframe()
+	}
+	if got := pipeline.keyframes.Load() - before; got != 1 {
+		t.Fatalf("keyframe requests = %d, want 1", got)
+	}
+
+	s.keyframeMu.Lock()
+	s.lastKeyframeReq = time.Now().Add(-2 * keyframeRequestInterval)
+	s.keyframeMu.Unlock()
+
+	s.RequestKeyframe()
+	if got := pipeline.keyframes.Load() - before; got != 2 {
+		t.Fatalf("keyframe requests after the interval = %d, want 2", got)
+	}
+}
+
+// Audio has no keyframes, so requesting one must not touch the pipeline.
+func TestRequestKeyframeIgnoredForAudio(t *testing.T) {
+	s := newTestSink(t, codec.Opus())
+	subscribe(t, s, &sampleCounter{})
+	pipeline := s.pipeline.(*fakeSinkPipeline)
+
+	s.RequestKeyframe()
+	if got := pipeline.keyframes.Load(); got != 0 {
+		t.Fatalf("audio keyframe requests = %d, want 0", got)
 	}
 }

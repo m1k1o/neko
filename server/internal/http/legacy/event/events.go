@@ -31,6 +31,12 @@ const (
 	CONTROL_GIVE       = "control/give"
 	CONTROL_CLIPBOARD  = "control/clipboard"
 	CONTROL_KEYBOARD   = "control/keyboard"
+	CONTROL_MOVE       = "control/move"
+	CONTROL_SCROLL     = "control/scroll"
+	CONTROL_BUTTONDOWN = "control/buttondown"
+	CONTROL_BUTTONUP   = "control/buttonup"
+	CONTROL_KEYDOWN    = "control/keydown"
+	CONTROL_KEYUP      = "control/keyup"
 )
 
 const (

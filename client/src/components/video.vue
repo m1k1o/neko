@@ -2,7 +2,31 @@
   <div ref="component" class="video">
     <div ref="player" class="player">
       <div ref="container" class="player-container">
-        <video ref="video" playsinline />
+        <neko-video-webcodecs
+          v-if="webCodecsRequested"
+          ref="rendererWebCodecs"
+          :media="media"
+          :playing="playing"
+          :volume="volume"
+          :muted="muted"
+          @ready="onRendererReady"
+          @error="onRendererError"
+        />
+        <neko-video-webrtc
+          v-else
+          ref="rendererWebRTC"
+          :stream="stream"
+          :playing="playing"
+          :volume="volume"
+          :muted="muted"
+          @ready="onRendererReady"
+          @ended="$accessor.video.setPlayable(false)"
+          @error="onRendererError"
+          @volume-change="onRendererVolumeChange"
+          @playing="$accessor.video.play()"
+          @pause="$accessor.video.pause()"
+          @play-failed="$accessor.video.pause()"
+        />
         <div class="emotes">
           <template v-for="(emote, index) in emotes">
             <neko-emote :id="index" :key="index" />
@@ -146,7 +170,8 @@
         width: 100%;
         max-width: calc(16 / 9 * 100vh);
 
-        video {
+        video,
+        canvas {
           position: absolute;
           top: 0;
           bottom: 0;
@@ -214,10 +239,13 @@
   import { Component, Ref, Watch, Vue, Prop } from 'vue-property-decorator'
   import ResizeObserver from 'resize-observer-polyfill'
   import { elementRequestFullscreen, onFullscreenChange, isFullscreen, lockKeyboard, unlockKeyboard } from '~/utils'
+  import { isWebCodecsMode } from '~/neko/media-transport'
 
   import Emote from './emote.vue'
   import Resolution from './resolution.vue'
   import Clipboard from './clipboard.vue'
+  import VideoWebRTC from './video-webrtc.vue'
+  import VideoWebCodecs from './video-webcodecs.vue'
 
   // @ts-ignore
   import GuacamoleKeyboard from '~/utils/guacamole-keyboard.ts'
@@ -230,6 +258,8 @@
       'neko-emote': Emote,
       'neko-resolution': Resolution,
       'neko-clipboard': Clipboard,
+      'neko-video-webrtc': VideoWebRTC,
+      'neko-video-webcodecs': VideoWebCodecs,
     },
   })
   export default class extends Vue {
@@ -238,7 +268,8 @@
     @Ref('overlay') readonly _overlay!: HTMLTextAreaElement
     @Ref('aspect') readonly _aspect!: HTMLElement
     @Ref('player') readonly _player!: HTMLElement
-    @Ref('video') readonly _video!: HTMLVideoElement
+    @Ref('rendererWebRTC') readonly _rendererWebRTC?: VideoWebRTC
+    @Ref('rendererWebCodecs') readonly _rendererWebCodecs?: VideoWebCodecs
     @Ref('resolution') readonly _resolution!: Resolution
     @Ref('clipboard') readonly _clipboard!: Clipboard
 
@@ -294,6 +325,14 @@
       return this.$accessor.video.stream
     }
 
+    get media() {
+      return this.$accessor.video.media
+    }
+
+    get webCodecsRequested() {
+      return isWebCodecsMode(new URLSearchParams(location.search).get('media'))
+    }
+
     get playing() {
       return this.$accessor.video.playing
     }
@@ -329,7 +368,7 @@
 
     get pip_available() {
       //@ts-ignore
-      return typeof document.createElement('video').requestPictureInPicture === 'function'
+      return !this.webCodecsRequested && typeof document.createElement('video').requestPictureInPicture === 'function'
     }
 
     get clipboard_read_available() {
@@ -399,69 +438,9 @@
       this.onResize()
     }
 
-    @Watch('volume')
-    onVolumeChanged(volume: number) {
-      volume /= 100
-
-      if (this._video && this._video.volume != volume) {
-        this._video.volume = volume
-      }
-    }
-
     @Watch('muted')
     onMutedChanged(muted: boolean) {
-      if (this._video && this._video.muted != muted) {
-        this._video.muted = muted
-
-        if (!muted) {
-          this.mutedOverlay = false
-        }
-      }
-    }
-
-    @Watch('stream')
-    onStreamChanged(stream?: MediaStream) {
-      if (!this._video || !stream) {
-        return
-      }
-
-      if ('srcObject' in this._video) {
-        this._video.srcObject = stream
-      } else {
-        // @ts-ignore
-        this._video.src = window.URL.createObjectURL(this.stream) // for older browsers
-      }
-    }
-
-    @Watch('playing')
-    async onPlayingChanged(playing: boolean) {
-      if (this._video && this._video.paused && playing) {
-        // if autoplay is disabled, play() will throw an error
-        // and we need to properly save the state otherwise we
-        // would be thinking we're playing when we're not
-        try {
-          await this._video.play()
-        } catch (err: any) {
-          if (!this._video.muted) {
-            // video.play() can fail if audio is set due restrictive
-            // browsers autoplay policy -> retry with muted audio
-            try {
-              this.$accessor.video.setMuted(true)
-              this._video.muted = true
-              await this._video.play()
-            } catch (err: any) {
-              // if it still fails, we're not playing anything
-              this.$accessor.video.pause()
-            }
-          } else {
-            this.$accessor.video.pause()
-          }
-        }
-      }
-
-      if (this._video && !this._video.paused && !playing) {
-        this.pause()
-      }
+      if (!muted) this.mutedOverlay = false
     }
 
     @Watch('clipboard')
@@ -478,9 +457,7 @@
 
     mounted() {
       this._container.addEventListener('resize', this.onResize)
-      this.onVolumeChanged(this.volume)
       this.onMutedChanged(this.muted)
-      this.onStreamChanged(this.stream)
       this.onResize()
 
       this.observer.observe(this._component)
@@ -489,37 +466,6 @@
         this.fullscreen = isFullscreen()
         this.fullscreen ? lockKeyboard() : unlockKeyboard()
         this.onResize()
-      })
-
-      this._video.addEventListener('canplaythrough', () => {
-        this.$accessor.video.setPlayable(true)
-        if (this.autoplay) {
-          this.$nextTick(() => {
-            this.$accessor.video.play()
-          })
-        }
-      })
-
-      this._video.addEventListener('ended', () => {
-        this.$accessor.video.setPlayable(false)
-      })
-
-      this._video.addEventListener('error', (event) => {
-        this.$log.error(event.error)
-        this.$accessor.video.setPlayable(false)
-      })
-
-      this._video.addEventListener('volumechange', () => {
-        this.$accessor.video.setMuted(this._video.muted)
-        this.$accessor.video.setVolume(this._video.volume * 100)
-      })
-
-      this._video.addEventListener('playing', () => {
-        this.$accessor.video.play()
-      })
-
-      this._video.addEventListener('pause', () => {
-        this.$accessor.video.pause()
       })
 
       /* Initialize Guacamole Keyboard */
@@ -595,12 +541,14 @@
     }
 
     async play() {
-      if (!this._video.paused || !this.playable) {
+      if (this.webCodecsRequested) {
+        this.$accessor.video.play()
         return
       }
+      if (!this.playable) return
 
       try {
-        await this._video.play()
+        await this._rendererWebRTC?.play()
         this.onResize()
       } catch (err: any) {
         this.$log.error(err)
@@ -608,11 +556,11 @@
     }
 
     pause() {
-      if (this._video.paused || !this.playable) {
+      if (this.webCodecsRequested) {
+        this.$accessor.video.pause()
         return
       }
-
-      this._video.pause()
+      if (this.playable) this._rendererWebRTC?.pause()
     }
 
     toggle() {
@@ -656,16 +604,31 @@
       }
 
       // fallback to fullscreen video itself (on mobile devices)
-      if (elementRequestFullscreen(this._video)) {
+      const element = this.webCodecsRequested ? this._rendererWebCodecs?.element : this._rendererWebRTC?.element
+      if (element && elementRequestFullscreen(element)) {
         this.onResize()
         return
       }
     }
 
     requestPictureInPicture() {
-      //@ts-ignore
-      this._video.requestPictureInPicture()
+      void this._rendererWebRTC?.requestPictureInPicture()
       this.onResize()
+    }
+
+    onRendererReady() {
+      this.$accessor.video.setPlayable(true)
+      if (this.autoplay) this.$nextTick(() => this.$accessor.video.play())
+    }
+
+    onRendererError(error: Error | Event) {
+      this.$log.error(error instanceof ErrorEvent ? error.error : error)
+      this.$accessor.video.setPlayable(false)
+    }
+
+    onRendererVolumeChange({ muted, volume }: { muted: boolean; volume: number }) {
+      this.$accessor.video.setMuted(muted)
+      this.$accessor.video.setVolume(volume)
     }
 
     openResolution(event: MouseEvent) {
@@ -856,6 +819,7 @@
 
     // stable reference for add/removeEventListener
     private _onWindowFocus = () => {
+      this.onFocus()
       if (this.hosting) this.syncClipboard()
     }
 

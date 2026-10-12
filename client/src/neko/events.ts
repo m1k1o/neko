@@ -36,6 +36,12 @@ export const EVENT = {
     CLIPBOARD: 'control/clipboard',
     GIVE: 'control/give',
     KEYBOARD: 'control/keyboard',
+    MOVE: 'control/move',
+    SCROLL: 'control/scroll',
+    BUTTONDOWN: 'control/buttondown',
+    BUTTONUP: 'control/buttonup',
+    KEYDOWN: 'control/keydown',
+    KEYUP: 'control/keyup',
   },
   CHAT: {
     MESSAGE: 'chat/message',
@@ -94,6 +100,12 @@ export type ControlEvents =
   | typeof EVENT.CONTROL.GIVE
   | typeof EVENT.CONTROL.CLIPBOARD
   | typeof EVENT.CONTROL.KEYBOARD
+  | typeof EVENT.CONTROL.MOVE
+  | typeof EVENT.CONTROL.SCROLL
+  | typeof EVENT.CONTROL.BUTTONDOWN
+  | typeof EVENT.CONTROL.BUTTONUP
+  | typeof EVENT.CONTROL.KEYDOWN
+  | typeof EVENT.CONTROL.KEYUP
 
 export type SystemEvents = typeof EVENT.SYSTEM.DISCONNECT
 export type ClientEvents = typeof EVENT.CLIENT.HEARTBEAT

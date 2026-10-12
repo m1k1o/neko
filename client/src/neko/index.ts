@@ -3,6 +3,7 @@ import EventEmitter from 'eventemitter3'
 import { BaseClient, BaseEvents } from './base'
 import { Member } from './types'
 import { EVENT } from './events'
+import { isWebCodecsMode } from './media-transport'
 import { accessor } from '~/store'
 
 import {
@@ -38,15 +39,23 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
         ? `ws://${location.host.split(':')[0]}:${process.env.VUE_APP_SERVER_PORT}/ws`
         : location.protocol.replace(/^http/, 'ws') + '//' + location.host + location.pathname.replace(/\/$/, '') + '/ws'
 
-    this.initWithURL(vue, url)
+    const serverURL = new URL(url)
+    const mediaMode = new URLSearchParams(location.search).get('media')
+    if (isWebCodecsMode(mediaMode)) serverURL.searchParams.set('media', mediaMode!)
+
+    this.initWithURL(vue, serverURL.toString())
   }
 
   initWithURL(vue: Vue, url: string) {
     this.$vue = vue
     this.$accessor = vue.$accessor
     this.url = url
-    // convert ws url to http url
-    this.$vue.$http.defaults.baseURL = url.replace(/^ws/, 'http').replace(/\/ws$/, '')
+    const httpURL = new URL(url)
+    httpURL.protocol = httpURL.protocol.replace(/^ws/, 'http')
+    httpURL.pathname = httpURL.pathname.replace(/\/ws$/, '')
+    httpURL.search = ''
+    httpURL.hash = ''
+    this.$vue.$http.defaults.baseURL = httpURL.toString().replace(/\/$/, '')
   }
 
   private cleanup() {
@@ -134,9 +143,29 @@ export class NekoClient extends BaseClient implements EventEmitter<NekoEvents> {
   /////////////////////////////
   // System Events
   /////////////////////////////
-  protected [EVENT.SYSTEM.INIT]({ implicit_hosting, locks, file_transfer, heartbeat_interval }: SystemInitPayload) {
+  protected [EVENT.SYSTEM.INIT]({
+    id,
+    implicit_hosting,
+    locks,
+    file_transfer,
+    heartbeat_interval,
+    media,
+  }: SystemInitPayload) {
+    if (this._webCodecsMode) {
+      this._id = id
+      this.onConnected()
+    }
     this.$accessor.remote.setImplicitHosting(implicit_hosting)
     this.$accessor.remote.setFileTransfer(file_transfer)
+
+    if (media) {
+      const serverURL = new URL(this.url)
+      const mediaURL = new URL(media.url, serverURL)
+      mediaURL.protocol = serverURL.protocol
+      this.$accessor.video.setMedia({ ...media, url: mediaURL.toString() })
+    } else {
+      this.$accessor.video.setMedia(null)
+    }
 
     for (const resource in locks) {
       this[EVENT.ADMIN.LOCK]({

@@ -36,6 +36,10 @@ export type WebSocketPayloads =
   | ControlPayload
   | ControlClipboardPayload
   | ControlKeyboardPayload
+  | ControlMovePayload
+  | ControlScrollPayload
+  | ControlButtonPayload
+  | ControlKeyPayload
   | ChatPayload
   | ChatSendPayload
   | EmojiSendPayload
@@ -58,10 +62,44 @@ export interface SystemInit extends WebSocketMessage, SystemInitPayload {
   event: typeof EVENT.SYSTEM.INIT
 }
 export interface SystemInitPayload {
+  id: string
   implicit_hosting: boolean
   locks: Record<string, string>
   file_transfer: boolean
   heartbeat_interval: number
+  media?: MediaConfiguration
+}
+
+export interface ControlMovePayload {
+  x: number
+  y: number
+}
+
+export interface ControlScrollPayload {
+  x: number
+  y: number
+}
+
+export interface ControlButtonPayload {
+  code: number
+}
+
+export interface ControlKeyPayload {
+  keysym: number
+}
+
+export interface MediaConfiguration {
+  url: string
+  protocol: 'webcodecs-ws-v1'
+  video: MediaCodecConfiguration
+  audio: MediaCodecConfiguration & {
+    sample_rate: number
+    number_of_channels: number
+  }
+}
+
+export interface MediaCodecConfiguration {
+  codec: string
 }
 
 // system/disconnect

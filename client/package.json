@@ -13,6 +13,7 @@
     "url": "https://github.com/m1k1o/neko/issues"
   },
   "scripts": {
+    "test:media": "node --test tests/media-*.test.cjs",
     "serve": "vue-cli-service serve --mode development",
     "build": "vue-cli-service build",
     "build:lib": "vue-cli-service build --target lib --name neko-lib 'src/lib.ts'",

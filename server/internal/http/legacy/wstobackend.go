@@ -160,6 +160,42 @@ func (s *session) wsToBackend(msg []byte) error {
 
 		return nil
 
+	case oldEvent.CONTROL_MOVE:
+		request := &message.ControlPos{}
+		if err := json.Unmarshal(msg, request); err != nil {
+			return err
+		}
+		return s.toBackend(event.CONTROL_MOVE, request)
+
+	case oldEvent.CONTROL_SCROLL:
+		request := &message.ControlScroll{}
+		if err := json.Unmarshal(msg, request); err != nil {
+			return err
+		}
+		return s.toBackend(event.CONTROL_SCROLL, request)
+
+	case oldEvent.CONTROL_BUTTONDOWN, oldEvent.CONTROL_BUTTONUP:
+		request := &message.ControlButton{}
+		if err := json.Unmarshal(msg, request); err != nil {
+			return err
+		}
+		eventName := event.CONTROL_BUTTONDOWN
+		if header.Event == oldEvent.CONTROL_BUTTONUP {
+			eventName = event.CONTROL_BUTTONUP
+		}
+		return s.toBackend(eventName, request)
+
+	case oldEvent.CONTROL_KEYDOWN, oldEvent.CONTROL_KEYUP:
+		request := &message.ControlKey{}
+		if err := json.Unmarshal(msg, request); err != nil {
+			return err
+		}
+		eventName := event.CONTROL_KEYDOWN
+		if header.Event == oldEvent.CONTROL_KEYUP {
+			eventName = event.CONTROL_KEYUP
+		}
+		return s.toBackend(eventName, request)
+
 	// Chat Events
 	case oldEvent.CHAT_MESSAGE:
 		request := &oldMessage.ChatReceive{}
@@ -203,10 +239,10 @@ func (s *session) wsToBackend(msg []byte) error {
 	// Open In App Events
 	case openinapp.OPENINAPP_OPENLINK:
 		request := &openinapp.Url{}
-    if err := json.Unmarshal(msg, request); err != nil {
+		if err := json.Unmarshal(msg, request); err != nil {
 			return err
-    }
-    return s.apiReq(http.MethodPost, "/api/openinapp/openlink", request, nil)
+		}
+		return s.apiReq(http.MethodPost, "/api/openinapp/openlink", request, nil)
 
 	// Screen Events
 	case oldEvent.SCREEN_RESOLUTION:

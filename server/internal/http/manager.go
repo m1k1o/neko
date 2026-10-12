@@ -14,6 +14,7 @@ import (
 
 	"github.com/m1k1o/neko/server/internal/config"
 	"github.com/m1k1o/neko/server/internal/http/legacy"
+	"github.com/m1k1o/neko/server/internal/mediawebsocket"
 	"github.com/m1k1o/neko/server/pkg/types"
 )
 
@@ -24,7 +25,7 @@ type HttpManagerCtx struct {
 	http   *http.Server
 }
 
-func New(WebSocketManager types.WebSocketManager, ApiManager types.ApiManager, config *config.Server, memberConfig *config.Member) *HttpManagerCtx {
+func New(WebSocketManager types.WebSocketManager, MediaWebSocketManager *mediawebsocket.Manager, ApiManager types.ApiManager, config *config.Server, memberConfig *config.Member) *HttpManagerCtx {
 	logger := log.With().Str("module", "http").Logger()
 
 	opts := []RouterOption{
@@ -58,6 +59,12 @@ func New(WebSocketManager types.WebSocketManager, ApiManager types.ApiManager, c
 		origin := r.Header.Get("Origin")
 		return origin == "" || config.AllowOrigin(origin)
 	}))
+	// the media transport is optional, so the server can run without it
+	if MediaWebSocketManager != nil {
+		router.Get("/media/ws", MediaWebSocketManager.Upgrade(func(r *http.Request) bool {
+			return config.AllowOrigin(r.Header.Get("Origin"))
+		}))
+	}
 
 	batch := batchHandler{
 		Router:     router,
