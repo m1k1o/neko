@@ -38,6 +38,15 @@ export class MediaWebSocket implements MediaTransport {
     this.socket = undefined
   }
 
+  send(data: ArrayBuffer) {
+    if (this.stopped || this.socket?.readyState !== WebSocket.OPEN) return
+    this.socket.send(data)
+  }
+
+  bufferedAmount() {
+    return this.socket?.bufferedAmount ?? 0
+  }
+
   private fail(error: Error) {
     if (this.stopped) return
     this.stop()

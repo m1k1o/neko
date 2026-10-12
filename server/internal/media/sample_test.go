@@ -13,7 +13,7 @@ type sampleRecorder struct {
 }
 
 func (recorder *sampleRecorder) WriteSample(track byte, sample types.Sample) {
-	encoded := EncodeSample(track, sample)
+	encoded := EncodeSample(track, sample, 0)
 	recorder.samples = append(recorder.samples, append([]byte(nil), encoded.Data...))
 	encoded.Release()
 }
@@ -26,7 +26,7 @@ func TestEncodeSample(t *testing.T) {
 		DeltaUnit: false,
 	}
 
-	message := EncodeSample(VideoTrack, sample)
+	message := EncodeSample(VideoTrack, sample, 42)
 	defer message.Release()
 	if len(message.Data) != SampleHeaderSize+len(sample.Data) {
 		t.Fatalf("message length = %d", len(message.Data))
@@ -40,6 +40,9 @@ func TestEncodeSample(t *testing.T) {
 	if got := int64(binary.BigEndian.Uint64(message.Data[12:20])); got != -1 {
 		t.Fatalf("duration = %d", got)
 	}
+	if got := binary.BigEndian.Uint32(message.Data[20:24]); got != 42 {
+		t.Fatalf("sequence = %d", got)
+	}
 	for index, value := range sample.Data {
 		if message.Data[SampleHeaderSize+index] != value {
 			t.Fatalf("payload = %v", message.Data[SampleHeaderSize:])
@@ -48,16 +51,19 @@ func TestEncodeSample(t *testing.T) {
 }
 
 func TestEncodeSampleClearsPooledHeader(t *testing.T) {
-	keyframe := EncodeSample(VideoTrack, types.Sample{Data: []byte{1}})
+	keyframe := EncodeSample(VideoTrack, types.Sample{Data: []byte{1}}, 7)
 	if keyframe.Data[2] != 1 {
 		t.Fatal("keyframe flag is not set")
 	}
 	keyframe.Release()
 
-	delta := EncodeSample(VideoTrack, types.Sample{Data: []byte{2}, DeltaUnit: true})
+	delta := EncodeSample(VideoTrack, types.Sample{Data: []byte{2}, DeltaUnit: true}, 8)
 	defer delta.Release()
 	if delta.Data[2] != 0 {
 		t.Fatal("stale keyframe flag was retained")
+	}
+	if got := binary.BigEndian.Uint32(delta.Data[20:24]); got != 8 {
+		t.Fatalf("stale sequence was retained = %d", got)
 	}
 }
 
@@ -72,11 +78,11 @@ func TestSampleBufferPoolBounds(t *testing.T) {
 
 func TestEncodeSampleReusesBuffer(t *testing.T) {
 	sample := types.Sample{Data: make([]byte, 4096)}
-	encoded := EncodeSample(VideoTrack, sample)
+	encoded := EncodeSample(VideoTrack, sample, 0)
 	encoded.Release()
 
 	allocations := testing.AllocsPerRun(100, func() {
-		encoded := EncodeSample(VideoTrack, sample)
+		encoded := EncodeSample(VideoTrack, sample, 0)
 		encoded.Release()
 	})
 	if allocations != 0 {

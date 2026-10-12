@@ -34,7 +34,9 @@ type Peer interface {
 	WriteSample(byte, types.Sample)
 	SessionID() string
 	Close(error)
-	Run()
+	// Run serves the peer until it disconnects. requestKeyframe lets the peer ask
+	// the video encoder for a keyframe when it has to drop frames to catch up.
+	Run(requestKeyframe func())
 }
 
 type Manager struct {
@@ -224,7 +226,7 @@ func (manager *Manager) Serve(ticket Ticket, peer Peer) {
 	}
 	defer videoSubscription.Close()
 
-	peer.Run()
+	peer.Run(video.RequestKeyframe)
 }
 
 func (manager *Manager) addPeer(peer Peer) bool {

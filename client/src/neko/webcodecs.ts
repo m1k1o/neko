@@ -1,5 +1,5 @@
 import { MediaConfiguration } from './messages'
-import { EncodedMediaSample } from './media-protocol'
+import { EncodedMediaSample, encodeAck, encodeKeyframeRequest } from './media-protocol'
 import { MediaTransport } from './media-transport'
 import { MediaWebSocket } from './media-websocket'
 
@@ -20,6 +20,12 @@ export class WebCodecsPlayer {
   private rendered = false
   private stopped = false
   private haveVideoKeyframe = false
+  // Sequence of the newest frame handed to the decoder, and the newest one
+  // already acked. Used to bound frames in flight from the server.
+  private pendingVideoSequence = 0
+  private ackedVideoSequence = 0
+  private droppedFrames = 0
+  private keyframeRequests = 0
 
   constructor(
     private readonly canvas: HTMLCanvasElement,
@@ -121,11 +127,22 @@ export class WebCodecsPlayer {
     try {
       if (sample.track === 'video') {
         if (!this.haveVideoKeyframe && !sample.keyframe) return
-        if (sample.keyframe) this.haveVideoKeyframe = true
+        // A full decode queue means the decoder is behind. Dropping the frame
+        // keeps latency bounded, but the decoder cannot use later delta frames,
+        // so wait for the next keyframe instead of closing the connection.
         if ((this.videoDecoder?.decodeQueueSize ?? 0) >= MAX_VIDEO_DECODE_QUEUE_SIZE) {
-          this.fail(new Error('media video decoder queue overflow'))
+          this.haveVideoKeyframe = false
+          this.droppedFrames++
+          this.keyframeRequests++
+          // Ask for a keyframe: without one the stream stays frozen until the
+          // encoder's next scheduled keyframe.
+          this.transport?.send(encodeKeyframeRequest())
+          // Ack the dropped frame so the server's window does not stall on it.
+          this.ackVideo(sample.sequence)
           return
         }
+        if (sample.keyframe) this.haveVideoKeyframe = true
+        this.pendingVideoSequence = sample.sequence
         this.videoDecoder?.decode(
           new EncodedVideoChunk({
             type: sample.keyframe ? 'key' : 'delta',
@@ -136,10 +153,9 @@ export class WebCodecsPlayer {
           }),
         )
       } else {
-        if ((this.audioDecoder?.decodeQueueSize ?? 0) >= MAX_AUDIO_DECODE_QUEUE_SIZE) {
-          this.fail(new Error('media audio decoder queue overflow'))
-          return
-        }
+        // Audio frames are independently decodable, so a backed up decoder can
+        // simply skip one without affecting what follows.
+        if ((this.audioDecoder?.decodeQueueSize ?? 0) >= MAX_AUDIO_DECODE_QUEUE_SIZE) return
         this.audioDecoder?.decode(
           new EncodedAudioChunk({
             type: 'key',
@@ -153,6 +169,27 @@ export class WebCodecsPlayer {
     } catch (error) {
       this.fail(error instanceof Error ? error : new Error(String(error)))
     }
+  }
+
+  // stats exposes the signals needed to tune the backpressure window:
+  // dropped frames, the decoder backlog, and the uplink send buffer.
+  stats() {
+    return {
+      droppedFrames: this.droppedFrames,
+      keyframeRequests: this.keyframeRequests,
+      videoDecodeQueue: this.videoDecoder?.decodeQueueSize ?? 0,
+      audioDecodeQueue: this.audioDecoder?.decodeQueueSize ?? 0,
+      bufferedAmount: this.transport?.bufferedAmount() ?? 0,
+      ackedSequence: this.ackedVideoSequence,
+    }
+  }
+
+  // ackVideo reports the newest frame the client is done with. Sequences are
+  // cumulative, so stale acks are ignored.
+  private ackVideo(sequence: number) {
+    if (sequence <= this.ackedVideoSequence) return
+    this.ackedVideoSequence = sequence
+    this.transport?.send(encodeAck(sequence))
   }
 
   private onVideoFrame = (frame: VideoFrame) => {
@@ -171,6 +208,9 @@ export class WebCodecsPlayer {
       this.rendered = true
     } finally {
       frame.close()
+      // Ack after painting so the server's in-flight window reflects what the
+      // client has actually displayed, not merely what it received.
+      this.ackVideo(this.pendingVideoSequence)
     }
   }
 

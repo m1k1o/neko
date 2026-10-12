@@ -12,7 +12,7 @@ const (
 	protocolVersion       byte = 1
 	VideoTrack            byte = 1
 	AudioTrack            byte = 2
-	SampleHeaderSize           = 20
+	SampleHeaderSize           = 24
 	minSampleBufferSize        = 1 << 10
 	maxSampleBufferSize        = 4 << 20
 	sampleBufferPoolCount      = 13
@@ -57,7 +57,7 @@ func (consumer *trackConsumer) WriteSample(sample types.Sample) {
 	consumer.peer.WriteSample(consumer.track, sample)
 }
 
-func EncodeSample(track byte, sample types.Sample) *EncodedSample {
+func EncodeSample(track byte, sample types.Sample, sequence uint32) *EncodedSample {
 	size := SampleHeaderSize + len(sample.Data)
 	poolIndex, capacity := sampleBufferPool(size)
 	var message *EncodedSample
@@ -69,12 +69,12 @@ func EncodeSample(track byte, sample types.Sample) *EncodedSample {
 	}
 	message.Data = message.Data[:size]
 	message.poolIndex = poolIndex
-	EncodeSampleHeader((*SampleHeader)(message.Data), track, sample)
+	EncodeSampleHeader((*SampleHeader)(message.Data), track, sample, sequence)
 	copy(message.Data[SampleHeaderSize:], sample.Data)
 	return message
 }
 
-func EncodeSampleHeader(header *SampleHeader, track byte, sample types.Sample) {
+func EncodeSampleHeader(header *SampleHeader, track byte, sample types.Sample, sequence uint32) {
 	clear(header[:])
 	header[0] = protocolVersion
 	header[1] = track
@@ -83,6 +83,7 @@ func EncodeSampleHeader(header *SampleHeader, track byte, sample types.Sample) {
 	}
 	binary.BigEndian.PutUint64(header[4:12], uint64(durationMicroseconds(sample.PTS)))
 	binary.BigEndian.PutUint64(header[12:20], uint64(durationMicroseconds(sample.Duration)))
+	binary.BigEndian.PutUint32(header[20:24], sequence)
 }
 
 func (sample *EncodedSample) Release() {
