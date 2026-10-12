@@ -19,6 +19,9 @@ import (
 
 var moveSinkSubscriptionMu sync.Mutex
 
+// keyframeRequestInterval bounds how often a consumer can force a keyframe.
+const keyframeRequestInterval = 250 * time.Millisecond
+
 type sinkPipeline interface {
 	Sample() chan types.Sample
 	AttachAppsink(string)
@@ -54,6 +57,10 @@ type StreamSinkManagerCtx struct {
 	bitrateMu sync.Mutex
 	bitrate   uint64
 	brBuckets map[int]float64
+
+	// Rate limits on-demand keyframe requests.
+	keyframeMu      sync.Mutex
+	lastKeyframeReq time.Time
 
 	// metrics
 	currentListeners prometheus.Gauge
@@ -182,6 +189,32 @@ func (manager *StreamSinkManagerCtx) Bitrate() uint64 {
 
 func (manager *StreamSinkManagerCtx) Codec() codec.RTPCodec {
 	return manager.codec
+}
+
+// RequestKeyframe asks the encoder for a keyframe, rate limited to one request
+// per keyframeRequestInterval. Keyframes are expensive, so an overloaded client
+// repeatedly recovering must not be able to drive the encoder on every sample.
+func (manager *StreamSinkManagerCtx) RequestKeyframe() {
+	if !manager.waitForKf {
+		return
+	}
+
+	manager.keyframeMu.Lock()
+	now := time.Now()
+	if now.Sub(manager.lastKeyframeReq) < keyframeRequestInterval {
+		manager.keyframeMu.Unlock()
+		return
+	}
+	manager.lastKeyframeReq = now
+	manager.keyframeMu.Unlock()
+
+	manager.pipelineMu.Lock()
+	pipeline := manager.pipeline
+	manager.pipelineMu.Unlock()
+
+	if pipeline != nil {
+		pipeline.EmitVideoKeyframe()
+	}
 }
 
 type streamSubscription struct {
