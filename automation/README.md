@@ -255,7 +255,7 @@ audit-logged. Prefer contexts (automatic injection) over exporting.
 
 The service never attempts to defeat CAPTCHAs.
 
-## Deployment (Dokploy)
+## Deployment
 
 The image is built by `.github/workflows/automation-image.yml` →
 `ghcr.io/<owner>/<repo>-automation:latest`. Deploy as a compose service
