@@ -1,7 +1,7 @@
 import { useStore } from 'zustand'
 import { selectIsAdmin } from '@m1k1o/neko'
 import { useTranslation } from 'react-i18next'
-import { File } from 'lucide-react'
+import { File } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 import { useNeko } from '@/state/provider'
 import { IconButton } from '@/components/IconButton'

@@ -18,7 +18,7 @@ const vendorChunks: [string, RegExp][] = [
     /^(react-markdown|remark-|rehype-|micromark|mdast-|hast-|unified|unist-|vfile|estree-|decode-named-character-reference|@ungap\/structured-clone|property-information|space-separated-tokens|comma-separated-tokens|style-to-|inline-style-parser|html-url-attributes|markdown-table|longest-streak|trim-lines|escape-string-regexp|is-plain-obj|bail|trough|zwitch|ccount|devlop|extend)/,
   ],
   ['i18n', /^(i18next|react-i18next)$/],
-  ['lucide', /^lucide-react$/],
+  ['icons', /^@phosphor-icons\/react$/],
 ]
 const vendorChunk = (id: string) => {
   const dep = id.split('/node_modules/').pop()

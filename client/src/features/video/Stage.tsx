@@ -4,15 +4,15 @@ import { useShallow } from 'zustand/react/shallow'
 import { selectControlling, selectIsAdmin } from '@m1k1o/neko'
 import { useTranslation } from 'react-i18next'
 import {
-  CirclePlay,
+  ArrowsOut,
   Clipboard as ClipboardIcon,
-  Expand,
   Keyboard,
   Monitor,
   Mouse,
-  PictureInPicture2,
-  Volume2,
-} from 'lucide-react'
+  PictureInPicture,
+  PlayCircle,
+  SpeakerHigh,
+} from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 import { useActions } from '@/state/actions'
 import { useNeko } from '@/state/provider'
@@ -74,7 +74,7 @@ export function Stage({ hideControls, extraControls }: { hideControls: boolean; 
               data-testid="player-overlay"
               onClick={() => (client.unmute(), client.play().catch(() => {}))}
             >
-              <CirclePlay className="size-[120px]" />
+              <PlayCircle className="size-[120px]" />
             </IconButton>
           ) : (
             // only for the mute that autoplay forced; a user who muted on purpose keeps the desktop
@@ -87,7 +87,7 @@ export function Stage({ hideControls, extraControls }: { hideControls: boolean; 
                 data-testid="player-overlay"
                 onClick={() => client.unmute()}
               >
-                <Volume2 className="size-[120px]" />
+                <SpeakerHigh className="size-[120px]" />
               </IconButton>
             )
           )}
@@ -96,7 +96,7 @@ export function Stage({ hideControls, extraControls }: { hideControls: boolean; 
           <ul className="absolute top-[15px] right-5">
             <li className="mb-2.5 last:mb-0">
               <IconButton variant="video" label="Fullscreen" onClick={requestFullscreen}>
-                <Expand className="size-4" />
+                <ArrowsOut className="size-4" />
               </IconButton>
             </li>
             {admin && (
@@ -145,7 +145,7 @@ export function Stage({ hideControls, extraControls }: { hideControls: boolean; 
             {pip.canPip && (
               <li className="mb-2.5 last:mb-0">
                 <IconButton variant="video" label="Picture-in-Picture" onClick={pip.request}>
-                  <PictureInPicture2 className="size-4" />
+                  <PictureInPicture className="size-4" />
                 </IconButton>
               </li>
             )}

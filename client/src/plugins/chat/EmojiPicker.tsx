@@ -2,20 +2,20 @@ import { useRef, useState } from 'react'
 import { useStore } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
 import {
-  Apple,
+  AppleLogo,
   Car,
   Cat,
   Clock,
   Flag,
+  type Icon,
   Lightbulb,
+  MagnifyingGlass,
   PawPrint,
-  Search,
   Shapes,
-  Smile,
+  Smiley,
   Users,
   Volleyball,
-  type LucideIcon,
-} from 'lucide-react'
+} from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 import { IconButton } from '@/components/IconButton'
 import { PopoverContent } from '@/components/ui/popover'
@@ -25,13 +25,13 @@ import { emoji, pickedEmoji } from './emoji'
 import { Emoji } from './Emoji'
 
 // the icon of each group's tab at the bottom of the picker
-const GROUP_ICON: Record<string, LucideIcon> = {
+const GROUP_ICON: Record<string, Icon> = {
   recent: Clock,
   neko: Cat,
-  emotion: Smile,
+  emotion: Smiley,
   people: Users,
   nature: PawPrint,
-  food: Apple,
+  food: AppleLogo,
   activity: Volleyball,
   travel: Car,
   objects: Lightbulb,
@@ -96,7 +96,7 @@ export function EmojiPicker({ onPick, onClose }: { onPick: (name: string) => voi
     >
       <div className="shrink-0 border-b border-background-tertiary p-2.5">
         <div className="relative flex flex-col overflow-hidden rounded-[5px] text-interactive-normal">
-          <Search className="absolute top-1.5 right-1.5 size-[15px] opacity-50" />
+          <MagnifyingGlass className="absolute top-1.5 right-1.5 size-[15px] opacity-50" />
           <input
             className="border-0 bg-background-floating p-[5px] leading-4 font-medium text-interactive-normal placeholder:font-medium placeholder:text-text-muted"
             type="text"

@@ -1,5 +1,5 @@
 import { useStore } from 'zustand'
-import { Monitor } from 'lucide-react'
+import { Monitor } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 import { useClient } from '@/state/provider'
 import { DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu'

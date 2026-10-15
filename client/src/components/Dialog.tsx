@@ -1,6 +1,6 @@
 import { useStore } from 'zustand'
 import { useTranslation } from 'react-i18next'
-import { CircleX, Info, TriangleAlert } from 'lucide-react'
+import { Info, Warning, XCircle } from '@phosphor-icons/react'
 import { useApp } from '@/state/provider'
 import { Button } from '@/components/ui/button'
 import {
@@ -12,7 +12,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog'
 
-const ICON = { warning: TriangleAlert, error: CircleX, info: Info }
+const ICON = { warning: Warning, error: XCircle, info: Info }
 const ICON_COLOR = { warning: 'text-[#f8bb86]', error: 'text-[#f27474]', info: 'text-[#3fc3ee]' }
 
 // the one modal dialog, shown for ask() and tell() (state/dialogs.ts); the look of the legacy

@@ -4,7 +4,7 @@ import { useActions } from '@/state/actions'
 import { selectMuted } from '@/state/app'
 import { EMOTES } from '@/state/emotes'
 import { useClient } from '@/state/provider'
-import { SmilePlus } from 'lucide-react'
+import { SmileySticker } from '@phosphor-icons/react'
 import { IconButton } from '@/components/IconButton'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import './sprites.css'
@@ -60,7 +60,7 @@ export function Emotes() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <IconButton label="Emotes" data-testid="emotes-open">
-                <SmilePlus className="size-6" />
+                <SmileySticker className="size-6" />
               </IconButton>
             </DropdownMenuTrigger>
             <DropdownMenuContent

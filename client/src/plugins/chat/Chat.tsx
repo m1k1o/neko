@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { useActions } from '@/state/actions'
 import { selectMuted } from '@/state/app'
 import { useNeko } from '@/state/provider'
-import { Laugh } from 'lucide-react'
+import { SmileyWink } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 import { IconButton } from '@/components/IconButton'
 import { Avatar } from '@/components/Avatar'
@@ -134,7 +134,7 @@ export function Chat() {
             <Popover open={picker} onOpenChange={setPicker}>
               <PopoverTrigger asChild>
                 <IconButton label="Emoji" className="mt-2 mr-[5px] h-5 w-5" data-testid="emoji-open">
-                  <Laugh className="size-5" />
+                  <SmileyWink className="size-5" />
                 </IconButton>
               </PopoverTrigger>
               {picker && <EmojiPicker onPick={onEmoji} onClose={() => input.current?.focus()} />}

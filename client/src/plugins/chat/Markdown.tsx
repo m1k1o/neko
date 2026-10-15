@@ -4,7 +4,7 @@ import { useShallow } from 'zustand/react/shallow'
 import { selectControlling } from '@m1k1o/neko'
 import ReactMarkdown, { type Components } from 'react-markdown'
 import { useNeko } from '@/state/provider'
-import { SquareArrowOutUpRight } from 'lucide-react'
+import { ArrowSquareOut } from '@phosphor-icons/react'
 import { IconButton } from '@/components/IconButton'
 import { chat } from './store'
 import { openInApp } from './actions'
@@ -89,7 +89,7 @@ export const Markdown = memo(function Markdown({ source }: { source: string }) {
         </a>
         {inApp && (
           <IconButton label="Open in app" className="ml-[0.3em] align-middle" onClick={() => openInApp(neko, href)}>
-            <SquareArrowOutUpRight className="size-3.5" />
+            <ArrowSquareOut className="size-3.5" />
           </IconButton>
         )}
       </>

@@ -2,7 +2,7 @@ import { useState, type ReactNode } from 'react'
 import { useStore } from 'zustand'
 import { selectIsAdmin } from '@m1k1o/neko'
 import { useTranslation } from 'react-i18next'
-import { Lock, LockOpen, Menu, Mouse } from 'lucide-react'
+import { List, Lock, LockOpen, Mouse } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 import { useActions } from '@/state/actions'
 import { isLocked, type LockResource } from '@/state/app'
@@ -100,7 +100,7 @@ function Toggle({ side, unread }: { side: boolean; unread: number }) {
           setRead(unread)
         }}
       >
-        <Menu className="size-4" />
+        <List className="size-4" />
       </IconButton>
     </li>
   )

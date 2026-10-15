@@ -1,5 +1,5 @@
 import type { ComponentType } from 'react'
-import type { LucideIcon } from 'lucide-react'
+import type { Icon } from '@phosphor-icons/react'
 import type { Session } from '@m1k1o/neko'
 import type { NekoApp } from '@/state/app'
 
@@ -56,8 +56,8 @@ export interface Slots {
 export interface PluginTab {
   // the stored `tab` value
   id: string
-  // the tab's icon, a lucide-react component
-  icon: LucideIcon
+  // the tab's icon, a @phosphor-icons/react component
+  icon: Icon
   // the i18n key of its label (`chat:tab`)
   label: string
   component: ComponentType

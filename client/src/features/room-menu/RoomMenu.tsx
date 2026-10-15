@@ -1,7 +1,7 @@
 import { useStore } from 'zustand'
 import { selectIsAdmin } from '@m1k1o/neko'
 import { useTranslation } from 'react-i18next'
-import { CircleHelp, Shield } from 'lucide-react'
+import { Question, Shield } from '@phosphor-icons/react'
 import { useNeko } from '@/state/provider'
 import { IconButton } from '@/components/IconButton'
 import { langs, setLang, type Lang } from '@/i18n'
@@ -15,7 +15,7 @@ export function RoomMenu() {
     <ul className="ml-2.5 self-center">
       <li className="mr-2.5 inline-block align-middle">
         <IconButton label="About n.eko" data-testid="about-open" onClick={() => app.setState({ about: true })}>
-          <CircleHelp className="size-6" />
+          <Question className="size-6" />
         </IconButton>
       </li>
       <li className="mr-2.5 inline-block align-middle">

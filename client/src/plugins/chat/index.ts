@@ -1,6 +1,6 @@
 import { useStore } from 'zustand'
 import { selectIsAdmin } from '@m1k1o/neko'
-import { MessageSquare } from 'lucide-react'
+import { Chat as ChatIcon } from '@phosphor-icons/react'
 import { isMuted, name } from '@/state/app'
 import { ask } from '@/state/dialogs'
 import { useClient, useNeko } from '@/state/provider'
@@ -15,7 +15,7 @@ export const chat: Plugin = {
   ns: 'chat',
   tab: {
     id: 'chat',
-    icon: MessageSquare,
+    icon: ChatIcon,
     label: 'chat:tab',
     component: Chat,
     useBadge: () => useStore(store(useNeko()), (s) => s.texts),

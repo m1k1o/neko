@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useStore } from 'zustand'
 import { useTranslation } from 'react-i18next'
-import { SlidersHorizontal } from 'lucide-react'
+import { SlidersHorizontal } from '@phosphor-icons/react'
 import { useApp } from '@/state/provider'
 import { remember } from '@/state/storage'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'

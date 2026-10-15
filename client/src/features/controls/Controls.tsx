@@ -4,17 +4,17 @@ import { useShallow } from 'zustand/react/shallow'
 import { selectControlling, selectIsAdmin, selectSession } from '@m1k1o/neko'
 import { useTranslation } from 'react-i18next'
 import {
-  CirclePause,
-  CirclePlay,
+  Cursor,
   Keyboard,
   Lock,
   LockOpen,
-  Mic,
-  MicOff,
-  MousePointer,
-  Volume2,
-  VolumeX,
-} from 'lucide-react'
+  Microphone,
+  MicrophoneSlash,
+  PauseCircle,
+  PlayCircle,
+  SpeakerHigh,
+  SpeakerSlash,
+} from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 import { useActions } from '@/state/actions'
 import { tell } from '@/state/dialogs'
@@ -109,7 +109,7 @@ export function Controls() {
           data-testid="control-implicit"
           title={t(controlLocked ? 'controls.hasnot' : 'controls.has')}
         >
-          <MousePointer className={cn('size-6', controlLocked && 'text-style-error/40')} />
+          <Cursor className={cn('size-6', controlLocked && 'text-style-error/40')} />
         </li>
       )}
       {(implicit || !controlLocked || hosting) && (
@@ -145,7 +145,7 @@ export function Controls() {
           className={cn('px-[5px]', !playable && 'text-style-error/40')}
           onClick={() => playable && (playing ? client.pause() : client.play().catch(() => {}))}
         >
-          {playing ? <CirclePause className="size-6" /> : <CirclePlay className="size-6" />}
+          {playing ? <PauseCircle className="size-6" /> : <PlayCircle className="size-6" />}
         </IconButton>
       </li>
       {micAllowed && (
@@ -157,7 +157,7 @@ export function Controls() {
             data-on={micOn || undefined}
             onClick={toggleMic}
           >
-            {micOn ? <Mic className="size-6" /> : <MicOff className="size-6" />}
+            {micOn ? <Microphone className="size-6" /> : <MicrophoneSlash className="size-6" />}
           </IconButton>
         </li>
       )}
@@ -169,7 +169,7 @@ export function Controls() {
             data-testid="mute"
             onClick={() => (muted ? client.unmute() : client.mute())}
           >
-            {volume === 0 || muted ? <VolumeX className="size-6" /> : <Volume2 className="size-6" />}
+            {volume === 0 || muted ? <SpeakerSlash className="size-6" /> : <SpeakerHigh className="size-6" />}
           </IconButton>
           <input
             type="range"

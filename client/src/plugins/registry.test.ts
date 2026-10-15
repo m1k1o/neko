@@ -1,7 +1,7 @@
 // Unit tests of the plugin registry: `npm test` (vitest). Slots and server event dispatch follow
 // the plugins array; the registry needs only `client.events.on('message')` of the instance and the manifests.
 import { test, vi } from 'vitest'
-import { Circle } from 'lucide-react'
+import { Circle } from '@phosphor-icons/react'
 import assert from 'node:assert/strict'
 import type { NekoApp } from '@/state/app'
 import type { Plugin, PluginEventArgs } from './types.ts'

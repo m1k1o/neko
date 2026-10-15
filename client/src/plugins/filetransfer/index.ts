@@ -1,4 +1,4 @@
-import { File } from 'lucide-react'
+import { File } from '@phosphor-icons/react'
 import { event } from '@/state/bus'
 import { t } from '@/i18n'
 import type { Plugin } from '@/plugins/types'

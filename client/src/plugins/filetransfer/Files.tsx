@@ -5,7 +5,18 @@ import { selectIsAdmin } from '@m1k1o/neko'
 import { useTranslation } from 'react-i18next'
 import { ask } from '@/state/dialogs'
 import { useNeko } from '@/state/provider'
-import { Check, Download, File, FileUp, Folder, RefreshCw, RotateCw, Trash2, TriangleAlert, X } from 'lucide-react'
+import {
+  ArrowClockwise,
+  ArrowsClockwise,
+  Check,
+  Download,
+  File,
+  FileArrowUp,
+  Folder,
+  Trash,
+  Warning,
+  X,
+} from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 import { IconButton } from '@/components/IconButton'
 import { store, type FileItem } from './store'
@@ -76,7 +87,7 @@ export function Files() {
       <div className={cn(box, 'mx-2.5 mt-2.5 flex flex-row p-2 font-semibold')}>
         <p>{f.root_dir}</p>
         <IconButton label="Refresh" className="ml-auto" onClick={() => refresh(neko)}>
-          <RotateCw className="size-3.5" />
+          <ArrowClockwise className="size-3.5" />
         </IconButton>
       </div>
       {plain.length > 2 && canDelete && (
@@ -104,7 +115,7 @@ export function Files() {
                   className={cn(action, 'text-style-error hover:text-[#dc5959]')}
                   onClick={deleteSelected}
                 >
-                  <Trash2 className="inline size-3.5 align-[-0.125em]" /> {t('files:delete')} ({selected.length})
+                  <Trash className="inline size-3.5 align-[-0.125em]" /> {t('files:delete')} ({selected.length})
                 </button>
               )}
               <button type="button" className={action} onClick={stopSelecting}>
@@ -164,7 +175,7 @@ export function Files() {
                   data-testid="file-delete"
                   onClick={() => deleteOne(item.name)}
                 >
-                  <Trash2 className="size-3.5" />
+                  <Trash className="size-3.5" />
                 </IconButton>
               )}
             </div>
@@ -189,11 +200,11 @@ export function Files() {
               <div key={u.id} data-testid="transfer" data-status={u.status}>
                 <div className="flex max-w-full flex-row p-2.5">
                   {u.status === 'inprogress' ? (
-                    <RefreshCw className="mr-2 size-3.5 shrink-0" />
+                    <ArrowsClockwise className="mr-2 size-3.5 shrink-0" />
                   ) : u.status === 'completed' ? (
                     <Check className="mr-2 size-3.5 shrink-0" />
                   ) : (
-                    <TriangleAlert className="mr-2 size-3.5 shrink-0" />
+                    <Warning className="mr-2 size-3.5 shrink-0" />
                   )}
                   <p className={name} title={u.name}>
                     {u.name}
@@ -230,7 +241,7 @@ export function Files() {
               onDrop={(e) => (e.preventDefault(), setDrag(false), upload(neko, e.dataTransfer.files))}
               onClick={() => input.current!.click()}
             >
-              <FileUp className="m-2.5 size-14 self-center" />
+              <FileArrowUp className="m-2.5 size-14 self-center" />
               <span className="mx-2.5 mb-2.5">{t('files:upload_here')}</span>
             </button>
             <input

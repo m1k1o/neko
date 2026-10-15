@@ -1,7 +1,7 @@
 import { useStore } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
 import { selectSession } from '@m1k1o/neko'
-import { CircleUser, Crown, Shield } from 'lucide-react'
+import { UserCircle, Crown, Shield } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 import { useActions } from '@/state/actions'
 import type { NekoApp } from '@/state/app'
@@ -47,7 +47,7 @@ export function Members() {
           {me && (
             <li className="inline-block">
               <div className={member} data-testid="member" data-self data-host={me.id === hostId || undefined}>
-                <CircleUser className={self} />
+                <UserCircle className={self} />
                 <Avatar seed={me.profile.name} avatar={me.profile.avatar} size={50} />
                 {me.id === hostId && <Crown className={host} />}
               </div>
