@@ -21,6 +21,9 @@ export type NekoAppOptions = Pick<NekoClientOptions, 'transport'>
 // WebRTC failures to take in 'auto' before switching to the websocket. One retry rides out a
 // transient ICE hiccup; past that the media route is blocked and waiting longer only delays video.
 const AUTO_FAIL_FAST_AFTER = 1
+// how long one WebRTC attempt may stay 'connecting' in 'auto'. A working route connects well under
+// this; the browser alone takes about ten seconds to give up, so without it the switch took twenty.
+const AUTO_CONNECT_TIMEOUT_MS = 4_000
 
 // The transport to start with, and what to fall back to, for a mode. The fallback lives in the
 // client rather than behind a setting because a stream that cannot connect would otherwise leave
@@ -35,7 +38,8 @@ export function transportsFor(mode: TransportMode): Pick<NekoClientOptions, 'tra
   // 'auto', or a forced mode this browser cannot do: use what it can, WebRTC first
   if (webrtc && websocket) {
     return {
-      transport: () => new WebRTCTransport({ failFastAfter: AUTO_FAIL_FAST_AFTER }),
+      transport: () =>
+        new WebRTCTransport({ failFastAfter: AUTO_FAIL_FAST_AFTER, connectTimeoutMs: AUTO_CONNECT_TIMEOUT_MS }),
       fallbackTransport: () => new WebCodecsTransport(),
     }
   }
