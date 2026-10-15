@@ -1,6 +1,6 @@
 {
   "name": "neko-client",
-  "version": "3.1.6",
+  "version": "3.2.0",
   "private": true,
   "description": "Client for neko: React GUI + framework-free core on the v3 API.",
   "license": "Apache-2.0",
