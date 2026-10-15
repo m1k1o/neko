@@ -1,5 +1,5 @@
 import { useStore } from 'zustand'
-import { Monitor } from '@phosphor-icons/react'
+import { MonitorIcon } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 import { useClient } from '@/state/provider'
 import { DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu'
@@ -27,7 +27,7 @@ export function Resolution() {
             data-active={active || undefined}
             onSelect={() => client.setScreenSize(c.width, c.height, c.rate)}
           >
-            <Monitor className="mr-2.5 size-3.5" />
+            <MonitorIcon className="mr-2.5 size-3.5" />
             <span className="grow">
               {c.width}x{c.height}
             </span>

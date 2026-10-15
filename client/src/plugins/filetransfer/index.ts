@@ -1,4 +1,4 @@
-import { File } from '@phosphor-icons/react'
+import { FileIcon } from '@phosphor-icons/react'
 import { event } from '@/state/bus'
 import { t } from '@/i18n'
 import type { Plugin } from '@/plugins/types'
@@ -10,7 +10,7 @@ import { useAllowed, locked, refresh } from './actions'
 export const filetransfer: Plugin = {
   id: 'filetransfer',
   ns: 'files',
-  tab: { id: 'files', icon: File, label: 'files:tab', component: Files, useVisible: useAllowed },
+  tab: { id: 'files', icon: FileIcon, label: 'files:tab', component: Files, useVisible: useAllowed },
   topBar: [{ id: 'filetransfer-lock', component: FileLock }],
   onEvent(neko, ...[event, payload]) {
     if (event === 'filetransfer/update') store(neko).setState({ files: payload })

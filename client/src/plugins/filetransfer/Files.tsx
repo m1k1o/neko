@@ -6,16 +6,16 @@ import { useTranslation } from 'react-i18next'
 import { ask } from '@/state/dialogs'
 import { useNeko } from '@/state/provider'
 import {
-  ArrowClockwise,
-  ArrowsClockwise,
-  Check,
-  Download,
-  File,
-  FileArrowUp,
-  Folder,
-  Trash,
-  Warning,
-  X,
+  ArrowClockwiseIcon,
+  ArrowsClockwiseIcon,
+  CheckIcon,
+  DownloadIcon,
+  FileArrowUpIcon,
+  FileIcon,
+  FolderIcon,
+  TrashIcon,
+  WarningIcon,
+  XIcon,
 } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 import { IconButton } from '@/components/IconButton'
@@ -87,7 +87,7 @@ export function Files() {
       <div className={cn(box, 'mx-2.5 mt-2.5 flex flex-row p-2 font-semibold')}>
         <p>{f.root_dir}</p>
         <IconButton label="Refresh" className="ml-auto" onClick={() => refresh(neko)}>
-          <ArrowClockwise className="size-3.5" />
+          <ArrowClockwiseIcon className="size-3.5" />
         </IconButton>
       </div>
       {plain.length > 2 && canDelete && (
@@ -115,7 +115,7 @@ export function Files() {
                   className={cn(action, 'text-style-error hover:text-[#dc5959]')}
                   onClick={deleteSelected}
                 >
-                  <Trash className="inline size-3.5 align-[-0.125em]" /> {t('files:delete')} ({selected.length})
+                  <TrashIcon className="inline size-3.5 align-[-0.125em]" /> {t('files:delete')} ({selected.length})
                 </button>
               )}
               <button type="button" className={action} onClick={stopSelecting}>
@@ -149,9 +149,9 @@ export function Files() {
                 />
               )}
               {item.type === 'dir' ? (
-                <Folder className="mr-2 size-3.5 shrink-0" />
+                <FolderIcon className="mr-2 size-3.5 shrink-0" />
               ) : (
-                <File className="mr-2 size-3.5 shrink-0" />
+                <FileIcon className="mr-2 size-3.5 shrink-0" />
               )}
               <p className={name} data-testid="file-name" title={item.name}>
                 {item.name}
@@ -165,7 +165,7 @@ export function Files() {
                   aria-label={`Download ${item.name}`}
                   title={`Download ${item.name}`}
                 >
-                  <Download className="size-3.5" />
+                  <DownloadIcon className="size-3.5" />
                 </a>
               )}
               {!selecting && item.type !== 'dir' && canDelete && (
@@ -175,7 +175,7 @@ export function Files() {
                   data-testid="file-delete"
                   onClick={() => deleteOne(item.name)}
                 >
-                  <Trash className="size-3.5" />
+                  <TrashIcon className="size-3.5" />
                 </IconButton>
               )}
             </div>
@@ -193,18 +193,18 @@ export function Files() {
                   uploadsStore.setState((s) => ({ uploads: s.uploads.filter((u) => u.status === 'inprogress') }))
                 }
               >
-                <X className="size-3.5" />
+                <XIcon className="size-3.5" />
               </IconButton>
             </p>
             {uploads.map((u) => (
               <div key={u.id} data-testid="transfer" data-status={u.status}>
                 <div className="flex max-w-full flex-row p-2.5">
                   {u.status === 'inprogress' ? (
-                    <ArrowsClockwise className="mr-2 size-3.5 shrink-0" />
+                    <ArrowsClockwiseIcon className="mr-2 size-3.5 shrink-0" />
                   ) : u.status === 'completed' ? (
-                    <Check className="mr-2 size-3.5 shrink-0" />
+                    <CheckIcon className="mr-2 size-3.5 shrink-0" />
                   ) : (
-                    <Warning className="mr-2 size-3.5 shrink-0" />
+                    <WarningIcon className="mr-2 size-3.5 shrink-0" />
                   )}
                   <p className={name} title={u.name}>
                     {u.name}
@@ -241,7 +241,7 @@ export function Files() {
               onDrop={(e) => (e.preventDefault(), setDrag(false), upload(neko, e.dataTransfer.files))}
               onClick={() => input.current!.click()}
             >
-              <FileArrowUp className="m-2.5 size-14 self-center" />
+              <FileArrowUpIcon className="m-2.5 size-14 self-center" />
               <span className="mx-2.5 mb-2.5">{t('files:upload_here')}</span>
             </button>
             <input

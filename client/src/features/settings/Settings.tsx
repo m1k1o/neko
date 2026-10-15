@@ -3,7 +3,7 @@ import { useStore } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
 import { selectIsAdmin } from '@m1k1o/neko'
 import { useTranslation } from 'react-i18next'
-import { Play, Square } from '@phosphor-icons/react'
+import { PlayIcon, SquareIcon } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 import { useActions } from '@/state/actions'
 import { useNeko } from '@/state/provider'
@@ -109,7 +109,7 @@ export function Settings() {
                   aria-label={t('setting.broadcast_title')}
                   onClick={() => actions.broadcastStart(url)}
                 >
-                  <Play className="size-3.5" />
+                  <PlayIcon className="size-3.5" />
                 </Button>
               ) : (
                 <Button
@@ -117,7 +117,7 @@ export function Settings() {
                   aria-label={t('setting.broadcast_title')}
                   onClick={actions.broadcastStop}
                 >
-                  <Square className="size-3.5" />
+                  <SquareIcon className="size-3.5" />
                 </Button>
               )}
             </div>

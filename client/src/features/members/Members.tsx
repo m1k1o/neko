@@ -1,7 +1,7 @@
 import { useStore } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
 import { selectSession } from '@m1k1o/neko'
-import { UserCircle, Crown, Shield } from '@phosphor-icons/react'
+import { UserCircleIcon, CrownIcon, ShieldIcon } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 import { useActions } from '@/state/actions'
 import type { NekoApp } from '@/state/app'
@@ -47,9 +47,9 @@ export function Members() {
           {me && (
             <li className="inline-block">
               <div className={member} data-testid="member" data-self data-host={me.id === hostId || undefined}>
-                <UserCircle className={self} />
+                <UserCircleIcon className={self} />
                 <Avatar seed={me.profile.name} avatar={me.profile.avatar} size={50} />
-                {me.id === hostId && <Crown className={host} />}
+                {me.id === hostId && <CrownIcon className={host} />}
               </div>
             </li>
           )}
@@ -67,9 +67,9 @@ export function Members() {
                   onContextMenu={(e) => actions.openMenu(e, m.id)}
                   onKeyDown={(e) => menuKey(neko, e, m.id)}
                 >
-                  {m.profile.is_admin && <Shield className={admin} />}
+                  {m.profile.is_admin && <ShieldIcon className={admin} />}
                   <Avatar seed={m.profile.name} avatar={m.profile.avatar} size={50} />
-                  {m.id === hostId && <Crown className={host} />}
+                  {m.id === hostId && <CrownIcon className={host} />}
                 </div>
               </li>
             ))}

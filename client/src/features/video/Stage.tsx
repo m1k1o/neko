@@ -4,14 +4,14 @@ import { useShallow } from 'zustand/react/shallow'
 import { selectControlling, selectIsAdmin } from '@m1k1o/neko'
 import { useTranslation } from 'react-i18next'
 import {
-  ArrowsOut,
-  Clipboard as ClipboardIcon,
-  Keyboard,
-  Monitor,
-  Mouse,
-  PictureInPicture,
-  PlayCircle,
-  SpeakerHigh,
+  ArrowsOutIcon,
+  ClipboardIcon,
+  KeyboardIcon,
+  MonitorIcon,
+  MouseIcon,
+  PictureInPictureIcon,
+  PlayCircleIcon,
+  SpeakerHighIcon,
 } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 import { useActions } from '@/state/actions'
@@ -74,7 +74,7 @@ export function Stage({ hideControls, extraControls }: { hideControls: boolean; 
               data-testid="player-overlay"
               onClick={() => (client.unmute(), client.play().catch(() => {}))}
             >
-              <PlayCircle className="size-[120px]" />
+              <PlayCircleIcon className="size-[120px]" />
             </IconButton>
           ) : (
             // only for the mute that autoplay forced; a user who muted on purpose keeps the desktop
@@ -87,7 +87,7 @@ export function Stage({ hideControls, extraControls }: { hideControls: boolean; 
                 data-testid="player-overlay"
                 onClick={() => client.unmute()}
               >
-                <SpeakerHigh className="size-[120px]" />
+                <SpeakerHighIcon className="size-[120px]" />
               </IconButton>
             )
           )}
@@ -96,7 +96,7 @@ export function Stage({ hideControls, extraControls }: { hideControls: boolean; 
           <ul className="absolute top-[15px] right-5">
             <li className="mb-2.5 last:mb-0">
               <IconButton variant="video" label="Fullscreen" onClick={requestFullscreen}>
-                <ArrowsOut className="size-4" />
+                <ArrowsOutIcon className="size-4" />
               </IconButton>
             </li>
             {admin && (
@@ -104,7 +104,7 @@ export function Stage({ hideControls, extraControls }: { hideControls: boolean; 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <IconButton variant="video" label="Screen resolution" data-testid="resolution-open">
-                      <Monitor className="size-4" />
+                      <MonitorIcon className="size-4" />
                     </IconButton>
                   </DropdownMenuTrigger>
                   <Resolution />
@@ -122,7 +122,7 @@ export function Stage({ hideControls, extraControls }: { hideControls: boolean; 
                   )}
                   onClick={() => playable && actions.toggleControl()}
                 >
-                  <Mouse className="size-4" />
+                  <MouseIcon className="size-4" />
                 </IconButton>
               </li>
             )}
@@ -145,7 +145,7 @@ export function Stage({ hideControls, extraControls }: { hideControls: boolean; 
             {pip.canPip && (
               <li className="mb-2.5 last:mb-0">
                 <IconButton variant="video" label="Picture-in-Picture" onClick={pip.request}>
-                  <PictureInPicture className="size-4" />
+                  <PictureInPictureIcon className="size-4" />
                 </IconButton>
               </li>
             )}
@@ -158,7 +158,7 @@ export function Stage({ hideControls, extraControls }: { hideControls: boolean; 
                   onMouseDown={(e) => e.preventDefault()} // tapping the button must not take the focus the keyboard needs
                   onClick={() => overlay.mobileKeyboardToggle()}
                 >
-                  <Keyboard className="size-4" />
+                  <KeyboardIcon className="size-4" />
                 </IconButton>
               </li>
             )}

@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useState, type FormEvent } from 'react'
+import { useEffect, useReducer, useState, type SyntheticEvent } from 'react'
 import { useStore } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
 import { useTranslation } from 'react-i18next'
@@ -59,7 +59,7 @@ export function Connect() {
     if (invite && params.get('usr')) loginOnce(neko, params.get('usr')!, invite).finally(settled)
   }, [neko, client])
 
-  const login = (e: FormEvent) => {
+  const login = (e: SyntheticEvent) => {
     e.preventDefault()
     if (!displayname) return tell(app, t('connect.error'), t('connect.empty_displayname'))
     loginOnce(neko, displayname, invite ?? password).finally(settled)

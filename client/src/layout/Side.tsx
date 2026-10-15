@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useStore } from 'zustand'
 import { useTranslation } from 'react-i18next'
-import { SlidersHorizontal } from '@phosphor-icons/react'
+import { SlidersHorizontalIcon } from '@phosphor-icons/react'
 import { useApp } from '@/state/provider'
 import { remember } from '@/state/storage'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
@@ -11,7 +11,12 @@ import type { PluginTab } from '@/plugins/types'
 import { EachHook } from '@/components/EachHook'
 
 // after the plugins' tabs
-const settingsTab: PluginTab = { id: 'settings', icon: SlidersHorizontal, label: 'side.settings', component: Settings }
+const settingsTab: PluginTab = {
+  id: 'settings',
+  icon: SlidersHorizontalIcon,
+  label: 'side.settings',
+  component: Settings,
+}
 const always = () => true
 
 export function Side() {

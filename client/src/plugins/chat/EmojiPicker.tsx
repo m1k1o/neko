@@ -2,19 +2,19 @@ import { useRef, useState } from 'react'
 import { useStore } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
 import {
-  AppleLogo,
-  Car,
-  Cat,
-  Clock,
-  Flag,
+  AppleLogoIcon,
+  CarIcon,
+  CatIcon,
+  ClockIcon,
+  FlagIcon,
   type Icon,
-  Lightbulb,
-  MagnifyingGlass,
-  PawPrint,
-  Shapes,
-  Smiley,
-  Users,
-  Volleyball,
+  LightbulbIcon,
+  MagnifyingGlassIcon,
+  PawPrintIcon,
+  ShapesIcon,
+  SmileyIcon,
+  UsersIcon,
+  VolleyballIcon,
 } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 import { IconButton } from '@/components/IconButton'
@@ -26,17 +26,17 @@ import { Emoji } from './Emoji'
 
 // the icon of each group's tab at the bottom of the picker
 const GROUP_ICON: Record<string, Icon> = {
-  recent: Clock,
-  neko: Cat,
-  emotion: Smiley,
-  people: Users,
-  nature: PawPrint,
-  food: AppleLogo,
-  activity: Volleyball,
-  travel: Car,
-  objects: Lightbulb,
-  symbols: Shapes,
-  flags: Flag,
+  recent: ClockIcon,
+  neko: CatIcon,
+  emotion: SmileyIcon,
+  people: UsersIcon,
+  nature: PawPrintIcon,
+  food: AppleLogoIcon,
+  activity: VolleyballIcon,
+  travel: CarIcon,
+  objects: LightbulbIcon,
+  symbols: ShapesIcon,
+  flags: FlagIcon,
 }
 
 export function EmojiPicker({ onPick, onClose }: { onPick: (name: string) => void; onClose: () => void }) {
@@ -96,7 +96,7 @@ export function EmojiPicker({ onPick, onClose }: { onPick: (name: string) => voi
     >
       <div className="shrink-0 border-b border-background-tertiary p-2.5">
         <div className="relative flex flex-col text-interactive-normal">
-          <MagnifyingGlass className="absolute top-1.5 right-1.5 size-[15px] opacity-50" />
+          <MagnifyingGlassIcon className="absolute top-1.5 right-1.5 size-[15px] opacity-50" />
           <input
             className="rounded-[5px] border-0 bg-background-floating p-[5px] leading-4 font-medium text-interactive-normal placeholder:font-medium placeholder:text-text-muted"
             type="text"

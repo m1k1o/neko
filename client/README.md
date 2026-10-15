@@ -133,8 +133,8 @@ that way comes with shadcn's theme classes and is rewritten with the tokens, lik
 Every icon control is `IconButton` (`src/components/IconButton.tsx`): a `<button type="button">` named
 by its `label` (the accessible name and the tooltip), with the icon as its child and the variants `plain`
 (the room bar, the chat, the files), `header` (a 30px box) and `video` (the translucent box over the
-video). Icons are `@phosphor-icons/react` components, tree-shaken: `import { Mouse } from
-'@phosphor-icons/react'` and `<Mouse className="size-4" />` (`size-3.5` next to 14px text, `size-6` in
+video). Icons are `@phosphor-icons/react` components, tree-shaken: `import { MouseIcon } from
+'@phosphor-icons/react'` and `<MouseIcon className="size-4" />` (`size-3.5` next to 14px text, `size-6` in
 the room bar), all filled: `IconContext` in `App.tsx` sets the weight once; a plugin tab's `icon` is one.
 Emoji are text: the character of each name from `public/emoji.json` (`src/plugins/chat/Emoji.tsx`).
 

@@ -32,6 +32,14 @@ export default [
     plugins: { 'react-hooks': reactHooks },
     rules: { 'react-hooks/rules-of-hooks': 'error', 'react-hooks/exhaustive-deps': 'error' },
   },
+  {
+    // deprecated APIs fail the lint, type-aware so it costs a few seconds; tests are outside the tsconfigs
+    files: ['src/**/*.{ts,tsx}', 'core/src/**/*.ts'],
+    ignores: ['**/*.test.{ts,tsx}', 'core/src/test/**'],
+    languageOptions: { parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname } },
+    plugins: { '@typescript-eslint': tseslint.plugin },
+    rules: { '@typescript-eslint/no-deprecated': 'error' },
+  },
   { files: ['src/components/**'], rules: only(not('app', 'layout', 'features', 'plugins')) },
   {
     files: ['src/state/**', 'src/i18n/**', 'src/lib/**'],

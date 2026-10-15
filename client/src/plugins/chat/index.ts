@@ -1,6 +1,6 @@
 import { useStore } from 'zustand'
 import { selectIsAdmin } from '@m1k1o/neko'
-import { Chat as ChatIcon } from '@phosphor-icons/react'
+import { ChatIcon } from '@phosphor-icons/react'
 import { isMuted, name } from '@/state/app'
 import { ask } from '@/state/dialogs'
 import { useClient, useNeko } from '@/state/provider'

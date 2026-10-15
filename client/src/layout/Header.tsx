@@ -2,7 +2,7 @@ import { useState, type ReactNode } from 'react'
 import { useStore } from 'zustand'
 import { selectIsAdmin } from '@m1k1o/neko'
 import { useTranslation } from 'react-i18next'
-import { List, Lock, LockOpen, Mouse } from '@phosphor-icons/react'
+import { ListIcon, LockIcon, LockOpenIcon, MouseIcon } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 import { useActions } from '@/state/actions'
 import { isLocked, type LockResource } from '@/state/app'
@@ -63,8 +63,11 @@ export function Header() {
         </span>
       </a>
       <ul className="mr-2.5 whitespace-nowrap">
-        {lock('control', <Mouse className="size-4" />)}
-        {lock('login', isLocked('login', settings) ? <Lock className="size-4" /> : <LockOpen className="size-4" />)}
+        {lock('control', <MouseIcon className="size-4" />)}
+        {lock(
+          'login',
+          isLocked('login', settings) ? <LockIcon className="size-4" /> : <LockOpenIcon className="size-4" />,
+        )}
         {items.map(({ id, component: Item }) => (
           <Item key={id} />
         ))}
@@ -100,7 +103,7 @@ function Toggle({ side, unread }: { side: boolean; unread: number }) {
           setRead(unread)
         }}
       >
-        <List className="size-4" />
+        <ListIcon className="size-4" />
       </IconButton>
     </li>
   )

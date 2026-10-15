@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { Book, GithubLogo } from '@phosphor-icons/react'
+import { BookIcon, GithubLogoIcon } from '@phosphor-icons/react'
 import { useApp } from '@/state/provider'
 import { Dialog, DialogPortal, DialogOverlay, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
@@ -34,7 +34,7 @@ export function About() {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <GithubLogo className="inline size-3.5 align-[-0.125em]" /> m1k1o/neko
+                <GithubLogoIcon className="inline size-3.5 align-[-0.125em]" /> m1k1o/neko
               </a>
               <a
                 className="mx-2.5 text-text-link"
@@ -42,7 +42,7 @@ export function About() {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <Book className="inline size-3.5 align-[-0.125em]" /> Documentation
+                <BookIcon className="inline size-3.5 align-[-0.125em]" /> Documentation
               </a>
             </p>
             <p className="mb-[15px] text-[12px] text-text-muted">client {__APP_VERSION__}</p>

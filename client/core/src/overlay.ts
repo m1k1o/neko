@@ -26,7 +26,7 @@ const XK = {
 }
 
 // macOS: Cmd acts as Ctrl and Option as AltGr on the remote (same as noVNC / the legacy client)
-const isMac = /Mac|iPhone|iPod|iPad/i.test(navigator.platform)
+const isMac = /Mac|iPhone|iPod|iPad/i.test(navigator.userAgent)
 const MAC_REMAP: Record<number, number> = {
   [XK.Meta_L]: XK.Control_L,
   [XK.Super_L]: XK.Alt_L,
