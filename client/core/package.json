@@ -1,6 +1,6 @@
 {
   "name": "@m1k1o/neko",
-  "version": "3.0.0",
+  "version": "3.1.6",
   "description": "Framework-free client library for the neko v3 API: REST, websocket events, WebRTC with the binary input channel, and the input overlay.",
   "license": "Apache-2.0",
   "repository": {
