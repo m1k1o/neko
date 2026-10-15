@@ -15,6 +15,17 @@ export class WebRTCTransport implements StreamTransport {
   readonly kind = 'webrtc' as const
   readonly input = new DataChannelInput()
 
+  // How many failures to take before giving up. The default retries for about a minute, which is
+  // right when WebRTC is the only option. A caller that has somewhere to fall back to passes a
+  // small number so the switch happens in seconds instead.
+  private readonly maxFailures: number
+
+  constructor(opts: { failFastAfter?: number } = {}) {
+    this.maxFailures = opts.failFastAfter ?? RECONNECT_MAX
+    this.input.onCursorPosition = (p) => this.events.emit('cursor.position', p)
+    this.input.onCursorImage = (img) => this.events.emit('cursor.image', img)
+  }
+
   static supported() {
     return typeof RTCPeerConnection !== 'undefined'
   }
@@ -34,11 +45,6 @@ export class WebRTCTransport implements StreamTransport {
   private failures = 0
   private retryTimer = 0
   private offerTimer = 0
-
-  constructor() {
-    this.input.onCursorPosition = (p) => this.events.emit('cursor.position', p)
-    this.input.onCursorImage = (img) => this.events.emit('cursor.image', img)
-  }
 
   get element() {
     return this.video
@@ -157,7 +163,7 @@ export class WebRTCTransport implements StreamTransport {
       this.closePeer()
       // no media route (firewall, NAT1TO1, missing TURN): retry with backoff, then give up
       // instead of asking the server for a new peer several times a second
-      if (++this.failures > RECONNECT_MAX)
+      if (++this.failures > this.maxFailures)
         return this.events.emit('error', new Error('video connection failed (WebRTC)'))
       clearTimeout(this.retryTimer)
       this.retryTimer = window.setTimeout(() => this.requestPeer(), RECONNECT_BACKOFF_MS * Math.min(this.failures, 4))
