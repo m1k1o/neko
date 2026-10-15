@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react'
 import { useStore } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
 import { selectControlling, selectIsAdmin, type Session } from '@m1k1o/neko'
@@ -37,7 +36,6 @@ export function MemberMenu({ items }: { items: readonly PluginMemberMenuItem[] }
   const { client, app } = useNeko()
   const actions = useActions()
   const menu = useStore(app, (s) => s.menu)
-  const [bannable, setBannable] = useState(false)
 
   const id = menu?.id
   const { m, admin, implicit, hostId, hosting } = useStore(
@@ -51,13 +49,6 @@ export function MemberMenu({ items }: { items: readonly PluginMemberMenuItem[] }
     })),
   )
   const ignored = useStore(app, (s) => !!id && !!s.ignored[id])
-  // ban only sticks where the auth provider stores accounts, see actions.ban
-  useEffect(() => {
-    setBannable(false)
-    let current = true // a slow answer for the previous member must not land on this one
-    if (id && client.isAdmin) actions.canBan(id).then((v) => current && setBannable(v))
-    return () => void (current = false)
-  }, [id, client, actions])
   const open = !!menu && !!m
   const n = m?.profile.name ?? ''
   const isHost = id === hostId
@@ -112,21 +103,6 @@ export function MemberMenu({ items }: { items: readonly PluginMemberMenuItem[] }
               >
                 {t('context.kick')}
               </ContextMenuItem>
-              {bannable && (
-                <ContextMenuItem
-                  className={danger}
-                  onSelect={() =>
-                    confirmThen(
-                      app,
-                      t('context.confirm.ban_title', { name: n }),
-                      t('context.confirm.ban_text', { name: n }),
-                      () => actions.ban(id!),
-                    )
-                  }
-                >
-                  {t('context.ban')}
-                </ContextMenuItem>
-              )}
             </>
           )}
         </ContextMenuContent>

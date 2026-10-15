@@ -260,18 +260,16 @@ npx playwright install chromium
 NEKO_URL=http://localhost:8080/ npm run test:e2e
 ```
 
-The typing step expects a launcher on Alt+F2 (KRunner on KDE, the app finder on Xfce). Set
-`NEKO_FILE_URL` to a second server using the `file` member provider (members `alice`/`alice` admin,
-`bob`/`bob`) to also test ban/unban. To run the steps in a real Chromium-based browser instead of
-Playwright's, start it with `--headless --remote-debugging-port=9222 --user-data-dir=<empty dir>
+The typing step expects a launcher on Alt+F2 (KRunner on KDE, the app finder on Xfce). To run the
+steps in a real Chromium-based browser instead of Playwright's, start it with
+`--headless --remote-debugging-port=9222 --user-data-dir=<empty dir>
 --autoplay-policy=no-user-gesture-required --use-fake-ui-for-media-stream
 --use-fake-device-for-media-stream` and set `NEKO_CDP=http://127.0.0.1:9222`.
 
 ## Behaviour notes
 
-- **Kick / ban** follow common chat-app semantics, see the comment at `actions.kick` in
-  `src/state/actions.ts`: kick removes the session (the user may log in again), ban sets
-  `can_login: false` and is only offered when the auth provider stores accounts.
+- **Kick** removes the session (the user may log in again), see the comment at `actions.kick` in
+  `src/state/actions.ts`.
 - Settings use the same `localStorage` keys and format as the previous client, so preferences carry
   over. Scroll sensitivity now uses v3 steps (-5..5, key `scroll_sensitivity`); `?scroll=` is mapped.
 - Chat markdown (`src/plugins/chat/markdown.ts`) is rendered by `react-markdown` with `remark-gfm`

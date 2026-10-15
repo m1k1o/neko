@@ -26,7 +26,6 @@
     "confirm": {
       "kick_title": "{{name}}님을 추방할까요?",
       "kick_text": "정말로 {{name}}님을 추방할까요?",
-      "ban_title": "{{name}}님을 차단할까요?",
       "button_yes": "네",
       "button_cancel": "아니요"
     }
@@ -87,7 +86,6 @@
     "controls_has_alt": "가지고 있는 사람에게 가지고 싶어한다고 알려드리겠습니다",
     "controls_requesting": "{{name}}님이 조작 권한을 요청하셨습니다",
     "resolution": "해상도로 {{width}}x{{height}}@{{rate}} 로 변경했습니다",
-    "banned": "{{name}} 님이 차단됐습니다",
     "kicked": "{{name}} 님이 추방됐습니다"
   }
 }

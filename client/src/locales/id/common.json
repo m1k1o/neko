@@ -26,7 +26,6 @@
     "confirm": {
       "kick_title": "Keluarkan {{name}}?",
       "kick_text": "Apakah Anda yakin ingin mengeluarkan {{name}}?",
-      "ban_title": "Blokir {{name}}?",
       "button_yes": "Ya",
       "button_cancel": "Batal"
     }
@@ -87,7 +86,6 @@
     "controls_has_alt": "Tapi saya sudah memberitahu orang itu bahwa Anda menginginkannya",
     "controls_requesting": "{{name}} meminta kendali",
     "resolution": "mengubah resolusi menjadi {{width}}x{{height}}@{{rate}}",
-    "banned": "memblokir {{name}}",
     "kicked": "mengeluarkan {{name}}"
   }
 }

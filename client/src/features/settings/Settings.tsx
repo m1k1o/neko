@@ -9,7 +9,6 @@ import { useActions } from '@/state/actions'
 import { useNeko } from '@/state/provider'
 import { setSetting } from '@/state/settings'
 import { Button } from '@/components/ui/button'
-import { Banned } from './Banned'
 import { row, label } from './classes'
 
 const field =
@@ -134,7 +133,6 @@ export function Settings() {
             />
           </li>
         )}
-        {admin && <Banned />}
         <li className={row}>
           <Button className="my-[5px] w-full" data-testid="logout" onClick={actions.logout}>
             {t('logout')}

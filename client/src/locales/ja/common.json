@@ -26,7 +26,6 @@
     "confirm": {
       "kick_title": "{{name}} を追い出しますか?",
       "kick_text": "本当に {{name}} を追い出しますか?",
-      "ban_title": "{{name}} を禁止にしますか?",
       "button_yes": "はい",
       "button_cancel": "キャンセル"
     }
@@ -87,7 +86,6 @@
     "controls_has_alt": "しかし、その人にあなたがそれを希望していることを伝えました",
     "controls_requesting": "{{name}} がコントロールを要求しています",
     "resolution": "解像度を {{width}}x{{height}}@{{rate}} に変更しました",
-    "banned": "{{name}} を禁止しました",
     "kicked": "{{name}} を追い出しました"
   }
 }

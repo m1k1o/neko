@@ -26,7 +26,6 @@
     "confirm": {
       "kick_title": "Haluatko heittää {{name}} ulos?",
       "kick_text": "Oletko varma että haluat heittää {{name}} ulos?",
-      "ban_title": "Haluatko kieltää {{name}}?",
       "button_yes": "Kyllä",
       "button_cancel": "Peruuta"
     }
@@ -87,7 +86,6 @@
     "controls_has_alt": "Kerroin henkilölle että haluat ne",
     "controls_requesting": "{{name}} pyytää kontrolleja",
     "resolution": "vaihdettu resoluutio {{width}}x{{height}}@{{rate}}",
-    "banned": "kielletty {{name}}",
     "kicked": "heitetty {{name}} ulos"
   }
 }

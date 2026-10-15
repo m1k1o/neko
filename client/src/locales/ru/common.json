@@ -26,7 +26,6 @@
     "confirm": {
       "kick_title": "Выкинуть {{name}}?",
       "kick_text": "Вы уверены, что хотите выкинуть {{name}}?",
-      "ban_title": "Забанить {{name}}?",
       "button_yes": "Да",
       "button_cancel": "Отмена"
     }
@@ -87,7 +86,6 @@
     "controls_has_alt": "Мы уведомим пользователя о запросе",
     "controls_requesting": "{{name}} запрашивает управление",
     "resolution": "разрешение изменено на {{width}}x{{height}}@{{rate}}",
-    "banned": "забанен {{name}}",
     "kicked": "выкинут {{name}}"
   }
 }

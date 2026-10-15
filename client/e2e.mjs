@@ -292,15 +292,6 @@ await step("a display name with # and ? cannot redirect the admin's mute", async
     timeout: 5000,
   })
 })
-await step('ban hidden on shared-password (multiuser) provider', async () => {
-  await A.click('[data-testid=member]:not([data-self])', { button: 'right' })
-  await A.waitForSelector('[data-testid=member-menu] >> text=Kick', { timeout: 3000 })
-  await A.waitForTimeout(500) // canBan() probe
-  if (await A.locator('[data-testid=member-menu] >> text=Ban').count())
-    throw new Error('Ban shown although accounts are not stored')
-  await A.keyboard.press('Escape')
-  await A.mouse.click(5, 5)
-})
 await step('keyboard: Enter on focused icon toggles side panel', async () => {
   await B.focus('[data-testid=side-toggle]')
   await B.keyboard.press('Enter')
@@ -537,51 +528,6 @@ await step('url params: ?embed=1 hides header and room bar', async () => {
     throw new Error('chrome visible in embed mode')
   await ctx.close()
 })
-// optional: ban/unban needs a provider that stores accounts, e.g.
-// NEKO_FILE_URL=http://host:port/ with file provider members alice (admin, pw alice) and bob (pw bob)
-if (process.env.NEKO_FILE_URL) {
-  const FILE_URL = process.env.NEKO_FILE_URL
-  const login = async (name) => {
-    const ctx = await browser.newContext({ ignoreHTTPSErrors: true, viewport: { width: 1400, height: 850 } })
-    const p = await ctx.newPage()
-    await p.goto(FILE_URL)
-    await p.fill('input[placeholder="Enter your display name"]', name)
-    await p.fill('input[type=password]', name)
-    await p.click('button[type=submit]')
-    return p
-  }
-  let FA, FB
-  await step('file provider: admin bans bob, bob cannot log in', async () => {
-    FA = await login('alice')
-    await FA.waitForSelector('[data-testid=connect]', { state: 'detached', timeout: 20000 })
-    FB = await login('bob')
-    await FB.waitForSelector('[data-testid=connect]', { state: 'detached', timeout: 20000 })
-    await FA.waitForFunction(() => document.querySelectorAll('[data-testid=member]').length === 2, null, {
-      timeout: 5000,
-    })
-    await FA.click('[data-testid=member]:not([data-self])', { button: 'right' })
-    await FA.click('[data-testid=member-menu] >> text=Ban', { timeout: 5000 })
-    await FA.click('[data-testid=dialog-confirm]')
-    await FB.waitForSelector('[data-testid=connect] input[type=password]', { timeout: 8000 })
-    await FB.click('[data-testid=dialog-confirm]').catch(() => {}) // "removed from this room"
-    await FB.fill('input[placeholder="Enter your display name"]', 'bob')
-    await FB.fill('input[type=password]', 'bob')
-    await FB.click('button[type=submit]')
-    await FB.waitForSelector('[data-testid=dialog]', { timeout: 5000 })
-    const text = await FB.locator('[data-testid=dialog]').textContent()
-    if (!/login/i.test(text ?? '') || !(await FB.locator('[data-testid=connect] input[type=password]').count()))
-      throw new Error('expected a login error, got ' + JSON.stringify(text))
-    await FB.click('[data-testid=dialog-confirm]')
-  })
-  await step('file provider: unban from Settings, bob logs in again', async () => {
-    await openSide(FA)
-    await FA.click('[data-testid=tabs] >> text=Settings')
-    await FA.click('[data-testid=unban]', { timeout: 5000 })
-    await FA.waitForSelector('[data-testid=banned]', { state: 'detached', timeout: 5000 })
-    await FB.click('button[type=submit]')
-    await FB.waitForSelector('[data-testid=connect]', { state: 'detached', timeout: 20000 })
-  })
-}
 console.log(
   `\n${fails} failed. page errors:`,
   errors.length ? '\n  ' + [...new Set(errors)].slice(0, 12).join('\n  ') : 'none',

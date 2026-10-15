@@ -26,7 +26,6 @@
     "confirm": {
       "kick_title": "Wyrzucić {{name}}?",
       "kick_text": "Czy na pewno chcesz wyrzucić {{name}}?",
-      "ban_title": "Zbanować {{name}}?",
       "button_yes": "Tak",
       "button_cancel": "Anuluj"
     }
@@ -87,7 +86,6 @@
     "controls_has_alt": "Ale poinformowałem osobę, że chciałeś je otrzymać",
     "controls_requesting": "{{name}} prosi o sterowanie",
     "resolution": "zmienił rozdzielczość na {{width}}x{{height}}@{{rate}}",
-    "banned": "zbanował {{name}}",
     "kicked": "wyrzucił {{name}}"
   }
 }

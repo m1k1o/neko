@@ -26,7 +26,6 @@
     "confirm": {
       "kick_title": "Kick {{name}}?",
       "kick_text": "Bist du sicher das du {{name}} rauswerfen willst?",
-      "ban_title": "{{name}} Sperren?",
       "button_yes": "Ja",
       "button_cancel": "Abbrechen"
     }
@@ -87,7 +86,6 @@
     "controls_has_alt": "Aber ich habe die Person wissen lassen, dass du es wolltest",
     "controls_requesting": "{{name}} fordert die Kontrollen an",
     "resolution": "die Auflösung geändert zu {{width}}x{{height}}@{{rate}}",
-    "banned": "sperrte {{name}}",
     "kicked": "{{name}} wurde rausgeworfen"
   }
 }

@@ -26,7 +26,6 @@
     "confirm": {
       "kick_title": "Kicker {{name}}?",
       "kick_text": "Êtes vous sûr de kick {{name}}?",
-      "ban_title": "Bannir {{name}}?",
       "button_yes": "Oui",
       "button_cancel": "Annuler"
     }
@@ -87,7 +86,6 @@
     "controls_has_alt": "Mais j'ai fait savoir que vous le voulez",
     "controls_requesting": "{{name}} demande le contrôle",
     "resolution": "a changé la résolution pour du {{width}}x{{height}}@{{rate}}",
-    "banned": "a banni {{name}}",
     "kicked": "a kick {{name}}"
   }
 }

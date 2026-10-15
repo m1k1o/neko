@@ -25,7 +25,6 @@
     "confirm": {
       "kick_title": "Kick {{name}}?",
       "kick_text": "Ste si istý/á, že chcete vykopnúť používateľa {{name}}?",
-      "ban_title": "Ban {{name}}?",
       "button_yes": "Áno",
       "button_cancel": "Zrušiť"
     }
@@ -86,7 +85,6 @@
     "controls_has_alt": "Ale dám mu vedieť, že si chcel ovládanie",
     "controls_requesting": "{{name}} by chcel/a ovládanie",
     "resolution": "zmenené rozlíšenie na {{width}}x{{height}}@{{rate}}",
-    "banned": "{{name}} dostal/a BAN",
     "kicked": "{{name}} bol/a vykopnutý/a"
   }
 }

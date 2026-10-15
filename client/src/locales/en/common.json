@@ -23,13 +23,9 @@
     "take": "Force Take Controls",
     "give": "Give Controls",
     "kick": "Kick",
-    "ban": "Ban",
-    "unban": "Unban",
     "confirm": {
       "kick_title": "Kick {{name}}?",
       "kick_text": "Are you sure you want to kick {{name}}?",
-      "ban_title": "Ban {{name}}?",
-      "ban_text": "Do you want to ban {{name}}? They cannot log in again until unbanned in Settings.",
       "button_yes": "Yes",
       "button_cancel": "Cancel"
     }
@@ -71,8 +67,7 @@
     "chat_sound": "Play Chat Sound",
     "links_in_app": "Always open links in app",
     "keyboard_layout": "Keyboard Layout",
-    "broadcast_title": "Live Broadcast",
-    "banned": "Banned"
+    "broadcast_title": "Live Broadcast"
   },
   "connection": {
     "reconnecting": "Reconnecting...",
@@ -96,7 +91,6 @@
     "controls_has_alt": "But I let the person know you wanted it",
     "controls_requesting": "{{name}} is requesting the controls",
     "resolution": "changed the resolution to {{width}}x{{height}}@{{rate}}",
-    "banned": "banned {{name}}",
     "kicked": "kicked {{name}}"
   }
 }

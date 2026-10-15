@@ -26,7 +26,6 @@
     "confirm": {
       "kick_title": "Sparka {{name}}?",
       "kick_text": "Är du säker du vill sparka {{name}}?",
-      "ban_title": "Bannlys {{name}}?",
       "button_yes": "Ja",
       "button_cancel": "Avbryt"
     }
@@ -87,7 +86,6 @@
     "controls_has_alt": "Men jag låter dem veta att du vill ha den",
     "controls_requesting": "{{name}} frågar om kontrollen",
     "resolution": "ändrade upplösningen till {{width}}x{{height}}@{{rate}}",
-    "banned": "bannlyste {{name}}",
     "kicked": "sparkade {{name}}"
   }
 }

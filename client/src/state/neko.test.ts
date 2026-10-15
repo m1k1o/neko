@@ -145,7 +145,7 @@ test('start-up: the URL parameters and the stored settings of the page, read whe
   stored = fakeBrowser()
 })
 
-test('a closed connection goes back to the login screen when the server no longer takes the session: whoami 401 (gone) or 403 (login disabled, banned); other failures keep it for Connect', async () => {
+test('a closed connection goes back to the login screen when the server no longer takes the session: whoami 401 (gone) or 403 (login disabled); other failures keep it for Connect', async () => {
   const out: number[] = []
   for (const status of [401, 403, 500, 200]) {
     const neko = make()

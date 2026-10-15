@@ -46,7 +46,6 @@ export function createAppStore() {
     menu: null as null | { x: number; y: number; id: string },
     dialog: null as Dialog | null,
     about: false,
-    bans: 0, // bumped after a ban or unban, so lists that show them reload
   }))
 }
 export type AppStore = ReturnType<typeof createAppStore>

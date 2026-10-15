@@ -26,7 +26,6 @@
     "confirm": {
       "kick_title": "Echar a {{name}}?",
       "kick_text": "Seguro que quiere echar a {{name}}?",
-      "ban_title": "Bloquear a {{name}}?",
       "button_yes": "Sí",
       "button_cancel": "Cancelar"
     }
@@ -87,7 +86,6 @@
     "controls_has_alt": "Pero le hice saber a la persona que los querías",
     "controls_requesting": "{{name}} está solicitando los controles",
     "resolution": "cambió la resolución a {{width}}x{{height}}@{{rate}}",
-    "banned": "bloqueó a {{name}}",
     "kicked": "expulsó a {{name}}"
   }
 }

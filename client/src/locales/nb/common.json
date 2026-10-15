@@ -26,7 +26,6 @@
     "confirm": {
       "kick_title": "Kast ut {{name}}?",
       "kick_text": "Vil du kaste ut {{name}}?",
-      "ban_title": "Bannlys {{name}}?",
       "button_yes": "Ja",
       "button_cancel": "Avbryt"
     }
@@ -87,7 +86,6 @@
     "controls_has_alt": "Jeg la det komme vedkommende til kjenne at du ønsket den",
     "controls_requesting": "{{name}} forespør kontrollen",
     "resolution": "endret oppløsningen til {{width}}x{{height}}@{{rate}}",
-    "banned": "bannlyste {{name}}",
     "kicked": "kastet ut {{name}}"
   }
 }

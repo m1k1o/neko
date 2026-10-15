@@ -26,7 +26,6 @@
     "confirm": {
       "kick_title": "踢出 {{name}}？",
       "kick_text": "您確定要踢出 {{name}} 嗎？",
-      "ban_title": "封鎖 {{name}}？",
       "button_yes": "是",
       "button_cancel": "取消"
     }
@@ -87,7 +86,6 @@
     "controls_has_alt": "但我已通知對方您有意接管",
     "controls_requesting": "{{name}} 正在請求控制權",
     "resolution": "將解析度改為 {{width}}x{{height}}@{{rate}}",
-    "banned": "已封鎖 {{name}}",
     "kicked": "已踢出 {{name}}"
   }
 }
