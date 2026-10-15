@@ -123,7 +123,7 @@ export function Chat() {
           <div className="relative flex h-full w-full flex-1 rounded-[5px] bg-white/5">
             <textarea
               ref={input}
-              className="m-[5px] flex-1 resize-none border-0 bg-transparent text-text-normal caret-text-normal selection:bg-text-link placeholder:text-text-muted [scrollbar-color:var(--color-background-tertiary)_transparent] [scrollbar-width:thin]"
+              className="m-[5px] flex-1 resize-none border-0 bg-transparent text-text-normal caret-text-normal outline-hidden selection:bg-text-link placeholder:text-text-muted [scrollbar-color:var(--color-background-tertiary)_transparent] [scrollbar-width:thin]"
               data-testid="chat-input"
               placeholder={t('chat:send_a_message')}
               maxLength={MAX_MESSAGE}

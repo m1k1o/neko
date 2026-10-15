@@ -19,7 +19,7 @@ export function Clipboard() {
       data-testid="clipboard"
     >
       <textarea
-        className="h-full w-full resize-y border-0 bg-transparent text-text-normal selection:bg-text-normal"
+        className="h-full w-full resize-y border-0 bg-transparent text-text-normal outline-hidden selection:bg-text-normal"
         aria-label="Clipboard"
         value={text}
         onFocus={(e) => e.target.select()}

@@ -177,4 +177,10 @@
   video::-webkit-media-controls {
     display: none !important;
   }
+  /* text fields: the ring the buttons use, instead of the browser's default outline */
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    outline: 2px solid var(--color-style-primary);
+  }
 }

@@ -95,10 +95,10 @@ export function EmojiPicker({ onPick, onClose }: { onPick: (name: string) => voi
       data-testid="emoji-picker"
     >
       <div className="shrink-0 border-b border-background-tertiary p-2.5">
-        <div className="relative flex flex-col overflow-hidden rounded-[5px] text-interactive-normal">
+        <div className="relative flex flex-col text-interactive-normal">
           <MagnifyingGlass className="absolute top-1.5 right-1.5 size-[15px] opacity-50" />
           <input
-            className="border-0 bg-background-floating p-[5px] leading-4 font-medium text-interactive-normal placeholder:font-medium placeholder:text-text-muted"
+            className="rounded-[5px] border-0 bg-background-floating p-[5px] leading-4 font-medium text-interactive-normal placeholder:font-medium placeholder:text-text-muted"
             type="text"
             data-testid="emoji-search"
             value={search}
