@@ -392,9 +392,11 @@ func (s *Capture) Set() {
 			s.VideoCodec = codec.VP8()
 			s.VideoPipelines = map[string]types.VideoConfig{
 				"main": {
-					Fps:         "25",
-					GstEncoder:  "vp8enc",
-					ShowPointer: true,
+					Fps:        "25",
+					GstEncoder: "vp8enc",
+					// the client draws the cursor (cursor image + position over the data channel);
+					// drawing it into the stream as well shows a second, delayed pointer
+					ShowPointer: false,
 					GstParams: map[string]string{
 						"target-bitrate":      "round(3072 * 650)",
 						"cpu-used":            "4",

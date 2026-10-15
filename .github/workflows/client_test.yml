@@ -8,6 +8,7 @@ on:
       - client/**
       - .github/workflows/client_build.yml
       - .github/workflows/client_test.yml
+      - .github/workflows/npm_publish.yml
 
 jobs:
   test-client:
