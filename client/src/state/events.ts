@@ -112,6 +112,11 @@ export function wireEvents(neko: NekoApp) {
     if (event === 'openinapp/init') app.setState({ openInApp: !!payload.enabled })
   })
 
+  // auto fell back to the websocket: worth saying, since the stream behaves a little differently
+  ev.on('transport.changed', (kind) => {
+    if (kind === 'webcodecs-ws') toast(t('connection.fell_back'))
+  })
+
   ev.on('connection.closed', (error) => {
     initialized = false
     if (!error) return

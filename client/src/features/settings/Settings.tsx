@@ -9,6 +9,7 @@ import { useActions } from '@/state/actions'
 import { useNeko } from '@/state/provider'
 import { setSetting } from '@/state/settings'
 import { Button } from '@/components/ui/button'
+import { TransportSelect } from '@/features/connect/TransportSelect'
 import { row, label } from './classes'
 
 const field =
@@ -97,6 +98,12 @@ export function Settings() {
                 </option>
               ))}
             </select>
+          </label>
+        </li>
+        <li className={row}>
+          <span className={label}>{t('setting.transport')}</span>
+          <label className="max-w-[120px] text-right">
+            <TransportSelect className="w-full max-w-full text-right" />
           </label>
         </li>
         {admin && (

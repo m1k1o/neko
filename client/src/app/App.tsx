@@ -4,7 +4,7 @@ import { useShallow } from 'zustand/react/shallow'
 import { useTranslation } from 'react-i18next'
 import { useNeko } from '@/state/provider'
 import { useSlot } from '@/plugins'
-import { WebRTCTransport } from '@m1k1o/neko'
+import { WebCodecsTransport, WebRTCTransport } from '@m1k1o/neko'
 import { cn } from '@/lib/utils'
 import logo from '@/assets/images/logo.svg'
 import { Dialog } from '@/components/Dialog'
@@ -31,7 +31,9 @@ export function App() {
   )
   const memberMenu = useSlot('member.menu')
 
-  if (!WebRTCTransport.supported()) {
+  // only a browser that can do neither transport is turned away: one without WebRTC can still
+  // stream over the websocket
+  if (!WebRTCTransport.supported() && !WebCodecsTransport.supported()) {
     return (
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="w-[320px] rounded-[5px] bg-background-secondary p-2.5">
