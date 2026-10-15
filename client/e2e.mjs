@@ -45,12 +45,13 @@ async function step(name, fn) {
     }
   }
 }
-async function user(name, password) {
+async function user(name, password, init) {
   const ctx = await browser.newContext({
     ignoreHTTPSErrors: true,
     viewport: { width: 1400, height: 850 },
     permissions: ['clipboard-read', 'clipboard-write', 'microphone'],
   })
+  if (init) await ctx.addInitScript(init) // runs before the app: a browser quirk to emulate
   const page = await ctx.newPage()
   page.on('pageerror', (e) => errors.push(`${name} pageerror: ${e.message}`))
   page.on(
@@ -391,6 +392,39 @@ await step('microphone: host enables and disables (fake device)', async () => {
   await A.click('[data-testid=mic][data-on]')
   await A.waitForSelector('[data-testid=mic]:not([data-on])', { timeout: 5000 })
   await api(A, 'POST', '/room/control/release')
+})
+// the textarea fallback shows when the browser cannot read the local clipboard (Firefox, Safari):
+// emulated by removing readText before the app loads
+await step('clipboard fallback: the popover keeps the focus while the mouse crosses the video', async () => {
+  const C = await user('carol', ADMIN, () =>
+    Object.defineProperty(Clipboard.prototype, 'readText', { value: undefined }),
+  )
+  try {
+    await C.click('[data-testid=control-request]')
+    await C.waitForSelector('[data-testid=member][data-self][data-host]', { timeout: 5000 })
+    await C.click('[data-testid=clipboard-open]')
+    const inPopover = () => document.activeElement?.closest('[data-testid=clipboard] textarea') != null
+    await C.waitForFunction(inPopover, null, { timeout: 3000 })
+    const box = await C.locator('[data-testid=player]').boundingBox()
+    await C.mouse.move(box.x + box.width / 2, box.y + box.height / 2, { steps: 12 })
+    await C.mouse.move(box.x + 40, box.y + box.height - 40, { steps: 12 })
+    await C.waitForTimeout(500)
+    if (!(await C.locator('[data-testid=clipboard]').count())) throw new Error('the clipboard popover closed')
+    if (!(await C.evaluate(inPopover))) throw new Error('the clipboard textarea lost the focus')
+    // what is typed lands in the textarea, not on the remote, and can be selected to copy
+    await C.keyboard.type('neko-fallback')
+    await C.keyboard.press('Control+A')
+    const sel = await C.evaluate(() => {
+      const t = document.activeElement
+      return t.value === 'neko-fallback' && t.selectionEnd - t.selectionStart === t.value.length
+    })
+    if (!sel) throw new Error('typing or select-all did not reach the clipboard textarea')
+    await C.keyboard.press('Escape')
+    await C.waitForSelector('[data-testid=clipboard]', { state: 'detached', timeout: 3000 })
+  } finally {
+    await api(C, 'POST', '/room/control/release').catch(() => {})
+    await C.context().close()
+  }
 })
 // offline emulation only freezes an open websocket in Chromium (WebKit and Firefox keep delivering
 // heartbeats to it, measured); elsewhere these two steps have nothing to notice and are skipped

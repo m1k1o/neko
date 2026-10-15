@@ -132,7 +132,9 @@ export function Stage({ hideControls, extraControls }: { hideControls: boolean; 
           <ul className="absolute right-5 bottom-[15px]">
             {hosting && !canReadClipboard && (
               <li className="mb-2.5 last:mb-0">
-                <Popover>
+                {/* modal: the overlay takes the keyboard focus when the mouse enters the video,
+                    which would close the popover and send its Ctrl+C to the remote */}
+                <Popover modal>
                   <PopoverTrigger asChild>
                     <IconButton variant="video" label="Clipboard" data-testid="clipboard-open">
                       <ClipboardIcon className="size-4" />
