@@ -6,11 +6,20 @@ on:
       - master
     paths:
       - client/**
+      - utils/release.sh
       - .github/workflows/client_build.yml
       - .github/workflows/client_test.yml
       - .github/workflows/npm_publish.yml
 
 jobs:
+  check-release-helper:
+    name: Check Release Helper
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check Bash syntax
+        run: bash -n utils/release.sh
+
   test-client:
     name: Test Client
     uses: ./.github/workflows/client_build.yml
