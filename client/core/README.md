@@ -249,8 +249,9 @@ login names on some member providers, so they go through `encodeURIComponent` in
 
 `NekoClient` owns the session (auth, the websocket, the room state) and leaves the stream to a
 `StreamTransport` (`transport.ts`), the way Guacamole's client runs over a tunnel it does not care
-about. WebRTC is the one implemented (`WebRTCTransport`, `transport/webrtc.ts`); others
-(WebCodecs over a websocket, WebTransport, MSE, HLS) plug in the same way:
+about. Two are implemented: WebRTC (`WebRTCTransport`, `transport/webrtc.ts`) and WebCodecs over a
+websocket (`WebCodecsTransport`, `transport/webcodecs.ts`); others (WebTransport, MSE, HLS) plug in
+the same way:
 
 ```ts
 interface StreamTransport {
@@ -292,6 +293,23 @@ and `autoplay` is on, and a transport keeps playing across its own reconnects. A
 needs: its own connection from the `SessionInfo`, an element it draws into, play/volume/mute, and
 either an `input` channel or nothing (the client then sends input over the websocket). Pass it as
 `new NekoClient({ transport })`; the GUI checks `WebRTCTransport.supported()` before rendering.
+
+`WebCodecsTransport` is the second one. The server sends encoded samples on its own binary socket
+(`/media/ws`, opened with a ticket from `POST /api/media/ticket`), the browser decodes them with
+WebCodecs and it paints to a canvas; it has no input channel, so input goes over the main socket.
+Its point is flow control: the server keeps a small window of unacked frames and, once that is
+full, replaces the pending frame with the newest instead of queuing, so a client that cannot keep
+up sees fewer frames rather than later ones. The transport holds up its end by acking each frame
+after painting it, and by asking for a keyframe whenever it drops one (a decoder cannot use delta
+frames across a gap). `stats()` reports dropped frames, the decoder backlog and the socket's send
+buffer, which is what the window sizes are tuned against.
+
+```ts
+import { NekoClient, WebCodecsTransport, WebRTCTransport } from '@m1k1o/neko'
+
+const transport = WebCodecsTransport.supported() ? new WebCodecsTransport() : new WebRTCTransport()
+const client = new NekoClient({ transport })
+```
 
 ## The store and `Emitter`
 
