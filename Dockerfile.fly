@@ -1,0 +1,32 @@
+# Builds a neko image from this branch's source, on top of the published chromium app image.
+# The base already has Xorg, GStreamer, PulseAudio and the browser; only the server binary and
+# the client bundle come from here, which is what this branch actually changes.
+#
+#   docker build -f Dockerfile.fly -t neko-ws .
+
+ARG APP_IMAGE=ghcr.io/m1k1o/neko/chromium:latest
+
+FROM golang:1.25-trixie AS server
+WORKDIR /src
+ENV DEBIAN_FRONTEND=noninteractive
+RUN set -eux; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends \
+        libx11-dev libxrandr-dev libxtst-dev libgtk-3-dev libxcvt-dev \
+        libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev; \
+    apt-get clean -y; \
+    rm -rf /var/lib/apt/lists/* /var/cache/apt/*
+COPY server/ .
+RUN ./build
+
+FROM node:24-trixie-slim AS client
+WORKDIR /src
+COPY client/package*.json ./
+RUN npm ci
+COPY client/ .
+RUN npm run build
+
+FROM ${APP_IMAGE}
+COPY --from=server /src/bin/plugins/ /etc/neko/plugins/
+COPY --from=server /src/bin/neko /usr/bin/neko
+COPY --from=client /src/dist/ /var/www

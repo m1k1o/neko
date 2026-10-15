@@ -152,6 +152,16 @@ func (manager *Manager) createTicket(w http.ResponseWriter, request *http.Reques
 }
 
 func (manager *Manager) resolve(videoID string) (types.EncodedStream, types.EncodedStream, codecConfig, codecConfig, error) {
+	// no stream asked for: serve the first configured one, so a client that does not care which
+	// quality it gets (the common case) does not have to discover the ids first
+	if videoID == "" {
+		ids := manager.source.Video().IDs()
+		if len(ids) == 0 {
+			return nil, nil, codecConfig{}, codecConfig{}, errors.New("no video streams are configured")
+		}
+		videoID = ids[0]
+	}
+
 	video, ok := manager.source.Video().GetStream(types.StreamSelector{ID: videoID})
 	if !ok {
 		return nil, nil, codecConfig{}, codecConfig{}, errors.New("video stream not found")
