@@ -121,7 +121,7 @@ func (s *Desktop) SetV2() {
 			height, err2 := strconv.ParseInt(res[2], 10, 64)
 			rate, err3 := strconv.ParseInt(res[3], 10, 64)
 
-			if err1 == nil && err2 == nil && err3 == nil {
+			if err1 == nil && err2 == nil && err3 == nil && useV2Fallback("desktop.screen") {
 				s.ScreenSize.Width = int(width)
 				s.ScreenSize.Height = int(height)
 				s.ScreenSize.Rate = int16(rate)
@@ -132,6 +132,6 @@ func (s *Desktop) SetV2() {
 	}
 
 	if deprecatedV2ConfigUsed {
-		log.Warn().Msg("deprecated V2 configuration is in use; migrate to V3 configuration, see https://neko.m1k1o.net/docs/v3/migration-from-v2")
+		log.Error().Msg("deprecated V2 configuration is in use; migrate to V3 configuration, see https://neko.m1k1o.net/docs/v3/migration-from-v2")
 	}
 }

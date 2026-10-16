@@ -321,22 +321,30 @@ func (s *WebRTC) SetV2() {
 	deprecatedV2ConfigUsed := false
 
 	if viper.IsSet("nat1to1") {
-		s.NAT1To1IPs = viper.GetStringSlice("nat1to1")
+		if useV2Fallback("webrtc.nat1to1") {
+			s.NAT1To1IPs = viper.GetStringSlice("nat1to1")
+		}
 		log.Warn().Msg("you are using v2 configuration 'NEKO_NAT1TO1' which is deprecated, please use 'NEKO_WEBRTC_NAT1TO1' instead")
 		deprecatedV2ConfigUsed = true
 	}
 	if viper.IsSet("tcpmux") {
-		s.TCPMux = viper.GetInt("tcpmux")
+		if useV2Fallback("webrtc.tcpmux") {
+			s.TCPMux = viper.GetInt("tcpmux")
+		}
 		log.Warn().Msg("you are using v2 configuration 'NEKO_TCPMUX' which is deprecated, please use 'NEKO_WEBRTC_TCPMUX' instead")
 		deprecatedV2ConfigUsed = true
 	}
 	if viper.IsSet("udpmux") {
-		s.UDPMux = viper.GetInt("udpmux")
+		if useV2Fallback("webrtc.udpmux") {
+			s.UDPMux = viper.GetInt("udpmux")
+		}
 		log.Warn().Msg("you are using v2 configuration 'NEKO_UDPMUX' which is deprecated, please use 'NEKO_WEBRTC_UDPMUX' instead")
 		deprecatedV2ConfigUsed = true
 	}
 	if viper.IsSet("icelite") {
-		s.ICELite = viper.GetBool("icelite")
+		if useV2Fallback("webrtc.icelite") {
+			s.ICELite = viper.GetBool("icelite")
+		}
 		log.Warn().Msg("you are using v2 configuration 'NEKO_ICELITE' which is deprecated, please use 'NEKO_WEBRTC_ICELITE' instead")
 		deprecatedV2ConfigUsed = true
 	}
@@ -350,24 +358,32 @@ func (s *WebRTC) SetV2() {
 				log.Panic().Err(err).Msg("failed to process iceservers")
 			}
 		}
-		s.ICEServersFrontend = iceServers
-		s.ICEServersBackend = iceServers
+		if useV2Fallback("webrtc.iceservers.frontend", "webrtc.iceservers") {
+			s.ICEServersFrontend = iceServers
+		}
+		if useV2Fallback("webrtc.iceservers.backend", "webrtc.iceservers") {
+			s.ICEServersBackend = iceServers
+		}
 		log.Warn().Msg("you are using v2 configuration 'NEKO_ICESERVERS' which is deprecated, please use 'NEKO_WEBRTC_ICESERVERS_FRONTEND' and/or 'NEKO_WEBRTC_ICESERVERS_BACKEND' instead")
 		deprecatedV2ConfigUsed = true
 	}
 
 	if viper.IsSet("iceserver") {
 		iceServerSlice := viper.GetStringSlice("iceserver")
-		if len(iceServerSlice) > 0 {
-			s.ICEServersFrontend = append(s.ICEServersFrontend, types.ICEServer{URLs: iceServerSlice})
-			s.ICEServersBackend = append(s.ICEServersBackend, types.ICEServer{URLs: iceServerSlice})
+		if len(iceServerSlice) > 0 && (useV2Fallback("webrtc.iceservers.frontend", "webrtc.iceservers") || useV2Fallback("webrtc.iceservers.backend", "webrtc.iceservers")) {
+			if useV2Fallback("webrtc.iceservers.frontend", "webrtc.iceservers") {
+				s.ICEServersFrontend = append(s.ICEServersFrontend, types.ICEServer{URLs: iceServerSlice})
+			}
+			if useV2Fallback("webrtc.iceservers.backend", "webrtc.iceservers") {
+				s.ICEServersBackend = append(s.ICEServersBackend, types.ICEServer{URLs: iceServerSlice})
+			}
 		}
 		log.Warn().Msg("you are using v2 configuration 'NEKO_ICESERVER' which is deprecated, please use 'NEKO_WEBRTC_ICESERVERS_FRONTEND' and/or 'NEKO_WEBRTC_ICESERVERS_BACKEND' instead")
 		deprecatedV2ConfigUsed = true
 	}
 
 	if viper.IsSet("ipfetch") {
-		if len(s.NAT1To1IPs) == 0 {
+		if len(s.NAT1To1IPs) == 0 && useV2Fallback("webrtc.nat1to1", "webrtc.ip_retrieval_url") {
 			ipfetch := viper.GetString("ipfetch")
 			ip, err := utils.HttpRequestGET(ipfetch)
 			if err != nil {
@@ -396,18 +412,20 @@ func (s *WebRTC) SetV2() {
 			}
 		}
 
-		if min > max {
-			s.EphemeralMin = max
-			s.EphemeralMax = min
-		} else {
-			s.EphemeralMin = min
-			s.EphemeralMax = max
+		if useV2Fallback("webrtc.epr") {
+			if min > max {
+				s.EphemeralMin = max
+				s.EphemeralMax = min
+			} else {
+				s.EphemeralMin = min
+				s.EphemeralMax = max
+			}
 		}
 		log.Warn().Msg("you are using v2 configuration 'NEKO_EPR' which is deprecated, please use 'NEKO_WEBRTC_EPR' instead")
 		deprecatedV2ConfigUsed = true
 	}
 
 	if deprecatedV2ConfigUsed {
-		log.Warn().Msg("deprecated V2 configuration is in use; migrate to V3 configuration, see https://neko.m1k1o.net/docs/v3/migration-from-v2")
+		log.Error().Msg("deprecated V2 configuration is in use; migrate to V3 configuration, see https://neko.m1k1o.net/docs/v3/migration-from-v2")
 	}
 }

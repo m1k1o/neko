@@ -269,22 +269,28 @@ func (s *Member) SetV2() {
 	deprecatedV2ConfigUsed := false
 
 	if viper.IsSet("password") || viper.IsSet("password_admin") {
-		s.Provider = "multiuser"
-		if userPassword := viper.GetString("password"); userPassword != "" {
-			s.Multiuser.UserPassword = userPassword
-		} else {
-			s.Multiuser.UserPassword = "neko"
+		if useV2Fallback("member.provider") {
+			s.Provider = "multiuser"
 		}
-		if adminPassword := viper.GetString("password_admin"); adminPassword != "" {
-			s.Multiuser.AdminPassword = adminPassword
-		} else {
-			s.Multiuser.AdminPassword = "admin"
+		if viper.IsSet("password") && useV2Fallback("member.multiuser.user_password") {
+			if userPassword := viper.GetString("password"); userPassword != "" {
+				s.Multiuser.UserPassword = userPassword
+			} else {
+				s.Multiuser.UserPassword = "neko"
+			}
+		}
+		if viper.IsSet("password_admin") && useV2Fallback("member.multiuser.admin_password") {
+			if adminPassword := viper.GetString("password_admin"); adminPassword != "" {
+				s.Multiuser.AdminPassword = adminPassword
+			} else {
+				s.Multiuser.AdminPassword = "admin"
+			}
 		}
 		log.Warn().Msg("you are using v2 configuration 'NEKO_PASSWORD' and 'NEKO_PASSWORD_ADMIN' which are deprecated, please use 'NEKO_MEMBER_MULTIUSER_USER_PASSWORD' and 'NEKO_MEMBER_MULTIUSER_ADMIN_PASSWORD' with 'NEKO_MEMBER_PROVIDER=multiuser' instead")
 		deprecatedV2ConfigUsed = true
 	}
 
 	if deprecatedV2ConfigUsed {
-		log.Warn().Msg("deprecated V2 configuration is in use; migrate to V3 configuration, see https://neko.m1k1o.net/docs/v3/migration-from-v2")
+		log.Error().Msg("deprecated V2 configuration is in use; migrate to V3 configuration, see https://neko.m1k1o.net/docs/v3/migration-from-v2")
 	}
 }

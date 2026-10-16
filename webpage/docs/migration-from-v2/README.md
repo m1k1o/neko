@@ -1,6 +1,6 @@
 # Migration from V2
 
-Neko v3 accepts many V2 configuration options as deprecated aliases, which are mapped to their V3 equivalents. When both forms are set, the V2 option takes precedence. The V2 API and client compatibility layer have been removed; clients must use the V3 API.
+Neko v3 accepts many V2 configuration options as deprecated aliases, which are mapped to their V3 equivalents. When both forms are set, the V3 option takes precedence. The V2 API and client compatibility layer have been removed; clients must use the V3 API.
 
 ## Docker Images {#docker}
 

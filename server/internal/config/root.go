@@ -4,12 +4,17 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"slices"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
+
+func useV2Fallback(v3Keys ...string) bool {
+	return !slices.ContainsFunc(v3Keys, viper.IsSet)
+}
 
 type Root struct {
 	Config string
@@ -109,14 +114,16 @@ func (s *Root) Set() {
 
 func (s *Root) SetV2() {
 	if viper.IsSet("logs") {
-		if viper.GetBool("logs") {
-			logs := filepath.Join(".", "logs")
-			if runtime.GOOS == "linux" {
-				logs = "/var/log/neko"
+		if useV2Fallback("log.dir") {
+			if viper.GetBool("logs") {
+				logs := filepath.Join(".", "logs")
+				if runtime.GOOS == "linux" {
+					logs = "/var/log/neko"
+				}
+				s.LogDir = logs
+			} else {
+				s.LogDir = ""
 			}
-			s.LogDir = logs
-		} else {
-			s.LogDir = ""
 		}
 		log.Warn().Msg("you are using v2 configuration 'NEKO_LOGS' which is deprecated, please use 'NEKO_LOG_DIR=/path/to/logs' instead")
 	}
