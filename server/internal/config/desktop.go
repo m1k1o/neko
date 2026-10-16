@@ -110,7 +110,7 @@ func (s *Desktop) Set() {
 }
 
 func (s *Desktop) SetV2() {
-	enableLegacy := false
+	deprecatedV2ConfigUsed := false
 
 	if viper.IsSet("screen") {
 		r := regexp.MustCompile(`([0-9]{1,4})x([0-9]{1,4})@([0-9]{1,3})`)
@@ -128,12 +128,10 @@ func (s *Desktop) SetV2() {
 			}
 		}
 		log.Warn().Msg("you are using v2 configuration 'NEKO_SCREEN' which is deprecated, please use 'NEKO_DESKTOP_SCREEN' instead")
-		enableLegacy = true
+		deprecatedV2ConfigUsed = true
 	}
 
-	// set legacy flag if any V2 configuration was used
-	if !viper.IsSet("legacy") && enableLegacy {
-		log.Warn().Msg("legacy configuration is enabled because at least one V2 configuration was used, please migrate to V3 configuration, visit https://neko.m1k1o.net/docs/v3/migration-from-v2 for more details")
-		viper.Set("legacy", true)
+	if deprecatedV2ConfigUsed {
+		log.Warn().Msg("deprecated V2 configuration is in use; migrate to V3 configuration, see https://neko.m1k1o.net/docs/v3/migration-from-v2")
 	}
 }

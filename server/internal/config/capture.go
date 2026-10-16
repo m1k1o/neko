@@ -378,14 +378,6 @@ func (s *Capture) Set() {
 				},
 			}
 			s.VideoIDs = []string{"main"}
-
-			if viper.GetBool("legacy") {
-				legacyPipeline := s.VideoPipelines["main"]
-				// Hacky way to enable pointer for legacy pipeline.
-				legacyPipeline.GstPipeline = strings.Replace(legacyPipeline.GstPipeline, "show-pointer=false", "show-pointer=true", 1)
-				s.VideoPipelines["legacy"] = legacyPipeline
-				// we do not add legacy to VideoIDs so that its ignored by bandwidth estimator
-			}
 		} else {
 			log.Warn().Msgf("no video pipelines specified, using default")
 
@@ -414,13 +406,6 @@ func (s *Capture) Set() {
 				},
 			}
 			s.VideoIDs = []string{"main"}
-
-			if viper.GetBool("legacy") {
-				legacyPipeline := s.VideoPipelines["main"]
-				legacyPipeline.ShowPointer = true
-				s.VideoPipelines["legacy"] = legacyPipeline
-				// we do not add legacy to VideoIDs so that its ignored by bandwidth estimator
-			}
 		}
 	} else if videoPipeline != "" {
 		log.Warn().Msg("you are setting both single video pipeline and multiple video pipelines, ignoring single video pipeline")
@@ -485,7 +470,7 @@ func (s *Capture) Set() {
 }
 
 func (s *Capture) SetV2() {
-	enableLegacy := false
+	deprecatedV2ConfigUsed := false
 
 	var ok bool
 
@@ -496,7 +481,7 @@ func (s *Capture) SetV2() {
 	if display := viper.GetString("display"); display != "" {
 		s.Display = display
 		log.Warn().Msg("you are using v2 configuration 'NEKO_DISPLAY' which is deprecated, please use 'NEKO_CAPTURE_VIDEO_DISPLAY' and/or 'NEKO_DESKTOP_DISPLAY' instead, also consider using 'DISPLAY' env variable if both should be the same")
-		enableLegacy = true
+		deprecatedV2ConfigUsed = true
 	}
 
 	modifiedVideoCodec := false
@@ -507,29 +492,29 @@ func (s *Capture) SetV2() {
 			s.VideoCodec = codec.VP8()
 		}
 		log.Warn().Msg("you are using v2 configuration 'NEKO_VIDEO_CODEC' which is deprecated, please use 'NEKO_CAPTURE_VIDEO_CODEC' instead")
-		enableLegacy = true
+		deprecatedV2ConfigUsed = true
 		modifiedVideoCodec = true
 	}
 
 	if viper.GetBool("vp8") {
 		s.VideoCodec = codec.VP8()
 		log.Warn().Msg("you are using deprecated config setting 'NEKO_VP8=true', use 'NEKO_CAPTURE_VIDEO_CODEC=vp8' instead")
-		enableLegacy = true
+		deprecatedV2ConfigUsed = true
 		modifiedVideoCodec = true
 	} else if viper.GetBool("vp9") {
 		s.VideoCodec = codec.VP9()
 		log.Warn().Msg("you are using deprecated config setting 'NEKO_VP9=true', use 'NEKO_CAPTURE_VIDEO_CODEC=vp9' instead")
-		enableLegacy = true
+		deprecatedV2ConfigUsed = true
 		modifiedVideoCodec = true
 	} else if viper.GetBool("h264") {
 		s.VideoCodec = codec.H264()
 		log.Warn().Msg("you are using deprecated config setting 'NEKO_H264=true', use 'NEKO_CAPTURE_VIDEO_CODEC=h264' instead")
-		enableLegacy = true
+		deprecatedV2ConfigUsed = true
 		modifiedVideoCodec = true
 	} else if viper.GetBool("av1") {
 		s.VideoCodec = codec.AV1()
 		log.Warn().Msg("you are using deprecated config setting 'NEKO_AV1=true', use 'NEKO_CAPTURE_VIDEO_CODEC=av1' instead")
-		enableLegacy = true
+		deprecatedV2ConfigUsed = true
 		modifiedVideoCodec = true
 	}
 
@@ -566,11 +551,7 @@ func (s *Capture) SetV2() {
 						// Hacky way to disable pointer.
 						GstPipeline: strings.Replace(pipeline, "show-pointer=true", "show-pointer=false", 1),
 					},
-					"legacy": {
-						GstPipeline: pipeline,
-					},
 				}
-				// we do not add legacy to VideoIDs so that its ignored by bandwidth estimator
 				s.VideoIDs = []string{"main"}
 			}
 		}
@@ -580,7 +561,7 @@ func (s *Capture) SetV2() {
 		}
 
 		// TODO: add deprecated warning and proper alternative for HW enc, bitrate and max fps
-		enableLegacy = true
+		deprecatedV2ConfigUsed = true
 	}
 
 	//
@@ -590,7 +571,7 @@ func (s *Capture) SetV2() {
 	if audioDevice := viper.GetString("device"); audioDevice != "" {
 		s.AudioDevice = audioDevice
 		log.Warn().Msg("you are using v2 configuration 'NEKO_DEVICE' which is deprecated, please use 'NEKO_CAPTURE_AUDIO_DEVICE' instead")
-		enableLegacy = true
+		deprecatedV2ConfigUsed = true
 	}
 
 	modifiedAudioCodec := false
@@ -601,29 +582,29 @@ func (s *Capture) SetV2() {
 			s.AudioCodec = codec.Opus()
 		}
 		log.Warn().Msg("you are using v2 configuration 'NEKO_AUDIO_CODEC' which is deprecated, please use 'NEKO_CAPTURE_AUDIO_CODEC' instead")
-		enableLegacy = true
+		deprecatedV2ConfigUsed = true
 		modifiedAudioCodec = true
 	}
 
 	if viper.GetBool("opus") {
 		s.AudioCodec = codec.Opus()
 		log.Warn().Msg("you are using deprecated config setting 'NEKO_OPUS=true', use 'NEKO_CAPTURE_AUDIO_CODEC=opus' instead")
-		enableLegacy = true
+		deprecatedV2ConfigUsed = true
 		modifiedAudioCodec = true
 	} else if viper.GetBool("g722") {
 		s.AudioCodec = codec.G722()
 		log.Warn().Msg("you are using deprecated config setting 'NEKO_G722=true', use 'NEKO_CAPTURE_AUDIO_CODEC=g722' instead")
-		enableLegacy = true
+		deprecatedV2ConfigUsed = true
 		modifiedAudioCodec = true
 	} else if viper.GetBool("pcmu") {
 		s.AudioCodec = codec.PCMU()
 		log.Warn().Msg("you are using deprecated config setting 'NEKO_PCMU=true', use 'NEKO_CAPTURE_AUDIO_CODEC=pcmu' instead")
-		enableLegacy = true
+		deprecatedV2ConfigUsed = true
 		modifiedAudioCodec = true
 	} else if viper.GetBool("pcma") {
 		s.AudioCodec = codec.PCMA()
 		log.Warn().Msg("you are using deprecated config setting 'NEKO_PCMA=true', use 'NEKO_CAPTURE_AUDIO_CODEC=pcma' instead")
-		enableLegacy = true
+		deprecatedV2ConfigUsed = true
 		modifiedAudioCodec = true
 	}
 
@@ -644,7 +625,7 @@ func (s *Capture) SetV2() {
 		}
 
 		// TODO: add deprecated warning and proper alternative for audio bitrate
-		enableLegacy = true
+		deprecatedV2ConfigUsed = true
 	}
 
 	//
@@ -654,22 +635,20 @@ func (s *Capture) SetV2() {
 	if viper.IsSet("broadcast_pipeline") {
 		s.BroadcastPipeline = viper.GetString("broadcast_pipeline")
 		log.Warn().Msg("you are using v2 configuration 'NEKO_BROADCAST_PIPELINE' which is deprecated, please use 'NEKO_CAPTURE_BROADCAST_PIPELINE' instead")
-		enableLegacy = true
+		deprecatedV2ConfigUsed = true
 	}
 	if viper.IsSet("broadcast_url") {
 		s.BroadcastUrl = viper.GetString("broadcast_url")
 		log.Warn().Msg("you are using v2 configuration 'NEKO_BROADCAST_URL' which is deprecated, please use 'NEKO_CAPTURE_BROADCAST_URL' instead")
-		enableLegacy = true
+		deprecatedV2ConfigUsed = true
 	}
 	if viper.IsSet("broadcast_autostart") {
 		s.BroadcastAutostart = viper.GetBool("broadcast_autostart")
 		log.Warn().Msg("you are using v2 configuration 'NEKO_BROADCAST_AUTOSTART' which is deprecated, please use 'NEKO_CAPTURE_BROADCAST_AUTOSTART' instead")
-		enableLegacy = true
+		deprecatedV2ConfigUsed = true
 	}
 
-	// set legacy flag if any V2 configuration was used
-	if !viper.IsSet("legacy") && enableLegacy {
-		log.Warn().Msg("legacy configuration is enabled because at least one V2 configuration was used, please migrate to V3 configuration, visit https://neko.m1k1o.net/docs/v3/migration-from-v2 for more details")
-		viper.Set("legacy", true)
+	if deprecatedV2ConfigUsed {
+		log.Warn().Msg("deprecated V2 configuration is in use; migrate to V3 configuration, see https://neko.m1k1o.net/docs/v3/migration-from-v2")
 	}
 }
