@@ -1,0 +1,14 @@
+{
+  "tab": "Chatt",
+  "mute": "Tysta",
+  "unmute": "Ta bort tystning",
+  "confirm": {
+    "mute_title": "Tysta {{name}}?",
+    "mute_text": "Är du säker du vill tysta {{name}}?",
+    "unmute_title": "Ta bort tystningen {{name}}?",
+    "unmute_text": "Är du säker du vill ta bort tystningen {{name}}?"
+  },
+  "muted": "tystade {{name}}",
+  "unmuted": "tog bort tystningen på {{name}}",
+  "send_a_message": "Skicka ett meddelande"
+}

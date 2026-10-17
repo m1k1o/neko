@@ -1,0 +1,22 @@
+{
+  "tab": "ファイル",
+  "locks": {
+    "lock": "ファイル転送をロック (ユーザに対して)",
+    "unlock": "ファイル転送のロックを解除 (ユーザに対して)",
+    "locked": "ファイル転送はロックされています (ユーザに対して)",
+    "unlocked": "ファイル転送はロックされていません (ユーザに対して)",
+    "notif_locked": "ファイル転送をロックしました",
+    "notif_unlocked": "ファイル転送のロックを解除しました"
+  },
+  "uploads": "アップロード",
+  "upload_here": "アップロードするにはここをクリックするかファイルをドラッグしてください",
+  "delete": "削除",
+  "delete_title": "\"{{name}}\" を削除しますか？",
+  "delete_confirm": "本当にこのファイルを削除しますか？",
+  "select": "選択",
+  "select_all": "すべて選択",
+  "unselect_all": "すべて選択解除",
+  "cancel": "キャンセル",
+  "delete_selected_title": "選択したファイルを削除しますか？",
+  "delete_selected_confirm": "選択した{{count}}個のファイルを本当に削除しますか？"
+}

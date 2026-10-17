@@ -1,17 +1,61 @@
 #include "xorg.h"
 
 static Display *DISPLAY = NULL;
+// XTEST virtual keyboard XInput1 device handle — cached so XKey() can dispatch
+// via XTestFakeDeviceKeyEvent (XI-aware) instead of XTestFakeKeyEvent (core-only).
+// GDK3 selects XI2 for the seat keyboard at startup and ignores core-protocol
+// KeyPress events, so core XTest silently drops every key into Firefox.
+static XDevice *XTEST_KEYBOARD = NULL;
 
 Display *getXDisplay(void) {
   return DISPLAY;
 }
 
+// Discover and open the "Virtual core XTEST keyboard" XInput1 device.
+// Must be called after XOpenDisplay. Returns NULL on failure; callers fall back
+// to XTestFakeKeyEvent (which doesn't work against modern GDK3, but at least
+// doesn't crash).
+static XDevice *openXTestKeyboardDevice(Display *display) {
+  int ndev = 0;
+  XDeviceInfo *devs = XListInputDevices(display, &ndev);
+  if (devs == NULL)
+    return NULL;
+
+  XDevice *dev = NULL;
+  for (int i = 0; i < ndev; i++) {
+    if (devs[i].name == NULL)
+      continue;
+    // Exact match against the XTEST extension's virtual keyboard. X.Org spawns
+    // this device at server startup. Use strstr to tolerate naming variations
+    // across X servers — e.g. "Virtual core XTEST keyboard" vs "XTEST keyboard".
+    if (strstr(devs[i].name, "XTEST") != NULL && strstr(devs[i].name, "keyboard") != NULL) {
+      dev = XOpenDevice(display, devs[i].id);
+      if (dev != NULL)
+        break;
+    }
+  }
+
+  XFreeDeviceList(devs);
+  return dev;
+}
+
 int XDisplayOpen(char *name) {
   DISPLAY = XOpenDisplay(name);
-  return DISPLAY == NULL;
+  if (DISPLAY == NULL)
+    return 1;
+
+  // Best-effort: cache the XTEST keyboard device. If this fails we still return
+  // success — XKey falls back to core XTest, which at least preserves the old
+  // behaviour (broken, but not a crash).
+  XTEST_KEYBOARD = openXTestKeyboardDevice(DISPLAY);
+  return 0;
 }
 
 void XDisplayClose(void) {
+  if (XTEST_KEYBOARD != NULL) {
+    XCloseDevice(DISPLAY, XTEST_KEYBOARD);
+    XTEST_KEYBOARD = NULL;
+  }
   XCloseDisplay(DISPLAY);
 }
 
@@ -225,7 +269,15 @@ void XKey(KeySym keysym, int down) {
   if (down)
     XKeyEntryAdd(keysym, keycode);
 
-  XTestFakeKeyEvent(display, keycode, down, CurrentTime);
+  // Prefer XTestFakeDeviceKeyEvent: it dispatches via the XTEST XInput device,
+  // so XI2 listeners (GDK3 inside Firefox) actually receive the event. The core
+  // XTestFakeKeyEvent path produces core-protocol events that GDK3's XI2 keyboard
+  // path silently drops.
+  if (XTEST_KEYBOARD != NULL) {
+    XTestFakeDeviceKeyEvent(display, XTEST_KEYBOARD, keycode, down, NULL, 0, CurrentTime);
+  } else {
+    XTestFakeKeyEvent(display, keycode, down, CurrentTime);
+  }
   XSync(display, 0);
 }
 

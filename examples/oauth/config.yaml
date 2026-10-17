@@ -1,0 +1,42 @@
+# See: https://neko.m1k1o.net/docs/v3/configuration/authentication#member.oauth
+member:
+  provider: "oauth"
+  oauth:
+    enabled: true
+    # When true, visiting the Neko root page immediately starts OAuth login.
+    auto_redirect: true
+    name: "Example SSO"
+    admin_emails: ["admin@example.com"]
+    user_emails: [] # if empty, any authenticated user is allowed to log in
+    client_id: "<client-id>"
+    client_secret: "<client-secret>"
+    # For OpenID Connect providers, issuer_url alone is enough - Neko
+    # discovers the authorization, token and user-info endpoints from
+    # /.well-known/openid-configuration.
+    issuer_url: "https://id.example.com"
+    scopes: ["openid", "profile", "email"]
+    # Configure these to match the JSON returned by the user-info endpoint.
+    subject_field: "sub"
+    username_field: "name"
+    avatar_field: "picture"
+    success_redirect: "/"
+    user_profile:
+      is_admin: false
+      can_login: true
+      can_connect: true
+      can_watch: true
+      can_host: true
+      can_share_media: true
+      can_access_clipboard: true
+      sends_inactive_cursor: true
+      can_see_inactive_cursors: false
+    admin_profile:
+      is_admin: true
+      can_login: true
+      can_connect: true
+      can_watch: true
+      can_host: true
+      can_share_media: true
+      can_access_clipboard: true
+      sends_inactive_cursor: true
+      can_see_inactive_cursors: true

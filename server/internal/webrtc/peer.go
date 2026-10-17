@@ -8,7 +8,7 @@ import (
 
 	"github.com/pion/interceptor/pkg/cc"
 	"github.com/pion/rtcp"
-	"github.com/pion/webrtc/v3"
+	"github.com/pion/webrtc/v4"
 	"github.com/rs/zerolog"
 
 	"github.com/m1k1o/neko/server/internal/config"
@@ -28,8 +28,8 @@ type WebRTCPeerCtx struct {
 	estimator     cc.BandwidthEstimator
 	estimateTrend *utils.TrendDetector
 	// stream selectors
-	video types.StreamSelectorManager
-	audio types.StreamSinkManager
+	video types.EncodedStreamSelector
+	audio types.EncodedStream
 	// tracks & channels
 	audioTrack  *Track
 	videoTrack  *Track

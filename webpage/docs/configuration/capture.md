@@ -35,13 +35,15 @@ The Gstreamer pipeline is started when the first client requests the video strea
   "capture.video.ids",
   "capture.video.pipeline",
   "capture.video.pipelines",
+  "capture.video.show_pointer",
 ]} comments={false} />
 
 - <Def id="video.display" /> is the name of the [X display](https://www.x.org/wiki/) that you want to capture. If not specified, the environment variable `DISPLAY` will be used.
-- <Def id="video.codec" /> available codecs are `vp8`, `vp9`, `av1`, `h264`. [Supported video codecs](https://developer.mozilla.org/en-US/docs/Web/Media/Guides/Formats/WebRTC_codecs#supported_video_codecs) are dependent on the WebRTC implementation used by the client, `vp8` and `h264` are supported by all WebRTC implementations.
+- <Def id="video.codec" /> available codecs are `vp8`, `vp9`, `av1`, `h264`, `h265`. [Supported video codecs](https://developer.mozilla.org/en-US/docs/Web/Media/Guides/Formats/WebRTC_codecs#supported_video_codecs) are dependent on the WebRTC implementation used by the client, `vp8` and `h264` are supported by all WebRTC implementations.
 - <Def id="video.ids" /> is a list of pipeline ids that are defined in the <Opt id="video.pipelines" /> section. The first pipeline in the list will be the default pipeline.
 - <Def id="video.pipeline" /> is a shorthand for defining [Gstreamer pipeline description](#video.gst_pipeline) for a single pipeline. This is option is ignored if <Opt id="video.pipelines" /> is defined.
 - <Def id="video.pipelines" /> is a dictionary of pipeline configurations. Each pipeline configuration is defined by a unique pipeline id. They can be defined in two ways: either by building the pipeline dynamically using [Expression-Driven Configuration](#video.expression) or by defining the pipeline using a [Gstreamer Pipeline Description](#video.gst_pipeline).
+- <Def id="video.show_pointer" /> overrides <Opt id="video.pipelines.show_pointer" /> for every video pipeline, only if explicitly set (per-pipeline `show_pointer` in `config.yaml` is left untouched when this flag is unset). It also controls the mouse pointer for the [Broadcast](#broadcast) and [Screencast](#screencast) pipelines, which do not have a per-pipeline setting of their own.
 
 ### Expression-Driven Configuration {#video.expression}
 
@@ -61,14 +63,14 @@ capture:
         gst_params:
           <param_name>: "<expression>"
         gst_suffix: "<gst_pipeline>"
-        show_pointer: true
+        show_pointer: false
 ```
 
 - <Def id="video.pipelines.width" />, <Def id="video.pipelines.height" />, and <Def id="video.pipelines.fps" /> are the expressions that are evaluated to get the stream resolution and framerate. They can be different from the display resolution and framerate if downscaling or upscaling is desired.
 - <Def id="video.pipelines.gst_prefix" /> and <Def id="video.pipelines.gst_suffix" /> allow you to add custom Gstreamer elements before and after the encoder. Both parameters need to start with `!` and then be followed by the Gstreamer elements.
 - <Def id="video.pipelines.gst_encoder" /> is the name of the Gstreamer encoder element, such as `vp8enc` or `x264enc`.
 - <Def id="video.pipelines.gst_params" /> are the parameters that are passed to the encoder element specified in <Opt id="video.pipelines.gst_encoder" />.
-- <Def id="video.pipelines.show_pointer" /> is a boolean value that determines whether the mouse pointer should be captured or not.
+- <Def id="video.pipelines.show_pointer" /> is a boolean value that determines whether the mouse pointer should be captured or not. The client draws the pointer itself (it receives the cursor image and position separately), so keep it `false` unless the stream is watched without the neko client, otherwise a second, delayed pointer is visible.
 
 <details>
   <summary>Example pipeline configuration</summary>
@@ -163,12 +165,24 @@ capture:
         gst_pipeline: "<gstreamer_pipeline>"
 ```
 
+As a shorthand, a pipeline entry can also be a plain string instead of an object, which is equivalent to setting only <Opt id="video.pipelines.gst_pipeline" />:
+
+```yaml title="config.yaml"
+capture:
+  video:
+    ...
+    pipelines:
+      <pipeline_id>: "<gstreamer_pipeline>"
+```
+
+This shorthand also works when defining <Opt id="video.pipelines" /> via the `NEKO_CAPTURE_VIDEO_PIPELINES` environment variable as a JSON object, e.g. `NEKO_CAPTURE_VIDEO_PIPELINES='{"<pipeline_id>":"<gstreamer_pipeline>"}'`.
+
 Since now you have to define the whole pipeline, you need to specify the src element to get the video frames and the sink element to send the encoded video frames to neko. In your pipeline, you can use `{display}` as a placeholder for the display name that will be replaced by the actual display name at runtime. You need to set the `name` property of the sink element to `appsink` so that neko can capture the video frames.
 
 Your typical pipeline string would look like this:
 
 ```
-ximagesrc display-name={display} show-pointer=true use-damage=false ! <your_elements> ! appsink name=appsink
+ximagesrc display-name={display} show-pointer=false use-damage=false ! <your_elements> ! appsink name=appsink
 ```
 
 See documentation for [ximagesrc](https://gstreamer.freedesktop.org/documentation/ximagesrc/index.html) and [appsink](https://gstreamer.freedesktop.org/documentation/app/appsink.html) for more information.
@@ -187,7 +201,7 @@ See documentation for [ximagesrc](https://gstreamer.freedesktop.org/documentatio
         pipelines:
           hq:
             gst_pipeline: |
-              ximagesrc display-name={display} show-pointer=true use-damage=false
+              ximagesrc display-name={display} show-pointer=false use-damage=false
               ! videoconvert ! queue
               ! vp8enc
                 name=encoder
@@ -206,7 +220,7 @@ See documentation for [ximagesrc](https://gstreamer.freedesktop.org/documentatio
               ! appsink name=appsink
           lq:
             gst_pipeline: |
-              ximagesrc display-name={display} show-pointer=true use-damage=false
+              ximagesrc display-name={display} show-pointer=false use-damage=false
               ! videoconvert ! queue
               ! vp8enc
                 name=encoder
@@ -236,7 +250,7 @@ See documentation for [ximagesrc](https://gstreamer.freedesktop.org/documentatio
         pipelines:
           main:
             gst_pipeline: |
-              ximagesrc display-name={display} show-pointer=true use-damage=false
+              ximagesrc display-name={display} show-pointer=false use-damage=false
               ! videoconvert ! queue
               ! x264enc
                 name=encoder
@@ -260,10 +274,10 @@ See documentation for [ximagesrc](https://gstreamer.freedesktop.org/documentatio
         pipelines:
           main:
             gst_pipeline: |
-              ximagesrc display-name={display} show-pointer=true use-damage=false
+              ximagesrc display-name={display} show-pointer=false use-damage=false
               ! videoconvert ! queue
               ! video/x-raw,format=NV12
-              ! nvh264enc
+              ! nvautogpuh264enc
                 name=encoder
                 preset=2
                 gop-size=25
@@ -287,10 +301,10 @@ See documentation for [ximagesrc](https://gstreamer.freedesktop.org/documentatio
         pipelines:
           main:
             gst_pipeline: |
-              ximagesrc display-name={display} show-pointer=true use-damage=false
+              ximagesrc display-name={display} show-pointer=false use-damage=false
               ! cudaupload ! cudaconvert ! queue
               ! video/x-raw(memory:CUDAMemory),format=NV12
-              ! nvh264enc
+              ! nvautogpuh264enc
                 name=encoder
                 preset=2
                 gop-size=25
@@ -306,6 +320,10 @@ See documentation for [ximagesrc](https://gstreamer.freedesktop.org/documentatio
 
     This configuration requires [Nvidia GPU](https://developer.nvidia.com/cuda-gpus) with [NVENC](https://developer.nvidia.com/nvidia-video-codec-sdk) support and [Cuda](https://developer.nvidia.com/cuda-zone) support.
 
+    :::tip
+    `nvautogpuh264enc` (GStreamer 1.22+) is the recommended encoder for NVIDIA driver 590 and newer. It auto-selects the correct memory path and replaces the older `nvh264enc`. On older GStreamer or driver versions, substitute `nvautogpuh264enc` with `nvh264enc`.
+    :::
+
   </TabItem>
 </Tabs>
 
@@ -318,8 +336,8 @@ Overview of available encoders for each codec is shown in the table below. The e
 | VP8   | [vp8enc](https://gstreamer.freedesktop.org/documentation/vpx/vp8enc.html?gi-language=c) | [vaapivp8enc](https://github.com/GStreamer/gstreamer-vaapi/blob/master/gst/vaapi/gstvaapiencode_vp8.c) | ? |
 | VP9   | [vp9enc](https://gstreamer.freedesktop.org/documentation/vpx/vp9enc.html?gi-language=c) | [vaapivp9enc](https://github.com/GStreamer/gstreamer-vaapi/blob/master/gst/vaapi/gstvaapiencode_vp9.c) | ? |
 | AV1   | [av1enc](https://gstreamer.freedesktop.org/documentation/aom/av1enc.html?gi-language=c) | ? | [nvav1enc](https://gstreamer.freedesktop.org/documentation/nvcodec/nvav1enc.html?gi-language=c) |
-| H264  | [x264enc](https://gstreamer.freedesktop.org/documentation/x264/index.html?gi-language=c) | [vaapih264enc](https://gstreamer.freedesktop.org/documentation/vaapi/vaapih264enc.html?gi-language=c) | [nvh264enc](https://gstreamer.freedesktop.org/documentation/nvcodec/nvh264enc.html?gi-language=c) |
-| H265  | [x265enc](https://gstreamer.freedesktop.org/documentation/x265/index.html?gi-language=c) | [vaapih265enc](https://gstreamer.freedesktop.org/documentation/vaapi/vaapih265enc.html?gi-language=c) | [nvh265enc](https://gstreamer.freedesktop.org/documentation/nvcodec/nvh265enc.html?gi-language=c) |
+| H264  | [x264enc](https://gstreamer.freedesktop.org/documentation/x264/index.html?gi-language=c) | [vah264enc](https://gstreamer.freedesktop.org/documentation/va/vah264enc.html?gi-language=c) | [nvautogpuh264enc](https://gstreamer.freedesktop.org/documentation/nvcodec/nvautogpuh264enc.html?gi-language=c) / [nvh264enc](https://gstreamer.freedesktop.org/documentation/nvcodec/nvh264enc.html?gi-language=c) |
+| H265  | [x265enc](https://gstreamer.freedesktop.org/documentation/x265/index.html?gi-language=c) | [vah265enc](https://gstreamer.freedesktop.org/documentation/va/vah265enc.html?gi-language=c) | [nvh265enc](https://gstreamer.freedesktop.org/documentation/nvcodec/nvh265enc.html?gi-language=c) |
 
 
 ## WebRTC Audio {#audio}
@@ -422,14 +440,14 @@ The default encoder uses `h264` for video and `aac` for audio, muxed in the `flv
             ! videoconvert
             ! queue
             ! video/x-raw,format=NV12
-            ! nvh264enc name=encoder preset=low-latency-hq gop-size=25 spatial-aq=true temporal-aq=true bitrate=2800 vbv-buffer-size=2800 rc-mode=6
+            ! nvautogpuh264enc name=encoder preset=low-latency-hq gop-size=25 spatial-aq=true temporal-aq=true bitrate=2800 vbv-buffer-size=2800 rc-mode=6
             ! h264parse config-interval=-1
             ! video/x-h264,stream-format=byte-stream,profile=high
             ! h264parse
             ! mux.
     ```
 
-    This configuration requires [Nvidia GPU](https://developer.nvidia.com/cuda-gpus) with [NVENC](https://developer.nvidia.com/nvidia-video-codec-sdk) support and [Nvidia docker image](/docs/v3/installation/docker-images#nvidia) of neko.
+    This configuration requires [Nvidia GPU](https://developer.nvidia.com/cuda-gpus) with [NVENC](https://developer.nvidia.com/nvidia-video-codec-sdk) support and [Nvidia docker image](/docs/v3/installation/docker-images#nvidia) of neko. Use `nvautogpuh264enc` for NVIDIA driver 590+ (GStreamer 1.22+), or substitute `nvh264enc` for older setups.
 
   </TabItem>
 </Tabs>

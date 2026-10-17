@@ -1,6 +1,4 @@
 
-      --legacy                                        enable legacy mode (default true)
-
       --logs                                          save logs to file
 
       --cert string                                   path to the SSL cert used to secure the neko server

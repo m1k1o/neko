@@ -1,7 +1,6 @@
 package capture
 
 import (
-	"errors"
 	"sort"
 
 	"github.com/rs/zerolog"
@@ -14,11 +13,11 @@ import (
 type StreamSelectorManagerCtx struct {
 	logger    zerolog.Logger
 	codec     codec.RTPCodec
-	streams   map[string]types.StreamSinkManager
+	streams   map[string]*StreamSinkManagerCtx
 	streamIDs []string
 }
 
-func streamSelectorNew(codec codec.RTPCodec, streams map[string]types.StreamSinkManager, streamIDs []string) *StreamSelectorManagerCtx {
+func streamSelectorNew(codec codec.RTPCodec, streams map[string]*StreamSinkManagerCtx, streamIDs []string) *StreamSelectorManagerCtx {
 	logger := log.With().
 		Str("module", "capture").
 		Str("submodule", "stream-selector").
@@ -40,17 +39,17 @@ func (manager *StreamSelectorManagerCtx) shutdown() {
 
 func (manager *StreamSelectorManagerCtx) destroyPipelines() {
 	for _, stream := range manager.streams {
-		if stream.Started() {
-			stream.DestroyPipeline()
+		if stream.started() {
+			stream.destroyPipeline()
 		}
 	}
 }
 
 func (manager *StreamSelectorManagerCtx) recreatePipelines() error {
 	for _, stream := range manager.streams {
-		if stream.Started() {
-			err := stream.CreatePipeline()
-			if err != nil && !errors.Is(err, types.ErrCapturePipelineAlreadyExists) {
+		if stream.started() {
+			err := stream.createPipeline()
+			if err != nil {
 				return err
 			}
 		}
@@ -66,12 +65,12 @@ func (manager *StreamSelectorManagerCtx) Codec() codec.RTPCodec {
 	return manager.codec
 }
 
-func (manager *StreamSelectorManagerCtx) GetStream(selector types.StreamSelector) (types.StreamSinkManager, bool) {
+func (manager *StreamSelectorManagerCtx) GetStream(selector types.StreamSelector) (types.EncodedStream, bool) {
 	// select stream by ID
 	if selector.ID != "" {
 		// select lower stream
 		if selector.Type == types.StreamSelectorTypeLower {
-			var lastStream types.StreamSinkManager
+			var lastStream types.EncodedStream
 			for i := len(manager.streamIDs) - 1; i >= 0; i-- {
 				streamID := manager.streamIDs[i]
 				if streamID == selector.ID {
@@ -88,7 +87,7 @@ func (manager *StreamSelectorManagerCtx) GetStream(selector types.StreamSelector
 
 		// select higher stream
 		if selector.Type == types.StreamSelectorTypeHigher {
-			var lastStream types.StreamSinkManager
+			var lastStream types.EncodedStream
 			for _, streamID := range manager.streamIDs {
 				if streamID == selector.ID {
 					return lastStream, lastStream != nil
@@ -121,7 +120,7 @@ func (manager *StreamSelectorManagerCtx) GetStream(selector types.StreamSelector
 				streamID := manager.streamIDs[i]
 				stream := manager.streams[streamID]
 				// if stream should be considered in calculation
-				considered := stream.Bitrate() != 0 && stream.Started()
+				considered := stream.Bitrate() != 0 && stream.started()
 				if considered && stream.Bitrate() < selector.Bitrate {
 					return stream, true
 				}
@@ -136,7 +135,7 @@ func (manager *StreamSelectorManagerCtx) GetStream(selector types.StreamSelector
 			for _, streamID := range manager.streamIDs {
 				stream := manager.streams[streamID]
 				// if stream should be considered in calculation
-				considered := stream.Bitrate() != 0 && stream.Started()
+				considered := stream.Bitrate() != 0 && stream.started()
 				if considered && stream.Bitrate() > selector.Bitrate {
 					return stream, true
 				}
@@ -158,7 +157,7 @@ func (manager *StreamSelectorManagerCtx) GetStream(selector types.StreamSelector
 }
 
 // TODO: This is a very naive implementation, we should use a binary search instead.
-func (manager *StreamSelectorManagerCtx) nearestBitrate(bitrate uint64) types.StreamSinkManager {
+func (manager *StreamSelectorManagerCtx) nearestBitrate(bitrate uint64) types.EncodedStream {
 	type streamDiff struct {
 		id          string
 		bitrateDiff int
@@ -181,7 +180,7 @@ func (manager *StreamSelectorManagerCtx) nearestBitrate(bitrate uint64) types.St
 
 	for _, stream := range manager.streams {
 		// if stream should be considered in calculation
-		considered := stream.Bitrate() != 0 && stream.Started()
+		considered := stream.Bitrate() != 0 && stream.started()
 		if !considered {
 			continue
 		}

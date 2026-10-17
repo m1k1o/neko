@@ -1,0 +1,14 @@
+{
+  "tab": "Chat",
+  "mute": "Silenciar",
+  "unmute": "No silenciar",
+  "confirm": {
+    "mute_title": "Silenciar a {{name}}?",
+    "mute_text": "Seguro que quieres silenciar a {{name}}?",
+    "unmute_title": "Dejar de silenciar a {{name}}?",
+    "unmute_text": "Seguro que quieres dejar de silenciar a {{name}}?"
+  },
+  "muted": "silenció a {{name}}",
+  "unmuted": "quitó el silencio a {{name}}",
+  "send_a_message": "Enviar un mensaje"
+}

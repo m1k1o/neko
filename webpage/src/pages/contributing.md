@@ -21,7 +21,7 @@ If you're a developer and want to contribute code to Neko, follow these steps:
 
 1. **Fork the [project](https://github.com/m1k1o/neko)**: Create a personal copy of the repository by [forking it](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo) to your GitHub account.
 
-2. **Edit files in your branch**: Make your changes in a new branch created from the `master` branch. Ensure your changes are well-documented and tested.
+2. **Edit files in your branch**: Set up your local environment using the [Local Development](/docs/v3/developer-guide/development) guide, then make your changes in a new branch created from the `master` branch. Ensure your changes are well-documented and tested.
 
 3. **Submit a [pull request](https://github.com/m1k1o/neko/pulls)**: Once your changes are ready, submit a pull request with a detailed explanation of the improvements and any relevant information for the reviewers.
 

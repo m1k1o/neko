@@ -51,6 +51,10 @@ The path inside the container will be `/home/neko/.mozilla/firefox/profile.defau
 
 <ProfileDirectoryPaths />
 
+:::warning
+Mounting a persistent profile volume alone is **not enough** to keep you logged in. By default, Neko's browser policy clears cookies and sessions on shutdown. You must also update the policy file to allow persistent data — see [Allow persistent data in policies](#firefox-based) below.
+:::
+
 ## Browser Policy Files {#policy-files}
 
 Browser policy files are JSON files that contain settings and configurations for the browser. These files are used to manage the browser settings programmatically and can be used to enforce certain policies, such as disabling extensions, setting the homepage, and more.
@@ -116,17 +120,37 @@ The policy files are located in the following paths:
 
 **Allow persistent data in policies**
 
-By default, the browsers in Neko are set up to forget all cookies and browsing history when they are closed. If you want to allow persistent data, you can set the following policies in the JSON file:
+By default, Firefox-based browsers in Neko are set up to clear cookies, sessions, and other browsing data on shutdown. If you want persistent logins across container restarts, do not replace the policy with a minimal JSON file. Instead, copy the default policy file and only modify the `SanitizeOnShutdown` values you need.
+
+You can copy the default policy from the container (or from this repository), then set these values to `false`:
 
 ```json title="policy.json"
 {
   "policies": {
-    "SanitizeOnShutdown": false,
+    "SanitizeOnShutdown": {
+      "Cache": false,
+      "Cookies": false,
+      "Downloads": false,
+      "FormData": false,
+      "History": false,
+      "OfflineApps": false,
+      "Sessions": false,
+      "SiteSettings": false
+    },
     "Homepage": {
       "StartPage": "previous-session"
     }
   }
 }
+```
+
+Keep the rest of the default policy entries unchanged so you preserve Neko defaults (for example extension rules and other hardened settings). Then mount it back into the container:
+
+```yaml title="docker-compose.yaml"
+services:
+  neko:
+    volumes:
+      - "./policy.json:/usr/lib/firefox/distribution/policies.json:ro"
 ```
 
 **Manage extensions**
@@ -230,3 +254,50 @@ The ID of the extension can be found in the URL of the extension in the Chrome W
   ]
 }
 ```
+
+## DRM for ARM64 {#arm64-drm}
+
+To stream protected contents, Google’s content protection system, Widevine, is required. However, its support for AArch64 systems is limited and it does not come natively during browser installation. To workaround, a copy of Widevine for ARM64 is obtained and installed from ChromeOS. However, further configuration is needed to function properly.
+
+### Firefox {#firefox-arm64-drm}
+
+Add the following command in your `docker-compose.yml`:
+
+```yaml title="docker-compose.yaml"
+services:
+  neko:
+    ...
+    command: sh -c "MOZ_GMP_PATH=/var/lib/widevine/gmp-widevinecdm/system-installed exec /usr/bin/supervisord -c /etc/neko/supervisord.conf"
+```
+
+In your [policies.json](#policy-files), add the following:
+
+```json title="policies.json"
+{
+  "policies": {
+    ...
+    "Preferences": {
+      ...
+      "media.gmp-widevinecdm.enabled": true,
+      "media.gmp-widevinecdm.visible": true,
+      "media.gmp-widevinecdm.version": "system-installed",
+      "media.gmp-widevinecdm.abi": "aarch64-gcc3",
+      "media.gmp-widevinecdm.autoupdate": false,
+      "media.eme.enabled": true,
+      "media.eme.encrypted-media-encryption-scheme.enabled": true
+    },
+    ...
+  }
+}
+```
+
+For some streaming sites, you also need to use [a user agent switcher extension](https://addons.mozilla.org/firefox/addon/user-agent-string-switcher/) and set it to: `Mozilla/5.0 (X11; CrOS aarch64 15662.0.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.6098.0 Safari/537.36`
+
+### Chromium-based Browsers {#chromium-arm64-drm}
+
+:::note
+- For Brave, you have to go to `brave://settings/extensions` and enable Widevine.
+- For Vivaldi, exit the browser and let it restart.
+:::
+
+For some streaming sites, you also need to use [a user agent switcher extension](https://chromewebstore.google.com/detail/bhchdcejhohfmigjafbampogmaanbfkg) and set it to: `Mozilla/5.0 (X11; CrOS aarch64 15662.0.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.6098.0 Safari/537.36`

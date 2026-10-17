@@ -7,7 +7,7 @@ import (
 	"github.com/m1k1o/neko/server/pkg/types/event"
 	"github.com/m1k1o/neko/server/pkg/types/message"
 
-	"github.com/pion/webrtc/v3"
+	"github.com/pion/webrtc/v4"
 )
 
 func (h *MessageHandlerCtx) signalRequest(session types.Session, payload *message.SignalRequest) error {
@@ -30,6 +30,9 @@ func (h *MessageHandlerCtx) signalRequest(session types.Session, payload *messag
 	// use default first video, if not provided
 	if video.Selector == nil {
 		videos := h.capture.Video().IDs()
+		if len(videos) == 0 {
+			return errors.New("no video streams available")
+		}
 		video.Selector = &types.StreamSelector{
 			ID:   videos[0],
 			Type: types.StreamSelectorTypeExact,

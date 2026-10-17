@@ -159,6 +159,14 @@ Make sure that you are exposing your ports correctly.
 
 If you put a local IP as `NEKO_WEBRTC_NAT1TO1`, external clients try to connect to that IP. But it is unreachable for them because it is your local IP. You must use your public IP address with port forwarding.
 
+:::danger Never use `127.0.0.1` as `NEKO_WEBRTC_NAT1TO1`
+Setting `NEKO_WEBRTC_NAT1TO1: 127.0.0.1` tells every client to connect to *their own* localhost, not your server. The connection will time out for all clients, and the browser will report:
+```
+Failed to ping without candidate pairs. Connection is not possible yet.
+```
+Use your actual public IP (or leave it unset to auto-detect) instead.
+:::
+
 ## Frequently Encountered Errors {#frequently-encountered-errors}
 
 ### Getting a black screen with a cursor, but no browser for Chromium-based browsers {#black-screen-with-cursor}
@@ -260,6 +268,55 @@ docker exec -it <container-id> ls -la /home/neko/.config/google-chrome
 docker exec -it <container-id> chown -R neko:neko /home/neko/.config/google-chrome
 ```
 
+#### Brave browser: singleton lock files preventing startup {#brave-singleton-lock}
+
+Brave (and other Chromium-based browsers) write singleton lock files (`SingletonLock`, `SingletonCookie`, `SingletonSocket`) to the profile directory when they start. If the container is stopped uncleanly, these files are left behind and the next container start fails because Brave thinks another instance is already running.
+
+**Fix 1: Remove lock files on container startup**
+
+Override the container's `command` to delete the stale lock files before launching supervisord:
+
+```yaml title="docker-compose.yaml"
+services:
+  neko:
+    image: "ghcr.io/m1k1o/neko/brave:latest"
+    restart: "unless-stopped"
+    shm_size: "2gb"
+    ports:
+      - "8080:8080"
+      - "52000-52100:52000-52100/udp"
+    volumes:
+      - /data:/home/neko/.config/brave
+    environment:
+      NEKO_DESKTOP_SCREEN: 1920x1080@30
+      NEKO_MEMBER_MULTIUSER_USER_PASSWORD: neko
+      NEKO_MEMBER_MULTIUSER_ADMIN_PASSWORD: admin
+      NEKO_WEBRTC_EPR: 52000-52100
+    # highlight-start
+    command: >
+      sh -c "rm -f /home/neko/.config/brave/SingletonLock
+             /home/neko/.config/brave/SingletonCookie
+             /home/neko/.config/brave/SingletonSocket &&
+             exec /usr/bin/supervisord -c /etc/neko/supervisord.conf"
+    # highlight-end
+```
+
+**Fix 2: Set a persistent container hostname**
+
+Chromium-based browsers also embed the hostname in the singleton lock. If the container hostname changes on every restart (which is Docker's default), the browser may refuse to reuse the profile. Setting a fixed hostname avoids this:
+
+```yaml title="docker-compose.yaml"
+services:
+  neko:
+    image: "ghcr.io/m1k1o/neko/brave:latest"
+    # highlight-start
+    hostname: neko
+    # highlight-end
+    volumes:
+      - /data:/home/neko/.config/brave
+    # ...
+```
+
 ### Common server errors {#common-server-errors}
 
 ```
@@ -291,6 +348,18 @@ Firefox can’t establish a connection to the server at ws://<your-IP>/ws?passwo
 ```
 
 Check if your TCP port is exposed correctly and your reverse proxy is correctly proxying websocket connections. And if your browser has not disabled websocket connections.
+
+---
+
+```
+Failed to ping without candidate pairs. Connection is not possible yet.
+```
+
+This WebRTC error means the browser received ICE candidates (IP:port pairs) from the server but could not reach any of them. Common causes:
+
+- **`NEKO_WEBRTC_NAT1TO1` is set to `127.0.0.1`** — never use localhost here; set it to your real public IP or leave it unset for auto-detection.
+- **`NEKO_WEBRTC_NAT1TO1` is set to a private/LAN IP** — external clients cannot reach a private IP. Use your public IP with port forwarding.
+- **UDP ports are blocked** — verify the ephemeral port range is exposed and reachable (see [Validate UDP ports reachability](#reachable-ports)).
 
 ---
 

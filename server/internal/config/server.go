@@ -2,12 +2,11 @@ package config
 
 import (
 	"path"
+	"slices"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-
-	"github.com/m1k1o/neko/server/pkg/utils"
 )
 
 type Server struct {
@@ -121,59 +120,71 @@ func (s *Server) Set() {
 	s.Metrics = viper.GetBool("server.metrics")
 
 	s.CORS = viper.GetStringSlice("server.cors")
-	in, _ := utils.ArrayIn("*", s.CORS)
-	if len(s.CORS) == 0 || in {
+	if slices.Contains(s.CORS, "*") {
 		s.CORS = []string{"*"}
+		log.Warn().Msg("CORS is enabled for all origins, this is not recommended for production environments")
 	}
 }
 
 func (s *Server) SetV2() {
-	enableLegacy := false
+	deprecatedV2ConfigUsed := false
 
 	if viper.IsSet("cert") {
-		s.Cert = viper.GetString("cert")
+		if useV2Fallback("server.cert") {
+			s.Cert = viper.GetString("cert")
+		}
 		log.Warn().Msg("you are using v2 configuration 'NEKO_CERT' which is deprecated, please use 'NEKO_SERVER_CERT' instead")
-		enableLegacy = true
+		deprecatedV2ConfigUsed = true
 	}
 	if viper.IsSet("key") {
-		s.Key = viper.GetString("key")
+		if useV2Fallback("server.key") {
+			s.Key = viper.GetString("key")
+		}
 		log.Warn().Msg("you are using v2 configuration 'NEKO_KEY' which is deprecated, please use 'NEKO_SERVER_KEY' instead")
-		enableLegacy = true
+		deprecatedV2ConfigUsed = true
 	}
 	if viper.IsSet("bind") {
-		s.Bind = viper.GetString("bind")
+		if useV2Fallback("server.bind") {
+			s.Bind = viper.GetString("bind")
+		}
 		log.Warn().Msg("you are using v2 configuration 'NEKO_BIND' which is deprecated, please use 'NEKO_SERVER_BIND' instead")
-		enableLegacy = true
+		deprecatedV2ConfigUsed = true
 	}
 	if viper.IsSet("proxy") {
-		s.Proxy = viper.GetBool("proxy")
+		if useV2Fallback("server.proxy") {
+			s.Proxy = viper.GetBool("proxy")
+		}
 		log.Warn().Msg("you are using v2 configuration 'NEKO_PROXY' which is deprecated, please use 'NEKO_SERVER_PROXY' instead")
-		enableLegacy = true
+		deprecatedV2ConfigUsed = true
 	}
 	if viper.IsSet("static") {
-		s.Static = viper.GetString("static")
+		if useV2Fallback("server.static") {
+			s.Static = viper.GetString("static")
+		}
 		log.Warn().Msg("you are using v2 configuration 'NEKO_STATIC' which is deprecated, please use 'NEKO_SERVER_STATIC' instead")
-		enableLegacy = true
+		deprecatedV2ConfigUsed = true
 	}
 	if viper.IsSet("path_prefix") {
-		s.PathPrefix = path.Join("/", path.Clean(viper.GetString("path_prefix")))
+		if useV2Fallback("server.path_prefix") {
+			s.PathPrefix = path.Join("/", path.Clean(viper.GetString("path_prefix")))
+		}
 		log.Warn().Msg("you are using v2 configuration 'NEKO_PATH_PREFIX' which is deprecated, please use 'NEKO_SERVER_PATH_PREFIX' instead")
-		enableLegacy = true
+		deprecatedV2ConfigUsed = true
 	}
 	if viper.IsSet("cors") {
-		s.CORS = viper.GetStringSlice("cors")
-		in, _ := utils.ArrayIn("*", s.CORS)
-		if len(s.CORS) == 0 || in {
+		if useV2Fallback("server.cors") {
+			s.CORS = viper.GetStringSlice("cors")
+		}
+		if slices.Contains(s.CORS, "*") {
 			s.CORS = []string{"*"}
+			log.Warn().Msg("CORS is enabled for all origins, this is not recommended for production environments")
 		}
 		log.Warn().Msg("you are using v2 configuration 'NEKO_CORS' which is deprecated, please use 'NEKO_SERVER_CORS' instead")
-		enableLegacy = true
+		deprecatedV2ConfigUsed = true
 	}
 
-	// set legacy flag if any V2 configuration was used
-	if !viper.IsSet("legacy") && enableLegacy {
-		log.Warn().Msg("legacy configuration is enabled because at least one V2 configuration was used, please migrate to V3 configuration, visit https://neko.m1k1o.net/docs/v3/migration-from-v2 for more details")
-		viper.Set("legacy", true)
+	if deprecatedV2ConfigUsed {
+		log.Error().Msg("deprecated V2 configuration is in use; migrate to V3 configuration, see https://neko.m1k1o.net/docs/v3/migration-from-v2")
 	}
 }
 
@@ -182,12 +193,12 @@ func (s *Server) HasCors() bool {
 }
 
 func (s *Server) AllowOrigin(origin string) bool {
-	// if CORS is disabled, allow all origins
-	if len(s.CORS) == 0 {
+	// if CORS is not configured, or a wildcard is present,
+	// allow WebSocket connections from any origin
+	if len(s.CORS) == 0 || s.CORS[0] == "*" {
 		return true
 	}
 
-	// if CORS is enabled, allow only origins in the list
-	in, _ := utils.ArrayIn(origin, s.CORS)
-	return in || s.CORS[0] == "*"
+	// allow only origins in the list
+	return slices.Contains(s.CORS, origin)
 }

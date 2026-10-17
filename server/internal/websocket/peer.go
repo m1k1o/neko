@@ -3,6 +3,7 @@ package websocket
 import (
 	"encoding/json"
 	"errors"
+	"slices"
 	"sync"
 
 	"github.com/gorilla/websocket"
@@ -11,7 +12,6 @@ import (
 	"github.com/m1k1o/neko/server/pkg/types"
 	"github.com/m1k1o/neko/server/pkg/types/event"
 	"github.com/m1k1o/neko/server/pkg/types/message"
-	"github.com/m1k1o/neko/server/pkg/utils"
 )
 
 type WebSocketPeerCtx struct {
@@ -51,7 +51,7 @@ func (peer *WebSocketPeerCtx) Send(event string, payload any) {
 	}
 
 	// log events if not ignored
-	if ok, _ := utils.ArrayIn(event, nologEvents); !ok {
+	if !slices.Contains(nologEvents, event) {
 		if len(raw) > maxPayloadLogLength {
 			raw = []byte("<truncated>")
 		}

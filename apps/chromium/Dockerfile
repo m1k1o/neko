@@ -17,6 +17,9 @@ RUN set -eux; \
         ./widevine.sh "${CHROMIUM_DIR}/WidevineCdm"; \
         rm -f /widevine.sh; \
         apt-get --purge autoremove -y xz-utils; \
+    elif [ "${ARCH}" = "arm64" ]; then \
+        mkdir -p "${CHROMIUM_DIR}/WidevineCdm"; \
+        find /var/lib/widevine/WidevineCdm/ ! -name "WidevineCdm" -exec cp -RL {} "${CHROMIUM_DIR}/WidevineCdm/" \; ; \
     else \
         echo "Widevine is not supported on ${ARCH}"; \
     fi; \

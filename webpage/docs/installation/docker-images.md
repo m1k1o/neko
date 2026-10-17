@@ -126,6 +126,18 @@ import TabItem from '@theme/TabItem';
 
 Check the [Chromium-based browsers customization guide](/docs/v3/customization/browsers#chromium-based) for more information on how to customize Chromium-based browsers (configuring profile, installing extensions, etc.).
 
+### Not available browsers {#not-available}
+
+Some browsers are intentionally absent from Neko - not because of technical limitations, but due to legal restrictions imposed by the vendor.
+
+#### Safari {#safari-not-available}
+
+:::danger Apple prohibits this
+Safari is **not available** and will never be officially supported. Apple's [macOS and Safari EULA](https://www.apple.com/legal/sla/) prohibits running Safari outside of Apple hardware and macOS. Distributing or using Safari on Linux (or any non-Apple platform) violates Apple's Terms of Service - so this repository cannot include it.
+
+Every other major browser vendor publishes Linux builds or open-source code that can run in a container. Apple does not. You can build it yourself if you wish, but this project will not ship it.
+:::
+
 ### Desktop Environments {#desktop}
 
 These images feature a full desktop environment where you can install and run multiple applications, use window management, and more. This is useful for people who want to run multiple applications in a single container.
@@ -240,7 +252,7 @@ For images with Nvidia GPU hardware acceleration using EGL use:
 - [`ghcr.io/m1k1o/neko/nvidia-microsoft-edge`](https://ghcr.io/m1k1o/neko/nvidia-microsoft-edge)
 - [`ghcr.io/m1k1o/neko/nvidia-brave`](https://ghcr.io/m1k1o/neko/nvidia-brave)
 
-The base image is available at [`ghcr.io/m1k1o/neko/nvidia-base`](https://ghcr.io/m1k1o/neko/nvidia-base). See [Examples](/docs/v3/installation/examples#nvidia) for more information and usage.
+The base image is available at [`ghcr.io/m1k1o/neko/nvidia-base`](https://ghcr.io/m1k1o/neko/nvidia-base). See [Examples](/docs/v3/installation/examples#gpu-nvidia-browser) for more information and usage.
 
 ## Supported Architectures {#arch}
 
@@ -259,7 +271,7 @@ The availability of applications for ARM architecture is limited due to the lack
 | [Tor Browser](#tor-browser)               | ✅    | ❌    | [Forum Post](https://forum.torproject.org/t/tor-browser-for-arm-linux/5240) |
 | [Waterfox](#waterfox)                     | ✅    | ❌    | [Github Issue](https://github.com/BrowserWorks/Waterfox/issues/1506), [Reddit](https://www.reddit.com/r/waterfox/comments/jpqsds/are_there_any_builds_for_arm64/) |
 | [Chromium](#chromium)                     | ✅    | ✅ \* | - |
-| [Google Chrome](#google-chrome)           | ✅    | ❌    | [Community Post](https://askubuntu.com/a/1383791) |
+| [Google Chrome](#google-chrome)           | ✅    | ✅ \* | - |
 | [Ungoogled Chromium](#ungoogled-chromium) | ✅    | ❌    | [Downloads Page](https://ungoogled-software.github.io/ungoogled-chromium-binaries/) |
 | [Microsoft Edge](#microsoft-edge)         | ✅    | ❌    | [Community Post](https://techcommunity.microsoft.com/discussions/edgeinsiderdiscussions/edge-for-linuxarm64/1532272) |
 | [Brave](#brave)                           | ✅    | ✅ \* | - |
@@ -270,7 +282,7 @@ The availability of applications for ARM architecture is limited due to the lack
 | [Remmina](#remmina)                       | ✅    | ✅    | - |
 | [VLC](#vlc)                               | ✅    | ✅    | - |
 
-\* No DRM support.
+\* requires extra steps to enable DRM, see instructions [here](/docs/v3/customization/browsers#arm64-drm).
 
 :::tip
 [Oracle Cloud ARM free tier](https://www.oracle.com/cloud/free/) is a great way to test Neko on ARM architecture for free. You can use the `ghcr.io/m1k1o/neko/xfce` image to run a full desktop environment with Xfce and test the applications.

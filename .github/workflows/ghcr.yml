@@ -36,7 +36,7 @@ jobs:
           - name: chromium
             platforms: linux/amd64,linux/arm64
           - name: google-chrome
-            platforms: linux/amd64
+            platforms: linux/amd64,linux/arm64
           - name: ungoogled-chromium
             platforms: linux/amd64
           - name: microsoft-edge

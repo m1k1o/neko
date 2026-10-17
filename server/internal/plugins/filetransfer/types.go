@@ -11,9 +11,12 @@ const (
 )
 
 type Message struct {
-	Enabled bool   `json:"enabled"`
-	RootDir string `json:"root_dir"`
-	Files   []Item `json:"files"`
+	Enabled      bool   `json:"enabled"`
+	RootDir      string `json:"root_dir"`
+	UserDownload bool   `json:"user_download"`
+	UserUpload   bool   `json:"user_upload"`
+	UserDelete   bool   `json:"user_delete"`
+	Files        []Item `json:"files"`
 }
 
 type ItemType string

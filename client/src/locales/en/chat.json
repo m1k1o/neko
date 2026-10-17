@@ -1,0 +1,14 @@
+{
+  "tab": "Chat",
+  "mute": "Mute",
+  "unmute": "Unmute",
+  "confirm": {
+    "mute_title": "Mute {{name}}?",
+    "mute_text": "Are you sure you want to mute {{name}}?",
+    "unmute_title": "Unmute {{name}}?",
+    "unmute_text": "Do you want to unmute {{name}}?"
+  },
+  "muted": "muted {{name}}",
+  "unmuted": "unmuted {{name}}",
+  "send_a_message": "Send a message"
+}

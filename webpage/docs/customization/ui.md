@@ -52,6 +52,7 @@ You can use query parameters to customize the Neko web interface. These paramete
 | `?cast=1`          | Hides all controls and shows only the video.               |
 | `?embed=1`         | Hides most additional components and shows only the video. |
 | `?volume=<0-1>`    | Sets the volume to the given value (between 0 and 1).      |
+| `?scroll=<1-100>`  | Sets the scroll sensitivity to the given value (1-100).    |
 | `?lang=<language>` | Sets the language to the given value.                      |
 | `?show_side=1`     | Shows the sidebar on startup.                              |
 | `?mute_chat=1`     | Mutes the chat on startup.                                 |
@@ -59,3 +60,24 @@ You can use query parameters to customize the Neko web interface. These paramete
 You can combine multiple query parameters in the URL. For example, to set the username to `guest`, the password to `neko`, and enable casting mode, you can use the following URL:
 
 Example: `http(s)://<URL:Port>/?pwd=neko&usr=guest&cast=1`
+
+## Single-user setup {#single-user}
+
+If you are running Neko for personal use only, you can streamline the experience in two ways:
+
+**1. Hide the control panel with `?embed=1`**
+
+Append `?embed=1` to the URL to hide most additional UI components (sidebar, control bar, chat) and display only the video. This removes the clutter when you do not need multi-user controls.
+
+Example: `http(s)://<URL:Port>/?embed=1`
+
+**2. Gain control automatically with `implicit_hosting`**
+
+By default, a user must explicitly request control of the mouse and keyboard. With [`session.implicit_hosting`](/docs/v3/configuration/#session) enabled, Neko automatically grants control to the user the moment they interact with the screen, without requiring them to press a button.
+
+```yaml title="docker-compose.yaml"
+environment:
+  NEKO_SESSION_IMPLICIT_HOSTING: "true"
+```
+
+Combining both gives a clean, single-user experience where you open the page and immediately have full control without any extra clicks.

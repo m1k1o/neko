@@ -10,15 +10,14 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/pion/ice/v2"
+	"github.com/pion/ice/v4"
 	"github.com/pion/interceptor"
 	"github.com/pion/interceptor/pkg/cc"
 	"github.com/pion/interceptor/pkg/gcc"
 	"github.com/pion/rtcp"
-	"github.com/pion/webrtc/v3"
+	"github.com/pion/webrtc/v4"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"github.com/spf13/viper"
 
 	"github.com/m1k1o/neko/server/internal/config"
 	"github.com/m1k1o/neko/server/internal/webrtc/cursor"
@@ -443,16 +442,25 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session) (*webrtc.Sess
 		ticker := time.NewTicker(rtcpPLIInterval)
 		defer ticker.Stop()
 
-		go func() {
-			for range ticker.C {
-				err := connection.WriteRTCP([]rtcp.Packet{
-					&rtcp.PictureLossIndication{
-						MediaSSRC: uint32(track.SSRC()),
-					},
-				})
+		//ticker.Stop() does not close channel,so the channel,so the goroutine below needs
+		//its own singal to exit, otherwise it would block on the ticker channel forever and leak memory
+		done := make(chan struct{})
+		defer close(done)
 
-				if err != nil {
-					logger.Err(err).Msg("remote track rtcp send err")
+		go func() {
+			for {
+				select {
+				case <-done:
+					return
+				case <-ticker.C:
+					err := connection.WriteRTCP([]rtcp.Packet{
+						&rtcp.PictureLossIndication{
+							MediaSSRC: uint32(track.SSRC()),
+						},
+					})
+					if err != nil {
+						logger.Err(err).Msg("remote track rtcp send err")
+					}
 				}
 			}
 		}()
@@ -476,23 +484,6 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session) (*webrtc.Sess
 
 	connection.OnDataChannel(func(dc *webrtc.DataChannel) {
 		logger.Info().Interface("data_channel", dc).Msg("got remote data channel")
-
-		//
-		// old implementation created a new data channel on client side
-		// new implementation creates a new data channel on server side
-		//
-
-		if viper.GetBool("legacy") {
-			// handle legacy data channel
-			dc.OnMessage(func(message webrtc.DataChannelMessage) {
-				if err := manager.handleLegacy(logger, message.Data, session); err != nil {
-					logger.Err(err).Msg("data handle failed")
-				}
-			})
-
-			// handle legacy data channel
-			peer.dataChannel = dc
-		}
 	})
 
 	var once sync.Once

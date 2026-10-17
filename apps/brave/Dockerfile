@@ -12,6 +12,12 @@ RUN set -eux; apt-get update; \
     apt-get update; \
     apt-get install -y --no-install-recommends brave-browser; \
     #
+    # install widevine
+    if [ "${ARCH}" = "arm64" ]; then \
+        mkdir -p /opt/brave.com/brave/WidevineCdm; \
+        find /var/lib/widevine/WidevineCdm/ ! -name "WidevineCdm" -exec cp -RL {} /opt/brave.com/brave/WidevineCdm/ \; ; \
+    fi; \
+    #
     # clean up
     apt-get clean -y; \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/*

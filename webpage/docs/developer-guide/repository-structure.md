@@ -13,10 +13,11 @@ This project uses a monorepo structure with the following directories:
   - `server/pkg/`: Packages used by the neko server that can be used by other projects.
   - `server/plugins/`: Directory for plugins that will be built and used by the neko server.
 
-- `client/`: Frontend code, written in [TypeScript](https://www.typescriptlang.org/) and [Vue.js](https://vuejs.org/).
+- `client/`: Frontend code, written in [TypeScript](https://www.typescriptlang.org/) and [React](https://react.dev/), built with [Vite](https://vite.dev/).
   - `client/dev/`: Development scripts to run/build the neko client locally in Docker.
   - `client/public/`: Public files for the neko client, such as icons and images.
-  - `client/src/`: Source code for the neko client, including components and pages.
+  - `client/core/`: The `@m1k1o/neko` npm package: framework-free client library for the v3 API (REST, websocket, WebRTC, input), usable from any UI.
+  - `client/src/`: The React GUI, one folder per layer: `app/` (shell), `layout/`, `features/`, `plugins/` (chat, file transfer, and the registry), `components/` (`ui/` holds the Radix kit), `state/`, `i18n/`, `locales/` (one JSON per language and namespace), `lib/`. See `client/README.md` for the layering rules.
   - `client/tools/`: Tools used for generating code for the neko client, such as emojis.
 
 - `runtime/`: Runtime environment, with [Xorg](https://www.x.org/wiki/) and [Pulseaudio](https://www.freedesktop.org/wiki/Software/PulseAudio/) servers and the necessary dependencies for the applications to run.
@@ -24,6 +25,7 @@ This project uses a monorepo structure with the following directories:
   - `runtime/fonts/`: Empty directory placeholder to include custom fonts in the neko runtime.
   - `runtime/icon-theme/`: Empty directory placeholder to include a custom icon theme in the neko runtime.
   - `runtime/intel/` or `runtime/nvidia/`: Directories with files for flavor-specific releases of the neko runtime.
+  - `runtime/widevine-installer/`: Directories with installer scripts from [AsahiLinux/widevine-installer](https://github.com/AsahiLinux/widevine-installer)
 
 - `apps/`: Contains the applications that run in the neko, such as Firefox, Chrome, etc.
   - `apps/<app-name>/Dockerfile`: Dockerfile extending `BASE_IMAGE` for the application used by the build script.

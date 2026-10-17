@@ -83,7 +83,7 @@ func CreatePipeline(pipelineStr string) (Pipeline, error) {
 			Int("pipeline_id", int(id)).Logger(),
 		src:    pipelineStr,
 		ctx:    ctx,
-		sample: make(chan types.Sample),
+		sample: make(chan types.Sample, 4),
 	}
 
 	pipelines[p.id] = p
@@ -199,10 +199,19 @@ func CheckPlugins(plugins []string) error {
 	return nil
 }
 
-//export goHandlePipelineBuffer
-func goHandlePipelineBuffer(pipelineID C.int, buf C.gpointer, bufLen C.int, duration C.guint64, deltaUnit C.gboolean) {
-	defer C.g_free(buf)
+func CheckElement(element string) error {
+	elementcstr := C.CString(element)
+	factory := C.gst_element_factory_find(elementcstr)
+	C.free(unsafe.Pointer(elementcstr))
+	if factory == nil {
+		return fmt.Errorf("required gstreamer element %s not found", element)
+	}
+	C.gst_object_unref(C.gpointer(factory))
+	return nil
+}
 
+//export goHandlePipelineBuffer
+func goHandlePipelineBuffer(pipelineID C.int, buf C.gpointer, bufLen C.int, pts C.guint64, dts C.guint64, duration C.guint64, deltaUnit C.gboolean) {
 	pipelinesLock.Lock()
 	pipeline, ok := pipelines[int(pipelineID)]
 	pipelinesLock.Unlock()
@@ -212,6 +221,8 @@ func goHandlePipelineBuffer(pipelineID C.int, buf C.gpointer, bufLen C.int, dura
 			Data:      C.GoBytes(unsafe.Pointer(buf), bufLen),
 			Length:    int(bufLen),
 			Timestamp: time.Now(),
+			PTS:       time.Duration(pts),
+			DTS:       time.Duration(dts),
 			Duration:  time.Duration(duration),
 			DeltaUnit: deltaUnit == C.TRUE,
 		}

@@ -1,0 +1,22 @@
+{
+  "tab": "파일",
+  "locks": {
+    "lock": "파일 전송 잠그기 (사용자)",
+    "unlock": "파일 전송 잠금 해제하기 (사용자)",
+    "locked": "파일 전송이 잠겼습니다 (사용자)",
+    "unlocked": "파일 전송 잠금이 해제됐습니다 (사용자)",
+    "notif_locked": "파일 전송이 잠겼습니다",
+    "notif_unlocked": "파일 전송 잠금이 해제됐습니다"
+  },
+  "uploads": "업로드",
+  "upload_here": "업로드할 파일을 여기로 클릭하거나 드래그하세요",
+  "delete": "삭제",
+  "delete_title": "\"{{name}}\" 을(를) 삭제하시겠습니까?",
+  "delete_confirm": "정말로 이 파일을 삭제하시겠습니까?",
+  "select": "선택",
+  "select_all": "모두 선택",
+  "unselect_all": "모두 선택 해제",
+  "cancel": "취소",
+  "delete_selected_title": "선택한 파일을 삭제하시겠습니까?",
+  "delete_selected_confirm": "선택한 {{count}}개의 파일을 정말로 삭제하시겠습니까?"
+}

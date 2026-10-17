@@ -26,6 +26,12 @@ RUN set -eux; apt-get update; \
       echo -e "{\n  \"external_crx\": \"${EXT_PATH}\",\n  \"external_version\": \"${EXT_VERSION}\"\n}" > "${EXTENSIONS_DIR}"/"${EXT_ID}".json; \
     done; \
     #
+    # install widevine
+    if [ "${ARCH}" = "arm64" ]; then \
+        mkdir -p /opt/vivaldi/WidevineCdm; \
+        find /var/lib/widevine/WidevineCdm/ ! -name "WidevineCdm" -exec cp -RL {} /opt/vivaldi/WidevineCdm/ \; ; \
+    fi; \
+    #
     # clean up
     apt-get --purge autoremove -y xz-utils jq; \
     apt-get clean -y; \

@@ -2,6 +2,7 @@ package session
 
 import (
 	"errors"
+	"slices"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -303,7 +304,7 @@ func (manager *SessionManagerCtx) Broadcast(event string, payload any, exclude .
 		}
 
 		if len(exclude) > 0 {
-			if in, _ := utils.ArrayIn(session.ID(), exclude); in {
+			if slices.Contains(exclude, session.ID()) {
 				continue
 			}
 		}
@@ -319,7 +320,7 @@ func (manager *SessionManagerCtx) AdminBroadcast(event string, payload any, excl
 		}
 
 		if len(exclude) > 0 {
-			if in, _ := utils.ArrayIn(session.ID(), exclude); in {
+			if slices.Contains(exclude, session.ID()) {
 				continue
 			}
 		}
@@ -335,7 +336,7 @@ func (manager *SessionManagerCtx) InactiveCursorsBroadcast(event string, payload
 		}
 
 		if len(exclude) > 0 {
-			if in, _ := utils.ArrayIn(session.ID(), exclude); in {
+			if slices.Contains(exclude, session.ID()) {
 				continue
 			}
 		}

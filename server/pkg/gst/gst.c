@@ -87,18 +87,19 @@ static GstFlowReturn gstreamer_send_new_sample_handler(GstElement *object, gpoin
   GstPipelineCtx *ctx = (GstPipelineCtx *)user_data;
   GstSample *sample = NULL;
   GstBuffer *buffer = NULL;
-  gpointer copy = NULL;
-  gsize copy_size = 0;
+  GstMapInfo map = {0};
 
   g_signal_emit_by_name(object, "pull-sample", &sample);
   if (sample) {
     buffer = gst_sample_get_buffer(sample);
-    if (buffer) {
-      gst_buffer_extract_dup(buffer, 0, gst_buffer_get_size(buffer), &copy, &copy_size);
-      goHandlePipelineBuffer(ctx->pipelineId, copy, copy_size,
+    if (buffer && gst_buffer_map(buffer, &map, GST_MAP_READ)) {
+      goHandlePipelineBuffer(ctx->pipelineId, map.data, (int)map.size,
+        GST_BUFFER_PTS(buffer),
+        GST_BUFFER_DTS(buffer),
         GST_BUFFER_DURATION(buffer),
         GST_BUFFER_FLAG_IS_SET(buffer, GST_BUFFER_FLAG_DELTA_UNIT)
       );
+      gst_buffer_unmap(buffer, &map);
     }
     gst_sample_unref(sample);
   }
@@ -108,7 +109,7 @@ static GstFlowReturn gstreamer_send_new_sample_handler(GstElement *object, gpoin
 
 void gstreamer_pipeline_attach_appsink(GstPipelineCtx *ctx, char *sinkName) {
   ctx->appsink = gst_bin_get_by_name(GST_BIN(ctx->pipeline), sinkName);
-  g_object_set(ctx->appsink, "emit-signals", TRUE, NULL);
+  g_object_set(ctx->appsink, "emit-signals", TRUE, "sync", FALSE, NULL);
   g_signal_connect(ctx->appsink, "new-sample", G_CALLBACK(gstreamer_send_new_sample_handler), ctx);
 }
 

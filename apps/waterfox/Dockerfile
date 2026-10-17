@@ -17,7 +17,7 @@ RUN set -eux; apt-get update; \
     #
     # create a profile directory
     mkdir -p /home/neko/.waterfox/profile.default/extensions; \
-    chown -R neko:neko /home/neko/.waterfox/profile.default; \
+    chown -R neko:neko /home/neko/.waterfox; \
     #
     # clean up
     apt-get --purge autoremove -y xz-utils bzip2; \

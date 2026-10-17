@@ -2,8 +2,8 @@ package capture
 
 import (
 	"errors"
-	"reflect"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -17,33 +17,48 @@ import (
 	"github.com/m1k1o/neko/server/pkg/types/codec"
 )
 
-var moveSinkListenerMu = sync.Mutex{}
+var moveSinkSubscriptionMu sync.Mutex
+
+type sinkPipeline interface {
+	Sample() chan types.Sample
+	AttachAppsink(string)
+	Play()
+	Destroy()
+	EmitVideoKeyframe() bool
+}
 
 type StreamSinkManagerCtx struct {
-	id string
+	// Configuration set before use.
+	id              string
+	logger          zerolog.Logger
+	codec           codec.RTPCodec
+	waitForKf       bool // wait for a keyframe before sending samples
+	pipelineFn      func() (string, error)
+	pipelineFactory func(string) (sinkPipeline, error)
 
-	// wait for a keyframe before sending samples
-	waitForKf bool
+	// Serializes subscription add, remove, and move operations.
+	mu sync.Mutex
 
+	// Serializes pipeline creation and destruction.
+	pipelineMu sync.Mutex
+	pipeline   sinkPipeline
+	wg         sync.WaitGroup // tracks pipeline sample readers
+
+	// Serializes listener map updates and snapshot publication.
+	listenersMu       sync.Mutex
+	listeners         map[*streamSubscription]types.SampleConsumer
+	listenersKf       map[*streamSubscription]types.SampleConsumer // keyframe lobby
+	listenersSnapshot atomic.Value                                 // read without listenersMu
+
+	// Protects bitrate accounting, reads, and resets.
+	bitrateMu sync.Mutex
 	bitrate   uint64
 	brBuckets map[int]float64
-
-	logger zerolog.Logger
-	mu     sync.Mutex
-	wg     sync.WaitGroup
-
-	codec      codec.RTPCodec
-	pipeline   gst.Pipeline
-	pipelineMu sync.Mutex
-	pipelineFn func() (string, error)
-
-	listeners   map[uintptr]types.SampleListener
-	listenersKf map[uintptr]types.SampleListener // keyframe lobby
-	listenersMu sync.Mutex
 
 	// metrics
 	currentListeners prometheus.Gauge
 	totalBytes       prometheus.Counter
+	frames           prometheus.Counter
 	pipelinesCounter prometheus.Counter
 	pipelinesActive  prometheus.Gauge
 }
@@ -66,9 +81,12 @@ func streamSinkNew(codec codec.RTPCodec, pipelineFn func() (string, error), id s
 		logger:     logger,
 		codec:      codec,
 		pipelineFn: pipelineFn,
+		pipelineFactory: func(src string) (sinkPipeline, error) {
+			return gst.CreatePipeline(src)
+		},
 
-		listeners:   map[uintptr]types.SampleListener{},
-		listenersKf: map[uintptr]types.SampleListener{},
+		listeners:   map[*streamSubscription]types.SampleConsumer{},
+		listenersKf: map[*streamSubscription]types.SampleConsumer{},
 
 		// metrics
 		currentListeners: promauto.NewGauge(prometheus.GaugeOpts{
@@ -87,6 +105,17 @@ func streamSinkNew(codec codec.RTPCodec, pipelineFn func() (string, error), id s
 			Namespace: "neko",
 			Subsystem: "capture",
 			Help:      "Total number of bytes created by the pipeline.",
+			ConstLabels: map[string]string{
+				"video_id":   id,
+				"codec_name": codec.Name,
+				"codec_type": codec.Type.String(),
+			},
+		}),
+		frames: promauto.NewCounter(prometheus.CounterOpts{
+			Name:      "streamsink_frames",
+			Namespace: "neko",
+			Subsystem: "capture",
+			Help:      "Total number of video frames created by the pipeline; a rate below the configured fps means the encoder falls behind.",
 			ConstLabels: map[string]string{
 				"video_id":   id,
 				"codec_name": codec.Name,
@@ -118,6 +147,7 @@ func streamSinkNew(codec codec.RTPCodec, pipelineFn func() (string, error), id s
 			},
 		}),
 	}
+	manager.listenersSnapshot.Store([]types.SampleConsumer(nil))
 
 	return manager
 }
@@ -132,9 +162,10 @@ func (manager *StreamSinkManagerCtx) shutdown() {
 	for key := range manager.listenersKf {
 		delete(manager.listenersKf, key)
 	}
+	manager.updateListenersSnapshotLocked()
 	manager.listenersMu.Unlock()
 
-	manager.DestroyPipeline()
+	manager.destroyPipeline()
 	manager.wg.Wait()
 }
 
@@ -143,6 +174,9 @@ func (manager *StreamSinkManagerCtx) ID() string {
 }
 
 func (manager *StreamSinkManagerCtx) Bitrate() uint64 {
+	manager.bitrateMu.Lock()
+	defer manager.bitrateMu.Unlock()
+
 	return manager.bitrate
 }
 
@@ -150,10 +184,76 @@ func (manager *StreamSinkManagerCtx) Codec() codec.RTPCodec {
 	return manager.codec
 }
 
+type streamSubscription struct {
+	mu       sync.Mutex
+	stream   *StreamSinkManagerCtx
+	consumer types.SampleConsumer
+	closed   bool
+}
+
+func (subscription *streamSubscription) Stream() types.EncodedStream {
+	subscription.mu.Lock()
+	defer subscription.mu.Unlock()
+
+	if subscription.closed {
+		return nil
+	}
+	return subscription.stream
+}
+
+func (subscription *streamSubscription) Switch(stream types.EncodedStream) error {
+	subscription.mu.Lock()
+	defer subscription.mu.Unlock()
+
+	if subscription.closed {
+		return errors.New("stream subscription is closed")
+	}
+
+	target, ok := stream.(*StreamSinkManagerCtx)
+	if !ok || target == nil {
+		return errors.New("target stream is incompatible with this subscription")
+	}
+	if target == subscription.stream {
+		return nil
+	}
+
+	if err := subscription.stream.moveSubscriptionTo(subscription, target); err != nil {
+		return err
+	}
+	subscription.stream = target
+	return nil
+}
+
+func (subscription *streamSubscription) Close() error {
+	subscription.mu.Lock()
+	defer subscription.mu.Unlock()
+
+	if subscription.closed {
+		return nil
+	}
+
+	subscription.stream.removeSubscription(subscription)
+	subscription.closed = true
+	subscription.stream = nil
+	return nil
+}
+
+func (manager *StreamSinkManagerCtx) Subscribe(consumer types.SampleConsumer) (types.StreamSubscription, error) {
+	if consumer == nil {
+		return nil, errors.New("sample consumer cannot be nil")
+	}
+
+	subscription := &streamSubscription{stream: manager, consumer: consumer}
+	if err := manager.addSubscription(subscription); err != nil {
+		return nil, err
+	}
+	return subscription, nil
+}
+
 func (manager *StreamSinkManagerCtx) start() error {
 	if len(manager.listeners)+len(manager.listenersKf) == 0 {
-		err := manager.CreatePipeline()
-		if err != nil && !errors.Is(err, types.ErrCapturePipelineAlreadyExists) {
+		err := manager.createPipeline()
+		if err != nil {
 			return err
 		}
 
@@ -165,13 +265,12 @@ func (manager *StreamSinkManagerCtx) start() error {
 
 func (manager *StreamSinkManagerCtx) stop() {
 	if len(manager.listeners)+len(manager.listenersKf) == 0 {
-		manager.DestroyPipeline()
+		manager.destroyPipeline()
 		manager.logger.Info().Msgf("last listener, stopping")
 	}
 }
 
-func (manager *StreamSinkManagerCtx) addListener(listener types.SampleListener) {
-	ptr := reflect.ValueOf(listener).Pointer()
+func (manager *StreamSinkManagerCtx) addSubscriptionToMaps(subscription *streamSubscription) {
 	emitKeyframe := false
 
 	manager.listenersMu.Lock()
@@ -179,15 +278,16 @@ func (manager *StreamSinkManagerCtx) addListener(listener types.SampleListener) 
 		// if this is the first listener, we need to emit a keyframe
 		emitKeyframe = len(manager.listenersKf) == 0
 		// if we're waiting for a keyframe, add it to the keyframe lobby
-		manager.listenersKf[ptr] = listener
+		manager.listenersKf[subscription] = subscription.consumer
 	} else {
 		// otherwise, add it as a regular listener
-		manager.listeners[ptr] = listener
+		manager.listeners[subscription] = subscription.consumer
+		manager.updateListenersSnapshotLocked()
 	}
 	manager.listenersMu.Unlock()
 
-	manager.logger.Debug().Interface("ptr", ptr).Msgf("adding listener")
-	manager.currentListeners.Set(float64(manager.ListenersCount()))
+	manager.logger.Debug().Interface("subscription", subscription).Msg("adding subscription")
+	manager.currentListeners.Set(float64(manager.subscriptionsCount()))
 
 	// if we will be waiting for a keyframe, emit one now
 	if manager.pipeline != nil && emitKeyframe {
@@ -195,25 +295,20 @@ func (manager *StreamSinkManagerCtx) addListener(listener types.SampleListener) 
 	}
 }
 
-func (manager *StreamSinkManagerCtx) removeListener(listener types.SampleListener) {
-	ptr := reflect.ValueOf(listener).Pointer()
-
+func (manager *StreamSinkManagerCtx) removeSubscriptionFromMaps(subscription *streamSubscription) {
 	manager.listenersMu.Lock()
-	delete(manager.listeners, ptr)
-	delete(manager.listenersKf, ptr) //	if it's a keyframe listener, remove it too
+	delete(manager.listeners, subscription)
+	delete(manager.listenersKf, subscription)
+	manager.updateListenersSnapshotLocked()
 	manager.listenersMu.Unlock()
 
-	manager.logger.Debug().Interface("ptr", ptr).Msgf("removing listener")
-	manager.currentListeners.Set(float64(manager.ListenersCount()))
+	manager.logger.Debug().Interface("subscription", subscription).Msg("removing subscription")
+	manager.currentListeners.Set(float64(manager.subscriptionsCount()))
 }
 
-func (manager *StreamSinkManagerCtx) AddListener(listener types.SampleListener) error {
+func (manager *StreamSinkManagerCtx) addSubscription(subscription *streamSubscription) error {
 	manager.mu.Lock()
 	defer manager.mu.Unlock()
-
-	if listener == nil {
-		return errors.New("listener cannot be nil")
-	}
 
 	// start if stopped
 	if err := manager.start(); err != nil {
@@ -221,46 +316,29 @@ func (manager *StreamSinkManagerCtx) AddListener(listener types.SampleListener) 
 	}
 
 	// add listener
-	manager.addListener(listener)
+	manager.addSubscriptionToMaps(subscription)
 
 	return nil
 }
 
-func (manager *StreamSinkManagerCtx) RemoveListener(listener types.SampleListener) error {
+func (manager *StreamSinkManagerCtx) removeSubscription(subscription *streamSubscription) {
 	manager.mu.Lock()
 	defer manager.mu.Unlock()
 
-	if listener == nil {
-		return errors.New("listener cannot be nil")
-	}
-
-	// remove listener
-	manager.removeListener(listener)
+	manager.removeSubscriptionFromMaps(subscription)
 
 	// stop if started
 	manager.stop()
-
-	return nil
 }
 
-// moving listeners between streams ensures, that target pipeline is running
-// before listener is added, and stops source pipeline if there are 0 listeners
-func (manager *StreamSinkManagerCtx) MoveListenerTo(listener types.SampleListener, stream types.StreamSinkManager) error {
-	if listener == nil {
-		return errors.New("listener cannot be nil")
-	}
-
-	targetStream, ok := stream.(*StreamSinkManagerCtx)
-	if !ok {
-		return errors.New("target stream manager does not support moving listeners")
-	}
-
+// moveSubscriptionTo starts the target before moving delivery and stopping the source.
+func (manager *StreamSinkManagerCtx) moveSubscriptionTo(subscription *streamSubscription, targetStream *StreamSinkManagerCtx) error {
 	// we need to acquire both mutextes, from source stream and from target stream
 	// in order to do that safely (without possibility of deadlock) we need third
 	// global mutex, that ensures atomic locking
 
 	// lock global mutex
-	moveSinkListenerMu.Lock()
+	moveSinkSubscriptionMu.Lock()
 
 	// lock source stream
 	manager.mu.Lock()
@@ -271,7 +349,7 @@ func (manager *StreamSinkManagerCtx) MoveListenerTo(listener types.SampleListene
 	defer targetStream.mu.Unlock()
 
 	// unlock global mutex
-	moveSinkListenerMu.Unlock()
+	moveSinkSubscriptionMu.Unlock()
 
 	// start if stopped
 	if err := targetStream.start(); err != nil {
@@ -279,8 +357,8 @@ func (manager *StreamSinkManagerCtx) MoveListenerTo(listener types.SampleListene
 	}
 
 	// swap listeners
-	manager.removeListener(listener)
-	targetStream.addListener(listener)
+	manager.removeSubscriptionFromMaps(subscription)
+	targetStream.addSubscriptionToMaps(subscription)
 
 	// stop if started
 	manager.stop()
@@ -288,23 +366,23 @@ func (manager *StreamSinkManagerCtx) MoveListenerTo(listener types.SampleListene
 	return nil
 }
 
-func (manager *StreamSinkManagerCtx) ListenersCount() int {
+func (manager *StreamSinkManagerCtx) subscriptionsCount() int {
 	manager.listenersMu.Lock()
 	defer manager.listenersMu.Unlock()
 
 	return len(manager.listeners) + len(manager.listenersKf)
 }
 
-func (manager *StreamSinkManagerCtx) Started() bool {
-	return manager.ListenersCount() > 0
+func (manager *StreamSinkManagerCtx) started() bool {
+	return manager.subscriptionsCount() > 0
 }
 
-func (manager *StreamSinkManagerCtx) CreatePipeline() error {
+func (manager *StreamSinkManagerCtx) createPipeline() error {
 	manager.pipelineMu.Lock()
 	defer manager.pipelineMu.Unlock()
 
 	if manager.pipeline != nil {
-		return types.ErrCapturePipelineAlreadyExists
+		return nil
 	}
 
 	pipelineStr, err := manager.pipelineFn()
@@ -317,7 +395,7 @@ func (manager *StreamSinkManagerCtx) CreatePipeline() error {
 		Str("src", pipelineStr).
 		Msgf("creating pipeline")
 
-	manager.pipeline, err = gst.CreatePipeline(pipelineStr)
+	manager.pipeline, err = manager.pipelineFactory(pipelineStr)
 	if err != nil {
 		return err
 	}
@@ -326,14 +404,22 @@ func (manager *StreamSinkManagerCtx) CreatePipeline() error {
 	manager.pipeline.Play()
 
 	pipeline := manager.pipeline
+	video := manager.codec.IsVideo()
 	manager.wg.Go(func() {
 		manager.logger.Debug().Msg("started emitting samples")
 
+		lastPTS := time.Duration(-1)
 		for {
 			sample, ok := <-pipeline.Sample()
 			if !ok {
 				manager.logger.Debug().Msg("stopped emitting samples")
 				return
+			}
+
+			if video {
+				sample.Duration = sampleDuration(lastPTS, sample)
+				lastPTS = sample.PTS
+				manager.frames.Inc()
 			}
 
 			manager.onSample(sample)
@@ -347,6 +433,9 @@ func (manager *StreamSinkManagerCtx) CreatePipeline() error {
 }
 
 func (manager *StreamSinkManagerCtx) saveSampleBitrate(timestamp time.Time, delta float64) {
+	manager.bitrateMu.Lock()
+	defer manager.bitrateMu.Unlock()
+
 	// get unix timestamp in seconds
 	sec := timestamp.Unix()
 	// last bucket is timestamp rounded to 3 seconds - 1 second
@@ -357,7 +446,7 @@ func (manager *StreamSinkManagerCtx) saveSampleBitrate(timestamp time.Time, delt
 	next := int((sec + 1) % 3)
 
 	if manager.brBuckets[next] != 0 {
-		// update bitrate, TODO: atomic?
+		// update bitrate
 		manager.bitrate = uint64(manager.brBuckets[last])
 		// empty next bucket
 		manager.brBuckets[next] = 0
@@ -367,31 +456,56 @@ func (manager *StreamSinkManagerCtx) saveSampleBitrate(timestamp time.Time, delt
 	manager.brBuckets[curr] += delta
 }
 
-func (manager *StreamSinkManagerCtx) onSample(sample types.Sample) {
-	manager.listenersMu.Lock()
-	defer manager.listenersMu.Unlock()
+// sampleDuration returns how far a consumer's clock (the RTP timestamp) must advance for this
+// video sample: the time since the previous one. A buffer's own duration is not that: ximagesrc
+// gives a frame it captures late only the time left until the next frame slot, and frames
+// dropped before the encoder leave gaps. Advancing by it makes the stream's clock run slow
+// under load, and browsers grow their jitter buffer to compensate (up to seconds).
+// The gap is known only when the next sample arrives, so it is applied one frame late; the
+// clock itself stays right.
+func sampleDuration(lastPTS time.Duration, sample types.Sample) time.Duration {
+	if lastPTS < 0 || sample.PTS <= lastPTS {
+		return sample.Duration
+	}
+	return sample.PTS - lastPTS
+}
 
+func (manager *StreamSinkManagerCtx) onSample(sample types.Sample) {
 	// save to metrics
 	length := float64(sample.Length)
 	manager.totalBytes.Add(length)
 	manager.saveSampleBitrate(sample.Timestamp, length)
 
 	// if is not delta unit -> it can be decoded independently -> it is a keyframe
-	if manager.waitForKf && !sample.DeltaUnit && len(manager.listenersKf) > 0 {
+	if manager.waitForKf && !sample.DeltaUnit {
+		manager.listenersMu.Lock()
 		// if current sample is a keyframe, move listeners from
 		// keyframe lobby to actual listeners map and clear lobby
 		for k, v := range manager.listenersKf {
 			manager.listeners[k] = v
 		}
-		manager.listenersKf = make(map[uintptr]types.SampleListener)
+		if len(manager.listenersKf) > 0 {
+			manager.listenersKf = make(map[*streamSubscription]types.SampleConsumer)
+			manager.updateListenersSnapshotLocked()
+		}
+		manager.listenersMu.Unlock()
 	}
 
-	for _, l := range manager.listeners {
+	listeners := manager.listenersSnapshot.Load().([]types.SampleConsumer)
+	for _, l := range listeners {
 		l.WriteSample(sample)
 	}
 }
 
-func (manager *StreamSinkManagerCtx) DestroyPipeline() {
+func (manager *StreamSinkManagerCtx) updateListenersSnapshotLocked() {
+	listeners := make([]types.SampleConsumer, 0, len(manager.listeners))
+	for _, listener := range manager.listeners {
+		listeners = append(listeners, listener)
+	}
+	manager.listenersSnapshot.Store(listeners)
+}
+
+func (manager *StreamSinkManagerCtx) destroyPipeline() {
 	manager.pipelineMu.Lock()
 	defer manager.pipelineMu.Unlock()
 
@@ -405,6 +519,8 @@ func (manager *StreamSinkManagerCtx) DestroyPipeline() {
 
 	manager.pipelinesActive.Set(0)
 
+	manager.bitrateMu.Lock()
 	manager.brBuckets = make(map[int]float64)
 	manager.bitrate = 0
+	manager.bitrateMu.Unlock()
 }

@@ -2,7 +2,6 @@ package noauth
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/m1k1o/neko/server/pkg/types"
 	"github.com/m1k1o/neko/server/pkg/utils"
@@ -43,8 +42,8 @@ func (provider *MemberProviderCtx) Authenticate(username string, password string
 		return "", types.MemberProfile{}, err
 	}
 
-	// id is username with token
-	id := fmt.Sprintf("%s-%s", username, token)
+	// id is username with token; the id ends up in URL paths, the name stays as typed
+	id := utils.SafeID(username) + "-" + token
 
 	provider.profile.Name = username
 	return id, provider.profile, nil
