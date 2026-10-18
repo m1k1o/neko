@@ -82,10 +82,11 @@ RUN set -eux; \
 # copy runtime configs
 COPY --chown=neko:neko .Xresources /home/$USERNAME/.Xresources
 COPY dbus /usr/bin/dbus
-COPY neko-serve /usr/bin/neko-serve
+COPY intel/neko-serve /usr/bin/neko-serve
 COPY default.pa /etc/pulse/default.pa
 COPY supervisord.conf /etc/neko/supervisord.conf
 COPY supervisord.dbus.conf /etc/neko/supervisord.dbus.conf
+COPY intel/supervisord.neko.conf /etc/neko/supervisord/neko.conf
 COPY xorg.conf /etc/neko/xorg.conf
 COPY intel/add-render-group.sh /usr/bin/add-render-group.sh
 COPY intel/entrypoint.sh /usr/bin/entrypoint.sh

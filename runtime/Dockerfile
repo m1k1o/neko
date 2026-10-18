@@ -87,7 +87,6 @@ RUN set -eux; \
 # copy runtime configs
 COPY --chown=neko:neko .Xresources /home/$USERNAME/.Xresources
 COPY dbus /usr/bin/dbus
-COPY neko-serve /usr/bin/neko-serve
 COPY default.pa /etc/pulse/default.pa
 COPY supervisord.conf /etc/neko/supervisord.conf
 COPY supervisord.dbus.conf /etc/neko/supervisord.dbus.conf
