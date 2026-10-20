@@ -20,7 +20,7 @@ The production build is written to `client/dist/`.
 
 ## Backend
 
-**Requires:** [Go](https://golang.org/) 1.25+ and the following system libraries (Debian/Ubuntu):
+**Requires:** [Go](https://golang.org/) 1.26+ and the following system libraries (Debian/Ubuntu):
 
 ```bash
 apt-get install -y --no-install-recommends \
@@ -58,7 +58,7 @@ The repository uses a [Dockerfile template](https://github.com/m1k1o/neko/blob/m
 
 ### Requirements
 
-- [Go](https://golang.org/) 1.25+ (for the template pre-processor)
+- [Go](https://golang.org/) 1.26+ (for the template pre-processor)
 - [Node.js](https://nodejs.org/) 24 LTS (22.18 or newer; for the frontend, unless you supply a pre-built `client/dist/`)
 - [Docker](https://www.docker.com/) with BuildKit enabled
 

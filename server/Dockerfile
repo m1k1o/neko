@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=golang:1.25-trixie
+ARG BASE_IMAGE=golang:1.26-trixie
 FROM $BASE_IMAGE AS server
 
 WORKDIR /src
