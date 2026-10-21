@@ -6,7 +6,7 @@
 
 ARG APP_IMAGE=ghcr.io/m1k1o/neko/chromium:latest
 
-FROM golang:1.25-trixie AS server
+FROM golang:1.26-trixie AS server
 WORKDIR /src
 ENV DEBIAN_FRONTEND=noninteractive
 RUN set -eux; \
