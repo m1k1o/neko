@@ -82,12 +82,14 @@ RUN set -eux; \
 # copy runtime configs
 COPY --chown=neko:neko .Xresources /home/$USERNAME/.Xresources
 COPY dbus /usr/bin/dbus
+COPY intel/neko-serve /usr/bin/neko-serve
 COPY default.pa /etc/pulse/default.pa
 COPY supervisord.conf /etc/neko/supervisord.conf
 COPY supervisord.dbus.conf /etc/neko/supervisord.dbus.conf
+COPY intel/supervisord.neko.conf /etc/neko/supervisord/neko.conf
 COPY xorg.conf /etc/neko/xorg.conf
 COPY intel/add-render-group.sh /usr/bin/add-render-group.sh
-COPY intel/supervisord.rendergroup.conf /etc/neko/supervisord/supervisord.rendergroup.conf
+COPY intel/entrypoint.sh /usr/bin/entrypoint.sh
 
 #
 # copy runtime folders
@@ -106,6 +108,10 @@ ENV NEKO_PLUGINS_ENABLED=true
 ENV NEKO_PLUGINS_DIR=/etc/neko/plugins/
 ENV NEKO_HWENC=VAAPI
 ENV RENDER_GID=
+# libva does not initialize the X11 display without an explicitly selected
+# driver here ('vaGetDriverNames() failed'), and the GStreamer VA plugin scan
+# uses X11. This image only ships the iHD driver (intel-media-va-driver-non-free).
+ENV LIBVA_DRIVER_NAME=iHD
 
 #
 # add healthcheck
@@ -116,4 +122,5 @@ HEALTHCHECK --interval=10s --timeout=5s --retries=8 \
 
 #
 # run neko
+ENTRYPOINT ["/usr/bin/entrypoint.sh"]
 CMD ["/usr/bin/supervisord", "-c", "/etc/neko/supervisord.conf"]

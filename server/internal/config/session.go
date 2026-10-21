@@ -171,7 +171,7 @@ func (s *Session) Set() {
 }
 
 func (s *Session) SetV2() {
-	enableLegacy := false
+	deprecatedV2ConfigUsed := false
 
 	if viper.IsSet("locks") {
 		locks := viper.GetStringSlice("locks")
@@ -179,34 +179,42 @@ func (s *Session) SetV2() {
 			switch lock {
 			// TODO: file_transfer
 			case "control":
-				s.LockedControls = true
+				if useV2Fallback("session.locked_controls") {
+					s.LockedControls = true
+				}
 			case "login":
-				s.LockedLogins = true
+				if useV2Fallback("session.locked_logins") {
+					s.LockedLogins = true
+				}
 			}
 		}
 		log.Warn().Msg("you are using v2 configuration 'NEKO_LOCKS' which is deprecated, please use 'NEKO_SESSION_LOCKED_CONTROLS' and 'NEKO_SESSION_LOCKED_LOGINS' instead")
-		enableLegacy = true
+		deprecatedV2ConfigUsed = true
 	}
 
 	if viper.IsSet("implicit_control") {
-		s.ImplicitHosting = viper.GetBool("implicit_control")
+		if useV2Fallback("session.implicit_hosting") {
+			s.ImplicitHosting = viper.GetBool("implicit_control")
+		}
 		log.Warn().Msg("you are using v2 configuration 'NEKO_IMPLICIT_CONTROL' which is deprecated, please use 'NEKO_SESSION_IMPLICIT_HOSTING' instead")
-		enableLegacy = true
+		deprecatedV2ConfigUsed = true
 	}
 	if viper.IsSet("control_protection") {
-		s.ControlProtection = viper.GetBool("control_protection")
+		if useV2Fallback("session.control_protection") {
+			s.ControlProtection = viper.GetBool("control_protection")
+		}
 		log.Warn().Msg("you are using v2 configuration 'NEKO_CONTROL_PROTECTION' which is deprecated, please use 'NEKO_SESSION_CONTROL_PROTECTION' instead")
-		enableLegacy = true
+		deprecatedV2ConfigUsed = true
 	}
 	if viper.IsSet("heartbeat_interval") {
-		s.HeartbeatInterval = viper.GetInt("heartbeat_interval")
+		if useV2Fallback("session.heartbeat_interval") {
+			s.HeartbeatInterval = viper.GetInt("heartbeat_interval")
+		}
 		log.Warn().Msg("you are using v2 configuration 'NEKO_HEARTBEAT_INTERVAL' which is deprecated, please use 'NEKO_SESSION_HEARTBEAT_INTERVAL' instead")
-		enableLegacy = true
+		deprecatedV2ConfigUsed = true
 	}
 
-	// set legacy flag if any V2 configuration was used
-	if !viper.IsSet("legacy") && enableLegacy {
-		log.Warn().Msg("legacy configuration is enabled because at least one V2 configuration was used, please migrate to V3 configuration, visit https://neko.m1k1o.net/docs/v3/migration-from-v2 for more details")
-		viper.Set("legacy", true)
+	if deprecatedV2ConfigUsed {
+		log.Error().Msg("deprecated V2 configuration is in use; migrate to V3 configuration, see https://neko.m1k1o.net/docs/v3/migration-from-v2")
 	}
 }

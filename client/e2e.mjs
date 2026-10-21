@@ -1,5 +1,5 @@
 import { chromium } from 'playwright'
-// Two-user smoke test against a running v3 server (NEKO_LEGACY=false, multiuser provider):
+// Two-user smoke test against a running v3 server with the multiuser provider:
 //   NEKO_URL=https://host/ NEKO_ADMIN_PASSWORD=admin NEKO_USER_PASSWORD=neko npm run test:e2e
 // Screenshots land in ./e2e-out. Needs a KDE/X desktop that opens KRunner on Alt+F2 for the typing step.
 import fs from 'node:fs'

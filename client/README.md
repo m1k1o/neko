@@ -1,7 +1,7 @@
 # neko client
 
 The web client for [neko](https://github.com/m1k1o/neko): React 19 + TypeScript, built with Vite.
-It speaks only the v3 API (`/api/ws` + REST), so it works with `NEKO_LEGACY=false`.
+It speaks only the v3 API (`/api/ws` + REST).
 
 ```
 client/
@@ -248,10 +248,10 @@ NEKO_URL=http://localhost:3000 npm run dev
 
 `e2e.mjs` drives two (or more) headless Chromium users through login, video, chat, control, files,
 admin actions, reconnects and URL parameters. It needs a disposable server (it takes control, types
-into the desktop and kicks users) with the legacy API off and the multiuser provider:
+into the desktop and kicks users) with the multiuser provider:
 
 ```sh
-docker run -d -p 8080:8080 -p 52000:52000/udp -e NEKO_LEGACY=false \
+docker run -d -p 8080:8080 -p 52000:52000/udp \
   -e NEKO_MEMBER_PROVIDER=multiuser -e NEKO_MEMBER_MULTIUSER_USER_PASSWORD=neko \
   -e NEKO_MEMBER_MULTIUSER_ADMIN_PASSWORD=admin -e NEKO_FILETRANSFER_ENABLED=true \
   -e NEKO_WEBRTC_UDPMUX=52000 \

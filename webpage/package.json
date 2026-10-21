@@ -18,21 +18,21 @@
     "typecheck": "tsc"
   },
   "dependencies": {
-    "@docusaurus/core": "3.7.0",
-    "@docusaurus/preset-classic": "3.7.0",
+    "@docusaurus/core": "3.10.2",
+    "@docusaurus/preset-classic": "3.10.2",
     "@mdx-js/react": "^3.0.0",
     "clsx": "^2.0.0",
-    "docusaurus-plugin-openapi-docs": "^4.3.4",
-    "docusaurus-theme-openapi-docs": "^4.3.4",
+    "docusaurus-plugin-openapi-docs": "^5.2.0",
+    "docusaurus-theme-openapi-docs": "^5.2.0",
     "prism-react-renderer": "^2.3.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "remark-code-import": "^1.2.0"
   },
   "devDependencies": {
-    "@docusaurus/module-type-aliases": "3.7.0",
-    "@docusaurus/tsconfig": "3.7.0",
-    "@docusaurus/types": "3.7.0",
+    "@docusaurus/module-type-aliases": "3.10.2",
+    "@docusaurus/tsconfig": "3.10.2",
+    "@docusaurus/types": "3.10.2",
     "typescript": "~5.6.2"
   },
   "browserslist": {
@@ -49,5 +49,13 @@
   },
   "engines": {
     "node": ">=18.0"
+  },
+  "overrides": {
+    "js-yaml": "^4.3.2",
+    "postcss-selector-parser": "^7.1.6",
+    "serialize-javascript": "^7.1.2",
+    "tinypool": "^2.2.0",
+    "uuid": "^14.0.3",
+    "yaml": "^2.9.1"
   }
 }
