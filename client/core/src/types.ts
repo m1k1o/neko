@@ -117,6 +117,9 @@ export interface CursorImage {
 export interface NekoEvents {
   'connection.status': (status: State['connection']['status']) => void
   'connection.closed': (error?: Error) => void
+  // the stream moved to another transport (a fallback took over): whatever attached the old
+  // transport's element must attach the new one
+  'transport.changed': (kind: string, reason: Error) => void
   'session.created': (id: string) => void
   'session.deleted': (id: string) => void
   'session.updated': (id: string) => void

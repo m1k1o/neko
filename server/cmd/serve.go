@@ -13,6 +13,8 @@ import (
 	"github.com/m1k1o/neko/server/internal/config"
 	"github.com/m1k1o/neko/server/internal/desktop"
 	"github.com/m1k1o/neko/server/internal/http"
+	"github.com/m1k1o/neko/server/internal/media"
+	"github.com/m1k1o/neko/server/internal/mediawebsocket"
 	"github.com/m1k1o/neko/server/internal/member"
 	"github.com/m1k1o/neko/server/internal/plugins"
 	"github.com/m1k1o/neko/server/internal/session"
@@ -52,15 +54,17 @@ type serve struct {
 	}
 
 	managers struct {
-		desktop   *desktop.DesktopManagerCtx
-		capture   *capture.CaptureManagerCtx
-		webRTC    *webrtc.WebRTCManagerCtx
-		member    *member.MemberManagerCtx
-		session   *session.SessionManagerCtx
-		webSocket *websocket.WebSocketManagerCtx
-		plugins   *plugins.ManagerCtx
-		api       *api.ApiManagerCtx
-		http      *http.HttpManagerCtx
+		desktop        *desktop.DesktopManagerCtx
+		capture        *capture.CaptureManagerCtx
+		webRTC         *webrtc.WebRTCManagerCtx
+		member         *member.MemberManagerCtx
+		session        *session.SessionManagerCtx
+		webSocket      *websocket.WebSocketManagerCtx
+		media          *media.Manager
+		mediaWebSocket *mediawebsocket.Manager
+		plugins        *plugins.ManagerCtx
+		api            *api.ApiManagerCtx
+		http           *http.HttpManagerCtx
 	}
 }
 
@@ -177,6 +181,13 @@ func (c *serve) Start(cmd *cobra.Command) {
 		&c.configs.Server,
 	)
 
+	c.managers.media = media.New(
+		c.managers.session,
+		c.managers.capture,
+	)
+	c.managers.mediaWebSocket = mediawebsocket.New(c.managers.media)
+	c.managers.api.AddRouter("/media", c.managers.media.Route)
+
 	c.managers.plugins = plugins.New(
 		&c.configs.Plugins,
 	)
@@ -194,6 +205,7 @@ func (c *serve) Start(cmd *cobra.Command) {
 
 	c.managers.http = http.New(
 		c.managers.webSocket,
+		c.managers.mediaWebSocket,
 		c.managers.api,
 		&c.configs.Server,
 		&c.configs.Member,
@@ -212,6 +224,9 @@ func (c *serve) Shutdown() {
 
 	err = c.managers.webSocket.Shutdown()
 	c.logger.Err(err).Msg("websocket manager shutdown")
+
+	err = c.managers.media.Shutdown()
+	c.logger.Err(err).Msg("media manager shutdown")
 
 	err = c.managers.webRTC.Shutdown()
 	c.logger.Err(err).Msg("webrtc manager shutdown")

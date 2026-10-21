@@ -176,13 +176,20 @@ export class FakeSocket {
   url: string
   closed = false
   code?: number
-  onmessage?: (e: { data: string }) => void
+  binaryType = ''
+  bufferedAmount = 0
+  // binary frames a transport sent back (acks, keyframe requests); text goes to sent/sentPayloads
+  readonly binary: number[][] = []
+  onmessage?: (e: { data: string | ArrayBuffer }) => void
   onclose?: () => void
+  onopen?: () => void
+  onerror?: () => void
   constructor(url: string) {
     this.url = url
     sockets.push(this)
   }
-  send(data: string) {
+  send(data: string | ArrayBuffer) {
+    if (typeof data !== 'string') return void this.binary.push([...new Uint8Array(data)])
     const m = JSON.parse(data)
     sent.push(m.event)
     sentPayloads.push(m)
@@ -193,6 +200,7 @@ export class FakeSocket {
   }
 }
 g.WebSocket = FakeSocket
+g.WebSocket.OPEN = 1
 
 export const OFFER =
   'v=0\r\nm=audio 9 RTP/AVP 0\r\na=rtpmap:0 opus/48000\r\nm=video 9 RTP/AVP 96\r\na=rtpmap:96 VP8/90000\r\n'
@@ -334,7 +342,101 @@ export const reset = () => {
   storage.clear()
   net.respond = () => ({ status: 200 })
   FakePeer.answerSdp = ANSWER
+  FakeVideoDecoder.all.length = FakeAudioDecoder.all.length = 0
+  FakeVideoDecoder.supported = FakeAudioDecoder.supported = true
+  audioContexts.length = 0
 }
+
+// WebCodecs, for the media websocket transport: decoders record what they are given and hand
+// back frames only when a test asks, so a backed up decoder can be simulated exactly.
+class FakeDecoder {
+  state = 'unconfigured'
+  decodeQueueSize = 0
+  readonly chunks: any[] = []
+  readonly output: (frame: any) => void
+  readonly error: (e: any) => void
+  constructor({ output, error }: { output: (f: any) => void; error: (e: any) => void }) {
+    this.output = output
+    this.error = error
+  }
+  configure() {
+    this.state = 'configured'
+  }
+  decode(chunk: any) {
+    this.chunks.push(chunk)
+    this.decodeQueueSize++
+  }
+  close() {
+    this.state = 'closed'
+  }
+  // hand back one decoded frame, as the real decoder would
+  emit(frame: Record<string, unknown>) {
+    this.decodeQueueSize = Math.max(0, this.decodeQueueSize - 1)
+    this.output({ displayWidth: 320, displayHeight: 240, close() {}, ...frame })
+  }
+}
+export class FakeVideoDecoder extends FakeDecoder {
+  static all: FakeVideoDecoder[] = []
+  static supported = true
+  static async isConfigSupported() {
+    return { supported: FakeVideoDecoder.supported }
+  }
+  constructor(init: any) {
+    super(init)
+    FakeVideoDecoder.all.push(this)
+  }
+}
+export class FakeAudioDecoder extends FakeDecoder {
+  static all: FakeAudioDecoder[] = []
+  static supported = true
+  static async isConfigSupported() {
+    return { supported: FakeAudioDecoder.supported }
+  }
+  constructor(init: any) {
+    super(init)
+    FakeAudioDecoder.all.push(this)
+  }
+}
+g.VideoDecoder = FakeVideoDecoder
+g.AudioDecoder = FakeAudioDecoder
+g.EncodedVideoChunk = class {
+  constructor(init: any) {
+    Object.assign(this, init)
+  }
+}
+g.EncodedAudioChunk = g.EncodedVideoChunk
+
+export const audioContexts: FakeAudioContext[] = []
+export class FakeAudioContext {
+  state = 'suspended'
+  currentTime = 0
+  resumes = 0
+  readonly destination = {}
+  readonly scheduled: number[] = []
+  constructor() {
+    audioContexts.push(this)
+  }
+  createGain() {
+    return { gain: { value: 1 }, connect() {}, disconnect() {} }
+  }
+  createBuffer(channels: number, frames: number, rate: number) {
+    return { duration: frames / rate, getChannelData: () => new Float32Array(frames) }
+  }
+  createBufferSource() {
+    const ctx = this
+    return { buffer: null as any, connect() {}, start: (at: number) => ctx.scheduled.push(at) }
+  }
+  resume() {
+    this.resumes++
+    this.state = 'running'
+    return Promise.resolve()
+  }
+  close() {
+    this.state = 'closed'
+    return Promise.resolve()
+  }
+}
+g.AudioContext = FakeAudioContext
 
 // a nested write of the client state, one slice at a time (the store takes immutable updates)
 type Slice = 'connection' | 'video' | 'control' | 'screen' | 'settings'
