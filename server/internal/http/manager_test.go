@@ -109,3 +109,24 @@ func TestWebSocketOriginAllowsInternalDialWithoutOrigin(t *testing.T) {
 		t.Fatal("unconfigured browser Origin was accepted")
 	}
 }
+
+func TestWebSocketOriginDefaultsToSameOrigin(t *testing.T) {
+	webSocketManager := &originCapturingWebSocketManager{}
+	serverConfig := &config.Server{}
+	memberConfig := &config.Member{}
+	sessionManager := session.New(&config.Session{})
+	apiManager := api.New(sessionManager, member.New(sessionManager, memberConfig), nil, nil, memberConfig, serverConfig)
+	New(webSocketManager, apiManager, serverConfig, memberConfig)
+
+	request := httptest.NewRequest(http.MethodGet, "http://neko.example.test/api/ws", nil)
+
+	request.Header.Set("Origin", "http://neko.example.test")
+	if !webSocketManager.checkOrigin(request) {
+		t.Fatal("same Origin was rejected")
+	}
+
+	request.Header.Set("Origin", "https://attacker.example")
+	if webSocketManager.checkOrigin(request) {
+		t.Fatal("cross-site Origin was accepted with empty CORS")
+	}
+}

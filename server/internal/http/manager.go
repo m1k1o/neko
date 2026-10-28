@@ -3,8 +3,10 @@ package http
 import (
 	"context"
 	"net/http"
+	"net/url"
 	"os"
 	"path"
+	"strings"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog"
@@ -53,7 +55,13 @@ func New(WebSocketManager types.WebSocketManager, ApiManager types.ApiManager, c
 
 	router.Get("/api/ws", WebSocketManager.Upgrade(func(r *http.Request) bool {
 		origin := r.Header.Get("Origin")
-		return origin == "" || config.AllowOrigin(origin)
+		if origin == "" || config.AllowOrigin(origin) {
+			return true
+		}
+
+		// by default, only same-origin browser connections are accepted
+		u, err := url.Parse(origin)
+		return err == nil && u.Host != "" && strings.EqualFold(u.Host, r.Host)
 	}))
 
 	batch := batchHandler{
