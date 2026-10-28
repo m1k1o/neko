@@ -70,6 +70,21 @@ func boolClaim(claims map[string]any, field string) bool {
 	return false
 }
 
+// claimFalse reports whether the claim is present and explicitly false.
+func claimFalse(claims map[string]any, field string) bool {
+	value, ok := claims[field]
+	if !ok {
+		return false
+	}
+	switch value := value.(type) {
+	case bool:
+		return !value
+	case string:
+		return strings.EqualFold(value, "false")
+	}
+	return false
+}
+
 func administrator(email string, isAdmin bool, emails []string) bool {
 	if isAdmin {
 		return true
