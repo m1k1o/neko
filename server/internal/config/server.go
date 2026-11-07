@@ -62,7 +62,7 @@ func (Server) Init(cmd *cobra.Command) error {
 		return err
 	}
 
-	cmd.PersistentFlags().StringSlice("server.cors", []string{}, "list of allowed origins for CORS, if empty CORS is disabled, if '*' is present all origins are allowed")
+	cmd.PersistentFlags().StringSlice("server.cors", []string{}, "list of allowed origins for CORS and WebSocket connections, if empty only same-origin WebSocket connections are accepted, if '*' is present all origins are allowed")
 	if err := viper.BindPFlag("server.cors", cmd.PersistentFlags().Lookup("server.cors")); err != nil {
 		return err
 	}
@@ -193,9 +193,8 @@ func (s *Server) HasCors() bool {
 }
 
 func (s *Server) AllowOrigin(origin string) bool {
-	// if CORS is not configured, or a wildcard is present,
-	// allow WebSocket connections from any origin
-	if len(s.CORS) == 0 || s.CORS[0] == "*" {
+	// only an explicit wildcard allows any origin
+	if len(s.CORS) > 0 && s.CORS[0] == "*" {
 		return true
 	}
 

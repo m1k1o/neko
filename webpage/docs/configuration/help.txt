@@ -43,7 +43,7 @@
       --plugins.required                              if true, neko will exit if there is an error when loading a plugin
       --server.bind string                            address/port/socket to serve neko (default "127.0.0.1:8080")
       --server.cert string                            path to the SSL cert used to secure the neko server
-      --server.cors strings                           list of allowed origins for CORS, if empty CORS is disabled, if '*' is present all origins are allowed
+      --server.cors strings                           list of allowed origins for CORS and WebSocket connections, if empty only same-origin WebSocket connections are accepted, if '*' is present all origins are allowed
       --server.key string                             path to the SSL key used to secure the neko server
       --server.metrics                                enable prometheus metrics available at /metrics (default true)
       --server.path_prefix string                     path prefix for HTTP requests (default "/")

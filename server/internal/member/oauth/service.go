@@ -168,6 +168,12 @@ func (service *Service) Complete(ctx context.Context, stateToken, code string) (
 		email = claim(idClaims, "email")
 	}
 
+	// Providers that omit email_verified are trusted; only an explicit false is rejected.
+	if email != "" && (claimFalse(claims, "email_verified") || claimFalse(idClaims, "email_verified")) {
+		log.Warn().Msg("OAuth provider reported the email as unverified; ignoring it for admin_emails/user_emails")
+		email = ""
+	}
+
 	if email == "" && (len(config.AdminEmails) > 0 || len(config.UserEmails) > 0) {
 		log.Warn().Msg("OAuth admin_emails/user_emails are configured but the provider did not return an 'email' claim; request the 'email' scope")
 	}

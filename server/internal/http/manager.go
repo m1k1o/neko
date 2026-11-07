@@ -3,8 +3,10 @@ package http
 import (
 	"context"
 	"net/http"
+	"net/url"
 	"os"
 	"path"
+	"strings"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog"
@@ -52,15 +54,20 @@ func New(WebSocketManager types.WebSocketManager, MediaWebSocketManager *mediawe
 
 	router.Route("/api", ApiManager.Route)
 
-	router.Get("/api/ws", WebSocketManager.Upgrade(func(r *http.Request) bool {
+	checkOrigin := func(r *http.Request) bool {
 		origin := r.Header.Get("Origin")
-		return origin == "" || config.AllowOrigin(origin)
-	}))
+		if origin == "" || config.AllowOrigin(origin) {
+			return true
+		}
+
+		// by default, only same-origin browser connections are accepted
+		u, err := url.Parse(origin)
+		return err == nil && u.Host != "" && strings.EqualFold(u.Host, r.Host)
+	}
+	router.Get("/api/ws", WebSocketManager.Upgrade(checkOrigin))
 	// the media transport is optional, so the server can run without it
 	if MediaWebSocketManager != nil {
-		router.Get("/media/ws", MediaWebSocketManager.Upgrade(func(r *http.Request) bool {
-			return config.AllowOrigin(r.Header.Get("Origin"))
-		}))
+		router.Get("/media/ws", MediaWebSocketManager.Upgrade(checkOrigin))
 	}
 
 	batch := batchHandler{
