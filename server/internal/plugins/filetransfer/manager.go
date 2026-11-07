@@ -381,7 +381,7 @@ func (m *Manager) uploadFileHandler(w http.ResponseWriter, r *http.Request) erro
 		}
 		defer formfile.Close()
 
-		f, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE, 0644)
+		f, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 		if err != nil {
 			return utils.HttpInternalServerError().
 				WithInternalErr(err).
@@ -395,6 +395,15 @@ func (m *Manager) uploadFileHandler(w http.ResponseWriter, r *http.Request) erro
 				WithInternalErr(err).
 				Msg("error writing file")
 		}
+	}
+
+	// the watcher does not report writes, so it misses the final size of uploaded files
+	err, changed := m.refresh()
+	if err != nil {
+		m.logger.Err(err).Msg("unable to refresh file list after upload")
+	}
+	if changed {
+		m.broadcastUpdate()
 	}
 
 	return nil
