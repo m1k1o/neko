@@ -815,7 +815,7 @@
       "nat1to1"
     ],
     "type": "strings",
-    "description": "sets a list of external IP addresses of 1:1 (D)NAT and a candidate type for which the external IP address is used"
+    "description": "list of external IP addresses or hostnames of 1:1 (D)NAT advertised to clients, hostnames are resolved for every new connection"
   },
   {
     "key": [
