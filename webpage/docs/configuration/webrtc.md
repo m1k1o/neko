@@ -50,6 +50,8 @@ The configuration of a single [ICE server](https://developer.mozilla.org/en-US/d
 | <Def id="iceservers.urls" />       | List of URLs of the ICE server, if the same server is available on multiple URLs with the same credentials, they can be listed here. | `string[]` |
 | <Def id="iceservers.username" />   | Username used to authenticate with the ICE server, if the server requires authentication. | `string` |
 | <Def id="iceservers.credential" /> | Credential used to authenticate with the ICE server, if the server requires authentication. | `string` |
+| <Def id="iceservers.secret" />     | Shared secret of a TURN server that uses [time-limited credentials](#iceservers-secret). When set, `username` and `credential` are generated for every connection. The secret is never sent to the client. | `string` |
+| <Def id="iceservers.ttl" />        | Number of seconds the generated credentials stay valid, defaults to `86400` (one day). Only used together with `secret`. | `int` |
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -133,6 +135,30 @@ services:
 Replace `<MY-COTURN-SERVER>` with your LAN or Public IP address, and allow ports `49160-49200/udp` and `3478/tcp`. The `--user` flag is used to specify the username and password for the TURN server. The `--lt-cred-mech` flag is used to enable the long-term credentials mechanism for authentication. More information about the Coturn server can be found [here](https://github.com/coturn/coturn).
 
 </details>
+
+#### Time-limited TURN credentials {#iceservers-secret}
+
+Static TURN credentials are sent to every client, so anyone who joins the room can keep using your TURN server afterwards. Instead, TURN servers supporting the [TURN REST API](https://datatracker.ietf.org/doc/html/draft-uberti-behave-turn-rest-00), such as Coturn with `--use-auth-secret`, accept credentials derived from a shared secret that expire after a given time.
+
+When <Def id="iceservers.secret" /> is set, Neko generates a new username and credential for every connection: the username is the expiry timestamp followed by the session ID (`<unix-timestamp>:<session-id>`), and the credential is the Base64 encoded HMAC-SHA1 of the username keyed with the secret. This works for both frontend and backend ICE servers.
+
+```yaml title="config.yaml"
+webrtc:
+  iceservers:
+    frontend:
+      - urls: "turn:<MY-COTURN-SERVER>:3478"
+        secret: "<MY-STATIC-AUTH-SECRET>"
+        ttl: 86400
+    backend:
+      - urls: "turn:<MY-COTURN-SERVER>:3478"
+        secret: "<MY-STATIC-AUTH-SECRET>"
+```
+
+For Coturn, replace `--user=neko:neko` and `--lt-cred-mech` in the example above with `--use-auth-secret` and `--static-auth-secret=<MY-STATIC-AUTH-SECRET>`.
+
+:::note
+The TURN server may refuse to refresh a relayed connection once its credentials have expired, so the <Def id="iceservers.ttl" /> should be longer than your sessions are expected to last.
+:::
 
 ## Network Setup {#network}
 
