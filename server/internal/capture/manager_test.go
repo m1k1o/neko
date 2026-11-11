@@ -38,7 +38,7 @@ func TestVideoIDsAvailableWithOnlyPipelinesEnv(t *testing.T) {
 	const pipeline = "ximagesrc display-name={display} show-pointer=false ! appsink name=appsink"
 	cfg := captureConfigFromEnv(t, `{"high":"`+pipeline+`","medium":"`+pipeline+`","low":"`+pipeline+`"}`)
 
-	manager := New(nil, cfg)
+	manager := New(nil, nil, cfg)
 
 	got := manager.Video().IDs()
 	want := []string{"high", "low", "medium"}
