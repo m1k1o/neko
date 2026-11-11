@@ -204,6 +204,36 @@ test('keyboard: the browser’s keydown/keypress/keyup on the textarea reach cli
   assert.equal(calls.length, 2, 'locked: nothing is sent')
 })
 
+test('keyboard: text that arrives only as input events (on-screen keyboards) is typed, also after a composition; composed text is typed once', async () => {
+  const { client, calls, box, overlay, textarea } = setup()
+  overlay.attach(box as any)
+  await host(client)
+  const typed = (ch: string) => [
+    ['key', ch.charCodeAt(0), true],
+    ['key', ch.charCodeAt(0), false],
+  ]
+  // what an on-screen keyboard can fire for a letter: keydown 229, then the text in an input event
+  const tap = (ch: string) => {
+    textarea().dispatch('keydown', { keyCode: 229, key: 'Unidentified', location: 0 })
+    textarea().dispatch('input', { data: ch, inputType: 'insertText', isComposing: false })
+  }
+  tap('a')
+  assert.deepEqual(calls, typed('a'))
+
+  calls.length = 0
+  textarea().dispatch('compositionstart', { data: '' })
+  textarea().dispatch('input', { data: 'b', inputType: 'insertCompositionText', isComposing: true })
+  textarea().dispatch('compositionend', { data: 'b' })
+  // some browsers fire the composition's last input event after compositionend
+  textarea().dispatch('input', { data: 'b', inputType: 'insertCompositionText', isComposing: false })
+  textarea().dispatch('input', { data: 'b', inputType: 'insertFromComposition', isComposing: false })
+  assert.deepEqual(calls, typed('b'), 'composed text is typed once, from compositionend')
+
+  calls.length = 0
+  tap('c')
+  assert.deepEqual(calls, typed('c'), 'input events are still typed after a composition')
+})
+
 test('mouse: a mousedown reaches client.input.move and .button with the position in remote screen coordinates; the release may land anywhere', async () => {
   const { client, calls, box, overlay, canvas, textarea } = setup()
   overlay.attach(box as any)

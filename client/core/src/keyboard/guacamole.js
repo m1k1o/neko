@@ -1382,7 +1382,30 @@ Guacamole.Keyboard = function Keyboard(element) {
         }, true);
 
         /**
+         * Returns whether the given "input" event is part of a composition.
+         * Composed text is typed once, by the "compositionend" handler. Some
+         * browsers fire the last "input" event of a composition after
+         * "compositionend", with "isComposing" already false, so the input
+         * type ("insertCompositionText", "insertFromComposition",
+         * "deleteCompositionText" or "deleteByComposition") is checked too.
+         *
+         * @private
+         * @param {!InputEvent} e
+         *     The "input" event to test.
+         *
+         * @returns {!boolean}
+         *     true if the event is part of a composition, false otherwise.
+         */
+        var isCompositionInput = function isCompositionInput(e) {
+            return e.isComposing || /Composition/.test(e.inputType || '');
+        };
+
+        /**
          * Handles the given "input" event, typing the data within the input text.
+         * The handler stays attached after a composition: browsers which send
+         * composition events can still send text in plain "input" events alone
+         * (on-screen keyboards, for example, may fire keydown 229 followed by
+         * an "insertText" input event).
          *
          * @private
          * @param {!InputEvent} e
@@ -1396,26 +1419,10 @@ Guacamole.Keyboard = function Keyboard(element) {
             // Ignore events which have already been handled
             if (!markEvent(e)) return;
 
-            // Type all content written
-            if (e.data && !e.isComposing)
+            // Type all content written, except text which is part of a
+            // composition
+            if (e.data && !isCompositionInput(e))
                 guac_keyboard.type(e.data);
-
-        };
-
-        /**
-         * Handles the given "compositionstart" event, automatically removing
-         * the "input" event handler, as "input" events should only be handled
-         * if composition events are not provided by the browser.
-         *
-         * @private
-         * @param {!CompositionEvent} e
-         *     The "compositionstart" event to handle.
-         */
-        var handleCompositionStart = function handleCompositionStart(e) {
-
-            // Remove the "input" event handler now that the browser is known
-            // to send composition events
-            element.removeEventListener("input", handleInput, false);
 
         };
 
@@ -1444,7 +1451,6 @@ Guacamole.Keyboard = function Keyboard(element) {
         // Automatically type text entered into the wrapped field
         element.addEventListener("input", handleInput, false);
         element.addEventListener("compositionend", handleCompositionEnd, false);
-        element.addEventListener("compositionstart", handleCompositionStart, false);
 
     };
 
