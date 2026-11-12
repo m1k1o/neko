@@ -52,6 +52,15 @@
     "key": [
       "capture",
       "broadcast",
+      "empty_timeout"
+    ],
+    "type": "duration",
+    "description": "automatically stop broadcasting once no user has been connected for this long, 0 to never stop"
+  },
+  {
+    "key": [
+      "capture",
+      "broadcast",
       "pipeline"
     ],
     "type": "string",

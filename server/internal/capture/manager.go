@@ -15,9 +15,10 @@ import (
 )
 
 type CaptureManagerCtx struct {
-	logger  zerolog.Logger
-	desktop types.DesktopManager
-	config  *config.Capture
+	logger   zerolog.Logger
+	desktop  types.DesktopManager
+	sessions types.SessionManager
+	config   *config.Capture
 
 	// sinks
 	broadcast  *BroacastManagerCtx
@@ -30,7 +31,7 @@ type CaptureManagerCtx struct {
 	microphone *StreamSrcManagerCtx
 }
 
-func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCtx {
+func New(desktop types.DesktopManager, sessions types.SessionManager, config *config.Capture) *CaptureManagerCtx {
 	logger := log.With().Str("module", "capture").Logger()
 
 	videos := map[string]*StreamSinkManagerCtx{}
@@ -73,9 +74,10 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 	}
 
 	return &CaptureManagerCtx{
-		logger:  logger,
-		desktop: desktop,
-		config:  config,
+		logger:   logger,
+		desktop:  desktop,
+		sessions: sessions,
+		config:   config,
 
 		// sinks
 		broadcast: broadcastNew(func(url string) (string, error) {
@@ -108,7 +110,7 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 					"! x264enc threads=4 bitrate=%d key-int-max=15 byte-stream=true tune=zerolatency speed-preset=%s "+
 					"! mux.", url, config.AudioDevice, config.BroadcastAudioBitrate*1000, config.Display, config.VideoShowPointer, config.BroadcastVideoBitrate, config.BroadcastPreset,
 			), nil
-		}, config.BroadcastUrl, config.BroadcastAutostart),
+		}, config.BroadcastUrl, config.BroadcastAutostart, config.BroadcastEmptyTimeout),
 		screencast: screencastNew(config.ScreencastEnabled, func() string {
 			if config.ScreencastPipeline != "" {
 				// replace {display} with valid display
@@ -198,6 +200,22 @@ func (manager *CaptureManagerCtx) Start() {
 		if err := manager.broadcast.createPipeline(); err != nil {
 			manager.logger.Panic().Err(err).Msg("unable to create broadcast pipeline")
 		}
+	}
+
+	if manager.config.BroadcastEmptyTimeout > 0 {
+		// connection stats are updated before these events are emitted
+		manager.broadcast.watchRoom(func() bool {
+			stats := manager.sessions.Stats()
+			return stats.TotalUsers+stats.TotalAdmins == 0
+		})
+
+		manager.sessions.OnConnected(func(session types.Session) {
+			manager.broadcast.roomChanged()
+		})
+
+		manager.sessions.OnDisconnected(func(session types.Session) {
+			manager.broadcast.roomChanged()
+		})
 	}
 
 	manager.desktop.OnBeforeScreenSizeChange(func() {

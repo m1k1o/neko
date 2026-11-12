@@ -3,6 +3,7 @@
       --capture.audio.pipeline string                 gstreamer pipeline used for audio streaming
       --capture.broadcast.audio_bitrate int           broadcast audio bitrate in KB/s (default 128)
       --capture.broadcast.autostart                   automatically start broadcasting when neko starts and broadcast_url is set (default true)
+      --capture.broadcast.empty_timeout duration      automatically stop broadcasting once no user has been connected for this long, 0 to never stop
       --capture.broadcast.pipeline string             gstreamer pipeline used for broadcasting
       --capture.broadcast.preset string               broadcast speed preset for h264 encoding (default "veryfast")
       --capture.broadcast.url string                  initial URL for broadcasting, setting this value will automatically start broadcasting
