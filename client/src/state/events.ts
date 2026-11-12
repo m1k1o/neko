@@ -67,6 +67,9 @@ export function wireEvents(neko: NekoApp) {
   })
 
   // connection toasts, as the legacy client showed them
+  // set when auto switched to the websocket, so the notice survives the 'connected' that follows
+  // (which clears the toasts) and is shown with it instead of being wiped by it
+  let fellBack = false
   client.store.subscribe(
     (s) => s.connection.status,
     (status, old) => {
@@ -74,6 +77,10 @@ export function wireEvents(neko: NekoApp) {
       if (status === 'connected') {
         dismissToasts()
         toast(t('connection.connected'), undefined, 'success')
+        if (fellBack) {
+          fellBack = false
+          toast(t('connection.fell_back'), undefined, 'warning')
+        }
       }
     },
   )
@@ -110,6 +117,12 @@ export function wireEvents(neko: NekoApp) {
   // plugin events (`chat/*`, ...) are dispatched by the plugin registry
   ev.on('message', (event, payload) => {
     if (event === 'openinapp/init') app.setState({ openInApp: !!payload.enabled })
+  })
+
+  // auto fell back to the websocket: worth saying, since the stream behaves a little differently.
+  // Shown when the new transport reports connected, above, since that clears earlier toasts.
+  ev.on('transport.changed', (kind) => {
+    if (kind === 'webcodecs-ws') fellBack = true
   })
 
   ev.on('connection.closed', (error) => {

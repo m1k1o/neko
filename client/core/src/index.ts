@@ -22,6 +22,8 @@ export type {
   TransportEvents,
 } from './transport.ts'
 export { WebRTCTransport } from './transport/webrtc.ts'
+export { WebCodecsTransport } from './transport/webcodecs.ts'
+export { type EncodedMediaSample } from './transport/media-protocol.ts'
 export { DataChannelInput } from './input/datachannel.ts'
 export { WebSocketInput } from './input/websocket.ts'
 export * from './types.ts'

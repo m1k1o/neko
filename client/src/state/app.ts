@@ -20,12 +20,20 @@ export const defaults = {
   // open chat links on the remote desktop instead of locally (needs the openinapp plugin)
   links_in_app: false,
   keyboard_layout: 'us',
+  // how the stream arrives: 'auto' tries WebRTC and falls back to the websocket when it fails,
+  // the others force one. Read once when the client is made, so a change applies on reload.
+  transport: 'auto' as TransportMode,
 }
+export type TransportMode = 'auto' | 'webrtc' | 'websocket'
+export const TRANSPORT_MODES: TransportMode[] = ['auto', 'webrtc', 'websocket']
+export const isTransportMode = (v: unknown): v is TransportMode => TRANSPORT_MODES.includes(v as TransportMode)
 export type ViewerSettings = typeof defaults
 
 function load(): ViewerSettings {
   const out = { ...defaults }
   for (const k of Object.keys(defaults) as (keyof ViewerSettings)[]) (out as any)[k] = get(k, defaults[k])
+  // a stored value from an older build, or typed by hand, must not leave the stream unreachable
+  if (!isTransportMode(out.transport)) out.transport = defaults.transport
   return out
 }
 

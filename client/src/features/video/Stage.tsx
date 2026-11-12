@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useStore } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
 import { selectControlling, selectIsAdmin } from '@m1k1o/neko'
@@ -48,6 +48,13 @@ export function Stage({ hideControls, extraControls }: { hideControls: boolean; 
   )
   const emotes = useStore(app, (s) => s.emotes)
   const player = useRef<HTMLDivElement>(null)
+  // the transport can be replaced mid-session (auto falling back to the websocket); the Player
+  // must attach the new one, so it is state here rather than read off the client once
+  const [transport, setTransport] = useState(client.transport)
+  useEffect(() => {
+    setTransport(client.transport)
+    return client.events.on('transport.changed', () => setTransport(client.transport))
+  }, [client])
   const { fullscreen, request: requestFullscreen } = useFullscreen(player)
   const syncClipboard = useClipboardSync()
   const pip = usePip()
@@ -61,7 +68,7 @@ export function Stage({ hideControls, extraControls }: { hideControls: boolean; 
     <div className="relative h-full w-full">
       <div ref={player} className="absolute inset-0 flex items-center justify-center bg-black">
         <div className="absolute inset-0" data-testid="player" onMouseEnter={syncClipboard}>
-          <Player transport={client.transport} />
+          <Player transport={transport} />
           <div className="pointer-events-none absolute inset-0 overflow-hidden">
             {Object.entries(emotes).map(([id, type]) => (
               <Emote key={id} id={id} type={type} />

@@ -41,7 +41,7 @@ func TestOAuthAutoRedirectSkipsAuthenticatedSessions(t *testing.T) {
 		Cookie: config.SessionCookie{Enabled: true, Name: "NEKO_SESSION", Expiration: time.Hour},
 	})
 	apiManager := api.New(sessionManager, member.New(sessionManager, memberConfig), nil, nil, memberConfig, &config.Server{})
-	manager := New(testWebSocketManager{}, apiManager, &config.Server{Static: staticDir}, memberConfig)
+	manager := New(testWebSocketManager{}, nil, apiManager, &config.Server{Static: staticDir}, memberConfig)
 
 	unauthenticated := httptest.NewRecorder()
 	manager.router.ServeHTTP(unauthenticated, httptest.NewRequest(http.MethodGet, "/", nil))
@@ -92,7 +92,7 @@ func TestWebSocketOriginAllowsInternalDialWithoutOrigin(t *testing.T) {
 	memberConfig := &config.Member{}
 	sessionManager := session.New(&config.Session{})
 	apiManager := api.New(sessionManager, member.New(sessionManager, memberConfig), nil, nil, memberConfig, serverConfig)
-	New(webSocketManager, apiManager, serverConfig, memberConfig)
+	New(webSocketManager, nil, apiManager, serverConfig, memberConfig)
 
 	request := httptest.NewRequest(http.MethodGet, "/api/ws", nil)
 	if !webSocketManager.checkOrigin(request) {

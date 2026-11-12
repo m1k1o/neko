@@ -9,6 +9,7 @@ import { useNeko } from '@/state/provider'
 import { i18n } from '@/i18n'
 import { Button } from '@/components/ui/button'
 import logo from '@/assets/images/logo.svg'
+import { TransportSelect } from './TransportSelect'
 
 const input =
   'my-[5px] rounded-[5px] border-0 bg-background-tertiary px-2 py-1.5 leading-5 text-text-normal selection:bg-text-link placeholder:text-[#757575]'
@@ -91,6 +92,7 @@ export function Connect() {
             <Button className="my-[5px]" type="button" onClick={actions(neko).logout}>
               {t('logout')}
             </Button>
+            <TransportSelect className="my-[5px]" />
           </form>
         ) : (
           <form className="flex flex-col" onSubmit={login}>
@@ -131,6 +133,7 @@ export function Connect() {
                 {oauth.name || 'OAuth'} Login
               </Button>
             )}
+            <TransportSelect className="my-[5px]" />
           </form>
         )}
       </div>

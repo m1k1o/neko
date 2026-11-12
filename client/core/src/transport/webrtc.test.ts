@@ -31,9 +31,9 @@ const sessionInfo = () => {
   }
   return { s, out, events: () => out.map((m) => m.event), receive: (e: string, p?: unknown) => messages.emit(e, p) }
 }
-const setup = () => {
+const setup = (opts?: ConstructorParameters<typeof WebRTCTransport>[0]) => {
   reset()
-  const t = new WebRTCTransport()
+  const t = new WebRTCTransport(opts)
   const states: State[] = []
   const errors: Error[] = []
   const cursors: unknown[] = []
@@ -346,4 +346,59 @@ test('microphone: shareMedia adds the tracks and renegotiates through the sessio
   assert.deepEqual(pc.senders, [])
   stop() // already gone: ignored, not thrown (the fake peer throws for an unknown sender)
   assert.deepEqual(pc.senders, [])
+})
+
+// A caller with somewhere to fall back to (auto) cannot wait for the browser, which takes about
+// ten seconds to give up on ICE per attempt. A blocked route must be noticed within the timeout.
+const stuck = async (opts: ConstructorParameters<typeof WebRTCTransport>[0]) => {
+  const r = setup(opts)
+  const si = sessionInfo()
+  await r.t.connect(si.s)
+  si.receive('signal/provide', { sdp: OFFER })
+  await settle()
+  FakePeer.all[0].transition('connecting') // and it never gets further: no media route
+  return r
+}
+
+test('connectTimeoutMs: a peer stuck connecting counts as failed once the time is up', async () => {
+  const { errors } = await stuck({ connectTimeoutMs: 4000, failFastAfter: 0 })
+  await tick(3900)
+  assert.deepEqual(errors, [], 'not before the timeout')
+  await tick(200)
+  assert.equal(errors.length, 1, 'given up on: the fallback can take over')
+  assert.match(errors[0].message, /video connection failed/)
+})
+
+test('connectTimeoutMs: a peer that connects in time is left alone', async () => {
+  const { errors, status } = await stuck({ connectTimeoutMs: 4000, failFastAfter: 0 })
+  await tick(1000)
+  FakePeer.all[0].transition('connected')
+  await tick(10_000)
+  assert.deepEqual(errors, [], 'a working route must not be torn down by a stale timer')
+  assert.equal(status(), 'connected')
+  assert.equal(FakePeer.all.length, 1, 'no new peer was asked for')
+  assert.equal(FakePeer.all[0].closed, false, 'the working peer is still open')
+})
+
+// the timer belongs to one attempt: a peer that went through 'connecting' and then failed on its
+// own must not have the old timer fail its replacement as well
+test('connectTimeoutMs: a resolved attempt leaves no timer behind for the next one', async () => {
+  const { errors } = await stuck({ connectTimeoutMs: 4000, failFastAfter: 5 })
+  await tick(1000)
+  FakePeer.all[0].transition('failed') // the browser gave up first: a retry is scheduled
+  await tick(1600) // the retry: a new peer
+  const si = FakePeer.all.length
+  assert.equal(si, 1, 'the retry asks the server for a peer, it has not arrived yet')
+  assert.deepEqual(errors, [])
+  // past the old attempt's deadline: nothing more may happen to the retry
+  await tick(3000)
+  assert.deepEqual(errors, [], 'a leftover timer must not count a second failure')
+})
+
+test('connectTimeoutMs: off by default, so WebRTC on its own waits for the browser as before', async () => {
+  const { errors } = await stuck(undefined)
+  await tick(30_000)
+  assert.deepEqual(errors, [], 'without a fallback there is no reason to give up early')
+  assert.equal(FakePeer.all.length, 1, 'the stuck peer is not torn down and retried on a timer')
+  assert.equal(FakePeer.all[0].closed, false)
 })
