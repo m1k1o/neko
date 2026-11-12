@@ -88,10 +88,7 @@ func (manager *WebRTCManagerCtx) Start() {
 
 	logger := pionlog.New(manager.logger)
 
-	// resolve NAT 1-to-1 hostnames early, so that a misconfiguration
-	// shows up in the logs before the first peer connection is created
 	manager.nat1to1 = newNAT1To1Resolver(manager.logger, manager.config.NAT1To1IPs)
-	manager.nat1to1.IPs()
 
 	// add TCP Mux listener
 	if manager.config.TCPMux > 0 {
