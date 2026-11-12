@@ -78,6 +78,8 @@ type WebRTCManagerCtx struct {
 	tcpMux ice.TCPMux
 	udpMux ice.UDPMux
 
+	nat1to1 *nat1to1Resolver
+
 	camStop, micStop *func()
 }
 
@@ -85,6 +87,8 @@ func (manager *WebRTCManagerCtx) Start() {
 	manager.curImage.Start()
 
 	logger := pionlog.New(manager.logger)
+
+	manager.nat1to1 = newNAT1To1Resolver(manager.logger, manager.config.NAT1To1IPs)
 
 	// add TCP Mux listener
 	if manager.config.TCPMux > 0 {
@@ -188,7 +192,7 @@ func (manager *WebRTCManagerCtx) newPeerConnection(logger zerolog.Logger, config
 
 	settings.DisableMediaEngineCopy(true)
 	settings.SetICETimeouts(disconnectedTimeout, failedTimeout, keepAliveInterval)
-	settings.SetNAT1To1IPs(manager.config.NAT1To1IPs, webrtc.ICECandidateTypeHost)
+	settings.SetNAT1To1IPs(manager.nat1to1.IPs(), webrtc.ICECandidateTypeHost)
 	settings.SetLite(manager.config.ICELite)
 	// make sure server answer sdp setup as passive, to not force DTLS renegotiation
 	// otherwise iOS renegotiation fails with: Failed to set SSL role for the transport.

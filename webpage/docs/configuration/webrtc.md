@@ -239,7 +239,9 @@ The server IP address is sent to the client in ICE candidates so that the client
   'webrtc.nat1to1': '10.10.0.5'
 }} comments={false} />
 
-Currently, only one address can be specified. Therefore if you want to access your instance from both local and public networks, your router must support [NAT loopback (hairpinning)](https://en.wikipedia.org/wiki/Network_address_translation#NAT_hairpinning).
+Instead of an IP address, you can specify a hostname, e.g. `neko.example.com`. All of its IPv4 and IPv6 addresses are used. The hostname is resolved again whenever a new WebRTC connection is created, so with a dynamic DNS name, clients that connect after your public IP address has changed receive the new address without restarting neko. If the hostname cannot be resolved, the addresses from the last successful lookup are used.
+
+When multiple addresses are specified, all of them are sent to the client, which connects to one that it can reach. If you want to access your instance from both local and public networks, you can specify both addresses, or your router must support [NAT loopback (hairpinning)](https://en.wikipedia.org/wiki/Network_address_translation#NAT_hairpinning).
 
 #### IP Retrieval URL {#ip_retrieval_url}
 
