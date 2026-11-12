@@ -143,7 +143,11 @@ func (manager *WebRTCManagerCtx) Shutdown() error {
 }
 
 func (manager *WebRTCManagerCtx) ICEServers(session types.Session) []types.ICEServer {
-	return resolveICEServers(manager.config.ICEServersFrontend, session.ID(), time.Now())
+	servers, err := resolveICEServers(manager.config.ICEServersFrontend, session.ID(), time.Now())
+	if err != nil {
+		manager.logger.Warn().Err(err).Str("session_id", session.ID()).Msg("unable to resolve some frontend ICE servers")
+	}
+	return servers
 }
 
 // webrtcConfiguration returns the configuration of a new peer connection for
@@ -157,8 +161,13 @@ func (manager *WebRTCManagerCtx) webrtcConfiguration(session types.Session) webr
 		return configuration
 	}
 
+	servers, err := resolveICEServers(manager.config.ICEServersBackend, session.ID(), time.Now())
+	if err != nil {
+		manager.logger.Warn().Err(err).Str("session_id", session.ID()).Msg("unable to resolve some backend ICE servers")
+	}
+
 	configuration.ICEServers = []webrtc.ICEServer{}
-	for _, server := range resolveICEServers(manager.config.ICEServersBackend, session.ID(), time.Now()) {
+	for _, server := range servers {
 		var credential any
 		if server.Credential != "" {
 			credential = server.Credential
