@@ -35,7 +35,7 @@ export function Stage({ hideControls, extraControls }: { hideControls: boolean; 
   const { t } = useTranslation()
   const { client, overlay, app } = useNeko()
   const actions = useActions()
-  const { admin, hosting, hosted, implicit, lockedControls, video } = useStore(
+  const { admin, hosting, hosted, implicit, lockedControls, privateMode, video } = useStore(
     client.store,
     useShallow((s) => ({
       admin: selectIsAdmin(s),
@@ -43,6 +43,7 @@ export function Stage({ hideControls, extraControls }: { hideControls: boolean; 
       hosted: s.control.host_id !== null,
       implicit: s.settings.implicit_hosting,
       lockedControls: s.settings.locked_controls,
+      privateMode: s.settings.private_mode,
       video: s.video,
     })),
   )
@@ -53,6 +54,8 @@ export function Stage({ hideControls, extraControls }: { hideControls: boolean; 
   const pip = usePip()
 
   const controlLocked = lockedControls && !admin
+  // private mode: the server pauses the stream of users (not admins); say why the video stopped
+  const privateModeEnabled = privateMode && !admin
   const { playing, playable, muted, mutedByAutoplay } = video
   // usually the extra controls are only shown on a phone
   const extra = extraControls ? '' : 'phone:block hidden'
@@ -67,7 +70,14 @@ export function Stage({ hideControls, extraControls }: { hideControls: boolean; 
               <Emote key={id} id={id} type={type} />
             ))}
           </div>
-          {!playing && playable ? (
+          {privateModeEnabled ? (
+            <div
+              className="absolute inset-0 flex items-center justify-center bg-black/80 px-5 text-center"
+              data-testid="private-mode"
+            >
+              <span className="leading-7.5 uppercase">{t('private_mode')}</span>
+            </div>
+          ) : !playing && playable ? (
             <IconButton
               label="Play"
               className={overlayClasses}

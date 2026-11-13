@@ -4,6 +4,7 @@
   "admin_loggedin": "You are logged in as an admin",
   "you": "You",
   "somebody": "Somebody",
+  "private_mode": "Private mode is enabled, only admins can see the room",
   "side": {
     "settings": "Settings"
   },
@@ -67,7 +68,16 @@
     "chat_sound": "Play Chat Sound",
     "links_in_app": "Always open links in app",
     "keyboard_layout": "Keyboard Layout",
-    "broadcast_title": "Live Broadcast"
+    "broadcast_title": "Live Broadcast",
+    "room_title": "Room Settings",
+    "private_mode": "Private Mode",
+    "private_mode_desc": "Users do not receive the video or audio and cannot take control; admins still can.",
+    "control_protection": "Control Protection",
+    "control_protection_desc": "Controls are locked for users whenever no admin is in the room.",
+    "implicit_hosting": "Implicit Hosting",
+    "implicit_hosting_desc": "Users take control by clicking on the screen, unless the controls are locked.",
+    "merciful_reconnect": "Merciful Reconnect",
+    "merciful_reconnect_desc": "A new connection replaces a session that is still connected instead of being refused."
   },
   "connection": {
     "reconnecting": "Reconnecting...",

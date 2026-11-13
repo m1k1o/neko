@@ -1,6 +1,6 @@
 // what the GUI can do to the room; `actions(neko)` is the set bound to one instance, `useActions()`
 // the same in a component
-import { isLocked, name, scoped, type LockResource } from './app'
+import { isLocked, name, scoped, type LockResource, type RoomSetting } from './app'
 import { api } from './api'
 import { toast } from './dialogs'
 import { line } from './bus'
@@ -37,6 +37,8 @@ export const actions = scoped((neko) => {
       if (r === 'login') return api(neko, 'POST', '/room/settings', { locked_logins: locked })
       return api(neko, 'POST', '/room/settings', { locked_controls: locked })
     },
+    // the server takes the changed keys only and tells everyone the new settings (system/settings)
+    setRoomSetting: (key: RoomSetting, value: boolean) => api(neko, 'POST', '/room/settings', { [key]: value }),
 
     // the member context menu, opened from the member list and from chat authors
     openMenu(e: React.MouseEvent, id: string) {

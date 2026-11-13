@@ -363,6 +363,28 @@ await step('implicit hosting: bob gets control by clicking', async () => {
   await api(A, 'POST', '/room/control/reset')
   await B.waitForSelector('[data-testid=member][data-self][data-host]', { state: 'detached', timeout: 5000 })
 })
+await step('room settings: admin switches private mode, bob sees why his video stopped', async () => {
+  await openSide(B)
+  await B.click('[data-testid=tabs] >> text=Settings')
+  await B.waitForSelector('[data-testid=settings] input[aria-label="Invert Scroll"]', {
+    state: 'attached',
+    timeout: 3000,
+  })
+  if (await B.locator('[data-testid=settings] input[aria-label="Private Mode"]').count())
+    throw new Error('bob (user) sees the room settings')
+  await B.click('[data-testid=tabs] >> text=Chat')
+  await A.click('[data-testid=tabs] >> text=Settings')
+  const privateMode = A.locator('[data-testid=settings] label:has(input[aria-label="Private Mode"])')
+  await privateMode.click()
+  await B.waitForSelector('[data-testid=private-mode]', { timeout: 5000 })
+  await A.waitForSelector('input[aria-label="Private Mode"]:checked', { state: 'attached', timeout: 5000 })
+  if (await A.locator('[data-testid=private-mode]').count())
+    throw new Error('alice (admin) sees the private mode notice')
+  await privateMode.click()
+  await B.waitForSelector('[data-testid=private-mode]', { state: 'detached', timeout: 5000 })
+  await A.waitForSelector('input[aria-label="Private Mode"]:not(:checked)', { state: 'attached', timeout: 5000 })
+  await A.click('[data-testid=tabs] >> text=Chat')
+})
 await step('clipboard: local clipboard reaches the remote when hovering', async () => {
   await A.click('[data-testid=control-request]')
   await A.waitForSelector('[data-testid=member][data-self][data-host]', { timeout: 5000 })
