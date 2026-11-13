@@ -1400,6 +1400,13 @@ Guacamole.Keyboard = function Keyboard(element) {
             return e.isComposing || /Composition/.test(e.inputType || '');
         };
 
+        // NEKO PATCH: this vendored copy differs from upstream
+        // (apache/guacamole-client, guacamole-common-js, Keyboard.js). Upstream removes the
+        // "input" listener on the first "compositionstart", which drops all
+        // text sent as plain "input" events after a composition (on-screen
+        // keyboards). Here the listener stays attached and composition input
+        // is skipped instead. Drop this patch if upstream fixes it.
+
         /**
          * Handles the given "input" event, typing the data within the input text.
          * The handler stays attached after a composition: browsers which send
