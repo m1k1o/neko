@@ -16,6 +16,13 @@ type ICEServer struct {
 	URLs       []string `mapstructure:"urls"       json:"urls"`
 	Username   string   `mapstructure:"username"   json:"username,omitempty"`
 	Credential string   `mapstructure:"credential" json:"credential,omitempty"`
+	// Secret shared with a TURN server that uses the TURN REST API (coturn's
+	// static-auth-secret). When set, Username and Credential are replaced by
+	// time-limited ones for every connection. It is never sent to clients.
+	Secret string `mapstructure:"secret" json:"-"`
+	// TTL is how many seconds the generated credentials stay valid. Zero
+	// means the default of one day.
+	TTL int `mapstructure:"ttl" json:"-"`
 }
 
 type PeerVideo struct {
@@ -63,7 +70,7 @@ type WebRTCManager interface {
 	Start()
 	Shutdown() error
 
-	ICEServers() []ICEServer
+	ICEServers(session Session) []ICEServer
 
 	CreatePeer(session Session) (*webrtc.SessionDescription, WebRTCPeer, error)
 	SetCursorPosition(x, y int)

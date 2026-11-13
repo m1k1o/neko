@@ -52,36 +52,10 @@ const (
 func New(desktop types.DesktopManager, capture types.CaptureManager, config *config.WebRTC) *WebRTCManagerCtx {
 	logger := log.With().Str("module", "webrtc").Logger()
 
-	configuration := webrtc.Configuration{
-		SDPSemantics: webrtc.SDPSemanticsUnifiedPlan,
-	}
-
-	if !config.ICELite {
-		ICEServers := []webrtc.ICEServer{}
-		for _, server := range config.ICEServersBackend {
-			var credential any
-			if server.Credential != "" {
-				credential = server.Credential
-			} else {
-				credential = false
-			}
-
-			ICEServers = append(ICEServers, webrtc.ICEServer{
-				URLs:       server.URLs,
-				Username:   server.Username,
-				Credential: credential,
-			})
-		}
-
-		configuration.ICEServers = ICEServers
-	}
-
 	return &WebRTCManagerCtx{
 		logger:  logger,
 		config:  config,
 		metrics: newMetricsManager(),
-
-		webrtcConfiguration: configuration,
 
 		desktop:     desktop,
 		capture:     capture,
@@ -101,10 +75,10 @@ type WebRTCManagerCtx struct {
 	curImage    cursor.Image
 	curPosition cursor.Position
 
-	webrtcConfiguration webrtc.Configuration
-
 	tcpMux ice.TCPMux
 	udpMux ice.UDPMux
+
+	nat1to1 *nat1to1Resolver
 
 	camStop, micStop *func()
 }
@@ -113,6 +87,8 @@ func (manager *WebRTCManagerCtx) Start() {
 	manager.curImage.Start()
 
 	logger := pionlog.New(manager.logger)
+
+	manager.nat1to1 = newNAT1To1Resolver(manager.logger, manager.config.NAT1To1IPs)
 
 	// add TCP Mux listener
 	if manager.config.TCPMux > 0 {
@@ -166,11 +142,41 @@ func (manager *WebRTCManagerCtx) Shutdown() error {
 	return nil
 }
 
-func (manager *WebRTCManagerCtx) ICEServers() []types.ICEServer {
-	return manager.config.ICEServersFrontend
+func (manager *WebRTCManagerCtx) ICEServers(session types.Session) []types.ICEServer {
+	return resolveICEServers(manager.config.ICEServersFrontend, session.ID(), time.Now())
 }
 
-func (manager *WebRTCManagerCtx) newPeerConnection(logger zerolog.Logger, codecs []codec.RTPCodec) (*webrtc.PeerConnection, cc.BandwidthEstimator, error) {
+// webrtcConfiguration returns the configuration of a new peer connection for
+// the given session, with fresh credentials for the backend ICE servers.
+func (manager *WebRTCManagerCtx) webrtcConfiguration(session types.Session) webrtc.Configuration {
+	configuration := webrtc.Configuration{
+		SDPSemantics: webrtc.SDPSemanticsUnifiedPlan,
+	}
+
+	if manager.config.ICELite {
+		return configuration
+	}
+
+	configuration.ICEServers = []webrtc.ICEServer{}
+	for _, server := range resolveICEServers(manager.config.ICEServersBackend, session.ID(), time.Now()) {
+		var credential any
+		if server.Credential != "" {
+			credential = server.Credential
+		} else {
+			credential = false
+		}
+
+		configuration.ICEServers = append(configuration.ICEServers, webrtc.ICEServer{
+			URLs:       server.URLs,
+			Username:   server.Username,
+			Credential: credential,
+		})
+	}
+
+	return configuration
+}
+
+func (manager *WebRTCManagerCtx) newPeerConnection(logger zerolog.Logger, configuration webrtc.Configuration, codecs []codec.RTPCodec) (*webrtc.PeerConnection, cc.BandwidthEstimator, error) {
 	// create media engine
 	engine := &webrtc.MediaEngine{}
 	for _, codec := range codecs {
@@ -186,7 +192,7 @@ func (manager *WebRTCManagerCtx) newPeerConnection(logger zerolog.Logger, codecs
 
 	settings.DisableMediaEngineCopy(true)
 	settings.SetICETimeouts(disconnectedTimeout, failedTimeout, keepAliveInterval)
-	settings.SetNAT1To1IPs(manager.config.NAT1To1IPs, webrtc.ICECandidateTypeHost)
+	settings.SetNAT1To1IPs(manager.nat1to1.IPs(), webrtc.ICECandidateTypeHost)
 	settings.SetLite(manager.config.ICELite)
 	// make sure server answer sdp setup as passive, to not force DTLS renegotiation
 	// otherwise iOS renegotiation fails with: Failed to set SSL role for the transport.
@@ -262,7 +268,6 @@ func (manager *WebRTCManagerCtx) newPeerConnection(logger zerolog.Logger, codecs
 	)
 
 	// create new peer connection
-	configuration := manager.webrtcConfiguration
 	connection, err := api.NewPeerConnection(configuration)
 	return connection, <-estimatorChan, err
 }
@@ -287,7 +292,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session) (*webrtc.Sess
 	videoCodec := video.Codec()
 
 	connection, estimator, err := manager.newPeerConnection(
-		logger, []codec.RTPCodec{audioCodec, videoCodec})
+		logger, manager.webrtcConfiguration(session), []codec.RTPCodec{audioCodec, videoCodec})
 	if err != nil {
 		return nil, nil, err
 	}

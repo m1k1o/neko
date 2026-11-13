@@ -3,6 +3,7 @@
       --capture.audio.pipeline string                 gstreamer pipeline used for audio streaming
       --capture.broadcast.audio_bitrate int           broadcast audio bitrate in KB/s (default 128)
       --capture.broadcast.autostart                   automatically start broadcasting when neko starts and broadcast_url is set (default true)
+      --capture.broadcast.empty_timeout duration      automatically stop broadcasting once no user has been connected for this long, 0 to never stop
       --capture.broadcast.pipeline string             gstreamer pipeline used for broadcasting
       --capture.broadcast.preset string               broadcast speed preset for h264 encoding (default "veryfast")
       --capture.broadcast.url string                  initial URL for broadcasting, setting this value will automatically start broadcasting
@@ -84,7 +85,7 @@
       --webrtc.iceservers.frontend string             STUN and TURN servers used by the frontend (default "[]")
       --webrtc.icetrickle                             configures whether cadidates should be sent asynchronously using Trickle ICE (default true)
       --webrtc.ip_retrieval_url string                URL address used for retrieval of the external IP address (default "https://checkip.amazonaws.com")
-      --webrtc.nat1to1 strings                        sets a list of external IP addresses of 1:1 (D)NAT and a candidate type for which the external IP address is used
+      --webrtc.nat1to1 strings                        list of external IP addresses or hostnames of 1:1 (D)NAT advertised to clients, hostnames are resolved for every new connection
       --webrtc.tcpmux int                             single TCP mux port for all peers
       --webrtc.udpmux int                             single UDP mux port for all peers, replaces EPR
 

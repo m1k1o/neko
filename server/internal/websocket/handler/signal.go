@@ -68,7 +68,7 @@ func (h *MessageHandlerCtx) signalRequest(session types.Session, payload *messag
 		event.SIGNAL_PROVIDE,
 		message.SignalProvide{
 			SDP:        offer.SDP,
-			ICEServers: h.webrtc.ICEServers(),
+			ICEServers: h.webrtc.ICEServers(session),
 
 			Video: peer.Video(),
 			Audio: peer.Audio(),

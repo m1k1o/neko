@@ -50,6 +50,8 @@ The configuration of a single [ICE server](https://developer.mozilla.org/en-US/d
 | <Def id="iceservers.urls" />       | List of URLs of the ICE server, if the same server is available on multiple URLs with the same credentials, they can be listed here. | `string[]` |
 | <Def id="iceservers.username" />   | Username used to authenticate with the ICE server, if the server requires authentication. | `string` |
 | <Def id="iceservers.credential" /> | Credential used to authenticate with the ICE server, if the server requires authentication. | `string` |
+| <Def id="iceservers.secret" />     | Shared secret of a TURN server that uses [time-limited credentials](#iceservers-secret). When set, `username` and `credential` are generated for every connection. The secret is never sent to the client. | `string` |
+| <Def id="iceservers.ttl" />        | Number of seconds the generated credentials stay valid, defaults to `86400` (one day). Only used together with `secret`. | `int` |
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -134,6 +136,30 @@ Replace `<MY-COTURN-SERVER>` with your LAN or Public IP address, and allow ports
 
 </details>
 
+#### Time-limited TURN credentials {#iceservers-secret}
+
+Static TURN credentials are sent to every client, so anyone who joins the room can keep using your TURN server afterwards. Instead, TURN servers supporting the [TURN REST API](https://datatracker.ietf.org/doc/html/draft-uberti-behave-turn-rest-00), such as Coturn with `--use-auth-secret`, accept credentials derived from a shared secret that expire after a given time.
+
+When <Def id="iceservers.secret" /> is set, Neko generates a new username and credential for every connection: the username is the expiry timestamp followed by the session ID (`<unix-timestamp>:<session-id>`), and the credential is the Base64 encoded HMAC-SHA1 of the username keyed with the secret. This works for both frontend and backend ICE servers.
+
+```yaml title="config.yaml"
+webrtc:
+  iceservers:
+    frontend:
+      - urls: "turn:<MY-COTURN-SERVER>:3478"
+        secret: "<MY-STATIC-AUTH-SECRET>"
+        ttl: 86400
+    backend:
+      - urls: "turn:<MY-COTURN-SERVER>:3478"
+        secret: "<MY-STATIC-AUTH-SECRET>"
+```
+
+For Coturn, replace `--user=neko:neko` and `--lt-cred-mech` in the example above with `--use-auth-secret` and `--static-auth-secret=<MY-STATIC-AUTH-SECRET>`.
+
+:::note
+The TURN server may refuse to refresh a relayed connection once its credentials have expired, so the <Def id="iceservers.ttl" /> should be longer than your sessions are expected to last.
+:::
+
 ## Network Setup {#network}
 
 Since WebRTC is a peer-to-peer protocol that requires a direct connection between the client and the server. This can be achieved by:
@@ -213,7 +239,9 @@ The server IP address is sent to the client in ICE candidates so that the client
   'webrtc.nat1to1': '10.10.0.5'
 }} comments={false} />
 
-Currently, only one address can be specified. Therefore if you want to access your instance from both local and public networks, your router must support [NAT loopback (hairpinning)](https://en.wikipedia.org/wiki/Network_address_translation#NAT_hairpinning).
+Instead of an IP address, you can specify a hostname, e.g. `neko.example.com`. All of its IPv4 and IPv6 addresses are used. The hostname is resolved again whenever a new WebRTC connection is created, so with a dynamic DNS name, clients that connect after your public IP address has changed receive the new address without restarting neko. If the hostname cannot be resolved, the addresses from the last successful lookup are used.
+
+When multiple addresses are specified, all of them are sent to the client, which connects to one that it can reach. If you want to access your instance from both local and public networks, you can specify both addresses, or your router must support [NAT loopback (hairpinning)](https://en.wikipedia.org/wiki/Network_address_translation#NAT_hairpinning).
 
 #### IP Retrieval URL {#ip_retrieval_url}
 
