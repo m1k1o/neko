@@ -53,6 +53,33 @@ Yes, you can, but it is not recommended. Neko is based on Debian and uses Xorg a
 
 However, it is recommend to start with existing system that has GUI with desktop manager, is based on Xorg and uses Pulseaudio (e.g. Ubuntu Desktop 24.04). For that matter you only need to install gstreamer dependencies, configure pulseaudio properly and run neko binary (you don't need to build it from scratch, you can copy it from docker image).
 
+### How can I send keyboard and mouse input from a script? {#scripted-input}
+
+Input does not need a WebRTC peer: the same WebSocket the web UI uses accepts the `control/*` events. The steps below were tested against Neko 3.2.0.
+
+1. Log in with `POST /api/login` (`{"username": "...", "password": "..."}`) and keep the returned `token`.
+2. Open `ws://<host>:8080/api/ws?token=<token>` and wait for the `system/init` message, which carries your `session_id`.
+3. Take the keyboard and mouse with `POST /api/room/control/request` (Bearer token). It only succeeds while nobody else is the host.
+4. Send events as JSON messages:
+
+```json
+{"event": "control/move",       "payload": {"x": 640, "y": 360}}
+{"event": "control/buttondown", "payload": {"code": 1}}
+{"event": "control/buttonup",   "payload": {"code": 1}}
+{"event": "control/keydown",    "payload": {"keysym": 65293}}
+{"event": "control/keyup",      "payload": {"keysym": 65293}}
+{"event": "control/scroll",     "payload": {"delta_x": 0, "delta_y": -1, "control_key": false}}
+```
+
+5. Release it with `POST /api/room/control/release` when you are done.
+
+Notes:
+
+- Keys are X11 keysyms. A keysym for an uppercase letter is sent without Shift, so hold Shift (`0xffe1`) around it to get the capital.
+- Only the current host's input is applied. Events from any other session are ignored, even from an admin, until that session becomes the host. Control is released when the host's WebSocket closes.
+- `GET /api/room/screen/shot.jpg` returns a JPEG of the screen but requires an admin session.
+- The server also defines `control/buttonpress` and `control/keypress`. They were not tested here; the examples above use only down/up pairs.
+
 ### Why does the clipboard button does not show up? {#clipboard-button}
 
 When you are using HTTPS connection and a compatible host browser (currently only Chromium-based browsers) which supports the Clipboard API, the clipboard button will not show up. Instead, you can use the native clipboard functionality of your host browser.
