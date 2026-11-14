@@ -2,12 +2,16 @@ package webrtc
 
 import (
 	"encoding/json"
+	"io"
+	"net/http"
+	"net/http/httptest"
 	"reflect"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/pion/webrtc/v4"
+	"github.com/rs/zerolog"
 
 	"github.com/m1k1o/neko/server/internal/config"
 	"github.com/m1k1o/neko/server/pkg/types"
@@ -60,7 +64,10 @@ func TestResolveICEServers(t *testing.T) {
 	original := make([]types.ICEServer, len(servers))
 	copy(original, servers)
 
-	resolved := resolveICEServers(servers, "alice", now)
+	resolved, err := resolveICEServers(servers, "alice", now)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	expected := []types.ICEServer{
 		{URLs: []string{"stun:stun.example.com:3478"}},
@@ -132,5 +139,200 @@ func TestManagerICEServersPerSession(t *testing.T) {
 	manager.config.ICELite = true
 	if servers := manager.webrtcConfiguration(&fakeSession{id: "bob"}).ICEServers; len(servers) != 0 {
 		t.Errorf("expected no backend ICE servers with ICE Lite, got %+v", servers)
+	}
+}
+
+// cloudflareTURNResponse is an example response of the Cloudflare TURN API
+const cloudflareTURNResponse = `{
+	"iceServers": [
+		{
+			"urls": ["stun:stun.cloudflare.com:3478"]
+		},
+		{
+			"urls": [
+				"turn:turn.cloudflare.com:3478?transport=udp",
+				"turns:turn.cloudflare.com:5349?transport=tcp"
+			],
+			"username": "bc91b63e",
+			"credential": "ebd71f1d"
+		}
+	]
+}`
+
+var cloudflareTURNServers = []types.ICEServer{
+	{URLs: []string{"stun:stun.cloudflare.com:3478"}},
+	{
+		URLs: []string{
+			"turn:turn.cloudflare.com:3478?transport=udp",
+			"turns:turn.cloudflare.com:5349?transport=tcp",
+		},
+		Username:   "bc91b63e",
+		Credential: "ebd71f1d",
+	},
+}
+
+type cloudflareTURNRequest struct {
+	method        string
+	path          string
+	authorization string
+	contentType   string
+	body          string
+}
+
+// fakeCloudflareTURN points the Cloudflare TURN API to a test server that
+// records the requests and answers them with the given status and body.
+func fakeCloudflareTURN(t *testing.T, status int, body string) *[]cloudflareTURNRequest {
+	t.Helper()
+
+	requests := &[]cloudflareTURNRequest{}
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		data, _ := io.ReadAll(r.Body)
+		*requests = append(*requests, cloudflareTURNRequest{
+			method:        r.Method,
+			path:          r.URL.EscapedPath(),
+			authorization: r.Header.Get("Authorization"),
+			contentType:   r.Header.Get("Content-Type"),
+			body:          string(data),
+		})
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(status)
+		_, _ = w.Write([]byte(body))
+	}))
+	t.Cleanup(server.Close)
+
+	original := cloudflareTURNURL
+	cloudflareTURNURL = server.URL + "/v1/turn/keys"
+	t.Cleanup(func() { cloudflareTURNURL = original })
+
+	return requests
+}
+
+func TestResolveICEServersCloudflare(t *testing.T) {
+	requests := fakeCloudflareTURN(t, http.StatusCreated, cloudflareTURNResponse)
+
+	servers := []types.ICEServer{
+		{URLs: []string{"stun:stun.example.com:3478"}},
+		{Cloudflare: &types.CloudflareTURN{KeyID: "key-id", APIToken: "api-token"}},
+		{Cloudflare: &types.CloudflareTURN{KeyID: "short/key", APIToken: "other-token"}, TTL: 3600},
+	}
+
+	resolved, err := resolveICEServers(servers, "alice", time.Now())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// each Cloudflare entry is replaced by the servers it returned, in place
+	expected := append([]types.ICEServer{servers[0]}, cloudflareTURNServers...)
+	expected = append(expected, cloudflareTURNServers...)
+	if !reflect.DeepEqual(resolved, expected) {
+		t.Errorf("resolved ICE servers:\n got %+v\nwant %+v", resolved, expected)
+	}
+
+	expectedRequests := []cloudflareTURNRequest{
+		{
+			method:        http.MethodPost,
+			path:          "/v1/turn/keys/key-id/credentials/generate-ice-servers",
+			authorization: "Bearer api-token",
+			contentType:   "application/json",
+			body:          `{"ttl":86400}`, // default TTL of one day
+		},
+		{
+			method:        http.MethodPost,
+			path:          "/v1/turn/keys/short%2Fkey/credentials/generate-ice-servers",
+			authorization: "Bearer other-token",
+			contentType:   "application/json",
+			body:          `{"ttl":3600}`,
+		},
+	}
+	if !reflect.DeepEqual(*requests, expectedRequests) {
+		t.Errorf("requests to Cloudflare TURN API:\n got %+v\nwant %+v", *requests, expectedRequests)
+	}
+}
+
+func TestResolveICEServersCloudflareError(t *testing.T) {
+	tests := []struct {
+		name   string
+		status int
+		body   string
+		reason string
+	}{
+		{"unknown key", http.StatusNotFound, `{"error":"cannot find specified key"}`, "404 Not Found: {\"error\":\"cannot find specified key\"}"},
+		{"invalid response", http.StatusCreated, `<html></html>`, "invalid response"},
+		{"no servers", http.StatusCreated, `{"iceServers":[]}`, "no ICE servers"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			fakeCloudflareTURN(t, tt.status, tt.body)
+
+			servers := []types.ICEServer{
+				{URLs: []string{"stun:stun.example.com:3478"}},
+				{Cloudflare: &types.CloudflareTURN{KeyID: "key-id", APIToken: "api-token"}},
+				{URLs: []string{"turn:rest.example.com:3478"}, Secret: "north"},
+			}
+
+			resolved, err := resolveICEServers(servers, "alice", time.Now())
+			if err == nil {
+				t.Fatal("expected an error")
+			}
+			if !strings.Contains(err.Error(), `"key-id"`) || !strings.Contains(err.Error(), tt.reason) {
+				t.Errorf("error does not mention the TURN key and %q: %v", tt.reason, err)
+			}
+			if strings.Contains(err.Error(), "api-token") {
+				t.Errorf("error contains the API token: %v", err)
+			}
+
+			// the failing entry is left out, other servers are still used
+			if len(resolved) != 2 || resolved[0].URLs[0] != "stun:stun.example.com:3478" ||
+				resolved[1].URLs[0] != "turn:rest.example.com:3478" || resolved[1].Credential == "" {
+				t.Errorf("unexpected resolved ICE servers: %+v", resolved)
+			}
+		})
+	}
+}
+
+func TestManagerICEServersCloudflare(t *testing.T) {
+	requests := fakeCloudflareTURN(t, http.StatusCreated, cloudflareTURNResponse)
+
+	manager := &WebRTCManagerCtx{
+		logger: zerolog.Nop(),
+		config: &config.WebRTC{
+			ICEServersFrontend: []types.ICEServer{
+				{Cloudflare: &types.CloudflareTURN{KeyID: "key-id", APIToken: "api-token"}},
+			},
+			ICEServersBackend: []types.ICEServer{
+				{Cloudflare: &types.CloudflareTURN{KeyID: "key-id", APIToken: "api-token"}},
+			},
+		},
+	}
+
+	// clients get the servers generated by Cloudflare
+	frontend := manager.ICEServers(&fakeSession{id: "alice"})
+	if !reflect.DeepEqual(frontend, cloudflareTURNServers) {
+		t.Errorf("frontend ICE servers:\n got %+v\nwant %+v", frontend, cloudflareTURNServers)
+	}
+
+	// the TURN key and API token are never sent to clients
+	data, err := json.Marshal(frontend)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, s := range []string{"key-id", "api-token", "key_id", "api_token"} {
+		if strings.Contains(string(data), s) {
+			t.Errorf("serialized ICE servers contain %q: %s", s, data)
+		}
+	}
+
+	// so does the backend peer connection
+	backend := manager.webrtcConfiguration(&fakeSession{id: "bob"}).ICEServers
+	if len(backend) != 2 || backend[0].Credential != false ||
+		backend[1].Username != "bc91b63e" || backend[1].Credential != "ebd71f1d" {
+		t.Errorf("unexpected backend ICE servers: %+v", backend)
+	}
+
+	// new credentials are requested for every connection
+	if len(*requests) != 2 {
+		t.Errorf("expected 2 requests to Cloudflare TURN API, got %d", len(*requests))
 	}
 }

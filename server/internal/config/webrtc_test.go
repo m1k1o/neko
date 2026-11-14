@@ -60,3 +60,30 @@ func TestICEServersSecretEnv(t *testing.T) {
 		t.Errorf("backend ICE servers:\n got %+v\nwant %+v", s.ICEServersBackend, expectedBackend)
 	}
 }
+
+func TestICEServersCloudflareEnv(t *testing.T) {
+	s := loadWebRTCFromEnv(t, map[string]string{
+		"NEKO_WEBRTC_ICESERVERS_FRONTEND": `[
+			{"cloudflare": {"key_id": "key-id", "api_token": "api-token"}, "ttl": 3600},
+			{"urls": "stun:stun.example.com:3478"}
+		]`,
+		"NEKO_WEBRTC_ICESERVERS_BACKEND": `[
+			{"cloudflare": {"key_id": "key-id", "api_token": "api-token"}}
+		]`,
+	})
+
+	expectedFrontend := []types.ICEServer{
+		{Cloudflare: &types.CloudflareTURN{KeyID: "key-id", APIToken: "api-token"}, TTL: 3600},
+		{URLs: []string{"stun:stun.example.com:3478"}},
+	}
+	if !reflect.DeepEqual(s.ICEServersFrontend, expectedFrontend) {
+		t.Errorf("frontend ICE servers:\n got %+v\nwant %+v", s.ICEServersFrontend, expectedFrontend)
+	}
+
+	expectedBackend := []types.ICEServer{
+		{Cloudflare: &types.CloudflareTURN{KeyID: "key-id", APIToken: "api-token"}},
+	}
+	if !reflect.DeepEqual(s.ICEServersBackend, expectedBackend) {
+		t.Errorf("backend ICE servers:\n got %+v\nwant %+v", s.ICEServersBackend, expectedBackend)
+	}
+}
