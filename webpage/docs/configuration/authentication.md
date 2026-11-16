@@ -189,6 +189,7 @@ member:
   oauth:
     enabled: true
     # When true, visiting the Neko root page immediately starts OAuth login.
+    # Only applies when OAuth is the member provider.
     auto_redirect: true
     name: "Example SSO"
     admin_emails: ["platform-admin@example.com", "security@example.com"]
@@ -225,6 +226,23 @@ member:
 ```
 
 The sign-in endpoint is `GET /api/oauth/login`; the callback endpoint is `GET /api/oauth/callback`. OAuth login requires `session.cookie.enabled: true`, which is the default. Set `member.provider: oauth` to make OAuth the only member provider.
+
+OAuth login can also be offered next to another member provider. Keep `member.provider` set to that provider and enable `member.oauth`; the login screen then shows the password form and the OAuth button. `auto_redirect` has no effect in this setup, as redirecting would hide the password form.
+
+```yaml title="config.yaml"
+member:
+  provider: "multiuser"
+  multiuser:
+    admin_password: "admin"
+    user_password: "neko"
+  oauth:
+    enabled: true
+    name: "Example SSO"
+    client_id: "<client-id>"
+    client_secret: "<client-secret>"
+    issuer_url: "https://id.example.com"
+    scopes: ["openid", "profile", "email"]
+```
 
 `admin_emails` is a list matched against the standard `email` field, case-insensitively. An OAuth user is an administrator when either their email matches that list or their user-info/ID-token claims include `isAdmin: true`; their permissions then use `admin_profile`. The configured name and avatar fields are read from userinfo first, then fall back to the ID token when userinfo omits them. Avatar URLs are rendered by clients that support member avatars.
 
