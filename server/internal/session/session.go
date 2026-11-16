@@ -193,6 +193,13 @@ func (session *SessionCtx) DisconnectWebSocketPeer(websocketPeer types.WebSocket
 		session.websocketPeer = nil
 	}
 	session.websocketMu.Unlock()
+
+	// A peer that never connected gets no ICE timeout and would keep its
+	// capture subscriptions, while a connected one is closed by its own
+	// connection state changes.
+	if webrtcPeer := session.GetWebRTCPeer(); webrtcPeer != nil && !session.state.IsWatching {
+		webrtcPeer.Destroy()
+	}
 }
 
 // Destroy WebSocket peer disconnects the peer and destroys it. It ensures that the peer is
