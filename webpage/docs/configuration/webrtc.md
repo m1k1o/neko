@@ -175,7 +175,7 @@ webrtc:
         ttl: 86400
 ```
 
-For every connection, Neko asks the Cloudflare API to [generate credentials](https://developers.cloudflare.com/realtime/turn/generate-credentials/) valid for <Def id="iceservers.ttl" /> seconds, and replaces the entry with the STUN and TURN servers returned by Cloudflare. Other fields of the entry, such as `urls`, are ignored. The TURN key itself stays on the server. The same entry can be used for the backend ICE servers as well.
+For every connection, Neko asks the Cloudflare API to [generate credentials](https://developers.cloudflare.com/realtime/turn/generate-credentials/) valid for <Def id="iceservers.ttl" /> seconds, and replaces the entry with the STUN and TURN servers returned by Cloudflare. Other fields of the entry, such as `urls`, are ignored. The TURN key itself stays on the server. The same entry can be used for the backend ICE servers as well. Cloudflare issues credentials for at most 48 hours, so keep <Def id="iceservers.ttl" /> at `172800` or below for this entry.
 
 If the Cloudflare API cannot be reached within 5 seconds or rejects the key, a warning is logged and the connection is established using the remaining ICE servers.
 
