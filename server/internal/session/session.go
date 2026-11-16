@@ -46,9 +46,9 @@ func (session *SessionCtx) profileChanged() {
 		session.ClearHost()
 	}
 
-	if (!session.profile.CanConnect || !session.profile.CanLogin || !session.profile.CanWatch) && session.state.IsWatching {
+	if !session.profile.CanConnect || !session.profile.CanLogin || !session.profile.CanWatch {
 		// The peer may have been removed if the user disconnected while
-		// waiting for the delayed teardown.
+		// waiting for the delayed teardown, or it may not have connected yet.
 		if webrtcPeer := session.GetWebRTCPeer(); webrtcPeer != nil {
 			webrtcPeer.Destroy()
 		}
