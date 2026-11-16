@@ -97,7 +97,7 @@ func (Member) Init(cmd *cobra.Command) error {
 		return err
 	}
 
-	cmd.PersistentFlags().Bool("member.oauth.auto_redirect", false, "redirect the Neko root page to OAuth login automatically")
+	cmd.PersistentFlags().Bool("member.oauth.auto_redirect", false, "redirect the Neko root page to OAuth login automatically, only when member.provider is oauth")
 	if err := viper.BindPFlag("member.oauth.auto_redirect", cmd.PersistentFlags().Lookup("member.oauth.auto_redirect")); err != nil {
 		return err
 	}

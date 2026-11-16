@@ -1395,7 +1395,7 @@ components:
       properties:
         enabled:
           type: boolean
-          description: Indicates whether OAuth login is enabled for the selected member provider.
+          description: Indicates whether OAuth login is enabled. It is available next to any member provider.
         name:
           type: string
           description: Display name for the OAuth login option.
