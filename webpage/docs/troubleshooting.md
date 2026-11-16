@@ -167,6 +167,31 @@ Failed to ping without candidate pairs. Connection is not possible yet.
 Use your actual public IP (or leave it unset to auto-detect) instead.
 :::
 
+### Neko is only reachable through an SSH tunnel {#ssh-tunnel}
+
+If the server cannot expose UDP ports (for example a host behind a bastion), you can still get video by forwarding two TCP ports and letting WebRTC use ICE-TCP. The web UI loads but the video stays black unless the media port is forwarded too.
+
+On the server, multiplex all media over one TCP port and advertise the address the client will actually dial:
+
+```yaml
+environment:
+  NEKO_WEBRTC_TCPMUX: "8081"
+  NEKO_WEBRTC_NAT1TO1: "127.0.0.1"
+  NEKO_WEBRTC_ICELITE: "true"
+```
+
+On the client machine, forward both ports, using **the same number for the media port locally and remotely** (the candidate that Neko advertises contains the port, so it must match):
+
+```bash
+ssh -N -L 8080:<neko-host>:8080 -L 8081:<neko-host>:8081 <bastion>
+```
+
+Then open `http://127.0.0.1:8080`.
+
+:::warning Only for the tunnel case
+Setting [`NEKO_WEBRTC_NAT1TO1`](/docs/v3/configuration/webrtc#nat1to1) to `127.0.0.1` is correct here because every client reaches the server through a tunnel on its own machine. For any other setup follow the warning above and use your public IP, or leave it unset.
+:::
+
 ## Frequently Encountered Errors {#frequently-encountered-errors}
 
 ### Getting a black screen with a cursor, but no browser for Chromium-based browsers {#black-screen-with-cursor}
