@@ -166,8 +166,10 @@ func (manager *SessionManagerCtx) Delete(id string) error {
 		session.DestroyWebSocketPeer("session deleted")
 	}
 
-	if session.State().IsWatching {
-		session.GetWebRTCPeer().Destroy()
+	// The peer is destroyed even if it never connected, otherwise it keeps
+	// the capture pipelines running.
+	if webrtcPeer := session.GetWebRTCPeer(); webrtcPeer != nil {
+		webrtcPeer.Destroy()
 	}
 
 	manager.emmiter.Emit("deleted", session)
@@ -189,8 +191,10 @@ func (manager *SessionManagerCtx) Disconnect(id string) error {
 		session.DestroyWebSocketPeer("session disconnected")
 	}
 
-	if session.State().IsWatching {
-		session.GetWebRTCPeer().Destroy()
+	// The peer is destroyed even if it never connected, otherwise it keeps
+	// the capture pipelines running.
+	if webrtcPeer := session.GetWebRTCPeer(); webrtcPeer != nil {
+		webrtcPeer.Destroy()
 	}
 
 	return nil

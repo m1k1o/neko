@@ -141,3 +141,62 @@ func TestStatsIgnoreProfileChangeWhileDisconnected(t *testing.T) {
 		t.Error("left times are set although nobody was connected")
 	}
 }
+
+// fakeWebRTCPeer embeds the real interface so we only implement the methods sessions call.
+type fakeWebRTCPeer struct {
+	types.WebRTCPeer
+	destroyed bool
+}
+
+func (p *fakeWebRTCPeer) Destroy() { p.destroyed = true }
+
+func (p *fakeWebRTCPeer) SetPaused(bool) error { return nil }
+
+// A peer that has not connected yet must still be destroyed with its session,
+// otherwise it keeps the capture pipelines running.
+func TestPeerDestroyedBeforeConnected(t *testing.T) {
+	tests := []struct {
+		name string
+		end  func(manager *SessionManagerCtx, session types.Session) error
+	}{
+		{"disconnect", func(manager *SessionManagerCtx, session types.Session) error {
+			return manager.Disconnect(session.ID())
+		}},
+		{"delete", func(manager *SessionManagerCtx, session types.Session) error {
+			return manager.Delete(session.ID())
+		}},
+		{"profile change", func(manager *SessionManagerCtx, session types.Session) error {
+			return manager.Update(session.ID(), types.MemberProfile{CanConnect: true, CanLogin: true})
+		}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			manager, session := newTestSession(t, types.MemberProfile{CanConnect: true, CanLogin: true, CanWatch: true})
+			peer := &fakeWebRTCPeer{}
+
+			session.SetWebRTCPeer(peer)
+			if session.State().IsWatching {
+				t.Fatal("session is watching before the peer connected")
+			}
+
+			if err := tt.end(manager, session); err != nil {
+				t.Fatalf("could not end session: %v", err)
+			}
+			if !peer.destroyed {
+				t.Error("webrtc peer was not destroyed")
+			}
+		})
+	}
+}
+
+func TestEndSessionWithoutPeer(t *testing.T) {
+	manager, session := newTestSession(t, types.MemberProfile{})
+
+	if err := manager.Disconnect(session.ID()); err != nil {
+		t.Fatalf("could not disconnect session: %v", err)
+	}
+	if err := manager.Delete(session.ID()); err != nil {
+		t.Fatalf("could not delete session: %v", err)
+	}
+}
