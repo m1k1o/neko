@@ -200,3 +200,78 @@ func TestEndSessionWithoutPeer(t *testing.T) {
 		t.Fatalf("could not delete session: %v", err)
 	}
 }
+
+// Closing or reloading the tab ends the websocket without going through the
+// session manager, so a peer that never connected must be torn down once the
+// websocket disconnection is final.
+func TestPendingPeerDestroyedOnWebSocketDisconnect(t *testing.T) {
+	_, session := newTestSession(t, types.MemberProfile{CanConnect: true, CanLogin: true, CanWatch: true})
+	wsPeer := &fakePeer{}
+	peer := &fakeWebRTCPeer{}
+
+	session.ConnectWebSocketPeer(wsPeer)
+	session.SetWebRTCPeer(peer)
+	session.DisconnectWebSocketPeer(wsPeer, false)
+
+	if !peer.destroyed {
+		t.Error("webrtc peer was not destroyed")
+	}
+}
+
+func TestPendingPeerKeptDuringReconnectGracePeriod(t *testing.T) {
+	_, session := newTestSession(t, types.MemberProfile{CanConnect: true, CanLogin: true, CanWatch: true})
+	wsPeer := &fakePeer{}
+	peer := &fakeWebRTCPeer{}
+
+	session.ConnectWebSocketPeer(wsPeer)
+	session.SetWebRTCPeer(peer)
+	session.DisconnectWebSocketPeer(wsPeer, true)
+
+	if peer.destroyed {
+		t.Fatal("webrtc peer was destroyed before the grace period ended")
+	}
+
+	t.Run("grace period expires", func(t *testing.T) {
+		// what the delayed disconnect timer calls
+		session.DisconnectWebSocketPeer(wsPeer, false)
+
+		if !peer.destroyed {
+			t.Error("webrtc peer was not destroyed after the grace period")
+		}
+	})
+}
+
+func TestPendingPeerKeptAfterReconnect(t *testing.T) {
+	_, session := newTestSession(t, types.MemberProfile{CanConnect: true, CanLogin: true, CanWatch: true})
+	wsPeer := &fakePeer{}
+	peer := &fakeWebRTCPeer{}
+
+	session.ConnectWebSocketPeer(wsPeer)
+	session.SetWebRTCPeer(peer)
+	session.DisconnectWebSocketPeer(wsPeer, true)
+
+	// reconnect within the grace period, then the delayed timer fires
+	session.ConnectWebSocketPeer(&fakePeer{})
+	session.DisconnectWebSocketPeer(wsPeer, false)
+
+	if peer.destroyed {
+		t.Error("webrtc peer was destroyed although the websocket reconnected")
+	}
+}
+
+// A connected peer is closed by its own connection state changes, so the
+// websocket disconnection leaves it alone.
+func TestConnectedPeerKeptOnWebSocketDisconnect(t *testing.T) {
+	_, session := newTestSession(t, types.MemberProfile{CanConnect: true, CanLogin: true, CanWatch: true})
+	wsPeer := &fakePeer{}
+	peer := &fakeWebRTCPeer{}
+
+	session.ConnectWebSocketPeer(wsPeer)
+	session.SetWebRTCPeer(peer)
+	session.SetWebRTCConnected(peer, true)
+	session.DisconnectWebSocketPeer(wsPeer, false)
+
+	if peer.destroyed {
+		t.Error("connected webrtc peer was destroyed")
+	}
+}
