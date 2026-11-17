@@ -29,7 +29,7 @@ type fakeWebRTC struct {
 	peer *fakePeer
 }
 
-func (w *fakeWebRTC) ICEServers() []types.ICEServer { return nil }
+func (w *fakeWebRTC) ICEServers(types.Session) []types.ICEServer { return nil }
 
 func (w *fakeWebRTC) CreatePeer(types.Session) (*webrtc.SessionDescription, types.WebRTCPeer, error) {
 	w.peer = &fakePeer{}

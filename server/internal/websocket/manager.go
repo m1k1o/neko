@@ -315,6 +315,15 @@ func (manager *WebSocketManagerCtx) handle(connection *websocket.Conn, peer type
 	bytes := make(chan []byte)
 	cancel := make(chan error)
 
+	// closed when this function returns, so that the read loop never blocks on a send
+	// that nobody is going to receive
+	done := make(chan struct{})
+	defer close(done)
+
+	// the connection is hijacked from the http server, so nobody else is going to close it
+	// and closing it is the only way to interrupt the blocking read below
+	defer connection.Close()
+
 	ticker := time.NewTicker(pingPeriod)
 	defer ticker.Stop()
 
@@ -322,11 +331,18 @@ func (manager *WebSocketManagerCtx) handle(connection *websocket.Conn, peer type
 		for {
 			_, raw, err := connection.ReadMessage()
 			if err != nil {
-				cancel <- err
-				break
+				select {
+				case cancel <- err:
+				case <-done:
+				}
+				return
 			}
 
-			bytes <- raw
+			select {
+			case bytes <- raw:
+			case <-done:
+				return
+			}
 		}
 	})
 

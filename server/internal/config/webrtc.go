@@ -97,7 +97,7 @@ func (WebRTC) Init(cmd *cobra.Command) error {
 		return err
 	}
 
-	cmd.PersistentFlags().StringSlice("webrtc.nat1to1", []string{}, "sets a list of external IP addresses of 1:1 (D)NAT and a candidate type for which the external IP address is used")
+	cmd.PersistentFlags().StringSlice("webrtc.nat1to1", []string{}, "list of external IP addresses or hostnames of 1:1 (D)NAT advertised to clients, hostnames are resolved for every new connection")
 	if err := viper.BindPFlag("webrtc.nat1to1", cmd.PersistentFlags().Lookup("webrtc.nat1to1")); err != nil {
 		return err
 	}

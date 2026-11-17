@@ -16,6 +16,23 @@ type ICEServer struct {
 	URLs       []string `mapstructure:"urls"       json:"urls"`
 	Username   string   `mapstructure:"username"   json:"username,omitempty"`
 	Credential string   `mapstructure:"credential" json:"credential,omitempty"`
+	// Secret shared with a TURN server that uses the TURN REST API (coturn's
+	// static-auth-secret). When set, Username and Credential are replaced by
+	// time-limited ones for every connection. It is never sent to clients.
+	Secret string `mapstructure:"secret" json:"-"`
+	// Cloudflare TURN key used to generate ICE servers with time-limited
+	// credentials for every connection. When set, the entry is replaced by
+	// the servers returned by Cloudflare. It is never sent to clients.
+	Cloudflare *CloudflareTURN `mapstructure:"cloudflare" json:"-"`
+	// TTL is how many seconds the generated credentials stay valid. Zero
+	// means the default of one day.
+	TTL int `mapstructure:"ttl" json:"-"`
+}
+
+// CloudflareTURN is a TURN key of the Cloudflare Realtime TURN service.
+type CloudflareTURN struct {
+	KeyID    string `mapstructure:"key_id"`
+	APIToken string `mapstructure:"api_token"`
 }
 
 type PeerVideo struct {
@@ -63,7 +80,7 @@ type WebRTCManager interface {
 	Start()
 	Shutdown() error
 
-	ICEServers() []ICEServer
+	ICEServers(session Session) []ICEServer
 
 	CreatePeer(session Session) (*webrtc.SessionDescription, WebRTCPeer, error)
 	SetCursorPosition(x, y int)

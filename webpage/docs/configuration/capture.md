@@ -377,7 +377,7 @@ capture:
 
 Neko allows you to broadcast out-of-the-box the display and audio capture to a third-party service. This can be used to broadcast the display and audio to a streaming service like [Twitch](https://www.twitch.tv/) or [YouTube](https://www.youtube.com/), or to a custom RTMP server like [OBS](https://obsproject.com/), [Nginx RTMP module](https://github.com/arut/nginx-rtmp-module), or [MediaMTX](https://github.com/bluenviron/mediamtx).
 
-The Gstreamer pipeline is started when the broadcast is started and is stopped when the broadcast is stopped regardless of the clients connected.
+The Gstreamer pipeline is started when the broadcast is started and is stopped when the broadcast is stopped regardless of the clients connected, unless <Opt id="broadcast.empty_timeout" /> is set.
 
 <ConfigurationTab options={configOptions} filter={[
   "capture.broadcast.audio_bitrate",
@@ -386,6 +386,7 @@ The Gstreamer pipeline is started when the broadcast is started and is stopped w
   "capture.broadcast.pipeline",
   "capture.broadcast.url",
   "capture.broadcast.autostart",
+  "capture.broadcast.empty_timeout",
 ]} comments={false} />
 
 The default encoder uses `h264` for video and `aac` for audio, muxed in the `flv` container and sent over the `rtmp` protocol. You can change the encoder settings by setting a custom Gstreamer pipeline description in the <Opt id="broadcast.pipeline" /> parameter.
@@ -395,6 +396,7 @@ The default encoder uses `h264` for video and `aac` for audio, muxed in the `flv
 - <Def id="broadcast.pipeline" /> when set, encoder settings above are ignored and the custom Gstreamer pipeline description is used. In the pipeline, you can use `{hostname}`, `{display}`, `{device}` and `{url}` as placeholders for the X display name, pulseaudio audio device name, and broadcast URL respectively.
 - <Def id="broadcast.url" /> is the URL of the RTMP server where the broadcast will be sent e.g. `rtmp://<server>/<application>/<stream_key>`. This can be set later using the API if the URL is not known at the time of configuration or is expected to change.
 - <Def id="broadcast.autostart" /> is a boolean value that determines whether the broadcast should start automatically when neko starts, works only if the URL is set.
+- <Def id="broadcast.empty_timeout" /> stops the broadcast automatically once nobody has been connected to the room for the given duration, e.g. `5m`. The countdown starts when the last user leaves, or when the broadcast is started while the room is empty, and is cancelled as soon as someone connects. It also applies to a broadcast started by <Opt id="broadcast.autostart" />. Defaults to `0`, which never stops the broadcast.
 
 <details>
   <summary>Example pipeline configuration</summary>

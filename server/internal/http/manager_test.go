@@ -68,6 +68,27 @@ func TestOAuthAutoRedirectSkipsAuthenticatedSessions(t *testing.T) {
 	}
 }
 
+func TestOAuthAutoRedirectOnlyForOAuthProvider(t *testing.T) {
+	staticDir := t.TempDir()
+	if err := os.WriteFile(staticDir+"/index.html", []byte("neko client"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	// with another member provider, the root page keeps showing the login form
+	memberConfig := &config.Member{Provider: "multiuser", OAuth: oauth.Config{Enabled: true, AutoRedirect: true}}
+	sessionManager := session.New(&config.Session{
+		Cookie: config.SessionCookie{Enabled: true, Name: "NEKO_SESSION", Expiration: time.Hour},
+	})
+	apiManager := api.New(sessionManager, member.New(sessionManager, memberConfig), nil, nil, memberConfig, &config.Server{})
+	manager := New(testWebSocketManager{}, apiManager, &config.Server{Static: staticDir}, memberConfig)
+
+	recorder := httptest.NewRecorder()
+	manager.router.ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, "/", nil))
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("status = %d, location = %q", recorder.Code, recorder.Header().Get("Location"))
+	}
+}
+
 type originCapturingWebSocketManager struct {
 	checkOrigin types.CheckOrigin
 }

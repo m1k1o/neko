@@ -3,6 +3,7 @@ package websocket
 import (
 	"encoding/json"
 	"errors"
+	"net"
 	"slices"
 	"sync"
 
@@ -88,6 +89,11 @@ func (peer *WebSocketPeerCtx) Destroy(reason string) {
 	peer.mu.Lock()
 	defer peer.mu.Unlock()
 
+	// the connection is already closed if the peer is destroyed after its connection ended
 	err := peer.connection.Close()
+	if errors.Is(err, net.ErrClosed) {
+		err = nil
+	}
+
 	peer.logger.Err(err).Msg("peer connection destroyed")
 }

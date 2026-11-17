@@ -97,6 +97,8 @@ func New(WebSocketManager types.WebSocketManager, MediaWebSocketManager *mediawe
 		}
 	}
 
+	// Only when OAuth is the sole member provider: with another provider the
+	// redirect would hide the password login form.
 	if memberConfig.Provider == "oauth" && memberConfig.OAuth.Enabled && memberConfig.OAuth.AutoRedirect {
 		router.Get("/", func(w http.ResponseWriter, r *http.Request) error {
 			if ApiManager.IsAuthenticated(r) {

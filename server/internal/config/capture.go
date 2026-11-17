@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/go-viper/mapstructure/v2"
 	"github.com/pion/webrtc/v4"
@@ -46,6 +47,7 @@ type Capture struct {
 	BroadcastPipeline     string
 	BroadcastUrl          string
 	BroadcastAutostart    bool
+	BroadcastEmptyTimeout time.Duration
 
 	ScreencastEnabled  bool
 	ScreencastRate     string
@@ -137,6 +139,11 @@ func (Capture) Init(cmd *cobra.Command) error {
 
 	cmd.PersistentFlags().Bool("capture.broadcast.autostart", true, "automatically start broadcasting when neko starts and broadcast_url is set")
 	if err := viper.BindPFlag("capture.broadcast.autostart", cmd.PersistentFlags().Lookup("capture.broadcast.autostart")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().Duration("capture.broadcast.empty_timeout", 0, "automatically stop broadcasting once no user has been connected for this long, 0 to never stop")
+	if err := viper.BindPFlag("capture.broadcast.empty_timeout", cmd.PersistentFlags().Lookup("capture.broadcast.empty_timeout")); err != nil {
 		return err
 	}
 
@@ -451,6 +458,7 @@ func (s *Capture) Set() {
 	s.BroadcastPipeline = viper.GetString("capture.broadcast.pipeline")
 	s.BroadcastUrl = viper.GetString("capture.broadcast.url")
 	s.BroadcastAutostart = viper.GetBool("capture.broadcast.autostart")
+	s.BroadcastEmptyTimeout = viper.GetDuration("capture.broadcast.empty_timeout")
 
 	// screencast
 	s.ScreencastEnabled = viper.GetBool("capture.screencast.enabled")

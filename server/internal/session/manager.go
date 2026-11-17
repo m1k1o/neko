@@ -137,6 +137,12 @@ func (manager *SessionManagerCtx) Update(id string, profile types.MemberProfile)
 	session.profile = profile
 	manager.sessionsMu.Unlock()
 
+	// connected sessions are counted by their admin status
+	if session.state.IsConnected && old.IsAdmin != profile.IsAdmin {
+		manager.statsDisconnected(old.IsAdmin, time.Now())
+		manager.statsConnected(profile.IsAdmin)
+	}
+
 	manager.emmiter.Emit("profile_changed", session, profile, old)
 	manager.save()
 
@@ -160,8 +166,10 @@ func (manager *SessionManagerCtx) Delete(id string) error {
 		session.DestroyWebSocketPeer("session deleted")
 	}
 
-	if session.State().IsWatching {
-		session.GetWebRTCPeer().Destroy()
+	// The peer is destroyed even if it never connected, otherwise it keeps
+	// the capture pipelines running.
+	if webrtcPeer := session.GetWebRTCPeer(); webrtcPeer != nil {
+		webrtcPeer.Destroy()
 	}
 
 	manager.emmiter.Emit("deleted", session)
@@ -183,8 +191,10 @@ func (manager *SessionManagerCtx) Disconnect(id string) error {
 		session.DestroyWebSocketPeer("session disconnected")
 	}
 
-	if session.State().IsWatching {
-		session.GetWebRTCPeer().Destroy()
+	// The peer is destroyed even if it never connected, otherwise it keeps
+	// the capture pipelines running.
+	if webrtcPeer := session.GetWebRTCPeer(); webrtcPeer != nil {
+		webrtcPeer.Destroy()
 	}
 
 	return nil
@@ -483,6 +493,28 @@ func (manager *SessionManagerCtx) CookieEnabled() bool {
 // ---
 // stats
 // ---
+
+func (manager *SessionManagerCtx) statsConnected(isAdmin bool) {
+	if isAdmin {
+		manager.totalAdmins.Add(1)
+		manager.lastAdminLeftAt.Store((*time.Time)(nil))
+	} else {
+		manager.totalUsers.Add(1)
+		manager.lastUserLeftAt.Store((*time.Time)(nil))
+	}
+}
+
+func (manager *SessionManagerCtx) statsDisconnected(isAdmin bool, now time.Time) {
+	if isAdmin {
+		if manager.totalAdmins.Add(-1) == 0 {
+			manager.lastAdminLeftAt.Store(&now)
+		}
+	} else {
+		if manager.totalUsers.Add(-1) == 0 {
+			manager.lastUserLeftAt.Store(&now)
+		}
+	}
+}
 
 func (manager *SessionManagerCtx) Stats() types.Stats {
 	hostId := ""

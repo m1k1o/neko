@@ -27,37 +27,41 @@ type OAuthUIConfig struct {
 
 // oauthHandler is deliberately limited to HTTP concerns. The OAuth protocol,
 // profile mapping, and session creation are owned by member/oauth.Service.
+//
+// OAuth login is available whenever it is enabled, next to the selected member
+// provider. Only when OAuth is the member provider itself (oauthOnly) is
+// password login turned off.
 type oauthHandler struct {
-	service       *oauth.Service
-	pathPrefix    string
-	trustProxy    bool
-	providerOAuth bool
+	service    *oauth.Service
+	pathPrefix string
+	trustProxy bool
+	oauthOnly  bool
 }
 
-func newOAuthHandler(service *oauth.Service, pathPrefix string, trustProxy, providerOAuth bool) *oauthHandler {
+func newOAuthHandler(service *oauth.Service, pathPrefix string, trustProxy, oauthOnly bool) *oauthHandler {
 	if pathPrefix == "" {
 		pathPrefix = "/"
 	}
 
 	return &oauthHandler{
-		service:       service,
-		pathPrefix:    pathPrefix,
-		trustProxy:    trustProxy,
-		providerOAuth: providerOAuth,
+		service:    service,
+		pathPrefix: pathPrefix,
+		trustProxy: trustProxy,
+		oauthOnly:  oauthOnly,
 	}
 }
 
 func (api *ApiManagerCtx) OAuthConfig(w http.ResponseWriter, r *http.Request) error {
 	return utils.HttpSuccess(w, OAuthUIConfig{
-		Enabled:              api.oauth.providerOAuth && api.oauth.service.Enabled(),
+		Enabled:              api.oauth.service.Enabled(),
 		Name:                 api.oauth.service.Name(),
 		LoginURL:             path.Join(api.oauth.pathPrefix, "/api/oauth/login"),
-		PasswordLoginEnabled: !api.oauth.providerOAuth,
+		PasswordLoginEnabled: !api.oauth.oauthOnly,
 	})
 }
 
 func (api *ApiManagerCtx) OAuthLogin(w http.ResponseWriter, r *http.Request) error {
-	if !api.oauth.providerOAuth || !api.oauth.service.Enabled() {
+	if !api.oauth.service.Enabled() {
 		return utils.HttpNotFound()
 	}
 
@@ -83,7 +87,7 @@ func (api *ApiManagerCtx) OAuthLogin(w http.ResponseWriter, r *http.Request) err
 }
 
 func (api *ApiManagerCtx) OAuthCallback(w http.ResponseWriter, r *http.Request) error {
-	if !api.oauth.providerOAuth || !api.oauth.service.Enabled() {
+	if !api.oauth.service.Enabled() {
 		return utils.HttpNotFound()
 	}
 
