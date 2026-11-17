@@ -80,7 +80,7 @@ func TestOAuthAutoRedirectOnlyForOAuthProvider(t *testing.T) {
 		Cookie: config.SessionCookie{Enabled: true, Name: "NEKO_SESSION", Expiration: time.Hour},
 	})
 	apiManager := api.New(sessionManager, member.New(sessionManager, memberConfig), nil, nil, memberConfig, &config.Server{})
-	manager := New(testWebSocketManager{}, apiManager, &config.Server{Static: staticDir}, memberConfig)
+	manager := New(testWebSocketManager{}, nil, apiManager, &config.Server{Static: staticDir}, memberConfig)
 
 	recorder := httptest.NewRecorder()
 	manager.router.ServeHTTP(recorder, httptest.NewRequest(http.MethodGet, "/", nil))
