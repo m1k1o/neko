@@ -9,7 +9,7 @@
 # stale, then run the browser.
 #
 # The profile is taken from the --user-data-dir= argument. Without it, the
-# default profile of opera and chromium is used.
+# browser is started as is.
 #
 # A lock from another hostname is treated as stale, so do not share one profile
 # between containers that run at the same time.
@@ -20,13 +20,6 @@ for arg in "$@"; do
     --user-data-dir=*) dir="${arg#--user-data-dir=}" ;;
   esac
 done
-
-if [ -z "$dir" ]; then
-  case "$(basename "$1")" in
-    opera) dir="$HOME/.config/opera" ;;
-    chromium|chrome-wrapper) dir="$HOME/.config/chromium" ;;
-  esac
-fi
 
 lock="$dir/SingletonLock"
 if [ -n "$dir" ] && [ -L "$lock" ]; then
