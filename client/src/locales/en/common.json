@@ -67,7 +67,12 @@
     "chat_sound": "Play Chat Sound",
     "links_in_app": "Always open links in app",
     "keyboard_layout": "Keyboard Layout",
-    "broadcast_title": "Live Broadcast"
+    "broadcast_title": "Live Broadcast",
+    "transport": "Connection method",
+    "transport_auto": "Automatic",
+    "transport_webrtc": "WebRTC",
+    "transport_websocket": "WebSocket",
+    "transport_reload": "Applies on the next connection"
   },
   "connection": {
     "reconnecting": "Reconnecting...",
@@ -75,7 +80,8 @@
     "disconnected": "Disconnected",
     "kicked": "You have been removed from this room.",
     "replaced": "This session was opened in another tab or window.",
-    "button_confirm": "OK"
+    "button_confirm": "OK",
+    "fell_back": "WebRTC could not connect, switched to WebSocket"
   },
   "notifications": {
     "connected": "{{name}} connected",

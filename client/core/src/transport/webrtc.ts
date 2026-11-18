@@ -10,10 +10,27 @@ const RECONNECT_BACKOFF_MS = 1500
 // is off), so the room is shown without video instead of a spinner for ever; a dead socket is the
 // client's stale check's business
 const OFFER_TIMEOUT_MS = 8_000
+// how long a peer may sit in 'connecting' before it is treated as failed. The browser takes about
+// ten seconds to give up on ICE by itself; a caller with somewhere to fall back to passes less, so
+// a blocked media route is noticed in seconds rather than after every attempt runs that long.
+const CONNECT_TIMEOUT_MS = 0
 
 export class WebRTCTransport implements StreamTransport {
   readonly kind = 'webrtc' as const
   readonly input = new DataChannelInput()
+
+  // How many failures to take before giving up. The default retries for about a minute, which is
+  // right when WebRTC is the only option. A caller that has somewhere to fall back to passes a
+  // small number so the switch happens in seconds instead.
+  private readonly maxFailures: number
+  private readonly connectTimeout: number
+
+  constructor(opts: { failFastAfter?: number; connectTimeoutMs?: number } = {}) {
+    this.maxFailures = opts.failFastAfter ?? RECONNECT_MAX
+    this.connectTimeout = opts.connectTimeoutMs ?? CONNECT_TIMEOUT_MS
+    this.input.onCursorPosition = (p) => this.events.emit('cursor.position', p)
+    this.input.onCursorImage = (img) => this.events.emit('cursor.image', img)
+  }
 
   static supported() {
     return typeof RTCPeerConnection !== 'undefined'
@@ -34,11 +51,7 @@ export class WebRTCTransport implements StreamTransport {
   private failures = 0
   private retryTimer = 0
   private offerTimer = 0
-
-  constructor() {
-    this.input.onCursorPosition = (p) => this.events.emit('cursor.position', p)
-    this.input.onCursorImage = (img) => this.events.emit('cursor.image', img)
-  }
+  private connectTimer = 0
 
   get element() {
     return this.video
@@ -109,6 +122,7 @@ export class WebRTCTransport implements StreamTransport {
   private closePeer() {
     clearTimeout(this.retryTimer)
     clearTimeout(this.offerTimer)
+    clearTimeout(this.connectTimer)
     this.pc?.close()
     this.pc = null
     this.input.bind(null)
@@ -147,6 +161,17 @@ export class WebRTCTransport implements StreamTransport {
   }
 
   private onPeerState(s: RTCPeerConnectionState) {
+    // any outcome ends the wait for this attempt
+    if (s !== 'connecting' && s !== 'new') clearTimeout(this.connectTimer)
+    if (s === 'connecting' && this.connectTimeout > 0) {
+      clearTimeout(this.connectTimer)
+      const pc = this.pc
+      // still stuck on the same peer once the time is up: treat it as failed, as the browser
+      // eventually would, so the retry or the fallback starts now instead
+      this.connectTimer = window.setTimeout(() => {
+        if (this.pc === pc && pc?.connectionState === 'connecting') this.onPeerState('failed')
+      }, this.connectTimeout)
+    }
     if (s === 'connected') {
       this.failures = 0
       this.setStatus('connected')
@@ -157,7 +182,7 @@ export class WebRTCTransport implements StreamTransport {
       this.closePeer()
       // no media route (firewall, NAT1TO1, missing TURN): retry with backoff, then give up
       // instead of asking the server for a new peer several times a second
-      if (++this.failures > RECONNECT_MAX)
+      if (++this.failures > this.maxFailures)
         return this.events.emit('error', new Error('video connection failed (WebRTC)'))
       clearTimeout(this.retryTimer)
       this.retryTimer = window.setTimeout(() => this.requestPeer(), RECONNECT_BACKOFF_MS * Math.min(this.failures, 4))
