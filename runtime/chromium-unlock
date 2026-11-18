@@ -1,20 +1,35 @@
 #!/bin/sh
 #
-# Usage: chromium-unlock <user-data-dir>
+# Usage: chromium-unlock <command> [args...]
 #
 # Chromium based browsers lock their profile with a SingletonLock symlink that
 # points to "<hostname>-<pid>". A recreated container gets a new hostname, so a
 # lock left in a persisted profile makes the browser refuse to start, as the
 # profile seems to be in use on another computer. Remove the lock when it is
-# stale. Runs once from supervisord, before the browser is started.
+# stale, then run the browser.
+#
+# The profile is taken from the --user-data-dir= argument. Without it, the
+# default profile of opera and chromium is used.
 #
 # A lock from another hostname is treated as stale, so do not share one profile
 # between containers that run at the same time.
 
-dir="$1"
+dir=""
+for arg in "$@"; do
+  case "$arg" in
+    --user-data-dir=*) dir="${arg#--user-data-dir=}" ;;
+  esac
+done
+
+if [ -z "$dir" ]; then
+  case "$(basename "$1")" in
+    opera) dir="$HOME/.config/opera" ;;
+    chromium|chrome-wrapper) dir="$HOME/.config/chromium" ;;
+  esac
+fi
 
 lock="$dir/SingletonLock"
-if [ -L "$lock" ]; then
+if [ -n "$dir" ] && [ -L "$lock" ]; then
   target="$(readlink "$lock")"
   host="${target%-*}"
   pid="${target##*-}"
@@ -25,4 +40,4 @@ if [ -L "$lock" ]; then
   fi
 fi
 
-exit 0
+exec "$@"
