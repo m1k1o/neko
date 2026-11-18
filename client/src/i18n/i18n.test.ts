@@ -121,13 +121,23 @@ test('loader: reads exactly <lang>/<ns> from the glob map, nothing of the other 
 test('every language has the three files, en every key, the others all but the known gaps', () => {
   assert.deepEqual(readdirSync(new URL('../locales/', import.meta.url)).sort(), [...langs].sort())
   const en = Object.fromEntries(NS.map((ns) => [ns, flat(json('en', ns))]))
-  assert.equal(Object.keys(en.common).length + Object.keys(en.chat).length + Object.keys(en.files).length, 100)
+  assert.equal(Object.keys(en.common).length + Object.keys(en.chat).length + Object.keys(en.files).length, 110)
   // strings added since the translations: en only, until someone translates them
   const GAPS = [
+    'private_mode',
     'controls.mic_on',
     'controls.mic_off',
     'controls.mic_error',
     'setting.links_in_app',
+    'setting.room_title',
+    'setting.private_mode',
+    'setting.private_mode_desc',
+    'setting.control_protection',
+    'setting.control_protection_desc',
+    'setting.implicit_hosting',
+    'setting.implicit_hosting_desc',
+    'setting.merciful_reconnect',
+    'setting.merciful_reconnect_desc',
     'connection.replaced',
   ]
   for (const lang of langs) {

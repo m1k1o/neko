@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next'
 import { PlayIcon, SquareIcon } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 import { useActions } from '@/state/actions'
+import { ROOM_SETTINGS } from '@/state/app'
 import { useNeko } from '@/state/provider'
 import { setSetting } from '@/state/settings'
 import { Button } from '@/components/ui/button'
@@ -33,30 +34,32 @@ export function Settings() {
       keyboardLayouts: a.keyboardLayouts,
     })),
   )
-  const admin = useStore(client.store, selectIsAdmin)
+  const { admin, room } = useStore(
+    client.store,
+    useShallow((c) => ({ admin: selectIsAdmin(c), room: c.settings })),
+  )
   const [url, setUrl] = useState(broadcast.url)
   useEffect(() => setUrl(broadcast.url), [broadcast.url])
 
-  const toggle = (
-    key: 'scroll_invert' | 'autoplay' | 'ignore_emotes' | 'chat_sound' | 'links_in_app',
-    name: string,
-  ) => (
-    <li className={row}>
+  // a row with a switch: the input, its track and its knob
+  const switchRow = (name: string, checked: boolean, onChange: (checked: boolean) => void, title?: string) => (
+    <li className={row} key={name} title={title}>
       <span className={label}>{t(`setting.${name}`)}</span>
-      {/* the switch: the input, its track and its knob */}
       <label className="relative h-6 w-[42px]">
         <input
           type="checkbox"
           className="peer h-0 w-0 opacity-0"
           aria-label={t(`setting.${name}`)}
-          checked={s[key]}
-          onChange={(e) => setSetting(neko, key, e.target.checked)}
+          checked={checked}
+          onChange={(e) => onChange(e.target.checked)}
         />
         <span className="absolute inset-0 cursor-pointer rounded-[34px] bg-background-tertiary transition-all duration-200 peer-checked:bg-style-primary" />
         <span className="absolute bottom-[3px] left-[3px] h-[18px] w-[18px] cursor-pointer rounded-full bg-white shadow-[0_2px_4px_rgba(0,0,0,0.3)] transition-all duration-300 peer-checked:translate-x-[18px]" />
       </label>
     </li>
   )
+  const toggle = (key: 'scroll_invert' | 'autoplay' | 'ignore_emotes' | 'chat_sound' | 'links_in_app', name: string) =>
+    switchRow(name, s[key], (checked) => setSetting(neko, key, checked))
 
   return (
     <div className="flex flex-1" data-testid="settings">
@@ -99,6 +102,18 @@ export function Settings() {
             </select>
           </label>
         </li>
+        {admin && (
+          <>
+            {/* the room's settings, for everyone in it: shown as the server last sent them (system/settings),
+                so a switch moves once the change is in, whoever made it */}
+            <li className={cn(row, 'justify-start pt-2.5 text-[12px] font-medium text-text-muted uppercase')}>
+              {t('setting.room_title')}
+            </li>
+            {ROOM_SETTINGS.map((key) =>
+              switchRow(key, room[key], (checked) => actions.setRoomSetting(key, checked), t(`setting.${key}_desc`)),
+            )}
+          </>
+        )}
         {admin && (
           <li className={cn(row, 'flex-col')}>
             <div className="mb-2.5 flex justify-between">

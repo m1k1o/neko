@@ -76,6 +76,11 @@ export const selectMuted = (s: State, id = s.session_id) =>
   !!id && s.sessions[id]?.profile.plugins?.['chat.can_send'] === false
 export const isMuted = (client: NekoClient, id?: string | null) => selectMuted(client.state, id)
 
+// the room settings an admin switches in the settings tab; the locks are in the header, and
+// inactive_cursors is left out because this client does not draw the other members' cursors
+export const ROOM_SETTINGS = ['private_mode', 'control_protection', 'implicit_hosting', 'merciful_reconnect'] as const
+export type RoomSetting = (typeof ROOM_SETTINGS)[number]
+
 export type LockResource = 'login' | 'control'
 export const isLocked = (r: LockResource, settings: Settings) =>
   r === 'login' ? settings.locked_logins : settings.locked_controls
