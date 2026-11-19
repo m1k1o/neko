@@ -64,6 +64,7 @@
       --session.heartbeat_interval int                interval in seconds for sending heartbeat messages (default 10)
       --session.implicit_hosting                      allow implicit control switching
       --session.inactive_cursors                      show inactive cursors on the screen
+      --session.locked                                start new clients with local controls locked when implicit hosting is enabled
       --session.locked_controls                       whether controls should be locked for users initially
       --session.locked_logins                         whether logins should be locked for users initially
       --session.merciful_reconnect                    allow reconnecting to websocket even if previous connection was not closed (default true)

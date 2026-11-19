@@ -286,7 +286,7 @@ export class Overlay {
     else this.mouseDown = false
 
     if (!this.client.controlling) {
-      if (down && this.client.implicitControl) {
+      if (down && this.interactive && this.client.implicitControl) {
         this.pendingPress = { e, at: performance.now() }
         this.client.request()
       }
@@ -401,7 +401,7 @@ export class Overlay {
 
   private onTouch(e: TouchEvent) {
     if (!this.client.controlling) {
-      if (e.type === 'touchstart' && this.client.implicitControl) this.client.request()
+      if (e.type === 'touchstart' && this.interactive && this.client.implicitControl) this.client.request()
       return // let the page scroll
     }
     e.preventDefault()
@@ -436,7 +436,7 @@ export class Overlay {
     this.pendingPress = null
     // only a press from just now: control that arrives minutes later by other means (an admin
     // giving it) must not replay an old click
-    if (controlling && pending && performance.now() - pending.at < 2000) {
+    if (controlling && this.active && pending && performance.now() - pending.at < 2000) {
       const e = pending.e
       this.move(this.pos(e))
       this.button(e.button + 1, true)

@@ -479,6 +479,10 @@ func (manager *SessionManagerCtx) updateSettings(session types.Session, new, old
 	manager.emmiter.Emit("settings_changed", session, new, old)
 }
 
+func (manager *SessionManagerCtx) LockControlsOnStart() bool {
+	return manager.config.LockControlsOnStart
+}
+
 func (manager *SessionManagerCtx) Settings() types.Settings {
 	manager.settingsMu.Lock()
 	defer manager.settingsMu.Unlock()

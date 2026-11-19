@@ -31,6 +31,8 @@ type Session struct {
 	HeartbeatInterval int
 	APIToken          string
 
+	LockControlsOnStart bool
+
 	Cookie SessionCookie
 }
 
@@ -62,6 +64,11 @@ func (Session) Init(cmd *cobra.Command) error {
 
 	cmd.PersistentFlags().Bool("session.implicit_hosting", false, "allow implicit control switching")
 	if err := viper.BindPFlag("session.implicit_hosting", cmd.PersistentFlags().Lookup("session.implicit_hosting")); err != nil {
+		return err
+	}
+
+	cmd.PersistentFlags().Bool("session.locked", false, "start new clients with local controls locked when implicit hosting is enabled")
+	if err := viper.BindPFlag("session.locked", cmd.PersistentFlags().Lookup("session.locked")); err != nil {
 		return err
 	}
 
@@ -156,6 +163,7 @@ func (s *Session) Set() {
 	s.LockedControls = viper.GetBool("session.locked_controls")
 	s.ControlProtection = viper.GetBool("session.control_protection")
 	s.ImplicitHosting = viper.GetBool("session.implicit_hosting")
+	s.LockControlsOnStart = viper.GetBool("session.locked")
 	s.InactiveCursors = viper.GetBool("session.inactive_cursors")
 	s.MercifulReconnect = viper.GetBool("session.merciful_reconnect")
 	s.HeartbeatInterval = viper.GetInt("session.heartbeat_interval")
