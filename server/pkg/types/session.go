@@ -119,6 +119,7 @@ type SessionManager interface {
 
 	UpdateSettingsFunc(session Session, f func(settings *Settings) bool)
 	Settings() Settings
+	LockControlsOnStart() bool
 	CookieEnabled() bool
 
 	Stats() Stats

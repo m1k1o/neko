@@ -35,13 +35,14 @@ func (h *MessageHandlerCtx) systemInit(session types.Session) error {
 	session.Send(
 		event.SYSTEM_INIT,
 		message.SystemInit{
-			SessionId:         session.ID(),
-			ControlHost:       controlHost,
-			ScreenSize:        h.desktop.GetScreenSize(),
-			Sessions:          sessions,
-			Settings:          h.sessions.Settings(),
-			TouchEvents:       h.desktop.HasTouchSupport(),
-			ScreencastEnabled: h.capture.Screencast().Enabled(),
+			SessionId:           session.ID(),
+			ControlHost:         controlHost,
+			ScreenSize:          h.desktop.GetScreenSize(),
+			Sessions:            sessions,
+			Settings:            h.sessions.Settings(),
+			LockControlsOnStart: h.sessions.LockControlsOnStart(),
+			TouchEvents:         h.desktop.HasTouchSupport(),
+			ScreencastEnabled:   h.capture.Screencast().Enabled(),
 			WebRTC: message.SystemWebRTC{
 				Videos: h.capture.Video().IDs(),
 			},

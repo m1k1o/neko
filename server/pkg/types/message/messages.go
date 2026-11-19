@@ -15,14 +15,15 @@ type SystemWebRTC struct {
 }
 
 type SystemInit struct {
-	SessionId         string                 `json:"session_id"`
-	ControlHost       ControlHost            `json:"control_host"`
-	ScreenSize        types.ScreenSize       `json:"screen_size"`
-	Sessions          map[string]SessionData `json:"sessions"`
-	Settings          types.Settings         `json:"settings"`
-	TouchEvents       bool                   `json:"touch_events"`
-	ScreencastEnabled bool                   `json:"screencast_enabled"`
-	WebRTC            SystemWebRTC           `json:"webrtc"`
+	SessionId           string                 `json:"session_id"`
+	ControlHost         ControlHost            `json:"control_host"`
+	ScreenSize          types.ScreenSize       `json:"screen_size"`
+	Sessions            map[string]SessionData `json:"sessions"`
+	Settings            types.Settings         `json:"settings"`
+	LockControlsOnStart bool                   `json:"lock_controls_on_start,omitempty"`
+	TouchEvents         bool                   `json:"touch_events"`
+	ScreencastEnabled   bool                   `json:"screencast_enabled"`
+	WebRTC              SystemWebRTC           `json:"webrtc"`
 }
 
 type SystemAdmin struct {

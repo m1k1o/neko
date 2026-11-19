@@ -355,7 +355,10 @@ export class NekoClient {
           control: {
             ...state.control,
             touch: !!p.touch_events,
-            host_id: p.control_host?.has_host ? p.control_host.host_id : null,
+            locked: p.settings.implicit_hosting
+              ? p.lock_controls_on_start === true && !!p.sessions?.[p.session_id]?.profile.can_host
+              : state.control.locked,
+            host_id: p.control_host?.has_host ? (p.control_host.host_id ?? null) : null,
           },
           screen: { ...state.screen, size: p.screen_size },
           sessions: p.sessions ?? {},
@@ -453,7 +456,12 @@ export class NekoClient {
     const { state } = this
     this.store.setState({
       connection: { ...state.connection, status: 'disconnected' },
-      control: { ...state.control, host_id: null, clipboard: null },
+      control: {
+        ...state.control,
+        host_id: null,
+        clipboard: null,
+        locked: !state.settings.implicit_hosting && state.control.locked,
+      },
       screen: { ...state.screen, configurations: [] },
       session_id: null,
       sessions: {},

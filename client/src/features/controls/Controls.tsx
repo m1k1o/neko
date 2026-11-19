@@ -25,29 +25,31 @@ export function Controls() {
   const { t } = useTranslation()
   const { client, app } = useNeko()
   const actions = useActions()
-  const { admin, hosting, hosted, implicit, lockedControls, localLock, video, connected, canShareMedia } = useStore(
-    client.store,
-    useShallow((s) => ({
-      admin: selectIsAdmin(s),
-      hosting: selectControlling(s),
-      hosted: s.control.host_id !== null,
-      implicit: s.settings.implicit_hosting,
-      lockedControls: s.settings.locked_controls,
-      localLock: s.control.locked,
-      video: s.video,
-      connected: s.connection.status === 'connected',
-      canShareMedia: !!selectSession(s)?.profile.can_share_media,
-    })),
-  )
+  const { admin, hosting, hosted, implicit, lockedControls, localLock, video, connected, canHost, canShareMedia } =
+    useStore(
+      client.store,
+      useShallow((s) => ({
+        admin: selectIsAdmin(s),
+        hosting: selectControlling(s),
+        hosted: s.control.host_id !== null,
+        implicit: s.settings.implicit_hosting,
+        lockedControls: s.settings.locked_controls,
+        localLock: s.control.locked,
+        video: s.video,
+        connected: s.connection.status === 'connected',
+        canHost: !!selectSession(s)?.profile.can_host,
+        canShareMedia: !!selectSession(s)?.profile.can_share_media,
+      })),
+    )
   const [shake, setShake] = useState(false)
   const mic = useRef<{ track: MediaStreamTrack; stop: () => void } | null>(null)
   const [micOn, setMicOn] = useState(false)
 
   const controlLocked = lockedControls && !admin
-  const locked = localLock && hosting
   const { playable, playing, muted, volume } = video
   const micAllowed = hosting && canShareMedia && !!navigator.mediaDevices // none on plain http
-  const lockDisabled = !hosting || (implicit && controlLocked)
+  const canToggleLock = implicit ? !controlLocked && (hosting || (connected && canHost)) : hosting
+  const locked = localLock && (hosting || canToggleLock)
 
   // clicking the video without control shakes the keyboard icon as a hint
   useEffect(() => {
@@ -117,24 +119,24 @@ export function Controls() {
           {/* the lock switch: the input, its track and its knob (a lock icon when it can be used) */}
           <label
             className="relative mx-[5px] block h-6 w-[42px] cursor-pointer"
-            title={hosting ? t(locked ? 'controls.unlock' : 'controls.lock') : ''}
+            title={canToggleLock ? t(locked ? 'controls.unlock' : 'controls.lock') : ''}
           >
             <input
               type="checkbox"
               className="peer h-0 w-0 opacity-0"
               aria-label={t(locked ? 'controls.unlock' : 'controls.lock')}
               checked={locked}
-              disabled={lockDisabled}
+              disabled={!canToggleLock}
               onChange={(e) => (e.target.checked ? client.lock() : client.unlock())}
             />
             <span className="absolute inset-0 rounded-[34px] bg-background-secondary transition-all duration-200 peer-checked:bg-style-primary peer-focus-visible:outline-2 peer-focus-visible:outline-style-primary" />
             <span
               className={cn(
                 'absolute bottom-[3px] left-[3px] flex h-[18px] w-[18px] items-center justify-center rounded-full text-background-tertiary shadow-[0_2px_4px_rgba(0,0,0,0.3)] transition-all duration-300 peer-checked:translate-x-[18px]',
-                lockDisabled ? 'bg-text-normal/40' : 'bg-white',
+                !canToggleLock ? 'bg-text-normal/40' : 'bg-white',
               )}
             >
-              {!lockDisabled && (locked ? <LockIcon className="size-2" /> : <LockOpenIcon className="size-2" />)}
+              {canToggleLock && (locked ? <LockIcon className="size-2" /> : <LockOpenIcon className="size-2" />)}
             </span>
           </label>
         </li>
