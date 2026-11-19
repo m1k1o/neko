@@ -47,6 +47,22 @@ export function Chat() {
   useLayoutEffect(() => {
     history.current!.scrollTop = history.current!.scrollHeight
   }, [last])
+  // an image (chat_images, a custom emoji) has no height until it loads: one that loads while the
+  // history is scrolled to the end keeps it there. load does not bubble, so it is caught on the way down
+  const atEnd = useRef(true)
+  useEffect(() => {
+    const el = history.current!
+    const onScroll = () => (atEnd.current = el.scrollHeight - el.scrollTop - el.clientHeight < 5)
+    const onLoad = () => {
+      if (atEnd.current) el.scrollTop = el.scrollHeight
+    }
+    el.addEventListener('scroll', onScroll, { passive: true })
+    el.addEventListener('load', onLoad, true)
+    return () => {
+      el.removeEventListener('scroll', onScroll)
+      el.removeEventListener('load', onLoad, true)
+    }
+  }, [])
 
   const onKeyDown = (e: React.KeyboardEvent) => {
     if (e.key !== 'Enter' || e.shiftKey || e.nativeEvent.isComposing) return

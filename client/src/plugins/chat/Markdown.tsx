@@ -37,18 +37,35 @@ function Spoiler({ children }: { children: ReactNode }) {
   )
 }
 
+// an image of the chat (chat_images), at most 200px tall; one that does not load shows `fallback`
+function ChatImage({ src, alt, fallback }: { src: string; alt: string; fallback: ReactNode }) {
+  const [failed, setFailed] = useState(false)
+  if (failed) return fallback
+  return (
+    <img
+      className="my-1 block max-h-[200px] max-w-full rounded"
+      src={src}
+      alt={alt}
+      loading="lazy"
+      referrerPolicy="no-referrer"
+      data-testid="chat-image"
+      onError={() => setFailed(true)}
+    />
+  )
+}
+
 // react-markdown's Markdown is a plain function (no hooks), called here so that a renderer error
 // (pathological nesting, say) shows the text as it is instead of taking the chat down
-function render(source: string, components: Components): ReactNode {
+function render(source: string, components: Components, images: boolean): ReactNode {
   if (source.length > FORMAT_LIMIT) return source
   try {
     return ReactMarkdown({
       children: source,
       remarkPlugins,
-      rehypePlugins,
+      rehypePlugins: rehypePlugins(images),
       components,
       urlTransform: safeUrl,
-      disallowedElements,
+      disallowedElements: disallowedElements(images),
       unwrapDisallowed: true,
     })
   } catch {
@@ -61,9 +78,13 @@ function render(source: string, components: Components): ReactNode {
 export const Markdown = memo(function Markdown({ source }: { source: string }) {
   const neko = useNeko()
   const { client, app } = neko
-  const { canOpenInApp, linksInApp } = useStore(
+  const { canOpenInApp, linksInApp, images } = useStore(
     app,
-    useShallow((s) => ({ canOpenInApp: s.openInApp, linksInApp: s.settings.links_in_app })),
+    useShallow((s) => ({
+      canOpenInApp: s.openInApp,
+      linksInApp: s.settings.links_in_app,
+      images: s.settings.chat_images,
+    })),
   )
   const hosting = useStore(client.store, selectControlling)
   useStore(chat(neko), (s) => s.emojiReady) // re-render once the emoji names are known (markdown.ts reads them)
@@ -76,24 +97,35 @@ export const Markdown = memo(function Markdown({ source }: { source: string }) {
   }
 
   const components: Components = {
-    a: ({ href = '', children }) => (
-      <>
-        <a
-          className="text-text-link underline"
-          href={href}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={open(href)}
-        >
+    // the preview of a link to an image (markdown.ts): the image alone, no icon; gone if it fails
+    a: ({ node, href = '', children }) =>
+      node?.properties.dataPreview ? (
+        <a className="block w-fit" href={href} target="_blank" rel="noopener noreferrer" onClick={open(href)}>
           {children}
         </a>
-        {inApp && (
-          <IconButton label="Open in app" className="ml-[0.3em] align-middle" onClick={() => openInApp(neko, href)}>
-            <ArrowSquareOutIcon className="size-3.5" />
-          </IconButton>
-        )}
-      </>
-    ),
+      ) : (
+        <>
+          <a
+            className="text-text-link underline"
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={open(href)}
+          >
+            {children}
+          </a>
+          {inApp && (
+            <IconButton label="Open in app" className="ml-[0.3em] align-middle" onClick={() => openInApp(neko, href)}>
+              <ArrowSquareOutIcon className="size-3.5" />
+            </IconButton>
+          )}
+        </>
+      ),
+    // with images on (chat_images) only; ![alt](url) that does not load leaves its alt text in its link
+    img: ({ node, src, alt = '' }) =>
+      typeof src === 'string' && (
+        <ChatImage src={src} alt={alt} fallback={node?.properties.dataPreview ? null : alt || src} />
+      ),
     // the spans are the plugins' (markdown.ts): an emoji by name, or a spoiler
     span: ({ node, children }) =>
       node?.properties.dataEmoji === undefined ? (
@@ -113,7 +145,7 @@ export const Markdown = memo(function Markdown({ source }: { source: string }) {
       className="leading-[22px] text-text-normal wrap-break-word [&_blockquote]:border-l-[3px] [&_blockquote]:border-background-accent [&_blockquote]:pl-[3px] [&_em]:italic [&_:is(h1,h2,h3,h4,h5,h6)]:font-bold [&_ol]:list-decimal [&_p+p]:mt-[22px] [&_pre_code]:block [&_strong]:font-extrabold [&_:is(td,th)]:px-1 [&_ul]:list-disc [&_:is(ul,ol)]:pl-5"
       data-testid="chat-body"
     >
-      {render(source, components)}
+      {render(source, components, images)}
     </div>
   )
 })

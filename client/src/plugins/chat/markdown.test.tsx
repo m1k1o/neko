@@ -11,7 +11,7 @@ fakeBrowser()
 const { createNekoApp } = await import('@/state/neko')
 const { NekoProvider } = await import('@/state/provider')
 const { emoji } = await import('./emoji.ts')
-const { FORMAT_LIMIT, safeUrl } = await import('./markdown.ts')
+const { FORMAT_LIMIT, imageUrl, isImageLink, safeUrl } = await import('./markdown.ts')
 const { Markdown } = await import('./Markdown.tsx')
 
 Object.assign(emoji, { names: new Set(['smile', 'neko']), chars: { smile: '😄' } })
@@ -133,6 +133,71 @@ test('open in app: the icon after a link when the plugin is there and we host', 
   const s = app.client.state
   app.client.store.setState({ session_id: 'me', control: { ...s.control, host_id: 'me' } })
   expect(html(link, app)).toMatch(/<\/a><button type="button" aria-label="Open in app"/)
+})
+
+test('images: shown only with chat_images, from http(s) only, a link to an image file gets a preview', () => {
+  const app = createNekoApp({ transport: fakeTransport() })
+  app.app.getInitialState = app.app.getState
+  app.app.setState((s) => ({ settings: { ...s.settings, chat_images: true } }))
+  const img = (src: string, alt = '') =>
+    `<img class="my-1 block max-h-[200px] max-w-full rounded" src="${src}" alt="${alt}" loading="lazy" referrerPolicy="no-referrer" data-testid="chat-image"/>`
+  const link = (href: string, inner: string) =>
+    `<a class="text-text-link underline" href="${href}" target="_blank" rel="noopener noreferrer">${inner}</a>`
+  const preview = (href: string) =>
+    `<a class="block w-fit" href="${href}" target="_blank" rel="noopener noreferrer">${img(href)}</a>`
+
+  // ![alt](url): the image, a link to itself; also by reference
+  expect(html('![a cat](https://x.io/cat)', app)).toBe(p(link('https://x.io/cat', img('https://x.io/cat', 'a cat'))))
+  expect(html('![](https://x.io/c.png)', app)).toBe(p(link('https://x.io/c.png', img('https://x.io/c.png'))))
+  expect(html('![b][i]\n\n[i]: https://x.io/y.png', app)).toBe(
+    p(link('https://x.io/y.png', img('https://x.io/y.png', 'b'))),
+  )
+  // in a link: that link, no second one around it, no preview
+  expect(html('[![a](https://x.io/a.png)](https://x.io/page)', app)).toBe(
+    p(link('https://x.io/page', img('https://x.io/a.png', 'a'))),
+  )
+  expect(html('[*![a](https://x.io/a.png)*](https://x.io/b.png)', app)).toBe(
+    p(link('https://x.io/b.png', '<em>' + img('https://x.io/a.png', 'a') + '</em>')),
+  )
+  // a link to an image file, bare or with a label: the link, then the preview; the query does not count
+  expect(html('look https://x.io/cat.PNG?s=2 here', app)).toBe(
+    p(
+      'look ' +
+        link('https://x.io/cat.PNG?s=2', 'https://x.io/cat.PNG?s=2') +
+        preview('https://x.io/cat.PNG?s=2') +
+        ' here',
+    ),
+  )
+  expect(html('[cat](https://x.io/a/cat.webp)', app)).toBe(
+    p(link('https://x.io/a/cat.webp', 'cat') + preview('https://x.io/a/cat.webp')),
+  )
+  // not an image file: no preview, nothing is fetched
+  for (const src of ['https://x.io/page', 'https://x.io/?f=cat.png', 'https://x.io/png', 'mailto:cat.png@x.io'])
+    expect(html(src, app), src).not.toContain('<img')
+  // a scheme other than http(s): the text it was typed as, even with images on
+  for (const src of [
+    '![a](data:image/png;base64,AAAA)',
+    '![a](javascript:alert(1))',
+    '![a](/rel.png)',
+    '![a](mailto:a@x.io)',
+  ]) {
+    const out = html(src, app)
+    expect(out, src).not.toContain('<img')
+    expect(out, src).toContain(src)
+  }
+  // raw HTML stays text
+  expect(html('<img src="https://x.io/y.png">', app)).not.toContain('<img')
+  // in code: verbatim
+  expect(html('`![a](https://x.io/y.png)` `https://x.io/y.png`', app)).not.toContain('<img')
+  // off (the default): no image anywhere
+  expect(html('![a](https://x.io/y.png) https://x.io/y.png')).not.toContain('<img')
+
+  expect(imageUrl('https://x.io/a.png')).toBe('https://x.io/a.png')
+  expect(imageUrl('mailto:a@x.io')).toBeNull()
+  expect(imageUrl('data:image/png;base64,AAAA')).toBeNull()
+  expect(isImageLink('https://x.io/a.jpeg#top')).toBe(true)
+  expect(isImageLink('https://x.io/a.jpeg.html')).toBe(false)
+  expect(isImageLink('ftp://x.io/a.png')).toBe(false)
 })
 
 // a fence with no closing fence and hundreds of newlines fits the 512-character chat box and used

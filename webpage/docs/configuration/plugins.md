@@ -49,6 +49,15 @@ plugins:
 - `chat.can_send` in the room settings context controls whether the chat messages can be sent by any user in the room, and in the user's profile context controls whether the user can send chat messages.
 - `chat.can_receive` in the room settings context controls whether the chat messages can be received by any user in the room, and in the user's profile context controls whether the user can receive chat messages.
 
+### Images in chat {#chat-images}
+
+The web client does not show images in chat by default. To show an image, the viewer's browser has to download it from wherever it is hosted, and that host would see the viewer's IP address. Each user can turn on **Show Images in Chat** in the settings tab. The choice is saved in that browser. While it is on, the client shows:
+
+- Markdown images, such as `![a cat](https://example.com/cat.png)`. Clicking one opens it in a new tab.
+- A preview below links to image files: links whose path ends in `.png`, `.jpg`, `.jpeg`, `.gif`, `.webp`, `.avif`, `.apng`, `.bmp` or `.svg`.
+
+Images load only over HTTP or HTTPS, are no taller than 200 pixels and are requested without a referrer. If a Markdown image fails to load, its alt text is shown as a link to it instead. If a preview fails to load, it is left out.
+
 ## File Transfer Plugin {#filetransfer}
 
 The file transfer plugin is a simple pre-loaded internal plugin that allows you to transfer files between the client and the server. The files are uploaded to the server and then downloaded by the client.
