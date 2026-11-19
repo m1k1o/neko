@@ -1,0 +1,61 @@
+name: Publish npm Package
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  client-checks:
+    name: Client Checks
+    uses: ./.github/workflows/client_build.yml
+    with:
+      with-artifact: false
+
+  publish:
+    name: Publish @m1k1o/neko
+    needs: client-checks
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
+
+      - name: Ensure npm supports trusted publishing
+        run: npm install --global 'npm@^11.5.1'
+
+      - name: Verify tag matches package version
+        working-directory: client/core
+        run: |
+          node --input-type=module -e '
+            import { readFileSync } from "node:fs";
+            const { version } = JSON.parse(readFileSync("package.json", "utf8"));
+            const expected = `v${version}`;
+            if (process.env.GITHUB_REF_NAME !== expected) {
+              throw new Error(`Tag ${process.env.GITHUB_REF_NAME} does not match package version ${version}`);
+            }
+          '
+
+      - name: Install package dependencies
+        working-directory: client/core
+        run: npm ci
+
+      - name: Build package
+        working-directory: client/core
+        run: npm run build
+
+      - name: Publish to npm
+        working-directory: client/core
+        run: npm publish

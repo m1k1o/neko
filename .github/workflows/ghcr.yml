@@ -6,31 +6,37 @@ on:
       - 'v*'
 
 jobs:
+  check-latest:
+    name: Check if Latest Version
+    uses: ./.github/workflows/check_latest.yml
+
   build-base:
     name: Base Image
+    needs: check-latest
     uses: ./.github/workflows/image_base.yml
     with:
-      platforms: linux/amd64,linux/arm64,linux/arm/v7
+      platforms: linux/amd64,linux/arm64
+      latest: ${{ needs.check-latest.outputs.is_latest == 'true' }}
+      latest_major: ${{ needs.check-latest.outputs.is_latest_major == 'true' }}
     secrets: inherit
 
   build-app:
     name: App Image
     uses: ./.github/workflows/image_app.yml
-    needs: build-base
+    needs: [build-base, check-latest]
     strategy:
       # Will build all images even if some fail.
       fail-fast: false
       matrix:
         include:
           - name: firefox
-            platforms: linux/amd64,linux/arm64,linux/arm/v7
-          # Temporarily disabled due to Cloudflare blocked download link
-          #- name: waterfox
-          #  platforms: linux/amd64
-          - name: chromium
-            platforms: linux/amd64,linux/arm64,linux/arm/v7
-          - name: google-chrome
+            platforms: linux/amd64,linux/arm64
+          - name: waterfox
             platforms: linux/amd64
+          - name: chromium
+            platforms: linux/amd64,linux/arm64
+          - name: google-chrome
+            platforms: linux/amd64,linux/arm64
           - name: ungoogled-chromium
             platforms: linux/amd64
           - name: microsoft-edge
@@ -38,20 +44,22 @@ jobs:
           - name: brave
             platforms: linux/amd64,linux/arm64
           - name: vivaldi
-            platforms: linux/amd64,linux/arm64,linux/arm/v7
+            platforms: linux/amd64,linux/arm64
           - name: opera
             platforms: linux/amd64
           - name: tor-browser
             platforms: linux/amd64
           - name: remmina
-            platforms: linux/amd64,linux/arm64,linux/arm/v7
+            platforms: linux/amd64,linux/arm64
           - name: vlc
-            platforms: linux/amd64,linux/arm64,linux/arm/v7
+            platforms: linux/amd64,linux/arm64
           - name: xfce
-            platforms: linux/amd64,linux/arm64,linux/arm/v7
+            platforms: linux/amd64,linux/arm64
           - name: kde
-            platforms: linux/amd64,linux/arm64,linux/arm/v7
+            platforms: linux/amd64,linux/arm64
     with:
       name: ${{ matrix.name }}
       platforms: ${{ matrix.platforms }}
+      latest: ${{ needs.check-latest.outputs.is_latest == 'true' }}
+      latest_major: ${{ needs.check-latest.outputs.is_latest_major == 'true' }}
     secrets: inherit

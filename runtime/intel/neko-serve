@@ -1,0 +1,26 @@
+#!/bin/sh
+
+# GStreamer only registers the VA-API elements (e.g. vah264enc) if a usable VA
+# display is found while the plugins are scanned for the first time, and the
+# result of that scan is cached in the user's registry. supervisord starts the
+# X server and neko in the same pass, so without waiting here neko can scan the
+# plugins before X (and therefore VA-API) is usable. The cache then lacks the
+# encoder elements and every client connect fails with
+# '(pipeline error) no element "vah264enc"'.
+#
+# Wait until VA is usable through X, then drop any stale registry, so that the
+# first scan of this process happens with a working VA display.
+i=0
+while [ "$i" -lt 30 ]; do
+  if vainfo >/dev/null 2>&1; then break; fi
+  sleep 1
+  i=$((i + 1))
+done
+
+if [ "$i" -ge 30 ]; then
+  echo "neko-serve: VA-API was not usable after 30s, starting neko anyway" >&2
+fi
+
+rm -f "$HOME/.cache/gstreamer-1.0/registry."*
+
+exec /usr/bin/neko serve "$@"

@@ -52,6 +52,15 @@
     "key": [
       "capture",
       "broadcast",
+      "empty_timeout"
+    ],
+    "type": "duration",
+    "description": "automatically stop broadcasting once no user has been connected for this long, 0 to never stop"
+  },
+  {
+    "key": [
+      "capture",
+      "broadcast",
       "pipeline"
     ],
     "type": "string",
@@ -191,6 +200,16 @@
     "type": "object",
     "defaultValue": {},
     "description": "pipelines config used for video streaming"
+  },
+  {
+    "key": [
+      "capture",
+      "video",
+      "show_pointer"
+    ],
+    "type": "boolean",
+    "defaultValue": "true",
+    "description": "show mouse pointer in captured video, overrides show_pointer of all video pipelines"
   },
   {
     "key": [
@@ -511,7 +530,7 @@
       "enabled"
     ],
     "type": "boolean",
-    "defaultValue": "true",
+    "defaultValue": "false",
     "description": "whether cookies authentication should be enabled"
   },
   {
@@ -577,7 +596,7 @@
       "heartbeat_interval"
     ],
     "type": "int",
-    "defaultValue": "120",
+    "defaultValue": "10",
     "description": "interval in seconds for sending heartbeat messages"
   },
   {
@@ -586,7 +605,7 @@
       "implicit_hosting"
     ],
     "type": "boolean",
-    "defaultValue": "true",
+    "defaultValue": "false",
     "description": "allow implicit control switching"
   },
   {
@@ -805,7 +824,7 @@
       "nat1to1"
     ],
     "type": "strings",
-    "description": "sets a list of external IP addresses of 1:1 (D)NAT and a candidate type for which the external IP address is used"
+    "description": "list of external IP addresses or hostnames of 1:1 (D)NAT advertised to clients, hostnames are resolved for every new connection"
   },
   {
     "key": [

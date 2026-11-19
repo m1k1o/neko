@@ -15,10 +15,11 @@ type SessionLoginPayload struct {
 }
 
 type SessionDataPayload struct {
-	ID      string              `json:"id"`
-	Token   string              `json:"token,omitempty"`
-	Profile types.MemberProfile `json:"profile"`
-	State   types.SessionState  `json:"state"`
+	ID        string              `json:"id"`
+	Token     string              `json:"token,omitempty"`
+	Profile   types.MemberProfile `json:"profile"`
+	State     types.SessionState  `json:"state"`
+	ExtraData map[string]any      `json:"extra_data,omitempty"`
 }
 
 func (api *ApiManagerCtx) Login(w http.ResponseWriter, r *http.Request) error {
@@ -78,21 +79,31 @@ func (api *ApiManagerCtx) Whoami(w http.ResponseWriter, r *http.Request) error {
 	session, _ := auth.GetSession(r)
 
 	return utils.HttpSuccess(w, SessionDataPayload{
-		ID:      session.ID(),
-		Profile: session.Profile(),
-		State:   session.State(),
+		ID:        session.ID(),
+		Profile:   session.Profile(),
+		State:     session.State(),
+		ExtraData: api.oauth.service.ExtraData(session.ID()),
 	})
 }
 
 func (api *ApiManagerCtx) UpdateProfile(w http.ResponseWriter, r *http.Request) error {
 	session, _ := auth.GetSession(r)
 
-	data := session.Profile()
-	if err := utils.HttpJsonRequest(w, r, &data); err != nil {
-		return err
+	profile := session.Profile()
+	if !profile.IsAdmin {
+		// Name is the only updatable field in the profile for non-admins
+		var payload types.MemberProfile
+		if err := utils.HttpJsonRequest(w, r, &payload); err != nil {
+			return err
+		}
+		profile.Name = payload.Name
+	} else {
+		if err := utils.HttpJsonRequest(w, r, &profile); err != nil {
+			return err
+		}
 	}
 
-	err := api.sessions.Update(session.ID(), data)
+	err := api.sessions.Update(session.ID(), profile)
 	if err != nil {
 		if errors.Is(err, types.ErrSessionNotFound) {
 			return utils.HttpBadRequest("session does not exist")

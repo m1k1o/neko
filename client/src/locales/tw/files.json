@@ -1,0 +1,22 @@
+{
+  "tab": "檔案",
+  "locks": {
+    "lock": "鎖定檔案傳輸（對使用者）",
+    "unlock": "解鎖檔案傳輸（對使用者）",
+    "locked": "檔案傳輸已鎖定（對使用者）",
+    "unlocked": "檔案傳輸已解鎖（對使用者）",
+    "notif_locked": "已鎖定檔案傳輸",
+    "notif_unlocked": "已解鎖檔案傳輸"
+  },
+  "uploads": "上傳",
+  "upload_here": "點選或拖曳檔案至此上傳",
+  "delete": "刪除",
+  "delete_title": "刪除「{{name}}」？",
+  "delete_confirm": "確定要刪除此檔案嗎？",
+  "select": "選擇",
+  "select_all": "全選",
+  "unselect_all": "取消全選",
+  "cancel": "取消",
+  "delete_selected_title": "刪除選取的檔案？",
+  "delete_selected_confirm": "確定要刪除選取的 {{count}} 個檔案嗎？"
+}

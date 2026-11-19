@@ -85,7 +85,9 @@ Check the [Firefox-based browsers customization guide](/docs/v3/customization/br
 
 There are multiple flavors of Chromium-based browsers available as Neko Docker images.
 
-They need `--cap-add=SYS_ADMIN` (see [security implications](https://www.redhat.com/en/blog/container-tidbits-adding-capabilities-container) for more information) and extended shared memory size (`--shm-size=2g`) to work properly.
+Chromium is running with `--no-sandbox` flag, which is required to run it in a container without additional configuration. You can read more about it in [Quick introduction](https://www.google.com/googlebooks/chrome/med_26.html) to Chrome's sandbox. More in-depth [design document](https://chromium.googlesource.com/chromium/src/+/refs/heads/main/docs/design/sandbox.md), with internal links to FAQ, etc.
+
+Additionally, chromium-based browsers require `--shm-size=2g` (or more) to work properly. This is because the default shared memory size for Docker containers is too small for Chromium-based browsers, which can lead to crashes and other issues. 
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
@@ -95,7 +97,6 @@ import TabItem from '@theme/TabItem';
 
     ```bash
     docker run \
-      --cap-add=SYS_ADMIN \
       --shm-size=2g \
       ghcr.io/m1k1o/neko/chromium
     ```
@@ -105,8 +106,6 @@ import TabItem from '@theme/TabItem';
   <TabItem value="docker-compose" label="Docker Compose configuration">
 
     ```yaml title="docker-compose.yaml"
-    cap_add:
-    - SYS_ADMIN
     shm_size: 2g
     ```
 
@@ -126,6 +125,18 @@ import TabItem from '@theme/TabItem';
 \* requires extra steps to enable DRM, see instructions [here](https://www.reddit.com/r/operabrowser/wiki/opera/linux_widevine_config/). `libffmpeg` is already configured.
 
 Check the [Chromium-based browsers customization guide](/docs/v3/customization/browsers#chromium-based) for more information on how to customize Chromium-based browsers (configuring profile, installing extensions, etc.).
+
+### Not available browsers {#not-available}
+
+Some browsers are intentionally absent from Neko - not because of technical limitations, but due to legal restrictions imposed by the vendor.
+
+#### Safari {#safari-not-available}
+
+:::danger Apple prohibits this
+Safari is **not available** and will never be officially supported. Apple's [macOS and Safari EULA](https://www.apple.com/legal/sla/) prohibits running Safari outside of Apple hardware and macOS. Distributing or using Safari on Linux (or any non-Apple platform) violates Apple's Terms of Service - so this repository cannot include it.
+
+Every other major browser vendor publishes Linux builds or open-source code that can run in a container. Apple does not. You can build it yourself if you wish, but this project will not ship it.
+:::
 
 ### Desktop Environments {#desktop}
 
@@ -241,7 +252,7 @@ For images with Nvidia GPU hardware acceleration using EGL use:
 - [`ghcr.io/m1k1o/neko/nvidia-microsoft-edge`](https://ghcr.io/m1k1o/neko/nvidia-microsoft-edge)
 - [`ghcr.io/m1k1o/neko/nvidia-brave`](https://ghcr.io/m1k1o/neko/nvidia-brave)
 
-The base image is available at [`ghcr.io/m1k1o/neko/nvidia-base`](https://ghcr.io/m1k1o/neko/nvidia-base).
+The base image is available at [`ghcr.io/m1k1o/neko/nvidia-base`](https://ghcr.io/m1k1o/neko/nvidia-base). See [Examples](/docs/v3/installation/examples#gpu-nvidia-browser) for more information and usage.
 
 ## Supported Architectures {#arch}
 
@@ -249,30 +260,29 @@ Neko Docker images are built with docker buildx and are available for multiple a
 
 - `linux/amd64` - 64-bit Intel/AMD architecture (most common).
 - `linux/arm64` - 64-bit ARM architecture (e.g., Raspberry Pi 4, Apple M1/M2).
-- `linux/arm/v7` - 32-bit ARM architecture (e.g., Raspberry Pi 3, Raspberry Pi Zero).
 
 ### Availability Matrix {#availability}
 
 The availability of applications for ARM architecture is limited due to the lack of support for some applications. The following table shows the availability of each application for each architecture. The `✅` symbol indicates that the application is available for that architecture, while the `❌` symbol indicates that it is not available.
 
-| Application                               | AMD64 | ARM64 | ARMv7 | Reference |
-| ----------------------------------------- | ----- | ----- | ----- | --------- |
-| [Firefox](#firefox)                       | ✅    | ✅ \* | ✅ \* | - |
-| [Tor Browser](#tor-browser)               | ✅    | ❌    | ❌    | [Forum Post](https://forum.torproject.org/t/tor-browser-for-arm-linux/5240) |
-| [Waterfox](#waterfox)                     | ✅    | ❌    | ❌    | [Github Issue](https://github.com/BrowserWorks/Waterfox/issues/1506), [Reddit](https://www.reddit.com/r/waterfox/comments/jpqsds/are_there_any_builds_for_arm64/) |
-| [Chromium](#chromium)                     | ✅    | ✅ \* | ✅ \* | - |
-| [Google Chrome](#google-chrome)           | ✅    | ❌    | ❌    | [Community Post](https://askubuntu.com/a/1383791) |
-| [Ungoogled Chromium](#ungoogled-chromium) | ✅    | ❌    | ❌    | [Downloads Page](https://ungoogled-software.github.io/ungoogled-chromium-binaries/) |
-| [Microsoft Edge](#microsoft-edge)         | ✅    | ❌    | ❌    | [Community Post](https://techcommunity.microsoft.com/discussions/edgeinsiderdiscussions/edge-for-linuxarm64/1532272) |
-| [Brave](#brave)                           | ✅    | ✅ \* | ❌    | [Requirements Page](https://support.brave.com/hc/en-us/articles/360021357112-What-are-the-system-requirements-to-install-Brave) |
-| [Vivaldi](#vivaldi)                       | ✅    | ✅ \* | ✅ \* | - |
-| [Opera](#opera)                           | ✅    | ❌    | ❌    | [Forum Post](https://forums.opera.com/topic/52811/opera-do-not-support-arm64-on-linux) |
-| [Xfce](#xfce)                             | ✅    | ✅    | ✅    | - |
-| [KDE](#kde)                               | ✅    | ✅    | ✅    | - |
-| [Remmina](#remmina)                       | ✅    | ✅    | ✅    | - |
-| [VLC](#vlc)                               | ✅    | ✅    | ✅    | - |
+| Application                               | AMD64 | ARM64 | Reference |
+| ----------------------------------------- | ----- | ----- | --------- |
+| [Firefox](#firefox)                       | ✅    | ✅ \* | - |
+| [Tor Browser](#tor-browser)               | ✅    | ❌    | [Forum Post](https://forum.torproject.org/t/tor-browser-for-arm-linux/5240) |
+| [Waterfox](#waterfox)                     | ✅    | ❌    | [Github Issue](https://github.com/BrowserWorks/Waterfox/issues/1506), [Reddit](https://www.reddit.com/r/waterfox/comments/jpqsds/are_there_any_builds_for_arm64/) |
+| [Chromium](#chromium)                     | ✅    | ✅ \* | - |
+| [Google Chrome](#google-chrome)           | ✅    | ✅ \* | - |
+| [Ungoogled Chromium](#ungoogled-chromium) | ✅    | ❌    | [Downloads Page](https://ungoogled-software.github.io/ungoogled-chromium-binaries/) |
+| [Microsoft Edge](#microsoft-edge)         | ✅    | ❌    | [Community Post](https://techcommunity.microsoft.com/discussions/edgeinsiderdiscussions/edge-for-linuxarm64/1532272) |
+| [Brave](#brave)                           | ✅    | ✅ \* | - |
+| [Vivaldi](#vivaldi)                       | ✅    | ✅ \* | - |
+| [Opera](#opera)                           | ✅    | ❌    | [Forum Post](https://forums.opera.com/topic/52811/opera-do-not-support-arm64-on-linux) |
+| [Xfce](#xfce)                             | ✅    | ✅    | - |
+| [KDE](#kde)                               | ✅    | ✅    | - |
+| [Remmina](#remmina)                       | ✅    | ✅    | - |
+| [VLC](#vlc)                               | ✅    | ✅    | - |
 
-\* No DRM support.
+\* requires extra steps to enable DRM, see instructions [here](/docs/v3/customization/browsers#arm64-drm).
 
 :::tip
 [Oracle Cloud ARM free tier](https://www.oracle.com/cloud/free/) is a great way to test Neko on ARM architecture for free. You can use the `ghcr.io/m1k1o/neko/xfce` image to run a full desktop environment with Xfce and test the applications.

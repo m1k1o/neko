@@ -13,14 +13,14 @@ import (
 // TODO: Extract file uploading to custom utility.
 
 // maximum upload size of 32 MB
-const maxUploadSize = 32 << 20
+const multipartFormMaxMemory = 32 << 20
 
 func (h *RoomHandler) uploadDrop(w http.ResponseWriter, r *http.Request) error {
 	if !h.desktop.IsUploadDropEnabled() {
 		return utils.HttpBadRequest("upload drop is disabled")
 	}
 
-	err := r.ParseMultipartForm(maxUploadSize)
+	err := r.ParseMultipartForm(multipartFormMaxMemory)
 	if err != nil {
 		return utils.HttpBadRequest("failed to parse multipart form").WithInternalErr(err)
 	}
@@ -95,7 +95,7 @@ func (h *RoomHandler) uploadDialogPost(w http.ResponseWriter, r *http.Request) e
 		return utils.HttpBadRequest("file chooser dialog is disabled")
 	}
 
-	err := r.ParseMultipartForm(maxUploadSize)
+	err := r.ParseMultipartForm(multipartFormMaxMemory)
 	if err != nil {
 		return utils.HttpBadRequest("failed to parse multipart form").WithInternalErr(err)
 	}

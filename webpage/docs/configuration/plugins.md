@@ -31,10 +31,12 @@ There exist a few pre-loaded internal plugins that are shipped with Neko:
 The chat plugin is a simple pre-loaded internal plugin that allows you to chat with other users in the same session. The chat messages are sent to the server and then broadcasted to all users in the same session.
 
 <ConfigurationTab options={{
-  'chat.enabled': true
+  'chat.enabled': true,
+  'chat.max_length': 512,
 }} />
 
 - <Def id="chat.enabled" /> enables the chat support. If set to `false`, the chat is disabled.
+- <Def id="chat.max_length" /> is the longest accepted chat message, counted in characters (not bytes). Longer messages are rejected with `400` over the API and dropped over the websocket. Set to `0` to disable the limit.
 
 The chat plugin extends user profile and room settings by adding the following fields:
 
@@ -59,11 +61,17 @@ The file transfer plugin is a simple pre-loaded internal plugin that allows you 
     type: 'duration',
     defaultValue: '30s',
   },
+  'filetransfer.user_download': false,
+  'filetransfer.user_upload': false,
+  'filetransfer.user_delete': false,
 }} />
 
 - <Def id="filetransfer.enabled" /> enables the file transfer support. If set to `false`, the file transfer is disabled.
 - <Def id="filetransfer.dir" /> refers to the directory where the files are stored.
 - <Def id="filetransfer.refresh_interval" /> refers to the interval at which the file list is refreshed.
+- <Def id="filetransfer.user_download" /> allows non-admin users to download files. If set to `false` (default), only admins can download files.
+- <Def id="filetransfer.user_upload" /> allows non-admin users to upload files. If set to `false` (default), only admins can upload files.
+- <Def id="filetransfer.user_delete" /> allows non-admin users to delete files. If set to `false` (default), only admins can delete files.
 
 The file transfer plugin extends user profile and room settings by adding the following fields:
 
@@ -73,3 +81,19 @@ plugins:
 ```
 
 - `filetransfer.enabled` in the room settings context controls whether the file transfer is enabled for any user in the room, and in the user's profile context controls whether the user can transfer files.
+
+## Open In App Plugin {#openinapp}
+
+The open in app plugin allows users to open links directly from the chat inside the shared neko instance.
+
+<ConfigurationTab options={{
+  'openinapp.enabled': true,
+  'openinapp.open_command': 'xdg-open',
+}} />
+
+- <Def id="openinapp.enabled" /> enables the open in app support.
+  If set to `false`, the feature is hidden from all clients.
+- <Def id="openinapp.open_command" /> is the shell command used to open
+  URLs inside the neko instance. Defaults to `xdg-open`. Can be set to a
+  browser-specific command such as `firefox -P default` depending on
+  the app image in use.

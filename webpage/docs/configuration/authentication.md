@@ -11,6 +11,11 @@ import configOptions from './help.json';
 Authentication is split into two modules:
 
 - **[Member Provider](#member)** - handles authentication and authorization of users, can be used to authenticate users against a database, LDAP, or any other system.
+  :::warning NOTE
+  LDAP, OIDC, and other subsystems are _not_ currently implemented. 
+  If you are interested in these features, please consider contributing or sponsoring their development.
+  :::
+
 - **[Session Provider](#session)** - handles session management, after the module authenticates the user, it creates a session and handles the session lifecycle.
 
 ## Member Profile {#profile}
@@ -20,6 +25,7 @@ A member profile is a structure that describes the user and what the user is all
 | Field                      | Description | Type |
 |----------------------------|-------------|------|
 | <Def id="profile.name" />                     | User's name as shown in the UI, must not be unique within the system (not used as an identifier). | string |
+| <Def id="profile.avatar" />                   | Avatar URL shown in clients that support member avatars. OAuth logins synchronize this value from the configured user-info field. | string |
 | <Def id="profile.is_admin" />                 | Whether the user can perform administrative tasks that include managing users, sessions, and settings. | boolean |
 | <Def id="profile.can_login" />                | Whether the user can log in to the system and use the HTTP API. | boolean |
 | <Def id="profile.can_connect" />              | Whether the user can connect to the room using the WebSocket API (needs <Opt id="profile.can_login" /> to be enabled). | boolean |
@@ -39,6 +45,7 @@ import TabItem from '@theme/TabItem';
   
     ```yaml title="Example member profile in YAML"
     name: User Name
+    avatar: https://example.com/avatar.png
     is_admin: false
     can_login: true
     can_connect: true
@@ -58,6 +65,7 @@ import TabItem from '@theme/TabItem';
     ```json title="Example member profile in JSON"
     {
       "name": "User Name",
+      "avatar": "https://example.com/avatar.png",
       "is_admin": false,
       "can_login": true, 
       "can_connect": true, 
@@ -167,6 +175,91 @@ environment:
 ```
 :::
 
+### OAuth 2.0 Provider {#member.oauth}
+
+Neko can use an OAuth 2.0 authorization-code provider. It exchanges the authorization code server-side and fetches the configured user-info endpoint. Provider access tokens, refresh tokens, and raw ID tokens are never persisted or returned to the browser.
+
+For OpenID Connect providers, set `issuer_url`. Neko retrieves `/.well-known/openid-configuration` from that issuer and uses its authorization, token, and user-info endpoints. Issuer discovery takes precedence over explicitly configured endpoints, so it can be introduced without removing older endpoint settings.
+
+When `redirect_url` is omitted, Neko derives the callback URL from the browser request as `https://<neko-host>/api/oauth/callback` (including `server.path_prefix`). Register that exact URL with the provider. Behind a TLS-terminating reverse proxy, set `server.proxy: true` so Neko trusts `X-Forwarded-Proto` and `X-Forwarded-Host`. The user-info endpoint must return JSON. `success_redirect` is relative to `server.path_prefix`.
+
+```yaml title="config.yaml"
+member:
+  provider: "oauth"
+  oauth:
+    enabled: true
+    # When true, visiting the Neko root page immediately starts OAuth login.
+    # Only applies when OAuth is the member provider.
+    auto_redirect: true
+    name: "Example SSO"
+    admin_emails: ["platform-admin@example.com", "security@example.com"]
+    user_emails: [] # if empty, any authenticated user is allowed to log in
+    client_id: "<client-id>"
+    client_secret: "<client-secret>"
+    issuer_url: "https://id.example.com"
+    scopes: ["openid", "profile", "email"]
+    # Configure these to match the JSON returned by userinfo_url.
+    subject_field: "sub"
+    username_field: "name"
+    avatar_field: "picture"
+    success_redirect: "/"
+    user_profile:
+      is_admin: false
+      can_login: true
+      can_connect: true
+      can_watch: true
+      can_host: true
+      can_share_media: true
+      can_access_clipboard: true
+      sends_inactive_cursor: true
+      can_see_inactive_cursors: false
+    admin_profile:
+      is_admin: true
+      can_login: true
+      can_connect: true
+      can_watch: true
+      can_host: true
+      can_share_media: true
+      can_access_clipboard: true
+      sends_inactive_cursor: true
+      can_see_inactive_cursors: true
+```
+
+The sign-in endpoint is `GET /api/oauth/login`; the callback endpoint is `GET /api/oauth/callback`. OAuth login requires `session.cookie.enabled: true`, which is the default. Set `member.provider: oauth` to make OAuth the only member provider.
+
+OAuth login can also be offered next to another member provider. Keep `member.provider` set to that provider and enable `member.oauth`; the login screen then shows the password form and the OAuth button. `auto_redirect` has no effect in this setup, as redirecting would hide the password form.
+
+```yaml title="config.yaml"
+member:
+  provider: "multiuser"
+  multiuser:
+    admin_password: "admin"
+    user_password: "neko"
+  oauth:
+    enabled: true
+    name: "Example SSO"
+    client_id: "<client-id>"
+    client_secret: "<client-secret>"
+    issuer_url: "https://id.example.com"
+    scopes: ["openid", "profile", "email"]
+```
+
+`admin_emails` is a list matched against the standard `email` field, case-insensitively. An OAuth user is an administrator when either their email matches that list or their user-info/ID-token claims include `isAdmin: true`; their permissions then use `admin_profile`. The configured name and avatar fields are read from userinfo first, then fall back to the ID token when userinfo omits them. Avatar URLs are rendered by clients that support member avatars.
+
+`user_emails` restricts non-admin login to a list of allowed emails, matched the same way as `admin_emails`. If `user_emails` is empty (the default), any authenticated user is allowed to log in. Administrators (matched by `admin_emails` or `isAdmin: true`) can always log in regardless of `user_emails`. Users whose email is not allowed receive an HTTP 403 response and no session is created.
+
+:::warning
+`admin_emails` and `user_emails` are matched against the `email` claim. Most providers only include that claim if the `email` scope is requested, so `scopes` must include `"email"` (in addition to `"openid"`) or the claim will be empty and these lists will never match.
+:::
+
+:::warning
+If the provider returns `email_verified: false`, Neko ignores the email, so it cannot match `admin_emails` or `user_emails`. If the claim is missing, the email is trusted, because many providers (including generic OAuth2 providers such as GitHub) do not return it at all. In that case `admin_emails` and `user_emails` rely on the identity provider having verified the address. If users can register or edit their email without verification on a provider that does not send `email_verified`, anyone could claim an address listed in `admin_emails` and obtain an administrator session. Require email verification at the provider or do not use these lists.
+:::
+
+For OAuth sessions, `GET /api/whoami` includes `extra_data`: the merged userinfo and ID-token claims, with userinfo values taking precedence. It is returned only to the authenticated session owner and is intended for profile-field troubleshooting. Do not place secrets in provider profile claims.
+
+For non-OIDC providers, set `authorization_url`, `token_url`, `userinfo_url`, and optionally `redirect_url` directly. For GitHub, for example, use `read:user` as a scope and set `subject_field: id`, `username_field: login`, and `avatar_field: avatar_url`.
+
 ### File Provider {#member.file}
 
 This provider reads the user's credentials from a file. It is useful for small deployments where you don't want to set up a database or LDAP server and still want to have persistent users.
@@ -201,7 +294,7 @@ You can leave the file empty and add users later using the HTTP API.
 
   We have two users, `admin` and `user` with their passwords and profiles. `admin` is a regular user, while `user` is an admin.
 
-  Please note that the passwords are stored in plain text. To store them securely, set the `hash` field to `true` in the configuration. After that, the passwords are expected to be hashed using the bcrypt algorithm.
+  Please note that the passwords are stored in plain text. To store them securely, set the `hash` field to `true` in the configuration. After that, the passwords are expected to be hashed using sha256 and base64-encoded. The file will look like this:
 
   ```json title="members.json"
   {
@@ -240,10 +333,10 @@ You can leave the file empty and add users later using the HTTP API.
   }
   ```
 
-  If you want to hash the passwords, you can use the following command to generate a sha256 hash:
+  If you want to hash the passwords, you can use the following command to generate a sha256 base64-encoded hash of the password:
 
   ```bash
-  echo -n "password" | sha256sum
+  echo -n "password" | openssl sha256 -binary | base64 -
   ```  
 </details>
 

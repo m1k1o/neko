@@ -6,8 +6,8 @@ import (
 	"sync"
 
 	"github.com/pion/rtcp"
-	"github.com/pion/webrtc/v3"
-	"github.com/pion/webrtc/v3/pkg/media"
+	"github.com/pion/webrtc/v4"
+	"github.com/pion/webrtc/v4/pkg/media"
 	"github.com/rs/zerolog"
 
 	"github.com/m1k1o/neko/server/pkg/types"
@@ -20,10 +20,13 @@ type Track struct {
 
 	rtcpCh chan []rtcp.Packet
 	sample chan types.Sample
+	done   chan struct{}
 
-	paused   bool
-	stream   types.StreamSinkManager
-	streamMu sync.Mutex
+	paused       bool
+	stream       types.EncodedStream
+	subscription types.StreamSubscription
+	streamMu     sync.Mutex
+	shutdownOnce sync.Once
 }
 
 type trackOption func(*Track)
@@ -45,7 +48,8 @@ func NewTrack(logger zerolog.Logger, codec codec.RTPCodec, connection *webrtc.Pe
 		logger: logger.With().Str("id", id).Logger(),
 		track:  track,
 		rtcpCh: nil,
-		sample: make(chan types.Sample),
+		sample: make(chan types.Sample, 2),
+		done:   make(chan struct{}),
 	}
 
 	for _, opt := range opts {
@@ -64,8 +68,10 @@ func NewTrack(logger zerolog.Logger, codec codec.RTPCodec, connection *webrtc.Pe
 }
 
 func (t *Track) Shutdown() {
-	t.RemoveStream()
-	close(t.sample)
+	t.shutdownOnce.Do(func() {
+		t.RemoveStream()
+		close(t.done)
+	})
 }
 
 func (t *Track) rtcpReader(sender *webrtc.RTPSender) {
@@ -91,31 +97,36 @@ func (t *Track) rtcpReader(sender *webrtc.RTPSender) {
 
 func (t *Track) sampleReader() {
 	for {
-		sample, ok := <-t.sample
-		if !ok {
+		select {
+		case <-t.done:
 			t.logger.Debug().Msg("track sample reader closed")
 			return
-		}
+		case sample := <-t.sample:
+			err := t.track.WriteSample(media.Sample{
+				Data:      sample.Data,
+				Duration:  sample.Duration,
+				Timestamp: sample.Timestamp,
+			})
 
-		err := t.track.WriteSample(media.Sample{
-			Data:      sample.Data,
-			Duration:  sample.Duration,
-			Timestamp: sample.Timestamp,
-		})
-
-		if err != nil && !errors.Is(err, io.ErrClosedPipe) {
-			t.logger.Warn().Err(err).Msg("failed to write sample to track")
+			if err != nil && !errors.Is(err, io.ErrClosedPipe) {
+				t.logger.Warn().Err(err).Msg("failed to write sample to track")
+			}
 		}
 	}
 }
 
 func (t *Track) WriteSample(sample types.Sample) {
-	t.sample <- sample
+	select {
+	case <-t.done:
+	case t.sample <- sample:
+	default:
+		t.logger.Trace().Msg("dropping sample: track channel full")
+	}
 }
 
 // --- stream ---
 
-func (t *Track) SetStream(stream types.StreamSinkManager) (bool, error) {
+func (t *Track) SetStream(stream types.EncodedStream) (bool, error) {
 	t.streamMu.Lock()
 	defer t.streamMu.Unlock()
 
@@ -130,14 +141,16 @@ func (t *Track) SetStream(stream types.StreamSinkManager) (bool, error) {
 		return true, nil
 	}
 
-	var err error
-	if t.stream != nil {
-		err = t.stream.MoveListenerTo(t, stream)
+	if t.subscription != nil {
+		if err := t.subscription.Switch(stream); err != nil {
+			return false, err
+		}
 	} else {
-		err = stream.AddListener(t)
-	}
-	if err != nil {
-		return false, err
+		subscription, err := stream.Subscribe(t)
+		if err != nil {
+			return false, err
+		}
+		t.subscription = subscription
 	}
 
 	t.stream = stream
@@ -148,21 +161,21 @@ func (t *Track) RemoveStream() {
 	t.streamMu.Lock()
 	defer t.streamMu.Unlock()
 
-	// if there is no stream, or paused we don't need to remove the listener
-	if t.stream == nil || t.paused {
-		t.stream = nil
+	if t.stream == nil {
 		return
 	}
 
-	err := t.stream.RemoveListener(t)
-	if err != nil {
-		t.logger.Warn().Err(err).Msg("failed to remove listener from stream")
+	if t.subscription != nil {
+		if err := t.subscription.Close(); err != nil {
+			t.logger.Warn().Err(err).Msg("failed to close stream subscription")
+		}
+		t.subscription = nil
 	}
 
 	t.stream = nil
 }
 
-func (t *Track) Stream() (types.StreamSinkManager, bool) {
+func (t *Track) Stream() (types.EncodedStream, bool) {
 	t.streamMu.Lock()
 	defer t.streamMu.Unlock()
 
@@ -181,15 +194,21 @@ func (t *Track) SetPaused(paused bool) {
 		return
 	}
 
-	var err error
 	if paused {
-		err = t.stream.RemoveListener(t)
+		if t.subscription != nil {
+			if err := t.subscription.Close(); err != nil {
+				t.logger.Warn().Err(err).Msg("failed to pause stream subscription")
+				return
+			}
+			t.subscription = nil
+		}
 	} else {
-		err = t.stream.AddListener(t)
-	}
-	if err != nil {
-		t.logger.Warn().Err(err).Msg("failed to change listener state")
-		return
+		subscription, err := t.stream.Subscribe(t)
+		if err != nil {
+			t.logger.Warn().Err(err).Msg("failed to resume stream subscription")
+			return
+		}
+		t.subscription = subscription
 	}
 
 	t.paused = paused

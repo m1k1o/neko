@@ -79,7 +79,8 @@ Bear in mind that your Neko server does not have to run on the same computer as 
   RewriteEngine on
   RewriteCond %{HTTP:Upgrade} websocket [NC]
   RewriteCond %{HTTP:Connection} upgrade [NC]
-  RewriteRule /ws(.*) "ws://localhost:8080/ws$1" [P,L]
+  # forward every websocket upgrade to the same path (the client connects to /api/ws)
+  RewriteRule ^/(.*) "ws://localhost:8080/$1" [P,L]
 
   # Available log levels: trace8, ..., trace1, debug, info, notice, warn,
   # error, crit, alert, emerg.

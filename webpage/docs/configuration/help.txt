@@ -3,6 +3,7 @@
       --capture.audio.pipeline string                 gstreamer pipeline used for audio streaming
       --capture.broadcast.audio_bitrate int           broadcast audio bitrate in KB/s (default 128)
       --capture.broadcast.autostart                   automatically start broadcasting when neko starts and broadcast_url is set (default true)
+      --capture.broadcast.empty_timeout duration      automatically stop broadcasting once no user has been connected for this long, 0 to never stop
       --capture.broadcast.pipeline string             gstreamer pipeline used for broadcasting
       --capture.broadcast.preset string               broadcast speed preset for h264 encoding (default "veryfast")
       --capture.broadcast.url string                  initial URL for broadcasting, setting this value will automatically start broadcasting
@@ -18,6 +19,7 @@
       --capture.video.ids strings                     ordered list of video ids
       --capture.video.pipeline string                 shortcut for configuring only a single gstreamer pipeline, ignored if pipelines is set
       --capture.video.pipelines string                pipelines config used for video streaming (default "{}")
+      --capture.video.show_pointer                    show mouse pointer in captured video, overrides show_pointer of all video pipelines (default true)
       --capture.webcam.device string                  v4l2sink device used for webcam (default "/dev/video0")
       --capture.webcam.enabled                        enable webcam stream
       --capture.webcam.height int                     webcam stream height (default 720)
@@ -42,7 +44,7 @@
       --plugins.required                              if true, neko will exit if there is an error when loading a plugin
       --server.bind string                            address/port/socket to serve neko (default "127.0.0.1:8080")
       --server.cert string                            path to the SSL cert used to secure the neko server
-      --server.cors strings                           list of allowed origins for CORS, if empty CORS is disabled, if '*' is present all origins are allowed
+      --server.cors strings                           list of allowed origins for CORS and WebSocket connections, if empty only same-origin WebSocket connections are accepted, if '*' is present all origins are allowed
       --server.key string                             path to the SSL key used to secure the neko server
       --server.metrics                                enable prometheus metrics available at /metrics (default true)
       --server.path_prefix string                     path prefix for HTTP requests (default "/")
@@ -52,15 +54,15 @@
       --session.api_token string                      API token for interacting with external services
       --session.control_protection                    users can gain control only if at least one admin is in the room
       --session.cookie.domain string                  domain of the cookie
-      --session.cookie.enabled                        whether cookies authentication should be enabled (default true)
+      --session.cookie.enabled                        whether cookies authentication should be enabled
       --session.cookie.expiration duration            expiration of the cookie (default 24h0m0s)
       --session.cookie.http_only                      use http only cookies (default true)
       --session.cookie.name string                    name of the cookie that holds token (default "NEKO_SESSION")
       --session.cookie.path string                    path of the cookie
       --session.cookie.secure                         use secure cookies (default true)
       --session.file string                           if sessions should be stored in a file, otherwise they will be stored only in memory
-      --session.heartbeat_interval int                interval in seconds for sending heartbeat messages (default 120)
-      --session.implicit_hosting                      allow implicit control switching (default true)
+      --session.heartbeat_interval int                interval in seconds for sending heartbeat messages (default 10)
+      --session.implicit_hosting                      allow implicit control switching
       --session.inactive_cursors                      show inactive cursors on the screen
       --session.locked_controls                       whether controls should be locked for users initially
       --session.locked_logins                         whether logins should be locked for users initially
@@ -83,7 +85,7 @@
       --webrtc.iceservers.frontend string             STUN and TURN servers used by the frontend (default "[]")
       --webrtc.icetrickle                             configures whether cadidates should be sent asynchronously using Trickle ICE (default true)
       --webrtc.ip_retrieval_url string                URL address used for retrieval of the external IP address (default "https://checkip.amazonaws.com")
-      --webrtc.nat1to1 strings                        sets a list of external IP addresses of 1:1 (D)NAT and a candidate type for which the external IP address is used
+      --webrtc.nat1to1 strings                        list of external IP addresses or hostnames of 1:1 (D)NAT advertised to clients, hostnames are resolved for every new connection
       --webrtc.tcpmux int                             single TCP mux port for all peers
       --webrtc.udpmux int                             single UDP mux port for all peers, replaces EPR
 

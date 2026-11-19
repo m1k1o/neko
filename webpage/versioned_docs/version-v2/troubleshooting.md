@@ -227,8 +227,6 @@ Check if your TCP port is exposed correctly and your reverse proxy is correctly 
 Getting black screen with a cursor, but no browser.
 ```
 
-Most likely you forgot to add `-cap-add=SYS_ADMIN` when using chromium-based browsers.
-
 ### Unrelated server errors
 
 ```

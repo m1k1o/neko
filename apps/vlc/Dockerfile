@@ -4,7 +4,7 @@ FROM $BASE_IMAGE
 #
 # install vlc
 RUN set -eux; apt-get update; \
-    apt-get install -y --no-install-recommends openbox vlc; \
+    apt-get install -y --no-install-recommends openbox vlc vlc-plugin-skins2; \
     #
     # clean up
     apt-get clean -y; \

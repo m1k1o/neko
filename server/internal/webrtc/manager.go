@@ -1,22 +1,23 @@
 package webrtc
 
 import (
+	"errors"
 	"fmt"
+	"io"
 	"net"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
 
-	"github.com/pion/ice/v2"
+	"github.com/pion/ice/v4"
 	"github.com/pion/interceptor"
 	"github.com/pion/interceptor/pkg/cc"
 	"github.com/pion/interceptor/pkg/gcc"
 	"github.com/pion/rtcp"
-	"github.com/pion/webrtc/v3"
+	"github.com/pion/webrtc/v4"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	"github.com/spf13/viper"
 
 	"github.com/m1k1o/neko/server/internal/config"
 	"github.com/m1k1o/neko/server/internal/webrtc/cursor"
@@ -51,36 +52,10 @@ const (
 func New(desktop types.DesktopManager, capture types.CaptureManager, config *config.WebRTC) *WebRTCManagerCtx {
 	logger := log.With().Str("module", "webrtc").Logger()
 
-	configuration := webrtc.Configuration{
-		SDPSemantics: webrtc.SDPSemanticsUnifiedPlan,
-	}
-
-	if !config.ICELite {
-		ICEServers := []webrtc.ICEServer{}
-		for _, server := range config.ICEServersBackend {
-			var credential any
-			if server.Credential != "" {
-				credential = server.Credential
-			} else {
-				credential = false
-			}
-
-			ICEServers = append(ICEServers, webrtc.ICEServer{
-				URLs:       server.URLs,
-				Username:   server.Username,
-				Credential: credential,
-			})
-		}
-
-		configuration.ICEServers = ICEServers
-	}
-
 	return &WebRTCManagerCtx{
 		logger:  logger,
 		config:  config,
 		metrics: newMetricsManager(),
-
-		webrtcConfiguration: configuration,
 
 		desktop:     desktop,
 		capture:     capture,
@@ -100,10 +75,10 @@ type WebRTCManagerCtx struct {
 	curImage    cursor.Image
 	curPosition cursor.Position
 
-	webrtcConfiguration webrtc.Configuration
-
 	tcpMux ice.TCPMux
 	udpMux ice.UDPMux
+
+	nat1to1 *nat1to1Resolver
 
 	camStop, micStop *func()
 }
@@ -112,6 +87,8 @@ func (manager *WebRTCManagerCtx) Start() {
 	manager.curImage.Start()
 
 	logger := pionlog.New(manager.logger)
+
+	manager.nat1to1 = newNAT1To1Resolver(manager.logger, manager.config.NAT1To1IPs)
 
 	// add TCP Mux listener
 	if manager.config.TCPMux > 0 {
@@ -165,11 +142,50 @@ func (manager *WebRTCManagerCtx) Shutdown() error {
 	return nil
 }
 
-func (manager *WebRTCManagerCtx) ICEServers() []types.ICEServer {
-	return manager.config.ICEServersFrontend
+func (manager *WebRTCManagerCtx) ICEServers(session types.Session) []types.ICEServer {
+	servers, err := resolveICEServers(manager.config.ICEServersFrontend, session.ID(), time.Now())
+	if err != nil {
+		manager.logger.Warn().Err(err).Str("session_id", session.ID()).Msg("unable to resolve some frontend ICE servers")
+	}
+	return servers
 }
 
-func (manager *WebRTCManagerCtx) newPeerConnection(logger zerolog.Logger, codecs []codec.RTPCodec) (*webrtc.PeerConnection, cc.BandwidthEstimator, error) {
+// webrtcConfiguration returns the configuration of a new peer connection for
+// the given session, with fresh credentials for the backend ICE servers.
+func (manager *WebRTCManagerCtx) webrtcConfiguration(session types.Session) webrtc.Configuration {
+	configuration := webrtc.Configuration{
+		SDPSemantics: webrtc.SDPSemanticsUnifiedPlan,
+	}
+
+	if manager.config.ICELite {
+		return configuration
+	}
+
+	servers, err := resolveICEServers(manager.config.ICEServersBackend, session.ID(), time.Now())
+	if err != nil {
+		manager.logger.Warn().Err(err).Str("session_id", session.ID()).Msg("unable to resolve some backend ICE servers")
+	}
+
+	configuration.ICEServers = []webrtc.ICEServer{}
+	for _, server := range servers {
+		var credential any
+		if server.Credential != "" {
+			credential = server.Credential
+		} else {
+			credential = false
+		}
+
+		configuration.ICEServers = append(configuration.ICEServers, webrtc.ICEServer{
+			URLs:       server.URLs,
+			Username:   server.Username,
+			Credential: credential,
+		})
+	}
+
+	return configuration
+}
+
+func (manager *WebRTCManagerCtx) newPeerConnection(logger zerolog.Logger, configuration webrtc.Configuration, codecs []codec.RTPCodec) (*webrtc.PeerConnection, cc.BandwidthEstimator, error) {
 	// create media engine
 	engine := &webrtc.MediaEngine{}
 	for _, codec := range codecs {
@@ -185,7 +201,7 @@ func (manager *WebRTCManagerCtx) newPeerConnection(logger zerolog.Logger, codecs
 
 	settings.DisableMediaEngineCopy(true)
 	settings.SetICETimeouts(disconnectedTimeout, failedTimeout, keepAliveInterval)
-	settings.SetNAT1To1IPs(manager.config.NAT1To1IPs, webrtc.ICECandidateTypeHost)
+	settings.SetNAT1To1IPs(manager.nat1to1.IPs(), webrtc.ICECandidateTypeHost)
 	settings.SetLite(manager.config.ICELite)
 	// make sure server answer sdp setup as passive, to not force DTLS renegotiation
 	// otherwise iOS renegotiation fails with: Failed to set SSL role for the transport.
@@ -261,7 +277,6 @@ func (manager *WebRTCManagerCtx) newPeerConnection(logger zerolog.Logger, codecs
 	)
 
 	// create new peer connection
-	configuration := manager.webrtcConfiguration
 	connection, err := api.NewPeerConnection(configuration)
 	return connection, <-estimatorChan, err
 }
@@ -286,7 +301,7 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session) (*webrtc.Sess
 	videoCodec := video.Codec()
 
 	connection, estimator, err := manager.newPeerConnection(
-		logger, []codec.RTPCodec{audioCodec, videoCodec})
+		logger, manager.webrtcConfiguration(session), []codec.RTPCodec{audioCodec, videoCodec})
 	if err != nil {
 		return nil, nil, err
 	}
@@ -441,16 +456,25 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session) (*webrtc.Sess
 		ticker := time.NewTicker(rtcpPLIInterval)
 		defer ticker.Stop()
 
-		go func() {
-			for range ticker.C {
-				err := connection.WriteRTCP([]rtcp.Packet{
-					&rtcp.PictureLossIndication{
-						MediaSSRC: uint32(track.SSRC()),
-					},
-				})
+		//ticker.Stop() does not close channel,so the channel,so the goroutine below needs
+		//its own singal to exit, otherwise it would block on the ticker channel forever and leak memory
+		done := make(chan struct{})
+		defer close(done)
 
-				if err != nil {
-					logger.Err(err).Msg("remote track rtcp send err")
+		go func() {
+			for {
+				select {
+				case <-done:
+					return
+				case <-ticker.C:
+					err := connection.WriteRTCP([]rtcp.Packet{
+						&rtcp.PictureLossIndication{
+							MediaSSRC: uint32(track.SSRC()),
+						},
+					})
+					if err != nil {
+						logger.Err(err).Msg("remote track rtcp send err")
+					}
 				}
 			}
 		}()
@@ -459,7 +483,10 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session) (*webrtc.Sess
 		for {
 			i, _, err := track.Read(buf)
 			if err != nil {
-				logger.Warn().Err(err).Msg("failed read from remote track")
+				// if the error is not io.EOF, log it. Otherwise, it's a normal closure of the track.
+				if !errors.Is(err, io.EOF) {
+					logger.Warn().Err(err).Msg("failed read from remote track")
+				}
 				break
 			}
 
@@ -471,23 +498,6 @@ func (manager *WebRTCManagerCtx) CreatePeer(session types.Session) (*webrtc.Sess
 
 	connection.OnDataChannel(func(dc *webrtc.DataChannel) {
 		logger.Info().Interface("data_channel", dc).Msg("got remote data channel")
-
-		//
-		// old implementation created a new data channel on client side
-		// new implementation creates a new data channel on server side
-		//
-
-		if viper.GetBool("legacy") {
-			// handle legacy data channel
-			dc.OnMessage(func(message webrtc.DataChannelMessage) {
-				if err := manager.handleLegacy(logger, message.Data, session); err != nil {
-					logger.Err(err).Msg("data handle failed")
-				}
-			})
-
-			// handle legacy data channel
-			peer.dataChannel = dc
-		}
 	})
 
 	var once sync.Once

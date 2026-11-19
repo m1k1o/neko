@@ -3,6 +3,7 @@ package capture
 import (
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/rs/zerolog"
@@ -14,9 +15,10 @@ import (
 )
 
 type CaptureManagerCtx struct {
-	logger  zerolog.Logger
-	desktop types.DesktopManager
-	config  *config.Capture
+	logger   zerolog.Logger
+	desktop  types.DesktopManager
+	sessions types.SessionManager
+	config   *config.Capture
 
 	// sinks
 	broadcast  *BroacastManagerCtx
@@ -29,10 +31,10 @@ type CaptureManagerCtx struct {
 	microphone *StreamSrcManagerCtx
 }
 
-func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCtx {
+func New(desktop types.DesktopManager, sessions types.SessionManager, config *config.Capture) *CaptureManagerCtx {
 	logger := log.With().Str("module", "capture").Logger()
 
-	videos := map[string]types.StreamSinkManager{}
+	videos := map[string]*StreamSinkManagerCtx{}
 	for video_id, cnf := range config.VideoPipelines {
 		pipelineConf := cnf
 
@@ -72,14 +74,19 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 	}
 
 	return &CaptureManagerCtx{
-		logger:  logger,
-		desktop: desktop,
-		config:  config,
+		logger:   logger,
+		desktop:  desktop,
+		sessions: sessions,
+		config:   config,
 
 		// sinks
 		broadcast: broadcastNew(func(url string) (string, error) {
 			if config.BroadcastPipeline != "" {
 				var pipeline = config.BroadcastPipeline
+				if hostname, err := os.Hostname(); err == nil {
+					// replace {hostname} with valid hostname
+					pipeline = strings.Replace(pipeline, "{hostname}", hostname, 1)
+				}
 				// replace {display} with valid display
 				pipeline = strings.Replace(pipeline, "{display}", config.Display, 1)
 				// replace {device} with valid device
@@ -96,14 +103,14 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 					"! queue "+
 					"! voaacenc bitrate=%d "+
 					"! mux. "+
-					"ximagesrc display-name=%s show-pointer=true use-damage=false "+
+					"ximagesrc display-name=%s show-pointer=%v use-damage=false "+
 					"! video/x-raw "+
 					"! videoconvert "+
 					"! queue "+
 					"! x264enc threads=4 bitrate=%d key-int-max=15 byte-stream=true tune=zerolatency speed-preset=%s "+
-					"! mux.", url, config.AudioDevice, config.BroadcastAudioBitrate*1000, config.Display, config.BroadcastVideoBitrate, config.BroadcastPreset,
+					"! mux.", url, config.AudioDevice, config.BroadcastAudioBitrate*1000, config.Display, config.VideoShowPointer, config.BroadcastVideoBitrate, config.BroadcastPreset,
 			), nil
-		}, config.BroadcastUrl, config.BroadcastAutostart),
+		}, config.BroadcastUrl, config.BroadcastAutostart, config.BroadcastEmptyTimeout),
 		screencast: screencastNew(config.ScreencastEnabled, func() string {
 			if config.ScreencastPipeline != "" {
 				// replace {display} with valid display
@@ -111,12 +118,12 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 			}
 
 			return fmt.Sprintf(
-				"ximagesrc display-name=%s show-pointer=true use-damage=false "+
+				"ximagesrc display-name=%s show-pointer=%v use-damage=false "+
 					"! video/x-raw,framerate=%s "+
 					"! videoconvert "+
 					"! queue "+
 					"! jpegenc quality=%s "+
-					"! appsink name=appsink", config.Display, config.ScreencastRate, config.ScreencastQuality,
+					"! appsink name=appsink", config.Display, config.VideoShowPointer, config.ScreencastRate, config.ScreencastQuality,
 			)
 		}()),
 
@@ -130,7 +137,7 @@ func New(desktop types.DesktopManager, config *config.Capture) *CaptureManagerCt
 				"pulsesrc device=%s "+
 					"! audio/x-raw,channels=2 "+
 					"! audioconvert "+
-					"! queue "+
+					"! queue max-size-buffers=5 leaky=downstream "+
 					"! %s "+
 					"! appsink name=appsink", config.AudioDevice, config.AudioCodec.Pipeline,
 			), nil
@@ -195,6 +202,22 @@ func (manager *CaptureManagerCtx) Start() {
 		}
 	}
 
+	if manager.config.BroadcastEmptyTimeout > 0 {
+		// connection stats are updated before these events are emitted
+		manager.broadcast.watchRoom(func() bool {
+			stats := manager.sessions.Stats()
+			return stats.TotalUsers+stats.TotalAdmins == 0
+		})
+
+		manager.sessions.OnConnected(func(session types.Session) {
+			manager.broadcast.roomChanged()
+		})
+
+		manager.sessions.OnDisconnected(func(session types.Session) {
+			manager.broadcast.roomChanged()
+		})
+	}
+
 	manager.desktop.OnBeforeScreenSizeChange(func() {
 		manager.video.destroyPipelines()
 
@@ -252,11 +275,11 @@ func (manager *CaptureManagerCtx) Screencast() types.ScreencastManager {
 	return manager.screencast
 }
 
-func (manager *CaptureManagerCtx) Audio() types.StreamSinkManager {
+func (manager *CaptureManagerCtx) Audio() types.EncodedStream {
 	return manager.audio
 }
 
-func (manager *CaptureManagerCtx) Video() types.StreamSelectorManager {
+func (manager *CaptureManagerCtx) Video() types.EncodedStreamSelector {
 	return manager.video
 }
 

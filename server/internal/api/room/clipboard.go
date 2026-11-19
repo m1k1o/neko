@@ -61,7 +61,7 @@ func (h *RoomHandler) clipboardGetImage(w http.ResponseWriter, r *http.Request) 
 
 /* TODO: Unused now.
 func (h *RoomHandler) clipboardSetImage(w http.ResponseWriter, r *http.Request) error {
-	err := r.ParseMultipartForm(MAX_UPLOAD_SIZE)
+	err := r.ParseMultipartForm(multipartFormMaxMemory)
 	if err != nil {
 		return utils.HttpBadRequest("failed to parse multipart form").WithInternalErr(err)
 	}

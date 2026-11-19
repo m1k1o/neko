@@ -1,0 +1,14 @@
+{
+  "tab": "Chatti",
+  "mute": "Mykistä",
+  "unmute": "Poista mykistys",
+  "confirm": {
+    "mute_title": "Haluatko mykistää {{name}}?",
+    "mute_text": "Oletko varma että haluat mykistää {{name}}?",
+    "unmute_title": "Poista {{name}} mykistys?",
+    "unmute_text": "Oletko varma että haluat poistaa {{name}} mykistyksen?"
+  },
+  "muted": "mykistetty {{name}}",
+  "unmuted": "poistettu mykistys {{name}}",
+  "send_a_message": "Lähetä viesti"
+}

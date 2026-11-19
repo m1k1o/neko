@@ -6,11 +6,16 @@ import (
 	"github.com/m1k1o/neko/server/pkg/drop"
 )
 
-// repeat move event multiple times
-const dropMoveRepeat = 4
+const (
+	// repeat move event multiple times
+	dropMoveRepeat = 4
 
-// wait after each repeated move event
-const dropMoveDelay = 100 * time.Millisecond
+	// wait after each repeated move event
+	dropMoveDelay = 100 * time.Millisecond
+
+	// wait for drop to finish before giving up
+	dropFinishTimeout = 1 * time.Second
+)
 
 func (manager *DesktopManagerCtx) DropFiles(x int, y int, files []string) bool {
 	mu.Lock()
@@ -32,7 +37,7 @@ func (manager *DesktopManagerCtx) DropFiles(x int, y int, files []string) bool {
 	})
 
 	drop.Emmiter.Once("begin", func(payload ...any) {
-		for i := 0; i < dropMoveRepeat; i++ {
+		for range dropMoveRepeat {
 			manager.Move(x, y)
 			time.Sleep(dropMoveDelay)
 		}
@@ -57,7 +62,7 @@ func (manager *DesktopManagerCtx) DropFiles(x int, y int, files []string) bool {
 	select {
 	case succeeded := <-finished:
 		return succeeded
-	case <-time.After(1 * time.Second):
+	case <-time.After(dropFinishTimeout):
 		drop.CloseWindow()
 		return false
 	}

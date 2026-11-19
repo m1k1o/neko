@@ -1,0 +1,152 @@
+/* the 47 emotes by name: a 24px box with the emoji as its background, used by the bar, the picker
+   and the flying copies (a flying copy sizes itself with utilities, which win over this layer) */
+@layer components {
+  .emote {
+    width: 24px;
+    height: 24px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center center;
+  }
+  .emote.anger {
+    background-image: url('../../assets/images/emote/1f4a2.svg');
+  }
+  .emote.bomb {
+    background-image: url('../../assets/images/emote/1f4a3.svg');
+  }
+  .emote.sleep {
+    background-image: url('../../assets/images/emote/1f4a4.svg');
+  }
+  .emote.explode {
+    background-image: url('../../assets/images/emote/1f4a5.svg');
+  }
+  .emote.sweat {
+    background-image: url('../../assets/images/emote/1f4a6.svg');
+  }
+  .emote.poo {
+    background-image: url('../../assets/images/emote/1f4a9.svg');
+  }
+  .emote.hundred {
+    background-image: url('../../assets/images/emote/1f4af.svg');
+  }
+  .emote.alert {
+    background-image: url('../../assets/images/emote/1f6a8.svg');
+  }
+  .emote.punch {
+    background-image: url('../../assets/images/emote/1f44a.svg');
+  }
+  .emote.wave {
+    background-image: url('../../assets/images/emote/1f44b.svg');
+  }
+  .emote.okay {
+    background-image: url('../../assets/images/emote/1f44c.svg');
+  }
+  .emote.thumbs-up {
+    background-image: url('../../assets/images/emote/1f44d.svg');
+  }
+  .emote.clap {
+    background-image: url('../../assets/images/emote/1f44f.svg');
+  }
+  .emote.prey {
+    background-image: url('../../assets/images/emote/1f64f.svg');
+  }
+  .emote.celebrate {
+    background-image: url('../../assets/images/emote/1f389.svg');
+  }
+  .emote.flame {
+    background-image: url('../../assets/images/emote/1f525.svg');
+  }
+  .emote.goof {
+    background-image: url('../../assets/images/emote/1f60b.svg');
+  }
+  .emote.love {
+    background-image: url('../../assets/images/emote/1f60d.svg');
+  }
+  .emote.cool {
+    background-image: url('../../assets/images/emote/1f60e.svg');
+  }
+  .emote.smerk {
+    background-image: url('../../assets/images/emote/1f60f.svg');
+  }
+  .emote.worry {
+    background-image: url('../../assets/images/emote/1f61f.svg');
+  }
+  .emote.ouch {
+    background-image: url('../../assets/images/emote/1f62c.svg');
+  }
+  .emote.cry {
+    background-image: url('../../assets/images/emote/1f62d.svg');
+  }
+  .emote.surprised {
+    background-image: url('../../assets/images/emote/1f62e.svg');
+  }
+  .emote.quiet {
+    background-image: url('../../assets/images/emote/1f92b.svg');
+  }
+  .emote.rage {
+    background-image: url('../../assets/images/emote/1f92c.svg');
+  }
+  .emote.annoy {
+    background-image: url('../../assets/images/emote/1f611.svg');
+  }
+  .emote.steamed {
+    background-image: url('../../assets/images/emote/1f624.svg');
+  }
+  .emote.scared {
+    background-image: url('../../assets/images/emote/1f628.svg');
+  }
+  .emote.terrified {
+    background-image: url('../../assets/images/emote/1f631.svg');
+  }
+  .emote.sleepy {
+    background-image: url('../../assets/images/emote/1f634.svg');
+  }
+  .emote.dead {
+    background-image: url('../../assets/images/emote/1f635.svg');
+  }
+  .emote.happy {
+    background-image: url('../../assets/images/emote/1f642.svg');
+  }
+  .emote.roll-eyes {
+    background-image: url('../../assets/images/emote/1f644.svg');
+  }
+  .emote.thinking {
+    background-image: url('../../assets/images/emote/1f914.svg');
+  }
+  .emote.clown {
+    background-image: url('../../assets/images/emote/1f921.svg');
+  }
+  .emote.sick {
+    background-image: url('../../assets/images/emote/1f922.svg');
+  }
+  .emote.rofl {
+    background-image: url('../../assets/images/emote/1f923.svg');
+  }
+  .emote.drule {
+    background-image: url('../../assets/images/emote/1f924.svg');
+  }
+  .emote.sniff {
+    background-image: url('../../assets/images/emote/1f927.svg');
+  }
+  .emote.sus {
+    background-image: url('../../assets/images/emote/1f928.svg');
+  }
+  .emote.party {
+    background-image: url('../../assets/images/emote/1f973.svg');
+  }
+  .emote.odd {
+    background-image: url('../../assets/images/emote/1f974.svg');
+  }
+  .emote.hot {
+    background-image: url('../../assets/images/emote/1f975.svg');
+  }
+  .emote.cold {
+    background-image: url('../../assets/images/emote/1f976.svg');
+  }
+  .emote.blush {
+    background-image: url('../../assets/images/emote/263a.svg');
+  }
+  .emote.sad {
+    background-image: url('../../assets/images/emote/2639.svg');
+  }
+}

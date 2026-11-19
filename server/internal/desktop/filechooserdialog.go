@@ -7,14 +7,19 @@ import (
 	"github.com/m1k1o/neko/server/pkg/xorg"
 )
 
-// name of the window that is being controlled
-const fileChooserDialogName = "Open File"
+const (
+	// name of the window that is being controlled
+	fileChooserDialogName = "Open File"
 
-// short sleep value between fake user interactions
-const fileChooserDialogShortSleep = "0.2"
+	// short sleep value between fake user interactions
+	fileChooserDialogShortSleep = "0.2"
 
-// long sleep value between fake user interactions
-const fileChooserDialogLongSleep = "0.4"
+	// long sleep value between fake user interactions
+	fileChooserDialogLongSleep = "0.4"
+
+	// number of attempts to close the dialog
+	fileChooserDialogCloseAttempts = 5
+)
 
 func (manager *DesktopManagerCtx) HandleFileChooserDialog(uri string) error {
 	mu.Lock()
@@ -57,7 +62,7 @@ func (manager *DesktopManagerCtx) HandleFileChooserDialog(uri string) error {
 }
 
 func (manager *DesktopManagerCtx) CloseFileChooserDialog() {
-	for i := 0; i < 5; i++ {
+	for range fileChooserDialogCloseAttempts {
 		mu.Lock()
 
 		manager.logger.Debug().Msg("attempting to close file chooser dialog")

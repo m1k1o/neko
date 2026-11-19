@@ -34,31 +34,6 @@ Ensure, that you have enabled debug mode in javascript console too, in order to 
 
 There exists an extension [Google Input Tools](https://chrome.google.com/webstore/detail/mclkkofklkfljcocdinagocijmpgbhab) for Chrome that allows you to use Chinese input method.
 
-## Only black screen is displayed but remote cursor is moving for Chromium-based browsers (Chrome, Edge, etc.)
-
-Check if you did not forget to add cap_add to your docker-compose file.
-
-```yaml title="docker-compose.yaml"
-version: "3.4"
-services:
-  neko:
-    image: "m1k1o/neko:chromium"
-    # highlight-start
-    cap_add:
-    - SYS_ADMIN
-    # highlight-end
-    restart: "unless-stopped"
-    shm_size: "2gb"
-    ports:
-    - "8080:8080"
-    - "52000-52100:52000-52100/udp"
-    environment:
-      NEKO_SCREEN: '1920x1080@30'
-      NEKO_PASSWORD: neko
-      NEKO_PASSWORD_ADMIN: admin
-      NEKO_EPR: 52000-52100
-```
-
 ## How can I embed the Neko desktop into web page without login prompt coming up for viewers?
 
 You can use the following URL to embed the Neko desktop into a web page without login prompt coming up for viewers:

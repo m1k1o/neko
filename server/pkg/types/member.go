@@ -9,7 +9,8 @@ var (
 )
 
 type MemberProfile struct {
-	Name string `json:"name"`
+	Name   string `json:"name"`
+	Avatar string `json:"avatar"`
 
 	// permissions
 	IsAdmin               bool `json:"is_admin"                 mapstructure:"is_admin"`

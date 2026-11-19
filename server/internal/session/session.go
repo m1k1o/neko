@@ -12,7 +12,7 @@ import (
 
 // client is expected to reconnect within 5 second
 // if some unexpected websocket disconnect happens
-const WS_DELAYED_DURATION = 5 * time.Second
+const wsDelayedDuration = 5 * time.Second
 
 type SessionCtx struct {
 	id      string
@@ -46,13 +46,12 @@ func (session *SessionCtx) profileChanged() {
 		session.ClearHost()
 	}
 
-	if (!session.profile.CanConnect || !session.profile.CanLogin || !session.profile.CanWatch) && session.state.IsWatching {
-		// TODO: Needed for legacy implementation. Websocket must die before webrtc and deliver signal close message
-		// otherwise webrtc destroy would trigger websocket reconnect. In case of kick event, webrtc destroy is called
-		// before websocket destroy that delivers the information about the kick.
-		time.AfterFunc(time.Second, func() {
-			session.GetWebRTCPeer().Destroy()
-		})
+	if !session.profile.CanConnect || !session.profile.CanLogin || !session.profile.CanWatch {
+		// The peer may have been removed if the user disconnected while
+		// waiting for the delayed teardown, or it may not have connected yet.
+		if webrtcPeer := session.GetWebRTCPeer(); webrtcPeer != nil {
+			webrtcPeer.Destroy()
+		}
 	}
 
 	if (!session.profile.CanConnect || !session.profile.CanLogin) && session.state.IsConnected {
@@ -71,12 +70,6 @@ func (session *SessionCtx) State() types.SessionState {
 
 func (session *SessionCtx) IsHost() bool {
 	return session.manager.isHost(session)
-}
-
-// only needed for legacy webrtc handler
-func (session *SessionCtx) LegacyIsHost() bool {
-	implicitHosting := session.manager.Settings().ImplicitHosting
-	return !(!implicitHosting && !session.manager.isHost(session)) || (implicitHosting && !session.profile.CanHost)
 }
 
 func (session *SessionCtx) SetAsHost() {
@@ -120,19 +113,17 @@ func (session *SessionCtx) ConnectWebSocketPeer(websocketPeer types.WebSocketPee
 
 	session.logger.Info().Msg("set websocket connected")
 
+	// a session replacing its peer is already counted, and disconnecting
+	// the replaced peer is ignored because it is no longer the current one
+	if !session.state.IsConnected {
+		session.manager.statsConnected(session.profile.IsAdmin)
+	}
+
 	// update state
 	now := time.Now()
 	session.state.IsConnected = true
 	session.state.ConnectedSince = &now
 	session.state.NotConnectedSince = nil
-
-	if session.profile.IsAdmin {
-		session.manager.totalAdmins.Add(1)
-		session.manager.lastAdminLeftAt.Store((*time.Time)(nil))
-	} else {
-		session.manager.totalUsers.Add(1)
-		session.manager.lastUserLeftAt.Store((*time.Time)(nil))
-	}
 
 	session.manager.emmiter.Emit("connected", session)
 
@@ -165,7 +156,7 @@ func (session *SessionCtx) DisconnectWebSocketPeer(websocketPeer types.WebSocket
 	var wsDelayedTimer *time.Timer
 
 	if delayed {
-		wsDelayedTimer = time.AfterFunc(WS_DELAYED_DURATION, func() {
+		wsDelayedTimer = time.AfterFunc(wsDelayedDuration, func() {
 			session.DisconnectWebSocketPeer(websocketPeer, false)
 		})
 	}
@@ -193,15 +184,7 @@ func (session *SessionCtx) DisconnectWebSocketPeer(websocketPeer types.WebSocket
 	session.state.ConnectedSince = nil
 	session.state.NotConnectedSince = &now
 
-	if session.profile.IsAdmin {
-		if session.manager.totalAdmins.Add(-1) == 0 {
-			session.manager.lastAdminLeftAt.Store(&now)
-		}
-	} else {
-		if session.manager.totalUsers.Add(-1) == 0 {
-			session.manager.lastUserLeftAt.Store(&now)
-		}
-	}
+	session.manager.statsDisconnected(session.profile.IsAdmin, now)
 
 	session.manager.emmiter.Emit("disconnected", session)
 
@@ -210,6 +193,13 @@ func (session *SessionCtx) DisconnectWebSocketPeer(websocketPeer types.WebSocket
 		session.websocketPeer = nil
 	}
 	session.websocketMu.Unlock()
+
+	// A peer that never connected gets no ICE timeout and would keep its
+	// capture subscriptions, while a connected one is closed by its own
+	// connection state changes.
+	if webrtcPeer := session.GetWebRTCPeer(); webrtcPeer != nil && !session.state.IsWatching {
+		webrtcPeer.Destroy()
+	}
 }
 
 // Destroy WebSocket peer disconnects the peer and destroys it. It ensures that the peer is

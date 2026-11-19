@@ -1,0 +1,14 @@
+{
+  "tab": "Obrolan",
+  "mute": "Senyapkan",
+  "unmute": "Bunyikan",
+  "confirm": {
+    "mute_title": "Senyapkan {{name}}?",
+    "mute_text": "Apakah Anda yakin ingin mematikan suara {{name}}?",
+    "unmute_title": "Bunyikan {{name}}?",
+    "unmute_text": "Apakah Anda yakin ingin menyalakan suara {{name}}?"
+  },
+  "muted": "mensenyapkan suara {{name}}",
+  "unmuted": "membunyikan suara {{name}}",
+  "send_a_message": "Kirim pesan"
+}

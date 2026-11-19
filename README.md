@@ -9,7 +9,7 @@
     <a href="https://github.com/m1k1o/neko/blob/master/LICENSE">
       <img src="https://img.shields.io/github/license/m1k1o/neko" alt="license">
     </a>
-    <a href="https://hub.docker.com/u/m1k1o/neko">
+    <a href="https://hub.docker.com/r/m1k1o/neko">
       <img src="https://img.shields.io/docker/pulls/m1k1o/neko" alt="pulls">
     </a>
     <a href="https://github.com/m1k1o/neko/issues">
@@ -18,7 +18,7 @@
     <a href="https://github.com/sponsors/m1k1o">
       <img src="https://img.shields.io/badge/-sponsor-red" alt="issues">
     </a>
-    <a href="https://discord.gg/3U6hWpC">
+    <a href="https://discord.gg/HXQJmqNJMz">
       <img src="https://discordapp.com/api/guilds/665851821906067466/widget.png" alt="Chat on discord">
     </a>
     <a href="https://hellogithub.com/repository/4536d4546af24196af3f08a023dfa007" target="_blank">
@@ -62,6 +62,7 @@ Primary use case is connecting with multiple people, leveraging real time synchr
 - **Embed anything** - embed virtual browser in your web app - open source alternative to [hyperbeam API](https://hyperbeam.com/).
   - open any third-party website or application, synchronize audio and video flawlessly among multiple participants.
   - request rooms using API with [neko-rooms](https://github.com/m1k1o/neko-rooms).
+- [**Neko inside VR Chat**](https://github.com/jameskitt616/vrchat_streaming) - watch remote browser together with friends in VR.
 
 Other use cases that benefit from single-user:
 - **Personal workspace** - streaming containerized apps and desktops to end-users - similar to [kasm](https://www.kasmweb.com/).

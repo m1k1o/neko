@@ -8,7 +8,7 @@ import (
 
 	"github.com/pion/interceptor/pkg/cc"
 	"github.com/pion/rtcp"
-	"github.com/pion/webrtc/v3"
+	"github.com/pion/webrtc/v4"
 	"github.com/rs/zerolog"
 
 	"github.com/m1k1o/neko/server/internal/config"
@@ -28,8 +28,8 @@ type WebRTCPeerCtx struct {
 	estimator     cc.BandwidthEstimator
 	estimateTrend *utils.TrendDetector
 	// stream selectors
-	video types.StreamSelectorManager
-	audio types.StreamSinkManager
+	video types.EncodedStreamSelector
+	audio types.EncodedStream
 	// tracks & channels
 	audioTrack  *Track
 	videoTrack  *Track
@@ -403,7 +403,8 @@ func (peer *WebRTCPeerCtx) SetVideo(r types.PeerVideoRequest) error {
 	if modified {
 		go func() {
 			// in goroutine because of mutex and we don't want to block
-			peer.session.Send(event.SIGNAL_VIDEO, peer.Video())
+			resolvedVideo := peer.Video()
+			peer.session.Send(event.SIGNAL_VIDEO, resolvedVideo)
 		}()
 	}
 
@@ -457,7 +458,8 @@ func (peer *WebRTCPeerCtx) SetAudio(r types.PeerAudioRequest) error {
 	if modified {
 		go func() {
 			// in goroutine because of mutex and we don't want to block
-			peer.session.Send(event.SIGNAL_AUDIO, peer.Audio())
+			resolvedAudio := peer.Audio()
+			peer.session.Send(event.SIGNAL_AUDIO, resolvedAudio)
 		}()
 	}
 

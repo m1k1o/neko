@@ -3,6 +3,8 @@ FROM $BASE_IMAGE
 
 ARG API_URL="https://api.github.com/repos/macchrome/linchrome/releases/latest"
 
+COPY ./widevinecdm.sh /widevine.sh
+
 #
 # install custom chromium build from woolyss with support for hevc/x265
 SHELL ["/bin/bash", "-c"]
@@ -12,8 +14,8 @@ RUN set -eux; apt-get update; \
     #
     # fetch latest release
     SRC_URL="$(wget -O - "${API_URL}" 2>/dev/null | jq -r "[.assets[] | select(.browser_download_url | contains(\"tar.xz\"))][-1] | .browser_download_url")"; \
-    wget -O - /tmp/chromium.tar.xz "${SRC_URL}" | tar -xJf- -C /tmp; \
-    mv /tmp/ungoogled-chromium_* /usr/lib/chromium; \
+    mkdir -p /usr/lib/chromium; \
+    wget -O - "${SRC_URL}" | tar -xJf- --strip-components=1 -C /usr/lib/chromium; \
     #
     # make required changes for sandbox mode
     mv /usr/lib/chromium/chrome_sandbox /usr/lib/chromium/chrome-sandbox; \
@@ -21,17 +23,15 @@ RUN set -eux; apt-get update; \
     chmod 4755 /usr/lib/chromium/chrome-sandbox; \
     #
     # install widevine module
-    WIDEVINE_VERSION=$(wget --quiet -O - https://dl.google.com/widevine-cdm/versions.txt | sort --version-sort | tail -n 1); \
-    wget -O /tmp/widevine.zip "https://dl.google.com/widevine-cdm/${WIDEVINE_VERSION}-linux-x64.zip"; \
-    unzip -p /tmp/widevine.zip libwidevinecdm.so > /usr/lib/chromium/libwidevinecdm.so; \
-    chmod 644 /usr/lib/chromium/libwidevinecdm.so; \
-    rm /tmp/widevine.zip; \
+    CHROMIUM_DIR="/usr/lib/chromium"; \
+    ./widevine.sh "${CHROMIUM_DIR}/WidevineCdm"; \
+    rm -f /widevine.sh; \
     #
     # install latest version of uBlock Origin and SponsorBlock for YouTube
     CHROMIUM_VERSION="$(wget -O - "${API_URL}" 2>/dev/null | jq -r ".tag_name" | sed -e 's/v//' -e 's/-.*//')"; \
     EXTENSIONS_DIR="/usr/share/chromium/extensions"; \
     EXTENSIONS=( \
-      cjpalhdlnbpafiamejdnhcphjbkeiagm \
+      ddkjiahejlhfcafbddmgiahcphecmpfh \
       mnjggcdmjocbbbhaepdhchncahnbgone \
     ); \
     mkdir -p "${EXTENSIONS_DIR}"; \

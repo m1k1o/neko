@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"slices"
 	"sync"
 	"time"
 
@@ -18,14 +19,21 @@ import (
 	"github.com/m1k1o/neko/server/pkg/utils"
 )
 
-// send pings to peer with this period - must be less than pongWait
-const pingPeriod = 10 * time.Second
+const (
+	// send pings to peer with this period - must be less than pongWait
+	pingPeriod = 10 * time.Second
 
-// period for sending inactive cursor messages
-const inactiveCursorsPeriod = 750 * time.Millisecond
+	// period for sending inactive cursor messages
+	inactiveCursorsPeriod = 750 * time.Millisecond
 
-// maximum payload length for logging
-const maxPayloadLogLength = 10_000
+	// maximum payload length for logging
+	maxPayloadLogLength = 10_000
+
+	// largest frame a client may send; the biggest legitimate messages (an SDP answer, pasted
+	// clipboard text) are far below this, and without a limit a client can push arbitrarily
+	// large frames that are read and decoded before any handler can reject them
+	maxMessageSize = 1 << 20
+)
 
 // events that are not logged in debug mode
 var nologEvents = []string{
@@ -212,6 +220,7 @@ func (manager *WebSocketManagerCtx) Upgrade(checkOrigin types.CheckOrigin) types
 		if err != nil {
 			return utils.HttpBadRequest().WithInternalErr(err)
 		}
+		connection.SetReadLimit(maxMessageSize)
 
 		// Cannot write HTTP response after connection upgrade
 		manager.connect(connection, r)
@@ -306,23 +315,36 @@ func (manager *WebSocketManagerCtx) handle(connection *websocket.Conn, peer type
 	bytes := make(chan []byte)
 	cancel := make(chan error)
 
+	// closed when this function returns, so that the read loop never blocks on a send
+	// that nobody is going to receive
+	done := make(chan struct{})
+	defer close(done)
+
+	// the connection is hijacked from the http server, so nobody else is going to close it
+	// and closing it is the only way to interrupt the blocking read below
+	defer connection.Close()
+
 	ticker := time.NewTicker(pingPeriod)
 	defer ticker.Stop()
 
-	manager.wg.Add(1)
-	go func() {
-		defer manager.wg.Done()
-
+	manager.wg.Go(func() {
 		for {
 			_, raw, err := connection.ReadMessage()
 			if err != nil {
-				cancel <- err
-				break
+				select {
+				case cancel <- err:
+				case <-done:
+				}
+				return
 			}
 
-			bytes <- raw
+			select {
+			case bytes <- raw:
+			case <-done:
+				return
+			}
 		}
-	}()
+	})
 
 	for {
 		select {
@@ -334,7 +356,7 @@ func (manager *WebSocketManagerCtx) handle(connection *websocket.Conn, peer type
 			}
 
 			// log events if not ignored
-			if ok, _ := utils.ArrayIn(data.Event, nologEvents); !ok {
+			if !slices.Contains(nologEvents, data.Event) {
 				payload := data.Payload
 				if len(payload) > maxPayloadLogLength {
 					payload = []byte("<truncated>")
@@ -381,10 +403,7 @@ func (manager *WebSocketManagerCtx) startInactiveCursors() {
 	manager.logger.Info().Msg("starting inactive cursors handler")
 	manager.shutdownInactiveCursors = make(chan struct{})
 
-	manager.wg.Add(1)
-	go func() {
-		defer manager.wg.Done()
-
+	manager.wg.Go(func() {
 		ticker := time.NewTicker(inactiveCursorsPeriod)
 		defer ticker.Stop()
 
@@ -424,7 +443,7 @@ func (manager *WebSocketManagerCtx) startInactiveCursors() {
 				manager.sessions.InactiveCursorsBroadcast(event.SESSION_CURSORS, sessionCursors)
 			}
 		}
-	}()
+	})
 }
 
 func (manager *WebSocketManagerCtx) stopInactiveCursors() {

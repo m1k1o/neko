@@ -1,0 +1,115 @@
+name: Build Branch Test Image
+
+on:
+  workflow_dispatch:
+    inputs:
+      app:
+        description: 'App to build'
+        required: true
+        default: 'firefox'
+        type: choice
+        options:
+          - firefox
+          - waterfox
+          - chromium
+          - google-chrome
+          - ungoogled-chromium
+          - microsoft-edge
+          - brave
+          - vivaldi
+          - opera
+          - tor-browser
+          - remmina
+          - vlc
+          - xfce
+          - kde
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-client:
+    name: Build Client
+    uses: ./.github/workflows/client_build.yml
+
+  build-base:
+    name: Build Base Image
+    runs-on: ubuntu-latest
+    needs: build-client
+    outputs:
+      branch_tag: ${{ steps.branch.outputs.tag }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Sanitize branch name for Docker tag
+        id: branch
+        run: |
+          TAG=$(echo "${{ github.ref_name }}" | sed 's/[^a-zA-Z0-9._-]/-/g')
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+          echo "Branch tag: ${TAG}"
+
+      - name: Download client dist
+        uses: actions/download-artifact@v4
+        with:
+          name: client
+          path: client/dist
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_ACCESS_TOKEN }}
+
+      - name: Generate base Dockerfile
+        run: go run utils/docker/main.go -i Dockerfile.tmpl -o Dockerfile -client client/dist
+
+      - name: Build and push base image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./
+          push: true
+          tags: ghcr.io/${{ github.repository }}/base:${{ steps.branch.outputs.tag }}
+          platforms: linux/amd64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  build-app:
+    name: Build App Image (${{ inputs.app }})
+    runs-on: ubuntu-latest
+    needs: build-base
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_ACCESS_TOKEN }}
+
+      - name: Build and push app image
+        uses: docker/build-push-action@v6
+        with:
+          context: apps/${{ inputs.app }}
+          file: apps/${{ inputs.app }}/Dockerfile
+          push: true
+          tags: ghcr.io/${{ github.repository }}/${{ inputs.app }}:${{ needs.build-base.outputs.branch_tag }}
+          build-args: |
+            BASE_IMAGE=ghcr.io/${{ github.repository }}/base:${{ needs.build-base.outputs.branch_tag }}
+          platforms: linux/amd64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

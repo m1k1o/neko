@@ -1,0 +1,14 @@
+{
+  "tab": "Chat",
+  "mute": "Stummschalten",
+  "unmute": "Nicht Stummschalten",
+  "confirm": {
+    "mute_title": "{{name}} stummschalten?",
+    "mute_text": "Bist du sicher das du {{name}} stummschalten willst?",
+    "unmute_title": "{{name}} stummschaltung aufheben?",
+    "unmute_text": "Bist du sicher das du von {{name}} die stummschaltung aufheben willst?"
+  },
+  "muted": "{{name}} stummgeschaltet",
+  "unmuted": "{{name}} stummschaltung aufgehoben",
+  "send_a_message": "Sende eine Nachricht"
+}

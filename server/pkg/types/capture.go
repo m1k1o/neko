@@ -20,17 +20,35 @@ var (
 type Sample struct {
 	// timing information
 	Timestamp time.Time
-	Duration  time.Duration
+	// PTS, DTS, and Duration use -1 for GST_CLOCK_TIME_NONE.
+	PTS      time.Duration
+	DTS      time.Duration
+	Duration time.Duration
 	// metadata
 	DeltaUnit bool // this unit cannot be decoded independently.
 	// buffer length
 	Length int
-	// buffer with encoded media
+	// Data is immutable and remains valid while referenced. Consumers may retain
+	// it after WriteSample returns.
 	Data []byte
 }
 
-type SampleListener interface {
+type SampleConsumer interface {
 	WriteSample(Sample)
+}
+
+type EncodedStream interface {
+	ID() string
+	Codec() codec.RTPCodec
+	Bitrate() uint64
+
+	Subscribe(SampleConsumer) (StreamSubscription, error)
+}
+
+type StreamSubscription interface {
+	Stream() EncodedStream
+	Switch(EncodedStream) error
+	Close() error
 }
 
 type BroadcastManager interface {
@@ -103,27 +121,16 @@ type StreamSelector struct {
 	Bitrate uint64 `json:"bitrate"`
 }
 
-type StreamSelectorManager interface {
+type EncodedStreamSelector interface {
 	IDs() []string
 	Codec() codec.RTPCodec
 
-	GetStream(selector StreamSelector) (StreamSinkManager, bool)
+	GetStream(selector StreamSelector) (EncodedStream, bool)
 }
 
-type StreamSinkManager interface {
-	ID() string
-	Codec() codec.RTPCodec
-	Bitrate() uint64
-
-	AddListener(listener SampleListener) error
-	RemoveListener(listener SampleListener) error
-	MoveListenerTo(listener SampleListener, targetStream StreamSinkManager) error
-
-	ListenersCount() int
-	Started() bool
-
-	CreatePipeline() error
-	DestroyPipeline()
+type EncodedMediaSource interface {
+	Audio() EncodedStream
+	Video() EncodedStreamSelector
 }
 
 type StreamSrcManager interface {
@@ -137,13 +144,13 @@ type StreamSrcManager interface {
 }
 
 type CaptureManager interface {
+	EncodedMediaSource
+
 	Start()
 	Shutdown() error
 
 	Broadcast() BroadcastManager
 	Screencast() ScreencastManager
-	Audio() StreamSinkManager
-	Video() StreamSelectorManager
 
 	Webcam() StreamSrcManager
 	Microphone() StreamSrcManager
@@ -175,8 +182,12 @@ func (config *VideoConfig) GetPipeline(screen ScreenSize) (string, error) {
 		}),
 	}
 
+	// queue holding at most the newest raw frame: when the encoder falls behind, older frames are
+	// dropped instead of piling up (a default queue buffers up to 1s, which becomes input lag)
+	const queue = "queue max-size-buffers=1 max-size-time=0 max-size-bytes=0 leaky=downstream"
+
 	// get fps pipeline
-	fpsPipeline := "! video/x-raw ! videoconvert ! queue"
+	fpsPipeline := "! video/x-raw ! videoconvert ! " + queue
 	if config.Fps != "" {
 		eval, err := gval.Full(language...).NewEvaluable(config.Fps)
 		if err != nil {
@@ -188,7 +199,7 @@ func (config *VideoConfig) GetPipeline(screen ScreenSize) (string, error) {
 			return "", err
 		}
 
-		fpsPipeline = fmt.Sprintf("! capsfilter caps=video/x-raw,framerate=%d/100 name=framerate ! videoconvert ! queue", int(val*100))
+		fpsPipeline = fmt.Sprintf("! capsfilter caps=video/x-raw,framerate=%d/100 name=framerate ! videoconvert ! %s", int(val*100), queue)
 	}
 
 	// get scale pipeline
@@ -215,7 +226,7 @@ func (config *VideoConfig) GetPipeline(screen ScreenSize) (string, error) {
 		}
 
 		// element videoscale parameter method to 0 meaning nearest neighbor
-		scalePipeline = fmt.Sprintf("! videoscale method=0 ! capsfilter caps=video/x-raw,width=%d,height=%d name=resolution ! queue", w, h)
+		scalePipeline = fmt.Sprintf("! videoscale method=0 ! capsfilter caps=video/x-raw,width=%d,height=%d name=resolution ! %s", w, h, queue)
 	}
 
 	// get encoder pipeline

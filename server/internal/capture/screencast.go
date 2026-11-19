@@ -87,11 +87,7 @@ func screencastNew(enabled bool, pipelineStr string) *ScreencastManagerCtx {
 		}),
 	}
 
-	manager.wg.Add(1)
-
-	go func() {
-		defer manager.wg.Done()
-
+	manager.wg.Go(func() {
 		ticker := time.NewTicker(screencastTimeout)
 		defer ticker.Stop()
 
@@ -105,7 +101,7 @@ func screencastNew(enabled bool, pipelineStr string) *ScreencastManagerCtx {
 				}
 			}
 		}
-	}()
+	})
 
 	return manager
 }
@@ -212,12 +208,9 @@ func (manager *ScreencastManagerCtx) createPipeline() error {
 		return errors.New("timeouted while waiting for first image")
 	}
 
-	manager.wg.Add(1)
 	pipeline := manager.pipeline
-
-	go func() {
+	manager.wg.Go(func() {
 		manager.logger.Debug().Msg("started receiving images")
-		defer manager.wg.Done()
 
 		for {
 			image, ok := <-pipeline.Sample()
@@ -228,7 +221,7 @@ func (manager *ScreencastManagerCtx) createPipeline() error {
 
 			manager.setImage(image)
 		}
-	}()
+	})
 
 	return nil
 }

@@ -1,0 +1,14 @@
+{
+  "tab": "Czat",
+  "mute": "Wycisz",
+  "unmute": "Cofnij wyciszenie",
+  "confirm": {
+    "mute_title": "Wyciszyć {{name}}?",
+    "mute_text": "Czy na pewno chcesz wyciszyć {{name}}?",
+    "unmute_title": "Cofnąć wyciszenie {{name}}?",
+    "unmute_text": "Czy chcesz cofnąć wyciszenie {{name}}?"
+  },
+  "muted": "wyciszył {{name}}",
+  "unmuted": "cofnął wyciszenie {{name}}",
+  "send_a_message": "Wyślij wiadomość"
+}
