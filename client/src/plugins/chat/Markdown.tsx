@@ -100,7 +100,13 @@ export const Markdown = memo(function Markdown({ source }: { source: string }) {
     // the preview of a link to an image (markdown.ts): the image alone, no icon; gone if it fails
     a: ({ node, href = '', children }) =>
       node?.properties.dataPreview ? (
-        <a className="block w-fit" href={href} target="_blank" rel="noopener noreferrer" onClick={open(href)}>
+        <a
+          className="block w-fit empty:hidden"
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={open(href)}
+        >
           {children}
         </a>
       ) : (

@@ -144,7 +144,7 @@ test('images: shown only with chat_images, from http(s) only, a link to an image
   const link = (href: string, inner: string) =>
     `<a class="text-text-link underline" href="${href}" target="_blank" rel="noopener noreferrer">${inner}</a>`
   const preview = (href: string) =>
-    `<a class="block w-fit" href="${href}" target="_blank" rel="noopener noreferrer">${img(href)}</a>`
+    `<a class="block w-fit empty:hidden" href="${href}" target="_blank" rel="noopener noreferrer">${img(href)}</a>`
 
   // ![alt](url): the image, a link to itself; also by reference
   expect(html('![a cat](https://x.io/cat)', app)).toBe(p(link('https://x.io/cat', img('https://x.io/cat', 'a cat'))))
