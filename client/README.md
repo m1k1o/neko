@@ -274,10 +274,11 @@ steps in a real Chromium-based browser instead of Playwright's, start it with
   over. Scroll sensitivity now uses v3 steps (-5..5, key `scroll_sensitivity`); `?scroll=` is mapped.
 - Chat markdown (`src/plugins/chat/markdown.ts`) is rendered by `react-markdown` with `remark-gfm`
   (`~~strike~~`, tables, bare links) and `remark-breaks` (a newline is a line break) to React elements,
-  no HTML strings; four small rehype plugins of ours add the chat's dialect: `:name:` emoji, plain-text
+  no HTML strings; small rehype plugins of ours add the chat's dialect: `:name:` emoji, plain-text
   `||spoiler||` (click to reveal; no formatting inside), `__underline__`, and links to anything but
   http(s)/mailto, images and raw HTML shown as the text they were typed as (nothing in a message loads
-  anything). Compared with the hand-written parser before: the Discord `>>>` block quote is gone
+  anything). A viewer who turns on "Show Images in Chat" (`chat_images`, off by default) gets http(s)
+  `![alt](url)` images, and a preview after a link to an image file (by the extension of its path). Compared with the hand-written parser before: the Discord `>>>` block quote is gone
   (`> ` quotes stay, and continue until a blank line), and CommonMark's headings, lists, nested
   quotes and tables are in. Messages over 512 characters (the server's default `chat.max_length`), or one the renderer fails on, are shown
   as plain text.
