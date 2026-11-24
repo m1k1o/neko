@@ -2,8 +2,12 @@ package file
 
 import (
 	"encoding/json"
+	"maps"
+	"path/filepath"
+	"slices"
 	"testing"
 
+	"github.com/m1k1o/neko/server/pkg/types"
 	"github.com/m1k1o/neko/server/pkg/utils"
 )
 
@@ -43,6 +47,33 @@ func TestMemberProviderCtx_hash(t *testing.T) {
 
 		if hashedPasswordStr != hashedPassword {
 			t.Errorf("hashedPasswordStr: %s != hashedPassword: %s", hashedPasswordStr, hashedPassword)
+		}
+	}
+}
+
+func TestMemberProviderCtx_SelectAll(t *testing.T) {
+	provider := &MemberProviderCtx{
+		config: Config{
+			Path: filepath.Join(t.TempDir(), "members.json"),
+		},
+	}
+
+	for _, id := range []string{"dave", "alice", "erin", "bob", "carol"} {
+		if _, err := provider.Insert(id, "password", types.MemberProfile{Name: id}); err != nil {
+			t.Fatalf("provider.Insert() returned error: %s", err)
+		}
+	}
+
+	pages := [][]string{{"alice", "bob"}, {"carol", "dave"}, {"erin"}}
+	for i, want := range pages {
+		profiles, err := provider.SelectAll(2, i*2)
+		if err != nil {
+			t.Fatalf("provider.SelectAll() returned error: %s", err)
+		}
+
+		got := slices.Sorted(maps.Keys(profiles))
+		if !slices.Equal(got, want) {
+			t.Errorf("page %d: got %v, want %v", i, got, want)
 		}
 	}
 }
