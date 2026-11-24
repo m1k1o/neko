@@ -40,7 +40,7 @@ func (h *RoomHandler) screenConfigurationChange(w http.ResponseWriter, r *http.R
 		ScreenSize: size,
 	})
 
-	return utils.HttpSuccess(w, data)
+	return utils.HttpSuccess(w, size)
 }
 
 // TODO: remove.
