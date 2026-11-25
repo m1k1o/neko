@@ -19,6 +19,9 @@ export const defaults = {
   chat_sound: true,
   // open chat links on the remote desktop instead of locally (needs the openinapp plugin)
   links_in_app: false,
+  // show the images of the chat (![alt](url), links to an image file); off: nothing is fetched from
+  // the hosts other users link to, which would learn this viewer's address
+  chat_images: false,
   keyboard_layout: 'us',
 }
 export type ViewerSettings = typeof defaults

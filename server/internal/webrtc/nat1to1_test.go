@@ -168,7 +168,7 @@ func TestPeerConnectionNAT1To1Hostname(t *testing.T) {
 	gatherHostIPs := func() map[string]bool {
 		t.Helper()
 
-		connection, _, err := manager.newPeerConnection(zerolog.Nop(), []codec.RTPCodec{codec.Opus(), codec.VP8()})
+		connection, _, err := manager.newPeerConnection(zerolog.Nop(), webrtc.Configuration{}, []codec.RTPCodec{codec.Opus(), codec.VP8()})
 		if err != nil {
 			t.Fatalf("creating peer connection: %v", err)
 		}

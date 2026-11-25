@@ -204,6 +204,36 @@ test('keyboard: the browser’s keydown/keypress/keyup on the textarea reach cli
   assert.equal(calls.length, 2, 'locked: nothing is sent')
 })
 
+test('keyboard: text that arrives only as input events (on-screen keyboards) is typed, also after a composition; composed text is typed once', async () => {
+  const { client, calls, box, overlay, textarea } = setup()
+  overlay.attach(box as any)
+  await host(client)
+  const typed = (ch: string) => [
+    ['key', ch.charCodeAt(0), true],
+    ['key', ch.charCodeAt(0), false],
+  ]
+  // what an on-screen keyboard can fire for a letter: keydown 229, then the text in an input event
+  const tap = (ch: string) => {
+    textarea().dispatch('keydown', { keyCode: 229, key: 'Unidentified', location: 0 })
+    textarea().dispatch('input', { data: ch, inputType: 'insertText', isComposing: false })
+  }
+  tap('a')
+  assert.deepEqual(calls, typed('a'))
+
+  calls.length = 0
+  textarea().dispatch('compositionstart', { data: '' })
+  textarea().dispatch('input', { data: 'b', inputType: 'insertCompositionText', isComposing: true })
+  textarea().dispatch('compositionend', { data: 'b' })
+  // some browsers fire the composition's last input event after compositionend
+  textarea().dispatch('input', { data: 'b', inputType: 'insertCompositionText', isComposing: false })
+  textarea().dispatch('input', { data: 'b', inputType: 'insertFromComposition', isComposing: false })
+  assert.deepEqual(calls, typed('b'), 'composed text is typed once, from compositionend')
+
+  calls.length = 0
+  tap('c')
+  assert.deepEqual(calls, typed('c'), 'input events are still typed after a composition')
+})
+
 test('mouse: a mousedown reaches client.input.move and .button with the position in remote screen coordinates; the release may land anywhere', async () => {
   const { client, calls, box, overlay, canvas, textarea } = setup()
   overlay.attach(box as any)
@@ -228,6 +258,35 @@ test('mouse: a mousedown reaches client.input.move and .button with the position
     ['move', 960, 540],
     ['button', 3, true],
   ])
+})
+
+test('mouse: the back/forward buttons reach the remote side as X11 buttons 8/9 (4/5 are the wheel), and their release does not navigate this page', async () => {
+  const { client, calls, box, overlay, canvas, textarea } = setup()
+  overlay.attach(box as any)
+  laidOut(canvas())
+  await host(client)
+  const press = { clientX: 10 + 480, clientY: 20 + 270 }
+  let prevented = 0
+  const release = (button: number) => {
+    for (const fn of windowListeners.mouseup) fn({ ...press, button, preventDefault: () => prevented++ })
+  }
+  textarea().dispatch('mousedown', { ...press, button: 3 })
+  release(3)
+  textarea().dispatch('mousedown', { ...press, button: 4 })
+  release(4)
+  assert.deepEqual(
+    calls.filter((c) => c[0] === 'button'),
+    [
+      ['button', 8, true],
+      ['button', 8, false],
+      ['button', 9, true],
+      ['button', 9, false],
+    ],
+  )
+  assert.equal(prevented, 2, 'the browser’s own back/forward on release is cancelled')
+  textarea().dispatch('mousedown', { ...press, button: 0 })
+  release(0)
+  assert.equal(prevented, 2, 'a left click release is left alone')
 })
 
 test('touch: a touchstart reaches client.input.touch with the id, position and pressure', async () => {

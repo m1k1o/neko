@@ -5,7 +5,9 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"io"
+	"maps"
 	"os"
+	"slices"
 
 	"github.com/m1k1o/neko/server/pkg/types"
 )
@@ -129,13 +131,10 @@ func (provider *MemberProviderCtx) SelectAll(limit int, offset int) (map[string]
 		return profiles, err
 	}
 
-	i := 0
-	for id, entry := range entries {
+	for i, id := range slices.Sorted(maps.Keys(entries)) {
 		if i >= offset && (limit == 0 || i < offset+limit) {
-			profiles[id] = entry.Profile
+			profiles[id] = entries[id].Profile
 		}
-
-		i = i + 1
 	}
 
 	return profiles, nil

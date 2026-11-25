@@ -46,9 +46,9 @@ func (session *SessionCtx) profileChanged() {
 		session.ClearHost()
 	}
 
-	if (!session.profile.CanConnect || !session.profile.CanLogin || !session.profile.CanWatch) && session.state.IsWatching {
+	if !session.profile.CanConnect || !session.profile.CanLogin || !session.profile.CanWatch {
 		// The peer may have been removed if the user disconnected while
-		// waiting for the delayed teardown.
+		// waiting for the delayed teardown, or it may not have connected yet.
 		if webrtcPeer := session.GetWebRTCPeer(); webrtcPeer != nil {
 			webrtcPeer.Destroy()
 		}
@@ -193,6 +193,13 @@ func (session *SessionCtx) DisconnectWebSocketPeer(websocketPeer types.WebSocket
 		session.websocketPeer = nil
 	}
 	session.websocketMu.Unlock()
+
+	// A peer that never connected gets no ICE timeout and would keep its
+	// capture subscriptions, while a connected one is closed by its own
+	// connection state changes.
+	if webrtcPeer := session.GetWebRTCPeer(); webrtcPeer != nil && !session.state.IsWatching {
+		webrtcPeer.Destroy()
+	}
 }
 
 // Destroy WebSocket peer disconnects the peer and destroys it. It ensures that the peer is

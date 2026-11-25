@@ -58,8 +58,10 @@ export function Settings() {
       </label>
     </li>
   )
-  const toggle = (key: 'scroll_invert' | 'autoplay' | 'ignore_emotes' | 'chat_sound' | 'links_in_app', name: string) =>
-    switchRow(name, s[key], (checked) => setSetting(neko, key, checked))
+  const toggle = (
+    key: 'scroll_invert' | 'autoplay' | 'ignore_emotes' | 'chat_sound' | 'chat_images' | 'links_in_app',
+    name: string,
+  ) => switchRow(name, s[key], (checked) => setSetting(neko, key, checked))
 
   return (
     <div className="flex flex-1" data-testid="settings">
@@ -82,6 +84,7 @@ export function Settings() {
         {toggle('autoplay', 'autoplay')}
         {toggle('ignore_emotes', 'ignore_emotes')}
         {toggle('chat_sound', 'chat_sound')}
+        {toggle('chat_images', 'chat_images')}
         {openInApp && toggle('links_in_app', 'links_in_app')}
         <li className={row}>
           <span className={label}>{t('setting.keyboard_layout')}</span>

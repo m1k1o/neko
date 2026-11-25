@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/cookiejar"
 	"net/http/httptest"
@@ -12,9 +13,11 @@ import (
 
 	"github.com/m1k1o/neko/server/internal/config"
 	"github.com/m1k1o/neko/server/internal/member"
+	"github.com/m1k1o/neko/server/internal/member/multiuser"
 	"github.com/m1k1o/neko/server/internal/member/oauth"
 	"github.com/m1k1o/neko/server/internal/session"
 	"github.com/m1k1o/neko/server/pkg/types"
+	"github.com/m1k1o/neko/server/pkg/utils"
 )
 
 func TestOAuthLoginSynchronizesProfile(t *testing.T) {
@@ -492,5 +495,122 @@ func TestOAuthConfigUsesProviderAndName(t *testing.T) {
 	}
 	if !payload.Enabled || payload.PasswordLoginEnabled || payload.Name != "Team SSO" || payload.LoginURL != "/api/oauth/login" {
 		t.Fatalf("OAuth UI config = %#v", payload)
+	}
+}
+
+func oauthUIConfig(t *testing.T, api *ApiManagerCtx) OAuthUIConfig {
+	t.Helper()
+
+	recorder := httptest.NewRecorder()
+	if err := api.OAuthConfig(recorder, httptest.NewRequest(http.MethodGet, "/api/oauth/config", nil)); err != nil {
+		t.Fatal(err)
+	}
+
+	var payload OAuthUIConfig
+	if err := json.NewDecoder(recorder.Body).Decode(&payload); err != nil {
+		t.Fatal(err)
+	}
+	return payload
+}
+
+func TestOAuthWorksAlongsideOtherMemberProvider(t *testing.T) {
+	idToken := testIDToken(t, map[string]string{"sub": "user-123", "name": "Ada Lovelace"})
+	provider := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/token":
+			_ = json.NewEncoder(w).Encode(map[string]string{"access_token": "provider-token", "id_token": idToken})
+		case "/userinfo":
+			_ = json.NewEncoder(w).Encode(map[string]string{"sub": "user-123"})
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer provider.Close()
+
+	memberConfig := &config.Member{
+		Provider: "multiuser",
+		Multiuser: multiuser.Config{
+			UserPassword: "neko",
+			UserProfile:  types.MemberProfile{CanLogin: true},
+		},
+		OAuth: oauth.Config{
+			Enabled:          true,
+			ClientID:         "client-id",
+			ClientSecret:     "client-secret",
+			AuthorizationURL: provider.URL + "/authorize",
+			TokenURL:         provider.URL + "/token",
+			UserInfoURL:      provider.URL + "/userinfo",
+			RedirectURL:      "https://neko.example.test/api/oauth/callback",
+			Scopes:           []string{"openid"},
+			SubjectField:     "sub",
+			UsernameField:    "name",
+			UserProfile:      types.MemberProfile{CanLogin: true},
+		},
+	}
+	sessionManager := session.New(&config.Session{
+		Cookie: config.SessionCookie{Enabled: true, Name: "NEKO_SESSION", Expiration: time.Hour},
+	})
+	members := member.New(sessionManager, memberConfig)
+	api := New(sessionManager, members, nil, nil, memberConfig, &config.Server{PathPrefix: "/"})
+
+	// both login options are offered
+	if payload := oauthUIConfig(t, api); !payload.Enabled || !payload.PasswordLoginEnabled {
+		t.Fatalf("OAuth UI config = %#v", payload)
+	}
+
+	// OAuth login creates a session
+	loginRecorder := httptest.NewRecorder()
+	if err := api.OAuthLogin(loginRecorder, httptest.NewRequest(http.MethodGet, "https://neko.example.test/api/oauth/login", nil)); err != nil {
+		t.Fatal(err)
+	}
+	authorizationURL, err := url.Parse(loginRecorder.Header().Get("Location"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	state := authorizationURL.Query().Get("state")
+	stateCookie := requireOAuthStateCookie(t, loginRecorder, state)
+
+	callbackRequest := httptest.NewRequest(http.MethodGet, "/api/oauth/callback?state="+url.QueryEscape(state)+"&code=authorization-code", nil)
+	callbackRequest.AddCookie(stateCookie)
+	if err := api.OAuthCallback(httptest.NewRecorder(), callbackRequest); err != nil {
+		t.Fatal(err)
+	}
+	if userSession, ok := sessionManager.Get("oauth:user-123"); !ok || userSession.Profile().Name != "Ada Lovelace" {
+		t.Fatal("OAuth session was not created")
+	}
+
+	// password login of the selected provider keeps working
+	passwordSession, _, err := members.Login("bob", "neko")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if passwordSession.Profile().Name != "bob" {
+		t.Fatalf("password session profile = %#v", passwordSession.Profile())
+	}
+}
+
+func TestOAuthEndpointsDisabledWithoutOAuth(t *testing.T) {
+	memberConfig := &config.Member{
+		Provider:  "multiuser",
+		Multiuser: multiuser.Config{UserPassword: "neko"},
+	}
+	sessionManager := session.New(&config.Session{
+		Cookie: config.SessionCookie{Enabled: true, Name: "NEKO_SESSION", Expiration: time.Hour},
+	})
+	api := New(sessionManager, member.New(sessionManager, memberConfig), nil, nil, memberConfig, &config.Server{PathPrefix: "/"})
+
+	if payload := oauthUIConfig(t, api); payload.Enabled || !payload.PasswordLoginEnabled {
+		t.Fatalf("OAuth UI config = %#v", payload)
+	}
+
+	for name, handler := range map[string]func(http.ResponseWriter, *http.Request) error{
+		"login":    api.OAuthLogin,
+		"callback": api.OAuthCallback,
+	} {
+		err := handler(httptest.NewRecorder(), httptest.NewRequest(http.MethodGet, "/api/oauth/"+name, nil))
+		var httpErr *utils.HTTPError
+		if !errors.As(err, &httpErr) || httpErr.Code != http.StatusNotFound {
+			t.Fatalf("%s error = %v, want 404", name, err)
+		}
 	}
 }

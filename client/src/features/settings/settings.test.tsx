@@ -58,7 +58,13 @@ const ROOM = ['private_mode', 'control_protection', 'implicit_hosting', 'mercifu
 
 test('a user sees the viewer settings only', () => {
   const out = html(make(false))
-  expect(Object.keys(switches(out))).toEqual(['scroll_invert', 'autoplay', 'ignore_emotes', 'chat_sound'])
+  expect(Object.keys(switches(out))).toEqual([
+    'scroll_invert',
+    'autoplay',
+    'ignore_emotes',
+    'chat_sound',
+    'chat_images',
+  ])
   expect(out).not.toContain('setting.room_title')
 })
 
@@ -67,7 +73,7 @@ test('an admin sees the room settings, in order, as the server last sent them', 
   let out = html(neko)
   expect(out).toContain('setting.room_title')
   const all = switches(out)
-  expect(Object.keys(all).slice(4)).toEqual(ROOM) // inactive_cursors: this client draws no other cursors
+  expect(Object.keys(all).slice(5)).toEqual(ROOM) // inactive_cursors: this client draws no other cursors
   expect(ROOM.map((k) => all[k])).toEqual([false, false, false, false])
   for (const k of ROOM) expect(out).toContain(`title="setting.${k}_desc"`)
 
