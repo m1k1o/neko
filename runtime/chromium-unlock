@@ -1,0 +1,36 @@
+#!/bin/sh
+#
+# Usage: chromium-unlock <command> [args...]
+#
+# Chromium based browsers lock their profile with a SingletonLock symlink that
+# points to "<hostname>-<pid>". A recreated container gets a new hostname, so a
+# lock left in a persisted profile makes the browser refuse to start, as the
+# profile seems to be in use on another computer. Remove the lock when it is
+# stale, then run the browser.
+#
+# The profile is taken from the --user-data-dir= argument. Without it, the
+# browser is started as is.
+#
+# A lock from another hostname is treated as stale, so do not share one profile
+# between containers that run at the same time.
+
+dir=""
+for arg in "$@"; do
+  case "$arg" in
+    --user-data-dir=*) dir="${arg#--user-data-dir=}" ;;
+  esac
+done
+
+lock="$dir/SingletonLock"
+if [ -n "$dir" ] && [ -L "$lock" ]; then
+  target="$(readlink "$lock")"
+  host="${target%-*}"
+  pid="${target##*-}"
+
+  if [ "$host" != "$(uname -n)" ] || ! kill -0 "$pid" 2>/dev/null; then
+    echo "chromium-unlock: removing stale lock $lock -> $target"
+    rm -f "$dir/SingletonLock" "$dir/SingletonSocket" "$dir/SingletonCookie"
+  fi
+fi
+
+exec "$@"

@@ -260,6 +260,35 @@ test('mouse: a mousedown reaches client.input.move and .button with the position
   ])
 })
 
+test('mouse: the back/forward buttons reach the remote side as X11 buttons 8/9 (4/5 are the wheel), and their release does not navigate this page', async () => {
+  const { client, calls, box, overlay, canvas, textarea } = setup()
+  overlay.attach(box as any)
+  laidOut(canvas())
+  await host(client)
+  const press = { clientX: 10 + 480, clientY: 20 + 270 }
+  let prevented = 0
+  const release = (button: number) => {
+    for (const fn of windowListeners.mouseup) fn({ ...press, button, preventDefault: () => prevented++ })
+  }
+  textarea().dispatch('mousedown', { ...press, button: 3 })
+  release(3)
+  textarea().dispatch('mousedown', { ...press, button: 4 })
+  release(4)
+  assert.deepEqual(
+    calls.filter((c) => c[0] === 'button'),
+    [
+      ['button', 8, true],
+      ['button', 8, false],
+      ['button', 9, true],
+      ['button', 9, false],
+    ],
+  )
+  assert.equal(prevented, 2, 'the browser’s own back/forward on release is cancelled')
+  textarea().dispatch('mousedown', { ...press, button: 0 })
+  release(0)
+  assert.equal(prevented, 2, 'a left click release is left alone')
+})
+
 test('touch: a touchstart reaches client.input.touch with the id, position and pressure', async () => {
   const { client, calls, box, overlay, canvas, textarea } = setup()
   overlay.attach(box as any)

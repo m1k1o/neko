@@ -9,6 +9,14 @@ import type { CursorImage } from './types.ts'
 const WHEEL_STEP = 53 // px of wheel delta per scroll step
 const WHEEL_LINE_HEIGHT = 19 // px per line when the browser reports lines
 const MOVE_THROTTLE_MS = 1000 / 60
+// MouseEvent.button -> X11 button. X11 keeps 4-7 for the wheel, so back/forward are 8/9.
+const X11_BUTTON: Record<number, number> = {
+  0: 1, // left
+  1: 2, // middle
+  2: 3, // right
+  3: 8, // back
+  4: 9, // forward
+}
 const LAYER = 'position:absolute;inset:0;width:100%;height:100%;'
 
 // X11 keysyms
@@ -280,6 +288,7 @@ export class Overlay {
   }
 
   private onButton(e: MouseEvent, down: boolean) {
+    if (!(e.button in X11_BUTTON)) return
     if (down) this.mouseDown = true
     else if (!this.mouseDown)
       return // only releases of presses that started on the video
@@ -293,8 +302,10 @@ export class Overlay {
       return
     }
     if (this.client.state.control.locked) return
+    // the browser goes back/forward on the release of those buttons: keep that for the remote side
+    if (!down && (e.button === 3 || e.button === 4)) e.preventDefault()
     this.move(this.pos(e))
-    this.button(e.button + 1, down)
+    this.button(X11_BUTTON[e.button], down)
   }
 
   private onWheel(e: WheelEvent) {
@@ -439,8 +450,8 @@ export class Overlay {
     if (controlling && pending && performance.now() - pending.at < 2000) {
       const e = pending.e
       this.move(this.pos(e))
-      this.button(e.button + 1, true)
-      if (!this.mouseDown) this.button(e.button + 1, false) // released while we waited
+      this.button(X11_BUTTON[e.button], true)
+      if (!this.mouseDown) this.button(X11_BUTTON[e.button], false) // released while we waited
     }
   }
 

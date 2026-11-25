@@ -2,7 +2,9 @@ package members
 
 import (
 	"errors"
+	"maps"
 	"net/http"
+	"slices"
 	"strconv"
 
 	"github.com/m1k1o/neko/server/pkg/types"
@@ -43,10 +45,10 @@ func (h *MembersHandler) membersList(w http.ResponseWriter, r *http.Request) err
 	}
 
 	members := []MemberDataPayload{}
-	for id, profile := range entries {
+	for _, id := range slices.Sorted(maps.Keys(entries)) {
 		members = append(members, MemberDataPayload{
 			ID:      id,
-			Profile: profile,
+			Profile: entries[id],
 		})
 	}
 

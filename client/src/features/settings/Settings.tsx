@@ -39,7 +39,7 @@ export function Settings() {
   useEffect(() => setUrl(broadcast.url), [broadcast.url])
 
   const toggle = (
-    key: 'scroll_invert' | 'autoplay' | 'ignore_emotes' | 'chat_sound' | 'links_in_app',
+    key: 'scroll_invert' | 'autoplay' | 'ignore_emotes' | 'chat_sound' | 'chat_images' | 'links_in_app',
     name: string,
   ) => (
     <li className={row}>
@@ -80,6 +80,7 @@ export function Settings() {
         {toggle('autoplay', 'autoplay')}
         {toggle('ignore_emotes', 'ignore_emotes')}
         {toggle('chat_sound', 'chat_sound')}
+        {toggle('chat_images', 'chat_images')}
         {openInApp && toggle('links_in_app', 'links_in_app')}
         <li className={row}>
           <span className={label}>{t('setting.keyboard_layout')}</span>
