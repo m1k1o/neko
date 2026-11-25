@@ -65,6 +65,7 @@ export interface InitPayload {
   screen_size: ScreenSize
   sessions: Record<string, Session>
   settings: Settings
+  lock_controls_on_start?: boolean
   touch_events: boolean
   screencast_enabled?: boolean
   webrtc?: { videos?: string[] }

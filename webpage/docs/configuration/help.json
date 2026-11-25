@@ -620,6 +620,15 @@
   {
     "key": [
       "session",
+      "locked"
+    ],
+    "type": "boolean",
+    "defaultValue": "false",
+    "description": "start new clients with local controls locked when implicit hosting is enabled"
+  },
+  {
+    "key": [
+      "session",
       "locked_controls"
     ],
     "type": "boolean",
