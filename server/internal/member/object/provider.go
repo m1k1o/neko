@@ -1,6 +1,9 @@
 package object
 
 import (
+	"maps"
+	"slices"
+
 	"github.com/m1k1o/neko/server/pkg/types"
 )
 
@@ -100,13 +103,10 @@ func (provider *MemberProviderCtx) Select(id string) (types.MemberProfile, error
 func (provider *MemberProviderCtx) SelectAll(limit int, offset int) (map[string]types.MemberProfile, error) {
 	profiles := make(map[string]types.MemberProfile)
 
-	i := 0
-	for id, entry := range provider.entries {
+	for i, id := range slices.Sorted(maps.Keys(provider.entries)) {
 		if i >= offset && (limit == 0 || i < offset+limit) {
-			profiles[id] = entry.profile
+			profiles[id] = provider.entries[id].profile
 		}
-
-		i = i + 1
 	}
 
 	return profiles, nil
