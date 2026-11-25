@@ -208,6 +208,40 @@ await step('markdown: bob -> alice renders safely', async () => {
   if ((await last.locator('a').count()) !== 1) throw new Error('expected exactly one (safe) link')
   if ((await last.locator('a').getAttribute('href')) !== 'https://example.com/') throw new Error('bad href')
 })
+await step('chat images: shown only to a viewer who turned them on', async () => {
+  const src = URL.replace(/\/?$/, '/') + 'android-chrome-192x192.png'
+  const toggle = A.locator('[data-testid=settings] li', { hasText: 'Show Images in Chat' })
+  await A.click('[data-testid=tabs] >> text=Settings')
+  await toggle.locator('label').click()
+  if (!(await toggle.locator('input').isChecked())) throw new Error('the switch did not turn on')
+  await A.click('[data-testid=tabs] >> text=Chat')
+  await B.fill('[data-testid=chat-input]', `look ${src} and ![icon](${src})`)
+  await B.press('[data-testid=chat-input]', 'Enter')
+  const last = A.locator('[data-testid=chat-body]').last()
+  await last.locator('[data-testid=chat-image]').nth(1).waitFor({ timeout: 5000 })
+  // both loaded, and the history still shows the end of the chat with them in it
+  await A.waitForFunction(
+    () => {
+      const imgs = [...document.querySelectorAll('[data-testid=chat-body]')].pop().querySelectorAll('img')
+      const ul = document.querySelector('[data-testid=chat] > ul')
+      return (
+        imgs.length === 2 &&
+        [...imgs].every((i) => i.complete && i.naturalWidth > 0) &&
+        ul.scrollHeight - ul.scrollTop - ul.clientHeight < 5
+      )
+    },
+    null,
+    { timeout: 5000 },
+  )
+  if ((await last.locator('a').count()) !== 3) throw new Error('expected the link, its preview and the image link')
+  // bob has them off (the default): the text and the link only
+  const mine = B.locator('[data-testid=chat-body]').last()
+  await mine.locator('a').first().waitFor({ timeout: 5000 })
+  if ((await mine.locator('img').count()) !== 0) throw new Error('bob fetched an image')
+  await A.click('[data-testid=tabs] >> text=Settings')
+  await toggle.locator('label').click()
+  await A.click('[data-testid=tabs] >> text=Chat')
+})
 await step('narrow screen: the member menu opens from a chat author', async () => {
   const ctx = await browser.newContext({ ignoreHTTPSErrors: true, viewport: { width: 700, height: 900 } })
   const N = await ctx.newPage()

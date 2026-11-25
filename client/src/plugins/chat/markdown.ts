@@ -1,9 +1,10 @@
 // The chat's markdown: react-markdown (CommonMark; GFM strikethrough, tables and bare links;
 // a newline is a line break) with the chat's own dialect on top as rehype plugins (`:name:` emoji,
 // `||spoiler||`, `__underline__`), and the rules for text that comes from other users: links are
-// http(s)/mailto only and anything else stays the text it was typed as, so do images; raw HTML is
-// text too (react-markdown's default). Markdown.tsx renders the tree; nothing is an HTML string.
-import type { Element, ElementContent, Root } from 'hast'
+// http(s)/mailto only and anything else stays the text it was typed as, so do images unless the
+// viewer turned them on (chat_images); raw HTML is text too (react-markdown's default). Markdown.tsx
+// renders the tree; nothing is an HTML string.
+import type { Element, ElementContent, Properties, Root } from 'hast'
 import type { Plugin, PluggableList } from 'unified'
 import remarkBreaks from 'remark-breaks'
 import remarkGfm from 'remark-gfm'
@@ -25,10 +26,25 @@ export function safeUrl(href: string): string | null {
   }
 }
 
+// an image is loaded from http(s) only, and only for a viewer who asked for it (chat_images): the
+// browser fetching it tells its host the viewer's address
+export function imageUrl(src: string): string | null {
+  const url = safeUrl(src)
+  return url && !url.startsWith('mailto:') ? url : null
+}
+
+// a link to an image file, by the extension of its path (https://x.io/cat.png?size=2): it gets a
+// preview below it when images are on
+const IMAGE_PATH = /\.(?:apng|avif|bmp|gif|jpe?g|png|svg|webp)$/i
+export function isImageLink(href: string): boolean {
+  const url = imageUrl(href)
+  return !!url && IMAGE_PATH.test(new URL(url).pathname)
+}
+
 // f sees every element of the tree but code (its text is verbatim), parents first; it may replace
-// the children
-function walk(node: Root | Element, f: (el: Element) => void) {
-  if (node.type === 'element') f(node)
+// the children, or return false to skip them
+function walk(node: Root | Element, f: (el: Element) => void | false) {
+  if (node.type === 'element' && f(node) === false) return
   for (const c of node.children) if (c.type === 'element' && c.tagName !== 'code') walk(c, f)
 }
 
@@ -51,13 +67,16 @@ function splitText(el: Element, re: RegExp, make: (m: RegExpExecArray) => Elemen
 }
 
 // a link to anything but http(s)/mailto ([x](javascript:...), <data:...>, a relative path) and an
-// image stay the text they were typed as; a generated one (a GFM footnote's) keeps its text only
-const rehypeSafe: Plugin<[], Root> = () => (tree, file) => {
+// image (with images on: an image not from http(s)) stay the text they were typed as; a generated
+// one (a GFM footnote's) keeps its text only
+const rehypeSafe: Plugin<[{ images?: boolean }?], Root> = (options) => (tree, file) => {
   const src = String(file)
   walk(tree, (el) => {
     el.children = el.children.flatMap((c) => {
       if (c.type !== 'element') return [c]
-      const unsafe = c.tagName === 'img' || (c.tagName === 'a' && !safeUrl(String(c.properties.href ?? '')))
+      const unsafe =
+        (c.tagName === 'img' && !(options?.images && imageUrl(String(c.properties.src ?? '')))) ||
+        (c.tagName === 'a' && !safeUrl(String(c.properties.href ?? '')))
       if (!unsafe) return [c]
       return c.position
         ? [{ type: 'text', value: src.slice(c.position.start.offset, c.position.end.offset) }]
@@ -104,8 +123,37 @@ const rehypeEmoji: Plugin<[], Root> = () => (tree) => {
   )
 }
 
-// react-markdown's options (Markdown.tsx adds the components and urlTransform: safeUrl)
+// with images on (after rehypeSafe, so every image left is from http(s)): ![alt](url) not inside a
+// link links to itself, so that a click opens it in full, and a link to an image file gets a
+// preview after it, a second link (data-preview) around the image. Markdown.tsx renders both
+const rehypeImages: Plugin<[], Root> = () => (tree) => {
+  const element = (tagName: string, properties: Properties, children: ElementContent[] = []): Element => ({
+    type: 'element',
+    tagName,
+    properties,
+    children,
+  })
+  const hasImage = (el: Element): boolean =>
+    el.children.some((c) => c.type === 'element' && (c.tagName === 'img' || hasImage(c)))
+  walk(tree, (el) => {
+    if (el.tagName === 'a') return false // an image in a link already opens that link
+    el.children = el.children.flatMap((c): ElementContent[] => {
+      if (c.type !== 'element') return [c]
+      if (c.tagName === 'img') return [element('a', { href: c.properties.src }, [c])]
+      const href = String(c.properties.href ?? '')
+      if (c.tagName !== 'a' || hasImage(c) || !isImageLink(href)) return [c]
+      const preview = element('img', { src: href, alt: '', dataPreview: true })
+      return [c, element('a', { href, dataPreview: true }, [preview])]
+    })
+  })
+}
+
+// react-markdown's options for a message (Markdown.tsx adds the components and urlTransform:
+// safeUrl); images are the viewer's choice (chat_images)
 export const remarkPlugins: PluggableList = [[remarkGfm, { singleTilde: false }], remarkBreaks]
-export const rehypePlugins: PluggableList = [rehypeSafe, rehypeUnderline, rehypeSpoiler, rehypeEmoji]
-// the plugins above leave no image in the tree; should one get through, it is dropped here
-export const disallowedElements = ['img']
+const rehypeText: PluggableList = [rehypeUnderline, rehypeSpoiler, rehypeEmoji]
+const rehypeNoImages: PluggableList = [rehypeSafe, ...rehypeText]
+const rehypeWithImages: PluggableList = [[rehypeSafe, { images: true }], rehypeImages, ...rehypeText]
+export const rehypePlugins = (images: boolean) => (images ? rehypeWithImages : rehypeNoImages)
+// without images the plugins above leave none in the tree; should one get through, it is dropped here
+export const disallowedElements = (images: boolean) => (images ? [] : ['img'])
