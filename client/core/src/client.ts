@@ -27,6 +27,10 @@ export interface NekoClientOptions {
   inputMode?: 'auto' | 'touch' | 'mouse'
   // how the stream arrives; WebRTC unless given
   transport?: StreamTransport | (() => StreamTransport)
+  // what to try when the first transport gives up on the stream, e.g. WebRTC found no media route
+  // through a firewall. Built on demand, used once, and only for stream failures: an auth or
+  // permission error closes the connection as it would without it.
+  fallbackTransport?: () => StreamTransport
 }
 
 export interface Pos {
@@ -76,12 +80,17 @@ export class NekoClient {
   readonly store = createStore<State>()(subscribeWithSelector(initialState))
   readonly api = new NekoApi()
   readonly events = new Emitter<NekoEvents>()
-  readonly transport: StreamTransport
+  // the stream's transport. Not readonly: a fallback replaces it in place when the first one
+  // gives up (see fallbackTransport), so everything holding the client keeps working.
+  transport: StreamTransport
   // where input devices send: the transport's own channel, or the websocket
-  readonly input: InputChannel
+  input: InputChannel
 
   private ws: WebSocket | null = null
   private introduced = false // system/init arrived on the current socket: the transport's reports count
+  // the last system/init payload, so a fallback transport can start without waiting for a reconnect
+  private lastInit: SessionInfo['init'] | null = null
+  private fellBack = false // the fallback transport is used at most once per client
   // every websocket message, for the transport's signalling
   private readonly messages = new Emitter<Record<string, (payload: any) => void>>()
   private wanted = false // user asked to be connected
@@ -101,8 +110,7 @@ export class NekoClient {
     const t = opts.transport
     this.transport = typeof t === 'function' ? t() : (t ?? new WebRTCTransport())
     this.input = this.transport.input ?? new WebSocketInput(this)
-    this.transport.on('state', (s) => this.onTransportState(s))
-    this.transport.on('error', (err) => this.close(err))
+    this.bindTransport()
 
     const { store } = this
     store.subscribe(selectControlling, () => this.sendKeyboardMap())
@@ -313,6 +321,45 @@ export class NekoClient {
     if (this.ws?.readyState === WebSocket.OPEN) this.ws.send(JSON.stringify({ event, payload }))
   }
 
+  // subscribe to whichever transport is current; called again when a fallback replaces it
+  private bindTransport() {
+    this.transport.on('state', (s) => this.onTransportState(s))
+    this.transport.on('error', (err) => {
+      if (!this.fallBack(err)) this.close(err)
+    })
+  }
+
+  // A transport emits 'error' when the stream is lost for good: WebRTC after it runs out of
+  // retries with no media route, or when no video codec is in common. A different transport may
+  // well work, so try the fallback once instead of ending the session. Everything else about the
+  // session (the socket, auth, room state) is untouched.
+  private fallBack(reason: Error): boolean {
+    const build = this.opts.fallbackTransport
+    if (!build || this.fellBack || !this.wanted) return false
+    this.fellBack = true
+
+    let next: StreamTransport
+    try {
+      next = build()
+    } catch {
+      return false // the fallback itself is unavailable; the original error stands
+    }
+
+    const previous = this.transport
+    previous.close()
+    this.transport = next
+    this.input = next.input ?? new WebSocketInput(this)
+    this.bindTransport()
+    // the consumer attached the old transport's element and must attach the new one
+    this.events.emit('transport.changed', next.kind, reason)
+
+    // the session is already introduced, so the new transport can start right away
+    if (this.introduced && this.lastInit) {
+      next.connect(this.sessionInfo(this.lastInit)).catch((err) => this.close(err))
+    }
+    return true
+  }
+
   // the stream: connected only once the transport is; its status counts while the socket is up
   private onTransportState(s: TransportState) {
     const playable = s.video.playable && !this.state.video.playable // a stream arrived (or a new one)
@@ -362,6 +409,7 @@ export class NekoClient {
           settings: p.settings,
         })
         this.introduced = true
+        this.lastInit = p
         this.transport.connect(this.sessionInfo(p)).catch((err) => this.close(err))
         break
       case 'system/admin':

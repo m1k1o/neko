@@ -13,6 +13,7 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"github.com/m1k1o/neko/server/internal/config"
+	"github.com/m1k1o/neko/server/internal/mediawebsocket"
 	"github.com/m1k1o/neko/server/pkg/types"
 )
 
@@ -23,7 +24,7 @@ type HttpManagerCtx struct {
 	http   *http.Server
 }
 
-func New(WebSocketManager types.WebSocketManager, ApiManager types.ApiManager, config *config.Server, memberConfig *config.Member) *HttpManagerCtx {
+func New(WebSocketManager types.WebSocketManager, MediaWebSocketManager *mediawebsocket.Manager, ApiManager types.ApiManager, config *config.Server, memberConfig *config.Member) *HttpManagerCtx {
 	logger := log.With().Str("module", "http").Logger()
 
 	opts := []RouterOption{
@@ -53,7 +54,7 @@ func New(WebSocketManager types.WebSocketManager, ApiManager types.ApiManager, c
 
 	router.Route("/api", ApiManager.Route)
 
-	router.Get("/api/ws", WebSocketManager.Upgrade(func(r *http.Request) bool {
+	checkOrigin := func(r *http.Request) bool {
 		origin := r.Header.Get("Origin")
 		if origin == "" || config.AllowOrigin(origin) {
 			return true
@@ -62,7 +63,12 @@ func New(WebSocketManager types.WebSocketManager, ApiManager types.ApiManager, c
 		// by default, only same-origin browser connections are accepted
 		u, err := url.Parse(origin)
 		return err == nil && u.Host != "" && strings.EqualFold(u.Host, r.Host)
-	}))
+	}
+	router.Get("/api/ws", WebSocketManager.Upgrade(checkOrigin))
+	// the media transport is optional, so the server can run without it
+	if MediaWebSocketManager != nil {
+		router.Get("/media/ws", MediaWebSocketManager.Upgrade(checkOrigin))
+	}
 
 	batch := batchHandler{
 		Router:     router,
