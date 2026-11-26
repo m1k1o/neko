@@ -132,7 +132,16 @@ export class WebRTCTransport implements StreamTransport {
   private async onProvide({ sdp, iceservers }: { sdp: string; iceservers?: RTCIceServer[] }) {
     this.closePeer()
     const pc = (this.pc = new RTCPeerConnection({ iceServers: iceservers ?? [] }))
-    pc.onicecandidate = (e) => e.candidate && this.session?.send('signal/candidate', e.candidate.toJSON())
+    let gathered = 0
+    pc.onicecandidate = (e) => {
+      if (e.candidate) {
+        gathered++
+        return this.session?.send('signal/candidate', e.candidate.toJSON())
+      }
+      // gathering finished with nothing to offer (UDP blocked by policy): the peer would sit in
+      // 'new' until the server gives up, so fail the attempt now
+      if (gathered === 0 && this.pc === pc) this.onPeerState('failed')
+    }
     pc.ontrack = (e) => this.onTrack(e)
     pc.ondatachannel = (e) => this.input.bind(e.channel)
     pc.onconnectionstatechange = () => this.pc === pc && this.onPeerState(pc.connectionState)
@@ -142,7 +151,20 @@ export class WebRTCTransport implements StreamTransport {
       await pc.setLocalDescription(await pc.createOffer())
       this.session?.send('signal/offer', { sdp: pc.localDescription!.sdp })
     }
+    this.armConnectTimer(pc)
     await this.onOffer(sdp)
+  }
+
+  // A peer that never reaches 'connected' within the timeout is treated as failed, as the browser
+  // eventually would, so the retry or the fallback starts now. Armed when the peer is made, since a
+  // peer with no route may never leave 'new'.
+  private armConnectTimer(pc: RTCPeerConnection) {
+    clearTimeout(this.connectTimer)
+    if (this.connectTimeout <= 0) return
+    this.connectTimer = window.setTimeout(() => {
+      const s = pc.connectionState
+      if (this.pc === pc && (s === 'new' || s === 'connecting')) this.onPeerState('failed')
+    }, this.connectTimeout)
   }
 
   private async onOffer(sdp: string) {
@@ -163,15 +185,6 @@ export class WebRTCTransport implements StreamTransport {
   private onPeerState(s: RTCPeerConnectionState) {
     // any outcome ends the wait for this attempt
     if (s !== 'connecting' && s !== 'new') clearTimeout(this.connectTimer)
-    if (s === 'connecting' && this.connectTimeout > 0) {
-      clearTimeout(this.connectTimer)
-      const pc = this.pc
-      // still stuck on the same peer once the time is up: treat it as failed, as the browser
-      // eventually would, so the retry or the fallback starts now instead
-      this.connectTimer = window.setTimeout(() => {
-        if (this.pc === pc && pc?.connectionState === 'connecting') this.onPeerState('failed')
-      }, this.connectTimeout)
-    }
     if (s === 'connected') {
       this.failures = 0
       this.setStatus('connected')

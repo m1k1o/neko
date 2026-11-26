@@ -350,6 +350,9 @@ export class NekoClient {
     this.transport = next
     this.input = next.input ?? new WebSocketInput(this)
     this.bindTransport()
+    // the new transport starts at full volume, unmuted; keep what the user had set
+    next.setVolume(this.state.video.volume)
+    next.setMuted(this.state.video.muted)
     // the consumer attached the old transport's element and must attach the new one
     this.events.emit('transport.changed', next.kind, reason)
 

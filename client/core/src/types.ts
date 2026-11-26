@@ -1,4 +1,5 @@
 // Client state + wire types, mirroring server/pkg/types (master).
+import type { TransportKind } from './transport.ts'
 
 export interface MemberProfile {
   name: string
@@ -119,7 +120,7 @@ export interface NekoEvents {
   'connection.closed': (error?: Error) => void
   // the stream moved to another transport (a fallback took over): whatever attached the old
   // transport's element must attach the new one
-  'transport.changed': (kind: string, reason: Error) => void
+  'transport.changed': (kind: TransportKind, reason: Error) => void
   'session.created': (id: string) => void
   'session.deleted': (id: string) => void
   'session.updated': (id: string) => void

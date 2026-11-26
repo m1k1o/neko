@@ -402,3 +402,27 @@ test('connectTimeoutMs: off by default, so WebRTC on its own waits for the brows
   assert.equal(FakePeer.all.length, 1, 'the stuck peer is not torn down and retried on a timer')
   assert.equal(FakePeer.all[0].closed, false)
 })
+
+// with UDP blocked by browser policy ICE gathers nothing and the peer never leaves 'new'
+const neverLeavesNew = async () => {
+  const r = setup({ connectTimeoutMs: 4000, failFastAfter: 0 })
+  const si = sessionInfo()
+  await r.t.connect(si.s)
+  si.receive('signal/provide', { sdp: OFFER })
+  await settle()
+  return r
+}
+
+test('connectTimeoutMs: a peer that never leaves new counts as failed once the time is up', async () => {
+  const { errors } = await neverLeavesNew()
+  await tick(3900)
+  assert.deepEqual(errors, [], 'not before the timeout')
+  await tick(200)
+  assert.equal(errors.length, 1, 'given up on without waiting for the server')
+})
+
+test('a peer whose ICE gathering ends with no candidates fails at once', async () => {
+  const { errors } = await neverLeavesNew()
+  FakePeer.all[0].onicecandidate!({ candidate: null })
+  assert.equal(errors.length, 1, 'no route to try: no point waiting for the timeout')
+})

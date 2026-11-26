@@ -9,6 +9,7 @@ const { NekoClient, Emitter, WebSocketInput } = await import('./index.ts')
 type Options = ConstructorParameters<typeof NekoClient>[0]
 type Transport = NonNullable<Exclude<NonNullable<Options>['transport'], () => unknown>>
 type SessionInfo = Parameters<Transport['connect']>[0]
+type TransportKind = Transport['kind']
 
 class FakeTransport implements Transport {
   element = null
@@ -29,8 +30,14 @@ class FakeTransport implements Transport {
     return () => {}
   }
   async setPlaying() {}
-  setVolume() {}
-  setMuted() {}
+  volume: number | null = null
+  muted: boolean | null = null
+  setVolume(v: number) {
+    this.volume = v
+  }
+  setMuted(on: boolean) {
+    this.muted = on
+  }
   on = (event: string, cb: (...a: any[]) => void) => this.events.on(event, cb)
   fail(err: Error) {
     this.events.emit('error', err)
@@ -49,7 +56,7 @@ const setup = (fallback?: () => FakeTransport, firstInput?: Transport['input']) 
   first.calls.length = 0
   const closed: (Error | undefined)[] = []
   client.events.on('connection.closed', (e) => closed.push(e))
-  const changed: string[] = []
+  const changed: TransportKind[] = []
   client.events.on('transport.changed', (kind) => changed.push(kind))
   client.store.setState({ authenticated: true, connection: { ...client.state.connection, token: 'tok' } })
   client.connect()
@@ -79,6 +86,17 @@ test('the fallback starts at once with the session it already has, without a rec
   assert.deepEqual(second.calls, ['connect'], 'connected straight away')
   assert.deepEqual(second.session!.init, firstSession!.init, 'with the session the server already introduced')
   assert.equal(second.session!.token, 'tok')
+})
+
+test('the fallback keeps the volume and mute the user had set', () => {
+  const second = new FakeTransport('webcodecs-ws')
+  const { client, first } = setup(() => second)
+  client.store.setState({ video: { ...client.state.video, volume: 0.3, muted: true } })
+
+  first.fail(new Error('video connection failed (WebRTC)'))
+
+  assert.equal(second.volume, 0.3)
+  assert.equal(second.muted, true)
 })
 
 test('input moves to the websocket when the fallback has no channel of its own', () => {

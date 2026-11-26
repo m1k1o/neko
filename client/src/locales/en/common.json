@@ -73,7 +73,7 @@
     "transport_auto": "Automatic",
     "transport_webrtc": "WebRTC",
     "transport_websocket": "WebSocket",
-    "transport_reload": "Applies on the next connection"
+    "transport_reload": "Changing this reconnects now"
   },
   "connection": {
     "reconnecting": "Reconnecting...",
