@@ -293,6 +293,8 @@ import TabItem from '@theme/TabItem';
 
 This is the initial configuration of the room that can be modified by an admin in real-time.
 
+In the web client, admins lock logins and controls from the top bar, and switch private mode, control protection, implicit hosting and merciful reconnect in the **Room Settings** section of the settings tab. Users in private mode see a notice instead of the video. All of these settings can also be changed with the `POST /api/room/settings` endpoint.
+
 <ConfigurationTab options={configOptions} filter={[
   'session.private_mode',
   'session.locked_logins',
